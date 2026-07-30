@@ -106,4 +106,18 @@ Cursor edit → push master → ESPHome Validate/Install (affected devices only)
 
 Do not edit package bodies only on the HA box — they will be overwritten on the next git refresh.
 
+### Incremental updates (already on v4)
+
+Firmware OTA is **not** enough when the cut also touches HA surfaces. Check [`RELEASE.md`](RELEASE.md) “Recent cut” + **Beyond OTA** before flashing:
+
+| Changed in git | What you do on HA |
+|---|---|
+| `firmware/v4/*` only | ESPHome Validate/Install on affected devices |
+| `dashboards/dsc-hub-v4-dashboard.yaml` | Re-paste into Lovelace raw editor (`dsc-hub-v4`) — **not** automatic |
+| `packages/dsc_v4_*.yaml` | Copy/replace into `/config/packages/` → restart HA |
+| `automations.yaml` | Merge/replace live automations → reload automations or restart |
+| Panel boot-looping after UI flash | Prefer **USB** until boot log shows a clean `4.0.x up` line |
+
+Example — current master cut: flash **hub** + **panel**, and **re-paste the dashboard**. Helpers/automations unchanged → no package swap.
+
 See also: [`INSTALL.md`](INSTALL.md) · [`RELEASE.md`](RELEASE.md) · [`homeassistant/README.md`](homeassistant/README.md)

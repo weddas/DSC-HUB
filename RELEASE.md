@@ -31,7 +31,40 @@ Repo: https://github.com/weddas/DSC-HUB · **`master`**
 - **Panel 4.0.8:** Soil NPK drill-down (0xD3/0xD4); hold-to-lock on primary pages; tap-challenge for Manual Takeover + appliance demands; Connections shows Wi‑Fi channel + ESP-NOW RX age/TX seq; Pulse 1h VPD micro-trend (label only). Hold HUD is strcmp-guarded + 250 ms tap grace to avoid heap churn / boot loops.
 - **Dashboard v0.2:** Home nav chips; narrator collapsed; Root Zone nested (mat votes source of truth); Climate mat expander links to Root Zone.
 
-**Flash:** hub (mat votes) + panel **USB first** if the glass is looping; then OTA. Reload Lovelace raw config for dashboard UX.
+**Flash / apply (this cut):**
+
+| Piece | How it lands | Manual HA step? |
+|---|---|---|
+| Hub mat-vote switches | ESPHome Install (hub OTA or USB) | No — entities appear after hub adopts |
+| Panel 4.0.8 | ESPHome Install (**USB if boot-looping**, else OTA) | No |
+| Dashboard UX v0.2 | **Not** via OTA or git-pull stubs | **Yes — re-paste** [`homeassistant/dashboards/dsc-hub-v4-dashboard.yaml`](homeassistant/dashboards/dsc-hub-v4-dashboard.yaml) into Lovelace raw editor (URL `dsc-hub-v4`) |
+| HA helper packages | Only if `dsc_v4_*.yaml` files changed | **Yes — copy/replace** packages + restart HA when those files change |
+| Automations | Only if `automations.yaml` changed | **Yes — merge/replace** live automations when that file changes |
+
+This cut: **dashboard re-paste required**. Helper packages and automations were **not** changed — no package swap needed. Hub + panel firmware still need flashing.
+
+---
+
+## Beyond OTA — what never auto-updates
+
+ESPHome **Validate/Install** (OTA or USB) only updates device firmware pulled from git stubs. These HA surfaces are **copied by hand** and stay stale until you swap them:
+
+| Surface | Path | When you must re-apply |
+|---|---|---|
+| Lovelace dashboard | `homeassistant/dashboards/dsc-hub-v4-dashboard.yaml` | Any dashboard UX / entity layout change |
+| Helper packages | `homeassistant/packages/dsc_v4_*.yaml` | New sensors, templates, unique_ids, helper renames |
+| Automations | `homeassistant/automations.yaml` | New followers, alerts, scribe rules |
+
+**Rule of thumb:** if the commit message or “Recent cut” table says dashboard / packages / automations changed, OTA alone is incomplete — do the HA paste/copy + restart before expecting the UI to match.
+
+Day-to-day firmware-only edits:
+
+```
+Cursor edit → commit/push → ESPHome Validate/Install (affected devices only)
+```
+
+Hub + panel: flash together when tag, MAC, or `0xD*` wire contract changes.
+
 ---
 
 ## Quick checklist (upgrade path)
@@ -42,18 +75,9 @@ Repo: https://github.com/weddas/DSC-HUB · **`master`**
 4. [ ] Replace ESPHome device YAMLs with `homeassistant/esphome/` stubs
 5. [ ] Restart HA → Validate → flash hub then panel (if tag changed) → pots/Sonoffs as needed
 6. [ ] Verify ESP-NOW, followers, tank EC, alert count chip
+7. [ ] After incremental cuts: check **Beyond OTA** — re-paste dashboard / swap helpers if listed
 
 Full steps: [`UPGRADE.md`](UPGRADE.md).
-
----
-
-## Day-to-day
-
-```
-Cursor edit → commit/push → ESPHome Validate/Install (only affected devices)
-```
-
-Hub + panel: flash together when tag, MAC, or `0xD*` wire contract changes.
 
 ---
 

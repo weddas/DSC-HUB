@@ -51,6 +51,8 @@ If you already have live copies of `dsc_tank.yaml` / `dsc_pots_*.yaml` /
 3. Create a new dashboard → **Edit dashboard → ⋮ → Raw configuration editor** → paste `dsc-hub-v4-dashboard.yaml`.  
    Set the dashboard URL to **`dsc-hub-v4`**.
 
+   **Ongoing:** dashboard YAML is **not** updated by ESPHome OTA. When `RELEASE.md` says the dashboard changed, re-paste the raw config (same URL). Same rule for `packages/dsc_v4_*.yaml` and `automations.yaml` — copy/merge by hand, then restart or reload.
+
 4. Restart Home Assistant (followers need `homeassistant: start` to resync).
 
 5. Entity registry: rename any leftover plant/stage ids to:

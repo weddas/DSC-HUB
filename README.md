@@ -8,9 +8,11 @@ Indoor grow automation fleet: ESPHome hub, CYD touch panel (DSC-CONTROL), soil p
 |---|---|
 | [`INSTALL.md`](INSTALL.md) | Fresh HA + fleet bring-up |
 | [`UPGRADE.md`](UPGRADE.md) | Moving from live v2.4 / early v4 onto this repo |
-| [`RELEASE.md`](RELEASE.md) | Release map + short checklist |
+| [`RELEASE.md`](RELEASE.md) | Release map, checklist, **Beyond OTA** (dashboard / helpers) |
 | [`homeassistant/README.md`](homeassistant/README.md) | Packages, dashboard, HACS |
 | [`firmware/v4/README.md`](firmware/v4/README.md) | Local validate / flash entry points |
+
+ESPHome OTA updates firmware only. Lovelace, `dsc_v4_*.yaml` helpers, and automations are manual copy/paste — see **Beyond OTA** in [`RELEASE.md`](RELEASE.md).
 
 ## Canonical firmware
 
