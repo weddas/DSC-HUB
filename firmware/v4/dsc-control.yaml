@@ -1,17 +1,16 @@
 # hub_cmd control (build_panel_control)
 # ESP-NOW-fed (build_panel_data)
 # ==================================================================
-#  DSC-CONTROL — per-tent wall touch panel  (firmware v4.0.2, ESP-NOW primary)
+#  DSC-CONTROL — per-tent wall touch panel  (firmware v4.0.4, ESP-NOW primary)
 #  Board: ESP32-2432S028R "Cheap Yellow Display", DUAL-USB variant
 #         (micro-USB + USB-C  ->  ST7789 panel, colours inverted)
 #  ------------------------------------------------------------------
-#  ROLE: touch control panel for the DSC-HUB system, built from the
-#  v4 design export (ESP-CYD Test V1 / DSC-HUB Panel v4). Data path:
-#  HOME ASSISTANT API — this panel is a *client* of the hub's HA
-#  entities; it drives nothing directly. Every control writes to an
-#  existing dsc-hub entity with the hub's own semantics (Full Auto
-#  arms the whole stack, Takeover is the master override, a stage
-#  change rewrites targets — same contract as the HA dashboard).
+#  ROLE: touch control panel for the DSC-HUB system. Dual path:
+#    * ESP-NOW PRIMARY — vitals/config/soil/names (0xD1–0xD4) in, commands
+#      (0xDC) out. Runs with Home Assistant down.
+#    * HA API OPTIONAL — OTA, encrypted api link, clock backup. The panel
+#      does NOT drive hub entities over HA; the hub is the single source
+#      of truth and republishes to this glass over ESP-NOW.
 #
 #  v0.1 SCOPE (bench build — flash, verify on glass, then iterate):
 #    * Tab bar: Pulse / Clone / Main / Control  (design tab order)
@@ -53,115 +52,8 @@ substitutions:
   friendly_name: DSC-CONTROL
   # ---- ESP-NOW primary link (must match the hub package) ----
   hub_mac: "84:1F:E8:16:E6:60"        # DSC-HUB
-  # MUST match dsc-hub-espnow-primary.yaml espnow_cmd_tag (0xABCD = 43981)
-  espnow_cmd_tag: "43981"
-
-  # ---- The hub's HA entity surface (v2.4.x) ----------------------
-  # Every remote read/write routes through THIS table. If an id in
-  # your HA registry differs (renamed in the UI once), fix it HERE.
-  ent_clone_temp: sensor.dsc_hub_clone_temperature
-  ent_clone_rh: sensor.dsc_hub_clone_humidity
-  ent_clone_vpd: sensor.dsc_hub_clone_vpd_kpa
-  ent_main_temp: sensor.dsc_hub_tent_temperature
-  ent_main_rh: sensor.dsc_hub_tent_humidity
-  ent_main_vpd: sensor.dsc_hub_vpd_kpa
-  ent_room_temp: sensor.dsc_hub_room_temperature
-  ent_room_rh: sensor.dsc_hub_room_humidity
-  ent_co2: sensor.dsc_hub_dynamic_co2_ppm
-  ent_win_4x8: binary_sensor.dsc_hub_4x8_window_open
-  ent_win_2x4: binary_sensor.dsc_hub_2x4_window_open
-  ent_fault_climate: binary_sensor.dsc_hub_climate_sensor_fault
-  ent_fault_aux: binary_sensor.dsc_hub_aux_sensor_fault
-  ent_fault_rootzone: binary_sensor.dsc_hub_root_zone_sensor_fault
-  ent_fan_out: fan.dsc_hub_6_inch_exhaust_outside
-  ent_fan_recirc: fan.dsc_hub_6_inch_exhaust_room
-  ent_fan_int_main: fan.dsc_hub_4_inch_intake_fan_main
-  ent_fan_int_clone: fan.dsc_hub_4_inch_intake_fan_2x4
-  ent_sf1000: light.dsc_hub_sf1000_dimmer
-  ent_dem_hum: switch.dsc_hub_humidifier_demand
-  ent_dem_dehum: switch.dsc_hub_dehumidifier_demand
-  ent_dem_heater: switch.dsc_hub_heater_demand
-  ent_dem_mat: switch.dsc_hub_grow_mat_demand
-  ent_dem_ac: switch.dsc_hub_ac_demand
-  ent_dem_clone_hum: switch.dsc_hub_clone_humidifier_demand
-  ent_full_auto: switch.dsc_hub_tent_full_auto_mode
-  ent_takeover: switch.dsc_hub_manual_takeover
-  ent_auto_photo: switch.dsc_hub_auto_photoperiod
-  ent_light_hold: switch.dsc_hub_manual_light_hold
-  ent_sel_stage: select.dsc_hub_grow_stage
-  ent_sel_strategy: select.dsc_hub_control_strategy
-  ent_sel_clone_mode: select.dsc_hub_clone_mode
-  ent_sel_priority: select.dsc_hub_priority_tent
-  ent_num_temp: number.dsc_hub_target_temp
-  ent_num_vpd_min: number.dsc_hub_vpd_target_min
-  ent_num_vpd_max: number.dsc_hub_vpd_target_max
-  ent_num_rh_min: number.dsc_hub_rh_target_min
-  ent_num_rh_max: number.dsc_hub_rh_target_max
-  ent_num_c_temp: number.dsc_hub_clone_target_temp
-  ent_num_c_vpd_min: number.dsc_hub_clone_vpd_min
-  ent_num_c_vpd_max: number.dsc_hub_clone_vpd_max
-  ent_num_c_rh_min: number.dsc_hub_clone_rh_min
-  ent_num_c_rh_max: number.dsc_hub_clone_rh_max
-  ent_num_sf_target: number.dsc_hub_sf1000_target_brightness
-  ent_cd_hum: sensor.dsc_hub_humidifier_fire_countdown
-  ent_cd_dehum: sensor.dsc_hub_dehumidifier_fire_countdown
-  ent_cd_heater: sensor.dsc_hub_heater_fire_countdown
-  ent_cd_ac: sensor.dsc_hub_ac_fire_countdown
-  ent_cd_mat: sensor.dsc_hub_grow_mat_fire_countdown
-  ent_cd_clone_hum: sensor.dsc_hub_clone_humidifier_fire_countdown
-
-  # ---- Pot soil probes (RS485 7-in-1, one per pot) ----
-  # POT1 drives the mat root-zone; POT3 moisture is a known probe fault.
-  ent_p1_moist: sensor.dsc_pot1_soil_moisture
-  ent_p1_temp: sensor.dsc_pot1_soil_temperature
-  ent_p1_ec: sensor.dsc_pot1_soil_conductivity
-  ent_p1_ph: sensor.dsc_pot1_soil_ph
-  ent_p1_n: sensor.dsc_pot1_soil_nitrogen
-  ent_p1_p: sensor.dsc_pot1_soil_phosphorus
-  ent_p1_k: sensor.dsc_pot1_soil_potassium
-  ent_p1_plant: text.dsc_pot1_plant_name
-  ent_p2_moist: sensor.dsc_pot2_soil_moisture
-  ent_p2_temp: sensor.dsc_pot2_soil_temperature
-  ent_p2_ec: sensor.dsc_pot2_soil_conductivity
-  ent_p2_ph: sensor.dsc_pot2_soil_ph
-  ent_p2_n: sensor.dsc_pot2_soil_nitrogen
-  ent_p2_p: sensor.dsc_pot2_soil_phosphorus
-  ent_p2_k: sensor.dsc_pot2_soil_potassium
-  ent_p2_plant: text.dsc_pot2_plant_name
-  ent_p3_moist: sensor.dsc_pot3_soil_moisture
-  ent_p3_temp: sensor.dsc_pot3_soil_temperature
-  ent_p3_ec: sensor.dsc_pot3_soil_conductivity
-  ent_p3_ph: sensor.dsc_pot3_soil_ph
-  ent_p3_n: sensor.dsc_pot3_soil_nitrogen
-  ent_p3_p: sensor.dsc_pot3_soil_phosphorus
-  ent_p3_k: sensor.dsc_pot3_soil_potassium
-  ent_p3_plant: text.dsc_pot3_plant_name
-  ent_p4_moist: sensor.dsc_pot4_soil_moisture
-  ent_p4_temp: sensor.dsc_pot4_soil_temperature
-  ent_p4_ec: sensor.dsc_pot4_soil_conductivity
-  ent_p4_ph: sensor.dsc_pot4_soil_ph
-  ent_p4_n: sensor.dsc_pot4_soil_nitrogen
-  ent_p4_p: sensor.dsc_pot4_soil_phosphorus
-  ent_p4_k: sensor.dsc_pot4_soil_potassium
-  ent_p4_plant: text.dsc_pot4_plant_name
-  # ---- extra hub numbers + switches for the Setup tab ----
-  ent_num_ramp_floor: number.dsc_hub_sf1000_ramp_floor
-  ent_num_sunrise: number.dsc_hub_sunrise_duration
-  ent_num_sunset: number.dsc_hub_sunset_duration
-  ent_num_clone_light_hours: number.dsc_hub_clone_light_hours
-  ent_num_mat_low: number.dsc_hub_mat_root_zone_low
-  ent_num_mat_high: number.dsc_hub_mat_root_zone_high
-  ent_num_mat_min_off: number.dsc_hub_mat_min_off_time
-  ent_num_clone_hum_hyst: number.dsc_hub_clone_hum_hysteresis
-  ent_num_clone_hum_min_off: number.dsc_hub_clone_hum_min_off_time
-  ent_num_hum_min_off: number.dsc_hub_humidifier_min_off_time
-  ent_num_heater_min_off: number.dsc_hub_heater_min_off_time
-  ent_num_destrat_period: number.dsc_hub_de_strat_pulse_period
-  ent_num_destrat_length: number.dsc_hub_de_strat_pulse_length
-  ent_num_destrat_level: number.dsc_hub_de_strat_pulse_level
-  ent_sel_clone_photo: select.dsc_hub_clone_photoperiod
-  ent_hum_routing: switch.dsc_hub_humidifier_intake_routing
-  ent_destrat: switch.dsc_hub_recirc_de_strat_pulse
+  # MUST match dsc-hub-espnow-primary.yaml. Not the default 0xABCD.
+  espnow_cmd_tag: "54727"             # 0xD5C7
 
 esphome:
   name: ${name}
@@ -173,7 +65,14 @@ esphome:
     # the dashboard and HA's device page both described DSC-CONTROL as
     # being the DSC HUB. Purely cosmetic, but confusing enough to matter.
     name: "digital_emotions.dsc-control"
-    version: "4.0.2"
+    version: "4.0.4"
+  on_boot:
+    # Seed the 0xDC command seq from hardware RNG so a panel reboot is
+    # unlikely to replay the hub's last-seen seq even before the hub's
+    # 500 ms dedupe window expires. (Hub also accepts same-seq after gap.)
+    - priority: 600
+      then:
+        - lambda: 'id(cmd_tx_seq) = (uint16_t) esp_random();'
 
 esp32:
   board: esp32dev
@@ -292,7 +191,22 @@ wifi:
     ssid: "DSC-CONTROL Fallback"
     password: !secret dsc_control_ap_password
   on_connect:
-    - lambda: 'id(wifi_conn) = true;'
+    - lambda: |-
+        id(wifi_conn) = true;
+        // Nest/mesh can hop 2.4 GHz channels under us. ESP-NOW rides the
+        // STA channel — a hop that the hub did not also take silently
+        // splits the link. Track it so the alert strip can surface it.
+        wifi_ap_record_t info;
+        if (esp_wifi_sta_get_ap_info(&info) == ESP_OK) {
+          int ch = info.primary;
+          if (id(wifi_channel) != 0 && id(wifi_channel) != ch) {
+            id(wifi_channel_hopped) = true;
+            ESP_LOGW("wifi", "channel hop %d -> %d (ESP-NOW needs hub on same ch)", id(wifi_channel), ch);
+          } else {
+            ESP_LOGI("wifi", "STA channel %d", ch);
+          }
+          id(wifi_channel) = ch;
+        }
   on_disconnect:
     - lambda: 'id(wifi_conn) = false;'
 
@@ -335,6 +249,22 @@ espnow:
         } else if (ty == 0xD3 && size >= 58) {
           static const float ss[7] = {100,10,1,100,1,1,1};
           for (int i = 0; i < 28; i++) { float v = rd(2 + i*2); id(gv_soil)[i] = isnan(v) ? NAN : v / ss[i % 7]; }
+        } else if (ty == 0xD4 && size >= 66) {
+          // Plant names: 4×16 bytes, null-padded. Canonical store is each
+          // pot; hub mirrors from HA and relays here so the soil tab works
+          // without the panel talking to HA.
+          auto take = [&](int off) -> std::string {
+            std::string s;
+            s.reserve(16);
+            for (int i = 0; i < 16; i++) {
+              char c = (char) data[off + i];
+              if (c == 0) break;
+              s.push_back(c);
+            }
+            return s;
+          };
+          id(gv_plant1) = take(2);  id(gv_plant2) = take(18);
+          id(gv_plant3) = take(34); id(gv_plant4) = take(50);
         }
 
 time:
@@ -388,9 +318,14 @@ touchscreen:
     id: cyd_touch
     spi_id: spi_touch
     cs_pin: GPIO33
-    interrupt_pin: GPIO36
-    # update_interval removed (v4.0.1) — with interrupt_pin set, XPT2046
-    # stops polling and the boot log asks for this line to go.
+    interrupt_pin:
+      # GPIO36 is input-only — no internal pull-up. Bare `GPIO36` makes
+      # ESP-IDF try gpio_pullup_en and log "GPIO number error".
+      number: GPIO36
+      mode:
+        input: true
+        pullup: false
+    # Interrupt-driven; do not set update_interval (ESPHome warns if present).
     threshold: 400
     # CALIBRATED 24 Jul from Chris's four-corner taps (pen). Raw ranges
     # measured: x 219-3771, y 384-3852. Corners land square with these.
@@ -922,12 +857,14 @@ binary_sensor:
     id: api_link
     name: "HA Link Status"
   - platform: template
-    id: win_4x8
+    id: lights_main
     internal: true
+    # gv_flt bit 32 = lights_currently_on (4x8 virtual window / night dim)
     lambda: 'return (id(gv_flt)&32);'
   - platform: template
-    id: win_2x4
+    id: lights_clone
     internal: true
+    # gv_flt bit 64 = clone_lights_on
     lambda: 'return (id(gv_flt)&64);'
   - platform: template
     id: fault_climate
@@ -941,6 +878,10 @@ binary_sensor:
     id: fault_rootzone
     internal: true
     lambda: 'return (id(gv_flt)&8);'
+  - platform: template
+    id: fault_emg
+    internal: true
+    lambda: 'return (id(gv_flt)&128);'
   - platform: template
     id: dem_hum
     internal: true
@@ -1014,31 +955,27 @@ text_sensor:
     update_interval: 2s
     lambda: |-
         const char* o[]={"Germination","Seedling","Early Vegetative","Vegetative","Late (Push) Vegetative","Early Flowering","Flowering","Late Flowering","Final 48-72h Flowering","Dry Mode","Off"}; int i=id(gv_stage); return std::string(i>=0&&i<11?o[i]:"--");
-  # pot plant-name labels (the label travels with the probe)
+  # pot plant-name labels (hub relays via 0xD4 from pot HA entities)
   - platform: template
     id: p1_plant
     internal: true
     update_interval: 2s
-    lambda: |-
-        return std::string("");
+    lambda: 'return id(gv_plant1);'
   - platform: template
     id: p2_plant
     internal: true
     update_interval: 2s
-    lambda: |-
-        return std::string("");
+    lambda: 'return id(gv_plant2);'
   - platform: template
     id: p3_plant
     internal: true
     update_interval: 2s
-    lambda: |-
-        return std::string("");
+    lambda: 'return id(gv_plant3);'
   - platform: template
     id: p4_plant
     internal: true
     update_interval: 2s
-    lambda: |-
-        return std::string("");
+    lambda: 'return id(gv_plant4);'
   - platform: template
     id: sel_strategy
     internal: true
@@ -1079,6 +1016,10 @@ globals:
   # ---- ESP-NOW telemetry sink (populated by on_receive) ----
   - {id: gv_hub_last, type: uint32_t, initial_value: '0'}     # millis of last hub packet
   - {id: cmd_tx_seq,  type: uint16_t, initial_value: '0'}
+  - {id: gv_plant1, type: std::string, initial_value: '""'}
+  - {id: gv_plant2, type: std::string, initial_value: '""'}
+  - {id: gv_plant3, type: std::string, initial_value: '""'}
+  - {id: gv_plant4, type: std::string, initial_value: '""'}
   - {id: gv_tent_t,   type: float, initial_value: 'NAN'}
   - {id: gv_clone_t,  type: float, initial_value: 'NAN'}
   - {id: gv_room_t,   type: float, initial_value: 'NAN'}
@@ -1101,7 +1042,7 @@ globals:
   - {id: gv_dem,      type: int, initial_value: '0'}   # bits: hum dehum heat mat ac clonehum
   - {id: gv_mode,     type: int, initial_value: '0'}   # bits: fauto man takeover photo lighthold mainA cloneA
   - {id: gv_arm,      type: int, initial_value: '0'}   # bits: hum dehum heat mat ac clonehum
-  - {id: gv_flt,      type: int, initial_value: '0'}   # bits: sensor room clone rootzone haconn mainwin clonewin emg
+  - {id: gv_flt,      type: int, initial_value: '0'}   # bits: sensor room clone rootzone haconn lights_main lights_clone emg
   - {id: gv_coord,    type: int, initial_value: '0'}   # bits: humroute destrat pot1..4 link
   - id: gv_cfg
     type: float[27]
@@ -1152,7 +1093,7 @@ globals:
   - id: edit_target              # editor page: 0=stage 1=strategy 2=clone 3=priority
     type: int
     initial_value: '0'
-  - id: active_tab               # 0=Pulse 1=Clone 2=Main 3=Control
+  - id: active_tab               # 0=Pulse 1=Clone 2=Main 3=Soil 4=Control
     type: int
     initial_value: '0'
   # ---- screen lock (hold-to-lock, seed->plant growth) ----
@@ -1172,9 +1113,9 @@ globals:
     type: int
     initial_value: '0'
   # ---- connection uptimes (millis timestamp of last (re)connect) ----
-  - id: wifi_conn                # driven by wifi on_connect/on_disconnect
-    type: bool
-    initial_value: 'false'
+  - {id: wifi_conn, type: bool, initial_value: 'false'}                # driven by wifi on_connect/on_disconnect
+  - {id: wifi_channel, type: int, initial_value: '0'}
+  - {id: wifi_channel_hopped, type: bool, initial_value: 'false'}
   - id: wifi_since
     type: uint32_t
     initial_value: '0'
@@ -4675,8 +4616,29 @@ script:
                          GREY=0x5A6472, WHITE=0xFFFFFF, DIM=0xC0C6CC, BORD=0x232A33,
                          BLUE=0x2196F3, ORANGE=0xFF9800;
           char b[64];
-          auto setc = [](lv_obj_t* o, uint32_t c){ lv_obj_set_style_text_color(o, lv_color_hex(c), 0); };
-          auto bordc = [](lv_obj_t* o, uint32_t c){ lv_obj_set_style_border_color(o, lv_color_hex(c), 0); };
+          // Guard style writes the same way setl guards text: LVGL invalidates
+          // on every style set, which reallocates aligned A8 glyph masks.
+          auto setc = [](lv_obj_t* o, uint32_t c){
+            lv_color_t want = lv_color_hex(c);
+            lv_color_t cur = lv_obj_get_style_text_color(o, 0);
+            if (lv_color_to_u32(cur) != lv_color_to_u32(want))
+              lv_obj_set_style_text_color(o, want, 0);
+          };
+          auto bordc = [](lv_obj_t* o, uint32_t c){
+            lv_color_t want = lv_color_hex(c);
+            lv_color_t cur = lv_obj_get_style_border_color(o, 0);
+            if (lv_color_to_u32(cur) != lv_color_to_u32(want))
+              lv_obj_set_style_border_color(o, want, 0);
+          };
+          auto setbar = [](lv_obj_t* o, int v){
+            if ((int) lv_bar_get_value(o) != v) lv_bar_set_value(o, v, LV_ANIM_OFF);
+          };
+          auto setbarb = [](lv_obj_t* o, uint32_t c){
+            lv_color_t want = lv_color_hex(c);
+            lv_color_t cur = lv_obj_get_style_bg_color(o, LV_PART_INDICATOR);
+            if (lv_color_to_u32(cur) != lv_color_to_u32(want))
+              lv_obj_set_style_bg_color(o, want, LV_PART_INDICATOR);
+          };
           // v4.0.2 — setl() replaces every lv_label_set_text() in refresh_ui.
           // lv_label_set_text() calls lv_realloc() *unconditionally*, then
           // invalidates the label, which schedules a redraw and a fresh
@@ -4834,9 +4796,27 @@ script:
           // ---------------- alerts ----------------
           int ac = 0; std::string head; char hb[48];
           auto AL = [&](bool cond, std::string txt){ if (cond) { if (ac == 0) head = txt; ac++; } };
+          // gv_flt bit 128 = emergency_failsafe_active (>35 °C). Was packed
+          // on the wire since v4.0 but never surfaced — panel could read
+          // "all clear" while the hub owned outputs in failsafe.
+          AL(id(fault_emg).state, "Emergency failsafe >35°C");
           AL(id(fault_climate).state, "Climate sensor fault");
           AL(id(fault_rootzone).state, "Root-zone probe fault");
           AL(id(fault_aux).state, "Aux sensor offline");
+          // Sonoffs only switch when HA is up — surface that honestly.
+          {
+            bool dem = id(dem_hum).state || id(dem_dehum).state || id(dem_heater).state
+                    || id(dem_mat).state || id(dem_ac).state || id(dem_clone_hum).state;
+            AL(dem && !id(api_link).state, "Appliances need HA (Sonoffs offline)");
+          }
+          // Nest/mesh channel hop: ESP-NOW peers must share the STA channel.
+          if (id(wifi_channel_hopped)) {
+            snprintf(hb, sizeof(hb), "WiFi channel hop → %d (check ESP-NOW)", id(wifi_channel));
+            AL(true, hb);
+            // Auto-clear once ESP-NOW is linked again on the new channel.
+            uint32_t hub_age = millis() - id(gv_hub_last);
+            if (id(gv_hub_last) != 0 && hub_age < 6000) id(wifi_channel_hopped) = false;
+          }
           float crh = id(clone_rh).state, cvp = id(clone_vpd).state, mrh = id(main_rh).state, mvp = id(main_vpd).state;
           if (!isnan(crh) && !isnan(c_rmax) && crh > c_rmax + 2) { snprintf(hb,sizeof(hb),"Clone RH high · %.0f%%",crh); AL(true,hb); }
           if (!isnan(cvp) && !isnan(c_vmax) && cvp > c_vmax + 0.1f) { snprintf(hb,sizeof(hb),"Clone VPD high · %.2f",cvp); AL(true,hb); }
@@ -4874,16 +4854,16 @@ script:
           {
             float t = id(clone_temp).state; uint32_t c = bandcol(t, c_tt-2, c_tt+2);
             if (isnan(t)) setl(id(clv_temp_val),"--"); else { snprintf(b,sizeof(b),"%.1f°",t); setl(id(clv_temp_val),b);} 
-            setc(id(clv_temp_val),c); lv_bar_set_value(id(clv_temp_bar), isnan(t)?10:(int)t, LV_ANIM_OFF);
-            lv_obj_set_style_bg_color(id(clv_temp_bar), lv_color_hex(c), LV_PART_INDICATOR);
+            setc(id(clv_temp_val),c); setbar(id(clv_temp_bar), isnan(t)?10:(int)t);
+            setbarb(id(clv_temp_bar), c);
             float rh = id(clone_rh).state; c = bandcol(rh, c_rmin, c_rmax);
             if (isnan(rh)) setl(id(clv_rh_val),"--"); else { snprintf(b,sizeof(b),"%.0f%%",rh); setl(id(clv_rh_val),b);} 
-            setc(id(clv_rh_val),c); lv_bar_set_value(id(clv_rh_bar), isnan(rh)?0:(int)rh, LV_ANIM_OFF);
-            lv_obj_set_style_bg_color(id(clv_rh_bar), lv_color_hex(c), LV_PART_INDICATOR);
+            setc(id(clv_rh_val),c); setbar(id(clv_rh_bar), isnan(rh)?0:(int)rh);
+            setbarb(id(clv_rh_bar), c);
             float vp = id(clone_vpd).state; c = bandcol(vp, c_vmin, c_vmax);
             if (isnan(vp)) setl(id(clv_vpd_val),"--"); else { snprintf(b,sizeof(b),"%.2f kPa",vp); setl(id(clv_vpd_val),b);} 
-            setc(id(clv_vpd_val),c); lv_bar_set_value(id(clv_vpd_bar), isnan(vp)?0:(int)(vp*100), LV_ANIM_OFF);
-            lv_obj_set_style_bg_color(id(clv_vpd_bar), lv_color_hex(c), LV_PART_INDICATOR);
+            setc(id(clv_vpd_val),c); setbar(id(clv_vpd_bar), isnan(vp)?0:(int)(vp*100));
+            setbarb(id(clv_vpd_bar), c);
           }
           setl(id(clone_hdr_note), id(sel_clone_mode).state.c_str());
 
@@ -4891,16 +4871,16 @@ script:
           {
             float t = id(main_temp).state; uint32_t c = bandcol(t, m_tt-2, m_tt+2);
             if (isnan(t)) setl(id(mnv_temp_val),"--"); else { snprintf(b,sizeof(b),"%.1f°",t); setl(id(mnv_temp_val),b);} 
-            setc(id(mnv_temp_val),c); lv_bar_set_value(id(mnv_temp_bar), isnan(t)?10:(int)t, LV_ANIM_OFF);
-            lv_obj_set_style_bg_color(id(mnv_temp_bar), lv_color_hex(c), LV_PART_INDICATOR);
+            setc(id(mnv_temp_val),c); setbar(id(mnv_temp_bar), isnan(t)?10:(int)t);
+            setbarb(id(mnv_temp_bar), c);
             float rh = id(main_rh).state; c = bandcol(rh, m_rmin, m_rmax);
             if (isnan(rh)) setl(id(mnv_rh_val),"--"); else { snprintf(b,sizeof(b),"%.0f%%",rh); setl(id(mnv_rh_val),b);} 
-            setc(id(mnv_rh_val),c); lv_bar_set_value(id(mnv_rh_bar), isnan(rh)?0:(int)rh, LV_ANIM_OFF);
-            lv_obj_set_style_bg_color(id(mnv_rh_bar), lv_color_hex(c), LV_PART_INDICATOR);
+            setc(id(mnv_rh_val),c); setbar(id(mnv_rh_bar), isnan(rh)?0:(int)rh);
+            setbarb(id(mnv_rh_bar), c);
             float vp = id(main_vpd).state; c = bandcol(vp, m_vmin, m_vmax);
             if (isnan(vp)) setl(id(mnv_vpd_val),"--"); else { snprintf(b,sizeof(b),"%.2f kPa",vp); setl(id(mnv_vpd_val),b);} 
-            setc(id(mnv_vpd_val),c); lv_bar_set_value(id(mnv_vpd_bar), isnan(vp)?0:(int)(vp*100), LV_ANIM_OFF);
-            lv_obj_set_style_bg_color(id(mnv_vpd_bar), lv_color_hex(c), LV_PART_INDICATOR);
+            setc(id(mnv_vpd_val),c); setbar(id(mnv_vpd_bar), isnan(vp)?0:(int)(vp*100));
+            setbarb(id(mnv_vpd_bar), c);
           }
 
           // ---------------- CONTROL state ----------------
@@ -5019,7 +4999,7 @@ script:
           }
 
           // ---------------- night mode, backlight, status LED ----------------
-          bool night = !id(win_4x8).state;
+          bool night = !id(lights_main).state;
           id(night_mode) = night;
           int want = id(panel_sleeping) ? 12 : (night ? 40 : 100);
           if (want != id(bl_last)) {
@@ -5088,25 +5068,38 @@ interval:
   - interval: 500ms
     then:
       - lambda: |-
+          // Skip entirely while the panel is asleep — no icons are visible.
+          if (id(panel_sleeping)) return;
           id(anim_phase) = (id(anim_phase) + 1) % 12;
           int tri = id(anim_phase) < 6 ? id(anim_phase) : 12 - id(anim_phase);    // 0..6
           uint8_t opa = 90 + (uint8_t)(tri * 165 / 6);                            // 90..255
           if (id(lock_engaged)) {
             // lock screen: active devices glow white and breathe, idle sit dim
             lv_color_t white = lv_color_hex(0xFFFFFF), dim = lv_color_hex(0x2A2A2A);
+            auto setopa = [](lv_obj_t* L, uint8_t o){
+              if (lv_obj_get_style_text_opa(L, 0) != o) lv_obj_set_style_text_opa(L, o, 0);
+            };
+            auto setcol = [](lv_obj_t* L, lv_color_t c){
+              if (lv_color_to_u32(lv_obj_get_style_text_color(L, 0)) != lv_color_to_u32(c))
+                lv_obj_set_style_text_color(L, c, 0);
+            };
             auto dev = [&](lv_obj_t* L, bool on){
-              if (on) { lv_obj_set_style_text_color(L, white, 0); lv_obj_set_style_text_opa(L, opa, 0); }
-              else    { lv_obj_set_style_text_color(L, dim, 0);   lv_obj_set_style_text_opa(L, 255, 0); }
+              if (on) { setcol(L, white); setopa(L, opa); }
+              else    { setcol(L, dim);   setopa(L, 255); }
             };
             bool fan_on = !isnan(id(fan_out_pct).state) && id(fan_out_pct).state > 0;
             bool int_on = !isnan(id(fan_int_main_pct).state) && id(fan_int_main_pct).state > 0;
             dev(id(lk_fan), fan_on); dev(id(lk_int), int_on); dev(id(lk_heat), id(dem_heater).state);
-            dev(id(lk_hum), id(dem_hum).state); dev(id(lk_deh), id(dem_dehum).state); dev(id(lk_light), id(win_4x8).state);
+            dev(id(lk_hum), id(dem_hum).state); dev(id(lk_deh), id(dem_dehum).state); dev(id(lk_light), id(lights_main).state);
             return;
           }
-          // control pages: breathe the opacity of whichever device icons are on
+          // control pages: breathe ON icons; OFF icons stay opa 255.
+          // Guarding the write means an idle mask (all off) is zero churn.
           int m = id(dev_mask);
-          auto br = [&](lv_obj_t* L, int bit){ lv_obj_set_style_text_opa(L, (m & (1 << bit)) ? opa : 255, 0); };
+          auto br = [&](lv_obj_t* L, int bit){
+            uint8_t want = (m & (1 << bit)) ? opa : (uint8_t) 255;
+            if (lv_obj_get_style_text_opa(L, 0) != want) lv_obj_set_style_text_opa(L, want, 0);
+          };
           br(id(ic_csf),0);  br(id(ic_cint),1); br(id(ic_chum),2); br(id(ic_cmat),3);
           br(id(ic_mout),4); br(id(ic_mroom),5); br(id(ic_mint),6); br(id(ic_mheat),7);
           br(id(ic_mac),8);  br(id(ic_mhum),9); br(id(ic_mdeh),10);

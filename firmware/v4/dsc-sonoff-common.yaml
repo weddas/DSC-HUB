@@ -23,6 +23,13 @@
 #  MUST keep its existing `name:`. Renaming either silently breaks the
 #  appliance layer — the demands would fire into a void and the tent
 #  would sit there getting cold while HA reports everything is fine.
+#
+#  ACTUATION PATH (by design): Sonoff BASIC R2 is ESP8285 — no ESP-NOW.
+#  Hub demand switches publish over the HA API; HA automations flip these
+#  relays. Panel/hub climate logic still runs without HA (fans + SF1000
+#  are local), but humidifiers / heater / mat / AC will not move until HA
+#  is up. The panel alert "Appliances need HA (Sonoffs offline)" surfaces
+#  that. A future ESP32 appliance bridge would be needed to cut HA out.
 # ==================================================================
 
 substitutions:

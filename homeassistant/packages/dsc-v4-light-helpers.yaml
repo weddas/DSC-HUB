@@ -1,0 +1,68 @@
+# ==================================================================
+#  DSC-HUB v4 · LIGHT-ACCOUNTING HELPERS
+#  ------------------------------------------------------------------
+#  Carried forward from v2.4 (topology Option A unchanged in v4):
+#  SF1000 is the 2x4 clone light; 4x8 window is virtual/schedule-only.
+#
+#  Install alongside dsc-v4-core-helpers.yaml. Delete any leftover
+#  v2.3 light definitions first (dup unique_ids create silent *_2 twins).
+# ==================================================================
+
+sensor:
+  - platform: history_stats
+    name: "DSC Lights On Today 2x4"
+    unique_id: dsc_lights_on_today_2x4
+    entity_id: light.dsc_hub_sf1000_dimmer
+    state: "on"
+    type: time
+    start: "{{ today_at('00:00') }}"
+    end: "{{ now() }}"
+
+  - platform: history_stats
+    name: "DSC Lights On Today 4x8"
+    unique_id: dsc_lights_on_today_4x8
+    entity_id: binary_sensor.dsc_hub_4x8_window_open
+    state: "on"
+    type: time
+    start: "{{ today_at('00:00') }}"
+    end: "{{ now() }}"
+
+template:
+  - binary_sensor:
+      - name: "DSC Clone Dark Period Violation"
+        unique_id: dsc_clone_dark_period_violation
+        device_class: problem
+        icon: mdi:weather-night-partly-cloudy
+        state: >
+          {{ is_state('light.dsc_hub_sf1000_dimmer','on')
+             and is_state('binary_sensor.dsc_hub_2x4_window_open','off') }}
+        availability: >
+          {{ has_value('light.dsc_hub_sf1000_dimmer')
+             and has_value('binary_sensor.dsc_hub_2x4_window_open') }}
+
+  - sensor:
+      - name: "DSC Clone Expected Light Hours"
+        unique_id: dsc_clone_expected_light_hours
+        unit_of_measurement: "h"
+        state_class: measurement
+        icon: mdi:sun-clock
+        state: >
+          {% if is_state('select.dsc_hub_clone_mode','Off') %}
+            0
+          {% elif is_state('select.dsc_hub_clone_photoperiod','Follow 4x8') %}
+            {{ states('sensor.dsc_expected_light_hours') | float(0) | round(0) }}
+          {% else %}
+            {{ states('number.dsc_hub_clone_light_hours') | float(18) | round(0) }}
+          {% endif %}
+
+      - name: "DSC Lights Deviation Today"
+        unique_id: dsc_lights_deviation_today
+        unit_of_measurement: "h"
+        state_class: measurement
+        icon: mdi:scale-balance
+        state: >
+          {{ (states('sensor.dsc_lights_on_today_2x4') | float(0)
+              - states('sensor.dsc_clone_expected_light_hours') | float(0)) | round(2) }}
+        availability: >
+          {{ has_value('sensor.dsc_lights_on_today_2x4')
+             and has_value('sensor.dsc_clone_expected_light_hours') }}

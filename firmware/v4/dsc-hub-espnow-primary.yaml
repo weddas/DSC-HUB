@@ -11,6 +11,13 @@
 #    • BROADCASTS telemetry (vitals / config / soil) so the panel runs
 #      fully independent of Home Assistant.
 #
+#  Dual path (neither is sole dependency):
+#    • ESP-NOW: panel ⇄ hub works with HA down (vitals/config/cmds).
+#    • HA API: hub entities stay the source of truth for dashboards /
+#      Sonoffs; every ESP-NOW apply drives the SAME entity actions HA
+#      uses, and HA entity changes rebroadcast to the panel via
+#      tx_panel_sync so glass and dashboard cannot drift.
+#
 #  INTEGRATION (already wired in dsc-hub-v4_0.yaml):
 #      packages:
 #        espnow_control: !include dsc-hub-espnow-primary.yaml
@@ -26,8 +33,8 @@
 # ==================================================================
 substitutions:
   panel_mac: "30:76:F5:E9:22:0C"      # DSC-CYD#1 / DSC-CONTROL
-  # MUST match dsc-control.yaml espnow_cmd_tag (0xABCD = 43981)
-  espnow_cmd_tag: "43981"
+  # MUST match dsc-control.yaml. Not the default 0xABCD / 43981.
+  espnow_cmd_tag: "54727"             # 0xD5C7
 
 espnow:
   # Merged into the hub's existing espnow: block (peers list concatenates,
@@ -42,14 +49,32 @@ espnow:
         uint16_t tag = (uint16_t)(data[8] | (data[9] << 8));
         if (tag != (uint16_t) ${espnow_cmd_tag}) return;               // auth/sanity
         uint16_t seq = (uint16_t)(data[10] | (data[11] << 8));
-        if (seq == id(cmd_last_seq)) return;                           // dedupe repeats
-        id(cmd_last_seq) = seq;
+        // Dedupe ESP-NOW retries (identical seq within 500 ms). Do NOT
+        // drop the same seq after a long gap — a panel reboot resets
+        // cmd_tx_seq (often back through 0) and the first tap would
+        // otherwise be silently ignored while hub still held that seq.
+        {
+          uint32_t now = millis();
+          if (seq == id(cmd_last_seq) && (now - id(cmd_last_ms)) < 500u) return;
+          id(cmd_last_seq) = seq;
+          id(cmd_last_ms) = now;
+        }
         id(cmd_fresh) = true;                                          // a real command -> echo state back
         uint8_t op = data[2];
         int32_t val = (int32_t)((uint32_t)data[4] | ((uint32_t)data[5] << 8)
                               | ((uint32_t)data[6] << 16) | ((uint32_t)data[7] << 24));
         float fv = val / 100.0f;
         auto clampi = [](int v, int lo, int hi){ return v < lo ? lo : (v > hi ? hi : v); };
+        // Fan/SF live-adjust: drop Full Auto and engage Manual via the
+        // HA-facing entities (publish_state / turn_on) so the dashboard
+        // cannot keep showing Full Auto ON while the panel owns fans.
+        auto eng_manual_fans = [&](){
+          if (id(full_auto_mode)) {
+            id(full_auto_mode) = false;
+            id(full_auto_switch).publish_state(false);
+          }
+          if (!id(local_manual_mode).state) id(local_manual_mode).turn_on();
+        };
         // SAFETY: the >35 °C failsafe and the sensor watchdog own the outputs.
         // The panel may NOT drive actuators (fans/SF, ops 25-29) or appliance
         // demands (ops 12-17) while either is latched — exactly as HA cannot.
@@ -92,12 +117,17 @@ espnow:
           case 23: id(clone_photo_select).make_call().set_index((size_t) clampi(val,0,1)).perform(); break;
           case 24: id(priority_tent_select).make_call().set_index((size_t) clampi(val,0,1)).perform(); break;
           // ----- fans: mirror the OLED live-adjust (engage Manual, drive fan) -----
-          case 25: { int v=clampi(val,0,100); id(local_target_out)=v;          id(full_auto_mode)=false; if(!id(local_manual_mode).state) id(local_manual_mode).turn_on(); auto c=id(fan_exhaust_out).make_call();    c.set_state(v>0); c.set_speed(v); c.perform(); break; }
-          case 26: { int v=clampi(val,0,100); id(local_target_recirc)=v;       id(full_auto_mode)=false; if(!id(local_manual_mode).state) id(local_manual_mode).turn_on(); auto c=id(fan_exhaust_recirc).make_call(); c.set_state(v>0); c.set_speed(v); c.perform(); break; }
-          case 27: { int v=clampi(val,0,100); id(local_target_intake_main)=v;  id(full_auto_mode)=false; if(!id(local_manual_mode).state) id(local_manual_mode).turn_on(); auto c=id(fan_intake_main).make_call();    c.set_state(v>0); c.set_speed(v); c.perform(); break; }
-          case 28: { int v=clampi(val,0,100); id(local_target_intake_clone)=v; id(full_auto_mode)=false; if(!id(local_manual_mode).state) id(local_manual_mode).turn_on(); auto c=id(fan_intake_clone).make_call();   c.set_state(v>0); c.set_speed(v); c.perform(); break; }
-          // ----- SF1000: mirror the OLED light adjust (Manual Light Hold) -----
-          case 29: { int v=clampi(val,0,100); id(local_target_sf1000)=v; if(!id(manual_light_hold)) id(manual_light_hold)=true;
+          case 25: { int v=clampi(val,0,100); id(local_target_out)=v;          eng_manual_fans(); auto c=id(fan_exhaust_out).make_call();    c.set_state(v>0); c.set_speed(v); c.perform(); break; }
+          case 26: { int v=clampi(val,0,100); id(local_target_recirc)=v;       eng_manual_fans(); auto c=id(fan_exhaust_recirc).make_call(); c.set_state(v>0); c.set_speed(v); c.perform(); break; }
+          case 27: { int v=clampi(val,0,100); id(local_target_intake_main)=v;  eng_manual_fans(); auto c=id(fan_intake_main).make_call();    c.set_state(v>0); c.set_speed(v); c.perform(); break; }
+          case 28: { int v=clampi(val,0,100); id(local_target_intake_clone)=v; eng_manual_fans(); auto c=id(fan_intake_clone).make_call();   c.set_state(v>0); c.set_speed(v); c.perform(); break; }
+          // ----- SF1000: latch Manual Light Hold via the HA entity -----
+          case 29: { int v=clampi(val,0,100); id(local_target_sf1000)=v;
+                     id(num_sf1000_target).publish_state((float) v);
+                     if (!id(manual_light_hold)) {
+                       id(manual_light_hold)=true;
+                       id(manual_light_hold_switch).publish_state(true);
+                     }
                      id(light_write_guard_until)=millis()+1000;
                      if(v>0){ auto l=id(light_sf1000).turn_on(); l.set_brightness(v/100.0f); l.set_transition_length(200); l.perform(); }
                      else id(light_sf1000).turn_off().perform(); break; }
@@ -149,6 +179,10 @@ globals:
     type: uint16_t
     restore_value: false
     initial_value: '0xFFFF'
+  - id: cmd_last_ms
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
   - id: tx_seq
     type: uint8_t
     restore_value: false
@@ -161,8 +195,17 @@ globals:
 script:
   # ---- telemetry senders — driven by the interval below AND re-fired right
   #      after each applied command (see on_receive) for instant panel feedback.
+  # ---- Coalesced HA→panel sync: any HA entity change calls this; rapid
+  #      slider drags restart the 150 ms delay so we send once at the end.
+  - id: tx_panel_sync
+    mode: restart
+    then:
+      - delay: 150ms
+      - script.execute: tx_vitals
+      - script.execute: tx_config
   # ---- VITALS (0xD1) — live values ----
   - id: tx_vitals
+    mode: single
     then:
       - espnow.send:
           address: ${panel_mac}
@@ -239,12 +282,33 @@ script:
             i16(id(rz_moist_4).state,10); i16(id(rz_ec_4).state,1); i16(id(rz_ph_4).state,100); i16(id(rz_n_4).state,1); i16(id(rz_p_4).state,1); i16(id(rz_k_4).state,1);
             return p;
 
+  # ---- PLANT NAMES (0xD4) — 4×16-byte labels for the soil tab ----
+  # packet_transport cannot carry text, so names ride HA→hub cache then
+  # this ESP-NOW relay. Panel stays HA-independent for display; pot NVS
+  # remains the permanent store when you rename in Home Assistant.
+  - id: tx_names
+    mode: restart
+    then:
+      - delay: 50ms
+      - espnow.send:
+          address: ${panel_mac}
+          wait_for_sent: false
+          data: !lambda |-
+            std::vector<uint8_t> p; p.reserve(66);
+            p.push_back(0xD4); p.push_back(0x01);
+            auto put = [&](const std::string& s){
+              for (size_t i = 0; i < 16; i++) p.push_back(i < s.size() ? (uint8_t) s[i] : 0);
+            };
+            put(id(plant_name_1)); put(id(plant_name_2));
+            put(id(plant_name_3)); put(id(plant_name_4));
+            return p;
+
 # Drive the periodic broadcasts (the on_receive echo covers instant feedback).
 interval:
   - interval: 2s
     then: [{script.execute: tx_vitals}]
   - interval: 10s
-    then: [{script.execute: tx_config}, {script.execute: tx_soil}]
+    then: [{script.execute: tx_config}, {script.execute: tx_soil}, {script.execute: tx_names}]
 
 # Full soil relay: receive the pots' extra fields (they already send temp +
 # moisture; the pot patch adds EC/pH/N/P/K to their sensors: list). These

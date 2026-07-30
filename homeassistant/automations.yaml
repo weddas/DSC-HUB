@@ -1,0 +1,341 @@
+# ==================================================================
+#  DSC-HUB v4 · AUTOMATIONS
+#  ------------------------------------------------------------------
+#  Ported from v2.4.1 Rev B. Demand-follower pattern unchanged —
+#  Sonoffs remain HA-actuated (ESP8285 has no ESP-NOW).
+#
+#  v4 notes:
+#   * Root-zone alert already covers all four pot ESP-NOW links.
+#   * Mat scribe logs coldest plausible pot when available.
+#   * Notifier target is notify.chriss_iphone_max — change if yours differs.
+#   * Keep dsc_hub_offline_safe_off from your live install if present
+#     (not reproduced here — already canonical in your HA).
+# ==================================================================
+
+
+# ==================================================================
+#  A.  DEMAND FOLLOWERS
+# ==================================================================
+
+- id: dsc_follower_humidifier
+  alias: "DSC-HUB · Humidifier follows Humidifier Demand"
+  description: "Relay mirrors hub demand. Safe-OFF on hub dropout. Resyncs on HA restart + node reconnect."
+  mode: restart
+  triggers:
+    - trigger: state
+      entity_id: switch.dsc_hub_humidifier_demand
+    - trigger: homeassistant
+      event: start
+    - trigger: state
+      entity_id: switch.dsc_humidifier_main_relay
+      from: "unavailable"
+      for: "00:00:05"
+  actions:
+    - choose:
+        - conditions:
+            - condition: state
+              entity_id: switch.dsc_hub_humidifier_demand
+              state: "on"
+          sequence:
+            - action: switch.turn_on
+              target:
+                entity_id: switch.dsc_humidifier_main_relay
+      default:
+        - action: switch.turn_off
+          target:
+            entity_id: switch.dsc_humidifier_main_relay
+
+- id: dsc_follower_dehumidifier
+  alias: "DSC-HUB · Dehumidifier follows Dehumidifier Demand"
+  description: "Relay mirrors hub demand. Safe-OFF on hub dropout. Resyncs on HA restart + node reconnect."
+  mode: restart
+  triggers:
+    - trigger: state
+      entity_id: switch.dsc_hub_dehumidifier_demand
+    - trigger: homeassistant
+      event: start
+    - trigger: state
+      entity_id: switch.dsc_de_humidifier_main_relay
+      from: "unavailable"
+      for: "00:00:05"
+  actions:
+    - choose:
+        - conditions:
+            - condition: state
+              entity_id: switch.dsc_hub_dehumidifier_demand
+              state: "on"
+          sequence:
+            - action: switch.turn_on
+              target:
+                entity_id: switch.dsc_de_humidifier_main_relay
+      default:
+        - action: switch.turn_off
+          target:
+            entity_id: switch.dsc_de_humidifier_main_relay
+
+- id: dsc_follower_heater
+  alias: "DSC-HUB · Heater follows Heater Demand"
+  description: "Relay mirrors hub demand. Safe-OFF on hub dropout. Resyncs on HA restart + node reconnect."
+  mode: restart
+  triggers:
+    - trigger: state
+      entity_id: switch.dsc_hub_heater_demand
+    - trigger: homeassistant
+      event: start
+    - trigger: state
+      entity_id: switch.dsc_heater_main_relay
+      from: "unavailable"
+      for: "00:00:05"
+  actions:
+    - choose:
+        - conditions:
+            - condition: state
+              entity_id: switch.dsc_hub_heater_demand
+              state: "on"
+          sequence:
+            - action: switch.turn_on
+              target:
+                entity_id: switch.dsc_heater_main_relay
+      default:
+        - action: switch.turn_off
+          target:
+            entity_id: switch.dsc_heater_main_relay
+
+- id: dsc_follower_grow_mat
+  alias: "DSC-HUB · Grow Mat follows Grow Mat Demand"
+  description: "Relay mirrors hub demand. Closed-loop on multi-pot root-zone temp."
+  mode: restart
+  triggers:
+    - trigger: state
+      entity_id: switch.dsc_hub_grow_mat_demand
+    - trigger: homeassistant
+      event: start
+    - trigger: state
+      entity_id: switch.dsc_heatmat_main_relay
+      from: "unavailable"
+      for: "00:00:05"
+  actions:
+    - choose:
+        - conditions:
+            - condition: state
+              entity_id: switch.dsc_hub_grow_mat_demand
+              state: "on"
+          sequence:
+            - action: switch.turn_on
+              target:
+                entity_id: switch.dsc_heatmat_main_relay
+      default:
+        - action: switch.turn_off
+          target:
+            entity_id: switch.dsc_heatmat_main_relay
+
+# ==================================================================
+#  B.  ALERTS
+# ==================================================================
+
+- id: dsc_v24_alert_clone_dark_violation
+  alias: "DSC-HUB · ALERT Clone dark-period violation"
+  description: "SF1000 commanded on outside the 2x4 window for >60s. Flowering herm risk."
+  mode: single
+  triggers:
+    - trigger: state
+      entity_id: binary_sensor.dsc_clone_dark_period_violation
+      to: "on"
+      for: "00:01:00"
+  actions:
+    - action: notify.chriss_iphone_max
+      data:
+        title: "⚠ CLONE TENT — LIGHT IN DARK PERIOD"
+        message: >-
+          SF1000 is ON at {{ (state_attr('light.dsc_hub_sf1000_dimmer','brightness')
+          | float(0) / 255 * 100) | round(0) }}% but the 2x4 window is shut.
+          Manual Light Hold is
+          {{ 'ON — that is almost certainly it' if is_state('switch.dsc_hub_manual_light_hold','on')
+             else 'off' }}.
+    - action: persistent_notification.create
+      data:
+        title: "⚠ CLONE TENT — LIGHT IN DARK PERIOD"
+        notification_id: dsc_clone_dark_violation
+        message: >-
+          The SF1000 is commanded ON but the 2x4 window is shut.
+          Brightness {{ (state_attr('light.dsc_hub_sf1000_dimmer','brightness') | float(0)
+          / 255 * 100) | round(0) }}%.
+
+          Most likely cause: Manual Light Hold is engaged
+          (currently {{ 'ON' if is_state('switch.dsc_hub_manual_light_hold','on') else 'off' }}).
+          It self-heals at the next clone lights-off boundary, but that
+          may be a full cycle away.
+
+          Check: Manual Light Hold · Master Manual Takeover
+          ({{ 'ON' if is_state('switch.dsc_hub_manual_takeover','on') else 'off' }}) ·
+          Auto Photoperiod
+          ({{ 'armed' if is_state('switch.dsc_hub_auto_photoperiod','on') else 'DISARMED' }}).
+    - action: logbook.log
+      data:
+        name: "Grow log"
+        entity_id: input_boolean.dsc_event_log
+        message: "⚠ Clone dark-period violation — SF1000 on outside the 2x4 window"
+
+- id: dsc_v24_alert_clone_dark_violation_clear
+  alias: "DSC-HUB · ALERT Clone dark-period violation cleared"
+  mode: single
+  triggers:
+    - trigger: state
+      entity_id: binary_sensor.dsc_clone_dark_period_violation
+      to: "off"
+  actions:
+    - action: persistent_notification.dismiss
+      data:
+        notification_id: dsc_clone_dark_violation
+
+- id: dsc_v24_alert_rootzone_fault
+  alias: "DSC-HUB · ALERT Root-zone probe fault (mat on air fallback)"
+  description: "All pot probes stale >5min on both paths. Mat reverts to clone-air rung."
+  mode: single
+  triggers:
+    - trigger: state
+      entity_id: binary_sensor.dsc_hub_root_zone_sensor_fault
+      to: "on"
+      for: "00:10:00"
+  actions:
+    - action: persistent_notification.create
+      data:
+        title: "Root-zone probes offline — grow mat degraded"
+        notification_id: dsc_rootzone_fault
+        message: >-
+          No pot soil-temperature probe has delivered a plausible reading
+          for over 5 minutes — on the ESP-NOW direct links OR the HA
+          path — so the closed-loop grow mat has fallen back to clone AIR
+          temperature. The mat still works — it is just heating to the
+          wrong target.
+
+          Soil temps: P1 {{ states('sensor.dsc_pot1_soil_temperature') }}°C ·
+          P2 {{ states('sensor.dsc_pot2_soil_temperature') }}°C ·
+          P3 {{ states('sensor.dsc_pot3_soil_temperature') }}°C ·
+          P4 {{ states('sensor.dsc_pot4_soil_temperature') }}°C.
+
+          ESP-NOW links:
+          P1 {{ states('binary_sensor.dsc_hub_pot1_esp_now_link') }} ·
+          P2 {{ states('binary_sensor.dsc_hub_pot2_esp_now_link') }} ·
+          P3 {{ states('binary_sensor.dsc_hub_pot3_esp_now_link') }} ·
+          P4 {{ states('binary_sensor.dsc_hub_pot4_esp_now_link') }}.
+
+          Likely causes, cheapest first:
+            1. Router AP channel hopped (splits ESP-NOW) AND HA is down.
+            2. All pot nodes offline (check WiFi RSSI / power).
+            3. RS485 probe faults.
+
+          Clears automatically when readings resume.
+    - action: logbook.log
+      data:
+        name: "Grow log"
+        entity_id: input_boolean.dsc_event_log
+        message: "Root-zone probes stale — grow mat fell back to clone-air control"
+
+- id: dsc_v24_alert_rootzone_fault_clear
+  alias: "DSC-HUB · ALERT Root-zone probe recovered"
+  mode: single
+  triggers:
+    - trigger: state
+      entity_id: binary_sensor.dsc_hub_root_zone_sensor_fault
+      to: "off"
+      for: "00:01:00"
+  actions:
+    - action: persistent_notification.dismiss
+      data:
+        notification_id: dsc_rootzone_fault
+    - action: logbook.log
+      data:
+        name: "Grow log"
+        entity_id: input_boolean.dsc_event_log
+        message: "Root-zone probe recovered — closed-loop grow mat resumed"
+
+# ==================================================================
+#  C.  SCRIBE — grow-log events
+# ==================================================================
+
+- id: dsc_v24_scribe_mat_closed_loop
+  alias: "DSC-HUB · Scribe Grow mat (closed-loop root zone)"
+  mode: queued
+  max: 10
+  triggers:
+    - trigger: state
+      entity_id: switch.dsc_hub_grow_mat_demand
+      to: "on"
+      id: "on"
+    - trigger: state
+      entity_id: switch.dsc_hub_grow_mat_demand
+      to: "off"
+      id: "off"
+  actions:
+    - action: logbook.log
+      data:
+        name: "Grow log"
+        entity_id: input_boolean.dsc_event_log
+        message: >-
+          {% set ns = namespace(vals=[]) %}
+          {% for e in ['sensor.dsc_pot1_soil_temperature','sensor.dsc_pot2_soil_temperature',
+                       'sensor.dsc_pot3_soil_temperature','sensor.dsc_pot4_soil_temperature'] %}
+            {% set v = states(e) | float(none) %}
+            {% if v is not none and 5 <= v <= 45 %}{% set ns.vals = ns.vals + [v] %}{% endif %}
+          {% endfor %}
+          {% set rz = (ns.vals | min) if ns.vals else 'n/a' %}
+          {% set blind = is_state('binary_sensor.dsc_hub_root_zone_sensor_fault','on') %}
+          {% if trigger.id == 'on' %}
+            Grow mat ON — coldest root zone {{ rz }}°C
+            (below {{ states('number.dsc_hub_mat_root_zone_low') }}°C){{ ' [AIR FALLBACK — probes blind]' if blind else '' }}
+          {% else %}
+            Grow mat off — coldest root zone {{ rz }}°C
+            (reached {{ states('number.dsc_hub_mat_root_zone_high') }}°C){{ ' [AIR FALLBACK]' if blind else '' }}
+          {% endif %}
+
+- id: dsc_v24_scribe_clone_photoperiod
+  alias: "DSC-HUB · Scribe Clone photoperiod boundaries"
+  mode: queued
+  max: 5
+  triggers:
+    - trigger: state
+      entity_id: binary_sensor.dsc_hub_2x4_window_open
+      to: "on"
+      id: open
+    - trigger: state
+      entity_id: binary_sensor.dsc_hub_2x4_window_open
+      to: "off"
+      id: shut
+  actions:
+    - action: logbook.log
+      data:
+        name: "Grow log"
+        entity_id: input_boolean.dsc_event_log
+        message: >-
+          {% if trigger.id == 'open' %}
+            2x4 sunrise — SF1000 ramping to {{ states('number.dsc_hub_sf1000_target_brightness') }}%
+            over {{ states('number.dsc_hub_sunrise_duration') }} min
+            ({{ states('select.dsc_hub_clone_photoperiod') }})
+          {% else %}
+            2x4 lights-off — SF1000 dark.
+            On today: {{ states('sensor.dsc_lights_on_today_2x4') | float(0) | round(2) }}h
+            vs {{ states('sensor.dsc_clone_expected_light_hours') }}h planned
+          {% endif %}
+
+- id: dsc_v24_scribe_node_test_mode
+  alias: "DSC-HUB · Scribe Appliance node test mode"
+  mode: queued
+  max: 10
+  triggers:
+    - trigger: state
+      entity_id:
+        - binary_sensor.dsc_heater_test_mode
+        - binary_sensor.dsc_heatmat_test_mode
+        - binary_sensor.dsc_humidifier_test_mode
+        - binary_sensor.dsc_de_humidifier_test_mode
+      to: ["on", "off"]
+  actions:
+    - action: logbook.log
+      data:
+        name: "Grow log"
+        entity_id: input_boolean.dsc_event_log
+        message: >-
+          {{ trigger.to_state.attributes.friendly_name }}
+          {{ 'ENGAGED — node ignores hub demand for up to 10 min' if trigger.to_state.state == 'on'
+             else 'ended — node back under hub control' }}
