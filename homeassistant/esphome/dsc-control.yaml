@@ -1,7 +1,8 @@
 # DSC-CONTROL — HA stub (pulls panel body from GitHub; glyphs via sibling include)
-# api/ota/wifi live in dsc-control-common.yaml via ${api_key_val} etc.
-# "Unable to connect… api section" ⇒ device unreachable or key mismatch,
-# not a missing api: block. Recovery: firmware/v4/README.md (Panel HA API).
+# api/ota/wifi live in dsc-control-common.yaml. Since 4.0.9 the panel API is
+# plaintext (api_key_val unused) and mDNS is off — add by IP with no key.
+# "Unable to connect… api section" ⇒ unreachable host or stale encrypted
+# HA entry, not a missing api: block. Recovery: firmware/v4/README.md.
 substitutions:
   name: dsc-control
   friendly_name: DSC-CONTROL

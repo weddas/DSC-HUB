@@ -85,7 +85,7 @@ mushroom · apexcharts-card · power-flow-card-plus · sankey-chart · plotly-gr
 | Piece | Version |
 |---|---|
 | Hub | `4.0` (+ mat vote switches) |
-| Panel | **`4.0.8`** |
+| Panel | **`4.0.9`** |
 | Dashboard | UX **v0.2** |
 | `espnow_cmd_tag` | `54727` (`0xD5C7`) on hub **and** panel |
 

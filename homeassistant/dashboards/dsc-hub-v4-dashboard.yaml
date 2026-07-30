@@ -19,7 +19,7 @@
 #  v4 DELTA vs v2.4.1:
 #   * Plant / stage entity_ids are canonical:
 #       text.dsc_potN_plant_name · select.dsc_potN_growth_stage
-#   * System expects hub firmware **4.0** (panel diagnostic **4.0.8**)
+#   * System expects hub firmware **4.0** (panel diagnostic **4.0.9**)
 #   * Home + System surfaces DSC-CONTROL (panel online, free heap,
 #     largest free block) — dual-path health alongside pot ESP-NOW links
 #   * Mat / root-zone copy: all four pots, plausibility 5–45 °C,

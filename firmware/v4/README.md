@@ -15,7 +15,7 @@ Package bodies are remote-git safe (no `!secret`). Stubs pass credentials (and h
 
 Pots (`dsc-pot-common` **4.0.1+**): each soil channel has **Cal … Offset** / **Cal … Scale** config numbers (NVS). Formula `raw * scale + offset` applies before range/median and feeds HA + ESP-NOW. **Reset Sensor Calibration** restores defaults.
 
-## Panel (DSC-CONTROL **4.0.8**)
+## Panel (DSC-CONTROL **4.0.9**)
 
 Package body: [`dsc-control-common.yaml`](dsc-control-common.yaml).
 
@@ -26,20 +26,21 @@ Package body: [`dsc-control-common.yaml`](dsc-control-common.yaml).
 | Demand / takeover gate | Confirm → Engage (not one stray tap) |
 | Connections | Wi‑Fi channel; ESP-NOW RX age + TX seq |
 | Pulse VPD trend | 12×5 min ring → one label (no canvas charts) |
+| HA API | **Plaintext** (no Noise); **mDNS off** — add by IP only |
 
-After UI flashes: watch serial `boot` / `heap` lines. If the panel boot-loops, use **USB** not OTA until `DSC-CONTROL 4.0.8 up — free_heap=…` prints cleanly. See [`../_history/v4/crash-logs/`](../_history/v4/crash-logs/).
+After UI flashes: watch serial `boot` / `heap` lines. If the panel boot-loops, use **USB** not OTA until `DSC-CONTROL 4.0.9 up — free_heap=…` prints cleanly. See [`../_history/v4/crash-logs/`](../_history/v4/crash-logs/).
 
 ### Panel HA API reconnect
 
-The `api:` block lives in [`dsc-control-common.yaml`](dsc-control-common.yaml) (`encryption.key: ${api_key_val}` from the stub’s `!secret dsc_control_api_key`). Same pattern as hub/pots. ESPHome’s “Unable to connect… includes an `api` section” toast is **generic** — it does **not** mean the YAML is missing `api:`.
+The `api:` block lives in [`dsc-control-common.yaml`](dsc-control-common.yaml). **v4.0.9+ has no Noise encryption** — LVGL RAM left the Noise handshake failing (`HANDSHAKESTATE_SETUP_FAILED`) and the teardown path double-freed the heap (reboot whenever HA probed). mDNS is **disabled** (setup OOM left it FAILED forever). ESPHome’s “Unable to connect… includes an `api` section” toast is **generic** — it does **not** mean the YAML is missing `api:`.
 
 | Check | What to do |
 |---|---|
-| Panel boot-looping / no Wi‑Fi | USB flash; serial must show `DSC-CONTROL 4.0.8 up — free_heap=…`. OTA will not recover a looping board. |
-| Host / mDNS | Prefer IP: ESPHome Logs → use panel IP, or HA → add/reconfigure `192.168.x.x` not only `dsc-control.local`. |
-| Encryption key | Paste **`dsc_control_api_key`** from `/config/esphome/secrets.yaml` (include trailing `=`). Must match the key compiled into the flash. |
-| Stale `dsc-cyd1` | Delete old **dsc-cyd1** ESPHome device in HA Integrations if present; re-add **dsc-control** with the current key. |
-| Secrets on HA | Confirm `dsc_control_api_key` / `_ota_password` / `_ap_password` exist (aliases `dsc_cyd1_*` are the same values). |
+| Panel boot-looping / no Wi‑Fi | USB flash; serial must show `DSC-CONTROL 4.0.9 up — free_heap=…`. OTA will not recover a looping board. |
+| Host / mDNS | **IP only** (Connections screen or serial `STA IP …`). Do not use `dsc-control.local`. |
+| Encryption | Leave the key **blank** when adding/reconfiguring. If HA still has an old encrypted entry, **delete it** and re-add. |
+| Stale `dsc-cyd1` | Delete old **dsc-cyd1** ESPHome device in HA Integrations if present. |
+| Secrets on HA | Still need `dsc_control_ota_password` / `_ap_password` for Install/fallback AP (`dsc_control_api_key` unused by panel firmware). |
 | Stub on HA | `/config/esphome/dsc-control.yaml` should match [`homeassistant/esphome/dsc-control.yaml`](../../homeassistant/esphome/dsc-control.yaml); Validate before Install. |
 
 ESP-NOW (glass ↔ hub) does **not** need the HA API. Fix API only for OTA, diagnostics, and HA time backup.

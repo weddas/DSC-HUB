@@ -1,7 +1,7 @@
 # hub_cmd control (build_panel_control)
 # ESP-NOW-fed (build_panel_data)
 # ==================================================================
-#  DSC-CONTROL — PACKAGE BODY (firmware v4.0.8, ESP-NOW primary)
+#  DSC-CONTROL — PACKAGE BODY (firmware v4.0.9, ESP-NOW primary)
 #  Flash via stub dsc-control.yaml (local) or
 #  homeassistant/esphome/dsc-control.yaml (git-pull).
 #  Remote-git safe: no !secret — stub passes credentials + hub_mac / tag.
@@ -35,6 +35,7 @@
 #    * Tap-challenge gate for Manual Takeover + appliance demands
 #    * Connections: Wi-Fi channel + ESP-NOW RX age + TX seq
 #    * Pulse 1h VPD micro-trend (12-slot ring, one label — no canvas)
+#  v4.0.9: plaintext HA API + mDNS off (Noise handshake crashed the glass).
 #  STILL DEFERRED: per-device power pages, VPD curve editor, canvas charts.
 #
 #  RAM RULE (crash postmortems v4.0–4.0.2): never call lv_label_set_text
@@ -42,18 +43,19 @@
 #  Watch heap INFO lines — largest_block < 12 KB means stop adding widgets.
 #
 #  BEFORE FLASHING:
-#    1. secrets.yaml needs dsc_control_api_key / _ota_password /
-#       _ap_password (dsc_cyd1_* aliases are the same panel keys).
+#    1. secrets.yaml needs dsc_control_ota_password / _ap_password
+#       (api_key kept for stub symmetry; panel API is plaintext since 4.0.9).
 #    2. First flash / boot-loop recovery = USB (not OTA).
 #    3. After HA adopts it: Settings -> Devices -> ESPHome ->
 #       dsc-control -> CONFIGURE -> tick "Allow the device to perform
 #       Home Assistant actions" (needed for homeassistant time sync).
+#       Add by IP with NO encryption key (mDNS is disabled).
 #
 #  HA "Unable to connect… includes an `api` section" is MISLEADING —
-#  this file already has `api:` + encryption. That toast means the
-#  native API socket failed (device offline/boot-looping, wrong host,
-#  or encryption key mismatch after rename/reflash). See firmware/v4
-#  README "Panel HA API reconnect".
+#  this file has `api:` (v4.0.9: plaintext — see api: block). That toast
+#  means the native API socket failed (offline/boot-loop, wrong host,
+#  or HA still offering a Noise key after we dropped encryption). See
+#  firmware/v4 README "Panel HA API reconnect".
 #
 #  BENCH-CHECK MATRIX (dual-USB boards vary by batch):
 #    * Colours look like a photo negative -> set invert_colors: false.
@@ -81,7 +83,7 @@ esphome:
     # the dashboard and HA's device page both described DSC-CONTROL as
     # being the DSC HUB. Purely cosmetic, but confusing enough to matter.
     name: "digital_emotions.dsc-control"
-    version: "4.0.8"
+    version: "4.0.9"
   on_boot:
     # Seed the 0xDC command seq from hardware RNG so a panel reboot is
     # unlikely to replay the hub's last-seen seq even before the hub's
@@ -89,13 +91,13 @@ esphome:
     - priority: 600
       then:
         - lambda: 'id(cmd_tx_seq) = (uint16_t) esp_random();'
-    # v4.0.8 — log heap at end of setup so boot-loop triage is visible
-    # before the first refresh_ui. If this never prints, the crash is
-    # earlier (OTA / Wi-Fi / LVGL init) — use USB serial, not OTA.
+    # Log heap at end of setup so boot-loop triage is visible before the
+    # first refresh_ui. If this never prints, the crash is earlier
+    # (OTA / Wi-Fi / LVGL init) — use USB serial, not OTA.
     - priority: -100
       then:
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 4.0.8 up — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 4.0.9 up — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
 
@@ -170,17 +172,15 @@ esp32:
       CONFIG_ESP_WIFI_MGMT_SBUF_NUM: "8"
       # ----------------------------------------------------------
       #  LWIP. Stock is sized for a device serving many sockets. This
-      #  one holds a single HA API connection plus mDNS.
+      #  one holds a single HA API connection (mDNS is disabled).
       # ----------------------------------------------------------
       # NB: CONFIG_LWIP_MAX_SOCKETS is deliberately NOT set here.
       # ESPHome auto-sizes it from the components that actually claim
-      # sockets (api, ota, mdns) and warns if a hand-set value is too
-      # low; the socket pool is a handful of small structs anyway, so
-      # there is nothing worth winning and a real risk of exhaustion.
-      CONFIG_LWIP_MAX_ACTIVE_TCP: "8"
-      CONFIG_LWIP_MAX_LISTENING_TCP: "8"
+      # sockets (api, ota) and warns if a hand-set value is too low.
+      CONFIG_LWIP_MAX_ACTIVE_TCP: "4"
+      CONFIG_LWIP_MAX_LISTENING_TCP: "4"
       # Send buffer and receive window, per connection. Stock 5744
-      # (4 x MSS). Halving costs API throughput nobody will notice.
+      # (4 x MSS). Halved — enough for API + OTA without Noise overhead.
       CONFIG_LWIP_TCP_SND_BUF_DEFAULT: "2880"
       CONFIG_LWIP_TCP_WND_DEFAULT: "2880"
       # TCP/IP task mailbox: stock 32 pointers deep.
@@ -198,9 +198,17 @@ debug:
   update_interval: 60s
 
 # Secrets come from the stub as substitutions (remote-git safe).
+#
+# v4.0.9 — Noise encryption DISABLED on this panel only.
+# LVGL leaves ~58 KB free; HA's Noise handshake then fails with
+# HANDSHAKESTATE_SETUP_FAILED and the teardown path double-frees the
+# heap (tlsf "block already marked as free") → reboot. Plaintext API on
+# the LAN is enough for OTA / clock backup; ESP-NOW stays the control
+# plane. Hub/pots keep encryption. Stub still defines api_key_val for
+# symmetry — unused here. Re-add in HA with NO encryption key.
 api:
-  encryption:
-    key: ${api_key_val}
+  # HA integration + one log/OTA client. Keep low — this board is RAM-tight.
+  max_connections: 2
   # Fleet rule (v2.4.1): never self-reboot because HA went away. A
   # panel with stale data beats a panel mid-boot-loop.
   reboot_timeout: 0s
@@ -235,8 +243,21 @@ wifi:
             id(wifi_channel) = ch;
           }
         }
+    # wifi_info IP text sensor updates just after associate — log it so
+    # USB/serial triage shows the host for HA add (mDNS is off).
+    - delay: 500ms
+    - lambda: |-
+        const char *ip = id(wifi_ip_ts).state.empty() ? "(pending)" : id(wifi_ip_ts).state.c_str();
+        ESP_LOGI("wifi", "STA IP %s — HA API :6053 plaintext (mDNS off)", ip);
   on_disconnect:
     - lambda: 'id(wifi_conn) = false;'
+
+# v4.0.9 — mDNS disabled. At peak setup() free heap was ~2 KB; the mDNS
+# task stack failed to allocate, the component stuck FAILED, and
+# dsc-control.local never worked. Nest already forces IP adoption; skip
+# the doomed init instead of burning RAM and leaving an error flag.
+mdns:
+  disabled: true
 
 # RAM RECOVERY (v4.0.1): captive_portal removed. It pulls in the async
 # web server + DNS server purely to serve a WiFi-setup page on the
@@ -2934,7 +2955,7 @@ lvgl:
                     - label: {text: "\U000F0142", text_font: mdi_22, align: RIGHT_MID, x: -6, text_color: 0x5A6472}
                   on_click:
                     - lvgl.page.show: page_set_panel
-              - label: {text: "DSC-CONTROL v4.0.8  ·  ESP-NOW primary", text_font: f_small, text_color: 0x3A4550, pad_top: 8, pad_bottom: 8}
+              - label: {text: "DSC-CONTROL v4.0.9  ·  ESP-NOW primary", text_font: f_small, text_color: 0x3A4550, pad_top: 8, pad_bottom: 8}
     - id: page_set_modes
       scrollbar_mode: "OFF"
       bg_color: 0x0E1116
