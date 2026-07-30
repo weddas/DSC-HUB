@@ -200,16 +200,18 @@ wifi:
         // Nest/mesh can hop 2.4 GHz channels under us. ESP-NOW rides the
         // STA channel — a hop that the hub did not also take silently
         // splits the link. Track it so the alert strip can surface it.
-        wifi_ap_record_t info;
-        if (esp_wifi_sta_get_ap_info(&info) == ESP_OK) {
-          int ch = info.primary;
-          if (id(wifi_channel) != 0 && id(wifi_channel) != ch) {
-            id(wifi_channel_hopped) = true;
-            ESP_LOGW("wifi", "channel hop %d -> %d (ESP-NOW needs hub on same ch)", id(wifi_channel), ch);
-          } else {
-            ESP_LOGI("wifi", "STA channel %d", ch);
+        auto *w = wifi::global_wifi_component;
+        if (w != nullptr) {
+          int ch = (int) w->get_wifi_channel();
+          if (ch > 0) {
+            if (id(wifi_channel) != 0 && id(wifi_channel) != ch) {
+              id(wifi_channel_hopped) = true;
+              ESP_LOGW("wifi", "channel hop %d -> %d (ESP-NOW needs hub on same ch)", id(wifi_channel), ch);
+            } else {
+              ESP_LOGI("wifi", "STA channel %d", ch);
+            }
+            id(wifi_channel) = ch;
           }
-          id(wifi_channel) = ch;
         }
   on_disconnect:
     - lambda: 'id(wifi_conn) = false;'

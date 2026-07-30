@@ -163,15 +163,19 @@ wifi:
     - lambda: |-
         // Log STA channel so Nest/mesh hops are visible next to the panel's
         // channel-hop alert. ESP-NOW requires hub + panel on the same ch.
-        wifi_ap_record_t info;
-        if (esp_wifi_sta_get_ap_info(&info) == ESP_OK) {
+        // Use ESPHome's API (works on Arduino + esp-idf); raw esp_wifi_*
+        // is not declared in Arduino-framework lambdas on 2026.x.
+        auto *w = wifi::global_wifi_component;
+        if (w != nullptr) {
           static int last_ch = 0;
-          int ch = info.primary;
-          if (last_ch != 0 && last_ch != ch)
-            ESP_LOGW("wifi", "channel hop %d -> %d — panel ESP-NOW will drop until it follows", last_ch, ch);
-          else
-            ESP_LOGI("wifi", "STA channel %d", ch);
-          last_ch = ch;
+          int ch = (int) w->get_wifi_channel();
+          if (ch > 0) {
+            if (last_ch != 0 && last_ch != ch)
+              ESP_LOGW("wifi", "channel hop %d -> %d — panel ESP-NOW will drop until it follows", last_ch, ch);
+            else
+              ESP_LOGI("wifi", "STA channel %d", ch);
+            last_ch = ch;
+          }
         }
 
 
