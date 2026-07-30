@@ -1,7 +1,7 @@
 # hub_cmd control (build_panel_control)
 # ESP-NOW-fed (build_panel_data)
 # ==================================================================
-#  DSC-CONTROL — PACKAGE BODY (firmware v4.0.4, ESP-NOW primary)
+#  DSC-CONTROL — PACKAGE BODY (firmware v4.0.5, ESP-NOW primary)
 #  Flash via stub dsc-control.yaml (local) or
 #  homeassistant/esphome/dsc-control.yaml (git-pull).
 #  Remote-git safe: no !secret — stub passes credentials + hub_mac / tag.
@@ -68,7 +68,7 @@ esphome:
     # the dashboard and HA's device page both described DSC-CONTROL as
     # being the DSC HUB. Purely cosmetic, but confusing enough to matter.
     name: "digital_emotions.dsc-control"
-    version: "4.0.4"
+    version: "4.0.5"
   on_boot:
     # Seed the 0xDC command seq from hardware RNG so a panel reboot is
     # unlikely to replay the hub's last-seen seq even before the hub's
@@ -4938,13 +4938,15 @@ script:
             stlbl(id(dem_hum_st), id(dem_hum).state);
             stlbl(id(dem_dehum_st), id(dem_dehum).state);
 
-            // ---- animated device icons (icon + sensor state) ----
-            // base colour = function tint when on, dim grey when off; the
-            // 250ms pass then breathes whichever are on (dev_mask bits).
+            // ---- device icons (colour = on/off). Breathing removed from
+            // control pages in v4.0.5 — force opa 255 so a leftover mid-fade
+            // from older firmware can't leave icons dim.
             auto pon = [](float v){ return !isnan(v) && v > 0; };
             int mask = 0;
             auto ic = [&](lv_obj_t* L, bool on, uint32_t col, int bit){
               setc(L, on ? col : 0x39424D);
+              if (lv_obj_get_style_text_opa(L, LV_PART_MAIN) != 255)
+                lv_obj_set_style_text_opa(L, 255, LV_PART_MAIN);
               if (on) mask |= (1 << bit);
             };
             ic(id(ic_csf),  pon(id(sf_target).state),        AMBER, 0);  // light
@@ -5049,56 +5051,38 @@ script:
 #  PERIODIC REFRESH
 # ==================================================================
 interval:
-  - interval: 1s
+  # v4.0.5 — 2 s. Climate labels barely move; 1 Hz was still forcing a
+  # full refresh_ui pass (and strcmp across dozens of labels) every second
+  # while the panel is awake. Halves steady-state UI work.
+  - interval: 2s
     then:
       - script.execute: refresh_ui
-  # Lock-screen breathing: only does work while locked. Active devices glow
-  # white and pulse; idle devices sit dim. This is the "animated icon +
-  # sensor state" holy grail, on the lock screen, white-on-black.
-  # v4.0.2 — was 250 ms / 24 phases. Every tick changes text_opa on the
-  # device icons, and a style change invalidates the label, so LVGL redraws
-  # it and takes a fresh 32-byte-aligned A8 glyph mask off the system heap
-  # for each icon (mdi_22 -> ~484 bytes each). At 250 ms that is a steady
-  # few-KB-per-second churn of aligned allocations for the whole time the
-  # panel is awake, which is the same fragmentation mechanism that killed
-  # the SCROLL_CIRCULAR labels. 500 ms with 12 phases halves the redraw
-  # rate while keeping the cycle at the same 6 s — it looks identical,
-  # just in 12 steps instead of 24 on a fade nobody can count frames on.
-  - interval: 500ms
+  # v4.0.5 — LOCK SCREEN ONLY. Control-page icon breathing (11 mdi icons
+  # at 2 Hz) was still invalidating labels every tick → fresh aligned A8
+  # glyph masks off the system heap — same fragmentation path that caused
+  # lv_draw_unit_draw_letter crashes / random reboots after "looks fine".
+  # Lock-screen breathe kept at a slow 1 s / 12-phase (~12 s) fade.
+  - interval: 1s
     then:
       - lambda: |-
-          // Skip entirely while the panel is asleep — no icons are visible.
           if (id(panel_sleeping)) return;
+          if (!id(lock_engaged)) return;   // no control-page breathe
           id(anim_phase) = (id(anim_phase) + 1) % 12;
-          int tri = id(anim_phase) < 6 ? id(anim_phase) : 12 - id(anim_phase);    // 0..6
-          uint8_t opa = 90 + (uint8_t)(tri * 165 / 6);                            // 90..255
-          if (id(lock_engaged)) {
-            // lock screen: active devices glow white and breathe, idle sit dim
-            lv_color_t white = lv_color_hex(0xFFFFFF), dim = lv_color_hex(0x2A2A2A);
-            auto setopa = [](lv_obj_t* L, uint8_t o){
-              if (lv_obj_get_style_text_opa(L, LV_PART_MAIN) != o) lv_obj_set_style_text_opa(L, o, LV_PART_MAIN);
-            };
-            auto setcol = [](lv_obj_t* L, lv_color_t c){
-              if (lv_color_to_u32(lv_obj_get_style_text_color(L, LV_PART_MAIN)) != lv_color_to_u32(c))
-                lv_obj_set_style_text_color(L, c, LV_PART_MAIN);
-            };
-            auto dev = [&](lv_obj_t* L, bool on){
-              if (on) { setcol(L, white); setopa(L, opa); }
-              else    { setcol(L, dim);   setopa(L, 255); }
-            };
-            bool fan_on = !isnan(id(fan_out_pct).state) && id(fan_out_pct).state > 0;
-            bool int_on = !isnan(id(fan_int_main_pct).state) && id(fan_int_main_pct).state > 0;
-            dev(id(lk_fan), fan_on); dev(id(lk_int), int_on); dev(id(lk_heat), id(dem_heater).state);
-            dev(id(lk_hum), id(dem_hum).state); dev(id(lk_deh), id(dem_dehum).state); dev(id(lk_light), id(lights_main).state);
-            return;
-          }
-          // control pages: breathe ON icons; OFF icons stay opa 255.
-          // Guarding the write means an idle mask (all off) is zero churn.
-          int m = id(dev_mask);
-          auto br = [&](lv_obj_t* L, int bit){
-            uint8_t want = (m & (1 << bit)) ? opa : (uint8_t) 255;
-            if (lv_obj_get_style_text_opa(L, LV_PART_MAIN) != want) lv_obj_set_style_text_opa(L, want, LV_PART_MAIN);
+          int tri = id(anim_phase) < 6 ? id(anim_phase) : 12 - id(anim_phase);
+          uint8_t opa = 90 + (uint8_t)(tri * 165 / 6);
+          lv_color_t white = lv_color_hex(0xFFFFFF), dim = lv_color_hex(0x2A2A2A);
+          auto setopa = [](lv_obj_t* L, uint8_t o){
+            if (lv_obj_get_style_text_opa(L, LV_PART_MAIN) != o) lv_obj_set_style_text_opa(L, o, LV_PART_MAIN);
           };
-          br(id(ic_csf),0);  br(id(ic_cint),1); br(id(ic_chum),2); br(id(ic_cmat),3);
-          br(id(ic_mout),4); br(id(ic_mroom),5); br(id(ic_mint),6); br(id(ic_mheat),7);
-          br(id(ic_mac),8);  br(id(ic_mhum),9); br(id(ic_mdeh),10);
+          auto setcol = [](lv_obj_t* L, lv_color_t c){
+            if (lv_color_to_u32(lv_obj_get_style_text_color(L, LV_PART_MAIN)) != lv_color_to_u32(c))
+              lv_obj_set_style_text_color(L, c, LV_PART_MAIN);
+          };
+          auto dev = [&](lv_obj_t* L, bool on){
+            if (on) { setcol(L, white); setopa(L, opa); }
+            else    { setcol(L, dim);   setopa(L, 255); }
+          };
+          bool fan_on = !isnan(id(fan_out_pct).state) && id(fan_out_pct).state > 0;
+          bool int_on = !isnan(id(fan_int_main_pct).state) && id(fan_int_main_pct).state > 0;
+          dev(id(lk_fan), fan_on); dev(id(lk_int), int_on); dev(id(lk_heat), id(dem_heater).state);
+          dev(id(lk_hum), id(dem_hum).state); dev(id(lk_deh), id(dem_dehum).state); dev(id(lk_light), id(lights_main).state);
