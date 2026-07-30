@@ -4619,15 +4619,15 @@ script:
           // on every style set, which reallocates aligned A8 glyph masks.
           auto setc = [](lv_obj_t* o, uint32_t c){
             lv_color_t want = lv_color_hex(c);
-            lv_color_t cur = lv_obj_get_style_text_color(o, 0);
+            lv_color_t cur = lv_obj_get_style_text_color(o, LV_PART_MAIN);
             if (lv_color_to_u32(cur) != lv_color_to_u32(want))
-              lv_obj_set_style_text_color(o, want, 0);
+              lv_obj_set_style_text_color(o, want, LV_PART_MAIN);
           };
           auto bordc = [](lv_obj_t* o, uint32_t c){
             lv_color_t want = lv_color_hex(c);
-            lv_color_t cur = lv_obj_get_style_border_color(o, 0);
+            lv_color_t cur = lv_obj_get_style_border_color(o, LV_PART_MAIN);
             if (lv_color_to_u32(cur) != lv_color_to_u32(want))
-              lv_obj_set_style_border_color(o, want, 0);
+              lv_obj_set_style_border_color(o, want, LV_PART_MAIN);
           };
           auto setbar = [](lv_obj_t* o, int v){
             if ((int) lv_bar_get_value(o) != v) lv_bar_set_value(o, v, LV_ANIM_OFF);
@@ -5076,11 +5076,11 @@ interval:
             // lock screen: active devices glow white and breathe, idle sit dim
             lv_color_t white = lv_color_hex(0xFFFFFF), dim = lv_color_hex(0x2A2A2A);
             auto setopa = [](lv_obj_t* L, uint8_t o){
-              if (lv_obj_get_style_text_opa(L, 0) != o) lv_obj_set_style_text_opa(L, o, 0);
+              if (lv_obj_get_style_text_opa(L, LV_PART_MAIN) != o) lv_obj_set_style_text_opa(L, o, LV_PART_MAIN);
             };
             auto setcol = [](lv_obj_t* L, lv_color_t c){
-              if (lv_color_to_u32(lv_obj_get_style_text_color(L, 0)) != lv_color_to_u32(c))
-                lv_obj_set_style_text_color(L, c, 0);
+              if (lv_color_to_u32(lv_obj_get_style_text_color(L, LV_PART_MAIN)) != lv_color_to_u32(c))
+                lv_obj_set_style_text_color(L, c, LV_PART_MAIN);
             };
             auto dev = [&](lv_obj_t* L, bool on){
               if (on) { setcol(L, white); setopa(L, opa); }
@@ -5097,7 +5097,7 @@ interval:
           int m = id(dev_mask);
           auto br = [&](lv_obj_t* L, int bit){
             uint8_t want = (m & (1 << bit)) ? opa : (uint8_t) 255;
-            if (lv_obj_get_style_text_opa(L, 0) != want) lv_obj_set_style_text_opa(L, want, 0);
+            if (lv_obj_get_style_text_opa(L, LV_PART_MAIN) != want) lv_obj_set_style_text_opa(L, want, LV_PART_MAIN);
           };
           br(id(ic_csf),0);  br(id(ic_cint),1); br(id(ic_chum),2); br(id(ic_cmat),3);
           br(id(ic_mout),4); br(id(ic_mroom),5); br(id(ic_mint),6); br(id(ic_mheat),7);
