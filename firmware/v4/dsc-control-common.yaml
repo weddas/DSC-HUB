@@ -42,13 +42,18 @@
 #  Watch heap INFO lines — largest_block < 12 KB means stop adding widgets.
 #
 #  BEFORE FLASHING:
-#    1. secrets.yaml needs THREE new lines (see runbook):
-#       dsc_cyd1_api_key / _ota_password / _ap_password — generate
-#       fresh, same discipline as generate-secrets.sh.
-#    2. First flash is USB (this device has never been flashed).
-#    3. After HA adopts it: Settings -> Devices -> ESPHome -> dsc-cyd1
-#       -> CONFIGURE -> tick "Allow the device to perform Home
-#       Assistant actions". Without it every control is read-only.
+#    1. secrets.yaml needs dsc_control_api_key / _ota_password /
+#       _ap_password (dsc_cyd1_* aliases are the same panel keys).
+#    2. First flash / boot-loop recovery = USB (not OTA).
+#    3. After HA adopts it: Settings -> Devices -> ESPHome ->
+#       dsc-control -> CONFIGURE -> tick "Allow the device to perform
+#       Home Assistant actions" (needed for homeassistant time sync).
+#
+#  HA "Unable to connect… includes an `api` section" is MISLEADING —
+#  this file already has `api:` + encryption. That toast means the
+#  native API socket failed (device offline/boot-looping, wrong host,
+#  or encryption key mismatch after rename/reflash). See firmware/v4
+#  README "Panel HA API reconnect".
 #
 #  BENCH-CHECK MATRIX (dual-USB boards vary by batch):
 #    * Colours look like a photo negative -> set invert_colors: false.

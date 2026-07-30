@@ -29,6 +29,21 @@ Package body: [`dsc-control-common.yaml`](dsc-control-common.yaml).
 
 After UI flashes: watch serial `boot` / `heap` lines. If the panel boot-loops, use **USB** not OTA until `DSC-CONTROL 4.0.8 up — free_heap=…` prints cleanly. See [`../_history/v4/crash-logs/`](../_history/v4/crash-logs/).
 
+### Panel HA API reconnect
+
+The `api:` block lives in [`dsc-control-common.yaml`](dsc-control-common.yaml) (`encryption.key: ${api_key_val}` from the stub’s `!secret dsc_control_api_key`). Same pattern as hub/pots. ESPHome’s “Unable to connect… includes an `api` section” toast is **generic** — it does **not** mean the YAML is missing `api:`.
+
+| Check | What to do |
+|---|---|
+| Panel boot-looping / no Wi‑Fi | USB flash; serial must show `DSC-CONTROL 4.0.8 up — free_heap=…`. OTA will not recover a looping board. |
+| Host / mDNS | Prefer IP: ESPHome Logs → use panel IP, or HA → add/reconfigure `192.168.x.x` not only `dsc-control.local`. |
+| Encryption key | Paste **`dsc_control_api_key`** from `/config/esphome/secrets.yaml` (include trailing `=`). Must match the key compiled into the flash. |
+| Stale `dsc-cyd1` | Delete old **dsc-cyd1** ESPHome device in HA Integrations if present; re-add **dsc-control** with the current key. |
+| Secrets on HA | Confirm `dsc_control_api_key` / `_ota_password` / `_ap_password` exist (aliases `dsc_cyd1_*` are the same values). |
+| Stub on HA | `/config/esphome/dsc-control.yaml` should match [`homeassistant/esphome/dsc-control.yaml`](../../homeassistant/esphome/dsc-control.yaml); Validate before Install. |
+
+ESP-NOW (glass ↔ hub) does **not** need the HA API. Fix API only for OTA, diagnostics, and HA time backup.
+
 ## Hub mat votes
 
 In [`dsc-hub-v4_0.yaml`](dsc-hub-v4_0.yaml): `Mat Vote Pot 1`–`4` (`switch.dsc_hub_mat_vote_pot_N`). OFF pots are skipped by coldest/hottest root-zone voting (5–45 °C filter still applies). POT3 defaults OFF.
