@@ -26,17 +26,18 @@ homeassistant:
   packages: !include_dir_named packages
 ```
 
-Copy **every** file matching `homeassistant/packages/dsc-v4-*.yaml` into `/config/packages/`:
+Copy **every** file matching `homeassistant/packages/dsc_v4_*.yaml` into `/config/packages/`.
+Use underscores in filenames — HA `!include_dir_named` rejects hyphens.
 
 | File | Purpose |
 |---|---|
-| `dsc-v4-core-helpers.yaml` | Hub link, fans, airflow, photoperiod, runtimes |
-| `dsc-v4-light-helpers.yaml` | Lights-on today, dark-period, deviation |
-| `dsc-v4-tank.yaml` | Tank EC/pH/temp + Tuya warn sync |
-| `dsc-v4-pots-stats.yaml` | Daily max/min, 7d baselines, rates |
-| `dsc-v4-pots-correlation.yaml` | EC vs tank, uptake slope |
-| `dsc-v4-pots-alerts.yaml` | Per-pot alert binaries + notifier |
-| `dsc-v4-alert-count.yaml` | Home chip aggregate |
+| `dsc_v4_core_helpers.yaml` | Hub link, fans, airflow, photoperiod, runtimes |
+| `dsc_v4_light_helpers.yaml` | Lights-on today, dark-period, deviation |
+| `dsc_v4_tank.yaml` | Tank EC/pH/temp + Tuya warn sync |
+| `dsc_v4_pots_stats.yaml` | Daily max/min, 7d baselines, rates |
+| `dsc_v4_pots_correlation.yaml` | EC vs tank, uptake slope |
+| `dsc_v4_pots_alerts.yaml` | Per-pot alert binaries + notifier |
+| `dsc_v4_alert_count.yaml` | Home chip aggregate |
 
 ---
 

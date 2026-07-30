@@ -19,8 +19,8 @@
 #   * Dashboard URL must be **dsc-hub-v4** (navigation_path links)
 #
 #  REQUIRES packages:
-#     homeassistant/packages/dsc-v4-core-helpers.yaml
-#     homeassistant/packages/dsc-v4-light-helpers.yaml
+#     homeassistant/packages/dsc_v4_core_helpers.yaml
+#     homeassistant/packages/dsc_v4_light_helpers.yaml
 #     homeassistant/automations.yaml
 #  HACS: mushroom · apexcharts · power-flow-card-plus · sankey-chart
 #        plotly-graph · mini-graph-card · gauge-card-pro

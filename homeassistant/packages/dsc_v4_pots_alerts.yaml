@@ -1,5 +1,5 @@
 # DSC-POTS Targets & Alerts (v4) — stage bands match firmware growth_stage options.
-# Depends on dsc-v4-pots-stats.yaml for baselines + N rate.
+# Depends on dsc_v4_pots_stats.yaml for baselines + N rate.
 
 input_number:
   dsc_pots_n_drop_rate_alert:

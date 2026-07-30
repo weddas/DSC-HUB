@@ -7,13 +7,13 @@ Canonical HA surface for firmware [`firmware/v4/`](../firmware/v4/).
 | Path | Role |
 |---|---|
 | `dashboards/dsc-hub-v4-dashboard.yaml` | Lovelace (9 views). Dashboard URL **must** be `dsc-hub-v4`. |
-| `packages/dsc-v4-core-helpers.yaml` | Hub link, fan %, airflow Sankey, photoperiod, leaf offset, appliance runtimes |
-| `packages/dsc-v4-light-helpers.yaml` | Lights-on today, clone dark-period, deviation |
-| `packages/dsc-v4-tank.yaml` | Tank EC/pH/temp helpers + Tuya warn sync |
-| `packages/dsc-v4-pots-stats.yaml` | Per-pot daily max/min + 7d baselines + rates |
-| `packages/dsc-v4-pots-correlation.yaml` | EC vs tank + uptake slope |
-| `packages/dsc-v4-pots-alerts.yaml` | Per-pot moisture/pH/temp/EC/N alerts |
-| `packages/dsc-v4-alert-count.yaml` | `sensor.dsc_active_alert_count` for Home chip |
+| `packages/dsc_v4_core_helpers.yaml` | Hub link, fan %, airflow Sankey, photoperiod, leaf offset, appliance runtimes |
+| `packages/dsc_v4_light_helpers.yaml` | Lights-on today, clone dark-period, deviation |
+| `packages/dsc_v4_tank.yaml` | Tank EC/pH/temp helpers + Tuya warn sync |
+| `packages/dsc_v4_pots_stats.yaml` | Per-pot daily max/min + 7d baselines + rates |
+| `packages/dsc_v4_pots_correlation.yaml` | EC vs tank + uptake slope |
+| `packages/dsc_v4_pots_alerts.yaml` | Per-pot moisture/pH/temp/EC/N alerts |
+| `packages/dsc_v4_alert_count.yaml` | `sensor.dsc_active_alert_count` for Home chip |
 | `automations.yaml` | Demand followers, climate/safety alerts, grow-log scribe |
 | `esphome/` | Thin device stubs — pull firmware packages from GitHub |
 
@@ -38,7 +38,8 @@ homeassistant:
   packages: !include_dir_named packages
 ```
 
-Copy **all** `packages/dsc-v4-*.yaml` into `/config/packages/` (or symlink this folder).
+Copy **all** `packages/dsc_v4_*.yaml` into `/config/packages/` (or symlink this folder).
+Filenames must use underscores — HA `!include_dir_named` rejects hyphens in the package slug.
 
 If you already have live copies of `dsc_tank.yaml` / `dsc_pots_*.yaml` /
 `dsc_dashboard_v3.yaml` / `dsc_v24_light_helpers.yaml` / `dsc_alert_count.yaml`,
@@ -59,7 +60,7 @@ If you already have live copies of `dsc_tank.yaml` / `dsc_pots_*.yaml` /
 
 ## Fan entity_ids
 
-Core helpers assume ESPHome default slugs from hub friendly names. If your registry differs, edit the four `fan.dsc_hub_*` ids in `dsc-v4-core-helpers.yaml` once.
+Core helpers assume ESPHome default slugs from hub friendly names. If your registry differs, edit the four `fan.dsc_hub_*` ids in `dsc_v4_core_helpers.yaml` once.
 
 ## Notifier
 

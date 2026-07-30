@@ -2,7 +2,7 @@
 # DSC-CORRELATION — Water tester <-> soil probe analysis (v4)
 # ---------------------------------------------------------------------
 # EC vs tank + 6h uptake slope per pot. Dashboard Root Zone uptake UI.
-# Depends on dsc-v4-tank.yaml (sensor.dsc_tank_ec_normalized).
+# Depends on dsc_v4_tank.yaml (sensor.dsc_tank_ec_normalized).
 # =====================================================================
 
 template:

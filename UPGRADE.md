@@ -16,7 +16,7 @@ Repo: https://github.com/weddas/DSC-HUB · branch **`master`**
 | ESPHome configs | Full YAML in `/config/esphome/` | Thin stubs + packages from GitHub |
 | Hub flash file | `dsc-hub-v4_0.yaml` alone | **`dsc-hub.yaml`** stub |
 | Panel flash file | Monolithic `dsc-control.yaml` | **`dsc-control.yaml`** stub → `dsc-control-common.yaml` |
-| HA helpers | Ad-hoc `dsc_dashboard_v3`, `dsc_tank`, `dsc_pots_*`, etc. | `dsc-v4-*.yaml` packages only |
+| HA helpers | Ad-hoc `dsc_dashboard_v3`, `dsc_tank`, `dsc_pots_*`, etc. | `dsc_v4_*.yaml` packages only |
 | Dashboard | Often `dsc-hub-v2-4` | URL **`dsc-hub-v4`** |
 | `espnow_cmd_tag` | May still be `0xABCD` | **`54727` (`0xD5C7`)** — hub **and** panel |
 
@@ -40,7 +40,8 @@ Keep unrelated house packages. Only remove DSC duplicates.
 
 ## B. Install the new HA pack
 
-1. Copy **all** `homeassistant/packages/dsc-v4-*.yaml` → `/config/packages/`
+1. Copy **all** `homeassistant/packages/dsc_v4_*.yaml` → `/config/packages/`
+   (underscores required — HA rejects hyphens in package filenames)
 2. Merge [`homeassistant/automations.yaml`](homeassistant/automations.yaml)
    - Delete Rev A ids `dsc_v24_follow_*` if present (collide with `dsc_follower_*`)
    - If you already have `dsc_hub_offline_safe_off` / emergency alerts live, replace with the git copies (same ids) or delete the live duplicates first

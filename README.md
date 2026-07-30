@@ -36,7 +36,7 @@ Canonical dashboard + packages + ESPHome stubs: [`homeassistant/`](homeassistant
 | Piece | File |
 |---|---|
 | Lovelace | `homeassistant/dashboards/dsc-hub-v4-dashboard.yaml` (URL: `dsc-hub-v4`) |
-| Helpers | `homeassistant/packages/dsc-v4-*.yaml` |
+| Helpers | `homeassistant/packages/dsc_v4_*.yaml` |
 | Automations | `homeassistant/automations.yaml` |
 | ESPHome stubs | `homeassistant/esphome/dsc-*.yaml` (git-pull package bodies) |
 
