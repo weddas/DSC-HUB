@@ -1,0 +1,865 @@
+[03:05:45]ets Jul 29 2019 12:21:46
+[03:05:45]
+[03:05:45]rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+[03:05:45]configsip: 0, SPIWP:0xee
+[03:05:45]clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+[03:05:45]mode:DIO, clock div:2
+[03:05:45]load:0x3fff0030,len:6248
+[03:05:45]load:0x40078000,len:15904
+[03:05:45]load:0x40080400,len:3896
+[03:05:45]entry 0x40080640
+[03:05:45]I (27) boot: ESP-IDF v5.5.5 2nd stage bootloader
+[03:05:45]I (27) boot: Multicore bootloader
+[03:05:45]I (28) boot: chip revision: v3.1
+[03:05:45]I (28) boot.esp32: SPI Speed      : 40MHz
+[03:05:45]I (31) boot.esp32: SPI Mode       : DIO
+[03:05:45]I (35) boot.esp32: SPI Flash Size : 4MB
+[03:05:45]I (38) boot: Enabling RNG early entropy source...
+[03:05:45]I (43) boot: Partition Table:
+[03:05:45]I (45) boot: ## Label            Usage          Type ST Offset   Length
+[03:05:45]I (52) boot:  0 otadata          OTA data         01 00 00009000 00002000
+[03:05:45]I (58) boot:  1 phy_init         RF data          01 01 0000b000 00001000
+[03:05:45]I (65) boot:  2 app0             OTA app          00 10 00010000 001c0000
+[03:05:45]I (71) boot:  3 app1             OTA app          00 11 001d0000 001c0000
+[03:05:45]I (78) boot:  4 nvs              WiFi data        01 02 00390000 00070000
+[03:05:45]I (84) boot: End of partition table
+[03:05:45]I (88) boot: No factory image, trying OTA 0
+[03:05:45]I (91) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=4377ch (276348) map
+[03:05:45]I (193) esp_image: segment 1: paddr=000537a4 vaddr=3ffb0000 size=042bch ( 17084) load
+[03:05:45]I (200) esp_image: segment 2: paddr=00057a68 vaddr=40080000 size=085b0h ( 34224) load
+[03:05:45]I (214) esp_image: segment 3: paddr=00060020 vaddr=400d0020 size=f1808h (989192) map
+[03:05:45]I (552) esp_image: segment 4: paddr=00151830 vaddr=400885b0 size=0b960h ( 47456) load
+[03:05:45]I (571) esp_image: segment 5: paddr=0015d198 vaddr=50000000 size=00020h (    32) load
+[03:05:45]I (581) boot: Loaded app from partition at offset 0x10000
+[03:05:45]I (642) boot: Set actual ota_seq=1 in otadata[0]
+[03:05:45]I (642) boot: Disabling RNG early entropy source...
+[03:05:46][I][logger:122]: Log initialized
+[03:05:47][I][app:060]: Running through setup()
+[03:05:48][I][esp-idf:000]: E (2144) gpio: gpio_pullup_en(85): GPIO number error (input-only pad has no internal PU)
+[03:05:48][W][lvgl:998]: Failed to allocate 153600 bytes for draw buffer
+[03:05:48][I][esp-idf:000]: E (2412) mdns_responder: Cannot allocate memory (allocate_txt(277), free heap: 16 bytes)
+[03:05:48][I][esp-idf:000]: E (2413) mdns_responder: mdns_service_add_for_host(786): Cannot create service: Out of memory
+[03:05:48][I][esp-idf:000]: E (2413) mdns_responder: Cannot allocate memory (mdns_service_add_for_host(804), free heap: 60 bytes)
+[03:05:48][W][mdns:045]: Failed to register service _esphomelib: ESP_ERR_NO_MEM
+[03:05:48][I][esp-idf:000]: E (2414) ESPNOW: esp now create mutex fail!
+[03:05:48][E][espnow:193]: esp_now_init failed: ESP_ERR_ESPNOW_NO_MEM
+[03:05:48][E][component:249]: espnow was marked as failed
+[03:05:48][E][component:349]: espnow set Error flag: unspecified
+[03:05:48][I][app:117]: setup() finished successfully!
+[03:05:48][W][touchscreen:031]: Touch Polling Stopped. You can safely remove the 'update_interval:' variable fr
+[03:05:48]abort() was called at PC 0x401a591e on core 1
+[03:05:48]
+[03:05:48]
+[03:05:48]Backtrace: 0x400886e5:0x3ffb63f0 0x400886ad:0x3ffb6410 0x4008ce86:0x3ffb6430 0x401a591e:0x3ffb64a0 0x401a5019:0x3ffb64c0 0x400fe381:0x3ffb64e0 0x400fed36:0x3ffb6500 0x400fe091:0x3ffb6530 0x400e3c32:0x3ffb6590 0x400e3e3b:0x3ffb6700 0x401b2955:0x3ffb6720 0x400f8f87:0x3ffb6740 0x400e114d:0x3ffb6760 0x401b2cad:0x3ffb6780 0x400e1085:0x3ffb67a0 0x400f8f87:0x3ffb67c0 0x401b2663:0x3ffb67e0 0x401b2439:0x3ffb6800 0x400dcc30:0x3ffb6820 0x400dd667:0x3ffb6840 0x400db370:0x3ffb6880
+WARNING Found stack trace! Trying to decode it
+WARNING Decoded 0x400886e5: panic_abort at /COMPONENT_ESP_SYSTEM_DIR/panic.c:477
+WARNING Decoded 0x400886ad: esp_system_abort at /COMPONENT_ESP_SYSTEM_DIR/port/esp_system_chip.c:87
+WARNING Decoded 0x4008ce86: abort at /COMPONENT_NEWLIB_DIR/src/abort.c:38
+WARNING Decoded 0x401a591e: __wrap___cxa_allocate_exception at /COMPONENT_CXX_DIR/cxx_exception_stubs.cpp:184
+WARNING Decoded 0x401a5019: operator new(unsigned int) at /builds/idf/crosstool-NG/.build/xtensa-esp-elf/src/gcc/libstdc++-v3/libsupc++/new_op.cc:54
+WARNING Decoded 0x400fe381: std::__detail::_MakeUniq<esphome::light::LightTransitionTransformer>::__single_object std::make_unique<esphome::light::LightTransitionTransformer>() at /TOOLCHAIN/xtensa-esp-elf/include/c++/14.2.0/bits/unique_ptr.h:1076
+ (inlined by) esphome::light::LightOutput::create_default_transition() at /IDF_BUILD/../src/esphome/components/light/light_output.cpp:7
+WARNING Decoded 0x400fed36: esphome::light::LightState::start_transition_(esphome::light::LightColorValues const&, unsigned long, bool) at /IDF_BUILD/../src/esphome/components/light/light_state.cpp:367
+WARNING Decoded 0x400fe091: esphome::light::LightCall::perform() at /IDF_BUILD/../src/esphome/components/light/light_call.cpp:144
+WARNING Decoded 0x400e3c32: _ZZ5setupvENKUlvE28_clEv$constprop$0 at /config/esphome/dsc-control.yaml:4755 (discriminator 3)
+WARNING Decoded 0x400e3e3b: setup()::{lambda()#30}::_FUN() at /config/esphome/dsc-control.yaml:4797
+WARNING Decoded 0x401b2955: esphome::StatelessLambdaAction<>::play() at /IDF_BUILD/../src/esphome/core/base_automation.h:247
+WARNING Decoded 0x400f8f87: esphome::Action<>::play_complex() at /IDF_BUILD/../src/esphome/core/automation.h:491
+WARNING Decoded 0x400e114d: esphome::ActionList<>::play() at /IDF_BUILD/../src/esphome/core/automation.h:576
+ (inlined by) esphome::Automation<>::trigger() at /IDF_BUILD/../src/esphome/core/automation.h:621
+ (inlined by) esphome::Trigger<>::trigger() at /IDF_BUILD/../src/esphome/core/automation.h:464
+ (inlined by) esphome::script::Script<>::run_actions_() at /IDF_BUILD/../src/esphome/components/script/script.h:66
+ (inlined by) esphome::script::SingleScript<>::execute() at /IDF_BUILD/../src/esphome/components/script/script.h:86
+WARNING Decoded 0x401b2cad: void esphome::script::Script<>::execute_tuple_<>(std::tuple<> const&, std::integer_sequence<unsigned int>) at /IDF_BUILD/../src/esphome/components/script/script.h:58
+ (inlined by) esphome::script::Script<>::execute_tuple(std::tuple<> const&) at /IDF_BUILD/../src/esphome/components/script/script.h:50
+WARNING Decoded 0x400e1085: esphome::script::ScriptExecuteAction<esphome::script::Script<>>::play() at /IDF_BUILD/../src/esphome/components/script/script.h:227 (discriminator 1)
+WARNING Decoded 0x400f8f87: esphome::Action<>::play_complex() at /IDF_BUILD/../src/esphome/core/automation.h:491
+WARNING Decoded 0x401b2663: esphome::ActionList<>::play() at /IDF_BUILD/../src/esphome/core/automation.h:576
+ (inlined by) esphome::Automation<>::trigger() at /IDF_BUILD/../src/esphome/core/automation.h:621
+ (inlined by) esphome::Trigger<>::trigger() at /IDF_BUILD/../src/esphome/core/automation.h:464
+ (inlined by) esphome::interval::IntervalTrigger::update() at /IDF_BUILD/../src/esphome/components/interval/interval.h:11
+WARNING Decoded 0x401b2439: std::_Function_handler<void (), esphome::PollingComponent::start_poller()::{lambda()#1}>::_M_invoke(std::_Any_data const&) at /IDF_BUILD/../src/esphome/core/component.cpp:442
+ (inlined by) __invoke_impl<void, esphome::PollingComponent::start_poller()::<lambda()>&> at /TOOLCHAIN/xtensa-esp-elf/include/c++/14.2.0/bits/invoke.h:61
+ (inlined by) __invoke_r<void, esphome::PollingComponent::start_poller()::<lambda()>&> at /TOOLCHAIN/xtensa-esp-elf/include/c++/14.2.0/bits/invoke.h:111
+ (inlined by) _M_invoke at /TOOLCHAIN/xtensa-esp-elf/include/c++/14.2.0/bits/std_function.h:290
+WARNING Decoded 0x400dcc30: std::function<void ()>::operator()() const at /TOOLCHAIN/xtensa-esp-elf/include/c++/14.2.0/bits/std_function.h:591
+ (inlined by) esphome::Scheduler::execute_item_(esphome::Scheduler::SchedulerItem*, unsigned long) at /IDF_BUILD/../src/esphome/core/scheduler.cpp:797
+WARNING Decoded 0x400dd667: esphome::Scheduler::call(unsigned long) at /IDF_BUILD/../src/esphome/core/scheduler.cpp:678
+WARNING Decoded 0x400db370: esphome::Application::scheduler_tick_(unsigned long) at /IDF_BUILD/../src/esphome/core/application.h:644
+ (inlined by) esphome::Application::loop() at /IDF_BUILD/../src/esphome/core/application.h:697
+ (inlined by) esphome::loop_task(void*) at /IDF_BUILD/../src/esphome/components/esp32/core.cpp:27
+[03:05:48]
+[03:05:48]
+[03:05:48]
+[03:05:48]
+[03:05:48]ELF file SHA256: c631efcc6
+[03:05:48]
+[03:05:48]Rebooting...
+[03:05:48]ets Jul 29 2019 12:21:46
+[03:05:48]
+[03:05:48]rst:0xc (SW_CPU_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+[03:05:48]configsip: 0, SPIWP:0xee
+[03:05:48]clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+[03:05:48]mode:DIO, clock div:2
+[03:05:48]load:0x3fff0030,len:6248
+[03:05:48]load:0x40078000,len:15904
+[03:05:48]load:0x40080400,len:3896
+[03:05:48]entry 0x40080640
+[03:05:48]I (27) boot: ESP-IDF v5.5.5 2nd stage bootloader
+[03:05:48]I (27) boot: Multicore bootloader
+[03:05:48]I (27) boot: chip revision: v3.1
+[03:05:48]I (27) boot.esp32: SPI Speed      : 40MHz
+[03:05:48]I (31) boot.esp32: SPI Mode       : DIO
+[03:05:48]I (35) boot.esp32: SPI Flash Size : 4MB
+[03:05:48]I (38) boot: Enabling RNG early entropy source...
+[03:05:48]I (43) boot: Partition Table:
+[03:05:48]I (45) boot: ## Label            Usage          Type ST Offset   Length
+[03:05:48]I (52) boot:  0 otadata          OTA data         01 00 00009000 00002000
+[03:05:48]I (58) boot:  1 phy_init         RF data          01 01 0000b000 00001000
+[03:05:48]I (65) boot:  2 app0             OTA app          00 10 00010000 001c0000
+[03:05:48]I (71) boot:  3 app1             OTA app          00 11 001d0000 001c0000
+[03:05:48]I (78) boot:  4 nvs              WiFi data        01 02 00390000 00070000
+[03:05:48]I (84) boot: End of partition table
+[03:05:48]I (88) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=4377ch (276348) map
+[03:05:48]I (189) esp_image: segment 1: paddr=000537a4 vaddr=3ffb0000 size=042bch ( 17084) load
+[03:05:48]I (196) esp_image: segment 2: paddr=00057a68 vaddr=40080000 size=085b0h ( 34224) load
+[03:05:48]I (210) esp_image: segment 3: paddr=00060020 vaddr=400d0020 size=f1808h (989192) map
+[03:05:49]I (548) esp_image: segment 4: paddr=00151830 vaddr=400885b0 size=0b960h ( 47456) load
+[03:05:49]I (567) esp_image: segment 5: paddr=0015d198 vaddr=50000000 size=00020h (    32) load
+[03:05:49]I (577) boot: Loaded app from partition at offset 0x10000
+[03:05:49]I (577) boot: Disabling RNG early entropy source...
+[03:05:49][I][logger:122]: Log initialized
+[03:05:50][I][app:060]: Running through setup()
+[03:05:51][I][esp-idf:000]: E (2143) gpio: gpio_pullup_en(85): GPIO number error (input-only pad has no internal PU)
+[03:05:51][W][lvgl:998]: Failed to allocate 153600 bytes for draw buffer
+[03:05:51][I][esp-idf:000]: E (2399) mdns_responder: Cannot allocate memory (create_service(338), free heap: 32 bytes)
+[03:05:51][I][esp-idf:000]: E (2399) mdns_responder: mdns_service_add_for_host(786): Cannot create service: Out of memory
+[03:05:51][I][esp-idf:000]: E (2400) mdns_responder: Cannot allocate memory (mdns_service_add_for_host(804), free heap: 32 bytes)
+[03:05:51][W][mdns:045]: Failed to register service _esphomelib: ESP_ERR_NO_MEM
+[03:05:51][I][esp-idf:000]: E (2400) ESPNOW: esp now create mutex fail!
+[03:05:51][E][espnow:193]: esp_now_init failed: ESP_ERR_ESPNOW_NO_MEM
+[03:05:51][E][component:249]: espnow was marked as failed
+[03:05:51][E][component:349]: espnow set Error flag: unspecified
+[03:05:51][I][app:117]: setup() finished successfully!
+[03:05:51][W][touchscreen:031]: Touch Polling Stopped. You can safely remove the 'update_interval:' variable from the YAML file.
+[03:05:51][E][lvgl:000]: [Error] lv_realloc: couldn't reallocate memory
+[03:05:51][E][lvgl:000]: [Error] lv_realloc: couldn't reallocate memory
+[03:05:51][E][lvgl:000]: [Error] lv_realloc: couldn't reallocate memory
+[03:05:51][E][lvgl:000]: [Error] lv_realloc: couldn't reallocate memory
+[03:05:51][E][lvgl:000]: [Error] lv_realloc: couldn't reallocate memory
+[03:05:51][E][lvgl:000]: [Error] lv_realloc: couldn't reallocate memory
+[03:05:51][E][lvgl:000]: [Error] lv_realloc: couldn't reallocate memory
+[03:05:51][E][lvgl:000]: [Error] lv_realloc: couldn't reallocate memory
+[03:05:51][E][lvgl:000]: [Error] lv_r
+[03:05:51]abort() was called at PC 0x401a591e on core 1
+[03:05:51]
+[03:05:51]
+[03:05:51]Backtrace: 0x400886e5:0x3ffb6430 0x400886ad:0x3ffb6450 0x4008ce86:0x3ffb6470 0x401a591e:0x3ffb64e0 0x401a5019:0x3ffb6500 0x400e118f:0x3ffb6520 0x400e276a:0x3ffb6540 0x400e27ab:0x3ffb6570 0x400e2ff3:0x3ffb6590 0x400e3e3b:0x3ffb6700 0x401b2955:0x3ffb6720 0x400f8f87:0x3ffb6740 0x400e114d:0x3ffb6760 0x401b2cad:0x3ffb6780 0x400e1085:0x3ffb67a0 0x400f8f87:0x3ffb67c0 0x401b2663:0x3ffb67e0 0x401b2439:0x3ffb6800 0x400dcc30:0x3ffb6820 0x400dd667:0x3ffb6840 0x400db370:0x3ffb6880
+WARNING Found stack trace! Trying to decode it
+WARNING Decoded 0x400886e5: panic_abort at /COMPONENT_ESP_SYSTEM_DIR/panic.c:477
+WARNING Decoded 0x400886ad: esp_system_abort at /COMPONENT_ESP_SYSTEM_DIR/port/esp_system_chip.c:87
+WARNING Decoded 0x4008ce86: abort at /COMPONENT_NEWLIB_DIR/src/abort.c:38
+WARNING Decoded 0x401a591e: __wrap___cxa_allocate_exception at /COMPONENT_CXX_DIR/cxx_exception_stubs.cpp:184
+WARNING Decoded 0x401a5019: operator new(unsigned int) at /builds/idf/crosstool-NG/.build/xtensa-esp-elf/src/gcc/libstdc++-v3/libsupc++/new_op.cc:54
+WARNING Decoded 0x400e118f: std::__new_allocator<char>::allocate(unsigned int, void const*) at /TOOLCHAIN/xtensa-esp-elf/include/c++/14.2.0/bits/new_allocator.h:151
+ (inlined by) std::allocator<char>::allocate(unsigned int) at /TOOLCHAIN/xtensa-esp-elf/include/c++/14.2.0/bits/allocator.h:196
+ (inlined by) std::allocator_traits<std::allocator<char> >::allocate(std::allocator<char>&, unsigned int) at /TOOLCHAIN/xtensa-esp-elf/include/c++/14.2.0/bits/alloc_traits.h:478
+ (inlined by) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_S_allocate(std::allocator<char>&, unsigned int) at /TOOLCHAIN/xtensa-esp-elf/include/c++/14.2.0/bits/basic_string.h:131
+ (inlined by) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_create(unsigned int&, unsigned int) at /TOOLCHAIN/xtensa-esp-elf/include/c++/14.2.0/bits/basic_string.tcc:159
+WARNING Decoded 0x400e276a: void std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_construct<char const*>(char const*, char const*, std::forward_iterator_tag) at /TOOLCHAIN/xtensa-esp-elf/include/c++/14.2.0/bits/basic_string.tcc:229
+WARNING Decoded 0x400e27ab: _ZNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEC4IS3_EEPKcRKS3_$isra$0 at /TOOLCHAIN/xtensa-esp-elf/include/c++/14.2.0/bits/basic_string.h:654
+WARNING Decoded 0x400e2ff3: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::basic_string<std::allocator<char> >(char const*, std::allocator<char> const&) at /TOOLCHAIN/xtensa-esp-elf/include/c++/14.2.0/bits/basic_string.h:655
+ (inlined by) operator() at /config/esphome/dsc-control.yaml:4566
+WARNING Decoded 0x400e3e3b: setup()::{lambda()#30}::_FUN() at /config/esphome/dsc-control.yaml:4797
+WARNING Decoded 0x401b2955: esphome::StatelessLambdaAction<>::play() at /IDF_BUILD/../src/esphome/core/base_automation.h:247
+WARNING Decoded 0x400f8f87: esphome::Action<>::play_complex() at /IDF_BUILD/../src/esphome/core/automation.h:491
+WARNING Decoded 0x400e114d: esphome::ActionList<>::play() at /IDF_BUILD/../src/esphome/core/automation.h:576
+ (inlined by) esphome::Automation<>::trigger() at /IDF_BUILD/../src/esphome/core/automation.h:621
+ (inlined by) esphome::Trigger<>::trigger() at /IDF_BUILD/../src/esphome/core/automation.h:464
+ (inlined by) esphome::script::Script<>::run_actions_() at /IDF_BUILD/../src/esphome/components/script/script.h:66
+ (inlined by) esphome::script::SingleScript<>::execute() at /IDF_BUILD/../src/esphome/components/script/script.h:86
+WARNING Decoded 0x401b2cad: void esphome::script::Script<>::execute_tuple_<>(std::tuple<> const&, std::integer_sequence<unsigned int>) at /IDF_BUILD/../src/esphome/components/script/script.h:58
+ (inlined by) esphome::script::Script<>::execute_tuple(std::tuple<> const&) at /IDF_BUILD/../src/esphome/components/script/script.h:50
+WARNING Decoded 0x400e1085: esphome::script::ScriptExecuteAction<esphome::script::Script<>>::play() at /IDF_BUILD/../src/esphome/components/script/script.h:227 (discriminator 1)
+WARNING Decoded 0x400f8f87: esphome::Action<>::play_complex() at /IDF_BUILD/../src/esphome/core/automation.h:491
+WARNING Decoded 0x401b2663: esphome::ActionList<>::play() at /IDF_BUILD/../src/esphome/core/automation.h:576
+ (inlined by) esphome::Automation<>::trigger() at /IDF_BUILD/../src/esphome/core/automation.h:621
+ (inlined by) esphome::Trigger<>::trigger() at /IDF_BUILD/../src/esphome/core/automation.h:464
+ (inlined by) esphome::interval::IntervalTrigger::update() at /IDF_BUILD/../src/esphome/components/interval/interval.h:11
+WARNING Decoded 0x401b2439: std::_Function_handler<void (), esphome::PollingComponent::start_poller()::{lambda()#1}>::_M_invoke(std::_Any_data const&) at /IDF_BUILD/../src/esphome/core/component.cpp:442
+ (inlined by) __invoke_impl<void, esphome::PollingComponent::start_poller()::<lambda()>&> at /TOOLCHAIN/xtensa-esp-elf/include/c++/14.2.0/bits/invoke.h:61
+ (inlined by) __invoke_r<void, esphome::PollingComponent::start_poller()::<lambda()>&> at /TOOLCHAIN/xtensa-esp-elf/include/c++/14.2.0/bits/invoke.h:111
+ (inlined by) _M_invoke at /TOOLCHAIN/xtensa-esp-elf/include/c++/14.2.0/bits/std_function.h:290
+WARNING Decoded 0x400dcc30: std::function<void ()>::operator()() const at /TOOLCHAIN/xtensa-esp-elf/include/c++/14.2.0/bits/std_function.h:591
+ (inlined by) esphome::Scheduler::execute_item_(esphome::Scheduler::SchedulerItem*, unsigned long) at /IDF_BUILD/../src/esphome/core/scheduler.cpp:797
+WARNING Decoded 0x400dd667: esphome::Scheduler::call(unsigned long) at /IDF_BUILD/../src/esphome/core/scheduler.cpp:678
+WARNING Decoded 0x400db370: esphome::Application::scheduler_tick_(unsigned long) at /IDF_BUILD/../src/esphome/core/application.h:644
+ (inlined by) esphome::Application::loop() at /IDF_BUILD/../src/esphome/core/application.h:697
+ (inlined by) esphome::loop_task(void*) at /IDF_BUILD/../src/esphome/components/esp32/core.cpp:27
+[03:05:51]
+[03:05:51]
+[03:05:51]
+[03:05:51]
+[03:05:51]ELF file SHA256: c631efcc6
+[03:05:51]
+[03:05:51]Rebooting...
+[03:05:51]ets Jul 29 2019 12:21:46
+[03:05:51]
+[03:05:51]rst:0xc (SW_CPU_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+[03:05:51]configsip: 0, SPIWP:0xee
+[03:05:51]clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+[03:05:51]mode:DIO, clock div:2
+[03:05:51]load:0x3fff0030,len:6248
+[03:05:51]load:0x40078000,len:15904
+[03:05:51]load:0x40080400,len:3896
+[03:05:51]entry 0x40080640
+[03:05:51]I (27) boot: ESP-IDF v5.5.5 2nd stage bootloader
+[03:05:51]I (27) boot: Multicore bootloader
+[03:05:51]I (27) boot: chip revision: v3.1
+[03:05:51]I (27) boot.esp32: SPI Speed      : 40MHz
+[03:05:51]I (31) boot.esp32: SPI Mode       : DIO
+[03:05:51]I (35) boot.esp32: SPI Flash Size : 4MB
+[03:05:51]I (38) boot: Enabling RNG early entropy source...
+[03:05:51]I (43) boot: Partition Table:
+[03:05:51]I (45) boot: ## Label            Usage          Type ST Offset   Length
+[03:05:51]I (52) boot:  0 otadata          OTA data         01 00 00009000 00002000
+[03:05:51]I (58) boot:  1 phy_init         RF data          01 01 0000b000 00001000
+[03:05:51]I (65) boot:  2 app0             OTA app          00 10 00010000 001c0000
+[03:05:51]I (71) boot:  3 app1             OTA app          00 11 001d0000 001c0000
+[03:05:51]I (78) boot:  4 nvs              WiFi data        01 02 00390000 00070000
+[03:05:51]I (84) boot: End of partition table
+[03:05:51]I (88) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=4377ch (276348) map
+[03:05:51]I (189) esp_image: segment 1: paddr=000537a4 vaddr=3ffb0000 size=042bch ( 17084) load
+[03:05:51]I (196) esp_image: segment 2: paddr=00057a68 vaddr=40080000 size=085b0h ( 34224) load
+[03:05:51]I (210) esp_image: segment 3: paddr=00060020 vaddr=400d0020 size=f1808h (989192) map
+[03:05:52]I (548) esp_image: segment 4: paddr=00151830 vaddr=400885b0 size=0b960h ( 47456) load
+[03:05:52]I (567) esp_image: segment 5: paddr=0015d198 vaddr=50000000 size=00020h (    32) load
+[03:05:52]I (577) boot: Loaded app from partition at offset 0x10000
+[03:05:52]I (577) boot: Disabling RNG early entropy source...
+[03:05:52][I][logger:122]: Log initialized
+[03:05:53][I][app:060]: Running through setup()
+[03:05:54][I][esp-idf:000]: E (2143) gpio: gpio_pullup_en(85): GPIO number error (input-only pad has no internal PU)
+[03:05:54][W][lvgl:998]: Failed to allocate 153600 bytes for draw buffer
+[03:05:54][I][esp-idf:000]: E (2399) mdns_responder: Cannot allocate memory (create_service(338), free heap: 16 bytes)
+[03:05:54][I][esp-idf:000]: E (2400) mdns_responder: mdns_service_add_for_host(786): Cannot create service: Out of memory
+[03:05:54][I][esp-idf:000]: E (2400) mdns_responder: Cannot allocate memory (mdns_service_add_for_host(804), free heap: 16 bytes)
+[03:05:54][W][mdns:045]: Failed to register service _esphomelib: ESP_ERR_NO_MEM
+[03:05:54][I][esp-idf:000]: E (2401) ESPNOW: esp now create mutex fail!
+[03:05:54][E][espnow:193]: esp_now_init failed: ESP_ERR_ESPNOW_NO_MEM
+[03:05:54][E][component:249]: espnow was marked as failed
+[03:05:54][E][component:349]: espnow set Error flag: unspecified
+[03:05:54][I][app:117]: setup() finished successfully!
+[03:05:54][W][touchscreen:031]: Touch Polling Stopped. You can safely remove the 'update_interval:' variable from the YAML file.
+[03:05:54][E][lvgl:000]: [Error] lv_realloc: couldn't reallocate memory
+[03:05:54][E][lvgl:000]: [Error] lv_realloc: couldn't reallocate memory
+[03:05:54][E][lvgl:000]: [Error] lv_realloc: couldn't reallocate memory
+[03:05:54][E][lvgl:000]: [Error] lv_realloc: couldn't reallocate memory
+[03:05:54][E][lvgl:000]: [Error] lv_realloc: couldn't reallocate memory
+[03:05:54][E][lvgl:000]: [Error] lv_realloc: couldn't reallocate memory
+[03:05:54][E][lvgl:000]: [Error] lv_realloc: couldn't reallocate memory
+[03:05:54][E][lvgl:000]: [Error] lv_realloc: couldn't reallocate memory
+[03:05:54][E][lvgl:000]: [Error] lv_r
+[03:05:54]abort() was called at PC 0x401a591e on core 1
+[03:05:54]
+[03:05:54]
+[03:05:54]Backtrace: 0x400886e5:0x3ffb6430 0x400886ad:0x3ffb6450 0x4008ce86:0x3ffb6470 0x401a591e:0x3ffb64e0 0x401a5019:0x3ffb6500 0x400e118f:0x3ffb6520 0x400e276a:0x3ffb6540 0x400e27ab:0x3ffb6570 0x400e2ff3:0x3ffb6590 0x400e3e3b:0x3ffb6700 0x401b2955:0x3ffb6720 0x400f8f87:0x3ffb6740 0x400e114d:0x3ffb6760 0x401b2cad:0x3ffb6780 0x400e1085:0x3ffb67a0 0x400f8f87:0x3ffb67c0 0x401b2663:0x3ffb67e0 0x401b2439:0x3ffb6800 0x400dcc30:0x3ffb6820 0x400dd667:0x3ffb6840 0x400db370:0x3ffb6880
+WARNING Found stack trace! Trying to decode it
+WARNING Decoded 0x400886e5: panic_abort at /COMPONENT_ESP_SYSTEM_DIR/panic.c:477
+WARNING Decoded 0x400886ad: esp_system_abort at /COMPONENT_ESP_SYSTEM_DIR/port/esp_system_chip.c:87
+WARNING Decoded 0x4008ce86: abort at /COMPONENT_NEWLIB_DIR/src/abort.c:38
+WARNING Decoded 0x401a591e: __wrap___cxa_allocate_exception at /COMPONENT_CXX_DIR/cxx_exception_stubs.cpp:184
+WARNING Decoded 0x401a5019: operator new(unsigned int) at /builds/idf/crosstool-NG/.build/xtensa-esp-elf/src/gcc/libstdc++-v3/libsupc++/new_op.cc:54
+WARNING Decoded 0x400e118f: std::__new_allocator<char>::allocate(unsigned int, void const*) at /TOOLCHAIN/xtensa-esp-elf/include/c++/14.2.0/bits/new_allocator.h:151
+ (inlined by) std::allocator<char>::allocate(unsigned int) at /TOOLCHAIN/xtensa-esp-elf/include/c++/14.2.0/bits/allocator.h:196
+ (inlined by) std::allocator_traits<std::allocator<char> >::allocate(std::allocator<char>&, unsigned int) at /TOOLCHAIN/xtensa-esp-elf/include/c++/14.2.0/bits/alloc_traits.h:478
+ (inlined by) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_S_allocate(std::allocator<char>&, unsigned int) at /TOOLCHAIN/xtensa-esp-elf/include/c++/14.2.0/bits/basic_string.h:131
+ (inlined by) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_create(unsigned int&, unsigned int) at /TOOLCHAIN/xtensa-esp-elf/include/c++/14.2.0/bits/basic_string.tcc:159
+WARNING Decoded 0x400e276a: void std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_construct<char const*>(char const*, char const*, std::forward_iterator_tag) at /TOOLCHAIN/xtensa-esp-elf/include/c++/14.2.0/bits/basic_string.tcc:229
+WARNING Decoded 0x400e27ab: _ZNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEC4IS3_EEPKcRKS3_$isra$0 at /TOOLCHAIN/xtensa-esp-elf/include/c++/14.2.0/bits/basic_string.h:654
+WARNING Decoded 0x400e2ff3: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::basic_string<std::allocator<char> >(char const*, std::allocator<char> const&) at /TOOLCHAIN/xtensa-esp-elf/include/c++/14.2.0/bits/basic_string.h:655
+ (inlined by) operator() at /config/esphome/dsc-control.yaml:4566
+WARNING Decoded 0x400e3e3b: setup()::{lambda()#30}::_FUN() at /config/esphome/dsc-control.yaml:4797
+WARNING Decoded 0x401b2955: esphome::StatelessLambdaAction<>::play() at /IDF_BUILD/../src/esphome/core/base_automation.h:247
+WARNING Decoded 0x400f8f87: esphome::Action<>::play_complex() at /IDF_BUILD/../src/esphome/core/automation.h:491
+WARNING Decoded 0x400e114d: esphome::ActionList<>::play() at /IDF_BUILD/../src/esphome/core/automation.h:576
+ (inlined by) esphome::Automation<>::trigger() at /IDF_BUILD/../src/esphome/core/automation.h:621
+ (inlined by) esphome::Trigger<>::trigger() at /IDF_BUILD/../src/esphome/core/automation.h:464
+ (inlined by) esphome::script::Script<>::run_actions_() at /IDF_BUILD/../src/esphome/components/script/script.h:66
+ (inlined by) esphome::script::SingleScript<>::execute() at /IDF_BUILD/../src/esphome/components/script/script.h:86
+WARNING Decoded 0x401b2cad: void esphome::script::Script<>::execute_tuple_<>(std::tuple<> const&, std::integer_sequence<unsigned int>) at /IDF_BUILD/../src/esphome/components/script/script.h:58
+ (inlined by) esphome::script::Script<>::execute_tuple(std::tuple<> const&) at /IDF_BUILD/../src/esphome/components/script/script.h:50
+WARNING Decoded 0x400e1085: esphome::script::ScriptExecuteAction<esphome::script::Script<>>::play() at /IDF_BUILD/../src/esphome/components/script/script.h:227 (discriminator 1)
+WARNING Decoded 0x400f8f87: esphome::Action<>::play_complex() at /IDF_BUILD/../src/esphome/core/automation.h:491
+WARNING Decoded 0x401b2663: esphome::ActionList<>::play() at /IDF_BUILD/../src/esphome/core/automation.h:576
+ (inlined by) esphome::Automation<>::trigger() at /IDF_BUILD/../src/esphome/core/automation.h:621
+ (inlined by) esphome::Trigger<>::trigger() at /IDF_BUILD/../src/esphome/core/automation.h:464
+ (inlined by) esphome::interval::IntervalTrigger::update() at /IDF_BUILD/../src/esphome/components/interval/interval.h:11
+WARNING Decoded 0x401b2439: std::_Function_handler<void (), esphome::PollingComponent::start_poller()::{lambda()#1}>::_M_invoke(std::_Any_data const&) at /IDF_BUILD/../src/esphome/core/component.cpp:442
+ (inlined by) __invoke_impl<void, esphome::PollingComponent::start_poller()::<lambda()>&> at /TOOLCHAIN/xtensa-esp-elf/include/c++/14.2.0/bits/invoke.h:61
+ (inlined by) __invoke_r<void, esphome::PollingComponent::start_poller()::<lambda()>&> at /TOOLCHAIN/xtensa-esp-elf/include/c++/14.2.0/bits/invoke.h:111
+ (inlined by) _M_invoke at /TOOLCHAIN/xtensa-esp-elf/include/c++/14.2.0/bits/std_function.h:290
+WARNING Decoded 0x400dcc30: std::function<void ()>::operator()() const at /TOOLCHAIN/xtensa-esp-elf/include/c++/14.2.0/bits/std_function.h:591
+ (inlined by) esphome::Scheduler::execute_item_(esphome::Scheduler::SchedulerItem*, unsigned long) at /IDF_BUILD/../src/esphome/core/scheduler.cpp:797
+WARNING Decoded 0x400dd667: esphome::Scheduler::call(unsigned long) at /IDF_BUILD/../src/esphome/core/scheduler.cpp:678
+WARNING Decoded 0x400db370: esphome::Application::scheduler_tick_(unsigned long) at /IDF_BUILD/../src/esphome/core/application.h:644
+ (inlined by) esphome::Application::loop() at /IDF_BUILD/../src/esphome/core/application.h:697
+ (inlined by) esphome::loop_task(void*) at /IDF_BUILD/../src/esphome/components/esp32/core.cpp:27
+[03:05:54]
+[03:05:54]
+[03:05:54]
+[03:05:54]
+[03:05:54]ELF file SHA256: c631efcc6
+[03:05:54]
+[03:05:54]Rebooting...
+[03:05:54]ets Jul 29 2019 12:21:46
+[03:05:54]
+[03:05:54]rst:0xc (SW_CPU_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+[03:05:54]configsip: 0, SPIWP:0xee
+[03:05:54]clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+[03:05:54]mode:DIO, clock div:2
+[03:05:54]load:0x3fff0030,len:6248
+[03:05:54]load:0x40078000,len:15904
+[03:05:54]load:0x40080400,len:3896
+[03:05:54]entry 0x40080640
+[03:05:54]I (27) boot: ESP-IDF v5.5.5 2nd stage bootloader
+[03:05:54]I (27) boot: Multicore bootloader
+[03:05:54]I (27) boot: chip revision: v3.1
+[03:05:54]I (27) boot.esp32: SPI Speed      : 40MHz
+[03:05:54]I (31) boot.esp32: SPI Mode       : DIO
+[03:05:54]I (35) boot.esp32: SPI Flash Size : 4MB
+[03:05:54]I (38) boot: Enabling RNG early entropy source...
+[03:05:54]I (43) boot: Partition Table:
+[03:05:54]I (45) boot: ## Label            Usage          Type ST Offset   Length
+[03:05:54]I (52) boot:  0 otadata          OTA data         01 00 00009000 00002000
+[03:05:54]I (58) boot:  1 phy_init         RF data          01 01 0000b000 00001000
+[03:05:54]I (65) boot:  2 app0             OTA app          00 10 00010000 001c0000
+[03:05:54]I (71) boot:  3 app1             OTA app          00 11 001d0000 001c0000
+[03:05:54]I (78) boot:  4 nvs              WiFi data        01 02 00390000 00070000
+[03:05:54]I (84) boot: End of partition table
+[03:05:54]I (88) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=4377ch (276348) map
+[03:05:55]I (189) esp_image: segment 1: paddr=000537a4 vaddr=3ffb0000 size=042bch ( 17084) load
+[03:05:55]I (196) esp_image: segment 2: paddr=00057a68 vaddr=40080000 size=085b0h ( 34224) load
+[03:05:55]I (210) esp_image: segment 3: paddr=00060020 vaddr=400d0020 size=f1808h (989192) map
+[03:05:55]I (548) esp_image: segment 4: paddr=00151830 vaddr=400885b0 size=0b960h ( 47456) load
+[03:05:55]I (567) esp_image: segment 5: paddr=0015d198 vaddr=50000000 size=00020h (    32) load
+[03:05:55]I (577) boot: Loaded app from partition at offset 0x10000
+[03:05:55]I (577) boot: Disabling RNG early entropy source...
+[03:05:55][I][logger:122]: Log initialized
+[03:05:57][I][app:060]: Running through setup()
+[03:05:57][I][esp-idf:000]: E (2143) gpio: gpio_pullup_en(85): GPIO number error (input-only pad has no internal PU)
+[03:05:57][W][lvgl:998]: Failed to allocate 153600 bytes for draw buffer
+[03:05:57][I][esp-idf:000]: E (2411) mdns_responder: Cannot allocate memory (allocate_txt(277), free heap: 32 bytes)
+[03:05:57][I][esp-idf:000]: E (2412) mdns_responder: mdns_service_add_for_host(786): Cannot create service: Out of memory
+[03:05:57][I][esp-idf:000]: E (2412) mdns_responder: Cannot allocate memory (mdns_service_add_for_host(804), free heap: 72 bytes)
+[03:05:57][W][mdns:045]: Failed to register service _esphomelib: ESP_ERR_NO_MEM
+[03:05:57][I][esp-idf:000]: E (2413) ESPNOW: esp now create mutex fail!
+[03:05:57][E][espnow:193]: esp_now_init failed: ESP_ERR_ESPNOW_NO_MEM
+[03:05:57][E][component:249]: espnow was marked as failed
+[03:05:57][E][component:349]: espnow set Error flag: unspecified
+[03:05:57][I][app:117]: setup() finished successfully!
+[03:05:57][W][touchscreen:031]: Touch Polling Stopped. You can safely remove the 'update_interval:' variable fr
+[03:05:57]abort() was called at PC 0x401a591e on core 1
+[03:05:57]
+[03:05:57]
+[03:05:57]Backtrace: 0x400886e5:0x3ffb63f0 0x400886ad:0x3ffb6410 0x4008ce86:0x3ffb6430 0x401a591e:0x3ffb64a0 0x401a5019:0x3ffb64c0 0x400fe381:0x3ffb64e0 0x400fed36:0x3ffb6500 0x400fe091:0x3ffb6530 0x400e3c32:0x3ffb6590 0x400e3e3b:0x3ffb6700 0x401b2955:0x3ffb6720 0x400f8f87:0x3ffb6740 0x400e114d:0x3ffb6760 0x401b2cad:0x3ffb6780 0x400e1085:0x3ffb67a0 0x400f8f87:0x3ffb67c0 0x401b2663:0x3ffb67e0 0x401b2439:0x3ffb6800 0x400dcc30:0x3ffb6820 0x400dd667:0x3ffb6840 0x400db370:0x3ffb6880
+WARNING Found stack trace! Trying to decode it
+WARNING Decoded 0x400886e5: panic_abort at /COMPONENT_ESP_SYSTEM_DIR/panic.c:477
+WARNING Decoded 0x400886ad: esp_system_abort at /COMPONENT_ESP_SYSTEM_DIR/port/esp_system_chip.c:87
+WARNING Decoded 0x4008ce86: abort at /COMPONENT_NEWLIB_DIR/src/abort.c:38
+WARNING Decoded 0x401a591e: __wrap___cxa_allocate_exception at /COMPONENT_CXX_DIR/cxx_exception_stubs.cpp:184
+WARNING Decoded 0x401a5019: operator new(unsigned int) at /builds/idf/crosstool-NG/.build/xtensa-esp-elf/src/gcc/libstdc++-v3/libsupc++/new_op.cc:54
+WARNING Decoded 0x400fe381: std::__detail::_MakeUniq<esphome::light::LightTransitionTransformer>::__single_object std::make_unique<esphome::light::LightTransitionTransformer>() at /TOOLCHAIN/xtensa-esp-elf/include/c++/14.2.0/bits/unique_ptr.h:1076
+ (inlined by) esphome::light::LightOutput::create_default_transition() at /IDF_BUILD/../src/esphome/components/light/light_output.cpp:7
+WARNING Decoded 0x400fed36: esphome::light::LightState::start_transition_(esphome::light::LightColorValues const&, unsigned long, bool) at /IDF_BUILD/../src/esphome/components/light/light_state.cpp:367
+WARNING Decoded 0x400fe091: esphome::light::LightCall::perform() at /IDF_BUILD/../src/esphome/components/light/light_call.cpp:144
+WARNING Decoded 0x400e3c32: _ZZ5setupvENKUlvE28_clEv$constprop$0 at /config/esphome/dsc-control.yaml:4755 (discriminator 3)
+WARNING Decoded 0x400e3e3b: setup()::{lambda()#30}::_FUN() at /config/esphome/dsc-control.yaml:4797
+WARNING Decoded 0x401b2955: esphome::StatelessLambdaAction<>::play() at /IDF_BUILD/../src/esphome/core/base_automation.h:247
+WARNING Decoded 0x400f8f87: esphome::Action<>::play_complex() at /IDF_BUILD/../src/esphome/core/automation.h:491
+WARNING Decoded 0x400e114d: esphome::ActionList<>::play() at /IDF_BUILD/../src/esphome/core/automation.h:576
+ (inlined by) esphome::Automation<>::trigger() at /IDF_BUILD/../src/esphome/core/automation.h:621
+ (inlined by) esphome::Trigger<>::trigger() at /IDF_BUILD/../src/esphome/core/automation.h:464
+ (inlined by) esphome::script::Script<>::run_actions_() at /IDF_BUILD/../src/esphome/components/script/script.h:66
+ (inlined by) esphome::script::SingleScript<>::execute() at /IDF_BUILD/../src/esphome/components/script/script.h:86
+WARNING Decoded 0x401b2cad: void esphome::script::Script<>::execute_tuple_<>(std::tuple<> const&, std::integer_sequence<unsigned int>) at /IDF_BUILD/../src/esphome/components/script/script.h:58
+ (inlined by) esphome::script::Script<>::execute_tuple(std::tuple<> const&) at /IDF_BUILD/../src/esphome/components/script/script.h:50
+WARNING Decoded 0x400e1085: esphome::script::ScriptExecuteAction<esphome::script::Script<>>::play() at /IDF_BUILD/../src/esphome/components/script/script.h:227 (discriminator 1)
+WARNING Decoded 0x400f8f87: esphome::Action<>::play_complex() at /IDF_BUILD/../src/esphome/core/automation.h:491
+WARNING Decoded 0x401b2663: esphome::ActionList<>::play() at /IDF_BUILD/../src/esphome/core/automation.h:576
+ (inlined by) esphome::Automation<>::trigger() at /IDF_BUILD/../src/esphome/core/automation.h:621
+ (inlined by) esphome::Trigger<>::trigger() at /IDF_BUILD/../src/esphome/core/automation.h:464
+ (inlined by) esphome::interval::IntervalTrigger::update() at /IDF_BUILD/../src/esphome/components/interval/interval.h:11
+WARNING Decoded 0x401b2439: std::_Function_handler<void (), esphome::PollingComponent::start_poller()::{lambda()#1}>::_M_invoke(std::_Any_data const&) at /IDF_BUILD/../src/esphome/core/component.cpp:442
+ (inlined by) __invoke_impl<void, esphome::PollingComponent::start_poller()::<lambda()>&> at /TOOLCHAIN/xtensa-esp-elf/include/c++/14.2.0/bits/invoke.h:61
+ (inlined by) __invoke_r<void, esphome::PollingComponent::start_poller()::<lambda()>&> at /TOOLCHAIN/xtensa-esp-elf/include/c++/14.2.0/bits/invoke.h:111
+ (inlined by) _M_invoke at /TOOLCHAIN/xtensa-esp-elf/include/c++/14.2.0/bits/std_function.h:290
+WARNING Decoded 0x400dcc30: std::function<void ()>::operator()() const at /TOOLCHAIN/xtensa-esp-elf/include/c++/14.2.0/bits/std_function.h:591
+ (inlined by) esphome::Scheduler::execute_item_(esphome::Scheduler::SchedulerItem*, unsigned long) at /IDF_BUILD/../src/esphome/core/scheduler.cpp:797
+WARNING Decoded 0x400dd667: esphome::Scheduler::call(unsigned long) at /IDF_BUILD/../src/esphome/core/scheduler.cpp:678
+WARNING Decoded 0x400db370: esphome::Application::scheduler_tick_(unsigned long) at /IDF_BUILD/../src/esphome/core/application.h:644
+ (inlined by) esphome::Application::loop() at /IDF_BUILD/../src/esphome/core/application.h:697
+ (inlined by) esphome::loop_task(void*) at /IDF_BUILD/../src/esphome/components/esp32/core.cpp:27
+[03:05:57]
+[03:05:57]
+[03:05:57]
+[03:05:57]
+[03:05:57]ELF file SHA256: c631efcc6
+[03:05:57]
+[03:05:57]Rebooting...
+[03:05:57]ets Jul 29 2019 12:21:46
+[03:05:57]
+[03:05:57]rst:0xc (SW_CPU_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+[03:05:57]configsip: 0, SPIWP:0xee
+[03:05:57]clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+[03:05:57]mode:DIO, clock div:2
+[03:05:57]load:0x3fff0030,len:6248
+[03:05:57]load:0x40078000,len:15904
+[03:05:57]load:0x40080400,len:3896
+[03:05:57]entry 0x40080640
+[03:05:57]I (27) boot: ESP-IDF v5.5.5 2nd stage bootloader
+[03:05:57]I (27) boot: Multicore bootloader
+[03:05:57]I (27) boot: chip revision: v3.1
+[03:05:57]I (27) boot.esp32: SPI Speed      : 40MHz
+[03:05:57]I (31) boot.esp32: SPI Mode       : DIO
+[03:05:57]I (35) boot.esp32: SPI Flash Size : 4MB
+[03:05:58]I (38) boot: Enabling RNG early entropy source...
+[03:05:58]I (43) boot: Partition Table:
+[03:05:58]I (45) boot: ## Label            Usage          Type ST Offset   Length
+[03:05:58]I (52) boot:  0 otadata          OTA data         01 00 00009000 00002000
+[03:05:58]I (58) boot:  1 phy_init         RF data          01 01 0000b000 00001000
+[03:05:58]I (65) boot:  2 app0             OTA app          00 10 00010000 001c0000
+[03:05:58]I (71) boot:  3 app1             OTA app          00 11 001d0000 001c0000
+[03:05:58]I (78) boot:  4 nvs              WiFi data        01 02 00390000 00070000
+[03:05:58]I (84) boot: End of partition table
+[03:05:58]I (88) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=4377ch (276348) map
+[03:05:58]I (189) esp_image: segment 1: paddr=000537a4 vaddr=3ffb0000 size=042bch ( 17084) load
+[03:05:58]I (196) esp_image: segment 2: paddr=00057a68 vaddr=40080000 size=085b0h ( 34224) load
+[03:05:58]I (210) esp_image: segment 3: paddr=00060020 vaddr=400d0020 size=f1808h (989192) map
+[03:05:58]I (548) esp_image: segment 4: paddr=00151830 vaddr=400885b0 size=0b960h ( 47456) load
+[03:05:58]I (567) esp_image: segment 5: paddr=0015d198 vaddr=50000000 size=00020h (    32) load
+[03:05:58]I (577) boot: Loaded app from partition at offset 0x10000
+[03:05:58]I (577) boot: Disabling RNG early entropy source...
+[03:05:58][I][logger:122]: Log initialized
+[03:06:00][I][app:060]: Running through setup()
+[03:06:00][I][esp-idf:000]: E (2143) gpio: gpio_pullup_en(85): GPIO number error (input-only pad has no internal PU)
+[03:06:00][W][lvgl:998]: Failed to allocate 153600 bytes for draw buffer
+[03:06:00][I][esp-idf:000]: E (2398) mdns_responder: Cannot allocate memory (allocate_txt(277), free heap: 32 bytes)
+[03:06:00][I][esp-idf:000]: E (2399) mdns_responder: mdns_service_add_for_host(786): Cannot create service: Out of memory
+[03:06:00][I][esp-idf:000]: E (2400) mdns_responder: Cannot allocate memory (mdns_service_add_for_host(804), free heap: 176 bytes)
+[03:06:00][W][mdns:045]: Failed to register service _esphomelib: ESP_ERR_NO_MEM
+[03:06:00][I][esp-idf:000]: I (2401) ESPNOW: espnow [version: 2.0] init
+[03:06:01][I][app:117]: setup() finished successfully!
+[03:06:01][E][lvgl:000]: [Error] lv_realloc: couldn't reallocate memory
+[03:06:01][E][lvgl:000]: [Error] lv_realloc: couldn't reallocate memory
+[03:06:01][E][lvgl:000]: [Error] lv_realloc: couldn't reallocate memory
+[03:06:01][E][lvgl:000]: [Error] lv_realloc: couldn't reallocate memory
+[03:06:01][E][lvgl:000]: [Error] lv_realloc: couldn't reallocate memory
+[03:06:01][E][lvgl:000]: [Error] lv_realloc: couldn't reallocate memory
+[03:06:01][E][lvgl:000]: [Error] lv_realloc: couldn't reallocate memory
+[03:06:01][E][lvgl:000]: [Error] lv_realloc: couldn't reallocate memory
+[03:06:01][E][lvgl:000]: [Error] lv_realloc: couldn't reallocate memory
+[03:06:01][E][lvgl:000]: [Error] 
+[03:06:01]abort() was called at PC 0x401a591e on core 1
+[03:06:01]
+[03:06:01]
+[03:06:01]Backtrace: 0x400886e5:0x3ffb6430 0x400886ad:0x3ffb6450 0x4008ce86:0x3ffb6470 0x401a591e:0x3ffb64e0 0x401a5019:0x3ffb6500 0x400e118f:0x3ffb6520 0x400e276a:0x3ffb6540 0x400e27ab:0x3ffb6570 0x400e2ff3:0x3ffb6590 0x400e3e3b:0x3ffb6700 0x401b2955:0x3ffb6720 0x400f8f87:0x3ffb6740 0x400e114d:0x3ffb6760 0x401b2cad:0x3ffb6780 0x400e1085:0x3ffb67a0 0x400f8f87:0x3ffb67c0 0x401b2663:0x3ffb67e0 0x401b2439:0x3ffb6800 0x400dcc30:0x3ffb6820 0x400dd667:0x3ffb6840 0x400db370:0x3ffb6880
+WARNING Found stack trace! Trying to decode it
+WARNING Decoded 0x400886e5: panic_abort at /COMPONENT_ESP_SYSTEM_DIR/panic.c:477
+WARNING Decoded 0x400886ad: esp_system_abort at /COMPONENT_ESP_SYSTEM_DIR/port/esp_system_chip.c:87
+WARNING Decoded 0x4008ce86: abort at /COMPONENT_NEWLIB_DIR/src/abort.c:38
+WARNING Decoded 0x401a591e: __wrap___cxa_allocate_exception at /COMPONENT_CXX_DIR/cxx_exception_stubs.cpp:184
+WARNING Decoded 0x401a5019: operator new(unsigned int) at /builds/idf/crosstool-NG/.build/xtensa-esp-elf/src/gcc/libstdc++-v3/libsupc++/new_op.cc:54
+WARNING Decoded 0x400e118f: std::__new_allocator<char>::allocate(unsigned int, void const*) at /TOOLCHAIN/xtensa-esp-elf/include/c++/14.2.0/bits/new_allocator.h:151
+ (inlined by) std::allocator<char>::allocate(unsigned int) at /TOOLCHAIN/xtensa-esp-elf/include/c++/14.2.0/bits/allocator.h:196
+ (inlined by) std::allocator_traits<std::allocator<char> >::allocate(std::allocator<char>&, unsigned int) at /TOOLCHAIN/xtensa-esp-elf/include/c++/14.2.0/bits/alloc_traits.h:478
+ (inlined by) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_S_allocate(std::allocator<char>&, unsigned int) at /TOOLCHAIN/xtensa-esp-elf/include/c++/14.2.0/bits/basic_string.h:131
+ (inlined by) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_create(unsigned int&, unsigned int) at /TOOLCHAIN/xtensa-esp-elf/include/c++/14.2.0/bits/basic_string.tcc:159
+WARNING Decoded 0x400e276a: void std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_construct<char const*>(char const*, char const*, std::forward_iterator_tag) at /TOOLCHAIN/xtensa-esp-elf/include/c++/14.2.0/bits/basic_string.tcc:229
+WARNING Decoded 0x400e27ab: _ZNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEC4IS3_EEPKcRKS3_$isra$0 at /TOOLCHAIN/xtensa-esp-elf/include/c++/14.2.0/bits/basic_string.h:654
+WARNING Decoded 0x400e2ff3: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::basic_string<std::allocator<char> >(char const*, std::allocator<char> const&) at /TOOLCHAIN/xtensa-esp-elf/include/c++/14.2.0/bits/basic_string.h:655
+ (inlined by) operator() at /config/esphome/dsc-control.yaml:4566
+WARNING Decoded 0x400e3e3b: setup()::{lambda()#30}::_FUN() at /config/esphome/dsc-control.yaml:4797
+WARNING Decoded 0x401b2955: esphome::StatelessLambdaAction<>::play() at /IDF_BUILD/../src/esphome/core/base_automation.h:247
+WARNING Decoded 0x400f8f87: esphome::Action<>::play_complex() at /IDF_BUILD/../src/esphome/core/automation.h:491
+WARNING Decoded 0x400e114d: esphome::ActionList<>::play() at /IDF_BUILD/../src/esphome/core/automation.h:576
+ (inlined by) esphome::Automation<>::trigger() at /IDF_BUILD/../src/esphome/core/automation.h:621
+ (inlined by) esphome::Trigger<>::trigger() at /IDF_BUILD/../src/esphome/core/automation.h:464
+ (inlined by) esphome::script::Script<>::run_actions_() at /IDF_BUILD/../src/esphome/components/script/script.h:66
+ (inlined by) esphome::script::SingleScript<>::execute() at /IDF_BUILD/../src/esphome/components/script/script.h:86
+WARNING Decoded 0x401b2cad: void esphome::script::Script<>::execute_tuple_<>(std::tuple<> const&, std::integer_sequence<unsigned int>) at /IDF_BUILD/../src/esphome/components/script/script.h:58
+ (inlined by) esphome::script::Script<>::execute_tuple(std::tuple<> const&) at /IDF_BUILD/../src/esphome/components/script/script.h:50
+WARNING Decoded 0x400e1085: esphome::script::ScriptExecuteAction<esphome::script::Script<>>::play() at /IDF_BUILD/../src/esphome/components/script/script.h:227 (discriminator 1)
+WARNING Decoded 0x400f8f87: esphome::Action<>::play_complex() at /IDF_BUILD/../src/esphome/core/automation.h:491
+WARNING Decoded 0x401b2663: esphome::ActionList<>::play() at /IDF_BUILD/../src/esphome/core/automation.h:576
+ (inlined by) esphome::Automation<>::trigger() at /IDF_BUILD/../src/esphome/core/automation.h:621
+ (inlined by) esphome::Trigger<>::trigger() at /IDF_BUILD/../src/esphome/core/automation.h:464
+ (inlined by) esphome::interval::IntervalTrigger::update() at /IDF_BUILD/../src/esphome/components/interval/interval.h:11
+WARNING Decoded 0x401b2439: std::_Function_handler<void (), esphome::PollingComponent::start_poller()::{lambda()#1}>::_M_invoke(std::_Any_data const&) at /IDF_BUILD/../src/esphome/core/component.cpp:442
+ (inlined by) __invoke_impl<void, esphome::PollingComponent::start_poller()::<lambda()>&> at /TOOLCHAIN/xtensa-esp-elf/include/c++/14.2.0/bits/invoke.h:61
+ (inlined by) __invoke_r<void, esphome::PollingComponent::start_poller()::<lambda()>&> at /TOOLCHAIN/xtensa-esp-elf/include/c++/14.2.0/bits/invoke.h:111
+ (inlined by) _M_invoke at /TOOLCHAIN/xtensa-esp-elf/include/c++/14.2.0/bits/std_function.h:290
+WARNING Decoded 0x400dcc30: std::function<void ()>::operator()() const at /TOOLCHAIN/xtensa-esp-elf/include/c++/14.2.0/bits/std_function.h:591
+ (inlined by) esphome::Scheduler::execute_item_(esphome::Scheduler::SchedulerItem*, unsigned long) at /IDF_BUILD/../src/esphome/core/scheduler.cpp:797
+WARNING Decoded 0x400dd667: esphome::Scheduler::call(unsigned long) at /IDF_BUILD/../src/esphome/core/scheduler.cpp:678
+WARNING Decoded 0x400db370: esphome::Application::scheduler_tick_(unsigned long) at /IDF_BUILD/../src/esphome/core/application.h:644
+ (inlined by) esphome::Application::loop() at /IDF_BUILD/../src/esphome/core/application.h:697
+ (inlined by) esphome::loop_task(void*) at /IDF_BUILD/../src/esphome/components/esp32/core.cpp:27
+[03:06:01]
+[03:06:01]
+[03:06:01]
+[03:06:01]
+[03:06:01]ELF file SHA256: c631efcc6
+[03:06:01]
+[03:06:01]Rebooting...
+[03:06:01]ets Jul 29 2019 12:21:46
+[03:06:01]
+[03:06:01]rst:0xc (SW_CPU_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+[03:06:01]configsip: 0, SPIWP:0xee
+[03:06:01]clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+[03:06:01]mode:DIO, clock div:2
+[03:06:01]load:0x3fff0030,len:6248
+[03:06:01]load:0x40078000,len:15904
+[03:06:01]load:0x40080400,len:3896
+[03:06:01]entry 0x40080640
+[03:06:01]I (27) boot: ESP-IDF v5.5.5 2nd stage bootloader
+[03:06:01]I (27) boot: Multicore bootloader
+[03:06:01]I (27) boot: chip revision: v3.1
+[03:06:01]I (27) boot.esp32: SPI Speed      : 40MHz
+[03:06:01]I (31) boot.esp32: SPI Mode       : DIO
+[03:06:01]I (35) boot.esp32: SPI Flash Size : 4MB
+[03:06:01]I (38) boot: Enabling RNG early entropy source...
+[03:06:01]I (43) boot: Partition Table:
+[03:06:01]I (45) boot: ## Label            Usage          Type ST Offset   Length
+[03:06:01]I (52) boot:  0 otadata          OTA data         01 00 00009000 00002000
+[03:06:01]I (58) boot:  1 phy_init         RF data          01 01 0000b000 00001000
+[03:06:01]I (65) boot:  2 app0             OTA app          00 10 00010000 001c0000
+[03:06:01]I (71) boot:  3 app1             OTA app          00 11 001d0000 001c0000
+[03:06:01]I (78) boot:  4 nvs              WiFi data        01 02 00390000 00070000
+[03:06:01]I (84) boot: End of partition table
+[03:06:01]I (88) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=4377ch (276348) map
+[03:06:01]I (189) esp_image: segment 1: paddr=000537a4 vaddr=3ffb0000 size=042bch ( 17084) load
+[03:06:01]I (196) esp_image: segment 2: paddr=00057a68 vaddr=40080000 size=085b0h ( 34224) load
+[03:06:01]I (210) esp_image: segment 3: paddr=00060020 vaddr=400d0020 size=f1808h (989192) map
+[03:06:01]I (548) esp_image: segment 4: paddr=00151830 vaddr=400885b0 size=0b960h ( 47456) load
+[03:06:01]I (567) esp_image: segment 5: paddr=0015d198 vaddr=50000000 size=00020h (    32) load
+[03:06:01]I (577) boot: Loaded app from partition at offset 0x10000
+[03:06:01]I (577) boot: Disabling RNG early entropy source...
+[03:06:01][I][logger:122]: Log initialized
+[03:06:03][I][app:060]: Running through setup()
+[03:06:03][I][esp-idf:000]: E (2143) gpio: gpio_pullup_en(85): GPIO number error (input-only pad has no internal PU)
+[03:06:03][W][lvgl:998]: Failed to allocate 153600 bytes for draw buffer
+[03:06:04][I][esp-idf:000]: E (2400) mdns_responder: Cannot allocate memory (allocate_txt(277), free heap: 32 bytes)
+[03:06:04][I][esp-idf:000]: E (2401) mdns_responder: mdns_service_add_for_host(786): Cannot create service: Out of memory
+[03:06:04][I][esp-idf:000]: E (2401) mdns_responder: Cannot allocate memory (mdns_service_add_for_host(804), free heap: 76 bytes)
+[03:06:04][W][mdns:045]: Failed to register service _esphomelib: ESP_ERR_NO_MEM
+[03:06:04][I][esp-idf:000]: E (2402) ESPNOW: esp now create mutex fail!
+[03:06:04][E][espnow:193]: esp_now_init failed: ESP_ERR_ESPNOW_NO_MEM
+[03:06:04][E][component:249]: espnow was marked as failed
+[03:06:04][E][component:349]: espnow set Error flag: unspecified
+[03:06:04][I][app:117]: setup() finished successfully!
+[03:06:04][W][touchscreen:031]: Touch Polling Stopped. You can safely remove the 'update_interval:' variable from the YAML file.
+[03:06:04][E][lvgl:000]: [Error] lv_realloc: couldn't reallocate memory
+[03:06:04][E][lvgl:000]: [Error] lv_realloc: couldn't reallocate memory
+[03:06:04][E][lvgl:000]: [Error] lv_realloc: couldn't reallocate memory
+[03:06:04][E][lvgl:000]: [Error] lv_realloc: couldn't reallocate memory
+[03:06:04][E][lvgl:000]: [Error] lv_realloc: couldn't reallocate memory
+[03:06:04][E][lvgl:000]: [Error] lv_realloc: couldn't reallocate memory
+[03:06:04][E][lvgl:000]: [Error] lv_realloc: couldn't r
+[03:06:04]abort() was called at PC 0x400d84b7 on core 1
+[03:06:04]
+[03:06:04]
+[03:06:04]Backtrace: 0x400886e5:0x3ffb6620 0x400886ad:0x3ffb6640 0x4008ce86:0x3ffb6660 0x400d84b7:0x3ffb66d0 0x400d84de:0x3ffb66f0 0x400d863d:0x3ffb6720 0x40194953:0x3ffb6740 0x401bb695:0x3ffb6760 0x400f9547:0x3ffb6790 0x400f9738:0x3ffb67c0 0x400f92ce:0x3ffb67e0 0x401b2439:0x3ffb6800 0x400dcc30:0x3ffb6820 0x400dd667:0x3ffb6840 0x400db370:0x3ffb6880
+WARNING Found stack trace! Trying to decode it
+WARNING Decoded 0x400886e5: panic_abort at /COMPONENT_ESP_SYSTEM_DIR/panic.c:477
+WARNING Decoded 0x400886ad: esp_system_abort at /COMPONENT_ESP_SYSTEM_DIR/port/esp_system_chip.c:87
+WARNING Decoded 0x4008ce86: abort at /COMPONENT_NEWLIB_DIR/src/abort.c:38
+WARNING Decoded 0x400d84b7: lock_init_generic at /COMPONENT_NEWLIB_DIR/src/locks.c:77
+WARNING Decoded 0x400d84de: lock_acquire_generic at /COMPONENT_NEWLIB_DIR/src/locks.c:133
+WARNING Decoded 0x400d863d: _lock_try_acquire at /COMPONENT_NEWLIB_DIR/src/locks.c:179
+WARNING Decoded 0x40194953: adc_lock_try_acquire at /COMPONENT_ESP_HW_SUPPORT_DIR/adc_share_hw_ctrl.c:162
+WARNING Decoded 0x401bb695: adc_oneshot_read at /COMPONENT_ESP_ADC_DIR/adc_oneshot.c:218
+WARNING Decoded 0x400f9547: esphome::adc::ADCSensor::sample_fixed_attenuation_() at /IDF_BUILD/../src/esphome/components/adc/adc_sensor_esp32.cpp:158
+WARNING Decoded 0x400f9738: esphome::adc::ADCSensor::sample() at /IDF_BUILD/../src/esphome/components/adc/adc_sensor_esp32.cpp:149
+WARNING Decoded 0x400f92ce: esphome::adc::ADCSensor::update() at /IDF_BUILD/../src/esphome/components/adc/adc_sensor_common.cpp:68
+WARNING Decoded 0x401b2439: std::_Function_handler<void (), esphome::PollingComponent::start_poller()::{lambda()#1}>::_M_invoke(std::_Any_data const&) at /IDF_BUILD/../src/esphome/core/component.cpp:442
+ (inlined by) __invoke_impl<void, esphome::PollingComponent::start_poller()::<lambda()>&> at /TOOLCHAIN/xtensa-esp-elf/include/c++/14.2.0/bits/invoke.h:61
+ (inlined by) __invoke_r<void, esphome::PollingComponent::start_poller()::<lambda()>&> at /TOOLCHAIN/xtensa-esp-elf/include/c++/14.2.0/bits/invoke.h:111
+ (inlined by) _M_invoke at /TOOLCHAIN/xtensa-esp-elf/include/c++/14.2.0/bits/std_function.h:290
+WARNING Decoded 0x400dcc30: std::function<void ()>::operator()() const at /TOOLCHAIN/xtensa-esp-elf/include/c++/14.2.0/bits/std_function.h:591
+ (inlined by) esphome::Scheduler::execute_item_(esphome::Scheduler::SchedulerItem*, unsigned long) at /IDF_BUILD/../src/esphome/core/scheduler.cpp:797
+WARNING Decoded 0x400dd667: esphome::Scheduler::call(unsigned long) at /IDF_BUILD/../src/esphome/core/scheduler.cpp:678
+WARNING Decoded 0x400db370: esphome::Application::scheduler_tick_(unsigned long) at /IDF_BUILD/../src/esphome/core/application.h:644
+ (inlined by) esphome::Application::loop() at /IDF_BUILD/../src/esphome/core/application.h:697
+ (inlined by) esphome::loop_task(void*) at /IDF_BUILD/../src/esphome/components/esp32/core.cpp:27
+[03:06:04]
+[03:06:04]
+[03:06:04]
+[03:06:04]
+[03:06:04]ELF file SHA256: c631efcc6
+[03:06:04]
+[03:06:04]Rebooting...
+[03:06:04]ets Jul 29 2019 12:21:46
+[03:06:04]
+[03:06:04]rst:0xc (SW_CPU_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+[03:06:04]configsip: 0, SPIWP:0xee
+[03:06:04]clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+[03:06:04]mode:DIO, clock div:2
+[03:06:04]load:0x3fff0030,len:6248
+[03:06:04]load:0x40078000,len:15904
+[03:06:04]load:0x40080400,len:3896
+[03:06:04]entry 0x40080640
+[03:06:04]I (27) boot: ESP-IDF v5.5.5 2nd stage bootloader
+[03:06:04]I (27) boot: Multicore bootloader
+[03:06:04]I (27) boot: chip revision: v3.1
+[03:06:04]I (27) boot.esp32: SPI Speed      : 40MHz
+[03:06:04]I (31) boot.esp32: SPI Mode       : DIO
+[03:06:04]I (35) boot.esp32: SPI Flash Size : 4MB
+[03:06:04]I (38) boot: Enabling RNG early entropy source...
+[03:06:04]I (43) boot: Partition Table:
+[03:06:04]I (45) boot: ## Label            Usage          Type ST Offset   Length
+[03:06:04]I (52) boot:  0 otadata          OTA data         01 00 00009000 00002000
+[03:06:04]I (58) boot:  1 phy_init         RF data          01 01 0000b000 00001000
+[03:06:04]I (65) boot:  2 app0             OTA app          00 10 00010000 001c0000
+[03:06:04]I (71) boot:  3 app1             OTA app          00 11 001d0000 001c0000
+[03:06:04]I (78) boot:  4 nvs              WiFi data        01 02 00390000 00070000
+[03:06:04]I (84) boot: End of partition table
+[03:06:04]I (88) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=4377ch (276348) map
+[03:06:04]I (189) esp_image: segment 1: paddr=000537a4 vaddr=3ffb0000 size=042bch ( 17084) load
+[03:06:04]I (196) esp_image: segment 2: paddr=00057a68 vaddr=40080000 size=085b0h ( 34224) load
+[03:06:04]I (210) esp_image: segment 3: paddr=00060020 vaddr=400d0020 size=f1808h (989192) map
+[03:06:04]I (548) esp_image: segment 4: paddr=00151830 vaddr=400885b0 size=0b960h ( 47456) load
+[03:06:04]I (567) esp_image: segment 5: paddr=0015d198 vaddr=50000000 size=00020h (    32) load
+[03:06:04]I (577) boot: Loaded app from partition at offset 0x10000
+[03:06:04]I (577) boot: Disabling RNG early entropy source...
+[03:06:05][I][logger:122]: Log initialized
+[03:06:06][I][app:060]: Running through setup()
+[03:06:07][I][esp-idf:000]: E (2143) gpio: gpio_pullup_en(85): GPIO number error (input-only pad has no internal PU)
+[03:06:07][W][lvgl:998]: Failed to allocate 153600 bytes for draw buffer
+[03:06:07][I][esp-idf:000]: E (2400) mdns_responder: Cannot allocate memory (allocate_txt(277), free heap: 32 bytes)
+[03:06:07][I][esp-idf:000]: E (2401) mdns_responder: mdns_service_add_for_host(786): Cannot create service: Out of memory
+[03:06:07][I][esp-idf:000]: E (2401) mdns_responder: Cannot allocate memory (mdns_service_add_for_host(804), free heap: 80 bytes)
+[03:06:07][W][mdns:045]: Failed to register service _esphomelib: ESP_ERR_NO_MEM
+[03:06:07][I][esp-idf:000]: E (2402) ESPNOW: esp now create mutex fail!
+[03:06:07][E][espnow:193]: esp_now_init failed: ESP_ERR_ESPNOW_NO_MEM
+[03:06:07][E][component:249]: espnow was marked as failed
+[03:06:07][E][component:349]: espnow set Error flag: unspecified
+[03:06:07][I][app:117]: setup() finished successfully!
+[03:06:07][W][touchscreen:031]: Touch Polling Stopped. You can safely remove the 'update_interval:' variable from the YAML file.
+[03:06:07][E][lvgl:000]: [Error] lv_realloc: couldn't reallocate memory
+[03:06:07][E][lvgl:000]: [Error] lv_realloc: couldn't reallocate memory
+[03:06:07][E][lvgl:000]: [Error] lv_realloc: couldn't reallocate memory
+[03:06:07][E][lvgl:000]: [Error] lv_realloc: couldn't reallocate memory
+[03:06:07][E][lvgl:000]: [Error] lv_realloc: couldn't reallocate memory
+[03:06:07][E][lvgl:000]: [Error] lv_realloc: couldn't reallocate memory
+[03:06:07][E][lvgl:000]: [Error] lv_realloc: couldn't reallocate memory
+[03:06:07][E][lvgl:000]: [Error] lv_realloc: couldn't reallocate memory
+[03:06:07][E][lvgl:000]: [Error] lv_realloc: couldn't reallocate memory
+[03:06:07][W][component:473]: interval took a long time for an operation (66 ms), max is 50 ms
+[03:06:07][W][component:342]: wifi set Warning flag: scanning for networks
+[03:06:07][E][lvgl:1023]: Failed to allocate 104 bytes
+[03:06:07][E][lvgl:000]: 
+[03:06:11]E (13950) task_wdt: Task watchdog got triggered. The following tasks/users did not reset the watchdog in time:
+[03:06:11]E (13950) task_wdt:  - loopTask (CPU 1)
+[03:06:11]E (13950) task_wdt: Tasks currently running:
+[03:06:11]E (13950) task_wdt: CPU 0: IDLE0
+[03:06:11]E (13950) task_wdt: CPU 1: loopTask
+[03:06:11]E (13950) task_wdt: Aborting.
+[03:06:11]E (13950) task_wdt: Print CPU 1 backtrace
+[03:06:11]
+[03:06:11]
+[03:06:11]
+[03:06:11]
+[03:06:11]Backtrace: 0x4012a3c5:0x3ffb65d0 0x4012ee48:0x3ffb6600 0x4012aba6:0x3ffb66c0 0x4012ac43:0x3ffb6710 0x4012269d:0x3ffb6760 0x4011e0a6:0x3ffb6780 0x40121960:0x3ffb67a0 0x4012c696:0x3ffb6830 0x400ffb8c:0x3ffb6860 0x400db456:0x3ffb6880
+WARNING Found stack trace! Trying to decode it
+WARNING Decoded 0x4012a3c5: lv_anim_start at /IDF_BUILD/../managed_components/lvgl__lvgl/src/misc/lv_anim.c:134 (discriminator 1)
+WARNING Decoded 0x4012ee48: lv_label_refr_text at /IDF_BUILD/../managed_components/lvgl__lvgl/src/widgets/label/lv_label.c:1280
+ (inlined by) update_layout_completed_cb at /IDF_BUILD/../managed_components/lvgl__lvgl/src/widgets/label/lv_label.c:1084
+WARNING Decoded 0x4012aba6: lv_event_send at /IDF_BUILD/../managed_components/lvgl__lvgl/src/misc/lv_event.c:137
+ (inlined by) lv_event_send at /IDF_BUILD/../managed_components/lvgl__lvgl/src/misc/lv_event.c:108
+WARNING Decoded 0x4012ac43: lv_event_push_and_send at /IDF_BUILD/../managed_components/lvgl__lvgl/src/misc/lv_event.c:100
+WARNING Decoded 0x4012269d: lv_display_send_event at /IDF_BUILD/../managed_components/lvgl__lvgl/src/display/lv_display.c:982
+WARNING Decoded 0x4011e0a6: lv_obj_update_layout at /IDF_BUILD/../managed_components/lvgl__lvgl/src/core/lv_obj_pos.c:400
+ (inlined by) lv_obj_update_layout at /IDF_BUILD/../managed_components/lvgl__lvgl/src/core/lv_obj_pos.c:381
+WARNING Decoded 0x40121960: lv_display_refr_timer at /IDF_BUILD/../managed_components/lvgl__lvgl/src/core/lv_refr.c:402
+WARNING Decoded 0x4012c696: lv_timer_exec at /IDF_BUILD/../managed_components/lvgl__lvgl/src/misc/lv_timer.c:353
+ (inlined by) lv_timer_handler at /IDF_BUILD/../managed_components/lvgl__lvgl/src/misc/lv_timer.c:107
+ (inlined by) lv_timer_handler at /IDF_BUILD/../managed_components/lvgl__lvgl/src/misc/lv_timer.c:63
+WARNING Decoded 0x400ffb8c: esphome::lvgl::LvglComponent::loop() at /IDF_BUILD/../src/esphome/components/lvgl/lvgl_esphome.cpp:861
+ (inlined by) esphome::lvgl::LvglComponent::loop() at /IDF_BUILD/../src/esphome/components/lvgl/lvgl_esphome.cpp:835
+WARNING Decoded 0x400db456: esphome::Application::loop() at /IDF_BUILD/../src/esphome/core/application.h:741
+ (inlined by) esphome::loop_task(void*) at /IDF_BUILD/../src/esphome/components/esp32/core.cpp:27
+[03:06:11]
+[03:06:11]
+[03:06:11]
+[03:06:11]
+[03:06:11]ELF file SHA256: c631efcc6
+[03:06:11]
+[03:06:11]Rebooting...
+[03:06:11]ets Jul 29 2019 12:21:46
+[03:06:11]
+[03:06:11]rst:0xc (SW_CPU_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+[03:06:11]configsip: 0, SPIWP:0xee
+[03:06:11]clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+[03:06:11]mode:DIO, clock div:2
+[03:06:11]load:0x3fff0030,len:6248
+[03:06:11]load:0x40078000,len:15904
+[03:06:11]load:0x40080400,len:3896
+[03:06:11]entry 0x40080640
+[03:06:11]I (27) boot: ESP-IDF v5.5.5 2nd stage bootloader
+[03:06:11]I (27) boot: Multicore bootloader
+[03:06:11]I (27) boot: chip revision: v3.1
+[03:06:11]I (27) boot.esp32: SPI Speed      : 40MHz
+[03:06:11]I (31) boot.esp32: SPI Mode       : DIO
+[03:06:11]I (35) boot.esp32: SPI Flash Size : 4MB
+[03:06:11]I (38) boot: Enabling RNG early entropy source...
+[03:06:11]I (43) boot: Partition Table:
+[03:06:11]I (45) boot: ## Label            Usage          Type ST Offset   Length
+[03:06:11]I (52) boot:  0 otadata          OTA data         01 00 00009000 00002000
+[03:06:11]I (58) boot:  1 phy_init         RF data          01 01 0000b000 00001000
+[03:06:11]I (65) boot:  2 app0             OTA app          00 10 00010000 001c0000
+[03:06:11]I (71) boot:  3 app1             OTA app          00 11 001d0000 001c0000
+[03:06:11]I (78) boot:  4 nvs              WiFi data        01 02 00390000 00070000
+[03:06:11]I (84) boot: End of partition table
+[03:06:11]I (88) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=4377ch (276348) map
+[03:06:11]I (189) esp_image: segment 1: paddr=000537a4 vaddr=3ffb0000 size=042bch ( 17084) load
+[03:06:11]I (196) esp_image: segment 2: paddr=00057a68 vaddr=40080000 size=085b0h ( 34224) load
+[03:06:11]I (210) esp_image: segment 3: paddr=00060020 vaddr=400d0020 size=f1808h (989192) map
+[03:06:12]I (548) esp_image: segment 4: paddr=00151830 vaddr=400885b0 size=0b960h ( 47456) load
+[03:06:12]I (567) esp_image: segment 5: paddr=0015d198 vaddr=50000000 size=00020h (    32) load
+[03:06:12]I (577) boot: Loaded app from partition at offset 0x10000
+[03:06:12]I (577) boot: Disabling RNG early entropy source...
+[03:06:12][I][logger:122]: Log initialized
+[03:06:13][I][app:060]: Running through setup()
+[03:06:14][I][esp-idf:000]: E (2144) gpio: gpio_pullup_en(85): GPIO number error (input-only pad has no internal PU)
+[03:06:14][W][lvgl:998]: Failed to allocate 153600 bytes for draw buffer
+[03:06:14][I][esp-idf:000]: E (2414) mdns_responder: Cannot allocate memory (allocate_txt(277), free heap: 32 bytes)
+[03:06:14][I][esp-idf:000]: E (2415) mdns_responder: mdns_service_add_for_host(786): Cannot create service: Out of memory
+[03:06:14][I][esp-idf:000]: E (2415) mdns_responder: Cannot allocate memory (mdns_service_add_for_host(804), free heap: 72 bytes)
+[03:06:14][W][mdns:045]: Failed to register service _esphomelib: ESP_ERR_NO_MEM
+[03:06:14][I][esp-idf:000]: E (2415) ESPNOW: esp now create mutex fail!
+[03:06:14][E][espnow:193]: esp_now_init failed: ESP_ERR_ESPNOW_NO_MEM
+[03:06:14][E][component:249]: espnow was marked as failed
+[03:06:14][E][component:349]: espnow set Error flag: unspecified
+[03:06:14][I][app:117]: setup() finished successfully!
+[03:06:14][W][touchscreen:031]: Touch Polling Stopped. You can safely remove the 'update_interval:' variable from the YAML file.
+[03:06:14][E][lvgl:000]: [Error] lv_realloc: couldn't reallocate memory
+[03:06:14][E][lvgl:000]: [Error] lv_realloc: couldn't reallocate memory
+[03:06:14][E][lvgl:000]: [Error] lv_realloc: couldn't reallocate memory
+[03:06:14][E][lvgl:000]: [Error] lv_realloc: couldn't reallocate memory
+[03:06:14][E][lvgl:000]: [Error] lv_realloc: couldn't reallocate memory
+[03:06:14][E][lvgl:000]: [Error] lv_realloc: couldn't reallocate memory
+[03:06:14][E][lvgl:000]: [Error] lv_realloc: couldn't reallocate memory
+[03:06:14][E][lvgl:000]: [Error] lv_realloc: couldn't reallocate memory
+[03:06:14][E][lvgl:000]: [Error] lv_realloc: couldn't reallocate memory
+[03:06:14][W][component:473]: interval took a long time for an operation (67 ms), max is 50 ms
+[03:06:14][W][component:342]: wifi set Warning flag: scanning for networks
+[03:06:14][E][lvgl:1023]: Failed to allocate 104 bytes
+[03:06:14][E][lvgl:000]: 
+[03:06:18]E (13950) task_wdt: Task watchdog got triggered. The following tasks/users did not reset the watchdog in time:
+[03:06:18]E (13950) task_wdt:  - loopTask (CPU 1)
+[03:06:18]E (13950) task_wdt: Tasks currently running:
+[03:06:18]E (13950) task_wdt: CPU 0: IDLE0
+[03:06:18]E (13950) task_wdt: CPU 1: loopTask
+[03:06:18]E (13950) task_wdt: Aborting.
+[03:06:18]E (13950) task_wdt: Print CPU 1 backtrace
+[03:06:18]
+[03:06:18]
+[03:06:18]
+[03:06:18]
+[03:06:18]Backtrace: 0x4012a3c5:0x3ffb65d0 0x4012ee48:0x3ffb6600 0x4012aba6:0x3ffb66c0 0x4012ac43:0x3ffb6710 0x4012269d:0x3ffb6760 0x4011e0a6:0x3ffb6780 0x40121960:0x3ffb67a0 0x4012c696:0x3ffb6830 0x400ffb8c:0x3ffb6860 0x400db456:0x3ffb6880
+WARNING Found stack trace! Trying to decode it
+WARNING Decoded 0x4012a3c5: lv_anim_start at /IDF_BUILD/../managed_components/lvgl__lvgl/src/misc/lv_anim.c:134 (discriminator 1)
+WARNING Decoded 0x4012ee48: lv_label_refr_text at /IDF_BUILD/../managed_components/lvgl__lvgl/src/widgets/label/lv_label.c:1280
+ (inlined by) update_layout_completed_cb at /IDF_BUILD/../managed_components/lvgl__lvgl/src/widgets/label/lv_label.c:1084
+WARNING Decoded 0x4012aba6: lv_event_send at /IDF_BUILD/../managed_components/lvgl__lvgl/src/misc/lv_event.c:137
+ (inlined by) lv_event_send at /IDF_BUILD/../managed_components/lvgl__lvgl/src/misc/lv_event.c:108
+WARNING Decoded 0x4012ac43: lv_event_push_and_send at /IDF_BUILD/../managed_components/lvgl__lvgl/src/misc/lv_event.c:100
+WARNING Decoded 0x4012269d: lv_display_send_event at /IDF_BUILD/../managed_components/lvgl__lvgl/src/display/lv_display.c:982
+WARNING Decoded 0x4011e0a6: lv_obj_update_layout at /IDF_BUILD/../managed_components/lvgl__lvgl/src/core/lv_obj_pos.c:400
+ (inlined by) lv_obj_update_layout at /IDF_BUILD/../managed_components/lvgl__lvgl/src/core/lv_obj_pos.c:381
+WARNING Decoded 0x40121960: lv_display_refr_timer at /IDF_BUILD/../managed_components/lvgl__lvgl/src/core/lv_refr.c:402
+WARNING Decoded 0x4012c696: lv_timer_exec at /IDF_BUILD/../managed_components/lvgl__lvgl/src/misc/lv_timer.c:353
+ (inlined by) lv_timer_handler at /IDF_BUILD/../managed_components/lvgl__lvgl/src/misc/lv_timer.c:107
+ (inlined by) lv_timer_handler at /IDF_BUILD/../managed_components/lvgl__lvgl/src/misc/lv_timer.c:63
+WARNING Decoded 0x400ffb8c: esphome::lvgl::LvglComponent::loop() at /IDF_BUILD/../src/esphome/components/lvgl/lvgl_esphome.cpp:861
+ (inlined by) esphome::lvgl::LvglComponent::loop() at /IDF_BUILD/../src/esphome/components/lvgl/lvgl_esphome.cpp:835
+WARNING Decoded 0x400db456: esphome::Application::loop() at /IDF_BUILD/../src/esphome/core/application.h:741
+ (inlined by) esphome::loop_task(void*) at /IDF_BUILD/../src/esphome/components/esp32/core.cpp:27
+[03:06:18]
+[03:06:18]
+[03:06:18]
+[03:06:18]
+[03:06:18]ELF file SHA256: c631efcc6
+[03:06:18]
+[03:06:18]Rebooting...
+[03:06:18]ets Jul 29 2019 12:21:46
+[03:06:18]
+[03:06:18]rst:0xc (SW_CPU_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+[03:06:18]configsip: 0, SPIWP:0xee
+[03:06:18]clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+[03:06:18]mode:DIO, clock div:2
+[03:06:18]load:0x3fff0030,len:6248
+[03:06:18]load:0x40078000,len:15904
+[03:06:18]load:0x40080400,len:3896
+[03:06:18]entry 0x40080640
+[03:06:18]I (27) boot: ESP-IDF v5.5.5 2nd stage bootloader
+[03:06:18]I (27) boot: Multicore bootloader
+[03:06:18]I (27) boot: chip revision: v3.1
+[03:06:18]I (27) boot.esp32: SPI Speed      : 40MHz
+[03:06:18]I (31) boot.esp32: SPI Mode       : DIO
+[03:06:18]I (35) boot.esp32: SPI Flash Size : 4MB
+[03:06:18]I (38) boot: Enabling RNG early entropy source...
+[03:06:18]I (43) boot: Partition Table:
+[03:06:18]I (45) boot: ## Label            Usage          Type ST Offset   Length
+[03:06:19]I (52) boot:  0 otadata          OTA data         01 00 00009000 00002000
+[03:06:19]I (58) boot:  1 phy_init         RF data          01 01 0000b000 00001000
+[03:06:19]I (65) boot:  2 app0             OTA app          00 10 00010000 001c0000
+[03:06:19]I (71) boot:  3 app1             OTA app          00 11 001d0000 001c0000
+[03:06:19]I (78) boot:  4 nvs              WiFi data        01 02 00390000 00070000
+[03:06:19]I (84) boot: End of partition table
+[03:06:19]I (88) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=4377ch (276348) map
+[03:06:19]I (189) esp_image: segment 1: paddr=000537a4 vaddr=3ffb0000 size=042bch ( 17084) load
+[03:06:19]I (196) esp_image: segment 2: paddr=00057a68 vaddr=40080000 size=085b0h ( 34224) load
+[03:06:19]I (210) esp_image: segment 3: paddr=00060020 vaddr=400d0020 size=f1808h (989192) map
+[03:06:19]I (548) esp_image: segment 4: paddr=00151830 vaddr=400885b0 size=0b960h ( 47456) load
+[03:06:19]I (567) esp_image: segment 5: paddr=0015d198 vaddr=50000000 size=00020h (    32) load
+[03:06:19]I (577) boot: Loaded app from partition at offset 0x10000
+[03:06:19]I (577) boot: Disabling RNG early entropy source...
+[03:06:19][I][logger:122]: Log initialized
+[03:06:21][I][app:060]: Running through setup()
+[03:06:21][I][esp-idf:000]: E (2142) gpio: gpio_pullup_en(85): GPIO number error (input-only pad has no internal PU)
+[03:06:21][W][lvgl:998]: Failed to allocate 153600 bytes for draw buffer
+[03:06:21][I][esp-idf:000]: E (2410) mdns_service: create_task_with_caps(262): failed to allocate memory for the mDNS task's stack
+[03:06:21][I][esp-idf:000]: E (2411) mdns_service: Cannot allocate memory (create_task_with_caps(270), free heap: 4068 bytes)
+[03:06:21][I][esp-idf:000]: E (2411) mdns_service: service_task_start(294): Failed to start the mDNS service task
+[03:06:21][W][mdns:021]: Init failed: ESP_FAIL
+[03:06:21][E][component:249]: mdns was marked as failed
+[03:06:21][E][component:349]: mdns set Error flag: unspecified
+[03:06:21][I][esp-idf:000]: I (2434) ESPNOW: espnow [version: 2.0] init
+[03:06:22][I][app:117]: setup() finished successfully!
+[03:06:22][W][touchscreen:031]: Touch Polling Stopped. You can safely remove the 'update_interval:' variable from the YAML file.
+[03:06:22][W][component:473]: lvgl took a long time for an operation (368 ms), max is 50 ms
+[03:06:22][W][component:342]: wifi set Warning flag: scanning for networks
+[03:06:22][I][app:151]: ESPHome version 2026.7.2 compiled on 2026-07-26 01:58:08 +1000
+[03:06:22][I][app:153]: Project digital_emotions.dsc-hub version 4.0
+[03:06:22][I][app:158]: ESP32 Chip: ESP32 rev3.1, 2 core(s)
+[03:06:22][W][app:171]: Chip rev >= 3.0 detected. Set minimum_chip_revision: "3.1" under esp32 > framework > advanced to reduce binary size
+[03:06:22][W][app:198]: Bootloader supports SRAM1 as IRAM (+40KB). Set sram1_as_iram: true under esp32 > framework > advanced
+[03:06:24][I][wifi:1460]: - 'Digital-Emotions Studio' (58:D9:D5:D7:AA:82) ▂▄▆█
+[03:06:24][I][wifi:1460]: - 'Digital-Emotions Studio' (58:D9:D5:D7:AA:E2) ▂▄▆█
+[03:06:24][I][wifi:1119]: Connecting to 'Digital-Emotions Studio' (58:D9:D5:D7:AA:82) (priority 0, attempt 1/2 in phase SCAN_CONNECTING)...
+[03:06:25][W][safe_mode:085]: Last reset too quick; invoke in 2 restarts
+[03:06:25][E][component:188]:   mdns is marked FAILED: unspecified
+[03:06:26][I][wifi:1597]: Connected
+[03:06:26][I][espnow:261]: Wifi Channel is changed from 1 to 6.
+[03:06:26][W][component:365]: wifi cleared Warning flag
+[03:06:48][I][cyd_touch:314]: raw=480,545  mapped=21,10
+[03:07:07][W][api.connection:2532]: 192.168.86.3 (192.168.86.3): Socket operation failed HANDSHAKESTATE_SPLIT_FAILED errno=11
+[03:07:19][I][safe_mode:142]: Boot seems successful; resetting boot loop counter
+[03:08:06][I][cyd_touch:314]: raw=956,1983  mapped=64,111
+[03:08:09][I][cyd_touch:314]: raw=596,601  mapped=31,14
+[03:08:10][I][cyd_touch:314]: raw=1057,1794  mapped=73,97
+[03:08:12][I][cyd_touch:314]: raw=3313,697  mapped=279,20
+[03:08:16][I][cyd_touch:314]: raw=1261,3364  mapped=92,207
+[03:08:18][I][cyd_touch:314]: raw=2076,3472  mapped=166,215
+[03:08:20][I][cyd_touch:314]: raw=3464,3532  mapped=293,219

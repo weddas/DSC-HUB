@@ -1,0 +1,36 @@
+# ==================================================================
+#  DSC-HUB — .gitignore
+#  The first line is the most important one in this repo.
+# ==================================================================
+secrets.yaml
+**/secrets.yaml
+secrets.yaml.*
+!secrets.yaml.template
+*.old-*
+
+# ESPHome build artefacts
+.esphome/
+**/.esphome/
+*.bin
+*.elf
+
+# Never commit a live HA config
+home-assistant_v2.db*
+.storage/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+.vscode/
+.idea/
+
+# Cursor local (keep rules if added later under .cursor/rules)
+.cursor/
+
+# Superseded tree — canonical firmware is firmware/v4/
+firmware/DSC-HUB v4/**
+!firmware/DSC-HUB v4/MOVED.md
+
+# Private business / marketing / build docs — keep local only, never push
+Media_and_Docs/

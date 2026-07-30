@@ -1,0 +1,67 @@
+# ==================================================================
+#  DSC-HUB · Demand automations (v2.2 — COMPLETE SET, all 7 rungs)
+#  This file SUPERSEDES dsc_hub_demand_additions.yaml.
+#
+#  Paste into automations.yaml, or save as
+#  config/packages/dsc_hub/dsc_hub_demand_automations.yaml under an
+#  `automation:` key if you use packages.
+#
+#  >>> REPLACE the seven REPLACE_WITH_* entity_ids with your real
+#  >>> smart plugs. Nothing else needs editing.
+# ==================================================================
+
+- id: dsc_hub_humidifier_follower
+  alias: "DSC-HUB · Humidifier follows Humidifier Demand"
+  use_blueprint:
+    path: dsc_hub/demand_follower.yaml
+    input:
+      demand_switch: switch.dsc_hub_humidifier_demand
+      appliance: switch.REPLACE_WITH_HUMIDIFIER_PLUG
+
+- id: dsc_hub_dehumidifier_follower
+  alias: "DSC-HUB · Dehumidifier follows Dehumidifier Demand"
+  use_blueprint:
+    path: dsc_hub/demand_follower.yaml
+    input:
+      demand_switch: switch.dsc_hub_dehumidifier_demand
+      appliance: switch.REPLACE_WITH_DEHUMIDIFIER_PLUG
+
+- id: dsc_hub_heater_follower
+  alias: "DSC-HUB · Heater follows Heater Demand"
+  use_blueprint:
+    path: dsc_hub/demand_follower.yaml
+    input:
+      demand_switch: switch.dsc_hub_heater_demand
+      appliance: switch.REPLACE_WITH_HEATER_PLUG
+
+- id: dsc_hub_growmat_follower
+  alias: "DSC-HUB · Grow Mat follows Grow Mat Demand"
+  use_blueprint:
+    path: dsc_hub/demand_follower.yaml
+    input:
+      demand_switch: switch.dsc_hub_grow_mat_demand
+      appliance: switch.REPLACE_WITH_GROWMAT_PLUG
+
+- id: dsc_hub_ac_follower
+  alias: "DSC-HUB · AC follows AC Demand"
+  use_blueprint:
+    path: dsc_hub/demand_follower.yaml
+    input:
+      demand_switch: switch.dsc_hub_ac_demand
+      appliance: switch.REPLACE_WITH_AC_PLUG
+
+- id: dsc_hub_clone_led_follower
+  alias: "DSC-HUB · Clone LED follows Clone LED Demand"
+  use_blueprint:
+    path: dsc_hub/demand_follower.yaml
+    input:
+      demand_switch: switch.dsc_hub_clone_led_demand
+      appliance: switch.REPLACE_WITH_CLONE_LIGHT_PLUG
+
+- id: dsc_hub_clone_humidifier_follower
+  alias: "DSC-HUB · Clone humidifier follows Clone Humidifier Demand"
+  use_blueprint:
+    path: dsc_hub/demand_follower.yaml
+    input:
+      demand_switch: switch.dsc_hub_clone_humidifier_demand
+      appliance: switch.REPLACE_WITH_CLONE_HUMIDIFIER_PLUG

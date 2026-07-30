@@ -1,0 +1,165 @@
+# ==================================================================
+#  DSC-HUB v2.4 · LIGHT-ACCOUNTING HELPERS
+#  ------------------------------------------------------------------
+#  WHY THIS FILE EXISTS (six-month note)
+#
+#  In v2.3 the SF1000 was the 4x8's light. Every light-accounting
+#  helper was built on that assumption:
+#
+#     "4x8 hours today"      <- measured the SF1000
+#     "2x4 hours today"      <- measured switch.dsc_hub_clone_led_demand
+#     "dark period violation"<- SF1000 on vs the 4x8 window
+#
+#  v2.4 moved the SF1000 into the 2x4 (topology Option A) and retired
+#  the Clone LED demand entirely. That inverted all three:
+#
+#     * "2x4 hours today" lost its source entity outright  -> dies
+#     * "4x8 hours today" silently began measuring the CLONE tent
+#     * "dark period violation" began comparing the CLONE light
+#       against the 4x8's schedule -> both false alarms AND, worse,
+#       silence during a real clone-tent light leak
+#
+#  The last one is the dangerous one. A dark-period alarm that is
+#  quietly watching the wrong tent is worse than no alarm at all: it
+#  reads green while a flowering herm risk goes unreported.
+#
+#  These five definitions REPLACE the v2.3 originals. The rest of the
+#  helper layer (airflow, fan %, runtimes, cycles, EC, tank) is
+#  untouched by the topology change and is not reproduced here.
+#
+#  DEPENDENCY: needs the two window binary_sensors added to the hub in
+#  v2.4-alpha (binary_sensor.dsc_hub_4x8_window_open / _2x4_window_open).
+#  Flash the hub BEFORE loading this file or every template renders
+#  'unknown' until it does.
+#
+#  INSTALL: see INSTALL-INSTRUCTIONS.md §3. You MUST delete the old
+#  definitions first — leaving both in place gives you duplicate
+#  unique_ids and HA will silently create *_2 entities that the
+#  dashboard does not reference.
+# ==================================================================
+
+# ------------------------------------------------------------------
+#  1. REAL LIGHT ON-TIME  —  the 2x4, where the SF1000 now lives
+# ------------------------------------------------------------------
+# This is now the ONLY tent with a physical lamp, so this is the only
+# on-time number in the system that reflects photons rather than plan.
+sensor:
+  - platform: history_stats
+    name: "DSC Lights On Today 2x4"
+    unique_id: dsc_lights_on_today_2x4
+    entity_id: light.dsc_hub_sf1000_dimmer
+    state: "on"
+    type: time
+    start: "{{ today_at('00:00') }}"
+    end: "{{ now() }}"
+
+  # ----------------------------------------------------------------
+  #  2. VIRTUAL WINDOW ON-TIME  —  the 4x8, which has no lamp at all
+  # ----------------------------------------------------------------
+  # Sourced from the hub's exported window global, NOT from any light.
+  # This number is a SCHEDULE, not an output: it says "the 4x8 believes
+  # it is in daylight", which still drives Follow-4x8, the counter-cycle
+  # thermal logic and the OLED countdowns. When a 4x8 light lands on the
+  # reserved GPIO5, this stays correct and a real on-time sensor joins
+  # it — the two then want to be compared, and any gap is a fault.
+  - platform: history_stats
+    name: "DSC Lights On Today 4x8"
+    unique_id: dsc_lights_on_today_4x8
+    entity_id: binary_sensor.dsc_hub_4x8_window_open
+    state: "on"
+    type: time
+    start: "{{ today_at('00:00') }}"
+    end: "{{ now() }}"
+
+template:
+  # ----------------------------------------------------------------
+  #  3. CLONE DARK-PERIOD VIOLATION  —  replaces the 4x8 version
+  # ----------------------------------------------------------------
+  # The herm alarm, re-pointed at the tent that actually has a light.
+  # Compares the SF1000 against the 2x4's OWN window, so it stays true
+  # under both Follow 4x8 and Independent without knowing which is set.
+  #
+  # Deliberately watches the LIGHT, not the ramp engine's intent: the
+  # whole point is to catch the case where something outside the
+  # schedule (Manual Light Hold left on, an HA script, a stale
+  # takeover) is holding photons on the clones after lights-off.
+  #
+  # NOTE this is COMMANDED state — the hub knows what it asked the
+  # driver for. Physical light leak from the 0-10V floor is a separate
+  # question, and as of v2.4 it is answered: see NOTES-COMMENTS.md §2.
+  - binary_sensor:
+      - name: "DSC Clone Dark Period Violation"
+        unique_id: dsc_clone_dark_period_violation
+        device_class: problem
+        icon: mdi:weather-night-partly-cloudy
+        state: >
+          {{ is_state('light.dsc_hub_sf1000_dimmer','on')
+             and is_state('binary_sensor.dsc_hub_2x4_window_open','off') }}
+        availability: >
+          {{ has_value('light.dsc_hub_sf1000_dimmer')
+             and has_value('binary_sensor.dsc_hub_2x4_window_open') }}
+
+  - sensor:
+      # --------------------------------------------------------------
+      #  4. CLONE EXPECTED LIGHT HOURS  —  new in v2.4
+      # --------------------------------------------------------------
+      # The 2x4 needs its own "plan" number now that it owns the light.
+      # Resolves the same way the firmware's ramp engine does, so the
+      # dashboard and the device never disagree about the window:
+      #   Clone Mode Off        -> 0h  (apply_clone_mode darks the SF1000)
+      #   Follow 4x8            -> the 4x8's stage hours (virtual window)
+      #   Independent (default) -> Clone Light Hours
+      - name: "DSC Clone Expected Light Hours"
+        unique_id: dsc_clone_expected_light_hours
+        unit_of_measurement: "h"
+        state_class: measurement
+        icon: mdi:sun-clock
+        state: >
+          {% if is_state('select.dsc_hub_clone_mode','Off') %}
+            0
+          {% elif is_state('select.dsc_hub_clone_photoperiod','Follow 4x8') %}
+            {{ states('sensor.dsc_expected_light_hours') | float(0) | round(0) }}
+          {% else %}
+            {{ states('number.dsc_hub_clone_light_hours') | float(18) | round(0) }}
+          {% endif %}
+
+      # --------------------------------------------------------------
+      #  5. LIGHTS DEVIATION TODAY  —  re-pointed at the 2x4
+      # --------------------------------------------------------------
+      # v2.3 compared 4x8 on-time against the 4x8 stage plan. With no
+      # 4x8 lamp that comparison is now plan-vs-plan and always reads
+      # zero — technically true, informationally worthless.
+      #
+      # Re-pointed at the tent with the lamp: real SF1000 on-time vs
+      # the clone plan. This is the number that catches a photoperiod
+      # that did not actually run.
+      #
+      # Only meaningful at day end — intraday it trends toward 0 on a
+      # healthy schedule because the day is still filling up.
+      - name: "DSC Lights Deviation Today"
+        unique_id: dsc_lights_deviation_today
+        unit_of_measurement: "h"
+        state_class: measurement
+        icon: mdi:scale-balance
+        state: >
+          {{ (states('sensor.dsc_lights_on_today_2x4') | float(0)
+              - states('sensor.dsc_clone_expected_light_hours') | float(0)) | round(2) }}
+        availability: >
+          {{ has_value('sensor.dsc_lights_on_today_2x4')
+             and has_value('sensor.dsc_clone_expected_light_hours') }}
+
+# ==================================================================
+#  LEFT ALONE ON PURPOSE
+# ==================================================================
+#  sensor.dsc_expected_light_hours
+#      Still correct. It describes the 4x8 stage plan, and the 4x8's
+#      window is still a real schedule even without a lamp — Follow-4x8
+#      clones resolve against it, so it must keep working.
+#
+#  sensor.dsc_next_light_event
+#      Still correct for the 4x8 virtual window. The Lighting page now
+#      reads it under the 4x8 section only; the SF1000 section uses the
+#      hub's own clone countdown instead of a second HA-side event
+#      sensor, because the ramp engine already owns that maths and a
+#      duplicate would be a second source of truth to drift.
+# ==================================================================

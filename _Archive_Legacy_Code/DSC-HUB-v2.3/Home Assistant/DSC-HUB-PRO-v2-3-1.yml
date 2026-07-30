@@ -1,0 +1,1856 @@
+title: DSC-HUB
+views:
+  # ==========================================
+  # 1. COMMAND CENTER
+  # ==========================================
+  - title: Command Center
+    icon: mdi:server-network
+    path: command-center
+    type: sections
+    max_columns: 3
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: 👑 SYSTEM STATUS
+            heading_style: title
+          - type: custom:mushroom-chips-card
+            alignment: start
+            chips:
+              - type: template
+                entity: sensor.dsc_hub_tent_temperature
+                icon: "{{ 'mdi:chip' if not is_state(entity,'unavailable') else 'mdi:alert-circle' }}"
+                icon_color: "{{ 'green' if not is_state(entity,'unavailable') else 'red' }}"
+                content: "{{ 'HUB ONLINE' if not is_state(entity,'unavailable') else 'HUB OFFLINE' }}"
+              - type: template
+                entity: sensor.dsc_hub_uptime
+                icon: mdi:timer-outline
+                icon_color: green
+                content: "{{ states(entity) }}"
+              - type: template
+                icon: mdi:sprout
+                content: >
+                  {% set ns = namespace(bad=0) %} {% for e in states.binary_sensor if e.entity_id.startswith('binary_sensor.dsc_') and e.state == 'on' %}{% set ns.bad = ns.bad + 1 %}{% endfor %}
+                  {{ 'All clear' if ns.bad == 0 else ns.bad ~ ' alert(s)' }}
+                icon_color: >
+                  {% set ns = namespace(bad=0) %} {% for e in states.binary_sensor if e.entity_id.startswith('binary_sensor.dsc_') and e.state == 'on' %}{% set ns.bad = ns.bad + 1 %}{% endfor %}
+                  {{ 'green' if ns.bad == 0 else 'red' }}
+          
+          - type: custom:auto-entities
+            show_empty: false
+            card:
+              type: entities
+              title: ⚠️ Active System Alerts
+              state_color: true
+            filter:
+              include:
+                - entity_id: binary_sensor.dsc_*
+                  state: "on"
+
+          - type: heading
+            heading: 🎛️ MASTER CONTROL
+            heading_style: title
+          - type: custom:stack-in-card
+            cards:
+              - type: custom:mushroom-select-card
+                entity: select.dsc_hub_priority_tent
+                name: Shared Room Priority
+                icon: mdi:priority-high
+                icon_color: blue
+              - type: custom:mushroom-select-card
+                entity: select.dsc_hub_control_strategy
+                name: Fan Control Strategy
+                icon: mdi:strategy
+              - type: custom:mushroom-entity-card
+                entity: switch.dsc_hub_manual_takeover
+                name: Master Manual Takeover
+                icon: mdi:gesture-tap-button
+                icon_color: purple
+              - type: custom:mushroom-entity-card
+                entity: switch.dsc_hub_tent_full_auto_mode
+                name: Resume Full Auto Mode
+                icon: mdi:robot
+                icon_color: green
+              - type: custom:mushroom-entity-card
+                entity: switch.dsc_hub_tent_manual_override
+                name: Manual Fan Override
+                icon: mdi:hand-back-right
+                icon_color: amber
+
+      - type: grid
+        cards:
+          - type: heading
+            heading: 🌡️ ROOM CONTROL
+            heading_style: title
+          - type: heading
+            heading: Source Air Environment
+            heading_style: subtitle
+            icon: mdi:home-thermometer
+          - type: custom:mushroom-template-card
+            entity: sensor.dsc_hub_room_temperature
+            primary: "{{ states('sensor.dsc_hub_room_temperature') | round(1) }}°C"
+            secondary: "RH: {{ states('sensor.dsc_hub_room_humidity') | round(0) }}%"
+            icon: mdi:air-filter
+            icon_color: cyan
+            layout: horizontal
+          
+          - type: heading
+            heading: Automatic Control Arming
+            heading_style: subtitle
+            icon: mdi:stairs-up
+          - type: custom:stack-in-card
+            cards:
+              - type: custom:mushroom-template-card
+                entity: switch.dsc_hub_heater_auto
+                primary: 750W Heater
+                secondary: >-
+                  {% if is_state('switch.dsc_hub_heater_auto','on') %}
+                    {% if is_state('switch.dsc_hub_heater_demand','on') %}
+                      Auto · CURRENTLY ON (Started {{ relative_time(states.switch.dsc_hub_heater_demand.last_changed) }} ago)
+                    {% else %}
+                      Auto · Standby (Last ran {{ relative_time(states.switch.dsc_hub_heater_demand.last_changed) }} ago)
+                    {% endif %}
+                  {% else %} Manual · Off {% endif %}
+                icon: mdi:radiator
+                icon_color: "{{ 'red' if is_state('switch.dsc_hub_heater_demand','on') else ('grey' if is_state('switch.dsc_hub_heater_auto','off') else 'blue') }}"
+                card_mod:
+                  style: |
+                    ha-card {
+                      {% if is_state('switch.dsc_hub_heater_demand', 'on') %}
+                        animation: pulse-red 2.5s infinite;
+                        background: rgba(244, 67, 54, 0.05);
+                        border: 1px solid rgba(244, 67, 54, 0.3);
+                      {% endif %}
+                    }
+                    @keyframes pulse-red {
+                      0% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.2); }
+                      70% { box-shadow: 0 0 0 8px rgba(244, 67, 54, 0); }
+                      100% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0); }
+                    }
+
+              - type: custom:mushroom-template-card
+                entity: switch.dsc_hub_ac_auto
+                primary: Portable AC
+                secondary: >-
+                  {% if is_state('switch.dsc_hub_ac_auto','on') %}
+                    {% if is_state('switch.dsc_hub_ac_demand','on') %}
+                      Auto · CURRENTLY ON (Started {{ relative_time(states.switch.dsc_hub_ac_demand.last_changed) }} ago)
+                    {% else %}
+                      Auto · Standby (Last ran {{ relative_time(states.switch.dsc_hub_ac_demand.last_changed) }} ago)
+                    {% endif %}
+                  {% else %} Manual · Off {% endif %}
+                icon: mdi:snowflake
+                icon_color: "{{ 'cyan' if is_state('switch.dsc_hub_ac_demand','on') else ('grey' if is_state('switch.dsc_hub_ac_auto','off') else 'blue') }}"
+                card_mod:
+                  style: |
+                    ha-card {
+                      {% if is_state('switch.dsc_hub_ac_demand', 'on') %}
+                        animation: pulse-cyan 2.5s infinite;
+                        background: rgba(0, 188, 212, 0.05);
+                        border: 1px solid rgba(0, 188, 212, 0.3);
+                      {% endif %}
+                    }
+                    @keyframes pulse-cyan {
+                      0% { box-shadow: 0 0 0 0 rgba(0, 188, 212, 0.2); }
+                      70% { box-shadow: 0 0 0 8px rgba(0, 188, 212, 0); }
+                      100% { box-shadow: 0 0 0 0 rgba(0, 188, 212, 0); }
+                    }
+
+              - type: custom:mushroom-template-card
+                entity: switch.dsc_hub_humidifier_auto
+                primary: Room Humidifier
+                secondary: >-
+                  {% if is_state('switch.dsc_hub_humidifier_auto','on') %}
+                    {% if is_state('switch.dsc_hub_humidifier_demand','on') %}
+                      Auto · CURRENTLY ON (Started {{ relative_time(states.switch.dsc_hub_humidifier_demand.last_changed) }} ago)
+                    {% else %}
+                      Auto · Standby (Last ran {{ relative_time(states.switch.dsc_hub_humidifier_demand.last_changed) }} ago)
+                    {% endif %}
+                  {% else %} Manual · Off {% endif %}
+                icon: mdi:water-plus
+                icon_color: "{{ 'blue' if is_state('switch.dsc_hub_humidifier_demand','on') else ('grey' if is_state('switch.dsc_hub_humidifier_auto','off') else 'light-blue') }}"
+                card_mod:
+                  style: |
+                    ha-card {
+                      {% if is_state('switch.dsc_hub_humidifier_demand', 'on') %}
+                        animation: pulse-blue 2.5s infinite;
+                        background: rgba(33, 150, 243, 0.05);
+                        border: 1px solid rgba(33, 150, 243, 0.3);
+                      {% endif %}
+                    }
+                    @keyframes pulse-blue {
+                      0% { box-shadow: 0 0 0 0 rgba(33, 150, 243, 0.2); }
+                      70% { box-shadow: 0 0 0 8px rgba(33, 150, 243, 0); }
+                      100% { box-shadow: 0 0 0 0 rgba(33, 150, 243, 0); }
+                    }
+
+              - type: custom:mushroom-template-card
+                entity: switch.dsc_hub_dehumidifier_auto
+                primary: Room Dehumidifier
+                secondary: >-
+                  {% if is_state('switch.dsc_hub_dehumidifier_auto','on') %}
+                    {% if is_state('switch.dsc_hub_dehumidifier_demand','on') %}
+                      Auto · CURRENTLY ON (Started {{ relative_time(states.switch.dsc_hub_dehumidifier_demand.last_changed) }} ago)
+                    {% else %}
+                      Auto · Standby (Last ran {{ relative_time(states.switch.dsc_hub_dehumidifier_demand.last_changed) }} ago)
+                    {% endif %}
+                  {% else %} Manual · Off {% endif %}
+                icon: mdi:water-minus
+                icon_color: "{{ 'orange' if is_state('switch.dsc_hub_dehumidifier_demand','on') else ('grey' if is_state('switch.dsc_hub_dehumidifier_auto','off') else 'blue') }}"
+                card_mod:
+                  style: |
+                    ha-card {
+                      {% if is_state('switch.dsc_hub_dehumidifier_demand', 'on') %}
+                        animation: pulse-orange 2.5s infinite;
+                        background: rgba(255, 152, 0, 0.05);
+                        border: 1px solid rgba(255, 152, 0, 0.3);
+                      {% endif %}
+                    }
+                    @keyframes pulse-orange {
+                      0% { box-shadow: 0 0 0 0 rgba(255, 152, 0, 0.2); }
+                      70% { box-shadow: 0 0 0 8px rgba(255, 152, 0, 0); }
+                      100% { box-shadow: 0 0 0 0 rgba(255, 152, 0, 0); }
+                    }
+
+      - type: grid
+        cards:
+          - type: heading
+            heading: 💨 AIRFLOW ROUTING
+            heading_style: title
+          - type: heading
+            heading: Fan Speeds & Limits
+            heading_style: subtitle
+            icon: mdi:fan
+          - type: grid
+            square: false
+            columns: 2
+            cards:
+              - type: custom:mushroom-fan-card
+                entity: fan.dsc_hub_6_inch_exhaust_outside
+                name: Exhaust (Out)
+                show_percentage_control: true
+                icon_animation: true
+              - type: custom:mushroom-fan-card
+                entity: fan.dsc_hub_6_inch_exhaust_room
+                name: Recirc (Room)
+                show_percentage_control: true
+                icon_animation: true
+              - type: custom:mushroom-fan-card
+                entity: fan.dsc_hub_4_inch_intake_fan_main
+                name: Intake (4x8)
+                show_percentage_control: true
+                icon_animation: true
+              - type: custom:mushroom-fan-card
+                entity: fan.dsc_hub_4_inch_intake_fan_2x4
+                name: Intake (2x4)
+                show_percentage_control: true
+                icon_animation: true
+
+          - type: heading
+            heading: System Info
+            heading_style: title
+            icon: mdi:chip
+          - type: custom:expander-card
+            title: ⚙️ Hub Diagnostics
+            cards:
+              - type: entities
+                entities:
+                  - entity: sensor.dsc_hub_firmware_version
+                    name: Firmware Version
+                    icon: mdi:tag
+                  - entity: sensor.dsc_hub_wifi_rssi
+                    name: WiFi RSSI
+                    icon: mdi:wifi
+                  - entity: button.dsc_hub_restart
+                    name: Restart Hub
+                    icon: mdi:restart
+
+  # ==========================================
+  # 2. 4x8 MAIN TENT
+  # ==========================================
+  - title: 4x8 Main
+    icon: mdi:tent
+    path: 4x8-main
+    type: sections
+    max_columns: 3
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: ⬜ 4x8 MAIN TENT
+            heading_style: title
+          - type: heading
+            heading: Current Environment
+            heading_style: subtitle
+            icon: mdi:chart-bar
+          - type: custom:stack-in-card
+            cards:
+              - type: custom:mushroom-template-card
+                entity: sensor.dsc_hub_tent_temperature
+                primary: "{{ states(entity) | round(1) }}°C"
+                secondary: Temperature
+                icon: mdi:thermometer
+                icon_color: >-
+                  {% set t = states(entity) | float(0) %} 
+                  {{ 'red' if t > 30 else ('blue' if t < 18 else 'green') }}
+              - type: custom:mushroom-template-card
+                entity: sensor.dsc_hub_tent_humidity
+                primary: "{{ states(entity) | round(0) }}%"
+                secondary: Humidity
+                icon: mdi:water-percent
+                icon_color: >-
+                  {% set rh = states(entity) | float(0) %}
+                  {% set lo = states('number.dsc_hub_rh_target_min') | float(40) %}
+                  {% set hi = states('number.dsc_hub_rh_target_max') | float(65) %}
+                  {{ 'green' if lo <= rh <= hi else 'amber' }}
+              - type: custom:mushroom-template-card
+                entity: sensor.dsc_hub_vpd_kpa
+                primary: "{{ states(entity) | round(2) }} kPa"
+                secondary: VPD
+                icon: mdi:waves-arrow-up
+                icon_color: >-
+                  {% set v = states(entity) | float(0) %}
+                  {% set lo = states('number.dsc_hub_vpd_target_min') | float(0.8) %}
+                  {% set hi = states('number.dsc_hub_vpd_target_max') | float(1.2) %}
+                  {{ 'green' if lo <= v <= hi else 'red' }}
+
+      - type: grid
+        cards:
+          - type: heading
+            heading: 🎯 STAGE & TARGETS
+            heading_style: title
+          - type: custom:mushroom-select-card
+            entity: select.dsc_hub_grow_stage
+            name: Grow Stage (Overrides Targets)
+            icon: mdi:sprout
+          - type: custom:expander-card
+            title: ⚙️ Adjust Climate Limits
+            cards:
+              - type: entities
+                entities:
+                  - entity: number.dsc_hub_target_temp
+                    name: Target Temp
+                  - entity: number.dsc_hub_vpd_target_min
+                    name: VPD Min
+                  - entity: number.dsc_hub_vpd_target_max
+                    name: VPD Max
+                  - entity: number.dsc_hub_rh_target_min
+                    name: Humidity Min
+                  - entity: number.dsc_hub_rh_target_max
+                    name: Humidity Max
+
+      - type: grid
+        cards:
+          - type: heading
+            heading: ☀️ LIGHTING SCHEDULE
+            heading_style: title
+          - type: custom:stack-in-card
+            cards:
+              - type: custom:mushroom-entity-card
+                entity: switch.dsc_hub_auto_photoperiod
+                name: Schedule Active
+                icon: mdi:theme-light-dark
+              - type: custom:mushroom-entity-card
+                entity: switch.dsc_hub_manual_light_hold
+                name: Manual Light Hold
+                icon: mdi:hand-back-right
+          - type: custom:expander-card
+            title: ⏱️ Adjust Schedule
+            cards:
+              - type: entities
+                entities:
+                  - entity: time.dsc_hub_lights_on_time
+                    name: Lights ON Time
+                  - entity: number.dsc_hub_sunrise_duration
+                    name: Sunrise Ramp (min)
+                  - entity: number.dsc_hub_sunset_duration
+                    name: Sunset Ramp (min)
+
+  # ==========================================
+  # 3. 2x4 CLONE TENT
+  # ==========================================
+  - title: 2x4 Clone
+    icon: mdi:sprout-outline
+    path: 2x4-clone
+    type: sections
+    max_columns: 3
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: 🌿 2x4 CLONE TENT
+            heading_style: title
+          - type: heading
+            heading: Clone Environment
+            heading_style: subtitle
+            icon: mdi:chart-bar
+          - type: custom:stack-in-card
+            cards:
+              - type: custom:mushroom-template-card
+                entity: sensor.dsc_hub_clone_temperature
+                primary: "{{ states(entity) | round(1) }}°C"
+                secondary: Temperature
+                icon: mdi:thermometer
+                icon_color: >-
+                  {% set t = states(entity) | float(0) %} 
+                  {{ 'green' if 20 <= t <= 28 else 'amber' }}
+              - type: custom:mushroom-template-card
+                entity: sensor.dsc_hub_clone_humidity
+                primary: "{{ states(entity) | round(0) }}%"
+                secondary: Humidity
+                icon: mdi:water-percent
+                icon_color: >-
+                  {% set rh = states(entity) | float(0) %} 
+                  {{ 'green' if rh >= 70 else 'amber' }}
+              - type: custom:mushroom-template-card
+                entity: sensor.dsc_hub_clone_vpd_kpa
+                primary: "{{ states(entity) | round(2) }} kPa"
+                secondary: VPD
+                icon: mdi:waves-arrow-up
+                icon_color: >-
+                  {% set v = states(entity) | float(0) %} 
+                  {% set lo = states('number.dsc_hub_clone_vpd_min') | float(0.8) %}
+                  {% set hi = states('number.dsc_hub_clone_vpd_max') | float(1.2) %}
+                  {{ 'green' if lo <= v <= hi else 'red' }}
+
+      - type: grid
+        cards:
+          - type: heading
+            heading: ⚙️ LOCAL CLONE EQUIPMENT
+            heading_style: title
+          - type: heading
+            heading: Automatic Control Arming
+            heading_style: subtitle
+            icon: mdi:stairs-up
+          - type: custom:stack-in-card
+            cards:
+              - type: custom:mushroom-template-card
+                entity: switch.dsc_hub_grow_mat_auto
+                primary: 2x4 Grow Mat (Root Zone)
+                secondary: >-
+                  {% if is_state('switch.dsc_hub_grow_mat_auto','on') %}
+                    {% if is_state('switch.dsc_hub_grow_mat_demand','on') %}
+                      Auto · CURRENTLY ON (Started {{ relative_time(states.switch.dsc_hub_grow_mat_demand.last_changed) }} ago)
+                    {% else %}
+                      Auto · Standby (Last ran {{ relative_time(states.switch.dsc_hub_grow_mat_demand.last_changed) }} ago)
+                    {% endif %}
+                  {% else %} Manual · Off {% endif %}
+                icon: mdi:heating-coil
+                icon_color: "{{ 'deep-orange' if is_state('switch.dsc_hub_grow_mat_demand','on') else ('grey' if is_state('switch.dsc_hub_grow_mat_auto','off') else 'blue') }}"
+                card_mod:
+                  style: |
+                    ha-card {
+                      {% if is_state('switch.dsc_hub_grow_mat_demand', 'on') %}
+                        animation: pulse-orange 2.5s infinite;
+                        background: rgba(255, 87, 34, 0.05);
+                        border: 1px solid rgba(255, 87, 34, 0.3);
+                      {% endif %}
+                    }
+                    @keyframes pulse-orange {
+                      0% { box-shadow: 0 0 0 0 rgba(255, 87, 34, 0.2); }
+                      70% { box-shadow: 0 0 0 8px rgba(255, 87, 34, 0); }
+                      100% { box-shadow: 0 0 0 0 rgba(255, 87, 34, 0); }
+                    }
+
+              - type: custom:mushroom-template-card
+                entity: switch.dsc_hub_clone_humidifier_auto
+                primary: Clone Humidifier
+                secondary: >-
+                  {% if is_state('switch.dsc_hub_clone_humidifier_auto','on') %}
+                    {% if is_state('switch.dsc_hub_clone_humidifier_demand','on') %}
+                      Auto · CURRENTLY ON (Started {{ relative_time(states.switch.dsc_hub_clone_humidifier_demand.last_changed) }} ago)
+                    {% else %}
+                      Auto · Standby (Last ran {{ relative_time(states.switch.dsc_hub_clone_humidifier_demand.last_changed) }} ago)
+                    {% endif %}
+                  {% else %} Manual · Off {% endif %}
+                icon: mdi:air-humidifier
+                icon_color: "{{ 'blue' if is_state('switch.dsc_hub_clone_humidifier_demand','on') else ('grey' if is_state('switch.dsc_hub_clone_humidifier_auto','off') else 'light-blue') }}"
+                card_mod:
+                  style: |
+                    ha-card {
+                      {% if is_state('switch.dsc_hub_clone_humidifier_demand', 'on') %}
+                        animation: pulse-blue 2.5s infinite;
+                        background: rgba(33, 150, 243, 0.05);
+                        border: 1px solid rgba(33, 150, 243, 0.3);
+                      {% endif %}
+                    }
+                    @keyframes pulse-blue {
+                      0% { box-shadow: 0 0 0 0 rgba(33, 150, 243, 0.2); }
+                      70% { box-shadow: 0 0 0 8px rgba(33, 150, 243, 0); }
+                      100% { box-shadow: 0 0 0 0 rgba(33, 150, 243, 0); }
+                    }
+
+              - type: custom:mushroom-template-card
+                entity: switch.dsc_hub_clone_led_auto
+                primary: Clone Light
+                secondary: >-
+                  {% if is_state('switch.dsc_hub_clone_led_auto','on') %}
+                    {% if is_state('switch.dsc_hub_clone_led_demand','on') %}
+                      Auto · CURRENTLY ON (Started {{ relative_time(states.switch.dsc_hub_clone_led_demand.last_changed) }} ago)
+                    {% else %}
+                      Auto · Standby (Last ran {{ relative_time(states.switch.dsc_hub_clone_led_demand.last_changed) }} ago)
+                    {% endif %}
+                  {% else %} Manual · Off {% endif %}
+                icon: mdi:led-strip-variant
+                icon_color: "{{ 'amber' if is_state('switch.dsc_hub_clone_led_demand','on') else 'grey' }}"
+          
+      - type: grid
+        cards:
+          - type: heading
+            heading: 🎯 CLONE TARGETS
+            heading_style: title
+          - type: custom:mushroom-select-card
+            entity: select.dsc_hub_clone_mode
+            name: Clone Mode
+            icon: mdi:sprout
+          - type: custom:expander-card
+            title: ⚙️ Adjust Clone Targets
+            cards:
+              - type: entities
+                entities:
+                  - entity: number.dsc_hub_clone_temp
+                    name: Clone Target Temp
+                  - entity: number.dsc_hub_clone_vpd_min
+                    name: Clone VPD Min
+                  - entity: number.dsc_hub_clone_vpd_max
+                    name: Clone VPD Max
+                  - entity: number.dsc_hub_clone_rh_min
+                    name: Clone RH Min
+                  - entity: number.dsc_hub_clone_rh_max
+                    name: Clone RH Max
+                  - entity: select.dsc_hub_clone_photoperiod
+                    name: Photoperiod Mode
+                  - entity: time.dsc_hub_clone_lights_on_time
+                    name: Clone Lights ON
+                  - entity: number.dsc_hub_clone_light_hours
+                    name: Clone Light Hours
+
+  # ==========================================
+  # 4. ROOT ZONE (Digital-Plant Data)
+  # ==========================================
+  - title: Root Zone
+    icon: mdi:water-percent
+    path: root-zone
+    type: sections
+    max_columns: 3
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: 🚰 NUTRIENT TANK
+            heading_style: title
+          - type: custom:stack-in-card
+            cards:
+              - type: custom:mushroom-template-card
+                primary: Main Reservoir
+                secondary: "{{ states('input_select.dsc_tank_stage') }} · {{ states('input_select.dsc_tank_plant_type') }}"
+                icon: mdi:cup-water
+                icon_color: >
+                  {% set bad = is_state('binary_sensor.dsc_tank_ec_out_of_range','on') or is_state('binary_sensor.dsc_tank_ph_out_of_range','on') or is_state('binary_sensor.dsc_tank_water_too_warm','on') %}
+                  {{ 'red' if bad else 'blue' }}
+              - type: custom:mushroom-chips-card
+                chips:
+                  - type: template
+                    icon: mdi:flash
+                    content: "{{ states('sensor.dsc_tank_ec_normalized') }} µS"
+                    icon_color: amber
+                  - type: template
+                    icon: mdi:ph
+                    content: "{{ states('sensor.water_tester_ph_current') }}"
+                    icon_color: purple
+                  - type: template
+                    icon: mdi:thermometer-water
+                    content: "{{ states('sensor.water_tester_temperature') }}°C"
+                    icon_color: blue
+                  - type: template
+                    icon: mdi:atom-variant
+                    content: "ORP {{ states('sensor.water_tester_orp_current') }}"
+                    icon_color: teal
+                  - type: template
+                    icon: mdi:target
+                    content: "{{ states('sensor.dsc_tank_ec_target_min') }}–{{ states('sensor.dsc_tank_ec_target_max') }}"
+                    icon_color: green
+              - type: custom:bar-card
+                entities:
+                  - entity: sensor.dsc_tank_ec_normalized
+                    name: EC
+                min: 0
+                max: 2600
+                height: 28px
+                positions:
+                  value: inside
+                  name: outside
+                  icon: "off"
+                severity:
+                  - color: "#e74c3c"
+                    from: 0
+                    to: 399
+                  - color: "#2ecc71"
+                    from: 400
+                    to: 2400
+                  - color: "#e74c3c"
+                    from: 2401
+                    to: 2600
+              - type: custom:bar-card
+                entities:
+                  - entity: sensor.water_tester_ph_current
+                    name: pH
+                min: 5
+                max: 8
+                height: 28px
+                positions:
+                  value: inside
+                  name: outside
+                  icon: "off"
+                severity:
+                  - color: "#e74c3c"
+                    from: 5
+                    to: 5.9
+                  - color: "#2ecc71"
+                    from: 6
+                    to: 7
+                  - color: "#e74c3c"
+                    from: 7.1
+                    to: 8
+              - type: custom:bar-card
+                entities:
+                  - entity: sensor.water_tester_temperature
+                    name: Temp
+                min: 10
+                max: 30
+                height: 28px
+                positions:
+                  value: inside
+                  name: outside
+                  icon: "off"
+                severity:
+                  - color: "#3fa9f5"
+                    from: 10
+                    to: 15
+                  - color: "#2ecc71"
+                    from: 16
+                    to: 22
+                  - color: "#f39c12"
+                    from: 23
+                    to: 24
+                  - color: "#e74c3c"
+                    from: 25
+                    to: 30
+          - type: custom:expander-card
+            title: ⚙️ Tank Config & Charts
+            cards:
+              - type: entities
+                title: Feed set-up
+                show_header_toggle: false
+                entities:
+                  - entity: input_select.dsc_tank_stage
+                    name: Feed stage
+                  - entity: input_select.dsc_tank_plant_type
+                    name: Plant type
+                  - entity: input_number.dsc_tank_ec_multiplier
+                    name: EC unit multiplier
+              - type: custom:apexcharts-card
+                header:
+                  show: true
+                  title: Tank EC vs stage target band
+                  show_states: true
+                  colorize_states: true
+                graph_span: 48h
+                yaxis:
+                  - id: ec
+                    min: 0
+                series:
+                  - entity: sensor.dsc_tank_ec_normalized
+                    name: EC
+                    type: line
+                    stroke_width: 3
+                    color: "#f5a623"
+                    yaxis_id: ec
+                    group_by:
+                      func: avg
+                      duration: 15min
+                  - entity: sensor.dsc_tank_ec_target_max
+                    name: max
+                    type: line
+                    stroke_width: 1
+                    color: "#e74c3c"
+                    opacity: 0.6
+                    yaxis_id: ec
+                  - entity: sensor.dsc_tank_ec_target_min
+                    name: min
+                    type: line
+                    stroke_width: 1
+                    color: "#e74c3c"
+                    opacity: 0.6
+                    yaxis_id: ec
+              - type: custom:apexcharts-card
+                header:
+                  show: true
+                  title: pH & water temp
+                  show_states: true
+                  colorize_states: true
+                graph_span: 48h
+                yaxis:
+                  - id: ph
+                    min: 5
+                    max: 8
+                    decimals: 1
+                  - id: t
+                    opposite: true
+                    decimals: 1
+                series:
+                  - entity: sensor.water_tester_ph_current
+                    name: pH
+                    type: line
+                    stroke_width: 2
+                    color: "#b06fe0"
+                    yaxis_id: ph
+                    group_by:
+                      func: avg
+                      duration: 15min
+                  - entity: sensor.water_tester_temperature
+                    name: °C
+                    type: line
+                    stroke_width: 2
+                    color: "#f5a623"
+                    yaxis_id: t
+                    group_by:
+                      func: avg
+                      duration: 15min
+
+      - type: grid
+        column_span: 2
+        cards:
+          - type: heading
+            heading: 🔄 WATER ↔ SOIL DYNAMICS
+            heading_style: title
+          - type: heading
+            heading: Feed vs. Drink Signatures
+            heading_style: subtitle
+            icon: mdi:transfer
+            
+          - type: custom:apexcharts-card
+            header:
+              show: true
+              title: Soil EC (all pots) over Tank EC
+              show_states: false
+            graph_span: 72h
+            yaxis:
+              - id: ec
+                min: 0
+            apex_config:
+              legend:
+                show: true
+              stroke:
+                curve: smooth
+            series:
+              - entity: sensor.dsc_tank_ec_normalized
+                name: TANK
+                type: area
+                stroke_width: 3
+                opacity: 0.12
+                color: "#e8eef2"
+                yaxis_id: ec
+                group_by:
+                  func: avg
+                  duration: 30min
+              - entity: sensor.dsc_pot1_soil_conductivity
+                name: POT1
+                type: line
+                stroke_width: 2
+                color: "#2ecc71"
+                group_by:
+                  func: avg
+                  duration: 30min
+              - entity: sensor.dsc_pot2_soil_conductivity
+                name: POT2
+                type: line
+                stroke_width: 2
+                color: "#3fa9f5"
+                group_by:
+                  func: avg
+                  duration: 30min
+              - entity: sensor.dsc_pot3_soil_conductivity
+                name: POT3
+                type: line
+                stroke_width: 2
+                color: "#f5a623"
+                group_by:
+                  func: avg
+                  duration: 30min
+              - entity: sensor.dsc_pot4_soil_conductivity
+                name: POT4
+                type: line
+                stroke_width: 2
+                color: "#b06fe0"
+                group_by:
+                  func: avg
+                  duration: 30min
+                  
+          - type: grid
+            square: false
+            columns: 2
+            cards:
+              - type: custom:apexcharts-card
+                header:
+                  show: true
+                  title: EC delta (soil − tank)
+                  show_states: false
+                graph_span: 72h
+                apex_config:
+                  legend:
+                    show: true
+                series:
+                  - entity: sensor.dsc_pot1_ec_vs_tank
+                    name: POT1
+                    type: line
+                    stroke_width: 2
+                    color: "#2ecc71"
+                    group_by:
+                      func: avg
+                      duration: 30min
+                  - entity: sensor.dsc_pot2_ec_vs_tank
+                    name: POT2
+                    type: line
+                    stroke_width: 2
+                    color: "#3fa9f5"
+                    group_by:
+                      func: avg
+                      duration: 30min
+                  - entity: sensor.dsc_pot3_ec_vs_tank
+                    name: POT3
+                    type: line
+                    stroke_width: 2
+                    color: "#f5a623"
+                    group_by:
+                      func: avg
+                      duration: 30min
+                  - entity: sensor.dsc_pot4_ec_vs_tank
+                    name: POT4
+                    type: line
+                    stroke_width: 2
+                    color: "#b06fe0"
+                    group_by:
+                      func: avg
+                      duration: 30min
+                      
+              - type: custom:apexcharts-card
+                header:
+                  show: true
+                  title: EC uptake slope — drinking shows negative (µS/cm per h)
+                  show_states: false
+                graph_span: 24h
+                apex_config:
+                  legend:
+                    show: true
+                series:
+                  - entity: sensor.dsc_pot1_ec_uptake_slope
+                    name: POT1
+                    type: column
+                    color: "#2ecc71"
+                    group_by:
+                      func: avg
+                      duration: 1h
+                  - entity: sensor.dsc_pot2_ec_uptake_slope
+                    name: POT2
+                    type: column
+                    color: "#3fa9f5"
+                    group_by:
+                      func: avg
+                      duration: 1h
+                  - entity: sensor.dsc_pot3_ec_uptake_slope
+                    name: POT3
+                    type: column
+                    color: "#f5a623"
+                    group_by:
+                      func: avg
+                      duration: 1h
+                  - entity: sensor.dsc_pot4_ec_uptake_slope
+                    name: POT4
+                    type: column
+                    color: "#b06fe0"
+                    group_by:
+                      func: avg
+                      duration: 1h
+
+      - type: grid
+        cards:
+          - type: heading
+            heading: 🌱 INDIVIDUAL POT TELEMETRY
+            heading_style: title
+          
+          # POT 1
+          - type: custom:stack-in-card
+            cards:
+              - type: custom:mushroom-template-card
+                primary: "{{ states('text.4x8_dsc_pot_1_plant_name') }}"
+                secondary: "POT1 · {{ states('select.4x8_dsc_pot_1_growth_stage') }} · {{ states('select.4x8_dsc_pot_1_plant_type') }}"
+                icon: mdi:sprout
+                icon_color: >
+                  {% set ns = namespace(bad=false) %}
+                  {% if is_state('binary_sensor.dsc_pot1_moisture_out_of_range','on') %}{% set ns.bad = true %}{% endif %}
+                  {% if is_state('binary_sensor.dsc_pot1_ph_out_of_range','on') %}{% set ns.bad = true %}{% endif %}
+                  {% if is_state('binary_sensor.dsc_pot1_root_zone_temp_out_of_range','on') %}{% set ns.bad = true %}{% endif %}
+                  {% if is_state('binary_sensor.dsc_pot1_ec_salt_build_up','on') %}{% set ns.bad = true %}{% endif %}
+                  {% if is_state('binary_sensor.dsc_pot1_ec_depleted_vs_baseline','on') %}{% set ns.bad = true %}{% endif %}
+                  {% if is_state('binary_sensor.dsc_pot1_nitrogen_below_baseline','on') %}{% set ns.bad = true %}{% endif %}
+                  {% if is_state('binary_sensor.dsc_pot1_nitrogen_depleting_fast','on') %}{% set ns.bad = true %}{% endif %}
+                  {{ 'red' if ns.bad else 'green' }}
+              - type: custom:mushroom-chips-card
+                chips:
+                  - type: template
+                    icon: mdi:water-percent
+                    content: "{{ states('sensor.dsc_pot1_soil_moisture') }}%"
+                    icon_color: teal
+                  - type: template
+                    icon: mdi:thermometer
+                    content: "{{ states('sensor.dsc_pot1_soil_temperature') }}°"
+                    icon_color: orange
+                  - type: template
+                    icon: mdi:ph
+                    content: "{{ states('sensor.dsc_pot1_soil_ph') }}"
+                    icon_color: purple
+                  - type: template
+                    icon: mdi:flash
+                    content: "{{ states('sensor.dsc_pot1_soil_conductivity') }}"
+                    icon_color: amber
+                  - type: template
+                    icon: mdi:leaf
+                    content: "N {{ states('sensor.dsc_pot1_soil_nitrogen') }}"
+                    icon_color: green
+              - type: custom:bar-card
+                entities:
+                  - entity: sensor.dsc_pot1_soil_moisture
+                    name: Moisture
+                min: 0
+                max: 100
+                height: 28px
+                positions:
+                  value: inside
+                  name: outside
+                  icon: "off"
+                severity:
+                  - color: "#e74c3c"
+                    from: 0
+                    to: 29
+                  - color: "#f39c12"
+                    from: 30
+                    to: 39
+                  - color: "#2ecc71"
+                    from: 40
+                    to: 70
+                  - color: "#f39c12"
+                    from: 71
+                    to: 84
+                  - color: "#e74c3c"
+                    from: 85
+                    to: 100
+              - type: custom:bar-card
+                entities:
+                  - entity: sensor.dsc_pot1_soil_ph
+                    name: pH
+                min: 5
+                max: 8
+                height: 28px
+                positions:
+                  value: inside
+                  name: outside
+                  icon: "off"
+                severity:
+                  - color: "#e74c3c"
+                    from: 5
+                    to: 5.7
+                  - color: "#f39c12"
+                    from: 5.8
+                    to: 6.1
+                  - color: "#2ecc71"
+                    from: 6.2
+                    to: 6.8
+                  - color: "#f39c12"
+                    from: 6.9
+                    to: 7
+                  - color: "#e74c3c"
+                    from: 7.1
+                    to: 8
+              - type: custom:bar-card
+                entities:
+                  - entity: sensor.dsc_pot1_soil_conductivity
+                    name: EC
+                min: 0
+                max: 3000
+                height: 28px
+                positions:
+                  value: inside
+                  name: outside
+                  icon: "off"
+                severity:
+                  - color: "#2ecc71"
+                    from: 0
+                    to: 1999
+                  - color: "#e74c3c"
+                    from: 2000
+                    to: 3000
+          - type: custom:expander-card
+            title: 📊 Expand Pot 1 Details
+            cards:
+              - type: entities
+                show_header_toggle: false
+                entities:
+                  - entity: select.4x8_dsc_pot_1_growth_stage
+                    name: Stage
+                  - entity: text.4x8_dsc_pot_1_plant_name
+                    name: Plant
+              - type: custom:apexcharts-card
+                header:
+                  show: true
+                  title: Nitrogen vs 7-day baseline
+                  show_states: true
+                  colorize_states: true
+                graph_span: 24h
+                span:
+                  end: minute
+                yaxis:
+                  - id: "n"
+                    decimals: 0
+                    min: 0
+                series:
+                  - entity: sensor.dsc_pot1_soil_nitrogen
+                    name: "N"
+                    type: line
+                    stroke_width: 2
+                    color: "#2ecc71"
+                    yaxis_id: "n"
+                    group_by:
+                      func: avg
+                      duration: 15min
+                  - entity: sensor.dsc_pot1_soil_nitrogen_7d_baseline
+                    name: 7d base
+                    type: line
+                    stroke_width: 1
+                    opacity: 0.5
+                    color: "#8895a0"
+                    yaxis_id: "n"
+                    group_by:
+                      func: avg
+                      duration: 1h
+              - type: custom:apexcharts-card
+                header:
+                  show: true
+                  title: EC & moisture
+                  show_states: true
+                  colorize_states: true
+                graph_span: 24h
+                yaxis:
+                  - id: ec
+                    min: 0
+                    decimals: 0
+                  - id: moist
+                    opposite: true
+                    min: 0
+                    max: 100
+                    decimals: 0
+                series:
+                  - entity: sensor.dsc_pot1_soil_conductivity
+                    name: EC
+                    type: line
+                    stroke_width: 2
+                    color: "#f5a623"
+                    yaxis_id: ec
+                    group_by:
+                      func: avg
+                      duration: 15min
+                  - entity: sensor.dsc_pot1_soil_moisture
+                    name: Moisture
+                    type: area
+                    stroke_width: 1
+                    opacity: 0.1
+                    color: "#3fa9f5"
+                    yaxis_id: moist
+                    group_by:
+                      func: avg
+                      duration: 15min
+              - type: entities
+                title: Today's extremes
+                show_header_toggle: false
+                entities:
+                  - entity: sensor.dsc_pot1_soil_nitrogen_daily_max
+                    name: N peak
+                  - entity: sensor.dsc_pot1_soil_nitrogen_daily_max_time
+                    name: — at
+                  - entity: sensor.dsc_pot1_soil_nitrogen_daily_min
+                    name: N low
+                  - entity: sensor.dsc_pot1_soil_nitrogen_daily_min_time
+                    name: — at
+                  - entity: sensor.dsc_pot1_soil_nitrogen_rate
+                    name: N rate (mg/kg/h)
+
+          # POT 2
+          - type: custom:stack-in-card
+            cards:
+              - type: custom:mushroom-template-card
+                primary: "{{ states('text.4x8_dsc_pot_2_plant_name') }}"
+                secondary: "POT2 · {{ states('select.4x8_dsc_pot_2_growth_stage') }} · {{ states('select.4x8_dsc_pot_2_plant_type') }}"
+                icon: mdi:sprout
+                icon_color: >
+                  {% set ns = namespace(bad=false) %}
+                  {% if is_state('binary_sensor.dsc_pot2_moisture_out_of_range','on') %}{% set ns.bad = true %}{% endif %}
+                  {% if is_state('binary_sensor.dsc_pot2_ph_out_of_range','on') %}{% set ns.bad = true %}{% endif %}
+                  {% if is_state('binary_sensor.dsc_pot2_root_zone_temp_out_of_range','on') %}{% set ns.bad = true %}{% endif %}
+                  {% if is_state('binary_sensor.dsc_pot2_ec_salt_build_up','on') %}{% set ns.bad = true %}{% endif %}
+                  {% if is_state('binary_sensor.dsc_pot2_ec_depleted_vs_baseline','on') %}{% set ns.bad = true %}{% endif %}
+                  {% if is_state('binary_sensor.dsc_pot2_nitrogen_below_baseline','on') %}{% set ns.bad = true %}{% endif %}
+                  {% if is_state('binary_sensor.dsc_pot2_nitrogen_depleting_fast','on') %}{% set ns.bad = true %}{% endif %}
+                  {{ 'red' if ns.bad else 'green' }}
+              - type: custom:mushroom-chips-card
+                chips:
+                  - type: template
+                    icon: mdi:water-percent
+                    content: "{{ states('sensor.dsc_pot2_soil_moisture') }}%"
+                    icon_color: teal
+                  - type: template
+                    icon: mdi:thermometer
+                    content: "{{ states('sensor.dsc_pot2_soil_temperature') }}°"
+                    icon_color: orange
+                  - type: template
+                    icon: mdi:ph
+                    content: "{{ states('sensor.dsc_pot2_soil_ph') }}"
+                    icon_color: purple
+                  - type: template
+                    icon: mdi:flash
+                    content: "{{ states('sensor.dsc_pot2_soil_conductivity') }}"
+                    icon_color: amber
+                  - type: template
+                    icon: mdi:leaf
+                    content: "N {{ states('sensor.dsc_pot2_soil_nitrogen') }}"
+                    icon_color: green
+              - type: custom:bar-card
+                entities:
+                  - entity: sensor.dsc_pot2_soil_moisture
+                    name: Moisture
+                min: 0
+                max: 100
+                height: 28px
+                positions:
+                  value: inside
+                  name: outside
+                  icon: "off"
+                severity:
+                  - color: "#e74c3c"
+                    from: 0
+                    to: 29
+                  - color: "#f39c12"
+                    from: 30
+                    to: 39
+                  - color: "#2ecc71"
+                    from: 40
+                    to: 70
+                  - color: "#f39c12"
+                    from: 71
+                    to: 84
+                  - color: "#e74c3c"
+                    from: 85
+                    to: 100
+              - type: custom:bar-card
+                entities:
+                  - entity: sensor.dsc_pot2_soil_ph
+                    name: pH
+                min: 5
+                max: 8
+                height: 28px
+                positions:
+                  value: inside
+                  name: outside
+                  icon: "off"
+                severity:
+                  - color: "#e74c3c"
+                    from: 5
+                    to: 5.7
+                  - color: "#f39c12"
+                    from: 5.8
+                    to: 6.1
+                  - color: "#2ecc71"
+                    from: 6.2
+                    to: 6.8
+                  - color: "#f39c12"
+                    from: 6.9
+                    to: 7
+                  - color: "#e74c3c"
+                    from: 7.1
+                    to: 8
+              - type: custom:bar-card
+                entities:
+                  - entity: sensor.dsc_pot2_soil_conductivity
+                    name: EC
+                min: 0
+                max: 3000
+                height: 28px
+                positions:
+                  value: inside
+                  name: outside
+                  icon: "off"
+                severity:
+                  - color: "#2ecc71"
+                    from: 0
+                    to: 1999
+                  - color: "#e74c3c"
+                    from: 2000
+                    to: 3000
+          - type: custom:expander-card
+            title: 📊 Expand Pot 2 Details
+            cards:
+              - type: entities
+                show_header_toggle: false
+                entities:
+                  - entity: select.4x8_dsc_pot_2_growth_stage
+                    name: Stage
+                  - entity: text.4x8_dsc_pot_2_plant_name
+                    name: Plant
+              - type: custom:apexcharts-card
+                header:
+                  show: true
+                  title: Nitrogen vs 7-day baseline
+                  show_states: true
+                  colorize_states: true
+                graph_span: 24h
+                span:
+                  end: minute
+                yaxis:
+                  - id: "n"
+                    decimals: 0
+                    min: 0
+                series:
+                  - entity: sensor.dsc_pot2_soil_nitrogen
+                    name: "N"
+                    type: line
+                    stroke_width: 2
+                    color: "#3fa9f5"
+                    yaxis_id: "n"
+                    group_by:
+                      func: avg
+                      duration: 15min
+                  - entity: sensor.dsc_pot2_soil_nitrogen_7d_baseline
+                    name: 7d base
+                    type: line
+                    stroke_width: 1
+                    opacity: 0.5
+                    color: "#8895a0"
+                    yaxis_id: "n"
+                    group_by:
+                      func: avg
+                      duration: 1h
+              - type: custom:apexcharts-card
+                header:
+                  show: true
+                  title: EC & moisture
+                  show_states: true
+                  colorize_states: true
+                graph_span: 24h
+                yaxis:
+                  - id: ec
+                    min: 0
+                    decimals: 0
+                  - id: moist
+                    opposite: true
+                    min: 0
+                    max: 100
+                    decimals: 0
+                series:
+                  - entity: sensor.dsc_pot2_soil_conductivity
+                    name: EC
+                    type: line
+                    stroke_width: 2
+                    color: "#f5a623"
+                    yaxis_id: ec
+                    group_by:
+                      func: avg
+                      duration: 15min
+                  - entity: sensor.dsc_pot2_soil_moisture
+                    name: Moisture
+                    type: area
+                    stroke_width: 1
+                    opacity: 0.1
+                    color: "#3fa9f5"
+                    yaxis_id: moist
+                    group_by:
+                      func: avg
+                      duration: 15min
+              - type: entities
+                title: Today's extremes
+                show_header_toggle: false
+                entities:
+                  - entity: sensor.dsc_pot2_soil_nitrogen_daily_max
+                    name: N peak
+                  - entity: sensor.dsc_pot2_soil_nitrogen_daily_max_time
+                    name: — at
+                  - entity: sensor.dsc_pot2_soil_nitrogen_daily_min
+                    name: N low
+                  - entity: sensor.dsc_pot2_soil_nitrogen_daily_min_time
+                    name: — at
+                  - entity: sensor.dsc_pot2_soil_nitrogen_rate
+                    name: N rate (mg/kg/h)
+          
+          # POT 3
+          - type: custom:stack-in-card
+            cards:
+              - type: custom:mushroom-template-card
+                primary: "{{ states('text.dsc_pot3_plant_name') }}"
+                secondary: "POT3 · {{ states('select.dsc_pot3_growth_stage') }} · {{ states('select.dsc_pot3_plant_type') }}"
+                icon: mdi:sprout
+                icon_color: >
+                  {% set ns = namespace(bad=false) %}
+                  {% if is_state('binary_sensor.dsc_pot3_moisture_out_of_range','on') %}{% set ns.bad = true %}{% endif %}
+                  {% if is_state('binary_sensor.dsc_pot3_ph_out_of_range','on') %}{% set ns.bad = true %}{% endif %}
+                  {% if is_state('binary_sensor.dsc_pot3_root_zone_temp_out_of_range','on') %}{% set ns.bad = true %}{% endif %}
+                  {% if is_state('binary_sensor.dsc_pot3_ec_salt_build_up','on') %}{% set ns.bad = true %}{% endif %}
+                  {% if is_state('binary_sensor.dsc_pot3_ec_depleted_vs_baseline','on') %}{% set ns.bad = true %}{% endif %}
+                  {% if is_state('binary_sensor.dsc_pot3_nitrogen_below_baseline','on') %}{% set ns.bad = true %}{% endif %}
+                  {% if is_state('binary_sensor.dsc_pot3_nitrogen_depleting_fast','on') %}{% set ns.bad = true %}{% endif %}
+                  {{ 'red' if ns.bad else 'green' }}
+              - type: custom:mushroom-chips-card
+                chips:
+                  - type: template
+                    icon: mdi:water-percent
+                    content: "{{ states('sensor.dsc_pot3_soil_moisture') }}%"
+                    icon_color: teal
+                  - type: template
+                    icon: mdi:thermometer
+                    content: "{{ states('sensor.dsc_pot3_soil_temperature') }}°"
+                    icon_color: orange
+                  - type: template
+                    icon: mdi:ph
+                    content: "{{ states('sensor.dsc_pot3_soil_ph') }}"
+                    icon_color: purple
+                  - type: template
+                    icon: mdi:flash
+                    content: "{{ states('sensor.dsc_pot3_soil_conductivity') }}"
+                    icon_color: amber
+                  - type: template
+                    icon: mdi:leaf
+                    content: "N {{ states('sensor.dsc_pot3_soil_nitrogen') }}"
+                    icon_color: green
+              - type: custom:bar-card
+                entities:
+                  - entity: sensor.dsc_pot3_soil_moisture
+                    name: Moisture
+                min: 0
+                max: 100
+                height: 28px
+                positions:
+                  value: inside
+                  name: outside
+                  icon: "off"
+                severity:
+                  - color: "#e74c3c"
+                    from: 0
+                    to: 29
+                  - color: "#f39c12"
+                    from: 30
+                    to: 39
+                  - color: "#2ecc71"
+                    from: 40
+                    to: 70
+                  - color: "#f39c12"
+                    from: 71
+                    to: 84
+                  - color: "#e74c3c"
+                    from: 85
+                    to: 100
+              - type: custom:bar-card
+                entities:
+                  - entity: sensor.dsc_pot3_soil_ph
+                    name: pH
+                min: 5
+                max: 8
+                height: 28px
+                positions:
+                  value: inside
+                  name: outside
+                  icon: "off"
+                severity:
+                  - color: "#e74c3c"
+                    from: 5
+                    to: 5.7
+                  - color: "#f39c12"
+                    from: 5.8
+                    to: 6.1
+                  - color: "#2ecc71"
+                    from: 6.2
+                    to: 6.8
+                  - color: "#f39c12"
+                    from: 6.9
+                    to: 7
+                  - color: "#e74c3c"
+                    from: 7.1
+                    to: 8
+              - type: custom:bar-card
+                entities:
+                  - entity: sensor.dsc_pot3_soil_conductivity
+                    name: EC
+                min: 0
+                max: 3000
+                height: 28px
+                positions:
+                  value: inside
+                  name: outside
+                  icon: "off"
+                severity:
+                  - color: "#2ecc71"
+                    from: 0
+                    to: 1999
+                  - color: "#e74c3c"
+                    from: 2000
+                    to: 3000
+          - type: custom:expander-card
+            title: 📊 Expand Pot 3 Details
+            cards:
+              - type: entities
+                show_header_toggle: false
+                entities:
+                  - entity: select.dsc_pot3_growth_stage
+                    name: Stage
+                  - entity: text.dsc_pot3_plant_name
+                    name: Plant
+              - type: custom:apexcharts-card
+                header:
+                  show: true
+                  title: Nitrogen vs 7-day baseline
+                  show_states: true
+                  colorize_states: true
+                graph_span: 24h
+                span:
+                  end: minute
+                yaxis:
+                  - id: "n"
+                    decimals: 0
+                    min: 0
+                series:
+                  - entity: sensor.dsc_pot3_soil_nitrogen
+                    name: "N"
+                    type: line
+                    stroke_width: 2
+                    color: "#f5a623"
+                    yaxis_id: "n"
+                    group_by:
+                      func: avg
+                      duration: 15min
+                  - entity: sensor.dsc_pot3_soil_nitrogen_7d_baseline
+                    name: 7d base
+                    type: line
+                    stroke_width: 1
+                    opacity: 0.5
+                    color: "#8895a0"
+                    yaxis_id: "n"
+                    group_by:
+                      func: avg
+                      duration: 1h
+              - type: custom:apexcharts-card
+                header:
+                  show: true
+                  title: EC & moisture
+                  show_states: true
+                  colorize_states: true
+                graph_span: 24h
+                yaxis:
+                  - id: ec
+                    min: 0
+                    decimals: 0
+                  - id: moist
+                    opposite: true
+                    min: 0
+                    max: 100
+                    decimals: 0
+                series:
+                  - entity: sensor.dsc_pot3_soil_conductivity
+                    name: EC
+                    type: line
+                    stroke_width: 2
+                    color: "#f5a623"
+                    yaxis_id: ec
+                    group_by:
+                      func: avg
+                      duration: 15min
+                  - entity: sensor.dsc_pot3_soil_moisture
+                    name: Moisture
+                    type: area
+                    stroke_width: 1
+                    opacity: 0.1
+                    color: "#3fa9f5"
+                    yaxis_id: moist
+                    group_by:
+                      func: avg
+                      duration: 15min
+              - type: entities
+                title: Today's extremes
+                show_header_toggle: false
+                entities:
+                  - entity: sensor.dsc_pot3_soil_nitrogen_daily_max
+                    name: N peak
+                  - entity: sensor.dsc_pot3_soil_nitrogen_daily_max_time
+                    name: — at
+                  - entity: sensor.dsc_pot3_soil_nitrogen_daily_min
+                    name: N low
+                  - entity: sensor.dsc_pot3_soil_nitrogen_daily_min_time
+                    name: — at
+                  - entity: sensor.dsc_pot3_soil_nitrogen_rate
+                    name: N rate (mg/kg/h)
+          
+          # POT 4
+          - type: custom:stack-in-card
+            cards:
+              - type: custom:mushroom-template-card
+                primary: "{{ states('text.grow_tent_dsc_pot_4_plant_name') }}"
+                secondary: "POT4 · {{ states('select.grow_tent_dsc_pot_4_growth_stage') }} · {{ states('select.grow_tent_dsc_pot_4_plant_type') }}"
+                icon: mdi:sprout
+                icon_color: >
+                  {% set ns = namespace(bad=false) %}
+                  {% if is_state('binary_sensor.dsc_pot4_moisture_out_of_range','on') %}{% set ns.bad = true %}{% endif %}
+                  {% if is_state('binary_sensor.dsc_pot4_ph_out_of_range','on') %}{% set ns.bad = true %}{% endif %}
+                  {% if is_state('binary_sensor.dsc_pot4_root_zone_temp_out_of_range','on') %}{% set ns.bad = true %}{% endif %}
+                  {% if is_state('binary_sensor.dsc_pot4_ec_salt_build_up','on') %}{% set ns.bad = true %}{% endif %}
+                  {% if is_state('binary_sensor.dsc_pot4_ec_depleted_vs_baseline','on') %}{% set ns.bad = true %}{% endif %}
+                  {% if is_state('binary_sensor.dsc_pot4_nitrogen_below_baseline','on') %}{% set ns.bad = true %}{% endif %}
+                  {% if is_state('binary_sensor.dsc_pot4_nitrogen_depleting_fast','on') %}{% set ns.bad = true %}{% endif %}
+                  {{ 'red' if ns.bad else 'green' }}
+              - type: custom:mushroom-chips-card
+                chips:
+                  - type: template
+                    icon: mdi:water-percent
+                    content: "{{ states('sensor.dsc_pot4_soil_moisture') }}%"
+                    icon_color: teal
+                  - type: template
+                    icon: mdi:thermometer
+                    content: "{{ states('sensor.dsc_pot4_soil_temperature') }}°"
+                    icon_color: orange
+                  - type: template
+                    icon: mdi:ph
+                    content: "{{ states('sensor.dsc_pot4_soil_ph') }}"
+                    icon_color: purple
+                  - type: template
+                    icon: mdi:flash
+                    content: "{{ states('sensor.dsc_pot4_soil_conductivity') }}"
+                    icon_color: amber
+                  - type: template
+                    icon: mdi:leaf
+                    content: "N {{ states('sensor.dsc_pot4_soil_nitrogen') }}"
+                    icon_color: green
+              - type: custom:bar-card
+                entities:
+                  - entity: sensor.dsc_pot4_soil_moisture
+                    name: Moisture
+                min: 0
+                max: 100
+                height: 28px
+                positions:
+                  value: inside
+                  name: outside
+                  icon: "off"
+                severity:
+                  - color: "#e74c3c"
+                    from: 0
+                    to: 29
+                  - color: "#f39c12"
+                    from: 30
+                    to: 39
+                  - color: "#2ecc71"
+                    from: 40
+                    to: 70
+                  - color: "#f39c12"
+                    from: 71
+                    to: 84
+                  - color: "#e74c3c"
+                    from: 85
+                    to: 100
+              - type: custom:bar-card
+                entities:
+                  - entity: sensor.dsc_pot4_soil_ph
+                    name: pH
+                min: 5
+                max: 8
+                height: 28px
+                positions:
+                  value: inside
+                  name: outside
+                  icon: "off"
+                severity:
+                  - color: "#e74c3c"
+                    from: 5
+                    to: 5.7
+                  - color: "#f39c12"
+                    from: 5.8
+                    to: 6.1
+                  - color: "#2ecc71"
+                    from: 6.2
+                    to: 6.8
+                  - color: "#f39c12"
+                    from: 6.9
+                    to: 7
+                  - color: "#e74c3c"
+                    from: 7.1
+                    to: 8
+              - type: custom:bar-card
+                entities:
+                  - entity: sensor.dsc_pot4_soil_conductivity
+                    name: EC
+                min: 0
+                max: 3000
+                height: 28px
+                positions:
+                  value: inside
+                  name: outside
+                  icon: "off"
+                severity:
+                  - color: "#2ecc71"
+                    from: 0
+                    to: 1999
+                  - color: "#e74c3c"
+                    from: 2000
+                    to: 3000
+          - type: custom:expander-card
+            title: 📊 Expand Pot 4 Details
+            cards:
+              - type: entities
+                show_header_toggle: false
+                entities:
+                  - entity: select.grow_tent_dsc_pot_4_growth_stage
+                    name: Stage
+                  - entity: text.grow_tent_dsc_pot_4_plant_name
+                    name: Plant
+              - type: custom:apexcharts-card
+                header:
+                  show: true
+                  title: Nitrogen vs 7-day baseline
+                  show_states: true
+                  colorize_states: true
+                graph_span: 24h
+                span:
+                  end: minute
+                yaxis:
+                  - id: "n"
+                    decimals: 0
+                    min: 0
+                series:
+                  - entity: sensor.dsc_pot4_soil_nitrogen
+                    name: "N"
+                    type: line
+                    stroke_width: 2
+                    color: "#b06fe0"
+                    yaxis_id: "n"
+                    group_by:
+                      func: avg
+                      duration: 15min
+                  - entity: sensor.dsc_pot4_soil_nitrogen_7d_baseline
+                    name: 7d base
+                    type: line
+                    stroke_width: 1
+                    opacity: 0.5
+                    color: "#8895a0"
+                    yaxis_id: "n"
+                    group_by:
+                      func: avg
+                      duration: 1h
+              - type: custom:apexcharts-card
+                header:
+                  show: true
+                  title: EC & moisture
+                  show_states: true
+                  colorize_states: true
+                graph_span: 24h
+                yaxis:
+                  - id: ec
+                    min: 0
+                    decimals: 0
+                  - id: moist
+                    opposite: true
+                    min: 0
+                    max: 100
+                    decimals: 0
+                series:
+                  - entity: sensor.dsc_pot4_soil_conductivity
+                    name: EC
+                    type: line
+                    stroke_width: 2
+                    color: "#f5a623"
+                    yaxis_id: ec
+                    group_by:
+                      func: avg
+                      duration: 15min
+                  - entity: sensor.dsc_pot4_soil_moisture
+                    name: Moisture
+                    type: area
+                    stroke_width: 1
+                    opacity: 0.1
+                    color: "#3fa9f5"
+                    yaxis_id: moist
+                    group_by:
+                      func: avg
+                      duration: 15min
+              - type: entities
+                title: Today's extremes
+                show_header_toggle: false
+                entities:
+                  - entity: sensor.dsc_pot4_soil_nitrogen_daily_max
+                    name: N peak
+                  - entity: sensor.dsc_pot4_soil_nitrogen_daily_max_time
+                    name: — at
+                  - entity: sensor.dsc_pot4_soil_nitrogen_daily_min
+                    name: N low
+                  - entity: sensor.dsc_pot4_soil_nitrogen_daily_min_time
+                    name: — at
+                  - entity: sensor.dsc_pot4_soil_nitrogen_rate
+                    name: N rate (mg/kg/h)
+
+  # ==========================================
+  # 5. TRENDS & LOGS (History)
+  # ==========================================
+  - title: Trends
+    icon: mdi:chart-line
+    path: trends
+    type: sections
+    max_columns: 2
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: 📉 CLIMATE HISTORY
+            heading_style: title
+          
+          - type: custom:apexcharts-card
+            header:
+              show: true
+              title: Main Tent · 24 h Climate
+              show_states: true
+              colorize_states: true
+            graph_span: 24h
+            apex_config:
+              chart:
+                height: 300
+              grid:
+                borderColor: rgba(128,128,128,.15)
+            all_series_config:
+              stroke_width: 2
+            yaxis:
+              - id: temp
+                decimals: 0
+                apex_config:
+                  title:
+                    text: °C
+              - id: rh
+                opposite: true
+                min: 0
+                max: 100
+                decimals: 0
+                apex_config:
+                  title:
+                    text: "% RH"
+            series:
+              - entity: sensor.dsc_hub_tent_temperature
+                name: Temp
+                color: "#ed7d31"
+                yaxis_id: temp
+              - entity: sensor.dsc_hub_tent_humidity
+                name: RH
+                color: "#5b9bd5"
+                yaxis_id: rh
+          
+          - type: custom:apexcharts-card
+            header:
+              show: true
+              title: VPD · 7 Days
+              show_states: true
+            graph_span: 7d
+            apex_config:
+              chart:
+                height: 240
+            yaxis:
+              - min: 0
+                max: 2
+                decimals: 1
+            series:
+              - entity: sensor.dsc_hub_vpd_kpa
+                name: VPD
+                color: "#70ad47"
+                stroke_width: 2
+                group_by:
+                  func: avg
+                  duration: 30min
+              - entity: number.dsc_hub_vpd_target_min
+                name: Min
+                curve: stepline
+                color: "#5b9bd5"
+                stroke_width: 1
+                opacity: 0.4
+                group_by:
+                  func: avg
+                  duration: 30min
+              - entity: number.dsc_hub_vpd_target_max
+                name: Max
+                curve: stepline
+                color: "#c00000"
+                stroke_width: 1
+                opacity: 0.4
+                group_by:
+                  func: avg
+                  duration: 30min
+
+      - type: grid
+        cards:
+          - type: heading
+            heading: 🔄 HARDWARE ACTIVITY
+            heading_style: title
+
+          - type: custom:apexcharts-card
+            header:
+              show: true
+              title: Demand Activity · 24 h
+              show_states: false
+            graph_span: 24h
+            apex_config:
+              chart:
+                height: 240
+            all_series_config:
+              curve: stepline
+              stroke_width: 2
+              transform: "return x === 'on' ? 1 : 0;"
+            yaxis:
+              - min: 0
+                max: 1.2
+                decimals: 0
+                show: false
+            series:
+              - entity: switch.dsc_hub_heater_demand
+                name: Heater
+                color: "#c00000"
+              - entity: switch.dsc_hub_dehumidifier_demand
+                name: Dehu
+                color: "#ed7d31"
+              - entity: switch.dsc_hub_humidifier_demand
+                name: Humid
+                color: "#5b9bd5"
+
+          - type: custom:apexcharts-card
+            header:
+              show: true
+              title: Fan Duty 6 h
+              show_states: true
+              colorize_states: true
+            graph_span: 6h
+            apex_config:
+              chart:
+                height: 180
+            yaxis:
+              - min: 0
+                max: 100
+                decimals: 0
+            series:
+              - entity: fan.dsc_hub_6_inch_exhaust_outside
+                attribute: percentage
+                name: Exhaust
+                curve: stepline
+                stroke_width: 2
+                color: "#c00000"
+              - entity: fan.dsc_hub_6_inch_exhaust_room
+                attribute: percentage
+                name: Recirc
+                curve: stepline
+                stroke_width: 2
+                color: "#5b9bd5"

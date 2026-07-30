@@ -1,0 +1,24 @@
+# ==================================================================
+#  DSC-Heater — device stub  (v2.4)
+#  Sonoff BASIC R2 v1.4 · ESP8285 · GPIO12 relay / GPIO0 button / GPIO13 LED
+#  ------------------------------------------------------------------
+#  ⚠ NEVER put logic in a stub — it belongs in dsc-sonoff-common.yaml.
+#  ⚠ `name:` is the entity_id contract: switch.dsc_heater_main_relay
+#     is referenced by the demand_follower automation + dashboards.
+#
+#  API-loss grace: 60s
+#  # 750W fan heater. Shortest grace of the four — highest consequence
+# if it runs unsupervised. 60s is still ~6 failsafe ticks.
+# ==================================================================
+
+substitutions:
+  name: dsc-heater
+  friendly_name: DSC-Heater
+  ap_ssid: "DSC-Heater Fallback Hotspot"
+  api_key_val: !secret dsc_heater_api_key
+  ota_password_val: !secret dsc_heater_ota_password
+  ap_password_val: !secret dsc_heater_ap_password
+  api_grace_ms: "60000"
+
+packages:
+  common: !include dsc-sonoff-common.yaml

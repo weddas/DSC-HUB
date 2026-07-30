@@ -1,0 +1,1306 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
+<style>
+  body { margin: 0; background: #06080b; }
+  a { color: #00E676; } a:hover { color: #69F0AE; }
+  @keyframes dscSpin { to { transform: rotate(360deg); } }
+  @keyframes dscPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+</style>
+</helmet>
+<div style="min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 24px; font-family: Helvetica, Arial, sans-serif; background: #06080b;">
+
+  <div style="display: flex; gap: 8px; align-items: center;">
+    <span style="font-size: 12px; color: rgba(255,255,255,0.45); letter-spacing: 1px; text-transform: uppercase; margin-right: 4px;">Demo state</span>
+    <sc-for list="{{ demoModes }}" as="m" hint-placeholder-count="3">
+      <button onClick="{{ m.onTap }}" style="cursor: pointer; font-family: inherit; font-size: 12px; padding: 8px 14px; border-radius: 999px; border: 1px solid {{ m.border }}; background: {{ m.bg }}; color: {{ m.color }}; white-space: nowrap;">{{ m.label }}</button>
+    </sc-for>
+  </div>
+
+  <div style="width: 640px; height: 480px; border: 1px solid #1e3a2b; border-radius: 8px; overflow: hidden; box-shadow: 0 0 40px rgba(0,230,118,0.12), 0 20px 60px rgba(0,0,0,0.7); flex-shrink: 0;">
+    <div onClick="{{ onActivity }}" style="width: 320px; height: 240px; position: relative; transform: scale(2); transform-origin: top left; background: #0E1116; color: #FFFFFF; display: flex; flex-direction: column; -webkit-font-smoothing: antialiased;">
+
+      <!-- PAGE AREA 320x192 -->
+      <div style="height: 192px; position: relative; overflow: hidden;">
+
+        <!-- 1 · PULSE -->
+        <sc-if value="{{ isPulse }}" hint-placeholder-val="{{ true }}">
+          <div style="position: absolute; inset: 0; padding: 5px; display: flex; flex-direction: column; gap: 3px;">
+            <div style="display: flex; gap: 3px; align-items: center;">
+              <div style="flex: 1; min-width: 0; display: flex; gap: 3px; flex-wrap: wrap; align-items: center;">
+                <div onClick="{{ openHub }}" style="height: 44px; display: flex; align-items: center; cursor: pointer;">
+                  <div style="display: flex; align-items: center; gap: 3px; background: #1A1F26; border-radius: 999px; padding: 3px 7px; font-size: 12px; white-space: nowrap;">
+                    <span class="mdi mdi-wifi" style="color: #00E676; font-size: 12px; text-shadow: 0 0 6px #00E676;"></span>
+                  </div>
+                </div>
+                <div onClick="{{ openAlerts }}" style="height: 44px; display: flex; align-items: center; cursor: pointer;">
+                  <div style="display: flex; align-items: center; gap: 3px; background: #1A1F26; border-radius: 999px; padding: 3px 8px; font-size: 12px; white-space: nowrap; border: 1px solid {{ alertChipBorder }};">
+                    <span class="mdi mdi-{{ alertChipIcon }}" style="color: {{ alertChipColor }}; font-size: 12px; text-shadow: 0 0 6px {{ alertChipColor }};"></span>
+                    <span style="color: {{ alertChipColor }};">{{ alertChipText }}</span>
+                  </div>
+                </div>
+                <div onClick="{{ openCo2 }}" style="height: 44px; display: flex; align-items: center; cursor: pointer;">
+                  <div style="display: flex; align-items: center; gap: 3px; background: #1A1F26; border-radius: 999px; padding: 3px 8px; font-size: 12px; white-space: nowrap;">
+                    <span class="mdi mdi-molecule-co2" style="color: rgba(255,255,255,0.6); font-size: 12px;"></span>
+                    <span style="color: #FFFFFF;">612</span>
+                    <span style="color: rgba(255,255,255,0.4);">ppm</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <sc-if value="{{ showSpaces }}" hint-placeholder-val="{{ true }}">
+              <div style="display: flex; gap: 4px;">
+                <sc-for list="{{ spaceCards }}" as="sp" hint-placeholder-count="2">
+                  <div onClick="{{ sp.onTap }}" style="flex: 1; cursor: pointer; background: #1A1F26; border: 1px solid {{ sp.border }}; border-radius: 12px; padding: 4px 8px; box-shadow: {{ sp.glow }};" style-active="background: #232933;">
+                    <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                      <span style="font-size: 12px; color: rgba(255,255,255,0.6); letter-spacing: 1px;">{{ sp.label }}</span>
+                      <span class="mdi mdi-{{ sp.icon }}" style="color: {{ sp.iconColor }}; font-size: 12px; text-shadow: 0 0 6px {{ sp.iconColor }};"></span>
+                    </div>
+                    <div style="font-size: 16px; color: #FFFFFF; white-space: nowrap;">{{ sp.vals }}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+            <div style="background: #1A1F26; border-radius: 12px; padding: 4px 8px;">
+              <div style="font-size: 12px; color: rgba(255,255,255,0.6); letter-spacing: 1px; margin-bottom: 1px;">ESCALATION LADDER</div>
+              <div style="display: flex; gap: 5px;">
+                <div onClick="{{ openRung1 }}" style="flex: 1; cursor: pointer; border: 1px solid #00BCD4; border-radius: 8px; padding: 3px 8px; box-shadow: {{ rung1Glow }};" style-active="background: #232933;">
+                  <div style="font-size: 12px; color: rgba(255,255,255,0.6);">Rung 1 · Fans</div>
+                  <div style="font-size: 16px; color: #00BCD4; text-shadow: 0 0 8px #00BCD4;">{{ rung1Text }}</div>
+                </div>
+                <div onClick="{{ openRung2 }}" style="flex: 1; cursor: pointer; border: 1px solid {{ rung2Border }}; border-radius: 8px; padding: 3px 8px; box-shadow: {{ rung2Glow }};" style-active="background: #232933;">
+                  <div style="font-size: 12px; color: rgba(255,255,255,0.6);">Rung 2 · Appliances</div>
+                  <div style="font-size: 16px; color: {{ rung2Color }}; text-shadow: {{ rung2TextGlow }};">{{ rung2Text }}</div>
+                </div>
+              </div>
+            </div>
+            <sc-if value="{{ alertVisible }}" hint-placeholder-val="{{ false }}">
+              <div style="background: #1A1F26; border: 1px solid #F44336; border-radius: 12px; padding: 4px 4px 4px 8px; box-shadow: {{ alertGlow }}; flex: 1; min-height: 0; display: flex; flex-direction: column;">
+                <div style="font-size: 12px; color: #F44336; letter-spacing: 1px; text-shadow: 0 0 8px #F44336;">NEEDS ATTENTION</div>
+                <div style="overflow-y: auto; flex: 1; min-height: 0; scrollbar-width: none;">
+                  <div style="display: flex; align-items: center; gap: 5px;">
+                    <span class="mdi mdi-water-alert" style="color: #F44336; font-size: 16px; text-shadow: 0 0 8px #F44336;"></span>
+                    <div style="flex: 1; min-width: 0;">
+                      <div style="font-size: 16px; color: #FFFFFF; white-space: nowrap;">Clone RH high · 71%</div>
+                      <div style="font-size: 12px; color: rgba(255,255,255,0.6);">2×4 clone</div>
+                    </div>
+                    <div onClick="{{ onSilence }}" style="width: 44px; height: 44px; flex-shrink: 0; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid #2a313b;" style-active="background: #2a313b;">
+                      <span class="mdi mdi-bell-off" style="color: #FFAA00; font-size: 16px;"></span>
+                      <span style="font-size: 12px; color: rgba(255,255,255,0.6);">mute</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </sc-if>
+            <sc-if value="{{ silencedVisible }}" hint-placeholder-val="{{ false }}">
+              <div style="display: flex; align-items: center; gap: 6px; padding: 0 8px;">
+                <span class="mdi mdi-bell-sleep" style="color: #FFAA00; font-size: 16px; text-shadow: 0 0 8px #FFAA00;"></span>
+                <span style="font-size: 12px; color: rgba(255,255,255,0.6);">1 alert silenced · re-raises if repeated</span>
+              </div>
+            </sc-if>
+            <sc-if value="{{ allClear }}" hint-placeholder-val="{{ true }}">
+              <div style="display: flex; align-items: center; gap: 6px; padding: 0 8px;">
+                <span class="mdi mdi-check-circle" style="color: #00E676; font-size: 16px; text-shadow: 0 0 10px #00E676;"></span>
+                <span style="font-size: 12px; color: rgba(255,255,255,0.6);">all clear · nothing needs attention</span>
+              </div>
+            </sc-if>
+          </div>
+        </sc-if>
+
+        <!-- 2 · CLONE grid -->
+        <sc-if value="{{ isClone }}" hint-placeholder-val="{{ false }}">
+          <div style="position: absolute; inset: 0; padding: 2px 5px; display: flex; flex-direction: column; gap: 2px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; height: 34px; flex-shrink: 0;">
+              <span style="font-size: 12px; color: rgba(255,255,255,0.6); letter-spacing: 1px;">2×4 CLONE</span>
+              <div onClick="{{ openCloneSettings }}" style="width: 44px; height: 34px; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 8px;" style-active="background: #1A1F26;">
+                <span class="mdi mdi-cog" style="color: #00E676; font-size: 16px; text-shadow: 0 0 8px #00E676;"></span>
+              </div>
+            </div>
+            <div ref="{{ setScrollEl }}" style="flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none; padding-right: 48px; display: flex; flex-direction: column; gap: 3px;">
+              <sc-for list="{{ cloneEnvGauges }}" as="g" hint-placeholder-count="3">
+                <div onClick="{{ g.onTap }}" style="height: 42px; flex-shrink: 0; box-sizing: border-box; background: #1A1F26; border: 1px solid {{ g.border }}; border-radius: 8px; padding: 5px 8px; cursor: pointer; box-shadow: {{ g.boxGlow }};" style-active="background: #232933;">
+                  <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                    <span style="font-size: 12px; color: rgba(255,255,255,0.6);"><span class="mdi mdi-{{ g.icon }}" style="font-size: 12px; margin-right: 3px;"></span>{{ g.label }}</span>
+                    <span style="font-size: 16px; color: {{ g.color }}; text-shadow: 0 0 8px {{ g.color }};">{{ g.value }}</span>
+                  </div>
+                  <div style="position: relative; height: 4px; background: #0E1116; border-radius: 2px; margin-top: 4px;">
+                    <div style="position: absolute; left: {{ g.bandLeft }}; width: {{ g.bandWidth }}; top: 0; height: 4px; background: rgba(255,255,255,0.16);"></div>
+                    <div style="position: absolute; left: 0; top: 0; height: 4px; width: {{ g.pct }}; background: {{ g.color }}; border-radius: 2px; box-shadow: 0 0 6px {{ g.color }};"></div>
+                  </div>
+                </div>
+              </sc-for>
+              <div style="font-size: 12px; color: rgba(255,255,255,0.6); letter-spacing: 1px; padding: 2px 2px 0; flex-shrink: 0;">DEVICES</div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; grid-auto-rows: 50px; gap: 3px; min-width: 0; flex-shrink: 0;">
+                <sc-for list="{{ cloneTiles }}" as="t" hint-placeholder-count="4">
+                  <div onClick="{{ t.onTap }}" style="background: #1A1F26; border: 1px solid {{ t.border }}; border-radius: 12px; box-shadow: {{ t.boxGlow }}; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; cursor: {{ t.cursor }}; box-sizing: border-box;" style-active="background: #232933;">
+                    <span class="mdi mdi-{{ t.icon }}" style="display: inline-block; color: {{ t.iconColor }}; font-size: 24px; line-height: 26px; text-shadow: {{ t.iconGlow }}; animation: {{ t.anim }};"></span>
+                    <span style="font-size: 12px; color: {{ t.valueColor }}; white-space: nowrap;">{{ t.value }}</span>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="font-size: 12px; color: #00E676; letter-spacing: 1px; padding: 2px 2px 0; flex-shrink: 0; text-shadow: 0 0 8px #00E676;">PLANTS</div>
+              <sc-for list="{{ clonePlantRows }}" as="p" hint-placeholder-count="2">
+                <div onClick="{{ p.onTap }}" style="height: 52px; flex-shrink: 0; box-sizing: border-box; background: #141d17; border: 1px solid #1e3a2b; border-radius: 12px; display: flex; align-items: center; gap: 8px; padding: 0 10px; cursor: pointer; box-shadow: 0 0 10px rgba(0,230,118,0.18);" style-active="background: #1a2a20;">
+                  <span class="mdi mdi-sprout" style="color: #00E676; font-size: 24px; text-shadow: 0 0 12px #00E676;"></span>
+                  <div style="flex: 1; min-width: 0; overflow: hidden;">
+                    <div style="font-size: 16px; color: #FFFFFF; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ p.name }}</div>
+                    <div style="font-size: 12px; color: rgba(255,255,255,0.6); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ p.sub }}</div>
+                  </div>
+                  <div style="width: 62px; flex-shrink: 0;">
+                    <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                      <span style="font-size: 12px; color: rgba(255,255,255,0.6);">moist</span>
+                      <span style="font-size: 12px; color: {{ p.moistColor }};">{{ p.moist }}</span>
+                    </div>
+                    <div style="height: 4px; background: #0E1116; border-radius: 2px; margin-top: 2px;">
+                      <div style="width: {{ p.moistPct }}; height: 4px; background: {{ p.moistColor }}; border-radius: 2px; box-shadow: 0 0 6px {{ p.moistColor }};"></div>
+                    </div>
+                  </div>
+                  <span class="mdi mdi-chevron-right" style="color: #616161; font-size: 16px;"></span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- 3 · MAIN grid -->
+        <sc-if value="{{ isMain }}" hint-placeholder-val="{{ false }}">
+          <div style="position: absolute; inset: 0; padding: 2px 5px; display: flex; flex-direction: column; gap: 2px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; height: 34px; flex-shrink: 0;">
+              <div>
+                <span style="font-size: 12px; color: rgba(255,255,255,0.6); letter-spacing: 1px;">4×8 MAIN</span>
+                <span style="font-size: 12px; color: #616161;"> · no lamp fitted</span>
+              </div>
+              <div onClick="{{ openMainSettings }}" style="width: 44px; height: 34px; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 8px;" style-active="background: #1A1F26;">
+                <span class="mdi mdi-cog" style="color: #00E676; font-size: 16px; text-shadow: 0 0 8px #00E676;"></span>
+              </div>
+            </div>
+            <div ref="{{ setScrollEl }}" style="flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none; padding-right: 48px; display: flex; flex-direction: column; gap: 3px;">
+              <sc-for list="{{ mainEnvGauges }}" as="g" hint-placeholder-count="3">
+                <div onClick="{{ g.onTap }}" style="height: 42px; flex-shrink: 0; box-sizing: border-box; background: #1A1F26; border: 1px solid {{ g.border }}; border-radius: 8px; padding: 5px 8px; cursor: pointer; box-shadow: {{ g.boxGlow }};" style-active="background: #232933;">
+                  <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                    <span style="font-size: 12px; color: rgba(255,255,255,0.6);"><span class="mdi mdi-{{ g.icon }}" style="font-size: 12px; margin-right: 3px;"></span>{{ g.label }}</span>
+                    <span style="font-size: 16px; color: {{ g.color }}; text-shadow: 0 0 8px {{ g.color }};">{{ g.value }}</span>
+                  </div>
+                  <div style="position: relative; height: 4px; background: #0E1116; border-radius: 2px; margin-top: 4px;">
+                    <div style="position: absolute; left: {{ g.bandLeft }}; width: {{ g.bandWidth }}; top: 0; height: 4px; background: rgba(255,255,255,0.16);"></div>
+                    <div style="position: absolute; left: 0; top: 0; height: 4px; width: {{ g.pct }}; background: {{ g.color }}; border-radius: 2px; box-shadow: 0 0 6px {{ g.color }};"></div>
+                  </div>
+                </div>
+              </sc-for>
+              <div style="font-size: 12px; color: rgba(255,255,255,0.6); letter-spacing: 1px; padding: 2px 2px 0; flex-shrink: 0;">DEVICES</div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; grid-auto-rows: 50px; gap: 3px; min-width: 0; flex-shrink: 0;">
+                <sc-for list="{{ mainTiles }}" as="t" hint-placeholder-count="9">
+                  <div onClick="{{ t.onTap }}" style="background: #1A1F26; border: 1px solid {{ t.border }}; border-radius: 12px; box-shadow: {{ t.boxGlow }}; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; cursor: {{ t.cursor }}; box-sizing: border-box;" style-active="background: #232933;">
+                    <span class="mdi mdi-{{ t.icon }}" style="display: inline-block; color: {{ t.iconColor }}; font-size: 24px; line-height: 26px; text-shadow: {{ t.iconGlow }}; animation: {{ t.anim }};"></span>
+                    <span style="font-size: 12px; color: {{ t.valueColor }}; white-space: nowrap;">{{ t.value }}</span>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="font-size: 12px; color: #00E676; letter-spacing: 1px; padding: 2px 2px 0; flex-shrink: 0; text-shadow: 0 0 8px #00E676;">PLANTS</div>
+              <sc-for list="{{ mainPlantRows }}" as="p" hint-placeholder-count="2">
+                <div onClick="{{ p.onTap }}" style="height: 52px; flex-shrink: 0; box-sizing: border-box; background: #141d17; border: 1px solid #1e3a2b; border-radius: 12px; display: flex; align-items: center; gap: 8px; padding: 0 10px; cursor: pointer; box-shadow: 0 0 10px rgba(0,230,118,0.18);" style-active="background: #1a2a20;">
+                  <span class="mdi mdi-sprout" style="color: #00E676; font-size: 24px; text-shadow: 0 0 12px #00E676;"></span>
+                  <div style="flex: 1; min-width: 0; overflow: hidden;">
+                    <div style="font-size: 16px; color: #FFFFFF; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ p.name }}</div>
+                    <div style="font-size: 12px; color: rgba(255,255,255,0.6); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ p.sub }}</div>
+                  </div>
+                  <div style="width: 62px; flex-shrink: 0;">
+                    <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                      <span style="font-size: 12px; color: rgba(255,255,255,0.6);">moist</span>
+                      <span style="font-size: 12px; color: {{ p.moistColor }};">{{ p.moist }}</span>
+                    </div>
+                    <div style="height: 4px; background: #0E1116; border-radius: 2px; margin-top: 2px;">
+                      <div style="width: {{ p.moistPct }}; height: 4px; background: {{ p.moistColor }}; border-radius: 2px; box-shadow: 0 0 6px {{ p.moistColor }};"></div>
+                    </div>
+                  </div>
+                  <span class="mdi mdi-chevron-right" style="color: #616161; font-size: 16px;"></span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- DEVICE CONTROL -->
+        <sc-if value="{{ isDevice }}" hint-placeholder-val="{{ false }}">
+          <div style="position: absolute; inset: 0; background: #0E1116; padding: 2px 5px; display: flex; flex-direction: column; gap: 3px;">
+            <div style="display: flex; align-items: center; gap: 4px; height: 42px; flex-shrink: 0;">
+              <div onClick="{{ goBack }}" style="width: 44px; height: 42px; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 8px;" style-active="background: #1A1F26;">
+                <span class="mdi mdi-arrow-left" style="color: #FFFFFF; font-size: 16px;"></span>
+              </div>
+              <span class="mdi mdi-{{ devIcon }}" style="display: inline-block; color: {{ devColor }}; font-size: 24px; text-shadow: 0 0 10px {{ devColor }}; animation: {{ devAnim }};"></span>
+              <div style="flex: 1; min-width: 0;">
+                <div style="font-size: 16px; color: #FFFFFF; white-space: nowrap;">{{ devName }}</div>
+                <div style="font-size: 12px; color: rgba(255,255,255,0.6); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ devStatus }}</div>
+              </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 3px; height: 44px; flex-shrink: 0;">
+              <sc-for list="{{ devModes }}" as="o" hint-placeholder-count="2">
+                <div onClick="{{ o.onTap }}" style="flex: 1; height: 44px; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; border-radius: 8px; background: #1A1F26; border: 1px solid {{ o.border }}; box-shadow: {{ o.glow }};">
+                  <span class="mdi mdi-{{ o.icon }}" style="color: {{ o.color }}; font-size: 16px;"></span>
+                  <span style="font-size: 16px; color: {{ o.color }};">{{ o.label }}</span>
+                </div>
+              </sc-for>
+            </div>
+            <sc-if value="{{ devIsPct }}" hint-placeholder-val="{{ true }}">
+              <div style="height: 48px; flex-shrink: 0; background: #1A1F26; border-radius: 12px; display: flex; align-items: center; gap: 2px; padding: 0 2px; opacity: {{ devPowerOpacity }};">
+                <div onClick="{{ devMinus }}" style="width: 44px; height: 44px; flex-shrink: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 8px;" style-active="background: #2a313b;">
+                  <span class="mdi mdi-minus" style="color: #FFFFFF; font-size: 16px;"></span>
+                </div>
+                <div style="flex: 1; text-align: center;">
+                  <div style="font-size: 24px; color: {{ devColor }}; text-shadow: 0 0 10px {{ devColor }};">{{ devPower }}</div>
+                </div>
+                <div onClick="{{ devPlus }}" style="width: 44px; height: 44px; flex-shrink: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 8px;" style-active="background: #2a313b;">
+                  <span class="mdi mdi-plus" style="color: #FFFFFF; font-size: 16px;"></span>
+                </div>
+              </div>
+            </sc-if>
+            <sc-if value="{{ devIsWindow }}" hint-placeholder-val="{{ false }}">
+              <div style="display: flex; gap: 3px; height: 48px; flex-shrink: 0; opacity: {{ devPowerOpacity }};">
+                <div onClick="{{ devOpen }}" style="flex: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; border-radius: 12px; background: #1A1F26; border: 1px solid {{ devOpenBorder }};">
+                  <span class="mdi mdi-window-open-variant" style="color: {{ devOpenColor }}; font-size: 16px;"></span>
+                  <span style="font-size: 16px; color: {{ devOpenColor }};">OPEN</span>
+                </div>
+                <div onClick="{{ devShut }}" style="flex: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; border-radius: 12px; background: #1A1F26; border: 1px solid {{ devShutBorder }};">
+                  <span class="mdi mdi-window-shutter" style="color: {{ devShutColor }}; font-size: 16px;"></span>
+                  <span style="font-size: 16px; color: {{ devShutColor }};">SHUT</span>
+                </div>
+              </div>
+            </sc-if>
+            <div style="flex: 1; background: #1A1F26; border-radius: 12px; padding: 4px 8px; min-height: 0; overflow: hidden;">
+              <div style="font-size: 12px; color: rgba(255,255,255,0.6); letter-spacing: 1px;">AUTOMATION</div>
+              <div style="font-size: 12px; color: #FFFFFF; margin-top: 2px; white-space: nowrap;">{{ devInfo }}</div>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- VPD CURVE EDITOR -->
+        <sc-if value="{{ isCurve }}" hint-placeholder-val="{{ false }}">
+          <div style="position: absolute; inset: 0; background: #0E1116; padding: 2px 5px; display: flex; flex-direction: column; gap: 3px;">
+            <div style="display: flex; align-items: center; gap: 4px; height: 38px; flex-shrink: 0;">
+              <div onClick="{{ goBack }}" style="width: 44px; height: 38px; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 8px;" style-active="background: #1A1F26;">
+                <span class="mdi mdi-arrow-left" style="color: #FFFFFF; font-size: 16px;"></span>
+              </div>
+              <div>
+                <div style="font-size: 16px; color: #FFFFFF;">VPD curve</div>
+                <div style="font-size: 12px; color: #00E676; text-shadow: 0 0 8px #00E676;">{{ curveSpace }} · tap a stage, then adjust</div>
+              </div>
+            </div>
+            <div style="flex: 1; min-height: 0; background: #1A1F26; border-radius: 12px; padding: 4px; display: flex;">
+              <sc-for list="{{ curveCols }}" as="c" hint-placeholder-count="5">
+                <div onClick="{{ c.onTap }}" style="flex: 1; position: relative; cursor: pointer; border-radius: 8px; background: {{ c.bg }};">
+                  <div style="position: absolute; top: 2px; left: 0; right: 0; text-align: center; font-size: 12px; color: {{ c.valColor }};">{{ c.val }}</div>
+                  <div style="position: absolute; left: 50%; top: 18px; bottom: 14px; width: 1px; background: rgba(255,255,255,0.12);"></div>
+                  <div style="position: absolute; left: 50%; margin-left: -5px; bottom: {{ c.dotBottom }}; width: 10px; height: 10px; border-radius: 5px; background: {{ c.dotColor }}; box-shadow: 0 0 8px {{ c.dotColor }};"></div>
+                  <div style="position: absolute; bottom: 1px; left: 0; right: 0; text-align: center; font-size: 12px; color: {{ c.labColor }}; white-space: nowrap;">{{ c.label }}</div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="height: 44px; flex-shrink: 0; background: #1A1F26; border-radius: 12px; display: flex; align-items: center; gap: 2px; padding: 0 2px;">
+              <div onClick="{{ curveMinus }}" style="width: 44px; height: 44px; flex-shrink: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 8px;" style-active="background: #2a313b;">
+                <span class="mdi mdi-minus" style="color: #FFFFFF; font-size: 16px;"></span>
+              </div>
+              <div style="flex: 1; text-align: center;">
+                <div style="font-size: 12px; color: rgba(255,255,255,0.6);">{{ curveSelLabel }}</div>
+                <div style="font-size: 16px; color: #00E676; text-shadow: 0 0 8px #00E676;">{{ curveSelVal }} kPa</div>
+              </div>
+              <div onClick="{{ curvePlus }}" style="width: 44px; height: 44px; flex-shrink: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 8px;" style-active="background: #2a313b;">
+                <span class="mdi mdi-plus" style="color: #FFFFFF; font-size: 16px;"></span>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- SPACE SETTINGS -->
+        <sc-if value="{{ isSettings }}" hint-placeholder-val="{{ false }}">
+          <div style="position: absolute; inset: 0; background: #0E1116; padding: 2px 5px; display: flex; flex-direction: column; gap: 2px;">
+            <div style="display: flex; align-items: center; gap: 4px; height: 42px; flex-shrink: 0;">
+              <div onClick="{{ goBack }}" style="width: 44px; height: 42px; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 8px;" style-active="background: #1A1F26;">
+                <span class="mdi mdi-arrow-left" style="color: #FFFFFF; font-size: 16px;"></span>
+              </div>
+              <div style="flex: 1;">
+                <div style="font-size: 16px; color: #FFFFFF;">{{ settingsTitle }}</div>
+                <div style="font-size: 12px; color: #00E676; text-shadow: 0 0 8px #00E676;">settings</div>
+              </div>
+            </div>
+            <div ref="{{ setScrollEl }}" style="flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none; display: flex; flex-direction: column; gap: 3px; padding-right: 48px;">
+              <sc-for list="{{ settingsRows }}" as="r" hint-placeholder-count="5">
+                <sc-if value="{{ r.isHeader }}" hint-placeholder-val="{{ false }}">
+                  <div style="height: 18px; flex-shrink: 0; display: flex; align-items: flex-end; font-size: 12px; color: #00E676; letter-spacing: 1px; padding: 0 2px; text-shadow: 0 0 8px #00E676;">{{ r.label }}</div>
+                </sc-if>
+                <sc-if value="{{ r.isRow }}" hint-placeholder-val="{{ true }}">
+                <div onClick="{{ r.onRowTap }}" style="height: 44px; box-sizing: border-box; flex-shrink: 0; background: #1A1F26; border-radius: 8px; display: flex; align-items: center; gap: 2px; padding: 0 2px 0 8px; opacity: {{ r.opacity }}; cursor: {{ r.cursor }};">
+                  <span class="mdi mdi-{{ r.icon }}" style="color: {{ r.iconColor }}; font-size: 16px; text-shadow: 0 0 8px {{ r.iconColor }}; width: 20px;"></span>
+                  <span style="flex: 1; font-size: 12px; color: rgba(255,255,255,0.6); min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ r.label }}</span>
+                  <sc-if value="{{ r.isCycle }}" hint-placeholder-val="{{ false }}">
+                    <div onClick="{{ r.onCycle }}" style="height: 40px; max-width: 150px; padding: 0 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; border-radius: 8px; border: 1px solid #00E676;" style-active="background: #12241a;">
+                      <span style="font-size: 12px; color: #00E676; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ r.cycVal }}</span>
+                      <span class="mdi mdi-rotate-right" style="color: #616161; font-size: 12px;"></span>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{ r.isLink }}" hint-placeholder-val="{{ false }}">
+                    <span style="font-size: 12px; color: #00E676;">{{ r.linkVal }}</span>
+                    <span class="mdi mdi-chevron-right" style="color: #616161; font-size: 16px; padding-right: 6px;"></span>
+                  </sc-if>
+                  <sc-if value="{{ r.isToggle }}" hint-placeholder-val="{{ false }}">
+                    <div onClick="{{ r.onToggle }}" style="width: 72px; height: 40px; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid {{ r.togBorder }}; box-shadow: {{ r.togGlow }};">
+                      <span style="font-size: 16px; color: {{ r.togColor }};">{{ r.togText }}</span>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{ r.isStep }}" hint-placeholder-val="{{ true }}">
+                    <div onClick="{{ r.onMinus }}" style="width: 44px; height: 40px; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 8px;" style-active="background: #2a313b;">
+                      <span class="mdi mdi-minus" style="color: #FFFFFF; font-size: 16px;"></span>
+                    </div>
+                    <span style="width: 52px; text-align: center; font-size: 16px; color: #FFFFFF;">{{ r.value }}</span>
+                    <div onClick="{{ r.onPlus }}" style="width: 44px; height: 40px; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 8px;" style-active="background: #2a313b;">
+                      <span class="mdi mdi-plus" style="color: #FFFFFF; font-size: 16px;"></span>
+                    </div>
+                  </sc-if>
+                </div>
+                </sc-if>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- LIST PAGE (hub status / alerts / escalation rungs) -->
+        <sc-if value="{{ isList }}" hint-placeholder-val="{{ false }}">
+          <div style="position: absolute; inset: 0; background: #0E1116; padding: 2px 5px; display: flex; flex-direction: column; gap: 2px;">
+            <div style="display: flex; align-items: center; gap: 4px; height: 42px; flex-shrink: 0;">
+              <div onClick="{{ goBack }}" style="width: 44px; height: 42px; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 8px;" style-active="background: #1A1F26;">
+                <span class="mdi mdi-arrow-left" style="color: #FFFFFF; font-size: 16px;"></span>
+              </div>
+              <div>
+                <div style="font-size: 16px; color: #FFFFFF;">{{ listTitle }}</div>
+                <div style="font-size: 12px; color: #00E676; text-shadow: 0 0 8px #00E676;">{{ listSub }}</div>
+              </div>
+            </div>
+            <div ref="{{ setScrollEl }}" style="flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none; display: flex; flex-direction: column; gap: 3px; padding-right: 48px;">
+              <sc-for list="{{ listRows }}" as="r" hint-placeholder-count="4">
+                <div onClick="{{ r.onTap }}" style="height: 44px; box-sizing: border-box; flex-shrink: 0; background: #1A1F26; border-radius: 8px; display: flex; align-items: center; gap: 6px; padding: 0 8px; cursor: {{ r.cursor }};" style-active="background: #232933;">
+                  <span class="mdi mdi-{{ r.icon }}" style="color: {{ r.color }}; font-size: 16px; text-shadow: {{ r.glow }}; width: 20px;"></span>
+                  <div style="flex: 1; min-width: 0; overflow: hidden;">
+                    <div style="font-size: 16px; color: #FFFFFF; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ r.title }}</div>
+                    <div style="font-size: 12px; color: rgba(255,255,255,0.6); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ r.sub }}</div>
+                  </div>
+                  <sc-if value="{{ r.hasTap }}" hint-placeholder-val="{{ false }}">
+                    <span class="mdi mdi-chevron-right" style="color: #616161; font-size: 16px;"></span>
+                  </sc-if>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- PLANT DETAIL -->
+        <sc-if value="{{ isPlant }}" hint-placeholder-val="{{ false }}">
+          <div style="position: absolute; inset: 0; background: #0E1116; padding: 2px 5px; display: flex; flex-direction: column; gap: 2px;">
+            <div style="display: flex; align-items: center; gap: 4px; height: 42px; flex-shrink: 0;">
+              <div onClick="{{ goBack }}" style="width: 44px; height: 42px; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 8px;" style-active="background: #1A1F26;">
+                <span class="mdi mdi-arrow-left" style="color: #FFFFFF; font-size: 16px;"></span>
+              </div>
+              <div style="flex: 1; min-width: 0; overflow: hidden;">
+                <div style="font-size: 16px; color: #FFFFFF; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ plantName }}</div>
+                <div style="font-size: 12px; color: rgba(255,255,255,0.6); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ plantSub }}</div>
+              </div>
+              <div onClick="{{ openPlantSettings }}" style="width: 44px; height: 42px; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 8px;" style-active="background: #1A1F26;">
+                <span class="mdi mdi-cog" style="color: #00E676; font-size: 16px; text-shadow: 0 0 8px #00E676;"></span>
+              </div>
+            </div>
+            <div ref="{{ setScrollEl }}" style="flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none; padding-right: 48px; display: flex; flex-direction: column; gap: 3px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: 44px; gap: 3px; flex-shrink: 0;">
+              <sc-for list="{{ gauges }}" as="g" hint-placeholder-count="7">
+                <div onClick="{{ g.onTap }}" style="background: #1A1F26; border-radius: 8px; padding: 5px 8px; box-sizing: border-box; cursor: pointer;" style-active="background: #232933;">
+                  <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                    <span style="font-size: 12px; color: rgba(255,255,255,0.6);">{{ g.label }}</span>
+                    <span style="font-size: 16px; color: {{ g.color }}; text-shadow: 0 0 8px {{ g.color }};">{{ g.value }}</span>
+                  </div>
+                  <div style="position: relative; height: 4px; background: #0E1116; border-radius: 2px; margin-top: 5px;">
+                    <div style="position: absolute; left: {{ g.bandLeft }}; width: {{ g.bandWidth }}; top: 0; height: 4px; background: rgba(255,255,255,0.16);"></div>
+                    <div style="position: absolute; left: 0; top: 0; height: 4px; width: {{ g.pct }}; background: {{ g.color }}; border-radius: 2px; box-shadow: 0 0 6px {{ g.color }};"></div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="height: 40px; flex-shrink: 0; box-sizing: border-box; background: #1A1F26; border-radius: 8px; display: flex; align-items: center; gap: 6px; padding: 0 8px;">
+              <span class="mdi mdi-access-point" style="color: #00E676; font-size: 16px; text-shadow: 0 0 8px #00E676;"></span>
+              <span style="font-size: 12px; color: rgba(255,255,255,0.6); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ plantNode }}</span>
+            </div>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- PLANT SETTINGS -->
+        <sc-if value="{{ isPlantSettings }}" hint-placeholder-val="{{ false }}">
+          <div style="position: absolute; inset: 0; background: #0E1116; padding: 2px 5px; display: flex; flex-direction: column; gap: 3px;">
+            <div style="display: flex; align-items: center; gap: 4px; height: 42px; flex-shrink: 0;">
+              <div onClick="{{ goBack }}" style="width: 44px; height: 42px; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 8px;" style-active="background: #1A1F26;">
+                <span class="mdi mdi-arrow-left" style="color: #FFFFFF; font-size: 16px;"></span>
+              </div>
+              <div>
+                <div style="font-size: 16px; color: #FFFFFF;">{{ plantName }}</div>
+                <div style="font-size: 12px; color: #00E676; text-shadow: 0 0 8px #00E676;">plant settings</div>
+              </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 3px; height: 44px;">
+              <span style="width: 60px; font-size: 12px; color: rgba(255,255,255,0.6); padding-left: 6px;">Type</span>
+              <sc-for list="{{ typeOpts }}" as="o" hint-placeholder-count="2">
+                <div onClick="{{ o.onTap }}" style="flex: 1; height: 44px; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 8px; background: #1A1F26; border: 1px solid {{ o.border }}; box-shadow: {{ o.glow }};">
+                  <span style="font-size: 16px; color: {{ o.color }};">{{ o.label }}</span>
+                </div>
+              </sc-for>
+            </div>
+            <div style="display: flex; align-items: center; gap: 3px; height: 44px;">
+              <span style="width: 60px; font-size: 12px; color: rgba(255,255,255,0.6); padding-left: 6px;">Stage</span>
+              <sc-for list="{{ stageOpts }}" as="o" hint-placeholder-count="3">
+                <div onClick="{{ o.onTap }}" style="flex: 1; height: 44px; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 8px; background: #1A1F26; border: 1px solid {{ o.border }}; box-shadow: {{ o.glow }};">
+                  <span style="font-size: 16px; color: {{ o.color }};">{{ o.label }}</span>
+                </div>
+              </sc-for>
+            </div>
+            <div style="flex: 1; background: #1A1F26; border-radius: 12px; padding: 4px 8px; min-height: 0; overflow: hidden;">
+              <div style="font-size: 12px; color: rgba(255,255,255,0.6); letter-spacing: 1px; white-space: nowrap;">STAGE TARGETS · sets gauge bands</div>
+              <div style="font-size: 12px; color: #FFFFFF; margin-top: 2px; white-space: nowrap;">{{ targetsText }}</div>
+              <div style="font-size: 12px; color: #FFFFFF; margin-top: 1px; white-space: nowrap;">{{ targetsText2 }}</div>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- TREND -->
+        <sc-if value="{{ isTrend }}" hint-placeholder-val="{{ false }}">
+          <div style="position: absolute; inset: 0; background: #0E1116; padding: 2px 5px; display: flex; flex-direction: column; gap: 2px;">
+            <div style="display: flex; align-items: center; gap: 4px; height: 42px; flex-shrink: 0;">
+              <div onClick="{{ goBack }}" style="width: 44px; height: 42px; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 8px;" style-active="background: #1A1F26;">
+                <span class="mdi mdi-arrow-left" style="color: #FFFFFF; font-size: 16px;"></span>
+              </div>
+              <div style="flex: 1; min-width: 0;">
+                <div style="font-size: 16px; color: #FFFFFF; white-space: nowrap;">{{ trendTitle }}</div>
+                <div style="font-size: 12px; color: rgba(255,255,255,0.6);">{{ trendSub }}</div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 3px; background: #1A1F26; border-radius: 999px; padding: 2px 8px; font-size: 12px;">
+                <span style="color: #00E676;">24h</span>
+              </div>
+            </div>
+            <div style="flex: 1; background: #1A1F26; border-radius: 12px; padding: 6px 8px 4px; min-height: 0; position: relative; display: flex; align-items: flex-end; gap: 2px;">
+              <div style="position: absolute; top: 2px; left: 8px; font-size: 12px; color: rgba(255,255,255,0.3);">−24h</div>
+              <div style="position: absolute; top: 2px; right: 8px; font-size: 12px; color: rgba(255,255,255,0.3);">now</div>
+              <div style="position: absolute; left: 8px; right: 8px; top: {{ trendHiTop }}; height: 1px; background: rgba(255,255,255,0.25);"></div>
+              <div style="position: absolute; left: 8px; right: 8px; top: {{ trendLoTop }}; height: 1px; background: rgba(255,255,255,0.25);"></div>
+              <sc-for list="{{ trendBars }}" as="b" hint-placeholder-count="12">
+                <div style="flex: 1; height: {{ b.h }}; background: {{ b.color }}; border-radius: 2px 2px 0 0; box-shadow: 0 0 4px {{ b.color }};"></div>
+              </sc-for>
+            </div>
+            <div style="display: flex; gap: 3px; height: 30px; flex-shrink: 0;">
+              <div style="flex: 1; background: #1A1F26; border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                <span style="font-size: 12px; color: rgba(255,255,255,0.6);">min</span><span style="font-size: 16px; color: #FFFFFF;">{{ trendMin }}</span>
+              </div>
+              <div style="flex: 1; background: #1A1F26; border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                <span style="font-size: 12px; color: rgba(255,255,255,0.6);">avg</span><span style="font-size: 16px; color: #FFFFFF;">{{ trendAvg }}</span>
+              </div>
+              <div style="flex: 1; background: #1A1F26; border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                <span style="font-size: 12px; color: rgba(255,255,255,0.6);">max</span><span style="font-size: 16px; color: #FFFFFF;">{{ trendMax }}</span>
+              </div>
+              <div style="flex: 1.4; background: #1A1F26; border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                <span style="font-size: 12px; color: rgba(255,255,255,0.6);">tgt</span><span style="font-size: 12px; color: #00E676; white-space: nowrap;">{{ trendBand }}</span>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- 4 · OVERRIDE -->
+        <sc-if value="{{ isOverride }}" hint-placeholder-val="{{ false }}">
+          <div style="position: absolute; inset: 0; padding: 3px; display: flex; flex-direction: column; gap: 3px;">
+            <div style="display: flex; gap: 3px; flex-shrink: 0;">
+              <div onClick="{{ onTakeover }}" style="flex: 1; height: 44px; box-sizing: border-box; cursor: pointer; background: {{ takeoverBg }}; border: 1px solid {{ takeoverBorder }}; border-radius: 12px; box-shadow: {{ takeoverGlow }}; display: flex; align-items: center; gap: 8px; padding: 0 10px;">
+                <span class="mdi mdi-hand-back-right" style="color: {{ takeoverColor }}; font-size: 24px; text-shadow: {{ takeoverIconGlow }};"></span>
+                <div style="flex: 1; min-width: 0;">
+                  <div style="font-size: 16px; color: {{ takeoverColor }}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ takeoverTitle }}</div>
+                  <div style="font-size: 12px; color: rgba(255,255,255,0.6); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ takeoverSub }}</div>
+                </div>
+              </div>
+              <div onClick="{{ onLock }}" style="width: 44px; height: 44px; flex-shrink: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 12px; background: #1A1F26; border: 1px solid #2a313b;" style-active="background: #2a313b;">
+                <span class="mdi mdi-lock-outline" style="color: rgba(255,255,255,0.6); font-size: 16px;"></span>
+              </div>
+            </div>
+            <div ref="{{ setScrollEl }}" style="flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none; display: flex; flex-direction: column; gap: 3px; padding-right: 48px;">
+              <sc-for list="{{ overrideRows }}" as="r" hint-placeholder-count="6">
+                <sc-if value="{{ r.isHeader }}" hint-placeholder-val="{{ false }}">
+                  <div style="height: 18px; flex-shrink: 0; display: flex; align-items: flex-end; font-size: 12px; color: #00E676; letter-spacing: 1px; padding: 0 2px; text-shadow: 0 0 8px #00E676;">{{ r.label }}</div>
+                </sc-if>
+                <sc-if value="{{ r.isRow }}" hint-placeholder-val="{{ true }}">
+                <div onClick="{{ r.onRowTap }}" style="height: 44px; box-sizing: border-box; flex-shrink: 0; background: #1A1F26; border-radius: 8px; display: flex; align-items: center; gap: 2px; padding: 0 2px 0 8px; cursor: {{ r.cursor }};" style-active="background: #232933;">
+                  <span class="mdi mdi-{{ r.icon }}" style="color: {{ r.iconColor }}; font-size: 16px; text-shadow: 0 0 8px {{ r.iconColor }}; width: 20px;"></span>
+                  <span style="flex: 1; font-size: 12px; color: rgba(255,255,255,0.6); min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ r.label }}</span>
+                  <sc-if value="{{ r.isLink }}" hint-placeholder-val="{{ false }}">
+                    <span style="font-size: 12px; color: #00E676;">{{ r.linkVal }}</span>
+                    <span class="mdi mdi-chevron-right" style="color: #616161; font-size: 16px; padding-right: 6px;"></span>
+                  </sc-if>
+                  <sc-if value="{{ r.isStep }}" hint-placeholder-val="{{ false }}">
+                    <div onClick="{{ r.onMinus }}" style="width: 44px; height: 40px; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 8px;" style-active="background: #2a313b;">
+                      <span class="mdi mdi-minus" style="color: #FFFFFF; font-size: 16px;"></span>
+                    </div>
+                    <span style="width: 52px; text-align: center; font-size: 16px; color: #FFFFFF;">{{ r.value }}</span>
+                    <div onClick="{{ r.onPlus }}" style="width: 44px; height: 40px; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 8px;" style-active="background: #2a313b;">
+                      <span class="mdi mdi-plus" style="color: #FFFFFF; font-size: 16px;"></span>
+                    </div>
+                  </sc-if>
+                </div>
+                </sc-if>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- SCROLL ARROWS -->
+        <sc-if value="{{ showArrows }}" hint-placeholder-val="{{ false }}">
+          <div style="position: absolute; right: 5px; top: 50px; bottom: 4px; width: 44px; display: flex; flex-direction: column; justify-content: space-between;">
+            <div onClick="{{ onScrollUp }}" style="width: 44px; height: 44px; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 8px; background: #1A1F26; border: 1px solid #2a313b;" style-active="background: #2a313b;">
+              <span class="mdi mdi-chevron-up" style="color: #00E676; font-size: 24px;"></span>
+            </div>
+            <div onClick="{{ onScrollDown }}" style="width: 44px; height: 44px; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 8px; background: #1A1F26; border: 1px solid #2a313b;" style-active="background: #2a313b;">
+              <span class="mdi mdi-chevron-down" style="color: #00E676; font-size: 24px;"></span>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+
+      <!-- TAB BAR -->
+      <div style="height: 48px; border-top: 1px solid #2a313b; background: #12161c; display: grid; grid-template-columns: 1fr 1fr 1fr 1fr;">
+        <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="4">
+          <div onClick="{{ t.onTap }}" style="cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; background: {{ t.bg }};">
+            <span class="mdi mdi-{{ t.icon }}" style="color: {{ t.color }}; font-size: 16px; line-height: 18px; text-shadow: {{ t.glow }};"></span>
+            <span style="font-size: 12px; color: {{ t.color }};">{{ t.label }}</span>
+          </div>
+        </sc-for>
+      </div>
+
+      <!-- DARK-CYCLE DIM (in-room night environment) -->
+      <sc-if value="{{ isNight }}" hint-placeholder-val="{{ false }}">
+        <div style="position: absolute; inset: 0; background: rgba(0,0,0,0.55); z-index: 5; pointer-events: none; display: flex; align-items: flex-start; justify-content: flex-end; padding: 4px 6px;">
+          <div style="display: flex; align-items: center; gap: 3px; background: rgba(26,31,38,0.85); border-radius: 999px; padding: 2px 8px;">
+            <span class="mdi mdi-weather-night" style="color: #9E9E9E; font-size: 12px;"></span>
+            <span style="font-size: 12px; color: #9E9E9E;">4×8 dark · panel dimmed</span>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- LOCK OVERLAY -->
+      <sc-if value="{{ isLocked }}" hint-placeholder-val="{{ false }}">
+        <div onClick="{{ onLockTap }}" style="position: absolute; inset: 0; background: #04060a; z-index: 10; cursor: pointer;">
+          <sc-if value="{{ isSaver }}" hint-placeholder-val="{{ true }}">
+            <div style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;">
+              <span style="font-size: 12px; color: rgba(0,230,118,0.35); letter-spacing: 2px;">DSC-HUB</span>
+              <div style="display: flex; gap: 14px;">
+                <div style="text-align: center;">
+                  <div style="font-size: 12px; color: rgba(255,255,255,0.25);">clone</div>
+                  <div style="font-size: 16px; color: rgba(255,255,255,0.4);">24.6° · {{ saverCloneRh }}</div>
+                </div>
+                <div style="text-align: center;">
+                  <div style="font-size: 12px; color: rgba(255,255,255,0.25);">main</div>
+                  <div style="font-size: 16px; color: rgba(255,255,255,0.4);">26.1° · 58%</div>
+                </div>
+                <div style="text-align: center;">
+                  <div style="font-size: 12px; color: rgba(255,255,255,0.25);">room</div>
+                  <div style="font-size: 16px; color: rgba(255,255,255,0.4);">22.9° · 47%</div>
+                </div>
+              </div>
+              <div style="font-size: 12px; color: {{ saverAlertColor }};">{{ saverAlertText }}</div>
+              <div style="display: flex; align-items: center; gap: 5px; margin-top: 6px;">
+                <span class="mdi mdi-lock" style="color: rgba(255,255,255,0.3); font-size: 16px;"></span>
+                <span style="font-size: 12px; color: rgba(255,255,255,0.3);">tap to unlock</span>
+              </div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ isChallenge }}" hint-placeholder-val="{{ false }}">
+            <div style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding-bottom: 14px;">
+              <div style="height: 130px; position: relative; display: flex; align-items: flex-end; justify-content: center;">
+                <sc-if value="{{ growNotDone }}" hint-placeholder-val="{{ true }}">
+                  <span class="mdi mdi-{{ plantIcon }}" style="font-size: {{ plantSize }}; color: {{ plantColor }}; text-shadow: {{ plantGlow }}; transition: font-size 0.25s ease, color 0.25s ease, text-shadow 0.25s ease; line-height: 1;"></span>
+                </sc-if>
+                <sc-if value="{{ growDone }}" hint-placeholder-val="{{ false }}">
+                  <div style="display: flex; flex-direction: column; align-items: center; filter: drop-shadow(0 0 12px rgba(255,170,0,0.4));">
+                    <div style="width: 56px; height: 12px; box-sizing: border-box; border: 2px solid #FFAA00; border-radius: 3px; background: #1A1F26;"></div>
+                    <div style="width: 74px; height: 82px; box-sizing: border-box; border: 2px solid #FFAA00; border-radius: 10px 10px 16px 16px; margin-top: 2px; overflow: hidden; position: relative; background: rgba(255,170,0,0.08);">
+                      <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 84%; background: rgba(0,230,118,0.5); box-shadow: 0 0 14px rgba(0,230,118,0.7);"></div>
+                      <div style="position: absolute; top: 6px; right: 8px; width: 6px; height: 38px; border-radius: 3px; background: rgba(255,255,255,0.22);"></div>
+                    </div>
+                  </div>
+                </sc-if>
+              </div>
+              <div style="font-size: 16px; color: {{ plantColor }}; margin-top: 4px;">{{ growLabel }}</div>
+              <div style="display: flex; gap: 5px; margin-top: 6px;">
+                <sc-for list="{{ growDots }}" as="d" hint-placeholder-count="5">
+                  <div style="width: 8px; height: 8px; border-radius: 4px; background: {{ d.bg }}; box-shadow: {{ d.glow }};"></div>
+                </sc-for>
+              </div>
+              <div style="font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 6px;">tap anywhere to grow · harvest unlocks</div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ isDark }}" hint-placeholder-val="{{ false }}">
+            <div style="position: absolute; inset: 0; background: #000000; display: flex; align-items: flex-end; justify-content: flex-end; padding: 8px;">
+              <div style="width: 4px; height: 4px; border-radius: 2px; background: rgba(0,230,118,0.3);"></div>
+            </div>
+          </sc-if>
+        </div>
+      </sc-if>
+
+    </div>
+  </div>
+  <div style="font-size: 12px; color: rgba(255,255,255,0.35);">DSC-HUB · Watches. <span style="color: #00E676; text-shadow: 0 0 8px rgba(0,230,118,0.6);">Decides.</span> Acts. · Digital-Emotions · 320 × 240 @ 2× · tap only</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:760,&quot;height&quot;:640},&quot;glowOpacity&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:0.5,&quot;min&quot;:0,&quot;max&quot;:1,&quot;step&quot;:0.05,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Look&quot;},&quot;autoLockSecs&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:60,&quot;min&quot;:10,&quot;max&quot;:600,&quot;unit&quot;:&quot;s&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Behavior&quot;}}">
+class Component extends DCLogic {
+  state = {
+    tab: 0, stack: [], demo: 'firing', secs: 43, takeover: 'off', silenced: false,
+    locked: false, lockView: 'saver', backlightOff: false, unlockTaps: 0,
+    temp: 25.0, rhMin: 55, rhMax: 65, vpdMin: 0.9, vpdMax: 1.3,
+    cl_on: 1080, cl_bri: 80, mn_open: 360, mn_shut: 1080,
+    clTemp: 24.0, clRhMin: 55, clRhMax: 65, clVpdMin: 0.8, clVpdMax: 1.2, clHours: 18, sunrise: 20, sunset: 25, rampFloor: 12,
+    clHumHyst: 3, clHumOff: 180, humOff: 300, heatOff: 300,
+    matLow: 21.0, matHigh: 24.0, matOff: 600, dsPeriod: 180, dsBurst: 15, dsLevel: 60,
+    growStage: 'Vegetative', strategy: 'VPD', cloneMode: 'Clones & Seedlings', clonePhoto: 'Independent', priority: '4×8 Main',
+    autoPhoto: true, lightHold: false, fullAuto: true, humRouting: true, destratOn: true,
+    dev: {
+      cl_light: { mode: 'auto', power: 80 }, cl_hum: { mode: 'auto', power: 50 },
+      cl_fan: { mode: 'auto', power: 30 }, cl_mat: { mode: 'auto', power: 55 },
+      mn_window: { mode: 'auto', power: 100 }, mn_exh_out: { mode: 'auto', power: 64 },
+      mn_exh_room: { mode: 'auto', power: 38 }, mn_intake: { mode: 'auto', power: 40 },
+      mn_ac: { mode: 'auto', power: 0 }, mn_heat: { mode: 'auto', power: 0 },
+      mn_hum: { mode: 'auto', power: 0 }, mn_dehum: { mode: 'auto', power: 0 }, mn_destrat: { mode: 'auto', power: 0 }
+    },
+    vpdCurve: { clone: [0.8, 0.95, 1.1, 1.25, 1.4], main: [0.9, 1.05, 1.2, 1.35, 1.5] },
+    curveSel: 0,
+    plantMeta: {
+      c1: { type: 'photo', stage: 'clone' }, c2: { type: 'photo', stage: 'clone' },
+      m1: { type: 'photo', stage: 'veg' }, m2: { type: 'auto', stage: 'flower' }
+    }
+  };
+  PLANTS = [
+    { id: 'c1', name: 'Clone A', space: 'clone', day: 9, pot: 1 }, { id: 'c2', name: 'Clone B', space: 'clone', day: 9, pot: 2 },
+    { id: 'm1', name: 'Runtz #1', space: 'main', day: 23, pot: 3 }, { id: 'm2', name: 'Auto Gelato', space: 'main', day: 51, pot: 4 }
+  ];
+  READ = {
+    c1: { moist: 78, temp: 23.9, ec: 0.8, ph: 6.4, n: 96, p: 48, k: 101 },
+    c2: { moist: 66, temp: 24.2, ec: 0.9, ph: 6.5, n: 88, p: 44, k: 95 },
+    m1: { moist: 62, temp: 22.8, ec: 1.5, ph: 6.2, n: 168, p: 72, k: 160 },
+    m2: { moist: 51, temp: 21.5, ec: 1.9, ph: 5.9, n: 120, p: 110, k: 210 }
+  };
+  NUM_DEFAULTS = {
+    clTemp: 24.0, clRhMin: 55, clRhMax: 65, clVpdMin: 0.8, clVpdMax: 1.2, clHours: 18, sunrise: 20, sunset: 25, rampFloor: 12,
+    clHumHyst: 3, clHumOff: 180, humOff: 300, heatOff: 300, matLow: 21.0, matHigh: 24.0, matOff: 600,
+    dsPeriod: 180, dsBurst: 15, dsLevel: 60
+  };
+  CYCLES = {
+    growStage: ['Germination', 'Seedling', 'Early Vegetative', 'Vegetative', 'Late (Push) Vegetative', 'Early Flowering', 'Flowering', 'Late Flowering', 'Final 48-72h Flowering', 'Dry Mode', 'Off'],
+    strategy: ['VPD', 'Temperature', 'Humidity'],
+    cloneMode: ['Follow 4×8', 'Clones & Seedlings', 'Mother', 'Custom', 'Off'],
+    clonePhoto: ['Follow 4×8', 'Independent'],
+    priority: ['4×8 Main', '2×4 Clone']
+  };
+  TARGETS = {
+    clone:    { moist: [70, 85], temp: [22, 26], ec: [0.6, 1.0], ph: [6.2, 6.8], n: [80, 120],  p: [40, 60],   k: [80, 120] },
+    seedling: { moist: [65, 80], temp: [21, 26], ec: [0.6, 1.2], ph: [6.2, 6.8], n: [80, 130],  p: [40, 70],   k: [80, 130] },
+    veg:      { moist: [55, 75], temp: [20, 26], ec: [1.2, 1.8], ph: [6.0, 6.5], n: [140, 200], p: [60, 90],   k: [140, 200] },
+    flower:   { moist: [45, 65], temp: [18, 24], ec: [1.6, 2.2], ph: [5.8, 6.4], n: [100, 150], p: [90, 140],  k: [180, 260] }
+  };
+  METRICS = [
+    ['moist', 'Moisture', [0, 100], v => v + '%'],
+    ['temp', 'Soil temp', [10, 35], v => v.toFixed(1) + '°'],
+    ['ec', 'Soil EC', [0, 3], v => v.toFixed(1) + ' mS'],
+    ['ph', 'Soil pH', [5, 7.5], v => (+v).toFixed(1)],
+    ['n', 'N', [0, 300], v => v + ' ppm'],
+    ['p', 'P', [0, 300], v => v + ' ppm'],
+    ['k', 'K', [0, 300], v => v + ' ppm']
+  ];
+  DEVDEF = {
+    cl_light:   { name: 'SF1000 dimmer', icon: 'white-balance-sunny', color: '#FFAA00', kind: 'pct', space: 'clone' },
+    cl_hum:     { name: 'Clone humidifier', icon: 'air-humidifier', color: '#2196F3', kind: 'pct', space: 'clone' },
+    cl_fan:     { name: '4″ intake (2×4)', icon: 'fan', color: '#2196F3', kind: 'pct', space: 'clone' },
+    cl_mat:     { name: 'Grow mat', icon: 'heating-coil', color: '#FF9800', kind: 'pct', space: 'clone' },
+    mn_window:  { name: 'Virtual window', icon: 'window-open-variant', color: '#2196F3', kind: 'openshut', space: 'main' },
+    mn_exh_out: { name: '6″ exhaust (outside)', icon: 'fan', color: '#00BCD4', kind: 'pct', space: 'main' },
+    mn_exh_room:{ name: '6″ RECIRC (room)', icon: 'fan', color: '#00BCD4', kind: 'pct', space: 'main' },
+    mn_intake:  { name: '4″ intake (main)', icon: 'fan', color: '#2196F3', kind: 'pct', space: 'main' },
+    mn_ac:      { name: 'Portable AC', icon: 'snowflake', color: '#2196F3', kind: 'pct', space: 'main' },
+    mn_heat:    { name: '750W heater', icon: 'radiator', color: '#FF9800', kind: 'pct', space: 'main' },
+    mn_hum:     { name: 'Humidifier', icon: 'air-humidifier', color: '#2196F3', kind: 'pct', space: 'main' },
+    mn_dehum:   { name: 'Dehumidifier', icon: 'water-remove', color: '#2196F3', kind: 'pct', space: 'main' },
+    mn_destrat: { name: 'De-strat pulse', icon: 'weather-windy', color: '#00BCD4', kind: 'pct', space: 'main' }
+  };
+  CURVE_STAGES = ['Clone', 'E-veg', 'L-veg', 'Stretch', 'Flower'];
+  GROW = [
+    { icon: 'seed', size: 28, color: '#8D6E63', label: 'seed' },
+    { icon: 'sprout', size: 44, color: '#00E676', label: 'sprout' },
+    { icon: 'spa', size: 60, color: '#00E676', label: 'seedling' },
+    { icon: 'cannabis', size: 78, color: '#4CAF50', label: 'veg' },
+    { icon: 'cannabis', size: 96, color: '#00E676', label: 'flower' },
+    { icon: 'beaker-outline', size: 110, color: '#FFAA00', label: 'in the jar · unlocked' }
+  ];
+  componentDidMount() {
+    this.lastAct = Date.now(); this.challengeAt = 0;
+    this.timer = setInterval(() => {
+      const now = Date.now(), S = this.state;
+      if (S.demo === 'firing') this.setState(s => ({ secs: s.secs <= 1 ? 43 : s.secs - 1 }));
+      if (!S.locked && now - this.lastAct > (this.props.autoLockSecs ?? 60) * 1000)
+        this.setState({ locked: true, lockView: 'saver', backlightOff: false, unlockTaps: 0 });
+      if (S.locked && S.lockView === 'saver' && !S.backlightOff && now - this.lastAct > ((this.props.autoLockSecs ?? 60) + 20) * 1000)
+        this.setState({ backlightOff: true });
+      if (S.locked && S.lockView === 'challenge' && now - this.challengeAt > 8000)
+        this.setState({ lockView: 'saver', unlockTaps: 0 });
+    }, 1000);
+  }
+  componentWillUnmount() { clearInterval(this.timer); clearTimeout(this.ct); clearTimeout(this.ut); }
+  glow(hex) {
+    const op = this.props.glowOpacity ?? 0.5;
+    return `0 0 10px 1px ${hex}${Math.round(op * 255).toString(16).padStart(2, '0')}`;
+  }
+  push(v) { this.setState(s => ({ stack: [...s.stack, v] })); }
+  snapScroll(dir) {
+    const el = this.scrollEl;
+    if (!el || !el.isConnected || !el.children.length) return;
+    const max = el.scrollHeight - el.clientHeight;
+    const target = el.scrollTop + dir * (el.clientHeight - 44);
+    if (target >= max) { el.scrollTop = max; return; }
+    if (target <= 0) { el.scrollTop = 0; return; }
+    const base = el.children[0].offsetTop;
+    let best = 0, bd = Infinity;
+    for (const c of el.children) {
+      const top = c.offsetTop - base;
+      const d = Math.abs(top - target);
+      if (d < bd) { bd = d; best = top; }
+    }
+    el.scrollTop = Math.min(best, max);
+  }
+  DEV_DEFAULTS = {
+    cl_light: 80, cl_hum: 50, cl_fan: 30, cl_mat: 55, mn_window: 100,
+    mn_exh_out: 64, mn_exh_room: 38, mn_intake: 40, mn_ac: 0, mn_heat: 0, mn_hum: 0, mn_dehum: 0, mn_destrat: 0
+  };
+  getDev(S, id) { return S.dev[id] || { mode: 'auto', power: this.DEV_DEFAULTS[id] ?? 0 }; }
+  setDev(id, patch) { this.setState(s => ({ dev: { ...s.dev, [id]: { ...this.getDev(s, id), ...patch } } })); }
+  renderVals() {
+    const S = this.state;
+    const AMBER = '#FFAA00', ORANGE = '#FF9800', BLUE = '#2196F3', CYAN = '#00BCD4', NEON = '#00E676', RED = '#F44336', GREY = '#616161';
+    const firing = S.demo === 'firing', alert = S.demo === 'alert', night = S.demo === 'night';
+    const alertLive = alert && !S.silenced, alertMuted = alert && S.silenced;
+    const fmtTime = m => String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
+    const nv = k => typeof S[k] === 'number' ? S[k] : (this.NUM_DEFAULTS[k] ?? 0);
+    const adj = (key, delta, min, max, dp) => () => this.setState(s => ({ [key]: Math.min(max, Math.max(min, +(s[key] + delta).toFixed(dp))) }));
+    const top = S.stack.length ? S.stack[S.stack.length - 1] : null;
+    const view = top ? top.name : 'root';
+    const plant = top && top.plantId ? this.PLANTS.find(p => p.id === top.plantId) : null;
+    const meta = plant ? S.plantMeta[plant.id] : null;
+    const tgt = meta ? this.TARGETS[meta.stage] : null;
+    const read = plant ? this.READ[plant.id] : null;
+
+    const demoModes = [['quiet', 'All quiet'], ['firing', 'Demand firing'], ['alert', 'Alert active'], ['night', 'Dark cycle']].map(([id, label]) => ({
+      label, onTap: () => this.setState({ demo: id, secs: 43, silenced: false }),
+      bg: S.demo === id ? '#12241a' : 'transparent',
+      border: S.demo === id ? NEON : '#2a313b',
+      color: S.demo === id ? NEON : 'rgba(255,255,255,0.5)'
+    }));
+    const tabs = [['heart-pulse', 'Pulse'], ['sprout', 'Clone'], ['leaf', 'Main'], ['tune', 'Control']].map(([icon, label], i) => ({
+      icon, label, onTap: () => this.setState({ tab: i, stack: [] }),
+      bg: S.tab === i ? '#1A1F26' : 'transparent',
+      color: S.tab === i ? NEON : GREY,
+      glow: S.tab === i ? `0 0 8px ${NEON}` : 'none'
+    }));
+    const tk = S.takeover;
+    const onTakeover = () => {
+      clearTimeout(this.ct);
+      if (tk === 'off') {
+        this.setState({ takeover: 'confirm' });
+        this.ct = setTimeout(() => { if (this.state.takeover === 'confirm') this.setState({ takeover: 'off' }); }, 5000);
+      } else if (tk === 'confirm') this.setState({ takeover: 'on' });
+      else this.setState({ takeover: 'off' });
+    };
+
+
+    // ---- space tiles ----
+    const envTile = (icon, value, warn, onTap) => ({
+      icon, iconColor: warn ? RED : '#9E9E9E', iconGlow: warn ? `0 0 8px ${RED}` : 'none', anim: 'none',
+      value, valueColor: warn ? RED : 'rgba(255,255,255,0.6)',
+      border: warn ? RED : '#2a313b', boxGlow: warn ? this.glow(RED) : 'none', cursor: 'pointer', onTap
+    });
+    const envTrend = (space, metric) => () => this.push({ name: 'trend', kind: 'env', space, metric });
+    const devTile = id => {
+      const D = this.DEVDEF[id], d = this.getDev(S, id);
+      const manual = d.mode === 'manual';
+      const FANDIR = { mn_exh_out: '↑', mn_exh_room: '↻', mn_intake: '↓', cl_fan: '↓' };
+      let active = d.power > 0, color = D.color, value = FANDIR[id] ? FANDIR[id] + ' ' + d.power + '%' : d.power + '%', anim = 'none';
+      if (id === 'cl_hum') { active = firing || (manual && d.power > 0); color = firing && !manual ? ORANGE : BLUE; value = manual ? d.power + '%' : (firing ? S.secs + 's' : '2/h'); if (active) anim = 'dscPulse 1.4s ease-in-out infinite'; }
+      if (D.icon.indexOf('fan') === 0 && active) anim = `dscSpin ${(2.6 - d.power / 100 * 2).toFixed(2)}s linear infinite`;
+      if (id.endsWith('_heat') && active) anim = 'dscPulse 1.6s ease-in-out infinite';
+      if (id === 'mn_window') { const open = !night && d.power > 0; value = open ? 'OPEN' : 'SHUT'; color = open ? BLUE : GREY; active = open; }
+      return {
+        icon: D.icon, iconColor: active ? color : GREY,
+        iconGlow: active ? `0 0 10px ${color}` : 'none', anim,
+        value, valueColor: manual ? ORANGE : (active ? color : GREY),
+        border: manual ? ORANGE : (active ? color : '#2a313b'),
+        boxGlow: manual ? this.glow(ORANGE) : (active ? this.glow(color) : 'none'),
+        cursor: 'pointer', onTap: () => this.push({ name: 'device', devId: id })
+      };
+    };
+    const plantRow = p => {
+      const r = this.READ[p.id], m = S.plantMeta[p.id], t = this.TARGETS[m.stage];
+      const [plo, phi] = t.moist;
+      const inBand = r.moist >= plo && r.moist <= phi;
+      const far = r.moist < plo - (phi - plo) * 0.5 || r.moist > phi + (phi - plo) * 0.5;
+      return {
+        name: p.name, sub: `POT#${p.pot} · ${m.type} · day ${p.day} of ${m.stage}`,
+        moist: r.moist + '%', moistPct: r.moist + '%',
+        moistColor: inBand ? NEON : (far ? RED : AMBER),
+        onTap: () => this.push({ name: 'plant', plantId: p.id })
+      };
+    };
+    const clonePlantRows = this.PLANTS.filter(p => p.space === 'clone').map(plantRow);
+    const mainPlantRows = this.PLANTS.filter(p => p.space === 'main').map(plantRow);
+    const envGauge = (icon, label, v, [lo, hi], [smin, smax], fmt, onTap) => {
+      const pc = x => Math.max(0, Math.min(100, (x - smin) / (smax - smin) * 100));
+      const inBand = v >= lo && v <= hi;
+      const far = v < lo - (hi - lo) * 0.5 || v > hi + (hi - lo) * 0.5;
+      const color = inBand ? NEON : (far ? RED : AMBER);
+      return {
+        icon, label, value: fmt(v), color,
+        pct: pc(v).toFixed(1) + '%', bandLeft: pc(lo).toFixed(1) + '%', bandWidth: (pc(hi) - pc(lo)).toFixed(1) + '%',
+        border: inBand ? '#2a313b' : color, boxGlow: inBand ? 'none' : this.glow(color), onTap
+      };
+    };
+    const cloneEnvGauges = [
+      envGauge('thermometer', 'Air temp', 24.6, [22, 26], [15, 32], v => v.toFixed(1) + '°', envTrend('clone', 'temp')),
+      envGauge('water-percent', 'RH', alert ? 71 : 62, [nv('clRhMin'), nv('clRhMax')], [30, 90], v => Math.round(v) + '%', envTrend('clone', 'rh')),
+      envGauge('gauge', 'VPD', alert ? 0.78 : 1.02, [nv('clVpdMin'), nv('clVpdMax')], [0.4, 1.8], v => v.toFixed(2) + ' kPa', envTrend('clone', 'vpd'))
+    ];
+    const mainEnvGauges = [
+      envGauge('thermometer', 'Air temp', 26.1, [22, 27], [15, 32], v => v.toFixed(1) + '°', envTrend('main', 'temp')),
+      envGauge('water-percent', 'RH', 58, [S.rhMin, S.rhMax], [30, 90], v => Math.round(v) + '%', envTrend('main', 'rh')),
+      envGauge('gauge', 'VPD', 1.31, [S.vpdMin, S.vpdMax], [0.4, 1.8], v => v.toFixed(2) + ' kPa', envTrend('main', 'vpd'))
+    ];
+    const airTile = {
+      icon: 'air-filter', iconColor: CYAN, iconGlow: `0 0 8px ${CYAN}`, anim: 'none',
+      value: 'airflow', valueColor: CYAN, border: '#2a313b', boxGlow: 'none', cursor: 'pointer',
+      onTap: () => this.push({ name: 'list', list: 'airflow' })
+    };
+    const cloneTiles = [devTile('cl_light'), devTile('cl_hum'), devTile('cl_fan'), devTile('cl_mat'), airTile];
+    const mainTiles = [
+      devTile('mn_window'), devTile('mn_exh_out'), devTile('mn_exh_room'),
+      devTile('mn_intake'), devTile('mn_ac'), devTile('mn_heat'),
+      devTile('mn_hum'), devTile('mn_dehum'), devTile('mn_destrat'), airTile
+    ];
+
+    // ---- device page ----
+    let dv = {};
+    if (view === 'device') {
+      const id = top.devId, D = this.DEVDEF[id], d = this.getDev(S, id);
+      const manual = d.mode === 'manual';
+      const winOpen = D.kind === 'openshut' && !night && d.power > 0;
+      const statusMap = {
+        cl_light: `schedule ${fmtTime(S.cl_on)}–${fmtTime((S.cl_on + S.clHours * 60) % 1440)} · ${S.cl_bri}% target · sunrise ${S.sunrise}m`,
+        cl_hum: firing ? `firing in ${S.secs}s · min off-time ${S.clHumOff}s` : (alert ? 'held · RH high' : `standing by · hysteresis ${S.clHumHyst}%`),
+        cl_fan: 'rung 1 · fans-first gate',
+        cl_mat: `root-zone ${S.matLow.toFixed(1)}–${S.matHigh.toFixed(1)}° · heats coldest of 4 pots`,
+        mn_window: night ? 'dark cycle · opens 06:00' : `12/12 · shut in 8h 12m`,
+        mn_exh_out: 'rung 1 · fans-first gate',
+        mn_exh_room: 'rung 1 · fans-first gate',
+        mn_intake: 'rung 1 · fans-first gate',
+        mn_ac: 'rung 2 · fans-first gate · compressor lock 3 min',
+        mn_heat: `standing by · target ${S.temp.toFixed(1)}° · min off-time ${S.heatOff}s`,
+        mn_hum: 'rung 2 · VPD-aware · no-war guard vs dehum',
+        mn_dehum: 'rung 2 · VPD-aware · compressor lock 3 min',
+        mn_destrat: `pulse ${S.dsBurst}s @ ${S.dsLevel}% every ${Math.round(S.dsPeriod / 60)}m`
+      };
+      dv = {
+        devIcon: D.icon, devName: D.name, devColor: manual ? ORANGE : D.color,
+        devAnim: D.icon.indexOf('fan') === 0 && d.power > 0 ? `dscSpin ${(2.6 - d.power / 100 * 2).toFixed(2)}s linear infinite` : 'none',
+        devStatus: manual ? 'MANUAL · automation ignored' : 'AUTO · hub-driven',
+        devInfo: manual ? 'tap AUTO to hand back to the hub' : statusMap[id],
+        devModes: [['auto', 'AUTO', 'refresh-auto'], ['manual', 'MANUAL', 'hand-back-right']].map(([mv, label, icon]) => ({
+          label, icon,
+          border: d.mode === mv ? (mv === 'manual' ? ORANGE : NEON) : '#2a313b',
+          color: d.mode === mv ? (mv === 'manual' ? ORANGE : NEON) : GREY,
+          glow: d.mode === mv ? this.glow(mv === 'manual' ? ORANGE : NEON) : 'none',
+          onTap: () => this.setDev(id, { mode: mv })
+        })),
+        devIsPct: D.kind === 'pct', devIsWindow: D.kind === 'openshut',
+        devPower: d.power + '%', devPowerOpacity: manual ? 1 : 0.4,
+        devMinus: () => { if (manual) this.setDev(id, { power: Math.max(0, d.power - 5) }); },
+        devPlus: () => { if (manual) this.setDev(id, { power: Math.min(100, d.power + 5) }); },
+        devOpen: () => { if (manual) this.setDev(id, { power: 100 }); },
+        devShut: () => { if (manual) this.setDev(id, { power: 0 }); },
+        devOpenBorder: winOpen ? BLUE : '#2a313b', devOpenColor: winOpen ? BLUE : GREY,
+        devShutBorder: winOpen ? '#2a313b' : GREY, devShutColor: winOpen ? GREY : '#FFFFFF'
+      };
+    }
+
+    // ---- vpd curve ----
+    let cv = {};
+    if (view === 'curve') {
+      const space = top.space, curve = S.vpdCurve[space], sel = S.curveSel;
+      const pc = v => ((v - 0.4) / 1.4 * 100).toFixed(1);
+      cv = {
+        curveSpace: space === 'clone' ? '2×4 CLONE' : '4×8 MAIN',
+        curveCols: this.CURVE_STAGES.map((lab, i) => ({
+          label: lab, val: curve[i].toFixed(2),
+          bg: i === sel ? '#232933' : 'transparent',
+          valColor: i === sel ? NEON : 'rgba(255,255,255,0.4)',
+          labColor: i === sel ? '#FFFFFF' : GREY,
+          dotColor: i === sel ? NEON : '#4a5563',
+          dotBottom: `calc(14px + ${pc(curve[i])}% * 0.55)`,
+          onTap: () => this.setState({ curveSel: i })
+        })),
+        curveSelLabel: this.CURVE_STAGES[sel],
+        curveSelVal: curve[sel].toFixed(2),
+        curveMinus: () => this.setState(s => { const c = [...s.vpdCurve[space]]; c[sel] = Math.max(0.4, +(c[sel] - 0.05).toFixed(2)); return { vpdCurve: { ...s.vpdCurve, [space]: c } }; }),
+        curvePlus: () => this.setState(s => { const c = [...s.vpdCurve[space]]; c[sel] = Math.min(1.8, +(c[sel] + 0.05).toFixed(2)); return { vpdCurve: { ...s.vpdCurve, [space]: c } }; })
+      };
+    }
+
+    // ---- settings rows (clone / main / hub) ----
+    const base = { isStep: false, isToggle: false, isLink: false, isCycle: false, isHeader: false, isRow: true, opacity: 1, cursor: 'default', onRowTap: undefined };
+    const hdr = label => ({ isHeader: true, isRow: false, label });
+    const stepRow = (icon, iconColor, label, key, step, min, max, dp, fmt) => {
+      const cur = typeof S[key] === 'number' ? S[key] : (this.NUM_DEFAULTS[key] ?? min);
+      return {
+        ...base, icon, iconColor, label, isStep: true, value: fmt(cur),
+        onMinus: () => this.setState(s => ({ [key]: Math.min(max, Math.max(min, +(((typeof s[key] === 'number' ? s[key] : cur)) - step).toFixed(dp))) })),
+        onPlus: () => this.setState(s => ({ [key]: Math.min(max, Math.max(min, +(((typeof s[key] === 'number' ? s[key] : cur)) + step).toFixed(dp))) }))
+      };
+    };
+    const linkRow = (icon, label, linkVal, onRowTap) => ({ ...base, icon, iconColor: NEON, label, isLink: true, linkVal, onRowTap, cursor: 'pointer' });
+    const togRowS = (icon, label, key, onColor) => ({
+      ...base, icon, iconColor: S[key] ? onColor : GREY, label, isToggle: true,
+      onToggle: () => this.setState(s => ({ [key]: !s[key] })),
+      togText: S[key] ? 'ON' : 'OFF', togColor: S[key] ? onColor : GREY,
+      togBorder: S[key] ? onColor : '#2a313b', togGlow: S[key] ? this.glow(onColor) : 'none'
+    });
+    const cycRow = (icon, label, key) => ({
+      ...base, icon, iconColor: NEON, label, isCycle: true, cycVal: S[key] ?? this.CYCLES[key][0],
+      onCycle: () => this.setState(s => { const o = this.CYCLES[key]; return { [key]: o[(o.indexOf(s[key]) + 1) % o.length] }; })
+    });
+    const curveLink = space => linkRow('chart-bell-curve-cumulative', 'VPD curve', S.vpdCurve[space].map(v => v.toFixed(1)).join(' '), () => { this.setState({ curveSel: 0 }); this.push({ name: 'curve', space }); });
+    const airLink = () => linkRow('air-filter', 'Airflow map', '', () => this.push({ name: 'list', list: 'airflow' }));
+    const overrideRows = S.tab !== 3 || top ? [] : [
+      hdr('SETTINGS'),
+      linkRow('sprout', '2×4 Clone', 'light · climate · mat', () => this.push({ name: 'settings', space: 'clone' })),
+      linkRow('leaf', '4×8 Main', 'window · climate · air', () => this.push({ name: 'settings', space: 'main' })),
+      linkRow('chip', 'Hub', 'stage · strategy · routing', () => this.push({ name: 'settings', space: 'hub' })),
+      linkRow('air-filter', 'Airflow map', '', () => this.push({ name: 'list', list: 'airflow' })),
+      linkRow('link-variant', 'Demand followers', '6 bound', () => this.push({ name: 'list', list: 'followers' })),
+      hdr('QUICK TARGETS · 4×8'),
+      stepRow('thermometer', ORANGE, 'Target temp', 'temp', 0.5, 15, 32, 1, v => v.toFixed(1) + '°'),
+      stepRow('water-percent', BLUE, 'RH min', 'rhMin', 1, 20, 90, 0, v => v + '%'),
+      stepRow('water-percent', BLUE, 'RH max', 'rhMax', 1, 20, 95, 0, v => v + '%'),
+      stepRow('gauge', BLUE, 'VPD min', 'vpdMin', 0.1, 0.4, 1.6, 1, v => v.toFixed(1)),
+      stepRow('gauge', BLUE, 'VPD max', 'vpdMax', 0.1, 0.4, 1.8, 1, v => v.toFixed(1)),
+      curveLink('main'),
+      hdr('QUICK TARGETS · 2×4'),
+      stepRow('thermometer', ORANGE, 'Target temp', 'clTemp', 0.5, 15, 32, 1, v => v.toFixed(1) + '°'),
+      stepRow('water-percent', BLUE, 'RH min', 'clRhMin', 1, 20, 90, 0, v => v + '%'),
+      stepRow('water-percent', BLUE, 'RH max', 'clRhMax', 1, 20, 95, 0, v => v + '%'),
+      stepRow('gauge', BLUE, 'VPD min', 'clVpdMin', 0.1, 0.2, 1.6, 1, v => v.toFixed(1)),
+      stepRow('gauge', BLUE, 'VPD max', 'clVpdMax', 0.1, 0.2, 1.8, 1, v => v.toFixed(1)),
+      curveLink('clone')
+    ];
+    const setSpace = view === 'settings' ? top.space : '';
+    const settingsRows = view !== 'settings' ? [] : setSpace === 'clone' ? [
+      hdr('LIGHT · SF1000'),
+      stepRow('white-balance-sunny', AMBER, 'Lights on', 'cl_on', 30, 0, 1410, 0, fmtTime),
+      stepRow('timer-outline', AMBER, 'Light hours', 'clHours', 1, 0, 24, 0, v => v + 'h'),
+      stepRow('brightness-6', AMBER, 'Brightness', 'cl_bri', 5, 0, 100, 0, v => v + '%'),
+      stepRow('weather-sunset-up', AMBER, 'Sunrise', 'sunrise', 5, 0, 120, 0, v => v + 'm'),
+      stepRow('weather-sunset-down', ORANGE, 'Sunset', 'sunset', 5, 0, 120, 0, v => v + 'm'),
+      stepRow('elevation-decline', GREY, 'Ramp floor', 'rampFloor', 1, 0, 50, 0, v => v + '%'),
+      hdr('CLIMATE'),
+      stepRow('thermometer', ORANGE, 'Target temp', 'clTemp', 0.5, 15, 32, 1, v => v.toFixed(1) + '°'),
+      stepRow('water-percent', BLUE, 'RH min', 'clRhMin', 1, 20, 90, 0, v => v + '%'),
+      stepRow('water-percent', BLUE, 'RH max', 'clRhMax', 1, 20, 95, 0, v => v + '%'),
+      stepRow('gauge', BLUE, 'VPD min', 'clVpdMin', 0.1, 0.2, 1.6, 1, v => v.toFixed(1)),
+      stepRow('gauge', BLUE, 'VPD max', 'clVpdMax', 0.1, 0.2, 1.8, 1, v => v.toFixed(1)),
+      curveLink('clone'),
+      hdr('CLONE HUMIDIFIER'),
+      stepRow('water-plus', BLUE, 'Hysteresis', 'clHumHyst', 0.5, 2, 15, 1, v => +v.toFixed(1) + '%'),
+      stepRow('timer-sand', BLUE, 'Min off-time', 'clHumOff', 30, 0, 900, 0, v => v + 's'),
+      hdr('GROW MAT'),
+      stepRow('heating-coil', ORANGE, 'Root-zone low', 'matLow', 0.5, 12, 26, 1, v => v.toFixed(1) + '°'),
+      stepRow('heating-coil', ORANGE, 'Root-zone high', 'matHigh', 0.5, 14, 28, 1, v => v.toFixed(1) + '°'),
+      stepRow('timer-sand', ORANGE, 'Mat min off', 'matOff', 60, 0, 1800, 0, v => v + 's')
+    ] : setSpace === 'main' ? [
+      hdr('VIRTUAL WINDOW'),
+      stepRow('window-open-variant', BLUE, 'Window open', 'mn_open', 30, 0, 1410, 0, fmtTime),
+      stepRow('window-shutter', GREY, 'Window shut', 'mn_shut', 30, 0, 1410, 0, fmtTime),
+      hdr('CLIMATE'),
+      stepRow('thermometer', ORANGE, 'Target temp', 'temp', 0.5, 15, 32, 1, v => v.toFixed(1) + '°'),
+      stepRow('water-percent', BLUE, 'RH min', 'rhMin', 1, 20, 90, 0, v => v + '%'),
+      stepRow('water-percent', BLUE, 'RH max', 'rhMax', 1, 20, 95, 0, v => v + '%'),
+      curveLink('main'),
+      hdr('APPLIANCES'),
+      stepRow('timer-sand', BLUE, 'Hum min off', 'humOff', 30, 0, 900, 0, v => v + 's'),
+      stepRow('timer-sand', ORANGE, 'Heater min off', 'heatOff', 30, 0, 900, 0, v => v + 's'),
+      hdr('AIR'),
+      airLink(),
+      stepRow('sine-wave', CYAN, 'De-strat period', 'dsPeriod', 30, 30, 1800, 0, v => v + 's'),
+      stepRow('sine-wave', CYAN, 'De-strat length', 'dsBurst', 5, 5, 120, 0, v => v + 's'),
+      stepRow('sine-wave', CYAN, 'De-strat level', 'dsLevel', 5, 25, 100, 0, v => v + '%')
+    ] : [
+      hdr('GROW'),
+      cycRow('sprout', 'Stage', 'growStage'),
+      cycRow('tune-variant', 'Strategy', 'strategy'),
+      cycRow('sprout-outline', 'Clone mode', 'cloneMode'),
+      cycRow('theme-light-dark', 'Clone photoperiod', 'clonePhoto'),
+      cycRow('priority-high', 'Priority tent', 'priority'),
+      hdr('LIGHT'),
+      togRowS('theme-light-dark', 'Auto photoperiod', 'autoPhoto', AMBER),
+      togRowS('hand-back-right', 'Manual light hold', 'lightHold', ORANGE),
+      hdr('AIR & HUMIDITY'),
+      togRowS('call-split', 'Hum intake routing', 'humRouting', BLUE),
+      togRowS('sine-wave', 'De-strat pulse', 'destratOn', CYAN),
+      airLink(),
+      hdr('SYSTEM'),
+      togRowS('robot', 'Tent full auto', 'fullAuto', NEON),
+      linkRow('link-variant', 'Demand followers', '6 bound', () => this.push({ name: 'list', list: 'followers' }))
+    ];
+
+    // ---- gauges / trend / plant settings ----
+    const gauges = !plant || view !== 'plant' ? [] : this.METRICS.map(([key, label, scale, fmt]) => {
+      const v = read[key], [lo, hi] = tgt[key], [smin, smax] = scale;
+      const pc = x => Math.max(0, Math.min(100, (x - smin) / (smax - smin) * 100));
+      const inBand = v >= lo && v <= hi;
+      const far = v < lo - (hi - lo) * 0.5 || v > hi + (hi - lo) * 0.5;
+      return {
+        label, value: fmt(v), color: inBand ? NEON : (far ? RED : AMBER),
+        pct: pc(v).toFixed(1) + '%', bandLeft: pc(lo).toFixed(1) + '%', bandWidth: (pc(hi) - pc(lo)).toFixed(1) + '%',
+        onTap: () => this.push({ name: 'trend', plantId: plant.id, metric: key })
+      };
+    });
+    let trend = { bars: [], min: '', avg: '', max: '', title: '', band: '', hiTop: '0%', loTop: '100%', sub: '' };
+    if (view === 'trend') {
+      let cfg = null;
+      if (top.kind === 'env') {
+        const E = {
+          clone: {
+            temp: { title: 'Air temp · 2×4 Clone', v: 24.6, band: [22, 26], scale: [15, 32], fmt: v => (+v).toFixed(1) + '°', seed: 3, sub: 'air sensor' },
+            rh:   { title: 'RH · 2×4 Clone', v: alert ? 71 : 62, band: [nv('clRhMin'), nv('clRhMax')], scale: [30, 90], fmt: v => Math.round(v) + '%', seed: 5, sub: 'air sensor' },
+            vpd:  { title: 'VPD · 2×4 Clone', v: alert ? 0.78 : 1.02, band: [nv('clVpdMin'), nv('clVpdMax')], scale: [0.4, 1.8], fmt: v => (+v).toFixed(2), seed: 7, sub: 'computed from T + RH' }
+          },
+          main: {
+            temp: { title: 'Air temp · 4×8 Main', v: 26.1, band: [22, 27], scale: [15, 32], fmt: v => (+v).toFixed(1) + '°', seed: 11, sub: 'air sensor' },
+            rh:   { title: 'RH · 4×8 Main', v: 58, band: [S.rhMin, S.rhMax], scale: [30, 90], fmt: v => Math.round(v) + '%', seed: 13, sub: 'air sensor' },
+            vpd:  { title: 'VPD · 4×8 Main', v: 1.31, band: [S.vpdMin, S.vpdMax], scale: [0.4, 1.8], fmt: v => (+v).toFixed(2), seed: 17, sub: 'computed from T + RH' }
+          },
+          room: {
+            temp: { title: 'Room temp', v: 22.9, band: [18, 26], scale: [10, 32], fmt: v => (+v).toFixed(1) + '°', seed: 31, sub: 'intake source air' },
+            rh: { title: 'Room RH', v: 47, band: [35, 60], scale: [20, 80], fmt: v => Math.round(v) + '%', seed: 37, sub: 'intake source air' },
+            co2: { title: 'CO₂e · room', v: 612, band: [450, 900], scale: [300, 1500], fmt: v => Math.round(v) + ' ppm', seed: 29, sub: 'uncalibrated analog estimate' },
+            co2v: { title: 'CO₂ sensor voltage', v: 1.42, band: [0.8, 2.2], scale: [0, 3.3], fmt: v => (+v).toFixed(2) + ' V', seed: 41, sub: 'raw analog input' }
+          }
+        };
+        cfg = E[top.space][top.metric];
+      } else if (plant) {
+        const M = this.METRICS.find(m => m[0] === top.metric);
+        cfg = { title: `${M[1]} · ${plant.name}`, v: read[M[0]], band: tgt[M[0]], scale: M[2], fmt: M[3], seed: plant.id.charCodeAt(1) + M[0].charCodeAt(0), sub: 'ESP-NOW soil probe' };
+      }
+      if (cfg) {
+        const [lo, hi] = cfg.band, [smin, smax] = cfg.scale;
+        const vals = [];
+        for (let i = 0; i < 16; i++) vals.push(cfg.v + (hi - lo) * 0.45 * Math.sin(i * 0.9 + cfg.seed) + (hi - lo) * 0.2 * Math.sin(i * 2.3 + cfg.seed * 2));
+        const pcH = x => Math.max(4, Math.min(96, (x - smin) / (smax - smin) * 100));
+        const dp = cfg.fmt(2).includes('.') ? 2 : 0;
+        trend = {
+          title: cfg.title, sub: 'last 24 h · ' + cfg.sub,
+          bars: vals.map(x => ({ h: pcH(x).toFixed(1) + '%', color: (x >= lo && x <= hi) ? NEON : AMBER })),
+          min: cfg.fmt(+Math.min(...vals).toFixed(dp)), avg: cfg.fmt(+(vals.reduce((a, b) => a + b) / vals.length).toFixed(dp)), max: cfg.fmt(+Math.max(...vals).toFixed(dp)),
+          band: `${cfg.fmt(lo).replace(/[^0-9.]+$/, '')}–${cfg.fmt(hi)}`,
+          hiTop: (100 - pcH(hi)).toFixed(1) + '%', loTop: (100 - pcH(lo)).toFixed(1) + '%'
+        };
+      }
+    }
+    // ---- list pages (hub / alerts / rungs) ----
+    const mkRow = (icon, color, title, sub, onTap) => ({
+      icon, color, title, sub, onTap, hasTap: !!onTap, glow: `0 0 8px ${color}`, cursor: onTap ? 'pointer' : 'default'
+    });
+    let listTitle = '', listSub = '', listRows = [];
+    if (view === 'list') {
+      if (top.list === 'hub') {
+        listTitle = 'Hub status'; listSub = 'DSC-HUB · online';
+        listRows = [
+          mkRow('cog', NEON, 'Hub settings', 'stage · strategy · routing · priority', () => this.push({ name: 'settings', space: 'hub' })),
+          mkRow('wifi', NEON, 'WiFi · GrowNet', '−48 dBm · 192.168.1.44'),
+          mkRow('home-assistant', NEON, 'HA link', 'connected · API idle'),
+          ...this.PLANTS.map(p => mkRow('access-point', NEON, `DSC-POT#${p.pot} · ${p.name}`, 'ESP-NOW · −62 dBm · 4m ago', () => this.push({ name: 'plant', plantId: p.id }))),
+          mkRow('shield-check', NEON, 'Sensor faults', 'climate: none · aux: none · root-zone: none'),
+          mkRow('window-open-variant', BLUE, '4×8 window', night ? 'SHUT · dark cycle' : 'OPEN · shut in 8h 12m'),
+          mkRow('window-open-variant', BLUE, '2×4 window', 'OPEN · shuts 12:00 · independent 18h'),
+          mkRow('chip', GREY, 'ESP32 · fw v2.4.3', 'up 12d 4h · NVS tuning persisted')
+        ];
+      } else if (top.list === 'room') {
+        listTitle = 'Room · air source'; listSub = 'intake source air · sensor at intake height';
+        listRows = [
+          mkRow('thermometer', '#9E9E9E', 'Room temp · 22.9°', 'source air for both intakes', () => this.push({ name: 'trend', kind: 'env', space: 'room', metric: 'temp' })),
+          mkRow('water-percent', '#9E9E9E', 'Room RH · 47%', 'humidifier plume adds at intakes', () => this.push({ name: 'trend', kind: 'env', space: 'room', metric: 'rh' })),
+          mkRow('molecule-co2', '#9E9E9E', 'CO₂e · 612 ppm', 'uncalibrated analog estimate', () => this.push({ name: 'trend', kind: 'env', space: 'room', metric: 'co2' })),
+          mkRow('flash', '#9E9E9E', 'CO₂ sensor voltage · 1.42 V', 'raw analog input', () => this.push({ name: 'trend', kind: 'env', space: 'room', metric: 'co2v' })),
+          mkRow('air-filter', CYAN, 'Airflow map', 'who vents where · budgets · routing', () => this.push({ name: 'list', list: 'airflow' }))
+        ];
+      } else if (top.list === 'airflow') {
+        const out = this.getDev(S, 'mn_exh_out').power, rec = this.getDev(S, 'mn_exh_room').power;
+        const im = this.getDev(S, 'mn_intake').power, ic = this.getDev(S, 'cl_fan').power;
+        const budget = Math.trunc(((out + rec) / 2) * 0.7) * 2;
+        listTitle = 'Airflow map'; listSub = 'negative pressure · intakes slave to exhaust';
+        listRows = [
+          mkRow('fan', BLUE, 'ROOM → 4×8 Main', `4″ intake · ↓ ${im}% · fresh makeup air`, () => this.push({ name: 'device', devId: 'mn_intake' })),
+          mkRow('fan', BLUE, 'ROOM → 2×4 Clone', `4″ intake · ↓ ${ic}% · hum plume`, () => this.push({ name: 'device', devId: 'cl_fan' })),
+          mkRow('arrow-collapse-down', GREY, '2×4 → 4×8 Main', 'passive cascade vent · flow-over volume'),
+          mkRow('fan', CYAN, '4×8 → OUTSIDE', `6″ exhaust · ↑ ${out}% · dumps heat + RH`, () => this.push({ name: 'device', devId: 'mn_exh_out' })),
+          mkRow('fan', CYAN, '4×8 → ROOM', `6″ RECIRC · ↻ ${rec}% · holds heat + RH in`, () => this.push({ name: 'device', devId: 'mn_exh_room' })),
+          mkRow('gauge-low', NEON, `Intake budget · ${budget}%`, 'hard invariant · tents always negative'),
+          mkRow('sine-wave', S.destratOn ? CYAN : GREY, 'De-strat pulse', `${S.dsBurst}s @ ${S.dsLevel}% every ${S.dsPeriod}s · raises idle RECIRC`, () => this.push({ name: 'device', devId: 'mn_destrat' })),
+          mkRow('call-split', S.humRouting ? BLUE : GREY, 'Hum intake routing', S.humRouting ? 'ON · starves the satisfied tent' : 'OFF · plume diffuses to room', () => this.push({ name: 'settings', space: 'hub' })),
+          mkRow('fire', RED, 'Failsafe >35°', 'OUT 100% · RECIRC 0% · intakes 100% · full air replacement')
+        ];
+      } else if (top.list === 'followers') {
+        listTitle = 'Demand followers'; listSub = 'HA blueprint · demand → plug · fail-safe OFF in 30s';
+        const bound = [
+          ['mn_hum', 'Humidifier Demand'], ['mn_dehum', 'Dehumidifier Demand'], ['mn_heat', 'Heater Demand'],
+          ['mn_ac', 'AC Demand'], ['cl_mat', 'Grow Mat Demand'], ['cl_hum', 'Clone Humidifier Demand']
+        ];
+        listRows = bound.map(([id, dem]) => {
+          const D = this.DEVDEF[id], d = this.getDev(S, id);
+          const on = d.power > 0 || (id === 'cl_hum' && firing);
+          return mkRow(D.icon, on ? D.color : GREY, dem, on ? 'demand ON → plug ON · synced' : 'demand OFF → plug OFF · synced', () => this.push({ name: 'device', devId: id }));
+        }).concat([mkRow('shield-check', NEON, 'Fail-safe', 'hub unavailable >30s → all plugs OFF · re-sync on HA restart')]);
+      } else if (top.list === 'alerts') {
+        listTitle = 'Alerts'; listSub = alertLive ? '1 active' : (alertMuted ? '1 silenced' : 'none active');
+        listRows = [
+          ...(alertLive ? [mkRow('water-alert', RED, 'Clone RH high · 71%', 'active · 12m · rung 1 escalated')] : []),
+          ...(alertMuted ? [mkRow('bell-sleep', AMBER, 'Clone RH high · 71%', 'silenced · re-raises if repeated')] : []),
+          mkRow('history', GREY, 'Clone RH high · resolved', 'yesterday 14:02 · 41m'),
+          mkRow('history', GREY, 'AC held · compressor lock', 'Mon 09:41 · 3 min · auto-released'),
+          mkRow('history', GREY, 'Soil node offline · Runtz #1', 'Jul 14 · 22m · reconnected')
+        ];
+      } else {
+        const r2 = top.list === 'rung2';
+        listTitle = r2 ? 'Rung 2 · Appliances' : 'Rung 1 · Fans';
+        listSub = r2 ? (firing ? 'firing now' : 'standing by') : 'first response · always available';
+        const ids = r2 ? ['mn_hum', 'mn_dehum', 'mn_heat', 'mn_ac', 'cl_hum', 'cl_mat'] : ['mn_exh_out', 'mn_exh_room', 'mn_intake', 'cl_fan'];
+        listRows = ids.map(id => {
+          const D = this.DEVDEF[id], d = this.getDev(S, id);
+          const on = d.power > 0 || (id === 'cl_hum' && firing);
+          const sub = id === 'cl_hum' && firing ? `firing in ${S.secs}s · ${d.mode}` : (id === 'mn_ac' ? `compressor lock 3 min · ${d.mode}` : `${d.power}% · ${d.mode}`);
+          return mkRow(D.icon, on ? D.color : GREY, `${D.name} · ${D.space === 'clone' ? '2×4' : '4×8'}`, sub, () => this.push({ name: 'device', devId: id }));
+        });
+      }
+    }
+    const stageList = meta ? (meta.type === 'photo' ? ['clone', 'veg', 'flower'] : ['seedling', 'veg', 'flower']) : [];
+    const optStyle = active => ({ border: active ? NEON : '#2a313b', color: active ? NEON : GREY, glow: active ? this.glow(NEON) : 'none' });
+    const typeOpts = !meta ? [] : ['photo', 'auto'].map(t => ({
+      label: t.toUpperCase(), ...optStyle(meta.type === t),
+      onTap: () => this.setState(s => {
+        const pm = { ...s.plantMeta }, cur = pm[plant.id];
+        const newStage = t === 'photo' ? (cur.stage === 'seedling' ? 'clone' : cur.stage) : (cur.stage === 'clone' ? 'seedling' : cur.stage);
+        pm[plant.id] = { type: t, stage: newStage };
+        return { plantMeta: pm };
+      })
+    }));
+    const stageOpts = stageList.map(st => ({
+      label: st.toUpperCase(), ...optStyle(meta.stage === st),
+      onTap: () => this.setState(s => { const pm = { ...s.plantMeta }; pm[plant.id] = { ...pm[plant.id], stage: st }; return { plantMeta: pm }; })
+    }));
+
+    const growStage = this.GROW[Math.min(S.unlockTaps, 5)];
+    return {
+      demoModes, tabs, onTakeover, settingsRows, overrideRows, gauges, typeOpts, stageOpts,
+      cloneTiles, mainTiles, cloneEnvGauges, mainEnvGauges, clonePlantRows, mainPlantRows, ...dv, ...cv,
+      targetsText: !tgt ? '' : `moist ${tgt.moist[0]}–${tgt.moist[1]}% · soil ${tgt.temp[0]}–${tgt.temp[1]}° · EC ${tgt.ec[0]}–${tgt.ec[1]}`,
+      targetsText2: !tgt ? '' : `N ${tgt.n[0]}–${tgt.n[1]} · P ${tgt.p[0]}–${tgt.p[1]} · K ${tgt.k[0]}–${tgt.k[1]} ppm`,
+      setScrollEl: el => { this.scrollEl = el; },
+      onScrollUp: () => this.snapScroll(-1),
+      onScrollDown: () => this.snapScroll(1),
+      goBack: () => this.setState(s => ({ stack: s.stack.slice(0, -1) })),
+      isPulse: S.tab === 0 && !top, isClone: S.tab === 1 && !top, isMain: S.tab === 2 && !top, isOverride: S.tab === 3 && !top,
+      isSettings: view === 'settings', isPlant: view === 'plant', isPlantSettings: view === 'plantSettings',
+      isTrend: view === 'trend', isDevice: view === 'device', isCurve: view === 'curve',
+      isList: view === 'list', listTitle, listSub, listRows, isNight: night,
+      openHub: () => this.push({ name: 'list', list: 'hub' }),
+      openAlerts: () => this.push({ name: 'list', list: 'alerts' }),
+      openRung1: () => this.push({ name: 'list', list: 'rung1' }),
+      openRung2: () => this.push({ name: 'list', list: 'rung2' }),
+      openCo2: () => this.push({ name: 'trend', kind: 'env', space: 'room', metric: 'co2' }),
+      showArrows: view === 'settings' || view === 'list' || view === 'plant' || (!top && S.tab >= 1),
+      settingsTitle: setSpace === 'clone' ? '2×4 CLONE' : (setSpace === 'hub' ? 'DSC-HUB' : '4×8 MAIN'),
+      plantNode: plant ? `ESP-NOW −62 dBm · POT#${plant.pot} up 6d 2h · fw 2.4.3` : '',
+      openCloneSettings: () => this.push({ name: 'settings', space: 'clone' }),
+      openMainSettings: () => this.push({ name: 'settings', space: 'main' }),
+      openPlantSettings: () => this.push({ name: 'plantSettings', plantId: plant.id }),
+      plantName: plant ? plant.name : '',
+      plantSub: plant ? `POT#${plant.pot} · ${meta.type} · day ${plant.day} of ${meta.stage}` : '',
+      trendSub: trend.sub,
+      trendTitle: trend.title, trendBars: trend.bars, trendMin: trend.min, trendAvg: trend.avg, trendMax: trend.max,
+      trendBand: trend.band, trendHiTop: trend.hiTop, trendLoTop: trend.loTop,
+      onActivity: () => { this.lastAct = Date.now(); },
+      onLock: () => this.setState({ locked: true, lockView: 'saver', backlightOff: false, unlockTaps: 0 }),
+      onLockTap: () => {
+        this.lastAct = Date.now();
+        if (S.backlightOff) this.setState({ backlightOff: false });
+        else if (S.lockView === 'saver') { this.challengeAt = Date.now(); this.setState({ lockView: 'challenge', unlockTaps: 0 }); }
+        else {
+          this.challengeAt = Date.now();
+          this.setState(s => {
+            const t = Math.min(5, s.unlockTaps + 1);
+            if (t >= 5) {
+              clearTimeout(this.ut);
+              this.ut = setTimeout(() => this.setState({ locked: false, lockView: 'saver', unlockTaps: 0 }), 800);
+            }
+            return { unlockTaps: t };
+          });
+        }
+      },
+      isLocked: S.locked,
+      isSaver: S.locked && S.lockView === 'saver' && !S.backlightOff,
+      isChallenge: S.locked && S.lockView === 'challenge' && !S.backlightOff,
+      isDark: S.locked && S.backlightOff,
+      plantIcon: growStage.icon, plantSize: growStage.size + 'px', plantColor: growStage.color,
+      plantGlow: S.unlockTaps > 0 ? `0 0 ${8 + S.unlockTaps * 4}px ${growStage.color}` : 'none',
+      growLabel: growStage.label,
+      growDone: S.unlockTaps >= 5,
+      growNotDone: S.unlockTaps < 5,
+      growDots: [0, 1, 2, 3, 4].map(i => ({ bg: i < S.unlockTaps ? NEON : '#2a313b', glow: i < S.unlockTaps ? `0 0 6px ${NEON}` : 'none' })),
+      saverCloneRh: alert ? '71%' : '62%',
+      saverAlertColor: alertLive ? 'rgba(244,67,54,0.6)' : 'rgba(255,255,255,0.25)',
+      saverAlertText: alertLive ? '1 alert · Clone RH high' : (alertMuted ? '1 alert silenced' : 'all clear'),
+      onSilence: () => this.setState({ silenced: true }),
+      alertVisible: alertLive, silencedVisible: alertMuted, allClear: !alert,
+      alertChipIcon: alertMuted ? 'bell-sleep' : 'bell',
+      alertChipColor: alertLive ? RED : (alertMuted ? AMBER : NEON),
+      alertChipBorder: alertLive ? RED : (alertMuted ? AMBER : 'transparent'),
+      alertChipText: alertLive || alertMuted ? '1' : '0',
+      showSpaces: !alertLive,
+      spaceCards: [
+        { label: '2×4', vals: `24.6° · ${alert ? '71' : '62'}%`, icon: alert ? 'alert' : 'check-circle', iconColor: alert ? RED : NEON, border: alert ? RED : '#2a313b', glow: alert ? this.glow(RED) : 'none', onTap: () => this.setState({ tab: 1, stack: [] }) },
+        { label: '4×8', vals: '26.1° · 58%', icon: 'check-circle', iconColor: NEON, border: '#2a313b', glow: 'none', onTap: () => this.setState({ tab: 2, stack: [] }) },
+        { label: 'ROOM', vals: '22.9° · 47%', icon: 'air-filter', iconColor: CYAN, border: '#2a313b', glow: 'none', onTap: () => this.push({ name: 'list', list: 'room' }) }
+      ],
+      rung1Text: 'active · 4 fans',
+      alertGlow: this.glow(RED), rung1Glow: this.glow(CYAN),
+      rung2Border: firing ? AMBER : '#2a313b', rung2Color: firing ? AMBER : GREY,
+      rung2Text: firing ? `humidifier ${S.secs}s` : 'standing by',
+      rung2Glow: firing ? this.glow(AMBER) : 'none', rung2TextGlow: firing ? `0 0 8px ${AMBER}` : 'none',
+      takeoverBg: tk === 'on' ? '#2a1215' : '#1A1F26',
+      takeoverBorder: tk === 'on' ? RED : (tk === 'confirm' ? ORANGE : '#2a313b'),
+      takeoverGlow: tk === 'on' ? this.glow(RED) : 'none',
+      takeoverIconGlow: tk === 'on' ? `0 0 10px ${RED}` : 'none',
+      takeoverColor: tk === 'on' ? RED : (tk === 'confirm' ? ORANGE : 'rgba(255,255,255,0.6)'),
+      takeoverTitle: tk === 'on' ? 'MANUAL TAKEOVER ENGAGED' : (tk === 'confirm' ? 'TAP AGAIN TO CONFIRM' : 'MANUAL TAKEOVER'),
+      takeoverSub: tk === 'on' ? 'automation paused · tap to release' : (tk === 'confirm' ? 'reverts in 5s if not confirmed' : 'tap to engage')
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,64 @@
+[15:53:16]ets Jul 29 2019 12:21:46
+[15:53:16]
+[15:53:16]rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+[15:53:16]configsip: 0, SPIWP:0xee
+[15:53:16]clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+[15:53:16]mode:DIO, clock div:2
+[15:53:16]load:0x3fff0030,len:6248
+[15:53:16]load:0x40078000,len:15904
+[15:53:16]load:0x40080400,len:3896
+[15:53:16]entry 0x40080640
+[15:53:16]I (27) boot: ESP-IDF v5.5.5 2nd stage bootloader
+[15:53:16]I (27) boot: Multicore bootloader
+[15:53:16]I (28) boot: chip revision: v3.1
+[15:53:16]I (28) boot.esp32: SPI Speed      : 40MHz
+[15:53:16]I (31) boot.esp32: SPI Mode       : DIO
+[15:53:16]I (35) boot.esp32: SPI Flash Size : 4MB
+[15:53:16]I (38) boot: Enabling RNG early entropy source...
+[15:53:16]I (43) boot: Partition Table:
+[15:53:16]I (45) boot: ## Label            Usage          Type ST Offset   Length
+[15:53:16]I (52) boot:  0 otadata          OTA data         01 00 00009000 00002000
+[15:53:16]I (58) boot:  1 phy_init         RF data          01 01 0000b000 00001000
+[15:53:16]I (65) boot:  2 app0             OTA app          00 10 00010000 001c0000
+[15:53:16]I (71) boot:  3 app1             OTA app          00 11 001d0000 001c0000
+[15:53:16]I (78) boot:  4 nvs              WiFi data        01 02 00390000 00070000
+[15:53:16]I (84) boot: End of partition table
+[15:53:16]I (88) boot: No factory image, trying OTA 0
+[15:53:16]I (91) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=40df8h (265720) map
+[15:53:16]I (190) esp_image: segment 1: paddr=00050e20 vaddr=3ffb0000 size=042bch ( 17084) load
+[15:53:16]I (196) esp_image: segment 2: paddr=000550e4 vaddr=40080000 size=0af34h ( 44852) load
+[15:53:16]I (214) esp_image: segment 3: paddr=00060020 vaddr=400d0020 size=ea270h (959088) map
+[15:53:16]I (542) esp_image: segment 4: paddr=0014a298 vaddr=4008af34 size=08dd4h ( 36308) load
+[15:53:16]I (557) esp_image: segment 5: paddr=00153074 vaddr=50000000 size=00020h (    32) load
+[15:53:16]I (567) boot: Loaded app from partition at offset 0x10000
+[15:53:16]I (627) boot: Set actual ota_seq=1 in otadata[0]
+[15:53:16]I (627) boot: Disabling RNG early entropy source...
+[15:53:16][I][logger:122]: Log initialized
+[15:53:18][I][app:060]: Running through setup()
+[15:53:19][I][esp-idf:000]: E (2334) gpio: gpio_pullup_en(85): GPIO number error (input-only pad has no internal PU)
+[15:53:19][I][esp-idf:000]: I (2589) ESPNOW: espnow [version: 2.0] init
+[15:53:19][I][app:117]: setup() finished successfully!
+[15:53:19][W][touchscreen:031]: Touch Polling Stopped. You can safely remove the 'update_interval:' variable from the YAML file.
+[15:53:19][W][component:473]: lvgl took a long time for an operation (353 ms), max is 50 ms
+[15:53:19][W][component:342]: wifi set Warning flag: scanning for networks
+[15:53:19][I][app:151]: ESPHome version 2026.7.2 compiled on 2026-07-26 14:14:17 +1000
+[15:53:19][I][app:153]: Project digital_emotions.dsc-control version 4.0.2
+[15:53:19][I][app:158]: ESP32 Chip: ESP32 rev3.1, 2 core(s)
+[15:53:19][W][app:198]: Bootloader supports SRAM1 as IRAM (+40KB). Set sram1_as_iram: true under esp32 > framework > advanced
+[15:53:21][I][heap:510]: free=66136 B  largest_block=(pending)
+[15:53:22][I][wifi:1460]: - 'Digital-Emotions Studio' (58:D9:D5:D7:AA:82) ▂▄▆█
+[15:53:22][I][wifi:1460]: - 'Digital-Emotions Studio' (58:D9:D5:D7:AA:E2) ▂▄▆█
+[15:53:22][I][wifi:1119]: Connecting to 'Digital-Emotions Studio' (58:D9:D5:D7:AA:82) (priority 0, attempt 1/2 in phase SCAN_CONNECTING)...
+[15:53:23][I][wifi:1597]: Connected
+[15:53:23][I][espnow:261]: Wifi Channel is changed from 1 to 6.
+[15:53:23][W][component:365]: wifi cleared Warning flag
+[15:53:30][I][cyd_touch:416]: raw=2297,1595  mapped=187,83
+[15:53:48][I][cyd_touch:416]: raw=555,874  mapped=27,33
+[15:53:53][I][cyd_touch:416]: raw=3363,821  mapped=284,29
+[15:54:16][I][safe_mode:142]: Boot seems successful; resetting boot loop counter
+[15:54:17][I][cyd_touch:416]: raw=560,798  mapped=28,27
+[15:54:21][I][cyd_touch:416]: raw=1616,3430  mapped=124,212
+[15:54:21][I][heap:512]: free=63980 B  largest_block=47104 B
+[15:54:27][I][cyd_touch:416]: raw=3326,764  mapped=281,25
+[15:54:38][I][cyd_touch:416]: raw=804,2634  mapped=50,156
+[15:54:40][I][cyd_touch:416]: raw=1360,3571  mapped=101,222

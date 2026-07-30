@@ -1,0 +1,24 @@
+# ==================================================================
+#  DSC-HUB v2.2 — NEW demand_follower bindings (Clone tent)
+#  Append these two automations to dsc_hub_demand_automations.yaml
+#  (they use the existing demand_follower.yaml blueprint unchanged —
+#  bindings 6 and 7 alongside the five appliance instances).
+#
+#  Replace the two `appliance:` entity_ids with the real plugs.
+# ==================================================================
+
+- id: dsc_hub_clone_led_follower
+  alias: "DSC-HUB · Clone LED follows Clone LED Demand"
+  use_blueprint:
+    path: demand_follower.yaml
+    input:
+      demand_switch: switch.dsc_hub_clone_led_demand
+      appliance: switch.REPLACE_WITH_CLONE_LIGHT_PLUG
+
+- id: dsc_hub_clone_humidifier_follower
+  alias: "DSC-HUB · Clone humidifier follows Clone Humidifier Demand"
+  use_blueprint:
+    path: demand_follower.yaml
+    input:
+      demand_switch: switch.dsc_hub_clone_humidifier_demand
+      appliance: switch.REPLACE_WITH_CLONE_HUMIDIFIER_PLUG

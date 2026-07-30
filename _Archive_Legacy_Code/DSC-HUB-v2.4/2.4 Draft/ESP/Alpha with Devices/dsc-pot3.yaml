@@ -1,0 +1,27 @@
+# ==================================================================
+#  DSC-POT#3 — device stub  (v2.4)
+#  ESP32 · RS485 7-in-1 NPK soil probe
+#  ------------------------------------------------------------------
+#  ⚠ NEVER put logic in a stub — it belongs in dsc-pot-common.yaml.
+#  ⚠ `name:` is the entity_id contract: sensor.dsc_pot3_soil_*
+#     (7 sensors) are referenced by the four HA packages, the DSC Grow
+#     dashboard, and the hub's closed-loop grow mat.
+#
+#  ⚠ POT3: soil probe reads 0.0% moisture — known fault, swap-test
+#  pending against a known-good pot to split probe vs node. This
+#  flash does NOT fix it (a faulty probe reports faithfully through
+#  good firmware) — but it DOES mean a 0.0% reading now survives the
+#  range guard as a real value, because 0.0 is inside 0..100. Watch
+#  this node after flashing: if moisture still pins at 0.0 the probe
+#  is the culprit, not the config.
+# ==================================================================
+
+substitutions:
+  name: dsc-pot3
+  friendly_name: DSC-POT#3
+  api_key_val: !secret dsc_pot3_api_key
+  ota_password_val: !secret dsc_pot3_ota_password
+  ap_password_val: !secret dsc_pot3_ap_password
+
+packages:
+  common: !include dsc-pot-common.yaml

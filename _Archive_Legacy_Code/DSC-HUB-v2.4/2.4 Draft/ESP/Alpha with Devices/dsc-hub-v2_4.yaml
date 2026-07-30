@@ -1,0 +1,3671 @@
+# Board: Generic ESP32 Board (Generic)
+# Definition: definitions/boards/generic-esp32/manifest.yaml
+
+# ===== v2.4 · SUBSTITUTIONS =====
+# rootzone_temp_entity: the HA entity the closed-loop grow mat reads.
+# MUST-VERIFY at flash time: point this at the DSC-POT soil-temp entity
+# for the pot the mat actually sits under (or an HA template averaging
+# the clone pots). One-line edit, no logic changes.
+substitutions:
+  rootzone_temp_entity: sensor.dsc_pot1_soil_temperature
+
+esphome:
+  name: dsc-hub
+  friendly_name: DSC-HUB
+  project:
+    name: "digital_emotions.dsc-hub"
+    version: "2.4.0-alpha"
+  on_boot:
+    - priority: -100
+      then:
+        - lambda: |-
+            id(last_valid_temp_time)  = millis();
+            id(last_valid_room_time)  = millis();   // aux heartbeats: grace
+            id(last_valid_clone_time) = millis();   // period before soft fault
+            id(last_valid_rootzone_time) = millis();
+            // v2.4: re-apply the persisted SF1000 ramp floor (the YAML
+            // min_power is only the shipped default; NVS layers on top).
+            id(light_sf1000_pwm).set_min_power(id(sf_ramp_floor) / 100.0f);
+        - delay: 3s
+        # Boot repopulates ONLY the stage label + light hours. The numeric
+        # climate targets (temp / VPD / RH) now PERSIST across reboots, so
+        # your fine-tuning is never clobbered by a power cycle. The full
+        # apply_stage (which overwrites targets with stage defaults) only
+        # runs when you actually CHANGE the stage.
+        - script.execute: apply_stage_boot
+        - lambda: |-
+            if (id(full_auto_mode) || id(auto_photoperiod_enabled)) {
+              // If Auto was live before the power cut, arm the resume prompt.
+              // It auto-continues after 60s so an unattended blip self-heals;
+              // automations hold off until resolved.
+              id(boot_resume_pending) = true;
+              ESP_LOGI("boot", "Auto was active pre-boot -> resume prompt armed");
+            } else {
+              // SAFE-BOOT BASELINE: never boot into dead air. If we are NOT
+              // resuming Auto (manual / standby session pre-cut), restore the
+              // persisted manual fan targets — or a minimum-ventilation
+              // floor if none were set. HA / the dial can override anytime.
+              int o = id(local_target_out)          > 0 ? id(local_target_out)          : 25;
+              int r = id(local_target_recirc)       > 0 ? id(local_target_recirc)       : 20;
+              int m = id(local_target_intake_main)  > 0 ? id(local_target_intake_main)  : 15;
+              int c = id(local_target_intake_clone) > 0 ? id(local_target_intake_clone) : 15;
+              auto fo = id(fan_exhaust_out).make_call();    fo.set_state(true); fo.set_speed(o); fo.perform();
+              auto fr = id(fan_exhaust_recirc).make_call(); fr.set_state(true); fr.set_speed(r); fr.perform();
+              auto fm = id(fan_intake_main).make_call();    fm.set_state(true); fm.set_speed(m); fm.perform();
+              auto fc = id(fan_intake_clone).make_call();   fc.set_state(true); fc.set_speed(c); fc.perform();
+              ESP_LOGW("boot", "Non-auto boot -> safe ventilation baseline: Out %d%% Room %d%% IntM %d%% Int2 %d%%", o, r, m, c);
+            }
+
+# Batch flash writes so rapid dial-spinning doesn't wear the chip.
+preferences:
+  flash_write_interval: 60s
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+logger:
+
+api:
+  encryption:
+    key: "Up4ETAwSuerKfUCeTVH59TLHwMMjHVgu4TjPawh7QXc="
+
+ota:
+  - platform: esphome
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  ap:
+    ssid: DSC-HUB Fallback Hotspot
+    password: "adGVoFwQ1MKI"
+
+
+# ==================================================================
+#  DIGITAL-PLANT  ·  Grow Tent Environmental Controller   (rev 2.4a)
+#  Device: dsc-hub   (ESP32 + SH1106 128x64 OLED + rotary UI)
+#  ---------------------------------------------------------------
+#  v2.4-ALPHA — LIGHT TOPOLOGY + CLOSED-LOOP ROOTS (July 2026)
+#  * LIGHT TOPOLOGY CORRECTION (Option A, decided 16 Jul 2026): the
+#    SF1000 physically hangs in the 2x4 CLONE tent; the 4x8 currently
+#    has NO light and NO PWM module. The whole ramp engine (sunrise/
+#    sunset, Manual Light Hold, write guard, OLED light page) is now
+#    parented to the CLONE photoperiod. The binary Clone LED Demand +
+#    Clone Light Auto entities RETIRE. The 4x8 exposes ZERO light
+#    entities; its photoperiod stays alive as a VIRTUAL schedule so
+#    Follow-4x8 and the counter-cycle thermal logic keep working —
+#    when a 4x8 light + PWM module land (GPIO5 reserved), the schedule
+#    just gets an output re-attached instead of being rebuilt.
+#  * SF1000 RAMP-FLOOR REMAP: the 1k pull-down fix (relay cancelled)
+#    leaves a dead zone — the light kicks in at ~30% duty. min_power
+#    remaps brightness 0-100% -> duty ~32-100% (hard 0 below 0.5%),
+#    so sunrise is a smooth start instead of dark-then-pop. Floor is
+#    a runtime number — verify against the light on the first sunrise.
+#    Minimum achievable intensity is now the kick-in level.
+#  * CLONE HUMIDIFIER SHORT-CYCLING FIX: release hysteresis widened
+#    (runtime, default +6%) + a minimum off-time (runtime, default
+#    180s). Kills the rapid on/off cycling AND the Event Scribe spam
+#    at the source. Room humidifier + heater get min-off too.
+#  * CLOSED-LOOP GROW MAT: mat demand now tracks the RS485 soil-probe
+#    ROOT-ZONE temp (via HA, ${rootzone_temp_entity}) — energise below
+#    Mat Root-Zone Low, cut at Mat Root-Zone High, min-off so it can't
+#    short-cycle. The mat's own plate thermostat regulates its SURFACE;
+#    a 22C setpoint sat the root zone at 16-19C — the probe is the only
+#    trustworthy sense point. Blind probe -> falls back to the v2.3
+#    clone-air rung; fully blind -> mat OFF (never guess root heat).
+#  * LADDER TIMING SENSORS: per-rung fire countdowns + per-appliance
+#    cooldown-remaining — firmware truth for the Dashboard v3 module
+#    cards (replaces HA-side timer mirrors, zero card changes).
+#  * RUNTIME-CONFIGURABLE PARAMETERS: tunables above ship as number:
+#    entities (restore_value: true). Watchdog + >35C failsafe
+#    thresholds stay COMPILED-IN constants — deliberately not exposed.
+#  * ESP-NOW pot links: parked as a ready-to-fill block (pot MACs +
+#    shared pot package rollout are prerequisites).
+#  (Built on v2.3 below.)
+#  ---------------------------------------------------------------
+#  v2.3 — ZONE CONTROL + MANUAL TAKEOVER (July 2026)
+#  Each tent gets an "Off" state; room appliances follow a Priority
+#  Tent; the grow mat is now correctly a 2x4-local lever; heating never
+#  vents outside; and a master Manual Takeover hands every output to HA.
+#  (Built on v2.2 below.)
+#  ---------------------------------------------------------------
+#  v2.2 — THE CLONE TENT UPDATE (July 2026)
+#  The 2x4 is now a second controlled environment AND a conditioned
+#  air reservoir for the 4x8 (daisy-chain: room -> 2x4 -> 4x8).
+#    * Room DHT22 (GPIO4) + Clone DHT22 (GPIO13) + Clone VPD
+#    * INTAKE ROUTER: the 4x8 sources makeup air from whichever
+#      donor (room via main intake / warm humid 2x4 air via clone
+#      intake) moves it toward target — with hard caps that protect
+#      the clone environment from being flushed out of band.
+#    * HEAT REUSE: tent heat sheds to the ROOM (recirc) instead of
+#      outside whenever the system is heat-poor. Lights are heaters;
+#      don't vent their output and then demand the 750W.
+#    * REALITY GATES on the ladder: if the source air physically
+#      cannot fix a condition, appliance persistence drops 5min->1min.
+#    * Clone Mode (Follow 4x8 / Clones & Seedlings / Mother / Custom),
+#      Clone Photoperiod (Follow 4x8 / Independent), Clone LED Demand
+#      (binary, blueprint-compatible), Clone Humidifier Demand.
+#    * Aux sensors are SOFT-fault only: tent DHT22 alone owns safe
+#      mode; a dead room/clone sensor just reverts v2.1 behaviour.
+# ==================================================================
+#  CONTROL MODEL — how the pieces fit together
+#  -----------------------------------------------------------------
+#   1. Pick "Grow Stage" in HA  ->  auto-loads the VPD / RH / Temp
+#      targets + photoperiod length for that stage. (You can still
+#      fine-tune the individual number sliders afterwards — the stage
+#      just writes sensible defaults into them. Fine-tuning now
+#      PERSISTS across reboots; only a stage CHANGE resets it.)
+#   2. "Control Strategy" decides WHICH variable the fans chase:
+#        VPD (grower-grade, default) / Temperature / Humidity
+#   3. "Tent Full Auto Mode"  -> enables the fan auto-curve.
+#   4. "Auto Photoperiod"     -> the DEVICE runs the light schedule
+#      locally (survives HA / network loss). HA only sets the params
+#      (stage = duration, "Lights-On Time" HH:MM = when it starts).
+#      Sunrise/Sunset: the SF1000 ramps 0 -> target% over "Sunrise
+#      Duration" minutes at lights-on, and target% -> 0 over "Sunset
+#      Duration" minutes finishing AT lights-off. Both ramps live
+#      INSIDE the photoperiod window (auto-scaled if they overlap).
+#   5. Humidifier / Dehumidifier soft switches -> read-only demand
+#      signals HA can watch to drive external gear (see that section).
+#
+#  FAN ROLES (4x inline) — "software-defined damper":
+#     6" Exhaust (Outside) -> dumps heat/moisture OUT (carbon filter 1).
+#                             Ramps on TEMP over target, RH overflow when
+#                             the dehumidifier can't cope, + a 15% fresh-
+#                             air floor so CO2 never fully depletes.
+#     6" Exhaust (Room)    -> RECIRCULATES into the room (carbon filter 2).
+#                             Ramps on VPD / RH demand. Holds the light's
+#                             heat in the room lung; the room dehumidifier
+#                             then pulls the moisture. This is the winter /
+#                             cold-but-humid workhorse.
+#     4" Intake (Main)     -> fresh air room -> 4x8, slaved to total exhaust
+#     4" Intake (2x4)      -> fresh air room -> 2x4 (cascades into 4x8)
+#   Blending OUT vs ROOM % IS the damper — no mechanical flap needed.
+#   Makeup air for OUT comes from a door undercut / cracked vent.
+#
+#  APPLIANCE ESCALATION LADDER (fans first, appliances on failure):
+#     Demands are soft signals; HA automations do the real switching,
+#     e.g. "if Heater Demand on -> turn on heater plug, off when off".
+#     v2.3: the ROOM appliances (dehumidifier/humidifier/heater/AC) serve
+#     the PRIORITY tent (see Priority Tent below) — they condition the
+#     shared room to hit that tent's own target, read on that tent's own
+#     sensor. The GROW MAT is different: it lives in the 2x4, so it is a
+#     2x4-LOCAL lever that always tracks the CLONE tent's temp/target and
+#     runs regardless of priority.
+#       Too humid : fans 5 min, RH still > max+3  -> Dehumidifier Demand
+#       Too dry   : 2 min below min-2             -> Humidifier Demand
+#       Clone cold: 1 min below clone target-1    -> Grow Mat Demand (2x4)
+#       Too cold  : 5 min below (arb) target-2    -> Heater Demand (750W)
+#       Too hot   : > target+2 for 5 min despite fans -> AC Demand (@20C)
+#     All clear with hysteresis. Each has an "Auto" arm switch. Emergency
+#     (>35C): heat demands OFF, AC ON. Ladder timers reset whenever the
+#     failsafe or watchdog engages.
+#     v2.3 HEATER INTERLOCK: whenever Heater Demand is live, the OUT fan
+#     drops to the fresh-air floor and air routes RECIRC — we never blow
+#     bought heat out the wall. (Moisture overflow + the >35C purge still
+#     override; safety is upstream of the closed damper.)
+#
+#  PER-TENT ON/OFF + PRIORITY (v2.3):
+#     Grow Stage "Off" (4x8) and Clone Mode "Off" (2x4) take a tent out of
+#     service: its light darks, its photoperiod suspends, its intake drops
+#     to a trickle, and it is EXCLUDED from room-appliance arbitration and
+#     from any borrow/donor role. Targets are preserved (return restores
+#     your tuning). "Priority Tent" (4x8 / 2x4) decides who commands the
+#     shared room appliances when BOTH tents run; the non-priority tent is
+#     best-effort on its LOCAL levers (its own intake/flush, the 2x4 grow
+#     mat + clone humidifier, and borrow/heat-reuse). Only one tent active
+#     -> it is priority by definition (the select is ignored).
+#
+#  MANUAL SEMANTICS (v2.3 — three tiers):
+#     "Manual Takeover"       = MASTER. You drive every output from HA;
+#        the fan curve, the ladder, and BOTH photoperiods are suspended.
+#        Only Emergency (>35C) and the sensor watchdog still override.
+#        This is the clean "HA owns everything" switch — use it when the
+#        curve/ramp were "fighting" you. Full Auto (or a stage set) exits.
+#     "Tent Manual Override"  = FANS ONLY. Device stops driving the fans;
+#        your fan values stick. Photoperiod keeps driving the light.
+#     "Manual Light Hold"     = LIGHT ONLY. Now latches on ANY external
+#        SF1000 change — HA slider OR the OLED dial (v2.2 only latched the
+#        dial; that was the "lights fight me from HA" bug). A re-entrancy
+#        guard (light_write_guard_until) means the device's OWN ramp/adjust
+#        writes never self-latch. Self-heals at the next lights-off edge.
+#     Safety layers (failsafe, watchdog) still override everything.
+#
+#  PRIORITY ORDER (highest wins):
+#     Emergency failsafe (>35C: OUT 100%, ROOM 0%, intakes 100% = once-
+#        through purge outside)  >  Sensor-fault safe mode
+#        >  Manual Takeover  >  Manual (fans) / Light Hold
+#        >  Priority-tent arbitration  >  Auto Photoperiod / Full Auto
+#
+#  OLED UI (rev 2):
+#     Home page dial-rotate = status carousel (position dots, top-right):
+#        Home <-> Trends <-> Lights <-> Fans <-> WiFi Diag
+#     Main Menu: Mode / Airflow / Lighting / Grow Status / System Info.
+#        Mode page sets Standby / Full Auto / Manual from the dial —
+#        Full Auto is now re-armable WITHOUT HA.
+#     CON button = quick Manual (fans) toggle only — a deliberate
+#        "panic hold". Entering Full Auto is menu-only by design so a
+#        stray press can never hand control back to the curve.
+#     Hold BACK ~1s = jump Home from anywhere.
+#     Adjust pages show the item NAME + a live bar, and flash a banner
+#        when they engage a manual hold. Trends page draws 1h sparklines.
+#     Detent acceleration: spin fast = 15%/detent, slow = 5%.
+#     Any text wider than the screen auto-scrolls (marquee, wall-clock
+#        based so speed is refresh-independent).
+#     Screensaver shows a live "Running: ..." automation status line.
+#
+#  HA ENTITIES added by this config:
+#     select   : Grow Stage, Control Strategy
+#     switch   : Tent Full Auto Mode, Tent Manual Override (fans),
+#                Manual Light Hold, Auto Photoperiod (v2.4: drives the
+#                SF1000 on the CLONE window),
+#                Humidifier Auto/Demand, Dehumidifier Auto/Demand,
+#                Heater Auto/Demand, Grow Mat Auto/Demand, AC Auto/Demand
+#     number   : Target Temp, VPD Min, VPD Max, RH Min, RH Max,
+#                Sunrise Duration, Sunset Duration, SF1000 Target %,
+#                v2.4: SF1000 Ramp Floor, Clone Hum Hysteresis,
+#                Clone Hum Min Off-Time, Humidifier Min Off-Time,
+#                Heater Min Off-Time, Mat Root-Zone Low/High,
+#                Mat Min Off-Time
+#     datetime : Lights-On Time (HH:MM, shows as AM/PM in HA)
+#     binary   : HA Link Status, Climate Sensor Fault, Aux Sensor Fault,
+#                v2.4: Root-Zone Sensor Fault
+#     sensor   : Tent Temperature, Tent Humidity, VPD, CO2e, Uptime,
+#                WiFi RSSI, v2.4: 6x "<Appliance> Fire Countdown" +
+#                4x "<Appliance> Cooldown Remaining"
+#     text     : IP Address, WiFi SSID, Firmware Version
+#     button   : Restart
+#  RETIRED entities in v2.4 (light topology Option A): "Clone Light
+#  Auto" and "Clone LED Demand" — the SF1000 IS the clone light; the
+#  binary demand drove nothing real. Remove the demand_follower
+#  automation for Clone LED Demand and drop both from dashboards.
+#  RENAMED entities in v2.3: "temp" -> "Tent Temperature",
+#  "humidity" -> "Tent Humidity" (entity_ids change — fold into the same
+#  dashboard migration as the Outside/Room fan renames). The dial and
+#  buttons are now internal (no longer exposed to HA).
+# ==================================================================
+
+
+captive_portal:
+
+# Time: SNTP primary (internet, HA-independent) so the photoperiod
+# keeps running even if Home Assistant is down. HA time is backup.
+# TIMEZONE IS CRITICAL — without it the schedule runs on UTC.
+time:
+  - platform: sntp
+    id: sntp_time
+    timezone: "Australia/Sydney"
+  - platform: homeassistant
+    id: grow_time
+
+# ==========================================
+# 1. I2C BUS & FONTS
+# ==========================================
+# 400kHz: a SH1106 full frame is ~1.1KB. At the 50kHz default that is
+# ~200ms of bus time per frame — the display would starve the loop
+# (laggy encoder, API stalls). At 400kHz a frame is ~25ms, so the
+# 100ms display refresh uses ~25% bus duty. SCD41 is 400kHz-happy too.
+i2c:
+  sda: GPIO21
+  scl: GPIO22
+  scan: true
+  frequency: 400kHz
+
+font:
+  - file: "gfonts://Roboto"
+    id: font_small
+    size: 10
+  - file: "gfonts://Roboto"
+    id: font_medium
+    size: 14
+  - file: "gfonts://Roboto"
+    id: font_large
+    size: 20
+
+# ==========================================
+# 2. GLOBALS (State Machine & Memory)
+# ==========================================
+globals:
+  # --- UI state machine ---
+  - id: current_page
+    type: int
+    restore_value: false
+    initial_value: '0'
+  - id: menu_cursor
+    type: int
+    restore_value: false
+    initial_value: '0'
+  - id: adjusting_item
+    type: int
+    restore_value: false
+    initial_value: '0'
+  - id: last_interaction_time
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+  - id: display_sleeping          # explicit sleep flag (no time sentinel —
+    type: bool                    # force-sleep works even in the first 5 min
+    restore_value: false          # of uptime)
+    initial_value: 'false'
+  - id: last_detent_ms            # detent acceleration: fast spin = big steps
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+  - id: manual_banner_until       # millis deadline for the "MANUAL" flash
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+
+  # --- Manual target levels (ALL persist now: they feed the safe-boot
+  #     baseline so a power cut mid-manual-session never boots into
+  #     dead air) ---
+  - id: local_target_out
+    type: int
+    restore_value: true
+    initial_value: '0'
+  - id: local_target_intake_main
+    type: int
+    restore_value: true
+    initial_value: '0'
+  - id: local_target_intake_clone
+    type: int
+    restore_value: true
+    initial_value: '0'
+  - id: local_target_recirc
+    type: int
+    restore_value: true
+    initial_value: '0'
+  - id: local_target_sf1000
+    type: int
+    restore_value: true
+    initial_value: '75'
+
+  # --- Operating modes (persist across reboot) ---
+  - id: emergency_failsafe_active
+    type: bool
+    restore_value: false
+    initial_value: 'false'
+  - id: emergency_since           # millis when the failsafe tripped (banner)
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+  - id: full_auto_mode
+    type: bool
+    restore_value: true
+    initial_value: 'false'
+  - id: auto_photoperiod_enabled
+    type: bool
+    restore_value: true
+    initial_value: 'false'
+  - id: manual_light_hold         # LIGHT-only hold; self-heals at lights-off.
+    type: bool                    # Deliberately NOT persisted: after a power
+    restore_value: false          # cycle the schedule is authoritative.
+    initial_value: 'false'
+  - id: humidifier_auto_enabled
+    type: bool
+    restore_value: true
+    initial_value: 'false'
+  - id: dehumidifier_auto_enabled
+    type: bool
+    restore_value: true
+    initial_value: 'false'
+  - id: heater_auto_enabled
+    type: bool
+    restore_value: true
+    initial_value: 'false'
+  - id: growmat_auto_enabled
+    type: bool
+    restore_value: true
+    initial_value: 'false'
+  - id: ac_auto_enabled
+    type: bool
+    restore_value: true
+    initial_value: 'false'
+
+  # --- Boot resume: power returned mid-schedule ---
+  - id: boot_resume_pending
+    type: bool
+    restore_value: false
+    initial_value: 'false'
+  - id: boot_time_synced_at        # millis when clock became valid (0 = not yet)
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+
+  # --- Escalation ladder timers (millis when a condition began; 0 = clear) ---
+  - id: esc_humid_since
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+  - id: esc_dry_since
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+  - id: esc_cold_since
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+  - id: esc_deep_cold_since
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+  - id: esc_hot_since
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+
+  # --- Stage-driven targets (written by apply_stage; numeric values
+  #     PERSIST so reboots keep your fine-tuning — see apply_stage_boot) ---
+  - id: stage_temp_target
+    type: float
+    restore_value: true
+    initial_value: '25.0'
+  - id: stage_vpd_min
+    type: float
+    restore_value: true
+    initial_value: '0.4'
+  - id: stage_vpd_max
+    type: float
+    restore_value: true
+    initial_value: '0.8'
+  - id: stage_rh_min
+    type: float
+    restore_value: true
+    initial_value: '70.0'
+  - id: stage_rh_max
+    type: float
+    restore_value: true
+    initial_value: '80.0'
+  - id: stage_light_hours
+    type: int
+    restore_value: true
+    initial_value: '18'
+  - id: stage_short               # std::string can't persist -> recomputed
+    type: std::string             # from the (restored) Grow Stage at boot
+    restore_value: false
+    initial_value: '"Germ"'
+
+  # --- Control strategy: 0=VPD, 1=Temperature, 2=Humidity (persists) ---
+  - id: control_strategy_idx
+    type: int
+    restore_value: true
+    initial_value: '0'
+
+  # --- Photoperiod & sunrise/sunset ramp ---
+  # (Lights-On Time itself lives in the `datetime` entity, restore_value: true)
+  - id: lights_currently_on
+    type: bool
+    restore_value: false
+    initial_value: 'false'
+  - id: sunrise_minutes
+    type: int
+    restore_value: true
+    initial_value: '30'
+  - id: sunset_minutes
+    type: int
+    restore_value: true
+    initial_value: '30'
+  - id: light_ramp_state          # 0 = steady/off, 1 = sunrise, 2 = sunset
+    type: int
+    restore_value: false
+    initial_value: '0'
+  - id: light_current_pct         # live brightness the ramp engine is driving
+    type: float
+    restore_value: false
+    initial_value: '0.0'
+
+  # --- Failsafe snapshot (to restore state after an emergency) ---
+  - id: saved_out
+    type: int
+    restore_value: false
+    initial_value: '0'
+  - id: saved_intake_main
+    type: int
+    restore_value: false
+    initial_value: '0'
+  - id: saved_intake_clone
+    type: int
+    restore_value: false
+    initial_value: '0'
+  - id: saved_recirc
+    type: int
+    restore_value: false
+    initial_value: '0'
+  - id: saved_light_sf1000_b
+    type: float
+    restore_value: false
+    initial_value: '0.0'
+
+  # --- Sensor watchdog ---
+  - id: sensor_fault_active
+    type: bool
+    restore_value: false
+    initial_value: 'false'
+  - id: last_valid_temp_time
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+  - id: last_good_temp            # last valid reading (fault-banner context)
+    type: float
+    restore_value: false
+    initial_value: 'NAN'
+
+  # --- Screensaver physics (px per 100ms frame; status line at y=53
+  #     gives the 48px logo a 0..5px vertical lane) ---
+  - id: saver_x
+    type: float
+    restore_value: false
+    initial_value: '10.0'
+  - id: saver_y
+    type: float
+    restore_value: false
+    initial_value: '2.0'
+  - id: saver_vx
+    type: float
+    restore_value: false
+    initial_value: '4.0'
+  - id: saver_vy
+    type: float
+    restore_value: false
+    initial_value: '0.5'
+
+  # --- Marquee scrolling + live automation status line ---
+  # marquee_px is derived from millis() each frame (wall-clock scroll):
+  # refresh-rate independent AND immune to float-precision freeze on
+  # long uptimes. Kept as a global so draw_scroll stays simple.
+  - id: marquee_px
+    type: float
+    restore_value: false
+    initial_value: '0.0'
+  - id: auto_status_text
+    type: std::string
+    restore_value: false
+    initial_value: '"Idle - automation off"'
+
+  # --- 1h trend ring buffers (12 slots, sampled every 5 min) ---
+  - id: hist_temp
+    type: float[12]
+    restore_value: false
+    initial_value: '{NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN}'
+  - id: hist_rh
+    type: float[12]
+    restore_value: false
+    initial_value: '{NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN}'
+  - id: hist_vpd
+    type: float[12]
+    restore_value: false
+    initial_value: '{NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN}'
+  - id: hist_idx
+    type: int
+    restore_value: false
+    initial_value: '0'
+  - id: hist_filled
+    type: bool
+    restore_value: false
+    initial_value: 'false'
+  - id: hist_cvpd                   # clone VPD sparkline (Clone page)
+    type: float[12]
+    restore_value: false
+    initial_value: '{NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN}'
+
+  # ===== v2.2 · CLONE TENT ENVIRONMENT (persist like the stage_* set) =====
+  - id: clone_temp_target
+    type: float
+    restore_value: true
+    initial_value: '24.0'
+  - id: clone_vpd_min
+    type: float
+    restore_value: true
+    initial_value: '0.4'
+  - id: clone_vpd_max
+    type: float
+    restore_value: true
+    initial_value: '0.8'
+  - id: clone_rh_min
+    type: float
+    restore_value: true
+    initial_value: '70.0'
+  - id: clone_rh_max
+    type: float
+    restore_value: true
+    initial_value: '80.0'
+  - id: clone_mode_idx              # 0=Follow 4x8, 1=Clones&Seedlings,
+    type: int                       # 2=Mother, 3=Custom (select can't
+    restore_value: true             # re-fire set_action on boot -> int
+    initial_value: '1'              # mirror persists, like strategy_idx)
+  - id: clone_photo_follow          # true = clone LED mirrors 4x8 window
+    type: bool
+    restore_value: true
+    initial_value: 'false'
+  - id: clone_light_hours
+    type: int
+    restore_value: true
+    initial_value: '18'
+  - id: clone_lights_on             # runtime: clone window truth
+    type: bool
+    restore_value: false
+    initial_value: 'false'
+  # v2.4: clone_led_auto_enabled RETIRED with the binary LED demand —
+  # the SF1000 ramp engine is armed by auto_photoperiod_enabled now.
+  - id: clone_hum_auto_enabled
+    type: bool
+    restore_value: true
+    initial_value: 'false'
+  - id: esc_clone_dry_since         # clone-humidifier ladder timer
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+
+  # ===== v2.2 · AUX SENSOR SOFT FAULTS (never trip safe mode) =====
+  - id: last_valid_room_time
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+  - id: last_valid_clone_time
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+  - id: room_fault_active
+    type: bool
+    restore_value: false
+    initial_value: 'false'
+  - id: clone_fault_active
+    type: bool
+    restore_value: false
+    initial_value: 'false'
+
+  # ===== v2.2 QA · compressor protection (min 3min off before restart) =====
+  - id: dehum_off_at
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+  - id: ac_off_at
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+
+  # ===== v2.3 · PER-TENT ACTIVE STATE + PRIORITY + MASTER TAKEOVER =====
+  # main_active / clone_active: false when that tent's stage/mode is "Off".
+  # An Off tent: lights off, photoperiod suspended, its intake trickles,
+  # and it is EXCLUDED from room-appliance arbitration + borrow/donor.
+  - id: main_active
+    type: bool
+    restore_value: true
+    initial_value: 'true'
+  - id: clone_active
+    type: bool
+    restore_value: true
+    initial_value: 'true'
+  # priority_tent_main: when BOTH tents run, which one commands the shared
+  # room appliances (heater/AC/humidifier/dehumidifier) + the exhaust
+  # curve. The non-priority tent is best-effort on its LOCAL levers only.
+  # Ignored when only one tent is active (that tent is priority by default).
+  - id: priority_tent_main
+    type: bool
+    restore_value: true
+    initial_value: 'true'
+  # ha_takeover_active: master "give me the wheel". Suspends the fan curve,
+  # the ladder, and both photoperiods — you drive every output from HA.
+  # Only Emergency (>35C) and the sensor watchdog still override.
+  - id: ha_takeover_active
+    type: bool
+    restore_value: true
+    initial_value: 'false'
+  # light_write_guard_until: re-entrancy guard so the device's OWN light
+  # writes (ramp/adjust/failsafe) don't trip the HA-touch auto-latch.
+  # millis() deadline; on_state ignores changes while now < this.
+  - id: light_write_guard_until
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+
+  # ===== v2.2 · INTAKE ROUTER slew state (prevents path oscillation) =====
+  - id: cur_intake_main
+    type: int
+    restore_value: false
+    initial_value: '15'
+  - id: cur_intake_clone
+    type: int
+    restore_value: false
+    initial_value: '15'
+
+  # ===== v2.4 · RUNTIME-CONFIGURABLE PARAMETERS ======================
+  # Numeric tunables promoted to NVS state (paired number: entities).
+  # YAML initial values are the git-versioned SHIPPED defaults; live NVS
+  # values layer on top. Fold tuned values back into these defaults at
+  # the next natural version bump. Watchdog + failsafe thresholds are
+  # deliberately NOT here — they stay compiled-in constants.
+  - id: sf_ramp_floor              # SF1000 kick-in duty %, from the 1k
+    type: float                    # pull-down bench test (~30%, +2 margin).
+    restore_value: true            # Verify on the first v2.4 sunrise.
+    initial_value: '32.0'
+  - id: clone_hum_hyst             # clone humidifier release offset:
+    type: float                    # OFF at c_rmin + this (was +2 -> 4%
+    restore_value: true            # band = the short-cycler). Default 6.
+    initial_value: '6.0'
+  - id: clone_hum_min_off_s        # clone humidifier minimum off-time
+    type: int
+    restore_value: true
+    initial_value: '180'
+  - id: hum_min_off_s              # room humidifier minimum off-time
+    type: int
+    restore_value: true
+    initial_value: '120'
+  - id: heater_min_off_s           # 750W heater minimum off-time (relay
+    type: int                      # hygiene; resistive load, so short)
+    restore_value: true
+    initial_value: '60'
+  - id: mat_rz_low                 # closed-loop mat: energise below this
+    type: float                    # ROOT-ZONE temp (soil probe via HA)
+    restore_value: true
+    initial_value: '20.0'
+  - id: mat_rz_high                # ...cut at/above this. The band IS the
+    type: float                    # hysteresis — keep it >= 2C wide.
+    restore_value: true
+    initial_value: '24.0'
+  - id: mat_min_off_s              # mat minimum off-time (soil is a slow
+    type: int                      # thermal mass — no rapid cycling)
+    restore_value: true
+    initial_value: '300'
+
+  # ===== v2.4 · MIN-OFF STAMPS (millis at last demand OFF; 0 = never) ===
+  - id: clone_hum_off_at
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+  - id: hum_off_at
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+  - id: heater_off_at
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+  - id: mat_off_at
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+
+  # ===== v2.4 · ROOT-ZONE SOFT FAULT (never trips safe mode) ==========
+  # The probe path is HA-dependent until ESP-NOW lands: HA down or the
+  # pot node dark -> readings stale -> mat falls back to the v2.3
+  # clone-AIR rung. Fully blind -> mat OFF. Never control on a blind
+  # sensor, and never guess root-zone heat.
+  - id: last_valid_rootzone_time
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+  - id: rootzone_fault_active
+    type: bool
+    restore_value: false
+    initial_value: 'false'
+
+  # ===== v2.4 · LADDER TIMING TELEMETRY ==============================
+  # run_climate_logic stashes the CURRENT persistence window per rung
+  # (reality gates change them tick-to-tick) so the Fire Countdown
+  # sensors can publish honest numbers without re-deriving the gates.
+  - id: cur_dehum_wait
+    type: uint32_t
+    restore_value: false
+    initial_value: '300000'
+  - id: cur_hum_wait
+    type: uint32_t
+    restore_value: false
+    initial_value: '120000'
+  - id: cur_heat_wait
+    type: uint32_t
+    restore_value: false
+    initial_value: '300000'
+  - id: cur_ac_wait
+    type: uint32_t
+    restore_value: false
+    initial_value: '300000'
+
+# ==========================================
+# 3. PWM OUTPUTS, FANS & LIGHTS
+# ==========================================
+# NOTE: GPIO16/17 are PSRAM pins on WROVER modules — fine on WROOM-32.
+# If a board swap ever happens (see the June latch-up casualty), check
+# the module variant before reusing this pin map.
+output:
+  - platform: ledc
+    pin: GPIO16
+    id: exhaust_out_pwm          # 6" exhaust -> OUTSIDE (carbon filter 1)
+    frequency: 1000 Hz
+  - platform: ledc
+    pin: GPIO17
+    id: intake_4in_main_pwm
+    frequency: 1000 Hz
+  - platform: ledc
+    pin: GPIO18
+    id: intake_4in_clone_pwm
+    frequency: 1000 Hz
+  - platform: ledc
+    pin: GPIO19                  # was 250W light -> now 6" exhaust -> ROOM
+    id: exhaust_recirc_pwm       # (carbon filter 2). Same clamp mod
+    frequency: 1000 Hz           # (330R + 3v3 zener / opto) before wiring.
+  - platform: ledc
+    pin: GPIO23
+    id: light_sf1000_pwm
+    frequency: 1000 Hz
+    # v2.4 · RAMP-FLOOR REMAP: the 1k pull-down on the dim line holds
+    # the SF1000 fully dark below ~30% duty (relay cancelled 16 Jul 26;
+    # GPIO5 returned to the spare pool). Without a remap the sunrise
+    # ramp has a dark dead zone then pops on at ~30-40% brightness.
+    # min_power maps brightness 0-100% -> duty 32-100%; zero_means_zero
+    # keeps OFF at a true 0% duty so the pull-down guarantees dark.
+    # 0.32 is the SHIPPED default — the "SF1000 Ramp Floor" number
+    # re-applies the persisted live value at boot and on change.
+    min_power: 0.32
+    zero_means_zero: true
+
+fan:
+  - platform: speed
+    output: exhaust_out_pwm
+    name: "6 Inch Exhaust (Outside)"
+    id: fan_exhaust_out
+  - platform: speed
+    output: exhaust_recirc_pwm
+    name: "6 Inch Exhaust (Room)"
+    id: fan_exhaust_recirc
+  - platform: speed
+    output: intake_4in_main_pwm
+    name: "4 Inch Intake Fan (Main)"
+    id: fan_intake_main
+  - platform: speed
+    output: intake_4in_clone_pwm
+    name: "4 Inch Intake Fan (2x4)"
+    id: fan_intake_clone
+
+light:
+  - platform: monochromatic
+    output: light_sf1000_pwm
+    name: "SF1000 Dimmer"
+    id: light_sf1000
+    # v2.4 · LIGHT TOPOLOGY: this IS the 2x4 CLONE tent's light. The
+    # 4x8 has no light and no PWM module (GPIO5 reserved for when one
+    # lands). The ramp engine driving this output now lives in
+    # run_clone_photoperiod, on the CLONE window.
+    # v2.3: an EXTERNAL brightness change (HA slider, physical toggle)
+    # latches Manual Light Hold — the schedule/ramp then leaves the light
+    # alone until you release it (self-heals at CLONE lights-off).
+    # The device's OWN writes set light_write_guard_until first, so ramp
+    # transitions never self-latch.
+    on_state:
+      - lambda: |-
+          if (millis() < id(light_write_guard_until)) return;   // our own write
+          if (id(ha_takeover_active)) return;                    // you already own it
+          if (!id(manual_light_hold)) {
+            id(manual_light_hold) = true;
+            id(manual_banner_until) = millis() + 2000;
+            ESP_LOGI("light", "External SF1000 change -> Manual Light Hold latched");
+          }
+
+# ==========================================
+# 4. HA CONTROLS (switches / selects / numbers)
+# ==========================================
+switch:
+  # MANUAL OVERRIDE (FANS) <-> FULL AUTO are mutually exclusive (each
+  # turns the other off). rev 2: Manual is FANS ONLY — the device stops
+  # driving the fans (no auto-curve, no slaving/roles); whatever you set
+  # from the dial or HA just sticks. The PHOTOPERIOD KEEPS DRIVING THE
+  # LIGHT unless you hand-adjust the light itself (-> Manual Light Hold).
+  # Safety layers (emergency failsafe, sensor watchdog) still override.
+  # The appliance escalation ladder keeps signalling in manual; disable
+  # individual "X Auto" switches if you want it silent too.
+  - platform: template
+    name: "Tent Manual Override"
+    id: local_manual_mode
+    icon: "mdi:hand-back-right"
+    optimistic: true
+    turn_on_action:
+      - globals.set: {id: full_auto_mode, value: 'false'}
+    turn_off_action:
+      # Leaving manual releases the light hold too — the schedule resumes.
+      - globals.set: {id: manual_light_hold, value: 'false'}
+
+  - platform: template
+    name: "Tent Full Auto Mode"
+    id: full_auto_switch
+    icon: "mdi:auto-mode"
+    lambda: 'return id(full_auto_mode);'
+    turn_on_action:
+      - globals.set: {id: full_auto_mode, value: 'true'}
+      - globals.set: {id: ha_takeover_active, value: 'false'}   # re-arming auto releases takeover
+      - switch.turn_off: local_manual_mode
+    turn_off_action:
+      - globals.set: {id: full_auto_mode, value: 'false'}
+
+  - platform: template
+    name: "Auto Photoperiod"
+    id: photoperiod_switch
+    icon: "mdi:theme-light-dark"
+    # v2.4: this switch now arms the SF1000 ramp engine on the CLONE
+    # window (run_clone_photoperiod). The 4x8 schedule it used to drive
+    # is virtual — it has no output until a 4x8 light lands on GPIO5.
+    lambda: 'return id(auto_photoperiod_enabled);'
+    turn_on_action:
+      - globals.set: {id: auto_photoperiod_enabled, value: 'true'}
+      # Arming the schedule is an explicit "schedule owns the light".
+      - globals.set: {id: manual_light_hold, value: 'false'}
+    turn_off_action:
+      - globals.set: {id: auto_photoperiod_enabled, value: 'false'}
+
+  # --- Manual Light Hold: visible + clearable from HA. Set automatically
+  # when the SF1000 is hand-adjusted; self-heals at lights-off. ---
+  - platform: template
+    name: "Manual Light Hold"
+    id: manual_light_hold_switch
+    icon: "mdi:lightbulb-alert-outline"
+    lambda: 'return id(manual_light_hold);'
+    turn_on_action:
+      - globals.set: {id: manual_light_hold, value: 'true'}
+    turn_off_action:
+      - globals.set: {id: manual_light_hold, value: 'false'}
+
+  # ===== v2.3 · MANUAL TAKEOVER — the master "give me the wheel" =====
+  # ON  = you drive EVERY output from HA. The device stops driving fans
+  #       (local_manual_mode), stops driving the light (manual_light_hold),
+  #       and suspends the ladder + both photoperiods. Appliance DEMAND
+  #       switches become yours to toggle directly. Only Emergency (>35C)
+  #       and the sensor watchdog still override — safety never yields.
+  # OFF = releases takeover; flip Full Auto (or set a stage) to resume.
+  # This is the clean answer to "when I control from HA I need it to
+  # actually hand me control" — no more curve/ramp fighting you.
+  - platform: template
+    name: "Manual Takeover"
+    id: manual_takeover_switch
+    icon: "mdi:gesture-tap-button"
+    lambda: 'return id(ha_takeover_active);'
+    turn_on_action:
+      - globals.set: {id: ha_takeover_active, value: 'true'}
+      - globals.set: {id: full_auto_mode, value: 'false'}
+      - globals.set: {id: manual_light_hold, value: 'true'}
+      - switch.turn_on: local_manual_mode
+      - globals.set: {id: manual_banner_until, value: !lambda 'return millis() + 2000;'}
+    turn_off_action:
+      - globals.set: {id: ha_takeover_active, value: 'false'}
+
+  # --- Humidifier soft switch (RH TOO LOW) ---
+  - platform: template
+    name: "Humidifier Auto"
+    id: humidifier_auto_switch
+    icon: "mdi:air-humidifier"
+    lambda: 'return id(humidifier_auto_enabled);'
+    turn_on_action:
+      - globals.set: {id: humidifier_auto_enabled, value: 'true'}
+    turn_off_action:
+      - globals.set: {id: humidifier_auto_enabled, value: 'false'}
+  - platform: template
+    name: "Humidifier Demand"      # <-- watch THIS in your HA automation
+    id: humidifier_demand
+    icon: "mdi:water-plus"
+    optimistic: true
+
+  # --- Dehumidifier soft switch (RH TOO HIGH — the one that matters in NSW flower) ---
+  - platform: template
+    name: "Dehumidifier Auto"
+    id: dehumidifier_auto_switch
+    icon: "mdi:air-humidifier-off"
+    lambda: 'return id(dehumidifier_auto_enabled);'
+    turn_on_action:
+      - globals.set: {id: dehumidifier_auto_enabled, value: 'true'}
+    turn_off_action:
+      - globals.set: {id: dehumidifier_auto_enabled, value: 'false'}
+  - platform: template
+    name: "Dehumidifier Demand"    # <-- watch THIS in your HA automation
+    id: dehumidifier_demand
+    icon: "mdi:water-minus"
+    optimistic: true
+
+  # --- ESCALATION LADDER appliances (HA does the actual switching) ---
+  # "X Auto" arms the ladder for that device; "X Demand" is the read-only
+  # signal an HA automation follows. Demands only engage when the fans
+  # have demonstrably failed to fix the condition (see run_climate_logic).
+  - platform: template
+    name: "Heater Auto"
+    id: heater_auto_switch
+    icon: "mdi:radiator"
+    lambda: 'return id(heater_auto_enabled);'
+    turn_on_action:
+      - globals.set: {id: heater_auto_enabled, value: 'true'}
+    turn_off_action:
+      - globals.set: {id: heater_auto_enabled, value: 'false'}
+      - switch.turn_off: heater_demand
+  - platform: template
+    name: "Heater Demand"          # 750W fan heater
+    id: heater_demand
+    icon: "mdi:fire"
+    optimistic: true
+
+  - platform: template
+    name: "Grow Mat Auto"
+    id: growmat_auto_switch
+    icon: "mdi:heat-wave"
+    lambda: 'return id(growmat_auto_enabled);'
+    turn_on_action:
+      - globals.set: {id: growmat_auto_enabled, value: 'true'}
+    turn_off_action:
+      - globals.set: {id: growmat_auto_enabled, value: 'false'}
+      - switch.turn_off: growmat_demand
+  - platform: template
+    name: "Grow Mat Demand"        # under-pot root-zone warmth
+    id: growmat_demand
+    icon: "mdi:heating-coil"
+    optimistic: true
+
+  - platform: template
+    name: "AC Auto"
+    id: ac_auto_switch
+    icon: "mdi:air-conditioner"
+    lambda: 'return id(ac_auto_enabled);'
+    turn_on_action:
+      - globals.set: {id: ac_auto_enabled, value: 'true'}
+    turn_off_action:
+      - globals.set: {id: ac_auto_enabled, value: 'false'}
+      - switch.turn_off: ac_demand
+  - platform: template
+    name: "AC Demand"              # portable AC, set to cool @ 20C max
+    id: ac_demand
+    icon: "mdi:snowflake"
+    optimistic: true
+
+  # ===== v2.2 · CLONE TENT demands (same blueprint contract) =====
+  # v2.4 · RETIRED: "Clone Light Auto" + "Clone LED Demand". The binary
+  # LED demand drove nothing real — the SF1000 (GPIO23 PWM) IS the clone
+  # light, and the ramp engine now drives it directly on the clone
+  # window. Remove the Clone LED demand_follower automation in HA and
+  # drop both entities from dashboards. If a SECOND (binary) clone light
+  # ever appears, resurrect this pair from the v2.3 file.
+
+  - platform: template
+    name: "Clone Humidifier Auto"  # dome today, micro-mister tomorrow.
+    id: clone_hum_auto_switch      # v2.4: hysteresis + min-off are now
+    icon: "mdi:air-humidifier"     # runtime numbers — retune for a
+    lambda: 'return id(clone_hum_auto_enabled);'   # mister, no reflash.
+    turn_on_action:
+      - globals.set: {id: clone_hum_auto_enabled, value: 'true'}
+    turn_off_action:
+      - globals.set: {id: clone_hum_auto_enabled, value: 'false'}
+      - switch.turn_off: clone_hum_demand
+  - platform: template
+    name: "Clone Humidifier Demand"  # <-- watch THIS in your HA automation
+    id: clone_hum_demand
+    icon: "mdi:water-plus-outline"
+    optimistic: true
+
+select:
+  - platform: template
+    name: "Grow Stage"
+    id: grow_stage
+    icon: "mdi:sprout"
+    optimistic: true
+    restore_value: true
+    initial_option: "Germination"
+    options:
+      - "Germination"
+      - "Seedling"
+      - "Early Vegetative"
+      - "Vegetative"
+      - "Late (Push) Vegetative"
+      - "Early Flowering"
+      - "Flowering"
+      - "Late Flowering"
+      - "Final 48-72h Flowering"
+      - "Dry Mode"
+      - "Off"
+    set_action:
+      - script.execute: apply_stage
+
+  - platform: template
+    name: "Control Strategy"
+    id: control_strategy
+    icon: "mdi:tune-variant"
+    optimistic: true
+    restore_value: true
+    initial_option: "VPD"
+    options:
+      - "VPD"
+      - "Temperature"
+      - "Humidity"
+    set_action:
+      - lambda: |-
+          if (x == "VPD") id(control_strategy_idx) = 0;
+          else if (x == "Temperature") id(control_strategy_idx) = 1;
+          else id(control_strategy_idx) = 2;
+
+  # ===== v2.2 · CLONE MODE — small select, not a second stage engine.
+  # Clones don't traverse ten stages in a 2x4. Follow 4x8 reads the
+  # main stage targets live; the presets write clone defaults into the
+  # sliders once (fine-tune after, it persists); Custom never writes.
+  - platform: template
+    name: "Clone Mode"
+    id: clone_mode
+    icon: "mdi:sprout-outline"
+    optimistic: true
+    restore_value: true
+    initial_option: "Clones & Seedlings"
+    options:
+      - "Follow 4x8"
+      - "Clones & Seedlings"
+      - "Mother"
+      - "Custom"
+      - "Off"
+    set_action:
+      - script.execute: apply_clone_mode
+
+  - platform: template
+    name: "Clone Photoperiod"
+    id: clone_photo_select
+    icon: "mdi:theme-light-dark"
+    optimistic: true
+    restore_value: true
+    initial_option: "Independent"
+    options:
+      - "Follow 4x8"
+      - "Independent"
+    set_action:
+      - lambda: 'id(clone_photo_follow) = (x == "Follow 4x8");'
+
+  # ===== v2.3 · PRIORITY TENT — who commands the shared room appliances
+  # (heater / AC / humidifier / dehumidifier) AND the exhaust curve when
+  # BOTH tents are running. The other tent is best-effort on its LOCAL
+  # levers (its own intake/flush, the 2x4's grow mat + clone humidifier,
+  # and the v2.2 borrow/heat-reuse routing). When only one tent is active,
+  # this is ignored — the live tent is priority by definition.
+  - platform: template
+    name: "Priority Tent"
+    id: priority_tent_select
+    icon: "mdi:priority-high"
+    optimistic: true
+    restore_value: true
+    initial_option: "4x8 Main"
+    options:
+      - "4x8 Main"
+      - "2x4 Clone"
+    set_action:
+      - lambda: 'id(priority_tent_main) = (x == "4x8 Main");'
+
+number:
+  # All five target numbers now restore across reboots (paired with the
+  # persisted stage_* globals) — fine-tuning survives power cycles.
+  - platform: template
+    name: "Target Temp"
+    id: num_target_temp
+    icon: "mdi:thermometer"
+    optimistic: true
+    restore_value: true
+    min_value: 15
+    max_value: 32
+    step: 0.5
+    unit_of_measurement: "°C"
+    initial_value: 25
+    set_action:
+      - globals.set: {id: stage_temp_target, value: !lambda 'return x;'}
+
+  - platform: template
+    name: "VPD Target Min"
+    id: num_vpd_min
+    icon: "mdi:water-thermometer"
+    optimistic: true
+    restore_value: true
+    min_value: 0.4
+    max_value: 1.6
+    step: 0.1
+    unit_of_measurement: "kPa"
+    initial_value: 0.4
+    set_action:
+      - globals.set: {id: stage_vpd_min, value: !lambda 'return x;'}
+
+  - platform: template
+    name: "VPD Target Max"
+    id: num_vpd_max
+    icon: "mdi:water-thermometer"
+    optimistic: true
+    restore_value: true
+    min_value: 0.4
+    max_value: 1.8
+    step: 0.1
+    unit_of_measurement: "kPa"
+    initial_value: 0.8
+    set_action:
+      - globals.set: {id: stage_vpd_max, value: !lambda 'return x;'}
+
+  - platform: template
+    name: "RH Target Min"
+    id: num_rh_min
+    icon: "mdi:water-percent"
+    optimistic: true
+    restore_value: true
+    min_value: 20
+    max_value: 90
+    step: 1
+    unit_of_measurement: "%"
+    initial_value: 70
+    set_action:
+      - globals.set: {id: stage_rh_min, value: !lambda 'return x;'}
+
+  - platform: template
+    name: "RH Target Max"
+    id: num_rh_max
+    icon: "mdi:water-percent"
+    optimistic: true
+    restore_value: true
+    min_value: 20
+    max_value: 95
+    step: 1
+    unit_of_measurement: "%"
+    initial_value: 80
+    set_action:
+      - globals.set: {id: stage_rh_max, value: !lambda 'return x;'}
+
+  - platform: template
+    name: "Sunrise Duration"
+    id: num_sunrise
+    icon: "mdi:weather-sunset-up"
+    min_value: 0
+    max_value: 120
+    step: 5
+    unit_of_measurement: "min"
+    update_interval: 10s
+    lambda: 'return id(sunrise_minutes);'
+    set_action:
+      - globals.set: {id: sunrise_minutes, value: !lambda 'return (int) x;'}
+
+  - platform: template
+    name: "Sunset Duration"
+    id: num_sunset
+    icon: "mdi:weather-sunset-down"
+    min_value: 0
+    max_value: 120
+    step: 5
+    unit_of_measurement: "min"
+    update_interval: 10s
+    lambda: 'return id(sunset_minutes);'
+    set_action:
+      - globals.set: {id: sunset_minutes, value: !lambda 'return (int) x;'}
+
+  # The "X" in the 0 -> X% sunrise ramp. Also the level manual OLED
+  # adjust writes to, so device + HA always agree on the target.
+  - platform: template
+    name: "SF1000 Target Brightness"
+    id: num_sf1000_target
+    icon: "mdi:brightness-percent"
+    min_value: 0
+    max_value: 100
+    step: 5
+    unit_of_measurement: "%"
+    update_interval: 10s
+    lambda: 'return id(local_target_sf1000);'
+    set_action:
+      - globals.set: {id: local_target_sf1000, value: !lambda 'return (int) x;'}
+
+  # ===== v2.2 · CLONE TARGET SLIDERS (persist; presets write them) =====
+  - platform: template
+    name: "Clone Target Temp"
+    id: num_clone_temp
+    icon: "mdi:thermometer"
+    optimistic: true
+    restore_value: true
+    min_value: 15
+    max_value: 32
+    step: 0.5
+    unit_of_measurement: "°C"
+    initial_value: 24
+    set_action:
+      - globals.set: {id: clone_temp_target, value: !lambda 'return x;'}
+
+  - platform: template
+    name: "Clone VPD Min"
+    id: num_clone_vpd_min
+    icon: "mdi:water-thermometer"
+    optimistic: true
+    restore_value: true
+    min_value: 0.2
+    max_value: 1.6
+    step: 0.1
+    unit_of_measurement: "kPa"
+    initial_value: 0.4
+    set_action:
+      - globals.set: {id: clone_vpd_min, value: !lambda 'return x;'}
+
+  - platform: template
+    name: "Clone VPD Max"
+    id: num_clone_vpd_max
+    icon: "mdi:water-thermometer"
+    optimistic: true
+    restore_value: true
+    min_value: 0.2
+    max_value: 1.8
+    step: 0.1
+    unit_of_measurement: "kPa"
+    initial_value: 0.8
+    set_action:
+      - globals.set: {id: clone_vpd_max, value: !lambda 'return x;'}
+
+  - platform: template
+    name: "Clone RH Min"
+    id: num_clone_rh_min
+    icon: "mdi:water-percent"
+    optimistic: true
+    restore_value: true
+    min_value: 20
+    max_value: 90
+    step: 1
+    unit_of_measurement: "%"
+    initial_value: 70
+    set_action:
+      - globals.set: {id: clone_rh_min, value: !lambda 'return x;'}
+
+  - platform: template
+    name: "Clone RH Max"
+    id: num_clone_rh_max
+    icon: "mdi:water-percent"
+    optimistic: true
+    restore_value: true
+    min_value: 20
+    max_value: 95
+    step: 1
+    unit_of_measurement: "%"
+    initial_value: 80
+    set_action:
+      - globals.set: {id: clone_rh_max, value: !lambda 'return x;'}
+
+  - platform: template
+    name: "Clone Light Hours"
+    id: num_clone_light_hours
+    icon: "mdi:clock-outline"
+    optimistic: true
+    restore_value: true
+    min_value: 0
+    max_value: 24
+    step: 1
+    unit_of_measurement: "h"
+    initial_value: 18
+    set_action:
+      - globals.set: {id: clone_light_hours, value: !lambda 'return (int) x;'}
+
+  # ===== v2.4 · RUNTIME-CONFIGURABLE PARAMETERS ======================
+  # Tunables promoted from compiled constants. All persist (NVS layers
+  # on the YAML defaults). Watchdog + >35C failsafe thresholds are
+  # deliberately NOT exposed — those stay compiled-in.
+
+  # The SF1000 kick-in duty (1k pull-down dead zone). Brightness 0-100%
+  # remaps to duty floor-100%; OFF stays a true 0% duty. Bench estimate
+  # ~30% + 2 margin — verify against the light on the first v2.4
+  # sunrise and trim here, no reflash.
+  - platform: template
+    name: "SF1000 Ramp Floor"
+    id: num_sf_ramp_floor
+    icon: "mdi:arrow-collapse-down"
+    min_value: 0
+    max_value: 50
+    step: 1
+    unit_of_measurement: "%"
+    update_interval: 10s
+    lambda: 'return id(sf_ramp_floor);'
+    set_action:
+      - globals.set: {id: sf_ramp_floor, value: !lambda 'return x;'}
+      - lambda: 'id(light_sf1000_pwm).set_min_power(x / 100.0f);'
+
+  # Clone humidifier release offset: demand clears at RH-min + this.
+  # The v2.3 +2% (4% total band) was the short-cycler. Raising this IS
+  # "raise the overshoot target".
+  - platform: template
+    name: "Clone Hum Hysteresis"
+    id: num_clone_hum_hyst
+    icon: "mdi:arrow-expand-vertical"
+    min_value: 2
+    max_value: 15
+    step: 0.5
+    unit_of_measurement: "%"
+    update_interval: 10s
+    lambda: 'return id(clone_hum_hyst);'
+    set_action:
+      - globals.set: {id: clone_hum_hyst, value: !lambda 'return x;'}
+
+  - platform: template
+    name: "Clone Hum Min Off-Time"
+    id: num_clone_hum_min_off
+    icon: "mdi:timer-sand"
+    min_value: 0
+    max_value: 900
+    step: 30
+    unit_of_measurement: "s"
+    update_interval: 10s
+    lambda: 'return id(clone_hum_min_off_s);'
+    set_action:
+      - globals.set: {id: clone_hum_min_off_s, value: !lambda 'return (int) x;'}
+
+  - platform: template
+    name: "Humidifier Min Off-Time"
+    id: num_hum_min_off
+    icon: "mdi:timer-sand"
+    min_value: 0
+    max_value: 900
+    step: 30
+    unit_of_measurement: "s"
+    update_interval: 10s
+    lambda: 'return id(hum_min_off_s);'
+    set_action:
+      - globals.set: {id: hum_min_off_s, value: !lambda 'return (int) x;'}
+
+  - platform: template
+    name: "Heater Min Off-Time"
+    id: num_heater_min_off
+    icon: "mdi:timer-sand"
+    min_value: 0
+    max_value: 900
+    step: 30
+    unit_of_measurement: "s"
+    update_interval: 10s
+    lambda: 'return id(heater_min_off_s);'
+    set_action:
+      - globals.set: {id: heater_min_off_s, value: !lambda 'return (int) x;'}
+
+  # Closed-loop grow mat band (ROOT-ZONE temp from the soil probe).
+  # Energise below Low, cut at/above High. The gap IS the hysteresis —
+  # keep it >= 2C. The mat's plate thermostat still bounds the surface.
+  - platform: template
+    name: "Mat Root-Zone Low"
+    id: num_mat_rz_low
+    icon: "mdi:thermometer-chevron-down"
+    min_value: 12
+    max_value: 26
+    step: 0.5
+    unit_of_measurement: "°C"
+    update_interval: 10s
+    lambda: 'return id(mat_rz_low);'
+    set_action:
+      - globals.set: {id: mat_rz_low, value: !lambda 'return x;'}
+
+  - platform: template
+    name: "Mat Root-Zone High"
+    id: num_mat_rz_high
+    icon: "mdi:thermometer-chevron-up"
+    min_value: 14
+    max_value: 28
+    step: 0.5
+    unit_of_measurement: "°C"
+    update_interval: 10s
+    lambda: 'return id(mat_rz_high);'
+    set_action:
+      - globals.set: {id: mat_rz_high, value: !lambda 'return x;'}
+
+  - platform: template
+    name: "Mat Min Off-Time"
+    id: num_mat_min_off
+    icon: "mdi:timer-sand"
+    min_value: 0
+    max_value: 1800
+    step: 60
+    unit_of_measurement: "s"
+    update_interval: 10s
+    lambda: 'return id(mat_min_off_s);'
+    set_action:
+      - globals.set: {id: mat_min_off_s, value: !lambda 'return (int) x;'}
+
+# Real HH:MM picker in HA (renders as AM/PM per your HA locale).
+datetime:
+  - platform: template
+    name: "Lights-On Time"
+    id: lights_on_time
+    type: time
+    icon: "mdi:clock-time-six-outline"
+    optimistic: true
+    restore_value: true
+    initial_value: "06:00:00"
+
+  # v2.2: clone window start. Default 18:00 — the counter-cycle to a
+  # 06:00 4x8 start, so the 2x4 is the warm humid reservoir at night.
+  - platform: template
+    name: "Clone Lights-On Time"
+    id: clone_lights_on_time
+    type: time
+    icon: "mdi:clock-time-six"
+    optimistic: true
+    restore_value: true
+    initial_value: "18:00:00"
+
+# ==========================================
+# 5. SYSTEM INFO TEXT SENSORS & DIAGNOSTICS
+# ==========================================
+text_sensor:
+  - platform: wifi_info
+    ip_address:
+      name: "IP Address"
+      id: network_ip
+    ssid:
+      name: "WiFi SSID"
+      id: network_ssid
+  - platform: version
+    name: "Firmware Version"
+    id: fw_version
+    hide_timestamp: true
+
+# Remote-recovery + community-testing helpers: restart from HA without
+# a power cycle, and uptime for "when did it last reboot" triage.
+button:
+  - platform: restart
+    name: "Restart"
+
+# ==========================================
+# 6. HARDWARE SENSORS, FAILSAFE & WATCHDOG
+# ==========================================
+sensor:
+  - platform: wifi_signal
+    name: "WiFi RSSI"
+    id: wifi_rssi
+    update_interval: 15s
+
+  - platform: uptime
+    name: "Uptime"
+    id: uptime_s
+    update_interval: 60s
+    entity_category: diagnostic
+
+  - platform: dht
+    model: DHT22
+    pin:
+      number: GPIO27
+      mode:
+        input: true
+        pullup: true
+    update_interval: 30s
+    temperature:
+      id: temp_sensor
+      name: "Tent Temperature"
+      filters:
+        - filter_out: 150.0
+        - lambda: |-
+            if (isnan(x) || x < -10 || x > 60) return NAN;
+            return x;
+      # Watchdog heartbeat: stamp the time of every VALID reading, and
+      # remember the value (shown on the fault banner for context).
+      on_value:
+        - lambda: |-
+            if (!isnan(id(temp_sensor).state)) {
+              id(last_valid_temp_time) = millis();
+              id(last_good_temp) = id(temp_sensor).state;
+            }
+      # EMERGENCY FAILSAFE (hysteresis 34/35 C)
+      on_value_range:
+        - above: 35.0
+          then:
+            - lambda: |-
+                if (id(emergency_failsafe_active)) return;   // already tripped
+                // Snapshot current state so we can restore on clear
+                id(saved_out)       = id(fan_exhaust_out).speed;
+                id(saved_recirc)   = id(fan_exhaust_recirc).speed;
+                id(saved_intake_main)   = id(fan_intake_main).speed;
+                id(saved_intake_clone)  = id(fan_intake_clone).speed;
+                id(saved_light_sf1000_b)= id(light_sf1000).remote_values.get_brightness();
+                id(emergency_failsafe_active) = true;
+                id(emergency_since) = millis();
+                // Reset the ladder timers: the emergency period must never
+                // count as "fans failed to fix it" after we resume.
+                id(esc_humid_since) = 0; id(esc_dry_since) = 0;
+                id(esc_cold_since) = 0;  id(esc_deep_cold_since) = 0;
+                id(esc_hot_since) = 0;   id(esc_clone_dry_since) = 0;
+                // Kill heat sources + ONCE-THROUGH purge to OUTSIDE.
+                // ROOM fan -> 0 so we don't dump the tent's heat into the
+                // room the intakes are pulling from. Intakes 100% feed the
+                // outside fan with (cooler) room/makeup air.
+                id(humidifier_demand).turn_off();
+                id(heater_demand).turn_off();
+                id(growmat_demand).turn_off();
+                // v2.4: stamp the min-off clocks — a forced-off must still
+                // honour the cooldown before the ladder re-fires anything.
+                id(hum_off_at) = millis(); id(heater_off_at) = millis();
+                id(mat_off_at) = millis(); id(clone_hum_off_at) = millis();
+                // v2.2/v2.4: purge path is room -> 2x4 -> 4x8 -> outside.
+                // The SF1000 (clone light) heats that airstream; the
+                // mister adds latent load. Both OFF — the clone schedule
+                // re-asserts within 15s of clear.
+                id(clone_hum_demand).turn_off();
+                id(ac_demand).turn_on();     // AC assists the purge (setpoint 20C)
+                auto fe = id(fan_exhaust_out).make_call();  fe.set_state(true);  fe.set_speed(100); fe.perform();
+                auto fa = id(fan_exhaust_recirc).make_call();  fa.set_state(false); fa.set_speed(0);  fa.perform();
+                auto fim = id(fan_intake_main).make_call(); fim.set_state(true); fim.set_speed(100); fim.perform();
+                auto fic = id(fan_intake_clone).make_call();fic.set_state(true); fic.set_speed(100); fic.perform();
+                id(light_write_guard_until) = millis() + 1000;   // v2.3: our write, don't latch hold
+                id(light_sf1000).turn_off().perform();
+                ESP_LOGW("failsafe", "EMERGENCY temp>35C: once-through purge OUTSIDE, ROOM fan off, light OFF");
+        - below: 34.0
+          then:
+            - lambda: |-
+                if (!id(emergency_failsafe_active)) return;
+                id(emergency_failsafe_active) = false;
+                id(emergency_since) = 0;
+                id(ac_demand).turn_off();    // ladder re-arms it if still needed
+                // Restore the pre-trip fan + light state
+                auto fe = id(fan_exhaust_out).make_call();  fe.set_state(id(saved_out) > 0);      fe.set_speed(id(saved_out));      fe.perform();
+                auto fa = id(fan_exhaust_recirc).make_call();  fa.set_state(id(saved_recirc) > 0);  fa.set_speed(id(saved_recirc));  fa.perform();
+                auto fim = id(fan_intake_main).make_call(); fim.set_state(id(saved_intake_main) > 0); fim.set_speed(id(saved_intake_main)); fim.perform();
+                auto fic = id(fan_intake_clone).make_call();fic.set_state(id(saved_intake_clone) > 0);fic.set_speed(id(saved_intake_clone));fic.perform();
+                id(light_write_guard_until) = millis() + 1000;   // v2.3: our write, don't latch hold
+                if (id(saved_light_sf1000_b) > 0.0f){ auto l = id(light_sf1000).turn_on();l.set_brightness(id(saved_light_sf1000_b));l.perform(); }
+                ESP_LOGI("failsafe", "Emergency cleared: restored previous fan/light state");
+    humidity:
+      id: humidity_sensor
+      name: "Tent Humidity"
+      filters:
+        - filter_out: 100.0
+        - lambda: |-
+            if (isnan(x) || x < 0 || x > 100) return NAN;
+            return x;
+
+  # ===== v2.2 · ROOM SENSOR (GPIO4) — the intake SOURCE air =====
+  # Placement: same height as the tents' room intakes. This sensor is
+  # what makes the ladder's reality gates and the heat-reuse split
+  # honest — it must read the air the fans actually move.
+  - platform: dht
+    model: DHT22
+    pin:
+      number: GPIO4
+      mode:
+        input: true
+        pullup: true
+    update_interval: 30s
+    temperature:
+      id: room_temp
+      name: "Room Temperature"
+      filters:
+        - filter_out: 150.0
+        - lambda: |-
+            if (isnan(x) || x < -10 || x > 60) return NAN;
+            return x;
+      on_value:
+        - lambda: |-
+            if (!isnan(id(room_temp).state)) id(last_valid_room_time) = millis();
+    humidity:
+      id: room_rh
+      name: "Room Humidity"
+      filters:
+        - filter_out: 100.0
+        - lambda: |-
+            if (isnan(x) || x < 0 || x > 100) return NAN;
+            return x;
+
+  # ===== v2.2 · CLONE TENT SENSOR (GPIO13) — canopy height, on a yoyo =====
+  - platform: dht
+    model: DHT22
+    pin:
+      number: GPIO13
+      mode:
+        input: true
+        pullup: true
+    update_interval: 30s
+    temperature:
+      id: clone_temp
+      name: "Clone Temperature"
+      filters:
+        - filter_out: 150.0
+        - lambda: |-
+            if (isnan(x) || x < -10 || x > 60) return NAN;
+            return x;
+      on_value:
+        - lambda: |-
+            if (!isnan(id(clone_temp).state)) id(last_valid_clone_time) = millis();
+    humidity:
+      id: clone_rh
+      name: "Clone Humidity"
+      filters:
+        - filter_out: 100.0
+        - lambda: |-
+            if (isnan(x) || x < 0 || x > 100) return NAN;
+            return x;
+
+  - platform: adc
+    pin: GPIO34
+    name: "CO2 Sensor Voltage"
+    id: co2_voltage
+    attenuation: 12db
+    update_interval: 10s
+    filters:
+      - exponential_moving_average: {alpha: 0.1, send_every: 3}
+    on_value:
+      then:
+        - component.update: co2_ppm_estimate
+
+  # ---- TEMPLATE SENSORS ----
+  - platform: template
+    name: "Dynamic CO2 PPM"          # NOTE: uncalibrated analog estimate.
+    id: co2_ppm_estimate             # Replace with SCD41 block below for real ppm.
+    unit_of_measurement: "ppm"
+    icon: "mdi:molecule-co2"
+    update_interval: never
+    lambda: |-
+      float v = id(co2_voltage).state;
+      if (isnan(v)) return NAN;
+      return 116.67f * expf(2.769f * v);
+
+  - platform: template
+    name: "VPD (kPa)"
+    id: vpd_sensor
+    accuracy_decimals: 2
+    unit_of_measurement: "kPa"
+    lambda: |-
+      float t = id(temp_sensor).state;
+      float rh = id(humidity_sensor).state;
+      if (isnan(t) || isnan(rh) || rh <= 0) return NAN;
+      float svp = 0.6108f * expf((17.27f * t) / (t + 237.3f));
+      float avp = svp * (rh / 100.0f);
+      return svp - avp;
+
+  # v2.2: same VPD maths, clone tent air. Drives the clone mini-
+  # controller, the clone humidifier rung, and the Clone OLED page.
+  - platform: template
+    name: "Clone VPD (kPa)"
+    id: clone_vpd
+    accuracy_decimals: 2
+    unit_of_measurement: "kPa"
+    lambda: |-
+      float t = id(clone_temp).state;
+      float rh = id(clone_rh).state;
+      if (isnan(t) || isnan(rh) || rh <= 0) return NAN;
+      float svp = 0.6108f * expf((17.27f * t) / (t + 237.3f));
+      float avp = svp * (rh / 100.0f);
+      return svp - avp;
+
+  # ===== v2.4 · ROOT-ZONE TEMP (soil probe via HA) ====================
+  # The closed-loop grow mat's sense point. HA-dependent until ESP-NOW
+  # lands (see the parked block below) — HA down or the pot node dark
+  # means readings go stale and the 5-min soft fault falls the mat back
+  # to the clone-AIR rung. internal: this is HA's own entity mirrored
+  # in; re-exporting it would just duplicate it.
+  - platform: homeassistant
+    id: rootzone_temp
+    entity_id: ${rootzone_temp_entity}
+    internal: true
+    on_value:
+      - lambda: |-
+          if (!isnan(x)) id(last_valid_rootzone_time) = millis();
+
+  # ===== v2.4 · LADDER TIMING TELEMETRY ==============================
+  # Firmware truth for the Dashboard v3 appliance module cards.
+  # "Fire Countdown" = seconds until that rung's persistence window
+  # elapses and the demand fires (0 = idle or already fired).
+  # "Cooldown Remaining" = seconds of min-off left before that
+  # appliance may re-fire (0 = free to fire).
+  - platform: template
+    name: "Dehumidifier Fire Countdown"
+    id: sens_dehum_countdown
+    unit_of_measurement: "s"
+    icon: "mdi:timer-outline"
+    entity_category: diagnostic
+    update_interval: 10s
+    lambda: |-
+      if (id(esc_humid_since) == 0 || id(dehumidifier_demand).state) return 0;
+      uint32_t held = millis() - id(esc_humid_since);
+      return held >= id(cur_dehum_wait) ? 0 : (id(cur_dehum_wait) - held) / 1000.0f;
+
+  - platform: template
+    name: "Humidifier Fire Countdown"
+    id: sens_hum_countdown
+    unit_of_measurement: "s"
+    icon: "mdi:timer-outline"
+    entity_category: diagnostic
+    update_interval: 10s
+    lambda: |-
+      if (id(esc_dry_since) == 0 || id(humidifier_demand).state) return 0;
+      uint32_t held = millis() - id(esc_dry_since);
+      return held >= id(cur_hum_wait) ? 0 : (id(cur_hum_wait) - held) / 1000.0f;
+
+  - platform: template
+    name: "Heater Fire Countdown"
+    id: sens_heater_countdown
+    unit_of_measurement: "s"
+    icon: "mdi:timer-outline"
+    entity_category: diagnostic
+    update_interval: 10s
+    lambda: |-
+      if (id(esc_deep_cold_since) == 0 || id(heater_demand).state) return 0;
+      uint32_t held = millis() - id(esc_deep_cold_since);
+      return held >= id(cur_heat_wait) ? 0 : (id(cur_heat_wait) - held) / 1000.0f;
+
+  - platform: template
+    name: "AC Fire Countdown"
+    id: sens_ac_countdown
+    unit_of_measurement: "s"
+    icon: "mdi:timer-outline"
+    entity_category: diagnostic
+    update_interval: 10s
+    lambda: |-
+      if (id(esc_hot_since) == 0 || id(ac_demand).state) return 0;
+      uint32_t held = millis() - id(esc_hot_since);
+      return held >= id(cur_ac_wait) ? 0 : (id(cur_ac_wait) - held) / 1000.0f;
+
+  - platform: template
+    name: "Grow Mat Fire Countdown"
+    id: sens_mat_countdown
+    unit_of_measurement: "s"
+    icon: "mdi:timer-outline"
+    entity_category: diagnostic
+    update_interval: 10s
+    lambda: |-
+      if (id(esc_cold_since) == 0 || id(growmat_demand).state) return 0;
+      uint32_t held = millis() - id(esc_cold_since);
+      return held >= 60000 ? 0 : (60000 - held) / 1000.0f;
+
+  - platform: template
+    name: "Clone Humidifier Fire Countdown"
+    id: sens_clone_hum_countdown
+    unit_of_measurement: "s"
+    icon: "mdi:timer-outline"
+    entity_category: diagnostic
+    update_interval: 10s
+    lambda: |-
+      if (id(esc_clone_dry_since) == 0 || id(clone_hum_demand).state) return 0;
+      uint32_t held = millis() - id(esc_clone_dry_since);
+      return held >= 120000 ? 0 : (120000 - held) / 1000.0f;
+
+  - platform: template
+    name: "Dehumidifier Cooldown Remaining"
+    id: sens_dehum_cooldown
+    unit_of_measurement: "s"
+    icon: "mdi:timer-lock-outline"
+    entity_category: diagnostic
+    update_interval: 10s
+    lambda: |-
+      if (id(dehum_off_at) == 0 || id(dehumidifier_demand).state) return 0;
+      uint32_t since = millis() - id(dehum_off_at);
+      return since >= 180000 ? 0 : (180000 - since) / 1000.0f;
+
+  - platform: template
+    name: "AC Cooldown Remaining"
+    id: sens_ac_cooldown
+    unit_of_measurement: "s"
+    icon: "mdi:timer-lock-outline"
+    entity_category: diagnostic
+    update_interval: 10s
+    lambda: |-
+      if (id(ac_off_at) == 0 || id(ac_demand).state) return 0;
+      uint32_t since = millis() - id(ac_off_at);
+      return since >= 180000 ? 0 : (180000 - since) / 1000.0f;
+
+  - platform: template
+    name: "Heater Cooldown Remaining"
+    id: sens_heater_cooldown
+    unit_of_measurement: "s"
+    icon: "mdi:timer-lock-outline"
+    entity_category: diagnostic
+    update_interval: 10s
+    lambda: |-
+      if (id(heater_off_at) == 0 || id(heater_demand).state) return 0;
+      uint32_t mo = (uint32_t) id(heater_min_off_s) * 1000;
+      uint32_t since = millis() - id(heater_off_at);
+      return since >= mo ? 0 : (mo - since) / 1000.0f;
+
+  - platform: template
+    name: "Grow Mat Cooldown Remaining"
+    id: sens_mat_cooldown
+    unit_of_measurement: "s"
+    icon: "mdi:timer-lock-outline"
+    entity_category: diagnostic
+    update_interval: 10s
+    lambda: |-
+      if (id(mat_off_at) == 0 || id(growmat_demand).state) return 0;
+      uint32_t mo = (uint32_t) id(mat_min_off_s) * 1000;
+      uint32_t since = millis() - id(mat_off_at);
+      return since >= mo ? 0 : (mo - since) / 1000.0f;
+
+  - platform: template
+    name: "Clone Humidifier Cooldown Remaining"
+    id: sens_clone_hum_cooldown
+    unit_of_measurement: "s"
+    icon: "mdi:timer-lock-outline"
+    entity_category: diagnostic
+    update_interval: 10s
+    lambda: |-
+      if (id(clone_hum_off_at) == 0 || id(clone_hum_demand).state) return 0;
+      uint32_t mo = (uint32_t) id(clone_hum_min_off_s) * 1000;
+      uint32_t since = millis() - id(clone_hum_off_at);
+      return since >= mo ? 0 : (mo - since) / 1000.0f;
+
+  # ---- UI: ROTARY ENCODER (internal — not an HA entity) ----
+  - platform: rotary_encoder
+    pin_a: GPIO25
+    pin_b: GPIO26
+    id: menu_dial
+    internal: true
+    on_clockwise:
+      then:
+        - lambda: |-
+            if (id(boot_resume_pending)) return;   // prompt owns the input
+            if (id(display_sleeping)) {            // first nudge only wakes
+              id(display_sleeping) = false;
+              id(last_interaction_time) = millis();
+              id(current_page) = 0; id(menu_cursor) = 0;
+              return;
+            }
+            id(last_interaction_time) = millis();
+
+            // Detent acceleration: <80ms between detents = fast spin
+            uint32_t nowd = millis();
+            int step = (nowd - id(last_detent_ms) < 80) ? 15 : 5;
+            id(last_detent_ms) = nowd;
+
+            // --- Home-page status carousel: Home -> Trends -> Lights -> Fans -> Clone -> WiFi -> Home ---
+            if (id(current_page) == 0)       { id(current_page) = 8; }
+            else if (id(current_page) == 8)  { id(current_page) = 9; }
+            else if (id(current_page) == 9)  { id(current_page) = 10; }
+            else if (id(current_page) == 10) { id(current_page) = 13; }
+            else if (id(current_page) == 13) { id(current_page) = 11; }
+            else if (id(current_page) == 11) { id(current_page) = 0; }
+
+            else if (id(current_page) == 1)  { id(menu_cursor) = (id(menu_cursor) + 1) % 5; }
+            else if (id(current_page) == 2)  { id(menu_cursor) = (id(menu_cursor) + 1) % 4; }
+            else if (id(current_page) == 4)  { id(menu_cursor) = (id(menu_cursor) + 1) % 3; }
+            else if (id(current_page) == 12) { id(menu_cursor) = (id(menu_cursor) + 1) % 3; }
+            else if (id(current_page) == 3) { // Adjusting Airflow (4 fans)
+              if (id(adjusting_item) == 0)      { int v = id(local_target_out) + step;          id(local_target_out)          = v > 100 ? 100 : v; }
+              else if (id(adjusting_item) == 1) { int v = id(local_target_recirc) + step;       id(local_target_recirc)       = v > 100 ? 100 : v; }
+              else if (id(adjusting_item) == 2) { int v = id(local_target_intake_main) + step;  id(local_target_intake_main)  = v > 100 ? 100 : v; }
+              else if (id(adjusting_item) == 3) { int v = id(local_target_intake_clone) + step; id(local_target_intake_clone) = v > 100 ? 100 : v; }
+              id(apply_live_adjust).execute();   // applies AS you scroll
+            }
+            else if (id(current_page) == 5) { // Adjusting Lighting
+              if (id(adjusting_item) == 0)      { int v = id(local_target_sf1000) + step; id(local_target_sf1000) = v > 100 ? 100 : v; }
+              else if (id(adjusting_item) == 1) { int v = id(sunrise_minutes) + step;     id(sunrise_minutes)     = v > 120 ? 120 : v; }
+              else if (id(adjusting_item) == 2) { int v = id(sunset_minutes) + step;      id(sunset_minutes)      = v > 120 ? 120 : v; }
+              id(apply_live_adjust).execute();   // applies AS you scroll
+            }
+    on_anticlockwise:
+      then:
+        - lambda: |-
+            if (id(boot_resume_pending)) return;   // prompt owns the input
+            if (id(display_sleeping)) {
+              id(display_sleeping) = false;
+              id(last_interaction_time) = millis();
+              id(current_page) = 0; id(menu_cursor) = 0;
+              return;
+            }
+            id(last_interaction_time) = millis();
+
+            uint32_t nowd = millis();
+            int step = (nowd - id(last_detent_ms) < 80) ? 15 : 5;
+            id(last_detent_ms) = nowd;
+
+            // --- Home-page status carousel (reverse) ---
+            if (id(current_page) == 0)       { id(current_page) = 11; }
+            else if (id(current_page) == 11) { id(current_page) = 13; }
+            else if (id(current_page) == 13) { id(current_page) = 10; }
+            else if (id(current_page) == 10) { id(current_page) = 9; }
+            else if (id(current_page) == 9)  { id(current_page) = 8; }
+            else if (id(current_page) == 8)  { id(current_page) = 0; }
+
+            else if (id(current_page) == 1)  { id(menu_cursor) = (id(menu_cursor) + 4) % 5; }
+            else if (id(current_page) == 2)  { id(menu_cursor) = (id(menu_cursor) + 3) % 4; }
+            else if (id(current_page) == 4)  { id(menu_cursor) = (id(menu_cursor) + 2) % 3; }
+            else if (id(current_page) == 12) { id(menu_cursor) = (id(menu_cursor) + 2) % 3; }
+            else if (id(current_page) == 3) {
+              if (id(adjusting_item) == 0)      { int v = id(local_target_out) - step;          id(local_target_out)          = v < 0 ? 0 : v; }
+              else if (id(adjusting_item) == 1) { int v = id(local_target_recirc) - step;       id(local_target_recirc)       = v < 0 ? 0 : v; }
+              else if (id(adjusting_item) == 2) { int v = id(local_target_intake_main) - step;  id(local_target_intake_main)  = v < 0 ? 0 : v; }
+              else if (id(adjusting_item) == 3) { int v = id(local_target_intake_clone) - step; id(local_target_intake_clone) = v < 0 ? 0 : v; }
+              id(apply_live_adjust).execute();   // applies AS you scroll
+            }
+            else if (id(current_page) == 5) {
+              if (id(adjusting_item) == 0)      { int v = id(local_target_sf1000) - step; id(local_target_sf1000) = v < 0 ? 0 : v; }
+              else if (id(adjusting_item) == 1) { int v = id(sunrise_minutes) - step;     id(sunrise_minutes)     = v < 0 ? 0 : v; }
+              else if (id(adjusting_item) == 2) { int v = id(sunset_minutes) - step;      id(sunset_minutes)      = v < 0 ? 0 : v; }
+              id(apply_live_adjust).execute();   // applies AS you scroll
+            }
+
+# ------------------------------------------------------------------
+# OPTIONAL: real CO2 sensor (Sensirion SCD41). Drops onto the SAME
+# I2C bus (GPIO21/22) — no new wiring. When the sensor arrives:
+#   1) uncomment this block
+#   2) delete the ADC "co2_voltage" + "Dynamic CO2 PPM" sensors above
+#   3) point the OLED "CO2e" line at id(scd41_co2)
+#   4) TIER-2 UPGRADE: point the sensor watchdog at scd41_temp as a
+#      fallback before declaring fault (single-DHT22 trip today).
+# ------------------------------------------------------------------
+#   - platform: scd4x
+#     address: 0x62
+#     update_interval: 30s
+#     co2:
+#       name: "CO2"
+#       id: scd41_co2
+#     temperature:
+#       name: "Temp (SCD41)"
+#       id: scd41_temp
+#     humidity:
+#       name: "RH (SCD41)"
+#       id: scd41_rh
+
+# ------------------------------------------------------------------
+# OPTIONAL: external Zigbee climate sensors, mirrored from Home
+# Assistant. The battery Zigbee sensors stay paired to the coordinator
+# on Digital-Home; the hub subscribes to their HA entities over the
+# native API it already holds. TIER 3 — informational only:
+#   * values only flow while HA is up (inverts the local-first rule)
+#   * battery sensors report lazily (1-5+ min) — too stale for the
+#     >35C failsafe or the watchdog. Use for canopy-average display /
+#     sanity checks, never safety.
+# Direct Zigbee on this board is not possible (WROOM-32 has no
+# 802.15.4 radio) and a second coordinator would fragment the mesh.
+# ------------------------------------------------------------------
+#   - platform: homeassistant
+#     id: zigbee_canopy_temp
+#     entity_id: sensor.YOUR_ZIGBEE_TEMP_ENTITY
+#     internal: true
+#   - platform: homeassistant
+#     id: zigbee_canopy_rh
+#     entity_id: sensor.YOUR_ZIGBEE_RH_ENTITY
+#     internal: true
+
+# ------------------------------------------------------------------
+# PARKED (v2.4): ESP-NOW direct pot->hub links — HA-independence for
+# the SENSING path. Scope confirmed 16 Jul 2026. PREREQUISITES before
+# uncommenting: (1) the shared pot package (dsc-pot-common.yaml) must
+# be rolled out with the matching PROVIDER block, (2) the four pot
+# MACs recorded below, (3) the AP channel LOCKED on the router —
+# ESP-NOW rides the WiFi channel and a router hop splits the link.
+# Pots unicast root-zone temp/moisture to this hub's MAC; the
+# packet_transport `status` binary sensors give a per-pot link-alive
+# watchdog for free (feeds "never control on a blind sensor").
+# Actuation stays HA-dependent (Sonoffs are ESP8285 — no espnow).
+# When live: point the closed-loop mat at the ESP-NOW root-zone
+# sensor first, HA-imported second, clone-air rung last.
+# ------------------------------------------------------------------
+# espnow:
+#   auto_add_peer: false
+#   peers:
+#     - FF:FF:FF:FF:FF:F1   # POT1 MAC (fill in)
+#     - FF:FF:FF:FF:FF:F2   # POT2 MAC
+#     - FF:FF:FF:FF:FF:F3   # POT3 MAC
+#     - FF:FF:FF:FF:FF:F4   # POT4 MAC
+#
+# packet_transport:
+#   - platform: espnow
+#     encryption:
+#       key: !secret espnow_key
+#     providers:
+#       - name: dsc-pot-1
+#       - name: dsc-pot-2
+#       - name: dsc-pot-3
+#       - name: dsc-pot-4
+#
+# (then remote sensors:  - platform: packet_transport, provider:
+#  dsc-pot-1, remote_id: soil_temp, id: pot1_rz_temp ... etc, plus the
+#  per-provider `type: status` binary sensors as link watchdogs)
+
+# ==========================================
+# 7. BINARY SENSORS (status + UI buttons)
+# ==========================================
+binary_sensor:
+  - platform: status
+    name: "HA Link Status"
+    id: ha_connected
+
+  - platform: template
+    name: "Climate Sensor Fault"
+    id: sensor_fault_bs
+    device_class: problem
+    lambda: 'return id(sensor_fault_active);'
+
+  # v2.2: room/clone sensor soft fault. NEVER trips safe mode — the
+  # router and reality gates just fall back to v2.1 behaviour.
+  - platform: template
+    name: "Aux Sensor Fault"
+    id: aux_fault_bs
+    device_class: problem
+    lambda: 'return id(room_fault_active) || id(clone_fault_active);'
+
+  # v2.4: root-zone probe soft fault (stale > 5 min). NEVER trips safe
+  # mode — the closed-loop mat just falls back to the clone-AIR rung.
+  - platform: template
+    name: "Root-Zone Sensor Fault"
+    id: rootzone_fault_bs
+    device_class: problem
+    lambda: 'return id(rootzone_fault_active);'
+
+  - platform: gpio
+    pin: {number: GPIO32, mode: {input: true, pullup: true}}
+    id: dial_button
+    internal: true
+    on_press:
+      then:
+        - lambda: |-
+            // Boot-resume prompt: dial = continue Auto right now
+            if (id(boot_resume_pending)) {
+              id(boot_resume_pending) = false;
+              id(last_interaction_time) = millis();
+              id(current_page) = 0;
+              ESP_LOGI("boot", "User confirmed -> resuming Auto");
+              return;
+            }
+            if (id(display_sleeping)) {            // first press only wakes
+              id(display_sleeping) = false;
+              id(last_interaction_time) = millis();
+              id(current_page) = 0; id(menu_cursor) = 0;
+              return;
+            }
+            id(last_interaction_time) = millis();
+
+            // Home / any status-carousel page -> Main Menu
+            if (id(current_page) == 0 || (id(current_page) >= 8 && id(current_page) <= 11) || id(current_page) == 13) {
+              id(current_page) = 1; id(menu_cursor) = 0;
+            }
+
+            // 1. MAIN MENU (5 items: Mode / Airflow / Lighting / Grow / System)
+            else if (id(current_page) == 1) {
+              if (id(menu_cursor) == 0)      { id(current_page) = 12; id(menu_cursor) = id(local_manual_mode).state ? 2 : (id(full_auto_mode) ? 1 : 0); } // Mode (cursor on current)
+              else if (id(menu_cursor) == 1) { id(current_page) = 2;  id(menu_cursor) = 0; } // Airflow
+              else if (id(menu_cursor) == 2) { id(current_page) = 4;  id(menu_cursor) = 0; } // Lighting
+              else if (id(menu_cursor) == 3) { id(current_page) = 7;  id(menu_cursor) = 0; } // Grow Status
+              else if (id(menu_cursor) == 4) { id(current_page) = 6;  id(menu_cursor) = 0; } // System Info
+            }
+
+            // 12. MODE SELECT -> apply and return. This is the deliberate
+            // path into Full Auto from the hardware (CON stays a simple
+            // Manual panic-toggle so a stray press can't arm the curve).
+            else if (id(current_page) == 12) {
+              if (id(menu_cursor) == 0) {        // Standby (HA drives outputs)
+                id(local_manual_mode).turn_off();
+                id(full_auto_mode) = false;
+                ESP_LOGI("mode", "Mode -> Standby");
+              } else if (id(menu_cursor) == 1) { // Full Auto
+                id(local_manual_mode).turn_off();
+                id(full_auto_mode) = true;
+                ESP_LOGI("mode", "Mode -> Full Auto");
+              } else {                           // Manual (fans)
+                id(local_manual_mode).turn_on();
+                ESP_LOGI("mode", "Mode -> Manual");
+              }
+              id(current_page) = 1; id(menu_cursor) = 0;
+            }
+
+            // 2. AIRFLOW MENU -> Adjust screen
+            else if (id(current_page) == 2) {
+               id(adjusting_item) = id(menu_cursor);
+               id(current_page) = 3;
+            }
+
+            // 4. LIGHTING MENU -> Adjust screen
+            else if (id(current_page) == 4) {
+               id(adjusting_item) = id(menu_cursor);
+               id(current_page) = 5;
+            }
+
+            // 3 / 5. ADJUST pages apply LIVE as you scroll — push = done.
+            else if (id(current_page) == 3) { id(current_page) = 2; }
+            else if (id(current_page) == 5) { id(current_page) = 4; }
+
+            // 6 / 7. Read-only pages -> dial returns to Main Menu
+            else if (id(current_page) == 6 || id(current_page) == 7) {
+               id(current_page) = 1; id(menu_cursor) = 0;
+            }
+
+  - platform: gpio
+    pin: {number: GPIO14, mode: {input: true, pullup: true}}
+    id: back_button
+    internal: true
+    on_multi_click:
+      # SHORT press: contextual back (fires on release)
+      - timing:
+          - ON for at most 0.5s
+          - OFF for at least 0.05s
+        then:
+          - lambda: |-
+              // Boot-resume prompt: back = decline, hold in Manual Override
+              if (id(boot_resume_pending)) {
+                id(boot_resume_pending) = false;
+                id(local_manual_mode).turn_on();   // holds fans; light stays scheduled
+                id(last_interaction_time) = millis();
+                id(current_page) = 0;
+                ESP_LOGI("boot", "User declined -> Manual Override (fans)");
+                return;
+              }
+              if (id(display_sleeping)) {
+                id(display_sleeping) = false;
+                id(last_interaction_time) = millis();
+                id(current_page) = 0; id(menu_cursor) = 0;
+                return;
+              }
+              id(last_interaction_time) = millis();
+              if ((id(current_page) >= 8 && id(current_page) <= 11) || id(current_page) == 13) {
+                id(current_page) = 0;                              // Status carousel -> Home
+              } else if (id(current_page) == 2 || id(current_page) == 4 || id(current_page) == 6 || id(current_page) == 7 || id(current_page) == 12) {
+                id(current_page) = 1; id(menu_cursor) = 0;          // Back to Main Menu
+              } else if (id(current_page) == 3) {
+                id(current_page) = 2;                                // Exit Fan Adjust (already live)
+              } else if (id(current_page) == 5) {
+                id(current_page) = 4;                                // Exit Light Adjust (already live)
+              } else {
+                id(current_page) = 0;
+                id(display_sleeping) = true;                         // Force Sleep (explicit flag)
+              }
+      # LONG press (~1s): jump Home from anywhere
+      - timing:
+          - ON for at least 0.8s
+        then:
+          - lambda: |-
+              if (id(boot_resume_pending)) {       // same contract as short-press
+                id(boot_resume_pending) = false;
+                id(local_manual_mode).turn_on();
+                ESP_LOGI("boot", "User declined (hold) -> Manual Override (fans)");
+              }
+              id(display_sleeping) = false;
+              id(last_interaction_time) = millis();
+              id(current_page) = 0; id(menu_cursor) = 0;
+
+  - platform: gpio
+    pin: {number: GPIO33, mode: {input: true, pullup: true}}
+    id: con_button
+    internal: true
+    on_press:
+      then:
+        - lambda: |-
+            if (id(boot_resume_pending)) return;   // prompt owns the input
+            if (id(display_sleeping)) {
+              id(display_sleeping) = false;
+              id(last_interaction_time) = millis();
+              id(current_page) = 0; id(menu_cursor) = 0;
+              return;
+            }
+            id(last_interaction_time) = millis();
+            // Quick Manual (fans) panic-toggle. Full Auto is entered via
+            // the Mode menu ONLY — deliberate, never on a stray press.
+            id(local_manual_mode).toggle();
+            id(full_auto_mode) = false;
+
+# ==========================================
+# 8. SCRIPTS  (stage engine + climate + photoperiod)
+# ==========================================
+script:
+  # ---- Load a stage's full climate envelope (STAGE CHANGE only) ----
+  - id: apply_stage
+    mode: restart
+    then:
+      - lambda: |-
+          std::string s = id(grow_stage).current_option().str();
+          // v2.3: OFF = 4x8 out of service. Don't touch the numeric targets
+          // (so returning to a stage restores your fine-tuning); just drop
+          // the tent from arbitration.
+          // v2.4: the SF1000 is NOT this tent's light any more — stage Off
+          // no longer writes the light. The 4x8 has no light to dark; its
+          // VIRTUAL window just closes (lights_currently_on -> false), and
+          // a clone in Follow-4x8 goes dark with it via the ramp engine.
+          if (s == "Off") {
+            id(main_active) = false;
+            id(stage_short) = "OFF";
+            id(stage_light_hours) = 0;
+            id(lights_currently_on) = false;
+            ESP_LOGI("grow", "Stage OFF -> 4x8 inactive (excluded from arbitration; virtual window closed)");
+            return;
+          }
+          id(main_active) = true;
+          float tt, vmin, vmax, rmin, rmax; int lh; std::string sh;
+          if      (s == "Germination")             { tt=25; vmin=0.4f; vmax=0.8f; rmin=70; rmax=80; lh=18; sh="Germ"; }
+          else if (s == "Seedling")                { tt=24; vmin=0.5f; vmax=0.8f; rmin=65; rmax=75; lh=18; sh="Seedling"; }
+          else if (s == "Early Vegetative")        { tt=25; vmin=0.7f; vmax=1.0f; rmin=60; rmax=70; lh=18; sh="Early Veg"; }
+          else if (s == "Vegetative")              { tt=26; vmin=0.8f; vmax=1.1f; rmin=55; rmax=65; lh=18; sh="Veg"; }
+          else if (s == "Late (Push) Vegetative")  { tt=26; vmin=1.0f; vmax=1.2f; rmin=50; rmax=60; lh=18; sh="Push Veg"; }
+          else if (s == "Early Flowering")         { tt=25; vmin=1.0f; vmax=1.2f; rmin=50; rmax=55; lh=12; sh="Early Flwr"; }
+          else if (s == "Flowering")               { tt=24; vmin=1.2f; vmax=1.4f; rmin=45; rmax=50; lh=12; sh="Flower"; }
+          else if (s == "Late Flowering")          { tt=22; vmin=1.3f; vmax=1.5f; rmin=40; rmax=45; lh=12; sh="Late Flwr"; }
+          else if (s == "Final 48-72h Flowering")  { tt=21; vmin=1.4f; vmax=1.6f; rmin=35; rmax=45; lh=12; sh="Flush"; }
+          else /* Dry Mode */                      { tt=19; vmin=0.8f; vmax=1.0f; rmin=55; rmax=62; lh=0;  sh="Dry"; }
+          id(num_target_temp).make_call().set_value(tt).perform();
+          id(num_vpd_min).make_call().set_value(vmin).perform();
+          id(num_vpd_max).make_call().set_value(vmax).perform();
+          id(num_rh_min).make_call().set_value(rmin).perform();
+          id(num_rh_max).make_call().set_value(rmax).perform();
+          id(stage_light_hours) = lh;
+          id(stage_short) = sh;
+          ESP_LOGI("grow", "Stage '%s': VPD %.1f-%.1f, RH %.0f-%.0f, %dh light",
+                   s.c_str(), vmin, vmax, (float)rmin, (float)rmax, lh);
+
+  # ---- BOOT variant: label + light hours ONLY. Never touches the
+  # numeric targets, so reboots keep your fine-tuning intact. ----
+  - id: apply_stage_boot
+    mode: restart
+    then:
+      - lambda: |-
+          std::string s = id(grow_stage).current_option().str();
+          if (s == "Off") { id(main_active) = false; id(stage_short) = "OFF"; id(stage_light_hours) = 0;
+                            ESP_LOGI("grow", "Boot: 4x8 stage OFF (inactive)"); return; }
+          id(main_active) = true;
+          if      (s == "Germination")             { id(stage_short) = "Germ";       id(stage_light_hours) = 18; }
+          else if (s == "Seedling")                { id(stage_short) = "Seedling";   id(stage_light_hours) = 18; }
+          else if (s == "Early Vegetative")        { id(stage_short) = "Early Veg";  id(stage_light_hours) = 18; }
+          else if (s == "Vegetative")              { id(stage_short) = "Veg";        id(stage_light_hours) = 18; }
+          else if (s == "Late (Push) Vegetative")  { id(stage_short) = "Push Veg";   id(stage_light_hours) = 18; }
+          else if (s == "Early Flowering")         { id(stage_short) = "Early Flwr"; id(stage_light_hours) = 12; }
+          else if (s == "Flowering")               { id(stage_short) = "Flower";     id(stage_light_hours) = 12; }
+          else if (s == "Late Flowering")          { id(stage_short) = "Late Flwr";  id(stage_light_hours) = 12; }
+          else if (s == "Final 48-72h Flowering")  { id(stage_short) = "Flush";      id(stage_light_hours) = 12; }
+          else /* Dry Mode */                      { id(stage_short) = "Dry";        id(stage_light_hours) = 0;  }
+          ESP_LOGI("grow", "Boot: stage '%s' relabelled (%dh light), targets untouched",
+                   s.c_str(), id(stage_light_hours));
+
+  # ---- v2.2 · Clone Mode loader. Presets write defaults ONCE into the
+  # clone sliders (fine-tune persists after). Follow 4x8 / Custom never
+  # write — Follow resolves against the live main targets at runtime.
+  - id: apply_clone_mode
+    mode: restart
+    then:
+      - lambda: |-
+          std::string m = id(clone_mode).current_option().str();
+          // v2.3: OFF = 2x4 out of service. Excluded from arbitration and
+          // from its donor/reservoir role; its intake trickles (see
+          // run_climate_logic). Sliders untouched.
+          // v2.4: the SF1000 lives in THIS tent — Clone Mode Off darks it.
+          if (m == "Off") {
+            id(clone_active) = false;
+            id(clone_hum_demand).turn_off();
+            id(clone_lights_on) = false;
+            id(light_ramp_state) = 0;
+            id(light_current_pct) = 0.0f;
+            id(light_write_guard_until) = millis() + 1000;   // our write, don't self-latch
+            id(light_sf1000).turn_off().perform();           // dark the tent now
+            ESP_LOGI("clone", "Mode OFF -> 2x4 inactive (no draw, no donor, SF1000 off)");
+            return;
+          }
+          id(clone_active) = true;
+          if      (m == "Follow 4x8")  { id(clone_mode_idx) = 0; ESP_LOGI("clone", "Mode: Follow 4x8 (live main targets)"); return; }
+          else if (m == "Mother")      { id(clone_mode_idx) = 2; }
+          else if (m == "Custom")      { id(clone_mode_idx) = 3; ESP_LOGI("clone", "Mode: Custom (sliders untouched)"); return; }
+          else                         { id(clone_mode_idx) = 1; }
+          float tt, vmin, vmax, rmin, rmax;
+          if (id(clone_mode_idx) == 2) { tt=25; vmin=0.8f; vmax=1.1f; rmin=55; rmax=65; }  // Mother = veg-like
+          else                         { tt=24; vmin=0.4f; vmax=0.8f; rmin=70; rmax=80; }  // Clones & Seedlings
+          id(num_clone_temp).make_call().set_value(tt).perform();
+          id(num_clone_vpd_min).make_call().set_value(vmin).perform();
+          id(num_clone_vpd_max).make_call().set_value(vmax).perform();
+          id(num_clone_rh_min).make_call().set_value(rmin).perform();
+          id(num_clone_rh_max).make_call().set_value(rmax).perform();
+          ESP_LOGI("clone", "Mode '%s': VPD %.1f-%.1f, RH %.0f-%.0f, %.0fC",
+                   m.c_str(), vmin, vmax, rmin, rmax, tt);
+
+  # ---- Climate auto-curve + humidifier/dehumidifier demand ----
+  - id: run_climate_logic
+    mode: single
+    then:
+      - lambda: |-
+          if (id(boot_resume_pending)) return;   // waiting on resume prompt
+          if (id(emergency_failsafe_active)) return;
+          if (id(sensor_fault_active)) return;   // watchdog has control
+          if (id(ha_takeover_active)) return;    // v2.3: you hold the wheel
+
+          float rh   = id(humidity_sensor).state;
+          float temp = id(temp_sensor).state;
+          float vpd  = id(vpd_sensor).state;
+          int  strat = id(control_strategy_idx);
+
+          // ===== v2.2 · AUX SENSOR READS (soft-fault aware) =====
+          // room_ok / clone_ok false -> every v2.2 feature that leans on
+          // that sensor silently reverts to v2.1 behaviour. Never less
+          // safe than blind.
+          float rm_t = id(room_temp).state,  rm_h = id(room_rh).state;
+          float cl_t = id(clone_temp).state, cl_h = id(clone_rh).state;
+          bool room_ok  = !id(room_fault_active)  && !isnan(rm_t) && !isnan(rm_h);
+          bool clone_ok = !id(clone_fault_active) && !isnan(cl_t) && !isnan(cl_h);
+
+          // Resolve clone targets: Follow 4x8 reads the LIVE main targets
+          // so a stage change re-aims the clone tent too.
+          float c_tt, c_rmin, c_rmax;
+          if (id(clone_mode_idx) == 0) {
+            c_tt = id(stage_temp_target);
+            c_rmin = fminf(id(stage_rh_min), id(stage_rh_max));      // QA guard:
+            c_rmax = fmaxf(id(stage_rh_min), id(stage_rh_max));      // bands are
+          } else {                                                    // normalised
+            c_tt = id(clone_temp_target);                            // everywhere
+            c_rmin = fminf(id(clone_rh_min), id(clone_rh_max));
+            c_rmax = fmaxf(id(clone_rh_min), id(clone_rh_max));
+          }
+
+          // Router status flags (feed the screensaver verbs at the bottom)
+          bool heat_reuse = false;
+          int  borrow = 0;            // 0=idle, else clone-path draw %
+          int  borrow_why = 0;        // 1=heat, 2=humidity
+          bool borrow_capped = false;
+          int  clone_need = 15;       // clone tent's own exchange request
+
+          // ============ APPLIANCE ESCALATION LADDER ============
+          // Fans are attempt #1 (curve below reacts within 10s). Appliances
+          // are attempt #2: demanded only when the condition PERSISTS
+          // despite the fans. Timers reset the moment the condition clears
+          // (and whenever the failsafe / watchdog engages — see those).
+          {
+            uint32_t nowms = millis();
+
+            // ===== v2.3 · PRIORITY ARBITRATION ===================
+            // The ROOM appliances (dehumidifier/humidifier/heater/AC) are
+            // shared — they can only condition the room to ONE tent's
+            // target at a time. Pick which tent they serve:
+            //   only one active  -> that tent (priority by definition)
+            //   both active      -> the Priority Tent select
+            //   both off         -> nobody (rungs gated by *_live below)
+            // The GROW MAT is deliberately NOT in this arbitration — it
+            // lives in the 2x4 and is that tent's own local heat lever,
+            // so it always tracks the clone tent regardless of priority.
+            bool arb_main;
+            if      (id(main_active) && !id(clone_active)) arb_main = true;
+            else if (!id(main_active) && id(clone_active)) arb_main = false;
+            else                                           arb_main = id(priority_tent_main);
+            // Never arbitrate on a blind sensor: clone falls back to main.
+            if (!arb_main && !clone_ok) arb_main = true;
+            bool room_live = id(main_active) || id(clone_active);
+
+            // Arbitrated tent's sensor + target + normalised RH band.
+            float a_t, a_rh, a_tgt, a_rhi, a_rlo;
+            if (arb_main) {
+              a_t = temp; a_rh = rh; a_tgt = id(stage_temp_target);
+              a_rhi = fmaxf(id(stage_rh_max), id(stage_rh_min));   // QA: normalise
+              a_rlo = fminf(id(stage_rh_max), id(stage_rh_min));
+            } else {
+              a_t = cl_t; a_rh = cl_h; a_tgt = c_tt;
+              a_rhi = c_rmax; a_rlo = c_rmin;                      // already normalised
+            }
+
+            // held-for tracker: returns how long (ms) cond has been true
+            auto track = [nowms](bool cond, uint32_t &since) -> uint32_t {
+              if (cond && since == 0) since = nowms;
+              if (!cond) since = 0;
+              return cond ? (nowms - since) : 0;
+            };
+
+            // ===== v2.2 · REALITY GATES (v2.3: room is the source) =====
+            // "Fans had N minutes" only makes sense if the ROOM air the
+            // appliances condition can actually move the arbitrated tent.
+            // If not, waiting is theatre — cut the persistence window.
+            uint32_t dehum_wait = 300000, hum_wait = 120000;
+            uint32_t heat_wait  = 300000, ac_wait  = 300000;
+            if (room_ok && rm_h >= a_rhi)
+              dehum_wait = 60000;   // room air can't pull RH below ceiling
+            if (room_ok && rm_t >= a_tgt + 1.0f)
+              ac_wait = 60000;      // venting can't cool below room temp
+            {
+              bool moist_src = room_ok && rm_h > a_rh + 5.0f;   // room can wet it
+              bool warm_src  = room_ok && rm_t > a_t  + 1.0f;   // room can warm it
+              if (!moist_src) hum_wait  = 60000;
+              if (!warm_src)  heat_wait = 120000;
+            }
+            // v2.4: stash the gated windows so the Fire Countdown
+            // sensors publish honest numbers (gates move tick-to-tick).
+            id(cur_dehum_wait) = dehum_wait; id(cur_hum_wait) = hum_wait;
+            id(cur_heat_wait)  = heat_wait;  id(cur_ac_wait)  = ac_wait;
+
+            // Too humid -> DEHUMIDIFIER (fans had their window, RH still high)
+            if (room_live && id(dehumidifier_auto_enabled) && !isnan(a_rh)) {
+              // QA: compressor protection — never restart within 3 min.
+              if (track(a_rh > a_rhi + 3.0f, id(esc_humid_since)) > dehum_wait && !id(dehumidifier_demand).state
+                  && (nowms - id(dehum_off_at)) > 180000) {
+                id(dehumidifier_demand).turn_on();
+                ESP_LOGI("ladder", "%s RH %.0f%% > %.0f%% for %us -> DEHUMIDIFIER", arb_main?"4x8":"2x4", a_rh, a_rhi, dehum_wait / 1000);
+              }
+              if (id(dehumidifier_demand).state && a_rh < a_rhi - 2.0f) {
+                id(dehumidifier_demand).turn_off();
+                id(dehum_off_at) = nowms;
+              }
+            }
+            // Too dry -> HUMIDIFIER (v2.4: min off-time — no rapid re-fire)
+            if (room_live && id(humidifier_auto_enabled) && !isnan(a_rh)) {
+              if (track(a_rh < a_rlo - 2.0f, id(esc_dry_since)) > hum_wait && !id(humidifier_demand).state
+                  && (nowms - id(hum_off_at)) > (uint32_t) id(hum_min_off_s) * 1000) {
+                id(humidifier_demand).turn_on();
+                ESP_LOGI("ladder", "%s RH %.0f%% < %.0f%% for %us -> HUMIDIFIER", arb_main?"4x8":"2x4", a_rh, a_rlo, hum_wait / 1000);
+              }
+              if (id(humidifier_demand).state && a_rh > a_rlo + 2.0f) {
+                id(humidifier_demand).turn_off();
+                id(hum_off_at) = nowms;
+              }
+            }
+            // ===== v2.2 · CLONE RUNG: clone tent too dry -> CLONE HUMIDIFIER
+            // 2x4-local; runs on the CLONE sensor + targets whenever the
+            // clone tent is active (independent of priority). Soft fault
+            // clears it (watchdog) — never guess wet.
+            // v2.4 · SHORT-CYCLING FIX: the v2.3 release point (c_rmin+2)
+            // gave a 4% total band -> rapid on/off cycling + Scribe spam.
+            // Release is now c_rmin + Clone Hum Hysteresis (default +6),
+            // and a min off-time blocks immediate re-fire. Both runtime-
+            // tunable — retune for the micro-mister without a reflash.
+            if (id(clone_active) && id(clone_hum_auto_enabled) && clone_ok) {
+              if (track(cl_h < c_rmin - 2.0f, id(esc_clone_dry_since)) > 120000 && !id(clone_hum_demand).state
+                  && (nowms - id(clone_hum_off_at)) > (uint32_t) id(clone_hum_min_off_s) * 1000) {
+                id(clone_hum_demand).turn_on();
+                ESP_LOGI("ladder", "Clone RH %.0f%% < %.0f%% for 2min -> CLONE HUMIDIFIER", cl_h, c_rmin);
+              }
+              if (id(clone_hum_demand).state && cl_h > c_rmin + id(clone_hum_hyst)) {
+                id(clone_hum_demand).turn_off();
+                id(clone_hum_off_at) = nowms;
+              }
+            }
+            // ===== v2.4 · GROW MAT — CLOSED-LOOP ROOT-ZONE HEAT =====
+            // The mat is a 2x4-local lever (v2.3), but its plate
+            // thermostat regulates the mat SURFACE — a 22C setpoint sat
+            // the root zone at 16-19C. The soil probe is the only
+            // trustworthy sense point, so demand now tracks ROOT-ZONE
+            // temp (via HA): energise below Mat Root-Zone Low, cut at
+            // Mat Root-Zone High (the band IS the hysteresis), with a
+            // min off-time — soil is a slow thermal mass, no cycling.
+            // FALLBACK CHAIN (never control on a blind sensor):
+            //   probe live  -> closed-loop on the root zone
+            //   probe stale -> v2.3 clone-AIR rung (clone sensor)
+            //   fully blind -> mat OFF (never guess root heat)
+            if (id(clone_active) && id(growmat_auto_enabled)) {
+              bool rz_ok = !id(rootzone_fault_active) && !isnan(id(rootzone_temp).state);
+              bool mat_free = (nowms - id(mat_off_at)) > (uint32_t) id(mat_min_off_s) * 1000;
+              if (rz_ok) {
+                float rz = id(rootzone_temp).state;
+                float rz_lo = fminf(id(mat_rz_low), id(mat_rz_high));   // QA guard:
+                float rz_hi = fmaxf(id(mat_rz_low), id(mat_rz_high));   // band normalised
+                if (track(rz < rz_lo, id(esc_cold_since)) > 60000 && !id(growmat_demand).state && mat_free) {
+                  id(growmat_demand).turn_on();
+                  ESP_LOGI("ladder", "Root zone %.1fC < %.1fC -> GROW MAT (closed-loop)", rz, rz_lo);
+                }
+                if (id(growmat_demand).state && rz >= rz_hi) {
+                  id(growmat_demand).turn_off();
+                  id(mat_off_at) = nowms;
+                  ESP_LOGI("ladder", "Root zone %.1fC >= %.1fC -> mat off (min-off %ds)", rz, rz_hi, id(mat_min_off_s));
+                }
+              } else if (clone_ok) {
+                // v2.3 fallback: clone-AIR rung (probe stale / HA down)
+                if (track(cl_t < c_tt - 1.0f, id(esc_cold_since)) > 60000 && !id(growmat_demand).state && mat_free) {
+                  id(growmat_demand).turn_on();
+                  ESP_LOGI("ladder", "Clone %.1fC < %.1fC -> GROW MAT (air fallback - probe blind)", cl_t, c_tt - 1.0f);
+                }
+                if (id(growmat_demand).state && cl_t >= c_tt) {
+                  id(growmat_demand).turn_off();
+                  id(mat_off_at) = nowms;
+                }
+              } else if (id(growmat_demand).state) {
+                id(growmat_demand).turn_off();   // fully blind -> mat off
+                id(mat_off_at) = nowms;
+              }
+            } else if (!id(clone_active) && id(growmat_demand).state) {
+              id(growmat_demand).turn_off();   // 2x4 off -> mat off
+              id(mat_off_at) = nowms;
+            }
+            // Too cold -> 750W HEATER (room appliance; serves the arbitrated
+            // tent. Note: NOT gated behind the mat any more — the mat now
+            // heats a different tent, so the heater escalates on its own
+            // deep-cold timer against whichever tent owns the room.)
+            // v2.4: min off-time (default 60s) — resistive load, so this
+            // is relay hygiene, not compressor protection.
+            if (room_live && id(heater_auto_enabled) && !isnan(a_t)) {
+              if (track(a_t < a_tgt - 2.0f, id(esc_deep_cold_since)) > heat_wait && !id(heater_demand).state
+                  && (nowms - id(heater_off_at)) > (uint32_t) id(heater_min_off_s) * 1000) {
+                id(heater_demand).turn_on();
+                ESP_LOGI("ladder", "%s %.1fC < %.1fC for %us -> HEATER", arb_main?"4x8":"2x4", a_t, a_tgt - 2.0f, heat_wait / 1000);
+              }
+              if (id(heater_demand).state && a_t >= a_tgt - 0.5f) {
+                id(heater_demand).turn_off();
+                id(heater_off_at) = nowms;
+              }
+            }
+            // Too hot -> AC (arbitrated tent held over target+2 despite fans)
+            if (room_live && id(ac_auto_enabled) && !isnan(a_t)) {
+              if (track(a_t > a_tgt + 2.0f, id(esc_hot_since)) > ac_wait && !id(ac_demand).state
+                  && (nowms - id(ac_off_at)) > 180000) {   // QA: compressor protection
+                id(ac_demand).turn_on();
+                ESP_LOGI("ladder", "%s %.1fC > %.1fC for %us -> AC", arb_main?"4x8":"2x4", a_t, a_tgt + 2.0f, ac_wait / 1000);
+              }
+              if (id(ac_demand).state && a_t <= a_tgt + 0.5f) {
+                id(ac_demand).turn_off();
+                id(ac_off_at) = nowms;
+              }
+            }
+          }
+
+          // ================= TWO-AXIS FAN CONTROL =================
+          // OUT   (fan_exhaust_out)   -> outside: heat, RH overflow, fresh air
+          // RECIRC(fan_exhaust_recirc)-> room:    VPD/RH air movement, hold heat
+          // Blending the two IS the damper. Intakes slave to total exhaust.
+          int out = 0, recirc = 0;
+          bool rh_overflow = false;
+          if (id(full_auto_mode) && !isnan(temp)) {
+            float rmax = fmaxf(id(stage_rh_max), id(stage_rh_min));   // QA guard
+
+            // ---- RECIRC: move air past canopy, feed moisture to the room ----
+            recirc = 20;   // baseline circulation, always on
+            if (strat == 0 && !isnan(vpd)) {                 // VPD strategy
+              float vmin = fminf(id(stage_vpd_min), id(stage_vpd_max));   // QA guard
+              float vmax = fmaxf(id(stage_vpd_min), id(stage_vpd_max));
+              if (vpd < vmin - 0.30f) recirc = 100;          // way too humid
+              else if (vpd < vmin - 0.20f) recirc = 80;
+              else if (vpd < vmin - 0.10f) recirc = 60;
+              else if (vpd < vmin) recirc = 45;              // slightly humid
+              else if (vpd <= vmax) recirc = 30;             // in band
+              else recirc = 20;                              // too dry -> ease off
+            } else if (strat == 2 && !isnan(rh)) {           // Humidity strategy
+              if (rh > rmax + 15.0f) recirc = 100;
+              else if (rh > rmax + 10.0f) recirc = 80;
+              else if (rh > rmax + 5.0f) recirc = 60;
+              else if (rh > rmax) recirc = 45;
+              else recirc = 25;
+            } else {                                         // Temperature strategy
+              recirc = 25;   // OUT does the heat work; RECIRC just circulates
+            }
+
+            // ---- OUT: expel heat / moisture overflow / fresh air ----
+            // Fresh-air floor: no CO2 rig, so makeup air is the only CO2
+            // top-up. Never let the loop fully close.
+            out = 15;
+            float target = id(stage_temp_target);
+            if (temp >= target + 3.0f) out = 100;            // dump heat hard
+            else if (temp >= target + 2.0f) out = 80;
+            else if (temp >= target + 1.0f) out = 60;
+            else if (temp >= target) out = 40;
+            // Moisture overflow: RH way over ceiling -> vent outside NOW,
+            // in parallel with the ladder deciding about the dehumidifier.
+            if (!isnan(rh) && rh > rmax + 5.0f) {
+              if (out < 70) out = 70;
+              rh_overflow = true;
+            }
+
+            // ===== v2.2 · HEAT REUSE: where should shed heat GO? =====
+            // Lights are heaters. If the tent must shed heat while the
+            // SYSTEM is heat-poor (heating rungs live, or the room is
+            // cold) and the room can still absorb it, route the shed
+            // through RECIRC instead of dumping it outside — the main
+            // intake pulls that warmth straight back as makeup air.
+            // Moisture overflow always wins: recirculated moisture just
+            // comes back; it has to physically leave the building.
+            if (out > 15 && !rh_overflow && room_ok
+                && rm_t < temp - 1.0f                       // room can absorb
+                && (id(heater_demand).state || id(growmat_demand).state
+                    || rm_t < target - 2.0f)) {             // system heat-poor
+              int shed = out;
+              if (recirc < shed) recirc = shed;             // shed to the room
+              out = 15 + shed / 4;                          // fresh-air floor + trickle
+              heat_reuse = true;
+            }
+
+            // ===== v2.3 · HEATER NO-EXTRACTION INTERLOCK ==========
+            // Heat is expensive. If we're actively running the 750W heater
+            // (or the mat), there's no sense blowing that bought heat out
+            // the wall. Hard rule: whenever heater demand is live, OUT
+            // drops to the fresh-air floor and the air routes RECIRC —
+            // circulate and hold, don't vent. Moisture overflow still
+            // wins (RH that high MUST leave the building), and the >35C
+            // emergency purge is upstream of this whole block, so safety
+            // is never trapped behind a closed damper.
+            if (id(heater_demand).state && !rh_overflow) {
+              if (recirc < out) recirc = out;   // keep canopy air moving inside
+              if (recirc < 25)  recirc = 25;    // never fully still while heating
+              out = 15;                          // fresh-air floor only
+              heat_reuse = true;                 // (drives the status verb)
+            }
+
+            // ===== v2.2 · INTAKE ROUTER =============================
+            // Negative-pressure budget preserved from v2.1: each intake
+            // used to run at 0.7 * mean(exhaust); the router now PLACES
+            // that same total across the two paths instead of mirroring.
+            int budget = (int)(((out + recirc) / 2.0f) * 0.7f) * 2;
+
+            // -- Clone protection cap: air exchange is what flushes a
+            //    clone tent out of band. The 4x8 may only draw through
+            //    the 2x4 up to this ceiling. QA: the cap is CONTINUOUS —
+            //    a hard step made the router oscillate +-15% whenever a
+            //    reading hovered on the boundary. Linear ramps have no
+            //    boundary to oscillate around.
+            //      RH:   20% at/below floor -> 40% at floor+3 -> 100% at floor+8
+            //      Cold: 30% at target-1.5C -> 100% at target-0.5C
+            //    Unknown clone env -> 25%.
+            int cap = 100;
+            if (clone_ok) {
+              float cap_rh = 100.0f;
+              if      (cl_h <= c_rmin)        cap_rh = 20.0f;
+              else if (cl_h <  c_rmin + 3.0f) cap_rh = 20.0f + (cl_h - c_rmin) * (20.0f / 3.0f);
+              else if (cl_h <  c_rmin + 8.0f) cap_rh = 40.0f + (cl_h - c_rmin - 3.0f) * (60.0f / 5.0f);
+              float cap_cold = 100.0f;
+              if      (cl_t <= c_tt - 1.5f)   cap_cold = 30.0f;
+              else if (cl_t <  c_tt - 0.5f)   cap_cold = 30.0f + (cl_t - (c_tt - 1.5f)) * 70.0f;
+              cap = (int) fminf(cap_rh, cap_cold);
+            } else cap = 25;
+
+            // -- Clone tent's OWN need (mini-controller, source-gated:
+            //    only ramp exchange when room air actually helps) --
+            //    v2.3: an Off 2x4 draws only an anti-stagnation trickle.
+            if (clone_ok && id(clone_active)) {
+              bool c_hot   = cl_t > c_tt + 1.0f;
+              bool c_humid = cl_h > c_rmax + 3.0f;
+              bool c_dry   = cl_h < c_rmin - 2.0f;
+              if      (c_humid && room_ok && rm_h < cl_h - 3.0f) clone_need = 60; // room air can dry it
+              else if (c_hot   && room_ok && rm_t < cl_t - 1.0f) clone_need = 50; // room air can cool it
+              else if (c_humid || c_hot)                          clone_need = 30; // exchange helps a little
+              if (c_dry) clone_need = 10;                  // hold the moisture in
+            } else if (!id(clone_active)) {
+              clone_need = 8;                              // 2x4 Off -> trickle only
+            }
+
+            // -- Donor selection for the 4x8: is warm/humid 2x4 air the
+            //    better source than room air? (The whole point of the
+            //    daisy-chain: a separate mini-lung on the counter-cycle.)
+            //    v2.3: borrowing needs an ACTIVE 4x8 to serve AND an
+            //    ACTIVE 2x4 to donate — an Off tent is neither.
+            if (clone_ok && id(main_active) && id(clone_active)) {
+              bool tent_needs_heat  = temp < target - 1.0f;
+              bool tent_needs_humid = (!isnan(rh) && rh < id(stage_rh_min) - 2.0f)
+                                   || (strat == 0 && !isnan(vpd) && vpd > id(stage_vpd_max) + 0.1f);
+              bool clone_warmer  = !room_ok || (cl_t > rm_t + 1.0f);
+              bool clone_moister = !room_ok || (cl_h > rm_h + 5.0f);
+              if      (tent_needs_heat  && cl_t > temp + 0.5f && clone_warmer)  { borrow = 60; borrow_why = 1; }
+              else if (tent_needs_humid && cl_h > rh   + 5.0f && clone_moister) { borrow = 50; borrow_why = 2; }
+              if (borrow > cap) { borrow = cap; borrow_capped = true; }
+            }
+
+            int clone_i = clone_need > borrow ? clone_need : borrow;
+            // QA: the protection cap is UNCONDITIONAL. Flushing a cold
+            // clone tent with 60% room air chills clones faster than damp
+            // air harms them — the cap always wins, own-need included.
+            if (clone_i > cap) clone_i = cap;
+
+            // QA: CHAIN SERVICE. The 2x4 only exchanges what the 4x8
+            // exhausts (daisy-chain). If the clone flush wants more than
+            // the current budget carries AND venting is climate-safe for
+            // the 4x8 (at/above target, no heating demand, not reusing
+            // heat), lift OUT gently — never past 45%.
+            if (clone_i > budget && temp >= target && !heat_reuse
+                && (!room_ok || rm_t < temp + 0.5f)      // QA: never lift OUT to
+                && !id(heater_demand).state              // suck a hotter room in
+                && !id(growmat_demand).state) {
+              int lift = 15 + (clone_i - budget) / 2;
+              if (lift > 45) lift = 45;
+              if (out < lift) out = lift;
+              budget = (int)(((out + recirc) / 2.0f) * 0.7f) * 2;
+            }
+
+            // QA: CHAIN SERVICE (borrow leg). Drawing conditioned 2x4 air
+            // requires the 4x8 to exhaust the same volume — via RECIRC,
+            // so the borrowed heat/moisture loops through the ROOM and
+            // back, instead of being thrown outside. Bounded at 70%.
+            if (borrow > 0 && clone_i > budget) {
+              int r2 = (int) ceilf(clone_i / 0.7f) - out;
+              if (r2 > 70) r2 = 70;
+              if (recirc < r2) recirc = r2;
+              budget = (int)(((out + recirc) / 2.0f) * 0.7f) * 2;
+            }
+
+            // QA: NEGATIVE PRESSURE IS A HARD INVARIANT. The intakes may
+            // never place more air than the exhaust budget carries — a
+            // positive tent leaks smell through every seam.
+            if (clone_i > budget) clone_i = budget;
+            int main_i  = budget - clone_i;
+            if (main_i > 100) {                       // main saturated: overflow
+              int spill = main_i - 100;               // to the clone path, but
+              int room_left = cap - clone_i;          // NEVER past the cap
+              if (room_left > 0) clone_i += spill < room_left ? spill : room_left;
+              main_i = 100;
+            }
+            if (main_i < 0) main_i = 0;
+
+            // v2.3: an Off tent draws only an anti-stagnation trickle so
+            // the room's conditioned air isn't wasted on an empty tent —
+            // this is the "energy goes to the tent that's ON" win.
+            // Clamping DOWN is always negative-pressure-safe (less air in).
+            if (!id(clone_active) && clone_i > 8) clone_i = 8;
+            if (!id(main_active)  && main_i  > 8) main_i  = 8;
+
+            // Slew-limit both paths (±15%/10s tick): the router must
+            // never oscillate between donors on sensor jitter.
+            auto slew = [](int cur, int tgt) {
+              int d = tgt - cur;
+              if (d >  15) d =  15;
+              if (d < -15) d = -15;
+              return cur + d;
+            };
+            clone_i = slew(id(cur_intake_clone), clone_i);
+            main_i  = slew(id(cur_intake_main),  main_i);
+            id(cur_intake_clone) = clone_i;
+            id(cur_intake_main)  = main_i;
+
+            auto co = id(fan_exhaust_out).make_call();    co.set_state(out > 0);     co.set_speed(out);     co.perform();
+            auto cr = id(fan_exhaust_recirc).make_call(); cr.set_state(recirc > 0);  cr.set_speed(recirc);  cr.perform();
+            auto ci = id(fan_intake_main).make_call();    ci.set_state(main_i > 0);  ci.set_speed(main_i);  ci.perform();
+            auto cc = id(fan_intake_clone).make_call();   cc.set_state(clone_i > 0); cc.set_speed(clone_i); cc.perform();
+          }
+
+          // ---- Build the live "Running:" status line (screensaver) ----
+          {
+            std::string s;
+            auto add = [&s](const char *p) { if (!s.empty()) s += ",   "; s += p; };
+            char b[72];
+            if (id(ha_takeover_active)) {
+              add("MANUAL TAKEOVER - you own every output (safety still armed)");
+            } else if (!id(full_auto_mode)) {
+              add(id(local_manual_mode).state ? "Manual control - holding set fan levels"
+                                              : "Standby - HA driving outputs directly");
+            } else if (isnan(temp)) {
+              add("Waiting on climate sensor");
+            } else {
+              // v2.3: say who's live + who the room is serving
+              if (!id(main_active) && !id(clone_active)) add("both tents Off - idle");
+              else if (!id(main_active))                 add("4x8 Off - room serving 2x4 clone");
+              else if (!id(clone_active))                add("2x4 Off - room serving 4x8");
+              else add(id(priority_tent_main) ? "both live - 4x8 has room priority"
+                                              : "both live - 2x4 has room priority");
+              if (id(dehumidifier_demand).state)      add("Dehumidifier called in");
+              else if (id(humidifier_demand).state)   add("Humidifier called in");
+              if (id(ac_demand).state)                add("AC cooling (max 20C)");
+              if (id(heater_demand).state)            add("heater assisting (venting held - reusing heat)");
+              else if (id(growmat_demand).state)      add("grow mat warming 2x4 roots");
+              // Air routing (which way is the air going, and why)
+              if (rh_overflow)         add("venting moisture outside (room dehumidifier maxed)");
+              else if (heat_reuse)     add("recycling tent heat into the room");
+              else if (out >= 60)      add("venting outside to dump heat");
+              else if (recirc >= 60)   add("recirculating hard through the room");
+              else if (recirc > 25)    add("moving air, holding heat in room");
+              else                     add("gentle recirculation + fresh-air trickle");
+              // v2.2: donor selection — say WHICH air the 4x8 is drinking
+              if (borrow_why == 1)      add(borrow_capped ? "drawing warm 2x4 air (capped - protecting clones)"
+                                                          : "drawing warm 2x4 air into the 4x8");
+              else if (borrow_why == 2) add(borrow_capped ? "borrowing 2x4 humidity (capped - protecting clones)"
+                                                          : "borrowing 2x4 humidity for the 4x8");
+              if (clone_need >= 50)     add("flushing clone tent with room air");
+              else if (clone_need <= 10 && clone_ok) add("holding clone tent moisture in");
+              add("maintaining internal negative pressure");
+              if (strat == 0 && !isnan(vpd)) {
+                if (vpd < id(stage_vpd_min))      { snprintf(b, sizeof(b), "raising VPD to target: %.1f", id(stage_vpd_min)); add(b); }
+                else if (vpd > id(stage_vpd_max)) { snprintf(b, sizeof(b), "lowering VPD to target: %.1f", id(stage_vpd_max)); add(b); }
+                else                              { snprintf(b, sizeof(b), "VPD %.2f inside %.1f-%.1f band", vpd, id(stage_vpd_min), id(stage_vpd_max)); add(b); }
+              } else if (strat == 1) {
+                float tt = id(stage_temp_target);
+                if (temp >= tt + 1.0f)      { snprintf(b, sizeof(b), "cooling toward %.0fC (venting out)", tt); add(b); }
+                else if (temp <= tt - 1.0f) { add("trying to maintain heat (recirculating)"); }
+                else                        { snprintf(b, sizeof(b), "holding temp at %.0fC", tt); add(b); }
+              } else if (!isnan(rh)) {
+                if (rh > id(stage_rh_max))      { snprintf(b, sizeof(b), "pulling RH down to %.0f%%", id(stage_rh_max)); add(b); }
+                else if (rh < id(stage_rh_min)) { snprintf(b, sizeof(b), "conserving RH above %.0f%%", id(stage_rh_min)); add(b); }
+                else                            { snprintf(b, sizeof(b), "RH %.0f%% inside band", rh); add(b); }
+              }
+            }
+            // v2.2: clone tent voice (v2.4: LED demand retired — the
+            // SF1000 ramp verbs below ARE the clone light's voice now)
+            if (id(clone_hum_demand).state)     add("clone humidifier called in");
+            if (id(room_fault_active))          add("room sensor offline (v2.1 fallback)");
+            if (id(clone_fault_active))         add("clone sensor offline (v2.1 fallback)");
+            if (id(rootzone_fault_active) && id(growmat_auto_enabled))
+                                                add("root-zone probe offline (mat on air fallback)");
+            if (id(manual_light_hold))          add("SF1000 held manually (resumes at clone lights-off)");
+            if (id(light_ramp_state) == 1)      { snprintf(b, sizeof(b), "clone sunrise ramp at %d%%", (int) id(light_current_pct)); add(b); }
+            else if (id(light_ramp_state) == 2) { snprintf(b, sizeof(b), "clone sunset dimming at %d%%", (int) id(light_current_pct)); add(b); }
+            id(auto_status_text) = s;
+          }
+
+  # ---- LIVE APPLY for the OLED adjust pages ----
+  # Called on every dial detent while adjusting: the value takes effect
+  # AS you scroll (no confirm needed).
+  #   Fans  : first detent engages Manual Override (FANS ONLY — the
+  #           photoperiod keeps driving the light).
+  #   Light : first detent sets Manual Light Hold (LIGHT ONLY — the
+  #           schedule pauses and self-heals at the next lights-off).
+  #   Sunrise/Sunset minutes are live globals; no hold of any kind.
+  - id: apply_live_adjust
+    mode: restart
+    then:
+      - lambda: |-
+          if (id(current_page) == 3) {                 // fans
+            id(full_auto_mode) = false;
+            if (!id(local_manual_mode).state) {
+              id(local_manual_mode).turn_on();
+              id(manual_banner_until) = millis() + 2000;   // flash the banner
+            }
+            switch (id(adjusting_item)) {
+              case 0: { int v = id(local_target_out);          auto c = id(fan_exhaust_out).make_call();    c.set_state(v > 0); c.set_speed(v); c.perform(); break; }
+              case 1: { int v = id(local_target_recirc);       auto c = id(fan_exhaust_recirc).make_call(); c.set_state(v > 0); c.set_speed(v); c.perform(); break; }
+              case 2: { int v = id(local_target_intake_main);  auto c = id(fan_intake_main).make_call();    c.set_state(v > 0); c.set_speed(v); c.perform(); break; }
+              case 3: { int v = id(local_target_intake_clone); auto c = id(fan_intake_clone).make_call();   c.set_state(v > 0); c.set_speed(v); c.perform(); break; }
+            }
+          } else if (id(current_page) == 5 && id(adjusting_item) == 0) {   // SF1000
+            if (!id(manual_light_hold)) {
+              id(manual_light_hold) = true;                  // light-only hold
+              id(manual_banner_until) = millis() + 2000;
+            }
+            int v = id(local_target_sf1000);
+            id(light_write_guard_until) = millis() + 1000;   // v2.3: dial write (hold already latched above)
+            if (v > 0) { auto l = id(light_sf1000).turn_on(); l.set_brightness(v / 100.0f); l.set_transition_length(200); l.perform(); }
+            else id(light_sf1000).turn_off().perform();
+          }
+
+  # ---- v2.4 · MAIN (4x8) PHOTOPERIOD — VIRTUAL SCHEDULE ----
+  # The SF1000 moved to the clone tent (topology Option A); the 4x8
+  # currently has NO light and NO PWM module. This script now ONLY
+  # maintains lights_currently_on (the 4x8 window truth) so Follow-4x8,
+  # the counter-cycle thermal logic, the OLED countdowns and the boot
+  # prompt keep working. NO output writes -> no guards needed; it is
+  # just a clock. When a 4x8 light lands (GPIO5 reserved), re-attach an
+  # output here and lift the ramp maths from run_clone_photoperiod.
+  - id: run_photoperiod
+    mode: single
+    then:
+      - lambda: |-
+          int dur = id(stage_light_hours);
+          if (!id(main_active) || dur <= 0) { id(lights_currently_on) = false; return; }
+          auto now = id(sntp_time).now();
+          if (!now.is_valid()) now = id(grow_time).now();
+          if (!now.is_valid()) return;           // no clock yet -> hold last truth
+          int cur  = now.hour * 60 + now.minute;
+          int on_m = id(lights_on_time).hour * 60 + id(lights_on_time).minute;
+          id(lights_currently_on) = ((cur - on_m + 1440) % 1440) < dur * 60;   // midnight wrap
+
+  # ---- v2.4 · CLONE PHOTOPERIOD — THE SF1000 RAMP ENGINE ----
+  # (was: binary Clone LED Demand flipper — retired with the demand.)
+  # The SF1000 is the clone tent's light, so the full ramp engine lives
+  # here now:
+  #   lights-on  ......... 0% -> target% over "Sunrise Duration" min
+  #   steady     ......... hold target%
+  #   window end ......... target% -> 0% over "Sunset Duration" min,
+  #                        finishing exactly AT clone lights-off.
+  # If sunrise+sunset ever exceed the window, both scale down to fit.
+  # Window source: Follow 4x8 mirrors the VIRTUAL main window (its
+  # clock + duration, so ramps align to the 4x8 schedule); Independent
+  # runs on Clone Lights-On Time + Clone Light Hours (default 18:00 —
+  # the counter-cycle that makes the 2x4 the warm night reservoir).
+  # Manual Light Hold self-heals at the CLONE lights-off boundary.
+  # During the >35C emergency the trip handler owns the light; the
+  # schedule re-asserts within 15s of clear.
+  # NOTE: the ramp-floor remap (1k pull-down dead zone) happens in the
+  # OUTPUT (min_power) — this engine still reasons in honest 0-100%.
+  - id: run_clone_photoperiod
+    mode: single
+    then:
+      - lambda: |-
+          if (id(boot_resume_pending)) return;    // waiting on resume prompt
+          if (id(emergency_failsafe_active)) return;  // trip handler owns the light
+          if (id(ha_takeover_active)) { id(light_ramp_state) = 0; return; }  // you own the light
+          if (!id(clone_active)) {                // 2x4 Off: apply_clone_mode already darked it
+            id(clone_lights_on) = false;
+            id(light_ramp_state) = 0;
+            return;
+          }
+          if (!id(auto_photoperiod_enabled)) { id(light_ramp_state) = 0; return; }
+
+          // From here down the ramp WILL drive the SF1000. Stamp the
+          // write-guard so device writes don't trip the HA-touch
+          // auto-latch (covers this tick + the 14s ramp transition).
+          id(light_write_guard_until) = millis() + 15500;
+
+          // Resolve the window source
+          int dur, on_m;
+          if (id(clone_photo_follow)) {
+            dur  = id(main_active) ? id(stage_light_hours) : 0;   // following an Off 4x8 = dark
+            on_m = id(lights_on_time).hour * 60 + id(lights_on_time).minute;
+          } else {
+            dur  = id(clone_light_hours);
+            on_m = id(clone_lights_on_time).hour * 60 + id(clone_lights_on_time).minute;
+          }
+
+          if (dur <= 0) {                        // dark mode / following an Off or Dry 4x8
+            if (id(manual_light_hold)) {         // explicit user hold wins;
+              id(light_ramp_state) = 0;          // no window = no self-heal,
+              id(light_current_pct) = id(light_sf1000).remote_values.is_on()   // clear via HA switch
+                  ? id(light_sf1000).remote_values.get_brightness() * 100.0f : 0.0f;
+              return;
+            }
+            id(light_sf1000).turn_off().perform();
+            id(clone_lights_on) = false;
+            id(light_ramp_state) = 0;
+            id(light_current_pct) = 0.0f;
+            return;
+          }
+
+          auto now = id(sntp_time).now();
+          if (!now.is_valid()) now = id(grow_time).now();
+          if (!now.is_valid()) return;           // no clock yet -> leave the light
+
+          // Seconds-resolution clock for a smooth ramp
+          float cur  = now.hour * 60.0f + now.minute + now.second / 60.0f;
+          float window   = dur * 60.0f;
+          float since_on = fmodf(cur - on_m + 1440.0f, 1440.0f);   // handles midnight wrap
+          bool was_on = id(clone_lights_on);
+          bool on = since_on < window;
+          id(clone_lights_on) = on;
+
+          // MANUAL LIGHT HOLD: the schedule keeps ticking (so the display
+          // and countdowns stay honest) but the device does NOT touch the
+          // light. SELF-HEALS at the CLONE lights-off boundary: a daytime
+          // tweak resumes the schedule overnight, so the dark window is
+          // always enforced from the next cycle onward — no herm trap.
+          if (id(manual_light_hold)) {
+            if (was_on && !on) {
+              id(manual_light_hold) = false;
+              ESP_LOGI("photoperiod", "Clone lights-off boundary -> manual light hold released, schedule resumes");
+              // fall through: the !on branch below turns the light off now
+            } else {
+              id(light_ramp_state) = 0;
+              id(light_current_pct) = id(light_sf1000).remote_values.is_on()
+                  ? id(light_sf1000).remote_values.get_brightness() * 100.0f : 0.0f;
+              return;
+            }
+          }
+
+          if (!on) {
+            id(light_sf1000).turn_off().perform();
+            id(light_ramp_state) = 0;
+            id(light_current_pct) = 0.0f;
+            return;
+          }
+
+          float target = (float) id(local_target_sf1000);          // the "X%"
+          float rise   = (float) id(sunrise_minutes);              // the "Y min"
+          float fall   = (float) id(sunset_minutes);
+          if (rise + fall > window && (rise + fall) > 0.0f) {      // never overlap
+            float k = window / (rise + fall);
+            rise *= k; fall *= k;
+          }
+
+          float to_off = window - since_on;
+          float pct; int ramp;
+          if (rise > 0.0f && since_on < rise)    { pct = target * (since_on / rise); ramp = 1; }
+          else if (fall > 0.0f && to_off < fall) { pct = target * (to_off / fall);   ramp = 2; }
+          else                                   { pct = target;                     ramp = 0; }
+          id(light_ramp_state)  = ramp;
+          id(light_current_pct) = pct;
+
+          if (pct >= 0.5f) {
+            auto l = id(light_sf1000).turn_on();
+            l.set_brightness(pct / 100.0f);
+            // Glide between 15s updates while ramping so it looks continuous
+            l.set_transition_length(ramp != 0 ? 14000 : 1000);
+            l.perform();
+          } else {
+            id(light_sf1000).turn_off().perform();
+          }
+
+# ==========================================
+# 9. PERIODIC LOOPS
+# ==========================================
+interval:
+  - interval: 10s
+    then:
+      - script.execute: run_climate_logic
+
+  # 15s cadence keeps the sunrise/sunset ramp visually continuous
+  # (each update glides via a 14s light transition).
+  - interval: 15s
+    then:
+      - script.execute: run_photoperiod
+      - script.execute: run_clone_photoperiod
+
+  # ---- Boot-resume countdown: starts once the clock syncs (or after a
+  # 2 min cap if WiFi/SNTP is down, so fans never wait forever) ----
+  - interval: 1s
+    then:
+      - lambda: |-
+          if (!id(boot_resume_pending)) return;
+          auto t = id(sntp_time).now();
+          if (!t.is_valid()) t = id(grow_time).now();
+          if (id(boot_time_synced_at) == 0 && (t.is_valid() || millis() > 120000))
+            id(boot_time_synced_at) = millis();
+          if (id(boot_time_synced_at) != 0 && (millis() - id(boot_time_synced_at)) > 60000) {
+            id(boot_resume_pending) = false;
+            ESP_LOGI("boot", "Resume prompt timed out -> continuing Auto");
+          }
+
+  # ---- 1h trend sampler: 12-slot ring buffer, one sample / 5 min ----
+  - interval: 300s
+    then:
+      - lambda: |-
+          int i = id(hist_idx);
+          id(hist_temp)[i] = id(temp_sensor).state;
+          id(hist_rh)[i]   = id(humidity_sensor).state;
+          id(hist_vpd)[i]  = id(vpd_sensor).state;
+          id(hist_cvpd)[i] = id(clone_vpd).state;    // v2.2: Clone page spark
+          id(hist_idx) = (i + 1) % 12;
+          if (id(hist_idx) == 0) id(hist_filled) = true;
+
+  # ---- Sensor watchdog: no valid temp for 3 min -> safe mode + alert ----
+  - interval: 30s
+    then:
+      - lambda: |-
+          // A stale sensor DURING an emergency must never throttle the
+          // purge — the failsafe outranks the watchdog. Let the latched
+          // emergency hold 100% purge until a valid <34C reading clears it.
+          if (id(emergency_failsafe_active)) return;
+
+          bool stale = (millis() - id(last_valid_temp_time)) > 180000;
+          if (stale && !id(sensor_fault_active)) {
+            id(sensor_fault_active) = true;
+            // Ladder timers reset: the fault period must never count as
+            // "fans failed to fix it" once readings return.
+            id(esc_humid_since) = 0; id(esc_dry_since) = 0;
+            id(esc_cold_since) = 0;  id(esc_deep_cold_since) = 0;
+            id(esc_hot_since) = 0;
+            // v2.2: clone demands are NOT cleared here — they run on the
+            // CLONE sensor (humidifier) and the CLOCK (LED). A dead tent
+            // sensor doesn't blind the 2x4. Independence = resilience.
+            id(humidifier_demand).turn_off();
+            id(dehumidifier_demand).turn_off();
+            id(heater_demand).turn_off();
+            id(growmat_demand).turn_off();
+            id(ac_demand).turn_off();   // climate unknown -> no appliances
+            // v2.4: stamp min-off clocks so recovery can't rapid-fire
+            id(hum_off_at) = millis(); id(heater_off_at) = millis();
+            id(mat_off_at) = millis();
+            // No temp reading -> gentle, safe ventilation. Bias OUTSIDE
+            // (fresh air + mild extraction) since we can't trust climate.
+            auto fe = id(fan_exhaust_out).make_call();  fe.set_state(true); fe.set_speed(40); fe.perform();
+            auto fa = id(fan_exhaust_recirc).make_call();  fa.set_state(true); fa.set_speed(25); fa.perform();
+            auto fim = id(fan_intake_main).make_call(); fim.set_state(true); fim.set_speed(25); fim.perform();
+            auto fic = id(fan_intake_clone).make_call();fic.set_state(true); fic.set_speed(25); fic.perform();
+            ESP_LOGW("watchdog", "No valid temp for 3 min -> SENSOR FAULT safe mode");
+          } else if (!stale && id(sensor_fault_active)) {
+            id(sensor_fault_active) = false;
+            // Recovery: in Auto the 10s curve re-takes the fans; in Manual
+            // the user's held levels must come back (safe mode stomped them).
+            if (id(local_manual_mode).state) {
+              auto fe = id(fan_exhaust_out).make_call();  fe.set_state(id(local_target_out) > 0);          fe.set_speed(id(local_target_out));          fe.perform();
+              auto fa = id(fan_exhaust_recirc).make_call();  fa.set_state(id(local_target_recirc) > 0);    fa.set_speed(id(local_target_recirc));       fa.perform();
+              auto fim = id(fan_intake_main).make_call(); fim.set_state(id(local_target_intake_main) > 0); fim.set_speed(id(local_target_intake_main)); fim.perform();
+              auto fic = id(fan_intake_clone).make_call();fic.set_state(id(local_target_intake_clone) > 0);fic.set_speed(id(local_target_intake_clone));fic.perform();
+              ESP_LOGI("watchdog", "Sensor recovered -> manual fan levels restored");
+            } else {
+              ESP_LOGI("watchdog", "Temperature sensor recovered");
+            }
+          }
+
+          // ===== v2.2 · AUX WATCHDOG (soft fault, 3 min, NO safe mode) =====
+          // Room stale  -> reality gates + heat-reuse revert to v2.1.
+          // Clone stale -> router runs main-only (cap 25%), clone
+          //                humidifier demand cleared (never guess wet).
+          // Clone LED demand is untouched: it's schedule-driven.
+          bool room_stale  = (millis() - id(last_valid_room_time))  > 180000;
+          bool clone_stale = (millis() - id(last_valid_clone_time)) > 180000;
+          if (room_stale && !id(room_fault_active)) {
+            id(room_fault_active) = true;
+            ESP_LOGW("watchdog", "Room sensor stale 3min -> soft fault (gates + heat-reuse disabled)");
+          } else if (!room_stale && id(room_fault_active)) {
+            id(room_fault_active) = false;
+            ESP_LOGI("watchdog", "Room sensor recovered");
+          }
+          if (clone_stale && !id(clone_fault_active)) {
+            id(clone_fault_active) = true;
+            id(esc_clone_dry_since) = 0;
+            id(clone_hum_demand).turn_off();
+            ESP_LOGW("watchdog", "Clone sensor stale 3min -> soft fault (router main-only, clone hum off)");
+          } else if (!clone_stale && id(clone_fault_active)) {
+            id(clone_fault_active) = false;
+            ESP_LOGI("watchdog", "Clone sensor recovered");
+          }
+
+          // ===== v2.4 · ROOT-ZONE WATCHDOG (soft fault, 5 min) =========
+          // The probe path is HA-dependent (pot -> HA -> hub) until
+          // ESP-NOW lands, so a longer 5-min window rides out routine HA
+          // restarts. Stale -> the mat falls back to the clone-AIR rung
+          // (see run_climate_logic); fully blind -> mat OFF. NEVER trips
+          // safe mode.
+          bool rz_stale = (millis() - id(last_valid_rootzone_time)) > 300000;
+          if (rz_stale && !id(rootzone_fault_active)) {
+            id(rootzone_fault_active) = true;
+            ESP_LOGW("watchdog", "Root-zone probe stale 5min -> soft fault (mat on clone-air fallback)");
+          } else if (!rz_stale && id(rootzone_fault_active)) {
+            id(rootzone_fault_active) = false;
+            ESP_LOGI("watchdog", "Root-zone probe recovered -> closed-loop mat resumes");
+          }
+
+# ==========================================
+# 10. OLED DISPLAY RENDERER
+# ==========================================
+display:
+  - platform: ssd1306_i2c
+    model: "SH1106 128x64"
+    address: 0x3C
+    id: oled_screen
+    update_interval: 100ms
+    lambda: |-
+      // --- RAW PIXEL-MAPPED SCREENSAVER (also prevents burn-in) ---
+      static const unsigned char dsc_esp_logo_bits[] = {
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x07, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x0f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x3f, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x7f, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0x00, 0x00, 0x00,
+        0x00, 0x01, 0xff, 0x00, 0x00, 0x00, 0x00, 0x01, 0xff, 0x00, 0x00, 0x00, 0x00, 0x03, 0xff, 0x00,
+        0x00, 0x00, 0x00, 0x03, 0xff, 0x00, 0x00, 0x00, 0x00, 0x07, 0xff, 0x80, 0x00, 0x00, 0x00, 0x07,
+        0xff, 0x60, 0x00, 0x00, 0x00, 0x0f, 0xfc, 0x30, 0x00, 0x00, 0x00, 0x0f, 0xf0, 0x08, 0x00, 0x00,
+        0x00, 0x1f, 0xe3, 0x06, 0x00, 0x00, 0x00, 0x1f, 0xc7, 0x03, 0x00, 0x00, 0x00, 0x3f, 0x9f, 0x01,
+        0x80, 0x00, 0x00, 0x3f, 0x3f, 0x00, 0xc0, 0x00, 0x00, 0x3e, 0x0f, 0x0e, 0x60, 0x00, 0x00, 0x7c,
+        0x07, 0x1e, 0x30, 0x00, 0x00, 0x78, 0xc3, 0x3c, 0x10, 0x00, 0x00, 0xf1, 0xf3, 0x30, 0x08, 0x00,
+        0x00, 0xe1, 0xff, 0x00, 0x04, 0x00, 0x01, 0xe1, 0xff, 0x00, 0x06, 0x00, 0x01, 0xc1, 0xff, 0x00,
+        0x82, 0x00, 0x01, 0xc1, 0xff, 0x00, 0x83, 0x00, 0x03, 0x80, 0xff, 0x01, 0x81, 0x00, 0x01, 0x80,
+        0xff, 0x01, 0x01, 0x00, 0x01, 0x80, 0xff, 0x01, 0x01, 0x00, 0x00, 0xc0, 0xf8, 0xe3, 0x03, 0x00,
+        0x00, 0x60, 0x7f, 0x06, 0x06, 0x00, 0x00, 0x30, 0x3f, 0x0c, 0x0c, 0x00, 0x00, 0x18, 0x1f, 0x18,
+        0x18, 0x00, 0x00, 0x0c, 0x0f, 0x30, 0x30, 0x00, 0x1f, 0x02, 0x03, 0x40, 0x40, 0x78, 0x1f, 0xc1,
+        0x00, 0x00, 0x83, 0xf8, 0x1b, 0xe0, 0x80, 0x03, 0x07, 0xd8, 0x1c, 0xf1, 0xe0, 0x07, 0x8f, 0xb8,
+        0x0e, 0x7a, 0x30, 0x0e, 0x5e, 0x78, 0x0f, 0x39, 0x98, 0x19, 0x9c, 0xf0, 0x0f, 0x98, 0x44, 0x22,
+        0x19, 0xf0, 0x07, 0xcc, 0x22, 0x44, 0x13, 0xe0, 0x03, 0xe8, 0x01, 0x8c, 0x17, 0xc0, 0x01, 0xf0,
+        0x01, 0x08, 0x0f, 0x80, 0x00, 0x04, 0x01, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x40, 0x00
+      };
+
+      // --- MARQUEE ENGINE ------------------------------------------------
+      // Wall-clock scroll (40 px/s): refresh-rate independent, and immune
+      // to the float-precision freeze an accumulator hits on long uptimes.
+      id(marquee_px) = fmodf(millis() * 0.040f, 100000.0f);
+      auto draw_scroll = [&](int x, int y, display::BaseFont *font, const char *text) {
+        int bx, by, bw, bh;
+        it.get_text_bounds(0, 0, text, font, TextAlign::TOP_LEFT, &bx, &by, &bw, &bh);
+        int avail = 128 - x;
+        if (bw <= avail) { it.print(x, y, font, text); return; }
+        int span = bw + 56;                         // generous gap before it loops
+        int off = ((int) id(marquee_px)) % span;
+        it.print(x - off, y, font, text);
+        it.print(x - off + span, y, font, text);    // seamless wrap copy
+      };
+
+      // --- CAROUSEL DOTS (Home + status pages, top-right; 6 in v2.2) ----
+      auto draw_dots = [&](int active) {
+        for (int i = 0; i < 6; i++) {
+          int x = 99 + i * 5;
+          if (i == active) it.filled_circle(x, 3, 2);
+          else             it.circle(x, 3, 1);
+        }
+      };
+
+      // EMERGENCY banner (with elapsed purge time for context)
+      if (id(emergency_failsafe_active)) {
+         it.printf(64, 14, id(font_large), TextAlign::CENTER, "! EMERGENCY");
+         it.printf(64, 34, id(font_medium), TextAlign::CENTER, "TEMP %.1f C", id(temp_sensor).state);
+         uint32_t es = id(emergency_since) ? (millis() - id(emergency_since)) / 1000 : 0;
+         it.printf(64, 50, id(font_small), TextAlign::CENTER, "Purging %um%02us  (clear <34C)", (unsigned)(es / 60), (unsigned)(es % 60));
+         return;
+      }
+
+      // SENSOR FAULT banner (stale-for + last good reading = diagnostics)
+      if (id(sensor_fault_active)) {
+         it.printf(64, 12, id(font_large), TextAlign::CENTER, "SENSOR FAULT");
+         uint32_t ss = (millis() - id(last_valid_temp_time)) / 1000;
+         it.printf(64, 34, id(font_small), TextAlign::CENTER, "No temp for %um%02us", (unsigned)(ss / 60), (unsigned)(ss % 60));
+         if (!isnan(id(last_good_temp)))
+           it.printf(64, 45, id(font_small), TextAlign::CENTER, "Last good: %.1fC", id(last_good_temp));
+         it.printf(64, 56, id(font_small), TextAlign::CENTER, "Safe vent active");
+         return;
+      }
+
+      // BOOT RESUME PROMPT: power returned mid-schedule. Automations are
+      // held until Dial (continue), Back (manual), or the 60s timeout.
+      if (id(boot_resume_pending)) {
+         it.printf(64, 0, id(font_medium), TextAlign::TOP_CENTER, "RESUME AUTO?");
+         char r1[40];
+         snprintf(r1, sizeof(r1), "Auto: %s", id(stage_short).c_str());
+         draw_scroll(4, 16, id(font_small), r1);
+         auto bnow = id(sntp_time).now();
+         if (!bnow.is_valid()) bnow = id(grow_time).now();
+         if (bnow.is_valid() && id(stage_light_hours) > 0) {
+           int cur = bnow.hour * 60 + bnow.minute;
+           int on_m = id(lights_on_time).hour * 60 + id(lights_on_time).minute;
+           int off_m = (on_m + id(stage_light_hours) * 60) % 1440;
+           bool in_win = ((cur - on_m + 1440) % 1440) < id(stage_light_hours) * 60;
+           int mins = in_win ? (off_m - cur + 1440) % 1440 : (on_m - cur + 1440) % 1440;
+           char r2[44];
+           snprintf(r2, sizeof(r2), "Lights %s  %dh%02dm %s", in_win ? "ON" : "OFF", mins / 60, mins % 60, in_win ? "left" : "to on");
+           draw_scroll(4, 27, id(font_small), r2);
+         } else if (!bnow.is_valid()) {
+           it.printf(4, 27, id(font_small), "Syncing clock...");
+         } else {
+           it.printf(4, 27, id(font_small), "Dark stage (Dry)");
+         }
+         it.printf(4, 38, id(font_small), "Dial=Go  Back=Manual");
+         if (id(boot_time_synced_at) != 0) {
+           int rem = 60 - (int)((millis() - id(boot_time_synced_at)) / 1000);
+           if (rem < 0) rem = 0;
+           it.printf(4, 49, id(font_small), "Auto-continue in %ds", rem);
+         } else {
+           it.printf(4, 49, id(font_small), "Waiting for clock...");
+         }
+         return;
+      }
+
+      // --- SCREENSAVER: bouncing logo + live "Running:" status line ------
+      if (millis() - id(last_interaction_time) > 300000) id(display_sleeping) = true;
+      if (id(display_sleeping)) {
+         id(current_page) = 0; id(menu_cursor) = 0;   // wake clean to Home
+         id(saver_x) += id(saver_vx); id(saver_y) += id(saver_vy);
+         // Bounce inside the area above the status line (logo is 48px tall;
+         // status line at y=53 gives a 0..5px vertical lane)
+         if (id(saver_x) <= 0)  { id(saver_x) = 0;  id(saver_vx) =  fabsf(id(saver_vx)); }
+         if (id(saver_x) >= 80) { id(saver_x) = 80; id(saver_vx) = -fabsf(id(saver_vx)); }
+         if (id(saver_y) <= 0)  { id(saver_y) = 0;  id(saver_vy) =  fabsf(id(saver_vy)); }
+         if (id(saver_y) >= 5)  { id(saver_y) = 5;  id(saver_vy) = -fabsf(id(saver_vy)); }
+         for(int y = 0; y < 48; y++) {
+             for(int x = 0; x < 48; x++) {
+                 int byte_idx = y * 6 + (x / 8);
+                 int bit_idx = x % 8;
+                 if (dsc_esp_logo_bits[byte_idx] & (1 << (7 - bit_idx))) {
+                     it.draw_pixel_at(id(saver_x) + x, id(saver_y) + y);
+                 }
+             }
+         }
+         std::string run_line = "Running:  " + id(auto_status_text);
+         draw_scroll(0, 53, id(font_small), run_line.c_str());
+         return;
+      }
+
+      // PAGE 0: HOME  (dial-rotate here to cycle the status carousel)
+      if (id(current_page) == 0) {
+        draw_dots(0);
+        const char* mode = id(full_auto_mode) ? "AUTO" : (id(local_manual_mode).state ? "MAN" : "HA");
+        it.printf(0, 0,  id(font_small), "T:%.1fC  RH:%.0f%%", id(temp_sensor).state, id(humidity_sensor).state);
+        it.printf(0, 12, id(font_small), "VPD %.2f [%.1f-%.1f]", id(vpd_sensor).state, id(stage_vpd_min), id(stage_vpd_max));
+        // v2.4: "4x8" is the VIRTUAL window truth (no physical light);
+        // "SF" is the real SF1000 in the clone tent. Marquee carries it.
+        char l3[56];
+        snprintf(l3, sizeof(l3), "%s  4x8:%s  SF %d%%%s", id(stage_short).c_str(), id(lights_currently_on) ? "ON" : "OFF", (int) id(light_current_pct), id(manual_light_hold) ? " HELD" : "");
+        draw_scroll(0, 24, id(font_small), l3);
+        char l4[48];
+        snprintf(l4, sizeof(l4), "Mode:%s  %s", mode, id(control_strategy).current_option().c_str());
+        draw_scroll(0, 36, id(font_small), l4);
+        // Demand badges: the escalation ladder is visible ON-DEVICE now.
+        // (v2.4: C-LED badge retired with the binary demand.)
+        std::string badges;
+        if (id(dehumidifier_demand).state) badges += "DEHUM ";
+        if (id(humidifier_demand).state)   badges += "HUM ";
+        if (id(heater_demand).state)       badges += "HEAT ";
+        if (id(growmat_demand).state)      badges += "MAT ";
+        if (id(ac_demand).state)           badges += "AC ";
+        if (id(clone_hum_demand).state)    badges += "C-HUM ";
+        if (!badges.empty()) {
+          std::string bl = "! " + badges;
+          draw_scroll(0, 48, id(font_small), bl.c_str());
+        }
+      }
+
+      // PAGE 1: MAIN MENU (5 items @ 10px pitch)
+      else if (id(current_page) == 1) {
+        it.printf(64, 0, id(font_medium), TextAlign::TOP_CENTER, "MAIN MENU");
+        it.printf(12, 13, id(font_small), "Mode");
+        it.printf(12, 23, id(font_small), "Airflow Control");
+        it.printf(12, 33, id(font_small), "Lighting Control");
+        it.printf(12, 43, id(font_small), "Grow Status");
+        it.printf(12, 53, id(font_small), "System Info");
+        it.printf(0, 13 + (id(menu_cursor) * 10), id(font_small), ">>");
+      }
+
+      // PAGE 12: MODE SELECT (dial to choose, push = set; '*' = active)
+      else if (id(current_page) == 12) {
+        it.printf(64, 0, id(font_medium), TextAlign::TOP_CENTER, "MODE");
+        int active = id(local_manual_mode).state ? 2 : (id(full_auto_mode) ? 1 : 0);
+        it.printf(12, 16, id(font_small), "Standby (HA)%s",  active == 0 ? "  *" : "");
+        it.printf(12, 27, id(font_small), "Full Auto%s",     active == 1 ? "  *" : "");
+        it.printf(12, 38, id(font_small), "Manual (fans)%s", active == 2 ? "  *" : "");
+        it.printf(0, 16 + (id(menu_cursor) * 11), id(font_small), ">>");
+        it.printf(64, 53, id(font_small), TextAlign::TOP_CENTER, "Push = set");
+      }
+
+      // PAGE 2: AIRFLOW (4 fans)
+      else if (id(current_page) == 2) {
+        it.printf(64, 0, id(font_medium), TextAlign::TOP_CENTER, "AIRFLOW");
+        it.printf(12, 16, id(font_small), "Exhaust Out [%d%%]", id(local_target_out));
+        it.printf(12, 27, id(font_small), "Exhaust Room [%d%%]", id(local_target_recirc));
+        it.printf(12, 38, id(font_small), "Main Intake [%d%%]", id(local_target_intake_main));
+        it.printf(12, 49, id(font_small), "Clone Intake [%d%%]", id(local_target_intake_clone));
+        it.printf(0, 16 + (id(menu_cursor) * 11), id(font_small), ">>");
+      }
+
+      // PAGE 4: LIGHTING
+      else if (id(current_page) == 4) {
+        it.printf(64, 0, id(font_medium), TextAlign::TOP_CENTER, "LIGHTING");
+        it.printf(12, 16, id(font_small), "SF1000 [%d%%]", id(local_target_sf1000));
+        it.printf(12, 27, id(font_small), "Sunrise [%dm]", id(sunrise_minutes));
+        it.printf(12, 38, id(font_small), "Sunset [%dm]", id(sunset_minutes));
+        it.printf(0, 16 + (id(menu_cursor) * 11), id(font_small), ">>");
+        if (id(manual_light_hold))
+          it.printf(12, 51, id(font_small), "SCHEDULE PAUSED (hold)");
+      }
+
+      // PAGE 3 / 5: ADJUST ITEM (name + big value + live bar)
+      else if (id(current_page) == 3 || id(current_page) == 5) {
+        static const char* fan_names[]   = {"Exhaust Out", "Exhaust Room", "Main Intake", "Clone Intake"};
+        static const char* light_names[] = {"SF1000", "Sunrise", "Sunset"};
+        int current_val = 0, bar_max = 100;
+        const char* unit = "%";
+        const char* iname = "";
+        if (id(current_page) == 3) {
+          it.printf(64, 0, id(font_medium), TextAlign::TOP_CENTER, "ADJUST FAN");
+          iname = fan_names[id(adjusting_item) & 3];
+          if (id(adjusting_item) == 0) current_val = id(local_target_out);
+          else if (id(adjusting_item) == 1) current_val = id(local_target_recirc);
+          else if (id(adjusting_item) == 2) current_val = id(local_target_intake_main);
+          else if (id(adjusting_item) == 3) current_val = id(local_target_intake_clone);
+        } else {
+          it.printf(64, 0, id(font_medium), TextAlign::TOP_CENTER, "ADJUST LIGHT");
+          iname = light_names[id(adjusting_item) % 3];
+          if (id(adjusting_item) == 0) current_val = id(local_target_sf1000);
+          else if (id(adjusting_item) == 1) { current_val = id(sunrise_minutes); unit = "min"; bar_max = 120; }
+          else if (id(adjusting_item) == 2) { current_val = id(sunset_minutes);  unit = "min"; bar_max = 120; }
+        }
+        it.printf(64, 15, id(font_small), TextAlign::TOP_CENTER, "%s", iname);
+        it.printf(64, 33, id(font_large), TextAlign::CENTER, "%d %s", current_val, unit);
+        // Live bar: outline + proportional fill
+        it.rectangle(14, 45, 100, 7);
+        int fillw = (current_val * 98) / bar_max;
+        if (fillw > 0) it.filled_rectangle(15, 46, fillw, 5);
+        if (id(current_page) == 5 && id(adjusting_item) == 0 && id(manual_light_hold))
+          it.printf(64, 55, id(font_small), TextAlign::TOP_CENTER, "Held - resumes at OFF");
+        else
+          it.printf(64, 55, id(font_small), TextAlign::TOP_CENTER, "Live - Push = Done");
+      }
+
+      // PAGE 6: SYSTEM INFO (uptime + firmware for remote triage)
+      else if (id(current_page) == 6) {
+        it.printf(64, 0, id(font_medium), TextAlign::TOP_CENTER, "SYSTEM INFO");
+        it.printf(4, 13, id(font_small), "HA:%s  Flt:%s%s", id(ha_connected).state ? "Conn" : "Off",
+                  id(sensor_fault_active) ? "YES" : "No",
+                  (id(room_fault_active) || id(clone_fault_active)) ? "+aux" : "");
+        int us = (int) id(uptime_s).state;
+        it.printf(4, 23, id(font_small), "Up: %dd %02dh %02dm   CO2e %.0f", us / 86400, (us % 86400) / 3600, (us % 3600) / 60, id(co2_ppm_estimate).state);
+        std::string ip_line = "IP: " + id(network_ip).state;
+        draw_scroll(4, 33, id(font_small), ip_line.c_str());
+        std::string fw_line = "FW: " + id(fw_version).state;
+        draw_scroll(4, 43, id(font_small), fw_line.c_str());
+        it.printf(4, 53, id(font_small), "DSC-HUB  rev 2.4a");
+      }
+
+      // PAGE 7: GROW STATUS (read-only)
+      else if (id(current_page) == 7) {
+        it.printf(64, 0, id(font_medium), TextAlign::TOP_CENTER, "GROW STATUS");
+        it.printf(4, 16, id(font_small), "Stage: %s", id(stage_short).c_str());
+        it.printf(4, 27, id(font_small), "VPD %.2f /%.1f-%.1f", id(vpd_sensor).state, id(stage_vpd_min), id(stage_vpd_max));
+        it.printf(4, 38, id(font_small), "RH %.0f%% /%.0f-%.0f", id(humidity_sensor).state, id(stage_rh_min), id(stage_rh_max));
+        if (id(stage_light_hours) <= 0) {
+          it.printf(4, 49, id(font_small), "Light: DARK (Dry)");
+        } else {
+          int mins_left = -1;
+          auto now = id(sntp_time).now();
+          if (!now.is_valid()) now = id(grow_time).now();
+          if (now.is_valid()) {
+            int cur = now.hour * 60 + now.minute;
+            int on_m = id(lights_on_time).hour * 60 + id(lights_on_time).minute;
+            int off_m = (on_m + id(stage_light_hours) * 60) % 1440;
+            if (id(lights_currently_on)) mins_left = (off_m - cur + 1440) % 1440;
+            else mins_left = (on_m - cur + 1440) % 1440;
+          }
+          if (mins_left >= 0)
+            it.printf(4, 49, id(font_small), "L:%s  %dh%02dm %s", id(lights_currently_on) ? "ON" : "OFF", mins_left / 60, mins_left % 60, id(lights_currently_on) ? "left" : "on");
+          else
+            it.printf(4, 49, id(font_small), "L:%s  (no clock)", id(lights_currently_on) ? "ON" : "OFF");
+        }
+      }
+
+      // ==================== STATUS CAROUSEL (dial from Home) =============
+
+      // PAGE 8: TRENDS (current + 1h delta + sparkline per metric)
+      else if (id(current_page) == 8) {
+        it.printf(64, 0, id(font_medium), TextAlign::TOP_CENTER, "TRENDS 1h");
+        draw_dots(1);
+        // Gather ring buffer chronologically (oldest -> newest)
+        float v_t[12], v_r[12], v_v[12];
+        int cnt   = id(hist_filled) ? 12 : id(hist_idx);
+        int start = id(hist_filled) ? id(hist_idx) : 0;
+        for (int i = 0; i < cnt; i++) {
+          int k = (start + i) % 12;
+          v_t[i] = id(hist_temp)[k]; v_r[i] = id(hist_rh)[k]; v_v[i] = id(hist_vpd)[k];
+        }
+        // Sparkline: 38px wide box, 10px tall, NANs skipped
+        auto spark = [&](int y, float *v, int n) {
+          if (n < 2) return;
+          float mn = 1e9f, mx = -1e9f;
+          for (int i = 0; i < n; i++) if (!isnan(v[i])) { if (v[i] < mn) mn = v[i]; if (v[i] > mx) mx = v[i]; }
+          if (mx < mn) return;                          // all NAN
+          if (mx - mn < 0.01f) { mx += 0.5f; mn -= 0.5f; }
+          int px = -1, py = -1;
+          for (int i = 0; i < n; i++) {
+            if (isnan(v[i])) continue;
+            int x  = 88 + (i * 38) / 11;
+            int yy = y + 9 - (int)((v[i] - mn) / (mx - mn) * 8.0f);
+            if (px >= 0) it.line(px, py, x, yy);
+            px = x; py = yy;
+          }
+        };
+        // First valid (oldest) sample = delta baseline
+        auto base = [&](float *v, int n) -> float {
+          for (int i = 0; i < n; i++) if (!isnan(v[i])) return v[i];
+          return NAN;
+        };
+        float tc = id(temp_sensor).state, rc = id(humidity_sensor).state, vc = id(vpd_sensor).state;
+        float t0 = base(v_t, cnt), r0 = base(v_r, cnt), v0 = base(v_v, cnt);
+        if (!isnan(t0) && !isnan(tc)) it.printf(4, 14, id(font_small), "T %.1f %+.1f", tc, tc - t0);
+        else                          it.printf(4, 14, id(font_small), "T %.1f ...", tc);
+        spark(14, v_t, cnt);
+        if (!isnan(r0) && !isnan(rc)) it.printf(4, 27, id(font_small), "RH %.0f%% %+.0f", rc, rc - r0);
+        else                          it.printf(4, 27, id(font_small), "RH %.0f%% ...", rc);
+        spark(27, v_r, cnt);
+        if (!isnan(v0) && !isnan(vc)) it.printf(4, 40, id(font_small), "VPD %.2f %+.2f", vc, vc - v0);
+        else                          it.printf(4, 40, id(font_small), "VPD %.2f ...", vc);
+        spark(40, v_v, cnt);
+        it.printf(4, 53, id(font_small), "CO2e %.0f ppm", id(co2_ppm_estimate).state);
+      }
+
+      // PAGE 9: LIGHTS — v2.4: the SF1000 is the CLONE light, so this
+      // page shows the CLONE window (Follow 4x8 / Independent),
+      // brightness, ramp phase and countdown.
+      else if (id(current_page) == 9) {
+        it.printf(64, 0, id(font_medium), TextAlign::TOP_CENTER, "LIGHTS 2x4");
+        draw_dots(2);
+        float pct = id(auto_photoperiod_enabled) && !id(manual_light_hold)
+                      ? id(light_current_pct)
+                      : (id(light_sf1000).remote_values.is_on() ? id(light_sf1000).remote_values.get_brightness() * 100.0f : 0.0f);
+        it.printf(4, 16, id(font_small), "SF1000: %s %d%%", pct > 0.5f ? "ON" : "OFF", (int) pct);
+        // Window line: resolve the same source the ramp engine uses
+        int wdur, won_m;
+        if (id(clone_photo_follow)) {
+          wdur  = id(main_active) ? id(stage_light_hours) : 0;
+          won_m = id(lights_on_time).hour * 60 + id(lights_on_time).minute;
+        } else {
+          wdur  = id(clone_light_hours);
+          won_m = id(clone_lights_on_time).hour * 60 + id(clone_lights_on_time).minute;
+        }
+        {
+          int lh = won_m / 60, lm = won_m % 60;
+          int h12 = lh % 12; if (h12 == 0) h12 = 12;
+          char l2[48];
+          snprintf(l2, sizeof(l2), "On @ %d:%02d %s for %dh%s", h12, lm, lh < 12 ? "AM" : "PM", wdur, id(clone_photo_follow) ? " (=4x8)" : "");
+          draw_scroll(4, 27, id(font_small), l2);
+        }
+        const char* ramp = id(manual_light_hold)      ? "HELD (manual)"
+                         : id(light_ramp_state) == 1  ? "Sunrise (raising)"
+                         : id(light_ramp_state) == 2  ? "Sunset (dimming)"
+                         : (id(clone_lights_on) ? "Steady" : "Dark");
+        it.printf(4, 38, id(font_small), "Phase: %s", ramp);
+        if (wdur > 0) {
+          auto now = id(sntp_time).now();
+          if (!now.is_valid()) now = id(grow_time).now();
+          if (now.is_valid()) {
+            int cur = now.hour * 60 + now.minute;
+            int off_m = (won_m + wdur * 60) % 1440;
+            int mins = id(clone_lights_on) ? (off_m - cur + 1440) % 1440 : (won_m - cur + 1440) % 1440;
+            it.printf(4, 49, id(font_small), "%dh%02dm to %s", mins / 60, mins % 60, id(clone_lights_on) ? "OFF" : "ON");
+          }
+        } else {
+          it.printf(4, 49, id(font_small), id(clone_photo_follow) ? "Dark (4x8 off/dry)" : "Dark period (0h)");
+        }
+      }
+
+      // PAGE 10: FANS (purpose + live speed)
+      else if (id(current_page) == 10) {
+        it.printf(64, 0, id(font_medium), TextAlign::TOP_CENTER, "FANS");
+        draw_dots(3);
+        it.printf(4, 16, id(font_small), "Out  %3d%% Outside", id(fan_exhaust_out).state ? id(fan_exhaust_out).speed : 0);
+        it.printf(4, 27, id(font_small), "Room %3d%% Recirc", id(fan_exhaust_recirc).state ? id(fan_exhaust_recirc).speed : 0);
+        it.printf(4, 38, id(font_small), "IntM %3d%%  Fresh", id(fan_intake_main).state ? id(fan_intake_main).speed : 0);
+        it.printf(4, 49, id(font_small), "Int2 %3d%%  Clone", id(fan_intake_clone).state ? id(fan_intake_clone).speed : 0);
+      }
+
+      // PAGE 13: CLONE 2x4 (v2.2 — read-only; config lives in HA)
+      else if (id(current_page) == 13) {
+        it.printf(50, 0, id(font_medium), TextAlign::TOP_CENTER, "CLONE 2x4");
+        draw_dots(4);
+        // Resolve targets the same way the router does (Follow = live main)
+        float d_rmin = id(clone_mode_idx) == 0 ? id(stage_rh_min)  : id(clone_rh_min);
+        float d_rmax = id(clone_mode_idx) == 0 ? id(stage_rh_max)  : id(clone_rh_max);
+        float d_vmin = id(clone_mode_idx) == 0 ? id(stage_vpd_min) : id(clone_vpd_min);
+        float d_vmax = id(clone_mode_idx) == 0 ? id(stage_vpd_max) : id(clone_vpd_max);
+        if (id(clone_fault_active)) {
+          it.printf(4, 16, id(font_small), "SENSOR OFFLINE");
+          it.printf(4, 27, id(font_small), "Router: main-only");
+        } else {
+          char cl1[44];
+          snprintf(cl1, sizeof(cl1), "T %.1fC  RH %.0f%% /%.0f-%.0f",
+                   id(clone_temp).state, id(clone_rh).state, d_rmin, d_rmax);
+          draw_scroll(4, 16, id(font_small), cl1);
+          it.printf(4, 27, id(font_small), "VPD %.2f /%.1f-%.1f", id(clone_vpd).state, d_vmin, d_vmax);
+          // Clone VPD sparkline, same box the Trends page uses
+          {
+            float v_c[12];
+            int cnt   = id(hist_filled) ? 12 : id(hist_idx);
+            int start = id(hist_filled) ? id(hist_idx) : 0;
+            for (int i = 0; i < cnt; i++) v_c[i] = id(hist_cvpd)[(start + i) % 12];
+            if (cnt >= 2) {
+              float mn = 1e9f, mx = -1e9f;
+              for (int i = 0; i < cnt; i++) if (!isnan(v_c[i])) { if (v_c[i] < mn) mn = v_c[i]; if (v_c[i] > mx) mx = v_c[i]; }
+              if (mx >= mn) {
+                if (mx - mn < 0.01f) { mx += 0.5f; mn -= 0.5f; }
+                int px = -1, py = -1;
+                for (int i = 0; i < cnt; i++) {
+                  if (isnan(v_c[i])) continue;
+                  int x  = 88 + (i * 38) / 11;
+                  int yy = 27 + 9 - (int)((v_c[i] - mn) / (mx - mn) * 8.0f);
+                  if (px >= 0) it.line(px, py, x, yy);
+                  px = x; py = yy;
+                }
+              }
+            }
+          }
+        }
+        // Light line — v2.4: the SF1000 IS this tent's light. Full
+        // schedule detail lives on the LIGHTS 2x4 page; keep it short.
+        {
+          float spct = id(light_sf1000).remote_values.is_on()
+                         ? id(light_sf1000).remote_values.get_brightness() * 100.0f : 0.0f;
+          const char* sph = id(manual_light_hold)      ? "HELD"
+                          : id(light_ramp_state) == 1  ? "sunrise"
+                          : id(light_ramp_state) == 2  ? "sunset"
+                          : (id(clone_lights_on) ? "steady" : "dark");
+          it.printf(4, 38, id(font_small), "SF1000 %d%%  %s%s", (int) spct, sph,
+                    id(clone_photo_follow) ? " (=4x8)" : "");
+        }
+        // Bottom line: mode + live intake + humidifier badge
+        char cl4[44];
+        snprintf(cl4, sizeof(cl4), "%s  In2 %d%%%s",
+                 id(clone_mode).current_option().c_str(),
+                 id(fan_intake_clone).state ? id(fan_intake_clone).speed : 0,
+                 id(clone_hum_demand).state ? "  HUM!" : "");
+        draw_scroll(4, 49, id(font_small), cl4);
+      }
+
+      // PAGE 11: WIFI DIAGNOSTICS
+      else if (id(current_page) == 11) {
+        it.printf(64, 0, id(font_medium), TextAlign::TOP_CENTER, "WIFI DIAG");
+        draw_dots(5);
+        std::string ssid_line = "SSID: " + id(network_ssid).state;
+        draw_scroll(4, 16, id(font_small), ssid_line.c_str());
+        float rssi = id(wifi_rssi).state;
+        const char* q = isnan(rssi) ? "?" : (rssi > -60 ? "Good" : (rssi > -70 ? "OK" : "Weak"));
+        it.printf(4, 27, id(font_small), "RSSI: %.0f dBm %s", rssi, q);
+        std::string ip_line = "IP: " + id(network_ip).state;
+        draw_scroll(4, 38, id(font_small), ip_line.c_str());
+        it.printf(4, 49, id(font_small), "HA: %s", id(ha_connected).state ? "Connected" : "Offline");
+      }
+
+      // --- HOLD-ENGAGED FLASH BANNER (drawn last = on top, 2s) -----------
+      if (millis() < id(manual_banner_until)) {
+        it.filled_rectangle(0, 0, 128, 12);
+        if (id(current_page) == 5)
+          it.printf(64, 1, id(font_small), COLOR_OFF, TextAlign::TOP_CENTER, "LIGHT HELD - sched paused");
+        else
+          it.printf(64, 1, id(font_small), COLOR_OFF, TextAlign::TOP_CENTER, "MANUAL - auto fans paused");
+      }

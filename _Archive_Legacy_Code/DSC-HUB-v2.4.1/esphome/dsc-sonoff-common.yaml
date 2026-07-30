@@ -1,0 +1,296 @@
+# ==================================================================
+#  DIGITAL-PLANT  ·  DSC-SONOFF COMMON PACKAGE            (v2.4)
+#  Sonoff BASIC R2 v1.4 (ESP8285) · the appliance/demand-follower layer
+#  ------------------------------------------------------------------
+#  One package, four nodes. Fix once, deploy everywhere.
+#  Stubs set ONLY: name, friendly_name, ap_ssid, api_grace_ms,
+#  (optionally) test_max_runtime_ms. NEVER put logic in a stub.
+#
+#  v2.4 — THE SONOFF BATCH (July 2026)
+#  Every node fix/feature/safety change lands in ONE OTA pass:
+#   1. restore_mode: ALWAYS_OFF        — the HA-restart safety fix
+#   2. API-loss interval failsafe      — node-local, no reboot needed
+#   3. secrets de-inlined + rotated    — keys were chat-burned
+#   4. OTA password                    — there was NONE before
+#   5. common package + 4 stubs        — entity_ids UNCHANGED
+#   6. project: version block          — nodes join the version scheme
+#   7. relay on-time counters          — Dashboard v3 module cards
+#   8. physical button = bounded TEST MODE (10 min)
+#
+#  ⚠ ENTITY IDs ARE A CONTRACT. `switch.dsc_heater_main_relay` and its
+#  siblings are referenced by every demand_follower automation and by
+#  the dashboards. The relay MUST stay name: "Main Relay" and each node
+#  MUST keep its existing `name:`. Renaming either silently breaks the
+#  appliance layer — the demands would fire into a void and the tent
+#  would sit there getting cold while HA reports everything is fine.
+# ==================================================================
+
+substitutions:
+  # Overridable per node; these are the shipped defaults.
+  test_max_runtime_ms: "600000"    # 10 min bounded button test (decided)
+  api_grace_ms: "90000"            # API-loss grace; stubs override
+# NOTE ON SECRETS: `!secret` is resolved by the YAML loader BEFORE
+# substitutions are applied, so `!secret ${prefix}_api_key` can never
+# work. The stubs therefore pass the secret VALUE in as a substitution
+# (api_key_val / ota_password_val / ap_password_val). Per-node keys are
+# preserved — which matters, because the whole reason we're rotating is
+# that the old ones leaked. One shared fleet key would mean one leak
+# burns all four mains relays.
+
+esphome:
+  name: ${name}
+  friendly_name: ${friendly_name}
+  # v2.4 item 6: nodes join the versioning scheme. Shows in HA as the
+  # device's project version — "which nodes are behind?" at a glance.
+  project:
+    name: digital_emotions.dsc-sonoff
+    version: "2.4.0"
+
+esp8266:
+  board: esp8285
+
+logger:
+
+# v2.4 item 3: key was inline (and has been through chat upload twice).
+# Rotate on flash — a leaked API key on a mains-switching device is
+# someone else's heater.
+api:
+  encryption:
+    key: ${api_key_val}
+  # EXPLICIT, not inherited. The default 15-min reboot was half of the
+  # v2.3 runaway bug: node reboots -> RESTORE_DEFAULT_OFF restores the
+  # saved ON state -> heater comes back, forever. With ALWAYS_OFF below
+  # a reboot is now SAFE (relay comes up off), so this stays as a
+  # last-resort WiFi-stack recovery. The interval failsafe fires ~10x
+  # sooner, so this should never be what saves us.
+  reboot_timeout: 15min
+
+# v2.4 item 4: there was NO OTA password. Any device on the LAN could
+# reflash a mains relay. This is the single worst finding of the audit.
+ota:
+  - platform: esphome
+    password: ${ota_password_val}
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  ap:
+    ssid: ${ap_ssid}
+    password: ${ap_password_val}
+
+captive_portal:
+
+# ==================================================================
+#  GLOBALS
+# ==================================================================
+globals:
+  # Bounded TEST MODE (v2.4 item 8). Set ONLY by a button-initiated ON.
+  # Deliberately NOT persisted: a reboot must never come up "in test".
+  - id: test_mode
+    type: bool
+    restore_value: false
+    initial_value: 'false'
+  - id: test_started_at
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+  # API-loss stamp (millis of first disconnected tick; 0 = connected)
+  - id: api_lost_at
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+
+# ==================================================================
+#  RELAY  —  the demand-follower target
+# ==================================================================
+switch:
+  - platform: gpio
+    name: "Main Relay"          # ⚠ entity_id contract — do not rename
+    pin: GPIO12
+    id: relay_1
+    # v2.4 item 1 · THE SAFETY FIX. Default RESTORE_DEFAULT_OFF restores
+    # the SAVED state — i.e. it faithfully turns the heater back on after
+    # every reboot. ALWAYS_OFF means the relay comes up off, always.
+    # Worst-case unsupervised runtime is now bounded by the failsafe
+    # below, not by whenever someone notices.
+    restore_mode: ALWAYS_OFF
+    # Any OFF from any source (button, HA, failsafe, test expiry) ends
+    # test mode. One place, so no path can leave the flag stuck on.
+    on_turn_off:
+      - globals.set:
+          id: test_mode
+          value: 'false'
+      - globals.set:
+          id: test_started_at
+          value: '0'
+    # Fresh ON = fresh grace. Without this a node that reconnects and
+    # gets a demand could inherit a stale api_lost_at and cut out.
+    on_turn_on:
+      - globals.set:
+          id: api_lost_at
+          value: '0'
+
+# ==================================================================
+#  BUTTON  —  bounded test mode (v2.4 item 8)
+# ==================================================================
+# The v2.3 promise was "local control survives everything". True — and
+# that was the problem: a press with HA dead ran the appliance forever.
+# v2.4 keeps the promise but bounds it: "local control survives
+# everything, bounded at 10 min per press."
+#
+#   button ON  -> test_mode set, 10-min timer armed, API failsafe stands
+#                 down (a 60-90s grace would kill a bench test)
+#   button OFF -> test mode cancelled (via the relay's on_turn_off)
+#   HA/demand ON -> NO timer. Normal operation, failsafe applies.
+binary_sensor:
+  - platform: gpio
+    pin:
+      number: GPIO0
+      mode: INPUT_PULLUP
+      inverted: true
+    name: "Physical Button"     # ⚠ entity_id contract — do not rename
+    on_press:
+      - if:
+          condition:
+            switch.is_on: relay_1
+          then:
+            # Already on (by button OR by demand) — a press means stop.
+            - switch.turn_off: relay_1
+          else:
+            - globals.set:
+                id: test_mode
+                value: 'true'
+            - globals.set:
+                id: test_started_at
+                value: !lambda 'return millis();'
+            - switch.turn_on: relay_1
+            - logger.log:
+                level: WARN
+                format: "TEST MODE armed by button -> relay ON, auto-off in %u s"
+                args: ['(unsigned) (${test_max_runtime_ms} / 1000)']
+
+  # Exposed so Event Scribe and the dashboards can SEE a bench test —
+  # otherwise a test looks identical to a runaway in the logs.
+  - platform: template
+    name: "Test Mode"
+    id: test_mode_bs
+    icon: "mdi:test-tube"
+    lambda: 'return id(test_mode);'
+
+  # internal: duty_time counts a BINARY SENSOR, not a switch, so this
+  # mirrors the relay purely to feed the on-time counter below. Not
+  # exposed — switch.<node>_main_relay already tells HA the same thing,
+  # and a duplicate would just muddy the entity list.
+  - platform: template
+    id: relay_state_bs
+    internal: true
+    lambda: 'return id(relay_1).state;'
+
+status_led:
+  pin:
+    number: GPIO13
+
+# ==================================================================
+#  SENSORS  —  diagnostics + relay on-time (v2.4 item 7)
+# ==================================================================
+sensor:
+  # Firmware truth for the Dashboard v3 appliance module cards —
+  # replaces the HA-side history_stats mirrors. duty_time counts
+  # seconds the relay has been ON; it survives HA restarts because the
+  # node owns it, which history_stats never could.
+  - platform: duty_time
+    name: "Relay On Time"
+    id: relay_on_time
+    sensor: relay_state_bs
+    update_interval: 60s
+    entity_category: diagnostic
+    last_time:
+      name: "Relay Last On Time"
+      entity_category: diagnostic
+
+  - platform: uptime
+    name: "Uptime"
+    id: uptime_s
+    update_interval: 60s
+    entity_category: diagnostic
+
+  - platform: wifi_signal
+    name: "WiFi RSSI"
+    id: wifi_rssi
+    update_interval: 60s
+    entity_category: diagnostic
+
+text_sensor:
+  - platform: version
+    name: "Firmware Version"
+    hide_timestamp: true
+
+button:
+  - platform: restart
+    name: "Restart"
+    entity_category: config
+
+# ==================================================================
+#  API-LOSS FAILSAFE (v2.4 item 2)  —  the only protection that
+#  survives HA being dead
+# ==================================================================
+# THE BUG THIS KILLS: a demand turns OFF while HA is rebooting. The
+# edge-triggered follower never sees the edge, so it never sends the
+# OFF. The relay stays on. The HA-side 30 s cutoff can't help — it's
+# HA-side, and HA is the thing that died. 750 W, unsupervised.
+#
+# So the node defends itself: relay ON + API gone past grace -> OFF.
+# It does NOT reboot — a rebooting node is an unobservable node, and
+# we'd rather have a live node reporting a cut appliance than a dark
+# one. Grace is per-node (${api_grace_ms}) because a dehumidifier
+# compressor must not be short-cycled by a routine HA restart.
+#
+# Test mode stands the failsafe down — see item 8 above.
+interval:
+  - interval: 10s
+    then:
+      - if:
+          condition:
+            lambda: 'return id(test_mode) && id(relay_1).state;'
+          then:
+            # ---- TEST MODE: the 10-min timer IS the safety bound ----
+            - if:
+                condition:
+                  lambda: 'return (millis() - id(test_started_at)) > (uint32_t) ${test_max_runtime_ms};'
+                then:
+                  - logger.log:
+                      level: WARN
+                      format: "TEST MODE expired (%u s) -> relay OFF"
+                      args: ['(unsigned) (${test_max_runtime_ms} / 1000)']
+                  - switch.turn_off: relay_1   # on_turn_off clears the flag
+          else:
+            # ---- NORMAL OPERATION: API-loss failsafe ----
+            - if:
+                condition:
+                  or:
+                    - switch.is_off: relay_1
+                    - api.connected:
+                then:
+                  # Relay off, or HA is watching. Either way, no danger.
+                  - globals.set:
+                      id: api_lost_at
+                      value: '0'
+                else:
+                  # Relay ON and nobody is home.
+                  - lambda: |-
+                      if (id(api_lost_at) == 0) {
+                        id(api_lost_at) = millis();
+                        ESP_LOGW("failsafe", "Relay ON but API disconnected -> grace %u s started",
+                                 (unsigned) (${api_grace_ms} / 1000));
+                      }
+                  - if:
+                      condition:
+                        lambda: 'return id(api_lost_at) != 0 && (millis() - id(api_lost_at)) > (uint32_t) ${api_grace_ms};'
+                      then:
+                        - logger.log:
+                            level: ERROR
+                            format: "API lost > grace with relay ON -> FAILSAFE OFF"
+                        - switch.turn_off: relay_1
+                        - globals.set:
+                            id: api_lost_at
+                            value: '0'

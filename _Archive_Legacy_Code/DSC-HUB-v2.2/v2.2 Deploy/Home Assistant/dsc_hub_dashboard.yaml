@@ -1,0 +1,342 @@
+# ==================================================================
+#  DSC-HUB · Dashboard (v2.2, sections layout, core cards only)
+#  Install: Settings -> Dashboards -> Add Dashboard -> "New dashboard
+#  from scratch" -> open it -> ⋮ -> Raw configuration editor -> paste
+#  this whole file. No custom cards required (HA 2024.3+).
+# ==================================================================
+title: DSC-HUB
+views:
+  - title: Grow
+    icon: mdi:sprout
+    type: sections
+    max_columns: 3
+    sections:
+
+      # ---------------- 4x8 MAIN TENT ----------------
+      - type: grid
+        cards:
+          - type: heading
+            heading: "4×8 Main Tent"
+            heading_style: title
+            icon: mdi:tent
+          - type: tile
+            entity: sensor.dsc_hub_tent_temperature
+            name: Temp
+            color: red
+          - type: tile
+            entity: sensor.dsc_hub_tent_humidity
+            name: RH
+            color: blue
+          - type: gauge
+            entity: sensor.dsc_hub_vpd_kpa
+            name: VPD
+            min: 0
+            max: 2
+            needle: true
+            segments:
+              - from: 0
+                color: "#5b9bd5"
+              - from: 0.4
+                color: "#70ad47"
+              - from: 1.6
+                color: "#c00000"
+          - type: tile
+            entity: select.dsc_hub_grow_stage
+            name: Stage
+            icon: mdi:sprout
+          - type: tile
+            entity: select.dsc_hub_control_strategy
+            name: Strategy
+          - type: tile
+            entity: switch.dsc_hub_tent_full_auto_mode
+            name: Full Auto
+            color: green
+          - type: tile
+            entity: switch.dsc_hub_tent_manual_override
+            name: Manual (fans)
+            color: amber
+          - type: history-graph
+            hours_to_show: 12
+            entities:
+              - entity: sensor.dsc_hub_tent_temperature
+                name: Temp
+              - entity: sensor.dsc_hub_tent_humidity
+                name: RH
+              - entity: sensor.dsc_hub_vpd_kpa
+                name: VPD
+
+      # ---------------- CLONE 2x4 ----------------
+      - type: grid
+        cards:
+          - type: heading
+            heading: "Clone 2×4"
+            heading_style: title
+            icon: mdi:sprout-outline
+          - type: tile
+            entity: sensor.dsc_hub_clone_temperature
+            name: Temp
+            color: red
+          - type: tile
+            entity: sensor.dsc_hub_clone_humidity
+            name: RH
+            color: blue
+          - type: gauge
+            entity: sensor.dsc_hub_clone_vpd_kpa
+            name: Clone VPD
+            min: 0
+            max: 1.6
+            needle: true
+            segments:
+              - from: 0
+                color: "#5b9bd5"
+              - from: 0.4
+                color: "#70ad47"
+              - from: 0.8
+                color: "#ffc000"
+              - from: 1.1
+                color: "#c00000"
+          - type: tile
+            entity: select.dsc_hub_clone_mode
+            name: Clone Mode
+          - type: tile
+            entity: select.dsc_hub_clone_photoperiod
+            name: Photoperiod
+          - type: tile
+            entity: time.dsc_hub_clone_lights_on_time
+            name: Lights-On
+            icon: mdi:clock-time-six
+          - type: tile
+            entity: number.dsc_hub_clone_light_hours
+            name: Light Hours
+            features:
+              - type: numeric-input
+                style: buttons
+          - type: tile
+            entity: switch.dsc_hub_clone_light_auto
+            name: Light Auto
+            color: green
+          - type: tile
+            entity: switch.dsc_hub_clone_led_demand
+            name: LED Demand
+            color: yellow
+          - type: tile
+            entity: switch.dsc_hub_clone_humidifier_auto
+            name: Hum Auto
+            color: green
+          - type: tile
+            entity: switch.dsc_hub_clone_humidifier_demand
+            name: Hum Demand
+            color: cyan
+          - type: history-graph
+            hours_to_show: 12
+            entities:
+              - entity: sensor.dsc_hub_clone_temperature
+                name: Temp
+              - entity: sensor.dsc_hub_clone_humidity
+                name: RH
+
+      # ---------------- LIGHTING (4x8) ----------------
+      - type: grid
+        cards:
+          - type: heading
+            heading: "4×8 Lighting"
+            heading_style: title
+            icon: mdi:white-balance-sunny
+          - type: light
+            entity: light.dsc_hub_sf1000_dimmer
+            name: SF1000
+          - type: tile
+            entity: switch.dsc_hub_auto_photoperiod
+            name: Auto Photoperiod
+            color: green
+          - type: tile
+            entity: switch.dsc_hub_manual_light_hold
+            name: Manual Hold
+            color: amber
+          - type: tile
+            entity: time.dsc_hub_lights_on_time
+            name: Lights-On
+            icon: mdi:clock-time-six-outline
+          - type: tile
+            entity: number.dsc_hub_sf1000_target_brightness
+            name: Target %
+            features:
+              - type: numeric-input
+                style: slider
+          - type: tile
+            entity: number.dsc_hub_sunrise_duration
+            name: Sunrise
+          - type: tile
+            entity: number.dsc_hub_sunset_duration
+            name: Sunset
+
+      # ---------------- AIRFLOW ROUTER ----------------
+      - type: grid
+        cards:
+          - type: heading
+            heading: "Airflow Router · room → 2×4 → 4×8"
+            heading_style: title
+            icon: mdi:fan
+          - type: tile
+            entity: sensor.dsc_hub_room_temperature
+            name: Room Temp
+            color: red
+          - type: tile
+            entity: sensor.dsc_hub_room_humidity
+            name: Room RH
+            color: blue
+          - type: tile
+            entity: fan.dsc_hub_6_inch_exhaust_outside
+            name: Exhaust → Outside
+            features:
+              - type: fan-speed
+          - type: tile
+            entity: fan.dsc_hub_6_inch_exhaust_room
+            name: Exhaust → Room
+            features:
+              - type: fan-speed
+          - type: tile
+            entity: fan.dsc_hub_4_inch_intake_fan_main
+            name: Intake · Main
+            features:
+              - type: fan-speed
+          - type: tile
+            entity: fan.dsc_hub_4_inch_intake_fan_2x4
+            name: Intake · Clone path
+            features:
+              - type: fan-speed
+
+      # ---------------- ESCALATION LADDER ----------------
+      - type: grid
+        cards:
+          - type: heading
+            heading: "Escalation Ladder"
+            heading_style: title
+            icon: mdi:stairs
+          - type: tile
+            entity: switch.dsc_hub_humidifier_auto
+            name: Humidifier Auto
+            color: green
+          - type: tile
+            entity: switch.dsc_hub_humidifier_demand
+            name: Hum Demand
+            color: cyan
+          - type: tile
+            entity: switch.dsc_hub_dehumidifier_auto
+            name: Dehum Auto
+            color: green
+          - type: tile
+            entity: switch.dsc_hub_dehumidifier_demand
+            name: Dehum Demand
+            color: cyan
+          - type: tile
+            entity: switch.dsc_hub_grow_mat_auto
+            name: Mat Auto
+            color: green
+          - type: tile
+            entity: switch.dsc_hub_grow_mat_demand
+            name: Mat Demand
+            color: orange
+          - type: tile
+            entity: switch.dsc_hub_heater_auto
+            name: Heater Auto
+            color: green
+          - type: tile
+            entity: switch.dsc_hub_heater_demand
+            name: Heater Demand
+            color: orange
+          - type: tile
+            entity: switch.dsc_hub_ac_auto
+            name: AC Auto
+            color: green
+          - type: tile
+            entity: switch.dsc_hub_ac_demand
+            name: AC Demand
+            color: light-blue
+
+      # ---------------- 4x8 TARGETS ----------------
+      - type: grid
+        cards:
+          - type: heading
+            heading: "4×8 Targets"
+            heading_style: title
+            icon: mdi:tune-variant
+          - type: tile
+            entity: number.dsc_hub_target_temp
+            name: Temp Target
+            features:
+              - type: numeric-input
+                style: buttons
+          - type: tile
+            entity: number.dsc_hub_vpd_target_min
+            name: VPD Min
+          - type: tile
+            entity: number.dsc_hub_vpd_target_max
+            name: VPD Max
+          - type: tile
+            entity: number.dsc_hub_rh_target_min
+            name: RH Min
+          - type: tile
+            entity: number.dsc_hub_rh_target_max
+            name: RH Max
+
+      # ---------------- CLONE TARGETS ----------------
+      - type: grid
+        cards:
+          - type: heading
+            heading: "Clone Targets (used unless Follow 4×8)"
+            heading_style: title
+            icon: mdi:tune
+          - type: tile
+            entity: number.dsc_hub_clone_target_temp
+            name: Temp Target
+            features:
+              - type: numeric-input
+                style: buttons
+          - type: tile
+            entity: number.dsc_hub_clone_vpd_min
+            name: VPD Min
+          - type: tile
+            entity: number.dsc_hub_clone_vpd_max
+            name: VPD Max
+          - type: tile
+            entity: number.dsc_hub_clone_rh_min
+            name: RH Min
+          - type: tile
+            entity: number.dsc_hub_clone_rh_max
+            name: RH Max
+
+      # ---------------- SYSTEM ----------------
+      - type: grid
+        cards:
+          - type: heading
+            heading: "System"
+            heading_style: title
+            icon: mdi:chip
+          - type: tile
+            entity: binary_sensor.dsc_hub_ha_link_status
+            name: Hub Link
+          - type: tile
+            entity: binary_sensor.dsc_hub_climate_sensor_fault
+            name: Sensor Fault
+            color: red
+          - type: tile
+            entity: binary_sensor.dsc_hub_aux_sensor_fault
+            name: Aux Fault
+            color: amber
+          - type: tile
+            entity: sensor.dsc_hub_dynamic_co2_ppm
+            name: CO2e
+          - type: tile
+            entity: sensor.dsc_hub_wifi_rssi
+            name: RSSI
+          - type: tile
+            entity: sensor.dsc_hub_uptime
+            name: Uptime
+          - type: tile
+            entity: sensor.dsc_hub_firmware_version
+            name: Firmware
+          - type: tile
+            entity: button.dsc_hub_restart
+            name: Restart Hub
+            color: red

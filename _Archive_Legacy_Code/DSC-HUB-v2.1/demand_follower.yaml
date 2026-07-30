@@ -1,0 +1,110 @@
+# ==================================================================
+#  DSC-HUB · Demand Follower  (Home Assistant blueprint)
+#  ------------------------------------------------------------------
+#  Mirrors one DSC-HUB demand soft-switch onto the real appliance
+#  plug(s). One blueprint drives all five ladder appliances — the
+#  behaviour is defined once, the five automations are just bindings.
+#
+#  Behaviour:
+#    demand ON            -> appliance ON
+#    demand OFF           -> appliance OFF
+#    hub UNAVAILABLE >30s -> appliance OFF   (fail-safe: a dead ESP
+#                            must never leave a 750W heater latched on;
+#                            30s grace rides out OTA/reboot blips)
+#    HA restart           -> re-sync appliance to current demand state
+#
+#  Note: DSC-HUB demand switches restore OFF after an ESP reboot by
+#  design, so a hub power-cycle also lands appliances in OFF — the
+#  escalation ladder re-demands within its normal persistence windows
+#  if the condition is still real.
+#
+#  Install: config/blueprints/automation/dsc-hub/demand_follower.yaml
+# ==================================================================
+blueprint:
+  name: "DSC-HUB · Demand Follower"
+  description: >
+    Follows a DSC-HUB escalation-ladder demand switch with a real
+    appliance plug. Fails safe (appliance OFF) if the hub goes
+    unavailable for more than 30 seconds, and re-syncs on Home
+    Assistant restart.
+  domain: automation
+  input:
+    demand_entity:
+      name: Demand switch (from DSC-HUB)
+      description: The read-only demand signal, e.g. switch.dsc_hub_heater_demand
+      selector:
+        entity:
+          filter:
+            domain: switch
+    appliance_entity:
+      name: Appliance plug(s)
+      description: The smart plug(s) that actually power the appliance
+      selector:
+        entity:
+          filter:
+            domain: switch
+          multiple: true
+
+mode: restart
+max_exceeded: silent
+
+triggers:
+  - trigger: state
+    entity_id: !input demand_entity
+    to: "on"
+    id: demand_on
+  - trigger: state
+    entity_id: !input demand_entity
+    to: "off"
+    id: demand_off
+  - trigger: state
+    entity_id: !input demand_entity
+    to:
+      - "unavailable"
+      - "unknown"
+    for: "00:00:30"
+    id: hub_lost
+  - trigger: homeassistant
+    event: start
+    id: ha_start
+
+actions:
+  - choose:
+      # Demand asserted -> power the appliance
+      - conditions:
+          - condition: trigger
+            id: demand_on
+        sequence:
+          - action: switch.turn_on
+            target:
+              entity_id: !input appliance_entity
+
+      # Demand cleared, or the hub has vanished -> fail safe, power off
+      - conditions:
+          - condition: trigger
+            id:
+              - demand_off
+              - hub_lost
+        sequence:
+          - action: switch.turn_off
+            target:
+              entity_id: !input appliance_entity
+
+      # HA restart -> mirror whatever the hub currently says
+      - conditions:
+          - condition: trigger
+            id: ha_start
+        sequence:
+          - choose:
+              - conditions:
+                  - condition: state
+                    entity_id: !input demand_entity
+                    state: "on"
+                sequence:
+                  - action: switch.turn_on
+                    target:
+                      entity_id: !input appliance_entity
+            default:
+              - action: switch.turn_off
+                target:
+                  entity_id: !input appliance_entity

@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
+<style>
+  body { margin: 0; background: #07090d; }
+  a { color: #2196F3; } a:hover { color: #64B5F6; }
+</style>
+</helmet>
+<div style="min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; padding: 24px; font-family: Helvetica, Arial, sans-serif; background: #07090d;">
+
+  <div style="display: flex; gap: 8px; align-items: center;">
+    <span style="font-size: 12px; color: rgba(255,255,255,0.45); letter-spacing: 1px; text-transform: uppercase; margin-right: 4px;">Demo state</span>
+    <sc-for list="{{ demoModes }}" as="m" hint-placeholder-count="3">
+      <button onClick="{{ m.onTap }}" style="cursor: pointer; font-family: inherit; font-size: 12px; padding: 8px 14px; border-radius: 999px; border: 1px solid {{ m.border }}; background: {{ m.bg }}; color: {{ m.color }};">{{ m.label }}</button>
+    </sc-for>
+  </div>
+
+  <!-- 320x240 logical canvas rendered at 2x -->
+  <div style="width: 640px; height: 480px; border: 1px solid #2a313b; border-radius: 8px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.6); flex-shrink: 0;">
+    <div style="width: 320px; height: 240px; transform: scale(2); transform-origin: top left; background: #0E1116; color: #FFFFFF; display: flex; flex-direction: column; -webkit-font-smoothing: antialiased;">
+
+      <!-- PAGE AREA 320x192 -->
+      <div style="height: 192px; position: relative; overflow: hidden;">
+
+        <!-- 1 · PULSE -->
+        <sc-if value="{{ isPulse }}" hint-placeholder-val="{{ true }}">
+          <div style="position: absolute; inset: 0; padding: 6px; display: flex; flex-direction: column; gap: 5px;">
+            <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+              <div style="display: flex; align-items: center; gap: 3px; background: #1A1F26; border-radius: 999px; padding: 3px 6px; font-size: 12px; white-space: nowrap;">
+                <span class="mdi mdi-wifi" style="color: #4CAF50; font-size: 12px;"></span>
+                <span style="color: rgba(255,255,255,0.6);">hub</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 3px; background: #1A1F26; border-radius: 999px; padding: 3px 6px; font-size: 12px; white-space: nowrap; border: 1px solid {{ alertChipBorder }};">
+                <span class="mdi mdi-bell" style="color: {{ alertChipColor }}; font-size: 12px;"></span>
+                <span style="color: {{ alertChipColor }};">{{ alertChipText }}</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 3px; background: #1A1F26; border-radius: 999px; padding: 3px 6px; font-size: 12px; white-space: nowrap;">
+                <span class="mdi mdi-flask-outline" style="color: rgba(255,255,255,0.6); font-size: 12px;"></span>
+                <span style="color: #FFFFFF;">1480 µS/cm</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 3px; background: #1A1F26; border-radius: 999px; padding: 3px 6px; font-size: 12px; white-space: nowrap;">
+                <span class="mdi mdi-test-tube" style="color: rgba(255,255,255,0.6); font-size: 12px;"></span>
+                <span style="color: #FFFFFF;">pH 6.1</span>
+              </div>
+            </div>
+            <div style="background: #1A1F26; border-radius: 12px; padding: 6px 8px;">
+              <div style="font-size: 12px; color: rgba(255,255,255,0.6); letter-spacing: 1px; margin-bottom: 4px;">ESCALATION</div>
+              <div style="display: flex; gap: 5px;">
+                <div style="flex: 1; border: 1px solid #00BCD4; border-radius: 8px; padding: 4px 8px; box-shadow: {{ rung1Glow }};">
+                  <div style="font-size: 12px; color: rgba(255,255,255,0.6);">Rung 1 · Fans</div>
+                  <div style="font-size: 16px; color: #00BCD4;">active</div>
+                </div>
+                <div style="flex: 1; border: 1px solid {{ rung2Border }}; border-radius: 8px; padding: 4px 8px; box-shadow: {{ rung2Glow }};">
+                  <div style="font-size: 12px; color: rgba(255,255,255,0.6);">Rung 2 · Appliances</div>
+                  <div style="font-size: 16px; color: {{ rung2Color }};">{{ rung2Text }}</div>
+                </div>
+              </div>
+            </div>
+            <sc-if value="{{ alertActive }}" hint-placeholder-val="{{ false }}">
+              <div style="background: #1A1F26; border: 1px solid #F44336; border-radius: 12px; padding: 6px 8px; box-shadow: {{ alertGlow }}; flex: 1; min-height: 0; display: flex; flex-direction: column;">
+                <div style="font-size: 12px; color: #F44336; letter-spacing: 1px; margin-bottom: 3px;">NEEDS ATTENTION</div>
+                <div style="overflow-y: auto; flex: 1; min-height: 0; scrollbar-width: none;">
+                  <div style="display: flex; align-items: center; gap: 6px; padding: 2px 0;">
+                    <span class="mdi mdi-water-alert" style="color: #F44336; font-size: 16px;"></span>
+                    <span style="font-size: 16px; color: #FFFFFF;">Clone RH high · 71%</span>
+                    <span style="font-size: 12px; color: rgba(255,255,255,0.6);">2×4 clone</span>
+                  </div>
+                </div>
+              </div>
+            </sc-if>
+            <sc-if value="{{ allClear }}" hint-placeholder-val="{{ true }}">
+              <div style="display: flex; align-items: center; gap: 6px; padding: 4px 8px;">
+                <span class="mdi mdi-check-circle" style="color: #4CAF50; font-size: 16px;"></span>
+                <span style="font-size: 12px; color: rgba(255,255,255,0.6);">all clear · nothing needs attention</span>
+              </div>
+            </sc-if>
+          </div>
+        </sc-if>
+
+        <!-- 2 · CLONE -->
+        <sc-if value="{{ isClone }}" hint-placeholder-val="{{ false }}">
+          <div style="position: absolute; inset: 0; padding: 6px; display: flex; flex-direction: column; gap: 4px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; height: 18px;">
+              <span style="font-size: 12px; color: rgba(255,255,255,0.6); letter-spacing: 1px;">2×4 CLONE</span>
+              <div style="display: flex; align-items: center; gap: 4px; background: #1A1F26; border-radius: 999px; padding: 2px 8px; font-size: 12px;">
+                <span class="mdi mdi-sync" style="color: rgba(255,255,255,0.6); font-size: 12px;"></span>
+                <span style="color: #FFFFFF;">cyc/h 2</span>
+              </div>
+            </div>
+            <div style="background: #1A1F26; border: 1px solid #2a313b; border-radius: 12px; padding: 6px 8px; display: flex; align-items: center; gap: 8px; height: 46px; box-sizing: border-box;">
+              <span class="mdi mdi-white-balance-sunny" style="color: #FFAA00; font-size: 24px;"></span>
+              <div style="flex: 1;">
+                <div style="font-size: 16px; color: #FFFFFF;">SF1000 light</div>
+                <div style="height: 4px; background: #0E1116; border-radius: 2px; margin-top: 4px;">
+                  <div style="width: 78%; height: 4px; background: #FFAA00; border-radius: 2px;"></div>
+                </div>
+              </div>
+              <span style="font-size: 24px; color: #FFAA00;">78%</span>
+            </div>
+            <div style="display: flex; gap: 4px;">
+              <div style="flex: 1; background: #1A1F26; border-radius: 8px; padding: 5px 8px;">
+                <div style="font-size: 12px; color: rgba(255,255,255,0.6);">Temp</div>
+                <div style="font-size: 16px; color: #FFFFFF;">24.6°</div>
+              </div>
+              <div style="flex: 1; background: #1A1F26; border-radius: 8px; padding: 5px 8px; border: 1px solid {{ cloneRhBorder }};">
+                <div style="font-size: 12px; color: rgba(255,255,255,0.6);">RH</div>
+                <div style="font-size: 16px; color: {{ cloneRhColor }};">{{ cloneRhVal }}</div>
+              </div>
+              <div style="flex: 1; background: #1A1F26; border-radius: 8px; padding: 5px 8px;">
+                <div style="font-size: 12px; color: rgba(255,255,255,0.6);">VPD</div>
+                <div style="font-size: 16px; color: #FFFFFF;">{{ cloneVpd }}</div>
+              </div>
+            </div>
+            <div style="background: #1A1F26; border: 1px solid {{ humBorder }}; border-radius: 12px; padding: 6px 8px; display: flex; align-items: center; gap: 8px; height: 46px; box-sizing: border-box; box-shadow: {{ humGlow }};">
+              <span class="mdi mdi-air-humidifier" style="color: {{ humColor }}; font-size: 24px;"></span>
+              <div style="flex: 1;">
+                <div style="font-size: 16px; color: #FFFFFF;">Humidifier</div>
+                <div style="font-size: 12px; color: {{ humColor }};">{{ humStatus }}</div>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- 3 · MAIN -->
+        <sc-if value="{{ isMain }}" hint-placeholder-val="{{ false }}">
+          <div style="position: absolute; inset: 0; padding: 6px; display: flex; flex-direction: column; gap: 4px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; height: 16px;">
+              <span style="font-size: 12px; color: rgba(255,255,255,0.6); letter-spacing: 1px;">4×8 MAIN</span>
+              <span style="font-size: 12px; color: #616161;">no lamp fitted</span>
+            </div>
+            <div style="background: #1A1F26; border: 1px solid #2196F3; border-radius: 12px; padding: 6px 8px; display: flex; align-items: center; gap: 8px; height: 50px; box-sizing: border-box; box-shadow: {{ windowGlow }};">
+              <span class="mdi mdi-window-open-variant" style="color: #2196F3; font-size: 24px;"></span>
+              <div style="flex: 1;">
+                <div style="font-size: 16px; color: #FFFFFF;">Virtual window</div>
+                <div style="font-size: 12px; color: rgba(255,255,255,0.6);">12h on / 12h dark · Shut in 3h 12m</div>
+              </div>
+              <span style="font-size: 16px; color: #2196F3;">OPEN</span>
+            </div>
+            <div style="display: flex; gap: 4px;">
+              <div style="flex: 1; background: #1A1F26; border-radius: 8px; padding: 5px 8px;">
+                <div style="font-size: 12px; color: rgba(255,255,255,0.6);">Temp</div>
+                <div style="font-size: 16px; color: #FFFFFF;">26.1°</div>
+              </div>
+              <div style="flex: 1; background: #1A1F26; border-radius: 8px; padding: 5px 8px;">
+                <div style="font-size: 12px; color: rgba(255,255,255,0.6);">RH</div>
+                <div style="font-size: 16px; color: #FFFFFF;">58%</div>
+              </div>
+              <div style="flex: 1; background: #1A1F26; border-radius: 8px; padding: 5px 8px;">
+                <div style="font-size: 12px; color: rgba(255,255,255,0.6);">VPD</div>
+                <div style="font-size: 16px; color: #FFFFFF;">1.31 kPa</div>
+              </div>
+            </div>
+            <div style="background: #1A1F26; border: 1px solid #00BCD4; border-radius: 12px; padding: 6px 8px; display: flex; align-items: center; gap: 8px; height: 46px; box-sizing: border-box; box-shadow: {{ fanGlow }};">
+              <span class="mdi mdi-fan" style="color: #00BCD4; font-size: 24px;"></span>
+              <div style="flex: 1;">
+                <div style="font-size: 16px; color: #FFFFFF;">Exhaust fan</div>
+                <div style="height: 4px; background: #0E1116; border-radius: 2px; margin-top: 4px;">
+                  <div style="width: 64%; height: 4px; background: #00BCD4; border-radius: 2px;"></div>
+                </div>
+              </div>
+              <span style="font-size: 24px; color: #00BCD4;">64%</span>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- 4 · OVERRIDE -->
+        <sc-if value="{{ isOverride }}" hint-placeholder-val="{{ false }}">
+          <div style="position: absolute; inset: 0; padding: 3px; display: flex; flex-direction: column; gap: 3px;">
+            <div onClick="{{ onTakeover }}" style="height: 44px; box-sizing: border-box; flex-shrink: 0; cursor: pointer; background: {{ takeoverBg }}; border: 1px solid {{ takeoverBorder }}; border-radius: 12px; box-shadow: {{ takeoverGlow }}; display: flex; align-items: center; gap: 8px; padding: 0 10px;">
+              <span class="mdi mdi-hand-back-right" style="color: {{ takeoverColor }}; font-size: 24px;"></span>
+              <div style="flex: 1;">
+                <div style="font-size: 16px; color: {{ takeoverColor }};">{{ takeoverTitle }}</div>
+                <div style="font-size: 12px; color: rgba(255,255,255,0.6);">{{ takeoverSub }}</div>
+              </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 3px;">
+              <sc-for list="{{ steppers }}" as="st" hint-placeholder-count="5">
+                <div style="height: 44px; box-sizing: border-box; background: #1A1F26; border-radius: 8px; display: flex; align-items: center; gap: 2px; padding: 0 2px;">
+                  <div onClick="{{ st.onMinus }}" style="width: 44px; height: 44px; flex-shrink: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 8px;" style-active="background: #2a313b;">
+                    <span class="mdi mdi-minus" style="color: #FFFFFF; font-size: 16px;"></span>
+                  </div>
+                  <div style="flex: 1; text-align: center; min-width: 0;">
+                    <div style="font-size: 12px; color: rgba(255,255,255,0.6); white-space: nowrap;">{{ st.label }}</div>
+                    <div style="font-size: 16px; color: #FFFFFF;">{{ st.value }}</div>
+                  </div>
+                  <div onClick="{{ st.onPlus }}" style="width: 44px; height: 44px; flex-shrink: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 8px;" style-active="background: #2a313b;">
+                    <span class="mdi mdi-plus" style="color: #FFFFFF; font-size: 16px;"></span>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+
+      <!-- TAB BAR 320x48 -->
+      <div style="height: 48px; border-top: 1px solid #2a313b; background: #12161c; display: grid; grid-template-columns: 1fr 1fr 1fr 1fr;">
+        <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="4">
+          <div onClick="{{ t.onTap }}" style="cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0px; background: {{ t.bg }};">
+            <span class="mdi mdi-{{ t.icon }}" style="color: {{ t.color }}; font-size: 16px; line-height: 18px;"></span>
+            <span style="font-size: 12px; color: {{ t.color }};">{{ t.label }}</span>
+          </div>
+        </sc-for>
+      </div>
+
+    </div>
+  </div>
+  <div style="font-size: 12px; color: rgba(255,255,255,0.35);">320 × 240 logical · rendered 2× · tap only, targets ≥ 44px</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:760,&quot;height&quot;:640},&quot;glowOpacity&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:0.4,&quot;min&quot;:0,&quot;max&quot;:1,&quot;step&quot;:0.05,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Look&quot;}}">
+class Component extends DCLogic {
+  state = { tab: 0, demo: 'firing', secs: 43, takeover: 'off', temp: 25.0, rhMin: 55, rhMax: 65, vpdMin: 0.9, vpdMax: 1.3 };
+  componentDidMount() {
+    this.timer = setInterval(() => {
+      if (this.state.demo === 'firing') this.setState(s => ({ secs: s.secs <= 1 ? 43 : s.secs - 1 }));
+    }, 1000);
+  }
+  componentWillUnmount() { clearInterval(this.timer); clearTimeout(this.ct); }
+  glow(hex) {
+    const op = this.props.glowOpacity ?? 0.4;
+    const a = Math.round(op * 255).toString(16).padStart(2, '0');
+    return `0 0 10px 1px ${hex}${a}`;
+  }
+  adjust(key, delta, min, max, dp) {
+    this.setState(s => {
+      let v = Math.min(max, Math.max(min, +(s[key] + delta).toFixed(dp)));
+      return { [key]: v };
+    });
+  }
+  renderVals() {
+    const S = this.state;
+    const AMBER = '#FFAA00', ORANGE = '#FF9800', BLUE = '#2196F3', CYAN = '#00BCD4', GREEN = '#4CAF50', RED = '#F44336', GREY = '#616161';
+    const firing = S.demo === 'firing', alert = S.demo === 'alert';
+    const modes = [['quiet', 'All quiet'], ['firing', 'Demand firing'], ['alert', 'Alert active']];
+    const demoModes = modes.map(([id, label]) => ({
+      label, onTap: () => this.setState({ demo: id, secs: 43 }),
+      bg: S.demo === id ? '#1A1F26' : 'transparent',
+      border: S.demo === id ? '#4a5563' : '#2a313b',
+      color: S.demo === id ? '#FFFFFF' : 'rgba(255,255,255,0.5)'
+    }));
+    const tabDefs = [['heart-pulse', 'Pulse'], ['sprout', 'Clone'], ['leaf', 'Main'], ['tune', 'Override']];
+    const tabs = tabDefs.map(([icon, label], i) => ({
+      icon, label, onTap: () => this.setState({ tab: i }),
+      bg: S.tab === i ? '#1A1F26' : 'transparent',
+      color: S.tab === i ? '#FFFFFF' : GREY
+    }));
+    // takeover two-step confirm
+    const tk = S.takeover;
+    const onTakeover = () => {
+      clearTimeout(this.ct);
+      if (tk === 'off') {
+        this.setState({ takeover: 'confirm' });
+        this.ct = setTimeout(() => { if (this.state.takeover === 'confirm') this.setState({ takeover: 'off' }); }, 5000);
+      } else if (tk === 'confirm') this.setState({ takeover: 'on' });
+      else this.setState({ takeover: 'off' });
+    };
+    const stepDefs = [
+      ['temp', 'Target Temp', 0.5, 15, 35, 1, v => v.toFixed(1) + '°'],
+      ['rhMin', 'RH Min', 1, 30, 80, 0, v => v + '%'],
+      ['rhMax', 'RH Max', 1, 35, 90, 0, v => v + '%'],
+      ['vpdMin', 'VPD Min', 0.1, 0.4, 2.0, 1, v => v.toFixed(1)],
+      ['vpdMax', 'VPD Max', 0.1, 0.5, 2.5, 1, v => v.toFixed(1)]
+    ];
+    const steppers = stepDefs.map(([key, label, step, min, max, dp, fmt]) => ({
+      label, value: fmt(S[key]),
+      onMinus: () => this.adjust(key, -step, min, max, dp),
+      onPlus: () => this.adjust(key, step, min, max, dp)
+    }));
+    return {
+      demoModes, tabs, steppers, onTakeover,
+      isPulse: S.tab === 0, isClone: S.tab === 1, isMain: S.tab === 2, isOverride: S.tab === 3,
+      alertActive: alert, allClear: !alert,
+      alertChipColor: alert ? RED : GREEN,
+      alertChipBorder: alert ? RED : 'transparent',
+      alertChipText: alert ? '1 alert' : '0 alerts',
+      alertGlow: this.glow(RED),
+      rung1Glow: this.glow(CYAN),
+      rung2Border: firing ? AMBER : '#2a313b',
+      rung2Color: firing ? AMBER : GREY,
+      rung2Text: firing ? 'firing' : 'standing by',
+      rung2Glow: firing ? this.glow(AMBER) : 'none',
+      cloneRhVal: alert ? '71%' : '62%',
+      cloneRhColor: alert ? RED : '#FFFFFF',
+      cloneRhBorder: alert ? RED : 'transparent',
+      cloneVpd: alert ? '0.78 kPa' : '1.02 kPa',
+      humBorder: firing ? ORANGE : '#2a313b',
+      humColor: firing ? ORANGE : 'rgba(255,255,255,0.6)',
+      humStatus: firing ? `firing in ${S.secs}s` : (alert ? 'held · RH high' : 'standing by'),
+      humGlow: firing ? this.glow(ORANGE) : 'none',
+      windowGlow: this.glow(BLUE),
+      fanGlow: this.glow(CYAN),
+      takeoverBg: tk === 'on' ? '#2a1215' : '#1A1F26',
+      takeoverBorder: tk === 'on' ? RED : (tk === 'confirm' ? ORANGE : '#2a313b'),
+      takeoverGlow: tk === 'on' ? this.glow(RED) : 'none',
+      takeoverColor: tk === 'on' ? RED : (tk === 'confirm' ? ORANGE : 'rgba(255,255,255,0.6)'),
+      takeoverTitle: tk === 'on' ? 'MANUAL TAKEOVER ENGAGED' : (tk === 'confirm' ? 'TAP AGAIN TO CONFIRM' : 'MANUAL TAKEOVER'),
+      takeoverSub: tk === 'on' ? 'automation paused · tap to release' : (tk === 'confirm' ? 'reverts in 5s if not confirmed' : 'tap to engage')
+    };
+  }
+}
+</script>
+</body>
+</html>

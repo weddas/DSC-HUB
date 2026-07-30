@@ -1,0 +1,186 @@
+[03:38:53]ets Jul 29 2019 12:21:46
+[03:38:53]
+[03:38:53]rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+[03:38:53]configsip: 0, SPIWP:0xee
+[03:38:53]clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+[03:38:53]mode:DIO, clock div:2
+[03:38:54]load:0x3fff0030,len:6248
+[03:38:54]load:0x40078000,len:15904
+[03:38:54]load:0x40080400,len:3896
+[03:38:54]entry 0x40080640
+[03:38:54]I (27) boot: ESP-IDF v5.5.5 2nd stage bootloader
+[03:38:54]I (27) boot: Multicore bootloader
+[03:38:54]I (28) boot: chip revision: v3.1
+[03:38:54]I (28) boot.esp32: SPI Speed      : 40MHz
+[03:38:54]I (31) boot.esp32: SPI Mode       : DIO
+[03:38:54]I (35) boot.esp32: SPI Flash Size : 4MB
+[03:38:54]I (38) boot: Enabling RNG early entropy source...
+[03:38:54]I (43) boot: Partition Table:
+[03:38:54]I (45) boot: ## Label            Usage          Type ST Offset   Length
+[03:38:54]I (52) boot:  0 otadata          OTA data         01 00 00009000 00002000
+[03:38:54]I (58) boot:  1 phy_init         RF data          01 01 0000b000 00001000
+[03:38:54]I (65) boot:  2 app0             OTA app          00 10 00010000 001c0000
+[03:38:54]I (71) boot:  3 app1             OTA app          00 11 001d0000 001c0000
+[03:38:54]I (78) boot:  4 nvs              WiFi data        01 02 00390000 00070000
+[03:38:54]I (84) boot: End of partition table
+[03:38:54]I (88) boot: No factory image, trying OTA 0
+[03:38:54]I (91) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=40ba0h (265120) map
+[03:38:54]I (190) esp_image: segment 1: paddr=00050bc8 vaddr=3ffb0000 size=042bch ( 17084) load
+[03:38:54]I (196) esp_image: segment 2: paddr=00054e8c vaddr=40080000 size=0b18ch ( 45452) load
+[03:38:54]I (214) esp_image: segment 3: paddr=00060020 vaddr=400d0020 size=e9f60h (958304) map
+[03:38:54]I (542) esp_image: segment 4: paddr=00149f88 vaddr=4008b18c size=08b7ch ( 35708) load
+[03:38:54]I (556) esp_image: segment 5: paddr=00152b0c vaddr=50000000 size=00020h (    32) load
+[03:38:54]I (566) boot: Loaded app from partition at offset 0x10000
+[03:38:54]I (627) boot: Set actual ota_seq=1 in otadata[0]
+[03:38:54]I (627) boot: Disabling RNG early entropy source...
+[03:38:54][I][logger:122]: Log initialized
+[03:38:54][E][safe_mode:201]: Boot loop detected
+[03:38:54][E][component:349]: safe_mode set Error flag: unspecified
+[03:38:55][I][app:060]: Running through setup()
+[03:38:55][I][app:117]: setup() finished successfully!
+[03:38:55][W][safe_mode:236]: SAFE MODE IS ACTIVE
+[03:38:55][W][component:342]: wifi set Warning flag: scanning for networks
+[03:38:55][I][app:151]: ESPHome version 2026.7.2 compiled on 2026-07-26 03:33:04 +1000
+[03:38:55][I][app:153]: Project digital_emotions.dsc-hub version 4.0.1
+[03:38:55][I][app:158]: ESP32 Chip: ESP32 rev3.1, 2 core(s)
+[03:38:55][W][safe_mode:087]: SAFE MODE IS ACTIVE
+[03:38:58][I][wifi:1460]: - 'Digital-Emotions Studio' (58:D9:D5:D7:AA:82) ▂▄▆█
+[03:38:58][I][wifi:1460]: - 'Digital-Emotions Studio' (58:D9:D5:D7:AA:E2) ▂▄▆█
+[03:38:58][I][wifi:1119]: Connecting to 'Digital-Emotions Studio' (58:D9:D5:D7:AA:82) (priority 0, attempt 1/2 in phase SCAN_CONNECTING)...
+[03:38:59][I][wifi:1597]: Connected
+[03:38:59][W][component:365]: wifi cleared Warning flag
+[03:39:04][W][component:342]: esphome.ota set Warning flag: unspecified
+[03:39:18][I][esphome.ota:497]: Update complete
+[03:39:18][W][component:365]: esphome.ota cleared Warning flag
+[03:39:18][I][app:271]: Rebooting safely
+[03:39:18]ets Jul 29 2019 12:21:46
+[03:39:18]
+[03:39:18]rst:0xc (SW_CPU_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+[03:39:18]configsip: 0, SPIWP:0xee
+[03:39:18]clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+[03:39:18]mode:DIO, clock div:2
+[03:39:18]load:0x3fff0030,len:6248
+[03:39:18]load:0x40078000,len:15904
+[03:39:18]load:0x40080400,len:3896
+[03:39:18]entry 0x40080640
+[03:39:18]I (27) boot: ESP-IDF v5.5.5 2nd stage bootloader
+[03:39:18]I (27) boot: Multicore bootloader
+[03:39:18]I (27) boot: chip revision: v3.1
+[03:39:18]I (27) boot.esp32: SPI Speed      : 40MHz
+[03:39:18]I (31) boot.esp32: SPI Mode       : DIO
+[03:39:18]I (35) boot.esp32: SPI Flash Size : 4MB
+[03:39:18]I (38) boot: Enabling RNG early entropy source...
+[03:39:18]I (43) boot: Partition Table:
+[03:39:18]I (45) boot: ## Label            Usage          Type ST Offset   Length
+[03:39:18]I (52) boot:  0 otadata          OTA data         01 00 00009000 00002000
+[03:39:18]I (58) boot:  1 phy_init         RF data          01 01 0000b000 00001000
+[03:39:18]I (65) boot:  2 app0             OTA app          00 10 00010000 001c0000
+[03:39:18]I (71) boot:  3 app1             OTA app          00 11 001d0000 001c0000
+[03:39:18]I (78) boot:  4 nvs              WiFi data        01 02 00390000 00070000
+[03:39:18]I (84) boot: End of partition table
+[03:39:18]I (148) esp_image: segment 0: paddr=001d0020 vaddr=3f400020 size=40ba0h (265120) map
+[03:39:18]I (239) esp_image: segment 1: paddr=00210bc8 vaddr=3ffb0000 size=042bch ( 17084) load
+[03:39:18]I (245) esp_image: segment 2: paddr=00214e8c vaddr=40080000 size=0b18ch ( 45452) load
+[03:39:18]I (264) esp_image: segment 3: paddr=00220020 vaddr=400d0020 size=e9f60h (958304) map
+[03:39:19]I (591) esp_image: segment 4: paddr=00309f88 vaddr=4008b18c size=08b7ch ( 35708) load
+[03:39:19]I (606) esp_image: segment 5: paddr=00312b0c vaddr=50000000 size=00020h (    32) load
+[03:39:19]I (616) boot: Loaded app from partition at offset 0x1d0000
+[03:39:19]I (616) boot: Disabling RNG early entropy source...
+[03:39:19][I][logger:122]: Log initialized
+[03:39:21][I][app:060]: Running through setup()
+[03:39:21][I][esp-idf:000]: E (2182) gpio: gpio_pullup_en(85): GPIO number error (input-only pad has no internal PU)
+[03:39:21][I][esp-idf:000]: I (2445) ESPNOW: espnow [version: 2.0] init
+[03:39:21][I][app:117]: setup() finished successfully!
+[03:39:21][W][touchscreen:031]: Touch Polling Stopped. You can safely remove the 'update_interval:' variable from the YAML file.
+[03:39:22][W][component:473]: lvgl took a long time for an operation (327 ms), max is 50 ms
+[03:39:22][W][component:342]: wifi set Warning flag: scanning for networks
+[03:39:22][I][app:151]: ESPHome version 2026.7.2 compiled on 2026-07-26 03:33:04 +1000
+[03:39:22][I][app:153]: Project digital_emotions.dsc-hub version 4.0.1
+[03:39:22][I][app:158]: ESP32 Chip: ESP32 rev3.1, 2 core(s)
+[03:39:24][I][wifi:1460]: - 'Digital-Emotions Studio' (58:D9:D5:D7:AA:82) ▂▄▆█
+[03:39:24][I][wifi:1460]: - 'Digital-Emotions Studio' (58:D9:D5:D7:AA:E2) ▂▄▆█
+[03:39:24][I][wifi:1119]: Connecting to 'Digital-Emotions Studio' (58:D9:D5:D7:AA:82) (priority 0, attempt 1/2 in phase SCAN_CONNECTING)...
+[03:39:26][I][wifi:1597]: Connected
+[03:39:26][I][espnow:261]: Wifi Channel is changed from 1 to 6.
+[03:39:26][W][component:365]: wifi cleared Warning flag
+[03:40:02][W][api.connection:2532]: aioesphomeapi (192.168.86.3): Reading failed CONNECTION_CLOSED errno=128
+[03:40:19][I][safe_mode:142]: Boot seems successful; resetting boot loop counter
+[03:40:32][I][cyd_touch:352]: raw=2420,2706  mapped=198,161
+[03:40:37][I][cyd_touch:352]: raw=2892,3529  mapped=241,219
+[03:40:54][I][cyd_touch:352]: raw=424,2428  mapped=15,142
+[03:40:55][I][cyd_touch:352]: raw=2061,3396  mapped=165,210
+[03:40:57][I][cyd_touch:352]: raw=904,2786  mapped=59,167
+[03:40:59][W][lvgl:998]: Failed to allocate 768 bytes for draw buffer
+[03:40:59][W][lvgl:000]: [Warn] lv_draw_buf_create_ex: No memory: 24x32, cf: 14, stride: 24, 768Byte, 
+[03:40:59][E][lvgl:000]: 
+[03:41:04]E (120751) task_wdt: Task watchdog got triggered. The following tasks/users did not reset the watchdog in time:
+[03:41:04]E (120751) task_wdt:  - loopTask (CPU 1)
+[03:41:04]E (120751) task_wdt: Tasks currently running:
+[03:41:04]E (120751) task_wdt: CPU 0: IDLE0
+[03:41:04]E (120751) task_wdt: CPU 1: loopTask
+[03:41:04]E (120751) task_wdt: Aborting.
+[03:41:04]E (120751) task_wdt: Print CPU 1 backtrace
+[03:41:04]
+[03:41:04]
+[03:41:04]
+[03:41:04]
+[03:41:04]Backtrace: 0x401228d9:0x3ffb5850 0x40122ff1:0x3ffb58d0 0x40132071:0x3ffb5a60 0x4012e082:0x3ffb5a80 0x401214f3:0x3ffb5aa0 0x40121538:0x3ffb5ac0 0x401215bc:0x3ffb5ae0 0x40122796:0x3ffb5b00 0x4012c87e:0x3ffb5bb0 0x401ae029:0x3ffb5c90 0x4011aa67:0x3ffb5cb0 0x4011ab88:0x3ffb5cf0 0x4011f4f4:0x3ffb5d30 0x4011f0e1:0x3ffb5e90 0x4011f58e:0x3ffb5fa0 0x4011f0e1:0x3ffb6100 0x4011f58e:0x3ffb6210 0x4011f0e1:0x3ffb6370 0x4011f58e:0x3ffb6480 0x4011f0e1:0x3ffb65e0 0x4011f7ba:0x3ffb66f0 0x4011f8cd:0x3ffb6710 0x4011f967:0x3ffb6740 0x40120075:0x3ffb6790 0x4012a8a2:0x3ffb6820 0x400ff71c:0x3ffb6850 0x400db2ea:0x3ffb6870
+[03:41:04]
+[03:41:04]
+[03:41:04]
+[03:41:04]
+[03:41:04]ELF file SHA256: cf19cfbaa
+[03:41:04]
+[03:41:04]Rebooting...
+[03:41:04]ets Jul 29 2019 12:21:46
+[03:41:04]
+[03:41:04]rst:0xc (SW_CPU_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+[03:41:04]configsip: 0, SPIWP:0xee
+[03:41:04]clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+[03:41:04]mode:DIO, clock div:2
+[03:41:04]load:0x3fff0030,len:6248
+[03:41:04]load:0x40078000,len:15904
+[03:41:04]load:0x40080400,len:3896
+[03:41:04]entry 0x40080640
+[03:41:04]I (27) boot: ESP-IDF v5.5.5 2nd stage bootloader
+[03:41:04]I (27) boot: Multicore bootloader
+[03:41:04]I (27) boot: chip revision: v3.1
+[03:41:04]I (27) boot.esp32: SPI Speed      : 40MHz
+[03:41:04]I (31) boot.esp32: SPI Mode       : DIO
+[03:41:04]I (35) boot.esp32: SPI Flash Size : 4MB
+[03:41:04]I (38) boot: Enabling RNG early entropy source...
+[03:41:04]I (43) boot: Partition Table:
+[03:41:04]I (45) boot: ## Label            Usage          Type ST Offset   Length
+[03:41:04]I (52) boot:  0 otadata          OTA data         01 00 00009000 00002000
+[03:41:04]I (58) boot:  1 phy_init         RF data          01 01 0000b000 00001000
+[03:41:04]I (65) boot:  2 app0             OTA app          00 10 00010000 001c0000
+[03:41:04]I (71) boot:  3 app1             OTA app          00 11 001d0000 001c0000
+[03:41:04]I (78) boot:  4 nvs              WiFi data        01 02 00390000 00070000
+[03:41:04]I (84) boot: End of partition table
+[03:41:04]I (88) esp_image: segment 0: paddr=001d0020 vaddr=3f400020 size=40ba0h (265120) map
+[03:41:04]I (186) esp_image: segment 1: paddr=00210bc8 vaddr=3ffb0000 size=042bch ( 17084) load
+[03:41:04]I (192) esp_image: segment 2: paddr=00214e8c vaddr=40080000 size=0b18ch ( 45452) load
+[03:41:04]I (210) esp_image: segment 3: paddr=00220020 vaddr=400d0020 size=e9f60h (958304) map
+[03:41:04]I (538) esp_image: segment 4: paddr=00309f88 vaddr=4008b18c size=08b7ch ( 35708) load
+[03:41:04]I (552) esp_image: segment 5: paddr=00312b0c vaddr=50000000 size=00020h (    32) load
+[03:41:04]I (562) boot: Loaded app from partition at offset 0x1d0000
+[03:41:04]I (562) boot: Disabling RNG early entropy source...
+[03:41:04][I][logger:122]: Log initialized
+[03:41:06][I][app:060]: Running through setup()
+[03:41:07][I][esp-idf:000]: E (2182) gpio: gpio_pullup_en(85): GPIO number error (input-only pad has no internal PU)
+[03:41:07][I][esp-idf:000]: I (2439) ESPNOW: espnow [version: 2.0] init
+[03:41:07][I][app:117]: setup() finished successfully!
+[03:41:07][W][touchscreen:031]: Touch Polling Stopped. You can safely remove the 'update_interval:' variable from the YAML file.
+[03:41:07][W][component:473]: lvgl took a long time for an operation (325 ms), max is 50 ms
+[03:41:07][W][component:342]: wifi set Warning flag: scanning for networks
+[03:41:07][I][app:151]: ESPHome version 2026.7.2 compiled on 2026-07-26 03:33:04 +1000
+[03:41:07][I][app:153]: Project digital_emotions.dsc-hub version 4.0.1
+[03:41:07][I][app:158]: ESP32 Chip: ESP32 rev3.1, 2 core(s)
+[03:41:07][I][cyd_touch:352]: raw=3381,2011  mapped=286,112
+[03:41:10][I][wifi:1460]: - 'Digital-Emotions Studio' (58:D9:D5:D7:AA:82) ▂▄▆█
+[03:41:10][I][wifi:1460]: - 'Digital-Emotions Studio' (58:D9:D5:D7:AA:E2) ▂▄▆█
+[03:41:10][I][wifi:1119]: Connecting to 'Digital-Emotions Studio' (58:D9:D5:D7:AA:82) (priority 0, attempt 1/2 in phase SCAN_CONNECTING)...
+[03:41:11][I][wifi:1597]: Connected
+[03:41:11][I][espnow:261]: Wifi Channel is changed from 1 to 6.
+[03:41:11][W][component:365]: wifi cleared Warning flag
+[03:42:04][I][safe_mode:142]: Boot seems successful; resetting boot loop counter

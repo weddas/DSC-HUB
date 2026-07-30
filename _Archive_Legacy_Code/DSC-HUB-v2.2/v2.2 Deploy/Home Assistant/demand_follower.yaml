@@ -1,0 +1,104 @@
+# ==================================================================
+#  DSC-HUB · Demand Follower blueprint (v2.2)
+#  Install to: config/blueprints/automation/dsc_hub/demand_follower.yaml
+#
+#  Contract: the hub raises a *Demand switch; HA makes the real
+#  appliance follow it. This blueprint adds two safety behaviours on
+#  top of simple mirroring:
+#    * SAFE-OFF  — if the demand entity goes unavailable (hub offline,
+#      OTA, power cut), the appliance turns OFF. Fail dark, not stuck-on.
+#    * RESYNC    — on HA start or automation reload, the appliance is
+#      forced to match the demand's current state, so nothing drifts
+#      while HA was down.
+# ==================================================================
+blueprint:
+  name: DSC-HUB Demand Follower
+  description: >-
+    Mirror a DSC-HUB demand switch onto a real appliance (smart plug),
+    with safe-off on unavailability and resync on HA restart.
+  domain: automation
+  input:
+    demand_switch:
+      name: Demand switch (from DSC-HUB)
+      selector:
+        entity:
+          domain: switch
+    appliance:
+      name: Appliance to control (smart plug)
+      selector:
+        entity:
+          domain:
+            - switch
+            - light
+            - fan
+
+variables:
+  demand_entity: !input demand_switch
+  appliance_entity: !input appliance
+
+triggers:
+  - trigger: state
+    entity_id: !input demand_switch
+    to: "on"
+    id: demand_on
+  - trigger: state
+    entity_id: !input demand_switch
+    to: "off"
+    id: demand_off
+  - trigger: state
+    entity_id: !input demand_switch
+    to:
+      - "unavailable"
+      - "unknown"
+    for: "00:00:30"
+    id: demand_lost
+  - trigger: homeassistant
+    event: start
+    id: resync
+  - trigger: event
+    event_type: automation_reloaded
+    id: resync
+
+actions:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: demand_on
+        sequence:
+          - action: homeassistant.turn_on
+            target:
+              entity_id: !input appliance
+      - conditions:
+          - condition: trigger
+            id: demand_off
+        sequence:
+          - action: homeassistant.turn_off
+            target:
+              entity_id: !input appliance
+      - conditions:
+          - condition: trigger
+            id: demand_lost
+        sequence:
+          # Hub gone -> fail SAFE. Heaters, humidifiers and lights must
+          # never run unattended on a stale demand.
+          - action: homeassistant.turn_off
+            target:
+              entity_id: !input appliance
+      - conditions:
+          - condition: trigger
+            id: resync
+        sequence:
+          - if:
+              - condition: template
+                value_template: "{{ states(demand_entity) == 'on' }}"
+            then:
+              - action: homeassistant.turn_on
+                target:
+                  entity_id: !input appliance
+            else:
+              - action: homeassistant.turn_off
+                target:
+                  entity_id: !input appliance
+
+mode: restart
+max_exceeded: silent

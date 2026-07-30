@@ -1,0 +1,1720 @@
+# Board: Generic ESP32 Board (Generic)
+# Definition: definitions/boards/generic-esp32/manifest.yaml
+
+esphome:
+  name: dsc-hub
+  friendly_name: DSC-HUB
+  on_boot:
+    - priority: -100
+      then:
+        - lambda: 'id(last_valid_temp_time) = millis();'
+        - delay: 3s
+        # Re-apply the (restored) stage after reboot so every target
+        # is populated correctly before the control loops kick in.
+        - script.execute: apply_stage
+        # If Auto was live before the power cut, arm the resume prompt.
+        # It auto-continues after 60s so an unattended blip self-heals;
+        # automations hold off until resolved.
+        - lambda: |-
+            if (id(full_auto_mode) || id(auto_photoperiod_enabled)) {
+              id(boot_resume_pending) = true;
+              ESP_LOGI("boot", "Auto was active pre-boot -> resume prompt armed");
+            }
+
+# Batch flash writes so rapid dial-spinning doesn't wear the chip.
+preferences:
+  flash_write_interval: 60s
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+logger:
+
+api:
+  encryption:
+    key: "Up4ETAwSuerKfUCeTVH59TLHwMMjHVgu4TjPawh7QXc="
+
+ota:
+  - platform: esphome
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  ap:
+    ssid: DSC-HUB Fallback Hotspot
+    password: "adGVoFwQ1MKI"
+
+
+# ==================================================================
+#  DIGITAL-PLANT  ·  Grow Tent Environmental Controller
+#  Device: airquality   (ESP32 + SH1106 128x64 OLED + rotary UI)
+# ==================================================================
+#  CONTROL MODEL — how the pieces fit together
+#  -----------------------------------------------------------------
+#   1. Pick "Grow Stage" in HA  ->  auto-loads the VPD / RH / Temp
+#      targets + photoperiod length for that stage. (You can still
+#      fine-tune the individual number sliders afterwards — the stage
+#      just writes sensible defaults into them.)
+#   2. "Control Strategy" decides WHICH variable the fans chase:
+#        VPD (grower-grade, default) / Temperature / Humidity
+#   3. "Tent Full Auto Mode"  -> enables the fan auto-curve.
+#   4. "Auto Photoperiod"     -> the DEVICE runs the light schedule
+#      locally (survives HA / network loss). HA only sets the params
+#      (stage = duration, "Lights-On Time" HH:MM = when it starts).
+#      Sunrise/Sunset: the SF1000 ramps 0 -> target% over "Sunrise
+#      Duration" minutes at lights-on, and target% -> 0 over "Sunset
+#      Duration" minutes finishing AT lights-off. Both ramps live
+#      INSIDE the photoperiod window (auto-scaled if they overlap).
+#   5. Humidifier / Dehumidifier soft switches -> read-only demand
+#      signals HA can watch to drive external gear (see that section).
+#
+#  FAN ROLES (4x inline) — "software-defined damper":
+#     6" Exhaust (Outside) -> dumps heat/moisture OUT (carbon filter 1).
+#                             Ramps on TEMP over target, RH overflow when
+#                             the dehumidifier can't cope, + a 15% fresh-
+#                             air floor so CO2 never fully depletes.
+#     6" Exhaust (Room)    -> RECIRCULATES into the room (carbon filter 2).
+#                             Ramps on VPD / RH demand. Holds the light's
+#                             heat in the room lung; the room dehumidifier
+#                             then pulls the moisture. This is the winter /
+#                             cold-but-humid workhorse.
+#     4" Intake (Main)     -> fresh air room -> 4x8, slaved to total exhaust
+#     4" Intake (2x4)      -> fresh air room -> 2x4 (cascades into 4x8)
+#   Blending OUT vs ROOM % IS the damper — no mechanical flap needed.
+#   Makeup air for OUT comes from a door undercut / cracked vent.
+#
+#  APPLIANCE ESCALATION LADDER (fans first, appliances on failure):
+#     Demands are soft signals; HA automations do the real switching,
+#     e.g. "if Heater Demand on -> turn on heater plug, off when off".
+#       Too humid : fans 5 min, RH still > max+3  -> Dehumidifier Demand
+#       Too dry   : 2 min below min-2             -> Humidifier Demand
+#       Too cold  : 1 min below target-1          -> Grow Mat Demand
+#                   5 min below target-2          -> Heater Demand (750W)
+#       Too hot   : OUT maxed 5 min, > target+2   -> AC Demand (cool @20C)
+#     All clear with hysteresis once back in band. Each has an "Auto"
+#     arm switch. Emergency (>35C): heat demands OFF, AC ON.
+#
+#  MANUAL OVERRIDE (mutually exclusive with Full Auto):
+#     Manual ON = device stops driving fans AND light: no auto-curve,
+#     no slaving/roles, no photoperiod. Your values just stick.
+#     Safety layers (failsafe, watchdog) still override. OLED adjust
+#     pages apply LIVE as you scroll the dial; push = done.
+#
+#  PRIORITY ORDER (highest wins):
+#     Emergency failsafe (>35C: OUT 100%, ROOM 0%, intakes 100% = once-
+#        through purge outside)  >  Sensor-fault safe mode
+#        >  Manual Override  >  Auto Photoperiod / Full Auto curve
+#
+#  OLED UI:
+#     Home page dial-rotate = status carousel:
+#        Home <-> Trends <-> Lights <-> Fans <-> WiFi Diag
+#     Any text wider than the screen auto-scrolls (marquee).
+#     Screensaver shows a live "Running: ..." automation status line.
+#
+#  HA ENTITIES added by this config:
+#     select   : Grow Stage, Control Strategy
+#     switch   : Tent Full Auto Mode, Tent Manual Override,
+#                Auto Photoperiod, Humidifier Auto/Demand,
+#                Dehumidifier Auto/Demand, Heater Auto/Demand,
+#                Grow Mat Auto/Demand, AC Auto/Demand
+#     number   : Target Temp, VPD Min, VPD Max, RH Min, RH Max,
+#                Sunrise Duration, Sunset Duration, SF1000 Target %
+#     datetime : Lights-On Time (HH:MM, shows as AM/PM in HA)
+#     binary   : HA Link Status, Climate Sensor Fault
+#  RENAMED fans: "6 Inch Exhaust (Outside)" + "(Room)" (were Main/Aux) —
+#  their HA entity_ids change, so update any dashboards referencing them.
+# ==================================================================
+
+
+captive_portal:
+
+# Time: SNTP primary (internet, HA-independent) so the photoperiod
+# keeps running even if Home Assistant is down. HA time is backup.
+# TIMEZONE IS CRITICAL — without it the schedule runs on UTC.
+time:
+  - platform: sntp
+    id: sntp_time
+    timezone: "Australia/Sydney"
+  - platform: homeassistant
+    id: grow_time
+
+# ==========================================
+# 1. I2C BUS & FONTS
+# ==========================================
+i2c:
+  sda: GPIO21
+  scl: GPIO22
+  scan: true
+
+font:
+  - file: "gfonts://Roboto"
+    id: font_small
+    size: 10
+  - file: "gfonts://Roboto"
+    id: font_medium
+    size: 14
+  - file: "gfonts://Roboto"
+    id: font_large
+    size: 20
+
+# ==========================================
+# 2. GLOBALS (State Machine & Memory)
+# ==========================================
+globals:
+  # --- UI state machine ---
+  - id: current_page
+    type: int
+    restore_value: false
+    initial_value: '0'
+  - id: menu_cursor
+    type: int
+    restore_value: false
+    initial_value: '0'
+  - id: adjusting_item
+    type: int
+    restore_value: false
+    initial_value: '0'
+  - id: last_interaction_time
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+
+  # --- Manual target levels (light brightness persists) ---
+  - id: local_target_out
+    type: int
+    restore_value: false
+    initial_value: '0'
+  - id: local_target_intake_main
+    type: int
+    restore_value: false
+    initial_value: '0'
+  - id: local_target_intake_clone
+    type: int
+    restore_value: false
+    initial_value: '0'
+  - id: local_target_recirc
+    type: int
+    restore_value: false
+    initial_value: '0'
+  - id: local_target_sf1000
+    type: int
+    restore_value: true
+    initial_value: '75'
+
+  # --- Operating modes (persist across reboot) ---
+  - id: emergency_failsafe_active
+    type: bool
+    restore_value: false
+    initial_value: 'false'
+  - id: full_auto_mode
+    type: bool
+    restore_value: true
+    initial_value: 'false'
+  - id: auto_photoperiod_enabled
+    type: bool
+    restore_value: true
+    initial_value: 'false'
+  - id: humidifier_auto_enabled
+    type: bool
+    restore_value: true
+    initial_value: 'false'
+  - id: dehumidifier_auto_enabled
+    type: bool
+    restore_value: true
+    initial_value: 'false'
+  - id: heater_auto_enabled
+    type: bool
+    restore_value: true
+    initial_value: 'false'
+  - id: growmat_auto_enabled
+    type: bool
+    restore_value: true
+    initial_value: 'false'
+  - id: ac_auto_enabled
+    type: bool
+    restore_value: true
+    initial_value: 'false'
+
+  # --- Boot resume: power returned mid-schedule ---
+  - id: boot_resume_pending
+    type: bool
+    restore_value: false
+    initial_value: 'false'
+  - id: boot_time_synced_at        # millis when clock became valid (0 = not yet)
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+
+  # --- Escalation ladder timers (millis when a condition began; 0 = clear) ---
+  - id: esc_humid_since
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+  - id: esc_dry_since
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+  - id: esc_cold_since
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+  - id: esc_deep_cold_since
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+  - id: esc_hot_since
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+
+  # --- Stage-driven targets (written by apply_stage) ---
+  - id: stage_temp_target
+    type: float
+    restore_value: false
+    initial_value: '25.0'
+  - id: stage_vpd_min
+    type: float
+    restore_value: false
+    initial_value: '0.4'
+  - id: stage_vpd_max
+    type: float
+    restore_value: false
+    initial_value: '0.8'
+  - id: stage_rh_min
+    type: float
+    restore_value: false
+    initial_value: '70.0'
+  - id: stage_rh_max
+    type: float
+    restore_value: false
+    initial_value: '80.0'
+  - id: stage_light_hours
+    type: int
+    restore_value: false
+    initial_value: '18'
+  - id: stage_short
+    type: std::string
+    restore_value: false
+    initial_value: '"Germ"'
+
+  # --- Control strategy: 0=VPD, 1=Temperature, 2=Humidity (persists) ---
+  - id: control_strategy_idx
+    type: int
+    restore_value: true
+    initial_value: '0'
+
+  # --- Photoperiod & sunrise/sunset ramp ---
+  # (Lights-On Time itself lives in the `datetime` entity, restore_value: true)
+  - id: lights_currently_on
+    type: bool
+    restore_value: false
+    initial_value: 'false'
+  - id: sunrise_minutes
+    type: int
+    restore_value: true
+    initial_value: '30'
+  - id: sunset_minutes
+    type: int
+    restore_value: true
+    initial_value: '30'
+  - id: light_ramp_state          # 0 = steady/off, 1 = sunrise, 2 = sunset
+    type: int
+    restore_value: false
+    initial_value: '0'
+  - id: light_current_pct         # live brightness the ramp engine is driving
+    type: float
+    restore_value: false
+    initial_value: '0.0'
+
+  # --- Failsafe snapshot (to restore state after an emergency) ---
+  - id: saved_out
+    type: int
+    restore_value: false
+    initial_value: '0'
+  - id: saved_intake_main
+    type: int
+    restore_value: false
+    initial_value: '0'
+  - id: saved_intake_clone
+    type: int
+    restore_value: false
+    initial_value: '0'
+  - id: saved_recirc
+    type: int
+    restore_value: false
+    initial_value: '0'
+  - id: saved_light_sf1000_b
+    type: float
+    restore_value: false
+    initial_value: '0.0'
+
+  # --- Sensor watchdog ---
+  - id: sensor_fault_active
+    type: bool
+    restore_value: false
+    initial_value: 'false'
+  - id: last_valid_temp_time
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+
+  # --- Screensaver physics ---
+  - id: saver_x
+    type: float
+    restore_value: false
+    initial_value: '10.0'
+  - id: saver_y
+    type: float
+    restore_value: false
+    initial_value: '10.0'
+  - id: saver_vx
+    type: float
+    restore_value: false
+    initial_value: '2.0'
+  - id: saver_vy
+    type: float
+    restore_value: false
+    initial_value: '1.5'
+
+  # --- Marquee scrolling + live automation status line ---
+  - id: marquee_px
+    type: float
+    restore_value: false
+    initial_value: '0.0'
+  - id: auto_status_text
+    type: std::string
+    restore_value: false
+    initial_value: '"Idle - automation off"'
+
+  # --- 1h trend ring buffers (12 slots, sampled every 5 min) ---
+  - id: hist_temp
+    type: float[12]
+    restore_value: false
+    initial_value: '{NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN}'
+  - id: hist_rh
+    type: float[12]
+    restore_value: false
+    initial_value: '{NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN}'
+  - id: hist_vpd
+    type: float[12]
+    restore_value: false
+    initial_value: '{NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN}'
+  - id: hist_idx
+    type: int
+    restore_value: false
+    initial_value: '0'
+  - id: hist_filled
+    type: bool
+    restore_value: false
+    initial_value: 'false'
+
+# ==========================================
+# 3. PWM OUTPUTS, FANS & LIGHTS
+# ==========================================
+output:
+  - platform: ledc
+    pin: GPIO16
+    id: exhaust_out_pwm          # 6" exhaust -> OUTSIDE (carbon filter 1)
+    frequency: 1000 Hz
+  - platform: ledc
+    pin: GPIO17
+    id: intake_4in_main_pwm
+    frequency: 1000 Hz
+  - platform: ledc
+    pin: GPIO18
+    id: intake_4in_clone_pwm
+    frequency: 1000 Hz
+  - platform: ledc
+    pin: GPIO19                  # was 250W light -> now 6" exhaust -> ROOM
+    id: exhaust_recirc_pwm       # (carbon filter 2). Same clamp mod
+    frequency: 1000 Hz           # (330R + 3v3 zener / opto) before wiring.
+  - platform: ledc
+    pin: GPIO23
+    id: light_sf1000_pwm
+    frequency: 1000 Hz
+
+fan:
+  - platform: speed
+    output: exhaust_out_pwm
+    name: "6 Inch Exhaust (Outside)"
+    id: fan_exhaust_out
+  - platform: speed
+    output: exhaust_recirc_pwm
+    name: "6 Inch Exhaust (Room)"
+    id: fan_exhaust_recirc
+  - platform: speed
+    output: intake_4in_main_pwm
+    name: "4 Inch Intake Fan (Main)"
+    id: fan_intake_main
+  - platform: speed
+    output: intake_4in_clone_pwm
+    name: "4 Inch Intake Fan (2x4)"
+    id: fan_intake_clone
+
+light:
+  - platform: monochromatic
+    output: light_sf1000_pwm
+    name: "SF1000 Dimmer"
+    id: light_sf1000
+
+# ==========================================
+# 4. HA CONTROLS (switches / selects / numbers)
+# ==========================================
+switch:
+  # MANUAL OVERRIDE <-> FULL AUTO are mutually exclusive (each turns the
+  # other off). Manual = the device stops driving fans AND the light
+  # entirely: no auto-curve, no slaving/roles, no photoperiod — whatever
+  # you set from the dial or HA just sticks. The safety layers (emergency
+  # failsafe, sensor watchdog) still override manual. The appliance
+  # escalation ladder keeps signalling in manual; disable individual
+  # "X Auto" switches if you want it silent too.
+  - platform: template
+    name: "Tent Manual Override"
+    id: local_manual_mode
+    icon: "mdi:hand-back-right"
+    optimistic: true
+    turn_on_action:
+      - globals.set: {id: full_auto_mode, value: 'false'}
+
+  - platform: template
+    name: "Tent Full Auto Mode"
+    id: full_auto_switch
+    icon: "mdi:auto-mode"
+    lambda: 'return id(full_auto_mode);'
+    turn_on_action:
+      - globals.set: {id: full_auto_mode, value: 'true'}
+      - switch.turn_off: local_manual_mode
+    turn_off_action:
+      - globals.set: {id: full_auto_mode, value: 'false'}
+
+  - platform: template
+    name: "Auto Photoperiod"
+    id: photoperiod_switch
+    icon: "mdi:theme-light-dark"
+    lambda: 'return id(auto_photoperiod_enabled);'
+    turn_on_action:
+      - globals.set: {id: auto_photoperiod_enabled, value: 'true'}
+    turn_off_action:
+      - globals.set: {id: auto_photoperiod_enabled, value: 'false'}
+
+  # --- Humidifier soft switch (RH TOO LOW) ---
+  - platform: template
+    name: "Humidifier Auto"
+    id: humidifier_auto_switch
+    icon: "mdi:air-humidifier"
+    lambda: 'return id(humidifier_auto_enabled);'
+    turn_on_action:
+      - globals.set: {id: humidifier_auto_enabled, value: 'true'}
+    turn_off_action:
+      - globals.set: {id: humidifier_auto_enabled, value: 'false'}
+  - platform: template
+    name: "Humidifier Demand"      # <-- watch THIS in your HA automation
+    id: humidifier_demand
+    icon: "mdi:water-plus"
+    optimistic: true
+
+  # --- Dehumidifier soft switch (RH TOO HIGH — the one that matters in NSW flower) ---
+  - platform: template
+    name: "Dehumidifier Auto"
+    id: dehumidifier_auto_switch
+    icon: "mdi:air-humidifier-off"
+    lambda: 'return id(dehumidifier_auto_enabled);'
+    turn_on_action:
+      - globals.set: {id: dehumidifier_auto_enabled, value: 'true'}
+    turn_off_action:
+      - globals.set: {id: dehumidifier_auto_enabled, value: 'false'}
+  - platform: template
+    name: "Dehumidifier Demand"    # <-- watch THIS in your HA automation
+    id: dehumidifier_demand
+    icon: "mdi:water-minus"
+    optimistic: true
+
+  # --- ESCALATION LADDER appliances (HA does the actual switching) ---
+  # "X Auto" arms the ladder for that device; "X Demand" is the read-only
+  # signal an HA automation follows. Demands only engage when the fans
+  # have demonstrably failed to fix the condition (see run_climate_logic).
+  - platform: template
+    name: "Heater Auto"
+    id: heater_auto_switch
+    icon: "mdi:radiator"
+    lambda: 'return id(heater_auto_enabled);'
+    turn_on_action:
+      - globals.set: {id: heater_auto_enabled, value: 'true'}
+    turn_off_action:
+      - globals.set: {id: heater_auto_enabled, value: 'false'}
+      - switch.turn_off: heater_demand
+  - platform: template
+    name: "Heater Demand"          # 750W fan heater
+    id: heater_demand
+    icon: "mdi:fire"
+    optimistic: true
+
+  - platform: template
+    name: "Grow Mat Auto"
+    id: growmat_auto_switch
+    icon: "mdi:heat-wave"
+    lambda: 'return id(growmat_auto_enabled);'
+    turn_on_action:
+      - globals.set: {id: growmat_auto_enabled, value: 'true'}
+    turn_off_action:
+      - globals.set: {id: growmat_auto_enabled, value: 'false'}
+      - switch.turn_off: growmat_demand
+  - platform: template
+    name: "Grow Mat Demand"        # under-pot root-zone warmth
+    id: growmat_demand
+    icon: "mdi:heating-coil"
+    optimistic: true
+
+  - platform: template
+    name: "AC Auto"
+    id: ac_auto_switch
+    icon: "mdi:air-conditioner"
+    lambda: 'return id(ac_auto_enabled);'
+    turn_on_action:
+      - globals.set: {id: ac_auto_enabled, value: 'true'}
+    turn_off_action:
+      - globals.set: {id: ac_auto_enabled, value: 'false'}
+      - switch.turn_off: ac_demand
+  - platform: template
+    name: "AC Demand"              # portable AC, set to cool @ 20C max
+    id: ac_demand
+    icon: "mdi:snowflake"
+    optimistic: true
+
+select:
+  - platform: template
+    name: "Grow Stage"
+    id: grow_stage
+    icon: "mdi:sprout"
+    optimistic: true
+    restore_value: true
+    initial_option: "Germination"
+    options:
+      - "Germination"
+      - "Seedling"
+      - "Early Vegetative"
+      - "Vegetative"
+      - "Late (Push) Vegetative"
+      - "Early Flowering"
+      - "Flowering"
+      - "Late Flowering"
+      - "Final 48-72h Flowering"
+      - "Dry Mode"
+    set_action:
+      - script.execute: apply_stage
+
+  - platform: template
+    name: "Control Strategy"
+    id: control_strategy
+    icon: "mdi:tune-variant"
+    optimistic: true
+    restore_value: true
+    initial_option: "VPD"
+    options:
+      - "VPD"
+      - "Temperature"
+      - "Humidity"
+    set_action:
+      - lambda: |-
+          if (x == "VPD") id(control_strategy_idx) = 0;
+          else if (x == "Temperature") id(control_strategy_idx) = 1;
+          else id(control_strategy_idx) = 2;
+
+number:
+  - platform: template
+    name: "Target Temp"
+    id: num_target_temp
+    icon: "mdi:thermometer"
+    optimistic: true
+    min_value: 15
+    max_value: 32
+    step: 0.5
+    unit_of_measurement: "°C"
+    initial_value: 25
+    set_action:
+      - globals.set: {id: stage_temp_target, value: !lambda 'return x;'}
+
+  - platform: template
+    name: "VPD Target Min"
+    id: num_vpd_min
+    icon: "mdi:water-thermometer"
+    optimistic: true
+    min_value: 0.4
+    max_value: 1.6
+    step: 0.1
+    unit_of_measurement: "kPa"
+    initial_value: 0.4
+    set_action:
+      - globals.set: {id: stage_vpd_min, value: !lambda 'return x;'}
+
+  - platform: template
+    name: "VPD Target Max"
+    id: num_vpd_max
+    icon: "mdi:water-thermometer"
+    optimistic: true
+    min_value: 0.4
+    max_value: 1.8
+    step: 0.1
+    unit_of_measurement: "kPa"
+    initial_value: 0.8
+    set_action:
+      - globals.set: {id: stage_vpd_max, value: !lambda 'return x;'}
+
+  - platform: template
+    name: "RH Target Min"
+    id: num_rh_min
+    icon: "mdi:water-percent"
+    optimistic: true
+    min_value: 20
+    max_value: 90
+    step: 1
+    unit_of_measurement: "%"
+    initial_value: 70
+    set_action:
+      - globals.set: {id: stage_rh_min, value: !lambda 'return x;'}
+
+  - platform: template
+    name: "RH Target Max"
+    id: num_rh_max
+    icon: "mdi:water-percent"
+    optimistic: true
+    min_value: 20
+    max_value: 95
+    step: 1
+    unit_of_measurement: "%"
+    initial_value: 80
+    set_action:
+      - globals.set: {id: stage_rh_max, value: !lambda 'return x;'}
+
+  - platform: template
+    name: "Sunrise Duration"
+    id: num_sunrise
+    icon: "mdi:weather-sunset-up"
+    min_value: 0
+    max_value: 120
+    step: 5
+    unit_of_measurement: "min"
+    update_interval: 10s
+    lambda: 'return id(sunrise_minutes);'
+    set_action:
+      - globals.set: {id: sunrise_minutes, value: !lambda 'return (int) x;'}
+
+  - platform: template
+    name: "Sunset Duration"
+    id: num_sunset
+    icon: "mdi:weather-sunset-down"
+    min_value: 0
+    max_value: 120
+    step: 5
+    unit_of_measurement: "min"
+    update_interval: 10s
+    lambda: 'return id(sunset_minutes);'
+    set_action:
+      - globals.set: {id: sunset_minutes, value: !lambda 'return (int) x;'}
+
+  # The "X" in the 0 -> X% sunrise ramp. Also the level manual OLED
+  # adjust writes to, so device + HA always agree on the target.
+  - platform: template
+    name: "SF1000 Target Brightness"
+    id: num_sf1000_target
+    icon: "mdi:brightness-percent"
+    min_value: 0
+    max_value: 100
+    step: 5
+    unit_of_measurement: "%"
+    update_interval: 10s
+    lambda: 'return id(local_target_sf1000);'
+    set_action:
+      - globals.set: {id: local_target_sf1000, value: !lambda 'return (int) x;'}
+
+# Real HH:MM picker in HA (renders as AM/PM per your HA locale).
+# Replaces the old whole-hour "Lights-On Hour" slider.
+datetime:
+  - platform: template
+    name: "Lights-On Time"
+    id: lights_on_time
+    type: time
+    icon: "mdi:clock-time-six-outline"
+    optimistic: true
+    restore_value: true
+    initial_value: "06:00:00"
+
+# ==========================================
+# 5. SYSTEM INFO TEXT SENSORS
+# ==========================================
+text_sensor:
+  - platform: wifi_info
+    ip_address:
+      name: "IP Address"
+      id: network_ip
+    ssid:
+      name: "WiFi SSID"
+      id: network_ssid
+
+# ==========================================
+# 6. HARDWARE SENSORS, FAILSAFE & WATCHDOG
+# ==========================================
+sensor:
+  - platform: wifi_signal
+    name: "WiFi RSSI"
+    id: wifi_rssi
+    update_interval: 15s
+
+  - platform: dht
+    model: DHT22
+    pin:
+      number: GPIO27
+      mode:
+        input: true
+        pullup: true
+    update_interval: 30s
+    temperature:
+      id: temp_sensor
+      name: "temp"
+      filters:
+        - filter_out: 150.0
+        - lambda: |-
+            if (isnan(x) || x < -10 || x > 60) return NAN;
+            return x;
+      # Watchdog heartbeat: stamp the time of every VALID reading.
+      on_value:
+        - lambda: 'if (!isnan(id(temp_sensor).state)) id(last_valid_temp_time) = millis();'
+      # EMERGENCY FAILSAFE (hysteresis 34/35 C)
+      on_value_range:
+        - above: 35.0
+          then:
+            - lambda: |-
+                if (id(emergency_failsafe_active)) return;   // already tripped
+                // Snapshot current state so we can restore on clear
+                id(saved_out)       = id(fan_exhaust_out).speed;
+                id(saved_recirc)   = id(fan_exhaust_recirc).speed;
+                id(saved_intake_main)   = id(fan_intake_main).speed;
+                id(saved_intake_clone)  = id(fan_intake_clone).speed;
+                id(saved_light_sf1000_b)= id(light_sf1000).remote_values.get_brightness();
+                id(emergency_failsafe_active) = true;
+                // Kill heat sources + ONCE-THROUGH purge to OUTSIDE.
+                // ROOM fan -> 0 so we don't dump the tent's heat into the
+                // room the intakes are pulling from. Intakes 100% feed the
+                // outside fan with (cooler) room/makeup air.
+                id(humidifier_demand).turn_off();
+                id(heater_demand).turn_off();
+                id(growmat_demand).turn_off();
+                id(ac_demand).turn_on();     // AC assists the purge (setpoint 20C)
+                auto fe = id(fan_exhaust_out).make_call();  fe.set_state(true);  fe.set_speed(100); fe.perform();
+                auto fa = id(fan_exhaust_recirc).make_call();  fa.set_state(false); fa.set_speed(0);  fa.perform();
+                auto fim = id(fan_intake_main).make_call(); fim.set_state(true); fim.set_speed(100); fim.perform();
+                auto fic = id(fan_intake_clone).make_call();fic.set_state(true); fic.set_speed(100); fic.perform();
+                id(light_sf1000).turn_off().perform();
+                ESP_LOGW("failsafe", "EMERGENCY temp>35C: once-through purge OUTSIDE, ROOM fan off, light OFF");
+        - below: 34.0
+          then:
+            - lambda: |-
+                if (!id(emergency_failsafe_active)) return;
+                id(emergency_failsafe_active) = false;
+                id(ac_demand).turn_off();    // ladder re-arms it if still needed
+                // Restore the pre-trip fan + light state
+                auto fe = id(fan_exhaust_out).make_call();  fe.set_state(id(saved_out) > 0);      fe.set_speed(id(saved_out));      fe.perform();
+                auto fa = id(fan_exhaust_recirc).make_call();  fa.set_state(id(saved_recirc) > 0);  fa.set_speed(id(saved_recirc));  fa.perform();
+                auto fim = id(fan_intake_main).make_call(); fim.set_state(id(saved_intake_main) > 0); fim.set_speed(id(saved_intake_main)); fim.perform();
+                auto fic = id(fan_intake_clone).make_call();fic.set_state(id(saved_intake_clone) > 0);fic.set_speed(id(saved_intake_clone));fic.perform();
+                if (id(saved_light_sf1000_b) > 0.0f){ auto l = id(light_sf1000).turn_on();l.set_brightness(id(saved_light_sf1000_b));l.perform(); }
+                ESP_LOGI("failsafe", "Emergency cleared: restored previous fan/light state");
+    humidity:
+      id: humidity_sensor
+      name: "humidity"
+      filters:
+        - filter_out: 100.0
+        - lambda: |-
+            if (isnan(x) || x < 0 || x > 100) return NAN;
+            return x;
+
+  - platform: adc
+    pin: GPIO34
+    name: "CO2 Sensor Voltage"
+    id: co2_voltage
+    attenuation: 12db
+    update_interval: 10s
+    filters:
+      - exponential_moving_average: {alpha: 0.1, send_every: 3}
+    on_value:
+      then:
+        - component.update: co2_ppm_estimate
+
+  # ---- TEMPLATE SENSORS ----
+  - platform: template
+    name: "Dynamic CO2 PPM"          # NOTE: uncalibrated analog estimate.
+    id: co2_ppm_estimate             # Replace with SCD41 block below for real ppm.
+    unit_of_measurement: "ppm"
+    icon: "mdi:molecule-co2"
+    update_interval: never
+    lambda: |-
+      float v = id(co2_voltage).state;
+      if (isnan(v)) return NAN;
+      return 116.67f * expf(2.769f * v);
+
+  - platform: template
+    name: "VPD (kPa)"
+    id: vpd_sensor
+    accuracy_decimals: 2
+    unit_of_measurement: "kPa"
+    lambda: |-
+      float t = id(temp_sensor).state;
+      float rh = id(humidity_sensor).state;
+      if (isnan(t) || isnan(rh) || rh <= 0) return NAN;
+      float svp = 0.6108f * expf((17.27f * t) / (t + 237.3f));
+      float avp = svp * (rh / 100.0f);
+      return svp - avp;
+
+  # ---- UI: ROTARY ENCODER ----
+  - platform: rotary_encoder
+    pin_a: GPIO25
+    pin_b: GPIO26
+    name: "Menu Dial"
+    id: menu_dial
+    on_clockwise:
+      then:
+        - lambda: |-
+            if (id(boot_resume_pending)) return;   // prompt owns the input
+            bool was_asleep = (millis() - id(last_interaction_time)) > 300000;
+            id(last_interaction_time) = millis();
+            if (was_asleep) return;   // first nudge only wakes the screen
+
+            // --- Home-page status carousel: Home -> Trends -> Lights -> Fans -> WiFi -> Home ---
+            if (id(current_page) == 0)       { id(current_page) = 8; }
+            else if (id(current_page) == 8)  { id(current_page) = 9; }
+            else if (id(current_page) == 9)  { id(current_page) = 10; }
+            else if (id(current_page) == 10) { id(current_page) = 11; }
+            else if (id(current_page) == 11) { id(current_page) = 0; }
+
+            else if (id(current_page) == 1) { id(menu_cursor) = (id(menu_cursor) + 1) % 4; }
+            else if (id(current_page) == 2) { id(menu_cursor) = (id(menu_cursor) + 1) % 4; }
+            else if (id(current_page) == 4) { id(menu_cursor) = (id(menu_cursor) + 1) % 3; }
+            else if (id(current_page) == 3) { // Adjusting Airflow (4 fans)
+              if (id(adjusting_item) == 0 && id(local_target_out) < 100) id(local_target_out) += 5;
+              else if (id(adjusting_item) == 1 && id(local_target_recirc) < 100) id(local_target_recirc) += 5;
+              else if (id(adjusting_item) == 2 && id(local_target_intake_main) < 100) id(local_target_intake_main) += 5;
+              else if (id(adjusting_item) == 3 && id(local_target_intake_clone) < 100) id(local_target_intake_clone) += 5;
+              id(apply_live_adjust).execute();   // applies AS you scroll
+            }
+            else if (id(current_page) == 5) { // Adjusting Lighting
+              if (id(adjusting_item) == 0 && id(local_target_sf1000) < 100) id(local_target_sf1000) += 5;
+              else if (id(adjusting_item) == 1 && id(sunrise_minutes) < 120) id(sunrise_minutes) += 5;
+              else if (id(adjusting_item) == 2 && id(sunset_minutes) < 120) id(sunset_minutes) += 5;
+              id(apply_live_adjust).execute();   // applies AS you scroll
+            }
+    on_anticlockwise:
+      then:
+        - lambda: |-
+            if (id(boot_resume_pending)) return;   // prompt owns the input
+            bool was_asleep = (millis() - id(last_interaction_time)) > 300000;
+            id(last_interaction_time) = millis();
+            if (was_asleep) return;
+
+            // --- Home-page status carousel (reverse) ---
+            if (id(current_page) == 0)       { id(current_page) = 11; }
+            else if (id(current_page) == 11) { id(current_page) = 10; }
+            else if (id(current_page) == 10) { id(current_page) = 9; }
+            else if (id(current_page) == 9)  { id(current_page) = 8; }
+            else if (id(current_page) == 8)  { id(current_page) = 0; }
+
+            else if (id(current_page) == 1) { id(menu_cursor) = (id(menu_cursor) + 3) % 4; }
+            else if (id(current_page) == 2) { id(menu_cursor) = (id(menu_cursor) + 3) % 4; }
+            else if (id(current_page) == 4) { id(menu_cursor) = (id(menu_cursor) + 2) % 3; }
+            else if (id(current_page) == 3) {
+              if (id(adjusting_item) == 0 && id(local_target_out) > 0) id(local_target_out) -= 5;
+              else if (id(adjusting_item) == 1 && id(local_target_recirc) > 0) id(local_target_recirc) -= 5;
+              else if (id(adjusting_item) == 2 && id(local_target_intake_main) > 0) id(local_target_intake_main) -= 5;
+              else if (id(adjusting_item) == 3 && id(local_target_intake_clone) > 0) id(local_target_intake_clone) -= 5;
+              id(apply_live_adjust).execute();   // applies AS you scroll
+            }
+            else if (id(current_page) == 5) {
+              if (id(adjusting_item) == 0 && id(local_target_sf1000) > 0) id(local_target_sf1000) -= 5;
+              else if (id(adjusting_item) == 1 && id(sunrise_minutes) > 0) id(sunrise_minutes) -= 5;
+              else if (id(adjusting_item) == 2 && id(sunset_minutes) > 0) id(sunset_minutes) -= 5;
+              id(apply_live_adjust).execute();   // applies AS you scroll
+            }
+
+# ------------------------------------------------------------------
+# OPTIONAL: real CO2 sensor (Sensirion SCD41). Drops onto the SAME
+# I2C bus (GPIO21/22) — no new wiring. When the sensor arrives:
+#   1) uncomment this block
+#   2) delete the ADC "co2_voltage" + "Dynamic CO2 PPM" sensors above
+#   3) point the OLED "CO2e" line at id(scd41_co2)
+# ------------------------------------------------------------------
+#   - platform: scd4x
+#     address: 0x62
+#     update_interval: 30s
+#     co2:
+#       name: "CO2"
+#       id: scd41_co2
+#     temperature:
+#       name: "Temp (SCD41)"
+#       id: scd41_temp
+#     humidity:
+#       name: "RH (SCD41)"
+#       id: scd41_rh
+
+# ==========================================
+# 7. BINARY SENSORS (status + UI buttons)
+# ==========================================
+binary_sensor:
+  - platform: status
+    name: "HA Link Status"
+    id: ha_connected
+
+  - platform: template
+    name: "Climate Sensor Fault"
+    id: sensor_fault_bs
+    device_class: problem
+    lambda: 'return id(sensor_fault_active);'
+
+  - platform: gpio
+    pin: {number: GPIO32, mode: {input: true, pullup: true}}
+    name: "Dial Button (PSH)"
+    id: dial_button
+    on_press:
+      then:
+        - lambda: |-
+            // Boot-resume prompt: dial = continue Auto right now
+            if (id(boot_resume_pending)) {
+              id(boot_resume_pending) = false;
+              id(last_interaction_time) = millis();
+              id(current_page) = 0;
+              ESP_LOGI("boot", "User confirmed -> resuming Auto");
+              return;
+            }
+            bool was_asleep = (millis() - id(last_interaction_time)) > 300000;
+            id(last_interaction_time) = millis();
+            if (was_asleep) return;   // first press only wakes the screen
+
+            // Wake from Home / any status-carousel page -> Main Menu
+            if (id(current_page) == 0 || id(current_page) >= 8) { id(current_page) = 1; id(menu_cursor) = 0; }
+
+            // 1. MAIN MENU (4 items)
+            else if (id(current_page) == 1) {
+              if (id(menu_cursor) == 0) { id(current_page) = 2; id(menu_cursor) = 0; }      // Airflow
+              else if (id(menu_cursor) == 1) { id(current_page) = 4; id(menu_cursor) = 0; } // Lighting
+              else if (id(menu_cursor) == 2) { id(current_page) = 7; id(menu_cursor) = 0; } // Grow Status
+              else if (id(menu_cursor) == 3) { id(current_page) = 6; id(menu_cursor) = 0; } // System Info
+            }
+
+            // 2. AIRFLOW MENU -> Adjust screen
+            else if (id(current_page) == 2) {
+               id(adjusting_item) = id(menu_cursor);
+               id(current_page) = 3;
+            }
+
+            // 4. LIGHTING MENU -> Adjust screen
+            else if (id(current_page) == 4) {
+               id(adjusting_item) = id(menu_cursor);
+               id(current_page) = 5;
+            }
+
+            // 3 / 5. ADJUST pages apply LIVE as you scroll — push = done.
+            else if (id(current_page) == 3) { id(current_page) = 2; }
+            else if (id(current_page) == 5) { id(current_page) = 4; }
+
+            // 6 / 7. Read-only pages -> dial returns to Main Menu
+            else if (id(current_page) == 6 || id(current_page) == 7) {
+               id(current_page) = 1; id(menu_cursor) = 0;
+            }
+
+  - platform: gpio
+    pin: {number: GPIO14, mode: {input: true, pullup: true}}
+    name: "Back Button (BAK)"
+    id: back_button
+    on_press:
+      then:
+        - lambda: |-
+            // Boot-resume prompt: back = decline, hold in Manual Override
+            if (id(boot_resume_pending)) {
+              id(boot_resume_pending) = false;
+              id(local_manual_mode).turn_on();   // suspends curve + photoperiod
+              id(last_interaction_time) = millis();
+              id(current_page) = 0;
+              ESP_LOGI("boot", "User declined -> Manual Override");
+              return;
+            }
+            id(last_interaction_time) = millis();
+            if (id(current_page) >= 8) {
+              id(current_page) = 0;                              // Status carousel -> Home
+            } else if (id(current_page) == 2 || id(current_page) == 4 || id(current_page) == 6 || id(current_page) == 7) {
+              id(current_page) = 1; id(menu_cursor) = 0;          // Back to Main Menu
+            } else if (id(current_page) == 3) {
+              id(current_page) = 2;                                // Exit Fan Adjust (already live)
+            } else if (id(current_page) == 5) {
+              id(current_page) = 4;                                // Exit Light Adjust (already live)
+            } else {
+              id(current_page) = 0; id(last_interaction_time) = 0; // Force Sleep
+            }
+
+  - platform: gpio
+    pin: {number: GPIO33, mode: {input: true, pullup: true}}
+    name: "Control Button (CON)"
+    id: con_button
+    on_press:
+      then:
+        - lambda: |-
+            id(last_interaction_time) = millis();
+            id(local_manual_mode).toggle();
+            id(full_auto_mode) = false;
+
+# ==========================================
+# 8. SCRIPTS  (stage engine + climate + photoperiod)
+# ==========================================
+script:
+  # ---- Load a stage's full climate envelope ----
+  - id: apply_stage
+    mode: restart
+    then:
+      - lambda: |-
+          std::string s = id(grow_stage).state;
+          float tt, vmin, vmax, rmin, rmax; int lh; std::string sh;
+          if      (s == "Germination")             { tt=25; vmin=0.4f; vmax=0.8f; rmin=70; rmax=80; lh=18; sh="Germ"; }
+          else if (s == "Seedling")                { tt=24; vmin=0.5f; vmax=0.8f; rmin=65; rmax=75; lh=18; sh="Seedling"; }
+          else if (s == "Early Vegetative")        { tt=25; vmin=0.7f; vmax=1.0f; rmin=60; rmax=70; lh=18; sh="Early Veg"; }
+          else if (s == "Vegetative")              { tt=26; vmin=0.8f; vmax=1.1f; rmin=55; rmax=65; lh=18; sh="Veg"; }
+          else if (s == "Late (Push) Vegetative")  { tt=26; vmin=1.0f; vmax=1.2f; rmin=50; rmax=60; lh=18; sh="Push Veg"; }
+          else if (s == "Early Flowering")         { tt=25; vmin=1.0f; vmax=1.2f; rmin=50; rmax=55; lh=12; sh="Early Flwr"; }
+          else if (s == "Flowering")               { tt=24; vmin=1.2f; vmax=1.4f; rmin=45; rmax=50; lh=12; sh="Flower"; }
+          else if (s == "Late Flowering")          { tt=22; vmin=1.3f; vmax=1.5f; rmin=40; rmax=45; lh=12; sh="Late Flwr"; }
+          else if (s == "Final 48-72h Flowering")  { tt=21; vmin=1.4f; vmax=1.6f; rmin=35; rmax=45; lh=12; sh="Flush"; }
+          else /* Dry Mode */                      { tt=19; vmin=0.8f; vmax=1.0f; rmin=55; rmax=62; lh=0;  sh="Dry"; }
+          id(num_target_temp).make_call().set_value(tt).perform();
+          id(num_vpd_min).make_call().set_value(vmin).perform();
+          id(num_vpd_max).make_call().set_value(vmax).perform();
+          id(num_rh_min).make_call().set_value(rmin).perform();
+          id(num_rh_max).make_call().set_value(rmax).perform();
+          id(stage_light_hours) = lh;
+          id(stage_short) = sh;
+          ESP_LOGI("grow", "Stage '%s': VPD %.1f-%.1f, RH %.0f-%.0f, %dh light",
+                   s.c_str(), vmin, vmax, (float)rmin, (float)rmax, lh);
+
+  # ---- Climate auto-curve + humidifier/dehumidifier demand ----
+  - id: run_climate_logic
+    mode: single
+    then:
+      - lambda: |-
+          if (id(boot_resume_pending)) return;   // waiting on resume prompt
+          if (id(emergency_failsafe_active)) return;
+          if (id(sensor_fault_active)) return;   // watchdog has control
+
+          float rh   = id(humidity_sensor).state;
+          float temp = id(temp_sensor).state;
+          float vpd  = id(vpd_sensor).state;
+          int  strat = id(control_strategy_idx);
+
+          // ============ APPLIANCE ESCALATION LADDER ============
+          // Fans are attempt #1 (curve below reacts within 10s). Appliances
+          // are attempt #2: demanded only when the condition PERSISTS
+          // despite the fans. Timers reset the moment the condition clears.
+          {
+            uint32_t nowms = millis();
+            float t_tgt = id(stage_temp_target);
+            float r_hi  = id(stage_rh_max);
+            float r_lo  = id(stage_rh_min);
+            // held-for tracker: returns how long (ms) cond has been true
+            auto track = [nowms](bool cond, uint32_t &since) -> uint32_t {
+              if (cond && since == 0) since = nowms;
+              if (!cond) since = 0;
+              return cond ? (nowms - since) : 0;
+            };
+
+            // Too humid -> DEHUMIDIFIER (fans had 5 min and RH still high)
+            if (id(dehumidifier_auto_enabled) && !isnan(rh)) {
+              if (track(rh > r_hi + 3.0f, id(esc_humid_since)) > 300000 && !id(dehumidifier_demand).state) {
+                id(dehumidifier_demand).turn_on();
+                ESP_LOGI("ladder", "RH %.0f%% > %.0f%% for 5min despite fans -> DEHUMIDIFIER", rh, r_hi);
+              }
+              if (id(dehumidifier_demand).state && rh < r_hi - 2.0f) id(dehumidifier_demand).turn_off();
+            }
+            // Too dry -> HUMIDIFIER (fans already eased; 2 min persistence)
+            if (id(humidifier_auto_enabled) && !isnan(rh)) {
+              if (track(rh < r_lo - 2.0f, id(esc_dry_since)) > 120000 && !id(humidifier_demand).state) {
+                id(humidifier_demand).turn_on();
+                ESP_LOGI("ladder", "RH %.0f%% < %.0f%% for 2min -> HUMIDIFIER", rh, r_lo);
+              }
+              if (id(humidifier_demand).state && rh > r_lo + 2.0f) id(humidifier_demand).turn_off();
+            }
+            // Too cold, rung 1 -> GROW MAT (gentle root-zone heat, 1 min)
+            if (id(growmat_auto_enabled) && !isnan(temp)) {
+              if (track(temp < t_tgt - 1.0f, id(esc_cold_since)) > 60000 && !id(growmat_demand).state) {
+                id(growmat_demand).turn_on();
+                ESP_LOGI("ladder", "Temp %.1fC < %.1fC -> GROW MAT", temp, t_tgt - 1.0f);
+              }
+              if (id(growmat_demand).state && temp >= t_tgt) id(growmat_demand).turn_off();
+            }
+            // Too cold, rung 2 -> 750W HEATER (mat wasn't enough for 5 min)
+            if (id(heater_auto_enabled) && !isnan(temp)) {
+              if (track(temp < t_tgt - 2.0f, id(esc_deep_cold_since)) > 300000 && !id(heater_demand).state) {
+                id(heater_demand).turn_on();
+                ESP_LOGI("ladder", "Temp %.1fC < %.1fC for 5min (mat not enough) -> HEATER", temp, t_tgt - 2.0f);
+              }
+              if (id(heater_demand).state && temp >= t_tgt - 0.5f) id(heater_demand).turn_off();
+            }
+            // Too hot -> AC (OUT fan was flat out for 5 min, still hot)
+            if (id(ac_auto_enabled) && !isnan(temp)) {
+              if (track(temp > t_tgt + 2.0f, id(esc_hot_since)) > 300000 && !id(ac_demand).state) {
+                id(ac_demand).turn_on();
+                ESP_LOGI("ladder", "Temp %.1fC > %.1fC for 5min despite venting -> AC", temp, t_tgt + 2.0f);
+              }
+              if (id(ac_demand).state && temp <= t_tgt + 0.5f) id(ac_demand).turn_off();
+            }
+          }
+
+          // ================= TWO-AXIS FAN CONTROL =================
+          // OUT   (fan_exhaust_out)   -> outside: heat, RH overflow, fresh air
+          // RECIRC(fan_exhaust_recirc)-> room:    VPD/RH air movement, hold heat
+          // Blending the two IS the damper. Intakes slave to total exhaust.
+          int out = 0, recirc = 0, intake = 0;
+          bool rh_overflow = false;
+          if (id(full_auto_mode) && !isnan(temp)) {
+            float rmax = id(stage_rh_max);
+
+            // ---- RECIRC: move air past canopy, feed moisture to the room ----
+            recirc = 20;   // baseline circulation, always on
+            if (strat == 0 && !isnan(vpd)) {                 // VPD strategy
+              float vmin = id(stage_vpd_min), vmax = id(stage_vpd_max);
+              if (vpd < vmin - 0.30f) recirc = 100;          // way too humid
+              else if (vpd < vmin - 0.20f) recirc = 80;
+              else if (vpd < vmin - 0.10f) recirc = 60;
+              else if (vpd < vmin) recirc = 45;              // slightly humid
+              else if (vpd <= vmax) recirc = 30;             // in band
+              else recirc = 20;                              // too dry -> ease off
+            } else if (strat == 2 && !isnan(rh)) {           // Humidity strategy
+              if (rh > rmax + 15.0f) recirc = 100;
+              else if (rh > rmax + 10.0f) recirc = 80;
+              else if (rh > rmax + 5.0f) recirc = 60;
+              else if (rh > rmax) recirc = 45;
+              else recirc = 25;
+            } else {                                         // Temperature strategy
+              recirc = 25;   // OUT does the heat work; RECIRC just circulates
+            }
+
+            // ---- OUT: expel heat / moisture overflow / fresh air ----
+            // Fresh-air floor: no CO2 rig, so makeup air is the only CO2
+            // top-up. Never let the loop fully close.
+            out = 15;
+            float target = id(stage_temp_target);
+            if (temp >= target + 3.0f) out = 100;            // dump heat hard
+            else if (temp >= target + 2.0f) out = 80;
+            else if (temp >= target + 1.0f) out = 60;
+            else if (temp >= target) out = 40;
+            // Moisture overflow: RH way over ceiling -> vent outside NOW,
+            // in parallel with the ladder deciding about the dehumidifier.
+            if (!isnan(rh) && rh > rmax + 5.0f) {
+              if (out < 70) out = 70;
+              rh_overflow = true;
+            }
+
+            // ---- Negative pressure: intakes track total extraction ----
+            intake = (int)(((out + recirc) / 2.0f) * 0.7f);
+
+            auto co = id(fan_exhaust_out).make_call();    co.set_state(out > 0);    co.set_speed(out);    co.perform();
+            auto cr = id(fan_exhaust_recirc).make_call(); cr.set_state(recirc > 0); cr.set_speed(recirc); cr.perform();
+            auto ci = id(fan_intake_main).make_call();    ci.set_state(intake > 0); ci.set_speed(intake); ci.perform();
+            auto cc = id(fan_intake_clone).make_call();   cc.set_state(intake > 0); cc.set_speed(intake); cc.perform();
+          }
+
+          // ---- Build the live "Running:" status line (screensaver) ----
+          {
+            std::string s;
+            auto add = [&s](const char *p) { if (!s.empty()) s += ",   "; s += p; };
+            char b[72];
+            if (!id(full_auto_mode)) {
+              add(id(local_manual_mode).state ? "Manual control - holding set fan levels"
+                                              : "Standby - HA driving outputs directly");
+            } else if (isnan(temp)) {
+              add("Waiting on climate sensor");
+            } else {
+              if (id(dehumidifier_demand).state)      add("Dehumidifier called in");
+              else if (id(humidifier_demand).state)   add("Humidifier called in");
+              if (id(ac_demand).state)                add("AC cooling (max 20C)");
+              if (id(heater_demand).state)            add("heater assisting");
+              else if (id(growmat_demand).state)      add("grow mat warming roots");
+              // Air routing (which way is the air going, and why)
+              if (rh_overflow)         add("venting moisture outside (room dehumidifier maxed)");
+              else if (out >= 60)      add("venting outside to dump heat");
+              else if (recirc >= 60)   add("recirculating hard through the room");
+              else if (recirc > 25)    add("moving air, holding heat in room");
+              else                     add("gentle recirculation + fresh-air trickle");
+              add("maintaining internal negative pressure");
+              if (strat == 0 && !isnan(vpd)) {
+                if (vpd < id(stage_vpd_min))      { snprintf(b, sizeof(b), "raising VPD to target: %.1f", id(stage_vpd_min)); add(b); }
+                else if (vpd > id(stage_vpd_max)) { snprintf(b, sizeof(b), "lowering VPD to target: %.1f", id(stage_vpd_max)); add(b); }
+                else                              { snprintf(b, sizeof(b), "VPD %.2f inside %.1f-%.1f band", vpd, id(stage_vpd_min), id(stage_vpd_max)); add(b); }
+              } else if (strat == 1) {
+                float tt = id(stage_temp_target);
+                if (temp >= tt + 1.0f)      { snprintf(b, sizeof(b), "cooling toward %.0fC (venting out)", tt); add(b); }
+                else if (temp <= tt - 1.0f) { add("trying to maintain heat (recirculating)"); }
+                else                        { snprintf(b, sizeof(b), "holding temp at %.0fC", tt); add(b); }
+              } else if (!isnan(rh)) {
+                if (rh > id(stage_rh_max))      { snprintf(b, sizeof(b), "pulling RH down to %.0f%%", id(stage_rh_max)); add(b); }
+                else if (rh < id(stage_rh_min)) { snprintf(b, sizeof(b), "conserving RH above %.0f%%", id(stage_rh_min)); add(b); }
+                else                            { snprintf(b, sizeof(b), "RH %.0f%% inside band", rh); add(b); }
+              }
+            }
+            if (id(light_ramp_state) == 1)      { snprintf(b, sizeof(b), "sunrise ramp at %d%%", (int) id(light_current_pct)); add(b); }
+            else if (id(light_ramp_state) == 2) { snprintf(b, sizeof(b), "sunset dimming at %d%%", (int) id(light_current_pct)); add(b); }
+            id(auto_status_text) = s;
+          }
+
+  # ---- LIVE APPLY for the OLED adjust pages ----
+  # Called on every dial detent while adjusting: the value takes effect
+  # AS you scroll (no confirm needed). First detent on a fan or the light
+  # engages Manual Override (which suspends auto-curve + photoperiod).
+  # Sunrise/Sunset minutes are live globals and do NOT trigger manual.
+  - id: apply_live_adjust
+    mode: restart
+    then:
+      - lambda: |-
+          if (id(current_page) == 3) {                 // fans
+            id(full_auto_mode) = false;
+            if (!id(local_manual_mode).state) id(local_manual_mode).turn_on();
+            switch (id(adjusting_item)) {
+              case 0: { int v = id(local_target_out);          auto c = id(fan_exhaust_out).make_call();    c.set_state(v > 0); c.set_speed(v); c.perform(); break; }
+              case 1: { int v = id(local_target_recirc);       auto c = id(fan_exhaust_recirc).make_call(); c.set_state(v > 0); c.set_speed(v); c.perform(); break; }
+              case 2: { int v = id(local_target_intake_main);  auto c = id(fan_intake_main).make_call();    c.set_state(v > 0); c.set_speed(v); c.perform(); break; }
+              case 3: { int v = id(local_target_intake_clone); auto c = id(fan_intake_clone).make_call();   c.set_state(v > 0); c.set_speed(v); c.perform(); break; }
+            }
+          } else if (id(current_page) == 5 && id(adjusting_item) == 0) {   // SF1000
+            id(full_auto_mode) = false;
+            if (!id(local_manual_mode).state) id(local_manual_mode).turn_on();
+            int v = id(local_target_sf1000);
+            if (v > 0) { auto l = id(light_sf1000).turn_on(); l.set_brightness(v / 100.0f); l.set_transition_length(200); l.perform(); }
+            else id(light_sf1000).turn_off().perform();
+          }
+
+  # ---- Photoperiod + Sunrise/Sunset ramp (device-run; HA sets params) ----
+  # Ramps live INSIDE the photoperiod window:
+  #   lights-on  ......... 0% -> target% over "Sunrise Duration" min
+  #   steady     ......... hold target%
+  #   window end ......... target% -> 0% over "Sunset Duration" min,
+  #                        finishing exactly AT lights-off.
+  # If sunrise+sunset ever exceed the window, both scale down to fit.
+  - id: run_photoperiod
+    mode: single
+    then:
+      - lambda: |-
+          if (id(boot_resume_pending)) return;   // waiting on resume prompt
+          if (id(emergency_failsafe_active)) return;
+          if (!id(auto_photoperiod_enabled)) { id(light_ramp_state) = 0; return; }
+
+          int dur = id(stage_light_hours);
+          if (dur <= 0) {                        // Dry Mode / dark
+            id(light_sf1000).turn_off().perform();
+            id(lights_currently_on) = false;
+            id(light_ramp_state) = 0;
+            id(light_current_pct) = 0.0f;
+            return;
+          }
+
+          auto now = id(sntp_time).now();
+          if (!now.is_valid()) now = id(grow_time).now();
+          if (!now.is_valid()) return;           // no clock yet -> leave lights
+
+          // Seconds-resolution clock for a smooth ramp
+          float cur  = now.hour * 60.0f + now.minute + now.second / 60.0f;
+          int on_m   = id(lights_on_time).hour * 60 + id(lights_on_time).minute;
+          float window   = dur * 60.0f;
+          float since_on = fmodf(cur - on_m + 1440.0f, 1440.0f);   // handles midnight wrap
+          bool on = since_on < window;
+          id(lights_currently_on) = on;
+
+          // MANUAL OVERRIDE: the schedule keeps ticking (so the display and
+          // countdowns stay honest) but the device does NOT touch the light.
+          // Whatever brightness you set sticks. Resumes when manual is off.
+          if (id(local_manual_mode).state) {
+            id(light_ramp_state) = 0;
+            id(light_current_pct) = id(light_sf1000).remote_values.is_on()
+                ? id(light_sf1000).remote_values.get_brightness() * 100.0f : 0.0f;
+            return;
+          }
+
+          if (!on) {
+            id(light_sf1000).turn_off().perform();
+            id(light_ramp_state) = 0;
+            id(light_current_pct) = 0.0f;
+            return;
+          }
+
+          float target = (float) id(local_target_sf1000);          // the "X%"
+          float rise   = (float) id(sunrise_minutes);              // the "Y min"
+          float fall   = (float) id(sunset_minutes);
+          if (rise + fall > window && (rise + fall) > 0.0f) {      // never overlap
+            float k = window / (rise + fall);
+            rise *= k; fall *= k;
+          }
+
+          float to_off = window - since_on;
+          float pct; int ramp;
+          if (rise > 0.0f && since_on < rise)    { pct = target * (since_on / rise); ramp = 1; }
+          else if (fall > 0.0f && to_off < fall) { pct = target * (to_off / fall);   ramp = 2; }
+          else                                   { pct = target;                     ramp = 0; }
+          id(light_ramp_state)  = ramp;
+          id(light_current_pct) = pct;
+
+          if (pct >= 0.5f) {
+            auto l = id(light_sf1000).turn_on();
+            l.set_brightness(pct / 100.0f);
+            // Glide between 15s updates while ramping so it looks continuous
+            l.set_transition_length(ramp != 0 ? 14000 : 1000);
+            l.perform();
+          } else {
+            id(light_sf1000).turn_off().perform();
+          }
+
+# ==========================================
+# 9. PERIODIC LOOPS
+# ==========================================
+interval:
+  - interval: 10s
+    then:
+      - script.execute: run_climate_logic
+
+  # 15s cadence keeps the sunrise/sunset ramp visually continuous
+  # (each update glides via a 14s light transition).
+  - interval: 15s
+    then:
+      - script.execute: run_photoperiod
+
+  # ---- Boot-resume countdown: starts once the clock syncs (or after a
+  # 2 min cap if WiFi/SNTP is down, so fans never wait forever) ----
+  - interval: 1s
+    then:
+      - lambda: |-
+          if (!id(boot_resume_pending)) return;
+          auto t = id(sntp_time).now();
+          if (!t.is_valid()) t = id(grow_time).now();
+          if (id(boot_time_synced_at) == 0 && (t.is_valid() || millis() > 120000))
+            id(boot_time_synced_at) = millis();
+          if (id(boot_time_synced_at) != 0 && (millis() - id(boot_time_synced_at)) > 60000) {
+            id(boot_resume_pending) = false;
+            ESP_LOGI("boot", "Resume prompt timed out -> continuing Auto");
+          }
+
+  # ---- 1h trend sampler: 12-slot ring buffer, one sample / 5 min ----
+  - interval: 300s
+    then:
+      - lambda: |-
+          int i = id(hist_idx);
+          id(hist_temp)[i] = id(temp_sensor).state;
+          id(hist_rh)[i]   = id(humidity_sensor).state;
+          id(hist_vpd)[i]  = id(vpd_sensor).state;
+          id(hist_idx) = (i + 1) % 12;
+          if (id(hist_idx) == 0) id(hist_filled) = true;
+
+  # ---- Sensor watchdog: no valid temp for 3 min -> safe mode + alert ----
+  - interval: 30s
+    then:
+      - lambda: |-
+          bool stale = (millis() - id(last_valid_temp_time)) > 180000;
+          if (stale && !id(sensor_fault_active)) {
+            id(sensor_fault_active) = true;
+            id(humidifier_demand).turn_off();
+            id(dehumidifier_demand).turn_off();
+            id(heater_demand).turn_off();
+            id(growmat_demand).turn_off();
+            id(ac_demand).turn_off();   // climate unknown -> no appliances
+            // No temp reading -> gentle, safe ventilation. Bias OUTSIDE
+            // (fresh air + mild extraction) since we can't trust climate.
+            auto fe = id(fan_exhaust_out).make_call();  fe.set_state(true); fe.set_speed(40); fe.perform();
+            auto fa = id(fan_exhaust_recirc).make_call();  fa.set_state(true); fa.set_speed(25); fa.perform();
+            auto fim = id(fan_intake_main).make_call(); fim.set_state(true); fim.set_speed(25); fim.perform();
+            auto fic = id(fan_intake_clone).make_call();fic.set_state(true); fic.set_speed(25); fic.perform();
+            ESP_LOGW("watchdog", "No valid temp for 3 min -> SENSOR FAULT safe mode");
+          } else if (!stale && id(sensor_fault_active)) {
+            id(sensor_fault_active) = false;
+            ESP_LOGI("watchdog", "Temperature sensor recovered");
+          }
+
+# ==========================================
+# 10. OLED DISPLAY RENDERER
+# ==========================================
+display:
+  - platform: ssd1306_i2c
+    model: "SH1106 128x64"
+    address: 0x3C
+    id: oled_screen
+    update_interval: 50ms
+    lambda: |-
+      // --- RAW PIXEL-MAPPED SCREENSAVER (also prevents burn-in) ---
+      static const unsigned char dsc_esp_logo_bits[] = {
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x07, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x0f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x3f, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x7f, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0x00, 0x00, 0x00,
+        0x00, 0x01, 0xff, 0x00, 0x00, 0x00, 0x00, 0x01, 0xff, 0x00, 0x00, 0x00, 0x00, 0x03, 0xff, 0x00,
+        0x00, 0x00, 0x00, 0x03, 0xff, 0x00, 0x00, 0x00, 0x00, 0x07, 0xff, 0x80, 0x00, 0x00, 0x00, 0x07,
+        0xff, 0x60, 0x00, 0x00, 0x00, 0x0f, 0xfc, 0x30, 0x00, 0x00, 0x00, 0x0f, 0xf0, 0x08, 0x00, 0x00,
+        0x00, 0x1f, 0xe3, 0x06, 0x00, 0x00, 0x00, 0x1f, 0xc7, 0x03, 0x00, 0x00, 0x00, 0x3f, 0x9f, 0x01,
+        0x80, 0x00, 0x00, 0x3f, 0x3f, 0x00, 0xc0, 0x00, 0x00, 0x3e, 0x0f, 0x0e, 0x60, 0x00, 0x00, 0x7c,
+        0x07, 0x1e, 0x30, 0x00, 0x00, 0x78, 0xc3, 0x3c, 0x10, 0x00, 0x00, 0xf1, 0xf3, 0x30, 0x08, 0x00,
+        0x00, 0xe1, 0xff, 0x00, 0x04, 0x00, 0x01, 0xe1, 0xff, 0x00, 0x06, 0x00, 0x01, 0xc1, 0xff, 0x00,
+        0x82, 0x00, 0x01, 0xc1, 0xff, 0x00, 0x83, 0x00, 0x03, 0x80, 0xff, 0x01, 0x81, 0x00, 0x01, 0x80,
+        0xff, 0x01, 0x01, 0x00, 0x01, 0x80, 0xff, 0x01, 0x01, 0x00, 0x00, 0xc0, 0xf8, 0xe3, 0x03, 0x00,
+        0x00, 0x60, 0x7f, 0x06, 0x06, 0x00, 0x00, 0x30, 0x3f, 0x0c, 0x0c, 0x00, 0x00, 0x18, 0x1f, 0x18,
+        0x18, 0x00, 0x00, 0x0c, 0x0f, 0x30, 0x30, 0x00, 0x1f, 0x02, 0x03, 0x40, 0x40, 0x78, 0x1f, 0xc1,
+        0x00, 0x00, 0x83, 0xf8, 0x1b, 0xe0, 0x80, 0x03, 0x07, 0xd8, 0x1c, 0xf1, 0xe0, 0x07, 0x8f, 0xb8,
+        0x0e, 0x7a, 0x30, 0x0e, 0x5e, 0x78, 0x0f, 0x39, 0x98, 0x19, 0x9c, 0xf0, 0x0f, 0x98, 0x44, 0x22,
+        0x19, 0xf0, 0x07, 0xcc, 0x22, 0x44, 0x13, 0xe0, 0x03, 0xe8, 0x01, 0x8c, 0x17, 0xc0, 0x01, 0xf0,
+        0x01, 0x08, 0x0f, 0x80, 0x00, 0x04, 0x01, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x40, 0x00
+      };
+
+      // --- MARQUEE ENGINE ------------------------------------------------
+      // Shared scroll clock; any line wider than the screen auto-scrolls.
+      id(marquee_px) += 2.0f;                       // ~40 px/s @ 50ms refresh
+      auto draw_scroll = [&](int x, int y, display::BaseFont *font, const char *text) {
+        int bx, by, bw, bh;
+        it.get_text_bounds(0, 0, text, font, TextAlign::TOP_LEFT, &bx, &by, &bw, &bh);
+        int avail = 128 - x;
+        if (bw <= avail) { it.print(x, y, font, text); return; }
+        int span = bw + 56;                         // generous gap before it loops
+        int off = ((int) id(marquee_px)) % span;
+        it.print(x - off, y, font, text);
+        it.print(x - off + span, y, font, text);    // seamless wrap copy
+      };
+
+      // EMERGENCY banner
+      if (id(emergency_failsafe_active)) {
+         it.printf(64, 16, id(font_large), TextAlign::CENTER, "! EMERGENCY");
+         it.printf(64, 38, id(font_medium), TextAlign::CENTER, "TEMP %.1f C", id(temp_sensor).state);
+         it.printf(64, 54, id(font_medium), TextAlign::CENTER, "PURGING 100%%");
+         return;
+      }
+
+      // SENSOR FAULT banner
+      if (id(sensor_fault_active)) {
+         it.printf(64, 16, id(font_large), TextAlign::CENTER, "SENSOR FAULT");
+         it.printf(64, 40, id(font_small), TextAlign::CENTER, "No temp reading");
+         it.printf(64, 52, id(font_small), TextAlign::CENTER, "Safe mode active");
+         return;
+      }
+
+      // BOOT RESUME PROMPT: power returned mid-schedule. Automations are
+      // held until Dial (continue), Back (manual), or the 60s timeout.
+      if (id(boot_resume_pending)) {
+         it.printf(64, 0, id(font_medium), TextAlign::TOP_CENTER, "RESUME AUTO?");
+         char r1[40];
+         snprintf(r1, sizeof(r1), "Auto: %s", id(stage_short).c_str());
+         draw_scroll(4, 16, id(font_small), r1);
+         auto bnow = id(sntp_time).now();
+         if (!bnow.is_valid()) bnow = id(grow_time).now();
+         if (bnow.is_valid() && id(stage_light_hours) > 0) {
+           int cur = bnow.hour * 60 + bnow.minute;
+           int on_m = id(lights_on_time).hour * 60 + id(lights_on_time).minute;
+           int off_m = (on_m + id(stage_light_hours) * 60) % 1440;
+           bool in_win = ((cur - on_m + 1440) % 1440) < id(stage_light_hours) * 60;
+           int mins = in_win ? (off_m - cur + 1440) % 1440 : (on_m - cur + 1440) % 1440;
+           char r2[44];
+           snprintf(r2, sizeof(r2), "Lights %s  %dh%02dm %s", in_win ? "ON" : "OFF", mins / 60, mins % 60, in_win ? "left" : "to on");
+           draw_scroll(4, 27, id(font_small), r2);
+         } else if (!bnow.is_valid()) {
+           it.printf(4, 27, id(font_small), "Syncing clock...");
+         } else {
+           it.printf(4, 27, id(font_small), "Dark stage (Dry)");
+         }
+         it.printf(4, 38, id(font_small), "Dial=Go  Back=Manual");
+         if (id(boot_time_synced_at) != 0) {
+           int rem = 60 - (int)((millis() - id(boot_time_synced_at)) / 1000);
+           if (rem < 0) rem = 0;
+           it.printf(4, 49, id(font_small), "Auto-continue in %ds", rem);
+         } else {
+           it.printf(4, 49, id(font_small), "Waiting for clock...");
+         }
+         return;
+      }
+
+      // --- SCREENSAVER: bouncing logo + live "Running:" status line ------
+      if (millis() - id(last_interaction_time) > 300000) {
+         id(current_page) = 0; id(menu_cursor) = 0;   // wake clean to Home
+         id(saver_x) += id(saver_vx); id(saver_y) += id(saver_vy);
+         // Bounce inside the area above the status line (logo is 48px tall)
+         if (id(saver_x) <= 0)  { id(saver_x) = 0;  id(saver_vx) =  fabsf(id(saver_vx)); }
+         if (id(saver_x) >= 80) { id(saver_x) = 80; id(saver_vx) = -fabsf(id(saver_vx)); }
+         if (id(saver_y) <= 0)  { id(saver_y) = 0;  id(saver_vy) =  fabsf(id(saver_vy)); }
+         if (id(saver_y) >= 2)  { id(saver_y) = 2;  id(saver_vy) = -fabsf(id(saver_vy)); }
+         for(int y = 0; y < 48; y++) {
+             for(int x = 0; x < 48; x++) {
+                 int byte_idx = y * 6 + (x / 8);
+                 int bit_idx = x % 8;
+                 if (dsc_esp_logo_bits[byte_idx] & (1 << (7 - bit_idx))) {
+                     it.draw_pixel_at(id(saver_x) + x, id(saver_y) + y);
+                 }
+             }
+         }
+         std::string run_line = "Running:  " + id(auto_status_text);
+         draw_scroll(0, 50, id(font_small), run_line.c_str());
+         return;
+      }
+
+      // PAGE 0: HOME  (dial-rotate here to cycle the status carousel)
+      if (id(current_page) == 0) {
+        const char* mode = id(full_auto_mode) ? "AUTO" : (id(local_manual_mode).state ? "MAN" : "HA");
+        it.printf(0, 0,  id(font_small), "T:%.1fC  RH:%.0f%%", id(temp_sensor).state, id(humidity_sensor).state);
+        it.printf(0, 16, id(font_small), "VPD %.2f [%.1f-%.1f]", id(vpd_sensor).state, id(stage_vpd_min), id(stage_vpd_max));
+        char l3[48];
+        snprintf(l3, sizeof(l3), "%s  L:%s %d%%", id(stage_short).c_str(), id(lights_currently_on) ? "ON" : "OFF", (int) id(light_current_pct));
+        draw_scroll(0, 32, id(font_small), l3);
+        char l4[48];
+        snprintf(l4, sizeof(l4), "Mode:%s  %s", mode, id(control_strategy).state.c_str());
+        draw_scroll(0, 48, id(font_small), l4);
+      }
+
+      // PAGE 1: MAIN MENU
+      else if (id(current_page) == 1) {
+        it.printf(64, 0, id(font_medium), TextAlign::TOP_CENTER, "MAIN MENU");
+        it.printf(12, 16, id(font_small), "Airflow Control");
+        it.printf(12, 27, id(font_small), "Lighting Control");
+        it.printf(12, 38, id(font_small), "Grow Status");
+        it.printf(12, 49, id(font_small), "System Info");
+        it.printf(0, 16 + (id(menu_cursor) * 11), id(font_small), ">>");
+      }
+
+      // PAGE 2: AIRFLOW (4 fans)
+      else if (id(current_page) == 2) {
+        it.printf(64, 0, id(font_medium), TextAlign::TOP_CENTER, "AIRFLOW");
+        it.printf(12, 16, id(font_small), "Exhaust Out [%d%%]", id(local_target_out));
+        it.printf(12, 27, id(font_small), "Exhaust Room [%d%%]", id(local_target_recirc));
+        it.printf(12, 38, id(font_small), "Main Intake [%d%%]", id(local_target_intake_main));
+        it.printf(12, 49, id(font_small), "Clone Intake [%d%%]", id(local_target_intake_clone));
+        it.printf(0, 16 + (id(menu_cursor) * 11), id(font_small), ">>");
+      }
+
+      // PAGE 4: LIGHTING
+      else if (id(current_page) == 4) {
+        it.printf(64, 0, id(font_medium), TextAlign::TOP_CENTER, "LIGHTING");
+        it.printf(12, 16, id(font_small), "SF1000 [%d%%]", id(local_target_sf1000));
+        it.printf(12, 27, id(font_small), "Sunrise [%dm]", id(sunrise_minutes));
+        it.printf(12, 38, id(font_small), "Sunset [%dm]", id(sunset_minutes));
+        it.printf(0, 16 + (id(menu_cursor) * 11), id(font_small), ">>");
+      }
+
+      // PAGE 3 / 5: ADJUST ITEM
+      else if (id(current_page) == 3 || id(current_page) == 5) {
+        int current_val = 0;
+        const char* unit = "%";
+        if (id(current_page) == 3) {
+          it.printf(64, 0, id(font_medium), TextAlign::TOP_CENTER, "ADJUST FAN");
+          if (id(adjusting_item) == 0) current_val = id(local_target_out);
+          else if (id(adjusting_item) == 1) current_val = id(local_target_recirc);
+          else if (id(adjusting_item) == 2) current_val = id(local_target_intake_main);
+          else if (id(adjusting_item) == 3) current_val = id(local_target_intake_clone);
+        } else {
+          it.printf(64, 0, id(font_medium), TextAlign::TOP_CENTER, "ADJUST LIGHT");
+          if (id(adjusting_item) == 0) current_val = id(local_target_sf1000);
+          else if (id(adjusting_item) == 1) { current_val = id(sunrise_minutes); unit = "min"; }
+          else if (id(adjusting_item) == 2) { current_val = id(sunset_minutes);  unit = "min"; }
+        }
+        it.printf(64, 30, id(font_large), TextAlign::CENTER, "%d %s", current_val, unit);
+        it.printf(64, 55, id(font_small), TextAlign::CENTER, "Live - Push = Done");
+      }
+
+      // PAGE 6: SYSTEM INFO
+      else if (id(current_page) == 6) {
+        it.printf(64, 0, id(font_medium), TextAlign::TOP_CENTER, "SYSTEM INFO");
+        it.printf(4, 16, id(font_small), "HA: %s", id(ha_connected).state ? "Connected" : "Offline");
+        it.printf(4, 27, id(font_small), "CO2e: %.0f ppm", id(co2_ppm_estimate).state);
+        it.printf(4, 38, id(font_small), "Fault: %s", id(sensor_fault_active) ? "YES" : "No");
+        it.printf(4, 49, id(font_small), "IP: %s", id(network_ip).state.c_str());
+      }
+
+      // PAGE 7: GROW STATUS (read-only)
+      else if (id(current_page) == 7) {
+        it.printf(64, 0, id(font_medium), TextAlign::TOP_CENTER, "GROW STATUS");
+        it.printf(4, 16, id(font_small), "Stage: %s", id(stage_short).c_str());
+        it.printf(4, 27, id(font_small), "VPD %.2f /%.1f-%.1f", id(vpd_sensor).state, id(stage_vpd_min), id(stage_vpd_max));
+        it.printf(4, 38, id(font_small), "RH %.0f%% /%.0f-%.0f", id(humidity_sensor).state, id(stage_rh_min), id(stage_rh_max));
+        if (id(stage_light_hours) <= 0) {
+          it.printf(4, 49, id(font_small), "Light: DARK (Dry)");
+        } else {
+          int mins_left = -1;
+          auto now = id(sntp_time).now();
+          if (!now.is_valid()) now = id(grow_time).now();
+          if (now.is_valid()) {
+            int cur = now.hour * 60 + now.minute;
+            int on_m = id(lights_on_time).hour * 60 + id(lights_on_time).minute;
+            int off_m = (on_m + id(stage_light_hours) * 60) % 1440;
+            if (id(lights_currently_on)) mins_left = (off_m - cur + 1440) % 1440;
+            else mins_left = (on_m - cur + 1440) % 1440;
+          }
+          if (mins_left >= 0)
+            it.printf(4, 49, id(font_small), "L:%s  %dh%02dm %s", id(lights_currently_on) ? "ON" : "OFF", mins_left / 60, mins_left % 60, id(lights_currently_on) ? "left" : "on");
+          else
+            it.printf(4, 49, id(font_small), "L:%s  (no clock)", id(lights_currently_on) ? "ON" : "OFF");
+        }
+      }
+
+      // ==================== STATUS CAROUSEL (dial from Home) =============
+
+      // PAGE 8: TRENDS (delta vs 1h ago, 5-min ring buffer)
+      else if (id(current_page) == 8) {
+        it.printf(64, 0, id(font_medium), TextAlign::TOP_CENTER, "TRENDS 1h");
+        bool have = id(hist_filled);
+        int oldest = id(hist_idx);              // next write slot = oldest sample
+        float t0 = have ? id(hist_temp)[oldest] : NAN;
+        float r0 = have ? id(hist_rh)[oldest]   : NAN;
+        float v0 = have ? id(hist_vpd)[oldest]  : NAN;
+        float tc = id(temp_sensor).state, rc = id(humidity_sensor).state, vc = id(vpd_sensor).state;
+        if (!isnan(t0) && !isnan(tc)) it.printf(4, 16, id(font_small), "T   %.1fC   %+.1f", tc, tc - t0);
+        else                          it.printf(4, 16, id(font_small), "T   %.1fC   ...", tc);
+        if (!isnan(r0) && !isnan(rc)) it.printf(4, 27, id(font_small), "RH  %.0f%%    %+.0f", rc, rc - r0);
+        else                          it.printf(4, 27, id(font_small), "RH  %.0f%%    ...", rc);
+        if (!isnan(v0) && !isnan(vc)) it.printf(4, 38, id(font_small), "VPD %.2f  %+.2f", vc, vc - v0);
+        else                          it.printf(4, 38, id(font_small), "VPD %.2f  ...", vc);
+        it.printf(4, 49, id(font_small), "CO2e %.0f ppm", id(co2_ppm_estimate).state);
+      }
+
+      // PAGE 9: LIGHTS (window, brightness, ramp phase, countdown)
+      else if (id(current_page) == 9) {
+        it.printf(64, 0, id(font_medium), TextAlign::TOP_CENTER, "LIGHTS");
+        float pct = id(auto_photoperiod_enabled)
+                      ? id(light_current_pct)
+                      : (id(light_sf1000).remote_values.is_on() ? id(light_sf1000).remote_values.get_brightness() * 100.0f : 0.0f);
+        it.printf(4, 16, id(font_small), "SF1000: %s %d%%", pct > 0.5f ? "ON" : "OFF", (int) pct);
+        int lh = id(lights_on_time).hour, lm = id(lights_on_time).minute;
+        int h12 = lh % 12; if (h12 == 0) h12 = 12;
+        char l2[48];
+        snprintf(l2, sizeof(l2), "On @ %d:%02d %s for %dh", h12, lm, lh < 12 ? "AM" : "PM", id(stage_light_hours));
+        draw_scroll(4, 27, id(font_small), l2);
+        const char* ramp = id(light_ramp_state) == 1 ? "Sunrise (raising)"
+                         : id(light_ramp_state) == 2 ? "Sunset (dimming)"
+                         : (id(lights_currently_on) ? "Steady" : "Dark");
+        it.printf(4, 38, id(font_small), "Phase: %s", ramp);
+        if (id(stage_light_hours) > 0) {
+          auto now = id(sntp_time).now();
+          if (!now.is_valid()) now = id(grow_time).now();
+          if (now.is_valid()) {
+            int cur = now.hour * 60 + now.minute;
+            int on_m = id(lights_on_time).hour * 60 + id(lights_on_time).minute;
+            int off_m = (on_m + id(stage_light_hours) * 60) % 1440;
+            int mins = id(lights_currently_on) ? (off_m - cur + 1440) % 1440 : (on_m - cur + 1440) % 1440;
+            it.printf(4, 49, id(font_small), "%dh%02dm to %s", mins / 60, mins % 60, id(lights_currently_on) ? "OFF" : "ON");
+          }
+        } else {
+          it.printf(4, 49, id(font_small), "Dark period (Dry)");
+        }
+      }
+
+      // PAGE 10: FANS (purpose + live speed)
+      else if (id(current_page) == 10) {
+        it.printf(64, 0, id(font_medium), TextAlign::TOP_CENTER, "FANS");
+        it.printf(4, 16, id(font_small), "Out  %3d%% Outside", id(fan_exhaust_out).state ? id(fan_exhaust_out).speed : 0);
+        it.printf(4, 27, id(font_small), "Room %3d%% Recirc", id(fan_exhaust_recirc).state ? id(fan_exhaust_recirc).speed : 0);
+        it.printf(4, 38, id(font_small), "IntM %3d%%  Fresh", id(fan_intake_main).state ? id(fan_intake_main).speed : 0);
+        it.printf(4, 49, id(font_small), "Int2 %3d%%  Clone", id(fan_intake_clone).state ? id(fan_intake_clone).speed : 0);
+      }
+
+      // PAGE 11: WIFI DIAGNOSTICS
+      else if (id(current_page) == 11) {
+        it.printf(64, 0, id(font_medium), TextAlign::TOP_CENTER, "WIFI DIAG");
+        std::string ssid_line = "SSID: " + id(network_ssid).state;
+        draw_scroll(4, 16, id(font_small), ssid_line.c_str());
+        float rssi = id(wifi_rssi).state;
+        const char* q = isnan(rssi) ? "?" : (rssi > -60 ? "Good" : (rssi > -70 ? "OK" : "Weak"));
+        it.printf(4, 27, id(font_small), "RSSI: %.0f dBm %s", rssi, q);
+        std::string ip_line = "IP: " + id(network_ip).state;
+        draw_scroll(4, 38, id(font_small), ip_line.c_str());
+        it.printf(4, 49, id(font_small), "HA: %s", id(ha_connected).state ? "Connected" : "Offline");
+      }

@@ -1,0 +1,23 @@
+# ==================================================================
+#  DSC-Humidifier — device stub  (v2.4)
+#  Sonoff BASIC R2 v1.4 · ESP8285 · GPIO12 relay / GPIO0 button / GPIO13 LED
+#  ------------------------------------------------------------------
+#  ⚠ NEVER put logic in a stub — it belongs in dsc-sonoff-common.yaml.
+#  ⚠ `name:` is the entity_id contract: switch.dsc_humidifier_main_relay
+#     is referenced by the demand_follower automation + dashboards.
+#
+#  API-loss grace: 90s
+#  # Room humidifier. Low consequence; 90s avoids nuisance cuts.
+# ==================================================================
+
+substitutions:
+  name: dsc-humidifier
+  friendly_name: DSC-Humidifier
+  ap_ssid: "DSC-Humidifier Fallback Hotspot"
+  api_key_val: !secret dsc_humidifier_api_key
+  ota_password_val: !secret dsc_humidifier_ota_password
+  ap_password_val: !secret dsc_humidifier_ap_password
+  api_grace_ms: "90000"
+
+packages:
+  common: !include dsc-sonoff-common.yaml

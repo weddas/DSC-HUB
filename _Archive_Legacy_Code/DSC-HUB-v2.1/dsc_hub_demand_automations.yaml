@@ -1,0 +1,64 @@
+# ==================================================================
+#  DSC-HUB · Demand automations (five bindings of demand_follower)
+#  ------------------------------------------------------------------
+#  Paste into automations.yaml (or create each via the UI from the
+#  "DSC-HUB · Demand Follower" blueprint — same result).
+#
+#  BEFORE USE — two verifications:
+#   1. Demand entity_ids: ESPHome derives them from the device name
+#      (dsc-hub) + switch name, so they should match the values below.
+#      Confirm in Developer Tools -> States, filter "demand".
+#   2. Appliance plugs: the four `switch.REPLACE_*` ids are the ONLY
+#      edits required — point each at the real smart plug entity.
+#      Multiple plugs per demand are fine (YAML list).
+# ==================================================================
+
+- id: dsc_hub_demand_humidifier
+  alias: "DSC-HUB · Humidifier follows demand"
+  description: "RH too low: ladder demands after 2 min below min-2"
+  use_blueprint:
+    path: dsc-hub/demand_follower.yaml
+    input:
+      demand_entity: switch.dsc_hub_humidifier_demand
+      appliance_entity:
+        - switch.REPLACE_humidifier_plug
+
+- id: dsc_hub_demand_dehumidifier
+  alias: "DSC-HUB · Dehumidifier follows demand"
+  description: "RH too high: ladder demands after fans had 5 min at max+3"
+  use_blueprint:
+    path: dsc-hub/demand_follower.yaml
+    input:
+      demand_entity: switch.dsc_hub_dehumidifier_demand
+      appliance_entity:
+        - switch.REPLACE_dehumidifier_plug
+
+- id: dsc_hub_demand_growmat
+  alias: "DSC-HUB · Grow Mat follows demand"
+  description: "Cold rung 1: root-zone warmth after 1 min below target-1"
+  use_blueprint:
+    path: dsc-hub/demand_follower.yaml
+    input:
+      demand_entity: switch.dsc_hub_grow_mat_demand
+      appliance_entity:
+        - switch.REPLACE_growmat_plug
+
+- id: dsc_hub_demand_heater
+  alias: "DSC-HUB · Heater follows demand"
+  description: "Cold rung 2: 750W heater after 5 min below target-2"
+  use_blueprint:
+    path: dsc-hub/demand_follower.yaml
+    input:
+      demand_entity: switch.dsc_hub_heater_demand
+      appliance_entity:
+        - switch.REPLACE_heater_plug
+
+- id: dsc_hub_demand_ac
+  alias: "DSC-HUB · AC follows demand"
+  description: "Too hot: portable AC (cool @20C) after 5 min above target+2"
+  use_blueprint:
+    path: dsc-hub/demand_follower.yaml
+    input:
+      demand_entity: switch.dsc_hub_ac_demand
+      appliance_entity:
+        - switch.REPLACE_ac_plug

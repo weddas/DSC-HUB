@@ -1,0 +1,18 @@
+# ==================================================================
+#  DSC-HUB — .gitignore
+#  The first line is the most important one in this repo.
+#  The old keys died because a file like this didn't exist yet.
+# ==================================================================
+secrets.yaml
+secrets.yaml.*
+*.old-*
+
+# ESPHome build artefacts
+.esphome/
+esphome/.esphome/
+*.bin
+*.elf
+
+# Never commit a live HA config
+home-assistant_v2.db*
+.storage/

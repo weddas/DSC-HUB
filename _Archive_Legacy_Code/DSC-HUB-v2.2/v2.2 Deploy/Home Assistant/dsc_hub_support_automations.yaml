@@ -1,0 +1,122 @@
+# ==================================================================
+#  DSC-HUB · Support & safety-net automations (v2.2)
+#  Paste into automations.yaml alongside the demand automations.
+#
+#  REPLACE:
+#    * notify.mobile_app_YOUR_PHONE   -> your phone's notify service
+#    * the appliance plug list in #1  -> the SAME seven plugs you used
+#      in dsc_hub_demand_automations.yaml
+# ==================================================================
+
+# 1) HUB OFFLINE -> ALL APPLIANCES SAFE-OFF + alert.
+#    The blueprint already fails each pair safe, but this is the
+#    belt-AND-braces master cutoff with a notification. Trigger uses
+#    the tent temperature entity: if the hub drops off the network,
+#    every dsc_hub entity goes unavailable together.
+- id: dsc_hub_offline_safe_off
+  alias: "DSC-HUB · Hub offline -> appliances safe-off + alert"
+  triggers:
+    - trigger: state
+      entity_id: sensor.dsc_hub_tent_temperature
+      to: "unavailable"
+      for: "00:02:00"
+  actions:
+    - action: homeassistant.turn_off
+      target:
+        entity_id:
+          - switch.REPLACE_WITH_HUMIDIFIER_PLUG
+          - switch.REPLACE_WITH_DEHUMIDIFIER_PLUG
+          - switch.REPLACE_WITH_HEATER_PLUG
+          - switch.REPLACE_WITH_GROWMAT_PLUG
+          - switch.REPLACE_WITH_AC_PLUG
+          - switch.REPLACE_WITH_CLONE_LIGHT_PLUG
+          - switch.REPLACE_WITH_CLONE_HUMIDIFIER_PLUG
+    - action: persistent_notification.create
+      data:
+        title: "DSC-HUB OFFLINE"
+        message: >-
+          The hub has been unreachable for 2 minutes. All grow
+          appliances were switched OFF as a safety measure. The hub's
+          own fans keep running at its last commanded state.
+    - action: notify.mobile_app_YOUR_PHONE
+      data:
+        title: "🚨 DSC-HUB OFFLINE"
+        message: "Hub unreachable 2 min — appliances cut. Check power/WiFi."
+  mode: single
+
+# 2) TENT SENSOR FAULT (hub is in safe-vent mode) -> alert
+- id: dsc_hub_sensor_fault_alert
+  alias: "DSC-HUB · Climate sensor fault -> alert"
+  triggers:
+    - trigger: state
+      entity_id: binary_sensor.dsc_hub_climate_sensor_fault
+      to: "on"
+  actions:
+    - action: notify.mobile_app_YOUR_PHONE
+      data:
+        title: "⚠️ DSC-HUB sensor fault"
+        message: >-
+          Tent DHT22 has gone stale — the hub is in SAFE VENT mode
+          (gentle outside bias, appliances off) until readings return.
+  mode: single
+
+# 3) AUX SENSOR SOFT FAULT (room/clone sensor) -> low-priority alert
+- id: dsc_hub_aux_fault_alert
+  alias: "DSC-HUB · Aux sensor soft fault -> alert"
+  triggers:
+    - trigger: state
+      entity_id: binary_sensor.dsc_hub_aux_sensor_fault
+      to: "on"
+      for: "00:05:00"
+  actions:
+    - action: notify.mobile_app_YOUR_PHONE
+      data:
+        title: "DSC-HUB aux sensor offline"
+        message: >-
+          Room or clone DHT22 is stale. The hub has reverted the router
+          and reality gates to v2.1 behaviour — nothing is unsafe, but
+          the efficiency features are parked until the sensor returns.
+  mode: single
+
+# 4) OVER-TEMP -> critical alert (the hub runs its own >35C purge;
+#    this is the human escalation path)
+- id: dsc_hub_overtemp_alert
+  alias: "DSC-HUB · Over-temp emergency -> critical alert"
+  triggers:
+    - trigger: numeric_state
+      entity_id: sensor.dsc_hub_tent_temperature
+      above: 34.5
+      for: "00:02:00"
+  actions:
+    - action: notify.mobile_app_YOUR_PHONE
+      data:
+        title: "🔥 DSC-HUB EMERGENCY PURGE"
+        message: >-
+          Tent over 34.5°C for 2 min. The hub is purging outside with
+          lights off. If this doesn't clear soon, physically check the
+          tent — {{ states('sensor.dsc_hub_tent_temperature') }}°C now.
+        data:
+          push:
+            interruption-level: critical
+  mode: single
+
+# 5) UNANSWERED HEATER DEMAND (winter seedling killer): demand ON but
+#    the plug never came on -> dead plug, dead automation, or dead WiFi
+#    on the plug. 5 minutes is generous.
+- id: dsc_hub_heater_unanswered
+  alias: "DSC-HUB · Heater demand unanswered -> alert"
+  triggers:
+    - trigger: state
+      entity_id: switch.dsc_hub_heater_demand
+      to: "on"
+      for: "00:05:00"
+  conditions:
+    - condition: state
+      entity_id: switch.REPLACE_WITH_HEATER_PLUG
+      state: "off"
+  actions:
+    - action: notify.mobile_app_YOUR_PHONE
+      data:
+        title: "⚠️ Heater demand unanswered"
+        message: "Hub has demanded heat for 5 min but the heater plug is still OFF. Check the plug."
+  mode: single

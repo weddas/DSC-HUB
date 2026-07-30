@@ -1,0 +1,392 @@
+# ==================================================================
+#  DIGITAL-PLANT  ·  DSC-POT COMMON PACKAGE               (v2.4)
+#  ESP32 · RS485 Modbus 7-in-1 NPK soil probe (JXCT-style)
+#  ------------------------------------------------------------------
+#  One package, four nodes. Fix once, deploy everywhere.
+#  Stubs set ONLY: name, friendly_name, secrets. NEVER put logic in a
+#  stub — it belongs here.
+#
+#  ⚠ ENTITY IDs ARE A CONTRACT. The deployed nodes publish
+#  `sensor.dsc_pot1_soil_*` (NO underscore before the digit). Those ids
+#  are referenced by: the four HA packages (dsc_pots_stats /
+#  _alerts / _correlation / dsc_tank — 64 statistics sensors and 28
+#  alert binaries), the DSC Grow dashboard, and — new in v2.4 — the
+#  HUB's closed-loop grow mat. Renaming a node breaks all of it at once.
+#
+#  v2.4 — THE PACKAGE ROLLOUT (July 2026)
+#  The deployed pots still run the pre-package MONOLITHIC v0 configs:
+#  20 s polling, no filters, no device_class/state_class, inline API
+#  keys. This package is what actually lands on the hardware.
+#   * 60 s polling (was 20 s) — soil is a slow thermal/ionic mass;
+#     3x less bus traffic, 3x less recorder churn, zero information
+#     lost. The 20 s rate was measuring noise, not roots.
+#   * Out-of-range lambda -> NAN + median(3) — RS485 bus glitches
+#     were reaching the dashboards as real readings.
+#   * device_class / state_class throughout — without these HA keeps
+#     no long-term statistics, and every baseline sensor in
+#     dsc_pots_stats.yaml is built on them.
+#   * secrets de-inlined + rotated (v0 carried keys inline, and they
+#     have been through chat/upload logs).
+#   * project: version block — pots join the versioning scheme.
+#   * ESP-NOW provider: LIVE below as of v2.4.1 (MACs captured
+#     19 Jul 2026) — pots unicast soil temp/moisture straight to the
+#     hub; HA is out of the mat's sense loop.
+#
+#  ⚠ POT3: soil probe reads 0.0% moisture — known fault, swap-test
+#  pending (Faults & Repairs). This package changes nothing about that;
+#  a faulty probe reports faithfully through good firmware.
+# ==================================================================
+
+substitutions:
+  # The Modbus address of the probe. All four are factory 0x01 on their
+  # own isolated bus (one probe per node), so this is a default, not a
+  # per-node fact — but it's here in case a replacement probe ships
+  # with a different address.
+  probe_address: "1"
+
+esphome:
+  name: ${name}
+  friendly_name: ${friendly_name}
+  # v2.4: pots join the versioning scheme. "Which nodes are behind?"
+  # becomes a dashboard column instead of an archaeology expedition.
+  project:
+    name: digital_emotions.dsc-pot
+    version: "2.4.1"
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+
+logger:
+
+# v2.4: was inline in the deployed v0 config. Rotate on flash.
+# See the secrets note in dsc-sonoff-common.yaml: `!secret` resolves
+# before substitutions, so the stub passes the VALUE in.
+api:
+  encryption:
+    key: ${api_key_val}
+  reboot_timeout: 15min
+
+ota:
+  - platform: esphome
+    password: ${ota_password_val}
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  ap:
+    ssid: "${friendly_name} Fallback"
+    password: ${ap_password_val}
+
+captive_portal:
+
+# ==================================================================
+#  RS485 / MODBUS
+# ==================================================================
+uart:
+  id: rs485_uart
+  tx_pin: GPIO17
+  rx_pin: GPIO16
+  baud_rate: 4800
+  parity: NONE
+  stop_bits: 1
+
+modbus:
+  id: modbus1
+  uart_id: rs485_uart
+  flow_control_pin: GPIO4
+
+modbus_controller:
+  - id: soil_sensor_bus
+    address: ${probe_address}
+    modbus_id: modbus1
+    # v2.4: 60s (was 20s in the deployed v0). Root-zone conditions do
+    # not change in 20 seconds. This is also now the hub's closed-loop
+    # mat sense rate — comfortably inside the mat's 5-min min-off and
+    # the hub's 5-min root-zone stale window.
+    update_interval: 60s
+    command_throttle: 100ms
+    setup_priority: -10
+
+# ==================================================================
+#  SOIL SENSORS  —  registers 0x0000..0x0006
+# ==================================================================
+# ⚠ NAMES ARE THE ENTITY_ID CONTRACT. "Soil Temperature" on node
+# dsc-pot1 -> sensor.dsc_pot1_soil_temperature. Do not rename.
+#
+# Every sensor gets the same two-stage guard:
+#   1. out-of-range lambda -> NAN   (a bus glitch is not a reading)
+#   2. median window 3              (one bad sample can't move the number)
+# The hub's mat logic and every HA baseline sensor trust these numbers.
+# NAN is honest; a wrong number is not. "Never control on a blind
+# sensor" starts here, at the probe.
+sensor:
+  - platform: modbus_controller
+    modbus_controller_id: soil_sensor_bus
+    name: "Soil Moisture"
+    id: soil_moisture
+    unit_of_measurement: "%"
+    device_class: moisture
+    state_class: measurement
+    icon: mdi:water-percent
+    register_type: holding
+    address: 0x0000
+    value_type: U_WORD
+    accuracy_decimals: 1
+    filters:
+      - multiply: 0.1
+      - lambda: |-
+          if (x < 0.0 || x > 100.0) return NAN;
+          return x;
+      - median:
+          window_size: 3
+          send_every: 1
+
+  # S_WORD: the probe reports sub-zero soil as a negative. U_WORD would
+  # wrap -1C into 6553.5C — which the range guard would then reject as
+  # NAN, leaving the hub's mat blind on exactly the coldest night it
+  # matters. This is the sensor the closed-loop grow mat reads.
+  - platform: modbus_controller
+    modbus_controller_id: soil_sensor_bus
+    name: "Soil Temperature"
+    id: soil_temperature
+    unit_of_measurement: "°C"
+    device_class: temperature
+    state_class: measurement
+    icon: mdi:thermometer
+    register_type: holding
+    address: 0x0001
+    value_type: S_WORD
+    accuracy_decimals: 1
+    filters:
+      - multiply: 0.1
+      - lambda: |-
+          if (x < -20.0 || x > 60.0) return NAN;
+          return x;
+      - median:
+          window_size: 3
+          send_every: 1
+
+  - platform: modbus_controller
+    modbus_controller_id: soil_sensor_bus
+    name: "Soil Conductivity"
+    id: soil_conductivity
+    unit_of_measurement: "µS/cm"
+    state_class: measurement
+    icon: mdi:flash
+    register_type: holding
+    address: 0x0002
+    value_type: U_WORD
+    accuracy_decimals: 0
+    filters:
+      - lambda: |-
+          if (x < 0.0 || x > 20000.0) return NAN;
+          return x;
+      - median:
+          window_size: 3
+          send_every: 1
+
+  - platform: modbus_controller
+    modbus_controller_id: soil_sensor_bus
+    name: "Soil pH"
+    id: soil_ph
+    unit_of_measurement: "pH"
+    state_class: measurement
+    icon: mdi:ph
+    register_type: holding
+    address: 0x0003
+    value_type: U_WORD
+    accuracy_decimals: 2
+    filters:
+      - multiply: 0.1
+      - lambda: |-
+          if (x < 3.0 || x > 9.0) return NAN;
+          return x;
+      - median:
+          window_size: 3
+          send_every: 1
+
+  # N/P/K: DERIVED values, not measured ions — the probe infers them
+  # from bulk EC. Treat as TREND indicators only; that is why every
+  # NPK alert in dsc_pots_alerts.yaml compares to a 7-day rolling
+  # baseline rather than an absolute number. Do not calibrate a feed
+  # chart against these.
+  - platform: modbus_controller
+    modbus_controller_id: soil_sensor_bus
+    name: "Soil Nitrogen"
+    id: soil_nitrogen
+    unit_of_measurement: "mg/kg"
+    state_class: measurement
+    icon: mdi:leaf
+    register_type: holding
+    address: 0x0004
+    value_type: U_WORD
+    accuracy_decimals: 0
+    filters:
+      - lambda: |-
+          if (x < 0.0 || x > 2000.0) return NAN;
+          return x;
+      - median:
+          window_size: 3
+          send_every: 1
+
+  - platform: modbus_controller
+    modbus_controller_id: soil_sensor_bus
+    name: "Soil Phosphorus"
+    id: soil_phosphorus
+    unit_of_measurement: "mg/kg"
+    state_class: measurement
+    icon: mdi:leaf
+    register_type: holding
+    address: 0x0005
+    value_type: U_WORD
+    accuracy_decimals: 0
+    filters:
+      - lambda: |-
+          if (x < 0.0 || x > 2000.0) return NAN;
+          return x;
+      - median:
+          window_size: 3
+          send_every: 1
+
+  - platform: modbus_controller
+    modbus_controller_id: soil_sensor_bus
+    name: "Soil Potassium"
+    id: soil_potassium
+    unit_of_measurement: "mg/kg"
+    state_class: measurement
+    icon: mdi:leaf
+    register_type: holding
+    address: 0x0006
+    value_type: U_WORD
+    accuracy_decimals: 0
+    filters:
+      - lambda: |-
+          if (x < 0.0 || x > 2000.0) return NAN;
+          return x;
+      - median:
+          window_size: 3
+          send_every: 1
+
+  - platform: uptime
+    name: "Uptime"
+    id: uptime_s
+    update_interval: 60s
+    entity_category: diagnostic
+
+  - platform: wifi_signal
+    name: "WiFi RSSI"
+    id: wifi_rssi
+    update_interval: 60s
+    entity_category: diagnostic
+
+text_sensor:
+  - platform: version
+    name: "Firmware Version"
+    hide_timestamp: true
+
+button:
+  - platform: restart
+    name: "Restart"
+    entity_category: config
+
+# ==================================================================
+#  PLANT IDENTITY  —  who is actually in this pot
+# ==================================================================
+# WHY THIS IS HERE (six-month note): the v0 monolithic pot configs
+# carried these; the v2.4 repackage dropped them by accident, which
+# would have orphaned the dashboard's POT MATRIX and PLANT IDS cards
+# on first flash. They live on the NODE (not as HA helpers) on purpose
+# — the label travels with the probe. Pull the node, and the plant it
+# was watching comes with it.
+#
+# These are LABELS, not control inputs. Nothing in the hub reads them:
+# the closed-loop grow mat tracks root-zone TEMPERATURE, and the pot
+# alerts are relative-to-baseline. A wrong stage here mis-captions a
+# chart; it never mis-drives an appliance.
+#
+# The Growth Stage vocabulary deliberately mirrors the hub's grow_stage
+# select, so the pot label and the tent's stage engine speak the same
+# language and a per-pot stage can be read straight against the room's.
+text:
+  - platform: template
+    name: "Plant Name"
+    id: plant_name
+    icon: "mdi:tag-text-outline"
+    optimistic: true
+    restore_value: true
+    initial_value: "Unassigned"
+    max_length: 32
+    mode: text
+    entity_category: config
+
+select:
+  - platform: template
+    name: "Growth Stage"
+    id: growth_stage
+    icon: "mdi:sprout"
+    optimistic: true
+    restore_value: true
+    initial_option: "Vegetative"
+    entity_category: config
+    options:
+      - "Germination"
+      - "Seedling"
+      - "Early Vegetative"
+      - "Vegetative"
+      - "Late (Push) Vegetative"
+      - "Early Flowering"
+      - "Flowering"
+      - "Late Flowering"
+      - "Final 48-72h Flowering"
+      - "Dry Mode"
+      - "Off"
+
+# ==================================================================
+#  v2.4.1 · ESP-NOW PROVIDER  —  the pot half of the link (LIVE)
+# ==================================================================
+# Consumer half is live in dsc-hub-v2_4_1.yaml. Purpose: HA-independence
+# for the SENSING path — the hub keeps root-zone awareness (and its
+# closed-loop mat) even when HA or the router is down. Previously this
+# leg ran pot -> HA -> hub, so an HA restart blinded the mat and
+# dropped it to the clone-air fallback.
+#
+# HOW IT WORKS: every 60s (matching the probe poll — sending faster
+# would just repeat the same median) this node unicasts its current
+# soil_temperature + soil_moisture to the hub's MAC, xxtea-signed with
+# `espnow_key`. The PROVIDER NAME is this node's `name:` (dsc-pot1..4
+# via the stubs) and MUST match the hub's providers: list — it does,
+# by construction, as long as stub names stay untouched.
+#
+# BEFORE FLASHING (per node):
+#   1. Add `espnow_key: "<random string>"` to this node's secrets.yaml
+#      — the SAME key as the hub and the other pots.
+#   2. AP channel LOCKED on the router — ESP-NOW rides the WiFi
+#      channel; a router channel hop silently splits the link.
+#   3. Flash the hub (v2.4.1, listens + falls back gracefully) FIRST,
+#      then POT2 as canary, then the rest.
+#
+# Known limit: no delivery ack. Fine at 60s trend rates — the hub's
+# per-pot freshness watchdogs (binary_sensor.dsc_hub_potN_esp_now_link)
+# are the heartbeat, and its 5-min stale window + HA-mirror fallback
+# are the backstop. A pot that can reach neither the hub nor HA is
+# simply excluded from the mat's min()/max() by the plausibility scan.
+# ------------------------------------------------------------------
+espnow:
+  auto_add_peer: false
+  peers:
+    - 84:1F:E8:16:E6:60   # DSC-HUB (192.168.86.33, dsc-hub.local)
+
+packet_transport:
+  - platform: espnow
+    id: pt_espnow
+    # Unicast straight to the hub — no broadcast chatter on the mesh.
+    peer_address: 84:1F:E8:16:E6:60
+    update_interval: 60s
+    encryption:
+      key: !secret espnow_key
+    # Sensor ids here are what the hub's remote_id: fields reference.
+    sensors:
+      - soil_temperature     # the closed-loop mat's sense point
+      - soil_moisture

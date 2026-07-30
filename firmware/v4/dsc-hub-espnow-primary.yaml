@@ -1,0 +1,278 @@
+# ==================================================================
+#  DSC-HUB · ESP-NOW PRIMARY CONTROL LAYER   (package add-on)
+#  ------------------------------------------------------------------
+#  Adds a direct panel⇄hub ESP-NOW link on top of the existing pot→hub
+#  telemetry, WITHOUT touching the QA'd control logic:
+#    • RECEIVES commands from the DSC-CYD panel and applies each one by
+#      driving the SAME HA-facing entity action HA/OLED already use —
+#      so the full safety precedence, guards and side-effects are
+#      inherited. The panel can never bypass the >35 °C failsafe or the
+#      sensor watchdog (run_climate_logic still returns early on both).
+#    • BROADCASTS telemetry (vitals / config / soil) so the panel runs
+#      fully independent of Home Assistant.
+#
+#  INTEGRATION (already wired in dsc-hub-v4_0.yaml):
+#      packages:
+#        espnow_control: !include dsc-hub-espnow-primary.yaml
+#  Then `esphome config dsc-hub-v4_0.yaml` on your host to validate the
+#  merge, and flash. The panel MAC is added to espnow.peers here, and the
+#  on_receive handler + telemetry senders are merged into the existing
+#  espnow component (list-merge).
+#
+#  ⚠ NOT payload-encrypted (unlike the xxtea pot link). The shared
+#  espnow_cmd_tag + rolling seq resist casual replay on local RF only —
+#  fine for a home grow LAN. Change the tag below to your own random
+#  16-bit value and set the SAME value on the panel.
+# ==================================================================
+substitutions:
+  panel_mac: "30:76:F5:E9:22:0C"      # DSC-CYD#1 / DSC-CONTROL
+  # MUST match dsc-control.yaml espnow_cmd_tag (0xABCD = 43981)
+  espnow_cmd_tag: "43981"
+
+espnow:
+  # Merged into the hub's existing espnow: block (peers list concatenates,
+  # so the four pots stay). auto_add_peer stays false from the base config.
+  peers:
+    - ${panel_mac}
+  on_receive:
+    - lambda: |-
+        // ---- COMMAND RX: {0xDC,ver,op,flags,i32 val,u16 tag,u16 seq} ----
+        id(cmd_fresh) = false;                                         // reset per packet
+        if (size < 12 || data[0] != 0xDC || data[1] != 0x01) return;   // not ours (pot packet etc.)
+        uint16_t tag = (uint16_t)(data[8] | (data[9] << 8));
+        if (tag != (uint16_t) ${espnow_cmd_tag}) return;               // auth/sanity
+        uint16_t seq = (uint16_t)(data[10] | (data[11] << 8));
+        if (seq == id(cmd_last_seq)) return;                           // dedupe repeats
+        id(cmd_last_seq) = seq;
+        id(cmd_fresh) = true;                                          // a real command -> echo state back
+        uint8_t op = data[2];
+        int32_t val = (int32_t)((uint32_t)data[4] | ((uint32_t)data[5] << 8)
+                              | ((uint32_t)data[6] << 16) | ((uint32_t)data[7] << 24));
+        float fv = val / 100.0f;
+        auto clampi = [](int v, int lo, int hi){ return v < lo ? lo : (v > hi ? hi : v); };
+        // SAFETY: the >35 °C failsafe and the sensor watchdog own the outputs.
+        // The panel may NOT drive actuators (fans/SF, ops 25-29) or appliance
+        // demands (ops 12-17) while either is latched — exactly as HA cannot.
+        // Modes / setpoints / selects still apply (the control loop enforces the
+        // precedence order on top of them; e.g. a stage change can't fire a fan
+        // mid-purge because run_climate_logic returns early during emergency).
+        if ((id(emergency_failsafe_active) || id(sensor_fault_active))
+            && ((op >= 12 && op <= 17) || (op >= 25 && op <= 29))) {
+          ESP_LOGW("espnow", "cmd op=%u blocked — failsafe/watchdog owns outputs", op);
+          return;
+        }
+        switch (op) {
+          // ----- master modes: drive the template switches (full actions) -----
+          case 1:  val ? id(full_auto_switch).turn_on()      : id(full_auto_switch).turn_off();      break;
+          case 2:  val ? id(local_manual_mode).turn_on()     : id(local_manual_mode).turn_off();     break;
+          case 3:  val ? id(manual_light_hold_switch).turn_on() : id(manual_light_hold_switch).turn_off(); break;
+          case 4:  val ? id(photoperiod_switch).turn_on()    : id(photoperiod_switch).turn_off();    break;
+          case 5:  val ? id(manual_takeover_switch).turn_on(): id(manual_takeover_switch).turn_off();break;
+          // ----- auto arms -----
+          case 6:  val ? id(humidifier_auto_switch).turn_on()   : id(humidifier_auto_switch).turn_off();   break;
+          case 7:  val ? id(dehumidifier_auto_switch).turn_on() : id(dehumidifier_auto_switch).turn_off(); break;
+          case 8:  val ? id(heater_auto_switch).turn_on()       : id(heater_auto_switch).turn_off();       break;
+          case 9:  val ? id(growmat_auto_switch).turn_on()      : id(growmat_auto_switch).turn_off();      break;
+          case 10: val ? id(ac_auto_switch).turn_on()           : id(ac_auto_switch).turn_off();           break;
+          case 11: val ? id(clone_hum_auto_switch).turn_on()    : id(clone_hum_auto_switch).turn_off();    break;
+          // ----- demands (optimistic; ladder still overrides in auto, same as HA) -----
+          case 12: val ? id(humidifier_demand).turn_on()   : id(humidifier_demand).turn_off();   break;
+          case 13: val ? id(dehumidifier_demand).turn_on() : id(dehumidifier_demand).turn_off(); break;
+          case 14: val ? id(heater_demand).turn_on()       : id(heater_demand).turn_off();       break;
+          case 15: val ? id(growmat_demand).turn_on()      : id(growmat_demand).turn_off();      break;
+          case 16: val ? id(ac_demand).turn_on()           : id(ac_demand).turn_off();           break;
+          case 17: val ? id(clone_hum_demand).turn_on()    : id(clone_hum_demand).turn_off();    break;
+          // ----- coordination -----
+          case 18: val ? id(hum_intake_routing_switch).turn_on() : id(hum_intake_routing_switch).turn_off(); break;
+          case 19: val ? id(destrat_pulse_switch).turn_on()      : id(destrat_pulse_switch).turn_off();      break;
+          // ----- selects: set_index triggers each select's set_action -----
+          case 20: id(grow_stage).make_call().set_index((size_t) clampi(val,0,10)).perform(); break;
+          case 21: id(control_strategy).make_call().set_index((size_t) clampi(val,0,2)).perform(); break;
+          case 22: id(clone_mode).make_call().set_index((size_t) clampi(val,0,4)).perform(); break;
+          case 23: id(clone_photo_select).make_call().set_index((size_t) clampi(val,0,1)).perform(); break;
+          case 24: id(priority_tent_select).make_call().set_index((size_t) clampi(val,0,1)).perform(); break;
+          // ----- fans: mirror the OLED live-adjust (engage Manual, drive fan) -----
+          case 25: { int v=clampi(val,0,100); id(local_target_out)=v;          id(full_auto_mode)=false; if(!id(local_manual_mode).state) id(local_manual_mode).turn_on(); auto c=id(fan_exhaust_out).make_call();    c.set_state(v>0); c.set_speed(v); c.perform(); break; }
+          case 26: { int v=clampi(val,0,100); id(local_target_recirc)=v;       id(full_auto_mode)=false; if(!id(local_manual_mode).state) id(local_manual_mode).turn_on(); auto c=id(fan_exhaust_recirc).make_call(); c.set_state(v>0); c.set_speed(v); c.perform(); break; }
+          case 27: { int v=clampi(val,0,100); id(local_target_intake_main)=v;  id(full_auto_mode)=false; if(!id(local_manual_mode).state) id(local_manual_mode).turn_on(); auto c=id(fan_intake_main).make_call();    c.set_state(v>0); c.set_speed(v); c.perform(); break; }
+          case 28: { int v=clampi(val,0,100); id(local_target_intake_clone)=v; id(full_auto_mode)=false; if(!id(local_manual_mode).state) id(local_manual_mode).turn_on(); auto c=id(fan_intake_clone).make_call();   c.set_state(v>0); c.set_speed(v); c.perform(); break; }
+          // ----- SF1000: mirror the OLED light adjust (Manual Light Hold) -----
+          case 29: { int v=clampi(val,0,100); id(local_target_sf1000)=v; if(!id(manual_light_hold)) id(manual_light_hold)=true;
+                     id(light_write_guard_until)=millis()+1000;
+                     if(v>0){ auto l=id(light_sf1000).turn_on(); l.set_brightness(v/100.0f); l.set_transition_length(200); l.perform(); }
+                     else id(light_sf1000).turn_off().perform(); break; }
+          // ----- numbers: set_value triggers each number's set_action -----
+          case 30: id(num_target_temp).make_call().set_value(fv).perform(); break;
+          case 31: id(num_vpd_min).make_call().set_value(fv).perform(); break;
+          case 32: id(num_vpd_max).make_call().set_value(fv).perform(); break;
+          case 33: id(num_rh_min).make_call().set_value(fv).perform(); break;
+          case 34: id(num_rh_max).make_call().set_value(fv).perform(); break;
+          case 35: id(num_sunrise).make_call().set_value((float)val).perform(); break;
+          case 36: id(num_sunset).make_call().set_value((float)val).perform(); break;
+          case 37: id(num_clone_temp).make_call().set_value(fv).perform(); break;
+          case 38: id(num_clone_vpd_min).make_call().set_value(fv).perform(); break;
+          case 39: id(num_clone_vpd_max).make_call().set_value(fv).perform(); break;
+          case 40: id(num_clone_rh_min).make_call().set_value(fv).perform(); break;
+          case 41: id(num_clone_rh_max).make_call().set_value(fv).perform(); break;
+          case 42: id(num_clone_light_hours).make_call().set_value((float)val).perform(); break;
+          case 43: id(num_sf_ramp_floor).make_call().set_value((float)val).perform(); break;
+          case 44: id(num_clone_hum_hyst).make_call().set_value(fv).perform(); break;
+          case 45: id(num_clone_hum_min_off).make_call().set_value((float)val).perform(); break;
+          case 46: id(num_hum_min_off).make_call().set_value((float)val).perform(); break;
+          case 47: id(num_heater_min_off).make_call().set_value((float)val).perform(); break;
+          case 48: id(num_mat_rz_low).make_call().set_value(fv).perform(); break;
+          case 49: id(num_mat_rz_high).make_call().set_value(fv).perform(); break;
+          case 50: id(num_mat_min_off).make_call().set_value((float)val).perform(); break;
+          case 51: id(num_destrat_period).make_call().set_value((float)val).perform(); break;
+          case 52: id(num_destrat_burst).make_call().set_value((float)val).perform(); break;
+          case 53: id(num_destrat_level).make_call().set_value((float)val).perform(); break;
+          // ----- datetime: val = minutes of day -----
+          case 54: { int m=((val%1440)+1440)%1440; auto c=id(lights_on_time).make_call();       c.set_time(m/60, m%60, 0); c.perform(); break; }
+          case 55: { int m=((val%1440)+1440)%1440; auto c=id(clone_lights_on_time).make_call(); c.set_time(m/60, m%60, 0); c.perform(); break; }
+          // ----- misc -----
+          case 56: ESP_LOGW("espnow","panel requested restart"); App.safe_reboot(); break;
+          default: ESP_LOGW("espnow","unknown opcode %u", op); break;
+        }
+        ESP_LOGD("espnow","cmd op=%u val=%d applied", op, val);
+    # After a real command, echo vitals + config straight back so the panel
+    # reflects the change in ~one round trip (not up to the 10s config cycle) —
+    # this is what makes setpoint stepping feel live and never drop steps.
+    - if:
+        condition:
+          lambda: 'return id(cmd_fresh);'
+        then:
+          - script.execute: tx_vitals
+          - script.execute: tx_config
+
+globals:
+  - id: cmd_last_seq
+    type: uint16_t
+    restore_value: false
+    initial_value: '0xFFFF'
+  - id: tx_seq
+    type: uint8_t
+    restore_value: false
+    initial_value: '0'
+  - id: cmd_fresh
+    type: bool
+    restore_value: false
+    initial_value: 'false'
+
+script:
+  # ---- telemetry senders — driven by the interval below AND re-fired right
+  #      after each applied command (see on_receive) for instant panel feedback.
+  # ---- VITALS (0xD1) — live values ----
+  - id: tx_vitals
+    then:
+      - espnow.send:
+          address: ${panel_mac}
+          wait_for_sent: false
+          data: !lambda |-
+            std::vector<uint8_t> p; p.reserve(48);
+            auto i16 = [&](float v, float sc){ int16_t t = isnan(v) ? (int16_t)0x8000 : (int16_t) lroundf(v * sc); p.push_back(t & 0xFF); p.push_back((t >> 8) & 0xFF); };
+            auto u8  = [&](int v){ p.push_back((uint8_t)(v < 0 ? 0 : (v > 255 ? 255 : v))); };
+            p.push_back(0xD1); p.push_back(0x01);
+            i16(id(temp_sensor).state,100);   i16(id(clone_temp).state,100); i16(id(room_temp).state,100);
+            i16(id(humidity_sensor).state,100); i16(id(clone_rh).state,100); i16(id(room_rh).state,100);
+            i16(id(vpd_sensor).state,100);    i16(id(clone_vpd).state,100);
+            i16(id(co2_ppm_estimate).state,1);
+            u8(id(fan_exhaust_out).state    ? id(fan_exhaust_out).speed    : 0);
+            u8(id(fan_exhaust_recirc).state ? id(fan_exhaust_recirc).speed : 0);
+            u8(id(fan_intake_main).state    ? id(fan_intake_main).speed    : 0);
+            u8(id(fan_intake_clone).state   ? id(fan_intake_clone).speed   : 0);
+            u8((int) id(light_current_pct)); u8(id(light_ramp_state));
+            u8((int) id(grow_stage).active_index().value_or(0));
+            u8(id(control_strategy_idx)); u8(id(clone_mode_idx)); u8(id(priority_tent_main) ? 1 : 0);
+            uint8_t dem=0; if(id(humidifier_demand).state)dem|=1; if(id(dehumidifier_demand).state)dem|=2; if(id(heater_demand).state)dem|=4; if(id(growmat_demand).state)dem|=8; if(id(ac_demand).state)dem|=16; if(id(clone_hum_demand).state)dem|=32; p.push_back(dem);
+            uint8_t md=0; if(id(full_auto_mode))md|=1; if(id(local_manual_mode).state)md|=2; if(id(ha_takeover_active))md|=4; if(id(auto_photoperiod_enabled))md|=8; if(id(manual_light_hold))md|=16; if(id(main_active))md|=32; if(id(clone_active))md|=64; p.push_back(md);
+            uint8_t ar=0; if(id(humidifier_auto_enabled))ar|=1; if(id(dehumidifier_auto_enabled))ar|=2; if(id(heater_auto_enabled))ar|=4; if(id(growmat_auto_enabled))ar|=8; if(id(ac_auto_enabled))ar|=16; if(id(clone_hum_auto_enabled))ar|=32; p.push_back(ar);
+            uint8_t ft=0; if(id(sensor_fault_active))ft|=1; if(id(room_fault_active))ft|=2; if(id(clone_fault_active))ft|=4; if(id(rootzone_fault_active))ft|=8; if(id(ha_connected).state)ft|=16; if(id(lights_currently_on))ft|=32; if(id(clone_lights_on))ft|=64; if(id(emergency_failsafe_active))ft|=128; p.push_back(ft);
+            uint8_t co=0; if(id(hum_intake_routing))co|=1; if(id(destrat_pulse_enable))co|=2; if(id(pot1_espnow_link).state)co|=4; if(id(pot2_espnow_link).state)co|=8; if(id(pot3_espnow_link).state)co|=16; if(id(pot4_espnow_link).state)co|=32; if(id(clone_photo_follow))co|=64; p.push_back(co);
+            p.push_back((uint8_t) id(tx_seq)++);
+            // ladder countdowns (seconds until each rung fires; 0 = idle), u16
+            auto cu = [&](float v){ uint16_t t = isnan(v)||v<0 ? 0 : (v>65535 ? 65535 : (uint16_t)v); p.push_back(t&0xFF); p.push_back((t>>8)&0xFF); };
+            cu(id(sens_hum_countdown).state); cu(id(sens_dehum_countdown).state); cu(id(sens_heater_countdown).state);
+            cu(id(sens_ac_countdown).state);  cu(id(sens_mat_countdown).state);   cu(id(sens_clone_hum_countdown).state);
+            return p;
+
+  # ---- CONFIG (0xD2) — setpoints ----
+  - id: tx_config
+    then:
+      - espnow.send:
+          address: ${panel_mac}
+          wait_for_sent: false
+          data: !lambda |-
+            std::vector<uint8_t> p; p.reserve(60);
+            auto i16 = [&](float v, float sc){ int16_t t = isnan(v) ? (int16_t)0x8000 : (int16_t) lroundf(v * sc); p.push_back(t & 0xFF); p.push_back((t >> 8) & 0xFF); };
+            p.push_back(0xD2); p.push_back(0x01);
+            i16(id(stage_temp_target),100); i16(id(stage_vpd_min),100); i16(id(stage_vpd_max),100); i16(id(stage_rh_min),100); i16(id(stage_rh_max),100);
+            i16(id(clone_temp_target),100); i16(id(clone_vpd_min),100); i16(id(clone_vpd_max),100); i16(id(clone_rh_min),100); i16(id(clone_rh_max),100);
+            i16((float)id(local_target_sf1000),1); i16((float)id(sunrise_minutes),1); i16((float)id(sunset_minutes),1); i16((float)id(clone_light_hours),1);
+            i16(id(sf_ramp_floor),1); i16(id(clone_hum_hyst),100); i16((float)id(clone_hum_min_off_s),1); i16((float)id(hum_min_off_s),1); i16((float)id(heater_min_off_s),1);
+            i16(id(mat_rz_low),100); i16(id(mat_rz_high),100); i16((float)id(mat_min_off_s),1); i16((float)id(destrat_period_s),1); i16((float)id(destrat_burst_s),1); i16((float)id(destrat_burst_pct),1);
+            i16((float)(id(lights_on_time).hour*60 + id(lights_on_time).minute),1);
+            i16((float)(id(clone_lights_on_time).hour*60 + id(clone_lights_on_time).minute),1);
+            return p;
+
+  # ---- SOIL broadcast (0xD3) — full per-pot set, 10s ----
+  # Per pot 1..4, 7 × i16: temp*100, moisture*10, EC*1, pH*100, N*1, P*1, K*1.
+  # Temp uses the mat's fresh-ESP-NOW-else-HA pick; the rest are the pot's
+  # broadcast values relayed straight through. NaN/absent -> 0x8000.
+  - id: tx_soil
+    then:
+      - espnow.send:
+          address: ${panel_mac}
+          wait_for_sent: false
+          data: !lambda |-
+            std::vector<uint8_t> p; p.reserve(60);
+            uint32_t nowms = millis();
+            auto i16 = [&](float v, float sc){ int16_t t = isnan(v) ? (int16_t)0x8000 : (int16_t) lroundf(v * sc); p.push_back(t & 0xFF); p.push_back((t >> 8) & 0xFF); };
+            auto tpick = [&](float now_v, uint32_t now_at, float ha_v){ bool fresh = now_at!=0 && (nowms-now_at)<150000; i16(fresh ? now_v : ha_v, 100); };
+            p.push_back(0xD3); p.push_back(0x01);
+            tpick(id(rz_now_1).state, id(rz_now_1_at), id(rootzone_temp).state);
+            i16(id(rz_moist_1).state,10); i16(id(rz_ec_1).state,1); i16(id(rz_ph_1).state,100); i16(id(rz_n_1).state,1); i16(id(rz_p_1).state,1); i16(id(rz_k_1).state,1);
+            tpick(id(rz_now_2).state, id(rz_now_2_at), id(rootzone_temp_2).state);
+            i16(id(rz_moist_2).state,10); i16(id(rz_ec_2).state,1); i16(id(rz_ph_2).state,100); i16(id(rz_n_2).state,1); i16(id(rz_p_2).state,1); i16(id(rz_k_2).state,1);
+            tpick(id(rz_now_3).state, id(rz_now_3_at), id(rootzone_temp_3).state);
+            i16(id(rz_moist_3).state,10); i16(id(rz_ec_3).state,1); i16(id(rz_ph_3).state,100); i16(id(rz_n_3).state,1); i16(id(rz_p_3).state,1); i16(id(rz_k_3).state,1);
+            tpick(id(rz_now_4).state, id(rz_now_4_at), id(rootzone_temp_4).state);
+            i16(id(rz_moist_4).state,10); i16(id(rz_ec_4).state,1); i16(id(rz_ph_4).state,100); i16(id(rz_n_4).state,1); i16(id(rz_p_4).state,1); i16(id(rz_k_4).state,1);
+            return p;
+
+# Drive the periodic broadcasts (the on_receive echo covers instant feedback).
+interval:
+  - interval: 2s
+    then: [{script.execute: tx_vitals}]
+  - interval: 10s
+    then: [{script.execute: tx_config}, {script.execute: tx_soil}]
+
+# Full soil relay: receive the pots' extra fields (they already send temp +
+# moisture; the pot patch adds EC/pH/N/P/K to their sensors: list). These
+# attach to the hub's existing pt_espnow packet_transport (default transport).
+# internal — HA already has the pots' own entities; the panel reads these via
+# the 0xD3 relay above.
+sensor:
+  - {platform: packet_transport, provider: dsc_pot1, remote_id: soil_moisture,     id: rz_moist_1, internal: true}
+  - {platform: packet_transport, provider: dsc_pot1, remote_id: soil_conductivity, id: rz_ec_1,    internal: true}
+  - {platform: packet_transport, provider: dsc_pot1, remote_id: soil_ph,           id: rz_ph_1,    internal: true}
+  - {platform: packet_transport, provider: dsc_pot1, remote_id: soil_nitrogen,     id: rz_n_1,     internal: true}
+  - {platform: packet_transport, provider: dsc_pot1, remote_id: soil_phosphorus,   id: rz_p_1,     internal: true}
+  - {platform: packet_transport, provider: dsc_pot1, remote_id: soil_potassium,    id: rz_k_1,     internal: true}
+  - {platform: packet_transport, provider: dsc_pot2, remote_id: soil_moisture,     id: rz_moist_2, internal: true}
+  - {platform: packet_transport, provider: dsc_pot2, remote_id: soil_conductivity, id: rz_ec_2,    internal: true}
+  - {platform: packet_transport, provider: dsc_pot2, remote_id: soil_ph,           id: rz_ph_2,    internal: true}
+  - {platform: packet_transport, provider: dsc_pot2, remote_id: soil_nitrogen,     id: rz_n_2,     internal: true}
+  - {platform: packet_transport, provider: dsc_pot2, remote_id: soil_phosphorus,   id: rz_p_2,     internal: true}
+  - {platform: packet_transport, provider: dsc_pot2, remote_id: soil_potassium,    id: rz_k_2,     internal: true}
+  - {platform: packet_transport, provider: dsc_pot3, remote_id: soil_moisture,     id: rz_moist_3, internal: true}
+  - {platform: packet_transport, provider: dsc_pot3, remote_id: soil_conductivity, id: rz_ec_3,    internal: true}
+  - {platform: packet_transport, provider: dsc_pot3, remote_id: soil_ph,           id: rz_ph_3,    internal: true}
+  - {platform: packet_transport, provider: dsc_pot3, remote_id: soil_nitrogen,     id: rz_n_3,     internal: true}
+  - {platform: packet_transport, provider: dsc_pot3, remote_id: soil_phosphorus,   id: rz_p_3,     internal: true}
+  - {platform: packet_transport, provider: dsc_pot3, remote_id: soil_potassium,    id: rz_k_3,     internal: true}
+  - {platform: packet_transport, provider: dsc_pot4, remote_id: soil_moisture,     id: rz_moist_4, internal: true}
+  - {platform: packet_transport, provider: dsc_pot4, remote_id: soil_conductivity, id: rz_ec_4,    internal: true}
+  - {platform: packet_transport, provider: dsc_pot4, remote_id: soil_ph,           id: rz_ph_4,    internal: true}
+  - {platform: packet_transport, provider: dsc_pot4, remote_id: soil_nitrogen,     id: rz_n_4,     internal: true}
+  - {platform: packet_transport, provider: dsc_pot4, remote_id: soil_phosphorus,   id: rz_p_4,     internal: true}
+  - {platform: packet_transport, provider: dsc_pot4, remote_id: soil_potassium,    id: rz_k_4,     internal: true}
