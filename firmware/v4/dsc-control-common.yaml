@@ -1,7 +1,7 @@
 # hub_cmd control (build_panel_control)
 # ESP-NOW-fed (build_panel_data)
 # ==================================================================
-#  DSC-CONTROL — PACKAGE BODY (firmware v4.0.5, ESP-NOW primary)
+#  DSC-CONTROL — PACKAGE BODY (firmware v4.0.6, ESP-NOW primary)
 #  Flash via stub dsc-control.yaml (local) or
 #  homeassistant/esphome/dsc-control.yaml (git-pull).
 #  Remote-git safe: no !secret — stub passes credentials + hub_mac / tag.
@@ -68,7 +68,7 @@ esphome:
     # the dashboard and HA's device page both described DSC-CONTROL as
     # being the DSC HUB. Purely cosmetic, but confusing enough to matter.
     name: "digital_emotions.dsc-control"
-    version: "4.0.5"
+    version: "4.0.6"
   on_boot:
     # Seed the 0xDC command seq from hardware RNG so a panel reboot is
     # unlikely to replay the hub's last-seen seq even before the hub's
@@ -395,14 +395,7 @@ light:
     green: led_g
     blue: led_b
     restore_mode: ALWAYS_OFF
-    effects:
-      # Breathing pulse — reused for BOTH the red "issue" state and the
-      # optional green "all-OK heartbeat" (colour is set separately; the
-      # effect just animates brightness up/down).
-      - pulse:
-          name: "Breathe"
-          transition_length: 0.5s
-          update_interval: 0.6s
+    # v4.0.6 — no pulse effect. Solid colours only (was Breathe @ 0.6 s).
 
 button:
   - platform: restart
@@ -479,376 +472,376 @@ sensor:
   - platform: template
     id: clone_temp
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_clone_t);'
   - platform: template
     id: clone_rh
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_clone_rh);'
   - platform: template
     id: clone_vpd
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_clone_vpd);'
   - platform: template
     id: main_temp
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_tent_t);'
   - platform: template
     id: main_rh
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_tent_rh);'
   - platform: template
     id: main_vpd
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_tent_vpd);'
   - platform: template
     id: room_temp
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_room_t);'
   - platform: template
     id: room_rh
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_room_rh);'
   - platform: template
     id: co2_ppm
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_co2);'
 
   # --- live targets (band colouring reads THESE, never baked numbers) ---
   - platform: template
     id: t_main_temp
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_cfg)[0];'
   - platform: template
     id: t_main_vpd_min
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_cfg)[1];'
   - platform: template
     id: t_main_vpd_max
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_cfg)[2];'
   - platform: template
     id: t_main_rh_min
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_cfg)[3];'
   - platform: template
     id: t_main_rh_max
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_cfg)[4];'
   - platform: template
     id: t_clone_temp
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_cfg)[5];'
   - platform: template
     id: t_clone_vpd_min
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_cfg)[6];'
   - platform: template
     id: t_clone_vpd_max
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_cfg)[7];'
   - platform: template
     id: t_clone_rh_min
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_cfg)[8];'
   - platform: template
     id: t_clone_rh_max
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_cfg)[9];'
   - platform: template
     id: sf_target
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_cfg)[10];'
 
   # --- fan speeds (percentage attribute) + SF1000 brightness ---
   - platform: template
     id: fan_out_pct
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return (float)id(gv_fan_out);'
   - platform: template
     id: fan_recirc_pct
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return (float)id(gv_fan_recirc);'
   - platform: template
     id: fan_int_main_pct
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return (float)id(gv_fan_imain);'
   - platform: template
     id: fan_int_clone_pct
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return (float)id(gv_fan_iclone);'
   - platform: template
     id: sf_brightness
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return (float)id(gv_sf_pct);'
 
   # --- ladder telemetry (firmware truth for the Rung 2 countdown) ---
   - platform: template
     id: cd_hum
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_cd)[0];'
   - platform: template
     id: cd_dehum
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_cd)[1];'
   - platform: template
     id: cd_heater
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_cd)[2];'
   - platform: template
     id: cd_ac
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_cd)[3];'
   - platform: template
     id: cd_mat
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_cd)[4];'
   - platform: template
     id: cd_clone_hum
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_cd)[5];'
 
   # --- POT SOIL PROBES (RS485 7-in-1 x4) — the Soil tab ---
   - platform: template
     id: p1_moist
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_soil)[1];'
   - platform: template
     id: p1_temp
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_soil)[0];'
   - platform: template
     id: p1_ec
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_soil)[2];'
   - platform: template
     id: p1_ph
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_soil)[3];'
   - platform: template
     id: p1_n
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_soil)[4];'
   - platform: template
     id: p1_p
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_soil)[5];'
   - platform: template
     id: p1_k
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_soil)[6];'
   - platform: template
     id: p2_moist
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_soil)[8];'
   - platform: template
     id: p2_temp
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_soil)[7];'
   - platform: template
     id: p2_ec
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_soil)[9];'
   - platform: template
     id: p2_ph
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_soil)[10];'
   - platform: template
     id: p2_n
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_soil)[11];'
   - platform: template
     id: p2_p
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_soil)[12];'
   - platform: template
     id: p2_k
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_soil)[13];'
   - platform: template
     id: p3_moist
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_soil)[15];'
   - platform: template
     id: p3_temp
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_soil)[14];'
   - platform: template
     id: p3_ec
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_soil)[16];'
   - platform: template
     id: p3_ph
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_soil)[17];'
   - platform: template
     id: p3_n
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_soil)[18];'
   - platform: template
     id: p3_p
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_soil)[19];'
   - platform: template
     id: p3_k
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_soil)[20];'
   - platform: template
     id: p4_moist
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_soil)[22];'
   - platform: template
     id: p4_temp
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_soil)[21];'
   - platform: template
     id: p4_ec
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_soil)[23];'
   - platform: template
     id: p4_ph
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_soil)[24];'
   - platform: template
     id: p4_n
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_soil)[25];'
   - platform: template
     id: p4_p
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_soil)[26];'
   - platform: template
     id: p4_k
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_soil)[27];'
   # --- extra hub numbers (Setup steppers) ---
   - platform: template
     id: n_ramp
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_cfg)[14];'
   - platform: template
     id: n_sunrise
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_cfg)[11];'
   - platform: template
     id: n_sunset
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_cfg)[12];'
   - platform: template
     id: n_clh
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_cfg)[13];'
   - platform: template
     id: n_rzlo
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_cfg)[19];'
   - platform: template
     id: n_rzhi
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_cfg)[20];'
   - platform: template
     id: n_matoff
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_cfg)[21];'
   - platform: template
     id: n_chh
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_cfg)[15];'
   - platform: template
     id: n_chmo
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_cfg)[16];'
   - platform: template
     id: n_hmo
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_cfg)[17];'
   - platform: template
     id: n_htmo
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_cfg)[18];'
   - platform: template
     id: n_dsp
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_cfg)[22];'
   - platform: template
     id: n_dsl
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_cfg)[23];'
   - platform: template
     id: n_dslv
     internal: true
-    update_interval: 1s
+    update_interval: 5s
     lambda: 'return id(gv_cfg)[24];'
 
 binary_sensor:
@@ -1061,7 +1054,7 @@ globals:
   - id: alerts_silenced          # local mute; auto-clears when alerts do
     type: bool
     initial_value: 'false'
-  - id: green_heartbeat          # pulse green when all-OK (Settings toggle)
+  - id: green_heartbeat          # solid dim green when all-OK (Settings toggle; no pulse)
     type: bool
     restore_value: true
     initial_value: 'true'
@@ -1105,10 +1098,10 @@ globals:
   - id: hold_start               # millis() when the current hold began
     type: uint32_t
     initial_value: '0'
-  - id: anim_phase               # free-running counter for lock-screen breathing
+  - id: anim_phase               # unused since v4.0.6 (breathe removed)
     type: int
     initial_value: '0'
-  - id: dev_mask                 # bitmask of active device icons (breathe these)
+  - id: dev_mask                 # bitmask of active device icons (UI colouring)
     type: int
     initial_value: '0'
   # ---- connection uptimes (millis timestamp of last (re)connect) ----
@@ -2820,7 +2813,7 @@ lvgl:
                   height: 40
                   styles: rowbtn
                   widgets:
-                    - label: {text: "Green OK heartbeat", text_font: f_body, align: LEFT_MID, x: 4, text_color: 0xFFFFFF}
+                    - label: {text: "Green OK indicator", text_font: f_body, align: LEFT_MID, x: 4, text_color: 0xFFFFFF}
                     - label: {id: st_greenhb_v, text: "off", text_font: f_body, align: RIGHT_MID, x: -8, text_color: 0x5A6472}
                   on_click:
                     - lambda: 'id(green_heartbeat) = !id(green_heartbeat);'
@@ -4446,7 +4439,6 @@ script:
             float r = 0, g = 0, bl = 0;
             switch (id(fl_color)) { case 1: r = g = bl = 1; break; case 2: r = 1; break; default: g = 1; break; }
             auto c = id(status_led).turn_on();
-            c.set_effect("None");
             c.set_rgb(r, g, bl);
             c.set_brightness(id(fl_bright) / 100.0f);
             c.perform();
@@ -5010,17 +5002,16 @@ script:
           // the status machine yields; close_flashlight sets led_last = -1 to
           // force a re-assert here.
           if (!id(fl_active)) {
-            // LED state (written only on change — no per-second log spam):
-            //   1 = ISSUE  -> pulsing red, overrides night (an alert you
-            //                 can't see is useless)
-            //   0 = night dark window -> LED off (no stray photons)
-            //   2 = appliance demand   -> solid amber
-            //   3 = all good           -> dim green
+            // LED state (written only on change). v4.0.6: solid only — no pulse.
+            //   1 = ISSUE  -> solid red (overrides night)
+            //   0 = night dark window / LED off
+            //   2 = appliance demand -> solid amber
+            //   3 = all good -> solid dim green (if Settings toggle on)
             int lm;
-            if (ac > 0 && !id(alerts_silenced)) lm = 1;          // ISSUE: red pulse (overrides night)
-            else if (night) lm = 0;                               // night dark window: off
-            else if (any_dem) lm = 2;                             // appliance demand: solid amber
-            else lm = id(green_heartbeat) ? 3 : 0;                // all-OK: green pulse if enabled, else off
+            if (ac > 0 && !id(alerts_silenced)) lm = 1;
+            else if (night) lm = 0;
+            else if (any_dem) lm = 2;
+            else lm = id(green_heartbeat) ? 3 : 0;
             if (lm != id(led_last)) {
               id(led_last) = lm;
               if (lm == 0) {
@@ -5028,18 +5019,34 @@ script:
               } else if (lm == 1) {
                 auto c = id(status_led).turn_on();
                 c.set_rgb(1.0f, 0.0f, 0.0f); c.set_brightness(1.0f);
-                c.set_effect("Breathe"); c.perform();
+                c.perform();
               } else if (lm == 3) {
                 auto c = id(status_led).turn_on();
-                c.set_rgb(0.0f, 1.0f, 0.25f); c.set_brightness(1.0f);
-                c.set_effect("Breathe"); c.perform();
+                c.set_rgb(0.0f, 1.0f, 0.25f); c.set_brightness(0.35f);
+                c.perform();
               } else {
                 auto c = id(status_led).turn_on();
-                c.set_effect("None"); c.set_brightness(0.6f);
-                c.set_rgb(1.0f, 0.60f, 0.0f);   // amber = appliance demand
+                c.set_brightness(0.6f);
+                c.set_rgb(1.0f, 0.60f, 0.0f);
                 c.perform();
               }
             }
+          }
+
+          // Lock screen: solid white/dim icons (no breathe — v4.0.6).
+          if (id(lock_engaged)) {
+            lv_color_t white = lv_color_hex(0xFFFFFF), dim = lv_color_hex(0x2A2A2A);
+            auto lockic = [&](lv_obj_t* L, bool on){
+              lv_color_t want = on ? white : dim;
+              if (lv_color_to_u32(lv_obj_get_style_text_color(L, LV_PART_MAIN)) != lv_color_to_u32(want))
+                lv_obj_set_style_text_color(L, want, LV_PART_MAIN);
+              if (lv_obj_get_style_text_opa(L, LV_PART_MAIN) != 255)
+                lv_obj_set_style_text_opa(L, 255, LV_PART_MAIN);
+            };
+            bool fan_on = !isnan(id(fan_out_pct).state) && id(fan_out_pct).state > 0;
+            bool int_on = !isnan(id(fan_int_main_pct).state) && id(fan_int_main_pct).state > 0;
+            lockic(id(lk_fan), fan_on); lockic(id(lk_int), int_on); lockic(id(lk_heat), id(dem_heater).state);
+            lockic(id(lk_hum), id(dem_hum).state); lockic(id(lk_deh), id(dem_dehum).state); lockic(id(lk_light), id(lights_main).state);
           }
 
           // ---------------- screensaver clock ----------------
@@ -5051,38 +5058,8 @@ script:
 #  PERIODIC REFRESH
 # ==================================================================
 interval:
-  # v4.0.5 — 2 s. Climate labels barely move; 1 Hz was still forcing a
-  # full refresh_ui pass (and strcmp across dozens of labels) every second
-  # while the panel is awake. Halves steady-state UI work.
+  # v4.0.5/4.0.6 — 2 s UI refresh. No icon breathe intervals (lock or
+  # control). Status LED is solid. Template mirrors poll at 5 s.
   - interval: 2s
     then:
       - script.execute: refresh_ui
-  # v4.0.5 — LOCK SCREEN ONLY. Control-page icon breathing (11 mdi icons
-  # at 2 Hz) was still invalidating labels every tick → fresh aligned A8
-  # glyph masks off the system heap — same fragmentation path that caused
-  # lv_draw_unit_draw_letter crashes / random reboots after "looks fine".
-  # Lock-screen breathe kept at a slow 1 s / 12-phase (~12 s) fade.
-  - interval: 1s
-    then:
-      - lambda: |-
-          if (id(panel_sleeping)) return;
-          if (!id(lock_engaged)) return;   // no control-page breathe
-          id(anim_phase) = (id(anim_phase) + 1) % 12;
-          int tri = id(anim_phase) < 6 ? id(anim_phase) : 12 - id(anim_phase);
-          uint8_t opa = 90 + (uint8_t)(tri * 165 / 6);
-          lv_color_t white = lv_color_hex(0xFFFFFF), dim = lv_color_hex(0x2A2A2A);
-          auto setopa = [](lv_obj_t* L, uint8_t o){
-            if (lv_obj_get_style_text_opa(L, LV_PART_MAIN) != o) lv_obj_set_style_text_opa(L, o, LV_PART_MAIN);
-          };
-          auto setcol = [](lv_obj_t* L, lv_color_t c){
-            if (lv_color_to_u32(lv_obj_get_style_text_color(L, LV_PART_MAIN)) != lv_color_to_u32(c))
-              lv_obj_set_style_text_color(L, c, LV_PART_MAIN);
-          };
-          auto dev = [&](lv_obj_t* L, bool on){
-            if (on) { setcol(L, white); setopa(L, opa); }
-            else    { setcol(L, dim);   setopa(L, 255); }
-          };
-          bool fan_on = !isnan(id(fan_out_pct).state) && id(fan_out_pct).state > 0;
-          bool int_on = !isnan(id(fan_int_main_pct).state) && id(fan_int_main_pct).state > 0;
-          dev(id(lk_fan), fan_on); dev(id(lk_int), int_on); dev(id(lk_heat), id(dem_heater).state);
-          dev(id(lk_hum), id(dem_hum).state); dev(id(lk_deh), id(dem_dehum).state); dev(id(lk_light), id(lights_main).state);
