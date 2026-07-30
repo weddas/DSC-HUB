@@ -6,7 +6,7 @@ Canonical HA surface for firmware [`firmware/v4/`](../firmware/v4/).
 
 | Path | Role |
 |---|---|
-| `dashboards/dsc-hub-v4-dashboard.yaml` | Lovelace (9 views). Dashboard URL **must** be `dsc-hub-v4`. |
+| `dashboards/dsc-hub-v4-dashboard.yaml` | Lovelace UX **v0.2** (9 views). URL **must** be `dsc-hub-v4`. Flow: Home → Climate → tents → Root Zone → Tank/Light/Trends/System. |
 | `packages/dsc_v4_core_helpers.yaml` | Hub link, fan %, airflow Sankey, photoperiod, leaf offset, appliance runtimes |
 | `packages/dsc_v4_light_helpers.yaml` | Lights-on today, clone dark-period, deviation |
 | `packages/dsc_v4_tank.yaml` | Tank EC/pH/temp helpers + Tuya warn sync |
@@ -68,7 +68,7 @@ Alerts call `notify.chriss_iphone_max`. Change that target in `automations.yaml`
 
 ## HACS cards
 
-mushroom · apexcharts-card · power-flow-card-plus · sankey-chart · plotly-graph-card · mini-graph-card · gauge-card-pro · modern-circular-gauge · logbook-card · auto-entities · vertical-stack-in-card · card-mod · bar-card · ph-meter-temperature
+mushroom · apexcharts-card · power-flow-card-plus · sankey-chart · plotly-graph-card · mini-graph-card · gauge-card-pro · modern-circular-gauge · logbook-card · auto-entities · vertical-stack-in-card · card-mod · bar-card · ph-meter-temperature · **expander-card**
 
 ## Still outside this folder (hardware / live site)
 
@@ -82,8 +82,11 @@ mushroom · apexcharts-card · power-flow-card-plus · sankey-chart · plotly-gr
 
 | Piece | Version |
 |---|---|
-| Hub | `4.0` |
-| Panel | `4.0.4`+ |
+| Hub | `4.0` (+ mat vote switches) |
+| Panel | **`4.0.8`** |
+| Dashboard | UX **v0.2** |
 | `espnow_cmd_tag` | `54727` (`0xD5C7`) on hub **and** panel |
+
+**Mat votes:** `switch.dsc_hub_mat_vote_pot_1`…`4` — Root Zone is source of truth; Climate links there.
 
 Full cutover: [`../INSTALL.md`](../INSTALL.md) (fresh) · [`../UPGRADE.md`](../UPGRADE.md) (from live) · [`../RELEASE.md`](../RELEASE.md).

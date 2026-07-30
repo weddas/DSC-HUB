@@ -1,7 +1,7 @@
 # hub_cmd control (build_panel_control)
 # ESP-NOW-fed (build_panel_data)
 # ==================================================================
-#  DSC-CONTROL — PACKAGE BODY (firmware v4.0.6, ESP-NOW primary)
+#  DSC-CONTROL — PACKAGE BODY (firmware v4.0.8, ESP-NOW primary)
 #  Flash via stub dsc-control.yaml (local) or
 #  homeassistant/esphome/dsc-control.yaml (git-pull).
 #  Remote-git safe: no !secret — stub passes credentials + hub_mac / tag.
@@ -29,9 +29,17 @@
 #    * Night dim on the 4x8 dark window (design: "panel dimmed")
 #    * Idle 60s -> screensaver clock; +30s -> backlight off + LVGL
 #      paused; tap wakes. RGB LED mirrors alert/demand, dark at night.
-#  DEFERRED to v0.2+ (in the v4 design, not this build): per-device
-#  manual/power pages, VPD curve editor, plant detail / NPK, 24h
-#  charts, tap-challenge unlock.
+#  v0.2 SHIPPED in 4.0.7/4.0.8:
+#    * Soil plant cards + NPK drill-down (0xD3/0xD4)
+#    * Hold-to-lock on primary pages (3s plant HUD); hold overlay to unlock
+#    * Tap-challenge gate for Manual Takeover + appliance demands
+#    * Connections: Wi-Fi channel + ESP-NOW RX age + TX seq
+#    * Pulse 1h VPD micro-trend (12-slot ring, one label — no canvas)
+#  STILL DEFERRED: per-device power pages, VPD curve editor, canvas charts.
+#
+#  RAM RULE (crash postmortems v4.0–4.0.2): never call lv_label_set_text
+#  every frame; guard with strcmp. No SCROLL_CIRCULAR, no breathe anim.
+#  Watch heap INFO lines — largest_block < 12 KB means stop adding widgets.
 #
 #  BEFORE FLASHING:
 #    1. secrets.yaml needs THREE new lines (see runbook):
@@ -68,7 +76,7 @@ esphome:
     # the dashboard and HA's device page both described DSC-CONTROL as
     # being the DSC HUB. Purely cosmetic, but confusing enough to matter.
     name: "digital_emotions.dsc-control"
-    version: "4.0.6"
+    version: "4.0.8"
   on_boot:
     # Seed the 0xDC command seq from hardware RNG so a panel reboot is
     # unlikely to replay the hub's last-seen seq even before the hub's
@@ -76,6 +84,15 @@ esphome:
     - priority: 600
       then:
         - lambda: 'id(cmd_tx_seq) = (uint16_t) esp_random();'
+    # v4.0.8 — log heap at end of setup so boot-loop triage is visible
+    # before the first refresh_ui. If this never prints, the crash is
+    # earlier (OTA / Wi-Fi / LVGL init) — use USB serial, not OTA.
+    - priority: -100
+      then:
+        - lambda: |-
+            ESP_LOGI("boot", "DSC-CONTROL 4.0.8 up — free_heap=%u largest=%u",
+                     (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
+                     (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
 
 esp32:
   board: esp32dev
@@ -1088,6 +1105,26 @@ globals:
   - id: active_tab               # 0=Pulse 1=Clone 2=Main 3=Soil 4=Control
     type: int
     initial_value: '0'
+  - id: soil_detail_pot          # 1..4 — which pot page_soil_detail shows
+    type: int
+    initial_value: '1'
+  # ---- tap-challenge gate (Manual Takeover + appliance demands) ----
+  - id: gate_op
+    type: int
+    initial_value: '0'
+  - id: gate_val
+    type: int
+    initial_value: '0'
+  # ---- Pulse 1h VPD micro-trend (12 × 5 min = 1 h; one label, no canvas) ----
+  - id: spark_vpd
+    type: float[12]
+    initial_value: '{NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN}'
+  - id: spark_idx
+    type: int
+    initial_value: '0'
+  - id: spark_filled
+    type: bool
+    initial_value: 'false'
   # ---- screen lock (hold-to-lock, seed->plant growth) ----
   - id: lock_engaged             # is the panel locked
     type: bool
@@ -1490,7 +1527,8 @@ lvgl:
                       on_click:
                         - script.execute: apply_editor
 
-      # ---- takeover confirm overlay ----
+      # ---- action gate overlay (Manual Takeover + appliance demands) ----
+      # Tap-challenge: nothing that flips outputs is one stray tap away.
       - obj:
           id: confirm_takeover
           hidden: true
@@ -1513,9 +1551,10 @@ lvgl:
                 radius: 10
                 pad_all: 12
                 widgets:
-                  - label: {text: "Manual Takeover", text_font: f_med, align: TOP_MID, text_color: 0xFFAA00}
+                  - label: {id: gate_title, text: "Confirm", text_font: f_med, align: TOP_MID, text_color: 0xFFAA00}
                   - label:
-                      text: "You will drive every output\nfrom HA. Safety stays armed."
+                      id: gate_body
+                      text: "Confirm this action."
                       text_font: f_small
                       align: TOP_MID
                       y: 30
@@ -1544,11 +1583,7 @@ lvgl:
                       widgets:
                         - label: {text: "Engage", align: CENTER, text_color: 0xFFAA00, text_font: f_body}
                       on_click:
-                        - script.execute:
-                            id: hub_cmd
-                            op: 5
-                            val: !lambda 'return id(st_takeover).state ? 0 : 1;'
-                        - lambda: 'lv_obj_add_flag(id(confirm_takeover), LV_OBJ_FLAG_HIDDEN);'
+                        - script.execute: gate_confirm
 
       # ---- flashlight overlay — drives the ONBOARD RGB LED (the chip LED) ----
       # This is a control surface only; the light itself is status_led (the
@@ -1927,11 +1962,22 @@ lvgl:
     - id: page_pulse
       scrollbar_mode: "OFF"
       bg_color: 0x0E1116
+      # Hold 3s on page chrome (empty areas / non-button widgets) to lock.
+      # Child buttons still own their own short taps.
+      on_press:
+        - script.execute: hold_begin
+      on_pressing:
+        - script.execute: hold_tick
+      on_release:
+        - script.execute: hold_cancel
       on_swipe_left:
+        - script.execute: hold_cancel
         - script.execute: tab_next
       on_swipe_right:
+        - script.execute: hold_cancel
         - script.execute: tab_prev
       on_swipe_down:
+        - script.execute: hold_cancel
         - script.execute: open_flashlight
       widgets:
         # status pills
@@ -1991,8 +2037,9 @@ lvgl:
               - label: {text: "ROOM", text_font: f_small, align: TOP_LEFT, text_color: 0x8A929C}
               - label: {id: lbl_room, text: "--", text_font: f_body, align: BOTTOM_LEFT, text_color: 0xFFFFFF}
 
-        # escalation ladder
+        # escalation ladder + 1h VPD micro-trend (ring buffer → one label)
         - label: {text: "ESCALATION LADDER", text_font: f_small, align: TOP_LEFT, x: 10, y: 98, text_color: 0x8A929C}
+        - label: {id: lbl_spark, text: "VPD —", text_font: f_small, align: TOP_RIGHT, x: -12, y: 98, text_color: 0x5A6472}
         - obj:
             id: rung1
             x: 8
@@ -2050,9 +2097,17 @@ lvgl:
     - id: page_clone
       scrollbar_mode: "OFF"
       bg_color: 0x0E1116
+      on_press:
+        - script.execute: hold_begin
+      on_pressing:
+        - script.execute: hold_tick
+      on_release:
+        - script.execute: hold_cancel
       on_swipe_left:
+        - script.execute: hold_cancel
         - script.execute: tab_next
       on_swipe_right:
+        - script.execute: hold_cancel
         - script.execute: tab_prev
       widgets:
         - obj:
@@ -2199,9 +2254,10 @@ lvgl:
                     - label: {id: dem_clone_hum_st, text: "off", text_font: f_body, align: RIGHT_MID, x: -8, text_color: 0x5A6472}
                   on_click:
                     - script.execute:
-                        id: hub_cmd
+                        id: open_gate
                         op: 17
                         val: !lambda 'return id(dem_clone_hum).state ? 0 : 1;'
+                        kind: 1
               - button:
                   id: cdev_mat
                   x: 8
@@ -2215,17 +2271,26 @@ lvgl:
                     - label: {id: dem_mat_st, text: "off", text_font: f_body, align: RIGHT_MID, x: -8, text_color: 0x5A6472}
                   on_click:
                     - script.execute:
-                        id: hub_cmd
+                        id: open_gate
                         op: 15
                         val: !lambda 'return id(dem_mat).state ? 0 : 1;'
+                        kind: 1
 
           # ------------------------------ MAIN ---------------------------
     - id: page_main
       scrollbar_mode: "OFF"
       bg_color: 0x0E1116
+      on_press:
+        - script.execute: hold_begin
+      on_pressing:
+        - script.execute: hold_tick
+      on_release:
+        - script.execute: hold_cancel
       on_swipe_left:
+        - script.execute: hold_cancel
         - script.execute: tab_next
       on_swipe_right:
+        - script.execute: hold_cancel
         - script.execute: tab_prev
       widgets:
         - obj:
@@ -2413,9 +2478,10 @@ lvgl:
                     - label: {id: dem_heater_st, text: "off", text_font: f_body, align: RIGHT_MID, x: -8, text_color: 0x5A6472}
                   on_click:
                     - script.execute:
-                        id: hub_cmd
+                        id: open_gate
                         op: 14
                         val: !lambda 'return id(dem_heater).state ? 0 : 1;'
+                        kind: 1
               - button:
                   id: mdev_ac
                   x: 8
@@ -2429,9 +2495,10 @@ lvgl:
                     - label: {id: dem_ac_st, text: "off", text_font: f_body, align: RIGHT_MID, x: -8, text_color: 0x5A6472}
                   on_click:
                     - script.execute:
-                        id: hub_cmd
+                        id: open_gate
                         op: 16
                         val: !lambda 'return id(dem_ac).state ? 0 : 1;'
+                        kind: 1
               - button:
                   id: mdev_hum
                   x: 8
@@ -2445,9 +2512,10 @@ lvgl:
                     - label: {id: dem_hum_st, text: "off", text_font: f_body, align: RIGHT_MID, x: -8, text_color: 0x5A6472}
                   on_click:
                     - script.execute:
-                        id: hub_cmd
+                        id: open_gate
                         op: 12
                         val: !lambda 'return id(dem_hum).state ? 0 : 1;'
+                        kind: 1
               - button:
                   id: mdev_dehum
                   x: 8
@@ -2461,22 +2529,32 @@ lvgl:
                     - label: {id: dem_dehum_st, text: "off", text_font: f_body, align: RIGHT_MID, x: -8, text_color: 0x5A6472}
                   on_click:
                     - script.execute:
-                        id: hub_cmd
+                        id: open_gate
                         op: 13
                         val: !lambda 'return id(dem_dehum).state ? 0 : 1;'
+                        kind: 1
 
           # ------------------------------ SOIL ---------------------------
-          # 4 pot cards: plant name + N/P/K on the header line, moisture /
-          # temp / pH / EC on the value line. Labels only (safe widget type);
-          # POT3 will read 0.0 / offline until the probe swap-test.
+          # 4 pot cards from 0xD3/0xD4: plant name + N/P/K header, moisture /
+          # temp / pH / EC value line. Tap opens page_soil_detail for the
+          # full per-pot read-out (v4.0.7).
     - id: page_soil
       scrollbar_mode: "OFF"
       bg_color: 0x0E1116
+      on_press:
+        - script.execute: hold_begin
+      on_pressing:
+        - script.execute: hold_tick
+      on_release:
+        - script.execute: hold_cancel
       on_swipe_left:
+        - script.execute: hold_cancel
         - script.execute: tab_next
       on_swipe_right:
+        - script.execute: hold_cancel
         - script.execute: tab_prev
       on_swipe_down:
+        - script.execute: hold_cancel
         - script.execute: open_flashlight
       widgets:
         # v4.0.2 — the four soil cards had 40 px of height, a 1 px border and
@@ -2489,8 +2567,8 @@ lvgl:
         # Left/right padding is left at the style's 6 so the N/P/K column
         # keeps its width. Header moved up 3 px to buy the extra rows; the
         # last card now ends at y=194, six pixels clear of the tab bar.
-        - label: {text: "SOIL · ROOT ZONE", text_font: f_small, align: TOP_LEFT, x: 12, y: 4, text_color: 0x8A929C}
-        - obj:
+        - label: {text: "SOIL · ROOT ZONE  ·  tap a pot", text_font: f_small, align: TOP_LEFT, x: 12, y: 4, text_color: 0x8A929C}
+        - button:
             id: card_p1
             x: 8
             y: 20
@@ -2499,12 +2577,17 @@ lvgl:
             styles: card
             pad_top: 2
             pad_bottom: 2
+            shadow_width: 0
             scrollable: false
             widgets:
-              - label: {id: lbl_p1_name, text: "P1", text_font: f_small, align: TOP_LEFT, width: 184, long_mode: DOT, text_color: 0xFFFFFF}
-              - label: {id: lbl_p1_npk, text: "N/P/K --", text_font: f_small, align: TOP_RIGHT, text_color: 0x8A929C}
+              - label: {id: lbl_p1_name, text: "P1", text_font: f_small, align: TOP_LEFT, width: 170, long_mode: DOT, text_color: 0xFFFFFF}
+              - label: {id: lbl_p1_npk, text: "N/P/K --", text_font: f_small, align: TOP_RIGHT, x: -20, text_color: 0x8A929C}
               - label: {id: lbl_p1_vals, text: "--", text_font: f_body, align: BOTTOM_LEFT, text_color: 0x00E676}
-        - obj:
+              - label: {text: "\U000F0142", text_font: mdi_16, align: RIGHT_MID, x: -4, text_color: 0x5A6472}
+            on_click:
+              - lambda: 'id(soil_detail_pot) = 1;'
+              - lvgl.page.show: page_soil_detail
+        - button:
             id: card_p2
             x: 8
             y: 64
@@ -2513,12 +2596,17 @@ lvgl:
             styles: card
             pad_top: 2
             pad_bottom: 2
+            shadow_width: 0
             scrollable: false
             widgets:
-              - label: {id: lbl_p2_name, text: "P2", text_font: f_small, align: TOP_LEFT, width: 184, long_mode: DOT, text_color: 0xFFFFFF}
-              - label: {id: lbl_p2_npk, text: "N/P/K --", text_font: f_small, align: TOP_RIGHT, text_color: 0x8A929C}
+              - label: {id: lbl_p2_name, text: "P2", text_font: f_small, align: TOP_LEFT, width: 170, long_mode: DOT, text_color: 0xFFFFFF}
+              - label: {id: lbl_p2_npk, text: "N/P/K --", text_font: f_small, align: TOP_RIGHT, x: -20, text_color: 0x8A929C}
               - label: {id: lbl_p2_vals, text: "--", text_font: f_body, align: BOTTOM_LEFT, text_color: 0x00E676}
-        - obj:
+              - label: {text: "\U000F0142", text_font: mdi_16, align: RIGHT_MID, x: -4, text_color: 0x5A6472}
+            on_click:
+              - lambda: 'id(soil_detail_pot) = 2;'
+              - lvgl.page.show: page_soil_detail
+        - button:
             id: card_p3
             x: 8
             y: 108
@@ -2527,12 +2615,17 @@ lvgl:
             styles: card
             pad_top: 2
             pad_bottom: 2
+            shadow_width: 0
             scrollable: false
             widgets:
-              - label: {id: lbl_p3_name, text: "P3", text_font: f_small, align: TOP_LEFT, width: 184, long_mode: DOT, text_color: 0xFFFFFF}
-              - label: {id: lbl_p3_npk, text: "N/P/K --", text_font: f_small, align: TOP_RIGHT, text_color: 0x8A929C}
+              - label: {id: lbl_p3_name, text: "P3", text_font: f_small, align: TOP_LEFT, width: 170, long_mode: DOT, text_color: 0xFFFFFF}
+              - label: {id: lbl_p3_npk, text: "N/P/K --", text_font: f_small, align: TOP_RIGHT, x: -20, text_color: 0x8A929C}
               - label: {id: lbl_p3_vals, text: "--", text_font: f_body, align: BOTTOM_LEFT, text_color: 0x00E676}
-        - obj:
+              - label: {text: "\U000F0142", text_font: mdi_16, align: RIGHT_MID, x: -4, text_color: 0x5A6472}
+            on_click:
+              - lambda: 'id(soil_detail_pot) = 3;'
+              - lvgl.page.show: page_soil_detail
+        - button:
             id: card_p4
             x: 8
             y: 152
@@ -2541,19 +2634,180 @@ lvgl:
             styles: card
             pad_top: 2
             pad_bottom: 2
+            shadow_width: 0
             scrollable: false
             widgets:
-              - label: {id: lbl_p4_name, text: "P4", text_font: f_small, align: TOP_LEFT, width: 184, long_mode: DOT, text_color: 0xFFFFFF}
-              - label: {id: lbl_p4_npk, text: "N/P/K --", text_font: f_small, align: TOP_RIGHT, text_color: 0x8A929C}
+              - label: {id: lbl_p4_name, text: "P4", text_font: f_small, align: TOP_LEFT, width: 170, long_mode: DOT, text_color: 0xFFFFFF}
+              - label: {id: lbl_p4_npk, text: "N/P/K --", text_font: f_small, align: TOP_RIGHT, x: -20, text_color: 0x8A929C}
               - label: {id: lbl_p4_vals, text: "--", text_font: f_body, align: BOTTOM_LEFT, text_color: 0x00E676}
+              - label: {text: "\U000F0142", text_font: mdi_16, align: RIGHT_MID, x: -4, text_color: 0x5A6472}
+            on_click:
+              - lambda: 'id(soil_detail_pot) = 4;'
+              - lvgl.page.show: page_soil_detail
+
+    # Per-pot plant / NPK detail — data already on the wire (0xD3 + 0xD4).
+    # Back returns to Soil; chevrons cycle pots 1–4 without leaving the page.
+    - id: page_soil_detail
+      scrollbar_mode: "OFF"
+      bg_color: 0x0E1116
+      scrollable: false
+      on_swipe_right:
+        - lvgl.page.show: page_soil
+      widgets:
+        - obj:
+            x: 0
+            y: 0
+            width: 320
+            height: 36
+            bg_color: 0x171B22
+            bg_opa: COVER
+            border_width: 0
+            radius: 0
+            pad_all: 0
+            scrollable: false
+            widgets:
+              - button:
+                  align: LEFT_MID
+                  x: 4
+                  width: 46
+                  height: 30
+                  bg_color: 0x232A33
+                  radius: 6
+                  shadow_width: 0
+                  widgets:
+                    - label: {text: "\U000F004D", text_font: mdi_22, align: CENTER, text_color: 0xFFFFFF}
+                  on_click:
+                    - lvgl.page.show: page_soil
+              - label: {id: lbl_sd_title, text: "POT 1", text_font: f_med, align: CENTER, text_color: 0xFFFFFF}
+              - button:
+                  align: RIGHT_MID
+                  x: -52
+                  width: 34
+                  height: 30
+                  bg_color: 0x232A33
+                  radius: 6
+                  shadow_width: 0
+                  widgets:
+                    - label: {text: "\U000F0141", text_font: mdi_22, align: CENTER, text_color: 0xFFFFFF}
+                  on_click:
+                    - lambda: |-
+                        int p = id(soil_detail_pot) - 1;
+                        if (p < 1) p = 4;
+                        id(soil_detail_pot) = p;
+                    - script.execute: refresh_ui
+              - button:
+                  align: RIGHT_MID
+                  x: -8
+                  width: 34
+                  height: 30
+                  bg_color: 0x232A33
+                  radius: 6
+                  shadow_width: 0
+                  widgets:
+                    - label: {text: "\U000F0142", text_font: mdi_22, align: CENTER, text_color: 0xFFFFFF}
+                  on_click:
+                    - lambda: |-
+                        int p = id(soil_detail_pot) + 1;
+                        if (p > 4) p = 1;
+                        id(soil_detail_pot) = p;
+                    - script.execute: refresh_ui
+        - obj:
+            id: soil_detail_scroll
+            x: 0
+            y: 36
+            width: 320
+            height: 164
+            bg_opa: TRANSP
+            border_width: 0
+            radius: 0
+            pad_all: 10
+            pad_top: 6
+            pad_bottom: 8
+            scrollbar_mode: AUTO
+            scroll_dir: VER
+            layout:
+              type: flex
+              flex_flow: COLUMN
+              pad_row: 8
+            widgets:
+              - obj:
+                  width: 300
+                  height: 52
+                  styles: rowbtn
+                  scrollable: false
+                  widgets:
+                    - label: {text: "\U000F058E", text_font: mdi_16, align: TOP_LEFT, x: 4, y: 4, text_color: 0xC0C6CC}
+                    - label: {text: "Moisture", text_font: f_body, align: TOP_LEFT, x: 28, y: 5, text_color: 0xC0C6CC}
+                    - label: {id: sd_moist_val, text: "--", text_font: f_med, align: TOP_RIGHT, x: -8, y: 2, text_color: 0x00E676}
+                    - bar: {id: sd_moist_bar, x: 8, y: 34, width: 284, height: 8, min_value: 0, max_value: 100, value: 0, indicator: {bg_color: 0x00E676}, bg_color: 0x232A33}
+              - obj:
+                  width: 300
+                  height: 40
+                  styles: rowbtn
+                  scrollable: false
+                  widgets:
+                    - label: {text: "\U000F050F", text_font: mdi_16, align: LEFT_MID, x: 4, text_color: 0xC0C6CC}
+                    - label: {text: "Soil temp", text_font: f_body, align: LEFT_MID, x: 28, text_color: 0xFFFFFF}
+                    - label: {id: sd_temp_val, text: "--", text_font: f_body, align: RIGHT_MID, x: -8, text_color: 0x00E676}
+              - obj:
+                  width: 300
+                  height: 52
+                  styles: rowbtn
+                  scrollable: false
+                  widgets:
+                    - label: {text: "\U000F029A", text_font: mdi_16, align: TOP_LEFT, x: 4, y: 4, text_color: 0xC0C6CC}
+                    - label: {text: "pH", text_font: f_body, align: TOP_LEFT, x: 28, y: 5, text_color: 0xC0C6CC}
+                    - label: {id: sd_ph_val, text: "--", text_font: f_med, align: TOP_RIGHT, x: -8, y: 2, text_color: 0x00E676}
+                    - bar: {id: sd_ph_bar, x: 8, y: 34, width: 284, height: 8, min_value: 40, max_value: 80, value: 60, indicator: {bg_color: 0x00E676}, bg_color: 0x232A33}
+              - obj:
+                  width: 300
+                  height: 40
+                  styles: rowbtn
+                  scrollable: false
+                  widgets:
+                    - label: {text: "EC", text_font: f_body, align: LEFT_MID, x: 4, text_color: 0xFFFFFF}
+                    - label: {id: sd_ec_val, text: "--", text_font: f_body, align: RIGHT_MID, x: -8, text_color: 0x00E676}
+              - label: {text: "NPK  ·  mg/kg", text_font: f_small, text_color: 0x8A929C, pad_top: 4}
+              - obj:
+                  width: 300
+                  height: 40
+                  styles: rowbtn
+                  scrollable: false
+                  widgets:
+                    - label: {text: "Nitrogen", text_font: f_body, align: LEFT_MID, x: 4, text_color: 0xFFFFFF}
+                    - label: {id: sd_n_val, text: "--", text_font: f_body, align: RIGHT_MID, x: -8, text_color: 0x00E676}
+              - obj:
+                  width: 300
+                  height: 40
+                  styles: rowbtn
+                  scrollable: false
+                  widgets:
+                    - label: {text: "Phosphorus", text_font: f_body, align: LEFT_MID, x: 4, text_color: 0xFFFFFF}
+                    - label: {id: sd_p_val, text: "--", text_font: f_body, align: RIGHT_MID, x: -8, text_color: 0x00E676}
+              - obj:
+                  width: 300
+                  height: 40
+                  styles: rowbtn
+                  scrollable: false
+                  widgets:
+                    - label: {text: "Potassium", text_font: f_body, align: LEFT_MID, x: 4, text_color: 0xFFFFFF}
+                    - label: {id: sd_k_val, text: "--", text_font: f_body, align: RIGHT_MID, x: -8, text_color: 0x00E676}
 
     # ------------------------------ CONTROL ------------------------
     - id: page_control
       scrollbar_mode: "OFF"
       bg_color: 0x0E1116
+      on_press:
+        - script.execute: hold_begin
+      on_pressing:
+        - script.execute: hold_tick
+      on_release:
+        - script.execute: hold_cancel
       on_swipe_left:
+        - script.execute: hold_cancel
         - script.execute: tab_next
       on_swipe_right:
+        - script.execute: hold_cancel
         - script.execute: tab_prev
       widgets:
         - obj:
@@ -2675,7 +2929,7 @@ lvgl:
                     - label: {text: "\U000F0142", text_font: mdi_22, align: RIGHT_MID, x: -6, text_color: 0x5A6472}
                   on_click:
                     - lvgl.page.show: page_set_panel
-              - label: {text: "DSC-CONTROL v4.0.2  ·  ESP-NOW primary", text_font: f_small, text_color: 0x3A4550, pad_top: 8, pad_bottom: 8}
+              - label: {text: "DSC-CONTROL v4.0.8  ·  ESP-NOW primary", text_font: f_small, text_color: 0x3A4550, pad_top: 8, pad_bottom: 8}
     - id: page_set_modes
       scrollbar_mode: "OFF"
       bg_color: 0x0E1116
@@ -2740,7 +2994,11 @@ lvgl:
                     - label: {text: "MANUAL TAKEOVER", text_font: f_med, align: TOP_LEFT, x: 38, y: 6, text_color: 0xFFFFFF}
                     - label: {id: lbl_takeover_state, text: "tap to engage", text_font: f_small, align: BOTTOM_LEFT, x: 38, y: -6, text_color: 0x8A929C}
                   on_click:
-                    - lambda: 'lv_obj_clear_flag(id(confirm_takeover), LV_OBJ_FLAG_HIDDEN);'
+                    - script.execute:
+                        id: open_gate
+                        op: 5
+                        val: !lambda 'return id(st_takeover).state ? 0 : 1;'
+                        kind: 0
               - button:
                   id: btn_fullauto
                   width: 300
@@ -4483,57 +4741,70 @@ script:
   # ---- screen lock: hold-to-lock / hold-to-unlock, seed<->plant growth ----
   # hold_begin shows the HUD; hold_tick (on_pressing) advances the plant and
   # the progress bar and, at 3s, commits the lock flip inline; hold_cancel
-  # (on_release) aborts an unfinished hold. Growth glyphs are passed to C++
-  # as \U escapes (literal in a YAML block scalar) -> UTF-8 for LVGL.
+  # (on_release) aborts an unfinished hold.
+  # v4.0.8 CRASH FIX: only rewrite HUD labels when the glyph/text actually
+  # changes. Unconditional lv_label_set_text on every on_pressing tick was
+  # shredding the heap with A8 glyph masks (same failure mode as v4.0.1).
   - id: hold_begin
     then:
       - lambda: |-
+          if (id(lock_engaged) && lv_obj_has_flag(id(lock_overlay), LV_OBJ_FLAG_HIDDEN))
+            return;  // locked but overlay gone — ignore
+          // Allow unlock holds (overlay visible) and lock holds (unlocked).
           id(holding) = true;
           id(hold_start) = millis();
-          lv_bar_set_value(id(hud_bar), 0, LV_ANIM_OFF);
-          bool waking = id(lock_engaged);   // currently locked -> this hold WAKES it
-          lv_label_set_text(id(hud_hint), waking ? "WAKING UP" : "GOING TO SLEEP");
-          // start at the current state: waking begins asleep (seed+moon),
-          // sleeping begins awake (flower+sun)
-          lv_label_set_text(id(hud_plant), waking ? "\U000F0E62" : "\U000F024A");
-          lv_label_set_text(id(hud_sky),   waking ? "\U000F0594" : "\U000F05A8");
-          lv_obj_set_style_text_color(id(hud_plant), lv_color_hex(waking ? 0x3A4550 : 0x00E676), 0);
-          lv_obj_set_style_text_color(id(hud_sky),   lv_color_hex(waking ? 0x5A6472 : 0xFFC24A), 0);
-          lv_obj_clear_flag(id(hold_hud), LV_OBJ_FLAG_HIDDEN);
+          // Do NOT show HUD yet — short taps must not flash / alloc glyphs.
+          // hold_tick reveals the HUD after ~250 ms of sustained press.
 
   - id: hold_tick
     then:
       - lambda: |-
           if (!id(holding)) return;
           const uint32_t HOLD_MS = 3000;
+          const uint32_t HUD_MS  = 250;   // ignore taps shorter than this
           uint32_t el = millis() - id(hold_start);
+          if (el < HUD_MS) return;
           if (el > HOLD_MS) el = HOLD_MS;
-          float prog = (float) el / HOLD_MS;               // 0..1 hold progress
-          // wake: 0 = asleep (seed + moon), 1 = awake (flower + sun).
-          // unlocking WAKES it (0->1); locking puts it to SLEEP (1->0).
+          // Reveal HUD on first tick past the tap-grace window.
+          if (lv_obj_has_flag(id(hold_hud), LV_OBJ_FLAG_HIDDEN)) {
+            bool waking = id(lock_engaged);
+            const char* hint = waking ? "WAKING UP" : "GOING TO SLEEP";
+            lv_label_set_text(id(hud_hint), hint);
+            lv_label_set_text(id(hud_plant), waking ? "\U000F0E62" : "\U000F024A");
+            lv_label_set_text(id(hud_sky),   waking ? "\U000F0594" : "\U000F05A8");
+            lv_obj_set_style_text_color(id(hud_plant), lv_color_hex(waking ? 0x3A4550 : 0x00E676), 0);
+            lv_obj_set_style_text_color(id(hud_sky),   lv_color_hex(waking ? 0x5A6472 : 0xFFC24A), 0);
+            lv_bar_set_value(id(hud_bar), 0, LV_ANIM_OFF);
+            lv_obj_clear_flag(id(hold_hud), LV_OBJ_FLAG_HIDDEN);
+          }
+          float prog = (float) el / HOLD_MS;
           float wake = id(lock_engaged) ? prog : (1.0f - prog);
           const char* icon;
-          if      (wake < 0.20f) icon = "\U000F0E62";      // seed   (asleep)
-          else if (wake < 0.45f) icon = "\U000F0E66";      // sprout
-          else if (wake < 0.70f) icon = "\U000F032A";      // leaf
-          else if (wake < 0.95f) icon = "\U000F038E";      // nature
-          else                   icon = "\U000F024A";      // flower (awake)
-          lv_label_set_text(id(hud_plant), icon);
-          lv_label_set_text(id(hud_sky), wake < 0.5f ? "\U000F0594" : "\U000F05A8");  // moon : sun
+          if      (wake < 0.20f) icon = "\U000F0E62";
+          else if (wake < 0.45f) icon = "\U000F0E66";
+          else if (wake < 0.70f) icon = "\U000F032A";
+          else if (wake < 0.95f) icon = "\U000F038E";
+          else                   icon = "\U000F024A";
+          if (strcmp(lv_label_get_text(id(hud_plant)), icon) != 0)
+            lv_label_set_text(id(hud_plant), icon);
+          const char* sky = wake < 0.5f ? "\U000F0594" : "\U000F05A8";
+          if (strcmp(lv_label_get_text(id(hud_sky)), sky) != 0)
+            lv_label_set_text(id(hud_sky), sky);
           lv_obj_set_style_text_color(id(hud_plant), lv_color_hex(wake < 0.5f ? 0x3A4550 : 0x00E676), 0);
           lv_obj_set_style_text_color(id(hud_sky),   lv_color_hex(wake < 0.5f ? 0x5A6472 : 0xFFC24A), 0);
-          lv_bar_set_value(id(hud_bar), (int)(prog * 100), LV_ANIM_OFF);
+          int bar = (int)(prog * 100);
+          if ((int) lv_bar_get_value(id(hud_bar)) != bar)
+            lv_bar_set_value(id(hud_bar), bar, LV_ANIM_OFF);
           if (el < HOLD_MS) return;
-          // ---- 3s reached: commit the flip ----
           id(holding) = false;
           lv_obj_add_flag(id(hold_hud), LV_OBJ_FLAG_HIDDEN);
-          if (id(lock_engaged)) {                          // was locked -> unlock
+          if (id(lock_engaged)) {
             id(lock_engaged) = false;
             lv_obj_add_flag(id(lock_overlay), LV_OBJ_FLAG_HIDDEN);
             id(panel_sleeping) = false;
             lv_obj_add_flag(id(saver), LV_OBJ_FLAG_HIDDEN);
-            id(bl_last) = -1;                              // refresh_ui restores backlight
-          } else {                                         // was unlocked -> lock
+            id(bl_last) = -1;
+          } else {
             id(lock_engaged) = true;
             lv_obj_clear_flag(id(lock_overlay), LV_OBJ_FLAG_HIDDEN);
           }
@@ -4541,9 +4812,36 @@ script:
   - id: hold_cancel
     then:
       - lambda: |-
-          if (!id(holding)) return;   // already committed at 3s; nothing to abort
+          if (!id(holding)) return;
           id(holding) = false;
           lv_obj_add_flag(id(hold_hud), LV_OBJ_FLAG_HIDDEN);
+
+  # ---- tap-challenge gate: show confirm, then Engage sends hub_cmd ----
+  - id: open_gate
+    parameters:
+      op: int
+      val: int
+      kind: int
+    then:
+      - lambda: |-
+          id(gate_op) = op;
+          id(gate_val) = val;
+          if (kind == 0) {
+            lv_label_set_text(id(gate_title), "Manual Takeover");
+            lv_label_set_text(id(gate_body), "You will drive every output\nfrom HA. Safety stays armed.");
+          } else {
+            lv_label_set_text(id(gate_title), "Confirm demand");
+            lv_label_set_text(id(gate_body), "Toggle this appliance demand?\nTap Engage to send.");
+          }
+          lv_obj_clear_flag(id(confirm_takeover), LV_OBJ_FLAG_HIDDEN);
+
+  - id: gate_confirm
+    then:
+      - script.execute:
+          id: hub_cmd
+          op: !lambda 'return id(gate_op);'
+          val: !lambda 'return id(gate_val);'
+      - lambda: 'lv_obj_add_flag(id(confirm_takeover), LV_OBJ_FLAG_HIDDEN);'
 
   # open the roller editor for a select (0=stage 1=strategy 2=clone 3=priority)
   - id: open_editor
@@ -4691,37 +4989,42 @@ script:
             upstr(u, sizeof(u), link, id(api_since), nowms);
             setl(id(conn_api_up), u); setc(id(conn_api_up), link ? NEON : GREY);
             setc(id(conn_api_ic), link ? NEON : RED);
-            // Wi-Fi sub-line: SSID · RSSI
+            // Wi-Fi sub-line: SSID · RSSI · channel (Nest hop diagnostic)
             std::string ssid = id(wifi_ssid_ts).state;
             float rssi = id(wifi_rssi).state;
+            int ch = id(wifi_channel);
             if (ssid.empty()) ssid = "—";
-            if (isnan(rssi)) snprintf(b, sizeof(b), "%s", ssid.c_str());
-            else             snprintf(b, sizeof(b), "%s · %ddBm", ssid.c_str(), (int)rssi);
+            if (isnan(rssi)) {
+              if (ch > 0) snprintf(b, sizeof(b), "%s · ch%d", ssid.c_str(), ch);
+              else        snprintf(b, sizeof(b), "%s", ssid.c_str());
+            } else if (ch > 0) {
+              snprintf(b, sizeof(b), "%s · %ddBm · ch%d", ssid.c_str(), (int)rssi, ch);
+            } else {
+              snprintf(b, sizeof(b), "%s · %ddBm", ssid.c_str(), (int)rssi);
+            }
             setl(id(conn_wifi_sub), b);
             setl(id(conn_api_sub), id(wifi_ip_ts).state.c_str());
 
-            // v4.0.2 — ESP-NOW row, live. gv_hub_last is stamped by the
-            // 0xD1 vitals handler, which the hub sends every 2 s, so
-            // "age" is the true health of the only link this panel needs.
-            // 6 s = three missed broadcasts. Deliberately NOT derived from
-            // the Wi-Fi or API state: ESP-NOW is independent of both, and
-            // the whole point of the panel is that it keeps working when
-            // they are down.
+            // ESP-NOW: RX age + TX seq + STA channel (peers must match)
             uint32_t hub_age = nowms - id(gv_hub_last);
             bool espn = id(gv_hub_last) != 0 && hub_age < 6000;
             setc(id(conn_espnow_ic), espn ? NEON : RED);
             setl(id(conn_espnow_val), espn ? "LINKED" : "DOWN");
             setc(id(conn_espnow_val), espn ? NEON : RED);
             if (id(gv_hub_last) == 0) {
-              setl(id(conn_espnow_sub), "no hub packet yet");
+              snprintf(b, sizeof(b), "no hub packet · tx#%u", (unsigned) id(cmd_tx_seq));
+              setl(id(conn_espnow_sub), b);
             } else if (espn) {
-              snprintf(b, sizeof(b), "hub vitals %us ago", hub_age / 1000);
+              if (ch > 0)
+                snprintf(b, sizeof(b), "rx %us · tx#%u · ch%d", hub_age / 1000, (unsigned) id(cmd_tx_seq), ch);
+              else
+                snprintf(b, sizeof(b), "rx %us · tx#%u", hub_age / 1000, (unsigned) id(cmd_tx_seq));
               setl(id(conn_espnow_sub), b);
             } else {
               uint32_t s = hub_age / 1000;
-              if (s < 3600)      snprintf(b, sizeof(b), "silent %um", s / 60 ? s / 60 : 1);
-              else if (s < 86400) snprintf(b, sizeof(b), "silent %uh", s / 3600);
-              else                snprintf(b, sizeof(b), "silent %ud", s / 86400);
+              if (s < 3600)      snprintf(b, sizeof(b), "silent %um · tx#%u", s / 60 ? s / 60 : 1, (unsigned) id(cmd_tx_seq));
+              else if (s < 86400) snprintf(b, sizeof(b), "silent %uh · tx#%u", s / 3600, (unsigned) id(cmd_tx_seq));
+              else                snprintf(b, sizeof(b), "silent %ud · tx#%u", s / 86400, (unsigned) id(cmd_tx_seq));
               setl(id(conn_espnow_sub), b);
             }
           }
@@ -4753,6 +5056,23 @@ script:
           envtxt(id(lbl_2x4), id(clone_temp).state, id(clone_rh).state);
           envtxt(id(lbl_4x8), id(main_temp).state,  id(main_rh).state);
           envtxt(id(lbl_room), id(room_temp).state, id(room_rh).state);
+
+          // ---------------- PULSE: 1h VPD micro-trend (12-slot ring) ----------------
+          {
+            float mn = NAN, mx = NAN;
+            int n = id(spark_filled) ? 12 : id(spark_idx);
+            for (int i = 0; i < n; i++) {
+              float v = id(spark_vpd)[i];
+              if (isnan(v)) continue;
+              if (isnan(mn) || v < mn) mn = v;
+              if (isnan(mx) || v > mx) mx = v;
+            }
+            if (isnan(mn)) setl(id(lbl_spark), "VPD —");
+            else {
+              snprintf(b, sizeof(b), "VPD %.2f–%.2f", mn, mx);
+              setl(id(lbl_spark), b);
+            }
+          }
 
           // ---------------- PULSE: ladder rung 1 (fans) ----------------
           int fans = (id(fan_out_on).state?1:0) + (id(fan_recirc_on).state?1:0)
@@ -4914,6 +5234,55 @@ script:
           potrow(id(lbl_p4_name), id(lbl_p4_npk), id(lbl_p4_vals), 4, id(p4_plant).state,
                  id(p4_moist).state, id(p4_temp).state, id(p4_ec).state, id(p4_ph).state, id(p4_n).state, id(p4_p).state, id(p4_k).state);
 
+          // ---------------- SOIL detail page (per-pot drill-down) ----------------
+          {
+            int pot = id(soil_detail_pot);
+            if (pot < 1 || pot > 4) pot = 1;
+            std::string plant = id(p1_plant).state;
+            float mo = id(p1_moist).state, tp = id(p1_temp).state, ec = id(p1_ec).state, ph = id(p1_ph).state;
+            float nn = id(p1_n).state, pp = id(p1_p).state, kk = id(p1_k).state;
+            if (pot == 2) {
+              plant = id(p2_plant).state; mo = id(p2_moist).state; tp = id(p2_temp).state;
+              ec = id(p2_ec).state; ph = id(p2_ph).state; nn = id(p2_n).state; pp = id(p2_p).state; kk = id(p2_k).state;
+            } else if (pot == 3) {
+              plant = id(p3_plant).state; mo = id(p3_moist).state; tp = id(p3_temp).state;
+              ec = id(p3_ec).state; ph = id(p3_ph).state; nn = id(p3_n).state; pp = id(p3_p).state; kk = id(p3_k).state;
+            } else if (pot == 4) {
+              plant = id(p4_plant).state; mo = id(p4_moist).state; tp = id(p4_temp).state;
+              ec = id(p4_ec).state; ph = id(p4_ph).state; nn = id(p4_n).state; pp = id(p4_p).state; kk = id(p4_k).state;
+            }
+            char x[64];
+            if (plant.empty()) snprintf(x, sizeof(x), "POT %d", pot);
+            else snprintf(x, sizeof(x), "P%d · %s", pot, plant.c_str());
+            setl(id(lbl_sd_title), x);
+
+            if (isnan(mo)) { setl(id(sd_moist_val), "--"); setc(id(sd_moist_val), GREY); setbar(id(sd_moist_bar), 0); setbarb(id(sd_moist_bar), GREY); }
+            else {
+              snprintf(x, sizeof(x), "%.0f%%", mo); setl(id(sd_moist_val), x);
+              setbar(id(sd_moist_bar), (int) mo);
+              uint32_t c = (mo >= 30.0f) ? NEON : AMBER;
+              setc(id(sd_moist_val), c); setbarb(id(sd_moist_bar), c);
+            }
+            if (isnan(tp)) { setl(id(sd_temp_val), "--"); setc(id(sd_temp_val), GREY); }
+            else { snprintf(x, sizeof(x), "%.1f°C", tp); setl(id(sd_temp_val), x); setc(id(sd_temp_val), NEON); }
+            if (isnan(ph)) { setl(id(sd_ph_val), "--"); setc(id(sd_ph_val), GREY); setbar(id(sd_ph_bar), 40); setbarb(id(sd_ph_bar), GREY); }
+            else {
+              snprintf(x, sizeof(x), "%.2f", ph); setl(id(sd_ph_val), x);
+              int pb = (int) (ph * 10.0f); if (pb < 40) pb = 40; if (pb > 80) pb = 80;
+              setbar(id(sd_ph_bar), pb);
+              uint32_t c = (ph >= 5.8f && ph <= 6.8f) ? NEON : AMBER;
+              setc(id(sd_ph_val), c); setbarb(id(sd_ph_bar), c);
+            }
+            if (isnan(ec)) { setl(id(sd_ec_val), "--"); setc(id(sd_ec_val), GREY); }
+            else { snprintf(x, sizeof(x), "%.0f uS/cm", ec); setl(id(sd_ec_val), x); setc(id(sd_ec_val), NEON); }
+            if (isnan(nn)) { setl(id(sd_n_val), "--"); setc(id(sd_n_val), GREY); }
+            else { snprintf(x, sizeof(x), "%d", (int) nn); setl(id(sd_n_val), x); setc(id(sd_n_val), NEON); }
+            if (isnan(pp)) { setl(id(sd_p_val), "--"); setc(id(sd_p_val), GREY); }
+            else { snprintf(x, sizeof(x), "%d", (int) pp); setl(id(sd_p_val), x); setc(id(sd_p_val), NEON); }
+            if (isnan(kk)) { setl(id(sd_k_val), "--"); setc(id(sd_k_val), GREY); }
+            else { snprintf(x, sizeof(x), "%d", (int) kk); setl(id(sd_k_val), x); setc(id(sd_k_val), NEON); }
+          }
+
           // ---------------- device rows (2x4 + 4x8) ----------------
           {
             auto pctlbl = [&](lv_obj_t* L, float v){ if (isnan(v)) setl(L, "--"); else { char q[8]; snprintf(q, sizeof(q), "%d%%", (int)v); setl(L, q); } };
@@ -5063,3 +5432,14 @@ interval:
   - interval: 2s
     then:
       - script.execute: refresh_ui
+  # 1h VPD micro-trend: one sample / 5 min → 12 slots. No canvas widgets.
+  - interval: 300s
+    then:
+      - lambda: |-
+          float v = id(main_vpd).state;
+          if (isnan(v)) v = id(clone_vpd).state;
+          if (isnan(v)) return;
+          int i = id(spark_idx);
+          id(spark_vpd)[i] = v;
+          id(spark_idx) = (i + 1) % 12;
+          if (id(spark_idx) == 0) id(spark_filled) = true;

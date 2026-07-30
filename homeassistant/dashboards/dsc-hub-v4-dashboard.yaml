@@ -1,5 +1,5 @@
 # ==================================================================
-#  DSC-HUB v4  ·  Lovelace dashboard
+#  DSC-HUB v4  ·  Lovelace dashboard (UX v0.2)
 #  ------------------------------------------------------------------
 #  Full rewrite of the v2.4.1 dashboard for firmware v4 (ESP-NOW primary
 #  panel + hub). Wire layout for 0xD1–0xD3 unchanged; plant names use
@@ -9,13 +9,21 @@
 #     The SF1000 is the 2x4 CLONE tent's light. The 4x8 has no lamp —
 #     its photoperiod is a VIRTUAL window (schedule / Follow-4x8).
 #
+#  VIEW FLOW (v0.2 nesting):
+#     Home        → pulse + demands + glance vitals (narrator collapsed)
+#     Climate     → master control, ladder, tunables, appliances
+#     4x8 / 2x4   → tent-local vitals + equipment
+#     Root Zone   → soil matrix, mat votes, chemistry, EC uptake
+#     Tank / Light / Trends / System → support surfaces
+#
 #  v4 DELTA vs v2.4.1:
 #   * Plant / stage entity_ids are canonical:
 #       text.dsc_potN_plant_name · select.dsc_potN_growth_stage
-#   * System expects hub firmware **4.0** (panel diagnostic **4.0.4**)
+#   * System expects hub firmware **4.0** (panel diagnostic **4.0.8**)
 #   * Home + System surfaces DSC-CONTROL (panel online, free heap,
 #     largest free block) — dual-path health alongside pot ESP-NOW links
-#   * Mat / root-zone copy: all four pots, plausibility 5–45 °C
+#   * Mat / root-zone copy: all four pots, plausibility 5–45 °C,
+#     Mat Vote Pot 1–4 (Root Zone is source of truth; Climate links)
 #   * Dashboard URL must be **dsc-hub-v4** (navigation_path links)
 #
 #  REQUIRES packages:
@@ -26,6 +34,7 @@
 #        plotly-graph · mini-graph-card · gauge-card-pro
 #        modern-circular-gauge · logbook-card · auto-entities
 #        vertical-stack-in-card · card-mod · bar-card · ph-meter-temperature
+#        expander-card
 # ==================================================================
 
 title: DSC-HUB v4
@@ -79,6 +88,65 @@ views:
                 icon_color: >
                   {% set n = states(entity) | int(0) %}
                   {{ 'green' if n == 0 else 'red' }}
+          - type: custom:mushroom-chips-card
+            alignment: start
+            chips:
+              - type: template
+                icon: mdi:engine
+                icon_color: teal
+                content: Climate
+                tap_action:
+                  action: navigate
+                  navigation_path: /dsc-hub-v4/climate
+              - type: template
+                icon: mdi:greenhouse
+                icon_color: green
+                content: 4x8
+                tap_action:
+                  action: navigate
+                  navigation_path: /dsc-hub-v4/main-4x8
+              - type: template
+                icon: mdi:sprout
+                icon_color: light-green
+                content: 2x4
+                tap_action:
+                  action: navigate
+                  navigation_path: /dsc-hub-v4/clone-2x4
+              - type: template
+                icon: mdi:grass
+                icon_color: lime
+                content: Root Zone
+                tap_action:
+                  action: navigate
+                  navigation_path: /dsc-hub-v4/root-zone
+              - type: template
+                icon: mdi:water
+                icon_color: blue
+                content: Tank
+                tap_action:
+                  action: navigate
+                  navigation_path: /dsc-hub-v4/tank
+              - type: template
+                icon: mdi:lightbulb-on
+                icon_color: amber
+                content: Lighting
+                tap_action:
+                  action: navigate
+                  navigation_path: /dsc-hub-v4/lighting
+              - type: template
+                icon: mdi:chart-timeline-variant
+                icon_color: purple
+                content: Trends
+                tap_action:
+                  action: navigate
+                  navigation_path: /dsc-hub-v4/trends
+              - type: template
+                icon: mdi:cog
+                icon_color: grey
+                content: System
+                tap_action:
+                  action: navigate
+                  navigation_path: /dsc-hub-v4/system
           - type: conditional
             conditions:
               - condition: state
@@ -278,388 +346,384 @@ views:
               start_date: true
             custom_logs: true
           # ============================================================
-          #  SYSTEM NARRATOR
-          #  v2.4 rework — three things it used to say are now untrue:
-          #    * the mat heats the ROOT ZONE to a band, not the air to a
-          #      target, so "carrying the heating load" was wrong
-          #    * the SF1000 is a heat + light source in the CLONE tent
-          #    * the 4x8's window is virtual, so it cannot narrate a lamp
+          #  SYSTEM NARRATOR (collapsed by default — Home stays a pulse)
           # ============================================================
-          - type: markdown
-            content: >
-              {#- ================= GATHER STATE ================= -#}
+          - type: custom:expander-card
+            title: 📖 System narrator
+            expanded: false
+            cards:
+              - type: markdown
+                content: >
+                  {#- ================= GATHER STATE ================= -#}
 
-              {%- set ct   = states('sensor.dsc_hub_clone_temperature') |
-              float(0) -%}
+                  {%- set ct   = states('sensor.dsc_hub_clone_temperature') |
+                  float(0) -%}
 
-              {%- set crh  = states('sensor.dsc_hub_clone_humidity') | float(0)
-              -%}
+                  {%- set crh  = states('sensor.dsc_hub_clone_humidity') | float(0)
+                  -%}
 
-              {%- set cvpd = states('sensor.dsc_hub_clone_vpd_kpa') | float(0)
-              -%}
+                  {%- set cvpd = states('sensor.dsc_hub_clone_vpd_kpa') | float(0)
+                  -%}
 
-              {%- set ct_target = states('number.dsc_hub_clone_target_temp') |
-              float(24) -%}
+                  {%- set ct_target = states('number.dsc_hub_clone_target_temp') |
+                  float(24) -%}
 
-              {%- set cvmin = states('number.dsc_hub_clone_vpd_min') |
-              float(0.4) -%}
+                  {%- set cvmin = states('number.dsc_hub_clone_vpd_min') |
+                  float(0.4) -%}
 
-              {%- set cvmax = states('number.dsc_hub_clone_vpd_max') |
-              float(0.8) -%}
+                  {%- set cvmax = states('number.dsc_hub_clone_vpd_max') |
+                  float(0.8) -%}
 
-              {%- set crh_min = states('number.dsc_hub_clone_rh_min') |
-              float(70) -%}
-
-
-              {%- set tt   = states('sensor.dsc_hub_tent_temperature') |
-              float(0) -%}
-
-              {%- set trh  = states('sensor.dsc_hub_tent_humidity') | float(0)
-              -%}
-
-              {%- set tvpd = states('sensor.dsc_hub_vpd_kpa') | float(0) -%}
-
-              {%- set tt_target = states('number.dsc_hub_target_temp') |
-              float(25) -%}
-
-              {%- set tvmin = states('number.dsc_hub_vpd_target_min') |
-              float(0.8) -%}
-
-              {%- set tvmax = states('number.dsc_hub_vpd_target_max') |
-              float(1.2) -%}
+                  {%- set crh_min = states('number.dsc_hub_clone_rh_min') |
+                  float(70) -%}
 
 
-              {%- set priority = states('select.dsc_hub_priority_tent') -%}
+                  {%- set tt   = states('sensor.dsc_hub_tent_temperature') |
+                  float(0) -%}
 
-              {%- set strategy = states('select.dsc_hub_control_strategy') -%}
+                  {%- set trh  = states('sensor.dsc_hub_tent_humidity') | float(0)
+                  -%}
 
+                  {%- set tvpd = states('sensor.dsc_hub_vpd_kpa') | float(0) -%}
 
-              {%- set mat_on   = is_state('switch.dsc_hub_grow_mat_demand','on')
-              -%}
+                  {%- set tt_target = states('number.dsc_hub_target_temp') |
+                  float(25) -%}
 
-              {%- set heat_on  = is_state('switch.dsc_hub_heater_demand','on')
-              -%}
+                  {%- set tvmin = states('number.dsc_hub_vpd_target_min') |
+                  float(0.8) -%}
 
-              {%- set ac_on    = is_state('switch.dsc_hub_ac_demand','on') -%}
-
-              {%- set hum_on   =
-              is_state('switch.dsc_hub_humidifier_demand','on') -%}
-
-              {%- set dehum_on =
-              is_state('switch.dsc_hub_dehumidifier_demand','on') -%}
-
-              {%- set chum_on  =
-              is_state('switch.dsc_hub_clone_humidifier_demand','on') -%}
+                  {%- set tvmax = states('number.dsc_hub_vpd_target_max') |
+                  float(1.2) -%}
 
 
-              {#- ---- v2.4: root zone is the mat's sense point ---- -#}
+                  {%- set priority = states('select.dsc_hub_priority_tent') -%}
 
-              {%- set rz = states('sensor.dsc_pot1_soil_temperature') | float(0)
-              -%}
-
-              {%- set rz_ok = has_value('sensor.dsc_pot1_soil_temperature')
-              and is_state('binary_sensor.dsc_hub_root_zone_sensor_fault','off') -%}
-
-              {%- set rz_lo = states('number.dsc_hub_mat_root_zone_low') |
-              float(20) -%}
-
-              {%- set rz_hi = states('number.dsc_hub_mat_root_zone_high') |
-              float(24) -%}
+                  {%- set strategy = states('select.dsc_hub_control_strategy') -%}
 
 
-              {#- ---- v2.4: the SF1000 lives in the clone tent ---- -#}
+                  {%- set mat_on   = is_state('switch.dsc_hub_grow_mat_demand','on')
+                  -%}
 
-              {%- set sf_on = is_state('light.dsc_hub_sf1000_dimmer','on') -%}
+                  {%- set heat_on  = is_state('switch.dsc_hub_heater_demand','on')
+                  -%}
 
-              {%- set sf_b = (state_attr('light.dsc_hub_sf1000_dimmer','brightness')
-              | float(0) / 255 * 100) | round(0) -%}
+                  {%- set ac_on    = is_state('switch.dsc_hub_ac_demand','on') -%}
 
-              {%- set cwin = is_state('binary_sensor.dsc_hub_2x4_window_open','on') -%}
+                  {%- set hum_on   =
+                  is_state('switch.dsc_hub_humidifier_demand','on') -%}
 
-              {%- set mwin = is_state('binary_sensor.dsc_hub_4x8_window_open','on') -%}
+                  {%- set dehum_on =
+                  is_state('switch.dsc_hub_dehumidifier_demand','on') -%}
 
-              {%- set hold = is_state('switch.dsc_hub_manual_light_hold','on') -%}
-
-
-              {#- ---- optional trend sensors ---- -#}
-
-              {%- set ct_tr = states('sensor.dsc_clone_temp_trend') | float(0)
-              if has_value('sensor.dsc_clone_temp_trend') else none -%}
-
-              {%- set crh_tr = states('sensor.dsc_clone_rh_trend') | float(0) if
-              has_value('sensor.dsc_clone_rh_trend') else none -%}
-
-              {%- set cdir = 'steady' -%}
-
-              {%- if ct_tr is not none -%}
-                {%- set cdir = 'falling' if ct_tr <= -0.2 else ('rising' if ct_tr >= 0.2 else 'steady') -%}
-              {%- endif -%}
-
-              {%- set rhdir = '' -%}
-
-              {%- if crh_tr is not none -%}
-                {%- set rhdir = ' (falling)' if crh_tr <= -1 else (' (rising)' if crh_tr >= 1 else ' (steady)') -%}
-              {%- endif -%}
+                  {%- set chum_on  =
+                  is_state('switch.dsc_hub_clone_humidifier_demand','on') -%}
 
 
-              {#- ---- VPD sensitivity at current humidity (Tetens) ---- -#}
+                  {#- ---- v2.4: root zone is the mat's sense point ---- -#}
 
-              {%- set svp  = 0.6108 * (e ** (17.27 * ct / (ct + 237.3))) -%}
+                  {%- set rz = states('sensor.dsc_pot1_soil_temperature') | float(0)
+                  -%}
 
-              {%- set svp1 = 0.6108 * (e ** (17.27 * (ct - 1) / (ct - 1 +
-              237.3))) -%}
+                  {%- set rz_ok = has_value('sensor.dsc_pot1_soil_temperature')
+                  and is_state('binary_sensor.dsc_hub_root_zone_sensor_fault','off') -%}
 
-              {%- set vpd_per_deg = (svp - svp1) * (1 - crh / 100) -%}
+                  {%- set rz_lo = states('number.dsc_hub_mat_root_zone_low') |
+                  float(20) -%}
 
-              {%- set degs_to_floor = (((cvpd - cvmin) / vpd_per_deg) |
-              round(1)) if vpd_per_deg > 0 else 99 -%}
-
-              {%- set degs_to_ceiling = (((cvmax - cvpd) / vpd_per_deg) |
-              round(1)) if vpd_per_deg > 0 else 99 -%}
+                  {%- set rz_hi = states('number.dsc_hub_mat_root_zone_high') |
+                  float(24) -%}
 
 
-              {#- ---- pot moisture ---- -#}
+                  {#- ---- v2.4: the SF1000 lives in the clone tent ---- -#}
 
-              {%- set m1 = states('sensor.dsc_pot1_soil_moisture') | float(0)
-              -%}
+                  {%- set sf_on = is_state('light.dsc_hub_sf1000_dimmer','on') -%}
 
-              {%- set m2 = states('sensor.dsc_pot2_soil_moisture') | float(0)
-              -%}
+                  {%- set sf_b = (state_attr('light.dsc_hub_sf1000_dimmer','brightness')
+                  | float(0) / 255 * 100) | round(0) -%}
 
-              {%- set m4 = states('sensor.dsc_pot4_soil_moisture') | float(0)
-              -%}
+                  {%- set cwin = is_state('binary_sensor.dsc_hub_2x4_window_open','on') -%}
 
-              {#- POT3 excluded: known probe fault reads 0.0% and would
+                  {%- set mwin = is_state('binary_sensor.dsc_hub_4x8_window_open','on') -%}
+
+                  {%- set hold = is_state('switch.dsc_hub_manual_light_hold','on') -%}
+
+
+                  {#- ---- optional trend sensors ---- -#}
+
+                  {%- set ct_tr = states('sensor.dsc_clone_temp_trend') | float(0)
+                  if has_value('sensor.dsc_clone_temp_trend') else none -%}
+
+                  {%- set crh_tr = states('sensor.dsc_clone_rh_trend') | float(0) if
+                  has_value('sensor.dsc_clone_rh_trend') else none -%}
+
+                  {%- set cdir = 'steady' -%}
+
+                  {%- if ct_tr is not none -%}
+                    {%- set cdir = 'falling' if ct_tr <= -0.2 else ('rising' if ct_tr >= 0.2 else 'steady') -%}
+                  {%- endif -%}
+
+                  {%- set rhdir = '' -%}
+
+                  {%- if crh_tr is not none -%}
+                    {%- set rhdir = ' (falling)' if crh_tr <= -1 else (' (rising)' if crh_tr >= 1 else ' (steady)') -%}
+                  {%- endif -%}
+
+
+                  {#- ---- VPD sensitivity at current humidity (Tetens) ---- -#}
+
+                  {%- set svp  = 0.6108 * (e ** (17.27 * ct / (ct + 237.3))) -%}
+
+                  {%- set svp1 = 0.6108 * (e ** (17.27 * (ct - 1) / (ct - 1 +
+                  237.3))) -%}
+
+                  {%- set vpd_per_deg = (svp - svp1) * (1 - crh / 100) -%}
+
+                  {%- set degs_to_floor = (((cvpd - cvmin) / vpd_per_deg) |
+                  round(1)) if vpd_per_deg > 0 else 99 -%}
+
+                  {%- set degs_to_ceiling = (((cvmax - cvpd) / vpd_per_deg) |
+                  round(1)) if vpd_per_deg > 0 else 99 -%}
+
+
+                  {#- ---- pot moisture ---- -#}
+
+                  {%- set m1 = states('sensor.dsc_pot1_soil_moisture') | float(0)
+                  -%}
+
+                  {%- set m2 = states('sensor.dsc_pot2_soil_moisture') | float(0)
+                  -%}
+
+                  {%- set m4 = states('sensor.dsc_pot4_soil_moisture') | float(0)
+                  -%}
+
+                  {#- POT3 excluded: known probe fault reads 0.0% and would
                   always win a min(). A faulted sensor must never become
                   the driest pot. -#}
 
-              {%- set pmin = [m1, m2, m4] | min -%}
+                  {%- set pmin = [m1, m2, m4] | min -%}
 
-              {%- set ndry = [m1, m2, m4] | select('lt', 30) | list | length -%}
+                  {%- set ndry = [m1, m2, m4] | select('lt', 30) | list | length -%}
 
-              {%- set driest = 'POT1' if pmin == m1 else ('POT2' if pmin == m2
-              else 'POT4') -%}
+                  {%- set driest = 'POT1' if pmin == m1 else ('POT2' if pmin == m2
+                  else 'POT4') -%}
 
 
-              {#- ---- fans ---- -#}
+                  {#- ---- fans ---- -#}
 
-              {%- set fx  =
-              state_attr('fan.dsc_hub_6_inch_exhaust_outside','percentage') |
-              int(0) -%}
+                  {%- set fx  =
+                  state_attr('fan.dsc_hub_6_inch_exhaust_outside','percentage') |
+                  int(0) -%}
 
-              {%- set fr  =
-              state_attr('fan.dsc_hub_6_inch_exhaust_room','percentage') |
-              int(0) -%}
+                  {%- set fr  =
+                  state_attr('fan.dsc_hub_6_inch_exhaust_room','percentage') |
+                  int(0) -%}
 
-              {%- set fi1 =
-              state_attr('fan.dsc_hub_4_inch_intake_fan_main','percentage') |
-              int(0) -%}
+                  {%- set fi1 =
+                  state_attr('fan.dsc_hub_4_inch_intake_fan_main','percentage') |
+                  int(0) -%}
 
-              {%- set fi2 =
-              state_attr('fan.dsc_hub_4_inch_intake_fan_2x4','percentage') |
-              int(0) -%}
+                  {%- set fi2 =
+                  state_attr('fan.dsc_hub_4_inch_intake_fan_2x4','percentage') |
+                  int(0) -%}
 
 
-              ## 🧠 System Narrator
+                  ## 🧠 System Narrator
 
-              *Serving: **{{ priority }}** · Strategy: **{{ strategy }}***
+                  *Serving: **{{ priority }}** · Strategy: **{{ strategy }}***
 
 
-              ### 🌿 Clone tent — *has the light*
+                  ### 🌿 Clone tent — *has the light*
 
-              Temperature is **{{ ct | round(1) }}°C** ({{ cdir }}) against a {{
-              ct_target | round(1) }}°C target, RH **{{ crh | round(0) | int
-              }}%**{{ rhdir }}, VPD **{{ cvpd | round(2) }} kPa** (band {{ cvmin
-              }}–{{ cvmax }}).
+                  Temperature is **{{ ct | round(1) }}°C** ({{ cdir }}) against a {{
+                  ct_target | round(1) }}°C target, RH **{{ crh | round(0) | int
+                  }}%**{{ rhdir }}, VPD **{{ cvpd | round(2) }} kPa** (band {{ cvmin
+                  }}–{{ cvmax }}).
 
-              {% if sf_on -%}
-              ☀️ SF1000 at **{{ sf_b }}%**{{ ' — **HELD MANUALLY**, schedule paused' if hold else '' }}{{ ' ⚠️ **OUTSIDE THE WINDOW**' if not cwin else '' }}. Remember the lamp is a heater: it is adding load to this tent right now, and the 4x8 may be drinking that warmth through the chain.
-              {%- else -%}
-              🌙 SF1000 **dark**{{ ' (window is open — check Manual Light Hold)' if cwin else ' — in the dark period' }}.
-              {%- endif %}
+                  {% if sf_on -%}
+                  ☀️ SF1000 at **{{ sf_b }}%**{{ ' — **HELD MANUALLY**, schedule paused' if hold else '' }}{{ ' ⚠️ **OUTSIDE THE WINDOW**' if not cwin else '' }}. Remember the lamp is a heater: it is adding load to this tent right now, and the 4x8 may be drinking that warmth through the chain.
+                  {%- else -%}
+                  🌙 SF1000 **dark**{{ ' (window is open — check Manual Light Hold)' if cwin else ' — in the dark period' }}.
+                  {%- endif %}
 
-              {%- if heat_on %}
+                  {%- if heat_on %}
 
-              🔥 **Room heater demand is ACTIVE** — the hub is heating the
-              shared room. Expect RH to fall and VPD to climb as warm air
-              arrives.
+                  🔥 **Room heater demand is ACTIVE** — the hub is heating the
+                  shared room. Expect RH to fall and VPD to climb as warm air
+                  arrives.
 
-              {%- elif ct < ct_target %}
+                  {%- elif ct < ct_target %}
 
-              {%- if mat_on %} The grow mat is **ON** — but note it is holding
-              the ROOT ZONE to its band, not defending air temp; it will not
-              rescue this number.{% else %} The grow mat is off,{% endif %} Air
-              temp is **{{ (ct_target - ct) | round(1) }}°C under target**. The
-              room heater stays on standby because VPD ({{ cvpd | round(2) }})
-              is inside its band.
+                  {%- if mat_on %} The grow mat is **ON** — but note it is holding
+                  the ROOT ZONE to its band, not defending air temp; it will not
+                  rescue this number.{% else %} The grow mat is off,{% endif %} Air
+                  temp is **{{ (ct_target - ct) | round(1) }}°C under target**. The
+                  room heater stays on standby because VPD ({{ cvpd | round(2) }})
+                  is inside its band.
 
-              {%- if degs_to_floor < 99 %}
+                  {%- if degs_to_floor < 99 %}
 
-              {%- if degs_to_floor <= 1 %}
+                  {%- if degs_to_floor <= 1 %}
 
-              ➡️ **Heater demand is imminent** — less than ~1°C more cooling (to
-              ≈{{ (ct - degs_to_floor) | round(1) }}°C) puts VPD under its {{
-              cvmin }} kPa floor.
+                  ➡️ **Heater demand is imminent** — less than ~1°C more cooling (to
+                  ≈{{ (ct - degs_to_floor) | round(1) }}°C) puts VPD under its {{
+                  cvmin }} kPa floor.
 
-              {%- elif degs_to_floor <= 3 %}
+                  {%- elif degs_to_floor <= 3 %}
 
-              ➡️ **If the clone tent cools another ~{{ degs_to_floor }}°C** (to
-              ≈{{ (ct - degs_to_floor) | round(1) }}°C at today's humidity), VPD
-              hits its {{ cvmin }} kPa floor — **heater demand will be
-              required**.
+                  ➡️ **If the clone tent cools another ~{{ degs_to_floor }}°C** (to
+                  ≈{{ (ct - degs_to_floor) | round(1) }}°C at today's humidity), VPD
+                  hits its {{ cvmin }} kPa floor — **heater demand will be
+                  required**.
 
-              {%- else %}
+                  {%- else %}
 
-              On VPD alone, heater demand is still **~{{ degs_to_floor }}°C of
-              cooling away** — though the hub's own temperature deadband may
-              trip it sooner.
+                  On VPD alone, heater demand is still **~{{ degs_to_floor }}°C of
+                  cooling away** — though the hub's own temperature deadband may
+                  trip it sooner.
 
-              {%- endif %}
+                  {%- endif %}
 
-              {%- endif %}
+                  {%- endif %}
 
-              {%- else %}
+                  {%- else %}
 
-              Air temp is at/above target — no heating pressure.
+                  Air temp is at/above target — no heating pressure.
 
-              {%- endif %}
+                  {%- endif %}
 
-              {%- if mat_on or heat_on %}
+                  {%- if mat_on or heat_on %}
 
-              💧 Watching humidity as heat is added: each +1°C lifts VPD by ≈{{
-              vpd_per_deg | round(2) }} kPa here. RH floor is {{ crh_min |
-              round(0) | int }}% (now {{ crh | round(0) | int }}%); clone
-              humidifier is {{ '**ON**' if chum_on else 'on standby' }}.
+                  💧 Watching humidity as heat is added: each +1°C lifts VPD by ≈{{
+                  vpd_per_deg | round(2) }} kPa here. RH floor is {{ crh_min |
+                  round(0) | int }}% (now {{ crh | round(0) | int }}%); clone
+                  humidifier is {{ '**ON**' if chum_on else 'on standby' }}.
 
-              {%- endif %}
+                  {%- endif %}
 
-              {%- if degs_to_ceiling <= 2 %}
+                  {%- if degs_to_ceiling <= 2 %}
 
-              ⚠️ Headroom warning: only ~{{ degs_to_ceiling }}°C of warming
-              before VPD tops its {{ cvmax }} kPa ceiling — expect exhaust to
-              ramp if heating continues.
+                  ⚠️ Headroom warning: only ~{{ degs_to_ceiling }}°C of warming
+                  before VPD tops its {{ cvmax }} kPa ceiling — expect exhaust to
+                  ramp if heating continues.
 
-              {%- endif %}
+                  {%- endif %}
 
 
-              ### ⬜ Main tent — *virtual window, no lamp*
+                  ### ⬜ Main tent — *virtual window, no lamp*
 
-              **{{ tt | round(1) }}°C** / **{{ trh | round(0) | int }}%** / VPD
-              **{{ tvpd | round(2) }} kPa** (band {{ tvmin }}–{{ tvmax }}, temp
-              target {{ tt_target | round(1) }}°C). Window is **{{ 'OPEN' if
-              mwin else 'shut' }}** — schedule only; nothing is lit in here.
+                  **{{ tt | round(1) }}°C** / **{{ trh | round(0) | int }}%** / VPD
+                  **{{ tvpd | round(2) }} kPa** (band {{ tvmin }}–{{ tvmax }}, temp
+                  target {{ tt_target | round(1) }}°C). Window is **{{ 'OPEN' if
+                  mwin else 'shut' }}** — schedule only; nothing is lit in here.
 
-              {%- set active = [] %}
+                  {%- set active = [] %}
 
-              {%- if heat_on %}{% set active = active + ['heater'] %}{% endif %}
+                  {%- if heat_on %}{% set active = active + ['heater'] %}{% endif %}
 
-              {%- if ac_on %}{% set active = active + ['AC'] %}{% endif %}
+                  {%- if ac_on %}{% set active = active + ['AC'] %}{% endif %}
 
-              {%- if hum_on %}{% set active = active + ['humidifier'] %}{% endif
-              %}
+                  {%- if hum_on %}{% set active = active + ['humidifier'] %}{% endif
+                  %}
 
-              {%- if dehum_on %}{% set active = active + ['dehumidifier'] %}{%
-              endif %}
+                  {%- if dehum_on %}{% set active = active + ['dehumidifier'] %}{%
+                  endif %}
 
-              {%- if active | length > 0 %}
+                  {%- if active | length > 0 %}
 
-              Running now: **{{ active | join(', ') }}**.
+                  Running now: **{{ active | join(', ') }}**.
 
-              {%- elif tvmin <= tvpd <= tvmax %}
+                  {%- elif tvmin <= tvpd <= tvmax %}
 
-              All room appliances on standby — VPD is inside its band.
+                  All room appliances on standby — VPD is inside its band.
 
-              {%- else %}
+                  {%- else %}
 
-              VPD is **{{ 'below' if tvpd < tvmin else 'above' }} its band** but
-              no appliance has fired yet — the hub is likely waiting out its
-              deadband, or the {{ priority }} priority is holding room
-              appliances for the other tent.
+                  VPD is **{{ 'below' if tvpd < tvmin else 'above' }} its band** but
+                  no appliance has fired yet — the hub is likely waiting out its
+                  deadband, or the {{ priority }} priority is holding room
+                  appliances for the other tent.
 
-              {%- endif %}
+                  {%- endif %}
 
 
-              ### 🌱 Root zone — *the mat's sense point*
+                  ### 🌱 Root zone — *the mat's sense point*
 
-              {% if rz_ok -%}
-              POT1 soil is **{{ rz | round(1) }}°C** (band {{ rz_lo }}–{{ rz_hi }}°C).
-              {%- if mat_on %} Mat **ON**, climbing toward {{ rz_hi }}°C.
-              {%- elif rz < rz_lo %} Below the floor — mat should fire shortly unless min-off is still running.
-              {%- else %} Inside the band; mat resting.
-              {%- endif %}
-              {%- else -%}
-              ⚠️ **Probe blind** — mat is on the v2.3 clone-air fallback, so the
-              root zone is unmeasured and probably sitting under target.
-              {%- endif %}
+                  {% if rz_ok -%}
+                  POT1 soil is **{{ rz | round(1) }}°C** (band {{ rz_lo }}–{{ rz_hi }}°C).
+                  {%- if mat_on %} Mat **ON**, climbing toward {{ rz_hi }}°C.
+                  {%- elif rz < rz_lo %} Below the floor — mat should fire shortly unless min-off is still running.
+                  {%- else %} Inside the band; mat resting.
+                  {%- endif %}
+                  {%- else -%}
+                  ⚠️ **Probe blind** — mat is on the v2.3 clone-air fallback, so the
+                  root zone is unmeasured and probably sitting under target.
+                  {%- endif %}
 
-              {%- if ndry == 0 %}
+                  {%- if ndry == 0 %}
 
-              All live pots above 30% moisture (driest: {{ driest }} at {{ pmin |
-              round(1) }}%) — water buffer intact while climate shifts.
+                  All live pots above 30% moisture (driest: {{ driest }} at {{ pmin |
+                  round(1) }}%) — water buffer intact while climate shifts.
 
-              {%- else %}
+                  {%- else %}
 
-              ⚠️ **{{ ndry }} pot(s) under 30% moisture** — {{ driest }} is
-              driest at {{ pmin | round(1) }}%. Added heat accelerates drying;
-              consider watering before the heater runs.
+                  ⚠️ **{{ ndry }} pot(s) under 30% moisture** — {{ driest }} is
+                  driest at {{ pmin | round(1) }}%. Added heat accelerates drying;
+                  consider watering before the heater runs.
 
-              {%- endif %}
+                  {%- endif %}
 
-              {%- if is_state('binary_sensor.dsc_tank_ec_out_of_range','on') or
-              is_state('binary_sensor.dsc_tank_ph_out_of_range','on') %}
+                  {%- if is_state('binary_sensor.dsc_tank_ec_out_of_range','on') or
+                  is_state('binary_sensor.dsc_tank_ph_out_of_range','on') %}
 
-              🚰 Tank needs attention before next feed:{{ ' EC out of range.' if
-              is_state('binary_sensor.dsc_tank_ec_out_of_range','on') }}{{ ' pH
-              out of range.' if
-              is_state('binary_sensor.dsc_tank_ph_out_of_range','on') }}
+                  🚰 Tank needs attention before next feed:{{ ' EC out of range.' if
+                  is_state('binary_sensor.dsc_tank_ec_out_of_range','on') }}{{ ' pH
+                  out of range.' if
+                  is_state('binary_sensor.dsc_tank_ph_out_of_range','on') }}
 
-              {%- endif %}
+                  {%- endif %}
 
 
-              ### 💨 Airflow
+                  ### 💨 Airflow
 
-              Exhaust **{{ fx }}%** · recirc **{{ fr }}%** · intakes **{{ fi1
-              }}% / {{ fi2 }}%** —
+                  Exhaust **{{ fx }}%** · recirc **{{ fr }}%** · intakes **{{ fi1
+                  }}% / {{ fi2 }}%** —
 
-              {%- if fx < 30 %} fans are idling low to conserve heat and
-              humidity. They'll ramp if VPD overshoots {{ cvmax }} kPa (clone)
-              or {{ tvmax }} kPa (main), or if temps exceed limits.
+                  {%- if fx < 30 %} fans are idling low to conserve heat and
+                  humidity. They'll ramp if VPD overshoots {{ cvmax }} kPa (clone)
+                  or {{ tvmax }} kPa (main), or if temps exceed limits.
 
-              {%- elif fx < 70 %} moderate venting — trading some
-              heat/humidity for fresh air exchange.
+                  {%- elif fx < 70 %} moderate venting — trading some
+                  heat/humidity for fresh air exchange.
 
-              {%- else %} venting hard — actively dumping heat/humidity;
-              heating and exhaust are fighting, check strategy if this persists.
+                  {%- else %} venting hard — actively dumping heat/humidity;
+                  heating and exhaust are fighting, check strategy if this persists.
 
-              {%- endif %}
+                  {%- endif %}
 
 
-              {%- set ns = namespace(alerts=[]) %}
+                  {%- set ns = namespace(alerts=[]) %}
 
-              {%- for b in states.binary_sensor
+                  {%- for b in states.binary_sensor
                   if b.entity_id.startswith('binary_sensor.dsc_')
                   and b.state == 'on'
                   and b.attributes.get('device_class') not in ['connectivity','running'] %}
-              {%- set ns.alerts = ns.alerts + [b.name] %}
+                  {%- set ns.alerts = ns.alerts + [b.name] %}
 
-              {%- endfor %}
+                  {%- endfor %}
 
-              {%- if ns.alerts | length > 0 %}
+                  {%- if ns.alerts | length > 0 %}
 
 
-              ### ⚠️ Watchlist ({{ ns.alerts | length }})
+                  ### ⚠️ Watchlist ({{ ns.alerts | length }})
 
-              {%- for a in ns.alerts %}
+                  {%- for a in ns.alerts %}
 
-              - {{ a }}
+                  - {{ a }}
 
-              {%- endfor %}
+                  {%- endfor %}
 
-              {%- endif %}
-            text_only: true
-            grid_options:
-              columns: full
-              rows: auto
+                  {%- endif %}
+                text_only: true
       - type: grid
         cards:
           - type: heading
@@ -837,6 +901,41 @@ views:
           - type: heading
             heading: 🌱 ROOT & TANK
             heading_style: subtitle
+          - type: custom:mushroom-chips-card
+            alignment: start
+            chips:
+              - type: template
+                entity: text.dsc_pot1_plant_name
+                icon: mdi:numeric-1-circle
+                icon_color: green
+                content: "P1 {{ states(entity) if states(entity) not in ['unknown','unavailable',''] else '—' }}"
+                tap_action:
+                  action: navigate
+                  navigation_path: /dsc-hub-v4/root-zone
+              - type: template
+                entity: text.dsc_pot2_plant_name
+                icon: mdi:numeric-2-circle
+                icon_color: green
+                content: "P2 {{ states(entity) if states(entity) not in ['unknown','unavailable',''] else '—' }}"
+                tap_action:
+                  action: navigate
+                  navigation_path: /dsc-hub-v4/root-zone
+              - type: template
+                entity: text.dsc_pot3_plant_name
+                icon: mdi:numeric-3-circle
+                icon_color: grey
+                content: "P3 {{ states(entity) if states(entity) not in ['unknown','unavailable',''] else '—' }}"
+                tap_action:
+                  action: navigate
+                  navigation_path: /dsc-hub-v4/root-zone
+              - type: template
+                entity: text.dsc_pot4_plant_name
+                icon: mdi:numeric-4-circle
+                icon_color: green
+                content: "P4 {{ states(entity) if states(entity) not in ['unknown','unavailable',''] else '—' }}"
+                tap_action:
+                  action: navigate
+                  navigation_path: /dsc-hub-v4/root-zone
           - type: grid
             columns: 4
             square: false
@@ -896,6 +995,13 @@ views:
                 content: >-
                   {{ states(entity) }}°C{{ ' ⚠ PYTHIUM' if
                   states(entity)|float(0) > 24 else '' }}
+              - type: template
+                icon: mdi:grass
+                icon_color: lime
+                content: Open Root Zone
+                tap_action:
+                  action: navigate
+                  navigation_path: /dsc-hub-v4/root-zone
           - type: custom:sankey-chart
             title: Digital-Plant Airflow Routing
             show_names: true
@@ -1153,7 +1259,7 @@ views:
       - type: grid
         cards:
           - type: heading
-            heading: 🎚️ v2.4 LIVE TUNABLES — no reflash
+            heading: 🎚️ LIVE TUNABLES — nested controls (no reflash)
             heading_style: title
           # These eight were compiled constants until v2.4. They now persist in
           # NVS, layered on the YAML defaults. Watchdog + >35C failsafe
@@ -1171,7 +1277,7 @@ views:
               can disarm the safety net.*
           - type: custom:expander-card
             title: 🌱 Grow mat — closed-loop root-zone band
-            expanded: true
+            expanded: false
             cards:
               - type: entities
                 entities:
@@ -1181,26 +1287,24 @@ views:
                     name: Cut at
                   - entity: number.dsc_hub_mat_min_off_time
                     name: Min off-time
-                  - entity: sensor.dsc_pot1_soil_temperature
-                    name: → Representative probe (POT1)
                   - entity: binary_sensor.dsc_hub_root_zone_sensor_fault
                     name: → Probe fault
+              - type: custom:mushroom-chips-card
+                alignment: start
+                chips:
+                  - type: template
+                    icon: mdi:grass
+                    icon_color: lime
+                    content: Mat votes & soil → Root Zone
+                    tap_action:
+                      action: navigate
+                      navigation_path: /dsc-hub-v4/root-zone
               - type: markdown
                 content: >-
                   *The **gap between Low and High IS the hysteresis** — keep it
-                  ≥ 2 °C or the mat will chase itself. Soil is a slow thermal
-                  mass; the min off-time stops it cycling on lag. The mat's own
-                  plate thermostat still bounds the surface underneath all of
-                  this.*
-
-
-                  *v4: the mat senses **all four pots** — it heats on the
-                  COLDEST plausible probe and cuts + flushes the 2x4 if the
-                  hottest reaches High + 1 °C. POT3's faulted probe excludes
-                  itself via the 5–45 °C plausibility filter. Sensing arrives
-                  over the direct **ESP-NOW links** (see Root Zone page), with
-                  the HA path as per-pot fallback — an HA restart no longer
-                  touches this loop.*
+                  ≥ 2 °C. Mat vote switches live on **Root Zone** (source of
+                  truth) so this page stays control-focused. Sensing arrives
+                  over ESP-NOW with HA as per-pot fallback.*
           - type: custom:expander-card
             title: 💧 Clone humidifier — the short-cycling fix
             expanded: false
@@ -2339,6 +2443,11 @@ views:
           - type: heading
             heading: 🌱 POT MATRIX
             heading_style: title
+          - type: markdown
+            content: >-
+              *Sense path for the grow mat and panel Soil tab (ESP-NOW
+              **0xD3** vitals · **0xD4** plant names). Mat votes below
+              choose which pots enter coldest / hottest voting.*
           # ============================================================
           #  v2.4.1 · ESP-NOW LINK CHIPS — the direct pot->hub sensing
           #  links that keep the closed-loop mat alive through HA
@@ -2415,11 +2524,16 @@ views:
 
               *🔥 v4 — **every pot's soil temperature drives the grow
               mat**: it heats on the coldest plausible probe and cuts + flushes
-              if the hottest reaches band-high + 1 °C. POT3's faulted probe
-              excludes itself via the 5–45 °C plausibility filter. If a
-              temperature here lies, the mat answers to it.*
+              if the hottest reaches band-high + 1 °C. Use **Mat vote** to
+              exclude a dying probe. Panel Soil tab shows the same 0xD3/0xD4
+              data with a per-pot NPK drill-down.*
+      - type: grid
+        cards:
           - type: heading
-            heading: 💧 MOISTURE
+            heading: 💧 MOISTURE & SOIL TEMP
+            heading_style: title
+          - type: heading
+            heading: Moisture
             heading_style: subtitle
           - type: grid
             columns: 4
@@ -2449,7 +2563,7 @@ views:
                 min: 0
                 max: 100
           - type: heading
-            heading: 🌡️ SOIL TEMPERATURE — coldest pot drives the mat
+            heading: Soil temperature — coldest voting pot drives the mat
             heading_style: subtitle
           - type: grid
             columns: 4
@@ -2486,72 +2600,96 @@ views:
                 max: 32
                 icon: mdi:thermometer
                 secondary: {}
-          - type: heading
-            heading: 🧪 SOIL pH
-            heading_style: subtitle
-          - type: grid
-            columns: 4
-            square: false
+          - type: custom:expander-card
+            title: Mat vote — include in coldest / hottest
+            expanded: true
             cards:
-              - type: custom:modern-circular-gauge
-                entity: sensor.dsc_pot1_soil_ph
-                name: POT1
-                min: 3
-                max: 9
-                icon: mdi:ph
-                secondary: {}
-              - type: custom:modern-circular-gauge
-                entity: sensor.dsc_pot2_soil_ph
-                name: POT2
-                min: 3
-                max: 9
-                icon: mdi:ph
-                secondary: {}
-              - type: custom:modern-circular-gauge
-                entity: sensor.dsc_pot3_soil_ph
-                name: POT3 🚧
-                min: 3
-                max: 9
-                icon: mdi:ph
-                secondary: {}
-                card_mod:
-                  style: |
-                    ha-card { opacity: 0.45; }
-              - type: custom:modern-circular-gauge
-                entity: sensor.dsc_pot4_soil_ph
-                name: POT4
-                min: 3
-                max: 9
-                icon: mdi:ph
-                secondary: {}
-          - type: heading
-            heading: 🪴 PLANT IDs & STAGES
-            heading_style: subtitle
-          - type: entities
-            entities:
-              - entity: text.dsc_pot1_plant_name
-                name: POT1 Plant
-              - entity: select.dsc_pot1_growth_stage
-                name: POT1 Stage
-              - entity: text.dsc_pot2_plant_name
-                name: POT2 Plant
-              - entity: select.dsc_pot2_growth_stage
-                name: POT2 Stage
-              - entity: text.dsc_pot3_plant_name
-                name: POT3 Plant
-              - entity: select.dsc_pot3_growth_stage
-                name: POT3 Stage
-              - entity: text.dsc_pot4_plant_name
-                name: POT4 Plant
-              - entity: select.dsc_pot4_growth_stage
-                name: POT4 Stage
-          - type: markdown
-            content: >-
-              *Plant names live on each pot (NVS). Hub mirrors
-              `text.dsc_potN_plant_name` from HA and relays to the panel
-              as ESP-NOW **0xD4**. If HA still shows the old `4x8_` /
-              `grow_tent_` ids, rename them in the entity registry (or
-              re-adopt the pot) so they match this dashboard.*
+              - type: entities
+                entities:
+                  - entity: switch.dsc_hub_mat_vote_pot_1
+                    name: POT1
+                    icon: mdi:numeric-1-circle
+                  - entity: switch.dsc_hub_mat_vote_pot_2
+                    name: POT2
+                    icon: mdi:numeric-2-circle
+                  - entity: switch.dsc_hub_mat_vote_pot_3
+                    name: POT3 (default OFF)
+                    icon: mdi:numeric-3-circle
+                  - entity: switch.dsc_hub_mat_vote_pot_4
+                    name: POT4
+                    icon: mdi:numeric-4-circle
+              - type: markdown
+                content: >-
+                  *OFF pots are skipped by the mat ladder. Plausibility
+                  filter (5–45 °C) still applies to voted-in pots. Band
+                  setpoints live under Climate → Live Tunables.*
+          - type: custom:expander-card
+            title: 🧪 Soil pH
+            expanded: false
+            cards:
+              - type: grid
+                columns: 4
+                square: false
+                cards:
+                  - type: custom:modern-circular-gauge
+                    entity: sensor.dsc_pot1_soil_ph
+                    name: POT1
+                    min: 3
+                    max: 9
+                    icon: mdi:ph
+                    secondary: {}
+                  - type: custom:modern-circular-gauge
+                    entity: sensor.dsc_pot2_soil_ph
+                    name: POT2
+                    min: 3
+                    max: 9
+                    icon: mdi:ph
+                    secondary: {}
+                  - type: custom:modern-circular-gauge
+                    entity: sensor.dsc_pot3_soil_ph
+                    name: POT3 🚧
+                    min: 3
+                    max: 9
+                    icon: mdi:ph
+                    secondary: {}
+                    card_mod:
+                      style: |
+                        ha-card { opacity: 0.45; }
+                  - type: custom:modern-circular-gauge
+                    entity: sensor.dsc_pot4_soil_ph
+                    name: POT4
+                    min: 3
+                    max: 9
+                    icon: mdi:ph
+                    secondary: {}
+          - type: custom:expander-card
+            title: 🪴 Plant IDs & stages
+            expanded: false
+            cards:
+              - type: entities
+                entities:
+                  - entity: text.dsc_pot1_plant_name
+                    name: POT1 Plant
+                  - entity: select.dsc_pot1_growth_stage
+                    name: POT1 Stage
+                  - entity: text.dsc_pot2_plant_name
+                    name: POT2 Plant
+                  - entity: select.dsc_pot2_growth_stage
+                    name: POT2 Stage
+                  - entity: text.dsc_pot3_plant_name
+                    name: POT3 Plant
+                  - entity: select.dsc_pot3_growth_stage
+                    name: POT3 Stage
+                  - entity: text.dsc_pot4_plant_name
+                    name: POT4 Plant
+                  - entity: select.dsc_pot4_growth_stage
+                    name: POT4 Stage
+              - type: markdown
+                content: >-
+                  *Plant names live on each pot (NVS). Hub mirrors
+                  `text.dsc_potN_plant_name` from HA and relays to the panel
+                  as ESP-NOW **0xD4**. Panel Soil → tap a pot for the live
+                  NPK drill-down.*
       - type: grid
         cards:
           # ============================================================

@@ -677,6 +677,24 @@ globals:
     type: bool
     restore_value: true
     initial_value: 'false'
+  # Per-pot mat vote: exclude a dying probe without a reflash.
+  # POT3 defaults OFF (known flat-0°C fault); others ON.
+  - id: mat_vote_1
+    type: bool
+    restore_value: true
+    initial_value: 'true'
+  - id: mat_vote_2
+    type: bool
+    restore_value: true
+    initial_value: 'true'
+  - id: mat_vote_3
+    type: bool
+    restore_value: true
+    initial_value: 'false'
+  - id: mat_vote_4
+    type: bool
+    restore_value: true
+    initial_value: 'true'
   - id: ac_auto_enabled
     type: bool
     restore_value: true
@@ -1431,6 +1449,49 @@ switch:
     id: growmat_demand
     icon: "mdi:heating-coil"
     optimistic: true
+
+  # Per-pot mat eligibility — OFF pots are skipped by coldest/hottest vote
+  # (still subject to the 5–45°C plausibility filter when ON).
+  - platform: template
+    name: "Mat Vote Pot 1"
+    id: mat_vote_1_switch
+    icon: "mdi:numeric-1-circle"
+    entity_category: config
+    lambda: 'return id(mat_vote_1);'
+    turn_on_action:
+      - globals.set: {id: mat_vote_1, value: 'true'}
+    turn_off_action:
+      - globals.set: {id: mat_vote_1, value: 'false'}
+  - platform: template
+    name: "Mat Vote Pot 2"
+    id: mat_vote_2_switch
+    icon: "mdi:numeric-2-circle"
+    entity_category: config
+    lambda: 'return id(mat_vote_2);'
+    turn_on_action:
+      - globals.set: {id: mat_vote_2, value: 'true'}
+    turn_off_action:
+      - globals.set: {id: mat_vote_2, value: 'false'}
+  - platform: template
+    name: "Mat Vote Pot 3"
+    id: mat_vote_3_switch
+    icon: "mdi:numeric-3-circle"
+    entity_category: config
+    lambda: 'return id(mat_vote_3);'
+    turn_on_action:
+      - globals.set: {id: mat_vote_3, value: 'true'}
+    turn_off_action:
+      - globals.set: {id: mat_vote_3, value: 'false'}
+  - platform: template
+    name: "Mat Vote Pot 4"
+    id: mat_vote_4_switch
+    icon: "mdi:numeric-4-circle"
+    entity_category: config
+    lambda: 'return id(mat_vote_4);'
+    turn_on_action:
+      - globals.set: {id: mat_vote_4, value: 'true'}
+    turn_off_action:
+      - globals.set: {id: mat_vote_4, value: 'false'}
 
   - platform: template
     name: "AC Auto"
@@ -3103,6 +3164,11 @@ script:
             //   * PLAUSIBILITY FILTER (5-45C): a faulted probe (POT3
             //     reads a flat 0.0C) is ignored, so it can never peg the
             //     mat on — the exact blocker that parked min() in v2.4.
+            //   * MAT VOTE switches (Mat Vote Pot 1-4): operator can
+            //     exclude a pot from coldest/hottest voting without a
+            //     reflash. POT3 defaults OFF (known fault). The root-
+            //     zone watchdog heartbeat uses the same gate so an
+            //     excluded probe cannot keep closed-loop "alive" alone.
             //   * RUNAWAY: hottest plausible probe >= High + 1C -> mat
             //     OFF immediately and the fan router flushes the 2x4
             //     with cooler room air. Fans handle runaway heat;
@@ -3129,7 +3195,10 @@ script:
                   pick(id(rz_now_2).state, id(rz_now_2_at), id(rootzone_temp_2).state),
                   pick(id(rz_now_3).state, id(rz_now_3_at), id(rootzone_temp_3).state),
                   pick(id(rz_now_4).state, id(rz_now_4_at), id(rootzone_temp_4).state) };
+                bool vote[4] = {
+                  id(mat_vote_1), id(mat_vote_2), id(mat_vote_3), id(mat_vote_4) };
                 for (int i = 0; i < 4; i++) {
+                  if (!vote[i]) continue;   // operator excluded this pot
                   float p = probes[i];
                   if (isnan(p) || p <= 5.0f || p >= 45.0f) continue;   // faulted/implausible
                   if (isnan(rz_min) || p < rz_min) rz_min = p;
@@ -3944,16 +4013,24 @@ interval:
           // — could go 5 min with no push and FALSE-trip this fault, dropping
           // the mat to air control (which then cuts the mat when the AIR hits
           // target while the ROOTS are still cold: the 19 Jul 10:32pm log).
-          // Refresh whenever any probe currently reads plausible (5-45C): a
-          // live-but-stable value keeps the closed loop alive; a truly dead pot
-          // (HA 'unavailable' -> NaN, or ESP-NOW gone stale) still cannot.
+          // Refresh whenever any *voting* probe currently reads plausible
+          // (5-45C): a live-but-stable value keeps the closed loop alive; a
+          // truly dead pot (HA 'unavailable' -> NaN, or ESP-NOW gone stale)
+          // still cannot. Mat Vote switches gate this the same way they gate
+          // coldest/hottest — an excluded dying probe must not keep the
+          // heartbeat alive while eligible pots are dark.
           {
             auto pl = [](float v){ return !isnan(v) && v > 5.0f && v < 45.0f; };
+            auto live = [&](bool vote, uint32_t at, float now_v, float ha_v) -> bool {
+              if (!vote) return false;
+              bool fresh = at != 0 && (millis() - at) < 150000;
+              return (fresh && pl(now_v)) || pl(ha_v);
+            };
             bool have =
-              ((id(rz_now_1_at) != 0 && (millis()-id(rz_now_1_at)) < 150000) && pl(id(rz_now_1).state)) || pl(id(rootzone_temp).state)   ||
-              ((id(rz_now_2_at) != 0 && (millis()-id(rz_now_2_at)) < 150000) && pl(id(rz_now_2).state)) || pl(id(rootzone_temp_2).state) ||
-              ((id(rz_now_3_at) != 0 && (millis()-id(rz_now_3_at)) < 150000) && pl(id(rz_now_3).state)) || pl(id(rootzone_temp_3).state) ||
-              ((id(rz_now_4_at) != 0 && (millis()-id(rz_now_4_at)) < 150000) && pl(id(rz_now_4).state)) || pl(id(rootzone_temp_4).state);
+              live(id(mat_vote_1), id(rz_now_1_at), id(rz_now_1).state, id(rootzone_temp).state) ||
+              live(id(mat_vote_2), id(rz_now_2_at), id(rz_now_2).state, id(rootzone_temp_2).state) ||
+              live(id(mat_vote_3), id(rz_now_3_at), id(rz_now_3).state, id(rootzone_temp_3).state) ||
+              live(id(mat_vote_4), id(rz_now_4_at), id(rz_now_4).state, id(rootzone_temp_4).state);
             if (have) id(last_valid_rootzone_time) = millis();
           }
           bool rz_stale = (millis() - id(last_valid_rootzone_time)) > 300000;

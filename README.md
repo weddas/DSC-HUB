@@ -86,7 +86,9 @@ esphome config dsc-pot1.yaml
 esphome config dsc-heater.yaml
 ```
 
-Panel heap health (after UI changes): watch log lines from `heap` — free heap and largest block. See `_history/v4/crash-logs/DSC-CONTROL-v4.0.2-postmortem.md`.
+Panel heap health (after UI changes): watch log lines from `heap` and boot — free heap and largest block. Comfort: largest block ≥ ~20 KB; warn below ~12 KB. See `_history/v4/crash-logs/DSC-CONTROL-v4.0.2-postmortem.md`. Panel **4.0.8** boot-loops: flash USB until stable, then OTA.
+
+**Grow mat:** hub exposes `switch.dsc_hub_mat_vote_pot_1`…`4` so a bad probe can be excluded without a reflash (Root Zone dashboard is the HA surface).
 
 ## Flash order (key rotation only)
 

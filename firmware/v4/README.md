@@ -15,6 +15,24 @@ Package bodies are remote-git safe (no `!secret`). Stubs pass credentials (and h
 
 Pots (`dsc-pot-common` **4.0.1+**): each soil channel has **Cal … Offset** / **Cal … Scale** config numbers (NVS). Formula `raw * scale + offset` applies before range/median and feeds HA + ESP-NOW. **Reset Sensor Calibration** restores defaults.
 
+## Panel (DSC-CONTROL **4.0.8**)
+
+Package body: [`dsc-control-common.yaml`](dsc-control-common.yaml).
+
+| Feature | Notes |
+|---|---|
+| Soil cards + detail | 0xD3 vitals / 0xD4 names; tap pot → NPK drill-down |
+| Hold-to-lock | Hold ~3 s on primary tabs; hold lock screen to unlock |
+| Demand / takeover gate | Confirm → Engage (not one stray tap) |
+| Connections | Wi‑Fi channel; ESP-NOW RX age + TX seq |
+| Pulse VPD trend | 12×5 min ring → one label (no canvas charts) |
+
+After UI flashes: watch serial `boot` / `heap` lines. If the panel boot-loops, use **USB** not OTA until `DSC-CONTROL 4.0.8 up — free_heap=…` prints cleanly. See [`../_history/v4/crash-logs/`](../_history/v4/crash-logs/).
+
+## Hub mat votes
+
+In [`dsc-hub-v4_0.yaml`](dsc-hub-v4_0.yaml): `Mat Vote Pot 1`–`4` (`switch.dsc_hub_mat_vote_pot_N`). OFF pots are skipped by coldest/hottest root-zone voting (5–45 °C filter still applies). POT3 defaults OFF.
+
 ## Quick validate
 
 ```bash
