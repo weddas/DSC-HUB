@@ -71,23 +71,14 @@ views:
                 icon_color: green
                 content: "{{ states(entity) }}"
               - type: template
+                entity: sensor.dsc_active_alert_count
                 icon: mdi:sprout
                 content: >
-                  {% set ns = namespace(bad=0) %} {% for e in
-                  states.binary_sensor
-                     if e.entity_id.startswith('binary_sensor.dsc_')
-                     and e.state == 'on'
-                     and e.attributes.get('device_class') not in ['connectivity','running'] %}
-                  {% set ns.bad = ns.bad + 1 %}{% endfor %} {{ 'All clear' if
-                  ns.bad == 0 else ns.bad ~ ' alert(s)' }}
+                  {% set n = states(entity) | int(0) %}
+                  {{ 'All clear' if n == 0 else n ~ ' alert(s)' }}
                 icon_color: >
-                  {% set ns = namespace(bad=0) %} {% for e in
-                  states.binary_sensor
-                     if e.entity_id.startswith('binary_sensor.dsc_')
-                     and e.state == 'on'
-                     and e.attributes.get('device_class') not in ['connectivity','running'] %}
-                  {% set ns.bad = ns.bad + 1 %}{% endfor %} {{ 'green' if ns.bad
-                  == 0 else 'red' }}
+                  {% set n = states(entity) | int(0) %}
+                  {{ 'green' if n == 0 else 'red' }}
           - type: conditional
             conditions:
               - condition: state
@@ -2645,7 +2636,7 @@ views:
                 decimals: 2
                 apex_config:
                   title:
-                    text: EC (mS/cm)
+                    text: EC (µS/cm)
             series:
               # The reference line. Everything else is read against THIS.
               - entity: sensor.dsc_tank_ec_normalized
@@ -3678,6 +3669,14 @@ views:
                 name: WiFi RSSI
               - entity: sensor.dsc_hub_ip_address
                 name: IP
+              - entity: binary_sensor.dsc_hub_emergency_failsafe
+                name: Emergency failsafe (>35°C)
+              - entity: binary_sensor.dsc_hub_climate_sensor_fault
+                name: Climate sensor fault
+              - entity: binary_sensor.dsc_hub_aux_sensor_fault
+                name: Aux sensor fault
+              - entity: binary_sensor.dsc_hub_root_zone_sensor_fault
+                name: Root-zone sensor fault
           - type: heading
             heading: 📱 DSC-CONTROL (PANEL)
             heading_style: subtitle

@@ -1,18 +1,12 @@
 # ==================================================================
 #  DSC-HUB v4 · CORE DASHBOARD HELPERS
 #  ------------------------------------------------------------------
-#  Reconstructs the Phase-0 layer that used to live only in the live
-#  HA install as packages/dsc_dashboard_v3.yaml (never checked into
-#  this repo). Without these, the Lovelace dashboard shows blanks for
-#  fan %, airflow Sankey, hub-link alias, photoperiod accounting, and
-#  the grow-log scribe target.
+#  Phase-0 / Dashboard-v3 support: hub-link alias, fan %, airflow
+#  Sankey nodes, photoperiod, leaf offset, appliance runtimes/cycles,
+#  transfer-function deltas. Tank + pot packages are separate files.
 #
-#  INSTALL: drop into /config/packages/ alongside dsc-v4-light-helpers.yaml
-#  See homeassistant/README.md.
-#
-#  Fan entity_ids below match ESPHome's default slug for dsc-hub v4:
-#    "6 Inch Exhaust (Outside)" → fan.dsc_hub_6_inch_exhaust_outside
-#  If your registry renamed them, edit FAN_* once here — nowhere else.
+#  Source: dsc_dashboard_v3.yaml (live) merged with v4 Sankey topology
+#  the Lovelace dashboard actually wires (direct_room / room_return).
 # ==================================================================
 
 input_boolean:
@@ -27,27 +21,96 @@ input_boolean:
 input_number:
   dsc_leaf_offset:
     name: DSC Leaf Temperature Offset
-    min: -5
+    icon: mdi:leaf-maple
+    min: 0
     max: 5
     step: 0.1
+    initial: 2
     unit_of_measurement: "°C"
-    icon: mdi:leaf
     mode: box
-    initial: 0
-  # Tank EC: raw Tuya units → mS/cm. Adjust once to your probe.
-  dsc_tank_ec_multiplier:
-    name: DSC Tank EC Multiplier
-    min: 0.001
-    max: 10
-    step: 0.001
-    mode: box
-    initial: 1
-    icon: mdi:flash
 
-# ------------------------------------------------------------------
-#  Fan % mirrors + airflow flux proxies (fan % × 10)
-#  Dashboard note: "Flux values are an airflow proxy, not watts."
-# ------------------------------------------------------------------
+sensor:
+  - platform: history_stats
+    name: "DSC Heater Runtime Today"
+    unique_id: dsc_heater_runtime_today
+    entity_id: switch.dsc_hub_heater_demand
+    state: "on"
+    type: time
+    start: "{{ today_at('00:00') }}"
+    end: "{{ now() }}"
+
+  - platform: history_stats
+    name: "DSC AC Runtime Today"
+    unique_id: dsc_ac_runtime_today
+    entity_id: switch.dsc_hub_ac_demand
+    state: "on"
+    type: time
+    start: "{{ today_at('00:00') }}"
+    end: "{{ now() }}"
+
+  - platform: history_stats
+    name: "DSC Humidifier Runtime Today"
+    unique_id: dsc_humidifier_runtime_today
+    entity_id: switch.dsc_hub_humidifier_demand
+    state: "on"
+    type: time
+    start: "{{ today_at('00:00') }}"
+    end: "{{ now() }}"
+
+  - platform: history_stats
+    name: "DSC Dehumidifier Runtime Today"
+    unique_id: dsc_dehumidifier_runtime_today
+    entity_id: switch.dsc_hub_dehumidifier_demand
+    state: "on"
+    type: time
+    start: "{{ today_at('00:00') }}"
+    end: "{{ now() }}"
+
+  - platform: history_stats
+    name: "DSC Grow Mat Runtime Today"
+    unique_id: dsc_growmat_runtime_today
+    entity_id: switch.dsc_hub_grow_mat_demand
+    state: "on"
+    type: time
+    start: "{{ today_at('00:00') }}"
+    end: "{{ now() }}"
+
+  - platform: history_stats
+    name: "DSC Heater Cycles Today"
+    unique_id: dsc_heater_cycles_today
+    entity_id: switch.dsc_hub_heater_demand
+    state: "on"
+    type: count
+    start: "{{ today_at('00:00') }}"
+    end: "{{ now() }}"
+
+  - platform: history_stats
+    name: "DSC Humidifier Cycles Today"
+    unique_id: dsc_humidifier_cycles_today
+    entity_id: switch.dsc_hub_humidifier_demand
+    state: "on"
+    type: count
+    start: "{{ today_at('00:00') }}"
+    end: "{{ now() }}"
+
+  - platform: history_stats
+    name: "DSC Humidifier Cycles Last Hour"
+    unique_id: dsc_humidifier_cycles_last_hour
+    entity_id: switch.dsc_hub_humidifier_demand
+    state: "on"
+    type: count
+    start: "{{ now() - timedelta(hours=1) }}"
+    end: "{{ now() }}"
+
+  - platform: history_stats
+    name: "DSC Clone Humidifier Cycles Last Hour"
+    unique_id: dsc_clone_humidifier_cycles_last_hour
+    entity_id: switch.dsc_hub_clone_humidifier_demand
+    state: "on"
+    type: count
+    start: "{{ now() - timedelta(hours=1) }}"
+    end: "{{ now() }}"
+
 template:
   - binary_sensor:
       - name: "DSC Hub Link"
@@ -98,7 +161,7 @@ template:
           {{ state_attr(e,'percentage') | float(0) if is_state(e,'on') else 0 }}
         availability: "{{ has_value('fan.dsc_hub_6_inch_exhaust_outside') }}"
 
-      # Sankey nodes — daisy-chain lung model (room → 2x4 → 4x8 → out/return)
+      # Sankey topology used by dsc-hub-v4-dashboard.yaml
       - name: "DSC Airflow Room Supply"
         unique_id: dsc_airflow_room_supply
         unit_of_measurement: "flux"
@@ -145,7 +208,42 @@ template:
         icon: mdi:weather-windy
         state: "{{ (states('sensor.dsc_fan_exhaust_room_pct') | float(0)) * 10 }}"
 
-      # 4x8 stage plan hours (mirrors firmware apply_grow_stage)
+      - name: "DSC Delta Room to Clone"
+        unique_id: dsc_delta_room_to_clone
+        unit_of_measurement: "°C"
+        state_class: measurement
+        icon: mdi:swap-vertical
+        state: >
+          {{ (states('sensor.dsc_hub_room_temperature') | float(0)
+            - states('sensor.dsc_hub_clone_temperature') | float(0)) | round(2) }}
+
+      - name: "DSC Delta Clone to Tent"
+        unique_id: dsc_delta_clone_to_tent
+        unit_of_measurement: "°C"
+        state_class: measurement
+        icon: mdi:swap-vertical
+        state: >
+          {{ (states('sensor.dsc_hub_clone_temperature') | float(0)
+            - states('sensor.dsc_hub_tent_temperature') | float(0)) | round(2) }}
+
+      - name: "DSC Main Temp Error"
+        unique_id: dsc_main_temp_error
+        unit_of_measurement: "°C"
+        state_class: measurement
+        icon: mdi:target
+        state: >
+          {{ (states('sensor.dsc_hub_tent_temperature') | float(0)
+            - states('number.dsc_hub_target_temp') | float(25)) | round(2) }}
+
+      - name: "DSC Clone Temp Error"
+        unique_id: dsc_clone_temp_error
+        unit_of_measurement: "°C"
+        state_class: measurement
+        icon: mdi:target
+        state: >
+          {{ (states('sensor.dsc_hub_clone_temperature') | float(0)
+            - states('number.dsc_hub_clone_target_temp') | float(25)) | round(2) }}
+
       - name: "DSC Expected Light Hours"
         unique_id: dsc_expected_light_hours
         unit_of_measurement: "h"
@@ -153,12 +251,13 @@ template:
         icon: mdi:sun-clock
         state: >
           {% set s = states('select.dsc_hub_grow_stage') %}
-          {% if s in ['Off', 'Dry Mode', 'unavailable', 'unknown', none] %}
-            0
-          {% elif s in ['Early Flowering', 'Flowering', 'Late Flowering', 'Final 48-72h Flowering'] %}
-            12
-          {% else %}
-            18
+          {% set veg = ['Germination', 'Seedling', 'Early Vegetative',
+                        'Vegetative', 'Late (Push) Vegetative'] %}
+          {% set flwr = ['Early Flowering', 'Flowering', 'Late Flowering',
+                         'Final 48-72h Flowering'] %}
+          {% if s in veg %}18
+          {% elif s in flwr %}12
+          {% else %}0
           {% endif %}
 
       - name: "DSC Next Light Event"
@@ -166,113 +265,28 @@ template:
         device_class: timestamp
         icon: mdi:clock-end
         state: >
-          {% set on = states('time.dsc_hub_lights_on_time') %}
-          {% set hrs = states('sensor.dsc_expected_light_hours') | float(0) %}
-          {% if on in ['unavailable', 'unknown', none] or hrs <= 0 %}
+          {% set exp = states('sensor.dsc_expected_light_hours') | float(0) %}
+          {% set t = states('time.dsc_hub_lights_on_time') %}
+          {% if exp <= 0 or t in ['unknown', 'unavailable', 'none', none] %}
             {{ none }}
           {% else %}
-            {% set parts = on.split(':') %}
-            {% set start = today_at('%02d:%02d' % (parts[0]|int, parts[1]|int)) %}
-            {% set end = start + timedelta(hours=hrs) %}
-            {% if is_state('binary_sensor.dsc_hub_4x8_window_open', 'on') %}
-              {{ end.isoformat() }}
-            {% else %}
-              {% set next_on = start if now() < start else start + timedelta(days=1) %}
-              {{ next_on.isoformat() }}
+            {% set on_today = today_at(t[0:5]) %}
+            {% set off_today = on_today + timedelta(hours=exp) %}
+            {% if now() < on_today %}{{ on_today.isoformat() }}
+            {% elif now() < off_today %}{{ off_today.isoformat() }}
+            {% else %}{{ (on_today + timedelta(days=1)).isoformat() }}
             {% endif %}
           {% endif %}
         attributes:
           event: >
-            {% if is_state('binary_sensor.dsc_hub_4x8_window_open', 'on') %}
-              lights-off
+            {% set exp = states('sensor.dsc_expected_light_hours') | float(0) %}
+            {% set t = states('time.dsc_hub_lights_on_time') %}
+            {% if exp <= 0 or t in ['unknown', 'unavailable', 'none', none] %}none
             {% else %}
-              lights-on
+              {% set on_today = today_at(t[0:5]) %}
+              {% set off_today = on_today + timedelta(hours=exp) %}
+              {% if now() < on_today %}sunrise
+              {% elif now() < off_today %}sunset
+              {% else %}sunrise
+              {% endif %}
             {% endif %}
-
-      # Tank EC normalisation (Tuya probe × multiplier)
-      - name: "DSC Tank EC Normalized"
-        unique_id: dsc_tank_ec_normalized
-        unit_of_measurement: "mS/cm"
-        state_class: measurement
-        icon: mdi:flash
-        state: >
-          {% set raw = states('sensor.water_tester_ec') | float(states('sensor.water_tester_electrical_conductivity') | float(0)) %}
-          {{ (raw * states('input_number.dsc_tank_ec_multiplier') | float(1)) | round(2) }}
-        availability: >
-          {{ has_value('sensor.water_tester_ec')
-             or has_value('sensor.water_tester_electrical_conductivity') }}
-
-      - name: "DSC Tank EC Target Min"
-        unique_id: dsc_tank_ec_target_min
-        unit_of_measurement: "mS/cm"
-        icon: mdi:flash-outline
-        state: >
-          {% set stage = states('select.dsc_hub_grow_stage') %}
-          {% if 'Flower' in stage %}1.2{% elif stage in ['Germination','Seedling'] %}0.6{% else %}0.8{% endif %}
-
-      - name: "DSC Tank EC Target Max"
-        unique_id: dsc_tank_ec_target_max
-        unit_of_measurement: "mS/cm"
-        icon: mdi:flash-outline
-        state: >
-          {% set stage = states('select.dsc_hub_grow_stage') %}
-          {% if 'Flower' in stage %}2.2{% elif stage in ['Germination','Seedling'] %}1.2{% else %}1.8{% endif %}
-
-  - binary_sensor:
-      - name: "DSC Tank EC Out Of Range"
-        unique_id: dsc_tank_ec_out_of_range
-        device_class: problem
-        state: >
-          {% set ec = states('sensor.dsc_tank_ec_normalized') | float(0) %}
-          {% set lo = states('sensor.dsc_tank_ec_target_min') | float(0) %}
-          {% set hi = states('sensor.dsc_tank_ec_target_max') | float(99) %}
-          {{ ec < lo or ec > hi }}
-        availability: "{{ has_value('sensor.dsc_tank_ec_normalized') }}"
-
-      - name: "DSC Tank pH Out Of Range"
-        unique_id: dsc_tank_ph_out_of_range
-        device_class: problem
-        state: >
-          {% set ph = states('sensor.water_tester_ph_current') | float(0) %}
-          {{ ph < 5.8 or ph > 6.5 }}
-        availability: "{{ has_value('sensor.water_tester_ph_current') }}"
-
-# ------------------------------------------------------------------
-#  Runtime / cycle history_stats (dashboard Climate Engine modules)
-# ------------------------------------------------------------------
-sensor:
-  - platform: history_stats
-    name: "DSC Heater Runtime Today"
-    unique_id: dsc_heater_runtime_today
-    entity_id: switch.dsc_hub_heater_demand
-    state: "on"
-    type: time
-    start: "{{ today_at('00:00') }}"
-    end: "{{ now() }}"
-
-  - platform: history_stats
-    name: "DSC Heater Cycles Today"
-    unique_id: dsc_heater_cycles_today
-    entity_id: switch.dsc_hub_heater_demand
-    state: "on"
-    type: count
-    start: "{{ today_at('00:00') }}"
-    end: "{{ now() }}"
-
-  - platform: history_stats
-    name: "DSC Humidifier Cycles Last Hour"
-    unique_id: dsc_humidifier_cycles_last_hour
-    entity_id: switch.dsc_hub_humidifier_demand
-    state: "on"
-    type: count
-    start: "{{ now() - timedelta(hours=1) }}"
-    end: "{{ now() }}"
-
-  - platform: history_stats
-    name: "DSC Clone Humidifier Cycles Last Hour"
-    unique_id: dsc_clone_humidifier_cycles_last_hour
-    entity_id: switch.dsc_hub_clone_humidifier_demand
-    state: "on"
-    type: count
-    start: "{{ now() - timedelta(hours=1) }}"
-    end: "{{ now() }}"

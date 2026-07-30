@@ -1,15 +1,20 @@
 # Board: Generic ESP32 Board (Generic)
 # Definition: definitions/boards/generic-esp32/manifest.yaml
+#
+# PACKAGE BODY — flash via stub dsc-hub.yaml (local) or
+# homeassistant/esphome/dsc-hub.yaml (git-pull). Do not flash this
+# file alone; it expects wifi/api/ota/ap/espnow_key substitutions.
+# ESP-NOW panel layer is loaded by the stub (dsc-hub-espnow-primary.yaml),
+# not !include'd here — keeps local and git-pull paths identical.
 
 # ===== v4.0 · ESP-NOW PRIMARY CONTROL LAYER =====
-# The DSC-CONTROL panel drives this hub directly over ESP-NOW. This add-on
-# merges the panel<->hub link (command RX + telemetry TX + full soil relay)
-# into the existing espnow / packet_transport / sensor / script / interval
-# blocks by list-concatenation — the QA'd control logic is untouched, and
-# every panel command runs through the SAME entity action HA uses, so the
-# >35C failsafe and the sensor watchdog still outrank it.
-packages:
-  espnow_control: !include dsc-hub-espnow-primary.yaml
+# The DSC-CONTROL panel drives this hub directly over ESP-NOW. The stub
+# merges dsc-hub-espnow-primary.yaml (command RX + telemetry TX + soil
+# relay) into this body by package list-concatenation — the QA'd control
+# logic is untouched, and every panel command runs through the SAME
+# entity action HA uses, so the >35C failsafe and the sensor watchdog
+# still outrank it.
+# Remote-git safe: no !secret here — stub passes credentials as substitutions.
 
 # ===== v2.4.1 · SUBSTITUTIONS =====
 # rootzone_temp_entity*: the HA entities the closed-loop grow mat reads.
@@ -127,9 +132,10 @@ logger:
 #  more than once. They are not rotated by moving them to secrets.yaml;
 #  they are rotated by GENERATING NEW ONES. Run generate-secrets.sh.
 # ==================================================================
+# Secrets come from the stub as substitutions (remote-git safe).
 api:
   encryption:
-    key: !secret dsc_hub_api_key
+    key: ${api_key_val}
   # v2.4.1 · HA-DROP RESILIENCE: the DEFAULT api reboot_timeout is
   # 15 min — meaning every longer HA outage/restart REBOOTED THE HUB
   # mid-grow (fans bounce through the safe-boot baseline, the resume
@@ -140,11 +146,11 @@ api:
 
 ota:
   - platform: esphome
-    password: !secret dsc_hub_ota_password
+    password: ${ota_password_val}
 
 wifi:
-  ssid: !secret wifi_ssid
-  password: !secret wifi_password
+  ssid: ${wifi_ssid}
+  password: ${wifi_password}
   # v2.4.1 · HA-DROP RESILIENCE: ESP32 modem power-save (default
   # LIGHT) makes the chip nap between DTIM beacons — the classic cause
   # of dropped/half-dead HA API sockets and the "Occasionally drops
@@ -152,7 +158,7 @@ wifi:
   power_save_mode: none
   ap:
     ssid: DSC-HUB Fallback Hotspot
-    password: !secret dsc_hub_ap_password
+    password: ${ap_password_val}
   on_connect:
     - lambda: |-
         // Log STA channel so Nest/mesh hops are visible next to the panel's
@@ -325,8 +331,7 @@ wifi:
 #  * RUNTIME-CONFIGURABLE PARAMETERS: tunables above ship as number:
 #    entities (restore_value: true). Watchdog + >35C failsafe
 #    thresholds stay COMPILED-IN constants — deliberately not exposed.
-#  * ESP-NOW pot links: parked as a ready-to-fill block (pot MACs +
-#    shared pot package rollout are prerequisites).
+#  * ESP-NOW pot links: LIVE (v2.4.1+) — per-pot providers + link sensors.
 #  (Built on v2.3 below.)
 #  ---------------------------------------------------------------
 #  v2.3 — ZONE CONTROL + MANUAL TAKEOVER (July 2026)
@@ -545,13 +550,13 @@ packet_transport:
     update_interval: 60s
     providers:
       - name: dsc_pot1
-        encryption: !secret espnow_key
+        encryption: ${espnow_key}
       - name: dsc_pot2
-        encryption: !secret espnow_key
+        encryption: ${espnow_key}
       - name: dsc_pot3
-        encryption: !secret espnow_key
+        encryption: ${espnow_key}
       - name: dsc_pot4
-        encryption: !secret espnow_key
+        encryption: ${espnow_key}
 
 # Time: SNTP primary (internet, HA-independent) so the photoperiod
 # keeps running even if Home Assistant is down. HA time is backup.
@@ -2637,6 +2642,15 @@ binary_sensor:
     id: rootzone_fault_bs
     device_class: problem
     lambda: 'return id(rootzone_fault_active);'
+
+  # >35 °C emergency vent — firmware owns the fans; HA gets a problem
+  # sensor so phone alerts / dashboard match the panel fault bit.
+  - platform: template
+    name: "Emergency Failsafe"
+    id: emergency_failsafe_bs
+    device_class: problem
+    icon: mdi:fire-alert
+    lambda: 'return id(emergency_failsafe_active);'
 
   # ===== v2.4 · PHOTOPERIOD WINDOW EXPORTS ==========================
   # WHY THESE EXIST (six-month note): when the SF1000 moved to the 2x4

@@ -4,7 +4,12 @@
 #  ------------------------------------------------------------------
 #  One package, four nodes. Fix once, deploy everywhere.
 #  Stubs set ONLY: name, friendly_name, ap_ssid, api_grace_ms,
-#  (optionally) test_max_runtime_ms. NEVER put logic in a stub.
+#  wifi_ssid/wifi_password, api/ota/ap secret vals.
+#  NEVER put logic in a stub.
+#
+#  Remote-git safe: no !secret in this file — stubs pass wifi + keys
+#  as substitutions (required for homeassistant/esphome/ HA stubs).
+# ==================================================================
 #
 #  v2.4 — THE SONOFF BATCH (July 2026)
 #  Every node fix/feature/safety change lands in ONE OTA pass:
@@ -78,9 +83,11 @@ ota:
   - platform: esphome
     password: ${ota_password_val}
 
+# WiFi credentials come from the stub as substitutions so this package
+# stays remote-git safe (ESPHome forbids !secret inside git packages).
 wifi:
-  ssid: !secret wifi_ssid
-  password: !secret wifi_password
+  ssid: ${wifi_ssid}
+  password: ${wifi_password}
   ap:
     ssid: ${ap_ssid}
     password: ${ap_password_val}

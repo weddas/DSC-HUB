@@ -18,13 +18,13 @@
 #      uses, and HA entity changes rebroadcast to the panel via
 #      tx_panel_sync so glass and dashboard cannot drift.
 #
-#  INTEGRATION (already wired in dsc-hub-v4_0.yaml):
+#  INTEGRATION (wired by the stub, not this file):
 #      packages:
+#        hub: !include dsc-hub-v4_0.yaml
 #        espnow_control: !include dsc-hub-espnow-primary.yaml
-#  Then `esphome config dsc-hub-v4_0.yaml` on your host to validate the
-#  merge, and flash. The panel MAC is added to espnow.peers here, and the
-#  on_receive handler + telemetry senders are merged into the existing
-#  espnow component (list-merge).
+#  Then `esphome config dsc-hub.yaml`. The panel MAC is added to
+#  espnow.peers here; on_receive + telemetry senders merge into the
+#  existing espnow component (list-merge).
 #
 #  ⚠ NOT payload-encrypted (unlike the xxtea pot link). The shared
 #  espnow_cmd_tag + rolling seq resist casual replay on local RF only —
@@ -32,8 +32,8 @@
 #  16-bit value and set the SAME value on the panel.
 # ==================================================================
 substitutions:
-  panel_mac: "30:76:F5:E9:22:0C"      # DSC-CYD#1 / DSC-CONTROL
-  # MUST match dsc-control.yaml. Not the default 0xABCD / 43981.
+  panel_mac: "30:76:F5:E9:22:0C"      # DSC-CYD#1 / DSC-CONTROL — stub may override
+  # MUST match dsc-control stub. Not the default 0xABCD / 43981.
   espnow_cmd_tag: "54727"             # 0xD5C7
 
 espnow:

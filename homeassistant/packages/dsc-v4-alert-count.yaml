@@ -1,0 +1,18 @@
+# ==================================================================
+#  DSC-HUB v4 · ALERT COUNT HELPER
+#  ------------------------------------------------------------------
+#  Server-side aggregate for the Home alert chip. Dashboard must NOT
+#  loop states.binary_sensor — subscribe to this one entity instead.
+# ==================================================================
+
+template:
+  - sensor:
+      - name: "DSC Active Alert Count"
+        unique_id: dsc_active_alert_count
+        icon: mdi:sprout
+        state: >
+          {{ states.binary_sensor
+             | selectattr('entity_id', 'search', '^binary_sensor\.dsc_')
+             | selectattr('state', 'eq', 'on')
+             | rejectattr('attributes.device_class', 'in', ['connectivity', 'running'])
+             | list | count }}

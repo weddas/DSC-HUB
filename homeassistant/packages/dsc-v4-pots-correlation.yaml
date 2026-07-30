@@ -1,0 +1,81 @@
+# =====================================================================
+# DSC-CORRELATION — Water tester <-> soil probe analysis (v4)
+# ---------------------------------------------------------------------
+# EC vs tank + 6h uptake slope per pot. Dashboard Root Zone uptake UI.
+# Depends on dsc-v4-tank.yaml (sensor.dsc_tank_ec_normalized).
+# =====================================================================
+
+template:
+  - sensor:
+      - name: "DSC-POT1 EC vs Tank"
+        unique_id: dsc_pot1_ec_vs_tank
+        unit_of_measurement: "µS/cm"
+        state_class: measurement
+        icon: mdi:swap-vertical-bold
+        state: >
+          {% set soil = states('sensor.dsc_pot1_soil_conductivity')|float(none) %}
+          {% set tank = states('sensor.dsc_tank_ec_normalized')|float(none) %}
+          {{ (soil - tank)|round(0) if soil is not none and tank is not none else none }}
+
+      - name: "DSC-POT2 EC vs Tank"
+        unique_id: dsc_pot2_ec_vs_tank
+        unit_of_measurement: "µS/cm"
+        state_class: measurement
+        icon: mdi:swap-vertical-bold
+        state: >
+          {% set soil = states('sensor.dsc_pot2_soil_conductivity')|float(none) %}
+          {% set tank = states('sensor.dsc_tank_ec_normalized')|float(none) %}
+          {{ (soil - tank)|round(0) if soil is not none and tank is not none else none }}
+
+      - name: "DSC-POT3 EC vs Tank"
+        unique_id: dsc_pot3_ec_vs_tank
+        unit_of_measurement: "µS/cm"
+        state_class: measurement
+        icon: mdi:swap-vertical-bold
+        state: >
+          {% set soil = states('sensor.dsc_pot3_soil_conductivity')|float(none) %}
+          {% set tank = states('sensor.dsc_tank_ec_normalized')|float(none) %}
+          {{ (soil - tank)|round(0) if soil is not none and tank is not none else none }}
+
+      - name: "DSC-POT4 EC vs Tank"
+        unique_id: dsc_pot4_ec_vs_tank
+        unit_of_measurement: "µS/cm"
+        state_class: measurement
+        icon: mdi:swap-vertical-bold
+        state: >
+          {% set soil = states('sensor.dsc_pot4_soil_conductivity')|float(none) %}
+          {% set tank = states('sensor.dsc_tank_ec_normalized')|float(none) %}
+          {{ (soil - tank)|round(0) if soil is not none and tank is not none else none }}
+
+sensor:
+  - platform: derivative
+    name: "DSC-POT1 EC Uptake Slope"
+    unique_id: dsc_pot1_ec_uptake_slope
+    source: sensor.dsc_pot1_soil_conductivity
+    time_window: "06:00:00"
+    unit_time: h
+    round: 1
+
+  - platform: derivative
+    name: "DSC-POT2 EC Uptake Slope"
+    unique_id: dsc_pot2_ec_uptake_slope
+    source: sensor.dsc_pot2_soil_conductivity
+    time_window: "06:00:00"
+    unit_time: h
+    round: 1
+
+  - platform: derivative
+    name: "DSC-POT3 EC Uptake Slope"
+    unique_id: dsc_pot3_ec_uptake_slope
+    source: sensor.dsc_pot3_soil_conductivity
+    time_window: "06:00:00"
+    unit_time: h
+    round: 1
+
+  - platform: derivative
+    name: "DSC-POT4 EC Uptake Slope"
+    unique_id: dsc_pot4_ec_uptake_slope
+    source: sensor.dsc_pot4_soil_conductivity
+    time_window: "06:00:00"
+    unit_time: h
+    round: 1

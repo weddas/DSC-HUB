@@ -3,13 +3,15 @@
 #  ESP32 · RS485 7-in-1 NPK soil probe
 #  ------------------------------------------------------------------
 #  NEVER put logic in a stub — it belongs in dsc-pot-common.yaml.
-#  'name:' is the entity_id contract: sensor.dsc_pot4_soil_* are
-#  referenced by the HA packages, the dashboard, and the hub's
-#  closed-loop grow mat (and now its ESP-NOW root-zone link).
+#  'name:' is the entity_id contract: sensor.dsc_pot4_soil_*
+#  Local compile: !include. HA deploy: homeassistant/esphome/
 # ==================================================================
 substitutions:
   name: dsc_pot4
   friendly_name: DSC-POT#4
+  wifi_ssid: !secret wifi_ssid
+  wifi_password: !secret wifi_password
+  espnow_key: !secret espnow_key
   api_key_val: !secret dsc_pot4_api_key
   ota_password_val: !secret dsc_pot4_ota_password
   ap_password_val: !secret dsc_pot4_ap_password

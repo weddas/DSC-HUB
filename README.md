@@ -2,16 +2,28 @@
 
 Indoor grow automation fleet: ESPHome hub, CYD touch panel (DSC-CONTROL), soil pots, and Sonoff demand followers.
 
+## Docs (start here)
+
+| Doc | When |
+|---|---|
+| [`INSTALL.md`](INSTALL.md) | Fresh HA + fleet bring-up |
+| [`UPGRADE.md`](UPGRADE.md) | Moving from live v2.4 / early v4 onto this repo |
+| [`RELEASE.md`](RELEASE.md) | Release map + short checklist |
+| [`homeassistant/README.md`](homeassistant/README.md) | Packages, dashboard, HACS |
+| [`firmware/v4/README.md`](firmware/v4/README.md) | Local validate / flash entry points |
+
 ## Canonical firmware
 
 **Active source of truth:** [`firmware/v4/`](firmware/v4/)
 
 | Device | Config |
 |---|---|
-| Hub | `dsc-hub-v4_0.yaml` (+ `dsc-hub-espnow-primary.yaml`) |
-| Touch panel | `dsc-control.yaml` (+ `cyd_glyphs.yaml`) |
+| Hub | stub `dsc-hub.yaml` → `dsc-hub-v4_0.yaml` + `dsc-hub-espnow-primary.yaml` |
+| Touch panel | stub `dsc-control.yaml` → `dsc-control-common.yaml` (+ `cyd_glyphs.yaml`) |
 | Pots 1–4 | `dsc-pot{1..4}.yaml` → `dsc-pot-common.yaml` |
 | Sonoffs | `dsc-heater` / `heatmat` / `humidifier` / `de-humidifier` → `dsc-sonoff-common.yaml` |
+
+**HA ESPHome deploy:** thin stubs in [`homeassistant/esphome/`](homeassistant/esphome/) pull package bodies from this GitHub repo. Edit in Cursor → push → Validate/Install in ESPHome. Flash hub + panel together when the ESP-NOW tag or wire contract changes.
 
 Crash logs and YAML backups live in [`firmware/_history/v4/`](firmware/_history/v4/). Legacy trees are under `_Archive_Legacy_Code/`.
 
@@ -19,15 +31,14 @@ The older path `firmware/DSC-HUB v4/` is superseded — do not edit it.
 
 ## Home Assistant
 
-Canonical dashboard + packages: [`homeassistant/`](homeassistant/)
+Canonical dashboard + packages + ESPHome stubs: [`homeassistant/`](homeassistant/)
 
 | Piece | File |
 |---|---|
 | Lovelace | `homeassistant/dashboards/dsc-hub-v4-dashboard.yaml` (URL: `dsc-hub-v4`) |
-| Helpers | `packages/dsc-v4-core-helpers.yaml` + `dsc-v4-light-helpers.yaml` |
+| Helpers | `homeassistant/packages/dsc-v4-*.yaml` |
 | Automations | `homeassistant/automations.yaml` |
-
-See [`homeassistant/README.md`](homeassistant/README.md) for install order and known live-HA gaps.
+| ESPHome stubs | `homeassistant/esphome/dsc-*.yaml` (git-pull package bodies) |
 
 ## Secrets
 
@@ -69,7 +80,7 @@ g++ -std=c++17 -Wall -Wextra -O2 -o verify_v4 verify_v4.cpp && ./verify_v4
 From `firmware/v4/` (ESPHome CLI or HA ESPHome add-on):
 
 ```bash
-esphome config dsc-hub-v4_0.yaml
+esphome config dsc-hub.yaml
 esphome config dsc-control.yaml
 esphome config dsc-pot1.yaml
 esphome config dsc-heater.yaml

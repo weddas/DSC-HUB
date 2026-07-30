@@ -6,6 +6,11 @@
 #  dsc-pot{1..4}.yaml stubs set ONLY name + friendly_name + secrets and
 #  !include this file — never put logic in a stub.
 #
+#  Remote-git safe: no !secret in this file — stubs pass wifi_ssid,
+#  wifi_password, and espnow_key as substitutions (HA stubs under
+#  homeassistant/esphome/ pull this package from GitHub).
+# ==================================================================
+#
 #  ⚠ ENTITY IDs ARE A CONTRACT (sensor.dsc_pot1_soil_*, NO underscore
 #  before the digit). Referenced by the HA stat/alert packages, the
 #  dashboard, and the HUB's closed-loop grow mat. Do not rename a node.
@@ -63,9 +68,11 @@ ota:
   - platform: esphome
     password: ${ota_password_val}
 
+# WiFi + espnow_key come from the stub as substitutions so this package
+# stays remote-git safe (ESPHome forbids !secret inside git packages).
 wifi:
-  ssid: !secret wifi_ssid
-  password: !secret wifi_password
+  ssid: ${wifi_ssid}
+  password: ${wifi_password}
   ap:
     ssid: "${friendly_name} Fallback"
     password: ${ap_password_val}
@@ -337,7 +344,7 @@ packet_transport:
     peer_address: 84:1F:E8:16:E6:60
     update_interval: 60s
     encryption:
-      key: !secret espnow_key
+      key: ${espnow_key}
     # Sensor ids here are what the hub's remote_id: fields reference.
     # v4.0: full soil set (was soil_temperature + soil_moisture only).
     sensors:

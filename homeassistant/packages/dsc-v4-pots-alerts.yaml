@@ -1,0 +1,366 @@
+# DSC-POTS Targets & Alerts (v4) — stage bands match firmware growth_stage options.
+# Depends on dsc-v4-pots-stats.yaml for baselines + N rate.
+
+input_number:
+  dsc_pots_n_drop_rate_alert:
+    name: "DSC Pots — N drop-rate alert (mg/kg per h)"
+    min: 1
+    max: 50
+    step: 1
+    initial: 8
+    unit_of_measurement: "mg/kg/h"
+    icon: mdi:trending-down
+
+  dsc_pots_n_reserve_floor:
+    name: "DSC Pots — N reserve floor (mg/kg)"
+    min: 0
+    max: 200
+    step: 5
+    initial: 30
+    unit_of_measurement: "mg/kg"
+    icon: mdi:alert-outline
+
+template:
+  - binary_sensor:
+
+      # ------------------------------ POT1 ------------------------------
+      - name: "DSC-POT1 Moisture Out of Range"
+        unique_id: dsc_pot1_moisture_out_of_range
+        icon: mdi:water-alert
+        delay_on:
+          minutes: 30
+        state: >
+          {% set v = states('sensor.dsc_pot1_soil_moisture')|float(none) %}
+          {% set s = states('select.dsc_pot1_growth_stage') %}
+          {% set lo = {'Germination':55,'Seedling':55,'Early Vegetative':50,'Vegetative':50,'Late (Push) Vegetative':50,'Early Flowering':40,'Flowering':40,'Late Flowering':40,'Final 48-72h Flowering':40,'Dry Mode':35,'Off':35} %}
+          {% set hi = {'Germination':75,'Seedling':75,'Early Vegetative':70,'Vegetative':70,'Late (Push) Vegetative':70,'Early Flowering':60,'Flowering':60,'Late Flowering':60,'Final 48-72h Flowering':60,'Dry Mode':60,'Off':60} %}
+          {{ v is not none and (v < lo.get(s, 40) or v > hi.get(s, 70)) }}
+
+      - name: "DSC-POT1 pH Out of Range"
+        unique_id: dsc_pot1_ph_out_of_range
+        icon: mdi:ph
+        delay_on:
+          minutes: 30
+        state: >
+          {% set v = states('sensor.dsc_pot1_soil_ph')|float(none) %}
+          {{ v is not none and (v < 5.8 or v > 7.0) }}
+
+      - name: "DSC-POT1 Root Zone Temp Out of Range"
+        unique_id: dsc_pot1_temp_out_of_range
+        icon: mdi:thermometer-alert
+        delay_on:
+          minutes: 30
+        state: >
+          {% set v = states('sensor.dsc_pot1_soil_temperature')|float(none) %}
+          {{ v is not none and (v < 18.0 or v > 28.0) }}
+
+      - name: "DSC-POT1 EC Salt Build-up"
+        unique_id: dsc_pot1_ec_salt_buildup
+        icon: mdi:shaker-outline
+        delay_on:
+          hours: 1
+        state: >
+          {% set v = states('sensor.dsc_pot1_soil_conductivity')|float(none) %}
+          {{ v is not none and v > 2000 }}
+
+      - name: "DSC-POT1 EC Depleted vs Baseline"
+        unique_id: dsc_pot1_ec_depleted
+        icon: mdi:battery-low
+        delay_on:
+          hours: 1
+        state: >
+          {% set v = states('sensor.dsc_pot1_soil_conductivity')|float(none) %}
+          {% set b = states('sensor.dsc_pot1_soil_conductivity_7d_baseline')|float(none) %}
+          {{ v is not none and b is not none and b > 100 and v < b * 0.5 }}
+
+      - name: "DSC-POT1 Nitrogen Below Baseline"
+        unique_id: dsc_pot1_n_below_baseline
+        icon: mdi:leaf-off
+        delay_on:
+          hours: 1
+        state: >
+          {% set v = states('sensor.dsc_pot1_soil_nitrogen')|float(none) %}
+          {% set b = states('sensor.dsc_pot1_soil_nitrogen_7d_baseline')|float(none) %}
+          {{ v is not none and b is not none and b > 10 and v < b * 0.7 }}
+
+      - name: "DSC-POT1 Nitrogen Depleting Fast"
+        unique_id: dsc_pot1_n_depleting_fast
+        icon: mdi:run-fast
+        delay_on:
+          minutes: 30
+        state: >
+          {% set rate = states('sensor.dsc_pot1_soil_nitrogen_rate')|float(0) %}
+          {% set n = states('sensor.dsc_pot1_soil_nitrogen')|float(999) %}
+          {% set r = states('input_number.dsc_pots_n_drop_rate_alert')|float(8) %}
+          {% set fl = states('input_number.dsc_pots_n_reserve_floor')|float(30) %}
+          {{ rate < (0 - r) and n < (fl * 2) }}
+
+      # ------------------------------ POT2 ------------------------------
+      - name: "DSC-POT2 Moisture Out of Range"
+        unique_id: dsc_pot2_moisture_out_of_range
+        icon: mdi:water-alert
+        delay_on:
+          minutes: 30
+        state: >
+          {% set v = states('sensor.dsc_pot2_soil_moisture')|float(none) %}
+          {% set s = states('select.dsc_pot2_growth_stage') %}
+          {% set lo = {'Germination':55,'Seedling':55,'Early Vegetative':50,'Vegetative':50,'Late (Push) Vegetative':50,'Early Flowering':40,'Flowering':40,'Late Flowering':40,'Final 48-72h Flowering':40,'Dry Mode':35,'Off':35} %}
+          {% set hi = {'Germination':75,'Seedling':75,'Early Vegetative':70,'Vegetative':70,'Late (Push) Vegetative':70,'Early Flowering':60,'Flowering':60,'Late Flowering':60,'Final 48-72h Flowering':60,'Dry Mode':60,'Off':60} %}
+          {{ v is not none and (v < lo.get(s, 40) or v > hi.get(s, 70)) }}
+
+      - name: "DSC-POT2 pH Out of Range"
+        unique_id: dsc_pot2_ph_out_of_range
+        icon: mdi:ph
+        delay_on:
+          minutes: 30
+        state: >
+          {% set v = states('sensor.dsc_pot2_soil_ph')|float(none) %}
+          {{ v is not none and (v < 5.8 or v > 7.0) }}
+
+      - name: "DSC-POT2 Root Zone Temp Out of Range"
+        unique_id: dsc_pot2_temp_out_of_range
+        icon: mdi:thermometer-alert
+        delay_on:
+          minutes: 30
+        state: >
+          {% set v = states('sensor.dsc_pot2_soil_temperature')|float(none) %}
+          {{ v is not none and (v < 18.0 or v > 28.0) }}
+
+      - name: "DSC-POT2 EC Salt Build-up"
+        unique_id: dsc_pot2_ec_salt_buildup
+        icon: mdi:shaker-outline
+        delay_on:
+          hours: 1
+        state: >
+          {% set v = states('sensor.dsc_pot2_soil_conductivity')|float(none) %}
+          {{ v is not none and v > 2000 }}
+
+      - name: "DSC-POT2 EC Depleted vs Baseline"
+        unique_id: dsc_pot2_ec_depleted
+        icon: mdi:battery-low
+        delay_on:
+          hours: 1
+        state: >
+          {% set v = states('sensor.dsc_pot2_soil_conductivity')|float(none) %}
+          {% set b = states('sensor.dsc_pot2_soil_conductivity_7d_baseline')|float(none) %}
+          {{ v is not none and b is not none and b > 100 and v < b * 0.5 }}
+
+      - name: "DSC-POT2 Nitrogen Below Baseline"
+        unique_id: dsc_pot2_n_below_baseline
+        icon: mdi:leaf-off
+        delay_on:
+          hours: 1
+        state: >
+          {% set v = states('sensor.dsc_pot2_soil_nitrogen')|float(none) %}
+          {% set b = states('sensor.dsc_pot2_soil_nitrogen_7d_baseline')|float(none) %}
+          {{ v is not none and b is not none and b > 10 and v < b * 0.7 }}
+
+      - name: "DSC-POT2 Nitrogen Depleting Fast"
+        unique_id: dsc_pot2_n_depleting_fast
+        icon: mdi:run-fast
+        delay_on:
+          minutes: 30
+        state: >
+          {% set rate = states('sensor.dsc_pot2_soil_nitrogen_rate')|float(0) %}
+          {% set n = states('sensor.dsc_pot2_soil_nitrogen')|float(999) %}
+          {% set r = states('input_number.dsc_pots_n_drop_rate_alert')|float(8) %}
+          {% set fl = states('input_number.dsc_pots_n_reserve_floor')|float(30) %}
+          {{ rate < (0 - r) and n < (fl * 2) }}
+
+      # ------------------------------ POT3 ------------------------------
+      - name: "DSC-POT3 Moisture Out of Range"
+        unique_id: dsc_pot3_moisture_out_of_range
+        icon: mdi:water-alert
+        delay_on:
+          minutes: 30
+        state: >
+          {% set v = states('sensor.dsc_pot3_soil_moisture')|float(none) %}
+          {% set s = states('select.dsc_pot3_growth_stage') %}
+          {% set lo = {'Germination':55,'Seedling':55,'Early Vegetative':50,'Vegetative':50,'Late (Push) Vegetative':50,'Early Flowering':40,'Flowering':40,'Late Flowering':40,'Final 48-72h Flowering':40,'Dry Mode':35,'Off':35} %}
+          {% set hi = {'Germination':75,'Seedling':75,'Early Vegetative':70,'Vegetative':70,'Late (Push) Vegetative':70,'Early Flowering':60,'Flowering':60,'Late Flowering':60,'Final 48-72h Flowering':60,'Dry Mode':60,'Off':60} %}
+          {{ v is not none and (v < lo.get(s, 40) or v > hi.get(s, 70)) }}
+
+      - name: "DSC-POT3 pH Out of Range"
+        unique_id: dsc_pot3_ph_out_of_range
+        icon: mdi:ph
+        delay_on:
+          minutes: 30
+        state: >
+          {% set v = states('sensor.dsc_pot3_soil_ph')|float(none) %}
+          {{ v is not none and (v < 5.8 or v > 7.0) }}
+
+      - name: "DSC-POT3 Root Zone Temp Out of Range"
+        unique_id: dsc_pot3_temp_out_of_range
+        icon: mdi:thermometer-alert
+        delay_on:
+          minutes: 30
+        state: >
+          {% set v = states('sensor.dsc_pot3_soil_temperature')|float(none) %}
+          {{ v is not none and (v < 18.0 or v > 28.0) }}
+
+      - name: "DSC-POT3 EC Salt Build-up"
+        unique_id: dsc_pot3_ec_salt_buildup
+        icon: mdi:shaker-outline
+        delay_on:
+          hours: 1
+        state: >
+          {% set v = states('sensor.dsc_pot3_soil_conductivity')|float(none) %}
+          {{ v is not none and v > 2000 }}
+
+      - name: "DSC-POT3 EC Depleted vs Baseline"
+        unique_id: dsc_pot3_ec_depleted
+        icon: mdi:battery-low
+        delay_on:
+          hours: 1
+        state: >
+          {% set v = states('sensor.dsc_pot3_soil_conductivity')|float(none) %}
+          {% set b = states('sensor.dsc_pot3_soil_conductivity_7d_baseline')|float(none) %}
+          {{ v is not none and b is not none and b > 100 and v < b * 0.5 }}
+
+      - name: "DSC-POT3 Nitrogen Below Baseline"
+        unique_id: dsc_pot3_n_below_baseline
+        icon: mdi:leaf-off
+        delay_on:
+          hours: 1
+        state: >
+          {% set v = states('sensor.dsc_pot3_soil_nitrogen')|float(none) %}
+          {% set b = states('sensor.dsc_pot3_soil_nitrogen_7d_baseline')|float(none) %}
+          {{ v is not none and b is not none and b > 10 and v < b * 0.7 }}
+
+      - name: "DSC-POT3 Nitrogen Depleting Fast"
+        unique_id: dsc_pot3_n_depleting_fast
+        icon: mdi:run-fast
+        delay_on:
+          minutes: 30
+        state: >
+          {% set rate = states('sensor.dsc_pot3_soil_nitrogen_rate')|float(0) %}
+          {% set n = states('sensor.dsc_pot3_soil_nitrogen')|float(999) %}
+          {% set r = states('input_number.dsc_pots_n_drop_rate_alert')|float(8) %}
+          {% set fl = states('input_number.dsc_pots_n_reserve_floor')|float(30) %}
+          {{ rate < (0 - r) and n < (fl * 2) }}
+
+      # ------------------------------ POT4 ------------------------------
+      - name: "DSC-POT4 Moisture Out of Range"
+        unique_id: dsc_pot4_moisture_out_of_range
+        icon: mdi:water-alert
+        delay_on:
+          minutes: 30
+        state: >
+          {% set v = states('sensor.dsc_pot4_soil_moisture')|float(none) %}
+          {% set s = states('select.dsc_pot4_growth_stage') %}
+          {% set lo = {'Germination':55,'Seedling':55,'Early Vegetative':50,'Vegetative':50,'Late (Push) Vegetative':50,'Early Flowering':40,'Flowering':40,'Late Flowering':40,'Final 48-72h Flowering':40,'Dry Mode':35,'Off':35} %}
+          {% set hi = {'Germination':75,'Seedling':75,'Early Vegetative':70,'Vegetative':70,'Late (Push) Vegetative':70,'Early Flowering':60,'Flowering':60,'Late Flowering':60,'Final 48-72h Flowering':60,'Dry Mode':60,'Off':60} %}
+          {{ v is not none and (v < lo.get(s, 40) or v > hi.get(s, 70)) }}
+
+      - name: "DSC-POT4 pH Out of Range"
+        unique_id: dsc_pot4_ph_out_of_range
+        icon: mdi:ph
+        delay_on:
+          minutes: 30
+        state: >
+          {% set v = states('sensor.dsc_pot4_soil_ph')|float(none) %}
+          {{ v is not none and (v < 5.8 or v > 7.0) }}
+
+      - name: "DSC-POT4 Root Zone Temp Out of Range"
+        unique_id: dsc_pot4_temp_out_of_range
+        icon: mdi:thermometer-alert
+        delay_on:
+          minutes: 30
+        state: >
+          {% set v = states('sensor.dsc_pot4_soil_temperature')|float(none) %}
+          {{ v is not none and (v < 18.0 or v > 28.0) }}
+
+      - name: "DSC-POT4 EC Salt Build-up"
+        unique_id: dsc_pot4_ec_salt_buildup
+        icon: mdi:shaker-outline
+        delay_on:
+          hours: 1
+        state: >
+          {% set v = states('sensor.dsc_pot4_soil_conductivity')|float(none) %}
+          {{ v is not none and v > 2000 }}
+
+      - name: "DSC-POT4 EC Depleted vs Baseline"
+        unique_id: dsc_pot4_ec_depleted
+        icon: mdi:battery-low
+        delay_on:
+          hours: 1
+        state: >
+          {% set v = states('sensor.dsc_pot4_soil_conductivity')|float(none) %}
+          {% set b = states('sensor.dsc_pot4_soil_conductivity_7d_baseline')|float(none) %}
+          {{ v is not none and b is not none and b > 100 and v < b * 0.5 }}
+
+      - name: "DSC-POT4 Nitrogen Below Baseline"
+        unique_id: dsc_pot4_n_below_baseline
+        icon: mdi:leaf-off
+        delay_on:
+          hours: 1
+        state: >
+          {% set v = states('sensor.dsc_pot4_soil_nitrogen')|float(none) %}
+          {% set b = states('sensor.dsc_pot4_soil_nitrogen_7d_baseline')|float(none) %}
+          {{ v is not none and b is not none and b > 10 and v < b * 0.7 }}
+
+      - name: "DSC-POT4 Nitrogen Depleting Fast"
+        unique_id: dsc_pot4_n_depleting_fast
+        icon: mdi:run-fast
+        delay_on:
+          minutes: 30
+        state: >
+          {% set rate = states('sensor.dsc_pot4_soil_nitrogen_rate')|float(0) %}
+          {% set n = states('sensor.dsc_pot4_soil_nitrogen')|float(999) %}
+          {% set r = states('input_number.dsc_pots_n_drop_rate_alert')|float(8) %}
+          {% set fl = states('input_number.dsc_pots_n_reserve_floor')|float(30) %}
+          {{ rate < (0 - r) and n < (fl * 2) }}
+
+# ---------------------------------------------------------------------
+# One notifier for all pot alerts. Fires on OFF->ON only; the delay_on
+# on each binary sensor is the debounce, so no extra cooldown needed.
+# notify.notify broadcasts to all registered mobile apps — change the
+# service if you want a specific device or channel.
+# ---------------------------------------------------------------------
+automation:
+  - id: dsc_pots_alert_notifier
+    alias: "DSC Pots — Alert Notifier"
+    mode: queued
+    max: 10
+    trigger:
+      - platform: state
+        to: "on"
+        entity_id:
+          - binary_sensor.dsc_pot1_moisture_out_of_range
+          - binary_sensor.dsc_pot1_ph_out_of_range
+          - binary_sensor.dsc_pot1_temp_out_of_range
+          - binary_sensor.dsc_pot1_ec_salt_buildup
+          - binary_sensor.dsc_pot1_ec_depleted
+          - binary_sensor.dsc_pot1_n_below_baseline
+          - binary_sensor.dsc_pot1_n_depleting_fast
+          - binary_sensor.dsc_pot2_moisture_out_of_range
+          - binary_sensor.dsc_pot2_ph_out_of_range
+          - binary_sensor.dsc_pot2_temp_out_of_range
+          - binary_sensor.dsc_pot2_ec_salt_buildup
+          - binary_sensor.dsc_pot2_ec_depleted
+          - binary_sensor.dsc_pot2_n_below_baseline
+          - binary_sensor.dsc_pot2_n_depleting_fast
+          - binary_sensor.dsc_pot3_moisture_out_of_range
+          - binary_sensor.dsc_pot3_ph_out_of_range
+          - binary_sensor.dsc_pot3_temp_out_of_range
+          - binary_sensor.dsc_pot3_ec_salt_buildup
+          - binary_sensor.dsc_pot3_ec_depleted
+          - binary_sensor.dsc_pot3_n_below_baseline
+          - binary_sensor.dsc_pot3_n_depleting_fast
+          - binary_sensor.dsc_pot4_moisture_out_of_range
+          - binary_sensor.dsc_pot4_ph_out_of_range
+          - binary_sensor.dsc_pot4_temp_out_of_range
+          - binary_sensor.dsc_pot4_ec_salt_buildup
+          - binary_sensor.dsc_pot4_ec_depleted
+          - binary_sensor.dsc_pot4_n_below_baseline
+          - binary_sensor.dsc_pot4_n_depleting_fast
+    action:
+      - action: notify.chriss_iphone_max
+        data:
+          title: "🌱 DSC Grow Alert"
+          message: >
+            {% set pot = trigger.entity_id.split('.')[1].split('_')[1] %}
+            {% set plant = states('text.dsc_' ~ pot ~ '_plant_name') %}
+            {% set stage = states('select.dsc_' ~ pot ~ '_growth_stage') %}
+            {{ plant }} ({{ pot | upper }}, {{ stage }}):
+            {{ trigger.to_state.attributes.friendly_name }}

@@ -1,0 +1,26 @@
+# ==================================================================
+#  DSC-HUB — device stub
+#  ------------------------------------------------------------------
+#  Secrets + MAC/tag stay here. Logic: dsc-hub-v4_0.yaml
+#  Panel ESP-NOW layer: dsc-hub-espnow-primary.yaml (sibling package).
+#
+#  Local:  esphome run dsc-hub.yaml
+#  HA:     homeassistant/esphome/dsc-hub.yaml (git-pulls both bodies)
+# ==================================================================
+
+substitutions:
+  name: dsc-hub
+  friendly_name: DSC-HUB
+  wifi_ssid: !secret wifi_ssid
+  wifi_password: !secret wifi_password
+  api_key_val: !secret dsc_hub_api_key
+  ota_password_val: !secret dsc_hub_ota_password
+  ap_password_val: !secret dsc_hub_ap_password
+  espnow_key: !secret espnow_key
+  # Must match panel stub / dsc-control
+  panel_mac: "30:76:F5:E9:22:0C"
+  espnow_cmd_tag: "54727"             # 0xD5C7
+
+packages:
+  hub: !include dsc-hub-v4_0.yaml
+  espnow_control: !include dsc-hub-espnow-primary.yaml

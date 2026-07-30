@@ -1,0 +1,18 @@
+# DSC-POT#3 — HA stub (pulls common package from GitHub)
+# Entity contract: sensor.dsc_pot3_soil_*
+substitutions:
+  name: dsc_pot3
+  friendly_name: DSC-POT#3
+  wifi_ssid: !secret wifi_ssid
+  wifi_password: !secret wifi_password
+  espnow_key: !secret espnow_key
+  api_key_val: !secret dsc_pot3_api_key
+  ota_password_val: !secret dsc_pot3_ota_password
+  ap_password_val: !secret dsc_pot3_ap_password
+
+packages:
+  common:
+    url: https://github.com/weddas/DSC-HUB
+    ref: master
+    files: [firmware/v4/dsc-pot-common.yaml]
+    refresh: 1d
