@@ -13,6 +13,8 @@ Entry points (local): `dsc-hub.yaml`, `dsc-control.yaml`, `dsc-heater.yaml`, `ds
 
 Package bodies are remote-git safe (no `!secret`). Stubs pass credentials (and hub/panel MACs + `espnow_cmd_tag`) as substitutions.
 
+Pots (`dsc-pot-common` **4.0.1+**): each soil channel has **Cal … Offset** / **Cal … Scale** config numbers (NVS). Formula `raw * scale + offset` applies before range/median and feeds HA + ESP-NOW. **Reset Sensor Calibration** restores defaults.
+
 ## Quick validate
 
 ```bash

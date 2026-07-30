@@ -15,6 +15,17 @@
 #  before the digit). Referenced by the HA stat/alert packages, the
 #  dashboard, and the HUB's closed-loop grow mat. Do not rename a node.
 #
+#  v4.0.1 — PER-SENSOR CALIBRATION (31 Jul 2026)
+#   * Each soil channel has HA/ESPHome number entities:
+#       Cal <Sensor> Offset  +  Cal <Sensor> Scale
+#     Applied after register scaling, before range→NAN + median(3).
+#     Formula: calibrated = raw * scale + offset (defaults 1.0 / 0.0).
+#     Values restore from NVS; Reset Sensor Calibration restores defaults.
+#     Calibrated readings feed BOTH HA and ESP-NOW (mat + panel stay honest).
+#   * NPK remain trend indicators — cal knobs exist but don't turn them
+#     into lab-grade ion electrodes.
+#  (Built on v4.0 below.)
+#  ------------------------------------------------------------------
 #  v4.0 — ESP-NOW PRIMARY / FULL SOIL BROADCAST (25 Jul 2026)
 #   * The pots now unicast the WHOLE soil readout to the hub every 60s —
 #     temperature + moisture (the mat's sense loop, unchanged) PLUS
@@ -48,7 +59,7 @@ esphome:
   friendly_name: ${friendly_name}
   project:
     name: digital_emotions.dsc-pot
-    version: "4.0"
+    version: "4.0.1"
 
 esp32:
   board: esp32dev
@@ -107,12 +118,201 @@ modbus_controller:
     setup_priority: -10
 
 # ==================================================================
+#  SENSOR CALIBRATION  —  config numbers (NVS-backed)
+#  ------------------------------------------------------------------
+#  Entity ids (examples for pot1): number.dsc_pot1_cal_moisture_offset,
+#  number.dsc_pot1_cal_moisture_scale, … for each soil channel.
+#  Applied in the sensor filters below so HA + ESP-NOW stay consistent.
+# ==================================================================
+number:
+  - platform: template
+    name: "Cal Moisture Offset"
+    id: cal_moist_offset
+    icon: mdi:tune-vertical
+    entity_category: config
+    unit_of_measurement: "%"
+    min_value: -50
+    max_value: 50
+    step: 0.1
+    initial_value: 0
+    optimistic: true
+    restore_value: true
+    mode: box
+  - platform: template
+    name: "Cal Moisture Scale"
+    id: cal_moist_scale
+    icon: mdi:multiplication
+    entity_category: config
+    min_value: 0.5
+    max_value: 1.5
+    step: 0.01
+    initial_value: 1
+    optimistic: true
+    restore_value: true
+    mode: box
+
+  - platform: template
+    name: "Cal Temperature Offset"
+    id: cal_temp_offset
+    icon: mdi:tune-vertical
+    entity_category: config
+    unit_of_measurement: "°C"
+    min_value: -10
+    max_value: 10
+    step: 0.1
+    initial_value: 0
+    optimistic: true
+    restore_value: true
+    mode: box
+  - platform: template
+    name: "Cal Temperature Scale"
+    id: cal_temp_scale
+    icon: mdi:multiplication
+    entity_category: config
+    min_value: 0.5
+    max_value: 1.5
+    step: 0.01
+    initial_value: 1
+    optimistic: true
+    restore_value: true
+    mode: box
+
+  - platform: template
+    name: "Cal Conductivity Offset"
+    id: cal_ec_offset
+    icon: mdi:tune-vertical
+    entity_category: config
+    unit_of_measurement: "µS/cm"
+    min_value: -2000
+    max_value: 2000
+    step: 1
+    initial_value: 0
+    optimistic: true
+    restore_value: true
+    mode: box
+  - platform: template
+    name: "Cal Conductivity Scale"
+    id: cal_ec_scale
+    icon: mdi:multiplication
+    entity_category: config
+    min_value: 0.5
+    max_value: 1.5
+    step: 0.01
+    initial_value: 1
+    optimistic: true
+    restore_value: true
+    mode: box
+
+  - platform: template
+    name: "Cal pH Offset"
+    id: cal_ph_offset
+    icon: mdi:tune-vertical
+    entity_category: config
+    unit_of_measurement: "pH"
+    min_value: -2
+    max_value: 2
+    step: 0.01
+    initial_value: 0
+    optimistic: true
+    restore_value: true
+    mode: box
+  - platform: template
+    name: "Cal pH Scale"
+    id: cal_ph_scale
+    icon: mdi:multiplication
+    entity_category: config
+    min_value: 0.5
+    max_value: 1.5
+    step: 0.01
+    initial_value: 1
+    optimistic: true
+    restore_value: true
+    mode: box
+
+  - platform: template
+    name: "Cal Nitrogen Offset"
+    id: cal_n_offset
+    icon: mdi:tune-vertical
+    entity_category: config
+    unit_of_measurement: "mg/kg"
+    min_value: -500
+    max_value: 500
+    step: 1
+    initial_value: 0
+    optimistic: true
+    restore_value: true
+    mode: box
+  - platform: template
+    name: "Cal Nitrogen Scale"
+    id: cal_n_scale
+    icon: mdi:multiplication
+    entity_category: config
+    min_value: 0.5
+    max_value: 1.5
+    step: 0.01
+    initial_value: 1
+    optimistic: true
+    restore_value: true
+    mode: box
+
+  - platform: template
+    name: "Cal Phosphorus Offset"
+    id: cal_p_offset
+    icon: mdi:tune-vertical
+    entity_category: config
+    unit_of_measurement: "mg/kg"
+    min_value: -500
+    max_value: 500
+    step: 1
+    initial_value: 0
+    optimistic: true
+    restore_value: true
+    mode: box
+  - platform: template
+    name: "Cal Phosphorus Scale"
+    id: cal_p_scale
+    icon: mdi:multiplication
+    entity_category: config
+    min_value: 0.5
+    max_value: 1.5
+    step: 0.01
+    initial_value: 1
+    optimistic: true
+    restore_value: true
+    mode: box
+
+  - platform: template
+    name: "Cal Potassium Offset"
+    id: cal_k_offset
+    icon: mdi:tune-vertical
+    entity_category: config
+    unit_of_measurement: "mg/kg"
+    min_value: -500
+    max_value: 500
+    step: 1
+    initial_value: 0
+    optimistic: true
+    restore_value: true
+    mode: box
+  - platform: template
+    name: "Cal Potassium Scale"
+    id: cal_k_scale
+    icon: mdi:multiplication
+    entity_category: config
+    min_value: 0.5
+    max_value: 1.5
+    step: 0.01
+    initial_value: 1
+    optimistic: true
+    restore_value: true
+    mode: box
+
+# ==================================================================
 #  SOIL SENSORS  —  registers 0x0000..0x0006
 # ==================================================================
-# ⚠ NAMES ARE THE ENTITY_ID CONTRACT. Every sensor gets the same two-
-# stage guard: out-of-range -> NAN (a bus glitch is not a reading), then
-# median(3) (one bad sample can't move the number). NAN is honest; a
-# wrong number is not. "Never control on a blind sensor" starts here.
+# ⚠ NAMES ARE THE ENTITY_ID CONTRACT. Pipeline per channel:
+#  register scale → user cal (scale+offset) → out-of-range → NAN →
+#  median(3). NAN is honest; a wrong number is not.
 sensor:
   - platform: modbus_controller
     modbus_controller_id: soil_sensor_bus
@@ -129,7 +329,12 @@ sensor:
     filters:
       - multiply: 0.1
       - lambda: |-
-          if (x < 0.0 || x > 100.0) return NAN;
+          float s = id(cal_moist_scale).state;
+          float o = id(cal_moist_offset).state;
+          if (isnan(s) || fabsf(s) < 1e-6f) s = 1.0f;
+          if (isnan(o)) o = 0.0f;
+          x = x * s + o;
+          if (x < 0.0f || x > 100.0f) return NAN;
           return x;
       - median:
           window_size: 3
@@ -153,7 +358,12 @@ sensor:
     filters:
       - multiply: 0.1
       - lambda: |-
-          if (x < -20.0 || x > 60.0) return NAN;
+          float s = id(cal_temp_scale).state;
+          float o = id(cal_temp_offset).state;
+          if (isnan(s) || fabsf(s) < 1e-6f) s = 1.0f;
+          if (isnan(o)) o = 0.0f;
+          x = x * s + o;
+          if (x < -20.0f || x > 60.0f) return NAN;
           return x;
       - median:
           window_size: 3
@@ -172,7 +382,12 @@ sensor:
     accuracy_decimals: 0
     filters:
       - lambda: |-
-          if (x < 0.0 || x > 20000.0) return NAN;
+          float s = id(cal_ec_scale).state;
+          float o = id(cal_ec_offset).state;
+          if (isnan(s) || fabsf(s) < 1e-6f) s = 1.0f;
+          if (isnan(o)) o = 0.0f;
+          x = x * s + o;
+          if (x < 0.0f || x > 20000.0f) return NAN;
           return x;
       - median:
           window_size: 3
@@ -192,7 +407,12 @@ sensor:
     filters:
       - multiply: 0.1
       - lambda: |-
-          if (x < 3.0 || x > 9.0) return NAN;
+          float s = id(cal_ph_scale).state;
+          float o = id(cal_ph_offset).state;
+          if (isnan(s) || fabsf(s) < 1e-6f) s = 1.0f;
+          if (isnan(o)) o = 0.0f;
+          x = x * s + o;
+          if (x < 3.0f || x > 9.0f) return NAN;
           return x;
       - median:
           window_size: 3
@@ -213,7 +433,12 @@ sensor:
     accuracy_decimals: 0
     filters:
       - lambda: |-
-          if (x < 0.0 || x > 2000.0) return NAN;
+          float s = id(cal_n_scale).state;
+          float o = id(cal_n_offset).state;
+          if (isnan(s) || fabsf(s) < 1e-6f) s = 1.0f;
+          if (isnan(o)) o = 0.0f;
+          x = x * s + o;
+          if (x < 0.0f || x > 2000.0f) return NAN;
           return x;
       - median:
           window_size: 3
@@ -232,7 +457,12 @@ sensor:
     accuracy_decimals: 0
     filters:
       - lambda: |-
-          if (x < 0.0 || x > 2000.0) return NAN;
+          float s = id(cal_p_scale).state;
+          float o = id(cal_p_offset).state;
+          if (isnan(s) || fabsf(s) < 1e-6f) s = 1.0f;
+          if (isnan(o)) o = 0.0f;
+          x = x * s + o;
+          if (x < 0.0f || x > 2000.0f) return NAN;
           return x;
       - median:
           window_size: 3
@@ -251,7 +481,12 @@ sensor:
     accuracy_decimals: 0
     filters:
       - lambda: |-
-          if (x < 0.0 || x > 2000.0) return NAN;
+          float s = id(cal_k_scale).state;
+          float o = id(cal_k_offset).state;
+          if (isnan(s) || fabsf(s) < 1e-6f) s = 1.0f;
+          if (isnan(o)) o = 0.0f;
+          x = x * s + o;
+          if (x < 0.0f || x > 2000.0f) return NAN;
           return x;
       - median:
           window_size: 3
@@ -278,6 +513,27 @@ button:
   - platform: restart
     name: "Restart"
     entity_category: config
+  - platform: template
+    name: "Reset Sensor Calibration"
+    id: cal_reset
+    icon: mdi:restore
+    entity_category: config
+    on_press:
+      - number.set: {id: cal_moist_offset, value: 0}
+      - number.set: {id: cal_moist_scale, value: 1}
+      - number.set: {id: cal_temp_offset, value: 0}
+      - number.set: {id: cal_temp_scale, value: 1}
+      - number.set: {id: cal_ec_offset, value: 0}
+      - number.set: {id: cal_ec_scale, value: 1}
+      - number.set: {id: cal_ph_offset, value: 0}
+      - number.set: {id: cal_ph_scale, value: 1}
+      - number.set: {id: cal_n_offset, value: 0}
+      - number.set: {id: cal_n_scale, value: 1}
+      - number.set: {id: cal_p_offset, value: 0}
+      - number.set: {id: cal_p_scale, value: 1}
+      - number.set: {id: cal_k_offset, value: 0}
+      - number.set: {id: cal_k_scale, value: 1}
+      - logger.log: "Soil sensor calibration reset to defaults (scale=1, offset=0)"
 
 # ==================================================================
 #  PLANT IDENTITY  —  labels, not control inputs. The label travels
