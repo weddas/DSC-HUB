@@ -151,25 +151,3 @@ automation:
           entity_id: number.water_tester_temp_warn_max
         data:
           value: 24
-
-  - id: dsc_tank_alert_notifier
-    alias: "DSC Tank — Alert Notifier"
-    mode: queued
-    max: 5
-    trigger:
-      - platform: state
-        to: "on"
-        entity_id:
-          - binary_sensor.dsc_tank_ec_out_of_range
-          - binary_sensor.dsc_tank_ph_out_of_range
-          - binary_sensor.dsc_tank_water_too_warm
-    action:
-      - action: notify.chriss_iphone_max
-        data:
-          title: "DSC Tank Alert"
-          message: >
-            {{ trigger.to_state.attributes.friendly_name }} —
-            EC {{ states('sensor.dsc_tank_ec_normalized') }} µS/cm
-            (target {{ states('sensor.dsc_tank_ec_target_min') }}–{{ states('sensor.dsc_tank_ec_target_max') }}),
-            pH {{ states('sensor.water_tester_ph_current') }},
-            temp {{ states('sensor.water_tester_temperature') }}°C
