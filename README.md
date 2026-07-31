@@ -2,34 +2,33 @@
 
 Indoor grow automation fleet: ESPHome hub, CYD touch panel (DSC-CONTROL), soil pots, and Sonoff demand followers.
 
+**Current release:** [**v4.0.0-alpha.1**](https://github.com/weddas/DSC-HUB/releases/tag/v4.0.0-alpha.1) — hub firmware **`4.0.0-alpha.1`**
+
 ## Docs (start here)
 
 | Doc | When |
 |---|---|
-| [`INSTALL.md`](INSTALL.md) | Fresh HA + fleet bring-up |
-| [`UPGRADE.md`](UPGRADE.md) | Moving from live v2.4 / early v4 onto this repo |
-| [`RELEASE.md`](RELEASE.md) | Release map, checklist, **Beyond OTA** (dashboard / helpers) |
-| [`homeassistant/README.md`](homeassistant/README.md) | Packages, dashboard, HACS |
+| [`INSTALL.md`](INSTALL.md) | **From-scratch** HA + fleet bring-up (file → destination map) |
+| [`RELEASE.md`](RELEASE.md) | This alpha cut, Beyond OTA, backlog |
+| [`homeassistant/README.md`](homeassistant/README.md) | Packages, dashboard, HACS, SYSTEM MAP |
 | [`firmware/v4/README.md`](firmware/v4/README.md) | Local validate / flash entry points |
 
-ESPHome OTA updates firmware only. Lovelace, `dsc_v4_*.yaml` helpers, and automations are manual copy/paste — see **Beyond OTA** in [`RELEASE.md`](RELEASE.md).
+ESPHome OTA updates firmware only. Lovelace, `dsc_v4_*.yaml` helpers, and automations are manual copy — see **Beyond OTA** in [`RELEASE.md`](RELEASE.md).
 
 ## Canonical firmware
 
 **Active source of truth:** [`firmware/v4/`](firmware/v4/)
 
-| Device | Config |
-|---|---|
-| Hub | stub `dsc-hub.yaml` → `dsc-hub-v4_0.yaml` + `dsc-hub-espnow-primary.yaml` |
-| Touch panel | stub `dsc-control.yaml` → `dsc-control-common.yaml` (+ `cyd_glyphs.yaml`) |
-| Pots 1–4 | `dsc-pot{1..4}.yaml` → `dsc-pot-common.yaml` |
-| Sonoffs | `dsc-heater` / `heatmat` / `humidifier` / `de-humidifier` → `dsc-sonoff-common.yaml` |
+| Device | Config | Version (this alpha) |
+|---|---|---|
+| Hub | stub `dsc-hub.yaml` → `dsc-hub-v4_0.yaml` + `dsc-hub-espnow-primary.yaml` | **`4.0.0-alpha.1`** |
+| Touch panel | stub `dsc-control.yaml` → `dsc-control-common.yaml` (+ `cyd_glyphs.yaml`) | **4.0.11** |
+| Pots 1–4 | `dsc-pot{1..4}.yaml` → `dsc-pot-common.yaml` | **4.0.1** |
+| Sonoffs | `dsc-heater` / `heatmat` / `humidifier` / `de-humidifier` → `dsc-sonoff-common.yaml` | common package |
 
 **HA ESPHome deploy:** thin stubs in [`homeassistant/esphome/`](homeassistant/esphome/) pull package bodies from this GitHub repo. Edit in Cursor → push → Validate/Install in ESPHome. Flash hub + panel together when the ESP-NOW tag or wire contract changes.
 
 Crash logs and YAML backups live in [`firmware/_history/v4/`](firmware/_history/v4/). Legacy trees are under `_Archive_Legacy_Code/`.
-
-The older path `firmware/DSC-HUB v4/` is superseded — do not edit it.
 
 ## Home Assistant
 
@@ -41,6 +40,7 @@ Canonical dashboard + packages + ESPHome stubs: [`homeassistant/`](homeassistant
 | Helpers | `homeassistant/packages/dsc_v4_*.yaml` |
 | Automations | `homeassistant/automations.yaml` |
 | ESPHome stubs | `homeassistant/esphome/dsc-*.yaml` (git-pull package bodies) |
+| SYSTEM MAP | `homeassistant/www/dsc-system-map-card.js` + `.svg` → `/config/www/` |
 
 ## Secrets
 
@@ -92,11 +92,11 @@ Panel heap health (after UI changes): watch log lines from `heap` and boot — f
 
 **Grow mat:** hub exposes `switch.dsc_hub_mat_vote_pot_1`…`4` so a bad probe can be excluded without a reflash (Root Zone dashboard is the HA surface).
 
-## Flash order (key rotation only)
+## Flash order (first bring-up)
 
 1. Hub  
-2. Pots  
-3. Sonoffs  
-4. Panel  
+2. Panel (pair with hub)  
+3. Pots  
+4. Sonoffs  
 
-Otherwise OTA + HA encryption keys get out of sync.
+Otherwise OTA + HA encryption keys / ESP-NOW tag get out of sync.

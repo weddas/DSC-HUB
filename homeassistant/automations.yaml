@@ -7,7 +7,7 @@
 #  v4 notes:
 #   * Root-zone alert covers all four pot ESP-NOW links.
 #   * Mat scribe logs coldest plausible pot when available.
-#   * Notifier target is notify.chriss_iphone_max — change if yours differs.
+#   * Notifier target is notify.mobile_app_chriss_iphone_max — change if yours differs.
 #   * Clone humidifier follower stays out until mister hardware exists.
 #   * AC follower stays out until actuator hardware exists.
 #
@@ -209,7 +209,7 @@
       to: "on"
       for: "00:01:00"
   actions:
-    - action: notify.chriss_iphone_max
+    - action: notify.mobile_app_chriss_iphone_max
       data:
         title: "⚠ CLONE TENT — LIGHT IN DARK PERIOD"
         message: >-
@@ -431,7 +431,7 @@
           - switch.dsc_heatmat_main_relay
           - switch.dsc_humidifier_main_relay
           - switch.dsc_de_humidifier_main_relay
-    - action: notify.chriss_iphone_max
+    - action: notify.mobile_app_chriss_iphone_max
       data:
         title: "DSC-HUB offline"
         message: >-
@@ -453,7 +453,7 @@
       to: "on"
       for: "00:00:15"
   actions:
-    - action: notify.chriss_iphone_max
+    - action: notify.mobile_app_chriss_iphone_max
       data:
         title: "⚠ DSC EMERGENCY FAILSAFE"
         message: >-
@@ -498,7 +498,7 @@
       to: "on"
       for: "00:02:00"
   actions:
-    - action: notify.chriss_iphone_max
+    - action: notify.mobile_app_chriss_iphone_max
       data:
         title: "DSC climate sensor fault"
         message: "Main tent sensor stale/faulted — hub in sensor-fault behaviour."

@@ -1,6 +1,8 @@
 # DSC-HUB firmware v4
 
-Working directory for ESPHome configs. See the repo [README](../../README.md) for the full setup.
+Working directory for ESPHome configs. Current hub release string:
+**`4.0.0-alpha.1`** (GitHub tag `v4.0.0-alpha.1`). See the repo
+[README](../../README.md) and [INSTALL.md](../../INSTALL.md) for from-scratch setup.
 
 ## Local vs HA
 

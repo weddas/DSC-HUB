@@ -13,9 +13,10 @@ Canonical HA surface for firmware [`firmware/v4/`](../firmware/v4/).
 | `packages/dsc_v4_tank.yaml` | Tank EC/pH/temp helpers + Tuya warn sync |
 | `packages/dsc_v4_pots_stats.yaml` | Per-pot daily max/min + 7d baselines + rates |
 | `packages/dsc_v4_pots_correlation.yaml` | EC vs tank + uptake slope |
-| `packages/dsc_v4_pots_alerts.yaml` | Per-pot moisture/pH/temp/EC/N alerts |
+| `packages/dsc_v4_pots_alerts.yaml` | Per-pot moisture/pH/temp/EC/N alert binaries |
 | `packages/dsc_v4_alert_count.yaml` | `sensor.dsc_active_alert_count` for Home chip |
 | `automations.yaml` | Demand followers, climate/safety alerts, grow-log scribe |
+| `www/dsc-system-map.*` | SYSTEM MAP Lovelace card + SVG → `/config/www/` |
 | `esphome/` | Thin device stubs — pull firmware packages from GitHub |
 
 ## ESPHome (all devices)
@@ -30,40 +31,29 @@ Hub + panel: flash as a pair when `espnow_cmd_tag` / wire contract changes.
 
 See [`esphome/README.md`](esphome/README.md).
 
-## Install
+## Install (from scratch)
 
-1. In `configuration.yaml` (if not already):
+Full file → destination map: [`../INSTALL.md`](../INSTALL.md).
+
+Quick copy list:
+
+| This folder | HA `/config/` |
+|---|---|
+| `packages/dsc_v4_*.yaml` | `packages/` |
+| `automations.yaml` | merge / include |
+| `dashboards/dsc-hub-v4-dashboard.yaml` | Lovelace URL **`dsc-hub-v4`** |
+| `esphome/dsc-*.yaml` | `esphome/` |
+| `www/dsc-system-map.*` | `www/` + resource `/local/dsc-system-map-card.js` |
 
 ```yaml
+# configuration.yaml
 homeassistant:
   packages: !include_dir_named packages
 ```
 
-Copy **all** `packages/dsc_v4_*.yaml` into `/config/packages/` (or symlink this folder).
-Filenames must use underscores — HA `!include_dir_named` rejects hyphens in the package slug.
+Filenames under `packages/` must use underscores. Restart HA after the first copy.
 
-If you already have live copies of `dsc_tank.yaml` / `dsc_pots_*.yaml` /
-`dsc_dashboard_v3.yaml` / `dsc_v24_light_helpers.yaml` / `dsc_alert_count.yaml`,
-**remove those first** — same `unique_id`s would create silent `*_2` twins.
-
-After swapping `dsc_v4_pots_alerts.yaml`, remove any leftover
-`binary_sensor.dsc_potN_temp_out_of_range` entities from the registry if the
-new `…_root_zone_temp_out_of_range` sensors appear (unique_id rename).
-
-2. Merge `automations.yaml` entries into HA (UI or `automation: !include`).  
-   If older `dsc_v24_follow_*` Rev A automations exist, delete them first.
-
-3. Create a new dashboard → **Edit dashboard → ⋮ → Raw configuration editor** → paste `dsc-hub-v4-dashboard.yaml`.  
-   Set the dashboard URL to **`dsc-hub-v4`**.
-
-   **Ongoing:** dashboard YAML is **not** updated by ESPHome OTA. When `RELEASE.md` says the dashboard changed, re-paste the raw config (same URL). Same rule for `packages/dsc_v4_*.yaml` and `automations.yaml` — copy/merge by hand, then restart or reload.
-
-4. Restart Home Assistant (followers need `homeassistant: start` to resync).
-
-5. Entity registry: rename any leftover plant/stage ids to:
-
-- `text.dsc_pot1_plant_name` … `text.dsc_pot4_plant_name`
-- `select.dsc_pot1_growth_stage` … `select.dsc_pot4_growth_stage`
+**Ongoing:** dashboard / packages / automations are **not** ESPHome OTA — re-copy when [`RELEASE.md`](../RELEASE.md) says they changed.
 
 ## Fan entity_ids
 
@@ -71,7 +61,10 @@ Core helpers assume ESPHome default slugs from hub friendly names. If your regis
 
 ## Notifier
 
-Alerts call `notify.chriss_iphone_max`. Change that target in `automations.yaml` if needed.
+Climate / safety automations in `automations.yaml` use a mobile notify target —
+edit those services to match your HA devices (`notify.mobile_app_…`). Package
+pot/tank **push** notifiers are not shipped in **v4.0.0-alpha.1** (alert binary
+sensors remain).
 
 ## HACS cards
 
@@ -152,15 +145,16 @@ appliance rates. Status: `sensor.dsc_plant_specs_status` (`ok` / `warn` / `error
 - Fixed-channel AP — ops (see root README / RELEASE.md)
 - POT3 probe swap, SCD41, ETH01 gateway — post-release hardware
 
-## Firmware pairing
+## Firmware pairing (**v4.0.0-alpha.1**)
 
 | Piece | Version |
 |---|---|
-| Hub | `4.0` (+ mat vote switches) |
-| Panel | **`4.0.10`** |
+| Hub | **`4.0.0-alpha.1`** (+ mat vote switches, Full Auto boot re-arm) |
+| Panel | **`4.0.11`** |
+| Pots | **`4.0.1`** |
 | Dashboard | UX **v0.2** |
 | `espnow_cmd_tag` | `54727` (`0xD5C7`) on hub **and** panel |
 
 **Mat votes:** `switch.dsc_hub_mat_vote_pot_1`…`4` — Root Zone is source of truth; Climate links there.
 
-Full cutover: [`../INSTALL.md`](../INSTALL.md) (fresh) · [`../UPGRADE.md`](../UPGRADE.md) (from live) · [`../RELEASE.md`](../RELEASE.md).
+Bring-up: [`../INSTALL.md`](../INSTALL.md) · release notes: [`../RELEASE.md`](../RELEASE.md).

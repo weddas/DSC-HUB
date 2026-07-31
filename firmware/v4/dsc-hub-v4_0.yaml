@@ -7,6 +7,11 @@
 # ESP-NOW panel layer is loaded by the stub (dsc-hub-espnow-primary.yaml),
 # not !include'd here — keeps local and git-pull paths identical.
 
+# ===== v4.0.0-alpha.1 · LINE-IN-THE-SAND ALPHA (31 Jul 2026) =====
+# First published alpha of the v4 ESP-NOW-primary hub stack. Project
+# version string matches the GitHub release tag. Built on the v4.0
+# ESP-NOW layer + climate rev through boot persist / Full Auto re-arm.
+#
 # ===== v4.0 · ESP-NOW PRIMARY CONTROL LAYER =====
 # The DSC-CONTROL panel drives this hub directly over ESP-NOW. The stub
 # merges dsc-hub-espnow-primary.yaml (command RX + telemetry TX + soil
@@ -41,7 +46,7 @@ esphome:
   friendly_name: DSC-HUB
   project:
     name: "digital_emotions.dsc-hub"
-    version: "4.0"
+    version: "4.0.0-alpha.1"
   on_boot:
     - priority: -100
       then:

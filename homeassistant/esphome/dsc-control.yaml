@@ -17,7 +17,7 @@ substitutions:
 packages:
   panel:
     url: https://github.com/weddas/DSC-HUB
-    ref: master
+    ref: v4.0.0-alpha.1
     files:
       - firmware/v4/dsc-control-common.yaml
     refresh: 1d

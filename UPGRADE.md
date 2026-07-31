@@ -1,11 +1,10 @@
-# DSC-HUB v4 — Upgrade (from live v2.4 / early v4)
+# DSC-HUB v4 — Upgrade (legacy live sites only)
 
-Use this when Home Assistant and the fleet are **already running** and you are
-moving onto this repo’s git-pull ESPHome workflow + HA pack.
+**New installs:** use [`INSTALL.md`](INSTALL.md) for **v4.0.0-alpha.1** (file → destination map).
 
-Fresh install? Use [`INSTALL.md`](INSTALL.md).
+This document is only for migrating an **already-running** v2.4 / early-v4 site onto the git-pull ESPHome + HA pack workflow.
 
-Repo: https://github.com/weddas/DSC-HUB · branch **`master`**
+Repo: https://github.com/weddas/DSC-HUB · tag **`v4.0.0-alpha.1`** · branch **`master`**
 
 ---
 
@@ -79,7 +78,7 @@ If moving to **54727**, flash **hub then panel in one sitting** (or panel will c
 ### Post-flash checks
 
 - [ ] Panel ESP-NOW row UP; command changes a hub number/switch
-- [ ] `sensor.dsc_hub_firmware_version` = `4.0`
+- [ ] `sensor.dsc_hub_firmware_version` = `4.0.0-alpha.1`
 - [ ] `binary_sensor.dsc_hub_emergency_failsafe` exists
 - [ ] Pot ESP-NOW link sensors present; mat still tracks soil temp
 - [ ] Sonoff followers still mirror demand (test one appliance)
