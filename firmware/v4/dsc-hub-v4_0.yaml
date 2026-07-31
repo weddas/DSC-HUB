@@ -75,12 +75,11 @@ esphome:
             }
         - lambda: |-
             // v2.4.2 (BUG-3): SEED THE SAFE VENTILATION BASELINE UNCONDITIONALLY.
-            // Previously only the non-auto branch did this; an auto-resume boot
-            // left the fans at the LEDC 0% power-on default for the whole
-            // 60-180s resume-prompt window (still air after every mid-grow power
-            // blip in Auto). Now every boot comes up on moving air; the resume
-            // prompt just arms on top, and the curve re-takes the fans the moment
-            // it resolves. (Restore persisted manual targets, else a min floor.)
+            // Previously an auto-resume boot left fans at LEDC 0% for the old
+            // resume-prompt window. Every boot now comes up on moving air;
+            // v2.4.4 re-arms Full Auto from the persisted flag so the curve
+            // takes over on the next tick. (Restore persisted manual targets,
+            // else a min floor.)
             int o = id(local_target_out)          > 0 ? id(local_target_out)          : 25;
             int r = id(local_target_recirc)       > 0 ? id(local_target_recirc)       : 20;
             int m = id(local_target_intake_main)  > 0 ? id(local_target_intake_main)  : 15;
@@ -89,15 +88,27 @@ esphome:
             auto fr = id(fan_exhaust_recirc).make_call(); fr.set_state(true); fr.set_speed(r); fr.perform();
             auto fm = id(fan_intake_main).make_call();    fm.set_state(true); fm.set_speed(m); fm.perform();
             auto fc = id(fan_intake_clone).make_call();   fc.set_state(true); fc.set_speed(c); fc.perform();
-            if (id(full_auto_mode) || id(auto_photoperiod_enabled)) {
-              // If Auto was live before the power cut, arm the resume prompt.
-              // It auto-continues after 60s so an unattended blip self-heals;
-              // automations hold off until resolved — but now over MOVING air.
-              id(boot_resume_pending) = true;
-              ESP_LOGI("boot", "Auto was active pre-boot -> resume prompt armed (safe baseline seeded: Out %d Room %d IntM %d Int2 %d)", o, r, m, c);
+            // v2.4.4 · PERSIST + RE-ARM ON BOOT.
+            // full_auto_mode already restores from NVS. The bug was that
+            // restore alone never re-ran arm_full_auto, and the old resume
+            // gate parked the ladder until a tap. Clear the gate; if Full
+            // Auto was ON (and Takeover is not), on_boot turns the switch
+            // on so arm_full_auto runs again. If it was OFF, stay OFF.
+            id(boot_resume_pending) = false;
+            if (id(ha_takeover_active)) {
+              ESP_LOGW("boot", "Manual Takeover restored -> Full Auto left alone (baseline Out %d Room %d IntM %d Int2 %d)", o, r, m, c);
+            } else if (id(full_auto_mode)) {
+              ESP_LOGI("boot", "Full Auto restored ON -> re-arming stack (baseline Out %d Room %d IntM %d Int2 %d)", o, r, m, c);
             } else {
-              ESP_LOGW("boot", "Non-auto boot -> safe ventilation baseline: Out %d%% Room %d%% IntM %d%% Int2 %d%%", o, r, m, c);
+              ESP_LOGI("boot", "Full Auto restored OFF -> staying OFF (baseline Out %d Room %d IntM %d Int2 %d)", o, r, m, c);
             }
+        # Re-run arm_full_auto only when Full Auto was already on (and not
+        # in Manual Takeover). Does not force ON if the user left it off.
+        - if:
+            condition:
+              lambda: 'return !id(ha_takeover_active) && id(full_auto_mode);'
+            then:
+              - switch.turn_on: full_auto_switch
 
 # Batch flash writes so rapid dial-spinning doesn't wear the chip.
 preferences:
@@ -180,9 +191,18 @@ wifi:
 
 
 # ==================================================================
-#  DIGITAL-PLANT  ·  Grow Tent Environmental Controller   (rev 2.4.3)
+#  DIGITAL-PLANT  ·  Grow Tent Environmental Controller   (rev 2.4.4)
 #  Device: dsc-hub   (ESP32 + SH1106 128x64 OLED + rotary UI)
 #  ---------------------------------------------------------------
+#  v2.4.4 — BOOT PERSIST + RE-ARM FULL AUTO (31 Jul 2026)
+#  ------------------------------------------------------------------
+#  full_auto_mode already persists in NVS. The reboot gap was that
+#  restore never re-ran arm_full_auto, and boot_resume_pending parked
+#  the ladder behind a tap/timeout. on_boot now clears that gate and,
+#  if Full Auto was ON (and Manual Takeover is not), turns the switch
+#  on so the stack re-arms. If Full Auto was OFF, it stays OFF.
+#  (Built on v2.4.3 below.)
+#
 #  v2.4.3 — FULL AUTO = MASTER + GROW-MAT ROOT-SAFETY (19 Jul 2026)
 #  * FULL AUTO IS NOW THE MASTER AUTOMATION MODE. Being in Full Auto
 #    keeps the ENTIRE stack armed every loop — all six appliance rungs
@@ -196,6 +216,9 @@ wifi:
 #  * FAIL INTO AUTOMATION: full_auto_mode + auto_photoperiod now DEFAULT
 #    ON, so a fresh flash or a wiped/non-preserved NVS reboots straight
 #    into Full Auto instead of idle Standby.
+#  * v2.4.4 · BOOT PERSIST + RE-ARM: if Full Auto was ON, reboot re-runs
+#    arm_full_auto (no resume prompt). If it was OFF, it stays OFF.
+#    Manual Takeover restored from NVS still wins.
 #  * GROW-MAT ROOT-ZONE SAFETY (the 10:32pm "mat off at air 21C / roots
 #    17C" bug): the mat had FALSE-tripped its root-zone fault and fallen
 #    to clone-AIR control, which cuts the mat when the AIR hits target —
@@ -3894,7 +3917,15 @@ interval:
             id(boot_time_synced_at) = millis();
           if (id(boot_time_synced_at) != 0 && (millis() - id(boot_time_synced_at)) > 60000) {
             id(boot_resume_pending) = false;
-            ESP_LOGI("boot", "Resume prompt timed out -> continuing Auto");
+            // Belt-and-suspenders for anything still using the old resume
+            // gate: if Full Auto was restored ON, re-arm the stack.
+            if (!id(ha_takeover_active) && id(full_auto_mode)) {
+              id(full_auto_switch).publish_state(true);
+              id(arm_full_auto).execute();
+              ESP_LOGI("boot", "Resume gate cleared -> Full Auto re-armed from persisted ON");
+            } else {
+              ESP_LOGI("boot", "Resume prompt timed out");
+            }
           }
 
   # ---- 1h trend sampler: 12-slot ring buffer, one sample / 5 min ----

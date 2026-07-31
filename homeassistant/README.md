@@ -77,6 +77,29 @@ Alerts call `notify.chriss_iphone_max`. Change that target in `automations.yaml`
 
 mushroom · apexcharts-card · power-flow-card-plus · sankey-chart · plotly-graph-card · mini-graph-card · gauge-card-pro · modern-circular-gauge · logbook-card · auto-entities · vertical-stack-in-card · card-mod · bar-card · ph-meter-temperature · **expander-card**
 
+## Local custom card — SYSTEM MAP
+
+Neon isometric live map (`custom:dsc-system-map-card`) on the Home view. Not a HACS card — ship from this repo:
+
+1. Copy both files into Home Assistant `/config/www/`:
+   - [`www/dsc-system-map.svg`](www/dsc-system-map.svg) — standalone animated SVG (open in a browser for a demo loop)
+   - [`www/dsc-system-map-card.js`](www/dsc-system-map-card.js) — Lovelace card that loads the SVG and binds fan %, SF1000, appliance demands, priority tent, failsafe, and climate labels
+2. **Settings → Dashboards → ⋮ → Resources → Add resource**
+   - URL: `/local/dsc-system-map-card.js`
+   - Type: **JavaScript** (not JavaScript Module — the card is a classic IIFE)
+3. Re-paste [`dashboards/dsc-hub-v4-dashboard.yaml`](dashboards/dsc-hub-v4-dashboard.yaml) (Home already includes the **SYSTEM MAP** FILL section).
+4. Hard-refresh the browser (or clear frontend cache) so `/local/` picks up the new files.
+
+Optional entity overrides via card YAML:
+
+```yaml
+type: custom:dsc-system-map-card
+title: DSC-HUB
+entities:
+  fan_out: sensor.dsc_fan_exhaust_outside_pct
+  light: light.dsc_hub_sf1000_dimmer
+```
+
 ## Climate capacity envelope
 
 The **hub firmware** owns the escalation ladder (fans first → appliances →

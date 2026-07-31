@@ -310,6 +310,17 @@ views:
                   {% endif %}
                 }
       - type: grid
+        column_span: 3
+        cards:
+          - type: heading
+            heading: SYSTEM MAP
+            heading_style: title
+          - type: custom:dsc-system-map-card
+            title: DSC-HUB
+            grid_options:
+              columns: 12
+              rows: 8
+      - type: grid
         cards:
           - type: heading
             heading: RUNNING NOW
