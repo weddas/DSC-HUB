@@ -15,7 +15,7 @@ Package bodies are remote-git safe (no `!secret`). Stubs pass credentials (and h
 
 Pots (`dsc-pot-common` **4.0.1+**): each soil channel has **Cal … Offset** / **Cal … Scale** config numbers (NVS). Formula `raw * scale + offset` applies before range/median and feeds HA + ESP-NOW. **Reset Sensor Calibration** restores defaults.
 
-## Panel (DSC-CONTROL **4.0.9**)
+## Panel (DSC-CONTROL **4.0.10**)
 
 Package body: [`dsc-control-common.yaml`](dsc-control-common.yaml).
 
@@ -27,8 +27,9 @@ Package body: [`dsc-control-common.yaml`](dsc-control-common.yaml).
 | Connections | Wi‑Fi channel; ESP-NOW RX age + TX seq |
 | Pulse VPD trend | 12×5 min ring → one label (no canvas charts) |
 | HA API | **Plaintext** (no Noise); **mDNS off** — add by IP only |
+| Stability | **4.0.10** page-gated `refresh_ui` @ 5 s (was rewriting every tab @ 2 s) |
 
-After UI flashes: watch serial `boot` / `heap` lines. If the panel boot-loops, use **USB** not OTA until `DSC-CONTROL 4.0.9 up — free_heap=…` prints cleanly. See [`../_history/v4/crash-logs/`](../_history/v4/crash-logs/).
+After UI flashes: watch serial `boot` / `heap` lines. If the panel boot-loops, use **USB** not OTA until `DSC-CONTROL 4.0.10 up — free_heap=…` prints cleanly. See [`../_history/v4/crash-logs/`](../_history/v4/crash-logs/).
 
 ### Panel HA API reconnect
 
@@ -36,7 +37,7 @@ The `api:` block lives in [`dsc-control-common.yaml`](dsc-control-common.yaml). 
 
 | Check | What to do |
 |---|---|
-| Panel boot-looping / no Wi‑Fi | USB flash; serial must show `DSC-CONTROL 4.0.9 up — free_heap=…`. OTA will not recover a looping board. |
+| Panel boot-looping / no Wi‑Fi | USB flash; serial must show `DSC-CONTROL 4.0.10 up — free_heap=…`. OTA will not recover a looping board. |
 | Host / mDNS | **IP only** (Connections screen or serial `STA IP …`). Do not use `dsc-control.local`. |
 | Encryption | Leave the key **blank** when adding/reconfiguring. If HA still has an old encrypted entry, **delete it** and re-add. |
 | Stale `dsc-cyd1` | Delete old **dsc-cyd1** ESPHome device in HA Integrations if present. |

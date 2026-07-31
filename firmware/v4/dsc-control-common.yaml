@@ -1,7 +1,7 @@
 # hub_cmd control (build_panel_control)
 # ESP-NOW-fed (build_panel_data)
 # ==================================================================
-#  DSC-CONTROL — PACKAGE BODY (firmware v4.0.9, ESP-NOW primary)
+#  DSC-CONTROL — PACKAGE BODY (firmware v4.0.10, ESP-NOW primary)
 #  Flash via stub dsc-control.yaml (local) or
 #  homeassistant/esphome/dsc-control.yaml (git-pull).
 #  Remote-git safe: no !secret — stub passes credentials + hub_mac / tag.
@@ -36,6 +36,7 @@
 #    * Connections: Wi-Fi channel + ESP-NOW RX age + TX seq
 #    * Pulse 1h VPD micro-trend (12-slot ring, one label — no canvas)
 #  v4.0.9: plaintext HA API + mDNS off (Noise handshake crashed the glass).
+#  v4.0.10: page-gated refresh_ui @ 5 s — stop A8 glyph / WDT reboot loops.
 #  STILL DEFERRED: per-device power pages, VPD curve editor, canvas charts.
 #
 #  RAM RULE (crash postmortems v4.0–4.0.2): never call lv_label_set_text
@@ -83,7 +84,7 @@ esphome:
     # the dashboard and HA's device page both described DSC-CONTROL as
     # being the DSC HUB. Purely cosmetic, but confusing enough to matter.
     name: "digital_emotions.dsc-control"
-    version: "4.0.9"
+    version: "4.0.10"
   on_boot:
     # Seed the 0xDC command seq from hardware RNG so a panel reboot is
     # unlikely to replay the hub's last-seen seq even before the hub's
@@ -97,7 +98,7 @@ esphome:
     - priority: -100
       then:
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 4.0.9 up — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 4.0.10 up — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
 
@@ -426,7 +427,7 @@ light:
     id: backlight
     name: "Backlight"
     restore_mode: ALWAYS_ON
-    default_transition_length: 250ms
+    default_transition_length: 0ms   # v4.0.10 — no PWM fade (avoids extra work under heap pressure)
 
   # Status LED contract: RED = alert live, AMBER = appliance demand
   # live, dim GREEN = all quiet, OFF = night mode (no stray photons in
@@ -515,376 +516,376 @@ sensor:
   - platform: template
     id: clone_temp
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_clone_t);'
   - platform: template
     id: clone_rh
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_clone_rh);'
   - platform: template
     id: clone_vpd
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_clone_vpd);'
   - platform: template
     id: main_temp
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_tent_t);'
   - platform: template
     id: main_rh
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_tent_rh);'
   - platform: template
     id: main_vpd
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_tent_vpd);'
   - platform: template
     id: room_temp
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_room_t);'
   - platform: template
     id: room_rh
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_room_rh);'
   - platform: template
     id: co2_ppm
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_co2);'
 
   # --- live targets (band colouring reads THESE, never baked numbers) ---
   - platform: template
     id: t_main_temp
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_cfg)[0];'
   - platform: template
     id: t_main_vpd_min
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_cfg)[1];'
   - platform: template
     id: t_main_vpd_max
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_cfg)[2];'
   - platform: template
     id: t_main_rh_min
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_cfg)[3];'
   - platform: template
     id: t_main_rh_max
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_cfg)[4];'
   - platform: template
     id: t_clone_temp
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_cfg)[5];'
   - platform: template
     id: t_clone_vpd_min
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_cfg)[6];'
   - platform: template
     id: t_clone_vpd_max
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_cfg)[7];'
   - platform: template
     id: t_clone_rh_min
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_cfg)[8];'
   - platform: template
     id: t_clone_rh_max
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_cfg)[9];'
   - platform: template
     id: sf_target
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_cfg)[10];'
 
   # --- fan speeds (percentage attribute) + SF1000 brightness ---
   - platform: template
     id: fan_out_pct
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return (float)id(gv_fan_out);'
   - platform: template
     id: fan_recirc_pct
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return (float)id(gv_fan_recirc);'
   - platform: template
     id: fan_int_main_pct
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return (float)id(gv_fan_imain);'
   - platform: template
     id: fan_int_clone_pct
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return (float)id(gv_fan_iclone);'
   - platform: template
     id: sf_brightness
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return (float)id(gv_sf_pct);'
 
   # --- ladder telemetry (firmware truth for the Rung 2 countdown) ---
   - platform: template
     id: cd_hum
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_cd)[0];'
   - platform: template
     id: cd_dehum
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_cd)[1];'
   - platform: template
     id: cd_heater
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_cd)[2];'
   - platform: template
     id: cd_ac
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_cd)[3];'
   - platform: template
     id: cd_mat
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_cd)[4];'
   - platform: template
     id: cd_clone_hum
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_cd)[5];'
 
   # --- POT SOIL PROBES (RS485 7-in-1 x4) — the Soil tab ---
   - platform: template
     id: p1_moist
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_soil)[1];'
   - platform: template
     id: p1_temp
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_soil)[0];'
   - platform: template
     id: p1_ec
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_soil)[2];'
   - platform: template
     id: p1_ph
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_soil)[3];'
   - platform: template
     id: p1_n
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_soil)[4];'
   - platform: template
     id: p1_p
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_soil)[5];'
   - platform: template
     id: p1_k
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_soil)[6];'
   - platform: template
     id: p2_moist
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_soil)[8];'
   - platform: template
     id: p2_temp
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_soil)[7];'
   - platform: template
     id: p2_ec
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_soil)[9];'
   - platform: template
     id: p2_ph
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_soil)[10];'
   - platform: template
     id: p2_n
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_soil)[11];'
   - platform: template
     id: p2_p
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_soil)[12];'
   - platform: template
     id: p2_k
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_soil)[13];'
   - platform: template
     id: p3_moist
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_soil)[15];'
   - platform: template
     id: p3_temp
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_soil)[14];'
   - platform: template
     id: p3_ec
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_soil)[16];'
   - platform: template
     id: p3_ph
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_soil)[17];'
   - platform: template
     id: p3_n
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_soil)[18];'
   - platform: template
     id: p3_p
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_soil)[19];'
   - platform: template
     id: p3_k
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_soil)[20];'
   - platform: template
     id: p4_moist
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_soil)[22];'
   - platform: template
     id: p4_temp
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_soil)[21];'
   - platform: template
     id: p4_ec
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_soil)[23];'
   - platform: template
     id: p4_ph
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_soil)[24];'
   - platform: template
     id: p4_n
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_soil)[25];'
   - platform: template
     id: p4_p
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_soil)[26];'
   - platform: template
     id: p4_k
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_soil)[27];'
   # --- extra hub numbers (Setup steppers) ---
   - platform: template
     id: n_ramp
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_cfg)[14];'
   - platform: template
     id: n_sunrise
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_cfg)[11];'
   - platform: template
     id: n_sunset
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_cfg)[12];'
   - platform: template
     id: n_clh
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_cfg)[13];'
   - platform: template
     id: n_rzlo
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_cfg)[19];'
   - platform: template
     id: n_rzhi
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_cfg)[20];'
   - platform: template
     id: n_matoff
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_cfg)[21];'
   - platform: template
     id: n_chh
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_cfg)[15];'
   - platform: template
     id: n_chmo
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_cfg)[16];'
   - platform: template
     id: n_hmo
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_cfg)[17];'
   - platform: template
     id: n_htmo
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_cfg)[18];'
   - platform: template
     id: n_dsp
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_cfg)[22];'
   - platform: template
     id: n_dsl
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_cfg)[23];'
   - platform: template
     id: n_dslv
     internal: true
-    update_interval: 5s
+    update_interval: 15s
     lambda: 'return id(gv_cfg)[24];'
 
 binary_sensor:
@@ -987,52 +988,52 @@ text_sensor:
   - platform: template
     id: sel_stage
     internal: true
-    update_interval: 2s
+    update_interval: 10s
     lambda: |-
         const char* o[]={"Germination","Seedling","Early Vegetative","Vegetative","Late (Push) Vegetative","Early Flowering","Flowering","Late Flowering","Final 48-72h Flowering","Dry Mode","Off"}; int i=id(gv_stage); return std::string(i>=0&&i<11?o[i]:"--");
   # pot plant-name labels (hub relays via 0xD4 from pot HA entities)
   - platform: template
     id: p1_plant
     internal: true
-    update_interval: 2s
+    update_interval: 10s
     lambda: 'return id(gv_plant1);'
   - platform: template
     id: p2_plant
     internal: true
-    update_interval: 2s
+    update_interval: 10s
     lambda: 'return id(gv_plant2);'
   - platform: template
     id: p3_plant
     internal: true
-    update_interval: 2s
+    update_interval: 10s
     lambda: 'return id(gv_plant3);'
   - platform: template
     id: p4_plant
     internal: true
-    update_interval: 2s
+    update_interval: 10s
     lambda: 'return id(gv_plant4);'
   - platform: template
     id: sel_strategy
     internal: true
-    update_interval: 2s
+    update_interval: 10s
     lambda: |-
         const char* o[]={"VPD","Temperature","Humidity"}; int i=id(gv_strat); return std::string(i>=0&&i<3?o[i]:"--");
   - platform: template
     id: sel_clone_mode
     internal: true
-    update_interval: 2s
+    update_interval: 10s
     lambda: |-
         const char* o[]={"Follow 4x8","Clones & Seedlings","Mother","Custom","Off"}; int i=id(gv_cmode); return std::string(i>=0&&i<5?o[i]:"--");
   - platform: template
     id: sel_priority
     internal: true
-    update_interval: 2s
+    update_interval: 10s
     lambda: |-
         return std::string(id(gv_prio)?"4x8 Main":"2x4 Clone");
   - platform: template
     id: sel_clone_photo
     internal: true
-    update_interval: 2s
+    update_interval: 10s
     lambda: |-
         return std::string((id(gv_coord)&64)?"Follow 4x8":"Independent");
   # WiFi identity for the Connections screen
@@ -1134,6 +1135,9 @@ globals:
   - id: soil_detail_pot          # 1..4 — which pot page_soil_detail shows
     type: int
     initial_value: '1'
+  - id: ui_soil_detail            # true while page_soil_detail is showing
+    type: bool
+    initial_value: 'false'
   # ---- tap-challenge gate (Manual Takeover + appliance demands) ----
   - id: gate_op
     type: int
@@ -1383,8 +1387,11 @@ lvgl:
                   - label: {id: tab_ic0, text: "\U000F05F6", text_font: mdi_28, align: CENTER, text_color: 0x00E676}
                 on_click:
                   - lvgl.page.show: page_pulse
-                  - lambda: 'id(active_tab) = 0;'
+                  - lambda: |-
+                      id(active_tab) = 0;
+                      id(ui_soil_detail) = false;
                   - script.execute: restyle_tabs
+                  - script.execute: refresh_ui
             - button:
                 id: tab_btn1
                 x: 64
@@ -1399,8 +1406,11 @@ lvgl:
                   - label: {id: tab_ic1, text: "\U000F0E66", text_font: mdi_28, align: CENTER, text_color: 0x5A6472}
                 on_click:
                   - lvgl.page.show: page_clone
-                  - lambda: 'id(active_tab) = 1;'
+                  - lambda: |-
+                      id(active_tab) = 1;
+                      id(ui_soil_detail) = false;
                   - script.execute: restyle_tabs
+                  - script.execute: refresh_ui
             - button:
                 id: tab_btn2
                 x: 128
@@ -1415,8 +1425,11 @@ lvgl:
                   - label: {id: tab_ic2, text: "\U000F032A", text_font: mdi_28, align: CENTER, text_color: 0x5A6472}
                 on_click:
                   - lvgl.page.show: page_main
-                  - lambda: 'id(active_tab) = 2;'
+                  - lambda: |-
+                      id(active_tab) = 2;
+                      id(ui_soil_detail) = false;
                   - script.execute: restyle_tabs
+                  - script.execute: refresh_ui
             - button:
                 id: tab_btn3
                 x: 192
@@ -1431,8 +1444,11 @@ lvgl:
                   - label: {id: tab_ic3, text: "\U000F058E", text_font: mdi_28, align: CENTER, text_color: 0x5A6472}
                 on_click:
                   - lvgl.page.show: page_soil
-                  - lambda: 'id(active_tab) = 3;'
+                  - lambda: |-
+                      id(active_tab) = 3;
+                      id(ui_soil_detail) = false;
                   - script.execute: restyle_tabs
+                  - script.execute: refresh_ui
             - button:
                 id: tab_btn4
                 x: 256
@@ -1447,8 +1463,11 @@ lvgl:
                   - label: {id: tab_ic4, text: "\U000F066A", text_font: mdi_28, align: CENTER, text_color: 0x5A6472}
                 on_click:
                   - lvgl.page.show: page_control
-                  - lambda: 'id(active_tab) = 4;'
+                  - lambda: |-
+                      id(active_tab) = 4;
+                      id(ui_soil_detail) = false;
                   - script.execute: restyle_tabs
+                  - script.execute: refresh_ui
 
       # ---- big SILENCE banner: shown only while an alert is live ----
       # Appears across the top on ANY tab whenever the LED is pulsing red;
@@ -2611,8 +2630,11 @@ lvgl:
               - label: {id: lbl_p1_vals, text: "--", text_font: f_body, align: BOTTOM_LEFT, text_color: 0x00E676}
               - label: {text: "\U000F0142", text_font: mdi_16, align: RIGHT_MID, x: -4, text_color: 0x5A6472}
             on_click:
-              - lambda: 'id(soil_detail_pot) = 1;'
+              - lambda: |-
+                  id(soil_detail_pot) = 1;
+                  id(ui_soil_detail) = true;
               - lvgl.page.show: page_soil_detail
+              - script.execute: refresh_ui
         - button:
             id: card_p2
             x: 8
@@ -2630,8 +2652,11 @@ lvgl:
               - label: {id: lbl_p2_vals, text: "--", text_font: f_body, align: BOTTOM_LEFT, text_color: 0x00E676}
               - label: {text: "\U000F0142", text_font: mdi_16, align: RIGHT_MID, x: -4, text_color: 0x5A6472}
             on_click:
-              - lambda: 'id(soil_detail_pot) = 2;'
+              - lambda: |-
+                  id(soil_detail_pot) = 2;
+                  id(ui_soil_detail) = true;
               - lvgl.page.show: page_soil_detail
+              - script.execute: refresh_ui
         - button:
             id: card_p3
             x: 8
@@ -2649,8 +2674,11 @@ lvgl:
               - label: {id: lbl_p3_vals, text: "--", text_font: f_body, align: BOTTOM_LEFT, text_color: 0x00E676}
               - label: {text: "\U000F0142", text_font: mdi_16, align: RIGHT_MID, x: -4, text_color: 0x5A6472}
             on_click:
-              - lambda: 'id(soil_detail_pot) = 3;'
+              - lambda: |-
+                  id(soil_detail_pot) = 3;
+                  id(ui_soil_detail) = true;
               - lvgl.page.show: page_soil_detail
+              - script.execute: refresh_ui
         - button:
             id: card_p4
             x: 8
@@ -2668,8 +2696,11 @@ lvgl:
               - label: {id: lbl_p4_vals, text: "--", text_font: f_body, align: BOTTOM_LEFT, text_color: 0x00E676}
               - label: {text: "\U000F0142", text_font: mdi_16, align: RIGHT_MID, x: -4, text_color: 0x5A6472}
             on_click:
-              - lambda: 'id(soil_detail_pot) = 4;'
+              - lambda: |-
+                  id(soil_detail_pot) = 4;
+                  id(ui_soil_detail) = true;
               - lvgl.page.show: page_soil_detail
+              - script.execute: refresh_ui
 
     # Per-pot plant / NPK detail — data already on the wire (0xD3 + 0xD4).
     # Back returns to Soil; chevrons cycle pots 1–4 without leaving the page.
@@ -2678,7 +2709,9 @@ lvgl:
       bg_color: 0x0E1116
       scrollable: false
       on_swipe_right:
+        - lambda: 'id(ui_soil_detail) = false;'
         - lvgl.page.show: page_soil
+        - script.execute: refresh_ui
       widgets:
         - obj:
             x: 0
@@ -2703,7 +2736,9 @@ lvgl:
                   widgets:
                     - label: {text: "\U000F004D", text_font: mdi_22, align: CENTER, text_color: 0xFFFFFF}
                   on_click:
+                    - lambda: 'id(ui_soil_detail) = false;'
                     - lvgl.page.show: page_soil
+                    - script.execute: refresh_ui
               - label: {id: lbl_sd_title, text: "POT 1", text_font: f_med, align: CENTER, text_color: 0xFFFFFF}
               - button:
                   align: RIGHT_MID
@@ -2955,7 +2990,7 @@ lvgl:
                     - label: {text: "\U000F0142", text_font: mdi_22, align: RIGHT_MID, x: -6, text_color: 0x5A6472}
                   on_click:
                     - lvgl.page.show: page_set_panel
-              - label: {text: "DSC-CONTROL v4.0.9  ·  ESP-NOW primary", text_font: f_small, text_color: 0x3A4550, pad_top: 8, pad_bottom: 8}
+              - label: {text: "DSC-CONTROL v4.0.10  ·  ESP-NOW primary", text_font: f_small, text_color: 0x3A4550, pad_top: 8, pad_bottom: 8}
     - id: page_set_modes
       scrollbar_mode: "OFF"
       bg_color: 0x0E1116
@@ -4652,7 +4687,9 @@ script:
       - if: {condition: {lambda: 'return id(active_tab) == 2;'}, then: [{lvgl.page.show: page_main}]}
       - if: {condition: {lambda: 'return id(active_tab) == 3;'}, then: [{lvgl.page.show: page_soil}]}
       - if: {condition: {lambda: 'return id(active_tab) == 4;'}, then: [{lvgl.page.show: page_control}]}
+      - lambda: 'id(ui_soil_detail) = false;'
       - script.execute: restyle_tabs
+      - script.execute: refresh_ui
   - id: tab_next
     then:
       - lambda: 'if (id(active_tab) < 4) id(active_tab)++;'
@@ -4708,13 +4745,18 @@ script:
             default: tint = 0x00FF00; break;  // green
           }
           char b[8]; snprintf(b, sizeof(b), "%d%%", id(fl_bright));
-          lv_label_set_text(id(fl_pct), b);
-          lv_bar_set_value(id(fl_bar), id(fl_bright), LV_ANIM_ON);
+          {
+            const char* cur = lv_label_get_text(id(fl_pct));
+            if (cur == nullptr || strcmp(cur, b) != 0) lv_label_set_text(id(fl_pct), b);
+          }
+          lv_bar_set_value(id(fl_bar), id(fl_bright), LV_ANIM_OFF);
           lv_obj_set_style_border_width(id(fl_bg), id(fl_color) == 0 ? 3 : 1, 0);
           lv_obj_set_style_border_width(id(fl_bw), id(fl_color) == 1 ? 3 : 1, 0);
           lv_obj_set_style_border_width(id(fl_br), id(fl_color) == 2 ? 3 : 1, 0);
           if (id(fl_active)) {
-            lv_label_set_text(id(fl_onoff_lbl), "ON");
+            const char* on = "ON";
+            if (strcmp(lv_label_get_text(id(fl_onoff_lbl)), on) != 0)
+              lv_label_set_text(id(fl_onoff_lbl), on);
             lv_obj_set_style_bg_color(id(fl_onoff), lv_color_hex(0x12241A), 0);
             lv_obj_set_style_border_color(id(fl_onoff), lv_color_hex(0x00E676), 0);
             lv_obj_set_style_text_color(id(fl_onoff_lbl), lv_color_hex(0x00E676), 0);
@@ -4727,7 +4769,9 @@ script:
             c.set_brightness(id(fl_bright) / 100.0f);
             c.perform();
           } else {
-            lv_label_set_text(id(fl_onoff_lbl), "OFF");
+            const char* off = "OFF";
+            if (strcmp(lv_label_get_text(id(fl_onoff_lbl)), off) != 0)
+              lv_label_set_text(id(fl_onoff_lbl), off);
             lv_obj_set_style_bg_color(id(fl_onoff), lv_color_hex(0x2A313B), 0);
             lv_obj_set_style_border_color(id(fl_onoff), lv_color_hex(0x8A929C), 0);
             lv_obj_set_style_text_color(id(fl_onoff_lbl), lv_color_hex(0xFFFFFF), 0);
@@ -4795,9 +4839,14 @@ script:
           if (lv_obj_has_flag(id(hold_hud), LV_OBJ_FLAG_HIDDEN)) {
             bool waking = id(lock_engaged);
             const char* hint = waking ? "WAKING UP" : "GOING TO SLEEP";
-            lv_label_set_text(id(hud_hint), hint);
-            lv_label_set_text(id(hud_plant), waking ? "\U000F0E62" : "\U000F024A");
-            lv_label_set_text(id(hud_sky),   waking ? "\U000F0594" : "\U000F05A8");
+            if (strcmp(lv_label_get_text(id(hud_hint)), hint) != 0)
+              lv_label_set_text(id(hud_hint), hint);
+            const char* plant0 = waking ? "\U000F0E62" : "\U000F024A";
+            const char* sky0 = waking ? "\U000F0594" : "\U000F05A8";
+            if (strcmp(lv_label_get_text(id(hud_plant)), plant0) != 0)
+              lv_label_set_text(id(hud_plant), plant0);
+            if (strcmp(lv_label_get_text(id(hud_sky)), sky0) != 0)
+              lv_label_set_text(id(hud_sky), sky0);
             lv_obj_set_style_text_color(id(hud_plant), lv_color_hex(waking ? 0x3A4550 : 0x00E676), 0);
             lv_obj_set_style_text_color(id(hud_sky),   lv_color_hex(waking ? 0x5A6472 : 0xFFC24A), 0);
             lv_bar_set_value(id(hud_bar), 0, LV_ANIM_OFF);
@@ -4816,8 +4865,15 @@ script:
           const char* sky = wake < 0.5f ? "\U000F0594" : "\U000F05A8";
           if (strcmp(lv_label_get_text(id(hud_sky)), sky) != 0)
             lv_label_set_text(id(hud_sky), sky);
-          lv_obj_set_style_text_color(id(hud_plant), lv_color_hex(wake < 0.5f ? 0x3A4550 : 0x00E676), 0);
-          lv_obj_set_style_text_color(id(hud_sky),   lv_color_hex(wake < 0.5f ? 0x5A6472 : 0xFFC24A), 0);
+          {
+            uint32_t pc = wake < 0.5f ? 0x3A4550 : 0x00E676;
+            uint32_t sc = wake < 0.5f ? 0x5A6472 : 0xFFC24A;
+            lv_color_t want_p = lv_color_hex(pc), want_s = lv_color_hex(sc);
+            if (lv_color_to_u32(lv_obj_get_style_text_color(id(hud_plant), LV_PART_MAIN)) != lv_color_to_u32(want_p))
+              lv_obj_set_style_text_color(id(hud_plant), want_p, LV_PART_MAIN);
+            if (lv_color_to_u32(lv_obj_get_style_text_color(id(hud_sky), LV_PART_MAIN)) != lv_color_to_u32(want_s))
+              lv_obj_set_style_text_color(id(hud_sky), want_s, LV_PART_MAIN);
+          }
           int bar = (int)(prog * 100);
           if ((int) lv_bar_get_value(id(hud_bar)) != bar)
             lv_bar_set_value(id(hud_bar), bar, LV_ANIM_OFF);
@@ -4923,7 +4979,10 @@ script:
           val: !lambda 'return (int) lv_roller_get_selected(id(ed_roller)->obj);'
       - lambda: 'lv_obj_add_flag(id(editor), LV_OBJ_FLAG_HIDDEN);'
 
-  # -------- the refresh engine: HA state -> every dynamic widget --------
+  # -------- the refresh engine (v4.0.10) --------
+  # Page-gated: only touch widgets on the visible tab/overlay. Sleep/lock
+  # short-circuit after LED/backlight/clock. Cadence is 5 s (see interval).
+  # Avoid std::string in the hot path — A8 glyph churn is what WDT'd 4.0.9.
   - id: refresh_ui
     then:
       - lambda: |-
@@ -4931,8 +4990,6 @@ script:
                          GREY=0x5A6472, WHITE=0xFFFFFF, DIM=0xC0C6CC, BORD=0x232A33,
                          BLUE=0x2196F3, ORANGE=0xFF9800;
           char b[64];
-          // Guard style writes the same way setl guards text: LVGL invalidates
-          // on every style set, which reallocates aligned A8 glyph masks.
           auto setc = [](lv_obj_t* o, uint32_t c){
             lv_color_t want = lv_color_hex(c);
             lv_color_t cur = lv_obj_get_style_text_color(o, LV_PART_MAIN);
@@ -4954,17 +5011,14 @@ script:
             if (lv_color_to_u32(cur) != lv_color_to_u32(want))
               lv_obj_set_style_bg_color(o, want, LV_PART_INDICATOR);
           };
-          // v4.0.2 — setl() replaces every lv_label_set_text() in refresh_ui.
-          // lv_label_set_text() calls lv_realloc() *unconditionally*, then
-          // invalidates the label, which schedules a redraw and a fresh
-          // aligned A8 glyph-mask allocation per glyph. refresh_ui runs at
-          // 1 Hz and rewrites ~41 labels, the overwhelming majority of which
-          // have not changed since the last tick ("22.4C", "ON", an IP that
-          // never moves). Comparing first turns that into zero allocations
-          // on a quiet second. Same pixels, far less heap churn.
           auto setl = [](lv_obj_t* o, const char* s){
             const char* c = lv_label_get_text(o);
             if (c == nullptr || strcmp(c, s) != 0) lv_label_set_text(o, s);
+          };
+          auto sethid = [](lv_obj_t* o, bool hide){
+            bool is_hid = lv_obj_has_flag(o, LV_OBJ_FLAG_HIDDEN);
+            if (hide && !is_hid) lv_obj_add_flag(o, LV_OBJ_FLAG_HIDDEN);
+            else if (!hide && is_hid) lv_obj_clear_flag(o, LV_OBJ_FLAG_HIDDEN);
           };
           auto bandcol = [&](float v, float lo, float hi)->uint32_t{
             if (isnan(v) || isnan(lo) || isnan(hi)) return GREY;
@@ -4974,7 +5028,13 @@ script:
             return RED;
           };
 
-          // ---------------- resolved target bands ----------------
+          const bool sleeping = id(panel_sleeping);
+          const bool locked = id(lock_engaged);
+          const bool conn_vis = !lv_obj_has_flag(id(conn_screen), LV_OBJ_FLAG_HIDDEN);
+          const int tab = id(active_tab);
+          const bool soil_det = id(ui_soil_detail);
+          const bool interactive = !sleeping && !locked;
+
           bool cfollow = id(sel_clone_mode).state == "Follow 4x8";
           float c_rmin = cfollow ? id(t_main_rh_min).state  : id(t_clone_rh_min).state;
           float c_rmax = cfollow ? id(t_main_rh_max).state  : id(t_clone_rh_max).state;
@@ -4985,22 +5045,112 @@ script:
           float m_vmin = id(t_main_vpd_min).state, m_vmax = id(t_main_vpd_max).state;
           float m_tt   = id(t_main_temp).state;
 
-          // ---------------- PULSE: pills ----------------
           bool link = id(api_link).state;
-          setc(id(pill_wifi_ic), link ? NEON : RED);
-          float co2 = id(co2_ppm).state;
-          if (isnan(co2)) strcpy(b, "CO2 --- ppm"); else snprintf(b, sizeof(b), "CO2 %d ppm", (int)co2);
-          setl(id(lbl_co2), b);
+          bool any_dem = id(dem_hum).state||id(dem_dehum).state||id(dem_heater).state
+                       ||id(dem_ac).state||id(dem_mat).state||id(dem_clone_hum).state;
 
-          // ---------------- connection uptimes (millis-stamped; reset on drop) ----
+          // ---- connection edge timers (always; cheap) ----
           {
             uint32_t nowms = millis();
             bool w = id(wifi_conn);
-            if (w && !id(wifi_was)) id(wifi_since) = nowms;   // rising edge -> restart timer
+            if (w && !id(wifi_was)) id(wifi_since) = nowms;
             id(wifi_was) = w;
             if (link && !id(api_was)) id(api_since) = nowms;
             id(api_was) = link;
-            // format seconds -> compact "Ns / Nm / Nh Nm"
+          }
+
+          // ---- alerts (always — drives LED + silence banner) ----
+          int ac = 0; char head[48] = ""; char hb[48];
+          auto AL = [&](bool cond, const char* txt){
+            if (!cond) return;
+            if (ac == 0) { strncpy(head, txt, sizeof(head)-1); head[sizeof(head)-1] = 0; }
+            ac++;
+          };
+          AL(id(fault_emg).state, "Emergency failsafe >35°C");
+          AL(id(fault_climate).state, "Climate sensor fault");
+          AL(id(fault_rootzone).state, "Root-zone probe fault");
+          AL(id(fault_aux).state, "Aux sensor offline");
+          AL(any_dem && !link, "Appliances need HA (Sonoffs offline)");
+          if (id(wifi_channel_hopped)) {
+            snprintf(hb, sizeof(hb), "WiFi channel hop → %d (check ESP-NOW)", id(wifi_channel));
+            AL(true, hb);
+            uint32_t hub_age = millis() - id(gv_hub_last);
+            if (id(gv_hub_last) != 0 && hub_age < 6000) id(wifi_channel_hopped) = false;
+          }
+          float crh = id(clone_rh).state, cvp = id(clone_vpd).state, mrh = id(main_rh).state, mvp = id(main_vpd).state;
+          if (!isnan(crh) && !isnan(c_rmax) && crh > c_rmax + 2) { snprintf(hb,sizeof(hb),"Clone RH high · %.0f%%",crh); AL(true,hb); }
+          if (!isnan(cvp) && !isnan(c_vmax) && cvp > c_vmax + 0.1f) { snprintf(hb,sizeof(hb),"Clone VPD high · %.2f",cvp); AL(true,hb); }
+          if (!isnan(mrh) && !isnan(m_rmax) && mrh > m_rmax + 2) { snprintf(hb,sizeof(hb),"Main RH high · %.0f%%",mrh); AL(true,hb); }
+          if (!isnan(mvp) && !isnan(m_vmax) && mvp > m_vmax + 0.1f) { snprintf(hb,sizeof(hb),"Main VPD high · %.2f",mvp); AL(true,hb); }
+          id(alert_count) = ac;
+          if (ac == 0) id(alerts_silenced) = false;
+          sethid(id(btn_silence), !(ac > 0 && !id(alerts_silenced)));
+
+          // ---- night / backlight / status LED (always) ----
+          bool night = !id(lights_main).state;
+          id(night_mode) = night;
+          int want = sleeping ? 12 : (night ? 40 : 100);
+          if (want != id(bl_last)) {
+            id(bl_last) = want; auto bl = id(backlight).turn_on(); bl.set_brightness(want/100.0f); bl.perform();
+          }
+          if (!id(fl_active)) {
+            int lm;
+            if (ac > 0 && !id(alerts_silenced)) lm = 1;
+            else if (night) lm = 0;
+            else if (any_dem) lm = 2;
+            else lm = id(green_heartbeat) ? 3 : 0;
+            if (lm != id(led_last)) {
+              id(led_last) = lm;
+              if (lm == 0) {
+                id(status_led).turn_off().perform();
+              } else if (lm == 1) {
+                auto c = id(status_led).turn_on();
+                c.set_rgb(1.0f, 0.0f, 0.0f); c.set_brightness(1.0f);
+                c.perform();
+              } else if (lm == 3) {
+                auto c = id(status_led).turn_on();
+                c.set_rgb(0.0f, 1.0f, 0.25f); c.set_brightness(0.35f);
+                c.perform();
+              } else {
+                auto c = id(status_led).turn_on();
+                c.set_brightness(0.6f);
+                c.set_rgb(1.0f, 0.60f, 0.0f);
+                c.perform();
+              }
+            }
+          }
+
+          // ---- clocks (always; setl no-ops when unchanged) ----
+          {
+            auto now = id(sntp_time).now();
+            if (!now.is_valid()) now = id(ha_time).now();
+            if (now.is_valid()) {
+              snprintf(b, sizeof(b), "%02d:%02d", now.hour, now.minute);
+              setl(id(saver_clock), b); setl(id(lock_clock), b);
+            }
+          }
+
+          if (locked) {
+            lv_color_t white = lv_color_hex(0xFFFFFF), dim = lv_color_hex(0x2A2A2A);
+            auto lockic = [&](lv_obj_t* L, bool on){
+              lv_color_t wantc = on ? white : dim;
+              if (lv_color_to_u32(lv_obj_get_style_text_color(L, LV_PART_MAIN)) != lv_color_to_u32(wantc))
+                lv_obj_set_style_text_color(L, wantc, LV_PART_MAIN);
+              if (lv_obj_get_style_text_opa(L, LV_PART_MAIN) != 255)
+                lv_obj_set_style_text_opa(L, 255, LV_PART_MAIN);
+            };
+            bool fan_on = !isnan(id(fan_out_pct).state) && id(fan_out_pct).state > 0;
+            bool int_on = !isnan(id(fan_int_main_pct).state) && id(fan_int_main_pct).state > 0;
+            lockic(id(lk_fan), fan_on); lockic(id(lk_int), int_on); lockic(id(lk_heat), id(dem_heater).state);
+            lockic(id(lk_hum), id(dem_hum).state); lockic(id(lk_deh), id(dem_dehum).state); lockic(id(lk_light), id(lights_main).state);
+          }
+
+          if (!interactive) return;
+
+          // ---- Connections overlay (only when open) ----
+          if (conn_vis) {
+            uint32_t nowms = millis();
+            bool w = id(wifi_conn);
             auto upstr = [](char* out, size_t n, bool on, uint32_t since, uint32_t now){
               if (!on) { strncpy(out, "0s", n); return; }
               uint32_t s = (now - since) / 1000;
@@ -5015,23 +5165,20 @@ script:
             upstr(u, sizeof(u), link, id(api_since), nowms);
             setl(id(conn_api_up), u); setc(id(conn_api_up), link ? NEON : GREY);
             setc(id(conn_api_ic), link ? NEON : RED);
-            // Wi-Fi sub-line: SSID · RSSI · channel (Nest hop diagnostic)
-            std::string ssid = id(wifi_ssid_ts).state;
+            const char* ssid = id(wifi_ssid_ts).state.c_str();
+            if (ssid == nullptr || ssid[0] == '\0') ssid = "—";
             float rssi = id(wifi_rssi).state;
             int ch = id(wifi_channel);
-            if (ssid.empty()) ssid = "—";
             if (isnan(rssi)) {
-              if (ch > 0) snprintf(b, sizeof(b), "%s · ch%d", ssid.c_str(), ch);
-              else        snprintf(b, sizeof(b), "%s", ssid.c_str());
+              if (ch > 0) snprintf(b, sizeof(b), "%s · ch%d", ssid, ch);
+              else        snprintf(b, sizeof(b), "%s", ssid);
             } else if (ch > 0) {
-              snprintf(b, sizeof(b), "%s · %ddBm · ch%d", ssid.c_str(), (int)rssi, ch);
+              snprintf(b, sizeof(b), "%s · %ddBm · ch%d", ssid, (int)rssi, ch);
             } else {
-              snprintf(b, sizeof(b), "%s · %ddBm", ssid.c_str(), (int)rssi);
+              snprintf(b, sizeof(b), "%s · %ddBm", ssid, (int)rssi);
             }
             setl(id(conn_wifi_sub), b);
             setl(id(conn_api_sub), id(wifi_ip_ts).state.c_str());
-
-            // ESP-NOW: RX age + TX seq + STA channel (peers must match)
             uint32_t hub_age = nowms - id(gv_hub_last);
             bool espn = id(gv_hub_last) != 0 && hub_age < 6000;
             setc(id(conn_espnow_ic), espn ? NEON : RED);
@@ -5039,26 +5186,29 @@ script:
             setc(id(conn_espnow_val), espn ? NEON : RED);
             if (id(gv_hub_last) == 0) {
               snprintf(b, sizeof(b), "no hub packet · tx#%u", (unsigned) id(cmd_tx_seq));
-              setl(id(conn_espnow_sub), b);
             } else if (espn) {
               if (ch > 0)
                 snprintf(b, sizeof(b), "rx %us · tx#%u · ch%d", hub_age / 1000, (unsigned) id(cmd_tx_seq), ch);
               else
                 snprintf(b, sizeof(b), "rx %us · tx#%u", hub_age / 1000, (unsigned) id(cmd_tx_seq));
-              setl(id(conn_espnow_sub), b);
             } else {
               uint32_t s = hub_age / 1000;
               if (s < 3600)      snprintf(b, sizeof(b), "silent %um · tx#%u", s / 60 ? s / 60 : 1, (unsigned) id(cmd_tx_seq));
               else if (s < 86400) snprintf(b, sizeof(b), "silent %uh · tx#%u", s / 3600, (unsigned) id(cmd_tx_seq));
               else                snprintf(b, sizeof(b), "silent %ud · tx#%u", s / 86400, (unsigned) id(cmd_tx_seq));
-              setl(id(conn_espnow_sub), b);
             }
+            setl(id(conn_espnow_sub), b);
           }
 
-          // ---------------- battery chip (hidden until a real pack is wired) ----
-          {
-            float bv = id(batt_v).state;                 // pack volts after the /2 divider
-            bool valid = !isnan(bv) && bv > 2.8f && bv < 4.6f;   // 1S Li-ion plausibility gate
+          // ---- PULSE ----
+          if (tab == 0) {
+            setc(id(pill_wifi_ic), link ? NEON : RED);
+            float co2 = id(co2_ppm).state;
+            if (isnan(co2)) strcpy(b, "CO2 --- ppm"); else snprintf(b, sizeof(b), "CO2 %d ppm", (int)co2);
+            setl(id(lbl_co2), b);
+
+            float bv = id(batt_v).state;
+            bool valid = !isnan(bv) && bv > 2.8f && bv < 4.6f;
             if (valid) {
               int pct = (int)((bv - 3.30f) / (4.20f - 3.30f) * 100.0f);
               if (pct < 0) pct = 0; if (pct > 100) pct = 100;
@@ -5066,257 +5216,122 @@ script:
               setl(id(pill_batt_pct), b);
               setc(id(pill_batt_pct), pct <= 15 ? RED : (pct <= 40 ? AMBER : NEON));
               setc(id(pill_batt_ic),  pct <= 15 ? RED : (pct <= 40 ? AMBER : NEON));
-              lv_obj_clear_flag(id(pill_batt_ic),  LV_OBJ_FLAG_HIDDEN);
-              lv_obj_clear_flag(id(pill_batt_pct), LV_OBJ_FLAG_HIDDEN);
-            } else {
-              lv_obj_add_flag(id(pill_batt_ic),  LV_OBJ_FLAG_HIDDEN);
-              lv_obj_add_flag(id(pill_batt_pct), LV_OBJ_FLAG_HIDDEN);
             }
-          }
+            sethid(id(pill_batt_ic), !valid);
+            sethid(id(pill_batt_pct), !valid);
 
-          // ---------------- PULSE: env cards ----------------
-          auto envtxt = [&](lv_obj_t* o, float t, float rh){
-            if (isnan(t) || isnan(rh)) { setl(o, "--"); return; }
-            char x[32]; snprintf(x, sizeof(x), "%.1f° · %.0f%%", t, rh); setl(o, x);
-          };
-          envtxt(id(lbl_2x4), id(clone_temp).state, id(clone_rh).state);
-          envtxt(id(lbl_4x8), id(main_temp).state,  id(main_rh).state);
-          envtxt(id(lbl_room), id(room_temp).state, id(room_rh).state);
+            auto envtxt = [&](lv_obj_t* o, float t, float rh){
+              if (isnan(t) || isnan(rh)) { setl(o, "--"); return; }
+              char x[32]; snprintf(x, sizeof(x), "%.1f° · %.0f%%", t, rh); setl(o, x);
+            };
+            envtxt(id(lbl_2x4), id(clone_temp).state, id(clone_rh).state);
+            envtxt(id(lbl_4x8), id(main_temp).state,  id(main_rh).state);
+            envtxt(id(lbl_room), id(room_temp).state, id(room_rh).state);
 
-          // ---------------- PULSE: 1h VPD micro-trend (12-slot ring) ----------------
-          {
-            float mn = NAN, mx = NAN;
-            int n = id(spark_filled) ? 12 : id(spark_idx);
-            for (int i = 0; i < n; i++) {
-              float v = id(spark_vpd)[i];
-              if (isnan(v)) continue;
-              if (isnan(mn) || v < mn) mn = v;
-              if (isnan(mx) || v > mx) mx = v;
+            {
+              float mn = NAN, mx = NAN;
+              int n = id(spark_filled) ? 12 : id(spark_idx);
+              for (int i = 0; i < n; i++) {
+                float v = id(spark_vpd)[i];
+                if (isnan(v)) continue;
+                if (isnan(mn) || v < mn) mn = v;
+                if (isnan(mx) || v > mx) mx = v;
+              }
+              if (isnan(mn)) setl(id(lbl_spark), "VPD —");
+              else { snprintf(b, sizeof(b), "VPD %.2f–%.2f", mn, mx); setl(id(lbl_spark), b); }
             }
-            if (isnan(mn)) setl(id(lbl_spark), "VPD —");
+
+            int fans = (id(fan_out_on).state?1:0) + (id(fan_recirc_on).state?1:0)
+                     + (id(fan_int_main_on).state?1:0) + (id(fan_int_clone_on).state?1:0);
+            if (fans > 0) { snprintf(b, sizeof(b), "active · %d fans", fans);
+              setc(id(lbl_rung1), CYAN); bordc(id(rung1), CYAN); }
+            else { strcpy(b, "idle"); setc(id(lbl_rung1), GREY); bordc(id(rung1), BORD); }
+            setl(id(lbl_rung1), b);
+
+            const char* dem = nullptr;
+            if (id(dem_dehum).state) dem = "dehumidifier";
+            else if (id(dem_hum).state) dem = "humidifier";
+            else if (id(dem_heater).state) dem = "heater";
+            else if (id(dem_ac).state) dem = "AC";
+            else if (id(dem_mat).state) dem = "grow mat";
+            else if (id(dem_clone_hum).state) dem = "clone humid";
+            if (dem) { snprintf(b, sizeof(b), "%s active", dem);
+              setc(id(lbl_rung2), AMBER); bordc(id(rung2), AMBER); }
             else {
-              snprintf(b, sizeof(b), "VPD %.2f–%.2f", mn, mx);
-              setl(id(lbl_spark), b);
+              float best = 1e9f; const char* who = nullptr;
+              auto chk = [&](float v, const char* n){ if (!isnan(v) && v > 0 && v < best) { best = v; who = n; } };
+              chk(id(cd_dehum).state,"dehum"); chk(id(cd_hum).state,"humid"); chk(id(cd_heater).state,"heater");
+              chk(id(cd_ac).state,"AC"); chk(id(cd_mat).state,"mat"); chk(id(cd_clone_hum).state,"c-hum");
+              if (who) { snprintf(b, sizeof(b), "%s in %ds", who, (int)best); setc(id(lbl_rung2), AMBER); bordc(id(rung2), BORD); }
+              else { strcpy(b, "standing by"); setc(id(lbl_rung2), GREY); bordc(id(rung2), BORD); }
             }
-          }
+            setl(id(lbl_rung2), b);
 
-          // ---------------- PULSE: ladder rung 1 (fans) ----------------
-          int fans = (id(fan_out_on).state?1:0) + (id(fan_recirc_on).state?1:0)
-                   + (id(fan_int_main_on).state?1:0) + (id(fan_int_clone_on).state?1:0);
-          if (fans > 0) { snprintf(b, sizeof(b), "active · %d fans", fans);
-            setc(id(lbl_rung1), CYAN); bordc(id(rung1), CYAN); }
-          else { strcpy(b, "idle"); setc(id(lbl_rung1), GREY); bordc(id(rung1), BORD); }
-          setl(id(lbl_rung1), b);
-
-          // ---------------- PULSE: ladder rung 2 (appliances) ----------------
-          bool any_dem = id(dem_hum).state||id(dem_dehum).state||id(dem_heater).state
-                       ||id(dem_ac).state||id(dem_mat).state||id(dem_clone_hum).state;
-          const char* dem = nullptr;
-          if (id(dem_dehum).state) dem = "dehumidifier";
-          else if (id(dem_hum).state) dem = "humidifier";
-          else if (id(dem_heater).state) dem = "heater";
-          else if (id(dem_ac).state) dem = "AC";
-          else if (id(dem_mat).state) dem = "grow mat";
-          else if (id(dem_clone_hum).state) dem = "clone humid";
-          if (dem) { snprintf(b, sizeof(b), "%s active", dem);
-            setc(id(lbl_rung2), AMBER); bordc(id(rung2), AMBER); }
-          else {
-            float best = 1e9f; const char* who = nullptr;
-            auto chk = [&](float v, const char* n){ if (!isnan(v) && v > 0 && v < best) { best = v; who = n; } };
-            chk(id(cd_dehum).state,"dehum"); chk(id(cd_hum).state,"humid"); chk(id(cd_heater).state,"heater");
-            chk(id(cd_ac).state,"AC"); chk(id(cd_mat).state,"mat"); chk(id(cd_clone_hum).state,"c-hum");
-            if (who) { snprintf(b, sizeof(b), "%s in %ds", who, (int)best); setc(id(lbl_rung2), AMBER); bordc(id(rung2), BORD); }
-            else { strcpy(b, "standing by"); setc(id(lbl_rung2), GREY); bordc(id(rung2), BORD); }
-          }
-          setl(id(lbl_rung2), b);
-
-          // ---------------- alerts ----------------
-          int ac = 0; std::string head; char hb[48];
-          auto AL = [&](bool cond, std::string txt){ if (cond) { if (ac == 0) head = txt; ac++; } };
-          // gv_flt bit 128 = emergency_failsafe_active (>35 °C). Was packed
-          // on the wire since v4.0 but never surfaced — panel could read
-          // "all clear" while the hub owned outputs in failsafe.
-          AL(id(fault_emg).state, "Emergency failsafe >35°C");
-          AL(id(fault_climate).state, "Climate sensor fault");
-          AL(id(fault_rootzone).state, "Root-zone probe fault");
-          AL(id(fault_aux).state, "Aux sensor offline");
-          // Sonoffs only switch when HA is up — surface that honestly.
-          {
-            bool dem = id(dem_hum).state || id(dem_dehum).state || id(dem_heater).state
-                    || id(dem_mat).state || id(dem_ac).state || id(dem_clone_hum).state;
-            AL(dem && !id(api_link).state, "Appliances need HA (Sonoffs offline)");
-          }
-          // Nest/mesh channel hop: ESP-NOW peers must share the STA channel.
-          if (id(wifi_channel_hopped)) {
-            snprintf(hb, sizeof(hb), "WiFi channel hop → %d (check ESP-NOW)", id(wifi_channel));
-            AL(true, hb);
-            // Auto-clear once ESP-NOW is linked again on the new channel.
-            uint32_t hub_age = millis() - id(gv_hub_last);
-            if (id(gv_hub_last) != 0 && hub_age < 6000) id(wifi_channel_hopped) = false;
-          }
-          float crh = id(clone_rh).state, cvp = id(clone_vpd).state, mrh = id(main_rh).state, mvp = id(main_vpd).state;
-          if (!isnan(crh) && !isnan(c_rmax) && crh > c_rmax + 2) { snprintf(hb,sizeof(hb),"Clone RH high · %.0f%%",crh); AL(true,hb); }
-          if (!isnan(cvp) && !isnan(c_vmax) && cvp > c_vmax + 0.1f) { snprintf(hb,sizeof(hb),"Clone VPD high · %.2f",cvp); AL(true,hb); }
-          if (!isnan(mrh) && !isnan(m_rmax) && mrh > m_rmax + 2) { snprintf(hb,sizeof(hb),"Main RH high · %.0f%%",mrh); AL(true,hb); }
-          if (!isnan(mvp) && !isnan(m_vmax) && mvp > m_vmax + 0.1f) { snprintf(hb,sizeof(hb),"Main VPD high · %.2f",mvp); AL(true,hb); }
-          id(alert_count) = ac;
-
-          // bell pill
-          snprintf(b, sizeof(b), "%d", ac); setl(id(pill_alert_ct), b);
-          setc(id(pill_alert_ct), ac>0?RED:GREY); setc(id(pill_bell_ic), ac>0?RED:GREY);
-          // big SILENCE banner: visible whenever an alert is live + unsilenced
-          if (ac > 0 && !id(alerts_silenced)) lv_obj_clear_flag(id(btn_silence), LV_OBJ_FLAG_HIDDEN);
-          else lv_obj_add_flag(id(btn_silence), LV_OBJ_FLAG_HIDDEN);
-
-          // alert strip
-          if (ac == 0) {
-            id(alerts_silenced) = false;
-            setl(id(lbl_alert), "all clear · nothing needs attention");
-            setc(id(lbl_alert), DIM); setc(id(alert_ic), NEON); bordc(id(alert_strip), 0x1E3A2B);
-            lv_obj_add_flag(id(btn_mute), LV_OBJ_FLAG_HIDDEN);
-          } else {
-            if (id(alerts_silenced)) {
-              snprintf(b, sizeof(b), "%d muted · %s", ac, head.c_str());
-              setl(id(lbl_alert), b);
-              setc(id(lbl_alert), 0x8A929C); setc(id(alert_ic), 0x8A929C); bordc(id(alert_strip), 0x3A2A12);
+            snprintf(b, sizeof(b), "%d", ac); setl(id(pill_alert_ct), b);
+            setc(id(pill_alert_ct), ac>0?RED:GREY); setc(id(pill_bell_ic), ac>0?RED:GREY);
+            if (ac == 0) {
+              setl(id(lbl_alert), "all clear · nothing needs attention");
+              setc(id(lbl_alert), DIM); setc(id(alert_ic), NEON); bordc(id(alert_strip), 0x1E3A2B);
+              sethid(id(btn_mute), true);
             } else {
-              setl(id(lbl_alert), head.c_str());
-              setc(id(lbl_alert), WHITE); setc(id(alert_ic), RED); bordc(id(alert_strip), RED);
+              if (id(alerts_silenced)) {
+                snprintf(b, sizeof(b), "%d muted · %s", ac, head);
+                setl(id(lbl_alert), b);
+                setc(id(lbl_alert), 0x8A929C); setc(id(alert_ic), 0x8A929C); bordc(id(alert_strip), 0x3A2A12);
+              } else {
+                setl(id(lbl_alert), head);
+                setc(id(lbl_alert), WHITE); setc(id(alert_ic), RED); bordc(id(alert_strip), RED);
+              }
+              sethid(id(btn_mute), false);
+              setl(id(lbl_mute), id(alerts_silenced) ? "unmute" : "mute");
             }
-            lv_obj_clear_flag(id(btn_mute), LV_OBJ_FLAG_HIDDEN);
-            setl(id(lbl_mute), id(alerts_silenced) ? "unmute" : "mute");
           }
 
-          // ---------------- CLONE vitals ----------------
-          {
+          // ---- CLONE vitals + clone device rows ----
+          if (tab == 1) {
             float t = id(clone_temp).state; uint32_t c = bandcol(t, c_tt-2, c_tt+2);
-            if (isnan(t)) setl(id(clv_temp_val),"--"); else { snprintf(b,sizeof(b),"%.1f°",t); setl(id(clv_temp_val),b);} 
-            setc(id(clv_temp_val),c); setbar(id(clv_temp_bar), isnan(t)?10:(int)t);
-            setbarb(id(clv_temp_bar), c);
+            if (isnan(t)) setl(id(clv_temp_val),"--"); else { snprintf(b,sizeof(b),"%.1f°",t); setl(id(clv_temp_val),b);}
+            setc(id(clv_temp_val),c); setbar(id(clv_temp_bar), isnan(t)?10:(int)t); setbarb(id(clv_temp_bar), c);
             float rh = id(clone_rh).state; c = bandcol(rh, c_rmin, c_rmax);
-            if (isnan(rh)) setl(id(clv_rh_val),"--"); else { snprintf(b,sizeof(b),"%.0f%%",rh); setl(id(clv_rh_val),b);} 
-            setc(id(clv_rh_val),c); setbar(id(clv_rh_bar), isnan(rh)?0:(int)rh);
-            setbarb(id(clv_rh_bar), c);
+            if (isnan(rh)) setl(id(clv_rh_val),"--"); else { snprintf(b,sizeof(b),"%.0f%%",rh); setl(id(clv_rh_val),b);}
+            setc(id(clv_rh_val),c); setbar(id(clv_rh_bar), isnan(rh)?0:(int)rh); setbarb(id(clv_rh_bar), c);
             float vp = id(clone_vpd).state; c = bandcol(vp, c_vmin, c_vmax);
-            if (isnan(vp)) setl(id(clv_vpd_val),"--"); else { snprintf(b,sizeof(b),"%.2f kPa",vp); setl(id(clv_vpd_val),b);} 
-            setc(id(clv_vpd_val),c); setbar(id(clv_vpd_bar), isnan(vp)?0:(int)(vp*100));
-            setbarb(id(clv_vpd_bar), c);
-          }
-          setl(id(clone_hdr_note), id(sel_clone_mode).state.c_str());
+            if (isnan(vp)) setl(id(clv_vpd_val),"--"); else { snprintf(b,sizeof(b),"%.2f kPa",vp); setl(id(clv_vpd_val),b);}
+            setc(id(clv_vpd_val),c); setbar(id(clv_vpd_bar), isnan(vp)?0:(int)(vp*100)); setbarb(id(clv_vpd_bar), c);
+            setl(id(clone_hdr_note), id(sel_clone_mode).state.c_str());
 
-          // ---------------- MAIN vitals ----------------
-          {
-            float t = id(main_temp).state; uint32_t c = bandcol(t, m_tt-2, m_tt+2);
-            if (isnan(t)) setl(id(mnv_temp_val),"--"); else { snprintf(b,sizeof(b),"%.1f°",t); setl(id(mnv_temp_val),b);} 
-            setc(id(mnv_temp_val),c); setbar(id(mnv_temp_bar), isnan(t)?10:(int)t);
-            setbarb(id(mnv_temp_bar), c);
-            float rh = id(main_rh).state; c = bandcol(rh, m_rmin, m_rmax);
-            if (isnan(rh)) setl(id(mnv_rh_val),"--"); else { snprintf(b,sizeof(b),"%.0f%%",rh); setl(id(mnv_rh_val),b);} 
-            setc(id(mnv_rh_val),c); setbar(id(mnv_rh_bar), isnan(rh)?0:(int)rh);
-            setbarb(id(mnv_rh_bar), c);
-            float vp = id(main_vpd).state; c = bandcol(vp, m_vmin, m_vmax);
-            if (isnan(vp)) setl(id(mnv_vpd_val),"--"); else { snprintf(b,sizeof(b),"%.2f kPa",vp); setl(id(mnv_vpd_val),b);} 
-            setc(id(mnv_vpd_val),c); setbar(id(mnv_vpd_bar), isnan(vp)?0:(int)(vp*100));
-            setbarb(id(mnv_vpd_bar), c);
-          }
-
-          // ---------------- CONTROL state ----------------
-          bool fa = id(st_full_auto).state, ta = id(st_takeover).state, ap = id(st_auto_photo).state;
-          setl(id(lbl_fullauto_state), fa ? "ON" : "off"); setc(id(lbl_fullauto_state), fa ? NEON : GREY);
-          setl(id(lbl_autophoto_state), ap ? "ON" : "off"); setc(id(lbl_autophoto_state), ap ? NEON : GREY);
-          if (ta) { setl(id(lbl_takeover_state), "ENGAGED — you own outputs"); setc(id(lbl_takeover_state), AMBER); bordc(id(takeover_card), AMBER); }
-          else { setl(id(lbl_takeover_state), "tap to engage"); setc(id(lbl_takeover_state), 0x8A929C); bordc(id(takeover_card), BORD); }
-          setl(id(lbl_stage_val), id(sel_stage).state.c_str());
-          setl(id(lbl_strategy_val), id(sel_strategy).state.c_str());
-          setl(id(lbl_clonemode_val), id(sel_clone_mode).state.c_str());
-          setl(id(lbl_priority_val), id(sel_priority).state.c_str());
-
-          // ---------------- SOIL tab (4 pot cards) ----------------
-          auto potrow = [&](lv_obj_t* nameL, lv_obj_t* npkL, lv_obj_t* valL, int idx,
-                            const std::string& plant, float mo, float tp, float ec, float ph,
-                            float nn, float pp, float kk){
-            char x[80];
-            snprintf(x, sizeof(x), "P%d · %s", idx, plant.empty() ? "—" : plant.c_str());
-            setl(nameL, x);
-            if (isnan(nn) && isnan(pp) && isnan(kk)) setl(npkL, "N/P/K —");
-            else { snprintf(x, sizeof(x), "N/P/K %d/%d/%d", (int)(isnan(nn)?0:nn), (int)(isnan(pp)?0:pp), (int)(isnan(kk)?0:kk)); setl(npkL, x); }
-            if (isnan(mo) && isnan(tp) && isnan(ph)) { setl(valL, "offline / no data"); setc(valL, GREY); return; }
-            char mS[10], tS[12], pS[10], eS[12];
-            if (isnan(mo)) strcpy(mS, "--"); else snprintf(mS, sizeof(mS), "%.0f%%", mo);
-            if (isnan(tp)) strcpy(tS, "--"); else snprintf(tS, sizeof(tS), "%.1f°", tp);
-            if (isnan(ph)) strcpy(pS, "--"); else snprintf(pS, sizeof(pS), "%.1f", ph);
-            if (isnan(ec)) strcpy(eS, "--"); else snprintf(eS, sizeof(eS), "%.0f", ec);
-            snprintf(x, sizeof(x), "M %s · T %s · pH %s · EC %s", mS, tS, pS, eS);
-            setl(valL, x);
-            bool healthy = (!isnan(mo) && mo >= 30.0f) && (!isnan(ph) && ph >= 5.8f && ph <= 6.8f);
-            setc(valL, healthy ? NEON : AMBER);
-          };
-          potrow(id(lbl_p1_name), id(lbl_p1_npk), id(lbl_p1_vals), 1, id(p1_plant).state,
-                 id(p1_moist).state, id(p1_temp).state, id(p1_ec).state, id(p1_ph).state, id(p1_n).state, id(p1_p).state, id(p1_k).state);
-          potrow(id(lbl_p2_name), id(lbl_p2_npk), id(lbl_p2_vals), 2, id(p2_plant).state,
-                 id(p2_moist).state, id(p2_temp).state, id(p2_ec).state, id(p2_ph).state, id(p2_n).state, id(p2_p).state, id(p2_k).state);
-          potrow(id(lbl_p3_name), id(lbl_p3_npk), id(lbl_p3_vals), 3, id(p3_plant).state,
-                 id(p3_moist).state, id(p3_temp).state, id(p3_ec).state, id(p3_ph).state, id(p3_n).state, id(p3_p).state, id(p3_k).state);
-          potrow(id(lbl_p4_name), id(lbl_p4_npk), id(lbl_p4_vals), 4, id(p4_plant).state,
-                 id(p4_moist).state, id(p4_temp).state, id(p4_ec).state, id(p4_ph).state, id(p4_n).state, id(p4_p).state, id(p4_k).state);
-
-          // ---------------- SOIL detail page (per-pot drill-down) ----------------
-          {
-            int pot = id(soil_detail_pot);
-            if (pot < 1 || pot > 4) pot = 1;
-            std::string plant = id(p1_plant).state;
-            float mo = id(p1_moist).state, tp = id(p1_temp).state, ec = id(p1_ec).state, ph = id(p1_ph).state;
-            float nn = id(p1_n).state, pp = id(p1_p).state, kk = id(p1_k).state;
-            if (pot == 2) {
-              plant = id(p2_plant).state; mo = id(p2_moist).state; tp = id(p2_temp).state;
-              ec = id(p2_ec).state; ph = id(p2_ph).state; nn = id(p2_n).state; pp = id(p2_p).state; kk = id(p2_k).state;
-            } else if (pot == 3) {
-              plant = id(p3_plant).state; mo = id(p3_moist).state; tp = id(p3_temp).state;
-              ec = id(p3_ec).state; ph = id(p3_ph).state; nn = id(p3_n).state; pp = id(p3_p).state; kk = id(p3_k).state;
-            } else if (pot == 4) {
-              plant = id(p4_plant).state; mo = id(p4_moist).state; tp = id(p4_temp).state;
-              ec = id(p4_ec).state; ph = id(p4_ph).state; nn = id(p4_n).state; pp = id(p4_p).state; kk = id(p4_k).state;
-            }
-            char x[64];
-            if (plant.empty()) snprintf(x, sizeof(x), "POT %d", pot);
-            else snprintf(x, sizeof(x), "P%d · %s", pot, plant.c_str());
-            setl(id(lbl_sd_title), x);
-
-            if (isnan(mo)) { setl(id(sd_moist_val), "--"); setc(id(sd_moist_val), GREY); setbar(id(sd_moist_bar), 0); setbarb(id(sd_moist_bar), GREY); }
-            else {
-              snprintf(x, sizeof(x), "%.0f%%", mo); setl(id(sd_moist_val), x);
-              setbar(id(sd_moist_bar), (int) mo);
-              uint32_t c = (mo >= 30.0f) ? NEON : AMBER;
-              setc(id(sd_moist_val), c); setbarb(id(sd_moist_bar), c);
-            }
-            if (isnan(tp)) { setl(id(sd_temp_val), "--"); setc(id(sd_temp_val), GREY); }
-            else { snprintf(x, sizeof(x), "%.1f°C", tp); setl(id(sd_temp_val), x); setc(id(sd_temp_val), NEON); }
-            if (isnan(ph)) { setl(id(sd_ph_val), "--"); setc(id(sd_ph_val), GREY); setbar(id(sd_ph_bar), 40); setbarb(id(sd_ph_bar), GREY); }
-            else {
-              snprintf(x, sizeof(x), "%.2f", ph); setl(id(sd_ph_val), x);
-              int pb = (int) (ph * 10.0f); if (pb < 40) pb = 40; if (pb > 80) pb = 80;
-              setbar(id(sd_ph_bar), pb);
-              uint32_t c = (ph >= 5.8f && ph <= 6.8f) ? NEON : AMBER;
-              setc(id(sd_ph_val), c); setbarb(id(sd_ph_bar), c);
-            }
-            if (isnan(ec)) { setl(id(sd_ec_val), "--"); setc(id(sd_ec_val), GREY); }
-            else { snprintf(x, sizeof(x), "%.0f uS/cm", ec); setl(id(sd_ec_val), x); setc(id(sd_ec_val), NEON); }
-            if (isnan(nn)) { setl(id(sd_n_val), "--"); setc(id(sd_n_val), GREY); }
-            else { snprintf(x, sizeof(x), "%d", (int) nn); setl(id(sd_n_val), x); setc(id(sd_n_val), NEON); }
-            if (isnan(pp)) { setl(id(sd_p_val), "--"); setc(id(sd_p_val), GREY); }
-            else { snprintf(x, sizeof(x), "%d", (int) pp); setl(id(sd_p_val), x); setc(id(sd_p_val), NEON); }
-            if (isnan(kk)) { setl(id(sd_k_val), "--"); setc(id(sd_k_val), GREY); }
-            else { snprintf(x, sizeof(x), "%d", (int) kk); setl(id(sd_k_val), x); setc(id(sd_k_val), NEON); }
-          }
-
-          // ---------------- device rows (2x4 + 4x8) ----------------
-          {
             auto pctlbl = [&](lv_obj_t* L, float v){ if (isnan(v)) setl(L, "--"); else { char q[8]; snprintf(q, sizeof(q), "%d%%", (int)v); setl(L, q); } };
             auto stlbl = [&](lv_obj_t* L, bool on){ setl(L, on ? "ON" : "off"); setc(L, on ? NEON : GREY); };
             pctlbl(id(sf1000_val), id(sf_target).state);
             pctlbl(id(fanclone_val), id(fan_int_clone_pct).state);
             stlbl(id(dem_clone_hum_st), id(dem_clone_hum).state);
             stlbl(id(dem_mat_st), id(dem_mat).state);
+            auto pon = [](float v){ return !isnan(v) && v > 0; };
+            auto ic = [&](lv_obj_t* L, bool on, uint32_t col){
+              setc(L, on ? col : 0x39424D);
+              if (lv_obj_get_style_text_opa(L, LV_PART_MAIN) != 255)
+                lv_obj_set_style_text_opa(L, 255, LV_PART_MAIN);
+            };
+            ic(id(ic_csf),  pon(id(sf_target).state),        AMBER);
+            ic(id(ic_cint), pon(id(fan_int_clone_pct).state), CYAN);
+            ic(id(ic_chum), id(dem_clone_hum).state,          CYAN);
+            ic(id(ic_cmat), id(dem_mat).state,               ORANGE);
+          }
+
+          // ---- MAIN vitals + main device rows ----
+          if (tab == 2) {
+            float t = id(main_temp).state; uint32_t c = bandcol(t, m_tt-2, m_tt+2);
+            if (isnan(t)) setl(id(mnv_temp_val),"--"); else { snprintf(b,sizeof(b),"%.1f°",t); setl(id(mnv_temp_val),b);}
+            setc(id(mnv_temp_val),c); setbar(id(mnv_temp_bar), isnan(t)?10:(int)t); setbarb(id(mnv_temp_bar), c);
+            float rh = id(main_rh).state; c = bandcol(rh, m_rmin, m_rmax);
+            if (isnan(rh)) setl(id(mnv_rh_val),"--"); else { snprintf(b,sizeof(b),"%.0f%%",rh); setl(id(mnv_rh_val),b);}
+            setc(id(mnv_rh_val),c); setbar(id(mnv_rh_bar), isnan(rh)?0:(int)rh); setbarb(id(mnv_rh_bar), c);
+            float vp = id(main_vpd).state; c = bandcol(vp, m_vmin, m_vmax);
+            if (isnan(vp)) setl(id(mnv_vpd_val),"--"); else { snprintf(b,sizeof(b),"%.2f kPa",vp); setl(id(mnv_vpd_val),b);}
+            setc(id(mnv_vpd_val),c); setbar(id(mnv_vpd_bar), isnan(vp)?0:(int)(vp*100)); setbarb(id(mnv_vpd_bar), c);
+
+            auto pctlbl = [&](lv_obj_t* L, float v){ if (isnan(v)) setl(L, "--"); else { char q[8]; snprintf(q, sizeof(q), "%d%%", (int)v); setl(L, q); } };
+            auto stlbl = [&](lv_obj_t* L, bool on){ setl(L, on ? "ON" : "off"); setc(L, on ? NEON : GREY); };
             pctlbl(id(exhout_val), id(fan_out_pct).state);
             pctlbl(id(exhroom_val), id(fan_recirc_pct).state);
             pctlbl(id(intmain_val), id(fan_int_main_pct).state);
@@ -5324,34 +5339,33 @@ script:
             stlbl(id(dem_ac_st), id(dem_ac).state);
             stlbl(id(dem_hum_st), id(dem_hum).state);
             stlbl(id(dem_dehum_st), id(dem_dehum).state);
-
-            // ---- device icons (colour = on/off). Breathing removed from
-            // control pages in v4.0.5 — force opa 255 so a leftover mid-fade
-            // from older firmware can't leave icons dim.
             auto pon = [](float v){ return !isnan(v) && v > 0; };
-            int mask = 0;
-            auto ic = [&](lv_obj_t* L, bool on, uint32_t col, int bit){
+            auto ic = [&](lv_obj_t* L, bool on, uint32_t col){
               setc(L, on ? col : 0x39424D);
               if (lv_obj_get_style_text_opa(L, LV_PART_MAIN) != 255)
                 lv_obj_set_style_text_opa(L, 255, LV_PART_MAIN);
-              if (on) mask |= (1 << bit);
             };
-            ic(id(ic_csf),  pon(id(sf_target).state),        AMBER, 0);  // light
-            ic(id(ic_cint), pon(id(fan_int_clone_pct).state), CYAN, 1);  // fan
-            ic(id(ic_chum), id(dem_clone_hum).state,          CYAN, 2);  // humidifier
-            ic(id(ic_cmat), id(dem_mat).state,               ORANGE,3);  // grow mat
-            ic(id(ic_mout), pon(id(fan_out_pct).state),       CYAN, 4);  // exhaust
-            ic(id(ic_mroom),pon(id(fan_recirc_pct).state),    CYAN, 5);  // recirc
-            ic(id(ic_mint), pon(id(fan_int_main_pct).state),  BLUE, 6);  // intake
-            ic(id(ic_mheat),id(dem_heater).state,            ORANGE,7);  // heater
-            ic(id(ic_mac),  id(dem_ac).state,                 BLUE, 8);  // AC
-            ic(id(ic_mhum), id(dem_hum).state,                CYAN, 9);  // humidifier
-            ic(id(ic_mdeh), id(dem_dehum).state,              AMBER,10); // dehumid
-            id(dev_mask) = mask;
+            ic(id(ic_mout), pon(id(fan_out_pct).state),       CYAN);
+            ic(id(ic_mroom),pon(id(fan_recirc_pct).state),    CYAN);
+            ic(id(ic_mint), pon(id(fan_int_main_pct).state),  BLUE);
+            ic(id(ic_mheat),id(dem_heater).state,            ORANGE);
+            ic(id(ic_mac),  id(dem_ac).state,                 BLUE);
+            ic(id(ic_mhum), id(dem_hum).state,                CYAN);
+            ic(id(ic_mdeh), id(dem_dehum).state,              AMBER);
           }
 
-          // ---------------- Setup steppers + switches ----------------
-          {
+          // ---- CONTROL + setup steppers ----
+          if (tab == 4) {
+            bool fa = id(st_full_auto).state, ta = id(st_takeover).state, ap = id(st_auto_photo).state;
+            setl(id(lbl_fullauto_state), fa ? "ON" : "off"); setc(id(lbl_fullauto_state), fa ? NEON : GREY);
+            setl(id(lbl_autophoto_state), ap ? "ON" : "off"); setc(id(lbl_autophoto_state), ap ? NEON : GREY);
+            if (ta) { setl(id(lbl_takeover_state), "ENGAGED — you own outputs"); setc(id(lbl_takeover_state), AMBER); bordc(id(takeover_card), AMBER); }
+            else { setl(id(lbl_takeover_state), "tap to engage"); setc(id(lbl_takeover_state), 0x8A929C); bordc(id(takeover_card), BORD); }
+            setl(id(lbl_stage_val), id(sel_stage).state.c_str());
+            setl(id(lbl_strategy_val), id(sel_strategy).state.c_str());
+            setl(id(lbl_clonemode_val), id(sel_clone_mode).state.c_str());
+            setl(id(lbl_priority_val), id(sel_priority).state.c_str());
+
             auto numlbl = [&](lv_obj_t* L, float v, const char* fmt){ if (isnan(v)) { setl(L, "--"); return; } char q[16]; snprintf(q, sizeof(q), fmt, v); setl(L, q); };
             auto stv = [&](lv_obj_t* L, bool on){ setl(L, on ? "ON" : "off"); setc(L, on ? NEON : GREY); };
             numlbl(id(s_temp_val), id(t_main_temp).state, "%.1f°");
@@ -5386,76 +5400,93 @@ script:
             setl(id(lbl_clonephoto_val), id(sel_clone_photo).state.c_str());
           }
 
-          // ---------------- night mode, backlight, status LED ----------------
-          bool night = !id(lights_main).state;
-          id(night_mode) = night;
-          int want = id(panel_sleeping) ? 12 : (night ? 40 : 100);
-          if (want != id(bl_last)) {
-            id(bl_last) = want; auto bl = id(backlight).turn_on(); bl.set_brightness(want/100.0f); bl.perform();
-          }
-          // The flashlight commandeers the onboard RGB LED while it's on, so
-          // the status machine yields; close_flashlight sets led_last = -1 to
-          // force a re-assert here.
-          if (!id(fl_active)) {
-            // LED state (written only on change). v4.0.6: solid only — no pulse.
-            //   1 = ISSUE  -> solid red (overrides night)
-            //   0 = night dark window / LED off
-            //   2 = appliance demand -> solid amber
-            //   3 = all good -> solid dim green (if Settings toggle on)
-            int lm;
-            if (ac > 0 && !id(alerts_silenced)) lm = 1;
-            else if (night) lm = 0;
-            else if (any_dem) lm = 2;
-            else lm = id(green_heartbeat) ? 3 : 0;
-            if (lm != id(led_last)) {
-              id(led_last) = lm;
-              if (lm == 0) {
-                id(status_led).turn_off().perform();
-              } else if (lm == 1) {
-                auto c = id(status_led).turn_on();
-                c.set_rgb(1.0f, 0.0f, 0.0f); c.set_brightness(1.0f);
-                c.perform();
-              } else if (lm == 3) {
-                auto c = id(status_led).turn_on();
-                c.set_rgb(0.0f, 1.0f, 0.25f); c.set_brightness(0.35f);
-                c.perform();
-              } else {
-                auto c = id(status_led).turn_on();
-                c.set_brightness(0.6f);
-                c.set_rgb(1.0f, 0.60f, 0.0f);
-                c.perform();
-              }
-            }
-          }
-
-          // Lock screen: solid white/dim icons (no breathe — v4.0.6).
-          if (id(lock_engaged)) {
-            lv_color_t white = lv_color_hex(0xFFFFFF), dim = lv_color_hex(0x2A2A2A);
-            auto lockic = [&](lv_obj_t* L, bool on){
-              lv_color_t want = on ? white : dim;
-              if (lv_color_to_u32(lv_obj_get_style_text_color(L, LV_PART_MAIN)) != lv_color_to_u32(want))
-                lv_obj_set_style_text_color(L, want, LV_PART_MAIN);
-              if (lv_obj_get_style_text_opa(L, LV_PART_MAIN) != 255)
-                lv_obj_set_style_text_opa(L, 255, LV_PART_MAIN);
+          // ---- SOIL summary cards ----
+          if (tab == 3 && !soil_det) {
+            auto potrow = [&](lv_obj_t* nameL, lv_obj_t* npkL, lv_obj_t* valL, int idx,
+                              const char* plant, float mo, float tp, float ec, float ph,
+                              float nn, float pp, float kk){
+              char x[80];
+              snprintf(x, sizeof(x), "P%d · %s", idx, (plant == nullptr || plant[0]=='\0') ? "—" : plant);
+              setl(nameL, x);
+              if (isnan(nn) && isnan(pp) && isnan(kk)) setl(npkL, "N/P/K —");
+              else { snprintf(x, sizeof(x), "N/P/K %d/%d/%d", (int)(isnan(nn)?0:nn), (int)(isnan(pp)?0:pp), (int)(isnan(kk)?0:kk)); setl(npkL, x); }
+              if (isnan(mo) && isnan(tp) && isnan(ph)) { setl(valL, "offline / no data"); setc(valL, GREY); return; }
+              char mS[10], tS[12], pS[10], eS[12];
+              if (isnan(mo)) strcpy(mS, "--"); else snprintf(mS, sizeof(mS), "%.0f%%", mo);
+              if (isnan(tp)) strcpy(tS, "--"); else snprintf(tS, sizeof(tS), "%.1f°", tp);
+              if (isnan(ph)) strcpy(pS, "--"); else snprintf(pS, sizeof(pS), "%.1f", ph);
+              if (isnan(ec)) strcpy(eS, "--"); else snprintf(eS, sizeof(eS), "%.0f", ec);
+              snprintf(x, sizeof(x), "M %s · T %s · pH %s · EC %s", mS, tS, pS, eS);
+              setl(valL, x);
+              bool healthy = (!isnan(mo) && mo >= 30.0f) && (!isnan(ph) && ph >= 5.8f && ph <= 6.8f);
+              setc(valL, healthy ? NEON : AMBER);
             };
-            bool fan_on = !isnan(id(fan_out_pct).state) && id(fan_out_pct).state > 0;
-            bool int_on = !isnan(id(fan_int_main_pct).state) && id(fan_int_main_pct).state > 0;
-            lockic(id(lk_fan), fan_on); lockic(id(lk_int), int_on); lockic(id(lk_heat), id(dem_heater).state);
-            lockic(id(lk_hum), id(dem_hum).state); lockic(id(lk_deh), id(dem_dehum).state); lockic(id(lk_light), id(lights_main).state);
+            potrow(id(lbl_p1_name), id(lbl_p1_npk), id(lbl_p1_vals), 1, id(p1_plant).state.c_str(),
+                   id(p1_moist).state, id(p1_temp).state, id(p1_ec).state, id(p1_ph).state, id(p1_n).state, id(p1_p).state, id(p1_k).state);
+            potrow(id(lbl_p2_name), id(lbl_p2_npk), id(lbl_p2_vals), 2, id(p2_plant).state.c_str(),
+                   id(p2_moist).state, id(p2_temp).state, id(p2_ec).state, id(p2_ph).state, id(p2_n).state, id(p2_p).state, id(p2_k).state);
+            potrow(id(lbl_p3_name), id(lbl_p3_npk), id(lbl_p3_vals), 3, id(p3_plant).state.c_str(),
+                   id(p3_moist).state, id(p3_temp).state, id(p3_ec).state, id(p3_ph).state, id(p3_n).state, id(p3_p).state, id(p3_k).state);
+            potrow(id(lbl_p4_name), id(lbl_p4_npk), id(lbl_p4_vals), 4, id(p4_plant).state.c_str(),
+                   id(p4_moist).state, id(p4_temp).state, id(p4_ec).state, id(p4_ph).state, id(p4_n).state, id(p4_p).state, id(p4_k).state);
           }
 
-          // ---------------- screensaver clock ----------------
-          auto now = id(sntp_time).now();
-          if (!now.is_valid()) now = id(ha_time).now();
-          if (now.is_valid()) { snprintf(b, sizeof(b), "%02d:%02d", now.hour, now.minute); setl(id(saver_clock), b); setl(id(lock_clock), b); }
+          // ---- SOIL detail ----
+          if (soil_det) {
+            int pot = id(soil_detail_pot);
+            if (pot < 1 || pot > 4) pot = 1;
+            const char* plant = id(p1_plant).state.c_str();
+            float mo = id(p1_moist).state, tp = id(p1_temp).state, ec = id(p1_ec).state, ph = id(p1_ph).state;
+            float nn = id(p1_n).state, pp = id(p1_p).state, kk = id(p1_k).state;
+            if (pot == 2) {
+              plant = id(p2_plant).state.c_str(); mo = id(p2_moist).state; tp = id(p2_temp).state;
+              ec = id(p2_ec).state; ph = id(p2_ph).state; nn = id(p2_n).state; pp = id(p2_p).state; kk = id(p2_k).state;
+            } else if (pot == 3) {
+              plant = id(p3_plant).state.c_str(); mo = id(p3_moist).state; tp = id(p3_temp).state;
+              ec = id(p3_ec).state; ph = id(p3_ph).state; nn = id(p3_n).state; pp = id(p3_p).state; kk = id(p3_k).state;
+            } else if (pot == 4) {
+              plant = id(p4_plant).state.c_str(); mo = id(p4_moist).state; tp = id(p4_temp).state;
+              ec = id(p4_ec).state; ph = id(p4_ph).state; nn = id(p4_n).state; pp = id(p4_p).state; kk = id(p4_k).state;
+            }
+            char x[64];
+            if (plant == nullptr || plant[0] == '\0') snprintf(x, sizeof(x), "POT %d", pot);
+            else snprintf(x, sizeof(x), "P%d · %s", pot, plant);
+            setl(id(lbl_sd_title), x);
+
+            if (isnan(mo)) { setl(id(sd_moist_val), "--"); setc(id(sd_moist_val), GREY); setbar(id(sd_moist_bar), 0); setbarb(id(sd_moist_bar), GREY); }
+            else {
+              snprintf(x, sizeof(x), "%.0f%%", mo); setl(id(sd_moist_val), x);
+              setbar(id(sd_moist_bar), (int) mo);
+              uint32_t c = (mo >= 30.0f) ? NEON : AMBER;
+              setc(id(sd_moist_val), c); setbarb(id(sd_moist_bar), c);
+            }
+            if (isnan(tp)) { setl(id(sd_temp_val), "--"); setc(id(sd_temp_val), GREY); }
+            else { snprintf(x, sizeof(x), "%.1f°C", tp); setl(id(sd_temp_val), x); setc(id(sd_temp_val), NEON); }
+            if (isnan(ph)) { setl(id(sd_ph_val), "--"); setc(id(sd_ph_val), GREY); setbar(id(sd_ph_bar), 40); setbarb(id(sd_ph_bar), GREY); }
+            else {
+              snprintf(x, sizeof(x), "%.2f", ph); setl(id(sd_ph_val), x);
+              int pb = (int) (ph * 10.0f); if (pb < 40) pb = 40; if (pb > 80) pb = 80;
+              setbar(id(sd_ph_bar), pb);
+              uint32_t c = (ph >= 5.8f && ph <= 6.8f) ? NEON : AMBER;
+              setc(id(sd_ph_val), c); setbarb(id(sd_ph_bar), c);
+            }
+            if (isnan(ec)) { setl(id(sd_ec_val), "--"); setc(id(sd_ec_val), GREY); }
+            else { snprintf(x, sizeof(x), "%.0f uS/cm", ec); setl(id(sd_ec_val), x); setc(id(sd_ec_val), NEON); }
+            if (isnan(nn)) { setl(id(sd_n_val), "--"); setc(id(sd_n_val), GREY); }
+            else { snprintf(x, sizeof(x), "%d", (int) nn); setl(id(sd_n_val), x); setc(id(sd_n_val), NEON); }
+            if (isnan(pp)) { setl(id(sd_p_val), "--"); setc(id(sd_p_val), GREY); }
+            else { snprintf(x, sizeof(x), "%d", (int) pp); setl(id(sd_p_val), x); setc(id(sd_p_val), NEON); }
+            if (isnan(kk)) { setl(id(sd_k_val), "--"); setc(id(sd_k_val), GREY); }
+            else { snprintf(x, sizeof(x), "%d", (int) kk); setl(id(sd_k_val), x); setc(id(sd_k_val), NEON); }
+          }
 
 # ==================================================================
 #  PERIODIC REFRESH
 # ==================================================================
 interval:
-  # v4.0.5/4.0.6 — 2 s UI refresh. No icon breathe intervals (lock or
-  # control). Status LED is solid. Template mirrors poll at 5 s.
-  - interval: 2s
+  # v4.0.10 — 5 s page-gated refresh (was 2 s rewriting every tab).
+  # Template mirrors poll at 15 s; UI no longer outruns the data.
+  - interval: 5s
     then:
       - script.execute: refresh_ui
   # 1h VPD micro-trend: one sample / 5 min → 12 slots. No canvas widgets.

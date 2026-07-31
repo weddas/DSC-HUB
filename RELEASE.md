@@ -22,27 +22,28 @@ Repo: https://github.com/weddas/DSC-HUB · **`master`**
 | Automations | Demand followers + safety nets + scribe |
 | Dashboard | `dsc-hub-v4-dashboard.yaml` UX **v0.2** (URL **`dsc-hub-v4`**) |
 | Hub ↔ panel tag | **`54727` (`0xD5C7`)** |
-| Panel | **DSC-CONTROL 4.0.9** |
+| Panel | **DSC-CONTROL 4.0.10** |
 | Hub mat votes | `switch.dsc_hub_mat_vote_pot_1`…`4` (POT3 defaults OFF) |
 
 ### Recent cut (docs + flash notes)
 
-- **Panel 4.0.9:** HA API plaintext + mDNS disabled — fixes Noise `HANDSHAKESTATE_SETUP_FAILED` → heap double-free reboot when HA (`192.168.86.3`) probed the glass. Add by IP with **no** encryption key (USB flash required while API is down).
+- **Panel 4.0.10:** Page-gated `refresh_ui` @ 5 s + slower template mirrors — fixes A8 glyph / task-WDT reboot loops after HA connected on 4.0.9. USB flash recommended until stable.
+- **Panel 4.0.9:** HA API plaintext + mDNS disabled — fixes Noise `HANDSHAKESTATE_SETUP_FAILED` → heap double-free. Add by IP with **no** encryption key.
 - **Hub:** per-pot grow-mat vote switches — exclude a dying probe without a reflash.
-- **Panel 4.0.8:** Soil NPK drill-down (0xD3/0xD4); hold-to-lock on primary pages; tap-challenge for Manual Takeover + appliance demands; Connections shows Wi‑Fi channel + ESP-NOW RX age/TX seq; Pulse 1h VPD micro-trend (label only). Hold HUD is strcmp-guarded + 250 ms tap grace to avoid heap churn / boot loops.
-- **Dashboard v0.2:** Home nav chips; narrator collapsed; Root Zone nested (mat votes source of truth); Climate mat expander links to Root Zone.
+- **Panel 4.0.8:** Soil NPK drill-down; hold-to-lock; tap-challenge; Connections link health; Pulse VPD micro-trend.
+- **Dashboard v0.2:** Home nav chips; narrator collapsed; Root Zone nested (mat votes source of truth).
 
 **Flash / apply (this cut):**
 
 | Piece | How it lands | Manual HA step? |
 |---|---|---|
-| Panel 4.0.9 | ESPHome Install (**USB** — API was crashing on HA probe) | **Yes — delete old encrypted dsc-control entry; re-add by IP with no key** |
+| Panel 4.0.10 | ESPHome Install (**USB** if still looping on 4.0.9) | Re-add by IP with **no** key if not already on plaintext API |
 | Hub mat-vote switches | ESPHome Install (hub OTA or USB) | No — entities appear after hub adopts |
-| Dashboard UX v0.2 | **Not** via OTA or git-pull stubs | **Yes — re-paste** [`homeassistant/dashboards/dsc-hub-v4-dashboard.yaml`](homeassistant/dashboards/dsc-hub-v4-dashboard.yaml) into Lovelace raw editor (URL `dsc-hub-v4`) if not already on v0.2 |
-| HA helper packages | Only if `dsc_v4_*.yaml` files changed | **Yes — copy/replace** packages + restart HA when those files change |
-| Automations | Only if `automations.yaml` changed | **Yes — merge/replace** live automations when that file changes |
+| Dashboard UX v0.2 | **Not** via OTA or git-pull stubs | Re-paste only if not already on v0.2 |
+| HA helper packages | Only if `dsc_v4_*.yaml` files changed | No change this cut |
+| Automations | Only if `automations.yaml` changed | No change this cut |
 
-This cut: **panel USB flash + HA re-add (no encryption)**. Helper packages and automations were **not** changed.
+This cut: **panel USB/OTA flash (4.0.10)**. Hub on `master` already has mat votes + tag `54727` — optional reflash for peace of mind only (wire contract unchanged). Helper packages and automations unchanged.
 
 ---
 
@@ -90,5 +91,5 @@ Full steps: [`UPGRADE.md`](UPGRADE.md).
 - WT32-ETH01 gateway
 - 4×8 light on GPIO5
 - Panel v0.2 remainder: per-device power pages, VPD curve editor, canvas charts
-  (4.0.7 soil NPK detail · 4.0.8 hold-to-lock / gate / link health · 4.0.9 plaintext API + mDNS off)
+  (4.0.7 soil NPK · 4.0.8 hold/gate/link · 4.0.9 plaintext API · 4.0.10 page-gated refresh)
   LDR auto-dim still deferred
