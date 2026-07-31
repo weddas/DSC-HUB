@@ -212,14 +212,28 @@ views:
               state_color: true
             filter:
               include:
-                - entity_id: binary_sensor.dsc_*
+                - entity_id: binary_sensor.dsc_hub_emergency_failsafe
                   state: "on"
-              exclude:
-                - attributes:
-                    device_class: connectivity
-                - attributes:
-                    device_class: running
-                - entity_id: binary_sensor.dsc_hub_link
+                - entity_id: binary_sensor.dsc_hub_climate_sensor_fault
+                  state: "on"
+                - entity_id: binary_sensor.dsc_hub_aux_sensor_fault
+                  state: "on"
+                - entity_id: binary_sensor.dsc_hub_root_zone_sensor_fault
+                  state: "on"
+                - entity_id: binary_sensor.dsc_clone_dark_period_violation
+                  state: "on"
+                - entity_id: binary_sensor.dsc_tank_*
+                  state: "on"
+                - entity_id: binary_sensor.dsc_pot*_moisture_out_of_range
+                  state: "on"
+                - entity_id: binary_sensor.dsc_pot*_ph_out_of_range
+                  state: "on"
+                - entity_id: binary_sensor.dsc_pot*_temp_out_of_range
+                  state: "on"
+                - entity_id: binary_sensor.dsc_pot*_ec_*
+                  state: "on"
+                - entity_id: binary_sensor.dsc_pot*_n_*
+                  state: "on"
           - type: heading
             heading: 💨 AIRFLOW — room → 2x4 → 4x8 → outside
             heading_style: subtitle
@@ -338,7 +352,7 @@ views:
           - type: custom:logbook-card
             title: Grow log
             entity: input_boolean.dsc_event_log
-            history: 7
+            history: 1
             desc: true
             show:
               state: false
@@ -701,26 +715,13 @@ views:
                   {%- endif %}
 
 
-                  {%- set ns = namespace(alerts=[]) %}
-
-                  {%- for b in states.binary_sensor
-                  if b.entity_id.startswith('binary_sensor.dsc_')
-                  and b.state == 'on'
-                  and b.attributes.get('device_class') not in ['connectivity','running'] %}
-                  {%- set ns.alerts = ns.alerts + [b.name] %}
-
-                  {%- endfor %}
-
-                  {%- if ns.alerts | length > 0 %}
+                  {%- set ac = states('sensor.dsc_active_alert_count')|int(0) %}
+                  {%- if ac > 0 %}
 
 
-                  ### ⚠️ Watchlist ({{ ns.alerts | length }})
+                  ### ⚠️ Watchlist ({{ ac }})
 
-                  {%- for a in ns.alerts %}
-
-                  - {{ a }}
-
-                  {%- endfor %}
+                  See Home alert chip / Active System Alerts list.
 
                   {%- endif %}
                 text_only: true
@@ -1002,46 +1003,14 @@ views:
                 tap_action:
                   action: navigate
                   navigation_path: /dsc-hub-v4/root-zone
-          - type: custom:sankey-chart
-            title: Digital-Plant Airflow Routing
-            show_names: true
-            show_states: true
-            round: 0
-            min_box_height: 10
-            height: 220
-            sections:
-              - entities:
-                  - entity_id: sensor.dsc_airflow_room_supply
-                    name: Room Intake
-                    color: var(--warning-color)
-                    children:
-                      - sensor.dsc_airflow_reservoir_net
-                      - sensor.dsc_airflow_direct_room
-              - entities:
-                  - entity_id: sensor.dsc_airflow_reservoir_net
-                    name: 2x4 Reservoir
-                    color: var(--info-color)
-                    children:
-                      - sensor.dsc_airflow_main_load
-                  - entity_id: sensor.dsc_airflow_direct_room
-                    name: Direct Room Air
-                    color: var(--warning-color)
-                    children:
-                      - sensor.dsc_airflow_main_load
-              - entities:
-                  - entity_id: sensor.dsc_airflow_main_load
-                    name: 4x8 Main
-                    color: var(--success-color)
-                    children:
-                      - sensor.dsc_airflow_exhaust_out
-                      - sensor.dsc_airflow_room_return
-              - entities:
-                  - entity_id: sensor.dsc_airflow_exhaust_out
-                    name: Outside Exhaust
-                    color: var(--primary-color)
-                  - entity_id: sensor.dsc_airflow_room_return
-                    name: Room Return
-                    color: var(--warning-color)
+          - type: custom:mushroom-template-card
+            primary: Airflow detail lives on Climate
+            secondary: Power-flow map kept there to keep Home first-paint light
+            icon: mdi:chart-sankey
+            icon_color: disabled
+            tap_action:
+              action: navigate
+              navigation_path: /dsc-hub-v4/climate
 
   - title: Climate Engine
     icon: mdi:engine
@@ -1431,7 +1400,7 @@ views:
             name: Fan speeds — 12 h
             hours_to_show: 12
             cache: true
-            points_per_hour: 60
+            points_per_hour: 12
             line_width: 2
             entities:
               - entity: sensor.dsc_fan_intake_main_pct
@@ -1449,7 +1418,7 @@ views:
             name: The curve working — exhaust vs tent temp
             hours_to_show: 12
             cache: true
-            points_per_hour: 60
+            points_per_hour: 12
             line_width: 2
             entities:
               - entity: sensor.dsc_hub_tent_temperature
@@ -1536,7 +1505,7 @@ views:
               - type: custom:mini-graph-card
                 hours_to_show: 12
                 cache: true
-                points_per_hour: 60
+                points_per_hour: 12
                 line_width: 2
                 smoothing: true
                 entities:
@@ -1626,7 +1595,7 @@ views:
               - type: custom:mini-graph-card
                 hours_to_show: 12
                 cache: true
-                points_per_hour: 60
+                points_per_hour: 12
                 line_width: 2
                 entities:
                   - entity: sensor.dsc_hub_tent_temperature
@@ -1702,7 +1671,7 @@ views:
               - type: custom:mini-graph-card
                 hours_to_show: 12
                 cache: true
-                points_per_hour: 60
+                points_per_hour: 12
                 line_width: 2
                 entities:
                   - entity: sensor.dsc_hub_tent_humidity
@@ -1785,7 +1754,7 @@ views:
               - type: custom:mini-graph-card
                 hours_to_show: 12
                 cache: true
-                points_per_hour: 60
+                points_per_hour: 12
                 line_width: 2
                 entities:
                   - entity: sensor.dsc_hub_tent_humidity
@@ -1913,7 +1882,7 @@ views:
             name: Temperature + heater/AC runs
             hours_to_show: 24
             cache: true
-            points_per_hour: 60
+            points_per_hour: 12
             line_width: 2
             entities:
               - entity: sensor.dsc_hub_tent_temperature
@@ -1947,7 +1916,7 @@ views:
             name: Humidity + hum/dehum runs
             hours_to_show: 24
             cache: true
-            points_per_hour: 60
+            points_per_hour: 12
             line_width: 2
             entities:
               - entity: sensor.dsc_hub_tent_humidity
@@ -1976,7 +1945,7 @@ views:
             name: VPD
             hours_to_show: 24
             cache: true
-            points_per_hour: 60
+            points_per_hour: 12
             line_width: 2
             entities:
               - entity: sensor.dsc_hub_vpd_kpa
@@ -2022,7 +1991,7 @@ views:
             name: Virtual window — 24 h
             hours_to_show: 24
             cache: true
-            points_per_hour: 60
+            points_per_hour: 12
             line_width: 1
             height: 90
             entities:
@@ -2200,7 +2169,7 @@ views:
             name: SF1000 brightness — the ramp, 24 h
             hours_to_show: 24
             cache: true
-            points_per_hour: 60
+            points_per_hour: 12
             line_width: 2
             entities:
               - entity: light.dsc_hub_sf1000_dimmer
@@ -2261,7 +2230,7 @@ views:
             name: Humidity + clone channel demand
             hours_to_show: 24
             cache: true
-            points_per_hour: 60
+            points_per_hour: 12
             line_width: 2
             entities:
               - entity: sensor.dsc_hub_clone_humidity
@@ -2286,7 +2255,7 @@ views:
             name: Clone VPD
             hours_to_show: 24
             cache: true
-            points_per_hour: 60
+            points_per_hour: 12
             line_width: 2
             entities:
               - entity: sensor.dsc_hub_clone_vpd_kpa
@@ -2768,7 +2737,7 @@ views:
               colorize_states: true
             graph_span: 48h
             span:
-              end: minute
+              end: hour
             yaxis:
               - min: ~0
                 decimals: 2
@@ -2832,7 +2801,7 @@ views:
               colorize_states: true
             graph_span: 48h
             span:
-              end: minute
+              end: hour
             apex_config:
               annotations:
                 yaxis:
@@ -2937,7 +2906,7 @@ views:
             name: Soil moisture — feed & drink signatures, 48 h
             hours_to_show: 48
             cache: true
-            points_per_hour: 60
+            points_per_hour: 12
             line_width: 2
             entities:
               - entity: sensor.dsc_pot1_soil_moisture
@@ -2990,7 +2959,7 @@ views:
               colorize_states: true
             graph_span: 7d
             span:
-              end: minute
+              end: hour
             yaxis:
               - decimals: 0
                 apex_config:
@@ -3031,7 +3000,7 @@ views:
               colorize_states: true
             graph_span: 7d
             span:
-              end: minute
+              end: hour
             yaxis:
               - decimals: 0
                 apex_config:
@@ -3072,7 +3041,7 @@ views:
               colorize_states: true
             graph_span: 7d
             span:
-              end: minute
+              end: hour
             yaxis:
               - decimals: 0
                 apex_config:
@@ -3119,7 +3088,7 @@ views:
             name: N rate — 48 h
             hours_to_show: 48
             cache: true
-            points_per_hour: 60
+            points_per_hour: 12
             line_width: 2
             entities:
               - entity: sensor.dsc_pot1_soil_nitrogen_rate
@@ -3183,7 +3152,7 @@ views:
             entity: sensor.dsc_tank_ec_normalized
             header: Tank EC (normalised)
             min: 0
-            max: 4
+            max: 3000
             needle: true
             segments: >
               {% set lo = states('sensor.dsc_tank_ec_target_min')|float(0.8) %}
@@ -3195,7 +3164,7 @@ views:
             name: EC + pH — 48 h
             hours_to_show: 48
             cache: true
-            points_per_hour: 60
+            points_per_hour: 12
             line_width: 2
             entities:
               - entity: sensor.dsc_tank_ec_normalized
@@ -3428,7 +3397,7 @@ views:
             name: 4x8 — virtual window (schedule, no lamp)
             hours_to_show: 24
             cache: true
-            points_per_hour: 60
+            points_per_hour: 12
             line_width: 1
             height: 90
             entities:
@@ -3446,7 +3415,7 @@ views:
             name: 2x4 — SF1000 brightness (real photons)
             hours_to_show: 24
             cache: true
-            points_per_hour: 60
+            points_per_hour: 12
             line_width: 2
             height: 90
             entities:
@@ -3502,7 +3471,7 @@ views:
           - type: custom:plotly-graph
             title: Disturbance propagation — 24 h
             hours_to_show: 24
-            refresh_interval: 60
+            refresh_interval: 300
             layout:
               height: 620
               hovermode: x unified
@@ -3566,7 +3535,7 @@ views:
           - type: custom:plotly-graph
             title: Fan % vs temp error — 48 h
             hours_to_show: 48
-            refresh_interval: 60
+            refresh_interval: 300
             layout:
               height: 420
               xaxis:
@@ -3620,7 +3589,7 @@ views:
           - type: custom:plotly-graph
             title: Root zone vs mat runs vs the band — 48 h
             hours_to_show: 48
-            refresh_interval: 60
+            refresh_interval: 300
             layout:
               height: 360
               hovermode: x unified
@@ -3668,7 +3637,7 @@ views:
           - type: custom:plotly-graph
             title: 4x8 temp with heater/AC run shading — 48 h
             hours_to_show: 48
-            refresh_interval: 60
+            refresh_interval: 300
             layout:
               height: 340
               hovermode: x unified
@@ -3709,7 +3678,7 @@ views:
           - type: custom:plotly-graph
             title: 4x8 RH with hum/dehum run shading — 48 h
             hours_to_show: 48
-            refresh_interval: 60
+            refresh_interval: 300
             layout:
               height: 340
               hovermode: x unified
@@ -3746,7 +3715,7 @@ views:
           - type: custom:plotly-graph
             title: VPD overlay — both tents vs stage band, 48 h
             hours_to_show: 48
-            refresh_interval: 60
+            refresh_interval: 300
             layout:
               height: 340
               hovermode: x unified

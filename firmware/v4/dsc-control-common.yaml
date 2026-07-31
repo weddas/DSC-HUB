@@ -1,7 +1,7 @@
 # hub_cmd control (build_panel_control)
 # ESP-NOW-fed (build_panel_data)
 # ==================================================================
-#  DSC-CONTROL — PACKAGE BODY (firmware v4.0.10, ESP-NOW primary)
+#  DSC-CONTROL — PACKAGE BODY (firmware v4.0.11, ESP-NOW primary)
 #  Flash via stub dsc-control.yaml (local) or
 #  homeassistant/esphome/dsc-control.yaml (git-pull).
 #  Remote-git safe: no !secret — stub passes credentials + hub_mac / tag.
@@ -37,6 +37,8 @@
 #    * Pulse 1h VPD micro-trend (12-slot ring, one label — no canvas)
 #  v4.0.9: plaintext HA API + mDNS off (Noise handshake crashed the glass).
 #  v4.0.10: page-gated refresh_ui @ 5 s — stop A8 glyph / WDT reboot loops.
+  v4.0.11: refresh_ui reads gv_* live; template mirrors parked (never);
+    30 s WiFi channel poll for silent Nest/mesh hops.
 #  STILL DEFERRED: per-device power pages, VPD curve editor, canvas charts.
 #
 #  RAM RULE (crash postmortems v4.0–4.0.2): never call lv_label_set_text
@@ -84,7 +86,7 @@ esphome:
     # the dashboard and HA's device page both described DSC-CONTROL as
     # being the DSC HUB. Purely cosmetic, but confusing enough to matter.
     name: "digital_emotions.dsc-control"
-    version: "4.0.10"
+    version: "4.0.11"
   on_boot:
     # Seed the 0xDC command seq from hardware RNG so a panel reboot is
     # unlikely to replay the hub's last-seen seq even before the hub's
@@ -98,7 +100,7 @@ esphome:
     - priority: -100
       then:
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 4.0.10 up — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 4.0.11 up — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
 
@@ -516,376 +518,376 @@ sensor:
   - platform: template
     id: clone_temp
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_clone_t);'
   - platform: template
     id: clone_rh
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_clone_rh);'
   - platform: template
     id: clone_vpd
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_clone_vpd);'
   - platform: template
     id: main_temp
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_tent_t);'
   - platform: template
     id: main_rh
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_tent_rh);'
   - platform: template
     id: main_vpd
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_tent_vpd);'
   - platform: template
     id: room_temp
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_room_t);'
   - platform: template
     id: room_rh
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_room_rh);'
   - platform: template
     id: co2_ppm
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_co2);'
 
   # --- live targets (band colouring reads THESE, never baked numbers) ---
   - platform: template
     id: t_main_temp
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_cfg)[0];'
   - platform: template
     id: t_main_vpd_min
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_cfg)[1];'
   - platform: template
     id: t_main_vpd_max
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_cfg)[2];'
   - platform: template
     id: t_main_rh_min
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_cfg)[3];'
   - platform: template
     id: t_main_rh_max
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_cfg)[4];'
   - platform: template
     id: t_clone_temp
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_cfg)[5];'
   - platform: template
     id: t_clone_vpd_min
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_cfg)[6];'
   - platform: template
     id: t_clone_vpd_max
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_cfg)[7];'
   - platform: template
     id: t_clone_rh_min
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_cfg)[8];'
   - platform: template
     id: t_clone_rh_max
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_cfg)[9];'
   - platform: template
     id: sf_target
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_cfg)[10];'
 
   # --- fan speeds (percentage attribute) + SF1000 brightness ---
   - platform: template
     id: fan_out_pct
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return (float)id(gv_fan_out);'
   - platform: template
     id: fan_recirc_pct
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return (float)id(gv_fan_recirc);'
   - platform: template
     id: fan_int_main_pct
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return (float)id(gv_fan_imain);'
   - platform: template
     id: fan_int_clone_pct
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return (float)id(gv_fan_iclone);'
   - platform: template
     id: sf_brightness
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return (float)id(gv_sf_pct);'
 
   # --- ladder telemetry (firmware truth for the Rung 2 countdown) ---
   - platform: template
     id: cd_hum
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_cd)[0];'
   - platform: template
     id: cd_dehum
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_cd)[1];'
   - platform: template
     id: cd_heater
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_cd)[2];'
   - platform: template
     id: cd_ac
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_cd)[3];'
   - platform: template
     id: cd_mat
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_cd)[4];'
   - platform: template
     id: cd_clone_hum
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_cd)[5];'
 
   # --- POT SOIL PROBES (RS485 7-in-1 x4) — the Soil tab ---
   - platform: template
     id: p1_moist
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_soil)[1];'
   - platform: template
     id: p1_temp
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_soil)[0];'
   - platform: template
     id: p1_ec
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_soil)[2];'
   - platform: template
     id: p1_ph
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_soil)[3];'
   - platform: template
     id: p1_n
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_soil)[4];'
   - platform: template
     id: p1_p
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_soil)[5];'
   - platform: template
     id: p1_k
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_soil)[6];'
   - platform: template
     id: p2_moist
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_soil)[8];'
   - platform: template
     id: p2_temp
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_soil)[7];'
   - platform: template
     id: p2_ec
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_soil)[9];'
   - platform: template
     id: p2_ph
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_soil)[10];'
   - platform: template
     id: p2_n
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_soil)[11];'
   - platform: template
     id: p2_p
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_soil)[12];'
   - platform: template
     id: p2_k
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_soil)[13];'
   - platform: template
     id: p3_moist
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_soil)[15];'
   - platform: template
     id: p3_temp
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_soil)[14];'
   - platform: template
     id: p3_ec
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_soil)[16];'
   - platform: template
     id: p3_ph
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_soil)[17];'
   - platform: template
     id: p3_n
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_soil)[18];'
   - platform: template
     id: p3_p
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_soil)[19];'
   - platform: template
     id: p3_k
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_soil)[20];'
   - platform: template
     id: p4_moist
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_soil)[22];'
   - platform: template
     id: p4_temp
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_soil)[21];'
   - platform: template
     id: p4_ec
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_soil)[23];'
   - platform: template
     id: p4_ph
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_soil)[24];'
   - platform: template
     id: p4_n
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_soil)[25];'
   - platform: template
     id: p4_p
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_soil)[26];'
   - platform: template
     id: p4_k
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_soil)[27];'
   # --- extra hub numbers (Setup steppers) ---
   - platform: template
     id: n_ramp
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_cfg)[14];'
   - platform: template
     id: n_sunrise
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_cfg)[11];'
   - platform: template
     id: n_sunset
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_cfg)[12];'
   - platform: template
     id: n_clh
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_cfg)[13];'
   - platform: template
     id: n_rzlo
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_cfg)[19];'
   - platform: template
     id: n_rzhi
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_cfg)[20];'
   - platform: template
     id: n_matoff
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_cfg)[21];'
   - platform: template
     id: n_chh
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_cfg)[15];'
   - platform: template
     id: n_chmo
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_cfg)[16];'
   - platform: template
     id: n_hmo
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_cfg)[17];'
   - platform: template
     id: n_htmo
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_cfg)[18];'
   - platform: template
     id: n_dsp
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_cfg)[22];'
   - platform: template
     id: n_dsl
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_cfg)[23];'
   - platform: template
     id: n_dslv
     internal: true
-    update_interval: 15s
+    update_interval: never
     lambda: 'return id(gv_cfg)[24];'
 
 binary_sensor:
@@ -895,145 +897,167 @@ binary_sensor:
   - platform: template
     id: lights_main
     internal: true
+    update_interval: never
     # gv_flt bit 32 = lights_currently_on (4x8 virtual window / night dim)
     lambda: 'return (id(gv_flt)&32);'
   - platform: template
     id: lights_clone
     internal: true
+    update_interval: never
     # gv_flt bit 64 = clone_lights_on
     lambda: 'return (id(gv_flt)&64);'
   - platform: template
     id: fault_climate
     internal: true
+    update_interval: never
     lambda: 'return (id(gv_flt)&1);'
   - platform: template
     id: fault_aux
     internal: true
+    update_interval: never
     lambda: 'return (id(gv_flt)&6);'
   - platform: template
     id: fault_rootzone
     internal: true
+    update_interval: never
     lambda: 'return (id(gv_flt)&8);'
   - platform: template
     id: fault_emg
     internal: true
+    update_interval: never
     lambda: 'return (id(gv_flt)&128);'
   - platform: template
     id: dem_hum
     internal: true
+    update_interval: never
     lambda: 'return (id(gv_dem)&1);'
   - platform: template
     id: dem_dehum
     internal: true
+    update_interval: never
     lambda: 'return (id(gv_dem)&2);'
   - platform: template
     id: dem_heater
     internal: true
+    update_interval: never
     lambda: 'return (id(gv_dem)&4);'
   - platform: template
     id: dem_mat
     internal: true
+    update_interval: never
     lambda: 'return (id(gv_dem)&8);'
   - platform: template
     id: dem_ac
     internal: true
+    update_interval: never
     lambda: 'return (id(gv_dem)&16);'
   - platform: template
     id: dem_clone_hum
     internal: true
+    update_interval: never
     lambda: 'return (id(gv_dem)&32);'
   # fan on/off state (the "N fans active" count on Pulse)
   - platform: template
     id: fan_out_on
     internal: true
+    update_interval: never
     lambda: 'return (id(gv_fan_out)>0);'
   - platform: template
     id: fan_recirc_on
     internal: true
+    update_interval: never
     lambda: 'return (id(gv_fan_recirc)>0);'
   - platform: template
     id: fan_int_main_on
     internal: true
+    update_interval: never
     lambda: 'return (id(gv_fan_imain)>0);'
   - platform: template
     id: fan_int_clone_on
     internal: true
+    update_interval: never
     lambda: 'return (id(gv_fan_iclone)>0);'
   - platform: template
     id: st_full_auto
     internal: true
+    update_interval: never
     lambda: 'return (id(gv_mode)&1);'
   - platform: template
     id: st_takeover
     internal: true
+    update_interval: never
     lambda: 'return (id(gv_mode)&4);'
   - platform: template
     id: st_auto_photo
     internal: true
+    update_interval: never
     lambda: 'return (id(gv_mode)&8);'
   - platform: template
     id: st_light_hold
     internal: true
+    update_interval: never
     lambda: 'return (id(gv_mode)&16);'
   - platform: template
     id: st_hum_routing
     internal: true
+    update_interval: never
     lambda: 'return (id(gv_coord)&1);'
   - platform: template
     id: st_destrat
     internal: true
+    update_interval: never
     lambda: 'return (id(gv_coord)&2);'
 
 text_sensor:
   - platform: template
     id: sel_stage
     internal: true
-    update_interval: 10s
+    update_interval: never
     lambda: |-
         const char* o[]={"Germination","Seedling","Early Vegetative","Vegetative","Late (Push) Vegetative","Early Flowering","Flowering","Late Flowering","Final 48-72h Flowering","Dry Mode","Off"}; int i=id(gv_stage); return std::string(i>=0&&i<11?o[i]:"--");
   # pot plant-name labels (hub relays via 0xD4 from pot HA entities)
   - platform: template
     id: p1_plant
     internal: true
-    update_interval: 10s
+    update_interval: never
     lambda: 'return id(gv_plant1);'
   - platform: template
     id: p2_plant
     internal: true
-    update_interval: 10s
+    update_interval: never
     lambda: 'return id(gv_plant2);'
   - platform: template
     id: p3_plant
     internal: true
-    update_interval: 10s
+    update_interval: never
     lambda: 'return id(gv_plant3);'
   - platform: template
     id: p4_plant
     internal: true
-    update_interval: 10s
+    update_interval: never
     lambda: 'return id(gv_plant4);'
   - platform: template
     id: sel_strategy
     internal: true
-    update_interval: 10s
+    update_interval: never
     lambda: |-
         const char* o[]={"VPD","Temperature","Humidity"}; int i=id(gv_strat); return std::string(i>=0&&i<3?o[i]:"--");
   - platform: template
     id: sel_clone_mode
     internal: true
-    update_interval: 10s
+    update_interval: never
     lambda: |-
         const char* o[]={"Follow 4x8","Clones & Seedlings","Mother","Custom","Off"}; int i=id(gv_cmode); return std::string(i>=0&&i<5?o[i]:"--");
   - platform: template
     id: sel_priority
     internal: true
-    update_interval: 10s
+    update_interval: never
     lambda: |-
         return std::string(id(gv_prio)?"4x8 Main":"2x4 Clone");
   - platform: template
     id: sel_clone_photo
     internal: true
-    update_interval: 10s
+    update_interval: never
     lambda: |-
         return std::string((id(gv_coord)&64)?"Follow 4x8":"Independent");
   # WiFi identity for the Connections screen
@@ -2224,7 +2248,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 29
-                              val: !lambda 'int v = isnan(id(sf_target).state) ? 0 : (int) id(sf_target).state; v -= 5; if (v < 0) v = 0; return (int)lroundf((float)v * 1);'
+                              val: !lambda 'int v = (isnan(id(gv_cfg)[10]) ? 0 : (int) id(gv_cfg)[10]); v -= 5; if (v < 0) v = 0; return (int)lroundf((float)v * 1);'
                     - button:
                         align: RIGHT_MID
                         x: -6
@@ -2241,7 +2265,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 29
-                              val: !lambda 'int v = isnan(id(sf_target).state) ? 0 : (int) id(sf_target).state; v += 5; if (v > 100) v = 100; return (int)lroundf((float)v * 1);'
+                              val: !lambda 'int v = (isnan(id(gv_cfg)[10]) ? 0 : (int) id(gv_cfg)[10]); v += 5; if (v > 100) v = 100; return (int)lroundf((float)v * 1);'
               - obj:
                   id: cdev_int
                   x: 8
@@ -2268,7 +2292,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 28
-                              val: !lambda 'int v = isnan(id(fan_int_clone_pct).state) ? 0 : (int) id(fan_int_clone_pct).state; v -= 10; if (v < 0) v = 0; return (int)lroundf((float)v * 1);'
+                              val: !lambda 'int v = id(gv_fan_iclone); v -= 10; if (v < 0) v = 0; return (int)lroundf((float)v * 1);'
                     - button:
                         align: RIGHT_MID
                         x: -6
@@ -2285,7 +2309,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 28
-                              val: !lambda 'int v = isnan(id(fan_int_clone_pct).state) ? 0 : (int) id(fan_int_clone_pct).state; v += 10; if (v > 100) v = 100; return (int)lroundf((float)v * 1);'
+                              val: !lambda 'int v = id(gv_fan_iclone); v += 10; if (v > 100) v = 100; return (int)lroundf((float)v * 1);'
               - button:
                   id: cdev_hum
                   x: 8
@@ -2301,7 +2325,7 @@ lvgl:
                     - script.execute:
                         id: open_gate
                         op: 17
-                        val: !lambda 'return id(dem_clone_hum).state ? 0 : 1;'
+                        val: !lambda 'return (id(gv_dem)&32) ? 0 : 1;'
                         kind: 1
               - button:
                   id: cdev_mat
@@ -2318,7 +2342,7 @@ lvgl:
                     - script.execute:
                         id: open_gate
                         op: 15
-                        val: !lambda 'return id(dem_mat).state ? 0 : 1;'
+                        val: !lambda 'return (id(gv_dem)&8) ? 0 : 1;'
                         kind: 1
 
           # ------------------------------ MAIN ---------------------------
@@ -2404,7 +2428,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 25
-                              val: !lambda 'int v = isnan(id(fan_out_pct).state) ? 0 : (int) id(fan_out_pct).state; v -= 10; if (v < 0) v = 0; return (int)lroundf((float)v * 1);'
+                              val: !lambda 'int v = id(gv_fan_out); v -= 10; if (v < 0) v = 0; return (int)lroundf((float)v * 1);'
                     - button:
                         align: RIGHT_MID
                         x: -6
@@ -2421,7 +2445,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 25
-                              val: !lambda 'int v = isnan(id(fan_out_pct).state) ? 0 : (int) id(fan_out_pct).state; v += 10; if (v > 100) v = 100; return (int)lroundf((float)v * 1);'
+                              val: !lambda 'int v = id(gv_fan_out); v += 10; if (v > 100) v = 100; return (int)lroundf((float)v * 1);'
               - obj:
                   id: mdev_room
                   x: 8
@@ -2448,7 +2472,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 26
-                              val: !lambda 'int v = isnan(id(fan_recirc_pct).state) ? 0 : (int) id(fan_recirc_pct).state; v -= 10; if (v < 0) v = 0; return (int)lroundf((float)v * 1);'
+                              val: !lambda 'int v = id(gv_fan_recirc); v -= 10; if (v < 0) v = 0; return (int)lroundf((float)v * 1);'
                     - button:
                         align: RIGHT_MID
                         x: -6
@@ -2465,7 +2489,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 26
-                              val: !lambda 'int v = isnan(id(fan_recirc_pct).state) ? 0 : (int) id(fan_recirc_pct).state; v += 10; if (v > 100) v = 100; return (int)lroundf((float)v * 1);'
+                              val: !lambda 'int v = id(gv_fan_recirc); v += 10; if (v > 100) v = 100; return (int)lroundf((float)v * 1);'
               - obj:
                   id: mdev_intm
                   x: 8
@@ -2492,7 +2516,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 27
-                              val: !lambda 'int v = isnan(id(fan_int_main_pct).state) ? 0 : (int) id(fan_int_main_pct).state; v -= 10; if (v < 0) v = 0; return (int)lroundf((float)v * 1);'
+                              val: !lambda 'int v = id(gv_fan_imain); v -= 10; if (v < 0) v = 0; return (int)lroundf((float)v * 1);'
                     - button:
                         align: RIGHT_MID
                         x: -6
@@ -2509,7 +2533,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 27
-                              val: !lambda 'int v = isnan(id(fan_int_main_pct).state) ? 0 : (int) id(fan_int_main_pct).state; v += 10; if (v > 100) v = 100; return (int)lroundf((float)v * 1);'
+                              val: !lambda 'int v = id(gv_fan_imain); v += 10; if (v > 100) v = 100; return (int)lroundf((float)v * 1);'
               - button:
                   id: mdev_heat
                   x: 8
@@ -2525,7 +2549,7 @@ lvgl:
                     - script.execute:
                         id: open_gate
                         op: 14
-                        val: !lambda 'return id(dem_heater).state ? 0 : 1;'
+                        val: !lambda 'return (id(gv_dem)&4) ? 0 : 1;'
                         kind: 1
               - button:
                   id: mdev_ac
@@ -2542,7 +2566,7 @@ lvgl:
                     - script.execute:
                         id: open_gate
                         op: 16
-                        val: !lambda 'return id(dem_ac).state ? 0 : 1;'
+                        val: !lambda 'return (id(gv_dem)&16) ? 0 : 1;'
                         kind: 1
               - button:
                   id: mdev_hum
@@ -2559,7 +2583,7 @@ lvgl:
                     - script.execute:
                         id: open_gate
                         op: 12
-                        val: !lambda 'return id(dem_hum).state ? 0 : 1;'
+                        val: !lambda 'return (id(gv_dem)&1) ? 0 : 1;'
                         kind: 1
               - button:
                   id: mdev_dehum
@@ -2576,7 +2600,7 @@ lvgl:
                     - script.execute:
                         id: open_gate
                         op: 13
-                        val: !lambda 'return id(dem_dehum).state ? 0 : 1;'
+                        val: !lambda 'return (id(gv_dem)&2) ? 0 : 1;'
                         kind: 1
 
           # ------------------------------ SOIL ---------------------------
@@ -2990,7 +3014,7 @@ lvgl:
                     - label: {text: "\U000F0142", text_font: mdi_22, align: RIGHT_MID, x: -6, text_color: 0x5A6472}
                   on_click:
                     - lvgl.page.show: page_set_panel
-              - label: {text: "DSC-CONTROL v4.0.10  ·  ESP-NOW primary", text_font: f_small, text_color: 0x3A4550, pad_top: 8, pad_bottom: 8}
+              - label: {text: "DSC-CONTROL v4.0.11  ·  ESP-NOW primary", text_font: f_small, text_color: 0x3A4550, pad_top: 8, pad_bottom: 8}
     - id: page_set_modes
       scrollbar_mode: "OFF"
       bg_color: 0x0E1116
@@ -3058,7 +3082,7 @@ lvgl:
                     - script.execute:
                         id: open_gate
                         op: 5
-                        val: !lambda 'return id(st_takeover).state ? 0 : 1;'
+                        val: !lambda 'return (id(gv_mode)&4) ? 0 : 1;'
                         kind: 0
               - button:
                   id: btn_fullauto
@@ -3072,7 +3096,7 @@ lvgl:
                     - script.execute:
                         id: hub_cmd
                         op: 1
-                        val: !lambda 'return id(st_full_auto).state ? 0 : 1;'
+                        val: !lambda 'return (id(gv_mode)&1) ? 0 : 1;'
               - button:
                   id: btn_autophoto
                   width: 300
@@ -3085,7 +3109,7 @@ lvgl:
                     - script.execute:
                         id: hub_cmd
                         op: 4
-                        val: !lambda 'return id(st_auto_photo).state ? 0 : 1;'
+                        val: !lambda 'return (id(gv_mode)&8) ? 0 : 1;'
               - label: {text: "MASTER SWITCHES", text_font: f_small, text_color: 0x8A929C, pad_top: 6}
               - button:
                   id: sw_lighthold
@@ -3099,7 +3123,7 @@ lvgl:
                     - script.execute:
                         id: hub_cmd
                         op: 3
-                        val: !lambda 'return id(st_light_hold).state ? 0 : 1;'
+                        val: !lambda 'return (id(gv_mode)&16) ? 0 : 1;'
               - button:
                   id: sw_humroute
                   width: 300
@@ -3112,7 +3136,7 @@ lvgl:
                     - script.execute:
                         id: hub_cmd
                         op: 18
-                        val: !lambda 'return id(st_hum_routing).state ? 0 : 1;'
+                        val: !lambda 'return (id(gv_coord)&1) ? 0 : 1;'
               - button:
                   id: sw_destrat
                   width: 300
@@ -3125,7 +3149,7 @@ lvgl:
                     - script.execute:
                         id: hub_cmd
                         op: 19
-                        val: !lambda 'return id(st_destrat).state ? 0 : 1;'
+                        val: !lambda 'return (id(gv_coord)&2) ? 0 : 1;'
               - button:
                   id: sw_greenhb
                   width: 300
@@ -3325,7 +3349,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 30
-                              val: !lambda 'float v = isnan(id(t_main_temp).state) ? 15.0f : id(t_main_temp).state; v -= 0.5f; if (v < 15.0f) v = 15.0f; return (int)lroundf((float)v * 100);'
+                              val: !lambda 'float v = isnan(id(gv_cfg)[0]) ? 15.0f : id(gv_cfg)[0]; v -= 0.5f; if (v < 15.0f) v = 15.0f; return (int)lroundf((float)v * 100);'
                     - button:
                         align: RIGHT_MID
                         x: -6
@@ -3342,7 +3366,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 30
-                              val: !lambda 'float v = isnan(id(t_main_temp).state) ? 15.0f : id(t_main_temp).state; v += 0.5f; if (v > 32.0f) v = 32.0f; return (int)lroundf((float)v * 100);'
+                              val: !lambda 'float v = isnan(id(gv_cfg)[0]) ? 15.0f : id(gv_cfg)[0]; v += 0.5f; if (v > 32.0f) v = 32.0f; return (int)lroundf((float)v * 100);'
               - obj:
                   id: s_vmin
                   width: 300
@@ -3366,7 +3390,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 31
-                              val: !lambda 'float v = isnan(id(t_main_vpd_min).state) ? 0.4f : id(t_main_vpd_min).state; v -= 0.1f; if (v < 0.4f) v = 0.4f; return (int)lroundf((float)v * 100);'
+                              val: !lambda 'float v = isnan(id(gv_cfg)[1]) ? 0.4f : id(gv_cfg)[1]; v -= 0.1f; if (v < 0.4f) v = 0.4f; return (int)lroundf((float)v * 100);'
                     - button:
                         align: RIGHT_MID
                         x: -6
@@ -3383,7 +3407,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 31
-                              val: !lambda 'float v = isnan(id(t_main_vpd_min).state) ? 0.4f : id(t_main_vpd_min).state; v += 0.1f; if (v > 1.6f) v = 1.6f; return (int)lroundf((float)v * 100);'
+                              val: !lambda 'float v = isnan(id(gv_cfg)[1]) ? 0.4f : id(gv_cfg)[1]; v += 0.1f; if (v > 1.6f) v = 1.6f; return (int)lroundf((float)v * 100);'
               - obj:
                   id: s_vmax
                   width: 300
@@ -3407,7 +3431,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 32
-                              val: !lambda 'float v = isnan(id(t_main_vpd_max).state) ? 0.4f : id(t_main_vpd_max).state; v -= 0.1f; if (v < 0.4f) v = 0.4f; return (int)lroundf((float)v * 100);'
+                              val: !lambda 'float v = isnan(id(gv_cfg)[2]) ? 0.4f : id(gv_cfg)[2]; v -= 0.1f; if (v < 0.4f) v = 0.4f; return (int)lroundf((float)v * 100);'
                     - button:
                         align: RIGHT_MID
                         x: -6
@@ -3424,7 +3448,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 32
-                              val: !lambda 'float v = isnan(id(t_main_vpd_max).state) ? 0.4f : id(t_main_vpd_max).state; v += 0.1f; if (v > 1.8f) v = 1.8f; return (int)lroundf((float)v * 100);'
+                              val: !lambda 'float v = isnan(id(gv_cfg)[2]) ? 0.4f : id(gv_cfg)[2]; v += 0.1f; if (v > 1.8f) v = 1.8f; return (int)lroundf((float)v * 100);'
               - obj:
                   id: s_rmin
                   width: 300
@@ -3448,7 +3472,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 33
-                              val: !lambda 'float v = isnan(id(t_main_rh_min).state) ? 20 : id(t_main_rh_min).state; v -= 1; if (v < 20) v = 20; return (int)lroundf((float)v * 100);'
+                              val: !lambda 'float v = isnan(id(gv_cfg)[3]) ? 20 : id(gv_cfg)[3]; v -= 1; if (v < 20) v = 20; return (int)lroundf((float)v * 100);'
                     - button:
                         align: RIGHT_MID
                         x: -6
@@ -3465,7 +3489,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 33
-                              val: !lambda 'float v = isnan(id(t_main_rh_min).state) ? 20 : id(t_main_rh_min).state; v += 1; if (v > 90) v = 90; return (int)lroundf((float)v * 100);'
+                              val: !lambda 'float v = isnan(id(gv_cfg)[3]) ? 20 : id(gv_cfg)[3]; v += 1; if (v > 90) v = 90; return (int)lroundf((float)v * 100);'
               - obj:
                   id: s_rmax
                   width: 300
@@ -3489,7 +3513,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 34
-                              val: !lambda 'float v = isnan(id(t_main_rh_max).state) ? 20 : id(t_main_rh_max).state; v -= 1; if (v < 20) v = 20; return (int)lroundf((float)v * 100);'
+                              val: !lambda 'float v = isnan(id(gv_cfg)[4]) ? 20 : id(gv_cfg)[4]; v -= 1; if (v < 20) v = 20; return (int)lroundf((float)v * 100);'
                     - button:
                         align: RIGHT_MID
                         x: -6
@@ -3506,7 +3530,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 34
-                              val: !lambda 'float v = isnan(id(t_main_rh_max).state) ? 20 : id(t_main_rh_max).state; v += 1; if (v > 95) v = 95; return (int)lroundf((float)v * 100);'
+                              val: !lambda 'float v = isnan(id(gv_cfg)[4]) ? 20 : id(gv_cfg)[4]; v += 1; if (v > 95) v = 95; return (int)lroundf((float)v * 100);'
     - id: page_set_cloneclim
       scrollbar_mode: "OFF"
       bg_color: 0x0E1116
@@ -3580,7 +3604,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 37
-                              val: !lambda 'float v = isnan(id(t_clone_temp).state) ? 15.0f : id(t_clone_temp).state; v -= 0.5f; if (v < 15.0f) v = 15.0f; return (int)lroundf((float)v * 100);'
+                              val: !lambda 'float v = isnan(id(gv_cfg)[5]) ? 15.0f : id(gv_cfg)[5]; v -= 0.5f; if (v < 15.0f) v = 15.0f; return (int)lroundf((float)v * 100);'
                     - button:
                         align: RIGHT_MID
                         x: -6
@@ -3597,7 +3621,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 37
-                              val: !lambda 'float v = isnan(id(t_clone_temp).state) ? 15.0f : id(t_clone_temp).state; v += 0.5f; if (v > 32.0f) v = 32.0f; return (int)lroundf((float)v * 100);'
+                              val: !lambda 'float v = isnan(id(gv_cfg)[5]) ? 15.0f : id(gv_cfg)[5]; v += 0.5f; if (v > 32.0f) v = 32.0f; return (int)lroundf((float)v * 100);'
               - obj:
                   id: s_cvmin
                   width: 300
@@ -3621,7 +3645,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 38
-                              val: !lambda 'float v = isnan(id(t_clone_vpd_min).state) ? 0.2f : id(t_clone_vpd_min).state; v -= 0.1f; if (v < 0.2f) v = 0.2f; return (int)lroundf((float)v * 100);'
+                              val: !lambda 'float v = isnan(id(gv_cfg)[6]) ? 0.2f : id(gv_cfg)[6]; v -= 0.1f; if (v < 0.2f) v = 0.2f; return (int)lroundf((float)v * 100);'
                     - button:
                         align: RIGHT_MID
                         x: -6
@@ -3638,7 +3662,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 38
-                              val: !lambda 'float v = isnan(id(t_clone_vpd_min).state) ? 0.2f : id(t_clone_vpd_min).state; v += 0.1f; if (v > 1.6f) v = 1.6f; return (int)lroundf((float)v * 100);'
+                              val: !lambda 'float v = isnan(id(gv_cfg)[6]) ? 0.2f : id(gv_cfg)[6]; v += 0.1f; if (v > 1.6f) v = 1.6f; return (int)lroundf((float)v * 100);'
               - obj:
                   id: s_cvmax
                   width: 300
@@ -3662,7 +3686,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 39
-                              val: !lambda 'float v = isnan(id(t_clone_vpd_max).state) ? 0.2f : id(t_clone_vpd_max).state; v -= 0.1f; if (v < 0.2f) v = 0.2f; return (int)lroundf((float)v * 100);'
+                              val: !lambda 'float v = isnan(id(gv_cfg)[7]) ? 0.2f : id(gv_cfg)[7]; v -= 0.1f; if (v < 0.2f) v = 0.2f; return (int)lroundf((float)v * 100);'
                     - button:
                         align: RIGHT_MID
                         x: -6
@@ -3679,7 +3703,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 39
-                              val: !lambda 'float v = isnan(id(t_clone_vpd_max).state) ? 0.2f : id(t_clone_vpd_max).state; v += 0.1f; if (v > 1.8f) v = 1.8f; return (int)lroundf((float)v * 100);'
+                              val: !lambda 'float v = isnan(id(gv_cfg)[7]) ? 0.2f : id(gv_cfg)[7]; v += 0.1f; if (v > 1.8f) v = 1.8f; return (int)lroundf((float)v * 100);'
               - obj:
                   id: s_crmin
                   width: 300
@@ -3703,7 +3727,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 40
-                              val: !lambda 'float v = isnan(id(t_clone_rh_min).state) ? 20 : id(t_clone_rh_min).state; v -= 1; if (v < 20) v = 20; return (int)lroundf((float)v * 100);'
+                              val: !lambda 'float v = isnan(id(gv_cfg)[8]) ? 20 : id(gv_cfg)[8]; v -= 1; if (v < 20) v = 20; return (int)lroundf((float)v * 100);'
                     - button:
                         align: RIGHT_MID
                         x: -6
@@ -3720,7 +3744,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 40
-                              val: !lambda 'float v = isnan(id(t_clone_rh_min).state) ? 20 : id(t_clone_rh_min).state; v += 1; if (v > 90) v = 90; return (int)lroundf((float)v * 100);'
+                              val: !lambda 'float v = isnan(id(gv_cfg)[8]) ? 20 : id(gv_cfg)[8]; v += 1; if (v > 90) v = 90; return (int)lroundf((float)v * 100);'
               - obj:
                   id: s_crmax
                   width: 300
@@ -3744,7 +3768,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 41
-                              val: !lambda 'float v = isnan(id(t_clone_rh_max).state) ? 20 : id(t_clone_rh_max).state; v -= 1; if (v < 20) v = 20; return (int)lroundf((float)v * 100);'
+                              val: !lambda 'float v = isnan(id(gv_cfg)[9]) ? 20 : id(gv_cfg)[9]; v -= 1; if (v < 20) v = 20; return (int)lroundf((float)v * 100);'
                     - button:
                         align: RIGHT_MID
                         x: -6
@@ -3761,7 +3785,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 41
-                              val: !lambda 'float v = isnan(id(t_clone_rh_max).state) ? 20 : id(t_clone_rh_max).state; v += 1; if (v > 95) v = 95; return (int)lroundf((float)v * 100);'
+                              val: !lambda 'float v = isnan(id(gv_cfg)[9]) ? 20 : id(gv_cfg)[9]; v += 1; if (v > 95) v = 95; return (int)lroundf((float)v * 100);'
     - id: page_set_light
       scrollbar_mode: "OFF"
       bg_color: 0x0E1116
@@ -3835,7 +3859,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 29
-                              val: !lambda 'float v = isnan(id(sf_target).state) ? 0 : id(sf_target).state; v -= 5; if (v < 0) v = 0; return (int)lroundf((float)v * 1);'
+                              val: !lambda 'float v = isnan(id(gv_cfg)[10]) ? 0 : id(gv_cfg)[10]; v -= 5; if (v < 0) v = 0; return (int)lroundf((float)v * 1);'
                     - button:
                         align: RIGHT_MID
                         x: -6
@@ -3852,7 +3876,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 29
-                              val: !lambda 'float v = isnan(id(sf_target).state) ? 0 : id(sf_target).state; v += 5; if (v > 100) v = 100; return (int)lroundf((float)v * 1);'
+                              val: !lambda 'float v = isnan(id(gv_cfg)[10]) ? 0 : id(gv_cfg)[10]; v += 5; if (v > 100) v = 100; return (int)lroundf((float)v * 1);'
               - obj:
                   id: s_ramp
                   width: 300
@@ -3876,7 +3900,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 43
-                              val: !lambda 'float v = isnan(id(n_ramp).state) ? 0 : id(n_ramp).state; v -= 1; if (v < 0) v = 0; return (int)lroundf((float)v * 1);'
+                              val: !lambda 'float v = isnan(id(gv_cfg)[14]) ? 0 : id(gv_cfg)[14]; v -= 1; if (v < 0) v = 0; return (int)lroundf((float)v * 1);'
                     - button:
                         align: RIGHT_MID
                         x: -6
@@ -3893,7 +3917,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 43
-                              val: !lambda 'float v = isnan(id(n_ramp).state) ? 0 : id(n_ramp).state; v += 1; if (v > 50) v = 50; return (int)lroundf((float)v * 1);'
+                              val: !lambda 'float v = isnan(id(gv_cfg)[14]) ? 0 : id(gv_cfg)[14]; v += 1; if (v > 50) v = 50; return (int)lroundf((float)v * 1);'
               - obj:
                   id: s_sunrise
                   width: 300
@@ -3917,7 +3941,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 35
-                              val: !lambda 'float v = isnan(id(n_sunrise).state) ? 0 : id(n_sunrise).state; v -= 5; if (v < 0) v = 0; return (int)lroundf((float)v * 1);'
+                              val: !lambda 'float v = isnan(id(gv_cfg)[11]) ? 0 : id(gv_cfg)[11]; v -= 5; if (v < 0) v = 0; return (int)lroundf((float)v * 1);'
                     - button:
                         align: RIGHT_MID
                         x: -6
@@ -3934,7 +3958,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 35
-                              val: !lambda 'float v = isnan(id(n_sunrise).state) ? 0 : id(n_sunrise).state; v += 5; if (v > 120) v = 120; return (int)lroundf((float)v * 1);'
+                              val: !lambda 'float v = isnan(id(gv_cfg)[11]) ? 0 : id(gv_cfg)[11]; v += 5; if (v > 120) v = 120; return (int)lroundf((float)v * 1);'
               - obj:
                   id: s_sunset
                   width: 300
@@ -3958,7 +3982,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 36
-                              val: !lambda 'float v = isnan(id(n_sunset).state) ? 0 : id(n_sunset).state; v -= 5; if (v < 0) v = 0; return (int)lroundf((float)v * 1);'
+                              val: !lambda 'float v = isnan(id(gv_cfg)[12]) ? 0 : id(gv_cfg)[12]; v -= 5; if (v < 0) v = 0; return (int)lroundf((float)v * 1);'
                     - button:
                         align: RIGHT_MID
                         x: -6
@@ -3975,7 +3999,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 36
-                              val: !lambda 'float v = isnan(id(n_sunset).state) ? 0 : id(n_sunset).state; v += 5; if (v > 120) v = 120; return (int)lroundf((float)v * 1);'
+                              val: !lambda 'float v = isnan(id(gv_cfg)[12]) ? 0 : id(gv_cfg)[12]; v += 5; if (v > 120) v = 120; return (int)lroundf((float)v * 1);'
               - obj:
                   id: s_clh
                   width: 300
@@ -3999,7 +4023,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 42
-                              val: !lambda 'float v = isnan(id(n_clh).state) ? 0 : id(n_clh).state; v -= 1; if (v < 0) v = 0; return (int)lroundf((float)v * 1);'
+                              val: !lambda 'float v = isnan(id(gv_cfg)[13]) ? 0 : id(gv_cfg)[13]; v -= 1; if (v < 0) v = 0; return (int)lroundf((float)v * 1);'
                     - button:
                         align: RIGHT_MID
                         x: -6
@@ -4016,7 +4040,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 42
-                              val: !lambda 'float v = isnan(id(n_clh).state) ? 0 : id(n_clh).state; v += 1; if (v > 24) v = 24; return (int)lroundf((float)v * 1);'
+                              val: !lambda 'float v = isnan(id(gv_cfg)[13]) ? 0 : id(gv_cfg)[13]; v += 1; if (v > 24) v = 24; return (int)lroundf((float)v * 1);'
     - id: page_set_mat
       scrollbar_mode: "OFF"
       bg_color: 0x0E1116
@@ -4090,7 +4114,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 48
-                              val: !lambda 'float v = isnan(id(n_rzlo).state) ? 12.0f : id(n_rzlo).state; v -= 0.5f; if (v < 12.0f) v = 12.0f; return (int)lroundf((float)v * 100);'
+                              val: !lambda 'float v = isnan(id(gv_cfg)[19]) ? 12.0f : id(gv_cfg)[19]; v -= 0.5f; if (v < 12.0f) v = 12.0f; return (int)lroundf((float)v * 100);'
                     - button:
                         align: RIGHT_MID
                         x: -6
@@ -4107,7 +4131,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 48
-                              val: !lambda 'float v = isnan(id(n_rzlo).state) ? 12.0f : id(n_rzlo).state; v += 0.5f; if (v > 26.0f) v = 26.0f; return (int)lroundf((float)v * 100);'
+                              val: !lambda 'float v = isnan(id(gv_cfg)[19]) ? 12.0f : id(gv_cfg)[19]; v += 0.5f; if (v > 26.0f) v = 26.0f; return (int)lroundf((float)v * 100);'
               - obj:
                   id: s_rzhi
                   width: 300
@@ -4131,7 +4155,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 49
-                              val: !lambda 'float v = isnan(id(n_rzhi).state) ? 14.0f : id(n_rzhi).state; v -= 0.5f; if (v < 14.0f) v = 14.0f; return (int)lroundf((float)v * 100);'
+                              val: !lambda 'float v = isnan(id(gv_cfg)[20]) ? 14.0f : id(gv_cfg)[20]; v -= 0.5f; if (v < 14.0f) v = 14.0f; return (int)lroundf((float)v * 100);'
                     - button:
                         align: RIGHT_MID
                         x: -6
@@ -4148,7 +4172,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 49
-                              val: !lambda 'float v = isnan(id(n_rzhi).state) ? 14.0f : id(n_rzhi).state; v += 0.5f; if (v > 28.0f) v = 28.0f; return (int)lroundf((float)v * 100);'
+                              val: !lambda 'float v = isnan(id(gv_cfg)[20]) ? 14.0f : id(gv_cfg)[20]; v += 0.5f; if (v > 28.0f) v = 28.0f; return (int)lroundf((float)v * 100);'
               - obj:
                   id: s_matoff
                   width: 300
@@ -4172,7 +4196,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 50
-                              val: !lambda 'float v = isnan(id(n_matoff).state) ? 0 : id(n_matoff).state; v -= 60; if (v < 0) v = 0; return (int)lroundf((float)v * 1);'
+                              val: !lambda 'float v = isnan(id(gv_cfg)[21]) ? 0 : id(gv_cfg)[21]; v -= 60; if (v < 0) v = 0; return (int)lroundf((float)v * 1);'
                     - button:
                         align: RIGHT_MID
                         x: -6
@@ -4189,7 +4213,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 50
-                              val: !lambda 'float v = isnan(id(n_matoff).state) ? 0 : id(n_matoff).state; v += 60; if (v > 1800) v = 1800; return (int)lroundf((float)v * 1);'
+                              val: !lambda 'float v = isnan(id(gv_cfg)[21]) ? 0 : id(gv_cfg)[21]; v += 60; if (v > 1800) v = 1800; return (int)lroundf((float)v * 1);'
     - id: page_set_timers
       scrollbar_mode: "OFF"
       bg_color: 0x0E1116
@@ -4263,7 +4287,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 44
-                              val: !lambda 'float v = isnan(id(n_chh).state) ? 2.0f : id(n_chh).state; v -= 0.5f; if (v < 2.0f) v = 2.0f; return (int)lroundf((float)v * 100);'
+                              val: !lambda 'float v = isnan(id(gv_cfg)[15]) ? 2.0f : id(gv_cfg)[15]; v -= 0.5f; if (v < 2.0f) v = 2.0f; return (int)lroundf((float)v * 100);'
                     - button:
                         align: RIGHT_MID
                         x: -6
@@ -4280,7 +4304,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 44
-                              val: !lambda 'float v = isnan(id(n_chh).state) ? 2.0f : id(n_chh).state; v += 0.5f; if (v > 15.0f) v = 15.0f; return (int)lroundf((float)v * 100);'
+                              val: !lambda 'float v = isnan(id(gv_cfg)[15]) ? 2.0f : id(gv_cfg)[15]; v += 0.5f; if (v > 15.0f) v = 15.0f; return (int)lroundf((float)v * 100);'
               - obj:
                   id: s_chmo
                   width: 300
@@ -4304,7 +4328,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 45
-                              val: !lambda 'float v = isnan(id(n_chmo).state) ? 0 : id(n_chmo).state; v -= 30; if (v < 0) v = 0; return (int)lroundf((float)v * 1);'
+                              val: !lambda 'float v = isnan(id(gv_cfg)[16]) ? 0 : id(gv_cfg)[16]; v -= 30; if (v < 0) v = 0; return (int)lroundf((float)v * 1);'
                     - button:
                         align: RIGHT_MID
                         x: -6
@@ -4321,7 +4345,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 45
-                              val: !lambda 'float v = isnan(id(n_chmo).state) ? 0 : id(n_chmo).state; v += 30; if (v > 900) v = 900; return (int)lroundf((float)v * 1);'
+                              val: !lambda 'float v = isnan(id(gv_cfg)[16]) ? 0 : id(gv_cfg)[16]; v += 30; if (v > 900) v = 900; return (int)lroundf((float)v * 1);'
               - obj:
                   id: s_hmo
                   width: 300
@@ -4345,7 +4369,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 46
-                              val: !lambda 'float v = isnan(id(n_hmo).state) ? 0 : id(n_hmo).state; v -= 30; if (v < 0) v = 0; return (int)lroundf((float)v * 1);'
+                              val: !lambda 'float v = isnan(id(gv_cfg)[17]) ? 0 : id(gv_cfg)[17]; v -= 30; if (v < 0) v = 0; return (int)lroundf((float)v * 1);'
                     - button:
                         align: RIGHT_MID
                         x: -6
@@ -4362,7 +4386,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 46
-                              val: !lambda 'float v = isnan(id(n_hmo).state) ? 0 : id(n_hmo).state; v += 30; if (v > 900) v = 900; return (int)lroundf((float)v * 1);'
+                              val: !lambda 'float v = isnan(id(gv_cfg)[17]) ? 0 : id(gv_cfg)[17]; v += 30; if (v > 900) v = 900; return (int)lroundf((float)v * 1);'
               - obj:
                   id: s_htmo
                   width: 300
@@ -4386,7 +4410,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 47
-                              val: !lambda 'float v = isnan(id(n_htmo).state) ? 0 : id(n_htmo).state; v -= 30; if (v < 0) v = 0; return (int)lroundf((float)v * 1);'
+                              val: !lambda 'float v = isnan(id(gv_cfg)[18]) ? 0 : id(gv_cfg)[18]; v -= 30; if (v < 0) v = 0; return (int)lroundf((float)v * 1);'
                     - button:
                         align: RIGHT_MID
                         x: -6
@@ -4403,7 +4427,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 47
-                              val: !lambda 'float v = isnan(id(n_htmo).state) ? 0 : id(n_htmo).state; v += 30; if (v > 900) v = 900; return (int)lroundf((float)v * 1);'
+                              val: !lambda 'float v = isnan(id(gv_cfg)[18]) ? 0 : id(gv_cfg)[18]; v += 30; if (v > 900) v = 900; return (int)lroundf((float)v * 1);'
     - id: page_set_destrat
       scrollbar_mode: "OFF"
       bg_color: 0x0E1116
@@ -4477,7 +4501,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 51
-                              val: !lambda 'float v = isnan(id(n_dsp).state) ? 30 : id(n_dsp).state; v -= 30; if (v < 30) v = 30; return (int)lroundf((float)v * 1);'
+                              val: !lambda 'float v = isnan(id(gv_cfg)[22]) ? 30 : id(gv_cfg)[22]; v -= 30; if (v < 30) v = 30; return (int)lroundf((float)v * 1);'
                     - button:
                         align: RIGHT_MID
                         x: -6
@@ -4494,7 +4518,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 51
-                              val: !lambda 'float v = isnan(id(n_dsp).state) ? 30 : id(n_dsp).state; v += 30; if (v > 1800) v = 1800; return (int)lroundf((float)v * 1);'
+                              val: !lambda 'float v = isnan(id(gv_cfg)[22]) ? 30 : id(gv_cfg)[22]; v += 30; if (v > 1800) v = 1800; return (int)lroundf((float)v * 1);'
               - obj:
                   id: s_dsl
                   width: 300
@@ -4518,7 +4542,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 52
-                              val: !lambda 'float v = isnan(id(n_dsl).state) ? 5 : id(n_dsl).state; v -= 5; if (v < 5) v = 5; return (int)lroundf((float)v * 1);'
+                              val: !lambda 'float v = isnan(id(gv_cfg)[23]) ? 5 : id(gv_cfg)[23]; v -= 5; if (v < 5) v = 5; return (int)lroundf((float)v * 1);'
                     - button:
                         align: RIGHT_MID
                         x: -6
@@ -4535,7 +4559,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 52
-                              val: !lambda 'float v = isnan(id(n_dsl).state) ? 5 : id(n_dsl).state; v += 5; if (v > 120) v = 120; return (int)lroundf((float)v * 1);'
+                              val: !lambda 'float v = isnan(id(gv_cfg)[23]) ? 5 : id(gv_cfg)[23]; v += 5; if (v > 120) v = 120; return (int)lroundf((float)v * 1);'
               - obj:
                   id: s_dslv
                   width: 300
@@ -4559,7 +4583,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 53
-                              val: !lambda 'float v = isnan(id(n_dslv).state) ? 25 : id(n_dslv).state; v -= 5; if (v < 25) v = 25; return (int)lroundf((float)v * 1);'
+                              val: !lambda 'float v = isnan(id(gv_cfg)[24]) ? 25 : id(gv_cfg)[24]; v -= 5; if (v < 25) v = 25; return (int)lroundf((float)v * 1);'
                     - button:
                         align: RIGHT_MID
                         x: -6
@@ -4576,7 +4600,7 @@ lvgl:
                           - script.execute:
                               id: hub_cmd
                               op: 53
-                              val: !lambda 'float v = isnan(id(n_dslv).state) ? 25 : id(n_dslv).state; v += 5; if (v > 100) v = 100; return (int)lroundf((float)v * 1);'
+                              val: !lambda 'float v = isnan(id(gv_cfg)[24]) ? 25 : id(gv_cfg)[24]; v += 5; if (v > 100) v = 100; return (int)lroundf((float)v * 1);'
     - id: page_set_panel
       scrollbar_mode: "OFF"
       bg_color: 0x0E1116
@@ -4933,22 +4957,28 @@ script:
       - lambda: |-
           id(edit_target) = target;
           const char* title; std::string opts; std::string cur;
+          static const char* STAGE_N[]={"Germination","Seedling","Early Vegetative","Vegetative","Late (Push) Vegetative","Early Flowering","Flowering","Late Flowering","Final 48-72h Flowering","Dry Mode","Off"};
+          static const char* STRAT_N[]={"VPD","Temperature","Humidity"};
+          static const char* CMODE_N[]={"Follow 4x8","Clones & Seedlings","Mother","Custom","Off"};
+          auto pick = [](int i, const char* const* o, int n)->std::string {
+            return std::string(i>=0&&i<n?o[i]:"--");
+          };
           switch (target) {
             case 0: title = "Grow Stage";
               opts = "Germination\nSeedling\nEarly Vegetative\nVegetative\nLate (Push) Vegetative\nEarly Flowering\nFlowering\nLate Flowering\nFinal 48-72h Flowering\nDry Mode\nOff";
-              cur = id(sel_stage).state; break;
+              cur = pick(id(gv_stage), STAGE_N, 11); break;
             case 1: title = "Control Strategy";
               opts = "VPD\nTemperature\nHumidity";
-              cur = id(sel_strategy).state; break;
+              cur = pick(id(gv_strat), STRAT_N, 3); break;
             case 2: title = "Clone Mode";
               opts = "Follow 4x8\nClones & Seedlings\nMother\nCustom\nOff";
-              cur = id(sel_clone_mode).state; break;
+              cur = pick(id(gv_cmode), CMODE_N, 5); break;
             case 3: title = "Priority Tent";
               opts = "4x8 Main\n2x4 Clone";
-              cur = id(sel_priority).state; break;
+              cur = std::string(id(gv_prio)?"4x8 Main":"2x4 Clone"); break;
             default: title = "Clone Photoperiod";
               opts = "Follow 4x8\nIndependent";
-              cur = id(sel_clone_photo).state; break;
+              cur = std::string((id(gv_coord)&64)?"Follow 4x8":"Independent"); break;
           }
           lv_label_set_text(id(ed_title), title);
           lv_roller_set_options(id(ed_roller)->obj, opts.c_str(), LV_ROLLER_MODE_NORMAL);
@@ -4979,7 +5009,7 @@ script:
           val: !lambda 'return (int) lv_roller_get_selected(id(ed_roller)->obj);'
       - lambda: 'lv_obj_add_flag(id(editor), LV_OBJ_FLAG_HIDDEN);'
 
-  # -------- the refresh engine (v4.0.10) --------
+  # -------- the refresh engine (v4.0.11) --------
   # Page-gated: only touch widgets on the visible tab/overlay. Sleep/lock
   # short-circuit after LED/backlight/clock. Cadence is 5 s (see interval).
   # Avoid std::string in the hot path — A8 glyph churn is what WDT'd 4.0.9.
@@ -5035,19 +5065,63 @@ script:
           const bool soil_det = id(ui_soil_detail);
           const bool interactive = !sleeping && !locked;
 
-          bool cfollow = id(sel_clone_mode).state == "Follow 4x8";
-          float c_rmin = cfollow ? id(t_main_rh_min).state  : id(t_clone_rh_min).state;
-          float c_rmax = cfollow ? id(t_main_rh_max).state  : id(t_clone_rh_max).state;
-          float c_vmin = cfollow ? id(t_main_vpd_min).state : id(t_clone_vpd_min).state;
-          float c_vmax = cfollow ? id(t_main_vpd_max).state : id(t_clone_vpd_max).state;
-          float c_tt   = cfollow ? id(t_main_temp).state    : id(t_clone_temp).state;
-          float m_rmin = id(t_main_rh_min).state,  m_rmax = id(t_main_rh_max).state;
-          float m_vmin = id(t_main_vpd_min).state, m_vmax = id(t_main_vpd_max).state;
-          float m_tt   = id(t_main_temp).state;
+          // v4.0.11 — read ESP-NOW globals directly (template mirrors parked).
+          const float *cfg = id(gv_cfg);
+          const float *soil = id(gv_soil);
+          const float *cd = id(gv_cd);
+          const int dem = id(gv_dem), mode = id(gv_mode), flt = id(gv_flt), coord = id(gv_coord);
+          const int stage = id(gv_stage), strat = id(gv_strat), cmode = id(gv_cmode), prio = id(gv_prio);
+          bool cfollow = (cmode == 0);
+          float c_rmin = cfollow ? cfg[3] : cfg[8];
+          float c_rmax = cfollow ? cfg[4] : cfg[9];
+          float c_vmin = cfollow ? cfg[1] : cfg[6];
+          float c_vmax = cfollow ? cfg[2] : cfg[7];
+          float c_tt   = cfollow ? cfg[0] : cfg[5];
+          float m_rmin = cfg[3], m_rmax = cfg[4];
+          float m_vmin = cfg[1], m_vmax = cfg[2];
+          float m_tt   = cfg[0];
+          float clone_temp = id(gv_clone_t), clone_rh = id(gv_clone_rh), clone_vpd = id(gv_clone_vpd);
+          float main_temp = id(gv_tent_t), main_rh = id(gv_tent_rh), main_vpd = id(gv_tent_vpd);
+          float room_temp = id(gv_room_t), room_rh = id(gv_room_rh);
+          float co2_ppm = id(gv_co2);
+          float fan_out_pct = (float) id(gv_fan_out);
+          float fan_recirc_pct = (float) id(gv_fan_recirc);
+          float fan_int_main_pct = (float) id(gv_fan_imain);
+          float fan_int_clone_pct = (float) id(gv_fan_iclone);
+          float sf_target = cfg[10];
+          float n_ramp = cfg[14], n_sunrise = cfg[11], n_sunset = cfg[12], n_clh = cfg[13];
+          float n_rzlo = cfg[19], n_rzhi = cfg[20], n_matoff = cfg[21];
+          float n_chh = cfg[15], n_chmo = cfg[16], n_hmo = cfg[17], n_htmo = cfg[18];
+          float n_dsp = cfg[22], n_dsl = cfg[23], n_dslv = cfg[24];
+          bool dem_hum = dem & 1, dem_dehum = dem & 2, dem_heater = dem & 4;
+          bool dem_mat = dem & 8, dem_ac = dem & 16, dem_clone_hum = dem & 32;
+          bool lights_main = flt & 32;
+          bool fault_emg = flt & 128, fault_climate = flt & 1;
+          bool fault_rootzone = flt & 8, fault_aux = flt & 6;
+          bool fan_out_on = id(gv_fan_out) > 0, fan_recirc_on = id(gv_fan_recirc) > 0;
+          bool fan_int_main_on = id(gv_fan_imain) > 0, fan_int_clone_on = id(gv_fan_iclone) > 0;
+          bool st_full_auto = mode & 1, st_takeover = mode & 4, st_auto_photo = mode & 8;
+          bool st_light_hold = mode & 16, st_hum_routing = coord & 1, st_destrat = coord & 2;
+          static const char* STAGE_N[] = {"Germination","Seedling","Early Vegetative","Vegetative","Late (Push) Vegetative","Early Flowering","Flowering","Late Flowering","Final 48-72h Flowering","Dry Mode","Off"};
+          static const char* STRAT_N[] = {"VPD","Temperature","Humidity"};
+          static const char* CMODE_N[] = {"Follow 4x8","Clones & Seedlings","Mother","Custom","Off"};
+          const char* sel_stage = (stage>=0&&stage<11)?STAGE_N[stage]:"--";
+          const char* sel_strategy = (strat>=0&&strat<3)?STRAT_N[strat]:"--";
+          const char* sel_clone_mode = (cmode>=0&&cmode<5)?CMODE_N[cmode]:"--";
+          const char* sel_priority = prio ? "4x8 Main" : "2x4 Clone";
+          const char* sel_clone_photo = (coord&64) ? "Follow 4x8" : "Independent";
+          const char* p1_plant = id(gv_plant1).c_str();
+          const char* p2_plant = id(gv_plant2).c_str();
+          const char* p3_plant = id(gv_plant3).c_str();
+          const char* p4_plant = id(gv_plant4).c_str();
+          float p1_moist=soil[1], p1_temp=soil[0], p1_ec=soil[2], p1_ph=soil[3], p1_n=soil[4], p1_p=soil[5], p1_k=soil[6];
+          float p2_moist=soil[8], p2_temp=soil[7], p2_ec=soil[9], p2_ph=soil[10], p2_n=soil[11], p2_p=soil[12], p2_k=soil[13];
+          float p3_moist=soil[15], p3_temp=soil[14], p3_ec=soil[16], p3_ph=soil[17], p3_n=soil[18], p3_p=soil[19], p3_k=soil[20];
+          float p4_moist=soil[22], p4_temp=soil[21], p4_ec=soil[23], p4_ph=soil[24], p4_n=soil[25], p4_p=soil[26], p4_k=soil[27];
+          float cd_hum=cd[0], cd_dehum=cd[1], cd_heater=cd[2], cd_ac=cd[3], cd_mat=cd[4], cd_clone_hum=cd[5];
 
           bool link = id(api_link).state;
-          bool any_dem = id(dem_hum).state||id(dem_dehum).state||id(dem_heater).state
-                       ||id(dem_ac).state||id(dem_mat).state||id(dem_clone_hum).state;
+          bool any_dem = dem_hum||dem_dehum||dem_heater||dem_ac||dem_mat||dem_clone_hum;
 
           // ---- connection edge timers (always; cheap) ----
           {
@@ -5066,10 +5140,10 @@ script:
             if (ac == 0) { strncpy(head, txt, sizeof(head)-1); head[sizeof(head)-1] = 0; }
             ac++;
           };
-          AL(id(fault_emg).state, "Emergency failsafe >35°C");
-          AL(id(fault_climate).state, "Climate sensor fault");
-          AL(id(fault_rootzone).state, "Root-zone probe fault");
-          AL(id(fault_aux).state, "Aux sensor offline");
+          AL(fault_emg, "Emergency failsafe >35°C");
+          AL(fault_climate, "Climate sensor fault");
+          AL(fault_rootzone, "Root-zone probe fault");
+          AL(fault_aux, "Aux sensor offline");
           AL(any_dem && !link, "Appliances need HA (Sonoffs offline)");
           if (id(wifi_channel_hopped)) {
             snprintf(hb, sizeof(hb), "WiFi channel hop → %d (check ESP-NOW)", id(wifi_channel));
@@ -5077,7 +5151,7 @@ script:
             uint32_t hub_age = millis() - id(gv_hub_last);
             if (id(gv_hub_last) != 0 && hub_age < 6000) id(wifi_channel_hopped) = false;
           }
-          float crh = id(clone_rh).state, cvp = id(clone_vpd).state, mrh = id(main_rh).state, mvp = id(main_vpd).state;
+          float crh = clone_rh, cvp = clone_vpd, mrh = main_rh, mvp = main_vpd;
           if (!isnan(crh) && !isnan(c_rmax) && crh > c_rmax + 2) { snprintf(hb,sizeof(hb),"Clone RH high · %.0f%%",crh); AL(true,hb); }
           if (!isnan(cvp) && !isnan(c_vmax) && cvp > c_vmax + 0.1f) { snprintf(hb,sizeof(hb),"Clone VPD high · %.2f",cvp); AL(true,hb); }
           if (!isnan(mrh) && !isnan(m_rmax) && mrh > m_rmax + 2) { snprintf(hb,sizeof(hb),"Main RH high · %.0f%%",mrh); AL(true,hb); }
@@ -5087,7 +5161,7 @@ script:
           sethid(id(btn_silence), !(ac > 0 && !id(alerts_silenced)));
 
           // ---- night / backlight / status LED (always) ----
-          bool night = !id(lights_main).state;
+          bool night = !lights_main;
           id(night_mode) = night;
           int want = sleeping ? 12 : (night ? 40 : 100);
           if (want != id(bl_last)) {
@@ -5139,10 +5213,10 @@ script:
               if (lv_obj_get_style_text_opa(L, LV_PART_MAIN) != 255)
                 lv_obj_set_style_text_opa(L, 255, LV_PART_MAIN);
             };
-            bool fan_on = !isnan(id(fan_out_pct).state) && id(fan_out_pct).state > 0;
-            bool int_on = !isnan(id(fan_int_main_pct).state) && id(fan_int_main_pct).state > 0;
-            lockic(id(lk_fan), fan_on); lockic(id(lk_int), int_on); lockic(id(lk_heat), id(dem_heater).state);
-            lockic(id(lk_hum), id(dem_hum).state); lockic(id(lk_deh), id(dem_dehum).state); lockic(id(lk_light), id(lights_main).state);
+            bool fan_on = !isnan(fan_out_pct) && fan_out_pct > 0;
+            bool int_on = !isnan(fan_int_main_pct) && fan_int_main_pct > 0;
+            lockic(id(lk_fan), fan_on); lockic(id(lk_int), int_on); lockic(id(lk_heat), dem_heater);
+            lockic(id(lk_hum), dem_hum); lockic(id(lk_deh), dem_dehum); lockic(id(lk_light), lights_main);
           }
 
           if (!interactive) return;
@@ -5203,7 +5277,7 @@ script:
           // ---- PULSE ----
           if (tab == 0) {
             setc(id(pill_wifi_ic), link ? NEON : RED);
-            float co2 = id(co2_ppm).state;
+            float co2 = co2_ppm;
             if (isnan(co2)) strcpy(b, "CO2 --- ppm"); else snprintf(b, sizeof(b), "CO2 %d ppm", (int)co2);
             setl(id(lbl_co2), b);
 
@@ -5224,9 +5298,9 @@ script:
               if (isnan(t) || isnan(rh)) { setl(o, "--"); return; }
               char x[32]; snprintf(x, sizeof(x), "%.1f° · %.0f%%", t, rh); setl(o, x);
             };
-            envtxt(id(lbl_2x4), id(clone_temp).state, id(clone_rh).state);
-            envtxt(id(lbl_4x8), id(main_temp).state,  id(main_rh).state);
-            envtxt(id(lbl_room), id(room_temp).state, id(room_rh).state);
+            envtxt(id(lbl_2x4), clone_temp, clone_rh);
+            envtxt(id(lbl_4x8), main_temp,  main_rh);
+            envtxt(id(lbl_room), room_temp, room_rh);
 
             {
               float mn = NAN, mx = NAN;
@@ -5241,27 +5315,27 @@ script:
               else { snprintf(b, sizeof(b), "VPD %.2f–%.2f", mn, mx); setl(id(lbl_spark), b); }
             }
 
-            int fans = (id(fan_out_on).state?1:0) + (id(fan_recirc_on).state?1:0)
-                     + (id(fan_int_main_on).state?1:0) + (id(fan_int_clone_on).state?1:0);
+            int fans = (fan_out_on?1:0) + (fan_recirc_on?1:0)
+                     + (fan_int_main_on?1:0) + (fan_int_clone_on?1:0);
             if (fans > 0) { snprintf(b, sizeof(b), "active · %d fans", fans);
               setc(id(lbl_rung1), CYAN); bordc(id(rung1), CYAN); }
             else { strcpy(b, "idle"); setc(id(lbl_rung1), GREY); bordc(id(rung1), BORD); }
             setl(id(lbl_rung1), b);
 
             const char* dem = nullptr;
-            if (id(dem_dehum).state) dem = "dehumidifier";
-            else if (id(dem_hum).state) dem = "humidifier";
-            else if (id(dem_heater).state) dem = "heater";
-            else if (id(dem_ac).state) dem = "AC";
-            else if (id(dem_mat).state) dem = "grow mat";
-            else if (id(dem_clone_hum).state) dem = "clone humid";
+            if (dem_dehum) dem = "dehumidifier";
+            else if (dem_hum) dem = "humidifier";
+            else if (dem_heater) dem = "heater";
+            else if (dem_ac) dem = "AC";
+            else if (dem_mat) dem = "grow mat";
+            else if (dem_clone_hum) dem = "clone humid";
             if (dem) { snprintf(b, sizeof(b), "%s active", dem);
               setc(id(lbl_rung2), AMBER); bordc(id(rung2), AMBER); }
             else {
               float best = 1e9f; const char* who = nullptr;
               auto chk = [&](float v, const char* n){ if (!isnan(v) && v > 0 && v < best) { best = v; who = n; } };
-              chk(id(cd_dehum).state,"dehum"); chk(id(cd_hum).state,"humid"); chk(id(cd_heater).state,"heater");
-              chk(id(cd_ac).state,"AC"); chk(id(cd_mat).state,"mat"); chk(id(cd_clone_hum).state,"c-hum");
+              chk(cd_dehum,"dehum"); chk(cd_hum,"humid"); chk(cd_heater,"heater");
+              chk(cd_ac,"AC"); chk(cd_mat,"mat"); chk(cd_clone_hum,"c-hum");
               if (who) { snprintf(b, sizeof(b), "%s in %ds", who, (int)best); setc(id(lbl_rung2), AMBER); bordc(id(rung2), BORD); }
               else { strcpy(b, "standing by"); setc(id(lbl_rung2), GREY); bordc(id(rung2), BORD); }
             }
@@ -5289,115 +5363,115 @@ script:
 
           // ---- CLONE vitals + clone device rows ----
           if (tab == 1) {
-            float t = id(clone_temp).state; uint32_t c = bandcol(t, c_tt-2, c_tt+2);
+            float t = clone_temp; uint32_t c = bandcol(t, c_tt-2, c_tt+2);
             if (isnan(t)) setl(id(clv_temp_val),"--"); else { snprintf(b,sizeof(b),"%.1f°",t); setl(id(clv_temp_val),b);}
             setc(id(clv_temp_val),c); setbar(id(clv_temp_bar), isnan(t)?10:(int)t); setbarb(id(clv_temp_bar), c);
-            float rh = id(clone_rh).state; c = bandcol(rh, c_rmin, c_rmax);
+            float rh = clone_rh; c = bandcol(rh, c_rmin, c_rmax);
             if (isnan(rh)) setl(id(clv_rh_val),"--"); else { snprintf(b,sizeof(b),"%.0f%%",rh); setl(id(clv_rh_val),b);}
             setc(id(clv_rh_val),c); setbar(id(clv_rh_bar), isnan(rh)?0:(int)rh); setbarb(id(clv_rh_bar), c);
-            float vp = id(clone_vpd).state; c = bandcol(vp, c_vmin, c_vmax);
+            float vp = clone_vpd; c = bandcol(vp, c_vmin, c_vmax);
             if (isnan(vp)) setl(id(clv_vpd_val),"--"); else { snprintf(b,sizeof(b),"%.2f kPa",vp); setl(id(clv_vpd_val),b);}
             setc(id(clv_vpd_val),c); setbar(id(clv_vpd_bar), isnan(vp)?0:(int)(vp*100)); setbarb(id(clv_vpd_bar), c);
-            setl(id(clone_hdr_note), id(sel_clone_mode).state.c_str());
+            setl(id(clone_hdr_note), sel_clone_mode);
 
             auto pctlbl = [&](lv_obj_t* L, float v){ if (isnan(v)) setl(L, "--"); else { char q[8]; snprintf(q, sizeof(q), "%d%%", (int)v); setl(L, q); } };
             auto stlbl = [&](lv_obj_t* L, bool on){ setl(L, on ? "ON" : "off"); setc(L, on ? NEON : GREY); };
-            pctlbl(id(sf1000_val), id(sf_target).state);
-            pctlbl(id(fanclone_val), id(fan_int_clone_pct).state);
-            stlbl(id(dem_clone_hum_st), id(dem_clone_hum).state);
-            stlbl(id(dem_mat_st), id(dem_mat).state);
+            pctlbl(id(sf1000_val), sf_target);
+            pctlbl(id(fanclone_val), fan_int_clone_pct);
+            stlbl(id(dem_clone_hum_st), dem_clone_hum);
+            stlbl(id(dem_mat_st), dem_mat);
             auto pon = [](float v){ return !isnan(v) && v > 0; };
             auto ic = [&](lv_obj_t* L, bool on, uint32_t col){
               setc(L, on ? col : 0x39424D);
               if (lv_obj_get_style_text_opa(L, LV_PART_MAIN) != 255)
                 lv_obj_set_style_text_opa(L, 255, LV_PART_MAIN);
             };
-            ic(id(ic_csf),  pon(id(sf_target).state),        AMBER);
-            ic(id(ic_cint), pon(id(fan_int_clone_pct).state), CYAN);
-            ic(id(ic_chum), id(dem_clone_hum).state,          CYAN);
-            ic(id(ic_cmat), id(dem_mat).state,               ORANGE);
+            ic(id(ic_csf),  pon(sf_target),        AMBER);
+            ic(id(ic_cint), pon(fan_int_clone_pct), CYAN);
+            ic(id(ic_chum), dem_clone_hum,          CYAN);
+            ic(id(ic_cmat), dem_mat,               ORANGE);
           }
 
           // ---- MAIN vitals + main device rows ----
           if (tab == 2) {
-            float t = id(main_temp).state; uint32_t c = bandcol(t, m_tt-2, m_tt+2);
+            float t = main_temp; uint32_t c = bandcol(t, m_tt-2, m_tt+2);
             if (isnan(t)) setl(id(mnv_temp_val),"--"); else { snprintf(b,sizeof(b),"%.1f°",t); setl(id(mnv_temp_val),b);}
             setc(id(mnv_temp_val),c); setbar(id(mnv_temp_bar), isnan(t)?10:(int)t); setbarb(id(mnv_temp_bar), c);
-            float rh = id(main_rh).state; c = bandcol(rh, m_rmin, m_rmax);
+            float rh = main_rh; c = bandcol(rh, m_rmin, m_rmax);
             if (isnan(rh)) setl(id(mnv_rh_val),"--"); else { snprintf(b,sizeof(b),"%.0f%%",rh); setl(id(mnv_rh_val),b);}
             setc(id(mnv_rh_val),c); setbar(id(mnv_rh_bar), isnan(rh)?0:(int)rh); setbarb(id(mnv_rh_bar), c);
-            float vp = id(main_vpd).state; c = bandcol(vp, m_vmin, m_vmax);
+            float vp = main_vpd; c = bandcol(vp, m_vmin, m_vmax);
             if (isnan(vp)) setl(id(mnv_vpd_val),"--"); else { snprintf(b,sizeof(b),"%.2f kPa",vp); setl(id(mnv_vpd_val),b);}
             setc(id(mnv_vpd_val),c); setbar(id(mnv_vpd_bar), isnan(vp)?0:(int)(vp*100)); setbarb(id(mnv_vpd_bar), c);
 
             auto pctlbl = [&](lv_obj_t* L, float v){ if (isnan(v)) setl(L, "--"); else { char q[8]; snprintf(q, sizeof(q), "%d%%", (int)v); setl(L, q); } };
             auto stlbl = [&](lv_obj_t* L, bool on){ setl(L, on ? "ON" : "off"); setc(L, on ? NEON : GREY); };
-            pctlbl(id(exhout_val), id(fan_out_pct).state);
-            pctlbl(id(exhroom_val), id(fan_recirc_pct).state);
-            pctlbl(id(intmain_val), id(fan_int_main_pct).state);
-            stlbl(id(dem_heater_st), id(dem_heater).state);
-            stlbl(id(dem_ac_st), id(dem_ac).state);
-            stlbl(id(dem_hum_st), id(dem_hum).state);
-            stlbl(id(dem_dehum_st), id(dem_dehum).state);
+            pctlbl(id(exhout_val), fan_out_pct);
+            pctlbl(id(exhroom_val), fan_recirc_pct);
+            pctlbl(id(intmain_val), fan_int_main_pct);
+            stlbl(id(dem_heater_st), dem_heater);
+            stlbl(id(dem_ac_st), dem_ac);
+            stlbl(id(dem_hum_st), dem_hum);
+            stlbl(id(dem_dehum_st), dem_dehum);
             auto pon = [](float v){ return !isnan(v) && v > 0; };
             auto ic = [&](lv_obj_t* L, bool on, uint32_t col){
               setc(L, on ? col : 0x39424D);
               if (lv_obj_get_style_text_opa(L, LV_PART_MAIN) != 255)
                 lv_obj_set_style_text_opa(L, 255, LV_PART_MAIN);
             };
-            ic(id(ic_mout), pon(id(fan_out_pct).state),       CYAN);
-            ic(id(ic_mroom),pon(id(fan_recirc_pct).state),    CYAN);
-            ic(id(ic_mint), pon(id(fan_int_main_pct).state),  BLUE);
-            ic(id(ic_mheat),id(dem_heater).state,            ORANGE);
-            ic(id(ic_mac),  id(dem_ac).state,                 BLUE);
-            ic(id(ic_mhum), id(dem_hum).state,                CYAN);
-            ic(id(ic_mdeh), id(dem_dehum).state,              AMBER);
+            ic(id(ic_mout), pon(fan_out_pct),       CYAN);
+            ic(id(ic_mroom),pon(fan_recirc_pct),    CYAN);
+            ic(id(ic_mint), pon(fan_int_main_pct),  BLUE);
+            ic(id(ic_mheat),dem_heater,            ORANGE);
+            ic(id(ic_mac),  dem_ac,                 BLUE);
+            ic(id(ic_mhum), dem_hum,                CYAN);
+            ic(id(ic_mdeh), dem_dehum,              AMBER);
           }
 
           // ---- CONTROL + setup steppers ----
           if (tab == 4) {
-            bool fa = id(st_full_auto).state, ta = id(st_takeover).state, ap = id(st_auto_photo).state;
+            bool fa = st_full_auto, ta = st_takeover, ap = st_auto_photo;
             setl(id(lbl_fullauto_state), fa ? "ON" : "off"); setc(id(lbl_fullauto_state), fa ? NEON : GREY);
             setl(id(lbl_autophoto_state), ap ? "ON" : "off"); setc(id(lbl_autophoto_state), ap ? NEON : GREY);
             if (ta) { setl(id(lbl_takeover_state), "ENGAGED — you own outputs"); setc(id(lbl_takeover_state), AMBER); bordc(id(takeover_card), AMBER); }
             else { setl(id(lbl_takeover_state), "tap to engage"); setc(id(lbl_takeover_state), 0x8A929C); bordc(id(takeover_card), BORD); }
-            setl(id(lbl_stage_val), id(sel_stage).state.c_str());
-            setl(id(lbl_strategy_val), id(sel_strategy).state.c_str());
-            setl(id(lbl_clonemode_val), id(sel_clone_mode).state.c_str());
-            setl(id(lbl_priority_val), id(sel_priority).state.c_str());
+            setl(id(lbl_stage_val), sel_stage);
+            setl(id(lbl_strategy_val), sel_strategy);
+            setl(id(lbl_clonemode_val), sel_clone_mode);
+            setl(id(lbl_priority_val), sel_priority);
 
             auto numlbl = [&](lv_obj_t* L, float v, const char* fmt){ if (isnan(v)) { setl(L, "--"); return; } char q[16]; snprintf(q, sizeof(q), fmt, v); setl(L, q); };
             auto stv = [&](lv_obj_t* L, bool on){ setl(L, on ? "ON" : "off"); setc(L, on ? NEON : GREY); };
-            numlbl(id(s_temp_val), id(t_main_temp).state, "%.1f°");
-            numlbl(id(s_vmin_val), id(t_main_vpd_min).state, "%.1f");
-            numlbl(id(s_vmax_val), id(t_main_vpd_max).state, "%.1f");
-            numlbl(id(s_rmin_val), id(t_main_rh_min).state, "%.0f%");
-            numlbl(id(s_rmax_val), id(t_main_rh_max).state, "%.0f%");
-            numlbl(id(s_ctemp_val), id(t_clone_temp).state, "%.1f°");
-            numlbl(id(s_cvmin_val), id(t_clone_vpd_min).state, "%.1f");
-            numlbl(id(s_cvmax_val), id(t_clone_vpd_max).state, "%.1f");
-            numlbl(id(s_crmin_val), id(t_clone_rh_min).state, "%.0f%");
-            numlbl(id(s_crmax_val), id(t_clone_rh_max).state, "%.0f%");
-            numlbl(id(s_sftgt_val), id(sf_target).state, "%.0f%");
-            numlbl(id(s_ramp_val), id(n_ramp).state, "%.0f%");
-            numlbl(id(s_sunrise_val), id(n_sunrise).state, "%.0fm");
-            numlbl(id(s_sunset_val), id(n_sunset).state, "%.0fm");
-            numlbl(id(s_clh_val), id(n_clh).state, "%.0fh");
-            numlbl(id(s_rzlo_val), id(n_rzlo).state, "%.1f°");
-            numlbl(id(s_rzhi_val), id(n_rzhi).state, "%.1f°");
-            numlbl(id(s_matoff_val), id(n_matoff).state, "%.0fs");
-            numlbl(id(s_chh_val), id(n_chh).state, "%.1f%");
-            numlbl(id(s_chmo_val), id(n_chmo).state, "%.0fs");
-            numlbl(id(s_hmo_val), id(n_hmo).state, "%.0fs");
-            numlbl(id(s_htmo_val), id(n_htmo).state, "%.0fs");
-            numlbl(id(s_dsp_val), id(n_dsp).state, "%.0fs");
-            numlbl(id(s_dsl_val), id(n_dsl).state, "%.0fs");
-            numlbl(id(s_dslv_val), id(n_dslv).state, "%.0f%");
-            stv(id(st_lighthold_v), id(st_light_hold).state);
-            stv(id(st_humroute_v), id(st_hum_routing).state);
-            stv(id(st_destrat_v), id(st_destrat).state);
+            numlbl(id(s_temp_val), m_tt, "%.1f°");
+            numlbl(id(s_vmin_val), m_vmin, "%.1f");
+            numlbl(id(s_vmax_val), m_vmax, "%.1f");
+            numlbl(id(s_rmin_val), m_rmin, "%.0f%");
+            numlbl(id(s_rmax_val), m_rmax, "%.0f%");
+            numlbl(id(s_ctemp_val), cfg[5], "%.1f°");
+            numlbl(id(s_cvmin_val), cfg[6], "%.1f");
+            numlbl(id(s_cvmax_val), cfg[7], "%.1f");
+            numlbl(id(s_crmin_val), cfg[8], "%.0f%");
+            numlbl(id(s_crmax_val), cfg[9], "%.0f%");
+            numlbl(id(s_sftgt_val), sf_target, "%.0f%");
+            numlbl(id(s_ramp_val), n_ramp, "%.0f%");
+            numlbl(id(s_sunrise_val), n_sunrise, "%.0fm");
+            numlbl(id(s_sunset_val), n_sunset, "%.0fm");
+            numlbl(id(s_clh_val), n_clh, "%.0fh");
+            numlbl(id(s_rzlo_val), n_rzlo, "%.1f°");
+            numlbl(id(s_rzhi_val), n_rzhi, "%.1f°");
+            numlbl(id(s_matoff_val), n_matoff, "%.0fs");
+            numlbl(id(s_chh_val), n_chh, "%.1f%");
+            numlbl(id(s_chmo_val), n_chmo, "%.0fs");
+            numlbl(id(s_hmo_val), n_hmo, "%.0fs");
+            numlbl(id(s_htmo_val), n_htmo, "%.0fs");
+            numlbl(id(s_dsp_val), n_dsp, "%.0fs");
+            numlbl(id(s_dsl_val), n_dsl, "%.0fs");
+            numlbl(id(s_dslv_val), n_dslv, "%.0f%");
+            stv(id(st_lighthold_v), st_light_hold);
+            stv(id(st_humroute_v), st_hum_routing);
+            stv(id(st_destrat_v), st_destrat);
             stv(id(st_greenhb_v), id(green_heartbeat));
-            setl(id(lbl_clonephoto_val), id(sel_clone_photo).state.c_str());
+            setl(id(lbl_clonephoto_val), sel_clone_photo);
           }
 
           // ---- SOIL summary cards ----
@@ -5421,32 +5495,32 @@ script:
               bool healthy = (!isnan(mo) && mo >= 30.0f) && (!isnan(ph) && ph >= 5.8f && ph <= 6.8f);
               setc(valL, healthy ? NEON : AMBER);
             };
-            potrow(id(lbl_p1_name), id(lbl_p1_npk), id(lbl_p1_vals), 1, id(p1_plant).state.c_str(),
-                   id(p1_moist).state, id(p1_temp).state, id(p1_ec).state, id(p1_ph).state, id(p1_n).state, id(p1_p).state, id(p1_k).state);
-            potrow(id(lbl_p2_name), id(lbl_p2_npk), id(lbl_p2_vals), 2, id(p2_plant).state.c_str(),
-                   id(p2_moist).state, id(p2_temp).state, id(p2_ec).state, id(p2_ph).state, id(p2_n).state, id(p2_p).state, id(p2_k).state);
-            potrow(id(lbl_p3_name), id(lbl_p3_npk), id(lbl_p3_vals), 3, id(p3_plant).state.c_str(),
-                   id(p3_moist).state, id(p3_temp).state, id(p3_ec).state, id(p3_ph).state, id(p3_n).state, id(p3_p).state, id(p3_k).state);
-            potrow(id(lbl_p4_name), id(lbl_p4_npk), id(lbl_p4_vals), 4, id(p4_plant).state.c_str(),
-                   id(p4_moist).state, id(p4_temp).state, id(p4_ec).state, id(p4_ph).state, id(p4_n).state, id(p4_p).state, id(p4_k).state);
+            potrow(id(lbl_p1_name), id(lbl_p1_npk), id(lbl_p1_vals), 1, p1_plant,
+                   p1_moist, p1_temp, p1_ec, p1_ph, p1_n, p1_p, p1_k);
+            potrow(id(lbl_p2_name), id(lbl_p2_npk), id(lbl_p2_vals), 2, p2_plant,
+                   p2_moist, p2_temp, p2_ec, p2_ph, p2_n, p2_p, p2_k);
+            potrow(id(lbl_p3_name), id(lbl_p3_npk), id(lbl_p3_vals), 3, p3_plant,
+                   p3_moist, p3_temp, p3_ec, p3_ph, p3_n, p3_p, p3_k);
+            potrow(id(lbl_p4_name), id(lbl_p4_npk), id(lbl_p4_vals), 4, p4_plant,
+                   p4_moist, p4_temp, p4_ec, p4_ph, p4_n, p4_p, p4_k);
           }
 
           // ---- SOIL detail ----
           if (soil_det) {
             int pot = id(soil_detail_pot);
             if (pot < 1 || pot > 4) pot = 1;
-            const char* plant = id(p1_plant).state.c_str();
-            float mo = id(p1_moist).state, tp = id(p1_temp).state, ec = id(p1_ec).state, ph = id(p1_ph).state;
-            float nn = id(p1_n).state, pp = id(p1_p).state, kk = id(p1_k).state;
+            const char* plant = p1_plant;
+            float mo = p1_moist, tp = p1_temp, ec = p1_ec, ph = p1_ph;
+            float nn = p1_n, pp = p1_p, kk = p1_k;
             if (pot == 2) {
-              plant = id(p2_plant).state.c_str(); mo = id(p2_moist).state; tp = id(p2_temp).state;
-              ec = id(p2_ec).state; ph = id(p2_ph).state; nn = id(p2_n).state; pp = id(p2_p).state; kk = id(p2_k).state;
+              plant = p2_plant; mo = p2_moist; tp = p2_temp;
+              ec = p2_ec; ph = p2_ph; nn = p2_n; pp = p2_p; kk = p2_k;
             } else if (pot == 3) {
-              plant = id(p3_plant).state.c_str(); mo = id(p3_moist).state; tp = id(p3_temp).state;
-              ec = id(p3_ec).state; ph = id(p3_ph).state; nn = id(p3_n).state; pp = id(p3_p).state; kk = id(p3_k).state;
+              plant = p3_plant; mo = p3_moist; tp = p3_temp;
+              ec = p3_ec; ph = p3_ph; nn = p3_n; pp = p3_p; kk = p3_k;
             } else if (pot == 4) {
-              plant = id(p4_plant).state.c_str(); mo = id(p4_moist).state; tp = id(p4_temp).state;
-              ec = id(p4_ec).state; ph = id(p4_ph).state; nn = id(p4_n).state; pp = id(p4_p).state; kk = id(p4_k).state;
+              plant = p4_plant; mo = p4_moist; tp = p4_temp;
+              ec = p4_ec; ph = p4_ph; nn = p4_n; pp = p4_p; kk = p4_k;
             }
             char x[64];
             if (plant == nullptr || plant[0] == '\0') snprintf(x, sizeof(x), "POT %d", pot);
@@ -5484,17 +5558,31 @@ script:
 #  PERIODIC REFRESH
 # ==================================================================
 interval:
-  # v4.0.10 — 5 s page-gated refresh (was 2 s rewriting every tab).
-  # Template mirrors poll at 15 s; UI no longer outruns the data.
+  # v4.0.11 — 5 s page-gated refresh; UI reads gv_* live (mirrors parked).
   - interval: 5s
     then:
       - script.execute: refresh_ui
+  # Nest/mesh can hop 2.4 GHz without a reconnect — keep wifi_channel fresh
+  # so Connections + alert strip catch ESP-NOW splits without waiting for
+  # on_connect.
+  - interval: 30s
+    then:
+      - lambda: |-
+          auto *w = wifi::global_wifi_component;
+          if (w == nullptr) return;
+          int ch = (int) w->get_wifi_channel();
+          if (ch <= 0) return;
+          if (id(wifi_channel) != 0 && id(wifi_channel) != ch) {
+            id(wifi_channel_hopped) = true;
+            ESP_LOGW("wifi", "channel hop %d -> %d (ESP-NOW needs hub on same ch)", id(wifi_channel), ch);
+          }
+          id(wifi_channel) = ch;
   # 1h VPD micro-trend: one sample / 5 min → 12 slots. No canvas widgets.
   - interval: 300s
     then:
       - lambda: |-
-          float v = id(main_vpd).state;
-          if (isnan(v)) v = id(clone_vpd).state;
+          float v = id(gv_tent_vpd);
+          if (isnan(v)) v = id(gv_clone_vpd);
           if (isnan(v)) return;
           int i = id(spark_idx);
           id(spark_vpd)[i] = v;

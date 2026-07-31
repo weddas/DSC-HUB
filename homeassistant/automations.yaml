@@ -18,7 +18,7 @@
 
 - id: dsc_follower_humidifier
   alias: "DSC-HUB · Humidifier follows Humidifier Demand"
-  description: "Relay mirrors hub demand. Safe-OFF on hub dropout. Resyncs on HA restart + node reconnect."
+  description: "Relay mirrors hub demand. Safe-OFF on hub dropout. Resyncs on HA restart + node reconnect + hub-link restore."
   mode: restart
   triggers:
     - trigger: state
@@ -29,24 +29,39 @@
       entity_id: switch.dsc_humidifier_main_relay
       from: "unavailable"
       for: "00:00:05"
+    - trigger: state
+      entity_id: switch.dsc_humidifier_main_relay
+      to: "off"
+      for: "00:00:02"
+    - trigger: state
+      entity_id: binary_sensor.dsc_hub_ha_link_status
+      to: "on"
+      for: "00:00:05"
   actions:
     - choose:
         - conditions:
             - condition: state
               entity_id: switch.dsc_hub_humidifier_demand
               state: "on"
+            - condition: state
+              entity_id: binary_sensor.dsc_hub_ha_link_status
+              state: "on"
+            - condition: template
+              value_template: "{{ not is_state('binary_sensor.dsc_humidifier_test_mode', 'on') }}"
           sequence:
             - action: switch.turn_on
               target:
                 entity_id: switch.dsc_humidifier_main_relay
       default:
+        - condition: template
+          value_template: "{{ not is_state('binary_sensor.dsc_humidifier_test_mode', 'on') }}"
         - action: switch.turn_off
           target:
             entity_id: switch.dsc_humidifier_main_relay
 
 - id: dsc_follower_dehumidifier
   alias: "DSC-HUB · Dehumidifier follows Dehumidifier Demand"
-  description: "Relay mirrors hub demand. Safe-OFF on hub dropout. Resyncs on HA restart + node reconnect."
+  description: "Relay mirrors hub demand. Safe-OFF on hub dropout. Resyncs on HA restart + node reconnect + hub-link restore."
   mode: restart
   triggers:
     - trigger: state
@@ -57,24 +72,39 @@
       entity_id: switch.dsc_de_humidifier_main_relay
       from: "unavailable"
       for: "00:00:05"
+    - trigger: state
+      entity_id: switch.dsc_de_humidifier_main_relay
+      to: "off"
+      for: "00:00:02"
+    - trigger: state
+      entity_id: binary_sensor.dsc_hub_ha_link_status
+      to: "on"
+      for: "00:00:05"
   actions:
     - choose:
         - conditions:
             - condition: state
               entity_id: switch.dsc_hub_dehumidifier_demand
               state: "on"
+            - condition: state
+              entity_id: binary_sensor.dsc_hub_ha_link_status
+              state: "on"
+            - condition: template
+              value_template: "{{ not is_state('binary_sensor.dsc_de_humidifier_test_mode', 'on') }}"
           sequence:
             - action: switch.turn_on
               target:
                 entity_id: switch.dsc_de_humidifier_main_relay
       default:
+        - condition: template
+          value_template: "{{ not is_state('binary_sensor.dsc_de_humidifier_test_mode', 'on') }}"
         - action: switch.turn_off
           target:
             entity_id: switch.dsc_de_humidifier_main_relay
 
 - id: dsc_follower_heater
   alias: "DSC-HUB · Heater follows Heater Demand"
-  description: "Relay mirrors hub demand. Safe-OFF on hub dropout. Resyncs on HA restart + node reconnect."
+  description: "Relay mirrors hub demand. Safe-OFF on hub dropout. Resyncs on HA restart + node reconnect + hub-link restore."
   mode: restart
   triggers:
     - trigger: state
@@ -85,24 +115,39 @@
       entity_id: switch.dsc_heater_main_relay
       from: "unavailable"
       for: "00:00:05"
+    - trigger: state
+      entity_id: switch.dsc_heater_main_relay
+      to: "off"
+      for: "00:00:02"
+    - trigger: state
+      entity_id: binary_sensor.dsc_hub_ha_link_status
+      to: "on"
+      for: "00:00:05"
   actions:
     - choose:
         - conditions:
             - condition: state
               entity_id: switch.dsc_hub_heater_demand
               state: "on"
+            - condition: state
+              entity_id: binary_sensor.dsc_hub_ha_link_status
+              state: "on"
+            - condition: template
+              value_template: "{{ not is_state('binary_sensor.dsc_heater_test_mode', 'on') }}"
           sequence:
             - action: switch.turn_on
               target:
                 entity_id: switch.dsc_heater_main_relay
       default:
+        - condition: template
+          value_template: "{{ not is_state('binary_sensor.dsc_heater_test_mode', 'on') }}"
         - action: switch.turn_off
           target:
             entity_id: switch.dsc_heater_main_relay
 
 - id: dsc_follower_grow_mat
   alias: "DSC-HUB · Grow Mat follows Grow Mat Demand"
-  description: "Relay mirrors hub demand. Closed-loop on multi-pot root-zone temp."
+  description: "Relay mirrors hub demand. Closed-loop on multi-pot root-zone temp. Resyncs on hub-link restore."
   mode: restart
   triggers:
     - trigger: state
@@ -113,17 +158,32 @@
       entity_id: switch.dsc_heatmat_main_relay
       from: "unavailable"
       for: "00:00:05"
+    - trigger: state
+      entity_id: switch.dsc_heatmat_main_relay
+      to: "off"
+      for: "00:00:02"
+    - trigger: state
+      entity_id: binary_sensor.dsc_hub_ha_link_status
+      to: "on"
+      for: "00:00:05"
   actions:
     - choose:
         - conditions:
             - condition: state
               entity_id: switch.dsc_hub_grow_mat_demand
               state: "on"
+            - condition: state
+              entity_id: binary_sensor.dsc_hub_ha_link_status
+              state: "on"
+            - condition: template
+              value_template: "{{ not is_state('binary_sensor.dsc_heatmat_test_mode', 'on') }}"
           sequence:
             - action: switch.turn_on
               target:
                 entity_id: switch.dsc_heatmat_main_relay
       default:
+        - condition: template
+          value_template: "{{ not is_state('binary_sensor.dsc_heatmat_test_mode', 'on') }}"
         - action: switch.turn_off
           target:
             entity_id: switch.dsc_heatmat_main_relay

@@ -62,6 +62,7 @@ esp8266:
   board: esp8285
 
 logger:
+  level: INFO
 
 # v2.4 item 3: key was inline (and has been through chat upload twice).
 # Rotate on flash — a leaked API key on a mains-switching device is
@@ -76,6 +77,14 @@ api:
   # last-resort WiFi-stack recovery. The interval failsafe fires ~10x
   # sooner, so this should never be what saves us.
   reboot_timeout: 15min
+  # v4 Phase-1: after API-loss failsafe forced the relay OFF, HA demand
+  # may still be ON with no rising edge for the follower. Clear the
+  # loss stamp on reconnect so the next HA command is not grace-poisoned;
+  # HA followers also re-assert on hub-link restore (see automations.yaml).
+  on_client_connected:
+    - lambda: |-
+        id(api_lost_at) = 0;
+        ESP_LOGI("failsafe", "API client connected — grace cleared (HA must re-assert demand if still ON)");
 
 # v2.4 item 4: there was NO OTA password. Any device on the LAN could
 # reflash a mains relay. This is the single worst finding of the audit.
@@ -88,6 +97,7 @@ ota:
 wifi:
   ssid: ${wifi_ssid}
   password: ${wifi_password}
+  power_save_mode: none          # fleet rule: mains device, no modem naps
   ap:
     ssid: ${ap_ssid}
     password: ${ap_password_val}

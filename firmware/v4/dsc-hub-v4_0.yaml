@@ -3909,6 +3909,20 @@ interval:
           id(hist_idx) = (i + 1) % 12;
           if (id(hist_idx) == 0) id(hist_filled) = true;
 
+  # ---- WiFi channel poll (Nest/mesh can hop without reconnect) ----
+  # ESP-NOW rides the STA channel; silent hops split hub ↔ panel/pots.
+  - interval: 30s
+    then:
+      - lambda: |-
+          auto *w = wifi::global_wifi_component;
+          if (w == nullptr) return;
+          static int poll_ch = 0;
+          int ch = (int) w->get_wifi_channel();
+          if (ch <= 0) return;
+          if (poll_ch != 0 && poll_ch != ch)
+            ESP_LOGW("wifi", "channel hop %d -> %d — panel ESP-NOW will drop until it follows", poll_ch, ch);
+          poll_ch = ch;
+
   # ---- Sensor watchdog: no valid temp for 3 min -> safe mode + alert ----
   - interval: 30s
     then:

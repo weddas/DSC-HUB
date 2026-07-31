@@ -67,6 +67,7 @@ esp32:
     type: esp-idf
 
 logger:
+  level: INFO
 
 # De-inlined + rotated at the v2.4 flash. `!secret` resolves before
 # substitutions, so the stub passes the VALUE in via ${..._val}.
@@ -84,6 +85,7 @@ ota:
 wifi:
   ssid: ${wifi_ssid}
   password: ${wifi_password}
+  power_save_mode: none          # fleet rule: mains device, no modem naps
   ap:
     ssid: "${friendly_name} Fallback"
     password: ${ap_password_val}

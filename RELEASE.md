@@ -22,11 +22,12 @@ Repo: https://github.com/weddas/DSC-HUB · **`master`**
 | Automations | Demand followers + safety nets + scribe |
 | Dashboard | `dsc-hub-v4-dashboard.yaml` UX **v0.2** (URL **`dsc-hub-v4`**) |
 | Hub ↔ panel tag | **`54727` (`0xD5C7`)** |
-| Panel | **DSC-CONTROL 4.0.10** |
+| Panel | **DSC-CONTROL 4.0.11** |
 | Hub mat votes | `switch.dsc_hub_mat_vote_pot_1`…`4` (POT3 defaults OFF) |
 
 ### Recent cut (docs + flash notes)
 
+- **Phase 1 optimise (4.0.11):** Panel `refresh_ui` reads `gv_*` live (mirrors parked); hub+panel 30 s Wi‑Fi channel poll; pots/Sonoffs `power_save_mode: none` + logger INFO; Sonoff/HA demand re-assert after failsafe; HA alert-count pinned entity list; dashboard Home/Trends lightened; Tank EC gauge `max: 3000`.
 - **Panel 4.0.10:** Page-gated `refresh_ui` @ 5 s + slower template mirrors — fixes A8 glyph / task-WDT reboot loops after HA connected on 4.0.9. USB flash recommended until stable.
 - **Panel 4.0.9:** HA API plaintext + mDNS disabled — fixes Noise `HANDSHAKESTATE_SETUP_FAILED` → heap double-free. Add by IP with **no** encryption key.
 - **Hub:** per-pot grow-mat vote switches — exclude a dying probe without a reflash.
@@ -37,13 +38,14 @@ Repo: https://github.com/weddas/DSC-HUB · **`master`**
 
 | Piece | How it lands | Manual HA step? |
 |---|---|---|
-| Panel 4.0.10 | ESPHome Install (**USB** if still looping on 4.0.9) | Re-add by IP with **no** key if not already on plaintext API |
-| Hub mat-vote switches | ESPHome Install (hub OTA or USB) | No — entities appear after hub adopts |
-| Dashboard UX v0.2 | **Not** via OTA or git-pull stubs | Re-paste only if not already on v0.2 |
-| HA helper packages | Only if `dsc_v4_*.yaml` files changed | No change this cut |
-| Automations | Only if `automations.yaml` changed | No change this cut |
+| Panel 4.0.11 | ESPHome Install (**USB** if heap-sensitive) | None if already on plaintext API |
+| Hub channel poll | ESPHome Install (hub OTA) | No |
+| Pots + Sonoffs | ESPHome Install (OTA) | No |
+| Dashboard lighten + Tank EC gauge | **Not** via OTA | Re-paste `dsc-hub-v4-dashboard.yaml` |
+| `dsc_v4_alert_count.yaml` | Package swap | Restart / reload template entities |
+| `automations.yaml` followers | Merge | Reload automations |
 
-This cut: **panel USB/OTA flash (4.0.10)**. Hub on `master` already has mat votes + tag `54727` — optional reflash for peace of mind only (wire contract unchanged). Helper packages and automations unchanged.
+This cut: **flash pots/Sonoffs → hub → panel 4.0.11**, then Beyond-OTA paste alert-count package + automations + dashboard. Wire contract / tag `54727` unchanged.
 
 ---
 
@@ -91,5 +93,5 @@ Full steps: [`UPGRADE.md`](UPGRADE.md).
 - WT32-ETH01 gateway
 - 4×8 light on GPIO5
 - Panel v0.2 remainder: per-device power pages, VPD curve editor, canvas charts
-  (4.0.7 soil NPK · 4.0.8 hold/gate/link · 4.0.9 plaintext API · 4.0.10 page-gated refresh)
+  (4.0.7 soil NPK · 4.0.8 hold/gate/link · 4.0.9 plaintext API · 4.0.10 page-gated refresh · 4.0.11 gv_* live UI)
   LDR auto-dim still deferred
