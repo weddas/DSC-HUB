@@ -28,6 +28,7 @@ Repo: https://github.com/weddas/DSC-HUB · **`master`**
 ### Recent cut (docs + flash notes)
 
 - **Panel package YAML hotfix:** Restored `#` on the v4.0.11 header changelog lines in `dsc-control-common.yaml` — uncommented `v4.0.11:` made HA git-pull Install fail (`not a valid YAML file` / `expected '<document start>'` at `substitutions:`). Docs: see Panel reconnect table in [`firmware/v4/README.md`](firmware/v4/README.md). No firmware behaviour change — re-Validate / Install after pull.
+- **Panel binary_sensor parking (ESPHome 2026.7):** `binary_sensor.template` rejects `update_interval` — stripped invalid `update_interval: never` + unused lambdas (UI already reads `gv_*`). Sensor/text_sensor mirrors still use `update_interval: never`.
 - **Phase 1 optimise (4.0.11):** Panel `refresh_ui` reads `gv_*` live (mirrors parked); hub+panel 30 s Wi‑Fi channel poll; pots/Sonoffs `power_save_mode: none` + logger INFO; Sonoff/HA demand re-assert after failsafe; HA alert-count pinned entity list; dashboard Home/Trends lightened; Tank EC gauge `max: 3000`.
 - **Panel 4.0.10:** Page-gated `refresh_ui` @ 5 s + slower template mirrors — fixes A8 glyph / task-WDT reboot loops after HA connected on 4.0.9. USB flash recommended until stable.
 - **Panel 4.0.9:** HA API plaintext + mDNS disabled — fixes Noise `HANDSHAKESTATE_SETUP_FAILED` → heap double-free. Add by IP with **no** encryption key.

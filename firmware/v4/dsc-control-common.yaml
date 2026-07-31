@@ -894,119 +894,75 @@ binary_sensor:
   - platform: status
     id: api_link
     name: "HA Link Status"
+  # Parked mirrors (v4.0.11 UI reads gv_*). binary_sensor.template
+  # has no update_interval — keep IDs, no lambda (would poll every loop).
   - platform: template
     id: lights_main
     internal: true
-    update_interval: never
-    # gv_flt bit 32 = lights_currently_on (4x8 virtual window / night dim)
-    lambda: 'return (id(gv_flt)&32);'
   - platform: template
     id: lights_clone
     internal: true
-    update_interval: never
-    # gv_flt bit 64 = clone_lights_on
-    lambda: 'return (id(gv_flt)&64);'
   - platform: template
     id: fault_climate
     internal: true
-    update_interval: never
-    lambda: 'return (id(gv_flt)&1);'
   - platform: template
     id: fault_aux
     internal: true
-    update_interval: never
-    lambda: 'return (id(gv_flt)&6);'
   - platform: template
     id: fault_rootzone
     internal: true
-    update_interval: never
-    lambda: 'return (id(gv_flt)&8);'
   - platform: template
     id: fault_emg
     internal: true
-    update_interval: never
-    lambda: 'return (id(gv_flt)&128);'
   - platform: template
     id: dem_hum
     internal: true
-    update_interval: never
-    lambda: 'return (id(gv_dem)&1);'
   - platform: template
     id: dem_dehum
     internal: true
-    update_interval: never
-    lambda: 'return (id(gv_dem)&2);'
   - platform: template
     id: dem_heater
     internal: true
-    update_interval: never
-    lambda: 'return (id(gv_dem)&4);'
   - platform: template
     id: dem_mat
     internal: true
-    update_interval: never
-    lambda: 'return (id(gv_dem)&8);'
   - platform: template
     id: dem_ac
     internal: true
-    update_interval: never
-    lambda: 'return (id(gv_dem)&16);'
   - platform: template
     id: dem_clone_hum
     internal: true
-    update_interval: never
-    lambda: 'return (id(gv_dem)&32);'
   # fan on/off state (the "N fans active" count on Pulse)
   - platform: template
     id: fan_out_on
     internal: true
-    update_interval: never
-    lambda: 'return (id(gv_fan_out)>0);'
   - platform: template
     id: fan_recirc_on
     internal: true
-    update_interval: never
-    lambda: 'return (id(gv_fan_recirc)>0);'
   - platform: template
     id: fan_int_main_on
     internal: true
-    update_interval: never
-    lambda: 'return (id(gv_fan_imain)>0);'
   - platform: template
     id: fan_int_clone_on
     internal: true
-    update_interval: never
-    lambda: 'return (id(gv_fan_iclone)>0);'
   - platform: template
     id: st_full_auto
     internal: true
-    update_interval: never
-    lambda: 'return (id(gv_mode)&1);'
   - platform: template
     id: st_takeover
     internal: true
-    update_interval: never
-    lambda: 'return (id(gv_mode)&4);'
   - platform: template
     id: st_auto_photo
     internal: true
-    update_interval: never
-    lambda: 'return (id(gv_mode)&8);'
   - platform: template
     id: st_light_hold
     internal: true
-    update_interval: never
-    lambda: 'return (id(gv_mode)&16);'
   - platform: template
     id: st_hum_routing
     internal: true
-    update_interval: never
-    lambda: 'return (id(gv_coord)&1);'
   - platform: template
     id: st_destrat
     internal: true
-    update_interval: never
-    lambda: 'return (id(gv_coord)&2);'
 
 text_sensor:
   - platform: template
