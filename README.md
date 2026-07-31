@@ -88,7 +88,7 @@ esphome config dsc-pot1.yaml
 esphome config dsc-heater.yaml
 ```
 
-Panel heap health (after UI changes): watch log lines from `heap` and boot — free heap and largest block. Comfort: largest block ≥ ~20 KB; warn below ~12 KB. See `_history/v4/crash-logs/DSC-CONTROL-v4.0.2-postmortem.md`. Panel **4.0.10** (page-gated refresh + plaintext API): flash **USB** if still WDT-looping; add HA by IP with **no** encryption key.
+Panel heap health (after UI changes): watch log lines from `heap` and boot — free heap and largest block. Comfort: largest block ≥ ~20 KB; warn below ~12 KB. See `_history/v4/crash-logs/DSC-CONTROL-v4.0.2-postmortem.md`. Panel **4.0.11** (live `gv_*` UI + page-gated refresh + plaintext API): flash **USB** if still WDT-looping; add HA by IP with **no** encryption key. HA git-pull Install failing with `not a valid YAML file` on `dsc-control-common.yaml` usually means a package header comment lost its `#` — see [`firmware/v4/README.md`](firmware/v4/README.md).
 
 **Grow mat:** hub exposes `switch.dsc_hub_mat_vote_pot_1`…`4` so a bad probe can be excluded without a reflash (Root Zone dashboard is the HA surface).
 

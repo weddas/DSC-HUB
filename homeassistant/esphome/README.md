@@ -37,4 +37,11 @@
 - Commit HA `secrets.yaml`
 - Change `espnow_cmd_tag` on only one of hub/panel
 
-Full install / upgrade: [`../../INSTALL.md`](../../INSTALL.md) · [`../../UPGRADE.md`](../../UPGRADE.md).
+## Bundle / Validate failures
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| `Failed to load packages` · `… is not a valid YAML file` · `expected '<document start>'` | Package body header comment missing `#` (e.g. bare `v4.0.11:` before `substitutions:`) | Fix + push on GitHub; set stub `refresh: 0d`; Validate again |
+| Stale package after a known-good push | ESPHome cache still on old commit | `refresh: 0d` once, Validate, then restore `1d` |
+
+Full install / upgrade: [`../../INSTALL.md`](../../INSTALL.md) · [`../../UPGRADE.md`](../../UPGRADE.md). Panel HA tips: [`../../firmware/v4/README.md`](../../firmware/v4/README.md).

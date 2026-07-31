@@ -116,7 +116,8 @@ Firmware OTA is **not** enough when the cut also touches HA surfaces. Check [`RE
 | `dashboards/dsc-hub-v4-dashboard.yaml` | Re-paste into Lovelace raw editor (`dsc-hub-v4`) — **not** automatic |
 | `packages/dsc_v4_*.yaml` | Copy/replace into `/config/packages/` → restart HA |
 | `automations.yaml` | Merge/replace live automations → reload automations or restart |
-| Panel boot-looping after UI flash | Prefer **USB** until boot log shows a clean `4.0.10 up` line; HA add by **IP**, no encryption key |
+| Panel boot-looping after UI flash | Prefer **USB** until boot log shows a clean `4.0.11 up` line; HA add by **IP**, no encryption key |
+| ESPHome: package `not a valid YAML file` / `expected '<document start>'` | Header changelog in the package body lost its `#` — fix on git, push, `refresh: 0d`, Validate |
 
 Example — current master cut: flash **hub** + **panel**, and **re-paste the dashboard**. Helpers/automations unchanged → no package swap.
 

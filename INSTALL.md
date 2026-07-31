@@ -82,6 +82,7 @@ Do **not** put `secrets.yaml` in git. Edit MACs / `espnow_cmd_tag` in the stubs 
 
 1. Restart Home Assistant
 2. ESPHome → Validate each device (set `refresh: 0d` once if the git cache is empty/stale, then restore `1d`)
+   - If Validate/Install dies with `not a valid YAML file` / `expected '<document start>'` on a package body, a header comment likely lost its `#` on GitHub — fix + push, then force re-pull with `refresh: 0d` (see [`homeassistant/esphome/README.md`](homeassistant/esphome/README.md))
 3. Flash USB first time per device if never adopted; OTA after
 
 ### Flash order (first fleet bring-up)
