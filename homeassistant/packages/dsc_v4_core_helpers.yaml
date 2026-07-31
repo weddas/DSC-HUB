@@ -13,9 +13,15 @@ input_boolean:
   dsc_event_log:
     name: DSC Event Log
     icon: mdi:notebook-outline
-  dsc_fan_test_voice:
-    name: DSC Fan Test Voice
-    icon: mdi:microphone-message
+  # Flip ON once a physical follower exists. Until then, Climate shows
+  # "demand without actuator" when the hub ladder fires these rungs.
+  dsc_ac_actuator_wired:
+    name: DSC AC Actuator Wired
+    icon: mdi:snowflake
+    initial: false
+  dsc_clone_humidifier_actuator_wired:
+    name: DSC Clone Humidifier Actuator Wired
+    icon: mdi:sprinkler-variant
     initial: false
 
 input_number:
@@ -120,6 +126,23 @@ template:
         state: "{{ is_state('binary_sensor.dsc_hub_ha_link_status', 'on') }}"
         availability: "{{ has_value('binary_sensor.dsc_hub_ha_link_status') }}"
 
+      # Ladder fired but nothing physical will run (no Sonoff follower yet).
+      - name: "DSC AC Demand Without Actuator"
+        unique_id: dsc_ac_demand_without_actuator
+        device_class: problem
+        icon: mdi:snowflake-off
+        state: >-
+          {{ is_state('switch.dsc_hub_ac_demand', 'on')
+             and not is_state('input_boolean.dsc_ac_actuator_wired', 'on') }}
+
+      - name: "DSC Clone Humidifier Demand Without Actuator"
+        unique_id: dsc_clone_humidifier_demand_without_actuator
+        device_class: problem
+        icon: mdi:sprinkler-off
+        state: >-
+          {{ is_state('switch.dsc_hub_clone_humidifier_demand', 'on')
+             and not is_state('input_boolean.dsc_clone_humidifier_actuator_wired', 'on') }}
+
   - sensor:
       - name: "DSC Fan Intake Main Pct"
         unique_id: dsc_fan_intake_main_pct
@@ -161,52 +184,91 @@ template:
           {{ state_attr(e,'percentage') | float(0) if is_state(e,'on') else 0 }}
         availability: "{{ has_value('fan.dsc_hub_6_inch_exhaust_outside') }}"
 
-      # Sankey topology used by dsc-hub-v4-dashboard.yaml
+      # Sankey topology — CFM from plant specs × commanded %.
+      # Falls back to legacy pct*10 flux if max CFM helpers are missing.
       - name: "DSC Airflow Room Supply"
         unique_id: dsc_airflow_room_supply
-        unit_of_measurement: "flux"
+        unit_of_measurement: "CFM"
         state_class: measurement
         icon: mdi:weather-windy
         state: >
-          {{ (states('sensor.dsc_fan_intake_main_pct') | float(0)
-              + states('sensor.dsc_fan_intake_2x4_pct') | float(0)) * 10 }}
+          {% set im = states('input_number.dsc_cfm_intake_main_max')|float(0) %}
+          {% set ic = states('input_number.dsc_cfm_intake_clone_max')|float(0) %}
+          {% if im > 0 or ic > 0 %}
+            {{ ((states('sensor.dsc_fan_intake_main_pct')|float(0)/100*im)
+               + (states('sensor.dsc_fan_intake_2x4_pct')|float(0)/100*ic)) | round(1) }}
+          {% else %}
+            {{ (states('sensor.dsc_fan_intake_main_pct')|float(0)
+                + states('sensor.dsc_fan_intake_2x4_pct')|float(0)) * 10 }}
+          {% endif %}
 
       - name: "DSC Airflow Reservoir Net"
         unique_id: dsc_airflow_reservoir_net
-        unit_of_measurement: "flux"
-        state_class: measurement
-        icon: mdi:weather-windy
-        state: "{{ (states('sensor.dsc_fan_intake_2x4_pct') | float(0)) * 10 }}"
-
-      - name: "DSC Airflow Direct Room"
-        unique_id: dsc_airflow_direct_room
-        unit_of_measurement: "flux"
-        state_class: measurement
-        icon: mdi:weather-windy
-        state: "{{ (states('sensor.dsc_fan_intake_main_pct') | float(0)) * 10 }}"
-
-      - name: "DSC Airflow Main Load"
-        unique_id: dsc_airflow_main_load
-        unit_of_measurement: "flux"
+        unit_of_measurement: "CFM"
         state_class: measurement
         icon: mdi:weather-windy
         state: >
-          {{ (states('sensor.dsc_fan_intake_main_pct') | float(0)
-              + states('sensor.dsc_fan_intake_2x4_pct') | float(0)) * 10 }}
+          {% set ic = states('input_number.dsc_cfm_intake_clone_max')|float(0) %}
+          {% if ic > 0 %}
+            {{ (states('sensor.dsc_fan_intake_2x4_pct')|float(0)/100*ic) | round(1) }}
+          {% else %}
+            {{ (states('sensor.dsc_fan_intake_2x4_pct')|float(0)) * 10 }}
+          {% endif %}
+
+      - name: "DSC Airflow Direct Room"
+        unique_id: dsc_airflow_direct_room
+        unit_of_measurement: "CFM"
+        state_class: measurement
+        icon: mdi:weather-windy
+        state: >
+          {% set im = states('input_number.dsc_cfm_intake_main_max')|float(0) %}
+          {% if im > 0 %}
+            {{ (states('sensor.dsc_fan_intake_main_pct')|float(0)/100*im) | round(1) }}
+          {% else %}
+            {{ (states('sensor.dsc_fan_intake_main_pct')|float(0)) * 10 }}
+          {% endif %}
+
+      - name: "DSC Airflow Main Load"
+        unique_id: dsc_airflow_main_load
+        unit_of_measurement: "CFM"
+        state_class: measurement
+        icon: mdi:weather-windy
+        state: >
+          {% set im = states('input_number.dsc_cfm_intake_main_max')|float(0) %}
+          {% set ic = states('input_number.dsc_cfm_intake_clone_max')|float(0) %}
+          {% if im > 0 or ic > 0 %}
+            {{ ((states('sensor.dsc_fan_intake_main_pct')|float(0)/100*im)
+               + (states('sensor.dsc_fan_intake_2x4_pct')|float(0)/100*ic)) | round(1) }}
+          {% else %}
+            {{ (states('sensor.dsc_fan_intake_main_pct')|float(0)
+                + states('sensor.dsc_fan_intake_2x4_pct')|float(0)) * 10 }}
+          {% endif %}
 
       - name: "DSC Airflow Exhaust Out"
         unique_id: dsc_airflow_exhaust_out
-        unit_of_measurement: "flux"
+        unit_of_measurement: "CFM"
         state_class: measurement
         icon: mdi:weather-windy
-        state: "{{ (states('sensor.dsc_fan_exhaust_outside_pct') | float(0)) * 10 }}"
+        state: >
+          {% set mx = states('input_number.dsc_cfm_out_max')|float(0) %}
+          {% if mx > 0 %}
+            {{ (states('sensor.dsc_fan_exhaust_outside_pct')|float(0)/100*mx) | round(1) }}
+          {% else %}
+            {{ (states('sensor.dsc_fan_exhaust_outside_pct')|float(0)) * 10 }}
+          {% endif %}
 
       - name: "DSC Airflow Room Return"
         unique_id: dsc_airflow_room_return
-        unit_of_measurement: "flux"
+        unit_of_measurement: "CFM"
         state_class: measurement
         icon: mdi:weather-windy
-        state: "{{ (states('sensor.dsc_fan_exhaust_room_pct') | float(0)) * 10 }}"
+        state: >
+          {% set mx = states('input_number.dsc_cfm_recirc_max')|float(0) %}
+          {% if mx > 0 %}
+            {{ (states('sensor.dsc_fan_exhaust_room_pct')|float(0)/100*mx) | round(1) }}
+          {% else %}
+            {{ (states('sensor.dsc_fan_exhaust_room_pct')|float(0)) * 10 }}
+          {% endif %}
 
       - name: "DSC Delta Room to Clone"
         unique_id: dsc_delta_room_to_clone

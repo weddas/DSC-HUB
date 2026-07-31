@@ -48,7 +48,7 @@ views:
       - type: grid
         cards:
           - type: heading
-            heading: 👑 SYSTEM PULSE
+            heading: SYSTEM PULSE
             heading_style: title
           - type: custom:mushroom-chips-card
             alignment: start
@@ -77,17 +77,40 @@ views:
               - type: template
                 entity: sensor.dsc_hub_uptime
                 icon: mdi:timer-outline
-                icon_color: green
-                content: "{{ states(entity) }}"
+                icon_color: >-
+                  {{ 'green' if not is_state(entity,'unavailable') else 'red' }}
+                content: >-
+                  {% set s = states(entity)|float(0) %}
+                  {% if is_state(entity,'unavailable') %}—{% elif s >= 86400 %}{{
+                  (s/86400)|round(1) }}d{% elif s >= 3600 %}{{ (s/3600)|round(1)
+                  }}h{% else %}{{ (s/60)|round(0)|int }}m{% endif %}
               - type: template
                 entity: sensor.dsc_active_alert_count
-                icon: mdi:sprout
+                icon: >-
+                  {% set n = states(entity) | int(0) %}
+                  {{ 'mdi:check-circle' if n == 0 else 'mdi:alert-decagram' }}
                 content: >
                   {% set n = states(entity) | int(0) %}
                   {{ 'All clear' if n == 0 else n ~ ' alert(s)' }}
                 icon_color: >
                   {% set n = states(entity) | int(0) %}
                   {{ 'green' if n == 0 else 'red' }}
+                tap_action:
+                  action: navigate
+                  navigation_path: /dsc-hub-v4/system
+            card_mod:
+              style:
+                ".": |
+                  @keyframes dsc-pulse-glow {
+                    0%, 100% { filter: drop-shadow(0 0 0 transparent); }
+                    50% { filter: drop-shadow(0 0 6px rgba(239,68,68,0.85)); }
+                  }
+                "mushroom-template-chip:nth-child(4)$": |
+                  mushroom-shape-icon {
+                    {% if states('sensor.dsc_active_alert_count')|int(0) > 0 %}
+                    animation: dsc-pulse-glow 1.4s ease-in-out infinite;
+                    {% endif %}
+                  }
           - type: custom:mushroom-chips-card
             alignment: start
             chips:
@@ -228,127 +251,267 @@ views:
                   state: "on"
                 - entity_id: binary_sensor.dsc_pot*_ph_out_of_range
                   state: "on"
-                - entity_id: binary_sensor.dsc_pot*_temp_out_of_range
+                - entity_id: binary_sensor.dsc_pot*_root_zone_temp_out_of_range
                   state: "on"
                 - entity_id: binary_sensor.dsc_pot*_ec_*
                   state: "on"
-                - entity_id: binary_sensor.dsc_pot*_n_*
+                - entity_id: binary_sensor.dsc_pot*_nitrogen_*
                   state: "on"
-          - type: heading
-            heading: 💨 AIRFLOW — room → 2x4 → 4x8 → outside
-            heading_style: subtitle
-          - type: custom:power-flow-card-plus
-            entities:
-              grid:
-                entity: sensor.dsc_airflow_exhaust_out
-                name: Outside
-                icon: mdi:weather-windy
-              solar:
-                entity: sensor.dsc_airflow_room_supply
-                name: Room
-                icon: mdi:home-thermometer-outline
-              battery:
-                entity: sensor.dsc_airflow_reservoir_net
-                name: 2x4 Reservoir
-                icon: mdi:sprout
-              home:
-                entity: sensor.dsc_airflow_main_load
-                name: 4x8 Main
-                icon: mdi:greenhouse
-            watt_threshold: 10000
-            w_decimals: 0
-            min_flow_rate: 0.9
-            max_flow_rate: 6
-            display_zero_lines:
-              mode: show
+          - type: custom:mushroom-chips-card
+            alignment: justify
+            chips:
+              - type: template
+                entity: binary_sensor.dsc_hub_pot1_esp_now_link
+                icon: mdi:access-point
+                icon_color: "{{ 'green' if is_state(entity,'on') else 'disabled' }}"
+                content: "P1 {{ 'ESP' if is_state(entity,'on') else 'HA' }}"
+                tap_action:
+                  action: navigate
+                  navigation_path: /dsc-hub-v4/root-zone
+              - type: template
+                entity: binary_sensor.dsc_hub_pot2_esp_now_link
+                icon: mdi:access-point
+                icon_color: "{{ 'green' if is_state(entity,'on') else 'disabled' }}"
+                content: "P2 {{ 'ESP' if is_state(entity,'on') else 'HA' }}"
+                tap_action:
+                  action: navigate
+                  navigation_path: /dsc-hub-v4/root-zone
+              - type: template
+                entity: binary_sensor.dsc_hub_pot3_esp_now_link
+                icon: mdi:access-point
+                icon_color: "{{ 'green' if is_state(entity,'on') else 'disabled' }}"
+                content: "P3 {{ 'ESP' if is_state(entity,'on') else 'HA' }}"
+                tap_action:
+                  action: navigate
+                  navigation_path: /dsc-hub-v4/root-zone
+              - type: template
+                entity: binary_sensor.dsc_hub_pot4_esp_now_link
+                icon: mdi:access-point
+                icon_color: "{{ 'green' if is_state(entity,'on') else 'disabled' }}"
+                content: "P4 {{ 'ESP' if is_state(entity,'on') else 'HA' }}"
+                tap_action:
+                  action: navigate
+                  navigation_path: /dsc-hub-v4/root-zone
+            card_mod:
+              style: |
+                @keyframes dsc-link-pulse {
+                  0%, 100% { opacity: 1; }
+                  50% { opacity: 0.55; }
+                }
+                mushroom-template-chip:nth-child(1) mushroom-shape-icon,
+                mushroom-template-chip:nth-child(2) mushroom-shape-icon,
+                mushroom-template-chip:nth-child(3) mushroom-shape-icon,
+                mushroom-template-chip:nth-child(4) mushroom-shape-icon {
+                  {% if is_state('binary_sensor.dsc_hub_pot1_esp_now_link','on')
+                     or is_state('binary_sensor.dsc_hub_pot2_esp_now_link','on')
+                     or is_state('binary_sensor.dsc_hub_pot3_esp_now_link','on')
+                     or is_state('binary_sensor.dsc_hub_pot4_esp_now_link','on') %}
+                  animation: dsc-link-pulse 2.4s ease-in-out infinite;
+                  {% endif %}
+                }
       - type: grid
         cards:
           - type: heading
-            heading: ⚡ RUNNING NOW
+            heading: RUNNING NOW
             heading_style: subtitle
           - type: custom:mushroom-chips-card
             alignment: justify
             chips:
               - type: template
                 entity: switch.dsc_hub_heater_demand
-                icon: mdi:radiator
-                icon_color: "{{ 'amber' if is_state(entity,'on') else 'disabled' }}"
-                content: "{{ 'HEAT' if is_state(entity,'on') else 'heat' }}"
+                icon: "{{ 'mdi:radiator' if is_state(entity,'on') else 'mdi:radiator-disabled' }}"
+                icon_color: "{{ 'deep-orange' if is_state(entity,'on') else 'disabled' }}"
+                content: Heat
                 tap_action:
                   action: more-info
               - type: template
                 entity: switch.dsc_hub_ac_demand
                 icon: mdi:snowflake
-                icon_color: "{{ 'amber' if is_state(entity,'on') else 'disabled' }}"
-                content: "{{ 'AC' if is_state(entity,'on') else 'ac' }}"
+                icon_color: >-
+                  {% if is_state('binary_sensor.dsc_ac_demand_without_actuator','on') %}red
+                  {% elif is_state(entity,'on') %}cyan
+                  {% else %}disabled{% endif %}
+                content: >-
+                  {% if is_state('binary_sensor.dsc_ac_demand_without_actuator','on') %}Cool ⚠
+                  {% else %}Cool{% endif %}
                 tap_action:
                   action: more-info
               - type: template
                 entity: switch.dsc_hub_humidifier_demand
-                icon: mdi:air-humidifier
-                icon_color: "{{ 'amber' if is_state(entity,'on') else 'disabled' }}"
-                content: "{{ 'HUM' if is_state(entity,'on') else 'hum' }}"
+                icon: "{{ 'mdi:air-humidifier' if is_state(entity,'on') else 'mdi:air-humidifier-off' }}"
+                icon_color: "{{ 'blue' if is_state(entity,'on') else 'disabled' }}"
+                content: Hum
                 tap_action:
                   action: more-info
               - type: template
                 entity: switch.dsc_hub_dehumidifier_demand
                 icon: mdi:water-remove
-                icon_color: "{{ 'amber' if is_state(entity,'on') else 'disabled' }}"
-                content: "{{ 'DEHUM' if is_state(entity,'on') else 'dehum' }}"
+                icon_color: >-
+                  {% if not has_value('switch.dsc_de_humidifier_main_relay') %}red
+                  {% elif is_state(entity,'on') %}teal
+                  {% else %}disabled{% endif %}
+                content: >-
+                  {% if not has_value('switch.dsc_de_humidifier_main_relay') %}Dehum offline
+                  {% else %}Dehum{% endif %}
                 tap_action:
                   action: more-info
               - type: template
                 entity: switch.dsc_hub_grow_mat_demand
                 icon: mdi:heating-coil
-                icon_color: "{{ 'amber' if is_state(entity,'on') else 'disabled' }}"
-                content: "{{ 'MAT' if is_state(entity,'on') else 'mat' }}"
+                icon_color: >-
+                  {% if is_state('binary_sensor.dsc_hub_root_zone_sensor_fault','on') %}red
+                  {% elif is_state(entity,'on') %}orange
+                  {% else %}disabled{% endif %}
+                content: Mat
                 tap_action:
                   action: more-info
               - type: template
                 entity: switch.dsc_hub_clone_humidifier_demand
                 icon: mdi:sprinkler-variant
-                icon_color: "{{ 'amber' if is_state(entity,'on') else 'disabled' }}"
-                content: "{{ 'C-HUM' if is_state(entity,'on') else 'c-hum' }}"
+                icon_color: >-
+                  {% if is_state('binary_sensor.dsc_clone_humidifier_demand_without_actuator','on') %}red
+                  {% elif is_state(entity,'on') %}light-blue
+                  {% else %}disabled{% endif %}
+                content: >-
+                  {% if is_state('binary_sensor.dsc_clone_humidifier_demand_without_actuator','on') %}C-Hum ⚠
+                  {% else %}C-Hum{% endif %}
                 tap_action:
                   action: more-info
-              # v2.4: replaces the retired CLONE LED demand chip. The SF1000
-              # is analogue now — a binary chip would throw away the ramp, so
-              # this shows live brightness and the ramp phase instead.
               - type: template
                 entity: light.dsc_hub_sf1000_dimmer
-                icon: mdi:lightbulb-on-outline
+                icon: >-
+                  {% if is_state(entity,'on') %}mdi:lightbulb-on
+                  {% else %}mdi:lightbulb-outline{% endif %}
                 icon_color: >-
                   {% if is_state('binary_sensor.dsc_clone_dark_period_violation','on') %}red
                   {% elif is_state(entity,'on') %}amber
                   {% else %}disabled{% endif %}
                 content: >-
                   {% set b = (state_attr(entity,'brightness') | float(0) / 255 * 100) | round(0) %}
-                  {% if is_state(entity,'on') %}SF1000 {{ b }}%{% else %}sf1000{% endif %}
+                  {% if is_state(entity,'on') %}SF {{ b }}%{% else %}SF1000{% endif %}
                 tap_action:
                   action: more-info
+            card_mod:
+              style:
+                ".": |
+                  @keyframes dsc-duty-pulse {
+                    0%, 100% { filter: drop-shadow(0 0 0 transparent); transform: scale(1); }
+                    50% { filter: drop-shadow(0 0 7px currentColor); transform: scale(1.08); }
+                  }
+                  @keyframes dsc-breathe {
+                    0%, 100% { opacity: 1; }
+                    50% { opacity: 0.55; }
+                  }
+                "mushroom-template-chip:nth-child(1)$": |
+                  mushroom-shape-icon {
+                    {% if is_state('switch.dsc_hub_heater_demand','on') %}
+                    animation: dsc-duty-pulse 1.8s ease-in-out infinite;
+                    {% endif %}
+                  }
+                "mushroom-template-chip:nth-child(2)$": |
+                  mushroom-shape-icon {
+                    {% if is_state('switch.dsc_hub_ac_demand','on') %}
+                    animation: dsc-duty-pulse 1.8s ease-in-out infinite;
+                    {% endif %}
+                  }
+                "mushroom-template-chip:nth-child(3)$": |
+                  mushroom-shape-icon {
+                    {% if is_state('switch.dsc_hub_humidifier_demand','on') %}
+                    animation: dsc-duty-pulse 2s ease-in-out infinite;
+                    {% endif %}
+                  }
+                "mushroom-template-chip:nth-child(4)$": |
+                  mushroom-shape-icon {
+                    {% if not has_value('switch.dsc_de_humidifier_main_relay') %}
+                    animation: dsc-breathe 1.2s ease-in-out infinite;
+                    {% elif is_state('switch.dsc_hub_dehumidifier_demand','on') %}
+                    animation: dsc-duty-pulse 2s ease-in-out infinite;
+                    {% endif %}
+                  }
+                "mushroom-template-chip:nth-child(5)$": |
+                  mushroom-shape-icon {
+                    {% if is_state('switch.dsc_hub_grow_mat_demand','on') %}
+                    animation: dsc-duty-pulse 1.8s ease-in-out infinite;
+                    {% endif %}
+                  }
+                "mushroom-template-chip:nth-child(6)$": |
+                  mushroom-shape-icon {
+                    {% if is_state('switch.dsc_hub_clone_humidifier_demand','on') %}
+                    animation: dsc-duty-pulse 2s ease-in-out infinite;
+                    {% endif %}
+                  }
+                "mushroom-template-chip:nth-child(7)$": |
+                  mushroom-shape-icon {
+                    {% if is_state('light.dsc_hub_sf1000_dimmer','on') %}
+                    animation: dsc-breathe 2.6s ease-in-out infinite;
+                    {% endif %}
+                  }
           - type: custom:mushroom-chips-card
             alignment: justify
             chips:
               - type: template
                 entity: sensor.dsc_fan_intake_main_pct
                 icon: mdi:fan
-                icon_color: "{{ 'blue' if states(entity)|float(0) > 0 else 'disabled' }}"
-                content: IN 4x8 {{ states(entity)|float(0)|round(0) }}%
+                icon_color: "{{ 'cyan' if states(entity)|float(0) > 0 else 'disabled' }}"
+                content: IN 4×8 {{ states(entity)|float(0)|round(0) }}%
+                tap_action:
+                  action: navigate
+                  navigation_path: /dsc-hub-v4/climate
               - type: template
                 entity: sensor.dsc_fan_intake_2x4_pct
                 icon: mdi:fan
-                icon_color: "{{ 'blue' if states(entity)|float(0) > 0 else 'disabled' }}"
-                content: IN 2x4 {{ states(entity)|float(0)|round(0) }}%
+                icon_color: "{{ 'cyan' if states(entity)|float(0) > 0 else 'disabled' }}"
+                content: IN 2×4 {{ states(entity)|float(0)|round(0) }}%
+                tap_action:
+                  action: navigate
+                  navigation_path: /dsc-hub-v4/climate
               - type: template
                 entity: sensor.dsc_fan_exhaust_room_pct
                 icon: mdi:fan-chevron-up
-                icon_color: "{{ 'blue' if states(entity)|float(0) > 0 else 'disabled' }}"
+                icon_color: "{{ 'cyan' if states(entity)|float(0) > 0 else 'disabled' }}"
                 content: EX ROOM {{ states(entity)|float(0)|round(0) }}%
+                tap_action:
+                  action: navigate
+                  navigation_path: /dsc-hub-v4/climate
               - type: template
                 entity: sensor.dsc_fan_exhaust_outside_pct
                 icon: mdi:fan-chevron-up
-                icon_color: "{{ 'blue' if states(entity)|float(0) > 0 else 'disabled' }}"
+                icon_color: "{{ 'cyan' if states(entity)|float(0) > 0 else 'disabled' }}"
                 content: EX OUT {{ states(entity)|float(0)|round(0) }}%
+                tap_action:
+                  action: navigate
+                  navigation_path: /dsc-hub-v4/climate
+            card_mod:
+              style:
+                ".": |
+                  @keyframes dsc-fan-spin {
+                    from { transform: rotate(0deg); }
+                    to { transform: rotate(360deg); }
+                  }
+                "mushroom-template-chip:nth-child(1)$": |
+                  mushroom-shape-icon {
+                    {% if states('sensor.dsc_fan_intake_main_pct')|float(0) > 0 %}
+                    animation: dsc-fan-spin 1.3s linear infinite;
+                    {% endif %}
+                  }
+                "mushroom-template-chip:nth-child(2)$": |
+                  mushroom-shape-icon {
+                    {% if states('sensor.dsc_fan_intake_2x4_pct')|float(0) > 0 %}
+                    animation: dsc-fan-spin 1.3s linear infinite;
+                    {% endif %}
+                  }
+                "mushroom-template-chip:nth-child(3)$": |
+                  mushroom-shape-icon {
+                    {% if states('sensor.dsc_fan_exhaust_room_pct')|float(0) > 0 %}
+                    animation: dsc-fan-spin 1.1s linear infinite;
+                    {% endif %}
+                  }
+                "mushroom-template-chip:nth-child(4)$": |
+                  mushroom-shape-icon {
+                    {% if states('sensor.dsc_fan_exhaust_outside_pct')|float(0) > 0 %}
+                    animation: dsc-fan-spin 1.4s linear infinite;
+                    {% endif %}
+                  }
           - type: custom:logbook-card
             title: Grow log
             entity: input_boolean.dsc_event_log
@@ -728,7 +891,7 @@ views:
       - type: grid
         cards:
           - type: heading
-            heading: 🌡️ TENT VITALS
+            heading: TENT VITALS
             heading_style: title
           - type: grid
             columns: 3
@@ -816,7 +979,7 @@ views:
                 needle: true
                 segments: >
                   {% set t =
-                  states('number.dsc_hub_clone_target_temp')|float(24) %} {{ [
+                  states('number.dsc_hub_target_temp')|float(25) %} {{ [
                   {'from': 10, 'color': '#3b82f6'},
                        {'from': t - 2, 'color': '#22c55e'},
                        {'from': t + 2, 'color': '#ef4444'} ] }}
@@ -827,8 +990,8 @@ views:
                 max: 100
                 needle: true
                 segments: >
-                  {% set lo = states('number.dsc_hub_clone_rh_min')|float(70) %}
-                  {% set hi = states('number.dsc_hub_clone_rh_max')|float(80) %}
+                  {% set lo = states('number.dsc_hub_rh_target_min')|float(50) %}
+                  {% set hi = states('number.dsc_hub_rh_target_max')|float(70) %}
                   {{ [ {'from': 0, 'color': '#f59e0b'},
                        {'from': lo, 'color': '#22c55e'},
                        {'from': hi, 'color': '#ef4444'} ] }}
@@ -839,7 +1002,7 @@ views:
               # itself heats on the coldest plausible pot of all four.
               - type: custom:gauge-card-pro
                 entity: sensor.dsc_pot1_soil_temperature
-                header: Root Zone
+                header: Root (P1)
                 min: 10
                 max: 32
                 needle: true
@@ -850,15 +1013,12 @@ views:
                        {'from': lo, 'color': '#22c55e'},
                        {'from': hi, 'color': '#ef4444'} ] }}
           - type: heading
-            heading: 📅 TODAY
+            heading: TODAY
             heading_style: subtitle
           - type: custom:mushroom-chips-card
             alignment: justify
             chips:
-              # v2.4: this is the VIRTUAL window's hours. No lamp — it says the
-              # 4x8 believed it was daytime, which is still what drives the
-              # counter-cycle and Follow-4x8. Icon is deliberately a clock, not
-              # a sun, so it never gets mistaken for photons.
+              # Virtual 4x8 window hours (no lamp) — clock icon on purpose.
               - type: template
                 entity: sensor.dsc_lights_on_today_4x8
                 icon: mdi:sun-clock
@@ -866,13 +1026,12 @@ views:
                   {{ 'blue' if is_state('binary_sensor.dsc_hub_4x8_window_open','on')
                   else 'disabled' }}
                 content: >-
-                  4x8 window {{ states(entity)|float(0)|round(1) }}h / {{
+                  4×8 {{ states(entity)|float(0)|round(1) }}h / {{
                   states('sensor.dsc_expected_light_hours')|float(0)|round(0)
                   }}h
                 tap_action:
                   action: navigate
                   navigation_path: /dsc-hub-v4/lighting
-              # v2.4: the only real photon count in the system.
               - type: template
                 entity: sensor.dsc_lights_on_today_2x4
                 icon: mdi:white-balance-sunny
@@ -881,7 +1040,7 @@ views:
                   is_state('binary_sensor.dsc_clone_dark_period_violation','on')
                   else 'amber' }}
                 content: >-
-                  2x4 💡 {{ states(entity)|float(0)|round(1) }}h / {{
+                  2×4 {{ states(entity)|float(0)|round(1) }}h / {{
                   states('sensor.dsc_clone_expected_light_hours')|float(0)|round(0)
                   }}h
                 tap_action:
@@ -890,17 +1049,29 @@ views:
               - type: template
                 entity: sensor.dsc_heater_runtime_today
                 icon: mdi:radiator
-                icon_color: "{{ 'amber' if states(entity)|float(0) > 0 else 'disabled' }}"
-                content: 🔥 {{ states(entity)|float(0)|round(1) }}h
+                icon_color: "{{ 'deep-orange' if states(entity)|float(0) > 0 else 'disabled' }}"
+                content: Heat {{ states(entity)|float(0)|round(1) }}h
               - type: template
                 entity: sensor.dsc_humidifier_cycles_last_hour
                 icon: mdi:sync-alert
                 icon_color: |-
                   {{ 'red' if states(entity)|float(0) > 6 else
                      ('amber' if states(entity)|float(0) > 3 else 'green') }}
-                content: HUM {{ states(entity)|float(0)|round(0) }} cyc/h
+                content: Hum {{ states(entity)|float(0)|round(0) }}/h
+            card_mod:
+              style: |
+                @keyframes dsc-sun-breathe {
+                  0%, 100% { opacity: 1; transform: scale(1); }
+                  50% { opacity: 0.65; transform: scale(1.08); }
+                }
+                mushroom-template-chip:nth-child(2) mushroom-shape-icon {
+                  {% if is_state('light.dsc_hub_sf1000_dimmer','on')
+                     and not is_state('binary_sensor.dsc_clone_dark_period_violation','on') %}
+                  animation: dsc-sun-breathe 2.8s ease-in-out infinite;
+                  {% endif %}
+                }
           - type: heading
-            heading: 🌱 ROOT & TANK
+            heading: ROOT & TANK
             heading_style: subtitle
           - type: custom:mushroom-chips-card
             alignment: start
@@ -1003,14 +1174,6 @@ views:
                 tap_action:
                   action: navigate
                   navigation_path: /dsc-hub-v4/root-zone
-          - type: custom:mushroom-template-card
-            primary: Airflow detail lives on Climate
-            secondary: Power-flow map kept there to keep Home first-paint light
-            icon: mdi:chart-sankey
-            icon_color: disabled
-            tap_action:
-              action: navigate
-              navigation_path: /dsc-hub-v4/climate
 
   - title: Climate Engine
     icon: mdi:engine
@@ -1069,6 +1232,30 @@ views:
               persisting. 0 = idle or already fired. The window shortens
               automatically when the room air can't fix it — waiting would be
               theatre.*
+          - type: conditional
+            conditions:
+              - condition: or
+                conditions:
+                  - condition: state
+                    entity_id: binary_sensor.dsc_ac_demand_without_actuator
+                    state: "on"
+                  - condition: state
+                    entity_id: binary_sensor.dsc_clone_humidifier_demand_without_actuator
+                    state: "on"
+            card:
+              type: markdown
+              content: >-
+                {% if is_state('binary_sensor.dsc_ac_demand_without_actuator','on') %}
+                **AC demand is LIVE but no actuator is wired** — fans can only
+                exchange toward room temp. Flip `DSC AC Actuator Wired` once a
+                follower exists.
+                {% endif %}
+                {% if is_state('binary_sensor.dsc_clone_humidifier_demand_without_actuator','on') %}
+
+                **Clone humidifier demand is LIVE but mister hardware is parked** —
+                2x4 RH depends on room humidifier + intake routing. Flip
+                `DSC Clone Humidifier Actuator Wired` once a follower exists.
+                {% endif %}
           - type: grid
             columns: 2
             square: false
@@ -1080,12 +1267,21 @@ views:
                   Exhaust {{ states(entity)|float(0)|round(0) }}% — always first
                   responder
                 icon: mdi:fan
-                icon_color: "{{ 'amber' if states(entity)|float(0) > 30 else 'blue' }}"
+                icon_color: "{{ 'cyan' if states(entity)|float(0) > 30 else 'blue' }}"
                 card_mod:
                   style: |
+                    @keyframes dsc-fan-spin {
+                      from { transform: rotate(0deg); }
+                      to { transform: rotate(360deg); }
+                    }
                     ha-card {
                       {% if states('sensor.dsc_fan_exhaust_outside_pct')|float(0) > 30 %}
-                      box-shadow: 0 0 12px rgba(255,170,0,0.45);
+                      box-shadow: 0 0 14px rgba(34,211,238,0.45);
+                      {% endif %}
+                    }
+                    mushroom-shape-icon {
+                      {% if states('sensor.dsc_fan_exhaust_outside_pct')|float(0) > 0 %}
+                      animation: dsc-fan-spin {{ [2.2 - (states('sensor.dsc_fan_exhaust_outside_pct')|float(0)/100*1.4), 0.75]|max }}s linear infinite;
                       {% endif %}
                     }
               - type: custom:mushroom-template-card
@@ -1093,21 +1289,19 @@ views:
                 primary: Rung 2 · Humidifier
                 secondary: >-
                   {% set c = states('sensor.dsc_hub_humidifier_fire_countdown')|float(0) %}
-                  {% set cd = states('sensor.dsc_hub_humidifier_cooldown_remaining')|float(0) %}
                   {% if is_state(entity,'on') %}DEMAND LIVE
                   {%- elif c > 0 %}firing in {{ c|round(0) }}s
-                  {%- elif cd > 0 %}cooling down {{ cd|round(0) }}s
                   {%- else %}standing by{% endif %}
                 icon: mdi:air-humidifier
                 icon_color: >-
-                  {% if is_state(entity,'on') %}amber
-                  {%- elif states('sensor.dsc_hub_humidifier_fire_countdown')|float(0) > 0 %}orange
+                  {% if is_state(entity,'on') %}blue
+                  {%- elif states('sensor.dsc_hub_humidifier_fire_countdown')|float(0) > 0 %}light-blue
                   {%- else %}disabled{% endif %}
                 card_mod:
                   style: |
                     ha-card {
                       {% if is_state('switch.dsc_hub_humidifier_demand','on') %}
-                      box-shadow: 0 0 12px rgba(255,170,0,0.45);
+                      box-shadow: 0 0 14px rgba(59,130,246,0.5);
                       {% endif %}
                     }
               - type: custom:mushroom-template-card
@@ -1122,14 +1316,17 @@ views:
                   {%- else %}standing by{% endif %}
                 icon: mdi:water-remove
                 icon_color: >-
-                  {% if is_state(entity,'on') %}amber
-                  {%- elif states('sensor.dsc_hub_dehumidifier_fire_countdown')|float(0) > 0 %}orange
+                  {% if not has_value('switch.dsc_de_humidifier_main_relay') %}red
+                  {%- elif is_state(entity,'on') %}teal
+                  {%- elif states('sensor.dsc_hub_dehumidifier_fire_countdown')|float(0) > 0 %}cyan
                   {%- else %}disabled{% endif %}
                 card_mod:
                   style: |
                     ha-card {
-                      {% if is_state('switch.dsc_hub_dehumidifier_demand','on') %}
-                      box-shadow: 0 0 12px rgba(255,170,0,0.45);
+                      {% if not has_value('switch.dsc_de_humidifier_main_relay') %}
+                      box-shadow: 0 0 14px rgba(239,68,68,0.45);
+                      {% elif is_state('switch.dsc_hub_dehumidifier_demand','on') %}
+                      box-shadow: 0 0 14px rgba(20,184,166,0.5);
                       {% endif %}
                     }
               - type: custom:mushroom-template-card
@@ -1138,20 +1335,26 @@ views:
                 secondary: >-
                   {% set c = states('sensor.dsc_hub_ac_fire_countdown')|float(0) %}
                   {% set cd = states('sensor.dsc_hub_ac_cooldown_remaining')|float(0) %}
-                  {% if is_state(entity,'on') %}DEMAND LIVE
+                  {% set dead = is_state('binary_sensor.dsc_ac_demand_without_actuator','on') %}
+                  {% if dead %}DEMAND LIVE — NO ACTUATOR
+                  {%- elif is_state(entity,'on') %}DEMAND LIVE
                   {%- elif c > 0 %}firing in {{ c|round(0) }}s
                   {%- elif cd > 0 %}compressor lock {{ cd|round(0) }}s
+                  {%- elif not is_state('input_boolean.dsc_ac_actuator_wired','on') %}standing by (unwired)
                   {%- else %}standing by{% endif %}
                 icon: mdi:snowflake
                 icon_color: >-
-                  {% if is_state(entity,'on') %}amber
-                  {%- elif states('sensor.dsc_hub_ac_fire_countdown')|float(0) > 0 %}orange
+                  {% if is_state('binary_sensor.dsc_ac_demand_without_actuator','on') %}red
+                  {%- elif is_state(entity,'on') %}cyan
+                  {%- elif states('sensor.dsc_hub_ac_fire_countdown')|float(0) > 0 %}light-blue
                   {%- else %}disabled{% endif %}
                 card_mod:
                   style: |
                     ha-card {
-                      {% if is_state('switch.dsc_hub_ac_demand','on') %}
-                      box-shadow: 0 0 12px rgba(255,170,0,0.45);
+                      {% if is_state('binary_sensor.dsc_ac_demand_without_actuator','on') %}
+                      box-shadow: 0 0 14px rgba(239,68,68,0.55);
+                      {% elif is_state('switch.dsc_hub_ac_demand','on') %}
+                      box-shadow: 0 0 14px rgba(34,211,238,0.5);
                       {% endif %}
                     }
               - type: custom:mushroom-template-card
@@ -1166,14 +1369,14 @@ views:
                   {%- else %}standing by{% endif %}
                 icon: mdi:radiator
                 icon_color: >-
-                  {% if is_state(entity,'on') %}amber
+                  {% if is_state(entity,'on') %}deep-orange
                   {%- elif states('sensor.dsc_hub_heater_fire_countdown')|float(0) > 0 %}orange
                   {%- else %}disabled{% endif %}
                 card_mod:
                   style: |
                     ha-card {
                       {% if is_state('switch.dsc_hub_heater_demand','on') %}
-                      box-shadow: 0 0 12px rgba(255,170,0,0.45);
+                      box-shadow: 0 0 14px rgba(249,115,22,0.5);
                       {% endif %}
                     }
               # v2.4: the mat is no longer an air-temp rung. Its secondary
@@ -1193,14 +1396,14 @@ views:
                 icon: mdi:heating-coil
                 icon_color: >-
                   {% if is_state('binary_sensor.dsc_hub_root_zone_sensor_fault','on') %}red
-                  {%- elif is_state(entity,'on') %}amber
-                  {%- elif states('sensor.dsc_hub_grow_mat_fire_countdown')|float(0) > 0 %}orange
+                  {%- elif is_state(entity,'on') %}orange
+                  {%- elif states('sensor.dsc_hub_grow_mat_fire_countdown')|float(0) > 0 %}amber
                   {%- else %}disabled{% endif %}
                 card_mod:
                   style: |
                     ha-card {
                       {% if is_state('switch.dsc_hub_grow_mat_demand','on') %}
-                      box-shadow: 0 0 12px rgba(255,170,0,0.45);
+                      box-shadow: 0 0 14px rgba(251,146,60,0.5);
                       {% endif %}
                     }
               - type: custom:mushroom-template-card
@@ -1209,18 +1412,50 @@ views:
                 secondary: >-
                   {% set c = states('sensor.dsc_hub_clone_humidifier_fire_countdown')|float(0) %}
                   {% set cd = states('sensor.dsc_hub_clone_humidifier_cooldown_remaining')|float(0) %}
-                  {% if is_state(entity,'on') %}DEMAND LIVE
+                  {% set dead = is_state('binary_sensor.dsc_clone_humidifier_demand_without_actuator','on') %}
+                  {% if dead %}DEMAND LIVE — NO ACTUATOR
+                  {%- elif is_state(entity,'on') %}DEMAND LIVE
                   {%- elif c > 0 %}firing in {{ c|round(0) }}s
                   {%- elif cd > 0 %}min-off {{ cd|round(0) }}s
+                  {%- elif not is_state('input_boolean.dsc_clone_humidifier_actuator_wired','on') %}standing by (parked)
                   {%- else %}standing by{% endif %}
                 icon: mdi:sprinkler-variant
                 icon_color: >-
-                  {% if is_state(entity,'on') %}amber
-                  {%- elif states('sensor.dsc_hub_clone_humidifier_fire_countdown')|float(0) > 0 %}orange
+                  {% if is_state('binary_sensor.dsc_clone_humidifier_demand_without_actuator','on') %}red
+                  {%- elif is_state(entity,'on') %}light-blue
+                  {%- elif states('sensor.dsc_hub_clone_humidifier_fire_countdown')|float(0) > 0 %}cyan
                   {%- else %}disabled{% endif %}
+                card_mod:
+                  style: |
+                    ha-card {
+                      {% if is_state('binary_sensor.dsc_clone_humidifier_demand_without_actuator','on') %}
+                      box-shadow: 0 0 14px rgba(239,68,68,0.55);
+                      {% elif is_state('switch.dsc_hub_clone_humidifier_demand','on') %}
+                      box-shadow: 0 0 14px rgba(56,189,248,0.5);
+                      {% endif %}
+                    }
           - type: heading
             heading: 🔒 APPLIANCE SAFETIES
             heading_style: subtitle
+          - type: markdown
+            content: >-
+              *AC and clone mister stay **demand-only** until hardware exists.
+              Leave the Wired toggles OFF so a live demand shows as
+              **NO ACTUATOR** instead of looking like the device is running.*
+          - type: grid
+            columns: 2
+            square: false
+            cards:
+              - type: custom:mushroom-entity-card
+                entity: input_boolean.dsc_ac_actuator_wired
+                name: AC Actuator Wired
+                icon: mdi:snowflake
+                icon_color: cyan
+              - type: custom:mushroom-entity-card
+                entity: input_boolean.dsc_clone_humidifier_actuator_wired
+                name: Clone Hum Actuator Wired
+                icon: mdi:sprinkler-variant
+                icon_color: light-blue
           - type: custom:mushroom-entity-card
             entity: lock.4x8_humidifier_photo_lab_lock
             name: 4x8 Humidifier Panel Lock
@@ -1244,6 +1479,77 @@ views:
               firmware defaults. **Watchdog and the >35 °C failsafe are not
               here on purpose** — they stay compiled-in so nothing in this UI
               can disarm the safety net.*
+          - type: custom:expander-card
+            title: 📐 Plant specs — CFM / volumes / appliance rates
+            expanded: false
+            cards:
+              - type: custom:mushroom-template-card
+                entity: sensor.dsc_plant_specs_status
+                primary: Spec verification
+                secondary: >-
+                  {{ states(entity)|upper }} —
+                  {{ state_attr(entity,'issues') or 'none' }}
+                icon: >-
+                  {% if is_state(entity,'error') %}mdi:clipboard-alert
+                  {% elif is_state(entity,'warn') %}mdi:clipboard-text-outline
+                  {% else %}mdi:clipboard-check{% endif %}
+                icon_color: >-
+                  {% if is_state(entity,'error') %}red
+                  {% elif is_state(entity,'warn') %}amber
+                  {% else %}green{% endif %}
+              - type: entities
+                title: Volumes
+                entities:
+                  - entity: input_number.dsc_vol_4x8_m3
+                    name: 4x8 tent
+                  - entity: input_number.dsc_vol_2x4_m3
+                    name: 2x4 tent
+                  - entity: input_number.dsc_vol_room_m3
+                    name: Room lung
+              - type: entities
+                title: Fan nameplate @ 100%
+                entities:
+                  - entity: input_number.dsc_cfm_out_max
+                    name: OUT max CFM
+                  - entity: input_number.dsc_cfm_recirc_max
+                    name: RECIRC max CFM
+                  - entity: input_number.dsc_cfm_intake_main_max
+                    name: Intake Main max CFM
+                  - entity: input_number.dsc_cfm_intake_clone_max
+                    name: Intake 2x4 max CFM
+              - type: entities
+                title: Appliance / light nameplates
+                entities:
+                  - entity: input_number.dsc_heater_w
+                    name: Heater W
+                  - entity: input_number.dsc_ac_btu_hr
+                    name: AC BTU/h (0 if unwired)
+                  - entity: input_number.dsc_dehum_l_day
+                    name: Dehumidifier L/day
+                  - entity: input_number.dsc_hum_ml_hr
+                    name: Humidifier mL/h
+                  - entity: input_number.dsc_sf1000_w
+                    name: SF1000 W @100%
+                  - entity: input_number.dsc_light_4x8_w
+                    name: 4x8 light W
+                  - entity: input_number.dsc_plant_transpiration_g_hr
+                    name: Plant transpiration g/h
+              - type: entities
+                title: Live capacity (from specs)
+                entities:
+                  - entity: sensor.dsc_cfm_exhaust_out
+                  - entity: sensor.dsc_cfm_exhaust_recirc
+                  - entity: sensor.dsc_cfm_intake_main
+                  - entity: sensor.dsc_cfm_intake_2x4
+                  - entity: sensor.dsc_ach_4x8
+                  - entity: sensor.dsc_ach_2x4
+                  - entity: sensor.dsc_heat_balance_btu
+                  - entity: sensor.dsc_moisture_net_rate
+              - type: markdown
+                content: >-
+                  *Defaults are placeholders — replace with anemometer / nameplate
+                  values. Spec checks flag intake CFM > exhaust CFM, AC wired
+                  with 0 BTU/h, and zeroed appliance rates.*
           - type: custom:expander-card
             title: 🌱 Grow mat — closed-loop root-zone band
             expanded: false
@@ -1396,39 +1702,136 @@ views:
                 name: Exhaust Outside
                 show_percentage_control: true
                 icon_animation: true
-          - type: custom:mini-graph-card
-            name: Fan speeds — 12 h
-            hours_to_show: 12
-            cache: true
-            points_per_hour: 12
-            line_width: 2
-            entities:
+          - type: custom:apexcharts-card
+            graph_span: 12h
+            update_interval: 1min
+            header:
+              show: true
+              title: Fan speeds — action magnitude (0–100%)
+              show_states: true
+              colorize_states: true
+            all_series_config:
+              extend_to: now
+              fill_raw: last
+            apex_config:
+              chart:
+                height: 220
+                animations:
+                  enabled: false
+              legend:
+                show: true
+                position: top
+              tooltip:
+                shared: true
+              grid:
+                borderColor: rgba(148,163,184,0.2)
+                strokeDashArray: 3
+            yaxis:
+              - id: primary
+                min: 0
+                max: 100
+                decimals: 0
+                apex_config:
+                  tickAmount: 5
+                  title:
+                    text: "%"
+            series:
               - entity: sensor.dsc_fan_intake_main_pct
                 name: In 4x8
+                yaxis_id: primary
+                curve: stepline
+                stroke_width: 2
+                color: '#34d399'
+                float_precision: 0
               - entity: sensor.dsc_fan_intake_2x4_pct
                 name: In 2x4
+                yaxis_id: primary
+                curve: stepline
+                stroke_width: 2
+                color: '#a3e635'
+                float_precision: 0
               - entity: sensor.dsc_fan_exhaust_room_pct
                 name: Ex Room
+                yaxis_id: primary
+                curve: stepline
+                stroke_width: 2
+                color: '#38bdf8'
+                float_precision: 0
               - entity: sensor.dsc_fan_exhaust_outside_pct
                 name: Ex Out
-            show:
-              labels: true
-              legend: true
-          - type: custom:mini-graph-card
-            name: The curve working — exhaust vs tent temp
-            hours_to_show: 12
-            cache: true
-            points_per_hour: 12
-            line_width: 2
-            entities:
-              - entity: sensor.dsc_hub_tent_temperature
-                name: Tent °C
+                yaxis_id: primary
+                curve: stepline
+                stroke_width: 2.5
+                color: '#67e8f9'
+                float_precision: 0
+          - type: custom:apexcharts-card
+            graph_span: 12h
+            update_interval: 1min
+            header:
+              show: true
+              title: Action → reaction · exhaust vs tent temp
+              show_states: true
+              colorize_states: true
+            apex_config:
+              chart:
+                height: 220
+                animations:
+                  enabled: false
+              legend:
+                show: true
+                position: top
+              tooltip:
+                shared: true
+              grid:
+                borderColor: rgba(148,163,184,0.2)
+                strokeDashArray: 3
+            all_series_config:
+              extend_to: now
+              fill_raw: last
+            yaxis:
+              - id: primary
+                decimals: 1
+                min: 14
+                max: 32
+                apex_config:
+                  forceNiceScale: true
+                  title:
+                    text: Tent °C
+              - id: fan
+                opposite: true
+                min: 0
+                max: 100
+                decimals: 0
+                apex_config:
+                  title:
+                    text: Exhaust %
+                  tickAmount: 4
+            series:
               - entity: sensor.dsc_fan_exhaust_outside_pct
                 name: Exhaust %
-                y_axis: secondary
-            show:
-              labels: true
-              legend: true
+                yaxis_id: fan
+                curve: stepline
+                stroke_width: 2
+                color: '#67e8f9'
+                float_precision: 0
+                show:
+                  extremas: false
+              - entity: number.dsc_hub_target_temp
+                name: Target
+                yaxis_id: primary
+                stroke_width: 1.5
+                stroke_dash: 5
+                color: '#94a3b8'
+                show:
+                  in_header: false
+                  extremas: false
+              - entity: sensor.dsc_hub_tent_temperature
+                name: Tent °C
+                yaxis_id: primary
+                stroke_width: 2.5
+                float_precision: 1
+                show:
+                  extremas: true
           - type: heading
             heading: 🔌 APPLIANCE NODE HEALTH
             heading_style: subtitle
@@ -1502,31 +1905,53 @@ views:
                   primary: Min-off — may re-fire in {{ states(entity)|round(0) }}s
                   icon: mdi:timer-sand
                   icon_color: blue
-              - type: custom:mini-graph-card
-                hours_to_show: 12
-                cache: true
-                points_per_hour: 12
-                line_width: 2
-                smoothing: true
-                entities:
+              - type: custom:apexcharts-card
+                graph_span: 12h
+                update_interval: 1min
+                header:
+                  show: false
+                apex_config:
+                  chart:
+                    height: 170
+                  legend:
+                    show: true
+                yaxis:
+                  - id: primary
+                    decimals: 1
+                    min: 14
+                    max: 32
+                  - id: duty
+                    opposite: true
+                    min: 0
+                    max: 1
+                    show: false
+                series:
                   - entity: sensor.dsc_hub_tent_temperature
                     name: Tent °C
+                    yaxis_id: primary
+                    stroke_width: 2
+                    show:
+                      extremas: true
                   - entity: number.dsc_hub_target_temp
                     name: Target
-                    show_points: false
+                    yaxis_id: primary
+                    stroke_width: 1
+                    stroke_dash: 4
+                    show:
+                      in_header: false
+                      extremas: false
                   - entity: switch.dsc_hub_heater_demand
                     name: Heater
-                    y_axis: secondary
-                    show_line: false
-                    show_points: false
-                    show_fill: true
-                    smoothing: false
-                lower_bound_secondary: 0
-                upper_bound_secondary: 1
-                show:
-                  labels: true
-                  extrema: true
-                  legend: true
+                    yaxis_id: duty
+                    transform: "return x === 'on' ? 1 : 0;"
+                    type: area
+                    curve: stepline
+                    opacity: 0.35
+                    stroke_width: 0
+                    color: '#f97316'
+                    show:
+                      in_header: false
+                      extremas: false
               - type: custom:mushroom-chips-card
                 alignment: justify
                 chips:
@@ -1561,7 +1986,7 @@ views:
                   ago{% endif %} · Auto {{ 'armed' if
                   is_state('switch.dsc_hub_ac_auto','on') else '⚠ DISARMED' }}
                 icon: mdi:snowflake
-                icon_color: "{{ 'amber' if is_state(entity,'on') else 'disabled' }}"
+                icon_color: "{{ 'cyan' if is_state(entity,'on') else 'disabled' }}"
                 tap_action:
                   action: more-info
                 hold_action:
@@ -1592,30 +2017,53 @@ views:
                   secondary: Fixed 180s in firmware; not user-tunable
                   icon: mdi:timer-lock-outline
                   icon_color: blue
-              - type: custom:mini-graph-card
-                hours_to_show: 12
-                cache: true
-                points_per_hour: 12
-                line_width: 2
-                entities:
+              - type: custom:apexcharts-card
+                graph_span: 12h
+                update_interval: 1min
+                header:
+                  show: false
+                apex_config:
+                  chart:
+                    height: 170
+                  legend:
+                    show: true
+                yaxis:
+                  - id: primary
+                    decimals: 1
+                    min: 14
+                    max: 32
+                  - id: duty
+                    opposite: true
+                    min: 0
+                    max: 1
+                    show: false
+                series:
                   - entity: sensor.dsc_hub_tent_temperature
                     name: Tent °C
+                    yaxis_id: primary
+                    stroke_width: 2
+                    show:
+                      extremas: true
                   - entity: number.dsc_hub_target_temp
                     name: Target
-                    show_points: false
+                    yaxis_id: primary
+                    stroke_width: 1
+                    stroke_dash: 4
+                    show:
+                      in_header: false
+                      extremas: false
                   - entity: switch.dsc_hub_ac_demand
                     name: AC
-                    y_axis: secondary
-                    show_line: false
-                    show_points: false
-                    show_fill: true
-                    smoothing: false
-                lower_bound_secondary: 0
-                upper_bound_secondary: 1
-                show:
-                  labels: true
-                  extrema: true
-                  legend: true
+                    yaxis_id: duty
+                    transform: "return x === 'on' ? 1 : 0;"
+                    type: area
+                    curve: stepline
+                    opacity: 0.35
+                    stroke_width: 0
+                    color: '#22d3ee'
+                    show:
+                      in_header: false
+                      extremas: false
               - type: custom:mushroom-chips-card
                 alignment: justify
                 chips:
@@ -1638,7 +2086,7 @@ views:
                   is_state('switch.dsc_hub_humidifier_auto','on') else '⚠
                   DISARMED' }}
                 icon: mdi:air-humidifier
-                icon_color: "{{ 'amber' if is_state(entity,'on') else 'disabled' }}"
+                icon_color: "{{ 'blue' if is_state(entity,'on') else 'disabled' }}"
                 tap_action:
                   action: more-info
                 hold_action:
@@ -1657,40 +2105,51 @@ views:
                   primary: Escalating — fires in {{ states(entity)|round(0) }}s
                   icon: mdi:timer-outline
                   icon_color: orange
-              - type: conditional
-                conditions:
-                  - condition: numeric_state
-                    entity: sensor.dsc_hub_humidifier_cooldown_remaining
-                    above: 0
-                card:
-                  type: custom:mushroom-template-card
-                  entity: sensor.dsc_hub_humidifier_cooldown_remaining
-                  primary: Min-off — {{ states(entity)|round(0) }}s
-                  icon: mdi:timer-sand
-                  icon_color: blue
-              - type: custom:mini-graph-card
-                hours_to_show: 12
-                cache: true
-                points_per_hour: 12
-                line_width: 2
-                entities:
+              - type: custom:apexcharts-card
+                graph_span: 12h
+                update_interval: 1min
+                header:
+                  show: false
+                apex_config:
+                  chart:
+                    height: 170
+                  legend:
+                    show: true
+                yaxis:
+                  - id: primary
+                    decimals: 0
+                    min: 35
+                    max: 95
+                  - id: duty
+                    opposite: true
+                    min: 0
+                    max: 1
+                    show: false
+                series:
                   - entity: sensor.dsc_hub_tent_humidity
                     name: 4x8 RH
+                    yaxis_id: primary
+                    stroke_width: 2
+                    show:
+                      extremas: true
                   - entity: sensor.dsc_hub_clone_humidity
                     name: 2x4 RH
+                    yaxis_id: primary
+                    stroke_width: 2
+                    show:
+                      extremas: true
                   - entity: switch.dsc_hub_humidifier_demand
                     name: Hum
-                    y_axis: secondary
-                    show_line: false
-                    show_points: false
-                    show_fill: true
-                    smoothing: false
-                lower_bound_secondary: 0
-                upper_bound_secondary: 1
-                show:
-                  labels: true
-                  extrema: true
-                  legend: true
+                    yaxis_id: duty
+                    transform: "return x === 'on' ? 1 : 0;"
+                    type: area
+                    curve: stepline
+                    opacity: 0.35
+                    stroke_width: 0
+                    color: '#3b82f6'
+                    show:
+                      in_header: false
+                      extremas: false
               - type: custom:mushroom-chips-card
                 alignment: justify
                 chips:
@@ -1721,7 +2180,10 @@ views:
                   is_state('switch.dsc_hub_dehumidifier_auto','on') else '⚠
                   DISARMED' }}
                 icon: mdi:water-remove
-                icon_color: "{{ 'amber' if is_state(entity,'on') else 'disabled' }}"
+                icon_color: >-
+                  {% if not has_value('switch.dsc_de_humidifier_main_relay') %}red
+                  {% elif is_state(entity,'on') %}teal
+                  {% else %}disabled{% endif %}
                 tap_action:
                   action: more-info
                 hold_action:
@@ -1751,27 +2213,45 @@ views:
                   primary: Compressor lock — {{ states(entity)|round(0) }}s
                   icon: mdi:timer-lock-outline
                   icon_color: blue
-              - type: custom:mini-graph-card
-                hours_to_show: 12
-                cache: true
-                points_per_hour: 12
-                line_width: 2
-                entities:
+              - type: custom:apexcharts-card
+                graph_span: 12h
+                update_interval: 1min
+                header:
+                  show: false
+                apex_config:
+                  chart:
+                    height: 170
+                  legend:
+                    show: true
+                yaxis:
+                  - id: primary
+                    decimals: 0
+                    min: 35
+                    max: 95
+                  - id: duty
+                    opposite: true
+                    min: 0
+                    max: 1
+                    show: false
+                series:
                   - entity: sensor.dsc_hub_tent_humidity
                     name: 4x8 RH
+                    yaxis_id: primary
+                    stroke_width: 2
+                    show:
+                      extremas: true
                   - entity: switch.dsc_hub_dehumidifier_demand
                     name: Dehum
-                    y_axis: secondary
-                    show_line: false
-                    show_points: false
-                    show_fill: true
-                    smoothing: false
-                lower_bound_secondary: 0
-                upper_bound_secondary: 1
-                show:
-                  labels: true
-                  extrema: true
-                  legend: true
+                    yaxis_id: duty
+                    transform: "return x === 'on' ? 1 : 0;"
+                    type: area
+                    curve: stepline
+                    opacity: 0.35
+                    stroke_width: 0
+                    color: '#14b8a6'
+                    show:
+                      in_header: false
+                      extremas: false
               - type: custom:mushroom-chips-card
                 alignment: justify
                 chips:
@@ -1878,69 +2358,120 @@ views:
           - type: heading
             heading: 🌡️ ENVIRONMENT — 24 h
             heading_style: title
-          - type: custom:mini-graph-card
-            name: Temperature + heater/AC runs
-            hours_to_show: 24
-            cache: true
-            points_per_hour: 12
-            line_width: 2
-            entities:
+          - type: custom:apexcharts-card
+            graph_span: 24h
+            update_interval: 1min
+            header:
+              show: true
+              title: Temperature + heater/AC runs
+              show_states: false
+            apex_config:
+              chart:
+                height: 200
+              legend:
+                show: true
+            yaxis:
+              - id: primary
+                decimals: 1
+              - id: duty
+                opposite: true
+                min: 0
+                max: 1
+                show: false
+            series:
               - entity: sensor.dsc_hub_tent_temperature
                 name: Tent
+                yaxis_id: primary
+                stroke_width: 2
+                show:
+                  extremas: true
               - entity: sensor.dsc_hub_room_temperature
                 name: Room
+                yaxis_id: primary
+                stroke_width: 2
               - entity: number.dsc_hub_target_temp
                 name: Target
-                show_points: false
+                yaxis_id: primary
+                stroke_width: 1
+                stroke_dash: 4
+                show:
+                  in_header: false
+                  extremas: false
               - entity: switch.dsc_hub_heater_demand
                 name: Heat
-                y_axis: secondary
-                show_line: false
-                show_points: false
-                show_fill: true
-                smoothing: false
+                yaxis_id: duty
+                transform: "return x === 'on' ? 1 : 0;"
+                type: area
+                curve: stepline
+                opacity: 0.3
+                stroke_width: 0
+                color: '#f97316'
+                show:
+                  in_header: false
+                  extremas: false
               - entity: switch.dsc_hub_ac_demand
                 name: AC
-                y_axis: secondary
-                show_line: false
-                show_points: false
-                show_fill: true
-                smoothing: false
-            lower_bound_secondary: 0
-            upper_bound_secondary: 1
-            show:
-              labels: true
-              extrema: true
-              legend: true
-          - type: custom:mini-graph-card
-            name: Humidity + hum/dehum runs
-            hours_to_show: 24
-            cache: true
-            points_per_hour: 12
-            line_width: 2
-            entities:
+                yaxis_id: duty
+                transform: "return x === 'on' ? 1 : 0;"
+                type: area
+                curve: stepline
+                opacity: 0.3
+                stroke_width: 0
+                color: '#22d3ee'
+                show:
+                  in_header: false
+                  extremas: false
+          - type: custom:apexcharts-card
+            graph_span: 24h
+            update_interval: 1min
+            header:
+              show: true
+              title: Humidity + hum/dehum runs
+              show_states: false
+            apex_config:
+              chart:
+                height: 200
+              legend:
+                show: true
+            yaxis:
+              - id: primary
+                decimals: 0
+              - id: duty
+                opposite: true
+                min: 0
+                max: 1
+                show: false
+            series:
               - entity: sensor.dsc_hub_tent_humidity
                 name: RH
+                yaxis_id: primary
+                stroke_width: 2
+                show:
+                  extremas: true
               - entity: switch.dsc_hub_humidifier_demand
                 name: Hum
-                y_axis: secondary
-                show_line: false
-                show_points: false
-                show_fill: true
-                smoothing: false
+                yaxis_id: duty
+                transform: "return x === 'on' ? 1 : 0;"
+                type: area
+                curve: stepline
+                opacity: 0.3
+                stroke_width: 0
+                color: '#3b82f6'
+                show:
+                  in_header: false
+                  extremas: false
               - entity: switch.dsc_hub_dehumidifier_demand
                 name: Dehum
-                y_axis: secondary
-                show_line: false
-                show_points: false
-                show_fill: true
-                smoothing: false
-            lower_bound_secondary: 0
-            upper_bound_secondary: 1
-            show:
-              labels: true
-              extrema: true
-              legend: true
+                yaxis_id: duty
+                transform: "return x === 'on' ? 1 : 0;"
+                type: area
+                curve: stepline
+                opacity: 0.3
+                stroke_width: 0
+                color: '#14b8a6'
+                show:
+                  in_header: false
+                  extremas: false
           - type: custom:mini-graph-card
             name: VPD
             hours_to_show: 24
@@ -2190,67 +2721,118 @@ views:
           - type: heading
             heading: 🌡️ CLONE ENVIRONMENT — 24 h
             heading_style: subtitle
-          - type: custom:mini-graph-card
-            name: Air temp vs ROOT ZONE + mat runs
-            hours_to_show: 24
-            cache: true
-            points_per_hour: 30
-            line_width: 2
-            entities:
+          - type: custom:apexcharts-card
+            graph_span: 24h
+            update_interval: 1min
+            header:
+              show: true
+              title: Air temp vs ROOT ZONE + mat runs
+              show_states: false
+            apex_config:
+              chart:
+                height: 220
+              legend:
+                show: true
+            yaxis:
+              - id: primary
+                decimals: 1
+              - id: duty
+                opposite: true
+                min: 0
+                max: 1
+                show: false
+            series:
               - entity: sensor.dsc_hub_clone_temperature
                 name: Clone air
+                yaxis_id: primary
+                stroke_width: 2
               - entity: sensor.dsc_pot1_soil_temperature
                 name: Root zone
+                yaxis_id: primary
+                stroke_width: 2
+                show:
+                  extremas: true
               - entity: number.dsc_hub_mat_root_zone_low
                 name: RZ low
-                show_points: false
+                yaxis_id: primary
+                stroke_width: 1
+                stroke_dash: 4
+                show:
+                  in_header: false
+                  extremas: false
               - entity: number.dsc_hub_mat_root_zone_high
                 name: RZ high
-                show_points: false
+                yaxis_id: primary
+                stroke_width: 1
+                stroke_dash: 4
+                show:
+                  in_header: false
+                  extremas: false
               - entity: switch.dsc_hub_grow_mat_demand
                 name: Mat
-                y_axis: secondary
-                show_line: false
-                show_points: false
-                show_fill: true
-                smoothing: false
-            lower_bound_secondary: 0
-            upper_bound_secondary: 1
-            show:
-              labels: true
-              extrema: true
-              legend: true
+                yaxis_id: duty
+                transform: "return x === 'on' ? 1 : 0;"
+                type: area
+                curve: stepline
+                opacity: 0.35
+                stroke_width: 0
+                color: '#fb923c'
+                show:
+                  in_header: false
+                  extremas: false
           - type: markdown
             content: >-
               *This is the v2.4 chart that matters. **Root zone** should live
               between the two band lines; **air temp** is now just context. The
               gap between them is exactly the problem v2.4 fixed: a 22 °C plate
               setpoint was leaving the soil at 16–19 °C.*
-          - type: custom:mini-graph-card
-            name: Humidity + clone channel demand
-            hours_to_show: 24
-            cache: true
-            points_per_hour: 12
-            line_width: 2
-            entities:
+          - type: custom:apexcharts-card
+            graph_span: 24h
+            update_interval: 1min
+            header:
+              show: true
+              title: Humidity + clone channel demand
+              show_states: false
+            apex_config:
+              chart:
+                height: 200
+              legend:
+                show: true
+            yaxis:
+              - id: primary
+                decimals: 0
+              - id: duty
+                opposite: true
+                min: 0
+                max: 1
+                show: false
+            series:
               - entity: sensor.dsc_hub_clone_humidity
                 name: RH
+                yaxis_id: primary
+                stroke_width: 2
+                show:
+                  extremas: true
               - entity: number.dsc_hub_clone_rh_min
                 name: Min
-                show_points: false
+                yaxis_id: primary
+                stroke_width: 1
+                stroke_dash: 4
+                show:
+                  in_header: false
+                  extremas: false
               - entity: switch.dsc_hub_clone_humidifier_demand
                 name: Clone Hum
-                y_axis: secondary
-                show_line: false
-                show_points: false
-                show_fill: true
-                smoothing: false
-            lower_bound_secondary: 0
-            upper_bound_secondary: 1
-            show:
-              labels: true
-              extrema: true
-              legend: true
+                yaxis_id: duty
+                transform: "return x === 'on' ? 1 : 0;"
+                type: area
+                curve: stepline
+                opacity: 0.3
+                stroke_width: 0
+                color: '#38bdf8'
+                show:
+                  in_header: false
+                  extremas: false
           - type: custom:mini-graph-card
             name: Clone VPD
             hours_to_show: 24
@@ -2313,7 +2895,7 @@ views:
               - type: custom:bar-card
                 entities:
                   - entity: sensor.dsc_pot1_soil_temperature
-                    name: Root zone (POT1)
+                    name: Coldest vote (POT1 shown)
                 positions:
                   icon: "off"
                   indicator: inside
@@ -2335,7 +2917,7 @@ views:
                 alignment: justify
                 chips:
                   - type: template
-                    entity: sensor.dsc_growmat_runtime_today
+                    entity: sensor.dsc_grow_mat_runtime_today
                     icon: mdi:clock-outline
                     icon_color: amber
                     content: "{{ states(entity)|float(0)|round(1) }}h today"
@@ -2631,6 +3213,22 @@ views:
                     max: 9
                     icon: mdi:ph
                     secondary: {}
+              - type: conditional
+                conditions:
+                  - condition: or
+                    conditions:
+                      - condition: numeric_state
+                        entity: sensor.dsc_pot1_soil_ph
+                        below: 5.0
+                      - condition: numeric_state
+                        entity: sensor.dsc_pot2_soil_ph
+                        below: 5.0
+                card:
+                  type: markdown
+                  content: >-
+                    *pH looks low on a live pot (under 5.0). These JXCT probes
+                    often need Cal pH Offset/Scale — treat absolute pH as a
+                    trend until calibrated against a known buffer.*
           - type: custom:expander-card
             title: 🪴 Plant IDs & stages
             expanded: false
@@ -3749,9 +4347,9 @@ views:
             custom_logs: true
           - type: markdown
             content: >-
-              *⚠ **Retention**: the recorder's default `purge_keep_days: 10`
-              deletes entries before a grow cycle finishes. Raise it to ~120 or
-              schedule an export — see NOTES-COMMENTS.md §4. This is still open.*
+              *Recorder tip: default `purge_keep_days: 10` is short for a full
+              grow. Prefer ~120 days (or export the grow log) so diary entries
+              survive the cycle — see NOTES-COMMENTS.md §4.*
 
   - title: System
     icon: mdi:cog
@@ -3808,10 +4406,11 @@ views:
           - type: markdown
             content: >-
               *Expected hub firmware for this dashboard: **`4.0`**.
-              Panel (DSC-CONTROL) should report **`4.0.4`** (or newer) on
-              `sensor.dsc_control_*` diagnostics. Older 2.4.x hubs still
-              drive climate, but panel ESP-NOW primary + 0xD4 plant names
-              need the v4 flash.*
+              Panel (DSC-CONTROL) should report **`4.0.11`** (or newer) on
+              panel diagnostics. Older 2.4.x hubs still drive climate, but
+              panel ESP-NOW primary + 0xD4 plant names need the v4 flash.
+              Live panel entity prefix may still be `dsc_cyd_1_*` until
+              renamed to `dsc_control_*`.*
           - type: custom:mini-graph-card
             name: WiFi RSSI — 24 h
             hours_to_show: 24
@@ -3926,70 +4525,6 @@ views:
             name: Event Scribe (grow log)
             icon: mdi:notebook-edit
             icon_color: green
-          - type: vertical-stack
-            cards:
-              - type: entities
-                title: DSC Fan Test Controller
-                entities:
-                  - entity: input_select.dsc_fan_test_target
-                  - entity: input_boolean.dsc_fan_test_voice
-                    name: Voice Announcements
-                  - entity: switch.dsc_hub_tent_manual_override
-                    name: Hardware Lock (Auto-Curve Suspended)
-              - type: horizontal-stack
-                cards:
-                  - type: button
-                    name: Start
-                    icon: mdi:play
-                    tap_action:
-                      action: call-service
-                      service: script.dsc_fan_test_start
-                  - type: button
-                    name: Pause
-                    icon: mdi:pause
-                    tap_action:
-                      action: call-service
-                      service: script.dsc_fan_test_pause
-                  - type: button
-                    name: Stop
-                    icon: mdi:stop
-                    tap_action:
-                      action: call-service
-                      service: script.dsc_fan_test_stop
-                  - type: button
-                    name: Restart
-                    icon: mdi:restart
-                    tap_action:
-                      action: call-service
-                      service: script.dsc_fan_test_restart
-              - type: horizontal-stack
-                cards:
-                  - type: tile
-                    entity: fan.dsc_hub_4_inch_intake_fan_2x4
-                    vertical: false
-                    features:
-                      - type: fan-speed
-                    features_position: bottom
-                  - type: tile
-                    entity: fan.dsc_hub_4_inch_intake_fan_main
-                    vertical: false
-                    features:
-                      - type: fan-speed
-                    features_position: bottom
-              - type: horizontal-stack
-                cards:
-                  - type: tile
-                    entity: fan.dsc_hub_6_inch_exhaust_outside
-                    vertical: false
-                    features:
-                      - type: fan-speed
-                    features_position: bottom
-                  - type: tile
-                    entity: fan.dsc_hub_6_inch_exhaust_room
-                    vertical: false
-                    features:
-                      - type: fan-speed
-                    features_position: bottom
           - type: heading
             heading: ⚠️ ALERT REGISTER
             heading_style: title
@@ -3997,13 +4532,24 @@ views:
             show_empty: true
             card:
               type: entities
-              title: All DSC alert binaries
+              title: Grow / tank / hub alerts
               state_color: true
             filter:
               include:
-                - entity_id: binary_sensor.dsc_*
+                - entity_id: binary_sensor.dsc_hub_emergency_failsafe
+                - entity_id: binary_sensor.dsc_hub_*_sensor_fault
+                - entity_id: binary_sensor.dsc_clone_dark_period_violation
+                - entity_id: binary_sensor.dsc_tank_*
+                - entity_id: binary_sensor.dsc_pot*_moisture_out_of_range
+                - entity_id: binary_sensor.dsc_pot*_ph_out_of_range
+                - entity_id: binary_sensor.dsc_pot*_root_zone_temp_out_of_range
+                - entity_id: binary_sensor.dsc_pot*_ec_*
+                - entity_id: binary_sensor.dsc_pot*_nitrogen_*
               exclude:
                 - entity_id: binary_sensor.dsc_hub_link
+                - entity_id: binary_sensor.dsc_hub_ha_link_status
+                - entity_id: binary_sensor.dsc_hub_*_window_open
+                - entity_id: binary_sensor.dsc_hub_pot*_esp_now_link
             sort:
               method: state
               reverse: true

@@ -46,7 +46,7 @@ template:
           {{ v is not none and (v < 5.8 or v > 7.0) }}
 
       - name: "DSC-POT1 Root Zone Temp Out of Range"
-        unique_id: dsc_pot1_temp_out_of_range
+        unique_id: dsc_pot1_root_zone_temp_out_of_range
         icon: mdi:thermometer-alert
         delay_on:
           minutes: 30
@@ -118,7 +118,7 @@ template:
           {{ v is not none and (v < 5.8 or v > 7.0) }}
 
       - name: "DSC-POT2 Root Zone Temp Out of Range"
-        unique_id: dsc_pot2_temp_out_of_range
+        unique_id: dsc_pot2_root_zone_temp_out_of_range
         icon: mdi:thermometer-alert
         delay_on:
           minutes: 30
@@ -190,7 +190,7 @@ template:
           {{ v is not none and (v < 5.8 or v > 7.0) }}
 
       - name: "DSC-POT3 Root Zone Temp Out of Range"
-        unique_id: dsc_pot3_temp_out_of_range
+        unique_id: dsc_pot3_root_zone_temp_out_of_range
         icon: mdi:thermometer-alert
         delay_on:
           minutes: 30
@@ -262,7 +262,7 @@ template:
           {{ v is not none and (v < 5.8 or v > 7.0) }}
 
       - name: "DSC-POT4 Root Zone Temp Out of Range"
-        unique_id: dsc_pot4_temp_out_of_range
+        unique_id: dsc_pot4_root_zone_temp_out_of_range
         icon: mdi:thermometer-alert
         delay_on:
           minutes: 30
@@ -326,34 +326,35 @@ automation:
       - platform: state
         to: "on"
         entity_id:
+          # Entity_ids match friendly-name slugs (same list as dsc_v4_alert_count).
           - binary_sensor.dsc_pot1_moisture_out_of_range
           - binary_sensor.dsc_pot1_ph_out_of_range
-          - binary_sensor.dsc_pot1_temp_out_of_range
-          - binary_sensor.dsc_pot1_ec_salt_buildup
-          - binary_sensor.dsc_pot1_ec_depleted
-          - binary_sensor.dsc_pot1_n_below_baseline
-          - binary_sensor.dsc_pot1_n_depleting_fast
+          - binary_sensor.dsc_pot1_root_zone_temp_out_of_range
+          - binary_sensor.dsc_pot1_ec_salt_build_up
+          - binary_sensor.dsc_pot1_ec_depleted_vs_baseline
+          - binary_sensor.dsc_pot1_nitrogen_below_baseline
+          - binary_sensor.dsc_pot1_nitrogen_depleting_fast
           - binary_sensor.dsc_pot2_moisture_out_of_range
           - binary_sensor.dsc_pot2_ph_out_of_range
-          - binary_sensor.dsc_pot2_temp_out_of_range
-          - binary_sensor.dsc_pot2_ec_salt_buildup
-          - binary_sensor.dsc_pot2_ec_depleted
-          - binary_sensor.dsc_pot2_n_below_baseline
-          - binary_sensor.dsc_pot2_n_depleting_fast
+          - binary_sensor.dsc_pot2_root_zone_temp_out_of_range
+          - binary_sensor.dsc_pot2_ec_salt_build_up
+          - binary_sensor.dsc_pot2_ec_depleted_vs_baseline
+          - binary_sensor.dsc_pot2_nitrogen_below_baseline
+          - binary_sensor.dsc_pot2_nitrogen_depleting_fast
           - binary_sensor.dsc_pot3_moisture_out_of_range
           - binary_sensor.dsc_pot3_ph_out_of_range
-          - binary_sensor.dsc_pot3_temp_out_of_range
-          - binary_sensor.dsc_pot3_ec_salt_buildup
-          - binary_sensor.dsc_pot3_ec_depleted
-          - binary_sensor.dsc_pot3_n_below_baseline
-          - binary_sensor.dsc_pot3_n_depleting_fast
+          - binary_sensor.dsc_pot3_root_zone_temp_out_of_range
+          - binary_sensor.dsc_pot3_ec_salt_build_up
+          - binary_sensor.dsc_pot3_ec_depleted_vs_baseline
+          - binary_sensor.dsc_pot3_nitrogen_below_baseline
+          - binary_sensor.dsc_pot3_nitrogen_depleting_fast
           - binary_sensor.dsc_pot4_moisture_out_of_range
           - binary_sensor.dsc_pot4_ph_out_of_range
-          - binary_sensor.dsc_pot4_temp_out_of_range
-          - binary_sensor.dsc_pot4_ec_salt_buildup
-          - binary_sensor.dsc_pot4_ec_depleted
-          - binary_sensor.dsc_pot4_n_below_baseline
-          - binary_sensor.dsc_pot4_n_depleting_fast
+          - binary_sensor.dsc_pot4_root_zone_temp_out_of_range
+          - binary_sensor.dsc_pot4_ec_salt_build_up
+          - binary_sensor.dsc_pot4_ec_depleted_vs_baseline
+          - binary_sensor.dsc_pot4_nitrogen_below_baseline
+          - binary_sensor.dsc_pot4_nitrogen_depleting_fast
     action:
       - action: notify.chriss_iphone_max
         data:

@@ -9,6 +9,13 @@
 #   * Mat scribe logs coldest plausible pot when available.
 #   * Notifier target is notify.chriss_iphone_max — change if yours differs.
 #   * Clone humidifier follower stays out until mister hardware exists.
+#   * AC follower stays out until actuator hardware exists.
+#
+#  Capacity audit (soft hardening): HA must NOT run a second escalation
+#  ladder. Firmware owns fans + demand rungs; this file only mirrors the
+#  four wired Sonoffs (hum / dehum / heater / mat), alerts, and safe-off.
+#  Verified: followers resync on HA start, relay restore, hub-link restore;
+#  skip while node test mode is on; hub-offline ≥30s forces all four OFF.
 # ==================================================================
 
 
@@ -335,17 +342,21 @@
           {% set ns = namespace(vals=[]) %}
           {% for e in ['sensor.dsc_pot1_soil_temperature','sensor.dsc_pot2_soil_temperature',
                        'sensor.dsc_pot3_soil_temperature','sensor.dsc_pot4_soil_temperature'] %}
-            {% set v = states(e) | float(none) %}
-            {% if v is not none and 5 <= v <= 45 %}{% set ns.vals = ns.vals + [v] %}{% endif %}
+            {% if has_value(e) %}
+              {% set v = states(e) | float(0) %}
+              {% if 5 <= v <= 45 %}{% set ns.vals = ns.vals + [v] %}{% endif %}
+            {% endif %}
           {% endfor %}
           {% set rz = (ns.vals | min) if ns.vals else 'n/a' %}
+          {% set lo = states('number.dsc_hub_mat_root_zone_low') if has_value('number.dsc_hub_mat_root_zone_low') else 'n/a' %}
+          {% set hi = states('number.dsc_hub_mat_root_zone_high') if has_value('number.dsc_hub_mat_root_zone_high') else 'n/a' %}
           {% set blind = is_state('binary_sensor.dsc_hub_root_zone_sensor_fault','on') %}
           {% if trigger.id == 'on' %}
             Grow mat ON — coldest root zone {{ rz }}°C
-            (below {{ states('number.dsc_hub_mat_root_zone_low') }}°C){{ ' [AIR FALLBACK — probes blind]' if blind else '' }}
+            (below {{ lo }}°C){{ ' [AIR FALLBACK — probes blind]' if blind else '' }}
           {% else %}
             Grow mat off — coldest root zone {{ rz }}°C
-            (reached {{ states('number.dsc_hub_mat_root_zone_high') }}°C){{ ' [AIR FALLBACK]' if blind else '' }}
+            (reached {{ hi }}°C){{ ' [AIR FALLBACK]' if blind else '' }}
           {% endif %}
 
 - id: dsc_v24_scribe_clone_photoperiod
