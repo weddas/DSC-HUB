@@ -76,7 +76,7 @@ DSC-HUB / `dsc-hub-v4`. Sidebar: single **DSC-HUB Pro** entry.
 | Stub | Body | Expect after flash |
 |---|---|---|
 | `dsc-hub.yaml` | hub v4_0 + espnow | **5.1.0** |
-| `dsc-control.yaml` | control-common | **5.1.3** |
+| `dsc-control.yaml` | control-common | **5.1.4** |
 | pots / Sonoffs | pot-common / sonoff-common | **5.1.0** |
 
 Stub `ref: v5.1.0`. Kits Validate even if not flashed on lab.

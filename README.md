@@ -58,7 +58,7 @@ packages / dashboard / www / ESPHome stubs land in `/config`.
 | Device | Config | Version |
 |---|---|---|
 | Hub | `dsc-hub.yaml` → `dsc-hub-v4_0.yaml` | **5.1.0** |
-| Panel | `dsc-control.yaml` → `dsc-control-common.yaml` | **5.1.3** |
+| Panel | `dsc-control.yaml` → `dsc-control-common.yaml` | **5.1.4** |
 | Pots 1–4 | `dsc-pot{N}.yaml` → `dsc-pot-common.yaml` | **5.1.0** |
 | Sonoffs | heater / heatmat / humidifier / de-humidifier | **5.1.0** |
 | Kits | `*-kit.yaml`, `*-wifi-kit.yaml`, fleet-setup kits | **5.1.0** (same bodies) |

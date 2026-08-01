@@ -57,6 +57,9 @@
 #  v5.1.3: 5.1.2 still looped (PC lv_draw_unit_draw_letter at boot — project
 #  line never printed). Pause LVGL until heap settles, then resume; gate
 #  refresh until boot_ui_ready; drop unused mdi_34 font.
+#  v5.1.4: 5.1.3 still died at/after resume. Longer settle + heap gate before
+#  resume; hub_cmd no longer paints labels under the tap (pend+gv only,
+#  ui_dirty drain paints grey) — Full Auto tap was crashing the glass.
 #
 #  BEFORE FLASHING:
 #    1. secrets.yaml needs dsc_control_ota_password / _ap_password
@@ -99,7 +102,7 @@ esphome:
     # the dashboard and HA's device page both described DSC-CONTROL as
     # being the DSC HUB. Purely cosmetic, but confusing enough to matter.
     name: "digital_emotions.dsc-control"
-    version: "5.1.3"
+    version: "5.1.4"
   on_boot:
     # Seed the 0xDC command seq from hardware RNG so a panel reboot is
     # unlikely to replay the hub's last-seen seq even before the hub's
@@ -107,13 +110,12 @@ esphome:
     - priority: 600
       then:
         - lambda: 'id(cmd_tx_seq) = (uint16_t) esp_random();'
-    # v5.1.3 — LVGL starts paused (see lvgl:). Wait for WiFi/heap to settle
-    # before the first letter-draw; 5.1.2 still died in lv_draw_unit_draw_letter
-    # before the project version line could print.
+    # v5.1.4 — LVGL starts paused. Give WiFi/API/heap time; if largest block
+    # is still tight after 12 s, wait another 10 s before first letter-draw.
     - priority: -100
       then:
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 5.1.3 paused — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 5.1.4 paused — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
             for (lv_indev_t *in = lv_indev_get_next(nullptr); in != nullptr; in = lv_indev_get_next(in)) {
@@ -122,12 +124,21 @@ esphome:
                 lv_indev_set_scroll_throw(in, 5);
               }
             }
-        - delay: 5s
+        - delay: 12s
+        - if:
+            condition:
+              lambda: 'return heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL) < 18000;'
+            then:
+              - lambda: |-
+                  ESP_LOGW("boot", "DSC-CONTROL 5.1.4 heap still tight largest=%u — waiting longer",
+                           (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
+              - delay: 10s
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 5.1.3 resume — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 5.1.4 resume — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
             id(boot_ui_ready) = true;
+            id(touch_guard_until) = millis() + 800;
             id(ui_dirty) = true;
         - lvgl.resume:
 
@@ -1035,7 +1046,7 @@ text_sensor:
     name: "Firmware Version"
     id: fw_version
     icon: mdi:tag-check
-    lambda: 'return {"5.1.3"};'
+    lambda: 'return {"5.1.4"};'
     update_interval: 60s
   - platform: template
     id: sel_stage
@@ -4782,33 +4793,15 @@ script:
   # ---- send a command to the hub: {0xDC,ver,op,flags,i32 val,u16 tag,u16 seq} ----
   # UI control actions call this instead of homeassistant.action. Float values
   # are passed pre-scaled by ×100 (e.g. 24.5 °C -> op 30, val 2450).
-  # v5.1.1: arm pend_* + write-through gv_* + paint grey NOW (no refresh_ui).
-  # Rapid +/- accumulate because gv_* already holds the pending value.
+  # v5.1.4: pend_* + write-through gv_* ONLY — no lv_label_set_text under the
+  # tap (Full Auto / Modes letter-draw crashes). ui_dirty lets the 200 ms
+  # drain paint grey via refresh_ui once the indev stack is clear.
   - id: hub_cmd
     parameters:
       op: int
       val: int
     then:
       - lambda: |-
-          const uint32_t PEND = 0x8A929C;
-          auto setl = [](lv_obj_t* o, const char* s){
-            if (o == nullptr) return;
-            const char* c = lv_label_get_text(o);
-            if (c == nullptr || strcmp(c, s) != 0) lv_label_set_text(o, s);
-          };
-          auto setc = [](lv_obj_t* o, uint32_t col){
-            if (o == nullptr) return;
-            lv_color_t want = lv_color_hex(col);
-            lv_color_t cur = lv_obj_get_style_text_color(o, LV_PART_MAIN);
-            if (lv_color_to_u32(cur) != lv_color_to_u32(want))
-              lv_obj_set_style_text_color(o, want, LV_PART_MAIN);
-          };
-          auto pct = [&](lv_obj_t* L, int v){
-            char q[8]; snprintf(q, sizeof(q), "%d%%", v); setl(L, q); setc(L, PEND);
-          };
-          auto onoff = [&](lv_obj_t* L, int on){
-            setl(L, on ? "ON" : "off"); setc(L, PEND);
-          };
           auto bitset = [](int& word, int bit, int on){
             if (on) word |= (1 << bit); else word &= ~(1 << bit);
           };
@@ -4818,18 +4811,18 @@ script:
           }
           // Write-through so the next tap steps from the pending value.
           switch (op) {
-            case 1: { int m=id(gv_mode); bitset(m,0,val); id(gv_mode)=m; onoff(id(lbl_fullauto_state), val); break; }
-            case 3: { int m=id(gv_mode); bitset(m,4,val); id(gv_mode)=m; onoff(id(st_lighthold_v), val); break; }
-            case 4: { int m=id(gv_mode); bitset(m,3,val); id(gv_mode)=m; onoff(id(lbl_autophoto_state), val); break; }
+            case 1: { int m=id(gv_mode); bitset(m,0,val); id(gv_mode)=m; break; }
+            case 3: { int m=id(gv_mode); bitset(m,4,val); id(gv_mode)=m; break; }
+            case 4: { int m=id(gv_mode); bitset(m,3,val); id(gv_mode)=m; break; }
             case 5: { int m=id(gv_mode); bitset(m,2,val); id(gv_mode)=m; break; }
-            case 12: { int d=id(gv_dem); bitset(d,0,val); id(gv_dem)=d; onoff(id(dem_hum_st), val); break; }
-            case 13: { int d=id(gv_dem); bitset(d,1,val); id(gv_dem)=d; onoff(id(dem_dehum_st), val); break; }
-            case 14: { int d=id(gv_dem); bitset(d,2,val); id(gv_dem)=d; onoff(id(dem_heater_st), val); break; }
-            case 15: { int d=id(gv_dem); bitset(d,3,val); id(gv_dem)=d; onoff(id(dem_mat_st), val); break; }
-            case 16: { int d=id(gv_dem); bitset(d,4,val); id(gv_dem)=d; onoff(id(dem_ac_st), val); break; }
-            case 17: { int d=id(gv_dem); bitset(d,5,val); id(gv_dem)=d; onoff(id(dem_clone_hum_st), val); break; }
-            case 18: { int c=id(gv_coord); bitset(c,0,val); id(gv_coord)=c; onoff(id(st_humroute_v), val); break; }
-            case 19: { int c=id(gv_coord); bitset(c,1,val); id(gv_coord)=c; onoff(id(st_destrat_v), val); break; }
+            case 12: { int d=id(gv_dem); bitset(d,0,val); id(gv_dem)=d; break; }
+            case 13: { int d=id(gv_dem); bitset(d,1,val); id(gv_dem)=d; break; }
+            case 14: { int d=id(gv_dem); bitset(d,2,val); id(gv_dem)=d; break; }
+            case 15: { int d=id(gv_dem); bitset(d,3,val); id(gv_dem)=d; break; }
+            case 16: { int d=id(gv_dem); bitset(d,4,val); id(gv_dem)=d; break; }
+            case 17: { int d=id(gv_dem); bitset(d,5,val); id(gv_dem)=d; break; }
+            case 18: { int c=id(gv_coord); bitset(c,0,val); id(gv_coord)=c; break; }
+            case 19: { int c=id(gv_coord); bitset(c,1,val); id(gv_coord)=c; break; }
             case 20: id(gv_stage) = val; break;
             case 21: id(gv_strat) = val; break;
             case 22: id(gv_cmode) = val; break;
@@ -4837,40 +4830,39 @@ script:
               if (val) id(gv_coord) |= 64; else id(gv_coord) &= ~64;
               break;
             case 24: id(gv_prio) = val; break;
-            case 25: id(gv_fan_out) = val; pct(id(exhout_val), val); break;
-            case 26: id(gv_fan_recirc) = val; pct(id(exhroom_val), val); break;
-            case 27: id(gv_fan_imain) = val; pct(id(intmain_val), val); break;
-            case 28: id(gv_fan_iclone) = val; pct(id(fanclone_val), val); break;
-            case 29:
-              id(gv_sf_pct) = val; id(gv_cfg)[10] = (float) val;
-              pct(id(sf1000_val), val); pct(id(s_sftgt_val), val);
-              break;
-            case 30: id(gv_cfg)[0] = val / 100.0f; { char q[16]; snprintf(q,sizeof(q),"%.1f°", id(gv_cfg)[0]); setl(id(s_temp_val), q); setc(id(s_temp_val), PEND);} break;
-            case 31: id(gv_cfg)[1] = val / 100.0f; { char q[16]; snprintf(q,sizeof(q),"%.1f", id(gv_cfg)[1]); setl(id(s_vmin_val), q); setc(id(s_vmin_val), PEND);} break;
-            case 32: id(gv_cfg)[2] = val / 100.0f; { char q[16]; snprintf(q,sizeof(q),"%.1f", id(gv_cfg)[2]); setl(id(s_vmax_val), q); setc(id(s_vmax_val), PEND);} break;
-            case 33: id(gv_cfg)[3] = val / 100.0f; { char q[16]; snprintf(q,sizeof(q),"%.0f%%", id(gv_cfg)[3]); setl(id(s_rmin_val), q); setc(id(s_rmin_val), PEND);} break;
-            case 34: id(gv_cfg)[4] = val / 100.0f; { char q[16]; snprintf(q,sizeof(q),"%.0f%%", id(gv_cfg)[4]); setl(id(s_rmax_val), q); setc(id(s_rmax_val), PEND);} break;
-            case 35: id(gv_cfg)[11] = (float) val; { char q[16]; snprintf(q,sizeof(q),"%.0fm", id(gv_cfg)[11]); setl(id(s_sunrise_val), q); setc(id(s_sunrise_val), PEND);} break;
-            case 36: id(gv_cfg)[12] = (float) val; { char q[16]; snprintf(q,sizeof(q),"%.0fm", id(gv_cfg)[12]); setl(id(s_sunset_val), q); setc(id(s_sunset_val), PEND);} break;
-            case 37: id(gv_cfg)[5] = val / 100.0f; { char q[16]; snprintf(q,sizeof(q),"%.1f°", id(gv_cfg)[5]); setl(id(s_ctemp_val), q); setc(id(s_ctemp_val), PEND);} break;
-            case 38: id(gv_cfg)[6] = val / 100.0f; { char q[16]; snprintf(q,sizeof(q),"%.1f", id(gv_cfg)[6]); setl(id(s_cvmin_val), q); setc(id(s_cvmin_val), PEND);} break;
-            case 39: id(gv_cfg)[7] = val / 100.0f; { char q[16]; snprintf(q,sizeof(q),"%.1f", id(gv_cfg)[7]); setl(id(s_cvmax_val), q); setc(id(s_cvmax_val), PEND);} break;
-            case 40: id(gv_cfg)[8] = val / 100.0f; { char q[16]; snprintf(q,sizeof(q),"%.0f%%", id(gv_cfg)[8]); setl(id(s_crmin_val), q); setc(id(s_crmin_val), PEND);} break;
-            case 41: id(gv_cfg)[9] = val / 100.0f; { char q[16]; snprintf(q,sizeof(q),"%.0f%%", id(gv_cfg)[9]); setl(id(s_crmax_val), q); setc(id(s_crmax_val), PEND);} break;
-            case 42: id(gv_cfg)[13] = (float) val; { char q[16]; snprintf(q,sizeof(q),"%.0fh", id(gv_cfg)[13]); setl(id(s_clh_val), q); setc(id(s_clh_val), PEND);} break;
-            case 43: id(gv_cfg)[14] = (float) val; id(gv_ramp) = val; { char q[16]; snprintf(q,sizeof(q),"%.0f%%", id(gv_cfg)[14]); setl(id(s_ramp_val), q); setc(id(s_ramp_val), PEND);} break;
-            case 44: id(gv_cfg)[15] = val / 100.0f; { char q[16]; snprintf(q,sizeof(q),"%.1f%%", id(gv_cfg)[15]); setl(id(s_chh_val), q); setc(id(s_chh_val), PEND);} break;
-            case 45: id(gv_cfg)[16] = (float) val; { char q[16]; snprintf(q,sizeof(q),"%.0fs", id(gv_cfg)[16]); setl(id(s_chmo_val), q); setc(id(s_chmo_val), PEND);} break;
-            case 46: id(gv_cfg)[17] = (float) val; { char q[16]; snprintf(q,sizeof(q),"%.0fs", id(gv_cfg)[17]); setl(id(s_hmo_val), q); setc(id(s_hmo_val), PEND);} break;
-            case 47: id(gv_cfg)[18] = (float) val; { char q[16]; snprintf(q,sizeof(q),"%.0fs", id(gv_cfg)[18]); setl(id(s_htmo_val), q); setc(id(s_htmo_val), PEND);} break;
-            case 48: id(gv_cfg)[19] = val / 100.0f; { char q[16]; snprintf(q,sizeof(q),"%.1f°", id(gv_cfg)[19]); setl(id(s_rzlo_val), q); setc(id(s_rzlo_val), PEND);} break;
-            case 49: id(gv_cfg)[20] = val / 100.0f; { char q[16]; snprintf(q,sizeof(q),"%.1f°", id(gv_cfg)[20]); setl(id(s_rzhi_val), q); setc(id(s_rzhi_val), PEND);} break;
-            case 50: id(gv_cfg)[21] = (float) val; { char q[16]; snprintf(q,sizeof(q),"%.0fs", id(gv_cfg)[21]); setl(id(s_matoff_val), q); setc(id(s_matoff_val), PEND);} break;
-            case 51: id(gv_cfg)[22] = (float) val; { char q[16]; snprintf(q,sizeof(q),"%.0fs", id(gv_cfg)[22]); setl(id(s_dsp_val), q); setc(id(s_dsp_val), PEND);} break;
-            case 52: id(gv_cfg)[23] = (float) val; { char q[16]; snprintf(q,sizeof(q),"%.0fs", id(gv_cfg)[23]); setl(id(s_dsl_val), q); setc(id(s_dsl_val), PEND);} break;
-            case 53: id(gv_cfg)[24] = (float) val; { char q[16]; snprintf(q,sizeof(q),"%.0f%%", id(gv_cfg)[24]); setl(id(s_dslv_val), q); setc(id(s_dslv_val), PEND);} break;
+            case 25: id(gv_fan_out) = val; break;
+            case 26: id(gv_fan_recirc) = val; break;
+            case 27: id(gv_fan_imain) = val; break;
+            case 28: id(gv_fan_iclone) = val; break;
+            case 29: id(gv_sf_pct) = val; id(gv_cfg)[10] = (float) val; break;
+            case 30: id(gv_cfg)[0] = val / 100.0f; break;
+            case 31: id(gv_cfg)[1] = val / 100.0f; break;
+            case 32: id(gv_cfg)[2] = val / 100.0f; break;
+            case 33: id(gv_cfg)[3] = val / 100.0f; break;
+            case 34: id(gv_cfg)[4] = val / 100.0f; break;
+            case 35: id(gv_cfg)[11] = (float) val; break;
+            case 36: id(gv_cfg)[12] = (float) val; break;
+            case 37: id(gv_cfg)[5] = val / 100.0f; break;
+            case 38: id(gv_cfg)[6] = val / 100.0f; break;
+            case 39: id(gv_cfg)[7] = val / 100.0f; break;
+            case 40: id(gv_cfg)[8] = val / 100.0f; break;
+            case 41: id(gv_cfg)[9] = val / 100.0f; break;
+            case 42: id(gv_cfg)[13] = (float) val; break;
+            case 43: id(gv_cfg)[14] = (float) val; id(gv_ramp) = val; break;
+            case 44: id(gv_cfg)[15] = val / 100.0f; break;
+            case 45: id(gv_cfg)[16] = (float) val; break;
+            case 46: id(gv_cfg)[17] = (float) val; break;
+            case 47: id(gv_cfg)[18] = (float) val; break;
+            case 48: id(gv_cfg)[19] = val / 100.0f; break;
+            case 49: id(gv_cfg)[20] = val / 100.0f; break;
+            case 50: id(gv_cfg)[21] = (float) val; break;
+            case 51: id(gv_cfg)[22] = (float) val; break;
+            case 52: id(gv_cfg)[23] = (float) val; break;
+            case 53: id(gv_cfg)[24] = (float) val; break;
             default: break;
           }
+          id(touch_guard_until) = millis() + 450;
+          id(ui_dirty) = true;
       - espnow.send:
           # Lab uses stub ${hub_mac}. Kit SoftAP builds override via fleet
           # package lambdas only when provisioning is enabled — do not call

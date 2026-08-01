@@ -1,5 +1,12 @@
 # Changelog
 
+## v5.1.4 — 2026-08-02
+
+- DSC-CONTROL **5.1.4**: longer LVGL pause (12 s + optional 10 s if heap
+  largest < 18 KB) before first paint; `hub_cmd` no longer calls
+  `lv_label_set_text` under the tap (Full Auto / Modes crash path) — grey
+  pending comes from the dirty-drain `refresh_ui`.
+
 ## v5.1.3 — 2026-08-02
 
 - DSC-CONTROL **5.1.3**: 5.1.2 still crash-looped in `lv_draw_unit_draw_letter`
