@@ -13,9 +13,9 @@ substitutions:
 packages:
   panel:
     url: https://github.com/weddas/DSC-HUB
-    ref: v5.1.0
+    ref: master
     files:
       - firmware/v4/dsc-control-wifi-lab.yaml
       - firmware/v4/dsc-control-common.yaml
       - firmware/v4/dsc-fleet-setup-control-lab.yaml
-    refresh: 1d
+    refresh: 1h

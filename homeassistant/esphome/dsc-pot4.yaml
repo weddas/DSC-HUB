@@ -13,9 +13,9 @@ substitutions:
 packages:
   common:
     url: https://github.com/weddas/DSC-HUB
-    ref: v5.1.0
+    ref: master
     files:
       - firmware/v4/dsc-pot-wifi-lab.yaml
       - firmware/v4/dsc-pot-common.yaml
       - firmware/v4/dsc-fleet-setup-pot-lab.yaml
-    refresh: 1d
+    refresh: 1h

@@ -14,10 +14,10 @@ substitutions:
 packages:
   hub:
     url: https://github.com/weddas/DSC-HUB
-    ref: v5.1.0
+    ref: master
     files:
       - firmware/v4/dsc-hub-wifi-lab.yaml
       - firmware/v4/dsc-hub-v4_0.yaml
       - firmware/v4/dsc-hub-espnow-primary.yaml
       - firmware/v4/dsc-fleet-setup-hub-lab.yaml
-    refresh: 1d
+    refresh: 1h
