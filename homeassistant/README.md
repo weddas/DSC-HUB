@@ -9,6 +9,7 @@ Canonical HA surface for firmware [`firmware/v4/`](../firmware/v4/).
 | `dashboards/dsc-hub-v4-dashboard.yaml` | Lovelace UX **v0.2** (10 views). URL **must** be `dsc-hub-pro`. Flow: Home → Climate → Learning → tents → Root Zone → Tank/Light/Trends/System. |
 | `packages/dsc_v4_core_helpers.yaml` | Hub link, fan %, airflow Sankey (CFM), photoperiod, leaf offset, appliance runtimes, dead-demand cues |
 | `packages/dsc_v4_climate_physics.yaml` | Settable plant specs (CFM/volumes/L/day/W), ACH/AH/BTU/moisture sensors, spec verification |
+| `packages/dsc_v4_device_cal.yaml` | Optional fan CFM / SF1000 PPFD multi-point curves + Learning wizard (unset = % × nameplate) |
 | `packages/dsc_v4_climate_learn.yaml` | Phase A EMA lever-efficiency observer + minutes-to-target / headroom gauges |
 | `packages/dsc_v4_light_helpers.yaml` | Lights-on today, clone dark-period, deviation |
 | `packages/dsc_v4_tank.yaml` | Tank EC/pH/temp helpers + Tuya warn sync |

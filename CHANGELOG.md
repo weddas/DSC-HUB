@@ -5,6 +5,8 @@
 - Force **5.1.0** across lab + kit firmwares, Sonoffs, Sync add-on, stubs, docs.
 - Learn **Phase B** (opt-in): rate-limited HA→hub ladder wait bases only.
 - Learning UI refresh (A+B), fleet version-status chip, coldest/hottest root sensors.
+- Optional Learning **device cal**: L×W×H→m³ Apply helpers, multi-point fan CFM /
+  SF1000 PPFD curves (`dsc_v4_device_cal`); live sensors stay % × nameplate until ≥2 points.
 - Sync harden: `sync_esphome` default true, atomic stage + rollback, version/SHA marker,
   broader reloads, restart hint for new helpers.
 - Notify via `input_text.dsc_notify_service`; door magnet UX; dead-demand / NO ACTUATOR cues.
