@@ -1,0 +1,849 @@
+# ==================================================================
+#  DSC-HUB v4 · DEVICE CALIBRATION (optional fan CFM + light PPFD curves)
+#  ------------------------------------------------------------------
+#  Opt-in only. Unset curve points (0) keep live CFM as pct × nameplate.
+#  ≥2 measured points → piecewise-linear CFM/PPFD at any commanded %.
+#  Wizard: select target → Start → Hold settles → enter m/s or CFM/PPFD
+#  → Save point. Abort restores prior speeds and clears the session.
+# ==================================================================
+
+input_boolean:
+  dsc_cal_active:
+    name: "DSC Cal · Session Active"
+    icon: mdi:crosshairs-gps
+
+  dsc_cal_had_manual_override:
+    name: "DSC Cal · Had Manual Override"
+    icon: mdi:hand-back-right
+
+  dsc_cal_had_light_hold:
+    name: "DSC Cal · Had Light Hold"
+    icon: mdi:lightbulb-outline
+
+input_select:
+  dsc_cal_target:
+    name: "DSC Cal · Target"
+    options:
+      - none
+      - out
+      - recirc
+      - intake_main
+      - intake_clone
+      - sf1000
+    initial: none
+    icon: mdi:target
+
+input_text:
+  dsc_cal_status:
+    name: "DSC Cal · Status"
+    max: 255
+    initial: "Idle — select a fan or SF1000, then Start."
+    icon: mdi:information-outline
+
+input_number:
+  dsc_cal_step_pct:
+    name: "DSC Cal · Step %"
+    min: 0
+    max: 100
+    step: 25
+    initial: 25
+    unit_of_measurement: "%"
+    icon: mdi:percent
+    mode: box
+
+  dsc_cal_reading_ms:
+    name: "DSC Cal · Anemometer m/s"
+    min: 0
+    max: 50
+    step: 0.01
+    initial: 0
+    unit_of_measurement: "m/s"
+    icon: mdi:anemometer
+    mode: box
+
+  dsc_cal_reading_cfm:
+    name: "DSC Cal · Reading CFM"
+    min: 0
+    max: 1500
+    step: 1
+    initial: 0
+    unit_of_measurement: "CFM"
+    icon: mdi:fan
+    mode: box
+
+  dsc_cal_reading_ppfd:
+    name: "DSC Cal · Reading PPFD"
+    min: 0
+    max: 3000
+    step: 1
+    initial: 0
+    unit_of_measurement: "µmol/m²/s"
+    icon: mdi:white-balance-sunny
+    mode: box
+
+  # Snapshots for Abort restore
+  dsc_cal_snap_out:
+    name: "DSC Cal · Snap OUT %"
+    min: 0
+    max: 100
+    step: 1
+    initial: 0
+    mode: box
+  dsc_cal_snap_recirc:
+    name: "DSC Cal · Snap RECIRC %"
+    min: 0
+    max: 100
+    step: 1
+    initial: 0
+    mode: box
+  dsc_cal_snap_intake_main:
+    name: "DSC Cal · Snap Intake Main %"
+    min: 0
+    max: 100
+    step: 1
+    initial: 0
+    mode: box
+  dsc_cal_snap_intake_clone:
+    name: "DSC Cal · Snap Intake 2x4 %"
+    min: 0
+    max: 100
+    step: 1
+    initial: 0
+    mode: box
+  dsc_cal_snap_sf1000:
+    name: "DSC Cal · Snap SF1000 %"
+    min: 0
+    max: 100
+    step: 1
+    initial: 0
+    mode: box
+
+  # Duct diameters (cm) for m/s → CFM. 6″ exhausts / 4″ intakes.
+  dsc_duct_out_cm:
+    name: "DSC Cal · OUT Duct Ø"
+    min: 5
+    max: 40
+    step: 0.01
+    initial: 15.24
+    unit_of_measurement: "cm"
+    icon: mdi:diameter-outline
+    mode: box
+  dsc_duct_recirc_cm:
+    name: "DSC Cal · RECIRC Duct Ø"
+    min: 5
+    max: 40
+    step: 0.01
+    initial: 15.24
+    unit_of_measurement: "cm"
+    icon: mdi:diameter-outline
+    mode: box
+  dsc_duct_intake_main_cm:
+    name: "DSC Cal · Intake Main Duct Ø"
+    min: 5
+    max: 40
+    step: 0.01
+    initial: 10.16
+    unit_of_measurement: "cm"
+    icon: mdi:diameter-outline
+    mode: box
+  dsc_duct_intake_clone_cm:
+    name: "DSC Cal · Intake 2x4 Duct Ø"
+    min: 5
+    max: 40
+    step: 0.01
+    initial: 10.16
+    unit_of_measurement: "cm"
+    icon: mdi:diameter-outline
+    mode: box
+
+  # Fan CFM curve points (0 = unset / optional)
+  dsc_cal_cfm_out_25:
+    name: "DSC Cal · OUT CFM @25%"
+    min: 0
+    max: 1500
+    step: 1
+    initial: 0
+    unit_of_measurement: "CFM"
+    icon: mdi:fan-chevron-up
+    mode: box
+  dsc_cal_cfm_out_50:
+    name: "DSC Cal · OUT CFM @50%"
+    min: 0
+    max: 1500
+    step: 1
+    initial: 0
+    unit_of_measurement: "CFM"
+    icon: mdi:fan-chevron-up
+    mode: box
+  dsc_cal_cfm_out_75:
+    name: "DSC Cal · OUT CFM @75%"
+    min: 0
+    max: 1500
+    step: 1
+    initial: 0
+    unit_of_measurement: "CFM"
+    icon: mdi:fan-chevron-up
+    mode: box
+  dsc_cal_cfm_out_100:
+    name: "DSC Cal · OUT CFM @100%"
+    min: 0
+    max: 1500
+    step: 1
+    initial: 0
+    unit_of_measurement: "CFM"
+    icon: mdi:fan-chevron-up
+    mode: box
+
+  dsc_cal_cfm_recirc_25:
+    name: "DSC Cal · RECIRC CFM @25%"
+    min: 0
+    max: 1500
+    step: 1
+    initial: 0
+    unit_of_measurement: "CFM"
+    icon: mdi:fan-chevron-up
+    mode: box
+  dsc_cal_cfm_recirc_50:
+    name: "DSC Cal · RECIRC CFM @50%"
+    min: 0
+    max: 1500
+    step: 1
+    initial: 0
+    unit_of_measurement: "CFM"
+    icon: mdi:fan-chevron-up
+    mode: box
+  dsc_cal_cfm_recirc_75:
+    name: "DSC Cal · RECIRC CFM @75%"
+    min: 0
+    max: 1500
+    step: 1
+    initial: 0
+    unit_of_measurement: "CFM"
+    icon: mdi:fan-chevron-up
+    mode: box
+  dsc_cal_cfm_recirc_100:
+    name: "DSC Cal · RECIRC CFM @100%"
+    min: 0
+    max: 1500
+    step: 1
+    initial: 0
+    unit_of_measurement: "CFM"
+    icon: mdi:fan-chevron-up
+    mode: box
+
+  dsc_cal_cfm_intake_main_25:
+    name: "DSC Cal · Intake Main CFM @25%"
+    min: 0
+    max: 800
+    step: 1
+    initial: 0
+    unit_of_measurement: "CFM"
+    icon: mdi:fan
+    mode: box
+  dsc_cal_cfm_intake_main_50:
+    name: "DSC Cal · Intake Main CFM @50%"
+    min: 0
+    max: 800
+    step: 1
+    initial: 0
+    unit_of_measurement: "CFM"
+    icon: mdi:fan
+    mode: box
+  dsc_cal_cfm_intake_main_75:
+    name: "DSC Cal · Intake Main CFM @75%"
+    min: 0
+    max: 800
+    step: 1
+    initial: 0
+    unit_of_measurement: "CFM"
+    icon: mdi:fan
+    mode: box
+  dsc_cal_cfm_intake_main_100:
+    name: "DSC Cal · Intake Main CFM @100%"
+    min: 0
+    max: 800
+    step: 1
+    initial: 0
+    unit_of_measurement: "CFM"
+    icon: mdi:fan
+    mode: box
+
+  dsc_cal_cfm_intake_clone_25:
+    name: "DSC Cal · Intake 2x4 CFM @25%"
+    min: 0
+    max: 800
+    step: 1
+    initial: 0
+    unit_of_measurement: "CFM"
+    icon: mdi:fan
+    mode: box
+  dsc_cal_cfm_intake_clone_50:
+    name: "DSC Cal · Intake 2x4 CFM @50%"
+    min: 0
+    max: 800
+    step: 1
+    initial: 0
+    unit_of_measurement: "CFM"
+    icon: mdi:fan
+    mode: box
+  dsc_cal_cfm_intake_clone_75:
+    name: "DSC Cal · Intake 2x4 CFM @75%"
+    min: 0
+    max: 800
+    step: 1
+    initial: 0
+    unit_of_measurement: "CFM"
+    icon: mdi:fan
+    mode: box
+  dsc_cal_cfm_intake_clone_100:
+    name: "DSC Cal · Intake 2x4 CFM @100%"
+    min: 0
+    max: 800
+    step: 1
+    initial: 0
+    unit_of_measurement: "CFM"
+    icon: mdi:fan
+    mode: box
+
+  # SF1000 PPFD curve (0 = unset)
+  dsc_cal_ppfd_25:
+    name: "DSC Cal · SF1000 PPFD @25%"
+    min: 0
+    max: 3000
+    step: 1
+    initial: 0
+    unit_of_measurement: "µmol/m²/s"
+    icon: mdi:white-balance-sunny
+    mode: box
+  dsc_cal_ppfd_50:
+    name: "DSC Cal · SF1000 PPFD @50%"
+    min: 0
+    max: 3000
+    step: 1
+    initial: 0
+    unit_of_measurement: "µmol/m²/s"
+    icon: mdi:white-balance-sunny
+    mode: box
+  dsc_cal_ppfd_75:
+    name: "DSC Cal · SF1000 PPFD @75%"
+    min: 0
+    max: 3000
+    step: 1
+    initial: 0
+    unit_of_measurement: "µmol/m²/s"
+    icon: mdi:white-balance-sunny
+    mode: box
+  dsc_cal_ppfd_100:
+    name: "DSC Cal · SF1000 PPFD @100%"
+    min: 0
+    max: 3000
+    step: 1
+    initial: 0
+    unit_of_measurement: "µmol/m²/s"
+    icon: mdi:white-balance-sunny
+    mode: box
+
+template:
+  - sensor:
+      - name: "DSC SF1000 PPFD"
+        unique_id: dsc_sf1000_ppfd
+        unit_of_measurement: "µmol/m²/s"
+        state_class: measurement
+        icon: mdi:white-balance-sunny
+        state: >-
+          {% set p25 = states('input_number.dsc_cal_ppfd_25')|float(0) %}
+          {% set p50 = states('input_number.dsc_cal_ppfd_50')|float(0) %}
+          {% set p75 = states('input_number.dsc_cal_ppfd_75')|float(0) %}
+          {% set p100 = states('input_number.dsc_cal_ppfd_100')|float(0) %}
+          {% set measured = [p25, p50, p75, p100] | select('gt', 0) | list %}
+          {% if measured | count < 2 %}unavailable
+          {% else %}
+            {% set pct = 0.0 %}
+            {% if is_state('light.dsc_hub_sf1000_dimmer', 'on') %}
+              {% set pct = (state_attr('light.dsc_hub_sf1000_dimmer', 'brightness')|float(0) / 255 * 100) %}
+            {% endif %}
+            {% set ns = namespace(xs=[0.0], ys=[0.0]) %}
+            {% for p, v in [(25.0, p25), (50.0, p50), (75.0, p75), (100.0, p100)] %}
+              {% if v > 0 %}
+                {% set ns.xs = ns.xs + [p] %}
+                {% set ns.ys = ns.ys + [v] %}
+              {% endif %}
+            {% endfor %}
+            {% if pct <= ns.xs[0] %}{{ ns.ys[0] | round(0) }}
+            {% elif pct >= ns.xs[-1] %}{{ ns.ys[-1] | round(0) }}
+            {% else %}
+              {% set ns2 = namespace(lo=0, hi=1) %}
+              {% for i in range(ns.xs | length - 1) %}
+                {% if pct >= ns.xs[i] and pct <= ns.xs[i + 1] %}
+                  {% set ns2.lo = i %}
+                  {% set ns2.hi = i + 1 %}
+                {% endif %}
+              {% endfor %}
+              {% set x0 = ns.xs[ns2.lo] %}{% set x1 = ns.xs[ns2.hi] %}
+              {% set y0 = ns.ys[ns2.lo] %}{% set y1 = ns.ys[ns2.hi] %}
+              {{ (y0 + (y1 - y0) * (pct - x0) / (x1 - x0)) | round(0) }}
+            {% endif %}
+          {% endif %}
+        availability: >-
+          {{ ([states('input_number.dsc_cal_ppfd_25')|float(0),
+               states('input_number.dsc_cal_ppfd_50')|float(0),
+               states('input_number.dsc_cal_ppfd_75')|float(0),
+               states('input_number.dsc_cal_ppfd_100')|float(0)]
+              | select('gt', 0) | list | count) >= 2 }}
+        attributes:
+          model: >-
+            {% set n = [states('input_number.dsc_cal_ppfd_25')|float(0),
+              states('input_number.dsc_cal_ppfd_50')|float(0),
+              states('input_number.dsc_cal_ppfd_75')|float(0),
+              states('input_number.dsc_cal_ppfd_100')|float(0)]
+              | select('gt', 0) | list | count %}
+            {{ 'curve' if n >= 2 else 'unset' }}
+
+script:
+  dsc_cal_start:
+    alias: "DSC Cal · Start session"
+    icon: mdi:play
+    mode: restart
+    sequence:
+      - condition: template
+        value_template: "{{ states('input_select.dsc_cal_target') != 'none' }}"
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: switch.dsc_hub_tent_manual_override
+                state: "on"
+            sequence:
+              - service: input_boolean.turn_on
+                target: { entity_id: input_boolean.dsc_cal_had_manual_override }
+        default:
+          - service: input_boolean.turn_off
+            target: { entity_id: input_boolean.dsc_cal_had_manual_override }
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: switch.dsc_hub_manual_light_hold
+                state: "on"
+            sequence:
+              - service: input_boolean.turn_on
+                target: { entity_id: input_boolean.dsc_cal_had_light_hold }
+        default:
+          - service: input_boolean.turn_off
+            target: { entity_id: input_boolean.dsc_cal_had_light_hold }
+      - service: input_number.set_value
+        target: { entity_id: input_number.dsc_cal_snap_out }
+        data:
+          value: "{{ state_attr('fan.dsc_hub_6_inch_exhaust_outside', 'percentage') | float(0) }}"
+      - service: input_number.set_value
+        target: { entity_id: input_number.dsc_cal_snap_recirc }
+        data:
+          value: "{{ state_attr('fan.dsc_hub_6_inch_exhaust_room', 'percentage') | float(0) }}"
+      - service: input_number.set_value
+        target: { entity_id: input_number.dsc_cal_snap_intake_main }
+        data:
+          value: "{{ state_attr('fan.dsc_hub_4_inch_intake_fan_main', 'percentage') | float(0) }}"
+      - service: input_number.set_value
+        target: { entity_id: input_number.dsc_cal_snap_intake_clone }
+        data:
+          value: "{{ state_attr('fan.dsc_hub_4_inch_intake_fan_2x4', 'percentage') | float(0) }}"
+      - service: input_number.set_value
+        target: { entity_id: input_number.dsc_cal_snap_sf1000 }
+        data:
+          value: >-
+            {% if is_state('light.dsc_hub_sf1000_dimmer', 'on') %}
+              {{ (state_attr('light.dsc_hub_sf1000_dimmer', 'brightness')|float(0) / 255 * 100) | round(0) }}
+            {% else %}0{% endif %}
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ states('input_select.dsc_cal_target') == 'sf1000' }}"
+            sequence:
+              - service: switch.turn_on
+                target: { entity_id: switch.dsc_hub_manual_light_hold }
+        default:
+          - service: switch.turn_on
+            target: { entity_id: switch.dsc_hub_tent_manual_override }
+      - service: input_number.set_value
+        target: { entity_id: input_number.dsc_cal_step_pct }
+        data: { value: 25 }
+      - service: input_number.set_value
+        target: { entity_id: input_number.dsc_cal_reading_ms }
+        data: { value: 0 }
+      - service: input_number.set_value
+        target: { entity_id: input_number.dsc_cal_reading_cfm }
+        data: { value: 0 }
+      - service: input_number.set_value
+        target: { entity_id: input_number.dsc_cal_reading_ppfd }
+        data: { value: 0 }
+      - service: input_boolean.turn_on
+        target: { entity_id: input_boolean.dsc_cal_active }
+      - service: input_text.set_value
+        target: { entity_id: input_text.dsc_cal_status }
+        data:
+          value: "Session started — ramping to 25%."
+      - service: script.dsc_cal_hold_next
+
+  dsc_cal_hold_next:
+    alias: "DSC Cal · Hold at step %"
+    icon: mdi:fan-clock
+    mode: restart
+    sequence:
+      - condition: state
+        entity_id: input_boolean.dsc_cal_active
+        state: "on"
+      - variables:
+          target: "{{ states('input_select.dsc_cal_target') }}"
+          step: "{{ states('input_number.dsc_cal_step_pct')|int(25) }}"
+      - service: input_text.set_value
+        target: { entity_id: input_text.dsc_cal_status }
+        data:
+          value: "Ramping {{ target }} to {{ step }}% — settling 25s…"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ target == 'out' }}"
+            sequence:
+              - service: fan.set_percentage
+                target: { entity_id: fan.dsc_hub_6_inch_exhaust_outside }
+                data: { percentage: "{{ step }}" }
+          - conditions:
+              - condition: template
+                value_template: "{{ target == 'recirc' }}"
+            sequence:
+              - service: fan.set_percentage
+                target: { entity_id: fan.dsc_hub_6_inch_exhaust_room }
+                data: { percentage: "{{ step }}" }
+          - conditions:
+              - condition: template
+                value_template: "{{ target == 'intake_main' }}"
+            sequence:
+              - service: fan.set_percentage
+                target: { entity_id: fan.dsc_hub_4_inch_intake_fan_main }
+                data: { percentage: "{{ step }}" }
+          - conditions:
+              - condition: template
+                value_template: "{{ target == 'intake_clone' }}"
+            sequence:
+              - service: fan.set_percentage
+                target: { entity_id: fan.dsc_hub_4_inch_intake_fan_2x4 }
+                data: { percentage: "{{ step }}" }
+          - conditions:
+              - condition: template
+                value_template: "{{ target == 'sf1000' }}"
+            sequence:
+              - service: light.turn_on
+                target: { entity_id: light.dsc_hub_sf1000_dimmer }
+                data: { brightness_pct: "{{ step }}" }
+      - delay: "00:00:25"
+      - service: input_number.set_value
+        target: { entity_id: input_number.dsc_cal_reading_ms }
+        data: { value: 0 }
+      - service: input_number.set_value
+        target: { entity_id: input_number.dsc_cal_reading_cfm }
+        data: { value: 0 }
+      - service: input_number.set_value
+        target: { entity_id: input_number.dsc_cal_reading_ppfd }
+        data: { value: 0 }
+      - service: input_text.set_value
+        target: { entity_id: input_text.dsc_cal_status }
+        data:
+          value: >-
+            Holding {{ target }} at {{ step }}%.
+            {% if target == 'sf1000' %}Enter PPFD then Save Point.
+            {% else %}Measure duct outlet — enter m/s and/or CFM, then Save Point.{% endif %}
+
+  dsc_cal_save_point:
+    alias: "DSC Cal · Save point"
+    icon: mdi:content-save
+    mode: single
+    sequence:
+      - condition: state
+        entity_id: input_boolean.dsc_cal_active
+        state: "on"
+      - variables:
+          target: "{{ states('input_select.dsc_cal_target') }}"
+          step: "{{ states('input_number.dsc_cal_step_pct')|int(25) }}"
+          ms: "{{ states('input_number.dsc_cal_reading_ms')|float(0) }}"
+          cfm_in: "{{ states('input_number.dsc_cal_reading_cfm')|float(0) }}"
+          ppfd_in: "{{ states('input_number.dsc_cal_reading_ppfd')|float(0) }}"
+          duct: >-
+            {% if target == 'out' %}{{ states('input_number.dsc_duct_out_cm')|float(15.24) }}
+            {% elif target == 'recirc' %}{{ states('input_number.dsc_duct_recirc_cm')|float(15.24) }}
+            {% elif target == 'intake_main' %}{{ states('input_number.dsc_duct_intake_main_cm')|float(10.16) }}
+            {% elif target == 'intake_clone' %}{{ states('input_number.dsc_duct_intake_clone_cm')|float(10.16) }}
+            {% else %}0{% endif %}
+          cfm: >-
+            {% if cfm_in|float(0) > 0 %}{{ cfm_in|float(0) | round(0) }}
+            {% elif ms|float(0) > 0 and duct|float(0) > 0 %}
+              {{ (ms|float(0) * 3.14159265 * (duct|float(0) / 200) ** 2 * 2118.88) | round(0) }}
+            {% else %}0{% endif %}
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: >-
+                  {{ (target == 'sf1000' and ppfd_in|float(0) <= 0)
+                     or (target != 'sf1000' and cfm|float(0) <= 0) }}
+            sequence:
+              - service: input_text.set_value
+                target: { entity_id: input_text.dsc_cal_status }
+                data:
+                  value: >-
+                    No reading — enter {% if target == 'sf1000' %}PPFD{% else %}m/s or CFM{% endif %}
+                    then Save again (still holding {{ step }}%).
+              - stop: "waiting for reading"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ target == 'sf1000' and ppfd_in|float(0) > 0 }}"
+            sequence:
+              - service: input_number.set_value
+                target:
+                  entity_id: "input_number.dsc_cal_ppfd_{{ step }}"
+                data:
+                  value: "{{ ppfd_in|float(0) | round(0) }}"
+          - conditions:
+              - condition: template
+                value_template: >-
+                  {{ target in ['out', 'recirc', 'intake_main', 'intake_clone']
+                     and cfm|float(0) > 0 }}
+            sequence:
+              - service: input_number.set_value
+                target:
+                  entity_id: "input_number.dsc_cal_cfm_{{ target }}_{{ step }}"
+                data:
+                  value: "{{ cfm|float(0) | round(0) }}"
+              - choose:
+                  - conditions:
+                      - condition: template
+                        value_template: "{{ step|int == 100 and target == 'out' }}"
+                    sequence:
+                      - service: input_number.set_value
+                        target: { entity_id: input_number.dsc_cfm_out_max }
+                        data: { value: "{{ [cfm|float(0)|round(0), 50]|max }}" }
+                  - conditions:
+                      - condition: template
+                        value_template: "{{ step|int == 100 and target == 'recirc' }}"
+                    sequence:
+                      - service: input_number.set_value
+                        target: { entity_id: input_number.dsc_cfm_recirc_max }
+                        data: { value: "{{ [cfm|float(0)|round(0), 50]|max }}" }
+                  - conditions:
+                      - condition: template
+                        value_template: "{{ step|int == 100 and target == 'intake_main' }}"
+                    sequence:
+                      - service: input_number.set_value
+                        target: { entity_id: input_number.dsc_cfm_intake_main_max }
+                        data: { value: "{{ [cfm|float(0)|round(0), 20]|max }}" }
+                  - conditions:
+                      - condition: template
+                        value_template: "{{ step|int == 100 and target == 'intake_clone' }}"
+                    sequence:
+                      - service: input_number.set_value
+                        target: { entity_id: input_number.dsc_cfm_intake_clone_max }
+                        data: { value: "{{ [cfm|float(0)|round(0), 20]|max }}" }
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ step|int >= 100 }}"
+            sequence:
+              - service: input_text.set_value
+                target: { entity_id: input_text.dsc_cal_status }
+                data:
+                  value: "Curve complete for {{ target }}. Restoring prior output…"
+              - service: script.dsc_cal_finish
+        default:
+          - service: input_number.set_value
+            target: { entity_id: input_number.dsc_cal_step_pct }
+            data:
+              value: "{{ step|int + 25 }}"
+          - service: input_text.set_value
+            target: { entity_id: input_text.dsc_cal_status }
+            data:
+              value: "Saved {{ target }} @ {{ step }}%. Advancing…"
+          - service: script.dsc_cal_hold_next
+
+  dsc_cal_skip_point:
+    alias: "DSC Cal · Skip point"
+    icon: mdi:skip-next
+    mode: single
+    sequence:
+      - condition: state
+        entity_id: input_boolean.dsc_cal_active
+        state: "on"
+      - variables:
+          step: "{{ states('input_number.dsc_cal_step_pct')|int(25) }}"
+          target: "{{ states('input_select.dsc_cal_target') }}"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ step|int >= 100 }}"
+            sequence:
+              - service: input_text.set_value
+                target: { entity_id: input_text.dsc_cal_status }
+                data: { value: "Skipped final step — finishing." }
+              - service: script.dsc_cal_finish
+        default:
+          - service: input_number.set_value
+            target: { entity_id: input_number.dsc_cal_step_pct }
+            data: { value: "{{ step|int + 25 }}" }
+          - service: input_text.set_value
+            target: { entity_id: input_text.dsc_cal_status }
+            data: { value: "Skipped {{ target }} @ {{ step }}%." }
+          - service: script.dsc_cal_hold_next
+
+  dsc_cal_finish:
+    alias: "DSC Cal · Finish & restore"
+    icon: mdi:check
+    mode: single
+    sequence:
+      - service: script.turn_off
+        target:
+          entity_id:
+            - script.dsc_cal_hold_next
+            - script.dsc_cal_start
+      - service: script.dsc_cal_restore_outputs
+      - service: input_boolean.turn_off
+        target: { entity_id: input_boolean.dsc_cal_active }
+      - service: input_text.set_value
+        target: { entity_id: input_text.dsc_cal_status }
+        data:
+          value: "Done. Curves optional — unset points keep % × nameplate."
+
+  dsc_cal_abort:
+    alias: "DSC Cal · Abort"
+    icon: mdi:cancel
+    mode: single
+    sequence:
+      - service: script.turn_off
+        target:
+          entity_id:
+            - script.dsc_cal_hold_next
+            - script.dsc_cal_start
+      - service: script.dsc_cal_restore_outputs
+      - service: input_boolean.turn_off
+        target: { entity_id: input_boolean.dsc_cal_active }
+      - service: input_select.select_option
+        target: { entity_id: input_select.dsc_cal_target }
+        data: { option: none }
+      - service: input_text.set_value
+        target: { entity_id: input_text.dsc_cal_status }
+        data: { value: "Aborted — prior speeds restored." }
+
+  dsc_cal_restore_outputs:
+    alias: "DSC Cal · Restore snapped outputs"
+    icon: mdi:restore
+    mode: single
+    sequence:
+      - service: fan.set_percentage
+        target: { entity_id: fan.dsc_hub_6_inch_exhaust_outside }
+        data:
+          percentage: "{{ states('input_number.dsc_cal_snap_out')|int(0) }}"
+      - service: fan.set_percentage
+        target: { entity_id: fan.dsc_hub_6_inch_exhaust_room }
+        data:
+          percentage: "{{ states('input_number.dsc_cal_snap_recirc')|int(0) }}"
+      - service: fan.set_percentage
+        target: { entity_id: fan.dsc_hub_4_inch_intake_fan_main }
+        data:
+          percentage: "{{ states('input_number.dsc_cal_snap_intake_main')|int(0) }}"
+      - service: fan.set_percentage
+        target: { entity_id: fan.dsc_hub_4_inch_intake_fan_2x4 }
+        data:
+          percentage: "{{ states('input_number.dsc_cal_snap_intake_clone')|int(0) }}"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ states('input_number.dsc_cal_snap_sf1000')|float(0) <= 0 }}"
+            sequence:
+              - service: light.turn_off
+                target: { entity_id: light.dsc_hub_sf1000_dimmer }
+        default:
+          - service: light.turn_on
+            target: { entity_id: light.dsc_hub_sf1000_dimmer }
+            data:
+              brightness_pct: "{{ states('input_number.dsc_cal_snap_sf1000')|int(0) }}"
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: input_boolean.dsc_cal_had_manual_override
+                state: "off"
+            sequence:
+              - service: switch.turn_off
+                target: { entity_id: switch.dsc_hub_tent_manual_override }
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: input_boolean.dsc_cal_had_light_hold
+                state: "off"
+            sequence:
+              - service: switch.turn_off
+                target: { entity_id: switch.dsc_hub_manual_light_hold }
+
+  dsc_cal_reset_curve_out:
+    alias: "DSC Cal · Reset OUT curve"
+    icon: mdi:restore
+    mode: single
+    sequence:
+      - service: input_number.set_value
+        target:
+          entity_id:
+            - input_number.dsc_cal_cfm_out_25
+            - input_number.dsc_cal_cfm_out_50
+            - input_number.dsc_cal_cfm_out_75
+            - input_number.dsc_cal_cfm_out_100
+        data: { value: 0 }
+
+  dsc_cal_reset_curve_recirc:
+    alias: "DSC Cal · Reset RECIRC curve"
+    icon: mdi:restore
+    mode: single
+    sequence:
+      - service: input_number.set_value
+        target:
+          entity_id:
+            - input_number.dsc_cal_cfm_recirc_25
+            - input_number.dsc_cal_cfm_recirc_50
+            - input_number.dsc_cal_cfm_recirc_75
+            - input_number.dsc_cal_cfm_recirc_100
+        data: { value: 0 }
+
+  dsc_cal_reset_curve_intake_main:
+    alias: "DSC Cal · Reset Intake Main curve"
+    icon: mdi:restore
+    mode: single
+    sequence:
+      - service: input_number.set_value
+        target:
+          entity_id:
+            - input_number.dsc_cal_cfm_intake_main_25
+            - input_number.dsc_cal_cfm_intake_main_50
+            - input_number.dsc_cal_cfm_intake_main_75
+            - input_number.dsc_cal_cfm_intake_main_100
+        data: { value: 0 }
+
+  dsc_cal_reset_curve_intake_clone:
+    alias: "DSC Cal · Reset Intake 2x4 curve"
+    icon: mdi:restore
+    mode: single
+    sequence:
+      - service: input_number.set_value
+        target:
+          entity_id:
+            - input_number.dsc_cal_cfm_intake_clone_25
+            - input_number.dsc_cal_cfm_intake_clone_50
+            - input_number.dsc_cal_cfm_intake_clone_75
+            - input_number.dsc_cal_cfm_intake_clone_100
+        data: { value: 0 }
+
+  dsc_cal_reset_curve_sf1000:
+    alias: "DSC Cal · Reset SF1000 PPFD curve"
+    icon: mdi:restore
+    mode: single
+    sequence:
+      - service: input_number.set_value
+        target:
+          entity_id:
+            - input_number.dsc_cal_ppfd_25
+            - input_number.dsc_cal_ppfd_50
+            - input_number.dsc_cal_ppfd_75
+            - input_number.dsc_cal_ppfd_100
+        data: { value: 0 }

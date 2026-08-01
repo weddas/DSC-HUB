@@ -2,7 +2,9 @@
 #  DSC-HUB v4 · CLIMATE PHYSICS / PLANT SPECS
 #  ------------------------------------------------------------------
 #  Operator-settable nameplate constants (CFM, volumes, dehum L/day…).
-#  Not hardcoded in firmware — edit here when a fan/appliance is swapped.
+#  Optional L×W×H (cm) helpers + Apply scripts write dsc_vol_*_m3.
+#  Live CFM: optional multi-point curves (dsc_v4_device_cal) interpolate
+#  when ≥2 points set; otherwise pct × nameplate (unchanged default).
 #  Derived sensors: live CFM, ACH, AH, BTU budget, moisture burn-off.
 #  Verification binaries flag impossible / incomplete specs.
 # ==================================================================
@@ -37,6 +39,97 @@ input_number:
     initial: 40
     unit_of_measurement: "m³"
     icon: mdi:home-floor-1
+    mode: box
+
+  # --- Optional L×W×H (cm) → m³ helpers (Apply scripts write dsc_vol_*_m3) ---
+  dsc_dim_4x8_l_cm:
+    name: "DSC Spec · 4x8 Length"
+    min: 0
+    max: 500
+    step: 1
+    initial: 0
+    unit_of_measurement: "cm"
+    icon: mdi:arrow-left-right
+    mode: box
+
+  dsc_dim_4x8_w_cm:
+    name: "DSC Spec · 4x8 Width"
+    min: 0
+    max: 500
+    step: 1
+    initial: 0
+    unit_of_measurement: "cm"
+    icon: mdi:arrow-left-right
+    mode: box
+
+  dsc_dim_4x8_h_cm:
+    name: "DSC Spec · 4x8 Height"
+    min: 0
+    max: 400
+    step: 1
+    initial: 0
+    unit_of_measurement: "cm"
+    icon: mdi:arrow-up-down
+    mode: box
+
+  dsc_dim_2x4_l_cm:
+    name: "DSC Spec · 2x4 Length"
+    min: 0
+    max: 400
+    step: 1
+    initial: 0
+    unit_of_measurement: "cm"
+    icon: mdi:arrow-left-right
+    mode: box
+
+  dsc_dim_2x4_w_cm:
+    name: "DSC Spec · 2x4 Width"
+    min: 0
+    max: 400
+    step: 1
+    initial: 0
+    unit_of_measurement: "cm"
+    icon: mdi:arrow-left-right
+    mode: box
+
+  dsc_dim_2x4_h_cm:
+    name: "DSC Spec · 2x4 Height"
+    min: 0
+    max: 400
+    step: 1
+    initial: 0
+    unit_of_measurement: "cm"
+    icon: mdi:arrow-up-down
+    mode: box
+
+  dsc_dim_room_l_cm:
+    name: "DSC Spec · Room Length"
+    min: 0
+    max: 2000
+    step: 1
+    initial: 0
+    unit_of_measurement: "cm"
+    icon: mdi:arrow-left-right
+    mode: box
+
+  dsc_dim_room_w_cm:
+    name: "DSC Spec · Room Width"
+    min: 0
+    max: 2000
+    step: 1
+    initial: 0
+    unit_of_measurement: "cm"
+    icon: mdi:arrow-left-right
+    mode: box
+
+  dsc_dim_room_h_cm:
+    name: "DSC Spec · Room Height"
+    min: 0
+    max: 600
+    step: 1
+    initial: 0
+    unit_of_measurement: "cm"
+    icon: mdi:arrow-up-down
     mode: box
 
   # --- Fan nameplate @ 100% command ---
@@ -256,16 +349,88 @@ template:
             ] %}
             {{ parts | reject('none') | list | join('; ') or 'none' }}
 
-      # ----- Live CFM (commanded % × nameplate) -----
+      # ----- Optional L×W×H → geometric m³ (Apply scripts write volume helpers) -----
+      - name: "DSC Dim 4x8 Computed m³"
+        unique_id: dsc_dim_4x8_computed_m3
+        unit_of_measurement: "m³"
+        icon: mdi:cube-outline
+        state: >-
+          {% set l = states('input_number.dsc_dim_4x8_l_cm')|float(0) %}
+          {% set w = states('input_number.dsc_dim_4x8_w_cm')|float(0) %}
+          {% set h = states('input_number.dsc_dim_4x8_h_cm')|float(0) %}
+          {% if l <= 0 or w <= 0 or h <= 0 %}unavailable
+          {% else %}{{ (l * w * h / 1000000) | round(2) }}{% endif %}
+
+      - name: "DSC Dim 2x4 Computed m³"
+        unique_id: dsc_dim_2x4_computed_m3
+        unit_of_measurement: "m³"
+        icon: mdi:cube-outline
+        state: >-
+          {% set l = states('input_number.dsc_dim_2x4_l_cm')|float(0) %}
+          {% set w = states('input_number.dsc_dim_2x4_w_cm')|float(0) %}
+          {% set h = states('input_number.dsc_dim_2x4_h_cm')|float(0) %}
+          {% if l <= 0 or w <= 0 or h <= 0 %}unavailable
+          {% else %}{{ (l * w * h / 1000000) | round(2) }}{% endif %}
+
+      - name: "DSC Dim Room Computed m³"
+        unique_id: dsc_dim_room_computed_m3
+        unit_of_measurement: "m³"
+        icon: mdi:home-floor-1
+        state: >-
+          {% set l = states('input_number.dsc_dim_room_l_cm')|float(0) %}
+          {% set w = states('input_number.dsc_dim_room_w_cm')|float(0) %}
+          {% set h = states('input_number.dsc_dim_room_h_cm')|float(0) %}
+          {% if l <= 0 or w <= 0 or h <= 0 %}unavailable
+          {% else %}{{ (l * w * h / 1000000) | round(1) }}{% endif %}
+
+      # ----- Live CFM: curve interp when ≥2 measured points, else pct × nameplate -----
       - name: "DSC CFM Exhaust Out"
         unique_id: dsc_cfm_exhaust_out
         unit_of_measurement: "CFM"
         state_class: measurement
         icon: mdi:fan-chevron-up
         state: >-
-          {{ (states('sensor.dsc_fan_exhaust_outside_pct')|float(0) / 100
-              * states('input_number.dsc_cfm_out_max')|float(0)) | round(1) }}
+          {% set pct = states('sensor.dsc_fan_exhaust_outside_pct')|float(0) %}
+          {% set plate = states('input_number.dsc_cfm_out_max')|float(0) %}
+          {% set c25 = states('input_number.dsc_cal_cfm_out_25')|float(0) %}
+          {% set c50 = states('input_number.dsc_cal_cfm_out_50')|float(0) %}
+          {% set c75 = states('input_number.dsc_cal_cfm_out_75')|float(0) %}
+          {% set c100 = states('input_number.dsc_cal_cfm_out_100')|float(0) %}
+          {% set measured = [c25, c50, c75, c100] | select('gt', 0) | list %}
+          {% if measured | count < 2 %}
+            {{ (pct / 100 * plate) | round(1) }}
+          {% else %}
+            {% set ns = namespace(xs=[0.0], ys=[0.0]) %}
+            {% for p, v in [(25.0, c25), (50.0, c50), (75.0, c75), (100.0, c100)] %}
+              {% if v > 0 %}
+                {% set ns.xs = ns.xs + [p] %}
+                {% set ns.ys = ns.ys + [v] %}
+              {% endif %}
+            {% endfor %}
+            {% if pct <= ns.xs[0] %}{{ ns.ys[0] | round(1) }}
+            {% elif pct >= ns.xs[-1] %}{{ ns.ys[-1] | round(1) }}
+            {% else %}
+              {% set ns2 = namespace(lo=0, hi=1) %}
+              {% for i in range(ns.xs | length - 1) %}
+                {% if pct >= ns.xs[i] and pct <= ns.xs[i + 1] %}
+                  {% set ns2.lo = i %}
+                  {% set ns2.hi = i + 1 %}
+                {% endif %}
+              {% endfor %}
+              {% set x0 = ns.xs[ns2.lo] %}{% set x1 = ns.xs[ns2.hi] %}
+              {% set y0 = ns.ys[ns2.lo] %}{% set y1 = ns.ys[ns2.hi] %}
+              {{ (y0 + (y1 - y0) * (pct - x0) / (x1 - x0)) | round(1) }}
+            {% endif %}
+          {% endif %}
         availability: "{{ has_value('sensor.dsc_fan_exhaust_outside_pct') }}"
+        attributes:
+          model: >-
+            {% set n = [states('input_number.dsc_cal_cfm_out_25')|float(0),
+              states('input_number.dsc_cal_cfm_out_50')|float(0),
+              states('input_number.dsc_cal_cfm_out_75')|float(0),
+              states('input_number.dsc_cal_cfm_out_100')|float(0)]
+              | select('gt', 0) | list | count %}
+            {{ 'curve' if n >= 2 else 'linear' }}
 
       - name: "DSC CFM Exhaust Recirc"
         unique_id: dsc_cfm_exhaust_recirc
@@ -273,9 +438,47 @@ template:
         state_class: measurement
         icon: mdi:fan-chevron-up
         state: >-
-          {{ (states('sensor.dsc_fan_exhaust_room_pct')|float(0) / 100
-              * states('input_number.dsc_cfm_recirc_max')|float(0)) | round(1) }}
+          {% set pct = states('sensor.dsc_fan_exhaust_room_pct')|float(0) %}
+          {% set plate = states('input_number.dsc_cfm_recirc_max')|float(0) %}
+          {% set c25 = states('input_number.dsc_cal_cfm_recirc_25')|float(0) %}
+          {% set c50 = states('input_number.dsc_cal_cfm_recirc_50')|float(0) %}
+          {% set c75 = states('input_number.dsc_cal_cfm_recirc_75')|float(0) %}
+          {% set c100 = states('input_number.dsc_cal_cfm_recirc_100')|float(0) %}
+          {% set measured = [c25, c50, c75, c100] | select('gt', 0) | list %}
+          {% if measured | count < 2 %}
+            {{ (pct / 100 * plate) | round(1) }}
+          {% else %}
+            {% set ns = namespace(xs=[0.0], ys=[0.0]) %}
+            {% for p, v in [(25.0, c25), (50.0, c50), (75.0, c75), (100.0, c100)] %}
+              {% if v > 0 %}
+                {% set ns.xs = ns.xs + [p] %}
+                {% set ns.ys = ns.ys + [v] %}
+              {% endif %}
+            {% endfor %}
+            {% if pct <= ns.xs[0] %}{{ ns.ys[0] | round(1) }}
+            {% elif pct >= ns.xs[-1] %}{{ ns.ys[-1] | round(1) }}
+            {% else %}
+              {% set ns2 = namespace(lo=0, hi=1) %}
+              {% for i in range(ns.xs | length - 1) %}
+                {% if pct >= ns.xs[i] and pct <= ns.xs[i + 1] %}
+                  {% set ns2.lo = i %}
+                  {% set ns2.hi = i + 1 %}
+                {% endif %}
+              {% endfor %}
+              {% set x0 = ns.xs[ns2.lo] %}{% set x1 = ns.xs[ns2.hi] %}
+              {% set y0 = ns.ys[ns2.lo] %}{% set y1 = ns.ys[ns2.hi] %}
+              {{ (y0 + (y1 - y0) * (pct - x0) / (x1 - x0)) | round(1) }}
+            {% endif %}
+          {% endif %}
         availability: "{{ has_value('sensor.dsc_fan_exhaust_room_pct') }}"
+        attributes:
+          model: >-
+            {% set n = [states('input_number.dsc_cal_cfm_recirc_25')|float(0),
+              states('input_number.dsc_cal_cfm_recirc_50')|float(0),
+              states('input_number.dsc_cal_cfm_recirc_75')|float(0),
+              states('input_number.dsc_cal_cfm_recirc_100')|float(0)]
+              | select('gt', 0) | list | count %}
+            {{ 'curve' if n >= 2 else 'linear' }}
 
       - name: "DSC CFM Intake Main"
         unique_id: dsc_cfm_intake_main
@@ -283,9 +486,47 @@ template:
         state_class: measurement
         icon: mdi:fan
         state: >-
-          {{ (states('sensor.dsc_fan_intake_main_pct')|float(0) / 100
-              * states('input_number.dsc_cfm_intake_main_max')|float(0)) | round(1) }}
+          {% set pct = states('sensor.dsc_fan_intake_main_pct')|float(0) %}
+          {% set plate = states('input_number.dsc_cfm_intake_main_max')|float(0) %}
+          {% set c25 = states('input_number.dsc_cal_cfm_intake_main_25')|float(0) %}
+          {% set c50 = states('input_number.dsc_cal_cfm_intake_main_50')|float(0) %}
+          {% set c75 = states('input_number.dsc_cal_cfm_intake_main_75')|float(0) %}
+          {% set c100 = states('input_number.dsc_cal_cfm_intake_main_100')|float(0) %}
+          {% set measured = [c25, c50, c75, c100] | select('gt', 0) | list %}
+          {% if measured | count < 2 %}
+            {{ (pct / 100 * plate) | round(1) }}
+          {% else %}
+            {% set ns = namespace(xs=[0.0], ys=[0.0]) %}
+            {% for p, v in [(25.0, c25), (50.0, c50), (75.0, c75), (100.0, c100)] %}
+              {% if v > 0 %}
+                {% set ns.xs = ns.xs + [p] %}
+                {% set ns.ys = ns.ys + [v] %}
+              {% endif %}
+            {% endfor %}
+            {% if pct <= ns.xs[0] %}{{ ns.ys[0] | round(1) }}
+            {% elif pct >= ns.xs[-1] %}{{ ns.ys[-1] | round(1) }}
+            {% else %}
+              {% set ns2 = namespace(lo=0, hi=1) %}
+              {% for i in range(ns.xs | length - 1) %}
+                {% if pct >= ns.xs[i] and pct <= ns.xs[i + 1] %}
+                  {% set ns2.lo = i %}
+                  {% set ns2.hi = i + 1 %}
+                {% endif %}
+              {% endfor %}
+              {% set x0 = ns.xs[ns2.lo] %}{% set x1 = ns.xs[ns2.hi] %}
+              {% set y0 = ns.ys[ns2.lo] %}{% set y1 = ns.ys[ns2.hi] %}
+              {{ (y0 + (y1 - y0) * (pct - x0) / (x1 - x0)) | round(1) }}
+            {% endif %}
+          {% endif %}
         availability: "{{ has_value('sensor.dsc_fan_intake_main_pct') }}"
+        attributes:
+          model: >-
+            {% set n = [states('input_number.dsc_cal_cfm_intake_main_25')|float(0),
+              states('input_number.dsc_cal_cfm_intake_main_50')|float(0),
+              states('input_number.dsc_cal_cfm_intake_main_75')|float(0),
+              states('input_number.dsc_cal_cfm_intake_main_100')|float(0)]
+              | select('gt', 0) | list | count %}
+            {{ 'curve' if n >= 2 else 'linear' }}
 
       - name: "DSC CFM Intake 2x4"
         unique_id: dsc_cfm_intake_2x4
@@ -293,9 +534,47 @@ template:
         state_class: measurement
         icon: mdi:fan
         state: >-
-          {{ (states('sensor.dsc_fan_intake_2x4_pct')|float(0) / 100
-              * states('input_number.dsc_cfm_intake_clone_max')|float(0)) | round(1) }}
+          {% set pct = states('sensor.dsc_fan_intake_2x4_pct')|float(0) %}
+          {% set plate = states('input_number.dsc_cfm_intake_clone_max')|float(0) %}
+          {% set c25 = states('input_number.dsc_cal_cfm_intake_clone_25')|float(0) %}
+          {% set c50 = states('input_number.dsc_cal_cfm_intake_clone_50')|float(0) %}
+          {% set c75 = states('input_number.dsc_cal_cfm_intake_clone_75')|float(0) %}
+          {% set c100 = states('input_number.dsc_cal_cfm_intake_clone_100')|float(0) %}
+          {% set measured = [c25, c50, c75, c100] | select('gt', 0) | list %}
+          {% if measured | count < 2 %}
+            {{ (pct / 100 * plate) | round(1) }}
+          {% else %}
+            {% set ns = namespace(xs=[0.0], ys=[0.0]) %}
+            {% for p, v in [(25.0, c25), (50.0, c50), (75.0, c75), (100.0, c100)] %}
+              {% if v > 0 %}
+                {% set ns.xs = ns.xs + [p] %}
+                {% set ns.ys = ns.ys + [v] %}
+              {% endif %}
+            {% endfor %}
+            {% if pct <= ns.xs[0] %}{{ ns.ys[0] | round(1) }}
+            {% elif pct >= ns.xs[-1] %}{{ ns.ys[-1] | round(1) }}
+            {% else %}
+              {% set ns2 = namespace(lo=0, hi=1) %}
+              {% for i in range(ns.xs | length - 1) %}
+                {% if pct >= ns.xs[i] and pct <= ns.xs[i + 1] %}
+                  {% set ns2.lo = i %}
+                  {% set ns2.hi = i + 1 %}
+                {% endif %}
+              {% endfor %}
+              {% set x0 = ns.xs[ns2.lo] %}{% set x1 = ns.xs[ns2.hi] %}
+              {% set y0 = ns.ys[ns2.lo] %}{% set y1 = ns.ys[ns2.hi] %}
+              {{ (y0 + (y1 - y0) * (pct - x0) / (x1 - x0)) | round(1) }}
+            {% endif %}
+          {% endif %}
         availability: "{{ has_value('sensor.dsc_fan_intake_2x4_pct') }}"
+        attributes:
+          model: >-
+            {% set n = [states('input_number.dsc_cal_cfm_intake_clone_25')|float(0),
+              states('input_number.dsc_cal_cfm_intake_clone_50')|float(0),
+              states('input_number.dsc_cal_cfm_intake_clone_75')|float(0),
+              states('input_number.dsc_cal_cfm_intake_clone_100')|float(0)]
+              | select('gt', 0) | list | count %}
+            {{ 'curve' if n >= 2 else 'linear' }}
 
       - name: "DSC ACH 4x8"
         unique_id: dsc_ach_4x8
@@ -467,3 +746,66 @@ template:
         attributes:
           meaning: >-
             Positive = drying the air; negative = moisture stacking.
+
+
+# Optional L×W×H (cm) → write free-air volume helpers. Direct m³ edit still primary.
+script:
+  dsc_apply_dim_4x8:
+    alias: "DSC Spec · Apply 4x8 L×W×H → m³"
+    icon: mdi:cube-send
+    mode: single
+    sequence:
+      - condition: template
+        value_template: >-
+          {{ states('input_number.dsc_dim_4x8_l_cm')|float(0) > 0
+             and states('input_number.dsc_dim_4x8_w_cm')|float(0) > 0
+             and states('input_number.dsc_dim_4x8_h_cm')|float(0) > 0 }}
+      - service: input_number.set_value
+        target: { entity_id: input_number.dsc_vol_4x8_m3 }
+        data:
+          value: >-
+            {{ [[
+              (states('input_number.dsc_dim_4x8_l_cm')|float(0)
+               * states('input_number.dsc_dim_4x8_w_cm')|float(0)
+               * states('input_number.dsc_dim_4x8_h_cm')|float(0) / 1000000) | round(1),
+              0.5]|max, 12]|min }}
+
+  dsc_apply_dim_2x4:
+    alias: "DSC Spec · Apply 2x4 L×W×H → m³"
+    icon: mdi:cube-send
+    mode: single
+    sequence:
+      - condition: template
+        value_template: >-
+          {{ states('input_number.dsc_dim_2x4_l_cm')|float(0) > 0
+             and states('input_number.dsc_dim_2x4_w_cm')|float(0) > 0
+             and states('input_number.dsc_dim_2x4_h_cm')|float(0) > 0 }}
+      - service: input_number.set_value
+        target: { entity_id: input_number.dsc_vol_2x4_m3 }
+        data:
+          value: >-
+            {{ [[
+              (states('input_number.dsc_dim_2x4_l_cm')|float(0)
+               * states('input_number.dsc_dim_2x4_w_cm')|float(0)
+               * states('input_number.dsc_dim_2x4_h_cm')|float(0) / 1000000) | round(1),
+              0.2]|max, 6]|min }}
+
+  dsc_apply_dim_room:
+    alias: "DSC Spec · Apply room L×W×H → m³"
+    icon: mdi:cube-send
+    mode: single
+    sequence:
+      - condition: template
+        value_template: >-
+          {{ states('input_number.dsc_dim_room_l_cm')|float(0) > 0
+             and states('input_number.dsc_dim_room_w_cm')|float(0) > 0
+             and states('input_number.dsc_dim_room_h_cm')|float(0) > 0 }}
+      - service: input_number.set_value
+        target: { entity_id: input_number.dsc_vol_room_m3 }
+        data:
+          value: >-
+            {{ [[
+              (states('input_number.dsc_dim_room_l_cm')|float(0)
+               * states('input_number.dsc_dim_room_w_cm')|float(0)
+               * states('input_number.dsc_dim_room_h_cm')|float(0) / 1000000) | round(0),
+              5]|max, 250]|min }}

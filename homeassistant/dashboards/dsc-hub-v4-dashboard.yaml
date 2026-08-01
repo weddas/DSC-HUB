@@ -12,7 +12,7 @@
 #  VIEW FLOW (v0.2 nesting):
 #     Home        → pulse + demands + glance vitals (narrator collapsed)
 #     Climate     → master control, ladder, tunables, appliances
-#     Learning    → Phase A+B status, waits, ETA, efficiencies, charts, settings
+#     Learning    → optional fan/PPFD cal, Phase A+B, appliance effect DB, ETA
 #     4x8 / 2x4   → tent-local vitals + equipment
 #     Root Zone   → soil matrix, mat votes, chemistry, EC uptake
 #     Tank / Light / Trends / System → support surfaces
@@ -1578,6 +1578,66 @@ views:
                     name: 2x4 tent
                   - entity: input_number.dsc_vol_room_m3
                     name: Room lung
+              - type: custom:expander-card
+                title: Optional L×W×H (cm) → m³
+                expanded: false
+                cards:
+                  - type: markdown
+                    content: >-
+                      *Optional. Fill cm dimensions and Apply to write the
+                      volume helper above. Packed tents may need a lower free-air
+                      m³ after apply. Leave blank to keep editing m³ directly.*
+                  - type: entities
+                    title: 4x8 tent
+                    entities:
+                      - entity: input_number.dsc_dim_4x8_l_cm
+                        name: Length
+                      - entity: input_number.dsc_dim_4x8_w_cm
+                        name: Width
+                      - entity: input_number.dsc_dim_4x8_h_cm
+                        name: Height
+                      - entity: sensor.dsc_dim_4x8_computed_m3
+                        name: Computed m³
+                  - type: button
+                    name: Apply → 4x8 volume
+                    icon: mdi:cube-send
+                    tap_action:
+                      action: call-service
+                      service: script.dsc_apply_dim_4x8
+                  - type: entities
+                    title: 2x4 tent
+                    entities:
+                      - entity: input_number.dsc_dim_2x4_l_cm
+                        name: Length
+                      - entity: input_number.dsc_dim_2x4_w_cm
+                        name: Width
+                      - entity: input_number.dsc_dim_2x4_h_cm
+                        name: Height
+                      - entity: sensor.dsc_dim_2x4_computed_m3
+                        name: Computed m³
+                  - type: button
+                    name: Apply → 2x4 volume
+                    icon: mdi:cube-send
+                    tap_action:
+                      action: call-service
+                      service: script.dsc_apply_dim_2x4
+                  - type: entities
+                    title: Room lung
+                    entities:
+                      - entity: input_number.dsc_dim_room_l_cm
+                        name: Length
+                      - entity: input_number.dsc_dim_room_w_cm
+                        name: Width
+                      - entity: input_number.dsc_dim_room_h_cm
+                        name: Height
+                      - entity: sensor.dsc_dim_room_computed_m3
+                        name: Computed m³
+                  - type: button
+                    name: Apply → room volume
+                    icon: mdi:cube-send
+                    tap_action:
+                      action: call-service
+                      service: script.dsc_apply_dim_room
               - type: entities
                 title: Fan nameplate @ 100%
                 entities:
@@ -1589,6 +1649,16 @@ views:
                     name: Intake Main max CFM
                   - entity: input_number.dsc_cfm_intake_clone_max
                     name: Intake 2x4 max CFM
+              - type: custom:mushroom-chips-card
+                alignment: start
+                chips:
+                  - type: template
+                    icon: mdi:chart-bell-curve
+                    icon_color: cyan
+                    content: Fan / PPFD curves → Learning
+                    tap_action:
+                      action: navigate
+                      navigation_path: /dsc-hub-pro/learning
               - type: entities
                 title: Appliance / light nameplates
                 entities:
@@ -1607,7 +1677,7 @@ views:
                   - entity: input_number.dsc_plant_transpiration_g_hr
                     name: Plant transpiration g/h
               - type: entities
-                title: Live capacity (from specs)
+                title: Live capacity (from specs / curves)
                 entities:
                   - entity: sensor.dsc_cfm_exhaust_out
                   - entity: sensor.dsc_cfm_exhaust_recirc
@@ -1635,9 +1705,10 @@ views:
               - type: markdown
                 content: >-
                   *Defaults are placeholders — replace with anemometer / nameplate
-                  values. Spec checks flag intake CFM > exhaust CFM, AC wired
-                  with 0 BTU/h, and zeroed appliance rates. Phase A learning UI
-                  lives on the **Learning** view.*
+                  values. Optional multi-point CFM/PPFD curves live on **Learning**
+                  (unset = % × nameplate). Spec checks flag intake CFM > exhaust
+                  CFM, AC wired with 0 BTU/h, and zeroed appliance rates. Phase A
+                  learning UI lives on the **Learning** view.*
           - type: custom:expander-card
             title: 🌱 Grow mat — closed-loop root-zone band
             expanded: false
@@ -3937,6 +4008,26 @@ views:
                     icon: mdi:sun-clock
                     icon_color: "{{ 'amber' if is_state(entity,'on') else 'disabled' }}"
                     content: "window {{ 'open' if is_state(entity,'on') else 'shut' }}"
+                  - type: template
+                    entity: sensor.dsc_sf1000_ppfd
+                    icon: mdi:white-balance-sunny
+                    icon_color: "{{ 'amber' if states(entity) not in ['unknown','unavailable'] else 'grey' }}"
+                    content: >-
+                      {% if states(entity) in ['unknown','unavailable'] %}PPFD —
+                      {% else %}{{ states(entity) }} µmol{% endif %}
+                    tap_action:
+                      action: navigate
+                      navigation_path: /dsc-hub-pro/learning
+              - type: custom:mushroom-chips-card
+                alignment: start
+                chips:
+                  - type: template
+                    icon: mdi:chart-bell-curve
+                    icon_color: cyan
+                    content: Calibrate PPFD curve → Learning
+                    tap_action:
+                      action: navigate
+                      navigation_path: /dsc-hub-pro/learning
           - type: entities
             title: Schedule
             entities:
@@ -3959,7 +4050,8 @@ views:
 
 
               *Sunrise + sunset can never overlap: if they exceed the window,
-              both scale down to fit.*
+              both scale down to fit. Optional PPFD curve (Learning) estimates
+              canopy µmol/m²/s from brightness % — unset keeps pure % control.*
           # ============================================================
           #  ⚠ THE STALE CAVEAT THIS REPLACES
           #  v3 said: "trust true darkness only after the GPIO5 hard-off
@@ -4152,7 +4244,172 @@ views:
       - type: grid
         cards:
           - type: heading
-            heading: STATUS — Phase A+B
+            heading: DEVICE CALIBRATION — optional CFM / PPFD curves
+            heading_style: title
+          - type: markdown
+            content: >-
+              *Fully optional. Leave curves empty and live CFM stays
+              **% × nameplate**. Measure duct outlet wind speed (or CFM) /
+              canopy PPFD at 25→50→75→100% holds — ≥2 points enables
+              interpolation. Heater / hum / dehum effect is learned
+              **automatically** below (Phase A).*
+          - type: entities
+            title: Wizard
+            show_header_toggle: false
+            entities:
+              - entity: input_select.dsc_cal_target
+                name: Target (fan or SF1000)
+              - entity: input_text.dsc_cal_status
+                name: Status
+              - entity: input_boolean.dsc_cal_active
+                name: Session active
+              - entity: input_number.dsc_cal_step_pct
+                name: Hold step %
+              - entity: input_number.dsc_cal_reading_ms
+                name: Anemometer m/s
+              - entity: input_number.dsc_cal_reading_cfm
+                name: Or enter CFM directly
+              - entity: input_number.dsc_cal_reading_ppfd
+                name: PPFD (SF1000 only)
+          - type: horizontal-stack
+            cards:
+              - type: button
+                name: Start
+                icon: mdi:play
+                tap_action:
+                  action: call-service
+                  service: script.dsc_cal_start
+              - type: button
+                name: Re-hold
+                icon: mdi:fan-clock
+                tap_action:
+                  action: call-service
+                  service: script.dsc_cal_hold_next
+              - type: button
+                name: Save point
+                icon: mdi:content-save
+                tap_action:
+                  action: call-service
+                  service: script.dsc_cal_save_point
+              - type: button
+                name: Skip
+                icon: mdi:skip-next
+                tap_action:
+                  action: call-service
+                  service: script.dsc_cal_skip_point
+              - type: button
+                name: Abort
+                icon: mdi:cancel
+                tap_action:
+                  action: call-service
+                  service: script.dsc_cal_abort
+          - type: entities
+            title: Duct Ø (cm) for m/s → CFM
+            show_header_toggle: false
+            entities:
+              - entity: input_number.dsc_duct_out_cm
+                name: OUT (default 6″)
+              - entity: input_number.dsc_duct_recirc_cm
+                name: RECIRC (default 6″)
+              - entity: input_number.dsc_duct_intake_main_cm
+                name: Intake Main (default 4″)
+              - entity: input_number.dsc_duct_intake_clone_cm
+                name: Intake 2x4 (default 4″)
+          - type: entities
+            title: Stored CFM curves (0 = unset → linear %)
+            show_header_toggle: false
+            entities:
+              - type: section
+                label: OUT exhaust
+              - entity: input_number.dsc_cal_cfm_out_25
+                name: "@25%"
+              - entity: input_number.dsc_cal_cfm_out_50
+                name: "@50%"
+              - entity: input_number.dsc_cal_cfm_out_75
+                name: "@75%"
+              - entity: input_number.dsc_cal_cfm_out_100
+                name: "@100%"
+              - type: section
+                label: RECIRC exhaust
+              - entity: input_number.dsc_cal_cfm_recirc_25
+                name: "@25%"
+              - entity: input_number.dsc_cal_cfm_recirc_50
+                name: "@50%"
+              - entity: input_number.dsc_cal_cfm_recirc_75
+                name: "@75%"
+              - entity: input_number.dsc_cal_cfm_recirc_100
+                name: "@100%"
+              - type: section
+                label: Intake Main
+              - entity: input_number.dsc_cal_cfm_intake_main_25
+                name: "@25%"
+              - entity: input_number.dsc_cal_cfm_intake_main_50
+                name: "@50%"
+              - entity: input_number.dsc_cal_cfm_intake_main_75
+                name: "@75%"
+              - entity: input_number.dsc_cal_cfm_intake_main_100
+                name: "@100%"
+              - type: section
+                label: Intake 2x4
+              - entity: input_number.dsc_cal_cfm_intake_clone_25
+                name: "@25%"
+              - entity: input_number.dsc_cal_cfm_intake_clone_50
+                name: "@50%"
+              - entity: input_number.dsc_cal_cfm_intake_clone_75
+                name: "@75%"
+              - entity: input_number.dsc_cal_cfm_intake_clone_100
+                name: "@100%"
+          - type: entities
+            title: SF1000 PPFD curve (0 = unset)
+            show_header_toggle: false
+            entities:
+              - entity: sensor.dsc_sf1000_ppfd
+                name: Live PPFD (interpolated)
+              - entity: input_number.dsc_cal_ppfd_25
+                name: "@25%"
+              - entity: input_number.dsc_cal_ppfd_50
+                name: "@50%"
+              - entity: input_number.dsc_cal_ppfd_75
+                name: "@75%"
+              - entity: input_number.dsc_cal_ppfd_100
+                name: "@100%"
+          - type: horizontal-stack
+            cards:
+              - type: button
+                name: Reset OUT
+                icon: mdi:restore
+                tap_action:
+                  action: call-service
+                  service: script.dsc_cal_reset_curve_out
+              - type: button
+                name: Reset RECIRC
+                icon: mdi:restore
+                tap_action:
+                  action: call-service
+                  service: script.dsc_cal_reset_curve_recirc
+              - type: button
+                name: Reset Int Main
+                icon: mdi:restore
+                tap_action:
+                  action: call-service
+                  service: script.dsc_cal_reset_curve_intake_main
+              - type: button
+                name: Reset Int 2x4
+                icon: mdi:restore
+                tap_action:
+                  action: call-service
+                  service: script.dsc_cal_reset_curve_intake_clone
+              - type: button
+                name: Reset PPFD
+                icon: mdi:restore
+                tap_action:
+                  action: call-service
+                  service: script.dsc_cal_reset_curve_sf1000
+
+      - type: grid
+        cards:
+          - type: heading
+            heading: STATUS — Phase A+B (appliance auto-learn)
             heading_style: title
           - type: custom:mushroom-chips-card
             alignment: start
@@ -4228,7 +4485,8 @@ views:
           - type: markdown
             content: >-
               *Phase A — learned coefficients scale **predictions** (ETA /
-              headroom). Phase B (below, opt-in) may write ladder **wait bases**
+              headroom) and are the automatic effect database for appliances.
+              Phase B (below, opt-in) may write ladder **wait bases**
               only. Failsafe, min-off, and fans are never touched. Status moves
               `warming` → `partial` → `ready` as sample counts hit the trust floor.*
 
@@ -4346,6 +4604,96 @@ views:
                   action: call-service
                   service: script.dsc_climate_learn_reset_waits
 
+      - type: grid
+        cards:
+          - type: heading
+            heading: APPLIANCE RESULTS — auto-collected effect DB
+            heading_style: title
+          - type: markdown
+            content: >-
+              *While levers are ON and the learn gate is open, Phase A EMA
+              samples real ΔT / ΔAH and stores efficiency vs nameplate
+              (`dsc_learn_eff_*`). This is the automatic results database for
+              heaters, humidifiers, dehumidifiers, mat, and vent. Fan / light
+              curves above are operator-measured.*
+          - type: grid
+            columns: 2
+            square: false
+            cards:
+              - type: custom:mushroom-template-card
+                entity: input_number.dsc_learn_eff_heater
+                primary: Heater
+                secondary: >-
+                  {{ states(entity) }}× nameplate ·
+                  {{ states('input_number.dsc_learn_samples_heater')|int(0) }} samples
+                icon: mdi:radiator
+                icon_color: >-
+                  {% set n = states('input_number.dsc_learn_samples_heater')|float(0) %}
+                  {% set need = states('input_number.dsc_learn_min_samples')|float(5) %}
+                  {{ 'green' if n >= need else 'amber' if n > 0 else 'grey' }}
+                tap_action:
+                  action: more-info
+              - type: custom:mushroom-template-card
+                entity: input_number.dsc_learn_eff_hum
+                primary: Humidifier
+                secondary: >-
+                  {{ states(entity) }}× nameplate ·
+                  {{ states('input_number.dsc_learn_samples_hum')|int(0) }} samples
+                icon: mdi:air-humidifier
+                icon_color: >-
+                  {% set n = states('input_number.dsc_learn_samples_hum')|float(0) %}
+                  {% set need = states('input_number.dsc_learn_min_samples')|float(5) %}
+                  {{ 'green' if n >= need else 'amber' if n > 0 else 'grey' }}
+                tap_action:
+                  action: more-info
+              - type: custom:mushroom-template-card
+                entity: input_number.dsc_learn_eff_dehum
+                primary: Dehumidifier
+                secondary: >-
+                  {{ states(entity) }}× nameplate ·
+                  {{ states('input_number.dsc_learn_samples_dehum')|int(0) }} samples
+                icon: mdi:water-remove
+                icon_color: >-
+                  {% set n = states('input_number.dsc_learn_samples_dehum')|float(0) %}
+                  {% set need = states('input_number.dsc_learn_min_samples')|float(5) %}
+                  {{ 'green' if n >= need else 'amber' if n > 0 else 'grey' }}
+                tap_action:
+                  action: more-info
+              - type: custom:mushroom-template-card
+                entity: input_number.dsc_learn_eff_mat
+                primary: Grow mat
+                secondary: >-
+                  {{ states(entity) }}× nameplate ·
+                  {{ states('input_number.dsc_learn_samples_mat')|int(0) }} samples
+                icon: mdi:heating-coil
+                icon_color: >-
+                  {% set n = states('input_number.dsc_learn_samples_mat')|float(0) %}
+                  {% set need = states('input_number.dsc_learn_min_samples')|float(5) %}
+                  {{ 'green' if n >= need else 'amber' if n > 0 else 'grey' }}
+                tap_action:
+                  action: more-info
+              - type: custom:mushroom-template-card
+                entity: input_number.dsc_learn_eff_vent_cool
+                primary: Vent cool
+                secondary: >-
+                  {{ states(entity) }}× ·
+                  {{ states('input_number.dsc_learn_samples_vent_cool')|int(0) }} samples
+                icon: mdi:fan-chevron-up
+                icon_color: teal
+                tap_action:
+                  action: more-info
+              - type: custom:mushroom-template-card
+                entity: input_number.dsc_learn_eff_vent_dry
+                primary: Vent dry
+                secondary: >-
+                  {{ states(entity) }}× ·
+                  {{ states('input_number.dsc_learn_samples_vent_dry')|int(0) }} samples
+                icon: mdi:weather-windy
+                icon_color: blue
+                tap_action:
+                  action: more-info
+
+          - type: heading
             heading: OUTPUTS — ETA & headroom
             heading_style: title
           - type: grid
@@ -4706,9 +5054,12 @@ views:
           - type: markdown
             content: >-
               *Plant nameplates (CFM / volumes / L/day) stay under
-              **Climate → Plant specs**. Learning watches live ΔT/ΔAH while
-              each lever is ON and the gate is open. AC / clone-mister rows
-              only move once those actuators are wired.*
+              **Climate → Plant specs**. Optional fan CFM / SF1000 PPFD
+              curves are on this page (unset = % × nameplate). Phase A
+              watches live ΔT/ΔAH while each lever is ON and the gate is
+              open — that is the automatic appliance results database.
+              AC / clone-mister rows only move once those actuators are
+              wired.*
 
   - title: Trends
     icon: mdi:chart-multiline

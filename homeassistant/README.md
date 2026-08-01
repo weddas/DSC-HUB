@@ -144,9 +144,31 @@ Nameplate values live as `input_number.dsc_*` (fan max CFM, tent/room m³,
 heater W, dehum L/day, hum mL/h, AC BTU/h, light watts). Change them when
 hardware is swapped; Sankey + capacity sensors recompute from those helpers.
 
+**Optional L×W×H (cm):** `input_number.dsc_dim_*_{l,w,h}_cm` plus Apply
+scripts (`script.dsc_apply_dim_4x8` / `_2x4` / `_room`) write the matching
+`dsc_vol_*_m3`. Leave dimensions at 0 to keep editing m³ directly. Packed
+tents may need a free-air nudge after geometric apply.
+
 Verification binaries (`binary_sensor.dsc_plant_specs_*`) flag incomplete
 floors, intake CFM > exhaust CFM, AC wired with 0 BTU/h, and zeroed
 appliance rates. Status: `sensor.dsc_plant_specs_status` (`ok` / `warn` / `error`).
+Curves / dimensions are **not** required for spec completeness.
+
+### Optional fan CFM / light PPFD curves
+
+Install [`packages/dsc_v4_device_cal.yaml`](packages/dsc_v4_device_cal.yaml)
+(auto-loaded with other `dsc_v4_*` packages).
+
+Unset curve points (`input_number.dsc_cal_cfm_*_*` / `dsc_cal_ppfd_*` = 0)
+keep live CFM as **commanded % × nameplate** — same as before. With **≥2**
+measured points, `sensor.dsc_cfm_*` (and `sensor.dsc_sf1000_ppfd`)
+piecewise-linear interpolate. Saving a 100% CFM point also updates the
+matching `dsc_cfm_*_max` nameplate.
+
+Dashboard wizard on **Learning**: pick target → Start (Tent Manual Override
+or Manual Light Hold) → hold 25/50/75/100% → enter duct-outlet m/s (uses
+`dsc_duct_*_cm`, default 6″/4″) or CFM / PPFD → Save. Skip / Abort restore
+prior speeds. Reset scripts clear a curve back to linear %.
 
 ### Response-rate learning (Phase A — observe + predict)
 
@@ -156,7 +178,9 @@ alongside the physics package.
 While each lever is ON (and emergency / manual takeover / climate-sensor
 fault are clear), a 5-minute EMA samples real `ΔT/min` and `ΔAH/min` and
 stores effectiveness vs nameplate (`input_number.dsc_learn_eff_*`, clamped
-0.1–2.0×). When sample count ≥ `input_number.dsc_learn_min_samples`, those
+0.1–2.0×). Sample counts (`dsc_learn_samples_*`) are the automatic
+**appliance results database** for heater / humidifier / dehumidifier /
+mat / vent. When sample count ≥ `input_number.dsc_learn_min_samples`, those
 coeffs scale **predictions only**:
 
 | Sensor | Role |
@@ -173,8 +197,9 @@ rate-limits writes to `number.dsc_hub_ladder_wait_*` only. Lock with
 `input_boolean.dsc_learn_phase_b_locked` after manual edits.
 Reset coeffs: `script.dsc_climate_learn_reset`. Reset waits: `script.dsc_climate_learn_reset_waits`.
 
-Dashboard: **Learning** (`/dsc-hub-pro/learning`) — Phase A+B status, waits, ETA,
-efficiencies, charts, settings.
+Dashboard: **Learning** (`/dsc-hub-pro/learning`) — optional device cal,
+Phase A+B status, appliance effect cards, waits, ETA, efficiencies, charts,
+settings.
 
 ## Tank / Tuya entity map
 
