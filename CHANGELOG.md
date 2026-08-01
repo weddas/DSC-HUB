@@ -8,7 +8,7 @@
   bar-only hold HUD; lock only from dedicated hit / Settings row (no page hold).
 - Idle sleep reuses lock overlay (tap to wake); 12% backlight for 5 min then off.
 - Harder LVGL scroll (`scroll_limit` 40); multi-alert list from bell/strip.
-- Lean: drop dead `saver` overlay; fixed `alert_txt[384]` (no string churn);
+- Lean: drop dead `saver` overlay; paint alert rows in-place (no string buffer);
   remove plant/sky HUD + `mdi_grow` font.
 - Panel project **5.1.1**.
 

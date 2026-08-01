@@ -1151,10 +1151,6 @@ globals:
   - id: alerts_silenced          # local mute; auto-clears when alerts do
     type: bool
     initial_value: 'false'
-  # Multi-alert list text (8×48 fixed; no std::string churn each refresh)
-  - id: alert_txt
-    type: char[384]
-    initial_value: '{0}'
   - id: green_heartbeat          # solid dim green when all-OK (Settings toggle; no pulse)
     type: bool
     restore_value: true
@@ -5328,18 +5324,25 @@ script:
           }
 
           // ---- alerts (always — drives LED + silence banner) ----
+          // Paint alert list rows here when open — no global string buffer
+          // (ESPHome GlobalsComponent rejects char[N] constructors).
+          const bool alert_vis = !lv_obj_has_flag(id(alert_screen), LV_OBJ_FLAG_HIDDEN);
+          lv_obj_t* al_rows[8] = {id(al_row0),id(al_row1),id(al_row2),id(al_row3),
+                                  id(al_row4),id(al_row5),id(al_row6),id(al_row7)};
+          if (alert_vis) {
+            for (int i = 0; i < 8; i++) sethid(al_rows[i], true);
+            setl(id(alert_mute_lbl), id(alerts_silenced) ? "UNMUTE" : "MUTE");
+          }
           int ac = 0; char head[48] = ""; char hb[48];
           auto AL = [&](bool cond, const char* txt){
             if (!cond) return;
             if (ac == 0) { strncpy(head, txt, sizeof(head)-1); head[sizeof(head)-1] = 0; }
-            if (ac < 8) {
-              char* slot = &id(alert_txt)[ac * 48];
-              strncpy(slot, txt, 47);
-              slot[47] = 0;
+            if (alert_vis && ac < 8) {
+              setl(al_rows[ac], txt);
+              sethid(al_rows[ac], false);
             }
             ac++;
           };
-          memset(id(alert_txt), 0, 384);
           AL(fault_emg, "Emergency failsafe >35°C");
           AL(fault_climate, "Climate sensor fault");
           AL(fault_rootzone, "Root-zone probe fault");
@@ -5432,19 +5435,6 @@ script:
             const char* title = locked ? "LOCKED" : "ASLEEP";
             const char* hint = locked ? "hold anywhere to wake" : "tap to wake";
             setl(id(lock_title), title); setl(id(lock_hint), hint);
-          }
-
-          // Alert list overlay (paint even while interactive)
-          if (!lv_obj_has_flag(id(alert_screen), LV_OBJ_FLAG_HIDDEN)) {
-            lv_obj_t* rows[8] = {id(al_row0),id(al_row1),id(al_row2),id(al_row3),
-                                 id(al_row4),id(al_row5),id(al_row6),id(al_row7)};
-            for (int i = 0; i < 8; i++) {
-              const char* s = &id(alert_txt)[i * 48];
-              bool empty = (s[0] == 0);
-              setl(rows[i], empty ? "" : s);
-              sethid(rows[i], empty);
-            }
-            setl(id(alert_mute_lbl), id(alerts_silenced) ? "UNMUTE" : "MUTE");
           }
 
           if (!interactive) return;
