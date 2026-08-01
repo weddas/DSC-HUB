@@ -1,5 +1,17 @@
 # Changelog
 
+## v5.1.7 — 2026-08-02
+
+- DSC-CONTROL **5.1.7**: apply CYD-without-PSRAM harden checklist where
+  ESPHome allows it.
+- LVGL `buffer_size` **10%** (~320×24×2 = 15.3 KB single partial buffer).
+- Wi-Fi `DYNAMIC_RX/TX_BUFFER_NUM` **4** (was 8) — starve TCP stack for
+  contiguous DRAM.
+- Already in place (no change): hide-not-destroy pages, TFT+touch on
+  **separate SPI** buses, no SD mount, font `bpp` 2, plaintext API /
+  mDNS off, paint-free `hub_cmd`, staged boot. PSRAM tips N/A on this
+  board. Raw FreeRTOS LVGL mutex / core-pin is ESPHome `loopTask`.
+
 ## v5.1.6 — 2026-08-02
 
 - DSC-CONTROL **5.1.6**: lean cut — now that 5.1.5 survives boot, restore

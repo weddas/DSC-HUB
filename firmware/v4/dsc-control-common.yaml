@@ -79,6 +79,10 @@
 #  lock/unlock) is unchanged. Vitals tabs (Pulse/Clone/Main/Soil + detail)
 #  and their fan +/- hub_cmd rows are untouched. Net: fewer widgets, fewer
 #  globals, smaller refresh_ui — same crash-safety rules apply below.
+#  v5.1.7: CYD harden — LVGL buffer_size 10% (~1/10 screen height in
+#  internal SRAM); Wi-Fi dynamic RX/TX buffers 4. Already matched:
+#  hide-not-destroy UI, dual SPI buses, no SD, fonts bpp2 in flash,
+#  no PSRAM path. ESPHome owns LVGL mutex / loopTask pinning.
 #
 #  BEFORE FLASHING:
 #    1. secrets.yaml needs dsc_control_ota_password / _ap_password
@@ -121,7 +125,7 @@ esphome:
     # the dashboard and HA's device page both described DSC-CONTROL as
     # being the DSC HUB. Purely cosmetic, but confusing enough to matter.
     name: "digital_emotions.dsc-control"
-    version: "5.1.6"
+    version: "5.1.7"
   on_boot:
     # Seed the 0xDC command seq from hardware RNG so a panel reboot is
     # unlikely to replay the hub's last-seen seq even before the hub's
@@ -136,7 +140,7 @@ esphome:
     - priority: -100
       then:
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 5.1.6 paused — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 5.1.7 paused — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
             id(boot_ui_ready) = false;
@@ -153,33 +157,33 @@ esphome:
               lambda: 'return heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL) < 20000;'
             then:
               - lambda: |-
-                  ESP_LOGW("boot", "DSC-CONTROL 5.1.6 heap still tight largest=%u — waiting longer",
+                  ESP_LOGW("boot", "DSC-CONTROL 5.1.7 heap still tight largest=%u — waiting longer",
                            (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
               - delay: 10s
         - lvgl.page.show: page_boot
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 5.1.6 resume-lite — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 5.1.7 resume-lite — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
             id(touch_guard_until) = millis() + 5000;
         - lvgl.resume:
         - delay: 6s
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 5.1.6 post-lite — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 5.1.7 post-lite — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
         - lvgl.pause:
         - lambda: 'lv_obj_clear_flag(id(tabbar), LV_OBJ_FLAG_HIDDEN);'
         - lvgl.page.show: page_pulse
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 5.1.6 resume-full — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 5.1.7 resume-full — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
             id(touch_guard_until) = millis() + 2000;
         - lvgl.resume:
         - delay: 4s
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 5.1.6 UI armed — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 5.1.7 UI armed — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
             id(boot_ui_ready) = true;
@@ -238,12 +242,16 @@ esp32:
       #  telemetry and control, and its frames are 48-58 bytes. WiFi
       #  only has to serve the HA API and OTA. So trade WiFi
       #  buffering for heap, hard.
+      #
+      #  v5.1.7 — CYD harden checklist: starve Wi-Fi further
+      #  (static/dynamic RX 4, dynamic TX 4) to reclaim contiguous
+      #  DRAM for LVGL. Ampdu already off.
       # ----------------------------------------------------------
       # Kept from v4.0.1 (stock is 10 / 32 / 32). Static RX buffers are
       # ~1.6 KB each of DMA-capable DRAM, allocated at wifi init.
       CONFIG_ESP_WIFI_STATIC_RX_BUFFER_NUM: "4"
-      CONFIG_ESP_WIFI_DYNAMIC_RX_BUFFER_NUM: "8"
-      CONFIG_ESP_WIFI_DYNAMIC_TX_BUFFER_NUM: "8"
+      CONFIG_ESP_WIFI_DYNAMIC_RX_BUFFER_NUM: "4"
+      CONFIG_ESP_WIFI_DYNAMIC_TX_BUFFER_NUM: "4"
       # v4.0.2 — block-ack aggregation off. AMPDU exists to push
       # throughput; this panel's WiFi traffic is a trickle of API
       # frames. Each direction keeps a reorder/retry window of
@@ -1063,7 +1071,7 @@ text_sensor:
     name: "Firmware Version"
     id: fw_version
     icon: mdi:tag-check
-    lambda: 'return {"5.1.6"};'
+    lambda: 'return {"5.1.7"};'
     update_interval: 60s
   - platform: template
     id: sel_stage
@@ -1370,23 +1378,12 @@ lvgl:
   # boot_ui_ready).
   paused: true
   resume_on_input: false
-  # Pin the draw buffer to 1/8 screen (19,200 B). Left unset, LVGL first
-  # asks for a FULL 320x240x2 = 153,600 B buffer; on this PSRAM-less
-  # board that always failed and LVGL silently fell back to 1/8 anyway,
-  # so 1/8 is what the panel has been running on all along and the
-  # picture is unchanged. Pinning it stops the full-size grab from ever
-  # starting to succeed and swallowing the recovered heap.
-  #
-  # v4.0.2 correction: the v4.0.1 note justified this with "sram1_as_iram
-  # frees 40 KB". It does not (see the esp32: block above) — but the pin
-  # is still right, for the reason above.
-  #
-  # And 12% is already the floor. ESPHome buckets this percentage into a
-  # fraction in lvgl/__init__.py:
-  #     >=0.75 -> 1;  >=0.375 -> 2;  >0.19 -> 4;  else -> 8
-  # so anything in (0, 19%] lands on 1/8. Setting 6% or 3% here would
-  # change nothing at all. There is no smaller draw buffer available.
-  buffer_size: 12%
+  # v5.1.7 — single partial draw buffer ≈ 1/10 screen
+  # (320×24×2 = 15,360 B) in internal SRAM. Checklist: never full-frame
+  # / double-buffer without PSRAM. ESPHome `buffer_size` is % of the
+  # full framebuffer; 10% ≈ one-tenth height. (Older note about 12%→1/8
+  # bucketing was for a prior ESPHome mapper — keep 10% explicit.)
+  buffer_size: 10%
   displays:
     - cyd_display
   touchscreens:
@@ -2880,7 +2877,7 @@ lvgl:
                         id: hub_cmd
                         op: 19
                         val: !lambda 'return (id(gv_coord)&2) ? 0 : 1;'
-              - label: {text: "DSC-CONTROL v5.1.6  ·  ESP-NOW primary", text_font: f_small, text_color: 0x3A4550, pad_top: 8, pad_bottom: 8}
+              - label: {text: "DSC-CONTROL v5.1.7  ·  ESP-NOW primary", text_font: f_small, text_color: 0x3A4550, pad_top: 8, pad_bottom: 8}
 # ==================================================================
 #  SCRIPTS
 # ==================================================================
