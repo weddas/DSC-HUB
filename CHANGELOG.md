@@ -1,5 +1,12 @@
 # Changelog
 
+## v5.1.3 — 2026-08-02
+
+- DSC-CONTROL **5.1.3**: 5.1.2 still crash-looped in `lv_draw_unit_draw_letter`
+  at boot (compile `04:05`, project line never printed).
+- Start LVGL **paused**; resume after 5 s once heap settles; gate all
+  `refresh_ui` / dirty-drain on `boot_ui_ready`; drop unused `mdi_34` font.
+
 ## v5.1.2 — 2026-08-02
 
 - DSC-CONTROL **5.1.2**: kill `lv_draw_unit_draw_letter` crash-loop (core 1 /

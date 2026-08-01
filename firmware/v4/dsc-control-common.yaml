@@ -54,6 +54,9 @@
 #  full refresh_ui on wake/unlock/lock or ESP-NOW confirm; touch_guard +
 #  ui_dirty drain; hold HUD show deferred off the indev stack; smaller
 #  lock icons (mdi_22). Root: A8 letter-draw under active press / overlay.
+#  v5.1.3: 5.1.2 still looped (PC lv_draw_unit_draw_letter at boot — project
+#  line never printed). Pause LVGL until heap settles, then resume; gate
+#  refresh until boot_ui_ready; drop unused mdi_34 font.
 #
 #  BEFORE FLASHING:
 #    1. secrets.yaml needs dsc_control_ota_password / _ap_password
@@ -96,7 +99,7 @@ esphome:
     # the dashboard and HA's device page both described DSC-CONTROL as
     # being the DSC HUB. Purely cosmetic, but confusing enough to matter.
     name: "digital_emotions.dsc-control"
-    version: "5.1.2"
+    version: "5.1.3"
   on_boot:
     # Seed the 0xDC command seq from hardware RNG so a panel reboot is
     # unlikely to replay the hub's last-seen seq even before the hub's
@@ -104,22 +107,29 @@ esphome:
     - priority: 600
       then:
         - lambda: 'id(cmd_tx_seq) = (uint16_t) esp_random();'
-    # Log heap at end of setup so boot-loop triage is visible before the
-    # first refresh_ui. If this never prints, the crash is earlier
-    # (OTA / Wi-Fi / LVGL init) — use USB serial, not OTA.
+    # v5.1.3 — LVGL starts paused (see lvgl:). Wait for WiFi/heap to settle
+    # before the first letter-draw; 5.1.2 still died in lv_draw_unit_draw_letter
+    # before the project version line could print.
     - priority: -100
       then:
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 5.1.2 up — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 5.1.3 paused — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
-            // Harder scroll engagement so finger jitter is not a drag (default ~10).
             for (lv_indev_t *in = lv_indev_get_next(nullptr); in != nullptr; in = lv_indev_get_next(in)) {
               if (lv_indev_get_type(in) == LV_INDEV_TYPE_POINTER) {
                 lv_indev_set_scroll_limit(in, 40);
                 lv_indev_set_scroll_throw(in, 5);
               }
             }
+        - delay: 5s
+        - lambda: |-
+            ESP_LOGI("boot", "DSC-CONTROL 5.1.3 resume — free_heap=%u largest=%u",
+                     (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
+                     (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
+            id(boot_ui_ready) = true;
+            id(ui_dirty) = true;
+        - lvgl.resume:
 
 esp32:
   board: esp32dev
@@ -1025,7 +1035,7 @@ text_sensor:
     name: "Firmware Version"
     id: fw_version
     icon: mdi:tag-check
-    lambda: 'return {"5.1.2"};'
+    lambda: 'return {"5.1.3"};'
     update_interval: 60s
   - platform: template
     id: sel_stage
@@ -1138,6 +1148,9 @@ globals:
     type: uint32_t
     initial_value: '0'
   - id: wake_pending             # wake started; keep sleeping until defer completes
+    type: bool
+    initial_value: 'false'
+  - id: boot_ui_ready            # false until post-boot LVGL resume (5.1.3)
     type: bool
     initial_value: 'false'
   - id: ui_dirty                 # coalesce full tab paint off the indev/ESP-NOW path
@@ -1347,12 +1360,7 @@ font:
     size: 28
     bpp: 4
     glyphs: *mdi_glyphs
-  # medium device glyphs for the lock-screen (white-on-black) device row
-  - file: "https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/fonts/materialdesignicons-webfont.ttf"
-    id: mdi_34
-    size: 34
-    bpp: 4
-    glyphs: *mdi_glyphs
+  # mdi_34 removed in 5.1.3 — lock row uses mdi_22; unused face still cost init RAM.
 
 # ================= LVGL SECTION APPENDED BELOW =================
 
@@ -1362,6 +1370,11 @@ font:
 #  BLUE #2196F3  CYAN #00BCD4  RED #F44336  card #171B22  bg #0E1116
 # ==================================================================
 lvgl:
+  # v5.1.3 — start paused so setup/WiFi do not letter-draw under peak heap
+  # pressure. on_boot resumes after 5 s. Do not resume_on_input (a wake tap
+  # must not force paint before boot_ui_ready).
+  paused: true
+  resume_on_input: false
   # Pin the draw buffer to 1/8 screen (19,200 B). Left unset, LVGL first
   # asks for a FULL 320x240x2 = 153,600 B buffer; on this PSRAM-less
   # board that always failed and LVGL silently fell back to 1/8 anyway,
@@ -5258,6 +5271,7 @@ script:
     mode: single
     then:
       - lambda: |-
+          if (!id(boot_ui_ready)) return;
           const uint32_t NEON=0x00E676, AMBER=0xFFAA00, RED=0xF44336, CYAN=0x00BCD4,
                          GREY=0x5A6472, WHITE=0xFFFFFF, DIM=0xC0C6CC, BORD=0x232A33,
                          BLUE=0x2196F3, ORANGE=0xFF9800, PEND=0x8A929C;
@@ -5887,7 +5901,8 @@ interval:
       - if:
           condition:
             lambda: |-
-              return id(ui_dirty)
+              return id(boot_ui_ready)
+                  && id(ui_dirty)
                   && !id(holding)
                   && !id(wake_pending)
                   && millis() >= id(touch_guard_until);
@@ -5896,7 +5911,11 @@ interval:
   # v4.0.11 — 5 s page-gated refresh; UI reads gv_* live (mirrors parked).
   - interval: 5s
     then:
-      - script.execute: refresh_ui
+      - if:
+          condition:
+            lambda: 'return id(boot_ui_ready);'
+          then:
+            - script.execute: refresh_ui
   # Nest/mesh can hop 2.4 GHz without a reconnect — keep wifi_channel fresh
   # so Connections + alert strip catch ESP-NOW splits without waiting for
   # on_connect.
