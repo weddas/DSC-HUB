@@ -168,29 +168,43 @@ coeffs scale **predictions only**:
 | `sensor.dsc_learn_status` | `disabled` / `gated` / `warming` / `partial` / `ready` |
 
 Phase A does **not** write hub persistence waits, fan curves, or failsafe.
-Reset coeffs: run `script.dsc_climate_learn_reset` (Learning view) or fire event
-`dsc_climate_learn_reset` (Developer Tools → Events).
+**Phase B** (opt-in, default off): `input_boolean.dsc_climate_learn_phase_b_enabled`
+rate-limits writes to `number.dsc_hub_ladder_wait_*` only. Lock with
+`input_boolean.dsc_learn_phase_b_locked` after manual edits.
+Reset coeffs: `script.dsc_climate_learn_reset`. Reset waits: `script.dsc_climate_learn_reset_waits`.
 
-Dashboard: dedicated **Learning** view (`/dsc-hub-pro/learning`) — status,
-ETA/headroom, efficiency bars, 12–48 h charts, and observer settings.
+Dashboard: **Learning** (`/dsc-hub-pro/learning`) — Phase A+B status, waits, ETA,
+efficiencies, charts, settings.
+
+## Tank / Tuya entity map
+
+Package [`packages/dsc_v4_tank.yaml`](packages/dsc_v4_tank.yaml) expects lab-style
+water tester entities. Alias or rename in HA to match:
+
+| DSC helper / sensor | Typical Tuya / integration id |
+|---|---|
+| Tank EC raw | `sensor.water_tester_ec` (or site-specific) |
+| Tank pH | `sensor.water_tester_ph` |
+| Tank temp | `sensor.water_tester_temperature` |
+| EC scale | `input_number.dsc_tank_ec_multiplier` (`1` or `1000`) |
+
+Door magnet (lab): `lock.4x8_humidifier_photo_lab_lock` = **room door release**,
+not humidifier lock — entity id kept for compatibility.
 
 ## Still outside this folder (hardware / live site)
 
-- Clone humidifier follower — parked until mister hardware
-- AC follower / Sonoff stub — not in repo (demand is live on hub)
-- Water-tester entity names (`sensor.water_tester_*`) — match your Tuya ids
-- Recorder `purge_keep_days: ~120` — HA config, not firmware
-- Fixed-channel AP — ops (see root README / RELEASE.md)
-- POT3 probe swap, SCD41, ETH01 gateway — post-release hardware
+- Clone humidifier / AC physical actuators — demands live; followers gated by wired flags
+- Recorder `purge_keep_days: ~120` — HA config
+- Fixed-channel AP — ops (root README)
+- POT3 probe swap, SCD41, ETH01 — post-release hardware
 
-## Firmware pairing (**v5.0.0**)
+## Firmware pairing (**v5.1.0**)
 
 | Piece | Version |
 |---|---|
-| Hub | **`5.0.0`** (+ mat votes, Full Auto boot re-arm, lab/kit WiFi packages) |
-| Panel | **`4.0.11`** |
-| Pots | **`4.0.1`** |
-| Dashboard | UX **v0.2** |
+| Hub / panel / pots / Sonoffs / kits | **`5.1.0`** |
+| Sync add-on / HA surface | **`5.1.0`** |
+| Dashboard | DSC-HUB Pro |
 | `espnow_cmd_tag` | `54727` (`0xD5C7`) on hub **and** panel |
 
 **Mat votes:** `switch.dsc_hub_mat_vote_pot_1`…`4` — Root Zone is source of truth; Climate links there.

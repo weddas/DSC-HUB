@@ -1,100 +1,68 @@
-# DSC-HUB **v5.0.0**
+# DSC-HUB **v5.1.0**
 
-First **major** cut after the v4 alpha line. Headline: Home Assistant surfaces
-ship through a first-party **HAOS add-on** (push `master` → sync to `/config`).
-Hub firmware string matches the GitHub tag.
+Full-fleet force to **5.1.0**: lab + kit firmwares, Sonoffs, Sync add-on,
+HA packages, DSC-HUB Pro dashboard, and Learn Phase B (opt-in wait clamps).
 
 | | |
 |---|---|
-| **GitHub tag** | `v5.0.0` |
-| **Hub** `sensor.dsc_hub_firmware_version` | **`5.0.0`** |
-| **Panel** | DSC-CONTROL **4.0.11** (flash with hub if ESP-NOW tag/wire changed) |
-| **Pots** | `dsc-pot-common` **4.0.1** |
-| **Dashboard** | UX **v0.2** · URL **`dsc-hub-pro`** (YAML mode) |
-| **ESP-NOW tag** | **`54727` (`0xD5C7`)** on hub **and** panel |
-| **HA delivery** | **DSC-HUB Sync** add-on · [`scripts/ADDON.md`](scripts/ADDON.md) |
+| **GitHub tag** | `v5.1.0` |
+| **Hub / panel / pots / Sonoffs** | **`5.1.0`** |
+| **Sync add-on** | **`5.1.0`** (`sync_esphome: true` default) |
+| **HA surface** | `sensor.dsc_ha_surface_version` = **`5.1.0`** |
+| **Dashboard** | **DSC-HUB Pro** · URL **`dsc-hub-pro`** |
+| **ESP-NOW tag** | **`54727` (`0xD5C7`)** |
+| **Phase B** | Default **off** — wait bases only |
 
-**Install from scratch:** [`INSTALL.md`](INSTALL.md) · add-on: [`scripts/ADDON.md`](scripts/ADDON.md)  
-**Kit SoftAP (no HA):** [`SETUP.md`](SETUP.md)
+**Install:** [`INSTALL.md`](INSTALL.md) · **Upgrade:** [`UPGRADE.md`](UPGRADE.md) ·
+**Add-on:** [`scripts/ADDON.md`](scripts/ADDON.md) ·
+**QA:** [`docs/qa/`](docs/qa/)
 
 Repo: https://github.com/weddas/DSC-HUB · branch **`master`**
 
 ---
 
-## What’s new in v5.0.0
+## What’s new in v5.1.0
 
 | Layer | Change |
 |---|---|
-| **HAOS Sync add-on** | Custom add-on repo = this GitHub URL; polls `master`, copies packages / dashboard / www, reloads HA |
-| Automations package | `packages/dsc_v4_automations.yaml` (no more merge into live `automations.yaml`) |
-| YAML Lovelace | `configuration.snippet.yaml` — dashboard file under `/config/dashboards/` |
-| HACS (optional) | SYSTEM MAP card via Dashboard custom repo (`dist/` + `hacs.json`) |
-| Kit SoftAP setup | Optional factory path without HA (`SETUP.md`, `*-kit.yaml`, `dsc_fleet_setup`) |
-| Hub firmware | **`5.0.0`** — WiFi moved to lab/kit packages; SoftAP provisioning path |
+| **Fleet version** | Force **5.1.0** on hub, panel, pots, Sonoffs, **all kits**, add-on, stubs |
+| **Learn Phase B** | Opt-in HA→hub ladder wait writes; floors/ceils; lock; never failsafe/min-off/fans |
+| **Learning UI** | Phase A+B status, wait entities, resets, last-sample age |
+| **Fleet chip** | `sensor.dsc_fleet_version_status` on Home + System table |
+| **Root zone** | `sensor.dsc_coldest_root_zone_temp` / hottest (voted + plausible) |
+| **Notify** | `input_text.dsc_notify_service` + `script.dsc_notify` |
+| **Sync** | Atomic stage copy, last-good rollback, version/SHA marker, broader reloads, `sync_esphome` default **true** |
+| **Door magnet** | Lab `lock.4x8_*` labeled as **room door release** |
+| **QoL** | Multi-lever sample skip, alert-count plant-spec zeros, dead-demand chip, AC/mister NO ACTUATOR cues |
 
-Still true from v4 alpha: ESP-NOW-primary panel↔hub, climate ladder on hub,
-Phase A learn gauges, SYSTEM MAP card.
+**Not in this cut:** auto-flash ESP devices; hub reconnect snapshot-restore;
+remote ESP log capture; renaming `dsc_v4_*` filenames.
 
 ---
 
-## From-scratch file map (summary)
+## Rollout on all systems
 
-| Repo | HA destination |
+- [ ] Push `master` / tag `v5.1.0`
+- [ ] On **each** HAOS: Update **DSC-HUB Sync** add-on to **5.1.0** → Start/restart → wait for “Synced to …”
+- [ ] Restart HA Core **once** (new Learning / version helpers)
+- [ ] Confirm `/dsc-hub-pro/home` + fleet chip shows HA surface **5.1.0**
+- [ ] ESPHome: Validate/Install each device to firmware **5.1.0** (lab + field kits)
+- [ ] Chip → **ok**
+
+Firmware Install remains **manual** per device.
+
+---
+
+## Beyond OTA
+
+| Surface | Deploy |
 |---|---|
-| `homeassistant/packages/dsc_v4_*.yaml` | `/config/packages/` (helpers + automations + learn) |
-| `homeassistant/dashboards/dsc-hub-v4-dashboard.yaml` | `/config/dashboards/` (YAML-mode URL **`dsc-hub-pro`**) |
-| `homeassistant/esphome/dsc-*.yaml` | `/config/esphome/` |
-| `homeassistant/www/dsc-system-map.*` | `/config/www/` (or HACS) |
-| `firmware/v4/secrets.yaml.template` | `/config/esphome/secrets.yaml` |
-
-Prefer the **DSC-HUB Sync** add-on over hand-copy after the first boot:
-[`scripts/ADDON.md`](scripts/ADDON.md).
-
-Full steps: [`INSTALL.md`](INSTALL.md).
-
----
-
-## Beyond OTA — HA surfaces vs firmware
-
-ESPHome Install only updates device firmware (still **manual** per device).
-
-**Primary HA delivery:** **DSC-HUB Sync** add-on
-([`dsc-hub-sync/`](dsc-hub-sync/) · [`scripts/ADDON.md`](scripts/ADDON.md)).
-
-| Surface | Path | Deploy |
-|---|---|---|
-| Packages + automations | `homeassistant/packages/dsc_v4_*.yaml` | **HAOS add-on** |
-| Lovelace dashboard YAML | `homeassistant/dashboards/dsc-hub-v4-dashboard.yaml` | **HAOS add-on** |
-| www SYSTEM MAP assets | `homeassistant/www/dsc-system-map.*` | **HAOS add-on** (optional) |
-| SYSTEM MAP card (alt) | `dist/DSC-HUB.js` | HACS Dashboard (optional) |
-| ESPHome stubs | `homeassistant/esphome/dsc-*.yaml` | Add-on option / manual · `ref: v5.0.0` |
-| Device firmware | `firmware/v4/` via stubs | Manual Validate/Install |
+| Packages / Pro dashboard / www | Sync add-on on push |
+| ESPHome stubs (`ref: v5.1.0`) | Sync (`sync_esphome: true`) |
+| Sync add-on binary | Supervisor **Update** once per HAOS |
+| Device firmware | Manual Validate/Install |
 
 ```
-Cursor edit → commit/push master → DSC-HUB Sync add-on (~60s)
-                                → ESPHome Validate/Install (devices)
+Cursor edit → push master → DSC-HUB Sync (~60s)
+                          → ESPHome Install (devices, manual)
 ```
-
-Hub + panel: flash together when tag, MAC, or `0xD*` wire contract changes.
-
----
-
-## Flash order (first bring-up / hub major bump)
-
-1. Hub (`dsc-hub.yaml` or `dsc-hub-kit.yaml`) → expect firmware **`5.0.0`**
-2. Panel (`dsc-control.yaml`) → **4.0.11** (USB if heap-sensitive)
-3. Pots → Sonoffs
-
----
-
-## Not in this cut (backlog)
-
-- AC / clone-mister followers (hardware)
-- Auto-flash fleet on git push (intentionally never)
-- Bidirectional HA→git sync
-
----
-
-## Previous cut
-
-**v4.0.0-alpha.1** — first published ESP-NOW-primary alpha (hub string matched tag).

@@ -61,7 +61,7 @@ esphome:
   friendly_name: ${friendly_name}
   project:
     name: digital_emotions.dsc-pot
-    version: "4.0.1"
+    version: "5.1.0"
 
 esp32:
   board: esp32dev

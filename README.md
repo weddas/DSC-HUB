@@ -1,112 +1,118 @@
-# DSC-HUB
+# DSC-HUB Pro
 
-Indoor grow automation fleet: ESPHome hub, CYD touch panel (DSC-CONTROL), soil pots, and Sonoff demand followers.
+Indoor grow climate fleet: **ESPHome hub**, **CYD touch panel** (DSC-CONTROL),
+**soil pots**, and **Sonoff demand followers** — local-first ladder control with
+Home Assistant surfaces that sync on every git push.
 
-**Current release:** [**v5.0.0**](https://github.com/weddas/DSC-HUB/releases/tag/v5.0.0) — hub firmware **`5.0.0`**
+**Current release:** [**v5.1.0**](https://github.com/weddas/DSC-HUB/releases/tag/v5.1.0) —
+fleet firmware / Sync add-on / HA surface **`5.1.0`**
 
-## Docs (start here)
+---
+
+## Why DSC-HUB
+
+- **Hub owns climate** — dehumidifier → humidifier → heater → AC → mat ladder
+  with reality gates, failsafe, and min-off (HA never drives those safety rails).
+- **ESP-NOW primary** panel ↔ hub — works when Home Assistant is down.
+- **DSC-HUB Pro** dashboard (`/dsc-hub-pro`) — Home, Climate, Learning, tents,
+  Root Zone, Tank, Light, Trends, System.
+- **Learn Phase A + B** — Phase A EMA efficiencies & ETA; Phase B (opt-in)
+  rate-limited writes to ladder **wait bases** only.
+- **Fleet version chip** — at-a-glance `ok` / `warn` / `error` vs expected **5.1.0**.
+- **Push → all Sync HAOS** — packages, Pro dashboard, www, ESPHome stubs;
+  **device firmware stays manual Install** (never auto-flash).
+
+```mermaid
+flowchart LR
+  Hub[Hub_ladder] <-->|ESPNOW| Panel[DSC_CONTROL]
+  Pots[Pots] -->|ESPNOW_soil| Hub
+  Hub --> Followers[Sonoff_followers]
+  Hub --> LearnA[PhaseA_EMA] --> LearnB[PhaseB_waits]
+  Sync[dsc_hub_sync] --> Pro[dsc-hub-pro]
+```
+
+---
+
+## Start here
 
 | Doc | When |
 |---|---|
-| [`INSTALL.md`](INSTALL.md) | **From-scratch** HA + fleet bring-up (file → destination map) |
-| [`SETUP.md`](SETUP.md) | **Standalone SoftAP unboxing** (no HA) — HUB + Control + pots |
-| [`scripts/ADDON.md`](scripts/ADDON.md) | **Primary delivery** — HAOS add-on (packages / dashboard / www) |
-| [`RELEASE.md`](RELEASE.md) | This alpha cut, HA sync vs firmware Install, backlog |
-| [`homeassistant/README.md`](homeassistant/README.md) | Packages, dashboard, HACS, SYSTEM MAP |
-| [`scripts/HACS-FRONTEND.md`](scripts/HACS-FRONTEND.md) | Optional HACS Dashboard card |
-| [`scripts/HA-SYNC-BOOTSTRAP.md`](scripts/HA-SYNC-BOOTSTRAP.md) | Optional Unraid runner (non-add-on path) |
-| [`firmware/v4/README.md`](firmware/v4/README.md) | Local validate / flash entry points |
+| [`INSTALL.md`](INSTALL.md) | From-scratch HA + fleet bring-up |
+| [`UPGRADE.md`](UPGRADE.md) | 5.0 → 5.1 cutover (add-on Update + flash) |
+| [`SETUP.md`](SETUP.md) | SoftAP kit unboxing without HA |
+| [`RELEASE.md`](RELEASE.md) | What’s new, rollout checklist |
+| [`scripts/ADDON.md`](scripts/ADDON.md) | **Primary delivery** — HAOS Sync add-on |
+| [`docs/qa/FIRMWARE-QA-5.1.0.md`](docs/qa/FIRMWARE-QA-5.1.0.md) | Firmware Validate / flash QC |
+| [`docs/qa/ADDON-QA-5.1.0.md`](docs/qa/ADDON-QA-5.1.0.md) | Sync add-on QC |
+| [`homeassistant/README.md`](homeassistant/README.md) | Packages, HACS, entity notes |
+| [`firmware/v4/README.md`](firmware/v4/README.md) | Local validate / flash |
 
-**HAOS delivery:** Settings → Add-ons → Repositories → add `https://github.com/weddas/DSC-HUB`
-→ install **DSC-HUB Sync**. Push to `master` → add-on polls GitHub (~60s) → packages /
-dashboard / www land in `/config`. Details: [`scripts/ADDON.md`](scripts/ADDON.md).
+**HAOS delivery:** Settings → Add-ons → Repositories → `https://github.com/weddas/DSC-HUB`
+→ install / Update **DSC-HUB Sync** **5.1.0**. Push to `master` → poll (~60s) →
+packages / dashboard / www / ESPHome stubs land in `/config`.
 
-ESPHome OTA updates firmware only (manual Validate/Install).
+---
 
-## Canonical firmware
+## Fleet at 5.1.0
 
-**Active source of truth:** [`firmware/v4/`](firmware/v4/)
-
-| Device | Config | Version (this alpha) |
+| Device | Config | Version |
 |---|---|---|
-| Hub | stub `dsc-hub.yaml` → `dsc-hub-v4_0.yaml` + `dsc-hub-espnow-primary.yaml` | **`5.0.0`** |
-| Touch panel | stub `dsc-control.yaml` → `dsc-control-common.yaml` (+ `cyd_glyphs.yaml`) | **4.0.11** |
-| Pots 1–4 | `dsc-pot{1..4}.yaml` → `dsc-pot-common.yaml` | **4.0.1** |
-| Sonoffs | `dsc-heater` / `heatmat` / `humidifier` / `de-humidifier` → `dsc-sonoff-common.yaml` | common package |
+| Hub | `dsc-hub.yaml` → `dsc-hub-v4_0.yaml` | **5.1.0** |
+| Panel | `dsc-control.yaml` → `dsc-control-common.yaml` | **5.1.0** |
+| Pots 1–4 | `dsc-pot{N}.yaml` → `dsc-pot-common.yaml` | **5.1.0** |
+| Sonoffs | heater / heatmat / humidifier / de-humidifier | **5.1.0** |
+| Kits | `*-kit.yaml`, `*-wifi-kit.yaml`, fleet-setup kits | **5.1.0** (same bodies) |
+| Sync add-on | `dsc-hub-sync/` | **5.1.0** |
+| HA surface | `sensor.dsc_ha_surface_version` | **5.1.0** |
 
-**HA ESPHome deploy:** thin stubs in [`homeassistant/esphome/`](homeassistant/esphome/) pull package bodies from this GitHub repo. Edit in Cursor → push → Validate/Install in ESPHome. Flash hub + panel together when the ESP-NOW tag or wire contract changes.
+ESPHome stubs use `ref: v5.1.0`. Flash order: hub → panel → pots → Sonoffs.
 
-Crash logs and YAML backups live in [`firmware/_history/v4/`](firmware/_history/v4/). Legacy trees are under `_Archive_Legacy_Code/`.
+---
 
-## Home Assistant
+## Home Assistant surfaces
 
-Canonical dashboard + packages + ESPHome stubs: [`homeassistant/`](homeassistant/)
-
-| Piece | File |
+| Piece | Path |
 |---|---|
-| **HAOS Sync add-on** | [`dsc-hub-sync/`](dsc-hub-sync/) · [`scripts/ADDON.md`](scripts/ADDON.md) |
-| Lovelace | `homeassistant/dashboards/dsc-hub-v4-dashboard.yaml` (YAML mode, URL: `dsc-hub-pro`) |
-| Helpers + automations | `homeassistant/packages/dsc_v4_*.yaml` |
+| Sync add-on | [`dsc-hub-sync/`](dsc-hub-sync/) |
+| Lovelace (Pro) | `homeassistant/dashboards/dsc-hub-v4-dashboard.yaml` → URL **`dsc-hub-pro`** |
+| Packages | `homeassistant/packages/dsc_v4_*.yaml` |
 | Config snippet | `homeassistant/configuration.snippet.yaml` |
-| ESPHome stubs | `homeassistant/esphome/dsc-*.yaml` (git-pull package bodies) |
-| SYSTEM MAP | HACS optional · or add-on `www/` sync — [`scripts/HACS-FRONTEND.md`](scripts/HACS-FRONTEND.md) |
-| Push deploy (alt) | [`scripts/ha-sync.sh`](scripts/ha-sync.sh) Unraid/GHA if not using the add-on |
+| ESPHome stubs | `homeassistant/esphome/dsc-*.yaml` |
 
-## Secrets
+After Sync lands new `input_*` helpers: **restart HA Core once**.
+
+Set notify target: `input_text.dsc_notify_service` (e.g. `notify.mobile_app_your_phone`).
+
+---
+
+## Secrets & ESP-NOW
 
 ```bash
 cd firmware/v4
-# Either use your existing secrets.yaml (already gitignored), or:
-cp secrets.yaml.template secrets.yaml
-# or generate fresh keys:
-./generate-secrets.sh   # then set wifi_ssid / wifi_password
+cp secrets.yaml.template secrets.yaml   # or ./generate-secrets.sh
 ```
 
-Never commit `secrets.yaml`. Never paste it into chat.
+Never commit `secrets.yaml`. Panel `hub_mac` ↔ hub WiFi MAC; hub `panel_mac` ↔
+panel WiFi MAC; `espnow_cmd_tag` **54727** (`0xD5C7`) on both.
 
-## ESP-NOW panel ↔ hub
+Sonoffs have no ESP-NOW — demand followers need HA.
 
-Both sides must share the same values:
-
-- Panel `hub_mac` ↔ hub WiFi MAC  
-- Hub `panel_mac` ↔ panel WiFi MAC  
-- `espnow_cmd_tag` — **54727** (`0xD5C7`) on both (rotated off the default `0xABCD`)
-
-If tags differ, the hub silently drops panel commands. **Flash hub and panel together** after a tag change.
-
-**Dual path:** ESP-NOW is primary for panel↔hub (works with HA down). The hub’s HA entities stay the dashboard/Sonoff surface — panel commands drive those same entities, and HA changes rebroadcast to the panel (`tx_panel_sync` / `0xD1`–`0xD4`). Plant names live on each pot (permanent); the hub mirrors them from HA and relays to the panel as `0xD4`.
-
-**Nest / mesh WiFi:** ESP-NOW follows the STA channel. Google Nest and similar meshes hop 2.4 GHz without warning. If the hub and panel land on different channels, telemetry stops with no protocol error — the panel ESP-NOW row goes DOWN and a channel-hop alert may fire. Fix: a small dedicated 2.4 GHz AP on a **fixed channel** for the DSC fleet (hub + panel + pots).
-
-**Sonoffs:** ESP8285 appliances have no ESP-NOW. Demand switches need Home Assistant to move relays. Climate fans/SF1000 still run locally without HA.
-
-## Wire-contract check
+## Validate
 
 ```bash
 cd firmware/v4
 g++ -std=c++17 -Wall -Wextra -O2 -o verify_v4 verify_v4.cpp && ./verify_v4
-```
-
-## Validate before flash
-
-From `firmware/v4/` (ESPHome CLI or HA ESPHome add-on):
-
-```bash
 esphome config dsc-hub.yaml
 esphome config dsc-control.yaml
 esphome config dsc-pot1.yaml
 esphome config dsc-heater.yaml
+# kits (Validate even if not flashing lab)
+esphome config dsc-hub-kit.yaml
 ```
 
-Panel heap health (after UI changes): watch log lines from `heap` and boot — free heap and largest block. Comfort: largest block ≥ ~20 KB; warn below ~12 KB. See `_history/v4/crash-logs/DSC-CONTROL-v4.0.2-postmortem.md`. Panel **4.0.11** (live `gv_*` UI + page-gated refresh + plaintext API): flash **USB** if still WDT-looping; add HA by IP with **no** encryption key. HA git-pull Install failing with `not a valid YAML file` on `dsc-control-common.yaml` usually means a package header comment lost its `#` — see [`firmware/v4/README.md`](firmware/v4/README.md).
+## Flash order
 
-**Grow mat:** hub exposes `switch.dsc_hub_mat_vote_pot_1`…`4` so a bad probe can be excluded without a reflash (Root Zone dashboard is the HA surface).
+1. Hub · 2. Panel · 3. Pots · 4. Sonoffs
 
-## Flash order (first bring-up)
-
-1. Hub  
-2. Panel (pair with hub)  
-3. Pots  
-4. Sonoffs  
-
-Otherwise OTA + HA encryption keys / ESP-NOW tag get out of sync.
+Firmware Install is always **manual**. Sync never auto-flashes. The fleet version
+chip stays `warn`/`error` until every device reports **5.1.0**.

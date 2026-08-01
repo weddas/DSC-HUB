@@ -1,14 +1,19 @@
 #!/usr/bin/with-contenv bashio
 # ==================================================================
-#  DSC-HUB Sync — git pull → /config (packages, dashboard, www)
+#  DSC-HUB Sync — git pull → /config (packages, dashboard, www, stubs)
 #  Runs inside the HAOS add-on. Polls GitHub; syncs when ref moves.
+#  v5.1.0: sync_esphome default true, broader reloads, version marker,
+#  atomic staging copy with last-good rollback.
 # ==================================================================
 set -euo pipefail
 
 OPTIONS="/data/options.json"
 REPO_DIR="/data/repo"
 STATE_FILE="/data/last_synced_sha"
+LAST_GOOD="/data/last_good_sync"
 HA_CONFIG="${HA_CONFIG:-/config}"
+STAGE="/data/sync_stage"
+SURFACE_VERSION="5.1.0"
 
 log() { bashio::log.info "$*"; }
 warn() { bashio::log.warning "$*"; }
@@ -39,6 +44,16 @@ ha_service() {
     warn "service ${domain}.${service} failed (non-fatal)"
 }
 
+ha_notify() {
+  local title="$1"
+  local message="$2"
+  curl -fsS -X POST \
+    -H "Authorization: Bearer ${SUPERVISOR_TOKEN}" \
+    -H "Content-Type: application/json" \
+    -d "{\"title\":\"${title}\",\"message\":\"${message}\",\"notification_id\":\"dsc_hub_sync\"}" \
+    "http://supervisor/core/api/services/persistent_notification/create" >/dev/null 2>&1 || true
+}
+
 ensure_clone() {
   mkdir -p "${REPO_DIR}"
   if [[ ! -d "${REPO_DIR}/.git" ]]; then
@@ -57,6 +72,142 @@ update_repo() {
   git -C "${REPO_DIR}" rev-parse HEAD
 }
 
+backup_last_good() {
+  rm -rf "${LAST_GOOD}"
+  mkdir -p "${LAST_GOOD}/packages" "${LAST_GOOD}/dashboards" "${LAST_GOOD}/www" "${LAST_GOOD}/esphome"
+  shopt -s nullglob
+  local f
+  for f in "${HA_CONFIG}/packages"/dsc_v4_*.yaml; do
+    [[ -f "${f}" ]] && cp -f "${f}" "${LAST_GOOD}/packages/"
+  done
+  [[ -f "${HA_CONFIG}/dashboards/dsc-hub-v4-dashboard.yaml" ]] && \
+    cp -f "${HA_CONFIG}/dashboards/dsc-hub-v4-dashboard.yaml" "${LAST_GOOD}/dashboards/"
+  for f in "${HA_CONFIG}/www"/dsc-system-map.*; do
+    [[ -f "${f}" ]] && cp -f "${f}" "${LAST_GOOD}/www/"
+  done
+  for f in "${HA_CONFIG}/esphome"/dsc-*.yaml; do
+    [[ -f "${f}" ]] && cp -f "${f}" "${LAST_GOOD}/esphome/"
+  done
+}
+
+restore_last_good() {
+  [[ -d "${LAST_GOOD}/packages" ]] || return 1
+  warn "Rolling back to last-good sync snapshot"
+  shopt -s nullglob
+  local f
+  for f in "${LAST_GOOD}/packages"/dsc_v4_*.yaml; do
+    cp -f "${f}" "${HA_CONFIG}/packages/"
+  done
+  [[ -f "${LAST_GOOD}/dashboards/dsc-hub-v4-dashboard.yaml" ]] && \
+    cp -f "${LAST_GOOD}/dashboards/dsc-hub-v4-dashboard.yaml" "${HA_CONFIG}/dashboards/"
+  if bashio::config.true 'sync_www'; then
+    for f in "${LAST_GOOD}/www"/dsc-system-map.*; do
+      [[ -f "${f}" ]] && cp -f "${f}" "${HA_CONFIG}/www/"
+    done
+  fi
+  if bashio::config.true 'sync_esphome'; then
+    for f in "${LAST_GOOD}/esphome"/dsc-*.yaml; do
+      [[ -f "${f}" ]] && cp -f "${f}" "${HA_CONFIG}/esphome/"
+    done
+  fi
+  return 0
+}
+
+stage_and_commit() {
+  local src="$1"
+  rm -rf "${STAGE}"
+  mkdir -p "${STAGE}/packages" "${STAGE}/dashboards" "${STAGE}/www" "${STAGE}/esphome"
+
+  shopt -s nullglob
+  local pkgs=("${src}/packages"/dsc_v4_*.yaml)
+  [[ ${#pkgs[@]} -gt 0 ]] || {
+    err "No dsc_v4_*.yaml packages found"
+    return 1
+  }
+  local f
+  for f in "${pkgs[@]}"; do
+    cp -f "${f}" "${STAGE}/packages/$(basename "${f}")"
+  done
+
+  local dash="${src}/dashboards/dsc-hub-v4-dashboard.yaml"
+  if [[ -f "${dash}" ]]; then
+    cp -f "${dash}" "${STAGE}/dashboards/dsc-hub-v4-dashboard.yaml"
+  else
+    warn "Dashboard YAML missing — skipped"
+  fi
+
+  if bashio::config.true 'sync_www'; then
+    local www=("${src}/www"/dsc-system-map.*)
+    for f in "${www[@]}"; do
+      [[ -f "${f}" ]] || continue
+      cp -f "${f}" "${STAGE}/www/$(basename "${f}")"
+    done
+  fi
+
+  if bashio::config.true 'sync_esphome'; then
+    local stubs=("${src}/esphome"/dsc-*.yaml)
+    for f in "${stubs[@]}"; do
+      [[ -f "${f}" ]] || continue
+      cp -f "${f}" "${STAGE}/esphome/$(basename "${f}")"
+    done
+  fi
+
+  # Promote stage → /config
+  mkdir -p \
+    "${HA_CONFIG}/packages" \
+    "${HA_CONFIG}/dashboards" \
+    "${HA_CONFIG}/www" \
+    "${HA_CONFIG}/esphome"
+
+  for f in "${STAGE}/packages"/dsc_v4_*.yaml; do
+    cp -f "${f}" "${HA_CONFIG}/packages/$(basename "${f}")"
+  done
+  if [[ -f "${STAGE}/dashboards/dsc-hub-v4-dashboard.yaml" ]]; then
+    cp -f "${STAGE}/dashboards/dsc-hub-v4-dashboard.yaml" \
+      "${HA_CONFIG}/dashboards/dsc-hub-v4-dashboard.yaml"
+  fi
+  if bashio::config.true 'sync_www'; then
+    for f in "${STAGE}/www"/dsc-system-map.*; do
+      [[ -f "${f}" ]] || continue
+      cp -f "${f}" "${HA_CONFIG}/www/$(basename "${f}")"
+    done
+  fi
+  if bashio::config.true 'sync_esphome'; then
+    for f in "${STAGE}/esphome"/dsc-*.yaml; do
+      [[ -f "${f}" ]] || continue
+      cp -f "${f}" "${HA_CONFIG}/esphome/$(basename "${f}")"
+    done
+  fi
+}
+
+write_version_marker() {
+  local sha="$1"
+  local short="${sha:0:12}"
+  cat >"${HA_CONFIG}/dsc-hub-sync.version" <<EOF
+version=${SURFACE_VERSION}
+sha=${sha}
+short_sha=${short}
+ref=${REF}
+synced_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+EOF
+  # Companion package fragment consumed by template sensors via file? HA can't read arbitrary files.
+  # Write a tiny helper YAML that template package can stay in sync with via packages include.
+  cat >"${HA_CONFIG}/packages/dsc_v4_sync_marker.yaml" <<EOF
+# Auto-written by DSC-HUB Sync — do not edit by hand.
+template:
+  - sensor:
+      - name: "DSC Hub Sync SHA"
+        unique_id: dsc_hub_sync_sha
+        icon: mdi:source-branch
+        state: "${short}"
+        attributes:
+          full_sha: "${sha}"
+          surface_version: "${SURFACE_VERSION}"
+          ref: "${REF}"
+EOF
+  log "Wrote version marker ${SURFACE_VERSION} @ ${short}"
+}
+
 do_sync() {
   local sha="$1"
   local src="${REPO_DIR}/homeassistant"
@@ -66,61 +217,32 @@ do_sync() {
     return 1
   }
 
-  mkdir -p \
-    "${HA_CONFIG}/packages" \
-    "${HA_CONFIG}/dashboards" \
-    "${HA_CONFIG}/www" \
-    "${HA_CONFIG}/esphome"
+  backup_last_good || true
 
-  log "Syncing packages/dsc_v4_*.yaml"
-  shopt -s nullglob
-  local pkgs=("${src}/packages"/dsc_v4_*.yaml)
-  [[ ${#pkgs[@]} -gt 0 ]] || {
-    err "No dsc_v4_*.yaml packages found"
+  log "Syncing packages/dsc_v4_*.yaml (+ dashboard/www/stubs per options)"
+  if ! stage_and_commit "${src}"; then
+    err "stage/copy failed — attempting rollback"
+    restore_last_good || true
     return 1
-  }
-  for f in "${pkgs[@]}"; do
-    cp -f "${f}" "${HA_CONFIG}/packages/$(basename "${f}")"
-  done
-
-  local dash="${src}/dashboards/dsc-hub-v4-dashboard.yaml"
-  if [[ -f "${dash}" ]]; then
-    log "Syncing dashboards/dsc-hub-v4-dashboard.yaml"
-    cp -f "${dash}" "${HA_CONFIG}/dashboards/dsc-hub-v4-dashboard.yaml"
-  else
-    warn "Dashboard YAML missing — skipped"
   fi
 
-  if bashio::config.true 'sync_www'; then
-    log "Syncing www/dsc-system-map.*"
-    local www=("${src}/www"/dsc-system-map.*)
-    for f in "${www[@]}"; do
-      [[ -f "${f}" ]] || continue
-      cp -f "${f}" "${HA_CONFIG}/www/$(basename "${f}")"
-    done
-  fi
-
-  if bashio::config.true 'sync_esphome'; then
-    log "Syncing esphome/dsc-*.yaml"
-    local stubs=("${src}/esphome"/dsc-*.yaml)
-    for f in "${stubs[@]}"; do
-      [[ -f "${f}" ]] || continue
-      cp -f "${f}" "${HA_CONFIG}/esphome/$(basename "${f}")"
-    done
-  fi
+  write_version_marker "${sha}"
 
   # One-time hint file (does not rewrite configuration.yaml)
   if [[ ! -f "${HA_CONFIG}/dsc-hub-sync.HINT.txt" ]]; then
     cat >"${HA_CONFIG}/dsc-hub-sync.HINT.txt" <<'EOF'
-DSC-HUB Sync add-on is writing packages / dashboards / www.
+DSC-HUB Sync add-on is writing packages / dashboards / www / esphome stubs.
 
 Once: merge homeassistant/configuration.snippet.yaml into configuration.yaml
 (packages include + YAML-mode lovelace dashboard dsc-hub-pro), then restart HA.
 
+After a major cut (e.g. 5.1.0) with new input_* helpers: Restart Home Assistant
+Core once — reload alone often does not create new helpers.
+
 Remove duplicate DSC automation ids from UI/automations.yaml if you had them
 before packages/dsc_v4_automations.yaml existed.
 
-See https://github.com/weddas/DSC-HUB — INSTALL.md · scripts/ADDON.md
+See https://github.com/weddas/DSC-HUB — INSTALL.md · UPGRADE.md · dsc-hub-sync/DOCS.md
 EOF
   fi
 
@@ -128,14 +250,18 @@ EOF
     log "Reloading Home Assistant config surfaces"
     ha_service homeassistant reload_core_config
     ha_service automation reload
+    ha_service script reload || true
+    ha_service template reload || true
     ha_service lovelace reload || true
   fi
 
   echo "${sha}" >"${STATE_FILE}"
   log "Synced to ${sha:0:12}"
+  ha_notify "DSC-HUB synced" \
+    "Synced to ${sha:0:12} (surface ${SURFACE_VERSION}). Restart HA Core once if new Learning helpers are missing."
 }
 
-log "DSC-HUB Sync starting (repo=${REPOSITORY} ref=${REF} poll=${POLL}s)"
+log "DSC-HUB Sync starting (repo=${REPOSITORY} ref=${REF} poll=${POLL}s sync_esphome=${SYNC_ESPHOME})"
 
 # Ensure git identity for reset operations (local only)
 git config --global --add safe.directory "${REPO_DIR}" || true

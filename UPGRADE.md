@@ -1,133 +1,80 @@
-# DSC-HUB v4 — Upgrade (legacy live sites only)
+# DSC-HUB — Upgrade
 
-**New installs:** use [`INSTALL.md`](INSTALL.md) for **v5.0.0** (file → destination map + add-on).
+**New installs:** [`INSTALL.md`](INSTALL.md) for **v5.1.0**.
 
-This document is only for migrating an **already-running** v2.4 / v4 site onto the
-git-pull ESPHome + HA Sync add-on workflow.
-
-Repo: https://github.com/weddas/DSC-HUB · tag **`v5.0.0`** · branch **`master`**
+Repo: https://github.com/weddas/DSC-HUB · tag **`v5.1.0`** · branch **`master`**
 
 ---
 
-## What changes in this upgrade
+## 5.0.0 → 5.1.0 (all Sync HAOS)
 
-| Area | Before (typical live) | After |
-|---|---|---|
-| ESPHome configs | Full YAML in `/config/esphome/` | Thin stubs + packages from GitHub |
-| Hub flash file | `dsc-hub-v4_0.yaml` alone | **`dsc-hub.yaml`** stub |
-| Panel flash file | Monolithic `dsc-control.yaml` | **`dsc-control.yaml`** stub → `dsc-control-common.yaml` |
-| HA helpers | Ad-hoc `dsc_dashboard_v3`, `dsc_tank`, `dsc_pots_*`, etc. | `dsc_v4_*.yaml` packages only |
-| Dashboard | Often `dsc-hub-v2-4` / storage Pro | URL **`dsc-hub-pro`** (YAML mode) |
-| `espnow_cmd_tag` | May still be `0xABCD` | **`54727` (`0xD5C7`)** — hub **and** panel |
+1. Push / pull tag **`v5.1.0`** (or `master` containing it).
+2. On **each** HAOS: Supervisor → **Update DSC-HUB Sync** to **5.1.0** → Start/restart.
+3. Confirm log “Synced to …” and `/config/dsc-hub-sync.version` shows `version=5.1.0`.
+4. If options still have `sync_esphome: false`, set **true** (5.1 default for new installs).
+5. **Restart HA Core once** — new `input_*` / Phase B / version helpers need restart.
+6. Confirm `/dsc-hub-pro/home`, fleet chip HA surface **5.1.0**, Learning Phase B **off**.
+7. Disable leftover storage dashboards named DSC-HUB / `dsc-hub-v4` (Pro YAML only).
+8. ESPHome: Update All / Install every device to firmware **5.1.0** (lab + field kits).
+9. Fleet chip → **ok**.
 
----
+### Behavioral notes
 
-## A. Delete old HA packages (required)
-
-Remove these from `/config/packages/` (or disable them) **before** adding the new ones.
-Same `unique_id`s left side-by-side create silent `*_2` entities the dashboard never sees:
-
-- `dsc_dashboard_v3.yaml` (any spelling / copy)
-- `dsc_v24_light_helpers.yaml` / `dsc-v24-light-helpers.yaml`
-- `dsc_tank.yaml`
-- `dsc_pots_stats.yaml` / `dsc_pots_correlation.yaml` / `dsc_pots_alerts.yaml`
-- `dsc_alert_count.yaml`
-- Any older reconstructed “core” helpers that redefine `dsc_hub_link`, fan %, airflow, tank EC
-
-Keep unrelated house packages. Only remove DSC duplicates.
+- Phase B writes **only** `number.dsc_hub_ladder_wait_*` — never failsafe / min-off / fans.
+- Hub reconnect: safe-off + follower resync only (**no** snapshot restore).
+- Notify: set `input_text.dsc_notify_service` (replaces hardcoded mobile_app targets).
+- Orphan automations: remove any leftover UI ids matching old `dsc_v24_*` / duplicate followers.
+- Lab door magnet entity `lock.4x8_humidifier_photo_lab_lock` is a **room door release**
+  (label fixed on dashboard; entity id unchanged).
 
 ---
 
-## B. Install the new HA pack
+## Legacy v2.4 / early v4 → Sync workflow
 
-1. Copy **all** `homeassistant/packages/dsc_v4_*.yaml` → `/config/packages/`
-   (underscores required — HA rejects hyphens in package filenames;
-   includes `dsc_v4_automations.yaml`)
-2. Remove duplicate DSC automation ids from the UI / `/config/automations.yaml`
-   if they were previously merged (same ids collide with the package)
-3. Dashboard:
-   - Prefer YAML mode from [`homeassistant/configuration.snippet.yaml`](homeassistant/configuration.snippet.yaml)
-   - Copy [`homeassistant/dashboards/dsc-hub-v4-dashboard.yaml`](homeassistant/dashboards/dsc-hub-v4-dashboard.yaml) → `/config/dashboards/`
-   - URL **`dsc-hub-pro`**; retire or unlink old `dsc-hub-v2-4` / storage **DSC-HUB Pro** when happy (YAML must own `dsc-hub-pro`)
-4. Entity registry (if still on historical names):
-   - `text.dsc_potN_plant_name` / `select.dsc_potN_growth_stage` (no `4x8_` / `grow_tent_` prefixes)
-5. Restart Home Assistant
-6. Optional: enable push sync — [`scripts/HA-SYNC-BOOTSTRAP.md`](scripts/HA-SYNC-BOOTSTRAP.md)
+Use this section only when migrating an **already-running** old site onto git-pull
+ESPHome + Sync add-on.
 
-### Align storage Pro → YAML `dsc-hub-pro` (cutover)
+### A. Delete old HA packages
 
-If the operator UI is still a **UI-managed** dashboard at `dsc-hub-pro` while packages sync a YAML file, they will fork. Cut over once:
+Remove duplicates before adding `dsc_v4_*` (same `unique_id`s create silent `*_2` entities):
 
-1. **Delete** (or rename away) the storage-mode **DSC-HUB Pro** dashboard so `dsc-hub-pro` is free.
-2. Ensure `/config/dashboards/dsc-hub-v4-dashboard.yaml` is the packaged file (nav paths `/dsc-hub-pro/…`).
-3. In `/config/configuration.yaml`, register YAML under key **`dsc-hub-pro`** (see [`configuration.snippet.yaml`](homeassistant/configuration.snippet.yaml)). Remove any leftover `dsc-hub-v4:` dashboard entry.
-4. **Restart** HA once (dashboard key changes need restart; `lovelace.reload` is not enough).
-5. Verify: sidebar **DSC-HUB Pro** → `/dsc-hub-pro/home`, Learning → `/dsc-hub-pro/learning`, no duplicate DSC sidebar entry.
+- `dsc_dashboard_v3.yaml`, `dsc_v24_*`, old `dsc_tank` / `dsc_pots_*` / `dsc_alert_count`
+- Any older core helpers that redefine `dsc_hub_link`, fan %, tank EC
 
----
+### B. Install the v5.1 HA pack
 
-## C. Swap ESPHome stubs
+1. Prefer Sync add-on **5.1.0** over hand-copy.
+2. Merge [`configuration.snippet.yaml`](homeassistant/configuration.snippet.yaml) —
+   dashboard key **`dsc-hub-pro`** only (remove `dsc-hub-v4:`).
+3. Restart HA; remove duplicate DSC automations from UI storage.
+4. Cut over storage Pro → YAML Pro (delete storage dashboard, restart once).
 
-1. Backup `/config/esphome/` (copy aside)
-2. Replace device YAMLs with [`homeassistant/esphome/dsc-*.yaml`](homeassistant/esphome/)
-3. Confirm `/config/esphome/secrets.yaml` still has wifi + per-device keys + `espnow_key`
-4. Edit stubs if needed: `hub_mac` / `panel_mac` / `espnow_cmd_tag` (must match both ends)
-5. ESPHome → Validate each device
-   - First pull after upgrade: temporarily set `refresh: 0d`, Validate, then set back to `1d`
+### C. ESPHome stubs + flash
 
----
-
-## D. Flash firmware (order matters if tag rotated)
-
-If hub/panel still share an old tag, you can flash one-at-a-time.
-If moving to **54727**, flash **hub then panel in one sitting** (or panel will command into a void).
-
-1. **Hub** — Install **`dsc-hub`** (stub), not the body alone  
-2. **Panel** — Install **`dsc-control`**  
-3. **Pots** — optional this pass if only HA/stubs changed; flash if pot-common changed  
-4. **Sonoffs** — flash if sonoff-common changed  
+1. Stubs from [`homeassistant/esphome/`](homeassistant/esphome/) with `ref: v5.1.0`
+2. Keep `secrets.yaml`; match `hub_mac` / `panel_mac` / `espnow_cmd_tag` **54727**
+3. Flash hub → panel → pots → Sonoffs when firmware packages change
 
 ### Post-flash checks
 
-- [ ] Panel ESP-NOW row UP; command changes a hub number/switch
-- [ ] `sensor.dsc_hub_firmware_version` = `5.0.0`
-- [ ] `binary_sensor.dsc_hub_emergency_failsafe` exists
-- [ ] Pot ESP-NOW link sensors present; mat still tracks soil temp
-- [ ] Sonoff followers still mirror demand (test one appliance)
-- [ ] No `*_2` twin entities for lights-on / tank EC / hub link
-- [ ] Home alert chip shows a number (not `unknown`) — `sensor.dsc_active_alert_count`
-- [ ] Tank EC in µS/cm; set `input_number.dsc_tank_ec_multiplier` to `1` or `1000` per your Tuya scale
+- [ ] Firmware entities = **5.1.0**
+- [ ] Fleet status **ok**
+- [ ] Panel ESP-NOW UP; Sonoff followers OK
+- [ ] No `*_2` twin entities
+- [ ] Tank EC scale via `input_number.dsc_tank_ec_multiplier`
+
+### Rollback
+
+Restore last-good packages/dashboard (Sync keeps a snapshot) or prior firmware builds.
+Hub and panel must share a matching `espnow_cmd_tag`.
 
 ---
 
-## E. Rollback
-
-- **HA only:** restore backed-up `/config/packages/` + old dashboard URL; restart
-- **ESPHome stubs:** restore backed-up device YAMLs; Validate
-- **Firmware:** reflash previous working builds from your backup / `_Archive_Legacy_Code` if needed  
-  Hub and panel must stay on a **matching** `espnow_cmd_tag`
-
----
-
-## Day-to-day after upgrade
+## Day-to-day
 
 ```
-Cursor edit → push master → HA sync Action (homeassistant/**) + ESPHome Validate/Install
+push master → Sync (~60s) → optional Core restart for new helpers
+           → ESPHome Install (manual, per device)
 ```
 
-Do not edit package bodies only on the HA box — they will be overwritten on the next git refresh / sync.
-
-### Incremental updates (already on v4)
-
-Firmware OTA is **not** enough when the cut also touches HA surfaces. Check [`RELEASE.md`](RELEASE.md) “Beyond OTA” before flashing.
-With push sync configured ([`scripts/HA-SYNC-BOOTSTRAP.md`](scripts/HA-SYNC-BOOTSTRAP.md)), HA YAML/www deploy automatically:
-
-| Changed in git | What you do on HA |
-|---|---|
-| `firmware/v4/*` only | ESPHome Validate/Install on affected devices |
-| `dashboards/dsc-hub-v4-dashboard.yaml` | Auto via HA sync (YAML-mode dashboard) — or copy to `/config/dashboards/` |
-| `packages/dsc_v4_*.yaml` | Auto via HA sync — or copy into `/config/packages/` → reload/restart |
-| Panel boot-looping after UI flash | Prefer **USB** until boot log shows a clean `4.0.11 up` line; HA add by **IP**, no encryption key |
-| ESPHome: package `not a valid YAML file` / `expected '<document start>'` | Header changelog in the package body lost its `#` — fix on git, push, `refresh: 0d`, Validate |
-
-See also: [`INSTALL.md`](INSTALL.md) · [`RELEASE.md`](RELEASE.md) · [`homeassistant/README.md`](homeassistant/README.md)
+See [`RELEASE.md`](RELEASE.md) · [`docs/qa/ADDON-QA-5.1.0.md`](docs/qa/ADDON-QA-5.1.0.md).

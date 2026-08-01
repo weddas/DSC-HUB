@@ -1,0 +1,81 @@
+# ==================================================================
+#  DSC-HUB v5.1 · SURFACE VERSION + FLEET STATUS
+#  ------------------------------------------------------------------
+#  Expected release string + HA surface marker + aggregate fleet chip.
+#  Sync add-on writes /config/dsc-hub-sync.version (optional) with SHA.
+# ==================================================================
+
+input_text:
+  dsc_expected_release:
+    name: "DSC Expected Release"
+    icon: mdi:tag-check
+    initial: "5.1.0"
+    max: 32
+
+template:
+  - sensor:
+      - name: "DSC HA Surface Version"
+        unique_id: dsc_ha_surface_version
+        icon: mdi:home-assistant
+        state: "5.1.0"
+        attributes:
+          packages: dsc_v4_*
+          dashboard: dsc-hub-pro
+          phase_b: present
+
+      - name: "DSC Fleet Version Status"
+        unique_id: dsc_fleet_version_status
+        icon: mdi:clipboard-check
+        state: >-
+          {% set exp = states('input_text.dsc_expected_release')|trim %}
+          {% if not exp %}{% set exp = '5.1.0' %}{% endif %}
+          {% set checks = [
+            ('hub', states('sensor.dsc_hub_firmware_version')),
+            ('panel', states('sensor.dsc_control_firmware_version')),
+            ('pot1', states('sensor.dsc_pot1_firmware_version')),
+            ('pot2', states('sensor.dsc_pot2_firmware_version')),
+            ('pot3', states('sensor.dsc_pot3_firmware_version')),
+            ('pot4', states('sensor.dsc_pot4_firmware_version')),
+            ('heater', states('sensor.dsc_heater_firmware_version')),
+            ('heatmat', states('sensor.dsc_heatmat_firmware_version')),
+            ('humidifier', states('sensor.dsc_humidifier_firmware_version')),
+            ('dehumidifier', states('sensor.dsc_de_humidifier_firmware_version')),
+            ('ha_surface', states('sensor.dsc_ha_surface_version'))
+          ] %}
+          {% set ns = namespace(missing=0, drift=0, ok=0) %}
+          {% for name, ver in checks %}
+            {% if ver in ['unknown','unavailable',''] or ver is none %}
+              {% set ns.missing = ns.missing + 1 %}
+            {% elif ver|string|trim != exp %}
+              {% set ns.drift = ns.drift + 1 %}
+            {% else %}
+              {% set ns.ok = ns.ok + 1 %}
+            {% endif %}
+          {% endfor %}
+          {% set learn_ok = states('input_boolean.dsc_climate_learn_phase_b_enabled') not in ['unknown','unavailable'] %}
+          {% set auto_ok = states('automation.dsc_hub_humidifier_follows_humidifier_demand') not in ['unknown','unavailable']
+             or states('automation.dsc_follower_humidifier') not in ['unknown','unavailable'] %}
+          {% if not learn_ok or ns.missing > 4 %}error
+          {% elif ns.drift > 0 or ns.missing > 0 %}warn
+          {% else %}ok{% endif %}
+        attributes:
+          expected: "{{ states('input_text.dsc_expected_release')|trim or '5.1.0' }}"
+          hub: "{{ states('sensor.dsc_hub_firmware_version') }}"
+          panel: "{{ states('sensor.dsc_control_firmware_version') }}"
+          pot1: "{{ states('sensor.dsc_pot1_firmware_version') }}"
+          pot2: "{{ states('sensor.dsc_pot2_firmware_version') }}"
+          pot3: "{{ states('sensor.dsc_pot3_firmware_version') }}"
+          pot4: "{{ states('sensor.dsc_pot4_firmware_version') }}"
+          heater: "{{ states('sensor.dsc_heater_firmware_version') }}"
+          heatmat: "{{ states('sensor.dsc_heatmat_firmware_version') }}"
+          humidifier: "{{ states('sensor.dsc_humidifier_firmware_version') }}"
+          dehumidifier: "{{ states('sensor.dsc_de_humidifier_firmware_version') }}"
+          ha_surface: "{{ states('sensor.dsc_ha_surface_version') }}"
+          sync_sha: >-
+            {% if states('sensor.dsc_hub_sync_sha') not in ['unknown','unavailable'] %}
+              {{ states('sensor.dsc_hub_sync_sha') }}
+            {% else %}n/a{% endif %}
+          meaning: >-
+            ok = all reporting devices + HA surface match expected.
+            warn = some missing/unavailable or version drift.
+            error = learn/helpers missing or most devices unavailable.

@@ -10,9 +10,10 @@
 #  v4 notes:
 #   * Root-zone alert covers all four pot ESP-NOW links.
 #   * Mat scribe logs coldest plausible pot when available.
-#   * Notifier target is notify.mobile_app_chriss_iphone_max — change if yours differs.
-#   * Clone humidifier follower stays out until mister hardware exists.
-#   * AC follower stays out until actuator hardware exists.
+#   * Notifier target is input_text.dsc_notify_service via script.dsc_notify (see dsc_v4_notify.yaml).
+#   * AC / clone mister followers: gated by input_boolean.*_actuator_wired and
+#     only act when switch.dsc_ac_main_relay / switch.dsc_clone_humidifier_main_relay
+#     exist (bring hardware online, then flip Wired).
 #
 #  Capacity audit (soft hardening): HA must NOT run a second escalation
 #  ladder. Firmware owns fans + demand rungs; this file only mirrors the
@@ -197,11 +198,100 @@ automation:
             target:
               entity_id: switch.dsc_heatmat_main_relay
 
+  # Optional — only when Wired flag ON and relay entity exists.
+  - id: dsc_follower_ac
+    alias: "DSC-HUB · AC follows AC Demand (gated)"
+    description: "Requires input_boolean.dsc_ac_actuator_wired and switch.dsc_ac_main_relay."
+    mode: restart
+    triggers:
+      - trigger: state
+        entity_id: switch.dsc_hub_ac_demand
+      - trigger: state
+        entity_id: input_boolean.dsc_ac_actuator_wired
+      - trigger: homeassistant
+        event: start
+      - trigger: state
+        entity_id: binary_sensor.dsc_hub_ha_link_status
+        to: "on"
+        for: "00:00:05"
+    actions:
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: input_boolean.dsc_ac_actuator_wired
+                state: "on"
+              - condition: state
+                entity_id: switch.dsc_hub_ac_demand
+                state: "on"
+              - condition: state
+                entity_id: binary_sensor.dsc_hub_ha_link_status
+                state: "on"
+              - condition: template
+                value_template: "{{ states('switch.dsc_ac_main_relay') not in ['unknown','unavailable'] }}"
+            sequence:
+              - action: switch.turn_on
+                target:
+                  entity_id: switch.dsc_ac_main_relay
+          - conditions:
+              - condition: state
+                entity_id: input_boolean.dsc_ac_actuator_wired
+                state: "on"
+              - condition: template
+                value_template: "{{ states('switch.dsc_ac_main_relay') not in ['unknown','unavailable'] }}"
+            sequence:
+              - action: switch.turn_off
+                target:
+                  entity_id: switch.dsc_ac_main_relay
+
+  - id: dsc_follower_clone_humidifier
+    alias: "DSC-HUB · Clone mister follows demand (gated)"
+    description: "Requires input_boolean.dsc_clone_humidifier_actuator_wired and switch.dsc_clone_humidifier_main_relay."
+    mode: restart
+    triggers:
+      - trigger: state
+        entity_id: switch.dsc_hub_clone_humidifier_demand
+      - trigger: state
+        entity_id: input_boolean.dsc_clone_humidifier_actuator_wired
+      - trigger: homeassistant
+        event: start
+      - trigger: state
+        entity_id: binary_sensor.dsc_hub_ha_link_status
+        to: "on"
+        for: "00:00:05"
+    actions:
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: input_boolean.dsc_clone_humidifier_actuator_wired
+                state: "on"
+              - condition: state
+                entity_id: switch.dsc_hub_clone_humidifier_demand
+                state: "on"
+              - condition: state
+                entity_id: binary_sensor.dsc_hub_ha_link_status
+                state: "on"
+              - condition: template
+                value_template: "{{ states('switch.dsc_clone_humidifier_main_relay') not in ['unknown','unavailable'] }}"
+            sequence:
+              - action: switch.turn_on
+                target:
+                  entity_id: switch.dsc_clone_humidifier_main_relay
+          - conditions:
+              - condition: state
+                entity_id: input_boolean.dsc_clone_humidifier_actuator_wired
+                state: "on"
+              - condition: template
+                value_template: "{{ states('switch.dsc_clone_humidifier_main_relay') not in ['unknown','unavailable'] }}"
+            sequence:
+              - action: switch.turn_off
+                target:
+                  entity_id: switch.dsc_clone_humidifier_main_relay
+
   # ==================================================================
   #  B.  ALERTS
   # ==================================================================
 
-  - id: dsc_v24_alert_clone_dark_violation
+  - id: dsc_alert_clone_dark_violation
     alias: "DSC-HUB · ALERT Clone dark-period violation"
     description: "SF1000 commanded on outside the 2x4 window for >60s. Flowering herm risk."
     mode: single
@@ -211,7 +301,7 @@ automation:
         to: "on"
         for: "00:01:00"
     actions:
-      - action: notify.mobile_app_chriss_iphone_max
+      - action: script.dsc_notify
         data:
           title: "⚠ CLONE TENT — LIGHT IN DARK PERIOD"
           message: >-
@@ -244,7 +334,7 @@ automation:
           entity_id: input_boolean.dsc_event_log
           message: "⚠ Clone dark-period violation — SF1000 on outside the 2x4 window"
 
-  - id: dsc_v24_alert_clone_dark_violation_clear
+  - id: dsc_alert_clone_dark_violation_clear
     alias: "DSC-HUB · ALERT Clone dark-period violation cleared"
     mode: single
     triggers:
@@ -256,7 +346,7 @@ automation:
         data:
           notification_id: dsc_clone_dark_violation
 
-  - id: dsc_v24_alert_rootzone_fault
+  - id: dsc_alert_rootzone_fault
     alias: "DSC-HUB · ALERT Root-zone probe fault (mat on air fallback)"
     description: "All pot probes stale >5min on both paths. Mat reverts to clone-air rung."
     mode: single
@@ -300,7 +390,7 @@ automation:
           entity_id: input_boolean.dsc_event_log
           message: "Root-zone probes stale — grow mat fell back to clone-air control"
 
-  - id: dsc_v24_alert_rootzone_fault_clear
+  - id: dsc_alert_rootzone_fault_clear
     alias: "DSC-HUB · ALERT Root-zone probe recovered"
     mode: single
     triggers:
@@ -322,7 +412,7 @@ automation:
   #  C.  SCRIBE — grow-log events
   # ==================================================================
 
-  - id: dsc_v24_scribe_mat_closed_loop
+  - id: dsc_scribe_mat_closed_loop
     alias: "DSC-HUB · Scribe Grow mat (closed-loop root zone)"
     mode: queued
     max: 10
@@ -361,7 +451,7 @@ automation:
               (reached {{ hi }}°C){{ ' [AIR FALLBACK]' if blind else '' }}
             {% endif %}
 
-  - id: dsc_v24_scribe_clone_photoperiod
+  - id: dsc_scribe_clone_photoperiod
     alias: "DSC-HUB · Scribe Clone photoperiod boundaries"
     mode: queued
     max: 5
@@ -390,7 +480,7 @@ automation:
               vs {{ states('sensor.dsc_clone_expected_light_hours') }}h planned
             {% endif %}
 
-  - id: dsc_v24_scribe_node_test_mode
+  - id: dsc_scribe_node_test_mode
     alias: "DSC-HUB · Scribe Appliance node test mode"
     mode: queued
     max: 10
@@ -433,7 +523,7 @@ automation:
             - switch.dsc_heatmat_main_relay
             - switch.dsc_humidifier_main_relay
             - switch.dsc_de_humidifier_main_relay
-      - action: notify.mobile_app_chriss_iphone_max
+      - action: script.dsc_notify
         data:
           title: "DSC-HUB offline"
           message: >-
@@ -445,7 +535,7 @@ automation:
           entity_id: input_boolean.dsc_event_log
           message: "Hub offline 30s — appliance relays safe-OFF"
 
-  - id: dsc_v4_alert_emergency_failsafe
+  - id: dsc_alert_emergency_failsafe
     alias: "DSC-HUB · ALERT Emergency failsafe (>35°C)"
     description: "Hub emergency vent active. Firmware already owns fans; this is the phone/log surface."
     mode: single
@@ -455,7 +545,7 @@ automation:
         to: "on"
         for: "00:00:15"
     actions:
-      - action: notify.mobile_app_chriss_iphone_max
+      - action: script.dsc_notify
         data:
           title: "⚠ DSC EMERGENCY FAILSAFE"
           message: >-
@@ -474,7 +564,7 @@ automation:
           entity_id: input_boolean.dsc_event_log
           message: "⚠ Emergency failsafe ON — over-temp vent"
 
-  - id: dsc_v4_alert_emergency_failsafe_clear
+  - id: dsc_alert_emergency_failsafe_clear
     alias: "DSC-HUB · ALERT Emergency failsafe cleared"
     mode: single
     triggers:
@@ -491,7 +581,7 @@ automation:
           entity_id: input_boolean.dsc_event_log
           message: "Emergency failsafe cleared"
 
-  - id: dsc_v4_alert_climate_sensor_fault
+  - id: dsc_alert_climate_sensor_fault
     alias: "DSC-HUB · ALERT Climate sensor fault"
     mode: single
     triggers:
@@ -500,7 +590,7 @@ automation:
         to: "on"
         for: "00:02:00"
     actions:
-      - action: notify.mobile_app_chriss_iphone_max
+      - action: script.dsc_notify
         data:
           title: "DSC climate sensor fault"
           message: "Main tent sensor stale/faulted — hub in sensor-fault behaviour."
@@ -515,7 +605,7 @@ automation:
           entity_id: input_boolean.dsc_event_log
           message: "Climate sensor fault — main tent probe"
 
-  - id: dsc_v4_alert_climate_sensor_fault_clear
+  - id: dsc_alert_climate_sensor_fault_clear
     alias: "DSC-HUB · ALERT Climate sensor fault cleared"
     mode: single
     triggers:
@@ -528,7 +618,7 @@ automation:
         data:
           notification_id: dsc_climate_sensor_fault
 
-  - id: dsc_v4_alert_aux_sensor_fault
+  - id: dsc_alert_aux_sensor_fault
     alias: "DSC-HUB · ALERT Aux sensor fault (room/clone)"
     mode: single
     triggers:
@@ -550,7 +640,7 @@ automation:
           entity_id: input_boolean.dsc_event_log
           message: "Aux sensor fault — room/clone soft fault"
 
-  - id: dsc_v4_alert_aux_sensor_fault_clear
+  - id: dsc_alert_aux_sensor_fault_clear
     alias: "DSC-HUB · ALERT Aux sensor fault cleared"
     mode: single
     triggers:

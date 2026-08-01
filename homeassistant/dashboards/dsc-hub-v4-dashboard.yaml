@@ -1,5 +1,5 @@
 # ==================================================================
-#  DSC-HUB v4  ·  Lovelace dashboard (UX v0.2)
+#  DSC-HUB Pro v5.1.0  ·  Lovelace dashboard
 #  ------------------------------------------------------------------
 #  Full rewrite of the v2.4.1 dashboard for firmware v4 (ESP-NOW primary
 #  panel + hub). Wire layout for 0xD1–0xD3 unchanged; plant names use
@@ -12,7 +12,7 @@
 #  VIEW FLOW (v0.2 nesting):
 #     Home        → pulse + demands + glance vitals (narrator collapsed)
 #     Climate     → master control, ladder, tunables, appliances
-#     Learning    → Phase A EMA status, ETA, efficiencies, charts, settings
+#     Learning    → Phase A+B status, waits, ETA, efficiencies, charts, settings
 #     4x8 / 2x4   → tent-local vitals + equipment
 #     Root Zone   → soil matrix, mat votes, chemistry, EC uptake
 #     Tank / Light / Trends / System → support surfaces
@@ -20,7 +20,7 @@
 #  v4 DELTA vs v2.4.1:
 #   * Plant / stage entity_ids are canonical:
 #       text.dsc_potN_plant_name · select.dsc_potN_growth_stage
-#   * System expects hub firmware **4.0** (panel diagnostic **4.0.10**)
+#   * System expects fleet firmware **5.1.0** (hub/panel/pots/Sonoffs)
 #   * Home + System surfaces DSC-CONTROL (panel online, free heap,
 #     largest free block) — dual-path health alongside pot ESP-NOW links
 #   * Mat / root-zone copy: all four pots, plausibility 5–45 °C,
@@ -97,6 +97,22 @@ views:
                 icon_color: >
                   {% set n = states(entity) | int(0) %}
                   {{ 'green' if n == 0 else 'red' }}
+                tap_action:
+                  action: navigate
+                  navigation_path: /dsc-hub-pro/system
+              - type: template
+                entity: sensor.dsc_fleet_version_status
+                icon: >-
+                  {% set s = states(entity) %}
+                  {{ 'mdi:check-decagram' if s == 'ok' else
+                     'mdi:alert' if s == 'warn' else 'mdi:alert-octagon' }}
+                icon_color: >-
+                  {% set s = states(entity) %}
+                  {{ 'green' if s == 'ok' else 'amber' if s == 'warn' else 'red' }}
+                content: >-
+                  {% set s = states(entity) %}
+                  {% set exp = state_attr(entity,'expected') or '5.1.0' %}
+                  {{ 'FLEET ' ~ exp if s == 'ok' else 'FLEET DRIFT' }}
                 tap_action:
                   action: navigate
                   navigation_path: /dsc-hub-pro/system
@@ -179,6 +195,37 @@ views:
                 tap_action:
                   action: navigate
                   navigation_path: /dsc-hub-pro/system
+
+          - type: conditional
+            conditions:
+              - condition: or
+                conditions:
+                  - condition: and
+                    conditions:
+                      - condition: state
+                        entity: switch.dsc_hub_ac_demand
+                        state: "on"
+                      - condition: state
+                        entity: input_boolean.dsc_ac_actuator_wired
+                        state: "off"
+                  - condition: and
+                    conditions:
+                      - condition: state
+                        entity: switch.dsc_hub_clone_humidifier_demand
+                        state: "on"
+                      - condition: state
+                        entity: input_boolean.dsc_clone_humidifier_actuator_wired
+                        state: "off"
+            card:
+              type: custom:mushroom-template-card
+              primary: DEAD DEMAND — NO ACTUATOR
+              secondary: AC or clone mister commanded but actuator wired flag is off
+              icon: mdi:alert-octagon
+              icon_color: red
+              tap_action:
+                action: navigate
+                navigation_path: /dsc-hub-pro/climate
+
           - type: conditional
             conditions:
               - condition: state
@@ -1021,8 +1068,8 @@ views:
               # v2.4.1: POT1 is the REPRESENTATIVE root-zone number; the mat
               # itself heats on the coldest plausible pot of all four.
               - type: custom:gauge-card-pro
-                entity: sensor.dsc_pot1_soil_temperature
-                header: Root (P1)
+                entity: sensor.dsc_coldest_root_zone_temp
+                header: Root (coldest)
                 min: 10
                 max: 32
                 needle: true
@@ -1144,12 +1191,12 @@ views:
                 max: 100
               - type: custom:modern-circular-gauge
                 entity: sensor.dsc_pot3_soil_moisture
-                name: POT3 🚧
+                name: POT3
                 min: 0
                 max: 100
                 card_mod:
                   style: |
-                    ha-card { opacity: 0.45; }
+                    ha-card { /* pot styling via live alerts */ }
               - type: custom:modern-circular-gauge
                 entity: sensor.dsc_pot4_soil_moisture
                 name: POT4
@@ -1478,8 +1525,8 @@ views:
                 icon_color: light-blue
           - type: custom:mushroom-entity-card
             entity: lock.4x8_humidifier_photo_lab_lock
-            name: 4x8 Humidifier Panel Lock
-            icon: mdi:lock
+            name: Room door release (lab magnet)
+            icon: mdi:door-closed-lock
       - type: grid
         cards:
           - type: heading
@@ -2931,7 +2978,7 @@ views:
               - type: custom:bar-card
                 entities:
                   - entity: sensor.dsc_pot1_soil_temperature
-                    name: Coldest vote (POT1 shown)
+                    name: Coldest voted root
                 positions:
                   icon: "off"
                   indicator: inside
@@ -3138,12 +3185,12 @@ views:
                 max: 100
               - type: custom:modern-circular-gauge
                 entity: sensor.dsc_pot3_soil_moisture
-                name: POT3 🚧
+                name: POT3
                 min: 0
                 max: 100
                 card_mod:
                   style: |
-                    ha-card { opacity: 0.45; }
+                    ha-card { /* pot styling via live alerts */ }
               - type: custom:modern-circular-gauge
                 entity: sensor.dsc_pot4_soil_moisture
                 name: POT4
@@ -3172,14 +3219,14 @@ views:
                 secondary: {}
               - type: custom:modern-circular-gauge
                 entity: sensor.dsc_pot3_soil_temperature
-                name: POT3 🚧
+                name: POT3
                 min: 10
                 max: 32
                 icon: mdi:thermometer
                 secondary: {}
                 card_mod:
                   style: |
-                    ha-card { opacity: 0.45; }
+                    ha-card { /* pot styling via live alerts */ }
               - type: custom:modern-circular-gauge
                 entity: sensor.dsc_pot4_soil_temperature
                 name: POT4 🔥
@@ -3234,14 +3281,14 @@ views:
                     secondary: {}
                   - type: custom:modern-circular-gauge
                     entity: sensor.dsc_pot3_soil_ph
-                    name: POT3 🚧
+                    name: POT3
                     min: 3
                     max: 9
                     icon: mdi:ph
                     secondary: {}
                     card_mod:
                       style: |
-                        ha-card { opacity: 0.45; }
+                        ha-card { /* pot styling via live alerts */ }
                   - type: custom:modern-circular-gauge
                     entity: sensor.dsc_pot4_soil_ph
                     name: POT4
@@ -3403,7 +3450,7 @@ views:
                   func: avg
                   duration: 15min
               - entity: sensor.dsc_pot3_soil_conductivity
-                name: POT3 🚧
+                name: POT3
                 stroke_width: 1
                 opacity: 0.4
                 color: "#a855f7"
@@ -3467,7 +3514,7 @@ views:
                   func: avg
                   duration: 15min
               - entity: sensor.dsc_pot3_ec_vs_tank
-                name: POT3 🚧
+                name: POT3
                 color: "#a855f7"
                 opacity: 0.4
                 stroke_width: 1
@@ -3503,7 +3550,7 @@ views:
               - entity: sensor.dsc_pot2_ec_uptake_slope
                 name: POT2
               - entity: sensor.dsc_pot3_ec_uptake_slope
-                name: POT3 🚧
+                name: POT3
               - entity: sensor.dsc_pot4_ec_uptake_slope
                 name: POT4
             positions:
@@ -3613,7 +3660,7 @@ views:
                   func: avg
                   duration: 1h
               - entity: sensor.dsc_pot3_soil_nitrogen
-                name: POT3 🚧
+                name: POT3
                 color: "#a855f7"
                 opacity: 0.4
                 stroke_width: 1
@@ -3654,7 +3701,7 @@ views:
                   func: avg
                   duration: 1h
               - entity: sensor.dsc_pot3_soil_phosphorus
-                name: POT3 🚧
+                name: POT3
                 color: "#a855f7"
                 opacity: 0.4
                 stroke_width: 1
@@ -3695,7 +3742,7 @@ views:
                   func: avg
                   duration: 1h
               - entity: sensor.dsc_pot3_soil_potassium
-                name: POT3 🚧
+                name: POT3
                 color: "#a855f7"
                 opacity: 0.4
                 stroke_width: 1
@@ -4100,7 +4147,7 @@ views:
       - type: grid
         cards:
           - type: heading
-            heading: STATUS — Phase A observe + predict
+            heading: STATUS — Phase A+B
             heading_style: title
           - type: custom:mushroom-chips-card
             alignment: start
@@ -4175,14 +4222,87 @@ views:
                   action: more-info
           - type: markdown
             content: >-
-              *Phase A only — learned coefficients scale **predictions** (ETA /
-              headroom). They never write ladder waits, failsafe, or Sonoff
-              followers. Status moves `warming` → `partial` → `ready` as sample
-              counts hit the trust floor.*
+              *Phase A — learned coefficients scale **predictions** (ETA /
+              headroom). Phase B (below, opt-in) may write ladder **wait bases**
+              only. Failsafe, min-off, and fans are never touched. Status moves
+              `warming` → `partial` → `ready` as sample counts hit the trust floor.*
 
       - type: grid
         cards:
           - type: heading
+            heading: PHASE B — ladder wait clamps (opt-in)
+            heading_style: subtitle
+          - type: custom:mushroom-chips-card
+            alignment: start
+            chips:
+              - type: template
+                entity: sensor.dsc_learn_phase_b_status
+                icon: mdi:tune-vertical
+                icon_color: >-
+                  {% set s = states(entity) %}
+                  {{ 'green' if s == 'idle' else 'amber' if s in ['warming','blocked'] else
+                     'grey' if s == 'off' else 'red' }}
+                content: >-
+                  B {{ states(entity)|upper }}
+              - type: template
+                entity: input_boolean.dsc_climate_learn_phase_b_enabled
+                icon: mdi:write
+                icon_color: "{{ 'cyan' if is_state(entity,'on') else 'grey' }}"
+                content: >-
+                  {{ 'B ON' if is_state(entity,'on') else 'B OFF' }}
+                tap_action:
+                  action: toggle
+              - type: template
+                entity: input_boolean.dsc_learn_phase_b_locked
+                icon: mdi:lock
+                icon_color: "{{ 'orange' if is_state(entity,'on') else 'grey' }}"
+                content: >-
+                  {{ 'LOCKED' if is_state(entity,'on') else 'WRITABLE' }}
+                tap_action:
+                  action: toggle
+              - type: template
+                entity: sensor.dsc_learn_last_sample_age
+                icon: mdi:timer-sand
+                content: >-
+                  {% if states(entity) in ['unknown','unavailable'] %}age —
+                  {% else %}{{ states(entity) }} min{% endif %}
+          - type: entities
+            title: Ladder wait bases (hub NVS)
+            show_header_toggle: false
+            entities:
+              - entity: number.dsc_hub_ladder_wait_dehum
+                name: Dehum wait (s)
+              - entity: number.dsc_hub_ladder_wait_hum
+                name: Hum wait (s)
+              - entity: number.dsc_hub_ladder_wait_heat
+                name: Heat wait (s)
+              - entity: number.dsc_hub_ladder_wait_ac
+                name: AC wait (s)
+              - entity: number.dsc_hub_ladder_wait_mat
+                name: Mat wait (s)
+              - entity: input_number.dsc_learn_wait_floor_s
+              - entity: input_number.dsc_learn_wait_ceil_s
+              - entity: input_number.dsc_learn_phase_b_alpha
+          - type: markdown
+            content: >-
+              *Phase B writes **only** ladder base waits on the hub.
+              Failsafe, watchdog, min-off, and fans are never touched.
+              Default is **off**. Lock freezes writes after manual edits.*
+          - type: horizontal-stack
+            cards:
+              - type: button
+                name: Reset Phase A coeffs
+                icon: mdi:restore
+                tap_action:
+                  action: call-service
+                  service: script.dsc_climate_learn_reset
+              - type: button
+                name: Reset waits → open-loop
+                icon: mdi:timer-refresh
+                tap_action:
+                  action: call-service
+                  service: script.dsc_climate_learn_reset_waits
+
             heading: OUTPUTS — ETA & headroom
             heading_style: title
           - type: grid
@@ -4851,9 +4971,56 @@ views:
     sections:
       - type: grid
         cards:
+          - type: custom:mushroom-chips-card
+            alignment: start
+            chips:
+              - type: template
+                icon: mdi:home
+                icon_color: teal
+                content: Back to Home
+                tap_action:
+                  action: navigate
+                  navigation_path: /dsc-hub-pro/home
           - type: heading
             heading: 👑 HUB HEALTH
             heading_style: title
+          - type: custom:mushroom-chips-card
+            alignment: start
+            chips:
+              - type: template
+                entity: sensor.dsc_fleet_version_status
+                icon: mdi:clipboard-check
+                icon_color: >-
+                  {% set s = states(entity) %}
+                  {{ 'green' if s == 'ok' else 'amber' if s == 'warn' else 'red' }}
+                content: >-
+                  FLEET {{ states(entity)|upper }} · expect {{ state_attr(entity,'expected') or '5.1.0' }}
+              - type: entity
+                entity: sensor.dsc_ha_surface_version
+              - type: entity
+                entity: sensor.dsc_hub_sync_sha
+          - type: markdown
+            content: >-
+              | Layer | Reported |
+              |---|---|
+              | Expected | `{{ state_attr('sensor.dsc_fleet_version_status','expected') or '5.1.0' }}` |
+              | HA surface | `{{ states('sensor.dsc_ha_surface_version') }}` |
+              | Sync SHA | `{{ states('sensor.dsc_hub_sync_sha') }}` |
+              | Hub | `{{ states('sensor.dsc_hub_firmware_version') }}` |
+              | Panel | `{{ states('sensor.dsc_control_firmware_version') }}` |
+              | Pot1–4 | `{{ states('sensor.dsc_pot1_firmware_version') }}` /
+                `{{ states('sensor.dsc_pot2_firmware_version') }}` /
+                `{{ states('sensor.dsc_pot3_firmware_version') }}` /
+                `{{ states('sensor.dsc_pot4_firmware_version') }}` |
+              | Heater / Mat | `{{ states('sensor.dsc_heater_firmware_version') }}` /
+                `{{ states('sensor.dsc_heatmat_firmware_version') }}` |
+              | Hum / Dehum | `{{ states('sensor.dsc_humidifier_firmware_version') }}` /
+                `{{ states('sensor.dsc_de_humidifier_firmware_version') }}` |
+          - type: entities
+            title: Expected release
+            entities:
+              - entity: input_text.dsc_expected_release
+                name: Expected release tag
           - type: entities
             entities:
               - entity: binary_sensor.dsc_hub_link
@@ -4897,11 +5064,10 @@ views:
               may be down while the panel still drives the hub.*
           - type: markdown
             content: >-
-              *Expected hub firmware for this dashboard: **`5.0.0`**.
-              Panel (DSC-CONTROL) should report **`4.0.11`** (or newer) on
-              panel diagnostics. Panel ESP-NOW primary + 0xD4 plant names
-              need the v4 hub flash. Prefer entity prefix `dsc_control_*`
-              for the panel.*
+              *Expected fleet cut: **`5.1.0`** (hub, panel, pots, Sonoffs,
+              Sync add-on, HA surface). Firmware Install is still **manual**
+              per device — Sync never auto-flashes. Prefer entity prefix
+              `dsc_control_*` for the panel.*
           - type: custom:mini-graph-card
             name: WiFi RSSI — 24 h
             hours_to_show: 24

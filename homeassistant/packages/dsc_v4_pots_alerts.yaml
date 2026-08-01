@@ -55,7 +55,7 @@ template:
           {{ v is not none and (v < 18.0 or v > 28.0) }}
 
       - name: "DSC-POT1 EC Salt Build-up"
-        unique_id: dsc_pot1_ec_salt_buildup
+        unique_id: dsc_pot1_ec_salt_build_up
         icon: mdi:shaker-outline
         delay_on:
           hours: 1
@@ -74,7 +74,7 @@ template:
           {{ v is not none and b is not none and b > 100 and v < b * 0.5 }}
 
       - name: "DSC-POT1 Nitrogen Below Baseline"
-        unique_id: dsc_pot1_n_below_baseline
+        unique_id: dsc_pot1_nitrogen_below_baseline
         icon: mdi:leaf-off
         delay_on:
           hours: 1
@@ -127,7 +127,7 @@ template:
           {{ v is not none and (v < 18.0 or v > 28.0) }}
 
       - name: "DSC-POT2 EC Salt Build-up"
-        unique_id: dsc_pot2_ec_salt_buildup
+        unique_id: dsc_pot2_ec_salt_build_up
         icon: mdi:shaker-outline
         delay_on:
           hours: 1
@@ -146,7 +146,7 @@ template:
           {{ v is not none and b is not none and b > 100 and v < b * 0.5 }}
 
       - name: "DSC-POT2 Nitrogen Below Baseline"
-        unique_id: dsc_pot2_n_below_baseline
+        unique_id: dsc_pot2_nitrogen_below_baseline
         icon: mdi:leaf-off
         delay_on:
           hours: 1
@@ -199,7 +199,7 @@ template:
           {{ v is not none and (v < 18.0 or v > 28.0) }}
 
       - name: "DSC-POT3 EC Salt Build-up"
-        unique_id: dsc_pot3_ec_salt_buildup
+        unique_id: dsc_pot3_ec_salt_build_up
         icon: mdi:shaker-outline
         delay_on:
           hours: 1
@@ -218,7 +218,7 @@ template:
           {{ v is not none and b is not none and b > 100 and v < b * 0.5 }}
 
       - name: "DSC-POT3 Nitrogen Below Baseline"
-        unique_id: dsc_pot3_n_below_baseline
+        unique_id: dsc_pot3_nitrogen_below_baseline
         icon: mdi:leaf-off
         delay_on:
           hours: 1
@@ -271,7 +271,7 @@ template:
           {{ v is not none and (v < 18.0 or v > 28.0) }}
 
       - name: "DSC-POT4 EC Salt Build-up"
-        unique_id: dsc_pot4_ec_salt_buildup
+        unique_id: dsc_pot4_ec_salt_build_up
         icon: mdi:shaker-outline
         delay_on:
           hours: 1
@@ -290,7 +290,7 @@ template:
           {{ v is not none and b is not none and b > 100 and v < b * 0.5 }}
 
       - name: "DSC-POT4 Nitrogen Below Baseline"
-        unique_id: dsc_pot4_n_below_baseline
+        unique_id: dsc_pot4_nitrogen_below_baseline
         icon: mdi:leaf-off
         delay_on:
           hours: 1

@@ -1,43 +1,41 @@
 # DSC-HUB Sync — Home Assistant add-on
 
-**Primary delivery** for packages, automations, and the YAML dashboard on HAOS.
+**Primary delivery** for packages, automations, Pro dashboard, www, and ESPHome
+stubs on HAOS. **v5.1.0** defaults `sync_esphome: true` and writes a version/SHA marker.
 
 ## Install (once)
 
-1. Settings → Add-ons → ⋮ → **Repositories**
-2. Add: `https://github.com/weddas/DSC-HUB`
-3. Refresh → find **DSC-HUB Sync** → **Install**
-4. Leave defaults (`ref: master`, `poll_seconds: 60`) → **Start**
-5. Watch the add-on log until the first “Synced to …” line
-6. Merge [`homeassistant/configuration.snippet.yaml`](../homeassistant/configuration.snippet.yaml)
-   into `/config/configuration.yaml`, then **restart Home Assistant once**
-7. Remove any duplicate DSC automations from the UI if you had them before
+1. Settings → Add-ons → Repositories → `https://github.com/weddas/DSC-HUB`
+2. Install **DSC-HUB Sync** → **Start**
+3. Defaults: `ref: master`, `poll_seconds: 60`, `sync_esphome: true`
+4. Log shows “Synced to …” · `/config/dsc-hub-sync.version` present
+5. Merge [`configuration.snippet.yaml`](../homeassistant/configuration.snippet.yaml)
+   → **restart HA once**
+6. Remove duplicate DSC automations from the UI if needed
 
-After that: **push to `master` → within ~60s HA packages / dashboard / www update**.
+**Push to `master` → within ~60s** packages / dashboard / www / stubs update.
+Device firmware: **manual** ESPHome Install only.
 
 ## Architecture
 
 ```
-GitHub master
+GitHub master / tag
     │  (poll)
     ▼
-DSC-HUB Sync add-on  ──cp──►  /config/packages|dashboards|www
-    │
-    └── Supervisor API ──► reload_core_config + automation.reload
+DSC-HUB Sync 5.1.0 ──stage/cp──► /config/packages|dashboards|www|esphome
+    │                              + dsc-hub-sync.version + sync SHA sensor
+    └── Supervisor API ──► core / automation / script / template / lovelace reload
 ```
 
-Add-on sources live in [`dsc-hub-sync/`](../dsc-hub-sync/) · store metadata
-[`repository.yaml`](../repository.yaml).
-
-## Options
-
-See add-on **Configuration** tab / [`dsc-hub-sync/DOCS.md`](../dsc-hub-sync/DOCS.md).
+Sources: [`dsc-hub-sync/`](../dsc-hub-sync/) · [`repository.yaml`](../repository.yaml).
 
 ## Related
 
 | Channel | Role |
 |---|---|
-| **This add-on** | Packages, automations package, dashboard YAML, optional www |
-| HACS Dashboard | Optional SYSTEM MAP card install — [`HACS-FRONTEND.md`](HACS-FRONTEND.md) |
-| [`ha-sync.sh`](ha-sync.sh) | Optional Unraid/GHA path if you are not on HAOS |
-| ESPHome Validate/Install | Firmware only (manual) |
+| **This add-on** | HA surfaces + stubs |
+| HACS Dashboard | Optional SYSTEM MAP — [`HACS-FRONTEND.md`](HACS-FRONTEND.md) |
+| [`ha-sync.sh`](ha-sync.sh) | Non-HAOS alternate |
+| ESPHome Install | Firmware only (manual) |
+
+QA: [`docs/qa/ADDON-QA-5.1.0.md`](../docs/qa/ADDON-QA-5.1.0.md)

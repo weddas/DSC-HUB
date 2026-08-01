@@ -1,15 +1,15 @@
 # ==================================================================
-#  DSC-HUB v4 · CLIMATE LEARN (Phase A — observe + predict only)
+#  DSC-HUB v5.1 · CLIMATE LEARN (Phase A observe + Phase B wait clamps)
 #  ------------------------------------------------------------------
 #  Bounded EMA response-rate observer. Samples ΔT / ΔAH while each
 #  lever is active, rejects outliers + emergency / takeover / faults,
 #  and stores lever-effectiveness coefficients.
 #
 #  Phase A: learned coeffs feed time-to-target / headroom gauges only.
-#  Does NOT write hub numbers, fan curves, failsafe, or followers.
-#  Phase B wait clamps are intentionally out of scope here.
+#  Phase B (opt-in): trusted coeffs clamp hub ladder wait bases via
+#  number.dsc_hub_ladder_wait_* — never failsafe, min-off, or fans.
 #
-#  Depends on: dsc_v4_climate_physics.yaml (AH / CFM / nameplates).
+#  Depends on: dsc_v4_climate_physics.yaml, dsc_v4_root_zone.yaml.
 # ==================================================================
 
 input_boolean:
@@ -17,6 +17,16 @@ input_boolean:
     name: "DSC Learn · Enabled"
     icon: mdi:brain
     initial: true
+
+  dsc_climate_learn_phase_b_enabled:
+    name: "DSC Learn · Phase B Wait Clamps"
+    icon: mdi:tune-vertical
+    initial: false
+
+  dsc_learn_phase_b_locked:
+    name: "DSC Learn · Phase B Manual Lock"
+    icon: mdi:lock
+    initial: false
 
 input_number:
   # EMA smoothing (α). Lower = slower adaptation.
@@ -37,6 +47,35 @@ input_number:
     initial: 5
     mode: box
     icon: mdi:counter
+
+  dsc_learn_wait_floor_s:
+    name: "DSC Learn · Wait Floor"
+    min: 60
+    max: 300
+    step: 10
+    initial: 60
+    mode: box
+    unit_of_measurement: "s"
+    icon: mdi:timer-minus
+
+  dsc_learn_wait_ceil_s:
+    name: "DSC Learn · Wait Ceiling"
+    min: 120
+    max: 600
+    step: 10
+    initial: 600
+    mode: box
+    unit_of_measurement: "s"
+    icon: mdi:timer-plus
+
+  dsc_learn_phase_b_alpha:
+    name: "DSC Learn · Phase B Wait Alpha"
+    min: 0.05
+    max: 0.5
+    step: 0.01
+    initial: 0.15
+    mode: box
+    icon: mdi:chart-bell-curve
 
   # ----- Learned effectiveness (1.0 = nameplate / open-loop) -----
   dsc_learn_eff_dehum:
@@ -292,6 +331,26 @@ template:
             ] %}
             {{ parts | reject('none') | list | join(', ') or 'none' }}
 
+
+      - name: "DSC Learn · Last Sample Age"
+        unique_id: dsc_learn_last_sample_age
+        unit_of_measurement: "min"
+        icon: mdi:timer-sand
+        state: >-
+          {% set ep = states('input_number.dsc_learn_snap_epoch')|float(0) %}
+          {% if ep <= 0 %}unknown
+          {% else %}{{ ((as_timestamp(now()) - ep) / 60)|round(1) }}{% endif %}
+
+      - name: "DSC Learn · Phase B Status"
+        unique_id: dsc_learn_phase_b_status
+        icon: mdi:tune-vertical
+        state: >-
+          {% if not is_state('input_boolean.dsc_climate_learn_phase_b_enabled','on') %}off
+          {% elif is_state('input_boolean.dsc_learn_phase_b_locked','on') %}locked
+          {% elif not is_state('binary_sensor.dsc_learn_gate_open','on') %}blocked
+          {% elif states('sensor.dsc_learn_status') in ['warming','disabled','gated'] %}warming
+          {% else %}idle{% endif %}
+
       # Effective moisture removal using learned scales when trusted.
       - name: "DSC Moisture Net Rate Learned"
         unique_id: dsc_moisture_net_rate_learned
@@ -486,6 +545,20 @@ automation:
             {% set dt = states('input_number.dsc_learn_snap_epoch')|float(0) %}
             {% set mins = ((as_timestamp(now()) - dt) / 60) if dt > 0 else 0 %}
             {{ mins >= 3 and mins <= 12 }}
+          # Skip contaminated windows when >1 climate lever is commanded.
+          active_levers: >-
+            {% set ns = namespace(n=0) %}
+            {% if is_state('switch.dsc_hub_dehumidifier_demand','on') %}{% set ns.n = ns.n + 1 %}{% endif %}
+            {% if is_state('switch.dsc_hub_humidifier_demand','on') %}{% set ns.n = ns.n + 1 %}{% endif %}
+            {% if is_state('switch.dsc_hub_heater_demand','on') %}{% set ns.n = ns.n + 1 %}{% endif %}
+            {% if is_state('switch.dsc_hub_grow_mat_demand','on') %}{% set ns.n = ns.n + 1 %}{% endif %}
+            {% if is_state('switch.dsc_hub_ac_demand','on') %}{% set ns.n = ns.n + 1 %}{% endif %}
+            {% if states('sensor.dsc_fan_exhaust_outside_pct')|float(0) >= 20
+                 or states('sensor.dsc_fan_intake_outside_pct')|float(0) >= 20 %}
+              {% set ns.n = ns.n + 1 %}
+            {% endif %}
+            {{ ns.n }}
+          single_lever: "{{ (active_levers|int(0)) == 1 }}"
 
       # --- Dehumidifier: observed drying vs nameplate ---
       - choose:
@@ -493,6 +566,7 @@ automation:
               - condition: template
                 value_template: >-
                   {{ valid_window|bool
+                     and single_lever|bool
                      and is_state('switch.dsc_hub_dehumidifier_demand','on')
                      and (dAH_per_min|float(0)) < -0.01
                      and (dAH_per_min|float(0)) > -2.0 }}
@@ -528,6 +602,7 @@ automation:
               - condition: template
                 value_template: >-
                   {{ valid_window|bool
+                     and single_lever|bool
                      and is_state('switch.dsc_hub_humidifier_demand','on')
                      and (dAH_per_min|float(0)) > 0.01
                      and (dAH_per_min|float(0)) < 2.0 }}
@@ -559,6 +634,7 @@ automation:
               - condition: template
                 value_template: >-
                   {{ valid_window|bool
+                     and single_lever|bool
                      and is_state('switch.dsc_hub_heater_demand','on')
                      and (dT_per_min|float(0)) > 0.005
                      and (dT_per_min|float(0)) < 1.5 }}
@@ -590,20 +666,14 @@ automation:
           - conditions:
               - condition: template
                 value_template: >-
-                  {% set ns = namespace(vals=[]) %}
-                  {% for e in ['sensor.dsc_pot1_soil_temperature','sensor.dsc_pot2_soil_temperature',
-                               'sensor.dsc_pot3_soil_temperature','sensor.dsc_pot4_soil_temperature'] %}
-                    {% if has_value(e) %}
-                      {% set v = states(e)|float(0) %}
-                      {% if 5 <= v <= 45 %}{% set ns.vals = ns.vals + [v] %}{% endif %}
-                    {% endif %}
-                  {% endfor %}
-                  {% set rz = (ns.vals | min) if ns.vals else none %}
+                  {% set rz = states('sensor.dsc_coldest_root_zone_temp')|float(none) if has_value('sensor.dsc_coldest_root_zone_temp') else none %}
                   {% set dt = states('input_number.dsc_learn_snap_epoch')|float(0) %}
                   {% set mins = ((as_timestamp(now()) - dt) / 60) if dt > 0 else 0 %}
                   {% set dR = ((rz - states('input_number.dsc_learn_snap_root_t')|float(0)) / mins)
                      if (rz is not none and mins >= 3 and mins <= 12) else 0 %}
-                  {{ is_state('switch.dsc_hub_grow_mat_demand','on')
+                  {{ valid_window|bool
+                     and single_lever|bool
+                     and is_state('switch.dsc_hub_grow_mat_demand','on')
                      and is_state('binary_sensor.dsc_hub_root_zone_sensor_fault','off')
                      and rz is not none
                      and dR > 0.002 and dR < 1.0
@@ -611,20 +681,11 @@ automation:
             sequence:
               - variables:
                   ratio: >-
-                    {% set ns = namespace(vals=[]) %}
-                    {% for e in ['sensor.dsc_pot1_soil_temperature','sensor.dsc_pot2_soil_temperature',
-                                 'sensor.dsc_pot3_soil_temperature','sensor.dsc_pot4_soil_temperature'] %}
-                      {% if has_value(e) %}
-                        {% set v = states(e)|float(0) %}
-                        {% if 5 <= v <= 45 %}{% set ns.vals = ns.vals + [v] %}{% endif %}
-                      {% endif %}
-                    {% endfor %}
-                    {% set rz = ns.vals | min %}
+                    {% set rz = states('sensor.dsc_coldest_root_zone_temp')|float(0) %}
                     {% set dt = states('input_number.dsc_learn_snap_epoch')|float(0) %}
                     {% set mins = (as_timestamp(now()) - dt) / 60 %}
                     {% set dR = (rz - states('input_number.dsc_learn_snap_root_t')|float(0)) / mins %}
-                    {# Expected ~0.05 °C/min soft mat rise — ratio vs that baseline #}
-                    {% set exp = 0.05 %}
+                    {% set exp = states('input_number.dsc_learn_mat_expected_c_min')|float(0.05) %}
                     {{ ([0.1, (dR / exp), 2.0]|sort)[1] }}
                   new_eff: >-
                     {{ (alpha|float(0.1) * (ratio|float(1))
@@ -646,7 +707,8 @@ automation:
               - condition: template
                 value_template: >-
                   {{ valid_window|bool
-                     and states('sensor.dsc_fan_exhaust_outside_pct')|float(0) >= 20
+                     and single_lever|bool
+                     and and states('sensor.dsc_fan_exhaust_outside_pct')|float(0) >= 20
                      and (dT_per_min|float(0)) < -0.005
                      and (dT_per_min|float(0)) > -1.5 }}
             sequence:
@@ -679,7 +741,8 @@ automation:
               - condition: template
                 value_template: >-
                   {{ valid_window|bool
-                     and states('sensor.dsc_fan_exhaust_outside_pct')|float(0) >= 20
+                     and single_lever|bool
+                     and and states('sensor.dsc_fan_exhaust_outside_pct')|float(0) >= 20
                      and (dAH_per_min|float(0)) < -0.01
                      and (dAH_per_min|float(0)) > -2.0 }}
             sequence:
@@ -716,6 +779,7 @@ automation:
                       - states('input_number.dsc_learn_snap_room_ah')|float(0)) / mins)
                      if mins >= 3 and mins <= 12 else 0 %}
                   {{ mins >= 3 and mins <= 12
+                     and single_lever|bool
                      and states('sensor.dsc_fan_exhaust_room_pct')|float(0) >= 20
                      and dRAH > 0.005 and dRAH < 1.5
                      and states('sensor.dsc_ah_room') not in ['unknown','unavailable'] }}
@@ -726,7 +790,7 @@ automation:
                     {% set mins = (as_timestamp(now()) - dt) / 60 %}
                     {% set dRAH = (states('sensor.dsc_ah_room')|float(0)
                         - states('input_number.dsc_learn_snap_room_ah')|float(0)) / mins %}
-                    {% set exp = 0.05 %}
+                    {% set exp = states('input_number.dsc_learn_recirc_expected_ah_min')|float(0.05) %}
                     {{ ([0.1, (dRAH / exp), 2.0]|sort)[1] }}
                   new_eff: >-
                     {{ (alpha|float(0.1) * (ratio|float(1))
@@ -748,6 +812,7 @@ automation:
               - condition: template
                 value_template: >-
                   {{ valid_window|bool
+                     and single_lever|bool
                      and is_state('switch.dsc_hub_ac_demand','on')
                      and is_state('input_boolean.dsc_ac_actuator_wired','on')
                      and states('input_number.dsc_ac_btu_hr')|float(0) > 0
@@ -795,15 +860,8 @@ automation:
         target: { entity_id: input_number.dsc_learn_snap_root_t }
         data:
           value: >-
-            {% set ns = namespace(vals=[]) %}
-            {% for e in ['sensor.dsc_pot1_soil_temperature','sensor.dsc_pot2_soil_temperature',
-                         'sensor.dsc_pot3_soil_temperature','sensor.dsc_pot4_soil_temperature'] %}
-              {% if has_value(e) %}
-                {% set v = states(e)|float(0) %}
-                {% if 5 <= v <= 45 %}{% set ns.vals = ns.vals + [v] %}{% endif %}
-              {% endif %}
-            {% endfor %}
-            {{ (ns.vals | min | round(2)) if ns.vals else 0 }}
+            {{ states('sensor.dsc_coldest_root_zone_temp')|float(0)|round(2)
+               if has_value('sensor.dsc_coldest_root_zone_temp') else 0 }}
       - service: input_number.set_value
         target: { entity_id: input_number.dsc_learn_snap_epoch }
         data:
@@ -873,6 +931,151 @@ automation:
           message: "All climate learn coefficients restored to 1.0× nameplate; sample counts cleared."
           notification_id: dsc_climate_learn_reset
 
+
+  - id: dsc_climate_learn_phase_b_apply
+    alias: "DSC Climate Learn — Phase B apply wait clamps"
+    mode: single
+    trigger:
+      - platform: time_pattern
+        minutes: "/30"
+      - platform: state
+        entity_id: input_boolean.dsc_climate_learn_phase_b_enabled
+        to: "on"
+    condition:
+      - condition: state
+        entity_id: input_boolean.dsc_climate_learn_phase_b_enabled
+        state: "on"
+      - condition: state
+        entity_id: input_boolean.dsc_learn_phase_b_locked
+        state: "off"
+      - condition: state
+        entity_id: binary_sensor.dsc_learn_gate_open
+        state: "on"
+      - condition: template
+        value_template: "{{ states('sensor.dsc_learn_status') in ['partial','ready'] }}"
+    action:
+      - variables:
+          need: "{{ states('input_number.dsc_learn_min_samples')|float(5) }}"
+          floor: "{{ states('input_number.dsc_learn_wait_floor_s')|float(60) }}"
+          ceil: "{{ states('input_number.dsc_learn_wait_ceil_s')|float(600) }}"
+          alpha: "{{ states('input_number.dsc_learn_phase_b_alpha')|float(0.15) }}"
+      # Higher eff → shorter wait (escalate sooner). Clamp to floor/ceil.
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: >-
+                  {{ states('input_number.dsc_learn_samples_dehum')|float(0) >= need|float(5)
+                     and states('number.dsc_hub_ladder_wait_dehum') not in ['unknown','unavailable'] }}
+            sequence:
+              - service: number.set_value
+                target: { entity_id: number.dsc_hub_ladder_wait_dehum }
+                data:
+                  value: >-
+                    {% set e = states('input_number.dsc_learn_eff_dehum')|float(1) %}
+                    {% set raw = 300 / ([e, 0.1]|max) %}
+                    {% set tgt = ([floor|float(60), raw, ceil|float(600)]|sort)[1] %}
+                    {{ (alpha|float(0.15) * tgt
+                        + (1 - alpha|float(0.15))
+                          * states('number.dsc_hub_ladder_wait_dehum')|float(300)) | round(0) }}
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: >-
+                  {{ states('input_number.dsc_learn_samples_hum')|float(0) >= need|float(5)
+                     and states('number.dsc_hub_ladder_wait_hum') not in ['unknown','unavailable'] }}
+            sequence:
+              - service: number.set_value
+                target: { entity_id: number.dsc_hub_ladder_wait_hum }
+                data:
+                  value: >-
+                    {% set e = states('input_number.dsc_learn_eff_hum')|float(1) %}
+                    {% set raw = 120 / ([e, 0.1]|max) %}
+                    {% set tgt = ([floor|float(60), raw, ceil|float(600)]|sort)[1] %}
+                    {{ (alpha|float(0.15) * tgt
+                        + (1 - alpha|float(0.15))
+                          * states('number.dsc_hub_ladder_wait_hum')|float(120)) | round(0) }}
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: >-
+                  {{ states('input_number.dsc_learn_samples_heater')|float(0) >= need|float(5)
+                     and states('number.dsc_hub_ladder_wait_heat') not in ['unknown','unavailable'] }}
+            sequence:
+              - service: number.set_value
+                target: { entity_id: number.dsc_hub_ladder_wait_heat }
+                data:
+                  value: >-
+                    {% set e = states('input_number.dsc_learn_eff_heater')|float(1) %}
+                    {% set raw = 300 / ([e, 0.1]|max) %}
+                    {% set tgt = ([floor|float(60), raw, ceil|float(600)]|sort)[1] %}
+                    {{ (alpha|float(0.15) * tgt
+                        + (1 - alpha|float(0.15))
+                          * states('number.dsc_hub_ladder_wait_heat')|float(300)) | round(0) }}
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: >-
+                  {{ states('input_number.dsc_learn_samples_ac')|float(0) >= need|float(5)
+                     and states('number.dsc_hub_ladder_wait_ac') not in ['unknown','unavailable'] }}
+            sequence:
+              - service: number.set_value
+                target: { entity_id: number.dsc_hub_ladder_wait_ac }
+                data:
+                  value: >-
+                    {% set e = states('input_number.dsc_learn_eff_ac')|float(1) %}
+                    {% set raw = 300 / ([e, 0.1]|max) %}
+                    {% set tgt = ([floor|float(60), raw, ceil|float(600)]|sort)[1] %}
+                    {{ (alpha|float(0.15) * tgt
+                        + (1 - alpha|float(0.15))
+                          * states('number.dsc_hub_ladder_wait_ac')|float(300)) | round(0) }}
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: >-
+                  {{ states('input_number.dsc_learn_samples_mat')|float(0) >= need|float(5)
+                     and states('number.dsc_hub_ladder_wait_mat') not in ['unknown','unavailable'] }}
+            sequence:
+              - service: number.set_value
+                target: { entity_id: number.dsc_hub_ladder_wait_mat }
+                data:
+                  value: >-
+                    {% set e = states('input_number.dsc_learn_eff_mat')|float(1) %}
+                    {% set fl = [floor|float(60), 30]|max %}
+                    {% set raw = 60 / ([e, 0.1]|max) %}
+                    {% set tgt = ([fl, raw, ceil|float(600)]|sort)[1] %}
+                    {{ (alpha|float(0.15) * tgt
+                        + (1 - alpha|float(0.15))
+                          * states('number.dsc_hub_ladder_wait_mat')|float(60)) | round(0) }}
+
+  - id: dsc_climate_learn_reset_waits
+    alias: "DSC Climate Learn — Reset ladder waits to open-loop"
+    mode: single
+    trigger:
+      - platform: event
+        event_type: dsc_climate_learn_reset_waits
+    action:
+      - service: number.set_value
+        target: { entity_id: number.dsc_hub_ladder_wait_dehum }
+        data: { value: 300 }
+      - service: number.set_value
+        target: { entity_id: number.dsc_hub_ladder_wait_hum }
+        data: { value: 120 }
+      - service: number.set_value
+        target: { entity_id: number.dsc_hub_ladder_wait_heat }
+        data: { value: 300 }
+      - service: number.set_value
+        target: { entity_id: number.dsc_hub_ladder_wait_ac }
+        data: { value: 300 }
+      - service: number.set_value
+        target: { entity_id: number.dsc_hub_ladder_wait_mat }
+        data: { value: 60 }
+      - service: persistent_notification.create
+        data:
+          title: "DSC Learn waits reset"
+          message: "Ladder wait bases restored to open-loop defaults."
+          notification_id: dsc_climate_learn_reset_waits
+
+
 script:
   dsc_climate_learn_reset:
     alias: "DSC Learn · Reset to nameplate"
@@ -880,4 +1083,12 @@ script:
     mode: single
     sequence:
       - event: dsc_climate_learn_reset
+        event_data: {}
+
+  dsc_climate_learn_reset_waits:
+    alias: "DSC Learn · Reset ladder waits"
+    icon: mdi:timer-refresh
+    mode: single
+    sequence:
+      - event: dsc_climate_learn_reset_waits
         event_data: {}

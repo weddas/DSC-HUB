@@ -1,160 +1,107 @@
-# DSC-HUB v5.0.0 — Install (from scratch)
+# DSC-HUB v5.1.0 — Install (from scratch)
 
-Fresh Home Assistant + ESPHome bring-up for release **`v5.0.0`**
-(hub firmware string matches the GitHub tag).
+Fresh Home Assistant + ESPHome bring-up for release **`v5.1.0`**
+(fleet firmware, Sync add-on, and HA surface all report **`5.1.0`**).
 
-Repo: https://github.com/weddas/DSC-HUB · tag **`v5.0.0`** · branch **`master`**
+Repo: https://github.com/weddas/DSC-HUB · tag **`v5.1.0`** · branch **`master`**
 
 **Preferred ongoing delivery:** HAOS add-on — [`scripts/ADDON.md`](scripts/ADDON.md)  
-**Kit SoftAP (no HA first):** [`SETUP.md`](SETUP.md)
+**Kit SoftAP (no HA first):** [`SETUP.md`](SETUP.md)  
+**Upgrading an existing site:** [`UPGRADE.md`](UPGRADE.md)
 
 ---
 
 ## File → destination map
 
-Copy from this repo into your HA config (or let the **DSC-HUB Sync** add-on do it
-after install). Paths on the left are relative to the repo root; destinations are
-under Home Assistant `/config/`.
-
 | Repo source | Destination |
 |---|---|
-| `homeassistant/packages/dsc_v4_*.yaml` (all `dsc_v4_*.yaml` files) | `/config/packages/` |
-| `homeassistant/dashboards/dsc-hub-v4-dashboard.yaml` | `/config/dashboards/dsc-hub-v4-dashboard.yaml` (YAML-mode Lovelace) |
-| `homeassistant/esphome/dsc-*.yaml` (all device stubs) | `/config/esphome/` |
-| `homeassistant/www/dsc-system-map-card.js` | `/config/www/dsc-system-map-card.js` |
-| `homeassistant/www/dsc-system-map.svg` | `/config/www/dsc-system-map.svg` |
+| `homeassistant/packages/dsc_v4_*.yaml` | `/config/packages/` |
+| `homeassistant/dashboards/dsc-hub-v4-dashboard.yaml` | `/config/dashboards/` (YAML-mode Lovelace) |
+| `homeassistant/esphome/dsc-*.yaml` | `/config/esphome/` |
+| `homeassistant/www/dsc-system-map.*` | `/config/www/` |
 | `firmware/v4/secrets.yaml.template` | `/config/esphome/secrets.yaml` (fill in; never commit) |
 
-Merge [`homeassistant/configuration.snippet.yaml`](homeassistant/configuration.snippet.yaml) into `configuration.yaml` (packages + YAML dashboard):
+Merge [`homeassistant/configuration.snippet.yaml`](homeassistant/configuration.snippet.yaml)
+into `configuration.yaml` (packages + YAML dashboard **`dsc-hub-pro`**).
 
-```yaml
-homeassistant:
-  packages: !include_dir_named packages
+### Add-on (recommended)
 
-lovelace:
-  mode: storage
-  dashboards:
-    dsc-hub-pro:
-      mode: yaml
-      title: DSC-HUB Pro
-      icon: mdi:sprout
-      show_in_sidebar: true
-      filename: dashboards/dsc-hub-v4-dashboard.yaml
-```
+1. Settings → Add-ons → Repositories → `https://github.com/weddas/DSC-HUB`
+2. Install **DSC-HUB Sync** **5.1.0** → Start (defaults include `sync_esphome: true`)
+3. Wait for “Synced to …” · confirm `/config/dsc-hub-sync.version`
+4. Merge configuration snippet → **Restart HA Core once** (creates new helpers)
 
-Filenames under `packages/` must use **underscores** — HA rejects hyphens in
-`!include_dir_named` package slugs.
-
-### Add-on (recommended after first files land)
-
-1. Settings → Add-ons → ⋮ → **Repositories** → add `https://github.com/weddas/DSC-HUB`
-2. Install **DSC-HUB Sync** → Start  
-3. Further pushes to `master` update packages / dashboard / www automatically  
-
-Details: [`scripts/ADDON.md`](scripts/ADDON.md).  
-Optional: HACS SYSTEM MAP card — [`scripts/HACS-FRONTEND.md`](scripts/HACS-FRONTEND.md).  
-Optional Unraid GHA path: [`scripts/HA-SYNC-BOOTSTRAP.md`](scripts/HA-SYNC-BOOTSTRAP.md).
+Further pushes to `master` update packages / Pro dashboard / www / stubs automatically.
+Firmware Install stays **manual**.
 
 ---
 
 ## 0. Prerequisites
 
-- Home Assistant OS (for the Sync add-on) with [ESPHome](https://esphome.io/) add-on
-- HACS custom cards listed in [`homeassistant/README.md`](homeassistant/README.md)
-- Router: **fixed 2.4 GHz channel** for hub + panel + pots (mesh channel hops break ESP-NOW)
-- Filled `/config/esphome/secrets.yaml` from the template above
+- HAOS + ESPHome add-on
+- HACS cards listed in [`homeassistant/README.md`](homeassistant/README.md)
+- Fixed 2.4 GHz channel for hub + panel + pots
+- Filled `/config/esphome/secrets.yaml`
 
-Mobile push alerts for pot/tank package notifiers are **not** shipped.
-Climate / safety alerts live in `dsc_v4_automations.yaml` — edit notify targets
-there to match your devices (e.g. `notify.mobile_app_…`).
+### Notify target (edit once)
 
----
-
-## 1. Packages
-
-| File → `/config/packages/` | Purpose |
-|---|---|
-| `dsc_v4_core_helpers.yaml` | Hub link, fans, airflow, photoperiod, runtimes |
-| `dsc_v4_climate_physics.yaml` | Plant specs, ACH/AH/BTU/moisture sensors |
-| `dsc_v4_climate_learn.yaml` | Phase A EMA learning + ETA / headroom gauges |
-| `dsc_v4_light_helpers.yaml` | Lights-on today, dark-period, deviation |
-| `dsc_v4_tank.yaml` | Tank EC/pH/temp + Tuya warn sync automation |
-| `dsc_v4_pots_stats.yaml` | Daily max/min, 7d baselines, rates |
-| `dsc_v4_pots_correlation.yaml` | EC vs tank, uptake slope |
-| `dsc_v4_pots_alerts.yaml` | Per-pot alert binary sensors (no push notifier) |
-| `dsc_v4_alert_count.yaml` | `sensor.dsc_active_alert_count` for Home chip |
-| `dsc_v4_automations.yaml` | Demand followers, alerts, scribe, safe-off |
+Set `input_text.dsc_notify_service` to your mobile notify entity, e.g.
+`notify.mobile_app_your_phone`. Climate alerts call `script.dsc_notify`
+([`dsc_v4_notify.yaml`](homeassistant/packages/dsc_v4_notify.yaml)).
 
 ---
 
-## 2. Automations
+## 1. Packages (all `dsc_v4_*.yaml`)
 
-Included via package [`dsc_v4_automations.yaml`](homeassistant/packages/dsc_v4_automations.yaml).
-Do **not** also merge the deprecated stub `homeassistant/automations.yaml`.
+Includes core helpers, climate physics, **Learn Phase A+B**, light helpers, tank,
+pots stats/correlation/alerts, alert count, automations, **version/fleet status**,
+**root zone coldest/hottest**, notify.
 
----
+After first 5.1 sync: restart Core once if Phase B / fleet sensors are missing.
 
-## 3. Dashboard
-
-Prefer **YAML mode** (required for add-on / git sync):
-
-1. Add the `lovelace:` block from the snippet above to `configuration.yaml`
-2. Copy dashboard YAML → `/config/dashboards/` (or let the add-on sync it)
-3. Restart HA once; sidebar shows **DSC-HUB Pro** at URL **`dsc-hub-pro`**
-4. Remove any older **UI-managed** dashboard that owned `dsc-hub-pro`
-
-### SYSTEM MAP card
-
-**Preferred:** HACS — [`scripts/HACS-FRONTEND.md`](scripts/HACS-FRONTEND.md)  
-**Or:** add-on / manual `www/` copy + resource `/local/dsc-system-map-card.js` (JavaScript).
+Suggested recorder includes (optional): learn eff/samples, ladder wait numbers,
+fire countdowns, fleet version status.
 
 ---
 
-## 4. ESPHome stubs
+## 2. Dashboard
 
-Copy every `homeassistant/esphome/dsc-*.yaml` → `/config/esphome/`.
-
-| Stub → `/config/esphome/` | Pulls from GitHub (`@v5.0.0` / `master`) |
-|---|---|
-| `dsc-hub.yaml` | `dsc-hub-v4_0.yaml` + `dsc-hub-espnow-primary.yaml` |
-| `dsc-control.yaml` | `dsc-control-common.yaml` (+ glyphs) |
-| Sonoffs / pots | `dsc-sonoff-common.yaml` / `dsc-pot-common.yaml` |
-
-Prefer stub `ref: v5.0.0` for this cut; `master` once tracking tip.
-Do **not** put `secrets.yaml` in git.
+YAML mode URL **`dsc-hub-pro`** only. Disable any storage dashboard still named
+DSC-HUB / `dsc-hub-v4`. Sidebar: single **DSC-HUB Pro** entry.
 
 ---
 
-## 5. Restart + flash
+## 3. ESPHome stubs
 
-1. Restart Home Assistant  
-2. ESPHome → Validate (set `refresh: 0d` once if git cache stale, then `1d`)  
-3. Flash USB first time; OTA after  
+| Stub | Body | Expect after flash |
+|---|---|---|
+| `dsc-hub.yaml` | hub v4_0 + espnow | **5.1.0** |
+| `dsc-control.yaml` | control-common | **5.1.0** |
+| pots / Sonoffs | pot-common / sonoff-common | **5.1.0** |
+
+Stub `ref: v5.1.0`. Kits Validate even if not flashed on lab.
 
 ### Flash order
 
-1. Hub — expect **`5.0.0`**  
-2. Panel — **4.0.11** (same `espnow_cmd_tag`)  
-3. Pots — POT2 canary, then 1 / 3 / 4  
-4. Sonoffs  
+1. Hub · 2. Panel · 3. Pots · 4. Sonoffs
 
 ### Verify
 
-- [ ] Panel ESP-NOW UP; panel command moves a hub entity  
-- [ ] `sensor.dsc_hub_firmware_version` = **`5.0.0`**  
-- [ ] Demand ON → matching Sonoff relay ON  
-- [ ] Dashboard URL `dsc-hub-pro` loads; alert chip uses `sensor.dsc_active_alert_count`  
+- [ ] `sensor.dsc_hub_firmware_version` = **5.1.0** (and peers)
+- [ ] `sensor.dsc_ha_surface_version` = **5.1.0**
+- [ ] `sensor.dsc_fleet_version_status` → **ok** after all flashes
+- [ ] `/dsc-hub-pro/home` + Learning Phase B controls present (B default off)
+- [ ] Panel ESP-NOW UP; Sonoff followers track demands
 
 ---
 
-## Day-to-day after install
+## Day-to-day
 
 ```
-Cursor edit → commit/push master
-  → DSC-HUB Sync add-on (~60s) → packages / dashboard / www
+Cursor edit → push master
+  → DSC-HUB Sync (~60s) → packages / dashboard / www / stubs
+  → Restart HA once if new helpers
   → ESPHome Validate/Install (changed devices only)
 ```
 
-Hub + panel: flash **together** when `espnow_cmd_tag`, MAC, or wire packets change.
-
-See also: [`RELEASE.md`](RELEASE.md) · [`scripts/ADDON.md`](scripts/ADDON.md) · [`homeassistant/README.md`](homeassistant/README.md) · [`firmware/v4/README.md`](firmware/v4/README.md)
+See [`RELEASE.md`](RELEASE.md) rollout checklist · [`docs/qa/`](docs/qa/).

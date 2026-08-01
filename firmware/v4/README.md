@@ -1,9 +1,10 @@
 # DSC-HUB firmware v4
 
-Working directory for ESPHome configs. Current hub release string:
-**`5.0.0`** (GitHub tag `v5.0.0`). See the repo
+Working directory for ESPHome configs. Current fleet release string:
+**`5.1.0`** (GitHub tag `v5.1.0`). See the repo
 [README](../../README.md) and [INSTALL.md](../../INSTALL.md) for from-scratch HA setup.
 Standalone SoftAP unboxing (no HA): [SETUP.md](../../SETUP.md).
+Firmware QA: [docs/qa/FIRMWARE-QA-5.1.0.md](../../docs/qa/FIRMWARE-QA-5.1.0.md).
 
 ## Local vs HA
 

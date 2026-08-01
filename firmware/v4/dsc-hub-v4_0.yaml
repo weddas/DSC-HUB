@@ -7,10 +7,10 @@
 # ESP-NOW panel layer is loaded by the stub (dsc-hub-espnow-primary.yaml),
 # not !include'd here — keeps local and git-pull paths identical.
 
-# ===== v5.0.0 · MAJOR — HA Sync add-on + kit SoftAP (Aug 2026) =====
-# First published alpha of the v4 ESP-NOW-primary hub stack. Project
-# version string matches the GitHub release tag. Built on the v4.0
-# ESP-NOW layer + climate rev through boot persist / Full Auto re-arm.
+# ===== v5.1.0 · FULL-FLEET INLINE + PHASE B WAITS (Aug 2026) =====
+# Hub project string matches GitHub tag v5.1.0. Ladder persistence bases
+# are NVS-tunable numbers (Phase B may clamp them from HA). Built on the
+# v5.0.0 Sync add-on cut + ESP-NOW-primary climate stack.
 #
 # ===== v4.0 · ESP-NOW PRIMARY CONTROL LAYER =====
 # The DSC-CONTROL panel drives this hub directly over ESP-NOW. The stub
@@ -46,7 +46,7 @@ esphome:
   friendly_name: DSC-HUB
   project:
     name: "digital_emotions.dsc-hub"
-    version: "5.0.0"
+    version: "5.1.0"
   on_boot:
     - priority: -100
       then:
@@ -1151,6 +1151,34 @@ globals:
     type: uint32_t
     restore_value: false
     initial_value: '300000'
+  - id: cur_mat_wait
+    type: uint32_t
+    restore_value: false
+    initial_value: '60000'
+
+  # ===== v5.1.0 · LADDER WAIT BASES (Phase B writable) ===============
+  # Open-loop persistence bases in milliseconds. Reality gates still
+  # shorten via min(base, gate). Failsafe / min-off untouched.
+  - id: base_dehum_wait_ms
+    type: uint32_t
+    restore_value: true
+    initial_value: '300000'
+  - id: base_hum_wait_ms
+    type: uint32_t
+    restore_value: true
+    initial_value: '120000'
+  - id: base_heat_wait_ms
+    type: uint32_t
+    restore_value: true
+    initial_value: '300000'
+  - id: base_ac_wait_ms
+    type: uint32_t
+    restore_value: true
+    initial_value: '300000'
+  - id: base_mat_wait_ms
+    type: uint32_t
+    restore_value: true
+    initial_value: '60000'
 
   # ===== v2.4.2 · BUG-4: arbitration-change detector =================
   # Previous arbitrated-tent identity. When it flips (Priority Tent
@@ -1959,6 +1987,73 @@ number:
       - lambda: 'id(num_hum_min_off).publish_state((float) id(hum_min_off_s));'
       - script.execute: tx_panel_sync
 
+  # ===== v5.1.0 · Ladder persistence bases (seconds) — Phase B may write =====
+  - platform: template
+    name: "Ladder Wait Dehum"
+    id: num_ladder_wait_dehum
+    icon: "mdi:timer-outline"
+    min_value: 60
+    max_value: 600
+    step: 10
+    unit_of_measurement: "s"
+    update_interval: 60s
+    lambda: 'return id(base_dehum_wait_ms) / 1000.0f;'
+    set_action:
+      - globals.set: {id: base_dehum_wait_ms, value: !lambda 'return (uint32_t)(x * 1000.0f);'}
+      - lambda: 'id(num_ladder_wait_dehum).publish_state(id(base_dehum_wait_ms) / 1000.0f);'
+  - platform: template
+    name: "Ladder Wait Hum"
+    id: num_ladder_wait_hum
+    icon: "mdi:timer-outline"
+    min_value: 60
+    max_value: 600
+    step: 10
+    unit_of_measurement: "s"
+    update_interval: 60s
+    lambda: 'return id(base_hum_wait_ms) / 1000.0f;'
+    set_action:
+      - globals.set: {id: base_hum_wait_ms, value: !lambda 'return (uint32_t)(x * 1000.0f);'}
+      - lambda: 'id(num_ladder_wait_hum).publish_state(id(base_hum_wait_ms) / 1000.0f);'
+  - platform: template
+    name: "Ladder Wait Heat"
+    id: num_ladder_wait_heat
+    icon: "mdi:timer-outline"
+    min_value: 60
+    max_value: 600
+    step: 10
+    unit_of_measurement: "s"
+    update_interval: 60s
+    lambda: 'return id(base_heat_wait_ms) / 1000.0f;'
+    set_action:
+      - globals.set: {id: base_heat_wait_ms, value: !lambda 'return (uint32_t)(x * 1000.0f);'}
+      - lambda: 'id(num_ladder_wait_heat).publish_state(id(base_heat_wait_ms) / 1000.0f);'
+  - platform: template
+    name: "Ladder Wait AC"
+    id: num_ladder_wait_ac
+    icon: "mdi:timer-outline"
+    min_value: 60
+    max_value: 600
+    step: 10
+    unit_of_measurement: "s"
+    update_interval: 60s
+    lambda: 'return id(base_ac_wait_ms) / 1000.0f;'
+    set_action:
+      - globals.set: {id: base_ac_wait_ms, value: !lambda 'return (uint32_t)(x * 1000.0f);'}
+      - lambda: 'id(num_ladder_wait_ac).publish_state(id(base_ac_wait_ms) / 1000.0f);'
+  - platform: template
+    name: "Ladder Wait Mat"
+    id: num_ladder_wait_mat
+    icon: "mdi:timer-outline"
+    min_value: 30
+    max_value: 300
+    step: 5
+    unit_of_measurement: "s"
+    update_interval: 60s
+    lambda: 'return id(base_mat_wait_ms) / 1000.0f;'
+    set_action:
+      - globals.set: {id: base_mat_wait_ms, value: !lambda 'return (uint32_t)(x * 1000.0f);'}
+      - lambda: 'id(num_ladder_wait_mat).publish_state(id(base_mat_wait_ms) / 1000.0f);'
+
   - platform: template
     name: "Heater Min Off-Time"
     id: num_heater_min_off
@@ -2501,7 +2596,8 @@ sensor:
     lambda: |-
       if (id(esc_cold_since) == 0 || id(growmat_demand).state) return 0;
       uint32_t held = millis() - id(esc_cold_since);
-      return held >= 60000 ? 0 : (60000 - held) / 1000.0f;
+      uint32_t mw = id(cur_mat_wait) ? id(cur_mat_wait) : id(base_mat_wait_ms);
+      return held >= mw ? 0 : (mw - held) / 1000.0f;
 
   - platform: template
     name: "Clone Humidifier Fire Countdown"
@@ -3056,8 +3152,17 @@ script:
             // "Fans had N minutes" only makes sense if the ROOM air the
             // appliances condition can actually move the arbitrated tent.
             // If not, waiting is theatre — cut the persistence window.
-            uint32_t dehum_wait = 300000, hum_wait = 120000;
-            uint32_t heat_wait  = 300000, ac_wait  = 300000;
+            // v5.1.0: start from NVS bases (Phase B / HA may clamp), then reality gates.
+            uint32_t dehum_wait = id(base_dehum_wait_ms);
+            uint32_t hum_wait   = id(base_hum_wait_ms);
+            uint32_t heat_wait  = id(base_heat_wait_ms);
+            uint32_t ac_wait    = id(base_ac_wait_ms);
+            uint32_t mat_wait   = id(base_mat_wait_ms);
+            if (dehum_wait < 60000) dehum_wait = 60000;
+            if (hum_wait < 60000) hum_wait = 60000;
+            if (heat_wait < 60000) heat_wait = 60000;
+            if (ac_wait < 60000) ac_wait = 60000;
+            if (mat_wait < 30000) mat_wait = 30000;
             if (room_ok && rm_h >= a_rhi)
               dehum_wait = 60000;   // room air can't pull RH below ceiling
             if (room_ok && rm_t >= a_tgt + 1.0f)
@@ -3068,10 +3173,10 @@ script:
               if (!moist_src) hum_wait  = 60000;
               if (!warm_src)  heat_wait = 120000;
             }
-            // v2.4: stash the gated windows so the Fire Countdown
-            // sensors publish honest numbers (gates move tick-to-tick).
+            // stash gated windows for Fire Countdown sensors
             id(cur_dehum_wait) = dehum_wait; id(cur_hum_wait) = hum_wait;
             id(cur_heat_wait)  = heat_wait;  id(cur_ac_wait)  = ac_wait;
+            id(cur_mat_wait)   = mat_wait;
 
             // Too humid -> DEHUMIDIFIER (fans had their window, RH still high)
             if (room_live && id(dehumidifier_auto_enabled) && !isnan(a_rh)) {
@@ -3223,7 +3328,7 @@ script:
                   }
                 }
                 if (!rz_runaway) {
-                  if (track(rz_min < rz_lo, id(esc_cold_since)) > 60000 && !id(growmat_demand).state && mat_free) {
+                  if (track(rz_min < rz_lo, id(esc_cold_since)) > mat_wait && !id(growmat_demand).state && mat_free) {
                     id(growmat_demand).turn_on();
                     ESP_LOGI("ladder", "Root zone (coldest pot) %.1fC < %.1fC -> GROW MAT (closed-loop)", rz_min, rz_lo);
                   }
@@ -3243,7 +3348,7 @@ script:
                 // heat into the slow root mass. The mat's plate thermostat
                 // still bounds its surface. (Stopgap — the real fix is keeping
                 // the probe alive; see the watchdog heartbeat + ESP-NOW.)
-                if (track(cl_t < c_tt, id(esc_cold_since)) > 60000 && !id(growmat_demand).state && mat_free) {
+                if (track(cl_t < c_tt, id(esc_cold_since)) > mat_wait && !id(growmat_demand).state && mat_free) {
                   id(growmat_demand).turn_on();
                   ESP_LOGW("ladder", "Clone AIR %.1fC < %.1fC -> GROW MAT (PROBES BLIND - air proxy, NOT a root reading)", cl_t, c_tt);
                 }

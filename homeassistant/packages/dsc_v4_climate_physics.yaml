@@ -141,6 +141,26 @@ input_number:
     icon: mdi:air-humidifier
     mode: box
 
+  dsc_learn_mat_expected_c_min:
+    name: "DSC Spec · Mat Expected Rise"
+    min: 0.01
+    max: 0.5
+    step: 0.01
+    initial: 0.05
+    unit_of_measurement: "°C/min"
+    icon: mdi:heating-coil
+    mode: box
+
+  dsc_learn_recirc_expected_ah_min:
+    name: "DSC Spec · Recirc Expected AH Rise"
+    min: 0.01
+    max: 0.5
+    step: 0.01
+    initial: 0.05
+    unit_of_measurement: "g/m³/min"
+    icon: mdi:fan
+    mode: box
+
   dsc_plant_transpiration_g_hr:
     name: "DSC Spec · Plant Transpiration"
     min: 0

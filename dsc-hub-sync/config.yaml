@@ -1,5 +1,5 @@
 name: DSC-HUB Sync
-version: "5.0.0"
+version: "5.1.0"
 slug: dsc_hub_sync
 description: >
   Pulls weddas/DSC-HUB from GitHub and syncs packages, automations,
@@ -24,7 +24,7 @@ options:
   repository: "https://github.com/weddas/DSC-HUB.git"
   ref: "master"
   poll_seconds: 60
-  sync_esphome: false
+  sync_esphome: true
   sync_www: true
   reload_after_sync: true
 schema:
