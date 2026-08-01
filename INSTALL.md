@@ -14,23 +14,35 @@ repo root; destinations are under Home Assistant `/config/`.
 
 | Repo source | Destination |
 |---|---|
-| `homeassistant/packages/dsc_v4_*.yaml` (all 8 files) | `/config/packages/` |
-| `homeassistant/automations.yaml` | merge into `/config/automations.yaml` **or** set `automation: !include automations.yaml` and copy the file |
-| `homeassistant/dashboards/dsc-hub-v4-dashboard.yaml` | paste into a new Lovelace dashboard (URL path **`dsc-hub-v4`**) |
+| `homeassistant/packages/dsc_v4_*.yaml` (all `dsc_v4_*.yaml` files) | `/config/packages/` |
+| `homeassistant/dashboards/dsc-hub-v4-dashboard.yaml` | `/config/dashboards/dsc-hub-v4-dashboard.yaml` (YAML-mode Lovelace) |
 | `homeassistant/esphome/dsc-*.yaml` (all device stubs) | `/config/esphome/` |
 | `homeassistant/www/dsc-system-map-card.js` | `/config/www/dsc-system-map-card.js` |
 | `homeassistant/www/dsc-system-map.svg` | `/config/www/dsc-system-map.svg` |
 | `firmware/v4/secrets.yaml.template` | `/config/esphome/secrets.yaml` (fill in; never commit) |
 
-Also in `configuration.yaml`:
+Merge [`homeassistant/configuration.snippet.yaml`](homeassistant/configuration.snippet.yaml) into `configuration.yaml` (packages + YAML dashboard):
 
 ```yaml
 homeassistant:
   packages: !include_dir_named packages
+
+lovelace:
+  mode: storage
+  dashboards:
+    dsc-hub-v4:
+      mode: yaml
+      title: DSC-HUB
+      icon: mdi:sprout
+      show_in_sidebar: true
+      filename: dashboards/dsc-hub-v4-dashboard.yaml
 ```
 
 Filenames under `packages/` must use **underscores** — HA rejects hyphens in
 `!include_dir_named` package slugs.
+
+After the one-time copy (or first auto-sync), enable push deploy:
+[`scripts/HA-SYNC-BOOTSTRAP.md`](scripts/HA-SYNC-BOOTSTRAP.md).
 
 ---
 
@@ -43,7 +55,7 @@ Filenames under `packages/` must use **underscores** — HA rejects hyphens in
 
 Mobile push alerts for pot/tank package notifiers are **not** shipped in this
 alpha (they previously targeted a non-existent notify service). Climate /
-safety alerts still live in `automations.yaml` — edit notify targets there to
+safety alerts live in `dsc_v4_automations.yaml` — edit notify targets there to
 match your devices (e.g. `notify.mobile_app_…`).
 
 ---
@@ -56,38 +68,50 @@ Copy every file:
 |---|---|
 | `dsc_v4_core_helpers.yaml` | Hub link, fans, airflow, photoperiod, runtimes |
 | `dsc_v4_climate_physics.yaml` | Plant specs, ACH/AH/BTU/moisture sensors |
+| `dsc_v4_climate_learn.yaml` | Phase A EMA learning + ETA / headroom gauges |
 | `dsc_v4_light_helpers.yaml` | Lights-on today, dark-period, deviation |
 | `dsc_v4_tank.yaml` | Tank EC/pH/temp + Tuya warn sync automation |
 | `dsc_v4_pots_stats.yaml` | Daily max/min, 7d baselines, rates |
 | `dsc_v4_pots_correlation.yaml` | EC vs tank, uptake slope |
 | `dsc_v4_pots_alerts.yaml` | Per-pot alert binary sensors (no push notifier) |
 | `dsc_v4_alert_count.yaml` | `sensor.dsc_active_alert_count` for Home chip |
+| `dsc_v4_automations.yaml` | Demand followers, alerts, scribe, safe-off |
 
 ---
 
 ## 2. Automations
 
-Copy/merge [`homeassistant/automations.yaml`](homeassistant/automations.yaml).
+Included via package [`dsc_v4_automations.yaml`](homeassistant/packages/dsc_v4_automations.yaml)
+(copied with the other packages above). Do **not** also merge the deprecated
+repo-root stub `homeassistant/automations.yaml` — it would duplicate ids.
 
 Includes: Sonoff demand followers, clone dark-period + root-zone alerts,
 grow-log scribe, hub-offline safe-off, emergency/climate/aux fault alerts.
+Learning EMA samples ship in `dsc_v4_climate_learn.yaml`.
 
 ---
 
 ## 3. Dashboard
 
-1. Settings → Dashboards → **Add dashboard**
-2. URL path must be exactly: **`dsc-hub-v4`**
-3. Edit → ⋮ → Raw configuration editor → paste
-   [`homeassistant/dashboards/dsc-hub-v4-dashboard.yaml`](homeassistant/dashboards/dsc-hub-v4-dashboard.yaml)
+Prefer **YAML mode** (required for git-push sync):
+
+1. Add the `lovelace:` block from the snippet above to `configuration.yaml`
+2. Copy [`homeassistant/dashboards/dsc-hub-v4-dashboard.yaml`](homeassistant/dashboards/dsc-hub-v4-dashboard.yaml) → `/config/dashboards/`
+3. Restart HA once; sidebar should show **DSC-HUB** at URL **`dsc-hub-v4`**
+4. If an older **UI-managed** dashboard already owns `dsc-hub-v4`, remove or rename it first
 
 ### SYSTEM MAP card (Home view)
+
+**Preferred:** install via HACS — [`scripts/HACS-FRONTEND.md`](scripts/HACS-FRONTEND.md)
+(custom repo `https://github.com/weddas/DSC-HUB`, category **Dashboard**).
+
+**Manual fallback:**
 
 1. Copy the two `www/` files into `/config/www/` (see map above)
 2. Settings → Dashboards → ⋮ → Resources → Add resource  
    - URL: `/local/dsc-system-map-card.js`  
    - Type: **JavaScript**
-3. Hard-refresh the browser after the dashboard paste
+3. Hard-refresh the browser after the first dashboard load
 
 ---
 
@@ -138,11 +162,13 @@ Install pulls the tagged bodies; `master` is fine once you are tracking tip.
 ## Day-to-day after install
 
 ```
-Cursor edit → commit/push → ESPHome Validate/Install (changed devices only)
+Cursor edit → commit/push → HA sync Action (packages / dashboard / www)
+                         → ESPHome Validate/Install (changed devices only)
 ```
 
-Dashboard, packages, and automations are **not** OTA — re-copy when they change
-(see [`RELEASE.md`](RELEASE.md) · Beyond OTA).
+With the Unraid self-hosted runner configured ([`scripts/HA-SYNC-BOOTSTRAP.md`](scripts/HA-SYNC-BOOTSTRAP.md)),
+pushes to `master` that touch `homeassistant/**` auto-deploy helpers, automations,
+dashboard, and SYSTEM MAP assets. Firmware Install stays manual.
 
 Hub + panel: flash **together** when `espnow_cmd_tag`, MAC, or wire packets change.
 

@@ -27,9 +27,10 @@
 #   * Dashboard URL must be **dsc-hub-v4** (navigation_path links)
 #
 #  REQUIRES packages:
-#     homeassistant/packages/dsc_v4_core_helpers.yaml
-#     homeassistant/packages/dsc_v4_light_helpers.yaml
-#     homeassistant/automations.yaml
+#     homeassistant/packages/dsc_v4_*.yaml (incl. dsc_v4_automations.yaml)
+#  Deploy: YAML-mode dashboard file under /config/dashboards/ (see
+#     homeassistant/configuration.snippet.yaml) — auto-sync on push when
+#     the Unraid runner is configured (scripts/HA-SYNC-BOOTSTRAP.md).
 #  HACS: mushroom · apexcharts · power-flow-card-plus · sankey-chart
 #        plotly-graph · mini-graph-card · gauge-card-pro
 #        modern-circular-gauge · logbook-card · auto-entities
@@ -1556,11 +1557,63 @@ views:
                   - entity: sensor.dsc_ach_2x4
                   - entity: sensor.dsc_heat_balance_btu
                   - entity: sensor.dsc_moisture_net_rate
+              - type: entities
+                title: ETA / headroom (learned when trusted)
+                entities:
+                  - entity: sensor.dsc_minutes_to_temp_target
+                    name: Minutes to temp target
+                  - entity: sensor.dsc_minutes_to_rh_target
+                    name: Minutes to RH target
+                  - entity: sensor.dsc_heat_balance_btu_learned
+                    name: Heat balance (learned)
+                  - entity: sensor.dsc_moisture_net_rate_learned
+                    name: Moisture net (learned)
+              - type: custom:mushroom-template-card
+                entity: sensor.dsc_learn_status
+                primary: Response-rate learning
+                secondary: >-
+                  {{ states(entity)|upper }} —
+                  trusted: {{ state_attr(entity,'trusted_levers') or 'none' }}
+                icon: mdi:brain
+                icon_color: >-
+                  {% if is_state(entity,'ready') %}green
+                  {% elif is_state(entity,'partial') %}teal
+                  {% elif is_state(entity,'warming') %}amber
+                  {% elif is_state(entity,'gated') %}orange
+                  {% else %}grey{% endif %}
+              - type: entities
+                title: Learned lever efficiency (1.0 = nameplate)
+                entities:
+                  - entity: input_boolean.dsc_climate_learn_enabled
+                    name: Learning enabled
+                  - entity: input_number.dsc_learn_eff_dehum
+                    name: Dehum ×
+                  - entity: input_number.dsc_learn_eff_hum
+                    name: Hum ×
+                  - entity: input_number.dsc_learn_eff_heater
+                    name: Heater ×
+                  - entity: input_number.dsc_learn_eff_mat
+                    name: Mat ×
+                  - entity: input_number.dsc_learn_eff_vent_cool
+                    name: Vent cool ×
+                  - entity: input_number.dsc_learn_eff_vent_dry
+                    name: Vent dry ×
+                  - entity: input_number.dsc_learn_eff_ac
+                    name: AC ×
+                  - entity: input_number.dsc_learn_min_samples
+                    name: Min samples to trust
+                  - entity: input_number.dsc_learn_alpha
+                    name: EMA α
               - type: markdown
                 content: >-
                   *Defaults are placeholders — replace with anemometer / nameplate
                   values. Spec checks flag intake CFM > exhaust CFM, AC wired
                   with 0 BTU/h, and zeroed appliance rates.*
+
+                  *Learning (Phase A) observes real ΔT/ΔAH while levers run and
+                  scales ETA / headroom only. It never writes ladder waits,
+                  failsafe, or Sonoff followers. Reset via Developer Tools →
+                  Events → `dsc_climate_learn_reset`.*
           - type: custom:expander-card
             title: 🌱 Grow mat — closed-loop root-zone band
             expanded: false

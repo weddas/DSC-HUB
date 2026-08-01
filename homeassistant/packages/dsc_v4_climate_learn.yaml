@@ -1,0 +1,874 @@
+# ==================================================================
+#  DSC-HUB v4 · CLIMATE LEARN (Phase A — observe + predict only)
+#  ------------------------------------------------------------------
+#  Bounded EMA response-rate observer. Samples ΔT / ΔAH while each
+#  lever is active, rejects outliers + emergency / takeover / faults,
+#  and stores lever-effectiveness coefficients.
+#
+#  Phase A: learned coeffs feed time-to-target / headroom gauges only.
+#  Does NOT write hub numbers, fan curves, failsafe, or followers.
+#  Phase B wait clamps are intentionally out of scope here.
+#
+#  Depends on: dsc_v4_climate_physics.yaml (AH / CFM / nameplates).
+# ==================================================================
+
+input_boolean:
+  dsc_climate_learn_enabled:
+    name: "DSC Learn · Enabled"
+    icon: mdi:brain
+    initial: true
+
+input_number:
+  # EMA smoothing (α). Lower = slower adaptation.
+  dsc_learn_alpha:
+    name: "DSC Learn · EMA Alpha"
+    min: 0.05
+    max: 0.4
+    step: 0.01
+    initial: 0.1
+    mode: box
+    icon: mdi:chart-bell-curve
+
+  dsc_learn_min_samples:
+    name: "DSC Learn · Min Samples for Trust"
+    min: 3
+    max: 40
+    step: 1
+    initial: 5
+    mode: box
+    icon: mdi:counter
+
+  # ----- Learned effectiveness (1.0 = nameplate / open-loop) -----
+  dsc_learn_eff_dehum:
+    name: "DSC Learn · Dehum Efficiency"
+    min: 0.1
+    max: 2.0
+    step: 0.01
+    initial: 1.0
+    mode: box
+    unit_of_measurement: "×"
+    icon: mdi:water-minus
+
+  dsc_learn_eff_hum:
+    name: "DSC Learn · Hum Efficiency"
+    min: 0.1
+    max: 2.0
+    step: 0.01
+    initial: 1.0
+    mode: box
+    unit_of_measurement: "×"
+    icon: mdi:water-plus
+
+  dsc_learn_eff_heater:
+    name: "DSC Learn · Heater Efficiency"
+    min: 0.1
+    max: 2.0
+    step: 0.01
+    initial: 1.0
+    mode: box
+    unit_of_measurement: "×"
+    icon: mdi:radiator
+
+  dsc_learn_eff_mat:
+    name: "DSC Learn · Mat Efficiency"
+    min: 0.1
+    max: 2.0
+    step: 0.01
+    initial: 1.0
+    mode: box
+    unit_of_measurement: "×"
+    icon: mdi:heating-coil
+
+  dsc_learn_eff_vent_cool:
+    name: "DSC Learn · Vent Cool Efficiency"
+    min: 0.1
+    max: 2.0
+    step: 0.01
+    initial: 1.0
+    mode: box
+    unit_of_measurement: "×"
+    icon: mdi:fan-chevron-up
+
+  dsc_learn_eff_vent_dry:
+    name: "DSC Learn · Vent Dry Efficiency"
+    min: 0.1
+    max: 2.0
+    step: 0.01
+    initial: 1.0
+    mode: box
+    unit_of_measurement: "×"
+    icon: mdi:weather-windy
+
+  dsc_learn_eff_recirc:
+    name: "DSC Learn · Recirc Mix Efficiency"
+    min: 0.1
+    max: 2.0
+    step: 0.01
+    initial: 1.0
+    mode: box
+    unit_of_measurement: "×"
+    icon: mdi:fan
+
+  dsc_learn_eff_ac:
+    name: "DSC Learn · AC Efficiency"
+    min: 0.1
+    max: 2.0
+    step: 0.01
+    initial: 1.0
+    mode: box
+    unit_of_measurement: "×"
+    icon: mdi:snowflake
+
+  # ----- Sample counters (confidence) -----
+  dsc_learn_samples_dehum:
+    name: "DSC Learn · Dehum Samples"
+    min: 0
+    max: 10000
+    step: 1
+    initial: 0
+    mode: box
+    icon: mdi:counter
+
+  dsc_learn_samples_hum:
+    name: "DSC Learn · Hum Samples"
+    min: 0
+    max: 10000
+    step: 1
+    initial: 0
+    mode: box
+    icon: mdi:counter
+
+  dsc_learn_samples_heater:
+    name: "DSC Learn · Heater Samples"
+    min: 0
+    max: 10000
+    step: 1
+    initial: 0
+    mode: box
+    icon: mdi:counter
+
+  dsc_learn_samples_mat:
+    name: "DSC Learn · Mat Samples"
+    min: 0
+    max: 10000
+    step: 1
+    initial: 0
+    mode: box
+    icon: mdi:counter
+
+  dsc_learn_samples_vent_cool:
+    name: "DSC Learn · Vent Cool Samples"
+    min: 0
+    max: 10000
+    step: 1
+    initial: 0
+    mode: box
+    icon: mdi:counter
+
+  dsc_learn_samples_vent_dry:
+    name: "DSC Learn · Vent Dry Samples"
+    min: 0
+    max: 10000
+    step: 1
+    initial: 0
+    mode: box
+    icon: mdi:counter
+
+  dsc_learn_samples_recirc:
+    name: "DSC Learn · Recirc Samples"
+    min: 0
+    max: 10000
+    step: 1
+    initial: 0
+    mode: box
+    icon: mdi:counter
+
+  dsc_learn_samples_ac:
+    name: "DSC Learn · AC Samples"
+    min: 0
+    max: 10000
+    step: 1
+    initial: 0
+    mode: box
+    icon: mdi:counter
+
+  # ----- Sample snapshots (internal) -----
+  dsc_learn_snap_tent_t:
+    name: "DSC Learn · Snap Tent °C"
+    min: -20
+    max: 60
+    step: 0.01
+    initial: 0
+    mode: box
+    unit_of_measurement: "°C"
+    icon: mdi:thermometer
+
+  dsc_learn_snap_tent_ah:
+    name: "DSC Learn · Snap Tent AH"
+    min: 0
+    max: 50
+    step: 0.01
+    initial: 0
+    mode: box
+    unit_of_measurement: "g/m³"
+    icon: mdi:water-percent
+
+  dsc_learn_snap_room_ah:
+    name: "DSC Learn · Snap Room AH"
+    min: 0
+    max: 50
+    step: 0.01
+    initial: 0
+    mode: box
+    unit_of_measurement: "g/m³"
+    icon: mdi:water-percent
+
+  dsc_learn_snap_root_t:
+    name: "DSC Learn · Snap Root °C"
+    min: -20
+    max: 60
+    step: 0.01
+    initial: 0
+    mode: box
+    unit_of_measurement: "°C"
+    icon: mdi:grass
+
+  dsc_learn_snap_epoch:
+    name: "DSC Learn · Snap Epoch"
+    min: 0
+    max: 4102444800
+    step: 1
+    initial: 0
+    mode: box
+    icon: mdi:clock-outline
+
+template:
+  - binary_sensor:
+      - name: "DSC Learn · Gate Open"
+        unique_id: dsc_learn_gate_open
+        icon: mdi:gate-open
+        state: >-
+          {{ is_state('input_boolean.dsc_climate_learn_enabled', 'on')
+             and is_state('binary_sensor.dsc_hub_emergency_failsafe', 'off')
+             and is_state('switch.dsc_hub_manual_takeover', 'off')
+             and is_state('binary_sensor.dsc_hub_climate_sensor_fault', 'off')
+             and is_state('binary_sensor.dsc_hub_ha_link_status', 'on') }}
+
+  - sensor:
+      - name: "DSC Learn · Status"
+        unique_id: dsc_learn_status
+        icon: mdi:brain
+        state: >-
+          {% if not is_state('input_boolean.dsc_climate_learn_enabled','on') %}disabled
+          {% elif not is_state('binary_sensor.dsc_learn_gate_open','on') %}gated
+          {% else %}
+            {% set need = states('input_number.dsc_learn_min_samples')|float(5) %}
+            {% set trusted = [
+              states('input_number.dsc_learn_samples_dehum')|float(0) >= need,
+              states('input_number.dsc_learn_samples_hum')|float(0) >= need,
+              states('input_number.dsc_learn_samples_heater')|float(0) >= need,
+              states('input_number.dsc_learn_samples_mat')|float(0) >= need,
+              states('input_number.dsc_learn_samples_vent_cool')|float(0) >= need,
+              states('input_number.dsc_learn_samples_vent_dry')|float(0) >= need,
+              states('input_number.dsc_learn_samples_recirc')|float(0) >= need,
+              states('input_number.dsc_learn_samples_ac')|float(0) >= need
+            ] | select | list | count %}
+            {% if trusted == 0 %}warming
+            {% elif trusted < 3 %}partial
+            {% else %}ready{% endif %}
+          {% endif %}
+        attributes:
+          trusted_levers: >-
+            {% set need = states('input_number.dsc_learn_min_samples')|float(5) %}
+            {% set parts = [
+              'dehum' if states('input_number.dsc_learn_samples_dehum')|float(0) >= need else none,
+              'hum' if states('input_number.dsc_learn_samples_hum')|float(0) >= need else none,
+              'heater' if states('input_number.dsc_learn_samples_heater')|float(0) >= need else none,
+              'mat' if states('input_number.dsc_learn_samples_mat')|float(0) >= need else none,
+              'vent_cool' if states('input_number.dsc_learn_samples_vent_cool')|float(0) >= need else none,
+              'vent_dry' if states('input_number.dsc_learn_samples_vent_dry')|float(0) >= need else none,
+              'recirc' if states('input_number.dsc_learn_samples_recirc')|float(0) >= need else none,
+              'ac' if states('input_number.dsc_learn_samples_ac')|float(0) >= need else none
+            ] %}
+            {{ parts | reject('none') | list | join(', ') or 'none' }}
+
+      # Effective moisture removal using learned scales when trusted.
+      - name: "DSC Moisture Net Rate Learned"
+        unique_id: dsc_moisture_net_rate_learned
+        unit_of_measurement: "g/h"
+        state_class: measurement
+        icon: mdi:waves
+        state: >-
+          {% set need = states('input_number.dsc_learn_min_samples')|float(5) %}
+          {% set ed = states('input_number.dsc_learn_eff_dehum')|float(1)
+             if states('input_number.dsc_learn_samples_dehum')|float(0) >= need else 1 %}
+          {% set eh = states('input_number.dsc_learn_eff_hum')|float(1)
+             if states('input_number.dsc_learn_samples_hum')|float(0) >= need else 1 %}
+          {% set ev = states('input_number.dsc_learn_eff_vent_dry')|float(1)
+             if states('input_number.dsc_learn_samples_vent_dry')|float(0) >= need else 1 %}
+          {% set dehum = states('sensor.dsc_dehum_removal_rate')|float(0) * ed %}
+          {% set vent = states('sensor.dsc_vent_moisture_removal')|float(0) * ev %}
+          {% set hum = states('sensor.dsc_hum_addition_rate')|float(0) * eh %}
+          {% set plant = states('input_number.dsc_plant_transpiration_g_hr')|float(0) %}
+          {{ (dehum + vent - hum - plant) | round(1) }}
+        attributes:
+          meaning: >-
+            Positive = drying; uses learned eff when sample count ≥ min.
+
+      - name: "DSC Heat Balance BTU Learned"
+        unique_id: dsc_heat_balance_btu_learned
+        unit_of_measurement: "BTU/h"
+        state_class: measurement
+        icon: mdi:scale-balance
+        state: >-
+          {% set need = states('input_number.dsc_learn_min_samples')|float(5) %}
+          {% set eh = states('input_number.dsc_learn_eff_heater')|float(1)
+             if states('input_number.dsc_learn_samples_heater')|float(0) >= need else 1 %}
+          {% set ea = states('input_number.dsc_learn_eff_ac')|float(1)
+             if states('input_number.dsc_learn_samples_ac')|float(0) >= need else 1 %}
+          {% set ev = states('input_number.dsc_learn_eff_vent_cool')|float(1)
+             if states('input_number.dsc_learn_samples_vent_cool')|float(0) >= need else 1 %}
+          {% set dump = states('sensor.dsc_vent_heat_dump_btu')|float(0) * ev %}
+          {% set gain_raw = states('sensor.dsc_heat_gain_btu')|float(0) %}
+          {% set heater_share = (states('input_number.dsc_heater_w')|float(0) * 3.412)
+             if is_state('switch.dsc_hub_heater_demand','on') else 0 %}
+          {% set gain = gain_raw - heater_share + (heater_share * eh) %}
+          {% set ac = (states('input_number.dsc_ac_btu_hr')|float(0) * ea)
+             if is_state('switch.dsc_hub_ac_demand','on')
+                and is_state('input_boolean.dsc_ac_actuator_wired','on') else 0 %}
+          {{ (dump + ac - gain) | round(0) }}
+        attributes:
+          meaning: >-
+            Positive = net cooling; heater/AC/vent scaled by learned eff when trusted.
+
+      # Time-to-target: temp (4x8 air mass, learned heat balance).
+      - name: "DSC Minutes to Temp Target"
+        unique_id: dsc_minutes_to_temp_target
+        unit_of_measurement: "min"
+        state_class: measurement
+        icon: mdi:timer-sand
+        state: >-
+          {% set t = states('sensor.dsc_hub_tent_temperature')|float(none) %}
+          {% set tgt = states('number.dsc_hub_target_temp')|float(none) %}
+          {% set bal = states('sensor.dsc_heat_balance_btu_learned')|float(none) %}
+          {% set vol = states('input_number.dsc_vol_4x8_m3')|float(0) %}
+          {% if t is none or tgt is none or bal is none or vol <= 0 %}unknown
+          {% else %}
+            {% set dT = tgt - t %}
+            {# BTU needed for 1°C ≈ vol_m³ × 1.143 #}
+            {% set btu_per_c = vol * 1.143 %}
+            {% set need_btu = dT * btu_per_c %}
+            {% if dT > 0.15 %}
+              {# need heat: heat balance positive = cooling, so heating power ≈ -bal when heater on #}
+              {% set heat_pwr = -bal if bal < -50 else none %}
+              {% if heat_pwr is none or heat_pwr <= 0 %}999
+              {% else %}{{ ([need_btu / heat_pwr * 60, 999]|min)|round(0) }}{% endif %}
+            {% elif dT < -0.15 %}
+              {% set cool_pwr = bal if bal > 50 else none %}
+              {% if cool_pwr is none or cool_pwr <= 0 %}999
+              {% else %}{{ ([(-need_btu) / cool_pwr * 60, 999]|min)|round(0) }}{% endif %}
+            {% else %}0{% endif %}
+          {% endif %}
+        availability: >-
+          {{ states('sensor.dsc_hub_tent_temperature') not in ['unknown','unavailable']
+             and has_value('number.dsc_hub_target_temp') }}
+        attributes:
+          meaning: >-
+            0 = at target (±0.15°C). 999 = wrong-direction / no capacity.
+            Uses learned heat balance when coeffs are trusted.
+
+      # Time-to-target: RH via AH inventory vs learned moisture net rate.
+      - name: "DSC Minutes to RH Target"
+        unique_id: dsc_minutes_to_rh_target
+        unit_of_measurement: "min"
+        state_class: measurement
+        icon: mdi:timer-sand
+        state: >-
+          {% set t = states('sensor.dsc_hub_tent_temperature')|float(none) %}
+          {% set rh = states('sensor.dsc_hub_tent_humidity')|float(none) %}
+          {% set lo = states('number.dsc_hub_rh_target_min')|float(50) %}
+          {% set hi = states('number.dsc_hub_rh_target_max')|float(70) %}
+          {% set ah = states('sensor.dsc_ah_tent')|float(none) %}
+          {% set net = states('sensor.dsc_moisture_net_rate_learned')|float(none) %}
+          {% set vol = states('input_number.dsc_vol_4x8_m3')|float(0) %}
+          {% if t is none or rh is none or ah is none or net is none or vol <= 0 %}unknown
+          {% else %}
+            {% set mid = (lo + hi) / 2 %}
+            {% set es = 6.112 * (2.718281828 ** ((17.67 * t) / (t + 243.5))) %}
+            {% set ah_tgt = (mid / 100) * es * 2.1674 / (273.15 + t) %}
+            {% set d_ah = ah - ah_tgt %}
+            {% set inv_g = d_ah * vol %}
+            {% if rh >= lo and rh <= hi %}0
+            {% elif rh > hi %}
+              {% if net <= 5 %}999
+              {% else %}{{ ([inv_g / net * 60, 999]|min)|round(0) }}{% endif %}
+            {% else %}
+              {% if net >= -5 %}999
+              {% else %}{{ ([(-inv_g) / (-net) * 60, 999]|min)|round(0) }}{% endif %}
+            {% endif %}
+          {% endif %}
+        availability: >-
+          {{ states('sensor.dsc_ah_tent') not in ['unknown','unavailable']
+             and has_value('number.dsc_hub_rh_target_min') }}
+        attributes:
+          meaning: >-
+            0 = RH in band. 999 = moisture moving wrong way / insufficient rate.
+
+      - name: "DSC Heat Headroom"
+        unique_id: dsc_heat_headroom
+        unit_of_measurement: "BTU/h"
+        state_class: measurement
+        icon: mdi:thermometer-chevron-down
+        state: "{{ states('sensor.dsc_heat_balance_btu_learned') }}"
+        attributes:
+          meaning: >-
+            Same as learned heat balance — positive headroom cools toward target.
+
+      - name: "DSC Moisture Headroom"
+        unique_id: dsc_moisture_headroom
+        unit_of_measurement: "g/h"
+        state_class: measurement
+        icon: mdi:water-check
+        state: "{{ states('sensor.dsc_moisture_net_rate_learned') }}"
+        attributes:
+          meaning: >-
+            Same as learned moisture net — positive headroom dries toward RH band.
+
+automation:
+  # Sample every 5 minutes while the learn gate is open.
+  - id: dsc_climate_learn_ema_sample
+    alias: "DSC Climate Learn — EMA lever sample"
+    mode: single
+    trigger:
+      - platform: time_pattern
+        minutes: "/5"
+    condition:
+      - condition: state
+        entity_id: binary_sensor.dsc_learn_gate_open
+        state: "on"
+      - condition: template
+        value_template: >-
+          {{ states('sensor.dsc_ah_tent') not in ['unknown','unavailable']
+             and states('sensor.dsc_hub_tent_temperature') not in ['unknown','unavailable'] }}
+    action:
+      - variables:
+          alpha: "{{ states('input_number.dsc_learn_alpha')|float(0.1) }}"
+          now_ep: "{{ as_timestamp(now())|int }}"
+          snap_ep: "{{ states('input_number.dsc_learn_snap_epoch')|float(0)|int }}"
+          dt_min: >-
+            {% set s = states('input_number.dsc_learn_snap_epoch')|float(0) %}
+            {% set n = as_timestamp(now()) %}
+            {{ ((n - s) / 60) if s > 0 else 0 }}
+          tent_t: "{{ states('sensor.dsc_hub_tent_temperature')|float(0) }}"
+          tent_ah: "{{ states('sensor.dsc_ah_tent')|float(0) }}"
+          room_ah: "{{ states('sensor.dsc_ah_room')|float(0) }}"
+          snap_t: "{{ states('input_number.dsc_learn_snap_tent_t')|float(0) }}"
+          snap_ah: "{{ states('input_number.dsc_learn_snap_tent_ah')|float(0) }}"
+          snap_rah: "{{ states('input_number.dsc_learn_snap_room_ah')|float(0) }}"
+          dT_per_min: >-
+            {% set dt = states('input_number.dsc_learn_snap_epoch')|float(0) %}
+            {% set mins = ((as_timestamp(now()) - dt) / 60) if dt > 0 else 0 %}
+            {% if mins < 3 or mins > 12 %}0
+            {% else %}
+              {{ ((states('sensor.dsc_hub_tent_temperature')|float(0)
+                  - states('input_number.dsc_learn_snap_tent_t')|float(0)) / mins) }}
+            {% endif %}
+          dAH_per_min: >-
+            {% set dt = states('input_number.dsc_learn_snap_epoch')|float(0) %}
+            {% set mins = ((as_timestamp(now()) - dt) / 60) if dt > 0 else 0 %}
+            {% if mins < 3 or mins > 12 %}0
+            {% else %}
+              {{ ((states('sensor.dsc_ah_tent')|float(0)
+                  - states('input_number.dsc_learn_snap_tent_ah')|float(0)) / mins) }}
+            {% endif %}
+          vol: "{{ states('input_number.dsc_vol_4x8_m3')|float(2.5) }}"
+          valid_window: >-
+            {% set dt = states('input_number.dsc_learn_snap_epoch')|float(0) %}
+            {% set mins = ((as_timestamp(now()) - dt) / 60) if dt > 0 else 0 %}
+            {{ mins >= 3 and mins <= 12 }}
+
+      # --- Dehumidifier: observed drying vs nameplate ---
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: >-
+                  {{ valid_window|bool
+                     and is_state('switch.dsc_hub_dehumidifier_demand','on')
+                     and (dAH_per_min|float(0)) < -0.01
+                     and (dAH_per_min|float(0)) > -2.0 }}
+            sequence:
+              - variables:
+                  nameplate_g_h: "{{ (states('input_number.dsc_dehum_l_day')|float(20) / 24) * 1000 }}"
+                  expected_dAH_min: >-
+                    {{ -((states('input_number.dsc_dehum_l_day')|float(20) / 24) * 1000)
+                       / states('input_number.dsc_vol_4x8_m3')|float(2.5) / 60 }}
+                  ratio: >-
+                    {% set exp = -((states('input_number.dsc_dehum_l_day')|float(20) / 24) * 1000)
+                       / states('input_number.dsc_vol_4x8_m3')|float(2.5) / 60 %}
+                    {% set obs = dAH_per_min|float(0) %}
+                    {% if exp >= -0.0001 %}1.0
+                    {% else %}{{ ([0.1, (obs / exp), 2.0]|sort)[1] }}{% endif %}
+                  new_eff: >-
+                    {{ (alpha|float(0.1) * (ratio|float(1))
+                        + (1 - alpha|float(0.1))
+                          * states('input_number.dsc_learn_eff_dehum')|float(1)) | round(3) }}
+              - service: input_number.set_value
+                target: { entity_id: input_number.dsc_learn_eff_dehum }
+                data:
+                  value: "{{ new_eff }}"
+              - service: input_number.set_value
+                target: { entity_id: input_number.dsc_learn_samples_dehum }
+                data:
+                  value: >-
+                    {{ [states('input_number.dsc_learn_samples_dehum')|float(0) + 1, 10000]|min }}
+
+      # --- Humidifier: observed AH rise vs nameplate ---
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: >-
+                  {{ valid_window|bool
+                     and is_state('switch.dsc_hub_humidifier_demand','on')
+                     and (dAH_per_min|float(0)) > 0.01
+                     and (dAH_per_min|float(0)) < 2.0 }}
+            sequence:
+              - variables:
+                  ratio: >-
+                    {% set exp = (states('input_number.dsc_hum_ml_hr')|float(300)
+                       / states('input_number.dsc_vol_4x8_m3')|float(2.5) / 60) %}
+                    {% set obs = dAH_per_min|float(0) %}
+                    {% if exp <= 0.0001 %}1.0
+                    {% else %}{{ ([0.1, (obs / exp), 2.0]|sort)[1] }}{% endif %}
+                  new_eff: >-
+                    {{ (alpha|float(0.1) * (ratio|float(1))
+                        + (1 - alpha|float(0.1))
+                          * states('input_number.dsc_learn_eff_hum')|float(1)) | round(3) }}
+              - service: input_number.set_value
+                target: { entity_id: input_number.dsc_learn_eff_hum }
+                data:
+                  value: "{{ new_eff }}"
+              - service: input_number.set_value
+                target: { entity_id: input_number.dsc_learn_samples_hum }
+                data:
+                  value: >-
+                    {{ [states('input_number.dsc_learn_samples_hum')|float(0) + 1, 10000]|min }}
+
+      # --- Heater: observed ΔT vs expected from watts ---
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: >-
+                  {{ valid_window|bool
+                     and is_state('switch.dsc_hub_heater_demand','on')
+                     and (dT_per_min|float(0)) > 0.005
+                     and (dT_per_min|float(0)) < 1.5 }}
+            sequence:
+              - variables:
+                  ratio: >-
+                    {% set btu = states('input_number.dsc_heater_w')|float(750) * 3.412 %}
+                    {% set exp_c_h = btu / (states('input_number.dsc_vol_4x8_m3')|float(2.5) * 1.143) %}
+                    {% set exp = exp_c_h / 60 %}
+                    {% set obs = dT_per_min|float(0) %}
+                    {% if exp <= 0.0001 %}1.0
+                    {% else %}{{ ([0.1, (obs / exp), 2.0]|sort)[1] }}{% endif %}
+                  new_eff: >-
+                    {{ (alpha|float(0.1) * (ratio|float(1))
+                        + (1 - alpha|float(0.1))
+                          * states('input_number.dsc_learn_eff_heater')|float(1)) | round(3) }}
+              - service: input_number.set_value
+                target: { entity_id: input_number.dsc_learn_eff_heater }
+                data:
+                  value: "{{ new_eff }}"
+              - service: input_number.set_value
+                target: { entity_id: input_number.dsc_learn_samples_heater }
+                data:
+                  value: >-
+                    {{ [states('input_number.dsc_learn_samples_heater')|float(0) + 1, 10000]|min }}
+
+      # --- Grow mat: root-zone ΔT (coldest plausible pot) ---
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: >-
+                  {% set ns = namespace(vals=[]) %}
+                  {% for e in ['sensor.dsc_pot1_soil_temperature','sensor.dsc_pot2_soil_temperature',
+                               'sensor.dsc_pot3_soil_temperature','sensor.dsc_pot4_soil_temperature'] %}
+                    {% if has_value(e) %}
+                      {% set v = states(e)|float(0) %}
+                      {% if 5 <= v <= 45 %}{% set ns.vals = ns.vals + [v] %}{% endif %}
+                    {% endif %}
+                  {% endfor %}
+                  {% set rz = (ns.vals | min) if ns.vals else none %}
+                  {% set dt = states('input_number.dsc_learn_snap_epoch')|float(0) %}
+                  {% set mins = ((as_timestamp(now()) - dt) / 60) if dt > 0 else 0 %}
+                  {% set dR = ((rz - states('input_number.dsc_learn_snap_root_t')|float(0)) / mins)
+                     if (rz is not none and mins >= 3 and mins <= 12) else 0 %}
+                  {{ is_state('switch.dsc_hub_grow_mat_demand','on')
+                     and is_state('binary_sensor.dsc_hub_root_zone_sensor_fault','off')
+                     and rz is not none
+                     and dR > 0.002 and dR < 1.0
+                     and mins >= 3 and mins <= 12 }}
+            sequence:
+              - variables:
+                  ratio: >-
+                    {% set ns = namespace(vals=[]) %}
+                    {% for e in ['sensor.dsc_pot1_soil_temperature','sensor.dsc_pot2_soil_temperature',
+                                 'sensor.dsc_pot3_soil_temperature','sensor.dsc_pot4_soil_temperature'] %}
+                      {% if has_value(e) %}
+                        {% set v = states(e)|float(0) %}
+                        {% if 5 <= v <= 45 %}{% set ns.vals = ns.vals + [v] %}{% endif %}
+                      {% endif %}
+                    {% endfor %}
+                    {% set rz = ns.vals | min %}
+                    {% set dt = states('input_number.dsc_learn_snap_epoch')|float(0) %}
+                    {% set mins = (as_timestamp(now()) - dt) / 60 %}
+                    {% set dR = (rz - states('input_number.dsc_learn_snap_root_t')|float(0)) / mins %}
+                    {# Expected ~0.05 °C/min soft mat rise — ratio vs that baseline #}
+                    {% set exp = 0.05 %}
+                    {{ ([0.1, (dR / exp), 2.0]|sort)[1] }}
+                  new_eff: >-
+                    {{ (alpha|float(0.1) * (ratio|float(1))
+                        + (1 - alpha|float(0.1))
+                          * states('input_number.dsc_learn_eff_mat')|float(1)) | round(3) }}
+              - service: input_number.set_value
+                target: { entity_id: input_number.dsc_learn_eff_mat }
+                data:
+                  value: "{{ new_eff }}"
+              - service: input_number.set_value
+                target: { entity_id: input_number.dsc_learn_samples_mat }
+                data:
+                  value: >-
+                    {{ [states('input_number.dsc_learn_samples_mat')|float(0) + 1, 10000]|min }}
+
+      # --- OUT vent cool: ΔT vs open-loop 1.08·CFM·ΔT envelope ---
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: >-
+                  {{ valid_window|bool
+                     and states('sensor.dsc_fan_exhaust_outside_pct')|float(0) >= 20
+                     and (dT_per_min|float(0)) < -0.005
+                     and (dT_per_min|float(0)) > -1.5 }}
+            sequence:
+              - variables:
+                  ratio: >-
+                    {% set dump = states('sensor.dsc_vent_heat_dump_btu')|float(0) %}
+                    {% set exp_c_h = dump / (states('input_number.dsc_vol_4x8_m3')|float(2.5) * 1.143)
+                       if dump > 50 else 0 %}
+                    {% set exp = exp_c_h / 60 %}
+                    {% set obs = -(dT_per_min|float(0)) %}
+                    {% if exp <= 0.0001 %}1.0
+                    {% else %}{{ ([0.1, (obs / exp), 2.0]|sort)[1] }}{% endif %}
+                  new_eff: >-
+                    {{ (alpha|float(0.1) * (ratio|float(1))
+                        + (1 - alpha|float(0.1))
+                          * states('input_number.dsc_learn_eff_vent_cool')|float(1)) | round(3) }}
+              - service: input_number.set_value
+                target: { entity_id: input_number.dsc_learn_eff_vent_cool }
+                data:
+                  value: "{{ new_eff }}"
+              - service: input_number.set_value
+                target: { entity_id: input_number.dsc_learn_samples_vent_cool }
+                data:
+                  value: >-
+                    {{ [states('input_number.dsc_learn_samples_vent_cool')|float(0) + 1, 10000]|min }}
+
+      # --- OUT vent dry ---
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: >-
+                  {{ valid_window|bool
+                     and states('sensor.dsc_fan_exhaust_outside_pct')|float(0) >= 20
+                     and (dAH_per_min|float(0)) < -0.01
+                     and (dAH_per_min|float(0)) > -2.0 }}
+            sequence:
+              - variables:
+                  ratio: >-
+                    {% set vent_g_h = states('sensor.dsc_vent_moisture_removal')|float(0) %}
+                    {% set exp = -(vent_g_h / states('input_number.dsc_vol_4x8_m3')|float(2.5) / 60)
+                       if vent_g_h > 5 else 0 %}
+                    {% set obs = dAH_per_min|float(0) %}
+                    {% if exp >= -0.0001 %}1.0
+                    {% else %}{{ ([0.1, (obs / exp), 2.0]|sort)[1] }}{% endif %}
+                  new_eff: >-
+                    {{ (alpha|float(0.1) * (ratio|float(1))
+                        + (1 - alpha|float(0.1))
+                          * states('input_number.dsc_learn_eff_vent_dry')|float(1)) | round(3) }}
+              - service: input_number.set_value
+                target: { entity_id: input_number.dsc_learn_eff_vent_dry }
+                data:
+                  value: "{{ new_eff }}"
+              - service: input_number.set_value
+                target: { entity_id: input_number.dsc_learn_samples_vent_dry }
+                data:
+                  value: >-
+                    {{ [states('input_number.dsc_learn_samples_vent_dry')|float(0) + 1, 10000]|min }}
+
+      # --- RECIRC mix: room AH rise while recirc active ---
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: >-
+                  {% set dt = states('input_number.dsc_learn_snap_epoch')|float(0) %}
+                  {% set mins = ((as_timestamp(now()) - dt) / 60) if dt > 0 else 0 %}
+                  {% set dRAH = ((states('sensor.dsc_ah_room')|float(0)
+                      - states('input_number.dsc_learn_snap_room_ah')|float(0)) / mins)
+                     if mins >= 3 and mins <= 12 else 0 %}
+                  {{ mins >= 3 and mins <= 12
+                     and states('sensor.dsc_fan_exhaust_room_pct')|float(0) >= 20
+                     and dRAH > 0.005 and dRAH < 1.5
+                     and states('sensor.dsc_ah_room') not in ['unknown','unavailable'] }}
+            sequence:
+              - variables:
+                  ratio: >-
+                    {% set dt = states('input_number.dsc_learn_snap_epoch')|float(0) %}
+                    {% set mins = (as_timestamp(now()) - dt) / 60 %}
+                    {% set dRAH = (states('sensor.dsc_ah_room')|float(0)
+                        - states('input_number.dsc_learn_snap_room_ah')|float(0)) / mins %}
+                    {% set exp = 0.05 %}
+                    {{ ([0.1, (dRAH / exp), 2.0]|sort)[1] }}
+                  new_eff: >-
+                    {{ (alpha|float(0.1) * (ratio|float(1))
+                        + (1 - alpha|float(0.1))
+                          * states('input_number.dsc_learn_eff_recirc')|float(1)) | round(3) }}
+              - service: input_number.set_value
+                target: { entity_id: input_number.dsc_learn_eff_recirc }
+                data:
+                  value: "{{ new_eff }}"
+              - service: input_number.set_value
+                target: { entity_id: input_number.dsc_learn_samples_recirc }
+                data:
+                  value: >-
+                    {{ [states('input_number.dsc_learn_samples_recirc')|float(0) + 1, 10000]|min }}
+
+      # --- AC cool (only when demand + actuator wired) ---
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: >-
+                  {{ valid_window|bool
+                     and is_state('switch.dsc_hub_ac_demand','on')
+                     and is_state('input_boolean.dsc_ac_actuator_wired','on')
+                     and states('input_number.dsc_ac_btu_hr')|float(0) > 0
+                     and (dT_per_min|float(0)) < -0.005
+                     and (dT_per_min|float(0)) > -1.5 }}
+            sequence:
+              - variables:
+                  ratio: >-
+                    {% set btu = states('input_number.dsc_ac_btu_hr')|float(0) %}
+                    {% set exp_c_h = btu / (states('input_number.dsc_vol_4x8_m3')|float(2.5) * 1.143) %}
+                    {% set exp = exp_c_h / 60 %}
+                    {% set obs = -(dT_per_min|float(0)) %}
+                    {% if exp <= 0.0001 %}1.0
+                    {% else %}{{ ([0.1, (obs / exp), 2.0]|sort)[1] }}{% endif %}
+                  new_eff: >-
+                    {{ (alpha|float(0.1) * (ratio|float(1))
+                        + (1 - alpha|float(0.1))
+                          * states('input_number.dsc_learn_eff_ac')|float(1)) | round(3) }}
+              - service: input_number.set_value
+                target: { entity_id: input_number.dsc_learn_eff_ac }
+                data:
+                  value: "{{ new_eff }}"
+              - service: input_number.set_value
+                target: { entity_id: input_number.dsc_learn_samples_ac }
+                data:
+                  value: >-
+                    {{ [states('input_number.dsc_learn_samples_ac')|float(0) + 1, 10000]|min }}
+
+      # Always refresh snapshots for the next interval.
+      - service: input_number.set_value
+        target: { entity_id: input_number.dsc_learn_snap_tent_t }
+        data:
+          value: "{{ states('sensor.dsc_hub_tent_temperature')|float(0) | round(2) }}"
+      - service: input_number.set_value
+        target: { entity_id: input_number.dsc_learn_snap_tent_ah }
+        data:
+          value: "{{ states('sensor.dsc_ah_tent')|float(0) | round(2) }}"
+      - service: input_number.set_value
+        target: { entity_id: input_number.dsc_learn_snap_room_ah }
+        data:
+          value: >-
+            {{ states('sensor.dsc_ah_room')|float(0) | round(2)
+               if states('sensor.dsc_ah_room') not in ['unknown','unavailable'] else 0 }}
+      - service: input_number.set_value
+        target: { entity_id: input_number.dsc_learn_snap_root_t }
+        data:
+          value: >-
+            {% set ns = namespace(vals=[]) %}
+            {% for e in ['sensor.dsc_pot1_soil_temperature','sensor.dsc_pot2_soil_temperature',
+                         'sensor.dsc_pot3_soil_temperature','sensor.dsc_pot4_soil_temperature'] %}
+              {% if has_value(e) %}
+                {% set v = states(e)|float(0) %}
+                {% if 5 <= v <= 45 %}{% set ns.vals = ns.vals + [v] %}{% endif %}
+              {% endif %}
+            {% endfor %}
+            {{ (ns.vals | min | round(2)) if ns.vals else 0 }}
+      - service: input_number.set_value
+        target: { entity_id: input_number.dsc_learn_snap_epoch }
+        data:
+          value: "{{ as_timestamp(now())|int }}"
+
+  - id: dsc_climate_learn_reset_coeffs
+    alias: "DSC Climate Learn — Reset coefficients to nameplate"
+    mode: single
+    trigger:
+      - platform: event
+        event_type: dsc_climate_learn_reset
+    action:
+      - service: input_number.set_value
+        target: { entity_id: input_number.dsc_learn_eff_dehum }
+        data: { value: 1.0 }
+      - service: input_number.set_value
+        target: { entity_id: input_number.dsc_learn_eff_hum }
+        data: { value: 1.0 }
+      - service: input_number.set_value
+        target: { entity_id: input_number.dsc_learn_eff_heater }
+        data: { value: 1.0 }
+      - service: input_number.set_value
+        target: { entity_id: input_number.dsc_learn_eff_mat }
+        data: { value: 1.0 }
+      - service: input_number.set_value
+        target: { entity_id: input_number.dsc_learn_eff_vent_cool }
+        data: { value: 1.0 }
+      - service: input_number.set_value
+        target: { entity_id: input_number.dsc_learn_eff_vent_dry }
+        data: { value: 1.0 }
+      - service: input_number.set_value
+        target: { entity_id: input_number.dsc_learn_eff_recirc }
+        data: { value: 1.0 }
+      - service: input_number.set_value
+        target: { entity_id: input_number.dsc_learn_eff_ac }
+        data: { value: 1.0 }
+      - service: input_number.set_value
+        target: { entity_id: input_number.dsc_learn_samples_dehum }
+        data: { value: 0 }
+      - service: input_number.set_value
+        target: { entity_id: input_number.dsc_learn_samples_hum }
+        data: { value: 0 }
+      - service: input_number.set_value
+        target: { entity_id: input_number.dsc_learn_samples_heater }
+        data: { value: 0 }
+      - service: input_number.set_value
+        target: { entity_id: input_number.dsc_learn_samples_mat }
+        data: { value: 0 }
+      - service: input_number.set_value
+        target: { entity_id: input_number.dsc_learn_samples_vent_cool }
+        data: { value: 0 }
+      - service: input_number.set_value
+        target: { entity_id: input_number.dsc_learn_samples_vent_dry }
+        data: { value: 0 }
+      - service: input_number.set_value
+        target: { entity_id: input_number.dsc_learn_samples_recirc }
+        data: { value: 0 }
+      - service: input_number.set_value
+        target: { entity_id: input_number.dsc_learn_samples_ac }
+        data: { value: 0 }
+      - service: input_number.set_value
+        target: { entity_id: input_number.dsc_learn_snap_epoch }
+        data: { value: 0 }
+      - service: persistent_notification.create
+        data:
+          title: "DSC Learn reset"
+          message: "All climate learn coefficients restored to 1.0× nameplate; sample counts cleared."
+          notification_id: dsc_climate_learn_reset

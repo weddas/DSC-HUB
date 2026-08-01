@@ -24,8 +24,8 @@ Repo: https://github.com/weddas/DSC-HUB · branch **`master`**
 |---|---|
 | Hub climate + ESP-NOW primary | Live — Full Auto boot persist / re-arm |
 | Panel glass ↔ hub | ESP-NOW primary; HA API plaintext (no Noise) |
-| HA helpers | All `homeassistant/packages/dsc_v4_*.yaml` |
-| Automations | Demand followers + safety nets + scribe |
+| HA helpers | All `homeassistant/packages/dsc_v4_*.yaml` (incl. climate physics + Phase A learn) |
+| Automations | Demand followers + safety nets + scribe (+ learn EMA in package) |
 | Dashboard | `dsc-hub-v4-dashboard.yaml` + optional SYSTEM MAP card |
 | Pot/tank push notifiers | **Removed** (bad notify target) — alert **binary sensors** remain |
 
@@ -37,9 +37,8 @@ This is a line-in-the-sand cut: usable day-to-day, not feature-complete.
 
 | Repo | HA destination |
 |---|---|
-| `homeassistant/packages/dsc_v4_*.yaml` | `/config/packages/` |
-| `homeassistant/automations.yaml` | `/config/automations.yaml` (merge or include) |
-| `homeassistant/dashboards/dsc-hub-v4-dashboard.yaml` | Lovelace URL **`dsc-hub-v4`** |
+| `homeassistant/packages/dsc_v4_*.yaml` | `/config/packages/` (helpers + automations + learn) |
+| `homeassistant/dashboards/dsc-hub-v4-dashboard.yaml` | `/config/dashboards/` (YAML-mode URL **`dsc-hub-v4`**) |
 | `homeassistant/esphome/dsc-*.yaml` | `/config/esphome/` |
 | `homeassistant/www/dsc-system-map.*` | `/config/www/` + Lovelace resource |
 | `firmware/v4/secrets.yaml.template` | `/config/esphome/secrets.yaml` |
@@ -48,20 +47,27 @@ Full steps: [`INSTALL.md`](INSTALL.md).
 
 ---
 
-## Beyond OTA — what never auto-updates
+## Beyond OTA — HA surfaces vs firmware
 
-ESPHome Install only updates device firmware. Re-copy by hand when these change:
+ESPHome Install only updates device firmware (still **manual** per device).
 
-| Surface | Path |
-|---|---|
-| Lovelace | `homeassistant/dashboards/dsc-hub-v4-dashboard.yaml` |
-| Packages | `homeassistant/packages/dsc_v4_*.yaml` |
-| Automations | `homeassistant/automations.yaml` |
-| SYSTEM MAP assets | `homeassistant/www/dsc-system-map.*` |
+HA packages, automations package, YAML dashboard, and SYSTEM MAP assets
+**auto-sync on push to `master`** when the Unraid self-hosted runner is configured
+([`scripts/HA-SYNC-BOOTSTRAP.md`](scripts/HA-SYNC-BOOTSTRAP.md) · workflow
+[`.github/workflows/ha-sync.yml`](.github/workflows/ha-sync.yml)):
+
+| Surface | Path | Deploy |
+|---|---|---|
+| SYSTEM MAP card | `dist/DSC-HUB.js` (+ SVG) | **HACS Dashboard** custom repo |
+| Lovelace dashboard YAML | `homeassistant/dashboards/dsc-hub-v4-dashboard.yaml` | Auto (YAML mode) via HA sync |
+| Packages + automations | `homeassistant/packages/dsc_v4_*.yaml` | Auto via HA sync |
+| www fallback assets | `homeassistant/www/dsc-system-map.*` | Auto via HA sync (optional if HACS) |
+| ESPHome stubs | `homeassistant/esphome/dsc-*.yaml` | Manual / optional workflow input |
+| Device firmware | `firmware/v4/` via stubs | Manual Validate/Install |
 
 ```
-Cursor edit → commit/push → ESPHome Validate/Install (devices)
-                         → re-copy HA files above if listed in the cut
+Cursor edit → commit/push → HA sync Action (homeassistant/**)
+                         → ESPHome Validate/Install (devices)
 ```
 
 Hub + panel: flash together when tag, MAC, or `0xD*` wire contract changes.

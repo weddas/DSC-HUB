@@ -9,13 +9,16 @@ Canonical HA surface for firmware [`firmware/v4/`](../firmware/v4/).
 | `dashboards/dsc-hub-v4-dashboard.yaml` | Lovelace UX **v0.2** (9 views). URL **must** be `dsc-hub-v4`. Flow: Home → Climate → tents → Root Zone → Tank/Light/Trends/System. |
 | `packages/dsc_v4_core_helpers.yaml` | Hub link, fan %, airflow Sankey (CFM), photoperiod, leaf offset, appliance runtimes, dead-demand cues |
 | `packages/dsc_v4_climate_physics.yaml` | Settable plant specs (CFM/volumes/L/day/W), ACH/AH/BTU/moisture sensors, spec verification |
+| `packages/dsc_v4_climate_learn.yaml` | Phase A EMA lever-efficiency observer + minutes-to-target / headroom gauges |
 | `packages/dsc_v4_light_helpers.yaml` | Lights-on today, clone dark-period, deviation |
 | `packages/dsc_v4_tank.yaml` | Tank EC/pH/temp helpers + Tuya warn sync |
 | `packages/dsc_v4_pots_stats.yaml` | Per-pot daily max/min + 7d baselines + rates |
 | `packages/dsc_v4_pots_correlation.yaml` | EC vs tank + uptake slope |
 | `packages/dsc_v4_pots_alerts.yaml` | Per-pot moisture/pH/temp/EC/N alert binaries |
 | `packages/dsc_v4_alert_count.yaml` | `sensor.dsc_active_alert_count` for Home chip |
-| `automations.yaml` | Demand followers, climate/safety alerts, grow-log scribe |
+| `packages/dsc_v4_automations.yaml` | Demand followers, climate/safety alerts, grow-log scribe |
+| `configuration.snippet.yaml` | Paste-once: packages include + YAML-mode `dsc-hub-v4` dashboard |
+| `automations.yaml` | Deprecated stub — points at the package above |
 | `www/dsc-system-map.*` | SYSTEM MAP Lovelace card + SVG → `/config/www/` |
 | `esphome/` | Thin device stubs — pull firmware packages from GitHub |
 
@@ -39,21 +42,18 @@ Quick copy list:
 
 | This folder | HA `/config/` |
 |---|---|
-| `packages/dsc_v4_*.yaml` | `packages/` |
-| `automations.yaml` | merge / include |
-| `dashboards/dsc-hub-v4-dashboard.yaml` | Lovelace URL **`dsc-hub-v4`** |
+| `packages/dsc_v4_*.yaml` | `packages/` (helpers, learn, automations) |
+| `dashboards/dsc-hub-v4-dashboard.yaml` | `dashboards/` (YAML-mode URL **`dsc-hub-v4`**) |
 | `esphome/dsc-*.yaml` | `esphome/` |
 | `www/dsc-system-map.*` | `www/` + resource `/local/dsc-system-map-card.js` |
 
-```yaml
-# configuration.yaml
-homeassistant:
-  packages: !include_dir_named packages
-```
+Merge [`configuration.snippet.yaml`](configuration.snippet.yaml) into HA `configuration.yaml`
+(packages + YAML Lovelace). Filenames under `packages/` must use underscores.
+Restart HA after the first copy / `configuration.yaml` change.
 
-Filenames under `packages/` must use underscores. Restart HA after the first copy.
-
-**Ongoing:** dashboard / packages / automations are **not** ESPHome OTA — re-copy when [`RELEASE.md`](../RELEASE.md) says they changed.
+**Ongoing:** with the Unraid runner set up ([`../scripts/HA-SYNC-BOOTSTRAP.md`](../scripts/HA-SYNC-BOOTSTRAP.md)),
+pushes to `master` under `homeassistant/**` auto-deploy packages, dashboard, and www.
+Firmware Install stays manual — see [`../RELEASE.md`](../RELEASE.md).
 
 ## Fan entity_ids
 
@@ -61,10 +61,10 @@ Core helpers assume ESPHome default slugs from hub friendly names. If your regis
 
 ## Notifier
 
-Climate / safety automations in `automations.yaml` use a mobile notify target —
-edit those services to match your HA devices (`notify.mobile_app_…`). Package
-pot/tank **push** notifiers are not shipped in **v4.0.0-alpha.1** (alert binary
-sensors remain).
+Climate / safety automations in `dsc_v4_automations.yaml` use a mobile notify
+target — edit those services to match your HA devices (`notify.mobile_app_…`).
+Package pot/tank **push** notifiers are not shipped in **v4.0.0-alpha.1**
+(alert binary sensors remain).
 
 ## HACS cards
 
@@ -72,16 +72,28 @@ mushroom · apexcharts-card · power-flow-card-plus · sankey-chart · plotly-gr
 
 ## Local custom card — SYSTEM MAP
 
-Neon isometric live map (`custom:dsc-system-map-card`) on the Home view. Not a HACS card — ship from this repo:
+Neon isometric live map (`custom:dsc-system-map-card`) on the Home view.
 
-1. Copy both files into Home Assistant `/config/www/`:
-   - [`www/dsc-system-map.svg`](www/dsc-system-map.svg) — standalone animated SVG (open in a browser for a demo loop)
-   - [`www/dsc-system-map-card.js`](www/dsc-system-map-card.js) — Lovelace card that loads the SVG and binds fan %, SF1000, appliance demands, priority tent, failsafe, and climate labels
+### Preferred — HACS Dashboard custom repository
+
+1. HACS → ⋮ → **Custom repositories**
+2. Repository: `https://github.com/weddas/DSC-HUB`
+3. Category: **Dashboard**
+4. Download **DSC-HUB System Map**, restart/reload when prompted, hard-refresh browser
+
+HACS serves `/hacsfiles/DSC-HUB/DSC-HUB.js` (+ SVG beside it). Full steps:
+[`../scripts/HACS-FRONTEND.md`](../scripts/HACS-FRONTEND.md).
+
+### Manual fallback (`/config/www/`)
+
+1. Copy both files into Home Assistant `/config/www/` (or rely on ha-sync):
+   - [`www/dsc-system-map.svg`](www/dsc-system-map.svg)
+   - [`www/dsc-system-map-card.js`](www/dsc-system-map-card.js)
 2. **Settings → Dashboards → ⋮ → Resources → Add resource**
    - URL: `/local/dsc-system-map-card.js`
    - Type: **JavaScript** (not JavaScript Module — the card is a classic IIFE)
-3. Re-paste [`dashboards/dsc-hub-v4-dashboard.yaml`](dashboards/dsc-hub-v4-dashboard.yaml) (Home already includes the **SYSTEM MAP** FILL section).
-4. Hard-refresh the browser (or clear frontend cache) so `/local/` picks up the new files.
+3. Ensure the dashboard includes the **SYSTEM MAP** card (YAML dashboard already does).
+4. Hard-refresh the browser.
 
 Optional entity overrides via card YAML:
 
@@ -135,6 +147,28 @@ hardware is swapped; Sankey + capacity sensors recompute from those helpers.
 Verification binaries (`binary_sensor.dsc_plant_specs_*`) flag incomplete
 floors, intake CFM > exhaust CFM, AC wired with 0 BTU/h, and zeroed
 appliance rates. Status: `sensor.dsc_plant_specs_status` (`ok` / `warn` / `error`).
+
+### Response-rate learning (Phase A — observe + predict)
+
+Install [`packages/dsc_v4_climate_learn.yaml`](packages/dsc_v4_climate_learn.yaml)
+alongside the physics package.
+
+While each lever is ON (and emergency / manual takeover / climate-sensor
+fault are clear), a 5-minute EMA samples real `ΔT/min` and `ΔAH/min` and
+stores effectiveness vs nameplate (`input_number.dsc_learn_eff_*`, clamped
+0.1–2.0×). When sample count ≥ `input_number.dsc_learn_min_samples`, those
+coeffs scale **predictions only**:
+
+| Sensor | Role |
+|---|---|
+| `sensor.dsc_minutes_to_temp_target` | ETA to `number.dsc_hub_target_temp` |
+| `sensor.dsc_minutes_to_rh_target` | ETA to RH band mid |
+| `sensor.dsc_heat_balance_btu_learned` | Heat headroom with trusted scales |
+| `sensor.dsc_moisture_net_rate_learned` | Moisture headroom with trusted scales |
+| `sensor.dsc_learn_status` | `disabled` / `gated` / `warming` / `partial` / `ready` |
+
+Phase A does **not** write hub persistence waits, fan curves, or failsafe.
+Reset coeffs: fire event `dsc_climate_learn_reset` (Developer Tools → Events).
 
 ## Still outside this folder (hardware / live site)
 
