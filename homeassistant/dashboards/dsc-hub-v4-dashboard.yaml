@@ -4270,19 +4270,57 @@ views:
             title: Ladder wait bases (hub NVS)
             show_header_toggle: false
             entities:
-              - entity: number.dsc_hub_ladder_wait_dehum
-                name: Dehum wait (s)
-              - entity: number.dsc_hub_ladder_wait_hum
-                name: Hum wait (s)
-              - entity: number.dsc_hub_ladder_wait_heat
-                name: Heat wait (s)
-              - entity: number.dsc_hub_ladder_wait_ac
-                name: AC wait (s)
-              - entity: number.dsc_hub_ladder_wait_mat
-                name: Mat wait (s)
+              - type: conditional
+                conditions:
+                  - entity: number.dsc_hub_ladder_wait_dehum
+                    state_not: unavailable
+                row:
+                  entity: number.dsc_hub_ladder_wait_dehum
+                  name: Dehum wait (s)
+              - type: conditional
+                conditions:
+                  - entity: number.dsc_hub_ladder_wait_hum
+                    state_not: unavailable
+                row:
+                  entity: number.dsc_hub_ladder_wait_hum
+                  name: Hum wait (s)
+              - type: conditional
+                conditions:
+                  - entity: number.dsc_hub_ladder_wait_heat
+                    state_not: unavailable
+                row:
+                  entity: number.dsc_hub_ladder_wait_heat
+                  name: Heat wait (s)
+              - type: conditional
+                conditions:
+                  - entity: number.dsc_hub_ladder_wait_ac
+                    state_not: unavailable
+                row:
+                  entity: number.dsc_hub_ladder_wait_ac
+                  name: AC wait (s)
+              - type: conditional
+                conditions:
+                  - entity: number.dsc_hub_ladder_wait_mat
+                    state_not: unavailable
+                row:
+                  entity: number.dsc_hub_ladder_wait_mat
+                  name: Mat wait (s)
+              - type: section
+                label: Phase B clamps (HA)
               - entity: input_number.dsc_learn_wait_floor_s
               - entity: input_number.dsc_learn_wait_ceil_s
               - entity: input_number.dsc_learn_phase_b_alpha
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: number.dsc_hub_ladder_wait_dehum
+                state: unavailable
+            card:
+              type: markdown
+              content: >-
+                *Hub ladder wait numbers appear after ESPHome Install of hub
+                firmware **5.1.0** (Phase B NVS bases). Until then Phase B
+                clamps stay ready but have nothing to write.*
           - type: markdown
             content: >-
               *Phase B writes **only** ladder base waits on the hub.
