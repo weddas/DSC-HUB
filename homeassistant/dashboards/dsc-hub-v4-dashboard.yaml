@@ -376,6 +376,11 @@ views:
             grid_options:
               columns: 12
               rows: 8
+          - type: markdown
+            content: >-
+              *SYSTEM MAP card loads from `/local/dsc-system-map-card.js`
+              (Sync www or HACS). If you see a configuration error, add that
+              JS as a Lovelace module resource and refresh.*
       - type: grid
         cards:
           - type: heading

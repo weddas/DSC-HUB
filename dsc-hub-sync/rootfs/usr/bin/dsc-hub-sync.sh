@@ -137,10 +137,15 @@ stage_and_commit() {
   fi
 
   if bashio::config.true 'sync_www'; then
-    local www=("${src}/www"/dsc-system-map.*)
-    for f in "${www[@]}"; do
-      [[ -f "${f}" ]] || continue
-      cp -f "${f}" "${STAGE}/www/$(basename "${f}")"
+    log "Syncing www/dsc-system-map.*"
+    local name
+    for name in dsc-system-map-card.js dsc-system-map.svg; do
+      if [[ -f "${src}/www/${name}" ]]; then
+        cp -f "${src}/www/${name}" "${STAGE}/www/${name}"
+        log "Staged www/${name} ($(wc -c <"${src}/www/${name}") bytes)"
+      else
+        warn "Missing repo www/${name}"
+      fi
     done
   fi
 
@@ -167,9 +172,11 @@ stage_and_commit() {
       "${HA_CONFIG}/dashboards/dsc-hub-v4-dashboard.yaml"
   fi
   if bashio::config.true 'sync_www'; then
-    for f in "${STAGE}/www"/dsc-system-map.*; do
-      [[ -f "${f}" ]] || continue
-      cp -f "${f}" "${HA_CONFIG}/www/$(basename "${f}")"
+    for name in dsc-system-map-card.js dsc-system-map.svg; do
+      if [[ -f "${STAGE}/www/${name}" ]]; then
+        cp -f "${STAGE}/www/${name}" "${HA_CONFIG}/www/${name}"
+        log "Installed /config/www/${name}"
+      fi
     done
   fi
   if bashio::config.true 'sync_esphome'; then

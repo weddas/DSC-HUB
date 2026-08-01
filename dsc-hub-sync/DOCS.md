@@ -3,7 +3,7 @@
 Pulls [weddas/DSC-HUB](https://github.com/weddas/DSC-HUB) and copies HA surfaces
 into `/config` whenever the tracked git ref moves (default: `master`).
 
-**Add-on version:** **5.1.0**
+**Add-on version:** **5.1.1** (script harden; HA surface still **5.1.0**)
 
 ## What it syncs
 
