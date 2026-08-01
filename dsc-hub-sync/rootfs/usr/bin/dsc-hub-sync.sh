@@ -115,7 +115,7 @@ do_sync() {
 DSC-HUB Sync add-on is writing packages / dashboards / www.
 
 Once: merge homeassistant/configuration.snippet.yaml into configuration.yaml
-(packages include + YAML-mode lovelace dashboard dsc-hub-v4), then restart HA.
+(packages include + YAML-mode lovelace dashboard dsc-hub-pro), then restart HA.
 
 Remove duplicate DSC automation ids from UI/automations.yaml if you had them
 before packages/dsc_v4_automations.yaml existed.

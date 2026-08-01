@@ -21,7 +21,7 @@ After each sync it reloads packages + automations via the Supervisor Core API
 
 1. Install this add-on, start it, wait for the first sync.
 2. Merge [`homeassistant/configuration.snippet.yaml`](https://github.com/weddas/DSC-HUB/blob/master/homeassistant/configuration.snippet.yaml)
-   into `/config/configuration.yaml` (packages + YAML-mode dashboard `dsc-hub-v4`).
+   into `/config/configuration.yaml` (packages + YAML-mode dashboard `dsc-hub-pro`).
 3. Restart Home Assistant once.
 4. If you previously pasted DSC automations into the UI / `automations.yaml`,
    delete those duplicate ids (they now live in `packages/dsc_v4_automations.yaml`).

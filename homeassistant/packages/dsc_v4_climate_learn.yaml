@@ -872,3 +872,12 @@ automation:
           title: "DSC Learn reset"
           message: "All climate learn coefficients restored to 1.0× nameplate; sample counts cleared."
           notification_id: dsc_climate_learn_reset
+
+script:
+  dsc_climate_learn_reset:
+    alias: "DSC Learn · Reset to nameplate"
+    icon: mdi:restore
+    mode: single
+    sequence:
+      - event: dsc_climate_learn_reset
+        event_data: {}

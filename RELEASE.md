@@ -10,7 +10,7 @@ Hub firmware string matches the GitHub tag.
 | **Hub** `sensor.dsc_hub_firmware_version` | **`5.0.0`** |
 | **Panel** | DSC-CONTROL **4.0.11** (flash with hub if ESP-NOW tag/wire changed) |
 | **Pots** | `dsc-pot-common` **4.0.1** |
-| **Dashboard** | UX **v0.2** · URL **`dsc-hub-v4`** (YAML mode) |
+| **Dashboard** | UX **v0.2** · URL **`dsc-hub-pro`** (YAML mode) |
 | **ESP-NOW tag** | **`54727` (`0xD5C7`)** on hub **and** panel |
 | **HA delivery** | **DSC-HUB Sync** add-on · [`scripts/ADDON.md`](scripts/ADDON.md) |
 
@@ -42,7 +42,7 @@ Phase A learn gauges, SYSTEM MAP card.
 | Repo | HA destination |
 |---|---|
 | `homeassistant/packages/dsc_v4_*.yaml` | `/config/packages/` (helpers + automations + learn) |
-| `homeassistant/dashboards/dsc-hub-v4-dashboard.yaml` | `/config/dashboards/` (YAML-mode URL **`dsc-hub-v4`**) |
+| `homeassistant/dashboards/dsc-hub-v4-dashboard.yaml` | `/config/dashboards/` (YAML-mode URL **`dsc-hub-pro`**) |
 | `homeassistant/esphome/dsc-*.yaml` | `/config/esphome/` |
 | `homeassistant/www/dsc-system-map.*` | `/config/www/` (or HACS) |
 | `firmware/v4/secrets.yaml.template` | `/config/esphome/secrets.yaml` |

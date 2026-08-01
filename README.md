@@ -45,7 +45,7 @@ Canonical dashboard + packages + ESPHome stubs: [`homeassistant/`](homeassistant
 | Piece | File |
 |---|---|
 | **HAOS Sync add-on** | [`dsc-hub-sync/`](dsc-hub-sync/) · [`scripts/ADDON.md`](scripts/ADDON.md) |
-| Lovelace | `homeassistant/dashboards/dsc-hub-v4-dashboard.yaml` (YAML mode, URL: `dsc-hub-v4`) |
+| Lovelace | `homeassistant/dashboards/dsc-hub-v4-dashboard.yaml` (YAML mode, URL: `dsc-hub-pro`) |
 | Helpers + automations | `homeassistant/packages/dsc_v4_*.yaml` |
 | Config snippet | `homeassistant/configuration.snippet.yaml` |
 | ESPHome stubs | `homeassistant/esphome/dsc-*.yaml` (git-pull package bodies) |

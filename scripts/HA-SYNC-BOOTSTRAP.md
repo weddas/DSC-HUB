@@ -32,9 +32,9 @@ Never commit these values. Never put `secrets.yaml` in the sync path.
 2. Add the runner’s **public** key under authorized keys.
 3. Merge [`configuration.snippet.yaml`](../homeassistant/configuration.snippet.yaml) into `/config/configuration.yaml`:
    - `homeassistant.packages: !include_dir_named packages`
-   - YAML-mode Lovelace dashboard `dsc-hub-v4` → `dashboards/dsc-hub-v4-dashboard.yaml`
+   - YAML-mode Lovelace dashboard `dsc-hub-pro` → `dashboards/dsc-hub-v4-dashboard.yaml`
 4. Create `/config/dashboards/` (the sync script also `mkdir -p`s it).
-5. If you already have a **UI-managed** dashboard at URL `dsc-hub-v4`, remove or rename it so the YAML dashboard owns that path.
+5. If you already have a **UI-managed** dashboard at URL `dsc-hub-pro`, remove or rename it so the YAML dashboard owns that path.
 6. If DSC automations were previously merged into `/config/automations.yaml` or the UI, **delete those duplicate ids** after `dsc_v4_automations.yaml` is in `packages/` (same ids collide).
 7. Restart HA once after the `configuration.yaml` change.
 8. Profile → Security → **Create long-lived access token** (name e.g. `dsc-hub-sync`) → store as `HA_TOKEN`.
@@ -67,7 +67,7 @@ Use a **registration PAT** only to enroll the runner; day-to-day jobs use the wo
 1. Confirm secrets are set on the repo.
 2. Actions → **HA sync** → Run workflow (optional dry run first).
 3. Or push a no-op change under `homeassistant/packages/`.
-4. On HA: confirm `/config/packages/dsc_v4_*.yaml` timestamps updated, dashboard URL `dsc-hub-v4` loads, automations with `dsc_` ids are present.
+4. On HA: confirm `/config/packages/dsc_v4_*.yaml` timestamps updated, dashboard URL `dsc-hub-pro` loads, automations with `dsc_` ids are present.
 
 Manual local dry run from a machine that can SSH to HA:
 

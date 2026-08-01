@@ -34,9 +34,9 @@ homeassistant:
 lovelace:
   mode: storage
   dashboards:
-    dsc-hub-v4:
+    dsc-hub-pro:
       mode: yaml
-      title: DSC-HUB
+      title: DSC-HUB Pro
       icon: mdi:sprout
       show_in_sidebar: true
       filename: dashboards/dsc-hub-v4-dashboard.yaml
@@ -100,8 +100,8 @@ Prefer **YAML mode** (required for add-on / git sync):
 
 1. Add the `lovelace:` block from the snippet above to `configuration.yaml`
 2. Copy dashboard YAML → `/config/dashboards/` (or let the add-on sync it)
-3. Restart HA once; sidebar shows **DSC-HUB** at URL **`dsc-hub-v4`**
-4. Remove any older **UI-managed** dashboard that owned `dsc-hub-v4`
+3. Restart HA once; sidebar shows **DSC-HUB Pro** at URL **`dsc-hub-pro`**
+4. Remove any older **UI-managed** dashboard that owned `dsc-hub-pro`
 
 ### SYSTEM MAP card
 
@@ -143,7 +143,7 @@ Do **not** put `secrets.yaml` in git.
 - [ ] Panel ESP-NOW UP; panel command moves a hub entity  
 - [ ] `sensor.dsc_hub_firmware_version` = **`5.0.0`**  
 - [ ] Demand ON → matching Sonoff relay ON  
-- [ ] Dashboard URL `dsc-hub-v4` loads; alert chip uses `sensor.dsc_active_alert_count`  
+- [ ] Dashboard URL `dsc-hub-pro` loads; alert chip uses `sensor.dsc_active_alert_count`  
 
 ---
 

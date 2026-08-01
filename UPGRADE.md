@@ -17,7 +17,7 @@ Repo: https://github.com/weddas/DSC-HUB · tag **`v5.0.0`** · branch **`master`
 | Hub flash file | `dsc-hub-v4_0.yaml` alone | **`dsc-hub.yaml`** stub |
 | Panel flash file | Monolithic `dsc-control.yaml` | **`dsc-control.yaml`** stub → `dsc-control-common.yaml` |
 | HA helpers | Ad-hoc `dsc_dashboard_v3`, `dsc_tank`, `dsc_pots_*`, etc. | `dsc_v4_*.yaml` packages only |
-| Dashboard | Often `dsc-hub-v2-4` | URL **`dsc-hub-v4`** |
+| Dashboard | Often `dsc-hub-v2-4` / storage Pro | URL **`dsc-hub-pro`** (YAML mode) |
 | `espnow_cmd_tag` | May still be `0xABCD` | **`54727` (`0xD5C7`)** — hub **and** panel |
 
 ---
@@ -48,11 +48,21 @@ Keep unrelated house packages. Only remove DSC duplicates.
 3. Dashboard:
    - Prefer YAML mode from [`homeassistant/configuration.snippet.yaml`](homeassistant/configuration.snippet.yaml)
    - Copy [`homeassistant/dashboards/dsc-hub-v4-dashboard.yaml`](homeassistant/dashboards/dsc-hub-v4-dashboard.yaml) → `/config/dashboards/`
-   - URL **`dsc-hub-v4`**; retire or unlink the old `dsc-hub-v2-4` dashboard when happy
+   - URL **`dsc-hub-pro`**; retire or unlink old `dsc-hub-v2-4` / storage **DSC-HUB Pro** when happy (YAML must own `dsc-hub-pro`)
 4. Entity registry (if still on historical names):
    - `text.dsc_potN_plant_name` / `select.dsc_potN_growth_stage` (no `4x8_` / `grow_tent_` prefixes)
 5. Restart Home Assistant
 6. Optional: enable push sync — [`scripts/HA-SYNC-BOOTSTRAP.md`](scripts/HA-SYNC-BOOTSTRAP.md)
+
+### Align storage Pro → YAML `dsc-hub-pro` (cutover)
+
+If the operator UI is still a **UI-managed** dashboard at `dsc-hub-pro` while packages sync a YAML file, they will fork. Cut over once:
+
+1. **Delete** (or rename away) the storage-mode **DSC-HUB Pro** dashboard so `dsc-hub-pro` is free.
+2. Ensure `/config/dashboards/dsc-hub-v4-dashboard.yaml` is the packaged file (nav paths `/dsc-hub-pro/…`).
+3. In `/config/configuration.yaml`, register YAML under key **`dsc-hub-pro`** (see [`configuration.snippet.yaml`](homeassistant/configuration.snippet.yaml)). Remove any leftover `dsc-hub-v4:` dashboard entry.
+4. **Restart** HA once (dashboard key changes need restart; `lovelace.reload` is not enough).
+5. Verify: sidebar **DSC-HUB Pro** → `/dsc-hub-pro/home`, Learning → `/dsc-hub-pro/learning`, no duplicate DSC sidebar entry.
 
 ---
 

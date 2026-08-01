@@ -11,9 +11,9 @@ homeassistant:
 lovelace:
   mode: storage
   dashboards:
-    dsc-hub-v4:
+    dsc-hub-pro:
       mode: yaml
-      title: DSC-HUB
+      title: DSC-HUB Pro
       icon: mdi:sprout
       show_in_sidebar: true
       filename: dashboards/dsc-hub-v4-dashboard.yaml

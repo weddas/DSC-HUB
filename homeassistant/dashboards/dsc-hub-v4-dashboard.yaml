@@ -12,6 +12,7 @@
 #  VIEW FLOW (v0.2 nesting):
 #     Home        → pulse + demands + glance vitals (narrator collapsed)
 #     Climate     → master control, ladder, tunables, appliances
+#     Learning    → Phase A EMA status, ETA, efficiencies, charts, settings
 #     4x8 / 2x4   → tent-local vitals + equipment
 #     Root Zone   → soil matrix, mat votes, chemistry, EC uptake
 #     Tank / Light / Trends / System → support surfaces
@@ -24,7 +25,7 @@
 #     largest free block) — dual-path health alongside pot ESP-NOW links
 #   * Mat / root-zone copy: all four pots, plausibility 5–45 °C,
 #     Mat Vote Pot 1–4 (Root Zone is source of truth; Climate links)
-#   * Dashboard URL must be **dsc-hub-v4** (navigation_path links)
+#   * Dashboard URL must be **dsc-hub-pro** (navigation_path links)
 #
 #  REQUIRES packages:
 #     homeassistant/packages/dsc_v4_*.yaml (incl. dsc_v4_automations.yaml)
@@ -38,7 +39,7 @@
 #        expander-card
 # ==================================================================
 
-title: DSC-HUB v4
+title: DSC-HUB Pro
 views:
   - title: Home
     icon: mdi:monitor-dashboard
@@ -74,7 +75,7 @@ views:
                   'PANEL OFFLINE' }}
                 tap_action:
                   action: navigate
-                  navigation_path: /dsc-hub-v4/system
+                  navigation_path: /dsc-hub-pro/system
               - type: template
                 entity: sensor.dsc_hub_uptime
                 icon: mdi:timer-outline
@@ -98,7 +99,7 @@ views:
                   {{ 'green' if n == 0 else 'red' }}
                 tap_action:
                   action: navigate
-                  navigation_path: /dsc-hub-v4/system
+                  navigation_path: /dsc-hub-pro/system
             card_mod:
               style:
                 ".": |
@@ -121,56 +122,63 @@ views:
                 content: Climate
                 tap_action:
                   action: navigate
-                  navigation_path: /dsc-hub-v4/climate
+                  navigation_path: /dsc-hub-pro/climate
+              - type: template
+                icon: mdi:brain
+                icon_color: cyan
+                content: Learning
+                tap_action:
+                  action: navigate
+                  navigation_path: /dsc-hub-pro/learning
               - type: template
                 icon: mdi:greenhouse
                 icon_color: green
                 content: 4x8
                 tap_action:
                   action: navigate
-                  navigation_path: /dsc-hub-v4/main-4x8
+                  navigation_path: /dsc-hub-pro/main-4x8
               - type: template
                 icon: mdi:sprout
                 icon_color: light-green
                 content: 2x4
                 tap_action:
                   action: navigate
-                  navigation_path: /dsc-hub-v4/clone-2x4
+                  navigation_path: /dsc-hub-pro/clone-2x4
               - type: template
                 icon: mdi:grass
                 icon_color: lime
                 content: Root Zone
                 tap_action:
                   action: navigate
-                  navigation_path: /dsc-hub-v4/root-zone
+                  navigation_path: /dsc-hub-pro/root-zone
               - type: template
                 icon: mdi:water
                 icon_color: blue
                 content: Tank
                 tap_action:
                   action: navigate
-                  navigation_path: /dsc-hub-v4/tank
+                  navigation_path: /dsc-hub-pro/tank
               - type: template
                 icon: mdi:lightbulb-on
                 icon_color: amber
                 content: Lighting
                 tap_action:
                   action: navigate
-                  navigation_path: /dsc-hub-v4/lighting
+                  navigation_path: /dsc-hub-pro/lighting
               - type: template
                 icon: mdi:chart-timeline-variant
                 icon_color: purple
                 content: Trends
                 tap_action:
                   action: navigate
-                  navigation_path: /dsc-hub-v4/trends
+                  navigation_path: /dsc-hub-pro/trends
               - type: template
                 icon: mdi:cog
                 icon_color: grey
                 content: System
                 tap_action:
                   action: navigate
-                  navigation_path: /dsc-hub-v4/system
+                  navigation_path: /dsc-hub-pro/system
           - type: conditional
             conditions:
               - condition: state
@@ -268,7 +276,7 @@ views:
                 content: "P1 {{ 'ESP' if is_state(entity,'on') else 'HA' }}"
                 tap_action:
                   action: navigate
-                  navigation_path: /dsc-hub-v4/root-zone
+                  navigation_path: /dsc-hub-pro/root-zone
               - type: template
                 entity: binary_sensor.dsc_hub_pot2_esp_now_link
                 icon: mdi:access-point
@@ -276,7 +284,7 @@ views:
                 content: "P2 {{ 'ESP' if is_state(entity,'on') else 'HA' }}"
                 tap_action:
                   action: navigate
-                  navigation_path: /dsc-hub-v4/root-zone
+                  navigation_path: /dsc-hub-pro/root-zone
               - type: template
                 entity: binary_sensor.dsc_hub_pot3_esp_now_link
                 icon: mdi:access-point
@@ -284,7 +292,7 @@ views:
                 content: "P3 {{ 'ESP' if is_state(entity,'on') else 'HA' }}"
                 tap_action:
                   action: navigate
-                  navigation_path: /dsc-hub-v4/root-zone
+                  navigation_path: /dsc-hub-pro/root-zone
               - type: template
                 entity: binary_sensor.dsc_hub_pot4_esp_now_link
                 icon: mdi:access-point
@@ -292,7 +300,7 @@ views:
                 content: "P4 {{ 'ESP' if is_state(entity,'on') else 'HA' }}"
                 tap_action:
                   action: navigate
-                  navigation_path: /dsc-hub-v4/root-zone
+                  navigation_path: /dsc-hub-pro/root-zone
             card_mod:
               style: |
                 @keyframes dsc-link-pulse {
@@ -468,7 +476,7 @@ views:
                 content: IN 4×8 {{ states(entity)|float(0)|round(0) }}%
                 tap_action:
                   action: navigate
-                  navigation_path: /dsc-hub-v4/climate
+                  navigation_path: /dsc-hub-pro/climate
               - type: template
                 entity: sensor.dsc_fan_intake_2x4_pct
                 icon: mdi:fan
@@ -476,7 +484,7 @@ views:
                 content: IN 2×4 {{ states(entity)|float(0)|round(0) }}%
                 tap_action:
                   action: navigate
-                  navigation_path: /dsc-hub-v4/climate
+                  navigation_path: /dsc-hub-pro/climate
               - type: template
                 entity: sensor.dsc_fan_exhaust_room_pct
                 icon: mdi:fan-chevron-up
@@ -484,7 +492,7 @@ views:
                 content: EX ROOM {{ states(entity)|float(0)|round(0) }}%
                 tap_action:
                   action: navigate
-                  navigation_path: /dsc-hub-v4/climate
+                  navigation_path: /dsc-hub-pro/climate
               - type: template
                 entity: sensor.dsc_fan_exhaust_outside_pct
                 icon: mdi:fan-chevron-up
@@ -492,7 +500,7 @@ views:
                 content: EX OUT {{ states(entity)|float(0)|round(0) }}%
                 tap_action:
                   action: navigate
-                  navigation_path: /dsc-hub-v4/climate
+                  navigation_path: /dsc-hub-pro/climate
             card_mod:
               style:
                 ".": |
@@ -1043,7 +1051,7 @@ views:
                   }}h
                 tap_action:
                   action: navigate
-                  navigation_path: /dsc-hub-v4/lighting
+                  navigation_path: /dsc-hub-pro/lighting
               - type: template
                 entity: sensor.dsc_lights_on_today_2x4
                 icon: mdi:white-balance-sunny
@@ -1057,7 +1065,7 @@ views:
                   }}h
                 tap_action:
                   action: navigate
-                  navigation_path: /dsc-hub-v4/lighting
+                  navigation_path: /dsc-hub-pro/lighting
               - type: template
                 entity: sensor.dsc_heater_runtime_today
                 icon: mdi:radiator
@@ -1095,7 +1103,7 @@ views:
                 content: "P1 {{ states(entity) if states(entity) not in ['unknown','unavailable',''] else '—' }}"
                 tap_action:
                   action: navigate
-                  navigation_path: /dsc-hub-v4/root-zone
+                  navigation_path: /dsc-hub-pro/root-zone
               - type: template
                 entity: text.dsc_pot2_plant_name
                 icon: mdi:numeric-2-circle
@@ -1103,7 +1111,7 @@ views:
                 content: "P2 {{ states(entity) if states(entity) not in ['unknown','unavailable',''] else '—' }}"
                 tap_action:
                   action: navigate
-                  navigation_path: /dsc-hub-v4/root-zone
+                  navigation_path: /dsc-hub-pro/root-zone
               - type: template
                 entity: text.dsc_pot3_plant_name
                 icon: mdi:numeric-3-circle
@@ -1111,7 +1119,7 @@ views:
                 content: "P3 {{ states(entity) if states(entity) not in ['unknown','unavailable',''] else '—' }}"
                 tap_action:
                   action: navigate
-                  navigation_path: /dsc-hub-v4/root-zone
+                  navigation_path: /dsc-hub-pro/root-zone
               - type: template
                 entity: text.dsc_pot4_plant_name
                 icon: mdi:numeric-4-circle
@@ -1119,7 +1127,7 @@ views:
                 content: "P4 {{ states(entity) if states(entity) not in ['unknown','unavailable',''] else '—' }}"
                 tap_action:
                   action: navigate
-                  navigation_path: /dsc-hub-v4/root-zone
+                  navigation_path: /dsc-hub-pro/root-zone
           - type: grid
             columns: 4
             square: false
@@ -1159,7 +1167,7 @@ views:
                 content: pH {{ states(entity) }}
                 tap_action:
                   action: navigate
-                  navigation_path: /dsc-hub-v4/tank
+                  navigation_path: /dsc-hub-pro/tank
               - type: template
                 entity: sensor.dsc_tank_ec_normalized
                 icon: mdi:flash
@@ -1171,7 +1179,7 @@ views:
                 content: EC {{ states(entity) }}
                 tap_action:
                   action: navigate
-                  navigation_path: /dsc-hub-v4/tank
+                  navigation_path: /dsc-hub-pro/tank
               - type: template
                 entity: sensor.water_tester_temperature
                 icon: mdi:thermometer-water
@@ -1185,7 +1193,7 @@ views:
                 content: Open Root Zone
                 tap_action:
                   action: navigate
-                  navigation_path: /dsc-hub-v4/root-zone
+                  navigation_path: /dsc-hub-pro/root-zone
 
   - title: Climate Engine
     icon: mdi:engine
@@ -1557,23 +1565,11 @@ views:
                   - entity: sensor.dsc_ach_2x4
                   - entity: sensor.dsc_heat_balance_btu
                   - entity: sensor.dsc_moisture_net_rate
-              - type: entities
-                title: ETA / headroom (learned when trusted)
-                entities:
-                  - entity: sensor.dsc_minutes_to_temp_target
-                    name: Minutes to temp target
-                  - entity: sensor.dsc_minutes_to_rh_target
-                    name: Minutes to RH target
-                  - entity: sensor.dsc_heat_balance_btu_learned
-                    name: Heat balance (learned)
-                  - entity: sensor.dsc_moisture_net_rate_learned
-                    name: Moisture net (learned)
               - type: custom:mushroom-template-card
                 entity: sensor.dsc_learn_status
                 primary: Response-rate learning
                 secondary: >-
-                  {{ states(entity)|upper }} —
-                  trusted: {{ state_attr(entity,'trusted_levers') or 'none' }}
+                  {{ states(entity)|upper }} — open Learning for ETA, charts & settings
                 icon: mdi:brain
                 icon_color: >-
                   {% if is_state(entity,'ready') %}green
@@ -1581,39 +1577,15 @@ views:
                   {% elif is_state(entity,'warming') %}amber
                   {% elif is_state(entity,'gated') %}orange
                   {% else %}grey{% endif %}
-              - type: entities
-                title: Learned lever efficiency (1.0 = nameplate)
-                entities:
-                  - entity: input_boolean.dsc_climate_learn_enabled
-                    name: Learning enabled
-                  - entity: input_number.dsc_learn_eff_dehum
-                    name: Dehum ×
-                  - entity: input_number.dsc_learn_eff_hum
-                    name: Hum ×
-                  - entity: input_number.dsc_learn_eff_heater
-                    name: Heater ×
-                  - entity: input_number.dsc_learn_eff_mat
-                    name: Mat ×
-                  - entity: input_number.dsc_learn_eff_vent_cool
-                    name: Vent cool ×
-                  - entity: input_number.dsc_learn_eff_vent_dry
-                    name: Vent dry ×
-                  - entity: input_number.dsc_learn_eff_ac
-                    name: AC ×
-                  - entity: input_number.dsc_learn_min_samples
-                    name: Min samples to trust
-                  - entity: input_number.dsc_learn_alpha
-                    name: EMA α
+                tap_action:
+                  action: navigate
+                  navigation_path: /dsc-hub-pro/learning
               - type: markdown
                 content: >-
                   *Defaults are placeholders — replace with anemometer / nameplate
                   values. Spec checks flag intake CFM > exhaust CFM, AC wired
-                  with 0 BTU/h, and zeroed appliance rates.*
-
-                  *Learning (Phase A) observes real ΔT/ΔAH while levers run and
-                  scales ETA / headroom only. It never writes ladder waits,
-                  failsafe, or Sonoff followers. Reset via Developer Tools →
-                  Events → `dsc_climate_learn_reset`.*
+                  with 0 BTU/h, and zeroed appliance rates. Phase A learning UI
+                  lives on the **Learning** view.*
           - type: custom:expander-card
             title: 🌱 Grow mat — closed-loop root-zone band
             expanded: false
@@ -1637,7 +1609,7 @@ views:
                     content: Mat votes & soil → Root Zone
                     tap_action:
                       action: navigate
-                      navigation_path: /dsc-hub-v4/root-zone
+                      navigation_path: /dsc-hub-pro/root-zone
               - type: markdown
                 content: >-
                   *The **gap between Low and High IS the hysteresis** — keep it
@@ -2581,7 +2553,7 @@ views:
             multiline_secondary: true
             tap_action:
               action: navigate
-              navigation_path: /dsc-hub-v4/lighting
+              navigation_path: /dsc-hub-pro/lighting
           - type: custom:mini-graph-card
             name: Virtual window — 24 h
             hours_to_show: 24
@@ -4118,6 +4090,462 @@ views:
                 icon: mdi:white-balance-sunny
                 icon_color: amber
                 content: 2x4 lit {{ states(entity)|float(0)|round(1) }}h
+
+  - title: Learning
+    icon: mdi:brain
+    path: learning
+    type: sections
+    max_columns: 3
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: STATUS — Phase A observe + predict
+            heading_style: title
+          - type: custom:mushroom-chips-card
+            alignment: start
+            chips:
+              - type: template
+                entity: sensor.dsc_learn_status
+                icon: mdi:brain
+                icon_color: >-
+                  {% if is_state(entity,'ready') %}green
+                  {% elif is_state(entity,'partial') %}teal
+                  {% elif is_state(entity,'warming') %}amber
+                  {% elif is_state(entity,'gated') %}orange
+                  {% else %}grey{% endif %}
+                content: >-
+                  {{ states(entity)|upper }}
+              - type: template
+                entity: binary_sensor.dsc_learn_gate_open
+                icon: >-
+                  {{ 'mdi:gate-open' if is_state(entity,'on') else 'mdi:gate' }}
+                icon_color: "{{ 'green' if is_state(entity,'on') else 'orange' }}"
+                content: >-
+                  {{ 'GATE OPEN' if is_state(entity,'on') else 'GATE CLOSED' }}
+              - type: template
+                entity: input_boolean.dsc_climate_learn_enabled
+                icon: mdi:toggle-switch
+                icon_color: "{{ 'cyan' if is_state(entity,'on') else 'grey' }}"
+                content: >-
+                  {{ 'ENABLED' if is_state(entity,'on') else 'DISABLED' }}
+                tap_action:
+                  action: toggle
+              - type: template
+                entity: sensor.dsc_plant_specs_status
+                icon: mdi:clipboard-check
+                icon_color: >-
+                  {% if is_state(entity,'ok') %}green
+                  {% elif is_state(entity,'warn') %}amber
+                  {% else %}red{% endif %}
+                content: SPECS {{ states(entity)|upper }}
+              - type: template
+                entity: binary_sensor.dsc_hub_ha_link_status
+                icon: mdi:lan-connect
+                icon_color: "{{ 'green' if is_state(entity,'on') else 'red' }}"
+                content: >-
+                  {{ 'HUB LINK' if is_state(entity,'on') else 'HUB OFFLINE' }}
+          - type: grid
+            columns: 2
+            square: false
+            cards:
+              - type: custom:mushroom-template-card
+                entity: sensor.dsc_learn_status
+                primary: Learning status
+                secondary: >-
+                  Trusted: {{ state_attr(entity,'trusted_levers') or 'none' }}
+                icon: mdi:brain
+                icon_color: >-
+                  {% if is_state(entity,'ready') %}green
+                  {% elif is_state(entity,'partial') %}teal
+                  {% elif is_state(entity,'warming') %}amber
+                  {% elif is_state(entity,'gated') %}orange
+                  {% else %}grey{% endif %}
+                tap_action:
+                  action: more-info
+              - type: custom:mushroom-template-card
+                entity: binary_sensor.dsc_learn_gate_open
+                primary: Sample gate
+                secondary: >-
+                  {% if is_state(entity,'on') %}Sampling when levers are ON
+                  {% else %}Blocked — enable learn / clear failsafe / takeover / fault{% endif %}
+                icon: mdi:gate-open
+                icon_color: "{{ 'green' if is_state(entity,'on') else 'orange' }}"
+                tap_action:
+                  action: more-info
+          - type: markdown
+            content: >-
+              *Phase A only — learned coefficients scale **predictions** (ETA /
+              headroom). They never write ladder waits, failsafe, or Sonoff
+              followers. Status moves `warming` → `partial` → `ready` as sample
+              counts hit the trust floor.*
+
+      - type: grid
+        cards:
+          - type: heading
+            heading: OUTPUTS — ETA & headroom
+            heading_style: title
+          - type: grid
+            columns: 2
+            square: false
+            cards:
+              - type: custom:mushroom-template-card
+                entity: sensor.dsc_minutes_to_temp_target
+                primary: >-
+                  {% set m = states(entity)|float(none) %}
+                  {% if m is none %}ETA temp —
+                  {% elif m|int == 0 %}At temp target
+                  {% elif m|int >= 999 %}No capacity
+                  {% else %}~{{ m|int }} min to temp{% endif %}
+                secondary: >-
+                  Target {{ states('number.dsc_hub_target_temp') }}°C · tent
+                  {{ states('sensor.dsc_hub_tent_temperature') }}°C
+                icon: mdi:thermometer-chevron-up
+                icon_color: teal
+                tap_action:
+                  action: more-info
+              - type: custom:mushroom-template-card
+                entity: sensor.dsc_minutes_to_rh_target
+                primary: >-
+                  {% set m = states(entity)|float(none) %}
+                  {% if m is none %}ETA RH —
+                  {% elif m|int == 0 %}RH in band
+                  {% elif m|int >= 999 %}Wrong direction
+                  {% else %}~{{ m|int }} min to RH{% endif %}
+                secondary: >-
+                  Band {{ states('number.dsc_hub_rh_target_min') }}–{{
+                  states('number.dsc_hub_rh_target_max') }}% · now
+                  {{ states('sensor.dsc_hub_tent_humidity') }}%
+                icon: mdi:water-percent
+                icon_color: blue
+                tap_action:
+                  action: more-info
+          - type: entities
+            title: Capacity (nameplate vs learned)
+            show_header_toggle: false
+            entities:
+              - entity: sensor.dsc_heat_balance_btu
+                name: Heat balance (nameplate)
+              - entity: sensor.dsc_heat_balance_btu_learned
+                name: Heat balance (learned)
+              - entity: sensor.dsc_moisture_net_rate
+                name: Moisture net (nameplate)
+              - entity: sensor.dsc_moisture_net_rate_learned
+                name: Moisture net (learned)
+              - entity: sensor.dsc_minutes_to_temp_target
+                name: Minutes to temp
+              - entity: sensor.dsc_minutes_to_rh_target
+                name: Minutes to RH
+          - type: custom:bar-card
+            title: Lever efficiency (1.0 = nameplate)
+            entities:
+              - entity: input_number.dsc_learn_eff_dehum
+                name: Dehum
+              - entity: input_number.dsc_learn_eff_hum
+                name: Hum
+              - entity: input_number.dsc_learn_eff_heater
+                name: Heater
+              - entity: input_number.dsc_learn_eff_mat
+                name: Mat
+              - entity: input_number.dsc_learn_eff_vent_cool
+                name: Vent cool
+              - entity: input_number.dsc_learn_eff_vent_dry
+                name: Vent dry
+              - entity: input_number.dsc_learn_eff_recirc
+                name: Recirc
+              - entity: input_number.dsc_learn_eff_ac
+                name: AC
+            min: 0
+            max: 2
+            height: 18
+            decimal: 2
+            positions:
+              icon: "off"
+              indicator: outside
+              name: inside
+              value: inside
+            severity:
+              - color: "#f87171"
+                from: 0
+                to: 0.5
+              - color: "#fbbf24"
+                from: 0.5
+                to: 0.85
+              - color: "#34d399"
+                from: 0.85
+                to: 1.15
+              - color: "#38bdf8"
+                from: 1.15
+                to: 2
+
+      - type: grid
+        cards:
+          - type: heading
+            heading: CHARTS — efficiencies, ETA, climate response
+            heading_style: title
+          - type: custom:apexcharts-card
+            graph_span: 48h
+            update_interval: 5min
+            header:
+              show: true
+              title: Learned lever efficiency — 48 h
+              show_states: true
+              colorize_states: true
+            all_series_config:
+              extend_to: now
+              fill_raw: last
+              curve: smooth
+              stroke_width: 2
+            apex_config:
+              chart:
+                height: 280
+                animations:
+                  enabled: false
+              legend:
+                show: true
+                position: top
+              yaxis:
+                - min: 0
+                  max: 2
+                  decimalsInFloat: 2
+                  title:
+                    text: "× nameplate"
+            series:
+              - entity: input_number.dsc_learn_eff_dehum
+                name: Dehum
+                color: "#38bdf8"
+              - entity: input_number.dsc_learn_eff_heater
+                name: Heater
+                color: "#f97316"
+              - entity: input_number.dsc_learn_eff_vent_cool
+                name: Vent cool
+                color: "#34d399"
+              - entity: input_number.dsc_learn_eff_vent_dry
+                name: Vent dry
+                color: "#a78bfa"
+              - entity: input_number.dsc_learn_eff_hum
+                name: Hum
+                color: "#22d3ee"
+          - type: custom:apexcharts-card
+            graph_span: 24h
+            update_interval: 2min
+            header:
+              show: true
+              title: ETA & headroom — 24 h
+              show_states: true
+              colorize_states: true
+            all_series_config:
+              extend_to: now
+              fill_raw: last
+            apex_config:
+              chart:
+                height: 260
+                animations:
+                  enabled: false
+              legend:
+                show: true
+                position: top
+            yaxis:
+              - id: eta
+                decimals: 0
+                apex_config:
+                  title:
+                    text: min
+              - id: bal
+                opposite: true
+                decimals: 0
+                apex_config:
+                  title:
+                    text: BTU/h · g/h
+            series:
+              - entity: sensor.dsc_minutes_to_temp_target
+                name: Min → temp
+                yaxis_id: eta
+                curve: stepline
+                stroke_width: 2
+                color: "#f97316"
+                float_precision: 0
+              - entity: sensor.dsc_minutes_to_rh_target
+                name: Min → RH
+                yaxis_id: eta
+                curve: stepline
+                stroke_width: 2
+                color: "#38bdf8"
+                float_precision: 0
+              - entity: sensor.dsc_heat_balance_btu_learned
+                name: Heat learned
+                yaxis_id: bal
+                curve: smooth
+                stroke_width: 2
+                color: "#fbbf24"
+                float_precision: 0
+              - entity: sensor.dsc_moisture_net_rate_learned
+                name: Moisture learned
+                yaxis_id: bal
+                curve: smooth
+                stroke_width: 2
+                color: "#22d3ee"
+                float_precision: 1
+          - type: custom:apexcharts-card
+            graph_span: 12h
+            update_interval: 1min
+            header:
+              show: true
+              title: Tent response while learning — 12 h
+              show_states: true
+              colorize_states: true
+            all_series_config:
+              extend_to: now
+              fill_raw: last
+            apex_config:
+              chart:
+                height: 260
+                animations:
+                  enabled: false
+              legend:
+                show: true
+                position: top
+            yaxis:
+              - id: temp
+                decimals: 1
+                apex_config:
+                  title:
+                    text: "°C"
+              - id: ah
+                opposite: true
+                decimals: 2
+                apex_config:
+                  title:
+                    text: "g/m³"
+            series:
+              - entity: sensor.dsc_hub_tent_temperature
+                name: Tent °C
+                yaxis_id: temp
+                curve: smooth
+                stroke_width: 2
+                color: "#f87171"
+              - entity: number.dsc_hub_target_temp
+                name: Target °C
+                yaxis_id: temp
+                curve: stepline
+                stroke_width: 1
+                color: "#fb923c"
+                stroke_dash: 4
+              - entity: sensor.dsc_ah_tent
+                name: Tent AH
+                yaxis_id: ah
+                curve: smooth
+                stroke_width: 2
+                color: "#60a5fa"
+              - entity: sensor.dsc_ah_room
+                name: Room AH
+                yaxis_id: ah
+                curve: smooth
+                stroke_width: 1
+                color: "#94a3b8"
+          - type: custom:mini-graph-card
+            name: Sample counts (confidence)
+            hours_to_show: 168
+            points_per_hour: 1
+            line_width: 2
+            animate: true
+            show:
+              state: true
+              fill: fade
+              legend: true
+              labels: false
+            entities:
+              - entity: input_number.dsc_learn_samples_dehum
+                name: Dehum
+                color: "#38bdf8"
+              - entity: input_number.dsc_learn_samples_heater
+                name: Heater
+                color: "#f97316"
+              - entity: input_number.dsc_learn_samples_vent_cool
+                name: Vent cool
+                color: "#34d399"
+              - entity: input_number.dsc_learn_samples_vent_dry
+                name: Vent dry
+                color: "#a78bfa"
+              - entity: input_number.dsc_learn_samples_hum
+                name: Hum
+                color: "#22d3ee"
+              - entity: input_number.dsc_learn_samples_mat
+                name: Mat
+                color: "#a3e635"
+
+      - type: grid
+        cards:
+          - type: heading
+            heading: SETTINGS
+            heading_style: title
+          - type: entities
+            title: Observer
+            show_header_toggle: false
+            entities:
+              - entity: input_boolean.dsc_climate_learn_enabled
+                name: Learning enabled
+              - entity: input_number.dsc_learn_alpha
+                name: EMA α (lower = slower)
+              - entity: input_number.dsc_learn_min_samples
+                name: Min samples to trust
+          - type: entities
+            title: Sample counts
+            show_header_toggle: false
+            entities:
+              - entity: input_number.dsc_learn_samples_dehum
+                name: Dehum
+              - entity: input_number.dsc_learn_samples_hum
+                name: Hum
+              - entity: input_number.dsc_learn_samples_heater
+                name: Heater
+              - entity: input_number.dsc_learn_samples_mat
+                name: Mat
+              - entity: input_number.dsc_learn_samples_vent_cool
+                name: Vent cool
+              - entity: input_number.dsc_learn_samples_vent_dry
+                name: Vent dry
+              - entity: input_number.dsc_learn_samples_recirc
+                name: Recirc
+              - entity: input_number.dsc_learn_samples_ac
+                name: AC
+          - type: entities
+            title: Coefficients (editable · 1.0 = nameplate)
+            show_header_toggle: false
+            entities:
+              - entity: input_number.dsc_learn_eff_dehum
+                name: Dehum ×
+              - entity: input_number.dsc_learn_eff_hum
+                name: Hum ×
+              - entity: input_number.dsc_learn_eff_heater
+                name: Heater ×
+              - entity: input_number.dsc_learn_eff_mat
+                name: Mat ×
+              - entity: input_number.dsc_learn_eff_vent_cool
+                name: Vent cool ×
+              - entity: input_number.dsc_learn_eff_vent_dry
+                name: Vent dry ×
+              - entity: input_number.dsc_learn_eff_recirc
+                name: Recirc ×
+              - entity: input_number.dsc_learn_eff_ac
+                name: AC ×
+          - type: custom:mushroom-template-card
+            primary: Reset coefficients to nameplate
+            secondary: Clears sample counts · fires dsc_climate_learn_reset
+            icon: mdi:restore
+            icon_color: amber
+            tap_action:
+              action: call-service
+              service: script.dsc_climate_learn_reset
+            hold_action:
+              action: more-info
+              entity: script.dsc_climate_learn_reset
+          - type: markdown
+            content: >-
+              *Plant nameplates (CFM / volumes / L/day) stay under
+              **Climate → Plant specs**. Learning watches live ΔT/ΔAH while
+              each lever is ON and the gate is open. AC / clone-mister rows
+              only move once those actuators are wired.*
 
   - title: Trends
     icon: mdi:chart-multiline

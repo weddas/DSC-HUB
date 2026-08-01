@@ -6,7 +6,7 @@ Canonical HA surface for firmware [`firmware/v4/`](../firmware/v4/).
 
 | Path | Role |
 |---|---|
-| `dashboards/dsc-hub-v4-dashboard.yaml` | Lovelace UX **v0.2** (9 views). URL **must** be `dsc-hub-v4`. Flow: Home → Climate → tents → Root Zone → Tank/Light/Trends/System. |
+| `dashboards/dsc-hub-v4-dashboard.yaml` | Lovelace UX **v0.2** (10 views). URL **must** be `dsc-hub-pro`. Flow: Home → Climate → Learning → tents → Root Zone → Tank/Light/Trends/System. |
 | `packages/dsc_v4_core_helpers.yaml` | Hub link, fan %, airflow Sankey (CFM), photoperiod, leaf offset, appliance runtimes, dead-demand cues |
 | `packages/dsc_v4_climate_physics.yaml` | Settable plant specs (CFM/volumes/L/day/W), ACH/AH/BTU/moisture sensors, spec verification |
 | `packages/dsc_v4_climate_learn.yaml` | Phase A EMA lever-efficiency observer + minutes-to-target / headroom gauges |
@@ -17,7 +17,7 @@ Canonical HA surface for firmware [`firmware/v4/`](../firmware/v4/).
 | `packages/dsc_v4_pots_alerts.yaml` | Per-pot moisture/pH/temp/EC/N alert binaries |
 | `packages/dsc_v4_alert_count.yaml` | `sensor.dsc_active_alert_count` for Home chip |
 | `packages/dsc_v4_automations.yaml` | Demand followers, climate/safety alerts, grow-log scribe |
-| `configuration.snippet.yaml` | Paste-once: packages include + YAML-mode `dsc-hub-v4` dashboard |
+| `configuration.snippet.yaml` | Paste-once: packages include + YAML-mode `dsc-hub-pro` dashboard |
 | `automations.yaml` | Deprecated stub — points at the package above |
 | `www/dsc-system-map.*` | SYSTEM MAP Lovelace card + SVG → `/config/www/` |
 | `esphome/` | Thin device stubs — pull firmware packages from GitHub |
@@ -43,7 +43,7 @@ Quick copy list:
 | This folder | HA `/config/` |
 |---|---|
 | `packages/dsc_v4_*.yaml` | `packages/` (helpers, learn, automations) |
-| `dashboards/dsc-hub-v4-dashboard.yaml` | `dashboards/` (YAML-mode URL **`dsc-hub-v4`**) |
+| `dashboards/dsc-hub-v4-dashboard.yaml` | `dashboards/` (YAML-mode URL **`dsc-hub-pro`**) |
 | `esphome/dsc-*.yaml` | `esphome/` |
 | `www/dsc-system-map.*` | `www/` + resource `/local/dsc-system-map-card.js` |
 
@@ -168,7 +168,11 @@ coeffs scale **predictions only**:
 | `sensor.dsc_learn_status` | `disabled` / `gated` / `warming` / `partial` / `ready` |
 
 Phase A does **not** write hub persistence waits, fan curves, or failsafe.
-Reset coeffs: fire event `dsc_climate_learn_reset` (Developer Tools → Events).
+Reset coeffs: run `script.dsc_climate_learn_reset` (Learning view) or fire event
+`dsc_climate_learn_reset` (Developer Tools → Events).
+
+Dashboard: dedicated **Learning** view (`/dsc-hub-pro/learning`) — status,
+ETA/headroom, efficiency bars, 12–48 h charts, and observer settings.
 
 ## Still outside this folder (hardware / live site)
 
