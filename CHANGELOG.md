@@ -1,5 +1,12 @@
 # Changelog
 
+## v5.1.10 — 2026-08-02
+
+- DSC-CONTROL **5.1.10**: A/B twin of 5.1.9 with `sram1_as_iram: false`.
+- Everything else identical (8% LVGL buffer, Wi-Fi/LWIP starve, SIZE,
+  lean UI). USB-flash and compare `UI armed` free_heap/largest to
+  5.1.9 (~153 KB / 98 KB). Winner becomes the fleet default.
+
 ## v5.1.9 — 2026-08-02
 
 - DSC-CONTROL **5.1.9**: experimental `sram1_as_iram: true`.

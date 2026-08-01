@@ -90,6 +90,8 @@
 #  v5.1.9: EXPERIMENT — sram1_as_iram: true despite v4.0.1 finding.
 #  USB flash ONLY (bootloader must match). Compare free_heap /
 #  largest= at "UI armed" vs 5.1.8; revert if DRAM drops.
+#  v5.1.10: A/B twin of 5.1.9 with sram1_as_iram: false. Same lean
+#  UI + starve. Compare UI-armed free_heap/largest vs 5.1.9.
 #
 #  BEFORE FLASHING:
 #    1. secrets.yaml needs dsc_control_ota_password / _ap_password
@@ -132,7 +134,7 @@ esphome:
     # the dashboard and HA's device page both described DSC-CONTROL as
     # being the DSC HUB. Purely cosmetic, but confusing enough to matter.
     name: "digital_emotions.dsc-control"
-    version: "5.1.9"
+    version: "5.1.10"
   on_boot:
     # Seed the 0xDC command seq from hardware RNG so a panel reboot is
     # unlikely to replay the hub's last-seen seq even before the hub's
@@ -147,7 +149,7 @@ esphome:
     - priority: -100
       then:
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 5.1.9 paused — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 5.1.10 paused — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
             id(boot_ui_ready) = false;
@@ -164,33 +166,33 @@ esphome:
               lambda: 'return heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL) < 20000;'
             then:
               - lambda: |-
-                  ESP_LOGW("boot", "DSC-CONTROL 5.1.9 heap still tight largest=%u — waiting longer",
+                  ESP_LOGW("boot", "DSC-CONTROL 5.1.10 heap still tight largest=%u — waiting longer",
                            (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
               - delay: 10s
         - lvgl.page.show: page_boot
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 5.1.9 resume-lite — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 5.1.10 resume-lite — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
             id(touch_guard_until) = millis() + 5000;
         - lvgl.resume:
         - delay: 6s
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 5.1.9 post-lite — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 5.1.10 post-lite — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
         - lvgl.pause:
         - lambda: 'lv_obj_clear_flag(id(tabbar), LV_OBJ_FLAG_HIDDEN);'
         - lvgl.page.show: page_pulse
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 5.1.9 resume-full — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 5.1.10 resume-full — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
             id(touch_guard_until) = millis() + 2000;
         - lvgl.resume:
         - delay: 4s
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 5.1.9 UI armed — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 5.1.10 UI armed — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
             id(boot_ui_ready) = true;
@@ -219,12 +221,12 @@ esp32:
     #  nothing in the control path or the opcode map is wrong.
     # ==============================================================
     advanced:
-      # v5.1.9 EXPERIMENT — sram1_as_iram: true.
-      # v4.0.1 measured +0 free DRAM (IRAM alias carves the data window
-      # out of the heap). Re-enabled on user request to re-measure on
-      # 2026.7 / IDF 5.5.5 after the lean UI cut. USB flash ONLY —
-      # OTA does not rewrite the bootloader; a mismatch bricks to a
-      # boot loop. If "UI armed" largest= is worse than 5.1.8, revert.
+      # v5.1.10 A/B — sram1_as_iram: false (twin of 5.1.9).
+      # 5.1.9 armed at ~153 KB free / largest 98 KB with the flag on.
+      # This build keeps every other 5.1.8/5.1.9 starve setting; only
+      # the IRAM alias is off. USB flash and compare UI-armed numbers.
+      # If 5.1.10 matches or beats 5.1.9, keep false (v4.0.1 was right).
+      # If 5.1.9 is clearly better, restore true as the fleet default.
       #
       # This CYD is an ESP32-D0WDQ6 rev 3.1. Declaring it drops the
       # older-silicon compatibility shims from the binary. Kept.
@@ -233,7 +235,7 @@ esp32:
       # LVGL build. loopTask 8 KB is ESPHome's LVGL floor; do not raise.
       compiler_optimization: SIZE
       loop_task_stack_size: 8192
-      sram1_as_iram: true
+      sram1_as_iram: false
     sdkconfig_options:
       # ----------------------------------------------------------
       #  WiFi is the BACKUP path on this panel — ESP-NOW carries all
@@ -1068,7 +1070,7 @@ text_sensor:
     name: "Firmware Version"
     id: fw_version
     icon: mdi:tag-check
-    lambda: 'return {"5.1.9"};'
+    lambda: 'return {"5.1.10"};'
     update_interval: 60s
   - platform: template
     id: sel_stage
@@ -2872,7 +2874,7 @@ lvgl:
                         id: hub_cmd
                         op: 19
                         val: !lambda 'return (id(gv_coord)&2) ? 0 : 1;'
-              - label: {text: "DSC-CONTROL v5.1.9  ·  ESP-NOW primary", text_font: f_small, text_color: 0x3A4550, pad_top: 8, pad_bottom: 8}
+              - label: {text: "DSC-CONTROL v5.1.10  ·  ESP-NOW primary", text_font: f_small, text_color: 0x3A4550, pad_top: 8, pad_bottom: 8}
 # ==================================================================
 #  SCRIPTS
 # ==================================================================
