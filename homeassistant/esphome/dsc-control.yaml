@@ -19,4 +19,4 @@ packages:
       - firmware/v4/dsc-control-common.yaml
       # No dsc-fleet-setup-control-lab.yaml — see firmware/v4/dsc-control.yaml
       # (web_server_base on this CYD crash-loops; hub_cmd uses ${hub_mac}).
-    refresh: 1h
+    refresh: 0s
