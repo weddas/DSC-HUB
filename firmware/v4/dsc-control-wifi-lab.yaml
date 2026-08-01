@@ -1,9 +1,13 @@
 # ==================================================================
 #  DSC-CONTROL · lab WiFi
+#  Nest DHCP reservation: 192.168.86.177 (panel mDNS is off — OTA must
+#  target use_address, not dsc-control.local).
 # ==================================================================
 wifi:
   ssid: ${wifi_ssid}
   password: ${wifi_password}
+  # OTA / ESPHome dashboard target (device IP from Nest reservation).
+  use_address: 192.168.86.177
   power_save_mode: none
   ap:
     ssid: "DSC-CONTROL Fallback"

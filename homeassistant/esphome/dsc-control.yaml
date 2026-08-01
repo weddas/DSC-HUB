@@ -1,4 +1,7 @@
 # DSC-CONTROL — HA stub
+# Lab OTA target: Nest reservation 192.168.86.177 (mDNS off on panel).
+# wifi-lab package sets use_address; keep this overlay in sync if the
+# reservation changes before the package lands on master.
 substitutions:
   name: dsc-control
   friendly_name: DSC-CONTROL
@@ -20,3 +23,6 @@ packages:
       # No dsc-fleet-setup-control-lab.yaml — see firmware/v4/dsc-control.yaml
       # (web_server_base on this CYD crash-loops; hub_cmd uses ${hub_mac}).
     refresh: 0s
+
+wifi:
+  use_address: 192.168.86.177

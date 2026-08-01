@@ -1,6 +1,7 @@
 # ==================================================================
 #  DSC-CONTROL — device stub (lab)
 #  Kit SoftAP setup: dsc-control-kit.yaml
+#  Lab IP: 192.168.86.177 (Nest reservation; see dsc-control-wifi-lab.yaml)
 # ==================================================================
 
 substitutions:

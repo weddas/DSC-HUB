@@ -237,8 +237,9 @@ ota:
 
 # v4.0.9 — mDNS disabled. At peak setup() free heap was ~2 KB; the mDNS
 # task stack failed to allocate, the component stuck FAILED, and
-# dsc-control.local never worked. Nest already forces IP adoption; skip
-# the doomed init instead of burning RAM and leaving an error flag.
+# dsc-control.local never worked. Nest reservation 192.168.86.177 +
+# wifi use_address (see dsc-control-wifi-lab.yaml); skip the doomed init
+# instead of burning RAM and leaving an error flag.
 mdns:
   disabled: true
 
