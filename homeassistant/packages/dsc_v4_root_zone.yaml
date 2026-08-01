@@ -3,6 +3,8 @@
 #  ------------------------------------------------------------------
 #  Coldest / hottest voted plausible pot temps — single source of truth
 #  for dashboard, learn, and scribe (matches hub mat voting rules).
+#  If every Mat Vote switch is OFF, fall back to all plausible pots so
+#  the UI does not go blank after a bad NVS restore.
 # ==================================================================
 
 template:
@@ -14,7 +16,7 @@ template:
         state_class: measurement
         icon: mdi:thermometer-chevron-down
         state: >-
-          {% set ns = namespace(vals=[], which='none') %}
+          {% set ns = namespace(vals=[], which='none', votes=0) %}
           {% set pots = [
             ('1', 'sensor.dsc_pot1_soil_temperature', 'switch.dsc_hub_mat_vote_pot_1'),
             ('2', 'sensor.dsc_pot2_soil_temperature', 'switch.dsc_hub_mat_vote_pot_2'),
@@ -22,18 +24,21 @@ template:
             ('4', 'sensor.dsc_pot4_soil_temperature', 'switch.dsc_hub_mat_vote_pot_4')
           ] %}
           {% for p, e, v in pots %}
-            {% if is_state(v, 'on') and has_value(e) %}
+            {% if is_state(v, 'on') %}{% set ns.votes = ns.votes + 1 %}{% endif %}
+          {% endfor %}
+          {% for p, e, v in pots %}
+            {% if (ns.votes == 0 or is_state(v, 'on')) and has_value(e) %}
               {% set t = states(e)|float(none) %}
               {% if t is not none and 5 < t < 45 %}
                 {% set ns.vals = ns.vals + [t] %}
-                {% if ns.which == 'none' or t < (ns.vals|min) %}{% set ns.which = p %}{% endif %}
+                {% if ns.which == 'none' or t < ns.vals|min %}{% set ns.which = p %}{% endif %}
               {% endif %}
             {% endif %}
           {% endfor %}
           {% if ns.vals %}{{ (ns.vals|min)|round(2) }}{% else %}unavailable{% endif %}
         attributes:
           pot: >-
-            {% set ns = namespace(best=none, best_t=999) %}
+            {% set ns = namespace(best=none, best_t=999, votes=0) %}
             {% set pots = [
               ('1', 'sensor.dsc_pot1_soil_temperature', 'switch.dsc_hub_mat_vote_pot_1'),
               ('2', 'sensor.dsc_pot2_soil_temperature', 'switch.dsc_hub_mat_vote_pot_2'),
@@ -41,7 +46,10 @@ template:
               ('4', 'sensor.dsc_pot4_soil_temperature', 'switch.dsc_hub_mat_vote_pot_4')
             ] %}
             {% for p, e, v in pots %}
-              {% if is_state(v, 'on') and has_value(e) %}
+              {% if is_state(v, 'on') %}{% set ns.votes = ns.votes + 1 %}{% endif %}
+            {% endfor %}
+            {% for p, e, v in pots %}
+              {% if (ns.votes == 0 or is_state(v, 'on')) and has_value(e) %}
                 {% set t = states(e)|float(none) %}
                 {% if t is not none and 5 < t < 45 and t < ns.best_t %}
                   {% set ns.best_t = t %}{% set ns.best = p %}
@@ -58,7 +66,7 @@ template:
         state_class: measurement
         icon: mdi:thermometer-chevron-up
         state: >-
-          {% set ns = namespace(vals=[]) %}
+          {% set ns = namespace(vals=[], votes=0) %}
           {% set pots = [
             ('1', 'sensor.dsc_pot1_soil_temperature', 'switch.dsc_hub_mat_vote_pot_1'),
             ('2', 'sensor.dsc_pot2_soil_temperature', 'switch.dsc_hub_mat_vote_pot_2'),
@@ -66,7 +74,10 @@ template:
             ('4', 'sensor.dsc_pot4_soil_temperature', 'switch.dsc_hub_mat_vote_pot_4')
           ] %}
           {% for p, e, v in pots %}
-            {% if is_state(v, 'on') and has_value(e) %}
+            {% if is_state(v, 'on') %}{% set ns.votes = ns.votes + 1 %}{% endif %}
+          {% endfor %}
+          {% for p, e, v in pots %}
+            {% if (ns.votes == 0 or is_state(v, 'on')) and has_value(e) %}
               {% set t = states(e)|float(none) %}
               {% if t is not none and 5 < t < 45 %}{% set ns.vals = ns.vals + [t] %}{% endif %}
             {% endif %}
