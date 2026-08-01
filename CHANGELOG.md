@@ -1,5 +1,17 @@
 # Changelog
 
+## v5.1.1 — 2026-08-01
+
+- DSC-CONTROL glass: **instant** grey pending on every +/- and toggle; neon when
+  hub ESP-NOW echoes (HA colours unchanged). Multi-tap accumulates from pending.
+- Kill freezes: defer overlay hide / `refresh_ui` after wake, unlock, lock commit;
+  bar-only hold HUD; lock only from dedicated hit / Settings row (no page hold).
+- Idle sleep reuses lock overlay (tap to wake); 12% backlight for 5 min then off.
+- Harder LVGL scroll (`scroll_limit` 40); multi-alert list from bell/strip.
+- Lean: drop dead `saver` overlay; fixed `alert_txt[384]` (no string churn);
+  remove plant/sky HUD + `mdi_grow` font.
+- Panel project **5.1.1**.
+
 ## v5.1.0 — 2026-08-01
 
 - Force **5.1.0** across lab + kit firmwares, Sonoffs, Sync add-on, stubs, docs.
