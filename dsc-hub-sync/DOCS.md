@@ -3,7 +3,7 @@
 Pulls [weddas/DSC-HUB](https://github.com/weddas/DSC-HUB) and copies HA surfaces
 into `/config` whenever the tracked git ref moves (default: `master`).
 
-**Add-on version:** **5.1.1** (script harden; HA surface still **5.1.0**)
+**Add-on version:** **5.1.2** (also syncs `esphome/components/dsc_fleet_setup`; HA surface still **5.1.0**)
 
 ## What it syncs
 
@@ -48,7 +48,7 @@ often does not create them. The add-on posts a persistent notification reminder.
 | `ref` | `master` | Branch or tag |
 | `poll_seconds` | `60` | Fetch interval |
 | `sync_www` | `true` | SYSTEM MAP assets |
-| `sync_esphome` | **`true`** | Overwrite ESPHome stubs (`ref: v5.1.0`) |
+| `sync_esphome` | **`true`** | Overwrite ESPHome stubs (`ref: v5.1.0`) and copy `firmware/v4/components` → `/config/esphome/components` |
 | `reload_after_sync` | `true` | Broader reload set |
 
 ## Private repos

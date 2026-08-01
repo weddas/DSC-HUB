@@ -14,11 +14,9 @@
 #include <esp_wifi.h>
 #include <nvs_flash.h>
 #include <nvs.h>
-#if defined(USE_ESP_IDF)
+// ESPHome 2026+ builds ESP32 Arduino as an IDF component — prefer
+// esp_http_client so we do not depend on Arduino HTTPClient include paths.
 #include <esp_http_client.h>
-#else
-#include <HTTPClient.h>
-#endif
 #endif
 
 #ifdef USE_ESPNOW
@@ -502,10 +500,9 @@ void DscFleetSetup::handle_hub_api_(AsyncWebServerRequest *request, const std::s
   send_err("unknown");
 }
 
-// ---- Satellite HTTP helpers (ESP-IDF esp_http_client; Arduino HTTPClient fallback) ----
+// ---- Satellite HTTP helpers (esp_http_client on all ESP32 builds) ----
 static bool http_get_string_(const char *url, std::string &out) {
 #ifdef USE_ESP32
-#if defined(USE_ESP_IDF)
   esp_http_client_config_t cfg = {};
   cfg.url = url;
   cfg.timeout_ms = 8000;
@@ -526,26 +523,12 @@ static bool http_get_string_(const char *url, std::string &out) {
   esp_http_client_cleanup(client);
   return content_length >= 0 || !out.empty();
 #else
-  HTTPClient http;
-  if (!http.begin(url))
-    return false;
-  int code = http.GET();
-  if (code != 200) {
-    http.end();
-    return false;
-  }
-  out = http.getString().c_str();
-  http.end();
-  return true;
-#endif
-#else
   return false;
 #endif
 }
 
 static bool http_post_json_(const char *url, const std::string &json_body) {
 #ifdef USE_ESP32
-#if defined(USE_ESP_IDF)
   esp_http_client_config_t cfg = {};
   cfg.url = url;
   cfg.timeout_ms = 8000;
@@ -565,15 +548,6 @@ static bool http_post_json_(const char *url, const std::string &json_body) {
   esp_http_client_close(client);
   esp_http_client_cleanup(client);
   return status >= 200 && status < 300;
-#else
-  HTTPClient http;
-  if (!http.begin(url))
-    return false;
-  http.addHeader("Content-Type", "application/json");
-  int code = http.POST(json_body.c_str());
-  http.end();
-  return code >= 200 && code < 300;
-#endif
 #else
   return false;
 #endif

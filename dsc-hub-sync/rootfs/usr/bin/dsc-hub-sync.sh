@@ -4,6 +4,7 @@
 #  Runs inside the HAOS add-on. Polls GitHub; syncs when ref moves.
 #  v5.1.0: sync_esphome default true, broader reloads, version marker,
 #  atomic staging copy with last-good rollback.
+#  v5.1.2: also sync firmware/v4/components → /config/esphome/components.
 # ==================================================================
 set -euo pipefail
 
@@ -155,6 +156,23 @@ stage_and_commit() {
       [[ -f "${f}" ]] || continue
       cp -f "${f}" "${STAGE}/esphome/$(basename "${f}")"
     done
+    # Local external_components path used by firmware/v4/dsc-fleet-setup-*.yaml
+    if [[ -d "${src}/../firmware/v4/components/dsc_fleet_setup" ]]; then
+      mkdir -p "${STAGE}/esphome/components"
+      rm -rf "${STAGE}/esphome/components/dsc_fleet_setup"
+      cp -a "${src}/../firmware/v4/components/dsc_fleet_setup" \
+        "${STAGE}/esphome/components/dsc_fleet_setup"
+      log "Staged esphome/components/dsc_fleet_setup"
+    elif [[ -d "${src}/firmware/v4/components/dsc_fleet_setup" ]]; then
+      # When src is repo root (typical Sync clone layout)
+      mkdir -p "${STAGE}/esphome/components"
+      rm -rf "${STAGE}/esphome/components/dsc_fleet_setup"
+      cp -a "${src}/firmware/v4/components/dsc_fleet_setup" \
+        "${STAGE}/esphome/components/dsc_fleet_setup"
+      log "Staged esphome/components/dsc_fleet_setup"
+    else
+      warn "Missing firmware/v4/components/dsc_fleet_setup — ESPHome Install will fail"
+    fi
   fi
 
   # Promote stage → /config
@@ -184,6 +202,13 @@ stage_and_commit() {
       [[ -f "${f}" ]] || continue
       cp -f "${f}" "${HA_CONFIG}/esphome/$(basename "${f}")"
     done
+    if [[ -d "${STAGE}/esphome/components/dsc_fleet_setup" ]]; then
+      mkdir -p "${HA_CONFIG}/esphome/components"
+      rm -rf "${HA_CONFIG}/esphome/components/dsc_fleet_setup"
+      cp -a "${STAGE}/esphome/components/dsc_fleet_setup" \
+        "${HA_CONFIG}/esphome/components/dsc_fleet_setup"
+      log "Installed /config/esphome/components/dsc_fleet_setup"
+    fi
   fi
 }
 
