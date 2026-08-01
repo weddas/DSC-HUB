@@ -21,11 +21,12 @@
 #  Verified: followers resync on HA start, relay restore, hub-link restore;
 #  skip while node test mode is on; hub-offline ≥30s forces all four OFF.
 #
-#  Blip tolerance (heater-critical): followers no longer fail-closed on a
-#  sub-second hub API flap. Genuine demand → off is immediate. Demand /
-#  ha_link unavailable|off must hold ≥25s before follower OFF; the 30s
-#  hub-offline safe-off remains the hard belt. Sonoff node grace still
-#  covers total HA death.
+#  API-blip tolerance (heater-critical): hub WiFi + DSC-CONTROL/ESP-NOW
+#  can stay healthy while HA alone marks the hub unavailable (Noise API
+#  session flap). Followers no longer fail-closed on that. Genuine
+#  demand → off is immediate. Demand / ha_link unavailable|off must hold
+#  ≥25s before follower OFF; 30s hub-offline safe-off remains the hard
+#  belt. Sonoff node grace still covers total HA death.
 #
 #  Phase A response-rate learning lives in dsc_v4_climate_learn.yaml
 #  (EMA observer + ETA gauges only — never writes ladder waits).
@@ -783,12 +784,13 @@ automation:
           entity_id: input_boolean.dsc_event_log
           message: "Hub offline 30s — appliance relays safe-OFF"
 
-  # Bidirectional stack handshake: HA pings number.dsc_hub_ha_handshake
-  # every 60s. Hub firmware treats a silent handshake (≥15 min, WiFi up)
-  # as a wedged API path → sync NVS + safe_reboot (Full Auto re-arms).
+  # Bidirectional API handshake: HA pings number.dsc_hub_ha_handshake
+  # every 60s. Proves the write path (not just WiFi). Hub firmware: silent
+  # ≥5 min while WiFi still up → wedged API → sync NVS + safe_reboot.
+  # Short blips do not reboot — follower debounce keeps the heater on.
   - id: dsc_hub_ha_handshake_ping
-    alias: "DSC-HUB · HA handshake ping"
-    description: "Writes unix time to the hub handshake number every 60s while the entity exists."
+    alias: "DSC-HUB · HA API handshake ping"
+    description: "Writes unix time to the hub handshake number every 60s while the API entity exists."
     mode: single
     triggers:
       - trigger: time_pattern
@@ -805,7 +807,7 @@ automation:
 
   - id: dsc_hub_heartbeat_stale
     alias: "DSC-HUB · ALERT Heartbeat unavailable"
-    description: "Hub heartbeat sensor gone ≥5 min — hub may be mid stack-recovery reboot."
+    description: "Hub heartbeat sensor gone ≥5 min — usually API session down (Control/ESP-NOW may still be fine)."
     mode: single
     triggers:
       - trigger: state
@@ -815,16 +817,16 @@ automation:
     actions:
       - action: script.dsc_notify
         data:
-          title: "DSC-HUB heartbeat lost"
+          title: "DSC-HUB API heartbeat lost"
           message: >-
             sensor.dsc_hub_heartbeat unavailable ≥5 min.
-            If WiFi/API is wedged the hub will sync state and reboot
-            (max 2×/boot). Check WiFi RSSI / power.
+            If Control is still linked this is an API wedge — hub will
+            sync state and reboot to rebind (max 2×/boot).
       - action: logbook.log
         data:
           name: "Grow log"
           entity_id: input_boolean.dsc_event_log
-          message: "Hub heartbeat unavailable ≥5 min — awaiting stack recovery"
+          message: "Hub API heartbeat unavailable ≥5 min — awaiting API recovery reboot"
 
   - id: dsc_hub_heartbeat_restored
     alias: "DSC-HUB · Heartbeat restored"

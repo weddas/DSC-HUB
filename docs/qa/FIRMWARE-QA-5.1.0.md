@@ -24,7 +24,7 @@ Commit checklist for lab + kit packages. Firmware Install is always **manual**.
 - [ ] Mat uses coldest **voted** plausible pot (not POT1-only)
 - [ ] Failsafe >35 °C owns outputs; learn gate closes
 - [ ] Hub API blip under 25s → heater/mat/hum relays **stay ON** (follower debounce); offline ≥30s → safe-off; followers resync on return (**no** snapshot restore)
-- [ ] Hub `sensor.dsc_hub_heartbeat` increments; HA writes `number.dsc_hub_ha_handshake` every 60s; WiFi dead ≥10 min or handshake/API dead ≥15 min (WiFi up) → NVS sync + safe_reboot (≤2×/boot); Full Auto re-arms
+- [ ] API-blip case: Control still LINKED, HA hub unavailable under 25s → heater stays ON; handshake/API dead ≥5 min while WiFi up → NVS sync + safe_reboot (≤2×/boot); Full Auto re-arms
 - [ ] Phase B wait numbers accepted; `run_climate_logic` starts from bases then gates
 - [ ] Phase B off by default in HA; enabling writes waits only (not failsafe/min-off/fans)
 - [ ] Panel heap: free + largest free block healthy after UI pages

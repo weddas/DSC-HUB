@@ -5,7 +5,7 @@
 wifi:
   # No ssid/password — ESPHome keeps NVS STA creds from fleet setup.
   power_save_mode: none
-  # Rejoin known AP without a full scan — shorter post-blip STA downtime.
+  # Rejoin known AP without a full scan. HA offline is usually API-only.
   fast_connect: true
   ap:
     ssid: "DSC-Setup"
