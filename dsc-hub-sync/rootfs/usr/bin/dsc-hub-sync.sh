@@ -252,7 +252,8 @@ EOF
     ha_service automation reload
     ha_service script reload || true
     ha_service template reload || true
-    ha_service lovelace reload || true
+    # YAML dashboards refresh on navigation; lovelace.reload is gone/400 on newer HA.
+    ha_service frontend reload_themes || true
   fi
 
   echo "${sha}" >"${STATE_FILE}"

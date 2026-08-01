@@ -2205,9 +2205,17 @@ text_sensor:
       name: "WiFi SSID"
       id: network_ssid
   - platform: version
+    name: "ESPHome Version"
+    id: esphome_version
+    hide_timestamp: true
+    entity_category: diagnostic
+  # Fleet chip / RELEASE expect this to match project.version (not ESPHome compiler).
+  - platform: template
     name: "Firmware Version"
     id: fw_version
-    hide_timestamp: true
+    icon: mdi:tag-check
+    lambda: 'return {"5.1.0"};'
+    update_interval: 60s
 
   # Plant names: HA → hub cache → panel via ESP-NOW 0xD4.
   # Renames in HA write the pot permanently (optimistic+restore there)

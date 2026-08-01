@@ -928,6 +928,12 @@ binary_sensor:
 
 text_sensor:
   - platform: template
+    name: "Firmware Version"
+    id: fw_version
+    icon: mdi:tag-check
+    lambda: 'return {"5.1.0"};'
+    update_interval: 60s
+  - platform: template
     id: sel_stage
     internal: true
     update_interval: never

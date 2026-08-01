@@ -500,8 +500,14 @@ sensor:
 
 text_sensor:
   - platform: version
-    name: "Firmware Version"
+    name: "ESPHome Version"
     hide_timestamp: true
+    entity_category: diagnostic
+  - platform: template
+    name: "Firmware Version"
+    icon: mdi:tag-check
+    lambda: 'return {"5.1.0"};'
+    update_interval: 60s
 
 button:
   - platform: restart
