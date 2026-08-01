@@ -211,7 +211,7 @@ script:
           address: ${panel_mac}
           wait_for_sent: false
           data: !lambda |-
-            std::vector<uint8_t> p; p.reserve(48);
+            std::vector<uint8_t> p; p.reserve(60);
             auto i16 = [&](float v, float sc){ int16_t t = isnan(v) ? (int16_t)0x8000 : (int16_t) lroundf(v * sc); p.push_back(t & 0xFF); p.push_back((t >> 8) & 0xFF); };
             auto u8  = [&](int v){ p.push_back((uint8_t)(v < 0 ? 0 : (v > 255 ? 255 : v))); };
             p.push_back(0xD1); p.push_back(0x01);
@@ -232,10 +232,13 @@ script:
             uint8_t ft=0; if(id(sensor_fault_active))ft|=1; if(id(room_fault_active))ft|=2; if(id(clone_fault_active))ft|=4; if(id(rootzone_fault_active))ft|=8; if(id(ha_connected).state)ft|=16; if(id(lights_currently_on))ft|=32; if(id(clone_lights_on))ft|=64; if(id(emergency_failsafe_active))ft|=128; p.push_back(ft);
             uint8_t co=0; if(id(hum_intake_routing))co|=1; if(id(destrat_pulse_enable))co|=2; if(id(pot1_espnow_link).state)co|=4; if(id(pot2_espnow_link).state)co|=8; if(id(pot3_espnow_link).state)co|=16; if(id(pot4_espnow_link).state)co|=32; if(id(clone_photo_follow))co|=64; p.push_back(co);
             p.push_back((uint8_t) id(tx_seq)++);
-            // ladder countdowns (seconds until each rung fires; 0 = idle), u16
+            // ladder fire countdowns + cooldown remaining (seconds; 0 = idle), u16 each
+            // order: hum, dehum, heat, ac, mat, clonehum
             auto cu = [&](float v){ uint16_t t = isnan(v)||v<0 ? 0 : (v>65535 ? 65535 : (uint16_t)v); p.push_back(t&0xFF); p.push_back((t>>8)&0xFF); };
             cu(id(sens_hum_countdown).state); cu(id(sens_dehum_countdown).state); cu(id(sens_heater_countdown).state);
             cu(id(sens_ac_countdown).state);  cu(id(sens_mat_countdown).state);   cu(id(sens_clone_hum_countdown).state);
+            cu(id(sens_hum_cooldown).state);  cu(id(sens_dehum_cooldown).state);  cu(id(sens_heater_cooldown).state);
+            cu(id(sens_ac_cooldown).state);   cu(id(sens_mat_cooldown).state);    cu(id(sens_clone_hum_cooldown).state);
             return p;
 
   # ---- CONFIG (0xD2) — setpoints ----

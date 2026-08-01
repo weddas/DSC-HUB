@@ -19,7 +19,8 @@
 #    * Tab bar: Pulse / Clone / Main / Control  (design tab order)
 #    * PULSE : status pills (WiFi / alert count / CO2e), 3 env cards
 #      (2x4 / 4x8 / ROOM), escalation-ladder rungs (fans + appliance
-#      w/ live fire-countdown), alert strip with local mute
+#      w/ live fire-countdown; tap → page_ladder_detail), alert strip
+#      with local mute
 #    * CLONE + MAIN : banded vitals bars (temp / RH / VPD coloured
 #      against the LIVE targets, Follow-4x8 resolved honestly)
 #    * CONTROL : Manual Takeover (confirm dialog), Full Auto + Auto
@@ -39,7 +40,9 @@
 #  v4.0.10: page-gated refresh_ui @ 5 s — stop A8 glyph / WDT reboot loops.
 #  v4.0.11: refresh_ui reads gv_* live; template mirrors parked (never);
 #    30 s WiFi channel poll for silent Nest/mesh hops.
-#  STILL DEFERRED: per-device power pages, VPD curve editor, canvas charts.
+#  STILL DEFERRED: VPD curve editor, canvas charts.
+#  PARTIAL: ladder drill-down (page_ladder_detail) — fans ± + appliance
+#  ON/fire/cooldown; full per-device power pages still deferred.
 #
 #  RAM RULE (crash postmortems v4.0–4.0.2 + 5.1.0): never call lv_label_set_text
 #  every frame; guard with strcmp. No SCROLL_CIRCULAR, no breathe anim.
@@ -92,6 +95,9 @@
 #  largest= at "UI armed" vs 5.1.8; revert if DRAM drops.
 #  v5.1.10: A/B twin of 5.1.9 with sram1_as_iram: false. Same lean
 #  UI + starve. Compare UI-armed free_heap/largest vs 5.1.9.
+#  v5.1.11: Pulse Rung 1/2 tappable → page_ladder_detail (shared 6-row
+#  drill-down). Fans show % + ±10; appliances show ON duration (panel-
+#  local), fire countdown, cooldown (0xD1 +12 B). Flash hub + panel.
 #
 #  BEFORE FLASHING:
 #    1. secrets.yaml needs dsc_control_ota_password / _ap_password
@@ -134,7 +140,7 @@ esphome:
     # the dashboard and HA's device page both described DSC-CONTROL as
     # being the DSC HUB. Purely cosmetic, but confusing enough to matter.
     name: "digital_emotions.dsc-control"
-    version: "5.1.10"
+    version: "5.1.11"
   on_boot:
     # Seed the 0xDC command seq from hardware RNG so a panel reboot is
     # unlikely to replay the hub's last-seen seq even before the hub's
@@ -149,7 +155,7 @@ esphome:
     - priority: -100
       then:
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 5.1.10 paused — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 5.1.11 paused — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
             id(boot_ui_ready) = false;
@@ -166,33 +172,33 @@ esphome:
               lambda: 'return heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL) < 20000;'
             then:
               - lambda: |-
-                  ESP_LOGW("boot", "DSC-CONTROL 5.1.10 heap still tight largest=%u — waiting longer",
+                  ESP_LOGW("boot", "DSC-CONTROL 5.1.11 heap still tight largest=%u — waiting longer",
                            (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
               - delay: 10s
         - lvgl.page.show: page_boot
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 5.1.10 resume-lite — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 5.1.11 resume-lite — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
             id(touch_guard_until) = millis() + 5000;
         - lvgl.resume:
         - delay: 6s
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 5.1.10 post-lite — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 5.1.11 post-lite — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
         - lvgl.pause:
         - lambda: 'lv_obj_clear_flag(id(tabbar), LV_OBJ_FLAG_HIDDEN);'
         - lvgl.page.show: page_pulse
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 5.1.10 resume-full — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 5.1.11 resume-full — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
             id(touch_guard_until) = millis() + 2000;
         - lvgl.resume:
         - delay: 4s
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 5.1.10 UI armed — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 5.1.11 UI armed — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
             id(boot_ui_ready) = true;
@@ -407,6 +413,18 @@ espnow:
           }
           id(gv_dem)=dem_w; id(gv_mode)=mode_w; id(gv_arm)=data[32]; id(gv_flt)=data[33]; id(gv_coord)=coord_w;
           if (size >= 48) for (int i = 0; i < 6; i++) { uint16_t c = data[36+i*2] | (data[37+i*2] << 8); id(gv_cd)[i] = (float) c; }
+          if (size >= 60) for (int i = 0; i < 6; i++) { uint16_t c = data[48+i*2] | (data[49+i*2] << 8); id(gv_cool)[i] = (float) c; }
+          // panel-local ON duration: stamp rising edge, clear when off
+          // dem bit order for cool/cd indices: hum0 dehum1 heat2 ac4 mat3 clonehum5
+          {
+            static const int dem_bit[6] = {0, 1, 2, 4, 3, 5};
+            uint32_t now = millis();
+            for (int i = 0; i < 6; i++) {
+              bool on = (dem_w >> dem_bit[i]) & 1;
+              if (on) { if (id(dem_on_ms)[i] == 0) id(dem_on_ms)[i] = now; }
+              else id(dem_on_ms)[i] = 0;
+            }
+          }
           if (confirm_paint) id(ui_dirty) = true;
         } else if (ty == 0xD2 && size >= 56) {
           static const float sc[27] = {100,100,100,100,100, 100,100,100,100,100, 1,1,1,1, 1,100,1,1,1, 100,100,1,1,1,1, 1,1};
@@ -1070,7 +1088,7 @@ text_sensor:
     name: "Firmware Version"
     id: fw_version
     icon: mdi:tag-check
-    lambda: 'return {"5.1.10"};'
+    lambda: 'return {"5.1.11"};'
     update_interval: 60s
   - platform: template
     id: sel_stage
@@ -1174,8 +1192,14 @@ globals:
     type: float[28]
     initial_value: '{NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN}'
   - id: gv_cd
-    type: float[6]        # ladder countdowns: hum dehum heat ac mat clonehum (added to vitals)
+    type: float[6]        # ladder fire countdowns: hum dehum heat ac mat clonehum
     initial_value: '{NAN,NAN,NAN,NAN,NAN,NAN}'
+  - id: gv_cool
+    type: float[6]        # ladder cooldown remaining (same order); from 0xD1 size>=60
+    initial_value: '{0,0,0,0,0,0}'
+  - id: dem_on_ms
+    type: uint32_t[6]     # panel-local ON stamp per demand (hum..clonehum); 0 = off
+    initial_value: '{0,0,0,0,0,0}'
   - id: boot_ui_ready            # false until post-boot LVGL resume (5.1.3)
     type: bool
     initial_value: 'false'
@@ -1223,6 +1247,12 @@ globals:
     type: int
     initial_value: '1'
   - id: ui_soil_detail            # true while page_soil_detail is showing
+    type: bool
+    initial_value: 'false'
+  - id: ladder_detail_mode        # 1 = fans, 2 = appliances
+    type: int
+    initial_value: '1'
+  - id: ui_ladder_detail          # true while page_ladder_detail is showing
     type: bool
     initial_value: 'false'
   # ---- tap-challenge gate (Manual Takeover + appliance demands) ----
@@ -1443,6 +1473,7 @@ lvgl:
                   - lambda: |-
                       id(active_tab) = 0;
                       id(ui_soil_detail) = false;
+                      id(ui_ladder_detail) = false;
                   - script.execute: restyle_tabs
                   - script.execute: refresh_ui
             - button:
@@ -1462,6 +1493,7 @@ lvgl:
                   - lambda: |-
                       id(active_tab) = 1;
                       id(ui_soil_detail) = false;
+                      id(ui_ladder_detail) = false;
                   - script.execute: restyle_tabs
                   - script.execute: refresh_ui
             - button:
@@ -1481,6 +1513,7 @@ lvgl:
                   - lambda: |-
                       id(active_tab) = 2;
                       id(ui_soil_detail) = false;
+                      id(ui_ladder_detail) = false;
                   - script.execute: restyle_tabs
                   - script.execute: refresh_ui
             - button:
@@ -1500,6 +1533,7 @@ lvgl:
                   - lambda: |-
                       id(active_tab) = 3;
                       id(ui_soil_detail) = false;
+                      id(ui_ladder_detail) = false;
                   - script.execute: restyle_tabs
                   - script.execute: refresh_ui
             - button:
@@ -1519,6 +1553,7 @@ lvgl:
                   - lambda: |-
                       id(active_tab) = 4;
                       id(ui_soil_detail) = false;
+                      id(ui_ladder_detail) = false;
                   - script.execute: restyle_tabs
                   - script.execute: refresh_ui
 
@@ -1984,9 +2019,10 @@ lvgl:
               - label: {id: lbl_room, text: "--", text_font: f_body, align: BOTTOM_LEFT, text_color: 0xFFFFFF}
 
         # escalation ladder + 1h VPD micro-trend (ring buffer → one label)
-        - label: {text: "ESCALATION LADDER", text_font: f_small, align: TOP_LEFT, x: 10, y: 98, text_color: 0x8A929C}
+        # Tap a rung → page_ladder_detail (fans ± / appliance timers).
+        - label: {text: "ESCALATION LADDER  ·  tap a rung", text_font: f_small, align: TOP_LEFT, x: 10, y: 98, text_color: 0x8A929C}
         - label: {id: lbl_spark, text: "VPD —", text_font: f_small, align: TOP_RIGHT, x: -12, y: 98, text_color: 0x5A6472}
-        - obj:
+        - button:
             id: rung1
             x: 8
             y: 114
@@ -1994,21 +2030,37 @@ lvgl:
             height: 46
             styles: card
             border_color: 0x00BCD4
+            shadow_width: 0
             scrollable: false
             widgets:
               - label: {text: "Rung 1 · Fans", text_font: f_small, align: TOP_LEFT, text_color: 0x8A929C}
               - label: {id: lbl_rung1, text: "--", text_font: f_body, align: BOTTOM_LEFT, text_color: 0x00BCD4}
-        - obj:
+              - label: {text: "\U000F0142", text_font: mdi_16, align: RIGHT_MID, x: -4, text_color: 0x5A6472}
+            on_click:
+              - lambda: |-
+                  id(ladder_detail_mode) = 1;
+                  id(ui_ladder_detail) = true;
+              - lvgl.page.show: page_ladder_detail
+              - script.execute: refresh_ui
+        - button:
             id: rung2
             x: 162
             y: 114
             width: 150
             height: 46
             styles: card
+            shadow_width: 0
             scrollable: false
             widgets:
               - label: {text: "Rung 2 · Appliances", text_font: f_small, align: TOP_LEFT, text_color: 0x8A929C}
               - label: {id: lbl_rung2, text: "standing by", text_font: f_body, align: BOTTOM_LEFT, text_color: 0x5A6472}
+              - label: {text: "\U000F0142", text_font: mdi_16, align: RIGHT_MID, x: -4, text_color: 0x5A6472}
+            on_click:
+              - lambda: |-
+                  id(ladder_detail_mode) = 2;
+                  id(ui_ladder_detail) = true;
+              - lvgl.page.show: page_ladder_detail
+              - script.execute: refresh_ui
 
         # alert strip
         - obj:
@@ -2050,6 +2102,322 @@ lvgl:
             radius: 0
             on_click:
               - script.execute: open_alerts
+
+    # Ladder drill-down — shared page for Rung 1 fans (±) and Rung 2
+    # appliances (ON duration / fire countdown / cooldown). Six reusable
+    # rows; mode flips labels + ± visibility in refresh_ui.
+    - id: page_ladder_detail
+      scrollbar_mode: "OFF"
+      bg_color: 0x0E1116
+      scrollable: false
+      on_swipe_right:
+        - lambda: 'id(ui_ladder_detail) = false;'
+        - lvgl.page.show: page_pulse
+        - script.execute: refresh_ui
+      widgets:
+        - obj:
+            x: 0
+            y: 0
+            width: 320
+            height: 36
+            bg_color: 0x171B22
+            bg_opa: COVER
+            border_width: 0
+            radius: 0
+            pad_all: 0
+            scrollable: false
+            widgets:
+              - button:
+                  align: LEFT_MID
+                  x: 4
+                  width: 46
+                  height: 30
+                  bg_color: 0x232A33
+                  radius: 6
+                  shadow_width: 0
+                  widgets:
+                    - label: {text: "\U000F004D", text_font: mdi_22, align: CENTER, text_color: 0xFFFFFF}
+                  on_click:
+                    - lambda: 'id(ui_ladder_detail) = false;'
+                    - lvgl.page.show: page_pulse
+                    - script.execute: refresh_ui
+              - label: {id: lbl_ld_title, text: "RUNG 1 · FANS", text_font: f_med, align: CENTER, text_color: 0xFFFFFF}
+        - obj:
+            id: ladder_detail_scroll
+            x: 0
+            y: 36
+            width: 320
+            height: 164
+            bg_opa: TRANSP
+            border_width: 0
+            radius: 0
+            pad_all: 0
+            pad_bottom: 8
+            scrollbar_mode: AUTO
+            scroll_dir: VER
+            widgets:
+              - obj:
+                  id: ld_row0
+                  x: 8
+                  y: 4
+                  width: 304
+                  height: 40
+                  styles: rowbtn
+                  scrollable: false
+                  widgets:
+                    - label: {id: ld_ic0, text: "\U000F0210", text_font: mdi_22, align: LEFT_MID, x: 6, text_color: 0x5A6472}
+                    - label: {id: ld_name0, text: "6\" exhaust (out)", text_font: f_body, align: LEFT_MID, x: 34, text_color: 0xFFFFFF}
+                    - label: {id: ld_val0, text: "--", text_font: f_body, align: RIGHT_MID, x: -92, text_color: 0x00E676}
+                    - button:
+                        id: ld_minus0
+                        align: RIGHT_MID
+                        x: -48
+                        width: 38
+                        height: 30
+                        bg_color: 0x2A313B
+                        radius: 6
+                        shadow_width: 0
+                        widgets:
+                          - label: {text: "-", text_font: f_med, align: CENTER, text_color: 0xFFFFFF}
+                        on_click:
+                          - script.execute:
+                              id: hub_cmd
+                              op: 25
+                              val: !lambda 'int v = id(gv_fan_out); v -= 10; if (v < 0) v = 0; return v;'
+                    - button:
+                        id: ld_plus0
+                        align: RIGHT_MID
+                        x: -6
+                        width: 38
+                        height: 30
+                        bg_color: 0x12241A
+                        border_color: 0x00E676
+                        border_width: 1
+                        radius: 6
+                        shadow_width: 0
+                        widgets:
+                          - label: {text: "+", text_font: f_med, align: CENTER, text_color: 0x00E676}
+                        on_click:
+                          - script.execute:
+                              id: hub_cmd
+                              op: 25
+                              val: !lambda 'int v = id(gv_fan_out); v += 10; if (v > 100) v = 100; return v;'
+              - obj:
+                  id: ld_row1
+                  x: 8
+                  y: 48
+                  width: 304
+                  height: 40
+                  styles: rowbtn
+                  scrollable: false
+                  widgets:
+                    - label: {id: ld_ic1, text: "\U000F0210", text_font: mdi_22, align: LEFT_MID, x: 6, text_color: 0x5A6472}
+                    - label: {id: ld_name1, text: "6\" exhaust (room)", text_font: f_body, align: LEFT_MID, x: 34, text_color: 0xFFFFFF}
+                    - label: {id: ld_val1, text: "--", text_font: f_body, align: RIGHT_MID, x: -92, text_color: 0x00E676}
+                    - button:
+                        id: ld_minus1
+                        align: RIGHT_MID
+                        x: -48
+                        width: 38
+                        height: 30
+                        bg_color: 0x2A313B
+                        radius: 6
+                        shadow_width: 0
+                        widgets:
+                          - label: {text: "-", text_font: f_med, align: CENTER, text_color: 0xFFFFFF}
+                        on_click:
+                          - script.execute:
+                              id: hub_cmd
+                              op: 26
+                              val: !lambda 'int v = id(gv_fan_recirc); v -= 10; if (v < 0) v = 0; return v;'
+                    - button:
+                        id: ld_plus1
+                        align: RIGHT_MID
+                        x: -6
+                        width: 38
+                        height: 30
+                        bg_color: 0x12241A
+                        border_color: 0x00E676
+                        border_width: 1
+                        radius: 6
+                        shadow_width: 0
+                        widgets:
+                          - label: {text: "+", text_font: f_med, align: CENTER, text_color: 0x00E676}
+                        on_click:
+                          - script.execute:
+                              id: hub_cmd
+                              op: 26
+                              val: !lambda 'int v = id(gv_fan_recirc); v += 10; if (v > 100) v = 100; return v;'
+              - obj:
+                  id: ld_row2
+                  x: 8
+                  y: 92
+                  width: 304
+                  height: 40
+                  styles: rowbtn
+                  scrollable: false
+                  widgets:
+                    - label: {id: ld_ic2, text: "\U000F11DC", text_font: mdi_22, align: LEFT_MID, x: 6, text_color: 0x5A6472}
+                    - label: {id: ld_name2, text: "4\" intake (main)", text_font: f_body, align: LEFT_MID, x: 34, text_color: 0xFFFFFF}
+                    - label: {id: ld_val2, text: "--", text_font: f_body, align: RIGHT_MID, x: -92, text_color: 0x00E676}
+                    - button:
+                        id: ld_minus2
+                        align: RIGHT_MID
+                        x: -48
+                        width: 38
+                        height: 30
+                        bg_color: 0x2A313B
+                        radius: 6
+                        shadow_width: 0
+                        widgets:
+                          - label: {text: "-", text_font: f_med, align: CENTER, text_color: 0xFFFFFF}
+                        on_click:
+                          - script.execute:
+                              id: hub_cmd
+                              op: 27
+                              val: !lambda 'int v = id(gv_fan_imain); v -= 10; if (v < 0) v = 0; return v;'
+                    - button:
+                        id: ld_plus2
+                        align: RIGHT_MID
+                        x: -6
+                        width: 38
+                        height: 30
+                        bg_color: 0x12241A
+                        border_color: 0x00E676
+                        border_width: 1
+                        radius: 6
+                        shadow_width: 0
+                        widgets:
+                          - label: {text: "+", text_font: f_med, align: CENTER, text_color: 0x00E676}
+                        on_click:
+                          - script.execute:
+                              id: hub_cmd
+                              op: 27
+                              val: !lambda 'int v = id(gv_fan_imain); v += 10; if (v > 100) v = 100; return v;'
+              - obj:
+                  id: ld_row3
+                  x: 8
+                  y: 136
+                  width: 304
+                  height: 40
+                  styles: rowbtn
+                  scrollable: false
+                  widgets:
+                    - label: {id: ld_ic3, text: "\U000F11DC", text_font: mdi_22, align: LEFT_MID, x: 6, text_color: 0x5A6472}
+                    - label: {id: ld_name3, text: "2x4 intake fan", text_font: f_body, align: LEFT_MID, x: 34, text_color: 0xFFFFFF}
+                    - label: {id: ld_val3, text: "--", text_font: f_body, align: RIGHT_MID, x: -92, text_color: 0x00E676}
+                    - button:
+                        id: ld_minus3
+                        align: RIGHT_MID
+                        x: -48
+                        width: 38
+                        height: 30
+                        bg_color: 0x2A313B
+                        radius: 6
+                        shadow_width: 0
+                        widgets:
+                          - label: {text: "-", text_font: f_med, align: CENTER, text_color: 0xFFFFFF}
+                        on_click:
+                          - script.execute:
+                              id: hub_cmd
+                              op: 28
+                              val: !lambda 'int v = id(gv_fan_iclone); v -= 10; if (v < 0) v = 0; return v;'
+                    - button:
+                        id: ld_plus3
+                        align: RIGHT_MID
+                        x: -6
+                        width: 38
+                        height: 30
+                        bg_color: 0x12241A
+                        border_color: 0x00E676
+                        border_width: 1
+                        radius: 6
+                        shadow_width: 0
+                        widgets:
+                          - label: {text: "+", text_font: f_med, align: CENTER, text_color: 0x00E676}
+                        on_click:
+                          - script.execute:
+                              id: hub_cmd
+                              op: 28
+                              val: !lambda 'int v = id(gv_fan_iclone); v += 10; if (v > 100) v = 100; return v;'
+              - obj:
+                  id: ld_row4
+                  x: 8
+                  y: 180
+                  width: 304
+                  height: 40
+                  styles: rowbtn
+                  scrollable: false
+                  hidden: true
+                  widgets:
+                    - label: {id: ld_ic4, text: "\U000F1AAF", text_font: mdi_22, align: LEFT_MID, x: 6, text_color: 0x5A6472}
+                    - label: {id: ld_name4, text: "Grow mat", text_font: f_body, align: LEFT_MID, x: 34, text_color: 0xFFFFFF}
+                    - label: {id: ld_val4, text: "idle", text_font: f_body, align: RIGHT_MID, x: -8, text_color: 0x5A6472}
+                    - button:
+                        id: ld_minus4
+                        align: RIGHT_MID
+                        x: -48
+                        width: 38
+                        height: 30
+                        bg_color: 0x2A313B
+                        radius: 6
+                        shadow_width: 0
+                        hidden: true
+                        widgets:
+                          - label: {text: "-", text_font: f_med, align: CENTER, text_color: 0xFFFFFF}
+                    - button:
+                        id: ld_plus4
+                        align: RIGHT_MID
+                        x: -6
+                        width: 38
+                        height: 30
+                        bg_color: 0x12241A
+                        border_color: 0x00E676
+                        border_width: 1
+                        radius: 6
+                        shadow_width: 0
+                        hidden: true
+                        widgets:
+                          - label: {text: "+", text_font: f_med, align: CENTER, text_color: 0x00E676}
+              - obj:
+                  id: ld_row5
+                  x: 8
+                  y: 224
+                  width: 304
+                  height: 40
+                  styles: rowbtn
+                  scrollable: false
+                  hidden: true
+                  widgets:
+                    - label: {id: ld_ic5, text: "\U000F1099", text_font: mdi_22, align: LEFT_MID, x: 6, text_color: 0x5A6472}
+                    - label: {id: ld_name5, text: "Clone humidifier", text_font: f_body, align: LEFT_MID, x: 34, text_color: 0xFFFFFF}
+                    - label: {id: ld_val5, text: "idle", text_font: f_body, align: RIGHT_MID, x: -8, text_color: 0x5A6472}
+                    - button:
+                        id: ld_minus5
+                        align: RIGHT_MID
+                        x: -48
+                        width: 38
+                        height: 30
+                        bg_color: 0x2A313B
+                        radius: 6
+                        shadow_width: 0
+                        hidden: true
+                        widgets:
+                          - label: {text: "-", text_font: f_med, align: CENTER, text_color: 0xFFFFFF}
+                    - button:
+                        id: ld_plus5
+                        align: RIGHT_MID
+                        x: -6
+                        width: 38
+                        height: 30
+                        bg_color: 0x12241A
+                        border_color: 0x00E676
+                        border_width: 1
+                        radius: 6
+                        shadow_width: 0
+                        hidden: true
+                        widgets:
+                          - label: {text: "+", text_font: f_med, align: CENTER, text_color: 0x00E676}
 
     # ------------------------------ CLONE --------------------------
     - id: page_clone
@@ -2874,7 +3242,7 @@ lvgl:
                         id: hub_cmd
                         op: 19
                         val: !lambda 'return (id(gv_coord)&2) ? 0 : 1;'
-              - label: {text: "DSC-CONTROL v5.1.10  ·  ESP-NOW primary", text_font: f_small, text_color: 0x3A4550, pad_top: 8, pad_bottom: 8}
+              - label: {text: "DSC-CONTROL v5.1.11  ·  ESP-NOW primary", text_font: f_small, text_color: 0x3A4550, pad_top: 8, pad_bottom: 8}
 # ==================================================================
 #  SCRIPTS
 # ==================================================================
@@ -2976,7 +3344,9 @@ script:
       - if: {condition: {lambda: 'return id(active_tab) == 2;'}, then: [{lvgl.page.show: page_main}]}
       - if: {condition: {lambda: 'return id(active_tab) == 3;'}, then: [{lvgl.page.show: page_soil}]}
       - if: {condition: {lambda: 'return id(active_tab) == 4;'}, then: [{lvgl.page.show: page_control}]}
-      - lambda: 'id(ui_soil_detail) = false;'
+      - lambda: |-
+          id(ui_soil_detail) = false;
+          id(ui_ladder_detail) = false;
       - script.execute: restyle_tabs
       - script.execute: refresh_ui
   - id: tab_next
@@ -3201,12 +3571,14 @@ script:
           const bool conn_vis = !lv_obj_has_flag(id(conn_screen), LV_OBJ_FLAG_HIDDEN);
           const int tab = id(active_tab);
           const bool soil_det = id(ui_soil_detail);
+          const bool lad_det = id(ui_ladder_detail);
           const bool interactive = !locked;
 
           // v4.0.11 — read ESP-NOW globals directly (template mirrors parked).
           const float *cfg = id(gv_cfg);
           const float *soil = id(gv_soil);
           const float *cd = id(gv_cd);
+          const float *cool = id(gv_cool);
           const int dem = id(gv_dem), mode = id(gv_mode), flt = id(gv_flt), coord = id(gv_coord);
           const int cmode = id(gv_cmode);
           bool cfollow = (cmode == 0);
@@ -3389,7 +3761,7 @@ script:
           }
 
           // ---- PULSE ----
-          if (tab == 0) {
+          if (tab == 0 && !lad_det) {
             setc(id(pill_wifi_ic), link ? NEON : RED);
             float co2 = co2_ppm;
             if (isnan(co2)) strcpy(b, "CO2 --- ppm"); else snprintf(b, sizeof(b), "CO2 %d ppm", (int)co2);
@@ -3674,6 +4046,92 @@ script:
             else { snprintf(x, sizeof(x), "%d", (int) pp); setl(id(sd_p_val), x); setc(id(sd_p_val), NEON); }
             if (isnan(kk)) { setl(id(sd_k_val), "--"); setc(id(sd_k_val), GREY); }
             else { snprintf(x, sizeof(x), "%d", (int) kk); setl(id(sd_k_val), x); setc(id(sd_k_val), NEON); }
+          }
+
+          // ---- LADDER detail (Rung 1 fans / Rung 2 appliances) ----
+          if (lad_det) {
+            const int mode = id(ladder_detail_mode);
+            const bool fans = (mode == 1);
+            setl(id(lbl_ld_title), fans ? "RUNG 1 · FANS" : "RUNG 2 · DEVICES");
+
+            lv_obj_t* rows[6] = {id(ld_row0),id(ld_row1),id(ld_row2),id(ld_row3),id(ld_row4),id(ld_row5)};
+            lv_obj_t* ics[6]  = {id(ld_ic0),id(ld_ic1),id(ld_ic2),id(ld_ic3),id(ld_ic4),id(ld_ic5)};
+            lv_obj_t* names[6]= {id(ld_name0),id(ld_name1),id(ld_name2),id(ld_name3),id(ld_name4),id(ld_name5)};
+            lv_obj_t* vals[6] = {id(ld_val0),id(ld_val1),id(ld_val2),id(ld_val3),id(ld_val4),id(ld_val5)};
+            lv_obj_t* minus[6]= {id(ld_minus0),id(ld_minus1),id(ld_minus2),id(ld_minus3),id(ld_minus4),id(ld_minus5)};
+            lv_obj_t* plus[6] = {id(ld_plus0),id(ld_plus1),id(ld_plus2),id(ld_plus3),id(ld_plus4),id(ld_plus5)};
+
+            auto pend_on = [&](int op)->bool{
+              if (op < 0 || op >= 64) return false;
+              uint32_t t = id(pend_ms)[op];
+              if (t == 0) return false;
+              if (millis() - t > 8000u) { id(pend_ms)[op] = 0; return false; }
+              return true;
+            };
+
+            if (fans) {
+              static const char* FNAME[4] = {
+                "6\" exhaust (out)", "6\" exhaust (room)", "4\" intake (main)", "2x4 intake fan"
+              };
+              static const char* FIC[4] = {
+                "\U000F0210", "\U000F0210", "\U000F11DC", "\U000F11DC"
+              };
+              float fpct[4] = {fan_out_pct, fan_recirc_pct, fan_int_main_pct, fan_int_clone_pct};
+              int fop[4] = {25, 26, 27, 28};
+              for (int i = 0; i < 6; i++) {
+                sethid(rows[i], i >= 4);
+                sethid(minus[i], i >= 4);
+                sethid(plus[i], i >= 4);
+              }
+              for (int i = 0; i < 4; i++) {
+                setl(names[i], FNAME[i]);
+                setl(ics[i], FIC[i]);
+                float v = fpct[i];
+                bool on = !isnan(v) && v > 0;
+                if (isnan(v)) setl(vals[i], "--");
+                else { snprintf(b, sizeof(b), "%d%%", (int)v); setl(vals[i], b); }
+                setc(vals[i], pend_on(fop[i]) ? PEND : (on ? CYAN : GREY));
+                setc(ics[i], on ? CYAN : 0x39424D);
+              }
+            } else {
+              static const char* ANAME[6] = {
+                "Humidifier", "Dehumidifier", "Heater", "AC", "Grow mat", "Clone humidifier"
+              };
+              static const char* AIC[6] = {
+                "\U000F1099", "\U000F150C", "\U000F0238", "\U000F0717", "\U000F1AAF", "\U000F1099"
+              };
+              bool aon[6] = {dem_hum, dem_dehum, dem_heater, dem_ac, dem_mat, dem_clone_hum};
+              float afire[6] = {cd_hum, cd_dehum, cd_heater, cd_ac, cd_mat, cd_clone_hum};
+              // cool[] same order; compressor lock for dehum(1) + AC(3)
+              for (int i = 0; i < 6; i++) {
+                sethid(rows[i], false);
+                sethid(minus[i], true);
+                sethid(plus[i], true);
+                setl(names[i], ANAME[i]);
+                setl(ics[i], AIC[i]);
+                uint32_t col = GREY;
+                if (aon[i]) {
+                  uint32_t ms = id(dem_on_ms)[i];
+                  uint32_t sec = ms ? (millis() - ms) / 1000u : 0;
+                  if (sec >= 60) snprintf(b, sizeof(b), "ON · %um", (unsigned)(sec / 60u));
+                  else snprintf(b, sizeof(b), "ON · %us", (unsigned)sec);
+                  col = AMBER;
+                } else if (!isnan(afire[i]) && afire[i] > 0) {
+                  snprintf(b, sizeof(b), "in %ds", (int)afire[i]);
+                  col = AMBER;
+                } else if (!isnan(cool[i]) && cool[i] > 0) {
+                  if (i == 1 || i == 3) snprintf(b, sizeof(b), "lock %ds", (int)cool[i]);
+                  else snprintf(b, sizeof(b), "min-off %ds", (int)cool[i]);
+                  col = 0x8A929C;
+                } else {
+                  strcpy(b, "idle");
+                  col = GREY;
+                }
+                setl(vals[i], b);
+                setc(vals[i], col);
+                setc(ics[i], aon[i] ? AMBER : 0x39424D);
+              }
+            }
           }
 
 # ==================================================================

@@ -12,6 +12,14 @@
 # are NVS-tunable numbers (Phase B may clamp them from HA). Built on the
 # v5.0.0 Sync add-on cut + ESP-NOW-primary climate stack.
 #
+# ===== STACK HEARTBEAT + RECOVERY (post-5.1.0) =====
+# Publishes sensor.dsc_hub_heartbeat every 30s. Watches WiFi STA + HA API
+# (and optional number.dsc_hub_ha_handshake from HA). Stuck link → sync
+# NVS preferences + App.safe_reboot() so Full Auto re-arms. Does NOT use
+# api.reboot_timeout (stays 0s) — brief HA maintenance must not bounce
+# climate; only sustained WiFi death or a wedged API after a prior good
+# session triggers recovery (boot grace + per-boot reboot cap).
+#
 # ===== v4.0 · ESP-NOW PRIMARY CONTROL LAYER =====
 # The DSC-CONTROL panel drives this hub directly over ESP-NOW. The stub
 # merges dsc-hub-espnow-primary.yaml (command RX + telemetry TX + soil
@@ -157,7 +165,9 @@ api:
   # mid-grow (fans bounce through the safe-boot baseline, the resume
   # prompt arms, the ladder timers reset). This device is local-first
   # by design: photoperiod, fan curve and ladder all run without HA.
-  # Never self-reboot just because HA went away.
+  # Keep reboot_timeout at 0s. Sustained WiFi/API wedge recovery lives
+  # in the stack-heartbeat interval (sync NVS → App.safe_reboot), which
+  # requires boot grace + a prior good session + a per-boot cap.
   reboot_timeout: 0s
 
 ota:
@@ -827,6 +837,37 @@ globals:
     type: float
     restore_value: false
     initial_value: 'NAN'
+
+  # --- Stack heartbeat / recovery (WiFi + HA API + optional HA handshake) ---
+  # Timestamps are millis(); 0 = currently healthy / not timing.
+  - id: wifi_down_since
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+  - id: api_down_since
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+  - id: api_ever_connected        # only recover API after a prior good session
+    type: bool
+    restore_value: false
+    initial_value: 'false'
+  - id: ha_handshake_last         # millis of last HA number write; 0 = unused
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+  - id: ha_handshake_seen         # HA automation has pinged at least once
+    type: bool
+    restore_value: false
+    initial_value: 'false'
+  - id: stack_recovery_reboots    # per-boot cap — avoids loops if AP is dead
+    type: int
+    restore_value: false
+    initial_value: '0'
+  - id: hub_heartbeat_count
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
 
   # --- Screensaver physics (px per 100ms frame; status line at y=53
   #     gives the 48px logo a 0..5px vertical lane) ---
@@ -2167,6 +2208,26 @@ number:
       - lambda: 'id(num_destrat_level).publish_state((float) id(destrat_burst_pct));'
       - script.execute: tx_panel_sync
 
+  # HA → hub handshake ping (Sync automation writes unix time every 60s).
+  # Once seen this boot, a silent handshake for ≥15 min (WiFi still up)
+  # is treated as a wedged API path and triggers stack recovery.
+  - platform: template
+    name: "HA Handshake"
+    id: num_ha_handshake
+    entity_category: diagnostic
+    icon: "mdi:handshake"
+    min_value: 0
+    max_value: 2147483647
+    step: 1
+    optimistic: true
+    initial_value: 0
+    set_action:
+      - lambda: |-
+          id(ha_handshake_last) = millis();
+          id(ha_handshake_seen) = true;
+          id(api_ever_connected) = true;
+          ESP_LOGD("heartbeat", "HA handshake ping (beat=%u)", (unsigned) x);
+
 # Real HH:MM picker in HA (renders as AM/PM per your HA locale).
 datetime:
   - platform: template
@@ -2275,6 +2336,19 @@ sensor:
     id: uptime_s
     update_interval: 300s
     entity_category: diagnostic
+
+  # Stack heartbeat — HA sees a live counter; Sync automation also pings
+  # number.dsc_hub_ha_handshake. Recovery interval uses both signals.
+  - platform: template
+    name: "Heartbeat"
+    id: hub_heartbeat
+    entity_category: diagnostic
+    icon: mdi:heart-pulse
+    accuracy_decimals: 0
+    update_interval: 30s
+    lambda: |-
+      id(hub_heartbeat_count) = id(hub_heartbeat_count) + 1;
+      return (float) id(hub_heartbeat_count);
 
   - platform: dht
     model: DHT22
@@ -2622,6 +2696,21 @@ sensor:
       return held >= 120000 ? 0 : (120000 - held) / 1000.0f;
 
   - platform: template
+    name: "Humidifier Cooldown Remaining"
+    id: sens_hum_cooldown
+    unit_of_measurement: "s"
+    icon: "mdi:timer-lock-outline"
+    entity_category: diagnostic
+    update_interval: 10s
+    filters:
+      - delta: 0.5
+    lambda: |-
+      if (id(hum_off_at) == 0 || id(humidifier_demand).state) return 0;
+      uint32_t mo = (uint32_t) id(hum_min_off_s) * 1000;
+      uint32_t since = millis() - id(hum_off_at);
+      return since >= mo ? 0 : (mo - since) / 1000.0f;
+
+  - platform: template
     name: "Dehumidifier Cooldown Remaining"
     id: sens_dehum_cooldown
     unit_of_measurement: "s"
@@ -2788,6 +2877,17 @@ binary_sensor:
     name: "HA Link Status"
     id: ha_connected
 
+  # True while WiFi is associated. Dashboard / alerts can show stack
+  # health separately from HA Link (API client), which can flap alone.
+  - platform: template
+    name: "WiFi Associated"
+    id: wifi_associated
+    device_class: connectivity
+    entity_category: diagnostic
+    lambda: |-
+      auto *w = wifi::global_wifi_component;
+      return w != nullptr && w->is_connected();
+
   - platform: template
     name: "Climate Sensor Fault"
     id: sensor_fault_bs
@@ -2887,6 +2987,21 @@ binary_sensor:
 # 8. SCRIPTS  (stage engine + climate + photoperiod)
 # ==========================================
 script:
+  # ---- Stack recovery: flush NVS then safe reboot ----
+  # Preferences batch every 60s; force a sync so Full Auto / targets /
+  # ladder bases survive the recovery reboot. Caps at 2 reboots/boot.
+  - id: stack_recovery_reboot
+    mode: single
+    then:
+      - lambda: |-
+          id(stack_recovery_reboots) = id(stack_recovery_reboots) + 1;
+          ESP_LOGE("heartbeat",
+                   "STACK RECOVERY #%d — syncing preferences then App.safe_reboot()",
+                   id(stack_recovery_reboots));
+          global_preferences->sync();
+      - delay: 250ms
+      - lambda: 'App.safe_reboot();'
+
   # ---- v2.4.3 · Engage the full automation stack (Full Auto entry) ----
   # Called the instant Full Auto is turned on (HA switch or OLED Mode menu):
   # arm every appliance rung AND the light schedule, and release Manual Light
@@ -4043,6 +4158,99 @@ interval:
           if (poll_ch != 0 && poll_ch != ch)
             ESP_LOGW("wifi", "channel hop %d -> %d — panel ESP-NOW will drop until it follows", poll_ch, ch);
           poll_ch = ch;
+
+  # ---- Stack heartbeat watchdog: WiFi / API / HA handshake ----
+  # Local climate keeps running (api.reboot_timeout is still 0s). This
+  # path only recovers a wedged STA or a dead API session after we had
+  # a good one — then sync NVS + safe_reboot so Full Auto re-arms.
+  # Thresholds: 5 min boot grace · WiFi 10 min · API/handshake 15 min ·
+  # max 2 recovery reboots this boot.
+  - interval: 30s
+    then:
+      - lambda: |-
+          const uint32_t BOOT_GRACE_MS     = 300000;   // 5 min
+          const uint32_t WIFI_DEAD_MS      = 600000;   // 10 min
+          const uint32_t API_DEAD_MS       = 900000;   // 15 min
+          const int      MAX_REBOOTS_BOOT  = 2;
+
+          if (millis() < BOOT_GRACE_MS) return;
+          if (id(stack_recovery_reboots) >= MAX_REBOOTS_BOOT) return;
+
+          auto *w = wifi::global_wifi_component;
+          bool wifi_ok = (w != nullptr && w->is_connected());
+          bool api_ok  = id(ha_connected).state;
+
+          if (api_ok) {
+            id(api_ever_connected) = true;
+            id(api_down_since) = 0;
+          }
+
+          // --- WiFi STA dead -------------------------------------------------
+          if (wifi_ok) {
+            if (id(wifi_down_since) != 0) {
+              ESP_LOGI("heartbeat", "WiFi STA back after %u s",
+                       (unsigned) ((millis() - id(wifi_down_since)) / 1000));
+            }
+            id(wifi_down_since) = 0;
+          } else {
+            if (id(wifi_down_since) == 0) {
+              id(wifi_down_since) = millis();
+              ESP_LOGW("heartbeat", "WiFi STA down — recovery timer started");
+            } else if ((millis() - id(wifi_down_since)) > WIFI_DEAD_MS) {
+              ESP_LOGE("heartbeat",
+                       "WiFi STA dead >%u min — save state + reboot",
+                       (unsigned) (WIFI_DEAD_MS / 60000));
+              id(stack_recovery_reboot).execute();
+              return;
+            }
+          }
+
+          // --- API / handshake wedge (only while WiFi is up) ----------------
+          // Prefer HA handshake once the Sync ping has been seen this boot
+          // (stale age IS the timer). Otherwise fall back to HA Link Status
+          // after a prior good API session.
+          if (!wifi_ok) {
+            id(api_down_since) = 0;   // wifi path owns recovery
+            return;
+          }
+
+          if (id(ha_handshake_seen) && id(ha_handshake_last) != 0) {
+            uint32_t age = millis() - id(ha_handshake_last);
+            if (age < API_DEAD_MS) {
+              id(api_down_since) = 0;
+              return;
+            }
+            ESP_LOGE("heartbeat",
+                     "HA handshake silent >%u min (WiFi up) — save state + reboot",
+                     (unsigned) (API_DEAD_MS / 60000));
+            id(stack_recovery_reboot).execute();
+            return;
+          }
+
+          if (api_ok) {
+            id(api_down_since) = 0;
+            return;
+          }
+
+          // No prior good API session → local-first, stay up (HA never joined).
+          if (!id(api_ever_connected)) {
+            id(api_down_since) = 0;
+            return;
+          }
+
+          if (id(api_down_since) == 0) {
+            id(api_down_since) = millis();
+            ESP_LOGW("heartbeat",
+                     "HA Link Status lost with WiFi up — recovery timer started");
+            return;
+          }
+
+          if ((millis() - id(api_down_since)) > API_DEAD_MS) {
+            ESP_LOGE("heartbeat",
+                     "HA Link Status dead >%u min (WiFi up) — save state + reboot",
+                     (unsigned) (API_DEAD_MS / 60000));
+            id(stack_recovery_reboot).execute();
+          }
 
   # ---- Sensor watchdog: no valid temp for 3 min -> safe mode + alert ----
   - interval: 30s

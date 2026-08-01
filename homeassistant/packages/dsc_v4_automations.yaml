@@ -21,6 +21,12 @@
 #  Verified: followers resync on HA start, relay restore, hub-link restore;
 #  skip while node test mode is on; hub-offline ≥30s forces all four OFF.
 #
+#  Blip tolerance (heater-critical): followers no longer fail-closed on a
+#  sub-second hub API flap. Genuine demand → off is immediate. Demand /
+#  ha_link unavailable|off must hold ≥25s before follower OFF; the 30s
+#  hub-offline safe-off remains the hard belt. Sonoff node grace still
+#  covers total HA death.
+#
 #  Phase A response-rate learning lives in dsc_v4_climate_learn.yaml
 #  (EMA observer + ETA gauges only — never writes ladder waits).
 # ==================================================================
@@ -28,11 +34,19 @@
 automation:
   - id: dsc_follower_humidifier
     alias: "DSC-HUB · Humidifier follows Humidifier Demand"
-    description: "Relay mirrors hub demand. Safe-OFF on hub dropout. Resyncs on HA restart + node reconnect + hub-link restore."
+    description: "Relay mirrors hub demand. Genuine OFF immediate; hub blips debounce 25s before OFF. Resyncs on HA restart + node reconnect + hub-link restore."
     mode: restart
     triggers:
       - trigger: state
         entity_id: switch.dsc_hub_humidifier_demand
+        to: "on"
+      - trigger: state
+        entity_id: switch.dsc_hub_humidifier_demand
+        to: "off"
+      - trigger: state
+        entity_id: switch.dsc_hub_humidifier_demand
+        to: "unavailable"
+        for: "00:00:25"
       - trigger: homeassistant
         event: start
       - trigger: state
@@ -47,6 +61,12 @@ automation:
         entity_id: binary_sensor.dsc_hub_ha_link_status
         to: "on"
         for: "00:00:05"
+      - trigger: state
+        entity_id: binary_sensor.dsc_hub_ha_link_status
+        to:
+          - "off"
+          - "unavailable"
+        for: "00:00:25"
     actions:
       - choose:
           - conditions:
@@ -62,20 +82,53 @@ automation:
               - action: switch.turn_on
                 target:
                   entity_id: switch.dsc_humidifier_main_relay
-        default:
-          - condition: template
-            value_template: "{{ not is_state('binary_sensor.dsc_humidifier_test_mode', 'on') }}"
-          - action: switch.turn_off
-            target:
-              entity_id: switch.dsc_humidifier_main_relay
+          - conditions:
+              - condition: state
+                entity_id: switch.dsc_hub_humidifier_demand
+                state: "off"
+              - condition: template
+                value_template: "{{ not is_state('binary_sensor.dsc_humidifier_test_mode', 'on') }}"
+            sequence:
+              - action: switch.turn_off
+                target:
+                  entity_id: switch.dsc_humidifier_main_relay
+          - conditions:
+              - condition: template
+                value_template: "{{ not is_state('binary_sensor.dsc_humidifier_test_mode', 'on') }}"
+              - condition: or
+                conditions:
+                  - condition: state
+                    entity_id: switch.dsc_hub_humidifier_demand
+                    state: "unavailable"
+                    for: "00:00:25"
+                  - condition: state
+                    entity_id: binary_sensor.dsc_hub_ha_link_status
+                    state: "off"
+                    for: "00:00:25"
+                  - condition: state
+                    entity_id: binary_sensor.dsc_hub_ha_link_status
+                    state: "unavailable"
+                    for: "00:00:25"
+            sequence:
+              - action: switch.turn_off
+                target:
+                  entity_id: switch.dsc_humidifier_main_relay
 
   - id: dsc_follower_dehumidifier
     alias: "DSC-HUB · Dehumidifier follows Dehumidifier Demand"
-    description: "Relay mirrors hub demand. Safe-OFF on hub dropout. Resyncs on HA restart + node reconnect + hub-link restore."
+    description: "Relay mirrors hub demand. Genuine OFF immediate; hub blips debounce 25s before OFF. Resyncs on HA restart + node reconnect + hub-link restore."
     mode: restart
     triggers:
       - trigger: state
         entity_id: switch.dsc_hub_dehumidifier_demand
+        to: "on"
+      - trigger: state
+        entity_id: switch.dsc_hub_dehumidifier_demand
+        to: "off"
+      - trigger: state
+        entity_id: switch.dsc_hub_dehumidifier_demand
+        to: "unavailable"
+        for: "00:00:25"
       - trigger: homeassistant
         event: start
       - trigger: state
@@ -90,6 +143,12 @@ automation:
         entity_id: binary_sensor.dsc_hub_ha_link_status
         to: "on"
         for: "00:00:05"
+      - trigger: state
+        entity_id: binary_sensor.dsc_hub_ha_link_status
+        to:
+          - "off"
+          - "unavailable"
+        for: "00:00:25"
     actions:
       - choose:
           - conditions:
@@ -105,20 +164,53 @@ automation:
               - action: switch.turn_on
                 target:
                   entity_id: switch.dsc_de_humidifier_main_relay
-        default:
-          - condition: template
-            value_template: "{{ not is_state('binary_sensor.dsc_de_humidifier_test_mode', 'on') }}"
-          - action: switch.turn_off
-            target:
-              entity_id: switch.dsc_de_humidifier_main_relay
+          - conditions:
+              - condition: state
+                entity_id: switch.dsc_hub_dehumidifier_demand
+                state: "off"
+              - condition: template
+                value_template: "{{ not is_state('binary_sensor.dsc_de_humidifier_test_mode', 'on') }}"
+            sequence:
+              - action: switch.turn_off
+                target:
+                  entity_id: switch.dsc_de_humidifier_main_relay
+          - conditions:
+              - condition: template
+                value_template: "{{ not is_state('binary_sensor.dsc_de_humidifier_test_mode', 'on') }}"
+              - condition: or
+                conditions:
+                  - condition: state
+                    entity_id: switch.dsc_hub_dehumidifier_demand
+                    state: "unavailable"
+                    for: "00:00:25"
+                  - condition: state
+                    entity_id: binary_sensor.dsc_hub_ha_link_status
+                    state: "off"
+                    for: "00:00:25"
+                  - condition: state
+                    entity_id: binary_sensor.dsc_hub_ha_link_status
+                    state: "unavailable"
+                    for: "00:00:25"
+            sequence:
+              - action: switch.turn_off
+                target:
+                  entity_id: switch.dsc_de_humidifier_main_relay
 
   - id: dsc_follower_heater
     alias: "DSC-HUB · Heater follows Heater Demand"
-    description: "Relay mirrors hub demand. Safe-OFF on hub dropout. Resyncs on HA restart + node reconnect + hub-link restore."
+    description: "Relay mirrors hub demand. Genuine OFF immediate; hub blips debounce 25s before OFF (stops cold cutouts). Resyncs on HA restart + node reconnect + hub-link restore."
     mode: restart
     triggers:
       - trigger: state
         entity_id: switch.dsc_hub_heater_demand
+        to: "on"
+      - trigger: state
+        entity_id: switch.dsc_hub_heater_demand
+        to: "off"
+      - trigger: state
+        entity_id: switch.dsc_hub_heater_demand
+        to: "unavailable"
+        for: "00:00:25"
       - trigger: homeassistant
         event: start
       - trigger: state
@@ -133,6 +225,12 @@ automation:
         entity_id: binary_sensor.dsc_hub_ha_link_status
         to: "on"
         for: "00:00:05"
+      - trigger: state
+        entity_id: binary_sensor.dsc_hub_ha_link_status
+        to:
+          - "off"
+          - "unavailable"
+        for: "00:00:25"
     actions:
       - choose:
           - conditions:
@@ -148,20 +246,53 @@ automation:
               - action: switch.turn_on
                 target:
                   entity_id: switch.dsc_heater_main_relay
-        default:
-          - condition: template
-            value_template: "{{ not is_state('binary_sensor.dsc_heater_test_mode', 'on') }}"
-          - action: switch.turn_off
-            target:
-              entity_id: switch.dsc_heater_main_relay
+          - conditions:
+              - condition: state
+                entity_id: switch.dsc_hub_heater_demand
+                state: "off"
+              - condition: template
+                value_template: "{{ not is_state('binary_sensor.dsc_heater_test_mode', 'on') }}"
+            sequence:
+              - action: switch.turn_off
+                target:
+                  entity_id: switch.dsc_heater_main_relay
+          - conditions:
+              - condition: template
+                value_template: "{{ not is_state('binary_sensor.dsc_heater_test_mode', 'on') }}"
+              - condition: or
+                conditions:
+                  - condition: state
+                    entity_id: switch.dsc_hub_heater_demand
+                    state: "unavailable"
+                    for: "00:00:25"
+                  - condition: state
+                    entity_id: binary_sensor.dsc_hub_ha_link_status
+                    state: "off"
+                    for: "00:00:25"
+                  - condition: state
+                    entity_id: binary_sensor.dsc_hub_ha_link_status
+                    state: "unavailable"
+                    for: "00:00:25"
+            sequence:
+              - action: switch.turn_off
+                target:
+                  entity_id: switch.dsc_heater_main_relay
 
   - id: dsc_follower_grow_mat
     alias: "DSC-HUB · Grow Mat follows Grow Mat Demand"
-    description: "Relay mirrors hub demand. Closed-loop on multi-pot root-zone temp. Resyncs on hub-link restore."
+    description: "Relay mirrors hub demand. Genuine OFF immediate; hub blips debounce 25s before OFF. Closed-loop on multi-pot root-zone temp. Resyncs on hub-link restore."
     mode: restart
     triggers:
       - trigger: state
         entity_id: switch.dsc_hub_grow_mat_demand
+        to: "on"
+      - trigger: state
+        entity_id: switch.dsc_hub_grow_mat_demand
+        to: "off"
+      - trigger: state
+        entity_id: switch.dsc_hub_grow_mat_demand
+        to: "unavailable"
+        for: "00:00:25"
       - trigger: homeassistant
         event: start
       - trigger: state
@@ -176,6 +307,12 @@ automation:
         entity_id: binary_sensor.dsc_hub_ha_link_status
         to: "on"
         for: "00:00:05"
+      - trigger: state
+        entity_id: binary_sensor.dsc_hub_ha_link_status
+        to:
+          - "off"
+          - "unavailable"
+        for: "00:00:25"
     actions:
       - choose:
           - conditions:
@@ -191,21 +328,54 @@ automation:
               - action: switch.turn_on
                 target:
                   entity_id: switch.dsc_heatmat_main_relay
-        default:
-          - condition: template
-            value_template: "{{ not is_state('binary_sensor.dsc_heatmat_test_mode', 'on') }}"
-          - action: switch.turn_off
-            target:
-              entity_id: switch.dsc_heatmat_main_relay
+          - conditions:
+              - condition: state
+                entity_id: switch.dsc_hub_grow_mat_demand
+                state: "off"
+              - condition: template
+                value_template: "{{ not is_state('binary_sensor.dsc_heatmat_test_mode', 'on') }}"
+            sequence:
+              - action: switch.turn_off
+                target:
+                  entity_id: switch.dsc_heatmat_main_relay
+          - conditions:
+              - condition: template
+                value_template: "{{ not is_state('binary_sensor.dsc_heatmat_test_mode', 'on') }}"
+              - condition: or
+                conditions:
+                  - condition: state
+                    entity_id: switch.dsc_hub_grow_mat_demand
+                    state: "unavailable"
+                    for: "00:00:25"
+                  - condition: state
+                    entity_id: binary_sensor.dsc_hub_ha_link_status
+                    state: "off"
+                    for: "00:00:25"
+                  - condition: state
+                    entity_id: binary_sensor.dsc_hub_ha_link_status
+                    state: "unavailable"
+                    for: "00:00:25"
+            sequence:
+              - action: switch.turn_off
+                target:
+                  entity_id: switch.dsc_heatmat_main_relay
 
   # Optional — only when Wired flag ON and relay entity exists.
   - id: dsc_follower_ac
     alias: "DSC-HUB · AC follows AC Demand (gated)"
-    description: "Requires input_boolean.dsc_ac_actuator_wired and switch.dsc_ac_main_relay."
+    description: "Requires input_boolean.dsc_ac_actuator_wired and switch.dsc_ac_main_relay. Hub blips debounce 25s before OFF."
     mode: restart
     triggers:
       - trigger: state
         entity_id: switch.dsc_hub_ac_demand
+        to: "on"
+      - trigger: state
+        entity_id: switch.dsc_hub_ac_demand
+        to: "off"
+      - trigger: state
+        entity_id: switch.dsc_hub_ac_demand
+        to: "unavailable"
+        for: "00:00:25"
       - trigger: state
         entity_id: input_boolean.dsc_ac_actuator_wired
       - trigger: homeassistant
@@ -214,6 +384,12 @@ automation:
         entity_id: binary_sensor.dsc_hub_ha_link_status
         to: "on"
         for: "00:00:05"
+      - trigger: state
+        entity_id: binary_sensor.dsc_hub_ha_link_status
+        to:
+          - "off"
+          - "unavailable"
+        for: "00:00:25"
     actions:
       - choose:
           - conditions:
@@ -236,8 +412,35 @@ automation:
               - condition: state
                 entity_id: input_boolean.dsc_ac_actuator_wired
                 state: "on"
+              - condition: state
+                entity_id: switch.dsc_hub_ac_demand
+                state: "off"
               - condition: template
                 value_template: "{{ states('switch.dsc_ac_main_relay') not in ['unknown','unavailable'] }}"
+            sequence:
+              - action: switch.turn_off
+                target:
+                  entity_id: switch.dsc_ac_main_relay
+          - conditions:
+              - condition: state
+                entity_id: input_boolean.dsc_ac_actuator_wired
+                state: "on"
+              - condition: template
+                value_template: "{{ states('switch.dsc_ac_main_relay') not in ['unknown','unavailable'] }}"
+              - condition: or
+                conditions:
+                  - condition: state
+                    entity_id: switch.dsc_hub_ac_demand
+                    state: "unavailable"
+                    for: "00:00:25"
+                  - condition: state
+                    entity_id: binary_sensor.dsc_hub_ha_link_status
+                    state: "off"
+                    for: "00:00:25"
+                  - condition: state
+                    entity_id: binary_sensor.dsc_hub_ha_link_status
+                    state: "unavailable"
+                    for: "00:00:25"
             sequence:
               - action: switch.turn_off
                 target:
@@ -245,11 +448,19 @@ automation:
 
   - id: dsc_follower_clone_humidifier
     alias: "DSC-HUB · Clone mister follows demand (gated)"
-    description: "Requires input_boolean.dsc_clone_humidifier_actuator_wired and switch.dsc_clone_humidifier_main_relay."
+    description: "Requires input_boolean.dsc_clone_humidifier_actuator_wired and switch.dsc_clone_humidifier_main_relay. Hub blips debounce 25s before OFF."
     mode: restart
     triggers:
       - trigger: state
         entity_id: switch.dsc_hub_clone_humidifier_demand
+        to: "on"
+      - trigger: state
+        entity_id: switch.dsc_hub_clone_humidifier_demand
+        to: "off"
+      - trigger: state
+        entity_id: switch.dsc_hub_clone_humidifier_demand
+        to: "unavailable"
+        for: "00:00:25"
       - trigger: state
         entity_id: input_boolean.dsc_clone_humidifier_actuator_wired
       - trigger: homeassistant
@@ -258,6 +469,12 @@ automation:
         entity_id: binary_sensor.dsc_hub_ha_link_status
         to: "on"
         for: "00:00:05"
+      - trigger: state
+        entity_id: binary_sensor.dsc_hub_ha_link_status
+        to:
+          - "off"
+          - "unavailable"
+        for: "00:00:25"
     actions:
       - choose:
           - conditions:
@@ -280,8 +497,35 @@ automation:
               - condition: state
                 entity_id: input_boolean.dsc_clone_humidifier_actuator_wired
                 state: "on"
+              - condition: state
+                entity_id: switch.dsc_hub_clone_humidifier_demand
+                state: "off"
               - condition: template
                 value_template: "{{ states('switch.dsc_clone_humidifier_main_relay') not in ['unknown','unavailable'] }}"
+            sequence:
+              - action: switch.turn_off
+                target:
+                  entity_id: switch.dsc_clone_humidifier_main_relay
+          - conditions:
+              - condition: state
+                entity_id: input_boolean.dsc_clone_humidifier_actuator_wired
+                state: "on"
+              - condition: template
+                value_template: "{{ states('switch.dsc_clone_humidifier_main_relay') not in ['unknown','unavailable'] }}"
+              - condition: or
+                conditions:
+                  - condition: state
+                    entity_id: switch.dsc_hub_clone_humidifier_demand
+                    state: "unavailable"
+                    for: "00:00:25"
+                  - condition: state
+                    entity_id: binary_sensor.dsc_hub_ha_link_status
+                    state: "off"
+                    for: "00:00:25"
+                  - condition: state
+                    entity_id: binary_sensor.dsc_hub_ha_link_status
+                    state: "unavailable"
+                    for: "00:00:25"
             sequence:
               - action: switch.turn_off
                 target:
@@ -508,12 +752,16 @@ automation:
 
   - id: dsc_hub_offline_safe_off
     alias: "DSC-HUB · Hub offline — safe-off appliances"
-    description: "30s after hub HA link drops, force Sonoff relays OFF. Demand followers re-assert when hub returns."
+    description: "30s after hub HA link drops (off or unavailable), force Sonoff relays OFF. Demand followers re-assert when hub returns."
     mode: single
     triggers:
       - trigger: state
         entity_id: binary_sensor.dsc_hub_ha_link_status
         to: "off"
+        for: "00:00:30"
+      - trigger: state
+        entity_id: binary_sensor.dsc_hub_ha_link_status
+        to: "unavailable"
         for: "00:00:30"
     actions:
       - action: switch.turn_off
@@ -534,6 +782,66 @@ automation:
           name: "Grow log"
           entity_id: input_boolean.dsc_event_log
           message: "Hub offline 30s — appliance relays safe-OFF"
+
+  # Bidirectional stack handshake: HA pings number.dsc_hub_ha_handshake
+  # every 60s. Hub firmware treats a silent handshake (≥15 min, WiFi up)
+  # as a wedged API path → sync NVS + safe_reboot (Full Auto re-arms).
+  - id: dsc_hub_ha_handshake_ping
+    alias: "DSC-HUB · HA handshake ping"
+    description: "Writes unix time to the hub handshake number every 60s while the entity exists."
+    mode: single
+    triggers:
+      - trigger: time_pattern
+        seconds: "/60"
+    conditions:
+      - condition: template
+        value_template: "{{ states('number.dsc_hub_ha_handshake') not in ['unknown', 'unavailable'] }}"
+    actions:
+      - action: number.set_value
+        target:
+          entity_id: number.dsc_hub_ha_handshake
+        data:
+          value: "{{ now().timestamp() | int }}"
+
+  - id: dsc_hub_heartbeat_stale
+    alias: "DSC-HUB · ALERT Heartbeat unavailable"
+    description: "Hub heartbeat sensor gone ≥5 min — hub may be mid stack-recovery reboot."
+    mode: single
+    triggers:
+      - trigger: state
+        entity_id: sensor.dsc_hub_heartbeat
+        to: "unavailable"
+        for: "00:05:00"
+    actions:
+      - action: script.dsc_notify
+        data:
+          title: "DSC-HUB heartbeat lost"
+          message: >-
+            sensor.dsc_hub_heartbeat unavailable ≥5 min.
+            If WiFi/API is wedged the hub will sync state and reboot
+            (max 2×/boot). Check WiFi RSSI / power.
+      - action: logbook.log
+        data:
+          name: "Grow log"
+          entity_id: input_boolean.dsc_event_log
+          message: "Hub heartbeat unavailable ≥5 min — awaiting stack recovery"
+
+  - id: dsc_hub_heartbeat_restored
+    alias: "DSC-HUB · Heartbeat restored"
+    description: "Log when hub heartbeat returns after being unavailable."
+    mode: single
+    triggers:
+      - trigger: state
+        entity_id: sensor.dsc_hub_heartbeat
+        from: "unavailable"
+    actions:
+      - action: logbook.log
+        data:
+          name: "Grow log"
+          entity_id: input_boolean.dsc_event_log
+          message: >-
+            Hub heartbeat restored (beat {{ states('sensor.dsc_hub_heartbeat') }},
+            uptime {{ states('sensor.dsc_hub_uptime') }})
 
   - id: dsc_alert_emergency_failsafe
     alias: "DSC-HUB · ALERT Emergency failsafe (>35°C)"
