@@ -1,5 +1,16 @@
 # Changelog
 
+## v5.1.8 — 2026-08-02
+
+- DSC-CONTROL **5.1.8**: more DRAM for LVGL without touching `sram1_as_iram`.
+- LVGL `buffer_size` **8%** (~12.3 KB; was 10%).
+- Wi-Fi `STATIC_RX` **3**; LWIP `MAX_ACTIVE/LISTENING_TCP` **3**;
+  `TCP_SND/WND` **1440**.
+- `compiler_optimization: SIZE`, `loop_task_stack_size: 8192`.
+- **Still no `sram1_as_iram`** — ESPHome's "+40KB" bootloader hint is IRAM,
+  not heap; enabling it carves 40 KB out of DRAM (v4.0.1 postmortem) and
+  risks OTA brick on an old bootloader.
+
 ## v5.1.7 — 2026-08-02
 
 - DSC-CONTROL **5.1.7**: apply CYD-without-PSRAM harden checklist where

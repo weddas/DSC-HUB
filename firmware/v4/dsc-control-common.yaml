@@ -83,6 +83,10 @@
 #  internal SRAM); Wi-Fi dynamic RX/TX buffers 4. Already matched:
 #  hide-not-destroy UI, dual SPI buses, no SD, fonts bpp2 in flash,
 #  no PSRAM path. ESPHome owns LVGL mutex / loopTask pinning.
+#  v5.1.8: further starve — buffer_size 8%; STATIC_RX 3; LWIP TCP
+#  3/3; TCP SND/WND 1440; compiler_optimization SIZE; loop stack
+#  8192. Still NOT sram1_as_iram (v4.0.1 postmortem: +0 DRAM, −40 KB
+#  heap alias; OTA brick risk). Ignore the bootloader +40KB hint.
 #
 #  BEFORE FLASHING:
 #    1. secrets.yaml needs dsc_control_ota_password / _ap_password
@@ -125,7 +129,7 @@ esphome:
     # the dashboard and HA's device page both described DSC-CONTROL as
     # being the DSC HUB. Purely cosmetic, but confusing enough to matter.
     name: "digital_emotions.dsc-control"
-    version: "5.1.7"
+    version: "5.1.8"
   on_boot:
     # Seed the 0xDC command seq from hardware RNG so a panel reboot is
     # unlikely to replay the hub's last-seen seq even before the hub's
@@ -140,7 +144,7 @@ esphome:
     - priority: -100
       then:
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 5.1.7 paused — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 5.1.8 paused — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
             id(boot_ui_ready) = false;
@@ -157,33 +161,33 @@ esphome:
               lambda: 'return heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL) < 20000;'
             then:
               - lambda: |-
-                  ESP_LOGW("boot", "DSC-CONTROL 5.1.7 heap still tight largest=%u — waiting longer",
+                  ESP_LOGW("boot", "DSC-CONTROL 5.1.8 heap still tight largest=%u — waiting longer",
                            (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
               - delay: 10s
         - lvgl.page.show: page_boot
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 5.1.7 resume-lite — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 5.1.8 resume-lite — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
             id(touch_guard_until) = millis() + 5000;
         - lvgl.resume:
         - delay: 6s
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 5.1.7 post-lite — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 5.1.8 post-lite — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
         - lvgl.pause:
         - lambda: 'lv_obj_clear_flag(id(tabbar), LV_OBJ_FLAG_HIDDEN);'
         - lvgl.page.show: page_pulse
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 5.1.7 resume-full — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 5.1.8 resume-full — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
             id(touch_guard_until) = millis() + 2000;
         - lvgl.resume:
         - delay: 4s
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 5.1.7 UI armed — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 5.1.8 UI armed — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
             id(boot_ui_ready) = true;
@@ -231,11 +235,17 @@ esp32:
       # It also carries an undocumented hazard: it needs a bootloader
       # from IDF v5.1+. A USB flash updates the bootloader, an OTA does
       # NOT — so an OTA onto an old bootloader bricks the boot.
-      # Zero benefit, real risk. Gone.
+      # Zero benefit, real risk. Gone. (v5.1.8: still refuse the
+      # bootloader "Set sram1_as_iram: true" hint — it is about IRAM,
+      # not free heap. See DSC-CONTROL-v4.0.1-ram-fix.md.)
       #
       # This CYD is an ESP32-D0WDQ6 rev 3.1. Declaring it drops the
       # older-silicon compatibility shims from the binary. Kept.
       minimum_chip_revision: "3.1"
+      # v5.1.8 — size over speed cuts I-cache pressure on a DRAM-tight
+      # LVGL build. loopTask 8 KB is ESPHome's LVGL floor; do not raise.
+      compiler_optimization: SIZE
+      loop_task_stack_size: 8192
     sdkconfig_options:
       # ----------------------------------------------------------
       #  WiFi is the BACKUP path on this panel — ESP-NOW carries all
@@ -243,13 +253,12 @@ esp32:
       #  only has to serve the HA API and OTA. So trade WiFi
       #  buffering for heap, hard.
       #
-      #  v5.1.7 — CYD harden checklist: starve Wi-Fi further
-      #  (static/dynamic RX 4, dynamic TX 4) to reclaim contiguous
-      #  DRAM for LVGL. Ampdu already off.
+      #  v5.1.8 — STATIC_RX 3; dynamic RX/TX already 4; LWIP TCP
+      #  sockets/windows trimmed further for contiguous DRAM.
       # ----------------------------------------------------------
-      # Kept from v4.0.1 (stock is 10 / 32 / 32). Static RX buffers are
-      # ~1.6 KB each of DMA-capable DRAM, allocated at wifi init.
-      CONFIG_ESP_WIFI_STATIC_RX_BUFFER_NUM: "4"
+      # Stock is 10 / 32 / 32. Static RX buffers are ~1.6 KB each of
+      # DMA-capable DRAM, allocated at wifi init.
+      CONFIG_ESP_WIFI_STATIC_RX_BUFFER_NUM: "3"
       CONFIG_ESP_WIFI_DYNAMIC_RX_BUFFER_NUM: "4"
       CONFIG_ESP_WIFI_DYNAMIC_TX_BUFFER_NUM: "4"
       # v4.0.2 — block-ack aggregation off. AMPDU exists to push
@@ -270,12 +279,12 @@ esp32:
       # NB: CONFIG_LWIP_MAX_SOCKETS is deliberately NOT set here.
       # ESPHome auto-sizes it from the components that actually claim
       # sockets (api, ota) and warns if a hand-set value is too low.
-      CONFIG_LWIP_MAX_ACTIVE_TCP: "4"
-      CONFIG_LWIP_MAX_LISTENING_TCP: "4"
+      CONFIG_LWIP_MAX_ACTIVE_TCP: "3"
+      CONFIG_LWIP_MAX_LISTENING_TCP: "3"
       # Send buffer and receive window, per connection. Stock 5744
-      # (4 x MSS). Halved — enough for API + OTA without Noise overhead.
-      CONFIG_LWIP_TCP_SND_BUF_DEFAULT: "2880"
-      CONFIG_LWIP_TCP_WND_DEFAULT: "2880"
+      # (4 x MSS). Quarters — enough for API + slow OTA.
+      CONFIG_LWIP_TCP_SND_BUF_DEFAULT: "1440"
+      CONFIG_LWIP_TCP_WND_DEFAULT: "1440"
       # TCP/IP task mailbox: stock 32 pointers deep.
       CONFIG_LWIP_TCPIP_RECVMBOX_SIZE: "16"
       # ----------------------------------------------------------
@@ -1071,7 +1080,7 @@ text_sensor:
     name: "Firmware Version"
     id: fw_version
     icon: mdi:tag-check
-    lambda: 'return {"5.1.7"};'
+    lambda: 'return {"5.1.8"};'
     update_interval: 60s
   - platform: template
     id: sel_stage
@@ -1378,12 +1387,10 @@ lvgl:
   # boot_ui_ready).
   paused: true
   resume_on_input: false
-  # v5.1.7 — single partial draw buffer ≈ 1/10 screen
-  # (320×24×2 = 15,360 B) in internal SRAM. Checklist: never full-frame
-  # / double-buffer without PSRAM. ESPHome `buffer_size` is % of the
-  # full framebuffer; 10% ≈ one-tenth height. (Older note about 12%→1/8
-  # bucketing was for a prior ESPHome mapper — keep 10% explicit.)
-  buffer_size: 10%
+  # v5.1.8 — single partial draw buffer ≈ 8% of framebuffer
+  # (320×240×2×0.08 = 12,288 B) in internal SRAM. Checklist: never
+  # full-frame / double-buffer without PSRAM. Reclaims ~3 KB vs 10%.
+  buffer_size: 8%
   displays:
     - cyd_display
   touchscreens:
@@ -2877,7 +2884,7 @@ lvgl:
                         id: hub_cmd
                         op: 19
                         val: !lambda 'return (id(gv_coord)&2) ? 0 : 1;'
-              - label: {text: "DSC-CONTROL v5.1.7  ·  ESP-NOW primary", text_font: f_small, text_color: 0x3A4550, pad_top: 8, pad_bottom: 8}
+              - label: {text: "DSC-CONTROL v5.1.8  ·  ESP-NOW primary", text_font: f_small, text_color: 0x3A4550, pad_top: 8, pad_bottom: 8}
 # ==================================================================
 #  SCRIPTS
 # ==================================================================
