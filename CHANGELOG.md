@@ -1,5 +1,14 @@
 # Changelog
 
+## v5.1.2 — 2026-08-02
+
+- DSC-CONTROL **5.1.2**: kill `lv_draw_unit_draw_letter` crash-loop (core 1 /
+  Fault-Unknown) seen on 5.1.0–5.1.1 after wake / unlock / lock.
+- Keep `panel_sleeping` through wake defer; coalesce paints with `ui_dirty` +
+  200 ms drain; `touch_guard` blocks tab `refresh_ui` under active indev.
+- No full `refresh_ui` on wake, unlock/lock commit, or ESP-NOW confirm.
+- Hold HUD show deferred off the press callback; lock row icons `mdi_22`.
+
 ## v5.1.1 — 2026-08-01
 
 - DSC-CONTROL glass: **instant** grey pending on every +/- and toggle; neon when

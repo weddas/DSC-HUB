@@ -50,6 +50,10 @@
 #  touch/indev callback (lv_draw_unit_draw_letter / StoreProhibited).
 #  v5.1.1: optimistic pending grey→neon on glass; sleep uses lock_overlay;
 #  dim 5 min then backlight off; harder scroll; alert list; dedicated lock.
+#  v5.1.2: crash-loop fix — keep panel_sleeping through wake defer; never
+#  full refresh_ui on wake/unlock/lock or ESP-NOW confirm; touch_guard +
+#  ui_dirty drain; hold HUD show deferred off the indev stack; smaller
+#  lock icons (mdi_22). Root: A8 letter-draw under active press / overlay.
 #
 #  BEFORE FLASHING:
 #    1. secrets.yaml needs dsc_control_ota_password / _ap_password
@@ -92,7 +96,7 @@ esphome:
     # the dashboard and HA's device page both described DSC-CONTROL as
     # being the DSC HUB. Purely cosmetic, but confusing enough to matter.
     name: "digital_emotions.dsc-control"
-    version: "5.1.1"
+    version: "5.1.2"
   on_boot:
     # Seed the 0xDC command seq from hardware RNG so a panel reboot is
     # unlikely to replay the hub's last-seen seq even before the hub's
@@ -106,7 +110,7 @@ esphome:
     - priority: -100
       then:
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 5.1.1 up — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 5.1.2 up — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
             // Harder scroll engagement so finger jitter is not a drag (default ~10).
@@ -331,7 +335,7 @@ espnow:
           }
           id(gv_dem)=dem_w; id(gv_mode)=mode_w; id(gv_arm)=data[32]; id(gv_flt)=data[33]; id(gv_coord)=coord_w;
           if (size >= 48) for (int i = 0; i < 6; i++) { uint16_t c = data[36+i*2] | (data[37+i*2] << 8); id(gv_cd)[i] = (float) c; }
-          if (confirm_paint) id(refresh_ui).execute();
+          if (confirm_paint) id(ui_dirty) = true;
         } else if (ty == 0xD2 && size >= 56) {
           static const float sc[27] = {100,100,100,100,100, 100,100,100,100,100, 1,1,1,1, 1,100,1,1,1, 100,100,1,1,1,1, 1,1};
           // cfg index → op for pending (matches settings steppers)
@@ -346,7 +350,7 @@ espnow:
             if (sc[i] >= 99.0f) id(gv_cfg)[i] = take_f100(op, wire);
             else id(gv_cfg)[i] = take_f1(op, wire);
           }
-          if (confirm_paint) id(refresh_ui).execute();
+          if (confirm_paint) id(ui_dirty) = true;
         } else if (ty == 0xD3 && size >= 58) {
           static const float ss[7] = {100,10,1,100,1,1,1};
           for (int i = 0; i < 28; i++) { float v = rd(2 + i*2); id(gv_soil)[i] = isnan(v) ? NAN : v / ss[i % 7]; }
@@ -443,6 +447,9 @@ touchscreen:
       swap_xy: true
       mirror_x: false
     on_touch:
+      # Stamp a short paint guard on every contact so refresh_ui never
+      # letter-draws under an active indev (5.1.0/5.1.1 crash family).
+      - lambda: 'id(touch_guard_until) = millis() + 450;'
       # Calibration dialled 24 Jul — wake-only path; no per-tap UART spam.
       # A first tap while asleep only WAKES (matches the hub's OLED
       # contract — a wake-tap must never also press a button).
@@ -1018,7 +1025,7 @@ text_sensor:
     name: "Firmware Version"
     id: fw_version
     icon: mdi:tag-check
-    lambda: 'return {"5.1.1"};'
+    lambda: 'return {"5.1.2"};'
     update_interval: 60s
   - platform: template
     id: sel_stage
@@ -1128,6 +1135,15 @@ globals:
     type: bool
     initial_value: 'false'
   - id: sleep_since              # millis when go_sleep armed (5 min → backlight off)
+    type: uint32_t
+    initial_value: '0'
+  - id: wake_pending             # wake started; keep sleeping until defer completes
+    type: bool
+    initial_value: 'false'
+  - id: ui_dirty                 # coalesce full tab paint off the indev/ESP-NOW path
+    type: bool
+    initial_value: 'false'
+  - id: touch_guard_until        # millis; skip interactive refresh_ui while active
     type: uint32_t
     initial_value: '0'
   - id: unlock_pending           # unlock committed; hide overlays after release
@@ -1857,12 +1873,12 @@ lvgl:
           widgets:
             - label: {id: lock_clock, text: "--:--", text_font: f_big, align: TOP_MID, y: 22, text_color: 0xFFFFFF}
             - label: {id: lock_title, text: "ASLEEP", text_font: f_small, align: TOP_MID, y: 60, text_color: 0x5A6472}
-            - label: {id: lk_fan,   text: "\U000F0210", text_font: mdi_34, align: CENTER, x: -125, y: 4, text_color: 0x2A2A2A}
-            - label: {id: lk_int,   text: "\U000F11DC", text_font: mdi_34, align: CENTER, x: -75,  y: 4, text_color: 0x2A2A2A}
-            - label: {id: lk_heat,  text: "\U000F0238", text_font: mdi_34, align: CENTER, x: -25,  y: 4, text_color: 0x2A2A2A}
-            - label: {id: lk_hum,   text: "\U000F1099", text_font: mdi_34, align: CENTER, x: 25,   y: 4, text_color: 0x2A2A2A}
-            - label: {id: lk_deh,   text: "\U000F150C", text_font: mdi_34, align: CENTER, x: 75,   y: 4, text_color: 0x2A2A2A}
-            - label: {id: lk_light, text: "\U000F05A8", text_font: mdi_34, align: CENTER, x: 125,  y: 4, text_color: 0x2A2A2A}
+            - label: {id: lk_fan,   text: "\U000F0210", text_font: mdi_22, align: CENTER, x: -125, y: 4, text_color: 0x2A2A2A}
+            - label: {id: lk_int,   text: "\U000F11DC", text_font: mdi_22, align: CENTER, x: -75,  y: 4, text_color: 0x2A2A2A}
+            - label: {id: lk_heat,  text: "\U000F0238", text_font: mdi_22, align: CENTER, x: -25,  y: 4, text_color: 0x2A2A2A}
+            - label: {id: lk_hum,   text: "\U000F1099", text_font: mdi_22, align: CENTER, x: 25,   y: 4, text_color: 0x2A2A2A}
+            - label: {id: lk_deh,   text: "\U000F150C", text_font: mdi_22, align: CENTER, x: 75,   y: 4, text_color: 0x2A2A2A}
+            - label: {id: lk_light, text: "\U000F05A8", text_font: mdi_22, align: CENTER, x: 125,  y: 4, text_color: 0x2A2A2A}
             - label: {id: lock_hint, text: "tap to wake", text_font: f_small, align: BOTTOM_MID, y: -26, text_color: 0x5A6472}
             - label: {text: "\U000F033E", text_font: mdi_22, align: BOTTOM_MID, y: -4, text_color: 0x3A4550}
           on_press:
@@ -4893,6 +4909,8 @@ script:
 
   # Wake must stay out of the LVGL indev stack: never hide overlays / full
   # refresh_ui under an active press (lv_draw_unit_draw_letter / StoreProhibited).
+  # v5.1.2: keep panel_sleeping until defer ends (interactive stays false);
+  # mark ui_dirty instead of full refresh; wait for finger release.
   - id: wake_panel
     mode: single
     then:
@@ -4901,9 +4919,9 @@ script:
             lambda: 'return id(panel_sleeping);'
           then:
             - lambda: |-
-                id(panel_sleeping) = false;
-                id(sleep_since) = 0;
-                // Brighten immediately; leave lock_overlay up until after the tap.
+                id(wake_pending) = true;
+                id(touch_guard_until) = millis() + 500;
+                // Brighten immediately; leave sleeping + overlay until defer.
                 int want = id(night_mode) ? 40 : 100;
                 if (want != id(bl_last)) {
                   id(bl_last) = want;
@@ -4911,13 +4929,23 @@ script:
                   bl.set_brightness(want / 100.0f);
                   bl.perform();
                 }
-            - delay: 120ms
+            - delay: 400ms
             - lambda: |-
+                if (!id(wake_pending)) return;
+                id(wake_pending) = false;
+                id(panel_sleeping) = false;
+                id(sleep_since) = 0;
+                id(touch_guard_until) = millis() + 400;
                 // Idle sleep only — do not dismiss a real lock.
                 if (!id(lock_engaged)) {
                   lv_obj_add_flag(id(lock_overlay), LV_OBJ_FLAG_HIDDEN);
                 }
-            - script.execute: refresh_ui
+                // Swallow the wake tap so it cannot click-through into a widget.
+                for (lv_indev_t *in = lv_indev_get_next(nullptr); in != nullptr; in = lv_indev_get_next(in)) {
+                  if (lv_indev_get_type(in) == LV_INDEV_TYPE_POINTER)
+                    lv_indev_wait_release(in);
+                }
+                id(ui_dirty) = true;
 
   - id: go_sleep
     then:
@@ -4927,6 +4955,7 @@ script:
           then:
             - lambda: |-
                 id(panel_sleeping) = true;
+                id(wake_pending) = false;
                 id(sleep_since) = millis();
                 lv_obj_clear_flag(id(lock_overlay), LV_OBJ_FLAG_HIDDEN);
                 const char* title = id(lock_engaged) ? "LOCKED" : "ASLEEP";
@@ -4935,7 +4964,7 @@ script:
                   lv_label_set_text(id(lock_title), title);
                 if (strcmp(lv_label_get_text(id(lock_hint)), hint) != 0)
                   lv_label_set_text(id(lock_hint), hint);
-            - script.execute: refresh_ui
+                id(ui_dirty) = true;
 
   # ---- flashlight — the light IS the onboard RGB LED (status_led) ----
   # apply_flashlight repaints the control chrome and either drives the chip
@@ -5023,24 +5052,40 @@ script:
     then:
       - lambda: 'lv_obj_add_flag(id(alert_screen), LV_OBJ_FLAG_HIDDEN);'
 
-  # ---- screen lock: hold-to-lock / hold-to-unlock (v5.1.1) ----
+  # ---- screen lock: hold-to-lock / hold-to-unlock (v5.1.2) ----
   # Lock-begin only from lock_arm (sw_lock / lock_hit). Unlock from overlay.
   # At 3s: set *_pending only — never hide/show overlay mid-press.
-  # HUD is bar + hint (no glyph storm on every tick).
+  # HUD show is deferred off the indev stack (delay in hold_begin).
   - id: hold_begin
     mode: single
     then:
-      - lambda: |-
-          if (id(lock_engaged)) {
-            if (lv_obj_has_flag(id(lock_overlay), LV_OBJ_FLAG_HIDDEN))
-              return;
-            id(holding) = true;
-            id(hold_start) = millis();
-            return;
-          }
-          if (!id(lock_arm)) return;  // ignore stray page holds
-          id(holding) = true;
-          id(hold_start) = millis();
+      - if:
+          condition:
+            lambda: |-
+              if (id(lock_engaged)) {
+                if (lv_obj_has_flag(id(lock_overlay), LV_OBJ_FLAG_HIDDEN))
+                  return false;
+                id(holding) = true;
+                id(hold_start) = millis();
+                return true;
+              }
+              if (!id(lock_arm)) return false;
+              id(holding) = true;
+              id(hold_start) = millis();
+              return true;
+          then:
+            - delay: 250ms
+            - lambda: |-
+                // Runs after the press callback returns — safe to mutate LVGL.
+                if (!id(holding)) return;
+                if (lv_obj_has_flag(id(hold_hud), LV_OBJ_FLAG_HIDDEN)) {
+                  bool waking = id(lock_engaged);
+                  const char* hint = waking ? "WAKING UP" : "LOCKING";
+                  if (strcmp(lv_label_get_text(id(hud_hint)), hint) != 0)
+                    lv_label_set_text(id(hud_hint), hint);
+                  lv_bar_set_value(id(hud_bar), 0, LV_ANIM_OFF);
+                  lv_obj_clear_flag(id(hold_hud), LV_OBJ_FLAG_HIDDEN);
+                }
 
   - id: hold_tick
     mode: single
@@ -5048,25 +5093,17 @@ script:
       - lambda: |-
           if (!id(holding)) return;
           const uint32_t HOLD_MS = 3000;
-          const uint32_t HUD_MS  = 250;
           uint32_t el = millis() - id(hold_start);
-          if (el < HUD_MS) return;
           if (el > HOLD_MS) el = HOLD_MS;
-          if (lv_obj_has_flag(id(hold_hud), LV_OBJ_FLAG_HIDDEN)) {
-            bool waking = id(lock_engaged);
-            const char* hint = waking ? "WAKING UP" : "LOCKING";
-            if (strcmp(lv_label_get_text(id(hud_hint)), hint) != 0)
-              lv_label_set_text(id(hud_hint), hint);
-            lv_bar_set_value(id(hud_bar), 0, LV_ANIM_OFF);
-            lv_obj_clear_flag(id(hold_hud), LV_OBJ_FLAG_HIDDEN);
+          // Bar only once HUD is visible (shown by deferred hold_begin).
+          if (!lv_obj_has_flag(id(hold_hud), LV_OBJ_FLAG_HIDDEN)) {
+            int bar = (int)((float) el / HOLD_MS * 100.0f);
+            if ((int) lv_bar_get_value(id(hud_bar)) != bar)
+              lv_bar_set_value(id(hud_bar), bar, LV_ANIM_OFF);
           }
-          int bar = (int)((float) el / HOLD_MS * 100.0f);
-          if ((int) lv_bar_get_value(id(hud_bar)) != bar)
-            lv_bar_set_value(id(hud_bar), bar, LV_ANIM_OFF);
           if (el < HOLD_MS) return;
-          // Commit flags only — overlay mutate after release.
+          // Commit flags only — hide HUD / overlay after release (hold_finish).
           id(holding) = false;
-          lv_obj_add_flag(id(hold_hud), LV_OBJ_FLAG_HIDDEN);
           if (id(lock_engaged)) id(unlock_pending) = true;
           else id(lock_pending) = true;
           id(lock_arm) = false;
@@ -5074,11 +5111,16 @@ script:
   - id: hold_cancel
     mode: single
     then:
-      - lambda: |-
-          id(lock_arm) = false;
-          if (!id(holding)) return;
-          id(holding) = false;
-          lv_obj_add_flag(id(hold_hud), LV_OBJ_FLAG_HIDDEN);
+      - if:
+          condition:
+            lambda: |-
+              id(lock_arm) = false;
+              if (!id(holding)) return false;
+              id(holding) = false;
+              return true;
+          then:
+            - delay: 100ms
+            - lambda: 'lv_obj_add_flag(id(hold_hud), LV_OBJ_FLAG_HIDDEN);'
 
   - id: hold_finish
     mode: single
@@ -5087,12 +5129,14 @@ script:
           condition:
             lambda: 'return id(unlock_pending) || id(lock_pending);'
           then:
-            - delay: 120ms
+            - delay: 350ms
             - lambda: |-
+                lv_obj_add_flag(id(hold_hud), LV_OBJ_FLAG_HIDDEN);
                 if (id(unlock_pending)) {
                   id(unlock_pending) = false;
                   id(lock_engaged) = false;
                   id(panel_sleeping) = false;
+                  id(wake_pending) = false;
                   id(sleep_since) = 0;
                   id(bl_last) = -1;
                   lv_obj_add_flag(id(lock_overlay), LV_OBJ_FLAG_HIDDEN);
@@ -5100,6 +5144,7 @@ script:
                   id(lock_pending) = false;
                   id(lock_engaged) = true;
                   id(panel_sleeping) = false;
+                  id(wake_pending) = false;
                   id(sleep_since) = 0;
                   lv_obj_clear_flag(id(lock_overlay), LV_OBJ_FLAG_HIDDEN);
                   if (strcmp(lv_label_get_text(id(lock_title)), "LOCKED") != 0)
@@ -5108,7 +5153,13 @@ script:
                     lv_label_set_text(id(lock_hint), "hold anywhere to wake");
                 }
                 id(lock_arm) = false;
-            - script.execute: refresh_ui
+                id(touch_guard_until) = millis() + 400;
+                for (lv_indev_t *in = lv_indev_get_next(nullptr); in != nullptr; in = lv_indev_get_next(in)) {
+                  if (lv_indev_get_type(in) == LV_INDEV_TYPE_POINTER)
+                    lv_indev_wait_release(in);
+                }
+                // Coalesce tab paint — never full refresh_ui on the release path.
+                id(ui_dirty) = true;
           else:
             - script.execute: hold_cancel
 
@@ -5438,7 +5489,18 @@ script:
             setl(id(lock_title), title); setl(id(lock_hint), hint);
           }
 
-          if (!interactive) return;
+          if (!interactive) {
+            id(ui_dirty) = false;
+            return;
+          }
+
+          // v5.1.2 — never letter-draw tab widgets under active touch / hold.
+          // Coalesce via ui_dirty; the 200 ms drain interval retries when safe.
+          if (id(holding) || millis() < id(touch_guard_until) || id(wake_pending)) {
+            id(ui_dirty) = true;
+            return;
+          }
+          id(ui_dirty) = false;
 
           // ---- Connections overlay (only when open) ----
           if (conn_vis) {
@@ -5819,6 +5881,18 @@ script:
 #  PERIODIC REFRESH
 # ==================================================================
 interval:
+  # v5.1.2 — drain coalesced paints once touch/hold/wake guard is clear.
+  - interval: 200ms
+    then:
+      - if:
+          condition:
+            lambda: |-
+              return id(ui_dirty)
+                  && !id(holding)
+                  && !id(wake_pending)
+                  && millis() >= id(touch_guard_until);
+          then:
+            - script.execute: refresh_ui
   # v4.0.11 — 5 s page-gated refresh; UI reads gv_* live (mirrors parked).
   - interval: 5s
     then:
