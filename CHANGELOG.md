@@ -1,5 +1,15 @@
 # Changelog
 
+## v5.1.5 — 2026-08-02
+
+- DSC-CONTROL **5.1.5**: USB log proved 5.1.4 dies on first full LVGL paint
+  after resume (`Failed to allocate 220–640 B` / draw-buffer OOM → WDT).
+- Staged boot: hide tabbar → `page_boot` lite resume → pause → show Pulse +
+  tabbar → arm `boot_ui_ready` (no `refresh_ui` during lite paint).
+- Drop `mdi_28` (tabs use `mdi_22`); Montserrat/MDI font `bpp` 4→2.
+- Do **not** re-enable `sram1_as_iram` (v4.0.2: costs DRAM; bootloader
+  warning is IRAM, not heap).
+
 ## v5.1.4 — 2026-08-02
 
 - DSC-CONTROL **5.1.4**: longer LVGL pause (12 s + optional 10 s if heap

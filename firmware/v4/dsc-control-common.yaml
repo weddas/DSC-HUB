@@ -60,6 +60,10 @@
 #  v5.1.4: 5.1.3 still died at/after resume. Longer settle + heap gate before
 #  resume; hub_cmd no longer paints labels under the tap (pend+gv only,
 #  ui_dirty drain paints grey) — Full Auto tap was crashing the glass.
+#  v5.1.5: USB proof — 5.1.4 resumes then OOMs on first full paint
+#  (Failed to allocate 220–640 B / draw buf 512 B → WDT). Do NOT re-enable
+#  sram1_as_iram (v4.0.2: costs DRAM). Staged resume: hide tabbar, paint
+#  minimal page_boot first, then arm full UI; drop mdi_28; font bpp 4→2.
 #
 #  BEFORE FLASHING:
 #    1. secrets.yaml needs dsc_control_ota_password / _ap_password
@@ -102,7 +106,7 @@ esphome:
     # the dashboard and HA's device page both described DSC-CONTROL as
     # being the DSC HUB. Purely cosmetic, but confusing enough to matter.
     name: "digital_emotions.dsc-control"
-    version: "5.1.4"
+    version: "5.1.5"
   on_boot:
     # Seed the 0xDC command seq from hardware RNG so a panel reboot is
     # unlikely to replay the hub's last-seen seq even before the hub's
@@ -110,37 +114,62 @@ esphome:
     - priority: 600
       then:
         - lambda: 'id(cmd_tx_seq) = (uint16_t) esp_random();'
-    # v5.1.4 — LVGL starts paused. Give WiFi/API/heap time; if largest block
-    # is still tight after 12 s, wait another 10 s before first letter-draw.
+    # v5.1.5 — staged first paint. 5.1.4 resumed straight into the full
+    # widget tree and OOMed on glyph/draw-buffer allocs. Keep LVGL paused
+    # through WiFi, hide the tabbar, resume onto page_boot only, then arm
+    # the real UI once that lite paint survives.
     - priority: -100
       then:
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 5.1.4 paused — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 5.1.5 paused — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
+            id(boot_ui_ready) = false;
             for (lv_indev_t *in = lv_indev_get_next(nullptr); in != nullptr; in = lv_indev_get_next(in)) {
               if (lv_indev_get_type(in) == LV_INDEV_TYPE_POINTER) {
                 lv_indev_set_scroll_limit(in, 40);
                 lv_indev_set_scroll_throw(in, 5);
               }
             }
-        - delay: 12s
+            lv_obj_add_flag(id(tabbar), LV_OBJ_FLAG_HIDDEN);
+        - delay: 14s
         - if:
             condition:
-              lambda: 'return heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL) < 18000;'
+              lambda: 'return heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL) < 20000;'
             then:
               - lambda: |-
-                  ESP_LOGW("boot", "DSC-CONTROL 5.1.4 heap still tight largest=%u — waiting longer",
+                  ESP_LOGW("boot", "DSC-CONTROL 5.1.5 heap still tight largest=%u — waiting longer",
                            (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
               - delay: 10s
+        - lvgl.page.show: page_boot
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 5.1.4 resume — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 5.1.5 resume-lite — free_heap=%u largest=%u",
+                     (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
+                     (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
+            id(touch_guard_until) = millis() + 5000;
+        - lvgl.resume:
+        - delay: 6s
+        - lambda: |-
+            ESP_LOGI("boot", "DSC-CONTROL 5.1.5 post-lite — free_heap=%u largest=%u",
+                     (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
+                     (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
+        - lvgl.pause:
+        - lambda: 'lv_obj_clear_flag(id(tabbar), LV_OBJ_FLAG_HIDDEN);'
+        - lvgl.page.show: page_pulse
+        - lambda: |-
+            ESP_LOGI("boot", "DSC-CONTROL 5.1.5 resume-full — free_heap=%u largest=%u",
+                     (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
+                     (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
+            id(touch_guard_until) = millis() + 2000;
+        - lvgl.resume:
+        - delay: 4s
+        - lambda: |-
+            ESP_LOGI("boot", "DSC-CONTROL 5.1.5 UI armed — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
             id(boot_ui_ready) = true;
             id(touch_guard_until) = millis() + 800;
             id(ui_dirty) = true;
-        - lvgl.resume:
 
 esp32:
   board: esp32dev
@@ -1046,7 +1075,7 @@ text_sensor:
     name: "Firmware Version"
     id: fw_version
     icon: mdi:tag-check
-    lambda: 'return {"5.1.4"};'
+    lambda: 'return {"5.1.5"};'
     update_interval: 60s
   - platform: template
     id: sel_stage
@@ -1287,35 +1316,37 @@ globals:
 #  Codepoints verified against @mdi/font 7.4.47 (the CSS is truth).
 # ==================================================================
 font:
+  # v5.1.5 — bpp 4→2 cuts A8 glyph mask size roughly in half (letter-draw
+  # OOM was failing 220–640 B allocs on first full paint).
   - file: "gfonts://Montserrat@700"
     id: f_title
     size: 20
-    bpp: 4
+    bpp: 2
     glyphs: !include cyd_glyphs.yaml
   - file: "gfonts://Montserrat@600"
     id: f_big
     size: 30
-    bpp: 4
+    bpp: 2
     glyphs: !include cyd_glyphs.yaml
   - file: "gfonts://Montserrat@600"
     id: f_med
     size: 17
-    bpp: 4
+    bpp: 2
     glyphs: !include cyd_glyphs.yaml
   - file: "gfonts://Montserrat@500"
     id: f_body
     size: 14
-    bpp: 4
+    bpp: 2
     glyphs: !include cyd_glyphs.yaml
   - file: "gfonts://Montserrat@600"
     id: f_small
     size: 12
-    bpp: 4
+    bpp: 2
     glyphs: !include cyd_glyphs.yaml
   - file: "https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/fonts/materialdesignicons-webfont.ttf"
     id: mdi_22
     size: 22
-    bpp: 4
+    bpp: 2
     glyphs: &mdi_glyphs [
       "\U000F05A9",  # wifi
       "\U000F05AA",  # wifi-off
@@ -1364,14 +1395,10 @@ font:
   - file: "https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/fonts/materialdesignicons-webfont.ttf"
     id: mdi_16
     size: 16
-    bpp: 4
+    bpp: 2
     glyphs: *mdi_glyphs
-  - file: "https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/fonts/materialdesignicons-webfont.ttf"
-    id: mdi_28
-    size: 28
-    bpp: 4
-    glyphs: *mdi_glyphs
-  # mdi_34 removed in 5.1.3 — lock row uses mdi_22; unused face still cost init RAM.
+  # mdi_28 removed in 5.1.5 — tabs use mdi_22; third MDI face cost init + glyph RAM.
+  # mdi_34 removed in 5.1.3 — lock row uses mdi_22.
 
 # ================= LVGL SECTION APPENDED BELOW =================
 
@@ -1382,8 +1409,9 @@ font:
 # ==================================================================
 lvgl:
   # v5.1.3 — start paused so setup/WiFi do not letter-draw under peak heap
-  # pressure. on_boot resumes after 5 s. Do not resume_on_input (a wake tap
-  # must not force paint before boot_ui_ready).
+  # pressure. v5.1.5 on_boot: resume-lite (page_boot) then resume-full.
+  # Do not resume_on_input (a wake tap must not force paint before
+  # boot_ui_ready).
   paused: true
   resume_on_input: false
   # Pin the draw buffer to 1/8 screen (19,200 B). Left unset, LVGL first
@@ -1464,7 +1492,7 @@ lvgl:
                 shadow_width: 0
                 radius: 0
                 widgets:
-                  - label: {id: tab_ic0, text: "\U000F05F6", text_font: mdi_28, align: CENTER, text_color: 0x00E676}
+                  - label: {id: tab_ic0, text: "\U000F05F6", text_font: mdi_22, align: CENTER, text_color: 0x00E676}
                 on_click:
                   - lvgl.page.show: page_pulse
                   - lambda: |-
@@ -1483,7 +1511,7 @@ lvgl:
                 shadow_width: 0
                 radius: 0
                 widgets:
-                  - label: {id: tab_ic1, text: "\U000F0E66", text_font: mdi_28, align: CENTER, text_color: 0x5A6472}
+                  - label: {id: tab_ic1, text: "\U000F0E66", text_font: mdi_22, align: CENTER, text_color: 0x5A6472}
                 on_click:
                   - lvgl.page.show: page_clone
                   - lambda: |-
@@ -1502,7 +1530,7 @@ lvgl:
                 shadow_width: 0
                 radius: 0
                 widgets:
-                  - label: {id: tab_ic2, text: "\U000F032A", text_font: mdi_28, align: CENTER, text_color: 0x5A6472}
+                  - label: {id: tab_ic2, text: "\U000F032A", text_font: mdi_22, align: CENTER, text_color: 0x5A6472}
                 on_click:
                   - lvgl.page.show: page_main
                   - lambda: |-
@@ -1521,7 +1549,7 @@ lvgl:
                 shadow_width: 0
                 radius: 0
                 widgets:
-                  - label: {id: tab_ic3, text: "\U000F058E", text_font: mdi_28, align: CENTER, text_color: 0x5A6472}
+                  - label: {id: tab_ic3, text: "\U000F058E", text_font: mdi_22, align: CENTER, text_color: 0x5A6472}
                 on_click:
                   - lvgl.page.show: page_soil
                   - lambda: |-
@@ -1540,7 +1568,7 @@ lvgl:
                 shadow_width: 0
                 radius: 0
                 widgets:
-                  - label: {id: tab_ic4, text: "\U000F066A", text_font: mdi_28, align: CENTER, text_color: 0x5A6472}
+                  - label: {id: tab_ic4, text: "\U000F066A", text_font: mdi_22, align: CENTER, text_color: 0x5A6472}
                 on_click:
                   - lvgl.page.show: page_control
                   - lambda: |-
@@ -2142,6 +2170,23 @@ lvgl:
 
   # =============================== PAGES ===========================
   pages:
+    # ------------------------------ BOOT (5.1.5 lite first paint) ---
+    - id: page_boot
+      scrollbar_mode: "OFF"
+      bg_color: 0x0E1116
+      widgets:
+        - label:
+            text: "DSC-CONTROL"
+            text_font: f_med
+            align: CENTER
+            y: -12
+            text_color: 0x00E676
+        - label:
+            text: "starting…"
+            text_font: f_small
+            align: CENTER
+            y: 14
+            text_color: 0x8A929C
     # ------------------------------ PULSE --------------------------
     - id: page_pulse
       scrollbar_mode: "OFF"
