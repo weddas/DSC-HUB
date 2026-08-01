@@ -1,0 +1,21 @@
+# ==================================================================
+#  DSC-HUB — KIT stub (standalone SoftAP setup, no HA required)
+#  Flash at factory / first unboxing. Phone joins DSC-Setup-XXXX.
+# ==================================================================
+
+substitutions:
+  name: dsc-hub
+  friendly_name: DSC-HUB
+  api_key_val: !secret dsc_hub_api_key
+  ota_password_val: !secret dsc_hub_ota_password
+  ap_password_val: !secret dsc_hub_ap_password
+  setup_ap_password: !secret dsc_setup_ap_password
+  espnow_key: !secret espnow_key
+  panel_mac: "00:00:00:00:00:00"      # learned at SoftAP hello
+  espnow_cmd_tag: "54727"
+
+packages:
+  wifi: !include dsc-hub-wifi-kit.yaml
+  hub: !include dsc-hub-v4_0.yaml
+  espnow_control: !include dsc-hub-espnow-primary.yaml
+  fleet: !include dsc-fleet-setup-hub.yaml

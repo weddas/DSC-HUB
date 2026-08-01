@@ -53,6 +53,8 @@ substitutions:
   # Factory Modbus address of the probe (all four are 0x01 on their own
   # isolated bus). Here as a default in case a replacement probe differs.
   probe_address: "1"
+  # Hub WiFi MAC for ESP-NOW (lab stub overrides; kit learns via SoftAP setup).
+  hub_mac: "84:1F:E8:16:E6:60"
 
 esphome:
   name: ${name}
@@ -80,17 +82,7 @@ ota:
   - platform: esphome
     password: ${ota_password_val}
 
-# WiFi + espnow_key come from the stub as substitutions so this package
-# stays remote-git safe (ESPHome forbids !secret inside git packages).
-wifi:
-  ssid: ${wifi_ssid}
-  password: ${wifi_password}
-  power_save_mode: none          # fleet rule: mains device, no modem naps
-  ap:
-    ssid: "${friendly_name} Fallback"
-    password: ${ap_password_val}
-
-captive_portal:
+# WiFi lives in dsc-pot-wifi-lab.yaml / dsc-pot-wifi-kit.yaml (stub).
 
 # ==================================================================
 #  RS485 / MODBUS
@@ -594,12 +586,12 @@ select:
 espnow:
   auto_add_peer: false
   peers:
-    - 84:1F:E8:16:E6:60   # DSC-HUB (192.168.86.33, dsc-hub.local)
+    - ${hub_mac}
 
 packet_transport:
   - platform: espnow
     id: pt_espnow
-    peer_address: 84:1F:E8:16:E6:60
+    peer_address: ${hub_mac}
     update_interval: 60s
     encryption:
       key: ${espnow_key}

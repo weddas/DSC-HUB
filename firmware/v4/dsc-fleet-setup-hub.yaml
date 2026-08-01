@@ -1,0 +1,22 @@
+# ==================================================================
+#  DSC-HUB · fleet SoftAP setup coordinator (kit builds)
+# ==================================================================
+external_components:
+  - source:
+      type: local
+      path: components
+    components: [dsc_fleet_setup]
+
+dsc_fleet_setup:
+  id: fleet_setup
+  role: hub
+  enabled: true
+  setup_ap_prefix: "DSC-Setup"
+  setup_ap_password: ${setup_ap_password}
+  espnow_key: ${espnow_key}
+  espnow_cmd_tag: ${espnow_cmd_tag}
+  lab_panel_mac: ${panel_mac}
+
+# Dynamic peers: auto-add Control/pots heard over ESP-NOW (hello + telemetry).
+espnow:
+  auto_add_peer: true

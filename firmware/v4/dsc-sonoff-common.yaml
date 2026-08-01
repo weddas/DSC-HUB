@@ -80,7 +80,7 @@ api:
   # v4 Phase-1: after API-loss failsafe forced the relay OFF, HA demand
   # may still be ON with no rising edge for the follower. Clear the
   # loss stamp on reconnect so the next HA command is not grace-poisoned;
-  # HA followers also re-assert on hub-link restore (see automations.yaml).
+  # HA followers also re-assert on hub-link restore (see dsc_v4_automations.yaml).
   on_client_connected:
     - lambda: |-
         id(api_lost_at) = 0;

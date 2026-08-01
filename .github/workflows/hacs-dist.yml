@@ -1,0 +1,59 @@
+# Ensure HACS dist/ stays in sync with homeassistant/www on push.
+# HACS installs from dist/ (repo name match: DSC-HUB.js).
+
+name: HACS dist
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "homeassistant/www/**"
+      - "scripts/sync-hacs-dist.sh"
+      - "hacs.json"
+      - ".github/workflows/hacs-dist.yml"
+  pull_request:
+    paths:
+      - "homeassistant/www/**"
+      - "scripts/sync-hacs-dist.sh"
+      - "hacs.json"
+      - "dist/**"
+  workflow_dispatch:
+
+jobs:
+  sync-dist:
+    name: Sync / verify dist
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build dist from www
+        run: |
+          chmod +x scripts/sync-hacs-dist.sh
+          ./scripts/sync-hacs-dist.sh
+
+      - name: Fail PR if dist is stale
+        if: github.event_name == 'pull_request'
+        run: |
+          if ! git diff --quiet -- dist/; then
+            echo "::error::dist/ is out of sync with homeassistant/www — run scripts/sync-hacs-dist.sh"
+            git diff --stat -- dist/
+            exit 1
+          fi
+
+      - name: Commit dist on master
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        run: |
+          if git diff --quiet -- dist/; then
+            echo "dist/ already up to date"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add dist/
+          git commit -m "chore(hacs): sync dist/ from homeassistant/www"
+          git push

@@ -14,6 +14,6 @@ substitutions:
 packages:
   common:
     url: https://github.com/weddas/DSC-HUB
-    ref: v4.0.0-alpha.1
+    ref: v5.0.0
     files: [firmware/v4/dsc-sonoff-common.yaml]
     refresh: 1d

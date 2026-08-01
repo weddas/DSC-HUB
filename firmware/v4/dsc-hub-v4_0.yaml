@@ -7,7 +7,7 @@
 # ESP-NOW panel layer is loaded by the stub (dsc-hub-espnow-primary.yaml),
 # not !include'd here — keeps local and git-pull paths identical.
 
-# ===== v4.0.0-alpha.1 · LINE-IN-THE-SAND ALPHA (31 Jul 2026) =====
+# ===== v5.0.0 · MAJOR — HA Sync add-on + kit SoftAP (Aug 2026) =====
 # First published alpha of the v4 ESP-NOW-primary hub stack. Project
 # version string matches the GitHub release tag. Built on the v4.0
 # ESP-NOW layer + climate rev through boot persist / Full Auto re-arm.
@@ -46,7 +46,7 @@ esphome:
   friendly_name: DSC-HUB
   project:
     name: "digital_emotions.dsc-hub"
-    version: "4.0.0-alpha.1"
+    version: "5.0.0"
   on_boot:
     - priority: -100
       then:
@@ -164,36 +164,8 @@ ota:
   - platform: esphome
     password: ${ota_password_val}
 
-wifi:
-  ssid: ${wifi_ssid}
-  password: ${wifi_password}
-  # v2.4.1 · HA-DROP RESILIENCE: ESP32 modem power-save (default
-  # LIGHT) makes the chip nap between DTIM beacons — the classic cause
-  # of dropped/half-dead HA API sockets and the "Occasionally drops
-  # connection" symptom. Mains-powered device, no reason to nap.
-  power_save_mode: none
-  ap:
-    ssid: DSC-HUB Fallback Hotspot
-    password: ${ap_password_val}
-  on_connect:
-    - lambda: |-
-        // Log STA channel so Nest/mesh hops are visible next to the panel's
-        // channel-hop alert. ESP-NOW requires hub + panel on the same ch.
-        // Use ESPHome's API (works on Arduino + esp-idf); raw esp_wifi_*
-        // is not declared in Arduino-framework lambdas on 2026.x.
-        auto *w = wifi::global_wifi_component;
-        if (w != nullptr) {
-          static int last_ch = 0;
-          int ch = (int) w->get_wifi_channel();
-          if (ch > 0) {
-            if (last_ch != 0 && last_ch != ch)
-              ESP_LOGW("wifi", "channel hop %d -> %d — panel ESP-NOW will drop until it follows", last_ch, ch);
-            else
-              ESP_LOGI("wifi", "STA channel %d", ch);
-            last_ch = ch;
-          }
-        }
-
+# WiFi lives in the stub / wifi package (lab vs kit SoftAP provisioning).
+# See dsc-hub-wifi-lab.yaml / dsc-hub-wifi-kit.yaml.
 
 # ==================================================================
 #  DIGITAL-PLANT  ·  Grow Tent Environmental Controller   (rev 2.4.4)
@@ -533,7 +505,7 @@ wifi:
 # ==================================================================
 
 
-captive_portal:
+# captive_portal: provided by wifi lab package (not kit SoftAP portal).
 
 # ==================================================================
 #  v2.4.1 · ESP-NOW  —  direct pot -> hub root-zone link (LIVE)

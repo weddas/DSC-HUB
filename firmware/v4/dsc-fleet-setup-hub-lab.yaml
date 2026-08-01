@@ -1,0 +1,16 @@
+# Lab hub: disabled fleet helper seeds panel MAC for runtime TX helpers.
+external_components:
+  - source:
+      type: local
+      path: components
+    components: [dsc_fleet_setup]
+
+dsc_fleet_setup:
+  id: fleet_setup
+  role: hub
+  enabled: false
+  setup_ap_prefix: "DSC-Setup"
+  setup_ap_password: "lab-unused"
+  espnow_key: ${espnow_key}
+  espnow_cmd_tag: ${espnow_cmd_tag}
+  lab_panel_mac: ${panel_mac}

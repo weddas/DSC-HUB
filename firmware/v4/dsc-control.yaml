@@ -1,13 +1,6 @@
 # ==================================================================
-#  DSC-CONTROL — device stub
-#  ------------------------------------------------------------------
-#  Secrets + hub MAC/tag stay here. UI/logic in dsc-control-common.yaml
-#  (glyphs via !include cyd_glyphs.yaml beside that file).
-#  Panel API is plaintext since 4.0.9 (api_key_val unused by the body;
-#  keep the secret for stub symmetry / possible future re-enable).
-#
-#  Local:  esphome run dsc-control.yaml
-#  HA:     homeassistant/esphome/dsc-control.yaml (git-pulls the body)
+#  DSC-CONTROL — device stub (lab)
+#  Kit SoftAP setup: dsc-control-kit.yaml
 # ==================================================================
 
 substitutions:
@@ -22,4 +15,6 @@ substitutions:
   espnow_cmd_tag: "54727"             # 0xD5C7 — must match hub
 
 packages:
+  wifi: !include dsc-control-wifi-lab.yaml
   panel: !include dsc-control-common.yaml
+  fleet: !include dsc-fleet-setup-control-lab.yaml

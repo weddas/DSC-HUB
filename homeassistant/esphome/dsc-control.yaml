@@ -1,8 +1,4 @@
-# DSC-CONTROL — HA stub (pulls panel body from GitHub; glyphs via sibling include)
-# api/ota/wifi live in dsc-control-common.yaml. Since 4.0.9 the panel API is
-# plaintext (api_key_val unused) and mDNS is off — add by IP with no key.
-# "Unable to connect… api section" ⇒ unreachable host or stale encrypted
-# HA entry, not a missing api: block. Recovery: firmware/v4/README.md.
+# DSC-CONTROL — HA stub
 substitutions:
   name: dsc-control
   friendly_name: DSC-CONTROL
@@ -17,7 +13,9 @@ substitutions:
 packages:
   panel:
     url: https://github.com/weddas/DSC-HUB
-    ref: v4.0.0-alpha.1
+    ref: v5.0.0
     files:
+      - firmware/v4/dsc-control-wifi-lab.yaml
       - firmware/v4/dsc-control-common.yaml
+      - firmware/v4/dsc-fleet-setup-control-lab.yaml
     refresh: 1d

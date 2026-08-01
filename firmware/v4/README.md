@@ -1,8 +1,9 @@
 # DSC-HUB firmware v4
 
 Working directory for ESPHome configs. Current hub release string:
-**`4.0.0-alpha.1`** (GitHub tag `v4.0.0-alpha.1`). See the repo
-[README](../../README.md) and [INSTALL.md](../../INSTALL.md) for from-scratch setup.
+**`5.0.0`** (GitHub tag `v5.0.0`). See the repo
+[README](../../README.md) and [INSTALL.md](../../INSTALL.md) for from-scratch HA setup.
+Standalone SoftAP unboxing (no HA): [SETUP.md](../../SETUP.md).
 
 ## Local vs HA
 
@@ -11,7 +12,11 @@ Working directory for ESPHome configs. Current hub release string:
 | Here (`firmware/v4/`) | Stubs `!include` package bodies for Cursor edits + local flash. |
 | [`homeassistant/esphome/`](../../homeassistant/esphome/) | Same stubs with **git-pull** packages from GitHub. |
 
-Entry points (local): `dsc-hub.yaml`, `dsc-control.yaml`, `dsc-heater.yaml`, `dsc-pot1.yaml`, …
+Entry points (local lab): `dsc-hub.yaml`, `dsc-control.yaml`, `dsc-pot1.yaml`, …
+Kit SoftAP setup: `dsc-hub-kit.yaml`, `dsc-control-kit.yaml`, `dsc-pot{1..4}-kit.yaml`
+
+WiFi is split into `dsc-*-wifi-lab.yaml` / `dsc-*-wifi-kit.yaml` so kit builds omit compile-time SSIDs.
+Fleet component: `components/dsc_fleet_setup/` (phone portal on hub; Control/pots join `DSC-Setup-*`).
 
 Package bodies are remote-git safe (no `!secret`). Stubs pass credentials (and hub/panel MACs + `espnow_cmd_tag`) as substitutions.
 
@@ -59,7 +64,7 @@ ESP-NOW (glass ↔ hub) does **not** need the HA API. Fix API only for OTA, diag
 | Pots + Sonoffs | `power_save_mode: none` + `logger: INFO` | OTA fine |
 | Hub | 30 s Wi‑Fi channel poll (silent Nest hops) | OTA fine |
 | Panel 4.0.11 | Live `gv_*` UI + channel poll | **USB** if heap-sensitive / still looping |
-| HA packages / automations / dashboard | Beyond OTA — paste + reload | See [`../../RELEASE.md`](../../RELEASE.md) |
+| HA packages / automations / dashboard | Push sync (or copy) + reload | See [`../../RELEASE.md`](../../RELEASE.md) · [`../../scripts/HA-SYNC-BOOTSTRAP.md`](../../scripts/HA-SYNC-BOOTSTRAP.md) |
 
 ## Hub mat votes
 

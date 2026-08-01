@@ -1,0 +1,30 @@
+# ==================================================================
+#  DSC-CONTROL · kit WiFi (no captive portal — join DSC-Setup-* then NVS)
+# ==================================================================
+wifi:
+  power_save_mode: none
+  ap:
+    ssid: "DSC-CONTROL Fallback"
+    password: ${ap_password_val}
+  on_connect:
+    - lambda: |-
+        id(wifi_conn) = true;
+        auto *w = wifi::global_wifi_component;
+        if (w != nullptr) {
+          int ch = (int) w->get_wifi_channel();
+          if (ch > 0) {
+            if (id(wifi_channel) != 0 && id(wifi_channel) != ch) {
+              id(wifi_channel_hopped) = true;
+              ESP_LOGW("wifi", "channel hop %d -> %d (ESP-NOW needs hub on same ch)", id(wifi_channel), ch);
+            } else {
+              ESP_LOGI("wifi", "STA channel %d", ch);
+            }
+            id(wifi_channel) = ch;
+          }
+        }
+    - delay: 500ms
+    - lambda: |-
+        const char *ip = id(wifi_ip_ts).state.empty() ? "(pending)" : id(wifi_ip_ts).state.c_str();
+        ESP_LOGI("wifi", "STA IP %s — HA API :6053 plaintext (mDNS off)", ip);
+  on_disconnect:
+    - lambda: 'id(wifi_conn) = false;'

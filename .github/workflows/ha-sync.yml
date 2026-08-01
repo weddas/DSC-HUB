@@ -1,0 +1,76 @@
+# Sync DSC-HUB Home Assistant surfaces to HAOS on push to master.
+# Requires a self-hosted runner on Unraid (label: unraid-ha-deploy).
+# GitHub-hosted runners cannot reach the private LAN HA host.
+
+name: HA sync
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "homeassistant/packages/**"
+      - "homeassistant/dashboards/**"
+      - "homeassistant/www/**"
+      - "homeassistant/esphome/**"
+      - "scripts/ha-sync.sh"
+      - ".github/workflows/ha-sync.yml"
+  workflow_dispatch:
+    inputs:
+      sync_esphome:
+        description: "Also sync ESPHome stubs (dsc-*.yaml)"
+        type: boolean
+        default: false
+      dry_run:
+        description: "Dry run (print actions only)"
+        type: boolean
+        default: false
+
+concurrency:
+  group: ha-sync-master
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    name: Sync to HAOS
+    runs-on: [self-hosted, unraid-ha-deploy]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Write SSH key
+        env:
+          HA_SSH_KEY: ${{ secrets.HA_SSH_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -z "${HA_SSH_KEY}" ]; then
+            echo "HA_SSH_KEY secret is required" >&2
+            exit 1
+          fi
+          umask 077
+          KEY_PATH="${RUNNER_TEMP}/ha_deploy_key"
+          printf '%s\n' "${HA_SSH_KEY}" > "${KEY_PATH}"
+          # Normalize Windows-style CRLF if secret was pasted from notepad
+          sed -i 's/\r$//' "${KEY_PATH}" || true
+          echo "HA_SSH_KEY_PATH=${KEY_PATH}" >> "${GITHUB_ENV}"
+
+      - name: Run ha-sync.sh
+        env:
+          HA_HOST: ${{ secrets.HA_HOST }}
+          HA_PORT: ${{ secrets.HA_PORT }}
+          HA_TOKEN: ${{ secrets.HA_TOKEN }}
+          HA_SSH_HOST: ${{ secrets.HA_SSH_HOST }}
+          HA_SSH_USER: ${{ secrets.HA_SSH_USER }}
+          HA_SSH_PORT: ${{ secrets.HA_SSH_PORT }}
+          HA_SSH_KEY: ${{ env.HA_SSH_KEY_PATH }}
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run == true && '1' || '0' }}
+          SYNC_ESPHOME: ${{ github.event_name == 'workflow_dispatch' && inputs.sync_esphome == true && '1' || '0' }}
+        run: |
+          set -euo pipefail
+          : "${HA_HOST:?Set repo secret HA_HOST (e.g. 192.168.86.3)}"
+          : "${HA_TOKEN:?Set repo secret HA_TOKEN (HA long-lived access token)}"
+          export HA_PORT="${HA_PORT:-8123}"
+          export HA_SSH_HOST="${HA_SSH_HOST:-$HA_HOST}"
+          export HA_SSH_USER="${HA_SSH_USER:-root}"
+          export HA_SSH_PORT="${HA_SSH_PORT:-22}"
+          chmod +x scripts/ha-sync.sh
+          ./scripts/ha-sync.sh

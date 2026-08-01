@@ -1,0 +1,17 @@
+substitutions:
+  name: dsc_pot4
+  friendly_name: DSC-POT#4
+  espnow_key: !secret espnow_key
+  api_key_val: !secret dsc_pot4_api_key
+  ota_password_val: !secret dsc_pot4_ota_password
+  ap_password_val: !secret dsc_pot4_ap_password
+  setup_ap_password: !secret dsc_setup_ap_password
+  hub_mac: "00:00:00:00:00:00"
+  espnow_cmd_tag: "54727"
+  fleet_role: "pot"
+  fleet_pot_index: "4"
+
+packages:
+  wifi: !include dsc-pot-wifi-kit.yaml
+  common: !include dsc-pot-common.yaml
+  fleet: !include dsc-fleet-setup-pot-kit.yaml

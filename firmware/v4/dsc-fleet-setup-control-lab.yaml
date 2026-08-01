@@ -1,0 +1,18 @@
+# Lab: component present (disabled) so lambdas can resolve hub MAC helpers.
+external_components:
+  - source:
+      type: local
+      path: components
+    components: [dsc_fleet_setup]
+
+dsc_fleet_setup:
+  id: fleet_setup
+  role: control
+  enabled: false
+  setup_ap_prefix: "DSC-Setup"
+  setup_ap_password: "lab-unused"
+  espnow_key: ""
+  espnow_cmd_tag: ${espnow_cmd_tag}
+  pot_index: 0
+  device_name: ${name}
+  lab_hub_mac: ${hub_mac}

@@ -2,18 +2,26 @@
 
 Indoor grow automation fleet: ESPHome hub, CYD touch panel (DSC-CONTROL), soil pots, and Sonoff demand followers.
 
-**Current release:** [**v4.0.0-alpha.1**](https://github.com/weddas/DSC-HUB/releases/tag/v4.0.0-alpha.1) — hub firmware **`4.0.0-alpha.1`**
+**Current release:** [**v5.0.0**](https://github.com/weddas/DSC-HUB/releases/tag/v5.0.0) — hub firmware **`5.0.0`**
 
 ## Docs (start here)
 
 | Doc | When |
 |---|---|
 | [`INSTALL.md`](INSTALL.md) | **From-scratch** HA + fleet bring-up (file → destination map) |
-| [`RELEASE.md`](RELEASE.md) | This alpha cut, Beyond OTA, backlog |
+| [`SETUP.md`](SETUP.md) | **Standalone SoftAP unboxing** (no HA) — HUB + Control + pots |
+| [`scripts/ADDON.md`](scripts/ADDON.md) | **Primary delivery** — HAOS add-on (packages / dashboard / www) |
+| [`RELEASE.md`](RELEASE.md) | This alpha cut, HA sync vs firmware Install, backlog |
 | [`homeassistant/README.md`](homeassistant/README.md) | Packages, dashboard, HACS, SYSTEM MAP |
+| [`scripts/HACS-FRONTEND.md`](scripts/HACS-FRONTEND.md) | Optional HACS Dashboard card |
+| [`scripts/HA-SYNC-BOOTSTRAP.md`](scripts/HA-SYNC-BOOTSTRAP.md) | Optional Unraid runner (non-add-on path) |
 | [`firmware/v4/README.md`](firmware/v4/README.md) | Local validate / flash entry points |
 
-ESPHome OTA updates firmware only. Lovelace, `dsc_v4_*.yaml` helpers, and automations are manual copy — see **Beyond OTA** in [`RELEASE.md`](RELEASE.md).
+**HAOS delivery:** Settings → Add-ons → Repositories → add `https://github.com/weddas/DSC-HUB`
+→ install **DSC-HUB Sync**. Push to `master` → add-on polls GitHub (~60s) → packages /
+dashboard / www land in `/config`. Details: [`scripts/ADDON.md`](scripts/ADDON.md).
+
+ESPHome OTA updates firmware only (manual Validate/Install).
 
 ## Canonical firmware
 
@@ -21,7 +29,7 @@ ESPHome OTA updates firmware only. Lovelace, `dsc_v4_*.yaml` helpers, and automa
 
 | Device | Config | Version (this alpha) |
 |---|---|---|
-| Hub | stub `dsc-hub.yaml` → `dsc-hub-v4_0.yaml` + `dsc-hub-espnow-primary.yaml` | **`4.0.0-alpha.1`** |
+| Hub | stub `dsc-hub.yaml` → `dsc-hub-v4_0.yaml` + `dsc-hub-espnow-primary.yaml` | **`5.0.0`** |
 | Touch panel | stub `dsc-control.yaml` → `dsc-control-common.yaml` (+ `cyd_glyphs.yaml`) | **4.0.11** |
 | Pots 1–4 | `dsc-pot{1..4}.yaml` → `dsc-pot-common.yaml` | **4.0.1** |
 | Sonoffs | `dsc-heater` / `heatmat` / `humidifier` / `de-humidifier` → `dsc-sonoff-common.yaml` | common package |
@@ -36,11 +44,13 @@ Canonical dashboard + packages + ESPHome stubs: [`homeassistant/`](homeassistant
 
 | Piece | File |
 |---|---|
-| Lovelace | `homeassistant/dashboards/dsc-hub-v4-dashboard.yaml` (URL: `dsc-hub-v4`) |
-| Helpers | `homeassistant/packages/dsc_v4_*.yaml` |
-| Automations | `homeassistant/automations.yaml` |
+| **HAOS Sync add-on** | [`dsc-hub-sync/`](dsc-hub-sync/) · [`scripts/ADDON.md`](scripts/ADDON.md) |
+| Lovelace | `homeassistant/dashboards/dsc-hub-v4-dashboard.yaml` (YAML mode, URL: `dsc-hub-v4`) |
+| Helpers + automations | `homeassistant/packages/dsc_v4_*.yaml` |
+| Config snippet | `homeassistant/configuration.snippet.yaml` |
 | ESPHome stubs | `homeassistant/esphome/dsc-*.yaml` (git-pull package bodies) |
-| SYSTEM MAP | `homeassistant/www/dsc-system-map-card.js` + `.svg` → `/config/www/` |
+| SYSTEM MAP | HACS optional · or add-on `www/` sync — [`scripts/HACS-FRONTEND.md`](scripts/HACS-FRONTEND.md) |
+| Push deploy (alt) | [`scripts/ha-sync.sh`](scripts/ha-sync.sh) Unraid/GHA if not using the add-on |
 
 ## Secrets
 

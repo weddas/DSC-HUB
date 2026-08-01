@@ -1,0 +1,19 @@
+# ==================================================================
+#  DSC-HUB — paste into /config/configuration.yaml (once)
+#  ------------------------------------------------------------------
+#  Packages + YAML-mode Lovelace so git-push sync can update helpers,
+#  automations, and the dashboard by file copy alone.
+# ==================================================================
+
+homeassistant:
+  packages: !include_dir_named packages
+
+lovelace:
+  mode: storage
+  dashboards:
+    dsc-hub-v4:
+      mode: yaml
+      title: DSC-HUB
+      icon: mdi:sprout
+      show_in_sidebar: true
+      filename: dashboards/dsc-hub-v4-dashboard.yaml

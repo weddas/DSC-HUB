@@ -1,4 +1,4 @@
-# DSC-HUB — HA stub (pulls hub body + ESP-NOW package from GitHub)
+# DSC-HUB — HA stub (pulls hub body + ESP-NOW package + lab WiFi from GitHub)
 substitutions:
   name: dsc-hub
   friendly_name: DSC-HUB
@@ -14,8 +14,10 @@ substitutions:
 packages:
   hub:
     url: https://github.com/weddas/DSC-HUB
-    ref: v4.0.0-alpha.1
+    ref: v5.0.0
     files:
+      - firmware/v4/dsc-hub-wifi-lab.yaml
       - firmware/v4/dsc-hub-v4_0.yaml
       - firmware/v4/dsc-hub-espnow-primary.yaml
+      - firmware/v4/dsc-fleet-setup-hub-lab.yaml
     refresh: 1d

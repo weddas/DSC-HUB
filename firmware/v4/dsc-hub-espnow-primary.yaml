@@ -208,7 +208,9 @@ script:
     mode: single
     then:
       - espnow.send:
-          address: ${panel_mac}
+          address: !lambda |-
+            const uint8_t *m = id(fleet_setup).panel_mac();
+            return std::array<uint8_t, 6>{m[0], m[1], m[2], m[3], m[4], m[5]};
           wait_for_sent: false
           data: !lambda |-
             std::vector<uint8_t> p; p.reserve(48);
@@ -242,7 +244,9 @@ script:
   - id: tx_config
     then:
       - espnow.send:
-          address: ${panel_mac}
+          address: !lambda |-
+            const uint8_t *m = id(fleet_setup).panel_mac();
+            return std::array<uint8_t, 6>{m[0], m[1], m[2], m[3], m[4], m[5]};
           wait_for_sent: false
           data: !lambda |-
             std::vector<uint8_t> p; p.reserve(60);
@@ -264,7 +268,9 @@ script:
   - id: tx_soil
     then:
       - espnow.send:
-          address: ${panel_mac}
+          address: !lambda |-
+            const uint8_t *m = id(fleet_setup).panel_mac();
+            return std::array<uint8_t, 6>{m[0], m[1], m[2], m[3], m[4], m[5]};
           wait_for_sent: false
           data: !lambda |-
             std::vector<uint8_t> p; p.reserve(60);
@@ -291,7 +297,9 @@ script:
     then:
       - delay: 50ms
       - espnow.send:
-          address: ${panel_mac}
+          address: !lambda |-
+            const uint8_t *m = id(fleet_setup).panel_mac();
+            return std::array<uint8_t, 6>{m[0], m[1], m[2], m[3], m[4], m[5]};
           wait_for_sent: false
           data: !lambda |-
             std::vector<uint8_t> p; p.reserve(66);

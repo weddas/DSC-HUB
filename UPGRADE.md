@@ -1,10 +1,11 @@
 # DSC-HUB v4 — Upgrade (legacy live sites only)
 
-**New installs:** use [`INSTALL.md`](INSTALL.md) for **v4.0.0-alpha.1** (file → destination map).
+**New installs:** use [`INSTALL.md`](INSTALL.md) for **v5.0.0** (file → destination map + add-on).
 
-This document is only for migrating an **already-running** v2.4 / early-v4 site onto the git-pull ESPHome + HA pack workflow.
+This document is only for migrating an **already-running** v2.4 / v4 site onto the
+git-pull ESPHome + HA Sync add-on workflow.
 
-Repo: https://github.com/weddas/DSC-HUB · tag **`v4.0.0-alpha.1`** · branch **`master`**
+Repo: https://github.com/weddas/DSC-HUB · tag **`v5.0.0`** · branch **`master`**
 
 ---
 
@@ -40,17 +41,18 @@ Keep unrelated house packages. Only remove DSC duplicates.
 ## B. Install the new HA pack
 
 1. Copy **all** `homeassistant/packages/dsc_v4_*.yaml` → `/config/packages/`
-   (underscores required — HA rejects hyphens in package filenames)
-2. Merge [`homeassistant/automations.yaml`](homeassistant/automations.yaml)
-   - Delete Rev A ids `dsc_v24_follow_*` if present (collide with `dsc_follower_*`)
-   - If you already have `dsc_hub_offline_safe_off` / emergency alerts live, replace with the git copies (same ids) or delete the live duplicates first
+   (underscores required — HA rejects hyphens in package filenames;
+   includes `dsc_v4_automations.yaml`)
+2. Remove duplicate DSC automation ids from the UI / `/config/automations.yaml`
+   if they were previously merged (same ids collide with the package)
 3. Dashboard:
-   - Prefer a **new** dashboard with URL **`dsc-hub-v4`**
-   - Paste [`homeassistant/dashboards/dsc-hub-v4-dashboard.yaml`](homeassistant/dashboards/dsc-hub-v4-dashboard.yaml)
-   - Retire or unlink the old `dsc-hub-v2-4` dashboard when happy
+   - Prefer YAML mode from [`homeassistant/configuration.snippet.yaml`](homeassistant/configuration.snippet.yaml)
+   - Copy [`homeassistant/dashboards/dsc-hub-v4-dashboard.yaml`](homeassistant/dashboards/dsc-hub-v4-dashboard.yaml) → `/config/dashboards/`
+   - URL **`dsc-hub-v4`**; retire or unlink the old `dsc-hub-v2-4` dashboard when happy
 4. Entity registry (if still on historical names):
    - `text.dsc_potN_plant_name` / `select.dsc_potN_growth_stage` (no `4x8_` / `grow_tent_` prefixes)
 5. Restart Home Assistant
+6. Optional: enable push sync — [`scripts/HA-SYNC-BOOTSTRAP.md`](scripts/HA-SYNC-BOOTSTRAP.md)
 
 ---
 
@@ -78,7 +80,7 @@ If moving to **54727**, flash **hub then panel in one sitting** (or panel will c
 ### Post-flash checks
 
 - [ ] Panel ESP-NOW row UP; command changes a hub number/switch
-- [ ] `sensor.dsc_hub_firmware_version` = `4.0.0-alpha.1`
+- [ ] `sensor.dsc_hub_firmware_version` = `5.0.0`
 - [ ] `binary_sensor.dsc_hub_emergency_failsafe` exists
 - [ ] Pot ESP-NOW link sensors present; mat still tracks soil temp
 - [ ] Sonoff followers still mirror demand (test one appliance)
@@ -100,24 +102,22 @@ If moving to **54727**, flash **hub then panel in one sitting** (or panel will c
 ## Day-to-day after upgrade
 
 ```
-Cursor edit → push master → ESPHome Validate/Install (affected devices only)
+Cursor edit → push master → HA sync Action (homeassistant/**) + ESPHome Validate/Install
 ```
 
-Do not edit package bodies only on the HA box — they will be overwritten on the next git refresh.
+Do not edit package bodies only on the HA box — they will be overwritten on the next git refresh / sync.
 
 ### Incremental updates (already on v4)
 
-Firmware OTA is **not** enough when the cut also touches HA surfaces. Check [`RELEASE.md`](RELEASE.md) “Recent cut” + **Beyond OTA** before flashing:
+Firmware OTA is **not** enough when the cut also touches HA surfaces. Check [`RELEASE.md`](RELEASE.md) “Beyond OTA” before flashing.
+With push sync configured ([`scripts/HA-SYNC-BOOTSTRAP.md`](scripts/HA-SYNC-BOOTSTRAP.md)), HA YAML/www deploy automatically:
 
 | Changed in git | What you do on HA |
 |---|---|
 | `firmware/v4/*` only | ESPHome Validate/Install on affected devices |
-| `dashboards/dsc-hub-v4-dashboard.yaml` | Re-paste into Lovelace raw editor (`dsc-hub-v4`) — **not** automatic |
-| `packages/dsc_v4_*.yaml` | Copy/replace into `/config/packages/` → restart HA |
-| `automations.yaml` | Merge/replace live automations → reload automations or restart |
+| `dashboards/dsc-hub-v4-dashboard.yaml` | Auto via HA sync (YAML-mode dashboard) — or copy to `/config/dashboards/` |
+| `packages/dsc_v4_*.yaml` | Auto via HA sync — or copy into `/config/packages/` → reload/restart |
 | Panel boot-looping after UI flash | Prefer **USB** until boot log shows a clean `4.0.11 up` line; HA add by **IP**, no encryption key |
 | ESPHome: package `not a valid YAML file` / `expected '<document start>'` | Header changelog in the package body lost its `#` — fix on git, push, `refresh: 0d`, Validate |
-
-Example — current master cut: flash **hub** + **panel**, and **re-paste the dashboard**. Helpers/automations unchanged → no package swap.
 
 See also: [`INSTALL.md`](INSTALL.md) · [`RELEASE.md`](RELEASE.md) · [`homeassistant/README.md`](homeassistant/README.md)

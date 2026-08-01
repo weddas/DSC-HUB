@@ -1,0 +1,35 @@
+# ==================================================================
+#  Fleet SoftAP satellite for pots — also retargets packet_transport peer
+# ==================================================================
+external_components:
+  - source:
+      type: local
+      path: components
+    components: [dsc_fleet_setup]
+
+dsc_fleet_setup:
+  id: fleet_setup
+  role: pot
+  enabled: true
+  setup_ap_prefix: "DSC-Setup"
+  setup_ap_password: ${setup_ap_password}
+  espnow_key: ${espnow_key}
+  espnow_cmd_tag: ${espnow_cmd_tag}
+  pot_index: ${fleet_pot_index}
+  device_name: ${name}
+  lab_hub_mac: ${hub_mac}
+
+esphome:
+  on_boot:
+    - priority: -50
+      then:
+        - lambda: |-
+            if (!id(fleet_setup).has_hub_mac()) return;
+            const uint8_t *m = id(fleet_setup).hub_mac();
+            if (espnow::global_esp_now != nullptr)
+              espnow::global_esp_now->add_peer(m);
+            espnow::peer_address_t addr;
+            memcpy(addr.data(), m, 6);
+            id(pt_espnow).set_peer_address(addr);
+            ESP_LOGI("dsc_fleet", "Pot peer -> hub %02X:%02X:%02X:%02X:%02X:%02X",
+                     m[0], m[1], m[2], m[3], m[4], m[5]);

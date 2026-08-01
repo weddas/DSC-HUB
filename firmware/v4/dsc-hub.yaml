@@ -1,10 +1,11 @@
 # ==================================================================
-#  DSC-HUB — device stub
+#  DSC-HUB — device stub (lab / existing bench)
 #  ------------------------------------------------------------------
 #  Secrets + MAC/tag stay here. Logic: dsc-hub-v4_0.yaml
 #  Panel ESP-NOW layer: dsc-hub-espnow-primary.yaml (sibling package).
 #
 #  Local:  esphome run dsc-hub.yaml
+#  Kit SoftAP setup: esphome run dsc-hub-kit.yaml
 #  HA:     homeassistant/esphome/dsc-hub.yaml (git-pulls both bodies)
 # ==================================================================
 
@@ -22,5 +23,7 @@ substitutions:
   espnow_cmd_tag: "54727"             # 0xD5C7
 
 packages:
+  wifi: !include dsc-hub-wifi-lab.yaml
   hub: !include dsc-hub-v4_0.yaml
   espnow_control: !include dsc-hub-espnow-primary.yaml
+  fleet: !include dsc-fleet-setup-hub-lab.yaml

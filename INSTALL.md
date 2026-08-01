@@ -1,16 +1,20 @@
-# DSC-HUB v4.0.0-alpha.1 — Install (from scratch)
+# DSC-HUB v5.0.0 — Install (from scratch)
 
-Fresh Home Assistant + ESPHome bring-up for release **`v4.0.0-alpha.1`**
+Fresh Home Assistant + ESPHome bring-up for release **`v5.0.0`**
 (hub firmware string matches the GitHub tag).
 
-Repo: https://github.com/weddas/DSC-HUB · tag **`v4.0.0-alpha.1`** · branch **`master`**
+Repo: https://github.com/weddas/DSC-HUB · tag **`v5.0.0`** · branch **`master`**
+
+**Preferred ongoing delivery:** HAOS add-on — [`scripts/ADDON.md`](scripts/ADDON.md)  
+**Kit SoftAP (no HA first):** [`SETUP.md`](SETUP.md)
 
 ---
 
 ## File → destination map
 
-Copy from this repo into your HA config. Paths on the left are relative to the
-repo root; destinations are under Home Assistant `/config/`.
+Copy from this repo into your HA config (or let the **DSC-HUB Sync** add-on do it
+after install). Paths on the left are relative to the repo root; destinations are
+under Home Assistant `/config/`.
 
 | Repo source | Destination |
 |---|---|
@@ -41,28 +45,32 @@ lovelace:
 Filenames under `packages/` must use **underscores** — HA rejects hyphens in
 `!include_dir_named` package slugs.
 
-After the one-time copy (or first auto-sync), enable push deploy:
-[`scripts/HA-SYNC-BOOTSTRAP.md`](scripts/HA-SYNC-BOOTSTRAP.md).
+### Add-on (recommended after first files land)
+
+1. Settings → Add-ons → ⋮ → **Repositories** → add `https://github.com/weddas/DSC-HUB`
+2. Install **DSC-HUB Sync** → Start  
+3. Further pushes to `master` update packages / dashboard / www automatically  
+
+Details: [`scripts/ADDON.md`](scripts/ADDON.md).  
+Optional: HACS SYSTEM MAP card — [`scripts/HACS-FRONTEND.md`](scripts/HACS-FRONTEND.md).  
+Optional Unraid GHA path: [`scripts/HA-SYNC-BOOTSTRAP.md`](scripts/HA-SYNC-BOOTSTRAP.md).
 
 ---
 
 ## 0. Prerequisites
 
-- Home Assistant with [ESPHome](https://esphome.io/) add-on (or external ESPHome)
+- Home Assistant OS (for the Sync add-on) with [ESPHome](https://esphome.io/) add-on
 - HACS custom cards listed in [`homeassistant/README.md`](homeassistant/README.md)
 - Router: **fixed 2.4 GHz channel** for hub + panel + pots (mesh channel hops break ESP-NOW)
 - Filled `/config/esphome/secrets.yaml` from the template above
 
-Mobile push alerts for pot/tank package notifiers are **not** shipped in this
-alpha (they previously targeted a non-existent notify service). Climate /
-safety alerts live in `dsc_v4_automations.yaml` — edit notify targets there to
-match your devices (e.g. `notify.mobile_app_…`).
+Mobile push alerts for pot/tank package notifiers are **not** shipped.
+Climate / safety alerts live in `dsc_v4_automations.yaml` — edit notify targets
+there to match your devices (e.g. `notify.mobile_app_…`).
 
 ---
 
 ## 1. Packages
-
-Copy every file:
 
 | File → `/config/packages/` | Purpose |
 |---|---|
@@ -81,37 +89,24 @@ Copy every file:
 
 ## 2. Automations
 
-Included via package [`dsc_v4_automations.yaml`](homeassistant/packages/dsc_v4_automations.yaml)
-(copied with the other packages above). Do **not** also merge the deprecated
-repo-root stub `homeassistant/automations.yaml` — it would duplicate ids.
-
-Includes: Sonoff demand followers, clone dark-period + root-zone alerts,
-grow-log scribe, hub-offline safe-off, emergency/climate/aux fault alerts.
-Learning EMA samples ship in `dsc_v4_climate_learn.yaml`.
+Included via package [`dsc_v4_automations.yaml`](homeassistant/packages/dsc_v4_automations.yaml).
+Do **not** also merge the deprecated stub `homeassistant/automations.yaml`.
 
 ---
 
 ## 3. Dashboard
 
-Prefer **YAML mode** (required for git-push sync):
+Prefer **YAML mode** (required for add-on / git sync):
 
 1. Add the `lovelace:` block from the snippet above to `configuration.yaml`
-2. Copy [`homeassistant/dashboards/dsc-hub-v4-dashboard.yaml`](homeassistant/dashboards/dsc-hub-v4-dashboard.yaml) → `/config/dashboards/`
-3. Restart HA once; sidebar should show **DSC-HUB** at URL **`dsc-hub-v4`**
-4. If an older **UI-managed** dashboard already owns `dsc-hub-v4`, remove or rename it first
+2. Copy dashboard YAML → `/config/dashboards/` (or let the add-on sync it)
+3. Restart HA once; sidebar shows **DSC-HUB** at URL **`dsc-hub-v4`**
+4. Remove any older **UI-managed** dashboard that owned `dsc-hub-v4`
 
-### SYSTEM MAP card (Home view)
+### SYSTEM MAP card
 
-**Preferred:** install via HACS — [`scripts/HACS-FRONTEND.md`](scripts/HACS-FRONTEND.md)
-(custom repo `https://github.com/weddas/DSC-HUB`, category **Dashboard**).
-
-**Manual fallback:**
-
-1. Copy the two `www/` files into `/config/www/` (see map above)
-2. Settings → Dashboards → ⋮ → Resources → Add resource  
-   - URL: `/local/dsc-system-map-card.js`  
-   - Type: **JavaScript**
-3. Hard-refresh the browser after the first dashboard load
+**Preferred:** HACS — [`scripts/HACS-FRONTEND.md`](scripts/HACS-FRONTEND.md)  
+**Or:** add-on / manual `www/` copy + resource `/local/dsc-system-map-card.js` (JavaScript).
 
 ---
 
@@ -119,57 +114,47 @@ Prefer **YAML mode** (required for git-push sync):
 
 Copy every `homeassistant/esphome/dsc-*.yaml` → `/config/esphome/`.
 
-| Stub → `/config/esphome/` | Pulls from GitHub (`@v4.0.0-alpha.1` / `master`) |
+| Stub → `/config/esphome/` | Pulls from GitHub (`@v5.0.0` / `master`) |
 |---|---|
 | `dsc-hub.yaml` | `dsc-hub-v4_0.yaml` + `dsc-hub-espnow-primary.yaml` |
 | `dsc-control.yaml` | `dsc-control-common.yaml` (+ glyphs) |
-| `dsc-heater.yaml` / `dsc-heatmat.yaml` / `dsc-humidifier.yaml` / `dsc-de-humidifier.yaml` | `dsc-sonoff-common.yaml` |
-| `dsc-pot1.yaml` … `dsc-pot4.yaml` | `dsc-pot-common.yaml` |
+| Sonoffs / pots | `dsc-sonoff-common.yaml` / `dsc-pot-common.yaml` |
 
-Edit MACs / `espnow_cmd_tag` in the stubs if your hardware differs.
+Prefer stub `ref: v5.0.0` for this cut; `master` once tracking tip.
 Do **not** put `secrets.yaml` in git.
-
-For this alpha cut, prefer stub `ref: v4.0.0-alpha.1` (or pin after clone) so
-Install pulls the tagged bodies; `master` is fine once you are tracking tip.
 
 ---
 
 ## 5. Restart + flash
 
-1. Restart Home Assistant
-2. ESPHome → Validate each device (set `refresh: 0d` once if the git cache is empty/stale, then restore `1d`)
-3. Flash USB the first time per device; OTA after
+1. Restart Home Assistant  
+2. ESPHome → Validate (set `refresh: 0d` once if git cache stale, then `1d`)  
+3. Flash USB first time; OTA after  
 
 ### Flash order
 
-1. Hub — **`dsc-hub.yaml`**
-2. Panel — **`dsc-control.yaml`** (same `espnow_cmd_tag` as hub)
-3. Pots — POT2 canary, then 1 / 3 / 4
-4. Sonoffs — any order
+1. Hub — expect **`5.0.0`**  
+2. Panel — **4.0.11** (same `espnow_cmd_tag`)  
+3. Pots — POT2 canary, then 1 / 3 / 4  
+4. Sonoffs  
 
 ### Verify
 
-- [ ] Panel ESP-NOW UP; a panel command moves a hub entity
-- [ ] `sensor.dsc_hub_firmware_version` = **`4.0.0-alpha.1`**
-- [ ] `binary_sensor.dsc_hub_emergency_failsafe` exists
-- [ ] Four `binary_sensor.dsc_hub_potN_esp_now_link` exist
-- [ ] Demand ON → matching Sonoff relay ON
-- [ ] Dashboard Home shows hub/panel chips; alert chip uses `sensor.dsc_active_alert_count`
-- [ ] Tank card reads `sensor.dsc_tank_ec_normalized` (check Tuya entity names if blank)
+- [ ] Panel ESP-NOW UP; panel command moves a hub entity  
+- [ ] `sensor.dsc_hub_firmware_version` = **`5.0.0`**  
+- [ ] Demand ON → matching Sonoff relay ON  
+- [ ] Dashboard URL `dsc-hub-v4` loads; alert chip uses `sensor.dsc_active_alert_count`  
 
 ---
 
 ## Day-to-day after install
 
 ```
-Cursor edit → commit/push → HA sync Action (packages / dashboard / www)
-                         → ESPHome Validate/Install (changed devices only)
+Cursor edit → commit/push master
+  → DSC-HUB Sync add-on (~60s) → packages / dashboard / www
+  → ESPHome Validate/Install (changed devices only)
 ```
-
-With the Unraid self-hosted runner configured ([`scripts/HA-SYNC-BOOTSTRAP.md`](scripts/HA-SYNC-BOOTSTRAP.md)),
-pushes to `master` that touch `homeassistant/**` auto-deploy helpers, automations,
-dashboard, and SYSTEM MAP assets. Firmware Install stays manual.
 
 Hub + panel: flash **together** when `espnow_cmd_tag`, MAC, or wire packets change.
 
-See also: [`RELEASE.md`](RELEASE.md) · [`homeassistant/README.md`](homeassistant/README.md) · [`firmware/v4/README.md`](firmware/v4/README.md)
+See also: [`RELEASE.md`](RELEASE.md) · [`scripts/ADDON.md`](scripts/ADDON.md) · [`homeassistant/README.md`](homeassistant/README.md) · [`firmware/v4/README.md`](firmware/v4/README.md)

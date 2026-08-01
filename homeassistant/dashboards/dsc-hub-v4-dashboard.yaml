@@ -4469,7 +4469,7 @@ views:
               may be down while the panel still drives the hub.*
           - type: markdown
             content: >-
-              *Expected hub firmware for this dashboard: **`4.0.0-alpha.1`**.
+              *Expected hub firmware for this dashboard: **`5.0.0`**.
               Panel (DSC-CONTROL) should report **`4.0.11`** (or newer) on
               panel diagnostics. Panel ESP-NOW primary + 0xD4 plant names
               need the v4 hub flash. Prefer entity prefix `dsc_control_*`

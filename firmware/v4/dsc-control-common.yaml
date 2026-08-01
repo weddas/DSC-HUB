@@ -220,40 +220,7 @@ ota:
   - platform: esphome
     password: ${ota_password_val}
 
-wifi:
-  ssid: ${wifi_ssid}
-  password: ${wifi_password}
-  power_save_mode: none          # fleet rule: mains device, no modem naps
-  ap:
-    ssid: "DSC-CONTROL Fallback"
-    password: ${ap_password_val}
-  on_connect:
-    - lambda: |-
-        id(wifi_conn) = true;
-        // Nest/mesh can hop 2.4 GHz channels under us. ESP-NOW rides the
-        // STA channel — a hop that the hub did not also take silently
-        // splits the link. Track it so the alert strip can surface it.
-        auto *w = wifi::global_wifi_component;
-        if (w != nullptr) {
-          int ch = (int) w->get_wifi_channel();
-          if (ch > 0) {
-            if (id(wifi_channel) != 0 && id(wifi_channel) != ch) {
-              id(wifi_channel_hopped) = true;
-              ESP_LOGW("wifi", "channel hop %d -> %d (ESP-NOW needs hub on same ch)", id(wifi_channel), ch);
-            } else {
-              ESP_LOGI("wifi", "STA channel %d", ch);
-            }
-            id(wifi_channel) = ch;
-          }
-        }
-    # wifi_info IP text sensor updates just after associate — log it so
-    # USB/serial triage shows the host for HA add (mDNS is off).
-    - delay: 500ms
-    - lambda: |-
-        const char *ip = id(wifi_ip_ts).state.empty() ? "(pending)" : id(wifi_ip_ts).state.c_str();
-        ESP_LOGI("wifi", "STA IP %s — HA API :6053 plaintext (mDNS off)", ip);
-  on_disconnect:
-    - lambda: 'id(wifi_conn) = false;'
+# WiFi lives in dsc-control-wifi-lab.yaml / dsc-control-wifi-kit.yaml (stub).
 
 # v4.0.9 — mDNS disabled. At peak setup() free heap was ~2 KB; the mDNS
 # task stack failed to allocate, the component stuck FAILED, and
@@ -262,13 +229,8 @@ wifi:
 mdns:
   disabled: true
 
-# RAM RECOVERY (v4.0.1): captive_portal removed. It pulls in the async
-# web server + DNS server purely to serve a WiFi-setup page on the
-# fallback AP — but this panel's credentials are baked into the
-# firmware, so that page could never do anything useful. The `wifi: ap:`
-# fallback above is KEPT, so OTA-over-the-fallback-AP still works as a
-# recovery path.
-# captive_portal:
+# RAM RECOVERY (v4.0.1): captive_portal stays removed on the CYD.
+# Kit provisioning uses STA join to DSC-Setup-* (see dsc_fleet_setup).
 
 # ==================================================================
 #  ESP-NOW PRIMARY LINK — telemetry in, commands out (to the hub)
@@ -277,7 +239,7 @@ mdns:
 #  Coexists with nothing else here — the panel has no other espnow use.
 # ==================================================================
 espnow:
-  auto_add_peer: false
+  auto_add_peer: true
   peers:
     - ${hub_mac}
   on_receive:
@@ -4647,7 +4609,9 @@ script:
       val: int
     then:
       - espnow.send:
-          address: ${hub_mac}
+          address: !lambda |-
+            const uint8_t *m = id(fleet_setup).hub_mac();
+            return std::array<uint8_t, 6>{m[0], m[1], m[2], m[3], m[4], m[5]};
           wait_for_sent: false
           data: !lambda |-
             std::vector<uint8_t> p(12, 0);

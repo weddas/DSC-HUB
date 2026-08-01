@@ -1,0 +1,26 @@
+# ==================================================================
+#  DSC-HUB · lab WiFi (compile-time SSID from secrets)
+# ==================================================================
+wifi:
+  ssid: ${wifi_ssid}
+  password: ${wifi_password}
+  power_save_mode: none
+  ap:
+    ssid: DSC-HUB Fallback Hotspot
+    password: ${ap_password_val}
+  on_connect:
+    - lambda: |-
+        auto *w = wifi::global_wifi_component;
+        if (w != nullptr) {
+          static int last_ch = 0;
+          int ch = (int) w->get_wifi_channel();
+          if (ch > 0) {
+            if (last_ch != 0 && last_ch != ch)
+              ESP_LOGW("wifi", "channel hop %d -> %d — panel ESP-NOW will drop until it follows", last_ch, ch);
+            else
+              ESP_LOGI("wifi", "STA channel %d", ch);
+            last_ch = ch;
+          }
+        }
+
+captive_portal:

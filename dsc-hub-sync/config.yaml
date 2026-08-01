@@ -1,0 +1,36 @@
+name: DSC-HUB Sync
+version: "5.0.0"
+slug: dsc_hub_sync
+description: >
+  Pulls weddas/DSC-HUB from GitHub and syncs packages, automations,
+  YAML dashboard, and www assets into Home Assistant /config whenever
+  master (or your chosen ref) advances.
+url: https://github.com/weddas/DSC-HUB
+arch:
+  - aarch64
+  - amd64
+  - armv7
+init: false
+startup: application
+boot: auto
+hassio_api: true
+homeassistant_api: true
+hassio_role: default
+map:
+  - type: homeassistant_config
+    read_only: false
+    path: /config
+options:
+  repository: "https://github.com/weddas/DSC-HUB.git"
+  ref: "master"
+  poll_seconds: 60
+  sync_esphome: false
+  sync_www: true
+  reload_after_sync: true
+schema:
+  repository: str
+  ref: str
+  poll_seconds: int(30,3600)
+  sync_esphome: bool
+  sync_www: bool
+  reload_after_sync: bool

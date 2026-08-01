@@ -1,0 +1,18 @@
+# Lab pot: optional peer apply from lab_hub_mac via disabled fleet helper.
+external_components:
+  - source:
+      type: local
+      path: components
+    components: [dsc_fleet_setup]
+
+dsc_fleet_setup:
+  id: fleet_setup
+  role: pot
+  enabled: false
+  setup_ap_prefix: "DSC-Setup"
+  setup_ap_password: "lab-unused"
+  espnow_key: ${espnow_key}
+  espnow_cmd_tag: "54727"
+  pot_index: 0
+  device_name: ${name}
+  lab_hub_mac: ${hub_mac}

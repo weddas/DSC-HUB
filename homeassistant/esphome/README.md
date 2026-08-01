@@ -10,7 +10,7 @@
 #    3. Flash only the devices that need that change
 #    4. Hub + panel: flash as a pair if espnow_cmd_tag / wire contract changed
 #
-#  Repo: https://github.com/weddas/DSC-HUB  ·  ref: v4.0.0-alpha.1
+#  Repo: https://github.com/weddas/DSC-HUB  ·  ref: v5.0.0
 #  refresh: 1d (use 0d temporarily to force a re-pull after a push)
 # ==================================================================
 

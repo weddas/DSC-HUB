@@ -1,35 +1,39 @@
-# DSC-HUB **v4.0.0-alpha.1**
+# DSC-HUB **v5.0.0**
 
-First published alpha of the v4 ESP-NOW-primary fleet. The release tag matches
-the hub (primary brain) firmware string:
+First **major** cut after the v4 alpha line. Headline: Home Assistant surfaces
+ship through a first-party **HAOS add-on** (push `master` → sync to `/config`).
+Hub firmware string matches the GitHub tag.
 
 | | |
 |---|---|
-| **GitHub tag** | `v4.0.0-alpha.1` |
-| **Hub** `sensor.dsc_hub_firmware_version` | **`4.0.0-alpha.1`** |
-| **Panel** | DSC-CONTROL **4.0.11** |
+| **GitHub tag** | `v5.0.0` |
+| **Hub** `sensor.dsc_hub_firmware_version` | **`5.0.0`** |
+| **Panel** | DSC-CONTROL **4.0.11** (flash with hub if ESP-NOW tag/wire changed) |
 | **Pots** | `dsc-pot-common` **4.0.1** |
-| **Dashboard** | UX **v0.2** · URL **`dsc-hub-v4`** |
+| **Dashboard** | UX **v0.2** · URL **`dsc-hub-v4`** (YAML mode) |
 | **ESP-NOW tag** | **`54727` (`0xD5C7`)** on hub **and** panel |
+| **HA delivery** | **DSC-HUB Sync** add-on · [`scripts/ADDON.md`](scripts/ADDON.md) |
 
-**Install from scratch:** [`INSTALL.md`](INSTALL.md) (file → destination map).
+**Install from scratch:** [`INSTALL.md`](INSTALL.md) · add-on: [`scripts/ADDON.md`](scripts/ADDON.md)  
+**Kit SoftAP (no HA):** [`SETUP.md`](SETUP.md)
 
 Repo: https://github.com/weddas/DSC-HUB · branch **`master`**
 
 ---
 
-## What this alpha is
+## What’s new in v5.0.0
 
-| Layer | State |
+| Layer | Change |
 |---|---|
-| Hub climate + ESP-NOW primary | Live — Full Auto boot persist / re-arm |
-| Panel glass ↔ hub | ESP-NOW primary; HA API plaintext (no Noise) |
-| HA helpers | All `homeassistant/packages/dsc_v4_*.yaml` (incl. climate physics + Phase A learn) |
-| Automations | Demand followers + safety nets + scribe (+ learn EMA in package) |
-| Dashboard | `dsc-hub-v4-dashboard.yaml` + optional SYSTEM MAP card |
-| Pot/tank push notifiers | **Removed** (bad notify target) — alert **binary sensors** remain |
+| **HAOS Sync add-on** | Custom add-on repo = this GitHub URL; polls `master`, copies packages / dashboard / www, reloads HA |
+| Automations package | `packages/dsc_v4_automations.yaml` (no more merge into live `automations.yaml`) |
+| YAML Lovelace | `configuration.snippet.yaml` — dashboard file under `/config/dashboards/` |
+| HACS (optional) | SYSTEM MAP card via Dashboard custom repo (`dist/` + `hacs.json`) |
+| Kit SoftAP setup | Optional factory path without HA (`SETUP.md`, `*-kit.yaml`, `dsc_fleet_setup`) |
+| Hub firmware | **`5.0.0`** — WiFi moved to lab/kit packages; SoftAP provisioning path |
 
-This is a line-in-the-sand cut: usable day-to-day, not feature-complete.
+Still true from v4 alpha: ESP-NOW-primary panel↔hub, climate ladder on hub,
+Phase A learn gauges, SYSTEM MAP card.
 
 ---
 
@@ -40,8 +44,11 @@ This is a line-in-the-sand cut: usable day-to-day, not feature-complete.
 | `homeassistant/packages/dsc_v4_*.yaml` | `/config/packages/` (helpers + automations + learn) |
 | `homeassistant/dashboards/dsc-hub-v4-dashboard.yaml` | `/config/dashboards/` (YAML-mode URL **`dsc-hub-v4`**) |
 | `homeassistant/esphome/dsc-*.yaml` | `/config/esphome/` |
-| `homeassistant/www/dsc-system-map.*` | `/config/www/` + Lovelace resource |
+| `homeassistant/www/dsc-system-map.*` | `/config/www/` (or HACS) |
 | `firmware/v4/secrets.yaml.template` | `/config/esphome/secrets.yaml` |
+
+Prefer the **DSC-HUB Sync** add-on over hand-copy after the first boot:
+[`scripts/ADDON.md`](scripts/ADDON.md).
 
 Full steps: [`INSTALL.md`](INSTALL.md).
 
@@ -51,53 +58,43 @@ Full steps: [`INSTALL.md`](INSTALL.md).
 
 ESPHome Install only updates device firmware (still **manual** per device).
 
-HA packages, automations package, YAML dashboard, and SYSTEM MAP assets
-**auto-sync on push to `master`** when the Unraid self-hosted runner is configured
-([`scripts/HA-SYNC-BOOTSTRAP.md`](scripts/HA-SYNC-BOOTSTRAP.md) · workflow
-[`.github/workflows/ha-sync.yml`](.github/workflows/ha-sync.yml)):
+**Primary HA delivery:** **DSC-HUB Sync** add-on
+([`dsc-hub-sync/`](dsc-hub-sync/) · [`scripts/ADDON.md`](scripts/ADDON.md)).
 
 | Surface | Path | Deploy |
 |---|---|---|
-| SYSTEM MAP card | `dist/DSC-HUB.js` (+ SVG) | **HACS Dashboard** custom repo |
-| Lovelace dashboard YAML | `homeassistant/dashboards/dsc-hub-v4-dashboard.yaml` | Auto (YAML mode) via HA sync |
-| Packages + automations | `homeassistant/packages/dsc_v4_*.yaml` | Auto via HA sync |
-| www fallback assets | `homeassistant/www/dsc-system-map.*` | Auto via HA sync (optional if HACS) |
-| ESPHome stubs | `homeassistant/esphome/dsc-*.yaml` | Manual / optional workflow input |
+| Packages + automations | `homeassistant/packages/dsc_v4_*.yaml` | **HAOS add-on** |
+| Lovelace dashboard YAML | `homeassistant/dashboards/dsc-hub-v4-dashboard.yaml` | **HAOS add-on** |
+| www SYSTEM MAP assets | `homeassistant/www/dsc-system-map.*` | **HAOS add-on** (optional) |
+| SYSTEM MAP card (alt) | `dist/DSC-HUB.js` | HACS Dashboard (optional) |
+| ESPHome stubs | `homeassistant/esphome/dsc-*.yaml` | Add-on option / manual · `ref: v5.0.0` |
 | Device firmware | `firmware/v4/` via stubs | Manual Validate/Install |
 
 ```
-Cursor edit → commit/push → HA sync Action (homeassistant/**)
-                         → ESPHome Validate/Install (devices)
+Cursor edit → commit/push master → DSC-HUB Sync add-on (~60s)
+                                → ESPHome Validate/Install (devices)
 ```
 
 Hub + panel: flash together when tag, MAC, or `0xD*` wire contract changes.
 
 ---
 
-## Flash order (first bring-up)
+## Flash order (first bring-up / hub major bump)
 
-1. Hub (`dsc-hub.yaml`) → expect firmware **`4.0.0-alpha.1`**
+1. Hub (`dsc-hub.yaml` or `dsc-hub-kit.yaml`) → expect firmware **`5.0.0`**
 2. Panel (`dsc-control.yaml`) → **4.0.11** (USB if heap-sensitive)
 3. Pots → Sonoffs
 
 ---
 
-## Not in this alpha (backlog)
+## Not in this cut (backlog)
 
-- POT3 soil-probe replacement / SCD41 CO₂ / ETH01 gateway
-- Clone humidifier / mister follower + AC follower wiring
-- 4×8 light on GPIO5
-- Pot/tank mobile push notifiers (re-add with a real `notify.mobile_app_…` target)
-- Panel remainder: power pages, VPD curve editor, canvas charts, LDR auto-dim
-- SYSTEM MAP visual polish (shipped baseline card only)
+- AC / clone-mister followers (hardware)
+- Auto-flash fleet on git push (intentionally never)
+- Bidirectional HA→git sync
 
 ---
 
-## Related docs
+## Previous cut
 
-| Doc | When |
-|---|---|
-| [`INSTALL.md`](INSTALL.md) | Fresh bring-up |
-| [`homeassistant/README.md`](homeassistant/README.md) | Packages, HACS, SYSTEM MAP |
-| [`firmware/v4/README.md`](firmware/v4/README.md) | Validate / flash / panel reconnect |
-| [`UPGRADE.md`](UPGRADE.md) | Legacy — only if migrating an old live site |
+**v4.0.0-alpha.1** — first published ESP-NOW-primary alpha (hub string matched tag).

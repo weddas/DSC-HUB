@@ -1,0 +1,21 @@
+# ==================================================================
+#  DSC-CONTROL — KIT stub (joins DSC-Setup-* SoftAP; no captive on CYD)
+# ==================================================================
+
+substitutions:
+  name: dsc-control
+  friendly_name: DSC-CONTROL
+  api_key_val: !secret dsc_control_api_key
+  ota_password_val: !secret dsc_control_ota_password
+  ap_password_val: !secret dsc_control_ap_password
+  setup_ap_password: !secret dsc_setup_ap_password
+  hub_mac: "00:00:00:00:00:00"        # learned from hub /setup/config
+  espnow_cmd_tag: "54727"
+  espnow_key: !secret espnow_key
+  fleet_role: "control"
+  fleet_pot_index: "0"
+
+packages:
+  wifi: !include dsc-control-wifi-kit.yaml
+  panel: !include dsc-control-common.yaml
+  fleet: !include dsc-fleet-setup-satellite.yaml

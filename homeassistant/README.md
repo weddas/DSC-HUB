@@ -51,8 +51,8 @@ Merge [`configuration.snippet.yaml`](configuration.snippet.yaml) into HA `config
 (packages + YAML Lovelace). Filenames under `packages/` must use underscores.
 Restart HA after the first copy / `configuration.yaml` change.
 
-**Ongoing:** with the Unraid runner set up ([`../scripts/HA-SYNC-BOOTSTRAP.md`](../scripts/HA-SYNC-BOOTSTRAP.md)),
-pushes to `master` under `homeassistant/**` auto-deploy packages, dashboard, and www.
+**Ongoing:** install the **DSC-HUB Sync** add-on ([`../scripts/ADDON.md`](../scripts/ADDON.md))
+so pushes to `master` update packages, dashboard, and www automatically.
 Firmware Install stays manual — see [`../RELEASE.md`](../RELEASE.md).
 
 ## Fan entity_ids
@@ -63,7 +63,7 @@ Core helpers assume ESPHome default slugs from hub friendly names. If your regis
 
 Climate / safety automations in `dsc_v4_automations.yaml` use a mobile notify
 target — edit those services to match your HA devices (`notify.mobile_app_…`).
-Package pot/tank **push** notifiers are not shipped in **v4.0.0-alpha.1**
+Package pot/tank **push** notifiers are not shipped in **v5.0.0**
 (alert binary sensors remain).
 
 ## HACS cards
@@ -179,11 +179,11 @@ Reset coeffs: fire event `dsc_climate_learn_reset` (Developer Tools → Events).
 - Fixed-channel AP — ops (see root README / RELEASE.md)
 - POT3 probe swap, SCD41, ETH01 gateway — post-release hardware
 
-## Firmware pairing (**v4.0.0-alpha.1**)
+## Firmware pairing (**v5.0.0**)
 
 | Piece | Version |
 |---|---|
-| Hub | **`4.0.0-alpha.1`** (+ mat vote switches, Full Auto boot re-arm) |
+| Hub | **`5.0.0`** (+ mat votes, Full Auto boot re-arm, lab/kit WiFi packages) |
 | Panel | **`4.0.11`** |
 | Pots | **`4.0.1`** |
 | Dashboard | UX **v0.2** |
@@ -191,4 +191,4 @@ Reset coeffs: fire event `dsc_climate_learn_reset` (Developer Tools → Events).
 
 **Mat votes:** `switch.dsc_hub_mat_vote_pot_1`…`4` — Root Zone is source of truth; Climate links there.
 
-Bring-up: [`../INSTALL.md`](../INSTALL.md) · release notes: [`../RELEASE.md`](../RELEASE.md).
+Bring-up: [`../INSTALL.md`](../INSTALL.md) · add-on: [`../scripts/ADDON.md`](../scripts/ADDON.md) · release: [`../RELEASE.md`](../RELEASE.md).
