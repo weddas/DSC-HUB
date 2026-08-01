@@ -2,7 +2,7 @@
 
 Kit firmware stubs: `dsc-hub-kit.yaml`, `dsc-control-kit.yaml`, `dsc-pot{1..4}-kit.yaml`
 
-Lab/bench stubs (`dsc-hub.yaml`, etc.) keep compile-time WiFi and MACs; they still load a **disabled** `dsc_fleet_setup` helper so ESP-NOW address lambdas resolve.
+Lab/bench stubs (`dsc-hub.yaml`, etc.) keep compile-time WiFi and MACs and do **not** include `dsc_fleet_setup` (hub/panel/pots use `${panel_mac}` / `${hub_mac}`). Kit SoftAP builds still load fleet setup.
 
 ## What you need
 

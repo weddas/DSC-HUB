@@ -12,4 +12,4 @@ substitutions:
 packages:
   wifi: !include dsc-pot-wifi-lab.yaml
   common: !include dsc-pot-common.yaml
-  fleet: !include dsc-fleet-setup-pot-lab.yaml
+  # Lab: no dsc-fleet-setup — peers use ${hub_mac}. Kit: *-kit.yaml.

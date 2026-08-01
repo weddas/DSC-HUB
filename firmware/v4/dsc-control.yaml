@@ -17,4 +17,8 @@ substitutions:
 packages:
   wifi: !include dsc-control-wifi-lab.yaml
   panel: !include dsc-control-common.yaml
-  fleet: !include dsc-fleet-setup-control-lab.yaml
+  # Lab: do NOT include dsc-fleet-setup-control-lab.yaml.
+  # Even with enabled: false the component AUTO_LOADs web_server_base + json
+  # (captive-class DRAM). That recreated the v4.0.x CYD heap crash mode as
+  # IllegalInstruction / Unknown on core 1 under ESPHome 2026.7 / IDF 5.5.
+  # Kit SoftAP still uses dsc-control-kit.yaml → dsc-fleet-setup-satellite.

@@ -19,5 +19,5 @@ packages:
       - firmware/v4/dsc-hub-wifi-lab.yaml
       - firmware/v4/dsc-hub-v4_0.yaml
       - firmware/v4/dsc-hub-espnow-primary.yaml
-      - firmware/v4/dsc-fleet-setup-hub-lab.yaml
+      # No dsc-fleet-setup-hub-lab.yaml — lab uses ${panel_mac}; kit SoftAP only.
     refresh: 1h

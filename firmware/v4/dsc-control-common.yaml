@@ -41,9 +41,11 @@
 #    30 s WiFi channel poll for silent Nest/mesh hops.
 #  STILL DEFERRED: per-device power pages, VPD curve editor, canvas charts.
 #
-#  RAM RULE (crash postmortems v4.0–4.0.2): never call lv_label_set_text
+#  RAM RULE (crash postmortems v4.0–4.0.2 + 5.1.0): never call lv_label_set_text
 #  every frame; guard with strcmp. No SCROLL_CIRCULAR, no breathe anim.
 #  Watch heap INFO lines — largest_block < 12 KB means stop adding widgets.
+#  Lab stub must NOT include dsc_fleet_setup (even disabled): AUTO_LOAD of
+#  web_server_base recreated the CYD OOM as IllegalInstruction under 2026.7.
 #
 #  BEFORE FLASHING:
 #    1. secrets.yaml needs dsc_control_ota_password / _ap_password
@@ -100,7 +102,7 @@ esphome:
     - priority: -100
       then:
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 4.0.11 up — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 5.1.0 up — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
 
@@ -239,7 +241,9 @@ mdns:
 #  Coexists with nothing else here — the panel has no other espnow use.
 # ==================================================================
 espnow:
-  auto_add_peer: true
+  # Lab: static hub peer only. auto_add_peer true (v5.0) + fleet web_server
+  # on this PSRAM-less CYD correlated with IllegalInstruction crash-loops.
+  auto_add_peer: false
   peers:
     - ${hub_mac}
   on_receive:
@@ -4615,9 +4619,10 @@ script:
       val: int
     then:
       - espnow.send:
-          address: !lambda |-
-            const uint8_t *m = id(fleet_setup).hub_mac();
-            return std::array<uint8_t, 6>{m[0], m[1], m[2], m[3], m[4], m[5]};
+          # Lab uses stub ${hub_mac}. Kit SoftAP builds override via fleet
+          # package lambdas only when provisioning is enabled — do not call
+          # id(fleet_setup) here or lab must link web_server_base (CYD OOM).
+          address: ${hub_mac}
           wait_for_sent: false
           data: !lambda |-
             std::vector<uint8_t> p(12, 0);

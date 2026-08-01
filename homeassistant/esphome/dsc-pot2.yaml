@@ -17,5 +17,5 @@ packages:
     files:
       - firmware/v4/dsc-pot-wifi-lab.yaml
       - firmware/v4/dsc-pot-common.yaml
-      - firmware/v4/dsc-fleet-setup-pot-lab.yaml
+      # No dsc-fleet-setup-pot-lab.yaml — lab peers use ${hub_mac}.
     refresh: 1h

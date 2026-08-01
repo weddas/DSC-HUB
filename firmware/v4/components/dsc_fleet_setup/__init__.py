@@ -26,6 +26,10 @@ DscFleetSetup = dsc_fleet_setup_ns.class_("DscFleetSetup", cg.Component)
 
 
 def AUTO_LOAD():
+    # Always pulls web_server_base (class inherits AsyncWebHandler).
+    # Even with enabled: false the WebServerBase instance costs DRAM — do NOT
+    # include this component on the PSRAM-less CYD lab panel (see
+    # firmware/v4/dsc-control.yaml). Kit SoftAP builds need it.
     return ["web_server_base", "json"]
 
 

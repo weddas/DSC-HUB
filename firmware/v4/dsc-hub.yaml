@@ -26,4 +26,5 @@ packages:
   wifi: !include dsc-hub-wifi-lab.yaml
   hub: !include dsc-hub-v4_0.yaml
   espnow_control: !include dsc-hub-espnow-primary.yaml
-  fleet: !include dsc-fleet-setup-hub-lab.yaml
+  # Lab: no dsc-fleet-setup — panel MAC is ${panel_mac} in espnow-primary.
+  # Kit SoftAP: dsc-hub-kit.yaml → dsc-fleet-setup-hub.yaml
