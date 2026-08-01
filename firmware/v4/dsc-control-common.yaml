@@ -64,6 +64,21 @@
 #  (Failed to allocate 220–640 B / draw buf 512 B → WDT). Do NOT re-enable
 #  sram1_as_iram (v4.0.2: costs DRAM). Staged resume: hide tabbar, paint
 #  minimal page_boot first, then arm full UI; drop mdi_28; font bpp 4→2.
+#  v5.1.6: LEAN CUT — restore the 4.0.11-era "what glass must do" scope now
+#  that boot survives. Removed entirely: torch/flashlight (fl_screen +
+#  apply/open/close_flashlight + swipe-down), idle sleep/screensaver
+#  (go_sleep/on_idle/panel_sleeping — lock is manual only now), status LED
+#  RGB (status_led/led_r/g/b + the LED machine in refresh_ui — backlight
+#  only), the select-roller editor overlay, green heartbeat (sw_greenhb),
+#  and every settings drill page (page_set_profile/mainclim/cloneclim/
+#  light/mat/timers/destrat/panel + page_set_modes). Modes & Automation's
+#  switches (Full Auto, Auto Photoperiod, Manual Light Hold, Humidifier
+#  Routing, RECIRC De-Strat, Manual Takeover) are now inline on
+#  page_control — no more drill-in. lock_overlay trimmed to clock + LOCKED
+#  + hint (dropped the lk_* appliance strip); lock_hit (top-right, hold to
+#  lock/unlock) is unchanged. Vitals tabs (Pulse/Clone/Main/Soil + detail)
+#  and their fan +/- hub_cmd rows are untouched. Net: fewer widgets, fewer
+#  globals, smaller refresh_ui — same crash-safety rules apply below.
 #
 #  BEFORE FLASHING:
 #    1. secrets.yaml needs dsc_control_ota_password / _ap_password
@@ -106,7 +121,7 @@ esphome:
     # the dashboard and HA's device page both described DSC-CONTROL as
     # being the DSC HUB. Purely cosmetic, but confusing enough to matter.
     name: "digital_emotions.dsc-control"
-    version: "5.1.5"
+    version: "5.1.6"
   on_boot:
     # Seed the 0xDC command seq from hardware RNG so a panel reboot is
     # unlikely to replay the hub's last-seen seq even before the hub's
@@ -121,7 +136,7 @@ esphome:
     - priority: -100
       then:
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 5.1.5 paused — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 5.1.6 paused — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
             id(boot_ui_ready) = false;
@@ -138,33 +153,33 @@ esphome:
               lambda: 'return heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL) < 20000;'
             then:
               - lambda: |-
-                  ESP_LOGW("boot", "DSC-CONTROL 5.1.5 heap still tight largest=%u — waiting longer",
+                  ESP_LOGW("boot", "DSC-CONTROL 5.1.6 heap still tight largest=%u — waiting longer",
                            (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
               - delay: 10s
         - lvgl.page.show: page_boot
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 5.1.5 resume-lite — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 5.1.6 resume-lite — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
             id(touch_guard_until) = millis() + 5000;
         - lvgl.resume:
         - delay: 6s
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 5.1.5 post-lite — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 5.1.6 post-lite — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
         - lvgl.pause:
         - lambda: 'lv_obj_clear_flag(id(tabbar), LV_OBJ_FLAG_HIDDEN);'
         - lvgl.page.show: page_pulse
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 5.1.5 resume-full — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 5.1.6 resume-full — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
             id(touch_guard_until) = millis() + 2000;
         - lvgl.resume:
         - delay: 4s
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 5.1.5 UI armed — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 5.1.6 UI armed — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
             id(boot_ui_ready) = true;
@@ -499,35 +514,20 @@ touchscreen:
     on_touch:
       # Stamp a short paint guard on every contact so refresh_ui never
       # letter-draws under an active indev (5.1.0/5.1.1 crash family).
+      # v5.1.6 — idle sleep/wake retired (no auto-sleep); the panel only
+      # ever needs unlocking, which lock_hit / lock_overlay handle via
+      # hold, not a plain tap.
       - lambda: 'id(touch_guard_until) = millis() + 450;'
-      # Calibration dialled 24 Jul — wake-only path; no per-tap UART spam.
-      # A first tap while asleep only WAKES (matches the hub's OLED
-      # contract — a wake-tap must never also press a button).
-      - if:
-          condition:
-            lambda: 'return id(panel_sleeping);'
-          then:
-            - script.execute: wake_panel
 
-# --- Outputs: backlight PWM + the 3 onboard RGB-LED channels ---
+# --- Outputs: backlight PWM only ---
+# v5.1.6 — onboard RGB LED (led_r/g/b + status_led) removed with the lean
+# cut. The chip LED was only ever driven by the status machine and the
+# torch; both are gone. Backlight (monochromatic) is the only light left.
 output:
   - platform: ledc
     pin: GPIO21
     id: backlight_pwm
     frequency: 1000 Hz
-  # Onboard RGB LED is common-anode -> each channel inverted.
-  - platform: ledc
-    pin: GPIO4
-    id: led_r
-    inverted: true
-  - platform: ledc
-    pin: GPIO16
-    id: led_g
-    inverted: true
-  - platform: ledc
-    pin: GPIO17
-    id: led_b
-    inverted: true
 
 light:
   - platform: monochromatic
@@ -536,18 +536,6 @@ light:
     name: "Backlight"
     restore_mode: ALWAYS_ON
     default_transition_length: 0ms   # v4.0.10 — no PWM fade (avoids extra work under heap pressure)
-
-  # Status LED contract: RED = alert live, AMBER = appliance demand
-  # live, dim GREEN = all quiet, OFF = night mode (no stray photons in
-  # the grow room's dark period).
-  - platform: rgb
-    id: status_led
-    name: "Status LED"
-    red: led_r
-    green: led_g
-    blue: led_b
-    restore_mode: ALWAYS_OFF
-    # v4.0.6 — no pulse effect. Solid colours only (was Breathe @ 0.6 s).
 
 button:
   - platform: restart
@@ -1075,7 +1063,7 @@ text_sensor:
     name: "Firmware Version"
     id: fw_version
     icon: mdi:tag-check
-    lambda: 'return {"5.1.5"};'
+    lambda: 'return {"5.1.6"};'
     update_interval: 60s
   - platform: template
     id: sel_stage
@@ -1181,15 +1169,6 @@ globals:
   - id: gv_cd
     type: float[6]        # ladder countdowns: hum dehum heat ac mat clonehum (added to vitals)
     initial_value: '{NAN,NAN,NAN,NAN,NAN,NAN}'
-  - id: panel_sleeping
-    type: bool
-    initial_value: 'false'
-  - id: sleep_since              # millis when go_sleep armed (5 min → backlight off)
-    type: uint32_t
-    initial_value: '0'
-  - id: wake_pending             # wake started; keep sleeping until defer completes
-    type: bool
-    initial_value: 'false'
   - id: boot_ui_ready            # false until post-boot LVGL resume (5.1.3)
     type: bool
     initial_value: 'false'
@@ -1205,7 +1184,7 @@ globals:
   - id: lock_pending             # lock committed; show overlay after release
     type: bool
     initial_value: 'false'
-  - id: lock_arm                 # true only from dedicated lock hit / sw_lock
+  - id: lock_arm                 # true only from dedicated lock hit
     type: bool
     initial_value: 'false'
   # Optimistic UI: wire val last sent per hub_cmd op; pend_ms!=0 → grey until hub echoes
@@ -1221,26 +1200,7 @@ globals:
   - id: alerts_silenced          # local mute; auto-clears when alerts do
     type: bool
     initial_value: 'false'
-  - id: green_heartbeat          # solid dim green when all-OK (Settings toggle; no pulse)
-    type: bool
-    restore_value: true
-    initial_value: 'true'
-  # ---- flashlight (screen-as-torch) ----
-  - id: fl_active
-    type: bool
-    initial_value: 'false'
-  - id: fl_color                 # 0=green 1=white 2=red
-    type: int
-    restore_value: true
-    initial_value: '0'
-  - id: fl_bright                # backlight % while torch is on
-    type: int
-    restore_value: true
-    initial_value: '70'
   - id: bl_last                  # last backlight % written (global so the lock can force a restore)
-    type: int
-    initial_value: '-1'
-  - id: led_last                 # last status-LED mode written (global so the torch can reclaim it)
     type: int
     initial_value: '-1'
   - id: alert_count
@@ -1248,9 +1208,6 @@ globals:
     initial_value: '0'
   - id: last_touch_ms
     type: uint32_t
-    initial_value: '0'
-  - id: edit_target              # editor page: 0=stage 1=strategy 2=clone 3=priority
-    type: int
     initial_value: '0'
   - id: active_tab               # 0=Pulse 1=Clone 2=Main 3=Soil 4=Control
     type: int
@@ -1278,7 +1235,7 @@ globals:
   - id: spark_filled
     type: bool
     initial_value: 'false'
-  # ---- screen lock (hold-to-lock, seed->plant growth) ----
+  # ---- screen lock (hold lock_hit to lock; hold the overlay to unlock) ----
   - id: lock_engaged             # is the panel locked
     type: bool
     initial_value: 'false'
@@ -1385,7 +1342,6 @@ font:
       "\U000F0238",  # fire
       "\U000F1A45",  # heat-wave
       "\U000F0150",  # clock-outline
-      "\U000F0244",  # flashlight (torch)
       "\U000F00AF",  # bluetooth
       "\U000F0002",  # access-point-network (ESP-NOW)
       "\U000F07D0",  # home-assistant
@@ -1439,11 +1395,6 @@ lvgl:
   default_font: f_body
   bg_color: 0x0E1116
   text_color: 0xFFFFFF
-  # A touch anywhere refreshes the idle timer (screensaver + night).
-  on_idle:
-    timeout: 60s
-    then:
-      - script.execute: go_sleep
 
   style_definitions:
     - id: card
@@ -1577,7 +1528,7 @@ lvgl:
                   - script.execute: restyle_tabs
                   - script.execute: refresh_ui
 
-      # ---- dedicated lock hit (v5.1.1) — not page-level hold on scroll pages ----
+      # ---- top-right lock (v5.1.6) — hold to lock; unlock via lock_overlay ----
       - button:
           id: lock_hit
           x: 276
@@ -1588,6 +1539,13 @@ lvgl:
           border_width: 0
           shadow_width: 0
           radius: 0
+          widgets:
+            - label:
+                id: lock_hit_ic
+                text: "\U000F033E"
+                text_font: mdi_22
+                align: CENTER
+                text_color: 0x5A6472
           on_press:
             - lambda: 'id(lock_arm) = true;'
             - script.execute: hold_begin
@@ -1615,73 +1573,6 @@ lvgl:
           on_click:
             - lambda: 'id(alerts_silenced) = true;'
             - script.execute: refresh_ui
-
-      # ---- screensaver retired in 5.1.1 (idle uses lock_overlay) ----
-
-      # ---- select editor overlay (roller + Apply/Cancel) ----
-      - obj:
-          id: editor
-          hidden: true
-          x: 0
-          y: 0
-          width: 320
-          height: 240
-          bg_color: 0x000000
-          bg_opa: 60%
-          border_width: 0
-          radius: 0
-          widgets:
-            - obj:
-                align: CENTER
-                width: 280
-                height: 190
-                bg_color: 0x171B22
-                bg_opa: COVER
-                border_color: 0x00E676
-                border_width: 1
-                radius: 10
-                pad_all: 10
-                widgets:
-                  - label: {id: ed_title, text: "Grow Stage", text_font: f_med, align: TOP_LEFT, text_color: 0x00E676}
-                  - roller:
-                      id: ed_roller
-                      align: TOP_MID
-                      y: 30
-                      width: 250
-                      visible_row_count: 3
-                      options:
-                        - "Germination"
-                        - "Vegetative"
-                        - "Flowering"
-                      bg_color: 0x0E1116
-                      text_color: 0xFFFFFF
-                      text_font: f_body
-                  - button:
-                      id: ed_cancel
-                      align: BOTTOM_LEFT
-                      width: 118
-                      height: 38
-                      bg_color: 0x2A313B
-                      radius: 8
-                      shadow_width: 0
-                      widgets:
-                        - label: {text: "Cancel", align: CENTER, text_color: 0xFFFFFF, text_font: f_body}
-                      on_click:
-                        - lambda: 'lv_obj_add_flag(id(editor), LV_OBJ_FLAG_HIDDEN);'
-                  - button:
-                      id: ed_apply
-                      align: BOTTOM_RIGHT
-                      width: 118
-                      height: 38
-                      bg_color: 0x12241A
-                      border_color: 0x00E676
-                      border_width: 1
-                      radius: 8
-                      shadow_width: 0
-                      widgets:
-                        - label: {text: "Apply", align: CENTER, text_color: 0x00E676, text_font: f_body}
-                      on_click:
-                        - script.execute: apply_editor
 
       # ---- action gate overlay (Manual Takeover + appliance demands) ----
       # Tap-challenge: nothing that flips outputs is one stray tap away.
@@ -1741,174 +1632,11 @@ lvgl:
                       on_click:
                         - script.execute: gate_confirm
 
-      # ---- flashlight overlay — drives the ONBOARD RGB LED (the chip LED) ----
-      # This is a control surface only; the light itself is status_led (the
-      # onboard RGB). While fl_active, refresh_ui's status-LED machine yields
-      # (see the LED block, guarded on fl_active). On-screen dot mirrors the
-      # colour so you can aim it. Opened by swipe-down on Pulse/Soil or
-      # Setup -> Flashlight.
-      - obj:
-          id: fl_screen
-          hidden: true
-          x: 0
-          y: 0
-          width: 320
-          height: 240
-          bg_color: 0x06080B
-          bg_opa: COVER
-          border_width: 0
-          radius: 0
-          pad_all: 0
-          scrollable: false
-          widgets:
-            - label: {id: fl_title, text: "TORCH", text_font: f_med, align: TOP_LEFT, x: 16, y: 12, text_color: 0xFFFFFF}
-            - label: {text: "onboard LED", text_font: f_small, align: TOP_LEFT, x: 16, y: 36, text_color: 0x8A929C}
-            # ON / OFF toggle (turns the chip LED on/off without closing)
-            - button:
-                id: fl_onoff
-                align: TOP_RIGHT
-                x: -12
-                y: 10
-                width: 92
-                height: 38
-                bg_color: 0x12241A
-                border_color: 0x00E676
-                border_width: 1
-                radius: 8
-                shadow_width: 0
-                widgets:
-                  - label: {id: fl_onoff_lbl, text: "ON", text_font: f_med, align: CENTER, text_color: 0x00E676}
-                on_click:
-                  - lambda: 'id(fl_active) = !id(fl_active);'
-                  - script.execute: apply_flashlight
-            # on-screen preview of the LED colour
-            - obj:
-                id: fl_dot
-                align: TOP_MID
-                y: 52
-                width: 54
-                height: 54
-                bg_color: 0x00FF00
-                bg_opa: COVER
-                radius: 27
-                border_width: 0
-                scrollable: false
-            - label: {id: fl_pct, text: "70%", text_font: f_med, align: TOP_MID, y: 112, text_color: 0xFFFFFF}
-            # colour: Green / White / Red
-            - button:
-                id: fl_bg
-                align: TOP_MID
-                x: -62
-                y: 138
-                width: 54
-                height: 32
-                bg_color: 0x0E3A16
-                border_color: 0x00E676
-                border_width: 3
-                radius: 8
-                shadow_width: 0
-                widgets:
-                  - label: {text: "G", text_font: f_med, align: CENTER, text_color: 0x00E676}
-                on_click:
-                  - lambda: 'id(fl_color) = 0;'
-                  - script.execute: apply_flashlight
-            - button:
-                id: fl_bw
-                align: TOP_MID
-                x: 0
-                y: 138
-                width: 54
-                height: 32
-                bg_color: 0x2A313B
-                border_color: 0xFFFFFF
-                border_width: 1
-                radius: 8
-                shadow_width: 0
-                widgets:
-                  - label: {text: "W", text_font: f_med, align: CENTER, text_color: 0xFFFFFF}
-                on_click:
-                  - lambda: 'id(fl_color) = 1;'
-                  - script.execute: apply_flashlight
-            - button:
-                id: fl_br
-                align: TOP_MID
-                x: 62
-                y: 138
-                width: 54
-                height: 32
-                bg_color: 0x3A1212
-                border_color: 0xF44336
-                border_width: 1
-                radius: 8
-                shadow_width: 0
-                widgets:
-                  - label: {text: "R", text_font: f_med, align: CENTER, text_color: 0xF44336}
-                on_click:
-                  - lambda: 'id(fl_color) = 2;'
-                  - script.execute: apply_flashlight
-            # brightness  -  [bar]  +
-            - button:
-                id: fl_dn
-                align: TOP_MID
-                x: -128
-                y: 178
-                width: 34
-                height: 30
-                bg_color: 0x2A313B
-                radius: 8
-                shadow_width: 0
-                widgets:
-                  - label: {text: "-", text_font: f_med, align: CENTER, text_color: 0xFFFFFF}
-                on_click:
-                  - lambda: 'id(fl_bright) -= 10; if (id(fl_bright) < 10) id(fl_bright) = 10;'
-                  - script.execute: apply_flashlight
-            - bar:
-                id: fl_bar
-                align: TOP_MID
-                x: 0
-                y: 187
-                width: 168
-                height: 10
-                min_value: 0
-                max_value: 100
-                value: 70
-                indicator: {bg_color: 0x00E676}
-                bg_color: 0x232A33
-            - button:
-                id: fl_up
-                align: TOP_MID
-                x: 128
-                y: 178
-                width: 34
-                height: 30
-                bg_color: 0x2A313B
-                radius: 8
-                shadow_width: 0
-                widgets:
-                  - label: {text: "+", text_font: f_med, align: CENTER, text_color: 0xFFFFFF}
-                on_click:
-                  - lambda: 'id(fl_bright) += 10; if (id(fl_bright) > 100) id(fl_bright) = 100;'
-                  - script.execute: apply_flashlight
-            - button:
-                id: fl_close
-                align: BOTTOM_MID
-                y: -6
-                width: 150
-                height: 28
-                bg_color: 0x171B22
-                border_color: 0x8A929C
-                border_width: 1
-                radius: 8
-                shadow_width: 0
-                widgets:
-                  - label: {text: "CLOSE", text_font: f_body, align: CENTER, text_color: 0xFFFFFF}
-                on_click:
-                  - script.execute: close_flashlight
-
-      # ---- LOCK / IDLE SLEEP SCREEN (v5.1.1) ----
-      # Idle sleep reuses this overlay (thin saver retired). Tap wakes when
-      # unlocked (touchscreen on_touch → wake_panel). Hold 3s unlocks when
-      # lock_engaged. Never hide this mid-press — defer via unlock_pending.
+      # ---- LOCK SCREEN (v5.1.6 — manual lock only, no idle sleep) ----
+      # Minimal overlay: clock + LOCKED + hint (the lk_* appliance strip is
+      # gone — this is not a status dashboard). Hold lock_hit (top-right) to
+      # lock; hold anywhere on this overlay to unlock. Never hide this
+      # mid-press — defer via unlock_pending/lock_pending (hold_finish).
       - button:
           id: lock_overlay
           hidden: true
@@ -1923,15 +1651,9 @@ lvgl:
           shadow_width: 0
           pad_all: 0
           widgets:
-            - label: {id: lock_clock, text: "--:--", text_font: f_big, align: TOP_MID, y: 22, text_color: 0xFFFFFF}
-            - label: {id: lock_title, text: "ASLEEP", text_font: f_small, align: TOP_MID, y: 60, text_color: 0x5A6472}
-            - label: {id: lk_fan,   text: "\U000F0210", text_font: mdi_22, align: CENTER, x: -125, y: 4, text_color: 0x2A2A2A}
-            - label: {id: lk_int,   text: "\U000F11DC", text_font: mdi_22, align: CENTER, x: -75,  y: 4, text_color: 0x2A2A2A}
-            - label: {id: lk_heat,  text: "\U000F0238", text_font: mdi_22, align: CENTER, x: -25,  y: 4, text_color: 0x2A2A2A}
-            - label: {id: lk_hum,   text: "\U000F1099", text_font: mdi_22, align: CENTER, x: 25,   y: 4, text_color: 0x2A2A2A}
-            - label: {id: lk_deh,   text: "\U000F150C", text_font: mdi_22, align: CENTER, x: 75,   y: 4, text_color: 0x2A2A2A}
-            - label: {id: lk_light, text: "\U000F05A8", text_font: mdi_22, align: CENTER, x: 125,  y: 4, text_color: 0x2A2A2A}
-            - label: {id: lock_hint, text: "tap to wake", text_font: f_small, align: BOTTOM_MID, y: -26, text_color: 0x5A6472}
+            - label: {id: lock_clock, text: "--:--", text_font: f_big, align: TOP_MID, y: 60, text_color: 0xFFFFFF}
+            - label: {text: "LOCKED", text_font: f_small, align: TOP_MID, y: 98, text_color: 0x5A6472}
+            - label: {text: "hold anywhere to unlock", text_font: f_small, align: BOTTOM_MID, y: -26, text_color: 0x5A6472}
             - label: {text: "\U000F033E", text_font: mdi_22, align: BOTTOM_MID, y: -4, text_color: 0x3A4550}
           on_press:
             - if:
@@ -2197,9 +1919,6 @@ lvgl:
       on_swipe_right:
         - script.execute: hold_cancel
         - script.execute: tab_prev
-      on_swipe_down:
-        - script.execute: hold_cancel
-        - script.execute: open_flashlight
       widgets:
         # status pills
         - label: {id: pill_wifi_ic, text: "\U000F05A9", text_font: mdi_16, align: TOP_LEFT, x: 12, y: 10, text_color: 0x00E676}
@@ -2780,9 +2499,6 @@ lvgl:
       on_swipe_right:
         - script.execute: hold_cancel
         - script.execute: tab_prev
-      on_swipe_down:
-        - script.execute: hold_cancel
-        - script.execute: open_flashlight
       widgets:
         # v4.0.2 — the four soil cards had 40 px of height, a 1 px border and
         # pad_all: 6, leaving 26 px of usable interior. The card stacks an
@@ -3075,148 +2791,10 @@ lvgl:
               flex_flow: COLUMN
               pad_row: 8
             widgets:
-              - label: {text: "SETTINGS", text_font: f_small, text_color: 0x8A929C, pad_top: 2}
-              - button:
-                  styles: rowbtn
-                  height: 50
-                  widgets:
-                    - label: {text: "\U000F0493", text_font: mdi_22, align: LEFT_MID, x: 6, text_color: 0x00E676}
-                    - label: {text: "Modes & Automation", text_font: f_body, align: LEFT_MID, x: 44, y: -9, text_color: 0xFFFFFF}
-                    - label: {text: "Auto, takeover, switches", text_font: f_small, align: LEFT_MID, x: 44, y: 10, text_color: 0x8A929C}
-                    - label: {text: "\U000F0142", text_font: mdi_22, align: RIGHT_MID, x: -6, text_color: 0x5A6472}
-                  on_click:
-                    - lvgl.page.show: page_set_modes
-              - button:
-                  styles: rowbtn
-                  height: 50
-                  widgets:
-                    - label: {text: "\U000F0E66", text_font: mdi_22, align: LEFT_MID, x: 6, text_color: 0x00E676}
-                    - label: {text: "Grow Profile", text_font: f_body, align: LEFT_MID, x: 44, y: -9, text_color: 0xFFFFFF}
-                    - label: {text: "Stage, strategy, clone", text_font: f_small, align: LEFT_MID, x: 44, y: 10, text_color: 0x8A929C}
-                    - label: {text: "\U000F0142", text_font: mdi_22, align: RIGHT_MID, x: -6, text_color: 0x5A6472}
-                  on_click:
-                    - lvgl.page.show: page_set_profile
-              - button:
-                  styles: rowbtn
-                  height: 50
-                  widgets:
-                    - label: {text: "\U000F050F", text_font: mdi_22, align: LEFT_MID, x: 6, text_color: 0x00E676}
-                    - label: {text: "Main Climate  4x8", text_font: f_body, align: LEFT_MID, x: 44, y: -9, text_color: 0xFFFFFF}
-                    - label: {text: "Temp, VPD, RH", text_font: f_small, align: LEFT_MID, x: 44, y: 10, text_color: 0x8A929C}
-                    - label: {text: "\U000F0142", text_font: mdi_22, align: RIGHT_MID, x: -6, text_color: 0x5A6472}
-                  on_click:
-                    - lvgl.page.show: page_set_mainclim
-              - button:
-                  styles: rowbtn
-                  height: 50
-                  widgets:
-                    - label: {text: "\U000F032A", text_font: mdi_22, align: LEFT_MID, x: 6, text_color: 0x00E676}
-                    - label: {text: "Clone Climate  2x4", text_font: f_body, align: LEFT_MID, x: 44, y: -9, text_color: 0xFFFFFF}
-                    - label: {text: "Temp, VPD, RH", text_font: f_small, align: LEFT_MID, x: 44, y: 10, text_color: 0x8A929C}
-                    - label: {text: "\U000F0142", text_font: mdi_22, align: RIGHT_MID, x: -6, text_color: 0x5A6472}
-                  on_click:
-                    - lvgl.page.show: page_set_cloneclim
-              - button:
-                  styles: rowbtn
-                  height: 50
-                  widgets:
-                    - label: {text: "\U000F05A8", text_font: mdi_22, align: LEFT_MID, x: 6, text_color: 0x00E676}
-                    - label: {text: "Lighting", text_font: f_body, align: LEFT_MID, x: 44, y: -9, text_color: 0xFFFFFF}
-                    - label: {text: "SF1000, sun times, clone", text_font: f_small, align: LEFT_MID, x: 44, y: 10, text_color: 0x8A929C}
-                    - label: {text: "\U000F0142", text_font: mdi_22, align: RIGHT_MID, x: -6, text_color: 0x5A6472}
-                  on_click:
-                    - lvgl.page.show: page_set_light
-              - button:
-                  styles: rowbtn
-                  height: 50
-                  widgets:
-                    - label: {text: "\U000F0438", text_font: mdi_22, align: LEFT_MID, x: 6, text_color: 0x00E676}
-                    - label: {text: "Root Zone (Mat)", text_font: f_body, align: LEFT_MID, x: 44, y: -9, text_color: 0xFFFFFF}
-                    - label: {text: "RZ low/high, min-off", text_font: f_small, align: LEFT_MID, x: 44, y: 10, text_color: 0x8A929C}
-                    - label: {text: "\U000F0142", text_font: mdi_22, align: RIGHT_MID, x: -6, text_color: 0x5A6472}
-                  on_click:
-                    - lvgl.page.show: page_set_mat
-              - button:
-                  styles: rowbtn
-                  height: 50
-                  widgets:
-                    - label: {text: "\U000F0150", text_font: mdi_22, align: LEFT_MID, x: 6, text_color: 0x00E676}
-                    - label: {text: "Cycle Timers", text_font: f_body, align: LEFT_MID, x: 44, y: -9, text_color: 0xFFFFFF}
-                    - label: {text: "Min-off, hysteresis", text_font: f_small, align: LEFT_MID, x: 44, y: 10, text_color: 0x8A929C}
-                    - label: {text: "\U000F0142", text_font: mdi_22, align: RIGHT_MID, x: -6, text_color: 0x5A6472}
-                  on_click:
-                    - lvgl.page.show: page_set_timers
-              - button:
-                  styles: rowbtn
-                  height: 50
-                  widgets:
-                    - label: {text: "\U000F059D", text_font: mdi_22, align: LEFT_MID, x: 6, text_color: 0x00E676}
-                    - label: {text: "De-Strat Pulse", text_font: f_body, align: LEFT_MID, x: 44, y: -9, text_color: 0xFFFFFF}
-                    - label: {text: "Period, length, level", text_font: f_small, align: LEFT_MID, x: 44, y: 10, text_color: 0x8A929C}
-                    - label: {text: "\U000F0142", text_font: mdi_22, align: RIGHT_MID, x: -6, text_color: 0x5A6472}
-                  on_click:
-                    - lvgl.page.show: page_set_destrat
-              - button:
-                  styles: rowbtn
-                  height: 50
-                  widgets:
-                    - label: {text: "\U000F066A", text_font: mdi_22, align: LEFT_MID, x: 6, text_color: 0x00E676}
-                    - label: {text: "Panel & System", text_font: f_body, align: LEFT_MID, x: 44, y: -9, text_color: 0xFFFFFF}
-                    - label: {text: "Flashlight, screen lock", text_font: f_small, align: LEFT_MID, x: 44, y: 10, text_color: 0x8A929C}
-                    - label: {text: "\U000F0142", text_font: mdi_22, align: RIGHT_MID, x: -6, text_color: 0x5A6472}
-                  on_click:
-                    - lvgl.page.show: page_set_panel
-              - label: {text: "DSC-CONTROL v4.0.11  ·  ESP-NOW primary", text_font: f_small, text_color: 0x3A4550, pad_top: 8, pad_bottom: 8}
-    - id: page_set_modes
-      scrollbar_mode: "OFF"
-      bg_color: 0x0E1116
-      scrollable: false
-      widgets:
-        - obj:
-            x: 0
-            y: 0
-            width: 320
-            height: 36
-            bg_color: 0x171B22
-            bg_opa: COVER
-            border_width: 0
-            radius: 0
-            pad_all: 0
-            scrollable: false
-            widgets:
-              - button:
-                  align: LEFT_MID
-                  x: 4
-                  width: 46
-                  height: 30
-                  bg_color: 0x232A33
-                  radius: 6
-                  shadow_width: 0
-                  widgets:
-                    - label: {text: "\U000F004D", text_font: mdi_22, align: CENTER, text_color: 0xFFFFFF}
-                  on_click:
-                    - lvgl.page.show: page_control
-              - label: {text: "Modes & Automation", text_font: f_med, align: CENTER, text_color: 0xFFFFFF}
-              - label: {text: "\U000F0493", text_font: mdi_16, align: RIGHT_MID, x: -8, text_color: 0x3A4550}
-        - obj:
-            id: set_modes_scroll
-            x: 0
-            y: 36
-            width: 320
-            height: 164
-            bg_opa: TRANSP
-            border_width: 0
-            radius: 0
-            pad_all: 10
-            pad_top: 6
-            pad_bottom: 8
-            scrollbar_mode: AUTO
-            scroll_dir: VER
-            layout:
-              type: flex
-              flex_flow: COLUMN
-              pad_row: 8
-            widgets:
+              # v5.1.6 — Modes & Automation inlined here (was a drill-in
+              # page_set_modes). Every other settings page (Grow Profile,
+              # Main/Clone Climate, Lighting, Mat, Timers, De-Strat Pulse,
+              # Panel & System) is gone with the lean cut.
               - button:
                   id: takeover_card
                   width: 300
@@ -3302,1535 +2880,7 @@ lvgl:
                         id: hub_cmd
                         op: 19
                         val: !lambda 'return (id(gv_coord)&2) ? 0 : 1;'
-              - button:
-                  id: sw_greenhb
-                  width: 300
-                  height: 40
-                  styles: rowbtn
-                  widgets:
-                    - label: {text: "Green OK indicator", text_font: f_body, align: LEFT_MID, x: 4, text_color: 0xFFFFFF}
-                    - label: {id: st_greenhb_v, text: "off", text_font: f_body, align: RIGHT_MID, x: -8, text_color: 0x5A6472}
-                  on_click:
-                    - lambda: 'id(green_heartbeat) = !id(green_heartbeat);'
-                    - script.execute: refresh_ui
-    - id: page_set_profile
-      scrollbar_mode: "OFF"
-      bg_color: 0x0E1116
-      scrollable: false
-      widgets:
-        - obj:
-            x: 0
-            y: 0
-            width: 320
-            height: 36
-            bg_color: 0x171B22
-            bg_opa: COVER
-            border_width: 0
-            radius: 0
-            pad_all: 0
-            scrollable: false
-            widgets:
-              - button:
-                  align: LEFT_MID
-                  x: 4
-                  width: 46
-                  height: 30
-                  bg_color: 0x232A33
-                  radius: 6
-                  shadow_width: 0
-                  widgets:
-                    - label: {text: "\U000F004D", text_font: mdi_22, align: CENTER, text_color: 0xFFFFFF}
-                  on_click:
-                    - lvgl.page.show: page_control
-              - label: {text: "Grow Profile", text_font: f_med, align: CENTER, text_color: 0xFFFFFF}
-              - label: {text: "\U000F0493", text_font: mdi_16, align: RIGHT_MID, x: -8, text_color: 0x3A4550}
-        - obj:
-            id: set_profile_scroll
-            x: 0
-            y: 36
-            width: 320
-            height: 164
-            bg_opa: TRANSP
-            border_width: 0
-            radius: 0
-            pad_all: 10
-            pad_top: 6
-            pad_bottom: 8
-            scrollbar_mode: AUTO
-            scroll_dir: VER
-            layout:
-              type: flex
-              flex_flow: COLUMN
-              pad_row: 8
-            widgets:
-              - button:
-                  id: btn_stage
-                  width: 300
-                  height: 40
-                  styles: rowbtn
-                  widgets:
-                    - label: {text: "Grow Stage", text_font: f_body, align: LEFT_MID, x: 4, text_color: 0xFFFFFF}
-                    - label: {id: lbl_stage_val, text: "--", text_font: f_body, align: RIGHT_MID, x: -20, text_color: 0x00E676}
-                    - label: {text: "\U000F0142", text_font: mdi_16, align: RIGHT_MID, x: -2, text_color: 0x5A6472}
-                  on_click:
-                    - script.execute:
-                        id: open_editor
-                        target: 0
-              - button:
-                  id: btn_strategy
-                  width: 300
-                  height: 40
-                  styles: rowbtn
-                  widgets:
-                    - label: {text: "Control Strategy", text_font: f_body, align: LEFT_MID, x: 4, text_color: 0xFFFFFF}
-                    - label: {id: lbl_strategy_val, text: "--", text_font: f_body, align: RIGHT_MID, x: -20, text_color: 0x00E676}
-                    - label: {text: "\U000F0142", text_font: mdi_16, align: RIGHT_MID, x: -2, text_color: 0x5A6472}
-                  on_click:
-                    - script.execute:
-                        id: open_editor
-                        target: 1
-              - button:
-                  id: btn_clonemode
-                  width: 300
-                  height: 40
-                  styles: rowbtn
-                  widgets:
-                    - label: {text: "Clone Mode", text_font: f_body, align: LEFT_MID, x: 4, text_color: 0xFFFFFF}
-                    - label: {id: lbl_clonemode_val, text: "--", text_font: f_body, align: RIGHT_MID, x: -20, text_color: 0x00E676}
-                    - label: {text: "\U000F0142", text_font: mdi_16, align: RIGHT_MID, x: -2, text_color: 0x5A6472}
-                  on_click:
-                    - script.execute:
-                        id: open_editor
-                        target: 2
-              - button:
-                  id: btn_priority
-                  width: 300
-                  height: 40
-                  styles: rowbtn
-                  widgets:
-                    - label: {text: "Priority Tent", text_font: f_body, align: LEFT_MID, x: 4, text_color: 0xFFFFFF}
-                    - label: {id: lbl_priority_val, text: "--", text_font: f_body, align: RIGHT_MID, x: -20, text_color: 0x00E676}
-                    - label: {text: "\U000F0142", text_font: mdi_16, align: RIGHT_MID, x: -2, text_color: 0x5A6472}
-                  on_click:
-                    - script.execute:
-                        id: open_editor
-                        target: 3
-              - button:
-                  id: btn_clonephoto
-                  width: 300
-                  height: 40
-                  styles: rowbtn
-                  widgets:
-                    - label: {text: "Clone Photoperiod", text_font: f_body, align: LEFT_MID, x: 4, text_color: 0xFFFFFF}
-                    - label: {id: lbl_clonephoto_val, text: "--", text_font: f_body, align: RIGHT_MID, x: -20, text_color: 0x00E676}
-                    - label: {text: "\U000F0142", text_font: mdi_16, align: RIGHT_MID, x: -2, text_color: 0x5A6472}
-                  on_click:
-                    - script.execute:
-                        id: open_editor
-                        target: 4
-    - id: page_set_mainclim
-      scrollbar_mode: "OFF"
-      bg_color: 0x0E1116
-      scrollable: false
-      widgets:
-        - obj:
-            x: 0
-            y: 0
-            width: 320
-            height: 36
-            bg_color: 0x171B22
-            bg_opa: COVER
-            border_width: 0
-            radius: 0
-            pad_all: 0
-            scrollable: false
-            widgets:
-              - button:
-                  align: LEFT_MID
-                  x: 4
-                  width: 46
-                  height: 30
-                  bg_color: 0x232A33
-                  radius: 6
-                  shadow_width: 0
-                  widgets:
-                    - label: {text: "\U000F004D", text_font: mdi_22, align: CENTER, text_color: 0xFFFFFF}
-                  on_click:
-                    - lvgl.page.show: page_control
-              - label: {text: "Main Climate  4x8", text_font: f_med, align: CENTER, text_color: 0xFFFFFF}
-              - label: {text: "\U000F0493", text_font: mdi_16, align: RIGHT_MID, x: -8, text_color: 0x3A4550}
-        - obj:
-            id: set_mainclim_scroll
-            x: 0
-            y: 36
-            width: 320
-            height: 164
-            bg_opa: TRANSP
-            border_width: 0
-            radius: 0
-            pad_all: 10
-            pad_top: 6
-            pad_bottom: 8
-            scrollbar_mode: AUTO
-            scroll_dir: VER
-            layout:
-              type: flex
-              flex_flow: COLUMN
-              pad_row: 8
-            widgets:
-              - obj:
-                  id: s_temp
-                  width: 300
-                  height: 40
-                  styles: rowbtn
-                  scrollable: false
-                  widgets:
-                    - label: {text: "Target Temp", text_font: f_body, align: LEFT_MID, x: 4, text_color: 0xFFFFFF}
-                    - label: {id: s_temp_val, text: "--", text_font: f_body, align: RIGHT_MID, x: -92, text_color: 0x00E676}
-                    - button:
-                        align: RIGHT_MID
-                        x: -48
-                        width: 38
-                        height: 30
-                        bg_color: 0x2A313B
-                        radius: 6
-                        shadow_width: 0
-                        widgets:
-                          - label: {text: "-", text_font: f_med, align: CENTER, text_color: 0xFFFFFF}
-                        on_click:
-                          - script.execute:
-                              id: hub_cmd
-                              op: 30
-                              val: !lambda 'float v = isnan(id(gv_cfg)[0]) ? 15.0f : id(gv_cfg)[0]; v -= 0.5f; if (v < 15.0f) v = 15.0f; return (int)lroundf((float)v * 100);'
-                    - button:
-                        align: RIGHT_MID
-                        x: -6
-                        width: 38
-                        height: 30
-                        bg_color: 0x12241A
-                        border_color: 0x00E676
-                        border_width: 1
-                        radius: 6
-                        shadow_width: 0
-                        widgets:
-                          - label: {text: "+", text_font: f_med, align: CENTER, text_color: 0x00E676}
-                        on_click:
-                          - script.execute:
-                              id: hub_cmd
-                              op: 30
-                              val: !lambda 'float v = isnan(id(gv_cfg)[0]) ? 15.0f : id(gv_cfg)[0]; v += 0.5f; if (v > 32.0f) v = 32.0f; return (int)lroundf((float)v * 100);'
-              - obj:
-                  id: s_vmin
-                  width: 300
-                  height: 40
-                  styles: rowbtn
-                  scrollable: false
-                  widgets:
-                    - label: {text: "VPD Min", text_font: f_body, align: LEFT_MID, x: 4, text_color: 0xFFFFFF}
-                    - label: {id: s_vmin_val, text: "--", text_font: f_body, align: RIGHT_MID, x: -92, text_color: 0x00E676}
-                    - button:
-                        align: RIGHT_MID
-                        x: -48
-                        width: 38
-                        height: 30
-                        bg_color: 0x2A313B
-                        radius: 6
-                        shadow_width: 0
-                        widgets:
-                          - label: {text: "-", text_font: f_med, align: CENTER, text_color: 0xFFFFFF}
-                        on_click:
-                          - script.execute:
-                              id: hub_cmd
-                              op: 31
-                              val: !lambda 'float v = isnan(id(gv_cfg)[1]) ? 0.4f : id(gv_cfg)[1]; v -= 0.1f; if (v < 0.4f) v = 0.4f; return (int)lroundf((float)v * 100);'
-                    - button:
-                        align: RIGHT_MID
-                        x: -6
-                        width: 38
-                        height: 30
-                        bg_color: 0x12241A
-                        border_color: 0x00E676
-                        border_width: 1
-                        radius: 6
-                        shadow_width: 0
-                        widgets:
-                          - label: {text: "+", text_font: f_med, align: CENTER, text_color: 0x00E676}
-                        on_click:
-                          - script.execute:
-                              id: hub_cmd
-                              op: 31
-                              val: !lambda 'float v = isnan(id(gv_cfg)[1]) ? 0.4f : id(gv_cfg)[1]; v += 0.1f; if (v > 1.6f) v = 1.6f; return (int)lroundf((float)v * 100);'
-              - obj:
-                  id: s_vmax
-                  width: 300
-                  height: 40
-                  styles: rowbtn
-                  scrollable: false
-                  widgets:
-                    - label: {text: "VPD Max", text_font: f_body, align: LEFT_MID, x: 4, text_color: 0xFFFFFF}
-                    - label: {id: s_vmax_val, text: "--", text_font: f_body, align: RIGHT_MID, x: -92, text_color: 0x00E676}
-                    - button:
-                        align: RIGHT_MID
-                        x: -48
-                        width: 38
-                        height: 30
-                        bg_color: 0x2A313B
-                        radius: 6
-                        shadow_width: 0
-                        widgets:
-                          - label: {text: "-", text_font: f_med, align: CENTER, text_color: 0xFFFFFF}
-                        on_click:
-                          - script.execute:
-                              id: hub_cmd
-                              op: 32
-                              val: !lambda 'float v = isnan(id(gv_cfg)[2]) ? 0.4f : id(gv_cfg)[2]; v -= 0.1f; if (v < 0.4f) v = 0.4f; return (int)lroundf((float)v * 100);'
-                    - button:
-                        align: RIGHT_MID
-                        x: -6
-                        width: 38
-                        height: 30
-                        bg_color: 0x12241A
-                        border_color: 0x00E676
-                        border_width: 1
-                        radius: 6
-                        shadow_width: 0
-                        widgets:
-                          - label: {text: "+", text_font: f_med, align: CENTER, text_color: 0x00E676}
-                        on_click:
-                          - script.execute:
-                              id: hub_cmd
-                              op: 32
-                              val: !lambda 'float v = isnan(id(gv_cfg)[2]) ? 0.4f : id(gv_cfg)[2]; v += 0.1f; if (v > 1.8f) v = 1.8f; return (int)lroundf((float)v * 100);'
-              - obj:
-                  id: s_rmin
-                  width: 300
-                  height: 40
-                  styles: rowbtn
-                  scrollable: false
-                  widgets:
-                    - label: {text: "RH Min", text_font: f_body, align: LEFT_MID, x: 4, text_color: 0xFFFFFF}
-                    - label: {id: s_rmin_val, text: "--", text_font: f_body, align: RIGHT_MID, x: -92, text_color: 0x00E676}
-                    - button:
-                        align: RIGHT_MID
-                        x: -48
-                        width: 38
-                        height: 30
-                        bg_color: 0x2A313B
-                        radius: 6
-                        shadow_width: 0
-                        widgets:
-                          - label: {text: "-", text_font: f_med, align: CENTER, text_color: 0xFFFFFF}
-                        on_click:
-                          - script.execute:
-                              id: hub_cmd
-                              op: 33
-                              val: !lambda 'float v = isnan(id(gv_cfg)[3]) ? 20 : id(gv_cfg)[3]; v -= 1; if (v < 20) v = 20; return (int)lroundf((float)v * 100);'
-                    - button:
-                        align: RIGHT_MID
-                        x: -6
-                        width: 38
-                        height: 30
-                        bg_color: 0x12241A
-                        border_color: 0x00E676
-                        border_width: 1
-                        radius: 6
-                        shadow_width: 0
-                        widgets:
-                          - label: {text: "+", text_font: f_med, align: CENTER, text_color: 0x00E676}
-                        on_click:
-                          - script.execute:
-                              id: hub_cmd
-                              op: 33
-                              val: !lambda 'float v = isnan(id(gv_cfg)[3]) ? 20 : id(gv_cfg)[3]; v += 1; if (v > 90) v = 90; return (int)lroundf((float)v * 100);'
-              - obj:
-                  id: s_rmax
-                  width: 300
-                  height: 40
-                  styles: rowbtn
-                  scrollable: false
-                  widgets:
-                    - label: {text: "RH Max", text_font: f_body, align: LEFT_MID, x: 4, text_color: 0xFFFFFF}
-                    - label: {id: s_rmax_val, text: "--", text_font: f_body, align: RIGHT_MID, x: -92, text_color: 0x00E676}
-                    - button:
-                        align: RIGHT_MID
-                        x: -48
-                        width: 38
-                        height: 30
-                        bg_color: 0x2A313B
-                        radius: 6
-                        shadow_width: 0
-                        widgets:
-                          - label: {text: "-", text_font: f_med, align: CENTER, text_color: 0xFFFFFF}
-                        on_click:
-                          - script.execute:
-                              id: hub_cmd
-                              op: 34
-                              val: !lambda 'float v = isnan(id(gv_cfg)[4]) ? 20 : id(gv_cfg)[4]; v -= 1; if (v < 20) v = 20; return (int)lroundf((float)v * 100);'
-                    - button:
-                        align: RIGHT_MID
-                        x: -6
-                        width: 38
-                        height: 30
-                        bg_color: 0x12241A
-                        border_color: 0x00E676
-                        border_width: 1
-                        radius: 6
-                        shadow_width: 0
-                        widgets:
-                          - label: {text: "+", text_font: f_med, align: CENTER, text_color: 0x00E676}
-                        on_click:
-                          - script.execute:
-                              id: hub_cmd
-                              op: 34
-                              val: !lambda 'float v = isnan(id(gv_cfg)[4]) ? 20 : id(gv_cfg)[4]; v += 1; if (v > 95) v = 95; return (int)lroundf((float)v * 100);'
-    - id: page_set_cloneclim
-      scrollbar_mode: "OFF"
-      bg_color: 0x0E1116
-      scrollable: false
-      widgets:
-        - obj:
-            x: 0
-            y: 0
-            width: 320
-            height: 36
-            bg_color: 0x171B22
-            bg_opa: COVER
-            border_width: 0
-            radius: 0
-            pad_all: 0
-            scrollable: false
-            widgets:
-              - button:
-                  align: LEFT_MID
-                  x: 4
-                  width: 46
-                  height: 30
-                  bg_color: 0x232A33
-                  radius: 6
-                  shadow_width: 0
-                  widgets:
-                    - label: {text: "\U000F004D", text_font: mdi_22, align: CENTER, text_color: 0xFFFFFF}
-                  on_click:
-                    - lvgl.page.show: page_control
-              - label: {text: "Clone Climate  2x4", text_font: f_med, align: CENTER, text_color: 0xFFFFFF}
-              - label: {text: "\U000F0493", text_font: mdi_16, align: RIGHT_MID, x: -8, text_color: 0x3A4550}
-        - obj:
-            id: set_cloneclim_scroll
-            x: 0
-            y: 36
-            width: 320
-            height: 164
-            bg_opa: TRANSP
-            border_width: 0
-            radius: 0
-            pad_all: 10
-            pad_top: 6
-            pad_bottom: 8
-            scrollbar_mode: AUTO
-            scroll_dir: VER
-            layout:
-              type: flex
-              flex_flow: COLUMN
-              pad_row: 8
-            widgets:
-              - obj:
-                  id: s_ctemp
-                  width: 300
-                  height: 40
-                  styles: rowbtn
-                  scrollable: false
-                  widgets:
-                    - label: {text: "Clone Temp", text_font: f_body, align: LEFT_MID, x: 4, text_color: 0xFFFFFF}
-                    - label: {id: s_ctemp_val, text: "--", text_font: f_body, align: RIGHT_MID, x: -92, text_color: 0x00E676}
-                    - button:
-                        align: RIGHT_MID
-                        x: -48
-                        width: 38
-                        height: 30
-                        bg_color: 0x2A313B
-                        radius: 6
-                        shadow_width: 0
-                        widgets:
-                          - label: {text: "-", text_font: f_med, align: CENTER, text_color: 0xFFFFFF}
-                        on_click:
-                          - script.execute:
-                              id: hub_cmd
-                              op: 37
-                              val: !lambda 'float v = isnan(id(gv_cfg)[5]) ? 15.0f : id(gv_cfg)[5]; v -= 0.5f; if (v < 15.0f) v = 15.0f; return (int)lroundf((float)v * 100);'
-                    - button:
-                        align: RIGHT_MID
-                        x: -6
-                        width: 38
-                        height: 30
-                        bg_color: 0x12241A
-                        border_color: 0x00E676
-                        border_width: 1
-                        radius: 6
-                        shadow_width: 0
-                        widgets:
-                          - label: {text: "+", text_font: f_med, align: CENTER, text_color: 0x00E676}
-                        on_click:
-                          - script.execute:
-                              id: hub_cmd
-                              op: 37
-                              val: !lambda 'float v = isnan(id(gv_cfg)[5]) ? 15.0f : id(gv_cfg)[5]; v += 0.5f; if (v > 32.0f) v = 32.0f; return (int)lroundf((float)v * 100);'
-              - obj:
-                  id: s_cvmin
-                  width: 300
-                  height: 40
-                  styles: rowbtn
-                  scrollable: false
-                  widgets:
-                    - label: {text: "Clone VPD Min", text_font: f_body, align: LEFT_MID, x: 4, text_color: 0xFFFFFF}
-                    - label: {id: s_cvmin_val, text: "--", text_font: f_body, align: RIGHT_MID, x: -92, text_color: 0x00E676}
-                    - button:
-                        align: RIGHT_MID
-                        x: -48
-                        width: 38
-                        height: 30
-                        bg_color: 0x2A313B
-                        radius: 6
-                        shadow_width: 0
-                        widgets:
-                          - label: {text: "-", text_font: f_med, align: CENTER, text_color: 0xFFFFFF}
-                        on_click:
-                          - script.execute:
-                              id: hub_cmd
-                              op: 38
-                              val: !lambda 'float v = isnan(id(gv_cfg)[6]) ? 0.2f : id(gv_cfg)[6]; v -= 0.1f; if (v < 0.2f) v = 0.2f; return (int)lroundf((float)v * 100);'
-                    - button:
-                        align: RIGHT_MID
-                        x: -6
-                        width: 38
-                        height: 30
-                        bg_color: 0x12241A
-                        border_color: 0x00E676
-                        border_width: 1
-                        radius: 6
-                        shadow_width: 0
-                        widgets:
-                          - label: {text: "+", text_font: f_med, align: CENTER, text_color: 0x00E676}
-                        on_click:
-                          - script.execute:
-                              id: hub_cmd
-                              op: 38
-                              val: !lambda 'float v = isnan(id(gv_cfg)[6]) ? 0.2f : id(gv_cfg)[6]; v += 0.1f; if (v > 1.6f) v = 1.6f; return (int)lroundf((float)v * 100);'
-              - obj:
-                  id: s_cvmax
-                  width: 300
-                  height: 40
-                  styles: rowbtn
-                  scrollable: false
-                  widgets:
-                    - label: {text: "Clone VPD Max", text_font: f_body, align: LEFT_MID, x: 4, text_color: 0xFFFFFF}
-                    - label: {id: s_cvmax_val, text: "--", text_font: f_body, align: RIGHT_MID, x: -92, text_color: 0x00E676}
-                    - button:
-                        align: RIGHT_MID
-                        x: -48
-                        width: 38
-                        height: 30
-                        bg_color: 0x2A313B
-                        radius: 6
-                        shadow_width: 0
-                        widgets:
-                          - label: {text: "-", text_font: f_med, align: CENTER, text_color: 0xFFFFFF}
-                        on_click:
-                          - script.execute:
-                              id: hub_cmd
-                              op: 39
-                              val: !lambda 'float v = isnan(id(gv_cfg)[7]) ? 0.2f : id(gv_cfg)[7]; v -= 0.1f; if (v < 0.2f) v = 0.2f; return (int)lroundf((float)v * 100);'
-                    - button:
-                        align: RIGHT_MID
-                        x: -6
-                        width: 38
-                        height: 30
-                        bg_color: 0x12241A
-                        border_color: 0x00E676
-                        border_width: 1
-                        radius: 6
-                        shadow_width: 0
-                        widgets:
-                          - label: {text: "+", text_font: f_med, align: CENTER, text_color: 0x00E676}
-                        on_click:
-                          - script.execute:
-                              id: hub_cmd
-                              op: 39
-                              val: !lambda 'float v = isnan(id(gv_cfg)[7]) ? 0.2f : id(gv_cfg)[7]; v += 0.1f; if (v > 1.8f) v = 1.8f; return (int)lroundf((float)v * 100);'
-              - obj:
-                  id: s_crmin
-                  width: 300
-                  height: 40
-                  styles: rowbtn
-                  scrollable: false
-                  widgets:
-                    - label: {text: "Clone RH Min", text_font: f_body, align: LEFT_MID, x: 4, text_color: 0xFFFFFF}
-                    - label: {id: s_crmin_val, text: "--", text_font: f_body, align: RIGHT_MID, x: -92, text_color: 0x00E676}
-                    - button:
-                        align: RIGHT_MID
-                        x: -48
-                        width: 38
-                        height: 30
-                        bg_color: 0x2A313B
-                        radius: 6
-                        shadow_width: 0
-                        widgets:
-                          - label: {text: "-", text_font: f_med, align: CENTER, text_color: 0xFFFFFF}
-                        on_click:
-                          - script.execute:
-                              id: hub_cmd
-                              op: 40
-                              val: !lambda 'float v = isnan(id(gv_cfg)[8]) ? 20 : id(gv_cfg)[8]; v -= 1; if (v < 20) v = 20; return (int)lroundf((float)v * 100);'
-                    - button:
-                        align: RIGHT_MID
-                        x: -6
-                        width: 38
-                        height: 30
-                        bg_color: 0x12241A
-                        border_color: 0x00E676
-                        border_width: 1
-                        radius: 6
-                        shadow_width: 0
-                        widgets:
-                          - label: {text: "+", text_font: f_med, align: CENTER, text_color: 0x00E676}
-                        on_click:
-                          - script.execute:
-                              id: hub_cmd
-                              op: 40
-                              val: !lambda 'float v = isnan(id(gv_cfg)[8]) ? 20 : id(gv_cfg)[8]; v += 1; if (v > 90) v = 90; return (int)lroundf((float)v * 100);'
-              - obj:
-                  id: s_crmax
-                  width: 300
-                  height: 40
-                  styles: rowbtn
-                  scrollable: false
-                  widgets:
-                    - label: {text: "Clone RH Max", text_font: f_body, align: LEFT_MID, x: 4, text_color: 0xFFFFFF}
-                    - label: {id: s_crmax_val, text: "--", text_font: f_body, align: RIGHT_MID, x: -92, text_color: 0x00E676}
-                    - button:
-                        align: RIGHT_MID
-                        x: -48
-                        width: 38
-                        height: 30
-                        bg_color: 0x2A313B
-                        radius: 6
-                        shadow_width: 0
-                        widgets:
-                          - label: {text: "-", text_font: f_med, align: CENTER, text_color: 0xFFFFFF}
-                        on_click:
-                          - script.execute:
-                              id: hub_cmd
-                              op: 41
-                              val: !lambda 'float v = isnan(id(gv_cfg)[9]) ? 20 : id(gv_cfg)[9]; v -= 1; if (v < 20) v = 20; return (int)lroundf((float)v * 100);'
-                    - button:
-                        align: RIGHT_MID
-                        x: -6
-                        width: 38
-                        height: 30
-                        bg_color: 0x12241A
-                        border_color: 0x00E676
-                        border_width: 1
-                        radius: 6
-                        shadow_width: 0
-                        widgets:
-                          - label: {text: "+", text_font: f_med, align: CENTER, text_color: 0x00E676}
-                        on_click:
-                          - script.execute:
-                              id: hub_cmd
-                              op: 41
-                              val: !lambda 'float v = isnan(id(gv_cfg)[9]) ? 20 : id(gv_cfg)[9]; v += 1; if (v > 95) v = 95; return (int)lroundf((float)v * 100);'
-    - id: page_set_light
-      scrollbar_mode: "OFF"
-      bg_color: 0x0E1116
-      scrollable: false
-      widgets:
-        - obj:
-            x: 0
-            y: 0
-            width: 320
-            height: 36
-            bg_color: 0x171B22
-            bg_opa: COVER
-            border_width: 0
-            radius: 0
-            pad_all: 0
-            scrollable: false
-            widgets:
-              - button:
-                  align: LEFT_MID
-                  x: 4
-                  width: 46
-                  height: 30
-                  bg_color: 0x232A33
-                  radius: 6
-                  shadow_width: 0
-                  widgets:
-                    - label: {text: "\U000F004D", text_font: mdi_22, align: CENTER, text_color: 0xFFFFFF}
-                  on_click:
-                    - lvgl.page.show: page_control
-              - label: {text: "Lighting", text_font: f_med, align: CENTER, text_color: 0xFFFFFF}
-              - label: {text: "\U000F0493", text_font: mdi_16, align: RIGHT_MID, x: -8, text_color: 0x3A4550}
-        - obj:
-            id: set_light_scroll
-            x: 0
-            y: 36
-            width: 320
-            height: 164
-            bg_opa: TRANSP
-            border_width: 0
-            radius: 0
-            pad_all: 10
-            pad_top: 6
-            pad_bottom: 8
-            scrollbar_mode: AUTO
-            scroll_dir: VER
-            layout:
-              type: flex
-              flex_flow: COLUMN
-              pad_row: 8
-            widgets:
-              - obj:
-                  id: s_sftgt
-                  width: 300
-                  height: 40
-                  styles: rowbtn
-                  scrollable: false
-                  widgets:
-                    - label: {text: "SF1000 Target", text_font: f_body, align: LEFT_MID, x: 4, text_color: 0xFFFFFF}
-                    - label: {id: s_sftgt_val, text: "--", text_font: f_body, align: RIGHT_MID, x: -92, text_color: 0x00E676}
-                    - button:
-                        align: RIGHT_MID
-                        x: -48
-                        width: 38
-                        height: 30
-                        bg_color: 0x2A313B
-                        radius: 6
-                        shadow_width: 0
-                        widgets:
-                          - label: {text: "-", text_font: f_med, align: CENTER, text_color: 0xFFFFFF}
-                        on_click:
-                          - script.execute:
-                              id: hub_cmd
-                              op: 29
-                              val: !lambda 'float v = isnan(id(gv_cfg)[10]) ? 0 : id(gv_cfg)[10]; v -= 5; if (v < 0) v = 0; return (int)lroundf((float)v * 1);'
-                    - button:
-                        align: RIGHT_MID
-                        x: -6
-                        width: 38
-                        height: 30
-                        bg_color: 0x12241A
-                        border_color: 0x00E676
-                        border_width: 1
-                        radius: 6
-                        shadow_width: 0
-                        widgets:
-                          - label: {text: "+", text_font: f_med, align: CENTER, text_color: 0x00E676}
-                        on_click:
-                          - script.execute:
-                              id: hub_cmd
-                              op: 29
-                              val: !lambda 'float v = isnan(id(gv_cfg)[10]) ? 0 : id(gv_cfg)[10]; v += 5; if (v > 100) v = 100; return (int)lroundf((float)v * 1);'
-              - obj:
-                  id: s_ramp
-                  width: 300
-                  height: 40
-                  styles: rowbtn
-                  scrollable: false
-                  widgets:
-                    - label: {text: "SF1000 Ramp Floor", text_font: f_body, align: LEFT_MID, x: 4, text_color: 0xFFFFFF}
-                    - label: {id: s_ramp_val, text: "--", text_font: f_body, align: RIGHT_MID, x: -92, text_color: 0x00E676}
-                    - button:
-                        align: RIGHT_MID
-                        x: -48
-                        width: 38
-                        height: 30
-                        bg_color: 0x2A313B
-                        radius: 6
-                        shadow_width: 0
-                        widgets:
-                          - label: {text: "-", text_font: f_med, align: CENTER, text_color: 0xFFFFFF}
-                        on_click:
-                          - script.execute:
-                              id: hub_cmd
-                              op: 43
-                              val: !lambda 'float v = isnan(id(gv_cfg)[14]) ? 0 : id(gv_cfg)[14]; v -= 1; if (v < 0) v = 0; return (int)lroundf((float)v * 1);'
-                    - button:
-                        align: RIGHT_MID
-                        x: -6
-                        width: 38
-                        height: 30
-                        bg_color: 0x12241A
-                        border_color: 0x00E676
-                        border_width: 1
-                        radius: 6
-                        shadow_width: 0
-                        widgets:
-                          - label: {text: "+", text_font: f_med, align: CENTER, text_color: 0x00E676}
-                        on_click:
-                          - script.execute:
-                              id: hub_cmd
-                              op: 43
-                              val: !lambda 'float v = isnan(id(gv_cfg)[14]) ? 0 : id(gv_cfg)[14]; v += 1; if (v > 50) v = 50; return (int)lroundf((float)v * 1);'
-              - obj:
-                  id: s_sunrise
-                  width: 300
-                  height: 40
-                  styles: rowbtn
-                  scrollable: false
-                  widgets:
-                    - label: {text: "Sunrise (min)", text_font: f_body, align: LEFT_MID, x: 4, text_color: 0xFFFFFF}
-                    - label: {id: s_sunrise_val, text: "--", text_font: f_body, align: RIGHT_MID, x: -92, text_color: 0x00E676}
-                    - button:
-                        align: RIGHT_MID
-                        x: -48
-                        width: 38
-                        height: 30
-                        bg_color: 0x2A313B
-                        radius: 6
-                        shadow_width: 0
-                        widgets:
-                          - label: {text: "-", text_font: f_med, align: CENTER, text_color: 0xFFFFFF}
-                        on_click:
-                          - script.execute:
-                              id: hub_cmd
-                              op: 35
-                              val: !lambda 'float v = isnan(id(gv_cfg)[11]) ? 0 : id(gv_cfg)[11]; v -= 5; if (v < 0) v = 0; return (int)lroundf((float)v * 1);'
-                    - button:
-                        align: RIGHT_MID
-                        x: -6
-                        width: 38
-                        height: 30
-                        bg_color: 0x12241A
-                        border_color: 0x00E676
-                        border_width: 1
-                        radius: 6
-                        shadow_width: 0
-                        widgets:
-                          - label: {text: "+", text_font: f_med, align: CENTER, text_color: 0x00E676}
-                        on_click:
-                          - script.execute:
-                              id: hub_cmd
-                              op: 35
-                              val: !lambda 'float v = isnan(id(gv_cfg)[11]) ? 0 : id(gv_cfg)[11]; v += 5; if (v > 120) v = 120; return (int)lroundf((float)v * 1);'
-              - obj:
-                  id: s_sunset
-                  width: 300
-                  height: 40
-                  styles: rowbtn
-                  scrollable: false
-                  widgets:
-                    - label: {text: "Sunset (min)", text_font: f_body, align: LEFT_MID, x: 4, text_color: 0xFFFFFF}
-                    - label: {id: s_sunset_val, text: "--", text_font: f_body, align: RIGHT_MID, x: -92, text_color: 0x00E676}
-                    - button:
-                        align: RIGHT_MID
-                        x: -48
-                        width: 38
-                        height: 30
-                        bg_color: 0x2A313B
-                        radius: 6
-                        shadow_width: 0
-                        widgets:
-                          - label: {text: "-", text_font: f_med, align: CENTER, text_color: 0xFFFFFF}
-                        on_click:
-                          - script.execute:
-                              id: hub_cmd
-                              op: 36
-                              val: !lambda 'float v = isnan(id(gv_cfg)[12]) ? 0 : id(gv_cfg)[12]; v -= 5; if (v < 0) v = 0; return (int)lroundf((float)v * 1);'
-                    - button:
-                        align: RIGHT_MID
-                        x: -6
-                        width: 38
-                        height: 30
-                        bg_color: 0x12241A
-                        border_color: 0x00E676
-                        border_width: 1
-                        radius: 6
-                        shadow_width: 0
-                        widgets:
-                          - label: {text: "+", text_font: f_med, align: CENTER, text_color: 0x00E676}
-                        on_click:
-                          - script.execute:
-                              id: hub_cmd
-                              op: 36
-                              val: !lambda 'float v = isnan(id(gv_cfg)[12]) ? 0 : id(gv_cfg)[12]; v += 5; if (v > 120) v = 120; return (int)lroundf((float)v * 1);'
-              - obj:
-                  id: s_clh
-                  width: 300
-                  height: 40
-                  styles: rowbtn
-                  scrollable: false
-                  widgets:
-                    - label: {text: "Clone Light Hours", text_font: f_body, align: LEFT_MID, x: 4, text_color: 0xFFFFFF}
-                    - label: {id: s_clh_val, text: "--", text_font: f_body, align: RIGHT_MID, x: -92, text_color: 0x00E676}
-                    - button:
-                        align: RIGHT_MID
-                        x: -48
-                        width: 38
-                        height: 30
-                        bg_color: 0x2A313B
-                        radius: 6
-                        shadow_width: 0
-                        widgets:
-                          - label: {text: "-", text_font: f_med, align: CENTER, text_color: 0xFFFFFF}
-                        on_click:
-                          - script.execute:
-                              id: hub_cmd
-                              op: 42
-                              val: !lambda 'float v = isnan(id(gv_cfg)[13]) ? 0 : id(gv_cfg)[13]; v -= 1; if (v < 0) v = 0; return (int)lroundf((float)v * 1);'
-                    - button:
-                        align: RIGHT_MID
-                        x: -6
-                        width: 38
-                        height: 30
-                        bg_color: 0x12241A
-                        border_color: 0x00E676
-                        border_width: 1
-                        radius: 6
-                        shadow_width: 0
-                        widgets:
-                          - label: {text: "+", text_font: f_med, align: CENTER, text_color: 0x00E676}
-                        on_click:
-                          - script.execute:
-                              id: hub_cmd
-                              op: 42
-                              val: !lambda 'float v = isnan(id(gv_cfg)[13]) ? 0 : id(gv_cfg)[13]; v += 1; if (v > 24) v = 24; return (int)lroundf((float)v * 1);'
-    - id: page_set_mat
-      scrollbar_mode: "OFF"
-      bg_color: 0x0E1116
-      scrollable: false
-      widgets:
-        - obj:
-            x: 0
-            y: 0
-            width: 320
-            height: 36
-            bg_color: 0x171B22
-            bg_opa: COVER
-            border_width: 0
-            radius: 0
-            pad_all: 0
-            scrollable: false
-            widgets:
-              - button:
-                  align: LEFT_MID
-                  x: 4
-                  width: 46
-                  height: 30
-                  bg_color: 0x232A33
-                  radius: 6
-                  shadow_width: 0
-                  widgets:
-                    - label: {text: "\U000F004D", text_font: mdi_22, align: CENTER, text_color: 0xFFFFFF}
-                  on_click:
-                    - lvgl.page.show: page_control
-              - label: {text: "Root Zone (Mat)", text_font: f_med, align: CENTER, text_color: 0xFFFFFF}
-              - label: {text: "\U000F0493", text_font: mdi_16, align: RIGHT_MID, x: -8, text_color: 0x3A4550}
-        - obj:
-            id: set_mat_scroll
-            x: 0
-            y: 36
-            width: 320
-            height: 164
-            bg_opa: TRANSP
-            border_width: 0
-            radius: 0
-            pad_all: 10
-            pad_top: 6
-            pad_bottom: 8
-            scrollbar_mode: AUTO
-            scroll_dir: VER
-            layout:
-              type: flex
-              flex_flow: COLUMN
-              pad_row: 8
-            widgets:
-              - obj:
-                  id: s_rzlo
-                  width: 300
-                  height: 40
-                  styles: rowbtn
-                  scrollable: false
-                  widgets:
-                    - label: {text: "Root-Zone Low", text_font: f_body, align: LEFT_MID, x: 4, text_color: 0xFFFFFF}
-                    - label: {id: s_rzlo_val, text: "--", text_font: f_body, align: RIGHT_MID, x: -92, text_color: 0x00E676}
-                    - button:
-                        align: RIGHT_MID
-                        x: -48
-                        width: 38
-                        height: 30
-                        bg_color: 0x2A313B
-                        radius: 6
-                        shadow_width: 0
-                        widgets:
-                          - label: {text: "-", text_font: f_med, align: CENTER, text_color: 0xFFFFFF}
-                        on_click:
-                          - script.execute:
-                              id: hub_cmd
-                              op: 48
-                              val: !lambda 'float v = isnan(id(gv_cfg)[19]) ? 12.0f : id(gv_cfg)[19]; v -= 0.5f; if (v < 12.0f) v = 12.0f; return (int)lroundf((float)v * 100);'
-                    - button:
-                        align: RIGHT_MID
-                        x: -6
-                        width: 38
-                        height: 30
-                        bg_color: 0x12241A
-                        border_color: 0x00E676
-                        border_width: 1
-                        radius: 6
-                        shadow_width: 0
-                        widgets:
-                          - label: {text: "+", text_font: f_med, align: CENTER, text_color: 0x00E676}
-                        on_click:
-                          - script.execute:
-                              id: hub_cmd
-                              op: 48
-                              val: !lambda 'float v = isnan(id(gv_cfg)[19]) ? 12.0f : id(gv_cfg)[19]; v += 0.5f; if (v > 26.0f) v = 26.0f; return (int)lroundf((float)v * 100);'
-              - obj:
-                  id: s_rzhi
-                  width: 300
-                  height: 40
-                  styles: rowbtn
-                  scrollable: false
-                  widgets:
-                    - label: {text: "Root-Zone High", text_font: f_body, align: LEFT_MID, x: 4, text_color: 0xFFFFFF}
-                    - label: {id: s_rzhi_val, text: "--", text_font: f_body, align: RIGHT_MID, x: -92, text_color: 0x00E676}
-                    - button:
-                        align: RIGHT_MID
-                        x: -48
-                        width: 38
-                        height: 30
-                        bg_color: 0x2A313B
-                        radius: 6
-                        shadow_width: 0
-                        widgets:
-                          - label: {text: "-", text_font: f_med, align: CENTER, text_color: 0xFFFFFF}
-                        on_click:
-                          - script.execute:
-                              id: hub_cmd
-                              op: 49
-                              val: !lambda 'float v = isnan(id(gv_cfg)[20]) ? 14.0f : id(gv_cfg)[20]; v -= 0.5f; if (v < 14.0f) v = 14.0f; return (int)lroundf((float)v * 100);'
-                    - button:
-                        align: RIGHT_MID
-                        x: -6
-                        width: 38
-                        height: 30
-                        bg_color: 0x12241A
-                        border_color: 0x00E676
-                        border_width: 1
-                        radius: 6
-                        shadow_width: 0
-                        widgets:
-                          - label: {text: "+", text_font: f_med, align: CENTER, text_color: 0x00E676}
-                        on_click:
-                          - script.execute:
-                              id: hub_cmd
-                              op: 49
-                              val: !lambda 'float v = isnan(id(gv_cfg)[20]) ? 14.0f : id(gv_cfg)[20]; v += 0.5f; if (v > 28.0f) v = 28.0f; return (int)lroundf((float)v * 100);'
-              - obj:
-                  id: s_matoff
-                  width: 300
-                  height: 40
-                  styles: rowbtn
-                  scrollable: false
-                  widgets:
-                    - label: {text: "Mat Min Off (s)", text_font: f_body, align: LEFT_MID, x: 4, text_color: 0xFFFFFF}
-                    - label: {id: s_matoff_val, text: "--", text_font: f_body, align: RIGHT_MID, x: -92, text_color: 0x00E676}
-                    - button:
-                        align: RIGHT_MID
-                        x: -48
-                        width: 38
-                        height: 30
-                        bg_color: 0x2A313B
-                        radius: 6
-                        shadow_width: 0
-                        widgets:
-                          - label: {text: "-", text_font: f_med, align: CENTER, text_color: 0xFFFFFF}
-                        on_click:
-                          - script.execute:
-                              id: hub_cmd
-                              op: 50
-                              val: !lambda 'float v = isnan(id(gv_cfg)[21]) ? 0 : id(gv_cfg)[21]; v -= 60; if (v < 0) v = 0; return (int)lroundf((float)v * 1);'
-                    - button:
-                        align: RIGHT_MID
-                        x: -6
-                        width: 38
-                        height: 30
-                        bg_color: 0x12241A
-                        border_color: 0x00E676
-                        border_width: 1
-                        radius: 6
-                        shadow_width: 0
-                        widgets:
-                          - label: {text: "+", text_font: f_med, align: CENTER, text_color: 0x00E676}
-                        on_click:
-                          - script.execute:
-                              id: hub_cmd
-                              op: 50
-                              val: !lambda 'float v = isnan(id(gv_cfg)[21]) ? 0 : id(gv_cfg)[21]; v += 60; if (v > 1800) v = 1800; return (int)lroundf((float)v * 1);'
-    - id: page_set_timers
-      scrollbar_mode: "OFF"
-      bg_color: 0x0E1116
-      scrollable: false
-      widgets:
-        - obj:
-            x: 0
-            y: 0
-            width: 320
-            height: 36
-            bg_color: 0x171B22
-            bg_opa: COVER
-            border_width: 0
-            radius: 0
-            pad_all: 0
-            scrollable: false
-            widgets:
-              - button:
-                  align: LEFT_MID
-                  x: 4
-                  width: 46
-                  height: 30
-                  bg_color: 0x232A33
-                  radius: 6
-                  shadow_width: 0
-                  widgets:
-                    - label: {text: "\U000F004D", text_font: mdi_22, align: CENTER, text_color: 0xFFFFFF}
-                  on_click:
-                    - lvgl.page.show: page_control
-              - label: {text: "Cycle Timers", text_font: f_med, align: CENTER, text_color: 0xFFFFFF}
-              - label: {text: "\U000F0493", text_font: mdi_16, align: RIGHT_MID, x: -8, text_color: 0x3A4550}
-        - obj:
-            id: set_timers_scroll
-            x: 0
-            y: 36
-            width: 320
-            height: 164
-            bg_opa: TRANSP
-            border_width: 0
-            radius: 0
-            pad_all: 10
-            pad_top: 6
-            pad_bottom: 8
-            scrollbar_mode: AUTO
-            scroll_dir: VER
-            layout:
-              type: flex
-              flex_flow: COLUMN
-              pad_row: 8
-            widgets:
-              - obj:
-                  id: s_chh
-                  width: 300
-                  height: 40
-                  styles: rowbtn
-                  scrollable: false
-                  widgets:
-                    - label: {text: "Clone Hum Hyst", text_font: f_body, align: LEFT_MID, x: 4, text_color: 0xFFFFFF}
-                    - label: {id: s_chh_val, text: "--", text_font: f_body, align: RIGHT_MID, x: -92, text_color: 0x00E676}
-                    - button:
-                        align: RIGHT_MID
-                        x: -48
-                        width: 38
-                        height: 30
-                        bg_color: 0x2A313B
-                        radius: 6
-                        shadow_width: 0
-                        widgets:
-                          - label: {text: "-", text_font: f_med, align: CENTER, text_color: 0xFFFFFF}
-                        on_click:
-                          - script.execute:
-                              id: hub_cmd
-                              op: 44
-                              val: !lambda 'float v = isnan(id(gv_cfg)[15]) ? 2.0f : id(gv_cfg)[15]; v -= 0.5f; if (v < 2.0f) v = 2.0f; return (int)lroundf((float)v * 100);'
-                    - button:
-                        align: RIGHT_MID
-                        x: -6
-                        width: 38
-                        height: 30
-                        bg_color: 0x12241A
-                        border_color: 0x00E676
-                        border_width: 1
-                        radius: 6
-                        shadow_width: 0
-                        widgets:
-                          - label: {text: "+", text_font: f_med, align: CENTER, text_color: 0x00E676}
-                        on_click:
-                          - script.execute:
-                              id: hub_cmd
-                              op: 44
-                              val: !lambda 'float v = isnan(id(gv_cfg)[15]) ? 2.0f : id(gv_cfg)[15]; v += 0.5f; if (v > 15.0f) v = 15.0f; return (int)lroundf((float)v * 100);'
-              - obj:
-                  id: s_chmo
-                  width: 300
-                  height: 40
-                  styles: rowbtn
-                  scrollable: false
-                  widgets:
-                    - label: {text: "Clone Hum Min Off", text_font: f_body, align: LEFT_MID, x: 4, text_color: 0xFFFFFF}
-                    - label: {id: s_chmo_val, text: "--", text_font: f_body, align: RIGHT_MID, x: -92, text_color: 0x00E676}
-                    - button:
-                        align: RIGHT_MID
-                        x: -48
-                        width: 38
-                        height: 30
-                        bg_color: 0x2A313B
-                        radius: 6
-                        shadow_width: 0
-                        widgets:
-                          - label: {text: "-", text_font: f_med, align: CENTER, text_color: 0xFFFFFF}
-                        on_click:
-                          - script.execute:
-                              id: hub_cmd
-                              op: 45
-                              val: !lambda 'float v = isnan(id(gv_cfg)[16]) ? 0 : id(gv_cfg)[16]; v -= 30; if (v < 0) v = 0; return (int)lroundf((float)v * 1);'
-                    - button:
-                        align: RIGHT_MID
-                        x: -6
-                        width: 38
-                        height: 30
-                        bg_color: 0x12241A
-                        border_color: 0x00E676
-                        border_width: 1
-                        radius: 6
-                        shadow_width: 0
-                        widgets:
-                          - label: {text: "+", text_font: f_med, align: CENTER, text_color: 0x00E676}
-                        on_click:
-                          - script.execute:
-                              id: hub_cmd
-                              op: 45
-                              val: !lambda 'float v = isnan(id(gv_cfg)[16]) ? 0 : id(gv_cfg)[16]; v += 30; if (v > 900) v = 900; return (int)lroundf((float)v * 1);'
-              - obj:
-                  id: s_hmo
-                  width: 300
-                  height: 40
-                  styles: rowbtn
-                  scrollable: false
-                  widgets:
-                    - label: {text: "Humidifier Min Off", text_font: f_body, align: LEFT_MID, x: 4, text_color: 0xFFFFFF}
-                    - label: {id: s_hmo_val, text: "--", text_font: f_body, align: RIGHT_MID, x: -92, text_color: 0x00E676}
-                    - button:
-                        align: RIGHT_MID
-                        x: -48
-                        width: 38
-                        height: 30
-                        bg_color: 0x2A313B
-                        radius: 6
-                        shadow_width: 0
-                        widgets:
-                          - label: {text: "-", text_font: f_med, align: CENTER, text_color: 0xFFFFFF}
-                        on_click:
-                          - script.execute:
-                              id: hub_cmd
-                              op: 46
-                              val: !lambda 'float v = isnan(id(gv_cfg)[17]) ? 0 : id(gv_cfg)[17]; v -= 30; if (v < 0) v = 0; return (int)lroundf((float)v * 1);'
-                    - button:
-                        align: RIGHT_MID
-                        x: -6
-                        width: 38
-                        height: 30
-                        bg_color: 0x12241A
-                        border_color: 0x00E676
-                        border_width: 1
-                        radius: 6
-                        shadow_width: 0
-                        widgets:
-                          - label: {text: "+", text_font: f_med, align: CENTER, text_color: 0x00E676}
-                        on_click:
-                          - script.execute:
-                              id: hub_cmd
-                              op: 46
-                              val: !lambda 'float v = isnan(id(gv_cfg)[17]) ? 0 : id(gv_cfg)[17]; v += 30; if (v > 900) v = 900; return (int)lroundf((float)v * 1);'
-              - obj:
-                  id: s_htmo
-                  width: 300
-                  height: 40
-                  styles: rowbtn
-                  scrollable: false
-                  widgets:
-                    - label: {text: "Heater Min Off", text_font: f_body, align: LEFT_MID, x: 4, text_color: 0xFFFFFF}
-                    - label: {id: s_htmo_val, text: "--", text_font: f_body, align: RIGHT_MID, x: -92, text_color: 0x00E676}
-                    - button:
-                        align: RIGHT_MID
-                        x: -48
-                        width: 38
-                        height: 30
-                        bg_color: 0x2A313B
-                        radius: 6
-                        shadow_width: 0
-                        widgets:
-                          - label: {text: "-", text_font: f_med, align: CENTER, text_color: 0xFFFFFF}
-                        on_click:
-                          - script.execute:
-                              id: hub_cmd
-                              op: 47
-                              val: !lambda 'float v = isnan(id(gv_cfg)[18]) ? 0 : id(gv_cfg)[18]; v -= 30; if (v < 0) v = 0; return (int)lroundf((float)v * 1);'
-                    - button:
-                        align: RIGHT_MID
-                        x: -6
-                        width: 38
-                        height: 30
-                        bg_color: 0x12241A
-                        border_color: 0x00E676
-                        border_width: 1
-                        radius: 6
-                        shadow_width: 0
-                        widgets:
-                          - label: {text: "+", text_font: f_med, align: CENTER, text_color: 0x00E676}
-                        on_click:
-                          - script.execute:
-                              id: hub_cmd
-                              op: 47
-                              val: !lambda 'float v = isnan(id(gv_cfg)[18]) ? 0 : id(gv_cfg)[18]; v += 30; if (v > 900) v = 900; return (int)lroundf((float)v * 1);'
-    - id: page_set_destrat
-      scrollbar_mode: "OFF"
-      bg_color: 0x0E1116
-      scrollable: false
-      widgets:
-        - obj:
-            x: 0
-            y: 0
-            width: 320
-            height: 36
-            bg_color: 0x171B22
-            bg_opa: COVER
-            border_width: 0
-            radius: 0
-            pad_all: 0
-            scrollable: false
-            widgets:
-              - button:
-                  align: LEFT_MID
-                  x: 4
-                  width: 46
-                  height: 30
-                  bg_color: 0x232A33
-                  radius: 6
-                  shadow_width: 0
-                  widgets:
-                    - label: {text: "\U000F004D", text_font: mdi_22, align: CENTER, text_color: 0xFFFFFF}
-                  on_click:
-                    - lvgl.page.show: page_control
-              - label: {text: "De-Strat Pulse", text_font: f_med, align: CENTER, text_color: 0xFFFFFF}
-              - label: {text: "\U000F0493", text_font: mdi_16, align: RIGHT_MID, x: -8, text_color: 0x3A4550}
-        - obj:
-            id: set_destrat_scroll
-            x: 0
-            y: 36
-            width: 320
-            height: 164
-            bg_opa: TRANSP
-            border_width: 0
-            radius: 0
-            pad_all: 10
-            pad_top: 6
-            pad_bottom: 8
-            scrollbar_mode: AUTO
-            scroll_dir: VER
-            layout:
-              type: flex
-              flex_flow: COLUMN
-              pad_row: 8
-            widgets:
-              - obj:
-                  id: s_dsp
-                  width: 300
-                  height: 40
-                  styles: rowbtn
-                  scrollable: false
-                  widgets:
-                    - label: {text: "Pulse Period (s)", text_font: f_body, align: LEFT_MID, x: 4, text_color: 0xFFFFFF}
-                    - label: {id: s_dsp_val, text: "--", text_font: f_body, align: RIGHT_MID, x: -92, text_color: 0x00E676}
-                    - button:
-                        align: RIGHT_MID
-                        x: -48
-                        width: 38
-                        height: 30
-                        bg_color: 0x2A313B
-                        radius: 6
-                        shadow_width: 0
-                        widgets:
-                          - label: {text: "-", text_font: f_med, align: CENTER, text_color: 0xFFFFFF}
-                        on_click:
-                          - script.execute:
-                              id: hub_cmd
-                              op: 51
-                              val: !lambda 'float v = isnan(id(gv_cfg)[22]) ? 30 : id(gv_cfg)[22]; v -= 30; if (v < 30) v = 30; return (int)lroundf((float)v * 1);'
-                    - button:
-                        align: RIGHT_MID
-                        x: -6
-                        width: 38
-                        height: 30
-                        bg_color: 0x12241A
-                        border_color: 0x00E676
-                        border_width: 1
-                        radius: 6
-                        shadow_width: 0
-                        widgets:
-                          - label: {text: "+", text_font: f_med, align: CENTER, text_color: 0x00E676}
-                        on_click:
-                          - script.execute:
-                              id: hub_cmd
-                              op: 51
-                              val: !lambda 'float v = isnan(id(gv_cfg)[22]) ? 30 : id(gv_cfg)[22]; v += 30; if (v > 1800) v = 1800; return (int)lroundf((float)v * 1);'
-              - obj:
-                  id: s_dsl
-                  width: 300
-                  height: 40
-                  styles: rowbtn
-                  scrollable: false
-                  widgets:
-                    - label: {text: "Pulse Length (s)", text_font: f_body, align: LEFT_MID, x: 4, text_color: 0xFFFFFF}
-                    - label: {id: s_dsl_val, text: "--", text_font: f_body, align: RIGHT_MID, x: -92, text_color: 0x00E676}
-                    - button:
-                        align: RIGHT_MID
-                        x: -48
-                        width: 38
-                        height: 30
-                        bg_color: 0x2A313B
-                        radius: 6
-                        shadow_width: 0
-                        widgets:
-                          - label: {text: "-", text_font: f_med, align: CENTER, text_color: 0xFFFFFF}
-                        on_click:
-                          - script.execute:
-                              id: hub_cmd
-                              op: 52
-                              val: !lambda 'float v = isnan(id(gv_cfg)[23]) ? 5 : id(gv_cfg)[23]; v -= 5; if (v < 5) v = 5; return (int)lroundf((float)v * 1);'
-                    - button:
-                        align: RIGHT_MID
-                        x: -6
-                        width: 38
-                        height: 30
-                        bg_color: 0x12241A
-                        border_color: 0x00E676
-                        border_width: 1
-                        radius: 6
-                        shadow_width: 0
-                        widgets:
-                          - label: {text: "+", text_font: f_med, align: CENTER, text_color: 0x00E676}
-                        on_click:
-                          - script.execute:
-                              id: hub_cmd
-                              op: 52
-                              val: !lambda 'float v = isnan(id(gv_cfg)[23]) ? 5 : id(gv_cfg)[23]; v += 5; if (v > 120) v = 120; return (int)lroundf((float)v * 1);'
-              - obj:
-                  id: s_dslv
-                  width: 300
-                  height: 40
-                  styles: rowbtn
-                  scrollable: false
-                  widgets:
-                    - label: {text: "Pulse Level (%)", text_font: f_body, align: LEFT_MID, x: 4, text_color: 0xFFFFFF}
-                    - label: {id: s_dslv_val, text: "--", text_font: f_body, align: RIGHT_MID, x: -92, text_color: 0x00E676}
-                    - button:
-                        align: RIGHT_MID
-                        x: -48
-                        width: 38
-                        height: 30
-                        bg_color: 0x2A313B
-                        radius: 6
-                        shadow_width: 0
-                        widgets:
-                          - label: {text: "-", text_font: f_med, align: CENTER, text_color: 0xFFFFFF}
-                        on_click:
-                          - script.execute:
-                              id: hub_cmd
-                              op: 53
-                              val: !lambda 'float v = isnan(id(gv_cfg)[24]) ? 25 : id(gv_cfg)[24]; v -= 5; if (v < 25) v = 25; return (int)lroundf((float)v * 1);'
-                    - button:
-                        align: RIGHT_MID
-                        x: -6
-                        width: 38
-                        height: 30
-                        bg_color: 0x12241A
-                        border_color: 0x00E676
-                        border_width: 1
-                        radius: 6
-                        shadow_width: 0
-                        widgets:
-                          - label: {text: "+", text_font: f_med, align: CENTER, text_color: 0x00E676}
-                        on_click:
-                          - script.execute:
-                              id: hub_cmd
-                              op: 53
-                              val: !lambda 'float v = isnan(id(gv_cfg)[24]) ? 25 : id(gv_cfg)[24]; v += 5; if (v > 100) v = 100; return (int)lroundf((float)v * 1);'
-    - id: page_set_panel
-      scrollbar_mode: "OFF"
-      bg_color: 0x0E1116
-      scrollable: false
-      widgets:
-        - obj:
-            x: 0
-            y: 0
-            width: 320
-            height: 36
-            bg_color: 0x171B22
-            bg_opa: COVER
-            border_width: 0
-            radius: 0
-            pad_all: 0
-            scrollable: false
-            widgets:
-              - button:
-                  align: LEFT_MID
-                  x: 4
-                  width: 46
-                  height: 30
-                  bg_color: 0x232A33
-                  radius: 6
-                  shadow_width: 0
-                  widgets:
-                    - label: {text: "\U000F004D", text_font: mdi_22, align: CENTER, text_color: 0xFFFFFF}
-                  on_click:
-                    - lvgl.page.show: page_control
-              - label: {text: "Panel & System", text_font: f_med, align: CENTER, text_color: 0xFFFFFF}
-              - label: {text: "\U000F0493", text_font: mdi_16, align: RIGHT_MID, x: -8, text_color: 0x3A4550}
-        - obj:
-            id: set_panel_scroll
-            x: 0
-            y: 36
-            width: 320
-            height: 164
-            bg_opa: TRANSP
-            border_width: 0
-            radius: 0
-            pad_all: 10
-            pad_top: 6
-            pad_bottom: 8
-            scrollbar_mode: AUTO
-            scroll_dir: VER
-            layout:
-              type: flex
-              flex_flow: COLUMN
-              pad_row: 8
-            widgets:
-              - button:
-                  id: sw_torch
-                  width: 300
-                  height: 40
-                  styles: rowbtn
-                  widgets:
-                    - label: {text: "\U000F0244", text_font: mdi_22, align: LEFT_MID, x: 4, text_color: 0xFFAA00}
-                    - label: {text: "Flashlight", text_font: f_body, align: LEFT_MID, x: 34, text_color: 0xFFFFFF}
-                    - label: {text: "\U000F0142", text_font: mdi_16, align: RIGHT_MID, x: -2, text_color: 0x5A6472}
-                  on_click:
-                    - script.execute: open_flashlight
-              - button:
-                  id: sw_lock
-                  width: 300
-                  height: 40
-                  styles: rowbtn
-                  widgets:
-                    - label: {text: "\U000F033E", text_font: mdi_22, align: LEFT_MID, x: 4, text_color: 0x00E676}
-                    - label: {text: "Screen Lock", text_font: f_body, align: LEFT_MID, x: 34, text_color: 0xFFFFFF}
-                    - label: {text: "hold 3s", text_font: f_small, align: RIGHT_MID, x: -4, text_color: 0x5A6472}
-                  on_press:
-                    - lambda: 'id(lock_arm) = true;'
-                    - script.execute: hold_begin
-                  on_pressing:
-                    - script.execute: hold_tick
-                  on_release:
-                    - script.execute: hold_finish
-
+              - label: {text: "DSC-CONTROL v5.1.6  ·  ESP-NOW primary", text_font: f_small, text_color: 0x3A4550, pad_top: 8, pad_bottom: 8}
 # ==================================================================
 #  SCRIPTS
 # ==================================================================
@@ -4957,134 +3007,6 @@ script:
           S(id(tab_ic3), t == 3);
           S(id(tab_ic4), t == 4);
 
-  # Wake must stay out of the LVGL indev stack: never hide overlays / full
-  # refresh_ui under an active press (lv_draw_unit_draw_letter / StoreProhibited).
-  # v5.1.2: keep panel_sleeping until defer ends (interactive stays false);
-  # mark ui_dirty instead of full refresh; wait for finger release.
-  - id: wake_panel
-    mode: single
-    then:
-      - if:
-          condition:
-            lambda: 'return id(panel_sleeping);'
-          then:
-            - lambda: |-
-                id(wake_pending) = true;
-                id(touch_guard_until) = millis() + 500;
-                // Brighten immediately; leave sleeping + overlay until defer.
-                int want = id(night_mode) ? 40 : 100;
-                if (want != id(bl_last)) {
-                  id(bl_last) = want;
-                  auto bl = id(backlight).turn_on();
-                  bl.set_brightness(want / 100.0f);
-                  bl.perform();
-                }
-            - delay: 400ms
-            - lambda: |-
-                if (!id(wake_pending)) return;
-                id(wake_pending) = false;
-                id(panel_sleeping) = false;
-                id(sleep_since) = 0;
-                id(touch_guard_until) = millis() + 400;
-                // Idle sleep only — do not dismiss a real lock.
-                if (!id(lock_engaged)) {
-                  lv_obj_add_flag(id(lock_overlay), LV_OBJ_FLAG_HIDDEN);
-                }
-                // Swallow the wake tap so it cannot click-through into a widget.
-                for (lv_indev_t *in = lv_indev_get_next(nullptr); in != nullptr; in = lv_indev_get_next(in)) {
-                  if (lv_indev_get_type(in) == LV_INDEV_TYPE_POINTER)
-                    lv_indev_wait_release(in);
-                }
-                id(ui_dirty) = true;
-
-  - id: go_sleep
-    then:
-      - if:
-          condition:
-            lambda: 'return !id(fl_active);'   # don't sleep while the torch is on
-          then:
-            - lambda: |-
-                id(panel_sleeping) = true;
-                id(wake_pending) = false;
-                id(sleep_since) = millis();
-                lv_obj_clear_flag(id(lock_overlay), LV_OBJ_FLAG_HIDDEN);
-                const char* title = id(lock_engaged) ? "LOCKED" : "ASLEEP";
-                const char* hint = id(lock_engaged) ? "hold anywhere to wake" : "tap to wake";
-                if (strcmp(lv_label_get_text(id(lock_title)), title) != 0)
-                  lv_label_set_text(id(lock_title), title);
-                if (strcmp(lv_label_get_text(id(lock_hint)), hint) != 0)
-                  lv_label_set_text(id(lock_hint), hint);
-                id(ui_dirty) = true;
-
-  # ---- flashlight — the light IS the onboard RGB LED (status_led) ----
-  # apply_flashlight repaints the control chrome and either drives the chip
-  # LED (fl_active) or hands it back to the status machine (led_last = -1 so
-  # refresh_ui re-asserts it). The screen is only the control surface; the
-  # dot mirrors the colour so you can aim it.
-  - id: apply_flashlight
-    then:
-      - lambda: |-
-          uint32_t tint;
-          switch (id(fl_color)) {
-            case 1: tint = 0xFFFFFF; break;   // white
-            case 2: tint = 0xFF0000; break;   // red
-            default: tint = 0x00FF00; break;  // green
-          }
-          char b[8]; snprintf(b, sizeof(b), "%d%%", id(fl_bright));
-          {
-            const char* cur = lv_label_get_text(id(fl_pct));
-            if (cur == nullptr || strcmp(cur, b) != 0) lv_label_set_text(id(fl_pct), b);
-          }
-          lv_bar_set_value(id(fl_bar), id(fl_bright), LV_ANIM_OFF);
-          lv_obj_set_style_border_width(id(fl_bg), id(fl_color) == 0 ? 3 : 1, 0);
-          lv_obj_set_style_border_width(id(fl_bw), id(fl_color) == 1 ? 3 : 1, 0);
-          lv_obj_set_style_border_width(id(fl_br), id(fl_color) == 2 ? 3 : 1, 0);
-          if (id(fl_active)) {
-            const char* on = "ON";
-            if (strcmp(lv_label_get_text(id(fl_onoff_lbl)), on) != 0)
-              lv_label_set_text(id(fl_onoff_lbl), on);
-            lv_obj_set_style_bg_color(id(fl_onoff), lv_color_hex(0x12241A), 0);
-            lv_obj_set_style_border_color(id(fl_onoff), lv_color_hex(0x00E676), 0);
-            lv_obj_set_style_text_color(id(fl_onoff_lbl), lv_color_hex(0x00E676), 0);
-            lv_obj_set_style_bg_color(id(fl_dot), lv_color_hex(tint), 0);
-            // drive the real onboard RGB LED
-            float r = 0, g = 0, bl = 0;
-            switch (id(fl_color)) { case 1: r = g = bl = 1; break; case 2: r = 1; break; default: g = 1; break; }
-            auto c = id(status_led).turn_on();
-            c.set_rgb(r, g, bl);
-            c.set_brightness(id(fl_bright) / 100.0f);
-            c.perform();
-          } else {
-            const char* off = "OFF";
-            if (strcmp(lv_label_get_text(id(fl_onoff_lbl)), off) != 0)
-              lv_label_set_text(id(fl_onoff_lbl), off);
-            lv_obj_set_style_bg_color(id(fl_onoff), lv_color_hex(0x2A313B), 0);
-            lv_obj_set_style_border_color(id(fl_onoff), lv_color_hex(0x8A929C), 0);
-            lv_obj_set_style_text_color(id(fl_onoff_lbl), lv_color_hex(0xFFFFFF), 0);
-            lv_obj_set_style_bg_color(id(fl_dot), lv_color_hex(0x2A313B), 0);
-            id(led_last) = -1;   // hand the LED back to the status machine
-          }
-      - if:
-          condition:
-            lambda: 'return !id(fl_active);'
-          then:
-            - script.execute: refresh_ui   # re-assert the status LED right away
-
-  - id: open_flashlight
-    then:
-      - lambda: |-
-          id(fl_active) = true;
-          lv_obj_clear_flag(id(fl_screen), LV_OBJ_FLAG_HIDDEN);
-      - script.execute: apply_flashlight
-
-  - id: close_flashlight
-    then:
-      - lambda: |-
-          id(fl_active) = false;
-          id(led_last) = -1;   // status machine reclaims the LED
-          lv_obj_add_flag(id(fl_screen), LV_OBJ_FLAG_HIDDEN);
-      - script.execute: refresh_ui
-
   # ---- connections screen ----
   - id: open_connections
     then:
@@ -5103,7 +3025,7 @@ script:
       - lambda: 'lv_obj_add_flag(id(alert_screen), LV_OBJ_FLAG_HIDDEN);'
 
   # ---- screen lock: hold-to-lock / hold-to-unlock (v5.1.2) ----
-  # Lock-begin only from lock_arm (sw_lock / lock_hit). Unlock from overlay.
+  # Lock-begin only from lock_arm (lock_hit). Unlock from the overlay itself.
   # At 3s: set *_pending only — never hide/show overlay mid-press.
   # HUD show is deferred off the indev stack (delay in hold_begin).
   - id: hold_begin
@@ -5129,8 +3051,8 @@ script:
                 // Runs after the press callback returns — safe to mutate LVGL.
                 if (!id(holding)) return;
                 if (lv_obj_has_flag(id(hold_hud), LV_OBJ_FLAG_HIDDEN)) {
-                  bool waking = id(lock_engaged);
-                  const char* hint = waking ? "WAKING UP" : "LOCKING";
+                  bool unlocking = id(lock_engaged);
+                  const char* hint = unlocking ? "UNLOCKING" : "LOCKING";
                   if (strcmp(lv_label_get_text(id(hud_hint)), hint) != 0)
                     lv_label_set_text(id(hud_hint), hint);
                   lv_bar_set_value(id(hud_bar), 0, LV_ANIM_OFF);
@@ -5185,22 +3107,12 @@ script:
                 if (id(unlock_pending)) {
                   id(unlock_pending) = false;
                   id(lock_engaged) = false;
-                  id(panel_sleeping) = false;
-                  id(wake_pending) = false;
-                  id(sleep_since) = 0;
-                  id(bl_last) = -1;
+                  id(bl_last) = -1;   // force backlight recompute (night vs day)
                   lv_obj_add_flag(id(lock_overlay), LV_OBJ_FLAG_HIDDEN);
                 } else if (id(lock_pending)) {
                   id(lock_pending) = false;
                   id(lock_engaged) = true;
-                  id(panel_sleeping) = false;
-                  id(wake_pending) = false;
-                  id(sleep_since) = 0;
                   lv_obj_clear_flag(id(lock_overlay), LV_OBJ_FLAG_HIDDEN);
-                  if (strcmp(lv_label_get_text(id(lock_title)), "LOCKED") != 0)
-                    lv_label_set_text(id(lock_title), "LOCKED");
-                  if (strcmp(lv_label_get_text(id(lock_hint)), "hold anywhere to wake") != 0)
-                    lv_label_set_text(id(lock_hint), "hold anywhere to wake");
                 }
                 id(lock_arm) = false;
                 id(touch_guard_until) = millis() + 400;
@@ -5240,69 +3152,9 @@ script:
           val: !lambda 'return id(gate_val);'
       - lambda: 'lv_obj_add_flag(id(confirm_takeover), LV_OBJ_FLAG_HIDDEN);'
 
-  # open the roller editor for a select (0=stage 1=strategy 2=clone 3=priority)
-  - id: open_editor
-    parameters:
-      target: int
-    then:
-      - lambda: |-
-          id(edit_target) = target;
-          const char* title; std::string opts; std::string cur;
-          static const char* STAGE_N[]={"Germination","Seedling","Early Vegetative","Vegetative","Late (Push) Vegetative","Early Flowering","Flowering","Late Flowering","Final 48-72h Flowering","Dry Mode","Off"};
-          static const char* STRAT_N[]={"VPD","Temperature","Humidity"};
-          static const char* CMODE_N[]={"Follow 4x8","Clones & Seedlings","Mother","Custom","Off"};
-          auto pick = [](int i, const char* const* o, int n)->std::string {
-            return std::string(i>=0&&i<n?o[i]:"--");
-          };
-          switch (target) {
-            case 0: title = "Grow Stage";
-              opts = "Germination\nSeedling\nEarly Vegetative\nVegetative\nLate (Push) Vegetative\nEarly Flowering\nFlowering\nLate Flowering\nFinal 48-72h Flowering\nDry Mode\nOff";
-              cur = pick(id(gv_stage), STAGE_N, 11); break;
-            case 1: title = "Control Strategy";
-              opts = "VPD\nTemperature\nHumidity";
-              cur = pick(id(gv_strat), STRAT_N, 3); break;
-            case 2: title = "Clone Mode";
-              opts = "Follow 4x8\nClones & Seedlings\nMother\nCustom\nOff";
-              cur = pick(id(gv_cmode), CMODE_N, 5); break;
-            case 3: title = "Priority Tent";
-              opts = "4x8 Main\n2x4 Clone";
-              cur = std::string(id(gv_prio)?"4x8 Main":"2x4 Clone"); break;
-            default: title = "Clone Photoperiod";
-              opts = "Follow 4x8\nIndependent";
-              cur = std::string((id(gv_coord)&64)?"Follow 4x8":"Independent"); break;
-          }
-          lv_label_set_text(id(ed_title), title);
-          lv_roller_set_options(id(ed_roller)->obj, opts.c_str(), LV_ROLLER_MODE_NORMAL);
-          int idx = 0, pos = 0; size_t start = 0;
-          for (size_t i = 0; i <= opts.size(); i++) {
-            if (i == opts.size() || opts[i] == '\n') {
-              if (opts.substr(start, i - start) == cur) { idx = pos; break; }
-              pos++; start = i + 1;
-            }
-          }
-          lv_roller_set_selected(id(ed_roller)->obj, idx, LV_ANIM_OFF);
-          lv_obj_clear_flag(id(editor), LV_OBJ_FLAG_HIDDEN);
-
-  # apply the roller selection to the hub's select — send the INDEX over ESP-NOW
-  # (roller option order matches the hub select order, so index maps 1:1).
-  - id: apply_editor
-    then:
-      - script.execute:
-          id: hub_cmd
-          op: !lambda |-
-            switch (id(edit_target)) {
-              case 0: return 20;   // grow_stage
-              case 1: return 21;   // control_strategy
-              case 2: return 22;   // clone_mode
-              case 3: return 24;   // priority_tent
-              default: return 23;  // clone_photoperiod
-            }
-          val: !lambda 'return (int) lv_roller_get_selected(id(ed_roller)->obj);'
-      - lambda: 'lv_obj_add_flag(id(editor), LV_OBJ_FLAG_HIDDEN);'
-
   # -------- the refresh engine (v4.0.11) --------
-  # Page-gated: only touch widgets on the visible tab/overlay. Sleep/lock
-  # short-circuit after LED/backlight/clock. Cadence is 5 s (see interval).
+  # Page-gated: only touch widgets on the visible tab/overlay. Lock
+  # short-circuits after backlight/clock. Cadence is 5 s (see interval).
   # Avoid std::string in the hot path — A8 glyph churn is what WDT'd 4.0.9.
   - id: refresh_ui
     mode: single
@@ -5351,19 +3203,18 @@ script:
             return RED;
           };
 
-          const bool sleeping = id(panel_sleeping);
           const bool locked = id(lock_engaged);
           const bool conn_vis = !lv_obj_has_flag(id(conn_screen), LV_OBJ_FLAG_HIDDEN);
           const int tab = id(active_tab);
           const bool soil_det = id(ui_soil_detail);
-          const bool interactive = !sleeping && !locked;
+          const bool interactive = !locked;
 
           // v4.0.11 — read ESP-NOW globals directly (template mirrors parked).
           const float *cfg = id(gv_cfg);
           const float *soil = id(gv_soil);
           const float *cd = id(gv_cd);
           const int dem = id(gv_dem), mode = id(gv_mode), flt = id(gv_flt), coord = id(gv_coord);
-          const int stage = id(gv_stage), strat = id(gv_strat), cmode = id(gv_cmode), prio = id(gv_prio);
+          const int cmode = id(gv_cmode);
           bool cfollow = (cmode == 0);
           float c_rmin = cfollow ? cfg[3] : cfg[8];
           float c_rmax = cfollow ? cfg[4] : cfg[9];
@@ -5382,10 +3233,6 @@ script:
           float fan_int_main_pct = (float) id(gv_fan_imain);
           float fan_int_clone_pct = (float) id(gv_fan_iclone);
           float sf_target = cfg[10];
-          float n_ramp = cfg[14], n_sunrise = cfg[11], n_sunset = cfg[12], n_clh = cfg[13];
-          float n_rzlo = cfg[19], n_rzhi = cfg[20], n_matoff = cfg[21];
-          float n_chh = cfg[15], n_chmo = cfg[16], n_hmo = cfg[17], n_htmo = cfg[18];
-          float n_dsp = cfg[22], n_dsl = cfg[23], n_dslv = cfg[24];
           bool dem_hum = dem & 1, dem_dehum = dem & 2, dem_heater = dem & 4;
           bool dem_mat = dem & 8, dem_ac = dem & 16, dem_clone_hum = dem & 32;
           bool lights_main = flt & 32;
@@ -5395,14 +3242,8 @@ script:
           bool fan_int_main_on = id(gv_fan_imain) > 0, fan_int_clone_on = id(gv_fan_iclone) > 0;
           bool st_full_auto = mode & 1, st_takeover = mode & 4, st_auto_photo = mode & 8;
           bool st_light_hold = mode & 16, st_hum_routing = coord & 1, st_destrat = coord & 2;
-          static const char* STAGE_N[] = {"Germination","Seedling","Early Vegetative","Vegetative","Late (Push) Vegetative","Early Flowering","Flowering","Late Flowering","Final 48-72h Flowering","Dry Mode","Off"};
-          static const char* STRAT_N[] = {"VPD","Temperature","Humidity"};
           static const char* CMODE_N[] = {"Follow 4x8","Clones & Seedlings","Mother","Custom","Off"};
-          const char* sel_stage = (stage>=0&&stage<11)?STAGE_N[stage]:"--";
-          const char* sel_strategy = (strat>=0&&strat<3)?STRAT_N[strat]:"--";
           const char* sel_clone_mode = (cmode>=0&&cmode<5)?CMODE_N[cmode]:"--";
-          const char* sel_priority = prio ? "4x8 Main" : "2x4 Clone";
-          const char* sel_clone_photo = (coord&64) ? "Follow 4x8" : "Independent";
           const char* p1_plant = id(gv_plant1).c_str();
           const char* p2_plant = id(gv_plant2).c_str();
           const char* p3_plant = id(gv_plant3).c_str();
@@ -5466,53 +3307,18 @@ script:
           if (ac == 0) id(alerts_silenced) = false;
           sethid(id(btn_silence), !(ac > 0 && !id(alerts_silenced)));
 
-          // ---- night / backlight / status LED (always) ----
-          // Sleep: 12% for 5 min, then backlight off. Wake restores.
+          // ---- night / backlight (always) ----
+          // v5.1.6 — no idle sleep, so this is just the night dim. No RGB
+          // LED machine any more (status_led/led_r/g/b removed).
           bool night = !lights_main;
           id(night_mode) = night;
-          int want;
-          if (sleeping) {
-            uint32_t age = (id(sleep_since) == 0) ? 0 : (millis() - id(sleep_since));
-            want = (age >= 300000u) ? 0 : 12;
-          } else {
-            want = night ? 40 : 100;
-          }
+          int want = night ? 40 : 100;
           if (want != id(bl_last)) {
             id(bl_last) = want;
-            if (want == 0) {
-              id(backlight).turn_off().perform();
-            } else {
-              auto bl = id(backlight).turn_on(); bl.set_brightness(want/100.0f); bl.perform();
-            }
-          }
-          if (!id(fl_active)) {
-            int lm;
-            if (ac > 0 && !id(alerts_silenced)) lm = 1;
-            else if (night) lm = 0;
-            else if (any_dem) lm = 2;
-            else lm = id(green_heartbeat) ? 3 : 0;
-            if (lm != id(led_last)) {
-              id(led_last) = lm;
-              if (lm == 0) {
-                id(status_led).turn_off().perform();
-              } else if (lm == 1) {
-                auto c = id(status_led).turn_on();
-                c.set_rgb(1.0f, 0.0f, 0.0f); c.set_brightness(1.0f);
-                c.perform();
-              } else if (lm == 3) {
-                auto c = id(status_led).turn_on();
-                c.set_rgb(0.0f, 1.0f, 0.25f); c.set_brightness(0.35f);
-                c.perform();
-              } else {
-                auto c = id(status_led).turn_on();
-                c.set_brightness(0.6f);
-                c.set_rgb(1.0f, 0.60f, 0.0f);
-                c.perform();
-              }
-            }
+            auto bl = id(backlight).turn_on(); bl.set_brightness(want/100.0f); bl.perform();
           }
 
-          // ---- clocks (always; setl no-ops when unchanged) ----
+          // ---- clock (always; setl no-ops when unchanged) ----
           {
             auto now = id(sntp_time).now();
             if (!now.is_valid()) now = id(ha_time).now();
@@ -5522,24 +3328,6 @@ script:
             }
           }
 
-          if (locked || sleeping) {
-            lv_color_t white = lv_color_hex(0xFFFFFF), dim = lv_color_hex(0x2A2A2A);
-            auto lockic = [&](lv_obj_t* L, bool on){
-              lv_color_t wantc = on ? white : dim;
-              if (lv_color_to_u32(lv_obj_get_style_text_color(L, LV_PART_MAIN)) != lv_color_to_u32(wantc))
-                lv_obj_set_style_text_color(L, wantc, LV_PART_MAIN);
-              if (lv_obj_get_style_text_opa(L, LV_PART_MAIN) != 255)
-                lv_obj_set_style_text_opa(L, 255, LV_PART_MAIN);
-            };
-            bool fan_on = !isnan(fan_out_pct) && fan_out_pct > 0;
-            bool int_on = !isnan(fan_int_main_pct) && fan_int_main_pct > 0;
-            lockic(id(lk_fan), fan_on); lockic(id(lk_int), int_on); lockic(id(lk_heat), dem_heater);
-            lockic(id(lk_hum), dem_hum); lockic(id(lk_deh), dem_dehum); lockic(id(lk_light), lights_main);
-            const char* title = locked ? "LOCKED" : "ASLEEP";
-            const char* hint = locked ? "hold anywhere to wake" : "tap to wake";
-            setl(id(lock_title), title); setl(id(lock_hint), hint);
-          }
-
           if (!interactive) {
             id(ui_dirty) = false;
             return;
@@ -5547,7 +3335,7 @@ script:
 
           // v5.1.2 — never letter-draw tab widgets under active touch / hold.
           // Coalesce via ui_dirty; the 200 ms drain interval retries when safe.
-          if (id(holding) || millis() < id(touch_guard_until) || id(wake_pending)) {
+          if (id(holding) || millis() < id(touch_guard_until)) {
             id(ui_dirty) = true;
             return;
           }
@@ -5788,7 +3576,9 @@ script:
             ic(id(ic_mdeh), dem_dehum,              AMBER);
           }
 
-          // ---- CONTROL + setup steppers ----
+          // ---- CONTROL (v5.1.6 — Full Auto / Auto Photoperiod / Manual
+          // Takeover / Manual Light Hold / Humidifier Routing / RECIRC
+          // De-Strat, inlined; every settings drill page is gone) ----
           if (tab == 4) {
             auto pend_on = [&](int op)->bool{
               if (op < 0 || op >= 64) return false;
@@ -5802,50 +3592,14 @@ script:
             setl(id(lbl_autophoto_state), ap ? "ON" : "off"); setc(id(lbl_autophoto_state), pend_on(4) ? PEND : (ap ? NEON : GREY));
             if (ta) { setl(id(lbl_takeover_state), "ENGAGED — you own outputs"); setc(id(lbl_takeover_state), pend_on(5) ? PEND : AMBER); bordc(id(takeover_card), AMBER); }
             else { setl(id(lbl_takeover_state), "tap to engage"); setc(id(lbl_takeover_state), 0x8A929C); bordc(id(takeover_card), BORD); }
-            setl(id(lbl_stage_val), sel_stage); setc(id(lbl_stage_val), pend_on(20) ? PEND : WHITE);
-            setl(id(lbl_strategy_val), sel_strategy); setc(id(lbl_strategy_val), pend_on(21) ? PEND : WHITE);
-            setl(id(lbl_clonemode_val), sel_clone_mode); setc(id(lbl_clonemode_val), pend_on(22) ? PEND : WHITE);
-            setl(id(lbl_priority_val), sel_priority); setc(id(lbl_priority_val), pend_on(24) ? PEND : WHITE);
 
-            auto numlbl = [&](lv_obj_t* L, float v, const char* fmt, int op){
-              if (isnan(v)) { setl(L, "--"); return; }
-              char q[16]; snprintf(q, sizeof(q), fmt, v); setl(L, q);
-              setc(L, pend_on(op) ? PEND : NEON);
-            };
             auto stv = [&](lv_obj_t* L, bool on, int op){
               setl(L, on ? "ON" : "off");
               setc(L, pend_on(op) ? PEND : (on ? NEON : GREY));
             };
-            numlbl(id(s_temp_val), m_tt, "%.1f°", 30);
-            numlbl(id(s_vmin_val), m_vmin, "%.1f", 31);
-            numlbl(id(s_vmax_val), m_vmax, "%.1f", 32);
-            numlbl(id(s_rmin_val), m_rmin, "%.0f%%", 33);
-            numlbl(id(s_rmax_val), m_rmax, "%.0f%%", 34);
-            numlbl(id(s_ctemp_val), cfg[5], "%.1f°", 37);
-            numlbl(id(s_cvmin_val), cfg[6], "%.1f", 38);
-            numlbl(id(s_cvmax_val), cfg[7], "%.1f", 39);
-            numlbl(id(s_crmin_val), cfg[8], "%.0f%%", 40);
-            numlbl(id(s_crmax_val), cfg[9], "%.0f%%", 41);
-            numlbl(id(s_sftgt_val), sf_target, "%.0f%%", 29);
-            numlbl(id(s_ramp_val), n_ramp, "%.0f%%", 43);
-            numlbl(id(s_sunrise_val), n_sunrise, "%.0fm", 35);
-            numlbl(id(s_sunset_val), n_sunset, "%.0fm", 36);
-            numlbl(id(s_clh_val), n_clh, "%.0fh", 42);
-            numlbl(id(s_rzlo_val), n_rzlo, "%.1f°", 48);
-            numlbl(id(s_rzhi_val), n_rzhi, "%.1f°", 49);
-            numlbl(id(s_matoff_val), n_matoff, "%.0fs", 50);
-            numlbl(id(s_chh_val), n_chh, "%.1f%%", 44);
-            numlbl(id(s_chmo_val), n_chmo, "%.0fs", 45);
-            numlbl(id(s_hmo_val), n_hmo, "%.0fs", 46);
-            numlbl(id(s_htmo_val), n_htmo, "%.0fs", 47);
-            numlbl(id(s_dsp_val), n_dsp, "%.0fs", 51);
-            numlbl(id(s_dsl_val), n_dsl, "%.0fs", 52);
-            numlbl(id(s_dslv_val), n_dslv, "%.0f%%", 53);
             stv(id(st_lighthold_v), st_light_hold, 3);
             stv(id(st_humroute_v), st_hum_routing, 18);
             stv(id(st_destrat_v), st_destrat, 19);
-            stv(id(st_greenhb_v), id(green_heartbeat), -1);
-            setl(id(lbl_clonephoto_val), sel_clone_photo); setc(id(lbl_clonephoto_val), pend_on(23) ? PEND : WHITE);
           }
 
           // ---- SOIL summary cards ----
@@ -5932,7 +3686,7 @@ script:
 #  PERIODIC REFRESH
 # ==================================================================
 interval:
-  # v5.1.2 — drain coalesced paints once touch/hold/wake guard is clear.
+  # v5.1.2 — drain coalesced paints once touch/hold guard is clear.
   - interval: 200ms
     then:
       - if:
@@ -5941,7 +3695,6 @@ interval:
               return id(boot_ui_ready)
                   && id(ui_dirty)
                   && !id(holding)
-                  && !id(wake_pending)
                   && millis() >= id(touch_guard_until);
           then:
             - script.execute: refresh_ui

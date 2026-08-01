@@ -1,5 +1,29 @@
 # Changelog
 
+## v5.1.6 — 2026-08-02
+
+- DSC-CONTROL **5.1.6**: lean cut — now that 5.1.5 survives boot, restore
+  the 4.0.11-era "what glass must do" scope instead of the full drill-in UI.
+- Kept: vitals tabs (Pulse/Clone/Main/Soil + soil detail) and their fan
+  +/- `hub_cmd` rows; Full Auto, RECIRC De-Strat, Manual Takeover (via
+  `open_gate`); Auto Photoperiod, Manual Light Hold, Humidifier Routing —
+  all now **inline** on `page_control` (Modes & Automation drill-in gone);
+  staged boot, `boot_ui_ready`, `hub_cmd` paint-free, `confirm_takeover`,
+  Connections/Alerts overlays, backlight (monochromatic).
+- Removed entirely: torch/flashlight (`fl_screen` + apply/open/close +
+  swipe-down-to-open); idle sleep/screensaver (`go_sleep`/`on_idle`/
+  `panel_sleeping` — locking is manual only now); onboard RGB status LED
+  (`status_led`/`led_r`/`led_g`/`led_b` + the LED machine in `refresh_ui`);
+  every settings drill page (`page_set_profile`/`mainclim`/`cloneclim`/
+  `light`/`mat`/`timers`/`destrat`/`panel` + `page_set_modes`); the
+  select-roller editor overlay; green heartbeat (`sw_greenhb`).
+- `lock_overlay` trimmed to clock + LOCKED + hint (dropped the `lk_*`
+  appliance-icon strip); **visible** lock glyph on `lock_hit` (top-right —
+  hold to lock; hold the overlay to unlock). No torch.
+- Net: fewer widgets/globals, smaller `refresh_ui` — same crash-safety
+  rules from 5.1.2–5.1.5 still apply (no `sram1_as_iram`, no
+  `lv_label_set_text` under the `hub_cmd` tap).
+
 ## v5.1.5 — 2026-08-02
 
 - DSC-CONTROL **5.1.5**: USB log proved 5.1.4 dies on first full LVGL paint
