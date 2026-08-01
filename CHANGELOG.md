@@ -1,5 +1,15 @@
 # Changelog
 
+## v5.1.9 — 2026-08-02
+
+- DSC-CONTROL **5.1.9**: experimental `sram1_as_iram: true`.
+- Re-measure after the 5.1.6 lean cut + 5.1.8 starve pass. v4.0.1 found
+  **+0 free DRAM** (option extends IRAM and reserves the DRAM alias);
+  bootloader "+40KB" is IRAM, not heap. Keep if `UI armed` largest=
+  improves; revert if it drops.
+- **USB flash only** — OTA does not update the bootloader; mismatch
+  bricks to a boot loop until USB recovery.
+
 ## v5.1.8 — 2026-08-02
 
 - DSC-CONTROL **5.1.8**: more DRAM for LVGL without touching `sram1_as_iram`.
