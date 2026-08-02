@@ -111,6 +111,47 @@ entities:
   light: light.dsc_hub_sf1000_dimmer
 ```
 
+## Demand followers & API-blip tolerance
+
+Package [`packages/dsc_v4_automations.yaml`](packages/dsc_v4_automations.yaml)
+mirrors hub demands onto Sonoff relays. It must **not** run a second ladder.
+
+| Rule | Behavior |
+|---|---|
+| Genuine demand → `off` | Follower OFF **immediately** |
+| Demand / `binary_sensor.dsc_hub_ha_link_status` → `unavailable`/`off` | Must hold **≥25 s** before follower OFF |
+| Hub offline ≥30 s | Hard safe-off of the four wired relays |
+| Resync | HA start, relay restore from unavailable, hub-link restore |
+
+**Symptom class:** Control still LINKED / Wi‑Fi fine, HA marks hub unavailable
+for a few seconds → heater used to cut out. Debounce absorbs that. Sustained
+API wedge (≥5 min heartbeat / handshake silent while Wi‑Fi up) is recovered
+by hub firmware (NVS sync + `safe_reboot`, ≤2×/boot) — not by HA.
+
+### HA API handshake
+
+Automation `dsc_hub_ha_handshake_ping` writes unix time to
+`number.dsc_hub_ha_handshake` every **60 s** (`time_pattern` `minutes: "/1"`)
+while the entity exists. Proves the **write** path, not just Wi‑Fi.
+
+| Entity | Role |
+|---|---|
+| `number.dsc_hub_ha_handshake` | HA→hub ping target |
+| `sensor.dsc_hub_heartbeat` | Hub live counter; stale ≥5 min → notify |
+| `binary_sensor.dsc_hub_panel_link` | ESP-NOW glass presence (template; published on RX + every 5 s — not a polling sensor) |
+| `switch.dsc_hub_lock_wifi_ap` | Learn/keep Nest BSSID; broadcast via 0xD0 |
+| `text.dsc_hub_preferred_wifi_bssid` | NVS preferred AP MAC |
+| `sensor.dsc_hub_wifi_bssid` | Current association (copy into stub `wifi_bssid` if hard-pinning) |
+
+System view (**LINK & HEARTBEAT** / **WiFi AP PINNING**) exposes these.
+Details: [`../firmware/v4/README.md`](../firmware/v4/README.md#fleet-link-nest-ap-pin-silent-recovery).
+
+### Automation setup pitfalls
+
+- Handshake uses `minutes: "/1"` — do **not** use `/60` (invalid `time_pattern`).
+- Climate-learn templates must not contain doubled `and and` (breaks setup).
+- After Sync lands new automations/helpers: restart Core once if entities are missing.
+
 ## Climate capacity envelope
 
 The **hub firmware** owns the escalation ladder (fans first → appliances →
@@ -229,12 +270,12 @@ not humidifier lock — entity id kept for compatibility.
 - Fixed-channel AP — ops (root README)
 - POT3 probe swap, SCD41, ETH01 — post-release hardware
 
-## Firmware pairing (**v5.1.0**)
+## Firmware pairing (**v5.1 train**)
 
 | Piece | Version |
 |---|---|
 | Hub / pots / Sonoffs / kits | **`5.1.0`** |
-| Panel (DSC-CONTROL) | **`5.1.x`** lean-cut patch train |
+| Panel (DSC-CONTROL) | **`5.1.14`** (lean glass + silent recovery) |
 | HA surface (packages + dashboard) | **`5.1.1`** |
 | Dashboard | DSC-HUB Pro (4-col, browser_mod popups) |
 | `espnow_cmd_tag` | `54727` (`0xD5C7`) on hub **and** panel |
