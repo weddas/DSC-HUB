@@ -554,7 +554,7 @@ automation:
             {% if is_state('switch.dsc_hub_grow_mat_demand','on') %}{% set ns.n = ns.n + 1 %}{% endif %}
             {% if is_state('switch.dsc_hub_ac_demand','on') %}{% set ns.n = ns.n + 1 %}{% endif %}
             {% if states('sensor.dsc_fan_exhaust_outside_pct')|float(0) >= 20
-                 or states('sensor.dsc_fan_intake_outside_pct')|float(0) >= 20 %}
+                 or states('sensor.dsc_fan_intake_main_pct')|float(0) >= 20 %}
               {% set ns.n = ns.n + 1 %}
             {% endif %}
             {{ ns.n }}

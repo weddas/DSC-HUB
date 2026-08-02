@@ -17,10 +17,10 @@ template:
       - name: "DSC HA Surface Version"
         unique_id: dsc_ha_surface_version
         icon: mdi:home-assistant
-        state: "5.1.0"
+        state: "5.1.1"
         attributes:
           packages: dsc_v4_*
-          dashboard: dsc-hub-pro
+          dashboard: dsc-hub-pro (4-col + browser_mod popups)
           phase_b: present
 
       - name: "DSC Fleet Version Status"
@@ -42,11 +42,14 @@ template:
             ('dehumidifier', states('sensor.dsc_de_humidifier_firmware_version')),
             ('ha_surface', states('sensor.dsc_ha_surface_version'))
           ] %}
+          {# Fleet runs mixed patch levels within one release train (e.g.
+             panel 5.1.14 beside hub 5.1.0), so drift compares major.minor. #}
+          {% set train = exp.split('.')[0:2]|join('.') %}
           {% set ns = namespace(missing=0, drift=0, ok=0) %}
           {% for name, ver in checks %}
             {% if ver in ['unknown','unavailable',''] or ver is none %}
               {% set ns.missing = ns.missing + 1 %}
-            {% elif ver|string|trim != exp %}
+            {% elif (ver|string|trim).split('.')[0:2]|join('.') != train %}
               {% set ns.drift = ns.drift + 1 %}
             {% else %}
               {% set ns.ok = ns.ok + 1 %}
@@ -78,6 +81,7 @@ template:
               {{ states('sensor.dsc_hub_sync_sha') }}
             {% else %}n/a{% endif %}
           meaning: >-
-            ok = all reporting devices + HA surface match expected.
-            warn = some missing/unavailable or version drift.
+            ok = all reporting devices + HA surface on the expected
+            major.minor release train (patch levels may differ).
+            warn = some missing/unavailable or off-train version drift.
             error = learn/helpers missing or most devices unavailable.

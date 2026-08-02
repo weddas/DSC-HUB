@@ -1,5 +1,5 @@
 # ==================================================================
-#  DSC-HUB Pro v5.1.0  ·  Lovelace dashboard
+#  DSC-HUB Pro v5.1.1  ·  Lovelace dashboard
 #  ------------------------------------------------------------------
 #  Full rewrite of the v2.4.1 dashboard for firmware v4 (ESP-NOW primary
 #  panel + hub). Wire layout for 0xD1–0xD3 unchanged; plant names use
@@ -32,11 +32,11 @@
 #  Deploy: YAML-mode dashboard file under /config/dashboards/ (see
 #     homeassistant/configuration.snippet.yaml) — auto-sync on push when
 #     the Unraid runner is configured (scripts/HA-SYNC-BOOTSTRAP.md).
-#  HACS: mushroom · apexcharts · power-flow-card-plus · sankey-chart
+#  HACS: mushroom · apexcharts · power-flow-card-plus
 #        plotly-graph · mini-graph-card · gauge-card-pro
 #        modern-circular-gauge · logbook-card · auto-entities
 #        vertical-stack-in-card · card-mod · bar-card · ph-meter-temperature
-#        expander-card
+#        expander-card · browser_mod (popups / graph enlarge)
 # ==================================================================
 
 title: DSC-HUB Pro
@@ -45,7 +45,7 @@ views:
     icon: mdi:monitor-dashboard
     path: home
     type: sections
-    max_columns: 3
+    max_columns: 4
     sections:
       - type: grid
         cards:
@@ -67,12 +67,30 @@ views:
               - type: template
                 entity: sensor.dsc_control_wifi_rssi
                 icon: >-
-                  {{ 'mdi:tablet-dashboard' if not is_state(entity,'unavailable') else
+                  {{ 'mdi:tablet-dashboard' if
+                  is_state('binary_sensor.dsc_hub_panel_link','on')
+                  or not is_state(entity,'unavailable') else
                   'mdi:tablet-dashboard-off' }}
-                icon_color: "{{ 'green' if not is_state(entity,'unavailable') else 'red' }}"
+                icon_color: >-
+                  {% if is_state('binary_sensor.dsc_hub_panel_link','on') %}green
+                  {% elif not is_state(entity,'unavailable') %}amber
+                  {% else %}red{% endif %}
                 content: >-
-                  {{ 'PANEL ONLINE' if not is_state(entity,'unavailable') else
-                  'PANEL OFFLINE' }}
+                  {% if is_state('binary_sensor.dsc_hub_panel_link','on') %}PANEL ESP-NOW
+                  {% elif not is_state(entity,'unavailable') %}PANEL HA-ONLY
+                  {% else %}PANEL OFFLINE{% endif %}
+                tap_action:
+                  action: navigate
+                  navigation_path: /dsc-hub-pro/system
+              - type: template
+                entity: sensor.dsc_hub_heartbeat
+                icon: mdi:heart-pulse
+                icon_color: >-
+                  {% if is_state(entity,'unavailable') or is_state(entity,'unknown') %}red
+                  {% else %}green{% endif %}
+                content: >-
+                  {% if is_state(entity,'unavailable') or is_state(entity,'unknown') %}NO BEAT
+                  {% else %}BEAT {{ states(entity) }}{% endif %}
                 tap_action:
                   action: navigate
                   navigation_path: /dsc-hub-pro/system
@@ -123,7 +141,7 @@ views:
                     0%, 100% { filter: drop-shadow(0 0 0 transparent); }
                     50% { filter: drop-shadow(0 0 6px rgba(239,68,68,0.85)); }
                   }
-                "mushroom-template-chip:nth-child(4)$": |
+                "mushroom-template-chip:nth-child(5)$": |
                   mushroom-shape-icon {
                     {% if states('sensor.dsc_active_alert_count')|int(0) > 0 %}
                     animation: dsc-pulse-glow 1.4s ease-in-out infinite;
@@ -366,7 +384,7 @@ views:
                   {% endif %}
                 }
       - type: grid
-        column_span: 3
+        column_span: 2
         cards:
           - type: heading
             heading: SYSTEM MAP
@@ -600,6 +618,16 @@ views:
           - type: custom:expander-card
             title: 📖 System narrator
             expanded: false
+            card_mod: &dsc_expander_style
+              style: |
+                ha-card {
+                  border-left: 3px solid rgba(56,189,248,0.4);
+                  border-radius: 10px;
+                }
+                ha-card .title {
+                  font-weight: 600;
+                  letter-spacing: 0.3px;
+                }
             cards:
               - type: markdown
                 content: >
@@ -961,6 +989,7 @@ views:
                   {%- endif %}
                 text_only: true
       - type: grid
+        column_span: 2
         cards:
           - type: heading
             heading: TENT VITALS
@@ -980,6 +1009,46 @@ views:
                   {{ [ {'from': 10, 'color': '#3b82f6'},
                        {'from': t - 2, 'color': '#22c55e'},
                        {'from': t + 2, 'color': '#ef4444'} ] }}
+                tap_action: &dsc_popup_temps
+                  action: fire-dom-event
+                  browser_mod:
+                    service: browser_mod.popup
+                    data:
+                      title: Temperature — 24h
+                      size: wide
+                      content:
+                        type: custom:apexcharts-card
+                        graph_span: 24h
+                        header:
+                          show: true
+                          title: Temperature (°C) — all zones
+                          show_states: true
+                          colorize_states: true
+                        apex_config:
+                          chart:
+                            height: 380
+                        series:
+                          - entity: sensor.dsc_hub_tent_temperature
+                            name: 4x8 Tent
+                            stroke_width: 2
+                            extend_to: now
+                            color: '#f97316'
+                          - entity: sensor.dsc_hub_clone_temperature
+                            name: 2x4 Clone
+                            stroke_width: 2
+                            extend_to: now
+                            color: '#22c55e'
+                          - entity: sensor.dsc_hub_room_temperature
+                            name: Room
+                            stroke_width: 2
+                            extend_to: now
+                            color: '#94a3b8'
+                          - entity: number.dsc_hub_target_temp
+                            name: 4x8 Target
+                            curve: stepline
+                            stroke_width: 1
+                            extend_to: now
+                            color: '#f9731688'
               - type: custom:gauge-card-pro
                 entity: sensor.dsc_hub_tent_humidity
                 header: 4x8 RH
@@ -993,6 +1062,40 @@ views:
                   {'from': 0, 'color': '#f59e0b'},
                        {'from': lo, 'color': '#22c55e'},
                        {'from': hi, 'color': '#ef4444'} ] }}
+                tap_action: &dsc_popup_rh
+                  action: fire-dom-event
+                  browser_mod:
+                    service: browser_mod.popup
+                    data:
+                      title: Humidity — 24h
+                      size: wide
+                      content:
+                        type: custom:apexcharts-card
+                        graph_span: 24h
+                        header:
+                          show: true
+                          title: Relative humidity (%) — all zones
+                          show_states: true
+                          colorize_states: true
+                        apex_config:
+                          chart:
+                            height: 380
+                        series:
+                          - entity: sensor.dsc_hub_tent_humidity
+                            name: 4x8 Tent
+                            stroke_width: 2
+                            extend_to: now
+                            color: '#3b82f6'
+                          - entity: sensor.dsc_hub_clone_humidity
+                            name: 2x4 Clone
+                            stroke_width: 2
+                            extend_to: now
+                            color: '#22c55e'
+                          - entity: sensor.dsc_hub_room_humidity
+                            name: Room
+                            stroke_width: 2
+                            extend_to: now
+                            color: '#94a3b8'
               - type: custom:gauge-card-pro
                 entity: sensor.dsc_hub_vpd_kpa
                 header: 4x8 VPD
@@ -1006,6 +1109,59 @@ views:
                   {'from': 0, 'color': '#3b82f6'},
                        {'from': lo, 'color': '#22c55e'},
                        {'from': hi, 'color': '#ef4444'} ] }}
+                tap_action: &dsc_popup_vpd
+                  action: fire-dom-event
+                  browser_mod:
+                    service: browser_mod.popup
+                    data:
+                      title: VPD — 24h
+                      size: wide
+                      content:
+                        type: custom:apexcharts-card
+                        graph_span: 24h
+                        header:
+                          show: true
+                          title: VPD (kPa) — both tents vs bands
+                          show_states: true
+                          colorize_states: true
+                        apex_config:
+                          chart:
+                            height: 380
+                        series:
+                          - entity: sensor.dsc_hub_vpd_kpa
+                            name: 4x8 VPD
+                            stroke_width: 2
+                            extend_to: now
+                            color: '#f97316'
+                          - entity: sensor.dsc_hub_clone_vpd_kpa
+                            name: 2x4 VPD
+                            stroke_width: 2
+                            extend_to: now
+                            color: '#22c55e'
+                          - entity: number.dsc_hub_vpd_target_min
+                            name: 4x8 floor
+                            curve: stepline
+                            stroke_width: 1
+                            extend_to: now
+                            color: '#f9731666'
+                          - entity: number.dsc_hub_vpd_target_max
+                            name: 4x8 ceiling
+                            curve: stepline
+                            stroke_width: 1
+                            extend_to: now
+                            color: '#f9731666'
+                          - entity: number.dsc_hub_clone_vpd_min
+                            name: 2x4 floor
+                            curve: stepline
+                            stroke_width: 1
+                            extend_to: now
+                            color: '#22c55e66'
+                          - entity: number.dsc_hub_clone_vpd_max
+                            name: 2x4 ceiling
+                            curve: stepline
+                            stroke_width: 1
+                            extend_to: now
+                            color: '#22c55e66'
               - type: custom:gauge-card-pro
                 entity: sensor.dsc_hub_clone_temperature
                 header: 2x4 Temp
@@ -1018,6 +1174,7 @@ views:
                   {'from': 10, 'color': '#3b82f6'},
                        {'from': t - 2, 'color': '#22c55e'},
                        {'from': t + 2, 'color': '#ef4444'} ] }}
+                tap_action: *dsc_popup_temps
               - type: custom:gauge-card-pro
                 entity: sensor.dsc_hub_clone_humidity
                 header: 2x4 RH
@@ -1030,6 +1187,7 @@ views:
                   {{ [ {'from': 0, 'color': '#f59e0b'},
                        {'from': lo, 'color': '#22c55e'},
                        {'from': hi, 'color': '#ef4444'} ] }}
+                tap_action: *dsc_popup_rh
               - type: custom:gauge-card-pro
                 entity: sensor.dsc_hub_clone_vpd_kpa
                 header: 2x4 VPD
@@ -1043,6 +1201,7 @@ views:
                   {'from': 0, 'color': '#3b82f6'},
                        {'from': lo, 'color': '#22c55e'},
                        {'from': hi, 'color': '#ef4444'} ] }}
+                tap_action: *dsc_popup_vpd
               - type: custom:gauge-card-pro
                 entity: sensor.dsc_hub_room_temperature
                 header: Room Tmp
@@ -1055,6 +1214,7 @@ views:
                   {'from': 10, 'color': '#3b82f6'},
                        {'from': t - 2, 'color': '#22c55e'},
                        {'from': t + 2, 'color': '#ef4444'} ] }}
+                tap_action: *dsc_popup_temps
               - type: custom:gauge-card-pro
                 entity: sensor.dsc_hub_room_humidity
                 header: Room RH
@@ -1067,6 +1227,7 @@ views:
                   {{ [ {'from': 0, 'color': '#f59e0b'},
                        {'from': lo, 'color': '#22c55e'},
                        {'from': hi, 'color': '#ef4444'} ] }}
+                tap_action: *dsc_popup_rh
               # v2.4: the mat's actual sense point, promoted to Home. It is a
               # control input now, not just telemetry — if this gauge is wrong
               # the mat is wrong.
@@ -1084,6 +1245,60 @@ views:
                   {{ [ {'from': 10, 'color': '#3b82f6'},
                        {'from': lo, 'color': '#22c55e'},
                        {'from': hi, 'color': '#ef4444'} ] }}
+                tap_action: &dsc_popup_rootzone
+                  action: fire-dom-event
+                  browser_mod:
+                    service: browser_mod.popup
+                    data:
+                      title: Root zone — 24h
+                      size: wide
+                      content:
+                        type: custom:apexcharts-card
+                        graph_span: 24h
+                        header:
+                          show: true
+                          title: Soil temperature (°C) vs mat band
+                          show_states: true
+                          colorize_states: true
+                        apex_config:
+                          chart:
+                            height: 380
+                        series:
+                          - entity: sensor.dsc_pot1_soil_temperature
+                            name: POT1
+                            stroke_width: 2
+                            extend_to: now
+                            color: '#22c55e'
+                          - entity: sensor.dsc_pot2_soil_temperature
+                            name: POT2
+                            stroke_width: 2
+                            extend_to: now
+                            color: '#84cc16'
+                          - entity: sensor.dsc_pot3_soil_temperature
+                            name: POT3
+                            stroke_width: 2
+                            extend_to: now
+                            color: '#a3a3a3'
+                          - entity: sensor.dsc_pot4_soil_temperature
+                            name: POT4
+                            stroke_width: 2
+                            extend_to: now
+                            color: '#14b8a6'
+                          - entity: number.dsc_hub_mat_root_zone_low
+                            name: Mat low
+                            curve: stepline
+                            stroke_width: 1
+                            extend_to: now
+                            color: '#3b82f688'
+                          - entity: number.dsc_hub_mat_root_zone_high
+                            name: Mat high
+                            curve: stepline
+                            stroke_width: 1
+                            extend_to: now
+                            color: '#ef444488'
+      - type: grid
+        column_span: 2
+        cards:
           - type: heading
             heading: TODAY
             heading_style: subtitle
@@ -1189,11 +1404,139 @@ views:
                 name: POT1
                 min: 0
                 max: 100
+                tap_action: &dsc_popup_pot1
+                  action: fire-dom-event
+                  browser_mod:
+                    service: browser_mod.popup
+                    data:
+                      title: POT1 — plant console
+                      size: wide
+                      content:
+                        type: vertical-stack
+                        cards:
+                          - type: entities
+                            entities:
+                              - entity: text.dsc_pot1_plant_name
+                                name: Plant
+                                icon: mdi:sprout
+                              - entity: select.dsc_pot1_growth_stage
+                                name: Growth stage
+                              - entity: binary_sensor.dsc_hub_pot1_esp_now_link
+                                name: ESP-NOW link
+                              - entity: switch.dsc_hub_mat_vote_pot_1
+                                name: Mat vote
+                              - type: divider
+                              - entity: sensor.dsc_pot1_soil_moisture
+                                name: Moisture
+                              - entity: sensor.dsc_pot1_soil_temperature
+                                name: Soil temp
+                              - entity: sensor.dsc_pot1_soil_conductivity
+                                name: EC
+                              - entity: sensor.dsc_pot1_soil_ph
+                                name: pH
+                              - entity: sensor.dsc_pot1_soil_nitrogen
+                                name: N
+                              - entity: sensor.dsc_pot1_soil_phosphorus
+                                name: P
+                              - entity: sensor.dsc_pot1_soil_potassium
+                                name: K
+                          - type: custom:apexcharts-card
+                            graph_span: 48h
+                            header:
+                              show: true
+                              title: Moisture & soil temp — 48h
+                              show_states: true
+                            apex_config:
+                              chart:
+                                height: 260
+                            yaxis:
+                              - id: pct
+                                min: 0
+                                max: 100
+                              - id: temp
+                                opposite: true
+                            series:
+                              - entity: sensor.dsc_pot1_soil_moisture
+                                name: Moisture %
+                                yaxis_id: pct
+                                stroke_width: 2
+                                extend_to: now
+                                color: '#3b82f6'
+                              - entity: sensor.dsc_pot1_soil_temperature
+                                name: Soil °C
+                                yaxis_id: temp
+                                stroke_width: 2
+                                extend_to: now
+                                color: '#f97316'
               - type: custom:modern-circular-gauge
                 entity: sensor.dsc_pot2_soil_moisture
                 name: POT2
                 min: 0
                 max: 100
+                tap_action: &dsc_popup_pot2
+                  action: fire-dom-event
+                  browser_mod:
+                    service: browser_mod.popup
+                    data:
+                      title: POT2 — plant console
+                      size: wide
+                      content:
+                        type: vertical-stack
+                        cards:
+                          - type: entities
+                            entities:
+                              - entity: text.dsc_pot2_plant_name
+                                name: Plant
+                                icon: mdi:sprout
+                              - entity: select.dsc_pot2_growth_stage
+                                name: Growth stage
+                              - entity: binary_sensor.dsc_hub_pot2_esp_now_link
+                                name: ESP-NOW link
+                              - entity: switch.dsc_hub_mat_vote_pot_2
+                                name: Mat vote
+                              - type: divider
+                              - entity: sensor.dsc_pot2_soil_moisture
+                                name: Moisture
+                              - entity: sensor.dsc_pot2_soil_temperature
+                                name: Soil temp
+                              - entity: sensor.dsc_pot2_soil_conductivity
+                                name: EC
+                              - entity: sensor.dsc_pot2_soil_ph
+                                name: pH
+                              - entity: sensor.dsc_pot2_soil_nitrogen
+                                name: N
+                              - entity: sensor.dsc_pot2_soil_phosphorus
+                                name: P
+                              - entity: sensor.dsc_pot2_soil_potassium
+                                name: K
+                          - type: custom:apexcharts-card
+                            graph_span: 48h
+                            header:
+                              show: true
+                              title: Moisture & soil temp — 48h
+                              show_states: true
+                            apex_config:
+                              chart:
+                                height: 260
+                            yaxis:
+                              - id: pct
+                                min: 0
+                                max: 100
+                              - id: temp
+                                opposite: true
+                            series:
+                              - entity: sensor.dsc_pot2_soil_moisture
+                                name: Moisture %
+                                yaxis_id: pct
+                                stroke_width: 2
+                                extend_to: now
+                                color: '#3b82f6'
+                              - entity: sensor.dsc_pot2_soil_temperature
+                                name: Soil °C
+                                yaxis_id: temp
+                                stroke_width: 2
+                                extend_to: now
+                                color: '#f97316'
               - type: custom:modern-circular-gauge
                 entity: sensor.dsc_pot3_soil_moisture
                 name: POT3
@@ -1202,24 +1545,157 @@ views:
                 card_mod:
                   style: |
                     ha-card { /* pot styling via live alerts */ }
+                tap_action: &dsc_popup_pot3
+                  action: fire-dom-event
+                  browser_mod:
+                    service: browser_mod.popup
+                    data:
+                      title: POT3 — plant console
+                      size: wide
+                      content:
+                        type: vertical-stack
+                        cards:
+                          - type: entities
+                            entities:
+                              - entity: text.dsc_pot3_plant_name
+                                name: Plant
+                                icon: mdi:sprout
+                              - entity: select.dsc_pot3_growth_stage
+                                name: Growth stage
+                              - entity: binary_sensor.dsc_hub_pot3_esp_now_link
+                                name: ESP-NOW link
+                              - entity: switch.dsc_hub_mat_vote_pot_3
+                                name: Mat vote
+                              - type: divider
+                              - entity: sensor.dsc_pot3_soil_moisture
+                                name: Moisture
+                              - entity: sensor.dsc_pot3_soil_temperature
+                                name: Soil temp
+                              - entity: sensor.dsc_pot3_soil_conductivity
+                                name: EC
+                              - entity: sensor.dsc_pot3_soil_ph
+                                name: pH
+                              - entity: sensor.dsc_pot3_soil_nitrogen
+                                name: N
+                              - entity: sensor.dsc_pot3_soil_phosphorus
+                                name: P
+                              - entity: sensor.dsc_pot3_soil_potassium
+                                name: K
+                          - type: custom:apexcharts-card
+                            graph_span: 48h
+                            header:
+                              show: true
+                              title: Moisture & soil temp — 48h
+                              show_states: true
+                            apex_config:
+                              chart:
+                                height: 260
+                            yaxis:
+                              - id: pct
+                                min: 0
+                                max: 100
+                              - id: temp
+                                opposite: true
+                            series:
+                              - entity: sensor.dsc_pot3_soil_moisture
+                                name: Moisture %
+                                yaxis_id: pct
+                                stroke_width: 2
+                                extend_to: now
+                                color: '#3b82f6'
+                              - entity: sensor.dsc_pot3_soil_temperature
+                                name: Soil °C
+                                yaxis_id: temp
+                                stroke_width: 2
+                                extend_to: now
+                                color: '#f97316'
               - type: custom:modern-circular-gauge
                 entity: sensor.dsc_pot4_soil_moisture
                 name: POT4
                 min: 0
                 max: 100
+                tap_action: &dsc_popup_pot4
+                  action: fire-dom-event
+                  browser_mod:
+                    service: browser_mod.popup
+                    data:
+                      title: POT4 — plant console
+                      size: wide
+                      content:
+                        type: vertical-stack
+                        cards:
+                          - type: entities
+                            entities:
+                              - entity: text.dsc_pot4_plant_name
+                                name: Plant
+                                icon: mdi:sprout
+                              - entity: select.dsc_pot4_growth_stage
+                                name: Growth stage
+                              - entity: binary_sensor.dsc_hub_pot4_esp_now_link
+                                name: ESP-NOW link
+                              - entity: switch.dsc_hub_mat_vote_pot_4
+                                name: Mat vote
+                              - type: divider
+                              - entity: sensor.dsc_pot4_soil_moisture
+                                name: Moisture
+                              - entity: sensor.dsc_pot4_soil_temperature
+                                name: Soil temp
+                              - entity: sensor.dsc_pot4_soil_conductivity
+                                name: EC
+                              - entity: sensor.dsc_pot4_soil_ph
+                                name: pH
+                              - entity: sensor.dsc_pot4_soil_nitrogen
+                                name: N
+                              - entity: sensor.dsc_pot4_soil_phosphorus
+                                name: P
+                              - entity: sensor.dsc_pot4_soil_potassium
+                                name: K
+                          - type: custom:apexcharts-card
+                            graph_span: 48h
+                            header:
+                              show: true
+                              title: Moisture & soil temp — 48h
+                              show_states: true
+                            apex_config:
+                              chart:
+                                height: 260
+                            yaxis:
+                              - id: pct
+                                min: 0
+                                max: 100
+                              - id: temp
+                                opposite: true
+                            series:
+                              - entity: sensor.dsc_pot4_soil_moisture
+                                name: Moisture %
+                                yaxis_id: pct
+                                stroke_width: 2
+                                extend_to: now
+                                color: '#3b82f6'
+                              - entity: sensor.dsc_pot4_soil_temperature
+                                name: Soil °C
+                                yaxis_id: temp
+                                stroke_width: 2
+                                extend_to: now
+                                color: '#f97316'
           - type: custom:mushroom-chips-card
             alignment: start
             chips:
-              - type: template
-                entity: sensor.water_tester_ph_current
-                icon: mdi:ph
-                icon_color: >-
-                  {% set ph = states(entity)|float(0) %} {{ 'green' if 5.8 <= ph
-                  <= 6.5 else 'red' }}
-                content: pH {{ states(entity) }}
-                tap_action:
-                  action: navigate
-                  navigation_path: /dsc-hub-pro/tank
+              - type: conditional
+                conditions:
+                  - entity: sensor.water_tester_ph_current
+                    state_not: unavailable
+                chip:
+                  type: template
+                  entity: sensor.water_tester_ph_current
+                  icon: mdi:ph
+                  icon_color: >-
+                    {% set ph = states(entity)|float(0) %} {{ 'green' if 5.8 <= ph
+                    <= 6.5 else 'red' }}
+                  content: pH {{ states(entity) }}
+                  tap_action:
+                    action: navigate
+                    navigation_path: /dsc-hub-pro/tank
               - type: template
                 entity: sensor.dsc_tank_ec_normalized
                 icon: mdi:flash
@@ -1232,13 +1708,21 @@ views:
                 tap_action:
                   action: navigate
                   navigation_path: /dsc-hub-pro/tank
-              - type: template
-                entity: sensor.water_tester_temperature
-                icon: mdi:thermometer-water
-                icon_color: "{{ 'red' if states(entity)|float(0) > 24 else 'green' }}"
-                content: >-
-                  {{ states(entity) }}°C{{ ' ⚠ PYTHIUM' if
-                  states(entity)|float(0) > 24 else '' }}
+              - type: conditional
+                conditions:
+                  - entity: sensor.water_tester_temperature
+                    state_not: unavailable
+                chip:
+                  type: template
+                  entity: sensor.water_tester_temperature
+                  icon: mdi:thermometer-water
+                  icon_color: "{{ 'red' if states(entity)|float(0) > 24 else 'green' }}"
+                  content: >-
+                    {{ states(entity) }}°C{{ ' ⚠ PYTHIUM' if
+                    states(entity)|float(0) > 24 else '' }}
+                  tap_action:
+                    action: navigate
+                    navigation_path: /dsc-hub-pro/tank
               - type: template
                 icon: mdi:grass
                 icon_color: lime
@@ -1251,7 +1735,7 @@ views:
     icon: mdi:engine
     path: climate
     type: sections
-    max_columns: 3
+    max_columns: 4
     sections:
       - type: grid
         cards:
@@ -1286,6 +1770,16 @@ views:
                 name: Resume Full Auto
                 icon: mdi:robot
                 icon_color: green
+              - type: custom:mushroom-entity-card
+                entity: switch.dsc_hub_humidifier_intake_routing
+                name: Humidifier Intake Routing
+                icon: mdi:call-split
+                icon_color: light-blue
+              - type: custom:mushroom-entity-card
+                entity: switch.dsc_hub_recirc_de_strat_pulse
+                name: RECIRC De-Strat Pulse
+                icon: mdi:sync-circle
+                icon_color: teal
           - type: heading
             heading: 🪜 DEMAND LADDER — fans first, appliances second
             heading_style: subtitle
@@ -1340,6 +1834,70 @@ views:
                   responder
                 icon: mdi:fan
                 icon_color: "{{ 'cyan' if states(entity)|float(0) > 30 else 'blue' }}"
+                tap_action: &dsc_popup_fans
+                  action: fire-dom-event
+                  browser_mod:
+                    service: browser_mod.popup
+                    data:
+                      title: 🌀 Fan bank — console
+                      size: wide
+                      content:
+                        type: vertical-stack
+                        cards:
+                          - type: grid
+                            columns: 2
+                            square: false
+                            cards:
+                              - type: custom:mushroom-fan-card
+                                entity: fan.dsc_hub_4_inch_intake_fan_main
+                                name: Intake 4x8
+                                show_percentage_control: true
+                                icon_animation: true
+                              - type: custom:mushroom-fan-card
+                                entity: fan.dsc_hub_4_inch_intake_fan_2x4
+                                name: Intake 2x4
+                                show_percentage_control: true
+                                icon_animation: true
+                              - type: custom:mushroom-fan-card
+                                entity: fan.dsc_hub_6_inch_exhaust_room
+                                name: Exhaust Room
+                                show_percentage_control: true
+                                icon_animation: true
+                              - type: custom:mushroom-fan-card
+                                entity: fan.dsc_hub_6_inch_exhaust_outside
+                                name: Exhaust Outside
+                                show_percentage_control: true
+                                icon_animation: true
+                          - type: custom:apexcharts-card
+                            graph_span: 48h
+                            header:
+                              show: true
+                              title: Fan duty — 48h
+                              show_states: true
+                            all_series_config:
+                              extend_to: now
+                              curve: stepline
+                              stroke_width: 2
+                              float_precision: 0
+                            apex_config:
+                              chart:
+                                height: 300
+                            yaxis:
+                              - min: 0
+                                max: 100
+                            series:
+                              - entity: sensor.dsc_fan_intake_main_pct
+                                name: In 4x8
+                                color: '#34d399'
+                              - entity: sensor.dsc_fan_intake_2x4_pct
+                                name: In 2x4
+                                color: '#a3e635'
+                              - entity: sensor.dsc_fan_exhaust_room_pct
+                                name: Ex Room
+                                color: '#38bdf8'
+                              - entity: sensor.dsc_fan_exhaust_outside_pct
+                                name: Ex Out
+                                color: '#67e8f9'
                 card_mod:
                   style: |
                     @keyframes dsc-fan-spin {
@@ -1369,6 +1927,76 @@ views:
                   {% if is_state(entity,'on') %}blue
                   {%- elif states('sensor.dsc_hub_humidifier_fire_countdown')|float(0) > 0 %}light-blue
                   {%- else %}disabled{% endif %}
+                tap_action:
+                  action: fire-dom-event
+                  browser_mod:
+                    service: browser_mod.popup
+                    data:
+                      title: 💧 Humidifier — console
+                      size: wide
+                      content:
+                        type: vertical-stack
+                        cards:
+                          - type: entities
+                            entities:
+                              - entity: switch.dsc_hub_humidifier_auto
+                                name: Auto armed
+                              - entity: switch.dsc_hub_humidifier_demand
+                                name: Demand (hub)
+                              - entity: switch.dsc_humidifier_main_relay
+                                name: Relay (Sonoff)
+                              - type: divider
+                              - entity: sensor.dsc_hub_humidifier_fire_countdown
+                                name: Fire countdown
+                              - entity: sensor.dsc_hub_humidifier_cooldown_remaining
+                                name: Cooldown remaining
+                              - entity: number.dsc_hub_humidifier_min_off_time
+                                name: Min off-time
+                              - entity: number.dsc_hub_ladder_wait_hum
+                                name: Ladder wait
+                              - entity: sensor.dsc_humidifier_runtime_today
+                                name: Runtime today
+                          - type: custom:apexcharts-card
+                            graph_span: 24h
+                            header:
+                              show: true
+                              title: RH & demand — 24h
+                              show_states: true
+                            apex_config:
+                              chart:
+                                height: 260
+                            yaxis:
+                              - id: pct
+                                min: 30
+                                max: 100
+                              - id: duty
+                                opposite: true
+                                min: 0
+                                max: 1
+                                show: false
+                            series:
+                              - entity: sensor.dsc_hub_tent_humidity
+                                name: 4x8 RH
+                                yaxis_id: pct
+                                stroke_width: 2
+                                extend_to: now
+                                color: '#3b82f6'
+                              - entity: sensor.dsc_hub_clone_humidity
+                                name: 2x4 RH
+                                yaxis_id: pct
+                                stroke_width: 2
+                                extend_to: now
+                                color: '#22c55e'
+                              - entity: switch.dsc_hub_humidifier_demand
+                                name: Demand
+                                yaxis_id: duty
+                                transform: "return x === 'on' ? 1 : 0;"
+                                type: area
+                                curve: stepline
+                                opacity: 0.3
+                                stroke_width: 0
+                                extend_to: now
+                                color: '#3b82f6'
                 card_mod:
                   style: |
                     ha-card {
@@ -1392,6 +2020,68 @@ views:
                   {%- elif is_state(entity,'on') %}teal
                   {%- elif states('sensor.dsc_hub_dehumidifier_fire_countdown')|float(0) > 0 %}cyan
                   {%- else %}disabled{% endif %}
+                tap_action:
+                  action: fire-dom-event
+                  browser_mod:
+                    service: browser_mod.popup
+                    data:
+                      title: 🌵 Dehumidifier — console
+                      size: wide
+                      content:
+                        type: vertical-stack
+                        cards:
+                          - type: entities
+                            entities:
+                              - entity: switch.dsc_hub_dehumidifier_auto
+                                name: Auto armed
+                              - entity: switch.dsc_hub_dehumidifier_demand
+                                name: Demand (hub)
+                              - entity: switch.dsc_de_humidifier_main_relay
+                                name: Relay (Sonoff)
+                              - type: divider
+                              - entity: sensor.dsc_hub_dehumidifier_fire_countdown
+                                name: Fire countdown
+                              - entity: sensor.dsc_hub_dehumidifier_cooldown_remaining
+                                name: Compressor lock (fixed 180 s)
+                              - entity: number.dsc_hub_ladder_wait_dehum
+                                name: Ladder wait
+                              - entity: sensor.dsc_dehumidifier_runtime_today
+                                name: Runtime today
+                          - type: custom:apexcharts-card
+                            graph_span: 24h
+                            header:
+                              show: true
+                              title: 4x8 RH & demand — 24h
+                              show_states: true
+                            apex_config:
+                              chart:
+                                height: 260
+                            yaxis:
+                              - id: pct
+                                min: 30
+                                max: 100
+                              - id: duty
+                                opposite: true
+                                min: 0
+                                max: 1
+                                show: false
+                            series:
+                              - entity: sensor.dsc_hub_tent_humidity
+                                name: 4x8 RH
+                                yaxis_id: pct
+                                stroke_width: 2
+                                extend_to: now
+                                color: '#3b82f6'
+                              - entity: switch.dsc_hub_dehumidifier_demand
+                                name: Demand
+                                yaxis_id: duty
+                                transform: "return x === 'on' ? 1 : 0;"
+                                type: area
+                                curve: stepline
+                                opacity: 0.3
+                                stroke_width: 0
+                                extend_to: now
+                                color: '#14b8a6'
                 card_mod:
                   style: |
                     ha-card {
@@ -1420,6 +2110,75 @@ views:
                   {%- elif is_state(entity,'on') %}cyan
                   {%- elif states('sensor.dsc_hub_ac_fire_countdown')|float(0) > 0 %}light-blue
                   {%- else %}disabled{% endif %}
+                tap_action:
+                  action: fire-dom-event
+                  browser_mod:
+                    service: browser_mod.popup
+                    data:
+                      title: ❄️ AC — console
+                      size: wide
+                      content:
+                        type: vertical-stack
+                        cards:
+                          - type: entities
+                            entities:
+                              - entity: switch.dsc_hub_ac_auto
+                                name: Auto armed
+                              - entity: switch.dsc_hub_ac_demand
+                                name: Demand (hub)
+                              - entity: input_boolean.dsc_ac_actuator_wired
+                                name: Actuator wired
+                              - type: divider
+                              - entity: sensor.dsc_hub_ac_fire_countdown
+                                name: Fire countdown
+                              - entity: sensor.dsc_hub_ac_cooldown_remaining
+                                name: Compressor lock (fixed 180 s)
+                              - entity: number.dsc_hub_ladder_wait_ac
+                                name: Ladder wait
+                              - entity: sensor.dsc_ac_runtime_today
+                                name: Runtime today
+                          - type: custom:apexcharts-card
+                            graph_span: 24h
+                            header:
+                              show: true
+                              title: Tent temp & demand — 24h
+                              show_states: true
+                            apex_config:
+                              chart:
+                                height: 260
+                            yaxis:
+                              - id: temp
+                                min: 14
+                                max: 34
+                              - id: duty
+                                opposite: true
+                                min: 0
+                                max: 1
+                                show: false
+                            series:
+                              - entity: sensor.dsc_hub_tent_temperature
+                                name: 4x8 °C
+                                yaxis_id: temp
+                                stroke_width: 2
+                                extend_to: now
+                                color: '#f97316'
+                              - entity: number.dsc_hub_target_temp
+                                name: Target
+                                yaxis_id: temp
+                                curve: stepline
+                                stroke_width: 1
+                                extend_to: now
+                                color: '#94a3b8'
+                              - entity: switch.dsc_hub_ac_demand
+                                name: Demand
+                                yaxis_id: duty
+                                transform: "return x === 'on' ? 1 : 0;"
+                                type: area
+                                curve: stepline
+                                opacity: 0.3
+                                stroke_width: 0
+                                extend_to: now
+                                color: '#22d3ee'
                 card_mod:
                   style: |
                     ha-card {
@@ -1444,6 +2203,77 @@ views:
                   {% if is_state(entity,'on') %}deep-orange
                   {%- elif states('sensor.dsc_hub_heater_fire_countdown')|float(0) > 0 %}orange
                   {%- else %}disabled{% endif %}
+                tap_action:
+                  action: fire-dom-event
+                  browser_mod:
+                    service: browser_mod.popup
+                    data:
+                      title: 🔥 Heater — console
+                      size: wide
+                      content:
+                        type: vertical-stack
+                        cards:
+                          - type: entities
+                            entities:
+                              - entity: switch.dsc_hub_heater_auto
+                                name: Auto armed
+                              - entity: switch.dsc_hub_heater_demand
+                                name: Demand (hub)
+                              - entity: switch.dsc_heater_main_relay
+                                name: Relay (Sonoff)
+                              - type: divider
+                              - entity: sensor.dsc_hub_heater_fire_countdown
+                                name: Fire countdown
+                              - entity: sensor.dsc_hub_heater_cooldown_remaining
+                                name: Min-off remaining
+                              - entity: number.dsc_hub_heater_min_off_time
+                                name: Min off-time
+                              - entity: number.dsc_hub_ladder_wait_heat
+                                name: Ladder wait
+                              - entity: sensor.dsc_heater_runtime_today
+                                name: Runtime today
+                          - type: custom:apexcharts-card
+                            graph_span: 24h
+                            header:
+                              show: true
+                              title: Tent temp & demand — 24h
+                              show_states: true
+                            apex_config:
+                              chart:
+                                height: 260
+                            yaxis:
+                              - id: temp
+                                min: 14
+                                max: 34
+                              - id: duty
+                                opposite: true
+                                min: 0
+                                max: 1
+                                show: false
+                            series:
+                              - entity: sensor.dsc_hub_tent_temperature
+                                name: 4x8 °C
+                                yaxis_id: temp
+                                stroke_width: 2
+                                extend_to: now
+                                color: '#f97316'
+                              - entity: number.dsc_hub_target_temp
+                                name: Target
+                                yaxis_id: temp
+                                curve: stepline
+                                stroke_width: 1
+                                extend_to: now
+                                color: '#94a3b8'
+                              - entity: switch.dsc_hub_heater_demand
+                                name: Demand
+                                yaxis_id: duty
+                                transform: "return x === 'on' ? 1 : 0;"
+                                type: area
+                                curve: stepline
+                                opacity: 0.3
+                                stroke_width: 0
+                                extend_to: now
+                                color: '#ef4444'
                 card_mod:
                   style: |
                     ha-card {
@@ -1471,6 +2301,93 @@ views:
                   {%- elif is_state(entity,'on') %}orange
                   {%- elif states('sensor.dsc_hub_grow_mat_fire_countdown')|float(0) > 0 %}amber
                   {%- else %}disabled{% endif %}
+                tap_action:
+                  action: fire-dom-event
+                  browser_mod:
+                    service: browser_mod.popup
+                    data:
+                      title: 🌱 Grow mat — console
+                      size: wide
+                      content:
+                        type: vertical-stack
+                        cards:
+                          - type: entities
+                            entities:
+                              - entity: switch.dsc_hub_grow_mat_auto
+                                name: Auto armed
+                              - entity: switch.dsc_hub_grow_mat_demand
+                                name: Demand (hub)
+                              - entity: switch.dsc_heatmat_main_relay
+                                name: Relay (Sonoff)
+                              - entity: binary_sensor.dsc_hub_root_zone_sensor_fault
+                                name: Probe fault
+                              - type: divider
+                              - entity: number.dsc_hub_mat_root_zone_low
+                                name: Energise below
+                              - entity: number.dsc_hub_mat_root_zone_high
+                                name: Cut at
+                              - entity: number.dsc_hub_mat_min_off_time
+                                name: Min off-time
+                              - entity: number.dsc_hub_ladder_wait_mat
+                                name: Ladder wait
+                              - type: divider
+                              - entity: switch.dsc_hub_mat_vote_pot_1
+                                name: Vote POT1
+                              - entity: switch.dsc_hub_mat_vote_pot_2
+                                name: Vote POT2
+                              - entity: switch.dsc_hub_mat_vote_pot_3
+                                name: Vote POT3
+                              - entity: switch.dsc_hub_mat_vote_pot_4
+                                name: Vote POT4
+                          - type: custom:apexcharts-card
+                            graph_span: 24h
+                            header:
+                              show: true
+                              title: Coldest root zone & demand — 24h
+                              show_states: true
+                            apex_config:
+                              chart:
+                                height: 260
+                            yaxis:
+                              - id: temp
+                                min: 12
+                                max: 30
+                              - id: duty
+                                opposite: true
+                                min: 0
+                                max: 1
+                                show: false
+                            series:
+                              - entity: sensor.dsc_coldest_root_zone_temp
+                                name: Coldest root °C
+                                yaxis_id: temp
+                                stroke_width: 2
+                                extend_to: now
+                                color: '#22c55e'
+                              - entity: number.dsc_hub_mat_root_zone_low
+                                name: Low
+                                yaxis_id: temp
+                                curve: stepline
+                                stroke_width: 1
+                                extend_to: now
+                                color: '#3b82f688'
+                              - entity: number.dsc_hub_mat_root_zone_high
+                                name: High
+                                yaxis_id: temp
+                                curve: stepline
+                                stroke_width: 1
+                                extend_to: now
+                                color: '#ef444488'
+                              - entity: switch.dsc_hub_grow_mat_demand
+                                name: Demand
+                                yaxis_id: duty
+                                transform: "return x === 'on' ? 1 : 0;"
+                                type: area
+                                curve: stepline
+                                opacity: 0.3
+                                stroke_width: 0
+                                extend_to: now
+                                color: '#fb923c'
                 card_mod:
                   style: |
                     ha-card {
@@ -1497,6 +2414,77 @@ views:
                   {%- elif is_state(entity,'on') %}light-blue
                   {%- elif states('sensor.dsc_hub_clone_humidifier_fire_countdown')|float(0) > 0 %}cyan
                   {%- else %}disabled{% endif %}
+                tap_action:
+                  action: fire-dom-event
+                  browser_mod:
+                    service: browser_mod.popup
+                    data:
+                      title: 💦 Clone humidifier — console
+                      size: wide
+                      content:
+                        type: vertical-stack
+                        cards:
+                          - type: entities
+                            entities:
+                              - entity: switch.dsc_hub_clone_humidifier_auto
+                                name: Auto armed
+                              - entity: switch.dsc_hub_clone_humidifier_demand
+                                name: Demand (hub)
+                              - entity: input_boolean.dsc_clone_humidifier_actuator_wired
+                                name: Actuator wired
+                              - type: divider
+                              - entity: sensor.dsc_hub_clone_humidifier_fire_countdown
+                                name: Fire countdown
+                              - entity: sensor.dsc_hub_clone_humidifier_cooldown_remaining
+                                name: Min-off remaining
+                              - entity: number.dsc_hub_clone_hum_hysteresis
+                                name: Release at RH-min +
+                              - entity: number.dsc_hub_clone_hum_min_off_time
+                                name: Min off-time
+                              - entity: sensor.dsc_clone_humidifier_cycles_last_hour
+                                name: Cycles last hour
+                          - type: custom:apexcharts-card
+                            graph_span: 24h
+                            header:
+                              show: true
+                              title: 2x4 RH & demand — 24h
+                              show_states: true
+                            apex_config:
+                              chart:
+                                height: 260
+                            yaxis:
+                              - id: pct
+                                min: 30
+                                max: 100
+                              - id: duty
+                                opposite: true
+                                min: 0
+                                max: 1
+                                show: false
+                            series:
+                              - entity: sensor.dsc_hub_clone_humidity
+                                name: 2x4 RH
+                                yaxis_id: pct
+                                stroke_width: 2
+                                extend_to: now
+                                color: '#22c55e'
+                              - entity: number.dsc_hub_clone_rh_min
+                                name: RH min
+                                yaxis_id: pct
+                                curve: stepline
+                                stroke_width: 1
+                                extend_to: now
+                                color: '#22c55e66'
+                              - entity: switch.dsc_hub_clone_humidifier_demand
+                                name: Demand
+                                yaxis_id: duty
+                                transform: "return x === 'on' ? 1 : 0;"
+                                type: area
+                                curve: stepline
+                                opacity: 0.3
+                                stroke_width: 0
+                                extend_to: now
+                                color: '#38bdf8'
                 card_mod:
                   style: |
                     ha-card {
@@ -1528,10 +2516,16 @@ views:
                 name: Clone Hum Actuator Wired
                 icon: mdi:sprinkler-variant
                 icon_color: light-blue
-          - type: custom:mushroom-entity-card
-            entity: lock.4x8_humidifier_photo_lab_lock
-            name: Room door release (lab magnet)
-            icon: mdi:door-closed-lock
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: lock.4x8_humidifier_photo_lab_lock
+                state_not: unavailable
+            card:
+              type: custom:mushroom-entity-card
+              entity: lock.4x8_humidifier_photo_lab_lock
+              name: Room door release (lab magnet)
+              icon: mdi:door-closed-lock
       - type: grid
         cards:
           - type: heading
@@ -1554,6 +2548,7 @@ views:
           - type: custom:expander-card
             title: 📐 Plant specs — CFM / volumes / appliance rates
             expanded: false
+            card_mod: *dsc_expander_style
             cards:
               - type: custom:mushroom-template-card
                 entity: sensor.dsc_plant_specs_status
@@ -1712,6 +2707,7 @@ views:
           - type: custom:expander-card
             title: 🌱 Grow mat — closed-loop root-zone band
             expanded: false
+            card_mod: *dsc_expander_style
             cards:
               - type: entities
                 entities:
@@ -1742,6 +2738,7 @@ views:
           - type: custom:expander-card
             title: 💧 Clone humidifier — the short-cycling fix
             expanded: false
+            card_mod: *dsc_expander_style
             cards:
               - type: entities
                 entities:
@@ -1760,6 +2757,7 @@ views:
           - type: custom:expander-card
             title: 🔥 Room appliance min off-times
             expanded: false
+            card_mod: *dsc_expander_style
             cards:
               - type: entities
                 entities:
@@ -1772,9 +2770,32 @@ views:
                   *AC and dehumidifier min-off is **fixed at 180 s in firmware**
                   and not exposed — that is compressor protection, not a
                   preference.*
+          # v5.1 glass lean-cut: the panel lost its De-Strat settings drill.
+          # This expander is now the ONLY place these tunables are editable.
+          - type: custom:expander-card
+            title: 🌀 De-strat pulse — RECIRC anti-stratification
+            expanded: false
+            card_mod: *dsc_expander_style
+            cards:
+              - type: entities
+                entities:
+                  - entity: switch.dsc_hub_recirc_de_strat_pulse
+                    name: Pulse enabled
+                  - entity: number.dsc_hub_de_strat_pulse_period
+                    name: Period
+                  - entity: number.dsc_hub_de_strat_pulse_length
+                    name: Pulse length
+                  - entity: number.dsc_hub_de_strat_pulse_level
+                    name: Pulse level
+              - type: markdown
+                content: >-
+                  *Briefly kicks the RECIRC fan to break temperature layers
+                  when the room is otherwise still. Was a panel settings drill
+                  before the v5.1.6 lean cut — HA is now the only editor.*
           - type: custom:expander-card
             title: ☀️ SF1000 ramp floor
             expanded: false
+            card_mod: *dsc_expander_style
             cards:
               - type: entities
                 entities:
@@ -1861,6 +2882,14 @@ views:
                 name: Exhaust Outside
                 show_percentage_control: true
                 icon_animation: true
+          - type: custom:mushroom-chips-card
+            alignment: end
+            chips:
+              - type: template
+                icon: mdi:arrow-expand-all
+                icon_color: cyan
+                content: Enlarge — fans 48h
+                tap_action: *dsc_popup_fans
           - type: custom:apexcharts-card
             graph_span: 12h
             update_interval: 1min
@@ -2018,6 +3047,15 @@ views:
             heading: 🧩 APPLIANCE MODULES
             heading_style: title
           - type: custom:vertical-stack-in-card
+            card_mod:
+              style: |
+                ha-card {
+                  border-left: 4px solid
+                    {% if is_state('switch.dsc_hub_heater_demand','on') %}rgba(249,115,22,0.9)
+                    {% elif states('sensor.dsc_hub_heater_fire_countdown')|float(0) > 0 %}rgba(251,191,36,0.9)
+                    {% elif states('sensor.dsc_hub_heater_cooldown_remaining')|float(0) > 0 %}rgba(59,130,246,0.9)
+                    {% else %}rgba(148,163,184,0.25){% endif %};
+                }
             cards:
               - type: custom:mushroom-template-card
                 entity: switch.dsc_hub_heater_demand
@@ -2134,6 +3172,16 @@ views:
                       {% if not has_value(entity) %}NODE OFFLINE
                       {%- else %}relay {{ states(entity) }}{% endif %}
           - type: custom:vertical-stack-in-card
+            card_mod:
+              style: |
+                ha-card {
+                  border-left: 4px solid
+                    {% if is_state('binary_sensor.dsc_ac_demand_without_actuator','on') %}rgba(239,68,68,0.9)
+                    {% elif is_state('switch.dsc_hub_ac_demand','on') %}rgba(34,211,238,0.9)
+                    {% elif states('sensor.dsc_hub_ac_fire_countdown')|float(0) > 0 %}rgba(251,191,36,0.9)
+                    {% elif states('sensor.dsc_hub_ac_cooldown_remaining')|float(0) > 0 %}rgba(59,130,246,0.9)
+                    {% else %}rgba(148,163,184,0.25){% endif %};
+                }
             cards:
               - type: custom:mushroom-template-card
                 entity: switch.dsc_hub_ac_demand
@@ -2232,6 +3280,14 @@ views:
                     icon_color: amber
                     content: "{{ states(entity)|float(0)|round(1) }}h today"
           - type: custom:vertical-stack-in-card
+            card_mod:
+              style: |
+                ha-card {
+                  border-left: 4px solid
+                    {% if is_state('switch.dsc_hub_humidifier_demand','on') %}rgba(59,130,246,0.9)
+                    {% elif states('sensor.dsc_hub_humidifier_fire_countdown')|float(0) > 0 %}rgba(251,191,36,0.9)
+                    {% else %}rgba(148,163,184,0.25){% endif %};
+                }
             cards:
               - type: custom:mushroom-template-card
                 entity: switch.dsc_hub_humidifier_demand
@@ -2327,6 +3383,16 @@ views:
                       {{ states(entity)|float(0)|round(0) }} cyc/h — short-cycle
                       watch
           - type: custom:vertical-stack-in-card
+            card_mod:
+              style: |
+                ha-card {
+                  border-left: 4px solid
+                    {% if not has_value('switch.dsc_de_humidifier_main_relay') %}rgba(239,68,68,0.9)
+                    {% elif is_state('switch.dsc_hub_dehumidifier_demand','on') %}rgba(20,184,166,0.9)
+                    {% elif states('sensor.dsc_hub_dehumidifier_fire_countdown')|float(0) > 0 %}rgba(251,191,36,0.9)
+                    {% elif states('sensor.dsc_hub_dehumidifier_cooldown_remaining')|float(0) > 0 %}rgba(59,130,246,0.9)
+                    {% else %}rgba(148,163,184,0.25){% endif %};
+                }
             cards:
               - type: custom:mushroom-template-card
                 entity: switch.dsc_hub_dehumidifier_demand
@@ -2424,7 +3490,7 @@ views:
     icon: mdi:greenhouse
     path: main-4x8
     type: sections
-    max_columns: 3
+    max_columns: 4
     sections:
       - type: grid
         cards:
@@ -2457,6 +3523,11 @@ views:
             multiline_secondary: true
             tap_action:
               action: more-info
+          # v5.1 lean cut: window start is HA-only now (stage sets duration).
+          - type: entities
+            entities:
+              - entity: time.dsc_hub_lights_on_time
+                name: 4x8 Window Opens (stage sets hours)
           - type: grid
             columns: 2
             square: false
@@ -2513,10 +3584,29 @@ views:
               *Full appliance modules live on the **Climate Engine** page — this
               tent page is environment-first.*
       - type: grid
+        column_span: 2
         cards:
           - type: heading
             heading: 🌡️ ENVIRONMENT — 24 h
             heading_style: title
+          - type: custom:mushroom-chips-card
+            alignment: end
+            chips:
+              - type: template
+                icon: mdi:arrow-expand-all
+                icon_color: orange
+                content: Temps
+                tap_action: *dsc_popup_temps
+              - type: template
+                icon: mdi:arrow-expand-all
+                icon_color: blue
+                content: Humidity
+                tap_action: *dsc_popup_rh
+              - type: template
+                icon: mdi:arrow-expand-all
+                icon_color: green
+                content: VPD
+                tap_action: *dsc_popup_vpd
           - type: custom:apexcharts-card
             graph_span: 24h
             update_interval: 1min
@@ -2649,6 +3739,7 @@ views:
             show:
               labels: true
               extrema: true
+            tap_action: *dsc_popup_vpd
       - type: grid
         cards:
           # ============================================================
@@ -2718,6 +3809,35 @@ views:
             show:
               labels: true
               extrema: true
+            tap_action:
+              action: fire-dom-event
+              browser_mod:
+                service: browser_mod.popup
+                data:
+                  title: CO2 trend — 48h
+                  size: wide
+                  content:
+                    type: custom:apexcharts-card
+                    graph_span: 48h
+                    header:
+                      show: true
+                      title: Dynamic CO2 (uncalibrated trend) — read shape, not ppm
+                      show_states: true
+                    apex_config:
+                      chart:
+                        height: 380
+                    series:
+                      - entity: sensor.dsc_hub_dynamic_co2_ppm
+                        name: CO2 est.
+                        stroke_width: 2
+                        extend_to: now
+                        color: '#a78bfa'
+                      - entity: sensor.dsc_fan_intake_main_pct
+                        name: Intake %
+                        curve: stepline
+                        stroke_width: 1
+                        extend_to: now
+                        color: '#34d399'
           - type: markdown
             content: >-
               *Uncalibrated ADC estimate — read the **shape**, never the
@@ -2729,7 +3849,7 @@ views:
     icon: mdi:sprout
     path: clone-2x4
     type: sections
-    max_columns: 3
+    max_columns: 4
     sections:
       - type: grid
         cards:
@@ -2807,6 +3927,7 @@ views:
               generated **in here**, so the reservoir is warmer than it was and
               the daisy-chain has something real to donate.*
       - type: grid
+        column_span: 2
         cards:
           - type: heading
             heading: ☀️ SF1000 — THIS TENT'S LIGHT
@@ -2870,6 +3991,67 @@ views:
             show:
               labels: true
               extrema: true
+            tap_action: &dsc_popup_sf1000
+              action: fire-dom-event
+              browser_mod:
+                service: browser_mod.popup
+                data:
+                  title: ☀️ SF1000 — ramp detail
+                  size: wide
+                  content:
+                    type: vertical-stack
+                    cards:
+                      - type: custom:apexcharts-card
+                        graph_span: 48h
+                        header:
+                          show: true
+                          title: Brightness ramp vs 2x4 window — 48h
+                          show_states: true
+                        apex_config:
+                          chart:
+                            height: 320
+                        yaxis:
+                          - id: pct
+                            min: 0
+                            max: 100
+                          - id: duty
+                            opposite: true
+                            min: 0
+                            max: 1
+                            show: false
+                        series:
+                          - entity: light.dsc_hub_sf1000_dimmer
+                            attribute: brightness
+                            name: SF1000 %
+                            yaxis_id: pct
+                            transform: "return x / 255 * 100;"
+                            stroke_width: 2
+                            extend_to: now
+                            color: '#f59e0b'
+                          - entity: binary_sensor.dsc_hub_2x4_window_open
+                            name: Window
+                            yaxis_id: duty
+                            transform: "return x === 'on' ? 1 : 0;"
+                            type: area
+                            curve: stepline
+                            opacity: 0.2
+                            stroke_width: 0
+                            extend_to: now
+                            color: '#22c55e'
+                      - type: entities
+                        entities:
+                          - entity: number.dsc_hub_sf1000_target_brightness
+                            name: Target brightness
+                          - entity: number.dsc_hub_sf1000_ramp_floor
+                            name: Ramp floor
+                          - entity: number.dsc_hub_sunrise_duration
+                            name: Sunrise duration
+                          - entity: number.dsc_hub_sunset_duration
+                            name: Sunset duration
+                          - entity: time.dsc_hub_clone_lights_on_time
+                            name: Clone lights-on
+                          - entity: number.dsc_hub_clone_light_hours
+                            name: Clone light hours
           - type: markdown
             content: >-
               *A healthy ramp is a **trapezoid**, not a rectangle: sunrise
@@ -3010,12 +4192,23 @@ views:
             show:
               labels: true
               extrema: true
+            tap_action: *dsc_popup_vpd
       - type: grid
         cards:
           - type: heading
             heading: ⚙️ LOCAL CLONE EQUIPMENT
             heading_style: title
           - type: custom:vertical-stack-in-card
+            card_mod:
+              style: |
+                ha-card {
+                  border-left: 4px solid
+                    {% if is_state('binary_sensor.dsc_hub_root_zone_sensor_fault','on') %}rgba(239,68,68,0.9)
+                    {% elif is_state('switch.dsc_hub_grow_mat_demand','on') %}rgba(251,146,60,0.9)
+                    {% elif states('sensor.dsc_hub_grow_mat_fire_countdown')|float(0) > 0 %}rgba(251,191,36,0.9)
+                    {% elif states('sensor.dsc_hub_grow_mat_cooldown_remaining')|float(0) > 0 %}rgba(59,130,246,0.9)
+                    {% else %}rgba(148,163,184,0.25){% endif %};
+                }
             cards:
               - type: custom:mushroom-template-card
                 entity: switch.dsc_hub_grow_mat_demand
@@ -3097,6 +4290,15 @@ views:
                       {% if not has_value(entity) %}NODE OFFLINE
                       {%- else %}relay {{ states(entity) }}{% endif %}
           - type: custom:vertical-stack-in-card
+            card_mod:
+              style: |
+                ha-card {
+                  border-left: 4px solid
+                    {% if is_state('binary_sensor.dsc_clone_humidifier_demand_without_actuator','on') %}rgba(239,68,68,0.9)
+                    {% elif is_state('switch.dsc_hub_clone_humidifier_demand','on') %}rgba(56,189,248,0.9)
+                    {% elif states('sensor.dsc_hub_clone_humidifier_fire_countdown')|float(0) > 0 %}rgba(251,191,36,0.9)
+                    {% else %}rgba(148,163,184,0.25){% endif %};
+                }
             cards:
               - type: custom:mushroom-template-card
                 entity: switch.dsc_hub_clone_humidifier_demand
@@ -3146,9 +4348,10 @@ views:
     icon: mdi:grass
     path: root-zone
     type: sections
-    max_columns: 3
+    max_columns: 4
     sections:
       - type: grid
+        column_span: 2
         cards:
           - type: heading
             heading: 🌱 POT MATRIX
@@ -3238,6 +4441,7 @@ views:
               exclude a dying probe. Panel Soil tab shows the same 0xD3/0xD4
               data with a per-pot NPK drill-down.*
       - type: grid
+        column_span: 2
         cards:
           - type: heading
             heading: 💧 MOISTURE & SOIL TEMP
@@ -3254,11 +4458,13 @@ views:
                 name: POT1
                 min: 0
                 max: 100
+                tap_action: *dsc_popup_pot1
               - type: custom:modern-circular-gauge
                 entity: sensor.dsc_pot2_soil_moisture
                 name: POT2
                 min: 0
                 max: 100
+                tap_action: *dsc_popup_pot2
               - type: custom:modern-circular-gauge
                 entity: sensor.dsc_pot3_soil_moisture
                 name: POT3
@@ -3267,11 +4473,13 @@ views:
                 card_mod:
                   style: |
                     ha-card { /* pot styling via live alerts */ }
+                tap_action: *dsc_popup_pot3
               - type: custom:modern-circular-gauge
                 entity: sensor.dsc_pot4_soil_moisture
                 name: POT4
                 min: 0
                 max: 100
+                tap_action: *dsc_popup_pot4
           - type: heading
             heading: Soil temperature — coldest voting pot drives the mat
             heading_style: subtitle
@@ -3286,6 +4494,7 @@ views:
                 max: 32
                 icon: mdi:thermometer
                 secondary: {}
+                tap_action: *dsc_popup_rootzone
               - type: custom:modern-circular-gauge
                 entity: sensor.dsc_pot2_soil_temperature
                 name: POT2 🔥
@@ -3293,6 +4502,7 @@ views:
                 max: 32
                 icon: mdi:thermometer
                 secondary: {}
+                tap_action: *dsc_popup_rootzone
               - type: custom:modern-circular-gauge
                 entity: sensor.dsc_pot3_soil_temperature
                 name: POT3
@@ -3303,6 +4513,7 @@ views:
                 card_mod:
                   style: |
                     ha-card { /* pot styling via live alerts */ }
+                tap_action: *dsc_popup_rootzone
               - type: custom:modern-circular-gauge
                 entity: sensor.dsc_pot4_soil_temperature
                 name: POT4 🔥
@@ -3310,9 +4521,11 @@ views:
                 max: 32
                 icon: mdi:thermometer
                 secondary: {}
+                tap_action: *dsc_popup_rootzone
           - type: custom:expander-card
             title: Mat vote — include in coldest / hottest
             expanded: true
+            card_mod: *dsc_expander_style
             cards:
               - type: entities
                 entities:
@@ -3336,6 +4549,7 @@ views:
           - type: custom:expander-card
             title: 🧪 Soil pH
             expanded: false
+            card_mod: *dsc_expander_style
             cards:
               - type: grid
                 columns: 4
@@ -3388,9 +4602,158 @@ views:
                     *pH looks low on a live pot (under 5.0). These JXCT probes
                     often need Cal pH Offset/Scale — treat absolute pH as a
                     trend until calibrated against a known buffer.*
+          # v5.1 lean cut: probe calibration lost its panel drill — HA only.
+          - type: custom:expander-card
+            title: 🔬 Probe calibration — offsets & scales (per pot)
+            expanded: false
+            card_mod: *dsc_expander_style
+            cards:
+              - type: markdown
+                content: >-
+                  *Applied on the pot node before publish (NVS-persisted).
+                  Offset shifts, scale multiplies. Calibrate pH against a
+                  known buffer; leave scale at 1.0 unless you have two
+                  reference points.*
+              - type: custom:expander-card
+                title: POT1
+                expanded: false
+                cards:
+                  - type: entities
+                    entities:
+                      - entity: number.dsc_pot1_cal_moisture_offset
+                        name: Moisture offset
+                      - entity: number.dsc_pot1_cal_moisture_scale
+                        name: Moisture scale
+                      - entity: number.dsc_pot1_cal_temperature_offset
+                        name: Temp offset
+                      - entity: number.dsc_pot1_cal_temperature_scale
+                        name: Temp scale
+                      - entity: number.dsc_pot1_cal_conductivity_offset
+                        name: EC offset
+                      - entity: number.dsc_pot1_cal_conductivity_scale
+                        name: EC scale
+                      - entity: number.dsc_pot1_cal_ph_offset
+                        name: pH offset
+                      - entity: number.dsc_pot1_cal_ph_scale
+                        name: pH scale
+                      - entity: number.dsc_pot1_cal_nitrogen_offset
+                        name: N offset
+                      - entity: number.dsc_pot1_cal_nitrogen_scale
+                        name: N scale
+                      - entity: number.dsc_pot1_cal_phosphorus_offset
+                        name: P offset
+                      - entity: number.dsc_pot1_cal_phosphorus_scale
+                        name: P scale
+                      - entity: number.dsc_pot1_cal_potassium_offset
+                        name: K offset
+                      - entity: number.dsc_pot1_cal_potassium_scale
+                        name: K scale
+              - type: custom:expander-card
+                title: POT2
+                expanded: false
+                cards:
+                  - type: entities
+                    entities:
+                      - entity: number.dsc_pot2_cal_moisture_offset
+                        name: Moisture offset
+                      - entity: number.dsc_pot2_cal_moisture_scale
+                        name: Moisture scale
+                      - entity: number.dsc_pot2_cal_temperature_offset
+                        name: Temp offset
+                      - entity: number.dsc_pot2_cal_temperature_scale
+                        name: Temp scale
+                      - entity: number.dsc_pot2_cal_conductivity_offset
+                        name: EC offset
+                      - entity: number.dsc_pot2_cal_conductivity_scale
+                        name: EC scale
+                      - entity: number.dsc_pot2_cal_ph_offset
+                        name: pH offset
+                      - entity: number.dsc_pot2_cal_ph_scale
+                        name: pH scale
+                      - entity: number.dsc_pot2_cal_nitrogen_offset
+                        name: N offset
+                      - entity: number.dsc_pot2_cal_nitrogen_scale
+                        name: N scale
+                      - entity: number.dsc_pot2_cal_phosphorus_offset
+                        name: P offset
+                      - entity: number.dsc_pot2_cal_phosphorus_scale
+                        name: P scale
+                      - entity: number.dsc_pot2_cal_potassium_offset
+                        name: K offset
+                      - entity: number.dsc_pot2_cal_potassium_scale
+                        name: K scale
+              - type: custom:expander-card
+                title: POT3 (probe fault — calibrate after repair)
+                expanded: false
+                cards:
+                  - type: entities
+                    entities:
+                      - entity: number.dsc_pot3_cal_moisture_offset
+                        name: Moisture offset
+                      - entity: number.dsc_pot3_cal_moisture_scale
+                        name: Moisture scale
+                      - entity: number.dsc_pot3_cal_temperature_offset
+                        name: Temp offset
+                      - entity: number.dsc_pot3_cal_temperature_scale
+                        name: Temp scale
+                      - entity: number.dsc_pot3_cal_conductivity_offset
+                        name: EC offset
+                      - entity: number.dsc_pot3_cal_conductivity_scale
+                        name: EC scale
+                      - entity: number.dsc_pot3_cal_ph_offset
+                        name: pH offset
+                      - entity: number.dsc_pot3_cal_ph_scale
+                        name: pH scale
+                      - entity: number.dsc_pot3_cal_nitrogen_offset
+                        name: N offset
+                      - entity: number.dsc_pot3_cal_nitrogen_scale
+                        name: N scale
+                      - entity: number.dsc_pot3_cal_phosphorus_offset
+                        name: P offset
+                      - entity: number.dsc_pot3_cal_phosphorus_scale
+                        name: P scale
+                      - entity: number.dsc_pot3_cal_potassium_offset
+                        name: K offset
+                      - entity: number.dsc_pot3_cal_potassium_scale
+                        name: K scale
+              - type: custom:expander-card
+                title: POT4
+                expanded: false
+                cards:
+                  - type: entities
+                    entities:
+                      - entity: number.dsc_pot4_cal_moisture_offset
+                        name: Moisture offset
+                      - entity: number.dsc_pot4_cal_moisture_scale
+                        name: Moisture scale
+                      - entity: number.dsc_pot4_cal_temperature_offset
+                        name: Temp offset
+                      - entity: number.dsc_pot4_cal_temperature_scale
+                        name: Temp scale
+                      - entity: number.dsc_pot4_cal_conductivity_offset
+                        name: EC offset
+                      - entity: number.dsc_pot4_cal_conductivity_scale
+                        name: EC scale
+                      - entity: number.dsc_pot4_cal_ph_offset
+                        name: pH offset
+                      - entity: number.dsc_pot4_cal_ph_scale
+                        name: pH scale
+                      - entity: number.dsc_pot4_cal_nitrogen_offset
+                        name: N offset
+                      - entity: number.dsc_pot4_cal_nitrogen_scale
+                        name: N scale
+                      - entity: number.dsc_pot4_cal_phosphorus_offset
+                        name: P offset
+                      - entity: number.dsc_pot4_cal_phosphorus_scale
+                        name: P scale
+                      - entity: number.dsc_pot4_cal_potassium_offset
+                        name: K offset
+                      - entity: number.dsc_pot4_cal_potassium_scale
+                        name: K scale
           - type: custom:expander-card
             title: 🪴 Plant IDs & stages
             expanded: false
+            card_mod: *dsc_expander_style
             cards:
               - type: entities
                 entities:
@@ -3417,6 +4780,7 @@ views:
                   as ESP-NOW **0xD4**. Panel Soil → tap a pot for the live
                   NPK drill-down.*
       - type: grid
+        column_span: 2
         cards:
           # ============================================================
           #  ⚡ EC PLANT UPTAKE  —  new in v2.4
@@ -3676,6 +5040,53 @@ views:
               labels: true
               extrema: true
               legend: true
+            tap_action:
+              action: fire-dom-event
+              browser_mod:
+                service: browser_mod.popup
+                data:
+                  title: Soil moisture — 7 days
+                  size: wide
+                  content:
+                    type: custom:apexcharts-card
+                    graph_span: 7d
+                    span:
+                      end: hour
+                    header:
+                      show: true
+                      title: Feed cliffs & drink decay — 7d
+                      show_states: true
+                    apex_config:
+                      chart:
+                        height: 380
+                    yaxis:
+                      - min: 0
+                        max: 100
+                    series:
+                      - entity: sensor.dsc_pot1_soil_moisture
+                        name: POT1
+                        stroke_width: 2
+                        extend_to: now
+                        color: '#22c55e'
+                        group_by:
+                          func: avg
+                          duration: 30min
+                      - entity: sensor.dsc_pot2_soil_moisture
+                        name: POT2
+                        stroke_width: 2
+                        extend_to: now
+                        color: '#3b82f6'
+                        group_by:
+                          func: avg
+                          duration: 30min
+                      - entity: sensor.dsc_pot4_soil_moisture
+                        name: POT4
+                        stroke_width: 2
+                        extend_to: now
+                        color: '#f59e0b'
+                        group_by:
+                          func: avg
+                          duration: 30min
           - type: markdown
             content: >-
               *POT3 omitted — its probe reads 0.0 % and would flatten the axis.*
@@ -3879,16 +5290,33 @@ views:
     icon: mdi:cup-water
     path: tank
     type: sections
-    max_columns: 3
+    max_columns: 4
     sections:
       - type: grid
         cards:
           - type: heading
             heading: 🚰 TANK TESTER
             heading_style: title
-          - type: custom:ph-meter-temperature
-            entity: sensor.water_tester_ph_current
-            entity_temperature: sensor.water_tester_temperature
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: sensor.water_tester_ph_current
+                state_not: unavailable
+            card:
+              type: custom:ph-meter-temperature
+              entity: sensor.water_tester_ph_current
+              entity_temperature: sensor.water_tester_temperature
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: sensor.water_tester_ph_current
+                state: unavailable
+            card:
+              type: markdown
+              content: >-
+                *Tank tester offline / not integrated — the Tuya water tester
+                map lives in `homeassistant/README.md`. EC targets below still
+                publish from stage & plant type.*
           - type: conditional
             conditions:
               - condition: numeric_state
@@ -3901,6 +5329,7 @@ views:
               icon: mdi:bacteria
               icon_color: red
       - type: grid
+        column_span: 2
         cards:
           - type: heading
             heading: ⚡ EC vs STAGE TARGET
@@ -3917,6 +5346,65 @@ views:
               {{ [ {'from': 0, 'color': '#f59e0b'},
                    {'from': lo, 'color': '#22c55e'},
                    {'from': hi, 'color': '#ef4444'} ] }}
+            tap_action: &dsc_popup_tank
+              action: fire-dom-event
+              browser_mod:
+                service: browser_mod.popup
+                data:
+                  title: 🚰 Tank — 7 days
+                  size: wide
+                  content:
+                    type: custom:apexcharts-card
+                    graph_span: 7d
+                    span:
+                      end: hour
+                    header:
+                      show: true
+                      title: Tank EC vs stage targets — 7d
+                      show_states: true
+                    apex_config:
+                      chart:
+                        height: 380
+                    yaxis:
+                      - id: ec
+                        min: ~0
+                      - id: ph
+                        opposite: true
+                        min: 4
+                        max: 9
+                    series:
+                      - entity: sensor.dsc_tank_ec_normalized
+                        name: Tank EC
+                        yaxis_id: ec
+                        stroke_width: 2
+                        extend_to: now
+                        color: '#38bdf8'
+                        group_by:
+                          func: avg
+                          duration: 30min
+                      - entity: sensor.dsc_tank_ec_target_min
+                        name: Target min
+                        yaxis_id: ec
+                        curve: stepline
+                        stroke_width: 1
+                        extend_to: now
+                        color: '#22c55e66'
+                      - entity: sensor.dsc_tank_ec_target_max
+                        name: Target max
+                        yaxis_id: ec
+                        curve: stepline
+                        stroke_width: 1
+                        extend_to: now
+                        color: '#ef444466'
+                      - entity: sensor.water_tester_ph_current
+                        name: pH
+                        yaxis_id: ph
+                        stroke_width: 2
+                        extend_to: now
+                        color: '#f59e0b'
+                        group_by:
+                          func: avg
+                          duration: 30min
           - type: custom:mini-graph-card
             name: EC + pH — 48 h
             hours_to_show: 48
@@ -3933,6 +5421,7 @@ views:
               labels: true
               extrema: true
               legend: true
+            tap_action: *dsc_popup_tank
           - type: markdown
             content: >-
               *This number is the **reference line** on the Root Zone uptake
@@ -3966,9 +5455,10 @@ views:
     icon: mdi:white-balance-sunny
     path: lighting
     type: sections
-    max_columns: 3
+    max_columns: 4
     sections:
       - type: grid
+        column_span: 2
         cards:
           # ============================================================
           #  v2.4: retitled from "SF1000 — 4x8 MAIN". The heading itself was
@@ -4041,6 +5531,8 @@ views:
                 name: Sunrise Ramp
               - entity: number.dsc_hub_sunset_duration
                 name: Sunset Ramp
+              - entity: time.dsc_hub_lights_on_time
+                name: 4x8 Window Opens (stage sets hours)
           - type: markdown
             content: >-
               *Window source: **Follow 4x8** mirrors the main tent's virtual
@@ -4077,17 +5569,25 @@ views:
 
               *What this page shows is still **commanded** state — but
               commanded off now means dark.*
-          - type: heading
-            heading: 💡 ROOM UTILITY LIGHT
-            heading_style: subtitle
-          - type: light
-            entity: light.nabu_casa_skyconnect_v1_0_grow_room_main_white
-            name: Grow Room White
-          - type: markdown
-            content: >-
-              *Not on the photoperiod, not in either tent — but it **is** in the
-              room the 2x4 draws from. Leaving it on during the clone dark
-              period can leak light through the intake path.*
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: light.nabu_casa_skyconnect_v1_0_grow_room_main_white
+                state_not: unavailable
+            card:
+              type: vertical-stack
+              cards:
+                - type: heading
+                  heading: 💡 ROOM UTILITY LIGHT
+                  heading_style: subtitle
+                - type: light
+                  entity: light.nabu_casa_skyconnect_v1_0_grow_room_main_white
+                  name: Grow Room White
+                - type: markdown
+                  content: >-
+                    *Not on the photoperiod, not in either tent — but it **is** in the
+                    room the 2x4 draws from. Leaving it on during the clone dark
+                    period can leak light through the intake path.*
       - type: grid
         cards:
           - type: heading
@@ -4209,6 +5709,7 @@ views:
             show:
               labels: false
               fill: true
+            tap_action: *dsc_popup_sf1000
           - type: markdown
             content: >-
               *Healthy counter-cycle = the two filled blocks **interlock like
@@ -4239,7 +5740,7 @@ views:
     icon: mdi:brain
     path: learning
     type: sections
-    max_columns: 3
+    max_columns: 4
     sections:
       - type: grid
         cards:
@@ -4315,64 +5816,72 @@ views:
                 name: Intake Main (default 4″)
               - entity: input_number.dsc_duct_intake_clone_cm
                 name: Intake 2x4 (default 4″)
-          - type: entities
-            title: Stored CFM curves (0 = unset → linear %)
-            show_header_toggle: false
-            entities:
-              - type: section
-                label: OUT exhaust
-              - entity: input_number.dsc_cal_cfm_out_25
-                name: "@25%"
-              - entity: input_number.dsc_cal_cfm_out_50
-                name: "@50%"
-              - entity: input_number.dsc_cal_cfm_out_75
-                name: "@75%"
-              - entity: input_number.dsc_cal_cfm_out_100
-                name: "@100%"
-              - type: section
-                label: RECIRC exhaust
-              - entity: input_number.dsc_cal_cfm_recirc_25
-                name: "@25%"
-              - entity: input_number.dsc_cal_cfm_recirc_50
-                name: "@50%"
-              - entity: input_number.dsc_cal_cfm_recirc_75
-                name: "@75%"
-              - entity: input_number.dsc_cal_cfm_recirc_100
-                name: "@100%"
-              - type: section
-                label: Intake Main
-              - entity: input_number.dsc_cal_cfm_intake_main_25
-                name: "@25%"
-              - entity: input_number.dsc_cal_cfm_intake_main_50
-                name: "@50%"
-              - entity: input_number.dsc_cal_cfm_intake_main_75
-                name: "@75%"
-              - entity: input_number.dsc_cal_cfm_intake_main_100
-                name: "@100%"
-              - type: section
-                label: Intake 2x4
-              - entity: input_number.dsc_cal_cfm_intake_clone_25
-                name: "@25%"
-              - entity: input_number.dsc_cal_cfm_intake_clone_50
-                name: "@50%"
-              - entity: input_number.dsc_cal_cfm_intake_clone_75
-                name: "@75%"
-              - entity: input_number.dsc_cal_cfm_intake_clone_100
-                name: "@100%"
-          - type: entities
-            title: SF1000 PPFD curve (0 = unset)
-            show_header_toggle: false
-            entities:
-              - entity: sensor.dsc_sf1000_ppfd
-                name: Live PPFD (interpolated)
-              - entity: input_number.dsc_cal_ppfd_25
-                name: "@25%"
-              - entity: input_number.dsc_cal_ppfd_50
-                name: "@50%"
-              - entity: input_number.dsc_cal_ppfd_75
-                name: "@75%"
-              - entity: input_number.dsc_cal_ppfd_100
-                name: "@100%"
+          - type: custom:expander-card
+            title: 📈 Stored CFM curves (0 = unset → linear %)
+            expanded: false
+            card_mod: *dsc_expander_style
+            cards:
+              - type: entities
+                show_header_toggle: false
+                entities:
+                  - type: section
+                    label: OUT exhaust
+                  - entity: input_number.dsc_cal_cfm_out_25
+                    name: "@25%"
+                  - entity: input_number.dsc_cal_cfm_out_50
+                    name: "@50%"
+                  - entity: input_number.dsc_cal_cfm_out_75
+                    name: "@75%"
+                  - entity: input_number.dsc_cal_cfm_out_100
+                    name: "@100%"
+                  - type: section
+                    label: RECIRC exhaust
+                  - entity: input_number.dsc_cal_cfm_recirc_25
+                    name: "@25%"
+                  - entity: input_number.dsc_cal_cfm_recirc_50
+                    name: "@50%"
+                  - entity: input_number.dsc_cal_cfm_recirc_75
+                    name: "@75%"
+                  - entity: input_number.dsc_cal_cfm_recirc_100
+                    name: "@100%"
+                  - type: section
+                    label: Intake Main
+                  - entity: input_number.dsc_cal_cfm_intake_main_25
+                    name: "@25%"
+                  - entity: input_number.dsc_cal_cfm_intake_main_50
+                    name: "@50%"
+                  - entity: input_number.dsc_cal_cfm_intake_main_75
+                    name: "@75%"
+                  - entity: input_number.dsc_cal_cfm_intake_main_100
+                    name: "@100%"
+                  - type: section
+                    label: Intake 2x4
+                  - entity: input_number.dsc_cal_cfm_intake_clone_25
+                    name: "@25%"
+                  - entity: input_number.dsc_cal_cfm_intake_clone_50
+                    name: "@50%"
+                  - entity: input_number.dsc_cal_cfm_intake_clone_75
+                    name: "@75%"
+                  - entity: input_number.dsc_cal_cfm_intake_clone_100
+                    name: "@100%"
+          - type: custom:expander-card
+            title: ☀️ SF1000 PPFD curve (0 = unset)
+            expanded: false
+            card_mod: *dsc_expander_style
+            cards:
+              - type: entities
+                show_header_toggle: false
+                entities:
+                  - entity: sensor.dsc_sf1000_ppfd
+                    name: Live PPFD (interpolated)
+                  - entity: input_number.dsc_cal_ppfd_25
+                    name: "@25%"
+                  - entity: input_number.dsc_cal_ppfd_50
+                    name: "@50%"
+                  - entity: input_number.dsc_cal_ppfd_75
+                    name: "@75%"
+                  - entity: input_number.dsc_cal_ppfd_100
+                    name: "@100%"
           - type: horizontal-stack
             cards:
               - type: button
@@ -4790,6 +6299,7 @@ views:
                 to: 2
 
       - type: grid
+        column_span: 3
         cards:
           - type: heading
             heading: CHARTS — efficiencies, ETA, climate response
@@ -5000,46 +6510,54 @@ views:
                 name: EMA α (lower = slower)
               - entity: input_number.dsc_learn_min_samples
                 name: Min samples to trust
-          - type: entities
-            title: Sample counts
-            show_header_toggle: false
-            entities:
-              - entity: input_number.dsc_learn_samples_dehum
-                name: Dehum
-              - entity: input_number.dsc_learn_samples_hum
-                name: Hum
-              - entity: input_number.dsc_learn_samples_heater
-                name: Heater
-              - entity: input_number.dsc_learn_samples_mat
-                name: Mat
-              - entity: input_number.dsc_learn_samples_vent_cool
-                name: Vent cool
-              - entity: input_number.dsc_learn_samples_vent_dry
-                name: Vent dry
-              - entity: input_number.dsc_learn_samples_recirc
-                name: Recirc
-              - entity: input_number.dsc_learn_samples_ac
-                name: AC
-          - type: entities
-            title: Coefficients (editable · 1.0 = nameplate)
-            show_header_toggle: false
-            entities:
-              - entity: input_number.dsc_learn_eff_dehum
-                name: Dehum ×
-              - entity: input_number.dsc_learn_eff_hum
-                name: Hum ×
-              - entity: input_number.dsc_learn_eff_heater
-                name: Heater ×
-              - entity: input_number.dsc_learn_eff_mat
-                name: Mat ×
-              - entity: input_number.dsc_learn_eff_vent_cool
-                name: Vent cool ×
-              - entity: input_number.dsc_learn_eff_vent_dry
-                name: Vent dry ×
-              - entity: input_number.dsc_learn_eff_recirc
-                name: Recirc ×
-              - entity: input_number.dsc_learn_eff_ac
-                name: AC ×
+          - type: custom:expander-card
+            title: 🔢 Sample counts
+            expanded: false
+            card_mod: *dsc_expander_style
+            cards:
+              - type: entities
+                show_header_toggle: false
+                entities:
+                  - entity: input_number.dsc_learn_samples_dehum
+                    name: Dehum
+                  - entity: input_number.dsc_learn_samples_hum
+                    name: Hum
+                  - entity: input_number.dsc_learn_samples_heater
+                    name: Heater
+                  - entity: input_number.dsc_learn_samples_mat
+                    name: Mat
+                  - entity: input_number.dsc_learn_samples_vent_cool
+                    name: Vent cool
+                  - entity: input_number.dsc_learn_samples_vent_dry
+                    name: Vent dry
+                  - entity: input_number.dsc_learn_samples_recirc
+                    name: Recirc
+                  - entity: input_number.dsc_learn_samples_ac
+                    name: AC
+          - type: custom:expander-card
+            title: ⚙️ Coefficients (editable · 1.0 = nameplate)
+            expanded: false
+            card_mod: *dsc_expander_style
+            cards:
+              - type: entities
+                show_header_toggle: false
+                entities:
+                  - entity: input_number.dsc_learn_eff_dehum
+                    name: Dehum ×
+                  - entity: input_number.dsc_learn_eff_hum
+                    name: Hum ×
+                  - entity: input_number.dsc_learn_eff_heater
+                    name: Heater ×
+                  - entity: input_number.dsc_learn_eff_mat
+                    name: Mat ×
+                  - entity: input_number.dsc_learn_eff_vent_cool
+                    name: Vent cool ×
+                  - entity: input_number.dsc_learn_eff_vent_dry
+                    name: Vent dry ×
+                  - entity: input_number.dsc_learn_eff_recirc
+                    name: Recirc ×
+                  - entity: input_number.dsc_learn_eff_ac
+                    name: AC ×
           - type: custom:mushroom-template-card
             primary: Reset coefficients to nameplate
             secondary: Clears sample counts · fires dsc_climate_learn_reset
@@ -5065,9 +6583,10 @@ views:
     icon: mdi:chart-multiline
     path: trends
     type: sections
-    max_columns: 2
+    max_columns: 4
     sections:
       - type: grid
+        column_span: 2
         cards:
           - type: heading
             heading: 🧠 THE RESPONSE STACK — source → fans → result
@@ -5183,6 +6702,7 @@ views:
               No reflash between attempts, which is the whole point of the
               runtime tunables.*
       - type: grid
+        column_span: 2
         cards:
           - type: heading
             heading: 🔍 FORENSICS
@@ -5361,7 +6881,7 @@ views:
     icon: mdi:cog
     path: system
     type: sections
-    max_columns: 3
+    max_columns: 4
     sections:
       - type: grid
         cards:
@@ -5391,30 +6911,45 @@ views:
                   FLEET {{ states(entity)|upper }} · expect {{ state_attr(entity,'expected') or '5.1.0' }}
               - type: entity
                 entity: sensor.dsc_ha_surface_version
-              - type: entity
-                entity: sensor.dsc_hub_sync_sha
-          - type: markdown
-            content: >-
-              | Layer | Reported |
-              |---|---|
-              | Expected | `{{ state_attr('sensor.dsc_fleet_version_status','expected') or '5.1.0' }}` |
-              | HA surface | `{{ states('sensor.dsc_ha_surface_version') }}` |
-              | Sync SHA | `{{ states('sensor.dsc_hub_sync_sha') }}` |
-              | Hub | `{{ states('sensor.dsc_hub_firmware_version') }}` |
-              | Panel | `{{ states('sensor.dsc_control_firmware_version') }}` |
-              | Pot1–4 | `{{ states('sensor.dsc_pot1_firmware_version') }}` /
-                `{{ states('sensor.dsc_pot2_firmware_version') }}` /
-                `{{ states('sensor.dsc_pot3_firmware_version') }}` /
-                `{{ states('sensor.dsc_pot4_firmware_version') }}` |
-              | Heater / Mat | `{{ states('sensor.dsc_heater_firmware_version') }}` /
-                `{{ states('sensor.dsc_heatmat_firmware_version') }}` |
-              | Hum / Dehum | `{{ states('sensor.dsc_humidifier_firmware_version') }}` /
-                `{{ states('sensor.dsc_de_humidifier_firmware_version') }}` |
-          - type: entities
-            title: Expected release
-            entities:
-              - entity: input_text.dsc_expected_release
-                name: Expected release tag
+              - type: conditional
+                conditions:
+                  - entity: sensor.dsc_hub_sync_sha
+                    state_not: unavailable
+                chip:
+                  type: entity
+                  entity: sensor.dsc_hub_sync_sha
+          - type: custom:expander-card
+            title: 🏷️ Fleet version table
+            expanded: false
+            card_mod: *dsc_expander_style
+            cards:
+              - type: markdown
+                content: >-
+                  | Layer | Reported |
+                  |---|---|
+                  | Expected | `{{ state_attr('sensor.dsc_fleet_version_status','expected') or '5.1.0' }}` |
+                  | HA surface | `{{ states('sensor.dsc_ha_surface_version') }}` |
+                  | Sync SHA | `{{ states('sensor.dsc_hub_sync_sha') }}` |
+                  | Hub | `{{ states('sensor.dsc_hub_firmware_version') }}` |
+                  | Panel | `{{ states('sensor.dsc_control_firmware_version') }}` |
+                  | Pot1–4 | `{{ states('sensor.dsc_pot1_firmware_version') }}` /
+                    `{{ states('sensor.dsc_pot2_firmware_version') }}` /
+                    `{{ states('sensor.dsc_pot3_firmware_version') }}` /
+                    `{{ states('sensor.dsc_pot4_firmware_version') }}` |
+                  | Heater / Mat | `{{ states('sensor.dsc_heater_firmware_version') }}` /
+                    `{{ states('sensor.dsc_heatmat_firmware_version') }}` |
+                  | Hum / Dehum | `{{ states('sensor.dsc_humidifier_firmware_version') }}` /
+                    `{{ states('sensor.dsc_de_humidifier_firmware_version') }}` |
+                  | ESPHome (hub) | `{{ states('sensor.dsc_hub_esphome_version') }}` |
+              - type: entities
+                entities:
+                  - entity: input_text.dsc_expected_release
+                    name: Expected release tag
+              - type: markdown
+                content: >-
+                  *Expected fleet cut: **`5.1.0`** (hub, panel, pots, Sonoffs,
+                  Sync add-on, HA surface). Firmware Install is still **manual**
+                  per device — Sync never auto-flashes.*
           - type: entities
             entities:
               - entity: binary_sensor.dsc_hub_link
@@ -5435,33 +6970,84 @@ views:
                 name: Aux sensor fault
               - entity: binary_sensor.dsc_hub_root_zone_sensor_fault
                 name: Root-zone sensor fault
+      # ================================================================
+      #  v5.1: LINK & HEARTBEAT + WIFI AP PINNING — the new reliability
+      #  surface. Heartbeat/handshake watch the API path; Lock WiFi AP
+      #  pins the fleet to one BSSID on mesh networks (Nest AP fix).
+      # ================================================================
+      - type: grid
+        cards:
           - type: heading
-            heading: 📱 DSC-CONTROL (PANEL)
-            heading_style: subtitle
+            heading: 💓 LINK & HEARTBEAT
+            heading_style: title
+          - type: custom:mushroom-template-card
+            entity: sensor.dsc_hub_heartbeat
+            primary: >-
+              {% if states(entity) in ['unknown','unavailable'] %}Heartbeat — NO SIGNAL
+              {% else %}Heartbeat {{ states(entity) }}{% endif %}
+            secondary: >-
+              {% set lc = states[entity].last_changed if states[entity] else none %}
+              {% if lc %}last beat {{ relative_time(lc) }} ago —
+              stale > 5 min triggers the watchdog alert{% else %}waiting for hub{% endif %}
+            icon: mdi:heart-pulse
+            icon_color: >-
+              {% if states(entity) in ['unknown','unavailable'] %}red{% else %}green{% endif %}
+            tap_action:
+              action: more-info
+            card_mod:
+              style: |
+                @keyframes dsc-beat {
+                  0%, 100% { transform: scale(1); }
+                  25% { transform: scale(1.15); }
+                  40% { transform: scale(1); }
+                }
+                mushroom-shape-icon {
+                  {% if states('sensor.dsc_hub_heartbeat') not in ['unknown','unavailable'] %}
+                  animation: dsc-beat 1.6s ease-in-out infinite;
+                  {% endif %}
+                }
           - type: entities
+            state_color: true
             entities:
-              - entity: sensor.dsc_control_wifi_rssi
-                name: Panel WiFi RSSI
-              - entity: sensor.dsc_control_panel_free_heap
-                name: Panel free heap
-              - entity: sensor.dsc_control_panel_largest_free_block
-                name: Panel largest free block
-              - entity: binary_sensor.dsc_control_ha_link_status
-                name: Panel HA link
-              - entity: button.dsc_control_restart
-                name: Restart panel
+              - entity: binary_sensor.dsc_hub_ha_link_status
+                name: HA API link
+              - entity: binary_sensor.dsc_hub_wifi_associated
+                name: WiFi associated
+              - entity: number.dsc_hub_ha_handshake
+                name: HA handshake counter
+              - entity: binary_sensor.dsc_hub_panel_link
+                name: Panel ESP-NOW link
           - type: markdown
             content: >-
-              *Panel heap: watch free heap **and** largest free block.
-              Fragmentation (small largest block with "ok" free total)
-              was the v4.0.1 crash mode. ESP-NOW is primary — HA link
-              may be down while the panel still drives the hub.*
-          - type: markdown
-            content: >-
-              *Expected fleet cut: **`5.1.0`** (hub, panel, pots, Sonoffs,
-              Sync add-on, HA surface). Firmware Install is still **manual**
-              per device — Sync never auto-flashes. Prefer entity prefix
-              `dsc_control_*` for the panel.*
+              *Handshake pings every few minutes; a wedged API with live WiFi
+              for ≥5 min makes the hub NVS-sync and safe-reboot (max 2×/boot).
+              ≥30 s of true offline safe-offs the Sonoffs from HA's side.*
+          - type: heading
+            heading: 📡 WIFI AP PINNING (v5.1)
+            heading_style: subtitle
+          - type: custom:expander-card
+            title: 📌 Pin fleet to one AP — mesh roaming fix
+            expanded: false
+            card_mod: *dsc_expander_style
+            cards:
+              - type: entities
+                entities:
+                  - entity: switch.dsc_hub_lock_wifi_ap
+                    name: Lock WiFi AP
+                  - entity: sensor.dsc_hub_wifi_bssid
+                    name: Current BSSID
+                  - entity: text.dsc_hub_preferred_wifi_bssid
+                    name: Preferred BSSID
+                  - entity: button.dsc_hub_remember_current_wifi_ap
+                    name: Remember current AP
+                  - entity: button.dsc_hub_clear_preferred_wifi_ap
+                    name: Clear preferred AP
+              - type: markdown
+                content: >-
+                  *Lock broadcasts the pinned BSSID over ESP-NOW 0xD0 — pots
+                  and the panel adopt it, so the whole fleet camps on one mesh
+                  node instead of roaming mid-grow. A recovery ladder unpins
+                  automatically if the AP disappears.*
           - type: custom:mini-graph-card
             name: WiFi RSSI — 24 h
             hours_to_show: 24
@@ -5469,23 +7055,156 @@ views:
             line_width: 2
             entities:
               - entity: sensor.dsc_hub_wifi_rssi
-                name: RSSI
+                name: Hub
+              - entity: sensor.dsc_control_wifi_rssi
+                name: Panel
             show:
               labels: true
               extrema: true
+              legend: true
+            tap_action:
+              action: fire-dom-event
+              browser_mod:
+                service: browser_mod.popup
+                data:
+                  title: 📡 WiFi RSSI — 48h fleet
+                  size: wide
+                  content:
+                    type: custom:apexcharts-card
+                    graph_span: 48h
+                    header:
+                      show: true
+                      title: RSSI (dBm) — pinned fleet should be flat lines
+                      show_states: true
+                    all_series_config:
+                      extend_to: now
+                      stroke_width: 2
+                    apex_config:
+                      chart:
+                        height: 380
+                    series:
+                      - entity: sensor.dsc_hub_wifi_rssi
+                        name: Hub
+                        color: '#38bdf8'
+                      - entity: sensor.dsc_control_wifi_rssi
+                        name: Panel
+                        color: '#a78bfa'
+                      - entity: sensor.dsc_pot1_wifi_rssi
+                        name: POT1
+                        color: '#22c55e'
+                      - entity: sensor.dsc_pot2_wifi_rssi
+                        name: POT2
+                        color: '#84cc16'
+                      - entity: sensor.dsc_pot3_wifi_rssi
+                        name: POT3
+                        color: '#a3a3a3'
+                      - entity: sensor.dsc_pot4_wifi_rssi
+                        name: POT4
+                        color: '#14b8a6'
+      # ================================================================
+      #  v5.1: PANEL HEALTH — the lean-cut glass. Heap fragmentation was
+      #  the 4.0.x crash mode; free heap + largest block get a chart.
+      # ================================================================
+      - type: grid
+        cards:
           - type: heading
-            heading: 🕐 PHOTOPERIOD WINDOWS
-            heading_style: subtitle
+            heading: 📱 DSC-CONTROL (PANEL)
+            heading_style: title
+          - type: custom:mushroom-template-card
+            entity: binary_sensor.dsc_hub_panel_link
+            primary: >-
+              {% if is_state(entity,'on') %}Panel — ESP-NOW primary
+              {% elif not is_state('sensor.dsc_control_wifi_rssi','unavailable') %}Panel — HA only (ESP-NOW hello missing)
+              {% else %}Panel — OFFLINE{% endif %}
+            secondary: >-
+              Glass is vitals + coarse control since the 5.1.6 lean cut —
+              every removed settings drill now lives on this dashboard
+            icon: mdi:tablet-dashboard
+            icon_color: >-
+              {% if is_state(entity,'on') %}green
+              {% elif not is_state('sensor.dsc_control_wifi_rssi','unavailable') %}amber
+              {% else %}red{% endif %}
+            multiline_secondary: true
+            tap_action:
+              action: more-info
           - type: entities
+            state_color: true
             entities:
-              - entity: binary_sensor.dsc_hub_4x8_window_open
-                name: 4x8 window (virtual — no lamp)
-              - entity: binary_sensor.dsc_hub_2x4_window_open
-                name: 2x4 window (SF1000)
-              - entity: light.dsc_hub_sf1000_dimmer
-                name: SF1000 actual
-              - entity: binary_sensor.dsc_clone_dark_period_violation
-                name: Clone dark-period violation
+              - entity: sensor.dsc_control_firmware_version
+                name: Panel firmware
+              - entity: sensor.dsc_control_wifi_rssi
+                name: Panel WiFi RSSI
+              - entity: binary_sensor.dsc_control_ha_link_status
+                name: Panel HA link
+              - entity: sensor.dsc_control_ambient_light_raw
+                name: Ambient light (raw)
+              - entity: light.dsc_control_backlight
+                name: Backlight
+              - entity: button.dsc_control_restart
+                name: Restart panel
+          - type: custom:mini-graph-card
+            name: Panel heap — 24 h
+            hours_to_show: 24
+            points_per_hour: 4
+            line_width: 2
+            entities:
+              - entity: sensor.dsc_control_panel_free_heap
+                name: Free heap
+              - entity: sensor.dsc_control_panel_largest_free_block
+                name: Largest block
+            show:
+              labels: true
+              extrema: true
+              legend: true
+            tap_action:
+              action: fire-dom-event
+              browser_mod:
+                service: browser_mod.popup
+                data:
+                  title: 📱 Panel heap — 48h
+                  size: wide
+                  content:
+                    type: custom:apexcharts-card
+                    graph_span: 48h
+                    header:
+                      show: true
+                      title: Free heap vs largest free block — fragmentation watch
+                      show_states: true
+                    all_series_config:
+                      extend_to: now
+                      stroke_width: 2
+                    apex_config:
+                      chart:
+                        height: 380
+                    series:
+                      - entity: sensor.dsc_control_panel_free_heap
+                        name: Free heap
+                        color: '#22c55e'
+                      - entity: sensor.dsc_control_panel_largest_free_block
+                        name: Largest block
+                        color: '#f59e0b'
+          - type: markdown
+            content: >-
+              *Watch free heap **and** largest free block. Fragmentation
+              (small largest block with "ok" free total) was the v4.0.1
+              crash mode. ESP-NOW is primary — panel HA link may be down
+              while the glass still drives the hub.*
+          - type: custom:expander-card
+            title: 🕐 Photoperiod windows
+            expanded: false
+            card_mod: *dsc_expander_style
+            cards:
+              - type: entities
+                state_color: true
+                entities:
+                  - entity: binary_sensor.dsc_hub_4x8_window_open
+                    name: 4x8 window (virtual — no lamp)
+                  - entity: binary_sensor.dsc_hub_2x4_window_open
+                    name: 2x4 window (SF1000)
+                  - entity: light.dsc_hub_sf1000_dimmer
+                    name: SF1000 actual
+                  - entity: binary_sensor.dsc_clone_dark_period_violation
+                    name: Clone dark-period violation
       - type: grid
         cards:
           - type: heading
@@ -5531,30 +7250,36 @@ views:
                 - entity_id: sensor.dsc_pot?_uptime
             sort:
               method: entity_id
-          - type: markdown
-            content: >-
-              *v4 node safety (Sonoffs still HA-actuated — no ESP-NOW on ESP8285):*
+          - type: custom:expander-card
+            title: 🛡️ Node safety notes
+            expanded: false
+            card_mod: *dsc_expander_style
+            cards:
+              - type: markdown
+                content: >-
+                  *v4 node safety (Sonoffs still HA-actuated — no ESP-NOW on ESP8285):*
 
 
-              *• **`restore_mode: ALWAYS_OFF`** — a Sonoff that loses power
-              comes back OFF, never mid-demand. This is the runaway fix.*
+                  *• **`restore_mode: ALWAYS_OFF`** — a Sonoff that loses power
+                  comes back OFF, never mid-demand. This is the runaway fix.*
 
 
-              *• **API-loss grace** — each node drops its relay after its own
-              grace window if the hub goes away: heater 60 s, heatmat/humidifier
-              90 s, dehumidifier 240 s (compressor). Tuned by consequence, not
-              by symmetry.*
+                  *• **API-loss grace** — each node drops its relay after its own
+                  grace window if the hub goes away: heater 60 s, heatmat/humidifier
+                  90 s, dehumidifier 240 s (compressor). Tuned by consequence, not
+                  by symmetry.*
 
 
-              *• **Test mode** — bounded to 10 minutes, physical button only.
-              The node ignores hub demand while it runs and auto-expires.*
+                  *• **Test mode** — bounded to 10 minutes, physical button only.
+                  The node ignores hub demand while it runs and auto-expires.*
 
 
-              *• **ESP-NOW pot links** — a grey link chip is not an
-              emergency: that pot is riding its HA mirror. Both paths dark for
-              5 min raises Root-Zone Sensor Fault and drops the mat to the
-              clone-air rung.*
+                  *• **ESP-NOW pot links** — a grey link chip is not an
+                  emergency: that pot is riding its HA mirror. Both paths dark for
+                  5 min raises Root-Zone Sensor Fault and drops the mat to the
+                  clone-air rung.*
       - type: grid
+        column_span: 2
         cards:
           - type: heading
             heading: 🔧 ACTIONS

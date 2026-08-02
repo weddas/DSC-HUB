@@ -30,6 +30,19 @@ title: DSC-HUB
 
 Optional entity overrides — see [`homeassistant/README.md`](../homeassistant/README.md).
 
+## Browser Mod (required for popups)
+
+The dashboard's popup layer (graph enlarge, appliance consoles, pot
+detail) fires `browser_mod.popup`. Unlike the cards above, **Browser Mod
+is a HACS *Integration***, not a Dashboard plugin:
+
+1. HACS → **Integrations** → search **Browser Mod** → **Download**
+2. Restart Home Assistant
+3. **Settings → Devices & Services → Add Integration → Browser Mod**
+4. Hard-refresh the browser (Ctrl+F5)
+
+Without it, popup `tap_action`s silently do nothing — no error is shown.
+
 ## Layout (what HACS downloads)
 
 | Path | Role |

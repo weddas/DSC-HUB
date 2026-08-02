@@ -6,7 +6,7 @@ Canonical HA surface for firmware [`firmware/v4/`](../firmware/v4/).
 
 | Path | Role |
 |---|---|
-| `dashboards/dsc-hub-v4-dashboard.yaml` | Lovelace UX **v0.2** (10 views). URL **must** be `dsc-hub-pro`. Flow: Home → Climate → Learning → tents → Root Zone → Tank/Light/Trends/System. |
+| `dashboards/dsc-hub-v4-dashboard.yaml` | Lovelace UX **v5.1.1** (10 views, 4-col, browser_mod popups). URL **must** be `dsc-hub-pro`. Flow: Home → Climate → Learning → tents → Root Zone → Tank/Light/Trends/System. |
 | `packages/dsc_v4_core_helpers.yaml` | Hub link, fan %, airflow Sankey (CFM), photoperiod, leaf offset, appliance runtimes, dead-demand cues |
 | `packages/dsc_v4_climate_physics.yaml` | Settable plant specs (CFM/volumes/L/day/W), ACH/AH/BTU/moisture sensors, spec verification |
 | `packages/dsc_v4_device_cal.yaml` | Optional fan CFM / SF1000 PPFD multi-point curves + Learning wizard (unset = % × nameplate) |
@@ -69,7 +69,12 @@ Package pot/tank **push** notifiers are not shipped in **v5.0.0**
 
 ## HACS cards
 
-mushroom · apexcharts-card · power-flow-card-plus · sankey-chart · plotly-graph-card · mini-graph-card · gauge-card-pro · modern-circular-gauge · logbook-card · auto-entities · vertical-stack-in-card · card-mod · bar-card · ph-meter-temperature · **expander-card**
+mushroom · apexcharts-card · power-flow-card-plus · plotly-graph-card · mini-graph-card · gauge-card-pro · modern-circular-gauge · logbook-card · auto-entities · vertical-stack-in-card · card-mod · bar-card · ph-meter-temperature · **expander-card** · **browser_mod**
+
+`browser_mod` (HACS **Integration**, not a card) powers the popup layer —
+graph enlarge, appliance consoles, pot detail. Install from HACS →
+Integrations, restart HA, then **Settings → Devices & Services →
+Add Integration → Browser Mod**. Without it the popup taps silently no-op.
 
 ## Local custom card — SYSTEM MAP
 
@@ -116,8 +121,8 @@ it must not duplicate ladder logic.
 |---|---|---|
 | OUT / RECIRC / intakes | Hub fans | First responder; heat reuse; negative-pressure budget |
 | Humidifier / dehumidifier / heater / grow mat | Hub demand → HA follower → Sonoff | Wired actuators |
-| AC | Hub `ac_demand` only | **No follower** — summer / lights-on heat can stall at room temp |
-| Clone mister | Hub `clone_humidifier_demand` only | **Parked** until mister hardware |
+| AC | Hub `ac_demand` → **gated follower** | Follower acts only when `input_boolean.dsc_ac_actuator_wired` is on and `switch.dsc_ac_main_relay` exists |
+| Clone mister | Hub `clone_humidifier_demand` → **gated follower** | Same gating via `dsc_clone_humidifier_actuator_wired` — parked until mister hardware |
 | Shared room appliances | Priority tent when both live | Non-priority tent is local levers only |
 
 ### Scenario keep-up matrix (code-walked)
@@ -228,10 +233,14 @@ not humidifier lock — entity id kept for compatibility.
 
 | Piece | Version |
 |---|---|
-| Hub / panel / pots / Sonoffs / kits | **`5.1.0`** |
-| Sync add-on / HA surface | **`5.1.0`** |
-| Dashboard | DSC-HUB Pro |
+| Hub / pots / Sonoffs / kits | **`5.1.0`** |
+| Panel (DSC-CONTROL) | **`5.1.x`** lean-cut patch train |
+| HA surface (packages + dashboard) | **`5.1.1`** |
+| Dashboard | DSC-HUB Pro (4-col, browser_mod popups) |
 | `espnow_cmd_tag` | `54727` (`0xD5C7`) on hub **and** panel |
+
+Fleet drift chip (`sensor.dsc_fleet_version_status`) compares the
+**major.minor** train, so mixed patch levels inside `5.1.x` stay `ok`.
 
 **Mat votes:** `switch.dsc_hub_mat_vote_pot_1`…`4` — Root Zone is source of truth; Climate links there.
 
