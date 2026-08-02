@@ -58,12 +58,14 @@ packages / dashboard / www / ESPHome stubs land in `/config`.
 | Device | Config | Version |
 |---|---|---|
 | Hub | `dsc-hub.yaml` → `dsc-hub-v4_0.yaml` | **5.1.0** |
-| Panel | `dsc-control.yaml` → `dsc-control-common.yaml` | **5.1.4** |
+| Panel | `dsc-control.yaml` → `dsc-control-common.yaml` | **5.1.14** |
 | Pots 1–4 | `dsc-pot{N}.yaml` → `dsc-pot-common.yaml` | **5.1.0** |
 | Sonoffs | heater / heatmat / humidifier / de-humidifier | **5.1.0** |
 | Kits | `*-kit.yaml`, `*-wifi-kit.yaml`, fleet-setup kits | **5.1.0** (same bodies) |
 | Sync add-on | `dsc-hub-sync/` | **5.1.0** |
-| HA surface | `sensor.dsc_ha_surface_version` | **5.1.0** |
+| HA surface | `sensor.dsc_ha_surface_version` | **5.1.1** |
+
+Fleet chip compares **major.minor** — panel `5.1.x` beside hub `5.1.0` stays `ok`.
 
 ESPHome stubs use `ref: v5.1.0`. Flash order: hub → panel → pots → Sonoffs.
 
@@ -115,4 +117,4 @@ esphome config dsc-hub-kit.yaml
 1. Hub · 2. Panel · 3. Pots · 4. Sonoffs
 
 Firmware Install is always **manual**. Sync never auto-flashes. The fleet version
-chip stays `warn`/`error` until every device reports **5.1.0**.
+chip stays `warn`/`error` until every device reports the **5.1** train.
