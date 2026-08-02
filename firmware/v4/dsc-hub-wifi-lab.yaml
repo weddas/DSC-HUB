@@ -1,13 +1,20 @@
 # ==================================================================
 #  DSC-HUB · lab WiFi (compile-time SSID from secrets)
+#
+#  AP PIN: prefer ${wifi_bssid} so hub / Control / pots land on the same
+#  Nest point. 00:00:00:00:00:00 = any AP on the SSID (fallback network).
 # ==================================================================
 wifi:
-  ssid: ${wifi_ssid}
-  password: ${wifi_password}
+  networks:
+    - ssid: ${wifi_ssid}
+      password: ${wifi_password}
+      bssid: ${wifi_bssid}
+      priority: 10
+    - ssid: ${wifi_ssid}
+      password: ${wifi_password}
+      priority: 0
   power_save_mode: none
-  # Rejoin known AP without a full scan. HA "hub offline" is usually an
-  # API session blip (Control/ESP-NOW still fine); fast_connect just
-  # shortens real STA drops.
+  # Rejoin known AP without a full scan. HA offline is usually API-only.
   fast_connect: true
   ap:
     ssid: DSC-HUB Fallback Hotspot
@@ -26,5 +33,7 @@ wifi:
             last_ch = ch;
           }
         }
+    # Early boot — learn/pin preferred Nest BSSID before climate/UI load.
+    - script.execute: wifi_ap_learn_or_pin
 
 captive_portal:

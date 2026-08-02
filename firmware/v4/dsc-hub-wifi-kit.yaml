@@ -24,3 +24,4 @@ wifi:
             last_ch = ch;
           }
         }
+    - script.execute: wifi_ap_learn_or_pin

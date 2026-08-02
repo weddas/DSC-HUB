@@ -8,6 +8,7 @@ substitutions:
   ota_password_val: !secret dsc_pot4_ota_password
   ap_password_val: !secret dsc_pot4_ap_password
   hub_mac: "84:1F:E8:16:E6:60"
+  wifi_bssid: "00:00:00:00:00:00"
 
 packages:
   wifi: !include dsc-pot-wifi-lab.yaml

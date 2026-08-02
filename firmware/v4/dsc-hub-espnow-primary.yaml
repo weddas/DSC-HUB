@@ -343,10 +343,39 @@ script:
             put(id(plant_name_3)); put(id(plant_name_4));
             return p;
 
+  # ---- FLEET HEARTBEAT (0xD0) — Control + pots
+  # Payload: {0xD0, 0x01, channel, b0..b5 preferred-or-current BSSID}.
+  # Control adopts BSSID during Starting (before full GUI).
+  - id: tx_fleet_heartbeat
+    mode: single
+    then:
+      - espnow.send:
+          address: FF:FF:FF:FF:FF:FF
+          wait_for_sent: false
+          data: !lambda |-
+            std::vector<uint8_t> p{0xD0, 0x01, 0, 0, 0, 0, 0, 0, 0};
+            auto *w = wifi::global_wifi_component;
+            if (w != nullptr && w->get_wifi_channel() > 0)
+              p[2] = (uint8_t) w->get_wifi_channel();
+            // Prefer NVS preferred BSSID; else current association.
+            std::string pref = id(preferred_wifi_bssid).state;
+            if (pref.size() == 17) {
+              for (int i = 0; i < 6; i++) {
+                char hex[3] = { pref[i * 3], pref[i * 3 + 1], 0 };
+                p[3 + i] = (uint8_t) strtol(hex, nullptr, 16);
+              }
+            } else if (w != nullptr && w->is_connected()) {
+              auto b = w->wifi_bssid();
+              for (int i = 0; i < 6; i++) p[3 + i] = b[i];
+            }
+            return p;
+
 # Drive the periodic broadcasts (the on_receive echo covers instant feedback).
 interval:
   - interval: 2s
     then: [{script.execute: tx_vitals}]
+  - interval: 5s
+    then: [{script.execute: tx_fleet_heartbeat}]
   - interval: 10s
     then: [{script.execute: tx_config}, {script.execute: tx_soil}, {script.execute: tx_names}]
 

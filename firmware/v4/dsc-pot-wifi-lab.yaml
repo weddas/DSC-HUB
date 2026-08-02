@@ -1,10 +1,21 @@
 # ==================================================================
 #  DSC pot · lab WiFi
+#
+#  AP PIN: networks[0] prefers ${wifi_bssid} (hub's WiFi BSSID). Use
+#  00:00:00:00:00:00 in the stub to allow any AP; set the real BSSID so
+#  every pot stays on the same Nest point as the hub.
 # ==================================================================
 wifi:
-  ssid: ${wifi_ssid}
-  password: ${wifi_password}
+  networks:
+    - ssid: ${wifi_ssid}
+      password: ${wifi_password}
+      bssid: ${wifi_bssid}
+      priority: 10
+    - ssid: ${wifi_ssid}
+      password: ${wifi_password}
+      priority: 0
   power_save_mode: none
+  fast_connect: true
   ap:
     ssid: "${friendly_name} Fallback"
     password: ${ap_password_val}

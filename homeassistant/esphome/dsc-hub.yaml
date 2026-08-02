@@ -10,6 +10,8 @@ substitutions:
   espnow_key: !secret espnow_key
   panel_mac: "30:76:F5:E9:22:0C"
   espnow_cmd_tag: "54727"
+  # Pin to hub AP: copy sensor.dsc_hub_wifi_bssid after first join.
+  wifi_bssid: "00:00:00:00:00:00"
 
 packages:
   hub:

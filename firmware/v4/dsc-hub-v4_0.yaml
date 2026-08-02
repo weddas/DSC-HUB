@@ -21,6 +21,14 @@
 # App.safe_reboot() so the API rebinds. api.reboot_timeout stays 0s
 # (HA maintenance must not bounce climate). Boot grace + per-boot cap.
 #
+# ===== FLEET LINK / AP PIN (temp mesh) =====
+# Optional text.dsc_hub_preferred_wifi_bssid (NVS). On WiFi connect the
+# hub can auto-learn the current AP into that field (Lock WiFi AP),
+# raise its STA priority, and broadcast the 6-byte BSSID in 0xD0 so
+# Control (during Starting) and pots can follow the same Nest point.
+# Compile-time wifi_bssid still works as a hard stub override.
+# Recovery ladder: nudge → WiFi bounce → reboot (hub reboot = API only).
+#
 # ===== v4.0 · ESP-NOW PRIMARY CONTROL LAYER =====
 # The DSC-CONTROL panel drives this hub directly over ESP-NOW. The stub
 # merges dsc-hub-espnow-primary.yaml (command RX + telemetry TX + soil
@@ -876,6 +884,19 @@ globals:
     type: uint32_t
     restore_value: false
     initial_value: '0'
+  # Same ladder as Control/pots: ping/nudge → WiFi bounce → reboot
+  - id: link_rec_stage
+    type: int
+    restore_value: false
+    initial_value: '0'
+  - id: link_rec_wifi_bounces
+    type: int
+    restore_value: false
+    initial_value: '0'
+  - id: link_rec_last_action
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
 
   # --- Screensaver physics (px per 100ms frame; status line at y=53
   #     gives the 48px logo a 0..5px vertical lane) ---
@@ -1390,6 +1411,23 @@ switch:
     turn_off_action:
       - globals.set: {id: full_auto_mode, value: 'false'}
       - script.execute: tx_panel_sync
+
+  # Temp mesh: when ON, WiFi-connect learns/keeps preferred BSSID in NVS
+  # and raises STA priority so the hub (and 0xD0 followers) stick to one
+  # Nest point without locking the whole LAN channel plan.
+  - platform: template
+    name: "Lock WiFi AP"
+    id: wifi_ap_lock
+    icon: "mdi:access-point-check"
+    entity_category: config
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_ON
+    turn_on_action:
+      - script.execute: wifi_ap_learn_or_pin
+    turn_off_action:
+      - logger.log:
+          level: INFO
+          format: "WiFi AP lock OFF — preferred BSSID kept but not enforced"
 
   - platform: template
     name: "Auto Photoperiod"
@@ -2274,6 +2312,11 @@ text_sensor:
     ssid:
       name: "WiFi SSID"
       id: network_ssid
+    bssid:
+      name: "WiFi BSSID"
+      id: network_bssid
+      entity_category: diagnostic
+      # Copy this into wifi_bssid on hub/Control/pots stubs to pin one Nest AP.
   - platform: version
     name: "ESPHome Version"
     id: esphome_version
@@ -2319,11 +2362,43 @@ text_sensor:
       - lambda: 'id(plant_name_4) = x.size() > 16 ? x.substr(0, 16) : x;'
       - script.execute: tx_names
 
+# Optional Nest-AP pin (NVS). Empty = unlocked. Lock WiFi AP auto-fills
+# this on connect; Control/pots can follow via 0xD0 BSSID bytes.
+text:
+  - platform: template
+    name: "Preferred WiFi BSSID"
+    id: preferred_wifi_bssid
+    icon: "mdi:router-wireless"
+    entity_category: config
+    mode: text
+    max_length: 17
+    optimistic: true
+    restore_value: true
+    initial_value: ""
+    on_value:
+      - script.execute: wifi_ap_learn_or_pin
+
 # Remote-recovery + community-testing helpers: restart from HA without
 # a power cycle, and uptime for "when did it last reboot" triage.
 button:
   - platform: restart
     name: "Restart"
+  - platform: template
+    name: "Remember Current WiFi AP"
+    id: btn_wifi_ap_remember
+    icon: "mdi:content-save"
+    entity_category: config
+    on_press:
+      - script.execute: wifi_ap_capture_now
+  - platform: template
+    name: "Clear Preferred WiFi AP"
+    id: btn_wifi_ap_clear
+    icon: "mdi:lock-open-variant"
+    entity_category: config
+    on_press:
+      - lambda: |-
+          id(preferred_wifi_bssid).make_call().set_value("").perform();
+          ESP_LOGI("wifi", "preferred WiFi BSSID cleared");
 
 # ==========================================
 # 6. HARDWARE SENSORS, FAILSAFE & WATCHDOG
@@ -2996,10 +3071,79 @@ binary_sensor:
 # 8. SCRIPTS  (stage engine + climate + photoperiod)
 # ==========================================
 script:
-  # ---- API session recovery: flush NVS then safe reboot ----
-  # Only for wedged HA API while WiFi is still up (Control/ESP-NOW can
-  # look fine the whole time). Short API blips must NOT land here —
-  # HA follower debounce covers those. Caps at 2 reboots/boot.
+  # ---- Optional AP pin: learn / prefer Nest BSSID (early, pre-GUI work) ----
+  - id: wifi_ap_capture_now
+    mode: single
+    then:
+      - lambda: |-
+          auto *w = wifi::global_wifi_component;
+          if (w == nullptr || !w->is_connected()) {
+            ESP_LOGW("wifi", "Remember AP: WiFi not connected");
+            return;
+          }
+          auto b = w->wifi_bssid();
+          char mac[18];
+          snprintf(mac, sizeof(mac), "%02X:%02X:%02X:%02X:%02X:%02X",
+                   b[0], b[1], b[2], b[3], b[4], b[5]);
+          id(preferred_wifi_bssid).make_call().set_value(mac).perform();
+          ESP_LOGI("wifi", "Remembered WiFi AP BSSID %s", mac);
+
+  - id: wifi_ap_learn_or_pin
+    mode: single
+    then:
+      - lambda: |-
+          auto *w = wifi::global_wifi_component;
+          if (w == nullptr || !w->is_connected()) return;
+
+          auto cur = w->wifi_bssid();
+          char cur_mac[18];
+          snprintf(cur_mac, sizeof(cur_mac), "%02X:%02X:%02X:%02X:%02X:%02X",
+                   cur[0], cur[1], cur[2], cur[3], cur[4], cur[5]);
+
+          std::string pref = id(preferred_wifi_bssid).state;
+          // Auto-learn once while Lock is ON and preferred is empty.
+          if (id(wifi_ap_lock).state && (pref.empty() || pref == "00:00:00:00:00:00")) {
+            id(preferred_wifi_bssid).make_call().set_value(cur_mac).perform();
+            pref = cur_mac;
+            ESP_LOGI("wifi", "Lock WiFi AP: learned BSSID %s", cur_mac);
+          }
+          if (!id(wifi_ap_lock).state) return;
+          if (pref.size() != 17) return;
+
+          wifi::bssid_t want{};
+          for (int i = 0; i < 6; i++) {
+            char hex[3] = { pref[i * 3], pref[i * 3 + 1], 0 };
+            want[i] = (uint8_t) strtol(hex, nullptr, 16);
+          }
+          // Prefer this Nest point on the next association.
+          w->set_sta_priority(want, 127);
+          bool same = true;
+          for (int i = 0; i < 6; i++) if (cur[i] != want[i]) { same = false; break; }
+          if (same) {
+            ESP_LOGI("wifi", "On preferred AP %s (priority raised)", pref.c_str());
+            return;
+          }
+          ESP_LOGW("wifi", "On %s but prefer %s — scheduling WiFi bounce", cur_mac, pref.c_str());
+          id(link_wifi_bounce).execute();
+
+  # ---- Link recovery (same ladder as Control/pots) ----
+  - id: link_wifi_bounce
+    mode: single
+    then:
+      - logger.log:
+          level: WARN
+          format: "link: WiFi bounce — API rebind + preferred BSSID rejoin"
+      - wifi.disable:
+      - delay: 3s
+      - wifi.enable:
+      - delay: 8s
+      - lambda: |-
+          ESP_LOGI("link", "WiFi bounce complete");
+          id(wifi_ap_learn_or_pin).execute();
+          id(tx_fleet_heartbeat).execute();
+          id(tx_vitals).execute();
+
+  # Wedged HA API while WiFi up — sync NVS then reboot. Caps at 2/boot.
   - id: stack_recovery_reboot
     mode: single
     then:
@@ -4169,84 +4313,112 @@ interval:
             ESP_LOGW("wifi", "channel hop %d -> %d — panel ESP-NOW will drop until it follows", poll_ch, ch);
           poll_ch = ch;
 
-  # ---- API session watchdog (the real failure mode) ----
-  # DSC-CONTROL can still be LINKED over ESP-NOW while HA marks the hub
-  # unavailable — that is API-only. Short blips: do nothing here (HA
-  # follower debounce keeps the heater on). Sustained wedge with WiFi
-  # still associated: sync NVS + safe_reboot to rebind the API.
-  # Thresholds: 5 min boot grace · API/handshake 5 min · max 2/boot.
-  # WiFi-down is logged only — not a reboot trigger.
-  - interval: 30s
+  # ---- Hub link recovery (same ladder as Control/pots) ----
+  # API wedge OR panel ESP-NOW gone quiet after it was alive:
+  #   ~45s  → fleet heartbeat + vitals nudge
+  #   ~90s  → WiFi bounce (API rebind + preferred BSSID)
+  #   ~180s → sync NVS + safe_reboot (API path only; max 2/boot)
+  # Panel-only silence never reboots the hub (climate stays local-first).
+  # WiFi-down is logged only.
+  - interval: 10s
     then:
-      - lambda: |-
-          const uint32_t BOOT_GRACE_MS    = 300000;   // 5 min
-          const uint32_t API_DEAD_MS      = 300000;   // 5 min — API wedge only
-          const int      MAX_REBOOTS_BOOT = 2;
+      - if:
+          condition:
+            lambda: |-
+              if (millis() < 90000u) return false;
+              auto *w = wifi::global_wifi_component;
+              if (w == nullptr || !w->is_connected()) return false;
+              if (id(link_rec_last_action) != 0 &&
+                  (millis() - id(link_rec_last_action)) < 20000u) return false;
 
-          if (millis() < BOOT_GRACE_MS) return;
-          if (id(stack_recovery_reboots) >= MAX_REBOOTS_BOOT) return;
+              // Healthy API clears stage.
+              bool api_ok = id(ha_connected).state;
+              if (api_ok) id(api_ever_connected) = true;
+              bool hs_ok = id(ha_handshake_seen) && id(ha_handshake_last) != 0 &&
+                           (millis() - id(ha_handshake_last)) < 45000u;
+              if (api_ok || hs_ok) {
+                id(api_down_since) = 0;
+              }
 
-          auto *w = wifi::global_wifi_component;
-          bool wifi_ok = (w != nullptr && w->is_connected());
-          bool api_ok  = id(ha_connected).state;
+              bool api_problem = false;
+              if (id(ha_handshake_seen) && id(ha_handshake_last) != 0) {
+                api_problem = (millis() - id(ha_handshake_last)) >= 45000u;
+              } else if (id(api_ever_connected) && !api_ok) {
+                if (id(api_down_since) == 0) id(api_down_since) = millis();
+                api_problem = (millis() - id(api_down_since)) >= 45000u;
+              }
 
-          if (api_ok) {
-            id(api_ever_connected) = true;
-            id(api_down_since) = 0;
-          }
+              bool panel_problem = id(panel_last_ms) != 0 &&
+                                   (millis() - id(panel_last_ms)) >= 45000u;
 
-          // WiFi down: climate + ESP-NOW may still run; do NOT reboot.
-          // API recovery only makes sense when STA is associated.
-          if (!wifi_ok) {
-            static uint32_t last_wifi_log = 0;
-            if (last_wifi_log == 0 || (millis() - last_wifi_log) > 60000) {
-              ESP_LOGW("api", "WiFi STA down — API recovery paused (not rebooting; Control/ESP-NOW may still be fine)");
-              last_wifi_log = millis();
-            }
-            id(api_down_since) = 0;
-            return;
-          }
+              if (!api_problem && !panel_problem) {
+                id(link_rec_stage) = 0;
+                return false;
+              }
+              return id(link_rec_stage) < 1;
+          then:
+            - lambda: |-
+                id(link_rec_stage) = 1;
+                id(link_rec_last_action) = millis();
+                ESP_LOGW("link", "hub link soft — fleet heartbeat + vitals nudge");
+            - script.execute: tx_fleet_heartbeat
+            - script.execute: tx_vitals
+      - if:
+          condition:
+            lambda: |-
+              if (millis() < 90000u) return false;
+              auto *w = wifi::global_wifi_component;
+              if (w == nullptr || !w->is_connected()) return false;
+              if (id(link_rec_last_action) != 0 &&
+                  (millis() - id(link_rec_last_action)) < 20000u) return false;
+              if (id(link_rec_wifi_bounces) >= 3) return false;
 
-          // Prefer HA handshake once the Sync ping has been seen this boot
-          // (stale age IS the timer). Otherwise fall back to HA Link Status
-          // after a prior good API session.
-          if (id(ha_handshake_seen) && id(ha_handshake_last) != 0) {
-            uint32_t age = millis() - id(ha_handshake_last);
-            if (age < API_DEAD_MS) {
-              id(api_down_since) = 0;
-              return;
-            }
-            ESP_LOGE("api",
-                     "HA handshake silent >%u min while WiFi up — API wedge; save state + reboot",
-                     (unsigned) (API_DEAD_MS / 60000));
-            id(stack_recovery_reboot).execute();
-            return;
-          }
+              bool api_ok = id(ha_connected).state;
+              bool api_problem = false;
+              if (id(ha_handshake_seen) && id(ha_handshake_last) != 0)
+                api_problem = (millis() - id(ha_handshake_last)) >= 90000u;
+              else if (id(api_ever_connected) && !api_ok && id(api_down_since) != 0)
+                api_problem = (millis() - id(api_down_since)) >= 90000u;
 
-          if (api_ok) {
-            id(api_down_since) = 0;
-            return;
-          }
+              bool panel_problem = id(panel_last_ms) != 0 &&
+                                   (millis() - id(panel_last_ms)) >= 90000u;
 
-          // No prior good API session → local-first, stay up (HA never joined).
-          if (!id(api_ever_connected)) {
-            id(api_down_since) = 0;
-            return;
-          }
+              // Bounce for API wedge and/or panel ESP-NOW silence.
+              return (api_problem || panel_problem) && id(link_rec_stage) < 2;
+          then:
+            - lambda: |-
+                id(link_rec_stage) = 2;
+                id(link_rec_wifi_bounces) = id(link_rec_wifi_bounces) + 1;
+                id(link_rec_last_action) = millis();
+                ESP_LOGW("link", "hub link — WiFi bounce #%d (API rebind + AP rejoin)",
+                         id(link_rec_wifi_bounces));
+            - script.execute: link_wifi_bounce
+      - if:
+          condition:
+            lambda: |-
+              if (millis() < 90000u) return false;
+              auto *w = wifi::global_wifi_component;
+              if (w == nullptr || !w->is_connected()) return false;
+              if (id(stack_recovery_reboots) >= 2) return false;
+              if (id(link_rec_last_action) != 0 &&
+                  (millis() - id(link_rec_last_action)) < 20000u) return false;
 
-          if (id(api_down_since) == 0) {
-            id(api_down_since) = millis();
-            ESP_LOGW("api",
-                     "HA Link Status lost while WiFi up (Control may still be fine) — API recovery timer started");
-            return;
-          }
+              // Reboot only for sustained API wedge after a WiFi bounce —
+              // never for panel-only silence (local climate must keep running).
+              bool api_ok = id(ha_connected).state;
+              bool api_problem = false;
+              if (id(ha_handshake_seen) && id(ha_handshake_last) != 0)
+                api_problem = (millis() - id(ha_handshake_last)) >= 180000u;
+              else if (id(api_ever_connected) && !api_ok && id(api_down_since) != 0)
+                api_problem = (millis() - id(api_down_since)) >= 180000u;
 
-          if ((millis() - id(api_down_since)) > API_DEAD_MS) {
-            ESP_LOGE("api",
-                     "HA Link Status dead >%u min while WiFi up — API wedge; save state + reboot",
-                     (unsigned) (API_DEAD_MS / 60000));
-            id(stack_recovery_reboot).execute();
-          }
+              return api_problem && id(link_rec_stage) >= 2;
+          then:
+            - lambda: |-
+                id(link_rec_stage) = 3;
+                id(link_rec_last_action) = millis();
+                ESP_LOGE("link", "hub API still wedged after WiFi bounce — save state + reboot");
+            - script.execute: stack_recovery_reboot
 
   # ---- Sensor watchdog: no valid temp for 3 min -> safe mode + alert ----
   - interval: 30s

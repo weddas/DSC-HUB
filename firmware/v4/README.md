@@ -32,7 +32,8 @@ Package body: [`dsc-control-common.yaml`](dsc-control-common.yaml).
 | Soil cards + detail | 0xD3 vitals / 0xD4 names; tap pot → NPK drill-down |
 | Hold-to-lock | Hold ~3 s on primary tabs; hold lock screen to unlock |
 | Demand / takeover gate | Confirm → Engage (not one stray tap) |
-| Connections | Wi‑Fi channel; ESP-NOW RX age + TX seq |
+| Connections | Wi‑Fi channel; ESP-NOW RX age + TX seq; silent → ping/WiFi bounce |
+| AP pin | Optional `wifi_bssid` (hub `sensor.dsc_hub_wifi_bssid`) pins Nest point |
 | Pulse VPD trend | 12×5 min ring → one label (no canvas charts) |
 | HA API | **Plaintext** (no Noise); **mDNS off** — add by IP only |
 | Stability | **4.0.10** page-gated `refresh_ui` @ 5 s |

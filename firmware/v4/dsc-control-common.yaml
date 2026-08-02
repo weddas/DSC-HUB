@@ -101,6 +101,8 @@
 #  v5.1.12: blank boot — backlight off until page_boot is painted; hold
 #  Starting until ESP-NOW hub vitals (timeout fallback); then arm full UI.
 #  Kills the white-noise flash while Wi-Fi/heap settle with LVGL paused.
+#  v5.1.14: ESP-NOW silent recovery ladder (hello ping → WiFi bounce →
+#    reboot) + optional wifi_bssid AP pin; accepts hub 0xD0 fleet beat.
 #  v5.1.13: panel hello (op 57) so hub knows glass is coming; Starting
 #  page loads vitals/config/soil with status text + lean progress bar
 #  before Pulse. Hub exposes binary_sensor Panel Link.
@@ -146,7 +148,7 @@ esphome:
     # the dashboard and HA's device page both described DSC-CONTROL as
     # being the DSC HUB. Purely cosmetic, but confusing enough to matter.
     name: "digital_emotions.dsc-control"
-    version: "5.1.13"
+    version: "5.1.14"
   on_boot:
     # Seed the 0xDC command seq from hardware RNG so a panel reboot is
     # unlikely to replay the hub's last-seen seq even before the hub's
@@ -159,7 +161,7 @@ esphome:
     - priority: 200
       then:
         - light.turn_off: backlight
-    # v5.1.13 — blank → Starting (status + bar) → hello → load snapshot → Pulse.
+    # v5.1.14 — blank → Starting (status + bar) → hello → load snapshot → Pulse.
     # Keep LVGL paused (backlight off) through Wi-Fi/heap settle. Resume only
     # the lite Starting page; hello the hub; wait for vitals/config/soil
     # before arming the full widget tree.
@@ -167,7 +169,7 @@ esphome:
       then:
         - light.turn_off: backlight
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 5.1.13 paused — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 5.1.14 paused — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
             id(boot_ui_ready) = false;
@@ -186,7 +188,7 @@ esphome:
               lambda: 'return heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL) < 20000;'
             then:
               - lambda: |-
-                  ESP_LOGW("boot", "DSC-CONTROL 5.1.13 heap still tight largest=%u — waiting longer",
+                  ESP_LOGW("boot", "DSC-CONTROL 5.1.14 heap still tight largest=%u — waiting longer",
                            (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
               - delay: 10s
         - lvgl.page.show: page_boot
@@ -195,7 +197,7 @@ esphome:
             id: boot_paint
             pct: 8
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 5.1.13 resume-lite — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 5.1.14 resume-lite — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
             id(touch_guard_until) = millis() + 5000;
@@ -213,6 +215,19 @@ esphome:
             condition:
               lambda: 'return id(wifi_conn);'
             timeout: 25s
+        - lambda: |-
+            id(boot_msg) = id(wifi_conn) ? "syncing Nest AP…" : "no Wi-Fi · announcing…";
+        - script.execute:
+            id: boot_paint
+            pct: 24
+        # During Starting (before full GUI): wait for hub 0xD0 BSSID and
+        # prefer that Nest point so glass matches hub channel/AP.
+        - wait_until:
+            condition:
+              lambda: 'return id(hub_ap_bssid_ok);'
+            timeout: 12s
+        - script.execute: adopt_hub_wifi_ap
+        - delay: 2s
         - lambda: |-
             id(boot_msg) = id(wifi_conn) ? "announcing to hub…" : "no Wi-Fi · announcing…";
         - script.execute:
@@ -277,7 +292,7 @@ esphome:
             id: boot_paint
             pct: 100
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 5.1.13 post-lite — free_heap=%u largest=%u hub=%d cfg=%d soil=%d",
+            ESP_LOGI("boot", "DSC-CONTROL 5.1.14 post-lite — free_heap=%u largest=%u hub=%d cfg=%d soil=%d",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL),
                      (int) (id(gv_hub_last) != 0), (int) id(gv_cfg_ok), (int) id(gv_soil_ok));
@@ -286,14 +301,14 @@ esphome:
         - lambda: 'lv_obj_clear_flag(id(tabbar), LV_OBJ_FLAG_HIDDEN);'
         - lvgl.page.show: page_pulse
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 5.1.13 resume-full — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 5.1.14 resume-full — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
             id(touch_guard_until) = millis() + 2000;
         - lvgl.resume:
         - delay: 3s
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 5.1.13 UI armed — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 5.1.14 UI armed — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
             id(boot_ui_ready) = true;
@@ -474,8 +489,23 @@ espnow:
           return wire;
         };
         uint8_t ty = data[0];
+        // Fleet heartbeat (hub 0xD0) — link alive + optional Nest BSSID.
+        if (ty == 0xD0) {
+          id(gv_hub_last) = millis();
+          id(link_rec_stage) = 0;
+          if (size >= 9) {
+            bool nz = false;
+            for (int i = 0; i < 6; i++) {
+              id(hub_ap_bssid)[i] = data[3 + i];
+              if (data[3 + i]) nz = true;
+            }
+            id(hub_ap_bssid_ok) = nz;
+          }
+          return;
+        }
         if (ty == 0xD1 && size >= 36) {
           id(gv_hub_last) = millis();
+          id(link_rec_stage) = 0;
           id(gv_tent_t)=rd(2)/100.0f; id(gv_clone_t)=rd(4)/100.0f; id(gv_room_t)=rd(6)/100.0f;
           id(gv_tent_rh)=rd(8)/100.0f; id(gv_clone_rh)=rd(10)/100.0f; id(gv_room_rh)=rd(12)/100.0f;
           id(gv_tent_vpd)=rd(14)/100.0f; id(gv_clone_vpd)=rd(16)/100.0f; id(gv_co2)=rd(18);
@@ -1188,7 +1218,7 @@ text_sensor:
     name: "Firmware Version"
     id: fw_version
     icon: mdi:tag-check
-    lambda: 'return {"5.1.13"};'
+    lambda: 'return {"5.1.14"};'
     update_interval: 60s
   - platform: template
     id: sel_stage
@@ -1401,6 +1431,17 @@ globals:
   - {id: wifi_conn, type: bool, initial_value: 'false'}                # driven by wifi on_connect/on_disconnect
   - {id: wifi_channel, type: int, initial_value: '0'}
   - {id: wifi_channel_hopped, type: bool, initial_value: 'false'}
+  # ESP-NOW silent recovery (temp mesh bandaid until dedicated AP/router).
+  # stage: 0=ok, 1=pinged, 2=wifi bounced, 3=reboot armed
+  - {id: link_rec_stage, type: int, initial_value: '0'}
+  - {id: link_rec_wifi_bounces, type: int, initial_value: '0'}
+  - {id: link_rec_reboots, type: int, initial_value: '0'}
+  - {id: link_rec_last_action, type: uint32_t, initial_value: '0'}
+  # Hub-advertised Nest BSSID from 0xD0 (learned during Starting).
+  - {id: hub_ap_bssid_ok, type: bool, initial_value: 'false'}
+  - id: hub_ap_bssid
+    type: uint8_t[6]
+    initial_value: '{0,0,0,0,0,0}'
   - id: wifi_since
     type: uint32_t
     initial_value: '0'
@@ -2030,7 +2071,7 @@ lvgl:
 
   # =============================== PAGES ===========================
   pages:
-    # ------------------------------ BOOT (5.1.13 Starting + bar) ---
+    # ------------------------------ BOOT (5.1.14 Starting + bar) ---
     # Lean: brand + status + one bar + pct. No icons/cards — RAM-safe.
     # Backlight stays off until this page is painted; then hello + snapshot.
     - id: page_boot
@@ -2071,7 +2112,7 @@ lvgl:
             y: 158
             text_color: 0x5A6472
         - label:
-            text: "v5.1.13"
+            text: "v5.1.14"
             text_font: f_small
             align: TOP_MID
             y: 188
@@ -3380,7 +3421,7 @@ lvgl:
                         id: hub_cmd
                         op: 19
                         val: !lambda 'return (id(gv_coord)&2) ? 0 : 1;'
-              - label: {text: "DSC-CONTROL v5.1.13  ·  ESP-NOW primary", text_font: f_small, text_color: 0x3A4550, pad_top: 8, pad_bottom: 8}
+              - label: {text: "DSC-CONTROL v5.1.14  ·  ESP-NOW primary", text_font: f_small, text_color: 0x3A4550, pad_top: 8, pad_bottom: 8}
 # ==================================================================
 #  SCRIPTS
 # ==================================================================
@@ -3413,6 +3454,51 @@ script:
   # v5.1.4: pend_* + write-through gv_* ONLY — no lv_label_set_text under the
   # tap (Full Auto / Modes letter-draw crashes). ui_dirty lets the 200 ms
   # drain paint grey via refresh_ui once the indev stack is clear.
+  # Prefer hub's Nest AP (from 0xD0). Runs during Starting before full GUI.
+  - id: adopt_hub_wifi_ap
+    mode: single
+    then:
+      - lambda: |-
+          if (!id(hub_ap_bssid_ok)) return;
+          auto *w = wifi::global_wifi_component;
+          if (w == nullptr || !w->is_connected()) return;
+          wifi::bssid_t want{};
+          for (int i = 0; i < 6; i++) want[i] = id(hub_ap_bssid)[i];
+          w->set_sta_priority(want, 127);
+          auto cur = w->wifi_bssid();
+          bool same = true;
+          for (int i = 0; i < 6; i++) if (cur[i] != want[i]) { same = false; break; }
+          if (same) {
+            ESP_LOGI("wifi", "Already on hub Nest AP %02X:%02X:%02X:%02X:%02X:%02X",
+                     want[0], want[1], want[2], want[3], want[4], want[5]);
+            return;
+          }
+          static uint32_t last_adopt_ms = 0;
+          if (last_adopt_ms != 0 && (millis() - last_adopt_ms) < 60000u) return;
+          if (id(link_rec_wifi_bounces) >= 3) return;
+          last_adopt_ms = millis();
+          id(link_rec_wifi_bounces) = id(link_rec_wifi_bounces) + 1;
+          ESP_LOGW("wifi", "Adopting hub Nest AP %02X:%02X:%02X:%02X:%02X:%02X — WiFi bounce #%d",
+                   want[0], want[1], want[2], want[3], want[4], want[5],
+                   id(link_rec_wifi_bounces));
+          id(link_wifi_bounce).execute();
+
+  # WiFi bounce rebinds HA API TCP and re-associates (prefers wifi_bssid / hub AP).
+  - id: link_wifi_bounce
+    mode: single
+    then:
+      - wifi.disable:
+      - delay: 3s
+      - wifi.enable:
+      - delay: 8s
+      - lambda: 'ESP_LOGI("link", "WiFi bounce complete — waiting for hub ESP-NOW");'
+
+  - id: link_recovery_reboot
+    mode: single
+    then:
+      - delay: 250ms
+      - lambda: 'App.safe_reboot();'
+
   - id: hub_cmd
     parameters:
       op: int
@@ -4334,6 +4420,65 @@ interval:
             ESP_LOGW("wifi", "channel hop %d -> %d (ESP-NOW needs hub on same ch)", id(wifi_channel), ch);
           }
           id(wifi_channel) = ch;
+
+  # ---- ESP-NOW silent recovery ladder (temp until dedicated router) ----
+  # Hub vitals 2s + 0xD0 beat 5s. If glass hears nothing:
+  #   15s → hello ping (hub echoes vitals — API/session nudge)
+  #   45s → WiFi bounce (rebind HA API + rejoin preferred BSSID)
+  #   120s → safe_reboot (cap 2/boot)
+  - interval: 10s
+    then:
+      - if:
+          condition:
+            lambda: |-
+              if (millis() < 90000u || !id(boot_ui_ready)) return false;
+              uint32_t age = (id(gv_hub_last) == 0) ? millis() : (millis() - id(gv_hub_last));
+              if (age < 15000u) { id(link_rec_stage) = 0; return false; }
+              if (id(link_rec_last_action) != 0 && (millis() - id(link_rec_last_action)) < 20000u)
+                return false;
+              return age >= 15000u && id(link_rec_stage) < 1;
+          then:
+            - lambda: |-
+                id(link_rec_stage) = 1;
+                id(link_rec_last_action) = millis();
+                ESP_LOGW("link", "ESP-NOW silent — hello ping to hub");
+            - script.execute:
+                id: hub_cmd
+                op: 57
+                val: 0
+      - if:
+          condition:
+            lambda: |-
+              if (millis() < 90000u || !id(boot_ui_ready)) return false;
+              uint32_t age = (id(gv_hub_last) == 0) ? millis() : (millis() - id(gv_hub_last));
+              if (id(link_rec_last_action) != 0 && (millis() - id(link_rec_last_action)) < 20000u)
+                return false;
+              return age >= 45000u && id(link_rec_stage) < 2 && id(link_rec_wifi_bounces) < 3;
+          then:
+            - lambda: |-
+                id(link_rec_stage) = 2;
+                id(link_rec_wifi_bounces) = id(link_rec_wifi_bounces) + 1;
+                id(link_rec_last_action) = millis();
+                ESP_LOGW("link", "ESP-NOW silent — WiFi bounce #%d (API rebind + AP rejoin)",
+                         id(link_rec_wifi_bounces));
+            - script.execute: link_wifi_bounce
+      - if:
+          condition:
+            lambda: |-
+              if (millis() < 90000u || !id(boot_ui_ready)) return false;
+              uint32_t age = (id(gv_hub_last) == 0) ? millis() : (millis() - id(gv_hub_last));
+              if (id(link_rec_last_action) != 0 && (millis() - id(link_rec_last_action)) < 20000u)
+                return false;
+              return age >= 120000u && id(link_rec_stage) >= 2 && id(link_rec_reboots) < 2;
+          then:
+            - lambda: |-
+                id(link_rec_reboots) = id(link_rec_reboots) + 1;
+                id(link_rec_stage) = 3;
+                id(link_rec_last_action) = millis();
+                ESP_LOGE("link", "ESP-NOW silent after WiFi bounce — safe_reboot #%d",
+                         id(link_rec_reboots));
+            - script.execute: link_recovery_reboot
+
   # 1h VPD micro-trend: one sample / 5 min → 12 slots. No canvas widgets.
   - interval: 300s
     then:

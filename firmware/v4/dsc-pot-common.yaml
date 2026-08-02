@@ -15,6 +15,12 @@
 #  before the digit). Referenced by the HA stat/alert packages, the
 #  dashboard, and the HUB's closed-loop grow mat. Do not rename a node.
 #
+#  v5.1.1 — LINK RECOVERY + AP PIN (Aug 2026)
+#   * Hub 0xD0 fleet handshake carries Nest BSSID; pot accepts it and
+#     disconnects/reconnects to that exact AP (set_sta + bssid).
+#   * If heartbeat silent: ping → WiFi bounce → reboot.
+#   * Optional stub wifi_bssid remains a hard compile-time pin.
+#  ------------------------------------------------------------------
 #  v4.0.1 — PER-SENSOR CALIBRATION (31 Jul 2026)
 #   * Each soil channel has HA/ESPHome number entities:
 #       Cal <Sensor> Offset  +  Cal <Sensor> Scale
@@ -61,7 +67,7 @@ esphome:
   friendly_name: ${friendly_name}
   project:
     name: digital_emotions.dsc-pot
-    version: "5.1.0"
+    version: "5.1.1"
 
 esp32:
   board: esp32dev
@@ -506,7 +512,7 @@ text_sensor:
   - platform: template
     name: "Firmware Version"
     icon: mdi:tag-check
-    lambda: 'return {"5.1.0"};'
+    lambda: 'return {"5.1.1"};'
     update_interval: 60s
 
 button:
@@ -586,13 +592,60 @@ select:
 #  exactly as before, and relays the rest to the DSC-CONTROL panel.
 #
 #  BEFORE FLASHING (per node): espnow_key in secrets (same everywhere);
-#  AP channel LOCKED on the router. Flash the hub first, then POT2 as
-#  canary, then the rest (USB first time, OTA after).
+#  Prefer wifi_bssid pin (same Nest AP as hub). Flash hub first, then
+#  POT2 as canary, then the rest (USB first time, OTA after).
 # ==================================================================
+globals:
+  - id: hub_beat_last
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+  - id: link_rec_stage
+    type: int
+    restore_value: false
+    initial_value: '0'
+  - id: link_rec_wifi_bounces
+    type: int
+    restore_value: false
+    initial_value: '0'
+  - id: link_rec_reboots
+    type: int
+    restore_value: false
+    initial_value: '0'
+  - id: link_rec_last_action
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+  - id: hub_ap_bssid_ok
+    type: bool
+    restore_value: false
+    initial_value: 'false'
+  - id: hub_ap_bssid
+    type: uint8_t[6]
+    restore_value: false
+    initial_value: '{0,0,0,0,0,0}'
+
 espnow:
   auto_add_peer: false
   peers:
     - ${hub_mac}
+  on_receive:
+    - lambda: |-
+        // Hub 0xD0 handshake — alive + Nest BSSID to join.
+        if (size >= 2 && data[0] == 0xD0 && data[1] == 0x01) {
+          id(hub_beat_last) = millis();
+          id(link_rec_stage) = 0;
+          if (size >= 9) {
+            bool nz = false;
+            for (int i = 0; i < 6; i++) {
+              id(hub_ap_bssid)[i] = data[3 + i];
+              if (data[3 + i]) nz = true;
+            }
+            id(hub_ap_bssid_ok) = nz;
+            // Accept handshake → disconnect/reconnect to that exact BSSID.
+            if (nz) id(adopt_hub_wifi_ap).execute();
+          }
+        }
 
 packet_transport:
   - platform: espnow
@@ -611,3 +664,149 @@ packet_transport:
       - soil_nitrogen
       - soil_phosphorus
       - soil_potassium
+
+script:
+  # Accept hub 0xD0 BSSID handshake → disconnect/reconnect to THAT AP.
+  - id: adopt_hub_wifi_ap
+    mode: single
+    then:
+      - lambda: |-
+          if (!id(hub_ap_bssid_ok)) return;
+          auto *w = wifi::global_wifi_component;
+          if (w == nullptr) return;
+
+          wifi::bssid_t want{};
+          for (int i = 0; i < 6; i++) want[i] = id(hub_ap_bssid)[i];
+
+          if (w->is_connected()) {
+            auto cur = w->wifi_bssid();
+            bool same = true;
+            for (int i = 0; i < 6; i++) if (cur[i] != want[i]) { same = false; break; }
+            if (same) {
+              w->set_sta_priority(want, 127);
+              return;  // already on hub's Nest point
+            }
+          }
+
+          static uint32_t last_adopt_ms = 0;
+          if (last_adopt_ms != 0 && (millis() - last_adopt_ms) < 60000u) return;
+          if (id(link_rec_wifi_bounces) >= 3) return;
+          last_adopt_ms = millis();
+          id(link_rec_wifi_bounces) = id(link_rec_wifi_bounces) + 1;
+
+          // Rebuild STA with the hub's BSSID so the reconnect targets it.
+          wifi::WiFiAP sta = w->get_sta();
+          if (sta.get_ssid().empty() && w->is_connected()) {
+            // Kit/NVS path: keep whatever STA is live; only force BSSID.
+            sta = w->get_sta();
+          }
+          sta.set_bssid(want);
+          sta.set_priority(127);
+          w->set_sta(sta);
+          w->set_sta_priority(want, 127);
+          ESP_LOGW("wifi",
+                   "0xD0 handshake — reconnect to hub AP %02X:%02X:%02X:%02X:%02X:%02X (#%d)",
+                   want[0], want[1], want[2], want[3], want[4], want[5],
+                   id(link_rec_wifi_bounces));
+      - wifi.disable:
+      - delay: 2s
+      - wifi.enable:
+      - delay: 8s
+      - lambda: |-
+          auto *w = wifi::global_wifi_component;
+          if (w != nullptr && w->is_connected() && id(hub_ap_bssid_ok)) {
+            auto cur = w->wifi_bssid();
+            ESP_LOGI("wifi", "Rejoined AP %02X:%02X:%02X:%02X:%02X:%02X (hub wanted %02X:%02X:%02X:%02X:%02X:%02X)",
+                     cur[0], cur[1], cur[2], cur[3], cur[4], cur[5],
+                     id(hub_ap_bssid)[0], id(hub_ap_bssid)[1], id(hub_ap_bssid)[2],
+                     id(hub_ap_bssid)[3], id(hub_ap_bssid)[4], id(hub_ap_bssid)[5]);
+          } else {
+            ESP_LOGW("wifi", "Reconnect after 0xD0 handshake still settling");
+          }
+
+  - id: link_wifi_bounce
+    mode: single
+    then:
+      - lambda: |-
+          // Silent-recovery bounce: if we have a hub BSSID, pin it first.
+          auto *w = wifi::global_wifi_component;
+          if (w != nullptr && id(hub_ap_bssid_ok)) {
+            wifi::bssid_t want{};
+            for (int i = 0; i < 6; i++) want[i] = id(hub_ap_bssid)[i];
+            wifi::WiFiAP sta = w->get_sta();
+            sta.set_bssid(want);
+            sta.set_priority(127);
+            w->set_sta(sta);
+            w->set_sta_priority(want, 127);
+          }
+      - wifi.disable:
+      - delay: 3s
+      - wifi.enable:
+      - delay: 8s
+      - lambda: 'ESP_LOGI("link", "WiFi bounce complete — waiting for hub 0xD0");'
+
+  - id: link_recovery_reboot
+    mode: single
+    then:
+      - delay: 250ms
+      - lambda: 'App.safe_reboot();'
+
+  - id: pot_hub_ping
+    mode: single
+    then:
+      - espnow.send:
+          address: ${hub_mac}
+          wait_for_sent: false
+          data: !lambda 'return std::vector<uint8_t>{0xD0, 0x01, 0};'
+
+# Hub 0xD0 every 5s. Silent ladder: ping → WiFi bounce (API rebind) → reboot.
+interval:
+  - interval: 10s
+    then:
+      - if:
+          condition:
+            lambda: |-
+              if (millis() < 90000u) return false;
+              uint32_t age = (id(hub_beat_last) == 0) ? millis() : (millis() - id(hub_beat_last));
+              if (age < 15000u) { id(link_rec_stage) = 0; return false; }
+              if (id(link_rec_last_action) != 0 && (millis() - id(link_rec_last_action)) < 20000u)
+                return false;
+              return age >= 15000u && id(link_rec_stage) < 1;
+          then:
+            - lambda: |-
+                id(link_rec_stage) = 1;
+                id(link_rec_last_action) = millis();
+                ESP_LOGW("link", "hub heartbeat silent — ESP-NOW ping");
+            - script.execute: pot_hub_ping
+      - if:
+          condition:
+            lambda: |-
+              if (millis() < 90000u) return false;
+              uint32_t age = (id(hub_beat_last) == 0) ? millis() : (millis() - id(hub_beat_last));
+              if (id(link_rec_last_action) != 0 && (millis() - id(link_rec_last_action)) < 20000u)
+                return false;
+              return age >= 45000u && id(link_rec_stage) < 2 && id(link_rec_wifi_bounces) < 3;
+          then:
+            - lambda: |-
+                id(link_rec_stage) = 2;
+                id(link_rec_wifi_bounces) = id(link_rec_wifi_bounces) + 1;
+                id(link_rec_last_action) = millis();
+                ESP_LOGW("link", "hub heartbeat silent — WiFi bounce #%d (API rebind + AP rejoin)",
+                         id(link_rec_wifi_bounces));
+            - script.execute: link_wifi_bounce
+      - if:
+          condition:
+            lambda: |-
+              if (millis() < 90000u) return false;
+              uint32_t age = (id(hub_beat_last) == 0) ? millis() : (millis() - id(hub_beat_last));
+              if (id(link_rec_last_action) != 0 && (millis() - id(link_rec_last_action)) < 20000u)
+                return false;
+              return age >= 120000u && id(link_rec_stage) >= 2 && id(link_rec_reboots) < 2;
+          then:
+            - lambda: |-
+                id(link_rec_reboots) = id(link_rec_reboots) + 1;
+                id(link_rec_stage) = 3;
+                id(link_rec_last_action) = millis();
+                ESP_LOGE("link", "hub heartbeat silent after WiFi bounce — safe_reboot #%d",
+                         id(link_rec_reboots));
+            - script.execute: link_recovery_reboot

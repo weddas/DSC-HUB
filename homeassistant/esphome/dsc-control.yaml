@@ -12,6 +12,8 @@ substitutions:
   ap_password_val: !secret dsc_control_ap_password
   hub_mac: "84:1F:E8:16:E6:60"
   espnow_cmd_tag: "54727"
+  # Pin to hub AP: copy sensor.dsc_hub_wifi_bssid after first join.
+  wifi_bssid: "00:00:00:00:00:00"
 
 packages:
   panel:
