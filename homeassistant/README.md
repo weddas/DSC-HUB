@@ -16,8 +16,9 @@ Canonical HA surface for firmware [`firmware/v4/`](../firmware/v4/).
 | `packages/dsc_v4_pots_stats.yaml` | Per-pot daily max/min + 7d baselines + rates |
 | `packages/dsc_v4_pots_correlation.yaml` | EC vs tank + uptake slope |
 | `packages/dsc_v4_pots_alerts.yaml` | Per-pot moisture/pH/temp/EC/N alert binaries |
+| `packages/dsc_v4_root_zone.yaml` | Coldest/hottest voted root temps (`sensor.dsc_coldest_root_zone_temp` + `pot` attr) |
 | `packages/dsc_v4_alert_count.yaml` | `sensor.dsc_active_alert_count` for Home chip |
-| `packages/dsc_v4_automations.yaml` | Demand followers, climate/safety alerts, grow-log scribe |
+| `packages/dsc_v4_automations.yaml` | Demand followers, climate/safety alerts, grow-log scribe, HA handshake ping |
 | `configuration.snippet.yaml` | Paste-once: packages include + YAML-mode `dsc-hub-pro` dashboard |
 | `automations.yaml` | Deprecated stub — points at the package above |
 | `www/dsc-system-map.*` | SYSTEM MAP Lovelace card + SVG → `/config/www/` |
@@ -59,6 +60,39 @@ Firmware Install stays manual — see [`../RELEASE.md`](../RELEASE.md).
 ## Fan entity_ids
 
 Core helpers assume ESPHome default slugs from hub friendly names. If your registry differs, edit the four `fan.dsc_hub_*` ids in `dsc_v4_core_helpers.yaml` once.
+
+## Demand followers
+
+Canonical automations: `dsc_follower_{humidifier,dehumidifier,heater,grow_mat}` in [`packages/dsc_v4_automations.yaml`](packages/dsc_v4_automations.yaml). Hub demand is source of truth; Sonoff relays mirror it.
+
+| Rule | Behavior |
+|---|---|
+| Demand ON / OFF | Relay follows (genuine OFF is immediate) |
+| Hub demand / HA link blip | **25 s** debounce before forcing OFF (stops heater cutouts on short API wedges) |
+| Hub offline ≥**30 s** | All four wired relays safe-OFF |
+| Relay → OFF while demand ON | **2 s** resync turns relay back ON |
+| Relay → ON while demand OFF | **2 s** symmetric resync turns relay OFF (console/manual toggle cannot stick) |
+| Node `*_test_mode` ON | Followers skip — intentional button bench tests |
+
+AC and clone-mister followers stay gated by Wired flags and are unchanged by the symmetric ON→OFF resync.
+
+## HA API handshake ping
+
+`dsc_hub_ha_handshake_ping` writes unix time to `number.dsc_hub_ha_handshake` every **30 s** (`time_pattern` `seconds: "/30"`) while the entity exists.
+
+Hub firmware ladder (aligned to ≥3 missed pings):
+
+- ≥**90 s** silent → soft nudge / `api_problem`
+- ≥**180 s** → WiFi bounce (API problem only)
+- ≥**300 s** → sync NVS + `safe_reboot` (max 2/boot)
+
+Do **not** use `minutes: "/60"` — that pattern is invalid and breaks automation setup. Older `minutes: "/1"` (60 s ping) is obsolete against the current 90/180/300 ladder.
+
+## Root-zone status surfaces
+
+Pro dashboard Root Zone / mat status binds to **`sensor.dsc_coldest_root_zone_temp`** (and its `pot` attribute), not `sensor.dsc_pot1_soil_temperature`. The mat votes across pots; status must show the coldest voted root that actually drives heat. Per-pot cards remain on their own pot sensors.
+
+Package: [`packages/dsc_v4_root_zone.yaml`](packages/dsc_v4_root_zone.yaml).
 
 ## Notifier
 

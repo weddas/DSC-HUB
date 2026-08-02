@@ -72,6 +72,47 @@ ESP-NOW (glass ↔ hub) does **not** need the HA API. Fix API only for OTA, diag
 
 In [`dsc-hub-v4_0.yaml`](dsc-hub-v4_0.yaml): `Mat Vote Pot 1`–`4` (`switch.dsc_hub_mat_vote_pot_N`). OFF pots are skipped by coldest/hottest root-zone voting (5–45 °C filter still applies). POT3 defaults OFF.
 
+## Demand latch release (hub)
+
+Room appliance demands can stay ON after the rungs that would release them stop running. Hub firmware clears those latches and stamps min-off clocks:
+
+| Trigger | Clears | Why |
+|---|---|---|
+| Emergency **>35 °C** trip | Dehumidifier demand (+ `dehum_off_at`) | Dehum adds heat; parity with sensor-watchdog purge |
+| Humidifier / Dehumidifier **Auto → OFF** | That appliance’s already-ON demand (+ min-off stamp) | Parity with Heater/Mat Auto release |
+| `room_live` **true → false** (last live tent goes Off) | Hum / dehum / heater / AC demands + min-off stamps | Release rungs are `room_live`-gated; without the edge clear the last Off latches room appliances ON |
+
+Transient single-tent Offs do **not** fire the edge clear — `room_live` stays true while another tent is still live.
+
+## Link recovery ladder (hub)
+
+HA writes `number.dsc_hub_ha_handshake` every **30 s**. Hub stages wait ≥3 missed beats:
+
+| Silence | Action |
+|---|---|
+| API ≥**90 s** | Soft nudge / api_problem |
+| API ≥**180 s** | WiFi bounce (API wedge **only**) |
+| API ≥**300 s** | Sync NVS + `safe_reboot` (max 2/boot) |
+
+Constraints (verified in `dsc-hub-v4_0.yaml`):
+
+- **WiFi bounce requires an API problem.** Panel-only silence never bounces the hub radio — the panel keepalives every 15 s and has its own ladder.
+- While `emergency_failsafe_active` or `sensor_fault_active`, WiFi bounce and stack recovery reboot are **deferred**. Safety ownership outranks link recovery (a bounce/reboot would clear the non-persisted emergency latch and drop fans to boot baseline).
+
+## Panel presence keepalive (op 58)
+
+Idle glass used to look dead to the hub: panel `0xDC` only fired on user commands, so ~90 s of silence falsely fed the hub recovery ladder.
+
+- Panel (`dsc-control-common.yaml`): `hub_keepalive` sends `0xDC` **op 58** every **15 s** (dedicated script — not `hub_cmd`, so it never touches `touch_guard` / `ui_dirty`).
+- Hub (`dsc-hub-espnow-primary.yaml`): op 58 is **presence-only** — stamps `panel_last_ms`, no state change, no echo burst.
+
+## Silent recovery — never reboot if hub never heard
+
+Panel and pot silent-recovery ladders escalate ping → WiFi bounce → reboot when a previously-good ESP-NOW session goes quiet. If the hub was **never heard this boot** (`gv_hub_last == 0` / `hub_beat_last == 0`), reboot is skipped:
+
+- The 2/boot reboot cap lives in RAM; with a persistently absent hub each reboot reset the cap → infinite loop.
+- Soft recovery (hello ping + capped WiFi bounces) still runs; UI/diagnostics stay available.
+
 ## Quick validate
 
 ```bash
