@@ -58,7 +58,7 @@ Firmware Install remains **manual** per device.
 | Surface | Deploy |
 |---|---|
 | Packages / Pro dashboard / www | Sync add-on on push |
-| ESPHome stubs (`ref: v5.1.0`) | Sync (`sync_esphome: true`) |
+| ESPHome stubs (`ref: master`) + `dsc_fleet_setup` component | Sync (`sync_esphome: true`) |
 | Sync add-on binary | Supervisor **Update** once per HAOS |
 | Device firmware | Manual Validate/Install |
 
@@ -66,3 +66,21 @@ Firmware Install remains **manual** per device.
 Cursor edit → push master → DSC-HUB Sync (~60s)
                           → ESPHome Install (devices, manual)
 ```
+
+---
+
+## Post-tag train (master after `v5.1.0`)
+
+The tagged cut stays **5.1.0**. Master has continued patch trains — keep these
+straight when reading fleet chips and Supervisor:
+
+| Layer | On `master` now | Notes |
+|---|---|---|
+| Hub / pots / Sonoffs / kits | **5.1.0** | Fleet firmware train |
+| Panel (DSC-CONTROL) | **5.1.14** lean-cut patches | Fleet chip compares **major.minor** |
+| HA surface packages + Pro dashboard | **5.1.1** | 4-col + Browser Mod System command center |
+| Sync add-on binary | **5.1.2** | Also copies `esphome/components/dsc_fleet_setup` |
+| Sync marker `surface_version` | **5.1.0** | Train label in add-on script — not the package sensor |
+
+Ops docs: [`dsc-hub-sync/DOCS.md`](dsc-hub-sync/DOCS.md) · [`scripts/ADDON.md`](scripts/ADDON.md) ·
+[`docs/qa/LIVE-UI-5.1.1.md`](docs/qa/LIVE-UI-5.1.1.md).

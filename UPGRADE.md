@@ -77,4 +77,13 @@ push master → Sync (~60s) → optional Core restart for new helpers
            → ESPHome Install (manual, per device)
 ```
 
-See [`RELEASE.md`](RELEASE.md) · [`docs/qa/ADDON-QA-5.1.0.md`](docs/qa/ADDON-QA-5.1.0.md).
+### Sync add-on after the `v5.1.0` tag
+
+On each HAOS, Supervisor **Update** to Sync **5.1.2** (not only the 5.1.0
+release binary). That revision stages `firmware/v4/components/dsc_fleet_setup`
+into `/config/esphome/components/` so kit SoftAP Validate works. HA packages on
+`master` report surface **5.1.1** via `sensor.dsc_ha_surface_version`; the sync
+marker’s `surface_version` may still read **5.1.0** (train label).
+
+See [`dsc-hub-sync/DOCS.md`](dsc-hub-sync/DOCS.md) · [`RELEASE.md`](RELEASE.md) ·
+[`docs/qa/ADDON-QA-5.1.0.md`](docs/qa/ADDON-QA-5.1.0.md).
