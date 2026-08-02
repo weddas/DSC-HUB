@@ -36,6 +36,11 @@
 - Auto-flash the fleet on every git push
 - Commit HA `secrets.yaml`
 - Change `espnow_cmd_tag` on only one of hub/panel
+- Rename Sonoff stub `name:` or common entity labels (`Main Relay`,
+  `Test Mode`, `Firmware Version`, …) — followers and the fleet chip
+  hard-code `switch.dsc_*_main_relay` / `sensor.dsc_*_firmware_version`.
+  Contract + registry-drift fix:
+  [`../README.md#sonoff-entity_id-contract`](../README.md#sonoff-entity_id-contract).
 
 ## Bundle / Validate failures
 

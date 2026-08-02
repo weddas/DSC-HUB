@@ -60,6 +60,61 @@ Firmware Install stays manual — see [`../RELEASE.md`](../RELEASE.md).
 
 Core helpers assume ESPHome default slugs from hub friendly names. If your registry differs, edit the four `fan.dsc_hub_*` ids in `dsc_v4_core_helpers.yaml` once.
 
+## Sonoff entity_id contract
+
+Hub climate demands reach appliances only through HA:
+
+`switch.dsc_hub_*_demand` → follower in [`packages/dsc_v4_automations.yaml`](packages/dsc_v4_automations.yaml)
+→ `switch.dsc_*_main_relay` on the Sonoff.
+
+Stub `name:` + component friendly names are a **hard contract**. Followers,
+fleet version chip, test-mode scribe, and dashboards all hard-code these ids.
+Renaming a stub or `"Main Relay"` / `"Test Mode"` / `"Firmware Version"` in
+[`../firmware/v4/dsc-sonoff-common.yaml`](../firmware/v4/dsc-sonoff-common.yaml)
+silently breaks the appliance layer while HA still looks healthy.
+
+| Node stub (`name:`) | Demand | Relay | Test mode | Firmware version |
+|---|---|---|---|---|
+| `dsc-humidifier` | `switch.dsc_hub_humidifier_demand` | `switch.dsc_humidifier_main_relay` | `binary_sensor.dsc_humidifier_test_mode` | `sensor.dsc_humidifier_firmware_version` |
+| `dsc-de-humidifier` | `switch.dsc_hub_dehumidifier_demand` | `switch.dsc_de_humidifier_main_relay` | `binary_sensor.dsc_de_humidifier_test_mode` | `sensor.dsc_de_humidifier_firmware_version` |
+| `dsc-heater` | `switch.dsc_hub_heater_demand` | `switch.dsc_heater_main_relay` | `binary_sensor.dsc_heater_test_mode` | `sensor.dsc_heater_firmware_version` |
+| `dsc-heatmat` | `switch.dsc_hub_grow_mat_demand` | `switch.dsc_heatmat_main_relay` | `binary_sensor.dsc_heatmat_test_mode` | `sensor.dsc_heatmat_firmware_version` |
+
+Also contract (same slug prefix): `Physical Button`, `Relay On Time`,
+`Relay Last On Time`, `Uptime`, `WiFi RSSI`, `ESPHome Version`, `Restart`,
+and the ESPHome `update.*_firmware` entity.
+
+Per-node API-loss grace (node-local failsafe, not the HA follower): heater
+**60 s**, heatmat/humidifier **90 s**, dehumidifier **240 s** (compressor).
+Followers skip while `*_test_mode` is on (button bench test, ≤10 min).
+
+### Entity registry drift (common after reflash / device rename)
+
+ESPHome keeps existing HA `entity_id`s when a node had a past life under
+another device name. New entities can land as
+`sensor.grow_tent_dsc_de_humidifier_*` or `binary_sensor.kitchen_dsc_*`
+while an older relay stays on the contract id. Symptom pattern (seen live
+on the dehumidifier — [`../docs/qa/LIVE-DEHUM-5.1.0.md`](../docs/qa/LIVE-DEHUM-5.1.0.md)):
+
+| What works | What’s broken |
+|---|---|
+| Manual / follower ON→OFF on `switch.dsc_*_main_relay` | `binary_sensor.dsc_*_test_mode` missing → follower won’t stand down for a button test |
+| | `sensor.dsc_*_firmware_version` missing → fleet chip counts the node absent |
+
+**Fix:** Developer Tools → Entities (or entity registry WS API) — rename
+drifted ids back to the contract table above. Do **not** change stub
+`name:` to match the drift. Re-check:
+
+1. `switch.dsc_hub_<appliance>_demand` ON → relay ON within a few seconds;
+   demand OFF → relay OFF.
+2. Fleet chip lists the node at expected **5.1.0**.
+3. `binary_sensor.dsc_*_test_mode` exists and is `off` in normal operation.
+
+Cosmetic leftover: a follower automation entity may keep a `_2` suffix from
+an old duplicate (`automation.…_demand_2`). Packages key on automation
+`id:` (`dsc_follower_dehumidifier`, etc.), not the HA entity_id — safe to
+leave.
+
 ## Notifier
 
 Climate / safety automations in `dsc_v4_automations.yaml` use a mobile notify

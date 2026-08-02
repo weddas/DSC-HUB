@@ -2,6 +2,9 @@
 
 **Lab pass (192.168.86.3) — 2026-08-02**
 
+Developer runbook (contract table + registry-drift fix):
+[`../../homeassistant/README.md#sonoff-entity_id-contract`](../../homeassistant/README.md#sonoff-entity_id-contract).
+
 Node reflashed to **5.1.0** (rotated keys, common package from GitHub master).
 Repo config chain was already correct — hub demand switch, `dsc_follower_dehumidifier`,
 node stub — but the **HA entity registry had drifted** from the entity contract.
