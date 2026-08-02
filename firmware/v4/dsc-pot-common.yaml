@@ -798,7 +798,20 @@ interval:
           condition:
             lambda: |-
               if (millis() < 90000u) return false;
-              uint32_t age = (id(hub_beat_last) == 0) ? millis() : (millis() - id(hub_beat_last));
+              // BUG-FIX 2026-08-02: never escalate to reboot when the hub was
+              // NEVER heard this boot (hub_beat_last==0) — the RAM-only 2/boot
+              // cap resets every reboot, so an absent hub caused an infinite
+              // reboot loop. Ping + capped WiFi bounces still run above.
+              // Reboot remains for a previously-good session gone silent.
+              if (id(hub_beat_last) == 0) {
+                static uint32_t nohub_log_ms = 0;
+                if (millis() - nohub_log_ms > 300000u) {
+                  nohub_log_ms = millis();
+                  ESP_LOGW("link", "hub never heard this boot — soft recovery only, no reboot");
+                }
+                return false;
+              }
+              uint32_t age = millis() - id(hub_beat_last);
               if (id(link_rec_last_action) != 0 && (millis() - id(link_rec_last_action)) < 20000u)
                 return false;
               return age >= 120000u && id(link_rec_stage) >= 2 && id(link_rec_reboots) < 2;

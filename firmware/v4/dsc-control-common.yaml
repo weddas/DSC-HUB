@@ -3499,6 +3499,24 @@ script:
       - delay: 250ms
       - lambda: 'App.safe_reboot();'
 
+  # BUG-FIX 2026-08-02: presence keepalive (op 58). The hub times panel
+  # liveness (panel_last_ms) from 0xDC RX only, and the panel only sends
+  # 0xDC on user commands — so an idle glass went "silent" after ~90s and
+  # falsely drove the hub's WiFi-bounce ladder. Dedicated script (not
+  # hub_cmd) so a background beat never touches touch_guard/ui_dirty.
+  - id: hub_keepalive
+    mode: single
+    then:
+      - espnow.send:
+          address: ${hub_mac}
+          wait_for_sent: false
+          data: !lambda |-
+            std::vector<uint8_t> p(12, 0);
+            p[0]=0xDC; p[1]=0x01; p[2]=58; p[3]=0;
+            uint16_t tg=(uint16_t) ${espnow_cmd_tag}; p[8]=tg&0xFF; p[9]=(tg>>8)&0xFF;
+            uint16_t sq=id(cmd_tx_seq)++; p[10]=sq&0xFF; p[11]=(sq>>8)&0xFF;
+            return p;
+
   - id: hub_cmd
     parameters:
       op: int
@@ -4466,7 +4484,22 @@ interval:
           condition:
             lambda: |-
               if (millis() < 90000u || !id(boot_ui_ready)) return false;
-              uint32_t age = (id(gv_hub_last) == 0) ? millis() : (millis() - id(gv_hub_last));
+              // BUG-FIX 2026-08-02: never escalate to reboot when the hub was
+              // NEVER heard this boot (gv_hub_last==0). The 2/boot cap lives
+              // in RAM, so with a persistently absent hub each reboot reset
+              // the cap -> infinite reboot loop, glass unusable. Hello ping +
+              // capped WiFi bounces still run above; the panel then stays up
+              // with its UI (and diagnostics) available. Reboot remains for a
+              // previously-good ESP-NOW session that went silent.
+              if (id(gv_hub_last) == 0) {
+                static uint32_t nohub_log_ms = 0;
+                if (millis() - nohub_log_ms > 300000u) {
+                  nohub_log_ms = millis();
+                  ESP_LOGW("link", "hub never heard this boot — soft recovery only, no reboot");
+                }
+                return false;
+              }
+              uint32_t age = millis() - id(gv_hub_last);
               if (id(link_rec_last_action) != 0 && (millis() - id(link_rec_last_action)) < 20000u)
                 return false;
               return age >= 120000u && id(link_rec_stage) >= 2 && id(link_rec_reboots) < 2;
@@ -4478,6 +4511,18 @@ interval:
                 ESP_LOGE("link", "ESP-NOW silent after WiFi bounce — safe_reboot #%d",
                          id(link_rec_reboots));
             - script.execute: link_recovery_reboot
+
+  # BUG-FIX 2026-08-02: presence keepalive — see hub_keepalive script.
+  # 15s beat (hub panel-silence stage-1 threshold is 45s) once the UI is
+  # up and the hub has been heard this boot. Keeps beating through a hub
+  # quiet spell so panel_last_ms re-stamps the moment it returns.
+  - interval: 15s
+    then:
+      - if:
+          condition:
+            lambda: 'return id(boot_ui_ready) && id(gv_hub_last) != 0;'
+          then:
+            - script.execute: hub_keepalive
 
   # 1h VPD micro-trend: one sample / 5 min → 12 slots. No canvas widgets.
   - interval: 300s

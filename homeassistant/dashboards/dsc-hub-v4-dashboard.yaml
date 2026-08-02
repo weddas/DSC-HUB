@@ -697,11 +697,14 @@ views:
 
 
                   {#- ---- v2.4: root zone is the mat's sense point ---- -#}
+                  {#- BUG-FIX 2026-08-02: coldest VOTED root, not POT1 — the
+                      mat votes across pots, so status must match the pot
+                      that actually drives heat. -#}
 
-                  {%- set rz = states('sensor.dsc_pot1_soil_temperature') | float(0)
+                  {%- set rz = states('sensor.dsc_coldest_root_zone_temp') | float(0)
                   -%}
 
-                  {%- set rz_ok = has_value('sensor.dsc_pot1_soil_temperature')
+                  {%- set rz_ok = has_value('sensor.dsc_coldest_root_zone_temp')
                   and is_state('binary_sensor.dsc_hub_root_zone_sensor_fault','off') -%}
 
                   {%- set rz_lo = states('number.dsc_hub_mat_root_zone_low') |
@@ -2289,12 +2292,15 @@ views:
                 secondary: >-
                   {% set c = states('sensor.dsc_hub_grow_mat_fire_countdown')|float(0) %}
                   {% set cd = states('sensor.dsc_hub_grow_mat_cooldown_remaining')|float(0) %}
-                  {% set rz = states('sensor.dsc_pot1_soil_temperature') %}
+                  {# BUG-FIX 2026-08-02: coldest VOTED root (what the mat
+                     actually chases), not POT1 #}
+                  {% set rz = states('sensor.dsc_coldest_root_zone_temp') %}
+                  {% set rzp = state_attr('sensor.dsc_coldest_root_zone_temp','pot') %}
                   {% if is_state('binary_sensor.dsc_hub_root_zone_sensor_fault','on') %}⚠ AIR FALLBACK — probes blind
-                  {%- elif is_state(entity,'on') %}DEMAND LIVE — root zone {{ rz }}°C
-                  {%- elif c > 0 %}firing in {{ c|round(0) }}s (root {{ rz }}°C)
+                  {%- elif is_state(entity,'on') %}DEMAND LIVE — root zone {{ rz }}°C (POT{{ rzp }})
+                  {%- elif c > 0 %}firing in {{ c|round(0) }}s (root {{ rz }}°C · POT{{ rzp }})
                   {%- elif cd > 0 %}min-off {{ cd|round(0) }}s
-                  {%- else %}root zone {{ rz }}°C — in band{% endif %}
+                  {%- else %}root zone {{ rz }}°C (POT{{ rzp }}) — in band{% endif %}
                 icon: mdi:heating-coil
                 icon_color: >-
                   {% if is_state('binary_sensor.dsc_hub_root_zone_sensor_fault','on') %}red
@@ -4087,7 +4093,8 @@ views:
                 name: Clone air
                 yaxis_id: primary
                 stroke_width: 2
-              - entity: sensor.dsc_pot1_soil_temperature
+              # BUG-FIX 2026-08-02: coldest voted root, not POT1
+              - entity: sensor.dsc_coldest_root_zone_temp
                 name: Root zone
                 yaxis_id: primary
                 stroke_width: 2
@@ -4246,7 +4253,9 @@ views:
                   multiline_secondary: true
               - type: custom:bar-card
                 entities:
-                  - entity: sensor.dsc_pot1_soil_temperature
+                  # BUG-FIX 2026-08-02: card said "coldest voted root" but
+                  # was bound to POT1 — now the actual vote winner.
+                  - entity: sensor.dsc_coldest_root_zone_temp
                     name: Coldest voted root
                 positions:
                   icon: "off"
@@ -6727,7 +6736,8 @@ views:
                   - 1
                 visible: false
             entities:
-              - entity: sensor.dsc_pot1_soil_temperature
+              # BUG-FIX 2026-08-02: coldest voted root, not POT1
+              - entity: sensor.dsc_coldest_root_zone_temp
                 name: Root zone
               - entity: sensor.dsc_hub_clone_temperature
                 name: Clone air

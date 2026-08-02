@@ -1259,6 +1259,16 @@ globals:
     restore_value: false
     initial_value: 'true'
 
+  # ===== BUG-FIX 2026-08-02 · room-live edge detector ================
+  # Previous room_live state. When the LAST active tent goes Off the
+  # release rungs stop running (they're room_live-gated), so an already
+  # ON room demand would latch forever. The edge-clear below needs to
+  # know the prior state to fire exactly once per transition.
+  - id: prev_room_live
+    type: bool
+    restore_value: false
+    initial_value: 'false'
+
   # ===== v2.4.2 · FAN/APPLIANCE COORDINATION (runtime-tunable) ========
   # Humidifier plume sits AT the intakes -> the intakes are its delivery
   # valves. When on, starve the intake of a tent that doesn't need the
@@ -1500,6 +1510,12 @@ switch:
       - script.execute: tx_panel_sync
     turn_off_action:
       - globals.set: {id: humidifier_auto_enabled, value: 'false'}
+      # BUG-FIX 2026-08-02: parity with Heater/Mat Auto — releasing Auto
+      # must drop an already-ON demand or the HA follower keeps the relay
+      # energized indefinitely. Stamp the min-off clock so the ladder
+      # honours the cooldown when Auto is re-armed.
+      - switch.turn_off: humidifier_demand
+      - lambda: 'id(hum_off_at) = millis();'
       - script.execute: tx_panel_sync
   - platform: template
     name: "Humidifier Demand"      # <-- watch THIS in your HA automation
@@ -1518,6 +1534,9 @@ switch:
       - script.execute: tx_panel_sync
     turn_off_action:
       - globals.set: {id: dehumidifier_auto_enabled, value: 'false'}
+      # BUG-FIX 2026-08-02: same parity fix as Humidifier Auto above.
+      - switch.turn_off: dehumidifier_demand
+      - lambda: 'id(dehum_off_at) = millis();'
       - script.execute: tx_panel_sync
   - platform: template
     name: "Dehumidifier Demand"    # <-- watch THIS in your HA automation
@@ -2254,7 +2273,7 @@ number:
       - lambda: 'id(num_destrat_level).publish_state((float) id(destrat_burst_pct));'
       - script.execute: tx_panel_sync
 
-  # HA → hub API handshake ping (Sync automation writes unix time every 60s).
+  # HA → hub API handshake ping (Sync automation writes unix time every 30s).
   # Proves the API write path is alive. Silent ≥5 min while WiFi is still
   # up → wedged API session → sync NVS + safe_reboot (not a WiFi reboot).
   - platform: template
@@ -2482,12 +2501,17 @@ sensor:
                 // room the intakes are pulling from. Intakes 100% feed the
                 // outside fan with (cooler) room/makeup air.
                 id(humidifier_demand).turn_off();
+                // BUG-FIX 2026-08-02: the dehumidifier is a heat-adding
+                // appliance too — leaving it ON fights the purge (watchdog
+                // path already clears it; trip path missed it).
+                id(dehumidifier_demand).turn_off();
                 id(heater_demand).turn_off();
                 id(growmat_demand).turn_off();
                 // v2.4: stamp the min-off clocks — a forced-off must still
                 // honour the cooldown before the ladder re-fires anything.
                 id(hum_off_at) = millis(); id(heater_off_at) = millis();
                 id(mat_off_at) = millis(); id(clone_hum_off_at) = millis();
+                id(dehum_off_at) = millis();
                 // v2.2/v2.4: purge path is room -> 2x4 -> 4x8 -> outside.
                 // The SF1000 (clone light) heats that airstream; the
                 // mister adds latent load. Both OFF — the clone schedule
@@ -3386,6 +3410,25 @@ script:
             // Never arbitrate on a blind sensor: clone falls back to main.
             if (!arb_main && !clone_ok) arb_main = true;
             bool room_live = id(main_active) || id(clone_active);
+
+            // BUG-FIX 2026-08-02: the release rungs below are room_live-
+            // gated, so when the LAST active tent goes Off an already-ON
+            // room demand (hum/dehum/heater/AC) would stay latched and the
+            // HA followers would keep conditioning a dead room. Force-clear
+            // on the true->false EDGE only (both tents inactive) and stamp
+            // the min-off clocks so re-activation honours the cooldowns.
+            // Transient single-tent Offs never trip this: room_live stays
+            // true while the other tent is active.
+            if (!room_live && id(prev_room_live)) {
+              id(humidifier_demand).turn_off();
+              id(dehumidifier_demand).turn_off();
+              id(heater_demand).turn_off();
+              id(ac_demand).turn_off();
+              id(hum_off_at) = millis();   id(dehum_off_at) = millis();
+              id(heater_off_at) = millis(); id(ac_off_at) = millis();
+              ESP_LOGW("grow", "Both tents Off -> room appliance demands force-cleared");
+            }
+            id(prev_room_live) = room_live;
 
             // v2.4.2 (BUG-4): the room-appliance dwell-timers are global but
             // timed against the ARBITRATED tent. When arbitration flips (a
@@ -4314,11 +4357,14 @@ interval:
           poll_ch = ch;
 
   # ---- Hub link recovery (same ladder as Control/pots) ----
-  # API wedge OR panel ESP-NOW gone quiet after it was alive:
-  #   ~45s  → fleet heartbeat + vitals nudge
-  #   ~90s  → WiFi bounce (API rebind + preferred BSSID)
-  #   ~180s → sync NVS + safe_reboot (API path only; max 2/boot)
-  # Panel-only silence never reboots the hub (climate stays local-first).
+  # API wedge OR panel ESP-NOW gone quiet after it was alive.
+  # BUG-FIX 2026-08-02 cadence: HA handshake pings every 30s, panel
+  # keepalives every 15s — every stage waits ≥3 missed beats:
+  #   API  ≥90s / panel ≥45s → fleet heartbeat + vitals nudge
+  #   API ≥180s              → WiFi bounce (API wedge ONLY)
+  #   API ≥300s              → sync NVS + safe_reboot (max 2/boot)
+  # Panel-only silence never bounces or reboots the hub (climate stays
+  # local-first; the panel has its own recovery ladder).
   # WiFi-down is logged only.
   - interval: 10s
     then:
@@ -4332,20 +4378,25 @@ interval:
                   (millis() - id(link_rec_last_action)) < 20000u) return false;
 
               // Healthy API clears stage.
+              // BUG-FIX 2026-08-02: handshake thresholds retuned to the HA
+              // ping cadence (30s — see dsc_v4_automations.yaml). The old
+              // 45s gate vs a 60s ping flagged api_problem every healthy
+              // minute. 90s = 3 missed pings before stage-1; bounce 180s;
+              // reboot 300s (matches the documented "silent ≥5 min").
               bool api_ok = id(ha_connected).state;
               if (api_ok) id(api_ever_connected) = true;
               bool hs_ok = id(ha_handshake_seen) && id(ha_handshake_last) != 0 &&
-                           (millis() - id(ha_handshake_last)) < 45000u;
+                           (millis() - id(ha_handshake_last)) < 90000u;
               if (api_ok || hs_ok) {
                 id(api_down_since) = 0;
               }
 
               bool api_problem = false;
               if (id(ha_handshake_seen) && id(ha_handshake_last) != 0) {
-                api_problem = (millis() - id(ha_handshake_last)) >= 45000u;
+                api_problem = (millis() - id(ha_handshake_last)) >= 90000u;
               } else if (id(api_ever_connected) && !api_ok) {
                 if (id(api_down_since) == 0) id(api_down_since) = millis();
-                api_problem = (millis() - id(api_down_since)) >= 45000u;
+                api_problem = (millis() - id(api_down_since)) >= 90000u;
               }
 
               bool panel_problem = id(panel_last_ms) != 0 &&
@@ -4367,6 +4418,20 @@ interval:
           condition:
             lambda: |-
               if (millis() < 90000u) return false;
+              // BUG-FIX 2026-08-02: safety ownership precedence — an active
+              // >35C emergency purge or sensor-fault safe-vent outranks link
+              // recovery (same rule the sensor watchdog already documents).
+              // A WiFi bounce here (or the reboot below) would clear the
+              // non-persisted emergency latch and drop fans to boot baseline.
+              // Defer; recovery resumes once the safety mode clears.
+              if (id(emergency_failsafe_active) || id(sensor_fault_active)) {
+                static uint32_t defer_log_ms = 0;
+                if (millis() - defer_log_ms > 60000u) {
+                  defer_log_ms = millis();
+                  ESP_LOGW("link", "WiFi bounce deferred — safety mode active (emergency/sensor fault)");
+                }
+                return false;
+              }
               auto *w = wifi::global_wifi_component;
               if (w == nullptr || !w->is_connected()) return false;
               if (id(link_rec_last_action) != 0 &&
@@ -4376,15 +4441,18 @@ interval:
               bool api_ok = id(ha_connected).state;
               bool api_problem = false;
               if (id(ha_handshake_seen) && id(ha_handshake_last) != 0)
-                api_problem = (millis() - id(ha_handshake_last)) >= 90000u;
+                api_problem = (millis() - id(ha_handshake_last)) >= 180000u;
               else if (id(api_ever_connected) && !api_ok && id(api_down_since) != 0)
-                api_problem = (millis() - id(api_down_since)) >= 90000u;
+                api_problem = (millis() - id(api_down_since)) >= 180000u;
 
-              bool panel_problem = id(panel_last_ms) != 0 &&
-                                   (millis() - id(panel_last_ms)) >= 90000u;
-
-              // Bounce for API wedge and/or panel ESP-NOW silence.
-              return (api_problem || panel_problem) && id(link_rec_stage) < 2;
+              // BUG-FIX 2026-08-02: panel-only silence must never bounce hub
+              // WiFi (same policy as the reboot stage below). The old trigger
+              // fired on any ~90s panel command gap — normal idle glass —
+              // flapping WiFi/API for the whole fleet. The panel now sends a
+              // 15s keepalive (op 58), and hub-side recovery for a genuinely
+              // dead panel stays at stage-1 nudges; the panel runs its own
+              // recovery ladder. Bounce only for an unhealthy API.
+              return api_problem && id(link_rec_stage) < 2;
           then:
             - lambda: |-
                 id(link_rec_stage) = 2;
@@ -4397,6 +4465,17 @@ interval:
           condition:
             lambda: |-
               if (millis() < 90000u) return false;
+              // BUG-FIX 2026-08-02: never safe_reboot while a safety mode is
+              // latched — the purge must run until <34C clears it (see the
+              // matching WiFi-bounce guard above).
+              if (id(emergency_failsafe_active) || id(sensor_fault_active)) {
+                static uint32_t defer_log_ms = 0;
+                if (millis() - defer_log_ms > 60000u) {
+                  defer_log_ms = millis();
+                  ESP_LOGW("link", "API recovery reboot deferred — safety mode active (emergency/sensor fault)");
+                }
+                return false;
+              }
               auto *w = wifi::global_wifi_component;
               if (w == nullptr || !w->is_connected()) return false;
               if (id(stack_recovery_reboots) >= 2) return false;
@@ -4408,9 +4487,9 @@ interval:
               bool api_ok = id(ha_connected).state;
               bool api_problem = false;
               if (id(ha_handshake_seen) && id(ha_handshake_last) != 0)
-                api_problem = (millis() - id(ha_handshake_last)) >= 180000u;
+                api_problem = (millis() - id(ha_handshake_last)) >= 300000u;
               else if (id(api_ever_connected) && !api_ok && id(api_down_since) != 0)
-                api_problem = (millis() - id(api_down_since)) >= 180000u;
+                api_problem = (millis() - id(api_down_since)) >= 300000u;
 
               return api_problem && id(link_rec_stage) >= 2;
           then:

@@ -169,6 +169,14 @@ espnow:
             id(cmd_hello) = true;
             ESP_LOGI("espnow", "panel hello — glass coming online (seq=%u)", (unsigned) seq);
             break;
+          // BUG-FIX 2026-08-02: panel keepalive — presence only. The panel
+          // sends 0xDC only on user commands, so an idle glass looked dead
+          // to the recovery ladder (panel_last_ms is stamped above on every
+          // authenticated packet, including this one). No state change and
+          // no echo burst: vitals already broadcast every 2s.
+          case 58:
+            id(cmd_fresh) = false;
+            break;
           default: ESP_LOGW("espnow","unknown opcode %u", op); break;
         }
         ESP_LOGD("espnow","cmd op=%u val=%d applied", op, val);
