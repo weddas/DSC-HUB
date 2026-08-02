@@ -76,10 +76,11 @@ DSC-HUB / `dsc-hub-v4`. Sidebar: single **DSC-HUB Pro** entry.
 | Stub | Body | Expect after flash |
 |---|---|---|
 | `dsc-hub.yaml` | hub v4_0 + espnow | **5.1.0** |
-| `dsc-control.yaml` | control-common | **5.1.4** |
+| `dsc-control.yaml` | control-common | **5.1.14** |
 | pots / Sonoffs | pot-common / sonoff-common | **5.1.0** |
 
-Stub `ref: v5.1.0`. Kits Validate even if not flashed on lab.
+Stub `ref: v5.1.0` (or `master` on lab stubs). Kits Validate even if not flashed on lab.
+Panel is on a lean-cut **5.1.x** patch train; fleet chip compares major.minor.
 
 ### Flash order
 
@@ -88,10 +89,12 @@ Stub `ref: v5.1.0`. Kits Validate even if not flashed on lab.
 ### Verify
 
 - [ ] `sensor.dsc_hub_firmware_version` = **5.1.0** (and peers)
-- [ ] `sensor.dsc_ha_surface_version` = **5.1.0**
+- [ ] `sensor.dsc_control_firmware_version` = **5.1.14** (or current panel patch)
+- [ ] `sensor.dsc_ha_surface_version` = **5.1.1**
 - [ ] `sensor.dsc_fleet_version_status` → **ok** after all flashes
+- [ ] `binary_sensor.dsc_hub_panel_link` tracks glass ESP-NOW (not HA API)
 - [ ] `/dsc-hub-pro/home` + Learning Phase B controls present (B default off)
-- [ ] Panel ESP-NOW UP; Sonoff followers track demands
+- [ ] Sonoff followers: short HA blips do **not** kill heater; offline ≥30 s safe-off
 
 ---
 

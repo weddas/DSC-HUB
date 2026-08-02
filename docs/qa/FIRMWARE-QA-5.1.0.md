@@ -4,17 +4,19 @@ Commit checklist for lab + kit packages. Firmware Install is always **manual**.
 
 ## Pre-flash
 
-- [ ] All `project.version` in hub / control / pot / sonoff commons = **`5.1.0`**
+- [ ] Hub / pot / sonoff `project.version` = **`5.1.0`**; panel common = **`5.1.14`** (or current 5.1.x patch)
 - [ ] Kit stubs (`*-kit.yaml`, `*-wifi-kit.yaml`, `dsc-fleet-setup-*-kit.yaml`) Validate
 - [ ] Lab stubs Validate: hub, control, pot1–4, heater, heatmat, humidifier, de-humidifier
+- [ ] Lab stubs do **not** pull SoftAP `dsc_fleet_setup` (kit path only)
 - [ ] `espnow_cmd_tag` = **54727** on hub **and** panel
 - [ ] `g++ … verify_v4.cpp && ./verify_v4` passes (wire contract)
 - [ ] Hub exposes `number.dsc_hub_ladder_wait_{dehum,hum,heat,ac,mat}` (NVS)
+- [ ] Hub exposes `number.dsc_hub_ha_handshake` + `binary_sensor.dsc_hub_panel_link`
 
 ## Flash order (lab)
 
 1. [ ] Hub → reports `sensor.dsc_hub_firmware_version` = **5.1.0**
-2. [ ] Panel → **5.1.0**; ESP-NOW link UP; heap comfortable
+2. [ ] Panel → **5.1.14** (USB if heap-sensitive); ESP-NOW UP; serial `UI armed`
 3. [ ] Pots 1–4 → **5.1.0**; soil + ESP-NOW
 4. [ ] Sonoffs → **5.1.0**; followers track demands
 

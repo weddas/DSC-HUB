@@ -68,4 +68,12 @@ Portal → **Factory reset fleet config** clears NVS Wi‑Fi/pairing on the HUB 
 
 ## HA note
 
-Home Assistant install remains documented in `INSTALL.md`. After this change, lab packages expect the `dsc_fleet_setup` component (copy `firmware/v4/components` beside your ESPHome configs, or use a git `external_components` source once published). Kit SoftAP setup does not require HA at all.
+Home Assistant install remains documented in `INSTALL.md`.
+
+- **Lab stubs** (`dsc-hub.yaml`, `dsc-control.yaml`, pots): compile-time Wi‑Fi +
+  MACs; they do **not** load `dsc_fleet_setup` (saves SoftAP DRAM on CYD/lab).
+- **Kit stubs** (`*-kit.yaml`): SoftAP portal + NVS pairing via
+  `firmware/v4/components/dsc_fleet_setup/`. No HA required for unboxing.
+
+When flashing kits from a local tree, keep `firmware/v4/components` beside the
+YAML (or point `external_components` at this repo).
