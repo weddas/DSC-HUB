@@ -219,12 +219,13 @@ globals:
 binary_sensor:
   # Glass presence from ESP-NOW commands (hello + any hub_cmd). Not the same
   # as HA API — panel can be linked while HA is down.
+  # (No update_interval — invalid on template binary_sensor in ESPHome 2026.7;
+  #  the 5s interval below republishes.)
   - platform: template
     name: "Panel Link"
     id: panel_link
     device_class: connectivity
     entity_category: diagnostic
-    update_interval: 5s
     lambda: |-
       if (id(panel_last_ms) == 0) return false;
       return (millis() - id(panel_last_ms)) < 30000u;
@@ -375,7 +376,9 @@ interval:
   - interval: 2s
     then: [{script.execute: tx_vitals}]
   - interval: 5s
-    then: [{script.execute: tx_fleet_heartbeat}]
+    then:
+      - script.execute: tx_fleet_heartbeat
+      - component.update: panel_link
   - interval: 10s
     then: [{script.execute: tx_config}, {script.execute: tx_soil}, {script.execute: tx_names}]
 
