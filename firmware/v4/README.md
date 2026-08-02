@@ -68,6 +68,32 @@ ESP-NOW (glass ↔ hub) does **not** need the HA API. Fix API only for OTA, diag
 | Panel 4.0.11 | Live `gv_*` UI + channel poll | **USB** if heap-sensitive / still looping |
 | HA packages / automations / dashboard | Push sync (or copy) + reload | See [`../../RELEASE.md`](../../RELEASE.md) · [`../../scripts/HA-SYNC-BOOTSTRAP.md`](../../scripts/HA-SYNC-BOOTSTRAP.md) |
 
+## Sonoff demand followers
+
+Shared body: [`dsc-sonoff-common.yaml`](dsc-sonoff-common.yaml). Stubs:
+`dsc-humidifier.yaml`, `dsc-de-humidifier.yaml`, `dsc-heater.yaml`,
+`dsc-heatmat.yaml`.
+
+Sonoffs are ESP8285 — **no ESP-NOW**. Path is hub demand → HA follower →
+relay. Do **not** rename stub `name:` or common-package entity names
+(`Main Relay`, `Test Mode`, `Firmware Version`, …); those slugs are the
+HA contract (`switch.dsc_de_humidifier_main_relay`, etc.).
+
+| Stub | API-loss grace | Why |
+|---|---|---|
+| heater | 60 s | Highest unsupervised risk |
+| heatmat / humidifier | 90 s | Default |
+| de-humidifier | 240 s | Compressor short-cycle protection |
+
+`restore_mode: ALWAYS_OFF` + node-local API-loss failsafe keep relays safe
+when HA dies. Button press arms bounded **test mode** (10 min); followers
+stand down while `binary_sensor.dsc_*_test_mode` is on.
+
+If a reflash leaves entities under `kitchen_` / `grow_tent_` prefixes while
+the relay still has the contract id, rename in the HA entity registry —
+see [`../../homeassistant/README.md`](../../homeassistant/README.md#sonoff-entity_id-contract)
+and lab note [`../../docs/qa/LIVE-DEHUM-5.1.0.md`](../../docs/qa/LIVE-DEHUM-5.1.0.md).
+
 ## Hub mat votes
 
 In [`dsc-hub-v4_0.yaml`](dsc-hub-v4_0.yaml): `Mat Vote Pot 1`–`4` (`switch.dsc_hub_mat_vote_pot_N`). OFF pots are skipped by coldest/hottest root-zone voting (5–45 °C filter still applies). POT3 defaults OFF.
