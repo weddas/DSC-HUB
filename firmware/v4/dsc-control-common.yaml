@@ -98,6 +98,12 @@
 #  v5.1.11: Pulse Rung 1/2 tappable → page_ladder_detail (shared 6-row
 #  drill-down). Fans show % + ±10; appliances show ON duration (panel-
 #  local), fire countdown, cooldown (0xD1 +12 B). Flash hub + panel.
+#  v5.1.12: blank boot — backlight off until page_boot is painted; hold
+#  Starting until ESP-NOW hub vitals (timeout fallback); then arm full UI.
+#  Kills the white-noise flash while Wi-Fi/heap settle with LVGL paused.
+#  v5.1.13: panel hello (op 57) so hub knows glass is coming; Starting
+#  page loads vitals/config/soil with status text + lean progress bar
+#  before Pulse. Hub exposes binary_sensor Panel Link.
 #
 #  BEFORE FLASHING:
 #    1. secrets.yaml needs dsc_control_ota_password / _ap_password
@@ -140,7 +146,7 @@ esphome:
     # the dashboard and HA's device page both described DSC-CONTROL as
     # being the DSC HUB. Purely cosmetic, but confusing enough to matter.
     name: "digital_emotions.dsc-control"
-    version: "5.1.11"
+    version: "5.1.13"
   on_boot:
     # Seed the 0xDC command seq from hardware RNG so a panel reboot is
     # unlikely to replay the hub's last-seen seq even before the hub's
@@ -148,17 +154,25 @@ esphome:
     - priority: 600
       then:
         - lambda: 'id(cmd_tx_seq) = (uint16_t) esp_random();'
-    # v5.1.5 — staged first paint. 5.1.4 resumed straight into the full
-    # widget tree and OOMed on glyph/draw-buffer allocs. Keep LVGL paused
-    # through WiFi, hide the tabbar, resume onto page_boot only, then arm
-    # the real UI once that lite paint survives.
+    # Kill backlight as early as light component exists — ST7789 shows
+    # framebuffer noise if the PWM is on before LVGL paints page_boot.
+    - priority: 200
+      then:
+        - light.turn_off: backlight
+    # v5.1.13 — blank → Starting (status + bar) → hello → load snapshot → Pulse.
+    # Keep LVGL paused (backlight off) through Wi-Fi/heap settle. Resume only
+    # the lite Starting page; hello the hub; wait for vitals/config/soil
+    # before arming the full widget tree.
     - priority: -100
       then:
+        - light.turn_off: backlight
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 5.1.11 paused — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 5.1.13 paused — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
             id(boot_ui_ready) = false;
+            id(gv_cfg_ok) = false;
+            id(gv_soil_ok) = false;
             for (lv_indev_t *in = lv_indev_get_next(nullptr); in != nullptr; in = lv_indev_get_next(in)) {
               if (lv_indev_get_type(in) == LV_INDEV_TYPE_POINTER) {
                 lv_indev_set_scroll_limit(in, 40);
@@ -166,42 +180,124 @@ esphome:
               }
             }
             lv_obj_add_flag(id(tabbar), LV_OBJ_FLAG_HIDDEN);
-        - delay: 14s
+        - delay: 10s
         - if:
             condition:
               lambda: 'return heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL) < 20000;'
             then:
               - lambda: |-
-                  ESP_LOGW("boot", "DSC-CONTROL 5.1.11 heap still tight largest=%u — waiting longer",
+                  ESP_LOGW("boot", "DSC-CONTROL 5.1.13 heap still tight largest=%u — waiting longer",
                            (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
               - delay: 10s
         - lvgl.page.show: page_boot
+        - lambda: 'id(boot_msg) = "starting…";'
+        - script.execute:
+            id: boot_paint
+            pct: 8
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 5.1.11 resume-lite — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 5.1.13 resume-lite — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
             id(touch_guard_until) = millis() + 5000;
         - lvgl.resume:
-        - delay: 6s
+        # Let the dark Starting page land in the FB before the PWM comes up.
+        - delay: 400ms
+        - light.turn_on:
+            id: backlight
+            brightness: 55%
+        - lambda: 'id(boot_msg) = "waiting for Wi-Fi…";'
+        - script.execute:
+            id: boot_paint
+            pct: 18
+        - wait_until:
+            condition:
+              lambda: 'return id(wifi_conn);'
+            timeout: 25s
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 5.1.11 post-lite — free_heap=%u largest=%u",
+            id(boot_msg) = id(wifi_conn) ? "announcing to hub…" : "no Wi-Fi · announcing…";
+        - script.execute:
+            id: boot_paint
+            pct: 30
+        # Hello: hub stamps Panel Link + bursts vitals/config/soil/names.
+        - script.execute:
+            id: hub_cmd
+            op: 57
+            val: 0
+        - lambda: 'id(boot_msg) = "loading climate…";'
+        - script.execute:
+            id: boot_paint
+            pct: 42
+        - wait_until:
+            condition:
+              lambda: 'return id(gv_hub_last) != 0;'
+            timeout: 20s
+        # One retry if the first hello was before the radio was fully ready.
+        - if:
+            condition:
+              lambda: 'return id(gv_hub_last) == 0;'
+            then:
+              - lambda: 'id(boot_msg) = "retrying hub hello…";'
+              - script.execute:
+                  id: boot_paint
+                  pct: 45
+              - script.execute:
+                  id: hub_cmd
+                  op: 57
+                  val: 0
+              - wait_until:
+                  condition:
+                    lambda: 'return id(gv_hub_last) != 0;'
+                  timeout: 25s
+        - lambda: 'id(boot_msg) = "loading setpoints…";'
+        - script.execute:
+            id: boot_paint
+            pct: 60
+        - wait_until:
+            condition:
+              lambda: 'return id(gv_cfg_ok);'
+            timeout: 15s
+        - lambda: 'id(boot_msg) = "loading soil…";'
+        - script.execute:
+            id: boot_paint
+            pct: 78
+        - wait_until:
+            condition:
+              lambda: 'return id(gv_soil_ok);'
+            timeout: 12s
+        - lambda: |-
+            if (id(gv_hub_last) == 0) id(boot_msg) = "hub quiet · opening UI…";
+            else if (!id(gv_cfg_ok)) id(boot_msg) = "partial data · opening UI…";
+            else id(boot_msg) = "ready · opening UI…";
+        - script.execute:
+            id: boot_paint
+            pct: 92
+        - delay: 500ms
+        - lambda: 'id(boot_msg) = "ready";'
+        - script.execute:
+            id: boot_paint
+            pct: 100
+        - lambda: |-
+            ESP_LOGI("boot", "DSC-CONTROL 5.1.13 post-lite — free_heap=%u largest=%u hub=%d cfg=%d soil=%d",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
-                     (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
+                     (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL),
+                     (int) (id(gv_hub_last) != 0), (int) id(gv_cfg_ok), (int) id(gv_soil_ok));
+        - delay: 300ms
         - lvgl.pause:
         - lambda: 'lv_obj_clear_flag(id(tabbar), LV_OBJ_FLAG_HIDDEN);'
         - lvgl.page.show: page_pulse
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 5.1.11 resume-full — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 5.1.13 resume-full — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
             id(touch_guard_until) = millis() + 2000;
         - lvgl.resume:
-        - delay: 4s
+        - delay: 3s
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 5.1.11 UI armed — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 5.1.13 UI armed — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
             id(boot_ui_ready) = true;
+            id(bl_last) = -1;   // let refresh_ui own night/day brightness
             id(touch_guard_until) = millis() + 800;
             id(ui_dirty) = true;
 
@@ -440,10 +536,12 @@ espnow:
             if (sc[i] >= 99.0f) id(gv_cfg)[i] = take_f100(op, wire);
             else id(gv_cfg)[i] = take_f1(op, wire);
           }
+          id(gv_cfg_ok) = true;
           if (confirm_paint) id(ui_dirty) = true;
         } else if (ty == 0xD3 && size >= 58) {
           static const float ss[7] = {100,10,1,100,1,1,1};
           for (int i = 0; i < 28; i++) { float v = rd(2 + i*2); id(gv_soil)[i] = isnan(v) ? NAN : v / ss[i % 7]; }
+          id(gv_soil_ok) = true;
         } else if (ty == 0xD4 && size >= 66) {
           // Plant names: 4×16 bytes, null-padded. Canonical store is each
           // pot; hub mirrors from HA and relays here so the soil tab works
@@ -559,7 +657,9 @@ light:
     output: backlight_pwm
     id: backlight
     name: "Backlight"
-    restore_mode: ALWAYS_ON
+    # v5.1.12 — stay dark until page_boot is painted. ALWAYS_ON lit the
+    # uninitialised ST7789 framebuffer (white noise) for ~14 s.
+    restore_mode: ALWAYS_OFF
     default_transition_length: 0ms   # v4.0.10 — no PWM fade (avoids extra work under heap pressure)
 
 button:
@@ -1088,7 +1188,7 @@ text_sensor:
     name: "Firmware Version"
     id: fw_version
     icon: mdi:tag-check
-    lambda: 'return {"5.1.11"};'
+    lambda: 'return {"5.1.13"};'
     update_interval: 60s
   - platform: template
     id: sel_stage
@@ -1203,6 +1303,15 @@ globals:
   - id: boot_ui_ready            # false until post-boot LVGL resume (5.1.3)
     type: bool
     initial_value: 'false'
+  - id: gv_cfg_ok                # true after first 0xD2 config packet
+    type: bool
+    initial_value: 'false'
+  - id: gv_soil_ok               # true after first 0xD3 soil packet
+    type: bool
+    initial_value: 'false'
+  - id: boot_msg                 # Starting-page status line (boot_paint)
+    type: std::string
+    initial_value: '"starting…"'
   - id: ui_dirty                 # coalesce full tab paint off the indev/ESP-NOW path
     type: bool
     initial_value: 'false'
@@ -1921,7 +2030,9 @@ lvgl:
 
   # =============================== PAGES ===========================
   pages:
-    # ------------------------------ BOOT (5.1.5 lite first paint) ---
+    # ------------------------------ BOOT (5.1.13 Starting + bar) ---
+    # Lean: brand + status + one bar + pct. No icons/cards — RAM-safe.
+    # Backlight stays off until this page is painted; then hello + snapshot.
     - id: page_boot
       scrollbar_mode: "OFF"
       bg_color: 0x0E1116
@@ -1929,15 +2040,42 @@ lvgl:
         - label:
             text: "DSC-CONTROL"
             text_font: f_med
-            align: CENTER
-            y: -12
+            align: TOP_MID
+            y: 72
             text_color: 0x00E676
         - label:
+            id: lbl_boot_status
             text: "starting…"
             text_font: f_small
-            align: CENTER
-            y: 14
+            align: TOP_MID
+            y: 108
             text_color: 0x8A929C
+        - bar:
+            id: boot_bar
+            x: 40
+            y: 140
+            width: 240
+            height: 10
+            min_value: 0
+            max_value: 100
+            value: 0
+            animated: false
+            indicator:
+              bg_color: 0x00E676
+            bg_color: 0x232A33
+        - label:
+            id: lbl_boot_pct
+            text: "0%"
+            text_font: f_small
+            align: TOP_MID
+            y: 158
+            text_color: 0x5A6472
+        - label:
+            text: "v5.1.13"
+            text_font: f_small
+            align: TOP_MID
+            y: 188
+            text_color: 0x3A4550
     # ------------------------------ PULSE --------------------------
     - id: page_pulse
       scrollbar_mode: "OFF"
@@ -3242,12 +3380,34 @@ lvgl:
                         id: hub_cmd
                         op: 19
                         val: !lambda 'return (id(gv_coord)&2) ? 0 : 1;'
-              - label: {text: "DSC-CONTROL v5.1.11  ·  ESP-NOW primary", text_font: f_small, text_color: 0x3A4550, pad_top: 8, pad_bottom: 8}
+              - label: {text: "DSC-CONTROL v5.1.13  ·  ESP-NOW primary", text_font: f_small, text_color: 0x3A4550, pad_top: 8, pad_bottom: 8}
 # ==================================================================
 #  SCRIPTS
 # ==================================================================
 script:
   # ---- send a command to the hub: {0xDC,ver,op,flags,i32 val,u16 tag,u16 seq} ----
+  # Starting-page progress — status + lean bar only (no cards/icons).
+  # Call after setting id(boot_msg); safe before boot_ui_ready.
+  - id: boot_paint
+    parameters:
+      pct: int
+    then:
+      - lambda: |-
+          int p = pct;
+          if (p < 0) p = 0;
+          if (p > 100) p = 100;
+          lv_bar_set_value(id(boot_bar), p, LV_ANIM_OFF);
+          const char* m = id(boot_msg).c_str();
+          if (m == nullptr || m[0] == '\0') m = "…";
+          const char* cur = lv_label_get_text(id(lbl_boot_status));
+          if (cur == nullptr || strcmp(cur, m) != 0)
+            lv_label_set_text(id(lbl_boot_status), m);
+          char b[8];
+          snprintf(b, sizeof(b), "%d%%", p);
+          cur = lv_label_get_text(id(lbl_boot_pct));
+          if (cur == nullptr || strcmp(cur, b) != 0)
+            lv_label_set_text(id(lbl_boot_pct), b);
+
   # UI control actions call this instead of homeassistant.action. Float values
   # are passed pre-scaled by ×100 (e.g. 24.5 °C -> op 30, val 2450).
   # v5.1.4: pend_* + write-through gv_* ONLY — no lv_label_set_text under the
@@ -3262,7 +3422,8 @@ script:
           auto bitset = [](int& word, int bit, int on){
             if (on) word |= (1 << bit); else word &= ~(1 << bit);
           };
-          if (op >= 0 && op < 64) {
+          // Hello (57) is presence-only — no optimistic UI pending.
+          if (op != 57 && op >= 0 && op < 64) {
             id(pend_val)[op] = val;
             id(pend_ms)[op] = millis();
           }

@@ -60,6 +60,7 @@ espnow:
           id(cmd_last_ms) = now;
         }
         id(cmd_fresh) = true;                                          // a real command -> echo state back
+        id(panel_last_ms) = millis();                                  // glass is alive / coming online
         uint8_t op = data[2];
         int32_t val = (int32_t)((uint32_t)data[4] | ((uint32_t)data[5] << 8)
                               | ((uint32_t)data[6] << 16) | ((uint32_t)data[7] << 24));
@@ -161,18 +162,33 @@ espnow:
           case 55: { int m=((val%1440)+1440)%1440; auto c=id(clone_lights_on_time).make_call(); c.set_time(m/60, m%60, 0); c.perform(); break; }
           // ----- misc -----
           case 56: ESP_LOGW("espnow","panel requested restart"); App.safe_reboot(); break;
+          // Panel boot hello — no side effects; marks glass coming online and
+          // requests a full vitals/config/soil/names burst (see below).
+          case 57:
+            id(cmd_hello) = true;
+            ESP_LOGI("espnow", "panel hello — glass coming online (seq=%u)", (unsigned) seq);
+            break;
           default: ESP_LOGW("espnow","unknown opcode %u", op); break;
         }
         ESP_LOGD("espnow","cmd op=%u val=%d applied", op, val);
     # After a real command, echo vitals + config straight back so the panel
     # reflects the change in ~one round trip (not up to the 10s config cycle) —
     # this is what makes setpoint stepping feel live and never drop steps.
+    # Hello also pulls soil + names so Starting can wait for a full snapshot.
     - if:
         condition:
           lambda: 'return id(cmd_fresh);'
         then:
           - script.execute: tx_vitals
           - script.execute: tx_config
+          - if:
+              condition:
+                lambda: 'return id(cmd_hello);'
+              then:
+                - lambda: 'id(cmd_hello) = false;'
+                - delay: 40ms
+                - script.execute: tx_soil
+                - script.execute: tx_names
 
 globals:
   - id: cmd_last_seq
@@ -191,6 +207,27 @@ globals:
     type: bool
     restore_value: false
     initial_value: 'false'
+  - id: cmd_hello
+    type: bool
+    restore_value: false
+    initial_value: 'false'
+  - id: panel_last_ms
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+
+binary_sensor:
+  # Glass presence from ESP-NOW commands (hello + any hub_cmd). Not the same
+  # as HA API — panel can be linked while HA is down.
+  - platform: template
+    name: "Panel Link"
+    id: panel_link
+    device_class: connectivity
+    entity_category: diagnostic
+    update_interval: 5s
+    lambda: |-
+      if (id(panel_last_ms) == 0) return false;
+      return (millis() - id(panel_last_ms)) < 30000u;
 
 script:
   # ---- telemetry senders — driven by the interval below AND re-fired right
