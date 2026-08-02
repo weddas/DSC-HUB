@@ -61,6 +61,7 @@ espnow:
         }
         id(cmd_fresh) = true;                                          // a real command -> echo state back
         id(panel_last_ms) = millis();                                  // glass is alive / coming online
+        id(panel_link).publish_state(true);
         uint8_t op = data[2];
         int32_t val = (int32_t)((uint32_t)data[4] | ((uint32_t)data[5] << 8)
                               | ((uint32_t)data[6] << 16) | ((uint32_t)data[7] << 24));
@@ -219,8 +220,8 @@ globals:
 binary_sensor:
   # Glass presence from ESP-NOW commands (hello + any hub_cmd). Not the same
   # as HA API — panel can be linked while HA is down.
-  # (No update_interval — invalid on template binary_sensor in ESPHome 2026.7;
-  #  the 5s interval below republishes.)
+  # Template binary_sensor is not a PollingComponent (no update_interval /
+  # component.update). State is published on RX and every 5s below.
   - platform: template
     name: "Panel Link"
     id: panel_link
@@ -378,7 +379,9 @@ interval:
   - interval: 5s
     then:
       - script.execute: tx_fleet_heartbeat
-      - component.update: panel_link
+      - lambda: |-
+          bool linked = id(panel_last_ms) != 0 && (millis() - id(panel_last_ms)) < 30000u;
+          id(panel_link).publish_state(linked);
   - interval: 10s
     then: [{script.execute: tx_config}, {script.execute: tx_soil}, {script.execute: tx_names}]
 

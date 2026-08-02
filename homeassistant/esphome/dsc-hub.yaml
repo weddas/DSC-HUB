@@ -22,4 +22,6 @@ packages:
       - firmware/v4/dsc-hub-v4_0.yaml
       - firmware/v4/dsc-hub-espnow-primary.yaml
       # No dsc-fleet-setup-hub-lab.yaml — lab uses ${panel_mac}; kit SoftAP only.
-    refresh: 1h
+    # 0s during fleet flash cycles so GitHub pushes are picked up immediately.
+    # Raise to 1h once the fleet is stable to avoid constant git pulls.
+    refresh: 0s
