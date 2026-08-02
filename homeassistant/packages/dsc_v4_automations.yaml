@@ -794,7 +794,7 @@ automation:
     mode: single
     triggers:
       - trigger: time_pattern
-        seconds: "/60"
+        minutes: "/1"
     conditions:
       - condition: template
         value_template: "{{ states('number.dsc_hub_ha_handshake') not in ['unknown', 'unavailable'] }}"

@@ -708,7 +708,7 @@ automation:
                 value_template: >-
                   {{ valid_window|bool
                      and single_lever|bool
-                     and and states('sensor.dsc_fan_exhaust_outside_pct')|float(0) >= 20
+                     and states('sensor.dsc_fan_exhaust_outside_pct')|float(0) >= 20
                      and (dT_per_min|float(0)) < -0.005
                      and (dT_per_min|float(0)) > -1.5 }}
             sequence:
@@ -742,7 +742,7 @@ automation:
                 value_template: >-
                   {{ valid_window|bool
                      and single_lever|bool
-                     and and states('sensor.dsc_fan_exhaust_outside_pct')|float(0) >= 20
+                     and states('sensor.dsc_fan_exhaust_outside_pct')|float(0) >= 20
                      and (dAH_per_min|float(0)) < -0.01
                      and (dAH_per_min|float(0)) > -2.0 }}
             sequence:
