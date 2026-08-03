@@ -294,22 +294,24 @@ Reset coeffs: `script.dsc_climate_learn_reset`. Reset waits: `script.dsc_climate
 Dashboard: **Learning** (`/dsc-hub-pro/learning`) — Activity card, device cal,
 Phase A+B status, appliance effect cards, waits, ETA, efficiencies, charts.
 
-## Crop-steering prep (HA surface 5.1.4)
+## Crop-steering (HA surface 5.1.5)
 
 Packages: `dsc_v4_strain_catalog`, `dsc_v4_nutrient_catalog`, `dsc_v4_pots_coherence`,
 `dsc_v4_actuator_efficacy`.
 
 - **Want / Need / Got:** strain + sprout date → Want bands; Got = raw + peer offset;
-  Need summary + Apply expected stage (advisory).
+  Need summary + Apply expected stage (advisory). Prefer pot `select`/`datetime`
+  after FW **5.1.3**; HA `input_*` fallback until then.
 - **Nutrient Science:** tank L × strength → recipe; **Accept mix** burns stock (no pumps).
 - **Fluctuations:** relative dryback; cross-pot coherence when moisture rises together
   but EC does not; learned ΔEC/Δmoisture.
 - **Temp OOS vs Operator Lockout:** humidifier/dehum/clone mister — efficacy fail →
   Temp OOS (flashing) + demand off; Lockout only you clear.
 
-Dashboard: **Strains** (`/dsc-hub-pro/strains`), pot subviews, **Nutrient Science**,
-Climate Temp OOS / Lockout cards. Data mirrors: `data/dsc_strain_catalog.yaml`,
-`data/dsc_nutrient_catalog.yaml`.
+Dashboard: **Strains** (`/dsc-hub-pro/strains`), plant consoles (strain/sprout/Need),
+**Nutrient Science** (`/dsc-hub-pro/nutrient-science`), Root Zone dryback/coherence,
+Climate Temp OOS / Lockout (incl. Clone Mister status). Data mirrors:
+`data/dsc_strain_catalog.yaml`, `data/dsc_nutrient_catalog.yaml`.
 
 ## Tank / Tuya entity map
 
@@ -339,7 +341,7 @@ not humidifier lock — entity id kept for compatibility.
 |---|---|
 | Hub / pots / Sonoffs / kits | **`5.1.0`** |
 | Panel (DSC-CONTROL) | **`5.1.x`** lean-cut patch train |
-| HA surface (packages + dashboard) | **`5.1.4`** |
+| HA surface (packages + dashboard) | **`5.1.5`** |
 | Dashboard | DSC-HUB Pro (4-col, browser_mod popups) |
 | `espnow_cmd_tag` | `54727` (`0xD5C7`) on hub **and** panel |
 

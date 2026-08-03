@@ -1,5 +1,5 @@
 # ==================================================================
-#  DSC-HUB Pro v5.1.4  ·  Lovelace dashboard
+#  DSC-HUB Pro v5.1.5  ·  Lovelace dashboard
 #  ------------------------------------------------------------------
 #  Full rewrite of the v2.4.1 dashboard for firmware v4 (ESP-NOW primary
 #  panel + hub). Wire layout for 0xD1–0xD3 unchanged; plant names use
@@ -15,7 +15,11 @@
 #     Learning    → optional fan/PPFD cal, Phase A+B, appliance effect DB, ETA
 #     4x8 / 2x4   → tent-local vitals + equipment
 #     Root Zone   → soil matrix, mat votes, chemistry, EC uptake
-#     Tank / Light / Trends / System → support surfaces
+#     Tank / Strains / Nutrient Science / Light / Trends / System → support
+#
+#  Plant identity: strain + sprout — use input_select/input_datetime until pot
+#  5.1.3 NVS flash; prefer select.dsc_potN_strain / datetime.dsc_potN_sprout_date
+#  when available after flash.
 #
 #  v4 DELTA vs v2.4.1:
 #   * Plant / stage entity_ids are canonical:
@@ -1514,6 +1518,16 @@ views:
                                 icon: mdi:sprout
                               - entity: select.dsc_pot1_growth_stage
                                 name: Growth stage
+                              - entity: select.dsc_pot1_strain
+                                name: Strain (pot)
+                              - entity: input_select.dsc_pot1_strain
+                                name: Strain (HA)
+                              - entity: datetime.dsc_pot1_sprout_date
+                                name: Sprout (pot)
+                              - entity: input_datetime.dsc_pot1_sprout_date
+                                name: Sprout (HA)
+                              - entity: sensor.dsc_pot1_need_summary
+                                name: Need
                               - entity: binary_sensor.dsc_hub_pot1_esp_now_link
                                 name: ESP-NOW link
                               - entity: switch.dsc_hub_mat_vote_pot_1
@@ -1583,6 +1597,16 @@ views:
                                 icon: mdi:sprout
                               - entity: select.dsc_pot2_growth_stage
                                 name: Growth stage
+                              - entity: select.dsc_pot2_strain
+                                name: Strain (pot)
+                              - entity: input_select.dsc_pot2_strain
+                                name: Strain (HA)
+                              - entity: datetime.dsc_pot2_sprout_date
+                                name: Sprout (pot)
+                              - entity: input_datetime.dsc_pot2_sprout_date
+                                name: Sprout (HA)
+                              - entity: sensor.dsc_pot2_need_summary
+                                name: Need
                               - entity: binary_sensor.dsc_hub_pot2_esp_now_link
                                 name: ESP-NOW link
                               - entity: switch.dsc_hub_mat_vote_pot_2
@@ -1655,6 +1679,16 @@ views:
                                 icon: mdi:sprout
                               - entity: select.dsc_pot3_growth_stage
                                 name: Growth stage
+                              - entity: select.dsc_pot3_strain
+                                name: Strain (pot)
+                              - entity: input_select.dsc_pot3_strain
+                                name: Strain (HA)
+                              - entity: datetime.dsc_pot3_sprout_date
+                                name: Sprout (pot)
+                              - entity: input_datetime.dsc_pot3_sprout_date
+                                name: Sprout (HA)
+                              - entity: sensor.dsc_pot3_need_summary
+                                name: Need
                               - entity: binary_sensor.dsc_hub_pot3_esp_now_link
                                 name: ESP-NOW link
                               - entity: switch.dsc_hub_mat_vote_pot_3
@@ -1724,6 +1758,16 @@ views:
                                 icon: mdi:sprout
                               - entity: select.dsc_pot4_growth_stage
                                 name: Growth stage
+                              - entity: select.dsc_pot4_strain
+                                name: Strain (pot)
+                              - entity: input_select.dsc_pot4_strain
+                                name: Strain (HA)
+                              - entity: datetime.dsc_pot4_sprout_date
+                                name: Sprout (pot)
+                              - entity: input_datetime.dsc_pot4_sprout_date
+                                name: Sprout (HA)
+                              - entity: sensor.dsc_pot4_need_summary
+                                name: Need
                               - entity: binary_sensor.dsc_hub_pot4_esp_now_link
                                 name: ESP-NOW link
                               - entity: switch.dsc_hub_mat_vote_pot_4
@@ -2703,6 +2747,24 @@ views:
                 tap_action:
                   action: call-service
                   service: script.dsc_clear_dehumidifier_temp_oos
+              - type: custom:mushroom-template-card
+                primary: Clone Mister
+                secondary: "{{ states('sensor.dsc_clone_humidifier_efficacy_summary') }}"
+                icon: mdi:sprinkler-variant
+                icon_color: "{{ 'amber' if is_state('input_boolean.dsc_clone_humidifier_temp_oos','on') else ('red' if is_state('input_boolean.dsc_clone_humidifier_operator_lockout','on') else 'green') }}"
+                card_mod:
+                  style: |
+                    ha-card {
+                      {% if is_state('input_boolean.dsc_clone_humidifier_temp_oos','on') %}
+                      animation: dsc_temp_oos_pulse 1.2s ease-in-out infinite;
+                      {% elif is_state('input_boolean.dsc_clone_humidifier_operator_lockout','on') %}
+                      box-shadow: 0 0 0 2px rgba(239,68,68,0.85);
+                      {% endif %}
+                    }
+                    @keyframes dsc_temp_oos_pulse {
+                      0%,100% { box-shadow: 0 0 0 0 rgba(245,158,11,0.0); }
+                      50% { box-shadow: 0 0 18px 2px rgba(245,158,11,0.85); }
+                    }
               - type: custom:mushroom-entity-card
                 entity: input_boolean.dsc_clone_humidifier_operator_lockout
                 name: Clone Mister Lockout
@@ -4931,6 +4993,72 @@ views:
         column_span: 2
         cards:
           - type: heading
+            heading: Dryback & coherence
+            heading_style: title
+          - type: markdown
+            content: >-
+              Daily peak→now dryback % and shared-event coherence when moisture
+              rises together but EC response disagrees across pots.
+          - type: grid
+            columns: 4
+            square: false
+            cards:
+              - type: custom:mushroom-template-card
+                primary: POT1 Dryback
+                secondary: "{{ states('sensor.dsc_pot1_dryback_pct') }}%"
+                icon: mdi:water-percent
+                icon_color: >-
+                  {% set v = states('sensor.dsc_pot1_dryback_pct')|float(0) %}
+                  {{ 'green' if v >= 10 else 'amber' }}
+              - type: custom:mushroom-template-card
+                primary: POT2 Dryback
+                secondary: "{{ states('sensor.dsc_pot2_dryback_pct') }}%"
+                icon: mdi:water-percent
+                icon_color: >-
+                  {% set v = states('sensor.dsc_pot2_dryback_pct')|float(0) %}
+                  {{ 'green' if v >= 10 else 'amber' }}
+              - type: custom:mushroom-template-card
+                primary: POT3 Dryback
+                secondary: "{{ states('sensor.dsc_pot3_dryback_pct') }}%"
+                icon: mdi:water-percent
+                icon_color: >-
+                  {% set v = states('sensor.dsc_pot3_dryback_pct')|float(0) %}
+                  {{ 'green' if v >= 10 else 'amber' }}
+              - type: custom:mushroom-template-card
+                primary: POT4 Dryback
+                secondary: "{{ states('sensor.dsc_pot4_dryback_pct') }}%"
+                icon: mdi:water-percent
+                icon_color: >-
+                  {% set v = states('sensor.dsc_pot4_dryback_pct')|float(0) %}
+                  {{ 'green' if v >= 10 else 'amber' }}
+              - type: custom:mushroom-template-card
+                primary: POT1 Coherence
+                secondary: "{{ states('sensor.dsc_pot1_coherence_summary') }}"
+                icon: mdi:compare-horizontal
+                icon_color: "{{ 'red' if is_state('binary_sensor.dsc_pot1_coherence_flag','on') else 'green' }}"
+                multiline_secondary: true
+              - type: custom:mushroom-template-card
+                primary: POT2 Coherence
+                secondary: "{{ states('sensor.dsc_pot2_coherence_summary') }}"
+                icon: mdi:compare-horizontal
+                icon_color: "{{ 'red' if is_state('binary_sensor.dsc_pot2_coherence_flag','on') else 'green' }}"
+                multiline_secondary: true
+              - type: custom:mushroom-template-card
+                primary: POT3 Coherence
+                secondary: "{{ states('sensor.dsc_pot3_coherence_summary') }}"
+                icon: mdi:compare-horizontal
+                icon_color: "{{ 'red' if is_state('binary_sensor.dsc_pot3_coherence_flag','on') else 'green' }}"
+                multiline_secondary: true
+              - type: custom:mushroom-template-card
+                primary: POT4 Coherence
+                secondary: "{{ states('sensor.dsc_pot4_coherence_summary') }}"
+                icon: mdi:compare-horizontal
+                icon_color: "{{ 'red' if is_state('binary_sensor.dsc_pot4_coherence_flag','on') else 'green' }}"
+                multiline_secondary: true
+      - type: grid
+        column_span: 2
+        cards:
+          - type: heading
             heading: Mat
             heading_style: title
           - type: custom:vertical-stack-in-card
@@ -5912,6 +6040,677 @@ views:
               *Tank EC alerts use **published absolute targets** — unlike the
               pot probes, which are trend-only. The tester sits in solution, so
               absolute values are meaningful here and only here.*
+
+  - title: Strains
+    icon: mdi:dna
+    path: strains
+    type: sections
+    max_columns: 4
+    sections:
+      - type: grid
+        column_span: 2
+        cards:
+          - type: heading
+            heading: Strain catalog
+            heading_style: title
+          - type: markdown
+            content: >-
+              **Want** bands come from genetics (seed templates or custom slots).
+              **Got** = offset-corrected probes. **Need** = gap narrative.
+              Set strain + sprout in HA until pot 5.1.3 NVS flash; then prefer
+              pot entities (`select` / `datetime`).
+          - type: grid
+            columns: 2
+            square: false
+            cards:
+              - type: custom:mushroom-template-card
+                primary: Capture peer baseline
+                secondary: Set offsets so corrected Got ≈ fleet median
+                icon: mdi:account-group
+                icon_color: green
+                multiline_secondary: true
+                tap_action:
+                  action: call-service
+                  service: script.dsc_pots_capture_peer_baseline
+              - type: custom:mushroom-template-card
+                primary: Migrate HA → pot
+                secondary: Push strain + sprout to pot NVS after flash
+                icon: mdi:export
+                icon_color: cyan
+                multiline_secondary: true
+                tap_action:
+                  action: call-service
+                  service: script.dsc_migrate_strain_sprout_ha_to_pot
+      - type: grid
+        column_span: 2
+        cards:
+          - type: custom:expander-card
+            title: POT1 — {{ states('text.dsc_pot1_plant_name') }}
+            expanded: true
+            card_mod: *dsc_expander_style
+            cards:
+              - type: entities
+                entities:
+                  - entity: text.dsc_pot1_plant_name
+                    name: Plant
+                  - entity: select.dsc_pot1_strain
+                    name: Strain (pot)
+                  - entity: input_select.dsc_pot1_strain
+                    name: Strain (HA)
+                  - entity: datetime.dsc_pot1_sprout_date
+                    name: Sprout (pot)
+                  - entity: input_datetime.dsc_pot1_sprout_date
+                    name: Sprout (HA)
+                  - entity: sensor.dsc_pot1_days_since_sprout
+                    name: Days since sprout
+                  - entity: sensor.dsc_pot1_expected_stage
+                    name: Expected stage
+                  - entity: select.dsc_pot1_growth_stage
+                    name: Growth stage (pot)
+              - type: custom:mushroom-template-card
+                primary: Apply expected stage
+                secondary: "{{ states('sensor.dsc_pot1_expected_stage') }}"
+                icon: mdi:timeline-clock
+                tap_action:
+                  action: call-service
+                  service: script.dsc_pot1_apply_expected_stage
+              - type: custom:mushroom-chips-card
+                alignment: start
+                chips:
+                  - type: template
+                    icon: mdi:ph
+                    content: >-
+                      pH {{ states('sensor.dsc_pot1_want_ph_min') }}–{{
+                      states('sensor.dsc_pot1_want_ph_max') }}
+                  - type: template
+                    icon: mdi:flash
+                    content: >-
+                      EC {{ states('sensor.dsc_pot1_want_ec_min') }}–{{
+                      states('sensor.dsc_pot1_want_ec_max') }}
+                  - type: template
+                    icon: mdi:water-percent
+                    content: >-
+                      M {{ states('sensor.dsc_pot1_want_moisture_min') }}–{{
+                      states('sensor.dsc_pot1_want_moisture_max') }}%
+              - type: entities
+                entities:
+                  - type: section
+                    label: Got (offset-corrected)
+                  - entity: sensor.dsc_pot1_got_ph
+                    name: Got pH
+                  - entity: sensor.dsc_pot1_got_ec
+                    name: Got EC
+                  - entity: sensor.dsc_pot1_got_moisture
+                    name: Got moisture
+                  - entity: sensor.dsc_pot1_need_summary
+                    name: Need summary
+                  - type: section
+                    label: Soft cues
+                  - entity: binary_sensor.dsc_pot1_stage_mismatch
+                    name: Stage mismatch
+                  - entity: binary_sensor.dsc_pot1_strain_ph_soft_cue
+                    name: pH soft cue
+                  - entity: binary_sensor.dsc_pot1_strain_ec_soft_cue
+                    name: EC soft cue
+                  - type: section
+                    label: Peer offsets
+                  - entity: input_number.dsc_pot1_offset_ph
+                    name: Offset pH
+                  - entity: input_number.dsc_pot1_offset_ec_us
+                    name: Offset EC
+                  - entity: input_number.dsc_pot1_offset_moisture
+                    name: Offset moisture
+          - type: custom:expander-card
+            title: POT2 — {{ states('text.dsc_pot2_plant_name') }}
+            expanded: false
+            card_mod: *dsc_expander_style
+            cards:
+              - type: entities
+                entities:
+                  - entity: text.dsc_pot2_plant_name
+                    name: Plant
+                  - entity: select.dsc_pot2_strain
+                    name: Strain (pot)
+                  - entity: input_select.dsc_pot2_strain
+                    name: Strain (HA)
+                  - entity: datetime.dsc_pot2_sprout_date
+                    name: Sprout (pot)
+                  - entity: input_datetime.dsc_pot2_sprout_date
+                    name: Sprout (HA)
+                  - entity: sensor.dsc_pot2_days_since_sprout
+                    name: Days since sprout
+                  - entity: sensor.dsc_pot2_expected_stage
+                    name: Expected stage
+                  - entity: select.dsc_pot2_growth_stage
+                    name: Growth stage (pot)
+              - type: custom:mushroom-template-card
+                primary: Apply expected stage
+                secondary: "{{ states('sensor.dsc_pot2_expected_stage') }}"
+                icon: mdi:timeline-clock
+                tap_action:
+                  action: call-service
+                  service: script.dsc_pot2_apply_expected_stage
+              - type: custom:mushroom-chips-card
+                alignment: start
+                chips:
+                  - type: template
+                    icon: mdi:ph
+                    content: >-
+                      pH {{ states('sensor.dsc_pot2_want_ph_min') }}–{{
+                      states('sensor.dsc_pot2_want_ph_max') }}
+                  - type: template
+                    icon: mdi:flash
+                    content: >-
+                      EC {{ states('sensor.dsc_pot2_want_ec_min') }}–{{
+                      states('sensor.dsc_pot2_want_ec_max') }}
+                  - type: template
+                    icon: mdi:water-percent
+                    content: >-
+                      M {{ states('sensor.dsc_pot2_want_moisture_min') }}–{{
+                      states('sensor.dsc_pot2_want_moisture_max') }}%
+              - type: entities
+                entities:
+                  - type: section
+                    label: Got (offset-corrected)
+                  - entity: sensor.dsc_pot2_got_ph
+                    name: Got pH
+                  - entity: sensor.dsc_pot2_got_ec
+                    name: Got EC
+                  - entity: sensor.dsc_pot2_got_moisture
+                    name: Got moisture
+                  - entity: sensor.dsc_pot2_need_summary
+                    name: Need summary
+                  - type: section
+                    label: Soft cues
+                  - entity: binary_sensor.dsc_pot2_stage_mismatch
+                    name: Stage mismatch
+                  - entity: binary_sensor.dsc_pot2_strain_ph_soft_cue
+                    name: pH soft cue
+                  - entity: binary_sensor.dsc_pot2_strain_ec_soft_cue
+                    name: EC soft cue
+                  - type: section
+                    label: Peer offsets
+                  - entity: input_number.dsc_pot2_offset_ph
+                    name: Offset pH
+                  - entity: input_number.dsc_pot2_offset_ec_us
+                    name: Offset EC
+                  - entity: input_number.dsc_pot2_offset_moisture
+                    name: Offset moisture
+          - type: custom:expander-card
+            title: POT3 — {{ states('text.dsc_pot3_plant_name') }}
+            expanded: false
+            card_mod: *dsc_expander_style
+            cards:
+              - type: entities
+                entities:
+                  - entity: text.dsc_pot3_plant_name
+                    name: Plant
+                  - entity: select.dsc_pot3_strain
+                    name: Strain (pot)
+                  - entity: input_select.dsc_pot3_strain
+                    name: Strain (HA)
+                  - entity: datetime.dsc_pot3_sprout_date
+                    name: Sprout (pot)
+                  - entity: input_datetime.dsc_pot3_sprout_date
+                    name: Sprout (HA)
+                  - entity: sensor.dsc_pot3_days_since_sprout
+                    name: Days since sprout
+                  - entity: sensor.dsc_pot3_expected_stage
+                    name: Expected stage
+                  - entity: select.dsc_pot3_growth_stage
+                    name: Growth stage (pot)
+              - type: custom:mushroom-template-card
+                primary: Apply expected stage
+                secondary: "{{ states('sensor.dsc_pot3_expected_stage') }}"
+                icon: mdi:timeline-clock
+                tap_action:
+                  action: call-service
+                  service: script.dsc_pot3_apply_expected_stage
+              - type: custom:mushroom-chips-card
+                alignment: start
+                chips:
+                  - type: template
+                    icon: mdi:ph
+                    content: >-
+                      pH {{ states('sensor.dsc_pot3_want_ph_min') }}–{{
+                      states('sensor.dsc_pot3_want_ph_max') }}
+                  - type: template
+                    icon: mdi:flash
+                    content: >-
+                      EC {{ states('sensor.dsc_pot3_want_ec_min') }}–{{
+                      states('sensor.dsc_pot3_want_ec_max') }}
+                  - type: template
+                    icon: mdi:water-percent
+                    content: >-
+                      M {{ states('sensor.dsc_pot3_want_moisture_min') }}–{{
+                      states('sensor.dsc_pot3_want_moisture_max') }}%
+              - type: entities
+                entities:
+                  - type: section
+                    label: Got (offset-corrected)
+                  - entity: sensor.dsc_pot3_got_ph
+                    name: Got pH
+                  - entity: sensor.dsc_pot3_got_ec
+                    name: Got EC
+                  - entity: sensor.dsc_pot3_got_moisture
+                    name: Got moisture
+                  - entity: sensor.dsc_pot3_need_summary
+                    name: Need summary
+                  - type: section
+                    label: Soft cues
+                  - entity: binary_sensor.dsc_pot3_stage_mismatch
+                    name: Stage mismatch
+                  - entity: binary_sensor.dsc_pot3_strain_ph_soft_cue
+                    name: pH soft cue
+                  - entity: binary_sensor.dsc_pot3_strain_ec_soft_cue
+                    name: EC soft cue
+                  - type: section
+                    label: Peer offsets
+                  - entity: input_number.dsc_pot3_offset_ph
+                    name: Offset pH
+                  - entity: input_number.dsc_pot3_offset_ec_us
+                    name: Offset EC
+                  - entity: input_number.dsc_pot3_offset_moisture
+                    name: Offset moisture
+          - type: custom:expander-card
+            title: POT4 — {{ states('text.dsc_pot4_plant_name') }}
+            expanded: false
+            card_mod: *dsc_expander_style
+            cards:
+              - type: entities
+                entities:
+                  - entity: text.dsc_pot4_plant_name
+                    name: Plant
+                  - entity: select.dsc_pot4_strain
+                    name: Strain (pot)
+                  - entity: input_select.dsc_pot4_strain
+                    name: Strain (HA)
+                  - entity: datetime.dsc_pot4_sprout_date
+                    name: Sprout (pot)
+                  - entity: input_datetime.dsc_pot4_sprout_date
+                    name: Sprout (HA)
+                  - entity: sensor.dsc_pot4_days_since_sprout
+                    name: Days since sprout
+                  - entity: sensor.dsc_pot4_expected_stage
+                    name: Expected stage
+                  - entity: select.dsc_pot4_growth_stage
+                    name: Growth stage (pot)
+              - type: custom:mushroom-template-card
+                primary: Apply expected stage
+                secondary: "{{ states('sensor.dsc_pot4_expected_stage') }}"
+                icon: mdi:timeline-clock
+                tap_action:
+                  action: call-service
+                  service: script.dsc_pot4_apply_expected_stage
+              - type: custom:mushroom-chips-card
+                alignment: start
+                chips:
+                  - type: template
+                    icon: mdi:ph
+                    content: >-
+                      pH {{ states('sensor.dsc_pot4_want_ph_min') }}–{{
+                      states('sensor.dsc_pot4_want_ph_max') }}
+                  - type: template
+                    icon: mdi:flash
+                    content: >-
+                      EC {{ states('sensor.dsc_pot4_want_ec_min') }}–{{
+                      states('sensor.dsc_pot4_want_ec_max') }}
+                  - type: template
+                    icon: mdi:water-percent
+                    content: >-
+                      M {{ states('sensor.dsc_pot4_want_moisture_min') }}–{{
+                      states('sensor.dsc_pot4_want_moisture_max') }}%
+              - type: entities
+                entities:
+                  - type: section
+                    label: Got (offset-corrected)
+                  - entity: sensor.dsc_pot4_got_ph
+                    name: Got pH
+                  - entity: sensor.dsc_pot4_got_ec
+                    name: Got EC
+                  - entity: sensor.dsc_pot4_got_moisture
+                    name: Got moisture
+                  - entity: sensor.dsc_pot4_need_summary
+                    name: Need summary
+                  - type: section
+                    label: Soft cues
+                  - entity: binary_sensor.dsc_pot4_stage_mismatch
+                    name: Stage mismatch
+                  - entity: binary_sensor.dsc_pot4_strain_ph_soft_cue
+                    name: pH soft cue
+                  - entity: binary_sensor.dsc_pot4_strain_ec_soft_cue
+                    name: EC soft cue
+                  - type: section
+                    label: Peer offsets
+                  - entity: input_number.dsc_pot4_offset_ph
+                    name: Offset pH
+                  - entity: input_number.dsc_pot4_offset_ec_us
+                    name: Offset EC
+                  - entity: input_number.dsc_pot4_offset_moisture
+                    name: Offset moisture
+      - type: grid
+        cards:
+          - type: custom:expander-card
+            title: Custom catalog (slots 1–5)
+            expanded: false
+            card_mod: *dsc_expander_style
+            cards:
+              - type: custom:expander-card
+                title: Custom 1
+                expanded: false
+                cards:
+                  - type: entities
+                    entities:
+                      - entity: input_text.dsc_custom_strain_1_name
+                        name: Name
+                      - entity: input_select.dsc_custom_strain_1_type
+                        name: Type
+                      - entity: input_text.dsc_custom_strain_1_notes
+                        name: Notes
+                      - entity: input_number.dsc_custom_strain_1_ph_min
+                        name: pH min
+                      - entity: input_number.dsc_custom_strain_1_ph_max
+                        name: pH max
+                      - entity: input_number.dsc_custom_strain_1_ec_min
+                        name: EC min
+                      - entity: input_number.dsc_custom_strain_1_ec_max
+                        name: EC max
+                      - entity: input_number.dsc_custom_strain_1_moisture_min
+                        name: Moisture min
+                      - entity: input_number.dsc_custom_strain_1_moisture_max
+                        name: Moisture max
+                      - entity: input_number.dsc_custom_strain_1_veg_days
+                        name: Veg days
+                      - entity: input_number.dsc_custom_strain_1_flower_days
+                        name: Flower days
+              - type: custom:expander-card
+                title: Custom 2
+                expanded: false
+                cards:
+                  - type: entities
+                    entities:
+                      - entity: input_text.dsc_custom_strain_2_name
+                        name: Name
+                      - entity: input_select.dsc_custom_strain_2_type
+                        name: Type
+                      - entity: input_text.dsc_custom_strain_2_notes
+                        name: Notes
+                      - entity: input_number.dsc_custom_strain_2_ph_min
+                        name: pH min
+                      - entity: input_number.dsc_custom_strain_2_ph_max
+                        name: pH max
+                      - entity: input_number.dsc_custom_strain_2_ec_min
+                        name: EC min
+                      - entity: input_number.dsc_custom_strain_2_ec_max
+                        name: EC max
+                      - entity: input_number.dsc_custom_strain_2_moisture_min
+                        name: Moisture min
+                      - entity: input_number.dsc_custom_strain_2_moisture_max
+                        name: Moisture max
+                      - entity: input_number.dsc_custom_strain_2_veg_days
+                        name: Veg days
+                      - entity: input_number.dsc_custom_strain_2_flower_days
+                        name: Flower days
+              - type: custom:expander-card
+                title: Custom 3
+                expanded: false
+                cards:
+                  - type: entities
+                    entities:
+                      - entity: input_text.dsc_custom_strain_3_name
+                        name: Name
+                      - entity: input_select.dsc_custom_strain_3_type
+                        name: Type
+                      - entity: input_text.dsc_custom_strain_3_notes
+                        name: Notes
+                      - entity: input_number.dsc_custom_strain_3_ph_min
+                        name: pH min
+                      - entity: input_number.dsc_custom_strain_3_ph_max
+                        name: pH max
+                      - entity: input_number.dsc_custom_strain_3_ec_min
+                        name: EC min
+                      - entity: input_number.dsc_custom_strain_3_ec_max
+                        name: EC max
+                      - entity: input_number.dsc_custom_strain_3_moisture_min
+                        name: Moisture min
+                      - entity: input_number.dsc_custom_strain_3_moisture_max
+                        name: Moisture max
+                      - entity: input_number.dsc_custom_strain_3_veg_days
+                        name: Veg days
+                      - entity: input_number.dsc_custom_strain_3_flower_days
+                        name: Flower days
+              - type: custom:expander-card
+                title: Custom 4
+                expanded: false
+                cards:
+                  - type: entities
+                    entities:
+                      - entity: input_text.dsc_custom_strain_4_name
+                        name: Name
+                      - entity: input_select.dsc_custom_strain_4_type
+                        name: Type
+                      - entity: input_text.dsc_custom_strain_4_notes
+                        name: Notes
+                      - entity: input_number.dsc_custom_strain_4_ph_min
+                        name: pH min
+                      - entity: input_number.dsc_custom_strain_4_ph_max
+                        name: pH max
+                      - entity: input_number.dsc_custom_strain_4_ec_min
+                        name: EC min
+                      - entity: input_number.dsc_custom_strain_4_ec_max
+                        name: EC max
+                      - entity: input_number.dsc_custom_strain_4_moisture_min
+                        name: Moisture min
+                      - entity: input_number.dsc_custom_strain_4_moisture_max
+                        name: Moisture max
+                      - entity: input_number.dsc_custom_strain_4_veg_days
+                        name: Veg days
+                      - entity: input_number.dsc_custom_strain_4_flower_days
+                        name: Flower days
+              - type: custom:expander-card
+                title: Custom 5
+                expanded: false
+                cards:
+                  - type: entities
+                    entities:
+                      - entity: input_text.dsc_custom_strain_5_name
+                        name: Name
+                      - entity: input_select.dsc_custom_strain_5_type
+                        name: Type
+                      - entity: input_text.dsc_custom_strain_5_notes
+                        name: Notes
+                      - entity: input_number.dsc_custom_strain_5_ph_min
+                        name: pH min
+                      - entity: input_number.dsc_custom_strain_5_ph_max
+                        name: pH max
+                      - entity: input_number.dsc_custom_strain_5_ec_min
+                        name: EC min
+                      - entity: input_number.dsc_custom_strain_5_ec_max
+                        name: EC max
+                      - entity: input_number.dsc_custom_strain_5_moisture_min
+                        name: Moisture min
+                      - entity: input_number.dsc_custom_strain_5_moisture_max
+                        name: Moisture max
+                      - entity: input_number.dsc_custom_strain_5_veg_days
+                        name: Veg days
+                      - entity: input_number.dsc_custom_strain_5_flower_days
+                        name: Flower days
+
+  - title: Nutrient Science
+    icon: mdi:flask
+    path: nutrient-science
+    type: sections
+    max_columns: 4
+    sections:
+      - type: grid
+        column_span: 2
+        cards:
+          - type: heading
+            heading: Mix planner
+            heading_style: title
+          - type: entities
+            entities:
+              - entity: input_number.dsc_mix_tank_liters
+                name: Tank volume
+              - entity: input_number.dsc_mix_strength_pct
+                name: Strength
+              - entity: input_select.dsc_mix_target_pot
+                name: Target pot
+          - type: markdown
+            content: >-
+              **Next mix:** {{ states('sensor.dsc_next_mix_recipe') }}
+
+              **Purchase list:** {{ states('sensor.dsc_mix_purchase_list') }}
+          - type: custom:mushroom-template-card
+            primary: Stock summary
+            secondary: "{{ states('sensor.dsc_nutrient_stock_summary') }}"
+            icon: mdi:warehouse
+            icon_color: green
+            multiline_secondary: true
+          - type: custom:mushroom-template-card
+            primary: Accept mix (QA)
+            secondary: Burn recipe ml from in-stock nutrients — manual gate
+            icon: mdi:check-decagram
+            icon_color: cyan
+            multiline_secondary: true
+            tap_action:
+              action: call-service
+              service: script.dsc_accept_mix
+      - type: grid
+        column_span: 2
+        cards:
+          - type: heading
+            heading: Nutrients 1–4 (primary)
+            heading_style: title
+          - type: custom:expander-card
+            title: "{{ states('input_text.dsc_nutrient_1_name') }}"
+            expanded: true
+            card_mod: *dsc_expander_style
+            cards:
+              - type: entities
+                entities:
+                  - entity: input_text.dsc_nutrient_1_name
+                    name: Name
+                  - entity: input_boolean.dsc_nutrient_1_in_inventory
+                    name: In inventory
+                  - entity: input_number.dsc_nutrient_1_stock_ml
+                    name: Stock
+                  - entity: input_number.dsc_nutrient_1_dose_ml_l
+                    name: Dose
+                  - entity: input_number.dsc_nutrient_1_reorder_ml
+                    name: Reorder at
+          - type: custom:expander-card
+            title: "{{ states('input_text.dsc_nutrient_2_name') }}"
+            expanded: false
+            card_mod: *dsc_expander_style
+            cards:
+              - type: entities
+                entities:
+                  - entity: input_text.dsc_nutrient_2_name
+                    name: Name
+                  - entity: input_boolean.dsc_nutrient_2_in_inventory
+                    name: In inventory
+                  - entity: input_number.dsc_nutrient_2_stock_ml
+                    name: Stock
+                  - entity: input_number.dsc_nutrient_2_dose_ml_l
+                    name: Dose
+                  - entity: input_number.dsc_nutrient_2_reorder_ml
+                    name: Reorder at
+          - type: custom:expander-card
+            title: "{{ states('input_text.dsc_nutrient_3_name') }}"
+            expanded: false
+            card_mod: *dsc_expander_style
+            cards:
+              - type: entities
+                entities:
+                  - entity: input_text.dsc_nutrient_3_name
+                    name: Name
+                  - entity: input_boolean.dsc_nutrient_3_in_inventory
+                    name: In inventory
+                  - entity: input_number.dsc_nutrient_3_stock_ml
+                    name: Stock
+                  - entity: input_number.dsc_nutrient_3_dose_ml_l
+                    name: Dose
+                  - entity: input_number.dsc_nutrient_3_reorder_ml
+                    name: Reorder at
+          - type: custom:expander-card
+            title: "{{ states('input_text.dsc_nutrient_4_name') }}"
+            expanded: false
+            card_mod: *dsc_expander_style
+            cards:
+              - type: entities
+                entities:
+                  - entity: input_text.dsc_nutrient_4_name
+                    name: Name
+                  - entity: input_boolean.dsc_nutrient_4_in_inventory
+                    name: In inventory
+                  - entity: input_number.dsc_nutrient_4_stock_ml
+                    name: Stock
+                  - entity: input_number.dsc_nutrient_4_dose_ml_l
+                    name: Dose
+                  - entity: input_number.dsc_nutrient_4_reorder_ml
+                    name: Reorder at
+          - type: custom:expander-card
+            title: Custom slots 5–8
+            expanded: false
+            card_mod: *dsc_expander_style
+            cards:
+              - type: custom:expander-card
+                title: Slot 5 — {{ states('input_text.dsc_nutrient_5_name') }}
+                expanded: false
+                cards:
+                  - type: entities
+                    entities:
+                      - entity: input_text.dsc_nutrient_5_name
+                        name: Name
+                      - entity: input_boolean.dsc_nutrient_5_in_inventory
+                        name: In inventory
+                      - entity: input_number.dsc_nutrient_5_stock_ml
+                        name: Stock
+                      - entity: input_number.dsc_nutrient_5_dose_ml_l
+                        name: Dose
+              - type: custom:expander-card
+                title: Slot 6 — {{ states('input_text.dsc_nutrient_6_name') }}
+                expanded: false
+                cards:
+                  - type: entities
+                    entities:
+                      - entity: input_text.dsc_nutrient_6_name
+                        name: Name
+                      - entity: input_boolean.dsc_nutrient_6_in_inventory
+                        name: In inventory
+                      - entity: input_number.dsc_nutrient_6_stock_ml
+                        name: Stock
+                      - entity: input_number.dsc_nutrient_6_dose_ml_l
+                        name: Dose
+              - type: custom:expander-card
+                title: Slot 7 — {{ states('input_text.dsc_nutrient_7_name') }}
+                expanded: false
+                cards:
+                  - type: entities
+                    entities:
+                      - entity: input_text.dsc_nutrient_7_name
+                        name: Name
+                      - entity: input_boolean.dsc_nutrient_7_in_inventory
+                        name: In inventory
+                      - entity: input_number.dsc_nutrient_7_stock_ml
+                        name: Stock
+                      - entity: input_number.dsc_nutrient_7_dose_ml_l
+                        name: Dose
+              - type: custom:expander-card
+                title: Slot 8 — {{ states('input_text.dsc_nutrient_8_name') }}
+                expanded: false
+                cards:
+                  - type: entities
+                    entities:
+                      - entity: input_text.dsc_nutrient_8_name
+                        name: Name
+                      - entity: input_boolean.dsc_nutrient_8_in_inventory
+                        name: In inventory
+                      - entity: input_number.dsc_nutrient_8_stock_ml
+                        name: Stock
+                      - entity: input_number.dsc_nutrient_8_dose_ml_l
+                        name: Dose
 
   - title: Lighting
     icon: mdi:white-balance-sunny

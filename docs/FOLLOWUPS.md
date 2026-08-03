@@ -194,3 +194,39 @@ No climate control regression during soak window.
 ### deferred
 
 - N-004 optional cull of unused Sankey template sensors (`dsc_airflow_direct_room`, `dsc_airflow_room_return`) â€” concept covered by live CFM edges; leave helpers until a dedicated orphan pass.
+
+---
+
+## 2026-08-03 — HA 5.1.5 finish crop UI + N-017/N-018
+
+### done (this pass — repo)
+
+- **Honesty:** 5.1.4 packages were live but Strains / Nutrient Science / Want·Need·Got UI never landed (dead Tank chips). Surface **5.1.5** finishes that UI.
+- Dashboard: `path: strains`, `path: nutrient-science`, plant-console strain/sprout/Need, Root Zone dryback & coherence, Clone Mister Temp OOS status parity
+- Pot firmware **5.1.3**: `select.strain` + `datetime.sprout_date` NVS (`dsc-pot-common.yaml`)
+- N-018: strain catalog prefers pot entities with HA `input_*` fallback; `script.dsc_migrate_strain_sprout_ha_to_pot`
+- CHANGELOG / README corrected
+
+### flash
+
+- Order: **POT2 canary ? POT1 ? POT4 ? POT3** (USB if POT3 still down)
+- After each online: confirm `sensor.dsc_potN_firmware_version` = **5.1.3**; run Migrate HA?pot from Strains view
+
+### soak (N-010)
+
+- Strains / Nutrient Science navigate; Want/Need/Got + Accept mix; Temp OOS entities (`input_boolean.dsc_*_temp_oos`); no climate red flags ~25–30 min
+
+### next-plan carry
+
+| ID | Item | Notes |
+|---|---|---|
+| N-010 | Post-deploy soak | After 5.1.5 sync + pot flashes |
+| N-011 | Promote customs ? git | When stable |
+| N-012–N-016 | Pumps / irrigation / AC efficacy / deeper learn / wet cal | Deferred |
+| N-017 | Strain + sprout on pot ESP | **Done in tree** — flash remaining |
+| N-018 | HA reads pot-native | **Done in tree** — soak after flash |
+
+### red-flag
+
+- Rotate exposed runner PAT + HA long-lived token when convenient
+- Unraid `unraid-ha-deploy` Autostart ON

@@ -15,6 +15,11 @@
 #  before the digit). Referenced by the HA stat/alert packages, the
 #  dashboard, and the HUB's closed-loop grow mat. Do not rename a node.
 #
+#  v5.1.3 — STRAIN + SPROUT ON NVS (Aug 2026)
+#   * select.strain + datetime.sprout_date restore with the probe (same
+#     contract as plant_name / growth_stage). HA Want/Need/Got reads these
+#     after flash; catalog Want bands stay HA-owned.
+#  ------------------------------------------------------------------
 #  v5.1.1 — LINK RECOVERY + AP PIN (Aug 2026)
 #   * Hub 0xD0 fleet handshake carries Nest BSSID; pot accepts it and
 #     disconnects/reconnects to that exact AP (set_sta + bssid).
@@ -67,7 +72,7 @@ esphome:
   friendly_name: ${friendly_name}
   project:
     name: digital_emotions.dsc-pot
-    version: "5.1.2"
+    version: "5.1.3"
 
 esp32:
   board: esp32dev
@@ -514,7 +519,7 @@ text_sensor:
   - platform: template
     name: "Firmware Version"
     icon: mdi:tag-check
-    lambda: 'return {"5.1.2"};'
+    lambda: 'return {"5.1.3"};'
     update_interval: 60s
 
 button:
@@ -580,6 +585,32 @@ select:
       - "Final 48-72h Flowering"
       - "Dry Mode"
       - "Off"
+  - platform: template
+    name: "Strain"
+    id: strain
+    icon: "mdi:dna"
+    optimistic: true
+    restore_value: true
+    initial_option: "Generic Photoperiod"
+    entity_category: config
+    options:
+      - "Generic Photoperiod"
+      - "Generic Autoflower"
+      - "Custom 1"
+      - "Custom 2"
+      - "Custom 3"
+      - "Custom 4"
+      - "Custom 5"
+
+datetime:
+  - platform: template
+    name: "Sprout Date"
+    id: sprout_date
+    type: date
+    icon: "mdi:calendar-start"
+    optimistic: true
+    restore_value: true
+    entity_category: config
 
 # ==================================================================
 #  ESP-NOW PROVIDER  —  the pot half of the link

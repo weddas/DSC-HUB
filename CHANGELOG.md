@@ -1,17 +1,28 @@
 # Changelog
 
-## HA surface 5.1.4 — crop-steering + response learning (2026-08-03)
+## HA surface 5.1.5 — finish crop UI + pot-native strain (2026-08-03)
 
-- **Strains / Want·Need·Got:** catalog + sprout age, peer offsets (Got = raw +
-  offset), soft pH/EC cues, Apply expected stage, Capture peer baseline.
-- **Nutrient Science:** stock room, next-mix recipe, purchase list, **Accept mix**
-  QA (burns stock; pumps deferred).
-- **Fluctuations:** relative dryback; cross-pot coherence; learned ΔEC/Δmoisture.
+- **Honest cutover:** 5.1.4 shipped packages + Climate Temp OOS + dead Tank chips;
+  Strains / Nutrient Science / Want·Need·Got UI were missing. This surface lands them.
+- Dashboard: `/dsc-hub-pro/strains`, `/dsc-hub-pro/nutrient-science`, plant-console
+  strain/sprout/Need, Root Zone dryback & coherence, Clone Mister Temp OOS parity.
+- **N-017:** pot firmware **5.1.3** — `select.strain` + `datetime.sprout_date` on NVS.
+- **N-018:** Want/Need/Got prefer pot entities; HA `input_*` fallback; migrate script
+  `script.dsc_migrate_strain_sprout_ha_to_pot`.
+- Follow-ups: [`docs/FOLLOWUPS.md`](docs/FOLLOWUPS.md).
+
+## HA surface 5.1.4 — crop-steering packages (2026-08-03)
+
+- **Strains / Want·Need·Got (packages):** catalog + sprout age, peer offsets (Got =
+  raw + offset), soft pH/EC cues, Apply expected stage, Capture peer baseline.
+- **Nutrient Science (packages):** stock room, next-mix recipe, purchase list,
+  **Accept mix** QA (burns stock; pumps deferred).
+- **Fluctuations (packages):** relative dryback; cross-pot coherence; learned
+  ΔEC/Δmoisture.
 - **Actuator efficacy:** humidifier / dehumidifier / clone mister — no space
   response → **Temp OOS** (flashing) + demand inhibit; separate **Operator
-  Lockout** never auto-cleared.
-- Dashboard: Strains + pot subviews, Nutrient Science, Climate Temp/Lockout UI;
-  Tank chips → science views.
+  Lockout** never auto-cleared. Climate Temp/Lockout UI landed; Strains /
+  Nutrient Science views deferred to **5.1.5** (Tank chips pointed at missing paths).
 - Follow-ups: [`docs/FOLLOWUPS.md`](docs/FOLLOWUPS.md).
 
 ## HA surface 5.1.3 + hub OOS / in-service (2026-08-03)
