@@ -72,6 +72,51 @@ ESP-NOW (glass ↔ hub) does **not** need the HA API. Fix API only for OTA, diag
 
 In [`dsc-hub-v4_0.yaml`](dsc-hub-v4_0.yaml): `Mat Vote Pot 1`–`4` (`switch.dsc_hub_mat_vote_pot_N`). OFF pots are skipped by coldest/hottest root-zone voting (5–45 °C filter still applies). POT3 defaults OFF.
 
+## Mode prefs → NVS (Full Auto / Takeover)
+
+`preferences.flash_write_interval` is **60 s**. Restore-backed mode globals (`full_auto_mode`, `ha_takeover_active`) used to stay dirty until that window — an API-recovery reboot could resurrect a stale **Full Auto OFF** after an explicit ON (3 Aug 2026).
+
+**Fix:** script `sync_mode_prefs` calls `global_preferences->sync()` immediately on:
+
+| Transition | Where |
+|---|---|
+| Full Auto ON / OFF | `full_auto_switch` |
+| Manual Takeover ON / OFF | `manual_takeover_switch` |
+| Local Manual ON | `local_manual_mode` (OLED / panel path) |
+| Panel fan live-adjust drops Full Auto | `dsc-hub-espnow-primary.yaml` (flush if Manual already on; else Manual ON syncs) |
+
+Do **not** lower the global flash interval — only flush on mode ownership changes. Stack recovery reboot still syncs NVS before `App.safe_reboot()`.
+
+## Hub link recovery + Lock WiFi AP (2026-08-03)
+
+HA writes `number.dsc_hub_ha_handshake` every **30 s**. Soft nudge still watches handshake age; **bounce/reboot require a dead HA client** (or wedged-while-connected). Handshake lag alone with a live client must **not** bounce WiFi (overnight reboot storm).
+
+```mermaid
+flowchart TD
+  ping["HA handshake ping /30s"] --> soft{"hs silent ≥90s<br/>or client down ≥90s?"}
+  soft -->|yes| nudge["Stage 1: fleet + vitals nudge"]
+  soft -->|no| ok["Healthy — clear api_down_since"]
+  nudge --> bounce{"client dead ≥180s<br/>OR hs ≥10min while connected?"}
+  bounce -->|yes| wifi["Stage 2: WiFi bounce<br/>max 3/boot"]
+  bounce -->|no| wait1["Wait / soft only"]
+  wifi --> reboot{"client still dead ≥300s<br/>OR hs ≥15min while connected?"}
+  reboot -->|yes| nvs["Stage 3: sync NVS + safe_reboot<br/>max 2/boot"]
+  reboot -->|no| wait2["Stay at stage 2"]
+```
+
+| Stage | Trigger | Action |
+|---|---|---|
+| Soft | Handshake ≥**90 s** (or client down ≥90 s) | Fleet heartbeat + vitals nudge |
+| Bounce | Client **dead** ≥**180 s**, **or** connected but hs ≥**10 min** | `link_wifi_bounce` (max 3/boot) |
+| Reboot | Client **dead** ≥**300 s** after bounce, **or** connected but hs ≥**15 min** | Sync NVS + `safe_reboot` (max 2/boot) |
+
+Constraints (verified in `dsc-hub-v4_0.yaml`):
+
+- Panel-only silence never bounces or reboots the hub.
+- Emergency / sensor-fault safety mode **defers** bounce + recovery reboot.
+- Hub WiFi packages set `fast_connect: false` so bounce can scan onto the preferred Nest BSSID.
+- **Lock WiFi AP** (`wifi_ap_learn_or_pin`): mismatch bounce backoff **120 s**, max **3**/boot; runs on every STA connect + delayed `on_boot` (5 s). If stuck on the wrong AP after 3 tries, use Remember Current AP or Clear Preferred.
+
 ## Quick validate
 
 ```bash
