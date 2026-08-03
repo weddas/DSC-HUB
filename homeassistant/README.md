@@ -6,7 +6,7 @@ Canonical HA surface for firmware [`firmware/v4/`](../firmware/v4/).
 
 | Path | Role |
 |---|---|
-| `dashboards/dsc-hub-v4-dashboard.yaml` | Lovelace UX **v5.1.3** (`dsc-hub-pro`). In-service kit toggles; learn **Activity**; Root Zone Pots+Mat. |
+| `dashboards/dsc-hub-v4-dashboard.yaml` | Lovelace UX **v5.1.4** (`dsc-hub-pro`). Strains / Nutrient Science; Temp OOS; in-service kit; learn **Activity**. |
 | `packages/dsc_v4_core_helpers.yaml` | Hub link, fan %, Sankey, runtimes, **in-service** + capacity-offline + vent-conflict / ineffective cues |
 | `packages/dsc_v4_strain_catalog.yaml` | Strain catalog, sprout age, Want/Need/Got, peer offsets, Apply expected stage |
 | `packages/dsc_v4_nutrient_catalog.yaml` | Nutrient stock, next-mix recipe, Accept mix QA (no pumps) |
@@ -57,8 +57,16 @@ Merge [`configuration.snippet.yaml`](configuration.snippet.yaml) into HA `config
 (packages + YAML Lovelace). Filenames under `packages/` must use underscores.
 Restart HA after the first copy / `configuration.yaml` change.
 
-**Ongoing:** install the **DSC-HUB Sync** add-on ([`../scripts/ADDON.md`](../scripts/ADDON.md))
-so pushes to `master` update packages, dashboard, and www automatically.
+**Ongoing delivery (either path):**
+
+| Path | Doc |
+|---|---|
+| **DSC-HUB Sync** add-on (HAOS poll ~60s) | [`../scripts/ADDON.md`](../scripts/ADDON.md) |
+| **HA sync** GHA → `unraid-ha-deploy` → `ha-sync.sh` | [`../scripts/HA-SYNC-BOOTSTRAP.md`](../scripts/HA-SYNC-BOOTSTRAP.md) |
+
+Gate live status on `sensor.dsc_ha_surface_version` (e.g. **5.1.4**) — a green
+GitHub push is not enough when the Unraid runner is offline. After a surface
+lands, run the timed soak: [`../docs/qa/LIVE-SOAK-5.1.4.md`](../docs/qa/LIVE-SOAK-5.1.4.md).
 Firmware Install stays manual — see [`../RELEASE.md`](../RELEASE.md).
 
 ## Fan entity_ids
@@ -310,6 +318,16 @@ Packages: `dsc_v4_strain_catalog`, `dsc_v4_nutrient_catalog`, `dsc_v4_pots_coher
 Dashboard: **Strains** (`/dsc-hub-pro/strains`), pot subviews, **Nutrient Science**,
 Climate Temp OOS / Lockout cards. Data mirrors: `data/dsc_strain_catalog.yaml`,
 `data/dsc_nutrient_catalog.yaml`.
+
+### Deploy status (N-009 closed)
+
+**HA-only** cut (`e0ffeaf`) — no firmware flash. Live HAOS reached surface
+**5.1.4** after runner recovery (Actions `30809723980` + Sync add-on tip
+`796847d`). Treat UI as production only when the surface sensor matches;
+post-deploy soak = FOLLOWUPS **N-010** /
+[`../docs/qa/LIVE-SOAK-5.1.4.md`](../docs/qa/LIVE-SOAK-5.1.4.md).
+Recover / Autostart hardening:
+[`../scripts/HA-SYNC-BOOTSTRAP.md`](../scripts/HA-SYNC-BOOTSTRAP.md).
 
 ## Tank / Tuya entity map
 
