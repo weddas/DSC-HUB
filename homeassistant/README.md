@@ -126,10 +126,76 @@ title: AIRFLOW STATUS
 # entities: override cfm_*, fan_*, zone T/RH, appliances — see www/dsc-airflow-map-card.js DEFAULTS
 ```
 
-**Airflow card:** real ducts only (Room→2x4 / Room→4x8 / cascade / OUT / RECIRC),
-edge chips carry source-zone T/RH + CFM/%, OUT/RECIRC percentage blend (only
-RECIRC share is lung feedback), room appliance chips on the Room node, tent
-volumes → air-mass / ACH from Plant Specs.
+### AIRFLOW STATUS — intent and topology
+
+Replaces Climate Engine `power-flow-card-plus` (generic energy Sankey) with a
+**duct-faithful** hybrid map. Source of truth:
+[`www/dsc-airflow-map-card.js`](www/dsc-airflow-map-card.js). Dashboard view:
+**Climate Engine** (`custom:dsc-airflow-map-card`).
+
+| Edge | Meaning | Flow sensor |
+|---|---|---|
+| Room → 2x4 | Clone intake | `sensor.dsc_cfm_intake_2x4` |
+| Room → 4x8 | Main intake | `sensor.dsc_cfm_intake_main` |
+| 2x4 → 4x8 | Cascade (same CFM as 2x4 intake) | mirrors `cfm_intake_2x4` |
+| 4x8 → Outside | OUT dump | `sensor.dsc_cfm_exhaust_out` |
+| 4x8 → Room | RECIRC lung return | `sensor.dsc_cfm_exhaust_recirc` |
+
+```mermaid
+flowchart LR
+  Room --> Clone["2x4"]
+  Room --> Main["4x8"]
+  Clone --> Main
+  Main --> Outside
+  Main --> Room
+```
+
+**Read the chips:** each active edge shows **CFM · fan %** plus the **source
+zone T/RH** being pulled (not the destination). Optional moisture Δ g/h when
+AH helpers exist. OUT also surfaces vent heat dump BTU/h + moisture g/h.
+RECIRC shows ΔT (tent−room) and lung **feedback** moisture (see blend below).
+
+**Node mass lines:** Plant Spec volumes (`input_number.dsc_vol_*_m3`) →
+`~kg air` at 1.2 kg/m³; tents also show `sensor.dsc_ach_*`.
+
+**Room appliances:** heater / AC / hum / dehum light when demand **or**
+follower relay is ON (AC is demand-only). Hum→intake route cue when
+`switch.dsc_hub_humidifier_intake_routing` is on with humidifier. Mat marker
+on 2x4; SF1000 brightness on 4x8.
+
+**OUT / RECIRC blend (code-walked):**
+
+| Mode | Condition | Narrative |
+|---|---|---|
+| open | OUT only | Outside (open) |
+| closed | RECIRC only | Recirc → Room (closed) |
+| blend | both > ~0.5 CFM | Outside+Recirc with % shares |
+| stalled | neither | stalled |
+
+Only the **RECIRC share** of exhaust is treated as lung feedback
+(`dAh_recirc × cfm_rec/(cfm_out+cfm_rec)`). OUT dumps outdoors and does **not**
+hit intakes — do not read OUT moisture as room return.
+
+**Depends on packages (not the card JS alone):**
+`dsc_v4_climate_physics` (live CFM, ACH, volumes, vent dump) and optional
+`dsc_v4_device_cal` curves. Without those helpers, ducts stay idle / `--`.
+
+**HACS vs `/local` dual path:** Sync/add-on can copy `www/` while HACS still
+serves an older `/hacsfiles/DSC-HUB/DSC-HUB.js`. After this card ships,
+**Redownload** the HACS plugin (or clear stale `/local` resources) and
+hard-refresh. Prefer one resource path — do not load both HACS + `/local`
+copies of the same custom element.
+
+**Pitfalls**
+
+- Card missing / Custom element doesn't exist → HACS not redownloaded, or
+  resource type must be **JavaScript** (IIFE), not JavaScript Module.
+- All ducts idle while fans spin → check `sensor.dsc_cfm_*` and Plant Spec
+  nameplates (`dsc_cfm_*_max`); CFM is `% × nameplate` until cal curves exist.
+- Cascade edge follows **2x4 intake only** — it is not an independent duct
+  sensor.
+- Orphan Sankey helpers `sensor.dsc_airflow_direct_room` /
+  `dsc_airflow_room_return` are unused by this card (FOLLOWUPS **N-004**).
 
 ## Climate capacity envelope
 

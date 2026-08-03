@@ -38,7 +38,25 @@ type: custom:dsc-airflow-map-card
 title: AIRFLOW STATUS
 ```
 
-Optional entity overrides — see [`homeassistant/README.md`](../homeassistant/README.md).
+Optional entity overrides — see [`homeassistant/README.md`](../homeassistant/README.md)
+(AIRFLOW STATUS entity map, blend rules, dual-path pitfalls).
+
+### After a card bundle change
+
+`scripts/sync-hacs-dist.sh` concatenates **both** www cards into
+`dist/DSC-HUB.js`. HACS does **not** auto-pull on every git push — use
+**Redownload** on **DSC-HUB System Map**, then hard-refresh (Ctrl+F5).
+
+| Symptom | Likely cause |
+|---|---|
+| Climate Engine blank / custom element missing | Stale HACS cache or resource still pointing at old `/local` only-system-map |
+| SYSTEM MAP ok, AIRFLOW STATUS missing | Pre-bundle HACS install (system map only) — redownload |
+| Two maps fight / odd double-register | Both `/hacsfiles/DSC-HUB/DSC-HUB.js` **and** `/local/dsc-*-map-card.js` loaded — keep one path |
+| Ducts always idle | Packages / CFM helpers not live — see HA README AIRFLOW STATUS |
+
+Dashboard YAML + packages still deploy via Sync add-on / HA sync runner, not
+HACS. Card JS without `dsc_v4_climate_physics` CFM sensors will render but
+show idle edges.
 
 ## Browser Mod (required for popups)
 
