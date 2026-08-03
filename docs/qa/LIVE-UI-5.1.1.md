@@ -41,10 +41,20 @@ Browser Mod popup layer, System command center, glass-replacement tunables.
 - [ ] PANEL HEALTH: panel firmware, free heap + largest free block, ambient light raw, backlight control
 - [ ] FLEET VERSIONS: table shows firmware + ESPHome versions, drift chip state correct
 
+## Mode ownership locks
+
+- [ ] Home: **Operational now** + **Bands** (Follow-aware) above the fold; no nav chip strip
+- [ ] 4x8: named Grow Stage shows locked temp/RH/VPD + **Switch to Custom**; Custom unlocks editors
+- [ ] 2x4: named / Follow / Off Clone Mode locks climate; Custom unlocks; light hours still shown
+- [ ] Photoperiod **Follow 4x8** locks clone light hours + lights-on; **Independent** unlocks
+- [ ] Full Auto: fan % cards locked with Override cue; Override / Takeover restores editors
+- [ ] Climate **Command** ownership strip matches live mode (Full Auto / Override / Hold)
+- [ ] Root Zone: above-fold **Pots + Mat**; EC / moisture / NPK charts only in History expanders
+
 ## Glass replacement (panel lean-cut coverage)
 
 - [ ] Grow Profile: stage / strategy / clone mode / clone photoperiod / priority tent editable
-- [ ] 4x8 + clone climate setpoints editable
+- [ ] 4x8 + clone climate setpoints editable **only when mode is Custom** (see Mode ownership)
 - [ ] Lighting drill: SF1000 target / ramp floor, sunrise / sunset, lights-on times, clone hours
 - [ ] Mat settings + 4 vote switches (Root Zone)
 - [ ] Cycle Timers: min-offs, hysteresis, 5 ladder waits

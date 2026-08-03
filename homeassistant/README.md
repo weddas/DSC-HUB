@@ -121,7 +121,7 @@ it must not duplicate ladder logic.
 
 Named modes own climate numbers. Switch to **Custom** (or Override / Hold)
 before fine-tuning — otherwise the hub rejects the write and the dashboard
-shows a locked readout.
+shows a locked readout + **Switch to Custom**.
 
 | Owner | Unlock | Locked surface |
 |---|---|---|
@@ -131,13 +131,35 @@ shows a locked readout.
 | Auto Photoperiod | Manual Light Hold or Takeover | SF1000 brightness (schedule cue) |
 | Clone Photoperiod Follow | **Independent** | Clone light hours + lights-on time |
 
+```mermaid
+flowchart LR
+  named["Named Grow Stage / Clone Mode"] --> lock["Dashboard locked readout"]
+  named --> hub["Hub rejects number writes"]
+  custom["Select Custom"] --> unlock["Sliders editable"]
+  fa["Full Auto ON"] --> fans["Fan cards read-only"]
+  ov["Manual Fan Override / Takeover"] --> fanEdit["Fan % editable"]
+  follow["Photoperiod Follow 4x8"] --> hours["Clone hours / lights-on locked"]
+  indep["Independent"] --> hoursEdit["Clone window editable"]
+```
+
 **Home** folds: **Now** (pulse + alerts) → **Operational now** (live vs band,
 ladder prep, fans) → **SYSTEM MAP** + Running → **Bands** (Follow-aware gauges)
 → narrator expander. **Root Zone** above-fold is Pots + Mat; EC/moisture/NPK
-charts live in History expanders.
+charts live in History expanders. Climate **Command** strip states who owns
+fans / light / appliances.
 
-After flashing Grow Stage **Custom**, either pick **Custom** to keep hand-tuned
-4x8 bands or re-select a named stage to reload presets.
+**Constraints / pitfalls**
+
+- Hub firmware is the source of truth for rejects (see
+  [`firmware/v4/README.md`](../firmware/v4/README.md) Mode ownership). Lovelace
+  only mirrors locks — bypassing the dashboard still hits hub guards.
+- Clone Mode Follow / named presets leave light-hours editors available in
+  every mode; Photoperiod **Follow** is the separate lock for the clone window.
+- Full Auto fan writes from Developer Tools appear to stick briefly, then the
+  climate tick reasserts — use Override, not repeated number.set_value.
+- After flashing Grow Stage **Custom**, either pick **Custom** to keep
+  hand-tuned 4x8 bands or re-select a named stage to reload presets.
+- Live checklist: [`docs/qa/LIVE-UI-5.1.1.md`](../docs/qa/LIVE-UI-5.1.1.md).
 
 | Device | Owner | Role |
 |---|---|---|

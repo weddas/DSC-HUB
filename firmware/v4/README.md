@@ -68,6 +68,57 @@ ESP-NOW (glass ↔ hub) does **not** need the HA API. Fix API only for OTA, diag
 | Panel 4.0.11 | Live `gv_*` UI + channel poll | **USB** if heap-sensitive / still looping |
 | HA packages / automations / dashboard | Push sync (or copy) + reload | See [`../../RELEASE.md`](../../RELEASE.md) · [`../../scripts/HA-SYNC-BOOTSTRAP.md`](../../scripts/HA-SYNC-BOOTSTRAP.md) |
 
+## Mode ownership (hub write guards)
+
+Named Grow Stage / Clone Mode presets own the climate numbers. The Pro
+dashboard mirrors locks in Lovelace; the **hub rejects** non-Custom writes
+so HA entity UI and the glass panel cannot silently fight a named stage.
+
+| Surface | Accept writes when | Reject / soft behavior |
+|---|---|---|
+| 4x8 temp / RH / VPD (`number.dsc_hub_*`) | Grow Stage = **Custom**, or `stage_preset_write` latch | `ESP_LOGW("grow", "Reject …")` + republish NVS value |
+| Clone temp / RH / VPD | Clone Mode = **Custom**, or `clone_preset_write` latch | Same pattern under `"clone"` |
+| Clone Light Hours | Clone Photoperiod = **Independent** | Reject + republish while Follow 4x8 |
+| Clone Lights-On Time | Independent for runtime effect | Follow still accepts the entity write but logs that the **4x8 window** is used |
+| Fan speed % | Full Auto **off**, or Manual Takeover | Full Auto: log warn; next climate tick **reasserts** PWM |
+
+**Latches:** `apply_stage` / `apply_clone_mode` set `stage_preset_write` /
+`clone_preset_write` around preset stamps so named modes can load defaults
+without tripping the Custom-only guard. Selecting **Custom** (or Follow /
+Off for clone) leaves sliders untouched.
+
+**Full Auto fans:** `on_speed_set` does not hard-reject — Override /
+Takeover clear `full_auto_mode` so dials stick. Dashboard hides editable
+fan cards while Full Auto owns the curve.
+
+```mermaid
+flowchart TD
+  write["HA / panel number or fan write"] --> kind{Surface}
+  kind -->|4x8 / clone climate| custom{"Custom or preset latch?"}
+  custom -->|yes| apply["Update globals + panel sync"]
+  custom -->|no| reject["LOGW Reject + republish"]
+  kind -->|clone light hours| follow{"Photoperiod Follow?"}
+  follow -->|no| apply
+  follow -->|yes| rejectHours["Reject + republish"]
+  kind -->|fan %| fa{"Full Auto and not Takeover?"}
+  fa -->|no| stick["Speed sticks"]
+  fa -->|yes| warn["LOGW — curve reasserts next tick"]
+```
+
+**Pitfalls**
+
+- Slider snaps back after a HA write → check Grow Stage / Clone Mode; switch
+  to **Custom** (dashboard **Switch to Custom**) before fine-tuning.
+- Fan % moves then returns → engage **Manual Fan Override** or Takeover.
+- After flashing Grow Stage **Custom**, either select Custom to keep
+  hand-tuned bands or re-pick a named stage to reload presets.
+- Clone hours editable under every Clone Mode, but Photoperiod **Follow 4x8**
+  still owns the window until **Independent**.
+
+Dashboard UX notes: [`homeassistant/README.md`](../../homeassistant/README.md)
+(Mode ownership). Source: [`dsc-hub-v4_0.yaml`](dsc-hub-v4_0.yaml)
+(`stage_preset_write`, `clone_preset_write`, fan `on_speed_set`).
+
 ## Hub mat votes
 
 In [`dsc-hub-v4_0.yaml`](dsc-hub-v4_0.yaml): `Mat Vote Pot 1`–`4` (`switch.dsc_hub_mat_vote_pot_N`). OFF pots are skipped by coldest/hottest root-zone voting (5–45 °C filter still applies). POT3 defaults OFF.
