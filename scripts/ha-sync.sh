@@ -146,6 +146,16 @@ cat "${air_js}" >> "${bundle}"
 run_scp "${bundle}" "${HA_CONFIG_ROOT}/www/dsc-system-map-card.js"
 run_scp "${bundle}" "${HA_CONFIG_ROOT}/www/DSC-HUB.js"
 
+# Bust browser cache for the existing Lovelace resource URL.
+# Without this, clients keep the pre-bundle system-map-only JS for ?v=….
+bust_ver="5.1.6-airflow-$(date -u +%Y%m%d%H%M)"
+log "Bumping Lovelace resource cache-buster to ${bust_ver}"
+if [[ "${DRY_RUN}" == "1" ]]; then
+  log "DRY_RUN resource bump"
+else
+  run_ssh "sed -i 's#/local/dsc-system-map-card.js?v=[^\"]*#/local/dsc-system-map-card.js?v=${bust_ver}#' ${HA_CONFIG_ROOT}/.storage/lovelace_resources || true"
+fi
+
 # --- esphome stubs (optional) ---------------------------------------------
 if [[ "${SYNC_ESPHOME}" == "1" ]]; then
   log "Syncing esphome/dsc-*.yaml (SYNC_ESPHOME=1)"
