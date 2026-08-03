@@ -321,10 +321,11 @@ views:
               rows: 8
           - type: markdown
             content: >-
-              *SYSTEM MAP + AIRFLOW STATUS load from HACS `DSC-HUB.js` or
-              `/local/dsc-system-map-card.js` + `/local/dsc-airflow-map-card.js`.
-              If you see a configuration error, add the JS as a Lovelace
-              resource (JavaScript, not module) and hard-refresh.*
+              *SYSTEM MAP + AIRFLOW STATUS load from one JS resource: HACS
+              `DSC-HUB.js`, or `/local/dsc-system-map-card.js` (ha-sync deploys
+              both cards in that file). Hard-refresh after update. If you still
+              see a missing custom element, redownload the HACS DSC-HUB plugin
+              or re-add `/local/dsc-system-map-card.js` as a JavaScript resource.*
           - type: heading
             heading: Running
             heading_style: subtitle

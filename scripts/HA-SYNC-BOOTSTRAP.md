@@ -85,7 +85,7 @@ export DRY_RUN=1
 |---|---|
 | `packages/dsc_v4_*.yaml` | `secrets.yaml` |
 | `dashboards/dsc-hub-v4-dashboard.yaml` | `.storage/` |
-| `www/dsc-system-map.*` (fallback) | Non-DSC house packages |
+| `www/` system-map SVG + **bundled** `dsc-system-map-card.js` (system+airflow) | Non-DSC house packages |
 | ESPHome stubs only if `SYNC_ESPHOME=1` | Firmware flash / ESPHome Install |
 | | **SYSTEM MAP card via HACS** — [`HACS-FRONTEND.md`](HACS-FRONTEND.md) |
 

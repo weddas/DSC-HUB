@@ -59,8 +59,10 @@ Without it, popup `tap_action`s silently do nothing — no error is shown.
 |---|---|
 | [`hacs.json`](../hacs.json) | HACS manifest (repo root) |
 | [`dist/DSC-HUB.js`](../dist/DSC-HUB.js) | Bundled cards (repo-name match) |
+| [`dist/dsc-system-map-card.js`](../dist/dsc-system-map-card.js) | Same bundle (legacy `/local` filename) |
 | [`dist/dsc-system-map.svg`](../dist/dsc-system-map.svg) | System map artwork |
-| [`dist/dsc-airflow-map-card.js`](../dist/dsc-airflow-map-card.js) | Airflow card (also in bundle) |
+| [`dist/dsc-airflow-map-card.js`](../dist/dsc-airflow-map-card.js) | Airflow card standalone source |
+
 | `homeassistant/www/*` | **Source of truth** — run `scripts/sync-hacs-dist.sh` after edits |
 
 CI workflow [`.github/workflows/hacs-dist.yml`](../.github/workflows/hacs-dist.yml)

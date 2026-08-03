@@ -124,12 +124,27 @@ log "Syncing dashboards/dsc-hub-v4-dashboard.yaml"
 run_scp "${dash}" "${HA_CONFIG_ROOT}/dashboards/dsc-hub-v4-dashboard.yaml"
 
 # --- www ------------------------------------------------------------------
-log "Syncing www/dsc-system-map.*"
-www_files=("${HA_SRC}/www"/dsc-system-map.*)
-[[ ${#www_files[@]} -gt 0 ]] || die "No dsc-system-map.* assets in www/"
-for f in "${www_files[@]}"; do
-  run_scp "${f}" "${HA_CONFIG_ROOT}/www/$(basename "${f}")"
-done
+# System map SVG + bundled JS (system map + airflow) as dsc-system-map-card.js
+# so the existing /local Lovelace resource registers both custom elements.
+# Standalone airflow file is also published for optional direct resources.
+log "Syncing www Lovelace cards (system map + airflow bundle)"
+svg="${HA_SRC}/www/dsc-system-map.svg"
+sys_js="${HA_SRC}/www/dsc-system-map-card.js"
+air_js="${HA_SRC}/www/dsc-airflow-map-card.js"
+[[ -f "${svg}" ]] || die "Missing ${svg}"
+[[ -f "${sys_js}" ]] || die "Missing ${sys_js}"
+[[ -f "${air_js}" ]] || die "Missing ${air_js}"
+
+run_scp "${svg}" "${HA_CONFIG_ROOT}/www/dsc-system-map.svg"
+run_scp "${air_js}" "${HA_CONFIG_ROOT}/www/dsc-airflow-map-card.js"
+
+bundle="$(mktemp)"
+trap 'rm -f "${bundle}"' RETURN
+cat "${sys_js}" > "${bundle}"
+printf '\n' >> "${bundle}"
+cat "${air_js}" >> "${bundle}"
+run_scp "${bundle}" "${HA_CONFIG_ROOT}/www/dsc-system-map-card.js"
+run_scp "${bundle}" "${HA_CONFIG_ROOT}/www/DSC-HUB.js"
 
 # --- esphome stubs (optional) ---------------------------------------------
 if [[ "${SYNC_ESPHOME}" == "1" ]]; then

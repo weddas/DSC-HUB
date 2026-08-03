@@ -102,12 +102,12 @@ HACS serves `/hacsfiles/DSC-HUB/DSC-HUB.js` (both cards + SVG beside it). Full s
 
 1. Copy into Home Assistant `/config/www/` (or rely on ha-sync):
    - [`www/dsc-system-map.svg`](www/dsc-system-map.svg)
-   - [`www/dsc-system-map-card.js`](www/dsc-system-map-card.js)
-   - [`www/dsc-airflow-map-card.js`](www/dsc-airflow-map-card.js)
+   - Bundled JS as `/local/dsc-system-map-card.js` (system map **and** airflow —
+     ha-sync builds this from the two www sources)
+   - Optional: [`www/dsc-airflow-map-card.js`](www/dsc-airflow-map-card.js) standalone
 2. **Settings → Dashboards → ⋮ → Resources → Add resource** (JavaScript, not module):
-   - `/local/dsc-system-map-card.js`
-   - `/local/dsc-airflow-map-card.js`
-   - Or a single concatenated `/local/DSC-HUB.js` if you publish the HACS bundle there
+   - `/local/dsc-system-map-card.js` (one resource registers both cards)
+   - Or HACS `/hacsfiles/DSC-HUB/DSC-HUB.js`
 3. YAML dashboard already includes both cards. Hard-refresh the browser.
 
 Optional entity overrides:
