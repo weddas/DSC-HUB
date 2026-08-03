@@ -33,9 +33,14 @@ Sources: [`dsc-hub-sync/`](../dsc-hub-sync/) · [`repository.yaml`](../repositor
 
 | Channel | Role |
 |---|---|
-| **This add-on** | HA surfaces + stubs |
-| HACS Dashboard | Optional SYSTEM MAP — [`HACS-FRONTEND.md`](HACS-FRONTEND.md) |
-| [`ha-sync.sh`](ha-sync.sh) | Non-HAOS alternate |
+| **This add-on** | HA surfaces + stubs (primary on HAOS) |
+| HACS Dashboard | Optional SYSTEM MAP / airflow — [`HACS-FRONTEND.md`](HACS-FRONTEND.md) |
+| GHA **HA sync** + [`ha-sync.sh`](ha-sync.sh) | Alternate / backup path via Unraid `unraid-ha-deploy` — [`HA-SYNC-BOOTSTRAP.md`](HA-SYNC-BOOTSTRAP.md) |
 | ESPHome Install | Firmware only (manual) |
 
-QA: [`docs/qa/ADDON-QA-5.1.0.md`](../docs/qa/ADDON-QA-5.1.0.md)
+Sites running **both** add-on and GHA: either path can land packages; gate on
+`sensor.dsc_ha_surface_version`. Keep the Unraid runner Autostart ON so the
+GHA path does not silently queue forever after a host reboot.
+
+QA: [`docs/qa/ADDON-QA-5.1.0.md`](../docs/qa/ADDON-QA-5.1.0.md) ·
+post-deploy soak: [`docs/qa/LIVE-SOAK-5.1.4.md`](../docs/qa/LIVE-SOAK-5.1.4.md)

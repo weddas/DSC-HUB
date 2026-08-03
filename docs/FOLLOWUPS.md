@@ -130,7 +130,7 @@ Observed live before package deploy:
 
 | ID | Item | Notes |
 |---|---|---|
-| N-009 | **Deploy HA 5.1.4 packages + dashboard** | Commit/push or manual sync; then reload YAML / restart helpers; verify Strains + Nutrient Science views |
+| N-009 | **Deploy HA 5.1.4 packages + dashboard** | **Done** (evening) — see Commit/push section below |
 | N-010 | Post-deploy soak 25–30 min | Confirm Temp OOS latch, Accept mix stock burn, Want/Need/Got entities, no climate red flags |
 | N-011 | Promote custom strain/nutrient slots → git YAML | When customs stabilize |
 | N-012 | Pump dosing from Accept mix | Hardware deferred |
@@ -143,7 +143,7 @@ Observed live before package deploy:
 
 ### red-flag
 
-- **Live HA still on pre-5.1.4 surface** until N-009 — do not treat crop-steering UI as production until sync confirms `sensor.dsc_ha_surface_version` = `5.1.4`
+- **N-009 closed 2026-08-03 evening** — live surface **5.1.4** after runner recovery; still gate new UI on `sensor.dsc_ha_surface_version` before treating crop-steering as production after future bumps
 
 ---
 
@@ -177,8 +177,8 @@ No climate control regression during soak window.
 
 | ID | Item | Notes |
 |---|---|---|
-| N-009 | Deploy HA 5.1.4 | **Done** — add-on + Actions HA sync both green |
-| N-010 | Post-deploy entity soak | After sync: Temp OOS, Strains, Nutrient Science, Got sensors |
+| N-009 | Deploy HA 5.1.4 | **Done** — add-on + Actions HA sync both green; ops recover/Autostart in `scripts/HA-SYNC-BOOTSTRAP.md` |
+| N-010 | Post-deploy entity soak | Checklist: `docs/qa/LIVE-SOAK-5.1.4.md` — Temp OOS, Strains, Nutrient Science, Got sensors |
 | N-017 | Strain + sprout on pot ESP | Probe stays until harvest |
 | N-018 | HA reads pot-native strain/sprout | After N-017 |
 
