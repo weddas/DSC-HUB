@@ -2,11 +2,14 @@
 
 ## Install / Update
 
-- [ ] Supervisor shows add-on version **5.1.0**
+- [ ] Supervisor shows add-on version **5.1.3** (or newer)
 - [ ] Defaults: `sync_esphome: true`, `sync_www: true`, `reload_after_sync: true`
-- [ ] `ref: master` (or `v5.1.0` after pin) · auto-start enabled
+- [ ] `ref: master` (or pin) · auto-start enabled
 - [ ] First start logs “Synced to …” and writes `/config/dsc-hub-sync.version`
 - [ ] `packages/dsc_v4_sync_marker.yaml` created → `sensor.dsc_hub_sync_sha`
+- [ ] `/config/www/dsc-system-map-card.js` is the **bundle** (~33 KB; defines
+      both `dsc-system-map-card` and `dsc-airflow-map-card`) — not ~10 KB source-only
+- [ ] Optional: `/config/www/DSC-HUB.js` + standalone `dsc-airflow-map-card.js` present
 
 ## Push → sync contract
 

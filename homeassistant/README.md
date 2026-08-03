@@ -24,9 +24,15 @@ Canonical HA surface for firmware [`firmware/v4/`](../firmware/v4/).
 | `packages/dsc_v4_automations.yaml` | Demand followers, climate/safety alerts, grow-log scribe |
 | `configuration.snippet.yaml` | Paste-once: packages include + YAML-mode `dsc-hub-pro` dashboard |
 | `automations.yaml` | Deprecated stub — points at the package above |
-| `www/dsc-system-map.*` | SYSTEM MAP Lovelace card + SVG → `/config/www/` |
-| `www/dsc-airflow-map-card.js` | AIRFLOW STATUS Lovelace card → `/config/www/` |
+| `www/dsc-system-map-card.js` | **Source** SYSTEM MAP card (edit here) |
+| `www/dsc-airflow-map-card.js` | **Source** AIRFLOW STATUS card (edit here) |
+| `www/dsc-system-map.svg` | SYSTEM MAP artwork → `/config/www/` |
 | `esphome/` | Thin device stubs — pull firmware packages from GitHub |
+
+Published `/config/www/dsc-system-map-card.js` is a **concat bundle** of both
+card sources (Sync add-on ≥ **5.1.3**, `ha-sync.sh`, HACS `dist/`). Do not
+hand-copy the system-map source alone to `/local` — airflow will miss its
+custom element.
 
 ## ESPHome (all devices)
 
@@ -51,7 +57,7 @@ Quick copy list:
 | `packages/dsc_v4_*.yaml` | `packages/` (helpers, learn, automations) |
 | `dashboards/dsc-hub-v4-dashboard.yaml` | `dashboards/` (YAML-mode URL **`dsc-hub-pro`**) |
 | `esphome/dsc-*.yaml` | `esphome/` |
-| `www/dsc-*-map*` | `www/` + `/local` or HACS `DSC-HUB.js` resources |
+| `www/` map sources (bundled on publish) | `www/` + one `/local` or HACS resource |
 
 Merge [`configuration.snippet.yaml`](configuration.snippet.yaml) into HA `configuration.yaml`
 (packages + YAML Lovelace). Filenames under `packages/` must use underscores.
@@ -100,15 +106,33 @@ HACS serves `/hacsfiles/DSC-HUB/DSC-HUB.js` (both cards + SVG beside it). Full s
 
 ### Manual fallback (`/config/www/`)
 
-1. Copy into Home Assistant `/config/www/` (or rely on ha-sync):
+Prefer Sync / ha-sync so the bundle is built for you. Hand-copy only if needed:
+
+1. Into `/config/www/`:
    - [`www/dsc-system-map.svg`](www/dsc-system-map.svg)
-   - Bundled JS as `/local/dsc-system-map-card.js` (system map **and** airflow —
-     ha-sync builds this from the two www sources)
-   - Optional: [`www/dsc-airflow-map-card.js`](www/dsc-airflow-map-card.js) standalone
+   - **Bundled** JS as `/local/dsc-system-map-card.js` = system map source **+**
+     airflow source (concatenated). Sync ≥5.1.3 / `ha-sync.sh` /
+     `scripts/sync-hacs-dist.sh` all produce this.
+   - Optional standalone: [`www/dsc-airflow-map-card.js`](www/dsc-airflow-map-card.js)
 2. **Settings → Dashboards → ⋮ → Resources → Add resource** (JavaScript, not module):
-   - `/local/dsc-system-map-card.js` (one resource registers both cards)
+   - `/local/dsc-system-map-card.js` (one resource registers **both** cards)
    - Or HACS `/hacsfiles/DSC-HUB/DSC-HUB.js`
 3. YAML dashboard already includes both cards. Hard-refresh the browser.
+
+```mermaid
+flowchart TD
+  srcSys["www/dsc-system-map-card.js<br/>source"]
+  srcAir["www/dsc-airflow-map-card.js<br/>source"]
+  srcSvg["www/dsc-system-map.svg"]
+  pub["Publish: Sync 5.1.3 / ha-sync / sync-hacs-dist"]
+  localJs["/local/dsc-system-map-card.js<br/>bundle = both cards"]
+  hacsJs["/hacsfiles/DSC-HUB/DSC-HUB.js<br/>same bundle"]
+  srcSys --> pub
+  srcAir --> pub
+  srcSvg --> pub
+  pub --> localJs
+  pub --> hacsJs
+```
 
 Optional entity overrides:
 
@@ -126,10 +150,80 @@ title: AIRFLOW STATUS
 # entities: override cfm_*, fan_*, zone T/RH, appliances — see www/dsc-airflow-map-card.js DEFAULTS
 ```
 
-**Airflow card:** real ducts only (Room→2x4 / Room→4x8 / cascade / OUT / RECIRC),
-edge chips carry source-zone T/RH + CFM/%, OUT/RECIRC percentage blend (only
-RECIRC share is lung feedback), room appliance chips on the Room node, tent
-volumes → air-mass / ACH from Plant Specs.
+### AIRFLOW STATUS — intent and topology
+
+Replaces Climate Engine `power-flow-card-plus` (generic energy Sankey) with a
+**duct-faithful** hybrid map. Source of truth:
+[`www/dsc-airflow-map-card.js`](www/dsc-airflow-map-card.js). Dashboard view:
+**Climate Engine** (`custom:dsc-airflow-map-card`).
+
+| Edge | Meaning | Flow sensor |
+|---|---|---|
+| Room → 2x4 | Clone intake | `sensor.dsc_cfm_intake_2x4` |
+| Room → 4x8 | Main intake | `sensor.dsc_cfm_intake_main` |
+| 2x4 → 4x8 | Cascade (same CFM as 2x4 intake) | mirrors `cfm_intake_2x4` |
+| 4x8 → Outside | OUT dump | `sensor.dsc_cfm_exhaust_out` |
+| 4x8 → Room | RECIRC lung return | `sensor.dsc_cfm_exhaust_recirc` |
+
+```mermaid
+flowchart LR
+  Room --> Clone["2x4"]
+  Room --> Main["4x8"]
+  Clone --> Main
+  Main --> Outside
+  Main --> Room
+```
+
+**Read the chips:** each active edge shows **CFM · fan %** plus the **source
+zone T/RH** being pulled (not the destination). Optional moisture Δ g/h when
+AH helpers exist. OUT also surfaces vent heat dump BTU/h + moisture g/h.
+RECIRC shows ΔT (tent−room) and lung **feedback** moisture (see blend below).
+
+**Node mass lines:** Plant Spec volumes (`input_number.dsc_vol_*_m3`) →
+`~kg air` at 1.2 kg/m³; tents also show `sensor.dsc_ach_*`.
+
+**Room appliances:** heater / AC / hum / dehum light when demand **or**
+follower relay is ON (AC is demand-only). Hum→intake route cue when
+`switch.dsc_hub_humidifier_intake_routing` is on with humidifier. Mat marker
+on 2x4; SF1000 brightness on 4x8.
+
+**OUT / RECIRC blend (code-walked):**
+
+| Mode | Condition | Narrative |
+|---|---|---|
+| open | OUT only | Outside (open) |
+| closed | RECIRC only | Recirc → Room (closed) |
+| blend | both > ~0.5 CFM | Outside+Recirc with % shares |
+| stalled | neither | stalled |
+
+Only the **RECIRC share** of exhaust is treated as lung feedback
+(`dAh_recirc × cfm_rec/(cfm_out+cfm_rec)`). OUT dumps outdoors and does **not**
+hit intakes — do not read OUT moisture as room return.
+
+**Depends on packages (not the card JS alone):**
+`dsc_v4_climate_physics` (live CFM, ACH, volumes, vent dump) and optional
+`dsc_v4_device_cal` curves. Without those helpers, ducts stay idle / `--`.
+
+**Publish contract (post `521ac11` + Sync 5.1.3):** one JS resource registers
+both cards. `homeassistant/www/*-card.js` files stay separate **sources**;
+publishers concatenate into `dsc-system-map-card.js` / `DSC-HUB.js`.
+
+**HACS vs `/local`:** Sync/ha-sync can refresh `/local` while HACS still serves
+an older `/hacsfiles/DSC-HUB/DSC-HUB.js`. Prefer **one** path. After a bundle
+change: Sync add-on **Update** to ≥5.1.3 (or redownload HACS) + hard-refresh.
+
+**Pitfalls**
+
+| Symptom | Likely cause |
+|---|---|
+| `Custom element doesn't exist: dsc-airflow-map-card` | Stale `/local/dsc-system-map-card.js` that is **system-map source only** (pre-bundle Sync / hand-copy). Update Sync ≥5.1.3, re-run ha-sync, or redownload HACS. Resource type must be **JavaScript**, not Module. |
+| SYSTEM MAP ok, AIRFLOW missing | Same — pre-bundle `/local` file (~10 KB) vs bundle (~33 KB) |
+| Two maps fight / double-register | Both HACS **and** `/local` resources loaded — keep one |
+| All ducts idle while fans spin | Check `sensor.dsc_cfm_*` + `input_number.dsc_cfm_*_max` |
+| Cascade weird | Cascades mirrors **2x4 intake CFM** only — not a separate sensor |
+| Orphan Sankey helpers | `dsc_airflow_direct_room` / `dsc_airflow_room_return` unused by this card (**N-004**) |
+
+Smoke checklist: [`../docs/qa/LIVE-UI-AIRFLOW-STATUS.md`](../docs/qa/LIVE-UI-AIRFLOW-STATUS.md).
 
 ## Climate capacity envelope
 

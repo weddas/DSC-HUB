@@ -18,7 +18,7 @@ Repo: https://github.com/weddas/DSC-HUB · tag **`v5.1.0`** · branch **`master`
 | `homeassistant/packages/dsc_v4_*.yaml` | `/config/packages/` |
 | `homeassistant/dashboards/dsc-hub-v4-dashboard.yaml` | `/config/dashboards/` (YAML-mode Lovelace) |
 | `homeassistant/esphome/dsc-*.yaml` | `/config/esphome/` |
-| `homeassistant/www/dsc-system-map.*` | `/config/www/` |
+| `homeassistant/www/` map sources | `/config/www/` (publish **bundles** system+airflow into `dsc-system-map-card.js`) |
 | `firmware/v4/secrets.yaml.template` | `/config/esphome/secrets.yaml` (fill in; never commit) |
 
 Merge [`homeassistant/configuration.snippet.yaml`](homeassistant/configuration.snippet.yaml)
@@ -27,7 +27,7 @@ into `configuration.yaml` (packages + YAML dashboard **`dsc-hub-pro`**).
 ### Add-on (recommended)
 
 1. Settings → Add-ons → Repositories → `https://github.com/weddas/DSC-HUB`
-2. Install **DSC-HUB Sync** **5.1.0** → Start (defaults include `sync_esphome: true`)
+2. Install **DSC-HUB Sync** **5.1.3** → Start (defaults include `sync_esphome: true`)
 3. Wait for “Synced to …” · confirm `/config/dsc-hub-sync.version`
 4. Merge configuration snippet → **Restart HA Core once** (creates new helpers)
 

@@ -190,10 +190,13 @@ No climate control regression during soak window.
 
 - Replaced Climate Engine `power-flow-card-plus` AIRFLOW FLOW MAP with `custom:dsc-airflow-map-card` (real ducts, % blend OUT/RECIRC, source T/RH carry, room appliances, vol/ACH mass chips).
 - HACS `dist/DSC-HUB.js` now bundles system map + airflow map; sync script updated.
+- **`521ac11`:** ha-sync + HACS dist publish the **same bundle** as `/local/dsc-system-map-card.js` (legacy resource name) so airflow is not a missing custom element.
+- **Sync add-on 5.1.3:** same concat publish (was copying system-map source only ? AIRFLOW missing on Sync-only sites). Docs: HA README, HACS-FRONTEND, LIVE-UI-AIRFLOW-STATUS.
 
 ### deferred
 
-- N-004 optional cull of unused Sankey template sensors (`dsc_airflow_direct_room`, `dsc_airflow_room_return`) â€” concept covered by live CFM edges; leave helpers until a dedicated orphan pass.
+- N-004 optional cull of unused Sankey template sensors (`dsc_airflow_direct_room`, `dsc_airflow_room_return`) — concept covered by live CFM edges; leave helpers until a dedicated orphan pass.
+- N-019 Operator: **Update Sync add-on to 5.1.3** on live HAOS (or HACS Redownload) after merge; hard-refresh; confirm `/config/www/dsc-system-map-card.js` ~33 KB defines both cards.
 
 ---
 

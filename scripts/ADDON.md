@@ -1,7 +1,9 @@
 # DSC-HUB Sync — Home Assistant add-on
 
 **Primary delivery** for packages, automations, Pro dashboard, www, and ESPHome
-stubs on HAOS. **v5.1.0** defaults `sync_esphome: true` and writes a version/SHA marker.
+stubs on HAOS. **v5.1.3** concatenates SYSTEM MAP + AIRFLOW into
+`/config/www/dsc-system-map-card.js` (and `DSC-HUB.js`) so one `/local`
+Lovelace resource registers both custom elements.
 
 ## Install (once)
 
@@ -22,20 +24,24 @@ Device firmware: **manual** ESPHome Install only.
 GitHub master / tag
     │  (poll)
     ▼
-DSC-HUB Sync 5.1.0 ──stage/cp──► /config/packages|dashboards|www|esphome
+DSC-HUB Sync 5.1.3 ──stage/cp──► /config/packages|dashboards|www|esphome
     │                              + dsc-hub-sync.version + sync SHA sensor
+    │                              www: SVG + bundled card JS (+ standalone airflow)
     └── Supervisor API ──► core / automation / script / template / lovelace reload
 ```
 
 Sources: [`dsc-hub-sync/`](../dsc-hub-sync/) · [`repository.yaml`](../repository.yaml).
 
+Card publish contract (source vs bundle): [`HACS-FRONTEND.md`](HACS-FRONTEND.md).
+
 ## Related
 
 | Channel | Role |
 |---|---|
-| **This add-on** | HA surfaces + stubs |
-| HACS Dashboard | Optional SYSTEM MAP — [`HACS-FRONTEND.md`](HACS-FRONTEND.md) |
-| [`ha-sync.sh`](ha-sync.sh) | Non-HAOS alternate |
+| **This add-on** | HA surfaces + stubs + www card **bundle** (≥5.1.3) |
+| HACS Dashboard | Optional SYSTEM MAP + AIRFLOW — [`HACS-FRONTEND.md`](HACS-FRONTEND.md) |
+| [`ha-sync.sh`](ha-sync.sh) | Non-HAOS alternate (same www bundle) |
 | ESPHome Install | Firmware only (manual) |
 
-QA: [`docs/qa/ADDON-QA-5.1.0.md`](../docs/qa/ADDON-QA-5.1.0.md)
+QA: [`docs/qa/ADDON-QA-5.1.0.md`](../docs/qa/ADDON-QA-5.1.0.md) ·
+airflow smoke: [`docs/qa/LIVE-UI-AIRFLOW-STATUS.md`](../docs/qa/LIVE-UI-AIRFLOW-STATUS.md)

@@ -89,7 +89,8 @@ export DRY_RUN=1
 | ESPHome stubs only if `SYNC_ESPHOME=1` | Firmware flash / ESPHome Install |
 | | **SYSTEM MAP card via HACS** — [`HACS-FRONTEND.md`](HACS-FRONTEND.md) |
 
-Prefer HACS for the SYSTEM MAP card; ha-sync still mirrors `www/` for sites
-not using HACS yet.
+Prefer HACS for the Lovelace cards, or Sync ≥5.1.3 / ha-sync for the www
+**bundle** (`dsc-system-map-card.js` = system map + airflow). See
+[`HACS-FRONTEND.md`](HACS-FRONTEND.md).
 
 Firmware still: Cursor → push → ESPHome Validate/Install per device.
