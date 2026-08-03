@@ -144,3 +144,40 @@ Observed live before package deploy:
 ### red-flag
 
 - **Live HA still on pre-5.1.4 surface** until N-009 — do not treat crop-steering UI as production until sync confirms `sensor.dsc_ha_surface_version` = `5.1.4`
+
+---
+
+## 2026-08-03 — Commit/push e0ffeaf + soak (HA sync blocked)
+
+### done
+
+- Commit **`e0ffeaf`** pushed to `master`: HA surface 5.1.4 crop-steering packages + dashboard
+- Cancelled stuck prior HA sync run `30789286359` (queued ~3h)
+
+### soak (~25 min fleet, post-push)
+
+| Check | T0 | T+10 | T+25 |
+|---|---|---|---|
+| Hub link | on | on | on |
+| Full Auto | on | on | on |
+| Tent | 20.9 °C / 71% RH | 20.9 / 72 | 20.9 / 72 |
+| Dehum demand | off | off | off |
+| Alert count | 9 | 9 | 9 |
+| AC / mister / POT3 in-service | off | off | off |
+| POT1 in-service | on | on | on |
+
+No climate control regression during soak window.
+
+### red-flag
+
+- **HA sync workflow `30801641521` still `queued`** — GitHub Actions reports **`total_count: 0` self-hosted runners**. Packages are on GitHub but **not deployed to HAOS**. `sensor.dsc_ha_surface_version` not yet 5.1.4 live.
+- Bring **`unraid-ha-deploy`** runner online (or manually `ha-sync.sh` / copy packages) to complete N-009; then re-soak new entities (N-010).
+
+### next-plan carry
+
+| ID | Item | Notes |
+|---|---|---|
+| N-009 | Deploy HA 5.1.4 | **Blocked on runner** — commit is pushed; sync pending |
+| N-010 | Post-deploy entity soak | After sync: Temp OOS, Strains, Nutrient Science, Got sensors |
+| N-017 | Strain + sprout on pot ESP | Probe stays until harvest |
+| N-018 | HA reads pot-native strain/sprout | After N-017 |
