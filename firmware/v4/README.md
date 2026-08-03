@@ -72,6 +72,52 @@ ESP-NOW (glass ↔ hub) does **not** need the HA API. Fix API only for OTA, diag
 
 In [`dsc-hub-v4_0.yaml`](dsc-hub-v4_0.yaml): `Mat Vote Pot 1`–`4` (`switch.dsc_hub_mat_vote_pot_N`). OFF pots are skipped by coldest/hottest root-zone voting (5–45 °C filter still applies). POT3 defaults OFF.
 
+**In-service AND:** mat voting also requires `potN_in_service`. Turning a pot OOS clears its mat vote and keeps chemistry/alerts silent on the HA side.
+
+## In-service / Full Auto OOS ladder
+
+**Intent:** one NVS gate per optional or removed lever. Full Auto stays ON with a reduced kit — missing hardware is skipped, not armed.
+
+Hub globals (restore-backed, defaults match incomplete kit):
+
+| Global | HA mirror | Default |
+|---|---|---|
+| `ac_in_service` | `switch.dsc_hub_ac_in_service` ← `input_boolean.dsc_ac_in_service` | OFF |
+| `clone_hum_in_service` | `switch.dsc_hub_clone_humidifier_in_service` | OFF |
+| `pot1`–`pot4_in_service` | `switch.dsc_hub_potN_in_service` | POT1/2/4 ON, POT3 OFF |
+
+HA is source of truth (`dsc_sync_in_service_to_hub`). Hub switches clear demand + auto-arm on turn-off.
+
+```mermaid
+flowchart TD
+  fa["Full Auto ON"] --> arm["Arm hum/dehum/heater/mat + photoperiod"]
+  arm --> ac{"ac_in_service?"}
+  ac -->|yes| acOn["ac_auto_enabled"]
+  ac -->|no| acSkip["Skip AC · force demand OFF"]
+  arm --> mister{"clone_hum_in_service?"}
+  mister -->|yes| mOn["clone_hum_auto_enabled"]
+  mister -->|no| mSkip["Skip mister · force demand OFF"]
+  arm --> pots["Mat vote = vote AND pot_in_service"]
+  acSkip --> fans["Next-best: OUT/RECIRC heat dump"]
+  mSkip --> hold["Intake/recirc hold moisture"]
+```
+
+**Next-best when OOS (verified in `run_climate_logic` / failsafe):**
+
+| OOS lever | Behavior |
+|---|---|
+| AC | Ladder never fires AC; fan curve still dumps heat via OUT/RECIRC. Emergency ≥35 °C is **fans-only** purge (no `ac_demand`). |
+| Clone mister | No clone-hum demand; room humidifier + intake routing remain. |
+| Pot | Excluded from coldest/hottest mat vote + root-zone heartbeat; HA pot alerts gated off. |
+
+**Constraints**
+
+- Full Auto top-of-loop reasserts `ac_auto_enabled = ac_in_service` (and mister) every pass — toggling In Service mid-run takes effect without leaving Full Auto.
+- Soft HA cues (`binary_sensor.dsc_*_capacity_offline`, `dsc_reduced_kit`) are **not** problem alerts — excluded from `sensor.dsc_active_alert_count`.
+- Capacity honesty: Full Auto ≠ complete climate with AC/mister OOS (see [`../../docs/FOLLOWUPS.md`](../../docs/FOLLOWUPS.md) F-001–F-003, F-009).
+
+HA package surface + dashboard toggles: [`../../homeassistant/README.md`](../../homeassistant/README.md).
+
 ## Quick validate
 
 ```bash

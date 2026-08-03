@@ -127,20 +127,46 @@ old or overflow is forcing a dump — check hub version ≥ 5.1.2.
 ## In service (single gate)
 
 One operator switch per optional/removed device — **not** a separate “Wired”
-flag. `input_boolean.dsc_*_in_service` (defaults: AC off, clone mister off,
-POT1/2/4 on, POT3 off). Synced to hub NVS switches.
+flag. Replaces former `*_actuator_wired`.
+
+| HA helper | Default | Hub NVS switch |
+|---|---|---|
+| `input_boolean.dsc_ac_in_service` | off | `switch.dsc_hub_ac_in_service` |
+| `input_boolean.dsc_clone_humidifier_in_service` | off | `switch.dsc_hub_clone_humidifier_in_service` |
+| `input_boolean.dsc_pot1/2/4_in_service` | on | `switch.dsc_hub_potN_in_service` |
+| `input_boolean.dsc_pot3_in_service` | off | same |
+
+**Sync:** automation `dsc_sync_in_service_to_hub` — HA wins; pushes on toggle,
+HA start, and hub link restore. Hub firmware owns ladder skips; HA owns
+follower gates + pot alert templates.
 
 | State | Behavior |
 |---|---|
 | Off | Never demand, follow, alert, learn, or Full-Auto-arm that lever |
-| Off (soft cue) | `binary_sensor.dsc_*_capacity_offline` / `dsc_reduced_kit` — not in `dsc_active_alert_count` |
+| Off (soft cue) | `binary_sensor.dsc_*_capacity_offline` / `dsc_reduced_kit` — **not** in `dsc_active_alert_count` |
 | On | Normal ladder + follower (relay entity must exist for Sonoffs) |
+
+```mermaid
+flowchart LR
+  ha["input_boolean.*_in_service"] --> sync["dsc_sync_in_service_to_hub"]
+  sync --> hub["Hub NVS switch"]
+  hub --> ladder["Full Auto arm / skip"]
+  ha --> follow["AC / mister follower gate"]
+  ha --> alerts["Pot alerts + learn AC sample"]
+  ha --> cue["capacity_offline / reduced_kit"]
+```
 
 **Next-best when OOS:** AC → OUT/RECIRC heat-dump (fans); emergency ≥35 °C
 fans-only if AC OOS. Clone mister → no demand; intake/recirc hold moisture.
 Pot OOS → excluded from mat vote + chemistry alerts silenced.
 
+**Learn Activity:** `sensor.dsc_learn_activity` is the plain-English Phase A
+truth (“Learning humidifier (2/5)…” / “Waiting — 2 air appliances…”). Gate
+open ≠ measuring. Air appliances (hum/dehum/heater/AC) sample when exactly
+one is ON — fans + grow mat may co-run. AC samples require In Service ON.
+
 Carry-forward work: [`../docs/FOLLOWUPS.md`](../docs/FOLLOWUPS.md).
+Firmware ladder detail: [`../firmware/v4/README.md`](../firmware/v4/README.md).
 
 ## Mode ownership (dashboard + hub)
 
