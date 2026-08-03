@@ -84,6 +84,15 @@ g++ -std=c++17 -Wall -Wextra -O2 -o verify_v4 verify_v4.cpp && ./verify_v4
 
 Requires `secrets.yaml` in this folder (gitignored). Start from `secrets.yaml.template` if needed.
 
+**Windows pitfall:** do not compile from a UNC/NAS path (`\\server\share\…`).
+Use a local working copy (or local build temp). Mid-upload OTA resets are
+retryable; path/toolchain failures are not. See [`../../docs/FOLLOWUPS.md`](../../docs/FOLLOWUPS.md) **N-008**.
+
+**After hub OTA:** confirm `switch.dsc_hub_tent_full_auto_mode` (or panel Full
+Auto). `full_auto_mode` restores from NVS and re-arms on boot when ON — if it
+comes up OFF once after flash, re-arm explicitly (**N-006**). Then soak the
+reduced kit using the HA README post-OOS checklist.
+
 `espnow_cmd_tag` is **54727** (`0xD5C7`) on hub + panel — flash both after changing it.
 
 Fleet bring-up / cutover: [`../../INSTALL.md`](../../INSTALL.md) · [`../../UPGRADE.md`](../../UPGRADE.md).

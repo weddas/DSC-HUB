@@ -215,8 +215,44 @@ Curves / dimensions are **not** required for spec completeness.
 | ESP-NOW pot probes that are **in service** | OOS pots (alerts off; mat vote excluded) |
 | Sonoff followers for hum/dehum/heater/mat | AC / clone mister until hardware + In Service ON |
 | `input_number.dsc_leaf_offset` (VPD leaf adj.) | Undefined `sensor.dsc_clone_temp_trend` (removed from dashboard) |
+| `input_boolean.dsc_*_in_service` | Retired `*_actuator_wired` entities (registry leftovers only) |
+
+**Orphan `*_actuator_wired`:** packages no longer define them (replaced by
+in-service). After Sync/reload, HA may still list
+`input_boolean.dsc_ac_actuator_wired` (and clone mister equivalents) in the
+entity registry. Purge those orphans — they are dead UI/automation bait, not
+live gates. See FOLLOWUPS **N-007**.
 
 SCD41 / dedicated CO₂ remain deferred — see [`../docs/FOLLOWUPS.md`](../docs/FOLLOWUPS.md).
+
+### Post-OOS soak — expected healthy reduced kit
+
+After hub **5.1.3** + HA surface **5.1.3** with AC / clone mister / POT3 OOS
+(defaults), a ~30 min soak should look like this (verified 2026-08-03):
+
+```mermaid
+flowchart TD
+  flash["Hub OTA 5.1.3"] --> check{"Full Auto ON?"}
+  check -->|no| rearm["Re-arm Full Auto — N-006"]
+  check -->|yes| kit["reduced_kit cue ON"]
+  kit --> demands["ac_auto / mister auto OFF · demands OFF"]
+  demands --> alerts{"alert_count rising?"}
+  alerts -->|only OOS cues| bad["Bug — capacity cues must stay soft"]
+  alerts -->|real pot / WiFi mismatch| ok["Healthy reduced kit"]
+```
+
+| Check | Healthy |
+|---|---|
+| Hub link | Stays **on**; FW text `sensor.dsc_hub_firmware_version` = **5.1.3** |
+| Full Auto | **ON** after flash (re-arm if NVS came up OFF — **N-006**) |
+| OOS levers | `ac_auto` / `clone_humidifier_auto` **off**; AC/mister demands **off** |
+| Soft cues | `binary_sensor.dsc_reduced_kit` lists OOS levers; **not** in `dsc_active_alert_count` |
+| Pot OOS | No chemistry alerts for OOS pots (e.g. POT3) |
+| Alert chip | Dominated by real in-service pot / preferred-AP issues — **not** OOS spam |
+| Preferred AP | Mismatch while Lock ON may still be open (**N-001**) — separate from OOS |
+
+Do **not** treat reduced-kit + Full Auto ON as a fault. Carry-forward IDs:
+[`../docs/FOLLOWUPS.md`](../docs/FOLLOWUPS.md).
 
 ### Optional fan CFM / light PPFD curves
 
