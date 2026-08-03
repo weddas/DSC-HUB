@@ -298,7 +298,7 @@ template:
         device_class: problem
         icon: mdi:snowflake-alert
         state: >-
-          {{ is_state('input_boolean.dsc_ac_actuator_wired', 'on')
+          {{ is_state('input_boolean.dsc_ac_in_service', 'on')
              and states('input_number.dsc_ac_btu_hr')|float(0) <= 0 }}
 
       - name: "DSC Plant Specs Dehum Rate Zero"
@@ -692,7 +692,7 @@ template:
           {% set gain = states('sensor.dsc_heat_gain_btu')|float(0) %}
           {% set ac = states('input_number.dsc_ac_btu_hr')|float(0)
              if is_state('switch.dsc_hub_ac_demand','on')
-                and is_state('input_boolean.dsc_ac_actuator_wired','on') else 0 %}
+                and is_state('input_boolean.dsc_ac_in_service','on') else 0 %}
           {{ (dump + ac - gain) | round(0) }}
         attributes:
           meaning: >-

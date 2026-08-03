@@ -67,7 +67,7 @@ esphome:
   friendly_name: ${friendly_name}
   project:
     name: digital_emotions.dsc-pot
-    version: "5.1.1"
+    version: "5.1.2"
 
 esp32:
   board: esp32dev
@@ -82,7 +82,9 @@ logger:
 api:
   encryption:
     key: ${api_key_val}
-  reboot_timeout: 15min
+  # Match hub/panel: never reboot just because HA is offline — ESP-NOW
+  # soil path must keep running for mat closed-loop during HA maintenance.
+  reboot_timeout: 0s
 
 ota:
   - platform: esphome
@@ -512,7 +514,7 @@ text_sensor:
   - platform: template
     name: "Firmware Version"
     icon: mdi:tag-check
-    lambda: 'return {"5.1.1"};'
+    lambda: 'return {"5.1.2"};'
     update_interval: 60s
 
 button:

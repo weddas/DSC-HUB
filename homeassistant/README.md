@@ -6,11 +6,11 @@ Canonical HA surface for firmware [`firmware/v4/`](../firmware/v4/).
 
 | Path | Role |
 |---|---|
-| `dashboards/dsc-hub-v4-dashboard.yaml` | Lovelace UX **v5.1.1** (`dsc-hub-pro`). Mode-locked targets (Grow Stage / Clone Mode **Custom** unlock); Home **Operational now**; Root Zone above-fold Pots+Mat. |
-| `packages/dsc_v4_core_helpers.yaml` | Hub link, fan %, airflow Sankey (CFM), photoperiod, leaf offset, appliance runtimes, dead-demand cues |
+| `dashboards/dsc-hub-v4-dashboard.yaml` | Lovelace UX **v5.1.3** (`dsc-hub-pro`). In-service kit toggles; learn **Activity**; Root Zone Pots+Mat. |
+| `packages/dsc_v4_core_helpers.yaml` | Hub link, fan %, Sankey, runtimes, **in-service** + capacity-offline + vent-conflict / ineffective cues |
 | `packages/dsc_v4_climate_physics.yaml` | Settable plant specs (CFM/volumes/L/day/W), ACH/AH/BTU/moisture sensors, spec verification |
 | `packages/dsc_v4_device_cal.yaml` | Optional fan CFM / SF1000 PPFD multi-point curves + Learning wizard (unset = % × nameplate) |
-| `packages/dsc_v4_climate_learn.yaml` | Phase A EMA lever-efficiency observer + minutes-to-target / headroom gauges |
+| `packages/dsc_v4_climate_learn.yaml` | Phase A EMA (fans+mat may co-run) + `sensor.dsc_learn_activity` + Phase B waits |
 | `packages/dsc_v4_light_helpers.yaml` | Lights-on today, clone dark-period, deviation |
 | `packages/dsc_v4_tank.yaml` | Tank EC/pH/temp helpers + Tuya warn sync |
 | `packages/dsc_v4_pots_stats.yaml` | Per-pot daily max/min + 7d baselines + rates |
@@ -117,6 +117,31 @@ The **hub firmware** owns the escalation ladder (fans first → appliances →
 >35°C failsafe). HA only mirrors four Sonoff relays and surfaces alerts —
 it must not duplicate ladder logic.
 
+**Energy rule:** do not buy heat or moisture then dump it outside. Heater
+and humidifier demands clamp OUT exhaust to the fresh-air floor and route
+RECIRC (RH overflow / emergency still win). If
+`binary_sensor.dsc_humidifier_vent_conflict` or
+`binary_sensor.dsc_heater_vent_conflict` lights up, the running firmware is
+old or overflow is forcing a dump — check hub version ≥ 5.1.2.
+
+## In service (single gate)
+
+One operator switch per optional/removed device — **not** a separate “Wired”
+flag. `input_boolean.dsc_*_in_service` (defaults: AC off, clone mister off,
+POT1/2/4 on, POT3 off). Synced to hub NVS switches.
+
+| State | Behavior |
+|---|---|
+| Off | Never demand, follow, alert, learn, or Full-Auto-arm that lever |
+| Off (soft cue) | `binary_sensor.dsc_*_capacity_offline` / `dsc_reduced_kit` — not in `dsc_active_alert_count` |
+| On | Normal ladder + follower (relay entity must exist for Sonoffs) |
+
+**Next-best when OOS:** AC → OUT/RECIRC heat-dump (fans); emergency ≥35 °C
+fans-only if AC OOS. Clone mister → no demand; intake/recirc hold moisture.
+Pot OOS → excluded from mat vote + chemistry alerts silenced.
+
+Carry-forward work: [`../docs/FOLLOWUPS.md`](../docs/FOLLOWUPS.md).
+
 ## Mode ownership (dashboard + hub)
 
 Named modes own climate numbers. Switch to **Custom** (or Override / Hold)
@@ -143,21 +168,21 @@ After flashing Grow Stage **Custom**, either pick **Custom** to keep hand-tuned
 |---|---|---|
 | OUT / RECIRC / intakes | Hub fans | First responder; heat reuse; negative-pressure budget |
 | Humidifier / dehumidifier / heater / grow mat | Hub demand → HA follower → Sonoff | Wired actuators |
-| AC | Hub `ac_demand` → **gated follower** | Follower acts only when `input_boolean.dsc_ac_actuator_wired` is on and `switch.dsc_ac_main_relay` exists |
-| Clone mister | Hub `clone_humidifier_demand` → **gated follower** | Same gating via `dsc_clone_humidifier_actuator_wired` — parked until mister hardware |
+| AC | Hub `ac_demand` → **gated follower** | Only when `input_boolean.dsc_ac_in_service` is on and `switch.dsc_ac_main_relay` exists |
+| Clone mister | Hub `clone_humidifier_demand` → **gated follower** | Same via `dsc_clone_humidifier_in_service` — off until mister hardware |
 | Shared room appliances | Priority tent when both live | Non-priority tent is local levers only |
 
 ### Scenario keep-up matrix (code-walked)
 
 | Scenario | Can tents keep up? |
 |---|---|
-| A. Warm room + lights dumping heat | **No if AC unwired** — fans exchange to room temp only |
+| A. Warm room + lights dumping heat | **No if AC out of service** — fans exchange to room temp only |
 | B. Cold dry night, 4x8 priority | **Yes** for air via heater/hum; clone RH needs intake plume |
 | C. Clone overheat, 4x8 has priority | **Partial** — local flush helps; shared AC serves priority |
 | D. High RH flower + dehum lag | **Yes** if dehum follower healthy; moisture wins over heat reuse |
 | E. Root zone cold / POT3 faulted | **Yes** (voted pots); air-proxy if all probes die |
 | F. Root runaway (≥ High+1) | **Yes** — mat OFF + fan flush |
-| G. Emergency ≥35°C | Fans yes; **AC only if wired** |
+| G. Emergency ≥35°C | Fans yes; **AC only if in service** |
 | H. Opposite climates both tents | **Structural limit** — priority wins room appliances |
 | I. Hub offline ≥30s | Appliances safe-off; fans continue if hub up |
 | J. Clone dry, no mister | **No local RH lever** — room humidifier + routing only |
@@ -178,9 +203,20 @@ scripts (`script.dsc_apply_dim_4x8` / `_2x4` / `_room`) write the matching
 tents may need a free-air nudge after geometric apply.
 
 Verification binaries (`binary_sensor.dsc_plant_specs_*`) flag incomplete
-floors, intake CFM > exhaust CFM, AC wired with 0 BTU/h, and zeroed
+floors, intake CFM > exhaust CFM, AC in service with 0 BTU/h, and zeroed
 appliance rates. Status: `sensor.dsc_plant_specs_status` (`ok` / `warn` / `error`).
 Curves / dimensions are **not** required for spec completeness.
+
+### ESP keep vs park / orphan helpers
+
+| Keep | Park / demote |
+|---|---|
+| Hub tent SHT + room/clone aux | ADC “dynamic CO2” — informational only until a real CO₂ sensor |
+| ESP-NOW pot probes that are **in service** | OOS pots (alerts off; mat vote excluded) |
+| Sonoff followers for hum/dehum/heater/mat | AC / clone mister until hardware + In Service ON |
+| `input_number.dsc_leaf_offset` (VPD leaf adj.) | Undefined `sensor.dsc_clone_temp_trend` (removed from dashboard) |
+
+SCD41 / dedicated CO₂ remain deferred — see [`../docs/FOLLOWUPS.md`](../docs/FOLLOWUPS.md).
 
 ### Optional fan CFM / light PPFD curves
 
@@ -203,16 +239,25 @@ prior speeds. Reset scripts clear a curve back to linear %.
 Install [`packages/dsc_v4_climate_learn.yaml`](packages/dsc_v4_climate_learn.yaml)
 alongside the physics package.
 
-While each lever is ON (and emergency / manual takeover / climate-sensor
-fault are clear), a 5-minute EMA samples real `ΔT/min` and `ΔAH/min` and
-stores effectiveness vs nameplate (`input_number.dsc_learn_eff_*`, clamped
-0.1–2.0×). Sample counts (`dsc_learn_samples_*`) are the automatic
-**appliance results database** for heater / humidifier / dehumidifier /
-mat / vent. When sample count ≥ `input_number.dsc_learn_min_samples`, those
-coeffs scale **predictions only**:
+**Gate open ≠ actively learning.** `binary_sensor.dsc_learn_gate_open` only
+means “allowed to sample.” Read **`sensor.dsc_learn_activity`** for plain
+English: *Learning humidifier (2/5 samples)* vs *Waiting — 2 air appliances
+on together* vs *Idle*.
+
+Phase A samples when **exactly one air appliance** is ON (humidifier /
+dehumidifier / heater / AC). **Fans and grow mat may co-run** — Full Auto
+always has fans, and the mat often stays on; that no longer blocks learning.
+Mat samples when mat is ON and no air appliance is ON. Vent samples when
+OUT/intake is high and no air appliance is ON.
+
+A 5-minute EMA stores effectiveness vs nameplate (`input_number.dsc_learn_eff_*`,
+clamped 0.1–2.0×). Sample counts (`dsc_learn_samples_*`) are the automatic
+**appliance results database**. When count ≥ `input_number.dsc_learn_min_samples`,
+those coeffs scale **predictions only**:
 
 | Sensor | Role |
 |---|---|
+| `sensor.dsc_learn_activity` | What learning is doing *right now* |
 | `sensor.dsc_minutes_to_temp_target` | ETA to `number.dsc_hub_target_temp` |
 | `sensor.dsc_minutes_to_rh_target` | ETA to RH band mid |
 | `sensor.dsc_heat_balance_btu_learned` | Heat headroom with trusted scales |
@@ -220,14 +265,14 @@ coeffs scale **predictions only**:
 | `sensor.dsc_learn_status` | `disabled` / `gated` / `warming` / `partial` / `ready` |
 
 Phase A does **not** write hub persistence waits, fan curves, or failsafe.
-**Phase B** (opt-in, default off): `input_boolean.dsc_climate_learn_phase_b_enabled`
-rate-limits writes to `number.dsc_hub_ladder_wait_*` only. Lock with
+**Phase B** (opt-in, default off): leave off until Activity shows appliance
+samples climbing. Then `input_boolean.dsc_climate_learn_phase_b_enabled`
+may clamp `number.dsc_hub_ladder_wait_*` only. Lock with
 `input_boolean.dsc_learn_phase_b_locked` after manual edits.
 Reset coeffs: `script.dsc_climate_learn_reset`. Reset waits: `script.dsc_climate_learn_reset_waits`.
 
-Dashboard: **Learning** (`/dsc-hub-pro/learning`) — optional device cal,
-Phase A+B status, appliance effect cards, waits, ETA, efficiencies, charts,
-settings.
+Dashboard: **Learning** (`/dsc-hub-pro/learning`) — Activity card, device cal,
+Phase A+B status, appliance effect cards, waits, ETA, efficiencies, charts.
 
 ## Tank / Tuya entity map
 
@@ -257,7 +302,7 @@ not humidifier lock — entity id kept for compatibility.
 |---|---|
 | Hub / pots / Sonoffs / kits | **`5.1.0`** |
 | Panel (DSC-CONTROL) | **`5.1.x`** lean-cut patch train |
-| HA surface (packages + dashboard) | **`5.1.1`** |
+| HA surface (packages + dashboard) | **`5.1.2`** |
 | Dashboard | DSC-HUB Pro (4-col, browser_mod popups) |
 | `espnow_cmd_tag` | `54727` (`0xD5C7`) on hub **and** panel |
 

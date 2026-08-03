@@ -9,6 +9,12 @@
 #  Phase B (opt-in): trusted coeffs clamp hub ladder wait bases via
 #  number.dsc_hub_ladder_wait_* — never failsafe, min-off, or fans.
 #
+#  Sampling rule (v5.1.2): air appliances (hum/dehum/heater/AC) train
+#  when exactly one of those is ON — fans and grow-mat may co-run
+#  (Full Auto always has fans; mat often stays on). Mat trains when mat
+#  is the only soil heater and no air appliance is ON. Vent trains when
+#  OUT/intake is high and no air appliance is ON (mat OK).
+#
 #  Depends on: dsc_v4_climate_physics.yaml, dsc_v4_root_zone.yaml.
 # ==================================================================
 
@@ -331,6 +337,49 @@ template:
             ] %}
             {{ parts | reject('none') | list | join(', ') or 'none' }}
 
+      # Plain-English "what is learning doing right now?" for the dashboard.
+      - name: "DSC Learn · Activity"
+        unique_id: dsc_learn_activity
+        icon: mdi:school-outline
+        state: >-
+          {% if not is_state('input_boolean.dsc_climate_learn_enabled','on') %}
+            Off — flip Learn Enabled to start
+          {% elif not is_state('binary_sensor.dsc_learn_gate_open','on') %}
+            Paused — clear failsafe / takeover / climate fault, or wait for hub link
+          {% else %}
+            {% set need = states('input_number.dsc_learn_min_samples')|float(5)|int %}
+            {% set dehum = is_state('switch.dsc_hub_dehumidifier_demand','on') %}
+            {% set hum = is_state('switch.dsc_hub_humidifier_demand','on') %}
+            {% set heat = is_state('switch.dsc_hub_heater_demand','on') %}
+            {% set mat = is_state('switch.dsc_hub_grow_mat_demand','on') %}
+            {% set ac = is_state('switch.dsc_hub_ac_demand','on') %}
+            {% set air_n = (1 if dehum else 0) + (1 if hum else 0) + (1 if heat else 0) + (1 if ac else 0) %}
+            {% set fans = states('sensor.dsc_fan_exhaust_outside_pct')|float(0) >= 20
+                 or states('sensor.dsc_fan_intake_main_pct')|float(0) >= 20 %}
+            {% set recirc = states('sensor.dsc_fan_exhaust_room_pct')|float(0) >= 20 %}
+            {% if air_n > 1 %}
+              Waiting — {{ air_n }} air appliances on together (needs exactly one)
+            {% elif dehum %}
+              Learning dehumidifier ({{ states('input_number.dsc_learn_samples_dehum')|int(0) }}/{{ need }} samples)
+            {% elif hum %}
+              Learning humidifier ({{ states('input_number.dsc_learn_samples_hum')|int(0) }}/{{ need }} samples)
+            {% elif heat %}
+              Learning heater ({{ states('input_number.dsc_learn_samples_heater')|int(0) }}/{{ need }} samples)
+            {% elif ac %}
+              Learning AC ({{ states('input_number.dsc_learn_samples_ac')|int(0) }}/{{ need }} samples)
+            {% elif mat and air_n == 0 %}
+              Learning grow mat ({{ states('input_number.dsc_learn_samples_mat')|int(0) }}/{{ need }} samples)
+            {% elif fans and air_n == 0 %}
+              Learning exhaust/vent ({{ states('input_number.dsc_learn_samples_vent_cool')|int(0) }}/{{ need }} cool, {{ states('input_number.dsc_learn_samples_vent_dry')|int(0) }}/{{ need }} dry)
+            {% elif recirc and air_n == 0 %}
+              Learning recirculation ({{ states('input_number.dsc_learn_samples_recirc')|int(0) }}/{{ need }} samples)
+            {% else %}
+              Idle — no single lever to measure (fans+mat alone is fine; waiting for an appliance run)
+            {% endif %}
+          {% endif %}
+        attributes:
+          plain: "Shows whether Phase A is measuring right now, and why not if idle."
+
 
       - name: "DSC Learn · Last Sample Age"
         unique_id: dsc_learn_last_sample_age
@@ -394,7 +443,7 @@ template:
           {% set gain = gain_raw - heater_share + (heater_share * eh) %}
           {% set ac = (states('input_number.dsc_ac_btu_hr')|float(0) * ea)
              if is_state('switch.dsc_hub_ac_demand','on')
-                and is_state('input_boolean.dsc_ac_actuator_wired','on') else 0 %}
+                and is_state('input_boolean.dsc_ac_in_service','on') else 0 %}
           {{ (dump + ac - gain) | round(0) }}
         attributes:
           meaning: >-
@@ -545,20 +594,22 @@ automation:
             {% set dt = states('input_number.dsc_learn_snap_epoch')|float(0) %}
             {% set mins = ((as_timestamp(now()) - dt) / 60) if dt > 0 else 0 %}
             {{ mins >= 3 and mins <= 12 }}
-          # Skip contaminated windows when >1 climate lever is commanded.
-          active_levers: >-
+          # Air appliances only — fans + grow-mat may co-run (Full Auto /
+          # root-zone always do). Exactly one air lever → air EMA may fire.
+          air_appliance_levers: >-
             {% set ns = namespace(n=0) %}
             {% if is_state('switch.dsc_hub_dehumidifier_demand','on') %}{% set ns.n = ns.n + 1 %}{% endif %}
             {% if is_state('switch.dsc_hub_humidifier_demand','on') %}{% set ns.n = ns.n + 1 %}{% endif %}
             {% if is_state('switch.dsc_hub_heater_demand','on') %}{% set ns.n = ns.n + 1 %}{% endif %}
-            {% if is_state('switch.dsc_hub_grow_mat_demand','on') %}{% set ns.n = ns.n + 1 %}{% endif %}
             {% if is_state('switch.dsc_hub_ac_demand','on') %}{% set ns.n = ns.n + 1 %}{% endif %}
-            {% if states('sensor.dsc_fan_exhaust_outside_pct')|float(0) >= 20
-                 or states('sensor.dsc_fan_intake_main_pct')|float(0) >= 20 %}
-              {% set ns.n = ns.n + 1 %}
-            {% endif %}
             {{ ns.n }}
-          single_lever: "{{ (active_levers|int(0)) == 1 }}"
+          single_air_lever: "{{ (air_appliance_levers|int(0)) == 1 }}"
+          # Mat: soil path; ignore fans; block if any air appliance is on.
+          mat_clean: >-
+            {{ is_state('switch.dsc_hub_grow_mat_demand','on')
+               and (air_appliance_levers|int(0)) == 0 }}
+          # Vent/recirc: ignore mat; block if any air appliance is on.
+          vent_clean: "{{ (air_appliance_levers|int(0)) == 0 }}"
 
       # --- Dehumidifier: observed drying vs nameplate ---
       - choose:
@@ -566,7 +617,7 @@ automation:
               - condition: template
                 value_template: >-
                   {{ valid_window|bool
-                     and single_lever|bool
+                     and single_air_lever|bool
                      and is_state('switch.dsc_hub_dehumidifier_demand','on')
                      and (dAH_per_min|float(0)) < -0.01
                      and (dAH_per_min|float(0)) > -2.0 }}
@@ -602,7 +653,7 @@ automation:
               - condition: template
                 value_template: >-
                   {{ valid_window|bool
-                     and single_lever|bool
+                     and single_air_lever|bool
                      and is_state('switch.dsc_hub_humidifier_demand','on')
                      and (dAH_per_min|float(0)) > 0.01
                      and (dAH_per_min|float(0)) < 2.0 }}
@@ -634,7 +685,7 @@ automation:
               - condition: template
                 value_template: >-
                   {{ valid_window|bool
-                     and single_lever|bool
+                     and single_air_lever|bool
                      and is_state('switch.dsc_hub_heater_demand','on')
                      and (dT_per_min|float(0)) > 0.005
                      and (dT_per_min|float(0)) < 1.5 }}
@@ -672,7 +723,7 @@ automation:
                   {% set dR = ((rz - states('input_number.dsc_learn_snap_root_t')|float(0)) / mins)
                      if (rz is not none and mins >= 3 and mins <= 12) else 0 %}
                   {{ valid_window|bool
-                     and single_lever|bool
+                     and mat_clean|bool
                      and is_state('switch.dsc_hub_grow_mat_demand','on')
                      and is_state('binary_sensor.dsc_hub_root_zone_sensor_fault','off')
                      and rz is not none
@@ -707,7 +758,7 @@ automation:
               - condition: template
                 value_template: >-
                   {{ valid_window|bool
-                     and single_lever|bool
+                     and vent_clean|bool
                      and states('sensor.dsc_fan_exhaust_outside_pct')|float(0) >= 20
                      and (dT_per_min|float(0)) < -0.005
                      and (dT_per_min|float(0)) > -1.5 }}
@@ -741,7 +792,7 @@ automation:
               - condition: template
                 value_template: >-
                   {{ valid_window|bool
-                     and single_lever|bool
+                     and vent_clean|bool
                      and states('sensor.dsc_fan_exhaust_outside_pct')|float(0) >= 20
                      and (dAH_per_min|float(0)) < -0.01
                      and (dAH_per_min|float(0)) > -2.0 }}
@@ -779,7 +830,7 @@ automation:
                       - states('input_number.dsc_learn_snap_room_ah')|float(0)) / mins)
                      if mins >= 3 and mins <= 12 else 0 %}
                   {{ mins >= 3 and mins <= 12
-                     and single_lever|bool
+                     and vent_clean|bool
                      and states('sensor.dsc_fan_exhaust_room_pct')|float(0) >= 20
                      and dRAH > 0.005 and dRAH < 1.5
                      and states('sensor.dsc_ah_room') not in ['unknown','unavailable'] }}
@@ -812,9 +863,9 @@ automation:
               - condition: template
                 value_template: >-
                   {{ valid_window|bool
-                     and single_lever|bool
+                     and single_air_lever|bool
                      and is_state('switch.dsc_hub_ac_demand','on')
-                     and is_state('input_boolean.dsc_ac_actuator_wired','on')
+                     and is_state('input_boolean.dsc_ac_in_service','on')
                      and states('input_number.dsc_ac_btu_hr')|float(0) > 0
                      and (dT_per_min|float(0)) < -0.005
                      and (dT_per_min|float(0)) > -1.5 }}

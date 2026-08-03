@@ -3,6 +3,8 @@
 # ==================================================================
 wifi:
   power_save_mode: none
+  # Match hub: allow scan onto learned preferred BSSID after bounce.
+  fast_connect: false
   ap:
     ssid: "DSC-CONTROL Fallback"
     password: ${ap_password_val}

@@ -1,5 +1,35 @@
 # Changelog
 
+## HA surface 5.1.3 + hub OOS / in-service (2026-08-03)
+
+- **Single in-service gate** replaces `*_actuator_wired` for AC, clone mister,
+  and pots (defaults: AC/mister/POT3 off). Soft **capacity offline** / reduced-kit
+  cues — not problem alerts in `dsc_active_alert_count`.
+- **Full Auto stays usable:** skips OOS rungs; next-best levers (AC OOS →
+  OUT/RECIRC; mister OOS → no demand; pot OOS → no mat vote / chem alerts).
+  Emergency ≥35 °C: fans-only when AC OOS.
+- Hub NVS `*_in_service` switches + HA sync automation; humidifier refuses
+  fire at/above RH ceiling; pot alerts gated on in-service.
+- Dashboard In-service toggles; learn/mesh copy (Activity, ETA, Sync≠flash).
+- Master follow-ups: [`docs/FOLLOWUPS.md`](docs/FOLLOWUPS.md).
+
+## HA surface 5.1.2 + hub/pot mesh & learn (2026-08-03)
+
+- **Learn UX:** `sensor.dsc_learn_activity` plain-English (“Learning humidifier
+  (2/5)…” / “Waiting — 2 air appliances…”). Dashboard Learning card uses it.
+  Gate open ≠ measuring — Activity is the source of truth.
+- **Phase A samples again with Full Auto:** fans + grow mat no longer count as
+  contaminating levers. Air appliances train when exactly one of hum/dehum/
+  heater/AC is ON. Mat/vent have their own clean gates.
+- **Energy:** hub humidifier no-extraction interlock (mirror heater) — do not
+  dump bought moisture outside while humidifying (RH overflow still wins).
+- **Mesh:** Control/pots `fast_connect: false`; pot `api.reboot_timeout: 0s`;
+  hub preferred-AP pin retries after cooldown and **relearns** preferred from
+  current after 30 min stuck off preferred (production-safe, no hardcoded MAC).
+- **Derived cues:** preferred-AP mismatch, humidifier/heater vent conflict,
+  ineffective humidifier/heater/mat suspects.
+- Docs: Lock/Remember/0xD0 adopt only — no “paste BSSID into stubs.”
+
 ## Mode ownership + cohesive dashboard (2026-08-03)
 
 - **Grow Stage Custom** + firmware write guards for 4x8 temp/RH/VPD (same

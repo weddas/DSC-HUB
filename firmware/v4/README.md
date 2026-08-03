@@ -33,7 +33,7 @@ Package body: [`dsc-control-common.yaml`](dsc-control-common.yaml).
 | Hold-to-lock | Hold ~3 s on primary tabs; hold lock screen to unlock |
 | Demand / takeover gate | Confirm → Engage (not one stray tap) |
 | Connections | Wi‑Fi channel; ESP-NOW RX age + TX seq; silent → ping/WiFi bounce |
-| AP pin | Optional `wifi_bssid` (hub `sensor.dsc_hub_wifi_bssid`) pins Nest point |
+| AP pin | Runtime only: hub **Lock WiFi AP** learns preferred BSSID into NVS; 0xD0 fleet-beats it; Control/pots `adopt_hub_wifi_ap`. Stubs stay `00:00:00:00:00:00` — never bake a site MAC into YAML. |
 | Pulse VPD trend | 12×5 min ring → one label (no canvas charts) |
 | HA API | **Plaintext** (no Noise); **mDNS off** — add by IP only |
 | Stability | **4.0.10** page-gated `refresh_ui` @ 5 s |

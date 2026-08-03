@@ -11,9 +11,9 @@
 #   * Root-zone alert covers all four pot ESP-NOW links.
 #   * Mat scribe logs coldest plausible pot when available.
 #   * Notifier target is input_text.dsc_notify_service via script.dsc_notify (see dsc_v4_notify.yaml).
-#   * AC / clone mister followers: gated by input_boolean.*_actuator_wired and
+#   * AC / clone mister followers: gated by input_boolean.*_in_service and
 #     only act when switch.dsc_ac_main_relay / switch.dsc_clone_humidifier_main_relay
-#     exist (bring hardware online, then flip Wired).
+#     exist (bring hardware online, then flip In Service).
 #
 #  Capacity audit (soft hardening): HA must NOT run a second escalation
 #  ladder. Firmware owns fans + demand rungs; this file only mirrors the
@@ -383,10 +383,10 @@ automation:
                 target:
                   entity_id: switch.dsc_heatmat_main_relay
 
-  # Optional — only when Wired flag ON and relay entity exists.
+  # Optional — only when In-service flag ON and relay entity exists.
   - id: dsc_follower_ac
     alias: "DSC-HUB · AC follows AC Demand (gated)"
-    description: "Requires input_boolean.dsc_ac_actuator_wired and switch.dsc_ac_main_relay. Hub blips debounce 25s before OFF."
+    description: "Requires input_boolean.dsc_ac_in_service and switch.dsc_ac_main_relay. Hub blips debounce 25s before OFF."
     mode: restart
     triggers:
       - trigger: state
@@ -400,7 +400,7 @@ automation:
         to: "unavailable"
         for: "00:00:25"
       - trigger: state
-        entity_id: input_boolean.dsc_ac_actuator_wired
+        entity_id: input_boolean.dsc_ac_in_service
       - trigger: homeassistant
         event: start
       - trigger: state
@@ -417,7 +417,7 @@ automation:
       - choose:
           - conditions:
               - condition: state
-                entity_id: input_boolean.dsc_ac_actuator_wired
+                entity_id: input_boolean.dsc_ac_in_service
                 state: "on"
               - condition: state
                 entity_id: switch.dsc_hub_ac_demand
@@ -433,7 +433,7 @@ automation:
                   entity_id: switch.dsc_ac_main_relay
           - conditions:
               - condition: state
-                entity_id: input_boolean.dsc_ac_actuator_wired
+                entity_id: input_boolean.dsc_ac_in_service
                 state: "on"
               - condition: state
                 entity_id: switch.dsc_hub_ac_demand
@@ -446,7 +446,7 @@ automation:
                   entity_id: switch.dsc_ac_main_relay
           - conditions:
               - condition: state
-                entity_id: input_boolean.dsc_ac_actuator_wired
+                entity_id: input_boolean.dsc_ac_in_service
                 state: "on"
               - condition: template
                 value_template: "{{ states('switch.dsc_ac_main_relay') not in ['unknown','unavailable'] }}"
@@ -471,7 +471,7 @@ automation:
 
   - id: dsc_follower_clone_humidifier
     alias: "DSC-HUB · Clone mister follows demand (gated)"
-    description: "Requires input_boolean.dsc_clone_humidifier_actuator_wired and switch.dsc_clone_humidifier_main_relay. Hub blips debounce 25s before OFF."
+    description: "Requires input_boolean.dsc_clone_humidifier_in_service and switch.dsc_clone_humidifier_main_relay. Hub blips debounce 25s before OFF."
     mode: restart
     triggers:
       - trigger: state
@@ -485,7 +485,7 @@ automation:
         to: "unavailable"
         for: "00:00:25"
       - trigger: state
-        entity_id: input_boolean.dsc_clone_humidifier_actuator_wired
+        entity_id: input_boolean.dsc_clone_humidifier_in_service
       - trigger: homeassistant
         event: start
       - trigger: state
@@ -502,7 +502,7 @@ automation:
       - choose:
           - conditions:
               - condition: state
-                entity_id: input_boolean.dsc_clone_humidifier_actuator_wired
+                entity_id: input_boolean.dsc_clone_humidifier_in_service
                 state: "on"
               - condition: state
                 entity_id: switch.dsc_hub_clone_humidifier_demand
@@ -518,7 +518,7 @@ automation:
                   entity_id: switch.dsc_clone_humidifier_main_relay
           - conditions:
               - condition: state
-                entity_id: input_boolean.dsc_clone_humidifier_actuator_wired
+                entity_id: input_boolean.dsc_clone_humidifier_in_service
                 state: "on"
               - condition: state
                 entity_id: switch.dsc_hub_clone_humidifier_demand
@@ -531,7 +531,7 @@ automation:
                   entity_id: switch.dsc_clone_humidifier_main_relay
           - conditions:
               - condition: state
-                entity_id: input_boolean.dsc_clone_humidifier_actuator_wired
+                entity_id: input_boolean.dsc_clone_humidifier_in_service
                 state: "on"
               - condition: template
                 value_template: "{{ states('switch.dsc_clone_humidifier_main_relay') not in ['unknown','unavailable'] }}"
@@ -986,3 +986,65 @@ automation:
       - action: persistent_notification.dismiss
         data:
           notification_id: dsc_aux_sensor_fault
+
+  # ==================================================================
+  #  In-service sync — HA input_boolean is source of truth → hub NVS
+  # ==================================================================
+  - id: dsc_sync_in_service_to_hub
+    alias: "DSC-HUB · Sync in-service flags to hub"
+    description: "HA toggles win; push to hub switches when available."
+    mode: queued
+    max: 20
+    triggers:
+      - trigger: state
+        entity_id:
+          - input_boolean.dsc_ac_in_service
+          - input_boolean.dsc_clone_humidifier_in_service
+          - input_boolean.dsc_pot1_in_service
+          - input_boolean.dsc_pot2_in_service
+          - input_boolean.dsc_pot3_in_service
+          - input_boolean.dsc_pot4_in_service
+      - trigger: state
+        entity_id: binary_sensor.dsc_hub_ha_link_status
+        to: "on"
+        for: "00:00:05"
+      - trigger: homeassistant
+        event: start
+    actions:
+      - variables:
+          pairs:
+            - ha: input_boolean.dsc_ac_in_service
+              hub: switch.dsc_hub_ac_in_service
+            - ha: input_boolean.dsc_clone_humidifier_in_service
+              hub: switch.dsc_hub_clone_humidifier_in_service
+            - ha: input_boolean.dsc_pot1_in_service
+              hub: switch.dsc_hub_pot1_in_service
+            - ha: input_boolean.dsc_pot2_in_service
+              hub: switch.dsc_hub_pot2_in_service
+            - ha: input_boolean.dsc_pot3_in_service
+              hub: switch.dsc_hub_pot3_in_service
+            - ha: input_boolean.dsc_pot4_in_service
+              hub: switch.dsc_hub_pot4_in_service
+      - repeat:
+          for_each: "{{ pairs }}"
+          sequence:
+            - condition: template
+              value_template: >-
+                {{ states(repeat.item.hub) not in ['unknown','unavailable']
+                   and states(repeat.item.ha) not in ['unknown','unavailable']
+                   and states(repeat.item.hub) != states(repeat.item.ha) }}
+            - choose:
+                - conditions:
+                    - condition: template
+                      value_template: "{{ is_state(repeat.item.ha, 'on') }}"
+                  sequence:
+                    - action: switch.turn_on
+                      target:
+                        entity_id: "{{ repeat.item.hub }}"
+                - conditions:
+                    - condition: template
+                      value_template: "{{ is_state(repeat.item.ha, 'off') }}"
+                  sequence:
+                    - action: switch.turn_off
+                      target:
+                        entity_id: "{{ repeat.item.hub }}"

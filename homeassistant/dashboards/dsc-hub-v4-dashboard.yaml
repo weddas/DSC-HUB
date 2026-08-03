@@ -1,5 +1,5 @@
 # ==================================================================
-#  DSC-HUB Pro v5.1.1  ·  Lovelace dashboard
+#  DSC-HUB Pro v5.1.2  ·  Lovelace dashboard
 #  ------------------------------------------------------------------
 #  Full rewrite of the v2.4.1 dashboard for firmware v4 (ESP-NOW primary
 #  panel + hub). Wire layout for 0xD1–0xD3 unchanged; plant names use
@@ -150,30 +150,17 @@ views:
 
           - type: conditional
             conditions:
-              - condition: or
-                conditions:
-                  - condition: and
-                    conditions:
-                      - condition: state
-                        entity: switch.dsc_hub_ac_demand
-                        state: "on"
-                      - condition: state
-                        entity: input_boolean.dsc_ac_actuator_wired
-                        state: "off"
-                  - condition: and
-                    conditions:
-                      - condition: state
-                        entity: switch.dsc_hub_clone_humidifier_demand
-                        state: "on"
-                      - condition: state
-                        entity: input_boolean.dsc_clone_humidifier_actuator_wired
-                        state: "off"
+              - condition: state
+                entity: binary_sensor.dsc_reduced_kit
+                state: "on"
             card:
               type: custom:mushroom-template-card
-              primary: DEAD DEMAND — NO ACTUATOR
-              secondary: AC or clone mister commanded but actuator wired flag is off
-              icon: mdi:alert-octagon
-              icon_color: red
+              primary: "Reduced kit — capacity offline"
+              secondary: >-
+                {{ state_attr('binary_sensor.dsc_reduced_kit','offline') | default('some levers out of service') }}
+                — Full Auto uses next-best in-service levers
+              icon: mdi:package-variant-closed
+              icon_color: amber
               tap_action:
                 action: navigate
                 navigation_path: /dsc-hub-pro/climate
@@ -350,11 +337,11 @@ views:
                 entity: switch.dsc_hub_ac_demand
                 icon: mdi:snowflake
                 icon_color: >-
-                  {% if is_state('binary_sensor.dsc_ac_demand_without_actuator','on') %}red
+                  {% if is_state('binary_sensor.dsc_ac_capacity_offline','on') %}amber
                   {% elif is_state(entity,'on') %}cyan
                   {% else %}disabled{% endif %}
                 content: >-
-                  {% if is_state('binary_sensor.dsc_ac_demand_without_actuator','on') %}Cool ⚠
+                  {% if is_state('binary_sensor.dsc_ac_capacity_offline','on') %}Cool ○
                   {% else %}Cool{% endif %}
                 tap_action:
                   action: more-info
@@ -391,11 +378,11 @@ views:
                 entity: switch.dsc_hub_clone_humidifier_demand
                 icon: mdi:sprinkler-variant
                 icon_color: >-
-                  {% if is_state('binary_sensor.dsc_clone_humidifier_demand_without_actuator','on') %}red
+                  {% if is_state('binary_sensor.dsc_clone_humidifier_capacity_offline','on') %}amber
                   {% elif is_state(entity,'on') %}light-blue
                   {% else %}disabled{% endif %}
                 content: >-
-                  {% if is_state('binary_sensor.dsc_clone_humidifier_demand_without_actuator','on') %}C-Hum ⚠
+                  {% if is_state('binary_sensor.dsc_clone_humidifier_capacity_offline','on') %}C-Hum ○
                   {% else %}C-Hum{% endif %}
                 tap_action:
                   action: more-info
@@ -666,8 +653,7 @@ views:
 
                   {#- ---- optional trend sensors ---- -#}
 
-                  {%- set ct_tr = states('sensor.dsc_clone_temp_trend') | float(0)
-                  if has_value('sensor.dsc_clone_temp_trend') else none -%}
+                  {%- set ct_tr = none -%}
 
                   {%- set crh_tr = states('sensor.dsc_clone_rh_trend') | float(0) if
                   has_value('sensor.dsc_clone_rh_trend') else none -%}
@@ -1914,24 +1900,24 @@ views:
               - condition: or
                 conditions:
                   - condition: state
-                    entity_id: binary_sensor.dsc_ac_demand_without_actuator
+                    entity_id: binary_sensor.dsc_ac_capacity_offline
                     state: "on"
                   - condition: state
-                    entity_id: binary_sensor.dsc_clone_humidifier_demand_without_actuator
+                    entity_id: binary_sensor.dsc_clone_humidifier_capacity_offline
                     state: "on"
             card:
               type: markdown
               content: >-
-                {% if is_state('binary_sensor.dsc_ac_demand_without_actuator','on') %}
-                **AC demand is LIVE but no actuator is wired** — fans can only
-                exchange toward room temp. Flip `DSC AC Actuator Wired` once a
+                {% if is_state('binary_sensor.dsc_ac_capacity_offline','on') %}
+                **AC is out of service** — Full Auto uses OUT/RECIRC heat-dump only.
+                Flip `DSC AC In Service` once a
                 follower exists.
                 {% endif %}
-                {% if is_state('binary_sensor.dsc_clone_humidifier_demand_without_actuator','on') %}
+                {% if is_state('binary_sensor.dsc_clone_humidifier_capacity_offline','on') %}
 
-                **Clone humidifier demand is LIVE but mister hardware is parked** —
-                2x4 RH depends on room humidifier + intake routing. Flip
-                `DSC Clone Humidifier Actuator Wired` once a follower exists.
+                **Clone mister is out of service** — 2x4 RH uses intake/recirc
+                limits only (no mister demand). Flip
+                `DSC Clone Humidifier In Service` once mister hardware is ready.
                 {% endif %}
           - type: grid
             columns: 2
@@ -2208,16 +2194,14 @@ views:
                 secondary: >-
                   {% set c = states('sensor.dsc_hub_ac_fire_countdown')|float(0) %}
                   {% set cd = states('sensor.dsc_hub_ac_cooldown_remaining')|float(0) %}
-                  {% set dead = is_state('binary_sensor.dsc_ac_demand_without_actuator','on') %}
-                  {% if dead %}DEMAND LIVE — NO ACTUATOR
+                  {% if not is_state('input_boolean.dsc_ac_in_service','on') %}out of service
                   {%- elif is_state(entity,'on') %}DEMAND LIVE
                   {%- elif c > 0 %}firing in {{ c|round(0) }}s
                   {%- elif cd > 0 %}compressor lock {{ cd|round(0) }}s
-                  {%- elif not is_state('input_boolean.dsc_ac_actuator_wired','on') %}standing by (unwired)
                   {%- else %}standing by{% endif %}
                 icon: mdi:snowflake
                 icon_color: >-
-                  {% if is_state('binary_sensor.dsc_ac_demand_without_actuator','on') %}red
+                  {% if is_state('binary_sensor.dsc_ac_capacity_offline','on') %}amber
                   {%- elif is_state(entity,'on') %}cyan
                   {%- elif states('sensor.dsc_hub_ac_fire_countdown')|float(0) > 0 %}light-blue
                   {%- else %}disabled{% endif %}
@@ -2237,8 +2221,8 @@ views:
                                 name: Auto armed
                               - entity: switch.dsc_hub_ac_demand
                                 name: Demand (hub)
-                              - entity: input_boolean.dsc_ac_actuator_wired
-                                name: Actuator wired
+                              - entity: input_boolean.dsc_ac_in_service
+                                name: In service
                               - type: divider
                               - entity: sensor.dsc_hub_ac_fire_countdown
                                 name: Fire countdown
@@ -2293,7 +2277,7 @@ views:
                 card_mod:
                   style: |
                     ha-card {
-                      {% if is_state('binary_sensor.dsc_ac_demand_without_actuator','on') %}
+                      {% if is_state('binary_sensor.dsc_ac_capacity_offline','on') %}
                       box-shadow: 0 0 14px rgba(239,68,68,0.55);
                       {% elif is_state('switch.dsc_hub_ac_demand','on') %}
                       box-shadow: 0 0 14px rgba(34,211,238,0.5);
@@ -2515,16 +2499,14 @@ views:
                 secondary: >-
                   {% set c = states('sensor.dsc_hub_clone_humidifier_fire_countdown')|float(0) %}
                   {% set cd = states('sensor.dsc_hub_clone_humidifier_cooldown_remaining')|float(0) %}
-                  {% set dead = is_state('binary_sensor.dsc_clone_humidifier_demand_without_actuator','on') %}
-                  {% if dead %}DEMAND LIVE — NO ACTUATOR
+                  {% if not is_state('input_boolean.dsc_clone_humidifier_in_service','on') %}out of service
                   {%- elif is_state(entity,'on') %}DEMAND LIVE
                   {%- elif c > 0 %}firing in {{ c|round(0) }}s
                   {%- elif cd > 0 %}min-off {{ cd|round(0) }}s
-                  {%- elif not is_state('input_boolean.dsc_clone_humidifier_actuator_wired','on') %}standing by (parked)
                   {%- else %}standing by{% endif %}
                 icon: mdi:sprinkler-variant
                 icon_color: >-
-                  {% if is_state('binary_sensor.dsc_clone_humidifier_demand_without_actuator','on') %}red
+                  {% if is_state('binary_sensor.dsc_clone_humidifier_capacity_offline','on') %}amber
                   {%- elif is_state(entity,'on') %}light-blue
                   {%- elif states('sensor.dsc_hub_clone_humidifier_fire_countdown')|float(0) > 0 %}cyan
                   {%- else %}disabled{% endif %}
@@ -2544,8 +2526,8 @@ views:
                                 name: Auto armed
                               - entity: switch.dsc_hub_clone_humidifier_demand
                                 name: Demand (hub)
-                              - entity: input_boolean.dsc_clone_humidifier_actuator_wired
-                                name: Actuator wired
+                              - entity: input_boolean.dsc_clone_humidifier_in_service
+                                name: In service
                               - type: divider
                               - entity: sensor.dsc_hub_clone_humidifier_fire_countdown
                                 name: Fire countdown
@@ -2602,34 +2584,54 @@ views:
                 card_mod:
                   style: |
                     ha-card {
-                      {% if is_state('binary_sensor.dsc_clone_humidifier_demand_without_actuator','on') %}
+                      {% if is_state('binary_sensor.dsc_clone_humidifier_capacity_offline','on') %}
                       box-shadow: 0 0 14px rgba(239,68,68,0.55);
                       {% elif is_state('switch.dsc_hub_clone_humidifier_demand','on') %}
                       box-shadow: 0 0 14px rgba(56,189,248,0.5);
                       {% endif %}
                     }
           - type: heading
-            heading: 🔒 APPLIANCE SAFETIES
+            heading: 🔒 IN SERVICE — kit capacity
             heading_style: subtitle
           - type: markdown
             content: >-
-              *AC and clone mister stay **demand-only** until hardware exists.
-              Leave the Wired toggles OFF so a live demand shows as
-              **NO ACTUATOR** instead of looking like the device is running.*
+              *One switch per device. **Off** = removed, unsafe, or not installed —
+              Full Auto never demands or relies on it; next-best in-kit levers run
+              instead. Soft **capacity offline** cues (not problem alerts).*
           - type: grid
             columns: 2
             square: false
             cards:
               - type: custom:mushroom-entity-card
-                entity: input_boolean.dsc_ac_actuator_wired
-                name: AC Actuator Wired
+                entity: input_boolean.dsc_ac_in_service
+                name: AC In Service
                 icon: mdi:snowflake
                 icon_color: cyan
               - type: custom:mushroom-entity-card
-                entity: input_boolean.dsc_clone_humidifier_actuator_wired
-                name: Clone Hum Actuator Wired
+                entity: input_boolean.dsc_clone_humidifier_in_service
+                name: Clone Mister In Service
                 icon: mdi:sprinkler-variant
                 icon_color: light-blue
+              - type: custom:mushroom-entity-card
+                entity: input_boolean.dsc_pot1_in_service
+                name: POT1 In Service
+                icon: mdi:flower
+                icon_color: green
+              - type: custom:mushroom-entity-card
+                entity: input_boolean.dsc_pot2_in_service
+                name: POT2 In Service
+                icon: mdi:flower
+                icon_color: green
+              - type: custom:mushroom-entity-card
+                entity: input_boolean.dsc_pot3_in_service
+                name: POT3 In Service
+                icon: mdi:flower-outline
+                icon_color: grey
+              - type: custom:mushroom-entity-card
+                entity: input_boolean.dsc_pot4_in_service
+                name: POT4 In Service
+                icon: mdi:flower
+                icon_color: green
           - type: conditional
             conditions:
               - condition: state
@@ -3366,7 +3368,7 @@ views:
               style: |
                 ha-card {
                   border-left: 4px solid
-                    {% if is_state('binary_sensor.dsc_ac_demand_without_actuator','on') %}rgba(239,68,68,0.9)
+                    {% if is_state('binary_sensor.dsc_ac_capacity_offline','on') %}rgba(239,68,68,0.9)
                     {% elif is_state('switch.dsc_hub_ac_demand','on') %}rgba(34,211,238,0.9)
                     {% elif states('sensor.dsc_hub_ac_fire_countdown')|float(0) > 0 %}rgba(251,191,36,0.9)
                     {% elif states('sensor.dsc_hub_ac_cooldown_remaining')|float(0) > 0 %}rgba(59,130,246,0.9)
@@ -4742,7 +4744,7 @@ views:
               style: |
                 ha-card {
                   border-left: 4px solid
-                    {% if is_state('binary_sensor.dsc_clone_humidifier_demand_without_actuator','on') %}rgba(239,68,68,0.9)
+                    {% if is_state('binary_sensor.dsc_clone_humidifier_capacity_offline','on') %}rgba(239,68,68,0.9)
                     {% elif is_state('switch.dsc_hub_clone_humidifier_demand','on') %}rgba(56,189,248,0.9)
                     {% elif states('sensor.dsc_hub_clone_humidifier_fire_countdown')|float(0) > 0 %}rgba(251,191,36,0.9)
                     {% else %}rgba(148,163,184,0.25){% endif %};
@@ -6414,10 +6416,23 @@ views:
                 tap_action:
                   action: more-info
               - type: custom:mushroom-template-card
+                entity: sensor.dsc_learn_activity
+                primary: What learning is doing
+                secondary: "{{ states(entity) }}"
+                icon: mdi:school-outline
+                icon_color: >-
+                  {% set s = states(entity)|lower %}
+                  {{ 'green' if s.startswith('learning') else
+                     'amber' if s.startswith('waiting') or s.startswith('paused') else
+                     'grey' }}
+                tap_action:
+                  action: more-info
+              - type: custom:mushroom-template-card
                 entity: binary_sensor.dsc_learn_gate_open
                 primary: Sample gate
                 secondary: >-
-                  {% if is_state(entity,'on') %}Sampling when levers are ON
+                  {% if is_state(entity,'on') %}
+                    {{ states('sensor.dsc_learn_activity') }}
                   {% else %}Blocked — enable learn / clear failsafe / takeover / fault{% endif %}
                 icon: mdi:gate-open
                 icon_color: "{{ 'green' if is_state(entity,'on') else 'orange' }}"
@@ -6425,11 +6440,13 @@ views:
                   action: more-info
           - type: markdown
             content: >-
-              *Phase A — learned coefficients scale **predictions** (ETA /
-              headroom) and are the automatic effect database for appliances.
-              Phase B (below, opt-in) may write ladder **wait bases**
-              only. Failsafe, min-off, and fans are never touched. Status moves
-              `warming` → `partial` → `ready` as sample counts hit the trust floor.*
+              *Phase A measures **one air appliance at a time** (humidifier,
+              dehumidifier, heater, or AC **in service**). Fans and the grow mat
+              may stay on — that no longer blocks learning. Out-of-service levers
+              are skipped. Status chips move `warming` → `partial` → `ready` as
+              each lever hits the sample floor. **Activity** is the source of
+              truth (gate open ≠ measuring). Phase B (below) stays **off** until
+              Activity shows appliance samples climbing — then enable when ready.*
 
       - type: grid
         cards:
@@ -6647,7 +6664,7 @@ views:
                   {% set m = states(entity)|float(none) %}
                   {% if m is none %}ETA temp —
                   {% elif m|int == 0 %}At temp target
-                  {% elif m|int >= 999 %}No capacity
+                  {% elif m|int >= 999 %}No capacity / wrong direction (not a clock)
                   {% else %}~{{ m|int }} min to temp{% endif %}
                 secondary: >-
                   Target {{ states('number.dsc_hub_target_temp') }}°C · tent
@@ -7380,9 +7397,10 @@ views:
                     name: Expected release tag
               - type: markdown
                 content: >-
-                  *Expected fleet cut: **`5.1.0`** (hub, panel, pots, Sonoffs,
-                  Sync add-on, HA surface). Firmware Install is still **manual**
-                  per device — Sync never auto-flashes.*
+                  *Expected train: **`5.1.x`**. HA surface **5.1.3** + hub **5.1.3**
+                  for in-service / OOS ladder. **Sync ≠ flash** — after git/Sync,
+                  ESPHome **Install** each device that needs the binary (hub for
+                  OOS; Control/pots if still on old `fast_connect` / reboot_timeout).*
           - type: entities
             entities:
               - entity: binary_sensor.dsc_hub_link

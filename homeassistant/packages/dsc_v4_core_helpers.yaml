@@ -13,16 +13,32 @@ input_boolean:
   dsc_event_log:
     name: DSC Event Log
     icon: mdi:notebook-outline
-  # Flip ON once a physical follower exists. Until then, Climate shows
-  # "demand without actuator" when the hub ladder fires these rungs.
-  dsc_ac_actuator_wired:
-    name: DSC AC Actuator Wired
+  # Single in-service gate (replaces former *_actuator_wired).
+  # Off = removed / unsafe / absent: never demand, follow, alert, or learn.
+  dsc_ac_in_service:
+    name: DSC AC In Service
     icon: mdi:snowflake
     initial: false
-  dsc_clone_humidifier_actuator_wired:
-    name: DSC Clone Humidifier Actuator Wired
+  dsc_clone_humidifier_in_service:
+    name: DSC Clone Humidifier In Service
     icon: mdi:sprinkler-variant
     initial: false
+  dsc_pot1_in_service:
+    name: DSC POT1 In Service
+    icon: mdi:flower
+    initial: true
+  dsc_pot2_in_service:
+    name: DSC POT2 In Service
+    icon: mdi:flower
+    initial: true
+  dsc_pot3_in_service:
+    name: DSC POT3 In Service
+    icon: mdi:flower-outline
+    initial: false
+  dsc_pot4_in_service:
+    name: DSC POT4 In Service
+    icon: mdi:flower
+    initial: true
 
 input_number:
   dsc_leaf_offset:
@@ -126,22 +142,132 @@ template:
         state: "{{ is_state('binary_sensor.dsc_hub_ha_link_status', 'on') }}"
         availability: "{{ has_value('binary_sensor.dsc_hub_ha_link_status') }}"
 
-      # Ladder fired but nothing physical will run (no Sonoff follower yet).
-      - name: "DSC AC Demand Without Actuator"
-        unique_id: dsc_ac_demand_without_actuator
-        device_class: problem
+      # Soft capacity — intentional OOS, not a problem alert.
+      - name: "DSC AC Capacity Offline"
+        unique_id: dsc_ac_capacity_offline
         icon: mdi:snowflake-off
-        state: >-
-          {{ is_state('switch.dsc_hub_ac_demand', 'on')
-             and not is_state('input_boolean.dsc_ac_actuator_wired', 'on') }}
+        state: "{{ not is_state('input_boolean.dsc_ac_in_service', 'on') }}"
 
-      - name: "DSC Clone Humidifier Demand Without Actuator"
-        unique_id: dsc_clone_humidifier_demand_without_actuator
-        device_class: problem
+      - name: "DSC Clone Humidifier Capacity Offline"
+        unique_id: dsc_clone_humidifier_capacity_offline
         icon: mdi:sprinkler-off
+        state: "{{ not is_state('input_boolean.dsc_clone_humidifier_in_service', 'on') }}"
+
+      - name: "DSC Reduced Kit"
+        unique_id: dsc_reduced_kit
+        icon: mdi:package-variant-closed
         state: >-
-          {{ is_state('switch.dsc_hub_clone_humidifier_demand', 'on')
-             and not is_state('input_boolean.dsc_clone_humidifier_actuator_wired', 'on') }}
+          {{ not is_state('input_boolean.dsc_ac_in_service', 'on')
+             or not is_state('input_boolean.dsc_clone_humidifier_in_service', 'on')
+             or not is_state('input_boolean.dsc_pot1_in_service', 'on')
+             or not is_state('input_boolean.dsc_pot2_in_service', 'on')
+             or not is_state('input_boolean.dsc_pot3_in_service', 'on')
+             or not is_state('input_boolean.dsc_pot4_in_service', 'on') }}
+        attributes:
+          offline: >-
+            {% set ns = namespace(items=[]) %}
+            {% if not is_state('input_boolean.dsc_ac_in_service', 'on') %}
+              {% set ns.items = ns.items + ['AC'] %}
+            {% endif %}
+            {% if not is_state('input_boolean.dsc_clone_humidifier_in_service', 'on') %}
+              {% set ns.items = ns.items + ['Clone mister'] %}
+            {% endif %}
+            {% for n in [1,2,3,4] %}
+              {% if not is_state('input_boolean.dsc_pot' ~ n ~ '_in_service', 'on') %}
+                {% set ns.items = ns.items + ['POT' ~ n] %}
+              {% endif %}
+            {% endfor %}
+            {{ ns.items | join(', ') }}
+
+      # Preferred AP learned in NVS disagrees with current association while
+      # Lock is ON — mesh/channel split risk until pin/relearn finishes.
+      - name: "DSC WiFi Preferred AP Mismatch"
+        unique_id: dsc_wifi_preferred_ap_mismatch
+        device_class: problem
+        icon: mdi:wifi-alert
+        state: >-
+          {% set lock = is_state('switch.dsc_hub_lock_wifi_ap', 'on') %}
+          {% set cur = states('sensor.dsc_hub_wifi_bssid')|trim|upper %}
+          {% set pref = states('text.dsc_hub_preferred_wifi_bssid')|trim|upper %}
+          {{ lock
+             and cur not in ['unknown','unavailable','']
+             and pref not in ['unknown','unavailable','','00:00:00:00:00:00']
+             and cur != pref }}
+
+      # Buying moisture while dumping outside — wasteful (firmware 5.1.2+
+      # clamps OUT during humidifier demand; cue catches unflashed hubs
+      # and any RH-overflow override).
+      - name: "DSC Humidifier Vent Conflict"
+        unique_id: dsc_humidifier_vent_conflict
+        device_class: problem
+        icon: mdi:water-opacity
+        state: >-
+          {{ is_state('switch.dsc_hub_humidifier_demand', 'on')
+             and is_state('switch.dsc_humidifier_main_relay', 'on')
+             and states('sensor.dsc_fan_exhaust_outside_pct')|float(0) >= 30 }}
+
+      # Buying heat while dumping outside (should be rare — heater interlock).
+      - name: "DSC Heater Vent Conflict"
+        unique_id: dsc_heater_vent_conflict
+        device_class: problem
+        icon: mdi:heat-wave
+        state: >-
+          {{ is_state('switch.dsc_hub_heater_demand', 'on')
+             and is_state('switch.dsc_heater_main_relay', 'on')
+             and states('sensor.dsc_fan_exhaust_outside_pct')|float(0) >= 25 }}
+
+      # Humidifier running hard but tent already at/above RH ceiling —
+      # empty tank, wrong routing, or ladder/strategy disagreement.
+      - name: "DSC Humidifier Ineffective Suspect"
+        unique_id: dsc_humidifier_ineffective_suspect
+        device_class: problem
+        icon: mdi:water-off
+        state: >-
+          {% set rh = states('sensor.dsc_hub_tent_humidity')|float(none) %}
+          {% set rmax = states('number.dsc_hub_rh_target_max')|float(70) %}
+          {% set on_s = states('sensor.dsc_humidifier_relay_on_time')|float(0) %}
+          {{ is_state('switch.dsc_hub_humidifier_demand', 'on')
+             and is_state('switch.dsc_humidifier_main_relay', 'on')
+             and rh is not none
+             and rh >= (rmax - 0.5)
+             and on_s >= 600 }}
+
+      # Heater duty with tent at/above target — load fighting or no effect.
+      - name: "DSC Heater Ineffective Suspect"
+        unique_id: dsc_heater_ineffective_suspect
+        device_class: problem
+        icon: mdi:radiator-off
+        state: >-
+          {% set t = states('sensor.dsc_hub_tent_temperature')|float(none) %}
+          {% set tgt = states('number.dsc_hub_target_temp')|float(21) %}
+          {% set on_s = states('sensor.dsc_heater_relay_on_time')|float(0) %}
+          {{ is_state('switch.dsc_hub_heater_demand', 'on')
+             and is_state('switch.dsc_heater_main_relay', 'on')
+             and t is not none
+             and t >= (tgt + 0.3)
+             and on_s >= 480 }}
+
+      # Mat ON a long time while coldest voted root zone stays cold.
+      # Ignore when no pot is in service (reduced kit / all probes parked).
+      - name: "DSC Grow Mat Ineffective Suspect"
+        unique_id: dsc_grow_mat_ineffective_suspect
+        device_class: problem
+        icon: mdi:heating-coil
+        state: >-
+          {% set any_pot = is_state('input_boolean.dsc_pot1_in_service','on')
+             or is_state('input_boolean.dsc_pot2_in_service','on')
+             or is_state('input_boolean.dsc_pot3_in_service','on')
+             or is_state('input_boolean.dsc_pot4_in_service','on') %}
+          {% set rz = states('sensor.dsc_coldest_root_zone_temp')|float(none) %}
+          {% set low = states('number.dsc_hub_mat_root_zone_low')|float(20)
+             if has_value('number.dsc_hub_mat_root_zone_low') else 20 %}
+          {% set on_s = states('sensor.dsc_heatmat_relay_on_time')|float(0) %}
+          {{ any_pot
+             and is_state('switch.dsc_hub_grow_mat_demand', 'on')
+             and is_state('switch.dsc_heatmat_main_relay', 'on')
+             and rz is not none
+             and rz < (low - 0.5)
+             and on_s >= 1800 }}
 
   - sensor:
       - name: "DSC Fan Intake Main Pct"

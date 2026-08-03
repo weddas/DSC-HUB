@@ -63,7 +63,7 @@ esphome:
   friendly_name: DSC-HUB
   project:
     name: "digital_emotions.dsc-hub"
-    version: "5.1.0"
+    version: "5.1.3"
   on_boot:
     - priority: -100
       then:
@@ -1038,6 +1038,32 @@ globals:
     type: bool
     restore_value: true
     initial_value: 'false'
+  # In-service gates (NVS). Off = never demand / never Full-Auto-arm that rung.
+  # Defaults match incomplete kit: AC/mister/POT3 out of service.
+  - id: ac_in_service
+    type: bool
+    restore_value: true
+    initial_value: 'false'
+  - id: clone_hum_in_service
+    type: bool
+    restore_value: true
+    initial_value: 'false'
+  - id: pot1_in_service
+    type: bool
+    restore_value: true
+    initial_value: 'true'
+  - id: pot2_in_service
+    type: bool
+    restore_value: true
+    initial_value: 'true'
+  - id: pot3_in_service
+    type: bool
+    restore_value: true
+    initial_value: 'false'
+  - id: pot4_in_service
+    type: bool
+    restore_value: true
+    initial_value: 'true'
   - id: esc_clone_dry_since         # clone-humidifier ladder timer
     type: uint32_t
     restore_value: false
@@ -1693,6 +1719,77 @@ switch:
       - globals.set: {id: mat_vote_4, value: 'true'}
     turn_off_action:
       - globals.set: {id: mat_vote_4, value: 'false'}
+
+
+  # --- In-service gates (HA toggles sync these; Full Auto never overrides off) ---
+  - platform: template
+    name: "AC In Service"
+    id: ac_in_service_switch
+    icon: "mdi:snowflake"
+    lambda: 'return id(ac_in_service);'
+    turn_on_action:
+      - globals.set: {id: ac_in_service, value: 'true'}
+    turn_off_action:
+      - globals.set: {id: ac_in_service, value: 'false'}
+      - switch.turn_off: ac_demand
+      - globals.set: {id: ac_auto_enabled, value: 'false'}
+      - lambda: 'id(ac_auto_switch).publish_state(false);'
+  - platform: template
+    name: "Clone Humidifier In Service"
+    id: clone_hum_in_service_switch
+    icon: "mdi:sprinkler-variant"
+    lambda: 'return id(clone_hum_in_service);'
+    turn_on_action:
+      - globals.set: {id: clone_hum_in_service, value: 'true'}
+    turn_off_action:
+      - globals.set: {id: clone_hum_in_service, value: 'false'}
+      - switch.turn_off: clone_hum_demand
+      - globals.set: {id: clone_hum_auto_enabled, value: 'false'}
+      - lambda: 'id(clone_hum_auto_switch).publish_state(false);'
+  - platform: template
+    name: "POT1 In Service"
+    id: pot1_in_service_switch
+    icon: "mdi:flower"
+    lambda: 'return id(pot1_in_service);'
+    turn_on_action:
+      - globals.set: {id: pot1_in_service, value: 'true'}
+    turn_off_action:
+      - globals.set: {id: pot1_in_service, value: 'false'}
+      - globals.set: {id: mat_vote_1, value: 'false'}
+      - lambda: 'id(mat_vote_1_switch).publish_state(false);'
+  - platform: template
+    name: "POT2 In Service"
+    id: pot2_in_service_switch
+    icon: "mdi:flower"
+    lambda: 'return id(pot2_in_service);'
+    turn_on_action:
+      - globals.set: {id: pot2_in_service, value: 'true'}
+    turn_off_action:
+      - globals.set: {id: pot2_in_service, value: 'false'}
+      - globals.set: {id: mat_vote_2, value: 'false'}
+      - lambda: 'id(mat_vote_2_switch).publish_state(false);'
+  - platform: template
+    name: "POT3 In Service"
+    id: pot3_in_service_switch
+    icon: "mdi:flower-outline"
+    lambda: 'return id(pot3_in_service);'
+    turn_on_action:
+      - globals.set: {id: pot3_in_service, value: 'true'}
+    turn_off_action:
+      - globals.set: {id: pot3_in_service, value: 'false'}
+      - globals.set: {id: mat_vote_3, value: 'false'}
+      - lambda: 'id(mat_vote_3_switch).publish_state(false);'
+  - platform: template
+    name: "POT4 In Service"
+    id: pot4_in_service_switch
+    icon: "mdi:flower"
+    lambda: 'return id(pot4_in_service);'
+    turn_on_action:
+      - globals.set: {id: pot4_in_service, value: 'true'}
+    turn_off_action:
+      - globals.set: {id: pot4_in_service, value: 'false'}
+      - globals.set: {id: mat_vote_4, value: 'false'}
+      - lambda: 'id(mat_vote_4_switch).publish_state(false);'
 
   - platform: template
     name: "AC Auto"
@@ -2543,7 +2640,7 @@ text_sensor:
     name: "Firmware Version"
     id: fw_version
     icon: mdi:tag-check
-    lambda: 'return {"5.1.0"};'
+    lambda: 'return {"5.1.2"};'
     update_interval: 60s
 
   # Plant names: HA → hub cache → panel via ESP-NOW 0xD4.
@@ -2714,7 +2811,9 @@ sensor:
                 // mister adds latent load. Both OFF — the clone schedule
                 // re-asserts within 15s of clear.
                 id(clone_hum_demand).turn_off();
-                id(ac_demand).turn_on();     // AC assists the purge (setpoint 20C)
+                // Next-best when AC OOS: fans-only purge (already at 100%).
+                if (id(ac_in_service)) id(ac_demand).turn_on();
+                else ESP_LOGW("failsafe", "AC out of service — fans-only emergency purge");
                 auto fe = id(fan_exhaust_out).make_call();  fe.set_state(true);  fe.set_speed(100); fe.perform();
                 auto fa = id(fan_exhaust_recirc).make_call();  fa.set_state(false); fa.set_speed(0);  fa.perform();
                 auto fim = id(fan_intake_main).make_call(); fim.set_state(true); fim.set_speed(100); fim.perform();
@@ -3347,12 +3446,36 @@ script:
           }
           // Backoff: fast_connect / sticky Nest can rejoin the wrong AP;
           // unbounded bounce loops tear the HA API and look like wedges.
+          // After 3 failed bounces this boot: wait, then either retry or
+          // self-heal by learning the AP we can actually stay on (preferred
+          // may be gone / wrong site — production must not soft-brick).
           const uint32_t now = millis();
           if (id(wifi_ap_mismatch_bounces) >= 3) {
-            ESP_LOGW("wifi",
-                     "On %s but prefer %s — giving up bounce this boot (use Remember Current AP or Clear Preferred)",
-                     cur_mac, pref.c_str());
-            return;
+            const uint32_t since = (id(wifi_ap_mismatch_last) == 0)
+                                       ? 0u
+                                       : (now - id(wifi_ap_mismatch_last));
+            if (since >= 1800000u) {
+              // 30 min stuck off preferred → relearn from current (portable).
+              id(preferred_wifi_bssid).make_call().set_value(cur_mac).perform();
+              id(wifi_ap_mismatch_bounces) = 0;
+              id(wifi_ap_mismatch_last) = now;
+              ESP_LOGW("wifi",
+                       "Preferred %s unreachable — relearned preferred to %s",
+                       pref.c_str(), cur_mac);
+              return;
+            }
+            if (since >= 600000u) {
+              // Every 10 min after give-up, allow one more bounce attempt.
+              id(wifi_ap_mismatch_bounces) = 2;
+              ESP_LOGI("wifi",
+                       "On %s but prefer %s — retrying pin after cooldown",
+                       cur_mac, pref.c_str());
+            } else {
+              ESP_LOGW("wifi",
+                       "On %s but prefer %s — pin paused (Remember/Clear or wait for relearn)",
+                       cur_mac, pref.c_str());
+              return;
+            }
           }
           if (id(wifi_ap_mismatch_last) != 0 &&
               (now - id(wifi_ap_mismatch_last)) < 120000u) {
@@ -3422,21 +3545,26 @@ script:
           id(dehumidifier_auto_enabled) = true;
           id(heater_auto_enabled)       = true;
           id(growmat_auto_enabled)      = true;
-          id(ac_auto_enabled)           = true;
-          id(clone_hum_auto_enabled)    = true;
+          // In-service: Full Auto stays ON, but never arm missing kit.
+          id(ac_auto_enabled)           = id(ac_in_service);
+          id(clone_hum_auto_enabled)    = id(clone_hum_in_service);
           id(auto_photoperiod_enabled)  = true;
           id(manual_light_hold)         = false;   // schedule owns the light now
+          if (!id(ac_in_service) && id(ac_demand).state) id(ac_demand).turn_off();
+          if (!id(clone_hum_in_service) && id(clone_hum_demand).state) id(clone_hum_demand).turn_off();
           // Publish to HA — bare global writes leave lambda switches stale on
           // the dashboard until something else republishes them.
           id(humidifier_auto_switch).publish_state(true);
           id(dehumidifier_auto_switch).publish_state(true);
           id(heater_auto_switch).publish_state(true);
           id(growmat_auto_switch).publish_state(true);
-          id(ac_auto_switch).publish_state(true);
-          id(clone_hum_auto_switch).publish_state(true);
+          id(ac_auto_switch).publish_state(id(ac_in_service));
+          id(clone_hum_auto_switch).publish_state(id(clone_hum_in_service));
           id(photoperiod_switch).publish_state(true);
           id(manual_light_hold_switch).publish_state(false);
-          ESP_LOGI("mode", "Full Auto engaged -> ladder + photoperiod armed, light hold released");
+          ESP_LOGI("mode", "Full Auto engaged -> ladder + photoperiod armed (AC %s, mister %s)",
+                   id(ac_in_service) ? "in-service" : "OOS",
+                   id(clone_hum_in_service) ? "in-service" : "OOS");
       - script.execute: tx_panel_sync
 
   # ---- Load a stage's full climate envelope (STAGE CHANGE only) ----
@@ -3582,9 +3710,18 @@ script:
             id(dehumidifier_auto_enabled) = true;
             id(heater_auto_enabled)       = true;
             id(growmat_auto_enabled)      = true;
-            id(ac_auto_enabled)           = true;
-            id(clone_hum_auto_enabled)    = true;
+            // Keep Full Auto usable; only arm rungs whose hardware is in service.
+            id(ac_auto_enabled)           = id(ac_in_service);
+            id(clone_hum_auto_enabled)    = id(clone_hum_in_service);
             id(auto_photoperiod_enabled)  = true;
+            if (!id(ac_in_service) && id(ac_demand).state) {
+              id(ac_demand).turn_off();
+              id(ac_off_at) = millis();
+            }
+            if (!id(clone_hum_in_service) && id(clone_hum_demand).state) {
+              id(clone_hum_demand).turn_off();
+              id(clone_hum_off_at) = millis();
+            }
           }
 
           float rh   = id(humidity_sensor).state;
@@ -3774,6 +3911,7 @@ script:
                              && a_rh < a_rhi - 2.0f && !id(dehumidifier_demand).state;
               bool too_dry = (a_rh < a_rlo - 2.0f) || vpd_dry;
               if (track(too_dry, id(esc_dry_since)) > hum_wait && !id(humidifier_demand).state
+                  && a_rh < a_rhi
                   && (nowms - id(hum_off_at)) > (uint32_t) id(hum_min_off_s) * 1000) {
                 id(humidifier_demand).turn_on();
                 ESP_LOGI("ladder", "%s RH %.0f%% (floor %.0f%%) VPD %.2f (ceil %.2f) for %us -> HUMIDIFIER",
@@ -3798,7 +3936,7 @@ script:
             // v2.4.1 · VPD-AWARE: same fix as the room rung — unrooted
             // clones transpire on VPD, not RH. Fire on the RH floor OR
             // clone VPD over its ceiling; release needs both healthy.
-            if (id(clone_active) && id(clone_hum_auto_enabled) && clone_ok) {
+            if (id(clone_active) && id(clone_hum_auto_enabled) && id(clone_hum_in_service) && clone_ok) {
               float c_vpd = id(clone_vpd).state;
               bool c_vpd_dry = !isnan(c_vpd) && c_vpd > c_vmax + 0.05f
                                && cl_h < c_rmax - 2.0f          // QA: same
@@ -3864,7 +4002,10 @@ script:
                   pick(id(rz_now_3).state, id(rz_now_3_at), id(rootzone_temp_3).state),
                   pick(id(rz_now_4).state, id(rz_now_4_at), id(rootzone_temp_4).state) };
                 bool vote[4] = {
-                  id(mat_vote_1), id(mat_vote_2), id(mat_vote_3), id(mat_vote_4) };
+                  id(mat_vote_1) && id(pot1_in_service),
+                  id(mat_vote_2) && id(pot2_in_service),
+                  id(mat_vote_3) && id(pot3_in_service),
+                  id(mat_vote_4) && id(pot4_in_service) };
                 for (int i = 0; i < 4; i++) {
                   if (!vote[i]) continue;   // operator excluded this pot
                   float p = probes[i];
@@ -3959,7 +4100,7 @@ script:
             // physics as the reality gate that shortens ac_wait), OR the
             // room sensor is blind (never safer-than-blind), OR the fan
             // curve isn't running (manual/standby — ladder still signals).
-            if (room_live && id(ac_auto_enabled) && !isnan(a_t)) {
+            if (room_live && id(ac_auto_enabled) && id(ac_in_service) && !isnan(a_t)) {
               bool fans_useless = !room_ok || rm_t >= a_tgt + 1.0f;
               bool fans_maxed = arb_main
                   ? (id(fan_exhaust_out).state && id(fan_exhaust_out).speed >= 80)
@@ -4056,6 +4197,18 @@ script:
               if (recirc < 25)  recirc = 25;    // never fully still while heating
               out = 15;                          // fresh-air floor only
               heat_reuse = true;                 // (drives the status verb)
+            }
+
+            // ===== HUMIDIFIER NO-EXTRACTION INTERLOCK ==============
+            // Same energy rule as heat: do not buy moisture then dump it
+            // outside. While humidifier demand is live, OUT stays at the
+            // fresh-air floor and air routes RECIRC. Moisture *overflow*
+            // (RH >> ceiling) still wins — that air must leave — and the
+            // dehumidifier ladder owns that case, not the humidifier.
+            if (id(humidifier_demand).state && !rh_overflow) {
+              if (recirc < out) recirc = out;
+              if (recirc < 25)  recirc = 25;
+              out = 15;
             }
 
             // ===== v2.2 · INTAKE ROUTER =============================
@@ -4867,10 +5020,10 @@ interval:
               return (fresh && pl(now_v)) || pl(ha_v);
             };
             bool have =
-              live(id(mat_vote_1), id(rz_now_1_at), id(rz_now_1).state, id(rootzone_temp).state) ||
-              live(id(mat_vote_2), id(rz_now_2_at), id(rz_now_2).state, id(rootzone_temp_2).state) ||
-              live(id(mat_vote_3), id(rz_now_3_at), id(rz_now_3).state, id(rootzone_temp_3).state) ||
-              live(id(mat_vote_4), id(rz_now_4_at), id(rz_now_4).state, id(rootzone_temp_4).state);
+              live(id(mat_vote_1) && id(pot1_in_service), id(rz_now_1_at), id(rz_now_1).state, id(rootzone_temp).state) ||
+              live(id(mat_vote_2) && id(pot2_in_service), id(rz_now_2_at), id(rz_now_2).state, id(rootzone_temp_2).state) ||
+              live(id(mat_vote_3) && id(pot3_in_service), id(rz_now_3_at), id(rz_now_3).state, id(rootzone_temp_3).state) ||
+              live(id(mat_vote_4) && id(pot4_in_service), id(rz_now_4_at), id(rz_now_4).state, id(rootzone_temp_4).state);
             if (have) id(last_valid_rootzone_time) = millis();
           }
           bool rz_stale = (millis() - id(last_valid_rootzone_time)) > 300000;

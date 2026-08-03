@@ -3,10 +3,10 @@
 #  Nest DHCP reservation: 192.168.86.177 (panel mDNS is off — OTA must
 #  target use_address, not dsc-control.local).
 #
-#  AP PIN (temp mesh fix): networks[0] prefers ${wifi_bssid}. Leave the
-#  stub at 00:00:00:00:00:00 to join any AP on the SSID; set it to the
-#  hub's sensor.dsc_hub_wifi_bssid so Control + pots + hub share one
-#  Nest point / channel until the dedicated ethernet router arrives.
+#  AP PIN: networks[0] prefers ${wifi_bssid}. Production stubs stay
+#  00:00:00:00:00:00 — hub Lock WiFi AP learns the site BSSID into NVS
+#  and 0xD0 fleet-beats it; Control adopts via adopt_hub_wifi_ap.
+#  Do not bake a lab Nest MAC into YAML.
 # ==================================================================
 wifi:
   networks:
@@ -20,7 +20,8 @@ wifi:
   # OTA / ESPHome dashboard target (device IP from Nest reservation).
   use_address: 192.168.86.177
   power_save_mode: none
-  fast_connect: true
+  # Match hub: false so bounce can scan onto hub's *learned* preferred AP.
+  fast_connect: false
   ap:
     ssid: "DSC-CONTROL Fallback"
     password: ${ap_password_val}
