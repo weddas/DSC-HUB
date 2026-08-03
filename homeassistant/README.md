@@ -60,6 +60,25 @@ Firmware Install stays manual — see [`../RELEASE.md`](../RELEASE.md).
 
 Core helpers assume ESPHome default slugs from hub friendly names. If your registry differs, edit the four `fan.dsc_hub_*` ids in `dsc_v4_core_helpers.yaml` once.
 
+## HA API handshake ping (hub ladder)
+
+`dsc_hub_ha_handshake_ping` in [`packages/dsc_v4_automations.yaml`](packages/dsc_v4_automations.yaml) writes unix time to `number.dsc_hub_ha_handshake` every **30 s** (`time_pattern` `seconds: "/30"`) while the entity exists.
+
+Hub firmware (`dsc-hub-v4_0.yaml`, 2026-08-03) treats that as a **write-path** watch — not an automatic reboot timer:
+
+| Stage | Trigger | Hub action |
+|---|---|---|
+| Soft | Handshake silent ≥**90 s** | Fleet heartbeat + vitals nudge |
+| Bounce | HA client **dead** ≥**180 s**, or connected but handshake ≥**10 min** | WiFi bounce (max 3/boot) |
+| Reboot | Client still **dead** ≥**300 s** after bounce, or connected but handshake ≥**15 min** | Sync NVS + `safe_reboot` (max 2/boot) |
+
+**Pitfalls**
+
+- Do **not** use `minutes: "/60"` — invalid; breaks automation setup.
+- Older `minutes: "/1"` (60 s ping) is obsolete against the 30 s cadence.
+- Handshake lag alone with a live HA client must **not** bounce WiFi (3 Aug overnight reboot storm).
+- Mode changes (Full Auto / Takeover / Manual) flush NVS immediately on the hub — recovery reboot can no longer resurrect a stale Full Auto OFF after an explicit ON. See [`firmware/v4/README.md`](../firmware/v4/README.md).
+
 ## Notifier
 
 Climate / safety automations in `dsc_v4_automations.yaml` use a mobile notify
