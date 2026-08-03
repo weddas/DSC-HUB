@@ -1,16 +1,17 @@
-# Live UI pass — DSC-HUB Pro v5.1.1 (4-col + Browser Mod popups)
+# Live UI pass — DSC-HUB Pro v5.1.x (4-col + Browser Mod popups)
 
-Operator click-through for the dashboard v5.1.1 upgrade: 4-column layout,
-Browser Mod popup layer, System command center, glass-replacement tunables.
+Operator click-through for the dashboard 4-column layout, Browser Mod popup
+layer, System command center, glass-replacement tunables, and (5.1.3)
+in-service / learn Activity surfaces.
 
 **Prerequisites**
 
 | Check | Result |
 |---|---|
 | Browser Mod | HACS Integration downloaded, HA restarted, integration added (Settings → Devices & Services) |
-| HA surface | `sensor.dsc_ha_surface_version` = **5.1.1** |
+| HA surface | `sensor.dsc_ha_surface_version` = **5.1.3** (was 5.1.1 at first 4-col ship) |
 | Fleet chip | `sensor.dsc_fleet_version_status` compares **major.minor** — mixed `5.1.x` patch levels stay `ok` |
-| Dashboard sync | Header comment reads `DSC-HUB Pro v5.1.1` |
+| Dashboard sync | Pro dashboard live; header may still say `v5.1.2` while `sensor.dsc_ha_surface_version` is **5.1.3** |
 
 ## Layout (all 10 views)
 
@@ -60,7 +61,16 @@ Browser Mod popup layer, System command center, glass-replacement tunables.
 ## Automations
 
 - [ ] `dsc_climate_learn_ema_sample` runs without template errors (intake ref fixed to `dsc_fan_intake_main_pct`)
-- [ ] AC / clone followers stay idle while `*_actuator_wired` flags are off
+- [ ] AC / clone followers stay idle while `input_boolean.dsc_*_in_service` flags are off (replaces former `*_actuator_wired`)
+- [ ] Toggling In Service pushes to hub switches via `dsc_sync_in_service_to_hub` when hub link is up
+
+## In-service + learn (5.1.3)
+
+- [ ] Home shows reduced-kit cue when any lever is OOS (`binary_sensor.dsc_reduced_kit`) — soft capacity, not alert chip
+- [ ] Climate / System In-service toggles: AC, clone mister, POT1–4; defaults AC/mister/POT3 off
+- [ ] `sensor.dsc_active_alert_count` does **not** rise solely because capacity_offline is on
+- [ ] Learning card uses `sensor.dsc_learn_activity` (gate open alone is not “measuring”)
+- [ ] Full Auto with AC OOS still runs fans; emergency ≥35 °C does not assert AC demand
 
 ## Sign-off
 
