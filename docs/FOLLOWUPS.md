@@ -59,3 +59,38 @@ After each execution pass, append:
 ### next-plan
 - …
 ```
+
+---
+
+## 2026-08-03 — Device out-of-service + deep-dive follow-through
+
+### done (this pass)
+
+- Single `*_in_service` gate (AC / mister / pots); retired `*_actuator_wired`
+- Soft capacity / reduced-kit cues; pot alerts gated; alert_count no dead-demand
+- Hub 5.1.3 OTA: Full Auto skips OOS rungs; emergency fans-only if AC OOS
+- HA surface 5.1.3 synced (`2499faf` / `bce6543`); dashboard In-service UI
+- `docs/FOLLOWUPS.md` created
+
+### soak (~30+ min post hub 5.1.3 flash)
+
+- Hub link stayed **on**; uptime ~3000 s; FW **5.1.3**; HA surface **5.1.3**
+- Full Auto **on**; `ac_auto` / `clone_humidifier_auto` **off**; AC/mister demands **off**
+- Reduced kit: `AC, Clone mister, POT3`; no POT3 chemistry alerts
+- First OTA attempt reset mid-upload; second (and version-string) OTA OK
+- Preferred AP mismatch still **on** (`58:D9:D5:D7:AA:82` vs preferred `C4:E3:CE:68:73:93`)
+- Alert count ~9 dominated by real pot1/2/4 moisture/pH + preferred mismatch (not OOS spam)
+
+### next-plan / soak carry
+
+| ID | Item | Notes |
+|---|---|---|
+| N-001 | Preferred BSSID ≠ current while Lock ON | Still open after 5.1.3 |
+| N-002 | Flash Control/pots if wifi stubs not live | Mesh patches in tree; verify versions |
+| N-006 | Full Auto NVS after OTA | Came up Full Auto **off** once after flash; operator re-armed |
+| N-007 | Purge orphan `dsc_ac_actuator_wired` entity if still in registry | Entity registry leftover |
+| N-008 | UNC-path ESPHome compile | Windows build must use local temp, not NAS path |
+
+### red-flag
+
+- None new blocking climate control during soak
