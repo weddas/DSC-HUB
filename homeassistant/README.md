@@ -6,7 +6,7 @@ Canonical HA surface for firmware [`firmware/v4/`](../firmware/v4/).
 
 | Path | Role |
 |---|---|
-| `dashboards/dsc-hub-v4-dashboard.yaml` | Lovelace UX **v5.1.3** (`dsc-hub-pro`). In-service kit toggles; learn **Activity**; Root Zone Pots+Mat. |
+| `dashboards/dsc-hub-v4-dashboard.yaml` | Lovelace UX **v5.1.5** (`dsc-hub-pro`). Strains + Nutrient Science; Want/Need/Got; pot-native strain/sprout; Temp OOS. |
 | `packages/dsc_v4_core_helpers.yaml` | Hub link, fan %, Sankey, runtimes, **in-service** + capacity-offline + vent-conflict / ineffective cues |
 | `packages/dsc_v4_strain_catalog.yaml` | Strain catalog, sprout age, Want/Need/Got, peer offsets, Apply expected stage |
 | `packages/dsc_v4_nutrient_catalog.yaml` | Nutrient stock, next-mix recipe, Accept mix QA (no pumps) |
@@ -296,22 +296,90 @@ Phase A+B status, appliance effect cards, waits, ETA, efficiencies, charts.
 
 ## Crop-steering (HA surface 5.1.5)
 
+**Intent:** genetics/age bands + peer-corrected Got + track-only dryback/coherence +
+humidity-appliance efficacy — usable steering before probe replacement. Accept mix
+is bookkeeping only (no pumps).
+
+**Honest cutover:** **5.1.4** shipped the packages + Climate Temp OOS / Lockout, but
+Strains / Nutrient Science / Want·Need·Got UI paths were missing (Tank chips pointed
+at dead routes). **5.1.5** lands those views and moves plant identity onto pot NVS.
+
 Packages: `dsc_v4_strain_catalog`, `dsc_v4_nutrient_catalog`, `dsc_v4_pots_coherence`,
-`dsc_v4_actuator_efficacy`.
+`dsc_v4_actuator_efficacy` (+ follower `*_available` gates in `dsc_v4_automations`).
 
-- **Want / Need / Got:** strain + sprout date → Want bands; Got = raw + peer offset;
-  Need summary + Apply expected stage (advisory). Prefer pot `select`/`datetime`
-  after FW **5.1.3**; HA `input_*` fallback until then.
-- **Nutrient Science:** tank L × strength → recipe; **Accept mix** burns stock (no pumps).
-- **Fluctuations:** relative dryback; cross-pot coherence when moisture rises together
-  but EC does not; learned ΔEC/Δmoisture.
-- **Temp OOS vs Operator Lockout:** humidifier/dehum/clone mister — efficacy fail →
-  Temp OOS (flashing) + demand off; Lockout only you clear.
+### Want / Need / Got
 
-Dashboard: **Strains** (`/dsc-hub-pro/strains`), plant consoles (strain/sprout/Need),
-**Nutrient Science** (`/dsc-hub-pro/nutrient-science`), Root Zone dryback/coherence,
-Climate Temp OOS / Lockout (incl. Clone Mister status). Data mirrors:
-`data/dsc_strain_catalog.yaml`, `data/dsc_nutrient_catalog.yaml`.
+| Layer | Meaning | Examples |
+|---|---|---|
+| **Want** | Strain + sprout age → expected stage bands (pH / EC / moisture) | `sensor.dsc_pot1_want_*`, `sensor.dsc_pot1_expected_stage` |
+| **Got** | Raw probe **+ peer offset** | `sensor.dsc_pot1_got_ph` / `_ec` / `_moisture` |
+| **Need** | Plain-English gap vs Want | `sensor.dsc_pot1_need_summary` |
+
+Scripts: Capture peer baseline; Apply expected stage (advisory — does not write hub
+climate). Catalog Want bands stay HA-owned (`data/dsc_strain_catalog.yaml` + custom
+`input_*` slots).
+
+### Plant identity — pot NVS preferred (N-017 / N-018)
+
+Probe stays in the pot until harvest, so **strain** and **sprout date** travel with
+the node (same contract as `plant_name` / `growth_stage`).
+
+| Surface | Entity (per pot N) | Role |
+|---|---|---|
+| Pot FW **5.1.3+** | `select.dsc_potN_strain`, `datetime.dsc_potN_sprout_date` | NVS restore; preferred SoT when online |
+| HA fallback | `input_select.dsc_potN_strain`, `input_datetime.dsc_potN_sprout_date` | Pre-flash / offline; dashboard still shows both |
+
+Catalog templates read pot first, then fall back to HA `input_*` when pot is
+`unknown` / `unavailable` / empty.
+
+```mermaid
+flowchart TD
+  pot["Pot NVS select/datetime"] -->|online| catalog["Want / stage templates"]
+  ha["HA input_select / input_datetime"] -->|fallback| catalog
+  catalog --> want["Want bands"]
+  raw["Raw soil sensors"] --> offset["+ peer offset"]
+  offset --> got["Got"]
+  want --> need["Need summary"]
+  got --> need
+  migrate["script.dsc_migrate_strain_sprout_ha_to_pot"] -->|defaults only| pot
+```
+
+**Migrate** (`script.dsc_migrate_strain_sprout_ha_to_pot`, Strains view button):
+
+- Skips pots whose `select.dsc_potN_strain` is offline.
+- Copies HA strain → pot **only** when pot is still `Generic Photoperiod` and HA is not.
+- Copies HA sprout → pot **only** when HA has a date and pot is empty / unavailable / `1970-01-01`.
+- Does **not** overwrite an already-set pot identity — edit pot entities directly after migrate.
+
+**Flash order (FOLLOWUPS):** POT2 canary → POT1 → POT4 → POT3 (USB if POT3 down).
+After each online: `sensor.dsc_potN_firmware_version` = **5.1.3**, then run Migrate.
+
+### Nutrient Science / fluctuations / Temp OOS
+
+- **Nutrient Science:** tank L × strength → recipe; **Accept mix** burns stock (no pumps — **N-012**).
+- **Fluctuations:** relative dryback + cross-pot coherence + learned ΔEC/Δmoisture — track-only (**N-013**).
+- **Temp OOS vs Operator Lockout** (hum / dehum / clone mister): efficacy fail after demand ON **5 min** → Temp OOS (flashing) + demand off; Lockout is operator-only and never auto-cleared. Distinct from capacity OOS (`*_in_service` off).
+
+### Dashboard + deploy gate
+
+| View | Path |
+|---|---|
+| Strains | `/dsc-hub-pro/strains` |
+| Nutrient Science | `/dsc-hub-pro/nutrient-science` |
+| Plant consoles | Home / Root Zone popups — strain / sprout / Need |
+| Root Zone | Dryback & coherence strip |
+| Climate | Temp OOS / Lockout (incl. Clone Mister status) |
+
+Packages on `master` are not live until HAOS has them:
+
+1. Sync add-on **or** GHA HA sync success (see [`../scripts/HA-SYNC-BOOTSTRAP.md`](../scripts/HA-SYNC-BOOTSTRAP.md)).
+2. Restart HA Core once after new helpers / scripts.
+3. `sensor.dsc_ha_surface_version` = **`5.1.5`**.
+4. Spot-check Strains + Nutrient Science navigate; Got sensors present.
+
+QA: [`../docs/qa/LIVE-UI-5.1.5.md`](../docs/qa/LIVE-UI-5.1.5.md) ·
+[`../docs/qa/LIVE-SOAK-5.1.5.md`](../docs/qa/LIVE-SOAK-5.1.5.md).
+Carry-forward: [`../docs/FOLLOWUPS.md`](../docs/FOLLOWUPS.md).
 
 ## Tank / Tuya entity map
 

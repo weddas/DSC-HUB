@@ -23,6 +23,8 @@ Package bodies are remote-git safe (no `!secret`). Stubs pass credentials (and h
 
 Pots (`dsc-pot-common` **4.0.1+**): each soil channel has **Cal … Offset** / **Cal … Scale** config numbers (NVS). Formula `raw * scale + offset` applies before range/median and feeds HA + ESP-NOW. **Reset Sensor Calibration** restores defaults.
 
+**Pot 5.1.3+ plant identity (NVS):** `select.strain` + `datetime.sprout_date` restore with the probe (same contract as `plant_name` / `growth_stage`). HA Want/Need/Got prefers these after flash; catalog Want bands stay HA-owned. One-shot HA→pot copy: `script.dsc_migrate_strain_sprout_ha_to_pot` (defaults only). Ops: [`../../homeassistant/README.md`](../../homeassistant/README.md) · QA: [`../../docs/qa/LIVE-UI-5.1.5.md`](../../docs/qa/LIVE-UI-5.1.5.md).
+
 ## Panel (DSC-CONTROL **4.0.11**)
 
 Package body: [`dsc-control-common.yaml`](dsc-control-common.yaml).
