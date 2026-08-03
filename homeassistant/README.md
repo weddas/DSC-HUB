@@ -296,18 +296,28 @@ not humidifier lock — entity id kept for compatibility.
 - Fixed-channel AP — ops (root README)
 - POT3 probe swap, SCD41, ETH01 — post-release hardware
 
-## Firmware pairing (**v5.1.0**)
+## Firmware pairing (**5.1.x** train)
 
 | Piece | Version |
 |---|---|
-| Hub / pots / Sonoffs / kits | **`5.1.0`** |
-| Panel (DSC-CONTROL) | **`5.1.x`** lean-cut patch train |
-| HA surface (packages + dashboard) | **`5.1.2`** |
+| Hub | **`5.1.3`** (`project.version` **and** text Firmware Version) |
+| Pots | **`5.1.2`** |
+| Panel (DSC-CONTROL) | **`5.1.14`** lean-cut patch train |
+| Sonoffs / kits | **`5.1.0`** (same major.minor train) |
+| HA surface (packages + dashboard) | **`5.1.3`** (`sensor.dsc_ha_surface_version`) |
 | Dashboard | DSC-HUB Pro (4-col, browser_mod popups) |
 | `espnow_cmd_tag` | `54727` (`0xD5C7`) on hub **and** panel |
 
 Fleet drift chip (`sensor.dsc_fleet_version_status`) compares the
 **major.minor** train, so mixed patch levels inside `5.1.x` stay `ok`.
+Expected helper default: `input_text.dsc_expected_release` = **5.1.3**.
+
+**Pitfall — dual version strings:** the fleet chip reads
+`sensor.dsc_*_firmware_version` from each device’s template text **Firmware
+Version**, not `esphome.project.version`. Bumping only `project.version`
+leaves the chip on the old patch until the text lambda matches (hub fix:
+both at **5.1.3**). Ignore **ESPHome Version** (compiler). See
+[`../firmware/v4/README.md`](../firmware/v4/README.md#firmware-version-surfaces-do-not-drift).
 
 **Mat votes:** `switch.dsc_hub_mat_vote_pot_1`…`4` — Root Zone is source of truth; Climate links there.
 

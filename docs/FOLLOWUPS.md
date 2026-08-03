@@ -31,7 +31,7 @@ Categories: `red-flag` · `soak` · `deferred` · `next-plan` · `out-of-scope` 
 | ID | Item | Notes |
 |---|---|---|
 | N-001 | Preferred BSSID ≠ current while Lock ON | Self-customize relearn exists; verify after hub 5.1.3 flash |
-| N-002 | Fleet version skew cleanup | Flash Control/pots if still on old wifi stubs |
+| N-002 | Fleet version skew cleanup | After hub flash: `sensor.dsc_hub_firmware_version` must be **5.1.3** (text sensor). Flash Control/pots if still on old wifi stubs |
 | N-003 | Soak warnings from OOS deploy | Fill after ~30 min post-flash soak |
 | N-004 | Orphan helper cull pass | leaf_offset kept; unused Sankey/deltas audit |
 | N-005 | Cooldown / open-loop wait retune | Evidence-based only; no site hardcodes |
