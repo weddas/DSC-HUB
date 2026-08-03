@@ -79,3 +79,14 @@ plugins — they deploy via [`ha-sync.sh`](ha-sync.sh) / Unraid runner
 | SYSTEM MAP + AIRFLOW STATUS cards | **HACS Dashboard** (this doc) |
 | `packages/dsc_v4_*.yaml` + YAML dashboard + www fallback | Git push → HA sync |
 | ESPHome firmware | Validate/Install (manual) |
+
+## Cache after card updates
+
+| Path | How the browser picks up new JS |
+|---|---|
+| **HACS** `/hacsfiles/DSC-HUB/DSC-HUB.js` | HACS **Redownload** (new asset hash / resource) + hard-refresh |
+| **ha-sync** `/local/dsc-system-map-card.js?v=…` | Script rewrites `?v=` in `.storage/lovelace_resources` to `5.1.6-airflow-<UTC>` then `lovelace.reload` — see [`HA-SYNC-BOOTSTRAP.md`](HA-SYNC-BOOTSTRAP.md) §5 |
+| **Sync add-on** `/local/…` | Overwrites www files only — **no** `?v=` rewrite today; bump Resources manually or hard-refresh after a bundle change |
+
+Do not mix HACS and `/local` for the same cards — double-register fights are
+harder to diagnose than a stale cache.

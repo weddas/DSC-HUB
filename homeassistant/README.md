@@ -106,9 +106,24 @@ HACS serves `/hacsfiles/DSC-HUB/DSC-HUB.js` (both cards + SVG beside it). Full s
      ha-sync builds this from the two www sources)
    - Optional: [`www/dsc-airflow-map-card.js`](www/dsc-airflow-map-card.js) standalone
 2. **Settings → Dashboards → ⋮ → Resources → Add resource** (JavaScript, not module):
-   - `/local/dsc-system-map-card.js` (one resource registers both cards)
+   - `/local/dsc-system-map-card.js?v=<anything>` (one resource registers both cards;
+     include a `?v=` query so ha-sync can rewrite it on later deploys)
    - Or HACS `/hacsfiles/DSC-HUB/DSC-HUB.js`
 3. YAML dashboard already includes both cards. Hard-refresh the browser.
+
+### Browser cache after a www / bundle deploy
+
+ha-sync rewrites `.storage/lovelace_resources` so the `/local/dsc-system-map-card.js?v=`
+query becomes `5.1.6-airflow-<UTC stamp>`. That forces browsers off the pre-bundle
+system-map-only script. Details + Sync-add-on gap:
+[`../scripts/HA-SYNC-BOOTSTRAP.md`](../scripts/HA-SYNC-BOOTSTRAP.md) §5.
+
+| Symptom | Likely cause |
+|---|---|
+| Disk file ~33 KB but AIRFLOW custom element missing | Stale `?v=` / browser cache — check Resources URL; re-run ha-sync or bump `?v=` |
+| Disk file ~10 KB | Pre-bundle publish (system-map source alone) — re-run ha-sync / Sync ≥5.1.3 / HACS Redownload |
+| Resource has no `?v=` | ha-sync sed will not match — add a query once |
+| Sync-only site, same `?v=` after www update | Add-on does not rewrite `lovelace_resources` yet (N-020) — bump manually |
 
 Optional entity overrides:
 

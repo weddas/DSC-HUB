@@ -42,8 +42,10 @@ flowchart LR
 | [`SETUP.md`](SETUP.md) | SoftAP kit unboxing without HA |
 | [`RELEASE.md`](RELEASE.md) | What’s new, rollout checklist |
 | [`scripts/ADDON.md`](scripts/ADDON.md) | **Primary delivery** — HAOS Sync add-on |
+| [`scripts/HA-SYNC-BOOTSTRAP.md`](scripts/HA-SYNC-BOOTSTRAP.md) | Unraid HA sync + Lovelace `?v=` cache-bust |
 | [`docs/qa/FIRMWARE-QA-5.1.0.md`](docs/qa/FIRMWARE-QA-5.1.0.md) | Firmware Validate / flash QC |
 | [`docs/qa/ADDON-QA-5.1.0.md`](docs/qa/ADDON-QA-5.1.0.md) | Sync add-on QC |
+| [`docs/qa/LIVE-UI-LOVELACE-CACHE.md`](docs/qa/LIVE-UI-LOVELACE-CACHE.md) | Stale `/local` card JS after www deploy |
 | [`homeassistant/README.md`](homeassistant/README.md) | Packages, HACS, entity notes |
 | [`firmware/v4/README.md`](firmware/v4/README.md) | Local validate / flash |
 

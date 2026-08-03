@@ -21,7 +21,9 @@
 #    SKIP_RELOAD      set to 1 to copy only (no check/reload)
 #    REPO_ROOT        override repo root (defaults to parent of scripts/)
 #
-#  Never syncs secrets.yaml or .storage/
+#  Never syncs secrets.yaml. Does not copy .storage/, but after publishing the
+#  www card bundle it rewrites the /local/dsc-system-map-card.js?v=… query in
+#  .storage/lovelace_resources so browsers drop the pre-bundle JS cache.
 # ==================================================================
 set -euo pipefail
 
