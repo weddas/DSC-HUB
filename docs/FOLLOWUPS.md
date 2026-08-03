@@ -190,7 +190,14 @@ No climate control regression during soak window.
 
 - Replaced Climate Engine `power-flow-card-plus` AIRFLOW FLOW MAP with `custom:dsc-airflow-map-card` (real ducts, % blend OUT/RECIRC, source T/RH carry, room appliances, vol/ACH mass chips).
 - HACS `dist/DSC-HUB.js` now bundles system map + airflow map; sync script updated.
-- **2026-08-03 evening:** live HA still served pre-bundle `/local/dsc-system-map-card.js` behind cache-buster `?v=5.1.0`. Deployed 33KB bundle + bumped resource to `?v=5.1.6-airflow`; card defines and renders. ha-sync now auto-bumps the resource query on www deploys.
+- **2026-08-03 evening:** live HA still served pre-bundle `/local/dsc-system-map-card.js` behind cache-buster `?v=5.1.0`. Deployed 33KB bundle + bumped resource to `?v=5.1.6-airflow`; card defines and renders. ha-sync now auto-bumps the resource query on www deploys (`0fafe8a`).
+- Ops docs: [`scripts/HA-SYNC-BOOTSTRAP.md`](../scripts/HA-SYNC-BOOTSTRAP.md) §5 + [`docs/qa/LIVE-UI-LOVELACE-CACHE.md`](qa/LIVE-UI-LOVELACE-CACHE.md).
+
+### next-plan
+
+| ID | Item | Notes |
+|---|---|---|
+| N-020 | Sync add-on Lovelace `?v=` bump | ha-sync rewrites `.storage/lovelace_resources`; Sync add-on still never touches `.storage/` — after www bundle changes on Sync-primary HAOS, operators must bump Resources manually until add-on grows a safe rewrite |
 
 ### deferred
 

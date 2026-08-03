@@ -84,7 +84,7 @@ export DRY_RUN=1
 | Syncs on push (ha-sync) | Does not sync / other channel |
 |---|---|
 | `packages/dsc_v4_*.yaml` | `secrets.yaml` |
-| `dashboards/dsc-hub-v4-dashboard.yaml` | `.storage/` |
+| `dashboards/dsc-hub-v4-dashboard.yaml` | Most of `.storage/` (see cache-bust below) |
 | `www/` system-map SVG + **bundled** `dsc-system-map-card.js` (system+airflow) | Non-DSC house packages |
 | ESPHome stubs only if `SYNC_ESPHOME=1` | Firmware flash / ESPHome Install |
 | | **SYSTEM MAP card via HACS** — [`HACS-FRONTEND.md`](HACS-FRONTEND.md) |
@@ -93,3 +93,49 @@ Prefer HACS for the SYSTEM MAP card; ha-sync still mirrors `www/` for sites
 not using HACS yet.
 
 Firmware still: Cursor → push → ESPHome Validate/Install per device.
+
+## 5. Lovelace resource cache-bust (ha-sync)
+
+Browsers cache Lovelace JS by full URL. After `521ac11`, the same path
+`/local/dsc-system-map-card.js` switched from **system-map-only** (~10 KB) to
+the **system+airflow bundle** (~33 KB). Without changing the `?v=` query,
+clients keep the old script and Climate Engine shows
+`Custom element doesn't exist: dsc-airflow-map-card` even though the file on
+disk is correct.
+
+`ha-sync.sh` (from `0fafe8a`) therefore:
+
+1. Publishes the concat bundle to `/config/www/dsc-system-map-card.js` (+ `DSC-HUB.js`)
+2. Rewrites `.storage/lovelace_resources` in place:
+   - Match: `/local/dsc-system-map-card.js?v=…`
+   - Replace with: `/local/dsc-system-map-card.js?v=5.1.6-airflow-<UTC YYYYMMDDHHMM>`
+3. Continues with config check + `lovelace.reload` (reload alone is not enough)
+
+```mermaid
+flowchart TD
+  push[master push homeassistant/**] --> runner[Unraid ha-sync]
+  runner --> bundle["Build concat bundle<br/>sys + airflow → www/"]
+  bundle --> sed["sed rewrite ?v= in<br/>.storage/lovelace_resources"]
+  sed --> reload[HA reload_core + lovelace.reload]
+  reload --> browser["Browser fetches new URL<br/>registers both custom elements"]
+```
+
+### Constraints (verified in `scripts/ha-sync.sh`)
+
+| Rule | Detail |
+|---|---|
+| Only `/local/…?v=` | sed requires an existing `?v=` query. Bare `/local/dsc-system-map-card.js` is **not** rewritten — add a version query once in Resources, or bump manually. |
+| Not HACS URLs | `/hacsfiles/DSC-HUB/DSC-HUB.js` is untouched; use HACS **Redownload** + hard-refresh. |
+| Not wholesale `.storage/` | Only that one URL pattern; secrets / other storage stay local. |
+| `DRY_RUN=1` | Logs the bump, does not sed. |
+| Failure soft | sed ends with `|| true` — a missing file or no match will not fail the job. |
+| Sync add-on | **Does not** rewrite `lovelace_resources` today — Sync-only sites need a manual `?v=` bump or hard-refresh after a bundle change (see [`FOLLOWUPS.md`](../docs/FOLLOWUPS.md) N-020). |
+
+### Manual recovery
+
+If AIRFLOW still missing after a green HA sync:
+
+1. Confirm bundle size on HA (~33 KB; contains both `customElements.define` names).
+2. **Settings → Dashboards → ⋮ → Resources** — confirm `/local/dsc-system-map-card.js?v=…` (not a stale `5.1.0` / pre-bundle value).
+3. Bump `?v=` by hand if needed, then hard-refresh (Ctrl+F5).
+4. Prefer a single resource path (HACS **or** `/local`, not both).

@@ -35,7 +35,17 @@ Sources: [`dsc-hub-sync/`](../dsc-hub-sync/) · [`repository.yaml`](../repositor
 |---|---|
 | **This add-on** | HA surfaces + stubs |
 | HACS Dashboard | Optional SYSTEM MAP — [`HACS-FRONTEND.md`](HACS-FRONTEND.md) |
-| [`ha-sync.sh`](ha-sync.sh) | Non-HAOS alternate |
+| [`ha-sync.sh`](ha-sync.sh) | Non-HAOS alternate (+ Lovelace `?v=` cache-bust) |
 | ESPHome Install | Firmware only (manual) |
+
+### Lovelace cache note
+
+Unlike [`ha-sync.sh`](ha-sync.sh) (which rewrites
+`/local/dsc-system-map-card.js?v=` in `.storage/lovelace_resources`), this
+add-on **does not** touch `.storage/`. After a www card-bundle change on a
+Sync-primary site, bump the resource query in
+**Settings → Dashboards → Resources** (or hard-refresh) so browsers drop the
+pre-bundle script. Runbook: [`HA-SYNC-BOOTSTRAP.md`](HA-SYNC-BOOTSTRAP.md) §5;
+follow-up **N-020**.
 
 QA: [`docs/qa/ADDON-QA-5.1.0.md`](../docs/qa/ADDON-QA-5.1.0.md)

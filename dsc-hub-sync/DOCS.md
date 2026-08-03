@@ -20,6 +20,10 @@ Also writes:
 - `/config/packages/dsc_v4_sync_marker.yaml` — `sensor.dsc_hub_sync_sha`
 
 Never touches `secrets.yaml` or `.storage/`. Never auto-flashes ESP devices.
+(Contrast: Unraid [`ha-sync.sh`](../scripts/ha-sync.sh) may rewrite only the
+`/local/dsc-system-map-card.js?v=` entry in `lovelace_resources` for cache-bust —
+this add-on does not; operators bump Resources manually after a card-bundle
+change. See [`HA-SYNC-BOOTSTRAP.md`](../scripts/HA-SYNC-BOOTSTRAP.md) §5 / N-020.)
 
 Copies are staged under `/data/sync_stage` then promoted; on failure the add-on
 restores the last-good snapshot under `/data/last_good_sync`.

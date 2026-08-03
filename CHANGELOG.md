@@ -1,5 +1,14 @@
 # Changelog
 
+## Ops — Lovelace bundle cache-bust (2026-08-03)
+
+- **`ha-sync.sh`:** after publishing the system+airflow www bundle, rewrite
+  `/local/dsc-system-map-card.js?v=` in `.storage/lovelace_resources` to
+  `5.1.6-airflow-<UTC>` so browsers drop the pre-bundle script (`0fafe8a`).
+- Docs: [`scripts/HA-SYNC-BOOTSTRAP.md`](scripts/HA-SYNC-BOOTSTRAP.md) §5,
+  [`docs/qa/LIVE-UI-LOVELACE-CACHE.md`](docs/qa/LIVE-UI-LOVELACE-CACHE.md).
+  Sync add-on still does not touch `.storage/` — follow-up **N-020**.
+
 ## HA surface 5.1.5 — finish crop UI + pot-native strain (2026-08-03)
 
 - **Honest cutover:** 5.1.4 shipped packages + Climate Temp OOS + dead Tank chips;
