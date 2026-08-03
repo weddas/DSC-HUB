@@ -170,14 +170,14 @@ No climate control regression during soak window.
 
 ### red-flag
 
-- **HA sync workflow `30801641521` still `queued`** — GitHub Actions reports **`total_count: 0` self-hosted runners**. Packages are on GitHub but **not deployed to HAOS**. `sensor.dsc_ha_surface_version` not yet 5.1.4 live.
-- Bring **`unraid-ha-deploy`** runner online (or manually `ha-sync.sh` / copy packages) to complete N-009; then re-soak new entities (N-010).
+- **Resolved 2026-08-03 evening:** `unraid-ha-deploy` runner online; repo Actions secrets set; Terminal & SSH on HAOS with deploy key; Actions HA sync succeeded (`30809723980`). Primary add-on path also at tip `796847d` / surface **5.1.4**.
+- **Remaining:** Rotate exposed runner PAT + MCP/HA long-lived token when convenient. Keep Unraid `unraid-ha-deploy` Autostart ON.
 
 ### next-plan carry
 
 | ID | Item | Notes |
 |---|---|---|
-| N-009 | Deploy HA 5.1.4 | **Blocked on runner** — commit is pushed; sync pending |
+| N-009 | Deploy HA 5.1.4 | **Done** — add-on + Actions HA sync both green |
 | N-010 | Post-deploy entity soak | After sync: Temp OOS, Strains, Nutrient Science, Got sensors |
 | N-017 | Strain + sprout on pot ESP | Probe stays until harvest |
 | N-018 | HA reads pot-native strain/sprout | After N-017 |
