@@ -2640,7 +2640,7 @@ text_sensor:
     name: "Firmware Version"
     id: fw_version
     icon: mdi:tag-check
-    lambda: 'return {"5.1.2"};'
+    lambda: 'return {"5.1.3"};'
     update_interval: 60s
 
   # Plant names: HA → hub cache → panel via ESP-NOW 0xD4.
