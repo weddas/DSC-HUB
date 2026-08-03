@@ -6,7 +6,8 @@ Canonical HA surface for firmware [`firmware/v4/`](../firmware/v4/).
 
 | Path | Role |
 |---|---|
-| `dashboards/dsc-hub-v4-dashboard.yaml` | Lovelace UX **v5.1.3** (`dsc-hub-pro`). In-service kit toggles; learn **Activity**; Root Zone Pots+Mat. |
+| `dashboards/dsc-hub-v4-dashboard.yaml` | Lovelace UX **v5.1.5** (`dsc-hub-pro`). Strains + Nutrient Science; Want/Need/Got; in-service; learn **Activity**. |
+| `packages/dsc_v4_version.yaml` | HA surface marker + fleet expected release + aggregate chip |
 | `packages/dsc_v4_core_helpers.yaml` | Hub link, fan %, Sankey, runtimes, **in-service** + capacity-offline + vent-conflict / ineffective cues |
 | `packages/dsc_v4_strain_catalog.yaml` | Strain catalog, sprout age, Want/Need/Got, peer offsets, Apply expected stage |
 | `packages/dsc_v4_nutrient_catalog.yaml` | Nutrient stock, next-mix recipe, Accept mix QA (no pumps) |
@@ -335,18 +336,62 @@ not humidifier lock — entity id kept for compatibility.
 - Fixed-channel AP — ops (root README)
 - POT3 probe swap, SCD41, ETH01 — post-release hardware
 
-## Firmware pairing (**v5.1.0**)
+## Fleet expected vs HA surface
+
+Package: [`packages/dsc_v4_version.yaml`](packages/dsc_v4_version.yaml).
+
+Two version strings stay independent. Bumping them together caused a false
+operator FLEET WARN after HA surface **5.1.5** while hub/pots stayed on the
+**5.1.3** firmware train (`e818568`).
+
+| Signal | Entity | Current | Owns |
+|---|---|---|---|
+| **Expected release** | `input_text.dsc_expected_release` | **`5.1.3`** | Firmware train the fleet chip expects |
+| **HA surface** | `sensor.dsc_ha_surface_version` | **`5.1.5`** | Packages + Pro dashboard cut |
+| **Fleet status** | `sensor.dsc_fleet_version_status` | `ok` / `warn` / `error` | Aggregate chip on Home + System |
+
+```mermaid
+flowchart TB
+  exp["input_text.dsc_expected_release\nfirmware train e.g. 5.1.3"]
+  surf["sensor.dsc_ha_surface_version\nHA packages e.g. 5.1.5"]
+  fw["device Firmware Version sensors\nhub / panel / pots / Sonoffs"]
+  chip["sensor.dsc_fleet_version_status"]
+  exp --> chip
+  surf --> chip
+  fw --> chip
+```
+
+**How the chip decides**
+
+- Reads `expected` (fallback hard-coded **5.1.3** when empty).
+- Compares each reporting device **and** HA surface on **major.minor** only
+  (so panel `5.1.14` beside hub `5.1.3` stays on-train).
+- `warn` = any off-train version **or** any missing/unavailable check.
+- `error` = learn/helpers missing or most devices unavailable.
+
+**Operator rules**
+
+1. Ship HA-only surfaces (5.1.4 → 5.1.5 crop UI) → bump **surface** only.
+2. Do **not** set `dsc_expected_release` to the surface patch string.
+3. Package `initial:` applies only when the helper is **first created**. After
+   Sync, open System → Fleet version table and set **Expected release tag** to
+   **`5.1.3`** if the live value still shows a surface patch (5.1.4 / 5.1.5).
+4. Missing devices (e.g. POT3 offline) also force `warn` — that is not fixed by
+   changing expected release.
+
+QA: [`../docs/qa/LIVE-FLEET-EXPECTED.md`](../docs/qa/LIVE-FLEET-EXPECTED.md).
+
+## Firmware pairing (**v5.1.x**)
 
 | Piece | Version |
 |---|---|
-| Hub / pots / Sonoffs / kits | **`5.1.0`** |
+| Hub / pots (text Firmware Version) | **`5.1.3`** train target |
 | Panel (DSC-CONTROL) | **`5.1.x`** lean-cut patch train |
+| Sonoffs / kits | often still **`5.1.0`** (same major.minor) |
 | HA surface (packages + dashboard) | **`5.1.5`** |
-| Dashboard | DSC-HUB Pro (4-col, browser_mod popups) |
+| Expected release (`dsc_expected_release`) | **`5.1.3`** — not the surface patch |
+| Dashboard | DSC-HUB Pro (strains + nutrient-science + crop UI) |
 | `espnow_cmd_tag` | `54727` (`0xD5C7`) on hub **and** panel |
-
-Fleet drift chip (`sensor.dsc_fleet_version_status`) compares the
-**major.minor** train, so mixed patch levels inside `5.1.x` stay `ok`.
 
 **Mat votes:** `switch.dsc_hub_mat_vote_pot_1`…`4` — Root Zone is source of truth; Climate links there.
 

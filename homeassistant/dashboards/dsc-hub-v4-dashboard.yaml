@@ -8274,10 +8274,14 @@ views:
                     name: Expected release tag
               - type: markdown
                 content: >-
-                  *Expected train: **`5.1.x`**. HA surface **5.1.3** + hub **5.1.3**
-                  for in-service / OOS ladder. **Sync ≠ flash** — after git/Sync,
-                  ESPHome **Install** each device that needs the binary (hub for
-                  OOS; Control/pots if still on old `fast_connect` / reboot_timeout).*
+                  *Expected release (`input_text.dsc_expected_release`) tracks the
+                  **firmware train** (**5.1.3**), not the HA surface patch.
+                  HA surface is **5.1.5** (crop UI); hub/pots Firmware Version
+                  target **5.1.3**. Chip compares **major.minor** only — do not
+                  bump expected to 5.1.5. Package `initial` does not rewrite an
+                  existing helper; edit Expected release tag here after Sync if
+                  needed. **Sync ≠ flash** — ESPHome **Install** each device
+                  that needs the binary.*
           - type: entities
             entities:
               - entity: binary_sensor.dsc_hub_link
