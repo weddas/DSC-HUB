@@ -50,6 +50,24 @@ Never commit these values. Never put `secrets.yaml` in the sync path.
    - Run `bash`, `scp`, `ssh`, `curl`
 5. Keep the runner online; idle runners miss push events until the next job.
 
+### Pitfall — zero runners → packages on GitHub, not on HAOS
+
+If Actions → **HA sync** stays **`queued`** and Settings → Actions → Runners
+shows **`total_count: 0`** (or the `unraid-ha-deploy` runner offline), the
+workflow never copies packages. `sensor.dsc_ha_surface_version` stays on the
+previous surface (e.g. stuck pre-**5.1.4** after `e0ffeaf` on 2026-08-03).
+
+**Recover:**
+
+1. Bring the Unraid runner online with labels `self-hosted,unraid-ha-deploy`.
+2. Cancel any stuck queued run if needed; re-run **HA sync** (workflow_dispatch)
+   or push a no-op under `homeassistant/packages/`.
+3. Or bypass GHA: from a LAN host with secrets set, run `./scripts/ha-sync.sh`
+   (see dry-run below). Sites using the **DSC-HUB Sync** add-on instead of GHA
+   are unaffected by the Unraid runner — check the add-on log instead.
+4. Verify gate: `sensor.dsc_ha_surface_version` matches the shipped surface;
+   restart HA Core once if new `input_*` helpers are missing.
+
 Example env for a typical runner container (adjust paths/tokens):
 
 ```text

@@ -6,7 +6,7 @@ Canonical HA surface for firmware [`firmware/v4/`](../firmware/v4/).
 
 | Path | Role |
 |---|---|
-| `dashboards/dsc-hub-v4-dashboard.yaml` | Lovelace UX **v5.1.3** (`dsc-hub-pro`). In-service kit toggles; learn **Activity**; Root Zone Pots+Mat. |
+| `dashboards/dsc-hub-v4-dashboard.yaml` | Lovelace UX **v5.1.4** (`dsc-hub-pro`). Strains / Nutrient Science; Temp OOS; in-service kit; learn **Activity**. |
 | `packages/dsc_v4_core_helpers.yaml` | Hub link, fan %, Sankey, runtimes, **in-service** + capacity-offline + vent-conflict / ineffective cues |
 | `packages/dsc_v4_strain_catalog.yaml` | Strain catalog, sprout age, Want/Need/Got, peer offsets, Apply expected stage |
 | `packages/dsc_v4_nutrient_catalog.yaml` | Nutrient stock, next-mix recipe, Accept mix QA (no pumps) |
@@ -56,9 +56,17 @@ Merge [`configuration.snippet.yaml`](configuration.snippet.yaml) into HA `config
 (packages + YAML Lovelace). Filenames under `packages/` must use underscores.
 Restart HA after the first copy / `configuration.yaml` change.
 
-**Ongoing:** install the **DSC-HUB Sync** add-on ([`../scripts/ADDON.md`](../scripts/ADDON.md))
-so pushes to `master` update packages, dashboard, and www automatically.
+**Ongoing delivery (pick one path):**
+
+| Path | When | Gate |
+|---|---|---|
+| **DSC-HUB Sync** add-on | HAOS polls `master` (~60s) | [`../scripts/ADDON.md`](../scripts/ADDON.md) |
+| **HA sync** GHA workflow | Push → self-hosted `unraid-ha-deploy` runner → `ha-sync.sh` | [`../scripts/HA-SYNC-BOOTSTRAP.md`](../scripts/HA-SYNC-BOOTSTRAP.md) |
+
 Firmware Install stays manual — see [`../RELEASE.md`](../RELEASE.md).
+**Do not treat a new HA surface as live** until `sensor.dsc_ha_surface_version`
+matches the commit (e.g. **5.1.4** after `e0ffeaf`). GitHub green ≠ HAOS
+updated when the Unraid runner is offline (jobs stay `queued`).
 
 ## Fan entity_ids
 
@@ -278,22 +286,96 @@ Reset coeffs: `script.dsc_climate_learn_reset`. Reset waits: `script.dsc_climate
 Dashboard: **Learning** (`/dsc-hub-pro/learning`) — Activity card, device cal,
 Phase A+B status, appliance effect cards, waits, ETA, efficiencies, charts.
 
-## Crop-steering prep (HA surface 5.1.4)
+## Crop-steering + response learning (HA surface 5.1.4)
+
+**Intent:** turn probe noise and actuator non-response into usable steering
+*before* probe replacement — genetics/age bands, peer-corrected Got, track-only
+dryback/coherence, and humidity-appliance efficacy that can force demand off.
+
+**HA-only cut** (`e0ffeaf`): no firmware flash required. Hub stays on the prior
+5.1.3 train until a later hub bump. Strain/sprout still live in HA helpers today
+(FOLLOWUPS **N-017** / **N-018** move them onto pot NVS).
 
 Packages: `dsc_v4_strain_catalog`, `dsc_v4_nutrient_catalog`, `dsc_v4_pots_coherence`,
-`dsc_v4_actuator_efficacy`.
+`dsc_v4_actuator_efficacy` (+ follower `*_available` gates in `dsc_v4_automations`).
 
-- **Want / Need / Got:** strain + sprout date → Want bands; Got = raw + peer offset;
-  Need summary + Apply expected stage (advisory).
-- **Nutrient Science:** tank L × strength → recipe; **Accept mix** burns stock (no pumps).
-- **Fluctuations:** relative dryback; cross-pot coherence when moisture rises together
-  but EC does not; learned ΔEC/Δmoisture.
-- **Temp OOS vs Operator Lockout:** humidifier/dehum/clone mister — efficacy fail →
-  Temp OOS (flashing) + demand off; Lockout only you clear.
+### Want / Need / Got
 
-Dashboard: **Strains** (`/dsc-hub-pro/strains`), pot subviews, **Nutrient Science**,
-Climate Temp OOS / Lockout cards. Data mirrors: `data/dsc_strain_catalog.yaml`,
+| Layer | Meaning | Examples |
+|---|---|---|
+| **Want** | Strain catalog + sprout age → expected stage bands (pH / EC / moisture) | `sensor.dsc_pot1_want_*`, `sensor.dsc_pot1_expected_stage` |
+| **Got** | Raw probe **+ peer offset** (soft cal vs peers) | `sensor.dsc_pot1_got_ph` / `_ec` / `_moisture` |
+| **Need** | Plain-English gap vs Want | `sensor.dsc_pot1_need_summary`, `sensor.dsc_pot1_need_ec_delta` |
+
+Scripts: Capture peer baseline; Apply expected stage (advisory — does not write
+hub climate). Sprout dates: `input_datetime.dsc_pot*_sprout_date`.
+
+### Nutrient Science
+
+Tank volume × strength → `sensor.dsc_next_mix_recipe` + purchase list.
+**Accept mix** (`script.dsc_accept_mix`) burns book stock only — **no pumps**
+(FOLLOWUPS **N-012**). Data mirrors: `data/dsc_strain_catalog.yaml`,
 `data/dsc_nutrient_catalog.yaml`.
+
+### Fluctuations (track-only)
+
+- Relative dryback: peak→now moisture (`sensor.dsc_pot*_dryback_pct`) — not closed-loop irrigation yet (**N-013**).
+- Cross-pot coherence when moisture rises together but EC response disagrees;
+  EWMA learns `input_number.dsc_pot*_learned_ec_per_moisture`.
+
+### Temp OOS vs Operator Lockout
+
+Applies to humidifier, dehumidifier, and clone mister (not AC/heater yet — **N-014**).
+
+| Mode | Who sets | Who clears | Effect |
+|---|---|---|---|
+| **Temp OOS** | Efficacy check after demand ON **5 min** | Operator (`script.dsc_clear_*_temp_oos`) | Flashing UI; demand + relay forced off |
+| **Operator Lockout** | Operator only | Operator only | Solid lock; system never auto-clears |
+
+Efficacy: record tent/clone RH at demand start; after 5 min require
+ΔRH ≥ max(learned×0.35, `dsc_efficacy_min_delta_rh` floor, default 0.5%).
+Pass → EWMA update learned ΔRH. Fail → Temp OOS + notify.
+`binary_sensor.dsc_*_available` is false while Temp OOS **or** Lockout (clone
+also requires in-service). Followers and `dsc_efficacy_inhibit_demand_while_oos`
+keep demand off while unavailable.
+
+```mermaid
+flowchart TD
+  demand["Demand ON"] --> record["Record RH at start"]
+  record --> wait["Wait 5 min still ON"]
+  wait --> delta{"ΔRH ≥ need?"}
+  delta -->|yes| ewma["Update learned ΔRH"]
+  delta -->|no| temp["Temp OOS ON"]
+  temp --> force["Demand + relay OFF"]
+  force --> clear["Clear Temp OOS script"]
+  lock["Operator Lockout"] --> force
+```
+
+### Deploy gate (live vs GitHub)
+
+Packages on `master` are **not** production until HAOS has them:
+
+1. Confirm delivery path ran (Sync add-on log **or** Actions **HA sync** success).
+2. Restart HA Core once after new `input_*` helpers (reload alone often misses them).
+3. `sensor.dsc_ha_surface_version` = **`5.1.4`** (System versions table).
+4. Views exist: **Strains** `/dsc-hub-pro/strains`, **Nutrient Science**, Climate Temp OOS / Lockout cards.
+5. Spot-check `sensor.dsc_pot*_got_*`, `binary_sensor.dsc_*_available`.
+
+**Incident 2026-08-03:** push `e0ffeaf` left HA sync **queued** with
+`total_count: 0` self-hosted runners — surface stayed pre-5.1.4 until
+`unraid-ha-deploy` came back (or manual `ha-sync.sh`). See FOLLOWUPS **N-009** /
+**N-010** and [`../scripts/HA-SYNC-BOOTSTRAP.md`](../scripts/HA-SYNC-BOOTSTRAP.md).
+
+### Pitfalls
+
+- Treat crop-steering UI as live only after the surface-version gate — stale
+  packages mean missing entities / broken views, not “empty catalog.”
+- Temp OOS ≠ capacity OOS (`*_in_service` off) ≠ Operator Lockout — three different gates.
+- Accept mix is bookkeeping; do not expect hardware dosing.
+- Peer offsets are v1 soft cal (**N-016**); probe stays in pot until harvest — genetics should eventually travel with the node (**N-017**).
+
+Dashboard: Strains + pot subviews, Nutrient Science, Climate Temp/Lockout UI.
+Carry-forward: [`../docs/FOLLOWUPS.md`](../docs/FOLLOWUPS.md).
 
 ## Tank / Tuya entity map
 
@@ -312,7 +394,7 @@ not humidifier lock — entity id kept for compatibility.
 
 ## Still outside this folder (hardware / live site)
 
-- Clone humidifier / AC physical actuators — demands live; followers gated by wired flags
+- Clone humidifier / AC physical actuators — demands live; followers gated by in-service + `*_available`
 - Recorder `purge_keep_days: ~120` — HA config
 - Fixed-channel AP — ops (root README)
 - POT3 probe swap, SCD41, ETH01 — post-release hardware
