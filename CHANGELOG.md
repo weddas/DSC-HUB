@@ -11,6 +11,8 @@
 - Hub NVS `*_in_service` switches + HA sync automation; humidifier refuses
   fire at/above RH ceiling; pot alerts gated on in-service.
 - Dashboard In-service toggles; learn/mesh copy (Activity, ETA, Sync≠flash).
+- **Hub version lockstep:** text sensor Firmware Version bumped to **5.1.3** to
+  match `project.version` (fleet chip reads the text sensor, not project).
 - Master follow-ups: [`docs/FOLLOWUPS.md`](docs/FOLLOWUPS.md).
 
 ## HA surface 5.1.2 + hub/pot mesh & learn (2026-08-03)

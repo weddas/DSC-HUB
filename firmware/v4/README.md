@@ -6,6 +6,35 @@ Working directory for ESPHome configs. Current fleet release string:
 Standalone SoftAP unboxing (no HA): [SETUP.md](../../SETUP.md).
 Firmware QA: [docs/qa/FIRMWARE-QA-5.1.0.md](../../docs/qa/FIRMWARE-QA-5.1.0.md).
 
+## Firmware Version surfaces (do not drift)
+
+Each device publishes **two** release strings that must stay in lockstep:
+
+| Surface | Where | Who reads it |
+|---|---|---|
+| `esphome.project.version` | package body (`dsc-hub-v4_0.yaml`, …) | ESPHome dashboard / compile metadata |
+| Template text **Firmware Version** (`fw_version`) | same package `text_sensor:` | HA `sensor.dsc_*_firmware_version` → fleet chip |
+
+```mermaid
+flowchart LR
+  project["project.version"] -.must match.-> text["text Firmware Version"]
+  text --> ha["sensor.dsc_*_firmware_version"]
+  ha --> chip["sensor.dsc_fleet_version_status"]
+  esphome["text ESPHome Version"] -.->|ignore| chip
+```
+
+**Constraints**
+
+- Fleet chip / System versions table use the **text** sensor, not `project.version`.
+- Never treat **ESPHome Version** (compiler string) as the fleet release.
+- Patch bumps must update **both** strings in the same commit. Hub incident
+  2026-08-03: `project.version` was already **5.1.3** while `fw_version`
+  still returned **5.1.2** until
+  [`bce6543`](https://github.com/weddas/DSC-HUB/commit/bce6543f6f9a879185c2b75b2ae5b7334e56a8a3).
+- Current lockstep (master tip): hub **5.1.3** / pots **5.1.2** / panel **5.1.14** /
+  Sonoffs **5.1.0**. Fleet chip compares **major.minor** only, so mixed patches
+  inside `5.1.x` stay `ok`.
+
 ## Local vs HA
 
 | Where | What |
