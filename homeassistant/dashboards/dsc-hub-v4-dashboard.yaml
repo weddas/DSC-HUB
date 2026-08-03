@@ -6085,7 +6085,7 @@ views:
         column_span: 2
         cards:
           - type: custom:expander-card
-            title: POT1 — {{ states('text.dsc_pot1_plant_name') }}
+            title: POT1
             expanded: true
             card_mod: *dsc_expander_style
             cards:
@@ -6161,7 +6161,7 @@ views:
                   - entity: input_number.dsc_pot1_offset_moisture
                     name: Offset moisture
           - type: custom:expander-card
-            title: POT2 — {{ states('text.dsc_pot2_plant_name') }}
+            title: POT2
             expanded: false
             card_mod: *dsc_expander_style
             cards:
@@ -6237,7 +6237,7 @@ views:
                   - entity: input_number.dsc_pot2_offset_moisture
                     name: Offset moisture
           - type: custom:expander-card
-            title: POT3 — {{ states('text.dsc_pot3_plant_name') }}
+            title: POT3
             expanded: false
             card_mod: *dsc_expander_style
             cards:
@@ -6313,7 +6313,7 @@ views:
                   - entity: input_number.dsc_pot3_offset_moisture
                     name: Offset moisture
           - type: custom:expander-card
-            title: POT4 — {{ states('text.dsc_pot4_plant_name') }}
+            title: POT4
             expanded: false
             card_mod: *dsc_expander_style
             cards:
@@ -6583,7 +6583,7 @@ views:
             heading: Nutrients 1–4 (primary)
             heading_style: title
           - type: custom:expander-card
-            title: "{{ states('input_text.dsc_nutrient_1_name') }}"
+            title: Nutrient 1
             expanded: true
             card_mod: *dsc_expander_style
             cards:
@@ -6600,7 +6600,7 @@ views:
                   - entity: input_number.dsc_nutrient_1_reorder_ml
                     name: Reorder at
           - type: custom:expander-card
-            title: "{{ states('input_text.dsc_nutrient_2_name') }}"
+            title: Nutrient 2
             expanded: false
             card_mod: *dsc_expander_style
             cards:
@@ -6617,7 +6617,7 @@ views:
                   - entity: input_number.dsc_nutrient_2_reorder_ml
                     name: Reorder at
           - type: custom:expander-card
-            title: "{{ states('input_text.dsc_nutrient_3_name') }}"
+            title: Nutrient 3
             expanded: false
             card_mod: *dsc_expander_style
             cards:
@@ -6634,7 +6634,7 @@ views:
                   - entity: input_number.dsc_nutrient_3_reorder_ml
                     name: Reorder at
           - type: custom:expander-card
-            title: "{{ states('input_text.dsc_nutrient_4_name') }}"
+            title: Nutrient 4
             expanded: false
             card_mod: *dsc_expander_style
             cards:

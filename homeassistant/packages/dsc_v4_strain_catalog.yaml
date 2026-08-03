@@ -1482,7 +1482,8 @@ script:
                   value_template: >-
                     {{ states(ha_sprout) not in ['unknown','unavailable','']
                        and (states(pot_sprout) in ['unknown','unavailable','']
-                            or states(pot_sprout)[:10] == '1970-01-01') }}
+                            or states(pot_sprout)[:10] in ['1970-01-01','0000-00-00']
+                            or states(pot_sprout)|length < 8) }}
               then:
                 - action: datetime.set_value
                   target:
