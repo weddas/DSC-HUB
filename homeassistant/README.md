@@ -6,7 +6,7 @@ Canonical HA surface for firmware [`firmware/v4/`](../firmware/v4/).
 
 | Path | Role |
 |---|---|
-| `dashboards/dsc-hub-v4-dashboard.yaml` | Lovelace UX **v5.1.1** (10 views, 4-col, browser_mod popups). URL **must** be `dsc-hub-pro`. Flow: Home → Climate → Learning → tents → Root Zone → Tank/Light/Trends/System. |
+| `dashboards/dsc-hub-v4-dashboard.yaml` | Lovelace UX **v5.1.1** (`dsc-hub-pro`). Mode-locked targets (Grow Stage / Clone Mode **Custom** unlock); Home **Operational now**; Root Zone above-fold Pots+Mat. |
 | `packages/dsc_v4_core_helpers.yaml` | Hub link, fan %, airflow Sankey (CFM), photoperiod, leaf offset, appliance runtimes, dead-demand cues |
 | `packages/dsc_v4_climate_physics.yaml` | Settable plant specs (CFM/volumes/L/day/W), ACH/AH/BTU/moisture sensors, spec verification |
 | `packages/dsc_v4_device_cal.yaml` | Optional fan CFM / SF1000 PPFD multi-point curves + Learning wizard (unset = % × nameplate) |
@@ -116,6 +116,28 @@ entities:
 The **hub firmware** owns the escalation ladder (fans first → appliances →
 >35°C failsafe). HA only mirrors four Sonoff relays and surfaces alerts —
 it must not duplicate ladder logic.
+
+## Mode ownership (dashboard + hub)
+
+Named modes own climate numbers. Switch to **Custom** (or Override / Hold)
+before fine-tuning — otherwise the hub rejects the write and the dashboard
+shows a locked readout.
+
+| Owner | Unlock | Locked surface |
+|---|---|---|
+| Grow Stage | **Custom** | 4x8 target temp / RH / VPD |
+| Clone Mode | **Custom** | Clone temp / RH / VPD |
+| Full Auto | Manual Fan Override or Takeover | Fan % cards |
+| Auto Photoperiod | Manual Light Hold or Takeover | SF1000 brightness (schedule cue) |
+| Clone Photoperiod Follow | **Independent** | Clone light hours + lights-on time |
+
+**Home** folds: **Now** (pulse + alerts) → **Operational now** (live vs band,
+ladder prep, fans) → **SYSTEM MAP** + Running → **Bands** (Follow-aware gauges)
+→ narrator expander. **Root Zone** above-fold is Pots + Mat; EC/moisture/NPK
+charts live in History expanders.
+
+After flashing Grow Stage **Custom**, either pick **Custom** to keep hand-tuned
+4x8 bands or re-select a named stage to reload presets.
 
 | Device | Owner | Role |
 |---|---|---|

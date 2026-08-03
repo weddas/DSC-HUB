@@ -1009,6 +1009,17 @@ globals:
     type: int                       # 2=Mother, 3=Custom, 4=Off (select
     restore_value: true             # can't re-fire set_action on boot ->
     initial_value: '1'              # int mirror persists, like strategy_idx)
+  # Latch: apply_clone_mode may write preset numbers while mode != Custom.
+  # HA / panel / entity UI writes are rejected unless mode is Custom.
+  - id: clone_preset_write
+    type: bool
+    restore_value: false
+    initial_value: 'false'
+  # Latch: apply_stage may stamp named-stage presets while stage != Custom.
+  - id: stage_preset_write
+    type: bool
+    restore_value: false
+    initial_value: 'false'
   - id: clone_photo_follow          # true = clone LED mirrors 4x8 window
     type: bool
     restore_value: true
@@ -1365,22 +1376,45 @@ output:
     zero_means_zero: true
 
 fan:
+  # While Full Auto owns the curve, HA speed writes are logged and the next
+  # climate tick reasserts PWM. Manual Override / Takeover clear full_auto
+  # so dials stick. Dashboard also locks the fan cards while Full Auto.
   - platform: speed
     output: exhaust_out_pwm
     name: "6 Inch Exhaust (Outside)"
     id: fan_exhaust_out
+    on_speed_set:
+      - lambda: |-
+          if (id(full_auto_mode) && !id(ha_takeover_active)) {
+            ESP_LOGW("fan", "OUT speed write while Full Auto — curve will reassert (use Manual Override)");
+          }
   - platform: speed
     output: exhaust_recirc_pwm
     name: "6 Inch Exhaust (Room)"
     id: fan_exhaust_recirc
+    on_speed_set:
+      - lambda: |-
+          if (id(full_auto_mode) && !id(ha_takeover_active)) {
+            ESP_LOGW("fan", "Room exhaust speed write while Full Auto — curve will reassert");
+          }
   - platform: speed
     output: intake_4in_main_pwm
     name: "4 Inch Intake Fan (Main)"
     id: fan_intake_main
+    on_speed_set:
+      - lambda: |-
+          if (id(full_auto_mode) && !id(ha_takeover_active)) {
+            ESP_LOGW("fan", "Main intake speed write while Full Auto — curve will reassert");
+          }
   - platform: speed
     output: intake_4in_clone_pwm
     name: "4 Inch Intake Fan (2x4)"
     id: fan_intake_clone
+    on_speed_set:
+      - lambda: |-
+          if (id(full_auto_mode) && !id(ha_takeover_active)) {
+            ESP_LOGW("fan", "Clone intake speed write while Full Auto — curve will reassert");
+          }
 
 light:
   - platform: monochromatic
@@ -1753,6 +1787,7 @@ select:
       - "Late Flowering"
       - "Final 48-72h Flowering"
       - "Dry Mode"
+      - "Custom"
       - "Off"
     set_action:
       - script.execute: apply_stage
@@ -1832,8 +1867,8 @@ select:
       - script.execute: tx_panel_sync
 
 number:
-  # All five target numbers now restore across reboots (paired with the
-  # persisted stage_* globals) — fine-tuning survives power cycles.
+  # Stage lock: only Grow Stage = Custom accepts HA/panel slider writes.
+  # apply_stage sets stage_preset_write around named-stage preset stamps.
   - platform: template
     name: "Target Temp"
     id: num_target_temp
@@ -1846,8 +1881,19 @@ number:
     unit_of_measurement: "°C"
     initial_value: 25
     set_action:
-      - globals.set: {id: stage_temp_target, value: !lambda 'return x;'}
-      - script.execute: tx_panel_sync
+      - if:
+          condition:
+            lambda: |-
+              return id(stage_preset_write) ||
+                     id(grow_stage).current_option() == "Custom";
+          then:
+            - globals.set: {id: stage_temp_target, value: !lambda 'return x;'}
+            - script.execute: tx_panel_sync
+          else:
+            - lambda: |-
+                ESP_LOGW("grow", "Reject Target Temp — stage '%s' (switch to Custom)",
+                         id(grow_stage).current_option().c_str());
+                id(num_target_temp).publish_state(id(stage_temp_target));
 
   - platform: template
     name: "VPD Target Min"
@@ -1861,8 +1907,19 @@ number:
     unit_of_measurement: "kPa"
     initial_value: 0.4
     set_action:
-      - globals.set: {id: stage_vpd_min, value: !lambda 'return x;'}
-      - script.execute: tx_panel_sync
+      - if:
+          condition:
+            lambda: |-
+              return id(stage_preset_write) ||
+                     id(grow_stage).current_option() == "Custom";
+          then:
+            - globals.set: {id: stage_vpd_min, value: !lambda 'return x;'}
+            - script.execute: tx_panel_sync
+          else:
+            - lambda: |-
+                ESP_LOGW("grow", "Reject VPD Min — stage '%s' (switch to Custom)",
+                         id(grow_stage).current_option().c_str());
+                id(num_vpd_min).publish_state(id(stage_vpd_min));
 
   - platform: template
     name: "VPD Target Max"
@@ -1876,8 +1933,19 @@ number:
     unit_of_measurement: "kPa"
     initial_value: 0.8
     set_action:
-      - globals.set: {id: stage_vpd_max, value: !lambda 'return x;'}
-      - script.execute: tx_panel_sync
+      - if:
+          condition:
+            lambda: |-
+              return id(stage_preset_write) ||
+                     id(grow_stage).current_option() == "Custom";
+          then:
+            - globals.set: {id: stage_vpd_max, value: !lambda 'return x;'}
+            - script.execute: tx_panel_sync
+          else:
+            - lambda: |-
+                ESP_LOGW("grow", "Reject VPD Max — stage '%s' (switch to Custom)",
+                         id(grow_stage).current_option().c_str());
+                id(num_vpd_max).publish_state(id(stage_vpd_max));
 
   - platform: template
     name: "RH Target Min"
@@ -1891,8 +1959,19 @@ number:
     unit_of_measurement: "%"
     initial_value: 70
     set_action:
-      - globals.set: {id: stage_rh_min, value: !lambda 'return x;'}
-      - script.execute: tx_panel_sync
+      - if:
+          condition:
+            lambda: |-
+              return id(stage_preset_write) ||
+                     id(grow_stage).current_option() == "Custom";
+          then:
+            - globals.set: {id: stage_rh_min, value: !lambda 'return x;'}
+            - script.execute: tx_panel_sync
+          else:
+            - lambda: |-
+                ESP_LOGW("grow", "Reject RH Min — stage '%s' (switch to Custom)",
+                         id(grow_stage).current_option().c_str());
+                id(num_rh_min).publish_state(id(stage_rh_min));
 
   - platform: template
     name: "RH Target Max"
@@ -1906,8 +1985,19 @@ number:
     unit_of_measurement: "%"
     initial_value: 80
     set_action:
-      - globals.set: {id: stage_rh_max, value: !lambda 'return x;'}
-      - script.execute: tx_panel_sync
+      - if:
+          condition:
+            lambda: |-
+              return id(stage_preset_write) ||
+                     id(grow_stage).current_option() == "Custom";
+          then:
+            - globals.set: {id: stage_rh_max, value: !lambda 'return x;'}
+            - script.execute: tx_panel_sync
+          else:
+            - lambda: |-
+                ESP_LOGW("grow", "Reject RH Max — stage '%s' (switch to Custom)",
+                         id(grow_stage).current_option().c_str());
+                id(num_rh_max).publish_state(id(stage_rh_max));
 
   # v2.4.1 · SENSOR EFFICIENCY: these polled template numbers only
   # mirror slow-moving settings. 10s polling re-published every one of
@@ -1962,6 +2052,10 @@ number:
       - script.execute: tx_panel_sync
 
   # ===== v2.2 · CLONE TARGET SLIDERS (persist; presets write them) =====
+  # Mode lock: only Clone Mode = Custom accepts HA/panel slider writes.
+  # apply_clone_mode sets clone_preset_write around preset loads so named
+  # modes can still stamp defaults. Rejects snap the number back to the
+  # live global so optimistic HA UIs can't drift from hub truth.
   - platform: template
     name: "Clone Target Temp"
     id: num_clone_temp
@@ -1974,8 +2068,19 @@ number:
     unit_of_measurement: "°C"
     initial_value: 24
     set_action:
-      - globals.set: {id: clone_temp_target, value: !lambda 'return x;'}
-      - script.execute: tx_panel_sync
+      - if:
+          condition:
+            lambda: |-
+              return id(clone_preset_write) ||
+                     id(clone_mode).current_option() == "Custom";
+          then:
+            - globals.set: {id: clone_temp_target, value: !lambda 'return x;'}
+            - script.execute: tx_panel_sync
+          else:
+            - lambda: |-
+                ESP_LOGW("clone", "Reject Clone Target Temp — mode '%s' (switch to Custom)",
+                         id(clone_mode).current_option().c_str());
+                id(num_clone_temp).publish_state(id(clone_temp_target));
 
   - platform: template
     name: "Clone VPD Min"
@@ -1989,8 +2094,19 @@ number:
     unit_of_measurement: "kPa"
     initial_value: 0.4
     set_action:
-      - globals.set: {id: clone_vpd_min, value: !lambda 'return x;'}
-      - script.execute: tx_panel_sync
+      - if:
+          condition:
+            lambda: |-
+              return id(clone_preset_write) ||
+                     id(clone_mode).current_option() == "Custom";
+          then:
+            - globals.set: {id: clone_vpd_min, value: !lambda 'return x;'}
+            - script.execute: tx_panel_sync
+          else:
+            - lambda: |-
+                ESP_LOGW("clone", "Reject Clone VPD Min — mode '%s' (switch to Custom)",
+                         id(clone_mode).current_option().c_str());
+                id(num_clone_vpd_min).publish_state(id(clone_vpd_min));
 
   - platform: template
     name: "Clone VPD Max"
@@ -2004,8 +2120,19 @@ number:
     unit_of_measurement: "kPa"
     initial_value: 0.8
     set_action:
-      - globals.set: {id: clone_vpd_max, value: !lambda 'return x;'}
-      - script.execute: tx_panel_sync
+      - if:
+          condition:
+            lambda: |-
+              return id(clone_preset_write) ||
+                     id(clone_mode).current_option() == "Custom";
+          then:
+            - globals.set: {id: clone_vpd_max, value: !lambda 'return x;'}
+            - script.execute: tx_panel_sync
+          else:
+            - lambda: |-
+                ESP_LOGW("clone", "Reject Clone VPD Max — mode '%s' (switch to Custom)",
+                         id(clone_mode).current_option().c_str());
+                id(num_clone_vpd_max).publish_state(id(clone_vpd_max));
 
   - platform: template
     name: "Clone RH Min"
@@ -2019,8 +2146,19 @@ number:
     unit_of_measurement: "%"
     initial_value: 70
     set_action:
-      - globals.set: {id: clone_rh_min, value: !lambda 'return x;'}
-      - script.execute: tx_panel_sync
+      - if:
+          condition:
+            lambda: |-
+              return id(clone_preset_write) ||
+                     id(clone_mode).current_option() == "Custom";
+          then:
+            - globals.set: {id: clone_rh_min, value: !lambda 'return x;'}
+            - script.execute: tx_panel_sync
+          else:
+            - lambda: |-
+                ESP_LOGW("clone", "Reject Clone RH Min — mode '%s' (switch to Custom)",
+                         id(clone_mode).current_option().c_str());
+                id(num_clone_rh_min).publish_state(id(clone_rh_min));
 
   - platform: template
     name: "Clone RH Max"
@@ -2034,8 +2172,19 @@ number:
     unit_of_measurement: "%"
     initial_value: 80
     set_action:
-      - globals.set: {id: clone_rh_max, value: !lambda 'return x;'}
-      - script.execute: tx_panel_sync
+      - if:
+          condition:
+            lambda: |-
+              return id(clone_preset_write) ||
+                     id(clone_mode).current_option() == "Custom";
+          then:
+            - globals.set: {id: clone_rh_max, value: !lambda 'return x;'}
+            - script.execute: tx_panel_sync
+          else:
+            - lambda: |-
+                ESP_LOGW("clone", "Reject Clone RH Max — mode '%s' (switch to Custom)",
+                         id(clone_mode).current_option().c_str());
+                id(num_clone_rh_max).publish_state(id(clone_rh_max));
 
   - platform: template
     name: "Clone Light Hours"
@@ -2049,8 +2198,16 @@ number:
     unit_of_measurement: "h"
     initial_value: 18
     set_action:
-      - globals.set: {id: clone_light_hours, value: !lambda 'return (int) x;'}
-      - script.execute: tx_panel_sync
+      - if:
+          condition:
+            lambda: 'return !id(clone_photo_follow);'
+          then:
+            - globals.set: {id: clone_light_hours, value: !lambda 'return (int) x;'}
+            - script.execute: tx_panel_sync
+          else:
+            - lambda: |-
+                ESP_LOGW("clone", "Reject Clone Light Hours — photoperiod is Follow 4x8 (switch to Independent)");
+                id(num_clone_light_hours).publish_state((float) id(clone_light_hours));
 
   # ===== v2.4 · RUNTIME-CONFIGURABLE PARAMETERS ======================
   # Tunables promoted from compiled constants. All persist (NVS layers
@@ -2351,7 +2508,14 @@ datetime:
     restore_value: true
     initial_value: "18:00:00"
     on_value:
-      - script.execute: tx_panel_sync
+      - if:
+          condition:
+            lambda: 'return id(clone_photo_follow);'
+          then:
+            - lambda: |-
+                ESP_LOGW("clone", "Clone Lights-On changed while Follow 4x8 — runtime still uses 4x8 window (switch to Independent)");
+          else:
+            - script.execute: tx_panel_sync
 
 # ==========================================
 # 5. SYSTEM INFO TEXT SENSORS & DIAGNOSTICS
@@ -3296,6 +3460,13 @@ script:
             ESP_LOGI("grow", "Stage OFF -> 4x8 inactive (excluded from arbitration; virtual window closed)");
             return;
           }
+          // Custom: fine-tune unlocked — keep live numbers + light hours.
+          if (s == "Custom") {
+            id(main_active) = true;
+            id(stage_short) = "Custom";
+            ESP_LOGI("grow", "Stage Custom -> targets unlocked (sliders untouched)");
+            return;
+          }
           id(main_active) = true;
           float tt, vmin, vmax, rmin, rmax; int lh; std::string sh;
           if      (s == "Germination")             { tt=25; vmin=0.4f; vmax=0.8f; rmin=70; rmax=80; lh=18; sh="Germ"; }
@@ -3308,11 +3479,13 @@ script:
           else if (s == "Late Flowering")          { tt=22; vmin=1.3f; vmax=1.5f; rmin=40; rmax=45; lh=12; sh="Late Flwr"; }
           else if (s == "Final 48-72h Flowering")  { tt=21; vmin=1.4f; vmax=1.6f; rmin=35; rmax=45; lh=12; sh="Flush"; }
           else /* Dry Mode */                      { tt=19; vmin=0.8f; vmax=1.0f; rmin=55; rmax=62; lh=0;  sh="Dry"; }
+          id(stage_preset_write) = true;
           id(num_target_temp).make_call().set_value(tt).perform();
           id(num_vpd_min).make_call().set_value(vmin).perform();
           id(num_vpd_max).make_call().set_value(vmax).perform();
           id(num_rh_min).make_call().set_value(rmin).perform();
           id(num_rh_max).make_call().set_value(rmax).perform();
+          id(stage_preset_write) = false;
           id(stage_light_hours) = lh;
           id(stage_short) = sh;
           ESP_LOGI("grow", "Stage '%s': VPD %.1f-%.1f, RH %.0f-%.0f, %dh light",
@@ -3328,7 +3501,8 @@ script:
           if (s == "Off") { id(main_active) = false; id(stage_short) = "OFF"; id(stage_light_hours) = 0;
                             ESP_LOGI("grow", "Boot: 4x8 stage OFF (inactive)"); return; }
           id(main_active) = true;
-          if      (s == "Germination")             { id(stage_short) = "Germ";       id(stage_light_hours) = 18; }
+          if      (s == "Custom")                  { id(stage_short) = "Custom"; /* light hours untouched */ }
+          else if (s == "Germination")             { id(stage_short) = "Germ";       id(stage_light_hours) = 18; }
           else if (s == "Seedling")                { id(stage_short) = "Seedling";   id(stage_light_hours) = 18; }
           else if (s == "Early Vegetative")        { id(stage_short) = "Early Veg";  id(stage_light_hours) = 18; }
           else if (s == "Vegetative")              { id(stage_short) = "Veg";        id(stage_light_hours) = 18; }
@@ -3373,11 +3547,15 @@ script:
           float tt, vmin, vmax, rmin, rmax;
           if (id(clone_mode_idx) == 2) { tt=25; vmin=0.8f; vmax=1.1f; rmin=55; rmax=65; }  // Mother = veg-like
           else                         { tt=24; vmin=0.4f; vmax=0.8f; rmin=70; rmax=80; }  // Clones & Seedlings
+          // Preset latch: set_action rejects non-Custom HA/panel writes, but
+          // this path must stamp the mode defaults onto the number entities.
+          id(clone_preset_write) = true;
           id(num_clone_temp).make_call().set_value(tt).perform();
           id(num_clone_vpd_min).make_call().set_value(vmin).perform();
           id(num_clone_vpd_max).make_call().set_value(vmax).perform();
           id(num_clone_rh_min).make_call().set_value(rmin).perform();
           id(num_clone_rh_max).make_call().set_value(rmax).perform();
+          id(clone_preset_write) = false;
           ESP_LOGI("clone", "Mode '%s': VPD %.1f-%.1f, RH %.0f-%.0f, %.0fC",
                    m.c_str(), vmin, vmax, rmin, rmax, tt);
 

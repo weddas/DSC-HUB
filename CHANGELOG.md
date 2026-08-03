@@ -1,5 +1,27 @@
 # Changelog
 
+## Mode ownership + cohesive dashboard (2026-08-03)
+
+- **Grow Stage Custom** + firmware write guards for 4x8 temp/RH/VPD (same
+  pattern as Clone Mode). Dashboard locked readout + Switch to Custom.
+- **Full Auto** fan lock cue + read-only % chips; editable fan cards only with
+  Override/Takeover (or Full Auto off). Hub `on_speed_set` warn while curve owns PWM.
+- Photoperiod **Follow 4x8** locks clone light hours + lights-on time;
+  SF1000 **Schedule owns brightness** cue (Manual Light Hold unlock).
+- Home **Now / Running / Operational now / Bands** composition (nav chip strip
+  dropped; Running nested under SYSTEM MAP). Follow-aware gauge segments.
+- Root Zone above-fold **Pots + Mat**; EC / moisture / NPK charts in History
+  expanders. Climate **Command** ownership strip.
+
+## Clone mode locks climate targets (2026-08-03)
+
+- Dashboard **2x4 Clone**: temp / RH / VPD editors only when Clone Mode is
+  **Custom**. Named modes / Follow / Off show a locked band readout plus a
+  one-tap **Switch to Custom**.
+- Hub firmware rejects non-Custom writes to those five numbers (HA entity UI
+  / panel included); `apply_clone_mode` still stamps presets via a latch.
+- Light hours + photoperiod stay editable in every mode.
+
 ## Hub — link recovery + AP pin (2026-08-03)
 
 - Soften API bounce/reboot: require a dead HA client (≥180s / ≥300s) or

@@ -10,7 +10,7 @@
 #     its photoperiod is a VIRTUAL window (schedule / Follow-4x8).
 #
 #  VIEW FLOW (v0.2 nesting):
-#     Home        → pulse + demands + glance vitals (narrator collapsed)
+#     Home        → Now (pulse+ops) · Space (map+running) · Bands (narrator)
 #     Climate     → master control, ladder, tunables, appliances
 #     Learning    → optional fan/PPFD cal, Phase A+B, appliance effect DB, ETA
 #     4x8 / 2x4   → tent-local vitals + equipment
@@ -50,7 +50,7 @@ views:
       - type: grid
         cards:
           - type: heading
-            heading: SYSTEM PULSE
+            heading: Now
             heading_style: title
           - type: custom:mushroom-chips-card
             alignment: start
@@ -147,72 +147,6 @@ views:
                     animation: dsc-pulse-glow 1.4s ease-in-out infinite;
                     {% endif %}
                   }
-          - type: custom:mushroom-chips-card
-            alignment: start
-            chips:
-              - type: template
-                icon: mdi:engine
-                icon_color: teal
-                content: Climate
-                tap_action:
-                  action: navigate
-                  navigation_path: /dsc-hub-pro/climate
-              - type: template
-                icon: mdi:brain
-                icon_color: cyan
-                content: Learning
-                tap_action:
-                  action: navigate
-                  navigation_path: /dsc-hub-pro/learning
-              - type: template
-                icon: mdi:greenhouse
-                icon_color: green
-                content: 4x8
-                tap_action:
-                  action: navigate
-                  navigation_path: /dsc-hub-pro/main-4x8
-              - type: template
-                icon: mdi:sprout
-                icon_color: light-green
-                content: 2x4
-                tap_action:
-                  action: navigate
-                  navigation_path: /dsc-hub-pro/clone-2x4
-              - type: template
-                icon: mdi:grass
-                icon_color: lime
-                content: Root Zone
-                tap_action:
-                  action: navigate
-                  navigation_path: /dsc-hub-pro/root-zone
-              - type: template
-                icon: mdi:water
-                icon_color: blue
-                content: Tank
-                tap_action:
-                  action: navigate
-                  navigation_path: /dsc-hub-pro/tank
-              - type: template
-                icon: mdi:lightbulb-on
-                icon_color: amber
-                content: Lighting
-                tap_action:
-                  action: navigate
-                  navigation_path: /dsc-hub-pro/lighting
-              - type: template
-                icon: mdi:chart-timeline-variant
-                icon_color: purple
-                content: Trends
-                tap_action:
-                  action: navigate
-                  navigation_path: /dsc-hub-pro/trends
-              - type: template
-                icon: mdi:cog
-                icon_color: grey
-                content: System
-                tap_action:
-                  action: navigate
-                  navigation_path: /dsc-hub-pro/system
 
           - type: conditional
             conditions:
@@ -399,10 +333,8 @@ views:
               *SYSTEM MAP card loads from `/local/dsc-system-map-card.js`
               (Sync www or HACS). If you see a configuration error, add that
               JS as a Lovelace module resource and refresh.*
-      - type: grid
-        cards:
           - type: heading
-            heading: RUNNING NOW
+            heading: Running
             heading_style: subtitle
           - type: custom:mushroom-chips-card
             alignment: justify
@@ -602,6 +534,8 @@ views:
                     animation: dsc-fan-spin 1.4s linear infinite;
                     {% endif %}
                   }
+      - type: grid
+        cards:
           - type: custom:logbook-card
             title: Grow log
             entity: input_boolean.dsc_event_log
@@ -642,17 +576,19 @@ views:
                   {%- set cvpd = states('sensor.dsc_hub_clone_vpd_kpa') | float(0)
                   -%}
 
-                  {%- set ct_target = states('number.dsc_hub_clone_target_temp') |
-                  float(24) -%}
+                  {%- set follow = is_state('select.dsc_hub_clone_mode','Follow 4x8') -%}
 
-                  {%- set cvmin = states('number.dsc_hub_clone_vpd_min') |
-                  float(0.4) -%}
+                  {%- set ct_target = states('number.dsc_hub_target_temp' if follow else
+                  'number.dsc_hub_clone_target_temp') | float(24) -%}
 
-                  {%- set cvmax = states('number.dsc_hub_clone_vpd_max') |
-                  float(0.8) -%}
+                  {%- set cvmin = states('number.dsc_hub_vpd_target_min' if follow else
+                  'number.dsc_hub_clone_vpd_min') | float(0.4) -%}
 
-                  {%- set crh_min = states('number.dsc_hub_clone_rh_min') |
-                  float(70) -%}
+                  {%- set cvmax = states('number.dsc_hub_vpd_target_max' if follow else
+                  'number.dsc_hub_clone_vpd_max') | float(0.8) -%}
+
+                  {%- set crh_min = states('number.dsc_hub_rh_target_min' if follow else
+                  'number.dsc_hub_clone_rh_min') | float(70) -%}
 
 
                   {%- set tt   = states('sensor.dsc_hub_tent_temperature') |
@@ -994,8 +930,166 @@ views:
       - type: grid
         column_span: 2
         cards:
+
           - type: heading
-            heading: TENT VITALS
+            heading: Operational now
+            heading_style: title
+          - type: custom:vertical-stack-in-card
+            cards:
+              - type: custom:mushroom-chips-card
+                alignment: start
+                chips:
+                  - type: template
+                    content: >-
+                      {{ states('select.dsc_hub_grow_stage') }}
+                    icon: mdi:sprout
+                    icon_color: green
+                  - type: template
+                    content: >-
+                      {{ states('select.dsc_hub_clone_mode') }}
+                    icon: mdi:sprout-outline
+                    icon_color: light-green
+                  - type: template
+                    content: >-
+                      {{ states('select.dsc_hub_control_strategy') }}
+                    icon: mdi:tune-variant
+                    icon_color: teal
+                  - type: template
+                    content: >-
+                      Priority {{ states('select.dsc_hub_priority_tent') }}
+                    icon: mdi:priority-high
+                    icon_color: blue
+                  - type: template
+                    content: >-
+                      {% if is_state('switch.dsc_hub_manual_takeover','on') %}Takeover
+                      {% elif is_state('switch.dsc_hub_tent_manual_override','on') %}Fan override
+                      {% elif is_state('switch.dsc_hub_tent_full_auto_mode','on') %}Full Auto
+                      {% else %}Standby{% endif %}
+                    icon: mdi:robot
+                    icon_color: >-
+                      {% if is_state('switch.dsc_hub_manual_takeover','on') %}purple
+                      {% elif is_state('switch.dsc_hub_tent_manual_override','on') %}amber
+                      {% elif is_state('switch.dsc_hub_tent_full_auto_mode','on') %}green
+                      {% else %}disabled{% endif %}
+              - type: markdown
+                content: >-
+                  {% set pri = states('select.dsc_hub_priority_tent') %}
+                  {% set follow = is_state('select.dsc_hub_clone_mode','Follow 4x8') %}
+                  {% macro band(val, lo, hi) -%}
+                  {%- if val in ['unavailable','unknown','none',''] or lo in ['unavailable','unknown'] -%}?—
+                  {%- else -%}
+                  {%- set v = val|float(0) %}{%- set a = lo|float(0) %}{%- set b = hi|float(0) %}
+                  {%- if v < a %}↓ low {{ '%.2f'|format(v-a) }}
+                  {%- elif v > b %}↑ high +{{ '%.2f'|format(v-b) }}
+                  {%- else %}→ on target{% endif %}
+                  {%- endif %}
+                  {%- endmacro %}
+                  **4x8** {{ states('sensor.dsc_hub_tent_temperature') }}°C /
+                  {{ states('sensor.dsc_hub_tent_humidity')|float(0)|round(0) }}% /
+                  VPD {{ states('sensor.dsc_hub_vpd_kpa') }}
+                  ({{ band(states('sensor.dsc_hub_vpd_kpa'),
+                  states('number.dsc_hub_vpd_target_min'),
+                  states('number.dsc_hub_vpd_target_max')) }})
+                  · band {{ states('number.dsc_hub_vpd_target_min') }}–{{
+                  states('number.dsc_hub_vpd_target_max') }}
+
+
+                  **2x4** {{ states('sensor.dsc_hub_clone_temperature') }}°C /
+                  {{ states('sensor.dsc_hub_clone_humidity')|float(0)|round(0) }}% /
+                  VPD {{ states('sensor.dsc_hub_clone_vpd_kpa') }}
+                  {%- if follow %} *(follows 4x8 bands)*
+                  {%- set vlo = states('number.dsc_hub_vpd_target_min') %}
+                  {%- set vhi = states('number.dsc_hub_vpd_target_max') %}
+                  {%- else %}
+                  {%- set vlo = states('number.dsc_hub_clone_vpd_min') %}
+                  {%- set vhi = states('number.dsc_hub_clone_vpd_max') %}
+                  {%- endif %}
+                  ({{ band(states('sensor.dsc_hub_clone_vpd_kpa'), vlo, vhi) }})
+
+
+                  Room appliances chase **{{ pri }}** bands.
+              - type: custom:mushroom-chips-card
+                alignment: start
+                chips:
+                  - type: template
+                    entity: sensor.dsc_hub_humidifier_fire_countdown
+                    content: >-
+                      {% set d = is_state('switch.dsc_hub_humidifier_demand','on') %}
+                      {% set c = states(entity)|float(0) %}
+                      {% if d %}Hum live{% elif c > 0 %}Hum {{ c|round(0)|int }}s{% else %}Hum idle{% endif %}
+                    icon: mdi:air-humidifier
+                    icon_color: >-
+                      {% set d = is_state('switch.dsc_hub_humidifier_demand','on') %}
+                      {% set c = states(entity)|float(0) %}
+                      {{ 'green' if d else 'amber' if c > 0 else 'disabled' }}
+                    tap_action:
+                      action: navigate
+                      navigation_path: /dsc-hub-pro/climate
+                  - type: template
+                    entity: sensor.dsc_hub_dehumidifier_fire_countdown
+                    content: >-
+                      {% set d = is_state('switch.dsc_hub_dehumidifier_demand','on') %}
+                      {% set c = states(entity)|float(0) %}
+                      {% if d %}Dehum live{% elif c > 0 %}Dehum {{ c|round(0)|int }}s{% else %}Dehum idle{% endif %}
+                    icon: mdi:air-humidifier-off
+                    icon_color: >-
+                      {% set d = is_state('switch.dsc_hub_dehumidifier_demand','on') %}
+                      {% set c = states(entity)|float(0) %}
+                      {{ 'green' if d else 'amber' if c > 0 else 'disabled' }}
+                    tap_action:
+                      action: navigate
+                      navigation_path: /dsc-hub-pro/climate
+                  - type: template
+                    entity: sensor.dsc_hub_heater_fire_countdown
+                    content: >-
+                      {% set d = is_state('switch.dsc_hub_heater_demand','on') %}
+                      {% set c = states(entity)|float(0) %}
+                      {% if d %}Heat live{% elif c > 0 %}Heat {{ c|round(0)|int }}s{% else %}Heat idle{% endif %}
+                    icon: mdi:radiator
+                    icon_color: >-
+                      {% set d = is_state('switch.dsc_hub_heater_demand','on') %}
+                      {% set c = states(entity)|float(0) %}
+                      {{ 'green' if d else 'amber' if c > 0 else 'disabled' }}
+                    tap_action:
+                      action: navigate
+                      navigation_path: /dsc-hub-pro/climate
+                  - type: template
+                    entity: sensor.dsc_hub_ac_fire_countdown
+                    content: >-
+                      {% set d = is_state('switch.dsc_hub_ac_demand','on') %}
+                      {% set c = states(entity)|float(0) %}
+                      {% if d %}AC live{% elif c > 0 %}AC {{ c|round(0)|int }}s{% else %}AC idle{% endif %}
+                    icon: mdi:snowflake
+                    icon_color: >-
+                      {% set d = is_state('switch.dsc_hub_ac_demand','on') %}
+                      {% set c = states(entity)|float(0) %}
+                      {{ 'green' if d else 'amber' if c > 0 else 'disabled' }}
+                    tap_action:
+                      action: navigate
+                      navigation_path: /dsc-hub-pro/climate
+                  - type: template
+                    entity: sensor.dsc_hub_grow_mat_fire_countdown
+                    content: >-
+                      {% set d = is_state('switch.dsc_hub_grow_mat_demand','on') %}
+                      {% set c = states(entity)|float(0) %}
+                      {% if d %}Mat live{% elif c > 0 %}Mat {{ c|round(0)|int }}s{% else %}Mat idle{% endif %}
+                    icon: mdi:heating-coil
+                    icon_color: >-
+                      {% set d = is_state('switch.dsc_hub_grow_mat_demand','on') %}
+                      {% set c = states(entity)|float(0) %}
+                      {{ 'green' if d else 'amber' if c > 0 else 'disabled' }}
+                  - type: template
+                    content: >-
+                      Fans {{ state_attr('fan.dsc_hub_6_inch_exhaust_outside','percentage')|int(0) }}/{{
+                      state_attr('fan.dsc_hub_6_inch_exhaust_room','percentage')|int(0) }}%
+                    icon: mdi:fan
+                    icon_color: cyan
+                    tap_action:
+                      action: navigate
+                      navigation_path: /dsc-hub-pro/climate
+
+          - type: heading
+            heading: Bands
             heading_style: title
           - type: grid
             columns: 3
@@ -1106,12 +1200,12 @@ views:
                 max: 2.5
                 needle: true
                 segments: >
-                  {% set lo = states('number.dsc_hub_vpd_target_min')|float(0.8)
-                  %} {% set hi =
-                  states('number.dsc_hub_vpd_target_max')|float(1.2) %} {{ [
-                  {'from': 0, 'color': '#3b82f6'},
+                  {% set lo = states('number.dsc_hub_vpd_target_min')|float(none) %}
+                  {% set hi = states('number.dsc_hub_vpd_target_max')|float(none) %}
+                  {% if lo is none or hi is none %}{{ [ {'from': 0, 'color': '#64748b'} ] }}
+                  {% else %}{{ [ {'from': 0, 'color': '#3b82f6'},
                        {'from': lo, 'color': '#22c55e'},
-                       {'from': hi, 'color': '#ef4444'} ] }}
+                       {'from': hi, 'color': '#ef4444'} ] }}{% endif %}
                 tap_action: &dsc_popup_vpd
                   action: fire-dom-event
                   browser_mod:
@@ -1172,11 +1266,13 @@ views:
                 max: 40
                 needle: true
                 segments: >
-                  {% set t =
-                  states('number.dsc_hub_clone_target_temp')|float(24) %} {{ [
-                  {'from': 10, 'color': '#3b82f6'},
+                  {% set follow = is_state('select.dsc_hub_clone_mode','Follow 4x8') %}
+                  {% set t = states('number.dsc_hub_target_temp' if follow else
+                  'number.dsc_hub_clone_target_temp')|float(none) %}
+                  {% if t is none %}{{ [ {'from': 10, 'color': '#64748b'} ] }}
+                  {% else %}{{ [ {'from': 10, 'color': '#3b82f6'},
                        {'from': t - 2, 'color': '#22c55e'},
-                       {'from': t + 2, 'color': '#ef4444'} ] }}
+                       {'from': t + 2, 'color': '#ef4444'} ] }}{% endif %}
                 tap_action: *dsc_popup_temps
               - type: custom:gauge-card-pro
                 entity: sensor.dsc_hub_clone_humidity
@@ -1185,11 +1281,15 @@ views:
                 max: 100
                 needle: true
                 segments: >
-                  {% set lo = states('number.dsc_hub_clone_rh_min')|float(70) %}
-                  {% set hi = states('number.dsc_hub_clone_rh_max')|float(80) %}
-                  {{ [ {'from': 0, 'color': '#f59e0b'},
+                  {% set follow = is_state('select.dsc_hub_clone_mode','Follow 4x8') %}
+                  {% set lo = states('number.dsc_hub_rh_target_min' if follow else
+                  'number.dsc_hub_clone_rh_min')|float(none) %}
+                  {% set hi = states('number.dsc_hub_rh_target_max' if follow else
+                  'number.dsc_hub_clone_rh_max')|float(none) %}
+                  {% if lo is none or hi is none %}{{ [ {'from': 0, 'color': '#64748b'} ] }}
+                  {% else %}{{ [ {'from': 0, 'color': '#f59e0b'},
                        {'from': lo, 'color': '#22c55e'},
-                       {'from': hi, 'color': '#ef4444'} ] }}
+                       {'from': hi, 'color': '#ef4444'} ] }}{% endif %}
                 tap_action: *dsc_popup_rh
               - type: custom:gauge-card-pro
                 entity: sensor.dsc_hub_clone_vpd_kpa
@@ -1198,12 +1298,15 @@ views:
                 max: 2
                 needle: true
                 segments: >
-                  {% set lo = states('number.dsc_hub_clone_vpd_min')|float(0.4)
-                  %} {% set hi =
-                  states('number.dsc_hub_clone_vpd_max')|float(0.8) %} {{ [
-                  {'from': 0, 'color': '#3b82f6'},
+                  {% set follow = is_state('select.dsc_hub_clone_mode','Follow 4x8') %}
+                  {% set lo = states('number.dsc_hub_vpd_target_min' if follow else
+                  'number.dsc_hub_clone_vpd_min')|float(none) %}
+                  {% set hi = states('number.dsc_hub_vpd_target_max' if follow else
+                  'number.dsc_hub_clone_vpd_max')|float(none) %}
+                  {% if lo is none or hi is none %}{{ [ {'from': 0, 'color': '#64748b'} ] }}
+                  {% else %}{{ [ {'from': 0, 'color': '#3b82f6'},
                        {'from': lo, 'color': '#22c55e'},
-                       {'from': hi, 'color': '#ef4444'} ] }}
+                       {'from': hi, 'color': '#ef4444'} ] }}{% endif %}
                 tap_action: *dsc_popup_vpd
               - type: custom:gauge-card-pro
                 entity: sensor.dsc_hub_room_temperature
@@ -1743,8 +1846,13 @@ views:
       - type: grid
         cards:
           - type: heading
-            heading: 🎛️ MASTER CONTROL
+            heading: Command
             heading_style: title
+          - type: markdown
+            content: >-
+              **Ownership:** Full Auto → hub drives fans + appliance Autos.
+              Manual Fan Override → you own fan %. Master Takeover → you own
+              everything. Priority tent's bands feed shared room appliances.
           - type: grid
             columns: 2
             square: false
@@ -2862,32 +2970,108 @@ views:
               it is a warmer donor than it used to be. The SF1000's waste heat
               is a feature of this loop, not a side effect.*
           - type: heading
-            heading: 🌀 FAN BANK
+            heading: Fans
             heading_style: subtitle
-          - type: grid
-            columns: 2
-            square: false
-            cards:
-              - type: custom:mushroom-fan-card
-                entity: fan.dsc_hub_4_inch_intake_fan_main
-                name: Intake 4x8
-                show_percentage_control: true
-                icon_animation: true
-              - type: custom:mushroom-fan-card
-                entity: fan.dsc_hub_4_inch_intake_fan_2x4
-                name: Intake 2x4
-                show_percentage_control: true
-                icon_animation: true
-              - type: custom:mushroom-fan-card
-                entity: fan.dsc_hub_6_inch_exhaust_room
-                name: Exhaust Room
-                show_percentage_control: true
-                icon_animation: true
-              - type: custom:mushroom-fan-card
-                entity: fan.dsc_hub_6_inch_exhaust_outside
-                name: Exhaust Outside
-                show_percentage_control: true
-                icon_animation: true
+          - type: conditional
+            conditions:
+              - condition: and
+                conditions:
+                  - condition: state
+                    entity: switch.dsc_hub_tent_full_auto_mode
+                    state: "on"
+                  - condition: state
+                    entity: switch.dsc_hub_tent_manual_override
+                    state: "off"
+                  - condition: state
+                    entity: switch.dsc_hub_manual_takeover
+                    state: "off"
+            card:
+              type: custom:mushroom-template-card
+              primary: Fans locked — Full Auto owns the curve
+              secondary: Enable Manual Fan Override (or Takeover) to set percentages.
+              icon: mdi:lock
+              icon_color: amber
+              multiline_secondary: true
+              tap_action:
+                action: call-service
+                service: switch.turn_on
+                target:
+                  entity_id: switch.dsc_hub_tent_manual_override
+          - type: conditional
+            conditions:
+              - condition: or
+                conditions:
+                  - condition: state
+                    entity: switch.dsc_hub_tent_full_auto_mode
+                    state: "off"
+                  - condition: state
+                    entity: switch.dsc_hub_tent_manual_override
+                    state: "on"
+                  - condition: state
+                    entity: switch.dsc_hub_manual_takeover
+                    state: "on"
+            card:
+              type: grid
+              columns: 2
+              square: false
+              cards:
+                - type: custom:mushroom-fan-card
+                  entity: fan.dsc_hub_4_inch_intake_fan_main
+                  name: Intake 4x8
+                  show_percentage_control: true
+                  icon_animation: true
+                - type: custom:mushroom-fan-card
+                  entity: fan.dsc_hub_4_inch_intake_fan_2x4
+                  name: Intake 2x4
+                  show_percentage_control: true
+                  icon_animation: true
+                - type: custom:mushroom-fan-card
+                  entity: fan.dsc_hub_6_inch_exhaust_room
+                  name: Exhaust Room
+                  show_percentage_control: true
+                  icon_animation: true
+                - type: custom:mushroom-fan-card
+                  entity: fan.dsc_hub_6_inch_exhaust_outside
+                  name: Exhaust Outside
+                  show_percentage_control: true
+                  icon_animation: true
+          - type: conditional
+            conditions:
+              - condition: and
+                conditions:
+                  - condition: state
+                    entity: switch.dsc_hub_tent_full_auto_mode
+                    state: "on"
+                  - condition: state
+                    entity: switch.dsc_hub_tent_manual_override
+                    state: "off"
+                  - condition: state
+                    entity: switch.dsc_hub_manual_takeover
+                    state: "off"
+            card:
+              type: custom:mushroom-chips-card
+              alignment: justify
+              chips:
+                - type: template
+                  entity: sensor.dsc_fan_intake_main_pct
+                  icon: mdi:fan
+                  icon_color: cyan
+                  content: "IN 4×8 {{ states(entity)|float(0)|round(0) }}%"
+                - type: template
+                  entity: sensor.dsc_fan_intake_2x4_pct
+                  icon: mdi:fan
+                  icon_color: cyan
+                  content: "IN 2×4 {{ states(entity)|float(0)|round(0) }}%"
+                - type: template
+                  entity: sensor.dsc_fan_exhaust_room_pct
+                  icon: mdi:fan-chevron-up
+                  icon_color: cyan
+                  content: "EX ROOM {{ states(entity)|float(0)|round(0) }}%"
+                - type: template
+                  entity: sensor.dsc_fan_exhaust_outside_pct
+                  icon: mdi:fan-chevron-up
+                  icon_color: cyan
+                  content: "EX OUT {{ states(entity)|float(0)|round(0) }}%"
           - type: custom:mushroom-chips-card
             alignment: end
             chips:
@@ -3501,16 +3685,13 @@ views:
       - type: grid
         cards:
           - type: heading
-            heading: 🎯 STAGE & TARGETS
+            heading: Stage & targets
             heading_style: title
           - type: custom:mushroom-select-card
             entity: select.dsc_hub_grow_stage
             name: Grow Stage
             icon: mdi:sprout
             icon_color: green
-          # v2.4: this card used to imply a lamp. It is a SCHEDULE card now.
-          # It still matters: Follow-4x8 clones resolve against this window,
-          # and the counter-cycle thermal logic runs off it.
           - type: custom:mushroom-template-card
             entity: sensor.dsc_expected_light_hours
             primary: >-
@@ -3518,10 +3699,7 @@ views:
               states(entity)|float(0)|round(0) }}h dark
             secondary: >-
               {{ 'OPEN' if is_state('binary_sensor.dsc_hub_4x8_window_open','on')
-              else 'Shut' }} · next {{ state_attr('sensor.dsc_next_light_event','event') }} —
-              {{ relative_time(as_datetime(states('sensor.dsc_next_light_event')))
-              if states('sensor.dsc_next_light_event') not in
-              ['unknown','unavailable','None'] else 'n/a' }}
+              else 'Shut' }} · stage sets duration · Follow-4x8 clones use this
             icon: mdi:sun-clock
             icon_color: >-
               {{ 'blue' if is_state('binary_sensor.dsc_hub_4x8_window_open','on')
@@ -3529,44 +3707,125 @@ views:
             multiline_secondary: true
             tap_action:
               action: more-info
-          # v5.1 lean cut: window start is HA-only now (stage sets duration).
           - type: entities
             entities:
               - entity: time.dsc_hub_lights_on_time
                 name: 4x8 Window Opens (stage sets hours)
-          - type: grid
-            columns: 2
-            square: false
-            cards:
-              - type: custom:mushroom-number-card
-                entity: number.dsc_hub_target_temp
-                name: Target Temp
-                icon: mdi:thermometer
-                display_mode: buttons
-              - type: custom:mushroom-select-card
-                entity: select.dsc_hub_control_strategy
-                name: Strategy
-                icon: mdi:tune-variant
-              - type: custom:mushroom-number-card
-                entity: number.dsc_hub_rh_target_min
-                name: RH Min
-                icon: mdi:water-minus
-                display_mode: buttons
-              - type: custom:mushroom-number-card
-                entity: number.dsc_hub_rh_target_max
-                name: RH Max
-                icon: mdi:water-plus
-                display_mode: buttons
-              - type: custom:mushroom-number-card
-                entity: number.dsc_hub_vpd_target_min
-                name: VPD Min
-                icon: mdi:waves-arrow-up
-                display_mode: buttons
-              - type: custom:mushroom-number-card
-                entity: number.dsc_hub_vpd_target_max
-                name: VPD Max
-                icon: mdi:waves-arrow-up
-                display_mode: buttons
+          - type: custom:mushroom-select-card
+            entity: select.dsc_hub_control_strategy
+            name: Strategy
+            icon: mdi:tune-variant
+          - type: markdown
+            content: >-
+              *Fans chase **{{ states('select.dsc_hub_control_strategy') }}**.
+              Other bands stay visible for context.*
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: select.dsc_hub_grow_stage
+                state: Custom
+            card:
+              type: vertical-stack
+              cards:
+                - type: custom:mushroom-template-card
+                  primary: Custom — 4x8 climate unlocked
+                  secondary: Named stages reload presets when selected.
+                  icon: mdi:lock-open-variant
+                  icon_color: green
+                  tap_action:
+                    action: none
+                - type: grid
+                  columns: 2
+                  square: false
+                  cards:
+                    - type: custom:mushroom-number-card
+                      entity: number.dsc_hub_target_temp
+                      name: Target Temp
+                      icon: mdi:thermometer
+                      display_mode: buttons
+                    - type: custom:mushroom-number-card
+                      entity: number.dsc_hub_rh_target_min
+                      name: RH Min
+                      icon: mdi:water-minus
+                      display_mode: buttons
+                    - type: custom:mushroom-number-card
+                      entity: number.dsc_hub_rh_target_max
+                      name: RH Max
+                      icon: mdi:water-plus
+                      display_mode: buttons
+                    - type: custom:mushroom-number-card
+                      entity: number.dsc_hub_vpd_target_min
+                      name: VPD Min
+                      icon: mdi:waves-arrow-up
+                      display_mode: buttons
+                    - type: custom:mushroom-number-card
+                      entity: number.dsc_hub_vpd_target_max
+                      name: VPD Max
+                      icon: mdi:waves-arrow-up
+                      display_mode: buttons
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: select.dsc_hub_grow_stage
+                state_not: Custom
+            card:
+              type: vertical-stack
+              cards:
+                - type: custom:mushroom-template-card
+                  primary: >-
+                    {% set s = states('select.dsc_hub_grow_stage') %}
+                    {% if s == 'Off' %}Locked — 4x8 inactive
+                    {% else %}Locked to {{ s }} presets{% endif %}
+                  secondary: >-
+                    Temp / RH / VPD are stage-owned. Switch Grow Stage →
+                    **Custom** to fine-tune (named stages overwrite on select).
+                  icon: mdi:lock
+                  icon_color: amber
+                  multiline_secondary: true
+                  tap_action:
+                    action: more-info
+                    entity: select.dsc_hub_grow_stage
+                - type: grid
+                  columns: 2
+                  square: false
+                  cards:
+                    - type: custom:mushroom-template-card
+                      primary: "{{ states('number.dsc_hub_target_temp') }}°C"
+                      secondary: Target Temp
+                      icon: mdi:thermometer-lock
+                      icon_color: disabled
+                      tap_action:
+                        action: none
+                    - type: custom:mushroom-template-card
+                      primary: >-
+                        {{ states('number.dsc_hub_rh_target_min')|float(0)|round(0) }}–{{
+                        states('number.dsc_hub_rh_target_max')|float(0)|round(0) }}%
+                      secondary: RH band
+                      icon: mdi:water-lock
+                      icon_color: disabled
+                      tap_action:
+                        action: none
+                    - type: custom:mushroom-template-card
+                      primary: >-
+                        {{ states('number.dsc_hub_vpd_target_min') }}–{{
+                        states('number.dsc_hub_vpd_target_max') }} kPa
+                      secondary: VPD band
+                      icon: mdi:lock
+                      icon_color: disabled
+                      tap_action:
+                        action: none
+                    - type: custom:mushroom-template-card
+                      primary: Switch to Custom
+                      secondary: Unlock 4x8 climate edits
+                      icon: mdi:lock-open-outline
+                      icon_color: green
+                      tap_action:
+                        action: call-service
+                        service: select.select_option
+                        target:
+                          entity_id: select.dsc_hub_grow_stage
+                        data:
+                          option: Custom
           - type: heading
             heading: ⚡ TENT APPLIANCE DEMANDS
             heading_style: subtitle
@@ -3860,7 +4119,7 @@ views:
       - type: grid
         cards:
           - type: heading
-            heading: 🎯 CLONE MODE & TARGETS
+            heading: Mode & targets
             heading_style: title
           # v2.4 behaviour shift worth knowing before you touch this select:
           # Clone Mode -> Off now DARKS THE SF1000. In v2.3 it only dropped
@@ -3879,8 +4138,8 @@ views:
               type: custom:mushroom-template-card
               primary: 2x4 OFF — SF1000 is dark
               secondary: >-
-                v2.4: Clone Mode Off darks the light, because the light lives in
-                this tent now. Set any other mode to restore the schedule.
+                Clone Mode Off darks the SF1000. Set any other mode to restore
+                the schedule.
               icon: mdi:lightbulb-off
               icon_color: purple
               multiline_secondary: true
@@ -3888,56 +4147,227 @@ views:
             entity: select.dsc_hub_clone_photoperiod
             name: Clone Photoperiod
             icon: mdi:theme-light-dark
-          - type: grid
-            columns: 2
-            square: false
-            cards:
-              - type: custom:mushroom-number-card
-                entity: number.dsc_hub_clone_target_temp
-                name: Target Temp
-                icon: mdi:thermometer
-                display_mode: buttons
-              - type: custom:mushroom-number-card
-                entity: number.dsc_hub_clone_light_hours
-                name: Light Hours
-                icon: mdi:sun-clock
-                display_mode: buttons
-              - type: custom:mushroom-number-card
-                entity: number.dsc_hub_clone_rh_min
-                name: RH Min
-                icon: mdi:water-minus
-                display_mode: buttons
-              - type: custom:mushroom-number-card
-                entity: number.dsc_hub_clone_rh_max
-                name: RH Max
-                icon: mdi:water-plus
-                display_mode: buttons
-              - type: custom:mushroom-number-card
-                entity: number.dsc_hub_clone_vpd_min
-                name: VPD Min
-                icon: mdi:waves-arrow-up
-                display_mode: buttons
-              - type: custom:mushroom-number-card
-                entity: number.dsc_hub_clone_vpd_max
-                name: VPD Max
-                icon: mdi:waves-arrow-up
-                display_mode: buttons
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: select.dsc_hub_clone_photoperiod
+                state: Independent
+            card:
+              type: custom:mushroom-number-card
+              entity: number.dsc_hub_clone_light_hours
+              name: Light Hours
+              icon: mdi:sun-clock
+              display_mode: buttons
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: select.dsc_hub_clone_photoperiod
+                state: Follow 4x8
+            card:
+              type: custom:mushroom-template-card
+              primary: >-
+                Window {{ states('sensor.dsc_expected_light_hours')|round(0) }}h
+                (follows 4x8)
+              secondary: >-
+                Clone hours locked — switch Clone Photoperiod to Independent
+                to edit. Opens {{ states('time.dsc_hub_lights_on_time') }}.
+              icon: mdi:lock
+              icon_color: amber
+              multiline_secondary: true
+              tap_action:
+                action: more-info
+                entity: select.dsc_hub_clone_photoperiod
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: select.dsc_hub_clone_photoperiod
+                state: Independent
+            card:
+              type: entities
+              entities:
+                - entity: time.dsc_hub_clone_lights_on_time
+                  name: Clone Lights-On Time
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: select.dsc_hub_clone_photoperiod
+                state: Follow 4x8
+            card:
+              type: custom:mushroom-template-card
+              primary: >-
+                Opens with 4x8 at {{ states('time.dsc_hub_lights_on_time') }}
+              secondary: >-
+                Clone lights-on time locked while Photoperiod Follows 4x8.
+                Switch to Independent to set a counter-cycle start.
+              icon: mdi:lock
+              icon_color: amber
+              multiline_secondary: true
+              tap_action:
+                action: more-info
+                entity: select.dsc_hub_clone_photoperiod
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: select.dsc_hub_clone_mode
+                state: Custom
+            card:
+              type: vertical-stack
+              cards:
+                - type: custom:mushroom-template-card
+                  primary: Custom — climate targets unlocked
+                  secondary: >-
+                    Edits write to the hub. Named modes reload presets on select.
+                  icon: mdi:lock-open-variant
+                  icon_color: green
+                  multiline_secondary: true
+                  tap_action:
+                    action: none
+                - type: grid
+                  columns: 2
+                  square: false
+                  cards:
+                    - type: custom:mushroom-number-card
+                      entity: number.dsc_hub_clone_target_temp
+                      name: Target Temp
+                      icon: mdi:thermometer
+                      display_mode: buttons
+                    - type: custom:mushroom-number-card
+                      entity: number.dsc_hub_clone_rh_min
+                      name: RH Min
+                      icon: mdi:water-minus
+                      display_mode: buttons
+                    - type: custom:mushroom-number-card
+                      entity: number.dsc_hub_clone_rh_max
+                      name: RH Max
+                      icon: mdi:water-plus
+                      display_mode: buttons
+                    - type: custom:mushroom-number-card
+                      entity: number.dsc_hub_clone_vpd_min
+                      name: VPD Min
+                      icon: mdi:waves-arrow-up
+                      display_mode: buttons
+                    - type: custom:mushroom-number-card
+                      entity: number.dsc_hub_clone_vpd_max
+                      name: VPD Max
+                      icon: mdi:waves-arrow-up
+                      display_mode: buttons
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: select.dsc_hub_clone_mode
+                state_not: Custom
+            card:
+              type: vertical-stack
+              cards:
+                - type: custom:mushroom-template-card
+                  primary: >-
+                    {% set m = states('select.dsc_hub_clone_mode') %}
+                    {% if m == 'Follow 4x8' %}Locked — following 4x8 targets
+                    {% elif m == 'Off' %}Locked — 2x4 inactive
+                    {% else %}Locked to {{ m }} presets{% endif %}
+                  secondary: >-
+                    Temp / RH / VPD are mode-owned. Switch Clone Mode → **Custom**
+                    to fine-tune.
+                  icon: mdi:lock
+                  icon_color: amber
+                  multiline_secondary: true
+                  tap_action:
+                    action: more-info
+                    entity: select.dsc_hub_clone_mode
+                - type: grid
+                  columns: 2
+                  square: false
+                  cards:
+                    - type: custom:mushroom-template-card
+                      primary: >-
+                        {% set m = states('select.dsc_hub_clone_mode') %}
+                        {% if m == 'Follow 4x8' %}{{ states('number.dsc_hub_target_temp') }}°C
+                        {% else %}{{ states('number.dsc_hub_clone_target_temp') }}°C{% endif %}
+                      secondary: Target Temp
+                      icon: mdi:thermometer-lock
+                      icon_color: disabled
+                      tap_action:
+                        action: none
+                    - type: custom:mushroom-template-card
+                      primary: >-
+                        {% set m = states('select.dsc_hub_clone_mode') %}
+                        {% if m == 'Follow 4x8' %}
+                        {{ states('number.dsc_hub_rh_target_min')|float(0)|round(0) }}–{{
+                        states('number.dsc_hub_rh_target_max')|float(0)|round(0) }}%
+                        {% else %}
+                        {{ states('number.dsc_hub_clone_rh_min')|float(0)|round(0) }}–{{
+                        states('number.dsc_hub_clone_rh_max')|float(0)|round(0) }}%
+                        {% endif %}
+                      secondary: RH band
+                      icon: mdi:water-lock
+                      icon_color: disabled
+                      tap_action:
+                        action: none
+                    - type: custom:mushroom-template-card
+                      primary: >-
+                        {% set m = states('select.dsc_hub_clone_mode') %}
+                        {% if m == 'Follow 4x8' %}
+                        {{ states('number.dsc_hub_vpd_target_min') }}–{{
+                        states('number.dsc_hub_vpd_target_max') }} kPa
+                        {% else %}
+                        {{ states('number.dsc_hub_clone_vpd_min') }}–{{
+                        states('number.dsc_hub_clone_vpd_max') }} kPa
+                        {% endif %}
+                      secondary: VPD band
+                      icon: mdi:lock
+                      icon_color: disabled
+                      tap_action:
+                        action: none
+                    - type: custom:mushroom-template-card
+                      primary: Switch to Custom
+                      secondary: Unlock clone climate edits
+                      icon: mdi:lock-open-outline
+                      icon_color: green
+                      tap_action:
+                        action: call-service
+                        service: select.select_option
+                        target:
+                          entity_id: select.dsc_hub_clone_mode
+                        data:
+                          option: Custom
           - type: markdown
             content: >-
-              *Counter-cycle by design: this tent's lights-on runs opposite the
-              4x8, keeping it a **warm, humid reservoir** the main tent draws
-              from during its dark period.*
-
-
-              *v2.4 makes that literal — the SF1000's waste heat is now
-              generated **in here**, so the reservoir is warmer than it was and
-              the daisy-chain has something real to donate.*
+              *Climate targets are **mode-locked**. Only **Custom** unlocks
+              sliders. Photoperiod **Follow 4x8** locks clone light hours and
+              lights-on time.*
       - type: grid
         column_span: 2
         cards:
           - type: heading
-            heading: ☀️ SF1000 — THIS TENT'S LIGHT
+            heading: SF1000
             heading_style: title
+          - type: conditional
+            conditions:
+              - condition: and
+                conditions:
+                  - condition: state
+                    entity: switch.dsc_hub_auto_photoperiod
+                    state: "on"
+                  - condition: state
+                    entity: switch.dsc_hub_manual_light_hold
+                    state: "off"
+                  - condition: state
+                    entity: switch.dsc_hub_manual_takeover
+                    state: "off"
+            card:
+              type: custom:mushroom-template-card
+              primary: Schedule owns brightness
+              secondary: >-
+                Auto Photoperiod is driving the ramp. Tap Manual Light Hold
+                (or edit the light) to take over temporarily.
+              icon: mdi:lock
+              icon_color: amber
+              multiline_secondary: true
+              tap_action:
+                action: call-service
+                service: switch.turn_on
+                target:
+                  entity_id: switch.dsc_hub_manual_light_hold
           - type: custom:vertical-stack-in-card
             cards:
               - type: light
@@ -3979,9 +4409,18 @@ views:
                       {{ states(entity)|float(0)|round(1) }}h / {{
                       states('sensor.dsc_clone_expected_light_hours')|float(0)|round(0)
                       }}h today
-                  - type: entity
+                  - type: template
                     entity: time.dsc_hub_clone_lights_on_time
                     icon: mdi:clock-start
+                    icon_color: >-
+                      {{ 'amber' if is_state('select.dsc_hub_clone_photoperiod','Independent') else 'disabled' }}
+                    content: >-
+                      {% if is_state('select.dsc_hub_clone_photoperiod','Follow 4x8') %}
+                      opens w/ 4x8 {{ states('time.dsc_hub_lights_on_time') }}
+                      {% else %}on {{ states(entity) }}{% endif %}
+                    tap_action:
+                      action: more-info
+                      entity: select.dsc_hub_clone_photoperiod
           - type: custom:mini-graph-card
             name: SF1000 brightness — the ramp, 24 h
             hours_to_show: 24
@@ -4363,22 +4802,12 @@ views:
         column_span: 2
         cards:
           - type: heading
-            heading: 🌱 POT MATRIX
+            heading: Pots now
             heading_style: title
           - type: markdown
             content: >-
-              *Sense path for the grow mat and panel Soil tab (ESP-NOW
-              **0xD3** vitals · **0xD4** plant names). Mat votes below
-              choose which pots enter coldest / hottest voting.*
-          # ============================================================
-          #  v2.4.1 · ESP-NOW LINK CHIPS — the direct pot->hub sensing
-          #  links that keep the closed-loop mat alive through HA
-          #  restarts. Green = that pot's readings are arriving straight
-          #  from the node (<150s old); grey = the hub is riding that
-          #  pot's HA mirror instead. connectivity-class, so a blip here
-          #  never raises a Home alert — the fallback chain IS the
-          #  response.
-          # ============================================================
+              Live soil snapshot. POT3 moisture probe is a known fault —
+              greyed, not alarmed.
           - type: custom:mushroom-chips-card
             alignment: justify
             chips:
@@ -4410,134 +4839,56 @@ views:
                 content: "P4 {{ 'direct' if is_state(entity,'on') else 'via HA' }}"
                 tap_action:
                   action: more-info
-          # v2.4: gained P and K columns (present on the probe since day one,
-          # never surfaced) and a root-zone temp column. v2.4.1: every pot's
-          # soil temp is a control input now (coldest drives the mat), so the
-          # 🔥 marker moved from POT1 to the whole column note below.
           - type: markdown
             content: >-
-              | Pot | Plant | 💧 % | 🌡 °C | ⚡ EC | ΔTank | pH | N | P | K |
+              | Pot | Plant | Moist | C | EC | dTank | pH | N/P/K |
 
-              |---|---|---|---|---|---|---|---|---|---|
+              |---|---|---|---|---|---|---|---|
 
               {% for p in ['1','2','3','4'] -%}
-              {% set names = {'1':'text.dsc_pot1_plant_name',
-                              '2':'text.dsc_pot2_plant_name',
-                              '3':'text.dsc_pot3_plant_name',
-                              '4':'text.dsc_pot4_plant_name'} %}
-              {% set m = states('sensor.dsc_pot' ~ p ~ '_soil_moisture')|float(0) %}
+              {% set names = {'1':'text.dsc_pot1_plant_name','2':'text.dsc_pot2_plant_name','3':'text.dsc_pot3_plant_name','4':'text.dsc_pot4_plant_name'} %}
+              {% set m = states('sensor.dsc_pot' ~ p ~ '_soil_moisture') %}
               {% set fault = (p == '3') %}
-              | **POT{{ p }}**{{ ' 🚧' if fault else '' }} 🔥 |
+              | **POT{{ p }}**{{ ' !' if fault else '' }} |
               {{ states(names[p]) }} |
-              {{ '—' if fault else (m|round(0)|string ~ ('' if m > 15 else ' ⚠')) }} |
+              {{ '-' if fault or m in ['unavailable','unknown'] else (m|float(0)|round(0)|string ~ '%') }} |
               {{ states('sensor.dsc_pot' ~ p ~ '_soil_temperature') }} |
               {{ states('sensor.dsc_pot' ~ p ~ '_soil_conductivity') }} |
               {{ states('sensor.dsc_pot' ~ p ~ '_ec_vs_tank') }} |
               {{ states('sensor.dsc_pot' ~ p ~ '_soil_ph') }} |
-              {{ states('sensor.dsc_pot' ~ p ~ '_soil_nitrogen') }} |
-              {{ states('sensor.dsc_pot' ~ p ~ '_soil_phosphorus') }} |
-              {{ states('sensor.dsc_pot' ~ p ~ '_soil_potassium') }} |
+              {{ states('sensor.dsc_pot' ~ p ~ '_soil_nitrogen') }}/{{ states('sensor.dsc_pot' ~ p ~ '_soil_phosphorus') }}/{{ states('sensor.dsc_pot' ~ p ~ '_soil_potassium') }} |
 
               {% endfor %}
 
-              *🚧 POT3 — moisture probe fault, tracked in Faults & Repairs.
-              Greyed, not alarmed: known faults don't get to cry wolf.*
-
-
-              *🔥 v4 — **every pot's soil temperature drives the grow
-              mat**: it heats on the coldest plausible probe and cuts + flushes
-              if the hottest reaches band-high + 1 °C. Use **Mat vote** to
-              exclude a dying probe. Panel Soil tab shows the same 0xD3/0xD4
-              data with a per-pot NPK drill-down.*
+              *POT3 moisture probe fault (Faults and Repairs).*
       - type: grid
         column_span: 2
         cards:
           - type: heading
-            heading: 💧 MOISTURE & SOIL TEMP
+            heading: Mat
             heading_style: title
-          - type: heading
-            heading: Moisture
-            heading_style: subtitle
-          - type: grid
-            columns: 4
-            square: false
+          - type: custom:vertical-stack-in-card
             cards:
-              - type: custom:modern-circular-gauge
-                entity: sensor.dsc_pot1_soil_moisture
-                name: POT1
-                min: 0
-                max: 100
-                tap_action: *dsc_popup_pot1
-              - type: custom:modern-circular-gauge
-                entity: sensor.dsc_pot2_soil_moisture
-                name: POT2
-                min: 0
-                max: 100
-                tap_action: *dsc_popup_pot2
-              - type: custom:modern-circular-gauge
-                entity: sensor.dsc_pot3_soil_moisture
-                name: POT3
-                min: 0
-                max: 100
-                card_mod:
-                  style: |
-                    ha-card { /* pot styling via live alerts */ }
-                tap_action: *dsc_popup_pot3
-              - type: custom:modern-circular-gauge
-                entity: sensor.dsc_pot4_soil_moisture
-                name: POT4
-                min: 0
-                max: 100
-                tap_action: *dsc_popup_pot4
-          - type: heading
-            heading: Soil temperature — coldest voting pot drives the mat
-            heading_style: subtitle
-          - type: grid
-            columns: 4
-            square: false
-            cards:
-              - type: custom:modern-circular-gauge
-                entity: sensor.dsc_pot1_soil_temperature
-                name: POT1 🔥
-                min: 10
-                max: 32
-                icon: mdi:thermometer
-                secondary: {}
-                tap_action: *dsc_popup_rootzone
-              - type: custom:modern-circular-gauge
-                entity: sensor.dsc_pot2_soil_temperature
-                name: POT2 🔥
-                min: 10
-                max: 32
-                icon: mdi:thermometer
-                secondary: {}
-                tap_action: *dsc_popup_rootzone
-              - type: custom:modern-circular-gauge
-                entity: sensor.dsc_pot3_soil_temperature
-                name: POT3
-                min: 10
-                max: 32
-                icon: mdi:thermometer
-                secondary: {}
-                card_mod:
-                  style: |
-                    ha-card { /* pot styling via live alerts */ }
-                tap_action: *dsc_popup_rootzone
-              - type: custom:modern-circular-gauge
-                entity: sensor.dsc_pot4_soil_temperature
-                name: POT4 🔥
-                min: 10
-                max: 32
-                icon: mdi:thermometer
-                secondary: {}
-                tap_action: *dsc_popup_rootzone
-          - type: custom:expander-card
-            title: Mat vote — include in coldest / hottest
-            expanded: true
-            card_mod: *dsc_expander_style
-            cards:
+              - type: custom:mushroom-template-card
+                entity: switch.dsc_hub_grow_mat_demand
+                primary: >-
+                  {% if is_state(entity,'on') %}Grow mat ON
+                  {% else %}Grow mat idle{% endif %}
+                secondary: >-
+                  Coldest {{ states('sensor.dsc_coldest_root_zone_temp') }}C ·
+                  Hottest {{ states('sensor.dsc_hottest_root_zone_temp') }}C ·
+                  Band {{ states('number.dsc_hub_mat_root_zone_low') }}-{{
+                  states('number.dsc_hub_mat_root_zone_high') }}C · Auto {{
+                  'armed' if is_state('switch.dsc_hub_grow_mat_auto','on') else 'off' }}
+                icon: mdi:heating-coil
+                icon_color: "{{ 'amber' if is_state(entity,'on') else 'disabled' }}"
+                multiline_secondary: true
+                tap_action:
+                  action: more-info
               - type: entities
                 entities:
+                  - type: section
+                    label: Mat vote (coldest heats / hottest cuts)
                   - entity: switch.dsc_hub_mat_vote_pot_1
                     name: POT1
                     icon: mdi:numeric-1-circle
@@ -4550,11 +4901,16 @@ views:
                   - entity: switch.dsc_hub_mat_vote_pot_4
                     name: POT4
                     icon: mdi:numeric-4-circle
-              - type: markdown
-                content: >-
-                  *OFF pots are skipped by the mat ladder. Plausibility
-                  filter (5–45 °C) still applies to voted-in pots. Band
-                  setpoints live under Climate → Live Tunables.*
+              - type: custom:expander-card
+                title: How mat voting works
+                expanded: false
+                card_mod: *dsc_expander_style
+                cards:
+                  - type: markdown
+                    content: >-
+                      Heats on the coldest plausible voted probe (5-45 C).
+                      Cuts and flushes if hottest reaches band-high + 1 C.
+                      OFF votes skip that pot. Band setpoints: Climate Live Tunables.
           - type: custom:expander-card
             title: 🧪 Soil pH
             expanded: false
@@ -4815,7 +5171,7 @@ views:
           #  one number in this section allowed to be read absolutely.
           # ============================================================
           - type: heading
-            heading: ⚡ EC PLANT UPTAKE
+            heading: Uptake
             heading_style: title
           - type: markdown
             content: >-
@@ -4859,441 +5215,458 @@ views:
               *Slope is EC change per hour. **Negative = uptake**, positive =
               concentration. A pot with Δ > 0 **and** a positive slope is the
               one to watch: it is taking water and leaving salts behind.*
-          - type: custom:apexcharts-card
-            header:
-              show: true
-              title: Soil EC vs tank feed — 48 h
-              show_states: true
-              colorize_states: true
-            graph_span: 48h
-            span:
-              end: hour
-            yaxis:
-              - min: ~0
-                decimals: 2
-                apex_config:
-                  title:
-                    text: EC (µS/cm)
-            series:
-              # The reference line. Everything else is read against THIS.
-              - entity: sensor.dsc_tank_ec_normalized
-                name: TANK (feed)
-                stroke_width: 4
-                color: "#94a3b8"
-                curve: stepline
-                group_by:
-                  func: last
-                  duration: 15min
-              - entity: sensor.dsc_pot1_soil_conductivity
-                name: POT1
-                stroke_width: 2
-                color: "#22c55e"
-                group_by:
-                  func: avg
-                  duration: 15min
-              - entity: sensor.dsc_pot2_soil_conductivity
-                name: POT2
-                stroke_width: 2
-                color: "#3b82f6"
-                group_by:
-                  func: avg
-                  duration: 15min
-              - entity: sensor.dsc_pot3_soil_conductivity
-                name: POT3
-                stroke_width: 1
-                opacity: 0.4
-                color: "#a855f7"
-                group_by:
-                  func: avg
-                  duration: 15min
-              - entity: sensor.dsc_pot4_soil_conductivity
-                name: POT4
-                stroke_width: 2
-                color: "#f59e0b"
-                group_by:
-                  func: avg
-                  duration: 15min
-          - type: markdown
-            content: >-
-              *Read the **gap to the grey line**, not the lines themselves.
-              Pots below tank are consuming; pots above are concentrating. The
-              sawtooth is normal: every feed resets the pot toward tank EC, then
-              the plant pulls it away again. **The shape of that pull is the
-              plant talking.**
+          - type: custom:expander-card
+            title: History — EC vs tank / uptake (48h)
+            expanded: false
+            card_mod: *dsc_expander_style
+            cards:
+            - type: custom:apexcharts-card
+              header:
+                show: true
+                title: Soil EC vs tank feed — 48 h
+                show_states: true
+                colorize_states: true
+              graph_span: 48h
+              span:
+                end: hour
+              yaxis:
+                - min: ~0
+                  decimals: 2
+                  apex_config:
+                    title:
+                      text: EC (µS/cm)
+              series:
+                # The reference line. Everything else is read against THIS.
+                - entity: sensor.dsc_tank_ec_normalized
+                  name: TANK (feed)
+                  stroke_width: 4
+                  color: "#94a3b8"
+                  curve: stepline
+                  group_by:
+                    func: last
+                    duration: 15min
+                - entity: sensor.dsc_pot1_soil_conductivity
+                  name: POT1
+                  stroke_width: 2
+                  color: "#22c55e"
+                  group_by:
+                    func: avg
+                    duration: 15min
+                - entity: sensor.dsc_pot2_soil_conductivity
+                  name: POT2
+                  stroke_width: 2
+                  color: "#3b82f6"
+                  group_by:
+                    func: avg
+                    duration: 15min
+                - entity: sensor.dsc_pot3_soil_conductivity
+                  name: POT3
+                  stroke_width: 1
+                  opacity: 0.4
+                  color: "#a855f7"
+                  group_by:
+                    func: avg
+                    duration: 15min
+                - entity: sensor.dsc_pot4_soil_conductivity
+                  name: POT4
+                  stroke_width: 2
+                  color: "#f59e0b"
+                  group_by:
+                    func: avg
+                    duration: 15min
+            - type: markdown
+              content: >-
+                *Read the **gap to the grey line**, not the lines themselves.
+                Pots below tank are consuming; pots above are concentrating. The
+                sawtooth is normal: every feed resets the pot toward tank EC, then
+                the plant pulls it away again. **The shape of that pull is the
+                plant talking.**
 
 
-              A pot that stops sawtoothing has stopped drinking.*
-          - type: custom:apexcharts-card
-            header:
-              show: true
-              title: Uptake balance — Δ from tank, 48 h
-              show_states: true
-              colorize_states: true
-            graph_span: 48h
-            span:
-              end: hour
-            apex_config:
-              annotations:
-                yaxis:
-                  - "y": 0
-                    strokeDashArray: 4
-                    borderColor: "#94a3b8"
-                    label:
-                      text: balanced
-                      style:
-                        background: "#94a3b8"
-              stroke:
-                width: 2
-            yaxis:
-              - decimals: 2
-                apex_config:
-                  title:
-                    text: soil − tank
-            series:
-              - entity: sensor.dsc_pot1_ec_vs_tank
-                name: POT1
-                color: "#22c55e"
-                group_by:
-                  func: avg
-                  duration: 15min
-              - entity: sensor.dsc_pot2_ec_vs_tank
-                name: POT2
-                color: "#3b82f6"
-                group_by:
-                  func: avg
-                  duration: 15min
-              - entity: sensor.dsc_pot3_ec_vs_tank
-                name: POT3
-                color: "#a855f7"
-                opacity: 0.4
-                stroke_width: 1
-                group_by:
-                  func: avg
-                  duration: 15min
-              - entity: sensor.dsc_pot4_ec_vs_tank
-                name: POT4
-                color: "#f59e0b"
-                group_by:
-                  func: avg
-                  duration: 15min
-          - type: markdown
-            content: >-
-              *This is the uptake chart. **Below zero = the plant is winning**
-              (pulling salts out faster than water). Above zero = salts are
-              accumulating faster than they're used — the classic pre-lockout
-              signature, and the cue to flush before it becomes a deficiency
-              that looks like something else.*
+                A pot that stops sawtoothing has stopped drinking.*
+            - type: custom:apexcharts-card
+              header:
+                show: true
+                title: Uptake balance — Δ from tank, 48 h
+                show_states: true
+                colorize_states: true
+              graph_span: 48h
+              span:
+                end: hour
+              apex_config:
+                annotations:
+                  yaxis:
+                    - "y": 0
+                      strokeDashArray: 4
+                      borderColor: "#94a3b8"
+                      label:
+                        text: balanced
+                        style:
+                          background: "#94a3b8"
+                stroke:
+                  width: 2
+              yaxis:
+                - decimals: 2
+                  apex_config:
+                    title:
+                      text: soil − tank
+              series:
+                - entity: sensor.dsc_pot1_ec_vs_tank
+                  name: POT1
+                  color: "#22c55e"
+                  group_by:
+                    func: avg
+                    duration: 15min
+                - entity: sensor.dsc_pot2_ec_vs_tank
+                  name: POT2
+                  color: "#3b82f6"
+                  group_by:
+                    func: avg
+                    duration: 15min
+                - entity: sensor.dsc_pot3_ec_vs_tank
+                  name: POT3
+                  color: "#a855f7"
+                  opacity: 0.4
+                  stroke_width: 1
+                  group_by:
+                    func: avg
+                    duration: 15min
+                - entity: sensor.dsc_pot4_ec_vs_tank
+                  name: POT4
+                  color: "#f59e0b"
+                  group_by:
+                    func: avg
+                    duration: 15min
+            - type: markdown
+              content: >-
+                *This is the uptake chart. **Below zero = the plant is winning**
+                (pulling salts out faster than water). Above zero = salts are
+                accumulating faster than they're used — the classic pre-lockout
+                signature, and the cue to flush before it becomes a deficiency
+                that looks like something else.*
 
 
-              *A pot drifting steadily upward over days, while its moisture
-              still cycles normally, is the textbook case: it's drinking water
-              and leaving the food behind.*
-          - type: heading
-            heading: 📈 INSTANTANEOUS UPTAKE RATE
-            heading_style: subtitle
-          - type: custom:bar-card
-            title: EC slope — negative is uptake
-            entities:
-              - entity: sensor.dsc_pot1_ec_uptake_slope
-                name: POT1
-              - entity: sensor.dsc_pot2_ec_uptake_slope
-                name: POT2
-              - entity: sensor.dsc_pot3_ec_uptake_slope
-                name: POT3
-              - entity: sensor.dsc_pot4_ec_uptake_slope
-                name: POT4
-            positions:
-              icon: "off"
-              indicator: inside
-              name: outside
-              value: inside
-            min: -0.15
-            max: 0.15
-            severity:
-              - color: "#22c55e"
-                from: -0.15
-                to: -0.005
-              - color: "#94a3b8"
-                from: -0.005
-                to: 0.005
-              - color: "#ef4444"
-                from: 0.005
-                to: 0.15
-          - type: markdown
-            content: >-
-              *🟢 green = drinking · ⚪ grey = steady · 🔴 red = concentrating.*
+                *A pot drifting steadily upward over days, while its moisture
+                still cycles normally, is the textbook case: it's drinking water
+                and leaving the food behind.*
+            - type: heading
+              heading: 📈 INSTANTANEOUS UPTAKE RATE
+              heading_style: subtitle
+            - type: custom:bar-card
+              title: EC slope — negative is uptake
+              entities:
+                - entity: sensor.dsc_pot1_ec_uptake_slope
+                  name: POT1
+                - entity: sensor.dsc_pot2_ec_uptake_slope
+                  name: POT2
+                - entity: sensor.dsc_pot3_ec_uptake_slope
+                  name: POT3
+                - entity: sensor.dsc_pot4_ec_uptake_slope
+                  name: POT4
+              positions:
+                icon: "off"
+                indicator: inside
+                name: outside
+                value: inside
+              min: -0.15
+              max: 0.15
+              severity:
+                - color: "#22c55e"
+                  from: -0.15
+                  to: -0.005
+                - color: "#94a3b8"
+                  from: -0.005
+                  to: 0.005
+                - color: "#ef4444"
+                  from: 0.005
+                  to: 0.15
+            - type: markdown
+              content: >-
+                *🟢 green = drinking · ⚪ grey = steady · 🔴 red = concentrating.*
 
 
-              *Right after a feed everything reads red for an hour or two —
-              that's the tank refilling the pot, not the plant failing. Judge
-              this **between** feeds.*
+                *Right after a feed everything reads red for an hour or two —
+                that's the tank refilling the pot, not the plant failing. Judge
+                this **between** feeds.*
       - type: grid
+        column_span: 2
         cards:
-          - type: heading
-            heading: 🔄 WATER ↔ SOIL DYNAMICS
-            heading_style: title
-          - type: custom:mini-graph-card
-            name: Soil moisture — feed & drink signatures, 48 h
-            hours_to_show: 48
-            cache: true
-            points_per_hour: 12
-            line_width: 2
-            entities:
-              - entity: sensor.dsc_pot1_soil_moisture
-                name: POT1
-              - entity: sensor.dsc_pot2_soil_moisture
-                name: POT2
-              - entity: sensor.dsc_pot4_soil_moisture
-                name: POT4
-            show:
-              labels: true
-              extrema: true
-              legend: true
-            tap_action:
-              action: fire-dom-event
-              browser_mod:
-                service: browser_mod.popup
-                data:
-                  title: Soil moisture — 7 days
-                  size: wide
-                  content:
-                    type: custom:apexcharts-card
-                    graph_span: 7d
-                    span:
-                      end: hour
-                    header:
-                      show: true
-                      title: Feed cliffs & drink decay — 7d
-                      show_states: true
-                    apex_config:
-                      chart:
-                        height: 380
-                    yaxis:
-                      - min: 0
-                        max: 100
-                    series:
-                      - entity: sensor.dsc_pot1_soil_moisture
-                        name: POT1
-                        stroke_width: 2
-                        extend_to: now
-                        color: '#22c55e'
-                        group_by:
-                          func: avg
-                          duration: 30min
-                      - entity: sensor.dsc_pot2_soil_moisture
-                        name: POT2
-                        stroke_width: 2
-                        extend_to: now
-                        color: '#3b82f6'
-                        group_by:
-                          func: avg
-                          duration: 30min
-                      - entity: sensor.dsc_pot4_soil_moisture
-                        name: POT4
-                        stroke_width: 2
-                        extend_to: now
-                        color: '#f59e0b'
-                        group_by:
-                          func: avg
-                          duration: 30min
-          - type: markdown
-            content: >-
-              *POT3 omitted — its probe reads 0.0 % and would flatten the axis.*
+          - type: custom:expander-card
+            title: History — moisture signatures (48h)
+            expanded: false
+            card_mod: *dsc_expander_style
+            cards:
+            - type: heading
+              heading: 🔄 WATER ↔ SOIL DYNAMICS
+              heading_style: title
+            - type: custom:mini-graph-card
+              name: Soil moisture — feed & drink signatures, 48 h
+              hours_to_show: 48
+              cache: true
+              points_per_hour: 12
+              line_width: 2
+              entities:
+                - entity: sensor.dsc_pot1_soil_moisture
+                  name: POT1
+                - entity: sensor.dsc_pot2_soil_moisture
+                  name: POT2
+                - entity: sensor.dsc_pot4_soil_moisture
+                  name: POT4
+              show:
+                labels: true
+                extrema: true
+                legend: true
+              tap_action:
+                action: fire-dom-event
+                browser_mod:
+                  service: browser_mod.popup
+                  data:
+                    title: Soil moisture — 7 days
+                    size: wide
+                    content:
+                      type: custom:apexcharts-card
+                      graph_span: 7d
+                      span:
+                        end: hour
+                      header:
+                        show: true
+                        title: Feed cliffs & drink decay — 7d
+                        show_states: true
+                      apex_config:
+                        chart:
+                          height: 380
+                      yaxis:
+                        - min: 0
+                          max: 100
+                      series:
+                        - entity: sensor.dsc_pot1_soil_moisture
+                          name: POT1
+                          stroke_width: 2
+                          extend_to: now
+                          color: '#22c55e'
+                          group_by:
+                            func: avg
+                            duration: 30min
+                        - entity: sensor.dsc_pot2_soil_moisture
+                          name: POT2
+                          stroke_width: 2
+                          extend_to: now
+                          color: '#3b82f6'
+                          group_by:
+                            func: avg
+                            duration: 30min
+                        - entity: sensor.dsc_pot4_soil_moisture
+                          name: POT4
+                          stroke_width: 2
+                          extend_to: now
+                          color: '#f59e0b'
+                          group_by:
+                            func: avg
+                            duration: 30min
+            - type: markdown
+              content: >-
+                *POT3 omitted — its probe reads 0.0 % and would flatten the axis.*
 
 
-              *A feed is a **cliff up**; drinking is the **decay after**. The
-              steepness of the decay is transpiration — it tracks VPD, light
-              and root-zone temp. Steeper decay after v2.4's mat fix is the
-              expected outcome: warmer roots drink faster.*
+                *A feed is a **cliff up**; drinking is the **decay after**. The
+                steepness of the decay is transpiration — it tracks VPD, light
+                and root-zone temp. Steeper decay after v2.4's mat fix is the
+                expected outcome: warmer roots drink faster.*
       - type: grid
+        column_span: 2
         cards:
-          # ============================================================
-          #  🧪 N · P · K
-          #  v2.4: P and K were read by the probe from day one and shown
-          #  NOWHERE. Two thirds of the NPK sensor was invisible.
-          #
-          #  Same caveat as EC, louder: JXCT derives N/P/K from bulk EC.
-          #  These are NOT laboratory values — they are three differently
-          #  weighted views of the same conductivity measurement. Treat them
-          #  as SHAPES over time, never as ppm you could act on directly.
-          #  Compare a pot to its own history, not to a chart on the box.
-          # ============================================================
-          - type: heading
-            heading: 🧪 N · P · K — trend only, never absolute
-            heading_style: title
-          - type: markdown
-            content: >-
-              *⚠ The JXCT derives N/P/K from **bulk EC**, so all three move
-              together with total salt. They are trend indicators against each
-              pot's **own baseline** — never absolute ppm, never cross-pot
-              league tables. A number moving is information; a number's value is
-              not.*
-          - type: custom:apexcharts-card
-            header:
-              show: true
-              title: Nitrogen — 7 d
-              show_states: true
-              colorize_states: true
-            graph_span: 7d
-            span:
-              end: hour
-            yaxis:
-              - decimals: 0
-                apex_config:
-                  title:
-                    text: N (mg/kg est.)
-            series:
-              - entity: sensor.dsc_pot1_soil_nitrogen
-                name: POT1
-                color: "#22c55e"
-                group_by:
-                  func: avg
-                  duration: 1h
-              - entity: sensor.dsc_pot2_soil_nitrogen
-                name: POT2
-                color: "#3b82f6"
-                group_by:
-                  func: avg
-                  duration: 1h
-              - entity: sensor.dsc_pot3_soil_nitrogen
-                name: POT3
-                color: "#a855f7"
-                opacity: 0.4
-                stroke_width: 1
-                group_by:
-                  func: avg
-                  duration: 1h
-              - entity: sensor.dsc_pot4_soil_nitrogen
-                name: POT4
-                color: "#f59e0b"
-                group_by:
-                  func: avg
-                  duration: 1h
-          - type: custom:apexcharts-card
-            header:
-              show: true
-              title: Phosphorus — 7 d
-              show_states: true
-              colorize_states: true
-            graph_span: 7d
-            span:
-              end: hour
-            yaxis:
-              - decimals: 0
-                apex_config:
-                  title:
-                    text: P (mg/kg est.)
-            series:
-              - entity: sensor.dsc_pot1_soil_phosphorus
-                name: POT1
-                color: "#22c55e"
-                group_by:
-                  func: avg
-                  duration: 1h
-              - entity: sensor.dsc_pot2_soil_phosphorus
-                name: POT2
-                color: "#3b82f6"
-                group_by:
-                  func: avg
-                  duration: 1h
-              - entity: sensor.dsc_pot3_soil_phosphorus
-                name: POT3
-                color: "#a855f7"
-                opacity: 0.4
-                stroke_width: 1
-                group_by:
-                  func: avg
-                  duration: 1h
-              - entity: sensor.dsc_pot4_soil_phosphorus
-                name: POT4
-                color: "#f59e0b"
-                group_by:
-                  func: avg
-                  duration: 1h
-          - type: custom:apexcharts-card
-            header:
-              show: true
-              title: Potassium — 7 d
-              show_states: true
-              colorize_states: true
-            graph_span: 7d
-            span:
-              end: hour
-            yaxis:
-              - decimals: 0
-                apex_config:
-                  title:
-                    text: K (mg/kg est.)
-            series:
-              - entity: sensor.dsc_pot1_soil_potassium
-                name: POT1
-                color: "#22c55e"
-                group_by:
-                  func: avg
-                  duration: 1h
-              - entity: sensor.dsc_pot2_soil_potassium
-                name: POT2
-                color: "#3b82f6"
-                group_by:
-                  func: avg
-                  duration: 1h
-              - entity: sensor.dsc_pot3_soil_potassium
-                name: POT3
-                color: "#a855f7"
-                opacity: 0.4
-                stroke_width: 1
-                group_by:
-                  func: avg
-                  duration: 1h
-              - entity: sensor.dsc_pot4_soil_potassium
-                name: POT4
-                color: "#f59e0b"
-                group_by:
-                  func: avg
-                  duration: 1h
-          - type: markdown
-            content: >-
-              *Because all three derive from bulk EC, the **useful signal is
-              divergence**: if N drops while P and K hold, that is a ratio shift
-              worth believing. If all three fall together, you are looking at
-              total-salt depletion — which the EC uptake chart above already
-              told you, more honestly.*
-          - type: heading
-            heading: 📉 N RATE OF CHANGE
-            heading_style: subtitle
-          - type: custom:mini-graph-card
-            name: N rate — 48 h
-            hours_to_show: 48
-            cache: true
-            points_per_hour: 12
-            line_width: 2
-            entities:
-              - entity: sensor.dsc_pot1_soil_nitrogen_rate
-                name: POT1
-              - entity: sensor.dsc_pot2_soil_nitrogen_rate
-                name: POT2
-              - entity: sensor.dsc_pot4_soil_nitrogen_rate
-                name: POT4
-            show:
-              labels: true
-              legend: true
-          - type: entities
-            title: Daily N extremes (uptake timing)
-            entities:
-              - entity: sensor.dsc_pot1_soil_nitrogen_daily_max_time
-                name: POT1 daily max at
-              - entity: sensor.dsc_pot1_soil_nitrogen_daily_min_time
-                name: POT1 daily min at
-              - entity: sensor.dsc_pot2_soil_nitrogen_daily_max_time
-                name: POT2 daily max at
-              - entity: sensor.dsc_pot2_soil_nitrogen_daily_min_time
-                name: POT2 daily min at
-          - type: markdown
-            content: >-
-              *Timing is the tell. On a healthy plant the daily minimum lands in
-              the **light period** — that is when it is transpiring and feeding.
-              A minimum that drifts into the dark period, or flattens out
-              entirely, means uptake has decoupled from the photoperiod.*
+          - type: custom:expander-card
+            title: History — N / P / K (7d)
+            expanded: false
+            card_mod: *dsc_expander_style
+            cards:
+            # ============================================================
+            #  🧪 N · P · K
+            #  v2.4: P and K were read by the probe from day one and shown
+            #  NOWHERE. Two thirds of the NPK sensor was invisible.
+            #
+            #  Same caveat as EC, louder: JXCT derives N/P/K from bulk EC.
+            #  These are NOT laboratory values — they are three differently
+            #  weighted views of the same conductivity measurement. Treat them
+            #  as SHAPES over time, never as ppm you could act on directly.
+            #  Compare a pot to its own history, not to a chart on the box.
+            # ============================================================
+            - type: heading
+              heading: 🧪 N · P · K — trend only, never absolute
+              heading_style: title
+            - type: markdown
+              content: >-
+                *⚠ The JXCT derives N/P/K from **bulk EC**, so all three move
+                together with total salt. They are trend indicators against each
+                pot's **own baseline** — never absolute ppm, never cross-pot
+                league tables. A number moving is information; a number's value is
+                not.*
+            - type: custom:apexcharts-card
+              header:
+                show: true
+                title: Nitrogen — 7 d
+                show_states: true
+                colorize_states: true
+              graph_span: 7d
+              span:
+                end: hour
+              yaxis:
+                - decimals: 0
+                  apex_config:
+                    title:
+                      text: N (mg/kg est.)
+              series:
+                - entity: sensor.dsc_pot1_soil_nitrogen
+                  name: POT1
+                  color: "#22c55e"
+                  group_by:
+                    func: avg
+                    duration: 1h
+                - entity: sensor.dsc_pot2_soil_nitrogen
+                  name: POT2
+                  color: "#3b82f6"
+                  group_by:
+                    func: avg
+                    duration: 1h
+                - entity: sensor.dsc_pot3_soil_nitrogen
+                  name: POT3
+                  color: "#a855f7"
+                  opacity: 0.4
+                  stroke_width: 1
+                  group_by:
+                    func: avg
+                    duration: 1h
+                - entity: sensor.dsc_pot4_soil_nitrogen
+                  name: POT4
+                  color: "#f59e0b"
+                  group_by:
+                    func: avg
+                    duration: 1h
+            - type: custom:apexcharts-card
+              header:
+                show: true
+                title: Phosphorus — 7 d
+                show_states: true
+                colorize_states: true
+              graph_span: 7d
+              span:
+                end: hour
+              yaxis:
+                - decimals: 0
+                  apex_config:
+                    title:
+                      text: P (mg/kg est.)
+              series:
+                - entity: sensor.dsc_pot1_soil_phosphorus
+                  name: POT1
+                  color: "#22c55e"
+                  group_by:
+                    func: avg
+                    duration: 1h
+                - entity: sensor.dsc_pot2_soil_phosphorus
+                  name: POT2
+                  color: "#3b82f6"
+                  group_by:
+                    func: avg
+                    duration: 1h
+                - entity: sensor.dsc_pot3_soil_phosphorus
+                  name: POT3
+                  color: "#a855f7"
+                  opacity: 0.4
+                  stroke_width: 1
+                  group_by:
+                    func: avg
+                    duration: 1h
+                - entity: sensor.dsc_pot4_soil_phosphorus
+                  name: POT4
+                  color: "#f59e0b"
+                  group_by:
+                    func: avg
+                    duration: 1h
+            - type: custom:apexcharts-card
+              header:
+                show: true
+                title: Potassium — 7 d
+                show_states: true
+                colorize_states: true
+              graph_span: 7d
+              span:
+                end: hour
+              yaxis:
+                - decimals: 0
+                  apex_config:
+                    title:
+                      text: K (mg/kg est.)
+              series:
+                - entity: sensor.dsc_pot1_soil_potassium
+                  name: POT1
+                  color: "#22c55e"
+                  group_by:
+                    func: avg
+                    duration: 1h
+                - entity: sensor.dsc_pot2_soil_potassium
+                  name: POT2
+                  color: "#3b82f6"
+                  group_by:
+                    func: avg
+                    duration: 1h
+                - entity: sensor.dsc_pot3_soil_potassium
+                  name: POT3
+                  color: "#a855f7"
+                  opacity: 0.4
+                  stroke_width: 1
+                  group_by:
+                    func: avg
+                    duration: 1h
+                - entity: sensor.dsc_pot4_soil_potassium
+                  name: POT4
+                  color: "#f59e0b"
+                  group_by:
+                    func: avg
+                    duration: 1h
+            - type: markdown
+              content: >-
+                *Because all three derive from bulk EC, the **useful signal is
+                divergence**: if N drops while P and K hold, that is a ratio shift
+                worth believing. If all three fall together, you are looking at
+                total-salt depletion — which the EC uptake chart above already
+                told you, more honestly.*
+            - type: heading
+              heading: 📉 N RATE OF CHANGE
+              heading_style: subtitle
+            - type: custom:mini-graph-card
+              name: N rate — 48 h
+              hours_to_show: 48
+              cache: true
+              points_per_hour: 12
+              line_width: 2
+              entities:
+                - entity: sensor.dsc_pot1_soil_nitrogen_rate
+                  name: POT1
+                - entity: sensor.dsc_pot2_soil_nitrogen_rate
+                  name: POT2
+                - entity: sensor.dsc_pot4_soil_nitrogen_rate
+                  name: POT4
+              show:
+                labels: true
+                legend: true
+            - type: entities
+              title: Daily N extremes (uptake timing)
+              entities:
+                - entity: sensor.dsc_pot1_soil_nitrogen_daily_max_time
+                  name: POT1 daily max at
+                - entity: sensor.dsc_pot1_soil_nitrogen_daily_min_time
+                  name: POT1 daily min at
+                - entity: sensor.dsc_pot2_soil_nitrogen_daily_max_time
+                  name: POT2 daily max at
+                - entity: sensor.dsc_pot2_soil_nitrogen_daily_min_time
+                  name: POT2 daily min at
+            - type: markdown
+              content: >-
+                *Timing is the tell. On a healthy plant the daily minimum lands in
+                the **light period** — that is when it is transpiring and feeding.
+                A minimum that drifts into the dark period, or flattens out
+                entirely, means uptake has decoupled from the photoperiod.*
 
   - title: Tank
     icon: mdi:cup-water
@@ -5476,6 +5849,33 @@ views:
           - type: heading
             heading: ☀️ SF1000 — 2x4 CLONE TENT
             heading_style: title
+          - type: conditional
+            conditions:
+              - condition: and
+                conditions:
+                  - condition: state
+                    entity: switch.dsc_hub_auto_photoperiod
+                    state: "on"
+                  - condition: state
+                    entity: switch.dsc_hub_manual_light_hold
+                    state: "off"
+                  - condition: state
+                    entity: switch.dsc_hub_manual_takeover
+                    state: "off"
+            card:
+              type: custom:mushroom-template-card
+              primary: Schedule owns brightness
+              secondary: >-
+                Auto Photoperiod drives the ramp. Enable Manual Light Hold to
+                edit brightness without fighting the schedule.
+              icon: mdi:lock
+              icon_color: amber
+              multiline_secondary: true
+              tap_action:
+                action: call-service
+                service: switch.turn_on
+                target:
+                  entity_id: switch.dsc_hub_manual_light_hold
           - type: custom:vertical-stack-in-card
             cards:
               - type: light
@@ -5532,16 +5932,39 @@ views:
             entities:
               - entity: select.dsc_hub_clone_photoperiod
                 name: Window source
-              - entity: time.dsc_hub_clone_lights_on_time
-                name: Clone Lights-On Time
-              - entity: number.dsc_hub_clone_light_hours
-                name: Clone Light Hours
               - entity: number.dsc_hub_sunrise_duration
                 name: Sunrise Ramp
               - entity: number.dsc_hub_sunset_duration
                 name: Sunset Ramp
               - entity: time.dsc_hub_lights_on_time
                 name: 4x8 Window Opens (stage sets hours)
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: select.dsc_hub_clone_photoperiod
+                state: Independent
+            card:
+              type: entities
+              entities:
+                - entity: time.dsc_hub_clone_lights_on_time
+                  name: Clone Lights-On Time
+                - entity: number.dsc_hub_clone_light_hours
+                  name: Clone Light Hours
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: select.dsc_hub_clone_photoperiod
+                state: Follow 4x8
+            card:
+              type: custom:mushroom-template-card
+              primary: Clone schedule follows 4x8
+              secondary: >-
+                Hours {{ states('sensor.dsc_expected_light_hours')|round(0) }}h ·
+                opens {{ states('time.dsc_hub_lights_on_time') }}. Switch Window
+                source to Independent to unlock clone start/hours.
+              icon: mdi:lock
+              icon_color: amber
+              multiline_secondary: true
           - type: markdown
             content: >-
               *Window source: **Follow 4x8** mirrors the main tent's virtual
