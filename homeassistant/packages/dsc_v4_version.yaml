@@ -1,7 +1,12 @@
 # ==================================================================
 #  DSC-HUB v5.1 · SURFACE VERSION + FLEET STATUS
 #  ------------------------------------------------------------------
-#  Expected release string + HA surface marker + aggregate fleet chip.
+#  Two independent strings:
+#    • input_text.dsc_expected_release — firmware train (default 5.1.3)
+#    • sensor.dsc_ha_surface_version — HA packages/dashboard (5.1.5)
+#  Do not bump expected_release when shipping HA-only surface cuts;
+#  that produced a false operator FLEET WARN vs hub/pots still on 5.1.3.
+#  Fleet chip compares major.minor across devices + ha_surface.
 #  Sync add-on writes /config/dsc-hub-sync.version (optional) with SHA.
 # ==================================================================
 

@@ -44,8 +44,9 @@ flowchart LR
 | [`scripts/ADDON.md`](scripts/ADDON.md) | **Primary delivery** — HAOS Sync add-on |
 | [`docs/qa/FIRMWARE-QA-5.1.0.md`](docs/qa/FIRMWARE-QA-5.1.0.md) | Firmware Validate / flash QC |
 | [`docs/qa/ADDON-QA-5.1.0.md`](docs/qa/ADDON-QA-5.1.0.md) | Sync add-on QC |
-| [`homeassistant/README.md`](homeassistant/README.md) | Packages, HACS, entity notes |
+| [`homeassistant/README.md`](homeassistant/README.md) | Packages, HACS, entity notes, **fleet expected vs surface** |
 | [`firmware/v4/README.md`](firmware/v4/README.md) | Local validate / flash |
+| [`docs/qa/LIVE-FLEET-EXPECTED.md`](docs/qa/LIVE-FLEET-EXPECTED.md) | After HA surface bumps — expected stays on firmware train |
 
 **HAOS delivery:** Settings → Add-ons → Repositories → `https://github.com/weddas/DSC-HUB`
 → install / Update **DSC-HUB Sync** **5.1.0**. Push to `master` → poll (~60s) →

@@ -1,5 +1,13 @@
 # Changelog
 
+## Fleet expected release stays on 5.1.3 firmware train (2026-08-03)
+
+- Keep `input_text.dsc_expected_release` (and fleet chip fallbacks) on **5.1.3**.
+- HA surface remains **5.1.5** — do not bump expected with the surface string;
+  that produced a false FLEET WARN against hub/pots still on 5.1.3.
+- Ops: [`homeassistant/README.md`](homeassistant/README.md) (Fleet expected vs HA
+  surface) · [`docs/qa/LIVE-FLEET-EXPECTED.md`](docs/qa/LIVE-FLEET-EXPECTED.md).
+
 ## HA surface 5.1.5 — finish crop UI + pot-native strain (2026-08-03)
 
 - **Honest cutover:** 5.1.4 shipped packages + Climate Temp OOS + dead Tank chips;

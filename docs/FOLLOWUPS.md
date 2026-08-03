@@ -235,5 +235,12 @@ No climate control regression during soak window.
 
 - POT2/POT1/POT4 OTA to **5.1.3** — confirmed `Firmware Version` + `Strain` + `Sprout Date` entities; sprout set to 2026-08-03 on flashed pots
 - POT3 offline (`.local` + `192.168.86.40:3232` refused) — **USB flash still required**
-- HA surface **5.1.5** live (`FLEET` chip may warn until `input_text.dsc_expected_release` is 5.1.3 firmware train; surface string stays 5.1.5)
+- HA surface **5.1.5** live; `input_text.dsc_expected_release` kept on **5.1.3** firmware train (`e818568`) — do not set expected to the surface patch
 - Strains + Nutrient Science views confirmed in browser; migrate button present; sprout copied via native API for pot1/2/4
+
+### fleet expected vs surface (ops)
+
+- Package defaults + chip fallbacks: expected **5.1.3**, surface **5.1.5**
+- Live `input_text` may still hold 5.1.4/5.1.5 until edited (package `initial` is create-only)
+- Missing devices (POT3) also force `warn` — unrelated to expected string
+- QA: [`docs/qa/LIVE-FLEET-EXPECTED.md`](qa/LIVE-FLEET-EXPECTED.md) · runbook in [`homeassistant/README.md`](../homeassistant/README.md)
