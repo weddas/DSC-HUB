@@ -194,3 +194,7 @@ No climate control regression during soak window.
 ### deferred
 
 - N-004 optional cull of unused Sankey template sensors (`dsc_airflow_direct_room`, `dsc_airflow_room_return`) — concept covered by live CFM edges; leave helpers until a dedicated orphan pass.
+
+### docs
+
+- Durable runbook: `homeassistant/README.md` (AIRFLOW STATUS) · HACS pitfalls: `scripts/HACS-FRONTEND.md` · smoke: `docs/qa/LIVE-UI-AIRFLOW-STATUS.md`.

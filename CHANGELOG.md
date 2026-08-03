@@ -1,5 +1,15 @@
 # Changelog
 
+## Lovelace — AIRFLOW STATUS duct card (2026-08-03)
+
+- Climate Engine replaces `power-flow-card-plus` with
+  `custom:dsc-airflow-map-card` (real ducts, CFM/% blend, source T/RH carry,
+  room appliances, volume/ACH mass chips).
+- HACS `dist/DSC-HUB.js` bundles **system map + airflow map**; sync script
+  concatenates both www sources.
+- Ops runbook: [`homeassistant/README.md`](homeassistant/README.md) ·
+  smoke: [`docs/qa/LIVE-UI-AIRFLOW-STATUS.md`](docs/qa/LIVE-UI-AIRFLOW-STATUS.md).
+
 ## HA surface 5.1.4 — crop-steering + response learning (2026-08-03)
 
 - **Strains / Want·Need·Got:** catalog + sprout age, peer offsets (Got = raw +
