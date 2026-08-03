@@ -6,7 +6,9 @@ Install the DSC-HUB Lovelace cards from this GitHub repo as a
 One resource (`DSC-HUB.js`) registers both:
 
 - `custom:dsc-system-map-card` — neon isometric SYSTEM MAP
-- `custom:dsc-airflow-map-card` — hybrid AIRFLOW STATUS map
+- `custom:dsc-airflow-map-card` — GUI-first isometric **tent airflow scene**
+  (room size, tents, wall ports, fans, carbon filters, exhaust into room or
+  through wall). Open **Edit card** for the visual editor; Add card uses DSC defaults.
 
 ## Add the custom repository
 
@@ -37,6 +39,11 @@ title: DSC-HUB
 type: custom:dsc-airflow-map-card
 title: AIRFLOW STATUS
 ```
+
+Edit the card in the Lovelace UI to configure room size, tents (1–4), routes
+(wall → wall), fans, carbon filters, and whether exhaust goes **through the
+wall (Outside)** or **into the room**. Advanced JSON is available in the editor
+for dashboard-as-code workflows.
 
 Optional entity overrides — see [`homeassistant/README.md`](../homeassistant/README.md).
 

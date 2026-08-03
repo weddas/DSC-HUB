@@ -138,16 +138,27 @@ stage_and_commit() {
   fi
 
   if bashio::config.true 'sync_www'; then
-    log "Syncing www/dsc-system-map.*"
-    local name
-    for name in dsc-system-map-card.js dsc-system-map.svg; do
-      if [[ -f "${src}/www/${name}" ]]; then
-        cp -f "${src}/www/${name}" "${STAGE}/www/${name}"
-        log "Staged www/${name} ($(wc -c <"${src}/www/${name}") bytes)"
-      else
-        warn "Missing repo www/${name}"
-      fi
-    done
+    log "Syncing www system-map SVG + bundled cards (system map + airflow)"
+    if [[ -f "${src}/www/dsc-system-map.svg" ]]; then
+      cp -f "${src}/www/dsc-system-map.svg" "${STAGE}/www/dsc-system-map.svg"
+      log "Staged www/dsc-system-map.svg"
+    else
+      warn "Missing repo www/dsc-system-map.svg"
+    fi
+    # Bundle both cards into dsc-system-map-card.js (existing Lovelace resource)
+    # and DSC-HUB.js (HACS filename). Standalone airflow optional.
+    if [[ -f "${src}/www/dsc-system-map-card.js" && -f "${src}/www/dsc-airflow-map-card.js" ]]; then
+      {
+        cat "${src}/www/dsc-system-map-card.js"
+        printf '\n'
+        cat "${src}/www/dsc-airflow-map-card.js"
+      } > "${STAGE}/www/dsc-system-map-card.js"
+      cp -f "${STAGE}/www/dsc-system-map-card.js" "${STAGE}/www/DSC-HUB.js"
+      cp -f "${src}/www/dsc-airflow-map-card.js" "${STAGE}/www/dsc-airflow-map-card.js"
+      log "Staged bundled www/dsc-system-map-card.js ($(wc -c <"${STAGE}/www/dsc-system-map-card.js") bytes)"
+    else
+      warn "Missing system-map and/or airflow card — www sync incomplete"
+    fi
   fi
 
   if bashio::config.true 'sync_esphome'; then
@@ -190,7 +201,7 @@ stage_and_commit() {
       "${HA_CONFIG}/dashboards/dsc-hub-v4-dashboard.yaml"
   fi
   if bashio::config.true 'sync_www'; then
-    for name in dsc-system-map-card.js dsc-system-map.svg; do
+    for name in dsc-system-map.svg dsc-system-map-card.js DSC-HUB.js dsc-airflow-map-card.js; do
       if [[ -f "${STAGE}/www/${name}" ]]; then
         cp -f "${STAGE}/www/${name}" "${HA_CONFIG}/www/${name}"
         log "Installed /config/www/${name}"

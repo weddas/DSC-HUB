@@ -86,7 +86,7 @@ Add Integration → Browser Mod**. Without it the popup taps silently no-op.
 | Card | Type | View |
 |---|---|---|
 | Neon isometric map | `custom:dsc-system-map-card` | Home |
-| Hybrid airflow status | `custom:dsc-airflow-map-card` | Climate Engine |
+| GUI tent airflow scene | `custom:dsc-airflow-map-card` | Climate Engine |
 
 ### Preferred — HACS Dashboard custom repository
 
@@ -123,13 +123,12 @@ entities:
 ```yaml
 type: custom:dsc-airflow-map-card
 title: AIRFLOW STATUS
-# entities: override cfm_*, fan_*, zone T/RH, appliances — see www/dsc-airflow-map-card.js DEFAULTS
 ```
 
-**Airflow card:** real ducts only (Room→2x4 / Room→4x8 / cascade / OUT / RECIRC),
-edge chips carry source-zone T/RH + CFM/%, OUT/RECIRC percentage blend (only
-RECIRC share is lung feedback), room appliance chips on the Room node, tent
-volumes → air-mass / ACH from Plant Specs.
+**Airflow card:** isometric tent scene with glowing ducts. Prefer **Edit card**
+(GUI) to set room size, tents (1–4), wall ports, fans, carbon filters, and
+exhaust **into room** vs **through wall**. Add card loads DSC defaults
+(Room + 2x4 + 4x8 + five routes).
 
 ## Climate capacity envelope
 

@@ -147,13 +147,15 @@ run_scp "${bundle}" "${HA_CONFIG_ROOT}/www/dsc-system-map-card.js"
 run_scp "${bundle}" "${HA_CONFIG_ROOT}/www/DSC-HUB.js"
 
 # Bust browser cache for the existing Lovelace resource URL.
-# Without this, clients keep the pre-bundle system-map-only JS for ?v=….
-bust_ver="5.1.6-airflow-$(date -u +%Y%m%d%H%M)"
+# HA serves /local with Cache-Control max-age ~31d — query must change.
+# Never replace lovelace_resources with an unvalidated jq write (empty/corrupt
+# file wipes every HACS card). Require non-trivial output before install.
+bust_ver="airflow-$(date -u +%Y%m%d%H%M%S)"
 log "Bumping Lovelace resource cache-buster to ${bust_ver}"
 if [[ "${DRY_RUN}" == "1" ]]; then
   log "DRY_RUN resource bump"
 else
-  run_ssh "sed -i 's#/local/dsc-system-map-card.js?v=[^\"]*#/local/dsc-system-map-card.js?v=${bust_ver}#' ${HA_CONFIG_ROOT}/.storage/lovelace_resources || true"
+  run_ssh "set -e; LR=${HA_CONFIG_ROOT}/.storage/lovelace_resources; test -s \"\${LR}\" || { echo 'lovelace_resources missing/empty — skip bump' >&2; exit 0; }; jq --arg v \"/local/dsc-system-map-card.js?v=${bust_ver}\" '(.data.items[] | select(.url|test(\"dsc-system-map\")).url) |= \$v' \"\${LR}\" > /tmp/lr.json; BYTES=\$(wc -c < /tmp/lr.json); test \"\${BYTES}\" -gt 500 || { echo \"jq output too small (\${BYTES}) — abort\" >&2; exit 1; }; cp -a \"\${LR}\" \"\${LR}.bak.\$(date +%s)\"; mv /tmp/lr.json \"\${LR}\""
 fi
 
 # --- esphome stubs (optional) ---------------------------------------------

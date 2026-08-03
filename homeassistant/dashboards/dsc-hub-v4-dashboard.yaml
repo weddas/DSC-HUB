@@ -3085,19 +3085,12 @@ views:
             title: AIRFLOW STATUS
             grid_options:
               columns: 12
-              rows: 6
+              rows: 11
           - type: markdown
             content: >-
-              *Real ducts only: Room→2x4, Room→4x8, 2x4→4x8 cascade, 4x8→Outside,
-              4x8→Room recirc. Edges show live **CFM / fan %** and the **source
-              zone T/RH** being pulled over. OUT and RECIRC are a **percentage
-              blend** — only the RECIRC share feeds the room lung; OUT dumps
-              outdoors and does not hit the intakes.*
-
-
-              *Room appliances (heater / AC / hum / dehum) condition the shared
-              lung the intakes suck from. Tent volumes from Plant Specs drive
-              the quick air-mass and ACH lines on each node.*
+              *GUI-configurable tent scene — Edit card to set room size, tents,
+              wall ports, fans, carbon filters, and exhaust into-room vs
+              through-wall. Defaults match this DSC Hub (2x4 + 4x8).*
           - type: heading
             heading: Fans
             heading_style: subtitle

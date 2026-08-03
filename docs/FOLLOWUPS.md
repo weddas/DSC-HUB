@@ -238,3 +238,19 @@ No climate control regression during soak window.
 - POT3 offline (`.local` + `192.168.86.40:3232` refused) ? **USB flash still required**
 - HA surface **5.1.5** live (`FLEET` chip may warn until `input_text.dsc_expected_release` is 5.1.3 firmware train; surface string stays 5.1.5)
 - Strains + Nutrient Science views confirmed in browser; migrate button present; sprout copied via native API for pot1/2/4
+
+---
+
+## Airflow STATUS layout + Lovelace resources (2026-08-03)
+
+### done
+- AIRFLOW STATUS card layout rewrite: perimeter chips, no center pile; live browser verify — chip AABB overlaps = 0; resource `?v=layoutfix3-restore`
+- `dsc-hub-sync` now bundles system-map + airflow into `dsc-system-map-card.js` / `DSC-HUB.js` (was overwriting with system-map-only and breaking the airflow element)
+- `ha-sync.sh` resource bump now refuses tiny/empty jq output and keeps a `.bak` before replace
+
+### red-flag
+- **F-010** Live `/config/.storage/lovelace_resources` was wiped to 0 bytes during a cache-bust + `ha core restart` race. Rebuilt from HACS `www/community` (57 items). If any custom card is missing after this, re-add via HACS or Settings → Dashboards → Resources. Prefer **stop core → edit resources → start core** for future bumps; never `mv` over the file while core is restarting without a size check.
+
+### deferred
+- Keep a dated copy of `lovelace_resources` on the NAS/repo (sanitized) so rebuild is not from community folder heuristics
+- Confirm browser_mod / any non-HACS module resources survived the rebuild
