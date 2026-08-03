@@ -32,7 +32,7 @@ Categories: `red-flag` · `soak` · `deferred` · `next-plan` · `out-of-scope` 
 |---|---|---|
 | N-001 | Preferred BSSID ≠ current while Lock ON | Self-customize relearn exists; verify after hub 5.1.3 flash |
 | N-002 | Fleet version skew cleanup | Flash Control/pots if still on old wifi stubs |
-| N-003 | Soak warnings from OOS deploy | Fill after ~30 min post-flash soak |
+| N-003 | Soak warnings from OOS deploy | **Filled** 2026-08-03 soak section below — no OOS alert spam; see N-001/N-006–N-008 carry |
 | N-004 | Orphan helper cull pass | leaf_offset kept; unused Sankey/deltas audit |
 | N-005 | Cooldown / open-loop wait retune | Evidence-based only; no site hardcodes |
 

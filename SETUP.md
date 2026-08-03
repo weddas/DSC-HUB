@@ -22,6 +22,11 @@ From `firmware/v4/` with a filled `secrets.yaml`:
 2. `esphome run dsc-control-kit.yaml` (USB)
 3. `esphome run dsc-pot1-kit.yaml` … `dsc-pot4-kit.yaml` (USB; POT2 canary first if preferred)
 
+**Windows / NAS compile:** ESPHome build dirs must be on a **local** path
+(drive letter or local SSD temp). UNC paths (`\\server\share\…`) break the
+toolchain mid-compile — copy the stub + secrets to a local folder, or set
+the build/temp directory off the NAS. See FOLLOWUPS **N-008**.
+
 ## Unboxing (end user)
 
 1. **Power the HUB.** It opens SoftAP `DSC-Setup-XXXX` (XXXX = last four hex of hub MAC).
