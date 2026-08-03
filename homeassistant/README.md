@@ -8,6 +8,10 @@ Canonical HA surface for firmware [`firmware/v4/`](../firmware/v4/).
 |---|---|
 | `dashboards/dsc-hub-v4-dashboard.yaml` | Lovelace UX **v5.1.3** (`dsc-hub-pro`). In-service kit toggles; learn **Activity**; Root Zone Pots+Mat. |
 | `packages/dsc_v4_core_helpers.yaml` | Hub link, fan %, Sankey, runtimes, **in-service** + capacity-offline + vent-conflict / ineffective cues |
+| `packages/dsc_v4_strain_catalog.yaml` | Strain catalog, sprout age, Want/Need/Got, peer offsets, Apply expected stage |
+| `packages/dsc_v4_nutrient_catalog.yaml` | Nutrient stock, next-mix recipe, Accept mix QA (no pumps) |
+| `packages/dsc_v4_pots_coherence.yaml` | Relative dryback + cross-pot EC/moisture coherence + learned ratios |
+| `packages/dsc_v4_actuator_efficacy.yaml` | Command→effect; Temp OOS vs Operator Lockout; demand inhibit |
 | `packages/dsc_v4_climate_physics.yaml` | Settable plant specs (CFM/volumes/L/day/W), ACH/AH/BTU/moisture sensors, spec verification |
 | `packages/dsc_v4_device_cal.yaml` | Optional fan CFM / SF1000 PPFD multi-point curves + Learning wizard (unset = % × nameplate) |
 | `packages/dsc_v4_climate_learn.yaml` | Phase A EMA (fans+mat may co-run) + `sensor.dsc_learn_activity` + Phase B waits |
@@ -274,6 +278,23 @@ Reset coeffs: `script.dsc_climate_learn_reset`. Reset waits: `script.dsc_climate
 Dashboard: **Learning** (`/dsc-hub-pro/learning`) — Activity card, device cal,
 Phase A+B status, appliance effect cards, waits, ETA, efficiencies, charts.
 
+## Crop-steering prep (HA surface 5.1.4)
+
+Packages: `dsc_v4_strain_catalog`, `dsc_v4_nutrient_catalog`, `dsc_v4_pots_coherence`,
+`dsc_v4_actuator_efficacy`.
+
+- **Want / Need / Got:** strain + sprout date → Want bands; Got = raw + peer offset;
+  Need summary + Apply expected stage (advisory).
+- **Nutrient Science:** tank L × strength → recipe; **Accept mix** burns stock (no pumps).
+- **Fluctuations:** relative dryback; cross-pot coherence when moisture rises together
+  but EC does not; learned ΔEC/Δmoisture.
+- **Temp OOS vs Operator Lockout:** humidifier/dehum/clone mister — efficacy fail →
+  Temp OOS (flashing) + demand off; Lockout only you clear.
+
+Dashboard: **Strains** (`/dsc-hub-pro/strains`), pot subviews, **Nutrient Science**,
+Climate Temp OOS / Lockout cards. Data mirrors: `data/dsc_strain_catalog.yaml`,
+`data/dsc_nutrient_catalog.yaml`.
+
 ## Tank / Tuya entity map
 
 Package [`packages/dsc_v4_tank.yaml`](packages/dsc_v4_tank.yaml) expects lab-style
@@ -302,7 +323,7 @@ not humidifier lock — entity id kept for compatibility.
 |---|---|
 | Hub / pots / Sonoffs / kits | **`5.1.0`** |
 | Panel (DSC-CONTROL) | **`5.1.x`** lean-cut patch train |
-| HA surface (packages + dashboard) | **`5.1.2`** |
+| HA surface (packages + dashboard) | **`5.1.4`** |
 | Dashboard | DSC-HUB Pro (4-col, browser_mod popups) |
 | `espnow_cmd_tag` | `54727` (`0xD5C7`) on hub **and** panel |
 

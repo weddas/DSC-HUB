@@ -1,5 +1,5 @@
 # ==================================================================
-#  DSC-HUB Pro v5.1.2  ·  Lovelace dashboard
+#  DSC-HUB Pro v5.1.4  ·  Lovelace dashboard
 #  ------------------------------------------------------------------
 #  Full rewrite of the v2.4.1 dashboard for firmware v4 (ESP-NOW primary
 #  panel + hub). Wire layout for 0xD1–0xD3 unchanged; plant names use
@@ -2632,6 +2632,87 @@ views:
                 name: POT4 In Service
                 icon: mdi:flower
                 icon_color: green
+          - type: heading
+            heading: Temp OOS (flash) vs Operator Lockout (solid)
+            heading_style: subtitle
+          - type: markdown
+            content: >-
+              **Temp OOS** = system saw no effect (e.g. empty dehum) — flashing cue;
+              Clear Temp after fix. **Operator Lockout** = only you set/clear; system
+              never brings a locked device back.
+          - type: grid
+            columns: 2
+            square: false
+            cards:
+              - type: custom:mushroom-template-card
+                primary: Humidifier
+                secondary: "{{ states('sensor.dsc_humidifier_efficacy_summary') }}"
+                icon: mdi:air-humidifier
+                icon_color: "{{ 'amber' if is_state('input_boolean.dsc_humidifier_temp_oos','on') else ('red' if is_state('input_boolean.dsc_humidifier_operator_lockout','on') else 'green') }}"
+                card_mod:
+                  style: |
+                    ha-card {
+                      {% if is_state('input_boolean.dsc_humidifier_temp_oos','on') %}
+                      animation: dsc_temp_oos_pulse 1.2s ease-in-out infinite;
+                      {% elif is_state('input_boolean.dsc_humidifier_operator_lockout','on') %}
+                      box-shadow: 0 0 0 2px rgba(239,68,68,0.85);
+                      {% endif %}
+                    }
+                    @keyframes dsc_temp_oos_pulse {
+                      0%,100% { box-shadow: 0 0 0 0 rgba(245,158,11,0.0); }
+                      50% { box-shadow: 0 0 18px 2px rgba(245,158,11,0.85); }
+                    }
+              - type: custom:mushroom-entity-card
+                entity: input_boolean.dsc_humidifier_operator_lockout
+                name: Humidifier Lockout
+                icon: mdi:lock
+                icon_color: red
+              - type: custom:mushroom-template-card
+                primary: Clear Humidifier Temp OOS
+                icon: mdi:restore
+                tap_action:
+                  action: call-service
+                  service: script.dsc_clear_humidifier_temp_oos
+              - type: custom:mushroom-template-card
+                primary: Dehumidifier
+                secondary: "{{ states('sensor.dsc_dehumidifier_efficacy_summary') }}"
+                icon: mdi:air-humidifier
+                icon_color: "{{ 'amber' if is_state('input_boolean.dsc_dehumidifier_temp_oos','on') else ('red' if is_state('input_boolean.dsc_dehumidifier_operator_lockout','on') else 'green') }}"
+                card_mod:
+                  style: |
+                    ha-card {
+                      {% if is_state('input_boolean.dsc_dehumidifier_temp_oos','on') %}
+                      animation: dsc_temp_oos_pulse 1.2s ease-in-out infinite;
+                      {% elif is_state('input_boolean.dsc_dehumidifier_operator_lockout','on') %}
+                      box-shadow: 0 0 0 2px rgba(239,68,68,0.85);
+                      {% endif %}
+                    }
+                    @keyframes dsc_temp_oos_pulse {
+                      0%,100% { box-shadow: 0 0 0 0 rgba(245,158,11,0.0); }
+                      50% { box-shadow: 0 0 18px 2px rgba(245,158,11,0.85); }
+                    }
+              - type: custom:mushroom-entity-card
+                entity: input_boolean.dsc_dehumidifier_operator_lockout
+                name: Dehumidifier Lockout
+                icon: mdi:lock
+                icon_color: red
+              - type: custom:mushroom-template-card
+                primary: Clear Dehumidifier Temp OOS
+                icon: mdi:restore
+                tap_action:
+                  action: call-service
+                  service: script.dsc_clear_dehumidifier_temp_oos
+              - type: custom:mushroom-entity-card
+                entity: input_boolean.dsc_clone_humidifier_operator_lockout
+                name: Clone Mister Lockout
+                icon: mdi:lock
+                icon_color: red
+              - type: custom:mushroom-template-card
+                primary: Clear Clone Temp OOS
+                icon: mdi:restore
+                tap_action:
+                  action: call-service
+                  service: script.dsc_clear_clone_humidifier_temp_oos
           - type: conditional
             conditions:
               - condition: state
@@ -5681,6 +5762,20 @@ views:
           - type: heading
             heading: 🚰 TANK TESTER
             heading_style: title
+          - type: custom:mushroom-chips-card
+            chips:
+              - type: template
+                icon: mdi:flask
+                content: Nutrient Science
+                tap_action:
+                  action: navigate
+                  navigation_path: /dsc-hub-pro/nutrient-science
+              - type: template
+                icon: mdi:dna
+                content: Strains
+                tap_action:
+                  action: navigate
+                  navigation_path: /dsc-hub-pro/strains
           - type: conditional
             conditions:
               - condition: state

@@ -1,0 +1,26 @@
+# DSC nutrient catalog — seed mirror (stock/doses live in HA input_*)
+
+seeds:
+  - slot: 1
+    name: Base A
+    dose_ml_l: 2.0
+    role: base
+    mix_order: 1
+  - slot: 2
+    name: Base B
+    dose_ml_l: 2.0
+    role: base
+    mix_order: 2
+  - slot: 3
+    name: CalMag
+    dose_ml_l: 1.0
+    role: calmag
+    mix_order: 3
+  - slot: 4
+    name: Bloom Booster
+    dose_ml_l: 1.5
+    role: bloom
+    mix_order: 4
+
+custom_slots: 8
+note: Accept mix burns stock; pumps deferred to FOLLOWUPS.

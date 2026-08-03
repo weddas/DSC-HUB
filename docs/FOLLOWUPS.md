@@ -94,3 +94,53 @@ After each execution pass, append:
 ### red-flag
 
 - None new blocking climate control during soak
+
+---
+
+## 2026-08-03 — Crop-steering + response learning (HA surface 5.1.4)
+
+### done (this pass — repo)
+
+- Packages: `dsc_v4_strain_catalog`, `dsc_v4_nutrient_catalog`, `dsc_v4_pots_coherence`,
+  `dsc_v4_actuator_efficacy` (+ automations available-gates, core reduced-kit)
+- Want/Need/Got, peer offsets, Capture peer baseline, Apply expected stage
+- Nutrient stock / next mix / Accept mix QA (no pumps)
+- Relative dryback + cross-pot coherence + learned ΔEC/Δmoisture
+- Temp OOS (flashing) vs Operator Lockout; demand inhibit for hum/dehum/clone mister
+- Dashboard: Strains + pot subviews, Nutrient Science, Climate Temp/Lockout UI
+- Surface string **5.1.4**; README + CHANGELOG; data mirrors under `homeassistant/data/`
+- Quality-bar Cursor rule (user + `.cursor/rules/quality-bar.mdc`) from earlier in session
+
+### flash
+
+- **No firmware changes** this pass — OTA flash skipped (HA-only). Hub remains on prior 5.1.3 train until a future hub bump.
+
+### soak (fleet baseline via HA MCP; new packages not live until sync)
+
+Observed live before package deploy:
+
+- Hub link **on**; Full Auto **on**; tent ~21.0 °C / ~71% RH
+- AC / clone mister in-service **off**; POT3 in-service **off**; POT1/2/4 **on**
+- Humidifier/dehumidifier demands **off**; dehum relay **off**
+- Active alert count **9** (pre-existing; not attributed to this pass)
+
+**Blocked:** SSH to HAOS refused (ports 22/22222 closed from this host); no local HA_TOKEN for `ha-sync.sh`. New entities (`sensor.dsc_pot*_got_*`, Temp OOS, etc.) cannot soak until packages reach `/config/packages/` (git push → HA sync workflow, or manual copy + reload).
+
+### next-plan
+
+| ID | Item | Notes |
+|---|---|---|
+| N-009 | **Deploy HA 5.1.4 packages + dashboard** | Commit/push or manual sync; then reload YAML / restart helpers; verify Strains + Nutrient Science views |
+| N-010 | Post-deploy soak 25–30 min | Confirm Temp OOS latch, Accept mix stock burn, Want/Need/Got entities, no climate red flags |
+| N-011 | Promote custom strain/nutrient slots → git YAML | When customs stabilize |
+| N-012 | Pump dosing from Accept mix | Hardware deferred |
+| N-013 | Closed-loop dryback irrigation | Track-only dryback shipped |
+| N-014 | AC/heater efficacy Temp OOS | Same latch pattern as hum/dehum |
+| N-015 | Deeper coherence / multi-feature learning | v1 = rules + EWMA |
+| N-016 | Lab wet calibration of probes | Peer offsets are v1 |
+| N-017 | **Strain + sprout date on pot ESP (NVS)** | Probe stays in pot until harvest — genetics/age must travel with the node like `plant_name` / `growth_stage`; HA Want/Need/Got should read pot entities after flash |
+| N-018 | Wire HA strain catalog to pot-native strain/sprout once N-017 ships | Drop duplicate HA-only sprout/strain as source of truth; keep Want bands / catalog in HA |
+
+### red-flag
+
+- **Live HA still on pre-5.1.4 surface** until N-009 — do not treat crop-steering UI as production until sync confirms `sensor.dsc_ha_surface_version` = `5.1.4`

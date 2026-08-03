@@ -1,0 +1,1445 @@
+# ==================================================================
+#  DSC-HUB v5.1.4 · STRAIN CATALOG + WANT / NEED / GOT
+#  ------------------------------------------------------------------
+#  Genetics define Want; offset-corrected probes are Got; Need = gap.
+#  Seed strains embedded in templates; 5 custom slots via input_*.
+#  Peer offsets: corrected = raw + offset (offset usually negative when
+#  a probe reads high vs peer median).
+# ==================================================================
+
+input_datetime:
+  dsc_pot1_sprout_date:
+    name: "DSC POT1 Sprout Date"
+    has_date: true
+    has_time: false
+    icon: mdi:sprout
+  dsc_pot2_sprout_date:
+    name: "DSC POT2 Sprout Date"
+    has_date: true
+    has_time: false
+    icon: mdi:sprout
+  dsc_pot3_sprout_date:
+    name: "DSC POT3 Sprout Date"
+    has_date: true
+    has_time: false
+    icon: mdi:sprout
+  dsc_pot4_sprout_date:
+    name: "DSC POT4 Sprout Date"
+    has_date: true
+    has_time: false
+    icon: mdi:sprout
+
+input_select:
+  dsc_pot1_strain:
+    name: "DSC POT1 Strain"
+    icon: mdi:dna
+    options:
+      - "Generic Photoperiod"
+      - "Generic Autoflower"
+      - "Custom 1"
+      - "Custom 2"
+      - "Custom 3"
+      - "Custom 4"
+      - "Custom 5"
+    initial: "Generic Photoperiod"
+  dsc_pot2_strain:
+    name: "DSC POT2 Strain"
+    icon: mdi:dna
+    options:
+      - "Generic Photoperiod"
+      - "Generic Autoflower"
+      - "Custom 1"
+      - "Custom 2"
+      - "Custom 3"
+      - "Custom 4"
+      - "Custom 5"
+    initial: "Generic Photoperiod"
+  dsc_pot3_strain:
+    name: "DSC POT3 Strain"
+    icon: mdi:dna
+    options:
+      - "Generic Photoperiod"
+      - "Generic Autoflower"
+      - "Custom 1"
+      - "Custom 2"
+      - "Custom 3"
+      - "Custom 4"
+      - "Custom 5"
+    initial: "Generic Photoperiod"
+  dsc_pot4_strain:
+    name: "DSC POT4 Strain"
+    icon: mdi:dna
+    options:
+      - "Generic Photoperiod"
+      - "Generic Autoflower"
+      - "Custom 1"
+      - "Custom 2"
+      - "Custom 3"
+      - "Custom 4"
+      - "Custom 5"
+    initial: "Generic Photoperiod"
+  dsc_custom_strain_1_type:
+    name: "DSC Custom Strain 1 Type"
+    options: ["photo", "auto", "other"]
+    initial: "photo"
+  dsc_custom_strain_2_type:
+    name: "DSC Custom Strain 2 Type"
+    options: ["photo", "auto", "other"]
+    initial: "photo"
+  dsc_custom_strain_3_type:
+    name: "DSC Custom Strain 3 Type"
+    options: ["photo", "auto", "other"]
+    initial: "photo"
+  dsc_custom_strain_4_type:
+    name: "DSC Custom Strain 4 Type"
+    options: ["photo", "auto", "other"]
+    initial: "photo"
+  dsc_custom_strain_5_type:
+    name: "DSC Custom Strain 5 Type"
+    options: ["photo", "auto", "other"]
+    initial: "photo"
+
+input_text:
+  dsc_custom_strain_1_name:
+    name: "DSC Custom Strain 1 Name"
+    max: 64
+    initial: ""
+  dsc_custom_strain_2_name:
+    name: "DSC Custom Strain 2 Name"
+    max: 64
+    initial: ""
+  dsc_custom_strain_3_name:
+    name: "DSC Custom Strain 3 Name"
+    max: 64
+    initial: ""
+  dsc_custom_strain_4_name:
+    name: "DSC Custom Strain 4 Name"
+    max: 64
+    initial: ""
+  dsc_custom_strain_5_name:
+    name: "DSC Custom Strain 5 Name"
+    max: 64
+    initial: ""
+  dsc_custom_strain_1_notes:
+    name: "DSC Custom Strain 1 Notes"
+    max: 255
+    initial: ""
+  dsc_custom_strain_2_notes:
+    name: "DSC Custom Strain 2 Notes"
+    max: 255
+    initial: ""
+  dsc_custom_strain_3_notes:
+    name: "DSC Custom Strain 3 Notes"
+    max: 255
+    initial: ""
+  dsc_custom_strain_4_notes:
+    name: "DSC Custom Strain 4 Notes"
+    max: 255
+    initial: ""
+  dsc_custom_strain_5_notes:
+    name: "DSC Custom Strain 5 Notes"
+    max: 255
+    initial: ""
+
+input_number:
+  # Peer offsets — Got = raw + offset
+  dsc_pot1_offset_ph:
+    name: "DSC POT1 Offset pH"
+    min: -3
+    max: 3
+    step: 0.05
+    initial: 0
+    mode: box
+  dsc_pot1_offset_ec_us:
+    name: "DSC POT1 Offset EC"
+    min: -2000
+    max: 2000
+    step: 10
+    initial: 0
+    unit_of_measurement: "µS/cm"
+    mode: box
+  dsc_pot1_offset_moisture:
+    name: "DSC POT1 Offset Moisture"
+    min: -40
+    max: 40
+    step: 0.5
+    initial: 0
+    unit_of_measurement: "%"
+    mode: box
+  dsc_pot2_offset_ph:
+    name: "DSC POT2 Offset pH"
+    min: -3
+    max: 3
+    step: 0.05
+    initial: 0
+    mode: box
+  dsc_pot2_offset_ec_us:
+    name: "DSC POT2 Offset EC"
+    min: -2000
+    max: 2000
+    step: 10
+    initial: 0
+    unit_of_measurement: "µS/cm"
+    mode: box
+  dsc_pot2_offset_moisture:
+    name: "DSC POT2 Offset Moisture"
+    min: -40
+    max: 40
+    step: 0.5
+    initial: 0
+    unit_of_measurement: "%"
+    mode: box
+  dsc_pot3_offset_ph:
+    name: "DSC POT3 Offset pH"
+    min: -3
+    max: 3
+    step: 0.05
+    initial: 0
+    mode: box
+  dsc_pot3_offset_ec_us:
+    name: "DSC POT3 Offset EC"
+    min: -2000
+    max: 2000
+    step: 10
+    initial: 0
+    unit_of_measurement: "µS/cm"
+    mode: box
+  dsc_pot3_offset_moisture:
+    name: "DSC POT3 Offset Moisture"
+    min: -40
+    max: 40
+    step: 0.5
+    initial: 0
+    unit_of_measurement: "%"
+    mode: box
+  dsc_pot4_offset_ph:
+    name: "DSC POT4 Offset pH"
+    min: -3
+    max: 3
+    step: 0.05
+    initial: 0
+    mode: box
+  dsc_pot4_offset_ec_us:
+    name: "DSC POT4 Offset EC"
+    min: -2000
+    max: 2000
+    step: 10
+    initial: 0
+    unit_of_measurement: "µS/cm"
+    mode: box
+  dsc_pot4_offset_moisture:
+    name: "DSC POT4 Offset Moisture"
+    min: -40
+    max: 40
+    step: 0.5
+    initial: 0
+    unit_of_measurement: "%"
+    mode: box
+  # Custom strain Want bands (default veg-ish); stage overrides deferred to FOLLOWUPS
+  dsc_custom_strain_1_ph_min:
+    name: "DSC Custom Strain 1 pH Min"
+    min: 4
+    max: 8
+    step: 0.1
+    initial: 5.8
+    mode: box
+  dsc_custom_strain_1_ph_max:
+    name: "DSC Custom Strain 1 pH Max"
+    min: 4
+    max: 8
+    step: 0.1
+    initial: 6.5
+    mode: box
+  dsc_custom_strain_1_ec_min:
+    name: "DSC Custom Strain 1 EC Min"
+    min: 0
+    max: 4000
+    step: 50
+    initial: 800
+    unit_of_measurement: "µS/cm"
+    mode: box
+  dsc_custom_strain_1_ec_max:
+    name: "DSC Custom Strain 1 EC Max"
+    min: 0
+    max: 4000
+    step: 50
+    initial: 1600
+    unit_of_measurement: "µS/cm"
+    mode: box
+  dsc_custom_strain_1_moisture_min:
+    name: "DSC Custom Strain 1 Moisture Min"
+    min: 0
+    max: 100
+    step: 1
+    initial: 45
+    unit_of_measurement: "%"
+    mode: box
+  dsc_custom_strain_1_moisture_max:
+    name: "DSC Custom Strain 1 Moisture Max"
+    min: 0
+    max: 100
+    step: 1
+    initial: 70
+    unit_of_measurement: "%"
+    mode: box
+  dsc_custom_strain_1_veg_days:
+    name: "DSC Custom Strain 1 Veg Days"
+    min: 1
+    max: 120
+    step: 1
+    initial: 28
+    unit_of_measurement: "d"
+    mode: box
+  dsc_custom_strain_1_flower_days:
+    name: "DSC Custom Strain 1 Flower Days"
+    min: 1
+    max: 120
+    step: 1
+    initial: 63
+    unit_of_measurement: "d"
+    mode: box
+  dsc_custom_strain_2_ph_min:
+    name: "DSC Custom Strain 2 pH Min"
+    min: 4
+    max: 8
+    step: 0.1
+    initial: 5.8
+    mode: box
+  dsc_custom_strain_2_ph_max:
+    name: "DSC Custom Strain 2 pH Max"
+    min: 4
+    max: 8
+    step: 0.1
+    initial: 6.5
+    mode: box
+  dsc_custom_strain_2_ec_min:
+    name: "DSC Custom Strain 2 EC Min"
+    min: 0
+    max: 4000
+    step: 50
+    initial: 800
+    unit_of_measurement: "µS/cm"
+    mode: box
+  dsc_custom_strain_2_ec_max:
+    name: "DSC Custom Strain 2 EC Max"
+    min: 0
+    max: 4000
+    step: 50
+    initial: 1600
+    unit_of_measurement: "µS/cm"
+    mode: box
+  dsc_custom_strain_2_moisture_min:
+    name: "DSC Custom Strain 2 Moisture Min"
+    min: 0
+    max: 100
+    step: 1
+    initial: 45
+    unit_of_measurement: "%"
+    mode: box
+  dsc_custom_strain_2_moisture_max:
+    name: "DSC Custom Strain 2 Moisture Max"
+    min: 0
+    max: 100
+    step: 1
+    initial: 70
+    unit_of_measurement: "%"
+    mode: box
+  dsc_custom_strain_2_veg_days:
+    name: "DSC Custom Strain 2 Veg Days"
+    min: 1
+    max: 120
+    step: 1
+    initial: 28
+    unit_of_measurement: "d"
+    mode: box
+  dsc_custom_strain_2_flower_days:
+    name: "DSC Custom Strain 2 Flower Days"
+    min: 1
+    max: 120
+    step: 1
+    initial: 63
+    unit_of_measurement: "d"
+    mode: box
+  dsc_custom_strain_3_ph_min:
+    name: "DSC Custom Strain 3 pH Min"
+    min: 4
+    max: 8
+    step: 0.1
+    initial: 5.8
+    mode: box
+  dsc_custom_strain_3_ph_max:
+    name: "DSC Custom Strain 3 pH Max"
+    min: 4
+    max: 8
+    step: 0.1
+    initial: 6.5
+    mode: box
+  dsc_custom_strain_3_ec_min:
+    name: "DSC Custom Strain 3 EC Min"
+    min: 0
+    max: 4000
+    step: 50
+    initial: 800
+    unit_of_measurement: "µS/cm"
+    mode: box
+  dsc_custom_strain_3_ec_max:
+    name: "DSC Custom Strain 3 EC Max"
+    min: 0
+    max: 4000
+    step: 50
+    initial: 1600
+    unit_of_measurement: "µS/cm"
+    mode: box
+  dsc_custom_strain_3_moisture_min:
+    name: "DSC Custom Strain 3 Moisture Min"
+    min: 0
+    max: 100
+    step: 1
+    initial: 45
+    unit_of_measurement: "%"
+    mode: box
+  dsc_custom_strain_3_moisture_max:
+    name: "DSC Custom Strain 3 Moisture Max"
+    min: 0
+    max: 100
+    step: 1
+    initial: 70
+    unit_of_measurement: "%"
+    mode: box
+  dsc_custom_strain_3_veg_days:
+    name: "DSC Custom Strain 3 Veg Days"
+    min: 1
+    max: 120
+    step: 1
+    initial: 28
+    unit_of_measurement: "d"
+    mode: box
+  dsc_custom_strain_3_flower_days:
+    name: "DSC Custom Strain 3 Flower Days"
+    min: 1
+    max: 120
+    step: 1
+    initial: 63
+    unit_of_measurement: "d"
+    mode: box
+  dsc_custom_strain_4_ph_min:
+    name: "DSC Custom Strain 4 pH Min"
+    min: 4
+    max: 8
+    step: 0.1
+    initial: 5.8
+    mode: box
+  dsc_custom_strain_4_ph_max:
+    name: "DSC Custom Strain 4 pH Max"
+    min: 4
+    max: 8
+    step: 0.1
+    initial: 6.5
+    mode: box
+  dsc_custom_strain_4_ec_min:
+    name: "DSC Custom Strain 4 EC Min"
+    min: 0
+    max: 4000
+    step: 50
+    initial: 800
+    unit_of_measurement: "µS/cm"
+    mode: box
+  dsc_custom_strain_4_ec_max:
+    name: "DSC Custom Strain 4 EC Max"
+    min: 0
+    max: 4000
+    step: 50
+    initial: 1600
+    unit_of_measurement: "µS/cm"
+    mode: box
+  dsc_custom_strain_4_moisture_min:
+    name: "DSC Custom Strain 4 Moisture Min"
+    min: 0
+    max: 100
+    step: 1
+    initial: 45
+    unit_of_measurement: "%"
+    mode: box
+  dsc_custom_strain_4_moisture_max:
+    name: "DSC Custom Strain 4 Moisture Max"
+    min: 0
+    max: 100
+    step: 1
+    initial: 70
+    unit_of_measurement: "%"
+    mode: box
+  dsc_custom_strain_4_veg_days:
+    name: "DSC Custom Strain 4 Veg Days"
+    min: 1
+    max: 120
+    step: 1
+    initial: 28
+    unit_of_measurement: "d"
+    mode: box
+  dsc_custom_strain_4_flower_days:
+    name: "DSC Custom Strain 4 Flower Days"
+    min: 1
+    max: 120
+    step: 1
+    initial: 63
+    unit_of_measurement: "d"
+    mode: box
+  dsc_custom_strain_5_ph_min:
+    name: "DSC Custom Strain 5 pH Min"
+    min: 4
+    max: 8
+    step: 0.1
+    initial: 5.8
+    mode: box
+  dsc_custom_strain_5_ph_max:
+    name: "DSC Custom Strain 5 pH Max"
+    min: 4
+    max: 8
+    step: 0.1
+    initial: 6.5
+    mode: box
+  dsc_custom_strain_5_ec_min:
+    name: "DSC Custom Strain 5 EC Min"
+    min: 0
+    max: 4000
+    step: 50
+    initial: 800
+    unit_of_measurement: "µS/cm"
+    mode: box
+  dsc_custom_strain_5_ec_max:
+    name: "DSC Custom Strain 5 EC Max"
+    min: 0
+    max: 4000
+    step: 50
+    initial: 1600
+    unit_of_measurement: "µS/cm"
+    mode: box
+  dsc_custom_strain_5_moisture_min:
+    name: "DSC Custom Strain 5 Moisture Min"
+    min: 0
+    max: 100
+    step: 1
+    initial: 45
+    unit_of_measurement: "%"
+    mode: box
+  dsc_custom_strain_5_moisture_max:
+    name: "DSC Custom Strain 5 Moisture Max"
+    min: 0
+    max: 100
+    step: 1
+    initial: 70
+    unit_of_measurement: "%"
+    mode: box
+  dsc_custom_strain_5_veg_days:
+    name: "DSC Custom Strain 5 Veg Days"
+    min: 1
+    max: 120
+    step: 1
+    initial: 28
+    unit_of_measurement: "d"
+    mode: box
+  dsc_custom_strain_5_flower_days:
+    name: "DSC Custom Strain 5 Flower Days"
+    min: 1
+    max: 120
+    step: 1
+    initial: 63
+    unit_of_measurement: "d"
+    mode: box
+
+template:
+  - sensor:
+      - name: "DSC Strain Catalog"
+        unique_id: dsc_strain_catalog
+        icon: mdi:book-open-variant
+        state: "ready"
+        attributes:
+          seed: "Generic Photoperiod, Generic Autoflower"
+          custom_slots: 5
+          note: >-
+            Want bands from seed templates or occupied custom slots.
+            Promote customs to YAML via FOLLOWUPS.
+
+      # ---- POT1 ----
+      - name: "DSC POT1 Days Since Sprout"
+        unique_id: dsc_pot1_days_since_sprout
+        unit_of_measurement: "d"
+        icon: mdi:calendar-start
+        state: >
+          {% set d = states('input_datetime.dsc_pot1_sprout_date') %}
+          {% if d in ['unknown','unavailable',''] %}none
+          {% else %}{{ ((as_timestamp(now()) - as_timestamp(d)) / 86400)|int }}
+          {% endif %}
+
+      - name: "DSC POT1 Expected Stage"
+        unique_id: dsc_pot1_expected_stage
+        icon: mdi:timeline-clock
+        state: >
+          {% set days = states('sensor.dsc_pot1_days_since_sprout')|int(-1) %}
+          {% set strain = states('input_select.dsc_pot1_strain') %}
+          {% set auto = strain == 'Generic Autoflower' or
+             (strain.startswith('Custom') and states('input_select.dsc_custom_strain_' ~ strain.split(' ')[1] ~ '_type') == 'auto') %}
+          {% if days < 0 %}unknown
+          {% elif days <= 3 %}Germination
+          {% elif days <= 14 %}Seedling
+          {% elif days <= 28 %}Early Vegetative
+          {% elif not auto and days <= 42 %}Vegetative
+          {% elif not auto and days <= 49 %}Late (Push) Vegetative
+          {% elif auto and days <= 21 %}Vegetative
+          {% elif auto and days <= 28 %}Early Flowering
+          {% elif auto and days <= 49 %}Flowering
+          {% elif auto and days <= 63 %}Late Flowering
+          {% elif not auto and days <= 56 %}Early Flowering
+          {% elif not auto and days <= 77 %}Flowering
+          {% elif not auto and days <= 91 %}Late Flowering
+          {% else %}Final 48-72h Flowering
+          {% endif %}
+
+      - name: "DSC POT1 Strain Display"
+        unique_id: dsc_pot1_strain_display
+        icon: mdi:dna
+        state: >
+          {% set s = states('input_select.dsc_pot1_strain') %}
+          {% if s.startswith('Custom') %}
+            {% set n = states('input_text.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_name')|trim %}
+            {{ n if n else s }}
+          {% else %}{{ s }}{% endif %}
+
+      - name: "DSC POT1 Want pH Min"
+        unique_id: dsc_pot1_want_ph_min
+        state: >
+          {% set s = states('input_select.dsc_pot1_strain') %}
+          {% if s.startswith('Custom') %}
+            {{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_ph_min')|float(5.8) }}
+          {% elif s == 'Generic Autoflower' %}5.8
+          {% else %}5.8{% endif %}
+      - name: "DSC POT1 Want pH Max"
+        unique_id: dsc_pot1_want_ph_max
+        state: >
+          {% set s = states('input_select.dsc_pot1_strain') %}
+          {% if s.startswith('Custom') %}
+            {{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_ph_max')|float(6.5) }}
+          {% else %}6.5{% endif %}
+      - name: "DSC POT1 Want EC Min"
+        unique_id: dsc_pot1_want_ec_min
+        unit_of_measurement: "µS/cm"
+        state: >
+          {% set s = states('input_select.dsc_pot1_strain') %}
+          {% set stage = states('sensor.dsc_pot1_expected_stage') %}
+          {% if s.startswith('Custom') %}
+            {{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_ec_min')|float(800) }}
+          {% elif 'Flower' in stage %}{{ 1400 if s == 'Generic Autoflower' else 1600 }}
+          {% elif 'Seedling' in stage or stage == 'Germination' %}{{ 400 if s == 'Generic Autoflower' else 500 }}
+          {% else %}{{ 800 if s == 'Generic Autoflower' else 1000 }}{% endif %}
+      - name: "DSC POT1 Want EC Max"
+        unique_id: dsc_pot1_want_ec_max
+        unit_of_measurement: "µS/cm"
+        state: >
+          {% set s = states('input_select.dsc_pot1_strain') %}
+          {% set stage = states('sensor.dsc_pot1_expected_stage') %}
+          {% if s.startswith('Custom') %}
+            {{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_ec_max')|float(1600) }}
+          {% elif 'Flower' in stage %}{{ 2000 if s == 'Generic Autoflower' else 2400 }}
+          {% elif 'Seedling' in stage or stage == 'Germination' %}{{ 800 if s == 'Generic Autoflower' else 900 }}
+          {% else %}{{ 1400 if s == 'Generic Autoflower' else 1600 }}{% endif %}
+      - name: "DSC POT1 Want Moisture Min"
+        unique_id: dsc_pot1_want_moisture_min
+        unit_of_measurement: "%"
+        state: >
+          {% set s = states('input_select.dsc_pot1_strain') %}
+          {% if s.startswith('Custom') %}
+            {{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_moisture_min')|float(45) }}
+          {% else %}45{% endif %}
+      - name: "DSC POT1 Want Moisture Max"
+        unique_id: dsc_pot1_want_moisture_max
+        unit_of_measurement: "%"
+        state: >
+          {% set s = states('input_select.dsc_pot1_strain') %}
+          {% if s.startswith('Custom') %}
+            {{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_moisture_max')|float(70) }}
+          {% else %}70{% endif %}
+
+      - name: "DSC POT1 Got pH"
+        unique_id: dsc_pot1_got_ph
+        state: >
+          {% set r = states('sensor.dsc_pot1_soil_ph')|float(none) %}
+          {% set o = states('input_number.dsc_pot1_offset_ph')|float(0) %}
+          {{ (r + o)|round(2) if r is not none else none }}
+      - name: "DSC POT1 Got EC"
+        unique_id: dsc_pot1_got_ec
+        unit_of_measurement: "µS/cm"
+        state: >
+          {% set r = states('sensor.dsc_pot1_soil_conductivity')|float(none) %}
+          {% set o = states('input_number.dsc_pot1_offset_ec_us')|float(0) %}
+          {{ (r + o)|round(0) if r is not none else none }}
+      - name: "DSC POT1 Got Moisture"
+        unique_id: dsc_pot1_got_moisture
+        unit_of_measurement: "%"
+        state: >
+          {% set r = states('sensor.dsc_pot1_soil_moisture')|float(none) %}
+          {% set o = states('input_number.dsc_pot1_offset_moisture')|float(0) %}
+          {{ (r + o)|round(1) if r is not none else none }}
+
+      - name: "DSC POT1 Need EC Delta"
+        unique_id: dsc_pot1_need_ec_delta
+        unit_of_measurement: "µS/cm"
+        state: >
+          {% set g = states('sensor.dsc_pot1_got_ec')|float(none) %}
+          {% set lo = states('sensor.dsc_pot1_want_ec_min')|float(none) %}
+          {% set hi = states('sensor.dsc_pot1_want_ec_max')|float(none) %}
+          {% if g is none or lo is none or hi is none %}none
+          {% elif g < lo %}{{ (lo - g)|round(0) }}
+          {% elif g > hi %}{{ (hi - g)|round(0) * -1 }}
+          {% else %}0{% endif %}
+
+      - name: "DSC POT1 Need Summary"
+        unique_id: dsc_pot1_need_summary
+        icon: mdi:clipboard-text
+        state: >
+          {% set g_ec = states('sensor.dsc_pot1_got_ec')|float(none) %}
+          {% set lo = states('sensor.dsc_pot1_want_ec_min')|float(0) %}
+          {% set hi = states('sensor.dsc_pot1_want_ec_max')|float(0) %}
+          {% set g_ph = states('sensor.dsc_pot1_got_ph')|float(none) %}
+          {% set ph_lo = states('sensor.dsc_pot1_want_ph_min')|float(5.8) %}
+          {% set ph_hi = states('sensor.dsc_pot1_want_ph_max')|float(6.5) %}
+          {% set g_m = states('sensor.dsc_pot1_got_moisture')|float(none) %}
+          {% set m_lo = states('sensor.dsc_pot1_want_moisture_min')|float(45) %}
+          {% set m_hi = states('sensor.dsc_pot1_want_moisture_max')|float(70) %}
+          {% set bits = [] %}
+          {% if g_ec is not none and g_ec < lo %}{% set bits = bits + ['EC low vs Want by ~' ~ (lo-g_ec)|round(0) ~ ' µS/cm'] %}
+          {% elif g_ec is not none and g_ec > hi %}{% set bits = bits + ['EC high vs Want by ~' ~ (g_ec-hi)|round(0) ~ ' µS/cm'] %}{% endif %}
+          {% if g_ph is not none and g_ph < ph_lo %}{% set bits = bits + ['pH low'] %}
+          {% elif g_ph is not none and g_ph > ph_hi %}{% set bits = bits + ['pH high'] %}{% endif %}
+          {% if g_m is not none and g_m < m_lo %}{% set bits = bits + ['moisture low'] %}
+          {% elif g_m is not none and g_m > m_hi %}{% set bits = bits + ['moisture high'] %}{% endif %}
+          {{ bits|join('; ') if bits else 'On target vs Want bands' }}
+
+
+      # ---- POT2 ----
+      - name: "DSC POT2 Days Since Sprout"
+        unique_id: dsc_pot2_days_since_sprout
+        unit_of_measurement: "d"
+        icon: mdi:calendar-start
+        state: >
+          {% set d = states('input_datetime.dsc_pot2_sprout_date') %}
+          {% if d in ['unknown','unavailable',''] %}none
+          {% else %}{{ ((as_timestamp(now()) - as_timestamp(d)) / 86400)|int }}
+          {% endif %}
+
+      - name: "DSC POT2 Expected Stage"
+        unique_id: dsc_pot2_expected_stage
+        icon: mdi:timeline-clock
+        state: >
+          {% set days = states('sensor.dsc_pot2_days_since_sprout')|int(-1) %}
+          {% set strain = states('input_select.dsc_pot2_strain') %}
+          {% set auto = strain == 'Generic Autoflower' or
+             (strain.startswith('Custom') and states('input_select.dsc_custom_strain_' ~ strain.split(' ')[1] ~ '_type') == 'auto') %}
+          {% if days < 0 %}unknown
+          {% elif days <= 3 %}Germination
+          {% elif days <= 14 %}Seedling
+          {% elif days <= 28 %}Early Vegetative
+          {% elif not auto and days <= 42 %}Vegetative
+          {% elif not auto and days <= 49 %}Late (Push) Vegetative
+          {% elif auto and days <= 21 %}Vegetative
+          {% elif auto and days <= 28 %}Early Flowering
+          {% elif auto and days <= 49 %}Flowering
+          {% elif auto and days <= 63 %}Late Flowering
+          {% elif not auto and days <= 56 %}Early Flowering
+          {% elif not auto and days <= 77 %}Flowering
+          {% elif not auto and days <= 91 %}Late Flowering
+          {% else %}Final 48-72h Flowering
+          {% endif %}
+
+      - name: "DSC POT2 Strain Display"
+        unique_id: dsc_pot2_strain_display
+        icon: mdi:dna
+        state: >
+          {% set s = states('input_select.dsc_pot2_strain') %}
+          {% if s.startswith('Custom') %}
+            {% set nme = states('input_text.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_name')|trim %}
+            {{ nme if nme else s }}
+          {% else %}{{ s }}{% endif %}
+
+      - name: "DSC POT2 Want pH Min"
+        unique_id: dsc_pot2_want_ph_min
+        state: >
+          {% set s = states('input_select.dsc_pot2_strain') %}
+          {% if s.startswith('Custom') %}
+            {{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_ph_min')|float(5.8) }}
+          {% else %}5.8{% endif %}
+      - name: "DSC POT2 Want pH Max"
+        unique_id: dsc_pot2_want_ph_max
+        state: >
+          {% set s = states('input_select.dsc_pot2_strain') %}
+          {% if s.startswith('Custom') %}
+            {{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_ph_max')|float(6.5) }}
+          {% else %}6.5{% endif %}
+      - name: "DSC POT2 Want EC Min"
+        unique_id: dsc_pot2_want_ec_min
+        unit_of_measurement: "µS/cm"
+        state: >
+          {% set s = states('input_select.dsc_pot2_strain') %}
+          {% set stage = states('sensor.dsc_pot2_expected_stage') %}
+          {% if s.startswith('Custom') %}
+            {{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_ec_min')|float(800) }}
+          {% elif 'Flower' in stage %}{{ 1400 if s == 'Generic Autoflower' else 1600 }}
+          {% elif 'Seedling' in stage or stage == 'Germination' %}{{ 400 if s == 'Generic Autoflower' else 500 }}
+          {% else %}{{ 800 if s == 'Generic Autoflower' else 1000 }}{% endif %}
+      - name: "DSC POT2 Want EC Max"
+        unique_id: dsc_pot2_want_ec_max
+        unit_of_measurement: "µS/cm"
+        state: >
+          {% set s = states('input_select.dsc_pot2_strain') %}
+          {% set stage = states('sensor.dsc_pot2_expected_stage') %}
+          {% if s.startswith('Custom') %}
+            {{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_ec_max')|float(1600) }}
+          {% elif 'Flower' in stage %}{{ 2000 if s == 'Generic Autoflower' else 2400 }}
+          {% elif 'Seedling' in stage or stage == 'Germination' %}{{ 800 if s == 'Generic Autoflower' else 900 }}
+          {% else %}{{ 1400 if s == 'Generic Autoflower' else 1600 }}{% endif %}
+      - name: "DSC POT2 Want Moisture Min"
+        unique_id: dsc_pot2_want_moisture_min
+        unit_of_measurement: "%"
+        state: >
+          {% set s = states('input_select.dsc_pot2_strain') %}
+          {% if s.startswith('Custom') %}
+            {{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_moisture_min')|float(45) }}
+          {% else %}45{% endif %}
+      - name: "DSC POT2 Want Moisture Max"
+        unique_id: dsc_pot2_want_moisture_max
+        unit_of_measurement: "%"
+        state: >
+          {% set s = states('input_select.dsc_pot2_strain') %}
+          {% if s.startswith('Custom') %}
+            {{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_moisture_max')|float(70) }}
+          {% else %}70{% endif %}
+
+      - name: "DSC POT2 Got pH"
+        unique_id: dsc_pot2_got_ph
+        state: >
+          {% set r = states('sensor.dsc_pot2_soil_ph')|float(none) %}
+          {% set o = states('input_number.dsc_pot2_offset_ph')|float(0) %}
+          {{ (r + o)|round(2) if r is not none else none }}
+      - name: "DSC POT2 Got EC"
+        unique_id: dsc_pot2_got_ec
+        unit_of_measurement: "µS/cm"
+        state: >
+          {% set r = states('sensor.dsc_pot2_soil_conductivity')|float(none) %}
+          {% set o = states('input_number.dsc_pot2_offset_ec_us')|float(0) %}
+          {{ (r + o)|round(0) if r is not none else none }}
+      - name: "DSC POT2 Got Moisture"
+        unique_id: dsc_pot2_got_moisture
+        unit_of_measurement: "%"
+        state: >
+          {% set r = states('sensor.dsc_pot2_soil_moisture')|float(none) %}
+          {% set o = states('input_number.dsc_pot2_offset_moisture')|float(0) %}
+          {{ (r + o)|round(1) if r is not none else none }}
+
+      - name: "DSC POT2 Need EC Delta"
+        unique_id: dsc_pot2_need_ec_delta
+        unit_of_measurement: "µS/cm"
+        state: >
+          {% set g = states('sensor.dsc_pot2_got_ec')|float(none) %}
+          {% set lo = states('sensor.dsc_pot2_want_ec_min')|float(none) %}
+          {% set hi = states('sensor.dsc_pot2_want_ec_max')|float(none) %}
+          {% if g is none or lo is none or hi is none %}none
+          {% elif g < lo %}{{ (lo - g)|round(0) }}
+          {% elif g > hi %}{{ (hi - g)|round(0) * -1 }}
+          {% else %}0{% endif %}
+
+      - name: "DSC POT2 Need Summary"
+        unique_id: dsc_pot2_need_summary
+        icon: mdi:clipboard-text
+        state: >
+          {% set g_ec = states('sensor.dsc_pot2_got_ec')|float(none) %}
+          {% set lo = states('sensor.dsc_pot2_want_ec_min')|float(0) %}
+          {% set hi = states('sensor.dsc_pot2_want_ec_max')|float(0) %}
+          {% set g_ph = states('sensor.dsc_pot2_got_ph')|float(none) %}
+          {% set ph_lo = states('sensor.dsc_pot2_want_ph_min')|float(5.8) %}
+          {% set ph_hi = states('sensor.dsc_pot2_want_ph_max')|float(6.5) %}
+          {% set g_m = states('sensor.dsc_pot2_got_moisture')|float(none) %}
+          {% set m_lo = states('sensor.dsc_pot2_want_moisture_min')|float(45) %}
+          {% set m_hi = states('sensor.dsc_pot2_want_moisture_max')|float(70) %}
+          {% set bits = [] %}
+          {% if g_ec is not none and g_ec < lo %}{% set bits = bits + ['EC low vs Want by ~' ~ (lo-g_ec)|round(0) ~ ' µS/cm'] %}
+          {% elif g_ec is not none and g_ec > hi %}{% set bits = bits + ['EC high vs Want by ~' ~ (g_ec-hi)|round(0) ~ ' µS/cm'] %}{% endif %}
+          {% if g_ph is not none and g_ph < ph_lo %}{% set bits = bits + ['pH low'] %}
+          {% elif g_ph is not none and g_ph > ph_hi %}{% set bits = bits + ['pH high'] %}{% endif %}
+          {% if g_m is not none and g_m < m_lo %}{% set bits = bits + ['moisture low'] %}
+          {% elif g_m is not none and g_m > m_hi %}{% set bits = bits + ['moisture high'] %}{% endif %}
+          {{ bits|join('; ') if bits else 'On target vs Want bands' }}
+
+      # ---- POT3 ----
+      - name: "DSC POT3 Days Since Sprout"
+        unique_id: dsc_pot3_days_since_sprout
+        unit_of_measurement: "d"
+        icon: mdi:calendar-start
+        state: >
+          {% set d = states('input_datetime.dsc_pot3_sprout_date') %}
+          {% if d in ['unknown','unavailable',''] %}none
+          {% else %}{{ ((as_timestamp(now()) - as_timestamp(d)) / 86400)|int }}
+          {% endif %}
+
+      - name: "DSC POT3 Expected Stage"
+        unique_id: dsc_pot3_expected_stage
+        icon: mdi:timeline-clock
+        state: >
+          {% set days = states('sensor.dsc_pot3_days_since_sprout')|int(-1) %}
+          {% set strain = states('input_select.dsc_pot3_strain') %}
+          {% set auto = strain == 'Generic Autoflower' or
+             (strain.startswith('Custom') and states('input_select.dsc_custom_strain_' ~ strain.split(' ')[1] ~ '_type') == 'auto') %}
+          {% if days < 0 %}unknown
+          {% elif days <= 3 %}Germination
+          {% elif days <= 14 %}Seedling
+          {% elif days <= 28 %}Early Vegetative
+          {% elif not auto and days <= 42 %}Vegetative
+          {% elif not auto and days <= 49 %}Late (Push) Vegetative
+          {% elif auto and days <= 21 %}Vegetative
+          {% elif auto and days <= 28 %}Early Flowering
+          {% elif auto and days <= 49 %}Flowering
+          {% elif auto and days <= 63 %}Late Flowering
+          {% elif not auto and days <= 56 %}Early Flowering
+          {% elif not auto and days <= 77 %}Flowering
+          {% elif not auto and days <= 91 %}Late Flowering
+          {% else %}Final 48-72h Flowering
+          {% endif %}
+
+      - name: "DSC POT3 Strain Display"
+        unique_id: dsc_pot3_strain_display
+        icon: mdi:dna
+        state: >
+          {% set s = states('input_select.dsc_pot3_strain') %}
+          {% if s.startswith('Custom') %}
+            {% set nme = states('input_text.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_name')|trim %}
+            {{ nme if nme else s }}
+          {% else %}{{ s }}{% endif %}
+
+      - name: "DSC POT3 Want pH Min"
+        unique_id: dsc_pot3_want_ph_min
+        state: >
+          {% set s = states('input_select.dsc_pot3_strain') %}
+          {% if s.startswith('Custom') %}
+            {{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_ph_min')|float(5.8) }}
+          {% else %}5.8{% endif %}
+      - name: "DSC POT3 Want pH Max"
+        unique_id: dsc_pot3_want_ph_max
+        state: >
+          {% set s = states('input_select.dsc_pot3_strain') %}
+          {% if s.startswith('Custom') %}
+            {{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_ph_max')|float(6.5) }}
+          {% else %}6.5{% endif %}
+      - name: "DSC POT3 Want EC Min"
+        unique_id: dsc_pot3_want_ec_min
+        unit_of_measurement: "µS/cm"
+        state: >
+          {% set s = states('input_select.dsc_pot3_strain') %}
+          {% set stage = states('sensor.dsc_pot3_expected_stage') %}
+          {% if s.startswith('Custom') %}
+            {{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_ec_min')|float(800) }}
+          {% elif 'Flower' in stage %}{{ 1400 if s == 'Generic Autoflower' else 1600 }}
+          {% elif 'Seedling' in stage or stage == 'Germination' %}{{ 400 if s == 'Generic Autoflower' else 500 }}
+          {% else %}{{ 800 if s == 'Generic Autoflower' else 1000 }}{% endif %}
+      - name: "DSC POT3 Want EC Max"
+        unique_id: dsc_pot3_want_ec_max
+        unit_of_measurement: "µS/cm"
+        state: >
+          {% set s = states('input_select.dsc_pot3_strain') %}
+          {% set stage = states('sensor.dsc_pot3_expected_stage') %}
+          {% if s.startswith('Custom') %}
+            {{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_ec_max')|float(1600) }}
+          {% elif 'Flower' in stage %}{{ 2000 if s == 'Generic Autoflower' else 2400 }}
+          {% elif 'Seedling' in stage or stage == 'Germination' %}{{ 800 if s == 'Generic Autoflower' else 900 }}
+          {% else %}{{ 1400 if s == 'Generic Autoflower' else 1600 }}{% endif %}
+      - name: "DSC POT3 Want Moisture Min"
+        unique_id: dsc_pot3_want_moisture_min
+        unit_of_measurement: "%"
+        state: >
+          {% set s = states('input_select.dsc_pot3_strain') %}
+          {% if s.startswith('Custom') %}
+            {{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_moisture_min')|float(45) }}
+          {% else %}45{% endif %}
+      - name: "DSC POT3 Want Moisture Max"
+        unique_id: dsc_pot3_want_moisture_max
+        unit_of_measurement: "%"
+        state: >
+          {% set s = states('input_select.dsc_pot3_strain') %}
+          {% if s.startswith('Custom') %}
+            {{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_moisture_max')|float(70) }}
+          {% else %}70{% endif %}
+
+      - name: "DSC POT3 Got pH"
+        unique_id: dsc_pot3_got_ph
+        state: >
+          {% set r = states('sensor.dsc_pot3_soil_ph')|float(none) %}
+          {% set o = states('input_number.dsc_pot3_offset_ph')|float(0) %}
+          {{ (r + o)|round(2) if r is not none else none }}
+      - name: "DSC POT3 Got EC"
+        unique_id: dsc_pot3_got_ec
+        unit_of_measurement: "µS/cm"
+        state: >
+          {% set r = states('sensor.dsc_pot3_soil_conductivity')|float(none) %}
+          {% set o = states('input_number.dsc_pot3_offset_ec_us')|float(0) %}
+          {{ (r + o)|round(0) if r is not none else none }}
+      - name: "DSC POT3 Got Moisture"
+        unique_id: dsc_pot3_got_moisture
+        unit_of_measurement: "%"
+        state: >
+          {% set r = states('sensor.dsc_pot3_soil_moisture')|float(none) %}
+          {% set o = states('input_number.dsc_pot3_offset_moisture')|float(0) %}
+          {{ (r + o)|round(1) if r is not none else none }}
+
+      - name: "DSC POT3 Need EC Delta"
+        unique_id: dsc_pot3_need_ec_delta
+        unit_of_measurement: "µS/cm"
+        state: >
+          {% set g = states('sensor.dsc_pot3_got_ec')|float(none) %}
+          {% set lo = states('sensor.dsc_pot3_want_ec_min')|float(none) %}
+          {% set hi = states('sensor.dsc_pot3_want_ec_max')|float(none) %}
+          {% if g is none or lo is none or hi is none %}none
+          {% elif g < lo %}{{ (lo - g)|round(0) }}
+          {% elif g > hi %}{{ (hi - g)|round(0) * -1 }}
+          {% else %}0{% endif %}
+
+      - name: "DSC POT3 Need Summary"
+        unique_id: dsc_pot3_need_summary
+        icon: mdi:clipboard-text
+        state: >
+          {% set g_ec = states('sensor.dsc_pot3_got_ec')|float(none) %}
+          {% set lo = states('sensor.dsc_pot3_want_ec_min')|float(0) %}
+          {% set hi = states('sensor.dsc_pot3_want_ec_max')|float(0) %}
+          {% set g_ph = states('sensor.dsc_pot3_got_ph')|float(none) %}
+          {% set ph_lo = states('sensor.dsc_pot3_want_ph_min')|float(5.8) %}
+          {% set ph_hi = states('sensor.dsc_pot3_want_ph_max')|float(6.5) %}
+          {% set g_m = states('sensor.dsc_pot3_got_moisture')|float(none) %}
+          {% set m_lo = states('sensor.dsc_pot3_want_moisture_min')|float(45) %}
+          {% set m_hi = states('sensor.dsc_pot3_want_moisture_max')|float(70) %}
+          {% set bits = [] %}
+          {% if g_ec is not none and g_ec < lo %}{% set bits = bits + ['EC low vs Want by ~' ~ (lo-g_ec)|round(0) ~ ' µS/cm'] %}
+          {% elif g_ec is not none and g_ec > hi %}{% set bits = bits + ['EC high vs Want by ~' ~ (g_ec-hi)|round(0) ~ ' µS/cm'] %}{% endif %}
+          {% if g_ph is not none and g_ph < ph_lo %}{% set bits = bits + ['pH low'] %}
+          {% elif g_ph is not none and g_ph > ph_hi %}{% set bits = bits + ['pH high'] %}{% endif %}
+          {% if g_m is not none and g_m < m_lo %}{% set bits = bits + ['moisture low'] %}
+          {% elif g_m is not none and g_m > m_hi %}{% set bits = bits + ['moisture high'] %}{% endif %}
+          {{ bits|join('; ') if bits else 'On target vs Want bands' }}
+
+      # ---- POT4 ----
+      - name: "DSC POT4 Days Since Sprout"
+        unique_id: dsc_pot4_days_since_sprout
+        unit_of_measurement: "d"
+        icon: mdi:calendar-start
+        state: >
+          {% set d = states('input_datetime.dsc_pot4_sprout_date') %}
+          {% if d in ['unknown','unavailable',''] %}none
+          {% else %}{{ ((as_timestamp(now()) - as_timestamp(d)) / 86400)|int }}
+          {% endif %}
+
+      - name: "DSC POT4 Expected Stage"
+        unique_id: dsc_pot4_expected_stage
+        icon: mdi:timeline-clock
+        state: >
+          {% set days = states('sensor.dsc_pot4_days_since_sprout')|int(-1) %}
+          {% set strain = states('input_select.dsc_pot4_strain') %}
+          {% set auto = strain == 'Generic Autoflower' or
+             (strain.startswith('Custom') and states('input_select.dsc_custom_strain_' ~ strain.split(' ')[1] ~ '_type') == 'auto') %}
+          {% if days < 0 %}unknown
+          {% elif days <= 3 %}Germination
+          {% elif days <= 14 %}Seedling
+          {% elif days <= 28 %}Early Vegetative
+          {% elif not auto and days <= 42 %}Vegetative
+          {% elif not auto and days <= 49 %}Late (Push) Vegetative
+          {% elif auto and days <= 21 %}Vegetative
+          {% elif auto and days <= 28 %}Early Flowering
+          {% elif auto and days <= 49 %}Flowering
+          {% elif auto and days <= 63 %}Late Flowering
+          {% elif not auto and days <= 56 %}Early Flowering
+          {% elif not auto and days <= 77 %}Flowering
+          {% elif not auto and days <= 91 %}Late Flowering
+          {% else %}Final 48-72h Flowering
+          {% endif %}
+
+      - name: "DSC POT4 Strain Display"
+        unique_id: dsc_pot4_strain_display
+        icon: mdi:dna
+        state: >
+          {% set s = states('input_select.dsc_pot4_strain') %}
+          {% if s.startswith('Custom') %}
+            {% set nme = states('input_text.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_name')|trim %}
+            {{ nme if nme else s }}
+          {% else %}{{ s }}{% endif %}
+
+      - name: "DSC POT4 Want pH Min"
+        unique_id: dsc_pot4_want_ph_min
+        state: >
+          {% set s = states('input_select.dsc_pot4_strain') %}
+          {% if s.startswith('Custom') %}
+            {{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_ph_min')|float(5.8) }}
+          {% else %}5.8{% endif %}
+      - name: "DSC POT4 Want pH Max"
+        unique_id: dsc_pot4_want_ph_max
+        state: >
+          {% set s = states('input_select.dsc_pot4_strain') %}
+          {% if s.startswith('Custom') %}
+            {{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_ph_max')|float(6.5) }}
+          {% else %}6.5{% endif %}
+      - name: "DSC POT4 Want EC Min"
+        unique_id: dsc_pot4_want_ec_min
+        unit_of_measurement: "µS/cm"
+        state: >
+          {% set s = states('input_select.dsc_pot4_strain') %}
+          {% set stage = states('sensor.dsc_pot4_expected_stage') %}
+          {% if s.startswith('Custom') %}
+            {{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_ec_min')|float(800) }}
+          {% elif 'Flower' in stage %}{{ 1400 if s == 'Generic Autoflower' else 1600 }}
+          {% elif 'Seedling' in stage or stage == 'Germination' %}{{ 400 if s == 'Generic Autoflower' else 500 }}
+          {% else %}{{ 800 if s == 'Generic Autoflower' else 1000 }}{% endif %}
+      - name: "DSC POT4 Want EC Max"
+        unique_id: dsc_pot4_want_ec_max
+        unit_of_measurement: "µS/cm"
+        state: >
+          {% set s = states('input_select.dsc_pot4_strain') %}
+          {% set stage = states('sensor.dsc_pot4_expected_stage') %}
+          {% if s.startswith('Custom') %}
+            {{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_ec_max')|float(1600) }}
+          {% elif 'Flower' in stage %}{{ 2000 if s == 'Generic Autoflower' else 2400 }}
+          {% elif 'Seedling' in stage or stage == 'Germination' %}{{ 800 if s == 'Generic Autoflower' else 900 }}
+          {% else %}{{ 1400 if s == 'Generic Autoflower' else 1600 }}{% endif %}
+      - name: "DSC POT4 Want Moisture Min"
+        unique_id: dsc_pot4_want_moisture_min
+        unit_of_measurement: "%"
+        state: >
+          {% set s = states('input_select.dsc_pot4_strain') %}
+          {% if s.startswith('Custom') %}
+            {{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_moisture_min')|float(45) }}
+          {% else %}45{% endif %}
+      - name: "DSC POT4 Want Moisture Max"
+        unique_id: dsc_pot4_want_moisture_max
+        unit_of_measurement: "%"
+        state: >
+          {% set s = states('input_select.dsc_pot4_strain') %}
+          {% if s.startswith('Custom') %}
+            {{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_moisture_max')|float(70) }}
+          {% else %}70{% endif %}
+
+      - name: "DSC POT4 Got pH"
+        unique_id: dsc_pot4_got_ph
+        state: >
+          {% set r = states('sensor.dsc_pot4_soil_ph')|float(none) %}
+          {% set o = states('input_number.dsc_pot4_offset_ph')|float(0) %}
+          {{ (r + o)|round(2) if r is not none else none }}
+      - name: "DSC POT4 Got EC"
+        unique_id: dsc_pot4_got_ec
+        unit_of_measurement: "µS/cm"
+        state: >
+          {% set r = states('sensor.dsc_pot4_soil_conductivity')|float(none) %}
+          {% set o = states('input_number.dsc_pot4_offset_ec_us')|float(0) %}
+          {{ (r + o)|round(0) if r is not none else none }}
+      - name: "DSC POT4 Got Moisture"
+        unique_id: dsc_pot4_got_moisture
+        unit_of_measurement: "%"
+        state: >
+          {% set r = states('sensor.dsc_pot4_soil_moisture')|float(none) %}
+          {% set o = states('input_number.dsc_pot4_offset_moisture')|float(0) %}
+          {{ (r + o)|round(1) if r is not none else none }}
+
+      - name: "DSC POT4 Need EC Delta"
+        unique_id: dsc_pot4_need_ec_delta
+        unit_of_measurement: "µS/cm"
+        state: >
+          {% set g = states('sensor.dsc_pot4_got_ec')|float(none) %}
+          {% set lo = states('sensor.dsc_pot4_want_ec_min')|float(none) %}
+          {% set hi = states('sensor.dsc_pot4_want_ec_max')|float(none) %}
+          {% if g is none or lo is none or hi is none %}none
+          {% elif g < lo %}{{ (lo - g)|round(0) }}
+          {% elif g > hi %}{{ (hi - g)|round(0) * -1 }}
+          {% else %}0{% endif %}
+
+      - name: "DSC POT4 Need Summary"
+        unique_id: dsc_pot4_need_summary
+        icon: mdi:clipboard-text
+        state: >
+          {% set g_ec = states('sensor.dsc_pot4_got_ec')|float(none) %}
+          {% set lo = states('sensor.dsc_pot4_want_ec_min')|float(0) %}
+          {% set hi = states('sensor.dsc_pot4_want_ec_max')|float(0) %}
+          {% set g_ph = states('sensor.dsc_pot4_got_ph')|float(none) %}
+          {% set ph_lo = states('sensor.dsc_pot4_want_ph_min')|float(5.8) %}
+          {% set ph_hi = states('sensor.dsc_pot4_want_ph_max')|float(6.5) %}
+          {% set g_m = states('sensor.dsc_pot4_got_moisture')|float(none) %}
+          {% set m_lo = states('sensor.dsc_pot4_want_moisture_min')|float(45) %}
+          {% set m_hi = states('sensor.dsc_pot4_want_moisture_max')|float(70) %}
+          {% set bits = [] %}
+          {% if g_ec is not none and g_ec < lo %}{% set bits = bits + ['EC low vs Want by ~' ~ (lo-g_ec)|round(0) ~ ' µS/cm'] %}
+          {% elif g_ec is not none and g_ec > hi %}{% set bits = bits + ['EC high vs Want by ~' ~ (g_ec-hi)|round(0) ~ ' µS/cm'] %}{% endif %}
+          {% if g_ph is not none and g_ph < ph_lo %}{% set bits = bits + ['pH low'] %}
+          {% elif g_ph is not none and g_ph > ph_hi %}{% set bits = bits + ['pH high'] %}{% endif %}
+          {% if g_m is not none and g_m < m_lo %}{% set bits = bits + ['moisture low'] %}
+          {% elif g_m is not none and g_m > m_hi %}{% set bits = bits + ['moisture high'] %}{% endif %}
+          {{ bits|join('; ') if bits else 'On target vs Want bands' }}
+
+  - binary_sensor:
+      - name: "DSC POT1 Stage Mismatch"
+        unique_id: dsc_pot1_stage_mismatch
+        icon: mdi:swap-horizontal
+        state: >
+          {% if not is_state('input_boolean.dsc_pot1_in_service', 'on') %}false
+          {% else %}
+          {% set exp = states('sensor.dsc_pot1_expected_stage') %}
+          {% set got = states('select.dsc_pot1_growth_stage') %}
+          {{ exp not in ['unknown','unavailable',''] and got not in ['unknown','unavailable',''] and exp != got }}
+          {% endif %}
+      - name: "DSC POT1 Strain pH Soft Cue"
+        unique_id: dsc_pot1_strain_ph_soft_cue
+        icon: mdi:ph
+        delay_on:
+          minutes: 30
+        state: >
+          {% if not is_state('input_boolean.dsc_pot1_in_service', 'on') %}false
+          {% else %}
+          {% set g = states('sensor.dsc_pot1_got_ph')|float(none) %}
+          {% set lo = states('sensor.dsc_pot1_want_ph_min')|float(none) %}
+          {% set hi = states('sensor.dsc_pot1_want_ph_max')|float(none) %}
+          {{ g is not none and lo is not none and hi is not none and (g < lo or g > hi) }}
+          {% endif %}
+      - name: "DSC POT1 Strain EC Soft Cue"
+        unique_id: dsc_pot1_strain_ec_soft_cue
+        icon: mdi:flash-alert
+        delay_on:
+          minutes: 30
+        state: >
+          {% if not is_state('input_boolean.dsc_pot1_in_service', 'on') %}false
+          {% else %}
+          {% set g = states('sensor.dsc_pot1_got_ec')|float(none) %}
+          {% set lo = states('sensor.dsc_pot1_want_ec_min')|float(none) %}
+          {% set hi = states('sensor.dsc_pot1_want_ec_max')|float(none) %}
+          {{ g is not none and lo is not none and hi is not none and (g < lo or g > hi) }}
+          {% endif %}
+      - name: "DSC POT2 Stage Mismatch"
+        unique_id: dsc_pot2_stage_mismatch
+        icon: mdi:swap-horizontal
+        state: >
+          {% if not is_state('input_boolean.dsc_pot2_in_service', 'on') %}false
+          {% else %}
+          {% set exp = states('sensor.dsc_pot2_expected_stage') %}
+          {% set got = states('select.dsc_pot2_growth_stage') %}
+          {{ exp not in ['unknown','unavailable',''] and got not in ['unknown','unavailable',''] and exp != got }}
+          {% endif %}
+      - name: "DSC POT2 Strain pH Soft Cue"
+        unique_id: dsc_pot2_strain_ph_soft_cue
+        icon: mdi:ph
+        delay_on:
+          minutes: 30
+        state: >
+          {% if not is_state('input_boolean.dsc_pot2_in_service', 'on') %}false
+          {% else %}
+          {% set g = states('sensor.dsc_pot2_got_ph')|float(none) %}
+          {% set lo = states('sensor.dsc_pot2_want_ph_min')|float(none) %}
+          {% set hi = states('sensor.dsc_pot2_want_ph_max')|float(none) %}
+          {{ g is not none and lo is not none and hi is not none and (g < lo or g > hi) }}
+          {% endif %}
+      - name: "DSC POT2 Strain EC Soft Cue"
+        unique_id: dsc_pot2_strain_ec_soft_cue
+        icon: mdi:flash-alert
+        delay_on:
+          minutes: 30
+        state: >
+          {% if not is_state('input_boolean.dsc_pot2_in_service', 'on') %}false
+          {% else %}
+          {% set g = states('sensor.dsc_pot2_got_ec')|float(none) %}
+          {% set lo = states('sensor.dsc_pot2_want_ec_min')|float(none) %}
+          {% set hi = states('sensor.dsc_pot2_want_ec_max')|float(none) %}
+          {{ g is not none and lo is not none and hi is not none and (g < lo or g > hi) }}
+          {% endif %}
+
+      - name: "DSC POT3 Stage Mismatch"
+        unique_id: dsc_pot3_stage_mismatch
+        icon: mdi:swap-horizontal
+        state: >
+          {% if not is_state('input_boolean.dsc_pot3_in_service', 'on') %}false
+          {% else %}
+          {% set exp = states('sensor.dsc_pot3_expected_stage') %}
+          {% set got = states('select.dsc_pot3_growth_stage') %}
+          {{ exp not in ['unknown','unavailable',''] and got not in ['unknown','unavailable',''] and exp != got }}
+          {% endif %}
+      - name: "DSC POT3 Strain pH Soft Cue"
+        unique_id: dsc_pot3_strain_ph_soft_cue
+        icon: mdi:ph
+        delay_on:
+          minutes: 30
+        state: >
+          {% if not is_state('input_boolean.dsc_pot3_in_service', 'on') %}false
+          {% else %}
+          {% set g = states('sensor.dsc_pot3_got_ph')|float(none) %}
+          {% set lo = states('sensor.dsc_pot3_want_ph_min')|float(none) %}
+          {% set hi = states('sensor.dsc_pot3_want_ph_max')|float(none) %}
+          {{ g is not none and lo is not none and hi is not none and (g < lo or g > hi) }}
+          {% endif %}
+      - name: "DSC POT3 Strain EC Soft Cue"
+        unique_id: dsc_pot3_strain_ec_soft_cue
+        icon: mdi:flash-alert
+        delay_on:
+          minutes: 30
+        state: >
+          {% if not is_state('input_boolean.dsc_pot3_in_service', 'on') %}false
+          {% else %}
+          {% set g = states('sensor.dsc_pot3_got_ec')|float(none) %}
+          {% set lo = states('sensor.dsc_pot3_want_ec_min')|float(none) %}
+          {% set hi = states('sensor.dsc_pot3_want_ec_max')|float(none) %}
+          {{ g is not none and lo is not none and hi is not none and (g < lo or g > hi) }}
+          {% endif %}
+
+      - name: "DSC POT4 Stage Mismatch"
+        unique_id: dsc_pot4_stage_mismatch
+        icon: mdi:swap-horizontal
+        state: >
+          {% if not is_state('input_boolean.dsc_pot4_in_service', 'on') %}false
+          {% else %}
+          {% set exp = states('sensor.dsc_pot4_expected_stage') %}
+          {% set got = states('select.dsc_pot4_growth_stage') %}
+          {{ exp not in ['unknown','unavailable',''] and got not in ['unknown','unavailable',''] and exp != got }}
+          {% endif %}
+      - name: "DSC POT4 Strain pH Soft Cue"
+        unique_id: dsc_pot4_strain_ph_soft_cue
+        icon: mdi:ph
+        delay_on:
+          minutes: 30
+        state: >
+          {% if not is_state('input_boolean.dsc_pot4_in_service', 'on') %}false
+          {% else %}
+          {% set g = states('sensor.dsc_pot4_got_ph')|float(none) %}
+          {% set lo = states('sensor.dsc_pot4_want_ph_min')|float(none) %}
+          {% set hi = states('sensor.dsc_pot4_want_ph_max')|float(none) %}
+          {{ g is not none and lo is not none and hi is not none and (g < lo or g > hi) }}
+          {% endif %}
+      - name: "DSC POT4 Strain EC Soft Cue"
+        unique_id: dsc_pot4_strain_ec_soft_cue
+        icon: mdi:flash-alert
+        delay_on:
+          minutes: 30
+        state: >
+          {% if not is_state('input_boolean.dsc_pot4_in_service', 'on') %}false
+          {% else %}
+          {% set g = states('sensor.dsc_pot4_got_ec')|float(none) %}
+          {% set lo = states('sensor.dsc_pot4_want_ec_min')|float(none) %}
+          {% set hi = states('sensor.dsc_pot4_want_ec_max')|float(none) %}
+          {{ g is not none and lo is not none and hi is not none and (g < lo or g > hi) }}
+          {% endif %}
+
+script:
+  dsc_pot1_apply_expected_stage:
+    alias: "DSC POT1 Apply Expected Stage"
+    mode: single
+    sequence:
+      - condition: template
+        value_template: "{{ states('sensor.dsc_pot1_expected_stage') not in ['unknown','unavailable',''] }}"
+      - action: select.select_option
+        target:
+          entity_id: select.dsc_pot1_growth_stage
+        data:
+          option: "{{ states('sensor.dsc_pot1_expected_stage') }}"
+  dsc_pot2_apply_expected_stage:
+    alias: "DSC POT2 Apply Expected Stage"
+    mode: single
+    sequence:
+      - condition: template
+        value_template: "{{ states('sensor.dsc_pot2_expected_stage') not in ['unknown','unavailable',''] }}"
+      - action: select.select_option
+        target:
+          entity_id: select.dsc_pot2_growth_stage
+        data:
+          option: "{{ states('sensor.dsc_pot2_expected_stage') }}"
+  dsc_pot3_apply_expected_stage:
+    alias: "DSC POT3 Apply Expected Stage"
+    mode: single
+    sequence:
+      - condition: template
+        value_template: "{{ states('sensor.dsc_pot3_expected_stage') not in ['unknown','unavailable',''] }}"
+      - action: select.select_option
+        target:
+          entity_id: select.dsc_pot3_growth_stage
+        data:
+          option: "{{ states('sensor.dsc_pot3_expected_stage') }}"
+  dsc_pot4_apply_expected_stage:
+    alias: "DSC POT4 Apply Expected Stage"
+    mode: single
+    sequence:
+      - condition: template
+        value_template: "{{ states('sensor.dsc_pot4_expected_stage') not in ['unknown','unavailable',''] }}"
+      - action: select.select_option
+        target:
+          entity_id: select.dsc_pot4_growth_stage
+        data:
+          option: "{{ states('sensor.dsc_pot4_expected_stage') }}"
+  dsc_pots_capture_peer_baseline:
+    alias: "DSC Pots Capture Peer Baseline"
+    description: "Set offsets so corrected Got matches median of in-service pots (same media assumed)."
+    mode: single
+    sequence:
+      - variables:
+          ph_vals: >
+            {% set ns = namespace(v=[]) %}
+            {% for n in [1,2,3,4] %}
+              {% if is_state('input_boolean.dsc_pot' ~ n ~ '_in_service','on') %}
+                {% set r = states('sensor.dsc_pot' ~ n ~ '_soil_ph')|float(none) %}
+                {% if r is not none %}{% set ns.v = ns.v + [r] %}{% endif %}
+              {% endif %}
+            {% endfor %}
+            {{ ns.v }}
+          ec_vals: >
+            {% set ns = namespace(v=[]) %}
+            {% for n in [1,2,3,4] %}
+              {% if is_state('input_boolean.dsc_pot' ~ n ~ '_in_service','on') %}
+                {% set r = states('sensor.dsc_pot' ~ n ~ '_soil_conductivity')|float(none) %}
+                {% if r is not none %}{% set ns.v = ns.v + [r] %}{% endif %}
+              {% endif %}
+            {% endfor %}
+            {{ ns.v }}
+          m_vals: >
+            {% set ns = namespace(v=[]) %}
+            {% for n in [1,2,3,4] %}
+              {% if is_state('input_boolean.dsc_pot' ~ n ~ '_in_service','on') %}
+                {% set r = states('sensor.dsc_pot' ~ n ~ '_soil_moisture')|float(none) %}
+                {% if r is not none %}{% set ns.v = ns.v + [r] %}{% endif %}
+              {% endif %}
+            {% endfor %}
+            {{ ns.v }}
+          ph_med: "{{ (ph_vals|sort)[((ph_vals|length)-1)//2] if ph_vals|length else none }}"
+          ec_med: "{{ (ec_vals|sort)[((ec_vals|length)-1)//2] if ec_vals|length else none }}"
+          m_med: "{{ (m_vals|sort)[((m_vals|length)-1)//2] if m_vals|length else none }}"
+      - repeat:
+          for_each:
+            - 1
+            - 2
+            - 3
+            - 4
+          sequence:
+            - condition: template
+              value_template: "{{ is_state('input_boolean.dsc_pot' ~ repeat.item ~ '_in_service','on') }}"
+            - if:
+                - condition: template
+                  value_template: "{{ ph_med is not none }}"
+              then:
+                - action: input_number.set_value
+                  target:
+                    entity_id: "input_number.dsc_pot{{ repeat.item }}_offset_ph"
+                  data:
+                    value: "{{ (ph_med - states('sensor.dsc_pot' ~ repeat.item ~ '_soil_ph')|float(ph_med))|round(2) }}"
+            - if:
+                - condition: template
+                  value_template: "{{ ec_med is not none }}"
+              then:
+                - action: input_number.set_value
+                  target:
+                    entity_id: "input_number.dsc_pot{{ repeat.item }}_offset_ec_us"
+                  data:
+                    value: "{{ (ec_med - states('sensor.dsc_pot' ~ repeat.item ~ '_soil_conductivity')|float(ec_med))|round(0) }}"
+            - if:
+                - condition: template
+                  value_template: "{{ m_med is not none }}"
+              then:
+                - action: input_number.set_value
+                  target:
+                    entity_id: "input_number.dsc_pot{{ repeat.item }}_offset_moisture"
+                  data:
+                    value: "{{ (m_med - states('sensor.dsc_pot' ~ repeat.item ~ '_soil_moisture')|float(m_med))|round(1) }}"
+      - action: persistent_notification.create
+        data:
+          title: "Peer baseline captured"
+          message: "Offsets set so corrected Got ≈ median of in-service pots."

@@ -1,5 +1,19 @@
 # Changelog
 
+## HA surface 5.1.4 — crop-steering + response learning (2026-08-03)
+
+- **Strains / Want·Need·Got:** catalog + sprout age, peer offsets (Got = raw +
+  offset), soft pH/EC cues, Apply expected stage, Capture peer baseline.
+- **Nutrient Science:** stock room, next-mix recipe, purchase list, **Accept mix**
+  QA (burns stock; pumps deferred).
+- **Fluctuations:** relative dryback; cross-pot coherence; learned ΔEC/Δmoisture.
+- **Actuator efficacy:** humidifier / dehumidifier / clone mister — no space
+  response → **Temp OOS** (flashing) + demand inhibit; separate **Operator
+  Lockout** never auto-cleared.
+- Dashboard: Strains + pot subviews, Nutrient Science, Climate Temp/Lockout UI;
+  Tank chips → science views.
+- Follow-ups: [`docs/FOLLOWUPS.md`](docs/FOLLOWUPS.md).
+
 ## HA surface 5.1.3 + hub OOS / in-service (2026-08-03)
 
 - **Single in-service gate** replaces `*_actuator_wired` for AC, clone mister,

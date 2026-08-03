@@ -1,0 +1,23 @@
+# DSC strain catalog — seed mirror (HA customs live in input_* slots)
+# Promote occupied customs into this file via FOLLOWUPS.
+
+seeds:
+  - id: generic_photoperiod
+    name: Generic Photoperiod
+    type: photo
+    want:
+      ph: [5.8, 6.5]
+      ec_veg_us: [1000, 1600]
+      ec_flower_us: [1600, 2400]
+      moisture_pct: [45, 70]
+  - id: generic_autoflower
+    name: Generic Autoflower
+    type: auto
+    want:
+      ph: [5.8, 6.5]
+      ec_veg_us: [800, 1400]
+      ec_flower_us: [1400, 2000]
+      moisture_pct: [45, 70]
+
+custom_slots: 5
+note: Got = raw + offset. Peer baseline script sets offsets to median.

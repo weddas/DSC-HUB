@@ -84,6 +84,9 @@ automation:
               - condition: state
                 entity_id: binary_sensor.dsc_hub_ha_link_status
                 state: "on"
+              - condition: state
+                entity_id: binary_sensor.dsc_humidifier_available
+                state: "on"
               - condition: template
                 value_template: "{{ not is_state('binary_sensor.dsc_humidifier_test_mode', 'on') }}"
             sequence:
@@ -117,6 +120,9 @@ automation:
                     entity_id: binary_sensor.dsc_hub_ha_link_status
                     state: "unavailable"
                     for: "00:00:25"
+                  - condition: state
+                    entity_id: binary_sensor.dsc_humidifier_available
+                    state: "off"
             sequence:
               - action: switch.turn_off
                 target:
@@ -171,6 +177,9 @@ automation:
               - condition: state
                 entity_id: binary_sensor.dsc_hub_ha_link_status
                 state: "on"
+              - condition: state
+                entity_id: binary_sensor.dsc_dehumidifier_available
+                state: "on"
               - condition: template
                 value_template: "{{ not is_state('binary_sensor.dsc_de_humidifier_test_mode', 'on') }}"
             sequence:
@@ -204,6 +213,9 @@ automation:
                     entity_id: binary_sensor.dsc_hub_ha_link_status
                     state: "unavailable"
                     for: "00:00:25"
+                  - condition: state
+                    entity_id: binary_sensor.dsc_dehumidifier_available
+                    state: "off"
             sequence:
               - action: switch.turn_off
                 target:
@@ -505,6 +517,9 @@ automation:
                 entity_id: input_boolean.dsc_clone_humidifier_in_service
                 state: "on"
               - condition: state
+                entity_id: binary_sensor.dsc_clone_humidifier_available
+                state: "on"
+              - condition: state
                 entity_id: switch.dsc_hub_clone_humidifier_demand
                 state: "on"
               - condition: state
@@ -530,13 +545,16 @@ automation:
                 target:
                   entity_id: switch.dsc_clone_humidifier_main_relay
           - conditions:
-              - condition: state
-                entity_id: input_boolean.dsc_clone_humidifier_in_service
-                state: "on"
               - condition: template
                 value_template: "{{ states('switch.dsc_clone_humidifier_main_relay') not in ['unknown','unavailable'] }}"
               - condition: or
                 conditions:
+                  - condition: state
+                    entity_id: input_boolean.dsc_clone_humidifier_in_service
+                    state: "off"
+                  - condition: state
+                    entity_id: binary_sensor.dsc_clone_humidifier_available
+                    state: "off"
                   - condition: state
                     entity_id: switch.dsc_hub_clone_humidifier_demand
                     state: "unavailable"
