@@ -9,7 +9,7 @@ input_text:
   dsc_expected_release:
     name: "DSC Expected Release"
     icon: mdi:tag-check
-    initial: "5.1.5"
+    initial: "5.1.3"
     max: 32
 
 template:
@@ -33,7 +33,7 @@ template:
         icon: mdi:clipboard-check
         state: >-
           {% set exp = states('input_text.dsc_expected_release')|trim %}
-          {% if exp in ['unknown','unavailable','', none] %}{% set exp = '5.1.5' %}{% endif %}
+          {% if exp in ['unknown','unavailable','', none] %}{% set exp = '5.1.3' %}{% endif %}
           {% set checks = [
             ('hub', states('sensor.dsc_hub_firmware_version')),
             ('panel', states('sensor.dsc_control_firmware_version')),
@@ -69,7 +69,7 @@ template:
         attributes:
           expected: >-
             {% set exp = states('input_text.dsc_expected_release')|trim %}
-            {{ '5.1.5' if exp in ['unknown','unavailable',''] else exp }}
+            {{ '5.1.3' if exp in ['unknown','unavailable',''] else exp }}
           hub: "{{ states('sensor.dsc_hub_firmware_version') }}"
           panel: "{{ states('sensor.dsc_control_firmware_version') }}"
           pot1: "{{ states('sensor.dsc_pot1_firmware_version') }}"
