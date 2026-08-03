@@ -3,7 +3,8 @@
 Pulls [weddas/DSC-HUB](https://github.com/weddas/DSC-HUB) and copies HA surfaces
 into `/config` whenever the tracked git ref moves (default: `master`).
 
-**Add-on version:** **5.1.2** (also syncs `esphome/components/dsc_fleet_setup`; HA surface still **5.1.0**)
+**Add-on version:** **5.1.3** (www publishes system+airflow **bundle**; also syncs
+`esphome/components/dsc_fleet_setup`; sync marker `SURFACE_VERSION` train label still **5.1.0**)
 
 ## What it syncs
 
@@ -11,7 +12,7 @@ into `/config` whenever the tracked git ref moves (default: `master`).
 |---|---|
 | `homeassistant/packages/dsc_v4_*.yaml` | `/config/packages/` |
 | `homeassistant/dashboards/dsc-hub-v4-dashboard.yaml` | `/config/dashboards/` |
-| `homeassistant/www/dsc-system-map.*` | `/config/www/` (default on) |
+| `homeassistant/www/` card sources | `/config/www/` — SVG + **bundled** `dsc-system-map-card.js` / `DSC-HUB.js` + standalone airflow (default on) |
 | `homeassistant/esphome/dsc-*.yaml` | `/config/esphome/` (**default on** in 5.1.0) |
 
 Also writes:
@@ -47,7 +48,7 @@ often does not create them. The add-on posts a persistent notification reminder.
 | `repository` | `https://github.com/weddas/DSC-HUB.git` | Git remote |
 | `ref` | `master` | Branch or tag |
 | `poll_seconds` | `60` | Fetch interval |
-| `sync_www` | `true` | SYSTEM MAP assets |
+| `sync_www` | `true` | SYSTEM MAP SVG + bundled card JS (system+airflow) |
 | `sync_esphome` | **`true`** | Overwrite ESPHome stubs (`ref: v5.1.0`) and copy `firmware/v4/components` → `/config/esphome/components` |
 | `reload_after_sync` | `true` | Broader reload set |
 

@@ -1,5 +1,17 @@
 # Changelog
 
+## Sync add-on 5.1.3 + Lovelace card bundle contract (2026-08-03)
+
+- **Root cause:** `/local/dsc-system-map-card.js` was often the **system-map source
+  only** (~10 KB). Climate Engine then failed with missing
+  `custom:dsc-airflow-map-card` even though HACS `DSC-HUB.js` already bundled both.
+- **`521ac11`:** `ha-sync.sh` + `sync-hacs-dist.sh` publish the concat bundle under
+  the legacy `/local` filename (and `DSC-HUB.js`).
+- **Sync add-on 5.1.3:** same concat when `sync_www: true` (was copying www source
+  verbatim). Update the add-on on HAOS after merge.
+- Docs: HA README AIRFLOW topology + publish mermaid; HACS-FRONTEND pipeline;
+  [`docs/qa/LIVE-UI-AIRFLOW-STATUS.md`](docs/qa/LIVE-UI-AIRFLOW-STATUS.md).
+
 ## HA surface 5.1.5 — finish crop UI + pot-native strain (2026-08-03)
 
 - **Honest cutover:** 5.1.4 shipped packages + Climate Temp OOS + dead Tank chips;

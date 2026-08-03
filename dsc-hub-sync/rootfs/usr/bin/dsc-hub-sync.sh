@@ -5,6 +5,9 @@
 #  v5.1.0: sync_esphome default true, broader reloads, version marker,
 #  atomic staging copy with last-good rollback.
 #  v5.1.2: also sync firmware/v4/components → /config/esphome/components.
+#  v5.1.3: www publish concatenates system map + airflow into
+#          dsc-system-map-card.js (and DSC-HUB.js) so one /local resource
+#          registers both custom elements — matches ha-sync / HACS dist.
 # ==================================================================
 set -euo pipefail
 
@@ -83,7 +86,9 @@ backup_last_good() {
   done
   [[ -f "${HA_CONFIG}/dashboards/dsc-hub-v4-dashboard.yaml" ]] && \
     cp -f "${HA_CONFIG}/dashboards/dsc-hub-v4-dashboard.yaml" "${LAST_GOOD}/dashboards/"
-  for f in "${HA_CONFIG}/www"/dsc-system-map.*; do
+  for f in "${HA_CONFIG}/www"/dsc-system-map.* \
+           "${HA_CONFIG}/www/dsc-airflow-map-card.js" \
+           "${HA_CONFIG}/www/DSC-HUB.js"; do
     [[ -f "${f}" ]] && cp -f "${f}" "${LAST_GOOD}/www/"
   done
   for f in "${HA_CONFIG}/esphome"/dsc-*.yaml; do
@@ -102,7 +107,9 @@ restore_last_good() {
   [[ -f "${LAST_GOOD}/dashboards/dsc-hub-v4-dashboard.yaml" ]] && \
     cp -f "${LAST_GOOD}/dashboards/dsc-hub-v4-dashboard.yaml" "${HA_CONFIG}/dashboards/"
   if bashio::config.true 'sync_www'; then
-    for f in "${LAST_GOOD}/www"/dsc-system-map.*; do
+    for f in "${LAST_GOOD}/www"/dsc-system-map.* \
+             "${LAST_GOOD}/www/dsc-airflow-map-card.js" \
+             "${LAST_GOOD}/www/DSC-HUB.js"; do
       [[ -f "${f}" ]] && cp -f "${f}" "${HA_CONFIG}/www/"
     done
   fi
@@ -138,16 +145,32 @@ stage_and_commit() {
   fi
 
   if bashio::config.true 'sync_www'; then
-    log "Syncing www/dsc-system-map.*"
-    local name
-    for name in dsc-system-map-card.js dsc-system-map.svg; do
-      if [[ -f "${src}/www/${name}" ]]; then
-        cp -f "${src}/www/${name}" "${STAGE}/www/${name}"
-        log "Staged www/${name} ($(wc -c <"${src}/www/${name}") bytes)"
-      else
-        warn "Missing repo www/${name}"
-      fi
-    done
+    # Source of truth in git: separate card JS files. Publish a concatenated
+    # dsc-system-map-card.js so existing /local Lovelace resources get both
+    # custom elements (same contract as scripts/ha-sync.sh + sync-hacs-dist.sh).
+    log "Syncing www Lovelace cards (system map + airflow bundle)"
+    local svg="${src}/www/dsc-system-map.svg"
+    local sys_js="${src}/www/dsc-system-map-card.js"
+    local air_js="${src}/www/dsc-airflow-map-card.js"
+    if [[ -f "${svg}" ]]; then
+      cp -f "${svg}" "${STAGE}/www/dsc-system-map.svg"
+      log "Staged www/dsc-system-map.svg ($(wc -c <"${svg}") bytes)"
+    else
+      warn "Missing repo www/dsc-system-map.svg"
+    fi
+    if [[ -f "${sys_js}" && -f "${air_js}" ]]; then
+      {
+        cat "${sys_js}"
+        printf '\n'
+        cat "${air_js}"
+      } > "${STAGE}/www/dsc-system-map-card.js"
+      cp -f "${STAGE}/www/dsc-system-map-card.js" "${STAGE}/www/DSC-HUB.js"
+      cp -f "${air_js}" "${STAGE}/www/dsc-airflow-map-card.js"
+      log "Staged www/dsc-system-map-card.js bundle ($(wc -c <"${STAGE}/www/dsc-system-map-card.js") bytes)"
+      log "Staged www/DSC-HUB.js + standalone dsc-airflow-map-card.js"
+    else
+      warn "Missing repo www card sources (need dsc-system-map-card.js + dsc-airflow-map-card.js)"
+    fi
   fi
 
   if bashio::config.true 'sync_esphome'; then
@@ -190,7 +213,8 @@ stage_and_commit() {
       "${HA_CONFIG}/dashboards/dsc-hub-v4-dashboard.yaml"
   fi
   if bashio::config.true 'sync_www'; then
-    for name in dsc-system-map-card.js dsc-system-map.svg; do
+    for name in dsc-system-map.svg dsc-system-map-card.js \
+                DSC-HUB.js dsc-airflow-map-card.js; do
       if [[ -f "${STAGE}/www/${name}" ]]; then
         cp -f "${STAGE}/www/${name}" "${HA_CONFIG}/www/${name}"
         log "Installed /config/www/${name}"

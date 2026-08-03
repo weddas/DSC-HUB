@@ -41,14 +41,16 @@ flowchart LR
 | [`UPGRADE.md`](UPGRADE.md) | 5.0 → 5.1 cutover (add-on Update + flash) |
 | [`SETUP.md`](SETUP.md) | SoftAP kit unboxing without HA |
 | [`RELEASE.md`](RELEASE.md) | What’s new, rollout checklist |
-| [`scripts/ADDON.md`](scripts/ADDON.md) | **Primary delivery** — HAOS Sync add-on |
+| [`scripts/ADDON.md`](scripts/ADDON.md) | **Primary delivery** — HAOS Sync add-on (**5.1.3** www card bundle) |
+| [`scripts/HACS-FRONTEND.md`](scripts/HACS-FRONTEND.md) | SYSTEM MAP + AIRFLOW Lovelace cards (HACS / `/local` bundle) |
 | [`docs/qa/FIRMWARE-QA-5.1.0.md`](docs/qa/FIRMWARE-QA-5.1.0.md) | Firmware Validate / flash QC |
 | [`docs/qa/ADDON-QA-5.1.0.md`](docs/qa/ADDON-QA-5.1.0.md) | Sync add-on QC |
+| [`docs/qa/LIVE-UI-AIRFLOW-STATUS.md`](docs/qa/LIVE-UI-AIRFLOW-STATUS.md) | AIRFLOW STATUS card smoke |
 | [`homeassistant/README.md`](homeassistant/README.md) | Packages, HACS, entity notes |
 | [`firmware/v4/README.md`](firmware/v4/README.md) | Local validate / flash |
 
 **HAOS delivery:** Settings → Add-ons → Repositories → `https://github.com/weddas/DSC-HUB`
-→ install / Update **DSC-HUB Sync** **5.1.0**. Push to `master` → poll (~60s) →
+→ install / Update **DSC-HUB Sync** (**5.1.3**+ for www card bundle). Push to `master` → poll (~60s) →
 packages / dashboard / www / ESPHome stubs land in `/config`.
 
 ---
@@ -62,7 +64,7 @@ packages / dashboard / www / ESPHome stubs land in `/config`.
 | Pots 1–4 | `dsc-pot{N}.yaml` → `dsc-pot-common.yaml` | **5.1.0** |
 | Sonoffs | heater / heatmat / humidifier / de-humidifier | **5.1.0** |
 | Kits | `*-kit.yaml`, `*-wifi-kit.yaml`, fleet-setup kits | **5.1.0** (same bodies) |
-| Sync add-on | `dsc-hub-sync/` | **5.1.0** |
+| Sync add-on | `dsc-hub-sync/` | **5.1.3** (www card bundle) |
 | HA surface | `sensor.dsc_ha_surface_version` | **5.1.0** |
 
 ESPHome stubs use `ref: v5.1.0`. Flash order: hub → panel → pots → Sonoffs.
