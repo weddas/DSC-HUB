@@ -16,18 +16,18 @@
 # Symptom class: HA shows hub offline while DSC-CONTROL / ESP-NOW / WiFi
 # still look healthy — that is an API session blip (Noise client), not a
 # dead board. Short blips are absorbed by HA demand-follower debounce
-# (heater stays on). This block only recovers a WEDGED API: WiFi still
-# associated, HA Link / handshake silent ≥5 min → sync NVS +
-# App.safe_reboot() so the API rebinds. api.reboot_timeout stays 0s
-# (HA maintenance must not bounce climate). Boot grace + per-boot cap.
+# (heater stays on). Soft nudge watches handshake ≥90s. Bounce/reboot
+# require a dead API client (≥180s / ≥300s) or wedged-while-connected
+# (handshake ≥10 / ≥15 min). Handshake lag alone must not bounce WiFi.
+# api.reboot_timeout stays 0s (HA maintenance must not bounce climate).
 #
 # ===== FLEET LINK / AP PIN (temp mesh) =====
-# Optional text.dsc_hub_preferred_wifi_bssid (NVS). On WiFi connect the
-# hub can auto-learn the current AP into that field (Lock WiFi AP),
-# raise its STA priority, and broadcast the 6-byte BSSID in 0xD0 so
-# Control (during Starting) and pots can follow the same Nest point.
-# Compile-time wifi_bssid still works as a hard stub override.
-# Recovery ladder: nudge → WiFi bounce → reboot (hub reboot = API only).
+# Optional text.dsc_hub_preferred_wifi_bssid (NVS). On every STA connect
+# (+ delayed on_boot) the hub runs wifi_ap_learn_or_pin: Lock ON learns
+# an empty preferred, raises STA priority, and mismatch-bounces with
+# backoff (max 3/boot, 120s cool-down). fast_connect is OFF so bounce
+# can scan onto the preferred Nest point. Broadcast 0xD0 BSSID for
+# Control/pots. Compile-time wifi_bssid still works as a hard stub.
 #
 # ===== v4.0 · ESP-NOW PRIMARY CONTROL LAYER =====
 # The DSC-CONTROL panel drives this hub directly over ESP-NOW. The stub
@@ -131,6 +131,11 @@ esphome:
               lambda: 'return !id(ha_takeover_active) && id(full_auto_mode);'
             then:
               - switch.turn_on: full_auto_switch
+        # Re-assert Lock WiFi AP after STA is up (on_connect also runs this;
+        # belt-and-suspenders for recovery boots that associated before the
+        # script id was ready).
+        - delay: 5s
+        - script.execute: wifi_ap_learn_or_pin
 
 # Batch flash writes so rapid dial-spinning doesn't wear the chip.
 preferences:
@@ -183,10 +188,15 @@ api:
                  client_info.c_str(), client_address.c_str());
         id(api_ever_connected) = true;
         id(api_down_since) = 0;
+        // Session liveness — do not treat a fresh TCP/Noise client as a
+        // write-path proof by itself, but clear the "API down" clock so
+        // bounce/reboot (which now require a dead client) do not fire
+        // while HA is reconnecting after a blip.
   on_client_disconnected:
     - lambda: |-
         ESP_LOGW("api", "HA client disconnected (%s @ %s) — API blip; climate/ESP-NOW keep running",
                  client_info.c_str(), client_address.c_str());
+        if (id(api_down_since) == 0) id(api_down_since) = millis();
 
 ota:
   - platform: esphome
@@ -199,6 +209,13 @@ ota:
 #  DIGITAL-PLANT  ·  Grow Tent Environmental Controller   (rev 2.4.4)
 #  Device: dsc-hub   (ESP32 + SH1106 128x64 OLED + rotary UI)
 #  ---------------------------------------------------------------
+#  2026-08-03 — NVS SYNC ON MODE CHANGE + LINK / AP PIN
+#  Mode transitions flush NVS immediately (API-recovery reboot cannot
+#  resurrect a stale Full Auto OFF). Link ladder: soft nudge on handshake
+#  ≥90s; bounce/reboot need a dead API client (or hs ≥10/15 min while
+#  "connected"). Lock WiFi AP: mismatch bounce backoff; fast_connect off;
+#  wifi_ap_learn_or_pin on every STA connect + delayed on_boot.
+#
 #  v2.4.4 — BOOT PERSIST + RE-ARM FULL AUTO (31 Jul 2026)
 #  ------------------------------------------------------------------
 #  full_auto_mode already persists in NVS. The reboot gap was that
@@ -897,6 +914,17 @@ globals:
     type: uint32_t
     restore_value: false
     initial_value: '0'
+  # Lock WiFi AP mismatch bounce backoff — fast_connect can rejoin the
+  # wrong Nest point; without a floor we bounce every ~11s forever and
+  # look like an API wedge storm.
+  - id: wifi_ap_mismatch_bounces
+    type: int
+    restore_value: false
+    initial_value: '0'
+  - id: wifi_ap_mismatch_last
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
 
   # --- Screensaver physics (px per 100ms frame; status line at y=53
   #     gives the 48px logo a 0..5px vertical lane) ---
@@ -1399,6 +1427,7 @@ switch:
     turn_on_action:
       - globals.set: {id: full_auto_mode, value: 'false'}
       - lambda: 'id(full_auto_switch).publish_state(false);'
+      - script.execute: sync_mode_prefs
       - script.execute: tx_panel_sync
     turn_off_action:
       # Leaving manual releases the light hold too — the schedule resumes.
@@ -1416,10 +1445,12 @@ switch:
       - globals.set: {id: ha_takeover_active, value: 'false'}   # re-arming auto releases takeover
       - switch.turn_off: local_manual_mode
       - lambda: 'id(manual_takeover_switch).publish_state(false);'
+      - script.execute: sync_mode_prefs
       - script.execute: arm_full_auto                          # v2.4.3: arm the whole stack
       # arm_full_auto already calls tx_panel_sync
     turn_off_action:
       - globals.set: {id: full_auto_mode, value: 'false'}
+      - script.execute: sync_mode_prefs
       - script.execute: tx_panel_sync
 
   # Temp mesh: when ON, WiFi-connect learns/keeps preferred BSSID in NVS
@@ -1494,9 +1525,11 @@ switch:
           id(manual_light_hold_switch).publish_state(true);
       - switch.turn_on: local_manual_mode
       - globals.set: {id: manual_banner_until, value: !lambda 'return millis() + 2000;'}
+      - script.execute: sync_mode_prefs
       - script.execute: tx_panel_sync
     turn_off_action:
       - globals.set: {id: ha_takeover_active, value: 'false'}
+      - script.execute: sync_mode_prefs
       - script.execute: tx_panel_sync
 
   # --- Humidifier soft switch (RH TOO LOW / v2.4.1: or VPD TOO HIGH) ---
@@ -3144,13 +3177,34 @@ script:
           bool same = true;
           for (int i = 0; i < 6; i++) if (cur[i] != want[i]) { same = false; break; }
           if (same) {
+            id(wifi_ap_mismatch_bounces) = 0;
             ESP_LOGI("wifi", "On preferred AP %s (priority raised)", pref.c_str());
             return;
           }
-          ESP_LOGW("wifi", "On %s but prefer %s — scheduling WiFi bounce", cur_mac, pref.c_str());
+          // Backoff: fast_connect / sticky Nest can rejoin the wrong AP;
+          // unbounded bounce loops tear the HA API and look like wedges.
+          const uint32_t now = millis();
+          if (id(wifi_ap_mismatch_bounces) >= 3) {
+            ESP_LOGW("wifi",
+                     "On %s but prefer %s — giving up bounce this boot (use Remember Current AP or Clear Preferred)",
+                     cur_mac, pref.c_str());
+            return;
+          }
+          if (id(wifi_ap_mismatch_last) != 0 &&
+              (now - id(wifi_ap_mismatch_last)) < 120000u) {
+            ESP_LOGI("wifi", "On %s but prefer %s — mismatch bounce cooling down",
+                     cur_mac, pref.c_str());
+            return;
+          }
+          id(wifi_ap_mismatch_last) = now;
+          id(wifi_ap_mismatch_bounces) = id(wifi_ap_mismatch_bounces) + 1;
+          ESP_LOGW("wifi", "On %s but prefer %s — scheduling WiFi bounce #%d",
+                   cur_mac, pref.c_str(), id(wifi_ap_mismatch_bounces));
           id(link_wifi_bounce).execute();
 
   # ---- Link recovery (same ladder as Control/pots) ----
+  # BSSID rejoin + API rebind. wifi packages use fast_connect: false so a
+  # bounce can scan onto the preferred Nest point instead of sticky-rejoining.
   - id: link_wifi_bounce
     mode: single
     then:
@@ -3179,6 +3233,17 @@ script:
           global_preferences->sync();
       - delay: 250ms
       - lambda: 'App.safe_reboot();'
+
+  # Flush restore-backed mode globals immediately. flash_write_interval is
+  # 60s — without this, an API-recovery reboot can resurrect a stale Full
+  # Auto OFF after an explicit ON (or the reverse). Targeted sync only;
+  # do not lower the global flash interval.
+  - id: sync_mode_prefs
+    mode: single
+    then:
+      - lambda: |-
+          global_preferences->sync();
+          ESP_LOGI("mode", "mode prefs flushed to NVS");
 
   # ---- v2.4.3 · Engage the full automation stack (Full Auto entry) ----
   # Called the instant Full Auto is turned on (HA switch or OLED Mode menu):
@@ -4115,10 +4180,18 @@ script:
     then:
       - lambda: |-
           if (id(current_page) == 3) {                 // fans
+            // Drop Full Auto on first detent. Flush NVS immediately when we
+            // actually transition (Manual turn_on also syncs via its action;
+            // if Manual is already on, sync here so a reboot cannot revive ON).
+            bool dropped_fa = id(full_auto_mode);
             id(full_auto_mode) = false;
             if (!id(local_manual_mode).state) {
               id(local_manual_mode).turn_on();
               id(manual_banner_until) = millis() + 2000;   // flash the banner
+            } else if (dropped_fa) {
+              id(full_auto_switch).publish_state(false);
+              global_preferences->sync();
+              ESP_LOGI("mode", "mode prefs flushed to NVS (OLED fan live-adjust)");
             }
             switch (id(adjusting_item)) {
               case 0: { int v = id(local_target_out);          auto c = id(fan_exhaust_out).make_call();    c.set_state(v > 0); c.set_speed(v); c.perform(); break; }
@@ -4358,13 +4431,14 @@ interval:
 
   # ---- Hub link recovery (same ladder as Control/pots) ----
   # API wedge OR panel ESP-NOW gone quiet after it was alive.
-  # BUG-FIX 2026-08-02 cadence: HA handshake pings every 30s, panel
-  # keepalives every 15s — every stage waits ≥3 missed beats:
-  #   API  ≥90s / panel ≥45s → fleet heartbeat + vitals nudge
-  #   API ≥180s              → WiFi bounce (API wedge ONLY)
-  #   API ≥300s              → sync NVS + safe_reboot (max 2/boot)
-  # Panel-only silence never bounces or reboots the hub (climate stays
-  # local-first; the panel has its own recovery ladder).
+  # Soft nudge still watches handshake (≥90s) + panel (≥45s).
+  # Bounce/reboot require a dead API client (or wedged-while-connected
+  # handshake ≥10/15 min) — handshake automation lag alone must not
+  # bounce WiFi (3 Aug overnight reboot storm).
+  #   handshake ≥90s / panel ≥45s → fleet heartbeat + vitals nudge
+  #   API client dead ≥180s OR hs ≥600s while "connected" → WiFi bounce
+  #   API client dead ≥300s after bounce OR hs ≥900s → safe_reboot (max 2/boot)
+  # Panel-only silence never bounces or reboots the hub.
   # WiFi-down is logged only.
   - interval: 10s
     then:
@@ -4377,26 +4451,23 @@ interval:
               if (id(link_rec_last_action) != 0 &&
                   (millis() - id(link_rec_last_action)) < 20000u) return false;
 
-              // Healthy API clears stage.
-              // BUG-FIX 2026-08-02: handshake thresholds retuned to the HA
-              // ping cadence (30s — see dsc_v4_automations.yaml). The old
-              // 45s gate vs a 60s ping flagged api_problem every healthy
-              // minute. 90s = 3 missed pings before stage-1; bounce 180s;
-              // reboot 300s (matches the documented "silent ≥5 min").
               bool api_ok = id(ha_connected).state;
-              if (api_ok) id(api_ever_connected) = true;
-              bool hs_ok = id(ha_handshake_seen) && id(ha_handshake_last) != 0 &&
-                           (millis() - id(ha_handshake_last)) < 90000u;
-              if (api_ok || hs_ok) {
+              if (api_ok) {
+                id(api_ever_connected) = true;
                 id(api_down_since) = 0;
               }
+              bool hs_ok = id(ha_handshake_seen) && id(ha_handshake_last) != 0 &&
+                           (millis() - id(ha_handshake_last)) < 90000u;
+              if (hs_ok) id(api_down_since) = 0;
 
+              // Soft nudge: handshake silent ≥90s (write-path watch).
               bool api_problem = false;
               if (id(ha_handshake_seen) && id(ha_handshake_last) != 0) {
                 api_problem = (millis() - id(ha_handshake_last)) >= 90000u;
-              } else if (id(api_ever_connected) && !api_ok) {
+              }
+              if (!api_ok && id(api_ever_connected)) {
                 if (id(api_down_since) == 0) id(api_down_since) = millis();
-                api_problem = (millis() - id(api_down_since)) >= 90000u;
+                if ((millis() - id(api_down_since)) >= 90000u) api_problem = true;
               }
 
               bool panel_problem = id(panel_last_ms) != 0 &&
@@ -4439,19 +4510,18 @@ interval:
               if (id(link_rec_wifi_bounces) >= 3) return false;
 
               bool api_ok = id(ha_connected).state;
-              bool api_problem = false;
+              uint32_t hs_age = 0;
               if (id(ha_handshake_seen) && id(ha_handshake_last) != 0)
-                api_problem = (millis() - id(ha_handshake_last)) >= 180000u;
-              else if (id(api_ever_connected) && !api_ok && id(api_down_since) != 0)
-                api_problem = (millis() - id(api_down_since)) >= 180000u;
+                hs_age = millis() - id(ha_handshake_last);
+              uint32_t down_age = (id(api_down_since) != 0) ? (millis() - id(api_down_since)) : 0;
 
-              // BUG-FIX 2026-08-02: panel-only silence must never bounce hub
-              // WiFi (same policy as the reboot stage below). The old trigger
-              // fired on any ~90s panel command gap — normal idle glass —
-              // flapping WiFi/API for the whole fleet. The panel now sends a
-              // 15s keepalive (op 58), and hub-side recovery for a genuinely
-              // dead panel stays at stage-1 nudges; the panel runs its own
-              // recovery ladder. Bounce only for an unhealthy API.
+              // Bounce when the API client is gone ≥180s, OR wedged-while-
+              // connected (handshake silent ≥10 min). Handshake lag alone
+              // with a live client must not bounce WiFi.
+              bool api_problem = (!api_ok && id(api_ever_connected) && down_age >= 180000u) ||
+                                 (api_ok && hs_age >= 600000u);
+
+              // Panel-only silence must never bounce hub WiFi.
               return api_problem && id(link_rec_stage) < 2;
           then:
             - lambda: |-
@@ -4482,14 +4552,16 @@ interval:
               if (id(link_rec_last_action) != 0 &&
                   (millis() - id(link_rec_last_action)) < 20000u) return false;
 
-              // Reboot only for sustained API wedge after a WiFi bounce —
-              // never for panel-only silence (local climate must keep running).
+              // Reboot after bounce when the client is still dead ≥300s —
+              // or wedged-while-connected ≥15 min. Never for panel-only silence.
               bool api_ok = id(ha_connected).state;
-              bool api_problem = false;
+              uint32_t hs_age = 0;
               if (id(ha_handshake_seen) && id(ha_handshake_last) != 0)
-                api_problem = (millis() - id(ha_handshake_last)) >= 300000u;
-              else if (id(api_ever_connected) && !api_ok && id(api_down_since) != 0)
-                api_problem = (millis() - id(api_down_since)) >= 300000u;
+                hs_age = millis() - id(ha_handshake_last);
+              uint32_t down_age = (id(api_down_since) != 0) ? (millis() - id(api_down_since)) : 0;
+
+              bool api_problem = (!api_ok && id(api_ever_connected) && down_age >= 300000u) ||
+                                 (api_ok && hs_age >= 900000u);
 
               return api_problem && id(link_rec_stage) >= 2;
           then:

@@ -71,9 +71,16 @@ espnow:
         // HA-facing entities (publish_state / turn_on) so the dashboard
         // cannot keep showing Full Auto ON while the panel owns fans.
         auto eng_manual_fans = [&](){
+          // Flush NVS on Full Auto drop so an API-recovery reboot cannot
+          // resurrect ON after panel fan +/- took Manual. Manual turn_on
+          // also syncs; if Manual is already on, sync here.
           if (id(full_auto_mode)) {
             id(full_auto_mode) = false;
             id(full_auto_switch).publish_state(false);
+            if (id(local_manual_mode).state) {
+              global_preferences->sync();
+              ESP_LOGI("mode", "mode prefs flushed to NVS (panel fan live-adjust)");
+            }
           }
           if (!id(local_manual_mode).state) id(local_manual_mode).turn_on();
         };

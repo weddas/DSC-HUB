@@ -1,5 +1,24 @@
 # Changelog
 
+## Hub — link recovery + AP pin (2026-08-03)
+
+- Soften API bounce/reboot: require a dead HA client (≥180s / ≥300s) or
+  wedged-while-connected handshake (≥10 / ≥15 min). Handshake automation
+  lag alone no longer bounces WiFi (overnight reboot storm).
+- Lock WiFi AP: mismatch bounce backoff (120s, max 3/boot); `fast_connect:
+  false` so bounce can scan onto preferred BSSID; delayed on_boot
+  `wifi_ap_learn_or_pin` after recovery associate.
+- Preferred BSSID operationally aligned to current healthy Nest point
+  when Lock was fighting a stronger alternate AP.
+
+## Hub — NVS sync on mode change (2026-08-03)
+
+- DSC-HUB: flush restore-backed mode globals (`full_auto_mode`,
+  `ha_takeover_active`) to NVS immediately on Full Auto / Manual Takeover /
+  Manual Override / OLED+panel fan live-adjust transitions.
+- Closes the gap where `flash_write_interval: 60s` let an API-recovery reboot
+  resurrect a stale Full Auto OFF after an explicit ON (3 Aug 2026 incident).
+
 ## v5.1.10 — 2026-08-02
 
 - DSC-CONTROL **5.1.10**: A/B twin of 5.1.9 with `sram1_as_iram: false`.

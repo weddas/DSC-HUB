@@ -808,9 +808,9 @@ automation:
 
   # Bidirectional API handshake: HA pings number.dsc_hub_ha_handshake
   # every 30s. Proves the write path (not just WiFi). Hub firmware ladder
-  # (BUG-FIX 2026-08-02, ≥3 missed pings per stage): silent ≥90s → soft
-  # nudge, ≥180s → WiFi bounce, ≥300s (5 min) while WiFi still up →
-  # wedged API → sync NVS + safe_reboot.
+  # (2026-08-03): soft nudge on handshake ≥90s; WiFi bounce when API
+  # client dead ≥180s (or hs ≥10 min while "connected"); safe_reboot when
+  # client dead ≥300s after bounce (or hs ≥15 min). Max 2×/boot.
   # Short blips do not reboot — follower debounce keeps the heater on.
   - id: dsc_hub_ha_handshake_ping
     alias: "DSC-HUB · HA API handshake ping"

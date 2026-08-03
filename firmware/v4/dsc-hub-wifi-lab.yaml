@@ -14,8 +14,9 @@ wifi:
       password: ${wifi_password}
       priority: 0
   power_save_mode: none
-  # Rejoin known AP without a full scan. HA offline is usually API-only.
-  fast_connect: true
+  # false: Lock WiFi AP / preferred BSSID needs a scan to leave a sticky
+  # Nest point. fast_connect rejoined the wrong AP after bounce (3 Aug).
+  fast_connect: false
   ap:
     ssid: DSC-HUB Fallback Hotspot
     password: ${ap_password_val}
@@ -33,7 +34,7 @@ wifi:
             last_ch = ch;
           }
         }
-    # Early boot — learn/pin preferred Nest BSSID before climate/UI load.
+    # Every STA connect / recovery boot — learn/pin preferred Nest BSSID.
     - script.execute: wifi_ap_learn_or_pin
 
 captive_portal:
