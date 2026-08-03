@@ -44,7 +44,8 @@ flowchart LR
 | [`scripts/ADDON.md`](scripts/ADDON.md) | **Primary delivery** — HAOS Sync add-on |
 | [`docs/qa/FIRMWARE-QA-5.1.0.md`](docs/qa/FIRMWARE-QA-5.1.0.md) | Firmware Validate / flash QC |
 | [`docs/qa/ADDON-QA-5.1.0.md`](docs/qa/ADDON-QA-5.1.0.md) | Sync add-on QC |
-| [`homeassistant/README.md`](homeassistant/README.md) | Packages, HACS, entity notes |
+| [`homeassistant/README.md`](homeassistant/README.md) | Packages, HACS, crop-steering 5.1.5 / pot identity |
+| [`docs/qa/LIVE-UI-5.1.5.md`](docs/qa/LIVE-UI-5.1.5.md) | Strains / Nutrient Science / migrate click-through |
 | [`firmware/v4/README.md`](firmware/v4/README.md) | Local validate / flash |
 
 **HAOS delivery:** Settings → Add-ons → Repositories → `https://github.com/weddas/DSC-HUB`
