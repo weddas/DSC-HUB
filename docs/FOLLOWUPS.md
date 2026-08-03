@@ -33,7 +33,7 @@ Categories: `red-flag` · `soak` · `deferred` · `next-plan` · `out-of-scope` 
 | N-001 | Preferred BSSID ≠ current while Lock ON | Self-customize relearn exists; verify after hub 5.1.3 flash |
 | N-002 | Fleet version skew cleanup | Flash Control/pots if still on old wifi stubs |
 | N-003 | Soak warnings from OOS deploy | Fill after ~30 min post-flash soak |
-| N-004 | Orphan helper cull pass | leaf_offset kept; unused Sankey/deltas audit |
+| N-004 | Orphan helper cull pass | leaf_offset kept; Sankey UI gone — `dsc_airflow_direct_room` / `dsc_airflow_room_return` still unused (live CFM edges on airflow card cover the concept; optional cull) |
 | N-005 | Cooldown / open-loop wait retune | Evidence-based only; no site hardcodes |
 
 ### out-of-scope
@@ -181,3 +181,16 @@ No climate control regression during soak window.
 | N-010 | Post-deploy entity soak | After sync: Temp OOS, Strains, Nutrient Science, Got sensors |
 | N-017 | Strain + sprout on pot ESP | Probe stays until harvest |
 | N-018 | HA reads pot-native strain/sprout | After N-017 |
+
+---
+
+## Airflow status card (2026-08-03)
+
+### done
+
+- Replaced Climate Engine `power-flow-card-plus` AIRFLOW FLOW MAP with `custom:dsc-airflow-map-card` (real ducts, % blend OUT/RECIRC, source T/RH carry, room appliances, vol/ACH mass chips).
+- HACS `dist/DSC-HUB.js` now bundles system map + airflow map; sync script updated.
+
+### deferred
+
+- N-004 optional cull of unused Sankey template sensors (`dsc_airflow_direct_room`, `dsc_airflow_room_return`) — concept covered by live CFM edges; leave helpers until a dedicated orphan pass.

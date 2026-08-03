@@ -25,6 +25,7 @@ Canonical HA surface for firmware [`firmware/v4/`](../firmware/v4/).
 | `configuration.snippet.yaml` | Paste-once: packages include + YAML-mode `dsc-hub-pro` dashboard |
 | `automations.yaml` | Deprecated stub — points at the package above |
 | `www/dsc-system-map.*` | SYSTEM MAP Lovelace card + SVG → `/config/www/` |
+| `www/dsc-airflow-map-card.js` | AIRFLOW STATUS Lovelace card → `/config/www/` |
 | `esphome/` | Thin device stubs — pull firmware packages from GitHub |
 
 ## ESPHome (all devices)
@@ -50,7 +51,7 @@ Quick copy list:
 | `packages/dsc_v4_*.yaml` | `packages/` (helpers, learn, automations) |
 | `dashboards/dsc-hub-v4-dashboard.yaml` | `dashboards/` (YAML-mode URL **`dsc-hub-pro`**) |
 | `esphome/dsc-*.yaml` | `esphome/` |
-| `www/dsc-system-map.*` | `www/` + resource `/local/dsc-system-map-card.js` |
+| `www/dsc-*-map*` | `www/` + `/local` or HACS `DSC-HUB.js` resources |
 
 Merge [`configuration.snippet.yaml`](configuration.snippet.yaml) into HA `configuration.yaml`
 (packages + YAML Lovelace). Filenames under `packages/` must use underscores.
@@ -73,16 +74,19 @@ Package pot/tank **push** notifiers are not shipped in **v5.0.0**
 
 ## HACS cards
 
-mushroom · apexcharts-card · power-flow-card-plus · plotly-graph-card · mini-graph-card · gauge-card-pro · modern-circular-gauge · logbook-card · auto-entities · vertical-stack-in-card · card-mod · bar-card · ph-meter-temperature · **expander-card** · **browser_mod**
+mushroom · apexcharts-card · plotly-graph-card · mini-graph-card · gauge-card-pro · modern-circular-gauge · logbook-card · auto-entities · vertical-stack-in-card · card-mod · bar-card · ph-meter-temperature · **expander-card** · **browser_mod** · **DSC-HUB** (Dashboard custom repo — system map + airflow map)
 
 `browser_mod` (HACS **Integration**, not a card) powers the popup layer —
 graph enlarge, appliance consoles, pot detail. Install from HACS →
 Integrations, restart HA, then **Settings → Devices & Services →
 Add Integration → Browser Mod**. Without it the popup taps silently no-op.
 
-## Local custom card — SYSTEM MAP
+## Local custom cards — SYSTEM MAP + AIRFLOW STATUS
 
-Neon isometric live map (`custom:dsc-system-map-card`) on the Home view.
+| Card | Type | View |
+|---|---|---|
+| Neon isometric map | `custom:dsc-system-map-card` | Home |
+| Hybrid airflow status | `custom:dsc-airflow-map-card` | Climate Engine |
 
 ### Preferred — HACS Dashboard custom repository
 
@@ -91,21 +95,22 @@ Neon isometric live map (`custom:dsc-system-map-card`) on the Home view.
 3. Category: **Dashboard**
 4. Download **DSC-HUB System Map**, restart/reload when prompted, hard-refresh browser
 
-HACS serves `/hacsfiles/DSC-HUB/DSC-HUB.js` (+ SVG beside it). Full steps:
+HACS serves `/hacsfiles/DSC-HUB/DSC-HUB.js` (both cards + SVG beside it). Full steps:
 [`../scripts/HACS-FRONTEND.md`](../scripts/HACS-FRONTEND.md).
 
 ### Manual fallback (`/config/www/`)
 
-1. Copy both files into Home Assistant `/config/www/` (or rely on ha-sync):
+1. Copy into Home Assistant `/config/www/` (or rely on ha-sync):
    - [`www/dsc-system-map.svg`](www/dsc-system-map.svg)
    - [`www/dsc-system-map-card.js`](www/dsc-system-map-card.js)
-2. **Settings → Dashboards → ⋮ → Resources → Add resource**
-   - URL: `/local/dsc-system-map-card.js`
-   - Type: **JavaScript** (not JavaScript Module — the card is a classic IIFE)
-3. Ensure the dashboard includes the **SYSTEM MAP** card (YAML dashboard already does).
-4. Hard-refresh the browser.
+   - [`www/dsc-airflow-map-card.js`](www/dsc-airflow-map-card.js)
+2. **Settings → Dashboards → ⋮ → Resources → Add resource** (JavaScript, not module):
+   - `/local/dsc-system-map-card.js`
+   - `/local/dsc-airflow-map-card.js`
+   - Or a single concatenated `/local/DSC-HUB.js` if you publish the HACS bundle there
+3. YAML dashboard already includes both cards. Hard-refresh the browser.
 
-Optional entity overrides via card YAML:
+Optional entity overrides:
 
 ```yaml
 type: custom:dsc-system-map-card
@@ -114,6 +119,17 @@ entities:
   fan_out: sensor.dsc_fan_exhaust_outside_pct
   light: light.dsc_hub_sf1000_dimmer
 ```
+
+```yaml
+type: custom:dsc-airflow-map-card
+title: AIRFLOW STATUS
+# entities: override cfm_*, fan_*, zone T/RH, appliances — see www/dsc-airflow-map-card.js DEFAULTS
+```
+
+**Airflow card:** real ducts only (Room→2x4 / Room→4x8 / cascade / OUT / RECIRC),
+edge chips carry source-zone T/RH + CFM/%, OUT/RECIRC percentage blend (only
+RECIRC share is lung feedback), room appliance chips on the Room node, tent
+volumes → air-mass / ACH from Plant Specs.
 
 ## Climate capacity envelope
 

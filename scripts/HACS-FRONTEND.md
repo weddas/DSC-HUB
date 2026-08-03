@@ -1,7 +1,12 @@
-# HACS — DSC-HUB System Map (Dashboard)
+# HACS — DSC-HUB Lovelace cards (Dashboard)
 
-Install the neon SYSTEM MAP Lovelace card from this GitHub repo as a
+Install the DSC-HUB Lovelace cards from this GitHub repo as a
 **HACS custom repository** (category: **Dashboard**).
+
+One resource (`DSC-HUB.js`) registers both:
+
+- `custom:dsc-system-map-card` — neon isometric SYSTEM MAP
+- `custom:dsc-airflow-map-card` — hybrid AIRFLOW STATUS map
 
 ## Add the custom repository
 
@@ -14,18 +19,23 @@ Install the neon SYSTEM MAP Lovelace card from this GitHub repo as a
 ## Install / update
 
 1. HACS → **Dashboard** (or search “DSC-HUB System Map”)  
-2. **DSC-HUB System Map** → **Download**  
+2. **DSC-HUB System Map** → **Download** / **Redownload**  
 3. Restart Home Assistant when HACS prompts (or reload resources)  
 4. Hard-refresh the browser (Ctrl+F5)
 
 HACS registers the resource automatically (typically
-`/hacsfiles/DSC-HUB/DSC-HUB.js`). The SVG ships beside it in `dist/`.
+`/hacsfiles/DSC-HUB/DSC-HUB.js`). The system-map SVG ships beside it in `dist/`.
 
 ## Use in Lovelace
 
 ```yaml
 type: custom:dsc-system-map-card
 title: DSC-HUB
+```
+
+```yaml
+type: custom:dsc-airflow-map-card
+title: AIRFLOW STATUS
 ```
 
 Optional entity overrides — see [`homeassistant/README.md`](../homeassistant/README.md).
@@ -48,8 +58,9 @@ Without it, popup `tap_action`s silently do nothing — no error is shown.
 | Path | Role |
 |---|---|
 | [`hacs.json`](../hacs.json) | HACS manifest (repo root) |
-| [`dist/DSC-HUB.js`](../dist/DSC-HUB.js) | Card (name matches GitHub repo) |
-| [`dist/dsc-system-map.svg`](../dist/dsc-system-map.svg) | Map artwork |
+| [`dist/DSC-HUB.js`](../dist/DSC-HUB.js) | Bundled cards (repo-name match) |
+| [`dist/dsc-system-map.svg`](../dist/dsc-system-map.svg) | System map artwork |
+| [`dist/dsc-airflow-map-card.js`](../dist/dsc-airflow-map-card.js) | Airflow card (also in bundle) |
 | `homeassistant/www/*` | **Source of truth** — run `scripts/sync-hacs-dist.sh` after edits |
 
 CI workflow [`.github/workflows/hacs-dist.yml`](../.github/workflows/hacs-dist.yml)
@@ -63,6 +74,6 @@ plugins — they deploy via [`ha-sync.sh`](ha-sync.sh) / Unraid runner
 
 | Surface | Delivery |
 |---|---|
-| SYSTEM MAP card | **HACS Dashboard** (this doc) |
+| SYSTEM MAP + AIRFLOW STATUS cards | **HACS Dashboard** (this doc) |
 | `packages/dsc_v4_*.yaml` + YAML dashboard + www fallback | Git push → HA sync |
 | ESPHome firmware | Validate/Install (manual) |

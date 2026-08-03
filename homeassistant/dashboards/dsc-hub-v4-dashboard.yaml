@@ -32,11 +32,11 @@
 #  Deploy: YAML-mode dashboard file under /config/dashboards/ (see
 #     homeassistant/configuration.snippet.yaml) — auto-sync on push when
 #     the Unraid runner is configured (scripts/HA-SYNC-BOOTSTRAP.md).
-#  HACS: mushroom · apexcharts · power-flow-card-plus
-#        plotly-graph · mini-graph-card · gauge-card-pro
-#        modern-circular-gauge · logbook-card · auto-entities
-#        vertical-stack-in-card · card-mod · bar-card · ph-meter-temperature
-#        expander-card · browser_mod (popups / graph enlarge)
+#  HACS: mushroom · apexcharts · plotly-graph · mini-graph-card
+#        gauge-card-pro · modern-circular-gauge · logbook-card
+#        auto-entities · vertical-stack-in-card · card-mod · bar-card
+#        ph-meter-temperature · expander-card · browser_mod (popups)
+#        + DSC-HUB Dashboard repo (system map + airflow map)
 # ==================================================================
 
 title: DSC-HUB Pro
@@ -317,9 +317,10 @@ views:
               rows: 8
           - type: markdown
             content: >-
-              *SYSTEM MAP card loads from `/local/dsc-system-map-card.js`
-              (Sync www or HACS). If you see a configuration error, add that
-              JS as a Lovelace module resource and refresh.*
+              *SYSTEM MAP + AIRFLOW STATUS load from HACS `DSC-HUB.js` or
+              `/local/dsc-system-map-card.js` + `/local/dsc-airflow-map-card.js`.
+              If you see a configuration error, add the JS as a Lovelace
+              resource (JavaScript, not module) and hard-refresh.*
           - type: heading
             heading: Running
             heading_style: subtitle
@@ -3015,43 +3016,25 @@ views:
       - type: grid
         cards:
           - type: heading
-            heading: 💨 AIRFLOW FLOW MAP
+            heading: 💨 AIRFLOW STATUS
             heading_style: title
-          - type: custom:power-flow-card-plus
-            entities:
-              grid:
-                entity: sensor.dsc_airflow_exhaust_out
-                name: Outside
-                icon: mdi:weather-windy
-              solar:
-                entity: sensor.dsc_airflow_room_supply
-                name: Room
-                icon: mdi:home-thermometer-outline
-              battery:
-                entity: sensor.dsc_airflow_reservoir_net
-                name: 2x4 Reservoir
-                icon: mdi:sprout
-              home:
-                entity: sensor.dsc_airflow_main_load
-                name: 4x8 Main
-                icon: mdi:greenhouse
-            watt_threshold: 10000
-            w_decimals: 0
-            min_flow_rate: 0.9
-            max_flow_rate: 6
-            display_zero_lines:
-              mode: show
+          - type: custom:dsc-airflow-map-card
+            title: AIRFLOW STATUS
+            grid_options:
+              columns: 12
+              rows: 6
           - type: markdown
             content: >-
-              *Flux values are an **airflow proxy** (fan % × 10), not watts —
-              read direction and relative magnitude, not units. When the heater
-              interlock holds extraction, watch the Outside flow stall while the
-              reservoir keeps feeding the 4x8.*
+              *Real ducts only: Room→2x4, Room→4x8, 2x4→4x8 cascade, 4x8→Outside,
+              4x8→Room recirc. Edges show live **CFM / fan %** and the **source
+              zone T/RH** being pulled over. OUT and RECIRC are a **percentage
+              blend** — only the RECIRC share feeds the room lung; OUT dumps
+              outdoors and does not hit the intakes.*
 
 
-              *v2.4 note: the 2x4 reservoir is now **lit** during its window, so
-              it is a warmer donor than it used to be. The SF1000's waste heat
-              is a feature of this loop, not a side effect.*
+              *Room appliances (heater / AC / hum / dehum) condition the shared
+              lung the intakes suck from. Tent volumes from Plant Specs drive
+              the quick air-mass and ACH lines on each node.*
           - type: heading
             heading: Fans
             heading_style: subtitle
