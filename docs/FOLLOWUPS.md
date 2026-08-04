@@ -454,4 +454,5 @@ No climate control regression during soak window.
 - Fix `view_home.yaml` pot Strain/Sprout entity IDs (N-032)
 - Operator: Push peer ? ESP when ready; optional pot OTA 5.1.5 after
 - Hold to reset all captures: `script.dsc_pots_reset_peer_captures` + Strains hold card (HA offsets only; ESP Cal untouched) ? needs package/dashboard sync
+- Ops runbook: [`docs/qa/SENSOR-CAL-5.1.7.md`](qa/SENSOR-CAL-5.1.7.md) (push / reset / dual-stack / N-032)
 

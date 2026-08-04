@@ -294,17 +294,19 @@ Reset coeffs: `script.dsc_climate_learn_reset`. Reset waits: `script.dsc_climate
 Dashboard: **Learning** (`/dsc-hub-pro/learning`) — Activity card, device cal,
 Phase A+B status, appliance effect cards, waits, ETA, efficiencies, charts.
 
-## Crop-steering (HA surface 5.1.5)
+## Crop-steering (HA surface 5.1.5+)
 
 Packages: `dsc_v4_strain_catalog`, `dsc_v4_nutrient_catalog`, `dsc_v4_pots_coherence`,
-`dsc_v4_actuator_efficacy`.
+`dsc_v4_actuator_efficacy`, `dsc_v4_sensor_cal` (**5.1.7**).
 
 - **Want / Need / Got:** strain + sprout date → Want bands; Got = raw + peer offset;
-  Capture peer baseline is MAD-hardened (v2); optional auto after shared watering
-  with require-confirm. **Push peer → ESP** merges offsets into pot Cal Offset and
-  zeroes HA peers so ESP-NOW matches Got (`dsc_v4_sensor_cal`, pot FW 5.1.5+).
-  Need summary + Apply expected stage (advisory). Prefer pot `select`/`datetime`
-  after FW **5.1.3**; HA `input_*` fallback until then.
+  Capture peer baseline is MAD-hardened (v2); auto after shared watering defaults to
+  **Require Confirm** (no silent Capture). **Push peer → ESP** merges offsets into
+  pot Cal Offset and zeroes HA peers so ESP-NOW matches Got (pot FW **5.1.5+** for
+  Mark stamp). **Hold to reset captures** zeroes HA peers only.
+  Need summary + Apply expected stage (advisory). Live pot Strain/Sprout entity IDs
+  are `select.dsc_pot_N_strain` / `date.dsc_pot_N_sprout_date` (underscore); HA
+  `input_*` fallback remains.
 - **Nutrient Science:** tank L × strength → recipe; **Accept mix** burns stock (no pumps).
 - **Fluctuations:** relative dryback; cross-pot coherence when moisture rises together
   but EC does not; learned ΔEC/Δmoisture.
@@ -315,6 +317,31 @@ Dashboard: **Strains** (`/dsc-hub-pro/strains`), plant consoles (strain/sprout/N
 **Nutrient Science** (`/dsc-hub-pro/nutrient-science`), Root Zone dryback/coherence,
 Climate Temp OOS / Lockout (incl. Clone Mister status). Data mirrors:
 `data/dsc_strain_catalog.yaml`, `data/dsc_nutrient_catalog.yaml`.
+
+## Sensor calibration (HA surface 5.1.7)
+
+Durable ops runbook: [`../docs/qa/SENSOR-CAL-5.1.7.md`](../docs/qa/SENSOR-CAL-5.1.7.md).
+
+Two correction stacks — **do not stack both** (FOLLOWUPS **N-024**):
+
+| Stack | Where | Formula / effect | Downstream |
+|---|---|---|---|
+| ESP Cal Offset/Scale | Pot NVS (`dsc-pot-common` **5.1.5+**) | `raw × scale + offset` before median | HA `soil_*` **and** ESP-NOW |
+| HA peer offsets | `input_number.dsc_potN_offset_*` | Got = soil + offset | Want/Need/Got until Push |
+
+**Peer sync v2:** `script.dsc_pots_capture_peer_baseline` (MAD median → HA offsets only).
+Auto: `automation.dsc_peer_sync_after_water` (settle 20 min, cooldown 6 h,
+**Require Confirm** default on).
+
+**Push SoT:** `script.dsc_pots_push_peer_offsets_to_esp` — additive HA → ESP Cal Offset
+(pH/EC/moisture), zero HA peers, scale≠1 guard + Force. Mark stamp needs pot FW **5.1.5+**.
+
+**Hold reset:** `script.dsc_pots_reset_peer_captures` — HA peers → 0; ESP Cal untouched.
+
+**Dual-stack warn:** `binary_sensor.dsc_potN_dual_cal_stack` + fleet summary on Strains.
+
+**Leaf VPD:** `input_number.dsc_leaf_offset` → leaf VPD sensors (honesty only; ladder
+uses air `sensor.dsc_hub_vpd_kpa`).
 
 ## Tank / Tuya entity map
 
