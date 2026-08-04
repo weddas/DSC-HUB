@@ -316,6 +316,21 @@ Dashboard: **Strains** (`/dsc-hub-pro/strains`), plant consoles (strain/sprout/N
 Climate Temp OOS / Lockout (incl. Clone Mister status). Data mirrors:
 `data/dsc_strain_catalog.yaml`, `data/dsc_nutrient_catalog.yaml`.
 
+### Pot Strain / Sprout entity IDs (N-032)
+
+Live pot ESP entities use the underscore form + `date` domain:
+
+| Pot (ESP) | HA helper fallback |
+|---|---|
+| `select.dsc_pot_N_strain` | `input_select.dsc_potN_strain` |
+| `date.dsc_pot_N_sprout_date` | `input_datetime.dsc_potN_sprout_date` |
+
+Home + Strains views match that contract (`52367b5`). Want/Need templates in
+`dsc_v4_strain_catalog.yaml` still probe `dsc_potN_*` / `datetime.*` and fall
+back to helpers — residual package align. Ops closeout:
+[`../docs/qa/LIVE-UI-OPS-DEBT-CLOSEOUT.md`](../docs/qa/LIVE-UI-OPS-DEBT-CLOSEOUT.md)
+(also flange glTF / curl soft particles + hub-offline recovery).
+
 ## Tank / Tuya entity map
 
 Package [`packages/dsc_v4_tank.yaml`](packages/dsc_v4_tank.yaml) expects lab-style
