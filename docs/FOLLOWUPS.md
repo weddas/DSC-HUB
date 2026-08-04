@@ -276,7 +276,7 @@ No climate control regression during soak window.
 
 ---
 
-## 2026-08-04 ? Dashboard repair + module unification
+## 2026-08-04 — Dashboard repair + module unification
 
 ### done
 - **Legacy DSC capture:** Notion [DSC legacy grow-cycle dashboard (2026-08-04)](https://app.notion.com/p/3b22b4cda37081cdb9edcba587a73b53) under DSC-HUB Wiki; repo archive `docs/archive/lovelace.dashboard_dsc.2026-08-04.json`
@@ -323,7 +323,7 @@ No climate control regression during soak window.
 ### deferred / honesty
 - sensor.dsc_cfm_exhaust_* remain pct x nameplate (6in 440 CFM max each) with cal curves unset ? Climate/Learning still see ~300+ CFM open-air estimates. Real duct CFM needs Learning fan cal curves. Until then those sensors are capacity proxies, not mass-balanced flow.
 
-## 2026-08-04 ? Calibration first pass closeout
+## 2026-08-04 — Calibration first pass closeout
 
 ### shipped (HA surface 5.1.6; pot FW 5.1.4 pending OTA)
 
@@ -368,7 +368,7 @@ No climate control regression during soak window.
 - None for climate control from this HA-only peer path. ESP-NOW mat still sees **uncalibrated-by-peer** soil values until N-019.
 
 
-## 2026-08-04 ? Calibration SoT push-to-ESP closeout
+## 2026-08-04 — Calibration SoT push-to-ESP closeout
 
 ### shipped (HA surface 5.1.7; pot FW 5.1.5 pending OTA)
 
@@ -402,9 +402,9 @@ No climate control regression during soak window.
 
 ### soak / deploy
 
-1. Sync HA packages/dashboard ? reload ? confirm surface **5.1.7**, dual-stack + Push button
-2. OTA pots **5.1.5** (POT2 canary) ? Mark button + peer_median stamp
-3. Capture peer baseline ? dual-stack may light ? Push peer ? ESP ? dual-stack clears; soil_* ? prior Got; ESP-NOW matches
+1. Sync HA packages/dashboard → reload ? confirm surface **5.1.7**, dual-stack + Push button
+2. OTA pots **5.1.5** (POT2 canary) → Mark button + peer_median stamp
+3. Capture peer baseline → dual-stack may light ? Push peer → ESP ? dual-stack clears; soil_* ≈ prior Got; ESP-NOW matches
 
 ### red-flag
 
@@ -412,14 +412,14 @@ No climate control regression during soak window.
 
 ---
 
-## 2026-08-04 ? The Dash 3D cinematic full-inclusion pass
+## 2026-08-04 — The Dash 3D cinematic full-inclusion pass
 
 ### done
 - Cinematic tent scene in `dsc-the-dash-card.js` + `vendor/dsc-dash-fx.js` (ACES, selective bloom composer, soft/depth-soft particles, flow ribbons, curl haze, color ramps)
-- Topology honesty: Room ? intakes ? cascade 2?4?4?8 ? OUT/RECIRC; heat mat 2?4 only; no central filter machine
+- Topology honesty: Room → intakes → cascade 2×4→4×8 → OUT/RECIRC; heat mat 2×4 only; no central filter machine
 - Product detail: flex rings, fans/muffler, mat bloom, tent ACH layered haze, room lung slices, SF1000 shafts, legend path highlight
 - Bundle order: system-map + airflow + three.min + dsc-dash-fx + the-dash (Node binary concat)
-- Live verify on `/dsc-hub-pro/dash` with Lovelace resource **type `js`** (not `module` ? IIFE THREE must be classic)
+- Live verify on `/dsc-hub-pro/dash` with Lovelace resource **type `js`** (not `module` — IIFE THREE must be classic)
 
 ### red-flag
 - **F-013** `dsc-hub-sync` add-on (still **5.1.2** image until rebuilt) overwrote `/config/www/dsc-system-map-card.js` to ~10KB system-map-only, wiping Three/Dash. **Mitigation (in-tree):** refuse bundles <500KB; fall back to `dist/dsc-system-map-card.js`; never replace a live >=500KB card with a tiny staged file; Lovelace resource must stay `res_type: js`. **Done 2026-08-04:** add-on rebuilt to **5.1.3**; sync staged 845901-byte cinematic bundle + vendor FX/three (F-013 closed on HA).
@@ -435,7 +435,7 @@ No climate control regression during soak window.
 
 ---
 
-## 2026-08-04 ? Strains peer-sync UI preflight (before Push)
+## 2026-08-04 — Strains peer-sync UI preflight (before Push)
 
 ### done (live)
 - Created missing UI helpers `input_boolean.dsc_peer_sync_require_confirm` (on) + `input_boolean.dsc_peer_push_force` (off) ? package reload had not created them
@@ -445,43 +445,44 @@ No climate control regression during soak window.
 ### discoveries
 | ID | Finding | Action |
 |---|---|---|
-| N-032 | Pot ESP entity IDs use `dsc_pot_N_*` (underscore), not `dsc_potN_*` ? Strain/Sprout rows were wrong | Fixed in `view_strains.yaml`; same bug still in `view_home.yaml` |
+| N-032 | Pot ESP entity IDs use `dsc_pot_N_*` (underscore), not `dsc_potN_*` — Strain/Sprout rows were wrong | **Home+Strains UI closed** (`52367b5`); residual in `dsc_v4_strain_catalog.yaml` Want/Need + migrate (`dsc_potN_*` / `datetime.*`) |
 | N-033 | Live pots still FW **5.1.4** (repo 5.1.5) ? Mark Soil Cal Peer Median absent | Push still merges offsets (N-029); OTA 5.1.5 for stamp |
 | N-034 | UI-created helpers vs package helpers same entity_id | Prefer one Core restart later so packages own them; avoid duplicate UI helpers |
 
 ### soak
-- Commit/push `view_strains.yaml` (mushroom?entities + pot_* IDs) so live Strains clears remaining Strain/Sprout Entity not found
-- Fix `view_home.yaml` pot Strain/Sprout entity IDs (N-032)
-- Operator: Push peer ? ESP when ready; optional pot OTA 5.1.5 after
+- Commit/push `view_strains.yaml` (mushroom entities + pot_* IDs) so live Strains clears remaining Strain/Sprout Entity not found
+- ~~Fix `view_home.yaml` pot Strain/Sprout entity IDs (N-032)~~ **done** `52367b5`
+- Align `dsc_v4_strain_catalog.yaml` Want/Need + migrate to `select.dsc_pot_N_strain` / `date.dsc_pot_N_sprout_date` (N-032 residual)
+- Operator: Push peer → ESP when ready; optional pot OTA 5.1.5 after
 - Hold to reset all captures: `script.dsc_pots_reset_peer_captures` + Strains hold card (HA offsets only; ESP Cal untouched) ? needs package/dashboard sync
 
 ---
 
-## 2026-08-04 ? Next Pass Full Inclusion (3?2?1?4)
+## 2026-08-04 — Next Pass Full Inclusion (3→2→1→4)
 
 ### done
-- **Pass 3 Cal SoT:** HA surface 5.1.7; pots 1/2/4 OTA to FW **5.1.5** (POT3 USB/F-003 still unavailable). Capture?Push with ESP range clamp + Mark entity-id dual form (dsc_potN / dsc_pot_N). Methods peer_median; dual-stack cleared (POT4 residual beyond pH ?2 clamp zeroed after push). N-027 compile OK. README surface ? 5.1.7. N-025/N-029 closed for online pots.
-- **Pass 2 CFM honesty:** sensor.dsc_cfm_exhaust_{out,recirc}_allocated (? intake � fan-% split); vent BTU/moisture + airflow-map use allocated; capacity proxies keep honesty attr; Climate/Learning labels linear-vs-curve. No invented cal curves.
+- **Pass 3 Cal SoT:** HA surface 5.1.7; pots 1/2/4 OTA to FW **5.1.5** (POT3 USB/F-003 still unavailable). Capture→Push with ESP range clamp + Mark entity-id dual form (dsc_potN / dsc_pot_N). Methods peer_median; dual-stack cleared (POT4 residual beyond pH ±2 clamp zeroed after push). N-027 compile OK. README surface → 5.1.7. N-025/N-029 closed for online pots.
+- **Pass 2 CFM honesty:** sensor.dsc_cfm_exhaust_{out,recirc}_allocated (Σ intake × fan-% split); vent BTU/moisture + airflow-map use allocated; capacity proxies keep honesty attr; Climate/Learning labels linear-vs-curve. No invented cal curves.
 - **Pass 1 Dash fidelity:** DepthTexture on DSCDashFX composer + layer-split soft particles; offline glTF accents under www/assets/dash/ + loadSimpleGltf with primitive fallback.
 - **Pass 4 Housekeeping:** Culled unused dsc_airflow_* Sankey helpers; *_actuator_wired absent from registry (N-007); README/qa Sankey/wired wording cleaned.
 
 ### soak / operator
 - POT3 USB flash to 5.1.5 when online (F-003)
-- Optional anemometer Learning curves still unset ? capacity proxies remain nameplate until measured
+- Optional anemometer Learning curves still unset — capacity proxies remain nameplate until measured
 - POT4 peer wanted pH beyond ESP ?2; ESP SoT clamped at -2.0 (honest residual cleared)
 
 ### deferred (unchanged)
-- N-016 lab wet cal; N-020?023 trust/alerts/tank; N-026 settle tune after real waterings
+- N-016 lab wet cal; N-020–023 trust/alerts/tank; N-026 settle tune after real waterings
 
 ### red-flag
 - None new for climate control. Keep Lovelace resource `res_type: js`; cache-bust via `lovelace/resources/update` only (F-010).
 
 ---
 
-## 2026-08-04 ? Ops + residual debt closeout
+## 2026-08-04 — Ops + residual debt closeout
 
 ### done
-- **N-032:** [`view_home.yaml`](homeassistant/dashboards/modules/view_home.yaml) Strain/Sprout ? `select.dsc_pot_N_strain` / `date.dsc_pot_N_sprout_date` (matches Strains).
+- **N-032:** [`view_home.yaml`](homeassistant/dashboards/modules/view_home.yaml) Strain/Sprout → `select.dsc_pot_N_strain` / `date.dsc_pot_N_sprout_date` (matches Strains).
 - **N-034:** Active helpers `input_boolean.dsc_peer_sync_require_confirm` + `dsc_peer_push_force` live with package names; purged orphan registry rows `*_non_1_scale*` / `*_require_confirm_2`.
 - **OTA:** POT2 re-flashed to FW **5.1.5** (was still 5.1.4); Mark Peer Median present (`button.dsc_pot_2_mark_soil_cal_peer_median`). POT1/POT4 already 5.1.5. Control already **5.1.14** (no flash).
 - **Dash residuals:** `flange.gltf` loaded via `loadSimpleGltf` (primitive fallback); curl haze DepthTexture soft-intersect + `registerSoftParticleMaterial`. Node-concat bundle ~855KB; Lovelace `?v=ops-debt-*` via `resources/update` (`res_type: js`).
@@ -499,12 +500,15 @@ No climate control regression during soak window.
 | Allocated CFM | **unavailable** (depends on hub fan/% entities) |
 
 ### soak / operator
-- Recover DSC-HUB (power / WiFi / API) ? climate + CFM honesty consumers dark until hub_link returns
+- Recover DSC-HUB (power / WiFi / API) — climate + CFM honesty consumers dark until hub_link returns
 - POT3 USB flash to 5.1.5 when probe/path available (F-003)
 - Anemometer Learning curves still unset
 
 ### deferred (unchanged)
-- N-016 lab wet; N-020?023 trust/alerts/tank; N-026 settle tune; MeshLine/GPUComputation real implementations
+- N-016 lab wet; N-020–023 trust/alerts/tank; N-026 settle tune; MeshLine/GPUComputation real implementations
+
+### docs
+- Ops closeout runbook: [`docs/qa/LIVE-UI-OPS-DEBT-CLOSEOUT.md`](qa/LIVE-UI-OPS-DEBT-CLOSEOUT.md) (N-032 Home closed, flange/curl soft, hub-offline recovery; catalog residual noted).
 
 ### red-flag
-- **Hub offline** at closeout (`binary_sensor.dsc_hub_link=off`, ping `.33` loss) ? not introduced by Dash/www changes; blocks climate + allocated CFM. Prefer hub recovery before any core restart. Keep F-010 cache-bust discipline.
+- **Hub offline** at closeout (`binary_sensor.dsc_hub_link=off`, ping `.33` loss) — not introduced by Dash/www changes; blocks climate + allocated CFM. Prefer hub recovery before any core restart. Keep F-010 cache-bust discipline.

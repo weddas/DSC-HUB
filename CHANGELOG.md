@@ -1,5 +1,14 @@
 # Changelog
 
+## Docs — ops debt closeout (2026-08-04)
+
+- QA runbook: [`docs/qa/LIVE-UI-OPS-DEBT-CLOSEOUT.md`](docs/qa/LIVE-UI-OPS-DEBT-CLOSEOUT.md)
+  for master `52367b5` (N-032 Home Strain/Sprout IDs, flange glTF + curl
+  DepthTexture soft particles, hub-offline red-flag recovery).
+- Notes residual: `dsc_v4_strain_catalog.yaml` still probes `dsc_potN_*` /
+  `datetime.*` while UI uses `dsc_pot_N_*` / `date.*`.
+- Follow-ups stamp + encoding repair: [`docs/FOLLOWUPS.md`](docs/FOLLOWUPS.md).
+
 ## HA surface 5.1.5 — finish crop UI + pot-native strain (2026-08-03)
 
 - **Honest cutover:** 5.1.4 shipped packages + Climate Temp OOS + dead Tank chips;
