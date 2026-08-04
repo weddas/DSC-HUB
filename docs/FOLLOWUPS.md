@@ -534,8 +534,10 @@ No climate control regression during soak window.
 - F-006 hub 5.1.4 diagnostics (API/handshake age, bounce reason) + HA flap counter
 - N-011 promote preview script + scripts/promote_customs_to_yaml.py
 - Control 5.1.15 VPD editor / ASCII sparkline / power detail
+- Control Validate: nest parameterized `script.execute` for `pwr_fan_step` (`0d30178`)
 - Dash MeshLine + GPU curl (fallback flags remain)
 - Docs: README/CHANGELOG/HA+FW READMEs aligned to live train; surface **5.1.8**
+- Docs: [`docs/qa/CONTROL-POWER-DETAIL-VALIDATE.md`](qa/CONTROL-POWER-DETAIL-VALIDATE.md) (power detail + Validate pitfall)
 
 ### red-flag
 
@@ -543,7 +545,8 @@ No climate control regression during soak window.
 
 ### deferred / soak carry
 
-- Operator: power-cycle hub ? flash hub 5.1.4, pots 5.1.6, Control 5.1.15
+- Operator: power-cycle hub → flash hub 5.1.4, pots 5.1.6, Control 5.1.15 (includes power-detail Validate fix)
+- Operator: glass soak power-detail ± / demand gate after Control flash — see CONTROL-POWER-DETAIL-VALIDATE
 - Operator: run lab buffers + anemometer curves on site
 - N-013 skipped (explicit)
 - F-001/F-002/F-003/F-004/F-008/N-012/N-014 unchanged

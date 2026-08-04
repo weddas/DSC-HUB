@@ -67,6 +67,7 @@ packages / dashboard / www / ESPHome stubs land in `/config`.
 | HA surface | `sensor.dsc_ha_surface_version` | **5.1.8** |
 
 Flash order: hub → panel → pots → Sonoffs. Living backlog: [`docs/FOLLOWUPS.md`](docs/FOLLOWUPS.md).
+Control power-detail Validate pitfall: [`docs/qa/CONTROL-POWER-DETAIL-VALIDATE.md`](docs/qa/CONTROL-POWER-DETAIL-VALIDATE.md).
 
 ---
 

@@ -2,11 +2,15 @@
 
 Commit checklist for lab + kit packages. Firmware Install is always **manual**.
 
+Live train versions: see root README (hub **5.1.4** · Control **5.1.15** · pots **5.1.6**).
+Control power-detail Validate pitfall: [CONTROL-POWER-DETAIL-VALIDATE.md](CONTROL-POWER-DETAIL-VALIDATE.md).
+
 ## Pre-flash
 
-- [ ] All `project.version` in hub / control / pot / sonoff commons = **`5.1.0`**
+- [ ] All `project.version` in hub / control / pot / sonoff commons match the **live train** (not stale `5.1.0` unless intentionally freezing a cut)
 - [ ] Kit stubs (`*-kit.yaml`, `*-wifi-kit.yaml`, `dsc-fleet-setup-*-kit.yaml`) Validate
 - [ ] Lab stubs Validate: hub, control, pot1–4, heater, heatmat, humidifier, de-humidifier
+- [ ] Control: parameterized `script.execute` calls nest `id` + args (power-detail `pwr_fan_step`)
 - [ ] `espnow_cmd_tag` = **54727** on hub **and** panel
 - [ ] `g++ … verify_v4.cpp && ./verify_v4` passes (wire contract)
 - [ ] Hub exposes `number.dsc_hub_ladder_wait_{dehum,hum,heat,ac,mat}` (NVS)
