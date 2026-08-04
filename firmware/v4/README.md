@@ -21,7 +21,9 @@ Fleet component: `components/dsc_fleet_setup/` (phone portal on hub; Control/pot
 
 Package bodies are remote-git safe (no `!secret`). Stubs pass credentials (and hub/panel MACs + `espnow_cmd_tag`) as substitutions.
 
-Pots (`dsc-pot-common` **5.1.4+**): each soil channel has **Cal … Offset** / **Cal … Scale** config numbers (NVS). Formula `raw * scale + offset` applies before range/median and feeds HA + ESP-NOW. **Reset Sensor Calibration** restores defaults and clears provenance (`Soil Cal Method` / `Soil Cal Last` / `Soil Calibrated`).
+Pots (`dsc-pot-common` **5.1.4+**): each soil channel has **Cal … Offset** / **Cal … Scale** config numbers (NVS). Formula `raw * scale + offset` applies before range/median and feeds HA + ESP-NOW. Changing a Cal number stamps provenance `Soil Cal Method=manual` + `Soil Cal Last` (ISO via HA time); `Soil Calibrated` is on when method ≠ `none`. **Reset Sensor Calibration** restores identity (scale=1, offset=0) and clears provenance.
+
+HA peer Got offsets (`script.dsc_pots_capture_peer_baseline`) are a **separate** stack — they do not write these ESP Cal numbers. Operator rule: peer **or** ESP, not both (double-corrects Got vs ESP-NOW). Ops: [`docs/qa/SENSOR-CAL-5.1.6.md`](../../docs/qa/SENSOR-CAL-5.1.6.md).
 
 ## Panel (DSC-CONTROL **4.0.11**)
 

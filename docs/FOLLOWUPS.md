@@ -325,6 +325,9 @@ No climate control regression during soak window.
 
 ## 2026-08-04 — Calibration first pass closeout
 
+Ops runbook (architecture, dual-stack rule, deploy checklist):
+[`docs/qa/SENSOR-CAL-5.1.6.md`](qa/SENSOR-CAL-5.1.6.md).
+
 ### shipped (HA surface 5.1.6; pot FW 5.1.4 pending OTA)
 
 - ESP pot provenance: `text.soil_cal_method` / `text.soil_cal_last` / `binary_sensor.soil_calibrated`; Reset clears; Cal set_action stamps `manual` (`firmware/v4/dsc-pot-common.yaml` 5.1.4)

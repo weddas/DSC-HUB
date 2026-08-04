@@ -1,5 +1,16 @@
 # Changelog
 
+## HA surface 5.1.6 — sensor calibration first pass (2026-08-04)
+
+- **Peer sync v2:** MAD-hardened Capture peer baseline; auto-after-water settle +
+  cooldown; divergence summary sensors (HA Got offsets only — not ESP Cal).
+- **Pot provenance (FW 5.1.4):** `soil_cal_method` / `soil_cal_last` /
+  `soil_calibrated` on NVS; Reset clears; Cal edits stamp `manual`.
+- **Leaf VPD:** `dsc_leaf_offset` → `sensor.dsc_leaf_vpd_kpa` / clone leaf VPD
+  (operator honesty; ladder still uses air VPD).
+- Ops runbook: [`docs/qa/SENSOR-CAL-5.1.6.md`](docs/qa/SENSOR-CAL-5.1.6.md).
+  Follow-ups: [`docs/FOLLOWUPS.md`](docs/FOLLOWUPS.md) (N-016 / N-019–N-028).
+
 ## HA surface 5.1.5 — finish crop UI + pot-native strain (2026-08-03)
 
 - **Honest cutover:** 5.1.4 shipped packages + Climate Temp OOS + dead Tank chips;
