@@ -509,33 +509,36 @@ No climate control regression during soak window.
 ### red-flag
 - **Hub offline** at closeout (`binary_sensor.dsc_hub_link=off`, ping `.33` loss) ? not introduced by Dash/www changes; blocks climate + allocated CFM. Prefer hub recovery before any core restart. Keep F-010 cache-bust discipline.
 
-## 2026-08-04 ? Sensing/learn debt + verify + docs (HA 5.1.8)
+## 2026-08-04 — Sensing/learn debt + verify + docs (HA 5.1.8)
+
+Ops runbook: [`docs/qa/LIVE-UI-SENSING-LEARN-5.1.8.md`](qa/LIVE-UI-SENSING-LEARN-5.1.8.md).
 
 ### verify (Phase 0)
 
 | ID | Result |
 |---|---|
-| Hub link | **FAIL** ? dsc_hub_link=off, ping .33 100% loss; needs **physical power cycle** (no smart-plug path) |
+| Hub link | **FAIL** — dsc_hub_link=off, ping .33 100% loss; needs **physical power cycle** (no smart-plug path) |
 | N-001 preferred AP | **BLOCKED** (hub offline; last soak was off/OK) |
 | N-017/018 strain/sprout IDs | **PASS in tree** (Home/Strains dsc_pot_N_*); live MCP exposes only soil subset |
 | N-019/024/025/029 | **PASS in tree**; pots 1/2/4 had live soil; POT3 soil unavailable |
 | N-032/034 | **PASS in tree** (prior ops closeout) |
-| Sankey/wired cull | **PASS** ? no irflow_direct_room / *_actuator_wired entities in packages |
+| Sankey/wired cull | **PASS** — no airflow_direct_room / *_actuator_wired entities in packages |
 
-### done (this pass ? repo)
+### done (this pass — repo)
 
 - N-016 lab wet wizard + docs/LAB-WET-CAL.md; pot FW 5.1.6 raw + lab_buffer mark
 - N-020/022 trust package; N-023 tank bias; N-021 raw publish
 - N-026: confirm gate kept; settle/cooldown **unchanged** (no shared-watering evidence while hub dark)
 - Anemometer: docs/ANEMOMETER-CFM.md + sensor.dsc_cfm_curves_status (operator measures)
 - F-005 multi-lever residual learn; N-015 fleet coherence score
-- N-005: **no wait retune** ? hub offline, insufficient soak evidence
+- N-005: **no wait retune** — hub offline, insufficient soak evidence
 - F-009 keep-up gaps + Home honesty copy
 - F-006 hub 5.1.4 diagnostics (API/handshake age, bounce reason) + HA flap counter
 - N-011 promote preview script + scripts/promote_customs_to_yaml.py
 - Control 5.1.15 VPD editor / ASCII sparkline / power detail
 - Dash MeshLine + GPU curl (fallback flags remain)
 - Docs: README/CHANGELOG/HA+FW READMEs aligned to live train; surface **5.1.8**
+- Docs automation: LIVE-UI-SENSING-LEARN-5.1.8 runbook (lab wet moisture UI gap, F-005 learn rewrite, trust/hub diag)
 
 ### red-flag
 
@@ -543,8 +546,9 @@ No climate control regression during soak window.
 
 ### deferred / soak carry
 
-- Operator: power-cycle hub ? flash hub 5.1.4, pots 5.1.6, Control 5.1.15
+- Operator: power-cycle hub → flash hub 5.1.4, pots 5.1.6, Control 5.1.15
 - Operator: run lab buffers + anemometer curves on site
+- Root Zone lab-wet card: add moisture `dsc_lab_wet_m_*` helpers (package has them; UI lists pH/EC only)
 - N-013 skipped (explicit)
 - F-001/F-002/F-003/F-004/F-008/N-012/N-014 unchanged
 - N-005/N-026 retune after hub-up soak + real watering

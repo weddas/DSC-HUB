@@ -262,14 +262,15 @@ alongside the physics package.
 
 **Gate open ≠ actively learning.** `binary_sensor.dsc_learn_gate_open` only
 means “allowed to sample.” Read **`sensor.dsc_learn_activity`** for plain
-English: *Learning humidifier (2/5 samples)* vs *Waiting — 2 air appliances
-on together* vs *Idle*.
+English: *Learning humidifier (2/5 samples)* vs *Multi-lever (N) — attributing
+via baseline subtract…* vs *Idle*.
 
-Phase A samples when **exactly one air appliance** is ON (humidifier /
-dehumidifier / heater / AC). **Fans and grow mat may co-run** — Full Auto
-always has fans, and the mat often stays on; that no longer blocks learning.
-Mat samples when mat is ON and no air appliance is ON. Vent samples when
-OUT/intake is high and no air appliance is ON.
+Phase A (**5.1.8 / F-005**): air appliances **may co-run**. When ≥2 of
+humidifier / dehumidifier / heater / AC are ON, samples attribute by subtracting
+the other levers’ expected ΔAH/ΔT (`nameplate × current EMA`). Single-lever path
+unchanged. **Fans and grow mat may always co-run.** Mat samples when mat is ON
+and no air appliance is ON. Vent samples when OUT/intake is high and no air
+appliance is ON. See [`docs/qa/LIVE-UI-SENSING-LEARN-5.1.8.md`](../docs/qa/LIVE-UI-SENSING-LEARN-5.1.8.md).
 
 A 5-minute EMA stores effectiveness vs nameplate (`input_number.dsc_learn_eff_*`,
 clamped 0.1–2.0×). Sample counts (`dsc_learn_samples_*`) are the automatic
@@ -300,12 +301,16 @@ Phase A+B status, appliance effect cards, waits, ETA, efficiencies, charts.
 Want/Need/Got, peer sync, lab wet, nutrient Accept mix (no pumps), coherence,
 efficacy Temp OOS. Sensor trust + keep-up honesty on reduced kit.
 
+Ops runbook: [`docs/qa/LIVE-UI-SENSING-LEARN-5.1.8.md`](../docs/qa/LIVE-UI-SENSING-LEARN-5.1.8.md).
+
 - Push peer → ESP SoT zeroes HA peers (`dsc_v4_sensor_cal`, pot FW 5.1.5+).
 - Lab wet two-point → ESP scale/offset (`docs/LAB-WET-CAL.md`, pot FW 5.1.6+).
+- Trust: stuck / peer-MAD / DHT cue / keep-up gaps (`dsc_v4_sensor_trust.yaml`).
+- Learn F-005: multi-lever residual attribution (Activity shows lever mix).
 - Strain/sprout on pot NVS after FW **5.1.3**; HA `input_*` fallback until then.
 
 Packages: `dsc_v4_strain_catalog`, `dsc_v4_nutrient_catalog`, `dsc_v4_pots_coherence`,
-`dsc_v4_actuator_efficacy`.
+`dsc_v4_actuator_efficacy`, `dsc_v4_sensor_cal`, `dsc_v4_sensor_trust`.
 
 - **Want / Need / Got:** strain + sprout date → Want bands; Got = raw + peer offset;
   Capture peer baseline is MAD-hardened (v2); optional auto after shared watering
@@ -346,13 +351,16 @@ not humidifier lock — entity id kept for compatibility.
 - Fixed-channel AP — ops (root README)
 - POT3 probe swap, SCD41, ETH01 — post-release hardware
 
-## Firmware pairing (**v5.1.0**)
+## Firmware pairing (live train)
 
 | Piece | Version |
 |---|---|
-| Hub / pots / Sonoffs / kits | **`5.1.5`** (pots cal SoT; hub/panel may trail on 5.1.x train) |
-| Panel (DSC-CONTROL) | **`5.1.x`** lean-cut patch train |
-| HA surface (packages + dashboard) | **`5.1.7`** |
+| Hub | **`5.1.4`** (F-006 API/handshake diagnostics) |
+| Pots | **`5.1.6`** (raw + lab_buffer stamp; cal SoT 5.1.5+) |
+| Panel (DSC-CONTROL) | **`5.1.15`** (VPD editor / Pulse sparkline / power detail) |
+| Sonoffs / kits | **`5.1.x`** same major.minor train |
+| HA surface (packages + dashboard) | **`5.1.8`** |
+| Sync add-on | **`5.1.3`** |
 | Dashboard | DSC-HUB Pro (4-col, browser_mod popups) |
 | `espnow_cmd_tag` | `54727` (`0xD5C7`) on hub **and** panel |
 

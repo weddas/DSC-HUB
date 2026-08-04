@@ -2,6 +2,8 @@
 
 Plumbing is live in `dsc_v4_device_cal.yaml` + Learning view. Curves stay **unset (0)** until you measure — no invented points in git.
 
+Related ops: [`docs/qa/LIVE-UI-SENSING-LEARN-5.1.8.md`](qa/LIVE-UI-SENSING-LEARN-5.1.8.md) · status entity `sensor.dsc_cfm_curves_status`.
+
 ## Operator steps
 
 1. Open **DSC-HUB Pro → Learning**.

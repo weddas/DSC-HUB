@@ -17,6 +17,7 @@
 - **Anemometer:** docs/ANEMOMETER-CFM.md + `sensor.dsc_cfm_curves_status`.
 - **N-005 / N-026:** no wait/settle retune without hub soak evidence (documented).
 - **N-013:** skipped this pass (track-only dryback remains).
+- **Ops runbook:** [`docs/qa/LIVE-UI-SENSING-LEARN-5.1.8.md`](docs/qa/LIVE-UI-SENSING-LEARN-5.1.8.md).
 - Follow-ups: [`docs/FOLLOWUPS.md`](docs/FOLLOWUPS.md).
 
 ## HA surface 5.1.7 — Cal SoT push + Dash (2026-08-04)
