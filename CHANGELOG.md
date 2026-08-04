@@ -1,5 +1,17 @@
 # Changelog
 
+## HA surface 5.1.7 — push-to-ESP SoT + Strains peer-sync UI (2026-08-04)
+
+- **Push peer → ESP:** `script.dsc_pots_push_peer_offsets_to_esp` merges HA peer
+  Got offsets into pot Cal Offset (pH/EC/moisture), zeroes HA peers, scale≠1
+  guard + Force; Mark stamp on pot FW **5.1.5+**.
+- **Dual-stack warn** + auto-after-water **Require Confirm** (default on).
+- **Hold to reset captures:** `script.dsc_pots_reset_peer_captures` — HA peers
+  only; ESP Cal untouched. Strains UI binds real peer actions + `dsc_pot_N_*`
+  Strain/Sprout entity IDs.
+- Ops runbook: [`docs/qa/SENSOR-CAL-5.1.7.md`](docs/qa/SENSOR-CAL-5.1.7.md).
+  Follow-ups: [`docs/FOLLOWUPS.md`](docs/FOLLOWUPS.md) (N-016 / N-020+ / N-032–N-034).
+
 ## HA surface 5.1.5 — finish crop UI + pot-native strain (2026-08-03)
 
 - **Honest cutover:** 5.1.4 shipped packages + Climate Temp OOS + dead Tank chips;
