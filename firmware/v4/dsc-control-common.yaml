@@ -3671,8 +3671,9 @@ lvgl:
                         widgets:
                           - label: {text: "-", text_font: f_med, align: CENTER, text_color: 0xFFFFFF}
                         on_click:
-                          - script.execute: pwr_fan_step
-                            delta: -10
+                          - script.execute:
+                              id: pwr_fan_step
+                              delta: -10
                     - button:
                         id: pwr_spd_plus
                         align: RIGHT_MID
@@ -3687,8 +3688,9 @@ lvgl:
                         widgets:
                           - label: {text: "+", text_font: f_med, align: CENTER, text_color: 0x00E676}
                         on_click:
-                          - script.execute: pwr_fan_step
-                            delta: 10
+                          - script.execute:
+                              id: pwr_fan_step
+                              delta: 10
               - button:
                   id: btn_pwr_demand
                   width: 300
