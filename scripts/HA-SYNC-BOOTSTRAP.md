@@ -1,7 +1,8 @@
 # HA auto-sync — Unraid + HAOS bootstrap
 
 One-time setup so pushes to `master` that touch `homeassistant/**` deploy
-packages, the YAML dashboard, and www assets to HAOS.
+packages, the YAML dashboard **plus `dashboards/modules/`**, and www assets
+(system + airflow + Three.js + The Dash bundle) to HAOS.
 
 **Rotate any HA password that was shared in chat** before continuing
 (Settings → People). Deploy never uses the UI password — only an SSH key
@@ -33,7 +34,9 @@ Never commit these values. Never put `secrets.yaml` in the sync path.
 3. Merge [`configuration.snippet.yaml`](../homeassistant/configuration.snippet.yaml) into `/config/configuration.yaml`:
    - `homeassistant.packages: !include_dir_named packages`
    - YAML-mode Lovelace dashboard `dsc-hub-pro` → `dashboards/dsc-hub-v4-dashboard.yaml`
-4. Create `/config/dashboards/` (the sync script also `mkdir -p`s it).
+4. Create `/config/dashboards/` (and ensure `dashboards/modules/` can be
+   created — `ha-sync.sh` `mkdir -p`s both). Shell `!include` views fail if
+   modules are missing (F-012).
 5. If you already have a **UI-managed** dashboard at URL `dsc-hub-pro`, remove or rename it so the YAML dashboard owns that path.
 6. If DSC automations were previously merged into `/config/automations.yaml` or the UI, **delete those duplicate ids** after `dsc_v4_automations.yaml` is in `packages/` (same ids collide).
 7. Restart HA once after the `configuration.yaml` change.
@@ -84,12 +87,15 @@ export DRY_RUN=1
 | Syncs on push (ha-sync) | Does not sync / other channel |
 |---|---|
 | `packages/dsc_v4_*.yaml` | `secrets.yaml` |
-| `dashboards/dsc-hub-v4-dashboard.yaml` | `.storage/` |
-| `www/` system-map SVG + **bundled** `dsc-system-map-card.js` (system+airflow) | Non-DSC house packages |
-| ESPHome stubs only if `SYNC_ESPHOME=1` | Firmware flash / ESPHome Install |
-| | **SYSTEM MAP card via HACS** — [`HACS-FRONTEND.md`](HACS-FRONTEND.md) |
+| `dashboards/dsc-hub-v4-dashboard.yaml` + `modules/view_*.yaml` | Firmware flash / ESPHome Install |
+| `www/` SVG + **bundled** `dsc-system-map-card.js` (system+airflow+Three+Dash ≈800 KB) | Non-DSC house packages |
+| Lovelace `/local/…?v=` rewrite to `dash-<UTC>` (existing `?v=` only) | Full `.storage/` wipe/replace |
+| ESPHome stubs only if `SYNC_ESPHOME=1` | **Cards via HACS** — [`HACS-FRONTEND.md`](HACS-FRONTEND.md) |
 
-Prefer HACS for the SYSTEM MAP card; ha-sync still mirrors `www/` for sites
-not using HACS yet.
+Prefer HACS for the card bundle; ha-sync still mirrors `www/` for sites
+not using HACS yet. After www deploy, confirm
+`wc -c /config/www/dsc-system-map-card.js` ≈ repo `dist/DSC-HUB.js`.
+
+The Dash + modules ops: [`docs/qa/LIVE-UI-THE-DASH.md`](../docs/qa/LIVE-UI-THE-DASH.md).
 
 Firmware still: Cursor → push → ESPHome Validate/Install per device.

@@ -11,15 +11,26 @@ into `/config` whenever the tracked git ref moves (default: `master`).
 |---|---|
 | `homeassistant/packages/dsc_v4_*.yaml` | `/config/packages/` |
 | `homeassistant/dashboards/dsc-hub-v4-dashboard.yaml` | `/config/dashboards/` |
-| `homeassistant/www/dsc-system-map.*` | `/config/www/` (default on) |
+| `homeassistant/dashboards/modules/view_*.yaml` | `/config/dashboards/modules/` (required with shell) |
+| `homeassistant/www/*` (bundled) | `/config/www/` (default on) |
 | `homeassistant/esphome/dsc-*.yaml` | `/config/esphome/` (**default on** in 5.1.0) |
+
+**www bundle** (when `sync_www`): concat
+`dsc-system-map-card.js` + `dsc-airflow-map-card.js` + `vendor/three.min.js` +
+`dsc-the-dash-card.js` → `/config/www/dsc-system-map-card.js` and `DSC-HUB.js`
+(~800 KB). Also stages standalone airflow + Dash sources + system-map SVG.
+Missing any of the four inputs → warn and incomplete www sync.
 
 Also writes:
 
 - `/config/dsc-hub-sync.version` — surface version + SHA
 - `/config/packages/dsc_v4_sync_marker.yaml` — `sensor.dsc_hub_sync_sha`
 
-Never touches `secrets.yaml` or `.storage/`. Never auto-flashes ESP devices.
+Never touches `secrets.yaml` or `.storage/` (no Lovelace `?v=` rewrite —
+use HACS Redownload or manual resource bump after www-only changes).
+Never auto-flashes ESP devices.
+
+Ops: [LIVE-UI-THE-DASH.md](https://github.com/weddas/DSC-HUB/blob/master/docs/qa/LIVE-UI-THE-DASH.md).
 
 Copies are staged under `/data/sync_stage` then promoted; on failure the add-on
 restores the last-good snapshot under `/data/last_good_sync`.
@@ -47,7 +58,7 @@ often does not create them. The add-on posts a persistent notification reminder.
 | `repository` | `https://github.com/weddas/DSC-HUB.git` | Git remote |
 | `ref` | `master` | Branch or tag |
 | `poll_seconds` | `60` | Fetch interval |
-| `sync_www` | `true` | SYSTEM MAP assets |
+| `sync_www` | `true` | SYSTEM MAP + AIRFLOW + Three + The Dash bundle |
 | `sync_esphome` | **`true`** | Overwrite ESPHome stubs (`ref: v5.1.0`) and copy `firmware/v4/components` → `/config/esphome/components` |
 | `reload_after_sync` | `true` | Broader reload set |
 
