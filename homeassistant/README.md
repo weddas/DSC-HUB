@@ -9,7 +9,8 @@ Canonical HA surface for firmware [`firmware/v4/`](../firmware/v4/).
 | `dashboards/dsc-hub-v4-dashboard.yaml` | Lovelace UX **v5.1.3** (`dsc-hub-pro`). In-service kit toggles; learn **Activity**; Root Zone Pots+Mat. |
 | `packages/dsc_v4_core_helpers.yaml` | Hub link, fan %, runtimes, **in-service** + capacity-offline + vent-conflict / ineffective cues |
 | `packages/dsc_v4_strain_catalog.yaml` | Strain catalog, sprout age, Want/Need/Got, peer offsets, Apply expected stage |
-| `packages/dsc_v4_sensor_cal.yaml` | Peer sync auto/settle/cooldown, dual-stack warn, push peer→ESP SoT, fleet divergence |
+| `packages/dsc_v4_sensor_cal.yaml` | Peer sync, dual-stack, push peer→ESP, **lab wet two-point** |
+| `packages/dsc_v4_sensor_trust.yaml` | Stuck/MAD/DHT trust, keep-up gaps, HA-link flap counter |
 | `packages/dsc_v4_nutrient_catalog.yaml` | Nutrient stock, next-mix recipe, Accept mix QA (no pumps) |
 | `packages/dsc_v4_pots_coherence.yaml` | Relative dryback + cross-pot EC/moisture coherence + learned ratios |
 | `packages/dsc_v4_actuator_efficacy.yaml` | Command→effect; Temp OOS vs Operator Lockout; demand inhibit |
@@ -294,7 +295,14 @@ Reset coeffs: `script.dsc_climate_learn_reset`. Reset waits: `script.dsc_climate
 Dashboard: **Learning** (`/dsc-hub-pro/learning`) — Activity card, device cal,
 Phase A+B status, appliance effect cards, waits, ETA, efficiencies, charts.
 
-## Crop-steering (HA surface 5.1.7)
+## Crop-steering (HA surface 5.1.8)
+
+Want/Need/Got, peer sync, lab wet, nutrient Accept mix (no pumps), coherence,
+efficacy Temp OOS. Sensor trust + keep-up honesty on reduced kit.
+
+- Push peer → ESP SoT zeroes HA peers (`dsc_v4_sensor_cal`, pot FW 5.1.5+).
+- Lab wet two-point → ESP scale/offset (`docs/LAB-WET-CAL.md`, pot FW 5.1.6+).
+- Strain/sprout on pot NVS after FW **5.1.3**; HA `input_*` fallback until then.
 
 Packages: `dsc_v4_strain_catalog`, `dsc_v4_nutrient_catalog`, `dsc_v4_pots_coherence`,
 `dsc_v4_actuator_efficacy`.

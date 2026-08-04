@@ -35,14 +35,14 @@
 #    * Hold-to-lock on primary pages (3s plant HUD); hold overlay to unlock
 #    * Tap-challenge gate for Manual Takeover + appliance demands
 #    * Connections: Wi-Fi channel + ESP-NOW RX age + TX seq
-#    * Pulse 1h VPD micro-trend (12-slot ring, one label — no canvas)
+#    * Pulse 1h VPD micro-trend (12-slot ring → ASCII sparkline in lbl_spark)
 #  v4.0.9: plaintext HA API + mDNS off (Noise handshake crashed the glass).
 #  v4.0.10: page-gated refresh_ui @ 5 s — stop A8 glyph / WDT reboot loops.
 #  v4.0.11: refresh_ui reads gv_* live; template mirrors parked (never);
 #    30 s WiFi channel poll for silent Nest/mesh hops.
-#  STILL DEFERRED: VPD curve editor, canvas charts.
-#  PARTIAL: ladder drill-down (page_ladder_detail) — fans ± + appliance
-#  ON/fire/cooldown; full per-device power pages still deferred.
+#  v5.1.15: VPD curve editor (page_set_vpd from Control), Pulse 1h VPD
+#  ASCII sparkline in lbl_spark (ring buffer; no lv_chart / LV_USE_CHART),
+#  per-device power drill-down (page_power_detail from ladder/Clone/Main).
 #
 #  RAM RULE (crash postmortems v4.0–4.0.2 + 5.1.0): never call lv_label_set_text
 #  every frame; guard with strcmp. No SCROLL_CIRCULAR, no breathe anim.
@@ -148,7 +148,7 @@ esphome:
     # the dashboard and HA's device page both described DSC-CONTROL as
     # being the DSC HUB. Purely cosmetic, but confusing enough to matter.
     name: "digital_emotions.dsc-control"
-    version: "5.1.14"
+    version: "5.1.15"
   on_boot:
     # Seed the 0xDC command seq from hardware RNG so a panel reboot is
     # unlikely to replay the hub's last-seen seq even before the hub's
@@ -161,7 +161,7 @@ esphome:
     - priority: 200
       then:
         - light.turn_off: backlight
-    # v5.1.14 — blank → Starting (status + bar) → hello → load snapshot → Pulse.
+    # v5.1.15 — blank → Starting (status + bar) → hello → load snapshot → Pulse.
     # Keep LVGL paused (backlight off) through Wi-Fi/heap settle. Resume only
     # the lite Starting page; hello the hub; wait for vitals/config/soil
     # before arming the full widget tree.
@@ -169,7 +169,7 @@ esphome:
       then:
         - light.turn_off: backlight
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 5.1.14 paused — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 5.1.15 paused — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
             id(boot_ui_ready) = false;
@@ -188,7 +188,7 @@ esphome:
               lambda: 'return heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL) < 20000;'
             then:
               - lambda: |-
-                  ESP_LOGW("boot", "DSC-CONTROL 5.1.14 heap still tight largest=%u — waiting longer",
+                  ESP_LOGW("boot", "DSC-CONTROL 5.1.15 heap still tight largest=%u — waiting longer",
                            (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
               - delay: 10s
         - lvgl.page.show: page_boot
@@ -197,7 +197,7 @@ esphome:
             id: boot_paint
             pct: 8
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 5.1.14 resume-lite — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 5.1.15 resume-lite — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
             id(touch_guard_until) = millis() + 5000;
@@ -292,7 +292,7 @@ esphome:
             id: boot_paint
             pct: 100
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 5.1.14 post-lite — free_heap=%u largest=%u hub=%d cfg=%d soil=%d",
+            ESP_LOGI("boot", "DSC-CONTROL 5.1.15 post-lite — free_heap=%u largest=%u hub=%d cfg=%d soil=%d",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL),
                      (int) (id(gv_hub_last) != 0), (int) id(gv_cfg_ok), (int) id(gv_soil_ok));
@@ -301,14 +301,14 @@ esphome:
         - lambda: 'lv_obj_clear_flag(id(tabbar), LV_OBJ_FLAG_HIDDEN);'
         - lvgl.page.show: page_pulse
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 5.1.14 resume-full — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 5.1.15 resume-full — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
             id(touch_guard_until) = millis() + 2000;
         - lvgl.resume:
         - delay: 3s
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 5.1.14 UI armed — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 5.1.15 UI armed — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
             id(boot_ui_ready) = true;
@@ -1218,7 +1218,7 @@ text_sensor:
     name: "Firmware Version"
     id: fw_version
     icon: mdi:tag-check
-    lambda: 'return {"5.1.14"};'
+    lambda: 'return {"5.1.15"};'
     update_interval: 60s
   - platform: template
     id: sel_stage
@@ -1394,6 +1394,18 @@ globals:
   - id: ui_ladder_detail          # true while page_ladder_detail is showing
     type: bool
     initial_value: 'false'
+  - id: ui_vpd_editor             # true while page_set_vpd is showing
+    type: bool
+    initial_value: 'false'
+  - id: ui_power_detail           # true while page_power_detail is showing
+    type: bool
+    initial_value: 'false'
+  - id: power_detail_dev          # 0..9 device index (see refresh_ui)
+    type: int
+    initial_value: '0'
+  - id: power_detail_return       # 0=ladder 1=clone 2=main
+    type: int
+    initial_value: '0'
   # ---- tap-challenge gate (Manual Takeover + appliance demands) ----
   - id: gate_op
     type: int
@@ -1401,7 +1413,7 @@ globals:
   - id: gate_val
     type: int
     initial_value: '0'
-  # ---- Pulse 1h VPD micro-trend (12 × 5 min = 1 h; one label, no canvas) ----
+  # ---- Pulse 1h VPD micro-trend (12 × 5 min = 1 h; lbl_spark + unicode sparkline) ----
   - id: spark_vpd
     type: float[12]
     initial_value: '{NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN}'
@@ -1624,6 +1636,8 @@ lvgl:
                       id(active_tab) = 0;
                       id(ui_soil_detail) = false;
                       id(ui_ladder_detail) = false;
+                      id(ui_vpd_editor) = false;
+                      id(ui_power_detail) = false;
                   - script.execute: restyle_tabs
                   - script.execute: refresh_ui
             - button:
@@ -1644,6 +1658,8 @@ lvgl:
                       id(active_tab) = 1;
                       id(ui_soil_detail) = false;
                       id(ui_ladder_detail) = false;
+                      id(ui_vpd_editor) = false;
+                      id(ui_power_detail) = false;
                   - script.execute: restyle_tabs
                   - script.execute: refresh_ui
             - button:
@@ -1664,6 +1680,8 @@ lvgl:
                       id(active_tab) = 2;
                       id(ui_soil_detail) = false;
                       id(ui_ladder_detail) = false;
+                      id(ui_vpd_editor) = false;
+                      id(ui_power_detail) = false;
                   - script.execute: restyle_tabs
                   - script.execute: refresh_ui
             - button:
@@ -1684,6 +1702,8 @@ lvgl:
                       id(active_tab) = 3;
                       id(ui_soil_detail) = false;
                       id(ui_ladder_detail) = false;
+                      id(ui_vpd_editor) = false;
+                      id(ui_power_detail) = false;
                   - script.execute: restyle_tabs
                   - script.execute: refresh_ui
             - button:
@@ -1704,6 +1724,8 @@ lvgl:
                       id(active_tab) = 4;
                       id(ui_soil_detail) = false;
                       id(ui_ladder_detail) = false;
+                      id(ui_vpd_editor) = false;
+                      id(ui_power_detail) = false;
                   - script.execute: restyle_tabs
                   - script.execute: refresh_ui
 
@@ -2071,7 +2093,7 @@ lvgl:
 
   # =============================== PAGES ===========================
   pages:
-    # ------------------------------ BOOT (5.1.14 Starting + bar) ---
+    # ------------------------------ BOOT (5.1.15 Starting + bar) ---
     # Lean: brand + status + one bar + pct. No icons/cards — RAM-safe.
     # Backlight stays off until this page is painted; then hello + snapshot.
     - id: page_boot
@@ -2112,7 +2134,7 @@ lvgl:
             y: 158
             text_color: 0x5A6472
         - label:
-            text: "v5.1.14"
+            text: "v5.1.15"
             text_font: f_small
             align: TOP_MID
             y: 188
@@ -2197,8 +2219,8 @@ lvgl:
               - label: {text: "ROOM", text_font: f_small, align: TOP_LEFT, text_color: 0x8A929C}
               - label: {id: lbl_room, text: "--", text_font: f_body, align: BOTTOM_LEFT, text_color: 0xFFFFFF}
 
-        # escalation ladder + 1h VPD micro-trend (ring buffer → one label)
-        # Tap a rung → page_ladder_detail (fans ± / appliance timers).
+        # escalation ladder + 1h VPD sparkline (ring → unicode blocks in lbl_spark)
+        # Tap a rung → page_ladder_detail; tap a row → page_power_detail.
         - label: {text: "ESCALATION LADDER  ·  tap a rung", text_font: f_small, align: TOP_LEFT, x: 10, y: 98, text_color: 0x8A929C}
         - label: {id: lbl_spark, text: "VPD —", text_font: f_small, align: TOP_RIGHT, x: -12, y: 98, text_color: 0x5A6472}
         - button:
@@ -2343,6 +2365,11 @@ lvgl:
                   height: 40
                   styles: rowbtn
                   scrollable: false
+                  on_click:
+                    - script.execute:
+                        id: open_power_detail
+                        dev: !lambda 'return id(ladder_detail_mode) == 1 ? 0 : 4;'
+                        ret: 0
                   widgets:
                     - label: {id: ld_ic0, text: "\U000F0210", text_font: mdi_22, align: LEFT_MID, x: 6, text_color: 0x5A6472}
                     - label: {id: ld_name0, text: "6\" exhaust (out)", text_font: f_body, align: LEFT_MID, x: 34, text_color: 0xFFFFFF}
@@ -2389,6 +2416,11 @@ lvgl:
                   height: 40
                   styles: rowbtn
                   scrollable: false
+                  on_click:
+                    - script.execute:
+                        id: open_power_detail
+                        dev: !lambda 'return id(ladder_detail_mode) == 1 ? 1 : 5;'
+                        ret: 0
                   widgets:
                     - label: {id: ld_ic1, text: "\U000F0210", text_font: mdi_22, align: LEFT_MID, x: 6, text_color: 0x5A6472}
                     - label: {id: ld_name1, text: "6\" exhaust (room)", text_font: f_body, align: LEFT_MID, x: 34, text_color: 0xFFFFFF}
@@ -2435,6 +2467,11 @@ lvgl:
                   height: 40
                   styles: rowbtn
                   scrollable: false
+                  on_click:
+                    - script.execute:
+                        id: open_power_detail
+                        dev: !lambda 'return id(ladder_detail_mode) == 1 ? 2 : 6;'
+                        ret: 0
                   widgets:
                     - label: {id: ld_ic2, text: "\U000F11DC", text_font: mdi_22, align: LEFT_MID, x: 6, text_color: 0x5A6472}
                     - label: {id: ld_name2, text: "4\" intake (main)", text_font: f_body, align: LEFT_MID, x: 34, text_color: 0xFFFFFF}
@@ -2481,6 +2518,11 @@ lvgl:
                   height: 40
                   styles: rowbtn
                   scrollable: false
+                  on_click:
+                    - script.execute:
+                        id: open_power_detail
+                        dev: !lambda 'return id(ladder_detail_mode) == 1 ? 3 : 7;'
+                        ret: 0
                   widgets:
                     - label: {id: ld_ic3, text: "\U000F11DC", text_font: mdi_22, align: LEFT_MID, x: 6, text_color: 0x5A6472}
                     - label: {id: ld_name3, text: "2x4 intake fan", text_font: f_body, align: LEFT_MID, x: 34, text_color: 0xFFFFFF}
@@ -2528,6 +2570,11 @@ lvgl:
                   styles: rowbtn
                   scrollable: false
                   hidden: true
+                  on_click:
+                    - script.execute:
+                        id: open_power_detail
+                        dev: 8
+                        ret: 0
                   widgets:
                     - label: {id: ld_ic4, text: "\U000F1AAF", text_font: mdi_22, align: LEFT_MID, x: 6, text_color: 0x5A6472}
                     - label: {id: ld_name4, text: "Grow mat", text_font: f_body, align: LEFT_MID, x: 34, text_color: 0xFFFFFF}
@@ -2567,6 +2614,11 @@ lvgl:
                   styles: rowbtn
                   scrollable: false
                   hidden: true
+                  on_click:
+                    - script.execute:
+                        id: open_power_detail
+                        dev: 9
+                        ret: 0
                   widgets:
                     - label: {id: ld_ic5, text: "\U000F1099", text_font: mdi_22, align: LEFT_MID, x: 6, text_color: 0x5A6472}
                     - label: {id: ld_name5, text: "Clone humidifier", text_font: f_body, align: LEFT_MID, x: 34, text_color: 0xFFFFFF}
@@ -2704,6 +2756,11 @@ lvgl:
                   height: 40
                   styles: rowbtn
                   scrollable: false
+                  on_click:
+                    - script.execute:
+                        id: open_power_detail
+                        dev: 3
+                        ret: 1
                   widgets:
                     - label: {id: ic_cint, text: "\U000F0210", text_font: mdi_22, align: LEFT_MID, x: 6, text_color: 0x5A6472}
                     - label: {text: "2x4 intake fan", text_font: f_body, align: LEFT_MID, x: 34, text_color: 0xFFFFFF}
@@ -2753,10 +2810,9 @@ lvgl:
                     - label: {id: dem_clone_hum_st, text: "off", text_font: f_body, align: RIGHT_MID, x: -8, text_color: 0x5A6472}
                   on_click:
                     - script.execute:
-                        id: open_gate
-                        op: 17
-                        val: !lambda 'return (id(gv_dem)&32) ? 0 : 1;'
-                        kind: 1
+                        id: open_power_detail
+                        dev: 9
+                        ret: 1
               - button:
                   id: cdev_mat
                   x: 8
@@ -2770,10 +2826,9 @@ lvgl:
                     - label: {id: dem_mat_st, text: "off", text_font: f_body, align: RIGHT_MID, x: -8, text_color: 0x5A6472}
                   on_click:
                     - script.execute:
-                        id: open_gate
-                        op: 15
-                        val: !lambda 'return (id(gv_dem)&8) ? 0 : 1;'
-                        kind: 1
+                        id: open_power_detail
+                        dev: 8
+                        ret: 1
 
           # ------------------------------ MAIN ---------------------------
     - id: page_main
@@ -2834,6 +2889,11 @@ lvgl:
                   height: 40
                   styles: rowbtn
                   scrollable: false
+                  on_click:
+                    - script.execute:
+                        id: open_power_detail
+                        dev: 0
+                        ret: 2
                   widgets:
                     - label: {id: ic_mout, text: "\U000F0210", text_font: mdi_22, align: LEFT_MID, x: 6, text_color: 0x5A6472}
                     - label: {text: "6\" exhaust (out)", text_font: f_body, align: LEFT_MID, x: 34, text_color: 0xFFFFFF}
@@ -2878,6 +2938,11 @@ lvgl:
                   height: 40
                   styles: rowbtn
                   scrollable: false
+                  on_click:
+                    - script.execute:
+                        id: open_power_detail
+                        dev: 1
+                        ret: 2
                   widgets:
                     - label: {id: ic_mroom, text: "\U000F0210", text_font: mdi_22, align: LEFT_MID, x: 6, text_color: 0x5A6472}
                     - label: {text: "6\" exhaust (room)", text_font: f_body, align: LEFT_MID, x: 34, text_color: 0xFFFFFF}
@@ -2922,6 +2987,11 @@ lvgl:
                   height: 40
                   styles: rowbtn
                   scrollable: false
+                  on_click:
+                    - script.execute:
+                        id: open_power_detail
+                        dev: 2
+                        ret: 2
                   widgets:
                     - label: {id: ic_mint, text: "\U000F11DC", text_font: mdi_22, align: LEFT_MID, x: 6, text_color: 0x5A6472}
                     - label: {text: "4\" intake (main)", text_font: f_body, align: LEFT_MID, x: 34, text_color: 0xFFFFFF}
@@ -2971,10 +3041,9 @@ lvgl:
                     - label: {id: dem_heater_st, text: "off", text_font: f_body, align: RIGHT_MID, x: -8, text_color: 0x5A6472}
                   on_click:
                     - script.execute:
-                        id: open_gate
-                        op: 14
-                        val: !lambda 'return (id(gv_dem)&4) ? 0 : 1;'
-                        kind: 1
+                        id: open_power_detail
+                        dev: 6
+                        ret: 2
               - button:
                   id: mdev_ac
                   x: 8
@@ -2988,10 +3057,9 @@ lvgl:
                     - label: {id: dem_ac_st, text: "off", text_font: f_body, align: RIGHT_MID, x: -8, text_color: 0x5A6472}
                   on_click:
                     - script.execute:
-                        id: open_gate
-                        op: 16
-                        val: !lambda 'return (id(gv_dem)&16) ? 0 : 1;'
-                        kind: 1
+                        id: open_power_detail
+                        dev: 7
+                        ret: 2
               - button:
                   id: mdev_hum
                   x: 8
@@ -3005,10 +3073,9 @@ lvgl:
                     - label: {id: dem_hum_st, text: "off", text_font: f_body, align: RIGHT_MID, x: -8, text_color: 0x5A6472}
                   on_click:
                     - script.execute:
-                        id: open_gate
-                        op: 12
-                        val: !lambda 'return (id(gv_dem)&1) ? 0 : 1;'
-                        kind: 1
+                        id: open_power_detail
+                        dev: 4
+                        ret: 2
               - button:
                   id: mdev_dehum
                   x: 8
@@ -3022,10 +3089,9 @@ lvgl:
                     - label: {id: dem_dehum_st, text: "off", text_font: f_body, align: RIGHT_MID, x: -8, text_color: 0x5A6472}
                   on_click:
                     - script.execute:
-                        id: open_gate
-                        op: 13
-                        val: !lambda 'return (id(gv_dem)&2) ? 0 : 1;'
-                        kind: 1
+                        id: open_power_detail
+                        dev: 5
+                        ret: 2
 
           # ------------------------------ SOIL ---------------------------
           # 4 pot cards from 0xD3/0xD4: plant name + N/P/K header, moisture /
@@ -3293,6 +3359,347 @@ lvgl:
                     - label: {text: "Potassium", text_font: f_body, align: LEFT_MID, x: 4, text_color: 0xFFFFFF}
                     - label: {id: sd_k_val, text: "--", text_font: f_body, align: RIGHT_MID, x: -8, text_color: 0x00E676}
 
+    # VPD curve editor — hub-synced targets (gv_cfg / t_* template sensors).
+    # +/- sends hub_cmd immediately; refresh_ui shows pending grey.
+    - id: page_set_vpd
+      scrollbar_mode: "OFF"
+      bg_color: 0x0E1116
+      scrollable: false
+      on_swipe_right:
+        - lambda: 'id(ui_vpd_editor) = false;'
+        - lvgl.page.show: page_control
+        - script.execute: refresh_ui
+      widgets:
+        - obj:
+            x: 0
+            y: 0
+            width: 320
+            height: 36
+            bg_color: 0x171B22
+            bg_opa: COVER
+            border_width: 0
+            radius: 0
+            pad_all: 0
+            scrollable: false
+            widgets:
+              - button:
+                  align: LEFT_MID
+                  x: 4
+                  width: 46
+                  height: 30
+                  bg_color: 0x232A33
+                  radius: 6
+                  shadow_width: 0
+                  widgets:
+                    - label: {text: "\U000F004D", text_font: mdi_22, align: CENTER, text_color: 0xFFFFFF}
+                  on_click:
+                    - lambda: 'id(ui_vpd_editor) = false;'
+                    - lvgl.page.show: page_control
+                    - script.execute: refresh_ui
+              - label: {text: "VPD TARGETS", text_font: f_med, align: CENTER, text_color: 0xFFFFFF}
+        - obj:
+            id: vpd_edit_scroll
+            x: 0
+            y: 36
+            width: 320
+            height: 164
+            bg_opa: TRANSP
+            border_width: 0
+            radius: 0
+            pad_all: 10
+            pad_top: 6
+            pad_bottom: 8
+            scrollbar_mode: AUTO
+            scroll_dir: VER
+            layout:
+              type: flex
+              flex_flow: COLUMN
+              pad_row: 6
+            widgets:
+              - label: {text: "4x8 MAIN · want VPD", text_font: f_small, text_color: 0x8A929C}
+              - obj:
+                  width: 300
+                  height: 40
+                  styles: rowbtn
+                  scrollable: false
+                  widgets:
+                    - label: {text: "VPD Min", text_font: f_body, align: LEFT_MID, x: 4, text_color: 0xFFFFFF}
+                    - label: {id: s_vmin_val, text: "--", text_font: f_body, align: RIGHT_MID, x: -92, text_color: 0x00E676}
+                    - button:
+                        align: RIGHT_MID
+                        x: -48
+                        width: 38
+                        height: 30
+                        bg_color: 0x2A313B
+                        radius: 6
+                        shadow_width: 0
+                        widgets:
+                          - label: {text: "-", text_font: f_med, align: CENTER, text_color: 0xFFFFFF}
+                        on_click:
+                          - script.execute:
+                              id: hub_cmd
+                              op: 31
+                              val: !lambda 'float v = isnan(id(t_main_vpd_min).state) ? 0.4f : id(t_main_vpd_min).state; v -= 0.1f; if (v < 0.4f) v = 0.4f; return (int)lroundf(v * 100);'
+                    - button:
+                        align: RIGHT_MID
+                        x: -6
+                        width: 38
+                        height: 30
+                        bg_color: 0x12241A
+                        border_color: 0x00E676
+                        border_width: 1
+                        radius: 6
+                        shadow_width: 0
+                        widgets:
+                          - label: {text: "+", text_font: f_med, align: CENTER, text_color: 0x00E676}
+                        on_click:
+                          - script.execute:
+                              id: hub_cmd
+                              op: 31
+                              val: !lambda 'float v = isnan(id(t_main_vpd_min).state) ? 0.4f : id(t_main_vpd_min).state; v += 0.1f; if (v > 1.6f) v = 1.6f; return (int)lroundf(v * 100);'
+              - obj:
+                  width: 300
+                  height: 40
+                  styles: rowbtn
+                  scrollable: false
+                  widgets:
+                    - label: {text: "VPD Max", text_font: f_body, align: LEFT_MID, x: 4, text_color: 0xFFFFFF}
+                    - label: {id: s_vmax_val, text: "--", text_font: f_body, align: RIGHT_MID, x: -92, text_color: 0x00E676}
+                    - button:
+                        align: RIGHT_MID
+                        x: -48
+                        width: 38
+                        height: 30
+                        bg_color: 0x2A313B
+                        radius: 6
+                        shadow_width: 0
+                        widgets:
+                          - label: {text: "-", text_font: f_med, align: CENTER, text_color: 0xFFFFFF}
+                        on_click:
+                          - script.execute:
+                              id: hub_cmd
+                              op: 32
+                              val: !lambda 'float v = isnan(id(t_main_vpd_max).state) ? 0.4f : id(t_main_vpd_max).state; v -= 0.1f; if (v < 0.4f) v = 0.4f; return (int)lroundf(v * 100);'
+                    - button:
+                        align: RIGHT_MID
+                        x: -6
+                        width: 38
+                        height: 30
+                        bg_color: 0x12241A
+                        border_color: 0x00E676
+                        border_width: 1
+                        radius: 6
+                        shadow_width: 0
+                        widgets:
+                          - label: {text: "+", text_font: f_med, align: CENTER, text_color: 0x00E676}
+                        on_click:
+                          - script.execute:
+                              id: hub_cmd
+                              op: 32
+                              val: !lambda 'float v = isnan(id(t_main_vpd_max).state) ? 0.4f : id(t_main_vpd_max).state; v += 0.1f; if (v > 1.8f) v = 1.8f; return (int)lroundf(v * 100);'
+              - label: {text: "2x4 CLONE · want VPD", text_font: f_small, text_color: 0x8A929C, pad_top: 4}
+              - obj:
+                  width: 300
+                  height: 40
+                  styles: rowbtn
+                  scrollable: false
+                  widgets:
+                    - label: {text: "VPD Min", text_font: f_body, align: LEFT_MID, x: 4, text_color: 0xFFFFFF}
+                    - label: {id: s_cvmin_val, text: "--", text_font: f_body, align: RIGHT_MID, x: -92, text_color: 0x00E676}
+                    - button:
+                        align: RIGHT_MID
+                        x: -48
+                        width: 38
+                        height: 30
+                        bg_color: 0x2A313B
+                        radius: 6
+                        shadow_width: 0
+                        widgets:
+                          - label: {text: "-", text_font: f_med, align: CENTER, text_color: 0xFFFFFF}
+                        on_click:
+                          - script.execute:
+                              id: hub_cmd
+                              op: 38
+                              val: !lambda 'float v = isnan(id(t_clone_vpd_min).state) ? 0.2f : id(t_clone_vpd_min).state; v -= 0.1f; if (v < 0.2f) v = 0.2f; return (int)lroundf(v * 100);'
+                    - button:
+                        align: RIGHT_MID
+                        x: -6
+                        width: 38
+                        height: 30
+                        bg_color: 0x12241A
+                        border_color: 0x00E676
+                        border_width: 1
+                        radius: 6
+                        shadow_width: 0
+                        widgets:
+                          - label: {text: "+", text_font: f_med, align: CENTER, text_color: 0x00E676}
+                        on_click:
+                          - script.execute:
+                              id: hub_cmd
+                              op: 38
+                              val: !lambda 'float v = isnan(id(t_clone_vpd_min).state) ? 0.2f : id(t_clone_vpd_min).state; v += 0.1f; if (v > 1.6f) v = 1.6f; return (int)lroundf(v * 100);'
+              - obj:
+                  width: 300
+                  height: 40
+                  styles: rowbtn
+                  scrollable: false
+                  widgets:
+                    - label: {text: "VPD Max", text_font: f_body, align: LEFT_MID, x: 4, text_color: 0xFFFFFF}
+                    - label: {id: s_cvmax_val, text: "--", text_font: f_body, align: RIGHT_MID, x: -92, text_color: 0x00E676}
+                    - button:
+                        align: RIGHT_MID
+                        x: -48
+                        width: 38
+                        height: 30
+                        bg_color: 0x2A313B
+                        radius: 6
+                        shadow_width: 0
+                        widgets:
+                          - label: {text: "-", text_font: f_med, align: CENTER, text_color: 0xFFFFFF}
+                        on_click:
+                          - script.execute:
+                              id: hub_cmd
+                              op: 39
+                              val: !lambda 'float v = isnan(id(t_clone_vpd_max).state) ? 0.2f : id(t_clone_vpd_max).state; v -= 0.1f; if (v < 0.2f) v = 0.2f; return (int)lroundf(v * 100);'
+                    - button:
+                        align: RIGHT_MID
+                        x: -6
+                        width: 38
+                        height: 30
+                        bg_color: 0x12241A
+                        border_color: 0x00E676
+                        border_width: 1
+                        radius: 6
+                        shadow_width: 0
+                        widgets:
+                          - label: {text: "+", text_font: f_med, align: CENTER, text_color: 0x00E676}
+                        on_click:
+                          - script.execute:
+                              id: hub_cmd
+                              op: 39
+                              val: !lambda 'float v = isnan(id(t_clone_vpd_max).state) ? 0.2f : id(t_clone_vpd_max).state; v += 0.1f; if (v > 1.8f) v = 1.8f; return (int)lroundf(v * 100);'
+
+    # Per-device power drill-down — one shared page; dev index 0..9.
+    - id: page_power_detail
+      scrollbar_mode: "OFF"
+      bg_color: 0x0E1116
+      scrollable: false
+      on_swipe_right:
+        - script.execute: power_detail_back
+      widgets:
+        - obj:
+            x: 0
+            y: 0
+            width: 320
+            height: 36
+            bg_color: 0x171B22
+            bg_opa: COVER
+            border_width: 0
+            radius: 0
+            pad_all: 0
+            scrollable: false
+            widgets:
+              - button:
+                  align: LEFT_MID
+                  x: 4
+                  width: 46
+                  height: 30
+                  bg_color: 0x232A33
+                  radius: 6
+                  shadow_width: 0
+                  widgets:
+                    - label: {text: "\U000F004D", text_font: mdi_22, align: CENTER, text_color: 0xFFFFFF}
+                  on_click:
+                    - script.execute: power_detail_back
+              - label: {id: lbl_pwr_title, text: "DEVICE", text_font: f_med, align: CENTER, text_color: 0xFFFFFF}
+        - obj:
+            id: power_detail_scroll
+            x: 0
+            y: 36
+            width: 320
+            height: 164
+            bg_opa: TRANSP
+            border_width: 0
+            radius: 0
+            pad_all: 10
+            pad_top: 8
+            pad_bottom: 8
+            scrollbar_mode: AUTO
+            scroll_dir: VER
+            layout:
+              type: flex
+              flex_flow: COLUMN
+              pad_row: 8
+            widgets:
+              - label: {id: lbl_pwr_ic, text: "\U000F0210", text_font: mdi_22, text_color: 0x5A6472}
+              - label: {id: lbl_pwr_status, text: "--", text_font: f_med, text_color: 0xFFFFFF}
+              - obj:
+                  width: 300
+                  height: 36
+                  styles: rowbtn
+                  scrollable: false
+                  widgets:
+                    - label: {text: "Fire countdown", text_font: f_body, align: LEFT_MID, x: 4, text_color: 0xC0C6CC}
+                    - label: {id: lbl_pwr_fire, text: "--", text_font: f_body, align: RIGHT_MID, x: -8, text_color: 0xFFAA00}
+              - obj:
+                  id: pwr_cool_row
+                  width: 300
+                  height: 36
+                  styles: rowbtn
+                  scrollable: false
+                  widgets:
+                    - label: {id: lbl_pwr_cool_l, text: "Cooldown", text_font: f_body, align: LEFT_MID, x: 4, text_color: 0xC0C6CC}
+                    - label: {id: lbl_pwr_cool, text: "--", text_font: f_body, align: RIGHT_MID, x: -8, text_color: 0x8A929C}
+              - obj:
+                  id: pwr_speed_row
+                  width: 300
+                  height: 40
+                  styles: rowbtn
+                  scrollable: false
+                  widgets:
+                    - label: {text: "Speed", text_font: f_body, align: LEFT_MID, x: 4, text_color: 0xFFFFFF}
+                    - label: {id: lbl_pwr_speed, text: "--", text_font: f_body, align: RIGHT_MID, x: -92, text_color: 0x00E676}
+                    - button:
+                        id: pwr_spd_minus
+                        align: RIGHT_MID
+                        x: -48
+                        width: 38
+                        height: 30
+                        bg_color: 0x2A313B
+                        radius: 6
+                        shadow_width: 0
+                        widgets:
+                          - label: {text: "-", text_font: f_med, align: CENTER, text_color: 0xFFFFFF}
+                        on_click:
+                          - script.execute: pwr_fan_step
+                            delta: -10
+                    - button:
+                        id: pwr_spd_plus
+                        align: RIGHT_MID
+                        x: -6
+                        width: 38
+                        height: 30
+                        bg_color: 0x12241A
+                        border_color: 0x00E676
+                        border_width: 1
+                        radius: 6
+                        shadow_width: 0
+                        widgets:
+                          - label: {text: "+", text_font: f_med, align: CENTER, text_color: 0x00E676}
+                        on_click:
+                          - script.execute: pwr_fan_step
+                            delta: 10
+              - button:
+                  id: btn_pwr_demand
+                  width: 300
+                  height: 44
+                  styles: rowbtn
+                  widgets:
+                    - label: {text: "Toggle demand", text_font: f_body, align: LEFT_MID, x: 4, text_color: 0xFFFFFF}
+                    - label: {id: lbl_pwr_dem, text: "off", text_font: f_body, align: RIGHT_MID, x: -8, text_color: 0x5A6472}
+                  on_click:
+                    - script.execute: pwr_toggle_demand
+
     # ------------------------------ CONTROL ------------------------
     - id: page_control
       scrollbar_mode: "OFF"
@@ -3421,7 +3828,21 @@ lvgl:
                         id: hub_cmd
                         op: 19
                         val: !lambda 'return (id(gv_coord)&2) ? 0 : 1;'
-              - label: {text: "DSC-CONTROL v5.1.14  ·  ESP-NOW primary", text_font: f_small, text_color: 0x3A4550, pad_top: 8, pad_bottom: 8}
+              - label: {text: "SETTINGS", text_font: f_small, text_color: 0x8A929C, pad_top: 6}
+              - button:
+                  id: btn_vpd_targets
+                  width: 300
+                  height: 40
+                  styles: rowbtn
+                  widgets:
+                    - label: {text: "\U000F029A", text_font: mdi_22, align: LEFT_MID, x: 4, text_color: 0x5A6472}
+                    - label: {text: "VPD Targets", text_font: f_body, align: LEFT_MID, x: 38, text_color: 0xFFFFFF}
+                    - label: {text: "\U000F0142", text_font: mdi_16, align: RIGHT_MID, x: -4, text_color: 0x5A6472}
+                  on_click:
+                    - lambda: 'id(ui_vpd_editor) = true;'
+                    - lvgl.page.show: page_set_vpd
+                    - script.execute: refresh_ui
+              - label: {text: "DSC-CONTROL v5.1.15  ·  ESP-NOW primary", text_font: f_small, text_color: 0x3A4550, pad_top: 8, pad_bottom: 8}
 # ==================================================================
 #  SCRIPTS
 # ==================================================================
@@ -3612,6 +4033,8 @@ script:
       - lambda: |-
           id(ui_soil_detail) = false;
           id(ui_ladder_detail) = false;
+          id(ui_vpd_editor) = false;
+          id(ui_power_detail) = false;
       - script.execute: restyle_tabs
       - script.execute: refresh_ui
   - id: tab_next
@@ -3781,6 +4204,92 @@ script:
           val: !lambda 'return id(gate_val);'
       - lambda: 'lv_obj_add_flag(id(confirm_takeover), LV_OBJ_FLAG_HIDDEN);'
 
+  - id: open_power_detail
+    parameters:
+      dev: int
+      ret: int
+    then:
+      - lambda: |-
+          id(power_detail_dev) = dev;
+          id(power_detail_return) = ret;
+          id(ui_power_detail) = true;
+          if (ret == 0) id(ui_ladder_detail) = false;
+      - lvgl.page.show: page_power_detail
+      - script.execute: refresh_ui
+
+  - id: power_detail_back
+    then:
+      - lambda: |-
+          int r = id(power_detail_return);
+          id(ui_power_detail) = false;
+          if (r == 0) id(ui_ladder_detail) = true;
+          else if (r == 1) id(active_tab) = 1;
+          else if (r == 2) id(active_tab) = 2;
+      - if:
+          condition:
+            lambda: 'return id(power_detail_return) == 0;'
+          then:
+            - lvgl.page.show: page_ladder_detail
+          else:
+            - if:
+                condition:
+                  lambda: 'return id(power_detail_return) == 1;'
+                then:
+                  - lvgl.page.show: page_clone
+                else:
+                  - lvgl.page.show: page_main
+      - script.execute: refresh_ui
+
+  - id: pwr_fan_step
+    parameters:
+      delta: int
+    then:
+      - if:
+          condition:
+            lambda: 'return id(power_detail_dev) == 0;'
+          then:
+            - script.execute:
+                id: hub_cmd
+                op: 25
+                val: !lambda 'int v = id(gv_fan_out) + delta; if (v < 0) v = 0; if (v > 100) v = 100; return v;'
+      - if:
+          condition:
+            lambda: 'return id(power_detail_dev) == 1;'
+          then:
+            - script.execute:
+                id: hub_cmd
+                op: 26
+                val: !lambda 'int v = id(gv_fan_recirc) + delta; if (v < 0) v = 0; if (v > 100) v = 100; return v;'
+      - if:
+          condition:
+            lambda: 'return id(power_detail_dev) == 2;'
+          then:
+            - script.execute:
+                id: hub_cmd
+                op: 27
+                val: !lambda 'int v = id(gv_fan_imain) + delta; if (v < 0) v = 0; if (v > 100) v = 100; return v;'
+      - if:
+          condition:
+            lambda: 'return id(power_detail_dev) == 3;'
+          then:
+            - script.execute:
+                id: hub_cmd
+                op: 28
+                val: !lambda 'int v = id(gv_fan_iclone) + delta; if (v < 0) v = 0; if (v > 100) v = 100; return v;'
+
+  - id: pwr_toggle_demand
+    then:
+      - lambda: |-
+          int d = id(power_detail_dev) - 4;
+          static const int OPS[6] = {12, 13, 14, 16, 15, 17};
+          static const int MASK[6] = {1, 2, 4, 16, 8, 32};
+          if (d < 0 || d > 5) return;
+          id(gate_op) = OPS[d];
+          id(gate_val) = (id(gv_dem) & MASK[d]) ? 0 : 1;
+          lv_label_set_text(id(gate_title), "Confirm demand");
+          lv_label_set_text(id(gate_body), "Toggle this appliance demand?\nTap Engage to send.");
+          lv_obj_clear_flag(id(confirm_takeover), LV_OBJ_FLAG_HIDDEN);
+
   # -------- the refresh engine (v4.0.11) --------
   # Page-gated: only touch widgets on the visible tab/overlay. Lock
   # short-circuits after backlight/clock. Cadence is 5 s (see interval).
@@ -3837,6 +4346,8 @@ script:
           const int tab = id(active_tab);
           const bool soil_det = id(ui_soil_detail);
           const bool lad_det = id(ui_ladder_detail);
+          const bool vpd_ed = id(ui_vpd_editor);
+          const bool pwr_det = id(ui_power_detail);
           const bool interactive = !locked;
 
           // v4.0.11 — read ESP-NOW globals directly (template mirrors parked).
@@ -4026,7 +4537,7 @@ script:
           }
 
           // ---- PULSE ----
-          if (tab == 0 && !lad_det) {
+          if (tab == 0 && !lad_det && !pwr_det && !vpd_ed) {
             setc(id(pill_wifi_ic), link ? NEON : RED);
             float co2 = co2_ppm;
             if (isnan(co2)) strcpy(b, "CO2 --- ppm"); else snprintf(b, sizeof(b), "CO2 %d ppm", (int)co2);
@@ -4056,6 +4567,7 @@ script:
             {
               float mn = NAN, mx = NAN;
               int n = id(spark_filled) ? 12 : id(spark_idx);
+              if (n < 1) n = 1;
               for (int i = 0; i < n; i++) {
                 float v = id(spark_vpd)[i];
                 if (isnan(v)) continue;
@@ -4063,7 +4575,25 @@ script:
                 if (isnan(mx) || v > mx) mx = v;
               }
               if (isnan(mn)) setl(id(lbl_spark), "VPD —");
-              else { snprintf(b, sizeof(b), "VPD %.2f–%.2f", mn, mx); setl(id(lbl_spark), b); }
+              else {
+                static const char ASC[8] = {'.', ':', '-', '=', '+', '*', '#', '@'};
+                char sp[16]; int spn = 0;
+                float span = mx - mn;
+                if (span < 0.05f) span = 0.05f;
+                for (int i = 0; i < n && spn < (int)sizeof(sp) - 2; i++) {
+                  float v = id(spark_vpd)[i];
+                  int lv = 0;
+                  if (!isnan(v)) {
+                    lv = (int)((v - mn) / span * 7.0f + 0.5f);
+                    if (lv < 0) lv = 0;
+                    if (lv > 7) lv = 7;
+                  }
+                  sp[spn++] = ASC[lv];
+                }
+                sp[spn] = '\0';
+                snprintf(b, sizeof(b), "%s %.2f–%.2f", sp, mn, mx);
+                setl(id(lbl_spark), b);
+              }
             }
 
             int fans = (fan_out_on?1:0) + (fan_recirc_on?1:0)
@@ -4113,7 +4643,7 @@ script:
           }
 
           // ---- CLONE vitals + clone device rows ----
-          if (tab == 1) {
+          if (tab == 1 && !pwr_det && !vpd_ed) {
             float t = clone_temp; uint32_t c = bandcol(t, c_tt-2, c_tt+2);
             if (isnan(t)) setl(id(clv_temp_val),"--"); else { snprintf(b,sizeof(b),"%.1f°",t); setl(id(clv_temp_val),b);}
             setc(id(clv_temp_val),c); setbar(id(clv_temp_bar), isnan(t)?10:(int)t); setbarb(id(clv_temp_bar), c);
@@ -4158,7 +4688,7 @@ script:
           }
 
           // ---- MAIN vitals + main device rows ----
-          if (tab == 2) {
+          if (tab == 2 && !pwr_det && !vpd_ed) {
             float t = main_temp; uint32_t c = bandcol(t, m_tt-2, m_tt+2);
             if (isnan(t)) setl(id(mnv_temp_val),"--"); else { snprintf(b,sizeof(b),"%.1f°",t); setl(id(mnv_temp_val),b);}
             setc(id(mnv_temp_val),c); setbar(id(mnv_temp_bar), isnan(t)?10:(int)t); setbarb(id(mnv_temp_bar), c);
@@ -4210,7 +4740,7 @@ script:
           // ---- CONTROL (v5.1.6 — Full Auto / Auto Photoperiod / Manual
           // Takeover / Manual Light Hold / Humidifier Routing / RECIRC
           // De-Strat, inlined; every settings drill page is gone) ----
-          if (tab == 4) {
+          if (tab == 4 && !vpd_ed && !pwr_det) {
             auto pend_on = [&](int op)->bool{
               if (op < 0 || op >= 64) return false;
               uint32_t t = id(pend_ms)[op];
@@ -4399,6 +4929,101 @@ script:
             }
           }
 
+          // ---- VPD editor (page_set_vpd) ----
+          if (vpd_ed) {
+            auto pend_on = [&](int op)->bool{
+              if (op < 0 || op >= 64) return false;
+              uint32_t t = id(pend_ms)[op];
+              if (t == 0) return false;
+              if (millis() - t > 8000u) { id(pend_ms)[op] = 0; return false; }
+              return true;
+            };
+            auto vpdlbl = [&](lv_obj_t* L, float v, int op){
+              if (isnan(v)) { setl(L, "--"); return; }
+              char q[16]; snprintf(q, sizeof(q), "%.2f", v); setl(L, q);
+              setc(L, pend_on(op) ? PEND : NEON);
+            };
+            vpdlbl(id(s_vmin_val), id(t_main_vpd_min).state, 31);
+            vpdlbl(id(s_vmax_val), id(t_main_vpd_max).state, 32);
+            vpdlbl(id(s_cvmin_val), id(t_clone_vpd_min).state, 38);
+            vpdlbl(id(s_cvmax_val), id(t_clone_vpd_max).state, 39);
+          }
+
+          // ---- Per-device power (page_power_detail) ----
+          if (pwr_det) {
+            auto pend_on = [&](int op)->bool{
+              if (op < 0 || op >= 64) return false;
+              uint32_t t = id(pend_ms)[op];
+              if (t == 0) return false;
+              if (millis() - t > 8000u) { id(pend_ms)[op] = 0; return false; }
+              return true;
+            };
+            int d = id(power_detail_dev);
+            static const char* DN[10] = {
+              "6\" exhaust (out)", "6\" exhaust (room)", "4\" intake (main)", "2x4 intake fan",
+              "Humidifier", "Dehumidifier", "Heater", "AC", "Grow mat", "Clone humidifier"
+            };
+            static const char* DIC[10] = {
+              "\U000F0210", "\U000F0210", "\U000F11DC", "\U000F11DC",
+              "\U000F1099", "\U000F150C", "\U000F0238", "\U000F0717", "\U000F1AAF", "\U000F1099"
+            };
+            bool is_fan = (d >= 0 && d < 4);
+            if (d >= 0 && d < 10) {
+              setl(id(lbl_pwr_title), DN[d]);
+              setl(id(lbl_pwr_ic), DIC[d]);
+            }
+            sethid(id(pwr_speed_row), !is_fan);
+            sethid(id(btn_pwr_demand), is_fan);
+            sethid(id(pwr_cool_row), is_fan);
+
+            if (is_fan) {
+              float fpct[4] = {fan_out_pct, fan_recirc_pct, fan_int_main_pct, fan_int_clone_pct};
+              int fop[4] = {25, 26, 27, 28};
+              float v = fpct[d];
+              bool on = !isnan(v) && v > 0;
+              if (isnan(v)) {
+                setl(id(lbl_pwr_status), "idle");
+                setl(id(lbl_pwr_speed), "--");
+              } else {
+                snprintf(b, sizeof(b), on ? "running · %d%%" : "idle · %d%%", (int)v);
+                setl(id(lbl_pwr_status), b);
+                snprintf(b, sizeof(b), "%d%%", (int)v);
+                setl(id(lbl_pwr_speed), b);
+                setc(id(lbl_pwr_speed), pend_on(fop[d]) ? PEND : (on ? CYAN : GREY));
+              }
+              setl(id(lbl_pwr_fire), "—");
+              setc(id(lbl_pwr_status), on ? CYAN : GREY);
+            } else if (d >= 4 && d < 10) {
+              int ai = d - 4;
+              bool aon[6] = {dem_hum, dem_dehum, dem_heater, dem_ac, dem_mat, dem_clone_hum};
+              float afire[6] = {cd_hum, cd_dehum, cd_heater, cd_ac, cd_mat, cd_clone_hum};
+              static const int OPS[6] = {12, 13, 14, 16, 15, 17};
+              if (aon[ai]) {
+                uint32_t ms = id(dem_on_ms)[ai];
+                uint32_t sec = ms ? (millis() - ms) / 1000u : 0;
+                if (sec >= 60) snprintf(b, sizeof(b), "ON · %um", (unsigned)(sec / 60u));
+                else snprintf(b, sizeof(b), "ON · %us", (unsigned)sec);
+                setc(id(lbl_pwr_status), AMBER);
+              } else {
+                strcpy(b, "off");
+                setc(id(lbl_pwr_status), GREY);
+              }
+              setl(id(lbl_pwr_status), b);
+              setl(id(lbl_pwr_dem), aon[ai] ? "ON" : "off");
+              setc(id(lbl_pwr_dem), pend_on(OPS[ai]) ? PEND : (aon[ai] ? NEON : GREY));
+              if (!isnan(afire[ai]) && afire[ai] > 0)
+                snprintf(b, sizeof(b), "in %ds", (int)afire[ai]);
+              else strcpy(b, "—");
+              setl(id(lbl_pwr_fire), b);
+              if (!isnan(cool[ai]) && cool[ai] > 0) {
+                setl(id(lbl_pwr_cool_l), (ai == 1 || ai == 3) ? "Compressor lock" : "Min-off");
+                if (ai == 1 || ai == 3) snprintf(b, sizeof(b), "lock %ds", (int)cool[ai]);
+                else snprintf(b, sizeof(b), "min-off %ds", (int)cool[ai]);
+              } else strcpy(b, "—");
+              setl(id(lbl_pwr_cool), b);
+            }
+          }
+
 # ==================================================================
 #  PERIODIC REFRESH
 # ==================================================================
@@ -4524,7 +5149,7 @@ interval:
           then:
             - script.execute: hub_keepalive
 
-  # 1h VPD micro-trend: one sample / 5 min → 12 slots. No canvas widgets.
+  # 1h VPD micro-trend: one sample / 5 min → 12 slots; unicode sparkline in lbl_spark.
   - interval: 300s
     then:
       - lambda: |-

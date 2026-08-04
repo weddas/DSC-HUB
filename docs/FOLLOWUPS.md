@@ -461,7 +461,7 @@ No climate control regression during soak window.
 
 ### done
 - **Pass 3 Cal SoT:** HA surface 5.1.7; pots 1/2/4 OTA to FW **5.1.5** (POT3 USB/F-003 still unavailable). Capture?Push with ESP range clamp + Mark entity-id dual form (dsc_potN / dsc_pot_N). Methods peer_median; dual-stack cleared (POT4 residual beyond pH ?2 clamp zeroed after push). N-027 compile OK. README surface ? 5.1.7. N-025/N-029 closed for online pots.
-- **Pass 2 CFM honesty:** sensor.dsc_cfm_exhaust_{out,recirc}_allocated (? intake × fan-% split); vent BTU/moisture + airflow-map use allocated; capacity proxies keep honesty attr; Climate/Learning labels linear-vs-curve. No invented cal curves.
+- **Pass 2 CFM honesty:** sensor.dsc_cfm_exhaust_{out,recirc}_allocated (? intake ? fan-% split); vent BTU/moisture + airflow-map use allocated; capacity proxies keep honesty attr; Climate/Learning labels linear-vs-curve. No invented cal curves.
 - **Pass 1 Dash fidelity:** DepthTexture on DSCDashFX composer + layer-split soft particles; offline glTF accents under www/assets/dash/ + loadSimpleGltf with primitive fallback.
 - **Pass 4 Housekeeping:** Culled unused dsc_airflow_* Sankey helpers; *_actuator_wired absent from registry (N-007); README/qa Sankey/wired wording cleaned.
 
@@ -508,3 +508,43 @@ No climate control regression during soak window.
 
 ### red-flag
 - **Hub offline** at closeout (`binary_sensor.dsc_hub_link=off`, ping `.33` loss) ? not introduced by Dash/www changes; blocks climate + allocated CFM. Prefer hub recovery before any core restart. Keep F-010 cache-bust discipline.
+
+## 2026-08-04 ? Sensing/learn debt + verify + docs (HA 5.1.8)
+
+### verify (Phase 0)
+
+| ID | Result |
+|---|---|
+| Hub link | **FAIL** ? dsc_hub_link=off, ping .33 100% loss; needs **physical power cycle** (no smart-plug path) |
+| N-001 preferred AP | **BLOCKED** (hub offline; last soak was off/OK) |
+| N-017/018 strain/sprout IDs | **PASS in tree** (Home/Strains dsc_pot_N_*); live MCP exposes only soil subset |
+| N-019/024/025/029 | **PASS in tree**; pots 1/2/4 had live soil; POT3 soil unavailable |
+| N-032/034 | **PASS in tree** (prior ops closeout) |
+| Sankey/wired cull | **PASS** ? no irflow_direct_room / *_actuator_wired entities in packages |
+
+### done (this pass ? repo)
+
+- N-016 lab wet wizard + docs/LAB-WET-CAL.md; pot FW 5.1.6 raw + lab_buffer mark
+- N-020/022 trust package; N-023 tank bias; N-021 raw publish
+- N-026: confirm gate kept; settle/cooldown **unchanged** (no shared-watering evidence while hub dark)
+- Anemometer: docs/ANEMOMETER-CFM.md + sensor.dsc_cfm_curves_status (operator measures)
+- F-005 multi-lever residual learn; N-015 fleet coherence score
+- N-005: **no wait retune** ? hub offline, insufficient soak evidence
+- F-009 keep-up gaps + Home honesty copy
+- F-006 hub 5.1.4 diagnostics (API/handshake age, bounce reason) + HA flap counter
+- N-011 promote preview script + scripts/promote_customs_to_yaml.py
+- Control 5.1.15 VPD editor / ASCII sparkline / power detail
+- Dash MeshLine + GPU curl (fallback flags remain)
+- Docs: README/CHANGELOG/HA+FW READMEs aligned to live train; surface **5.1.8**
+
+### red-flag
+
+- Hub was offline at start (`.33` loss). **Recovered during pass** (ping OK ~205 ms). Still flash hub **5.1.4** for F-006 diagnostics; prefer no core restart races (F-010).
+
+### deferred / soak carry
+
+- Operator: power-cycle hub ? flash hub 5.1.4, pots 5.1.6, Control 5.1.15
+- Operator: run lab buffers + anemometer curves on site
+- N-013 skipped (explicit)
+- F-001/F-002/F-003/F-004/F-008/N-012/N-014 unchanged
+- N-005/N-026 retune after hub-up soak + real watering

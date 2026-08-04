@@ -1,5 +1,6 @@
 # DSC strain catalog — seed mirror (HA customs live in input_* slots)
-# Promote occupied customs into this file via FOLLOWUPS.
+# Promote occupied customs: script.dsc_promote_customs_yaml_preview
+# or python scripts/promote_customs_to_yaml.py <ha-states.json>
 
 seeds:
   - id: generic_photoperiod

@@ -19,6 +19,11 @@ HA packages, DSC-HUB Pro dashboard, and Learn Phase B (opt-in wait clamps).
 
 Repo: https://github.com/weddas/DSC-HUB · branch **`master`**
 
+> **Live train note (2026-08-04):** tagged cut remains `v5.1.0`. In-tree /
+> lab patch train is HA **5.1.8**, pots **5.1.6**, Control **5.1.15**, hub
+> **5.1.4**, Sync **5.1.3**. See [`CHANGELOG.md`](CHANGELOG.md) and
+> [`docs/FOLLOWUPS.md`](docs/FOLLOWUPS.md).
+
 ---
 
 ## What’s new in v5.1.0

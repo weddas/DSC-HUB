@@ -15,10 +15,9 @@ sections:
           **% × nameplate** (attribute `model: linear`). Measure duct outlet
           wind speed (or CFM) / canopy PPFD at 25→50→75→100% holds — ≥2
           points enables interpolation (`model: curve`). **Do not invent
-          points.** Vent BTU / Dash / airflow map use mass-balanced
-          **allocated** exhaust (Σ intake × fan-% split), not the nameplate
-          proxy. Heater / hum / dehum effect is learned **automatically**
-          below (Phase A).*
+          points.** See docs/ANEMOMETER-CFM.md. Status:
+          **{{ states('sensor.dsc_cfm_curves_status') }}**
+          (unset: {{ state_attr('sensor.dsc_cfm_curves_status','unset') }}).*
       - type: entities
         title: Wizard
         show_header_toggle: false

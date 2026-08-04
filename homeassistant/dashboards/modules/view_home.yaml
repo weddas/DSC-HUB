@@ -115,7 +115,10 @@ sections:
           primary: "Reduced kit — capacity offline"
           secondary: >-
             {{ state_attr('binary_sensor.dsc_reduced_kit','offline') | default('some levers out of service') }}
-            — Full Auto uses next-best in-service levers
+            — Full Auto uses next-best in-service levers.
+            {% set gaps = state_attr('sensor.dsc_keepup_gaps','gaps') %}
+            {% if gaps %} Keep-up gaps: {{ gaps }}.{% endif %}
+            {{ state_attr('sensor.dsc_keepup_gaps','full_auto_honesty') }}
           icon: mdi:package-variant-closed
           icon_color: amber
           tap_action:

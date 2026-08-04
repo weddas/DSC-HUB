@@ -393,6 +393,103 @@
     };
   }
 
+  var _tmpTangent = new THREE.Vector3();
+  var _tmpSide = new THREE.Vector3();
+  var _tmpUp = new THREE.Vector3(0, 1, 0);
+  var _tmpPoint = new THREE.Vector3();
+
+  var FEATURES = {
+    meshLineRibbon: true,
+    gpuCurlHaze: true,
+    tubeRibbonFallback: false,
+    cpuCurlHazeFallback: false
+  };
+
+  function buildMeshLineGeometry(curve, segments, radius) {
+    segments = Math.max(4, Math.floor(segments));
+    radius = Math.max(0.0001, radius);
+    var count = segments + 1;
+    var positions = new Float32Array(count * 6);
+    var uvs = new Float32Array(count * 4);
+    var indices = new Uint16Array(segments * 6);
+    var up = _tmpUp;
+    var tangent = _tmpTangent;
+    var side = _tmpSide;
+    var point = _tmpPoint;
+    var i;
+    var ii = 0;
+
+    for (i = 0; i < count; i++) {
+      var t = i / segments;
+      curve.getPoint(t, point);
+      curve.getTangent(t, tangent);
+      if (tangent.lengthSq() < 1e-8) tangent.set(0, 0, 1);
+      tangent.normalize();
+      if (Math.abs(tangent.dot(up)) > 0.92) up.set(1, 0, 0);
+      side.crossVectors(tangent, up).normalize();
+      up.crossVectors(side, tangent).normalize();
+
+      var vi = i * 2;
+      var px = point.x;
+      var py = point.y;
+      var pz = point.z;
+      var sx = side.x * radius;
+      var sy = side.y * radius;
+      var sz = side.z * radius;
+
+      positions[vi * 3] = px + sx;
+      positions[vi * 3 + 1] = py + sy;
+      positions[vi * 3 + 2] = pz + sz;
+      positions[(vi + 1) * 3] = px - sx;
+      positions[(vi + 1) * 3 + 1] = py - sy;
+      positions[(vi + 1) * 3 + 2] = pz - sz;
+
+      uvs[vi * 2] = t;
+      uvs[vi * 2 + 1] = 0;
+      uvs[(vi + 1) * 2] = t;
+      uvs[(vi + 1) * 2 + 1] = 1;
+
+      if (i > 0) {
+        var base = (i - 1) * 2;
+        indices[ii++] = base;
+        indices[ii++] = base + 1;
+        indices[ii++] = base + 2;
+        indices[ii++] = base + 1;
+        indices[ii++] = base + 3;
+        indices[ii++] = base + 2;
+      }
+    }
+
+    var geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+    geometry.setIndex(new THREE.BufferAttribute(indices, 1));
+    geometry.computeVertexNormals();
+    return geometry;
+  }
+
+  function rebuildFlowRibbonGeometry(mesh, curve, tubular, radius) {
+    if (!mesh || !curve) return null;
+    var meta = mesh.userData && mesh.userData.flowRibbon;
+    if (meta) {
+      meta.tubular = tubular == null ? meta.tubular : Math.max(4, Math.floor(tubular));
+      meta.radius = radius == null ? meta.radius : radius;
+      meta.curve = curve;
+    }
+    var geometry = FEATURES.meshLineRibbon && !FEATURES.tubeRibbonFallback
+      ? buildMeshLineGeometry(curve, meta ? meta.tubular : tubular, meta ? meta.radius : radius)
+      : new THREE.TubeGeometry(
+        curve,
+        meta ? meta.tubular : tubular,
+        meta ? meta.radius : radius,
+        6,
+        false
+      );
+    if (mesh.geometry) mesh.geometry.dispose();
+    mesh.geometry = geometry;
+    return geometry;
+  }
+
   function makeFlowRibbon(curve, opts) {
     opts = opts || {};
     var radius = opts.radius == null ? 0.04 : opts.radius;
@@ -402,7 +499,17 @@
     var dashArray = opts.dashArray || [0.14, 0.09];
     if (typeof dashArray === 'number') dashArray = [dashArray, dashArray];
 
-    var geometry = new THREE.TubeGeometry(curve, tubular, radius, 6, false);
+    var geometry;
+    try {
+      geometry = FEATURES.meshLineRibbon && !FEATURES.tubeRibbonFallback
+        ? buildMeshLineGeometry(curve, tubular, radius)
+        : new THREE.TubeGeometry(curve, tubular, radius, 6, false);
+    } catch (err) {
+      FEATURES.meshLineRibbon = false;
+      FEATURES.tubeRibbonFallback = true;
+      geometry = new THREE.TubeGeometry(curve, tubular, radius, 6, false);
+    }
+
     var uniforms = {
       uDashOffset: { value: opts.dashOffset || 0 },
       uOpacity: { value: opacity },
@@ -467,31 +574,19 @@
 
     var mesh = new THREE.Mesh(geometry, material);
     mesh.name = 'DSCDashFX.FlowRibbon';
+    mesh.userData.flowRibbon = { curve: curve, tubular: tubular, radius: radius };
+    mesh.userData.rebuildFlowRibbon = function (nextRadius) {
+      return rebuildFlowRibbonGeometry(
+        mesh,
+        mesh.userData.flowRibbon.curve,
+        mesh.userData.flowRibbon.tubular,
+        nextRadius == null ? mesh.userData.flowRibbon.radius : nextRadius
+      );
+    };
     return mesh;
   }
 
-  function createCurlHaze(renderer, count) {
-    count = count == null ? 800 : Math.max(1, Math.floor(count));
-    var positions = new Float32Array(count * 3);
-    var seeds = new Float32Array(count * 3);
-    var i;
-    for (i = 0; i < count; i++) {
-      var j = i * 3;
-      positions[j] = (Math.random() - 0.5) * 12;
-      positions[j + 1] = (Math.random() - 0.5) * 5;
-      positions[j + 2] = (Math.random() - 0.5) * 12;
-      seeds[j] = Math.random() * 6.2831853;
-      seeds[j + 1] = 0.25 + Math.random() * 0.75;
-      seeds[j + 2] = Math.random();
-    }
-
-    var geometry = new THREE.BufferGeometry();
-    var positionAttribute = new THREE.BufferAttribute(positions, 3);
-    positionAttribute.setUsage(THREE.DynamicDrawUsage);
-    geometry.setAttribute('position', positionAttribute);
-    geometry.setAttribute('aSeed', new THREE.BufferAttribute(seeds, 3));
-    geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 10);
-
+  function createCurlHazeCpuFallback(renderer, count, positions, seeds, positionAttribute) {
     var uniforms = {
       uOpacity: { value: 0.14 },
       uPointSize: { value: 16 * (renderer.getPixelRatio ? renderer.getPixelRatio() : 1) },
@@ -557,7 +652,11 @@
       blending: THREE.AdditiveBlending,
       toneMapped: false
     });
-    var points = new THREE.Points(geometry, material);
+    var cpuGeometry = new THREE.BufferGeometry();
+    cpuGeometry.setAttribute('position', positionAttribute);
+    cpuGeometry.setAttribute('aSeed', new THREE.BufferAttribute(seeds, 3));
+    cpuGeometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 10);
+    var points = new THREE.Points(cpuGeometry, material);
     points.name = 'DSCDashFX.CurlHaze';
     points.frustumCulled = false;
 
@@ -575,14 +674,12 @@
         var y = positions[p + 1];
         var z = positions[p + 2];
         var phase = seeds[p] + elapsed * (0.08 + seeds[p + 1] * 0.08);
-
         var vx = Math.sin(y * 0.72 + phase) - Math.cos(z * 0.48 - phase);
         var vy = Math.sin(z * 0.55 + phase * 0.7) - Math.cos(x * 0.42 + phase);
         var vz = Math.sin(x * 0.63 - phase * 0.8) - Math.cos(y * 0.57 + phase);
         positions[p] = x + vx * speed;
         positions[p + 1] = y + vy * speed * 0.58 + dt * 0.035;
         positions[p + 2] = z + vz * speed;
-
         if (positions[p] > 6) positions[p] = -6;
         else if (positions[p] < -6) positions[p] = 6;
         if (positions[p + 1] > 2.5) positions[p + 1] = -2.5;
@@ -591,6 +688,160 @@
         else if (positions[p + 2] < -6) positions[p + 2] = 6;
       }
       positionAttribute.needsUpdate = true;
+      uniforms.uOpacity.value = Math.min(0.32, 0.045 + intensity * 0.095);
+    }
+
+    function dispose() {
+      if (disposed) return;
+      disposed = true;
+      points.geometry.dispose();
+      material.dispose();
+    }
+
+    return { points: points, material: material, update: update, dispose: dispose };
+  }
+
+  function createCurlHaze(renderer, count) {
+    count = count == null ? 800 : Math.max(1, Math.floor(count));
+    var bases = new Float32Array(count * 3);
+    var seeds = new Float32Array(count * 3);
+    var i;
+    for (i = 0; i < count; i++) {
+      var j = i * 3;
+      bases[j] = (Math.random() - 0.5) * 12;
+      bases[j + 1] = (Math.random() - 0.5) * 5;
+      bases[j + 2] = (Math.random() - 0.5) * 12;
+      seeds[j] = Math.random() * 6.2831853;
+      seeds[j + 1] = 0.25 + Math.random() * 0.75;
+      seeds[j + 2] = Math.random();
+    }
+
+    if (!FEATURES.gpuCurlHaze || FEATURES.cpuCurlHazeFallback) {
+      var cpuPositions = bases.slice();
+      var cpuAttribute = new THREE.BufferAttribute(cpuPositions, 3);
+      cpuAttribute.setUsage(THREE.DynamicDrawUsage);
+      FEATURES.cpuCurlHazeFallback = true;
+      return createCurlHazeCpuFallback(renderer, count, cpuPositions, seeds, cpuAttribute);
+    }
+
+    var geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('aBasePosition', new THREE.BufferAttribute(bases, 3));
+    geometry.setAttribute('aSeed', new THREE.BufferAttribute(seeds, 3));
+    geometry.setAttribute(
+      'position',
+      new THREE.BufferAttribute(new Float32Array(count * 3), 3)
+    );
+    geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 10);
+
+    var uniforms = {
+      uOpacity: { value: 0.14 },
+      uPointSize: { value: 16 * (renderer.getPixelRatio ? renderer.getPixelRatio() : 1) },
+      uColor: { value: new THREE.Color(0x8fcfff) },
+      uTime: { value: 0 },
+      uIntensity: { value: 1 },
+      tDepth: { value: null },
+      uHasDepth: { value: 0 },
+      uResolution: { value: new THREE.Vector2(1, 1) },
+      uCameraNear: { value: 0.1 },
+      uCameraFar: { value: 80 },
+      uSoftness: { value: 0.85 }
+    };
+    var material = new THREE.ShaderMaterial({
+      name: 'DSCDashFX.CurlHaze',
+      uniforms: uniforms,
+      vertexShader: [
+        'attribute vec3 aBasePosition;',
+        'attribute vec3 aSeed;',
+        'uniform float uTime;',
+        'uniform float uIntensity;',
+        'varying float vAlpha;',
+        'varying float vViewZ;',
+        'uniform float uPointSize;',
+        'vec3 wrapVolume(vec3 p) {',
+        '  p.x = mod(p.x + 6.0, 12.0) - 6.0;',
+        '  p.y = mod(p.y + 2.5, 5.0) - 2.5;',
+        '  p.z = mod(p.z + 6.0, 12.0) - 6.0;',
+        '  return p;',
+        '}',
+        'vec3 curlVelocity(vec3 p, float phase) {',
+        '  return vec3(',
+        '    sin(p.y * 0.72 + phase) - cos(p.z * 0.48 - phase),',
+        '    sin(p.z * 0.55 + phase * 0.7) - cos(p.x * 0.42 + phase),',
+        '    sin(p.x * 0.63 - phase * 0.8) - cos(p.y * 0.57 + phase)',
+        '  );',
+        '}',
+        'vec3 advectCurl(vec3 base, float time, vec3 seed, float intensity) {',
+        '  float phase = seed.x + time * (0.08 + seed.y * 0.08);',
+        '  float t = time * (0.22 + intensity * 0.34);',
+        '  vec3 p = base;',
+        '  vec3 v0 = curlVelocity(p, phase);',
+        '  vec3 v1 = curlVelocity(p + v0 * 0.45, phase + 0.37);',
+        '  vec3 v2 = curlVelocity(p + v1 * 0.45, phase + 0.74);',
+        '  vec3 drift = (v0 + v1 + v2) * (t * 0.33);',
+        '  drift.y = drift.y * 0.58 + time * 0.035;',
+        '  return wrapVolume(base + drift);',
+        '}',
+        'void main() {',
+        '  vec3 worldPos = advectCurl(aBasePosition, uTime, aSeed, uIntensity);',
+        '  vec4 mv = modelViewMatrix * vec4(worldPos, 1.0);',
+        '  vViewZ = -mv.z;',
+        '  float depthScale = clamp(90.0 / max(1.0, vViewZ), 0.5, 4.0);',
+        '  gl_PointSize = uPointSize * mix(0.35, 0.9, aSeed.z) * depthScale;',
+        '  vAlpha = mix(0.35, 1.0, aSeed.z);',
+        '  gl_Position = projectionMatrix * mv;',
+        '}'
+      ].join('\n'),
+      fragmentShader: [
+        'uniform vec3 uColor;',
+        'uniform float uOpacity;',
+        'uniform sampler2D tDepth;',
+        'uniform float uHasDepth;',
+        'uniform vec2 uResolution;',
+        'uniform float uCameraNear;',
+        'uniform float uCameraFar;',
+        'uniform float uSoftness;',
+        'varying float vAlpha;',
+        'varying float vViewZ;',
+        'float perspDepthToViewZ(float d, float near, float far) {',
+        '  float z = d * 2.0 - 1.0;',
+        '  return (2.0 * near * far) / (far + near - z * (far - near));',
+        '}',
+        'void main() {',
+        '  vec2 p = gl_PointCoord - 0.5;',
+        '  float d = length(p) * 2.0;',
+        '  float glow = exp(-4.8 * d * d) * (1.0 - smoothstep(0.72, 1.0, d));',
+        '  float alpha = glow * uOpacity * vAlpha;',
+        '  if (uHasDepth > 0.5) {',
+        '    vec2 screenUv = gl_FragCoord.xy / uResolution;',
+        '    float sceneD = texture2D(tDepth, screenUv).x;',
+        '    float sceneZ = perspDepthToViewZ(sceneD, uCameraNear, uCameraFar);',
+        '    float dz = sceneZ - vViewZ;',
+        '    alpha *= smoothstep(0.0, uSoftness, dz);',
+        '  }',
+        '  if (alpha < 0.004) discard;',
+        '  gl_FragColor = vec4(uColor, alpha);',
+        '}'
+      ].join('\n'),
+      transparent: true,
+      depthWrite: false,
+      depthTest: false,
+      blending: THREE.AdditiveBlending,
+      toneMapped: false
+    });
+
+    var points = new THREE.Points(geometry, material);
+    points.name = 'DSCDashFX.CurlHaze';
+    points.frustumCulled = false;
+
+    var elapsed = 0;
+    var disposed = false;
+    function update(dt, intensity) {
+      if (disposed) return;
+      dt = Math.min(Math.max(Number(dt) || 0, 0), 0.05);
+      intensity = intensity == null ? 1 : Math.max(0, Number(intensity) || 0);
+      elapsed += dt;
+      uniforms.uTime.value = elapsed;
+      uniforms.uIntensity.value = intensity;
       uniforms.uOpacity.value = Math.min(0.32, 0.045 + intensity * 0.095);
     }
 
@@ -702,9 +953,11 @@
   }
 
   THREE.DSCDashFX = Object.freeze({
+    FEATURES: FEATURES,
     createSoftSpriteTexture: createSoftSpriteTexture,
     createComposer: createComposer,
     makeFlowRibbon: makeFlowRibbon,
+    rebuildFlowRibbonGeometry: rebuildFlowRibbonGeometry,
     createCurlHaze: createCurlHaze,
     createColorRamp: createColorRamp,
     loadSimpleGltf: loadSimpleGltf

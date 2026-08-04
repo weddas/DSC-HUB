@@ -1,5 +1,33 @@
 # Changelog
 
+## HA surface 5.1.8 + fleet patch train (2026-08-04)
+
+- **Cal truth:** lab wet two-point → ESP (`script.dsc_pots_apply_lab_wet_to_esp`,
+  docs/LAB-WET-CAL.md); pot FW **5.1.6** raw sensors + `lab_buffer` stamp.
+- **Trust:** `dsc_v4_sensor_trust.yaml` — stuck pots, peer-MAD alerts, DHT
+  disagreement cue, optional mat-vote clear; tank EC/pH bias (N-023).
+- **Learn F-005:** multi-lever residual attribution (no longer skips when ≥2
+  air appliances co-run). Activity shows lever mix. Fleet coherence score (N-015).
+- **F-009:** Home keep-up gaps + Full Auto honesty copy on reduced kit.
+- **F-006:** hub **5.1.4** API/handshake age + last recovery reason; HA flap
+  counter 24h. Hub still needs physical power cycle if `.33` dead.
+- **N-011:** promote customs preview script + `scripts/promote_customs_to_yaml.py`.
+- **Control 5.1.15:** VPD editor, Pulse ASCII sparkline, per-device power page.
+- **Dash FX:** MeshLine ribbons + GPU curl haze (Tube/CPU fallback flags).
+- **Anemometer:** docs/ANEMOMETER-CFM.md + `sensor.dsc_cfm_curves_status`.
+- **N-005 / N-026:** no wait/settle retune without hub soak evidence (documented).
+- **N-013:** skipped this pass (track-only dryback remains).
+- Follow-ups: [`docs/FOLLOWUPS.md`](docs/FOLLOWUPS.md).
+
+## HA surface 5.1.7 — Cal SoT push + Dash (2026-08-04)
+
+- Peer → ESP push, dual-stack warn, allocated CFM honesty, The Dash cinematic.
+- Detail lives in FOLLOWUPS dated 2026-08-04 sections.
+
+## HA surface 5.1.6 — Calibration peer sync (2026-08-04)
+
+- Peer sync v2 (MAD), leaf VPD wire-up, pot provenance (FW 5.1.4).
+
 ## HA surface 5.1.5 — finish crop UI + pot-native strain (2026-08-03)
 
 - **Honest cutover:** 5.1.4 shipped packages + Climate Temp OOS + dead Tank chips;

@@ -254,6 +254,37 @@ template:
           {{ me_up and peer_up >= 1 and med_ec > 5 and ec4 < med_ec * 0.25 }}
           {% endif %}
 
+  - sensor:
+      # N-015: fleet multi-feature coherence score (0–100)
+      - name: "DSC Fleet Coherence Score"
+        unique_id: dsc_fleet_coherence_score
+        unit_of_measurement: "%"
+        icon: mdi:chart-timeline-variant
+        state: >
+          {% set ns = namespace(ok=0, n=0, flags=0) %}
+          {% for i in [1,2,3,4] %}
+            {% if is_state('input_boolean.dsc_pot' ~ i ~ '_in_service','on') %}
+              {% set ns.n = ns.n + 1 %}
+              {% if not is_state('binary_sensor.dsc_pot' ~ i ~ '_coherence_flag','on') %}
+                {% set ns.ok = ns.ok + 1 %}
+              {% else %}{% set ns.flags = ns.flags + 1 %}{% endif %}
+            {% endif %}
+          {% endfor %}
+          {% if ns.n == 0 %}none
+          {% else %}{{ ((ns.ok / ns.n) * 100)|round(0) }}{% endif %}
+        attributes:
+          moisture_ec_band: >-
+            {% set ns = namespace(vals=[]) %}
+            {% for i in [1,2,3,4] %}
+              {% if is_state('input_boolean.dsc_pot' ~ i ~ '_in_service','on') %}
+                {% set ns.vals = ns.vals + [states('input_number.dsc_pot' ~ i ~ '_learned_ec_per_moisture')|float(0)] %}
+              {% endif %}
+            {% endfor %}
+            {% if ns.vals|length < 2 %}n/a
+            {% else %}
+              {{ (ns.vals|min)|round(1) }}…{{ (ns.vals|max)|round(1) }} ΔEC/ΔM
+            {% endif %}
+
 automation:
   - id: dsc_pots_learn_ec_moisture_ratio
     alias: "DSC Pots · Learn ΔEC/Δmoisture after coherent rise"

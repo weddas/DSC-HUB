@@ -309,9 +309,26 @@ sections:
               Offset shifts, scale multiplies. Calibrate pH against a
               known buffer; leave scale at 1.0 unless you have two
               reference points. Provenance chips need pot firmware
-              **5.1.4+**; peer-median stamp button needs **5.1.5+**.
-              Rule: **peer OR ESP absolute, not both** — after Capture,
-              use Strains → Push peer → ESP.*
+              **5.1.4+**; peer-median stamp **5.1.5+**; lab wet stamp
+              **5.1.6+**. Rule: **peer OR ESP absolute, not both**.
+              Lab wet wizard: set Target Pot + Channel + measured/expected
+              → `script.dsc_pots_apply_lab_wet_to_esp` (see docs/LAB-WET-CAL.md).*
+          - type: entities
+            title: Lab wet two-point (N-016)
+            entities:
+              - entity: input_number.dsc_lab_wet_pot
+              - entity: input_select.dsc_lab_wet_channel
+              - entity: input_number.dsc_lab_wet_ph_lo_meas
+              - entity: input_number.dsc_lab_wet_ph_lo_exp
+              - entity: input_number.dsc_lab_wet_ph_hi_meas
+              - entity: input_number.dsc_lab_wet_ph_hi_exp
+              - entity: input_number.dsc_lab_wet_ec_lo_meas
+              - entity: input_number.dsc_lab_wet_ec_lo_exp
+              - entity: input_number.dsc_lab_wet_ec_hi_meas
+              - entity: input_number.dsc_lab_wet_ec_hi_exp
+              - entity: input_boolean.dsc_lab_wet_force
+              - entity: script.dsc_pots_apply_lab_wet_to_esp
+                name: Apply lab wet → ESP
           - type: conditional
             conditions:
               - condition: state

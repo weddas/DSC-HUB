@@ -1,10 +1,12 @@
 # DSC-HUB firmware v4
 
 Working directory for ESPHome configs. Current fleet release string:
-**`5.1.0`** (GitHub tag `v5.1.0`). See the repo
-[README](../../README.md) and [INSTALL.md](../../INSTALL.md) for from-scratch HA setup.
-Standalone SoftAP unboxing (no HA): [SETUP.md](../../SETUP.md).
+**Live train:** hub **5.1.4** · Control **5.1.15** · pots **5.1.6** (tagged marketing
+cut remains `v5.1.0`). See the repo root README / CHANGELOG / FOLLOWUPS.
+
 Firmware QA: [docs/qa/FIRMWARE-QA-5.1.0.md](../../docs/qa/FIRMWARE-QA-5.1.0.md).
+Repo [README](../../README.md) and [INSTALL.md](../../INSTALL.md) for from-scratch HA setup.
+Standalone SoftAP unboxing (no HA): [SETUP.md](../../SETUP.md).
 
 ## Local vs HA
 
@@ -21,7 +23,11 @@ Fleet component: `components/dsc_fleet_setup/` (phone portal on hub; Control/pot
 
 Package bodies are remote-git safe (no `!secret`). Stubs pass credentials (and hub/panel MACs + `espnow_cmd_tag`) as substitutions.
 
-Pots (`dsc-pot-common` **5.1.5+**): each soil channel has **Cal … Offset** / **Cal … Scale** config numbers (NVS). Formula `raw * scale + offset` applies before range/median and feeds HA + ESP-NOW. **Reset Sensor Calibration** restores defaults and clears provenance (`Soil Cal Method` / `Soil Cal Last` / `Soil Calibrated`). **Mark Soil Cal Peer Median** stamps method after HA push-to-ESP SoT.
+Pots (`dsc-pot-common` **5.1.6+**): each soil channel has **Cal … Offset** / **Cal … Scale**
+config numbers (NVS). Formula `raw * scale + offset` applies before range/median and feeds
+HA + ESP-NOW. **Soil * Raw** diagnostic templates reverse cal for lab wet measured points.
+**Reset Sensor Calibration** restores defaults and clears provenance. **Mark Soil Cal Peer Median**
+(5.1.5+) and **Mark Soil Cal Lab Buffer** (5.1.6+) stamp method after HA push / lab wet.
 
 ## Panel (DSC-CONTROL **4.0.11**)
 

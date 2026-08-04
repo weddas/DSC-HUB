@@ -15,6 +15,11 @@
 #  before the digit). Referenced by the HA stat/alert packages, the
 #  dashboard, and the HUB's closed-loop grow mat. Do not rename a node.
 #
+#  v5.1.6 — LAB WET + RAW PUBLISH (Aug 2026)
+#   * button.Mark Soil Cal Lab Buffer stamps method lab_buffer
+#   * Soil * Raw template sensors = (cal - offset) / scale (N-021)
+#   * project.version / Firmware Version → 5.1.6
+#
 #  v5.1.5 — PEER-MEDIAN CAL STAMP (Aug 2026)
 #   * button.Mark Soil Cal Peer Median: mute set_action stamps, write
 #     method=peer_median + ISO last (HA push-to-ESP SoT uses this after
@@ -83,7 +88,7 @@ esphome:
   friendly_name: ${friendly_name}
   project:
     name: digital_emotions.dsc-pot
-    version: "5.1.5"
+    version: "5.1.6"
 
 esp32:
   board: esp32dev
@@ -531,6 +536,69 @@ sensor:
           window_size: 3
           send_every: 1
 
+  # N-021: raw = (calibrated - offset) / scale — no second Modbus read.
+  - platform: template
+    name: "Soil Moisture Raw"
+    id: soil_moisture_raw
+    unit_of_measurement: "%"
+    state_class: measurement
+    icon: mdi:water-percent
+    entity_category: diagnostic
+    update_interval: 15s
+    lambda: |-
+      float c = id(soil_moisture).state;
+      float s = id(cal_moist_scale).state;
+      float o = id(cal_moist_offset).state;
+      if (isnan(c) || isnan(s) || fabsf(s) < 1e-6f) return {};
+      if (isnan(o)) o = 0.0f;
+      return {(c - o) / s};
+  - platform: template
+    name: "Soil Temperature Raw"
+    id: soil_temperature_raw
+    unit_of_measurement: "°C"
+    device_class: temperature
+    state_class: measurement
+    icon: mdi:thermometer
+    entity_category: diagnostic
+    update_interval: 15s
+    lambda: |-
+      float c = id(soil_temperature).state;
+      float s = id(cal_temp_scale).state;
+      float o = id(cal_temp_offset).state;
+      if (isnan(c) || isnan(s) || fabsf(s) < 1e-6f) return {};
+      if (isnan(o)) o = 0.0f;
+      return {(c - o) / s};
+  - platform: template
+    name: "Soil Conductivity Raw"
+    id: soil_conductivity_raw
+    unit_of_measurement: "µS/cm"
+    state_class: measurement
+    icon: mdi:flash
+    entity_category: diagnostic
+    update_interval: 15s
+    lambda: |-
+      float c = id(soil_conductivity).state;
+      float s = id(cal_ec_scale).state;
+      float o = id(cal_ec_offset).state;
+      if (isnan(c) || isnan(s) || fabsf(s) < 1e-6f) return {};
+      if (isnan(o)) o = 0.0f;
+      return {(c - o) / s};
+  - platform: template
+    name: "Soil pH Raw"
+    id: soil_ph_raw
+    unit_of_measurement: "pH"
+    state_class: measurement
+    icon: mdi:ph
+    entity_category: diagnostic
+    update_interval: 15s
+    lambda: |-
+      float c = id(soil_ph).state;
+      float s = id(cal_ph_scale).state;
+      float o = id(cal_ph_offset).state;
+      if (isnan(c) || isnan(s) || fabsf(s) < 1e-6f) return {};
+      if (isnan(o)) o = 0.0f;
+      return {(c - o) / s};
+
   - platform: uptime
     name: "Uptime"
     id: uptime_s
@@ -551,7 +619,7 @@ text_sensor:
   - platform: template
     name: "Firmware Version"
     icon: mdi:tag-check
-    lambda: 'return {"5.1.5"};'
+    lambda: 'return {"5.1.6"};'
     update_interval: 60s
 
 binary_sensor:
@@ -614,6 +682,27 @@ button:
           }
           id(cal_mute_stamp) = false;
           ESP_LOGI("cal", "Soil cal method stamped peer_median");
+  - platform: template
+    name: "Mark Soil Cal Lab Buffer"
+    id: cal_mark_lab_buffer
+    icon: mdi:flask
+    entity_category: config
+    on_press:
+      - lambda: "id(cal_mute_stamp) = true;"
+      - text.set:
+          id: cal_method
+          value: "lab_buffer"
+      - lambda: |-
+          auto now = id(ha_time).now();
+          if (now.is_valid()) {
+            char buf[32];
+            snprintf(buf, sizeof(buf), "%04d-%02d-%02dT%02d:%02d:%02d",
+                     now.year, now.month, now.day_of_month,
+                     now.hour, now.minute, now.second);
+            id(cal_last).make_call().set_value(std::string(buf)).perform();
+          }
+          id(cal_mute_stamp) = false;
+          ESP_LOGI("cal", "Soil cal method stamped lab_buffer");
 
 # ==================================================================
 #  PLANT IDENTITY  —  labels, not control inputs. The label travels

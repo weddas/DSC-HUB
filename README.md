@@ -4,8 +4,9 @@ Indoor grow climate fleet: **ESPHome hub**, **CYD touch panel** (DSC-CONTROL),
 **soil pots**, and **Sonoff demand followers** — local-first ladder control with
 Home Assistant surfaces that sync on every git push.
 
-**Current release:** [**v5.1.0**](https://github.com/weddas/DSC-HUB/releases/tag/v5.1.0) —
-fleet firmware / Sync add-on / HA surface **`5.1.0`**
+**Current release tag:** [**v5.1.0**](https://github.com/weddas/DSC-HUB/releases/tag/v5.1.0)  
+**Live train (in tree):** HA surface **5.1.8** · pots **5.1.6** · Control **5.1.15** · hub **5.1.4** · Sync **5.1.3**  
+(Fleet chip compares major.minor — mixed `5.1.x` stays `ok`.)
 
 ---
 
@@ -18,7 +19,7 @@ fleet firmware / Sync add-on / HA surface **`5.1.0`**
   Root Zone, Tank, Light, Trends, System.
 - **Learn Phase A + B** — Phase A EMA efficiencies & ETA; Phase B (opt-in)
   rate-limited writes to ladder **wait bases** only.
-- **Fleet version chip** — at-a-glance `ok` / `warn` / `error` vs expected **5.1.0**.
+- **Fleet version chip** — at-a-glance `ok` / `warn` / `error` vs expected **5.1.6** train.
 - **Push → all Sync HAOS** — packages, Pro dashboard, www, ESPHome stubs;
   **device firmware stays manual Install** (never auto-flash).
 
@@ -48,24 +49,24 @@ flowchart LR
 | [`firmware/v4/README.md`](firmware/v4/README.md) | Local validate / flash |
 
 **HAOS delivery:** Settings → Add-ons → Repositories → `https://github.com/weddas/DSC-HUB`
-→ install / Update **DSC-HUB Sync** **5.1.0**. Push to `master` → poll (~60s) →
+→ install / Update **DSC-HUB Sync** **5.1.3**. Push to `master` → poll (~60s) →
 packages / dashboard / www / ESPHome stubs land in `/config`.
 
 ---
 
-## Fleet at 5.1.0
+## Fleet at 5.1.x (live train)
 
 | Device | Config | Version |
 |---|---|---|
-| Hub | `dsc-hub.yaml` → `dsc-hub-v4_0.yaml` | **5.1.0** |
-| Panel | `dsc-control.yaml` → `dsc-control-common.yaml` | **5.1.4** |
-| Pots 1–4 | `dsc-pot{N}.yaml` → `dsc-pot-common.yaml` | **5.1.0** |
-| Sonoffs | heater / heatmat / humidifier / de-humidifier | **5.1.0** |
-| Kits | `*-kit.yaml`, `*-wifi-kit.yaml`, fleet-setup kits | **5.1.0** (same bodies) |
-| Sync add-on | `dsc-hub-sync/` | **5.1.0** |
-| HA surface | `sensor.dsc_ha_surface_version` | **5.1.0** |
+| Hub | `dsc-hub.yaml` → `dsc-hub-v4_0.yaml` | **5.1.4** |
+| Panel | `dsc-control.yaml` → `dsc-control-common.yaml` | **5.1.15** |
+| Pots 1–4 | `dsc-pot{N}.yaml` → `dsc-pot-common.yaml` | **5.1.6** |
+| Sonoffs | heater / heatmat / humidifier / de-humidifier | **5.1.x** |
+| Kits | `*-kit.yaml`, `*-wifi-kit.yaml`, fleet-setup kits | same bodies as device train |
+| Sync add-on | `dsc-hub-sync/` | **5.1.3** |
+| HA surface | `sensor.dsc_ha_surface_version` | **5.1.8** |
 
-ESPHome stubs use `ref: v5.1.0`. Flash order: hub → panel → pots → Sonoffs.
+Flash order: hub → panel → pots → Sonoffs. Living backlog: [`docs/FOLLOWUPS.md`](docs/FOLLOWUPS.md).
 
 ---
 

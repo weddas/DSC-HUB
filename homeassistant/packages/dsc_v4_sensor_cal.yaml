@@ -1,8 +1,9 @@
 # ==================================================================
-#  DSC-HUB v5.1.7 · SENSOR CAL — peer sync v2 + push-to-ESP SoT
+#  DSC-HUB v5.1.8 · SENSOR CAL — peer sync + push-to-ESP + lab wet
 #  ------------------------------------------------------------------
-#  HA peer Got offsets + optional push into ESP Cal Offset (N-019).
-#  Dual-stack warn (N-024). Auto-after-water can require confirm (N-026).
+#  HA peer Got offsets + push into ESP Cal Offset (N-019).
+#  Dual-stack warn (N-024). Auto-after-water confirm (N-026).
+#  Lab wet two-point scale → ESP (N-016). See docs/LAB-WET-CAL.md.
 #  MAD capture: script.dsc_pots_capture_peer_baseline (strain_catalog).
 # ==================================================================
 
@@ -18,6 +19,10 @@ input_boolean:
   dsc_peer_push_force:
     name: "DSC Peer Push Force (non-1 scale)"
     icon: mdi:alert-octagon
+    initial: false
+  dsc_lab_wet_force:
+    name: "DSC Lab Wet Force (ignore HA peers)"
+    icon: mdi:flask-empty-alert
     initial: false
 
 input_datetime:
@@ -58,6 +63,117 @@ input_number:
     unit_of_measurement: "h"
     mode: box
     icon: mdi:timer-outline
+  # N-016 lab wet two-point wizard (operator fills measured + expected)
+  dsc_lab_wet_pot:
+    name: "DSC Lab Wet Target Pot"
+    min: 1
+    max: 4
+    step: 1
+    initial: 1
+    mode: box
+    icon: mdi:flower-pot
+  dsc_lab_wet_ph_lo_meas:
+    name: "DSC Lab Wet pH Low Measured"
+    min: 3
+    max: 9
+    step: 0.01
+    initial: 4.0
+    mode: box
+  dsc_lab_wet_ph_lo_exp:
+    name: "DSC Lab Wet pH Low Expected"
+    min: 3
+    max: 9
+    step: 0.01
+    initial: 4.0
+    mode: box
+  dsc_lab_wet_ph_hi_meas:
+    name: "DSC Lab Wet pH High Measured"
+    min: 3
+    max: 9
+    step: 0.01
+    initial: 7.0
+    mode: box
+  dsc_lab_wet_ph_hi_exp:
+    name: "DSC Lab Wet pH High Expected"
+    min: 3
+    max: 9
+    step: 0.01
+    initial: 7.0
+    mode: box
+  dsc_lab_wet_ec_lo_meas:
+    name: "DSC Lab Wet EC Low Measured"
+    min: 0
+    max: 10000
+    step: 1
+    initial: 0
+    unit_of_measurement: "µS/cm"
+    mode: box
+  dsc_lab_wet_ec_lo_exp:
+    name: "DSC Lab Wet EC Low Expected"
+    min: 0
+    max: 10000
+    step: 1
+    initial: 0
+    unit_of_measurement: "µS/cm"
+    mode: box
+  dsc_lab_wet_ec_hi_meas:
+    name: "DSC Lab Wet EC High Measured"
+    min: 0
+    max: 10000
+    step: 1
+    initial: 1413
+    unit_of_measurement: "µS/cm"
+    mode: box
+  dsc_lab_wet_ec_hi_exp:
+    name: "DSC Lab Wet EC High Expected"
+    min: 0
+    max: 10000
+    step: 1
+    initial: 1413
+    unit_of_measurement: "µS/cm"
+    mode: box
+  dsc_lab_wet_m_lo_meas:
+    name: "DSC Lab Wet Moisture Low Measured"
+    min: 0
+    max: 100
+    step: 0.1
+    initial: 0
+    unit_of_measurement: "%"
+    mode: box
+  dsc_lab_wet_m_lo_exp:
+    name: "DSC Lab Wet Moisture Low Expected"
+    min: 0
+    max: 100
+    step: 0.1
+    initial: 0
+    unit_of_measurement: "%"
+    mode: box
+  dsc_lab_wet_m_hi_meas:
+    name: "DSC Lab Wet Moisture High Measured"
+    min: 0
+    max: 100
+    step: 0.1
+    initial: 100
+    unit_of_measurement: "%"
+    mode: box
+  dsc_lab_wet_m_hi_exp:
+    name: "DSC Lab Wet Moisture High Expected"
+    min: 0
+    max: 100
+    step: 0.1
+    initial: 100
+    unit_of_measurement: "%"
+    mode: box
+
+input_select:
+  dsc_lab_wet_channel:
+    name: "DSC Lab Wet Channel"
+    icon: mdi:flask
+    options:
+      - "ph"
+      - "ec"
+      - "moisture"
+    initial: "ph"
 
 template:
   - binary_sensor:
@@ -386,6 +502,118 @@ script:
           message: >-
             ESP Cal Offset now holds peer alignment. Got ≈ soil_*.
             ESP-NOW/mat see the same values. Dual-stack warn should clear.
+
+  dsc_pots_apply_lab_wet_to_esp:
+    alias: "DSC Pots Apply Lab Wet → ESP"
+    description: >-
+      Two-point lab buffer → ESP Cal Scale+Offset for selected pot/channel
+      (N-016). Refuses if HA peer offsets non-zero unless Force. Stamps
+      lab_buffer via Mark button (pot FW 5.1.6+). See docs/LAB-WET-CAL.md.
+    mode: single
+    sequence:
+      - variables:
+          n: "{{ states('input_number.dsc_lab_wet_pot')|int(1) }}"
+          ch: "{{ states('input_select.dsc_lab_wet_channel') }}"
+          force: "{{ is_state('input_boolean.dsc_lab_wet_force','on') }}"
+          ha_peer: >
+            {% set n = states('input_number.dsc_lab_wet_pot')|int(1) %}
+            {{ states('input_number.dsc_pot' ~ n ~ '_offset_ph')|float(0)|abs > 0.05
+               or states('input_number.dsc_pot' ~ n ~ '_offset_ec_us')|float(0)|abs > 1
+               or states('input_number.dsc_pot' ~ n ~ '_offset_moisture')|float(0)|abs > 0.05 }}
+          m_lo: >
+            {% set c = states('input_select.dsc_lab_wet_channel') %}
+            {% if c == 'ph' %}{{ states('input_number.dsc_lab_wet_ph_lo_meas')|float(0) }}
+            {% elif c == 'ec' %}{{ states('input_number.dsc_lab_wet_ec_lo_meas')|float(0) }}
+            {% else %}{{ states('input_number.dsc_lab_wet_m_lo_meas')|float(0) }}{% endif %}
+          m_hi: >
+            {% set c = states('input_select.dsc_lab_wet_channel') %}
+            {% if c == 'ph' %}{{ states('input_number.dsc_lab_wet_ph_hi_meas')|float(0) }}
+            {% elif c == 'ec' %}{{ states('input_number.dsc_lab_wet_ec_hi_meas')|float(0) }}
+            {% else %}{{ states('input_number.dsc_lab_wet_m_hi_meas')|float(0) }}{% endif %}
+          e_lo: >
+            {% set c = states('input_select.dsc_lab_wet_channel') %}
+            {% if c == 'ph' %}{{ states('input_number.dsc_lab_wet_ph_lo_exp')|float(0) }}
+            {% elif c == 'ec' %}{{ states('input_number.dsc_lab_wet_ec_lo_exp')|float(0) }}
+            {% else %}{{ states('input_number.dsc_lab_wet_m_lo_exp')|float(0) }}{% endif %}
+          e_hi: >
+            {% set c = states('input_select.dsc_lab_wet_channel') %}
+            {% if c == 'ph' %}{{ states('input_number.dsc_lab_wet_ph_hi_exp')|float(0) }}
+            {% elif c == 'ec' %}{{ states('input_number.dsc_lab_wet_ec_hi_exp')|float(0) }}
+            {% else %}{{ states('input_number.dsc_lab_wet_m_hi_exp')|float(0) }}{% endif %}
+          scale: >
+            {% set dm = (m_hi|float) - (m_lo|float) %}
+            {% set de = (e_hi|float) - (e_lo|float) %}
+            {% if dm|abs < 0.001 %}0{% else %}{{ (de / dm)|round(4) }}{% endif %}
+          offset: >
+            {% set sc = scale|float(0) %}
+            {{ ((e_lo|float) - sc * (m_lo|float))|round(3) }}
+          scale_ent: >
+            {% set c = states('input_select.dsc_lab_wet_channel') %}
+            {% set n = states('input_number.dsc_lab_wet_pot')|int(1) %}
+            {% if c == 'ph' %}number.dsc_pot{{ n }}_cal_ph_scale
+            {% elif c == 'ec' %}number.dsc_pot{{ n }}_cal_conductivity_scale
+            {% else %}number.dsc_pot{{ n }}_cal_moisture_scale{% endif %}
+          offset_ent: >
+            {% set c = states('input_select.dsc_lab_wet_channel') %}
+            {% set n = states('input_number.dsc_lab_wet_pot')|int(1) %}
+            {% if c == 'ph' %}number.dsc_pot{{ n }}_cal_ph_offset
+            {% elif c == 'ec' %}number.dsc_pot{{ n }}_cal_conductivity_offset
+            {% else %}number.dsc_pot{{ n }}_cal_moisture_offset{% endif %}
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ ha_peer and not force }}"
+            sequence:
+              - action: input_text.set_value
+                target: { entity_id: input_text.dsc_peer_sync_status }
+                data:
+                  value: "Lab wet aborted — HA peer offsets still set. Push/zero peers or enable Force."
+              - stop: "dual stack"
+          - conditions:
+              - condition: template
+                value_template: "{{ (scale|float(0))|abs < 0.001 }}"
+            sequence:
+              - action: input_text.set_value
+                target: { entity_id: input_text.dsc_peer_sync_status }
+                data:
+                  value: "Lab wet aborted — measured span too small (hi ≈ lo)."
+              - stop: "span"
+      - action: number.set_value
+        target: { entity_id: "{{ scale_ent }}" }
+        data: { value: "{{ scale|float }}" }
+      - action: number.set_value
+        target: { entity_id: "{{ offset_ent }}" }
+        data: { value: "{{ offset|float }}" }
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: >-
+                  {% set a = 'button.dsc_pot' ~ n ~ '_mark_soil_cal_lab_buffer' %}
+                  {% set b = 'button.dsc_pot_' ~ n ~ '_mark_soil_cal_lab_buffer' %}
+                  {{ states(a) not in ['unknown','unavailable','']
+                     or states(b) not in ['unknown','unavailable',''] }}
+            sequence:
+              - variables:
+                  mark_btn: >-
+                    {% set a = 'button.dsc_pot' ~ n ~ '_mark_soil_cal_lab_buffer' %}
+                    {% set b = 'button.dsc_pot_' ~ n ~ '_mark_soil_cal_lab_buffer' %}
+                    {{ a if states(a) not in ['unknown','unavailable',''] else b }}
+              - action: button.press
+                target: { entity_id: "{{ mark_btn }}" }
+      - action: input_text.set_value
+        target: { entity_id: input_text.dsc_peer_sync_status }
+        data:
+          value: >-
+            Lab wet POT{{ n }} {{ ch }} → scale {{ scale }} offset {{ offset }}
+            at {{ now().strftime('%Y-%m-%d %H:%M') }} (lab_buffer).
+      - action: input_boolean.turn_off
+        target: { entity_id: input_boolean.dsc_lab_wet_force }
+      - action: persistent_notification.create
+        data:
+          title: "Lab wet applied"
+          message: >-
+            POT{{ n }} {{ ch }}: scale={{ scale }} offset={{ offset }}.
+            Method lab_buffer (needs pot FW 5.1.6+). Do not also stack HA peers.
 
   dsc_pots_reset_peer_captures:
     alias: "DSC Pots Reset Peer Captures"

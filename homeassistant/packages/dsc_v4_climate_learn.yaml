@@ -1,5 +1,5 @@
 # ==================================================================
-#  DSC-HUB v5.1 · CLIMATE LEARN (Phase A observe + Phase B wait clamps)
+#  DSC-HUB v5.1.8 · CLIMATE LEARN (Phase A observe + Phase B wait clamps)
 #  ------------------------------------------------------------------
 #  Bounded EMA response-rate observer. Samples ΔT / ΔAH while each
 #  lever is active, rejects outliers + emergency / takeover / faults,
@@ -9,11 +9,12 @@
 #  Phase B (opt-in): trusted coeffs clamp hub ladder wait bases via
 #  number.dsc_hub_ladder_wait_* — never failsafe, min-off, or fans.
 #
-#  Sampling rule (v5.1.2): air appliances (hum/dehum/heater/AC) train
-#  when exactly one of those is ON — fans and grow-mat may co-run
-#  (Full Auto always has fans; mat often stays on). Mat trains when mat
-#  is the only soil heater and no air appliance is ON. Vent trains when
-#  OUT/intake is high and no air appliance is ON (mat OK).
+#  Sampling rule (v5.1.8 / F-005): air appliances may co-run. When
+#  ≥2 air levers are ON, Phase A attributes by subtracting the other
+#  levers' expected ΔAH/ΔT (nameplate × current EMA eff). Single-lever
+#  path unchanged. Fans + grow-mat may always co-run. Mat trains when
+#  no air appliance is ON. Vent trains when no air appliance is ON.
+#  Phase B stays wait-only until multi-lever A soaks clean.
 #
 #  Depends on: dsc_v4_climate_physics.yaml, dsc_v4_root_zone.yaml.
 # ==================================================================
@@ -358,7 +359,11 @@ template:
                  or states('sensor.dsc_fan_intake_main_pct')|float(0) >= 20 %}
             {% set recirc = states('sensor.dsc_fan_exhaust_room_pct')|float(0) >= 20 %}
             {% if air_n > 1 %}
-              Waiting — {{ air_n }} air appliances on together (needs exactly one)
+              Multi-lever ({{ air_n }}) — attributing via baseline subtract
+              {% if dehum %}· dehum {{ states('input_number.dsc_learn_samples_dehum')|int(0) }}/{{ need }}{% endif %}
+              {% if hum %}· hum {{ states('input_number.dsc_learn_samples_hum')|int(0) }}/{{ need }}{% endif %}
+              {% if heat %}· heat {{ states('input_number.dsc_learn_samples_heater')|int(0) }}/{{ need }}{% endif %}
+              {% if ac %}· AC {{ states('input_number.dsc_learn_samples_ac')|int(0) }}/{{ need }}{% endif %}
             {% elif dehum %}
               Learning dehumidifier ({{ states('input_number.dsc_learn_samples_dehum')|int(0) }}/{{ need }} samples)
             {% elif hum %}
@@ -374,10 +379,24 @@ template:
             {% elif recirc and air_n == 0 %}
               Learning recirculation ({{ states('input_number.dsc_learn_samples_recirc')|int(0) }}/{{ need }} samples)
             {% else %}
-              Idle — no single lever to measure (fans+mat alone is fine; waiting for an appliance run)
+              Idle — no lever to measure (fans+mat alone is fine; waiting for an appliance run)
             {% endif %}
           {% endif %}
         attributes:
+          lever_mix: >-
+            {% set parts = [] %}
+            {% if is_state('switch.dsc_hub_dehumidifier_demand','on') %}{% set parts = parts + ['dehum'] %}{% endif %}
+            {% if is_state('switch.dsc_hub_humidifier_demand','on') %}{% set parts = parts + ['hum'] %}{% endif %}
+            {% if is_state('switch.dsc_hub_heater_demand','on') %}{% set parts = parts + ['heater'] %}{% endif %}
+            {% if is_state('switch.dsc_hub_ac_demand','on') %}{% set parts = parts + ['ac'] %}{% endif %}
+            {% if is_state('switch.dsc_hub_grow_mat_demand','on') %}{% set parts = parts + ['mat'] %}{% endif %}
+            {{ parts | join('+') or 'none' }}
+          multi_lever: >-
+            {% set n = (1 if is_state('switch.dsc_hub_dehumidifier_demand','on') else 0)
+               + (1 if is_state('switch.dsc_hub_humidifier_demand','on') else 0)
+               + (1 if is_state('switch.dsc_hub_heater_demand','on') else 0)
+               + (1 if is_state('switch.dsc_hub_ac_demand','on') else 0) %}
+            {{ n > 1 }}
           plain: "Shows whether Phase A is measuring right now, and why not if idle."
 
 
@@ -594,8 +613,8 @@ automation:
             {% set dt = states('input_number.dsc_learn_snap_epoch')|float(0) %}
             {% set mins = ((as_timestamp(now()) - dt) / 60) if dt > 0 else 0 %}
             {{ mins >= 3 and mins <= 12 }}
-          # Air appliances only — fans + grow-mat may co-run (Full Auto /
-          # root-zone always do). Exactly one air lever → air EMA may fire.
+          # Air appliances — F-005 multi-lever: residual after subtracting
+          # other levers' expected ΔAH/ΔT (nameplate × current EMA).
           air_appliance_levers: >-
             {% set ns = namespace(n=0) %}
             {% if is_state('switch.dsc_hub_dehumidifier_demand','on') %}{% set ns.n = ns.n + 1 %}{% endif %}
@@ -604,6 +623,35 @@ automation:
             {% if is_state('switch.dsc_hub_ac_demand','on') %}{% set ns.n = ns.n + 1 %}{% endif %}
             {{ ns.n }}
           single_air_lever: "{{ (air_appliance_levers|int(0)) == 1 }}"
+          air_ok: "{{ (air_appliance_levers|int(0)) >= 1 }}"
+          # Expected other-lever AH contribution (g/m³/min) excluding self.
+          other_dAH_ex_dehum: >-
+            {% set vol = states('input_number.dsc_vol_4x8_m3')|float(2.5) %}
+            {% set ns = namespace(v=0.0) %}
+            {% if is_state('switch.dsc_hub_humidifier_demand','on') %}
+              {% set ns.v = ns.v + (states('input_number.dsc_hum_ml_hr')|float(300) / vol / 60)
+                 * states('input_number.dsc_learn_eff_hum')|float(1) %}
+            {% endif %}
+            {{ ns.v }}
+          other_dAH_ex_hum: >-
+            {% set vol = states('input_number.dsc_vol_4x8_m3')|float(2.5) %}
+            {% set ns = namespace(v=0.0) %}
+            {% if is_state('switch.dsc_hub_dehumidifier_demand','on') %}
+              {% set ns.v = ns.v + (-(states('input_number.dsc_dehum_l_day')|float(20) / 24) * 1000 / vol / 60)
+                 * states('input_number.dsc_learn_eff_dehum')|float(1) %}
+            {% endif %}
+            {{ ns.v }}
+          dAH_adj_dehum: "{{ (dAH_per_min|float(0)) - (other_dAH_ex_dehum|float(0)) }}"
+          dAH_adj_hum: "{{ (dAH_per_min|float(0)) - (other_dAH_ex_hum|float(0)) }}"
+          other_dT_ex_heater: >-
+            {% set vol = states('input_number.dsc_vol_4x8_m3')|float(2.5) %}
+            {% set ns = namespace(v=0.0) %}
+            {% if is_state('switch.dsc_hub_ac_demand','on') %}
+              {% set btu = states('input_number.dsc_ac_btu_hr')|float(9000) %}
+              {% set ns.v = ns.v - (btu / (vol * 1.143) / 60) * states('input_number.dsc_learn_eff_ac')|float(1) %}
+            {% endif %}
+            {{ ns.v }}
+          dT_adj_heater: "{{ (dT_per_min|float(0)) - (other_dT_ex_heater|float(0)) }}"
           # Mat: soil path; ignore fans; block if any air appliance is on.
           mat_clean: >-
             {{ is_state('switch.dsc_hub_grow_mat_demand','on')
@@ -611,16 +659,16 @@ automation:
           # Vent/recirc: ignore mat; block if any air appliance is on.
           vent_clean: "{{ (air_appliance_levers|int(0)) == 0 }}"
 
-      # --- Dehumidifier: observed drying vs nameplate ---
+      # --- Dehumidifier: observed drying vs nameplate (multi-lever residual) ---
       - choose:
           - conditions:
               - condition: template
                 value_template: >-
                   {{ valid_window|bool
-                     and single_air_lever|bool
+                     and air_ok|bool
                      and is_state('switch.dsc_hub_dehumidifier_demand','on')
-                     and (dAH_per_min|float(0)) < -0.01
-                     and (dAH_per_min|float(0)) > -2.0 }}
+                     and (dAH_adj_dehum|float(0)) < -0.01
+                     and (dAH_adj_dehum|float(0)) > -2.0 }}
             sequence:
               - variables:
                   nameplate_g_h: "{{ (states('input_number.dsc_dehum_l_day')|float(20) / 24) * 1000 }}"
@@ -630,7 +678,7 @@ automation:
                   ratio: >-
                     {% set exp = -((states('input_number.dsc_dehum_l_day')|float(20) / 24) * 1000)
                        / states('input_number.dsc_vol_4x8_m3')|float(2.5) / 60 %}
-                    {% set obs = dAH_per_min|float(0) %}
+                    {% set obs = dAH_adj_dehum|float(0) %}
                     {% if exp >= -0.0001 %}1.0
                     {% else %}{{ ([0.1, (obs / exp), 2.0]|sort)[1] }}{% endif %}
                   new_eff: >-
@@ -647,22 +695,22 @@ automation:
                   value: >-
                     {{ [states('input_number.dsc_learn_samples_dehum')|float(0) + 1, 10000]|min }}
 
-      # --- Humidifier: observed AH rise vs nameplate ---
+      # --- Humidifier: observed AH rise vs nameplate (multi-lever residual) ---
       - choose:
           - conditions:
               - condition: template
                 value_template: >-
                   {{ valid_window|bool
-                     and single_air_lever|bool
+                     and air_ok|bool
                      and is_state('switch.dsc_hub_humidifier_demand','on')
-                     and (dAH_per_min|float(0)) > 0.01
-                     and (dAH_per_min|float(0)) < 2.0 }}
+                     and (dAH_adj_hum|float(0)) > 0.01
+                     and (dAH_adj_hum|float(0)) < 2.0 }}
             sequence:
               - variables:
                   ratio: >-
                     {% set exp = (states('input_number.dsc_hum_ml_hr')|float(300)
                        / states('input_number.dsc_vol_4x8_m3')|float(2.5) / 60) %}
-                    {% set obs = dAH_per_min|float(0) %}
+                    {% set obs = dAH_adj_hum|float(0) %}
                     {% if exp <= 0.0001 %}1.0
                     {% else %}{{ ([0.1, (obs / exp), 2.0]|sort)[1] }}{% endif %}
                   new_eff: >-
@@ -679,23 +727,23 @@ automation:
                   value: >-
                     {{ [states('input_number.dsc_learn_samples_hum')|float(0) + 1, 10000]|min }}
 
-      # --- Heater: observed ΔT vs expected from watts ---
+      # --- Heater: observed ΔT vs expected from watts (multi-lever residual) ---
       - choose:
           - conditions:
               - condition: template
                 value_template: >-
                   {{ valid_window|bool
-                     and single_air_lever|bool
+                     and air_ok|bool
                      and is_state('switch.dsc_hub_heater_demand','on')
-                     and (dT_per_min|float(0)) > 0.005
-                     and (dT_per_min|float(0)) < 1.5 }}
+                     and (dT_adj_heater|float(0)) > 0.005
+                     and (dT_adj_heater|float(0)) < 1.5 }}
             sequence:
               - variables:
                   ratio: >-
                     {% set btu = states('input_number.dsc_heater_w')|float(750) * 3.412 %}
                     {% set exp_c_h = btu / (states('input_number.dsc_vol_4x8_m3')|float(2.5) * 1.143) %}
                     {% set exp = exp_c_h / 60 %}
-                    {% set obs = dT_per_min|float(0) %}
+                    {% set obs = dT_adj_heater|float(0) %}
                     {% if exp <= 0.0001 %}1.0
                     {% else %}{{ ([0.1, (obs / exp), 2.0]|sort)[1] }}{% endif %}
                   new_eff: >-
@@ -863,7 +911,7 @@ automation:
               - condition: template
                 value_template: >-
                   {{ valid_window|bool
-                     and single_air_lever|bool
+                     and air_ok|bool
                      and is_state('switch.dsc_hub_ac_demand','on')
                      and is_state('input_boolean.dsc_ac_in_service','on')
                      and states('input_number.dsc_ac_btu_hr')|float(0) > 0

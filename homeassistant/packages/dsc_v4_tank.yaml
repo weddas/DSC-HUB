@@ -33,10 +33,27 @@ input_number:
     max: 1000
     step: 999      # effectively a 1 <-> 1000 toggle
     initial: 1
+  dsc_tank_ec_bias:
+    name: "DSC Tank — EC bias (µS/cm)"
+    icon: mdi:plus-minus-variant
+    min: -2000
+    max: 2000
+    step: 1
+    initial: 0
+    unit_of_measurement: "µS/cm"
+    mode: box
+  dsc_tank_ph_bias:
+    name: "DSC Tank — pH bias"
+    icon: mdi:plus-minus-variant
+    min: -2
+    max: 2
+    step: 0.01
+    initial: 0
+    mode: box
 
 template:
   - sensor:
-      # Single source of truth for tank EC in µS/cm
+      # Single source of truth for tank EC in µS/cm (multiplier then bias)
       - name: "DSC Tank EC Normalized"
         unique_id: dsc_tank_ec_normalized
         unit_of_measurement: "µS/cm"
@@ -45,7 +62,18 @@ template:
         state: >
           {% set v = states('sensor.water_tester_ec_current')|float(none) %}
           {% set m = states('input_number.dsc_tank_ec_multiplier')|float(1) %}
-          {{ (v * m)|round(0) if v is not none else none }}
+          {% set b = states('input_number.dsc_tank_ec_bias')|float(0) %}
+          {{ ((v * m) + b)|round(0) if v is not none else none }}
+
+      - name: "DSC Tank pH Calibrated"
+        unique_id: dsc_tank_ph_calibrated
+        unit_of_measurement: "pH"
+        state_class: measurement
+        icon: mdi:ph
+        state: >
+          {% set v = states('sensor.water_tester_ph_current')|float(none) %}
+          {% set b = states('input_number.dsc_tank_ph_bias')|float(0) %}
+          {{ (v + b)|round(2) if v is not none else none }}
 
       # Stage/type -> EC band (µS/cm). Photo vs Auto maps from Table A.
       - name: "DSC Tank EC Target Min"
@@ -89,7 +117,8 @@ template:
         delay_on:
           minutes: 15
         state: >
-          {% set v = states('sensor.water_tester_ph_current')|float(none) %}
+          {% set v = states('sensor.dsc_tank_ph_calibrated')|float(none) %}
+          {% if v is none %}{% set v = states('sensor.water_tester_ph_current')|float(none) %}{% endif %}
           {{ v is not none and (v < 6.0 or v > 7.0) }}
 
       # >24C = dissolved O2 drops, Pythium risk climbs. Most valuable

@@ -1497,14 +1497,26 @@
         uniforms.uDashOffset.value -= 0.005 + shown * 0.018;
         const width = active ? 0.46 + shown * 0.86 : 0.32;
         if (Math.abs(width - path.ribbon.userData.flow.lastWidth) > 0.08) {
-          path.ribbon.geometry.dispose();
-          path.ribbon.geometry = new THREE.TubeGeometry(
-            path.ribbon.userData.flow.curve,
-            path.ribbon.userData.flow.tubular,
-            path.ribbon.userData.flow.baseRadius * width,
-            6,
-            false
-          );
+          const nextRadius = path.ribbon.userData.flow.baseRadius * width;
+          if (typeof path.ribbon.userData.rebuildFlowRibbon === "function") {
+            path.ribbon.userData.rebuildFlowRibbon(nextRadius);
+          } else if (fx && typeof fx.rebuildFlowRibbonGeometry === "function") {
+            fx.rebuildFlowRibbonGeometry(
+              path.ribbon,
+              path.ribbon.userData.flow.curve,
+              path.ribbon.userData.flow.tubular,
+              nextRadius
+            );
+          } else {
+            path.ribbon.geometry.dispose();
+            path.ribbon.geometry = new THREE.TubeGeometry(
+              path.ribbon.userData.flow.curve,
+              path.ribbon.userData.flow.tubular,
+              nextRadius,
+              6,
+              false
+            );
+          }
           path.ribbon.userData.flow.lastWidth = width;
         }
       }
