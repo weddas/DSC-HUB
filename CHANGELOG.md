@@ -1,5 +1,12 @@
 # Changelog
 
+## Sync add-on 5.1.3 — cinematic www guards (F-013) (2026-08-04)
+
+- Add-on **5.1.3** concatenates system-map + airflow + THREE + `dsc-dash-fx` +
+  The Dash; refuses staged bundles `< 500000` bytes; falls back to `dist/`;
+  never demotes a live ≥500 KB cinematic file (F-013 closed on HA).
+- Ops: [`docs/qa/LIVE-UI-WWW-BUNDLE-GUARDS.md`](docs/qa/LIVE-UI-WWW-BUNDLE-GUARDS.md).
+
 ## HA surface 5.1.5 — finish crop UI + pot-native strain (2026-08-03)
 
 - **Honest cutover:** 5.1.4 shipped packages + Climate Temp OOS + dead Tank chips;

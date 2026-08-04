@@ -27,8 +27,9 @@ into `configuration.yaml` (packages + YAML dashboard **`dsc-hub-pro`**).
 ### Add-on (recommended)
 
 1. Settings → Add-ons → Repositories → `https://github.com/weddas/DSC-HUB`
-2. Install **DSC-HUB Sync** **5.1.0** → Start (defaults include `sync_esphome: true`)
-3. Wait for “Synced to …” · confirm `/config/dsc-hub-sync.version`
+2. Install **DSC-HUB Sync** **5.1.3** → Start (defaults include `sync_esphome: true`)
+3. Wait for “Synced to …” · confirm `/config/dsc-hub-sync.version` ·
+   `wc -c /config/www/dsc-system-map-card.js` ≥ 500000 (~846 KB cinematic bundle)
 4. Merge configuration snippet → **Restart HA Core once** (creates new helpers)
 
 Further pushes to `master` update packages / Pro dashboard / www / stubs automatically.

@@ -425,10 +425,12 @@ No climate control regression during soak window.
 - **F-013** `dsc-hub-sync` add-on (still **5.1.2** image until rebuilt) overwrote `/config/www/dsc-system-map-card.js` to ~10KB system-map-only, wiping Three/Dash. **Mitigation (in-tree):** refuse bundles <500KB; fall back to `dist/dsc-system-map-card.js`; never replace a live >=500KB card with a tiny staged file; Lovelace resource must stay `res_type: js`. **Done 2026-08-04:** add-on rebuilt to **5.1.3**; sync staged 845901-byte cinematic bundle + vendor FX/three (F-013 closed on HA).
 
 ### next-plan / deferred
-- Rebuild dsc-hub-sync add-on from current tree so F-013 guards are live
 - Optional offline GLTF accents if still below product-shot bar after soak (primitives currently accepted)
 - True depth-buffer soft particles (sample DepthTexture) if layered haze + view-Z fade still feel harsh against duct solids
 - Prefer `hass.callWS(lovelace/resources/update)` cache-bust; avoid core restart races (F-010)
+
+### docs
+- Ops runbook for F-013 guards: [`docs/qa/LIVE-UI-WWW-BUNDLE-GUARDS.md`](qa/LIVE-UI-WWW-BUNDLE-GUARDS.md)
 
 ### constraint preserved
 - Air Path rail not redesigned (legend hover/click only)
