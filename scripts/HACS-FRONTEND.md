@@ -3,12 +3,18 @@
 Install the DSC-HUB Lovelace cards from this GitHub repo as a
 **HACS custom repository** (category: **Dashboard**).
 
-One resource (`DSC-HUB.js`) registers both:
+One resource (`DSC-HUB.js` ≡ `dsc-system-map-card.js`, **~846 KB**) registers:
 
 - `custom:dsc-system-map-card` — neon isometric SYSTEM MAP
 - `custom:dsc-airflow-map-card` — GUI-first isometric **tent airflow scene**
   (room size, tents, wall ports, fans, carbon filters, exhaust into room or
   through wall). Open **Edit card** for the visual editor; Add card uses DSC defaults.
+- `custom:dsc-the-dash-card` — Three.js cinematic tent/duct ops view (needs
+  vendored THREE + `dsc-dash-fx` inside the same classic `js` resource)
+
+**Do not** install `homeassistant/www/dsc-system-map-card.js` alone (~10 KB
+source). Publishers must concatenate — see
+[`docs/qa/LIVE-UI-WWW-BUNDLE-GUARDS.md`](../docs/qa/LIVE-UI-WWW-BUNDLE-GUARDS.md).
 
 ## Add the custom repository
 
@@ -65,24 +71,41 @@ Without it, popup `tap_action`s silently do nothing — no error is shown.
 | Path | Role |
 |---|---|
 | [`hacs.json`](../hacs.json) | HACS manifest (repo root) |
-| [`dist/DSC-HUB.js`](../dist/DSC-HUB.js) | Bundled cards (repo-name match) |
+| [`dist/DSC-HUB.js`](../dist/DSC-HUB.js) | Cinematic bundle (~846 KB, repo-name match) |
 | [`dist/dsc-system-map-card.js`](../dist/dsc-system-map-card.js) | Same bundle (legacy `/local` filename) |
 | [`dist/dsc-system-map.svg`](../dist/dsc-system-map.svg) | System map artwork |
 | [`dist/dsc-airflow-map-card.js`](../dist/dsc-airflow-map-card.js) | Airflow card standalone source |
+| [`dist/dsc-the-dash-card.js`](../dist/dsc-the-dash-card.js) | Dash standalone source |
+| [`dist/vendor/`](../dist/vendor/) | `three.min.js` + `dsc-dash-fx.js` (also inside bundle) |
 
 | `homeassistant/www/*` | **Source of truth** — run `scripts/sync-hacs-dist.sh` after edits |
+
+**Concat order:** system-map → airflow → `vendor/three.min.js` →
+`vendor/dsc-dash-fx.js` → `dsc-the-dash-card.js` (Node/binary concat; avoid
+PowerShell `Get-Content` — Unicode corruption).
 
 CI workflow [`.github/workflows/hacs-dist.yml`](../.github/workflows/hacs-dist.yml)
 keeps `dist/` synced on pushes that touch `homeassistant/www/`.
 
+After Redownload: `wc -c` the served JS — expect **≥ 500000** (healthy ~846 KB).
+~10 KB ⇒ stub; ~33–61 KB ⇒ pre-THREE era.
+
+## Publish matrix
+
+| Path | www bundle | Modules `view_*.yaml` | Lovelace `?v=` |
+|---|---|---|---|
+| **Sync add-on ≥ 5.1.3** | Five-part concat + F-013 guards | Yes | No (manual / WS) |
+| **`ha-sync.sh`** | Five-part concat | Yes | `dash-<UTC>` |
+| **HACS Redownload** | Uses `dist/` bundle | No | HACS resource URL |
+
 ## Packages / dashboard YAML (not HACS)
 
 Helpers, automations, and the full Lovelace dashboard are **not** HACS
-plugins — they deploy via [`ha-sync.sh`](ha-sync.sh) / Unraid runner
-([`HA-SYNC-BOOTSTRAP.md`](HA-SYNC-BOOTSTRAP.md)).
+plugins — they deploy via Sync / [`ha-sync.sh`](ha-sync.sh)
+([`HA-SYNC-BOOTSTRAP.md`](HA-SYNC-BOOTSTRAP.md) / [`ADDON.md`](ADDON.md)).
 
 | Surface | Delivery |
 |---|---|
-| SYSTEM MAP + AIRFLOW STATUS cards | **HACS Dashboard** (this doc) |
-| `packages/dsc_v4_*.yaml` + YAML dashboard + www fallback | Git push → HA sync |
+| SYSTEM MAP + AIRFLOW + The Dash cards | **HACS** and/or Sync/ha-sync www bundle |
+| `packages/dsc_v4_*.yaml` + YAML dashboard + modules | Git push → Sync / ha-sync |
 | ESPHome firmware | Validate/Install (manual) |

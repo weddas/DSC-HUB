@@ -41,15 +41,16 @@ flowchart LR
 | [`UPGRADE.md`](UPGRADE.md) | 5.0 → 5.1 cutover (add-on Update + flash) |
 | [`SETUP.md`](SETUP.md) | SoftAP kit unboxing without HA |
 | [`RELEASE.md`](RELEASE.md) | What’s new, rollout checklist |
-| [`scripts/ADDON.md`](scripts/ADDON.md) | **Primary delivery** — HAOS Sync add-on |
+| [`scripts/ADDON.md`](scripts/ADDON.md) | **Primary delivery** — HAOS Sync add-on **5.1.3** |
+| [`docs/qa/LIVE-UI-WWW-BUNDLE-GUARDS.md`](docs/qa/LIVE-UI-WWW-BUNDLE-GUARDS.md) | F-013 www cinematic bundle guards |
 | [`docs/qa/FIRMWARE-QA-5.1.0.md`](docs/qa/FIRMWARE-QA-5.1.0.md) | Firmware Validate / flash QC |
 | [`docs/qa/ADDON-QA-5.1.0.md`](docs/qa/ADDON-QA-5.1.0.md) | Sync add-on QC |
 | [`homeassistant/README.md`](homeassistant/README.md) | Packages, HACS, entity notes |
 | [`firmware/v4/README.md`](firmware/v4/README.md) | Local validate / flash |
 
 **HAOS delivery:** Settings → Add-ons → Repositories → `https://github.com/weddas/DSC-HUB`
-→ install / Update **DSC-HUB Sync** **5.1.0**. Push to `master` → poll (~60s) →
-packages / dashboard / www / ESPHome stubs land in `/config`.
+→ install / Update **DSC-HUB Sync** **5.1.3**. Push to `master` → poll (~60s) →
+packages / dashboard / modules / www / ESPHome stubs land in `/config`.
 
 ---
 

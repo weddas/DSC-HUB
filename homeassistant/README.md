@@ -25,8 +25,10 @@ Canonical HA surface for firmware [`firmware/v4/`](../firmware/v4/).
 | `packages/dsc_v4_automations.yaml` | Demand followers, climate/safety alerts, grow-log scribe |
 | `configuration.snippet.yaml` | Paste-once: packages include + YAML-mode `dsc-hub-pro` dashboard |
 | `automations.yaml` | Deprecated stub — points at the package above |
-| `www/dsc-system-map.*` | SYSTEM MAP Lovelace card + SVG → `/config/www/` |
-| `www/dsc-airflow-map-card.js` | AIRFLOW STATUS Lovelace card → `/config/www/` |
+| `www/dsc-system-map.*` | SYSTEM MAP **source** + SVG (publish concatenates — do not load source alone) |
+| `www/dsc-airflow-map-card.js` | AIRFLOW STATUS **source** → bundled into `/local/dsc-system-map-card.js` |
+| `www/dsc-the-dash-card.js` + `www/vendor/` | The Dash + THREE + `dsc-dash-fx` (inside same bundle) |
+| `dashboards/modules/view_*.yaml` | Pro view includes (must sync with shell — F-012) |
 | `esphome/` | Thin device stubs — pull firmware packages from GitHub |
 
 ## ESPHome (all devices)
@@ -82,12 +84,16 @@ graph enlarge, appliance consoles, pot detail. Install from HACS →
 Integrations, restart HA, then **Settings → Devices & Services →
 Add Integration → Browser Mod**. Without it the popup taps silently no-op.
 
-## Local custom cards — SYSTEM MAP + AIRFLOW STATUS
+## Local custom cards — SYSTEM MAP + AIRFLOW + The Dash
 
 | Card | Type | View |
 |---|---|---|
 | Neon isometric map | `custom:dsc-system-map-card` | Home |
 | GUI tent airflow scene | `custom:dsc-airflow-map-card` | Climate Engine |
+| Cinematic 3D ops | `custom:dsc-the-dash-card` | Dash (`path: dash`) |
+
+One classic **`js`** resource (~846 KB) registers all three. Ops + F-013 guards:
+[`../docs/qa/LIVE-UI-WWW-BUNDLE-GUARDS.md`](../docs/qa/LIVE-UI-WWW-BUNDLE-GUARDS.md).
 
 ### Preferred — HACS Dashboard custom repository
 
@@ -96,20 +102,19 @@ Add Integration → Browser Mod**. Without it the popup taps silently no-op.
 3. Category: **Dashboard**
 4. Download **DSC-HUB System Map**, restart/reload when prompted, hard-refresh browser
 
-HACS serves `/hacsfiles/DSC-HUB/DSC-HUB.js` (both cards + SVG beside it). Full steps:
-[`../scripts/HACS-FRONTEND.md`](../scripts/HACS-FRONTEND.md).
+HACS serves `/hacsfiles/DSC-HUB/DSC-HUB.js` (full cinematic bundle + SVG beside it).
+Full steps: [`../scripts/HACS-FRONTEND.md`](../scripts/HACS-FRONTEND.md).
 
-### Manual fallback (`/config/www/`)
+### Manual / Sync fallback (`/config/www/`)
 
-1. Copy into Home Assistant `/config/www/` (or rely on ha-sync):
-   - [`www/dsc-system-map.svg`](www/dsc-system-map.svg)
-   - Bundled JS as `/local/dsc-system-map-card.js` (system map **and** airflow —
-     ha-sync builds this from the two www sources)
-   - Optional: [`www/dsc-airflow-map-card.js`](www/dsc-airflow-map-card.js) standalone
-2. **Settings → Dashboards → ⋮ → Resources → Add resource** (JavaScript, not module):
-   - `/local/dsc-system-map-card.js` (one resource registers both cards)
+1. Prefer **DSC-HUB Sync ≥ 5.1.3** or [`../scripts/ha-sync.sh`](../scripts/ha-sync.sh)
+   — both concatenate map + airflow + THREE + Dash FX + The Dash.
+2. Confirm `wc -c /config/www/dsc-system-map-card.js` **≥ 500000** (~846 KB).
+   ~10 KB means the source stub was installed (The Dash / airflow will break).
+3. **Settings → Dashboards → ⋮ → Resources → Add resource** (**JavaScript**, not module):
+   - `/local/dsc-system-map-card.js`
    - Or HACS `/hacsfiles/DSC-HUB/DSC-HUB.js`
-3. YAML dashboard already includes both cards. Hard-refresh the browser.
+4. Hard-refresh the browser.
 
 Optional entity overrides:
 
