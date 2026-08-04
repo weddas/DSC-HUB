@@ -416,7 +416,7 @@ No climate control regression during soak window.
 
 ### done
 - Cinematic tent scene in `dsc-the-dash-card.js` + `vendor/dsc-dash-fx.js` (ACES, selective bloom composer, soft/depth-soft particles, flow ribbons, curl haze, color ramps)
-- Topology honesty: Room ? intakes ? cascade 2×4?4×8 ? OUT/RECIRC; heat mat 2×4 only; no central filter machine
+- Topology honesty: Room ? intakes ? cascade 2?4?4?8 ? OUT/RECIRC; heat mat 2?4 only; no central filter machine
 - Product detail: flex rings, fans/muffler, mat bloom, tent ACH layered haze, room lung slices, SF1000 shafts, legend path highlight
 - Bundle order: system-map + airflow + three.min + dsc-dash-fx + the-dash (Node binary concat)
 - Live verify on `/dsc-hub-pro/dash` with Lovelace resource **type `js`** (not `module` ? IIFE THREE must be classic)
@@ -432,4 +432,26 @@ No climate control regression during soak window.
 
 ### constraint preserved
 - Air Path rail not redesigned (legend hover/click only)
+
+---
+
+## 2026-08-04 ? Strains peer-sync UI preflight (before Push)
+
+### done (live)
+- Created missing UI helpers `input_boolean.dsc_peer_sync_require_confirm` (on) + `input_boolean.dsc_peer_push_force` (off) ? package reload had not created them
+- Peer sync status card: no Entity not found; Confirm ON ? Force OFF
+- Push preflight: script present; HA peer offsets non-zero on POT1/2/4; ESP scales all 1.0; dual-stack OK
+
+### discoveries
+| ID | Finding | Action |
+|---|---|---|
+| N-032 | Pot ESP entity IDs use `dsc_pot_N_*` (underscore), not `dsc_potN_*` ? Strain/Sprout rows were wrong | Fixed in `view_strains.yaml`; same bug still in `view_home.yaml` |
+| N-033 | Live pots still FW **5.1.4** (repo 5.1.5) ? Mark Soil Cal Peer Median absent | Push still merges offsets (N-029); OTA 5.1.5 for stamp |
+| N-034 | UI-created helpers vs package helpers same entity_id | Prefer one Core restart later so packages own them; avoid duplicate UI helpers |
+
+### soak
+- Commit/push `view_strains.yaml` (mushroom?entities + pot_* IDs) so live Strains clears remaining Strain/Sprout Entity not found
+- Fix `view_home.yaml` pot Strain/Sprout entity IDs (N-032)
+- Operator: Push peer ? ESP when ready; optional pot OTA 5.1.5 after
+- Hold to reset all captures: `script.dsc_pots_reset_peer_captures` + Strains hold card (HA offsets only; ESP Cal untouched) ? needs package/dashboard sync
 

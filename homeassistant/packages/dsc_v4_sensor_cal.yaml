@@ -374,6 +374,43 @@ script:
             ESP Cal Offset now holds peer alignment. Got ≈ soil_*.
             ESP-NOW/mat see the same values. Dual-stack warn should clear.
 
+  dsc_pots_reset_peer_captures:
+    alias: "DSC Pots Reset Peer Captures"
+    description: >-
+      Zero all HA peer Got offsets (pH/EC/moisture) and clear peer sync
+      method/status. Does not touch ESP Cal Offset/Scale.
+    mode: single
+    sequence:
+      - repeat:
+          for_each: [1, 2, 3, 4]
+          sequence:
+            - variables:
+                n: "{{ repeat.item }}"
+            - action: input_number.set_value
+              target: { entity_id: "input_number.dsc_pot{{ n }}_offset_ph" }
+              data: { value: 0 }
+            - action: input_number.set_value
+              target: { entity_id: "input_number.dsc_pot{{ n }}_offset_ec_us" }
+              data: { value: 0 }
+            - action: input_number.set_value
+              target: { entity_id: "input_number.dsc_pot{{ n }}_offset_moisture" }
+              data: { value: 0 }
+      - action: input_text.set_value
+        target: { entity_id: input_text.dsc_peer_sync_method }
+        data: { value: "none" }
+      - action: input_text.set_value
+        target: { entity_id: input_text.dsc_peer_sync_status }
+        data:
+          value: >-
+            Peer captures cleared {{ now().strftime('%Y-%m-%d %H:%M') }}.
+            HA offsets zeroed — Capture again when ready. ESP Cal untouched.
+      - action: persistent_notification.create
+        data:
+          title: "Peer captures reset"
+          message: >-
+            All HA peer Got offsets set to 0. ESP Cal Offset/Scale unchanged.
+            Run Capture peer baseline to rebuild offsets.
+
 automation:
   - id: dsc_peer_sync_after_water
     alias: "DSC Peer Sync · After shared watering"
