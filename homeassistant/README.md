@@ -294,10 +294,10 @@ Reset coeffs: `script.dsc_climate_learn_reset`. Reset waits: `script.dsc_climate
 Dashboard: **Learning** (`/dsc-hub-pro/learning`) — Activity card, device cal,
 Phase A+B status, appliance effect cards, waits, ETA, efficiencies, charts.
 
-## Crop-steering (HA surface 5.1.5)
+## Crop-steering (HA surface 5.1.5+)
 
 Packages: `dsc_v4_strain_catalog`, `dsc_v4_nutrient_catalog`, `dsc_v4_pots_coherence`,
-`dsc_v4_actuator_efficacy`.
+`dsc_v4_actuator_efficacy`, `dsc_v4_sensor_cal` (5.1.6).
 
 - **Want / Need / Got:** strain + sprout date → Want bands; Got = raw + peer offset;
   Capture peer baseline is MAD-hardened (v2); optional auto after shared watering
@@ -314,6 +314,30 @@ Dashboard: **Strains** (`/dsc-hub-pro/strains`), plant consoles (strain/sprout/N
 **Nutrient Science** (`/dsc-hub-pro/nutrient-science`), Root Zone dryback/coherence,
 Climate Temp OOS / Lockout (incl. Clone Mister status). Data mirrors:
 `data/dsc_strain_catalog.yaml`, `data/dsc_nutrient_catalog.yaml`.
+
+## Sensor calibration (HA surface 5.1.6)
+
+Durable ops runbook: [`../docs/qa/SENSOR-CAL-5.1.6.md`](../docs/qa/SENSOR-CAL-5.1.6.md).
+
+Two correction stacks — **do not stack both** (FOLLOWUPS **N-024**):
+
+| Stack | Where | Formula / effect | Downstream |
+|---|---|---|---|
+| ESP Cal Offset/Scale | Pot NVS (`dsc-pot-common` **5.1.4+**) | `raw * scale + offset` before median | HA `soil_*` **and** ESP-NOW |
+| HA peer offsets | `input_number.dsc_potN_offset_*` | Got = soil + offset | Want/Need/Got UI only |
+
+**Peer sync v2:** `script.dsc_pots_capture_peer_baseline` takes MAD-filtered median
+of in-service pots (≥3 samples: keep within 2.5×MAD) and writes HA offsets only.
+Auto path: `automation.dsc_peer_sync_after_water` (settle default 20 min, cooldown
+6 h). Divergence sensors are dashboard-only (no alerts yet — **N-020**).
+
+**Pot provenance** (after pot OTA **5.1.4**): `text.dsc_potN_soil_cal_method` /
+`soil_cal_last` / `binary_sensor.dsc_potN_soil_calibrated`. Cal edits stamp
+`manual`; Reset clears. Until flash, Root Zone chips stay unavailable (**N-025**).
+
+**Leaf VPD:** `input_number.dsc_leaf_offset` → `sensor.dsc_leaf_vpd_kpa` /
+`dsc_clone_leaf_vpd_kpa` (SVP at T_air−offset − AVP). Ladder control still uses
+air `sensor.dsc_hub_vpd_kpa` (**N-028**).
 
 ## Tank / Tuya entity map
 
