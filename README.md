@@ -45,6 +45,8 @@ flowchart LR
 | [`scripts/ADDON.md`](scripts/ADDON.md) | **Primary delivery** — HAOS Sync add-on |
 | [`docs/qa/FIRMWARE-QA-5.1.0.md`](docs/qa/FIRMWARE-QA-5.1.0.md) | Firmware Validate / flash QC |
 | [`docs/qa/ADDON-QA-5.1.0.md`](docs/qa/ADDON-QA-5.1.0.md) | Sync add-on QC |
+| [`docs/qa/LIVE-UI-SENSING-LEARN-5.1.8.md`](docs/qa/LIVE-UI-SENSING-LEARN-5.1.8.md) | Lab wet, trust, multi-lever learn, hub diag |
+| [`docs/LAB-WET-CAL.md`](docs/LAB-WET-CAL.md) | Buffer two-point → ESP procedure |
 | [`homeassistant/README.md`](homeassistant/README.md) | Packages, HACS, entity notes |
 | [`firmware/v4/README.md`](firmware/v4/README.md) | Local validate / flash |
 
