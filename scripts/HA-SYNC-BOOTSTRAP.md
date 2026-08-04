@@ -84,12 +84,13 @@ export DRY_RUN=1
 | Syncs on push (ha-sync) | Does not sync / other channel |
 |---|---|
 | `packages/dsc_v4_*.yaml` | `secrets.yaml` |
-| `dashboards/dsc-hub-v4-dashboard.yaml` | `.storage/` |
-| `www/` system-map SVG + **bundled** `dsc-system-map-card.js` (system+airflow) | Non-DSC house packages |
+| `dashboards/dsc-hub-v4-dashboard.yaml` + `modules/view_*.yaml` | `.storage/` |
+| `www/` SVG + **cinematic bundle** (map+airflow+THREE+FX+Dash ≈846 KB) | Non-DSC house packages |
 | ESPHome stubs only if `SYNC_ESPHOME=1` | Firmware flash / ESPHome Install |
-| | **SYSTEM MAP card via HACS** — [`HACS-FRONTEND.md`](HACS-FRONTEND.md) |
+| Lovelace `?v=` → `dash-<UTC>` on www deploy | Sync add-on does **not** bump `?v=` |
+| | **Cards via HACS** — [`HACS-FRONTEND.md`](HACS-FRONTEND.md) |
 
-Prefer HACS for the SYSTEM MAP card; ha-sync still mirrors `www/` for sites
-not using HACS yet.
+HAOS sites can use **DSC-HUB Sync 5.1.3** instead (same five-part concat +
+F-013 size guards). See [`LIVE-UI-WWW-BUNDLE-GUARDS.md`](../docs/qa/LIVE-UI-WWW-BUNDLE-GUARDS.md).
 
 Firmware still: Cursor → push → ESPHome Validate/Install per device.
