@@ -909,6 +909,7 @@
     addFlexRings(curves.intakeClone, 24, 0.126);
     addFlexRings(curves.intakeMain, 24, 0.137);
 
+    const flangePrimitives = [];
     const mkFlange = (point, tangent, radius) => {
       const ring = new THREE.Mesh(
         new THREE.TorusGeometry(radius, 0.026, 8, 20),
@@ -918,6 +919,8 @@
       ring.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), tangent.clone().normalize());
       ring.castShadow = true;
       ductGroup.add(ring);
+      flangePrimitives.push(ring);
+      return ring;
     };
     Object.values(curves).forEach((curve) => {
       mkFlange(curve.getPoint(0.02), curve.getTangent(0.02), 0.15);
@@ -1015,6 +1018,27 @@
           () => {}
         );
       });
+      fx.loadSimpleGltf(
+        `${accentBase}flange.gltf`,
+        (template) => {
+          const targetMajor = 0.15;
+          const sourceMajor = 0.208;
+          const scale = targetMajor / sourceMajor;
+          flangePrimitives.forEach((ring) => {
+            const mesh = template.clone(true);
+            if (ring.material) mesh.material = ring.material.clone();
+            mesh.position.copy(ring.position);
+            mesh.quaternion.copy(ring.quaternion);
+            mesh.scale.setScalar(scale);
+            mesh.castShadow = true;
+            ductGroup.add(mesh);
+            ductGroup.remove(ring);
+            ring.geometry.dispose();
+            if (ring.material) ring.material.dispose();
+          });
+        },
+        () => {}
+      );
     }
 
     const vent = new THREE.Group();
@@ -1346,7 +1370,12 @@
         curl = fx.createCurlHaze(renderer, 520);
         curl.points.scale.set(0.78, 0.58, 0.58);
         curl.points.position.set(0, 1.25, 0.3);
-        if (post) curl.points.layers.set(1);
+        if (post && curl.material && typeof post.registerSoftParticleMaterial === "function") {
+          post.registerSoftParticleMaterial(curl.material);
+          curl.points.layers.set(1);
+        } else if (post) {
+          curl.points.layers.set(1);
+        }
         root.add(curl.points);
       } catch (_) {
         curl = null;

@@ -1673,11 +1673,11 @@ sections:
                             icon: mdi:sprout
                           - entity: select.dsc_pot1_growth_stage
                             name: Growth stage
-                          - entity: select.dsc_pot1_strain
+                          - entity: select.dsc_pot_1_strain
                             name: Strain (pot)
                           - entity: input_select.dsc_pot1_strain
                             name: Strain (HA)
-                          - entity: datetime.dsc_pot1_sprout_date
+                          - entity: date.dsc_pot_1_sprout_date
                             name: Sprout (pot)
                           - entity: input_datetime.dsc_pot1_sprout_date
                             name: Sprout (HA)
@@ -1752,11 +1752,11 @@ sections:
                             icon: mdi:sprout
                           - entity: select.dsc_pot2_growth_stage
                             name: Growth stage
-                          - entity: select.dsc_pot2_strain
+                          - entity: select.dsc_pot_2_strain
                             name: Strain (pot)
                           - entity: input_select.dsc_pot2_strain
                             name: Strain (HA)
-                          - entity: datetime.dsc_pot2_sprout_date
+                          - entity: date.dsc_pot_2_sprout_date
                             name: Sprout (pot)
                           - entity: input_datetime.dsc_pot2_sprout_date
                             name: Sprout (HA)
@@ -1834,11 +1834,11 @@ sections:
                             icon: mdi:sprout
                           - entity: select.dsc_pot3_growth_stage
                             name: Growth stage
-                          - entity: select.dsc_pot3_strain
+                          - entity: select.dsc_pot_3_strain
                             name: Strain (pot)
                           - entity: input_select.dsc_pot3_strain
                             name: Strain (HA)
-                          - entity: datetime.dsc_pot3_sprout_date
+                          - entity: date.dsc_pot_3_sprout_date
                             name: Sprout (pot)
                           - entity: input_datetime.dsc_pot3_sprout_date
                             name: Sprout (HA)
@@ -1907,11 +1907,11 @@ sections:
                             icon: mdi:sprout
                           - entity: select.dsc_pot4_growth_stage
                             name: Growth stage
-                          - entity: select.dsc_pot4_strain
+                          - entity: select.dsc_pot_4_strain
                             name: Strain (pot)
                           - entity: input_select.dsc_pot4_strain
                             name: Strain (HA)
-                          - entity: datetime.dsc_pot4_sprout_date
+                          - entity: date.dsc_pot_4_sprout_date
                             name: Sprout (pot)
                           - entity: input_datetime.dsc_pot4_sprout_date
                             name: Sprout (HA)

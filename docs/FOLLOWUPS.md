@@ -457,23 +457,54 @@ No climate control regression during soak window.
 
 ---
 
-## 2026-08-04 — Next Pass Full Inclusion (3→2→1→4)
+## 2026-08-04 ? Next Pass Full Inclusion (3?2?1?4)
 
 ### done
-- **Pass 3 Cal SoT:** HA surface 5.1.7; pots 1/2/4 OTA to FW **5.1.5** (POT3 USB/F-003 still unavailable). Capture→Push with ESP range clamp + Mark entity-id dual form (dsc_potN / dsc_pot_N). Methods peer_median; dual-stack cleared (POT4 residual beyond pH ±2 clamp zeroed after push). N-027 compile OK. README surface → 5.1.7. N-025/N-029 closed for online pots.
-- **Pass 2 CFM honesty:** sensor.dsc_cfm_exhaust_{out,recirc}_allocated (Σ intake × fan-% split); vent BTU/moisture + airflow-map use allocated; capacity proxies keep honesty attr; Climate/Learning labels linear-vs-curve. No invented cal curves.
+- **Pass 3 Cal SoT:** HA surface 5.1.7; pots 1/2/4 OTA to FW **5.1.5** (POT3 USB/F-003 still unavailable). Capture?Push with ESP range clamp + Mark entity-id dual form (dsc_potN / dsc_pot_N). Methods peer_median; dual-stack cleared (POT4 residual beyond pH ?2 clamp zeroed after push). N-027 compile OK. README surface ? 5.1.7. N-025/N-029 closed for online pots.
+- **Pass 2 CFM honesty:** sensor.dsc_cfm_exhaust_{out,recirc}_allocated (? intake � fan-% split); vent BTU/moisture + airflow-map use allocated; capacity proxies keep honesty attr; Climate/Learning labels linear-vs-curve. No invented cal curves.
 - **Pass 1 Dash fidelity:** DepthTexture on DSCDashFX composer + layer-split soft particles; offline glTF accents under www/assets/dash/ + loadSimpleGltf with primitive fallback.
 - **Pass 4 Housekeeping:** Culled unused dsc_airflow_* Sankey helpers; *_actuator_wired absent from registry (N-007); README/qa Sankey/wired wording cleaned.
 
 ### soak / operator
 - POT3 USB flash to 5.1.5 when online (F-003)
-- Optional anemometer Learning curves still unset — capacity proxies remain nameplate until measured
-- POT4 peer wanted pH beyond ESP ±2; ESP SoT clamped at -2.0 (honest residual cleared)
+- Optional anemometer Learning curves still unset ? capacity proxies remain nameplate until measured
+- POT4 peer wanted pH beyond ESP ?2; ESP SoT clamped at -2.0 (honest residual cleared)
 
 ### deferred (unchanged)
-- N-016 lab wet cal; N-020–023 trust/alerts/tank; N-026 settle tune after real waterings
+- N-016 lab wet cal; N-020?023 trust/alerts/tank; N-026 settle tune after real waterings
 
 ### red-flag
-- None new for climate control. Keep Lovelace resource 
-es_type: js; cache-bust via 
-esources/update only (F-010).
+- None new for climate control. Keep Lovelace resource `res_type: js`; cache-bust via `lovelace/resources/update` only (F-010).
+
+---
+
+## 2026-08-04 ? Ops + residual debt closeout
+
+### done
+- **N-032:** [`view_home.yaml`](homeassistant/dashboards/modules/view_home.yaml) Strain/Sprout ? `select.dsc_pot_N_strain` / `date.dsc_pot_N_sprout_date` (matches Strains).
+- **N-034:** Active helpers `input_boolean.dsc_peer_sync_require_confirm` + `dsc_peer_push_force` live with package names; purged orphan registry rows `*_non_1_scale*` / `*_require_confirm_2`.
+- **OTA:** POT2 re-flashed to FW **5.1.5** (was still 5.1.4); Mark Peer Median present (`button.dsc_pot_2_mark_soil_cal_peer_median`). POT1/POT4 already 5.1.5. Control already **5.1.14** (no flash).
+- **Dash residuals:** `flange.gltf` loaded via `loadSimpleGltf` (primitive fallback); curl haze DepthTexture soft-intersect + `registerSoftParticleMaterial`. Node-concat bundle ~855KB; Lovelace `?v=ops-debt-*` via `resources/update` (`res_type: js`).
+- **Accepted approximations (not rewritten):** MeshLine/Line2 still Tube ribbons; GPUComputation still CPU curl.
+
+### audit (live)
+| Check | Result |
+|---|---|
+| HA surface | **5.1.7** |
+| POT1/2/4 FW | **5.1.5** / dual-stack off / method `peer_median` |
+| POT3 | ICMP to `.40` OK; **OTA :3232 refused** ? USB/F-003 still required |
+| Control | **5.1.14** (matches tree) |
+| Preferred AP mismatch | **off** (N-001 verify OK this soak) |
+| Hub link / hub FW | **off / unavailable** ? hub `.33` not pinging at closeout |
+| Allocated CFM | **unavailable** (depends on hub fan/% entities) |
+
+### soak / operator
+- Recover DSC-HUB (power / WiFi / API) ? climate + CFM honesty consumers dark until hub_link returns
+- POT3 USB flash to 5.1.5 when probe/path available (F-003)
+- Anemometer Learning curves still unset
+
+### deferred (unchanged)
+- N-016 lab wet; N-020?023 trust/alerts/tank; N-026 settle tune; MeshLine/GPUComputation real implementations
+
+### red-flag
+- **Hub offline** at closeout (`binary_sensor.dsc_hub_link=off`, ping `.33` loss) ? not introduced by Dash/www changes; blocks climate + allocated CFM. Prefer hub recovery before any core restart. Keep F-010 cache-bust discipline.

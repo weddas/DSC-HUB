@@ -495,7 +495,13 @@
     var uniforms = {
       uOpacity: { value: 0.14 },
       uPointSize: { value: 16 * (renderer.getPixelRatio ? renderer.getPixelRatio() : 1) },
-      uColor: { value: new THREE.Color(0x8fcfff) }
+      uColor: { value: new THREE.Color(0x8fcfff) },
+      tDepth: { value: null },
+      uHasDepth: { value: 0 },
+      uResolution: { value: new THREE.Vector2(1, 1) },
+      uCameraNear: { value: 0.1 },
+      uCameraFar: { value: 80 },
+      uSoftness: { value: 0.85 }
     };
     var material = new THREE.ShaderMaterial({
       name: 'DSCDashFX.CurlHaze',
@@ -503,10 +509,12 @@
       vertexShader: [
         'attribute vec3 aSeed;',
         'varying float vAlpha;',
+        'varying float vViewZ;',
         'uniform float uPointSize;',
         'void main() {',
         '  vec4 mv = modelViewMatrix * vec4(position, 1.0);',
-        '  float depthScale = clamp(90.0 / max(1.0, -mv.z), 0.5, 4.0);',
+        '  vViewZ = -mv.z;',
+        '  float depthScale = clamp(90.0 / max(1.0, vViewZ), 0.5, 4.0);',
         '  gl_PointSize = uPointSize * mix(0.35, 0.9, aSeed.z) * depthScale;',
         '  vAlpha = mix(0.35, 1.0, aSeed.z);',
         '  gl_Position = projectionMatrix * mv;',
@@ -515,16 +523,37 @@
       fragmentShader: [
         'uniform vec3 uColor;',
         'uniform float uOpacity;',
+        'uniform sampler2D tDepth;',
+        'uniform float uHasDepth;',
+        'uniform vec2 uResolution;',
+        'uniform float uCameraNear;',
+        'uniform float uCameraFar;',
+        'uniform float uSoftness;',
         'varying float vAlpha;',
+        'varying float vViewZ;',
+        'float perspDepthToViewZ(float d, float near, float far) {',
+        '  float z = d * 2.0 - 1.0;',
+        '  return (2.0 * near * far) / (far + near - z * (far - near));',
+        '}',
         'void main() {',
         '  vec2 p = gl_PointCoord - 0.5;',
         '  float d = length(p) * 2.0;',
         '  float glow = exp(-4.8 * d * d) * (1.0 - smoothstep(0.72, 1.0, d));',
-        '  gl_FragColor = vec4(uColor, glow * uOpacity * vAlpha);',
+        '  float alpha = glow * uOpacity * vAlpha;',
+        '  if (uHasDepth > 0.5) {',
+        '    vec2 screenUv = gl_FragCoord.xy / uResolution;',
+        '    float sceneD = texture2D(tDepth, screenUv).x;',
+        '    float sceneZ = perspDepthToViewZ(sceneD, uCameraNear, uCameraFar);',
+        '    float dz = sceneZ - vViewZ;',
+        '    alpha *= smoothstep(0.0, uSoftness, dz);',
+        '  }',
+        '  if (alpha < 0.004) discard;',
+        '  gl_FragColor = vec4(uColor, alpha);',
         '}'
       ].join('\n'),
       transparent: true,
       depthWrite: false,
+      depthTest: false,
       blending: THREE.AdditiveBlending,
       toneMapped: false
     });
@@ -572,7 +601,7 @@
       material.dispose();
     }
 
-    return { points: points, update: update, dispose: dispose };
+    return { points: points, material: material, update: update, dispose: dispose };
   }
 
   function createColorRamp(stops) {

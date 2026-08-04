@@ -2128,7 +2128,13 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     var uniforms = {
       uOpacity: { value: 0.14 },
       uPointSize: { value: 16 * (renderer.getPixelRatio ? renderer.getPixelRatio() : 1) },
-      uColor: { value: new THREE.Color(0x8fcfff) }
+      uColor: { value: new THREE.Color(0x8fcfff) },
+      tDepth: { value: null },
+      uHasDepth: { value: 0 },
+      uResolution: { value: new THREE.Vector2(1, 1) },
+      uCameraNear: { value: 0.1 },
+      uCameraFar: { value: 80 },
+      uSoftness: { value: 0.85 }
     };
     var material = new THREE.ShaderMaterial({
       name: 'DSCDashFX.CurlHaze',
@@ -2136,10 +2142,12 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       vertexShader: [
         'attribute vec3 aSeed;',
         'varying float vAlpha;',
+        'varying float vViewZ;',
         'uniform float uPointSize;',
         'void main() {',
         '  vec4 mv = modelViewMatrix * vec4(position, 1.0);',
-        '  float depthScale = clamp(90.0 / max(1.0, -mv.z), 0.5, 4.0);',
+        '  vViewZ = -mv.z;',
+        '  float depthScale = clamp(90.0 / max(1.0, vViewZ), 0.5, 4.0);',
         '  gl_PointSize = uPointSize * mix(0.35, 0.9, aSeed.z) * depthScale;',
         '  vAlpha = mix(0.35, 1.0, aSeed.z);',
         '  gl_Position = projectionMatrix * mv;',
@@ -2148,16 +2156,37 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       fragmentShader: [
         'uniform vec3 uColor;',
         'uniform float uOpacity;',
+        'uniform sampler2D tDepth;',
+        'uniform float uHasDepth;',
+        'uniform vec2 uResolution;',
+        'uniform float uCameraNear;',
+        'uniform float uCameraFar;',
+        'uniform float uSoftness;',
         'varying float vAlpha;',
+        'varying float vViewZ;',
+        'float perspDepthToViewZ(float d, float near, float far) {',
+        '  float z = d * 2.0 - 1.0;',
+        '  return (2.0 * near * far) / (far + near - z * (far - near));',
+        '}',
         'void main() {',
         '  vec2 p = gl_PointCoord - 0.5;',
         '  float d = length(p) * 2.0;',
         '  float glow = exp(-4.8 * d * d) * (1.0 - smoothstep(0.72, 1.0, d));',
-        '  gl_FragColor = vec4(uColor, glow * uOpacity * vAlpha);',
+        '  float alpha = glow * uOpacity * vAlpha;',
+        '  if (uHasDepth > 0.5) {',
+        '    vec2 screenUv = gl_FragCoord.xy / uResolution;',
+        '    float sceneD = texture2D(tDepth, screenUv).x;',
+        '    float sceneZ = perspDepthToViewZ(sceneD, uCameraNear, uCameraFar);',
+        '    float dz = sceneZ - vViewZ;',
+        '    alpha *= smoothstep(0.0, uSoftness, dz);',
+        '  }',
+        '  if (alpha < 0.004) discard;',
+        '  gl_FragColor = vec4(uColor, alpha);',
         '}'
       ].join('\n'),
       transparent: true,
       depthWrite: false,
+      depthTest: false,
       blending: THREE.AdditiveBlending,
       toneMapped: false
     });
@@ -2205,7 +2234,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       material.dispose();
     }
 
-    return { points: points, update: update, dispose: dispose };
+    return { points: points, material: material, update: update, dispose: dispose };
   }
 
   function createColorRamp(stops) {
@@ -3226,6 +3255,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     addFlexRings(curves.intakeClone, 24, 0.126);
     addFlexRings(curves.intakeMain, 24, 0.137);
 
+    const flangePrimitives = [];
     const mkFlange = (point, tangent, radius) => {
       const ring = new THREE.Mesh(
         new THREE.TorusGeometry(radius, 0.026, 8, 20),
@@ -3235,6 +3265,8 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       ring.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), tangent.clone().normalize());
       ring.castShadow = true;
       ductGroup.add(ring);
+      flangePrimitives.push(ring);
+      return ring;
     };
     Object.values(curves).forEach((curve) => {
       mkFlange(curve.getPoint(0.02), curve.getTangent(0.02), 0.15);
@@ -3332,6 +3364,27 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
           () => {}
         );
       });
+      fx.loadSimpleGltf(
+        `${accentBase}flange.gltf`,
+        (template) => {
+          const targetMajor = 0.15;
+          const sourceMajor = 0.208;
+          const scale = targetMajor / sourceMajor;
+          flangePrimitives.forEach((ring) => {
+            const mesh = template.clone(true);
+            if (ring.material) mesh.material = ring.material.clone();
+            mesh.position.copy(ring.position);
+            mesh.quaternion.copy(ring.quaternion);
+            mesh.scale.setScalar(scale);
+            mesh.castShadow = true;
+            ductGroup.add(mesh);
+            ductGroup.remove(ring);
+            ring.geometry.dispose();
+            if (ring.material) ring.material.dispose();
+          });
+        },
+        () => {}
+      );
     }
 
     const vent = new THREE.Group();
@@ -3663,7 +3716,12 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         curl = fx.createCurlHaze(renderer, 520);
         curl.points.scale.set(0.78, 0.58, 0.58);
         curl.points.position.set(0, 1.25, 0.3);
-        if (post) curl.points.layers.set(1);
+        if (post && curl.material && typeof post.registerSoftParticleMaterial === "function") {
+          post.registerSoftParticleMaterial(curl.material);
+          curl.points.layers.set(1);
+        } else if (post) {
+          curl.points.layers.set(1);
+        }
         root.add(curl.points);
       } catch (_) {
         curl = null;
