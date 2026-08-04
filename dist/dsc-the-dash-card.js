@@ -207,7 +207,17 @@
         linear-gradient(180deg, #121a28, #070a10);
       border: 1px solid var(--line); border-radius: 8px; overflow: hidden;
     }
-    .dash-scene-wrap canvas { display: block; width: 100%; height: 100%; }
+    .dash-scene-wrap::after {
+      content: "";
+      pointer-events: none;
+      position: absolute; inset: 0; z-index: 1; border-radius: inherit;
+      background:
+        radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.55) 100%),
+        repeating-linear-gradient(0deg, rgba(255,255,255,0.015) 0 1px, transparent 1px 2px);
+      mix-blend-mode: soft-light;
+      opacity: 0.85;
+    }
+    .dash-scene-wrap canvas { display: block; width: 100%; height: 100%; position: relative; z-index: 0; }
     .dash-hud {
       position: absolute; pointer-events: none; z-index: 2;
       background: rgba(8,12,18,0.72); backdrop-filter: blur(8px);
@@ -224,7 +234,14 @@
       display: flex; gap: 14px; flex-wrap: wrap;
       font-size: 10px; color: var(--muted); letter-spacing: 0.04em;
     }
-    .dash-legend span { display: inline-flex; align-items: center; gap: 6px; }
+    .dash-legend span {
+      display: inline-flex; align-items: center; gap: 6px;
+      pointer-events: auto; cursor: pointer; padding: 2px 4px; border-radius: 4px;
+      transition: color 0.15s, background 0.15s;
+    }
+    .dash-legend span:hover, .dash-legend span.on {
+      color: var(--text); background: rgba(255,255,255,0.06);
+    }
     .dash-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
     .dash-charts {
       display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px;
@@ -508,553 +525,1069 @@
   const createScene = (host) => {
     if (typeof THREE === "undefined") return null;
 
+    const fx = THREE.DSCDashFX || null;
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0a0d12);
-    scene.fog = new THREE.Fog(0x0a0d12, 14, 32);
+    scene.background = new THREE.Color(0x07090e);
+    scene.fog = new THREE.Fog(0x07090e, 12, 28);
 
-    const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
-    camera.position.set(7.2, 5.4, 8.6);
-    camera.lookAt(0, 1.2, 0);
-
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 80);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: "high-performance" });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    if ("outputColorSpace" in renderer && THREE.SRGBColorSpace) renderer.outputColorSpace = THREE.SRGBColorSpace;
+    else if ("outputEncoding" in renderer && THREE.sRGBEncoding) renderer.outputEncoding = THREE.sRGBEncoding;
+    if (THREE.ACESFilmicToneMapping) renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.05;
     renderer.shadowMap.enabled = true;
+    if (THREE.PCFSoftShadowMap) renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     host.appendChild(renderer.domElement);
 
-    const hemi = new THREE.HemisphereLight(0xb0c4de, 0x1a1a1a, 0.55);
-    scene.add(hemi);
-    const key = new THREE.DirectionalLight(0xffffff, 0.85);
-    key.position.set(6, 10, 4);
-    key.castShadow = true;
-    scene.add(key);
-    const fill = new THREE.DirectionalLight(0x4fc3f7, 0.25);
-    fill.position.set(-5, 4, -2);
-    scene.add(fill);
+    let post = null;
+    if (fx && typeof fx.createComposer === "function") {
+      try {
+        post = fx.createComposer(renderer, scene, camera);
+        if (post.bloomPass) {
+          post.bloomPass.threshold = 0.72;
+          post.bloomPass.strength = 0.7;
+          post.bloomPass.radius = 0.55;
+        }
+      } catch (_) {
+        post = null;
+      }
+    }
 
     const root = new THREE.Group();
     scene.add(root);
 
-    // Room plate + grid
+    const hemi = new THREE.HemisphereLight(0x9fbad2, 0x161019, 0.32);
+    scene.add(hemi);
+    const key = new THREE.DirectionalLight(0xffd8ad, 1.08);
+    key.position.set(5.5, 9, 5);
+    key.castShadow = true;
+    key.shadow.mapSize.set(2048, 2048);
+    key.shadow.bias = -0.00045;
+    key.shadow.normalBias = 0.025;
+    key.shadow.camera.left = -7;
+    key.shadow.camera.right = 7;
+    key.shadow.camera.top = 6;
+    key.shadow.camera.bottom = -4;
+    key.shadow.camera.near = 1;
+    key.shadow.camera.far = 22;
+    scene.add(key);
+    const fill = new THREE.DirectionalLight(0x5aa9ff, 0.38);
+    fill.position.set(-6, 4.5, 4);
+    scene.add(fill);
+    const rim = new THREE.DirectionalLight(0xb66cff, 0.56);
+    rim.position.set(4, 5, -6);
+    scene.add(rim);
+
     const floor = new THREE.Mesh(
-      new THREE.BoxGeometry(11, 0.08, 8),
-      new THREE.MeshStandardMaterial({ color: 0x10161f, roughness: 0.9, metalness: 0.05 })
+      new THREE.BoxGeometry(11.5, 0.1, 8.2),
+      new THREE.MeshStandardMaterial({ color: 0x0c1119, metalness: 0.08, roughness: 0.92 })
     );
-    floor.position.y = -0.04;
+    floor.position.y = -0.06;
     floor.receiveShadow = true;
     root.add(floor);
-    const grid = new THREE.GridHelper(10, 20, 0x2a3548, 0x1a2230);
-    grid.position.y = 0.01;
+    const grid = new THREE.GridHelper(10.8, 24, 0x263349, 0x131c29);
+    grid.position.y = 0.005;
+    if (grid.material) {
+      grid.material.transparent = true;
+      grid.material.opacity = 0.42;
+    }
     root.add(grid);
 
-    const poleMat = new THREE.MeshStandardMaterial({ color: 0xb0bec5, metalness: 0.55, roughness: 0.4 });
-    const fabricMat = (tint) =>
-      new THREE.MeshStandardMaterial({
-        color: tint,
-        metalness: 0.08,
-        roughness: 0.82,
+    const roomShell = new THREE.Mesh(
+      new THREE.BoxGeometry(10.8, 4.3, 7.3),
+      new THREE.MeshBasicMaterial({
+        color: 0x183047,
         transparent: true,
-        opacity: 0.72,
-        side: THREE.DoubleSide,
-      });
-    const mylarInner = new THREE.MeshStandardMaterial({
-      color: 0xdce3ea,
-      metalness: 0.7,
+        opacity: 0.026,
+        side: THREE.BackSide,
+        depthWrite: false,
+      })
+    );
+    roomShell.position.y = 2.05;
+    root.add(roomShell);
+    const roomEdges = new THREE.LineSegments(
+      new THREE.EdgesGeometry(new THREE.BoxGeometry(10.8, 4.3, 7.3)),
+      new THREE.LineBasicMaterial({ color: 0x44637e, transparent: true, opacity: 0.18 })
+    );
+    roomEdges.position.copy(roomShell.position);
+    root.add(roomEdges);
+    // Room lung — layered horizontal volumetric slices (read as body, not bare grid)
+    const roomLungSlices = [];
+    for (let s = 0; s < 4; s++) {
+      const slice = new THREE.Mesh(
+        new THREE.PlaneGeometry(9.6 - s * 0.35, 6.2 - s * 0.25),
+        new THREE.MeshBasicMaterial({
+          color: 0x3d7ea8,
+          transparent: true,
+          opacity: 0.012 + s * 0.004,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false,
+          side: THREE.DoubleSide,
+        })
+      );
+      slice.rotation.x = -Math.PI / 2;
+      slice.position.set(0, 0.55 + s * 0.72, 0.15);
+      root.add(slice);
+      roomLungSlices.push(slice);
+    }
+
+    const addContact = (x, z, sx, sz) => {
+      const contact = new THREE.Mesh(
+        new THREE.CircleGeometry(1, 40),
+        new THREE.MeshBasicMaterial({
+          color: 0x000000,
+          transparent: true,
+          opacity: 0.38,
+          depthWrite: false,
+        })
+      );
+      contact.rotation.x = -Math.PI / 2;
+      contact.scale.set(sx, sz, 1);
+      contact.position.set(x, 0.012, z);
+      root.add(contact);
+    };
+    addContact(-2.75, 0.3, 1.62, 1.08);
+    addContact(2.15, 0.08, 2.45, 1.5);
+
+    const poleMat = new THREE.MeshStandardMaterial({ color: 0xb4c0c9, metalness: 0.72, roughness: 0.28 });
+    const mylarMat = new THREE.MeshStandardMaterial({
+      color: 0xb9c8d7,
+      metalness: 0.82,
       roughness: 0.22,
       transparent: true,
       opacity: 0.35,
       side: THREE.BackSide,
     });
+    const mkFabric = (opacity) =>
+      new THREE.MeshStandardMaterial({
+        color: 0x111822,
+        metalness: 0.12,
+        roughness: 0.82,
+        transparent: true,
+        opacity,
+        side: THREE.DoubleSide,
+      });
 
-    const mkTent = (w, d, h, accent, glowColor) => {
-      const g = new THREE.Group();
-      const shellTint = 0x1c2430;
-      const wall = (ww, hh, dd, x, y, z) => {
-        const outer = new THREE.Mesh(new THREE.BoxGeometry(ww, hh, dd), fabricMat(shellTint));
-        outer.position.set(x, y, z);
-        g.add(outer);
-      };
-      wall(w, h, 0.05, 0, h / 2, -d / 2);
-      wall(0.05, h, d, -w / 2, h / 2, 0);
-      wall(0.05, h, d, w / 2, h / 2, 0);
-      wall(w, 0.05, d, 0, h, 0);
-      // Inner mylar (visible through open front)
-      const inner = new THREE.Mesh(new THREE.BoxGeometry(w * 0.96, h * 0.96, d * 0.96), mylarInner);
+    const mkTent = (w, d, h, accent, lightColor) => {
+      const group = new THREE.Group();
+      const panels = [
+        [new THREE.BoxGeometry(w, h, 0.065), [0, h / 2, -d / 2], 0.94],
+        [new THREE.BoxGeometry(0.065, h, d), [-w / 2, h / 2, 0], 0.84],
+        [new THREE.BoxGeometry(0.065, h, d), [w / 2, h / 2, 0], 0.84],
+        [new THREE.BoxGeometry(w, 0.065, d), [0, h, 0], 0.9],
+      ];
+      panels.forEach(([geometry, position, opacity]) => {
+        const panel = new THREE.Mesh(geometry, mkFabric(opacity));
+        panel.position.set(...position);
+        panel.castShadow = true;
+        panel.receiveShadow = true;
+        group.add(panel);
+      });
+      const inner = new THREE.Mesh(new THREE.BoxGeometry(w * 0.94, h * 0.94, d * 0.94), mylarMat.clone());
       inner.position.y = h / 2;
-      g.add(inner);
+      group.add(inner);
       const tray = new THREE.Mesh(
-        new THREE.BoxGeometry(w * 0.92, 0.06, d * 0.92),
-        new THREE.MeshStandardMaterial({ color: 0x263238, roughness: 0.8 })
+        new THREE.BoxGeometry(w * 0.9, 0.05, d * 0.9),
+        new THREE.MeshStandardMaterial({ color: 0x151e29, roughness: 0.78, metalness: 0.22 })
       );
-      tray.position.y = 0.05;
-      g.add(tray);
-      for (const sx of [-1, 1])
+      tray.position.y = 0.04;
+      tray.receiveShadow = true;
+      group.add(tray);
+      for (const sx of [-1, 1]) {
         for (const sz of [-1, 1]) {
-          const p = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, h, 8), poleMat);
-          p.position.set((sx * w) / 2, h / 2, (sz * d) / 2);
-          g.add(p);
+          const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, h, 10), poleMat);
+          pole.position.set((sx * w) / 2, h / 2, (sz * d) / 2);
+          pole.castShadow = true;
+          group.add(pole);
         }
-      // Front zipper rails
-      const zipL = new THREE.Mesh(
-        new THREE.BoxGeometry(0.03, h * 0.92, 0.03),
-        new THREE.MeshStandardMaterial({ color: accent, emissive: accent, emissiveIntensity: 0.25 })
-      );
-      zipL.position.set(-w * 0.22, h / 2, d / 2 - 0.02);
-      const zipR = zipL.clone();
-      zipR.position.x = w * 0.22;
-      g.add(zipL);
-      g.add(zipR);
+      }
       const frame = new THREE.LineSegments(
         new THREE.EdgesGeometry(new THREE.BoxGeometry(w, h, d)),
-        new THREE.LineBasicMaterial({ color: accent })
+        new THREE.LineBasicMaterial({ color: accent, transparent: true, opacity: 0.76 })
       );
       frame.position.y = h / 2;
-      g.add(frame);
-      const bar = new THREE.Mesh(
-        new THREE.BoxGeometry(w * 0.7, 0.08, 0.18),
-        new THREE.MeshStandardMaterial({ color: 0x37474f, emissive: glowColor, emissiveIntensity: 0.2 })
-      );
-      bar.position.set(0, h - 0.12, 0);
-      g.add(bar);
-      const lightPlane = new THREE.Mesh(
-        new THREE.PlaneGeometry(w * 0.85, d * 0.75),
+      group.add(frame);
+      const veil = new THREE.Mesh(
+        new THREE.PlaneGeometry(w * 0.94, h * 0.92),
         new THREE.MeshBasicMaterial({
-          color: glowColor,
+          color: accent,
           transparent: true,
-          opacity: 0.12,
+          opacity: 0.025,
           side: THREE.DoubleSide,
-          blending: THREE.AdditiveBlending,
           depthWrite: false,
         })
       );
-      lightPlane.rotation.x = Math.PI / 2;
-      lightPlane.position.y = h - 0.2;
-      g.add(lightPlane);
-      const volume = new THREE.Mesh(
-        new THREE.BoxGeometry(w * 0.88, h * 0.75, d * 0.88),
-        new THREE.MeshBasicMaterial({
-          color: glowColor,
+      veil.position.set(0, h / 2, d / 2 - 0.012);
+      group.add(veil);
+
+      const lightBar = new THREE.Mesh(
+        new THREE.BoxGeometry(w * 0.62, 0.075, 0.24),
+        new THREE.MeshStandardMaterial({
+          color: 0x273544,
+          emissive: lightColor,
+          emissiveIntensity: 0,
+          metalness: 0.48,
+          roughness: 0.38,
           transparent: true,
-          opacity: 0.06,
-          depthWrite: false,
-          blending: THREE.AdditiveBlending,
+          opacity: 1,
         })
       );
-      volume.position.y = h * 0.45;
-      g.add(volume);
-      g.userData.lightPlane = lightPlane;
-      g.userData.bar = bar;
-      g.userData.volume = volume;
-      g.userData.color = accent;
-      return g;
+      lightBar.position.set(0, h - 0.15, 0);
+      lightBar.castShadow = true;
+      group.add(lightBar);
+      const barRim = new THREE.Mesh(
+        new THREE.BoxGeometry(w * 0.67, 0.025, 0.29),
+        new THREE.MeshStandardMaterial({ color: 0x607786, metalness: 0.68, roughness: 0.3 })
+      );
+      barRim.position.set(0, h - 0.105, 0);
+      group.add(barRim);
+
+      const shaftMat = new THREE.MeshBasicMaterial({
+        color: lightColor,
+        transparent: true,
+        opacity: 0,
+        side: THREE.DoubleSide,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      });
+      const shafts = new THREE.Group();
+      for (let i = -1; i <= 1; i++) {
+        const shaft = new THREE.Mesh(new THREE.PlaneGeometry(w * 0.22, h * 0.72), shaftMat.clone());
+        shaft.position.set(i * w * 0.22, h * 0.52, 0);
+        shaft.rotation.x = -0.06 * i;
+        shafts.add(shaft);
+      }
+      group.add(shafts);
+
+      // Layered ACH volume stack (multi-slice additive haze — not a single flat box)
+      const achHaze = new THREE.Group();
+      const achSlices = [];
+      for (let s = 0; s < 3; s++) {
+        const slice = new THREE.Mesh(
+          new THREE.BoxGeometry(w * (0.78 + s * 0.04), h * (0.22 + s * 0.08), d * (0.72 + s * 0.04)),
+          new THREE.MeshBasicMaterial({
+            color: accent,
+            transparent: true,
+            opacity: 0,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false,
+            side: THREE.DoubleSide,
+          })
+        );
+        slice.position.y = h * (0.28 + s * 0.14);
+        achHaze.add(slice);
+        achSlices.push(slice);
+      }
+      group.add(achHaze);
+      group.userData = { size: { w, d, h }, lightBar, shafts, achHaze, achSlices };
+      return group;
     };
 
-    const tentClone = mkTent(2.4, 1.5, 2.1, 0x26c6da, 0x29b6f6);
-    tentClone.position.set(-2.8, 0, 0.35);
+    const tentClone = mkTent(2.4, 1.5, 2.1, 0x26c6da, 0x65d6ff);
+    tentClone.position.set(-2.75, 0, 0.3);
     root.add(tentClone);
-
     const tentMain = mkTent(3.8, 2.15, 2.45, 0xff8a65, 0xf48fb1);
-    tentMain.position.set(2.2, 0, 0.15);
+    tentMain.position.set(2.15, 0, 0.08);
+    tentMain.userData.lightBar.material.emissiveIntensity = 0;
+    tentMain.userData.lightBar.material.opacity = 0.025;
+    tentMain.userData.shafts.visible = false;
     root.add(tentMain);
 
-    // Ducting — real DSC path (no central “filter machine”):
-    // Room → intake into each tent → cascade 2x4→4x8 → 4x8 splits to OUT / RECIRC
-    const ductMat = new THREE.MeshStandardMaterial({ color: 0x78909c, metalness: 0.75, roughness: 0.28 });
-    const glowDuct = (color) =>
-      new THREE.MeshBasicMaterial({
-        color,
+    const mkCurve = (points) =>
+      new THREE.CatmullRomCurve3(
+        points.map((p) => new THREE.Vector3(p[0], p[1], p[2])),
+        false,
+        "catmullrom",
+        0.18
+      );
+    const curves = {
+      intakeClone: mkCurve([
+        [-2.75, 0.34, 3.05],
+        [-2.75, 0.34, 2.1],
+        [-2.75, 0.34, 1.2],
+        [-2.75, 0.34, 0.5],
+      ]),
+      intakeMain: mkCurve([
+        [2.15, 0.36, 3.15],
+        [2.15, 0.36, 2.15],
+        [2.15, 0.36, 1.28],
+        [2.15, 0.36, 0.48],
+      ]),
+      cascade: mkCurve([
+        [-1.52, 1.2, 0.28],
+        [-0.82, 1.28, 0.22],
+        [0.05, 1.25, 0.15],
+        [0.95, 1.17, 0.1],
+        [1.92, 1.08, 0.08],
+      ]),
+      out: mkCurve([
+        [2.15, 2.34, 0.08],
+        [2.15, 2.52, -0.45],
+        [2.15, 2.65, -1.08],
+        [2.15, 2.82, -1.72],
+        [2.15, 2.96, -2.45],
+      ]),
+      recirc: mkCurve([
+        [2.15, 2.32, 0.08],
+        [2.05, 2.02, 0.72],
+        [1.72, 1.55, 1.38],
+        [0.95, 1.05, 2.05],
+        [-0.2, 0.78, 2.72],
+      ]),
+    };
+
+    const ductGroup = new THREE.Group();
+    root.add(ductGroup);
+    const ductMat = new THREE.MeshStandardMaterial({ color: 0x7d8f9b, metalness: 0.76, roughness: 0.29 });
+    const shellMaterials = {};
+    const paths = {};
+    const pathColors = {
+      intakeClone: 0x42a5f5,
+      intakeMain: 0x42a5f5,
+      cascade: 0xffb74d,
+      out: 0xff765e,
+      recirc: 0xa85be0,
+    };
+    const addPath = (name, radius, tubular) => {
+      const solid = new THREE.Mesh(new THREE.TubeGeometry(curves[name], tubular, radius, 12, false), ductMat);
+      solid.castShadow = true;
+      solid.receiveShadow = true;
+      ductGroup.add(solid);
+      const shellMat = new THREE.MeshBasicMaterial({
+        color: pathColors[name],
         transparent: true,
-        opacity: 0.4,
+        opacity: 0,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
       });
-    const mkPipe = (r, len, mat = ductMat) => {
-      const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, len, 24), mat);
-      m.castShadow = true;
-      return m;
-    };
-    const mkElbow = (from, to, radius = 0.14, mat = ductMat) => {
-      const dir = new THREE.Vector3().subVectors(to, from);
-      const len = Math.max(0.05, dir.length());
-      const mid = from.clone().add(to).multiplyScalar(0.5);
-      const pipe = mkPipe(radius, len, mat);
-      pipe.position.copy(mid);
-      pipe.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize());
-      return pipe;
-    };
-    const mkArrow = (pos, dir, color) => {
-      const g = new THREE.Group();
-      const cone = new THREE.Mesh(
-        new THREE.ConeGeometry(0.1, 0.24, 10),
-        new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.9 })
-      );
-      cone.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize());
-      g.add(cone);
-      g.position.copy(pos);
-      return g;
-    };
-
-    const ducts = new THREE.Group();
-    const blueMat = glowDuct(0x42a5f5);
-    const amberMat = glowDuct(0xffb74d);
-    const purpleMat = glowDuct(0xab47bc);
-    const outMat = glowDuct(0xff8a65);
-
-    // Room intake stubs (from front of room into each tent floor port)
-    ducts.add(mkElbow(new THREE.Vector3(-2.8, 0.35, 2.2), new THREE.Vector3(-2.8, 0.35, 0.9), 0.12, blueMat));
-    ducts.add(mkElbow(new THREE.Vector3(-2.8, 0.35, 0.9), new THREE.Vector3(-2.8, 0.35, 0.35), 0.12));
-    ducts.add(mkElbow(new THREE.Vector3(2.2, 0.35, 2.4), new THREE.Vector3(2.2, 0.35, 1.0), 0.13, blueMat));
-    ducts.add(mkElbow(new THREE.Vector3(2.2, 0.35, 1.0), new THREE.Vector3(2.2, 0.35, 0.4), 0.13));
-
-    // Cascade 2x4 → 4x8 (passive / negative pressure)
-    ducts.add(mkElbow(new THREE.Vector3(-1.55, 1.1, 0.3), new THREE.Vector3(0.2, 1.1, 0.2), 0.11, amberMat));
-    ducts.add(mkElbow(new THREE.Vector3(0.2, 1.1, 0.2), new THREE.Vector3(1.55, 1.1, 0.15), 0.11, amberMat));
-
-    // 4x8 exhaust: OUT (dump outside) — rise + back; small inline muffler on OUT only (not a central filter hub)
-    ducts.add(mkElbow(new THREE.Vector3(2.2, 2.15, 0.2), new THREE.Vector3(2.2, 2.55, -0.6), 0.12, outMat));
-    ducts.add(mkElbow(new THREE.Vector3(2.2, 2.55, -0.6), new THREE.Vector3(2.2, 2.9, -1.8), 0.12));
-    const outCarbon = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.16, 0.16, 0.38, 14),
-      new THREE.MeshStandardMaterial({ color: 0x455a64, metalness: 0.45, roughness: 0.5 })
-    );
-    outCarbon.position.set(2.2, 2.55, -1.15);
-    outCarbon.rotation.x = Math.PI / 2;
-    ducts.add(outCarbon);
-
-    // 4x8 exhaust: RECIRC back into room
-    ducts.add(mkElbow(new THREE.Vector3(2.2, 1.85, 0.4), new THREE.Vector3(2.2, 1.4, 1.5), 0.11, purpleMat));
-    ducts.add(mkElbow(new THREE.Vector3(2.2, 1.4, 1.5), new THREE.Vector3(1.0, 0.9, 2.3), 0.11, purpleMat));
-
-    const airArrows = [
-      mkArrow(new THREE.Vector3(-2.8, 0.5, 1.5), new THREE.Vector3(0, 0, -1), 0x42a5f5),
-      mkArrow(new THREE.Vector3(2.2, 0.5, 1.7), new THREE.Vector3(0, 0, -1), 0x42a5f5),
-      mkArrow(new THREE.Vector3(-0.4, 1.25, 0.25), new THREE.Vector3(1, 0, 0), 0xffb74d),
-      mkArrow(new THREE.Vector3(2.2, 2.7, -1.0), new THREE.Vector3(0, 0.4, -1), 0xff8a65),
-      mkArrow(new THREE.Vector3(1.5, 1.15, 1.9), new THREE.Vector3(-0.6, -0.2, 0.5), 0xab47bc),
-    ];
-    airArrows.forEach((a) => ducts.add(a));
-    ducts.userData.arrows = airArrows;
-
-    const mkFan = (pos, axis = "z") => {
-      const g = new THREE.Group();
-      const housing = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.28, 0.28, 0.2, 20),
-        new THREE.MeshStandardMaterial({ color: 0x455a64, metalness: 0.55, roughness: 0.35 })
-      );
-      if (axis === "z") housing.rotation.x = Math.PI / 2;
-      else if (axis === "x") housing.rotation.z = Math.PI / 2;
-      g.add(housing);
-      const hub = new THREE.Mesh(
-        new THREE.SphereGeometry(0.05, 12, 12),
-        new THREE.MeshStandardMaterial({ color: 0xeceff1 })
-      );
-      g.add(hub);
-      const blades = [];
-      for (let i = 0; i < 3; i++) {
-        const b = new THREE.Mesh(
-          new THREE.BoxGeometry(0.07, 0.02, 0.36),
-          new THREE.MeshStandardMaterial({ color: 0x90caf9, metalness: 0.4, roughness: 0.4 })
-        );
-        b.rotation.y = (i * Math.PI * 2) / 3;
-        g.add(b);
-        blades.push(b);
+      const shell = new THREE.Mesh(new THREE.TubeGeometry(curves[name], tubular, radius * 1.22, 10, false), shellMat);
+      ductGroup.add(shell);
+      shellMaterials[name] = shellMat;
+      let ribbon = null;
+      if (fx && typeof fx.makeFlowRibbon === "function") {
+        try {
+          ribbon = fx.makeFlowRibbon(curves[name], {
+            radius: radius * (name === "cascade" ? 0.48 : 0.36),
+            tubular,
+            color: pathColors[name],
+            opacity: 0,
+            dashArray: name === "cascade" ? [0.12, 0.055] : [0.11, 0.085],
+          });
+          ribbon.userData.flow = { name, curve: curves[name], tubular, baseRadius: radius * 0.38, lastWidth: -1 };
+          ductGroup.add(ribbon);
+        } catch (_) {
+          ribbon = null;
+        }
       }
-      g.position.copy(pos);
-      g.userData.blades = blades;
-      g.userData.speed = 0;
-      return g;
+      paths[name] = { solid, shell, ribbon, intensity: 0 };
+    };
+    addPath("intakeClone", 0.11, 44);
+    addPath("intakeMain", 0.12, 44);
+    addPath("cascade", 0.105, 58);
+    addPath("out", 0.118, 50);
+    addPath("recirc", 0.105, 52);
+
+    const addFlexRings = (curve, count, radius) => {
+      const geometry = new THREE.TorusGeometry(radius, 0.015, 6, 16);
+      const material = new THREE.MeshStandardMaterial({ color: 0xa9b7bf, metalness: 0.72, roughness: 0.34 });
+      const rings = new THREE.InstancedMesh(geometry, material, count);
+      const matrix = new THREE.Matrix4();
+      const scale = new THREE.Vector3(1, 1, 1);
+      for (let i = 0; i < count; i++) {
+        const t = (i + 0.5) / count;
+        const p = curve.getPoint(t);
+        const tangent = curve.getTangent(t).normalize();
+        const quaternion = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), tangent);
+        matrix.compose(p, quaternion, scale);
+        rings.setMatrixAt(i, matrix);
+      }
+      rings.castShadow = true;
+      ductGroup.add(rings);
+    };
+    addFlexRings(curves.intakeClone, 24, 0.126);
+    addFlexRings(curves.intakeMain, 24, 0.137);
+
+    const mkFlange = (point, tangent, radius) => {
+      const ring = new THREE.Mesh(
+        new THREE.TorusGeometry(radius, 0.026, 8, 20),
+        new THREE.MeshStandardMaterial({ color: 0x90a4ae, metalness: 0.75, roughness: 0.28 })
+      );
+      ring.position.copy(point);
+      ring.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), tangent.clone().normalize());
+      ring.castShadow = true;
+      ductGroup.add(ring);
+    };
+    Object.values(curves).forEach((curve) => {
+      mkFlange(curve.getPoint(0.02), curve.getTangent(0.02), 0.15);
+      mkFlange(curve.getPoint(0.98), curve.getTangent(0.98), 0.15);
+    });
+
+    const mkFan = (curve, t, color) => {
+      const group = new THREE.Group();
+      const axis = curve.getTangent(t).normalize();
+      group.position.copy(curve.getPoint(t));
+      group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), axis);
+      const housing = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.255, 0.255, 0.2, 24, 1, true),
+        new THREE.MeshStandardMaterial({ color: 0x3b4d59, metalness: 0.72, roughness: 0.28 })
+      );
+      housing.castShadow = true;
+      group.add(housing);
+      const guard = new THREE.Mesh(
+        new THREE.TorusGeometry(0.205, 0.018, 7, 24),
+        new THREE.MeshStandardMaterial({ color: 0xb0bec5, metalness: 0.8, roughness: 0.22 })
+      );
+      guard.rotation.x = Math.PI / 2;
+      group.add(guard);
+      const rotor = new THREE.Group();
+      for (let i = 0; i < 5; i++) {
+        const blade = new THREE.Mesh(
+          new THREE.BoxGeometry(0.055, 0.022, 0.34),
+          new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.16, metalness: 0.4 })
+        );
+        blade.position.y = 0;
+        blade.rotation.y = (i * Math.PI * 2) / 5;
+        rotor.add(blade);
+      }
+      const hub = new THREE.Mesh(
+        new THREE.SphereGeometry(0.06, 14, 12),
+        new THREE.MeshStandardMaterial({ color: 0xe8edf0, metalness: 0.45, roughness: 0.25 })
+      );
+      rotor.add(hub);
+      group.add(rotor);
+      group.userData = { rotor, axis: axis.clone(), speed: 0 };
+      ductGroup.add(group);
+      return group;
+    };
+    const fans = {
+      intakeClone: mkFan(curves.intakeClone, 0.46, 0x64b5f6),
+      intakeMain: mkFan(curves.intakeMain, 0.46, 0x64b5f6),
+      exhaust: mkFan(curves.out, 0.42, 0xff8a65),
+      recirc: mkFan(curves.recirc, 0.42, 0xba68c8),
     };
 
-    const fanIntakeClone = mkFan(new THREE.Vector3(-2.8, 0.35, 1.15));
-    const fanIntakeMain = mkFan(new THREE.Vector3(2.2, 0.35, 1.35));
-    const fanExhaust = mkFan(new THREE.Vector3(2.2, 2.55, -0.9));
-    const fanRecirc = mkFan(new THREE.Vector3(2.2, 1.55, 1.1));
-    ducts.add(fanIntakeClone);
-    ducts.add(fanIntakeMain);
-    ducts.add(fanExhaust);
-    ducts.add(fanRecirc);
-    root.add(ducts);
-
-    // Heat mat — 2x4 only (does not heat the room)
-    const growMat = new THREE.Mesh(
-      new THREE.BoxGeometry(1.4, 0.04, 0.9),
-      new THREE.MeshStandardMaterial({ color: 0x3e2723, emissive: 0xff6d00, emissiveIntensity: 0 })
+    const muffler = new THREE.Group();
+    const muffBody = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.215, 0.215, 0.55, 24),
+      new THREE.MeshStandardMaterial({ color: 0x455a64, metalness: 0.62, roughness: 0.4 })
     );
-    growMat.position.set(0, 0.08, 0.15);
+    muffBody.rotation.x = Math.PI / 2;
+    muffBody.castShadow = true;
+    muffler.add(muffBody);
+    for (const z of [-0.2, 0, 0.2]) {
+      const band = new THREE.Mesh(
+        new THREE.TorusGeometry(0.225, 0.022, 8, 22),
+        new THREE.MeshStandardMaterial({ color: 0x90a4ae, metalness: 0.75, roughness: 0.3 })
+      );
+      band.position.z = z;
+      muffler.add(band);
+    }
+    muffler.position.copy(curves.out.getPoint(0.68));
+    muffler.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), curves.out.getTangent(0.68).normalize());
+    ductGroup.add(muffler);
+
+    const vent = new THREE.Group();
+    const ventGlow = new THREE.Mesh(
+      new THREE.PlaneGeometry(1.35, 1.05),
+      new THREE.MeshBasicMaterial({
+        color: 0xff735a,
+        transparent: true,
+        opacity: 0.08,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      })
+    );
+    vent.add(ventGlow);
+    const ventPlate = new THREE.Mesh(
+      new THREE.BoxGeometry(1.18, 0.9, 0.08),
+      new THREE.MeshStandardMaterial({ color: 0x172331, metalness: 0.5, roughness: 0.42 })
+    );
+    ventPlate.position.z = 0.015;
+    vent.add(ventPlate);
+    for (let i = -3; i <= 3; i++) {
+      const slat = new THREE.Mesh(
+        new THREE.BoxGeometry(0.98, 0.045, 0.055),
+        new THREE.MeshStandardMaterial({ color: 0xff846d, emissive: 0xff5d45, emissiveIntensity: 0.5 })
+      );
+      slat.position.set(0, i * 0.105, 0.07);
+      vent.add(slat);
+    }
+    vent.position.copy(curves.out.getPoint(1));
+    root.add(vent);
+
+    const arrowByPath = {};
+    const addArrow = (name, t) => {
+      const arrow = new THREE.ArrowHelper(
+        curves[name].getTangent(t).normalize(),
+        curves[name].getPoint(t),
+        0.44,
+        pathColors[name],
+        0.18,
+        0.11
+      );
+      arrow.visible = false;
+      arrowByPath[name] = arrowByPath[name] || [];
+      arrowByPath[name].push(arrow);
+      ductGroup.add(arrow);
+    };
+    addArrow("intakeClone", 0.28);
+    addArrow("intakeMain", 0.28);
+    addArrow("cascade", 0.5);
+    addArrow("out", 0.78);
+    addArrow("recirc", 0.72);
+
+    let rampTexture = null;
+    let mergeRampTexture = null;
+    if (fx && typeof fx.createColorRamp === "function") {
+      try {
+        rampTexture = fx.createColorRamp([
+          { t: 0, color: 0xffb74d },
+          { t: 0.48, color: 0xff765e },
+          { t: 1, color: 0xa85be0 },
+        ]);
+        const junction = new THREE.Mesh(
+          new THREE.PlaneGeometry(0.72, 0.11),
+          new THREE.MeshBasicMaterial({
+            map: rampTexture,
+            transparent: true,
+            opacity: 0.55,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false,
+            side: THREE.DoubleSide,
+          })
+        );
+        junction.position.set(2.15, 2.37, 0.08);
+        junction.rotation.y = Math.PI / 2;
+        root.add(junction);
+        mergeRampTexture = fx.createColorRamp([
+          { t: 0, color: 0x42a5f5 },
+          { t: 0.55, color: 0xffb74d },
+          { t: 1, color: 0xff9148 },
+        ]);
+        const merge = new THREE.Mesh(
+          new THREE.PlaneGeometry(0.58, 0.1),
+          new THREE.MeshBasicMaterial({
+            map: mergeRampTexture,
+            transparent: true,
+            opacity: 0.48,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false,
+            side: THREE.DoubleSide,
+          })
+        );
+        const mergePt = curves.cascade.getPoint(0.92);
+        merge.position.copy(mergePt);
+        merge.position.y += 0.08;
+        merge.lookAt(camera.position);
+        root.add(merge);
+      } catch (_) {
+        rampTexture = null;
+        mergeRampTexture = null;
+      }
+    }
+
+    const growMat = new THREE.Group();
+    const matRim = new THREE.Mesh(
+      new THREE.BoxGeometry(1.68, 0.035, 1.14),
+      new THREE.MeshStandardMaterial({ color: 0x6d3d29, metalness: 0.35, roughness: 0.45 })
+    );
+    growMat.add(matRim);
+    const matPlate = new THREE.Mesh(
+      new THREE.BoxGeometry(1.58, 0.052, 1.04),
+      new THREE.MeshStandardMaterial({
+        color: 0x3b1f18,
+        emissive: 0xff5a00,
+        emissiveIntensity: 0,
+        roughness: 0.58,
+      })
+    );
+    matPlate.position.y = 0.025;
+    growMat.add(matPlate);
+    const matGlow = new THREE.Mesh(
+      new THREE.PlaneGeometry(1.72, 1.18),
+      new THREE.MeshBasicMaterial({
+        color: 0xff6d00,
+        transparent: true,
+        opacity: 0,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+      })
+    );
+    matGlow.rotation.x = -Math.PI / 2;
+    matGlow.position.y = 0.07;
+    growMat.add(matGlow);
+    growMat.position.set(0, 0.095, 0);
     tentClone.add(growMat);
 
-    // Outside dump marker (window plane)
-    const outside = new THREE.Mesh(
-      new THREE.PlaneGeometry(1.4, 1.1),
-      new THREE.MeshBasicMaterial({ color: 0x1a3040, transparent: true, opacity: 0.55, side: THREE.DoubleSide })
-    );
-    outside.position.set(2.2, 2.9, -2.15);
-    root.add(outside);
-
-    // Appliances on floor (room gear — heater is room heater, not the mat)
     const appliances = {};
-    const mkAppliance = (name, x, z, color) => {
-      const g = new THREE.Group();
+    const addAppliance = (name, x, z, color) => {
       const body = new THREE.Mesh(
-        new THREE.BoxGeometry(0.45, 0.35, 0.35),
-        new THREE.MeshStandardMaterial({ color: 0x222933, emissive: color, emissiveIntensity: 0 })
+        new THREE.BoxGeometry(0.42, 0.36, 0.36),
+        new THREE.MeshStandardMaterial({ color: 0x202936, emissive: color, emissiveIntensity: 0, roughness: 0.48 })
       );
-      body.position.y = 0.18;
-      g.add(body);
-      g.position.set(x, 0, z);
-      g.userData.body = body;
-      root.add(g);
-      appliances[name] = g;
-      return g;
+      body.position.set(x, 0.18, z);
+      body.castShadow = true;
+      root.add(body);
+      appliances[name] = body;
     };
-    mkAppliance("heater", -4.2, 1.5, 0xff7043);
-    mkAppliance("ac", -4.2, 0.6, 0x4fc3f7);
-    mkAppliance("humidifier", -4.2, -0.3, 0x29b6f6);
-    mkAppliance("dehumidifier", -4.2, -1.2, 0x80cbc4);
-    mkAppliance("clone_humidifier", -3.6, 1.2, 0x81d4fa);
+    addAppliance("heater", -4.35, 1.4, 0xff7043);
+    addAppliance("ac", -4.35, 0.65, 0x4fc3f7);
+    addAppliance("humidifier", -4.35, -0.1, 0x29b6f6);
+    addAppliance("dehumidifier", -4.35, -0.85, 0x80cbc4);
+    addAppliance("clone_humidifier", -3.85, 1.35, 0x81d4fa);
 
-    // Pot slots with stylized plants
-    const potMeshes = { clone: [], main: [] };
+    const pots = { clone: [], main: [] };
     const mkPlant = (tall) => {
-      const pot = new THREE.Group();
-      const potBody = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.18, 0.15, 0.2, 12),
-        new THREE.MeshStandardMaterial({ color: 0x5d4037, roughness: 0.85 })
+      const plant = new THREE.Group();
+      const pot = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.18, 0.145, 0.22, 12),
+        new THREE.MeshStandardMaterial({ color: 0x5b392c, roughness: 0.8 })
       );
-      potBody.position.y = 0.12;
-      pot.add(potBody);
-      const soil = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.15, 0.15, 0.04, 12),
-        new THREE.MeshStandardMaterial({ color: 0x3e2723 })
-      );
-      soil.position.y = 0.22;
-      pot.add(soil);
+      pot.position.y = 0.12;
+      pot.castShadow = true;
+      plant.add(pot);
+      const stemHeight = tall ? 0.65 : 0.38;
       const stem = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.025, 0.03, tall ? 0.7 : 0.4, 6),
-        new THREE.MeshStandardMaterial({ color: 0x2e7d32 })
+        new THREE.CylinderGeometry(0.022, 0.03, stemHeight, 7),
+        new THREE.MeshStandardMaterial({ color: 0x2f7b3c, roughness: 0.75 })
       );
-      stem.position.y = tall ? 0.55 : 0.42;
-      pot.add(stem);
-      const canopy = new THREE.Mesh(
-        new THREE.SphereGeometry(tall ? 0.28 : 0.2, 10, 10),
-        new THREE.MeshStandardMaterial({ color: 0x43a047, emissive: 0x1b5e20, emissiveIntensity: 0.25 })
-      );
-      canopy.position.y = tall ? 0.9 : 0.65;
-      canopy.scale.y = 0.75;
-      pot.add(canopy);
-      if (tall) {
-        const leaf = new THREE.Mesh(
-          new THREE.SphereGeometry(0.12, 8, 8),
-          new THREE.MeshStandardMaterial({ color: 0x66bb6a })
-        );
-        leaf.position.set(0.12, 0.55, 0.05);
-        leaf.scale.set(1.2, 0.45, 0.8);
-        pot.add(leaf);
+      stem.position.y = 0.24 + stemHeight / 2;
+      plant.add(stem);
+      const leafMat = new THREE.MeshStandardMaterial({ color: 0x49a85a, emissive: 0x103b19, emissiveIntensity: 0.24 });
+      for (let i = 0; i < (tall ? 6 : 4); i++) {
+        const leaf = new THREE.Mesh(new THREE.SphereGeometry(tall ? 0.12 : 0.09, 8, 6), leafMat.clone());
+        const angle = (i * Math.PI * 2) / (tall ? 6 : 4);
+        leaf.position.set(Math.cos(angle) * 0.14, 0.42 + (i % 2) * stemHeight * 0.45, Math.sin(angle) * 0.14);
+        leaf.scale.set(1.7, 0.35, 0.85);
+        leaf.rotation.y = -angle;
+        plant.add(leaf);
       }
-      pot.userData.plant = pot;
-      pot.userData.pad = potBody;
-      pot.visible = false;
-      return pot;
+      plant.userData.canopyMaterial = leafMat;
+      plant.visible = false;
+      return plant;
     };
-    const placePots = (tentGroup, count, key, cols, tall) => {
-      const w = key === "clone" ? 2.4 : 3.8;
-      const d = key === "clone" ? 1.5 : 2.15;
+    const placePlants = (tent, key, count, cols, tall) => {
+      const size = tent.userData.size;
       for (let i = 0; i < count; i++) {
+        const rows = Math.ceil(count / cols);
         const col = i % cols;
         const row = Math.floor(i / cols);
-        const rows = Math.ceil(count / cols);
-        const gx = (col - (cols - 1) / 2) * (w * 0.28);
-        const gz = (row - (rows - 1) / 2) * (d * 0.32);
-        const pot = mkPlant(tall);
-        pot.position.set(gx, 0.08, gz);
-        tentGroup.add(pot);
-        potMeshes[key].push(pot);
+        const plant = mkPlant(tall);
+        plant.position.set(
+          (col - (cols - 1) / 2) * size.w * 0.24,
+          key === "clone" ? 0.13 : 0.08,
+          (row - (rows - 1) / 2) * size.d * 0.3
+        );
+        tent.add(plant);
+        pots[key].push(plant);
       }
     };
-    placePots(tentClone, 4, "clone", 2, false);
-    placePots(tentMain, 8, "main", 4, true);
+    placePlants(tentClone, "clone", 4, 2, false);
+    placePlants(tentMain, "main", 8, 4, true);
 
-    // Air particles
+    let spriteTexture = null;
+    if (fx && typeof fx.createSoftSpriteTexture === "function") {
+      try {
+        spriteTexture = fx.createSoftSpriteTexture(64);
+      } catch (_) {
+        spriteTexture = null;
+      }
+    }
     const air = {};
-    const mkAir = (color, n) => {
-      const geo = new THREE.BufferGeometry();
-      const pos = new Float32Array(n * 3);
-      geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
-      const mat = new THREE.PointsMaterial({
-        color,
-        size: 0.14,
+    const mkAir = (name, color, count, size) => {
+      const geometry = new THREE.BufferGeometry();
+      const positions = new Float32Array(count * 3);
+      geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+      // Depth-soft particles: soft sprite + view-Z edge fade so points dissolve into geometry
+      const material = new THREE.ShaderMaterial({
+        uniforms: {
+          uMap: { value: spriteTexture },
+          uColor: { value: new THREE.Color(color) },
+          uOpacity: { value: 0 },
+          uSize: { value: size * 180 },
+          uHasMap: { value: spriteTexture ? 1 : 0 },
+        },
+        vertexShader: `
+          uniform float uSize;
+          varying float vSoft;
+          void main() {
+            vec4 mv = modelViewMatrix * vec4(position, 1.0);
+            vSoft = smoothstep(-0.35, -2.8, mv.z) * smoothstep(-18.0, -6.0, mv.z);
+            gl_PointSize = uSize * (1.0 / max(1.0, -mv.z));
+            gl_Position = projectionMatrix * mv;
+          }
+        `,
+        fragmentShader: `
+          uniform sampler2D uMap;
+          uniform vec3 uColor;
+          uniform float uOpacity;
+          uniform float uHasMap;
+          varying float vSoft;
+          void main() {
+            vec2 uv = gl_PointCoord;
+            float softEdge = 1.0 - smoothstep(0.32, 0.5, length(uv - 0.5));
+            float alpha = softEdge * vSoft * uOpacity;
+            if (uHasMap > 0.5) {
+              alpha *= texture2D(uMap, uv).a;
+            }
+            if (alpha < 0.01) discard;
+            gl_FragColor = vec4(uColor, alpha);
+          }
+        `,
         transparent: true,
-        opacity: 0.0,
         depthWrite: false,
+        depthTest: true,
         blending: THREE.AdditiveBlending,
-        sizeAttenuation: true,
+        toneMapped: false,
       });
-      const pts = new THREE.Points(geo, mat);
-      root.add(pts);
-      return { pts, pos, n, t: new Float32Array(n).map(() => Math.random()), mat };
+      const points = new THREE.Points(geometry, material);
+      points.frustumCulled = false;
+      root.add(points);
+      const phase = new Float32Array(count);
+      const seed = new Float32Array(count);
+      for (let i = 0; i < count; i++) {
+        phase[i] = Math.random();
+        seed[i] = Math.random();
+      }
+      air[name] = {
+        points,
+        positions,
+        material,
+        count,
+        phase,
+        seed,
+        intensity: 0,
+        setOpacity: (v) => {
+          material.uniforms.uOpacity.value = v;
+        },
+        setColor: (c) => {
+          material.uniforms.uColor.value.copy(c);
+        },
+      };
     };
-    air.intake = mkAir(0x42a5f5, 70);
-    air.cascade = mkAir(0xffb74d, 50);
-    air.out = mkAir(0xff8a65, 55);
-    air.recirc = mkAir(0xab47bc, 50);
-
-    // Orbit state
-    const orbit = { theta: 0.85, phi: 1.05, radius: 12.5, dragging: false, lx: 0, ly: 0 };
-    const applyCam = () => {
-      const x = orbit.radius * Math.sin(orbit.phi) * Math.cos(orbit.theta);
-      const y = orbit.radius * Math.cos(orbit.phi);
-      const z = orbit.radius * Math.sin(orbit.phi) * Math.sin(orbit.theta);
-      camera.position.set(x, y, z);
-      camera.lookAt(0, 1.1, 0);
+    mkAir("intakeClone", 0x42a5f5, 58, 0.12);
+    mkAir("intakeMain", 0x42a5f5, 66, 0.12);
+    mkAir("cascade", 0xffb74d, 92, 0.145);
+    mkAir("out", 0xff765e, 68, 0.135);
+    mkAir("recirc", 0xa85be0, 68, 0.135);
+    mkAir("matHeat", 0xff6d00, 34, 0.11);
+    const particleColors = {
+      intake: new THREE.Color(0x42a5f5),
+      intakeWarm: new THREE.Color(0x66a4d9).lerp(new THREE.Color(0xff9b55), 0.16),
+      cascade: new THREE.Color(0xffb74d),
+      cascadeWarm: new THREE.Color(0xff9148),
     };
-    applyCam();
 
-    const onDown = (e) => {
+    let curl = null;
+    if (fx && typeof fx.createCurlHaze === "function") {
+      try {
+        curl = fx.createCurlHaze(renderer, 520);
+        curl.points.scale.set(0.78, 0.58, 0.58);
+        curl.points.position.set(0, 1.25, 0.3);
+        root.add(curl.points);
+      } catch (_) {
+        curl = null;
+      }
+    }
+
+    const sampleCurve = (curve, t, radius, seed) => {
+      const clamped = Math.max(0, Math.min(1, t));
+      const point = curve.getPoint(clamped);
+      const tangent = curve.getTangent(clamped);
+      const side = new THREE.Vector3(-tangent.z, 0, tangent.x);
+      if (side.lengthSq() < 0.001) side.set(1, 0, 0);
+      side.normalize();
+      const up = new THREE.Vector3().crossVectors(tangent, side).normalize();
+      const angle = seed * Math.PI * 2 + t * 8;
+      return point
+        .addScaledVector(side, Math.cos(angle) * radius * (0.35 + seed * 0.65))
+        .addScaledVector(up, Math.sin(angle) * radius * (0.35 + seed * 0.65));
+    };
+
+    const climateValue = (zone, key) => {
+      const source = live.climate && live.climate[zone] != null ? live.climate[zone] : live[`${zone}Climate`];
+      if (source && typeof source === "object" && Number.isFinite(Number(source[key]))) return Number(source[key]);
+      if (typeof source !== "string") return NaN;
+      const nums = source.match(/-?\d+(?:\.\d+)?/g) || [];
+      const index = key === "temperature" ? 0 : key === "humidity" ? 1 : 2;
+      return Number(nums[index]);
+    };
+
+    const setZoneTint = () => {
+      const cloneTemp = climateValue("clone", "temperature");
+      const mainTemp = climateValue("main", "temperature");
+      const roomHumidity = climateValue("room", "humidity");
+      const tint = (value) => {
+        if (!Number.isFinite(value)) return new THREE.Color(0x7bb8d7);
+        const n = Math.max(0, Math.min(1, (value - 18) / 12));
+        return new THREE.Color(0x5e9cff).lerp(new THREE.Color(0xff855e), n);
+      };
+      const cloneTint = tint(cloneTemp);
+      const mainTint = tint(mainTemp);
+      (tentClone.userData.achSlices || []).forEach((slice) => slice.material.color.copy(cloneTint));
+      (tentMain.userData.achSlices || []).forEach((slice) => slice.material.color.copy(mainTint));
+      roomShell.material.color.set(Number.isFinite(roomHumidity) && roomHumidity > 65 ? 0x355f72 : 0x183047);
+      roomLungSlices.forEach((slice) => {
+        slice.material.color.set(Number.isFinite(roomHumidity) && roomHumidity > 65 ? 0x4a8aaa : 0x3d7ea8);
+      });
+    };
+
+    const orbit = { theta: 0.72, phi: 1.0, radius: 11.7, dragging: false, x: 0, y: 0 };
+    const applyCamera = () => {
+      camera.position.set(
+        orbit.radius * Math.sin(orbit.phi) * Math.cos(orbit.theta),
+        orbit.radius * Math.cos(orbit.phi),
+        orbit.radius * Math.sin(orbit.phi) * Math.sin(orbit.theta)
+      );
+      camera.lookAt(0, 1.15, 0.15);
+    };
+    applyCamera();
+    const onDown = (event) => {
       orbit.dragging = true;
-      orbit.lx = e.clientX;
-      orbit.ly = e.clientY;
+      orbit.x = event.clientX;
+      orbit.y = event.clientY;
     };
     const onUp = () => {
       orbit.dragging = false;
     };
-    const onMove = (e) => {
+    const onMove = (event) => {
       if (!orbit.dragging) return;
-      const dx = e.clientX - orbit.lx;
-      const dy = e.clientY - orbit.ly;
-      orbit.lx = e.clientX;
-      orbit.ly = e.clientY;
-      orbit.theta -= dx * 0.005;
-      orbit.phi = Math.max(0.35, Math.min(1.35, orbit.phi + dy * 0.005));
-      applyCam();
+      orbit.theta -= (event.clientX - orbit.x) * 0.005;
+      orbit.phi = Math.max(0.34, Math.min(1.38, orbit.phi + (event.clientY - orbit.y) * 0.005));
+      orbit.x = event.clientX;
+      orbit.y = event.clientY;
+      applyCamera();
     };
-    const onWheel = (e) => {
-      e.preventDefault();
-      orbit.radius = Math.max(7, Math.min(18, orbit.radius + e.deltaY * 0.01));
-      applyCam();
+    const onWheel = (event) => {
+      event.preventDefault();
+      orbit.radius = Math.max(7.5, Math.min(17, orbit.radius + event.deltaY * 0.01));
+      applyCamera();
     };
     renderer.domElement.addEventListener("pointerdown", onDown);
     window.addEventListener("pointerup", onUp);
     window.addEventListener("pointermove", onMove);
     renderer.domElement.addEventListener("wheel", onWheel, { passive: false });
 
-    let raf = 0;
     let live = {};
-    const setLive = (L) => {
-      live = L || {};
+    const setLive = (next) => {
+      live = next || {};
+      setZoneTint();
     };
-
     const resize = () => {
-      const w = host.clientWidth || 640;
-      const h = host.clientHeight || 400;
-      camera.aspect = w / Math.max(1, h);
+      const width = host.clientWidth || 640;
+      const height = host.clientHeight || 400;
+      camera.aspect = width / Math.max(1, height);
       camera.updateProjectionMatrix();
-      renderer.setSize(w, h, false);
+      renderer.setSize(width, height, false);
+      if (post && typeof post.setSize === "function") post.setSize(width, height);
     };
 
-    const updateAir = (sys, dt) => {
-      const run = (sysBag, pathFn, intensity) => {
-        const on = intensity > 0.04;
-        sysBag.mat.opacity = on ? Math.min(0.9, 0.25 + intensity * 0.7) : 0.03;
-        const arr = sysBag.pos;
-        const speed = on ? 0.2 + intensity * 0.5 : 0.03;
-        for (let i = 0; i < sysBag.n; i++) {
-          sysBag.t[i] = (sysBag.t[i] + dt * speed) % 1;
-          const p = pathFn(sysBag.t[i], i);
-          arr[i * 3] = p.x;
-          arr[i * 3 + 1] = p.y;
-          arr[i * 3 + 2] = p.z;
+    const highlights = (name) => {
+      const wanted = String(live.pathHighlight || "").toLowerCase();
+      if (!wanted) return false;
+      if (wanted === "intake") return name === "intakeClone" || name === "intakeMain";
+      return wanted === name;
+    };
+    const updatePathVisual = (name, intensity, now) => {
+      const path = paths[name];
+      const active = intensity >= 0.04;
+      const boost = highlights(name) ? 1.45 : 1;
+      const shown = active ? Math.min(1, intensity * boost) : 0;
+      path.intensity = shown;
+      path.shell.material.opacity = active ? 0.08 + shown * 0.38 : 0;
+      (arrowByPath[name] || []).forEach((arrow) => {
+        arrow.visible = active;
+        if (active) arrow.scale.setScalar(0.88 + Math.sin(now * 0.005) * 0.12);
+      });
+      if (path.ribbon) {
+        const uniforms = path.ribbon.material.userData;
+        uniforms.uOpacity.value = active ? (name === "cascade" ? 0.46 : 0.25) + shown * 0.58 : 0;
+        uniforms.uDashOffset.value -= 0.005 + shown * 0.018;
+        const width = active ? 0.46 + shown * 0.86 : 0.32;
+        if (Math.abs(width - path.ribbon.userData.flow.lastWidth) > 0.08) {
+          path.ribbon.geometry.dispose();
+          path.ribbon.geometry = new THREE.TubeGeometry(
+            path.ribbon.userData.flow.curve,
+            path.ribbon.userData.flow.tubular,
+            path.ribbon.userData.flow.baseRadius * width,
+            6,
+            false
+          );
+          path.ribbon.userData.flow.lastWidth = width;
         }
-        sysBag.pts.geometry.attributes.position.needsUpdate = true;
-      };
-      const inClone = Math.max(0, live.fanIntakeClone || 0);
-      const inMain = Math.max(0, live.fanIntakeMain || 0);
-      const casc = Math.max(0, live.cascadeNorm || 0);
-      const outI = (live.outShare || 0) * Math.max(0.1, live.fanExhaust || 0);
-      const recI = (live.recircShare || 0) * Math.max(0.1, live.fanRecirc || 0);
-
-      // Blue: room → into tent floor ports
-      run(
-        air.intake,
-        (t, i) => {
-          const toClone = i % 2 === 0;
-          const inten = toClone ? inClone : inMain;
-          const x = toClone ? -2.8 : 2.2;
-          if (inten < 0.03) return new THREE.Vector3(x, 0.2, 2.4);
-          const z0 = toClone ? 2.2 : 2.4;
-          return new THREE.Vector3(x, 0.35, z0 - t * (z0 - 0.4));
-        },
-        Math.max(inClone, inMain)
-      );
-      // Amber: cascade 2x4 → 4x8
-      run(
-        air.cascade,
-        (t) => new THREE.Vector3(-1.5 + t * 3.0, 1.1 + Math.sin(t * Math.PI) * 0.05, 0.25),
-        casc
-      );
-      // Orange: 4x8 → outside dump
-      run(
-        air.out,
-        (t) => {
-          if (t < 0.4) return new THREE.Vector3(2.2, 2.15 + t * 1.0, 0.2 - t * 2.0);
-          return new THREE.Vector3(2.2, 2.55 + (t - 0.4) * 0.8, -0.6 - (t - 0.4) * 2.2);
-        },
-        outI
-      );
-      // Purple: 4x8 → room recirc
-      run(
-        air.recirc,
-        (t) => new THREE.Vector3(2.2 - t * 1.4, 1.85 - t * 0.9, 0.4 + t * 1.9),
-        recI
-      );
+      }
     };
 
+    const updateSystem = (name, curve, dt, intensity, mapper) => {
+      const system = air[name];
+      const active = intensity >= 0.04;
+      const boost = highlights(name) || (name.startsWith("intake") && highlights("intake")) ? 1.42 : 1;
+      const shown = active ? Math.min(1, intensity * boost) : 0;
+      system.intensity = shown;
+      system.points.visible = active;
+      system.setOpacity(active ? Math.min(1, 0.3 + shown * 0.7) : 0);
+      if (!active) return;
+      const speed = 0.14 + shown * 0.62;
+      for (let i = 0; i < system.count; i++) {
+        system.phase[i] = (system.phase[i] + dt * speed * (0.82 + (i % 7) * 0.045)) % 1;
+        const point = mapper
+          ? mapper(system.phase[i], system.seed[i], i)
+          : sampleCurve(curve, system.phase[i], 0.052, system.seed[i]);
+        system.positions[i * 3] = point.x;
+        system.positions[i * 3 + 1] = point.y;
+        system.positions[i * 3 + 2] = point.z;
+      }
+      system.points.geometry.attributes.position.needsUpdate = true;
+    };
+
+    const updateCascadePlume = (dt, intensity) => {
+      air.cascade.setColor(live.matOn ? particleColors.cascadeWarm : particleColors.cascade);
+      updateSystem("cascade", curves.cascade, dt, intensity, (t, seed, i) => {
+        if (t < 0.52) return sampleCurve(curves.cascade, t / 0.52, 0.055 + t * 0.08, seed);
+        const u = (t - 0.52) / 0.48;
+        const entry = curves.cascade.getPoint(1);
+        const exhaust = curves.out.getPoint(0.04);
+        const point = entry.clone().lerp(exhaust, Math.pow(u, 1.38));
+        const swell = Math.sin(Math.PI * u);
+        point.x += (seed - 0.5) * 1.65 * swell;
+        point.y += ((i % 9) / 8 - 0.35) * 1.28 * swell;
+        point.z += (((i * 0.618) % 1) - 0.5) * 1.25 * swell;
+        return point;
+      });
+    };
+
+    const updateMatHeat = (dt, intensity) => {
+      const system = air.matHeat;
+      const active = intensity >= 0.04;
+      const boost = highlights("mat") ? 1.5 : 1;
+      system.points.visible = active;
+      system.setOpacity(active ? Math.min(0.95, 0.48 * boost) : 0);
+      if (!active) return;
+      for (let i = 0; i < system.count; i++) {
+        system.phase[i] = (system.phase[i] + dt * (0.24 + (i % 5) * 0.025)) % 1;
+        const u = system.phase[i];
+        const point = new THREE.Vector3(
+          (system.seed[i] - 0.5) * 1.38 + Math.sin(u * 10 + i) * 0.05,
+          0.12 + u * 0.72,
+          (((i * 0.618) % 1) - 0.5) * 0.88
+        );
+        tentClone.localToWorld(point);
+        system.positions[i * 3] = point.x;
+        system.positions[i * 3 + 1] = point.y;
+        system.positions[i * 3 + 2] = point.z;
+      }
+      system.points.geometry.attributes.position.needsUpdate = true;
+    };
+
+    let raf = 0;
+    let disposed = false;
     let last = performance.now();
     const tick = (now) => {
+      if (disposed) return;
       raf = requestAnimationFrame(tick);
-      const dt = Math.min(0.05, (now - last) / 1000);
+      const dt = Math.min(0.05, Math.max(0.001, (now - last) / 1000));
       last = now;
 
-      const ll = live.lightLevel || 0;
-      tentClone.userData.lightPlane.material.opacity = live.cloneLit ? 0.22 + ll * 0.45 : 0.05;
-      tentClone.userData.volume.material.opacity = live.cloneLit ? 0.1 + ll * 0.12 : 0.03;
-      tentClone.userData.bar.material.emissiveIntensity = live.cloneLit ? 0.4 + ll * 0.8 : 0.08;
-      // 4x8 has no lamp — keep canopy dim unless we add a future light
-      tentMain.userData.lightPlane.material.opacity = 0.04;
-      tentMain.userData.volume.material.opacity = 0.03;
-      tentMain.userData.bar.material.emissiveIntensity = 0.05;
+      const intakeClone = Math.max(0, Number(live.fanIntakeClone) || 0);
+      const intakeMain = Math.max(0, Number(live.fanIntakeMain) || 0);
+      const cascade = Math.max(0, Number(live.cascadeNorm) || 0);
+      const exhaust = Math.max(0, Number(live.fanExhaust) || 0);
+      const recircFan = Math.max(0, Number(live.fanRecirc) || 0);
+      const out = Math.max(0, Number(live.outShare) || 0) * exhaust;
+      const recirc = Math.max(0, Number(live.recircShare) || 0) * recircFan;
 
-      growMat.material.emissiveIntensity = live.matOn ? 0.85 : 0.0;
+      updatePathVisual("intakeClone", intakeClone, now);
+      updatePathVisual("intakeMain", intakeMain, now);
+      updatePathVisual("cascade", cascade, now);
+      updatePathVisual("out", out, now);
+      updatePathVisual("recirc", recirc, now);
+      updateSystem("intakeClone", curves.intakeClone, dt, intakeClone);
+      updateSystem("intakeMain", curves.intakeMain, dt, intakeMain);
+      updateCascadePlume(dt, cascade);
+      updateSystem("out", curves.out, dt, out);
+      updateSystem("recirc", curves.recirc, dt, recirc);
+      updateMatHeat(dt, live.matOn ? 1 : 0);
 
-      fanIntakeClone.userData.speed = (live.fanIntakeClone || 0) * 14;
-      fanIntakeMain.userData.speed = (live.fanIntakeMain || 0) * 14;
-      fanExhaust.userData.speed = (live.fanExhaust || 0) * 16;
-      fanRecirc.userData.speed = (live.fanRecirc || 0) * 14;
-      for (const f of [fanIntakeClone, fanIntakeMain, fanExhaust, fanRecirc]) {
-        for (const b of f.userData.blades) b.rotation.y += f.userData.speed * dt;
+      if (live.matOn) {
+        air.intakeClone.setColor(particleColors.intakeWarm);
+      } else {
+        air.intakeClone.setColor(particleColors.intake);
       }
-      if (ducts.userData.arrows) {
-        const pulse = 0.65 + Math.sin(now * 0.004) * 0.25;
-        ducts.userData.arrows.forEach((a) => a.scale.setScalar(pulse));
+      const lightLevel = Math.max(0, Number(live.lightLevel) || 0);
+      const lightBoost = highlights("light") ? 1.35 : 1;
+      tentClone.userData.lightBar.material.emissiveIntensity = live.cloneLit ? (2.2 + lightLevel * 4.2) * lightBoost : 0;
+      tentClone.userData.shafts.visible = !!live.cloneLit;
+      tentClone.userData.shafts.children.forEach((shaft, i) => {
+        shaft.material.opacity = live.cloneLit ? (0.055 + lightLevel * 0.14) * lightBoost : 0;
+        shaft.position.y = tentClone.userData.size.h * 0.5 + Math.sin(now * 0.0007 + i) * 0.02;
+      });
+      tentMain.userData.lightBar.material.emissiveIntensity = 0;
+      tentMain.userData.lightBar.material.opacity = 0.025;
+
+      const pulse = 0.86 + Math.sin(now * 0.0045) * 0.14;
+      matPlate.material.emissiveIntensity = live.matOn ? 3.4 * pulse * (highlights("mat") ? 1.35 : 1) : 0;
+      matGlow.material.opacity = live.matOn ? 0.38 * pulse * (highlights("mat") ? 1.4 : 1) : 0;
+      ventGlow.material.opacity = out >= 0.04 ? 0.09 + out * 0.4 : 0.015;
+      // Y-split bloom beat: OUT coral vs RECIRC violet shells diverge when both legs live
+      if (paths.out && paths.recirc) {
+        paths.out.shell.material.color.setHex(0xff765e);
+        paths.recirc.shell.material.color.setHex(0xa85be0);
+        if (out >= 0.04 && recirc >= 0.04) {
+          paths.out.shell.material.opacity = Math.max(paths.out.shell.material.opacity, 0.18 + out * 0.42);
+          paths.recirc.shell.material.opacity = Math.max(paths.recirc.shell.material.opacity, 0.18 + recirc * 0.42);
+        }
       }
 
-      for (const [name, g] of Object.entries(appliances)) {
-        const on = !!(live.devices || []).find((d) => d.id === name && d.on);
-        g.userData.body.material.emissiveIntensity = on ? 0.55 : 0.0;
-      }
+      const setAch = (tent, base) => {
+        (tent.userData.achSlices || []).forEach((slice, i) => {
+          slice.material.opacity = base * (0.55 + i * 0.28);
+        });
+      };
+      setAch(tentClone, intakeClone >= 0.04 ? 0.025 + intakeClone * 0.085 : 0.008);
+      setAch(
+        tentMain,
+        Math.max(intakeMain, cascade, exhaust) >= 0.04
+          ? 0.026 + Math.max(intakeMain, cascade, exhaust) * 0.09
+          : 0.008
+      );
+      roomShell.material.opacity = 0.024 + recirc * 0.045;
+      roomEdges.material.opacity = 0.14 + recirc * 0.12;
+      roomLungSlices.forEach((slice, i) => {
+        slice.material.opacity = (0.01 + recirc * 0.055) * (0.55 + i * 0.18);
+        slice.position.y = 0.55 + i * 0.72 + Math.sin(now * 0.00055 + i) * 0.04 * (0.4 + recirc);
+      });
+      if (curl) curl.update(dt, recirc);
 
-      const assign = live.potSlots || { clone: [], main: [] };
-      for (const key of ["clone", "main"]) {
-        potMeshes[key].forEach((m, i) => {
-          const filled = assign[key] && assign[key][i];
-          m.visible = !!filled;
-          if (filled && filled.color && m.children[3] && m.children[3].material) {
-            m.children[3].material.color.set(filled.color);
+      fans.intakeClone.userData.speed = intakeClone * 15;
+      fans.intakeMain.userData.speed = intakeMain * 15;
+      fans.exhaust.userData.speed = exhaust * 17;
+      fans.recirc.userData.speed = recircFan * 15;
+      Object.values(fans).forEach((fan) => {
+        fan.userData.rotor.rotation.y += fan.userData.speed * dt;
+      });
+
+      Object.entries(appliances).forEach(([name, body]) => {
+        const on = !!(live.devices || []).find((device) => device.id === name && device.on);
+        body.material.emissiveIntensity = on ? 0.72 : 0;
+      });
+      const slots = live.potSlots || { clone: [], main: [] };
+      ["clone", "main"].forEach((key) => {
+        pots[key].forEach((plant, i) => {
+          const slot = slots[key] && slots[key][i];
+          plant.visible = !!slot;
+          if (slot && slot.color) {
+            plant.children.slice(2).forEach((leaf) => {
+              if (leaf.material && leaf.material.color) leaf.material.color.set(slot.color);
+            });
           }
         });
-      }
+      });
 
-      updateAir(air, dt);
-      renderer.render(scene, camera);
+      if (post && typeof post.render === "function") post.render();
+      else renderer.render(scene, camera);
     };
 
     resize();
@@ -1064,11 +1597,27 @@
       resize,
       setLive,
       dispose() {
+        if (disposed) return;
+        disposed = true;
         cancelAnimationFrame(raf);
         renderer.domElement.removeEventListener("pointerdown", onDown);
         window.removeEventListener("pointerup", onUp);
         window.removeEventListener("pointermove", onMove);
         renderer.domElement.removeEventListener("wheel", onWheel);
+        if (post && typeof post.dispose === "function") post.dispose();
+        if (curl && typeof curl.dispose === "function") curl.dispose();
+        const geometries = new Set();
+        const materials = new Set();
+        scene.traverse((object) => {
+          if (object.geometry) geometries.add(object.geometry);
+          if (Array.isArray(object.material)) object.material.forEach((material) => materials.add(material));
+          else if (object.material) materials.add(object.material);
+        });
+        geometries.forEach((geometry) => geometry.dispose && geometry.dispose());
+        materials.forEach((material) => material.dispose && material.dispose());
+        if (spriteTexture) spriteTexture.dispose();
+        if (rampTexture) rampTexture.dispose();
+        if (mergeRampTexture) mergeRampTexture.dispose();
         renderer.dispose();
         if (renderer.domElement.parentNode) renderer.domElement.parentNode.removeChild(renderer.domElement);
       },
@@ -1189,13 +1738,13 @@
                 ${typeof THREE === "undefined" ? `<div class="dash-missing">THREE.js not loaded — redeploy DSC-HUB bundle.</div>` : ""}
                 <div class="dash-hud left" id="d-hud-clone"></div>
                 <div class="dash-hud right" id="d-hud-main"></div>
-                <div class="dash-legend">
-                  <span><i class="dash-dot" style="background:#66bb6a"></i> 2x4 light</span>
-                  <span><i class="dash-dot" style="background:#ff6d00"></i> 2x4 heat mat</span>
-                  <span><i class="dash-dot" style="background:#42a5f5"></i> Intake</span>
-                  <span><i class="dash-dot" style="background:#ffb74d"></i> Cascade 2x4→4x8</span>
-                  <span><i class="dash-dot" style="background:#ff8a65"></i> Dump out</span>
-                  <span><i class="dash-dot" style="background:#ab47bc"></i> Recirc</span>
+                <div class="dash-legend" id="d-legend">
+                  <span data-path="light"><i class="dash-dot" style="background:#66bb6a"></i> 2x4 light</span>
+                  <span data-path="mat"><i class="dash-dot" style="background:#ff6d00"></i> 2x4 heat mat</span>
+                  <span data-path="intake"><i class="dash-dot" style="background:#42a5f5"></i> Room intake</span>
+                  <span data-path="cascade"><i class="dash-dot" style="background:#ffb74d"></i> Cascade 2x4→4x8</span>
+                  <span data-path="out"><i class="dash-dot" style="background:#ff8a65"></i> Dump OUT</span>
+                  <span data-path="recirc"><i class="dash-dot" style="background:#ab47bc"></i> Recirc</span>
                 </div>
               </div>
               <div class="dash-charts">
@@ -1273,6 +1822,28 @@
           );
         });
       });
+
+      this._pathHighlight = "";
+      const legend = this.shadowRoot.getElementById("d-legend");
+      if (legend) {
+        legend.querySelectorAll("[data-path]").forEach((el) => {
+          const apply = (path) => {
+            this._pathHighlight = path || "";
+            legend.querySelectorAll("[data-path]").forEach((n) => {
+              n.classList.toggle("on", !!path && n.getAttribute("data-path") === path);
+            });
+            if (this._scene && this._lastLive) {
+              this._scene.setLive({ ...this._lastLive, pathHighlight: this._pathHighlight });
+            }
+          };
+          el.addEventListener("mouseenter", () => apply(el.getAttribute("data-path")));
+          el.addEventListener("mouseleave", () => apply(""));
+          el.addEventListener("click", () => {
+            const p = el.getAttribute("data-path");
+            apply(this._pathHighlight === p ? "" : p);
+          });
+        });
+      }
 
       this._update();
     }
@@ -1461,6 +2032,19 @@
         roomClimate: `${fmt(rT)}°C · ${fmt(rH, 0)}% · VPD ${fmt(roomVpd, 2)}`,
         cloneClimate: `${fmt(numState(hass, e.clone_temp))}°C · ${fmt(numState(hass, e.clone_humidity), 0)}% · VPD ${fmt(numState(hass, e.clone_vpd), 2)}`,
         mainClimate: `${fmt(numState(hass, e.tent_temp))}°C · ${fmt(numState(hass, e.tent_humidity), 0)}% · VPD ${fmt(numState(hass, e.tent_vpd), 2)}`,
+        climate: {
+          room: { temperature: rT, humidity: rH, vpd: roomVpd },
+          clone: {
+            temperature: numState(hass, e.clone_temp, NaN),
+            humidity: numState(hass, e.clone_humidity, NaN),
+            vpd: numState(hass, e.clone_vpd, NaN),
+          },
+          main: {
+            temperature: numState(hass, e.tent_temp, NaN),
+            humidity: numState(hass, e.tent_humidity, NaN),
+            vpd: numState(hass, e.tent_vpd, NaN),
+          },
+        },
         pots,
       };
     }
@@ -1469,6 +2053,8 @@
       if (!this.shadowRoot || !this._hass) return;
       const live = this._buildLive();
       if (!live) return;
+      live.pathHighlight = this._pathHighlight || "";
+      this._lastLive = live;
 
       const status = this.shadowRoot.getElementById("d-status");
       if (status) {

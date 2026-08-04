@@ -1522,13 +1522,13 @@ script:
         data:
           value: >-
             Synced {{ now().strftime('%Y-%m-%d %H:%M') }} ({{ src }}).
-            Got ≈ MAD-filtered median of in-service pots. ESP Cal untouched.
+            Got ≈ MAD-filtered median. Push peer → ESP to move SoT onto pots.
       - action: persistent_notification.create
         data:
           title: "Peer baseline captured"
           message: >-
             Offsets set so corrected Got ≈ MAD-filtered median ({{ src }}).
-            HA-only — ESP Cal Offset/Scale not written.
+            Optional next: Push peer → ESP (SoT) on Strains.
 
   dsc_migrate_strain_sprout_ha_to_pot:
     alias: "DSC Migrate Strain/Sprout HA → Pot"

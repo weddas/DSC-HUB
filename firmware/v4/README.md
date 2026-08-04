@@ -21,7 +21,7 @@ Fleet component: `components/dsc_fleet_setup/` (phone portal on hub; Control/pot
 
 Package bodies are remote-git safe (no `!secret`). Stubs pass credentials (and hub/panel MACs + `espnow_cmd_tag`) as substitutions.
 
-Pots (`dsc-pot-common` **5.1.4+**): each soil channel has **Cal … Offset** / **Cal … Scale** config numbers (NVS). Formula `raw * scale + offset` applies before range/median and feeds HA + ESP-NOW. **Reset Sensor Calibration** restores defaults and clears provenance (`Soil Cal Method` / `Soil Cal Last` / `Soil Calibrated`).
+Pots (`dsc-pot-common` **5.1.5+**): each soil channel has **Cal … Offset** / **Cal … Scale** config numbers (NVS). Formula `raw * scale + offset` applies before range/median and feeds HA + ESP-NOW. **Reset Sensor Calibration** restores defaults and clears provenance (`Soil Cal Method` / `Soil Cal Last` / `Soil Calibrated`). **Mark Soil Cal Peer Median** stamps method after HA push-to-ESP SoT.
 
 ## Panel (DSC-CONTROL **4.0.11**)
 

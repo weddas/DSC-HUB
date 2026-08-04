@@ -149,17 +149,21 @@ stage_and_commit() {
   fi
 
   if bashio::config.true 'sync_www'; then
-    log "Syncing www system-map SVG + bundled cards (system map + airflow + Three + Dash)"
+    log "Syncing www system-map SVG + bundled cards (system map + airflow + Three + Dash FX)"
+    mkdir -p "${STAGE}/www/vendor"
     if [[ -f "${src}/www/dsc-system-map.svg" ]]; then
       cp -f "${src}/www/dsc-system-map.svg" "${STAGE}/www/dsc-system-map.svg"
       log "Staged www/dsc-system-map.svg"
     else
       warn "Missing repo www/dsc-system-map.svg"
     fi
-    # Bundle cards + Three.js into dsc-system-map-card.js (existing Lovelace resource)
-    # and DSC-HUB.js (HACS filename). Standalone sources optional.
+    # Bundle cards + Three.js + cinematic FX into dsc-system-map-card.js (Lovelace resource)
+    # and DSC-HUB.js (HACS filename). Never stage a map-only stub — that wipes The Dash (F-013).
+    local bundled=0
+    local min_bundle=500000
     if [[ -f "${src}/www/dsc-system-map-card.js" && -f "${src}/www/dsc-airflow-map-card.js" \
-       && -f "${src}/www/vendor/three.min.js" && -f "${src}/www/dsc-the-dash-card.js" ]]; then
+       && -f "${src}/www/vendor/three.min.js" && -f "${src}/www/vendor/dsc-dash-fx.js" \
+       && -f "${src}/www/dsc-the-dash-card.js" ]]; then
       {
         cat "${src}/www/dsc-system-map-card.js"
         printf '\n'
@@ -167,14 +171,33 @@ stage_and_commit() {
         printf '\n'
         cat "${src}/www/vendor/three.min.js"
         printf '\n'
+        cat "${src}/www/vendor/dsc-dash-fx.js"
+        printf '\n'
         cat "${src}/www/dsc-the-dash-card.js"
       } > "${STAGE}/www/dsc-system-map-card.js"
-      cp -f "${STAGE}/www/dsc-system-map-card.js" "${STAGE}/www/DSC-HUB.js"
-      cp -f "${src}/www/dsc-airflow-map-card.js" "${STAGE}/www/dsc-airflow-map-card.js"
-      cp -f "${src}/www/dsc-the-dash-card.js" "${STAGE}/www/dsc-the-dash-card.js"
-      log "Staged bundled www/dsc-system-map-card.js ($(wc -c <"${STAGE}/www/dsc-system-map-card.js") bytes)"
+      bundled=1
+    elif [[ -f "${src}/dist/dsc-system-map-card.js" ]]; then
+      # Fallback: prebuilt dist artifact (keeps live Dash if vendor/three is missing from clone)
+      cp -f "${src}/dist/dsc-system-map-card.js" "${STAGE}/www/dsc-system-map-card.js"
+      bundled=1
+      warn "Used dist/dsc-system-map-card.js fallback (www vendor concat inputs incomplete)"
+    fi
+    if [[ "${bundled}" -eq 1 ]]; then
+      local bytes
+      bytes="$(wc -c <"${STAGE}/www/dsc-system-map-card.js" | tr -d ' ')"
+      if [[ "${bytes}" -lt "${min_bundle}" ]]; then
+        warn "Refusing tiny www bundle (${bytes} bytes < ${min_bundle}) — leaving live /config/www alone"
+        rm -f "${STAGE}/www/dsc-system-map-card.js"
+      else
+        cp -f "${STAGE}/www/dsc-system-map-card.js" "${STAGE}/www/DSC-HUB.js"
+        [[ -f "${src}/www/dsc-airflow-map-card.js" ]] && cp -f "${src}/www/dsc-airflow-map-card.js" "${STAGE}/www/dsc-airflow-map-card.js"
+        [[ -f "${src}/www/dsc-the-dash-card.js" ]] && cp -f "${src}/www/dsc-the-dash-card.js" "${STAGE}/www/dsc-the-dash-card.js"
+        [[ -f "${src}/www/vendor/dsc-dash-fx.js" ]] && cp -f "${src}/www/vendor/dsc-dash-fx.js" "${STAGE}/www/vendor/dsc-dash-fx.js"
+        [[ -f "${src}/www/vendor/three.min.js" ]] && cp -f "${src}/www/vendor/three.min.js" "${STAGE}/www/vendor/three.min.js"
+        log "Staged bundled www/dsc-system-map-card.js (${bytes} bytes)"
+      fi
     else
-      warn "Missing system-map / airflow / three / dash — www sync incomplete"
+      warn "Missing system-map / airflow / three / dash-fx / dash (and no dist fallback) — www card sync skipped"
     fi
   fi
 
@@ -227,10 +250,31 @@ stage_and_commit() {
   if bashio::config.true 'sync_www'; then
     for name in dsc-system-map.svg dsc-system-map-card.js DSC-HUB.js dsc-airflow-map-card.js dsc-the-dash-card.js; do
       if [[ -f "${STAGE}/www/${name}" ]]; then
+        # Guard: never replace a healthy cinematic bundle with a tiny stub
+        if [[ "${name}" == "dsc-system-map-card.js" || "${name}" == "DSC-HUB.js" ]]; then
+          local live="${HA_CONFIG}/www/${name}"
+          local staged_bytes live_bytes
+          staged_bytes="$(wc -c <"${STAGE}/www/${name}" | tr -d ' ')"
+          if [[ -f "${live}" ]]; then
+            live_bytes="$(wc -c <"${live}" | tr -d ' ')"
+            if [[ "${staged_bytes}" -lt 500000 && "${live_bytes}" -ge 500000 ]]; then
+              warn "Skip install ${name}: staged ${staged_bytes}B would wipe live ${live_bytes}B bundle"
+              continue
+            fi
+          fi
+        fi
         cp -f "${STAGE}/www/${name}" "${HA_CONFIG}/www/${name}"
         log "Installed /config/www/${name}"
       fi
     done
+    if [[ -d "${STAGE}/www/vendor" ]]; then
+      mkdir -p "${HA_CONFIG}/www/vendor"
+      for f in "${STAGE}/www/vendor"/*; do
+        [[ -f "${f}" ]] || continue
+        cp -f "${f}" "${HA_CONFIG}/www/vendor/$(basename "${f}")"
+        log "Installed /config/www/vendor/$(basename "${f}")"
+      done
+    fi
   fi
   if bashio::config.true 'sync_esphome'; then
     for f in "${STAGE}/esphome"/dsc-*.yaml; do

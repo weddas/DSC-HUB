@@ -16,8 +16,10 @@ DIST="${REPO_ROOT}/dist"
 mkdir -p "${DIST}"
 
 THREE_JS="${SRC}/vendor/three.min.js"
+DASH_FX="${SRC}/vendor/dsc-dash-fx.js"
 DASH_JS="${SRC}/dsc-the-dash-card.js"
 [[ -f "${THREE_JS}" ]] || { echo "Missing ${THREE_JS}" >&2; exit 1; }
+[[ -f "${DASH_FX}" ]] || { echo "Missing ${DASH_FX}" >&2; exit 1; }
 [[ -f "${DASH_JS}" ]] || { echo "Missing ${DASH_JS}" >&2; exit 1; }
 
 BUNDLE="${DIST}/DSC-HUB.js"
@@ -27,6 +29,8 @@ BUNDLE="${DIST}/DSC-HUB.js"
   cat "${SRC}/dsc-airflow-map-card.js"
   printf '\n'
   cat "${THREE_JS}"
+  printf '\n'
+  cat "${DASH_FX}"
   printf '\n'
   cat "${DASH_JS}"
 } > "${BUNDLE}"
@@ -39,6 +43,7 @@ cp -f "${SRC}/dsc-airflow-map-card.js" "${DIST}/dsc-airflow-map-card.js"
 cp -f "${DASH_JS}" "${DIST}/dsc-the-dash-card.js"
 mkdir -p "${DIST}/vendor"
 cp -f "${THREE_JS}" "${DIST}/vendor/three.min.js"
+cp -f "${DASH_FX}" "${DIST}/vendor/dsc-dash-fx.js"
 
 echo "HACS dist updated:"
 ls -la "${DIST}/DSC-HUB.js" "${DIST}/dsc-system-map.svg" \

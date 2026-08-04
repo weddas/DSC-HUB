@@ -6,7 +6,7 @@ Standing process for every plan:
 2. **During:** note findings, warnings, incomplete fixes, red flags  
 3. **End:** append a dated section (do not leave soak/log issues in chat only)
 
-Categories: `red-flag` ù `soak` ù `deferred` ù `next-plan` ù `out-of-scope` ù `done`
+Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `done`
 
 ---
 
@@ -33,7 +33,7 @@ Categories: `red-flag` ù `soak` ù `deferred` ù `next-plan` ù `out-of-scope` ù `d
 | N-001 | Preferred BSSID ? current while Lock ON | Self-customize relearn exists; verify after hub 5.1.3 flash |
 | N-002 | Fleet version skew cleanup | Flash Control/pots if still on old wifi stubs |
 | N-003 | Soak warnings from OOS deploy | Fill after ~30 min post-flash soak |
-| N-004 | Orphan helper cull pass | `dsc_leaf_offset` wired ? `sensor.dsc_leaf_vpd_kpa` / `dsc_clone_leaf_vpd_kpa` (2026-08-04 cal pass). Sankey UI gone ù `dsc_airflow_direct_room` / `dsc_airflow_room_return` still unused (optional cull) |
+| N-004 | Orphan helper cull pass | `dsc_leaf_offset` wired ? `sensor.dsc_leaf_vpd_kpa` / `dsc_clone_leaf_vpd_kpa` (2026-08-04 cal pass). Sankey UI gone ? `dsc_airflow_direct_room` / `dsc_airflow_room_return` still unused (optional cull) |
 | N-005 | Cooldown / open-loop wait retune | Evidence-based only; no site hardcodes |
 
 ### out-of-scope
@@ -119,7 +119,7 @@ After each execution pass, append:
 
 Observed live before package deploy:
 
-- Hub link **on**; Full Auto **on**; tent ~21.0 ùC / ~71% RH
+- Hub link **on**; Full Auto **on**; tent ~21.0 ?C / ~71% RH
 - AC / clone mister in-service **off**; POT3 in-service **off**; POT1/2/4 **on**
 - Humidifier/dehumidifier demands **off**; dehum relay **off**
 - Active alert count **9** (pre-existing; not attributed to this pass)
@@ -160,7 +160,7 @@ Observed live before package deploy:
 |---|---|---|---|
 | Hub link | on | on | on |
 | Full Auto | on | on | on |
-| Tent | 20.9 ùC / 71% RH | 20.9 / 72 | 20.9 / 72 |
+| Tent | 20.9 ?C / 71% RH | 20.9 / 72 | 20.9 / 72 |
 | Dehum demand | off | off | off |
 | Alert count | 9 | 9 | 9 |
 | AC / mister / POT3 in-service | off | off | off |
@@ -244,7 +244,7 @@ No climate control regression during soak window.
 ## Airflow STATUS layout + Lovelace resources (2026-08-03)
 
 ### done
-- AIRFLOW STATUS card layout rewrite: perimeter chips, no center pile; live browser verify ù chip AABB overlaps = 0; resource `?v=layoutfix3-restore`
+- AIRFLOW STATUS card layout rewrite: perimeter chips, no center pile; live browser verify ? chip AABB overlaps = 0; resource `?v=layoutfix3-restore`
 - `dsc-hub-sync` now bundles system-map + airflow into `dsc-system-map-card.js` / `DSC-HUB.js` (was overwriting with system-map-only and breaking the airflow element)
 - `ha-sync.sh` resource bump now refuses tiny/empty jq output and keeps a `.bak` before replace
 
@@ -260,7 +260,7 @@ No climate control regression during soak window.
 ## Lovelace www bundle overwrite (2026-08-04)
 
 ### red-flag
-- **F-011** /config/www/dsc-system-map-card.js was overwritten back to **system-map-only (~10KB)** after a sync, so Lovelace showed a config error for `custom:dsc-airflow-map-card` (element missing). Redeployed full bundle (~61KB) + cache-bust `?v=fix-ù`. Likely cause: `dsc-hub-sync` add-on still running an older image that copies unbundled `www/dsc-system-map-card.js`, or a sync path that does not concatenate airflow. **Fix:** rebuild/update the dsc-hub-sync add-on from current master (bundling is in-tree), or turn off `sync_www` on that add-on until updated; prefer `ha-sync.sh` for www deploys. **2026-08-04 late:** bundle now also includes Three.js + `dsc-the-dash-card` (~789KB). Add-on must concatenate `vendor/three.min.js` + `dsc-the-dash-card.js` or The Dash will 404 the custom element again.
+- **F-011** /config/www/dsc-system-map-card.js was overwritten back to **system-map-only (~10KB)** after a sync, so Lovelace showed a config error for `custom:dsc-airflow-map-card` (element missing). Redeployed full bundle (~61KB) + cache-bust `?v=fix-?`. Likely cause: `dsc-hub-sync` add-on still running an older image that copies unbundled `www/dsc-system-map-card.js`, or a sync path that does not concatenate airflow. **Fix:** rebuild/update the dsc-hub-sync add-on from current master (bundling is in-tree), or turn off `sync_www` on that add-on until updated; prefer `ha-sync.sh` for www deploys. **2026-08-04 late:** bundle now also includes Three.js + `dsc-the-dash-card` (~789KB). Add-on must concatenate `vendor/three.min.js` + `dsc-the-dash-card.js` or The Dash will 404 the custom element again.
 
 ---
 
@@ -272,23 +272,23 @@ No climate control regression during soak window.
 
 ### open
 - Scene fidelity still below the reference mockup (richer plants, carbon/fan detail, stronger volumetric air, denser duct manifold)
-- Prefer `hass.callWS({ type: 'lovelace/resources/update' })` for cache-bust during iteration ù avoid repeated `ha core restart` (slow; SSH drops)
+- Prefer `hass.callWS({ type: 'lovelace/resources/update' })` for cache-bust during iteration ? avoid repeated `ha core restart` (slow; SSH drops)
 
 ---
 
-## 2026-08-04 ù Dashboard repair + module unification
+## 2026-08-04 ? Dashboard repair + module unification
 
 ### done
 - **Legacy DSC capture:** Notion [DSC legacy grow-cycle dashboard (2026-08-04)](https://app.notion.com/p/3b22b4cda37081cdb9edcba587a73b53) under DSC-HUB Wiki; repo archive `docs/archive/lovelace.dashboard_dsc.2026-08-04.json`
 - **Legacy cleanup:** removed `dashboard_dsc` from `lovelace_dashboards`; HA storage file renamed `lovelace.dashboard_dsc.archived.2026-08-04` (hard-refresh sidebar if DSC still visible)
 - **Pro modules:** `homeassistant/dashboards/dsc-hub-v4-dashboard.yaml` shell + `dashboards/modules/view_*.yaml` (!include). **Dash view left as pass-through only.**
 - **History view** (`path: history`): soil EC/moisture/NPK charts moved off Root Zone expanders; apexcharts replaced with mini-graph (apex 2.2.3 `disabled is extraneous` vs HA 2026.7)
-- Root Zone: guarded pots table, dryback layout, POT3 pH OOS conditional, uptake table restored with `ù` guards
+- Root Zone: guarded pots table, dryback layout, POT3 pH OOS conditional, uptake table restored with `?` guards
 - Trends plotly heights reduced (overflow)
 
 ### next-plan (from Notion follow-ups)
 - Replicate/modify when kit returns: multi-probe canopy map, germ/dry tent, cure fridge, stage-band VPD instrument
-- Bump apexcharts-card when a build accepts HA `disabled` injection ù then restore richer History charts if desired
+- Bump apexcharts-card when a build accepts HA `disabled` injection ? then restore richer History charts if desired
 - Disable unused house-era registry entities (canopy/VPD) in a careful orphan pass (N-007 style)
 
 ### red-flag
@@ -321,27 +321,27 @@ No climate control regression during soak window.
 - The Dash exhaust OUT/RECIRC absolute CFM now = intake throughput x dump/recirc split (split still from exhaust nameplate ratio / fan %)
 
 ### deferred / honesty
-- sensor.dsc_cfm_exhaust_* remain pct x nameplate (6in 440 CFM max each) with cal curves unset ù Climate/Learning still see ~300+ CFM open-air estimates. Real duct CFM needs Learning fan cal curves. Until then those sensors are capacity proxies, not mass-balanced flow.
+- sensor.dsc_cfm_exhaust_* remain pct x nameplate (6in 440 CFM max each) with cal curves unset ? Climate/Learning still see ~300+ CFM open-air estimates. Real duct CFM needs Learning fan cal curves. Until then those sensors are capacity proxies, not mass-balanced flow.
 
-## 2026-08-04 ó Calibration first pass closeout
+## 2026-08-04 ? Calibration first pass closeout
 
 ### shipped (HA surface 5.1.6; pot FW 5.1.4 pending OTA)
 
 - ESP pot provenance: `text.soil_cal_method` / `text.soil_cal_last` / `binary_sensor.soil_calibrated`; Reset clears; Cal set_action stamps `manual` (`firmware/v4/dsc-pot-common.yaml` 5.1.4)
 - Root Zone: provenance chips + Reset Sensor Calibration per pot
-- Peer sync v2: MAD-hardened `script.dsc_pots_capture_peer_baseline`; last-sync stamp/method/status; auto-after-water settle+cooldown (`dsc_v4_sensor_cal.yaml`) ó **HA Got offsets only**
-- Peer divergence summary sensors (?pH / ?EC / ?moisture max vs median) ó dashboard only, no alerts
+- Peer sync v2: MAD-hardened `script.dsc_pots_capture_peer_baseline`; last-sync stamp/method/status; auto-after-water settle+cooldown (`dsc_v4_sensor_cal.yaml`) ? **HA Got offsets only**
+- Peer divergence summary sensors (?pH / ?EC / ?moisture max vs median) ? dashboard only, no alerts
 - Leaf offset wired ? `sensor.dsc_leaf_vpd_kpa` / `dsc_clone_leaf_vpd_kpa`; Main 4x8 leaf ?T + chart series
 - README: SHT ? DHT22; package map + Want/Need/Got peer sync note
 
-### deferred (not in this pass ó next-plan IDs)
+### deferred (not in this pass ? next-plan IDs)
 
 | ID | Item | Notes |
 |---|---|---|
 | N-016 | Lab wet buffer / two-point ESP scale | Peer sync v2 ? lab truth |
 | N-019 | Push peer offsets ? ESP Cal Offset (SoT) | After HA sync soaks; refuse if scale?1 unless confirm |
-| N-020 | Sensor trust layer | Stuck / peer-MAD alerts / mat-vote gates ó soak thresholds first |
-| N-021 | Raw+cal dual publish on pot | Entity churn; provenance covers ìwas adjustedî for now |
+| N-020 | Sensor trust layer | Stuck / peer-MAD alerts / mat-vote gates ? soak thresholds first |
+| N-021 | Raw+cal dual publish on pot | Entity churn; provenance covers ?was adjusted? for now |
 | N-022 | DHT tent/room/clone disagreement alerts | False-positive risk |
 | N-023 | Tank EC/pH bias cal | Unit multiplier + uptake exist; bias needs procedure |
 | F-008 | SCD41 / real CO? | Unrelated; leave ADC shape-only |
@@ -350,10 +350,10 @@ No climate control regression during soak window.
 
 | ID | Finding | Action |
 |---|---|---|
-| N-024 | Dual-stack risk: ESP Cal Offset/Scale **and** HA peer offsets can both be non-zero ? Got double-corrects vs ESP-NOW | Warn binary or UI cue before N-019; document operator rule ìpeer OR ESP, not bothî |
+| N-024 | Dual-stack risk: ESP Cal Offset/Scale **and** HA peer offsets can both be non-zero ? Got double-corrects vs ESP-NOW | Warn binary or UI cue before N-019; document operator rule ?peer OR ESP, not both? |
 | N-025 | Provenance entities unavailable until pot OTA 5.1.4; dashboard shows unavailable until flash | Flash pots; expected_release / fleet note optional |
 | N-026 | Auto peer sync on moisture_rate may fire on non-water events; cooldown+settle mitigate | Tune settle/cooldown after live waterings; consider Require button confirm |
-| N-027 | ESPHome Cal ``set_action`` YAML anchors ó first pot compile validates stamp path | Fixed to ``set_action: &cal_stamp_manual_action`` (no root ``.`` key); still verify on first compile |
+| N-027 | ESPHome Cal ``set_action`` YAML anchors ? first pot compile validates stamp path | Fixed to ``set_action: &cal_stamp_manual_action`` (no root ``.`` key); still verify on first compile |
 | N-028 | Leaf VPD is HA-only; climate control still uses hub air VPD | Intentional; leaf VPD is operator honesty, not control input (unless later promoted) |
 | N-004 update | leaf_offset no longer orphan | Done this pass |
 
@@ -366,4 +366,70 @@ No climate control regression during soak window.
 ### red-flag
 
 - None for climate control from this HA-only peer path. ESP-NOW mat still sees **uncalibrated-by-peer** soil values until N-019.
+
+
+## 2026-08-04 ? Calibration SoT push-to-ESP closeout
+
+### shipped (HA surface 5.1.7; pot FW 5.1.5 pending OTA)
+
+- Dual-stack warn: `binary_sensor.dsc_potN_dual_cal_stack` + fleet + summary (N-024) ? Strains/Root Zone cues
+- `script.dsc_pots_push_peer_offsets_to_esp`: additive HA peer ? ESP Cal Offset (pH/EC/moisture), zero HA offsets, scale?1 guard + Force (N-019)
+- Pot FW **5.1.5**: `button.Mark Soil Cal Peer Median` stamps method after push (avoids set_action stuck on `manual`)
+- Auto peer sync **Require Confirm** default on (N-026) ? settle then status/notify, no silent Capture
+- `dsc_expected_release` initial **5.1.5**; surface **5.1.7**
+
+### deferred (still open)
+
+| ID | Item | Notes |
+|---|---|---|
+| N-016 | Lab wet buffer / two-point ESP scale | Peer push ? lab truth |
+| N-020 | Sensor trust layer | Post-SoT soak thresholds |
+| N-021 | Raw+cal dual publish | Entity churn |
+| N-022 | DHT disagreement alerts | False-positive risk |
+| N-023 | Tank bias cal | Separate |
+| F-008 | SCD41 / real CO2 | Unrelated |
+| N-025 | Pot OTA provenance/push buttons live | Operator: flash 5.1.5 canary POT2 then fleet |
+| N-026 tune | Settle/cooldown after real shared watering | Confirm gate shipped; tune values later |
+
+### discoveries / opportunities
+
+| ID | Finding | Action |
+|---|---|---|
+| N-029 | Push skips Mark button if pot still on FW <5.1.5 (entity missing) ? offsets still written | Flash pots; status text already notes 5.1.5+ |
+| N-030 | Temp/NPK peer channels not in push (pH/EC/moisture only) | Intentional; expand if needed |
+| N-031 | During number.set_value before Mark, brief method=manual flicker possible | Acceptable; Mark overwrites |
+| N-027 | set_action anchors | Still verify on first 5.1.5 compile |
+
+### soak / deploy
+
+1. Sync HA packages/dashboard ? reload ? confirm surface **5.1.7**, dual-stack + Push button
+2. OTA pots **5.1.5** (POT2 canary) ? Mark button + peer_median stamp
+3. Capture peer baseline ? dual-stack may light ? Push peer ? ESP ? dual-stack clears; soil_* ? prior Got; ESP-NOW matches
+
+### red-flag
+
+- None in-repo. Until pot OTA, Push still merges offsets but provenance stamp may no-op (N-029).
+
+---
+
+## 2026-08-04 ? The Dash 3D cinematic full-inclusion pass
+
+### done
+- Cinematic tent scene in `dsc-the-dash-card.js` + `vendor/dsc-dash-fx.js` (ACES, selective bloom composer, soft/depth-soft particles, flow ribbons, curl haze, color ramps)
+- Topology honesty: Room ? intakes ? cascade 2√ó4?4√ó8 ? OUT/RECIRC; heat mat 2√ó4 only; no central filter machine
+- Product detail: flex rings, fans/muffler, mat bloom, tent ACH layered haze, room lung slices, SF1000 shafts, legend path highlight
+- Bundle order: system-map + airflow + three.min + dsc-dash-fx + the-dash (Node binary concat)
+- Live verify on `/dsc-hub-pro/dash` with Lovelace resource **type `js`** (not `module` ? IIFE THREE must be classic)
+
+### red-flag
+- **F-013** `dsc-hub-sync` add-on (still **5.1.2** image until rebuilt) overwrote `/config/www/dsc-system-map-card.js` to ~10KB system-map-only, wiping Three/Dash. **Mitigation (in-tree):** refuse bundles <500KB; fall back to `dist/dsc-system-map-card.js`; never replace a live >=500KB card with a tiny staged file; Lovelace resource must stay `res_type: js`. **Still needed:** rebuild/update the running add-on image so these guards apply on HA.
+
+### next-plan / deferred
+- Rebuild dsc-hub-sync add-on from current tree so F-013 guards are live
+- Optional offline GLTF accents if still below product-shot bar after soak (primitives currently accepted)
+- True depth-buffer soft particles (sample DepthTexture) if layered haze + view-Z fade still feel harsh against duct solids
+- Prefer `hass.callWS(lovelace/resources/update)` cache-bust; avoid core restart races (F-010)
+
+### constraint preserved
+- Air Path rail not redesigned (legend hover/click only)
 

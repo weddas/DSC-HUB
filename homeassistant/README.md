@@ -9,7 +9,7 @@ Canonical HA surface for firmware [`firmware/v4/`](../firmware/v4/).
 | `dashboards/dsc-hub-v4-dashboard.yaml` | Lovelace UX **v5.1.3** (`dsc-hub-pro`). In-service kit toggles; learn **Activity**; Root Zone Pots+Mat. |
 | `packages/dsc_v4_core_helpers.yaml` | Hub link, fan %, Sankey, runtimes, **in-service** + capacity-offline + vent-conflict / ineffective cues |
 | `packages/dsc_v4_strain_catalog.yaml` | Strain catalog, sprout age, Want/Need/Got, peer offsets, Apply expected stage |
-| `packages/dsc_v4_sensor_cal.yaml` | Peer sync auto/settle/cooldown, fleet divergence summary (HA Got only) |
+| `packages/dsc_v4_sensor_cal.yaml` | Peer sync auto/settle/cooldown, dual-stack warn, push peer→ESP SoT, fleet divergence |
 | `packages/dsc_v4_nutrient_catalog.yaml` | Nutrient stock, next-mix recipe, Accept mix QA (no pumps) |
 | `packages/dsc_v4_pots_coherence.yaml` | Relative dryback + cross-pot EC/moisture coherence + learned ratios |
 | `packages/dsc_v4_actuator_efficacy.yaml` | Command→effect; Temp OOS vs Operator Lockout; demand inhibit |
@@ -301,7 +301,8 @@ Packages: `dsc_v4_strain_catalog`, `dsc_v4_nutrient_catalog`, `dsc_v4_pots_coher
 
 - **Want / Need / Got:** strain + sprout date → Want bands; Got = raw + peer offset;
   Capture peer baseline is MAD-hardened (v2); optional auto after shared watering
-  (`dsc_v4_sensor_cal`). Does not write ESP Cal Offset (see FOLLOWUPS N-019).
+  with require-confirm. **Push peer → ESP** merges offsets into pot Cal Offset and
+  zeroes HA peers so ESP-NOW matches Got (`dsc_v4_sensor_cal`, pot FW 5.1.5+).
   Need summary + Apply expected stage (advisory). Prefer pot `select`/`datetime`
   after FW **5.1.3**; HA `input_*` fallback until then.
 - **Nutrient Science:** tank L × strength → recipe; **Accept mix** burns stock (no pumps).

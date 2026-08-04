@@ -15,6 +15,11 @@
 #  before the digit). Referenced by the HA stat/alert packages, the
 #  dashboard, and the HUB's closed-loop grow mat. Do not rename a node.
 #
+#  v5.1.5 — PEER-MEDIAN CAL STAMP (Aug 2026)
+#   * button.Mark Soil Cal Peer Median: mute set_action stamps, write
+#     method=peer_median + ISO last (HA push-to-ESP SoT uses this after
+#     writing Cal Offsets so provenance is not stuck on manual).
+#  ------------------------------------------------------------------
 #  v5.1.4 — SOIL CAL PROVENANCE (Aug 2026)
 #   * text.soil_cal_method (none|manual|peer_median|lab_buffer) +
 #     text.soil_cal_last (ISO) + binary_sensor.soil_calibrated on NVS.
@@ -78,7 +83,7 @@ esphome:
   friendly_name: ${friendly_name}
   project:
     name: digital_emotions.dsc-pot
-    version: "5.1.4"
+    version: "5.1.5"
 
 esp32:
   board: esp32dev
@@ -546,7 +551,7 @@ text_sensor:
   - platform: template
     name: "Firmware Version"
     icon: mdi:tag-check
-    lambda: 'return {"5.1.4"};'
+    lambda: 'return {"5.1.5"};'
     update_interval: 60s
 
 binary_sensor:
@@ -588,6 +593,27 @@ button:
       - text.set: {id: cal_last, value: ""}
       - lambda: "id(cal_mute_stamp) = false;"
       - logger.log: "Soil sensor calibration reset to defaults (scale=1, offset=0); provenance cleared"
+  - platform: template
+    name: "Mark Soil Cal Peer Median"
+    id: cal_mark_peer_median
+    icon: mdi:account-group
+    entity_category: config
+    on_press:
+      - lambda: "id(cal_mute_stamp) = true;"
+      - text.set:
+          id: cal_method
+          value: "peer_median"
+      - lambda: |-
+          auto now = id(ha_time).now();
+          if (now.is_valid()) {
+            char buf[32];
+            snprintf(buf, sizeof(buf), "%04d-%02d-%02dT%02d:%02d:%02d",
+                     now.year, now.month, now.day_of_month,
+                     now.hour, now.minute, now.second);
+            id(cal_last).make_call().set_value(std::string(buf)).perform();
+          }
+          id(cal_mute_stamp) = false;
+          ESP_LOGI("cal", "Soil cal method stamped peer_median");
 
 # ==================================================================
 #  PLANT IDENTITY  —  labels, not control inputs. The label travels
