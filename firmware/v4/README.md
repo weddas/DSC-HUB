@@ -28,6 +28,12 @@ config numbers (NVS). Formula `raw * scale + offset` applies before range/median
 HA + ESP-NOW. **Soil * Raw** diagnostic templates reverse cal for lab wet measured points.
 **Reset Sensor Calibration** restores defaults and clears provenance. **Mark Soil Cal Peer Median**
 (5.1.5+) and **Mark Soil Cal Lab Buffer** (5.1.6+) stamp method after HA push / lab wet.
+HA ops: [`docs/LAB-WET-CAL.md`](../../docs/LAB-WET-CAL.md) ·
+[`docs/qa/LIVE-UI-SENSING-LEARN-5.1.8.md`](../../docs/qa/LIVE-UI-SENSING-LEARN-5.1.8.md).
+
+Hub **5.1.4** F-006 diagnostics: API Down Age, HA Handshake Age, Link Recovery Last
+Reason / Bounces (entity category diagnostic). Control **5.1.15**: VPD editor, Pulse
+ASCII sparkline, per-device power detail.
 
 ## Panel (DSC-CONTROL **4.0.11**)
 
