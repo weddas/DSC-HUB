@@ -85,11 +85,11 @@ sections:
                   name: VPD Max
                   icon: mdi:waves-arrow-up
                   display_mode: buttons
-      - type: conditional
-        conditions:
-          - condition: state
-            entity: select.dsc_hub_grow_stage
-            state_not: Custom
+                - type: custom:mushroom-number-card
+                  entity: input_number.dsc_leaf_offset
+                  name: Leaf ΔT
+                  icon: mdi:leaf
+                  display_mode: buttons
         card:
           type: vertical-stack
           cards:
@@ -291,10 +291,20 @@ sections:
                         stroke_width: 2
                         extend_to: now
                         color: '#f97316'
+                      - entity: sensor.dsc_leaf_vpd_kpa
+                        name: 4x8 leaf VPD
+                        stroke_width: 1
+                        extend_to: now
+                        color: '#86efac'
                       - entity: sensor.dsc_hub_clone_vpd_kpa
                         name: 2x4 VPD
                         stroke_width: 2
                         extend_to: now
+                      - entity: sensor.dsc_clone_leaf_vpd_kpa
+                        name: 2x4 leaf VPD
+                        stroke_width: 1
+                        extend_to: now
+                        color: '#a7f3d0'
                         color: '#22c55e'
                       - entity: number.dsc_hub_vpd_target_min
                         name: 4x8 floor
@@ -473,11 +483,21 @@ sections:
                     stroke_width: 2
                     extend_to: now
                     color: '#f97316'
+                  - entity: sensor.dsc_leaf_vpd_kpa
+                    name: 4x8 leaf VPD
+                    stroke_width: 1
+                    extend_to: now
+                    color: '#86efac'
                   - entity: sensor.dsc_hub_clone_vpd_kpa
                     name: 2x4 VPD
                     stroke_width: 2
                     extend_to: now
                     color: '#22c55e'
+                  - entity: sensor.dsc_clone_leaf_vpd_kpa
+                    name: 2x4 leaf VPD
+                    stroke_width: 1
+                    extend_to: now
+                    color: '#a7f3d0'
                   - entity: number.dsc_hub_vpd_target_min
                     name: 4x8 floor
                     curve: stepline

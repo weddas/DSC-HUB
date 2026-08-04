@@ -50,6 +50,7 @@ input_number:
     initial: 2
     unit_of_measurement: "°C"
     mode: box
+    # Leaf cooler than air by this many °C → sensor.dsc_*_leaf_vpd_kpa
 
 sensor:
   - platform: history_stats
@@ -288,6 +289,46 @@ template:
              and on_s >= 1800 }}
 
   - sensor:
+      - name: "DSC Leaf VPD"
+        unique_id: dsc_leaf_vpd_kpa
+        unit_of_measurement: "kPa"
+        state_class: measurement
+        icon: mdi:leaf
+        state: >
+          {% set t = states('sensor.dsc_hub_tent_temperature')|float(none) %}
+          {% set rh = states('sensor.dsc_hub_tent_humidity')|float(none) %}
+          {% set lo = states('input_number.dsc_leaf_offset')|float(2) %}
+          {% if t is none or rh is none %}unavailable
+          {% else %}
+            {% set tl = t - lo %}
+            {% set svp_l = 0.6108 * (2.718281828 ** ((17.27 * tl) / (tl + 237.3))) %}
+            {% set avp = 0.6108 * (2.718281828 ** ((17.27 * t) / (t + 237.3))) * (rh / 100) %}
+            {{ (svp_l - avp)|round(3) }}
+          {% endif %}
+        attributes:
+          note: "SVP(T_air − leaf_offset) − AVP(air). Air VPD remains sensor.dsc_hub_vpd_kpa."
+          leaf_temp_c: >
+            {% set t = states('sensor.dsc_hub_tent_temperature')|float(none) %}
+            {% set lo = states('input_number.dsc_leaf_offset')|float(2) %}
+            {{ (t - lo)|round(1) if t is not none else none }}
+
+      - name: "DSC Clone Leaf VPD"
+        unique_id: dsc_clone_leaf_vpd_kpa
+        unit_of_measurement: "kPa"
+        state_class: measurement
+        icon: mdi:leaf
+        state: >
+          {% set t = states('sensor.dsc_hub_clone_temperature')|float(none) %}
+          {% set rh = states('sensor.dsc_hub_clone_humidity')|float(none) %}
+          {% set lo = states('input_number.dsc_leaf_offset')|float(2) %}
+          {% if t is none or rh is none %}unavailable
+          {% else %}
+            {% set tl = t - lo %}
+            {% set svp_l = 0.6108 * (2.718281828 ** ((17.27 * tl) / (tl + 237.3))) %}
+            {% set avp = 0.6108 * (2.718281828 ** ((17.27 * t) / (t + 237.3))) * (rh / 100) %}
+            {{ (svp_l - avp)|round(3) }}
+          {% endif %}
+
       - name: "DSC Fan Intake Main Pct"
         unique_id: dsc_fan_intake_main_pct
         unit_of_measurement: "%"

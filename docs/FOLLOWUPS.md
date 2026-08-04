@@ -33,7 +33,7 @@ Categories: `red-flag` ù `soak` ù `deferred` ù `next-plan` ù `out-of-scope` ù `d
 | N-001 | Preferred BSSID ? current while Lock ON | Self-customize relearn exists; verify after hub 5.1.3 flash |
 | N-002 | Fleet version skew cleanup | Flash Control/pots if still on old wifi stubs |
 | N-003 | Soak warnings from OOS deploy | Fill after ~30 min post-flash soak |
-| N-004 | Orphan helper cull pass | leaf_offset kept; Sankey UI gone ? `dsc_airflow_direct_room` / `dsc_airflow_room_return` still unused (live CFM edges on airflow card cover the concept; optional cull) |
+| N-004 | Orphan helper cull pass | `dsc_leaf_offset` wired ? `sensor.dsc_leaf_vpd_kpa` / `dsc_clone_leaf_vpd_kpa` (2026-08-04 cal pass). Sankey UI gone ù `dsc_airflow_direct_room` / `dsc_airflow_room_return` still unused (optional cull) |
 | N-005 | Cooldown / open-loop wait retune | Evidence-based only; no site hardcodes |
 
 ### out-of-scope
@@ -137,7 +137,7 @@ Observed live before package deploy:
 | N-013 | Closed-loop dryback irrigation | Track-only dryback shipped |
 | N-014 | AC/heater efficacy Temp OOS | Same latch pattern as hum/dehum |
 | N-015 | Deeper coherence / multi-feature learning | v1 = rules + EWMA |
-| N-016 | Lab wet calibration of probes | Peer offsets are v1 |
+| N-016 | Lab wet calibration of probes | Peer sync v2 shipped (HA MAD median); lab buffer procedure + ESP scale still open |
 | N-017 | **Strain + sprout date on pot ESP (NVS)** | Probe stays in pot until harvest ? genetics/age must travel with the node like `plant_name` / `growth_stage`; HA Want/Need/Got should read pot entities after flash |
 | N-018 | Wire HA strain catalog to pot-native strain/sprout once N-017 ships | Drop duplicate HA-only sprout/strain as source of truth; keep Want bands / catalog in HA |
 
@@ -244,7 +244,7 @@ No climate control regression during soak window.
 ## Airflow STATUS layout + Lovelace resources (2026-08-03)
 
 ### done
-- AIRFLOW STATUS card layout rewrite: perimeter chips, no center pile; live browser verify ó chip AABB overlaps = 0; resource `?v=layoutfix3-restore`
+- AIRFLOW STATUS card layout rewrite: perimeter chips, no center pile; live browser verify ù chip AABB overlaps = 0; resource `?v=layoutfix3-restore`
 - `dsc-hub-sync` now bundles system-map + airflow into `dsc-system-map-card.js` / `DSC-HUB.js` (was overwriting with system-map-only and breaking the airflow element)
 - `ha-sync.sh` resource bump now refuses tiny/empty jq output and keeps a `.bak` before replace
 
@@ -272,23 +272,23 @@ No climate control regression during soak window.
 
 ### open
 - Scene fidelity still below the reference mockup (richer plants, carbon/fan detail, stronger volumetric air, denser duct manifold)
-- Prefer `hass.callWS({ type: 'lovelace/resources/update' })` for cache-bust during iteration ó avoid repeated `ha core restart` (slow; SSH drops)
+- Prefer `hass.callWS({ type: 'lovelace/resources/update' })` for cache-bust during iteration ù avoid repeated `ha core restart` (slow; SSH drops)
 
 ---
 
-## 2026-08-04 ó Dashboard repair + module unification
+## 2026-08-04 ù Dashboard repair + module unification
 
 ### done
 - **Legacy DSC capture:** Notion [DSC legacy grow-cycle dashboard (2026-08-04)](https://app.notion.com/p/3b22b4cda37081cdb9edcba587a73b53) under DSC-HUB Wiki; repo archive `docs/archive/lovelace.dashboard_dsc.2026-08-04.json`
 - **Legacy cleanup:** removed `dashboard_dsc` from `lovelace_dashboards`; HA storage file renamed `lovelace.dashboard_dsc.archived.2026-08-04` (hard-refresh sidebar if DSC still visible)
 - **Pro modules:** `homeassistant/dashboards/dsc-hub-v4-dashboard.yaml` shell + `dashboards/modules/view_*.yaml` (!include). **Dash view left as pass-through only.**
 - **History view** (`path: history`): soil EC/moisture/NPK charts moved off Root Zone expanders; apexcharts replaced with mini-graph (apex 2.2.3 `disabled is extraneous` vs HA 2026.7)
-- Root Zone: guarded pots table, dryback layout, POT3 pH OOS conditional, uptake table restored with `ó` guards
+- Root Zone: guarded pots table, dryback layout, POT3 pH OOS conditional, uptake table restored with `ù` guards
 - Trends plotly heights reduced (overflow)
 
 ### next-plan (from Notion follow-ups)
 - Replicate/modify when kit returns: multi-probe canopy map, germ/dry tent, cure fridge, stage-band VPD instrument
-- Bump apexcharts-card when a build accepts HA `disabled` injection ó then restore richer History charts if desired
+- Bump apexcharts-card when a build accepts HA `disabled` injection ù then restore richer History charts if desired
 - Disable unused house-era registry entities (canopy/VPD) in a careful orphan pass (N-007 style)
 
 ### red-flag
@@ -321,4 +321,49 @@ No climate control regression during soak window.
 - The Dash exhaust OUT/RECIRC absolute CFM now = intake throughput x dump/recirc split (split still from exhaust nameplate ratio / fan %)
 
 ### deferred / honesty
-- sensor.dsc_cfm_exhaust_* remain pct x nameplate (6in 440 CFM max each) with cal curves unset ‚Äî Climate/Learning still see ~300+ CFM open-air estimates. Real duct CFM needs Learning fan cal curves. Until then those sensors are capacity proxies, not mass-balanced flow.
+- sensor.dsc_cfm_exhaust_* remain pct x nameplate (6in 440 CFM max each) with cal curves unset ù Climate/Learning still see ~300+ CFM open-air estimates. Real duct CFM needs Learning fan cal curves. Until then those sensors are capacity proxies, not mass-balanced flow.
+
+## 2026-08-04 ó Calibration first pass closeout
+
+### shipped (HA surface 5.1.6; pot FW 5.1.4 pending OTA)
+
+- ESP pot provenance: `text.soil_cal_method` / `text.soil_cal_last` / `binary_sensor.soil_calibrated`; Reset clears; Cal set_action stamps `manual` (`firmware/v4/dsc-pot-common.yaml` 5.1.4)
+- Root Zone: provenance chips + Reset Sensor Calibration per pot
+- Peer sync v2: MAD-hardened `script.dsc_pots_capture_peer_baseline`; last-sync stamp/method/status; auto-after-water settle+cooldown (`dsc_v4_sensor_cal.yaml`) ó **HA Got offsets only**
+- Peer divergence summary sensors (?pH / ?EC / ?moisture max vs median) ó dashboard only, no alerts
+- Leaf offset wired ? `sensor.dsc_leaf_vpd_kpa` / `dsc_clone_leaf_vpd_kpa`; Main 4x8 leaf ?T + chart series
+- README: SHT ? DHT22; package map + Want/Need/Got peer sync note
+
+### deferred (not in this pass ó next-plan IDs)
+
+| ID | Item | Notes |
+|---|---|---|
+| N-016 | Lab wet buffer / two-point ESP scale | Peer sync v2 ? lab truth |
+| N-019 | Push peer offsets ? ESP Cal Offset (SoT) | After HA sync soaks; refuse if scale?1 unless confirm |
+| N-020 | Sensor trust layer | Stuck / peer-MAD alerts / mat-vote gates ó soak thresholds first |
+| N-021 | Raw+cal dual publish on pot | Entity churn; provenance covers ìwas adjustedî for now |
+| N-022 | DHT tent/room/clone disagreement alerts | False-positive risk |
+| N-023 | Tank EC/pH bias cal | Unit multiplier + uptake exist; bias needs procedure |
+| F-008 | SCD41 / real CO? | Unrelated; leave ADC shape-only |
+
+### discoveries / errors / opportunities (this pass)
+
+| ID | Finding | Action |
+|---|---|---|
+| N-024 | Dual-stack risk: ESP Cal Offset/Scale **and** HA peer offsets can both be non-zero ? Got double-corrects vs ESP-NOW | Warn binary or UI cue before N-019; document operator rule ìpeer OR ESP, not bothî |
+| N-025 | Provenance entities unavailable until pot OTA 5.1.4; dashboard shows unavailable until flash | Flash pots; expected_release / fleet note optional |
+| N-026 | Auto peer sync on moisture_rate may fire on non-water events; cooldown+settle mitigate | Tune settle/cooldown after live waterings; consider Require button confirm |
+| N-027 | ESPHome Cal ``set_action`` YAML anchors ó first pot compile validates stamp path | Fixed to ``set_action: &cal_stamp_manual_action`` (no root ``.`` key); still verify on first compile |
+| N-028 | Leaf VPD is HA-only; climate control still uses hub air VPD | Intentional; leaf VPD is operator honesty, not control input (unless later promoted) |
+| N-004 update | leaf_offset no longer orphan | Done this pass |
+
+### soak / deploy
+
+- **HA packages + dashboard:** sync / reload for surface **5.1.6**
+- **Pot OTA 5.1.4:** required for provenance chips; flash canary POT2 first
+- Do not treat peer Got as lab-calibrated until N-016
+
+### red-flag
+
+- None for climate control from this HA-only peer path. ESP-NOW mat still sees **uncalibrated-by-peer** soil values until N-019.
+

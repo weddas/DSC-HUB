@@ -1,12 +1,13 @@
 # ==================================================================
-#  DSC-HUB v5.1.5 · STRAIN CATALOG + WANT / NEED / GOT
+#  DSC-HUB v5.1.6 · STRAIN CATALOG + WANT / NEED / GOT
 #  Strain/sprout SoT: prefer pot ESP entities (select/datetime) when online;
 #  fall back to HA input_* until N-017 flash + migrate.
 #  ------------------------------------------------------------------
 #  Genetics define Want; offset-corrected probes are Got; Need = gap.
 #  Seed strains embedded in templates; 5 custom slots via input_*.
 #  Peer offsets: corrected = raw + offset (offset usually negative when
-#  a probe reads high vs peer median).
+#  a probe reads high vs peer median). Capture script is MAD-hardened v2;
+#  auto-after-water lives in dsc_v4_sensor_cal.yaml (HA Got only).
 # ==================================================================
 
 input_datetime:
@@ -1371,11 +1372,22 @@ script:
           option: "{{ states('sensor.dsc_pot4_expected_stage') }}"
   dsc_pots_capture_peer_baseline:
     alias: "DSC Pots Capture Peer Baseline"
-    description: "Set offsets so corrected Got matches median of in-service pots (same media assumed)."
+    description: >-
+      MAD-hardened median of in-service pots → HA Got offsets (pH/EC/moisture).
+      Does not write ESP Cal Offset/Scale. Optional field sync_source stamps status.
     mode: single
+    fields:
+      sync_source:
+        name: Sync source
+        description: "manual | peer_median_auto | peer_median"
+        example: manual
+        default: peer_median
+        selector:
+          text:
     sequence:
       - variables:
-          ph_vals: >
+          src: "{{ sync_source if sync_source is defined and sync_source else 'peer_median' }}"
+          ph_raw: >
             {% set ns = namespace(v=[]) %}
             {% for n in [1,2,3,4] %}
               {% if is_state('input_boolean.dsc_pot' ~ n ~ '_in_service','on') %}
@@ -1384,7 +1396,7 @@ script:
               {% endif %}
             {% endfor %}
             {{ ns.v }}
-          ec_vals: >
+          ec_raw: >
             {% set ns = namespace(v=[]) %}
             {% for n in [1,2,3,4] %}
               {% if is_state('input_boolean.dsc_pot' ~ n ~ '_in_service','on') %}
@@ -1393,7 +1405,7 @@ script:
               {% endif %}
             {% endfor %}
             {{ ns.v }}
-          m_vals: >
+          m_raw: >
             {% set ns = namespace(v=[]) %}
             {% for n in [1,2,3,4] %}
               {% if is_state('input_boolean.dsc_pot' ~ n ~ '_in_service','on') %}
@@ -1402,9 +1414,65 @@ script:
               {% endif %}
             {% endfor %}
             {{ ns.v }}
-          ph_med: "{{ (ph_vals|sort)[((ph_vals|length)-1)//2] if ph_vals|length else none }}"
-          ec_med: "{{ (ec_vals|sort)[((ec_vals|length)-1)//2] if ec_vals|length else none }}"
-          m_med: "{{ (m_vals|sort)[((m_vals|length)-1)//2] if m_vals|length else none }}"
+          ph_med: >
+            {% set s = ph_raw|sort %}
+            {% set n = s|length %}
+            {% if n == 0 %}none
+            {% elif n < 3 %}{{ s[(n-1)//2] }}
+            {% else %}
+              {% set med = s[(n-1)//2] %}
+              {% set ds = namespace(d=[]) %}
+              {% for x in s %}{% set ds.d = ds.d + [(x - med)|abs] %}{% endfor %}
+              {% set mad = (ds.d|sort)[((ds.d|length)-1)//2] %}
+              {% set keep = namespace(v=[]) %}
+              {% for x in s %}
+                {% if mad|float(0) < 1e-9 or (x - med)|abs <= 2.5 * mad %}
+                  {% set keep.v = keep.v + [x] %}
+                {% endif %}
+              {% endfor %}
+              {% set k = keep.v if keep.v|length >= 2 else s %}
+              {{ (k|sort)[((k|length)-1)//2] }}
+            {% endif %}
+          ec_med: >
+            {% set s = ec_raw|sort %}
+            {% set n = s|length %}
+            {% if n == 0 %}none
+            {% elif n < 3 %}{{ s[(n-1)//2] }}
+            {% else %}
+              {% set med = s[(n-1)//2] %}
+              {% set ds = namespace(d=[]) %}
+              {% for x in s %}{% set ds.d = ds.d + [(x - med)|abs] %}{% endfor %}
+              {% set mad = (ds.d|sort)[((ds.d|length)-1)//2] %}
+              {% set keep = namespace(v=[]) %}
+              {% for x in s %}
+                {% if mad|float(0) < 1e-9 or (x - med)|abs <= 2.5 * mad %}
+                  {% set keep.v = keep.v + [x] %}
+                {% endif %}
+              {% endfor %}
+              {% set k = keep.v if keep.v|length >= 2 else s %}
+              {{ (k|sort)[((k|length)-1)//2] }}
+            {% endif %}
+          m_med: >
+            {% set s = m_raw|sort %}
+            {% set n = s|length %}
+            {% if n == 0 %}none
+            {% elif n < 3 %}{{ s[(n-1)//2] }}
+            {% else %}
+              {% set med = s[(n-1)//2] %}
+              {% set ds = namespace(d=[]) %}
+              {% for x in s %}{% set ds.d = ds.d + [(x - med)|abs] %}{% endfor %}
+              {% set mad = (ds.d|sort)[((ds.d|length)-1)//2] %}
+              {% set keep = namespace(v=[]) %}
+              {% for x in s %}
+                {% if mad|float(0) < 1e-9 or (x - med)|abs <= 2.5 * mad %}
+                  {% set keep.v = keep.v + [x] %}
+                {% endif %}
+              {% endfor %}
+              {% set k = keep.v if keep.v|length >= 2 else s %}
+              {{ (k|sort)[((k|length)-1)//2] }}
+            {% endif %}
+      - condition: template
+        value_template: "{{ ph_med not in ['none', none] or ec_med not in ['none', none] or m_med not in ['none', none] }}"
       - repeat:
           for_each:
             - 1
@@ -1416,35 +1484,51 @@ script:
               value_template: "{{ is_state('input_boolean.dsc_pot' ~ repeat.item ~ '_in_service','on') }}"
             - if:
                 - condition: template
-                  value_template: "{{ ph_med is not none }}"
+                  value_template: "{{ ph_med not in ['none', none] }}"
               then:
                 - action: input_number.set_value
                   target:
                     entity_id: "input_number.dsc_pot{{ repeat.item }}_offset_ph"
                   data:
-                    value: "{{ (ph_med - states('sensor.dsc_pot' ~ repeat.item ~ '_soil_ph')|float(ph_med))|round(2) }}"
+                    value: "{{ (ph_med|float - states('sensor.dsc_pot' ~ repeat.item ~ '_soil_ph')|float(ph_med|float))|round(2) }}"
             - if:
                 - condition: template
-                  value_template: "{{ ec_med is not none }}"
+                  value_template: "{{ ec_med not in ['none', none] }}"
               then:
                 - action: input_number.set_value
                   target:
                     entity_id: "input_number.dsc_pot{{ repeat.item }}_offset_ec_us"
                   data:
-                    value: "{{ (ec_med - states('sensor.dsc_pot' ~ repeat.item ~ '_soil_conductivity')|float(ec_med))|round(0) }}"
+                    value: "{{ (ec_med|float - states('sensor.dsc_pot' ~ repeat.item ~ '_soil_conductivity')|float(ec_med|float))|round(0) }}"
             - if:
                 - condition: template
-                  value_template: "{{ m_med is not none }}"
+                  value_template: "{{ m_med not in ['none', none] }}"
               then:
                 - action: input_number.set_value
                   target:
                     entity_id: "input_number.dsc_pot{{ repeat.item }}_offset_moisture"
                   data:
-                    value: "{{ (m_med - states('sensor.dsc_pot' ~ repeat.item ~ '_soil_moisture')|float(m_med))|round(1) }}"
+                    value: "{{ (m_med|float - states('sensor.dsc_pot' ~ repeat.item ~ '_soil_moisture')|float(m_med|float))|round(1) }}"
+      - action: input_datetime.set_datetime
+        target: { entity_id: input_datetime.dsc_peer_sync_last }
+        data:
+          datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+      - action: input_text.set_value
+        target: { entity_id: input_text.dsc_peer_sync_method }
+        data:
+          value: "{{ src }}"
+      - action: input_text.set_value
+        target: { entity_id: input_text.dsc_peer_sync_status }
+        data:
+          value: >-
+            Synced {{ now().strftime('%Y-%m-%d %H:%M') }} ({{ src }}).
+            Got ≈ MAD-filtered median of in-service pots. ESP Cal untouched.
       - action: persistent_notification.create
         data:
           title: "Peer baseline captured"
-          message: "Offsets set so corrected Got ≈ median of in-service pots."
+          message: >-
+            Offsets set so corrected Got ≈ MAD-filtered median ({{ src }}).
+            HA-only — ESP Cal Offset/Scale not written.
 
   dsc_migrate_strain_sprout_ha_to_pot:
     alias: "DSC Migrate Strain/Sprout HA → Pot"

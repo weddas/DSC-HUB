@@ -22,13 +22,30 @@ sections:
         cards:
           - type: custom:mushroom-template-card
             primary: Capture peer baseline
-            secondary: Set offsets so corrected Got ≈ fleet median
+            secondary: >-
+              MAD median → Got offsets (HA only).
+              {{ states('input_text.dsc_peer_sync_status') }}
             icon: mdi:account-group
             icon_color: green
             multiline_secondary: true
             tap_action:
               action: call-service
               service: script.dsc_pots_capture_peer_baseline
+              data:
+                sync_source: peer_median
+          - type: custom:mushroom-template-card
+            primary: Sync after water
+            secondary: >-
+              Same capture after settle.
+              Auto {{ 'ON' if is_state('input_boolean.dsc_peer_sync_auto','on') else 'OFF' }}
+            icon: mdi:water-sync
+            icon_color: cyan
+            multiline_secondary: true
+            tap_action:
+              action: call-service
+              service: script.dsc_pots_capture_peer_baseline
+              data:
+                sync_source: peer_median
           - type: custom:mushroom-template-card
             primary: Migrate HA → pot
             secondary: Push strain + sprout to pot NVS after flash
@@ -38,6 +55,29 @@ sections:
             tap_action:
               action: call-service
               service: script.dsc_migrate_strain_sprout_ha_to_pot
+      - type: entities
+        title: Peer sync status
+        entities:
+          - entity: input_boolean.dsc_peer_sync_auto
+            name: Auto sync after shared water
+          - entity: input_datetime.dsc_peer_sync_last
+            name: Last peer sync
+          - entity: input_text.dsc_peer_sync_method
+            name: Last method
+          - entity: input_text.dsc_peer_sync_status
+            name: Status
+          - entity: input_number.dsc_peer_sync_settle_min
+            name: Settle minutes
+          - entity: input_number.dsc_peer_sync_cooldown_h
+            name: Cooldown hours
+          - entity: sensor.dsc_peer_divergence_summary
+            name: Fleet divergence
+          - entity: sensor.dsc_peer_divergence_ph
+            name: ΔpH max
+          - entity: sensor.dsc_peer_divergence_ec
+            name: ΔEC max
+          - entity: sensor.dsc_peer_divergence_moisture
+            name: ΔMoisture max
   - type: grid
     column_span: 2
     cards:

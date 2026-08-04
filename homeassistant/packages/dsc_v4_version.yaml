@@ -17,7 +17,7 @@ template:
       - name: "DSC HA Surface Version"
         unique_id: dsc_ha_surface_version
         icon: mdi:home-assistant
-        state: "5.1.5"
+        state: "5.1.6"
         attributes:
           packages: dsc_v4_*
           dashboard: dsc-hub-pro (strains + nutrient-science + crop UI)
@@ -26,6 +26,7 @@ template:
           in_service: ac/mister/pots + temp OOS / operator lockout
           crop_steering: strains + nutrient science + coherence + efficacy
           pot_identity: strain + sprout NVS (pot FW 5.1.3+)
+          sensor_cal: peer sync v2 + pot cal provenance (pot FW 5.1.4+)
           derived_faults: vent-conflict + ineffective suspects
 
       - name: "DSC Fleet Version Status"

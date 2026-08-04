@@ -1,0 +1,194 @@
+# ==================================================================
+#  DSC-HUB v5.1.6 · SENSOR CAL — peer sync v2 + divergence (HA)
+#  ------------------------------------------------------------------
+#  HA-only peer alignment (Got offsets). Does NOT write ESP Cal Offset
+#  (push-to-ESP SoT is FOLLOWUPS N-019). MAD-hardened capture lives in
+#  script.dsc_pots_capture_peer_baseline (strain_catalog).
+# ==================================================================
+
+input_boolean:
+  dsc_peer_sync_auto:
+    name: "DSC Peer Sync Auto After Water"
+    icon: mdi:sync
+    initial: true
+
+input_datetime:
+  dsc_peer_sync_last:
+    name: "DSC Peer Sync Last"
+    has_date: true
+    has_time: true
+    icon: mdi:clock-check
+
+input_text:
+  dsc_peer_sync_method:
+    name: "DSC Peer Sync Method"
+    max: 32
+    initial: "none"
+    icon: mdi:clipboard-check-outline
+  dsc_peer_sync_status:
+    name: "DSC Peer Sync Status"
+    max: 255
+    initial: "Never synced — Capture peer baseline or wait for auto after water."
+    icon: mdi:information-outline
+
+input_number:
+  dsc_peer_sync_settle_min:
+    name: "DSC Peer Sync Settle (min)"
+    min: 5
+    max: 120
+    step: 5
+    initial: 20
+    unit_of_measurement: "min"
+    mode: box
+    icon: mdi:timer-sand
+  dsc_peer_sync_cooldown_h:
+    name: "DSC Peer Sync Cooldown (h)"
+    min: 1
+    max: 48
+    step: 1
+    initial: 6
+    unit_of_measurement: "h"
+    mode: box
+    icon: mdi:timer-outline
+
+template:
+  - sensor:
+      - name: "DSC Peer Divergence pH"
+        unique_id: dsc_peer_divergence_ph
+        unit_of_measurement: "pH"
+        icon: mdi:delta
+        state: >
+          {% set ns = namespace(v=[]) %}
+          {% for n in [1,2,3,4] %}
+            {% if is_state('input_boolean.dsc_pot' ~ n ~ '_in_service','on') %}
+              {% set r = states('sensor.dsc_pot' ~ n ~ '_soil_ph')|float(none) %}
+              {% if r is not none %}{% set ns.v = ns.v + [r] %}{% endif %}
+            {% endif %}
+          {% endfor %}
+          {% if ns.v|length < 2 %}unavailable
+          {% else %}
+            {% set med = (ns.v|sort)[((ns.v|length)-1)//2] %}
+            {% set dmax = namespace(m=0.0) %}
+            {% for x in ns.v %}
+              {% set d = (x - med)|abs %}
+              {% if d > dmax.m %}{% set dmax.m = d %}{% endif %}
+            {% endfor %}
+            {{ dmax.m|round(2) }}
+          {% endif %}
+        attributes:
+          note: "Max |raw − median| among in-service pots (dashboard only)."
+
+      - name: "DSC Peer Divergence EC"
+        unique_id: dsc_peer_divergence_ec
+        unit_of_measurement: "µS/cm"
+        icon: mdi:delta
+        state: >
+          {% set ns = namespace(v=[]) %}
+          {% for n in [1,2,3,4] %}
+            {% if is_state('input_boolean.dsc_pot' ~ n ~ '_in_service','on') %}
+              {% set r = states('sensor.dsc_pot' ~ n ~ '_soil_conductivity')|float(none) %}
+              {% if r is not none %}{% set ns.v = ns.v + [r] %}{% endif %}
+            {% endif %}
+          {% endfor %}
+          {% if ns.v|length < 2 %}unavailable
+          {% else %}
+            {% set med = (ns.v|sort)[((ns.v|length)-1)//2] %}
+            {% set dmax = namespace(m=0.0) %}
+            {% for x in ns.v %}
+              {% set d = (x - med)|abs %}
+              {% if d > dmax.m %}{% set dmax.m = d %}{% endif %}
+            {% endfor %}
+            {{ dmax.m|round(0) }}
+          {% endif %}
+
+      - name: "DSC Peer Divergence Moisture"
+        unique_id: dsc_peer_divergence_moisture
+        unit_of_measurement: "%"
+        icon: mdi:delta
+        state: >
+          {% set ns = namespace(v=[]) %}
+          {% for n in [1,2,3,4] %}
+            {% if is_state('input_boolean.dsc_pot' ~ n ~ '_in_service','on') %}
+              {% set r = states('sensor.dsc_pot' ~ n ~ '_soil_moisture')|float(none) %}
+              {% if r is not none %}{% set ns.v = ns.v + [r] %}{% endif %}
+            {% endif %}
+          {% endfor %}
+          {% if ns.v|length < 2 %}unavailable
+          {% else %}
+            {% set med = (ns.v|sort)[((ns.v|length)-1)//2] %}
+            {% set dmax = namespace(m=0.0) %}
+            {% for x in ns.v %}
+              {% set d = (x - med)|abs %}
+              {% if d > dmax.m %}{% set dmax.m = d %}{% endif %}
+            {% endfor %}
+            {{ dmax.m|round(1) }}
+          {% endif %}
+
+      - name: "DSC Peer Divergence Summary"
+        unique_id: dsc_peer_divergence_summary
+        icon: mdi:chart-scatter-plot
+        state: >
+          {% set ph = states('sensor.dsc_peer_divergence_ph') %}
+          {% set ec = states('sensor.dsc_peer_divergence_ec') %}
+          {% set m = states('sensor.dsc_peer_divergence_moisture') %}
+          {% if ph in ['unknown','unavailable'] or ec in ['unknown','unavailable'] or m in ['unknown','unavailable'] %}
+            Need ≥2 in-service pots with readings
+          {% else %}
+            ΔpH {{ ph }} · ΔEC {{ ec }} · ΔM {{ m }}%
+          {% endif %}
+
+automation:
+  - id: dsc_peer_sync_after_water
+    alias: "DSC Peer Sync · After shared watering"
+    description: >-
+      When ≥2 in-service pots show a coherent moisture rise, wait settle,
+      then MAD-hardened Capture Peer Baseline (HA Got offsets only).
+    mode: single
+    triggers:
+      - trigger: numeric_state
+        entity_id:
+          - sensor.dsc_pot1_soil_moisture_rate
+          - sensor.dsc_pot2_soil_moisture_rate
+          - sensor.dsc_pot3_soil_moisture_rate
+          - sensor.dsc_pot4_soil_moisture_rate
+        above: 1.5
+        for:
+          minutes: 10
+    conditions:
+      - condition: state
+        entity_id: input_boolean.dsc_peer_sync_auto
+        state: "on"
+      - condition: template
+        value_template: >
+          {% set thr = states('input_number.dsc_coherence_moisture_event_pts')|float(8) / 6 %}
+          {% set up = namespace(n=0) %}
+          {% for i in [1,2,3,4] %}
+            {% if is_state('input_boolean.dsc_pot' ~ i ~ '_in_service','on')
+                 and states('sensor.dsc_pot' ~ i ~ '_soil_moisture_rate')|float(0) >= thr %}
+              {% set up.n = up.n + 1 %}
+            {% endif %}
+          {% endfor %}
+          {{ up.n >= 2 }}
+      - condition: template
+        value_template: >
+          {% set last = states('input_datetime.dsc_peer_sync_last') %}
+          {% set cd = states('input_number.dsc_peer_sync_cooldown_h')|float(6) %}
+          {% if last in ['unknown','unavailable',''] %}true
+          {% else %}
+            {{ (as_timestamp(now()) - as_timestamp(last, 0)) >= cd * 3600 }}
+          {% endif %}
+    actions:
+      - action: input_text.set_value
+        target: { entity_id: input_text.dsc_peer_sync_status }
+        data:
+          value: >-
+            Shared moisture rise — settling
+            {{ states('input_number.dsc_peer_sync_settle_min')|int(20) }} min before sync…
+      - delay:
+          minutes: "{{ states('input_number.dsc_peer_sync_settle_min')|int(20) }}"
+      - condition: state
+        entity_id: input_boolean.dsc_peer_sync_auto
+        state: "on"
+      - action: script.dsc_pots_capture_peer_baseline
+        data:
+          sync_source: peer_median_auto

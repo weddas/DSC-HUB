@@ -15,6 +15,12 @@
 #  before the digit). Referenced by the HA stat/alert packages, the
 #  dashboard, and the HUB's closed-loop grow mat. Do not rename a node.
 #
+#  v5.1.4 — SOIL CAL PROVENANCE (Aug 2026)
+#   * text.soil_cal_method (none|manual|peer_median|lab_buffer) +
+#     text.soil_cal_last (ISO) + binary_sensor.soil_calibrated on NVS.
+#   * Any Cal Offset/Scale set stamps method=manual + now (HA time).
+#   * Reset Sensor Calibration restores identity and clears provenance.
+#  ------------------------------------------------------------------
 #  v5.1.3 — STRAIN + SPROUT ON NVS (Aug 2026)
 #   * select.strain + datetime.sprout_date restore with the probe (same
 #     contract as plant_name / growth_stage). HA Want/Need/Got reads these
@@ -72,7 +78,7 @@ esphome:
   friendly_name: ${friendly_name}
   project:
     name: digital_emotions.dsc-pot
-    version: "5.1.3"
+    version: "5.1.4"
 
 esp32:
   board: esp32dev
@@ -130,7 +136,13 @@ modbus_controller:
 #  Entity ids (examples for pot1): number.dsc_pot1_cal_moisture_offset,
 #  number.dsc_pot1_cal_moisture_scale, … for each soil channel.
 #  Applied in the sensor filters below so HA + ESP-NOW stay consistent.
+#  Provenance: text.soil_cal_method / text.soil_cal_last + binary
+#  soil_calibrated. set_action stamps method=manual (muted during Reset).
 # ==================================================================
+time:
+  - platform: homeassistant
+    id: ha_time
+
 number:
   - platform: template
     name: "Cal Moisture Offset"
@@ -145,6 +157,8 @@ number:
     optimistic: true
     restore_value: true
     mode: box
+    set_action: &cal_stamp_manual_action
+      - script.execute: cal_stamp_manual
   - platform: template
     name: "Cal Moisture Scale"
     id: cal_moist_scale
@@ -157,6 +171,7 @@ number:
     optimistic: true
     restore_value: true
     mode: box
+    set_action: *cal_stamp_manual_action
 
   - platform: template
     name: "Cal Temperature Offset"
@@ -171,6 +186,7 @@ number:
     optimistic: true
     restore_value: true
     mode: box
+    set_action: *cal_stamp_manual_action
   - platform: template
     name: "Cal Temperature Scale"
     id: cal_temp_scale
@@ -183,6 +199,7 @@ number:
     optimistic: true
     restore_value: true
     mode: box
+    set_action: *cal_stamp_manual_action
 
   - platform: template
     name: "Cal Conductivity Offset"
@@ -197,6 +214,7 @@ number:
     optimistic: true
     restore_value: true
     mode: box
+    set_action: *cal_stamp_manual_action
   - platform: template
     name: "Cal Conductivity Scale"
     id: cal_ec_scale
@@ -209,6 +227,7 @@ number:
     optimistic: true
     restore_value: true
     mode: box
+    set_action: *cal_stamp_manual_action
 
   - platform: template
     name: "Cal pH Offset"
@@ -223,6 +242,7 @@ number:
     optimistic: true
     restore_value: true
     mode: box
+    set_action: *cal_stamp_manual_action
   - platform: template
     name: "Cal pH Scale"
     id: cal_ph_scale
@@ -235,6 +255,7 @@ number:
     optimistic: true
     restore_value: true
     mode: box
+    set_action: *cal_stamp_manual_action
 
   - platform: template
     name: "Cal Nitrogen Offset"
@@ -249,6 +270,7 @@ number:
     optimistic: true
     restore_value: true
     mode: box
+    set_action: *cal_stamp_manual_action
   - platform: template
     name: "Cal Nitrogen Scale"
     id: cal_n_scale
@@ -261,6 +283,7 @@ number:
     optimistic: true
     restore_value: true
     mode: box
+    set_action: *cal_stamp_manual_action
 
   - platform: template
     name: "Cal Phosphorus Offset"
@@ -275,6 +298,7 @@ number:
     optimistic: true
     restore_value: true
     mode: box
+    set_action: *cal_stamp_manual_action
   - platform: template
     name: "Cal Phosphorus Scale"
     id: cal_p_scale
@@ -287,6 +311,7 @@ number:
     optimistic: true
     restore_value: true
     mode: box
+    set_action: *cal_stamp_manual_action
 
   - platform: template
     name: "Cal Potassium Offset"
@@ -301,6 +326,7 @@ number:
     optimistic: true
     restore_value: true
     mode: box
+    set_action: *cal_stamp_manual_action
   - platform: template
     name: "Cal Potassium Scale"
     id: cal_k_scale
@@ -313,6 +339,7 @@ number:
     optimistic: true
     restore_value: true
     mode: box
+    set_action: *cal_stamp_manual_action
 
 # ==================================================================
 #  SOIL SENSORS  —  registers 0x0000..0x0006
@@ -519,8 +546,18 @@ text_sensor:
   - platform: template
     name: "Firmware Version"
     icon: mdi:tag-check
-    lambda: 'return {"5.1.3"};'
+    lambda: 'return {"5.1.4"};'
     update_interval: 60s
+
+binary_sensor:
+  - platform: template
+    name: "Soil Calibrated"
+    id: soil_calibrated
+    icon: mdi:check-decagram
+    entity_category: diagnostic
+    lambda: |-
+      auto m = id(cal_method).state;
+      return m != "none" && !m.empty();
 
 button:
   - platform: restart
@@ -532,6 +569,7 @@ button:
     icon: mdi:restore
     entity_category: config
     on_press:
+      - lambda: "id(cal_mute_stamp) = true;"
       - number.set: {id: cal_moist_offset, value: 0}
       - number.set: {id: cal_moist_scale, value: 1}
       - number.set: {id: cal_temp_offset, value: 0}
@@ -546,13 +584,36 @@ button:
       - number.set: {id: cal_p_scale, value: 1}
       - number.set: {id: cal_k_offset, value: 0}
       - number.set: {id: cal_k_scale, value: 1}
-      - logger.log: "Soil sensor calibration reset to defaults (scale=1, offset=0)"
+      - text.set: {id: cal_method, value: "none"}
+      - text.set: {id: cal_last, value: ""}
+      - lambda: "id(cal_mute_stamp) = false;"
+      - logger.log: "Soil sensor calibration reset to defaults (scale=1, offset=0); provenance cleared"
 
 # ==================================================================
 #  PLANT IDENTITY  —  labels, not control inputs. The label travels
 #  with the probe (pull the node, the plant it watched comes with it).
 # ==================================================================
 text:
+  - platform: template
+    name: "Soil Cal Method"
+    id: cal_method
+    icon: mdi:clipboard-check-outline
+    optimistic: true
+    restore_value: true
+    initial_value: "none"
+    max_length: 16
+    mode: text
+    entity_category: diagnostic
+  - platform: template
+    name: "Soil Cal Last"
+    id: cal_last
+    icon: mdi:clock-check-outline
+    optimistic: true
+    restore_value: true
+    initial_value: ""
+    max_length: 32
+    mode: text
+    entity_category: diagnostic
   - platform: template
     name: "Plant Name"
     id: plant_name
@@ -629,6 +690,10 @@ datetime:
 #  POT2 as canary, then the rest (USB first time, OTA after).
 # ==================================================================
 globals:
+  - id: cal_mute_stamp
+    type: bool
+    restore_value: false
+    initial_value: "false"
   - id: hub_beat_last
     type: uint32_t
     restore_value: false
@@ -699,6 +764,25 @@ packet_transport:
       - soil_potassium
 
 script:
+  - id: cal_stamp_manual
+    mode: single
+    then:
+      - if:
+          condition:
+            lambda: "return !id(cal_mute_stamp);"
+          then:
+            - text.set:
+                id: cal_method
+                value: "manual"
+            - lambda: |-
+                auto now = id(ha_time).now();
+                if (!now.is_valid()) return;
+                char buf[32];
+                snprintf(buf, sizeof(buf), "%04d-%02d-%02dT%02d:%02d:%02d",
+                         now.year, now.month, now.day_of_month,
+                         now.hour, now.minute, now.second);
+                id(cal_last).make_call().set_value(std::string(buf)).perform();
+
   # Accept hub 0xD0 BSSID handshake → disconnect/reconnect to THAT AP.
   - id: adopt_hub_wifi_ap
     mode: single

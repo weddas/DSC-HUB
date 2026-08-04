@@ -308,13 +308,23 @@ sections:
               *Applied on the pot node before publish (NVS-persisted).
               Offset shifts, scale multiplies. Calibrate pH against a
               known buffer; leave scale at 1.0 unless you have two
-              reference points.*
+              reference points. Provenance chips need pot firmware
+              **5.1.4+** (unavailable until flash).*
           - type: custom:expander-card
             title: POT1
             expanded: false
             cards:
               - type: entities
                 entities:
+                  - entity: binary_sensor.dsc_pot1_soil_calibrated
+                    name: Calibrated
+                  - entity: text.dsc_pot1_soil_cal_method
+                    name: Cal method
+                  - entity: text.dsc_pot1_soil_cal_last
+                    name: Cal last
+                  - entity: button.dsc_pot1_reset_sensor_calibration
+                    name: Reset calibration
+                  - type: divider
                   - entity: number.dsc_pot1_cal_moisture_offset
                     name: Moisture offset
                   - entity: number.dsc_pot1_cal_moisture_scale
@@ -349,6 +359,15 @@ sections:
             cards:
               - type: entities
                 entities:
+                  - entity: binary_sensor.dsc_pot2_soil_calibrated
+                    name: Calibrated
+                  - entity: text.dsc_pot2_soil_cal_method
+                    name: Cal method
+                  - entity: text.dsc_pot2_soil_cal_last
+                    name: Cal last
+                  - entity: button.dsc_pot2_reset_sensor_calibration
+                    name: Reset calibration
+                  - type: divider
                   - entity: number.dsc_pot2_cal_moisture_offset
                     name: Moisture offset
                   - entity: number.dsc_pot2_cal_moisture_scale
@@ -383,6 +402,15 @@ sections:
             cards:
               - type: entities
                 entities:
+                  - entity: binary_sensor.dsc_pot3_soil_calibrated
+                    name: Calibrated
+                  - entity: text.dsc_pot3_soil_cal_method
+                    name: Cal method
+                  - entity: text.dsc_pot3_soil_cal_last
+                    name: Cal last
+                  - entity: button.dsc_pot3_reset_sensor_calibration
+                    name: Reset calibration
+                  - type: divider
                   - entity: number.dsc_pot3_cal_moisture_offset
                     name: Moisture offset
                   - entity: number.dsc_pot3_cal_moisture_scale
@@ -417,6 +445,15 @@ sections:
             cards:
               - type: entities
                 entities:
+                  - entity: binary_sensor.dsc_pot4_soil_calibrated
+                    name: Calibrated
+                  - entity: text.dsc_pot4_soil_cal_method
+                    name: Cal method
+                  - entity: text.dsc_pot4_soil_cal_last
+                    name: Cal last
+                  - entity: button.dsc_pot4_reset_sensor_calibration
+                    name: Reset calibration
+                  - type: divider
                   - entity: number.dsc_pot4_cal_moisture_offset
                     name: Moisture offset
                   - entity: number.dsc_pot4_cal_moisture_scale
