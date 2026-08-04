@@ -6,7 +6,8 @@ Canonical HA surface for firmware [`firmware/v4/`](../firmware/v4/).
 
 | Path | Role |
 |---|---|
-| `dashboards/dsc-hub-v4-dashboard.yaml` | Lovelace UX **v5.1.3** (`dsc-hub-pro`). In-service kit toggles; learn **Activity**; Root Zone Pots+Mat. |
+| `dashboards/dsc-hub-v4-dashboard.yaml` | Lovelace shell **v5.1.5** (`dsc-hub-pro`) — `!include modules/view_*.yaml` |
+| `dashboards/modules/view_*.yaml` | Per-view bodies (Dash, Home, Climate, tents, Root Zone, …). **Must sync with the shell.** |
 | `packages/dsc_v4_core_helpers.yaml` | Hub link, fan %, Sankey, runtimes, **in-service** + capacity-offline + vent-conflict / ineffective cues |
 | `packages/dsc_v4_strain_catalog.yaml` | Strain catalog, sprout age, Want/Need/Got, peer offsets, Apply expected stage |
 | `packages/dsc_v4_nutrient_catalog.yaml` | Nutrient stock, next-mix recipe, Accept mix QA (no pumps) |
@@ -26,6 +27,7 @@ Canonical HA surface for firmware [`firmware/v4/`](../firmware/v4/).
 | `automations.yaml` | Deprecated stub — points at the package above |
 | `www/dsc-system-map.*` | SYSTEM MAP Lovelace card + SVG → `/config/www/` |
 | `www/dsc-airflow-map-card.js` | AIRFLOW STATUS Lovelace card → `/config/www/` |
+| `www/dsc-the-dash-card.js` + `www/vendor/three.min.js` | **The Dash** Three.js ops card (bundled after airflow) |
 | `esphome/` | Thin device stubs — pull firmware packages from GitHub |
 
 ## ESPHome (all devices)
@@ -49,9 +51,9 @@ Quick copy list:
 | This folder | HA `/config/` |
 |---|---|
 | `packages/dsc_v4_*.yaml` | `packages/` (helpers, learn, automations) |
-| `dashboards/dsc-hub-v4-dashboard.yaml` | `dashboards/` (YAML-mode URL **`dsc-hub-pro`**) |
+| `dashboards/dsc-hub-v4-dashboard.yaml` + `dashboards/modules/` | `dashboards/` (YAML-mode URL **`dsc-hub-pro`**) |
 | `esphome/dsc-*.yaml` | `esphome/` |
-| `www/dsc-*-map*` | `www/` + `/local` or HACS `DSC-HUB.js` resources |
+| `www/` cards + `vendor/three.min.js` | `www/` + `/local` or HACS `DSC-HUB.js` resources |
 
 Merge [`configuration.snippet.yaml`](configuration.snippet.yaml) into HA `configuration.yaml`
 (packages + YAML Lovelace). Filenames under `packages/` must use underscores.
@@ -74,19 +76,28 @@ Package pot/tank **push** notifiers are not shipped in **v5.0.0**
 
 ## HACS cards
 
-mushroom · apexcharts-card · plotly-graph-card · mini-graph-card · gauge-card-pro · modern-circular-gauge · logbook-card · auto-entities · vertical-stack-in-card · card-mod · bar-card · ph-meter-temperature · **expander-card** · **browser_mod** · **DSC-HUB** (Dashboard custom repo — system map + airflow map)
+mushroom · apexcharts-card · plotly-graph-card · mini-graph-card · gauge-card-pro · modern-circular-gauge · logbook-card · auto-entities · vertical-stack-in-card · card-mod · bar-card · ph-meter-temperature · **expander-card** · **browser_mod** · **DSC-HUB** (Dashboard custom repo — system map + airflow + The Dash)
 
 `browser_mod` (HACS **Integration**, not a card) powers the popup layer —
 graph enlarge, appliance consoles, pot detail. Install from HACS →
 Integrations, restart HA, then **Settings → Devices & Services →
 Add Integration → Browser Mod**. Without it the popup taps silently no-op.
 
-## Local custom cards — SYSTEM MAP + AIRFLOW STATUS
+## Local custom cards — SYSTEM MAP + AIRFLOW + The Dash
 
 | Card | Type | View |
 |---|---|---|
 | Neon isometric map | `custom:dsc-system-map-card` | Home |
 | GUI tent airflow scene | `custom:dsc-airflow-map-card` | Climate Engine |
+| Three.js ops surface | `custom:dsc-the-dash-card` | **The Dash** (`/dsc-hub-pro/dash`) |
+
+One published bundle registers all three. Concat order:
+`dsc-system-map-card.js` → `dsc-airflow-map-card.js` → `vendor/three.min.js` →
+`dsc-the-dash-card.js`. Expect **~800 KB** for `/local/dsc-system-map-card.js`
+(or HACS `DSC-HUB.js`). Source-only system map (~10 KB) or system+airflow
+(~33–61 KB) means The Dash custom element is missing.
+
+Ops runbook: [`../docs/qa/LIVE-UI-THE-DASH.md`](../docs/qa/LIVE-UI-THE-DASH.md).
 
 ### Preferred — HACS Dashboard custom repository
 
@@ -95,20 +106,20 @@ Add Integration → Browser Mod**. Without it the popup taps silently no-op.
 3. Category: **Dashboard**
 4. Download **DSC-HUB System Map**, restart/reload when prompted, hard-refresh browser
 
-HACS serves `/hacsfiles/DSC-HUB/DSC-HUB.js` (both cards + SVG beside it). Full steps:
+HACS serves `/hacsfiles/DSC-HUB/DSC-HUB.js` (all three cards + SVG beside it). Full steps:
 [`../scripts/HACS-FRONTEND.md`](../scripts/HACS-FRONTEND.md).
 
 ### Manual fallback (`/config/www/`)
 
-1. Copy into Home Assistant `/config/www/` (or rely on ha-sync):
+1. Copy into Home Assistant `/config/www/` (or rely on ha-sync / Sync add-on):
    - [`www/dsc-system-map.svg`](www/dsc-system-map.svg)
-   - Bundled JS as `/local/dsc-system-map-card.js` (system map **and** airflow —
-     ha-sync builds this from the two www sources)
-   - Optional: [`www/dsc-airflow-map-card.js`](www/dsc-airflow-map-card.js) standalone
+   - Bundled JS as `/local/dsc-system-map-card.js` (system + airflow + Three + Dash)
+   - Optional standalones: airflow + `dsc-the-dash-card.js` (Dash still needs THREE)
 2. **Settings → Dashboards → ⋮ → Resources → Add resource** (JavaScript, not module):
-   - `/local/dsc-system-map-card.js` (one resource registers both cards)
+   - `/local/dsc-system-map-card.js` (one resource registers all three cards)
    - Or HACS `/hacsfiles/DSC-HUB/DSC-HUB.js`
-3. YAML dashboard already includes both cards. Hard-refresh the browser.
+3. YAML dashboard includes the cards; modules must be present under
+   `dashboards/modules/`. Hard-refresh the browser.
 
 Optional entity overrides:
 
@@ -125,10 +136,21 @@ type: custom:dsc-airflow-map-card
 title: AIRFLOW STATUS
 ```
 
+```yaml
+type: custom:dsc-the-dash-card
+title: DSC-HUB // ADVANCED CULTIVATION CONTROL
+subtitle: Zonal Cultivation Hub — 2-Tent System
+```
+
 **Airflow card:** isometric tent scene with glowing ducts. Prefer **Edit card**
 (GUI) to set room size, tents (1–4), wall ports, fans, carbon filters, and
 exhaust **into room** vs **through wall**. Add card loads DSC defaults
 (Room + 2x4 + 4x8 + five routes).
+
+**The Dash:** cinematic Three.js tents/ducts + air-path rail. Exhaust OUT/RECIRC
+absolute CFM on the rail is **mass-balanced to Σ intake × fan-% split** — not
+raw `sensor.dsc_cfm_exhaust_*` (those stay nameplate proxies until Learning
+fan cal). Heat mat is 2×4-only; no central filter-machine duct hub.
 
 ## Climate capacity envelope
 

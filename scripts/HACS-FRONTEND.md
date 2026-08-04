@@ -3,12 +3,15 @@
 Install the DSC-HUB Lovelace cards from this GitHub repo as a
 **HACS custom repository** (category: **Dashboard**).
 
-One resource (`DSC-HUB.js`) registers both:
+One resource (`DSC-HUB.js`) registers:
 
 - `custom:dsc-system-map-card` — neon isometric SYSTEM MAP
 - `custom:dsc-airflow-map-card` — GUI-first isometric **tent airflow scene**
   (room size, tents, wall ports, fans, carbon filters, exhaust into room or
   through wall). Open **Edit card** for the visual editor; Add card uses DSC defaults.
+- `custom:dsc-the-dash-card` — **The Dash** Three.js ops surface (tents/ducts,
+  mass-balanced air-path rail, pot charts, timeline). Requires `THREE` from
+  `vendor/three.min.js` bundled **before** the Dash source.
 
 ## Add the custom repository
 
@@ -28,6 +31,10 @@ One resource (`DSC-HUB.js`) registers both:
 HACS registers the resource automatically (typically
 `/hacsfiles/DSC-HUB/DSC-HUB.js`). The system-map SVG ships beside it in `dist/`.
 
+After The Dash ship, expect **`DSC-HUB.js` ≈ 800 KB**. If the file is ~10 KB
+(system-map only) or ~33–61 KB (system+airflow without Three/Dash), Redownload
+from current `master` — The Dash custom element will be missing otherwise.
+
 ## Use in Lovelace
 
 ```yaml
@@ -40,12 +47,18 @@ type: custom:dsc-airflow-map-card
 title: AIRFLOW STATUS
 ```
 
-Edit the card in the Lovelace UI to configure room size, tents (1–4), routes
-(wall → wall), fans, carbon filters, and whether exhaust goes **through the
-wall (Outside)** or **into the room**. Advanced JSON is available in the editor
-for dashboard-as-code workflows.
+```yaml
+type: custom:dsc-the-dash-card
+title: DSC-HUB // ADVANCED CULTIVATION CONTROL
+subtitle: Zonal Cultivation Hub — 2-Tent System
+```
+
+The Pro dashboard ships The Dash at `/dsc-hub-pro/dash`
+(`modules/view_dash.yaml`). Edit the card in the Lovelace UI for entity
+overrides; duct topology is fixed in the card (not on-glass editable).
 
 Optional entity overrides — see [`homeassistant/README.md`](../homeassistant/README.md).
+Ops / triage: [`docs/qa/LIVE-UI-THE-DASH.md`](../docs/qa/LIVE-UI-THE-DASH.md).
 
 ## Browser Mod (required for popups)
 
@@ -68,21 +81,26 @@ Without it, popup `tap_action`s silently do nothing — no error is shown.
 | [`dist/DSC-HUB.js`](../dist/DSC-HUB.js) | Bundled cards (repo-name match) |
 | [`dist/dsc-system-map-card.js`](../dist/dsc-system-map-card.js) | Same bundle (legacy `/local` filename) |
 | [`dist/dsc-system-map.svg`](../dist/dsc-system-map.svg) | System map artwork |
-| [`dist/dsc-airflow-map-card.js`](../dist/dsc-airflow-map-card.js) | Airflow card standalone source |
+| [`dist/dsc-airflow-map-card.js`](../dist/dsc-airflow-map-card.js) | Airflow standalone source |
+| [`dist/dsc-the-dash-card.js`](../dist/dsc-the-dash-card.js) | Dash standalone (needs THREE) |
+| [`dist/vendor/three.min.js`](../dist/vendor/three.min.js) | THREE global (bundled before Dash) |
 
 | `homeassistant/www/*` | **Source of truth** — run `scripts/sync-hacs-dist.sh` after edits |
 
 CI workflow [`.github/workflows/hacs-dist.yml`](../.github/workflows/hacs-dist.yml)
 keeps `dist/` synced on pushes that touch `homeassistant/www/`.
 
+**Windows:** use `sync-hacs-dist.sh` / Node binary concat — PowerShell
+`Get-Content` can corrupt JS Unicode (FOLLOWUPS).
+
 ## Packages / dashboard YAML (not HACS)
 
 Helpers, automations, and the full Lovelace dashboard are **not** HACS
 plugins — they deploy via [`ha-sync.sh`](ha-sync.sh) / Unraid runner
-([`HA-SYNC-BOOTSTRAP.md`](HA-SYNC-BOOTSTRAP.md)).
+([`HA-SYNC-BOOTSTRAP.md`](HA-SYNC-BOOTSTRAP.md)) or the Sync add-on.
 
 | Surface | Delivery |
 |---|---|
-| SYSTEM MAP + AIRFLOW STATUS cards | **HACS Dashboard** (this doc) |
-| `packages/dsc_v4_*.yaml` + YAML dashboard + www fallback | Git push → HA sync |
+| SYSTEM MAP + AIRFLOW + The Dash cards | **HACS Dashboard** (this doc) or www bundle |
+| `packages/dsc_v4_*.yaml` + YAML shell + `modules/` + www fallback | Git push → HA sync |
 | ESPHome firmware | Validate/Install (manual) |

@@ -318,7 +318,14 @@ No climate control regression during soak window.
 ## CFM mass balance on The Dash (2026-08-04)
 
 ### done
-- The Dash exhaust OUT/RECIRC absolute CFM now = intake throughput x dump/recirc split (split still from exhaust nameplate ratio / fan %)
+- The Dash exhaust OUT/RECIRC absolute CFM now = intake throughput × dump/recirc split (split prefers live fan %; exhaust CFM sensors are ratio fallback only)
+- Engineering docs: [`docs/qa/LIVE-UI-THE-DASH.md`](qa/LIVE-UI-THE-DASH.md) (bundle ~800 KB, modules sync, mass-balance honesty, triage)
 
 ### deferred / honesty
-- sensor.dsc_cfm_exhaust_* remain pct x nameplate (6in 440 CFM max each) with cal curves unset â€” Climate/Learning still see ~300+ CFM open-air estimates. Real duct CFM needs Learning fan cal curves. Until then those sensors are capacity proxies, not mass-balanced flow.
+- `sensor.dsc_cfm_exhaust_*` remain pct × nameplate (6in 440 CFM max each) with cal curves unset ? Climate/Learning still see ~300+ CFM open-air estimates. Real duct CFM needs Learning fan cal curves. Until then those sensors are capacity proxies, not mass-balanced flow.
+
+### next-plan
+
+| ID | Item | Notes |
+|---|---|---|
+| N-021 | **Update live Sync add-on** so www concat includes Three + Dash (~800 KB) and modules sync | Old images overwrite to system-map-only (F-011) or omit modules (F-012); prefer ha-sync until image is current |
