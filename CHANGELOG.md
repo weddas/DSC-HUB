@@ -1,5 +1,20 @@
 # Changelog
 
+## The Dash + modular Lovelace (2026-08-04)
+
+- **The Dash** (`custom:dsc-the-dash-card`, `/dsc-hub-pro/dash`): Three.js
+  tents/ducts ops surface; air-path rail mass-balances exhaust OUT/RECIRC CFM
+  to Σ intake × fan-% dump/recirc split (raw `sensor.dsc_cfm_exhaust_*` stay
+  nameplate proxies until Learning cal).
+- **Modular Pro dashboard:** shell `dsc-hub-v4-dashboard.yaml` +
+  `dashboards/modules/view_*.yaml` (`!include`). Sync must ship modules with
+  the shell (F-012).
+- **www / HACS bundle:** concat system-map + airflow + `vendor/three.min.js` +
+  Dash → `DSC-HUB.js` / `/local/dsc-system-map-card.js` (~800 KB). ha-sync
+  cache-buster prefix `dash-<UTC>`.
+- Docs: [`docs/qa/LIVE-UI-THE-DASH.md`](docs/qa/LIVE-UI-THE-DASH.md);
+  HA / HACS / Sync / bootstrap updated. Follow-ups: [`docs/FOLLOWUPS.md`](docs/FOLLOWUPS.md).
+
 ## HA surface 5.1.5 — finish crop UI + pot-native strain (2026-08-03)
 
 - **Honest cutover:** 5.1.4 shipped packages + Climate Temp OOS + dead Tank chips;

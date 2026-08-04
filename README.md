@@ -14,8 +14,9 @@ fleet firmware / Sync add-on / HA surface **`5.1.0`**
 - **Hub owns climate** — dehumidifier → humidifier → heater → AC → mat ladder
   with reality gates, failsafe, and min-off (HA never drives those safety rails).
 - **ESP-NOW primary** panel ↔ hub — works when Home Assistant is down.
-- **DSC-HUB Pro** dashboard (`/dsc-hub-pro`) — Home, Climate, Learning, tents,
-  Root Zone, Tank, Light, Trends, System.
+- **DSC-HUB Pro** dashboard (`/dsc-hub-pro`) — **The Dash**, Home, Climate,
+  Learning, tents, Root Zone, Tank, Light, Trends, System (YAML shell +
+  `dashboards/modules/`).
 - **Learn Phase A + B** — Phase A EMA efficiencies & ETA; Phase B (opt-in)
   rate-limited writes to ladder **wait bases** only.
 - **Fleet version chip** — at-a-glance `ok` / `warn` / `error` vs expected **5.1.0**.
@@ -45,6 +46,7 @@ flowchart LR
 | [`docs/qa/FIRMWARE-QA-5.1.0.md`](docs/qa/FIRMWARE-QA-5.1.0.md) | Firmware Validate / flash QC |
 | [`docs/qa/ADDON-QA-5.1.0.md`](docs/qa/ADDON-QA-5.1.0.md) | Sync add-on QC |
 | [`homeassistant/README.md`](homeassistant/README.md) | Packages, HACS, entity notes |
+| [`docs/qa/LIVE-UI-THE-DASH.md`](docs/qa/LIVE-UI-THE-DASH.md) | The Dash + modular views + www bundle ops |
 | [`firmware/v4/README.md`](firmware/v4/README.md) | Local validate / flash |
 
 **HAOS delivery:** Settings → Add-ons → Repositories → `https://github.com/weddas/DSC-HUB`
@@ -74,7 +76,7 @@ ESPHome stubs use `ref: v5.1.0`. Flash order: hub → panel → pots → Sonoffs
 | Piece | Path |
 |---|---|
 | Sync add-on | [`dsc-hub-sync/`](dsc-hub-sync/) |
-| Lovelace (Pro) | `homeassistant/dashboards/dsc-hub-v4-dashboard.yaml` → URL **`dsc-hub-pro`** |
+| Lovelace (Pro) | `dashboards/dsc-hub-v4-dashboard.yaml` + `modules/` → URL **`dsc-hub-pro`** |
 | Packages | `homeassistant/packages/dsc_v4_*.yaml` |
 | Config snippet | `homeassistant/configuration.snippet.yaml` |
 | ESPHome stubs | `homeassistant/esphome/dsc-*.yaml` |
