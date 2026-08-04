@@ -15,19 +15,32 @@ DIST="${REPO_ROOT}/dist"
 
 mkdir -p "${DIST}"
 
+THREE_JS="${SRC}/vendor/three.min.js"
+DASH_JS="${SRC}/dsc-the-dash-card.js"
+[[ -f "${THREE_JS}" ]] || { echo "Missing ${THREE_JS}" >&2; exit 1; }
+[[ -f "${DASH_JS}" ]] || { echo "Missing ${DASH_JS}" >&2; exit 1; }
+
 BUNDLE="${DIST}/DSC-HUB.js"
 {
   cat "${SRC}/dsc-system-map-card.js"
   printf '\n'
   cat "${SRC}/dsc-airflow-map-card.js"
+  printf '\n'
+  cat "${THREE_JS}"
+  printf '\n'
+  cat "${DASH_JS}"
 } > "${BUNDLE}"
 
 cp -f "${SRC}/dsc-system-map.svg" "${DIST}/dsc-system-map.svg"
 # Same bundle under the legacy /local filename (already a Lovelace resource)
 cp -f "${BUNDLE}" "${DIST}/dsc-system-map-card.js"
-# Standalone airflow source (optional second resource / debugging)
+# Standalone sources (optional second resources / debugging)
 cp -f "${SRC}/dsc-airflow-map-card.js" "${DIST}/dsc-airflow-map-card.js"
+cp -f "${DASH_JS}" "${DIST}/dsc-the-dash-card.js"
+mkdir -p "${DIST}/vendor"
+cp -f "${THREE_JS}" "${DIST}/vendor/three.min.js"
 
 echo "HACS dist updated:"
 ls -la "${DIST}/DSC-HUB.js" "${DIST}/dsc-system-map.svg" \
-  "${DIST}/dsc-system-map-card.js" "${DIST}/dsc-airflow-map-card.js"
+  "${DIST}/dsc-system-map-card.js" "${DIST}/dsc-airflow-map-card.js" \
+  "${DIST}/dsc-the-dash-card.js"

@@ -120,29 +120,46 @@ done
 # --- dashboard ------------------------------------------------------------
 dash="${HA_SRC}/dashboards/dsc-hub-v4-dashboard.yaml"
 [[ -f "${dash}" ]] || die "Missing ${dash}"
-log "Syncing dashboards/dsc-hub-v4-dashboard.yaml"
+log "Syncing dashboards/dsc-hub-v4-dashboard.yaml + modules/"
 run_scp "${dash}" "${HA_CONFIG_ROOT}/dashboards/dsc-hub-v4-dashboard.yaml"
+run_ssh "mkdir -p '${HA_CONFIG_ROOT}/dashboards/modules'"
+mod_dir="${HA_SRC}/dashboards/modules"
+[[ -d "${mod_dir}" ]] || die "Missing ${mod_dir}"
+mod_files=("${mod_dir}"/view_*.yaml)
+[[ ${#mod_files[@]} -gt 0 ]] || die "No view_*.yaml modules found"
+for f in "${mod_files[@]}"; do
+  run_scp "${f}" "${HA_CONFIG_ROOT}/dashboards/modules/$(basename "${f}")"
+done
 
 # --- www ------------------------------------------------------------------
 # System map SVG + bundled JS (system map + airflow) as dsc-system-map-card.js
 # so the existing /local Lovelace resource registers both custom elements.
 # Standalone airflow file is also published for optional direct resources.
-log "Syncing www Lovelace cards (system map + airflow bundle)"
+log "Syncing www Lovelace cards (system map + airflow + Three.js + The Dash)"
 svg="${HA_SRC}/www/dsc-system-map.svg"
 sys_js="${HA_SRC}/www/dsc-system-map-card.js"
 air_js="${HA_SRC}/www/dsc-airflow-map-card.js"
+three_js="${HA_SRC}/www/vendor/three.min.js"
+dash_js="${HA_SRC}/www/dsc-the-dash-card.js"
 [[ -f "${svg}" ]] || die "Missing ${svg}"
 [[ -f "${sys_js}" ]] || die "Missing ${sys_js}"
 [[ -f "${air_js}" ]] || die "Missing ${air_js}"
+[[ -f "${three_js}" ]] || die "Missing ${three_js}"
+[[ -f "${dash_js}" ]] || die "Missing ${dash_js}"
 
 run_scp "${svg}" "${HA_CONFIG_ROOT}/www/dsc-system-map.svg"
 run_scp "${air_js}" "${HA_CONFIG_ROOT}/www/dsc-airflow-map-card.js"
+run_scp "${dash_js}" "${HA_CONFIG_ROOT}/www/dsc-the-dash-card.js"
 
 bundle="$(mktemp)"
 trap 'rm -f "${bundle}"' RETURN
 cat "${sys_js}" > "${bundle}"
 printf '\n' >> "${bundle}"
 cat "${air_js}" >> "${bundle}"
+printf '\n' >> "${bundle}"
+cat "${three_js}" >> "${bundle}"
+printf '\n' >> "${bundle}"
+cat "${dash_js}" >> "${bundle}"
 run_scp "${bundle}" "${HA_CONFIG_ROOT}/www/dsc-system-map-card.js"
 run_scp "${bundle}" "${HA_CONFIG_ROOT}/www/DSC-HUB.js"
 
@@ -150,7 +167,7 @@ run_scp "${bundle}" "${HA_CONFIG_ROOT}/www/DSC-HUB.js"
 # HA serves /local with Cache-Control max-age ~31d — query must change.
 # Never replace lovelace_resources with an unvalidated jq write (empty/corrupt
 # file wipes every HACS card). Require non-trivial output before install.
-bust_ver="airflow-$(date -u +%Y%m%d%H%M%S)"
+bust_ver="dash-$(date -u +%Y%m%d%H%M%S)"
 log "Bumping Lovelace resource cache-buster to ${bust_ver}"
 if [[ "${DRY_RUN}" == "1" ]]; then
   log "DRY_RUN resource bump"

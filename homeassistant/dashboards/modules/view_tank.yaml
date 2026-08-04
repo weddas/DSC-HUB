@@ -1,0 +1,238 @@
+title: Tank
+icon: mdi:cup-water
+path: tank
+type: sections
+max_columns: 4
+sections:
+  - type: grid
+    cards:
+      - type: heading
+        heading: 🚰 TANK TESTER
+        heading_style: title
+      - type: custom:mushroom-chips-card
+        chips:
+          - type: template
+            icon: mdi:flask
+            content: Nutrient Science
+            tap_action:
+              action: navigate
+              navigation_path: /dsc-hub-pro/nutrient-science
+          - type: template
+            icon: mdi:dna
+            content: Strains
+            tap_action:
+              action: navigate
+              navigation_path: /dsc-hub-pro/strains
+      - type: conditional
+        conditions:
+          - condition: state
+            entity: sensor.water_tester_ph_current
+            state_not: unavailable
+        card:
+          type: custom:ph-meter-temperature
+          entity: sensor.water_tester_ph_current
+          entity_temperature: sensor.water_tester_temperature
+      - type: conditional
+        conditions:
+          - condition: state
+            entity: sensor.water_tester_ph_current
+            state: unavailable
+        card:
+          type: markdown
+          content: >-
+            *Tank tester offline / not integrated — the Tuya water tester
+            map lives in `homeassistant/README.md`. EC targets below still
+            publish from stage & plant type.*
+      - type: conditional
+        conditions:
+          - condition: numeric_state
+            entity: sensor.water_tester_temperature
+            above: 24
+        card:
+          type: custom:mushroom-template-card
+          primary: ⚠ WATER TEMP > 24 °C — PYTHIUM RISK
+          secondary: Chill or shade the reservoir; dissolved O2 is crashing
+          icon: mdi:bacteria
+          icon_color: red
+  - type: grid
+    column_span: 2
+    cards:
+      - type: heading
+        heading: ⚡ EC vs STAGE TARGET
+        heading_style: title
+      - type: custom:gauge-card-pro
+        entity: sensor.dsc_tank_ec_normalized
+        header: Tank EC (normalised)
+        min: 0
+        max: 3000
+        needle: true
+        segments: >
+          {% set lo = states('sensor.dsc_tank_ec_target_min')|float(0.8) %}
+          {% set hi = states('sensor.dsc_tank_ec_target_max')|float(2.0) %}
+          {{ [ {'from': 0, 'color': '#f59e0b'},
+               {'from': lo, 'color': '#22c55e'},
+               {'from': hi, 'color': '#ef4444'} ] }}
+        tap_action: 
+          action: fire-dom-event
+          browser_mod:
+            service: browser_mod.popup
+            data:
+              title: 🚰 Tank — 7 days
+              size: wide
+              content:
+                type: custom:apexcharts-card
+                graph_span: 7d
+                span:
+                  end: hour
+                header:
+                  show: true
+                  title: Tank EC vs stage targets — 7d
+                  show_states: true
+                apex_config:
+                  chart:
+                    height: 380
+                yaxis:
+                  - id: ec
+                    min: 0
+                  - id: ph
+                    opposite: true
+                    min: 4
+                    max: 9
+                series:
+                  - entity: sensor.dsc_tank_ec_normalized
+                    name: Tank EC
+                    yaxis_id: ec
+                    stroke_width: 2
+                    extend_to: now
+                    color: '#38bdf8'
+                    group_by:
+                      func: avg
+                      duration: 30min
+                  - entity: sensor.dsc_tank_ec_target_min
+                    name: Target min
+                    yaxis_id: ec
+                    curve: stepline
+                    stroke_width: 1
+                    extend_to: now
+                    color: '#22c55e66'
+                  - entity: sensor.dsc_tank_ec_target_max
+                    name: Target max
+                    yaxis_id: ec
+                    curve: stepline
+                    stroke_width: 1
+                    extend_to: now
+                    color: '#ef444466'
+                  - entity: sensor.water_tester_ph_current
+                    name: pH
+                    yaxis_id: ph
+                    stroke_width: 2
+                    extend_to: now
+                    color: '#f59e0b'
+                    group_by:
+                      func: avg
+                      duration: 30min
+      - type: custom:mini-graph-card
+        name: EC + pH — 48 h
+        hours_to_show: 48
+        cache: true
+        points_per_hour: 12
+        line_width: 2
+        entities:
+          - entity: sensor.dsc_tank_ec_normalized
+            name: EC
+          - entity: sensor.water_tester_ph_current
+            name: pH
+            y_axis: secondary
+        show:
+          labels: true
+          extrema: true
+          legend: true
+        tap_action:
+          action: fire-dom-event
+          browser_mod:
+            service: browser_mod.popup
+            data:
+              title: 🚰 Tank — 7 days
+              size: wide
+              content:
+                type: custom:apexcharts-card
+                graph_span: 7d
+                span:
+                  end: hour
+                header:
+                  show: true
+                  title: Tank EC vs stage targets — 7d
+                  show_states: true
+                apex_config:
+                  chart:
+                    height: 380
+                yaxis:
+                  - id: ec
+                    min: 0
+                  - id: ph
+                    opposite: true
+                    min: 4
+                    max: 9
+                series:
+                  - entity: sensor.dsc_tank_ec_normalized
+                    name: Tank EC
+                    yaxis_id: ec
+                    stroke_width: 2
+                    extend_to: now
+                    color: '#38bdf8'
+                    group_by:
+                      func: avg
+                      duration: 30min
+                  - entity: sensor.dsc_tank_ec_target_min
+                    name: Target min
+                    yaxis_id: ec
+                    curve: stepline
+                    stroke_width: 1
+                    extend_to: now
+                    color: '#22c55e66'
+                  - entity: sensor.dsc_tank_ec_target_max
+                    name: Target max
+                    yaxis_id: ec
+                    curve: stepline
+                    stroke_width: 1
+                    extend_to: now
+                    color: '#ef444466'
+                  - entity: sensor.water_tester_ph_current
+                    name: pH
+                    yaxis_id: ph
+                    stroke_width: 2
+                    extend_to: now
+                    color: '#f59e0b'
+                    group_by:
+                      func: avg
+                      duration: 30min
+
+      - type: markdown
+        content: >-
+          *This number is the **reference line** on the Root Zone uptake
+          charts. When it moves, every Δ moves with it — so a "sudden
+          uptake change" across all four pots at once is usually the tank,
+          not the plants.*
+  - type: grid
+    cards:
+      - type: heading
+        heading: 🎯 FEED TARGETS
+        heading_style: title
+      - type: entities
+        entities:
+          - entity: input_select.dsc_tank_plant_type
+            name: Plant Type
+          - entity: input_select.dsc_tank_stage
+            name: Feed Stage
+          - entity: input_number.dsc_tank_ec_multiplier
+            name: EC Multiplier
+          - entity: sensor.dsc_tank_ec_target_min
+            name: EC Target Min
+          - entity: sensor.dsc_tank_ec_target_max
+            name: EC Target Max
+      - type: markdown
+        content: >-
+          *Tank EC alerts use **published absolute targets** — unlike the
+          pot probes, which are trend-only. The tester sits in solution, so
+          absolute values are meaningful here and only here.*
+

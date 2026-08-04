@@ -6,7 +6,7 @@ Standing process for every plan:
 2. **During:** note findings, warnings, incomplete fixes, red flags  
 3. **End:** append a dated section (do not leave soak/log issues in chat only)
 
-Categories: `red-flag` · `soak` · `deferred` · `next-plan` · `out-of-scope` · `done`
+Categories: `red-flag`  `soak`  `deferred`  `next-plan`  `out-of-scope`  `done`
 
 ---
 
@@ -119,7 +119,7 @@ After each execution pass, append:
 
 Observed live before package deploy:
 
-- Hub link **on**; Full Auto **on**; tent ~21.0 °C / ~71% RH
+- Hub link **on**; Full Auto **on**; tent ~21.0 C / ~71% RH
 - AC / clone mister in-service **off**; POT3 in-service **off**; POT1/2/4 **on**
 - Humidifier/dehumidifier demands **off**; dehum relay **off**
 - Active alert count **9** (pre-existing; not attributed to this pass)
@@ -160,7 +160,7 @@ Observed live before package deploy:
 |---|---|---|---|
 | Hub link | on | on | on |
 | Full Auto | on | on | on |
-| Tent | 20.9 °C / 71% RH | 20.9 / 72 | 20.9 / 72 |
+| Tent | 20.9 C / 71% RH | 20.9 / 72 | 20.9 / 72 |
 | Dehum demand | off | off | off |
 | Alert count | 9 | 9 | 9 |
 | AC / mister / POT3 in-service | off | off | off |
@@ -244,13 +244,81 @@ No climate control regression during soak window.
 ## Airflow STATUS layout + Lovelace resources (2026-08-03)
 
 ### done
-- AIRFLOW STATUS card layout rewrite: perimeter chips, no center pile; live browser verify â€” chip AABB overlaps = 0; resource `?v=layoutfix3-restore`
+- AIRFLOW STATUS card layout rewrite: perimeter chips, no center pile; live browser verify — chip AABB overlaps = 0; resource `?v=layoutfix3-restore`
 - `dsc-hub-sync` now bundles system-map + airflow into `dsc-system-map-card.js` / `DSC-HUB.js` (was overwriting with system-map-only and breaking the airflow element)
 - `ha-sync.sh` resource bump now refuses tiny/empty jq output and keeps a `.bak` before replace
 
 ### red-flag
-- **F-010** Live `/config/.storage/lovelace_resources` was wiped to 0 bytes during a cache-bust + `ha core restart` race. Rebuilt from HACS `www/community` (57 items). If any custom card is missing after this, re-add via HACS or Settings â†’ Dashboards â†’ Resources. Prefer **stop core â†’ edit resources â†’ start core** for future bumps; never `mv` over the file while core is restarting without a size check.
+- **F-010** Live `/config/.storage/lovelace_resources` was wiped to 0 bytes during a cache-bust + `ha core restart` race. Rebuilt from HACS `www/community` (57 items). If any custom card is missing after this, re-add via HACS or Settings ? Dashboards ? Resources. Prefer **stop core ? edit resources ? start core** for future bumps; never `mv` over the file while core is restarting without a size check.
 
 ### deferred
 - Keep a dated copy of `lovelace_resources` on the NAS/repo (sanitized) so rebuild is not from community folder heuristics
 - Confirm browser_mod / any non-HACS module resources survived the rebuild
+
+---
+
+## Lovelace www bundle overwrite (2026-08-04)
+
+### red-flag
+- **F-011** /config/www/dsc-system-map-card.js was overwritten back to **system-map-only (~10KB)** after a sync, so Lovelace showed a config error for `custom:dsc-airflow-map-card` (element missing). Redeployed full bundle (~61KB) + cache-bust `?v=fix-`. Likely cause: `dsc-hub-sync` add-on still running an older image that copies unbundled `www/dsc-system-map-card.js`, or a sync path that does not concatenate airflow. **Fix:** rebuild/update the dsc-hub-sync add-on from current master (bundling is in-tree), or turn off `sync_www` on that add-on until updated; prefer `ha-sync.sh` for www deploys. **2026-08-04 late:** bundle now also includes Three.js + `dsc-the-dash-card` (~789KB). Add-on must concatenate `vendor/three.min.js` + `dsc-the-dash-card.js` or The Dash will 404 the custom element again.
+
+---
+
+## The Dash v1 (2026-08-04)
+
+### done
+- New view `path: dash` + `custom:dsc-the-dash-card` (Three.js tents/ducts, flow diagram, pot charts, timeline)
+- Sync scripts updated to bundle Three + Dash into `dsc-system-map-card.js` / `DSC-HUB.js`
+
+### open
+- Scene fidelity still below the reference mockup (richer plants, carbon/fan detail, stronger volumetric air, denser duct manifold)
+- Prefer `hass.callWS({ type: 'lovelace/resources/update' })` for cache-bust during iteration — avoid repeated `ha core restart` (slow; SSH drops)
+
+---
+
+## 2026-08-04 — Dashboard repair + module unification
+
+### done
+- **Legacy DSC capture:** Notion [DSC legacy grow-cycle dashboard (2026-08-04)](https://app.notion.com/p/3b22b4cda37081cdb9edcba587a73b53) under DSC-HUB Wiki; repo archive `docs/archive/lovelace.dashboard_dsc.2026-08-04.json`
+- **Legacy cleanup:** removed `dashboard_dsc` from `lovelace_dashboards`; HA storage file renamed `lovelace.dashboard_dsc.archived.2026-08-04` (hard-refresh sidebar if DSC still visible)
+- **Pro modules:** `homeassistant/dashboards/dsc-hub-v4-dashboard.yaml` shell + `dashboards/modules/view_*.yaml` (!include). **Dash view left as pass-through only.**
+- **History view** (`path: history`): soil EC/moisture/NPK charts moved off Root Zone expanders; apexcharts replaced with mini-graph (apex 2.2.3 `disabled is extraneous` vs HA 2026.7)
+- Root Zone: guarded pots table, dryback layout, POT3 pH OOS conditional, uptake table restored with `—` guards
+- Trends plotly heights reduced (overflow)
+
+### next-plan (from Notion follow-ups)
+- Replicate/modify when kit returns: multi-probe canopy map, germ/dry tent, cure fridge, stage-band VPD instrument
+- Bump apexcharts-card when a build accepts HA `disabled` injection — then restore richer History charts if desired
+- Disable unused house-era registry entities (canopy/VPD) in a careful orphan pass (N-007 style)
+
+### red-flag
+- None new for climate control; sidebar may cache old DSC entry until browser/HA frontend refresh
+
+---
+
+## The Dash airflow path (2026-08-04)
+
+### done
+- Removed central filter-machine mental model from 3D ducts (room intakes, cascade 2x4->4x8, 4x8 DUMP/RECIRC only; small OUT muffler)
+- Flow rail: Intake Environment (room T/RH/VPD) -> Intake CFM (2x4 / cascade / 4x8) -> 4x8 exhaust split (OUT %+CFM / RECIRC %+CFM)
+- Heat mat attributed to 2x4 only (scene glow + Active gear + editor copy)
+- Editor lists CFM/room/mat entity ids; topology fixed (not on-glass editable)
+- ha-sync + dsc-hub-sync now copy dashboards/modules/view_*.yaml
+- Restored mangled HA modules that caused Unnamed empty views (F-012)
+
+### red-flag
+- F-012: modular views break if modules missing or incorrectly indented under title
+- Windows www bundling: use Node binary concat; PowerShell Get-Content can corrupt JS Unicode
+
+### open
+- Continue climbing 3D fidelity vs mockup; particle paths already follow the new ducts
+
+---
+
+## CFM mass balance on The Dash (2026-08-04)
+
+### done
+- The Dash exhaust OUT/RECIRC absolute CFM now = intake throughput x dump/recirc split (split still from exhaust nameplate ratio / fan %)
+
+### deferred / honesty
+- sensor.dsc_cfm_exhaust_* remain pct x nameplate (6in 440 CFM max each) with cal curves unset â€” Climate/Learning still see ~300+ CFM open-air estimates. Real duct CFM needs Learning fan cal curves. Until then those sensors are capacity proxies, not mass-balanced flow.

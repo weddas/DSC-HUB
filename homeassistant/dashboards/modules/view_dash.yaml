@@ -1,0 +1,8 @@
+title: The Dash
+icon: mdi:view-dashboard-variant
+path: dash
+type: panel
+cards:
+  - type: custom:dsc-the-dash-card
+    title: DSC-HUB // ADVANCED CULTIVATION CONTROL
+    subtitle: Zonal Cultivation Hub — 2-Tent System

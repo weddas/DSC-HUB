@@ -1,0 +1,176 @@
+title: History
+icon: mdi:chart-timeline-variant
+path: history
+type: sections
+max_columns: 4
+sections:
+  - type: grid
+    column_span: 2
+    cards:
+      - type: heading
+        heading: Soil history
+        heading_style: title
+      - type: markdown
+        content: >-
+          Long charts live here (not on Root Zone pulse). POT3 OOS series are
+          omitted. Values unknown/unavailable are left off charts to avoid NaN.
+      - type: custom:expander-card
+        title: History — EC vs tank / uptake (48h)
+        expanded: true
+        card_mod:
+          style: |
+            ha-card {
+              border-left: 3px solid rgba(56,189,248,0.4);
+              border-radius: 10px;
+            }
+        cards:
+          - type: custom:mini-graph-card
+            name: Soil EC vs tank feed — 48 h
+            hours_to_show: 48
+            points_per_hour: 4
+            line_width: 2
+            entities:
+              - entity: sensor.dsc_tank_ec_normalized
+                name: TANK
+              - entity: sensor.dsc_pot1_soil_conductivity
+                name: POT1
+              - entity: sensor.dsc_pot2_soil_conductivity
+                name: POT2
+              - entity: sensor.dsc_pot4_soil_conductivity
+                name: POT4
+            show:
+              labels: true
+              extrema: true
+              legend: true
+          - type: markdown
+            content: "*POT3 omitted (OOS). Gap to tank line = uptake vs concentrate.*"
+          - type: custom:mini-graph-card
+            name: Uptake Δ (soil − tank) — 48 h
+            hours_to_show: 48
+            points_per_hour: 4
+            line_width: 2
+            entities:
+              - entity: sensor.dsc_pot1_ec_vs_tank
+                name: POT1
+              - entity: sensor.dsc_pot2_ec_vs_tank
+                name: POT2
+              - entity: sensor.dsc_pot4_ec_vs_tank
+                name: POT4
+            show:
+              labels: true
+              legend: true
+          - type: custom:bar-card
+            title: EC slope — negative is uptake
+            entities:
+              - entity: sensor.dsc_pot1_ec_uptake_slope
+                name: POT1
+              - entity: sensor.dsc_pot2_ec_uptake_slope
+                name: POT2
+              - entity: sensor.dsc_pot4_ec_uptake_slope
+                name: POT4
+            positions:
+              icon: "off"
+              indicator: inside
+              name: outside
+              value: inside
+            min: -0.15
+            max: 0.15
+            severity:
+              - color: "#22c55e"
+                from: -0.15
+                to: -0.005
+              - color: "#94a3b8"
+                from: -0.005
+                to: 0.005
+              - color: "#ef4444"
+                from: 0.005
+                to: 0.15
+  - type: grid
+    column_span: 2
+    cards:
+      - type: custom:expander-card
+        title: History — moisture signatures (48h)
+        expanded: false
+        card_mod:
+          style: |
+            ha-card {
+              border-left: 3px solid rgba(56,189,248,0.4);
+              border-radius: 10px;
+            }
+        cards:
+          - type: custom:mini-graph-card
+            name: Soil moisture — feed & drink, 48 h
+            hours_to_show: 48
+            points_per_hour: 6
+            line_width: 2
+            entities:
+              - entity: sensor.dsc_pot1_soil_moisture
+                name: POT1
+              - entity: sensor.dsc_pot2_soil_moisture
+                name: POT2
+              - entity: sensor.dsc_pot4_soil_moisture
+                name: POT4
+            show:
+              labels: true
+              extrema: true
+              legend: true
+          - type: markdown
+            content: "*POT3 omitted — probe fault would flatten the axis.*"
+  - type: grid
+    column_span: 2
+    cards:
+      - type: custom:expander-card
+        title: History — N / P / K (7d)
+        expanded: false
+        card_mod:
+          style: |
+            ha-card {
+              border-left: 3px solid rgba(56,189,248,0.4);
+              border-radius: 10px;
+            }
+        cards:
+          - type: markdown
+            content: >-
+              *JXCT N/P/K are bulk-EC derivatives — trend shapes only, never
+              absolute ppm. POT3 omitted while OOS.*
+          - type: custom:mini-graph-card
+            name: Nitrogen — 7 d
+            hours_to_show: 168
+            entities:
+              - entity: sensor.dsc_pot1_soil_nitrogen
+                name: POT1
+              - entity: sensor.dsc_pot2_soil_nitrogen
+                name: POT2
+              - entity: sensor.dsc_pot4_soil_nitrogen
+                name: POT4
+            show:
+              legend: true
+              extrema: true
+          - type: custom:mini-graph-card
+            name: Phosphorus — 7 d
+            hours_to_show: 168
+            entities:
+              - entity: sensor.dsc_pot1_soil_phosphorus
+                name: POT1
+              - entity: sensor.dsc_pot2_soil_phosphorus
+                name: POT2
+              - entity: sensor.dsc_pot4_soil_phosphorus
+                name: POT4
+            show:
+              legend: true
+          - type: custom:mini-graph-card
+            name: Potassium — 7 d
+            hours_to_show: 168
+            entities:
+              - entity: sensor.dsc_pot1_soil_potassium
+                name: POT1
+              - entity: sensor.dsc_pot2_soil_potassium
+                name: POT2
+              - entity: sensor.dsc_pot4_soil_potassium
+                name: POT4
+            show:
+              legend: true
+          - type: markdown
+            content: >-
+              *N rate derivative charts stay hidden while
+              `sensor.dsc_pot*_soil_nitrogen_rate` is unknown (avoids NaN).*

@@ -136,28 +136,45 @@ stage_and_commit() {
   else
     warn "Dashboard YAML missing — skipped"
   fi
+  # Modular views (!include modules/view_*.yaml) — must ship with the shell
+  mkdir -p "${STAGE}/dashboards/modules"
+  local mods=("${src}/dashboards/modules"/view_*.yaml)
+  if [[ ${#mods[@]} -gt 0 ]]; then
+    for f in "${mods[@]}"; do
+      cp -f "${f}" "${STAGE}/dashboards/modules/$(basename "${f}")"
+    done
+    log "Staged ${#mods[@]} dashboard modules"
+  else
+    warn "No dashboards/modules/view_*.yaml — included views will be empty"
+  fi
 
   if bashio::config.true 'sync_www'; then
-    log "Syncing www system-map SVG + bundled cards (system map + airflow)"
+    log "Syncing www system-map SVG + bundled cards (system map + airflow + Three + Dash)"
     if [[ -f "${src}/www/dsc-system-map.svg" ]]; then
       cp -f "${src}/www/dsc-system-map.svg" "${STAGE}/www/dsc-system-map.svg"
       log "Staged www/dsc-system-map.svg"
     else
       warn "Missing repo www/dsc-system-map.svg"
     fi
-    # Bundle both cards into dsc-system-map-card.js (existing Lovelace resource)
-    # and DSC-HUB.js (HACS filename). Standalone airflow optional.
-    if [[ -f "${src}/www/dsc-system-map-card.js" && -f "${src}/www/dsc-airflow-map-card.js" ]]; then
+    # Bundle cards + Three.js into dsc-system-map-card.js (existing Lovelace resource)
+    # and DSC-HUB.js (HACS filename). Standalone sources optional.
+    if [[ -f "${src}/www/dsc-system-map-card.js" && -f "${src}/www/dsc-airflow-map-card.js" \
+       && -f "${src}/www/vendor/three.min.js" && -f "${src}/www/dsc-the-dash-card.js" ]]; then
       {
         cat "${src}/www/dsc-system-map-card.js"
         printf '\n'
         cat "${src}/www/dsc-airflow-map-card.js"
+        printf '\n'
+        cat "${src}/www/vendor/three.min.js"
+        printf '\n'
+        cat "${src}/www/dsc-the-dash-card.js"
       } > "${STAGE}/www/dsc-system-map-card.js"
       cp -f "${STAGE}/www/dsc-system-map-card.js" "${STAGE}/www/DSC-HUB.js"
       cp -f "${src}/www/dsc-airflow-map-card.js" "${STAGE}/www/dsc-airflow-map-card.js"
+      cp -f "${src}/www/dsc-the-dash-card.js" "${STAGE}/www/dsc-the-dash-card.js"
       log "Staged bundled www/dsc-system-map-card.js ($(wc -c <"${STAGE}/www/dsc-system-map-card.js") bytes)"
     else
-      warn "Missing system-map and/or airflow card — www sync incomplete"
+      warn "Missing system-map / airflow / three / dash — www sync incomplete"
     fi
   fi
 
@@ -200,8 +217,15 @@ stage_and_commit() {
     cp -f "${STAGE}/dashboards/dsc-hub-v4-dashboard.yaml" \
       "${HA_CONFIG}/dashboards/dsc-hub-v4-dashboard.yaml"
   fi
+  if [[ -d "${STAGE}/dashboards/modules" ]]; then
+    mkdir -p "${HA_CONFIG}/dashboards/modules"
+    for f in "${STAGE}/dashboards/modules"/view_*.yaml; do
+      [[ -f "${f}" ]] || continue
+      cp -f "${f}" "${HA_CONFIG}/dashboards/modules/$(basename "${f}")"
+    done
+  fi
   if bashio::config.true 'sync_www'; then
-    for name in dsc-system-map.svg dsc-system-map-card.js DSC-HUB.js dsc-airflow-map-card.js; do
+    for name in dsc-system-map.svg dsc-system-map-card.js DSC-HUB.js dsc-airflow-map-card.js dsc-the-dash-card.js; do
       if [[ -f "${STAGE}/www/${name}" ]]; then
         cp -f "${STAGE}/www/${name}" "${HA_CONFIG}/www/${name}"
         log "Installed /config/www/${name}"

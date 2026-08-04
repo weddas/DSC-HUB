@@ -1,0 +1,532 @@
+title: Root Zone
+icon: mdi:grass
+path: root-zone
+type: sections
+max_columns: 4
+sections:
+  - type: grid
+    column_span: 2
+    cards:
+      - type: heading
+        heading: Pots now
+        heading_style: title
+      - type: markdown
+        content: >-
+          Live soil snapshot. POT3 moisture probe is a known fault —
+          greyed, not alarmed.
+      - type: custom:mushroom-chips-card
+        alignment: justify
+        chips:
+          - type: template
+            entity: binary_sensor.dsc_hub_pot1_esp_now_link
+            icon: mdi:access-point
+            icon_color: "{{ 'green' if is_state(entity,'on') else 'disabled' }}"
+            content: "P1 {{ 'direct' if is_state(entity,'on') else 'via HA' }}"
+            tap_action:
+              action: more-info
+          - type: template
+            entity: binary_sensor.dsc_hub_pot2_esp_now_link
+            icon: mdi:access-point
+            icon_color: "{{ 'green' if is_state(entity,'on') else 'disabled' }}"
+            content: "P2 {{ 'direct' if is_state(entity,'on') else 'via HA' }}"
+            tap_action:
+              action: more-info
+          - type: template
+            entity: binary_sensor.dsc_hub_pot3_esp_now_link
+            icon: mdi:access-point
+            icon_color: "{{ 'green' if is_state(entity,'on') else 'disabled' }}"
+            content: "P3 {{ 'direct' if is_state(entity,'on') else 'via HA' }}"
+            tap_action:
+              action: more-info
+          - type: template
+            entity: binary_sensor.dsc_hub_pot4_esp_now_link
+            icon: mdi:access-point
+            icon_color: "{{ 'green' if is_state(entity,'on') else 'disabled' }}"
+            content: "P4 {{ 'direct' if is_state(entity,'on') else 'via HA' }}"
+            tap_action:
+              action: more-info
+      - type: markdown
+        content: >-
+          | Pot | Plant | Moist | C | EC | dTank | pH | N/P/K |
+
+          |---|---|---|---|---|---|---|---|
+
+          {% for p in ['1','2','3','4'] -%}
+          {% set oos = is_state('input_boolean.dsc_pot' ~ p ~ '_in_service','off') %}
+          {% set plant = states('text.dsc_pot' ~ p ~ '_plant_name') %}
+          {% set m = states('sensor.dsc_pot' ~ p ~ '_soil_moisture') %}
+          {% set t = states('sensor.dsc_pot' ~ p ~ '_soil_temperature') %}
+          {% set ec = states('sensor.dsc_pot' ~ p ~ '_soil_conductivity') %}
+          {% set dt = states('sensor.dsc_pot' ~ p ~ '_ec_vs_tank') %}
+          {% set ph = states('sensor.dsc_pot' ~ p ~ '_soil_ph') %}
+          {% set n = states('sensor.dsc_pot' ~ p ~ '_soil_nitrogen') %}
+          {% set pp = states('sensor.dsc_pot' ~ p ~ '_soil_phosphorus') %}
+          {% set k = states('sensor.dsc_pot' ~ p ~ '_soil_potassium') %}
+          | **POT{{ p }}**{{ ' OOS' if oos else '' }} |
+          {{ '—' if plant in ['unavailable','unknown'] else plant }} |
+          {{ '—' if oos or m in ['unavailable','unknown'] else (m|float(0)|round(0)|string ~ '%') }} |
+          {{ '—' if t in ['unavailable','unknown'] else (t|float(0)|round(1)) }} |
+          {{ '—' if ec in ['unavailable','unknown'] else (ec|float(0)|round(0)) }} |
+          {{ '—' if dt in ['unavailable','unknown'] else (dt|float(0)|round(0)) }} |
+          {{ '—' if ph in ['unavailable','unknown'] else (ph|float(0)|round(2)) }} |
+          {{ '—' if n in ['unavailable','unknown'] else (n|float(0)|round(0)) }}/{{ '—' if pp in ['unavailable','unknown'] else (pp|float(0)|round(0)) }}/{{ '—' if k in ['unavailable','unknown'] else (k|float(0)|round(0)) }} |
+
+          {% endfor %}
+
+          *POT3 moisture probe fault (Faults and Repairs).*
+  - type: grid
+    column_span: 2
+    cards:
+      - type: heading
+        heading: Dryback & coherence
+        heading_style: title
+      - type: markdown
+        content: >-
+          Daily peak→now dryback % and shared-event coherence when moisture
+          rises together but EC response disagrees across pots.
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+          - type: custom:mushroom-template-card
+            primary: "P1 dryback"
+            secondary: >-
+              {% set v = states('sensor.dsc_pot1_dryback_pct') %}
+              {{ '—' if v in ['unavailable','unknown'] else (v|float(0)|round(0)|string ~ '%') }}
+            icon: mdi:water-percent
+            icon_color: >-
+              {% set v = states('sensor.dsc_pot1_dryback_pct') %}
+              {{ 'disabled' if v in ['unavailable','unknown'] else ('green' if v|float(0) >= 10 else 'amber') }}
+            layout: horizontal
+          - type: custom:mushroom-template-card
+            primary: "P2 dryback"
+            secondary: >-
+              {% set v = states('sensor.dsc_pot2_dryback_pct') %}
+              {{ '—' if v in ['unavailable','unknown'] else (v|float(0)|round(0)|string ~ '%') }}
+            icon: mdi:water-percent
+            icon_color: >-
+              {% set v = states('sensor.dsc_pot2_dryback_pct') %}
+              {{ 'disabled' if v in ['unavailable','unknown'] else ('green' if v|float(0) >= 10 else 'amber') }}
+            layout: horizontal
+          - type: custom:mushroom-template-card
+            primary: "P3 dryback"
+            secondary: >-
+              {% if is_state('input_boolean.dsc_pot3_in_service','off') %}OOS
+              {% else %}
+              {% set v = states('sensor.dsc_pot3_dryback_pct') %}
+              {{ '—' if v in ['unavailable','unknown'] else (v|float(0)|round(0)|string ~ '%') }}
+              {% endif %}
+            icon: mdi:water-percent
+            icon_color: disabled
+            layout: horizontal
+          - type: custom:mushroom-template-card
+            primary: "P4 dryback"
+            secondary: >-
+              {% set v = states('sensor.dsc_pot4_dryback_pct') %}
+              {{ '—' if v in ['unavailable','unknown'] else (v|float(0)|round(0)|string ~ '%') }}
+            icon: mdi:water-percent
+            icon_color: >-
+              {% set v = states('sensor.dsc_pot4_dryback_pct') %}
+              {{ 'disabled' if v in ['unavailable','unknown'] else ('green' if v|float(0) >= 10 else 'amber') }}
+            layout: horizontal
+          - type: custom:mushroom-template-card
+            primary: POT1 Coherence
+            secondary: "{{ states('sensor.dsc_pot1_coherence_summary') }}"
+            icon: mdi:compare-horizontal
+            icon_color: "{{ 'red' if is_state('binary_sensor.dsc_pot1_coherence_flag','on') else 'green' }}"
+            multiline_secondary: true
+          - type: custom:mushroom-template-card
+            primary: POT2 Coherence
+            secondary: "{{ states('sensor.dsc_pot2_coherence_summary') }}"
+            icon: mdi:compare-horizontal
+            icon_color: "{{ 'red' if is_state('binary_sensor.dsc_pot2_coherence_flag','on') else 'green' }}"
+            multiline_secondary: true
+          - type: custom:mushroom-template-card
+            primary: POT3 Coherence
+            secondary: "{{ states('sensor.dsc_pot3_coherence_summary') }}"
+            icon: mdi:compare-horizontal
+            icon_color: "{{ 'red' if is_state('binary_sensor.dsc_pot3_coherence_flag','on') else 'green' }}"
+            multiline_secondary: true
+          - type: custom:mushroom-template-card
+            primary: POT4 Coherence
+            secondary: "{{ states('sensor.dsc_pot4_coherence_summary') }}"
+            icon: mdi:compare-horizontal
+            icon_color: "{{ 'red' if is_state('binary_sensor.dsc_pot4_coherence_flag','on') else 'green' }}"
+            multiline_secondary: true
+  - type: grid
+    column_span: 2
+    cards:
+      - type: heading
+        heading: Mat
+        heading_style: title
+      - type: custom:vertical-stack-in-card
+        cards:
+          - type: custom:mushroom-template-card
+            entity: switch.dsc_hub_grow_mat_demand
+            primary: >-
+              {% if is_state(entity,'on') %}Grow mat ON
+              {% else %}Grow mat idle{% endif %}
+            secondary: >-
+              Coldest {{ states('sensor.dsc_coldest_root_zone_temp') }}C ·
+              Hottest {{ states('sensor.dsc_hottest_root_zone_temp') }}C ·
+              Band {{ states('number.dsc_hub_mat_root_zone_low') }}-{{
+              states('number.dsc_hub_mat_root_zone_high') }}C · Auto {{
+              'armed' if is_state('switch.dsc_hub_grow_mat_auto','on') else 'off' }}
+            icon: mdi:heating-coil
+            icon_color: "{{ 'amber' if is_state(entity,'on') else 'disabled' }}"
+            multiline_secondary: true
+            tap_action:
+              action: more-info
+          - type: entities
+            entities:
+              - type: section
+                label: Mat vote (coldest heats / hottest cuts)
+              - entity: switch.dsc_hub_mat_vote_pot_1
+                name: POT1
+                icon: mdi:numeric-1-circle
+              - entity: switch.dsc_hub_mat_vote_pot_2
+                name: POT2
+                icon: mdi:numeric-2-circle
+              - entity: switch.dsc_hub_mat_vote_pot_3
+                name: POT3 (default OFF)
+                icon: mdi:numeric-3-circle
+              - entity: switch.dsc_hub_mat_vote_pot_4
+                name: POT4
+                icon: mdi:numeric-4-circle
+          - type: custom:expander-card
+            title: How mat voting works
+            expanded: false
+            card_mod:
+              style: |
+                ha-card {
+                  border-left: 3px solid rgba(56,189,248,0.4);
+                  border-radius: 10px;
+                }
+                ha-card .title {
+                  font-weight: 600;
+                  letter-spacing: 0.3px;
+                }
+            cards:
+              - type: markdown
+                content: >-
+                  Heats on the coldest plausible voted probe (5-45 C).
+                  Cuts and flushes if hottest reaches band-high + 1 C.
+                  OFF votes skip that pot. Band setpoints: Climate Live Tunables.
+      - type: custom:expander-card
+        title: 🧪 Soil pH
+        expanded: false
+        card_mod:
+          style: |
+            ha-card {
+              border-left: 3px solid rgba(56,189,248,0.4);
+              border-radius: 10px;
+            }
+            ha-card .title {
+              font-weight: 600;
+              letter-spacing: 0.3px;
+            }
+        cards:
+          - type: grid
+            columns: 4
+            square: false
+            cards:
+              - type: custom:modern-circular-gauge
+                entity: sensor.dsc_pot1_soil_ph
+                name: POT1
+                min: 3
+                max: 9
+                icon: mdi:ph
+                secondary: {}
+              - type: custom:modern-circular-gauge
+                entity: sensor.dsc_pot2_soil_ph
+                name: POT2
+                min: 3
+                max: 9
+                icon: mdi:ph
+                secondary: {}
+              - type: conditional
+                conditions:
+                  - condition: state
+                    entity: input_boolean.dsc_pot3_in_service
+                    state: "on"
+                card:
+                  type: custom:modern-circular-gauge
+                  entity: sensor.dsc_pot3_soil_ph
+                  name: POT3
+                  min: 3
+                  max: 9
+                  icon: mdi:ph
+                  secondary: {}
+              - type: conditional
+                conditions:
+                  - condition: state
+                    entity: input_boolean.dsc_pot3_in_service
+                    state_not: "on"
+                card:
+                  type: markdown
+                  content: "**POT3 pH** — OOS / probe offline" 
+              - type: custom:modern-circular-gauge
+                entity: sensor.dsc_pot4_soil_ph
+                name: POT4
+                min: 3
+                max: 9
+                icon: mdi:ph
+                secondary: {}
+          - type: conditional
+            conditions:
+              - condition: or
+                conditions:
+                  - condition: numeric_state
+                    entity: sensor.dsc_pot1_soil_ph
+                    below: 5.0
+                  - condition: numeric_state
+                    entity: sensor.dsc_pot2_soil_ph
+                    below: 5.0
+            card:
+              type: markdown
+              content: >-
+                *pH looks low on a live pot (under 5.0). These JXCT probes
+                often need Cal pH Offset/Scale — treat absolute pH as a
+                trend until calibrated against a known buffer.*
+      # v5.1 lean cut: probe calibration lost its panel drill — HA only.
+      - type: custom:expander-card
+        title: 🔬 Probe calibration — offsets & scales (per pot)
+        expanded: false
+        card_mod:
+          style: |
+            ha-card {
+              border-left: 3px solid rgba(56,189,248,0.4);
+              border-radius: 10px;
+            }
+            ha-card .title {
+              font-weight: 600;
+              letter-spacing: 0.3px;
+            }
+        cards:
+          - type: markdown
+            content: >-
+              *Applied on the pot node before publish (NVS-persisted).
+              Offset shifts, scale multiplies. Calibrate pH against a
+              known buffer; leave scale at 1.0 unless you have two
+              reference points.*
+          - type: custom:expander-card
+            title: POT1
+            expanded: false
+            cards:
+              - type: entities
+                entities:
+                  - entity: number.dsc_pot1_cal_moisture_offset
+                    name: Moisture offset
+                  - entity: number.dsc_pot1_cal_moisture_scale
+                    name: Moisture scale
+                  - entity: number.dsc_pot1_cal_temperature_offset
+                    name: Temp offset
+                  - entity: number.dsc_pot1_cal_temperature_scale
+                    name: Temp scale
+                  - entity: number.dsc_pot1_cal_conductivity_offset
+                    name: EC offset
+                  - entity: number.dsc_pot1_cal_conductivity_scale
+                    name: EC scale
+                  - entity: number.dsc_pot1_cal_ph_offset
+                    name: pH offset
+                  - entity: number.dsc_pot1_cal_ph_scale
+                    name: pH scale
+                  - entity: number.dsc_pot1_cal_nitrogen_offset
+                    name: N offset
+                  - entity: number.dsc_pot1_cal_nitrogen_scale
+                    name: N scale
+                  - entity: number.dsc_pot1_cal_phosphorus_offset
+                    name: P offset
+                  - entity: number.dsc_pot1_cal_phosphorus_scale
+                    name: P scale
+                  - entity: number.dsc_pot1_cal_potassium_offset
+                    name: K offset
+                  - entity: number.dsc_pot1_cal_potassium_scale
+                    name: K scale
+          - type: custom:expander-card
+            title: POT2
+            expanded: false
+            cards:
+              - type: entities
+                entities:
+                  - entity: number.dsc_pot2_cal_moisture_offset
+                    name: Moisture offset
+                  - entity: number.dsc_pot2_cal_moisture_scale
+                    name: Moisture scale
+                  - entity: number.dsc_pot2_cal_temperature_offset
+                    name: Temp offset
+                  - entity: number.dsc_pot2_cal_temperature_scale
+                    name: Temp scale
+                  - entity: number.dsc_pot2_cal_conductivity_offset
+                    name: EC offset
+                  - entity: number.dsc_pot2_cal_conductivity_scale
+                    name: EC scale
+                  - entity: number.dsc_pot2_cal_ph_offset
+                    name: pH offset
+                  - entity: number.dsc_pot2_cal_ph_scale
+                    name: pH scale
+                  - entity: number.dsc_pot2_cal_nitrogen_offset
+                    name: N offset
+                  - entity: number.dsc_pot2_cal_nitrogen_scale
+                    name: N scale
+                  - entity: number.dsc_pot2_cal_phosphorus_offset
+                    name: P offset
+                  - entity: number.dsc_pot2_cal_phosphorus_scale
+                    name: P scale
+                  - entity: number.dsc_pot2_cal_potassium_offset
+                    name: K offset
+                  - entity: number.dsc_pot2_cal_potassium_scale
+                    name: K scale
+          - type: custom:expander-card
+            title: POT3 (probe fault — calibrate after repair)
+            expanded: false
+            cards:
+              - type: entities
+                entities:
+                  - entity: number.dsc_pot3_cal_moisture_offset
+                    name: Moisture offset
+                  - entity: number.dsc_pot3_cal_moisture_scale
+                    name: Moisture scale
+                  - entity: number.dsc_pot3_cal_temperature_offset
+                    name: Temp offset
+                  - entity: number.dsc_pot3_cal_temperature_scale
+                    name: Temp scale
+                  - entity: number.dsc_pot3_cal_conductivity_offset
+                    name: EC offset
+                  - entity: number.dsc_pot3_cal_conductivity_scale
+                    name: EC scale
+                  - entity: number.dsc_pot3_cal_ph_offset
+                    name: pH offset
+                  - entity: number.dsc_pot3_cal_ph_scale
+                    name: pH scale
+                  - entity: number.dsc_pot3_cal_nitrogen_offset
+                    name: N offset
+                  - entity: number.dsc_pot3_cal_nitrogen_scale
+                    name: N scale
+                  - entity: number.dsc_pot3_cal_phosphorus_offset
+                    name: P offset
+                  - entity: number.dsc_pot3_cal_phosphorus_scale
+                    name: P scale
+                  - entity: number.dsc_pot3_cal_potassium_offset
+                    name: K offset
+                  - entity: number.dsc_pot3_cal_potassium_scale
+                    name: K scale
+          - type: custom:expander-card
+            title: POT4
+            expanded: false
+            cards:
+              - type: entities
+                entities:
+                  - entity: number.dsc_pot4_cal_moisture_offset
+                    name: Moisture offset
+                  - entity: number.dsc_pot4_cal_moisture_scale
+                    name: Moisture scale
+                  - entity: number.dsc_pot4_cal_temperature_offset
+                    name: Temp offset
+                  - entity: number.dsc_pot4_cal_temperature_scale
+                    name: Temp scale
+                  - entity: number.dsc_pot4_cal_conductivity_offset
+                    name: EC offset
+                  - entity: number.dsc_pot4_cal_conductivity_scale
+                    name: EC scale
+                  - entity: number.dsc_pot4_cal_ph_offset
+                    name: pH offset
+                  - entity: number.dsc_pot4_cal_ph_scale
+                    name: pH scale
+                  - entity: number.dsc_pot4_cal_nitrogen_offset
+                    name: N offset
+                  - entity: number.dsc_pot4_cal_nitrogen_scale
+                    name: N scale
+                  - entity: number.dsc_pot4_cal_phosphorus_offset
+                    name: P offset
+                  - entity: number.dsc_pot4_cal_phosphorus_scale
+                    name: P scale
+                  - entity: number.dsc_pot4_cal_potassium_offset
+                    name: K offset
+                  - entity: number.dsc_pot4_cal_potassium_scale
+                    name: K scale
+      - type: custom:expander-card
+        title: 🪴 Plant IDs & stages
+        expanded: false
+        card_mod:
+          style: |
+            ha-card {
+              border-left: 3px solid rgba(56,189,248,0.4);
+              border-radius: 10px;
+            }
+            ha-card .title {
+              font-weight: 600;
+              letter-spacing: 0.3px;
+            }
+        cards:
+          - type: entities
+            entities:
+              - entity: text.dsc_pot1_plant_name
+                name: POT1 Plant
+              - entity: select.dsc_pot1_growth_stage
+                name: POT1 Stage
+              - entity: text.dsc_pot2_plant_name
+                name: POT2 Plant
+              - entity: select.dsc_pot2_growth_stage
+                name: POT2 Stage
+              - entity: text.dsc_pot3_plant_name
+                name: POT3 Plant
+              - entity: select.dsc_pot3_growth_stage
+                name: POT3 Stage
+              - entity: text.dsc_pot4_plant_name
+                name: POT4 Plant
+              - entity: select.dsc_pot4_growth_stage
+                name: POT4 Stage
+          - type: markdown
+            content: >-
+              *Plant names live on each pot (NVS). Hub mirrors
+              `text.dsc_potN_plant_name` from HA and relays to the panel
+              as ESP-NOW **0xD4**. Panel Soil → tap a pot for the live
+              NPK drill-down.*
+  - type: grid
+    column_span: 2
+    cards:
+      - type: heading
+        heading: Uptake
+        heading_style: title
+      - type: markdown
+        content: >-
+          {% set tank = states('sensor.dsc_tank_ec_normalized') %}
+
+          TANK {{ '—' if tank in ['unavailable','unknown'] else (tank|float(0)|round(0)) }}
+          → feed → ROOT ZONE → uptake → PLANT
+
+
+          Δ < 0   soil thinner than feed     drinking salts
+
+
+          Δ ≈ 0   soil matches feed          balanced
+
+
+          Δ > 0   soil richer than feed      water-only draw / salts
+
+
+          | Pot | Soil EC | Δ tank | Slope | Reading |
+
+          |---|---|---|---|---|
+
+          {% for p in ['1','2','3','4'] -%}
+          {% set oos = is_state('input_boolean.dsc_pot' ~ p ~ '_in_service','off') %}
+          {% set ec = states('sensor.dsc_pot' ~ p ~ '_soil_conductivity') %}
+          {% set d = states('sensor.dsc_pot' ~ p ~ '_ec_vs_tank') %}
+          {% set s = states('sensor.dsc_pot' ~ p ~ '_ec_uptake_slope') %}
+          | POT{{ p }}{{ ' OOS' if oos else '' }} |
+          {{ '—' if oos or ec in ['unavailable','unknown'] else (ec|float(0)|round(1)) }} |
+          {{ '—' if oos or d in ['unavailable','unknown'] else ('%+.0f'|format(d|float(0))) }} |
+          {{ '—' if oos or s in ['unavailable','unknown'] else ('%+.3f'|format(s|float(0))) }} |
+          {%- if oos %} OOS
+          {%- elif d in ['unavailable','unknown'] %} —
+          {%- elif d|float(0) > 0.3 and s|float(0) > 0 %} accumulating
+          {%- elif d|float(0) < -0.3 %} drinking / thin
+          {%- else %} balanced
+          {%- endif %} |
+
+          {% endfor %}
+
+
+          *48h charts moved to the **History** view. Slope unknown → shown as —.*
