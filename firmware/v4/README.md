@@ -29,9 +29,10 @@ HA + ESP-NOW. **Soil * Raw** diagnostic templates reverse cal for lab wet measur
 **Reset Sensor Calibration** restores defaults and clears provenance. **Mark Soil Cal Peer Median**
 (5.1.5+) and **Mark Soil Cal Lab Buffer** (5.1.6+) stamp method after HA push / lab wet.
 
-## Panel (DSC-CONTROL **4.0.11**)
+## Panel (DSC-CONTROL **5.1.15**)
 
 Package body: [`dsc-control-common.yaml`](dsc-control-common.yaml).
+Power-detail Validate runbook: [`docs/qa/CONTROL-POWER-DETAIL-VALIDATE.md`](../../docs/qa/CONTROL-POWER-DETAIL-VALIDATE.md).
 
 | Feature | Notes |
 |---|---|
@@ -40,12 +41,36 @@ Package body: [`dsc-control-common.yaml`](dsc-control-common.yaml).
 | Demand / takeover gate | Confirm → Engage (not one stray tap) |
 | Connections | Wi‑Fi channel; ESP-NOW RX age + TX seq; silent → ping/WiFi bounce |
 | AP pin | Runtime only: hub **Lock WiFi AP** learns preferred BSSID into NVS; 0xD0 fleet-beats it; Control/pots `adopt_hub_wifi_ap`. Stubs stay `00:00:00:00:00:00` — never bake a site MAC into YAML. |
-| Pulse VPD trend | 12×5 min ring → one label (no canvas charts) |
+| Pulse VPD trend | 12×5 min ring → ASCII sparkline in `lbl_spark` (no `lv_chart`) |
+| VPD editor | `page_set_vpd` from Control (5.1.15) |
+| Power detail | Shared `page_power_detail` from ladder / Clone / Main; fans ±10% via `pwr_fan_step`; appliances gated demand |
 | HA API | **Plaintext** (no Noise); **mDNS off** — add by IP only |
-| Stability | **4.0.10** page-gated `refresh_ui` @ 5 s |
-| Snappiness | **4.0.11** `refresh_ui` reads `gv_*` live (template mirrors parked); 30 s Wi‑Fi channel poll |
+| Stability | Page-gated `refresh_ui` @ 5 s; staged boot resume (see crash-logs) |
+| Snappiness | `refresh_ui` reads `gv_*` live (template mirrors parked); 30 s Wi‑Fi channel poll |
 
-After UI flashes: watch serial `boot` / `heap` lines. If the panel boot-loops, use **USB** not OTA until `DSC-CONTROL 4.0.11 up — free_heap=…` prints cleanly. See [`../_history/v4/crash-logs/`](../_history/v4/crash-logs/).
+### Parameterized `script.execute` (Validate)
+
+Scripts with `parameters:` must nest `id` and args under one mapping. Flat siblings
+make ESPHome treat the param as a second action key (broke power-detail ± buttons
+before `0d30178`):
+
+```yaml
+# wrong
+- script.execute: pwr_fan_step
+  delta: -10
+
+# right
+- script.execute:
+    id: pwr_fan_step
+    delta: -10
+```
+
+Bare `script.execute: refresh_ui` is fine when there are no parameters. Same nesting
+applies to `hub_cmd` / `open_power_detail`.
+
+After UI flashes: watch serial `boot` / `heap` lines. If the panel boot-loops, use
+**USB** not OTA until a clean `DSC-CONTROL … up — free_heap=…` line prints. See
+[`../_history/v4/crash-logs/`](../_history/v4/crash-logs/).
 
 ### Panel HA API reconnect
 
@@ -53,7 +78,8 @@ The `api:` block lives in [`dsc-control-common.yaml`](dsc-control-common.yaml). 
 
 | Check | What to do |
 |---|---|
-| Panel boot-looping / no Wi‑Fi | USB flash; serial must show `DSC-CONTROL 4.0.11 up — free_heap=…`. OTA will not recover a looping board. |
+| Panel boot-looping / no Wi‑Fi | USB flash; serial must show a clean `DSC-CONTROL … up — free_heap=…`. OTA will not recover a looping board. |
+| Validate fails on `pwr_fan_step` / `delta` | Nest `id` + `delta` under `script.execute` — see power-detail runbook above. |
 | Host / mDNS | **IP only** — lab Nest reservation **`192.168.86.177`** (`use_address` in `dsc-control-wifi-lab.yaml`). Do not use `dsc-control.local`. |
 | Encryption | Leave the key **blank** when adding/reconfiguring. If HA still has an old encrypted entry, **delete it** and re-add. |
 | Stale `dsc-cyd1` | Delete old **dsc-cyd1** ESPHome device in HA Integrations if present. |

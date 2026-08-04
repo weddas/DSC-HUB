@@ -75,11 +75,11 @@ DSC-HUB / `dsc-hub-v4`. Sidebar: single **DSC-HUB Pro** entry.
 
 | Stub | Body | Expect after flash |
 |---|---|---|
-| `dsc-hub.yaml` | hub v4_0 + espnow | **5.1.0** |
-| `dsc-control.yaml` | control-common | **5.1.4** |
-| pots / Sonoffs | pot-common / sonoff-common | **5.1.0** |
+| `dsc-hub.yaml` | hub v4_0 + espnow | **5.1.4** (live train) |
+| `dsc-control.yaml` | control-common | **5.1.15** (Validate: nest parameterized `script.execute` — [power-detail runbook](docs/qa/CONTROL-POWER-DETAIL-VALIDATE.md)) |
+| pots / Sonoffs | pot-common / sonoff-common | pots **5.1.6** · Sonoffs **5.1.x** |
 
-Stub `ref: v5.1.0`. Kits Validate even if not flashed on lab.
+Live train versions: root [README](README.md). Kits Validate even if not flashed on lab.
 
 ### Flash order
 

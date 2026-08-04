@@ -13,6 +13,8 @@
   counter 24h. Hub still needs physical power cycle if `.33` dead.
 - **N-011:** promote customs preview script + `scripts/promote_customs_to_yaml.py`.
 - **Control 5.1.15:** VPD editor, Pulse ASCII sparkline, per-device power page.
+- **Control Validate fix:** power-detail `pwr_fan_step` nest `id`/`delta` under
+  `script.execute` (`0d30178`); runbook [`docs/qa/CONTROL-POWER-DETAIL-VALIDATE.md`](docs/qa/CONTROL-POWER-DETAIL-VALIDATE.md).
 - **Dash FX:** MeshLine ribbons + GPU curl haze (Tube/CPU fallback flags).
 - **Anemometer:** docs/ANEMOMETER-CFM.md + `sensor.dsc_cfm_curves_status`.
 - **N-005 / N-026:** no wait/settle retune without hub soak evidence (documented).
