@@ -1,5 +1,12 @@
 # Changelog
 
+## Docs — allocated CFM honesty + Dash depth/glTF (2026-08-04)
+
+- Ops runbook [`docs/qa/LIVE-UI-CFM-ALLOCATED.md`](docs/qa/LIVE-UI-CFM-ALLOCATED.md)
+  for master `9d9895b` / HACS dist sync `0d06cab`: capacity vs allocated exhaust
+  CFM, vent/airflow/Dash consumers, DepthTexture soft particles, optional glTF
+  accents, and the Sync/HACS gap that leaves `/local/assets/dash/` unsynced.
+
 ## HA surface 5.1.5 — finish crop UI + pot-native strain (2026-08-03)
 
 - **Honest cutover:** 5.1.4 shipped packages + Climate Temp OOS + dead Tank chips;

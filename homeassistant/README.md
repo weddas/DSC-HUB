@@ -238,6 +238,24 @@ Curves / dimensions are **not** required for spec completeness.
 
 SCD41 / dedicated CO₂ remain deferred — see [`../docs/FOLLOWUPS.md`](../docs/FOLLOWUPS.md).
 
+### CFM honesty — capacity vs allocated (post-`9d9895b`)
+
+Two exhaust CFM families live in [`packages/dsc_v4_climate_physics.yaml`](packages/dsc_v4_climate_physics.yaml):
+
+| Family | Entities | Meaning |
+|---|---|---|
+| **Capacity proxy** | `sensor.dsc_cfm_exhaust_out` / `_recirc` | `% × nameplate` or Learning curve — fan capacity, not duct mass flow |
+| **Allocated** | `sensor.dsc_cfm_exhaust_{out,recirc}_allocated` | `Σ intake × fan-% split` — mass-balance constraint model |
+
+**Consumers of allocated:** vent heat dump / moisture removal, AIRFLOW STATUS
+OUT/RECIRC routes, Climate Plant-specs honesty rows. **The Dash** recomputes the
+same split in JS (does not bind the allocated sensors for absolute rail CFM).
+
+Do not invent Learning curve points. Soft particles need the cinematic bundle;
+offline glTF accents under `www/assets/dash/` are optional and are **not** yet
+copied by Sync / ha-sync / HACS dist (primitives stay until `/local/assets/dash/`
+exists). Ops runbook: [`../docs/qa/LIVE-UI-CFM-ALLOCATED.md`](../docs/qa/LIVE-UI-CFM-ALLOCATED.md).
+
 ### Optional fan CFM / light PPFD curves
 
 Install [`packages/dsc_v4_device_cal.yaml`](packages/dsc_v4_device_cal.yaml)

@@ -33,7 +33,7 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 | N-001 | Preferred BSSID ? current while Lock ON | Self-customize relearn exists; verify after hub 5.1.3 flash |
 | N-002 | Fleet version skew cleanup | Flash Control/pots if still on old wifi stubs |
 | N-003 | Soak warnings from OOS deploy | Fill after ~30 min post-flash soak |
-| N-004 | Orphan helper cull pass | `dsc_leaf_offset` wired ? `sensor.dsc_leaf_vpd_kpa` / `dsc_clone_leaf_vpd_kpa` (2026-08-04 cal pass). Sankey UI gone ? `dsc_airflow_direct_room` / `dsc_airflow_room_return` still unused (optional cull) |
+| N-004 | Orphan helper cull pass | `dsc_leaf_offset` wired; Sankey `dsc_airflow_direct_room` / `dsc_airflow_room_return` culled (2026-08-04 Pass 4). Remaining orphan work is registry-only (see N-007). |
 | N-005 | Cooldown / open-loop wait retune | Evidence-based only; no site hardcodes |
 
 ### out-of-scope
@@ -194,7 +194,7 @@ No climate control regression during soak window.
 
 ### deferred
 
-- N-004 optional cull of unused Sankey template sensors (`dsc_airflow_direct_room`, `dsc_airflow_room_return`) ? concept covered by live CFM edges; leave helpers until a dedicated orphan pass.
+- N-004 Sankey helpers (`dsc_airflow_direct_room` / `dsc_airflow_room_return`) culled in 2026-08-04 Pass 4 — concept covered by live CFM / allocated edges.
 
 ---
 
@@ -473,7 +473,14 @@ No climate control regression during soak window.
 ### deferred (unchanged)
 - N-016 lab wet cal; N-020–023 trust/alerts/tank; N-026 settle tune after real waterings
 
+### next-plan (docs pass 2026-08-04)
+
+| ID | Item | Notes |
+|---|---|---|
+| N-035 | Sync / ha-sync / HACS dist copy `www/assets/dash/*.gltf` → `/config/www/assets/dash/` (+ optionally `dist/`) | Accents optional; primitives fallback today. Documented in [`docs/qa/LIVE-UI-CFM-ALLOCATED.md`](qa/LIVE-UI-CFM-ALLOCATED.md) |
+
 ### red-flag
-- None new for climate control. Keep Lovelace resource 
-es_type: js; cache-bust via 
-esources/update only (F-010).
+- None new for climate control. Keep Lovelace resource `res_type: js`; cache-bust via `lovelace/resources/update` only (F-010).
+
+### docs
+- Ops runbook: [`docs/qa/LIVE-UI-CFM-ALLOCATED.md`](qa/LIVE-UI-CFM-ALLOCATED.md) (capacity vs allocated, Dash depth/glTF, HACS dist CI, N-035)

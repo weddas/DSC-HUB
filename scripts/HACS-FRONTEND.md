@@ -69,11 +69,18 @@ Without it, popup `tap_action`s silently do nothing — no error is shown.
 | [`dist/dsc-system-map-card.js`](../dist/dsc-system-map-card.js) | Same bundle (legacy `/local` filename) |
 | [`dist/dsc-system-map.svg`](../dist/dsc-system-map.svg) | System map artwork |
 | [`dist/dsc-airflow-map-card.js`](../dist/dsc-airflow-map-card.js) | Airflow card standalone source |
+| [`dist/vendor/`](../dist/vendor/) | `three.min.js` + `dsc-dash-fx.js` (also inside the bundle) |
 
 | `homeassistant/www/*` | **Source of truth** — run `scripts/sync-hacs-dist.sh` after edits |
 
 CI workflow [`.github/workflows/hacs-dist.yml`](../.github/workflows/hacs-dist.yml)
-keeps `dist/` synced on pushes that touch `homeassistant/www/`.
+keeps `dist/` synced on pushes that touch `homeassistant/www/` (bot commit
+`chore(hacs): sync dist/ from homeassistant/www`).
+
+**Not in HACS `dist/`:** `homeassistant/www/assets/dash/*.gltf` offline accents.
+The Dash falls back to primitives until those files exist under
+`/config/www/assets/dash/` (manual copy today). See
+[`docs/qa/LIVE-UI-CFM-ALLOCATED.md`](../docs/qa/LIVE-UI-CFM-ALLOCATED.md).
 
 ## Packages / dashboard YAML (not HACS)
 
