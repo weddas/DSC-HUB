@@ -1829,7 +1829,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     .dash-pill.warn { border-color: rgba(255,183,77,0.5); background: rgba(255,183,77,0.12); color: var(--warn); }
     .dash-body {
       flex: 1; display: grid;
-      grid-template-columns: minmax(0, 1.75fr) minmax(280px, 0.9fr);
+      grid-template-columns: minmax(0, 1.55fr) minmax(340px, 1fr);
       gap: 12px; padding: 12px; min-height: 0;
     }
     .dash-main { display: flex; flex-direction: column; gap: 12px; min-height: 0; }
@@ -1898,7 +1898,44 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     .dash-chev:first-child { margin-left: 0; clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 0 100%); }
     .dash-chev.on { background: #1565c0; color: #fff; }
     .dash-chev.next { background: #3e3428; color: #ffcc80; }
-    .dash-flow svg { width: 100%; height: auto; display: block; }
+    .dash-flow { overflow: visible; }
+    .dash-flow-grid {
+      display: grid;
+      grid-template-columns: 72px 1fr 1fr 1fr;
+      gap: 8px;
+      align-items: stretch;
+      min-width: 0;
+    }
+    .dash-flow-col { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+    .dash-flow-col .col-h {
+      font-size: 8px; letter-spacing: 0.06em; color: var(--muted);
+      text-transform: uppercase; font-weight: 700; text-align: center;
+    }
+    .dash-flow-box {
+      border-radius: 8px; padding: 8px 6px; text-align: center;
+      background: #152030; border: 1px solid #243044; min-height: 44px;
+    }
+    .dash-flow-box .lbl { font-size: 9px; color: var(--muted); margin-bottom: 2px; }
+    .dash-flow-box .val { font-size: 13px; font-weight: 700; color: var(--text); line-height: 1.2; }
+    .dash-flow-box .sub { font-size: 9px; color: #6a7788; margin-top: 4px; }
+    .dash-flow-box.env { border-color: #26c6da; }
+    .dash-flow-box.clone { border-color: #26c6da; background: #13202e; }
+    .dash-flow-box.main { border-color: #ffb74d; background: #2a2018; }
+    .dash-flow-box.casc {
+      border-style: dashed; border-color: #ffb74d; background: #1e1810;
+      padding: 6px;
+    }
+    .dash-flow-box.total {
+      border-color: #78909c; background: #121820; padding: 6px;
+    }
+    .dash-flow-box.out { border-color: #42a5f5; }
+    .dash-flow-box.rec { border-color: #ab47bc; background: #241830; }
+    .dash-flow-box.gear { border-color: currentColor; }
+    .dash-flow-box.idle { color: var(--muted); font-size: 11px; padding: 16px 6px; }
+    .dash-flow-arrow {
+      text-align: center; font-size: 9px; color: #6a7788; letter-spacing: 0.04em;
+      line-height: 1; padding: 0 0 2px;
+    }
     .dash-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     .dash-btn {
       border: 1px solid var(--line); background: #1a222e; color: var(--text);
@@ -1934,81 +1971,96 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
 
   const renderFlow = (live) => {
     // Col1 Active gear | Col2 Intake environment (room climate)
-    // Col3 Intake CFM (2x4 + 4x8 + cascade) | Col4 Exhaust from 4x8 (OUT / RECIRC)
+    // Col3 Intake CFM (2x4 + cascade transfer + 4x8 + Σ) | Col4 4x8 exhaust split
     const devices = (live.devices || []).filter((d) => d.on && !String(d.id).startsWith("fan_"));
-    const n = Math.max(1, devices.length);
-    const leftNodes = devices
-      .map((d, i) => {
-        const y = 36 + (i * (n > 1 ? 90 / (n - 1) : 0));
-        return `
-          <g transform="translate(4,${y})">
-            <rect x="0" y="-12" width="70" height="24" rx="5" fill="#1a2433" stroke="${d.color}" stroke-width="1.3"/>
-            <text x="35" y="4" text-anchor="middle" fill="#cfd8e6" font-size="9" font-weight="700">${esc(d.label)}</text>
-          </g>`;
-      })
-      .join("");
-    const idleLeft =
+    const gearHtml =
       devices.length === 0
-        ? `<text x="39" y="72" text-anchor="middle" fill="#8b95a8" font-size="10">None on</text>`
-        : "";
+        ? `<div class="dash-flow-box idle">None on</div>`
+        : devices
+            .map(
+              (d) =>
+                `<div class="dash-flow-box gear" style="color:${esc(d.color)};border-color:${esc(d.color)}">
+                  <div class="val" style="font-size:11px">${esc(d.label)}</div>
+                </div>`
+            )
+            .join("");
 
     const cfm2 = live.cfmClone ?? NaN;
     const cfm8 = live.cfmMain ?? NaN;
     const casc = live.cascadeCfm ?? NaN;
-    const o = Math.round((live.outShare || 0) * 100);
-    const r = Math.round((live.recircShare || 0) * 100);
-    const room = live.roomClimate || "—";
+    const throughput =
+      Number.isFinite(cfm2) && Number.isFinite(cfm8) ? cfm2 + cfm8 : Number.isFinite(live.throughput) ? live.throughput : NaN;
+    const oPct = Math.round((live.outShare || 0) * 100);
+    const rPct = Math.round((live.recircShare || 0) * 100);
+    const cfmOut = live.cfmOut ?? NaN;
+    const cfmRec = live.cfmRecirc ?? NaN;
+    const roomParts = String(live.roomClimate || "— · — · —").split("·").map((s) => s.trim());
 
     return `
-      <svg viewBox="0 0 420 190" xmlns="http://www.w3.org/2000/svg" aria-label="Intake environment to CFM to exhaust">
-        <text x="39" y="14" text-anchor="middle" fill="#8b95a8" font-size="8" letter-spacing="0.06em">ACTIVE GEAR</text>
-        <text x="130" y="14" text-anchor="middle" fill="#8b95a8" font-size="8" letter-spacing="0.06em">INTAKE ENVIRONMENT</text>
-        <text x="250" y="14" text-anchor="middle" fill="#8b95a8" font-size="8" letter-spacing="0.06em">INTAKE CFM</text>
-        <text x="360" y="14" text-anchor="middle" fill="#8b95a8" font-size="8" letter-spacing="0.06em">4x8 EXHAUST</text>
-
-        ${leftNodes}${idleLeft}
-
-        <g transform="translate(84,36)">
-          <rect width="92" height="100" rx="8" fill="#152030" stroke="#26c6da" stroke-width="1.5"/>
-          <text x="46" y="18" text-anchor="middle" fill="#8b95a8" font-size="8">ROOM → TENTS</text>
-          <text x="46" y="42" text-anchor="middle" fill="#e8eef8" font-size="11" font-weight="700">${esc(room.split("·")[0]?.trim() || "—")}</text>
-          <text x="46" y="60" text-anchor="middle" fill="#cfd8e6" font-size="11" font-weight="700">${esc((room.split("·")[1] || "—").trim())}</text>
-          <text x="46" y="78" text-anchor="middle" fill="#26c6da" font-size="11" font-weight="700">${esc((room.split("·")[2] || "—").trim())}</text>
-          <text x="46" y="94" text-anchor="middle" fill="#6a7788" font-size="8">shared lung air</text>
-        </g>
-
-        <path d="M176 70 C190 55, 198 48, 208 48" fill="none" stroke="#26c6da" stroke-width="2"/>
-        <path d="M176 95 C190 110, 198 122, 208 122" fill="none" stroke="#ffb74d" stroke-width="2"/>
-
-        <g transform="translate(208,30)">
-          <rect width="88" height="40" rx="6" fill="#13202e" stroke="#26c6da"/>
-          <text x="44" y="16" text-anchor="middle" fill="#8b95a8" font-size="8">2x4 intake</text>
-          <text x="44" y="32" text-anchor="middle" fill="#e8eef8" font-size="13" font-weight="700">${esc(fmtCfm(cfm2))}</text>
-        </g>
-        <path d="M252 70 L252 100" fill="none" stroke="#FFB74D" stroke-width="2.2" stroke-dasharray="4 3"/>
-        <text x="268" y="90" fill="#ffb74d" font-size="8">cascade</text>
-        <text x="268" y="100" fill="#ffcc80" font-size="9" font-weight="700">${esc(fmtCfm(casc))}</text>
-        <g transform="translate(208,108)">
-          <rect width="88" height="40" rx="6" fill="#2a2018" stroke="#ffb74d"/>
-          <text x="44" y="16" text-anchor="middle" fill="#8b95a8" font-size="8">4x8 intake</text>
-          <text x="44" y="32" text-anchor="middle" fill="#e8eef8" font-size="13" font-weight="700">${esc(fmtCfm(cfm8))}</text>
-        </g>
-
-        <path d="M296 128 C315 128, 325 55, 338 48" fill="none" stroke="#42a5f5" stroke-width="2"/>
-        <path d="M296 128 C315 128, 325 155, 338 160" fill="none" stroke="#ab47bc" stroke-width="2"/>
-
-        <g transform="translate(338,28)">
-          <rect width="76" height="44" rx="6" fill="#13202e" stroke="#42a5f5"/>
-          <text x="38" y="16" text-anchor="middle" fill="#8b95a8" font-size="8">DUMP OUT</text>
-          <text x="38" y="34" text-anchor="middle" fill="#e8eef8" font-size="14" font-weight="700">${o}%</text>
-        </g>
-        <g transform="translate(338,140)">
-          <rect width="76" height="44" rx="6" fill="#241830" stroke="#ab47bc"/>
-          <text x="38" y="16" text-anchor="middle" fill="#8b95a8" font-size="8">RECIRC ROOM</text>
-          <text x="38" y="34" text-anchor="middle" fill="#e8eef8" font-size="14" font-weight="700">${r}%</text>
-        </g>
-        <text x="210" y="175" fill="#6a7788" font-size="8">Cascade ≈ 2x4 intake pulled into 4x8 by negative pressure · mat heats 2x4 only</text>
-      </svg>`;
+      <div class="dash-flow-grid" role="img" aria-label="Intake environment to CFM to exhaust">
+        <div class="dash-flow-col">
+          <div class="col-h">Active gear</div>
+          ${gearHtml}
+        </div>
+        <div class="dash-flow-col">
+          <div class="col-h">Intake environment</div>
+          <div class="dash-flow-box env" style="flex:1">
+            <div class="lbl">ROOM → TENTS</div>
+            <div class="val">${esc(roomParts[0] || "—")}</div>
+            <div class="val">${esc(roomParts[1] || "—")}</div>
+            <div class="val" style="color:#26c6da">${esc(roomParts[2] || "—")}</div>
+            <div class="sub">shared lung air into intakes</div>
+          </div>
+        </div>
+        <div class="dash-flow-col">
+          <div class="col-h">Intake CFM</div>
+          <div class="dash-flow-box clone">
+            <div class="lbl">2×4 from room</div>
+            <div class="val">${esc(fmtCfm(cfm2))}</div>
+          </div>
+          <div class="dash-flow-arrow">↓ transfer (not +)</div>
+          <div class="dash-flow-box casc">
+            <div class="lbl">2×4 → 4×8 cascade</div>
+            <div class="val" style="color:#ffcc80;font-size:12px">${esc(fmtCfm(casc))}</div>
+            <div class="sub">same air · neg. pressure</div>
+          </div>
+          <div class="dash-flow-box main">
+            <div class="lbl">4×8 from room</div>
+            <div class="val">${esc(fmtCfm(cfm8))}</div>
+          </div>
+          <div class="dash-flow-box total">
+            <div class="lbl">Σ into 4×8</div>
+            <div class="val" style="font-size:12px">${esc(fmtCfm(throughput))}</div>
+            <div class="sub">2×4 + 4×8 intakes</div>
+          </div>
+        </div>
+        <div class="dash-flow-col">
+          <div class="col-h">4×8 exhaust · ${esc(fmtCfm(throughput))}</div>
+          <div class="dash-flow-box out">
+            <div class="lbl">DUMP OUTSIDE</div>
+            <div class="val">${oPct}%</div>
+            <div class="sub">${esc(fmtCfm(cfmOut))}</div>
+          </div>
+          <div class="dash-flow-box rec" style="margin-top:auto">
+            <div class="lbl">RECIRC ROOM</div>
+            <div class="val">${rPct}%</div>
+            <div class="sub">${esc(fmtCfm(cfmRec))}</div>
+          </div>
+          <div class="dash-flow-box total">
+            <div class="lbl">Σ dump + recirc</div>
+            <div class="val" style="font-size:12px">${esc(
+              fmtCfm(Number.isFinite(cfmOut) && Number.isFinite(cfmRec) ? cfmOut + cfmRec : NaN)
+            )}</div>
+            <div class="sub">must equal Σ intake</div>
+          </div>
+        </div>
+      </div>
+      <p class="dash-flow-caption" style="margin-top:8px">
+        Mass balance: exhaust CFM = Σ intake (${esc(fmtCfm(throughput))}) × dump/recirc split (from fan %).
+        Cascade is a transfer of 2×4 air — do not add it to intake total.
+        Raw sensor.dsc_cfm_exhaust_* stay nameplate proxies until Learning cal.
+        Heat mat is 2×4-only.
+      </p>`;
   };
 
   const renderTimeline = (live) => {
@@ -2291,12 +2343,12 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     ducts.add(mkElbow(new THREE.Vector3(-1.55, 1.1, 0.3), new THREE.Vector3(0.2, 1.1, 0.2), 0.11, amberMat));
     ducts.add(mkElbow(new THREE.Vector3(0.2, 1.1, 0.2), new THREE.Vector3(1.55, 1.1, 0.15), 0.11, amberMat));
 
-    // 4x8 exhaust: OUT (dump outside) — short rise + back, optional small inline carbon on OUT only
+    // 4x8 exhaust: OUT (dump outside) — rise + back; small inline muffler on OUT only (not a central filter hub)
     ducts.add(mkElbow(new THREE.Vector3(2.2, 2.15, 0.2), new THREE.Vector3(2.2, 2.55, -0.6), 0.12, outMat));
     ducts.add(mkElbow(new THREE.Vector3(2.2, 2.55, -0.6), new THREE.Vector3(2.2, 2.9, -1.8), 0.12));
     const outCarbon = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.22, 0.22, 0.55, 16),
-      new THREE.MeshStandardMaterial({ color: 0x37474f, metalness: 0.4, roughness: 0.55 })
+      new THREE.CylinderGeometry(0.16, 0.16, 0.38, 14),
+      new THREE.MeshStandardMaterial({ color: 0x455a64, metalness: 0.45, roughness: 0.5 })
     );
     outCarbon.position.set(2.2, 2.55, -1.15);
     outCarbon.rotation.x = Math.PI / 2;
@@ -2806,8 +2858,8 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
               </div>
               <div class="dash-panel" style="flex:1">
                 <h3>Air path · environment → CFM → exhaust</h3>
-                <p class="dash-flow-caption">Room lung climate → intake CFM per tent + cascade from 2x4 into 4x8 → 4x8 exhaust split (dump outside vs recirc to room). Heat mat is 2x4-only.</p>
-                <div id="d-flow"></div>
+                <p class="dash-flow-caption">Room climate → intake CFM (2×4 / 4×8) + cascade transfer → 4×8 exhaust mass-balanced to Σ intake × dump/recirc split. Heat mat is 2×4-only.</p>
+                <div id="d-flow" class="dash-flow"></div>
               </div>
               <div class="dash-panel">
                 <h3>Actions</h3>
@@ -2916,23 +2968,28 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
           splitClone = fanClone / fsum;
         }
       }
-      const cfmOut = Math.max(0, numState(hass, e.cfm_out, 0));
-      const cfmRec = Math.max(0, numState(hass, e.cfm_recirc, 0));
-      const exSum = cfmOut + cfmRec;
+      // Dump/recirc split: prefer live fan % (honest duty blend). Exhaust CFM sensors
+      // are pct×nameplate until Learning cal — fine as a ratio fallback only.
+      const fo = numState(hass, e.fan_out, 0) / 100;
+      const fr = numState(hass, e.fan_recirc, 0) / 100;
+      const fs = fo + fr;
+      const cfmOutRaw = Math.max(0, numState(hass, e.cfm_out, 0));
+      const cfmRecRaw = Math.max(0, numState(hass, e.cfm_recirc, 0));
+      const exSum = cfmOutRaw + cfmRecRaw;
       let outShare = 0;
       let recircShare = 0;
-      if (exSum > FLOW_EPS) {
-        outShare = cfmOut / exSum;
-        recircShare = cfmRec / exSum;
-      } else {
-        const fo = numState(hass, e.fan_out, 0) / 100;
-        const fr = numState(hass, e.fan_recirc, 0) / 100;
-        const fs = fo + fr;
-        if (fs > 0.02) {
-          outShare = fo / fs;
-          recircShare = fr / fs;
-        }
+      if (fs > 0.02) {
+        outShare = fo / fs;
+        recircShare = fr / fs;
+      } else if (exSum > FLOW_EPS) {
+        outShare = cfmOutRaw / exSum;
+        recircShare = cfmRecRaw / exSum;
       }
+      // Mass balance: absolute OUT/RECIRC CFM = intake throughput × split.
+      // Do not use sensor.dsc_cfm_exhaust_* as absolute duct flow on The Dash.
+      const throughput = intakeSum;
+      const cfmOut = throughput * outShare;
+      const cfmRec = throughput * recircShare;
 
       const devices = [
         { id: "heater", label: "Room heat", on: isOn(hass, e.heater), color: "#ff7043" },
@@ -3015,12 +3072,15 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         recircShare,
         cfmClone,
         cfmMain,
+        cfmOut,
+        cfmRecirc: cfmRec,
+        throughput,
         cascadeCfm,
         cascadeNorm,
         fanIntakeClone: fanClone,
         fanIntakeMain: fanMain,
-        fanExhaust: numState(hass, e.fan_out, 0) / 100,
-        fanRecirc: numState(hass, e.fan_recirc, 0) / 100,
+        fanExhaust: fo,
+        fanRecirc: fr,
         lightLevel: lightLevel(hass, e.light),
         cloneLit: lightLevel(hass, e.light) > 0.02,
         mainLit: false,
@@ -3189,11 +3249,14 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         )
         .join("");
       this.innerHTML = `
-        <div style="padding:14px;display:grid;gap:12px;font-family:system-ui,sans-serif;max-width:560px">
-          <p style="margin:0;color:#9aa;font-size:13px;line-height:1.4">
-            Presentation surface — duct topology is fixed to the DSC layout
-            (room → 2x4/4x8 intakes → cascade 2x4→4x8 → 4x8 OUT/RECIRC). Edit titles and pot→tent slots here.
-            Heat mat is always the 2x4 element (not room heat).
+        <div style="padding:14px;display:grid;gap:12px;font-family:system-ui,sans-serif;max-width:640px">
+          <p style="margin:0;color:#9aa;font-size:13px;line-height:1.45">
+            <strong style="color:#cfd8e6">Air path (fixed topology):</strong>
+            Room lung → tent intakes → cascade 2×4→4×8 (neg. pressure) → 4×8 splits DUMP outside / RECIRC room.
+            Exhaust absolute CFM on The Dash is mass-balanced to Σ intake × fan-% split — not raw exhaust CFM sensors
+            (those stay nameplate proxies until Learning cal). There is no central filter machine.
+            Heat mat is always the 2×4 element (not room heat).
+            Edit titles, pot slots, and airflow entity ids below — duct geometry itself is not editable on-glass.
           </p>
           <label style="display:grid;gap:4px">Title
             <input id="t" style="width:100%;padding:8px" value="${esc(c.title)}"/>
@@ -3202,13 +3265,27 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
             <input id="s" style="width:100%;padding:8px" value="${esc(c.subtitle)}"/>
           </label>
           <div>
+            <div style="font-size:12px;color:#888;margin-bottom:6px;font-weight:700;letter-spacing:0.06em">AIRFLOW ENTITIES</div>
+            <div style="display:grid;grid-template-columns:160px 1fr;gap:6px;align-items:center;font-size:12px">
+              <span>2×4 intake CFM</span><input data-ent="cfm_intake_2x4" value="${esc(c.entities.cfm_intake_2x4 || "")}"/>
+              <span>4×8 intake CFM</span><input data-ent="cfm_intake_main" value="${esc(c.entities.cfm_intake_main || "")}"/>
+              <span>Dump OUT fan %</span><input data-ent="fan_out" value="${esc(c.entities.fan_out || "")}"/>
+              <span>Recirc fan %</span><input data-ent="fan_recirc" value="${esc(c.entities.fan_recirc || "")}"/>
+              <span>Dump OUT CFM (split fallback)</span><input data-ent="cfm_out" value="${esc(c.entities.cfm_out || "")}"/>
+              <span>Recirc CFM (split fallback)</span><input data-ent="cfm_recirc" value="${esc(c.entities.cfm_recirc || "")}"/>
+              <span>Room temp</span><input data-ent="room_temp" value="${esc(c.entities.room_temp || "")}"/>
+              <span>Room humidity</span><input data-ent="room_humidity" value="${esc(c.entities.room_humidity || "")}"/>
+              <span>2×4 heat mat</span><input data-ent="grow_mat" value="${esc(c.entities.grow_mat || "")}"/>
+            </div>
+          </div>
+          <div>
             <div style="font-size:12px;color:#888;margin-bottom:6px;font-weight:700;letter-spacing:0.06em">POTS → TENT / SLOT</div>
             <div style="display:grid;grid-template-columns:70px 1fr 90px 70px;gap:8px;font-size:11px;color:#777;margin-bottom:4px">
               <span></span><span>Entity prefix</span><span>Tent</span><span>Slot</span>
             </div>
             ${potRows}
           </div>
-          <button type="button" id="apply" style="padding:10px;font-weight:700;cursor:pointer">Save pot layout</button>
+          <button type="button" id="apply" style="padding:10px;font-weight:700;cursor:pointer">Save layout</button>
         </div>`;
       const syncPotsFromDom = () => {
         const next = pots.map((p, i) => {
@@ -3229,6 +3306,14 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         });
         this._cfg = { ...this._cfg, pots: next };
       };
+      const syncEntFromDom = () => {
+        const ents = { ...this._cfg.entities };
+        this.querySelectorAll("[data-ent]").forEach((el) => {
+          const k = el.getAttribute("data-ent");
+          if (k) ents[k] = el.value.trim();
+        });
+        this._cfg = { ...this._cfg, entities: ents };
+      };
       this.querySelector("#t").onchange = (e) => {
         this._cfg = { ...this._cfg, title: e.target.value };
         this._fire();
@@ -3243,8 +3328,15 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
           this._fire();
         });
       });
+      this.querySelectorAll("[data-ent]").forEach((el) => {
+        el.addEventListener("change", () => {
+          syncEntFromDom();
+          this._fire();
+        });
+      });
       this.querySelector("#apply").onclick = () => {
         syncPotsFromDom();
+        syncEntFromDom();
         this._fire();
         this._render();
       };
@@ -3262,4 +3354,3 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     preview: true,
   });
 })();
-
