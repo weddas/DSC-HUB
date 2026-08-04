@@ -455,3 +455,25 @@ No climate control regression during soak window.
 - Operator: Push peer ? ESP when ready; optional pot OTA 5.1.5 after
 - Hold to reset all captures: `script.dsc_pots_reset_peer_captures` + Strains hold card (HA offsets only; ESP Cal untouched) ? needs package/dashboard sync
 
+---
+
+## 2026-08-04 — Next Pass Full Inclusion (3→2→1→4)
+
+### done
+- **Pass 3 Cal SoT:** HA surface 5.1.7; pots 1/2/4 OTA to FW **5.1.5** (POT3 USB/F-003 still unavailable). Capture→Push with ESP range clamp + Mark entity-id dual form (dsc_potN / dsc_pot_N). Methods peer_median; dual-stack cleared (POT4 residual beyond pH ±2 clamp zeroed after push). N-027 compile OK. README surface → 5.1.7. N-025/N-029 closed for online pots.
+- **Pass 2 CFM honesty:** sensor.dsc_cfm_exhaust_{out,recirc}_allocated (Σ intake × fan-% split); vent BTU/moisture + airflow-map use allocated; capacity proxies keep honesty attr; Climate/Learning labels linear-vs-curve. No invented cal curves.
+- **Pass 1 Dash fidelity:** DepthTexture on DSCDashFX composer + layer-split soft particles; offline glTF accents under www/assets/dash/ + loadSimpleGltf with primitive fallback.
+- **Pass 4 Housekeeping:** Culled unused dsc_airflow_* Sankey helpers; *_actuator_wired absent from registry (N-007); README/qa Sankey/wired wording cleaned.
+
+### soak / operator
+- POT3 USB flash to 5.1.5 when online (F-003)
+- Optional anemometer Learning curves still unset — capacity proxies remain nameplate until measured
+- POT4 peer wanted pH beyond ESP ±2; ESP SoT clamped at -2.0 (honest residual cleared)
+
+### deferred (unchanged)
+- N-016 lab wet cal; N-020–023 trust/alerts/tank; N-026 settle tune after real waterings
+
+### red-flag
+- None new for climate control. Keep Lovelace resource 
+es_type: js; cache-bust via 
+esources/update only (F-010).

@@ -103,7 +103,17 @@
 
     var sceneTarget = makeTarget(1, 1, 'DSCDashFX.Scene', useHalfFloat);
     sceneTarget.depthBuffer = true;
-    sceneTarget.depthTexture = null;
+    var depthTexture = null;
+    if (THREE.DepthTexture) {
+      depthTexture = new THREE.DepthTexture();
+      depthTexture.name = 'DSCDashFX.Depth';
+      depthTexture.type = THREE.UnsignedIntType || THREE.UnsignedShortType;
+      depthTexture.minFilter = THREE.NearestFilter;
+      depthTexture.magFilter = THREE.NearestFilter;
+      sceneTarget.depthTexture = depthTexture;
+    } else {
+      sceneTarget.depthTexture = null;
+    }
     var brightTarget = makeTarget(1, 1, 'DSCDashFX.Bright', useHalfFloat);
     var horizontalTargets = [];
     var verticalTargets = [];
@@ -244,6 +254,12 @@
       width = Math.max(1, Math.floor(w));
       height = Math.max(1, Math.floor(h));
       sceneTarget.setSize(width, height);
+      if (depthTexture) {
+        depthTexture.image = depthTexture.image || {};
+        depthTexture.image.width = width;
+        depthTexture.image.height = height;
+        depthTexture.needsUpdate = true;
+      }
 
       var mipW = Math.max(1, Math.floor(width / 2));
       var mipH = Math.max(1, Math.floor(height / 2));
@@ -256,6 +272,27 @@
       }
     }
 
+    var softParticleMaterials = [];
+    function registerSoftParticleMaterial(material) {
+      if (material && softParticleMaterials.indexOf(material) < 0) {
+        softParticleMaterials.push(material);
+      }
+    }
+
+    function syncSoftParticleUniforms() {
+      var near = camera.near || 0.1;
+      var far = camera.far || 80;
+      for (var i = 0; i < softParticleMaterials.length; i++) {
+        var uniforms = softParticleMaterials[i].uniforms;
+        if (!uniforms) continue;
+        if (uniforms.tDepth) uniforms.tDepth.value = depthTexture;
+        if (uniforms.uResolution) uniforms.uResolution.value.set(width, height);
+        if (uniforms.uCameraNear) uniforms.uCameraNear.value = near;
+        if (uniforms.uCameraFar) uniforms.uCameraFar.value = far;
+        if (uniforms.uHasDepth) uniforms.uHasDepth.value = depthTexture ? 1 : 0;
+      }
+    }
+
     function render() {
       if (disposed) return;
       oldTarget = renderer.getRenderTarget();
@@ -264,13 +301,25 @@
       renderer.getClearColor(oldClearColor);
       renderer.autoClear = true;
 
+      // Pass A: solids only (layer 0) → color + depth
+      var prevMask = camera.layers.mask;
+      camera.layers.set(0);
       renderer.setRenderTarget(sceneTarget);
       renderer.clear(true, true, true);
       renderer.render(scene, camera);
 
+      // Pass B: soft particles (layer 1) reading depth texture
+      syncSoftParticleUniforms();
+      camera.layers.set(1);
+      renderer.autoClear = false;
+      renderer.setRenderTarget(sceneTarget);
+      renderer.render(scene, camera);
+      camera.layers.mask = prevMask;
+
       quad.material = highPassMaterial;
       highPassMaterial.uniforms.tInput.value = sceneTarget.texture;
       renderer.setRenderTarget(brightTarget);
+      renderer.autoClear = true;
       renderer.clear();
       quad.render(renderer);
 
@@ -308,6 +357,7 @@
       if (disposed) return;
       disposed = true;
       sceneTarget.dispose();
+      if (depthTexture) depthTexture.dispose();
       brightTarget.dispose();
       for (var level = 0; level < mipCount; level++) {
         horizontalTargets[level].dispose();
@@ -337,7 +387,9 @@
       bloomPass: bloomPass,
       setSize: setSize,
       render: render,
-      dispose: dispose
+      dispose: dispose,
+      depthTexture: depthTexture,
+      registerSoftParticleMaterial: registerSoftParticleMaterial
     };
   }
 
@@ -566,11 +618,66 @@
     return setTextureSRGB(texture);
   }
 
+  function loadSimpleGltf(url, onLoad, onError) {
+    function fail(err) {
+      if (typeof onError === 'function') onError(err);
+    }
+    if (!root.fetch) {
+      fail(new Error('fetch unavailable'));
+      return;
+    }
+    root.fetch(url, { cache: 'force-cache' })
+      .then(function (res) {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.json();
+      })
+      .then(function (json) {
+        var bufferDef = json.buffers && json.buffers[0];
+        if (!bufferDef || !bufferDef.uri) throw new Error('missing buffer');
+        var b64 = String(bufferDef.uri).split(',')[1];
+        if (!b64) throw new Error('expected data URI buffer');
+        var binary = root.atob(b64);
+        var bytes = new Uint8Array(binary.length);
+        for (var i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+
+        var posAcc = json.accessors[0];
+        var idxAcc = json.accessors[1];
+        var posView = json.bufferViews[posAcc.bufferView];
+        var idxView = json.bufferViews[idxAcc.bufferView];
+        var pos = new Float32Array(
+          bytes.buffer,
+          posView.byteOffset || 0,
+          posAcc.count * 3
+        );
+        var idx = new Uint16Array(
+          bytes.buffer,
+          idxView.byteOffset || 0,
+          idxAcc.count
+        );
+        var geometry = new THREE.BufferGeometry();
+        geometry.setAttribute('position', new THREE.BufferAttribute(pos.slice(), 3));
+        geometry.setIndex(new THREE.BufferAttribute(idx.slice(), 1));
+        geometry.computeVertexNormals();
+        var material = new THREE.MeshStandardMaterial({
+          color: 0x90a4ae,
+          metalness: 0.72,
+          roughness: 0.32
+        });
+        var mesh = new THREE.Mesh(geometry, material);
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        mesh.name = (json.nodes && json.nodes[0] && json.nodes[0].name) || 'DSCDashFX.GltfAccent';
+        if (typeof onLoad === 'function') onLoad(mesh);
+      })
+      .catch(fail);
+  }
+
   THREE.DSCDashFX = Object.freeze({
     createSoftSpriteTexture: createSoftSpriteTexture,
     createComposer: createComposer,
     makeFlowRibbon: makeFlowRibbon,
     createCurlHaze: createCurlHaze,
-    createColorRamp: createColorRamp
+    createColorRamp: createColorRamp,
+    loadSimpleGltf: loadSimpleGltf
   });
 })(typeof globalThis !== 'undefined' ? globalThis : this);

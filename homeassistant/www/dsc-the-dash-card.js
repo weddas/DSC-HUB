@@ -987,6 +987,35 @@
     muffler.position.copy(curves.out.getPoint(0.68));
     muffler.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), curves.out.getTangent(0.68).normalize());
     ductGroup.add(muffler);
+    // Offline GLTF accents (primitive fallback already in scene)
+    if (fx && typeof fx.loadSimpleGltf === "function") {
+      const accentBase = "/local/assets/dash/";
+      fx.loadSimpleGltf(
+        `${accentBase}muffler.gltf`,
+        (mesh) => {
+          mesh.material = muffBody.material.clone();
+          mesh.rotation.copy(muffBody.rotation);
+          muffler.remove(muffBody);
+          muffBody.geometry.dispose();
+          muffler.add(mesh);
+        },
+        () => {}
+      );
+      Object.values(fans).forEach((fan) => {
+        fx.loadSimpleGltf(
+          `${accentBase}fan_housing.gltf`,
+          (mesh) => {
+            const housing = fan.children.find((c) => c.geometry && c.geometry.type === "CylinderGeometry");
+            if (!housing) return;
+            mesh.material = housing.material.clone();
+            fan.remove(housing);
+            housing.geometry.dispose();
+            fan.add(mesh);
+          },
+          () => {}
+        );
+      });
+    }
 
     const vent = new THREE.Group();
     const ventGlow = new THREE.Mesh(
@@ -1201,7 +1230,7 @@
       const geometry = new THREE.BufferGeometry();
       const positions = new Float32Array(count * 3);
       geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-      // Depth-soft particles: soft sprite + view-Z edge fade so points dissolve into geometry
+      // True soft particles: sample scene DepthTexture vs particle view-Z
       const material = new THREE.ShaderMaterial({
         uniforms: {
           uMap: { value: spriteTexture },
@@ -1209,29 +1238,55 @@
           uOpacity: { value: 0 },
           uSize: { value: size * 180 },
           uHasMap: { value: spriteTexture ? 1 : 0 },
+          tDepth: { value: null },
+          uHasDepth: { value: 0 },
+          uResolution: { value: new THREE.Vector2(1, 1) },
+          uCameraNear: { value: 0.1 },
+          uCameraFar: { value: 80 },
+          uSoftness: { value: 0.55 },
         },
         vertexShader: `
           uniform float uSize;
-          varying float vSoft;
+          varying float vViewZ;
+          varying float vViewSoft;
           void main() {
             vec4 mv = modelViewMatrix * vec4(position, 1.0);
-            vSoft = smoothstep(-0.35, -2.8, mv.z) * smoothstep(-18.0, -6.0, mv.z);
-            gl_PointSize = uSize * (1.0 / max(1.0, -mv.z));
+            vViewZ = -mv.z;
+            vViewSoft = smoothstep(0.35, 2.8, vViewZ) * smoothstep(18.0, 6.0, vViewZ);
+            gl_PointSize = uSize * (1.0 / max(1.0, vViewZ));
             gl_Position = projectionMatrix * mv;
           }
         `,
         fragmentShader: `
           uniform sampler2D uMap;
+          uniform sampler2D tDepth;
           uniform vec3 uColor;
           uniform float uOpacity;
           uniform float uHasMap;
-          varying float vSoft;
+          uniform float uHasDepth;
+          uniform vec2 uResolution;
+          uniform float uCameraNear;
+          uniform float uCameraFar;
+          uniform float uSoftness;
+          varying float vViewZ;
+          varying float vViewSoft;
+          float perspDepthToViewZ(float d, float near, float far) {
+            float z = d * 2.0 - 1.0;
+            return (2.0 * near * far) / (far + near - z * (far - near));
+          }
           void main() {
             vec2 uv = gl_PointCoord;
             float softEdge = 1.0 - smoothstep(0.32, 0.5, length(uv - 0.5));
-            float alpha = softEdge * vSoft * uOpacity;
+            float alpha = softEdge * vViewSoft * uOpacity;
             if (uHasMap > 0.5) {
               alpha *= texture2D(uMap, uv).a;
+            }
+            if (uHasDepth > 0.5) {
+              vec2 screenUv = gl_FragCoord.xy / uResolution;
+              float sceneD = texture2D(tDepth, screenUv).x;
+              float sceneZ = perspDepthToViewZ(sceneD, uCameraNear, uCameraFar);
+              float dz = sceneZ - vViewZ;
+              alpha *= smoothstep(0.0, uSoftness, dz);
             }
             if (alpha < 0.01) discard;
             gl_FragColor = vec4(uColor, alpha);
@@ -1239,12 +1294,16 @@
         `,
         transparent: true,
         depthWrite: false,
-        depthTest: true,
+        depthTest: false,
         blending: THREE.AdditiveBlending,
         toneMapped: false,
       });
       const points = new THREE.Points(geometry, material);
       points.frustumCulled = false;
+      if (post && typeof post.registerSoftParticleMaterial === "function") {
+        post.registerSoftParticleMaterial(material);
+        points.layers.set(1);
+      }
       root.add(points);
       const phase = new Float32Array(count);
       const seed = new Float32Array(count);
@@ -1287,6 +1346,7 @@
         curl = fx.createCurlHaze(renderer, 520);
         curl.points.scale.set(0.78, 0.58, 0.58);
         curl.points.position.set(0, 1.25, 0.3);
+        if (post) curl.points.layers.set(1);
         root.add(curl.points);
       } catch (_) {
         curl = null;

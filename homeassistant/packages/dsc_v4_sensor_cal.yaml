@@ -325,33 +325,46 @@ script:
                 ec_ha: "{{ states('input_number.dsc_pot' ~ repeat.item ~ '_offset_ec_us')|float(0) }}"
                 m_esp: "{{ states('number.dsc_pot' ~ repeat.item ~ '_cal_moisture_offset')|float(0) }}"
                 m_ha: "{{ states('input_number.dsc_pot' ~ repeat.item ~ '_offset_moisture')|float(0) }}"
+                ph_merged: "{{ [[(ph_esp|float + ph_ha|float), -2]|max, 2]|min }}"
+                ec_merged: "{{ [[(ec_esp|float + ec_ha|float), -2000]|max, 2000]|min }}"
+                m_merged: "{{ [[(m_esp|float + m_ha|float), -50]|max, 50]|min }}"
+                ph_resid: "{{ (ph_esp|float + ph_ha|float) - (ph_merged|float) }}"
+                ec_resid: "{{ (ec_esp|float + ec_ha|float) - (ec_merged|float) }}"
+                m_resid: "{{ (m_esp|float + m_ha|float) - (m_merged|float) }}"
             - action: number.set_value
               target: { entity_id: "number.dsc_pot{{ n }}_cal_ph_offset" }
-              data: { value: "{{ (ph_esp|float + ph_ha|float)|round(2) }}" }
+              data: { value: "{{ ph_merged|float|round(2) }}" }
             - action: number.set_value
               target: { entity_id: "number.dsc_pot{{ n }}_cal_conductivity_offset" }
-              data: { value: "{{ (ec_esp|float + ec_ha|float)|round(0) }}" }
+              data: { value: "{{ ec_merged|float|round(0) }}" }
             - action: number.set_value
               target: { entity_id: "number.dsc_pot{{ n }}_cal_moisture_offset" }
-              data: { value: "{{ (m_esp|float + m_ha|float)|round(1) }}" }
+              data: { value: "{{ m_merged|float|round(1) }}" }
             - action: input_number.set_value
               target: { entity_id: "input_number.dsc_pot{{ n }}_offset_ph" }
-              data: { value: 0 }
+              data: { value: "{{ ph_resid|float|round(2) }}" }
             - action: input_number.set_value
               target: { entity_id: "input_number.dsc_pot{{ n }}_offset_ec_us" }
-              data: { value: 0 }
+              data: { value: "{{ ec_resid|float|round(0) }}" }
             - action: input_number.set_value
               target: { entity_id: "input_number.dsc_pot{{ n }}_offset_moisture" }
-              data: { value: 0 }
+              data: { value: "{{ m_resid|float|round(1) }}" }
             - choose:
                 - conditions:
                     - condition: template
                       value_template: >-
-                        {{ states('button.dsc_pot' ~ n ~ '_mark_soil_cal_peer_median')
-                           not in ['unknown','unavailable',''] }}
+                        {% set a = 'button.dsc_pot' ~ n ~ '_mark_soil_cal_peer_median' %}
+                        {% set b = 'button.dsc_pot_' ~ n ~ '_mark_soil_cal_peer_median' %}
+                        {{ states(a) not in ['unknown','unavailable','']
+                           or states(b) not in ['unknown','unavailable',''] }}
                   sequence:
+                    - variables:
+                        mark_btn: >-
+                          {% set a = 'button.dsc_pot' ~ n ~ '_mark_soil_cal_peer_median' %}
+                          {% set b = 'button.dsc_pot_' ~ n ~ '_mark_soil_cal_peer_median' %}
+                          {{ a if states(a) not in ['unknown','unavailable',''] else b }}
                     - action: button.press
-                      target: { entity_id: "button.dsc_pot{{ n }}_mark_soil_cal_peer_median" }
+                      target: { entity_id: "{{ mark_btn }}" }
       - action: input_datetime.set_datetime
         target: { entity_id: input_datetime.dsc_peer_sync_last }
         data:

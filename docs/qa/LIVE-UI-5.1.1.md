@@ -60,7 +60,7 @@ Browser Mod popup layer, System command center, glass-replacement tunables.
 ## Automations
 
 - [ ] `dsc_climate_learn_ema_sample` runs without template errors (intake ref fixed to `dsc_fan_intake_main_pct`)
-- [ ] AC / clone followers stay idle while `*_actuator_wired` flags are off
+- [ ] AC / clone followers stay idle while `*_in_service` flags are off
 
 ## Sign-off
 

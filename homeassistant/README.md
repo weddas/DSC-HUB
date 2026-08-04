@@ -7,7 +7,7 @@ Canonical HA surface for firmware [`firmware/v4/`](../firmware/v4/).
 | Path | Role |
 |---|---|
 | `dashboards/dsc-hub-v4-dashboard.yaml` | Lovelace UX **v5.1.3** (`dsc-hub-pro`). In-service kit toggles; learn **Activity**; Root Zone Pots+Mat. |
-| `packages/dsc_v4_core_helpers.yaml` | Hub link, fan %, Sankey, runtimes, **in-service** + capacity-offline + vent-conflict / ineffective cues |
+| `packages/dsc_v4_core_helpers.yaml` | Hub link, fan %, runtimes, **in-service** + capacity-offline + vent-conflict / ineffective cues |
 | `packages/dsc_v4_strain_catalog.yaml` | Strain catalog, sprout age, Want/Need/Got, peer offsets, Apply expected stage |
 | `packages/dsc_v4_sensor_cal.yaml` | Peer sync auto/settle/cooldown, dual-stack warn, push peer→ESP SoT, fleet divergence |
 | `packages/dsc_v4_nutrient_catalog.yaml` | Nutrient stock, next-mix recipe, Accept mix QA (no pumps) |
@@ -215,7 +215,7 @@ Hard holes today are **AC actuation** and **clone mister actuation**.
 Install [`packages/dsc_v4_climate_physics.yaml`](packages/dsc_v4_climate_physics.yaml).
 Nameplate values live as `input_number.dsc_*` (fan max CFM, tent/room m³,
 heater W, dehum L/day, hum mL/h, AC BTU/h, light watts). Change them when
-hardware is swapped; Sankey + capacity sensors recompute from those helpers.
+hardware is swapped; live CFM / capacity sensors recompute from those helpers.
 
 **Optional L×W×H (cm):** `input_number.dsc_dim_*_{l,w,h}_cm` plus Apply
 scripts (`script.dsc_apply_dim_4x8` / `_2x4` / `_room`) write the matching
@@ -294,7 +294,7 @@ Reset coeffs: `script.dsc_climate_learn_reset`. Reset waits: `script.dsc_climate
 Dashboard: **Learning** (`/dsc-hub-pro/learning`) — Activity card, device cal,
 Phase A+B status, appliance effect cards, waits, ETA, efficiencies, charts.
 
-## Crop-steering (HA surface 5.1.5)
+## Crop-steering (HA surface 5.1.7)
 
 Packages: `dsc_v4_strain_catalog`, `dsc_v4_nutrient_catalog`, `dsc_v4_pots_coherence`,
 `dsc_v4_actuator_efficacy`.
@@ -342,9 +342,9 @@ not humidifier lock — entity id kept for compatibility.
 
 | Piece | Version |
 |---|---|
-| Hub / pots / Sonoffs / kits | **`5.1.0`** |
+| Hub / pots / Sonoffs / kits | **`5.1.5`** (pots cal SoT; hub/panel may trail on 5.1.x train) |
 | Panel (DSC-CONTROL) | **`5.1.x`** lean-cut patch train |
-| HA surface (packages + dashboard) | **`5.1.5`** |
+| HA surface (packages + dashboard) | **`5.1.7`** |
 | Dashboard | DSC-HUB Pro (4-col, browser_mod popups) |
 | `espnow_cmd_tag` | `54727` (`0xD5C7`) on hub **and** panel |
 

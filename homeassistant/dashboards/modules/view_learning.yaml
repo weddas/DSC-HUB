@@ -11,11 +11,14 @@ sections:
         heading_style: title
       - type: markdown
         content: >-
-          *Fully optional. Leave curves empty and live CFM stays
-          **% × nameplate**. Measure duct outlet wind speed (or CFM) /
-          canopy PPFD at 25→50→75→100% holds — ≥2 points enables
-          interpolation. Heater / hum / dehum effect is learned
-          **automatically** below (Phase A).*
+          *Fully optional. Leave curves empty and capacity-proxy CFM stays
+          **% × nameplate** (attribute `model: linear`). Measure duct outlet
+          wind speed (or CFM) / canopy PPFD at 25→50→75→100% holds — ≥2
+          points enables interpolation (`model: curve`). **Do not invent
+          points.** Vent BTU / Dash / airflow map use mass-balanced
+          **allocated** exhaust (Σ intake × fan-% split), not the nameplate
+          proxy. Heater / hum / dehum effect is learned **automatically**
+          below (Phase A).*
       - type: entities
         title: Wizard
         show_header_toggle: false

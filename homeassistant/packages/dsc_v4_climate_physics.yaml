@@ -431,6 +431,9 @@ template:
               states('input_number.dsc_cal_cfm_out_100')|float(0)]
               | select('gt', 0) | list | count %}
             {{ 'curve' if n >= 2 else 'linear' }}
+          honesty: >-
+            {{ 'measured_curve' if state_attr('sensor.dsc_cfm_exhaust_out','model') == 'curve'
+               else 'capacity_proxy_nameplate' }}
 
       - name: "DSC CFM Exhaust Recirc"
         unique_id: dsc_cfm_exhaust_recirc
@@ -479,6 +482,57 @@ template:
               states('input_number.dsc_cal_cfm_recirc_100')|float(0)]
               | select('gt', 0) | list | count %}
             {{ 'curve' if n >= 2 else 'linear' }}
+          honesty: >-
+            {{ 'measured_curve' if state_attr('sensor.dsc_cfm_exhaust_recirc','model') == 'curve'
+               else 'capacity_proxy_nameplate' }}
+
+      # ----- Allocated exhaust (mass balance) — Σ intake × fan-% split -----
+      # Constraint model matching The Dash; NOT a duct anemometer reading.
+      - name: "DSC CFM Exhaust Out Allocated"
+        unique_id: dsc_cfm_exhaust_out_allocated
+        unit_of_measurement: "CFM"
+        state_class: measurement
+        icon: mdi:pipe-valve
+        state: >-
+          {% set inn = states('sensor.dsc_cfm_intake_main')|float(0)
+                     + states('sensor.dsc_cfm_intake_2x4')|float(0) %}
+          {% set po = states('sensor.dsc_fan_exhaust_outside_pct')|float(0) %}
+          {% set pr = states('sensor.dsc_fan_exhaust_room_pct')|float(0) %}
+          {% set fs = po + pr %}
+          {% if fs < 0.5 %}0
+          {% else %}{{ (inn * po / fs) | round(1) }}{% endif %}
+        availability: >-
+          {{ has_value('sensor.dsc_cfm_intake_main')
+             and has_value('sensor.dsc_cfm_intake_2x4')
+             and has_value('sensor.dsc_fan_exhaust_outside_pct')
+             and has_value('sensor.dsc_fan_exhaust_room_pct') }}
+        attributes:
+          model: mass_balance_allocated
+          honesty: Sigma_intake_times_fan_pct_split
+          companion_capacity: sensor.dsc_cfm_exhaust_out
+
+      - name: "DSC CFM Exhaust Recirc Allocated"
+        unique_id: dsc_cfm_exhaust_recirc_allocated
+        unit_of_measurement: "CFM"
+        state_class: measurement
+        icon: mdi:pipe
+        state: >-
+          {% set inn = states('sensor.dsc_cfm_intake_main')|float(0)
+                     + states('sensor.dsc_cfm_intake_2x4')|float(0) %}
+          {% set po = states('sensor.dsc_fan_exhaust_outside_pct')|float(0) %}
+          {% set pr = states('sensor.dsc_fan_exhaust_room_pct')|float(0) %}
+          {% set fs = po + pr %}
+          {% if fs < 0.5 %}0
+          {% else %}{{ (inn * pr / fs) | round(1) }}{% endif %}
+        availability: >-
+          {{ has_value('sensor.dsc_cfm_intake_main')
+             and has_value('sensor.dsc_cfm_intake_2x4')
+             and has_value('sensor.dsc_fan_exhaust_outside_pct')
+             and has_value('sensor.dsc_fan_exhaust_room_pct') }}
+        attributes:
+          model: mass_balance_allocated
+          honesty: Sigma_intake_times_fan_pct_split
+          companion_capacity: sensor.dsc_cfm_exhaust_recirc
 
       - name: "DSC CFM Intake Main"
         unique_id: dsc_cfm_intake_main
@@ -657,12 +711,15 @@ template:
         state_class: measurement
         icon: mdi:fire-alert
         state: >-
-          {% set cfm = states('sensor.dsc_cfm_exhaust_out')|float(0) %}
+          {% set cfm = states('sensor.dsc_cfm_exhaust_out_allocated')|float(0) %}
           {% set tt = states('sensor.dsc_hub_tent_temperature')|float(none) %}
           {% set rt = states('sensor.dsc_hub_room_temperature')|float(none) %}
           {% if tt is none or rt is none %}unknown{% else %}
             {{ (1.08 * cfm * (tt - rt)) | round(0) }}
           {% endif %}
+        attributes:
+          cfm_source: sensor.dsc_cfm_exhaust_out_allocated
+          note: Uses mass-balanced allocated OUT CFM (not nameplate capacity proxy).
 
       - name: "DSC Heat Gain BTU"
         unique_id: dsc_heat_gain_btu
@@ -725,12 +782,15 @@ template:
         state_class: measurement
         icon: mdi:weather-windy
         state: >-
-          {% set cfm = states('sensor.dsc_cfm_exhaust_out')|float(0) %}
+          {% set cfm = states('sensor.dsc_cfm_exhaust_out_allocated')|float(0) %}
           {% set aht = states('sensor.dsc_ah_tent')|float(none) %}
           {% set ahr = states('sensor.dsc_ah_room')|float(none) %}
           {% if aht is none or ahr is none %}unknown{% else %}
             {{ (cfm * 1.699 * (aht - ahr)) | round(1) }}
           {% endif %}
+        attributes:
+          cfm_source: sensor.dsc_cfm_exhaust_out_allocated
+          note: Uses mass-balanced allocated OUT CFM (not nameplate capacity proxy).
 
       - name: "DSC Moisture Net Rate"
         unique_id: dsc_moisture_net_rate

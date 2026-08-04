@@ -111,7 +111,7 @@
         to: "room",
         to_wall: "front",
         kind: "recirc",
-        cfm: "sensor.dsc_cfm_exhaust_recirc",
+        cfm: "sensor.dsc_cfm_exhaust_recirc_allocated",
         fan_pct: "sensor.dsc_fan_exhaust_room_pct",
         cfm_max: "input_number.dsc_cfm_recirc_max",
         components: [{ type: "inline_fan", at: "source" }],
@@ -123,7 +123,7 @@
         to: "outside",
         to_wall: "window",
         kind: "out",
-        cfm: "sensor.dsc_cfm_exhaust_out",
+        cfm: "sensor.dsc_cfm_exhaust_out_allocated",
         fan_pct: "sensor.dsc_fan_exhaust_outside_pct",
         cfm_max: "input_number.dsc_cfm_out_max",
         components: [

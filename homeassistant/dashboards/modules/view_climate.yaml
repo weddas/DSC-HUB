@@ -401,12 +401,18 @@ sections:
               - entity: input_number.dsc_plant_transpiration_g_hr
                 name: Plant transpiration g/h
           - type: entities
-            title: Live capacity (from specs / curves)
+            title: Live capacity proxies (curve or % × nameplate)
             entities:
               - entity: sensor.dsc_cfm_exhaust_out
+                name: OUT capacity proxy
               - entity: sensor.dsc_cfm_exhaust_recirc
+                name: RECIRC capacity proxy
               - entity: sensor.dsc_cfm_intake_main
               - entity: sensor.dsc_cfm_intake_2x4
+              - entity: sensor.dsc_cfm_exhaust_out_allocated
+                name: OUT allocated (Σ intake × split)
+              - entity: sensor.dsc_cfm_exhaust_recirc_allocated
+                name: RECIRC allocated (Σ intake × split)
               - entity: sensor.dsc_ach_4x8
               - entity: sensor.dsc_ach_2x4
               - entity: sensor.dsc_heat_balance_btu
@@ -428,11 +434,12 @@ sections:
               navigation_path: /dsc-hub-pro/learning
           - type: markdown
             content: >-
-              *Defaults are placeholders — replace with anemometer / nameplate
-              values. Optional multi-point CFM/PPFD curves live on **Learning**
-              (unset = % × nameplate). Spec checks flag intake CFM > exhaust
-              CFM, AC wired with 0 BTU/h, and zeroed appliance rates. Phase A
-              learning UI lives on the **Learning** view.*
+              *Capacity proxies use Learning CFM curves when ≥2 points are set;
+              otherwise **% × nameplate** (not duct mass flow). Vent BTU /
+              moisture and The Dash / airflow map use **allocated** OUT/RECIRC
+              = Σ intake × fan-% split. Do not invent curve points — measure
+              with an anemometer on Learning. Spec checks flag intake CFM >
+              exhaust CFM, AC wired with 0 BTU/h, and zeroed appliance rates.*
       - type: custom:expander-card
         title: 🌱 Grow mat — closed-loop root-zone band
         expanded: false
