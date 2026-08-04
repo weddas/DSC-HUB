@@ -194,7 +194,7 @@ No climate control regression during soak window.
 
 ### deferred
 
-- N-004 optional cull of unused Sankey template sensors (`dsc_airflow_direct_room`, `dsc_airflow_room_return`) ? concept covered by live CFM edges; leave helpers until a dedicated orphan pass.
+- N-004 Sankey helpers (`dsc_airflow_direct_room` / `dsc_airflow_room_return`) culled in 2026-08-04 Pass 4 — concept covered by live CFM / allocated edges.
 
 ---
 
