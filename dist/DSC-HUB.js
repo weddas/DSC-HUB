@@ -1,7 +1,7 @@
 /**
- * DSC-HUB neon isometric system map â€” Lovelace custom card.
+ * DSC-HUB neon isometric system map — Lovelace custom card.
  *
- * HACS Dashboard (preferred): install custom repo weddas/DSC-HUB â†’ resource
+ * HACS Dashboard (preferred): install custom repo weddas/DSC-HUB → resource
  *   /hacsfiles/DSC-HUB/DSC-HUB.js  (SVG beside it in the same folder)
  * Manual /local fallback:
  *   /local/dsc-system-map-card.js + /local/dsc-system-map.svg
@@ -286,13 +286,13 @@
   window.customCards.push({
     type: CARD_TYPE,
     name: "DSC System Map",
-    description: "Neon isometric DSC-HUB map â€” tents, fans, light, pots, appliances (live).",
+    description: "Neon isometric DSC-HUB map — tents, fans, light, pots, appliances (live).",
     preview: true,
   });
 })();
 
 /**
- * DSC-HUB airflow status â€” GUI-first isometric tent scene.
+ * DSC-HUB airflow status — GUI-first isometric tent scene.
  *
  * type: custom:dsc-airflow-map-card
  * Editor: custom:dsc-airflow-map-card-editor (getConfigElement)
@@ -498,8 +498,8 @@
     if (typeof bri === "number") return Math.max(0, Math.min(1, bri / 255));
     return s.state === "on" ? 1 : 0;
   };
-  const fmtTemp = (t) => (Number.isFinite(t) ? `${t.toFixed(1)}Â°C` : "â€”");
-  const fmtRh = (h) => (Number.isFinite(h) ? `${Math.round(h)}%` : "â€”");
+  const fmtTemp = (t) => (Number.isFinite(t) ? `${t.toFixed(1)}°C` : "—");
+  const fmtRh = (h) => (Number.isFinite(h) ? `${Math.round(h)}%` : "—");
   const climatePair = (t, h) => `${fmtTemp(t)} ${fmtRh(h)}`;
   const flowFrac = (cfm, max) => {
     if (!Number.isFinite(cfm) || cfm <= FLOW_EPS) return 0;
@@ -665,7 +665,7 @@
         <text x="${t.x + t.w / 2}" y="${t.y + 28}" text-anchor="middle" class="af-tent-label">${esc(t.label || t.id)}</text>
         <foreignObject x="${t.x + 8}" y="${t.y + 36}" width="${Math.max(40, t.w - 16)}" height="54">
           <div xmlns="http://www.w3.org/1999/xhtml" class="af-hud">
-            <div class="af-hud-main">${esc(L.climate || "â€”")}</div>
+            <div class="af-hud-main">${esc(L.climate || "—")}</div>
             <div class="af-hud-sub">${esc(L.meta || "")}</div>
             ${L.mark ? `<div class="af-hud-mark">${esc(L.mark)}</div>` : ""}
           </div>
@@ -791,7 +791,7 @@
   <!-- Room floor -->
   <rect x="${floor.x}" y="${floor.y}" width="${floor.w}" height="${floor.h}" rx="10"
     fill="url(#af-room)" stroke="#2a3548" stroke-width="1.5"/>
-  <text x="${floor.x + 12}" y="${floor.y + 18}" class="af-room-label">${esc(room.label || "Room")} Â· ${esc(room.size || "")}</text>
+  <text x="${floor.x + 12}" y="${floor.y + 18}" class="af-room-label">${esc(room.label || "Room")} · ${esc(room.size || "")}</text>
   <text x="${floor.x + 12}" y="${floor.y + 34}" class="af-room-label">${esc(roomLive.climate || "")}</text>
 
   ${
@@ -941,8 +941,8 @@
         <div class="af-scene" id="af-scene"></div>
         <div class="af-blend">
           <div class="af-blend-label">
-            <span id="blend-left-lbl">Recirc â€”</span>
-            <span id="blend-right-lbl">Out â€”</span>
+            <span id="blend-left-lbl">Recirc —</span>
+            <span id="blend-right-lbl">Out —</span>
           </div>
           <div class="af-blend-track">
             <div class="af-blend-rec" id="blend-rec" style="width:0%"></div>
@@ -980,7 +980,7 @@
         else if (mat) mark = "MAT";
         live.zones[z.id] = {
           climate: climatePair(t, h),
-          meta: meta.join(" Â· "),
+          meta: meta.join(" · "),
           light,
           mat,
           mark,
@@ -1042,19 +1042,19 @@
       if (left) left.innerHTML = `<strong>Recirc ${recPct}%</strong>`;
       if (right) {
         if (outPct > 0 && dumpPct > 0)
-          right.innerHTML = `<strong>Out ${outPct}% Â· Dump ${dumpPct}%</strong>`;
+          right.innerHTML = `<strong>Out ${outPct}% · Dump ${dumpPct}%</strong>`;
         else if (dumpPct > 0)
-          right.innerHTML = `<strong>Dumpâ†’Room ${dumpPct}%</strong>`;
+          right.innerHTML = `<strong>Dump→Room ${dumpPct}%</strong>`;
         else right.innerHTML = `<strong>Out ${outPct}%</strong>`;
       }
 
       const tents = cfg.zones.filter((z) => z.role === "tent").length;
       const hm = this._q("#af-head-meta");
-      if (hm) hm.textContent = `${tents} tent${tents === 1 ? "" : "s"} Â· ${cfg.ducts.length} routes`;
+      if (hm) hm.textContent = `${tents} tent${tents === 1 ? "" : "s"} · ${cfg.ducts.length} routes`;
       const foot = this._q("#af-foot");
       if (foot) {
         foot.textContent =
-          "Room lung â†’ tent intakes â†’ cascade â†’ exhaust blend. Only Recirc (and into-room dump) stays in the lung; through-wall Out leaves the room.";
+          "Room lung → tent intakes → cascade → exhaust blend. Only Recirc (and into-room dump) stays in the lung; through-wall Out leaves the room.";
       }
     }
   }
@@ -1232,7 +1232,7 @@
         </div>
 
         <details class="afe-adv">
-          <summary>Advanced â€” raw config JSON</summary>
+          <summary>Advanced — raw config JSON</summary>
           <textarea id="afe-json">${esc(JSON.stringify({ title: cfg.title, zones: cfg.zones, ducts: cfg.ducts }, null, 2))}</textarea>
           <div class="afe-actions">
             <button type="button" class="afe-btn ghost" id="afe-apply-json">Apply JSON</button>
@@ -1327,7 +1327,7 @@
               ${(d.components || [])
                 .map(
                   (c, ci) =>
-                    `<span class="afe-comp" data-comp="${idx}:${ci}" title="tap to cycle position / right-click remove">${esc(c.type)} Â· ${esc(c.at || "mid")}</span>`
+                    `<span class="afe-comp" data-comp="${idx}:${ci}" title="tap to cycle position / right-click remove">${esc(c.type)} · ${esc(c.at || "mid")}</span>`
                 )
                 .join("")}
             </div>
@@ -1617,7 +1617,7 @@
     type: CARD_TYPE,
     name: "DSC Airflow Tent Scene",
     description:
-      "GUI-configurable isometric tent airflow â€” room size, tents, wall ports, fans, carbon filters, exhaust into room or through wall.",
+      "GUI-configurable isometric tent airflow — room size, tents, wall ports, fans, carbon filters, exhaust into room or through wall.",
     preview: true,
     documentationURL: "https://github.com/weddas/DSC-HUB",
   });
@@ -1934,7 +1934,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       renderer.getClearColor(oldClearColor);
       renderer.autoClear = true;
 
-      // Pass A: solids only (layer 0) â†’ color + depth
+      // Pass A: solids only (layer 0) → color + depth
       var prevMask = camera.layers.mask;
       camera.layers.set(0);
       renderer.setRenderTarget(sceneTarget);
@@ -2598,7 +2598,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
 })(typeof globalThis !== 'undefined' ? globalThis : this);
 
 /**
- * DSC-HUB â€” The Dash
+ * DSC-HUB — The Dash
  * Full-bleed cinematic ops surface: Three.js tent/duct scene + charts + flow.
  *
  * type: custom:dsc-the-dash-card
@@ -2624,7 +2624,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
   const DSC_DEFAULTS = () => ({
     type: `custom:${CARD_TYPE}`,
     title: "DSC-HUB // ADVANCED CULTIVATION CONTROL",
-    subtitle: "Zonal Cultivation Hub â€” 2-Tent System",
+    subtitle: "Zonal Cultivation Hub — 2-Tent System",
     pots: [
       { id: "pot1", tent: "clone", slot: 0, prefix: "dsc_pot1", in_service: "input_boolean.dsc_pot1_in_service" },
       { id: "pot2", tent: "clone", slot: 1, prefix: "dsc_pot2", in_service: "input_boolean.dsc_pot2_in_service" },
@@ -2693,7 +2693,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     const s = stateOf(hass, id);
     return !s || s.state === "unavailable" || s.state === "unknown";
   };
-  const fmt = (n, digits = 1) => (Number.isFinite(n) ? n.toFixed(digits) : "â€”");
+  const fmt = (n, digits = 1) => (Number.isFinite(n) ? n.toFixed(digits) : "—");
   const esc = (s) =>
     String(s ?? "")
       .replace(/&/g, "&amp;")
@@ -2947,14 +2947,14 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
   `;
 
   /* ------------------------------------------------------------------ */
-  /* Flow diagram (device â†’ split â†’ exhaust)                             */
+  /* Flow diagram (device → split → exhaust)                             */
   /* ------------------------------------------------------------------ */
 
-  const fmtCfm = (n) => (Number.isFinite(n) ? `${Math.round(n)} CFM` : "â€” CFM");
+  const fmtCfm = (n) => (Number.isFinite(n) ? `${Math.round(n)} CFM` : "— CFM");
 
   const renderFlow = (live) => {
     // Col1 Active gear | Col2 Intake environment (room climate)
-    // Col3 Intake CFM (2x4 + cascade transfer + 4x8 + Î£) | Col4 4x8 exhaust split
+    // Col3 Intake CFM (2x4 + cascade transfer + 4x8 + Σ) | Col4 4x8 exhaust split
     const devices = (live.devices || []).filter((d) => d.on && !String(d.id).startsWith("fan_"));
     const gearHtml =
       devices.length === 0
@@ -2977,7 +2977,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     const rPct = Math.round((live.recircShare || 0) * 100);
     const cfmOut = live.cfmOut ?? NaN;
     const cfmRec = live.cfmRecirc ?? NaN;
-    const roomParts = String(live.roomClimate || "â€” Â· â€” Â· â€”").split("Â·").map((s) => s.trim());
+    const roomParts = String(live.roomClimate || "— · — · —").split("·").map((s) => s.trim());
 
     return `
       <div class="dash-flow-grid" role="img" aria-label="Intake environment to CFM to exhaust">
@@ -2988,37 +2988,37 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         <div class="dash-flow-col">
           <div class="col-h">Intake environment</div>
           <div class="dash-flow-box env" style="flex:1">
-            <div class="lbl">ROOM â†’ TENTS</div>
-            <div class="val">${esc(roomParts[0] || "â€”")}</div>
-            <div class="val">${esc(roomParts[1] || "â€”")}</div>
-            <div class="val" style="color:#26c6da">${esc(roomParts[2] || "â€”")}</div>
+            <div class="lbl">ROOM → TENTS</div>
+            <div class="val">${esc(roomParts[0] || "—")}</div>
+            <div class="val">${esc(roomParts[1] || "—")}</div>
+            <div class="val" style="color:#26c6da">${esc(roomParts[2] || "—")}</div>
             <div class="sub">shared lung air into intakes</div>
           </div>
         </div>
         <div class="dash-flow-col">
           <div class="col-h">Intake CFM</div>
           <div class="dash-flow-box clone">
-            <div class="lbl">2Ã—4 from room</div>
+            <div class="lbl">2×4 from room</div>
             <div class="val">${esc(fmtCfm(cfm2))}</div>
           </div>
-          <div class="dash-flow-arrow">â†“ transfer (not +)</div>
+          <div class="dash-flow-arrow">↓ transfer (not +)</div>
           <div class="dash-flow-box casc">
-            <div class="lbl">2Ã—4 â†’ 4Ã—8 cascade</div>
+            <div class="lbl">2×4 → 4×8 cascade</div>
             <div class="val" style="color:#ffcc80;font-size:12px">${esc(fmtCfm(casc))}</div>
-            <div class="sub">same air Â· neg. pressure</div>
+            <div class="sub">same air · neg. pressure</div>
           </div>
           <div class="dash-flow-box main">
-            <div class="lbl">4Ã—8 from room</div>
+            <div class="lbl">4×8 from room</div>
             <div class="val">${esc(fmtCfm(cfm8))}</div>
           </div>
           <div class="dash-flow-box total">
-            <div class="lbl">Î£ into 4Ã—8</div>
+            <div class="lbl">Σ into 4×8</div>
             <div class="val" style="font-size:12px">${esc(fmtCfm(throughput))}</div>
-            <div class="sub">2Ã—4 + 4Ã—8 intakes</div>
+            <div class="sub">2×4 + 4×8 intakes</div>
           </div>
         </div>
         <div class="dash-flow-col">
-          <div class="col-h">4Ã—8 exhaust Â· ${esc(fmtCfm(throughput))}</div>
+          <div class="col-h">4×8 exhaust · ${esc(fmtCfm(throughput))}</div>
           <div class="dash-flow-box out">
             <div class="lbl">DUMP OUTSIDE</div>
             <div class="val">${oPct}%</div>
@@ -3030,19 +3030,19 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
             <div class="sub">${esc(fmtCfm(cfmRec))}</div>
           </div>
           <div class="dash-flow-box total">
-            <div class="lbl">Î£ dump + recirc</div>
+            <div class="lbl">Σ dump + recirc</div>
             <div class="val" style="font-size:12px">${esc(
               fmtCfm(Number.isFinite(cfmOut) && Number.isFinite(cfmRec) ? cfmOut + cfmRec : NaN)
             )}</div>
-            <div class="sub">must equal Î£ intake</div>
+            <div class="sub">must equal Σ intake</div>
           </div>
         </div>
       </div>
       <p class="dash-flow-caption" style="margin-top:8px">
-        Mass balance: exhaust CFM = Î£ intake (${esc(fmtCfm(throughput))}) Ã— dump/recirc split (from fan %).
-        Cascade is a transfer of 2Ã—4 air â€” do not add it to intake total.
+        Mass balance: exhaust CFM = Σ intake (${esc(fmtCfm(throughput))}) × dump/recirc split (from fan %).
+        Cascade is a transfer of 2×4 air — do not add it to intake total.
         Raw sensor.dsc_cfm_exhaust_* stay nameplate proxies until Learning cal.
-        Heat mat is 2Ã—4-only.
+        Heat mat is 2×4-only.
       </p>`;
   };
 
@@ -3212,7 +3212,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     );
     roomEdges.position.copy(roomShell.position);
     root.add(roomEdges);
-    // Room lung â€” layered horizontal volumetric slices (read as body, not bare grid)
+    // Room lung — layered horizontal volumetric slices (read as body, not bare grid)
     const roomLungSlices = [];
     for (let s = 0; s < 4; s++) {
       const slice = new THREE.Mesh(
@@ -3360,7 +3360,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       }
       group.add(shafts);
 
-      // Layered ACH volume stack (multi-slice additive haze â€” not a single flat box)
+      // Layered ACH volume stack (multi-slice additive haze — not a single flat box)
       const achHaze = new THREE.Group();
       const achSlices = [];
       for (let s = 0; s < 3; s++) {
@@ -4430,28 +4430,28 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
               <div class="dash-brand" id="d-title">${esc(cfg.title)}</div>
               <div class="dash-sub" id="d-sub">${esc(cfg.subtitle)}</div>
             </div>
-            <div class="dash-pill" id="d-status">ONLINE // â€¦</div>
+            <div class="dash-pill" id="d-status">ONLINE // …</div>
           </div>
           <div class="dash-body">
             <div class="dash-main">
               <div class="dash-scene-wrap" id="d-scene">
-                ${typeof THREE === "undefined" ? `<div class="dash-missing">THREE.js not loaded â€” redeploy DSC-HUB bundle.</div>` : ""}
+                ${typeof THREE === "undefined" ? `<div class="dash-missing">THREE.js not loaded — redeploy DSC-HUB bundle.</div>` : ""}
                 <div class="dash-hud left" id="d-hud-clone"></div>
                 <div class="dash-hud right" id="d-hud-main"></div>
                 <div class="dash-legend" id="d-legend">
                   <span data-path="light"><i class="dash-dot" style="background:#66bb6a"></i> 2x4 light</span>
                   <span data-path="mat"><i class="dash-dot" style="background:#ff6d00"></i> 2x4 heat mat</span>
                   <span data-path="intake"><i class="dash-dot" style="background:#42a5f5"></i> Room intake</span>
-                  <span data-path="cascade"><i class="dash-dot" style="background:#ffb74d"></i> Cascade 2x4â†’4x8</span>
+                  <span data-path="cascade"><i class="dash-dot" style="background:#ffb74d"></i> Cascade 2x4→4x8</span>
                   <span data-path="out"><i class="dash-dot" style="background:#ff8a65"></i> Dump OUT</span>
                   <span data-path="recirc"><i class="dash-dot" style="background:#ab47bc"></i> Recirc</span>
                 </div>
               </div>
               <div class="dash-charts">
-                <div class="dash-chart"><h4>Moisture â€” pots</h4><canvas id="c-moist"></canvas></div>
-                <div class="dash-chart"><h4>Feed intake rate â€” pots</h4><canvas id="c-rate"></canvas></div>
+                <div class="dash-chart"><h4>Moisture — pots</h4><canvas id="c-moist"></canvas></div>
+                <div class="dash-chart"><h4>Feed intake rate — pots</h4><canvas id="c-rate"></canvas></div>
                 <div class="dash-chart">
-                  <h4>Temperature Â°C</h4>
+                  <h4>Temperature °C</h4>
                   <div class="leg"><span><i style="background:#26c6da"></i>2x4</span><span><i style="background:#ff8a65"></i>4x8</span><span><i style="background:#90a4ae"></i>Room</span></div>
                   <canvas id="c-temp"></canvas>
                 </div>
@@ -4473,8 +4473,8 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
                 <div id="d-timeline"></div>
               </div>
               <div class="dash-panel" style="flex:1">
-                <h3>Air path Â· environment â†’ CFM â†’ exhaust</h3>
-                <p class="dash-flow-caption">Room climate â†’ intake CFM (2Ã—4 / 4Ã—8) + cascade transfer â†’ 4Ã—8 exhaust mass-balanced to Î£ intake Ã— dump/recirc split. Heat mat is 2Ã—4-only.</p>
+                <h3>Air path · environment → CFM → exhaust</h3>
+                <p class="dash-flow-caption">Room climate → intake CFM (2×4 / 4×8) + cascade transfer → 4×8 exhaust mass-balanced to Σ intake × dump/recirc split. Heat mat is 2×4-only.</p>
                 <div id="d-flow" class="dash-flow"></div>
               </div>
               <div class="dash-panel">
@@ -4607,7 +4607,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         }
       }
       // Dump/recirc split: prefer live fan % (honest duty blend). Exhaust CFM sensors
-      // are pctÃ—nameplate until Learning cal â€” fine as a ratio fallback only.
+      // are pct×nameplate until Learning cal — fine as a ratio fallback only.
       const fo = numState(hass, e.fan_out, 0) / 100;
       const fr = numState(hass, e.fan_recirc, 0) / 100;
       const fs = fo + fr;
@@ -4623,7 +4623,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         outShare = cfmOutRaw / exSum;
         recircShare = cfmRecRaw / exSum;
       }
-      // Mass balance: absolute OUT/RECIRC CFM = intake throughput Ã— split.
+      // Mass balance: absolute OUT/RECIRC CFM = intake throughput × split.
       // Do not use sensor.dsc_cfm_exhaust_* as absolute duct flow on The Dash.
       const throughput = intakeSum;
       const cfmOut = throughput * outShare;
@@ -4636,12 +4636,12 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         { id: "dehumidifier", label: "Dehum", on: isOn(hass, e.dehumidifier), color: "#80cbc4" },
         { id: "clone_humidifier", label: "C-Hum", on: isOn(hass, e.clone_humidifier), color: "#81d4fa" },
       ];
-      // Grow mat is 2x4-only â€” show under active gear but never as room heat
+      // Grow mat is 2x4-only — show under active gear but never as room heat
       if (isOn(hass, e.grow_mat)) {
         devices.push({ id: "grow_mat", label: "2x4 mat", on: true, color: "#ff6d00" });
       }
 
-      const cascadeCfm = cfmClone; // passive transfer â‰ˆ what entered the 2x4
+      const cascadeCfm = cfmClone; // passive transfer ≈ what entered the 2x4
       const cascadeNorm = Math.min(1, cascadeCfm / 80);
 
       const pots = activePots(cfg, hass);
@@ -4729,9 +4729,9 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         emerg,
         strategy,
         priority,
-        roomClimate: `${fmt(rT)}Â°C Â· ${fmt(rH, 0)}% Â· VPD ${fmt(roomVpd, 2)}`,
-        cloneClimate: `${fmt(numState(hass, e.clone_temp))}Â°C Â· ${fmt(numState(hass, e.clone_humidity), 0)}% Â· VPD ${fmt(numState(hass, e.clone_vpd), 2)}`,
-        mainClimate: `${fmt(numState(hass, e.tent_temp))}Â°C Â· ${fmt(numState(hass, e.tent_humidity), 0)}% Â· VPD ${fmt(numState(hass, e.tent_vpd), 2)}`,
+        roomClimate: `${fmt(rT)}°C · ${fmt(rH, 0)}% · VPD ${fmt(roomVpd, 2)}`,
+        cloneClimate: `${fmt(numState(hass, e.clone_temp))}°C · ${fmt(numState(hass, e.clone_humidity), 0)}% · VPD ${fmt(numState(hass, e.clone_vpd), 2)}`,
+        mainClimate: `${fmt(numState(hass, e.tent_temp))}°C · ${fmt(numState(hass, e.tent_humidity), 0)}% · VPD ${fmt(numState(hass, e.tent_vpd), 2)}`,
         climate: {
           room: { temperature: rT, humidity: rH, vpd: roomVpd },
           clone: {
@@ -4761,7 +4761,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         status.className = "dash-pill" + (live.emerg ? " bad" : "");
         status.textContent = live.emerg
           ? "FAILSAFE // EMERGENCY"
-          : `ONLINE // ${live.strategy || "NOMINAL"} Â· ${live.priority || ""}`.trim();
+          : `ONLINE // ${live.strategy || "NOMINAL"} · ${live.priority || ""}`.trim();
       }
 
       const lightMins = lightClockMinutes(this._hass, this._cfg.entities, "clone");
@@ -4771,19 +4771,19 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         const exp = numState(this._hass, hours, 18) * 60;
         const left = Number.isFinite(lightMins) ? Math.max(0, exp - lightMins) : NaN;
         lightNote = Number.isFinite(left)
-          ? `SF1000 on Â· ${Math.floor(left / 60)}h ${Math.round(left % 60)}m to off`
+          ? `SF1000 on · ${Math.floor(left / 60)}h ${Math.round(left % 60)}m to off`
           : "SF1000 on";
       } else if (Number.isFinite(lightMins) && lightMins < 0) {
         const until = Math.abs(lightMins);
-        lightNote = `Dark Â· ${Math.floor(until / 60)}h ${Math.round(until % 60)}m to lights-on`;
+        lightNote = `Dark · ${Math.floor(until / 60)}h ${Math.round(until % 60)}m to lights-on`;
       }
       const hudC = this.shadowRoot.getElementById("d-hud-clone");
       if (hudC) {
-        hudC.innerHTML = `<div class="k">2Ã—4 Reservoir</div><div class="v">${esc(live.cloneClimate)}</div><div class="s">${esc(lightNote)}${live.matOn ? " Â· heat mat ON" : ""}</div>`;
+        hudC.innerHTML = `<div class="k">2×4 Reservoir</div><div class="v">${esc(live.cloneClimate)}</div><div class="s">${esc(lightNote)}${live.matOn ? " · heat mat ON" : ""}</div>`;
       }
       const hudM = this.shadowRoot.getElementById("d-hud-main");
       if (hudM) {
-        hudM.innerHTML = `<div class="k">4Ã—8 Main</div><div class="v">${esc(live.mainClimate)}</div><div class="s">No lamp Â· cascade in Â· exhaust split OUT/RECIRC</div>`;
+        hudM.innerHTML = `<div class="k">4×8 Main</div><div class="v">${esc(live.mainClimate)}</div><div class="s">No lamp · cascade in · exhaust split OUT/RECIRC</div>`;
       }
 
       const tl = this.shadowRoot.getElementById("d-timeline");
@@ -4805,10 +4805,10 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         if (live.emerg) alerts.push(`<span class="err">EMERGENCY FAILSAFE</span>`);
         if (live.mixed) alerts.push(`<span class="alert">Mixed pot stages</span>`);
         foot.innerHTML = `
-          <span>The Dash Â· presentation surface</span>
+          <span>The Dash · presentation surface</span>
           <span>${new Date().toLocaleString()}</span>
-          ${alerts.join(" Â· ") || `<span style="color:var(--ok)">All systems nominal</span>`}
-          <span class="err" style="margin-left:auto">LOGS â†’ Climate / Root Zone</span>`;
+          ${alerts.join(" · ") || `<span style="color:var(--ok)">All systems nominal</span>`}
+          <span class="err" style="margin-left:auto">LOGS → Climate / Root Zone</span>`;
       }
     }
 
@@ -4905,11 +4905,11 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         <div style="padding:14px;display:grid;gap:12px;font-family:system-ui,sans-serif;max-width:640px">
           <p style="margin:0;color:#9aa;font-size:13px;line-height:1.45">
             <strong style="color:#cfd8e6">Air path (fixed topology):</strong>
-            Room lung â†’ tent intakes â†’ cascade 2Ã—4â†’4Ã—8 (neg. pressure) â†’ 4Ã—8 splits DUMP outside / RECIRC room.
-            Exhaust absolute CFM on The Dash is mass-balanced to Î£ intake Ã— fan-% split â€” not raw exhaust CFM sensors
+            Room lung → tent intakes → cascade 2×4→4×8 (neg. pressure) → 4×8 splits DUMP outside / RECIRC room.
+            Exhaust absolute CFM on The Dash is mass-balanced to Σ intake × fan-% split — not raw exhaust CFM sensors
             (those stay nameplate proxies until Learning cal). There is no central filter machine.
-            Heat mat is always the 2Ã—4 element (not room heat).
-            Edit titles, pot slots, and airflow entity ids below â€” duct geometry itself is not editable on-glass.
+            Heat mat is always the 2×4 element (not room heat).
+            Edit titles, pot slots, and airflow entity ids below — duct geometry itself is not editable on-glass.
           </p>
           <label style="display:grid;gap:4px">Title
             <input id="t" style="width:100%;padding:8px" value="${esc(c.title)}"/>
@@ -4920,19 +4920,19 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
           <div>
             <div style="font-size:12px;color:#888;margin-bottom:6px;font-weight:700;letter-spacing:0.06em">AIRFLOW ENTITIES</div>
             <div style="display:grid;grid-template-columns:160px 1fr;gap:6px;align-items:center;font-size:12px">
-              <span>2Ã—4 intake CFM</span><input data-ent="cfm_intake_2x4" value="${esc(c.entities.cfm_intake_2x4 || "")}"/>
-              <span>4Ã—8 intake CFM</span><input data-ent="cfm_intake_main" value="${esc(c.entities.cfm_intake_main || "")}"/>
+              <span>2×4 intake CFM</span><input data-ent="cfm_intake_2x4" value="${esc(c.entities.cfm_intake_2x4 || "")}"/>
+              <span>4×8 intake CFM</span><input data-ent="cfm_intake_main" value="${esc(c.entities.cfm_intake_main || "")}"/>
               <span>Dump OUT fan %</span><input data-ent="fan_out" value="${esc(c.entities.fan_out || "")}"/>
               <span>Recirc fan %</span><input data-ent="fan_recirc" value="${esc(c.entities.fan_recirc || "")}"/>
               <span>Dump OUT CFM (split fallback)</span><input data-ent="cfm_out" value="${esc(c.entities.cfm_out || "")}"/>
               <span>Recirc CFM (split fallback)</span><input data-ent="cfm_recirc" value="${esc(c.entities.cfm_recirc || "")}"/>
               <span>Room temp</span><input data-ent="room_temp" value="${esc(c.entities.room_temp || "")}"/>
               <span>Room humidity</span><input data-ent="room_humidity" value="${esc(c.entities.room_humidity || "")}"/>
-              <span>2Ã—4 heat mat</span><input data-ent="grow_mat" value="${esc(c.entities.grow_mat || "")}"/>
+              <span>2×4 heat mat</span><input data-ent="grow_mat" value="${esc(c.entities.grow_mat || "")}"/>
             </div>
           </div>
           <div>
-            <div style="font-size:12px;color:#888;margin-bottom:6px;font-weight:700;letter-spacing:0.06em">POTS â†’ TENT / SLOT</div>
+            <div style="font-size:12px;color:#888;margin-bottom:6px;font-weight:700;letter-spacing:0.06em">POTS → TENT / SLOT</div>
             <div style="display:grid;grid-template-columns:70px 1fr 90px 70px;gap:8px;font-size:11px;color:#777;margin-bottom:4px">
               <span></span><span>Entity prefix</span><span>Tent</span><span>Slot</span>
             </div>
