@@ -5,6 +5,7 @@ Working directory for ESPHome configs. Current fleet release string:
 cut remains `v5.1.0`). See the repo root README / CHANGELOG / FOLLOWUPS.
 
 Firmware QA: [docs/qa/FIRMWARE-QA-5.1.0.md](../../docs/qa/FIRMWARE-QA-5.1.0.md).
+Hub light-quota / first-ledger seed (5.1.7): [docs/qa/HUB-LIGHT-QUOTA-5.1.7.md](../../docs/qa/HUB-LIGHT-QUOTA-5.1.7.md).
 Repo [README](../../README.md) and [INSTALL.md](../../INSTALL.md) for from-scratch HA setup.
 Standalone SoftAP unboxing (no HA): [SETUP.md](../../SETUP.md).
 
@@ -73,6 +74,14 @@ ESP-NOW (glass ↔ hub) does **not** need the HA API. Fix API only for OTA, diag
 | Hub | 30 s Wi‑Fi channel poll (silent Nest hops) | OTA fine |
 | Panel 4.0.11 | Live `gv_*` UI + channel poll | **USB** if heap-sensitive / still looping |
 | HA packages / automations / dashboard | Push sync (or copy) + reload | See [`../../RELEASE.md`](../../RELEASE.md) · [`../../scripts/HA-SYNC-BOOTSTRAP.md`](../../scripts/HA-SYNC-BOOTSTRAP.md) |
+
+## Hub photoperiod quota (5.1.7)
+
+In [`dsc-hub-v4_0.yaml`](dsc-hub-v4_0.yaml) `run_clone_photoperiod`: NVS ledger
+(`photo_delivered_s` / carry / cycle key / `photo_ledger_rev`) credits actual
+SF1000 on-time, catches up past nominal off under **Min Dark Hours**, and
+rev-1 seeds on first boot so mid-dark OTA cannot invent full-day debt.
+Ops soak / pitfalls: [docs/qa/HUB-LIGHT-QUOTA-5.1.7.md](../../docs/qa/HUB-LIGHT-QUOTA-5.1.7.md).
 
 ## Hub mat votes
 

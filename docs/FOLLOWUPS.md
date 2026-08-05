@@ -616,5 +616,5 @@ No climate control regression during soak window.
 ### next
 | ID | Item | Notes |
 |---|---|---|
-| N-030 | Flash hub **5.1.7** + sync HA light helpers / Lighting view | **Done** 5 Aug — 5.1.7 live; catch-up idle, debt 0 mid-dark after ledger seed |
+| N-030 | Flash hub **5.1.7** + sync HA light helpers / Lighting view | **Done** 5 Aug — 5.1.7 live; catch-up idle, debt 0 mid-dark after ledger seed. Ops: [`docs/qa/HUB-LIGHT-QUOTA-5.1.7.md`](qa/HUB-LIGHT-QUOTA-5.1.7.md) |
 | F-006 | HA-link flap / recovery reboot storm | Still the upstream driver of these mode surprises |

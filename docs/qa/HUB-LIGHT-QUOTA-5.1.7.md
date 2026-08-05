@@ -1,0 +1,255 @@
+# Hub light-quota ledger + first-ledger seed — 5.1.7
+
+Operator / developer runbook for hub **photoperiod quota** (NVS ledger),
+**post-window debt catch-up**, and the **first-ledger seed** that stops mid-dark
+OTA from inventing catch-up debt.
+
+Shipped on master:
+
+| Hub | Commit | Role |
+|---|---|---|
+| **5.1.5** | `edb2bfd` | Photoperiod NVS survival / on_boot re-arm |
+| **5.1.6** | `c0e16f8` | Quota ledger + Min Dark Hours catch-up |
+| **5.1.7** | `2a3abea` | Rev-1 first-ledger seed (upgrade / fresh NVS) |
+
+**Live status (N-030):** hub **5.1.7** flashed 5 Aug 2026 — mid-dark verify
+**debt ≈ 0**, **catch-up idle** after ledger seed (`ea5a115`). Prefer this
+runbook over the 5.1.6-only flash path (open draft #25).
+
+Firmware QA baseline: [FIRMWARE-QA-5.1.0.md](FIRMWARE-QA-5.1.0.md).
+Hub body: [`firmware/v4/dsc-hub-v4_0.yaml`](../../firmware/v4/dsc-hub-v4_0.yaml)
+(`run_clone_photoperiod`). HA: [`dsc_v4_light_helpers.yaml`](../../homeassistant/packages/dsc_v4_light_helpers.yaml),
+[`view_lighting.yaml`](../../homeassistant/dashboards/modules/view_lighting.yaml),
+guards in [`dsc_v4_automations.yaml`](../../homeassistant/packages/dsc_v4_automations.yaml).
+
+**Does not replace:** Control Validate (#24), HA sensing/learn (#23), Sync
+www guards (#19). Use those for their subsystems.
+
+| Surface | Expect |
+|---|---|
+| Hub FW | **5.1.7** (`sensor.dsc_hub_firmware_version` / project string) |
+| HA packages | Light helpers + Lighting view + dark-violation exempt catch-up |
+| Sync | **5.1.3** (unchanged; packages land on push poll) |
+| Plant ops | Flash hub **before** trusting mid-window dark recovery or post-OTA dark |
+
+## Intent
+
+Clock-window photoperiod alone never repaid mid-window dark. Jul–Aug 2026
+history (HA flaps / recovery reboots, including the 5 Aug ~5.5h hole) left
+configured light hours unpaid because HA `unavailable` cannot meter photons.
+
+Hub **5.1.6** makes photoperiod a **quota ledger**: credit actual SF1000
+output into NVS `delivered_s`, compute debt vs cycle target, and after
+nominal off keep the light on (catch-up) while debt remains and remaining
+dark stays above **Min Dark Hours** (default 4h). Leftover debt folds into
+the next cycle capped at **+2h**.
+
+Hub **5.1.7** fixes the first-flash footgun: upgrading mid-dark with a zeroed
+ledger invented ~18h debt and turned the SF1000 on with the window shut.
+Rev-1 seed marks the day paid (or credits elapsed nominal) **before** catch-up
+can run.
+
+Hub **5.1.5** remains required context: Auto Photoperiod must survive
+recovery reboot (NVS flush + on_boot re-arm when Takeover clear). Quota
+cannot repay a schedule that stays disarmed.
+
+## Architecture
+
+```mermaid
+flowchart TB
+  subgraph nvs [NVS ledger]
+    Rev[photo_ledger_rev<br/>seed gate]
+    Key[photo_cycle_key<br/>YYYYMMDD of lights-on]
+    Del[photo_delivered_s]
+    Carry[photo_carry_s<br/>capped +2h]
+    MinDark[photo_min_dark_hours<br/>default 4h]
+  end
+
+  Tick["run_clone_photoperiod<br/>every 15s"]
+  Seed{ledger_rev &lt; 1<br/>or cycle_key==0?}
+  Nominal{in_nominal<br/>clock window?}
+  Credit[Credit dt when SF1000 on<br/>and bri ≥ ramp floor]
+  Debt[debt = target − delivered]
+  Catch{debt > 0 and<br/>dark_remaining > min_dark?}
+  Want[want_on]
+  Window["2x4 Window Open<br/>= nominal only"]
+  SF[SF1000 dimmer]
+
+  Tick --> Seed
+  Seed -->|yes: seed delivered| Del
+  Seed -->|no| Nominal
+  Tick --> Credit --> Del
+  Del --> Debt
+  Carry --> Debt
+  Nominal -->|yes| Want
+  Nominal -->|no| Catch
+  Catch -->|yes| Want
+  Catch -->|no| Off[force off]
+  Want --> SF
+  Nominal --> Window
+  MinDark --> Catch
+  Key --> Carry
+  Rev --> Seed
+```
+
+### First-ledger seed (5.1.7 — verified in `run_clone_photoperiod`)
+
+`photo_ledger_rev` (NVS, initial `0`) gates a one-shot seed. Bump the constant
+in firmware when a future format change must re-seed.
+
+| Condition | Seeded `photo_delivered_s` | Carry |
+|---|---|---|
+| `photo_ledger_rev < 1` and `dur > 0`, **in nominal** | `min(elapsed_s, target)` | `0` |
+| `photo_ledger_rev < 1` and `dur > 0`, **past window** | `target` (day paid) | `0` |
+| `photo_cycle_key == 0` on cycle rollover (same math) | same as above | `0` |
+| Normal cycle rollover (`key != 0`) | `0` + unpaid debt → carry (cap 2h) | capped |
+
+After seed: `photo_cycle_key = cycle_key`, `photo_last_tick_ms = 0`,
+`photo_ledger_rev = 1`. Serial: `Ledger rev1 seed cycle … delivered …s`.
+
+**Why mid-dark OTA of 5.1.6 was lethal:** fresh NVS left `delivered_s=0` and
+`cycle_key=0`. Outside the window, debt ≈ full day → catch-up ON all night.
+
+```mermaid
+sequenceDiagram
+  participant OTA as Mid-dark OTA
+  participant NVS as Ledger NVS
+  participant PP as run_clone_photoperiod
+  participant SF as SF1000
+
+  Note over OTA,SF: 5.1.6 first flash (broken)
+  OTA->>NVS: delivered=0, cycle_key=0
+  PP->>PP: debt ≈ target (~18h)
+  PP->>SF: catch-up ON, window shut
+
+  Note over OTA,SF: 5.1.7 rev-1 seed
+  OTA->>NVS: ledger_rev=0
+  PP->>NVS: delivered=target (past window)
+  PP->>NVS: ledger_rev=1, carry=0
+  PP->>SF: catch-up idle
+```
+
+### Cycle math (verified in `run_clone_photoperiod`)
+
+| Term | Definition |
+|---|---|
+| Cycle key | Local calendar date of the lights-on boundary (`YYYYMMDD`) |
+| Target | `dur_hours × 3600 + photo_carry_s` |
+| Credit | When dimmer ON and brightness ≥ `sf_ramp_floor − 0.5%`, add clamped `dt` (1–30s) |
+| Debt | `max(0, target − delivered)` |
+| Catch-up | Auto Photoperiod armed, not in nominal window, debt > 0, `dark_remaining > min_dark` |
+| Carry | On cycle rollover (after seed), unpaid debt folded in, capped at **7200s (2h)** |
+
+`binary_sensor.dsc_hub_2x4_window_open` stays **nominal-window only** — catch-up
+does not fake “window open”. That keeps flowering dark-period accounting honest.
+
+### Published entities (hub → HA)
+
+| Entity | Role |
+|---|---|
+| `sensor.dsc_hub_light_delivered_hours` | Cycle delivered (`photo_delivered_s / 3600`) |
+| `sensor.dsc_hub_light_debt_hours` | Remaining debt incl. carry |
+| `binary_sensor.dsc_hub_light_catchup_active` | Post-window repayment (`device_class: running`) |
+| `number.dsc_hub_min_dark_hours` | Floor 2–12h, step 0.5 (NVS) |
+
+### HA helpers / UI
+
+| Piece | Behavior |
+|---|---|
+| `binary_sensor.dsc_clone_dark_period_violation` | ON only if SF1000 on **and** window shut **and** catch-up **off** |
+| `sensor.dsc_lights_deviation_today` | Prefers hub delivered vs plan; falls back to midnight `history_stats` |
+| Lighting view | Cycle quota card + catch-up chip; calendar `history_stats` demoted to cross-check |
+
+Midnight-anchored `sensor.dsc_lights_on_today_2x4` undercounts a 17:00→11:00
+cycle. Trust the hub ledger when they disagree.
+
+## Why 5.1.5 alone was not enough
+
+```mermaid
+sequenceDiagram
+  participant FA as Full Auto loop
+  participant NVS as Photoperiod NVS
+  participant Boot as Recovery reboot
+  participant SF as SF1000
+
+  FA->>FA: keeps auto_photoperiod true in RAM
+  Note over NVS: could stay OFF (pre-5.1.5)
+  Boot->>NVS: restore OFF
+  Boot->>SF: dark while clock window still open
+  Note over SF: ~5.5h hole 5 Aug 2026
+```
+
+5.1.5 flushes NVS after `arm_full_auto` / photoperiod switch and re-arms on
+boot when Takeover is clear. HA still guards: re-arm if photoperiod OFF >45s
+without Takeover; alert + force-arm if light missing in window >2min.
+
+5.1.6 addresses the **other** failure: even with schedule armed, mid-window
+dark (flaps, holds, outages) must be **repaid** under a plant-safe dark floor.
+
+5.1.7 addresses the **upgrade** failure: first ledger boot must not treat
+“never credited” as “owe the whole day” when flashing mid-cycle.
+
+## Operator flash + sync (N-030)
+
+Plant-critical for any hub still below **5.1.7**. Lab fleet closed this on
+5 Aug 2026 (`ea5a115`) — keep the checklist for rebuilds / second sites.
+
+1. [x] Sync add-on has pulled packages / Lighting view / light helpers *(lab)*
+2. [x] Validate + flash hub stub → FW **5.1.7** (not 5.1.6) *(lab)*
+3. [ ] Serial (or log) shows `Ledger rev1 seed` on first photoperiod tick after upgrade
+4. [x] Entities present: Delivered / Debt / Catch-up / Min Dark Hours *(lab)*
+5. [x] If flashed **during dark**: Delivered ≈ plan, Debt ≈ 0, catch-up **idle** *(lab 5 Aug)*
+6. [ ] If flashed **during window**: Delivered ≈ elapsed nominal (not zero)
+7. [ ] Lighting → Cycle quota shows delivered vs plan; catch-up chip idle (healthy)
+8. [ ] Min Dark Hours at a sane floor (default **4h**; do not set 0)
+9. [ ] Confirm dark-period alert stays quiet during intentional catch-up
+
+### Soak scenarios
+
+| Scenario | Expect | Lab note |
+|---|---|---|
+| Fresh flash mid-dark (5.1.7) | Seed marks day paid; SF1000 stays off; no invented debt | **Verified** 5 Aug — debt 0, catch-up idle |
+| Fresh flash mid-window | Seed credits elapsed; no full-day debt; continues crediting | Pending intentional mid-window reflash |
+| Healthy cycle, no outage | Delivered ≈ plan by nominal off; catch-up idle; sunset ramp may run | Ongoing |
+| Mid-window dark (reboot / hold / flap) | Debt rises; after nominal off catch-up ON until debt clears or min-dark floor | Needs real outage soak |
+| Debt > remaining dark − min dark | Catch-up stops; leftover ≤2h carries into next cycle | Pending |
+| Manual Takeover / Clone Off | Catch-up cleared; device does not drive schedule | Pending |
+| Manual Light Hold | Ledger still credits actual-on; hold self-heals when `want_on` clears | Pending |
+| Expect catch-up at end of window | Sunset dim skipped so light does not dip to 0 then snap back | Pending |
+| Re-flash 5.1.7 after rev already 1 | No re-seed; normal credit / rollover / carry | Pending |
+
+## Developer constraints
+
+- Credit path uses **hub dimmer remote values**, not HA history — by design.
+- `photo_catchup_active` is **not** NVS-restored (runtime only).
+- `photo_ledger_rev` **is** NVS-restored; bump initial/constant to force re-seed.
+- Carry cap is hard-coded **7200s** in `run_clone_photoperiod`.
+- Delivered clamp rejects absurd wrap (`delivered_s < 200000` before credit).
+- Interval is **15s** (`run_photoperiod` + `run_clone_photoperiod`).
+- Emergency failsafe / `boot_resume_pending` / Takeover short-circuit the script.
+- Seed runs only when `dur > 0` (photoperiod hours configured).
+- HA alert copy may still say “flash 5.1.5+”; tree SoT for quota+seed is **5.1.7**.
+
+## Pitfalls
+
+| Symptom | Likely cause | Check |
+|---|---|---|
+| Light ON all night after first 5.1.6 OTA | Missing seed (still on 5.1.6) | Flash **5.1.7**; serial for `Ledger rev1 seed` |
+| Catch-up never fires after real outage | Hub below 5.1.6, or photoperiod/Takeover/Clone Off | FW string; Auto Photoperiod ON |
+| Dark-period alert during catch-up | Stale HA helpers (pre-exempt package) | Sync `dsc_v4_light_helpers`; entity `dsc_hub_light_catchup_active` |
+| Calendar hours ≠ Delivered | Midnight history_stats vs cycle ledger | Prefer hub Delivered; calendar is cross-check |
+| Debt sticks overnight | Floor hit; carry capped at +2h | Debt next cycle ≤ prior leftover + 2h |
+| Window Open off while light on | Normal during catch-up | Catch-up chip amber; not a flowering violation |
+| Schedule OFF after recovery reboot | Pre-5.1.5 NVS path or Takeover | Flash ≥5.1.5; HA GUARD should re-arm without Takeover |
+| Expect re-seed after format tweak | Forgot to bump `photo_ledger_rev` gate | Bump rev constant in hub YAML |
+
+## Related FOLLOWUPS
+
+| ID | Item | Status |
+|---|---|---|
+| N-030 | Flash hub **5.1.7** + sync HA light helpers / Lighting view | **Done** 5 Aug — live mid-dark seed OK |
+| F-006 | HA-link flap / recovery reboot storm (upstream driver) | Open |
+
+Sibling draft docs (#19–#26) cover other subsystems — keep this file focused
+on light quota, photoperiod survival, and first-ledger seed. Prefer this file
+over #25/#26 drafts once merged; close those flash-path PRs after merge.
