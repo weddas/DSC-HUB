@@ -39,8 +39,11 @@ substitutions:
 espnow:
   # Merged into the hub's existing espnow: block (peers list concatenates,
   # so the four pots stay). auto_add_peer stays false from the base config.
+  # Register broadcast explicitly so ESPHome does not channel-sweep looking
+  # for FF:FF… when 0xD0 / 0xD7 go out (N-037 — caused Nest STA thrash + OOM).
   peers:
     - ${panel_mac}
+    - FF:FF:FF:FF:FF:FF
   on_receive:
     - lambda: |-
         // ---- PEER RF CARD (0xD5): {0xD5,ver,role,assoc3[3],pref3[3],ch,rssi,status} ----
@@ -258,6 +261,16 @@ globals:
     type: uint32_t
     restore_value: false
     initial_value: '0'
+  # N-037 — after ESP-NOW send OOM / fail, pause periodic TX (ms epoch).
+  - id: espnow_tx_backoff_until
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+  # 5s cadence phase: even = medium (0xD0/0xD7), odd = large (vitals/config/soil).
+  - id: espnow_tx_phase
+    type: int
+    restore_value: false
+    initial_value: '0'
 
 binary_sensor:
   # Glass presence from ESP-NOW commands (hello + any hub_cmd). Not the same
@@ -282,8 +295,41 @@ script:
     mode: restart
     then:
       - delay: 150ms
+      # Event-driven: one large packet only (vitals). Config rides the 5s cadence.
       - script.execute: tx_vitals
-      - script.execute: tx_config
+
+  # ---- 5s cadence (N-037): exactly ONE outbound frame per tick ----
+  # even: medium 0xD0 fleet beat (every 6th medium → 0xD7 TIME instead)
+  # odd:  large 0xD1 vitals (every 4th large → config; every 8th → soil;
+  #       every 12th → names — still one packet)
+  - id: tx_espnow_cadence
+    mode: single
+    then:
+      - lambda: |-
+          uint32_t now = millis();
+          if (id(espnow_tx_backoff_until) != 0 && now < id(espnow_tx_backoff_until)) {
+            ESP_LOGD("espnow", "TX cadence skipped — backoff %u ms left",
+                     (unsigned)(id(espnow_tx_backoff_until) - now));
+            return;
+          }
+          int ph = id(espnow_tx_phase);
+          id(espnow_tx_phase) = ph + 1;
+          if ((ph & 1) == 0) {
+            // Medium slot — 0xD0 most of the time; 0xD7 every 6th medium (60s).
+            int med = ph / 2;
+            if (med % 6 == 5) id(tx_peer_time).execute();
+            else id(tx_fleet_heartbeat).execute();
+          } else {
+            // Large slot — vitals default; rotate config/soil/names sparsely.
+            int lg = ph / 2;
+            if (lg % 12 == 11) id(tx_names).execute();
+            else if (lg % 8 == 7) id(tx_soil).execute();
+            else if (lg % 4 == 3) id(tx_config).execute();
+            else id(tx_vitals).execute();
+          }
+          bool linked = id(panel_last_ms) != 0 && (now - id(panel_last_ms)) < 30000u;
+          id(panel_link).publish_state(linked);
+
   # ---- VITALS (0xD1) — live values ----
   - id: tx_vitals
     mode: single
@@ -291,6 +337,11 @@ script:
       - espnow.send:
           address: ${panel_mac}
           wait_for_sent: false
+          continue_on_error: true
+          on_error:
+            - lambda: |-
+                id(espnow_tx_backoff_until) = millis() + 15000u;
+                ESP_LOGW("espnow", "vitals TX fail — backoff 15s");
           data: !lambda |-
             std::vector<uint8_t> p; p.reserve(60);
             auto i16 = [&](float v, float sc){ int16_t t = isnan(v) ? (int16_t)0x8000 : (int16_t) lroundf(v * sc); p.push_back(t & 0xFF); p.push_back((t >> 8) & 0xFF); };
@@ -328,6 +379,11 @@ script:
       - espnow.send:
           address: ${panel_mac}
           wait_for_sent: false
+          continue_on_error: true
+          on_error:
+            - lambda: |-
+                id(espnow_tx_backoff_until) = millis() + 15000u;
+                ESP_LOGW("espnow", "config TX fail — backoff 15s");
           data: !lambda |-
             std::vector<uint8_t> p; p.reserve(60);
             auto i16 = [&](float v, float sc){ int16_t t = isnan(v) ? (int16_t)0x8000 : (int16_t) lroundf(v * sc); p.push_back(t & 0xFF); p.push_back((t >> 8) & 0xFF); };
@@ -341,7 +397,7 @@ script:
             i16((float)(id(clone_lights_on_time).hour*60 + id(clone_lights_on_time).minute),1);
             return p;
 
-  # ---- SOIL broadcast (0xD3) — full per-pot set, 10s ----
+  # ---- SOIL (0xD3) — full per-pot set (cadence large slot) ----
   # Per pot 1..4, 7 × i16: temp*100, moisture*10, EC*1, pH*100, N*1, P*1, K*1.
   # Temp uses the mat's fresh-ESP-NOW-else-HA pick; the rest are the pot's
   # broadcast values relayed straight through. NaN/absent -> 0x8000.
@@ -350,6 +406,11 @@ script:
       - espnow.send:
           address: ${panel_mac}
           wait_for_sent: false
+          continue_on_error: true
+          on_error:
+            - lambda: |-
+                id(espnow_tx_backoff_until) = millis() + 15000u;
+                ESP_LOGW("espnow", "soil TX fail — backoff 15s");
           data: !lambda |-
             std::vector<uint8_t> p; p.reserve(60);
             uint32_t nowms = millis();
@@ -371,12 +432,16 @@ script:
   # this ESP-NOW relay. Panel stays HA-independent for display; pot NVS
   # remains the permanent store when you rename in Home Assistant.
   - id: tx_names
-    mode: restart
+    mode: single
     then:
-      - delay: 50ms
       - espnow.send:
           address: ${panel_mac}
           wait_for_sent: false
+          continue_on_error: true
+          on_error:
+            - lambda: |-
+                id(espnow_tx_backoff_until) = millis() + 15000u;
+                ESP_LOGW("espnow", "names TX fail — backoff 15s");
           data: !lambda |-
             std::vector<uint8_t> p; p.reserve(66);
             p.push_back(0xD4); p.push_back(0x01);
@@ -387,15 +452,21 @@ script:
             put(id(plant_name_3)); put(id(plant_name_4));
             return p;
 
-  # ---- FLEET HEARTBEAT (0xD0 v2) — Control + pots
+  # ---- FLEET HEARTBEAT (0xD0 v2) — Control + pots (medium cadence slot)
   # v1: {0xD0,0x01,ch,bssid[6]}
   # v2: {0xD0,0x02,ch,bssid[6],rssi_u8,flags} — peers accept either.
+  # Broadcast peer is registered above so ESPHome stays on Nest channel.
   - id: tx_fleet_heartbeat
     mode: single
     then:
       - espnow.send:
           address: FF:FF:FF:FF:FF:FF
           wait_for_sent: false
+          continue_on_error: true
+          on_error:
+            - lambda: |-
+                id(espnow_tx_backoff_until) = millis() + 15000u;
+                ESP_LOGW("espnow", "0xD0 TX fail — backoff 15s");
           data: !lambda |-
             std::vector<uint8_t> p{0xD0, 0x02, 0, 0, 0, 0, 0, 0, 0, 0, 0};
             auto *w = wifi::global_wifi_component;
@@ -420,7 +491,7 @@ script:
             p[10] = flags;
             return p;
 
-  # ---- PEER TIME (0xD7) — SNTP-rooted wall clock for pots / Control backup
+  # ---- PEER TIME (0xD7) — SNTP-rooted wall clock (medium cadence, sparse)
   # {0xD7,0x01,year-2000,month,day,hour,min,sec,valid}
   - id: tx_peer_time
     mode: single
@@ -428,6 +499,11 @@ script:
       - espnow.send:
           address: FF:FF:FF:FF:FF:FF
           wait_for_sent: false
+          continue_on_error: true
+          on_error:
+            - lambda: |-
+                id(espnow_tx_backoff_until) = millis() + 15000u;
+                ESP_LOGW("espnow", "0xD7 TX fail — backoff 15s");
           data: !lambda |-
             std::vector<uint8_t> p{0xD7, 0x01, 0, 0, 0, 0, 0, 0, 0};
             auto now = id(sntp_time).now();
@@ -443,19 +519,11 @@ script:
             }
             return p;
 
-# Drive the periodic broadcasts (the on_receive echo covers instant feedback).
+# One outbound ESP-NOW frame every 5s (medium / large alternating). Instant
+# feedback still comes from on_receive → tx_panel_sync (vitals only).
 interval:
-  - interval: 2s
-    then: [{script.execute: tx_vitals}]
   - interval: 5s
-    then:
-      - script.execute: tx_fleet_heartbeat
-      - script.execute: tx_peer_time
-      - lambda: |-
-          bool linked = id(panel_last_ms) != 0 && (millis() - id(panel_last_ms)) < 30000u;
-          id(panel_link).publish_state(linked);
-  - interval: 10s
-    then: [{script.execute: tx_config}, {script.execute: tx_soil}, {script.execute: tx_names}]
+    then: [{script.execute: tx_espnow_cadence}]
 
 # Full soil relay: receive the pots' extra fields (they already send temp +
 # moisture; the pot patch adds EC/pH/N/P/K to their sensors: list). These

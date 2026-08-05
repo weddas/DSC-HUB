@@ -1,5 +1,12 @@
 # Changelog
 
+## Hub 5.1.9 — ESP-NOW TX cadence (2026-08-05)
+
+- **N-037:** One outbound ESP-NOW frame every 5s — alternate medium `0xD0`
+  (sparse `0xD7`) and large vitals (sparse config/soil/names). Register
+  broadcast peer so sends do not channel-sweep off Nest. 15s TX backoff on
+  send fail. Stops the 5.1.8 OOM + `11→1…14→11` thrash seen in soak logs.
+
 ## Hub 5.1.8 + Control 5.1.16 + Pots 5.1.7 — fleet self-heal train (2026-08-05)
 
 - **Light quota** (5.1.6/5.1.7) retained; lateral **VPD band** + **mister duty** ledgers.

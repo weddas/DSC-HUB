@@ -5445,7 +5445,8 @@ interval:
           id(wifi_channel) = ch;
 
   # ---- ESP-NOW silent recovery ladder (temp until dedicated router) ----
-  # Hub vitals 2s + 0xD0 beat 5s. If glass hears nothing:
+  # Hub 5.1.9+: vitals ~10s (large cadence) + 0xD0 ~10s (medium). If glass
+  # hears nothing:
   #   15s → hello ping (hub echoes vitals — API/session nudge)
   #   45s → WiFi bounce (rebind HA API + rejoin preferred BSSID)
   #   120s → safe_reboot (cap 2/boot)

@@ -173,8 +173,8 @@ button:
           id(evt_pending_code) = "OTA_QUIESCE";
           id(evt_pending_detail) = "arm";
           id(emit_evt).execute();
+          // One medium frame only (cadence owns periodic 0xD7).
           id(tx_fleet_heartbeat).execute();
-          id(tx_peer_time).execute();
       - delay: 2s
       - lambda: |-
           bool panel_ok = id(panel_last_ms) != 0 && (millis() - id(panel_last_ms)) < 30000u;

@@ -648,3 +648,51 @@ No climate control regression during soak window.
 
 - Flash pots to **5.1.7**; confirm `binary_sensor.dsc_pot_N_clock_valid` and (once hub RX exists, N-035) that a fleet RF summary appears hub-side
 - Run `scripts/run_sim_gates.ps1` (or `.sh`) before any future `dsc-control-common.yaml` or fleet-heal packet-format change
+
+---
+
+## 2026-08-05 — Fleet self-heal flash soak
+
+### live train
+- Hub **5.1.8** (`a1f5d76` compile fix: REJOIN → `link_wifi_bounce`, not `WiFiComponent::reset`)
+- Control **5.1.16**
+- Pots **5.1.7** on 1 / 2 / 4; pot3 OTA upload failed (still F-003 / offline)
+
+### soak snapshot (dark window)
+- Light delivered **18.0h**, debt **0**, catch-up **off**; Auto Photoperiod **on**; SF1000 **off**
+- `clock_valid` **on** hub + Control + pots 1/2/4
+- Hub RF `RF|H|E2A|E2A|11|-58|OK` — no CHX; **F-004 Nest channel lock not indicated** this soak
+- `fix_active` off; coherence mismatch off; EVT saw `API_BLIP` on reconnect (expected)
+
+### residual
+| ID | Item | Notes |
+|---|---|---|
+| F-003 | Pot3 USB/OTA | Compile OK; upload exit 1 — device unreachable |
+| N-035 | 0xD5 RX + 0xD7 TX | **Closed in tree** (`dsc-hub-espnow-primary.yaml`); confirm pot `last_peer_time` updates on soak |
+
+---
+
+## 2026-08-05 — Hub 5.1.8 soak log: ESP-NOW OOM + channel sweep
+
+### source
+`dsc-hub-logs (4).txt` (~14:51–15:31 AEST), FW **5.1.8**.
+
+### plant / quota (OK)
+- Light delivered **18.0h**, debt **0**, SF1000 **OFF**, photoperiod entities present; RF status stays `…|11|…|OK` when reported.
+
+### red-flag
+- **~178** `espnow: Failed to send … Our of memory` across the hour (broadcast `FF:FF:…` and panel `30:76:F5:E9:22:0C`).
+- **Channel sweep storms**: rapid `Wifi Channel is changed from 11 → N → 11` for N=1…14 (ESP-NOW broadcast path thrashing STA channel). Clustered with OOM bursts (~every few minutes).
+- `espnow` warning flag set/cleared repeatedly; one `api Max connections (3), rejecting 192.168.86.10`; log ends with API disconnect/reconnect.
+- `Last EVT` stuck republishing stale `API_BLIP` (no fresh detail) — noisy, not plant-critical.
+
+### likely cause
+New 5s `tx_fleet_heartbeat` / `tx_peer_time` broadcast load on top of 2s vitals + 10s soil/config; ESP-NOW TX buffers exhaust → component retries/sweeps channels off Nest ch11 then snaps back.
+
+### next
+| ID | Item | Notes |
+|---|---|---|
+| N-037 | Cap / coalesce hub ESP-NOW TX; never channel-sweep while STA associated; gate broadcast when send fails | **Fixed in hub 5.1.9** — 5s medium/large alternate; broadcast peer registered; 15s TX backoff |
+| N-038 | EVT last-per-code freshness: don't re-publish identical `API_BLIP` every few seconds | HA autofix dedupe assumes change |
+| F-004 | Nest channel lock | Not indicated this soak (RF stays ch11 OK between sweeps); sweeps are hub-local, not Nest hop |
+| N-039 | Pot 0xD7 RX expects u32 epoch; hub/Control use calendar fields | Align pot parser to Control calendar pack (or dual-decode) |
