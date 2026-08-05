@@ -507,7 +507,8 @@ script:
           id(evt_pending_code) = "REJOIN";
           id(evt_pending_detail) = "hub";
           id(emit_evt).execute();
-          wifi::global_wifi_component->reset();
+          // Same path as API-recovery bounce — WiFiComponent has no reset().
+          id(link_wifi_bounce).execute();
 
   - id: rf_fleet_jump_arm
     mode: single
