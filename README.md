@@ -5,7 +5,7 @@ Indoor grow climate fleet: **ESPHome hub**, **CYD touch panel** (DSC-CONTROL),
 Home Assistant surfaces that sync on every git push.
 
 **Current release tag:** [**v5.1.0**](https://github.com/weddas/DSC-HUB/releases/tag/v5.1.0)  
-**Live train (in tree):** HA surface **5.1.8** · pots **5.1.6** · Control **5.1.15** · hub **5.1.5** · Sync **5.1.3**  
+**Live train (in tree):** HA surface **5.1.8** · pots **5.1.6** · Control **5.1.15** · hub **5.1.6** · Sync **5.1.3**  
 (Fleet chip compares major.minor — mixed `5.1.x` stays `ok`.)
 
 ---
@@ -58,7 +58,7 @@ packages / dashboard / www / ESPHome stubs land in `/config`.
 
 | Device | Config | Version |
 |---|---|---|
-| Hub | `dsc-hub.yaml` → `dsc-hub-v4_0.yaml` | **5.1.5** |
+| Hub | `dsc-hub.yaml` → `dsc-hub-v4_0.yaml` | **5.1.6** |
 | Panel | `dsc-control.yaml` → `dsc-control-common.yaml` | **5.1.15** |
 | Pots 1–4 | `dsc-pot{N}.yaml` → `dsc-pot-common.yaml` | **5.1.6** |
 | Sonoffs | heater / heatmat / humidifier / de-humidifier | **5.1.x** |

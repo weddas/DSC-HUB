@@ -1,5 +1,16 @@
 # Changelog
 
+## Hub 5.1.6 — light-quota + debt catch-up (2026-08-05)
+
+- **Plant-critical:** photoperiod is now a hub NVS ledger (`delivered_s` /
+  debt), not a pure clock window. After mid-window outages the SF1000
+  stays/re-lights past nominal off while debt remains and remaining dark
+  > **Min Dark Hours** (default 4h). Leftover debt folds into the next
+  cycle capped at +2h. HA dark-period violation exempts catch-up; Lighting
+  view shows Delivered / Debt / Catch-up.
+- Motivated by Jul–Aug 2026 history (recurring mid-window theft; HA
+  `unavailable` cannot meter photons) and the 5 Aug ~5.5h hole.
+
 ## Hub 5.1.5 — photoperiod NVS / mid-window dark (2026-08-05)
 
 - **Plant-critical:** recovery reboot could restore Auto Photoperiod **OFF** from

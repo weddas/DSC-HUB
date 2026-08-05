@@ -35,7 +35,8 @@ template:
         icon: mdi:weather-night-partly-cloudy
         state: >
           {{ is_state('light.dsc_hub_sf1000_dimmer','on')
-             and is_state('binary_sensor.dsc_hub_2x4_window_open','off') }}
+             and is_state('binary_sensor.dsc_hub_2x4_window_open','off')
+             and not is_state('binary_sensor.dsc_hub_light_catchup_active','on') }}
         availability: >
           {{ has_value('light.dsc_hub_sf1000_dimmer')
              and has_value('binary_sensor.dsc_hub_2x4_window_open') }}
@@ -80,8 +81,13 @@ template:
         state_class: measurement
         icon: mdi:scale-balance
         state: >
-          {{ (states('sensor.dsc_lights_on_today_2x4') | float(0)
-              - states('sensor.dsc_clone_expected_light_hours') | float(0)) | round(2) }}
+          {% set exp = states('sensor.dsc_clone_expected_light_hours') | float(0) %}
+          {% if has_value('sensor.dsc_hub_light_delivered_hours') %}
+            {{ (states('sensor.dsc_hub_light_delivered_hours') | float(0) - exp) | round(2) }}
+          {% else %}
+            {{ (states('sensor.dsc_lights_on_today_2x4') | float(0) - exp) | round(2) }}
+          {% endif %}
         availability: >
-          {{ has_value('sensor.dsc_lights_on_today_2x4')
-             and has_value('sensor.dsc_clone_expected_light_hours') }}
+          {{ has_value('sensor.dsc_clone_expected_light_hours')
+             and (has_value('sensor.dsc_hub_light_delivered_hours')
+                  or has_value('sensor.dsc_lights_on_today_2x4')) }}

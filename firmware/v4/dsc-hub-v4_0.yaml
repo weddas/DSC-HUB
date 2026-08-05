@@ -28,6 +28,12 @@
 # photoperiod switch; on_boot re-arms photoperiod whenever Takeover is
 # clear (Full Auto OFF ≠ lights OFF).
 #
+# ===== v5.1.6 · LIGHT-QUOTA + DEBT CATCH-UP =====
+# Clock-window alone never repaid mid-window dark (Jul–Aug 2026 history:
+# recurring theft; HA unavailable ≠ meter). NVS ledger credits actual
+# SF1000 output; after nominal off, catch-up while debt > 0 and remaining
+# dark > min dark floor (default 4h). Capped carry into next cycle (+2h).
+#
 # ===== FLEET LINK / AP PIN (temp mesh) =====
 # Optional text.dsc_hub_preferred_wifi_bssid (NVS). On every STA connect
 # (+ delayed on_boot) the hub runs wifi_ap_learn_or_pin: Lock ON learns
@@ -70,7 +76,7 @@ esphome:
   friendly_name: DSC-HUB
   project:
     name: "digital_emotions.dsc-hub"
-    version: "5.1.5"
+    version: "5.1.6"
   on_boot:
     - priority: -100
       then:
@@ -856,6 +862,40 @@ globals:
     type: float
     restore_value: false
     initial_value: '0.0'
+
+  # ===== v5.1.6 · LIGHT-QUOTA LEDGER (NVS) ==========================
+  # photo_cycle_key: YYYYMMDD of the current photoperiod-day start
+  # (lights-on boundary). photo_delivered_s: actual-on seconds this
+  # cycle. photo_carry_s: capped leftover debt folded from prior cycle.
+  # photo_catchup_active: runtime only — post-window repayment.
+  - id: photo_cycle_key
+    type: int
+    restore_value: true
+    initial_value: '0'
+  - id: photo_delivered_s
+    type: uint32_t
+    restore_value: true
+    initial_value: '0'
+  - id: photo_carry_s
+    type: uint32_t
+    restore_value: true
+    initial_value: '0'
+  - id: photo_catchup_active
+    type: bool
+    restore_value: false
+    initial_value: 'false'
+  - id: photo_min_dark_hours       # plant-safety floor; catch-up stops when
+    type: float                    # remaining dark would drop below this
+    restore_value: true
+    initial_value: '4.0'
+  - id: photo_last_tick_ms         # millis of last credit tick (dt clamp)
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+  - id: photo_was_want_on          # prior tick want_on (manual-hold self-heal)
+    type: bool
+    restore_value: false
+    initial_value: 'false'
 
   # --- Failsafe snapshot (to restore state after an emergency) ---
   - id: saved_out
@@ -2360,6 +2400,23 @@ number:
       - lambda: 'id(num_sf_ramp_floor).publish_state((float) id(sf_ramp_floor));'
       - script.execute: tx_panel_sync
 
+  # v5.1.6 · min dark floor for light-quota catch-up. After a mid-window
+  # outage the engine may extend past nominal off, but never eat the
+  # whole night — stop when remaining dark would drop below this.
+  - platform: template
+    name: "Min Dark Hours"
+    id: num_min_dark_hours
+    icon: "mdi:weather-night"
+    min_value: 2
+    max_value: 12
+    step: 0.5
+    unit_of_measurement: "h"
+    update_interval: 60s
+    lambda: 'return id(photo_min_dark_hours);'
+    set_action:
+      - globals.set: {id: photo_min_dark_hours, value: !lambda 'return x;'}
+      - lambda: 'id(num_min_dark_hours).publish_state((float) id(photo_min_dark_hours));'
+
   # Clone humidifier release offset: demand clears at RH-min + this.
   # The v2.3 +2% (4% total band) was the short-cycler. Raising this IS
   # "raise the overshoot target".
@@ -2668,7 +2725,7 @@ text_sensor:
     name: "Firmware Version"
     id: fw_version
     icon: mdi:tag-check
-    lambda: 'return {"5.1.5"};'
+    lambda: 'return {"5.1.6"};'
     update_interval: 60s
 
   # F-006: last recovery action reason (bounce / reboot / none)
@@ -2802,6 +2859,33 @@ sensor:
     accuracy_decimals: 0
     update_interval: 15s
     lambda: 'return {(float)id(link_rec_wifi_bounces)};'
+
+  # v5.1.6 · on-hub photoperiod ledger (HA history is blind during flaps)
+  - platform: template
+    name: "Light Delivered Hours"
+    id: light_delivered_h
+    unit_of_measurement: "h"
+    state_class: measurement
+    icon: mdi:lightbulb-on-outline
+    accuracy_decimals: 2
+    update_interval: 15s
+    lambda: 'return {id(photo_delivered_s) / 3600.0f};'
+  - platform: template
+    name: "Light Debt Hours"
+    id: light_debt_h
+    unit_of_measurement: "h"
+    state_class: measurement
+    icon: mdi:scale-unbalanced
+    accuracy_decimals: 2
+    update_interval: 15s
+    lambda: |-
+      int dur = id(clone_photo_follow)
+          ? (id(main_active) ? id(stage_light_hours) : 0)
+          : id(clone_light_hours);
+      if (dur <= 0) return {0.0f};
+      uint32_t target = (uint32_t) dur * 3600u + id(photo_carry_s);
+      if (id(photo_delivered_s) >= target) return {0.0f};
+      return {(target - id(photo_delivered_s)) / 3600.0f};
 
   # Stack heartbeat — HA sees a live counter; Sync automation also pings
   # number.dsc_hub_ha_handshake. Recovery interval uses both signals.
@@ -3424,6 +3508,16 @@ binary_sensor:
     icon: "mdi:sun-clock-outline"
     device_class: running
     lambda: 'return id(clone_lights_on);'
+
+  # v5.1.6 · intentional post-window light while repaying photoperiod debt.
+  # device_class: running so Home alert auto-include skips it (same as
+  # window-open). Dark-period violation must exclude this.
+  - platform: template
+    name: "Light Catchup Active"
+    id: light_catchup_bs
+    icon: "mdi:restore-clock"
+    device_class: running
+    lambda: 'return id(photo_catchup_active);'
 
   # ===== v2.4.1 · PER-POT ESP-NOW LINK WATCHDOGS ====================
   # Honest freshness-based link truth: ON while that pot's last
@@ -4650,30 +4744,30 @@ script:
   # schedule re-asserts within 15s of clear.
   # NOTE: the ramp-floor remap (1k pull-down dead zone) happens in the
   # OUTPUT (min_power) — this engine still reasons in honest 0-100%.
+  #
+  # v5.1.6 · LIGHT-QUOTA + DEBT CATCH-UP
+  # Nominal window still drives clone_lights_on / 2x4 Window Open.
+  # Separately, NVS-backed delivered_s credits actual SF1000 output
+  # (≥ ramp floor). After nominal off, want_on continues while debt > 0
+  # and remaining dark > min dark floor (catch-up). Leftover debt folds
+  # into the next cycle capped at +2h.
   - id: run_clone_photoperiod
     mode: single
     then:
       - lambda: |-
           if (id(boot_resume_pending)) return;    // waiting on resume prompt
           if (id(emergency_failsafe_active)) return;  // trip handler owns the light
-          if (id(ha_takeover_active)) { id(light_ramp_state) = 0; return; }  // you own the light
+          if (id(ha_takeover_active)) {
+            id(light_ramp_state) = 0;
+            id(photo_catchup_active) = false;
+            return;
+          }
           if (!id(clone_active)) {                // 2x4 Off: apply_clone_mode already darked it
             id(clone_lights_on) = false;
             id(light_ramp_state) = 0;
+            id(photo_catchup_active) = false;
             return;
           }
-          if (!id(auto_photoperiod_enabled)) { id(light_ramp_state) = 0; return; }
-
-          // v2.4.1 · LATCH FIX: v2.4 stamped a blanket 15.5s write-guard
-          // here on EVERY 15s tick — so the guard was permanently live
-          // whenever the schedule was armed, an external SF1000 change
-          // (HA slider / dial) could never latch Manual Light Hold, and
-          // the ramp silently overwrote it on the next tick. That is the
-          // v2.2 "lights fight me from HA" bug back from the dead. The
-          // guard is now stamped per-WRITE (2s), immediately before each
-          // light call — device writes still never self-latch, and the
-          // ~13s gap between ticks is where an external touch is heard
-          // and latches the hold as designed.
 
           // Resolve the window source
           int dur, on_m;
@@ -4685,84 +4779,167 @@ script:
             on_m = id(clone_lights_on_time).hour * 60 + id(clone_lights_on_time).minute;
           }
 
-          if (dur <= 0) {                        // dark mode / following an Off or Dry 4x8
-            if (id(manual_light_hold)) {         // explicit user hold wins;
-              id(light_ramp_state) = 0;          // no window = no self-heal,
-              id(light_current_pct) = id(light_sf1000).remote_values.is_on()   // clear via HA switch
-                  ? id(light_sf1000).remote_values.get_brightness() * 100.0f : 0.0f;
-              return;
-            }
-            id(light_write_guard_until) = millis() + 2000;   // our write
-            id(light_sf1000).turn_off().perform();
-            id(clone_lights_on) = false;
-            id(light_ramp_state) = 0;
-            id(light_current_pct) = 0.0f;
-            return;
-          }
-
           auto now = id(sntp_time).now();
           if (!now.is_valid()) now = id(grow_time).now();
           if (!now.is_valid()) return;           // no clock yet -> leave the light
 
           // Seconds-resolution clock for a smooth ramp
           float cur  = now.hour * 60.0f + now.minute + now.second / 60.0f;
-          float window   = dur * 60.0f;
-          float since_on = fmodf(cur - on_m + 1440.0f, 1440.0f);   // handles midnight wrap
-          bool was_on = id(clone_lights_on);
-          bool on = since_on < window;
-          id(clone_lights_on) = on;
+          float window   = dur > 0 ? dur * 60.0f : 0.0f;
+          float since_on = fmodf(cur - (float) on_m + 1440.0f, 1440.0f);   // midnight wrap
+          bool in_nominal = (dur > 0) && (since_on < window);
 
-          // MANUAL LIGHT HOLD: the schedule keeps ticking (so the display
-          // and countdowns stay honest) but the device does NOT touch the
-          // light. SELF-HEALS at the CLONE lights-off boundary: a daytime
-          // tweak resumes the schedule overnight, so the dark window is
-          // always enforced from the next cycle onward — no herm trap.
+          // ---- cycle key (YYYYMMDD of lights-on boundary) ----
+          time_t cycle_start_ts = now.timestamp - (time_t)(since_on * 60.0f);
+          ESPTime cs = ESPTime::from_epoch_local(cycle_start_ts);
+          int cycle_key = cs.year * 10000 + cs.month * 100 + cs.day_of_month;
+
+          const uint32_t CARRY_CAP_S = 7200u;   // +2h max fold into next day
+          if (id(photo_cycle_key) != cycle_key) {
+            uint32_t carry = 0;
+            if (id(photo_cycle_key) != 0 && dur > 0) {
+              uint32_t old_target = (uint32_t) dur * 3600u + id(photo_carry_s);
+              if (old_target > id(photo_delivered_s)) {
+                uint32_t old_debt = old_target - id(photo_delivered_s);
+                carry = old_debt > CARRY_CAP_S ? CARRY_CAP_S : old_debt;
+              }
+            }
+            id(photo_carry_s) = carry;
+            id(photo_delivered_s) = 0;
+            id(photo_cycle_key) = cycle_key;
+            id(photo_last_tick_ms) = 0;
+            ESP_LOGI("photoperiod", "Cycle %d start — carry %us into ledger",
+                     cycle_key, (unsigned) carry);
+          }
+
+          // ---- credit actual-on (hub truth; HA flaps do not matter) ----
+          uint32_t now_ms = millis();
+          uint32_t dt_s = 15;
+          if (id(photo_last_tick_ms) != 0) {
+            uint32_t dt_ms = now_ms - id(photo_last_tick_ms);
+            if (dt_ms < 1000) dt_s = 1;
+            else if (dt_ms > 30000) dt_s = 30;
+            else dt_s = dt_ms / 1000u;
+          }
+          id(photo_last_tick_ms) = now_ms;
+
+          bool light_on = id(light_sf1000).remote_values.is_on();
+          float bri_pct = light_on
+              ? id(light_sf1000).remote_values.get_brightness() * 100.0f
+              : 0.0f;
+          // Count photons only when commanded output clears the dead-zone floor
+          if (light_on && bri_pct >= id(sf_ramp_floor) - 0.5f) {
+            uint32_t d = id(photo_delivered_s);
+            if (d < 200000u) id(photo_delivered_s) = d + dt_s;  // clamp absurd wrap
+          }
+
+          uint32_t target_s = (dur > 0)
+              ? ((uint32_t) dur * 3600u + id(photo_carry_s)) : 0u;
+          uint32_t debt_s = (target_s > id(photo_delivered_s))
+              ? (target_s - id(photo_delivered_s)) : 0u;
+
+          // Dark remaining until next lights-on (= end of this 24h cycle)
+          float dark_remaining_s = (1440.0f - since_on) * 60.0f;
+          float min_dark_s = id(photo_min_dark_hours) * 3600.0f;
+          if (min_dark_s < 0.0f) min_dark_s = 0.0f;
+
+          bool catchup_want = id(auto_photoperiod_enabled) && (dur > 0)
+              && !in_nominal && (debt_s > 0)
+              && (dark_remaining_s > min_dark_s);
+          bool want_on = id(auto_photoperiod_enabled) && (dur > 0)
+              && (in_nominal || catchup_want);
+          id(photo_catchup_active) = catchup_want;
+
+          // Nominal window export only (HA 2x4 Window Open stays honest)
+          id(clone_lights_on) = in_nominal;
+
+          if (!id(auto_photoperiod_enabled)) {
+            id(light_ramp_state) = 0;
+            id(photo_catchup_active) = false;
+            return;
+          }
+
+          if (dur <= 0) {                        // dark mode / following an Off or Dry 4x8
+            if (id(manual_light_hold)) {         // explicit user hold wins;
+              id(light_ramp_state) = 0;          // no window = no self-heal,
+              id(light_current_pct) = id(light_sf1000).remote_values.is_on()
+                  ? id(light_sf1000).remote_values.get_brightness() * 100.0f : 0.0f;
+              return;
+            }
+            id(light_write_guard_until) = millis() + 2000;
+            id(light_sf1000).turn_off().perform();
+            id(clone_lights_on) = false;
+            id(light_ramp_state) = 0;
+            id(light_current_pct) = 0.0f;
+            id(photo_catchup_active) = false;
+            return;
+          }
+
+          // MANUAL LIGHT HOLD: schedule keeps ticking (display/debt honest)
+          // but device does NOT touch the light. SELF-HEALS when leaving
+          // want_on (nominal off, or catch-up finished / dark floor hit).
           if (id(manual_light_hold)) {
-            if (was_on && !on) {
+            if (id(photo_was_want_on) && !want_on) {
               id(manual_light_hold) = false;
-              ESP_LOGI("photoperiod", "Clone lights-off boundary -> manual light hold released, schedule resumes");
-              // fall through: the !on branch below turns the light off now
+              ESP_LOGI("photoperiod", "want_on cleared -> manual light hold released");
+              // fall through to force-off below
             } else {
+              id(photo_was_want_on) = want_on;
               id(light_ramp_state) = 0;
               id(light_current_pct) = id(light_sf1000).remote_values.is_on()
                   ? id(light_sf1000).remote_values.get_brightness() * 100.0f : 0.0f;
               return;
             }
           }
+          id(photo_was_want_on) = want_on;
 
-          if (!on) {
-            id(light_write_guard_until) = millis() + 2000;   // our write
+          if (!want_on) {
+            id(light_write_guard_until) = millis() + 2000;
             id(light_sf1000).turn_off().perform();
             id(light_ramp_state) = 0;
             id(light_current_pct) = 0.0f;
             return;
           }
 
-          float target = (float) id(local_target_sf1000);          // the "X%"
-          float rise   = (float) id(sunrise_minutes);              // the "Y min"
+          float target = (float) id(local_target_sf1000);
+          float rise   = (float) id(sunrise_minutes);
           float fall   = (float) id(sunset_minutes);
-          if (rise + fall > window && (rise + fall) > 0.0f) {      // never overlap
-            float k = window / (rise + fall);
-            rise *= k; fall *= k;
-          }
-
-          float to_off = window - since_on;
           float pct; int ramp;
-          if (rise > 0.0f && since_on < rise)    { pct = target * (since_on / rise); ramp = 1; }
-          else if (fall > 0.0f && to_off < fall) { pct = target * (to_off / fall);   ramp = 2; }
-          else                                   { pct = target;                     ramp = 0; }
+
+          // If catch-up will continue past nominal off, skip sunset dim —
+          // otherwise the light dips to 0 then snaps back to target.
+          bool expect_catchup = (debt_s > 0)
+              && ((1440.0f - window) * 60.0f > min_dark_s);
+
+          if (in_nominal) {
+            if (rise + fall > window && (rise + fall) > 0.0f) {
+              float k = window / (rise + fall);
+              rise *= k; fall *= k;
+            }
+            float to_off = window - since_on;
+            if (rise > 0.0f && since_on < rise) {
+              pct = target * (since_on / rise); ramp = 1;
+            } else if (!expect_catchup && fall > 0.0f && to_off < fall) {
+              pct = target * (to_off / fall); ramp = 2;
+            } else {
+              pct = target; ramp = 0;
+            }
+          } else {
+            // Catch-up: steady target (no sunset curve — may stop mid-band)
+            pct = target;
+            ramp = 0;
+          }
           id(light_ramp_state)  = ramp;
           id(light_current_pct) = pct;
 
           if (pct >= 0.5f) {
-            id(light_write_guard_until) = millis() + 2000;   // our write
+            id(light_write_guard_until) = millis() + 2000;
             auto l = id(light_sf1000).turn_on();
             l.set_brightness(pct / 100.0f);
-            // Glide between 15s updates while ramping so it looks continuous
             l.set_transition_length(ramp != 0 ? 14000 : 1000);
             l.perform();
           } else {
-            id(light_write_guard_until) = millis() + 2000;   // our write
+            id(light_write_guard_until) = millis() + 2000;
             id(light_sf1000).turn_off().perform();
           }
 

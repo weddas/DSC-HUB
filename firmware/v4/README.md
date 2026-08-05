@@ -1,7 +1,7 @@
 # DSC-HUB firmware v4
 
 Working directory for ESPHome configs. Current fleet release string:
-**Live train:** hub **5.1.5** · Control **5.1.15** · pots **5.1.6** (tagged marketing
+**Live train:** hub **5.1.6** · Control **5.1.15** · pots **5.1.6** (tagged marketing
 cut remains `v5.1.0`). See the repo root README / CHANGELOG / FOLLOWUPS.
 
 Firmware QA: [docs/qa/FIRMWARE-QA-5.1.0.md](../../docs/qa/FIRMWARE-QA-5.1.0.md).

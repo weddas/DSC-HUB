@@ -609,10 +609,11 @@ No climate control regression during soak window.
 
 ### fix (repo — flash hub + sync HA packages)
 - Hub **5.1.5**: sync after `arm_full_auto` / photoperiod switch; on_boot re-arms photoperiod when Takeover clear.
-- HA: `binary_sensor.dsc_clone_light_missing_in_window`; GUARD re-arms photoperiod if disarmed >45s without Takeover; ALERT if light missing in window >2min.
+- Hub **5.1.6**: on-hub light-quota ledger + debt catch-up under min dark floor (HA cannot meter during flaps).
+- HA: `binary_sensor.dsc_clone_light_missing_in_window`; GUARD re-arms photoperiod if disarmed >45s without Takeover; ALERT if light missing in window >2min; dark-period violation exempts catch-up.
 
 ### next
 | ID | Item | Notes |
 |---|---|---|
-| N-030 | Flash hub **5.1.5** + sync HA packages | Plant-critical; do not wait for soak of other work |
+| N-030 | Flash hub **5.1.6** + sync HA light helpers / Lighting view | Plant-critical; supersedes 5.1.5-only flash |
 | F-006 | HA-link flap / recovery reboot storm | Still the upstream driver of these mode surprises |

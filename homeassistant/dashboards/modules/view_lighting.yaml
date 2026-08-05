@@ -103,6 +103,24 @@ sections:
             name: Sunset Ramp
           - entity: time.dsc_hub_lights_on_time
             name: 4x8 Window Opens (stage sets hours)
+          - entity: number.dsc_hub_min_dark_hours
+            name: Min Dark Hours (catch-up floor)
+      - type: custom:mushroom-chips-card
+        alignment: start
+        chips:
+          - type: template
+            entity: binary_sensor.dsc_hub_light_catchup_active
+            icon: mdi:restore-clock
+            icon_color: "{{ 'amber' if is_state(entity,'on') else 'disabled' }}"
+            content: >-
+              {{ 'catch-up ON' if is_state(entity,'on') else 'catch-up idle' }}
+          - type: template
+            entity: sensor.dsc_hub_light_debt_hours
+            icon: mdi:scale-unbalanced
+            icon_color: >-
+              {% set d = states(entity)|float(0) %}
+              {{ 'green' if d < 0.5 else ('amber' if d < 2 else 'red') }}
+            content: "debt {{ states(entity)|float(0)|round(1) }}h"
       - type: conditional
         conditions:
           - condition: state
@@ -188,11 +206,44 @@ sections:
   - type: grid
     cards:
       - type: heading
-        heading: 📊 24 h ACCOUNTING — the tent with the lamp
+        heading: 📊 CYCLE QUOTA — hub ledger (not HA flaps)
         heading_style: title
+      - type: custom:mushroom-template-card
+        entity: sensor.dsc_hub_light_delivered_hours
+        primary: >-
+          Delivered {{ states(entity)|float(0)|round(2) }}h /
+          {{ states('sensor.dsc_clone_expected_light_hours')|float(18)|round(0) }}h
+        secondary: >-
+          Debt {{ states('sensor.dsc_hub_light_debt_hours')|float(0)|round(2) }}h
+          · Min dark {{ states('number.dsc_hub_min_dark_hours')|float(4)|round(1) }}h
+          {% if is_state('binary_sensor.dsc_hub_light_catchup_active','on') %}
+          · Catching up
+          {% endif %}
+        icon: mdi:lightbulb-on-outline
+        icon_color: >-
+          {% if is_state('binary_sensor.dsc_hub_light_catchup_active','on') %}amber
+          {% elif states('sensor.dsc_hub_light_debt_hours')|float(0) < 0.5 %}green
+          {% elif states('sensor.dsc_hub_light_debt_hours')|float(0) < 2 %}amber
+          {% else %}red{% endif %}
+        multiline_secondary: true
+      - type: conditional
+        conditions:
+          - condition: state
+            entity: binary_sensor.dsc_hub_light_catchup_active
+            state: "on"
+        card:
+          type: custom:mushroom-template-card
+          primary: Catch-up active — repaying light debt
+          secondary: >-
+            Window shut; SF1000 still on until debt clears or min dark
+            floor ({{ states('number.dsc_hub_min_dark_hours')|float(4)|round(1) }}h)
+            is reached. Not a dark-period violation.
+          icon: mdi:restore-clock
+          icon_color: amber
+          multiline_secondary: true
       - type: custom:gauge-card-pro
-        entity: sensor.dsc_lights_on_today_2x4
-        header: 2x4 SF1000 on-time vs plan
+        entity: sensor.dsc_hub_light_delivered_hours
+        header: Cycle delivered vs plan
         min: 0
         max: >
           {{ [states('sensor.dsc_clone_expected_light_hours')|float(18), 1] | max }}
@@ -205,9 +256,9 @@ sections:
         entity: sensor.dsc_lights_deviation_today
         primary: "Deviation: {{ states(entity) }} h vs clone plan"
         secondary: >-
-          Meaningful at day end — intraday it trends to 0 on a healthy
-          schedule. Plan is {{
-          states('sensor.dsc_clone_expected_light_hours')|round(0) }} h.
+          Prefers hub delivered hours (cycle-anchored). HA calendar
+          history_stats remains a cross-check below. Plan
+          {{ states('sensor.dsc_clone_expected_light_hours')|round(0) }} h.
         icon: mdi:scale-balance
         icon_color: >-
           {% set d = states(entity)|float(0)|abs %} {{ 'green' if d < 0.5
@@ -224,6 +275,18 @@ sections:
           secondary: SF1000 commanded on outside the 2x4 window — flowering killer
           icon: mdi:weather-night-partly-cloudy
           icon_color: red
+      - type: heading
+        heading: 📅 Calendar cross-check (HA history_stats)
+        heading_style: subtitle
+      - type: custom:mushroom-template-card
+        entity: sensor.dsc_lights_on_today_2x4
+        primary: "HA calendar on {{ states(entity)|float(0)|round(1) }}h today"
+        secondary: >-
+          Midnight-anchored — undercounts a 17:00→11:00 cycle. Trust the
+          hub ledger above when both disagree.
+        icon: mdi:calendar-clock
+        icon_color: disabled
+        multiline_secondary: true
       - type: heading
         heading: 🕐 4x8 VIRTUAL WINDOW
         heading_style: subtitle
