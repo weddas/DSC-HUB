@@ -2,9 +2,17 @@
 
 Commit checklist for lab + kit packages. Firmware Install is always **manual**.
 
+Live train ops (fleet self-heal / EVT / Fleet Fix / sim gates):
+[`FLEET-SELF-HEAL-5.1.8.md`](FLEET-SELF-HEAL-5.1.8.md). Version strings below
+still say the tagged **5.1.0** marketing cut — bump checks to hub **5.1.8** /
+Control **5.1.16** / pots **5.1.7** when flashing the self-heal train.
+
 ## Pre-flash
 
 - [ ] All `project.version` in hub / control / pot / sonoff commons = **`5.1.0`**
+      (or live train: hub **5.1.8** / Control **5.1.16** / pots **5.1.7**)
+- [ ] `bash scripts/run_sim_gates.sh` (or `run_sim_gates.ps1`) passes before
+      Control UI / fleet-heal / packet-format edits
 - [ ] Kit stubs (`*-kit.yaml`, `*-wifi-kit.yaml`, `dsc-fleet-setup-*-kit.yaml`) Validate
 - [ ] Lab stubs Validate: hub, control, pot1–4, heater, heatmat, humidifier, de-humidifier
 - [ ] `espnow_cmd_tag` = **54727** on hub **and** panel

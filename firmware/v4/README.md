@@ -5,8 +5,16 @@ Working directory for ESPHome configs. Current fleet release string:
 cut remains `v5.1.0`). See the repo root README / CHANGELOG / FOLLOWUPS.
 
 Firmware QA: [docs/qa/FIRMWARE-QA-5.1.0.md](../../docs/qa/FIRMWARE-QA-5.1.0.md).
+Fleet self-heal (hub 5.1.8 / Control 5.1.16 / pots 5.1.7):
+[docs/qa/FLEET-SELF-HEAL-5.1.8.md](../../docs/qa/FLEET-SELF-HEAL-5.1.8.md).
 Repo [README](../../README.md) and [INSTALL.md](../../INSTALL.md) for from-scratch HA setup.
 Standalone SoftAP unboxing (no HA): [SETUP.md](../../SETUP.md).
+
+Pre-flash sim gates (glyph / layout / fleet_fix_sim):
+
+```bash
+bash ../scripts/run_sim_gates.sh
+```
 
 ## Local vs HA
 

@@ -641,10 +641,12 @@ No climate control regression during soak window.
 
 | ID | Finding | Action |
 |---|---|---|
-| N-035 | Hub has no RX handler for 0xD5 "RF card" and no TX for 0xD7 "TIME" yet — pots will broadcast 0xD5 every 10s and listen for 0xD7 with no hub counterpart currently wired | Hub-side pass: add `espnow.on_receive` 0xD5 aggregation (mirrors what `dsc-hub-fleet-heal.yaml`'s RF Status sensor already computes locally per-hub-radio, but for each pot) + a periodic 0xD7 broadcast (epoch from `homeassistant`/`sntp` time) so `last_peer_time` on pots actually gets fed |
-| N-036 | `cyd_glyph_audit.py`/`cyd_layout_check.py` found `dsc-control-common.yaml` and `cyd_glyphs.yaml` already clean (0 missing glyphs, 0 position dupes on gated pages) — another pass in this session had already converted non-ASCII UI strings to ASCII/declared glyphs before this pass ran; scripts are validating the *current* state, not re-doing that work | None — gates green, keep them in CI/pre-compile going forward |
+| N-035 (this section, superseded) | Earlier note said hub had no 0xD5 RX / 0xD7 TX | **Superseded by N-037** — `dsc-hub-espnow-primary.yaml` now TX 0xD0v2 + 0xD7 and RX 0xD5, but layouts disagree with peers |
+| N-036 (this section) | `cyd_glyph_audit.py`/`cyd_layout_check.py` found Control + glyphs clean | Keep gates in pre-flash; ID collides with Dash DepthTexture N-036 elsewhere — prefer topic labels |
+| **N-037** | **0xD5 / 0xD7 wire mismatch across hub / Control / pots** — Control TX 18-byte full-BSSID card; pot TX 11-byte shorthand; hub RX expects ≥12 with `st==1/2` WRB/CHX at `data[11]`. Hub 0xD7 calendar fields match Control RX; pots still decode u32 LE epoch. Pot cards dropped; Control→hub status enum misaligned | Unify one 0xD5 layout + one 0xD7 layout; flash hub+Control+pots together; until then treat peer-card EVT as unreliable — hub-local `sensor.dsc_hub_rf_status` remains SoT |
 
 ### soak / operator
 
-- Flash pots to **5.1.7**; confirm `binary_sensor.dsc_pot_N_clock_valid` and (once hub RX exists, N-035) that a fleet RF summary appears hub-side
+- Flash pots to **5.1.7**; confirm `binary_sensor.dsc_pot_N_clock_valid` (SNTP or HA). Do **not** treat pot→hub 0xD5 aggregation as green until **N-037**.
 - Run `scripts/run_sim_gates.ps1` (or `.sh`) before any future `dsc-control-common.yaml` or fleet-heal packet-format change
+- Ops runbook: [`docs/qa/FLEET-SELF-HEAL-5.1.8.md`](qa/FLEET-SELF-HEAL-5.1.8.md)

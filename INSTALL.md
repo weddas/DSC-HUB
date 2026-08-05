@@ -104,4 +104,5 @@ Cursor edit → push master
   → ESPHome Validate/Install (changed devices only)
 ```
 
-See [`RELEASE.md`](RELEASE.md) rollout checklist · [`docs/qa/`](docs/qa/).
+See [`RELEASE.md`](RELEASE.md) rollout checklist · [`docs/qa/`](docs/qa/) ·
+fleet self-heal ops [`docs/qa/FLEET-SELF-HEAL-5.1.8.md`](docs/qa/FLEET-SELF-HEAL-5.1.8.md).
