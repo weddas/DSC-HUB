@@ -5,6 +5,7 @@
 #  handshake nudge, follower resync, sticky safe-off clear.
 #  Coherence / RF / CHX = notify only (no setpoint invent).
 #  FIX_ACTIVE defers safe-off automations.
+#  Ops runbook: docs/qa/FLEET-SELF-HEAL-5.1.8.md
 # ==================================================================
 
 input_number:

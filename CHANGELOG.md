@@ -12,6 +12,8 @@
 - **Control Fleet Fix:** hold-to-run; Starting-only UI; 5-strike skip; ASCII status;
   glyphs `…`/`–` + ASCII Fix strings; Bluetooth row removed.
 - **Sim gates:** `scripts/cyd_glyph_audit.py`, `cyd_layout_check.py`, `fleet_fix_sim.py`.
+- **Ops runbook:** [`docs/qa/FLEET-SELF-HEAL-5.1.8.md`](docs/qa/FLEET-SELF-HEAL-5.1.8.md)
+  (includes verified 0xD5/0xD7 wire-layout debt → FOLLOWUPS **N-037**).
 
 ## Hub 5.1.7 — light-quota first-ledger seed (2026-08-05)
 

@@ -8,6 +8,7 @@
 #    - clock_valid gate + EVT bus + FIX_ACTIVE
 #    - RF self-heal orchestration hooks (REJOIN / FLEET_JUMP)
 #  Wire packets 0xD0v2 / 0xD5 / 0xD7 live in dsc-hub-espnow-primary.yaml.
+#  Ops runbook: docs/qa/FLEET-SELF-HEAL-5.1.8.md (includes 0xD5/0xD7 layout debt).
 # ==================================================================
 
 globals:

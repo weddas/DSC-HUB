@@ -18,6 +18,7 @@ Canonical HA surface for firmware [`firmware/v4/`](../firmware/v4/).
 | `packages/dsc_v4_device_cal.yaml` | Optional fan CFM / SF1000 PPFD multi-point curves + Learning wizard (unset = % × nameplate) |
 | `packages/dsc_v4_climate_learn.yaml` | Phase A EMA (fans+mat may co-run) + `sensor.dsc_learn_activity` + Phase B waits |
 | `packages/dsc_v4_light_helpers.yaml` | Lights-on today, clone dark-period, deviation |
+| `packages/dsc_v4_fleet_heal.yaml` | EVT freshness TTL, autofix map, FIX_ACTIVE defer, CHX cue |
 | `packages/dsc_v4_tank.yaml` | Tank EC/pH/temp helpers + Tuya warn sync |
 | `packages/dsc_v4_pots_stats.yaml` | Per-pot daily max/min + 7d baselines + rates |
 | `packages/dsc_v4_pots_correlation.yaml` | EC vs tank + uptake slope |
@@ -360,5 +361,13 @@ Fleet drift chip (`sensor.dsc_fleet_version_status`) compares the
 **major.minor** train, so mixed patch levels inside `5.1.x` stay `ok`.
 
 **Mat votes:** `switch.dsc_hub_mat_vote_pot_1`…`4` — Root Zone is source of truth; Climate links there.
+
+### Fleet heal + EVT autofix (HA)
+
+Package [`packages/dsc_v4_fleet_heal.yaml`](packages/dsc_v4_fleet_heal.yaml)
+gates remediation on `binary_sensor.dsc_evt_fresh` (default TTL 300s).
+Autofix remediates HA-side only (link refresh, follower resync); coherence /
+CHX / REJOIN are notify-only. `binary_sensor.dsc_hub_fix_active` defers
+sticky safe-off. Ops: [`../docs/qa/FLEET-SELF-HEAL-5.1.8.md`](../docs/qa/FLEET-SELF-HEAL-5.1.8.md).
 
 Bring-up: [`../INSTALL.md`](../INSTALL.md) · add-on: [`../scripts/ADDON.md`](../scripts/ADDON.md) · release: [`../RELEASE.md`](../RELEASE.md).
