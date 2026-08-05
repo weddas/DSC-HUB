@@ -20,3 +20,12 @@ bash scripts/sync-hacs-dist.sh
 ```
 
 Concat order: `dsc-system-map-card.js` → `dsc-airflow-map-card.js` → `vendor/three.min.js` → `vendor/dsc-dash-fx.js` → `dsc-the-dash-card.js` → `dist/DSC-HUB.js` and `dist/dsc-system-map-card.js`. The `dsc-hub-sync` add-on uses the same order when staging `/config/www`.
+
+## Black-canvas / reload
+
+If `/dsc-hub-pro/dash` shows a black 3D viewport while HUD/CFM still update,
+see [`docs/qa/LIVE-UI-DASH-BLACK-CANVAS.md`](../../../docs/qa/LIVE-UI-DASH-BLACK-CANVAS.md).
+After every Dash `www` deploy: **hard-refresh** the tab (`location.reload()`);
+SPA navigate will not replace a sticky `customElements.define` class.
+`createComposer` currently attaches `DepthTexture` when Three exposes it —
+soft shaders gate sampling on `uHasDepth`.

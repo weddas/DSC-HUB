@@ -558,6 +558,8 @@ No climate control regression during soak window.
 - **Cause:** Bloom `createComposer` DepthTexture/FBO path; HA SPA `location.href` cache-bust kept the old `customElements.define` class until full reload.
 - **Mitigation (live):** Bloom composer temporarily disabled → direct `renderer.render`; DepthTexture hardened for when composer returns; tick try/catch; flange glTF clones geometry.
 - **Operator:** After www deploys, **hard-refresh** the Dash tab (reload), not just navigate.
+- **Runbook:** [`docs/qa/LIVE-UI-DASH-BLACK-CANVAS.md`](qa/LIVE-UI-DASH-BLACK-CANVAS.md) — source-verified composer path + sticky custom element + deploy checklist.
+- **Residual:** closeout text said DepthTexture “detached by default”; current tree still **attaches** in `createComposer` when `THREE.DepthTexture` exists — reconcile before treating soft-intersect as a green soak check.
 
 ---
 
@@ -589,9 +591,10 @@ No climate control regression during soak window.
 - N-016 lab wet cal; N-020–023 already partly shipped in 5.1.8 sensing pass — leave soak
 - True DepthTexture soft-intersect **opt-in** after a browser that clears depth correctly with color+depth FBO (do not re-enable by default)
 - MeshLine/GPUComputation remain accepted approximations
+- **N-036:** Reconcile DepthTexture attach in `createComposer` with ops “default off” wording — see [`docs/qa/LIVE-UI-DASH-BLACK-CANVAS.md`](qa/LIVE-UI-DASH-BLACK-CANVAS.md)
 
 ### red-flag
-- None new for climate. Keep Lovelace `res_type: js`; cache-bust via `lovelace/resources/update` only; always **location.reload()** after Dash www deploys.
+- None new for climate. Keep Lovelace `res_type: js`; cache-bust via `lovelace/resources/update` only; always **location.reload()** after Dash www deploys. Dash black-canvas runbook: [`docs/qa/LIVE-UI-DASH-BLACK-CANVAS.md`](qa/LIVE-UI-DASH-BLACK-CANVAS.md).
 
 ---
 
