@@ -6,6 +6,9 @@
   (sparse `0xD7`) and large vitals (sparse config/soil/names). Register
   broadcast peer so sends do not channel-sweep off Nest. 15s TX backoff on
   send fail. Stops the 5.1.8 OOM + `11→1…14→11` thrash seen in soak logs.
+- **Glass closeout:** hub **5.1.9** live-verified 5 Aug 18:29 AEST; leftover
+  `dsc_fleet_setup::pot_index()` getter landed. Ops:
+  [`docs/qa/FLEET-POT-INDEX-5.1.9.md`](docs/qa/FLEET-POT-INDEX-5.1.9.md).
 
 ## Hub 5.1.8 + Control 5.1.16 + Pots 5.1.7 — fleet self-heal train (2026-08-05)
 

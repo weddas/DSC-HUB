@@ -20,6 +20,9 @@ Kit SoftAP setup: `dsc-hub-kit.yaml`, `dsc-control-kit.yaml`, `dsc-pot{1..4}-kit
 
 WiFi is split into `dsc-*-wifi-lab.yaml` / `dsc-*-wifi-kit.yaml` so kit builds omit compile-time SSIDs.
 Fleet component: `components/dsc_fleet_setup/` (phone portal on hub; Control/pots join `DSC-Setup-*`).
+Pot slot identity is dual-path: YAML `fleet_pot_index` drives `0xD5` RF cards on
+lab **and** kit; kit SoftAP also sets component `pot_index` / `pot_index()`.
+See [`docs/qa/FLEET-POT-INDEX-5.1.9.md`](../../docs/qa/FLEET-POT-INDEX-5.1.9.md).
 
 Package bodies are remote-git safe (no `!secret`). Stubs pass credentials (and hub/panel MACs + `espnow_cmd_tag`) as substitutions.
 

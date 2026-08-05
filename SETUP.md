@@ -4,6 +4,10 @@ Kit firmware stubs: `dsc-hub-kit.yaml`, `dsc-control-kit.yaml`, `dsc-pot{1..4}-k
 
 Lab/bench stubs (`dsc-hub.yaml`, etc.) keep compile-time WiFi and MACs and do **not** include `dsc_fleet_setup` (hub/panel/pots use `${panel_mac}` / `${hub_mac}`). Kit SoftAP builds still load fleet setup.
 
+Pot slot `1–4` still matters on lab builds: set stub `fleet_pot_index` so
+`0xD5` RF cards encode `2+N` (kit SoftAP also maps that sub → component
+`pot_index` / `pot_index()`). See [`docs/qa/FLEET-POT-INDEX-5.1.9.md`](docs/qa/FLEET-POT-INDEX-5.1.9.md).
+
 ## What you need
 
 - Phone or laptop with Wi‑Fi
