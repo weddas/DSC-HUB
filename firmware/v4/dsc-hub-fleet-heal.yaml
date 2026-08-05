@@ -8,6 +8,7 @@
 #    - clock_valid gate + EVT bus + FIX_ACTIVE
 #    - RF self-heal orchestration hooks (REJOIN / FLEET_JUMP)
 #  Wire packets 0xD0v2 / 0xD5 / 0xD7 live in dsc-hub-espnow-primary.yaml.
+#  REJOIN bounce: docs/qa/HUB-RF-REJOIN-LINK-BOUNCE.md (link_wifi_bounce; no WiFi reset()).
 # ==================================================================
 
 globals:

@@ -648,3 +648,23 @@ No climate control regression during soak window.
 
 - Flash pots to **5.1.7**; confirm `binary_sensor.dsc_pot_N_clock_valid` and (once hub RX exists, N-035) that a fleet RF summary appears hub-side
 - Run `scripts/run_sim_gates.ps1` (or `.sh`) before any future `dsc-control-common.yaml` or fleet-heal packet-format change
+
+---
+
+## 2026-08-05 — Hub REJOIN compile: `link_wifi_bounce` (not WiFi `reset()`)
+
+### done (repo)
+
+- Master `a1f5d76`: `rf_request_rejoin` in `dsc-hub-fleet-heal.yaml` calls
+  `id(link_wifi_bounce).execute()` instead of
+  `wifi::global_wifi_component->reset()` (ESPHome `WiFiComponent` has no
+  `reset()`; bounce already lives in `dsc-hub-v4_0.yaml`).
+- Docs: [`docs/qa/HUB-RF-REJOIN-LINK-BOUNCE.md`](qa/HUB-RF-REJOIN-LINK-BOUNCE.md)
+  — REJOIN vs peer 0xD5 WRB EVT, op 61 entry, Fleet Fix does not send op 61.
+
+### discoveries
+
+| ID | Finding | Action |
+|---|---|---|
+| (docs) | Fleet Fix never sends espnow op 61/62 today — hub RX maps exist for future glass/HA | Keep heal script compile-clean; do not reintroduce `reset()` |
+| N-037 | 0xD5/0xD7 layouts still disagree (see fleet-heal train / docs PR #29) | Firmware wire unify — not this docs pass |

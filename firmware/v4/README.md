@@ -5,6 +5,8 @@ Working directory for ESPHome configs. Current fleet release string:
 cut remains `v5.1.0`). See the repo root README / CHANGELOG / FOLLOWUPS.
 
 Firmware QA: [docs/qa/FIRMWARE-QA-5.1.0.md](../../docs/qa/FIRMWARE-QA-5.1.0.md).
+Hub REJOIN → `link_wifi_bounce` (no WiFi `reset()`):
+[docs/qa/HUB-RF-REJOIN-LINK-BOUNCE.md](../../docs/qa/HUB-RF-REJOIN-LINK-BOUNCE.md).
 Repo [README](../../README.md) and [INSTALL.md](../../INSTALL.md) for from-scratch HA setup.
 Standalone SoftAP unboxing (no HA): [SETUP.md](../../SETUP.md).
 

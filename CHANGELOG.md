@@ -6,6 +6,9 @@
 - **Settings coherence** receipt (epoch+hash) detect+flag only on HA link restore.
 - **Fleet RF:** 0xD0 v2 heartbeat, 0xD5 peer cards, 0xD7 peer TIME; hub REJOIN/JUMP;
   RF shorthand sensor; CHX hygiene cue (F-004 ops).
+- **Compile fix (`a1f5d76`):** hub `rf_request_rejoin` calls `link_wifi_bounce`
+  (wifi.disable/enable) — ESPHome `WiFiComponent` has no `reset()`. See
+  [`docs/qa/HUB-RF-REJOIN-LINK-BOUNCE.md`](docs/qa/HUB-RF-REJOIN-LINK-BOUNCE.md).
 - **EVT bus** + HA autofix map (API_BLIP, FAILSAFE, FOLLOWER_DRIFT, FIX_*, COHERENCE);
   freshness TTL; FIX_ACTIVE defers safe-off / blocks OTA; Pre-OTA Quiesce button.
 - **Fleet clock:** Australia/Sydney SNTP fleet-wide; `clock_valid` gate; pots leave HA-only.
