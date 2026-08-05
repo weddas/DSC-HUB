@@ -6,6 +6,7 @@
   invented ~18h catch-up debt → SF1000 on with window shut. Rev-1 NVS seed
   credits elapsed nominal (or marks the day paid if past window) so upgrade
   never blazes the dark period.
+- Ops runbook: [`docs/qa/HUB-LIGHT-QUOTA-5.1.7.md`](docs/qa/HUB-LIGHT-QUOTA-5.1.7.md).
 
 ## Hub 5.1.6 — light-quota + debt catch-up (2026-08-05)
 
@@ -17,6 +18,7 @@
   view shows Delivered / Debt / Catch-up.
 - Motivated by Jul–Aug 2026 history (recurring mid-window theft; HA
   `unavailable` cannot meter photons) and the 5 Aug ~5.5h hole.
+- Ops (superseded by 5.1.7 seed notes): [`docs/qa/HUB-LIGHT-QUOTA-5.1.7.md`](docs/qa/HUB-LIGHT-QUOTA-5.1.7.md).
 
 ## Hub 5.1.5 — photoperiod NVS / mid-window dark (2026-08-05)
 

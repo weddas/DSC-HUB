@@ -356,6 +356,11 @@ not humidifier lock â€” entity id kept for compatibility.
 | Dashboard | DSC-HUB Pro (4-col, browser_mod popups) |
 | `espnow_cmd_tag` | `54727` (`0xD5C7`) on hub **and** panel |
 
+**Hub light-quota (5.1.7):** NVS delivered/debt + Min Dark Hours catch-up past
+nominal off; rev-1 first-ledger seed on upgrade. Lighting view Cycle quota +
+helpers in `dsc_v4_light_helpers.yaml`.
+Ops: [`docs/qa/HUB-LIGHT-QUOTA-5.1.7.md`](../docs/qa/HUB-LIGHT-QUOTA-5.1.7.md).
+
 Fleet drift chip (`sensor.dsc_fleet_version_status`) compares the
 **major.minor** train, so mixed patch levels inside `5.1.x` stay `ok`.
 
