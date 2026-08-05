@@ -1,5 +1,12 @@
 # Changelog
 
+## Hub 5.1.7 — light-quota first-ledger seed (2026-08-05)
+
+- **Plant-critical:** first OTA of 5.1.6 mid-dark seeded `delivered_s=0` and
+  invented ~18h catch-up debt → SF1000 on with window shut. Rev-1 NVS seed
+  credits elapsed nominal (or marks the day paid if past window) so upgrade
+  never blazes the dark period.
+
 ## Hub 5.1.6 — light-quota + debt catch-up (2026-08-05)
 
 - **Plant-critical:** photoperiod is now a hub NVS ledger (`delivered_s` /

@@ -76,7 +76,7 @@ esphome:
   friendly_name: DSC-HUB
   project:
     name: "digital_emotions.dsc-hub"
-    version: "5.1.6"
+    version: "5.1.7"
   on_boot:
     - priority: -100
       then:
@@ -896,6 +896,10 @@ globals:
     type: bool
     restore_value: false
     initial_value: 'false'
+  - id: photo_ledger_rev           # bump to re-seed after format changes
+    type: int
+    restore_value: true
+    initial_value: '0'
 
   # --- Failsafe snapshot (to restore state after an emergency) ---
   - id: saved_out
@@ -2725,7 +2729,7 @@ text_sensor:
     name: "Firmware Version"
     id: fw_version
     icon: mdi:tag-check
-    lambda: 'return {"5.1.6"};'
+    lambda: 'return {"5.1.7"};'
     update_interval: 60s
 
   # F-006: last recovery action reason (bounce / reboot / none)
@@ -4795,21 +4799,51 @@ script:
           int cycle_key = cs.year * 10000 + cs.month * 100 + cs.day_of_month;
 
           const uint32_t CARRY_CAP_S = 7200u;   // +2h max fold into next day
-          if (id(photo_cycle_key) != cycle_key) {
-            uint32_t carry = 0;
-            if (id(photo_cycle_key) != 0 && dur > 0) {
-              uint32_t old_target = (uint32_t) dur * 3600u + id(photo_carry_s);
-              if (old_target > id(photo_delivered_s)) {
-                uint32_t old_debt = old_target - id(photo_delivered_s);
-                carry = old_debt > CARRY_CAP_S ? CARRY_CAP_S : old_debt;
-              }
+          // Rev 1: first-ledger seed (fresh NVS or upgrade mid-cycle).
+          // Without this, OTA during dark invents ~18h debt and catch-up
+          // blazes the light through the night (5.1.6 first flash).
+          if (id(photo_ledger_rev) < 1 && dur > 0) {
+            uint32_t target = (uint32_t) dur * 3600u;
+            if (in_nominal) {
+              uint32_t elapsed = (uint32_t)(since_on * 60.0f);
+              id(photo_delivered_s) = elapsed > target ? target : elapsed;
+            } else {
+              id(photo_delivered_s) = target;
             }
-            id(photo_carry_s) = carry;
-            id(photo_delivered_s) = 0;
+            id(photo_carry_s) = 0;
             id(photo_cycle_key) = cycle_key;
             id(photo_last_tick_ms) = 0;
-            ESP_LOGI("photoperiod", "Cycle %d start — carry %us into ledger",
-                     cycle_key, (unsigned) carry);
+            id(photo_ledger_rev) = 1;
+            ESP_LOGI("photoperiod", "Ledger rev1 seed cycle %d delivered %us",
+                     cycle_key, (unsigned) id(photo_delivered_s));
+          } else if (id(photo_cycle_key) != cycle_key) {
+            if (id(photo_cycle_key) == 0 && dur > 0) {
+              uint32_t target = (uint32_t) dur * 3600u;
+              if (in_nominal) {
+                uint32_t elapsed = (uint32_t)(since_on * 60.0f);
+                id(photo_delivered_s) = elapsed > target ? target : elapsed;
+              } else {
+                id(photo_delivered_s) = target;
+              }
+              id(photo_carry_s) = 0;
+              ESP_LOGI("photoperiod", "Cycle %d first ledger seed — delivered %us",
+                       cycle_key, (unsigned) id(photo_delivered_s));
+            } else {
+              uint32_t carry = 0;
+              if (id(photo_cycle_key) != 0 && dur > 0) {
+                uint32_t old_target = (uint32_t) dur * 3600u + id(photo_carry_s);
+                if (old_target > id(photo_delivered_s)) {
+                  uint32_t old_debt = old_target - id(photo_delivered_s);
+                  carry = old_debt > CARRY_CAP_S ? CARRY_CAP_S : old_debt;
+                }
+              }
+              id(photo_carry_s) = carry;
+              id(photo_delivered_s) = 0;
+              ESP_LOGI("photoperiod", "Cycle %d start — carry %us into ledger",
+                       cycle_key, (unsigned) carry);
+            }
+            id(photo_cycle_key) = cycle_key;
+            id(photo_last_tick_ms) = 0;
           }
 
           // ---- credit actual-on (hub truth; HA flaps do not matter) ----
