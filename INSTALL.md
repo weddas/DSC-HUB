@@ -104,4 +104,6 @@ Cursor edit → push master
   → ESPHome Validate/Install (changed devices only)
 ```
 
-See [`RELEASE.md`](RELEASE.md) rollout checklist · [`docs/qa/`](docs/qa/).
+See [`RELEASE.md`](RELEASE.md) rollout checklist · [`docs/qa/`](docs/qa/) ·
+[`docs/qa/FLEET-POT-INDEX-5.1.9.md`](docs/qa/FLEET-POT-INDEX-5.1.9.md) (pot slot
+identity + hub 5.1.9 pass closeout).

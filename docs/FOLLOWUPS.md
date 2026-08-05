@@ -630,7 +630,7 @@ No climate control regression during soak window.
 - 0xD5 TX "RF card" every 10s: role byte `2+fleet_pot_index` (1-4) else bare `2`, wifi channel, RSSI, associated/preferred BSSID shorthand (last-byte-pair) with presence flags.
 - 0xD7 RX TIME: while `!clock_valid`, publishes epoch to diagnostic `text_sensor.last_peer_time` (ESPHome's `ESPTime`/`sntp`/`homeassistant` time platforms expose no public "set now" — cannot mark `clock_valid` true from a peer broadcast without a custom time component).
 - New substitution `fleet_pot_index` (default `"0"`) set per-stub (`dsc-pot{1..4}.yaml` and `-kit` variants already had/now have `pot_index`/`fleet_pot_index` wired) so the 0xD5 role byte is correct without depending on `dsc_fleet_setup` being present (lab stubs don't include that component).
-- `dsc_fleet_setup.h`: added `pot_index()` getter (kit-side component identity; not required by the substitution path above, kept as it's a clean and likely-useful accessor).
+- `dsc_fleet_setup.h`: added `pot_index()` getter (kit-side component identity; not required by the substitution path above, kept as it's a clean and likely-useful accessor). Durable dual-path notes: [`docs/qa/FLEET-POT-INDEX-5.1.9.md`](qa/FLEET-POT-INDEX-5.1.9.md).
 - New pre-compile gates (`scripts/`): `cyd_glyph_audit.py` (non-ASCII scan of `dsc-control-common.yaml` vs `cyd_glyphs.yaml` + MDI PUA escapes), `cyd_layout_check.py` (LVGL sibling-label position-overlap heuristic; hard-fail only on `page_boot`/`Connections` exact duplicates), `fleet_fix_sim.py` (20 pure-Python assertions: light-quota catch-up budget, first-ledger NVS seed, RF status codes, EVT TTL freshness, fix-attempt state machine). `run_sim_gates.ps1` / `run_sim_gates.sh` run all three fail-fast; all three pass clean (`pwsh`/`powershell -File` not on PATH as `pwsh` on this box — use `powershell -ExecutionPolicy Bypass -File` or `bash`).
 
 ### red-flag / fix (found via fleet_fix_sim, fixed same pass)
@@ -666,6 +666,7 @@ No climate control regression during soak window.
 
 ### closed
 - Hub **5.1.9** live on glass 5 Aug **18:29** AEST (`Project digital_emotions.dsc-hub version 5.1.9`). Pass complete.
+- Closeout + pot identity dual-path: [`docs/qa/FLEET-POT-INDEX-5.1.9.md`](qa/FLEET-POT-INDEX-5.1.9.md).
 
 ### residual
 | ID | Item | Notes |

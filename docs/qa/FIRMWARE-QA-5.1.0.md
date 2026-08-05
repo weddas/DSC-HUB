@@ -34,6 +34,7 @@ Commit checklist for lab + kit packages. Firmware Install is always **manual**.
 
 - [ ] SoftAP / wifi-kit configs **Validate** (flash optional on lab)
 - [ ] No leftover `5.0.0` / `4.0.x` `project.version` in kit path
+- [ ] Each pot stub sets `fleet_pot_index: "1"`…`"4"`; kit passes it as `pot_index: ${fleet_pot_index}` (see [`FLEET-POT-INDEX-5.1.9.md`](FLEET-POT-INDEX-5.1.9.md))
 
 ## Sign-off
 
