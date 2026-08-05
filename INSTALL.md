@@ -104,4 +104,6 @@ Cursor edit → push master
   → ESPHome Validate/Install (changed devices only)
 ```
 
-See [`RELEASE.md`](RELEASE.md) rollout checklist · [`docs/qa/`](docs/qa/).
+See [`RELEASE.md`](RELEASE.md) rollout checklist · [`docs/qa/`](docs/qa/) ·
+[`docs/qa/HUB-RF-REJOIN-LINK-BOUNCE.md`](docs/qa/HUB-RF-REJOIN-LINK-BOUNCE.md)
+(hub REJOIN compile/ops: reuse `link_wifi_bounce`, never `WiFiComponent::reset()`).

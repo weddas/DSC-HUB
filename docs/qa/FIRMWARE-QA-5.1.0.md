@@ -26,6 +26,7 @@ Commit checklist for lab + kit packages. Firmware Install is always **manual**.
 - [ ] Hub API blip under 25s → heater/mat/hum relays **stay ON** (follower debounce); offline ≥30s → safe-off; followers resync on return (**no** snapshot restore)
 - [ ] API-blip case: Control still LINKED, HA hub unavailable under 25s → heater stays ON; handshake/API dead ≥5 min while WiFi up → NVS sync + safe_reboot (≤2×/boot); Full Auto re-arms
 - [ ] Hub `Lock WiFi AP` learns preferred BSSID; 0xD0 handshake carries it; pots accept and reconnect to that exact BSSID; Control adopts during Starting; ladder nudge→WiFi bounce→reboot
+- [ ] Hub `rf_request_rejoin` compiles via `link_wifi_bounce` (not `WiFiComponent::reset()`) — see [HUB-RF-REJOIN-LINK-BOUNCE.md](HUB-RF-REJOIN-LINK-BOUNCE.md)
 - [ ] Phase B wait numbers accepted; `run_climate_logic` starts from bases then gates
 - [ ] Phase B off by default in HA; enabling writes waits only (not failsafe/min-off/fans)
 - [ ] Panel heap: free + largest free block healthy after UI pages
