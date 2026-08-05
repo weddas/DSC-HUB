@@ -350,7 +350,7 @@ not humidifier lock — entity id kept for compatibility.
 
 | Piece | Version |
 |---|---|
-| Hub / pots / Sonoffs / kits | **`5.1.7`** hub light-quota; pots cal SoT on 5.1.x train |
+| Hub / pots / Sonoffs / kits | **`5.1.8`** hub fleet-heal; Control **5.1.16**; pots **5.1.7** |
 | Panel (DSC-CONTROL) | **`5.1.x`** lean-cut patch train |
 | HA surface (packages + dashboard) | **`5.1.8`** |
 | Dashboard | DSC-HUB Pro (4-col, browser_mod popups) |

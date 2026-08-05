@@ -13,6 +13,7 @@ substitutions:
   hub_mac: "84:1F:E8:16:E6:60"
   # Same Nest AP as hub — set to sensor.dsc_hub_wifi_bssid (all caps).
   wifi_bssid: "00:00:00:00:00:00"
+  fleet_pot_index: "1"
 
 packages:
   wifi: !include dsc-pot-wifi-lab.yaml

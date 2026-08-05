@@ -1,5 +1,18 @@
 # Changelog
 
+## Hub 5.1.8 + Control 5.1.16 + Pots 5.1.7 — fleet self-heal train (2026-08-05)
+
+- **Light quota** (5.1.6/5.1.7) retained; lateral **VPD band** + **mister duty** ledgers.
+- **Settings coherence** receipt (epoch+hash) detect+flag only on HA link restore.
+- **Fleet RF:** 0xD0 v2 heartbeat, 0xD5 peer cards, 0xD7 peer TIME; hub REJOIN/JUMP;
+  RF shorthand sensor; CHX hygiene cue (F-004 ops).
+- **EVT bus** + HA autofix map (API_BLIP, FAILSAFE, FOLLOWER_DRIFT, FIX_*, COHERENCE);
+  freshness TTL; FIX_ACTIVE defers safe-off / blocks OTA; Pre-OTA Quiesce button.
+- **Fleet clock:** Australia/Sydney SNTP fleet-wide; `clock_valid` gate; pots leave HA-only.
+- **Control Fleet Fix:** hold-to-run; Starting-only UI; 5-strike skip; ASCII status;
+  glyphs `…`/`–` + ASCII Fix strings; Bluetooth row removed.
+- **Sim gates:** `scripts/cyd_glyph_audit.py`, `cyd_layout_check.py`, `fleet_fix_sim.py`.
+
 ## Hub 5.1.7 — light-quota first-ledger seed (2026-08-05)
 
 - **Plant-critical:** first OTA of 5.1.6 mid-dark seeded `delivered_s=0` and

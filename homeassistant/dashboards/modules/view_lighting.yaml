@@ -209,6 +209,38 @@ sections:
         heading: 📊 CYCLE QUOTA — hub ledger (not HA flaps)
         heading_style: title
       - type: custom:mushroom-template-card
+        entity: sensor.dsc_hub_vpd_main_band_hours
+        primary: >-
+          VPD band {{ states(entity)|float(0)|round(1) }}h /
+          {{ states('number.dsc_hub_vpd_band_target_hours')|float(18)|round(0) }}h
+        secondary: >-
+          Clone {{ states('sensor.dsc_hub_vpd_clone_band_hours')|float(0)|round(1) }}h
+          · Mister {{ states('sensor.dsc_hub_mister_delivered_hours')|float(0)|round(1) }}h
+          · RF {{ states('sensor.dsc_hub_rf_status') }}
+        icon: mdi:leaf
+        icon_color: green
+        multiline_secondary: true
+      - type: custom:mushroom-template-card
+        entity: sensor.dsc_hub_last_evt
+        primary: "EVT {{ states('sensor.dsc_hub_evt_code') }}"
+        secondary: "{{ states(entity) }}"
+        icon: mdi:message-alert-outline
+        icon_color: >-
+          {{ 'amber' if is_state('binary_sensor.dsc_evt_fresh','on') else 'disabled' }}
+        multiline_secondary: true
+      - type: custom:mushroom-template-card
+        entity: binary_sensor.dsc_hub_clock_valid
+        primary: >-
+          Clock {{ 'valid' if is_state(entity,'on') else 'HOLD' }}
+          · Fix {{ 'ACTIVE' if is_state('binary_sensor.dsc_hub_fix_active','on') else 'idle' }}
+        secondary: >-
+          Coherence {{ 'MISMATCH' if is_state('binary_sensor.dsc_hub_coherence_mismatch','on') else 'ok' }}
+          · OTA {{ 'blocked' if is_state('binary_sensor.dsc_hub_ota_blocked','on') else 'open' }}
+        icon: mdi:clock-check-outline
+        icon_color: >-
+          {{ 'green' if is_state(entity,'on') else 'red' }}
+        multiline_secondary: true
+      - type: custom:mushroom-template-card
         entity: sensor.dsc_hub_light_delivered_hours
         primary: >-
           Delivered {{ states(entity)|float(0)|round(2) }}h /

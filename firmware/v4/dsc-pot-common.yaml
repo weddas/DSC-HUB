@@ -15,6 +15,31 @@
 #  before the digit). Referenced by the HA stat/alert packages, the
 #  dashboard, and the HUB's closed-loop grow mat. Do not rename a node.
 #
+#  v5.1.7 — FLEET CLOCK + RF CARD (Aug 2026)
+#   * time: sntp_time (SNTP, Australia/Sydney) added alongside ha_time.
+#     global clock_valid = sntp_time.now().is_valid() || ha_time.now()
+#     .is_valid(), recomputed every 15s; binary_sensor.Clock Valid mirrors
+#     it (same pattern as the hub's fleet-heal clock_valid gate).
+#   * 0xD0 RX: v2 payload (data[1]==0x02) is the same {ver,channel,BSSID}
+#     shape as v1 but softer — only adopts the hub's preferred AP when
+#     this pot has none yet (hub_ap_bssid_ok==false); if one is already
+#     latched, it just logs. v1 keeps its existing (unconditional adopt)
+#     behaviour untouched — v2 is additive, not a replacement.
+#   * TX 0xD5 "RF card" every 10s → hub_mac: role, channel, rssi, and a
+#     2-byte shorthand (last two BSSID octets) for both the pot's current
+#     association and the hub-preferred AP it is holding (hub_ap_bssid).
+#     role = 2, or 2+fleet_pot_index once this pot's identity (1-4) is
+#     known (substitution, set by every stub — see fleet_pot_index above).
+#     This role numbering is local to the 0xD5 wire format; it is NOT
+#     dsc_fleet_setup's FleetRole enum. Hub-side RX/aggregation for 0xD5
+#     does not exist yet — see docs/FOLLOWUPS.md.
+#   * RX 0xD7 TIME: hub-broadcast epoch. This node cannot set sntp_time/
+#     ha_time from arbitrary C++ (no public "now injector" on either
+#     platform), so when clock_valid is false and the packet parses as
+#     plausible (epoch > 2023-11-01), it only publishes text_sensor
+#     "Last Peer Time" (ISO, UTC) for visibility. Hub-side TX for 0xD7
+#     does not exist yet either — see docs/FOLLOWUPS.md.
+#  ------------------------------------------------------------------
 #  v5.1.6 — LAB WET + RAW PUBLISH (Aug 2026)
 #   * button.Mark Soil Cal Lab Buffer stamps method lab_buffer
 #   * Soil * Raw template sensors = (cal - offset) / scale (N-021)
@@ -82,13 +107,20 @@ substitutions:
   probe_address: "1"
   # Hub WiFi MAC for ESP-NOW (lab stub overrides; kit learns via SoftAP setup).
   hub_mac: "84:1F:E8:16:E6:60"
+  # v5.1.7: this pot's fleet slot (1-4) for the 0xD5 RF card role byte.
+  # Same substitution name the kit stubs already pass to dsc_fleet_setup
+  # (dsc-fleet-setup-pot-kit.yaml: pot_index: ${fleet_pot_index}) — lab
+  # stubs now set it too (identity is known structurally either way).
+  # Default "0" = unknown/unassigned (matches the lab fleet-setup stub's
+  # hardcoded pot_index: 0 for any pot stub that still omits it).
+  fleet_pot_index: "0"
 
 esphome:
   name: ${name}
   friendly_name: ${friendly_name}
   project:
     name: digital_emotions.dsc-pot
-    version: "5.1.6"
+    version: "5.1.7"
 
 esp32:
   board: esp32dev
@@ -150,6 +182,13 @@ modbus_controller:
 #  soil_calibrated. set_action stamps method=manual (muted during Reset).
 # ==================================================================
 time:
+  # v5.1.7: SNTP alongside HA time so the clock can be valid with HA down —
+  # cal_stamp_manual / cal_mark_peer_median / cal_mark_lab_buffer still read
+  # ha_time (unchanged; those are provenance stamps for HA-facing entities).
+  # clock_valid (below) is sntp_time.now().is_valid() || ha_time.now().is_valid().
+  - platform: sntp
+    id: sntp_time
+    timezone: "Australia/Sydney"
   - platform: homeassistant
     id: ha_time
 
@@ -619,8 +658,16 @@ text_sensor:
   - platform: template
     name: "Firmware Version"
     icon: mdi:tag-check
-    lambda: 'return {"5.1.6"};'
+    lambda: 'return {"5.1.7"};'
     update_interval: 60s
+  # Diagnostic only — see 0xD7 RX note in globals/espnow below. This node
+  # cannot set its own clock from the packet, so this is the only trace
+  # of "what time did a peer last tell me" while clock_valid is false.
+  - platform: template
+    name: "Last Peer Time"
+    id: last_peer_time
+    icon: mdi:clock-sync-outline
+    entity_category: diagnostic
 
 binary_sensor:
   - platform: template
@@ -631,6 +678,13 @@ binary_sensor:
     lambda: |-
       auto m = id(cal_method).state;
       return m != "none" && !m.empty();
+  - platform: template
+    name: "Clock Valid"
+    id: clock_valid_bs
+    device_class: running
+    entity_category: diagnostic
+    icon: mdi:clock-check-outline
+    lambda: 'return id(clock_valid);'
 
 button:
   - platform: restart
@@ -837,6 +891,12 @@ globals:
     type: uint8_t[6]
     restore_value: false
     initial_value: '{0,0,0,0,0,0}'
+  # v5.1.7: sntp_time.now().is_valid() || ha_time.now().is_valid(), recomputed
+  # every 15s (see interval below). Gates the 0xD7 "adopt peer time" path.
+  - id: clock_valid
+    type: bool
+    restore_value: false
+    initial_value: 'false'
 
 espnow:
   auto_add_peer: false
@@ -857,6 +917,42 @@ espnow:
             id(hub_ap_bssid_ok) = nz;
             // Accept handshake → disconnect/reconnect to that exact BSSID.
             if (nz) id(adopt_hub_wifi_ap).execute();
+          }
+        }
+        // v5.1.7 — 0xD0 v2: same {ver,channel,BSSID} shape as v1, but softer.
+        // Only adopt when we don't already have a preferred AP; if we do,
+        // log only — v2 must not fight an already-settled v1 adoption.
+        if (size >= 9 && data[0] == 0xD0 && data[1] == 0x02) {
+          id(hub_beat_last) = millis();
+          id(link_rec_stage) = 0;
+          uint8_t v2[6];
+          bool nz = false;
+          for (int i = 0; i < 6; i++) { v2[i] = data[3 + i]; if (v2[i]) nz = true; }
+          if (nz) {
+            if (!id(hub_ap_bssid_ok)) {
+              for (int i = 0; i < 6; i++) id(hub_ap_bssid)[i] = v2[i];
+              id(hub_ap_bssid_ok) = true;
+              ESP_LOGI("wifi", "0xD0v2 handshake — adopting hub preferred AP (had none)");
+              id(adopt_hub_wifi_ap).execute();
+            } else {
+              ESP_LOGD("wifi", "0xD0v2 handshake — preferred AP already set, not overriding");
+            }
+          }
+        }
+        // v5.1.7 — 0xD7 TIME: hub-broadcast epoch (u32 LE at data[2..5]).
+        // Neither sntp_time nor ha_time exposes a way to inject "now" from
+        // here, so while our own clock is invalid this only publishes a
+        // diagnostic text_sensor — it does NOT make clock_valid true.
+        if (size >= 6 && data[0] == 0xD7 && data[1] == 0x01) {
+          uint32_t epoch = (uint32_t) data[2] | ((uint32_t) data[3] << 8)
+                          | ((uint32_t) data[4] << 16) | ((uint32_t) data[5] << 24);
+          bool pack_valid = epoch > 1698800000u;  // sanity: after 2023-11-01
+          if (!id(clock_valid) && pack_valid) {
+            ESPTime et = ESPTime::from_epoch_utc(epoch);
+            char buf[24];
+            snprintf(buf, sizeof(buf), "%04d-%02d-%02dT%02d:%02d:%02dZ",
+                     et.year, et.month, et.day_of_month, et.hour, et.minute, et.second);
+            id(last_peer_time).publish_state(std::string(buf));
           }
         }
 
@@ -991,8 +1087,52 @@ script:
           wait_for_sent: false
           data: !lambda 'return std::vector<uint8_t>{0xD0, 0x01, 0};'
 
+  # v5.1.7 — TX 0xD5 "RF card" every 10s. Local role numbering (NOT the
+  # dsc_fleet_setup FleetRole enum): 2 = pot, unknown/unassigned slot;
+  # 2+fleet_pot_index (3-6) once this pot's identity (1-4) is known —
+  # see the fleet_pot_index substitution above.
+  # Layout: [0]0xD5 [1]ver=1 [2]role [3]channel [4]rssi(int8)
+  #         [5]assoc_ok [6..7]assoc BSSID[4..5]  [8]pref_ok [9..10]pref BSSID[4..5]
+  # "pref" here is hub_ap_bssid (the hub-preferred AP this pot is holding
+  # via 0xD0), not a pot-local preferred-BSSID entity (the pot has none).
+  - id: tx_rf_card
+    mode: single
+    then:
+      - espnow.send:
+          address: ${hub_mac}
+          wait_for_sent: false
+          data: !lambda |-
+            std::vector<uint8_t> p(11, 0);
+            p[0] = 0xD5; p[1] = 0x01;
+            uint8_t pidx = ${fleet_pot_index};
+            p[2] = (pidx >= 1 && pidx <= 4) ? (uint8_t)(2 + pidx) : (uint8_t)2;
+            auto *w = wifi::global_wifi_component;
+            bool connected = w != nullptr && w->is_connected();
+            if (connected) {
+              p[3] = (uint8_t) w->get_wifi_channel();
+              int rssi = (int) w->wifi_rssi();
+              if (rssi < -128) rssi = -128;
+              if (rssi > 0) rssi = 0;
+              p[4] = (uint8_t)(int8_t) rssi;
+              auto b = w->wifi_bssid();
+              p[5] = 1; p[6] = b[4]; p[7] = b[5];
+            }
+            if (id(hub_ap_bssid_ok)) {
+              p[8] = 1; p[9] = id(hub_ap_bssid)[4]; p[10] = id(hub_ap_bssid)[5];
+            }
+            return p;
+
 # Hub 0xD0 every 5s. Silent ladder: ping → WiFi bounce (API rebind) → reboot.
 interval:
+  - interval: 10s
+    then:
+      - script.execute: tx_rf_card
+  # v5.1.7 — clock_valid: sntp OR ha, recomputed every 15s (same cadence as
+  # the hub's fleet-heal ledger tick).
+  - interval: 15s
+    then:
+      - lambda: |-
+          id(clock_valid) = id(sntp_time).now().is_valid() || id(ha_time).now().is_valid();
   - interval: 10s
     then:
       - if:

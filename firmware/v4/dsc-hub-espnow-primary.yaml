@@ -43,6 +43,26 @@ espnow:
     - ${panel_mac}
   on_receive:
     - lambda: |-
+        // ---- PEER RF CARD (0xD5): {0xD5,ver,role,assoc3[3],pref3[3],ch,rssi,status} ----
+        if (size >= 12 && data[0] == 0xD5 && (data[1] == 0x01 || data[1] == 0x02)) {
+          uint8_t role = data[2];
+          int8_t rssi = (int8_t) data[10];
+          uint8_t st = data[11];
+          ESP_LOGI("rf", "0xD5 role=%u ch=%u rssi=%d st=%u", role, data[9], (int) rssi, st);
+          // Aggregate into last EVT detail for CHX/WRB from peers (hub-orchestrated).
+          if (st == 1) { // WRB
+            id(evt_pending_code) = "REJOIN";
+            id(evt_pending_detail) = std::string("peer") + std::to_string(role);
+            id(emit_evt).execute();
+            // Soft: ask that peer class to rejoin by refreshing 0xD0 preferred
+            id(tx_fleet_heartbeat).execute();
+          } else if (st == 2) { // CHX
+            id(evt_pending_code) = "CHX";
+            id(evt_pending_detail) = std::string("peer") + std::to_string(role);
+            id(emit_evt).execute();
+          }
+          return;
+        }
         // ---- COMMAND RX: {0xDC,ver,op,flags,i32 val,u16 tag,u16 seq} ----
         id(cmd_fresh) = false;                                         // reset per packet
         if (size < 12 || data[0] != 0xDC || data[1] != 0x01) return;   // not ours (pot packet etc.)
@@ -170,6 +190,13 @@ espnow:
           case 55: { int m=((val%1440)+1440)%1440; auto c=id(clone_lights_on_time).make_call(); c.set_time(m/60, m%60, 0); c.perform(); break; }
           // ----- misc -----
           case 56: ESP_LOGW("espnow","panel requested restart"); App.safe_reboot(); break;
+          // ----- fleet heal (panel Fleet Fix) -----
+          case 60: // FIX_ACTIVE on/off
+            id(fix_active) = val != 0;
+            id(set_fix_active).execute();
+            break;
+          case 61: id(rf_request_rejoin).execute(); break;
+          case 62: id(rf_fleet_jump_arm).execute(); break;
           // Panel boot hello — no side effects; marks glass coming online and
           // requests a full vitals/config/soil/names burst (see below).
           case 57:
@@ -360,9 +387,9 @@ script:
             put(id(plant_name_3)); put(id(plant_name_4));
             return p;
 
-  # ---- FLEET HEARTBEAT (0xD0) — Control + pots
-  # Payload: {0xD0, 0x01, channel, b0..b5 preferred-or-current BSSID}.
-  # Control adopts BSSID during Starting (before full GUI).
+  # ---- FLEET HEARTBEAT (0xD0 v2) — Control + pots
+  # v1: {0xD0,0x01,ch,bssid[6]}
+  # v2: {0xD0,0x02,ch,bssid[6],rssi_u8,flags} — peers accept either.
   - id: tx_fleet_heartbeat
     mode: single
     then:
@@ -370,11 +397,10 @@ script:
           address: FF:FF:FF:FF:FF:FF
           wait_for_sent: false
           data: !lambda |-
-            std::vector<uint8_t> p{0xD0, 0x01, 0, 0, 0, 0, 0, 0, 0};
+            std::vector<uint8_t> p{0xD0, 0x02, 0, 0, 0, 0, 0, 0, 0, 0, 0};
             auto *w = wifi::global_wifi_component;
             if (w != nullptr && w->get_wifi_channel() > 0)
               p[2] = (uint8_t) w->get_wifi_channel();
-            // Prefer NVS preferred BSSID; else current association.
             std::string pref = id(preferred_wifi_bssid).state;
             if (pref.size() == 17) {
               for (int i = 0; i < 6; i++) {
@@ -385,6 +411,36 @@ script:
               auto b = w->wifi_bssid();
               for (int i = 0; i < 6; i++) p[3 + i] = b[i];
             }
+            int rssi = (w != nullptr && w->is_connected()) ? (int) w->wifi_rssi() : -127;
+            p[9] = (uint8_t)(rssi < -127 ? 0 : (rssi > 0 ? 127 : (rssi + 127)));
+            uint8_t flags = 0;
+            if (id(clock_valid)) flags |= 1;
+            if (id(fix_active)) flags |= 2;
+            if (id(ota_blocked)) flags |= 4;
+            p[10] = flags;
+            return p;
+
+  # ---- PEER TIME (0xD7) — SNTP-rooted wall clock for pots / Control backup
+  # {0xD7,0x01,year-2000,month,day,hour,min,sec,valid}
+  - id: tx_peer_time
+    mode: single
+    then:
+      - espnow.send:
+          address: FF:FF:FF:FF:FF:FF
+          wait_for_sent: false
+          data: !lambda |-
+            std::vector<uint8_t> p{0xD7, 0x01, 0, 0, 0, 0, 0, 0, 0};
+            auto now = id(sntp_time).now();
+            if (!now.is_valid()) now = id(grow_time).now();
+            if (now.is_valid()) {
+              p[2] = (uint8_t)(now.year >= 2000 ? now.year - 2000 : 0);
+              p[3] = (uint8_t) now.month;
+              p[4] = (uint8_t) now.day_of_month;
+              p[5] = (uint8_t) now.hour;
+              p[6] = (uint8_t) now.minute;
+              p[7] = (uint8_t) now.second;
+              p[8] = 1;
+            }
             return p;
 
 # Drive the periodic broadcasts (the on_receive echo covers instant feedback).
@@ -394,6 +450,7 @@ interval:
   - interval: 5s
     then:
       - script.execute: tx_fleet_heartbeat
+      - script.execute: tx_peer_time
       - lambda: |-
           bool linked = id(panel_last_ms) != 0 && (millis() - id(panel_last_ms)) < 30000u;
           id(panel_link).publish_state(linked);

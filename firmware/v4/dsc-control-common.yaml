@@ -43,6 +43,21 @@
 #  v5.1.15: VPD curve editor (page_set_vpd from Control), Pulse 1h VPD
 #  ASCII sparkline in lbl_spark (ring buffer; no lv_chart / LV_USE_CHART),
 #  per-device power drill-down (page_power_detail from ladder/Clone/Main).
+#  v5.1.16: Fleet Fix — hold "Fleet Fix" (Connections, was the Bluetooth
+#  stub row) >=1.5s to run fleet_fix_run: pins the glass on page_boot,
+#  gates refresh_ui off (fix_active), and walks Hub -> Control(self) ->
+#  Pot1..4 in order, up to 5 tries each (skip + continue on repeated
+#  fail), driving boot_msg + boot_paint the whole time — never the tab
+#  UI. Success gate = preferred-AP match + fresh hub beat + valid clock
+#  + non-skipped pots OK; reports Success / Done - skipped <list> then
+#  returns to Connections. All Fleet Fix / boot_msg strings are ASCII-
+#  only now (no "…"/"–"/"→") so a missing glyph can never blank the
+#  status line mid-heal; cyd_glyphs.yaml still gained "…"/"–" as a
+#  belt-and-suspenders (the Pulse sparkline keeps the en dash). Added
+#  ESP-NOW: TX tx_rf_card (0xD5, 10 s while WiFi is up) and RX for hub
+#  0xD7 TIME packs (noted, not applied — SNTP/HA time stay authoritative)
+#  + tolerate a v2 (extended) 0xD0. Removed the "radio off" Bluetooth
+#  stub row (dead weight — this panel has no BT hardware use).
 #
 #  RAM RULE (crash postmortems v4.0–4.0.2 + 5.1.0): never call lv_label_set_text
 #  every frame; guard with strcmp. No SCROLL_CIRCULAR, no breathe anim.
@@ -148,7 +163,7 @@ esphome:
     # the dashboard and HA's device page both described DSC-CONTROL as
     # being the DSC HUB. Purely cosmetic, but confusing enough to matter.
     name: "digital_emotions.dsc-control"
-    version: "5.1.15"
+    version: "5.1.16"
   on_boot:
     # Seed the 0xDC command seq from hardware RNG so a panel reboot is
     # unlikely to replay the hub's last-seen seq even before the hub's
@@ -169,7 +184,7 @@ esphome:
       then:
         - light.turn_off: backlight
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 5.1.15 paused — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 5.1.16 paused — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
             id(boot_ui_ready) = false;
@@ -188,16 +203,16 @@ esphome:
               lambda: 'return heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL) < 20000;'
             then:
               - lambda: |-
-                  ESP_LOGW("boot", "DSC-CONTROL 5.1.15 heap still tight largest=%u — waiting longer",
+                  ESP_LOGW("boot", "DSC-CONTROL 5.1.16 heap still tight largest=%u — waiting longer",
                            (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
               - delay: 10s
         - lvgl.page.show: page_boot
-        - lambda: 'id(boot_msg) = "starting…";'
+        - lambda: 'id(boot_msg) = "starting...";'
         - script.execute:
             id: boot_paint
             pct: 8
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 5.1.15 resume-lite — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 5.1.16 resume-lite — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
             id(touch_guard_until) = millis() + 5000;
@@ -207,7 +222,7 @@ esphome:
         - light.turn_on:
             id: backlight
             brightness: 55%
-        - lambda: 'id(boot_msg) = "waiting for Wi-Fi…";'
+        - lambda: 'id(boot_msg) = "waiting for Wi-Fi...";'
         - script.execute:
             id: boot_paint
             pct: 18
@@ -216,7 +231,7 @@ esphome:
               lambda: 'return id(wifi_conn);'
             timeout: 25s
         - lambda: |-
-            id(boot_msg) = id(wifi_conn) ? "syncing Nest AP…" : "no Wi-Fi · announcing…";
+            id(boot_msg) = id(wifi_conn) ? "syncing Nest AP..." : "no Wi-Fi - announcing...";
         - script.execute:
             id: boot_paint
             pct: 24
@@ -229,7 +244,7 @@ esphome:
         - script.execute: adopt_hub_wifi_ap
         - delay: 2s
         - lambda: |-
-            id(boot_msg) = id(wifi_conn) ? "announcing to hub…" : "no Wi-Fi · announcing…";
+            id(boot_msg) = id(wifi_conn) ? "announcing to hub..." : "no Wi-Fi - announcing...";
         - script.execute:
             id: boot_paint
             pct: 30
@@ -238,7 +253,7 @@ esphome:
             id: hub_cmd
             op: 57
             val: 0
-        - lambda: 'id(boot_msg) = "loading climate…";'
+        - lambda: 'id(boot_msg) = "loading climate...";'
         - script.execute:
             id: boot_paint
             pct: 42
@@ -251,7 +266,7 @@ esphome:
             condition:
               lambda: 'return id(gv_hub_last) == 0;'
             then:
-              - lambda: 'id(boot_msg) = "retrying hub hello…";'
+              - lambda: 'id(boot_msg) = "retrying hub hello...";'
               - script.execute:
                   id: boot_paint
                   pct: 45
@@ -263,7 +278,7 @@ esphome:
                   condition:
                     lambda: 'return id(gv_hub_last) != 0;'
                   timeout: 25s
-        - lambda: 'id(boot_msg) = "loading setpoints…";'
+        - lambda: 'id(boot_msg) = "loading setpoints...";'
         - script.execute:
             id: boot_paint
             pct: 60
@@ -271,7 +286,7 @@ esphome:
             condition:
               lambda: 'return id(gv_cfg_ok);'
             timeout: 15s
-        - lambda: 'id(boot_msg) = "loading soil…";'
+        - lambda: 'id(boot_msg) = "loading soil...";'
         - script.execute:
             id: boot_paint
             pct: 78
@@ -280,9 +295,9 @@ esphome:
               lambda: 'return id(gv_soil_ok);'
             timeout: 12s
         - lambda: |-
-            if (id(gv_hub_last) == 0) id(boot_msg) = "hub quiet · opening UI…";
-            else if (!id(gv_cfg_ok)) id(boot_msg) = "partial data · opening UI…";
-            else id(boot_msg) = "ready · opening UI…";
+            if (id(gv_hub_last) == 0) id(boot_msg) = "hub quiet - opening UI...";
+            else if (!id(gv_cfg_ok)) id(boot_msg) = "partial data - opening UI...";
+            else id(boot_msg) = "ready - opening UI...";
         - script.execute:
             id: boot_paint
             pct: 92
@@ -292,7 +307,7 @@ esphome:
             id: boot_paint
             pct: 100
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 5.1.15 post-lite — free_heap=%u largest=%u hub=%d cfg=%d soil=%d",
+            ESP_LOGI("boot", "DSC-CONTROL 5.1.16 post-lite — free_heap=%u largest=%u hub=%d cfg=%d soil=%d",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL),
                      (int) (id(gv_hub_last) != 0), (int) id(gv_cfg_ok), (int) id(gv_soil_ok));
@@ -301,14 +316,14 @@ esphome:
         - lambda: 'lv_obj_clear_flag(id(tabbar), LV_OBJ_FLAG_HIDDEN);'
         - lvgl.page.show: page_pulse
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 5.1.15 resume-full — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 5.1.16 resume-full — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
             id(touch_guard_until) = millis() + 2000;
         - lvgl.resume:
         - delay: 3s
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 5.1.15 UI armed — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 5.1.16 UI armed — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
             id(boot_ui_ready) = true;
@@ -453,7 +468,11 @@ espnow:
     - ${hub_mac}
   on_receive:
     - lambda: |-
-        if (size < 2 || data[1] != 0x01) return;
+        if (size < 2) return;
+        // Every packet is ver 0x01 except the hub fleet-beat (0xD0), which
+        // may arrive as ver 0x02 (extended payload, fields TBD) once the
+        // hub ships it — accept and still parse the v1 layout below.
+        if (data[1] != 0x01 && !(data[0] == 0xD0 && data[1] == 0x02)) return;
         auto rd = [&](int off) -> float { int16_t v = (int16_t)(data[off] | (data[off+1] << 8)); return v == (int16_t)0x8000 ? NAN : (float) v; };
         auto pend_on = [&](int op) -> bool {
           if (op < 0 || op >= 64) return false;
@@ -490,6 +509,8 @@ espnow:
         };
         uint8_t ty = data[0];
         // Fleet heartbeat (hub 0xD0) — link alive + optional Nest BSSID.
+        // v2 (data[1]==0x02) is the same v1 layout plus extended bytes
+        // beyond offset 9 — parse the shared prefix now, ignore the rest.
         if (ty == 0xD0) {
           id(gv_hub_last) = millis();
           id(link_rec_stage) = 0;
@@ -501,6 +522,7 @@ espnow:
             }
             id(hub_ap_bssid_ok) = nz;
           }
+          if (data[1] == 0x02) ESP_LOGD("espnow", "0xD0 v2 extended payload accepted, size=%d", size);
           return;
         }
         if (ty == 0xD1 && size >= 36) {
@@ -588,6 +610,16 @@ espnow:
           };
           id(gv_plant1) = take(2);  id(gv_plant2) = take(18);
           id(gv_plant3) = take(34); id(gv_plant4) = take(50);
+        } else if (ty == 0xD7 && size >= 9) {
+          // TIME pack: {0xD7,0x01,y,m,d,h,min,s,valid}. y = years since 2000.
+          // Control already runs SNTP (+ HA time backup) — this is a hub
+          // courtesy broadcast, not a clock source. Only worth a log line,
+          // and only when this panel's own clock is not yet trustworthy.
+          bool hub_time_valid = data[8] != 0;
+          if (hub_time_valid && !id(clock_valid)) {
+            ESP_LOGI("espnow", "hub TIME 0xD7 20%02u-%02u-%02u %02u:%02u:%02u (local clock weak, noted)",
+                     data[2], data[3], data[4], data[5], data[6], data[7]);
+          }
         }
 
 time:
@@ -695,6 +727,19 @@ light:
 button:
   - platform: restart
     name: "Restart"
+  # HA-side trigger for the same flow as holding "Fleet Fix" on Connections.
+  # No fat-finger timer here — a deliberate HA button press already is one.
+  - platform: template
+    name: "Fleet Fix"
+    id: fleet_fix_ha_btn
+    icon: mdi:cog-refresh
+    entity_category: diagnostic
+    on_press:
+      - if:
+          condition:
+            lambda: 'return id(boot_ui_ready) && !id(fix_active);'
+          then:
+            - script.execute: fleet_fix_run
 
 # ==================================================================
 #  SENSORS — onboard diagnostics + the hub's HA entity surface.
@@ -1212,13 +1257,22 @@ binary_sensor:
   - platform: template
     id: st_destrat
     internal: true
+  # Fleet Fix success gate input + HA visibility. No lambda (see the note
+  # above this block) — driven by explicit publish_state() on a 15s
+  # interval, near the bottom of this file.
+  - platform: template
+    name: "Clock Valid"
+    id: clock_valid_bs
+    device_class: running
+    entity_category: diagnostic
+    icon: mdi:clock-check-outline
 
 text_sensor:
   - platform: template
     name: "Firmware Version"
     id: fw_version
     icon: mdi:tag-check
-    lambda: 'return {"5.1.15"};'
+    lambda: 'return {"5.1.16"};'
     update_interval: 60s
   - platform: template
     id: sel_stage
@@ -1339,9 +1393,11 @@ globals:
   - id: gv_soil_ok               # true after first 0xD3 soil packet
     type: bool
     initial_value: 'false'
-  - id: boot_msg                 # Starting-page status line (boot_paint)
+  - id: boot_msg                 # Starting-page status line (boot_paint); also
+                                  # the Fleet Fix status line — ASCII only, see
+                                  # fleet_fix_run.
     type: std::string
-    initial_value: '"starting…"'
+    initial_value: '"starting..."'
   - id: ui_dirty                 # coalesce full tab paint off the indev/ESP-NOW path
     type: bool
     initial_value: 'false'
@@ -1466,6 +1522,35 @@ globals:
   - id: api_was
     type: bool
     initial_value: 'false'
+  # ---- Fleet Fix (v5.1.16) — hold "Fleet Fix" on Connections >=1.5s.
+  # Drives status ONLY via boot_msg + boot_paint (never the tab UI);
+  # refresh_ui bails immediately while fix_active. Strings are ASCII
+  # only (see fleet_fix_run) — cyd_glyphs.yaml is a safety net, not
+  # the plan.
+  - id: fix_active            # true for the whole run; gates refresh_ui
+    type: bool
+    initial_value: 'false'
+  - id: fix_phase              # 0 idle,1 hub,2 self,3-6 pot1-4,7 gate,8 done
+    type: int
+    initial_value: '0'
+  - id: fix_msg                # ASCII-only status line, mirrors into boot_msg
+    type: std::string
+    initial_value: '""'
+  - id: fix_skip_mask           # bit0 hub,1 self,2-5 pot1-4
+    type: int
+    initial_value: '0'
+  - id: fix_try_count           # retry counter for the device fix_phase names
+    type: int
+    initial_value: '0'
+  - id: fix_dev_ok              # scratch: has the current device passed yet
+    type: bool
+    initial_value: 'false'
+  - id: fix_hold_start          # millis() when the Fleet Fix button was pressed
+    type: uint32_t
+    initial_value: '0'
+  - id: clock_valid             # sntp_time OR ha_time valid; polled, not per-frame
+    type: bool
+    initial_value: 'false'
 
 # ==================================================================
 #  FONTS — Montserrat built-ins for text; MDI subset for icons.
@@ -1541,11 +1626,12 @@ font:
       "\U000F0238",  # fire
       "\U000F1A45",  # heat-wave
       "\U000F0150",  # clock-outline
-      "\U000F00AF",  # bluetooth
       "\U000F0002",  # access-point-network (ESP-NOW)
       "\U000F07D0",  # home-assistant
       "\U000F0079",  # battery
       "\U000F0084",  # battery-charging
+      # v5.1.16 — \U000F00AF (bluetooth) removed: its only use, the
+      # Connections "radio off" stub row, is gone (see Fleet Fix).
       ]
   - file: "https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/fonts/materialdesignicons-webfont.ttf"
     id: mdi_16
@@ -1952,10 +2038,10 @@ lvgl:
             - label: {id: al_row7, text: "", text_font: f_body, align: TOP_LEFT, x: 12, y: 202, text_color: 0xC0C6CC}
 
       # ---- CONNECTIONS screen (tap the Wi-Fi pill on Pulse) ----
-      # Live link table: Wi-Fi, Home Assistant API, Bluetooth, ESP-NOW. Each
-      # shows an up-counter that resets to 0 the moment that link drops.
-      # BT/ESP-NOW read "—" until those radios are configured (ESP-NOW arrives
-      # with the headless-hub firmware).
+      # Live link table: Wi-Fi, Home Assistant API, ESP-NOW, Fleet Fix. Each
+      # link row shows an up-counter that resets to 0 the moment it drops.
+      # v5.1.16 — the Bluetooth "radio off" stub row is gone (this panel has
+      # no BT hardware use); its slot is now the Fleet Fix hold button.
       - obj:
           id: conn_screen
           hidden: true
@@ -2044,8 +2130,12 @@ lvgl:
                   - label: {text: "Home Assistant", text_font: f_body, align: TOP_LEFT, x: 36, y: 0, text_color: 0xFFFFFF}
                   - label: {id: conn_api_sub, text: "—", text_font: f_small, align: BOTTOM_LEFT, x: 36, y: 0, text_color: 0x8A929C}
                   - label: {id: conn_api_up, text: "0s", text_font: f_body, align: RIGHT_MID, x: -2, text_color: 0x00E676}
-            # --- Bluetooth ---
-            - obj:
+            # --- Fleet Fix (v5.1.16) — was the Bluetooth stub row (this
+            # panel has no BT hardware use; dead weight). Hold >=1.5s to
+            # run fleet_fix_run: pins the glass on page_boot and walks
+            # Hub -> Control(self) -> Pot1..4, all status via boot_msg.
+            - button:
+                id: fleet_fix_btn
                 x: 10
                 y: 136
                 width: 300
@@ -2054,15 +2144,26 @@ lvgl:
                 border_color: 0x232A33
                 border_width: 1
                 radius: 8
+                shadow_width: 0
                 pad_all: 6
                 pad_top: 2
                 pad_bottom: 2
-                scrollable: false
                 widgets:
-                  - label: {text: "\U000F00AF", text_font: mdi_22, align: LEFT_MID, x: 2, text_color: 0x3A4550}
-                  - label: {text: "Bluetooth", text_font: f_body, align: TOP_LEFT, x: 36, y: 0, text_color: 0xC0C6CC}
-                  - label: {text: "radio off", text_font: f_small, align: BOTTOM_LEFT, x: 36, y: 0, text_color: 0x5A6472}
-                  - label: {text: "—", text_font: f_body, align: RIGHT_MID, x: -2, text_color: 0x5A6472}
+                  - label: {text: "\U000F0493", text_font: mdi_22, align: LEFT_MID, x: 2, text_color: 0xFFAA00}
+                  - label: {text: "Fleet Fix", text_font: f_body, align: TOP_LEFT, x: 36, y: 0, text_color: 0xFFFFFF}
+                  - label: {text: "hold 1.5s to run", text_font: f_small, align: BOTTOM_LEFT, x: 36, y: 0, text_color: 0x8A929C}
+                  - label: {text: "\U000F0142", text_font: mdi_22, align: RIGHT_MID, x: -2, text_color: 0x5A6472}
+                on_press:
+                  - lambda: 'id(fix_hold_start) = millis();'
+                on_release:
+                  - if:
+                      condition:
+                        lambda: |-
+                          uint32_t el = id(fix_hold_start) ? millis() - id(fix_hold_start) : 0;
+                          id(fix_hold_start) = 0;
+                          return el >= 1500 && id(boot_ui_ready) && !id(fix_active);
+                      then:
+                        - script.execute: fleet_fix_run
             # --- ESP-NOW ---
             - obj:
                 x: 10
@@ -2108,7 +2209,7 @@ lvgl:
             text_color: 0x00E676
         - label:
             id: lbl_boot_status
-            text: "starting…"
+            text: "starting..."
             text_font: f_small
             align: TOP_MID
             y: 108
@@ -2134,7 +2235,7 @@ lvgl:
             y: 158
             text_color: 0x5A6472
         - label:
-            text: "v5.1.15"
+            text: "v5.1.16"
             text_font: f_small
             align: TOP_MID
             y: 188
@@ -3844,7 +3945,7 @@ lvgl:
                     - lambda: 'id(ui_vpd_editor) = true;'
                     - lvgl.page.show: page_set_vpd
                     - script.execute: refresh_ui
-              - label: {text: "DSC-CONTROL v5.1.15  ·  ESP-NOW primary", text_font: f_small, text_color: 0x3A4550, pad_top: 8, pad_bottom: 8}
+              - label: {text: "DSC-CONTROL v5.1.16  ·  ESP-NOW primary", text_font: f_small, text_color: 0x3A4550, pad_top: 8, pad_bottom: 8}
 # ==================================================================
 #  SCRIPTS
 # ==================================================================
@@ -3862,7 +3963,7 @@ script:
           if (p > 100) p = 100;
           lv_bar_set_value(id(boot_bar), p, LV_ANIM_OFF);
           const char* m = id(boot_msg).c_str();
-          if (m == nullptr || m[0] == '\0') m = "…";
+          if (m == nullptr || m[0] == '\0') m = "...";
           const char* cur = lv_label_get_text(id(lbl_boot_status));
           if (cur == nullptr || strcmp(cur, m) != 0)
             lv_label_set_text(id(lbl_boot_status), m);
@@ -3922,6 +4023,240 @@ script:
       - delay: 250ms
       - lambda: 'App.safe_reboot();'
 
+  # ================================================================
+  #  FLEET FIX (v5.1.16) — hold "Fleet Fix" on Connections >=1.5s.
+  #  Pins the glass on page_boot (refresh_ui bails via fix_active) and
+  #  drives status ONLY through boot_msg + boot_paint — never the tab
+  #  UI — while it walks the fleet in order: Hub -> Control (self) ->
+  #  Pot1 -> Pot2 -> Pot3 -> Pot4. Each device gets up to 5 tries; one
+  #  that never comes good is recorded in fix_skip_mask and the run
+  #  moves on (no device can block the others). Soft heal only: Hub
+  #  and the pots are pure wait-for-vitals (nothing this panel can
+  #  push to them over ESP-NOW); self additionally gets a WiFi bounce
+  #  between tries. NO hub reboot from glass, ever. Every string here
+  #  is ASCII (no "…"/"–"/"→") — cyd_glyphs.yaml is a safety net, not
+  #  the plan.
+  # ================================================================
+  - id: fleet_fix_run
+    mode: single
+    then:
+      - lambda: |-
+          if (id(fix_active)) return;   // belt & suspenders vs mode: single
+          id(fix_active) = true;
+          id(fix_phase) = 0;
+          id(fix_skip_mask) = 0;
+          id(fix_try_count) = 0;
+          id(fix_msg) = "fleet fix starting...";
+          id(boot_msg) = id(fix_msg);
+          for (lv_indev_t *in = lv_indev_get_next(nullptr); in != nullptr; in = lv_indev_get_next(in)) {
+            if (lv_indev_get_type(in) == LV_INDEV_TYPE_POINTER) lv_indev_wait_release(in);
+          }
+          lv_obj_add_flag(id(conn_screen), LV_OBJ_FLAG_HIDDEN);
+          lv_obj_add_flag(id(alert_screen), LV_OBJ_FLAG_HIDDEN);
+          lv_obj_add_flag(id(confirm_takeover), LV_OBJ_FLAG_HIDDEN);
+          lv_obj_add_flag(id(tabbar), LV_OBJ_FLAG_HIDDEN);
+      - lvgl.page.show: page_boot
+      - script.execute: {id: boot_paint, pct: 2}
+      - delay: 150ms
+
+      # ---- 1: HUB — pure wait; hub already beats 0xD0 every 5s / vitals
+      # every 2s regardless of this panel, and it is never rebooted from
+      # here. ----
+      - lambda: 'id(fix_phase) = 1; id(fix_try_count) = 0; id(fix_dev_ok) = id(gv_hub_last) != 0 && (millis() - id(gv_hub_last)) < 6000u;'
+      - repeat:
+          count: 5
+          then:
+            - if:
+                condition: {lambda: 'return !id(fix_dev_ok);'}
+                then:
+                  - lambda: |-
+                      id(fix_try_count)++;
+                      char m[48];
+                      snprintf(m, sizeof(m), "polling Nest - hub - try %d/5...", id(fix_try_count));
+                      id(fix_msg) = m; id(boot_msg) = id(fix_msg);
+                  - script.execute: {id: boot_paint, pct: 6}
+                  - delay: 2500ms
+                  - lambda: 'id(fix_dev_ok) = id(gv_hub_last) != 0 && (millis() - id(gv_hub_last)) < 6000u;'
+      - lambda: |-
+          if (!id(fix_dev_ok)) { id(fix_skip_mask) |= 1; id(fix_msg) = "hub skipped after 5 fails"; }
+          else id(fix_msg) = "hub - linked";
+          id(boot_msg) = id(fix_msg);
+      - script.execute: {id: boot_paint, pct: 14}
+      - delay: 300ms
+
+      # ---- 2: CONTROL (self) — the one device this panel can actually
+      # heal: bounce WiFi between tries. ----
+      - lambda: 'id(fix_phase) = 2; id(fix_try_count) = 0; id(fix_dev_ok) = id(wifi_conn);'
+      - repeat:
+          count: 5
+          then:
+            - if:
+                condition: {lambda: 'return !id(fix_dev_ok);'}
+                then:
+                  - lambda: |-
+                      id(fix_try_count)++;
+                      char m[48];
+                      snprintf(m, sizeof(m), "control (self) - try %d/5 - bounce", id(fix_try_count));
+                      id(fix_msg) = m; id(boot_msg) = id(fix_msg);
+                  - script.execute: {id: boot_paint, pct: 18}
+                  - wifi.disable:
+                  - delay: 1500ms
+                  - wifi.enable:
+                  - wait_until:
+                      condition: {lambda: 'return id(wifi_conn);'}
+                      timeout: 6s
+                  - lambda: 'id(fix_dev_ok) = id(wifi_conn);'
+      - lambda: |-
+          if (!id(fix_dev_ok)) { id(fix_skip_mask) |= 2; id(fix_msg) = "control skipped after 5 fails"; }
+          else id(fix_msg) = "control (self) - linked";
+          id(boot_msg) = id(fix_msg);
+      - script.execute: {id: boot_paint, pct: 30}
+      - delay: 300ms
+
+      # ---- 3-6: POT1..4 — pure wait on the hub-relayed link bit (0xD1
+      # gv_coord bits 2..5). This panel has no command that can reconnect
+      # a pot; ESP-NOW vitals recovering is the only signal available. ----
+      - lambda: 'id(fix_phase) = 3; id(fix_try_count) = 0; id(fix_dev_ok) = (id(gv_coord) >> 2) & 1;'
+      - repeat:
+          count: 5
+          then:
+            - if:
+                condition: {lambda: 'return !id(fix_dev_ok);'}
+                then:
+                  - lambda: |-
+                      id(fix_try_count)++;
+                      char m[48];
+                      snprintf(m, sizeof(m), "waiting pot1 - try %d/5 - vitals...", id(fix_try_count));
+                      id(fix_msg) = m; id(boot_msg) = id(fix_msg);
+                  - script.execute: {id: boot_paint, pct: 34}
+                  - delay: 2500ms
+                  - lambda: 'id(fix_dev_ok) = (id(gv_coord) >> 2) & 1;'
+      - lambda: |-
+          if (!id(fix_dev_ok)) { id(fix_skip_mask) |= 4; id(fix_msg) = "pot1 skipped after 5 fails"; }
+          else id(fix_msg) = "pot1 - linked";
+          id(boot_msg) = id(fix_msg);
+      - script.execute: {id: boot_paint, pct: 42}
+
+      - lambda: 'id(fix_phase) = 4; id(fix_try_count) = 0; id(fix_dev_ok) = (id(gv_coord) >> 3) & 1;'
+      - repeat:
+          count: 5
+          then:
+            - if:
+                condition: {lambda: 'return !id(fix_dev_ok);'}
+                then:
+                  - lambda: |-
+                      id(fix_try_count)++;
+                      char m[48];
+                      snprintf(m, sizeof(m), "waiting pot2 - try %d/5 - vitals...", id(fix_try_count));
+                      id(fix_msg) = m; id(boot_msg) = id(fix_msg);
+                  - script.execute: {id: boot_paint, pct: 46}
+                  - delay: 2500ms
+                  - lambda: 'id(fix_dev_ok) = (id(gv_coord) >> 3) & 1;'
+      - lambda: |-
+          if (!id(fix_dev_ok)) { id(fix_skip_mask) |= 8; id(fix_msg) = "pot2 skipped after 5 fails"; }
+          else id(fix_msg) = "pot2 - linked";
+          id(boot_msg) = id(fix_msg);
+      - script.execute: {id: boot_paint, pct: 56}
+
+      - lambda: 'id(fix_phase) = 5; id(fix_try_count) = 0; id(fix_dev_ok) = (id(gv_coord) >> 4) & 1;'
+      - repeat:
+          count: 5
+          then:
+            - if:
+                condition: {lambda: 'return !id(fix_dev_ok);'}
+                then:
+                  - lambda: |-
+                      id(fix_try_count)++;
+                      char m[48];
+                      snprintf(m, sizeof(m), "waiting pot3 - try %d/5 - vitals...", id(fix_try_count));
+                      id(fix_msg) = m; id(boot_msg) = id(fix_msg);
+                  - script.execute: {id: boot_paint, pct: 60}
+                  - delay: 2500ms
+                  - lambda: 'id(fix_dev_ok) = (id(gv_coord) >> 4) & 1;'
+      - lambda: |-
+          if (!id(fix_dev_ok)) { id(fix_skip_mask) |= 16; id(fix_msg) = "pot3 skipped after 5 fails"; }
+          else id(fix_msg) = "pot3 - linked";
+          id(boot_msg) = id(fix_msg);
+      - script.execute: {id: boot_paint, pct: 70}
+
+      - lambda: 'id(fix_phase) = 6; id(fix_try_count) = 0; id(fix_dev_ok) = (id(gv_coord) >> 5) & 1;'
+      - repeat:
+          count: 5
+          then:
+            - if:
+                condition: {lambda: 'return !id(fix_dev_ok);'}
+                then:
+                  - lambda: |-
+                      id(fix_try_count)++;
+                      char m[48];
+                      snprintf(m, sizeof(m), "waiting pot4 - try %d/5 - vitals...", id(fix_try_count));
+                      id(fix_msg) = m; id(boot_msg) = id(fix_msg);
+                  - script.execute: {id: boot_paint, pct: 74}
+                  - delay: 2500ms
+                  - lambda: 'id(fix_dev_ok) = (id(gv_coord) >> 5) & 1;'
+      - lambda: |-
+          if (!id(fix_dev_ok)) { id(fix_skip_mask) |= 32; id(fix_msg) = "pot4 skipped after 5 fails"; }
+          else id(fix_msg) = "pot4 - linked";
+          id(boot_msg) = id(fix_msg);
+      - script.execute: {id: boot_paint, pct: 84}
+      - delay: 300ms
+
+      # ---- 7: SUCCESS GATE — preferred-AP match (if one is known),
+      # fresh hub beat, a valid clock, and every non-skipped pot still OK.
+      # "Success" needs zero skips too; any skip reports "Done - skipped
+      # <list>" even if the gate itself would otherwise pass. ----
+      - lambda: |-
+          id(fix_phase) = 7;
+          id(fix_msg) = "checking success gate...";
+          id(boot_msg) = id(fix_msg);
+      - script.execute: {id: boot_paint, pct: 90}
+      - delay: 300ms
+      - lambda: |-
+          bool pref_ok = true;
+          if (id(hub_ap_bssid_ok)) {
+            auto *w = wifi::global_wifi_component;
+            pref_ok = false;
+            if (w != nullptr && w->is_connected()) {
+              auto b = w->wifi_bssid();
+              pref_ok = true;
+              for (int i = 0; i < 6; i++) if (b[i] != id(hub_ap_bssid)[i]) { pref_ok = false; break; }
+            }
+          }
+          bool hub_ok = id(gv_hub_last) != 0 && (millis() - id(gv_hub_last)) < 30000u;
+          bool clk_ok = id(sntp_time).now().is_valid() || id(ha_time).now().is_valid();
+          bool pots_ok = true;
+          for (int i = 0; i < 4; i++) {
+            if (!(id(fix_skip_mask) & (4 << i)) && !((id(gv_coord) >> (2 + i)) & 1)) pots_ok = false;
+          }
+          bool gate_clear = pref_ok && hub_ok && clk_ok && pots_ok;
+          bool success = gate_clear && id(fix_skip_mask) == 0;
+          char skiplist[48] = "";
+          static const char* NAMES[6] = {"hub","control","pot1","pot2","pot3","pot4"};
+          for (int i = 0; i < 6; i++) {
+            if (id(fix_skip_mask) & (1 << i)) {
+              if (skiplist[0]) strncat(skiplist, ",", sizeof(skiplist) - strlen(skiplist) - 1);
+              strncat(skiplist, NAMES[i], sizeof(skiplist) - strlen(skiplist) - 1);
+            }
+          }
+          char m[80];
+          if (success) snprintf(m, sizeof(m), "Success");
+          else if (id(fix_skip_mask) != 0) snprintf(m, sizeof(m), "Done - skipped %s", skiplist);
+          else snprintf(m, sizeof(m), "Done - gate not clear");
+          id(fix_msg) = m;
+          id(boot_msg) = id(fix_msg);
+      - script.execute: {id: boot_paint, pct: 100}
+      - lambda: 'id(fix_phase) = 8;'
+      - delay: 2200ms
+
+      # ---- done: hand the glass back to Connections ----
+      - lambda: |-
+          id(fix_active) = false;
+          id(fix_phase) = 0;
+          id(touch_guard_until) = millis() + 500;
+          lv_obj_clear_flag(id(tabbar), LV_OBJ_FLAG_HIDDEN);
+      - script.execute: show_active_tab
+      - script.execute: open_connections
+
   # BUG-FIX 2026-08-02: presence keepalive (op 58). The hub times panel
   # liveness (panel_last_ms) from 0xDC RX only, and the panel only sends
   # 0xDC on user commands — so an idle glass went "silent" after ~90s and
@@ -3939,6 +4274,45 @@ script:
             uint16_t tg=(uint16_t) ${espnow_cmd_tag}; p[8]=tg&0xFF; p[9]=(tg>>8)&0xFF;
             uint16_t sq=id(cmd_tx_seq)++; p[10]=sq&0xFF; p[11]=(sq>>8)&0xFF;
             return p;
+
+  # ---- RF status card (0xD5), every 10s while WiFi is up (v5.1.16) ----
+  # {0xD5,0x01,role=1(control),assoc[6],pref[6],ch,rssi_u8,status}.
+  # assoc = current associated BSSID (zeros if not connected). pref =
+  # the hub's learned Nest BSSID (hub_ap_bssid from 0xD0), zeros if
+  # never learned — this panel has no NVS "preferred AP" of its own.
+  # rssi_u8 = |RSSI| clamped 0-255 (dBm is always <=0 here). status
+  # bits: 0 wifi up, 1 clock valid, 2 have preferred AP, 3 fix_active.
+  - id: tx_rf_card
+    mode: single
+    then:
+      - if:
+          condition:
+            lambda: 'return id(wifi_conn);'
+          then:
+            - espnow.send:
+                address: ${hub_mac}
+                wait_for_sent: false
+                data: !lambda |-
+                  std::vector<uint8_t> p(18, 0);
+                  p[0]=0xD5; p[1]=0x01; p[2]=1;
+                  auto *w = wifi::global_wifi_component;
+                  int rssi = 0;
+                  if (w != nullptr && w->is_connected()) {
+                    auto b = w->wifi_bssid();
+                    for (int i = 0; i < 6; i++) p[3+i] = b[i];
+                    rssi = (int) w->wifi_rssi();
+                  }
+                  if (id(hub_ap_bssid_ok)) {
+                    for (int i = 0; i < 6; i++) p[9+i] = id(hub_ap_bssid)[i];
+                  }
+                  p[15] = (uint8_t) (id(wifi_channel) < 0 ? 0 : (id(wifi_channel) > 255 ? 255 : id(wifi_channel)));
+                  p[16] = (uint8_t) (rssi < 0 ? (-rssi > 255 ? 255 : -rssi) : 0);
+                  uint8_t status = 1;   // gated by the if above -> wifi is up
+                  if (id(clock_valid)) status |= 2;
+                  if (id(hub_ap_bssid_ok)) status |= 4;
+                  if (id(fix_active)) status |= 8;
+                  p[17] = status;
+                  return p;
 
   - id: hub_cmd
     parameters:
@@ -4301,6 +4675,10 @@ script:
     then:
       - lambda: |-
           if (!id(boot_ui_ready)) return;
+          // Fleet Fix owns the glass exclusively while it runs — never
+          // paint Pulse/Connections/etc underneath it (boot_msg + boot_paint
+          // drive the screen instead; see fleet_fix_run).
+          if (id(fix_active)) return;
           const uint32_t NEON=0x00E676, AMBER=0xFFAA00, RED=0xF44336, CYAN=0x00BCD4,
                          GREY=0x5A6472, WHITE=0xFFFFFF, DIM=0xC0C6CC, BORD=0x232A33,
                          BLUE=0x2196F3, ORANGE=0xFF9800, PEND=0x8A929C;
@@ -4437,7 +4815,7 @@ script:
           AL(fault_aux, "Aux sensor offline");
           AL(any_dem && !link, "Appliances need HA (Sonoffs offline)");
           if (id(wifi_channel_hopped)) {
-            snprintf(hb, sizeof(hb), "WiFi channel hop → %d (check ESP-NOW)", id(wifi_channel));
+            snprintf(hb, sizeof(hb), "WiFi channel hop -> %d (check ESP-NOW)", id(wifi_channel));
             AL(true, hb);
             uint32_t hub_age = millis() - id(gv_hub_last);
             if (id(gv_hub_last) != 0 && hub_age < 6000) id(wifi_channel_hopped) = false;
@@ -5071,12 +5449,14 @@ interval:
   #   15s → hello ping (hub echoes vitals — API/session nudge)
   #   45s → WiFi bounce (rebind HA API + rejoin preferred BSSID)
   #   120s → safe_reboot (cap 2/boot)
+  # v5.1.16 — suspended while fix_active: Fleet Fix drives its own hello/
+  # WiFi-bounce sequence and must be the only thing touching the radio.
   - interval: 10s
     then:
       - if:
           condition:
             lambda: |-
-              if (millis() < 90000u || !id(boot_ui_ready)) return false;
+              if (millis() < 90000u || !id(boot_ui_ready) || id(fix_active)) return false;
               uint32_t age = (id(gv_hub_last) == 0) ? millis() : (millis() - id(gv_hub_last));
               if (age < 15000u) { id(link_rec_stage) = 0; return false; }
               if (id(link_rec_last_action) != 0 && (millis() - id(link_rec_last_action)) < 20000u)
@@ -5094,7 +5474,7 @@ interval:
       - if:
           condition:
             lambda: |-
-              if (millis() < 90000u || !id(boot_ui_ready)) return false;
+              if (millis() < 90000u || !id(boot_ui_ready) || id(fix_active)) return false;
               uint32_t age = (id(gv_hub_last) == 0) ? millis() : (millis() - id(gv_hub_last));
               if (id(link_rec_last_action) != 0 && (millis() - id(link_rec_last_action)) < 20000u)
                 return false;
@@ -5110,7 +5490,7 @@ interval:
       - if:
           condition:
             lambda: |-
-              if (millis() < 90000u || !id(boot_ui_ready)) return false;
+              if (millis() < 90000u || !id(boot_ui_ready) || id(fix_active)) return false;
               // BUG-FIX 2026-08-02: never escalate to reboot when the hub was
               // NEVER heard this boot (gv_hub_last==0). The 2/boot cap lives
               // in RAM, so with a persistently absent hub each reboot reset
@@ -5162,3 +5542,24 @@ interval:
           id(spark_vpd)[i] = v;
           id(spark_idx) = (i + 1) % 12;
           if (id(spark_idx) == 0) id(spark_filled) = true;
+
+  # RF status card to the hub (0xD5) — 10s while WiFi is up (v5.1.16).
+  - interval: 10s
+    then:
+      - if:
+          condition:
+            lambda: 'return id(boot_ui_ready) && id(wifi_conn);'
+          then:
+            - script.execute: tx_rf_card
+
+  # clock_valid: cheap (two is_valid() calls), polled here rather than a
+  # binary_sensor lambda — this codebase's binary_sensor.template has no
+  # update_interval, so a lambda there would run every loop() instead.
+  - interval: 15s
+    then:
+      - lambda: |-
+          bool cv = id(sntp_time).now().is_valid() || id(ha_time).now().is_valid();
+          if (cv != id(clock_valid)) {
+            id(clock_valid) = cv;
+            id(clock_valid_bs).publish_state(cv);
+          }

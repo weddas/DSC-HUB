@@ -21,6 +21,8 @@ template:
             'binary_sensor.dsc_hub_root_zone_sensor_fault',
             'binary_sensor.dsc_clone_dark_period_violation',
             'binary_sensor.dsc_clone_light_missing_in_window',
+            'binary_sensor.dsc_hub_coherence_mismatch',
+            'binary_sensor.dsc_nest_channel_split',
             'binary_sensor.dsc_wifi_preferred_ap_mismatch',
             'binary_sensor.dsc_humidifier_vent_conflict',
             'binary_sensor.dsc_heater_vent_conflict',

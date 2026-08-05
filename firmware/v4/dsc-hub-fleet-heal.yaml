@@ -1,0 +1,617 @@
+# ==================================================================
+#  DSC-HUB · fleet heal + lateral ledgers (merged by stub package list)
+#  ------------------------------------------------------------------
+#  Light-quota stays in dsc-hub-v4_0.yaml. This package adds:
+#    - VPD hours-in-band ledger (main + clone)
+#    - Mister/irrigation duty ledger (target 0 = disabled)
+#    - Settings coherence receipt (detect + flag only)
+#    - clock_valid gate + EVT bus + FIX_ACTIVE
+#    - RF self-heal orchestration hooks (REJOIN / FLEET_JUMP)
+#  Wire packets 0xD0v2 / 0xD5 / 0xD7 live in dsc-hub-espnow-primary.yaml.
+# ==================================================================
+
+globals:
+  # --- VPD band ledger (same cycle key as photo) ---
+  - id: vpd_main_delivered_s
+    type: uint32_t
+    restore_value: true
+    initial_value: '0'
+  - id: vpd_clone_delivered_s
+    type: uint32_t
+    restore_value: true
+    initial_value: '0'
+  - id: vpd_band_target_h
+    type: float
+    restore_value: true
+    initial_value: '18.0'
+  - id: vpd_ledger_cycle_key
+    type: int
+    restore_value: true
+    initial_value: '0'
+
+  # --- Mister duty ledger (target 0 = off) ---
+  - id: mister_delivered_s
+    type: uint32_t
+    restore_value: true
+    initial_value: '0'
+  - id: mister_target_h
+    type: float
+    restore_value: true
+    initial_value: '0.0'
+  - id: mister_min_off_h
+    type: float
+    restore_value: true
+    initial_value: '4.0'
+  - id: mister_catchup_active
+    type: bool
+    restore_value: false
+    initial_value: 'false'
+
+  # --- Coherence receipt (HA <-> hub; detect+flag only) ---
+  - id: coherence_epoch
+    type: uint32_t
+    restore_value: true
+    initial_value: '0'
+  - id: coherence_hash
+    type: uint32_t
+    restore_value: true
+    initial_value: '0'
+  - id: coherence_mismatch
+    type: bool
+    restore_value: false
+    initial_value: 'false'
+  - id: coherence_ha_hash
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+  - id: coherence_ha_epoch
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+
+  # --- Fleet heal / Fix ---
+  - id: clock_valid
+    type: bool
+    restore_value: false
+    initial_value: 'false'
+  - id: fix_active
+    type: bool
+    restore_value: false
+    initial_value: 'false'
+  - id: ota_blocked
+    type: bool
+    restore_value: false
+    initial_value: 'false'
+  - id: rf_heal_last_ms
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+  - id: rf_jump_last_ms
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+  - id: rf_rejoin_count
+    type: int
+    restore_value: false
+    initial_value: '0'
+  - id: evt_ring_idx
+    type: int
+    restore_value: true
+    initial_value: '0'
+  - id: evt_last_code
+    type: std::string
+    restore_value: false
+    initial_value: '""'
+  - id: evt_last_epoch
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+  - id: evt_ring_0
+    type: std::string
+    restore_value: true
+    initial_value: '""'
+  - id: evt_ring_1
+    type: std::string
+    restore_value: true
+    initial_value: '""'
+  - id: evt_ring_2
+    type: std::string
+    restore_value: true
+    initial_value: '""'
+  - id: evt_ring_3
+    type: std::string
+    restore_value: true
+    initial_value: '""'
+  - id: evt_ring_4
+    type: std::string
+    restore_value: true
+    initial_value: '""'
+  - id: evt_ring_5
+    type: std::string
+    restore_value: true
+    initial_value: '""'
+  - id: evt_ring_6
+    type: std::string
+    restore_value: true
+    initial_value: '""'
+  - id: evt_ring_7
+    type: std::string
+    restore_value: true
+    initial_value: '""'
+  - id: evt_pending_code
+    type: std::string
+    restore_value: false
+    initial_value: '""'
+  - id: evt_pending_detail
+    type: std::string
+    restore_value: false
+    initial_value: '""'
+  - id: ledger_tick_ms
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+  - id: learning_paused
+    type: bool
+    restore_value: false
+    initial_value: 'false'
+
+button:
+  - platform: template
+    name: "Pre-OTA Quiesce"
+    id: btn_pre_ota_quiesce
+    icon: mdi:airplane-takeoff
+    on_press:
+      - lambda: |-
+          // Fleet Fix-lite: confirm preferred + ESP-NOW before OTA; block if Fix active.
+          if (id(fix_active)) {
+            id(evt_pending_code) = "OTA_BLOCK";
+            id(evt_pending_detail) = "fix_active";
+            id(emit_evt).execute();
+            ESP_LOGW("ota", "Pre-OTA refused — FIX_ACTIVE");
+            return;
+          }
+          id(evt_pending_code) = "OTA_QUIESCE";
+          id(evt_pending_detail) = "arm";
+          id(emit_evt).execute();
+          id(tx_fleet_heartbeat).execute();
+          id(tx_peer_time).execute();
+      - delay: 2s
+      - lambda: |-
+          bool panel_ok = id(panel_last_ms) != 0 && (millis() - id(panel_last_ms)) < 30000u;
+          bool wifi_ok = wifi::global_wifi_component != nullptr
+              && wifi::global_wifi_component->is_connected();
+          if (wifi_ok && id(clock_valid) && panel_ok) {
+            id(evt_pending_code) = "OTA_READY";
+            id(evt_pending_detail) = "ok";
+          } else {
+            id(evt_pending_code) = "OTA_HOLD";
+            id(evt_pending_detail) = !wifi_ok ? "wifi" : (!id(clock_valid) ? "clock" : "espnow");
+          }
+          id(emit_evt).execute();
+
+number:
+  - platform: template
+    name: "VPD Band Target Hours"
+    id: num_vpd_band_target_h
+    icon: mdi:chart-timeline-variant
+    min_value: 0
+    max_value: 24
+    step: 0.5
+    unit_of_measurement: "h"
+    update_interval: 60s
+    lambda: 'return id(vpd_band_target_h);'
+    set_action:
+      - globals.set: {id: vpd_band_target_h, value: !lambda 'return x;'}
+      - lambda: 'id(num_vpd_band_target_h).publish_state(id(vpd_band_target_h));'
+
+  - platform: template
+    name: "Mister Target Hours"
+    id: num_mister_target_h
+    icon: mdi:water-pump
+    min_value: 0
+    max_value: 12
+    step: 0.5
+    unit_of_measurement: "h"
+    update_interval: 60s
+    lambda: 'return id(mister_target_h);'
+    set_action:
+      - globals.set: {id: mister_target_h, value: !lambda 'return x;'}
+      - lambda: 'id(num_mister_target_h).publish_state(id(mister_target_h));'
+
+  - platform: template
+    name: "Mister Min Off Hours"
+    id: num_mister_min_off_h
+    icon: mdi:timer-sand
+    min_value: 1
+    max_value: 12
+    step: 0.5
+    unit_of_measurement: "h"
+    update_interval: 60s
+    lambda: 'return id(mister_min_off_h);'
+    set_action:
+      - globals.set: {id: mister_min_off_h, value: !lambda 'return x;'}
+      - lambda: 'id(num_mister_min_off_h).publish_state(id(mister_min_off_h));'
+
+sensor:
+  - platform: template
+    name: "VPD Main Band Hours"
+    id: vpd_main_band_h
+    unit_of_measurement: "h"
+    state_class: measurement
+    icon: mdi:leaf
+    accuracy_decimals: 2
+    update_interval: 15s
+    lambda: 'return {id(vpd_main_delivered_s) / 3600.0f};'
+  - platform: template
+    name: "VPD Clone Band Hours"
+    id: vpd_clone_band_h
+    unit_of_measurement: "h"
+    state_class: measurement
+    icon: mdi:leaf-circle
+    accuracy_decimals: 2
+    update_interval: 15s
+    lambda: 'return {id(vpd_clone_delivered_s) / 3600.0f};'
+  - platform: template
+    name: "VPD Main Band Debt Hours"
+    id: vpd_main_debt_h
+    unit_of_measurement: "h"
+    state_class: measurement
+    icon: mdi:scale-unbalanced
+    accuracy_decimals: 2
+    update_interval: 15s
+    lambda: |-
+      uint32_t t = (uint32_t)(id(vpd_band_target_h) * 3600.0f);
+      if (id(vpd_main_delivered_s) >= t) return {0.0f};
+      return {(t - id(vpd_main_delivered_s)) / 3600.0f};
+  - platform: template
+    name: "VPD Clone Band Debt Hours"
+    id: vpd_clone_debt_h
+    unit_of_measurement: "h"
+    state_class: measurement
+    icon: mdi:scale-unbalanced
+    accuracy_decimals: 2
+    update_interval: 15s
+    lambda: |-
+      uint32_t t = (uint32_t)(id(vpd_band_target_h) * 3600.0f);
+      if (id(vpd_clone_delivered_s) >= t) return {0.0f};
+      return {(t - id(vpd_clone_delivered_s)) / 3600.0f};
+  - platform: template
+    name: "Mister Delivered Hours"
+    id: mister_delivered_h
+    unit_of_measurement: "h"
+    state_class: measurement
+    icon: mdi:water
+    accuracy_decimals: 2
+    update_interval: 15s
+    lambda: 'return {id(mister_delivered_s) / 3600.0f};'
+  - platform: template
+    name: "Mister Debt Hours"
+    id: mister_debt_h
+    unit_of_measurement: "h"
+    state_class: measurement
+    icon: mdi:water-alert
+    accuracy_decimals: 2
+    update_interval: 15s
+    lambda: |-
+      if (id(mister_target_h) <= 0.01f) return {0.0f};
+      uint32_t t = (uint32_t)(id(mister_target_h) * 3600.0f);
+      if (id(mister_delivered_s) >= t) return {0.0f};
+      return {(t - id(mister_delivered_s)) / 3600.0f};
+  - platform: template
+    name: "Coherence Hash"
+    id: coherence_hash_s
+    entity_category: diagnostic
+    accuracy_decimals: 0
+    update_interval: 30s
+    lambda: 'return {(float) id(coherence_hash)};'
+  - platform: template
+    name: "Coherence Epoch"
+    id: coherence_epoch_s
+    entity_category: diagnostic
+    accuracy_decimals: 0
+    update_interval: 30s
+    lambda: 'return {(float) id(coherence_epoch)};'
+
+binary_sensor:
+  - platform: template
+    name: "Clock Valid"
+    id: clock_valid_bs
+    device_class: running
+    icon: mdi:clock-check-outline
+    lambda: 'return id(clock_valid);'
+  - platform: template
+    name: "Fix Active"
+    id: fix_active_bs
+    device_class: running
+    icon: mdi:wrench-clock
+    lambda: 'return id(fix_active);'
+  - platform: template
+    name: "OTA Blocked"
+    id: ota_blocked_bs
+    device_class: problem
+    entity_category: diagnostic
+    icon: mdi:cloud-off-outline
+    lambda: 'return id(ota_blocked);'
+  - platform: template
+    name: "Coherence Mismatch"
+    id: coherence_mismatch_bs
+    device_class: problem
+    icon: mdi:file-compare
+    lambda: 'return id(coherence_mismatch);'
+  - platform: template
+    name: "Mister Catchup Active"
+    id: mister_catchup_bs
+    device_class: running
+    icon: mdi:water-sync
+    lambda: 'return id(mister_catchup_active);'
+  - platform: template
+    name: "Learning Paused"
+    id: learning_paused_bs
+    device_class: running
+    entity_category: diagnostic
+    icon: mdi:pause-circle-outline
+    lambda: 'return id(learning_paused);'
+
+text_sensor:
+  - platform: template
+    name: "Last EVT"
+    id: last_evt_ts
+    icon: mdi:message-alert-outline
+    lambda: |-
+      if (id(evt_last_code).empty()) return {"EVT|H|NONE|0|"};
+      char b[96];
+      snprintf(b, sizeof(b), "EVT|H|%s|%u|", id(evt_last_code).c_str(), (unsigned) id(evt_last_epoch));
+      return {std::string(b)};
+    update_interval: 5s
+  - platform: template
+    name: "RF Status"
+    id: rf_status_ts
+    icon: mdi:wifi-marker
+    update_interval: 10s
+    lambda: |-
+      // RF|H|assoc3|pref3|ch|rssi|CODE
+      auto *w = wifi::global_wifi_component;
+      char assoc3[4] = {'-','-','-',0};
+      char pref3[4] = {'-','-','-',0};
+      int ch = 0;
+      int rssi = 0;
+      const char *code = "OK";
+      if (w != nullptr && w->is_connected()) {
+        auto b = w->wifi_bssid();
+        snprintf(assoc3, sizeof(assoc3), "%02X%02X", b[4], b[5]);
+        // last 3 hex of BSSID = 1.5 bytes -> use last byte pair style A1B
+        snprintf(assoc3, sizeof(assoc3), "%02X%X", b[5], (b[4] >> 4) & 0xF);
+        ch = w->get_wifi_channel();
+        rssi = (int) w->wifi_rssi();
+      } else {
+        code = "WRB";
+      }
+      std::string pref = id(preferred_wifi_bssid).state;
+      if (pref.size() == 17) {
+        // last octet + nibble of prior
+        char hex[3] = { pref[15], pref[16], 0 };
+        int last = (int) strtol(hex, nullptr, 16);
+        char hex2[3] = { pref[12], pref[13], 0 };
+        int prev = (int) strtol(hex2, nullptr, 16);
+        snprintf(pref3, sizeof(pref3), "%02X%X", last, (prev >> 4) & 0xF);
+        if (w != nullptr && w->is_connected()) {
+          auto b = w->wifi_bssid();
+          bool match = true;
+          for (int i = 0; i < 6; i++) {
+            char hx[3] = { pref[i * 3], pref[i * 3 + 1], 0 };
+            if ((uint8_t) strtol(hx, nullptr, 16) != b[i]) { match = false; break; }
+          }
+          if (!match) code = "CHX";
+        }
+      } else {
+        snprintf(pref3, sizeof(pref3), "---");
+      }
+      // FAR must be checked before WEAK — every FAR rssi (<-90) also
+      // satisfies WEAK's (<-80), so checking WEAK first made FAR dead code
+      // (found by scripts/fleet_fix_sim.py's RF-code model check).
+      if (strcmp(code, "OK") == 0 && rssi < -90) code = "FAR";
+      if (strcmp(code, "OK") == 0 && rssi < -80) code = "WEAK";
+      char out[48];
+      snprintf(out, sizeof(out), "RF|H|%s|%s|%d|%d|%s", assoc3, pref3, ch, rssi, code);
+      return {std::string(out)};
+
+script:
+  - id: emit_evt
+    mode: queued
+    max_runs: 8
+    then:
+      - lambda: |-
+          std::string code = id(evt_pending_code);
+          std::string detail = id(evt_pending_detail);
+          if (code.empty()) return;
+          auto now = id(sntp_time).now();
+          if (!now.is_valid()) now = id(grow_time).now();
+          uint32_t epoch = now.is_valid() ? (uint32_t) now.timestamp : (millis() / 1000u);
+          id(evt_last_code) = code;
+          id(evt_last_epoch) = epoch;
+          char line[80];
+          snprintf(line, sizeof(line), "%s|%u|%s", code.c_str(), (unsigned) epoch, detail.c_str());
+          std::string s(line);
+          int i = id(evt_ring_idx) % 8;
+          if (i == 0) id(evt_ring_0) = s;
+          else if (i == 1) id(evt_ring_1) = s;
+          else if (i == 2) id(evt_ring_2) = s;
+          else if (i == 3) id(evt_ring_3) = s;
+          else if (i == 4) id(evt_ring_4) = s;
+          else if (i == 5) id(evt_ring_5) = s;
+          else if (i == 6) id(evt_ring_6) = s;
+          else id(evt_ring_7) = s;
+          id(evt_ring_idx) = (i + 1) % 8;
+          char pub[96];
+          snprintf(pub, sizeof(pub), "EVT|H|%s|%u|%s", code.c_str(), (unsigned) epoch, detail.c_str());
+          id(last_evt_ts).publish_state(pub);
+          ESP_LOGI("evt", "%s", pub);
+          id(evt_pending_code) = "";
+          id(evt_pending_detail) = "";
+
+  - id: recompute_coherence
+    mode: single
+    then:
+      - lambda: |-
+          uint32_t h = 2166136261u;
+          auto mix = [&](uint32_t v){ h ^= v; h *= 16777619u; };
+          mix((uint32_t) id(full_auto_mode));
+          mix((uint32_t) id(auto_photoperiod_enabled));
+          mix((uint32_t) id(ha_takeover_active));
+          mix((uint32_t) id(clone_light_hours));
+          mix((uint32_t)(id(photo_min_dark_hours) * 10));
+          mix((uint32_t)(id(stage_vpd_min) * 100));
+          mix((uint32_t)(id(stage_vpd_max) * 100));
+          mix((uint32_t)(id(clone_vpd_min) * 100));
+          mix((uint32_t)(id(clone_vpd_max) * 100));
+          mix(id(photo_delivered_s));
+          mix(id(vpd_main_delivered_s));
+          mix(id(vpd_clone_delivered_s));
+          id(coherence_hash) = h;
+          auto now = id(sntp_time).now();
+          if (!now.is_valid()) now = id(grow_time).now();
+          if (now.is_valid()) id(coherence_epoch) = (uint32_t) now.timestamp;
+          if (id(coherence_ha_hash) != 0 && id(coherence_ha_hash) != h) {
+            if (!id(coherence_mismatch)) {
+              id(coherence_mismatch) = true;
+              id(evt_pending_code) = "COHERENCE";
+              id(evt_pending_detail) = "ha_hash_diff";
+              id(emit_evt).execute();
+            }
+          } else {
+            id(coherence_mismatch) = false;
+          }
+
+  - id: set_fix_active
+    mode: single
+    then:
+      - lambda: |-
+          // Toggle via fix_active global before calling; this syncs side effects.
+          id(ota_blocked) = id(fix_active);
+          id(learning_paused) = id(fix_active) || !id(clock_valid);
+          id(evt_pending_code) = id(fix_active) ? "FIX_ACTIVE" : "FIX_DONE";
+          id(evt_pending_detail) = id(fix_active) ? "1" : "0";
+          id(emit_evt).execute();
+
+  - id: rf_request_rejoin
+    mode: single
+    then:
+      - lambda: |-
+          uint32_t now = millis();
+          if (id(rf_heal_last_ms) != 0 && (now - id(rf_heal_last_ms)) < 60000u) {
+            ESP_LOGW("rf", "REJOIN rate-limited");
+            return;
+          }
+          id(rf_heal_last_ms) = now;
+          id(rf_rejoin_count) = id(rf_rejoin_count) + 1;
+          id(evt_pending_code) = "REJOIN";
+          id(evt_pending_detail) = "hub";
+          id(emit_evt).execute();
+          wifi::global_wifi_component->reset();
+
+  - id: rf_fleet_jump_arm
+    mode: single
+    then:
+      - lambda: |-
+          if (!id(clock_valid)) {
+            id(evt_pending_code) = "CLK_HOLD";
+            id(evt_pending_detail) = "jump";
+            id(emit_evt).execute();
+            return;
+          }
+          uint32_t now = millis();
+          if (!id(fix_active) && id(rf_jump_last_ms) != 0 && (now - id(rf_jump_last_ms)) < 300000u) {
+            ESP_LOGW("rf", "FLEET_JUMP rate-limited");
+            return;
+          }
+          id(rf_jump_last_ms) = now;
+          id(evt_pending_code) = "FLEET_JUMP";
+          id(evt_pending_detail) = "arm";
+          id(emit_evt).execute();
+
+  - id: tick_lateral_ledgers
+    mode: single
+    then:
+      - lambda: |-
+          auto now = id(sntp_time).now();
+          if (!now.is_valid()) now = id(grow_time).now();
+          id(clock_valid) = now.is_valid();
+          id(learning_paused) = id(fix_active) || !id(clock_valid);
+          if (!id(clock_valid)) return;
+
+          uint32_t now_ms = millis();
+          uint32_t dt_s = 15;
+          if (id(ledger_tick_ms) != 0) {
+            uint32_t dt = now_ms - id(ledger_tick_ms);
+            if (dt < 1000) dt_s = 1;
+            else if (dt > 30000) dt_s = 30;
+            else dt_s = dt / 1000u;
+          }
+          id(ledger_tick_ms) = now_ms;
+
+          int ckey = id(photo_cycle_key);
+          if (ckey != 0 && id(vpd_ledger_cycle_key) != ckey) {
+            id(vpd_main_delivered_s) = 0;
+            id(vpd_clone_delivered_s) = 0;
+            id(mister_delivered_s) = 0;
+            id(vpd_ledger_cycle_key) = ckey;
+          }
+
+          float mv = id(vpd_sensor).state;
+          float cv = id(clone_vpd).state;
+          float mn = fminf(id(stage_vpd_min), id(stage_vpd_max));
+          float mx = fmaxf(id(stage_vpd_min), id(stage_vpd_max));
+          if (!isnan(mv) && mv >= mn && mv <= mx && id(vpd_main_delivered_s) < 200000u)
+            id(vpd_main_delivered_s) = id(vpd_main_delivered_s) + dt_s;
+          float cmn = fminf(id(clone_vpd_min), id(clone_vpd_max));
+          float cmx = fmaxf(id(clone_vpd_min), id(clone_vpd_max));
+          if (!isnan(cv) && cv >= cmn && cv <= cmx && id(vpd_clone_delivered_s) < 200000u)
+            id(vpd_clone_delivered_s) = id(vpd_clone_delivered_s) + dt_s;
+
+          if (id(clone_hum_demand).state && id(mister_delivered_s) < 200000u)
+            id(mister_delivered_s) = id(mister_delivered_s) + dt_s;
+
+          if (id(mister_target_h) > 0.01f) {
+            uint32_t tgt = (uint32_t)(id(mister_target_h) * 3600.0f);
+            uint32_t debt = tgt > id(mister_delivered_s) ? tgt - id(mister_delivered_s) : 0;
+            id(mister_catchup_active) = debt > 0 && id(clone_hum_auto_enabled);
+          } else {
+            id(mister_catchup_active) = false;
+          }
+
+interval:
+  - interval: 15s
+    then:
+      - script.execute: tick_lateral_ledgers
+      - script.execute: recompute_coherence
+
+  - interval: 30s
+    then:
+      - lambda: |-
+          static bool was_fs = false;
+          static bool was_api = true;
+          bool fs = id(emergency_failsafe_active);
+          if (fs && !was_fs) {
+            id(evt_pending_code) = "FAILSAFE";
+            id(evt_pending_detail) = "trip";
+            id(emit_evt).execute();
+          }
+          if (!fs && was_fs) {
+            id(evt_pending_code) = "FAILSAFE";
+            id(evt_pending_detail) = "clear";
+            id(emit_evt).execute();
+          }
+          was_fs = fs;
+          bool api = id(ha_connected).state;
+          if (!api && was_api) {
+            id(evt_pending_code) = "API_BLIP";
+            id(evt_pending_detail) = "down";
+            id(emit_evt).execute();
+          }
+          if (api && !was_api) {
+            id(evt_pending_code) = "API_BLIP";
+            id(evt_pending_detail) = "up";
+            id(emit_evt).execute();
+            id(recompute_coherence).execute();
+          }
+          was_api = api;

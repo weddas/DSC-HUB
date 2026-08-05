@@ -76,7 +76,7 @@ esphome:
   friendly_name: DSC-HUB
   project:
     name: "digital_emotions.dsc-hub"
-    version: "5.1.7"
+    version: "5.1.8"
   on_boot:
     - priority: -100
       then:
@@ -2729,7 +2729,7 @@ text_sensor:
     name: "Firmware Version"
     id: fw_version
     icon: mdi:tag-check
-    lambda: 'return {"5.1.7"};'
+    lambda: 'return {"5.1.8"};'
     update_interval: 60s
 
   # F-006: last recovery action reason (bounce / reboot / none)

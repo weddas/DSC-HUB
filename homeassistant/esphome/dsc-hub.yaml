@@ -20,6 +20,7 @@ packages:
     files:
       - firmware/v4/dsc-hub-wifi-lab.yaml
       - firmware/v4/dsc-hub-v4_0.yaml
+      - firmware/v4/dsc-hub-fleet-heal.yaml
       - firmware/v4/dsc-hub-espnow-primary.yaml
       # No dsc-fleet-setup-hub-lab.yaml — lab uses ${panel_mac}; kit SoftAP only.
     # 0s during fleet flash cycles so GitHub pushes are picked up immediately.

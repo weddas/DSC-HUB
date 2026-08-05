@@ -1,4 +1,5 @@
-# printable ASCII + degree + middot + em dash (shared text-font glyph set)
+# printable ASCII + degree + middot + em dash + ellipsis + en dash
+# (shared text-font glyph set)
 #
 # v4.0.2 — U+2014 EM DASH added. It was already being emitted from four
 # LVGL label defaults (conn_wifi_sub, conn_api_sub, the Bluetooth and
@@ -8,6 +9,14 @@
 # drew the missing-glyph box for every one of them. That is every □ in
 # the 26 Jul panel photos; no MDI icon was ever missing. Glyph bitmaps
 # live in flash, so this costs zero RAM.
+#
+# v5.1.16 — U+2026 ELLIPSIS + U+2013 EN DASH added as a safety net (same
+# missing-glyph-box risk as the em dash above: "…" was used in every
+# boot_msg string and the Pulse 1h VPD sparkline used "%.2f–%.2f"). The
+# boot / Fleet Fix status line and every other boot_msg string were ALSO
+# converted to plain ASCII ("..." / "->") so Fleet Fix never depends on
+# this file being right; the sparkline still uses the en dash, now that
+# it is declared.
 - " "
 - "!"
 - "\""
@@ -106,3 +115,5 @@
 - "°"
 - "·"
 - "—"
+- "…"
+- "–"

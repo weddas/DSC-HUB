@@ -618,3 +618,33 @@ No climate control regression during soak window.
 |---|---|---|
 | N-030 | Flash hub **5.1.7** + sync HA light helpers / Lighting view | **Done** 5 Aug — 5.1.7 live; catch-up idle, debt 0 mid-dark after ledger seed |
 | F-006 | HA-link flap / recovery reboot storm | Still the upstream driver of these mode surprises |
+
+---
+
+## 2026-08-05 — Pot fleet clock + RF card + pre-compile sim gates
+
+### done (repo)
+
+- Pot FW **5.1.7** (`firmware/v4/dsc-pot-common.yaml`): SNTP time (`sntp_time`) alongside existing `ha_time`; global `clock_valid` recomputed every 15s from `sntp_time.now().is_valid() || ha_time.now().is_valid()`; `binary_sensor.dsc_pot_N_clock_valid`.
+- 0xD0 v2 RX: soft-adopt hub-preferred BSSID only when the pot has none yet; if a preferred AP is already set, log-only (does not fight an already-settled v1 adoption).
+- 0xD5 TX "RF card" every 10s: role byte `2+fleet_pot_index` (1-4) else bare `2`, wifi channel, RSSI, associated/preferred BSSID shorthand (last-byte-pair) with presence flags.
+- 0xD7 RX TIME: while `!clock_valid`, publishes epoch to diagnostic `text_sensor.last_peer_time` (ESPHome's `ESPTime`/`sntp`/`homeassistant` time platforms expose no public "set now" — cannot mark `clock_valid` true from a peer broadcast without a custom time component).
+- New substitution `fleet_pot_index` (default `"0"`) set per-stub (`dsc-pot{1..4}.yaml` and `-kit` variants already had/now have `pot_index`/`fleet_pot_index` wired) so the 0xD5 role byte is correct without depending on `dsc_fleet_setup` being present (lab stubs don't include that component).
+- `dsc_fleet_setup.h`: added `pot_index()` getter (kit-side component identity; not required by the substitution path above, kept as it's a clean and likely-useful accessor).
+- New pre-compile gates (`scripts/`): `cyd_glyph_audit.py` (non-ASCII scan of `dsc-control-common.yaml` vs `cyd_glyphs.yaml` + MDI PUA escapes), `cyd_layout_check.py` (LVGL sibling-label position-overlap heuristic; hard-fail only on `page_boot`/`Connections` exact duplicates), `fleet_fix_sim.py` (20 pure-Python assertions: light-quota catch-up budget, first-ledger NVS seed, RF status codes, EVT TTL freshness, fix-attempt state machine). `run_sim_gates.ps1` / `run_sim_gates.sh` run all three fail-fast; all three pass clean (`pwsh`/`powershell -File` not on PATH as `pwsh` on this box — use `powershell -ExecutionPolicy Bypass -File` or `bash`).
+
+### red-flag / fix (found via fleet_fix_sim, fixed same pass)
+
+- **RF status code FAR was dead code** (`dsc-hub-fleet-heal.yaml` `rf_status_ts`): `WEAK` (`rssi < -80`) was checked before `FAR` (`rssi < -90`); since every FAR RSSI also satisfies WEAK's threshold, `code` always latched to `WEAK` first and the second `if` (guarded on `code == "OK"`) could never fire — no device could ever report `FAR`. Fixed by checking `FAR` first. `fleet_fix_sim.py`'s RF-code model now encodes the corrected precedence (was reproducing the same bug before the fix, which is exactly how the sim caught it).
+
+### discoveries
+
+| ID | Finding | Action |
+|---|---|---|
+| N-035 | Hub has no RX handler for 0xD5 "RF card" and no TX for 0xD7 "TIME" yet — pots will broadcast 0xD5 every 10s and listen for 0xD7 with no hub counterpart currently wired | Hub-side pass: add `espnow.on_receive` 0xD5 aggregation (mirrors what `dsc-hub-fleet-heal.yaml`'s RF Status sensor already computes locally per-hub-radio, but for each pot) + a periodic 0xD7 broadcast (epoch from `homeassistant`/`sntp` time) so `last_peer_time` on pots actually gets fed |
+| N-036 | `cyd_glyph_audit.py`/`cyd_layout_check.py` found `dsc-control-common.yaml` and `cyd_glyphs.yaml` already clean (0 missing glyphs, 0 position dupes on gated pages) — another pass in this session had already converted non-ASCII UI strings to ASCII/declared glyphs before this pass ran; scripts are validating the *current* state, not re-doing that work | None — gates green, keep them in CI/pre-compile going forward |
+
+### soak / operator
+
+- Flash pots to **5.1.7**; confirm `binary_sensor.dsc_pot_N_clock_valid` and (once hub RX exists, N-035) that a fleet RF summary appears hub-side
+- Run `scripts/run_sim_gates.ps1` (or `.sh`) before any future `dsc-control-common.yaml` or fleet-heal packet-format change
