@@ -631,6 +631,110 @@ automation:
         data:
           notification_id: dsc_clone_dark_violation
 
+  # ----- Plant-critical: lights dark mid photoperiod window -----
+  # 5 Aug 2026: recovery reboot restored Auto Photoperiod OFF from stale
+  # NVS (Full Auto had kept it true in RAM only). SF1000 stayed dark
+  # ~02:59–08:28 while the 17:00+18h window was still open.
+  - id: dsc_guard_photoperiod_disarmed
+    alias: "DSC-HUB · GUARD Auto Photoperiod re-arm (plant safety)"
+    description: >-
+      If Auto Photoperiod drops while Manual Takeover is clear, re-arm it.
+      Intentional schedule-off requires Takeover (or re-disable after this).
+      Hub 5.1.5+ also re-arms on boot; this HA guard covers pre-flash soak.
+    mode: single
+    triggers:
+      - trigger: state
+        entity_id: switch.dsc_hub_auto_photoperiod
+        to: "off"
+        for: "00:00:45"
+    conditions:
+      - condition: state
+        entity_id: switch.dsc_hub_manual_takeover
+        state: "off"
+      - condition: not
+        conditions:
+          - condition: state
+            entity_id: light.dsc_hub_sf1000_dimmer
+            state: "unavailable"
+    actions:
+      - action: switch.turn_on
+        target:
+          entity_id: switch.dsc_hub_auto_photoperiod
+      - action: script.dsc_notify
+        data:
+          title: "⚠ CLONE LIGHT SCHEDULE WAS DISARMED"
+          message: >-
+            Auto Photoperiod was OFF for >45s with Manual Takeover clear.
+            Re-armed. Full Auto is
+            {{ states('switch.dsc_hub_tent_full_auto_mode') }}.
+            Window
+            {{ 'OPEN' if is_state('binary_sensor.dsc_hub_2x4_window_open','on') else 'shut' }};
+            SF1000 {{ states('light.dsc_hub_sf1000_dimmer') }}.
+      - action: persistent_notification.create
+        data:
+          title: "⚠ Auto Photoperiod was disarmed — re-armed"
+          notification_id: dsc_photoperiod_rearmed
+          message: >-
+            Plant-safety guard turned Auto Photoperiod back ON.
+            To leave the schedule off intentionally, engage Manual Takeover
+            first (or accept that this guard will re-arm it).
+      - action: logbook.log
+        data:
+          name: "Grow log"
+          entity_id: input_boolean.dsc_event_log
+          message: "⚠ Auto Photoperiod disarmed — HA plant-safety guard re-armed"
+
+  - id: dsc_alert_clone_light_missing
+    alias: "DSC-HUB · ALERT Clone light missing in window"
+    description: "2x4 window open but SF1000 dark >2min (not Takeover / Light Hold / Clone Off)."
+    mode: single
+    triggers:
+      - trigger: state
+        entity_id: binary_sensor.dsc_clone_light_missing_in_window
+        to: "on"
+        for: "00:02:00"
+    actions:
+      - action: switch.turn_on
+        target:
+          entity_id: switch.dsc_hub_auto_photoperiod
+      - action: script.dsc_notify
+        data:
+          title: "⚠ CLONE TENT — LIGHT MISSING IN WINDOW"
+          message: >-
+            2x4 window is OPEN but SF1000 is dark for >2 min.
+            Auto Photoperiod {{ states('switch.dsc_hub_auto_photoperiod') }};
+            Full Auto {{ states('switch.dsc_hub_tent_full_auto_mode') }}.
+            Re-armed photoperiod. Check hub link / flash hub 5.1.5+.
+      - action: persistent_notification.create
+        data:
+          title: "⚠ CLONE TENT — LIGHT MISSING IN WINDOW"
+          notification_id: dsc_clone_light_missing
+          message: >-
+            The 2x4 photoperiod window is open but the SF1000 has been
+            dark for over 2 minutes (Takeover / Manual Light Hold / Clone
+            Off are not engaged).
+
+            Auto Photoperiod was force-armed. If the light stays dark,
+            check DSC Hub Link and flash hub firmware 5.1.5+ (photoperiod
+            NVS survival).
+      - action: logbook.log
+        data:
+          name: "Grow log"
+          entity_id: input_boolean.dsc_event_log
+          message: "⚠ Clone light missing in window — photoperiod force-armed"
+
+  - id: dsc_alert_clone_light_missing_clear
+    alias: "DSC-HUB · ALERT Clone light missing cleared"
+    mode: single
+    triggers:
+      - trigger: state
+        entity_id: binary_sensor.dsc_clone_light_missing_in_window
+        to: "off"
+    actions:
+      - action: persistent_notification.dismiss
+        data:
+          notification_id: dsc_clone_light_missing
+
   - id: dsc_alert_rootzone_fault
     alias: "DSC-HUB · ALERT Root-zone probe fault (mat on air fallback)"
     description: "All pot probes stale >5min on both paths. Mat reverts to clone-air rung."

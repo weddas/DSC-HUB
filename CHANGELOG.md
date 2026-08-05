@@ -1,5 +1,14 @@
 # Changelog
 
+## Hub 5.1.5 — photoperiod NVS / mid-window dark (2026-08-05)
+
+- **Plant-critical:** recovery reboot could restore Auto Photoperiod **OFF** from
+  stale NVS while Full Auto had kept it true only in RAM → SF1000 dark mid
+  cycle (~5.5h on 5 Aug). Sync after `arm_full_auto` + photoperiod switch;
+  on_boot re-arms photoperiod whenever Takeover is clear.
+- **HA guard (pre-flash):** re-arm photoperiod if disarmed >45s without Takeover;
+  `binary_sensor.dsc_clone_light_missing_in_window` + alert if dark mid-window >2min.
+
 ## HA surface 5.1.8 + fleet patch train (2026-08-04)
 
 - **Cal truth:** lab wet two-point → ESP (`script.dsc_pots_apply_lab_wet_to_esp`,

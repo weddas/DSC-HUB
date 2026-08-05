@@ -21,6 +21,13 @@
 # (handshake ≥10 / ≥15 min). Handshake lag alone must not bounce WiFi.
 # api.reboot_timeout stays 0s (HA maintenance must not bounce climate).
 #
+# ===== v5.1.5 · PHOTOPERIOD NVS / LIGHTS-ON SURVIVAL =====
+# Full Auto's climate loop kept auto_photoperiod true in RAM only; NVS
+# could stay OFF. Recovery reboot restored both OFF → SF1000 dark mid
+# window (~5.5h on 5 Aug 2026). Fix: sync after arm_full_auto /
+# photoperiod switch; on_boot re-arms photoperiod whenever Takeover is
+# clear (Full Auto OFF ≠ lights OFF).
+#
 # ===== FLEET LINK / AP PIN (temp mesh) =====
 # Optional text.dsc_hub_preferred_wifi_bssid (NVS). On every STA connect
 # (+ delayed on_boot) the hub runs wifi_ap_learn_or_pin: Lock ON learns
@@ -63,7 +70,7 @@ esphome:
   friendly_name: DSC-HUB
   project:
     name: "digital_emotions.dsc-hub"
-    version: "5.1.4"
+    version: "5.1.5"
   on_boot:
     - priority: -100
       then:
@@ -116,14 +123,27 @@ esphome:
             // gate parked the ladder until a tap. Clear the gate; if Full
             // Auto was ON (and Takeover is not), on_boot turns the switch
             // on so arm_full_auto runs again. If it was OFF, stay OFF.
+            //
+            // v5.1.5 · PLANT-CRITICAL: Auto Photoperiod must NOT die when
+            // Full Auto NVS is stale OFF. Full Auto's climate loop only
+            // keeps photoperiod true in RAM (never flushed); a recovery
+            // reboot then restored both OFF and left the SF1000 dark for
+            // ~5.5h mid-window (5 Aug 2026). Takeover still owns the light.
             id(boot_resume_pending) = false;
             if (id(ha_takeover_active)) {
-              ESP_LOGW("boot", "Manual Takeover restored -> Full Auto left alone (baseline Out %d Room %d IntM %d Int2 %d)", o, r, m, c);
+              ESP_LOGW("boot", "Manual Takeover restored -> Full Auto/photoperiod left alone (baseline Out %d Room %d IntM %d Int2 %d)", o, r, m, c);
             } else if (id(full_auto_mode)) {
               ESP_LOGI("boot", "Full Auto restored ON -> re-arming stack (baseline Out %d Room %d IntM %d Int2 %d)", o, r, m, c);
             } else {
-              ESP_LOGI("boot", "Full Auto restored OFF -> staying OFF (baseline Out %d Room %d IntM %d Int2 %d)", o, r, m, c);
+              ESP_LOGI("boot", "Full Auto restored OFF -> staying OFF; photoperiod will still re-arm (baseline Out %d Room %d IntM %d Int2 %d)", o, r, m, c);
             }
+        # Plant-safe: schedule owns the light whenever Takeover is clear.
+        # Full Auto OFF must not equal lights OFF.
+        - if:
+            condition:
+              lambda: 'return !id(ha_takeover_active);'
+            then:
+              - switch.turn_on: photoperiod_switch
         # Re-run arm_full_auto only when Full Auto was already on (and not
         # in Manual Takeover). Does not force ON if the user left it off.
         - if:
@@ -1509,8 +1529,10 @@ switch:
       - globals.set: {id: ha_takeover_active, value: 'false'}   # re-arming auto releases takeover
       - switch.turn_off: local_manual_mode
       - lambda: 'id(manual_takeover_switch).publish_state(false);'
-      - script.execute: sync_mode_prefs
       - script.execute: arm_full_auto                          # v2.4.3: arm the whole stack
+      # Sync AFTER arm_full_auto so photoperiod=true is flushed (5.1.5).
+      # Pre-arm sync left NVS photoperiod stale OFF while RAM stayed ON.
+      - script.execute: sync_mode_prefs
       # arm_full_auto already calls tx_panel_sync
     turn_off_action:
       - globals.set: {id: full_auto_mode, value: 'false'}
@@ -1547,9 +1569,11 @@ switch:
       # Arming the schedule is an explicit "schedule owns the light".
       - globals.set: {id: manual_light_hold, value: 'false'}
       - lambda: 'id(manual_light_hold_switch).publish_state(false);'
+      - script.execute: sync_mode_prefs
       - script.execute: tx_panel_sync
     turn_off_action:
       - globals.set: {id: auto_photoperiod_enabled, value: 'false'}
+      - script.execute: sync_mode_prefs
       - script.execute: tx_panel_sync
 
   # --- Manual Light Hold: visible + clearable from HA. Set automatically
@@ -2644,7 +2668,7 @@ text_sensor:
     name: "Firmware Version"
     id: fw_version
     icon: mdi:tag-check
-    lambda: 'return {"5.1.4"};'
+    lambda: 'return {"5.1.5"};'
     update_interval: 60s
 
   # F-006: last recovery action reason (bounce / reboot / none)
@@ -3610,6 +3634,7 @@ script:
           ESP_LOGI("mode", "Full Auto engaged -> ladder + photoperiod armed (AC %s, mister %s)",
                    id(ac_in_service) ? "in-service" : "OOS",
                    id(clone_hum_in_service) ? "in-service" : "OOS");
+      - script.execute: sync_mode_prefs
       - script.execute: tx_panel_sync
 
   # ---- Load a stage's full climate envelope (STAGE CHANGE only) ----
