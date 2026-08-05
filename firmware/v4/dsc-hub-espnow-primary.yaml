@@ -1,6 +1,7 @@
 # ==================================================================
 #  DSC-HUB · ESP-NOW PRIMARY CONTROL LAYER   (package add-on)
 #  ------------------------------------------------------------------
+#  Ops runbook (TX cadence / OOM): docs/qa/HUB-ESPNOW-TX-CADENCE-5.1.9.md
 #  Adds a direct panel⇄hub ESP-NOW link on top of the existing pot→hub
 #  telemetry, WITHOUT touching the QA'd control logic:
 #    • RECEIVES commands from the DSC-CYD panel and applies each one by
@@ -210,7 +211,7 @@ espnow:
           // sends 0xDC only on user commands, so an idle glass looked dead
           // to the recovery ladder (panel_last_ms is stamped above on every
           // authenticated packet, including this one). No state change and
-          // no echo burst: vitals already broadcast every 2s.
+          // no echo burst: presence only; vitals ride the 5s cadence.
           case 58:
             id(cmd_fresh) = false;
             break;
@@ -218,9 +219,9 @@ espnow:
         }
         ESP_LOGD("espnow","cmd op=%u val=%d applied", op, val);
     # After a real command, echo vitals + config straight back so the panel
-    # reflects the change in ~one round trip (not up to the 10s config cycle) —
-    # this is what makes setpoint stepping feel live and never drop steps.
-    # Hello also pulls soil + names so Starting can wait for a full snapshot.
+    # reflects the change in ~one round trip (config otherwise ≤~40s on the
+    # 5s cadence) — setpoint stepping stays live. Hello also pulls soil +
+    # names so Starting can wait for a full snapshot.
     - if:
         condition:
           lambda: 'return id(cmd_fresh);'

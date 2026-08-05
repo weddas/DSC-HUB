@@ -104,4 +104,5 @@ Cursor edit → push master
   → ESPHome Validate/Install (changed devices only)
 ```
 
-See [`RELEASE.md`](RELEASE.md) rollout checklist · [`docs/qa/`](docs/qa/).
+See [`RELEASE.md`](RELEASE.md) rollout checklist · [`docs/qa/`](docs/qa/) ·
+hub ESP-NOW TX cadence [`docs/qa/HUB-ESPNOW-TX-CADENCE-5.1.9.md`](docs/qa/HUB-ESPNOW-TX-CADENCE-5.1.9.md).

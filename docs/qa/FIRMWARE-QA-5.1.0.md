@@ -18,6 +18,15 @@ Commit checklist for lab + kit packages. Firmware Install is always **manual**.
 3. [ ] Pots 1–4 → **5.1.0**; soil + ESP-NOW
 4. [ ] Sonoffs → **5.1.0**; followers track demands
 
+## Hub 5.1.9 ESP-NOW TX (N-037)
+
+When validating hub **5.1.9+**, also see
+[`HUB-ESPNOW-TX-CADENCE-5.1.9.md`](HUB-ESPNOW-TX-CADENCE-5.1.9.md):
+
+- [ ] One periodic outbound ESP-NOW frame / 5s (no 2s vitals storm)
+- [ ] Broadcast peer registered; no `11→1…14→11` channel sweep loops
+- [ ] Send-fail logs trigger ~15s TX backoff, not continuous OOM
+
 ## Behavioral smoke
 
 - [ ] Ladder: dehum → hum → heat → AC → mat with reality gates

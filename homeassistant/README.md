@@ -356,6 +356,9 @@ not humidifier lock — entity id kept for compatibility.
 | Dashboard | DSC-HUB Pro (4-col, browser_mod popups) |
 | `espnow_cmd_tag` | `54727` (`0xD5C7`) on hub **and** panel |
 
+Hub ESP-NOW TX cadence / OOM (N-037):
+[`../docs/qa/HUB-ESPNOW-TX-CADENCE-5.1.9.md`](../docs/qa/HUB-ESPNOW-TX-CADENCE-5.1.9.md).
+
 Fleet drift chip (`sensor.dsc_fleet_version_status`) compares the
 **major.minor** train, so mixed patch levels inside `5.1.x` stay `ok`.
 
