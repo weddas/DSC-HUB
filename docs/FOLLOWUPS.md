@@ -692,7 +692,7 @@ New 5s `tx_fleet_heartbeat` / `tx_peer_time` broadcast load on top of 2s vitals 
 ### next
 | ID | Item | Notes |
 |---|---|---|
-| N-037 | Cap / coalesce hub ESP-NOW TX; never channel-sweep while STA associated; gate broadcast when send fails | **Fixed in hub 5.1.9** — 5s medium/large alternate; broadcast peer registered; 15s TX backoff |
+| N-037 | Cap / coalesce hub ESP-NOW TX; never channel-sweep while STA associated; gate broadcast when send fails | **Fixed in hub 5.1.9** — 5s medium/large alternate; broadcast peer registered; 15s TX backoff. Runbook: [`docs/qa/HUB-ESPNOW-TX-CADENCE-5.1.9.md`](qa/HUB-ESPNOW-TX-CADENCE-5.1.9.md) |
 | N-038 | EVT last-per-code freshness: don't re-publish identical `API_BLIP` every few seconds | HA autofix dedupe assumes change |
 | F-004 | Nest channel lock | Not indicated this soak (RF stays ch11 OK between sweeps); sweeps are hub-local, not Nest hop |
-| N-039 | Pot 0xD7 RX expects u32 epoch; hub/Control use calendar fields | Align pot parser to Control calendar pack (or dual-decode) |
+| N-039 | Pot 0xD7 RX expects u32 epoch; hub/Control use calendar fields | Align pot parser to Control calendar pack (or dual-decode). (Draft #29 used **N-037** for wire layouts — prefer this ID + residual 0xD5 layout disagree.) |
