@@ -50,6 +50,9 @@ class DscFleetSetup : public Component, public AsyncWebHandler {
   bool is_configured() const { return this->net_mode_ != NetMode::UNCONFIGURED; }
   bool needs_provision() const { return this->enabled_ && this->role_ != FleetRole::HUB && !this->is_configured(); }
   NetMode net_mode() const { return this->net_mode_; }
+  // 0 on the lab stubs (no kit provisioning) and on any pot not yet assigned
+  // a slot; 1-4 once dsc-fleet-setup-pot-kit.yaml passes fleet_pot_index.
+  uint8_t pot_index() const { return this->pot_index_; }
   const uint8_t *hub_mac() const { return this->hub_mac_; }
   const uint8_t *panel_mac() const { return this->panel_mac_; }
   bool has_hub_mac() const {
