@@ -132,6 +132,17 @@ title: AIRFLOW STATUS
 exhaust **into room** vs **through wall**. Add card loads DSC defaults
 (Room + 2x4 + 4x8 + five routes).
 
+### The Dash (`/dsc-hub-pro/dash`)
+
+Cinematic Three.js tent scene (`www/dsc-the-dash-card.js` +
+`www/vendor/dsc-dash-fx.js`) lands via the same concat bundle. After every
+Dash `www` deploy: **hard-refresh** the tab — SPA navigate keeps a sticky
+`customElements.define` class. If the 3D viewport goes fully black while
+HUD/CFM chips still update, triage with
+[`docs/qa/LIVE-UI-DASH-BLACK-CANVAS.md`](../docs/qa/LIVE-UI-DASH-BLACK-CANVAS.md).
+Optional glTF accents under `www/assets/dash/` fall back to primitives when
+missing (Sync does not stage them yet — N-035).
+
 ## Climate capacity envelope
 
 The **hub firmware** owns the escalation ladder (fans first → appliances →

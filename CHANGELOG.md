@@ -1,5 +1,13 @@
 # Changelog
 
+## Docs — Dash black-canvas triage (2026-08-05)
+
+- Operator runbook [`docs/qa/LIVE-UI-DASH-BLACK-CANVAS.md`](docs/qa/LIVE-UI-DASH-BLACK-CANVAS.md):
+  black 3D viewport vs healthy HUD, sticky `customElements.define`, composer /
+  DepthTexture FBO path (source-verified), hard-reload after Dash www deploys.
+  Does not invent a DepthTexture “default off” flag — tree still attaches when
+  Three exposes the class; FOLLOWUPS residual called out in the runbook.
+
 ## Hub 5.1.7 — light-quota first-ledger seed (2026-08-05)
 
 - **Plant-critical:** first OTA of 5.1.6 mid-dark seeded `delivered_s=0` and
