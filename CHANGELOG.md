@@ -10,6 +10,7 @@
   view shows Delivered / Debt / Catch-up.
 - Motivated by Jul–Aug 2026 history (recurring mid-window theft; HA
   `unavailable` cannot meter photons) and the 5 Aug ~5.5h hole.
+- Ops runbook: [`docs/qa/HUB-LIGHT-QUOTA-5.1.6.md`](docs/qa/HUB-LIGHT-QUOTA-5.1.6.md).
 
 ## Hub 5.1.5 — photoperiod NVS / mid-window dark (2026-08-05)
 

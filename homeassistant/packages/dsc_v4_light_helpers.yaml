@@ -4,6 +4,10 @@
 #  Carried forward from v2.4 (topology Option A unchanged in v4):
 #  SF1000 is the 2x4 clone light; 4x8 window is virtual/schedule-only.
 #
+#  Hub 5.1.6+: prefer sensor.dsc_hub_light_delivered_hours (cycle ledger)
+#  over midnight history_stats. Dark-period violation exempts catch-up.
+#  Ops: docs/qa/HUB-LIGHT-QUOTA-5.1.6.md
+#
 #  Install alongside dsc_v4_core_helpers.yaml. Delete any leftover
 #  v2.3 light definitions first (dup unique_ids create silent *_2 twins).
 # ==================================================================

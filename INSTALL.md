@@ -105,3 +105,4 @@ Cursor edit → push master
 ```
 
 See [`RELEASE.md`](RELEASE.md) rollout checklist · [`docs/qa/`](docs/qa/).
+Hub photoperiod ledger / catch-up soak: [`docs/qa/HUB-LIGHT-QUOTA-5.1.6.md`](docs/qa/HUB-LIGHT-QUOTA-5.1.6.md).

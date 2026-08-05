@@ -44,6 +44,7 @@ flowchart LR
 | [`RELEASE.md`](RELEASE.md) | What’s new, rollout checklist |
 | [`scripts/ADDON.md`](scripts/ADDON.md) | **Primary delivery** — HAOS Sync add-on |
 | [`docs/qa/FIRMWARE-QA-5.1.0.md`](docs/qa/FIRMWARE-QA-5.1.0.md) | Firmware Validate / flash QC |
+| [`docs/qa/HUB-LIGHT-QUOTA-5.1.6.md`](docs/qa/HUB-LIGHT-QUOTA-5.1.6.md) | Hub photoperiod NVS ledger + debt catch-up |
 | [`docs/qa/ADDON-QA-5.1.0.md`](docs/qa/ADDON-QA-5.1.0.md) | Sync add-on QC |
 | [`homeassistant/README.md`](homeassistant/README.md) | Packages, HACS, entity notes |
 | [`firmware/v4/README.md`](firmware/v4/README.md) | Local validate / flash |
