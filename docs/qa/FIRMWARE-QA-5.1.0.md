@@ -29,6 +29,7 @@ Commit checklist for lab + kit packages. Firmware Install is always **manual**.
 - [ ] Phase B wait numbers accepted; `run_climate_logic` starts from bases then gates
 - [ ] Phase B off by default in HA; enabling writes waits only (not failsafe/min-off/fans)
 - [ ] Panel heap: free + largest free block healthy after UI pages
+- [ ] Hub **5.1.6+** light-quota: Delivered / Debt / Catch-up entities publish; mid-window dark accrues debt; catch-up past nominal off respects Min Dark Hours; dark-period violation stays off during catch-up (see [HUB-LIGHT-QUOTA-5.1.6.md](HUB-LIGHT-QUOTA-5.1.6.md))
 
 ## Kits
 

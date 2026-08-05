@@ -5,6 +5,7 @@ Working directory for ESPHome configs. Current fleet release string:
 cut remains `v5.1.0`). See the repo root README / CHANGELOG / FOLLOWUPS.
 
 Firmware QA: [docs/qa/FIRMWARE-QA-5.1.0.md](../../docs/qa/FIRMWARE-QA-5.1.0.md).
+Hub light-quota / debt catch-up (5.1.6): [docs/qa/HUB-LIGHT-QUOTA-5.1.6.md](../../docs/qa/HUB-LIGHT-QUOTA-5.1.6.md).
 Repo [README](../../README.md) and [INSTALL.md](../../INSTALL.md) for from-scratch HA setup.
 Standalone SoftAP unboxing (no HA): [SETUP.md](../../SETUP.md).
 
@@ -73,6 +74,15 @@ ESP-NOW (glass ↔ hub) does **not** need the HA API. Fix API only for OTA, diag
 | Hub | 30 s Wi‑Fi channel poll (silent Nest hops) | OTA fine |
 | Panel 4.0.11 | Live `gv_*` UI + channel poll | **USB** if heap-sensitive / still looping |
 | HA packages / automations / dashboard | Push sync (or copy) + reload | See [`../../RELEASE.md`](../../RELEASE.md) · [`../../scripts/HA-SYNC-BOOTSTRAP.md`](../../scripts/HA-SYNC-BOOTSTRAP.md) |
+
+## Hub photoperiod quota (5.1.6)
+
+In [`dsc-hub-v4_0.yaml`](dsc-hub-v4_0.yaml) `run_clone_photoperiod`: NVS ledger
+(`photo_delivered_s` / carry / cycle key) credits actual SF1000 output. After
+nominal off, catch-up continues while debt remains and remaining dark >
+**Min Dark Hours** (default 4h). Carry into the next cycle is capped at +2h.
+HA `2x4 Window Open` stays nominal-only; dark-period violation exempts
+catch-up. Ops runbook: [HUB-LIGHT-QUOTA-5.1.6.md](../../docs/qa/HUB-LIGHT-QUOTA-5.1.6.md).
 
 ## Hub mat votes
 
