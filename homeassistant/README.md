@@ -359,6 +359,11 @@ not humidifier lock — entity id kept for compatibility.
 Fleet drift chip (`sensor.dsc_fleet_version_status`) compares the
 **major.minor** train, so mixed patch levels inside `5.1.x` stay `ok`.
 
+**Hub light-quota (5.1.7):** NVS delivered/debt + Min Dark Hours catch-up past
+nominal off; rev-1 first-ledger seed on upgrade. Lighting view Cycle quota +
+helpers in `dsc_v4_light_helpers.yaml`. N-030 live (mid-dark debt 0 / catch-up idle).
+Ops: [`docs/qa/HUB-LIGHT-QUOTA-5.1.7.md`](../docs/qa/HUB-LIGHT-QUOTA-5.1.7.md).
+
 **Mat votes:** `switch.dsc_hub_mat_vote_pot_1`…`4` — Root Zone is source of truth; Climate links there.
 
 Bring-up: [`../INSTALL.md`](../INSTALL.md) · add-on: [`../scripts/ADDON.md`](../scripts/ADDON.md) · release: [`../RELEASE.md`](../RELEASE.md).
