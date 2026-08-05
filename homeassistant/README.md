@@ -1,4 +1,4 @@
-﻿# Home Assistant â€” DSC-HUB v4
+# Home Assistant — DSC-HUB v4
 
 Canonical HA surface for firmware [`firmware/v4/`](../firmware/v4/).
 
@@ -9,13 +9,13 @@ Canonical HA surface for firmware [`firmware/v4/`](../firmware/v4/).
 | `dashboards/dsc-hub-v4-dashboard.yaml` | Lovelace UX **v5.1.3** (`dsc-hub-pro`). In-service kit toggles; learn **Activity**; Root Zone Pots+Mat. |
 | `packages/dsc_v4_core_helpers.yaml` | Hub link, fan %, runtimes, **in-service** + capacity-offline + vent-conflict / ineffective cues |
 | `packages/dsc_v4_strain_catalog.yaml` | Strain catalog, sprout age, Want/Need/Got, peer offsets, Apply expected stage |
-| `packages/dsc_v4_sensor_cal.yaml` | Peer sync, dual-stack, push peerâ†’ESP, **lab wet two-point** |
+| `packages/dsc_v4_sensor_cal.yaml` | Peer sync, dual-stack, push peer→ESP, **lab wet two-point** |
 | `packages/dsc_v4_sensor_trust.yaml` | Stuck/MAD/DHT trust, keep-up gaps, HA-link flap counter |
 | `packages/dsc_v4_nutrient_catalog.yaml` | Nutrient stock, next-mix recipe, Accept mix QA (no pumps) |
 | `packages/dsc_v4_pots_coherence.yaml` | Relative dryback + cross-pot EC/moisture coherence + learned ratios |
-| `packages/dsc_v4_actuator_efficacy.yaml` | Commandâ†’effect; Temp OOS vs Operator Lockout; demand inhibit |
+| `packages/dsc_v4_actuator_efficacy.yaml` | Command→effect; Temp OOS vs Operator Lockout; demand inhibit |
 | `packages/dsc_v4_climate_physics.yaml` | Settable plant specs (CFM/volumes/L/day/W), ACH/AH/BTU/moisture sensors, spec verification |
-| `packages/dsc_v4_device_cal.yaml` | Optional fan CFM / SF1000 PPFD multi-point curves + Learning wizard (unset = % Ã— nameplate) |
+| `packages/dsc_v4_device_cal.yaml` | Optional fan CFM / SF1000 PPFD multi-point curves + Learning wizard (unset = % × nameplate) |
 | `packages/dsc_v4_climate_learn.yaml` | Phase A EMA (fans+mat may co-run) + `sensor.dsc_learn_activity` + Phase B waits |
 | `packages/dsc_v4_light_helpers.yaml` | Lights-on today, clone dark-period, deviation |
 | `packages/dsc_v4_tank.yaml` | Tank EC/pH/temp helpers + Tuya warn sync |
@@ -25,14 +25,14 @@ Canonical HA surface for firmware [`firmware/v4/`](../firmware/v4/).
 | `packages/dsc_v4_alert_count.yaml` | `sensor.dsc_active_alert_count` for Home chip |
 | `packages/dsc_v4_automations.yaml` | Demand followers, climate/safety alerts, grow-log scribe |
 | `configuration.snippet.yaml` | Paste-once: packages include + YAML-mode `dsc-hub-pro` dashboard |
-| `automations.yaml` | Deprecated stub â€” points at the package above |
-| `www/dsc-system-map.*` | SYSTEM MAP Lovelace card + SVG â†’ `/config/www/` |
-| `www/dsc-airflow-map-card.js` | AIRFLOW STATUS Lovelace card â†’ `/config/www/` |
-| `esphome/` | Thin device stubs â€” pull firmware packages from GitHub |
+| `automations.yaml` | Deprecated stub — points at the package above |
+| `www/dsc-system-map.*` | SYSTEM MAP Lovelace card + SVG → `/config/www/` |
+| `www/dsc-airflow-map-card.js` | AIRFLOW STATUS Lovelace card → `/config/www/` |
+| `esphome/` | Thin device stubs — pull firmware packages from GitHub |
 
 ## ESPHome (all devices)
 
-Canonical edit path: Cursor â†’ `firmware/v4/` â†’ push.
+Canonical edit path: Cursor → `firmware/v4/` → push.
 
 On HA: copy `homeassistant/esphome/dsc-*.yaml` into `/config/esphome/`.
 Stubs pull package bodies from `github.com/weddas/DSC-HUB` (`master`,
@@ -44,7 +44,7 @@ See [`esphome/README.md`](esphome/README.md).
 
 ## Install (from scratch)
 
-Full file â†’ destination map: [`../INSTALL.md`](../INSTALL.md).
+Full file → destination map: [`../INSTALL.md`](../INSTALL.md).
 
 Quick copy list:
 
@@ -61,7 +61,7 @@ Restart HA after the first copy / `configuration.yaml` change.
 
 **Ongoing:** install the **DSC-HUB Sync** add-on ([`../scripts/ADDON.md`](../scripts/ADDON.md))
 so pushes to `master` update packages, dashboard, and www automatically.
-Firmware Install stays manual â€” see [`../RELEASE.md`](../RELEASE.md).
+Firmware Install stays manual — see [`../RELEASE.md`](../RELEASE.md).
 
 ## Fan entity_ids
 
@@ -70,29 +70,29 @@ Core helpers assume ESPHome default slugs from hub friendly names. If your regis
 ## Notifier
 
 Climate / safety automations in `dsc_v4_automations.yaml` use a mobile notify
-target â€” edit those services to match your HA devices (`notify.mobile_app_â€¦`).
+target — edit those services to match your HA devices (`notify.mobile_app_…`).
 Package pot/tank **push** notifiers are not shipped in **v5.0.0**
 (alert binary sensors remain).
 
 ## HACS cards
 
-mushroom Â· apexcharts-card Â· plotly-graph-card Â· mini-graph-card Â· gauge-card-pro Â· modern-circular-gauge Â· logbook-card Â· auto-entities Â· vertical-stack-in-card Â· card-mod Â· bar-card Â· ph-meter-temperature Â· **expander-card** Â· **browser_mod** Â· **DSC-HUB** (Dashboard custom repo â€” system map + airflow map)
+mushroom · apexcharts-card · plotly-graph-card · mini-graph-card · gauge-card-pro · modern-circular-gauge · logbook-card · auto-entities · vertical-stack-in-card · card-mod · bar-card · ph-meter-temperature · **expander-card** · **browser_mod** · **DSC-HUB** (Dashboard custom repo — system map + airflow map)
 
-`browser_mod` (HACS **Integration**, not a card) powers the popup layer â€”
-graph enlarge, appliance consoles, pot detail. Install from HACS â†’
-Integrations, restart HA, then **Settings â†’ Devices & Services â†’
-Add Integration â†’ Browser Mod**. Without it the popup taps silently no-op.
+`browser_mod` (HACS **Integration**, not a card) powers the popup layer —
+graph enlarge, appliance consoles, pot detail. Install from HACS →
+Integrations, restart HA, then **Settings → Devices & Services →
+Add Integration → Browser Mod**. Without it the popup taps silently no-op.
 
-## Local custom cards â€” SYSTEM MAP + AIRFLOW STATUS
+## Local custom cards — SYSTEM MAP + AIRFLOW STATUS
 
 | Card | Type | View |
 |---|---|---|
 | Neon isometric map | `custom:dsc-system-map-card` | Home |
 | GUI tent airflow scene | `custom:dsc-airflow-map-card` | Climate Engine |
 
-### Preferred â€” HACS Dashboard custom repository
+### Preferred — HACS Dashboard custom repository
 
-1. HACS â†’ â‹® â†’ **Custom repositories**
+1. HACS → ⋮ → **Custom repositories**
 2. Repository: `https://github.com/weddas/DSC-HUB`
 3. Category: **Dashboard**
 4. Download **DSC-HUB System Map**, restart/reload when prompted, hard-refresh browser
@@ -104,10 +104,10 @@ HACS serves `/hacsfiles/DSC-HUB/DSC-HUB.js` (both cards + SVG beside it). Full s
 
 1. Copy into Home Assistant `/config/www/` (or rely on ha-sync):
    - [`www/dsc-system-map.svg`](www/dsc-system-map.svg)
-   - Bundled JS as `/local/dsc-system-map-card.js` (system map **and** airflow â€”
+   - Bundled JS as `/local/dsc-system-map-card.js` (system map **and** airflow —
      ha-sync builds this from the two www sources)
    - Optional: [`www/dsc-airflow-map-card.js`](www/dsc-airflow-map-card.js) standalone
-2. **Settings â†’ Dashboards â†’ â‹® â†’ Resources â†’ Add resource** (JavaScript, not module):
+2. **Settings → Dashboards → ⋮ → Resources → Add resource** (JavaScript, not module):
    - `/local/dsc-system-map-card.js` (one resource registers both cards)
    - Or HACS `/hacsfiles/DSC-HUB/DSC-HUB.js`
 3. YAML dashboard already includes both cards. Hard-refresh the browser.
@@ -128,14 +128,14 @@ title: AIRFLOW STATUS
 ```
 
 **Airflow card:** isometric tent scene with glowing ducts. Prefer **Edit card**
-(GUI) to set room size, tents (1â€“4), wall ports, fans, carbon filters, and
+(GUI) to set room size, tents (1–4), wall ports, fans, carbon filters, and
 exhaust **into room** vs **through wall**. Add card loads DSC defaults
 (Room + 2x4 + 4x8 + five routes).
 
 ## Climate capacity envelope
 
-The **hub firmware** owns the escalation ladder (fans first â†’ appliances â†’
->35Â°C failsafe). HA only mirrors four Sonoff relays and surfaces alerts â€”
+The **hub firmware** owns the escalation ladder (fans first → appliances →
+>35°C failsafe). HA only mirrors four Sonoff relays and surfaces alerts —
 it must not duplicate ladder logic.
 
 **Energy rule:** do not buy heat or moisture then dump it outside. Heater
@@ -143,30 +143,30 @@ and humidifier demands clamp OUT exhaust to the fresh-air floor and route
 RECIRC (RH overflow / emergency still win). If
 `binary_sensor.dsc_humidifier_vent_conflict` or
 `binary_sensor.dsc_heater_vent_conflict` lights up, the running firmware is
-old or overflow is forcing a dump â€” check hub version â‰¥ 5.1.2.
+old or overflow is forcing a dump — check hub version ≥ 5.1.2.
 
 ## In service (single gate)
 
-One operator switch per optional/removed device â€” **not** a separate â€œWiredâ€
+One operator switch per optional/removed device — **not** a separate “Wired”
 flag. `input_boolean.dsc_*_in_service` (defaults: AC off, clone mister off,
 POT1/2/4 on, POT3 off). Synced to hub NVS switches.
 
 | State | Behavior |
 |---|---|
 | Off | Never demand, follow, alert, learn, or Full-Auto-arm that lever |
-| Off (soft cue) | `binary_sensor.dsc_*_capacity_offline` / `dsc_reduced_kit` â€” not in `dsc_active_alert_count` |
+| Off (soft cue) | `binary_sensor.dsc_*_capacity_offline` / `dsc_reduced_kit` — not in `dsc_active_alert_count` |
 | On | Normal ladder + follower (relay entity must exist for Sonoffs) |
 
-**Next-best when OOS:** AC â†’ OUT/RECIRC heat-dump (fans); emergency â‰¥35â€¯Â°C
-fans-only if AC OOS. Clone mister â†’ no demand; intake/recirc hold moisture.
-Pot OOS â†’ excluded from mat vote + chemistry alerts silenced.
+**Next-best when OOS:** AC → OUT/RECIRC heat-dump (fans); emergency ≥35 °C
+fans-only if AC OOS. Clone mister → no demand; intake/recirc hold moisture.
+Pot OOS → excluded from mat vote + chemistry alerts silenced.
 
 Carry-forward work: [`../docs/FOLLOWUPS.md`](../docs/FOLLOWUPS.md).
 
 ## Mode ownership (dashboard + hub)
 
 Named modes own climate numbers. Switch to **Custom** (or Override / Hold)
-before fine-tuning â€” otherwise the hub rejects the write and the dashboard
+before fine-tuning — otherwise the hub rejects the write and the dashboard
 shows a locked readout.
 
 | Owner | Unlock | Locked surface |
@@ -177,9 +177,9 @@ shows a locked readout.
 | Auto Photoperiod | Manual Light Hold or Takeover | SF1000 brightness (schedule cue) |
 | Clone Photoperiod Follow | **Independent** | Clone light hours + lights-on time |
 
-**Home** folds: **Now** (pulse + alerts) â†’ **Operational now** (live vs band,
-ladder prep, fans) â†’ **SYSTEM MAP** + Running â†’ **Bands** (Follow-aware gauges)
-â†’ narrator expander. **Root Zone** above-fold is Pots + Mat; EC/moisture/NPK
+**Home** folds: **Now** (pulse + alerts) → **Operational now** (live vs band,
+ladder prep, fans) → **SYSTEM MAP** + Running → **Bands** (Follow-aware gauges)
+→ narrator expander. **Root Zone** above-fold is Pots + Mat; EC/moisture/NPK
 charts live in History expanders.
 
 After flashing Grow Stage **Custom**, either pick **Custom** to keep hand-tuned
@@ -188,39 +188,39 @@ After flashing Grow Stage **Custom**, either pick **Custom** to keep hand-tuned
 | Device | Owner | Role |
 |---|---|---|
 | OUT / RECIRC / intakes | Hub fans | First responder; heat reuse; negative-pressure budget |
-| Humidifier / dehumidifier / heater / grow mat | Hub demand â†’ HA follower â†’ Sonoff | Wired actuators |
-| AC | Hub `ac_demand` â†’ **gated follower** | Only when `input_boolean.dsc_ac_in_service` is on and `switch.dsc_ac_main_relay` exists |
-| Clone mister | Hub `clone_humidifier_demand` â†’ **gated follower** | Same via `dsc_clone_humidifier_in_service` â€” off until mister hardware |
+| Humidifier / dehumidifier / heater / grow mat | Hub demand → HA follower → Sonoff | Wired actuators |
+| AC | Hub `ac_demand` → **gated follower** | Only when `input_boolean.dsc_ac_in_service` is on and `switch.dsc_ac_main_relay` exists |
+| Clone mister | Hub `clone_humidifier_demand` → **gated follower** | Same via `dsc_clone_humidifier_in_service` — off until mister hardware |
 | Shared room appliances | Priority tent when both live | Non-priority tent is local levers only |
 
 ### Scenario keep-up matrix (code-walked)
 
 | Scenario | Can tents keep up? |
 |---|---|
-| A. Warm room + lights dumping heat | **No if AC out of service** â€” fans exchange to room temp only |
+| A. Warm room + lights dumping heat | **No if AC out of service** — fans exchange to room temp only |
 | B. Cold dry night, 4x8 priority | **Yes** for air via heater/hum; clone RH needs intake plume |
-| C. Clone overheat, 4x8 has priority | **Partial** â€” local flush helps; shared AC serves priority |
+| C. Clone overheat, 4x8 has priority | **Partial** — local flush helps; shared AC serves priority |
 | D. High RH flower + dehum lag | **Yes** if dehum follower healthy; moisture wins over heat reuse |
 | E. Root zone cold / POT3 faulted | **Yes** (voted pots); air-proxy if all probes die |
-| F. Root runaway (â‰¥ High+1) | **Yes** â€” mat OFF + fan flush |
-| G. Emergency â‰¥35Â°C | Fans yes; **AC only if in service** |
-| H. Opposite climates both tents | **Structural limit** â€” priority wins room appliances |
-| I. Hub offline â‰¥30s | Appliances safe-off; fans continue if hub up |
-| J. Clone dry, no mister | **No local RH lever** â€” room humidifier + routing only |
+| F. Root runaway (≥ High+1) | **Yes** — mat OFF + fan flush |
+| G. Emergency ≥35°C | Fans yes; **AC only if in service** |
+| H. Opposite climates both tents | **Structural limit** — priority wins room appliances |
+| I. Hub offline ≥30s | Appliances safe-off; fans continue if hub up |
+| J. Clone dry, no mister | **No local RH lever** — room humidifier + routing only |
 
 Capacity verdict: fan ladder + heat reuse + reality gates are strong.
 Hard holes today are **AC actuation** and **clone mister actuation**.
 
-### Plant specs (settable â€” not hardcoded)
+### Plant specs (settable — not hardcoded)
 
 Install [`packages/dsc_v4_climate_physics.yaml`](packages/dsc_v4_climate_physics.yaml).
-Nameplate values live as `input_number.dsc_*` (fan max CFM, tent/room mÂ³,
+Nameplate values live as `input_number.dsc_*` (fan max CFM, tent/room m³,
 heater W, dehum L/day, hum mL/h, AC BTU/h, light watts). Change them when
 hardware is swapped; live CFM / capacity sensors recompute from those helpers.
 
-**Optional LÃ—WÃ—H (cm):** `input_number.dsc_dim_*_{l,w,h}_cm` plus Apply
+**Optional L×W×H (cm):** `input_number.dsc_dim_*_{l,w,h}_cm` plus Apply
 scripts (`script.dsc_apply_dim_4x8` / `_2x4` / `_room`) write the matching
-`dsc_vol_*_m3`. Leave dimensions at 0 to keep editing mÂ³ directly. Packed
+`dsc_vol_*_m3`. Leave dimensions at 0 to keep editing m³ directly. Packed
 tents may need a free-air nudge after geometric apply.
 
 Verification binaries (`binary_sensor.dsc_plant_specs_*`) flag incomplete
@@ -232,12 +232,12 @@ Curves / dimensions are **not** required for spec completeness.
 
 | Keep | Park / demote |
 |---|---|
-| Hub tent/room/clone DHT22 | ADC â€œdynamic CO2â€ â€” informational only until a real COâ‚‚ sensor |
+| Hub tent/room/clone DHT22 | ADC “dynamic CO2” — informational only until a real CO₂ sensor |
 | ESP-NOW pot probes that are **in service** | OOS pots (alerts off; mat vote excluded) |
 | Sonoff followers for hum/dehum/heater/mat | AC / clone mister until hardware + In Service ON |
-| `input_number.dsc_leaf_offset` â†’ `sensor.dsc_leaf_vpd_kpa` / `dsc_clone_leaf_vpd_kpa` | Undefined `sensor.dsc_clone_temp_trend` (removed from dashboard) |
+| `input_number.dsc_leaf_offset` → `sensor.dsc_leaf_vpd_kpa` / `dsc_clone_leaf_vpd_kpa` | Undefined `sensor.dsc_clone_temp_trend` (removed from dashboard) |
 
-SCD41 / dedicated COâ‚‚ remain deferred â€” see [`../docs/FOLLOWUPS.md`](../docs/FOLLOWUPS.md).
+SCD41 / dedicated CO₂ remain deferred — see [`../docs/FOLLOWUPS.md`](../docs/FOLLOWUPS.md).
 
 ### Optional fan CFM / light PPFD curves
 
@@ -245,35 +245,35 @@ Install [`packages/dsc_v4_device_cal.yaml`](packages/dsc_v4_device_cal.yaml)
 (auto-loaded with other `dsc_v4_*` packages).
 
 Unset curve points (`input_number.dsc_cal_cfm_*_*` / `dsc_cal_ppfd_*` = 0)
-keep live CFM as **commanded % Ã— nameplate** â€” same as before. With **â‰¥2**
+keep live CFM as **commanded % × nameplate** — same as before. With **≥2**
 measured points, `sensor.dsc_cfm_*` (and `sensor.dsc_sf1000_ppfd`)
 piecewise-linear interpolate. Saving a 100% CFM point also updates the
 matching `dsc_cfm_*_max` nameplate.
 
-Dashboard wizard on **Learning**: pick target â†’ Start (Tent Manual Override
-or Manual Light Hold) â†’ hold 25/50/75/100% â†’ enter duct-outlet m/s (uses
-`dsc_duct_*_cm`, default 6â€³/4â€³) or CFM / PPFD â†’ Save. Skip / Abort restore
+Dashboard wizard on **Learning**: pick target → Start (Tent Manual Override
+or Manual Light Hold) → hold 25/50/75/100% → enter duct-outlet m/s (uses
+`dsc_duct_*_cm`, default 6″/4″) or CFM / PPFD → Save. Skip / Abort restore
 prior speeds. Reset scripts clear a curve back to linear %.
 
-### Response-rate learning (Phase A â€” observe + predict)
+### Response-rate learning (Phase A — observe + predict)
 
 Install [`packages/dsc_v4_climate_learn.yaml`](packages/dsc_v4_climate_learn.yaml)
 alongside the physics package.
 
-**Gate open â‰  actively learning.** `binary_sensor.dsc_learn_gate_open` only
-means â€œallowed to sample.â€ Read **`sensor.dsc_learn_activity`** for plain
-English: *Learning humidifier (2/5 samples)* vs *Waiting â€” 2 air appliances
+**Gate open ≠ actively learning.** `binary_sensor.dsc_learn_gate_open` only
+means “allowed to sample.” Read **`sensor.dsc_learn_activity`** for plain
+English: *Learning humidifier (2/5 samples)* vs *Waiting — 2 air appliances
 on together* vs *Idle*.
 
 Phase A samples when **exactly one air appliance** is ON (humidifier /
-dehumidifier / heater / AC). **Fans and grow mat may co-run** â€” Full Auto
+dehumidifier / heater / AC). **Fans and grow mat may co-run** — Full Auto
 always has fans, and the mat often stays on; that no longer blocks learning.
 Mat samples when mat is ON and no air appliance is ON. Vent samples when
 OUT/intake is high and no air appliance is ON.
 
 A 5-minute EMA stores effectiveness vs nameplate (`input_number.dsc_learn_eff_*`,
-clamped 0.1â€“2.0Ã—). Sample counts (`dsc_learn_samples_*`) are the automatic
-**appliance results database**. When count â‰¥ `input_number.dsc_learn_min_samples`,
+clamped 0.1–2.0×). Sample counts (`dsc_learn_samples_*`) are the automatic
+**appliance results database**. When count ≥ `input_number.dsc_learn_min_samples`,
 those coeffs scale **predictions only**:
 
 | Sensor | Role |
@@ -292,7 +292,7 @@ may clamp `number.dsc_hub_ladder_wait_*` only. Lock with
 `input_boolean.dsc_learn_phase_b_locked` after manual edits.
 Reset coeffs: `script.dsc_climate_learn_reset`. Reset waits: `script.dsc_climate_learn_reset_waits`.
 
-Dashboard: **Learning** (`/dsc-hub-pro/learning`) â€” Activity card, device cal,
+Dashboard: **Learning** (`/dsc-hub-pro/learning`) — Activity card, device cal,
 Phase A+B status, appliance effect cards, waits, ETA, efficiencies, charts.
 
 ## Crop-steering (HA surface 5.1.8)
@@ -300,23 +300,23 @@ Phase A+B status, appliance effect cards, waits, ETA, efficiencies, charts.
 Want/Need/Got, peer sync, lab wet, nutrient Accept mix (no pumps), coherence,
 efficacy Temp OOS. Sensor trust + keep-up honesty on reduced kit.
 
-- Push peer â†’ ESP SoT zeroes HA peers (`dsc_v4_sensor_cal`, pot FW 5.1.5+).
-- Lab wet two-point â†’ ESP scale/offset (`docs/LAB-WET-CAL.md`, pot FW 5.1.6+).
+- Push peer → ESP SoT zeroes HA peers (`dsc_v4_sensor_cal`, pot FW 5.1.5+).
+- Lab wet two-point → ESP scale/offset (`docs/LAB-WET-CAL.md`, pot FW 5.1.6+).
 - Strain/sprout on pot NVS after FW **5.1.3**; HA `input_*` fallback until then.
 
 Packages: `dsc_v4_strain_catalog`, `dsc_v4_nutrient_catalog`, `dsc_v4_pots_coherence`,
 `dsc_v4_actuator_efficacy`.
 
-- **Want / Need / Got:** strain + sprout date â†’ Want bands; Got = raw + peer offset;
+- **Want / Need / Got:** strain + sprout date → Want bands; Got = raw + peer offset;
   Capture peer baseline is MAD-hardened (v2); optional auto after shared watering
-  with require-confirm. **Push peer â†’ ESP** merges offsets into pot Cal Offset and
+  with require-confirm. **Push peer → ESP** merges offsets into pot Cal Offset and
   zeroes HA peers so ESP-NOW matches Got (`dsc_v4_sensor_cal`, pot FW 5.1.5+).
   Need summary + Apply expected stage (advisory). Prefer pot `select`/`datetime`
   after FW **5.1.3**; HA `input_*` fallback until then.
-- **Nutrient Science:** tank L Ã— strength â†’ recipe; **Accept mix** burns stock (no pumps).
+- **Nutrient Science:** tank L × strength → recipe; **Accept mix** burns stock (no pumps).
 - **Fluctuations:** relative dryback; cross-pot coherence when moisture rises together
-  but EC does not; learned Î”EC/Î”moisture.
-- **Temp OOS vs Operator Lockout:** humidifier/dehum/clone mister â€” efficacy fail â†’
+  but EC does not; learned ΔEC/Δmoisture.
+- **Temp OOS vs Operator Lockout:** humidifier/dehum/clone mister — efficacy fail →
   Temp OOS (flashing) + demand off; Lockout only you clear.
 
 Dashboard: **Strains** (`/dsc-hub-pro/strains`), plant consoles (strain/sprout/Need),
@@ -337,14 +337,14 @@ water tester entities. Alias or rename in HA to match:
 | EC scale | `input_number.dsc_tank_ec_multiplier` (`1` or `1000`) |
 
 Door magnet (lab): `lock.4x8_humidifier_photo_lab_lock` = **room door release**,
-not humidifier lock â€” entity id kept for compatibility.
+not humidifier lock — entity id kept for compatibility.
 
 ## Still outside this folder (hardware / live site)
 
-- Clone humidifier / AC physical actuators â€” demands live; followers gated by wired flags
-- Recorder `purge_keep_days: ~120` â€” HA config
-- Fixed-channel AP â€” ops (root README)
-- POT3 probe swap, SCD41, ETH01 â€” post-release hardware
+- Clone humidifier / AC physical actuators — demands live; followers gated by wired flags
+- Recorder `purge_keep_days: ~120` — HA config
+- Fixed-channel AP — ops (root README)
+- POT3 probe swap, SCD41, ETH01 — post-release hardware
 
 ## Firmware pairing (**v5.1.0**)
 
@@ -359,6 +359,6 @@ not humidifier lock â€” entity id kept for compatibility.
 Fleet drift chip (`sensor.dsc_fleet_version_status`) compares the
 **major.minor** train, so mixed patch levels inside `5.1.x` stay `ok`.
 
-**Mat votes:** `switch.dsc_hub_mat_vote_pot_1`â€¦`4` â€” Root Zone is source of truth; Climate links there.
+**Mat votes:** `switch.dsc_hub_mat_vote_pot_1`…`4` — Root Zone is source of truth; Climate links there.
 
-Bring-up: [`../INSTALL.md`](../INSTALL.md) Â· add-on: [`../scripts/ADDON.md`](../scripts/ADDON.md) Â· release: [`../RELEASE.md`](../RELEASE.md).
+Bring-up: [`../INSTALL.md`](../INSTALL.md) · add-on: [`../scripts/ADDON.md`](../scripts/ADDON.md) · release: [`../RELEASE.md`](../RELEASE.md).

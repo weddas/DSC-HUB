@@ -1,4 +1,4 @@
-﻿# DSC-HUB ? Master follow-up list
+# DSC-HUB ? Master follow-up list
 
 Standing process for every plan:
 
@@ -33,7 +33,7 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 | N-001 | Preferred BSSID ? current while Lock ON | Self-customize relearn exists; verify after hub 5.1.3 flash |
 | N-002 | Fleet version skew cleanup | Flash Control/pots if still on old wifi stubs |
 | N-003 | Soak warnings from OOS deploy | Fill after ~30 min post-flash soak |
-| N-004 | Orphan helper cull pass | `dsc_leaf_offset` wired â†’ leaf VPD sensors (2026-08-04). Sankey `dsc_airflow_*` helpers culled + registry purged (2026-08-05 Full Inclusion Pass 4) |
+| N-004 | Orphan helper cull pass | `dsc_leaf_offset` wired → leaf VPD sensors (2026-08-04). Sankey `dsc_airflow_*` helpers culled + registry purged (2026-08-05 Full Inclusion Pass 4) |
 | N-005 | Cooldown / open-loop wait retune | Evidence-based only; no site hardcodes |
 
 ### out-of-scope
@@ -194,7 +194,7 @@ No climate control regression during soak window.
 
 ### deferred
 
-- N-004 optional cull of unused Sankey template sensors â€” **done 2026-08-05** (repo helpers + live `dsc_airflow_sankey.yaml` removed).
+- N-004 optional cull of unused Sankey template sensors — **done 2026-08-05** (repo helpers + live `dsc_airflow_sankey.yaml` removed).
 
 ---
 
@@ -462,7 +462,7 @@ No climate control regression during soak window.
 ### done
 - **Pass 3 Cal SoT:** HA surface 5.1.7; pots 1/2/4 OTA to FW **5.1.5** (POT3 USB/F-003 still unavailable). Capture?Push with ESP range clamp + Mark entity-id dual form (dsc_potN / dsc_pot_N). Methods peer_median; dual-stack cleared (POT4 residual beyond pH ?2 clamp zeroed after push). N-027 compile OK. README surface ? 5.1.7. N-025/N-029 closed for online pots.
 - **Pass 2 CFM honesty:** sensor.dsc_cfm_exhaust_{out,recirc}_allocated (? intake ? fan-% split); vent BTU/moisture + airflow-map use allocated; capacity proxies keep honesty attr; Climate/Learning labels linear-vs-curve. No invented cal curves.
-- **Pass 1 Dash fidelity:** Bloom composer + soft-particle/curl shaders (`tDepth`/`uHasDepth`); DepthTexture **safe-default off** (WebKit solids bug â€” see 2026-08-05 closeout). Offline glTF accents under www/assets/dash/ + loadSimpleGltf with primitive fallback.
+- **Pass 1 Dash fidelity:** Bloom composer + soft-particle/curl shaders (`tDepth`/`uHasDepth`); DepthTexture **safe-default off** (WebKit solids bug — see 2026-08-05 closeout). Offline glTF accents under www/assets/dash/ + loadSimpleGltf with primitive fallback.
 - **Pass 4 Housekeeping:** Culled unused dsc_airflow_* Sankey helpers; *_actuator_wired absent from registry (N-007); README/qa Sankey/wired wording cleaned.
 
 ### soak / operator
@@ -551,23 +551,23 @@ No climate control regression during soak window.
 
 ---
 
-## 2026-08-05 â€” Dash tents black-canvas recovery
+## 2026-08-05 — Dash tents black-canvas recovery
 
 ### red-flag / fix
-- **Symptom:** Dash 3D viewport fully black (tents/ducts â€œgoneâ€) while overlays/CFM still looked nominal.
+- **Symptom:** Dash 3D viewport fully black (tents/ducts “gone”) while overlays/CFM still looked nominal.
 - **Cause:** Bloom `createComposer` DepthTexture/FBO path; HA SPA `location.href` cache-bust kept the old `customElements.define` class until full reload.
-- **Mitigation (live):** Bloom composer temporarily disabled â†’ direct `renderer.render`; DepthTexture hardened for when composer returns; tick try/catch; flange glTF clones geometry.
+- **Mitigation (live):** Bloom composer temporarily disabled → direct `renderer.render`; DepthTexture hardened for when composer returns; tick try/catch; flange glTF clones geometry.
 - **Operator:** After www deploys, **hard-refresh** the Dash tab (reload), not just navigate.
 
 ---
 
-## 2026-08-05 â€” Next Pass Full Inclusion closeout (3â†’2â†’1â†’4)
+## 2026-08-05 — Next Pass Full Inclusion closeout (3→2→1→4)
 
 ### done
-- **Pass 3 Cal SoT:** Live surface **5.1.8** (plan floor 5.1.7 met); pots 1/2/4 FW **5.1.6** (plan floor 5.1.5); dual-stack **off**; method **peer_median**; Mark Peer Median present. POT3 still USB/F-003. README surface train **5.1.8**. N-025/N-029 closed for online pots; N-016 still open (peer â‰  lab wet).
+- **Pass 3 Cal SoT:** Live surface **5.1.8** (plan floor 5.1.7 met); pots 1/2/4 FW **5.1.6** (plan floor 5.1.5); dual-stack **off**; method **peer_median**; Mark Peer Median present. POT3 still USB/F-003. README surface train **5.1.8**. N-025/N-029 closed for online pots; N-016 still open (peer ≠ lab wet).
 - **Pass 2 CFM honesty:** `sensor.dsc_cfm_exhaust_{out,recirc}_allocated` live (~15 / ~31 CFM); Climate vent BTU / Learning / airflow-map consume allocated; nameplate `sensor.dsc_cfm_*` remain capacity proxies. No invented `dsc_cal_cfm_*` curves.
-- **Pass 1 Dash fidelity:** Bloom composer on (single-pass when no depth tex); soft-particle + curl shaders with `tDepth`/`uHasDepth` (depth-soft gated). **DepthTexture attached then safely detached by default** â€” WebKit/Chromium depth-clear bug made opaques fail while particles drew (haze-only / black tents). View-Z soft fade remains the live path; reattach is opt-in later. Offline glTF accents under `www/assets/dash/` + `loadSimpleGltf` primitive fallback. Node-concat bundle ~875KB; `res_type: js` + `resources/update` + **hard reload**. Screenshot `/dsc-hub-pro/dash`: tents + ducts + particles + fan accent; no Configuration error.
-- **Pass 4 Housekeeping:** Packages already culled Sankey helpers; **removed live-only** `/config/packages/dsc_airflow_sankey.yaml` (not in repo â€” was recreating entities on every boot); WS purged `dsc_airflow_*`; `*_actuator_wired` absent (N-004/N-007). Live dashboards use `sensor.dsc_cfm_*` / allocated only.
+- **Pass 1 Dash fidelity:** Bloom composer on (single-pass when no depth tex); soft-particle + curl shaders with `tDepth`/`uHasDepth` (depth-soft gated). **DepthTexture attached then safely detached by default** — WebKit/Chromium depth-clear bug made opaques fail while particles drew (haze-only / black tents). View-Z soft fade remains the live path; reattach is opt-in later. Offline glTF accents under `www/assets/dash/` + `loadSimpleGltf` primitive fallback. Node-concat bundle ~875KB; `res_type: js` + `resources/update` + **hard reload**. Screenshot `/dsc-hub-pro/dash`: tents + ducts + particles + fan accent; no Configuration error.
+- **Pass 4 Housekeeping:** Packages already culled Sankey helpers; **removed live-only** `/config/packages/dsc_airflow_sankey.yaml` (not in repo — was recreating entities on every boot); WS purged `dsc_airflow_*`; `*_actuator_wired` absent (N-004/N-007). Live dashboards use `sensor.dsc_cfm_*` / allocated only.
 
 ### audit (live at closeout)
 | Check | Result |
@@ -582,11 +582,11 @@ No climate control regression during soak window.
 
 ### soak / operator
 - POT3 USB flash when probe available (F-003)
-- Optional anemometer Learning curves still unset â€” capacity proxies honest until measured
+- Optional anemometer Learning curves still unset — capacity proxies honest until measured
 - After any www deploy: hard-refresh Dash tab (F-010)
 
 ### deferred (unchanged / narrowed)
-- N-016 lab wet cal; N-020â€“023 already partly shipped in 5.1.8 sensing pass â€” leave soak
+- N-016 lab wet cal; N-020–023 already partly shipped in 5.1.8 sensing pass — leave soak
 - True DepthTexture soft-intersect **opt-in** after a browser that clears depth correctly with color+depth FBO (do not re-enable by default)
 - MeshLine/GPUComputation remain accepted approximations
 
@@ -595,19 +595,19 @@ No climate control regression during soak window.
 
 ---
 
-## 2026-08-05 â€” Full Auto overnight drop (probe)
+## 2026-08-05 — Full Auto overnight drop (probe)
 
 ### finding
 - **Not** Manual Takeover this time (unlike 3 Aug 02:11).
 - Hub **API-recovery reboot ~02:59 AEST** (uptime reset to ~1.3s). Came back Full Auto **OFF** from NVS; second reboot ~06:03 still OFF; re-armed ~08:28. HA showed ON through flaps until the 02:20 outage.
-- Implies NVS had OFF at reboot despite live ON before disconnect (stale flash and/or local drop+sync during the dark window). `sync_mode_prefs` is in hub **5.1.4** tree â€” soak whether every ON path actually flushes.
+- Implies NVS had OFF at reboot despite live ON before disconnect (stale flash and/or local drop+sync during the dark window). `sync_mode_prefs` is in hub **5.1.4** tree — soak whether every ON path actually flushes.
 - Chronic **HA link flaps** all morning (F-006); preferred BSSID currently matches associated `58:D9:D5:D7:AA:E2`, Lock ON.
 
 ### plant-critical escalation
 - Auto Photoperiod also restored **OFF** at 02:59 (NVS desync: Full Auto climate loop kept it true in RAM only).
-- SF1000 dark **02:59â€“08:28** while Independent window was still open (17:00 + 18h â†’ 11:00). ~5.5h mid-cycle dark.
+- SF1000 dark **02:59–08:28** while Independent window was still open (17:00 + 18h → 11:00). ~5.5h mid-cycle dark.
 
-### fix (repo â€” flash hub + sync HA packages)
+### fix (repo — flash hub + sync HA packages)
 - Hub **5.1.5**: sync after `arm_full_auto` / photoperiod switch; on_boot re-arms photoperiod when Takeover clear.
 - Hub **5.1.6**: on-hub light-quota ledger + debt catch-up under min dark floor (HA cannot meter during flaps).
 - HA: `binary_sensor.dsc_clone_light_missing_in_window`; GUARD re-arms photoperiod if disarmed >45s without Takeover; ALERT if light missing in window >2min; dark-period violation exempts catch-up.
@@ -615,5 +615,5 @@ No climate control regression during soak window.
 ### next
 | ID | Item | Notes |
 |---|---|---|
-| N-030 | Flash hub **5.1.7** + sync HA light helpers / Lighting view | Plant-critical; supersedes 5.1.5-only flash |
+| N-030 | Flash hub **5.1.6** + sync HA light helpers / Lighting view | Plant-critical; supersedes 5.1.5-only flash |
 | F-006 | HA-link flap / recovery reboot storm | Still the upstream driver of these mode surprises |
