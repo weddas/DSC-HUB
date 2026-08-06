@@ -613,11 +613,13 @@ No climate control regression during soak window.
 - Hub **5.1.7**: first-ledger NVS seed so mid-dark OTA cannot invent catch-up debt (5.1.6 first-flash blaze).
 - Hub **5.1.11**: boot **forces Full Auto ON** (unless Takeover) — stale NVS OFF can no longer leave the stack idle after recovery reboot.
 - HA: `binary_sensor.dsc_clone_light_missing_in_window`; GUARD re-arms photoperiod if disarmed >45s without Takeover; ALERT if light missing in window >2min; dark-period violation exempts catch-up.
+- Ops runbook: [`docs/qa/HUB-FULL-AUTO-DEFAULT-STARTUP-5.1.11.md`](qa/HUB-FULL-AUTO-DEFAULT-STARTUP-5.1.11.md).
 
 ### next
 | ID | Item | Notes |
 |---|---|---|
 | N-030 | Flash hub **5.1.7** + sync HA light helpers / Lighting view | **Done** 5 Aug — 5.1.7 live; catch-up idle, debt 0 mid-dark after ledger seed |
+| N-043 | Flash hub **5.1.11** (Full Auto default boot) | Confirm text FW + project **5.1.11**; soak recovery reboot → Full Auto ON without manual re-arm |
 | F-006 | HA-link flap / recovery reboot storm | Still the upstream driver of these mode surprises |
 
 ---

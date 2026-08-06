@@ -10,6 +10,8 @@
   now default **true** on fresh NVS so the stack is armed before the
   first climate tick. AC / clone mister remain gated by in-service.
 - Mid-session Full Auto OFF still works until the next reboot.
+- **Lockstep:** text Firmware Version (`fw_version`) must match
+  `project.version` **5.1.11** (fleet chip reads the text sensor).
 
 ## Hub 5.1.10 / Control 5.1.17 / Pots 5.1.8 — kill post-connect roam scans (2026-08-06)
 

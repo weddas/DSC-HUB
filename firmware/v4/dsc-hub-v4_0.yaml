@@ -2723,7 +2723,7 @@ text_sensor:
     name: "Firmware Version"
     id: fw_version
     icon: mdi:tag-check
-    lambda: 'return {"5.1.10"};'
+    lambda: 'return {"5.1.11"};'
     update_interval: 60s
 
   # F-006: last recovery action reason (bounce / reboot / none)
