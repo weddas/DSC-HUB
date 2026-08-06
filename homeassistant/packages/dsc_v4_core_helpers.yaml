@@ -1,12 +1,10 @@
 # ==================================================================
 #  DSC-HUB v4 · CORE DASHBOARD HELPERS
 #  ------------------------------------------------------------------
-#  Phase-0 / Dashboard-v3 support: hub-link alias, fan %, airflow
-#  Sankey nodes, photoperiod, leaf offset, appliance runtimes/cycles,
-#  transfer-function deltas. Tank + pot packages are separate files.
-#
-#  Source: dsc_dashboard_v3.yaml (live) merged with v4 Sankey topology
-#  the Lovelace dashboard actually wires (direct_room / room_return).
+#  Phase-0 / Dashboard-v3 support: hub-link alias, fan %, photoperiod,
+#  leaf offset, appliance runtimes/cycles, transfer-function deltas.
+#  Tank + pot packages are separate files. (Sankey dsc_airflow_* helpers
+#  removed 2026-08-04 — live CFM / Dash edges are the airflow SoT.)
 # ==================================================================
 
 input_boolean:

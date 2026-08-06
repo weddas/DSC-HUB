@@ -723,9 +723,10 @@ New 5s `tx_fleet_heartbeat` / `tx_peer_time` broadcast load on top of 2s vitals 
 ### operator
 | ID | Item | Notes |
 |---|---|---|
-| N-040 | **Physical power-cycle DSC-HUB** | Required — remote API cannot finish entity list / cannot OTA while flapping |
-| N-041 | After power cycle: confirm `dsc_hub_link=on`, FW 5.1.9, Dash climate/CFM live | Hard-refresh `/dsc-hub-pro/dash` |
-| N-042 | Soak whether 5.1.9 ESP-NOW cadence still OOMs under load | If ListEntities hangs again, treat as FW defect not dashboard |
+| N-040 | **Physical power-cycle DSC-HUB** | **Done** 6 Aug — hub **5.1.10** live (ESPHome Logs handshake OK; compiled 12:16 AEST) |
+| N-041 | After power cycle: confirm `dsc_hub_link=on`, FW 5.1.9, Dash climate/CFM live | Partial — HA got link+5.1.10+temps/CFM once after entry reload, then ListEntities 60s timeout / flap (`ESP/link HA flaps 24h 112`). Close Builder Logs before HA reconnect |
+| N-042 | Soak whether 5.1.9 ESP-NOW cadence still OOMs under load | Superseded by 5.1.10 roam fix; still soak ListEntities under HA-only (no competing log client) |
+| N-043 | HA ListEntities vs ESPHome Logs | Builder log session + HA setup can race `max_connections: 3`; ListEntities alone ~15s when healthy — keep Logs closed until `dsc_hub_link=on` |
 
 ---
 
@@ -754,3 +755,114 @@ New 5s `tx_fleet_heartbeat` / `tx_peer_time` broadcast load on top of 2s vitals 
 ### next
 - Flash hub 5.1.10 first (OTA when `:3232` up, else power-cycle then OTA); then Control/pots
 - Do **not** flash speculative FW until A–C vs D–E separated; N-040 still applies if ListEntities hangs again |
+
+---
+
+## 2026-08-06 — Fleet post_connect_roaming OTA pass
+
+### shipped
+- Commit `4257209` on `master`: `post_connect_roaming: false` + hub **5.1.10** / Control **5.1.17** / pots **5.1.8**.
+- Local compile (UNC path broken for IDF — built from `C:\Users\cmgwe\esphome-dsc\v4`).
+
+### OTA results
+| Device | Result |
+|---|---|
+| Control `.177` | **OK** — live logs `Project … dsc-control version 5.1.17` |
+| POT1 `.47` | **OK** |
+| POT2 `.22` | **OK** |
+| POT4 `.49` | **OK** |
+| POT3 `.40` | **SKIP** — `:3232` closed (F-003) |
+| Hub `.33` | **BLOCKED** — connect/auth/chunk timeouts; WiFi flap; hung mid-upload. Still needs **physical power-cycle (N-040)** then `python -m esphome upload dsc-hub.yaml --device 192.168.86.33` from local build tree |
+
+### soak
+- Hub 5.1.10 soak **not started** — device still on prior FW until power-cycle + OTA succeeds.
+- After hub flash: ≥15 min logs, zero `Wifi Channel is changed` storms.
+
+---
+
+## 2026-08-06 — Separate Exhaust Ducts + Residual Closeout
+
+### done
+- **Pass A/B Dash ducts:** OUT and RECIRC no longer share a roof Y-stub. OUT exits **rear** of 4×8 → outdoor vent + muffler; RECIRC exits **front** toward room. Shared coral/violet Y-ramp removed. Intakes aligned; cascade flattened to constant height. Flex rings on OUT/RECIRC; idle coral/violet shell so both legs read at 0 CFM. Fans/muffler/flanges re-seated on independent curves.
+- **Pass C deploy:** Node-concat ~875KB; `res_type: js` + `resources/update` + hard reload. Composer on; DepthTexture default off. Screenshot `/dsc-hub-pro/dash`: tents + separate OUT/RECIRC solids; no Configuration error.
+- **Pass D residuals (software):** Control **5.1.17** / pots **5.1.8** match tree — no OTA. N-001 `binary_sensor.dsc_wifi_preferred_ap_mismatch=off`. Climate/Learning still label capacity proxy vs allocated. No invented CFM curves. No commit (not requested).
+
+### audit (live at closeout)
+| Check | Result |
+|---|---|
+| HA surface | **5.1.10** |
+| Hub link / hub FW | **off / unavailable** (allocated CFM dark; skip hub OTA this pass) |
+| Control / POT1/2/4 | **5.1.17** / **5.1.8** |
+| Preferred AP mismatch | **off** |
+| Dash ducts | OUT rear + RECIRC front; idle glow; DepthTexture off |
+
+### soak / operator
+- Recover hub (power / API) → confirm link + allocated CFM; flash hub **5.1.10** when `:3232` up (prior FOLLOWUPS)
+- POT3 USB / F-003; N-016 lab wet; anemometer curves still operator
+- Hard-refresh Dash after www deploys (F-010)
+
+### deferred (unchanged)
+- DepthTexture default-on; MeshLine/GPUComputation rewrite; F-001/F-002 physical AC/mister; N-012/N-013 pumps/irrigation
+
+### red-flag
+- Hub offline at closeout — climate CFM honesty consumers unavailable until hub_link returns. Not introduced by duct geometry.
+
+---
+
+## 2026-08-06 — Right-wall Recirc, CFM Air, Models, Hub Hold
+
+### done
+- **RECIRC:** Moved to **4×8 right wall** (+X ≈ 4.05) per annotated screenshot; OUT stays rear (−Z) → outdoor vent. Cinch-port collars at duct pierces; HUD notes `OUT rear / RECIRC right wall`.
+- **CFM air:** Retired ambient `createCurlHaze` room fog (FEATURES.gpuCurlHaze=false). Duct `mkAir` streams CFM-scaled (speed/active count, tight centerline). Added `mixClone`/`mixMain` in-tent swirl. Cascade plume enters 4×8 mix instead of leaping to OUT.
+- **Models (incremental):** Cloudline-like inline fan primitives (housing + flanges), denser aluminum flex rings, tent poles/fabric already present + cinch ports. DepthTexture still safe-default off.
+- **Hub hold:** Card caches last-known-good live snapshot while `dsc_hub_link` on; on dropout shows HELD/OFFLINE timer + footer `ESP/link:` line from cached diagnostics (API/handshake/bounces/RF/EVT/flaps). No invented ESP serial tail.
+
+### audit (live)
+| Check | Result |
+|---|---|
+| RECIRC fan world pos | ~`(4.59, 1.47, 0.3)` right wall |
+| OUT fan | rear ~`(2.55, 1.9, -1.58)` |
+| Composer / depth | on / off |
+| Hub | **off** — status `OFFLINE // hub Xs`; footer flaps line; hold activates after first good sample |
+| Bundle | ~883KB Node-concat + hard reload |
+
+### soak / operator
+- Hub power-cycle + flash **5.1.10** (prior) so CFM streams + hold path can soak with live mass-balance
+- After hub returns: confirm HELD clears and last-good was used during outage
+- POT3 / N-016 / anemometer still operator
+
+### deferred
+- ~~Photoreal tent/plant GLTF rebuild; DepthTexture default-on; MeshLine/GPU curl real impl~~ → see **2026-08-06 Deferred FX closeout** below
+
+### red-flag
+- Hub still offline — CFM air animates only when held CFM or live CFM > 0; zero-CFM idle is intentional honesty.
+
+---
+
+## 2026-08-06 — Deferred FX closeout (MeshLine / GPU curl / Depth opt-in / models)
+
+### done
+- **MeshLine ribbons:** Real screen-space MeshLine attrs (`previous`/`next`/`side`) + width/resolution uniforms; tube fallback retained via `FEATURES.tubeRibbonFallback`. Live: 5 `DSCDashFX.FlowRibbon` with `previous` attrs.
+- **GPU confined curl:** `createConfinedCurlHaze` (GPU shader wrap in AABB; CPU fallback). Wired to `mixClone`/`mixMain` (not room fog). Live: 2 `DSCDashFX.ConfinedCurl`. Ambient room curl stays retired.
+- **DepthTexture:** Remains **default off**. Composer attaches then detaches unless `FEATURES.depthSoftParticles`; `enableDepthTexture(force)` opt-in API exported. Live `post.depthTexture === false`.
+- **Models (incremental, not full photoreal GLTF rebuild):** Leaflet-tier plants (pot rim/soil/fan leaves); Cloudline fans with badge + flange bolts + denser blades. Existing offline muffler/housing/flange glTF accents unchanged.
+- **Deploy:** Node-concat with `\n` separators → `dist/dsc-system-map-card.js` ~898KB; SCP + `lovelace/resources/update` `?v=deferred2-*` + hard reload. Verified FEATURES + scene objects on `/dsc-hub-pro/dash`.
+
+### audit (live)
+| Check | Result |
+|---|---|
+| FEATURES | meshLineRibbon **true**, gpuCurlHaze **true**, depthSoftParticles **false** |
+| Scene | 5 MeshLine ribbons, 2 confined curls, depth tex off |
+| Bundle | ~898KB |
+
+### soak / operator
+- Hard-refresh after www deploys (F-010). Screenshot tool flaked this pass — visual soak on operator refresh.
+- Hub still offline → CFM stream soak waits on hub recovery (prior).
+
+### deferred (narrowed / remaining)
+- Full photoreal tent/plant **authored GLTF** packs (beyond incremental primitives)
+- DepthTexture **default-on** — still blocked on WebKit/Chromium color+depth FBO clear bug; keep opt-in only
+- Hardware: POT3 USB / F-003; N-016 lab wet; anemometer; F-001/F-002 AC/mister; hub flash when online
+
+### red-flag
+- None new from FX pass. Do **not** flip `depthSoftParticles` default true.

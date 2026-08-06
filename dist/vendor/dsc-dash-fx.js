@@ -101,18 +101,52 @@
     var oldClearColor = new THREE.Color();
     var useHalfFloat = !!THREE.HalfFloatType;
 
-    var sceneTarget = makeTarget(1, 1, 'DSCDashFX.Scene', useHalfFloat);
+    // DepthTexture soft-intersection is optional. Prefer it when the FBO is
+    // complete; otherwise bloom still runs and particles use view-Z fade.
+    // Never attach DepthTexture on HalfFloat targets (incomplete FBO → black).
+    var sceneTarget = makeTarget(1, 1, 'DSCDashFX.Scene', false);
     sceneTarget.depthBuffer = true;
+    sceneTarget.stencilBuffer = false;
     var depthTexture = null;
-    if (THREE.DepthTexture) {
-      depthTexture = new THREE.DepthTexture();
-      depthTexture.name = 'DSCDashFX.Depth';
-      depthTexture.type = THREE.UnsignedIntType || THREE.UnsignedShortType;
-      depthTexture.minFilter = THREE.NearestFilter;
-      depthTexture.magFilter = THREE.NearestFilter;
-      sceneTarget.depthTexture = depthTexture;
-    } else {
-      sceneTarget.depthTexture = null;
+    var depthAttachmentFailed = false;
+    function attachDepthTexture() {
+      if (!THREE.DepthTexture || depthAttachmentFailed) return;
+      try {
+        depthTexture = new THREE.DepthTexture(1, 1);
+        depthTexture.name = 'DSCDashFX.Depth';
+        if (THREE.DepthFormat != null) depthTexture.format = THREE.DepthFormat;
+        var isWebGL2 = !!(renderer.capabilities && renderer.capabilities.isWebGL2);
+        if (isWebGL2 && THREE.UnsignedIntType != null) depthTexture.type = THREE.UnsignedIntType;
+        else if (THREE.UnsignedShortType != null) depthTexture.type = THREE.UnsignedShortType;
+        depthTexture.minFilter = THREE.NearestFilter;
+        depthTexture.magFilter = THREE.NearestFilter;
+        depthTexture.generateMipmaps = false;
+        sceneTarget.depthTexture = depthTexture;
+      } catch (err) {
+        depthTexture = null;
+        sceneTarget.depthTexture = null;
+        depthAttachmentFailed = true;
+        if (root.console && root.console.warn) {
+          root.console.warn('dsc-dash-fx: DepthTexture unavailable, soft particles use view-Z fade only', err);
+        }
+      }
+    }
+    attachDepthTexture();
+    // Default: detach immediately unless FEATURES.depthSoftParticles opt-in.
+    // Soft-particle shaders still sample tDepth when enableDepthTexture() reattaches.
+    if (depthTexture && !FEATURES.depthSoftParticles) {
+      try { sceneTarget.depthTexture = null; } catch (_) {}
+      try { depthTexture.dispose(); } catch (_) {}
+      depthTexture = null;
+    }
+
+    function enableDepthTexture(force) {
+      if (force) FEATURES.depthSoftParticles = true;
+      if (!FEATURES.depthSoftParticles) return false;
+      depthAttachmentFailed = false;
+      if (!depthTexture) attachDepthTexture();
+      syncSoftParticleUniforms();
+      return !!depthTexture;
     }
     var brightTarget = makeTarget(1, 1, 'DSCDashFX.Bright', useHalfFloat);
     var horizontalTargets = [];
@@ -249,6 +283,49 @@
     bloomPass.strength = 0.55;
     bloomPass.radius = 0.4;
 
+    var softParticleMaterials = [];
+    // depthAttachmentFailed declared with DepthTexture setup above
+
+    function registerSoftParticleMaterial(material) {
+      if (material && softParticleMaterials.indexOf(material) < 0) {
+        softParticleMaterials.push(material);
+      }
+    }
+
+    function syncSoftParticleUniforms() {
+      var near = camera.near || 0.1;
+      var far = camera.far || 80;
+      for (var i = 0; i < softParticleMaterials.length; i++) {
+        var uniforms = softParticleMaterials[i].uniforms;
+        if (!uniforms) continue;
+        if (uniforms.tDepth) uniforms.tDepth.value = depthTexture;
+        if (uniforms.uResolution) uniforms.uResolution.value.set(width, height);
+        if (uniforms.uCameraNear) uniforms.uCameraNear.value = near;
+        if (uniforms.uCameraFar) uniforms.uCameraFar.value = far;
+        if (uniforms.uHasDepth) uniforms.uHasDepth.value = depthTexture ? 1 : 0;
+      }
+    }
+
+    function disableDepthTexture(reason) {
+      if (depthAttachmentFailed && !depthTexture) return;
+      depthAttachmentFailed = true;
+      try {
+        sceneTarget.depthTexture = null;
+      } catch (_) {}
+      if (depthTexture) {
+        try { depthTexture.dispose(); } catch (_) {}
+      }
+      depthTexture = null;
+      for (var i = 0; i < softParticleMaterials.length; i++) {
+        var uniforms = softParticleMaterials[i].uniforms;
+        if (uniforms && uniforms.uHasDepth) uniforms.uHasDepth.value = 0;
+        if (uniforms && uniforms.tDepth) uniforms.tDepth.value = null;
+      }
+      if (root.console && root.console.warn) {
+        root.console.warn('dsc-dash-fx: DepthTexture disabled (' + reason + '); solids still render');
+      }
+    }
+
     function setSize(w, h) {
       if (disposed) return;
       width = Math.max(1, Math.floor(w));
@@ -270,26 +347,21 @@
         mipW = Math.max(1, Math.floor(mipW / 2));
         mipH = Math.max(1, Math.floor(mipH / 2));
       }
-    }
 
-    var softParticleMaterials = [];
-    function registerSoftParticleMaterial(material) {
-      if (material && softParticleMaterials.indexOf(material) < 0) {
-        softParticleMaterials.push(material);
-      }
-    }
-
-    function syncSoftParticleUniforms() {
-      var near = camera.near || 0.1;
-      var far = camera.far || 80;
-      for (var i = 0; i < softParticleMaterials.length; i++) {
-        var uniforms = softParticleMaterials[i].uniforms;
-        if (!uniforms) continue;
-        if (uniforms.tDepth) uniforms.tDepth.value = depthTexture;
-        if (uniforms.uResolution) uniforms.uResolution.value.set(width, height);
-        if (uniforms.uCameraNear) uniforms.uCameraNear.value = near;
-        if (uniforms.uCameraFar) uniforms.uCameraFar.value = far;
-        if (uniforms.uHasDepth) uniforms.uHasDepth.value = depthTexture ? 1 : 0;
+      if (depthTexture && !depthAttachmentFailed) {
+        try {
+          var gl = renderer.getContext();
+          var prev = renderer.getRenderTarget();
+          renderer.setRenderTarget(sceneTarget);
+          var status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+          renderer.setRenderTarget(prev);
+          if (status !== gl.FRAMEBUFFER_COMPLETE) {
+            disableDepthTexture('FBO status ' + status);
+            sceneTarget.setSize(width, height);
+          }
+        } catch (err) {
+          disableDepthTexture('FBO check threw');
+        }
       }
     }
 
@@ -301,19 +373,37 @@
       renderer.getClearColor(oldClearColor);
       renderer.autoClear = true;
 
-      // Pass A: solids only (layer 0) → color + depth
       var prevMask = camera.layers.mask;
-      camera.layers.set(0);
-      renderer.setRenderTarget(sceneTarget);
-      renderer.clear(true, true, true);
-      renderer.render(scene, camera);
-
-      // Pass B: soft particles (layer 1) reading depth texture
-      syncSoftParticleUniforms();
-      camera.layers.set(1);
-      renderer.autoClear = false;
-      renderer.setRenderTarget(sceneTarget);
-      renderer.render(scene, camera);
+      try {
+        syncSoftParticleUniforms();
+        renderer.setRenderTarget(sceneTarget);
+        renderer.clear(true, true, true);
+        if (depthTexture) {
+          // Depth soft-particles: solids first (layer 0), then air (layer 1)
+          camera.layers.set(0);
+          renderer.render(scene, camera);
+          camera.layers.set(1);
+          renderer.autoClear = false;
+          renderer.setRenderTarget(sceneTarget);
+          renderer.render(scene, camera);
+        } else {
+          // Safe path: one pass, all layers (particles stay on layer 0 when no depth tex)
+          camera.layers.enable(0);
+          camera.layers.enable(1);
+          renderer.render(scene, camera);
+        }
+      } catch (err) {
+        camera.layers.mask = prevMask;
+        disableDepthTexture('scene pass threw');
+        renderer.setRenderTarget(oldTarget);
+        renderer.autoClear = oldAutoClear;
+        renderer.setClearColor(oldClearColor, oldClearAlpha);
+        camera.layers.enable(0);
+        camera.layers.enable(1);
+        renderer.render(scene, camera);
+        camera.layers.mask = prevMask;
+        return;
+      }
       camera.layers.mask = prevMask;
 
       quad.material = highPassMaterial;
@@ -388,7 +478,9 @@
       setSize: setSize,
       render: render,
       dispose: dispose,
-      depthTexture: depthTexture,
+      get depthTexture() { return depthTexture; },
+      disableDepthTexture: disableDepthTexture,
+      enableDepthTexture: enableDepthTexture,
       registerSoftParticleMaterial: registerSoftParticleMaterial
     };
   }
@@ -402,7 +494,10 @@
     meshLineRibbon: true,
     gpuCurlHaze: true,
     tubeRibbonFallback: false,
-    cpuCurlHazeFallback: false
+    cpuCurlHazeFallback: false,
+    // WebKit/Chromium: DepthTexture on color FBO often breaks opaque depth clears.
+    // Keep false by default; enableDepthTexture() / FEATURES.depthSoftParticles for opt-in.
+    depthSoftParticles: false
   };
 
   function buildMeshLineGeometry(curve, segments, radius) {
@@ -410,40 +505,51 @@
     radius = Math.max(0.0001, radius);
     var count = segments + 1;
     var positions = new Float32Array(count * 6);
+    var previous = new Float32Array(count * 6);
+    var next = new Float32Array(count * 6);
+    var sideAttr = new Float32Array(count * 2);
     var uvs = new Float32Array(count * 4);
     var indices = new Uint16Array(segments * 6);
-    var up = _tmpUp;
-    var tangent = _tmpTangent;
-    var side = _tmpSide;
     var point = _tmpPoint;
     var i;
     var ii = 0;
+    var pts = [];
 
     for (i = 0; i < count; i++) {
-      var t = i / segments;
-      curve.getPoint(t, point);
-      curve.getTangent(t, tangent);
-      if (tangent.lengthSq() < 1e-8) tangent.set(0, 0, 1);
-      tangent.normalize();
-      if (Math.abs(tangent.dot(up)) > 0.92) up.set(1, 0, 0);
-      side.crossVectors(tangent, up).normalize();
-      up.crossVectors(side, tangent).normalize();
+      curve.getPoint(i / segments, point);
+      pts.push(point.clone());
+    }
 
+    for (i = 0; i < count; i++) {
+      var curr = pts[i];
+      var prev = pts[i === 0 ? i : i - 1];
+      var nxt = pts[i === count - 1 ? i : i + 1];
       var vi = i * 2;
-      var px = point.x;
-      var py = point.y;
-      var pz = point.z;
-      var sx = side.x * radius;
-      var sy = side.y * radius;
-      var sz = side.z * radius;
+      var t = i / segments;
 
-      positions[vi * 3] = px + sx;
-      positions[vi * 3 + 1] = py + sy;
-      positions[vi * 3 + 2] = pz + sz;
-      positions[(vi + 1) * 3] = px - sx;
-      positions[(vi + 1) * 3 + 1] = py - sy;
-      positions[(vi + 1) * 3 + 2] = pz - sz;
+      positions[vi * 3] = curr.x;
+      positions[vi * 3 + 1] = curr.y;
+      positions[vi * 3 + 2] = curr.z;
+      positions[(vi + 1) * 3] = curr.x;
+      positions[(vi + 1) * 3 + 1] = curr.y;
+      positions[(vi + 1) * 3 + 2] = curr.z;
 
+      previous[vi * 3] = prev.x;
+      previous[vi * 3 + 1] = prev.y;
+      previous[vi * 3 + 2] = prev.z;
+      previous[(vi + 1) * 3] = prev.x;
+      previous[(vi + 1) * 3 + 1] = prev.y;
+      previous[(vi + 1) * 3 + 2] = prev.z;
+
+      next[vi * 3] = nxt.x;
+      next[vi * 3 + 1] = nxt.y;
+      next[vi * 3 + 2] = nxt.z;
+      next[(vi + 1) * 3] = nxt.x;
+      next[(vi + 1) * 3 + 1] = nxt.y;
+      next[(vi + 1) * 3 + 2] = nxt.z;
+
+      sideAttr[vi] = 1;
+      sideAttr[vi + 1] = -1;
       uvs[vi * 2] = t;
       uvs[vi * 2 + 1] = 0;
       uvs[(vi + 1) * 2] = t;
@@ -462,9 +568,12 @@
 
     var geometry = new THREE.BufferGeometry();
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute('previous', new THREE.BufferAttribute(previous, 3));
+    geometry.setAttribute('next', new THREE.BufferAttribute(next, 3));
+    geometry.setAttribute('side', new THREE.BufferAttribute(sideAttr, 1));
     geometry.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
     geometry.setIndex(new THREE.BufferAttribute(indices, 1));
-    geometry.computeVertexNormals();
+    geometry.userData.meshLineRadius = radius;
     return geometry;
   }
 
@@ -519,22 +628,59 @@
           Math.max(0.0001, dashArray[0]),
           Math.max(0.0001, dashArray[1])
         )
+      },
+      uLineWidth: { value: radius * 180 },
+      uResolution: {
+        value: new THREE.Vector2(
+          (typeof root !== 'undefined' && root.innerWidth) || 1280,
+          (typeof root !== 'undefined' && root.innerHeight) || 720
+        )
       }
     };
+    var useMeshLine = !!(FEATURES.meshLineRibbon && !FEATURES.tubeRibbonFallback && geometry.getAttribute('previous'));
     var material = new THREE.ShaderMaterial({
       name: 'DSCDashFX.FlowRibbon',
       uniforms: uniforms,
-      vertexShader: [
-        'varying vec2 vUv;',
-        'varying float vFacing;',
-        'void main() {',
-        '  vUv = uv;',
-        '  vec3 n = normalize(normalMatrix * normal);',
-        '  vec4 mv = modelViewMatrix * vec4(position, 1.0);',
-        '  vFacing = 0.35 + 0.65 * abs(dot(n, normalize(-mv.xyz)));',
-        '  gl_Position = projectionMatrix * mv;',
-        '}'
-      ].join('\n'),
+      vertexShader: useMeshLine
+        ? [
+          'attribute vec3 previous;',
+          'attribute vec3 next;',
+          'attribute float side;',
+          'uniform float uLineWidth;',
+          'uniform vec2 uResolution;',
+          'varying vec2 vUv;',
+          'varying float vFacing;',
+          'void main() {',
+          '  vUv = uv;',
+          '  vec4 currProj = projectionMatrix * modelViewMatrix * vec4(position, 1.0);',
+          '  vec4 prevProj = projectionMatrix * modelViewMatrix * vec4(previous, 1.0);',
+          '  vec4 nextProj = projectionMatrix * modelViewMatrix * vec4(next, 1.0);',
+          '  vec2 curr = currProj.xy / max(0.0001, currProj.w);',
+          '  vec2 prev = prevProj.xy / max(0.0001, prevProj.w);',
+          '  vec2 nextp = nextProj.xy / max(0.0001, nextProj.w);',
+          '  vec2 dir = normalize(nextp - prev);',
+          '  if (length(nextp - curr) < 0.00001) dir = normalize(curr - prev);',
+          '  else if (length(curr - prev) < 0.00001) dir = normalize(nextp - curr);',
+          '  vec2 normal = vec2(-dir.y, dir.x);',
+          '  float aspect = uResolution.x / max(1.0, uResolution.y);',
+          '  normal.x /= aspect;',
+          '  float pixelWidth = uLineWidth / max(1.0, uResolution.y);',
+          '  currProj.xy += normal * side * pixelWidth * currProj.w;',
+          '  vFacing = 0.55 + 0.45 * abs(side);',
+          '  gl_Position = currProj;',
+          '}'
+        ].join('\n')
+        : [
+          'varying vec2 vUv;',
+          'varying float vFacing;',
+          'void main() {',
+          '  vUv = uv;',
+          '  vec3 n = normalize(normalMatrix * normal);',
+          '  vec4 mv = modelViewMatrix * vec4(position, 1.0);',
+          '  vFacing = 0.35 + 0.65 * abs(dot(n, normalize(-mv.xyz)));',
+          '  gl_Position = projectionMatrix * mv;',
+          '}'
+        ].join('\n'),
       fragmentShader: [
         'uniform float uDashOffset;',
         'uniform float uOpacity;',
@@ -566,6 +712,8 @@
     material.userData.uOpacity = uniforms.uOpacity;
     material.userData.uColor = uniforms.uColor;
     material.userData.uDashArray = uniforms.uDashArray;
+    material.userData.uLineWidth = uniforms.uLineWidth;
+    material.userData.uResolution = uniforms.uResolution;
     Object.defineProperty(material.userData, 'dashOffset', {
       enumerable: true,
       get: function () { return uniforms.uDashOffset.value; },
@@ -574,13 +722,16 @@
 
     var mesh = new THREE.Mesh(geometry, material);
     mesh.name = 'DSCDashFX.FlowRibbon';
-    mesh.userData.flowRibbon = { curve: curve, tubular: tubular, radius: radius };
+    mesh.userData.flowRibbon = { curve: curve, tubular: tubular, radius: radius, meshLine: useMeshLine };
     mesh.userData.rebuildFlowRibbon = function (nextRadius) {
+      var r = nextRadius == null ? mesh.userData.flowRibbon.radius : nextRadius;
+      mesh.userData.flowRibbon.radius = r;
+      if (uniforms.uLineWidth) uniforms.uLineWidth.value = r * 180;
       return rebuildFlowRibbonGeometry(
         mesh,
         mesh.userData.flowRibbon.curve,
         mesh.userData.flowRibbon.tubular,
-        nextRadius == null ? mesh.userData.flowRibbon.radius : nextRadius
+        r
       );
     };
     return mesh;
@@ -855,6 +1006,177 @@
     return { points: points, material: material, update: update, dispose: dispose };
   }
 
+  /** GPU (or CPU fallback) curl confined to an AABB — for in-tent mixing, not room fog. */
+  function createConfinedCurlHaze(renderer, opts) {
+    opts = opts || {};
+    var count = opts.count == null ? 64 : Math.max(8, Math.floor(opts.count));
+    var center = opts.center || new THREE.Vector3(0, 1, 0);
+    var half = opts.halfExtents || new THREE.Vector3(1, 0.8, 0.8);
+    var color = opts.color == null ? 0x8fcfff : opts.color;
+
+    var bases = new Float32Array(count * 3);
+    var seeds = new Float32Array(count * 3);
+    var i;
+    for (i = 0; i < count; i++) {
+      var j = i * 3;
+      bases[j] = (Math.random() * 2 - 1) * half.x;
+      bases[j + 1] = (Math.random() * 2 - 1) * half.y;
+      bases[j + 2] = (Math.random() * 2 - 1) * half.z;
+      seeds[j] = Math.random() * 6.2831853;
+      seeds[j + 1] = 0.25 + Math.random() * 0.75;
+      seeds[j + 2] = Math.random();
+    }
+
+    function wrapLocal(p, hx, hy, hz) {
+      if (p > hx) return p - hx * 2;
+      if (p < -hx) return p + hx * 2;
+      return p;
+    }
+
+    if (!FEATURES.gpuCurlHaze || FEATURES.cpuCurlHazeFallback) {
+      var cpuPositions = bases.slice();
+      for (i = 0; i < count; i++) {
+        cpuPositions[i * 3] += center.x;
+        cpuPositions[i * 3 + 1] += center.y;
+        cpuPositions[i * 3 + 2] += center.z;
+      }
+      var cpuAttribute = new THREE.BufferAttribute(cpuPositions, 3);
+      cpuAttribute.setUsage(THREE.DynamicDrawUsage);
+      var fallback = createCurlHazeCpuFallback(renderer, count, cpuPositions, seeds, cpuAttribute);
+      fallback.material.uniforms.uColor.value.set(color);
+      var baseUpdate = fallback.update;
+      fallback.update = function (dt, intensity) {
+        baseUpdate(dt, intensity);
+        // Re-confine after free curl step
+        var pos = cpuPositions;
+        for (var k = 0; k < count; k++) {
+          var p = k * 3;
+          var lx = pos[p] - center.x;
+          var ly = pos[p + 1] - center.y;
+          var lz = pos[p + 2] - center.z;
+          lx = wrapLocal(lx, half.x, half.y, half.z);
+          ly = wrapLocal(ly, half.y, half.x, half.z);
+          lz = wrapLocal(lz, half.z, half.x, half.y);
+          pos[p] = center.x + lx;
+          pos[p + 1] = center.y + ly;
+          pos[p + 2] = center.z + lz;
+        }
+        cpuAttribute.needsUpdate = true;
+        fallback.material.uniforms.uOpacity.value = Math.min(0.42, 0.06 + (intensity || 0) * 0.28);
+      };
+      return fallback;
+    }
+
+    var geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('aBasePosition', new THREE.BufferAttribute(bases, 3));
+    geometry.setAttribute('aSeed', new THREE.BufferAttribute(seeds, 3));
+    geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(count * 3), 3));
+    geometry.boundingSphere = new THREE.Sphere(center.clone(), half.length() + 0.5);
+
+    var uniforms = {
+      uOpacity: { value: 0.14 },
+      uPointSize: { value: 12 * (renderer.getPixelRatio ? renderer.getPixelRatio() : 1) },
+      uColor: { value: new THREE.Color(color) },
+      uTime: { value: 0 },
+      uIntensity: { value: 1 },
+      uCenter: { value: center.clone() },
+      uHalf: { value: half.clone() },
+      tDepth: { value: null },
+      uHasDepth: { value: 0 },
+      uResolution: { value: new THREE.Vector2(1, 1) },
+      uCameraNear: { value: 0.1 },
+      uCameraFar: { value: 80 },
+      uSoftness: { value: 0.85 }
+    };
+    var material = new THREE.ShaderMaterial({
+      name: 'DSCDashFX.ConfinedCurl',
+      uniforms: uniforms,
+      vertexShader: [
+        'attribute vec3 aBasePosition;',
+        'attribute vec3 aSeed;',
+        'uniform float uTime;',
+        'uniform float uIntensity;',
+        'uniform vec3 uCenter;',
+        'uniform vec3 uHalf;',
+        'varying float vAlpha;',
+        'varying float vViewZ;',
+        'uniform float uPointSize;',
+        'vec3 curlVelocity(vec3 p, float phase) {',
+        '  return vec3(',
+        '    sin(p.y * 1.4 + phase) - cos(p.z * 1.1 - phase),',
+        '    sin(p.z * 1.2 + phase * 0.7) - cos(p.x * 0.9 + phase),',
+        '    sin(p.x * 1.3 - phase * 0.8) - cos(p.y * 1.05 + phase)',
+        '  );',
+        '}',
+        'float wrap1(float v, float h) {',
+        '  float span = max(0.001, h * 2.0);',
+        '  return mod(v + h, span) - h;',
+        '}',
+        'void main() {',
+        '  float phase = aSeed.x + uTime * (0.1 + aSeed.y * 0.1);',
+        '  float t = uTime * (0.18 + uIntensity * 0.28);',
+        '  vec3 p = aBasePosition;',
+        '  vec3 v0 = curlVelocity(p, phase);',
+        '  vec3 v1 = curlVelocity(p + v0 * 0.35, phase + 0.4);',
+        '  vec3 drift = (v0 + v1) * (t * 0.28);',
+        '  p = aBasePosition + drift;',
+        '  p.x = wrap1(p.x, uHalf.x);',
+        '  p.y = wrap1(p.y, uHalf.y);',
+        '  p.z = wrap1(p.z, uHalf.z);',
+        '  vec3 worldPos = uCenter + p;',
+        '  vec4 mv = modelViewMatrix * vec4(worldPos, 1.0);',
+        '  vViewZ = -mv.z;',
+        '  float depthScale = clamp(70.0 / max(1.0, vViewZ), 0.5, 3.5);',
+        '  gl_PointSize = uPointSize * mix(0.4, 0.95, aSeed.z) * depthScale;',
+        '  vAlpha = mix(0.4, 1.0, aSeed.z);',
+        '  gl_Position = projectionMatrix * mv;',
+        '}'
+      ].join('\n'),
+      fragmentShader: [
+        'uniform vec3 uColor;',
+        'uniform float uOpacity;',
+        'varying float vAlpha;',
+        'varying float vViewZ;',
+        'void main() {',
+        '  vec2 p = gl_PointCoord - 0.5;',
+        '  float d = length(p) * 2.0;',
+        '  float glow = exp(-5.2 * d * d) * (1.0 - smoothstep(0.7, 1.0, d));',
+        '  float alpha = glow * uOpacity * vAlpha * smoothstep(0.2, 1.2, vViewZ);',
+        '  if (alpha < 0.004) discard;',
+        '  gl_FragColor = vec4(uColor, alpha);',
+        '}'
+      ].join('\n'),
+      transparent: true,
+      depthWrite: false,
+      depthTest: true,
+      blending: THREE.AdditiveBlending,
+      toneMapped: false
+    });
+
+    var points = new THREE.Points(geometry, material);
+    points.name = 'DSCDashFX.ConfinedCurl';
+    points.frustumCulled = false;
+    var elapsed = 0;
+    var disposed = false;
+    return {
+      points: points,
+      material: material,
+      update: function (dt, intensity) {
+        if (disposed) return;
+        elapsed += Math.min(Math.max(Number(dt) || 0, 0), 0.05);
+        uniforms.uTime.value = elapsed;
+        uniforms.uIntensity.value = intensity == null ? 1 : Math.max(0, Number(intensity) || 0);
+        uniforms.uOpacity.value = Math.min(0.42, 0.06 + uniforms.uIntensity.value * 0.28);
+      },
+      dispose: function () {
+        if (disposed) return;
+        disposed = true;
+        geometry.dispose();
+        material.dispose();
+      }
+    };
+  }
+
   function createColorRamp(stops) {
     var source = Array.isArray(stops) && stops.length
       ? stops.slice()
@@ -959,6 +1281,7 @@
     makeFlowRibbon: makeFlowRibbon,
     rebuildFlowRibbonGeometry: rebuildFlowRibbonGeometry,
     createCurlHaze: createCurlHaze,
+    createConfinedCurlHaze: createConfinedCurlHaze,
     createColorRamp: createColorRamp,
     loadSimpleGltf: loadSimpleGltf
   });

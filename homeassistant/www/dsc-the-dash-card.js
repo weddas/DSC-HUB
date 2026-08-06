@@ -64,6 +64,13 @@
       expected_light_hours: "sensor.dsc_expected_light_hours",
       clone_expected_light_hours: "sensor.dsc_clone_expected_light_hours",
       next_light_event: "sensor.dsc_next_light_event",
+      hub_link: "binary_sensor.dsc_hub_link",
+      hub_api_down_age: "sensor.dsc_hub_api_down_age",
+      hub_handshake_age: "sensor.dsc_hub_ha_handshake_age",
+      hub_link_bounces: "sensor.dsc_hub_link_recovery_bounces",
+      hub_rf_status: "sensor.dsc_hub_rf_status",
+      hub_last_evt: "sensor.dsc_hub_last_evt",
+      ha_link_flaps: "sensor.dsc_ha_link_flap_count_24h",
     },
   });
 
@@ -95,12 +102,38 @@
     return !s || s.state === "unavailable" || s.state === "unknown";
   };
   const fmt = (n, digits = 1) => (Number.isFinite(n) ? n.toFixed(digits) : "—");
+  const fmtHeld = (ms) => {
+    const s = Math.max(0, Math.floor((Number(ms) || 0) / 1000));
+    if (s < 60) return `${s}s`;
+    const m = Math.floor(s / 60);
+    const r = s % 60;
+    if (m < 60) return `${m}m ${r}s`;
+    return `${Math.floor(m / 60)}h ${m % 60}m`;
+  };
   const esc = (s) =>
     String(s ?? "")
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;");
+
+  const composeHubDiagLine = (hass, e) => {
+    if (!hass || !e) return "";
+    const bits = [];
+    const apiAge = numState(hass, e.hub_api_down_age, NaN);
+    const hsAge = numState(hass, e.hub_handshake_age, NaN);
+    const bounces = numState(hass, e.hub_link_bounces, NaN);
+    const flaps = numState(hass, e.ha_link_flaps, NaN);
+    const rf = stateOf(hass, e.hub_rf_status)?.state;
+    const evt = stateOf(hass, e.hub_last_evt)?.state;
+    if (Number.isFinite(apiAge) && apiAge > 0) bits.push(`API down ${Math.round(apiAge)}s`);
+    if (Number.isFinite(hsAge)) bits.push(`handshake age ${Math.round(hsAge)}s`);
+    if (Number.isFinite(bounces)) bits.push(`link bounces ${Math.round(bounces)}`);
+    if (Number.isFinite(flaps)) bits.push(`HA flaps 24h ${Math.round(flaps)}`);
+    if (rf && rf !== "unavailable" && rf !== "unknown") bits.push(`RF ${rf}`);
+    if (evt && evt !== "unavailable" && evt !== "unknown") bits.push(`EVT ${evt}`);
+    return bits.join(" · ");
+  };
 
   const lightLevel = (hass, id) => {
     const s = stateOf(hass, id);
@@ -531,7 +564,13 @@
     scene.fog = new THREE.Fog(0x07090e, 12, 28);
 
     const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 80);
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: "high-performance" });
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: false,
+      powerPreference: "high-performance",
+      // Needed so we can detect a black composer FBO and fall back to direct render.
+      preserveDrawingBuffer: true,
+    });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     if ("outputColorSpace" in renderer && THREE.SRGBColorSpace) renderer.outputColorSpace = THREE.SRGBColorSpace;
     else if ("outputEncoding" in renderer && THREE.sRGBEncoding) renderer.outputEncoding = THREE.sRGBEncoding;
@@ -545,7 +584,7 @@
     if (fx && typeof fx.createComposer === "function") {
       try {
         post = fx.createComposer(renderer, scene, camera);
-        if (post.bloomPass) {
+        if (post && post.bloomPass) {
           post.bloomPass.threshold = 0.72;
           post.bloomPass.strength = 0.7;
           post.bloomPass.radius = 0.55;
@@ -802,39 +841,42 @@
         "catmullrom",
         0.18
       );
+    // Duct ports are independent (no shared Y-stub). Tent anchors:
+    // 2x4 @ (-2.75,0,0.3) ~2.4×2.1×1.5; 4x8 @ (2.15,0,0.08) ~3.8×2.45×2.15.
     const curves = {
       intakeClone: mkCurve([
-        [-2.75, 0.34, 3.05],
-        [-2.75, 0.34, 2.1],
-        [-2.75, 0.34, 1.2],
-        [-2.75, 0.34, 0.5],
+        [-2.75, 0.38, 2.95],
+        [-2.75, 0.38, 2.05],
+        [-2.75, 0.38, 1.15],
+        [-2.75, 0.38, 0.52],
       ]),
       intakeMain: mkCurve([
-        [2.15, 0.36, 3.15],
-        [2.15, 0.36, 2.15],
-        [2.15, 0.36, 1.28],
-        [2.15, 0.36, 0.48],
+        [2.15, 0.38, 2.95],
+        [2.15, 0.38, 2.05],
+        [2.15, 0.38, 1.15],
+        [2.15, 0.38, 0.52],
       ]),
       cascade: mkCurve([
-        [-1.52, 1.2, 0.28],
-        [-0.82, 1.28, 0.22],
-        [0.05, 1.25, 0.15],
-        [0.95, 1.17, 0.1],
-        [1.92, 1.08, 0.08],
+        [-1.55, 1.15, 0.28],
+        [-0.95, 1.15, 0.22],
+        [-0.35, 1.15, 0.16],
+        [0.25, 1.15, 0.1],
       ]),
+      // OUT: rear dump port on 4×8 (negative Z) → outdoor vent
       out: mkCurve([
-        [2.15, 2.34, 0.08],
-        [2.15, 2.52, -0.45],
-        [2.15, 2.65, -1.08],
-        [2.15, 2.82, -1.72],
-        [2.15, 2.96, -2.45],
+        [2.55, 1.72, -1.12],
+        [2.55, 1.88, -1.55],
+        [2.55, 2.12, -2.05],
+        [2.55, 2.32, -2.55],
+        [2.55, 2.42, -3.05],
       ]),
+      // RECIRC: right-wall port on 4×8 (+X) → room return (matches annotated layout)
       recirc: mkCurve([
-        [2.15, 2.32, 0.08],
-        [2.05, 2.02, 0.72],
-        [1.72, 1.55, 1.38],
-        [0.95, 1.05, 2.05],
-        [-0.2, 0.78, 2.72],
+        [4.05, 1.55, 0.08],
+        [4.55, 1.48, 0.28],
+        [5.15, 1.28, 0.65],
+        [5.55, 1.08, 1.15],
+        [5.75, 0.9, 1.75],
       ]),
     };
 
@@ -850,15 +892,19 @@
       out: 0xff765e,
       recirc: 0xa85be0,
     };
-    const addPath = (name, radius, tubular) => {
-      const solid = new THREE.Mesh(new THREE.TubeGeometry(curves[name], tubular, radius, 12, false), ductMat);
+    const addPath = (name, radius, tubular, solidColor) => {
+      const mat = solidColor
+        ? new THREE.MeshStandardMaterial({ color: solidColor, metalness: 0.72, roughness: 0.32 })
+        : ductMat;
+      const solid = new THREE.Mesh(new THREE.TubeGeometry(curves[name], tubular, radius, 12, false), mat);
       solid.castShadow = true;
       solid.receiveShadow = true;
       ductGroup.add(solid);
       const shellMat = new THREE.MeshBasicMaterial({
         color: pathColors[name],
         transparent: true,
-        opacity: 0,
+        // Exhaust legs keep a faint idle glow so OUT vs RECIRC read at 0 CFM.
+        opacity: name === "out" || name === "recirc" ? 0.14 : 0,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
       });
@@ -872,7 +918,7 @@
             radius: radius * (name === "cascade" ? 0.48 : 0.36),
             tubular,
             color: pathColors[name],
-            opacity: 0,
+            opacity: name === "out" || name === "recirc" ? 0.1 : 0,
             dashArray: name === "cascade" ? [0.12, 0.055] : [0.11, 0.085],
           });
           ribbon.userData.flow = { name, curve: curves[name], tubular, baseRadius: radius * 0.38, lastWidth: -1 };
@@ -885,13 +931,13 @@
     };
     addPath("intakeClone", 0.11, 44);
     addPath("intakeMain", 0.12, 44);
-    addPath("cascade", 0.105, 58);
-    addPath("out", 0.118, 50);
-    addPath("recirc", 0.105, 52);
+    addPath("cascade", 0.105, 48);
+    addPath("out", 0.122, 50, 0x8a6a62);
+    addPath("recirc", 0.118, 50, 0x6a6288);
 
     const addFlexRings = (curve, count, radius) => {
       const geometry = new THREE.TorusGeometry(radius, 0.015, 6, 16);
-      const material = new THREE.MeshStandardMaterial({ color: 0xa9b7bf, metalness: 0.72, roughness: 0.34 });
+      const material = new THREE.MeshStandardMaterial({ color: 0xc5d0d8, metalness: 0.82, roughness: 0.28 });
       const rings = new THREE.InstancedMesh(geometry, material, count);
       const matrix = new THREE.Matrix4();
       const scale = new THREE.Vector3(1, 1, 1);
@@ -906,8 +952,10 @@
       rings.castShadow = true;
       ductGroup.add(rings);
     };
-    addFlexRings(curves.intakeClone, 24, 0.126);
-    addFlexRings(curves.intakeMain, 24, 0.137);
+    addFlexRings(curves.intakeClone, 28, 0.126);
+    addFlexRings(curves.intakeMain, 28, 0.137);
+    addFlexRings(curves.out, 26, 0.138);
+    addFlexRings(curves.recirc, 26, 0.134);
 
     const flangePrimitives = [];
     const mkFlange = (point, tangent, radius) => {
@@ -927,36 +975,89 @@
       mkFlange(curve.getPoint(0.98), curve.getTangent(0.98), 0.15);
     });
 
+    // Tent cinch-port collars where ducts pierce walls (grow-tent style)
+    const mkCinchPort = (point, tangent, radius, accentHex) => {
+      const g = new THREE.Group();
+      const rim = new THREE.Mesh(
+        new THREE.TorusGeometry(radius, 0.032, 10, 28),
+        new THREE.MeshStandardMaterial({ color: 0x90a4ae, metalness: 0.78, roughness: 0.26, emissive: accentHex, emissiveIntensity: 0.12 })
+      );
+      const sleeve = new THREE.Mesh(
+        new THREE.CylinderGeometry(radius * 0.92, radius * 0.92, 0.08, 20, 1, true),
+        new THREE.MeshStandardMaterial({ color: 0x37474f, metalness: 0.55, roughness: 0.4 })
+      );
+      sleeve.rotation.x = Math.PI / 2;
+      g.add(rim);
+      g.add(sleeve);
+      g.position.copy(point);
+      g.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), tangent.clone().normalize());
+      ductGroup.add(g);
+      return g;
+    };
+    mkCinchPort(curves.out.getPoint(0.02), curves.out.getTangent(0.02), 0.16, 0xff765e);
+    mkCinchPort(curves.recirc.getPoint(0.02), curves.recirc.getTangent(0.02), 0.155, 0xa85be0);
+    mkCinchPort(curves.intakeClone.getPoint(0.98), curves.intakeClone.getTangent(0.98), 0.14, 0x42a5f5);
+    mkCinchPort(curves.intakeMain.getPoint(0.98), curves.intakeMain.getTangent(0.98), 0.145, 0x42a5f5);
+    mkCinchPort(curves.cascade.getPoint(0.02), curves.cascade.getTangent(0.02), 0.13, 0xffb74d);
+    mkCinchPort(curves.cascade.getPoint(0.98), curves.cascade.getTangent(0.98), 0.13, 0xffb74d);
+
     const mkFan = (curve, t, color) => {
       const group = new THREE.Group();
       const axis = curve.getTangent(t).normalize();
       group.position.copy(curve.getPoint(t));
       group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), axis);
+      // Cloudline-like short inline housing + end flanges (primitive; GLTF may replace)
       const housing = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.255, 0.255, 0.2, 24, 1, true),
-        new THREE.MeshStandardMaterial({ color: 0x3b4d59, metalness: 0.72, roughness: 0.28 })
+        new THREE.CylinderGeometry(0.22, 0.22, 0.42, 32, 1, false),
+        new THREE.MeshStandardMaterial({ color: 0x243038, metalness: 0.82, roughness: 0.22 })
       );
       housing.castShadow = true;
       group.add(housing);
+      const badge = new THREE.Mesh(
+        new THREE.BoxGeometry(0.12, 0.28, 0.02),
+        new THREE.MeshStandardMaterial({ color: 0xeceff1, metalness: 0.35, roughness: 0.4 })
+      );
+      badge.position.set(0.215, 0, 0);
+      group.add(badge);
+      for (const y of [-0.22, 0.22]) {
+        const flange = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.26, 0.26, 0.038, 32),
+          new THREE.MeshStandardMaterial({ color: 0x90a4ae, metalness: 0.85, roughness: 0.22 })
+        );
+        flange.position.y = y;
+        group.add(flange);
+        const bolts = new THREE.Group();
+        for (let b = 0; b < 6; b++) {
+          const bolt = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.012, 0.012, 0.02, 6),
+            new THREE.MeshStandardMaterial({ color: 0xcfd8dc, metalness: 0.9, roughness: 0.2 })
+          );
+          const ang = (b / 6) * Math.PI * 2;
+          bolt.position.set(Math.cos(ang) * 0.23, y, Math.sin(ang) * 0.23);
+          bolts.add(bolt);
+        }
+        group.add(bolts);
+      }
       const guard = new THREE.Mesh(
-        new THREE.TorusGeometry(0.205, 0.018, 7, 24),
-        new THREE.MeshStandardMaterial({ color: 0xb0bec5, metalness: 0.8, roughness: 0.22 })
+        new THREE.TorusGeometry(0.175, 0.014, 8, 28),
+        new THREE.MeshStandardMaterial({ color: 0xb0bec5, metalness: 0.82, roughness: 0.2 })
       );
       guard.rotation.x = Math.PI / 2;
       group.add(guard);
       const rotor = new THREE.Group();
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < 9; i++) {
         const blade = new THREE.Mesh(
-          new THREE.BoxGeometry(0.055, 0.022, 0.34),
-          new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.16, metalness: 0.4 })
+          new THREE.BoxGeometry(0.038, 0.014, 0.3),
+          new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.16, metalness: 0.45, roughness: 0.35 })
         );
-        blade.position.y = 0;
-        blade.rotation.y = (i * Math.PI * 2) / 5;
+        blade.position.z = 0.02;
+        blade.rotation.y = (i * Math.PI * 2) / 9;
+        blade.rotation.z = 0.18;
         rotor.add(blade);
       }
       const hub = new THREE.Mesh(
-        new THREE.SphereGeometry(0.06, 14, 12),
-        new THREE.MeshStandardMaterial({ color: 0xe8edf0, metalness: 0.45, roughness: 0.25 })
+        new THREE.SphereGeometry(0.05, 16, 14),
+        new THREE.MeshStandardMaterial({ color: 0xe8edf0, metalness: 0.5, roughness: 0.22 })
       );
       rotor.add(hub);
       group.add(rotor);
@@ -967,8 +1068,8 @@
     const fans = {
       intakeClone: mkFan(curves.intakeClone, 0.46, 0x64b5f6),
       intakeMain: mkFan(curves.intakeMain, 0.46, 0x64b5f6),
-      exhaust: mkFan(curves.out, 0.42, 0xff8a65),
-      recirc: mkFan(curves.recirc, 0.42, 0xba68c8),
+      exhaust: mkFan(curves.out, 0.28, 0xff8a65),
+      recirc: mkFan(curves.recirc, 0.28, 0xba68c8),
     };
 
     const muffler = new THREE.Group();
@@ -987,8 +1088,8 @@
       band.position.z = z;
       muffler.add(band);
     }
-    muffler.position.copy(curves.out.getPoint(0.68));
-    muffler.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), curves.out.getTangent(0.68).normalize());
+    muffler.position.copy(curves.out.getPoint(0.62));
+    muffler.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), curves.out.getTangent(0.62).normalize());
     ductGroup.add(muffler);
     // Offline GLTF accents (primitive fallback already in scene)
     if (fx && typeof fx.loadSimpleGltf === "function") {
@@ -1025,16 +1126,23 @@
           const sourceMajor = 0.208;
           const scale = targetMajor / sourceMajor;
           flangePrimitives.forEach((ring) => {
-            const mesh = template.clone(true);
-            if (ring.material) mesh.material = ring.material.clone();
-            mesh.position.copy(ring.position);
-            mesh.quaternion.copy(ring.quaternion);
-            mesh.scale.setScalar(scale);
-            mesh.castShadow = true;
-            ductGroup.add(mesh);
-            ductGroup.remove(ring);
-            ring.geometry.dispose();
-            if (ring.material) ring.material.dispose();
+            try {
+              const mesh = new THREE.Mesh(
+                template.geometry.clone(),
+                ring.material ? ring.material.clone() : template.material.clone()
+              );
+              mesh.position.copy(ring.position);
+              mesh.quaternion.copy(ring.quaternion);
+              mesh.scale.setScalar(scale);
+              mesh.castShadow = true;
+              mesh.name = "flangeAccent";
+              ductGroup.add(mesh);
+              ductGroup.remove(ring);
+              ring.geometry.dispose();
+              if (ring.material) ring.material.dispose();
+            } catch (_) {
+              /* keep torus primitive */
+            }
           });
         },
         () => {}
@@ -1095,25 +1203,7 @@
     let mergeRampTexture = null;
     if (fx && typeof fx.createColorRamp === "function") {
       try {
-        rampTexture = fx.createColorRamp([
-          { t: 0, color: 0xffb74d },
-          { t: 0.48, color: 0xff765e },
-          { t: 1, color: 0xa85be0 },
-        ]);
-        const junction = new THREE.Mesh(
-          new THREE.PlaneGeometry(0.72, 0.11),
-          new THREE.MeshBasicMaterial({
-            map: rampTexture,
-            transparent: true,
-            opacity: 0.55,
-            blending: THREE.AdditiveBlending,
-            depthWrite: false,
-            side: THREE.DoubleSide,
-          })
-        );
-        junction.position.set(2.15, 2.37, 0.08);
-        junction.rotation.y = Math.PI / 2;
-        root.add(junction);
+        // Cascade → 4×8 merge cue only (OUT/RECIRC are separate ports — no shared Y ramp).
         mergeRampTexture = fx.createColorRamp([
           { t: 0, color: 0x42a5f5 },
           { t: 0.55, color: 0xffb74d },
@@ -1135,6 +1225,7 @@
         merge.position.y += 0.08;
         merge.lookAt(camera.position);
         root.add(merge);
+        rampTexture = mergeRampTexture;
       } catch (_) {
         rampTexture = null;
         mergeRampTexture = null;
@@ -1196,27 +1287,67 @@
     const mkPlant = (tall) => {
       const plant = new THREE.Group();
       const pot = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.18, 0.145, 0.22, 12),
-        new THREE.MeshStandardMaterial({ color: 0x5b392c, roughness: 0.8 })
+        new THREE.CylinderGeometry(0.17, 0.14, 0.2, 16),
+        new THREE.MeshStandardMaterial({ color: 0x4a3228, roughness: 0.86, metalness: 0.05 })
       );
-      pot.position.y = 0.12;
+      pot.position.y = 0.11;
       pot.castShadow = true;
+      pot.receiveShadow = true;
       plant.add(pot);
-      const stemHeight = tall ? 0.65 : 0.38;
-      const stem = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.022, 0.03, stemHeight, 7),
-        new THREE.MeshStandardMaterial({ color: 0x2f7b3c, roughness: 0.75 })
+      const rim = new THREE.Mesh(
+        new THREE.TorusGeometry(0.165, 0.012, 8, 20),
+        new THREE.MeshStandardMaterial({ color: 0x3a281f, roughness: 0.7 })
       );
-      stem.position.y = 0.24 + stemHeight / 2;
+      rim.rotation.x = Math.PI / 2;
+      rim.position.y = 0.21;
+      plant.add(rim);
+      const soil = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.15, 0.15, 0.04, 14),
+        new THREE.MeshStandardMaterial({ color: 0x2a1c14, roughness: 1 })
+      );
+      soil.position.y = 0.2;
+      plant.add(soil);
+      const stemHeight = tall ? 0.72 : 0.4;
+      const stem = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.018, 0.028, stemHeight, 8),
+        new THREE.MeshStandardMaterial({ color: 0x2a6b38, roughness: 0.7 })
+      );
+      stem.position.y = 0.22 + stemHeight / 2;
+      stem.castShadow = true;
       plant.add(stem);
-      const leafMat = new THREE.MeshStandardMaterial({ color: 0x49a85a, emissive: 0x103b19, emissiveIntensity: 0.24 });
-      for (let i = 0; i < (tall ? 6 : 4); i++) {
-        const leaf = new THREE.Mesh(new THREE.SphereGeometry(tall ? 0.12 : 0.09, 8, 6), leafMat.clone());
-        const angle = (i * Math.PI * 2) / (tall ? 6 : 4);
-        leaf.position.set(Math.cos(angle) * 0.14, 0.42 + (i % 2) * stemHeight * 0.45, Math.sin(angle) * 0.14);
-        leaf.scale.set(1.7, 0.35, 0.85);
-        leaf.rotation.y = -angle;
-        plant.add(leaf);
+      const leafMat = new THREE.MeshStandardMaterial({
+        color: 0x3f9a52,
+        emissive: 0x0c3014,
+        emissiveIntensity: 0.2,
+        roughness: 0.55,
+        side: THREE.DoubleSide,
+      });
+      const leaflet = (scale) => {
+        const leaf = new THREE.Mesh(new THREE.CircleGeometry(0.09 * scale, 10), leafMat.clone());
+        leaf.scale.set(1.35, 0.55, 1);
+        leaf.castShadow = true;
+        return leaf;
+      };
+      const tiers = tall ? 4 : 3;
+      const perTier = tall ? 5 : 4;
+      for (let t = 0; t < tiers; t++) {
+        const y = 0.32 + (t / Math.max(1, tiers - 1)) * stemHeight * 0.78;
+        const rad = 0.1 + t * 0.035;
+        for (let i = 0; i < perTier; i++) {
+          const angle = (i / perTier) * Math.PI * 2 + t * 0.35;
+          const fan = new THREE.Group();
+          for (let f = 0; f < 5; f++) {
+            const pet = leaflet(tall ? 0.95 : 0.75);
+            const a = ((f - 2) / 2) * 0.55;
+            pet.position.set(Math.cos(a) * 0.06, 0, Math.sin(a) * 0.04);
+            pet.rotation.set(-0.55 + f * 0.05, a * 0.4, a * 0.35);
+            fan.add(pet);
+          }
+          fan.position.set(Math.cos(angle) * rad, y, Math.sin(angle) * rad);
+          fan.rotation.y = -angle;
+          fan.rotation.x = -0.35 - t * 0.05;
+          plant.add(fan);
+        }
       }
       plant.userData.canopyMaterial = leafMat;
       plant.visible = false;
@@ -1326,7 +1457,8 @@
       points.frustumCulled = false;
       if (post && typeof post.registerSoftParticleMaterial === "function") {
         post.registerSoftParticleMaterial(material);
-        points.layers.set(1);
+        // Only isolate particles on layer 1 when DepthTexture soft-intersect is live.
+        if (post.depthTexture) points.layers.set(1);
       }
       root.add(points);
       const phase = new Float32Array(count);
@@ -1351,36 +1483,70 @@
         },
       };
     };
-    mkAir("intakeClone", 0x42a5f5, 58, 0.12);
-    mkAir("intakeMain", 0x42a5f5, 66, 0.12);
-    mkAir("cascade", 0xffb74d, 92, 0.145);
-    mkAir("out", 0xff765e, 68, 0.135);
-    mkAir("recirc", 0xa85be0, 68, 0.135);
-    mkAir("matHeat", 0xff6d00, 34, 0.11);
+    mkAir("intakeClone", 0x42a5f5, 58, 0.095);
+    mkAir("intakeMain", 0x42a5f5, 66, 0.095);
+    mkAir("cascade", 0xffb74d, 72, 0.1);
+    mkAir("out", 0xff765e, 68, 0.1);
+    mkAir("recirc", 0xa85be0, 68, 0.1);
+    mkAir("matHeat", 0xff6d00, 34, 0.09);
+
+    const confinedMix = [];
+    const mkConfinedMix = (name, tent, color, count) => {
+      if (!fx || typeof fx.createConfinedCurlHaze !== "function" || !renderer) {
+        mkAir(name, color, count, 0.085);
+        return;
+      }
+      const size = tent.userData.size;
+      const worldCenter = tent.localToWorld(new THREE.Vector3(0, size.h * 0.42, 0));
+      let haze = null;
+      try {
+        haze = fx.createConfinedCurlHaze(renderer, {
+          count,
+          color,
+          center: worldCenter,
+          halfExtents: new THREE.Vector3(size.w * 0.38, size.h * 0.32, size.d * 0.38),
+        });
+      } catch (_) {
+        haze = null;
+      }
+      if (!haze) {
+        mkAir(name, color, count, 0.085);
+        return;
+      }
+      if (post && typeof post.registerSoftParticleMaterial === "function") {
+        post.registerSoftParticleMaterial(haze.material);
+        if (post.depthTexture) haze.points.layers.set(1);
+      }
+      root.add(haze.points);
+      confinedMix.push(haze);
+      air[name] = {
+        points: haze.points,
+        material: haze.material,
+        curl: haze,
+        confined: true,
+        count,
+        intensity: 0,
+        setOpacity: (v) => {
+          haze.material.uniforms.uOpacity.value = v;
+        },
+        setColor: (c) => {
+          haze.material.uniforms.uColor.value.copy(c);
+        },
+      };
+    };
+    mkConfinedMix("mixClone", tentClone, 0x5eb8f0, 56);
+    mkConfinedMix("mixMain", tentMain, 0xff9a6b, 84);
     const particleColors = {
       intake: new THREE.Color(0x42a5f5),
       intakeWarm: new THREE.Color(0x66a4d9).lerp(new THREE.Color(0xff9b55), 0.16),
       cascade: new THREE.Color(0xffb74d),
       cascadeWarm: new THREE.Color(0xff9148),
+      mixCool: new THREE.Color(0x5eb8f0),
+      mixWarm: new THREE.Color(0xff9a6b),
     };
 
+    // Ambient room curl haze retired — it read as flying blur balls, not CFM flow.
     let curl = null;
-    if (fx && typeof fx.createCurlHaze === "function") {
-      try {
-        curl = fx.createCurlHaze(renderer, 520);
-        curl.points.scale.set(0.78, 0.58, 0.58);
-        curl.points.position.set(0, 1.25, 0.3);
-        if (post && curl.material && typeof post.registerSoftParticleMaterial === "function") {
-          post.registerSoftParticleMaterial(curl.material);
-          curl.points.layers.set(1);
-        } else if (post) {
-          curl.points.layers.set(1);
-        }
-        root.add(curl.points);
-      } catch (_) {
-        curl = null;
-      }
-    }
 
     const sampleCurve = (curve, t, radius, seed) => {
       const clamped = Math.max(0, Math.min(1, t));
@@ -1391,9 +1557,9 @@
       side.normalize();
       const up = new THREE.Vector3().crossVectors(tangent, side).normalize();
       const angle = seed * Math.PI * 2 + t * 8;
-      return point
-        .addScaledVector(side, Math.cos(angle) * radius * (0.35 + seed * 0.65))
-        .addScaledVector(up, Math.sin(angle) * radius * (0.35 + seed * 0.65));
+      // Tight centerline jitter so duct streams read as flow, not fog
+      const r = radius * (0.22 + seed * 0.28);
+      return point.addScaledVector(side, Math.cos(angle) * r).addScaledVector(up, Math.sin(angle) * r);
     };
 
     const climateValue = (zone, key) => {
@@ -1472,6 +1638,10 @@
       camera.updateProjectionMatrix();
       renderer.setSize(width, height, false);
       if (post && typeof post.setSize === "function") post.setSize(width, height);
+      Object.values(paths).forEach((path) => {
+        const res = path.ribbon && path.ribbon.material && path.ribbon.material.userData && path.ribbon.material.userData.uResolution;
+        if (res && res.value) res.value.set(width, height);
+      });
     };
 
     const highlights = (name) => {
@@ -1486,14 +1656,19 @@
       const boost = highlights(name) ? 1.45 : 1;
       const shown = active ? Math.min(1, intensity * boost) : 0;
       path.intensity = shown;
-      path.shell.material.opacity = active ? 0.08 + shown * 0.38 : 0;
+      const idleGlow = name === "out" || name === "recirc" ? 0.14 : 0;
+      path.shell.material.opacity = active ? Math.max(idleGlow, 0.08 + shown * 0.38) : idleGlow;
       (arrowByPath[name] || []).forEach((arrow) => {
-        arrow.visible = active;
-        if (active) arrow.scale.setScalar(0.88 + Math.sin(now * 0.005) * 0.12);
+        arrow.visible = active || name === "out" || name === "recirc";
+        if (arrow.visible) arrow.scale.setScalar(0.88 + Math.sin(now * 0.005) * 0.12);
       });
       if (path.ribbon) {
         const uniforms = path.ribbon.material.userData;
-        uniforms.uOpacity.value = active ? (name === "cascade" ? 0.46 : 0.25) + shown * 0.58 : 0;
+        uniforms.uOpacity.value = active
+          ? (name === "cascade" ? 0.46 : 0.25) + shown * 0.58
+          : name === "out" || name === "recirc"
+            ? 0.12
+            : 0;
         uniforms.uDashOffset.value -= 0.005 + shown * 0.018;
         const width = active ? 0.46 + shown * 0.86 : 0.32;
         if (Math.abs(width - path.ribbon.userData.flow.lastWidth) > 0.08) {
@@ -1522,6 +1697,8 @@
       }
     };
 
+    const cfmNorm = (cfm, scale = 80) => Math.min(1, Math.max(0, Number(cfm) || 0) / scale);
+
     const updateSystem = (name, curve, dt, intensity, mapper) => {
       const system = air[name];
       const active = intensity >= 0.04;
@@ -1529,14 +1706,20 @@
       const shown = active ? Math.min(1, intensity * boost) : 0;
       system.intensity = shown;
       system.points.visible = active;
-      system.setOpacity(active ? Math.min(1, 0.3 + shown * 0.7) : 0);
+      system.setOpacity(active ? Math.min(1, 0.28 + shown * 0.72) : 0);
       if (!active) return;
-      const speed = 0.14 + shown * 0.62;
+      // CFM-scaled speed: higher absolute CFM → faster stream along duct
+      const speed = 0.12 + shown * 0.78;
+      const activeCount = Math.max(8, Math.floor(system.count * (0.35 + shown * 0.65)));
       for (let i = 0; i < system.count; i++) {
+        if (i >= activeCount) {
+          system.positions[i * 3 + 1] = -99;
+          continue;
+        }
         system.phase[i] = (system.phase[i] + dt * speed * (0.82 + (i % 7) * 0.045)) % 1;
         const point = mapper
           ? mapper(system.phase[i], system.seed[i], i)
-          : sampleCurve(curve, system.phase[i], 0.052, system.seed[i]);
+          : sampleCurve(curve, system.phase[i], 0.028, system.seed[i]);
         system.positions[i * 3] = point.x;
         system.positions[i * 3 + 1] = point.y;
         system.positions[i * 3 + 2] = point.z;
@@ -1547,17 +1730,56 @@
     const updateCascadePlume = (dt, intensity) => {
       air.cascade.setColor(live.matOn ? particleColors.cascadeWarm : particleColors.cascade);
       updateSystem("cascade", curves.cascade, dt, intensity, (t, seed, i) => {
-        if (t < 0.52) return sampleCurve(curves.cascade, t / 0.52, 0.055 + t * 0.08, seed);
-        const u = (t - 0.52) / 0.48;
+        if (t < 0.78) return sampleCurve(curves.cascade, t / 0.78, 0.03 + t * 0.02, seed);
+        // After cascade entry: bleed into 4×8 mix volume (not leap to OUT port)
+        const u = (t - 0.78) / 0.22;
         const entry = curves.cascade.getPoint(1);
-        const exhaust = curves.out.getPoint(0.04);
-        const point = entry.clone().lerp(exhaust, Math.pow(u, 1.38));
-        const swell = Math.sin(Math.PI * u);
-        point.x += (seed - 0.5) * 1.65 * swell;
-        point.y += ((i % 9) / 8 - 0.35) * 1.28 * swell;
-        point.z += (((i * 0.618) % 1) - 0.5) * 1.25 * swell;
+        const size = tentMain.userData.size;
+        const point = entry.clone();
+        point.x += (seed - 0.5) * size.w * 0.35 * u;
+        point.y += 0.15 + u * size.h * 0.35 + ((i % 5) / 5) * 0.12;
+        point.z += (((i * 0.618) % 1) - 0.5) * size.d * 0.4 * u;
         return point;
       });
+    };
+
+    const updateTentMix = (name, tent, dt, intensity, warmBlend) => {
+      const system = air[name];
+      if (!system) return;
+      const active = intensity >= 0.04;
+      system.points.visible = active;
+      const cool = particleColors.mixCool;
+      const warm = particleColors.mixWarm;
+      system.setColor(cool.clone().lerp(warm, Math.max(0, Math.min(1, warmBlend || 0))));
+      if (system.confined && system.curl) {
+        if (!active) {
+          system.setOpacity(0);
+          return;
+        }
+        system.curl.update(dt, intensity);
+        system.setOpacity(Math.min(0.48, 0.1 + intensity * 0.34));
+        return;
+      }
+      system.setOpacity(active ? Math.min(0.85, 0.22 + intensity * 0.55) : 0);
+      if (!active) return;
+      const size = tent.userData.size;
+      const speed = 0.08 + intensity * 0.35;
+      for (let i = 0; i < system.count; i++) {
+        system.phase[i] = (system.phase[i] + dt * speed * (0.7 + (i % 5) * 0.04)) % 1;
+        const u = system.phase[i];
+        const ang = u * Math.PI * 2 + system.seed[i] * 6.28;
+        const rad = 0.2 + system.seed[i] * 0.55;
+        const local = new THREE.Vector3(
+          Math.cos(ang) * size.w * 0.28 * rad,
+          size.h * (0.18 + (u * 0.55 + ((i % 7) / 7) * 0.12) % 0.62),
+          Math.sin(ang * 0.85) * size.d * 0.28 * rad
+        );
+        tent.localToWorld(local);
+        system.positions[i * 3] = local.x;
+        system.positions[i * 3 + 1] = local.y;
+        system.positions[i * 3 + 2] = local.z;
+      }
+      system.points.geometry.attributes.position.needsUpdate = true;
     };
 
     const updateMatHeat = (dt, intensity) => {
@@ -1589,106 +1811,186 @@
     const tick = (now) => {
       if (disposed) return;
       raf = requestAnimationFrame(tick);
-      const dt = Math.min(0.05, Math.max(0.001, (now - last) / 1000));
-      last = now;
+      try {
+        const dt = Math.min(0.05, Math.max(0.001, (now - last) / 1000));
+        last = now;
 
-      const intakeClone = Math.max(0, Number(live.fanIntakeClone) || 0);
-      const intakeMain = Math.max(0, Number(live.fanIntakeMain) || 0);
-      const cascade = Math.max(0, Number(live.cascadeNorm) || 0);
-      const exhaust = Math.max(0, Number(live.fanExhaust) || 0);
-      const recircFan = Math.max(0, Number(live.fanRecirc) || 0);
-      const out = Math.max(0, Number(live.outShare) || 0) * exhaust;
-      const recirc = Math.max(0, Number(live.recircShare) || 0) * recircFan;
+        const intakeClone = cfmNorm(live.cfmClone, 80);
+        const intakeMain = cfmNorm(live.cfmMain, 80);
+        const cascade = cfmNorm(live.cascadeCfm, 80);
+        const out = cfmNorm(live.cfmOut, 80);
+        const recirc = cfmNorm(live.cfmRecirc, 80);
+        const exhaustFan = Math.max(0, Number(live.fanExhaust) || 0);
+        const recircFan = Math.max(0, Number(live.fanRecirc) || 0);
+        // Fall back to fan-% when CFM held at 0 but fans report duty (rare)
+        const outVis = out >= 0.04 ? out : exhaustFan * Math.max(0, Number(live.outShare) || 0);
+        const recVis = recirc >= 0.04 ? recirc : recircFan * Math.max(0, Number(live.recircShare) || 0);
 
-      updatePathVisual("intakeClone", intakeClone, now);
-      updatePathVisual("intakeMain", intakeMain, now);
-      updatePathVisual("cascade", cascade, now);
-      updatePathVisual("out", out, now);
-      updatePathVisual("recirc", recirc, now);
-      updateSystem("intakeClone", curves.intakeClone, dt, intakeClone);
-      updateSystem("intakeMain", curves.intakeMain, dt, intakeMain);
-      updateCascadePlume(dt, cascade);
-      updateSystem("out", curves.out, dt, out);
-      updateSystem("recirc", curves.recirc, dt, recirc);
-      updateMatHeat(dt, live.matOn ? 1 : 0);
+        updatePathVisual("intakeClone", intakeClone, now);
+        updatePathVisual("intakeMain", intakeMain, now);
+        updatePathVisual("cascade", cascade, now);
+        updatePathVisual("out", outVis, now);
+        updatePathVisual("recirc", recVis, now);
+        updateSystem("intakeClone", curves.intakeClone, dt, intakeClone);
+        updateSystem("intakeMain", curves.intakeMain, dt, intakeMain);
+        updateCascadePlume(dt, cascade);
+        updateSystem("out", curves.out, dt, outVis);
+        updateSystem("recirc", curves.recirc, dt, recVis);
+        updateTentMix("mixClone", tentClone, dt, intakeClone, live.matOn ? 0.35 : 0.1);
+        updateTentMix(
+          "mixMain",
+          tentMain,
+          dt,
+          Math.min(1, intakeMain * 0.55 + cascade * 0.45 + outVis * 0.15),
+          0.25 + cascade * 0.45
+        );
+        updateMatHeat(dt, live.matOn ? 1 : 0);
 
-      if (live.matOn) {
-        air.intakeClone.setColor(particleColors.intakeWarm);
-      } else {
-        air.intakeClone.setColor(particleColors.intake);
-      }
-      const lightLevel = Math.max(0, Number(live.lightLevel) || 0);
-      const lightBoost = highlights("light") ? 1.35 : 1;
-      tentClone.userData.lightBar.material.emissiveIntensity = live.cloneLit ? (2.2 + lightLevel * 4.2) * lightBoost : 0;
-      tentClone.userData.shafts.visible = !!live.cloneLit;
-      tentClone.userData.shafts.children.forEach((shaft, i) => {
-        shaft.material.opacity = live.cloneLit ? (0.055 + lightLevel * 0.14) * lightBoost : 0;
-        shaft.position.y = tentClone.userData.size.h * 0.5 + Math.sin(now * 0.0007 + i) * 0.02;
-      });
-      tentMain.userData.lightBar.material.emissiveIntensity = 0;
-      tentMain.userData.lightBar.material.opacity = 0.025;
-
-      const pulse = 0.86 + Math.sin(now * 0.0045) * 0.14;
-      matPlate.material.emissiveIntensity = live.matOn ? 3.4 * pulse * (highlights("mat") ? 1.35 : 1) : 0;
-      matGlow.material.opacity = live.matOn ? 0.38 * pulse * (highlights("mat") ? 1.4 : 1) : 0;
-      ventGlow.material.opacity = out >= 0.04 ? 0.09 + out * 0.4 : 0.015;
-      // Y-split bloom beat: OUT coral vs RECIRC violet shells diverge when both legs live
-      if (paths.out && paths.recirc) {
-        paths.out.shell.material.color.setHex(0xff765e);
-        paths.recirc.shell.material.color.setHex(0xa85be0);
-        if (out >= 0.04 && recirc >= 0.04) {
-          paths.out.shell.material.opacity = Math.max(paths.out.shell.material.opacity, 0.18 + out * 0.42);
-          paths.recirc.shell.material.opacity = Math.max(paths.recirc.shell.material.opacity, 0.18 + recirc * 0.42);
+        if (live.matOn) {
+          air.intakeClone.setColor(particleColors.intakeWarm);
+        } else {
+          air.intakeClone.setColor(particleColors.intake);
         }
-      }
-
-      const setAch = (tent, base) => {
-        (tent.userData.achSlices || []).forEach((slice, i) => {
-          slice.material.opacity = base * (0.55 + i * 0.28);
+        const lightLevel = Math.max(0, Number(live.lightLevel) || 0);
+        const lightBoost = highlights("light") ? 1.35 : 1;
+        tentClone.userData.lightBar.material.emissiveIntensity = live.cloneLit ? (2.2 + lightLevel * 4.2) * lightBoost : 0;
+        tentClone.userData.shafts.visible = !!live.cloneLit;
+        tentClone.userData.shafts.children.forEach((shaft, i) => {
+          shaft.material.opacity = live.cloneLit ? (0.055 + lightLevel * 0.14) * lightBoost : 0;
+          shaft.position.y = tentClone.userData.size.h * 0.5 + Math.sin(now * 0.0007 + i) * 0.02;
         });
-      };
-      setAch(tentClone, intakeClone >= 0.04 ? 0.025 + intakeClone * 0.085 : 0.008);
-      setAch(
-        tentMain,
-        Math.max(intakeMain, cascade, exhaust) >= 0.04
-          ? 0.026 + Math.max(intakeMain, cascade, exhaust) * 0.09
-          : 0.008
-      );
-      roomShell.material.opacity = 0.024 + recirc * 0.045;
-      roomEdges.material.opacity = 0.14 + recirc * 0.12;
-      roomLungSlices.forEach((slice, i) => {
-        slice.material.opacity = (0.01 + recirc * 0.055) * (0.55 + i * 0.18);
-        slice.position.y = 0.55 + i * 0.72 + Math.sin(now * 0.00055 + i) * 0.04 * (0.4 + recirc);
-      });
-      if (curl) curl.update(dt, recirc);
+        tentMain.userData.lightBar.material.emissiveIntensity = 0;
+        tentMain.userData.lightBar.material.opacity = 0.025;
 
-      fans.intakeClone.userData.speed = intakeClone * 15;
-      fans.intakeMain.userData.speed = intakeMain * 15;
-      fans.exhaust.userData.speed = exhaust * 17;
-      fans.recirc.userData.speed = recircFan * 15;
-      Object.values(fans).forEach((fan) => {
-        fan.userData.rotor.rotation.y += fan.userData.speed * dt;
-      });
-
-      Object.entries(appliances).forEach(([name, body]) => {
-        const on = !!(live.devices || []).find((device) => device.id === name && device.on);
-        body.material.emissiveIntensity = on ? 0.72 : 0;
-      });
-      const slots = live.potSlots || { clone: [], main: [] };
-      ["clone", "main"].forEach((key) => {
-        pots[key].forEach((plant, i) => {
-          const slot = slots[key] && slots[key][i];
-          plant.visible = !!slot;
-          if (slot && slot.color) {
-            plant.children.slice(2).forEach((leaf) => {
-              if (leaf.material && leaf.material.color) leaf.material.color.set(slot.color);
-            });
+        const pulse = 0.86 + Math.sin(now * 0.0045) * 0.14;
+        matPlate.material.emissiveIntensity = live.matOn ? 3.4 * pulse * (highlights("mat") ? 1.35 : 1) : 0;
+        matGlow.material.opacity = live.matOn ? 0.38 * pulse * (highlights("mat") ? 1.4 : 1) : 0;
+        ventGlow.material.opacity = outVis >= 0.04 ? 0.09 + outVis * 0.4 : 0.015;
+        // Separate-port bloom: OUT coral vs RECIRC violet shells when both legs live
+        if (paths.out && paths.recirc) {
+          paths.out.shell.material.color.setHex(0xff765e);
+          paths.recirc.shell.material.color.setHex(0xa85be0);
+          if (outVis >= 0.04 && recVis >= 0.04) {
+            paths.out.shell.material.opacity = Math.max(paths.out.shell.material.opacity, 0.18 + outVis * 0.42);
+            paths.recirc.shell.material.opacity = Math.max(paths.recirc.shell.material.opacity, 0.18 + recVis * 0.42);
           }
-        });
-      });
+        }
 
-      if (post && typeof post.render === "function") post.render();
-      else renderer.render(scene, camera);
+        const setAch = (tent, base) => {
+          (tent.userData.achSlices || []).forEach((slice, i) => {
+            slice.material.opacity = base * (0.55 + i * 0.28);
+          });
+        };
+        setAch(tentClone, intakeClone >= 0.04 ? 0.025 + intakeClone * 0.085 : 0.008);
+        setAch(
+          tentMain,
+          Math.max(intakeMain, cascade, outVis) >= 0.04
+            ? 0.026 + Math.max(intakeMain, cascade, outVis) * 0.09
+            : 0.008
+        );
+        roomShell.material.opacity = 0.024 + recVis * 0.045;
+        roomEdges.material.opacity = 0.14 + recVis * 0.12;
+        roomLungSlices.forEach((slice, i) => {
+          slice.material.opacity = (0.01 + recVis * 0.055) * (0.55 + i * 0.18);
+          slice.position.y = 0.55 + i * 0.72 + Math.sin(now * 0.00055 + i) * 0.04 * (0.4 + recVis);
+        });
+
+        fans.intakeClone.userData.speed = intakeClone * 15;
+        fans.intakeMain.userData.speed = intakeMain * 15;
+        fans.exhaust.userData.speed = outVis * 17;
+        fans.recirc.userData.speed = recVis * 15;
+        Object.values(fans).forEach((fan) => {
+          const rotor = fan.userData && fan.userData.rotor;
+          if (rotor) rotor.rotation.y += (fan.userData.speed || 0) * dt;
+        });
+
+        Object.entries(appliances).forEach(([name, body]) => {
+          const on = !!(live.devices || []).find((device) => device.id === name && device.on);
+          body.material.emissiveIntensity = on ? 0.72 : 0;
+        });
+        const slots = live.potSlots || { clone: [], main: [] };
+        ["clone", "main"].forEach((key) => {
+          pots[key].forEach((plant, i) => {
+            const slot = slots[key] && slots[key][i];
+            plant.visible = !!slot;
+            if (slot && slot.color) {
+              plant.children.slice(2).forEach((leaf) => {
+                if (leaf.material && leaf.material.color) leaf.material.color.set(slot.color);
+              });
+            }
+          });
+        });
+
+        if (post && typeof post.render === "function") {
+          try {
+            post.render();
+            // Detect truly blank composer output (not just a dark floor between tents).
+            if (!tick._composerOk) {
+              const gl = renderer.getContext();
+              if (gl && !gl.isContextLost()) {
+                const w = renderer.domElement.width;
+                const h = renderer.domElement.height;
+                const px = new Uint8Array(4);
+                const samples = [
+                  [0.28, 0.42],
+                  [0.72, 0.42],
+                  [0.5, 0.28],
+                  [0.5, 0.55],
+                  [0.5, 0.72],
+                ];
+                let lit = 0;
+                for (let s = 0; s < samples.length; s++) {
+                  gl.readPixels(
+                    Math.floor(w * samples[s][0]),
+                    Math.floor(h * samples[s][1]),
+                    1,
+                    1,
+                    gl.RGBA,
+                    gl.UNSIGNED_BYTE,
+                    px
+                  );
+                  if (px[0] + px[1] + px[2] >= 12) lit += 1;
+                }
+                if (lit >= 2) {
+                  tick._composerOk = true;
+                  tick._blackFrames = 0;
+                } else {
+                  tick._blackFrames = (tick._blackFrames || 0) + 1;
+                  if (tick._blackFrames >= 12) {
+                    tick._blackFrames = 0;
+                    try { post.dispose(); } catch (_) {}
+                    post = null;
+                    renderer.setRenderTarget(null);
+                    renderer.render(scene, camera);
+                    console.warn("dsc-the-dash-card: composer abandoned after blank frames; direct render");
+                  }
+                }
+              }
+            }
+          } catch (composerErr) {
+            if (post && typeof post.dispose === "function") {
+              try { post.dispose(); } catch (_) {}
+            }
+            post = null;
+            renderer.setRenderTarget(null);
+            renderer.render(scene, camera);
+            if (!tick._composerFallen) {
+              tick._composerFallen = true;
+              console.warn("dsc-the-dash-card: composer failed; falling back to direct render", composerErr);
+            }
+          }
+        } else {
+          renderer.render(scene, camera);
+        }
+      } catch (err) {
+        if (!tick._errLogged) {
+          tick._errLogged = true;
+          console.error("dsc-the-dash-card: render tick failed", err);
+        }
+        try {
+          renderer.render(scene, camera);
+        } catch (_) {}
+      }
     };
 
     resize();
@@ -1707,20 +2009,30 @@
         renderer.domElement.removeEventListener("wheel", onWheel);
         if (post && typeof post.dispose === "function") post.dispose();
         if (curl && typeof curl.dispose === "function") curl.dispose();
-        const geometries = new Set();
-        const materials = new Set();
-        scene.traverse((object) => {
-          if (object.geometry) geometries.add(object.geometry);
-          if (Array.isArray(object.material)) object.material.forEach((material) => materials.add(material));
-          else if (object.material) materials.add(object.material);
+        confinedMix.forEach((h) => {
+          try {
+            if (h && typeof h.dispose === "function") h.dispose();
+          } catch (_) {}
         });
-        geometries.forEach((geometry) => geometry.dispose && geometry.dispose());
-        materials.forEach((material) => material.dispose && material.dispose());
-        if (spriteTexture) spriteTexture.dispose();
-        if (rampTexture) rampTexture.dispose();
-        if (mergeRampTexture) mergeRampTexture.dispose();
+        try {
+          scene.traverse((obj) => {
+            if (obj.geometry) obj.geometry.dispose();
+            if (obj.material) {
+              const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+              mats.forEach((m) => m && m.dispose && m.dispose());
+            }
+          });
+        } catch (_) {}
         renderer.dispose();
         if (renderer.domElement.parentNode) renderer.domElement.parentNode.removeChild(renderer.domElement);
+      },
+      // Debug handle for live recovery / QA (not part of public card API)
+      _debug: {
+        get renderer() { return renderer; },
+        get scene() { return scene; },
+        get camera() { return camera; },
+        get post() { return post; },
+        get disposed() { return disposed; },
       },
     };
   };
@@ -1782,6 +2094,9 @@
       this._hist = { moisture: {}, rate: {}, climate: {} };
       this._histAt = 0;
       this._ro = null;
+      this._lastGoodLive = null;
+      this._hubOfflineSince = 0;
+      this._lastDiagLine = "";
     }
 
     static getConfigElement() {
@@ -2103,7 +2418,16 @@
         roomVpd = svp * (1 - rH / 100);
       }
 
-      return {
+      const hubLinkOn = !isUnavailable(hass, e.hub_link) && isOn(hass, e.hub_link);
+      const climateLive =
+        Number.isFinite(numState(hass, e.tent_temp, NaN)) ||
+        Number.isFinite(numState(hass, e.clone_temp, NaN)) ||
+        Number.isFinite(numState(hass, e.room_temp, NaN));
+      const cfmLive = intakeSum > FLOW_EPS || fs > 0.02;
+      const hubOnline = hubLinkOn && (climateLive || cfmLive);
+      const diagLine = composeHubDiagLine(hass, e);
+
+      const live = {
         devices,
         splitMain,
         splitClone,
@@ -2147,7 +2471,36 @@
           },
         },
         pots,
+        hubOnline,
+        hubHeld: false,
+        hubOfflineMs: 0,
+        diagLine,
       };
+
+      if (hubOnline) {
+        this._lastGoodLive = { ...live, devices: devices.map((d) => ({ ...d })), potSlots: { clone: [...potSlots.clone], main: [...potSlots.main] } };
+        this._hubOfflineSince = 0;
+        if (diagLine) this._lastDiagLine = diagLine;
+        return live;
+      }
+
+      // Hub dropout: hold last-known-good values; start disconnect timer
+      if (!this._hubOfflineSince) this._hubOfflineSince = Date.now();
+      const offlineMs = Date.now() - this._hubOfflineSince;
+      if (this._lastGoodLive) {
+        return {
+          ...this._lastGoodLive,
+          hubOnline: false,
+          hubHeld: true,
+          hubOfflineMs: offlineMs,
+          diagLine: this._lastDiagLine || diagLine || "Hub link lost — no prior diagnostic line cached",
+          emerg: live.emerg || this._lastGoodLive.emerg,
+        };
+      }
+      live.hubHeld = false;
+      live.hubOfflineMs = offlineMs;
+      live.diagLine = this._lastDiagLine || diagLine || "Hub offline · waiting for first good sample";
+      return live;
     }
 
     async _update() {
@@ -2159,10 +2512,16 @@
 
       const status = this.shadowRoot.getElementById("d-status");
       if (status) {
-        status.className = "dash-pill" + (live.emerg ? " bad" : "");
-        status.textContent = live.emerg
-          ? "FAILSAFE // EMERGENCY"
-          : `ONLINE // ${live.strategy || "NOMINAL"} · ${live.priority || ""}`.trim();
+        status.className = "dash-pill" + (live.emerg ? " bad" : live.hubHeld ? " warn" : "");
+        if (live.emerg) {
+          status.textContent = "FAILSAFE // EMERGENCY";
+        } else if (live.hubHeld) {
+          status.textContent = `HELD // hub offline ${fmtHeld(live.hubOfflineMs)}`;
+        } else if (!live.hubOnline) {
+          status.textContent = `OFFLINE // hub ${fmtHeld(live.hubOfflineMs || 0)}`;
+        } else {
+          status.textContent = `ONLINE // ${live.strategy || "NOMINAL"} · ${live.priority || ""}`.trim();
+        }
       }
 
       const lightMins = lightClockMinutes(this._hass, this._cfg.entities, "clone");
@@ -2184,7 +2543,8 @@
       }
       const hudM = this.shadowRoot.getElementById("d-hud-main");
       if (hudM) {
-        hudM.innerHTML = `<div class="k">4×8 Main</div><div class="v">${esc(live.mainClimate)}</div><div class="s">No lamp · cascade in · exhaust split OUT/RECIRC</div>`;
+        const heldNote = live.hubHeld ? " · HELD" : "";
+        hudM.innerHTML = `<div class="k">4×8 Main</div><div class="v">${esc(live.mainClimate)}</div><div class="s">No lamp · cascade in · OUT rear / RECIRC right wall${heldNote}</div>`;
       }
 
       const tl = this.shadowRoot.getElementById("d-timeline");
@@ -2205,10 +2565,20 @@
         const alerts = [];
         if (live.emerg) alerts.push(`<span class="err">EMERGENCY FAILSAFE</span>`);
         if (live.mixed) alerts.push(`<span class="alert">Mixed pot stages</span>`);
+        if (live.hubHeld) {
+          alerts.push(`<span class="alert">Hub offline · held ${esc(fmtHeld(live.hubOfflineMs))}</span>`);
+        } else if (!live.hubOnline) {
+          alerts.push(`<span class="alert">Hub offline · ${esc(fmtHeld(live.hubOfflineMs || 0))}</span>`);
+        }
+        const diag = live.diagLine || "";
+        const diagHtml = diag
+          ? `<span class="alert" title="Last hub diagnostic line">ESP/link: ${esc(diag)}</span>`
+          : "";
         foot.innerHTML = `
           <span>The Dash · presentation surface</span>
           <span>${new Date().toLocaleString()}</span>
           ${alerts.join(" · ") || `<span style="color:var(--ok)">All systems nominal</span>`}
+          ${diagHtml}
           <span class="err" style="margin-left:auto">LOGS → Climate / Root Zone</span>`;
       }
     }
