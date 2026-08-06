@@ -9,6 +9,7 @@
   `dsc-hub-logs (5)`: one 1…14 storm at 09:50, no OOM, Link Recovery = 0.
 - Set `post_connect_roaming: false` on hub/Control/pot lab+kit WiFi packages.
   Preferred-BSSID Lock already owns Nest pin; roam scans fought that pin.
+- Ops runbook: [`docs/qa/HUB-WIFI-POST-CONNECT-ROAMING-5.1.10.md`](docs/qa/HUB-WIFI-POST-CONNECT-ROAMING-5.1.10.md).
 
 ## Hub 5.1.9 — ESP-NOW TX cadence (2026-08-05)
 

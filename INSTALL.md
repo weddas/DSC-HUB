@@ -104,4 +104,5 @@ Cursor edit → push master
   → ESPHome Validate/Install (changed devices only)
 ```
 
-See [`RELEASE.md`](RELEASE.md) rollout checklist · [`docs/qa/`](docs/qa/).
+See [`RELEASE.md`](RELEASE.md) rollout checklist · [`docs/qa/`](docs/qa/) ·
+WiFi roam-scan off [`docs/qa/HUB-WIFI-POST-CONNECT-ROAMING-5.1.10.md`](docs/qa/HUB-WIFI-POST-CONNECT-ROAMING-5.1.10.md).

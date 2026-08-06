@@ -750,6 +750,7 @@ New 5s `tx_fleet_heartbeat` / `tx_peer_time` broadcast load on top of 2s vitals 
 ### fix (in tree, needs flash)
 - Hub **5.1.10** / Control **5.1.17** / Pots **5.1.8**: `post_connect_roaming: false` on all lab+kit WiFi packages.
 - Verify: soak hub logs ≥15 min with **zero** `Wifi Channel is changed` storms; Panel ESP-NOW stays LINKED; ping loss down.
+- Ops runbook: [`docs/qa/HUB-WIFI-POST-CONNECT-ROAMING-5.1.10.md`](qa/HUB-WIFI-POST-CONNECT-ROAMING-5.1.10.md).
 
 ### next
 - Flash hub 5.1.10 first (OTA when `:3232` up, else power-cycle then OTA); then Control/pots
