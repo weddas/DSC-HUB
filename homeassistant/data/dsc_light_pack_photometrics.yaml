@@ -1,0 +1,149 @@
+# DSC curated light photometrics pack (PPFD / spectrum map URLs)
+# Rebuild: python scripts/clean_light_map_assets.py && python scripts/build_light_pack_photometrics.py
+#
+schema_version: 1
+id: photometrics_starter
+name: DSC Photometrics Starter Pack
+curated: true
+built_at: '2026-08-06T21:26:25Z'
+note: 'Starter fixtures with cleaned PPFD/spectrum/beam map image URLs from manufacturer
+  dumps. Honesty: never invent heatmap values; open the linked images/PDFs. Rebuild
+  via scripts/build_light_pack_photometrics.py after clean_light_map_assets.py.'
+fixtures:
+- id: spider_farmer_sf1000
+  dump_id: spiderfarmer_light_sf_1000_led_grow_light
+  dump: dsc_lights_spider_farmer.json
+  name: 2026 Spider Farmer SF1000 Full-Spectrum Dimmable LED grow light
+  brand: Spider Farmer
+  url: https://www.spider-farmer.com/products/sf-1000-led-grow-light/
+  wattage_w: 100.0
+  ppf_umol_s: 211.0
+  efficacy_umol_j: 2.5
+  ppfd_map_urls:
+  - https://www.spider-farmer.com/wp-content/uploads/2026/03/SF1000-2512-PPFD-Map-Bridgelux-values-​​same-as-Samsung-phone.jpg
+  - https://www.spider-farmer.com/wp-content/uploads/2021/05/SF1000-2512-PPFD-Map-Bridgelux-values-​​same-as-Samsung.jpg
+  - https://www.spider-farmer.com/wp-content/uploads/2026/03/SF1000-2512-PPFD-Map-Bridgelux-values-​​same-as-Samsung.jpg
+  spectrum_map_urls:
+  - https://www.spider-farmer.com/wp-content/uploads/2021/05/EVO-SF1000-Samsung-lm301h-evo-led-grow-light-full-spectrum.jpg
+  - https://www.spider-farmer.com/wp-content/uploads/2021/05/Bridgelux-Diodes-Full-Spectrum.jpg
+  beam_map_urls: []
+  datasheet_urls:
+  - https://www.spider-farmer.com/wp-content/uploads/2021/05/SF-SF-07-SF-Series-Users-Manual-20260210.pdf
+  curated: true
+  note: URLs + stated photometrics only; no invented PPFD grid cells.
+- id: spider_farmer_sf2000
+  dump_id: spiderfarmer_light_sf_2000_led_grow_light
+  dump: dsc_lights_spider_farmer.json
+  name: 2026 Spider Farmer SF2000 200W Full Spectrum Dimmable LED
+  brand: Spider Farmer
+  url: https://www.spider-farmer.com/products/sf-2000-led-grow-light/
+  wattage_w: 200.0
+  ppf_umol_s: 211.0
+  efficacy_umol_j: 2.7
+  ppfd_map_urls:
+  - https://www.spider-farmer.com/wp-content/uploads/2021/05/SF2000-2512-PPFD-Map-Bridgelux-values-​​same-as-Samsung.jpg
+  - https://www.spider-farmer.com/wp-content/uploads/2021/05/SF2000-PPFD.jpg
+  - https://www.spider-farmer.com/wp-content/uploads/2021/05/SF4000-2512-PPFD-Map-Bridgelux-values-​​same-as-Samsung-600x600.jpg
+  spectrum_map_urls:
+  - https://www.spider-farmer.com/wp-content/uploads/2021/05/Bridgelux-Diodes-Full-Spectrum.jpg
+  - https://www.spider-farmer.com/wp-content/uploads/2022/01/Spider-Farmer-G-1000w-Foldable-Full-Spectrum-Cost-Effective-Led-Grow-Lights_1-600x600.jpg
+  beam_map_urls: []
+  datasheet_urls:
+  - https://www.spider-farmer.com/wp-content/uploads/2021/05/SF-SF-07-SF-Series-Users-Manual-20260210.pdf
+  curated: true
+  note: URLs + stated photometrics only; no invented PPFD grid cells.
+- id: spider_farmer_se7000
+  dump_id: spiderfarmer_light_spider_farmer_upgraded_se7000_730w_commercial_led_grow_light
+  dump: dsc_lights_spider_farmer.json
+  name: 2026 New Spider Farmer®SE7000 730W Led Grow Light Commercial Grow
+  brand: Spider Farmer
+  url: https://www.spider-farmer.com/products/spider-farmer-upgraded-se7000-730w-commercial-led-grow-light/
+  wattage_w: 730.0
+  ppf_umol_s: 2146.0
+  efficacy_umol_j: 2.9
+  ppfd_map_urls:
+  - https://www.spider-farmer.com/wp-content/uploads/2021/09/SE7000-evo-led-PPFD-MAP.jpg
+  - https://www.spider-farmer.com/wp-content/uploads/2023/06/SE5000-EVO-PPFD-MAP-120x120cm-600x600.jpg
+  - https://www.spider-farmer.com/wp-content/uploads/2023/06/SE3000-EVO-PPFD-MAP-90x90cm-600x600.jpg
+  spectrum_map_urls:
+  - https://www.spider-farmer.com/wp-content/uploads/2021/09/SE7000-EVO-Spectrum-Ratio.jpg
+  - https://www.spider-farmer.com/wp-content/uploads/2024/08/2024-Newest-Version-Spider-Farmer-Dimmable-Foldable-Full-Spectrum-800W-Led-Grow-Light-G-Series-G8600-For-5X5-600x600.jpg
+  - https://www.spider-farmer.com/wp-content/uploads/2024/12/2024-Newest-Version-Spider-Farmer-Dimmable-Foldable-Full-Spectrum-730W-Led-Grow-Light-G-Series-G7000-600x600.jpg
+  beam_map_urls: []
+  datasheet_urls:
+  - https://www.spider-farmer.com/wp-content/uploads/2026/01/SE-User-Manual-06.pdf
+  curated: true
+  note: URLs + stated photometrics only; no invented PPFD grid cells.
+- id: mars_hydro_fc_e3000
+  dump_id: mars_hydro_au_light_fc_e3000_300w_led_grow_light_100x100x180cm_grow_tent_combo
+  dump: dsc_lights_mars_hydro_au.json
+  name: Mars Hydro FC-E3000 300W LED Grow Light + 100x100x180cm Grow Tent Combo
+  brand: Mars Hydro
+  url: https://marshydroau.com/products/fc-e3000-300w-led-grow-light-100x100x180cm-grow-tent-combo/
+  wattage_w: 300.0
+  ppf_umol_s: 832.0
+  efficacy_umol_j: 2.8
+  ppfd_map_urls:
+  - https://marshydroau.com/wp-content/uploads/2023/05/2mars-hydro-fc-e3000-led-grow-light-ppfd-map-e1683785683423.jpg
+  - https://marshydroau.com/wp-content/uploads/2021/08/mars-hydro-fc-e3000-led-grow-light-ppfd-map.jpg
+  spectrum_map_urls:
+  - https://marshydroau.com/wp-content/uploads/2023/05/3mars-hydro-FC-E3000-LED-grow-light-plant-favored-full-spectrum-e1683785724759.jpg
+  beam_map_urls: []
+  datasheet_urls: []
+  curated: true
+  note: URLs + stated photometrics only; no invented PPFD grid cells.
+- id: mars_hydro_ts1000
+  dump_id: mars_hydro_au_light_ts_1000_led_with_icontrol_kits
+  dump: dsc_lights_mars_hydro_au.json
+  name: Bundle Sale Mars Hydro TS1000 150W Dimmable Full Spectrum LED Grow Light +
+    iControl Smart Controller Kits
+  brand: Mars Hydro
+  url: https://marshydroau.com/products/ts-1000-led-with-icontrol-kits/
+  wattage_w: 150.0
+  ppf_umol_s: 343.0
+  efficacy_umol_j: 2.3
+  ppfd_map_urls:
+  - https://marshydroau.com/wp-content/uploads/2021/07/TS1000-PPFD.jpg
+  spectrum_map_urls: []
+  beam_map_urls: []
+  datasheet_urls:
+  - https://marshydroau.com/wp-content/uploads/2025/01/TS-SERIES-LED.pdf
+  curated: true
+  note: URLs + stated photometrics only; no invented PPFD grid cells.
+- id: digi_lumen_best
+  dump_id: digi_lumen_light_250_w_side_bar_led
+  dump: dsc_lights_digi_lumen.json
+  name: 250-w-side-bar-led
+  brand: Digi-Lumen
+  url: https://digilumen.com.au/250-w-side-bar-led
+  wattage_w: 250.0
+  ppf_umol_s: 662.0
+  efficacy_umol_j: 2.65
+  ppfd_map_urls:
+  - https://digilumen.com.au/wp-content/uploads/2026/06/662-umols-150x150.jpg
+  spectrum_map_urls: []
+  beam_map_urls: []
+  datasheet_urls:
+  - https://digilumen.com.au/wp-content/uploads/2026/06/A5-DIGI-LUMEN-BROCHURE.pdf
+  - https://digilumen.com.au/wp-content/uploads/2026/06/250-w-specs.jpg
+  curated: true
+  note: URLs + stated photometrics only; no invented PPFD grid cells.
+- id: treegers_best
+  dump_id: treegers_light_gl1000w_led
+  dump: dsc_lights_treegers.json
+  name: GL1000W+ LED GROW FIXTURE
+  brand: Treegers
+  url: https://treegers.com/products/gl1000w-led
+  wattage_w: 1000.0
+  ppf_umol_s: 3090.0
+  efficacy_umol_j: 3.1
+  ppfd_map_urls:
+  - https://treegers.com/cdn/shop/files/GL1000WPPFD04_-_1.jpg?v=1738143166&amp;width=1600
+  - https://treegers.com/cdn/shop/files/GL1000W_PPFD04.jpg?v=1754059189&amp;width=2048
+  spectrum_map_urls:
+  - https://cdn.shopify.com/s/files/1/0764/5288/8851/files/Full-Spectrum-HybridF_480x480.png?v=1711605519
+  beam_map_urls:
+  - https://treegers.com/cdn/shop/files/Accessories_Header.jpg?v=1738044921&amp;width=340
+  datasheet_urls: []
+  curated: true
+  note: URLs + stated photometrics only; no invented PPFD grid cells.

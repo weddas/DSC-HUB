@@ -122,6 +122,11 @@ dash="${HA_SRC}/dashboards/dsc-hub-v4-dashboard.yaml"
 [[ -f "${dash}" ]] || die "Missing ${dash}"
 log "Syncing dashboards/dsc-hub-v4-dashboard.yaml + modules/"
 run_scp "${dash}" "${HA_CONFIG_ROOT}/dashboards/dsc-hub-v4-dashboard.yaml"
+build_dash="${HA_SRC}/dashboards/dsc-build-plant-dashboard.yaml"
+if [[ -f "${build_dash}" ]]; then
+  log "Syncing dashboards/dsc-build-plant-dashboard.yaml"
+  run_scp "${build_dash}" "${HA_CONFIG_ROOT}/dashboards/dsc-build-plant-dashboard.yaml"
+fi
 run_ssh "mkdir -p '${HA_CONFIG_ROOT}/dashboards/modules'"
 mod_dir="${HA_SRC}/dashboards/modules"
 [[ -d "${mod_dir}" ]] || die "Missing ${mod_dir}"
@@ -132,28 +137,38 @@ for f in "${mod_files[@]}"; do
 done
 
 # --- www ------------------------------------------------------------------
-# System map SVG + bundled JS (system map + airflow) as dsc-system-map-card.js
-# so the existing /local Lovelace resource registers both custom elements.
-# Standalone airflow file is also published for optional direct resources.
-log "Syncing www Lovelace cards (system map + airflow + Three.js + The Dash)"
+# System map SVG + bundled JS (system map + airflow + The Dash + Build a Plant)
+# as dsc-system-map-card.js so the existing /local Lovelace resource registers
+# all custom elements. Standalone files also published for optional resources.
+log "Syncing www Lovelace cards (system map + airflow + Three.js + The Dash + Build a Plant)"
 svg="${HA_SRC}/www/dsc-system-map.svg"
 sys_js="${HA_SRC}/www/dsc-system-map-card.js"
 air_js="${HA_SRC}/www/dsc-airflow-map-card.js"
 three_js="${HA_SRC}/www/vendor/three.min.js"
 dash_fx="${HA_SRC}/www/vendor/dsc-dash-fx.js"
 dash_js="${HA_SRC}/www/dsc-the-dash-card.js"
+build_js="${HA_SRC}/www/dsc-build-plant-card.js"
 [[ -f "${svg}" ]] || die "Missing ${svg}"
 [[ -f "${sys_js}" ]] || die "Missing ${sys_js}"
 [[ -f "${air_js}" ]] || die "Missing ${air_js}"
 [[ -f "${three_js}" ]] || die "Missing ${three_js}"
 [[ -f "${dash_fx}" ]] || die "Missing ${dash_fx}"
 [[ -f "${dash_js}" ]] || die "Missing ${dash_js}"
+[[ -f "${build_js}" ]] || die "Missing ${build_js}"
 
 run_scp "${svg}" "${HA_CONFIG_ROOT}/www/dsc-system-map.svg"
 run_scp "${air_js}" "${HA_CONFIG_ROOT}/www/dsc-airflow-map-card.js"
 run_scp "${dash_js}" "${HA_CONFIG_ROOT}/www/dsc-the-dash-card.js"
-run_ssh "mkdir -p '${HA_CONFIG_ROOT}/www/vendor'"
+run_scp "${build_js}" "${HA_CONFIG_ROOT}/www/dsc-build-plant-card.js"
+run_ssh "mkdir -p '${HA_CONFIG_ROOT}/www/vendor' '${HA_CONFIG_ROOT}/www/dsc-catalog'"
 run_scp "${dash_fx}" "${HA_CONFIG_ROOT}/www/vendor/dsc-dash-fx.js"
+catalog_dir="${HA_SRC}/www/dsc-catalog"
+if [[ -d "${catalog_dir}" ]]; then
+  for f in "${catalog_dir}"/*.json; do
+    [[ -f "${f}" ]] || continue
+    run_scp "${f}" "${HA_CONFIG_ROOT}/www/dsc-catalog/$(basename "${f}")"
+  done
+fi
 
 bundle="$(mktemp)"
 trap 'rm -f "${bundle}"' RETURN
@@ -166,6 +181,8 @@ printf '\n' >> "${bundle}"
 cat "${dash_fx}" >> "${bundle}"
 printf '\n' >> "${bundle}"
 cat "${dash_js}" >> "${bundle}"
+printf '\n' >> "${bundle}"
+cat "${build_js}" >> "${bundle}"
 run_scp "${bundle}" "${HA_CONFIG_ROOT}/www/dsc-system-map-card.js"
 run_scp "${bundle}" "${HA_CONFIG_ROOT}/www/DSC-HUB.js"
 

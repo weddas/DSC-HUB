@@ -17,3 +17,9 @@ lovelace:
       icon: mdi:sprout
       show_in_sidebar: true
       filename: dashboards/dsc-hub-v4-dashboard.yaml
+    dsc-build-plant:
+      mode: yaml
+      title: Build a Plant
+      icon: mdi:spa
+      show_in_sidebar: true
+      filename: dashboards/dsc-build-plant-dashboard.yaml

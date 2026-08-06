@@ -1,5 +1,23 @@
 # Changelog
 
+## Unreleased
+
+- **Build a Plant (N-083)** — Separate product surface: dashboard `dsc-build-plant`, Lit card `dsc-build-plant-card`, package `dsc_v4_build_plant.yaml` (soil % blend, plant roster, mix calculator, Apply climate Want). Slim `/local/dsc-catalog/` search indexes via `scripts/build_catalog_search_indexes.py`. Vivosun NEXT_DATA enrich (wattage/PPE/stated point-PPFD/datasheets); keyword-labeled map URLs still **0** on CDN hashes. Wired into `sync-hacs-dist.sh` / `ha-sync.sh` (bundle + catalog + dashboard copy).
+- **Light photometrics (PPFD / spectrum)** — `clean_light_map_assets.py` strips non-image map URLs; `dsc_light_pack_photometrics.yaml` + `dsc_v4_light_catalog.yaml` surface map URLs + stated W/PPF/PPE for SF1000/SF2000/SE7000, Mars Hydro FC-E3000/TS1000, Digi-Lumen, Treegers.
+- **Catalog → Pro dash (N-082)** — Strains / Nutrient Science / Lighting views wired to catalog packs; SF1000 nameplate watts sync into climate physics.
+- **Medium pack (N-064)** — `dsc_medium_pack_canna_coco.yaml` + `dsc_v4_medium_catalog.yaml` (CANNA Coco Professional Plus).
+- **Light/tent slug hygiene (N-070/N-077/N-071)** — canonical `spider_farmer`; Vivosun D2C owner pin.
+- **Strain merge + HA picker (N-058/N-060/N-062/N-054–N-056)** — `merge_strain_catalogs.py --write --chemistry` → `dsc_strains_merged.json` (**36881** unique / **73571** input; chemistry on **2397**). Herbies dump finalized at **3873**. HA package wired via `promote_strain_catalog_to_ha.py` (catalog `want_bands`, split custom EC, curated picker seeds).
+- **Curated nutrient pack (N-053)** — `dsc_nutrient_pack_canna_coco.yaml` (CANNA Coco A+B @ 4.0 ml/L) seeded into `dsc_v4_nutrient_catalog.yaml` initials.
+- **Bunnings AU retailer dumps** — nutrients / additives / mediums via category SSR tiles + PDP `__NEXT_DATA__` (`scripts/import_*_bunnings.py` + `bunnings_common.py`). Dumps `dsc_{nutrients,additives,mediums}_bunnings.json` (+ medium category splits). `apis.prod` product API = 401 (unused); robots: no `/search`. See `NUTRIENT_SOURCES.md` / `ADDITIVE_SOURCES.md` / `MEDIUM_SOURCES.md`.
+- **Grow-medium dumps (N-064 foundation)** — schema v1 per-SKU rows (`dsc_medium_catalog.schema.md`) with category taxonomy + size/composition/pH/EC when stated. Grow Kings importer `scripts/import_mediums_growkings.py` → `dsc_mediums_growkings.json` + per-category splits + `_gk_mediums_brands.json` / `_gk_mediums_categories.json`. See `homeassistant/data/MEDIUM_SOURCES.md`.
+- **Nutrient dumps (N-053 foundation)** — schema v1 per-bottle rows (`dsc_nutrient_catalog.schema.md`) with pack links + `charts`/`feed_plans`/`vpd`/`notes`/`source_urls`. Grow Kings importer `scripts/import_nutrients_growkings.py` → `dsc_nutrients_growkings.json` + brand index `_gk_brands.json`. Manufacturer catalogs are parallel sibling dumps (`dsc_nutrients_<brandslug>.json`); see `homeassistant/data/NUTRIENT_SOURCES.md`.
+- **Additive dumps (N-053 adjacent)** — same bottle/pack schema for Grow Kings `/collections/supplements-additives` via `scripts/import_additives_growkings.py` → `dsc_additives_growkings.json` + `_gk_additives_brands.json`; `category` = `additive`\|`supplement`. See `dsc_additive_catalog.schema.md` / `ADDITIVE_SOURCES.md`.
+- **Strain catalog schema v2** — expanded `homeassistant/data/dsc_strain_catalog.yaml` (+ `.schema.md`) with lineage, cannabinoids, sensory, growing, timing, split EC Want (seedling/veg/flower), optional climate Want, external IDs; promote script emits v2 shape. Live HA picker wired via `want_bands` (N-054).
+- **BudProfiles import** — `scripts/import_strains_budprofiles.py` fills `dsc_strains_budprofiles.json` (~11k, gitignored) and merges a popular enriched set into the YAML catalog (`curated=false` default Want). Re-run: `--enrich-popular --merge-yaml`.
+- **OpenTHC VDB import** — `scripts/import_strains_openthc.py` pulls official `strains.json` (~12.8k ULIDs, gitignored) and cross-links `external.openthc_id` into BudProfiles / popular / YAML by normalized name.
+- **More strain dumps (merge deferred)** — Kushy (~9.5k), Cannabis Intelligence CSV (~15.7k), BudProfiles breeders/studies, Seed City CC0 (~8.9k), Herbies UK (~3.8k), Royal Queen Seeds (~181), Fast Buds (~165), Barney's Farm (~111), Dutch Passion EN (~176), Wikileaf via grow_data MIT CSV (~2793). Inventory via `scripts/merge_strain_catalogs.py` (no `--write` yet). See `homeassistant/data/STRAIN_SOURCES.md`. SeedFinder API dead; Seedsman skipped (JS SPA); Wikipedia/Wikidata probed and skipped (~34 Wikidata / ~84 wiki names — too thin).
+
 ## Hub 5.1.11 — Full Auto default startup (2026-08-07)
 
 - **Boot policy:** every start forces Full Auto + `arm_full_auto` unless

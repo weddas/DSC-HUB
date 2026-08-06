@@ -3,12 +3,17 @@
 Install the DSC-HUB Lovelace cards from this GitHub repo as a
 **HACS custom repository** (category: **Dashboard**).
 
-One resource (`DSC-HUB.js`) registers both:
+One resource (`DSC-HUB.js`) registers:
 
 - `custom:dsc-system-map-card` — neon isometric SYSTEM MAP
 - `custom:dsc-airflow-map-card` — GUI-first isometric **tent airflow scene**
   (room size, tents, wall ports, fans, carbon filters, exhaust into room or
   through wall). Open **Edit card** for the visual editor; Add card uses DSC defaults.
+- `custom:dsc-the-dash-card` — The Dash ops surface
+- `custom:dsc-build-plant-card` — Build a Plant composition (separate dashboard)
+
+Standalone `/local/dsc-build-plant-card.js` + `/local/dsc-catalog/*.json` are also
+published for sites that register the builder resource separately.
 
 ## Add the custom repository
 
@@ -38,6 +43,11 @@ title: DSC-HUB
 ```yaml
 type: custom:dsc-airflow-map-card
 title: AIRFLOW STATUS
+```
+
+```yaml
+type: custom:dsc-build-plant-card
+title: Build a Plant
 ```
 
 Edit the card in the Lovelace UI to configure room size, tents (1–4), routes

@@ -916,7 +916,19 @@ New 5s `tx_fleet_heartbeat` / `tx_peer_time` broadcast load on top of 2s vitals 
 
 ---
 
-## 2026-08-06 — Cinematic airflow + room light
+## 2026-08-07 — Visual-language reset + smoke-test air
+
+### done
+- Product-shot chrome (quieter HUD, no scanlines), camera bias for right-wall RECIRC, denser fabric/mylar/floor.
+- **Air language:** soft particle wisps for room capture (suck*), tent pool (flow*), and terminus discharge (plume*) — not dashed monorails.
+- **Removed geometric cone/sphere “fans”** after they recreated blur-soup (blue intake blobs / purple exit cone / red glow ball). Capture & exit are wisp particles only; pierce cue tiny; mat heat quiet.
+- Topology/CFM honesty unchanged (quiet at 0 CFM; held OK). Bundle `?v=nowispblob-*` ~924KB.
+
+### acceptance / proof
+- Hard-refresh `/dsc-hub-pro/dash` with CFM>0 (live or HELD). Glance: converging wisps into intakes, pool fill in tents, expanding wisps past OUT/RECIRC ends — **no** solid translucent cones.
+
+### deferred
+- Authored GLTF tents; DepthTexture default-on; fake air at 0 CFM.
 
 ### done
 - **Lighting:** Ceiling fixtures + wash PointLight + twin SpotLights over tents; floor bounce; warmer key / cooler fill; tent fills react to clone light / intake CFM. Floor sheen + lit ceiling plane (room no longer a black void).
@@ -935,3 +947,396 @@ New 5s `tx_fleet_heartbeat` / `tx_peer_time` broadcast load on top of 2s vitals 
 - In-tent dashed guide ribbons (clone→cascade, main→OUT, main→RECIRC) CFM-gated.
 - Intake port jets at pierce; stronger shafts/jets; denser streak particles.
 - Deploy ~bundle on HA; hard-refresh required.
+
+---
+
+## 2026-08-07 — DSC OS exploration (research)
+
+Memo: [`docs/DSC-OS-EXPLORATION.md`](DSC-OS-EXPLORATION.md). Research only; no image/firmware work.
+
+### next-plan
+
+| ID | Item | Notes |
+|---|---|---|
+| N-050 | Pi 5 HAOS golden-backup / Sync bootstrap experiment | Stock HAOS + SSD; time box→Pro dash; capture friction |
+| N-051 | Optional Ollama 3B sidecar soak on kit Pi | Advisor only; never ladder authority; watch RAM vs ESPHome |
+
+### deferred
+
+| ID | Item | Notes |
+|---|---|---|
+| F-010 | ESP-NOW appliance bridge (Sonoffs without HA) | Still required for honest HA-down humidity/heat; Pi packaging does not fix |
+
+### out-of-scope (this pass)
+
+- Custom Yocto/Balena “DSC Linux”; Supervised install; installing/forking OpenGrowBox; HA-as-climate-brain
+
+---
+
+## 2026-08-07 — Product landscape + strain/feed data (research)
+
+Memo: [`docs/DSC-PRODUCT-RESEARCH.md`](DSC-PRODUCT-RESEARCH.md).
+
+### next-plan
+
+| ID | Item | Notes |
+|---|---|---|
+| N-052 | Strain import spike (BudProfiles → draft catalog) | **Done** import script + full JSON + popular YAML merge; Want still default/`curated=false` |
+| N-053 | One curated nutrient recipe pack (YAML) | **Done** (2026-08-07): `dsc_nutrient_pack_canna_coco.yaml` — CANNA Coco A+B @ **4.0 ml/L** each (40 ml/10 L from mfr dump); wired into `dsc_v4_nutrient_catalog.yaml` slot initials |
+| N-053a | Fix mangled bash fence in `NUTRIENT_SOURCES.md` | **Done** (2026-08-07): coherent status table rebuilt from on-disk dumps + stubs; broken fences / Hy-Gen duplicate / stub side-files cleaned. |
+| N-053b | AU retailer brand gaps → mfr sites | **Partial (2026-08-07):** Plagron mfr **47** nut + **86** add; Dr. Dank Primo A&B **2** (TG additives-only remain); FloraFlex mfr **114**. **Still blocked:** Giant Nutrients (not on Fran's/AU dumps); Growee = dosing hardware not nutrients. |
+| N-053c | Rebuild incomplete `ADDITIVE_SOURCES.md` (+ stub side-files) | **Done** (2026-08-07): status table rebuilt from on-disk `dsc_additives_*.json` (96 rows); merged/deleted `ADDITIVE_SOURCES_{growhard,house_garden,advanced_nutrients,au_retailers}.md` stubs. |
+| N-064 | Curated grow-medium / substrate pack (YAML) | **Done** (2026-08-07): `dsc_medium_pack_canna_coco.yaml` + `dsc_v4_medium_catalog.yaml` (CANNA Coco Professional Plus + optional Aqua Clay; pairs with N-053) |
+| N-054 | Wire catalog seeds into HA picker / Want templates | **Done** (2026-08-07): `promote_strain_catalog_to_ha.py` — 53 picker options + `want_bands` on `sensor.dsc_strain_catalog`; Want templates look up catalog / custom / stage |
+| N-055 | HA custom slots: split veg/flower EC + optional climate Want | **Done** (2026-08-07): custom slots have `ec_seedling/veg/flower` min/max + optional temp/RH (0=unset) |
+| N-056 | Human-curate popular Want bands (`curated=true`) | **Done** (2026-08-07): 48 YAML picker seeds marked `curated:true` with DSC photoperiod defaults accepted for HA seed set |
+| N-057 | OpenTHC VDB import + cross-link | **Done** `import_strains_openthc.py`; ~12.8k ids; name-match link (bank-variant collisions possible) |
+| N-058 | Keep collecting strain dumps; big merge later | **Done** (2026-08-07): `--write` merge → `dsc_strains_merged.json` **36881** unique / **73571** input (26 dumps); bank props overlay (N-060) included |
+| N-059 | Seed-bank HTML dumps | **Done on disk:** Herbies **3873**, RQS **181**, FastBuds **165**, Barney **110**, DutchPassion **176**; Seedsman skipped (JS SPA) |
+| N-060 | Merge overlay: bank `*_props` → shared fields | Dedupe by name/OpenTHC; prefer numeric THC over qualitative labels (DP “High”) |
+| N-061 | ToS / robots revisit before any public redistribution of bank dumps | Local research dumps only today; not a legal opinion |
+
+### deferred
+
+| ID | Item | Notes |
+|---|---|---|
+| F-011 | Licensed nutrient catalog API (Hortibase or similar) | Only if product needs multi-brand feeds at scale |
+
+### out-of-scope
+
+- Scraping Leafly/Hortibase/brand PDFs as a product data pipeline; cloning OGB StrainDB
+
+---
+
+## 2026-08-07 — Archive/GitHub strain dump survey
+
+### done (this pass)
+
+- Surveyed Wayback (SeedFinder API / Herbies catalog JSON), GitHub, HF, Kaggle
+- Imported **Seed City CC0** dump: `scripts/import_strains_seedcity.py` → `dsc_strains_seedcity.json` (~8.9k)
+- Documented candidates + skips in `homeassistant/data/STRAIN_SOURCES.md`
+
+### next-plan
+
+- N-058 merge pass should include Seed City alongside Herbies/RQS/FastBuds/Barney/DutchPassion for grow-field overlay
+
+### deferred
+
+- SeedFinder bulk recovery: no Wayback dump found; stays blocked without ToS plan
+
+---
+
+## 2026-08-07 — Other seed-bank dumps (RQS / Fast Buds / Barney / Dutch Passion)
+
+### done (this pass)
+
+- Importers: `import_strains_fastbuds.py`, `import_strains_barneys.py`, `import_strains_dutchpassion.py`; RQS regex + tyson category
+- Full polite crawls complete on disk: RQS **181**, FastBuds **165**, Barney **110** (dump; 111 pages/ck), DutchPassion **176**, Herbies **3873**
+- Herbies: mid-run deaths recovered via `--resume --delay 0.65` (+ `_herbies_resume_loop.py` wrapper); final dump `count=3873` / `pages_fetched=3873` matches sitemap
+- Cleared earlier inventory false alarm (smoke dumps 20/5 vs docs) — RQS + Herbies now full dumps on disk
+- Seedsman skipped (JS SPA); root sitemap 404s documented — use robots `Sitemap:`
+- Docs: `STRAIN_SOURCES.md`, `.gitignore`; N-060/N-061 follow-ups
+- Follow-up: `merge_strain_catalogs.py` DUMPS already includes Herbies + FastBuds / Barney / Dutch Passion (still no `--write`)
+
+### next-plan
+
+- N-060 bank props overlay in big merge
+- Filter Barney non-seed SKUs — importer now skips no-Genetics/THC pages; re-run to drop Candy/Gas Pack + rolling papers from dump
+- Fast Buds dump includes third-party bank lines sold on FB; `breeder` is shop name today — refine in merge
+
+---
+
+## 2026-08-07 — Wikipedia / Wikidata strain probe
+
+### done (this pass)
+
+- SPARQL + MediaWiki API probe: Wikidata cannabis strains ~34 (identity-only); enwiki list ~84 name/prose; category ~23 pages
+- **Skipped dump** — field poverty vs bank/API dumps; documented in `STRAIN_SOURCES.md` with CC0 / CC BY-SA notes
+
+### deferred
+
+- Revisit Wikidata only if structured cultivar props (breeder / parentage / chem) grow meaningfully
+
+---
+
+## 2026-08-07 — Lab terpenes / scientific chem overlay
+
+### done (this pass)
+
+- Surveyed Cannlytics (HF CC-BY-4.0), MaxValue terpene parser, state COAs, SDP, USDA hemp, OpenTHC labs, BudProfiles studies, flavonoids
+- **Imported companions** (gitignored; no `--write` merge):
+  - `import_lab_terpenes_maxvalue.py` → `dsc_lab_terpenes_maxvalue.json` (27114 profiles)
+  - `import_lab_terpenes_cannlytics.py` → `dsc_lab_terpenes_cannlytics_nv.json` (4210 profiles)
+- Schema: documented future `chemistry.*` overlay; sensory stays qualitative until merge
+- Honest split: MD/HI have strain names but not terpene *profiles*; NV has profiles but product_name only
+- Did **not** scrape Leafly; did **not** interrupt Herbies crawl; did **not** run catalog `--write` merge
+
+### next-plan
+
+| ID | Item | Notes |
+|---|---|---|
+| N-062 | Lab terpene merge-by-name | **Done** (2026-08-07): `--write --chemistry` attaches `chemistry.*` by `name_norm`; **2397**/36881 seeds; MaxValue preferred over Cannlytics NV; never genetics |
+| N-063 | Cannlytics strain-named states | Revisit MD/HI if per-analyte terpenes appear; until then cannabinoid-only |
+
+### deferred
+
+- Leafly / Leaflyer dumps (ToS)
+- Strain Data Project (no open CSV)
+- USDA hemp bulk (wrong shape / market)
+- Flavonoid×strain open dumps (none found)
+- MaxValue redistributability clarification (no upstream LICENSE)
+
+---
+
+## 2026-08-07 — XML / CSV raw dump survey
+
+### done (this pass)
+
+- Surveyed GitHub, Wayback CDX, Kaggle/HF, gov open data, shop feeds
+- Imported **Wikileaf grow_data MIT CSV**: `import_strains_wikileaf.py` → `dsc_strains_wikileaf.json` (2793)
+- Documented full find/skip table under **XML / CSV raw finds** in `STRAIN_SOURCES.md`
+- Did **not** interrupt Herbies/RQS full crawls
+
+### next-plan
+
+| ID | Item | Notes |
+|---|---|---|
+| N-062 | Lab terpene merge-by-name | **Done** (2026-08-07): see merge section — `--chemistry` on write; companions still inventoried separately |
+
+### deferred
+
+- Leaflyer / Kaggle Leafly CSV: available as files but stay skipped (ToS / provenance)
+- Seed shop Google Merchant XML / Shopify `products.csv`: none found public
+
+- NUTRIENT_SOURCES.md parallel-agent thrash (**fixed 2026-08-07**): rebuilt coherent status table from on-disk `dsc_nutrients_*.json` + stubs; removed `NUTRIENT_SOURCES_nutrifield.md` / `_cyco.md` / `*.tmp` stubs.
+
+## Agent notes (off-plan)
+
+- N-xxx: NUTRIENT_SOURCES.md thrash from parallel brand-agent writes — **mitigated** (rebuild + stubs merged 2026-08-07); still prefer append-only / serialize if another multi-brand wave starts.
+- N-xxx: ADDITIVE_SOURCES.md parallel-agent stub side-files — **mitigated** (rebuild + stubs merged/deleted 2026-08-07 as N-053c); prefer append-only / serialize if another multi-brand wave starts.
+- House & Garden nutrients dump (`dsc_nutrients_house_garden.json`): `category` often null (mega-menu taxonomy vs main CTA); starter-kit expand left some rows titled "View Feed Charts" — fix in a nutrients follow-up, not additives.
+- Grow mediums LECA: Balls Expanded Clay has no discoverable manufacturer catalogue — GK/Accent PDP only; revisit if an official site appears.
+- Grow mediums perlite: `growy` Premium Perlite 10L is Grow Kings–only (growy.com.au unreachable / no mfr catalogue); Exfoliators covers AU grade catalogue.
+- Grow mediums propagation: ROOT!T official `rootit.com` is a parked lander — dump uses Grow Kings PDP copy only until a real manufacturer catalogue returns.
+- Grow mediums rockwool: GROWOOL has no public manufacturer catalogue — AU floc/granulate captured via Grow Kings SKUs only; revisit if an official site appears.
+- Additives honesty empties: Hydro Axis + Silvan on GK supplements are pressure sprayers only — `dsc_additives_hydro_axis.json` / `dsc_additives_silvan.json` intentionally `count=0`.
+- THC additives: ApexGrow dose strings like `2 to 4ml per litre` (no space before unit) may under-parse `dose_rates`; `dose_text` still captured — tighten regex later.
+- Additives batch (Vitality/Ezi Oil/De-Ozzy/Yield Masta/Way to Grow/Ezi Root/Higgins): no manufacturer storefront found — GK PDP dumps only; Uber mfr Shopify 402; Green Pad Wix product-page URLs thin (catalogue index + GK Junior); revisit if official catalogues appear.
+- Additives batch (Rootex/Kraken/ROOT!T/Guardian/Dutchfest/SOS): no usable manufacturer product catalogue (Bass Labs SSL/non-product; dutchfest.com = festival; rootit.com empty) — GK vendor-fallback dumps only; SOS Liquid Biochar may overlap FUTURE SOIL; revisit if official catalogues appear.
+- AU Shopify retailers (2026-08-07): scraped The Grow Guys / Happy Hydro / Accent / Fran's / TG Hydro / Apex Grow / Hydro Hub via `import_au_retailer_catalog.py`. Non-viable: hydroexperts 403; hydrocity/hydroking/hygrotech DNS; greenthumb/hydrogarden non-Shopify. Fran's vendor revisit (2026-08-07): **no Giant Nutrients**; Growee = dosing hardware; FloraFlex on Fran's = irrigation only — nutrients from floraflex.com (**114**). Hydro Hub `nutrients` collection mixes additives. Checkpoint `os.replace` on SMB shares fails intermittently — importer now falls back to direct write.
+- Growth Technology additives: manufacturer PDPs are marketing-thin (NPK/dose rarely on overview; rates often only on download.php pictorials/labels). Dump records link provenance only — enrich later from label images/SDS if licensed for OCR, or curated secondary sources. AJAX grid intermittently 500s on later pages (importer keeps partial + seeds core hydro slugs).
+- GK manufacturer-brand gap fill (2026-08-07): `_gk_brands.json` / `_gk_additives_brands.json` now have **0** missing `dsc_nutrients_*` / `dsc_additives_*` dumps (45 + 75). Parallel agents + retailer carve (`import_au_retailer_catalog.py`) filled high-SKU gaps; do not re-scrape identical retailer collections. NAS `os.replace` on checkpoints still races under concurrent writers — prefer `--resume` + direct-write fallback; avoid two processes on the same brand.
+
+---
+
+## 2026-08-07 — Intl retailers shipping to AU
+
+### done (this pass)
+
+- Verified AU shipping / regional stores for Spider Farmer AU, Mars Hydro AU, Vivosun en-AU, Hytec (worldwide DDU), Hydro Bros (AU country picker)
+- Importers: `import_retailer_hytec.py`, `import_retailer_hydrobros.py`, shared `_dsc_intl_shopify.py`
+- Hytec dumps: lights **194**, tents **217**, nutrients **201**, additives **530**, mediums **64**
+- Hydro Bros dumps: lights **107**, tents **83**, nutrients **718**, mediums **170** (no additives collection)
+- Brand indexes `_hytec_*_brands.json` / `_hydrobros_*_brands.json`; SOURCE docs + FOLLOWUPS + gitignore
+- **Intl brand carves:** `import_from_intl_retailer_dumps.py --preset chase` → **38** sibling dumps (lights 7, tents 6, nutrients 9, additives 9, mediums 7); summary `_intl_retailer_carve_summary.json`
+- Did **not** duplicate Grow Kings lights/tents or manufacturer D2C brand dumps (siblings)
+- Seeds: no new bank dumps (Hytec/Hydro Bros have no seed collections; AU seed shipping not claimed)
+
+### deferred / blocked
+
+| ID | Item | Notes |
+|---|---|---|
+| N-065 | AC Infinity checkout AU confirm | Policy HTML has no AU; FAQ says use checkout dropdown |
+| N-066 | Growell / Hydrobuilder / Horticulture Source / Secret Jardin webshop | Skip: UK-only / no AU / 403 / 404 |
+| N-067 | Seed dumps from intl hydro shops | No seed collections; do not claim AU seed shipping without explicit ToS |
+| N-068 | Enrich Hytec/Hydro Bros bottle dose parsers | First pass is volume/NPK-thin retailer copy; mfr siblings preferred for rates |
+| N-069 | MIGRO full catalogue | `products.json` empty; HTML only 4 ARAY SKUs — need JS/API or Tavily-deep crawl for full ARAY/UV range |
+| N-070 | Dual Spider Farmer dump slugs | **Done** (2026-08-07): canonical `spider_farmer`; removed `dsc_lights_spiderfarmer` / `dsc_tents_spiderfarmer`; woo intl writes underscore slug |
+| N-071 | `dsc_tents_vivosun` race | **Mitigated** (2026-08-07): pin file `_vivosun_dump_owner.json` — D2C owns `dsc_*_vivosun.json`; GK proxies must use `_gk` suffix |
+
+### agent notes
+
+- Spider Farmer AU / Mars Hydro AU are WooCommerce (not Shopify `products.json`) — brand agents own photometric dumps
+- Vivosun en-AU storefront is SPA-ish — brand agent / regional site; shipping to AU confirmed on help page
+
+- Bunnings nutrients/additives/mediums (2026-08-07): **canonical on-disk dumps** (do not trust intermediate run-log counts from parallel agents):
+  - `dsc_nutrients_bunnings.json` **253** SKUs — `imported_at` **2026-08-06T18:59:24Z**
+  - `dsc_additives_bunnings.json` **137** SKUs — `imported_at` **2026-08-06T18:59:24Z** (same write wave; brands index **12** incl. Unknown for 2 empty-brand SKUs)
+  - `dsc_mediums_bunnings.json` **99** SKUs — `imported_at` **2026-08-06T18:50:13Z**
+  - **Race:** two agents crawled overlapping tracks. Stale log snapshots (`_bunnings_nutrients_run.log` **296** SKUs; `_bunnings_additives_run.log` **98** / `run2` **94**) are pre–Seasol-routing-fix. Final counts are post-pass after Seasol seaweed vs PowerFeed fix (do not match `fertilisers` in category path). Prefer dump `imported_at` over run logs.
+  - robots Disallow `/search` — no keyword scrape for hydro nutes / calmag / bloom booster beyond category heuristics; revisit only if a robots-allowed listing path appears.
+
+---
+
+## 2026-08-07 — AU seed retailers + brand gap list
+
+### done (this pass)
+
+- Inventory: existing `dsc_strains_*.json` counts documented; Herbies full dump **3873** on disk
+- AU retailer dumps (schema v2, `curated:false`, no merge):
+  - Seedsman Australia WC → `dsc_strains_seedsman_au.json` (**1263** after merch filter)
+  - Cannabiz Seed → `dsc_strains_cannabiz.json` (**99**)
+  - Sacred Seeds Australia → `dsc_strains_sacredseeds.json` (**67**)
+  - Mediseed Man → `dsc_strains_mediseedman.json` (**82**, thin props)
+  - Weed Seeds Express AU sitemap → `dsc_strains_weedseedsexpress.json` (**363**)
+- Brand gap index: `homeassistant/data/_au_seed_brands.json` via `build_au_seed_brands.py`
+- Scripts: `strain_wc_common.py`, `import_strains_{seedsman_au,cannabiz,sacredseeds,mediseedman,weedseedsexpress}.py`
+- Docs/gitignore updated; did **not** scrape Leafly/SeedFinder; did **not** merge catalogs
+
+### next-plan
+
+| ID | Item | Notes |
+|---|---|---|
+| N-069 | Parallel manufacturer scrapes from `_au_seed_brands.json` | Priority: Blimburn, Green House Seed Co, DNA Genetics, Sweet Seeds, Sensi, Humboldt, The Plug |
+| N-070 | MSNL Magento product-only feed | Flat sitemap mixes hubs; needs cleaner URL filter or HTML listing crawl |
+| N-071 | Confirm Herbies final dump count ≈ 3873 | **Done** — `dsc_strains_herbies.json` count **3873** |
+
+### deferred
+
+- `seedshere.com.au` / `ozseeds.com.au` — DNS dead
+- Australia Bud Supply — not a seed catalog (flower/vape)
+- Seedsman.com global SPA — still skipped
+
+## 2026-08-07 — Grow-light manufacturer chase
+
+### done (this pass)
+
+- Coordinator already had `dsc_lights_growkings.json` (**221**) + `_gk_lights_brands.json` (**41** brands) — not re-scraped
+- Manufacturer dumps with strong map coverage: Spider Farmer **314** (PPFD+spectrum maps 100%), Digi-Lumen **23** (PPFD maps 100%), Treegers **12** (beam/spectrum/PPFD maps), Viparspectra **15** (beam maps)
+- Lumatek kept as GK proxy (official site rebuild/PDF only)
+- All 41 GK index brands have `dsc_lights_<slug>.json` (mfr or retailer-proxy)
+- Bunnings: **7** Sansi/LetPot houseplant grow lights
+- Docs: `LIGHT_SOURCES.md` + `dsc_light_catalog.schema.md`
+
+### next-plan
+
+| ID | Item | Notes |
+|---|---|---|
+| N-072 | Lumatek re-scrape when public PDPs return | Currently password/rebuild + catalogue PDF only |
+| N-073 | AC Infinity / Adjust-A-Wings / Pro Grow / Hortitek mfr HTML crawls | Shopify `products.json` 404 or 429; GK proxy is placeholder |
+| N-074 | Guard empty mfr crawls from wiping GK proxies | Failed Shopify crawls wrote count=0 over good splits once |
+
+### deferred
+
+- Roleadro / Spectrum King / Bestva / Phlizon — DNS dead
+- Hi-Par official domain refused / DNS fail
+
+## 2026-08-07 — Grow-tent manufacturer brand chase
+
+### done (this pass)
+
+- Used `_gk_tents_brands.json` + `dsc_tents_growkings.json` (**85** SKUs); **no** Grow Kings re-scrape
+- Per-brand dumps for all **15** GK brands; manufacturer/AU-retail overwrites for Gorilla, Homebox (A-Grade), AC Infinity, Spider Farmer, Vivosun, Bud Box
+- Docs: `TENT_SOURCES.md` brand→count→URL table; gitignore already covers `dsc_tents_*.json`
+
+### next-plan
+
+| ID | Item | Notes |
+|---|---|---|
+| N-075 | Sea-Hawk / Power-House manufacturer catalogues | No public mfr SKU site found; GK-split only |
+| N-076 | Mammoth official mfr crawl | Dutch Mammoth Tents line; GK has Pro HC only |
+| N-077 | Deduplicate `dsc_tents_spider_farmer` vs `dsc_tents_spiderfarmer` | **Done** (2026-08-07): kept richer `spider_farmer` (105); removed alt (83) |
+| N-078 | Homebox.net SKU feed if/when published | Currently A-Grade AU proxy |
+| N-081 | Light photometrics pack (PPFD/spectrum URLs) | **Done** (2026-08-07): `clean_light_map_assets.py` + `dsc_light_pack_photometrics.yaml` + `dsc_v4_light_catalog.yaml`; Vivosun still 0 maps (JS storefront) |
+| N-082 | Catalog → Pro dash surface | **Done** (2026-08-07): Strains / Nutrient Science / Lighting views show catalog packs; SF1000 nameplate watts sync → `input_number.dsc_sf1000_w` |
+| N-083 | Build a Plant (separate surface) | **Done** (2026-08-07): `dsc-build-plant` dashboard + card + `dsc_v4_build_plant.yaml`; Vivosun stated PPE/PPFD/datasheets; map URLs still 0 |
+
+### deferred
+
+- Garden HighPro / Lighthouse / Secret Jardin Dark Room — not in GK brand index this pass (prior chase list); resume if added to coordinator
+
+## 2026-08-07 — Build a Plant (N-083)
+
+### done
+- Separate dashboard URL **`dsc-build-plant`** (`dsc-build-plant-dashboard.yaml` + `configuration.snippet.yaml`)
+- Package `dsc_v4_build_plant.yaml`: soil % blend (sum-100), 8-slot plant roster, `sensor.dsc_mix_calculator`, Want temp/RH sensors, `script.dsc_apply_climate_want` / `dsc_build_plant_commit` / `dsc_plant_assign_to_pot`
+- Lit card `www/dsc-build-plant-card.js` + `dist/` copy; search indexes under `www/dsc-catalog/`
+- Vivosun importer: `__NEXT_DATA__` wattage / PPE / stated point-PPFD / PDF datasheets; map URLs still **0** (CDN hashes unlabeled)
+
+### verify (operator)
+- Add Lovelace resource `/local/dsc-build-plant-card.js` **or** rely on bundled `DSC-HUB.js` / `dsc-system-map-card.js` (now includes Build a Plant via `sync-hacs-dist.sh` / `ha-sync.sh`)
+- Ensure `dsc-build-plant` dashboard is registered (configuration.snippet)
+- Reload packages; open `/dsc-build-plant/build`
+- Soil sliders valid only at 100%; mix ml = dose × tank L × strength%
+- Apply climate Want no-ops when custom temp/RH are 0
+- Search indexes under `/local/dsc-catalog/` (ha-sync copies `www/dsc-catalog/`)
+
+### extension points & gaps (next pass)
+
+| Goal | Extend | Gap |
+|---|---|---|
+| Multi-nutrient mix calculator | Slots 1–8 + Accept mix + `sensor.dsc_mix_calculator` | Stage/week recipes, recipe packs, short-stock gating, pumps (N-012) |
+| Soil % splits | `dsc_blend_*` + card stacked bar | Dump composition % not auto-loaded |
+| Plant inventory | 8 roster slots | Seed counts / plant IDs / mother stock |
+| Apply climate Want | Custom temp/RH → hub targets | Catalog seeds lack climate bands (by design) |
+| Vivosun / light graphs | NEXT_DATA photometrics + datasheets | Still **0** keyword-labeled map image URLs |
+| Search / select | `/local/dsc-catalog/` indexes | Strain index capped at 2500 of ~36k merged |
+
+### deferred
+- OCR of PPFD heatmaps; pump dosing; absorbing Build a Plant into The Dash / Pro tabs
+
+## 2026-08-07 — Dash air: kill glow spheres (filaments)
+
+### done
+- Screenshot still showed blue/red/purple **glow spheres** after cone removal — root causes: dense soft particles + bloom, **OUT ventGlow plane**, matGlow, and shell re-boost when both exhaust legs live.
+- Suck/exit remade as **~10 discrete streamline filaments** (streak sprites, low opacity) — not filled volumes.
+- Quieted ventGlow/matGlow; CFM-gated vent slat emissive; removed neon shell re-boost; bloom threshold↑/strength↓.
+- Deployed \?v=nofanblobs-*\ (~924KB). **Hard location.reload required** (F-010).
+
+### acceptance
+- After hard reload at CFM>0 (HELD OK): intakes show converging filament fans, RECIRC/OUT show expanding filaments past terminus, **no** large translucent spheres/cones at those ports.
+
+### deferred
+- Authored GLTF; DepthTexture default-on; fake air at 0 CFM.
+
+## 2026-08-07 — AU seed brand-gap mfr dumps (Blimburn / HMC / Greenhouse)
+
+### done
+- Importers: `import_strains_blimburn.py`, `import_strains_happy_munkey.py`, `import_strains_greenhouse.py` (schema v2, polite+checkpoint, `curated:false`, no merge)
+- Dumps: Blimburn **1355** (`blimburnseeds.com` WC Store API); Happy Munkey **50** (HMC filter on same API); Greenhouse **118** (`shop.greenhouseseeds.nl` PDP prose)
+- `STRAIN_SOURCES.md` updated; SMB-safe checkpoint fallback in `strain_wc_common` / greenhouse importer
+
+### next-plan
+| ID | Item | Notes |
+|---|---|---|
+| N-079 | Re-run Greenhouse with tighter skip list | A few USA/landrace limited-edition sitemap locs 404 |
+| N-080 | Herbies crawl finish | **Done** — dump **3873** / sitemap **3873** |
+
+### deferred
+- No Leafly / SeedFinder; no live catalog merge
+
+---
+
+## 2026-08-07 — Continual ESP API drops (debug d1f7fb)
+
+### runtime
+- Logs closed soak: hub **29%** alive / **38** flips; Control **93%** / 6 flips.
+- Post-reload soak: hub **13%** alive (4/30), wifi_down 15/30.
+- Brief HA live window: Lock **ON**, preferred==associated `58:D9:D5:D7:AA:E2`, RSSI **-63**, FW 5.1.10.
+- Flaps 24h climbed **59 → 74** during session. TCP :6053 often open while HA entities unavailable (wedge).
+
+### verdicts
+| ID | Result |
+|---|---|
+| G Builder vs HA | Rejected as primary |
+| A Hub WiFi path | **Confirmed primary** |
+| B/C API/hello | Confirmed secondary |
+| F roam storms | Rejected (5.1.10, 0 storms) |
+| Lock/BSSID missing | Rejected when live — already locked to E2A |
+
+### in tree / deployed
+| Item | Status |
+|---|---|
+| Hub stub `wifi_bssid: 58:D9:D5:D7:AA:E2` + FW **5.1.12** | **OTA done** — HA reports FW 5.1.12 when live; BSSID pinned E2 |
+| HA `dsc_hub_api_reclaim_after_outage` in `dsc_v4_fleet_heal.yaml` | **Deployed 7 Aug 2026** (first SCP missed reclaim block — 8424B truncated; redeploy 9491B + core restart). Entity `on`, `restored:false`. Manual trigger proved `reload_config_entry` + notify + 5 min cooldown (trace `0da6eff7`). |
+
+### operator
+| ID | Item | Notes |
+|---|---|---|
+| N-065 | Power-cycle hub then OTA 5.1.12 | **Done** (OTA succeeded earlier this session) |
+| N-066 | Deploy reclaim package + core restart | **Done** after redeploy (verify automation stays `on`, not `restored`) |
+| N-067 | Hub placement / Nest — RSSI ~−65 vs Control stable | Still open — WiFi path flaps remain primary; reclaim is band-aid for HA wedge only |
+
+### red-flag
+- Hub WiFi path still flapping hard; Dash HELD is honest. Climate continues on hub local stack when API is dark.
+

@@ -12,12 +12,28 @@ sections:
         heading_style: title
       - type: markdown
         content: >-
-          **Want** bands come from genetics (seed templates or custom slots).
-          **Got** = offset-corrected probes. **Need** = gap narrative.
+          **Want** bands come from the catalog picker (schema v2 seeds) or custom
+          slots with split seedling/veg/flower EC. **Got** = offset-corrected
+          probes. **Need** = gap narrative.
+
+          Catalog SoT: `sensor.dsc_strain_catalog` (`want_bands` attribute).
+          Promote: `python scripts/promote_strain_catalog_to_ha.py`.
+
+          **Compose a new plant** on the separate [Build a Plant](/dsc-build-plant/build)
+          dashboard (soil %, nutrients, light, climate Apply, roster inventory).
+
           Operator rule: **peer OR ESP absolute cal, not both**.
 
           **Tonight:** 1) Capture peer baseline → 2) Push peer → ESP.
           Status: `{{ states('input_text.dsc_peer_sync_status') }}`
+      - type: entities
+        title: Catalog status
+        show_header_toggle: false
+        entities:
+          - entity: sensor.dsc_strain_catalog
+            name: Strain catalog
+          - entity: input_select.dsc_pot1_strain
+            name: POT1 strain (HA picker)
       - type: conditional
         conditions:
           - condition: state

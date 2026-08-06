@@ -1,0 +1,17 @@
+# ==================================================================
+#  DSC Build a Plant — separate Lovelace dashboard
+#  ------------------------------------------------------------------
+#  URL path: dsc-build-plant (see configuration.snippet.yaml)
+#  Not a Pro-dash tab. Full-bleed composition card only.
+# ==================================================================
+
+title: Build a Plant
+views:
+  - title: Build
+    path: build
+    icon: mdi:sprout
+    type: panel
+    cards:
+      - type: custom:dsc-build-plant-card
+        title: Build a Plant
+        subtitle: Compose strain · medium · nutrition · light · climate — then commit to inventory.

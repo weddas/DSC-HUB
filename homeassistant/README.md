@@ -7,11 +7,15 @@ Canonical HA surface for firmware [`firmware/v4/`](../firmware/v4/).
 | Path | Role |
 |---|---|
 | `dashboards/dsc-hub-v4-dashboard.yaml` | Lovelace UX **v5.1.3** (`dsc-hub-pro`). In-service kit toggles; learn **Activity**; Root Zone Pots+Mat. |
+| `dashboards/dsc-build-plant-dashboard.yaml` | **Build a Plant** separate dashboard (`dsc-build-plant`) — composition card only |
 | `packages/dsc_v4_core_helpers.yaml` | Hub link, fan %, runtimes, **in-service** + capacity-offline + vent-conflict / ineffective cues |
 | `packages/dsc_v4_strain_catalog.yaml` | Strain catalog, sprout age, Want/Need/Got, peer offsets, Apply expected stage |
+| `packages/dsc_v4_build_plant.yaml` | Build a Plant SoT: soil % blend, plant roster, mix calculator, Apply climate Want |
 | `packages/dsc_v4_sensor_cal.yaml` | Peer sync, dual-stack, push peer→ESP, **lab wet two-point** |
 | `packages/dsc_v4_sensor_trust.yaml` | Stuck/MAD/DHT trust, keep-up gaps, HA-link flap counter |
-| `packages/dsc_v4_nutrient_catalog.yaml` | Nutrient stock, next-mix recipe, Accept mix QA (no pumps) |
+| `packages/dsc_v4_nutrient_catalog.yaml` | Nutrient stock, next-mix recipe, Accept mix QA (no pumps); CANNA Coco A+B pack |
+| `packages/dsc_v4_medium_catalog.yaml` | Curated substrate pack (CANNA Coco Professional Plus + optional clay) |
+| `packages/dsc_v4_light_catalog.yaml` | Fixture picker + PPFD/spectrum map URLs + stated W/PPF/PPE |
 | `packages/dsc_v4_pots_coherence.yaml` | Relative dryback + cross-pot EC/moisture coherence + learned ratios |
 | `packages/dsc_v4_actuator_efficacy.yaml` | Command→effect; Temp OOS vs Operator Lockout; demand inhibit |
 | `packages/dsc_v4_climate_physics.yaml` | Settable plant specs (CFM/volumes/L/day/W), ACH/AH/BTU/moisture sensors, spec verification |
@@ -24,8 +28,10 @@ Canonical HA surface for firmware [`firmware/v4/`](../firmware/v4/).
 | `packages/dsc_v4_pots_alerts.yaml` | Per-pot moisture/pH/temp/EC/N alert binaries |
 | `packages/dsc_v4_alert_count.yaml` | `sensor.dsc_active_alert_count` for Home chip |
 | `packages/dsc_v4_automations.yaml` | Demand followers, climate/safety alerts, grow-log scribe |
-| `configuration.snippet.yaml` | Paste-once: packages include + YAML-mode `dsc-hub-pro` dashboard |
+| `configuration.snippet.yaml` | Paste-once: packages include + YAML-mode `dsc-hub-pro` + `dsc-build-plant` dashboards |
 | `automations.yaml` | Deprecated stub — points at the package above |
+| `www/dsc-build-plant-card.js` | Build a Plant Lovelace card → `/config/www/` (+ resource) |
+| `www/dsc-catalog/` | Slim search indexes for Build a Plant (`/local/dsc-catalog/…`) |
 | `www/dsc-system-map.*` | SYSTEM MAP Lovelace card + SVG → `/config/www/` |
 | `www/dsc-airflow-map-card.js` | AIRFLOW STATUS Lovelace card → `/config/www/` |
 | `esphome/` | Thin device stubs — pull firmware packages from GitHub |
@@ -322,7 +328,11 @@ Packages: `dsc_v4_strain_catalog`, `dsc_v4_nutrient_catalog`, `dsc_v4_pots_coher
 Dashboard: **Strains** (`/dsc-hub-pro/strains`), plant consoles (strain/sprout/Need),
 **Nutrient Science** (`/dsc-hub-pro/nutrient-science`), Root Zone dryback/coherence,
 Climate Temp OOS / Lockout (incl. Clone Mister status). Data mirrors:
-`data/dsc_strain_catalog.yaml`, `data/dsc_nutrient_catalog.yaml`.
+`data/dsc_strain_catalog.yaml` (**schema v2** — see `data/dsc_strain_catalog.schema.md`;
+popular BudProfiles imports merged; regenerate dumps with
+`python scripts/import_strains_budprofiles.py` and
+`python scripts/import_strains_openthc.py --link-budprofiles --link-popular --link-yaml`),
+`data/dsc_nutrient_catalog.yaml`.
 
 ## Tank / Tuya entity map
 

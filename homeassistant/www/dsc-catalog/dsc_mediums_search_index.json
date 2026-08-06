@@ -1,0 +1,5448 @@
+{
+  "schema_version": 1,
+  "kind": "mediums",
+  "built_at": "2026-08-06T21:29:57Z",
+  "count": 777,
+  "note": "Slim medium index for soil % blend search.",
+  "items": [
+    {
+      "id": "medium_clay_pebbles_leca",
+      "name": "Clay pebbles / LECA",
+      "brand": null,
+      "category": "substrate",
+      "source": "builder_seed"
+    },
+    {
+      "id": "medium_perlite",
+      "name": "Perlite",
+      "brand": null,
+      "category": "substrate",
+      "source": "builder_seed"
+    },
+    {
+      "id": "medium_cyco_coco_lite_70_30",
+      "name": "Cyco Coco Lite 70/30",
+      "brand": null,
+      "category": "substrate",
+      "source": "builder_seed"
+    },
+    {
+      "id": "mfr_canna_aqua_clay_pebbles_50l",
+      "name": "CANNA Aqua Clay Pebbles — 50L",
+      "brand": "Canna",
+      "category": "clay_pebbles_leca",
+      "source": "dsc_mediums_canna"
+    },
+    {
+      "id": "gk_med_canna_aqua_expanded_clay_45l_45l_8_16",
+      "name": "Canna Aqua Expanded Clay Pebbles | Leca 8-16mm - 45L",
+      "brand": "Canna",
+      "category": "clay_pebbles_leca",
+      "source": "dsc_mediums_canna"
+    },
+    {
+      "id": "mfr_canna_canna_coco_natural_50l",
+      "name": "CANNA Coco Natural",
+      "brand": "Canna",
+      "category": "coco",
+      "source": "dsc_mediums_canna"
+    },
+    {
+      "id": "mfr_canna_canna_coco_professional_plus_canna_coco_professional_plus",
+      "name": "CANNA Coco Professional Plus",
+      "brand": "Canna",
+      "category": "coco",
+      "source": "dsc_mediums_canna"
+    },
+    {
+      "id": "gk_canna_coco_professional_plus_50l_bag_50l",
+      "name": "Canna Coco Professional Plus 50L bag",
+      "brand": "Canna",
+      "category": "coco",
+      "source": "dsc_mediums_canna"
+    },
+    {
+      "id": "mfr_canna_canna_coco_slabs_canna_coco_slabs",
+      "name": "CANNA Coco Slabs",
+      "brand": "Canna",
+      "category": "coco",
+      "source": "dsc_mediums_canna"
+    },
+    {
+      "id": "mfr_canna_canna_cogr_boards_canna_cogr_boards",
+      "name": "CANNA COGr Boards",
+      "brand": "Canna",
+      "category": "coco",
+      "source": "dsc_mediums_canna"
+    },
+    {
+      "id": "gk_med_canna_terra_professional_50l_bag_50l",
+      "name": "Canna Terra Professional 50L Bag",
+      "brand": "Canna",
+      "category": "soil_potting_mix",
+      "source": "dsc_mediums_canna"
+    },
+    {
+      "id": "gk_cyco_coco_bitz_50_litre_bag_0mri_approved_50l",
+      "name": "Cyco Coco Bitz 50 Litre Bag (OMRI Approved)",
+      "brand": "CYCO",
+      "category": "coco",
+      "source": "dsc_mediums_cyco"
+    },
+    {
+      "id": "mfr_cyco_cyco_coco_bitz_brick_5_kg_cyco_coco_bitz_brick",
+      "name": "Cyco Coco Bitz Brick",
+      "brand": "CYCO",
+      "category": "coco",
+      "source": "dsc_mediums_cyco"
+    },
+    {
+      "id": "mfr_cyco_cyco_coco_coir_50l",
+      "name": "CYCO COCO COIR",
+      "brand": "CYCO",
+      "category": "coco",
+      "source": "dsc_mediums_cyco"
+    },
+    {
+      "id": "gk_cyco_coco_coir_50_litre_bag_omri_approved_50l",
+      "name": "Cyco Coco Coir 50 Litre Bag (Omri Approved)",
+      "brand": "CYCO",
+      "category": "coco",
+      "source": "dsc_mediums_cyco"
+    },
+    {
+      "id": "mfr_cyco_cyco_coco_lite_50l",
+      "name": "CYCO COCO LITE",
+      "brand": "CYCO",
+      "category": "coco",
+      "source": "dsc_mediums_cyco"
+    },
+    {
+      "id": "gk_cyco_coco_lite_50_litre_bag_70_30_omri_approved_50l",
+      "name": "Cyco Coco Lite 50 Litre Bag (70 / 30) (OMRI Approved)",
+      "brand": "CYCO",
+      "category": "coco",
+      "source": "dsc_mediums_cyco"
+    },
+    {
+      "id": "mfr_cyco_cyco_coco_pearl_50l",
+      "name": "CYCO COCO PEARL",
+      "brand": "CYCO",
+      "category": "coco",
+      "source": "dsc_mediums_cyco"
+    },
+    {
+      "id": "mfr_cyco_cyco_coco_pearl_205l_205l",
+      "name": "CYCO COCO PEARL 205L",
+      "brand": "CYCO",
+      "category": "coco",
+      "source": "dsc_mediums_cyco"
+    },
+    {
+      "id": "gk_coco_coir_perlite_coco_chips_blend_10l",
+      "name": "Premium Indoor Plant Blend - Coco Coir, Coco Chips & Perlite - 10L",
+      "brand": "Grow Kings",
+      "category": "coco",
+      "source": "dsc_mediums_coco"
+    },
+    {
+      "id": "gk_hy_gen_cocopeat_brick_five_kg_compressed_makes_70l_copy_4kg",
+      "name": "CoCopeat Brick 4Kg Compressed (Makes 56L)",
+      "brand": "LGD",
+      "category": "coco",
+      "source": "dsc_mediums_coco"
+    },
+    {
+      "id": "gk_coco_coir_chips_washed_buffered_10l_10l",
+      "name": "Premium Coco Coir Chips - Washed & Buffered - 10L",
+      "brand": "Grow Kings",
+      "category": "coco",
+      "source": "dsc_mediums_coco"
+    },
+    {
+      "id": "gk_premium_max_air_70_30_coco_blend_50l_50l",
+      "name": "Bio Diesel Premium MAX AIR 70/30 Coco Blend 50L",
+      "brand": "Bio Diesel",
+      "category": "coco",
+      "source": "dsc_mediums_coco"
+    },
+    {
+      "id": "gk_greenplanet_coco_70_30_perlite_53l_bag_53l",
+      "name": "GreenPlanet 70/30 Coco Perlite Blend 53L Bag",
+      "brand": "Green Planet",
+      "category": "coco",
+      "source": "dsc_mediums_coco"
+    },
+    {
+      "id": "gk_w2g_pro_coco_5_kg_block_5kg",
+      "name": "W2G Professional Coco 5 kg Block (Makes 60L)",
+      "brand": "Way to Grow",
+      "category": "coco",
+      "source": "dsc_mediums_coco"
+    },
+    {
+      "id": "gk_co_co_brick_five_kg_hy_gen_compressed_makes_70_ltrs_70l",
+      "name": "Hy-Gen CoCopeat Brick Five Kg Compressed (Makes 70L)",
+      "brand": "Hy-Gen",
+      "category": "coco",
+      "source": "dsc_mediums_coco"
+    },
+    {
+      "id": "gk_co_co_brick_650_gram_compressed_650g",
+      "name": "Hy-Gen CoCopeat Brick 650 Gram Compressed",
+      "brand": "Hy-Gen",
+      "category": "coco",
+      "source": "dsc_mediums_coco"
+    },
+    {
+      "id": "gk_coco_coir_perlite_70_30_blend_10l_10l",
+      "name": "Premium Coco Coir Perlite 70 / 30 Blend - 10L",
+      "brand": "Grow Kings",
+      "category": "coco",
+      "source": "dsc_mediums_coco"
+    },
+    {
+      "id": "gk_hy_gen_coirlite_70_30_peat_perlite_4_8_premium_50_litre_50l",
+      "name": "Hy-Gen Coirlite 70/30 Peat - Perlite 4/8 Premium 50 Litre",
+      "brand": "Hy-Gen",
+      "category": "coco",
+      "source": "dsc_mediums_coco"
+    },
+    {
+      "id": "gk_premium_coco_coir_washed_buffered_10l_10l",
+      "name": "Premium Coco Coir Washed & Buffered - 10L",
+      "brand": "Grow Kings",
+      "category": "coco",
+      "source": "dsc_mediums_coco"
+    },
+    {
+      "id": "gk_rootz_distribution_coco_perlite_70_30_blend_50l_50l",
+      "name": "Rootz Distribution Coco Perlite 70/30 Blend - 50L",
+      "brand": "Rootz Distribution",
+      "category": "coco",
+      "source": "dsc_mediums_coco"
+    },
+    {
+      "id": "gk_eazy_plug_ct_24_tray_24_count",
+      "name": "Eazy-Plug Coco Peat Plug & Grow Propagation Tray - 24 Cubes",
+      "brand": "Eazy Plug",
+      "category": "coco",
+      "source": "dsc_mediums_coco"
+    },
+    {
+      "id": "gk_greenplanet_professional_coco_coir_53l_bag_53l",
+      "name": "GreenPlanet Professional Coco Coir 53L Bag",
+      "brand": "Green Planet",
+      "category": "coco",
+      "source": "dsc_mediums_coco"
+    },
+    {
+      "id": "gk_eazy_plug_ct_12_tray_12_count",
+      "name": "Eazy-Plug Coco Peat Plug & Grow Propagation Tray - 12 Cubes",
+      "brand": "Eazy Plug",
+      "category": "coco",
+      "source": "dsc_mediums_coco"
+    },
+    {
+      "id": "gk_eazy_plug_ct_77_tray_77_count",
+      "name": "Eazy-Plug Coco Peat Plug & Grow Propagation Tray - 77 Cubes",
+      "brand": "Eazy Plug",
+      "category": "coco",
+      "source": "dsc_mediums_coco"
+    },
+    {
+      "id": "gk_premium_coco_coir_and_coco_chips_washed_buffered_10l_10l",
+      "name": "Premium Coco Coir & Coco Chips Blend - Washed & Buffered - 10L",
+      "brand": "Grow Kings",
+      "category": "coco",
+      "source": "dsc_mediums_coco"
+    },
+    {
+      "id": "gk_bio_diesel_coco_propagation_plugs_38mm_38mm",
+      "name": "Bio Diesel - Coco Propagation Plugs - 38mm (100 Pack)",
+      "brand": "Bio Diesel",
+      "category": "coco",
+      "source": "dsc_mediums_coco"
+    },
+    {
+      "id": "gk_w2g_green_pro_coco_50_l_bag_50l",
+      "name": "W2G Professional Coco 50L bag",
+      "brand": "Way to Grow",
+      "category": "coco",
+      "source": "dsc_mediums_coco"
+    },
+    {
+      "id": "gk_microgreen_coco_coir_grow_mats_default",
+      "name": "Microgreen Coco Coir Grow Mat",
+      "brand": "growy",
+      "category": "coco",
+      "source": "dsc_mediums_coco"
+    },
+    {
+      "id": "gk_hy_gen_ultimate_blend_coir_peat_coco_chips_50l_bag_50l",
+      "name": "Hy-Gen Ultimate Blend Coir Peat + Coco Chips 50L Bag",
+      "brand": "Hy-Gen",
+      "category": "coco",
+      "source": "dsc_mediums_coco"
+    },
+    {
+      "id": "gk_rootz_distribution_coco_m_default",
+      "name": "Rootz Distribution Coco-M",
+      "brand": "Rootz Distribution",
+      "category": "coco",
+      "source": "dsc_mediums_coco"
+    },
+    {
+      "id": "gk_root_t_coco_coir_dry_propagation_plugs_tray_24_cell_24_count",
+      "name": "ROOT!T Coco Coir Dry Propagation Plugs - 24 Cell Tray",
+      "brand": "ROOT!T",
+      "category": "coco",
+      "source": "dsc_mediums_coco"
+    },
+    {
+      "id": "gk_professors_coco_chips_50l_50l",
+      "name": "Professors Nutrients Coco Chips - 50L",
+      "brand": "Professor's Nutrients",
+      "category": "coco",
+      "source": "dsc_mediums_coco"
+    },
+    {
+      "id": "gk_professors_nutrients_coco_brick_5kg_5kg",
+      "name": "Professors Nutrients Coco Brick - 5kg",
+      "brand": "Professor's Nutrients",
+      "category": "coco",
+      "source": "dsc_mediums_coco"
+    },
+    {
+      "id": "gk_coco_low_compression_brick_70l",
+      "name": "Bio Diesel Coco Low Compression Brick",
+      "brand": "Bio Diesel",
+      "category": "coco",
+      "source": "dsc_mediums_coco"
+    },
+    {
+      "id": "gk_greenplanet_coco_60_40_chips_53l_bag_53l",
+      "name": "GreenPlanet Coco 60/40 Chips - 53L Bag",
+      "brand": "Green Planet",
+      "category": "coco",
+      "source": "dsc_mediums_coco"
+    },
+    {
+      "id": "mfr_bio_diesel_upload_product_coco_fiber_coco_fiber",
+      "name": "Coco Fiber",
+      "brand": "Bio Diesel",
+      "category": "coco",
+      "source": "dsc_mediums_coco"
+    },
+    {
+      "id": "mfr_bio_diesel_upload_product_coco_brick_coco_brick",
+      "name": "Coco Brick",
+      "brand": "Bio Diesel",
+      "category": "coco",
+      "source": "dsc_mediums_coco"
+    },
+    {
+      "id": "mfr_green_planet_products_professional_coco_chips_professional_coco_chips",
+      "name": "Professional Coco Chips",
+      "brand": "Green Planet",
+      "category": "coco",
+      "source": "dsc_mediums_coco"
+    },
+    {
+      "id": "mfr_green_planet_products_professional_coco_professional_coco",
+      "name": "Professional Coco",
+      "brand": "Green Planet",
+      "category": "coco",
+      "source": "dsc_mediums_coco"
+    },
+    {
+      "id": "mfr_green_planet_products_professional_coco_perlite_professional_coco_perlite",
+      "name": "Professional Coco Perlite",
+      "brand": "Green Planet",
+      "category": "coco",
+      "source": "dsc_mediums_coco"
+    },
+    {
+      "id": "mfr_hy_gen_product_hy_gen_cocopeat_650g",
+      "name": "HY-GEN Cocopeat",
+      "brand": "Hy-Gen",
+      "category": "coco",
+      "source": "dsc_mediums_coco"
+    },
+    {
+      "id": "mfr_hy_gen_product_coirlite_50l",
+      "name": "HY-GEN Coirlite",
+      "brand": "Hy-Gen",
+      "category": "coco",
+      "source": "dsc_mediums_coco"
+    },
+    {
+      "id": "mfr_hy_gen_product_hy_gen_ultimate_50l",
+      "name": "HY-GEN Ultimate",
+      "brand": "Hy-Gen",
+      "category": "coco",
+      "source": "dsc_mediums_coco"
+    },
+    {
+      "id": "gk_med_easy_as_organics_water_only_soil_25_litre_25l",
+      "name": "Easy As Organics Water Only Living Soil 25L",
+      "brand": "SNT",
+      "category": "living_soil",
+      "source": "dsc_mediums_growkings"
+    },
+    {
+      "id": "gk_med_professors_nutrients_hydro_clay_balls_10l_10l",
+      "name": "Professors Nutrients Hydro Clay Balls - 10L",
+      "brand": "Professor's Nutrients",
+      "category": "clay_pebbles_leca",
+      "source": "dsc_mediums_growkings"
+    },
+    {
+      "id": "gk_med_clay_balls_16mm_10l",
+      "name": "Expanded Clay Balls For Growing plants / Hydroponic Systems 8-16mm - 10L Bag",
+      "brand": "Grow Kings",
+      "category": "clay_pebbles_leca",
+      "source": "dsc_mediums_growkings"
+    },
+    {
+      "id": "gk_med_premium_perlite_10litre_bag_course_10l",
+      "name": "Premium Perlite 10L Bag - Course",
+      "brand": "growy",
+      "category": "perlite",
+      "source": "dsc_mediums_growkings"
+    },
+    {
+      "id": "gk_med_green_planet_expanded_clay_balls_leca_8_15mm_25l_bag_25l",
+      "name": "Green Planet Expanded Clay Balls (LECA) 8-15mm - 25L Bag",
+      "brand": "Green Planet",
+      "category": "clay_pebbles_leca",
+      "source": "dsc_mediums_growkings"
+    },
+    {
+      "id": "gk_med_balls_expanded_clay_8mm_to_16mm_50_litre_bag_50l",
+      "name": "Colossal Expanded Clay 8mm To 16mm 50 Litre Bag",
+      "brand": "Accent Hydroponics",
+      "category": "clay_pebbles_leca",
+      "source": "dsc_mediums_growkings"
+    },
+    {
+      "id": "gk_med_introducing_groden_rockwool_cube_40mm_x_40mm_8pk_12pk",
+      "name": "Grodan Rockwool Wrapped Propagation Cube - 40mm x 40mm - 12pk",
+      "brand": "Grodan",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_growkings"
+    },
+    {
+      "id": "gk_med_balls_expanded_clay_16mm_plus_50_litre_bag_50l",
+      "name": "Expanded Clay Balls 16mm - 50 Litre Bag",
+      "brand": "Balls Expanded Clay",
+      "category": "clay_pebbles_leca",
+      "source": "dsc_mediums_growkings"
+    },
+    {
+      "id": "gk_med_speedgrow_40_x_40_x_40mm_propagation_cubes_8_pack_40x40x40mm",
+      "name": "SPEEDGROW 40 x 40 x 40mm Propagation Cubes - 8 Pack",
+      "brand": "Speed Grow",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_growkings"
+    },
+    {
+      "id": "gk_med_groden_rockwool_cube_75mm_x_75mm_no_hole_6pk",
+      "name": "Grodan Rockwool Cube - No Hole - 75mm x 75mm- 6pk",
+      "brand": "Grodan",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_growkings"
+    },
+    {
+      "id": "gk_med_rootit_natural_rooting_sponges_50_refill_bag_default",
+      "name": "Rootit - Natural Rooting Sponges (50 Refill Bag)",
+      "brand": "ROOT!T",
+      "category": "propagation_plugs",
+      "source": "dsc_mediums_growkings"
+    },
+    {
+      "id": "gk_med_expanded_clay_balls_for_growing_plants_hydroponic_systems_16mm_10",
+      "name": "Expanded Clay Balls For Growing plants / Hydroponic Systems 16mm - 10L Bag",
+      "brand": "Grow Kings",
+      "category": "clay_pebbles_leca",
+      "source": "dsc_mediums_growkings"
+    },
+    {
+      "id": "gk_med_grodan_rockwool_wrapped_propagation_cube_40mm_x_40mm_30pk_30pk",
+      "name": "Grodan Rockwool Wrapped Propagation Cube - 40mm x 40mm - 30pk",
+      "brand": "Grodan",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_growkings"
+    },
+    {
+      "id": "gk_med_vermiculite_10l_10l",
+      "name": "Vermiculite - 10L",
+      "brand": "Grow Kings",
+      "category": "vermiculite",
+      "source": "dsc_mediums_growkings"
+    },
+    {
+      "id": "gk_med_natures_soil_premium_potting_mix_30_l_30l",
+      "name": "Natures Soil Premium Potting Mix 30 L",
+      "brand": "Natures Soil",
+      "category": "soil_potting_mix",
+      "source": "dsc_mediums_growkings"
+    },
+    {
+      "id": "gk_med_copy_of_grodan_rockwool_10l_10l",
+      "name": "Growool Granulated Premium Rockwool - 10L",
+      "brand": "Grow Kings",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_growkings"
+    },
+    {
+      "id": "gk_med_eazy_plug_six_plug_sowing_set_default",
+      "name": "Eazy-Plug Six Plug Sowing Set",
+      "brand": "Eazy Plug",
+      "category": "propagation_plugs",
+      "source": "dsc_mediums_growkings"
+    },
+    {
+      "id": "gk_med_jiffy_7_propagation_pellets_42mm_30pk_30pk",
+      "name": "Jiffy-7 Propagation Pellets 42mm - 30pk",
+      "brand": "Jiffy",
+      "category": "propagation_plugs",
+      "source": "dsc_mediums_growkings"
+    },
+    {
+      "id": "gk_med_rootit_rooting_sponge_24_cell_tray_24pk",
+      "name": "Rootit - Rooting Sponge 24 Cell Tray",
+      "brand": "ROOT!T",
+      "category": "propagation_plugs",
+      "source": "dsc_mediums_growkings"
+    },
+    {
+      "id": "gk_med_organic_living_soil_30l_30l",
+      "name": "Bio Diesel Organic Living Soil 30L",
+      "brand": "Bio Diesel",
+      "category": "living_soil",
+      "source": "dsc_mediums_growkings"
+    },
+    {
+      "id": "gk_med_copy_of_expanded_clay_balls_for_growing_plants_hydroponic_systems",
+      "name": "Expanded Clay Balls For Growing plants / Hydroponic Systems 30mm - 10L Bag",
+      "brand": "Grow Kings",
+      "category": "clay_pebbles_leca",
+      "source": "dsc_mediums_growkings"
+    },
+    {
+      "id": "gk_med_speedgrow_prop_84_plug_tray_38_x_40mm_with_hole_38x40mm",
+      "name": "Speedgrow Prop Plug 84pc Tray - 38 x 40mm With Hole",
+      "brand": "Speed Grow",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_growkings"
+    },
+    {
+      "id": "gk_med_balls_expanded_clay_30mm_plus_elongated_50_litre_bag_50l",
+      "name": "Balls Expanded Clay 30mm Plus Elongated 50 Litre Bag",
+      "brand": "Accent Hydroponics",
+      "category": "clay_pebbles_leca",
+      "source": "dsc_mediums_growkings"
+    },
+    {
+      "id": "gk_med_grodan_crop_box_slabs_370x550x150_mm_4_pk_370x550x150mm",
+      "name": "Grodan Crop Box Slabs (370x550x150 mm) 4/pk",
+      "brand": "Grodan",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_growkings"
+    },
+    {
+      "id": "gk_med_root_t_dry_propagation_plugs_for_tray_refill_60_plugs_60pk",
+      "name": "ROOT!T Dry Propagation Plugs For Tray Refill - 60 Plugs",
+      "brand": "ROOT!T",
+      "category": "propagation_plugs",
+      "source": "dsc_mediums_growkings"
+    },
+    {
+      "id": "gk_med_jiffy_7_42_mm_pellet_1000_carton_default",
+      "name": "Jiffy-7 42 mm Pellet (1000) Carton",
+      "brand": "Jiffy",
+      "category": "propagation_plugs",
+      "source": "dsc_mediums_growkings"
+    },
+    {
+      "id": "gk_med_perlite_4mm_to_6mm_coarsec1pwhite_100_litre_bag_100l",
+      "name": "Premium Perlite 100 Litre Bag - Course",
+      "brand": "Exfoliators",
+      "category": "perlite",
+      "source": "dsc_mediums_growkings"
+    },
+    {
+      "id": "gk_med_rootit_rooting_sponge_propagation_kit_24pk",
+      "name": "Rootit - Rooting Sponge Propagation Kit (24 Cells)",
+      "brand": "ROOT!T",
+      "category": "propagation_plugs",
+      "source": "dsc_mediums_growkings"
+    },
+    {
+      "id": "gk_med_eazy_plug_sea_of_green_set_default",
+      "name": "Eazy Plug Sea Of Green Set",
+      "brand": "Eazy Plug",
+      "category": "propagation_plugs",
+      "source": "dsc_mediums_growkings"
+    },
+    {
+      "id": "gk_med_hy_gen_two_part_hygen_coco_starter_pack_default",
+      "name": "Hy-Gen Hygen Coco Starter Pack \"Two Part\"",
+      "brand": "Hy-Gen",
+      "category": "coco",
+      "source": "dsc_mediums_growkings"
+    },
+    {
+      "id": "gk_med_regenerate_soil_top_dressing_snt_5kg_5kg",
+      "name": "SNT Regenerate Soil Top Dressing - 5Kg",
+      "brand": "SNT",
+      "category": "soil_potting_mix",
+      "source": "dsc_mediums_growkings"
+    },
+    {
+      "id": "gk_med_eazy_plug_start_up_kit_default",
+      "name": "Eazy Plug Start-up Kit",
+      "brand": "Eazy Plug",
+      "category": "propagation_plugs",
+      "source": "dsc_mediums_growkings"
+    },
+    {
+      "id": "gk_med_growool_granulated_premium_rockwool_13_6_kg_bag_122_ltr_122l",
+      "name": "Growool Granulated Premium Rockwool 13.6Kg Bag (122 Ltr)",
+      "brand": "GROWOOL",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_growkings"
+    },
+    {
+      "id": "gk_med_grodan_delta_10_cubes_with_hole_100x100x100_mm_144_ctn_100x100x10",
+      "name": "Grodan Delta 10 Cubes with hole (100x100x100 mm) 144/ctn",
+      "brand": "Grodan",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_growkings"
+    },
+    {
+      "id": "gk_med_premium_organic_living_soil_10l_10l",
+      "name": "Premium Organic Living Soil - 10L",
+      "brand": "Grow Kings",
+      "category": "living_soil",
+      "source": "dsc_mediums_growkings"
+    },
+    {
+      "id": "gk_med_regenerate_soil_top_dressing_snt_2kg_2kg",
+      "name": "SNT Regenerate Soil Top Dressing - 2Kg",
+      "brand": "SNT",
+      "category": "soil_potting_mix",
+      "source": "dsc_mediums_growkings"
+    },
+    {
+      "id": "gk_med_grodan_hugo_cubes_150x150x142_mm_48_ctn_150x150x142mm",
+      "name": "Grodan Hugo Cubes (150x150x142 mm) 48/ctn",
+      "brand": "Grodan",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_growkings"
+    },
+    {
+      "id": "gk_med_eazy_plug_mini_pyramid_default",
+      "name": "Eazy Plug Mini Pyramid",
+      "brand": "Eazy Plug",
+      "category": "propagation_plugs",
+      "source": "dsc_mediums_growkings"
+    },
+    {
+      "id": "gk_med_hy_gen_single_part_cornicopia_coco_starter_pack_default",
+      "name": "Hy-Gen \"Single Part\" Cornicopia Coco Starter Pack",
+      "brand": "Hy-Gen",
+      "category": "coco",
+      "source": "dsc_mediums_growkings"
+    },
+    {
+      "id": "gk_med_perlite_8mm_to_12mm_coarse_yellow_bag_15p_100_litre_100l",
+      "name": "Premium Perlite Extra Coarse 100 Litre Bag (8mm To 12mm Coarse)",
+      "brand": "Exfoliators",
+      "category": "perlite",
+      "source": "dsc_mediums_growkings"
+    },
+    {
+      "id": "gk_med_perlite_twenty_litre_grow_bag_20l",
+      "name": "Perlite Grow Bag - 20L",
+      "brand": "Exfoliators",
+      "category": "perlite",
+      "source": "dsc_mediums_growkings"
+    },
+    {
+      "id": "gk_med_grodan_sbs_36_77_cubes_18_trays_77_cubes_per_tray_1386_ctn_77pk",
+      "name": "Grodan SBS 36/77 Cubes 18 Trays - 77 cubes per tray 1386/ctn",
+      "brand": "Grodan",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_growkings"
+    },
+    {
+      "id": "gk_med_grodan_mm40_40_cubes_40x40x40_mm_cubes_2250_ctn_40x40x40mm",
+      "name": "Grodan MM40/40 Cubes (40x40x40 mm) Cubes 2250/ctn",
+      "brand": "Grodan",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_growkings"
+    },
+    {
+      "id": "gk_med_grodan_delta_4g_w_hole_75x75x60_mm_384_carton_4g_75x75x60mm",
+      "name": "Grodan Delta 4G w/Hole (75x75x60 mm) 384 Carton",
+      "brand": "Grodan",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_growkings"
+    },
+    {
+      "id": "gk_med_grodan_delta_4g_cubes_no_hole_75x75x60_mm_384_ctn_4g_75x75x60mm",
+      "name": "Grodan Delta 4G Cubes No/Hole (75x75x60 mm) 384/ctn",
+      "brand": "Grodan",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_growkings"
+    },
+    {
+      "id": "bn_med_garden_basics_0274300_25l",
+      "name": "Garden Basics 25L Garden Soil Mix",
+      "brand": "Garden Basics",
+      "category": "soil_potting_mix",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_garden_basics_0274301_25l",
+      "name": "Garden Basics 25L All Purpose Potting Mix",
+      "brand": "Garden Basics",
+      "category": "soil_potting_mix",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_scotts_osmocote_2962139_25l",
+      "name": "Scotts Osmocote 25L Premium Potting Mix",
+      "brand": "Scotts Osmocote",
+      "category": "soil_potting_mix",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_scotts_osmocote_2962143_50l",
+      "name": "Scotts Osmocote 50L Premium Potting Mix",
+      "brand": "Scotts Osmocote",
+      "category": "soil_potting_mix",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_garden_basics_0274303_25l",
+      "name": "Garden Basics 25L Premium Potting Mix",
+      "brand": "Garden Basics",
+      "category": "soil_potting_mix",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_richgro_garden_products_0289035_25l",
+      "name": "Richgro 25L Black Marvel Premium Potting Mix",
+      "brand": "Richgro Garden Products",
+      "category": "soil_potting_mix",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_brunnings_0575598_50l",
+      "name": "Brunnings 50L Premium Garden Soil Planting Mix",
+      "brand": "Brunnings",
+      "category": "soil_potting_mix",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_garden_basics_0274306_25l",
+      "name": "Garden Basics 25L Compost",
+      "brand": "Garden Basics",
+      "category": "compost_soil_conditioner",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_scotts_osmocote_1122481_50l",
+      "name": "Scotts Osmocote 50L The Best Potting Mix",
+      "brand": "Scotts Osmocote",
+      "category": "soil_potting_mix",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_osmocote_0164627_10l",
+      "name": "Scotts Osmocote 10L Indoor Plants Premium Potting Mix",
+      "brand": "Osmocote",
+      "category": "soil_potting_mix",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_scotts_osmocote_2962103_25l",
+      "name": "Scotts Osmocote 25L Tomato Vegetable And Herb Premium Potting Mix",
+      "brand": "Scotts Osmocote",
+      "category": "soil_potting_mix",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_garden_basics_0274304_25l",
+      "name": "Garden Basics 25L Tomato And Vegetable Growing Mix",
+      "brand": "Garden Basics",
+      "category": "soil_potting_mix",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_brunnings_0274283_15l",
+      "name": "Brunnings 15L Coir Peat Brick",
+      "brand": "Brunnings",
+      "category": "coco",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_scotts_osmocote_2961490_25l",
+      "name": "Scotts Osmocote 25L Cacti And Succulent Premium Potting Mix",
+      "brand": "Scotts Osmocote",
+      "category": "soil_potting_mix",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_scotts_osmocote_2961638_25l",
+      "name": "Scotts Osmocote 25L Citrus And Fruit Premium Potting Mix",
+      "brand": "Scotts Osmocote",
+      "category": "soil_potting_mix",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_scotts_osmocote_2961491_25l",
+      "name": "Scotts Osmocote 25L Rose Gardenia And Azalea Premium Potting Mix",
+      "brand": "Scotts Osmocote",
+      "category": "soil_potting_mix",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_osmocote_plus_organics_2961636_50l",
+      "name": "Scotts Osmocote Plus 50L Tomato, Vegetable And Herb Premium Planting Mix",
+      "brand": "Osmocote Plus Organics",
+      "category": "soil_potting_mix",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_scotts_osmocote_2962101_50l",
+      "name": "Scotts Osmocote 50L Premium Plus Superior Potting Mix",
+      "brand": "Scotts Osmocote",
+      "category": "soil_potting_mix",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_brunnings_3010215_default",
+      "name": "Brunnings Sphagnum Moss Block",
+      "brand": "Brunnings",
+      "category": "propagation_plugs",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_scotts_osmocote_2961489_25l",
+      "name": "Scotts Osmocote 25L Seed And Cutting Premium Potting Mix",
+      "brand": "Scotts Osmocote",
+      "category": "seed_raising",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_brunnings_0683213_5l",
+      "name": "Brunnings 5L Coarse Grade Perlite",
+      "brand": "Brunnings",
+      "category": "perlite",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_scotts_osmocote_2961492_25l",
+      "name": "Scotts Osmocote 25L Native Premium Potting Mix",
+      "brand": "Scotts Osmocote",
+      "category": "soil_potting_mix",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_brunnings_3016175_5l",
+      "name": "Brunnings 5L Horticultural Charcoal",
+      "brand": "Brunnings",
+      "category": "other",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_seasol_0274160_25l",
+      "name": "Seasol 25L Advanced Potting Mix",
+      "brand": "Seasol",
+      "category": "soil_potting_mix",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_unknown_1122479_10l",
+      "name": "Scotts Osmocote 10L The Best Potting Mix",
+      "brand": null,
+      "category": "soil_potting_mix",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_scotts_osmocote_3010171_10l",
+      "name": "Scotts Osmocote 10L Cacti And Succulent Premium Potting Mix",
+      "brand": "Scotts Osmocote",
+      "category": "soil_potting_mix",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_brunnings_3018363_5l",
+      "name": "Brunnings 5L Propagation Sand",
+      "brand": "Brunnings",
+      "category": "propagation_plugs",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_brunnings_0344268_2_5l",
+      "name": "Brunnings 2.5L Hydro Clay Pebbles",
+      "brand": "Brunnings",
+      "category": "clay_pebbles_leca",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_brunnings_3010202_5l",
+      "name": "Brunnings 5L Peat Moss",
+      "brand": "Brunnings",
+      "category": "peat",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_scotts_osmocote_3020058_10l",
+      "name": "Scotts Osmocote 10L Seed And Cutting Premium Potting Mix",
+      "brand": "Scotts Osmocote",
+      "category": "seed_raising",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_brunnings_0274286_65l",
+      "name": "Brunnings 65L Coir Potting Mix",
+      "brand": "Brunnings",
+      "category": "coco",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_scotts_osmocote_2961485_25l",
+      "name": "Scotts Osmocote 25L Orchid Premium Potting Mix",
+      "brand": "Scotts Osmocote",
+      "category": "soil_potting_mix",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_brunnings_0274284_30l",
+      "name": "Brunnings 30L Coir Seed Raising Mix",
+      "brand": "Brunnings",
+      "category": "seed_raising",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_scotts_osmocote_3020057_10l",
+      "name": "Scotts Osmocote 10L Orchid Premium Potting Mix",
+      "brand": "Scotts Osmocote",
+      "category": "soil_potting_mix",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_yates_0273524_2_5l",
+      "name": "Yates 2.5L Specialty Potting Mix Cutting and Seeds",
+      "brand": "Yates",
+      "category": "seed_raising",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_osmocote_plus_organics_2961443_25l",
+      "name": "Scotts Osmocote Plus 25L Tomato, Vegetable & Herb Premium Planting Mix",
+      "brand": "Osmocote Plus Organics",
+      "category": "soil_potting_mix",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_scotts_0751762_25l",
+      "name": "Scotts 25L Organic Potting Mix for All Plants",
+      "brand": "Scotts",
+      "category": "soil_potting_mix",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_yates_0170990_4_5l",
+      "name": "Yates 4.5L Gnat Barrier",
+      "brand": "Yates",
+      "category": "other",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_seasol_0274166_10l",
+      "name": "Seasol 10L Seed Raising And Cutting Potting Mix",
+      "brand": "Seasol",
+      "category": "seed_raising",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_scotts_osmocote_2962117_10l",
+      "name": "Scotts Osmocote 10L Premium Plus Superior Potting Mix",
+      "brand": "Scotts Osmocote",
+      "category": "soil_potting_mix",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_scotts_osmocote_0168581_10l",
+      "name": "Scotts Osmocote 10L Orchid Coarse Potting Mix",
+      "brand": "Scotts Osmocote",
+      "category": "soil_potting_mix",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_yates_0165673_2_5l",
+      "name": "Yates 2.5L Specialty Potting Mix Cacti & Succulents",
+      "brand": "Yates",
+      "category": "soil_potting_mix",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_yates_0348025_30l",
+      "name": "Yates 30L Premium Potting Mix With Dynamic Lifter",
+      "brand": "Yates",
+      "category": "soil_potting_mix",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_scotts_osmocote_2962100_25l",
+      "name": "Scotts Osmocote 25L Premium Plus Superior Potting Mix",
+      "brand": "Scotts Osmocote",
+      "category": "soil_potting_mix",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_brunnings_0551189_1kg",
+      "name": "Brunnings 1kg Kaolin Clay",
+      "brand": "Brunnings",
+      "category": "other",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_osmocote_3020060_10l",
+      "name": "Scotts Osmocote 10L Rose, Gardenia & Azalea Premium Potting Mix",
+      "brand": "Osmocote",
+      "category": "soil_potting_mix",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_yates_0165671_2_5l",
+      "name": "Yates 2.5L Specialty Potting Mix Orchids",
+      "brand": "Yates",
+      "category": "soil_potting_mix",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_brunnings_2961891_40l",
+      "name": "Brunnings 40L Sphagnum Moss Propagation Block",
+      "brand": "Brunnings",
+      "category": "propagation_plugs",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_brunnings_0683211_25l",
+      "name": "Brunnings 25L Hydro Clay Pebbles",
+      "brand": "Brunnings",
+      "category": "clay_pebbles_leca",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_seasol_0274167_10l",
+      "name": "Seasol 10L Indoor Potting Mix",
+      "brand": "Seasol",
+      "category": "soil_potting_mix",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_scotts_0631412_10l",
+      "name": "Scotts 10L Organic Potting Mix For All Plants",
+      "brand": "Scotts",
+      "category": "soil_potting_mix",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_osmocote_3010172_10l",
+      "name": "Scotts Osmocote 10L Bonsai Premium Potting Mix",
+      "brand": "Osmocote",
+      "category": "soil_potting_mix",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_yates_0165669_2_5l",
+      "name": "Yates 2.5L Plants And Ferns Specialty Potting Mix",
+      "brand": "Yates",
+      "category": "soil_potting_mix",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_yates_0348026_10l",
+      "name": "Yates 10L Premium Potting Mix With Dynamic Lifter",
+      "brand": "Yates",
+      "category": "soil_potting_mix",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_brunnings_0646467_default",
+      "name": "Hydroponic Rockwool 40 x 40 x 40 Grow Cubes - 18 pack",
+      "brand": "Brunnings",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_osmocote_3020061_10l",
+      "name": "Scotts Osmocote 10L African Violet Premium Potting Mix",
+      "brand": "Osmocote",
+      "category": "soil_potting_mix",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_scotts_osmocote_1122480_25l",
+      "name": "Scotts Osmocote 25L The Best Potting Mix",
+      "brand": "Scotts Osmocote",
+      "category": "soil_potting_mix",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_brunnings_0646460_default",
+      "name": "Hydroponic Rockwool 75 x 75 x 65 - 12 Pack",
+      "brand": "Brunnings",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_knoxbrooke_2881464_default",
+      "name": "Bonsai Repotting Kit",
+      "brand": "Knoxbrooke",
+      "category": "other",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_scotts_lawn_builder_1097031_25l",
+      "name": "Scotts Lawn Builder 25L Organic Based Lawn Soil Topdress",
+      "brand": "Scotts Lawn Builder",
+      "category": "compost_soil_conditioner",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_osmocote_3010198_25l",
+      "name": "Scotts Osmocote 25L Garden Soil Premium Planting Mix",
+      "brand": "Osmocote",
+      "category": "compost_soil_conditioner",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_osmocote_2962102_25l",
+      "name": "Osmocote 25L Scotts Compost Premium Soil Improver",
+      "brand": "Osmocote",
+      "category": "compost_soil_conditioner",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_richgro_garden_products_0089356_25l",
+      "name": "Richgro 25L All Purpose Mushroom Compost",
+      "brand": "Richgro Garden Products",
+      "category": "compost_soil_conditioner",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_richgro_garden_products_0289036_25l",
+      "name": "Richgro Black Marvel 25L Premium Garden Compost",
+      "brand": "Richgro Garden Products",
+      "category": "compost_soil_conditioner",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_scotts_lawn_builder_3010199_25l",
+      "name": "Scotts Lawn Builder 25L Organic Lawn Soil Topdress & Underlay",
+      "brand": "Scotts Lawn Builder",
+      "category": "compost_soil_conditioner",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_scotts_lawn_builder_0938167_20l",
+      "name": "Scotts Lawn Builder 20L Levelling Mix",
+      "brand": "Scotts Lawn Builder",
+      "category": "compost_soil_conditioner",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_seasol_0274161_25l",
+      "name": "Seasol 25L Garden Soil Mix",
+      "brand": "Seasol",
+      "category": "compost_soil_conditioner",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_seasol_0274165_25l",
+      "name": "Seasol 25L Lawn Top Dress Mix",
+      "brand": "Seasol",
+      "category": "compost_soil_conditioner",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_seasol_0274164_25l",
+      "name": "Seasol 25L Super Compost",
+      "brand": "Seasol",
+      "category": "compost_soil_conditioner",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_scotts_0938162_25l",
+      "name": "Scotts 25L Organic Soil Improver",
+      "brand": "Scotts",
+      "category": "compost_soil_conditioner",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_neutrog_0821984_25kg",
+      "name": "Neutrog 25kg CHOCKABLOK Super Compost",
+      "brand": "Neutrog",
+      "category": "compost_soil_conditioner",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_clyde_compost_0653898_20l",
+      "name": "Clyde Compost 20L Premium Organic Compost",
+      "brand": "Clyde Compost ",
+      "category": "compost_soil_conditioner",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_brunnings_1169441_50l",
+      "name": "Brunnings 50L Premium Compost Soil Improver",
+      "brand": "Brunnings",
+      "category": "compost_soil_conditioner",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_seasol_0274169_3_5l",
+      "name": "Seasol 3.5L Biochar Soil Conditioner",
+      "brand": "Seasol",
+      "category": "compost_soil_conditioner",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_fine_farms_2961628_25l",
+      "name": "Fine Farms 25L Blended Cow Manure",
+      "brand": "Fine Farms",
+      "category": "compost_soil_conditioner",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_fine_farms_2961066_25l",
+      "name": "Fine Farms 25L Sheep Manure",
+      "brand": "Fine Farms",
+      "category": "compost_soil_conditioner",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_fine_farms_3010234_25l",
+      "name": "Fine Farms 25L Cow Manure",
+      "brand": "Fine Farms",
+      "category": "compost_soil_conditioner",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_fine_farms_2961755_25l",
+      "name": "Fine Farms 25L Blended Poultry Manure",
+      "brand": "Fine Farms",
+      "category": "compost_soil_conditioner",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_fine_farms_3010195_25l",
+      "name": "Fine Farms 25L Poultry Manure",
+      "brand": "Fine Farms",
+      "category": "compost_soil_conditioner",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_fothergill_s_2961318_default",
+      "name": "Mr Fothergill's 60mm Jiffy Round Peat Pot - 26 Pack",
+      "brand": "Fothergill's",
+      "category": "peat",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_fothergill_s_2961316_default",
+      "name": "Mr Fothergill's 36mm Jiffy Peat Pellets - 36 Pack",
+      "brand": "Fothergill's",
+      "category": "peat",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_fothergill_s_0675003_default",
+      "name": "Fothergill’s 72 Cell Coco Fibre Pellet Greenhouse Kit",
+      "brand": "Fothergill's",
+      "category": "coco",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_fothergill_s_0646353_default",
+      "name": "Fothergill’s 72 Coco Fibre Pellet Refill Pack",
+      "brand": "Fothergill's",
+      "category": "coco",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_fothergill_s_0675004_default",
+      "name": "Fothergill's 8cm Coco Coir Propagation Pots - 22 Pack",
+      "brand": "Fothergill's",
+      "category": "coco",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_fothergill_s_2961322_default",
+      "name": "Mr Fothergill's Jiffy 36mm Peat Pellet - 12 Pack",
+      "brand": "Fothergill's",
+      "category": "peat",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_fothergill_s_2961314_default",
+      "name": "Mr Fothergill's Jiffy Easy Starter Set",
+      "brand": "Fothergill's",
+      "category": "propagation_plugs",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_fothergill_s_0207920_default",
+      "name": "Mr Fothergill's Jiffy Coir Pellet Refill - 24 Pack",
+      "brand": "Fothergill's",
+      "category": "coco",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_fothergill_s_2961319_default",
+      "name": "Mr Fothergill's 8cm Jiffy Square Peat Propagation Pots - 8 Pack",
+      "brand": "Fothergill's",
+      "category": "peat",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_orku_0867128_10l",
+      "name": "10L Coco Chips Premium - 50/50 Coir Pure Blend Hydroponic Plant Growing Medium",
+      "brand": "Orku",
+      "category": "coco",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_fothergill_s_2961754_default",
+      "name": "Mr Fothergill's 45mm Jiffy Propagation Peat Strip - 50 Pack",
+      "brand": "Fothergill's",
+      "category": "peat",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_fothergill_s_2961312_default",
+      "name": "Mr Fothergill's Jiffy Windowsill Greenhouse With 12 Peat Pellets",
+      "brand": "Fothergill's",
+      "category": "peat",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_orku_0867132_5l",
+      "name": "5L Vermiculite Bag Grade 3 Horticulture Plant Garden Crop Growing Media 1-4mm",
+      "brand": "Orku",
+      "category": "vermiculite",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_orku_0867131_20l",
+      "name": "20L Coco Chips Premium - 50/50 Coir Pure Blend Hydroponic Plant Growing Medium",
+      "brand": "Orku",
+      "category": "coco",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_orku_0867127_2l",
+      "name": "2L Coco Chips Premium - 50/50 Coir Pure Blend Hydroponic Plant Growing Medium",
+      "brand": "Orku",
+      "category": "coco",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_orku_0867125_5l",
+      "name": "5L Coco Chips Premium - 50/50 Coir Pure Blend Hydroponic Plant Growing Medium",
+      "brand": "Orku",
+      "category": "coco",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_brunnings_3010203_5l",
+      "name": "Brunnings 5L Perlite",
+      "brand": "Brunnings",
+      "category": "perlite",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_brunnings_3016191_5l",
+      "name": "Brunnings 5L Vermiculite",
+      "brand": "Brunnings",
+      "category": "vermiculite",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_brunnings_0274287_25l",
+      "name": "Brunnings 25L Perlite - 25L",
+      "brand": "Brunnings",
+      "category": "perlite",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "bn_med_brunnings_0274288_25l",
+      "name": "Brunnings 25L Vermiculite - 25L",
+      "brand": "Brunnings",
+      "category": "vermiculite",
+      "source": "dsc_mediums_bunnings"
+    },
+    {
+      "id": "eao_bloom_booster_2kg",
+      "name": "Easy As Organics Bloom Booster — 2KG",
+      "brand": "Easy As Organics",
+      "category": "amendment",
+      "source": "dsc_mediums_perlite"
+    },
+    {
+      "id": "eao_bloom_booster_5kg",
+      "name": "Easy As Organics Bloom Booster — 5KG",
+      "brand": "Easy As Organics",
+      "category": "amendment",
+      "source": "dsc_mediums_perlite"
+    },
+    {
+      "id": "eao_regenerate_organic_nutrient_blend_2kg",
+      "name": "Regenerate All Purpose Organic Fertiliser — 2KG",
+      "brand": "Easy As Organics",
+      "category": "amendment",
+      "source": "dsc_mediums_perlite"
+    },
+    {
+      "id": "eao_regenerate_organic_nutrient_blend_5kg",
+      "name": "Regenerate All Purpose Organic Fertiliser — 5KG",
+      "brand": "Easy As Organics",
+      "category": "amendment",
+      "source": "dsc_mediums_perlite"
+    },
+    {
+      "id": "eao_worm_castings_10l",
+      "name": "Worm Castings 10L — 10L",
+      "brand": "Easy As Organics",
+      "category": "amendment",
+      "source": "dsc_mediums_perlite"
+    },
+    {
+      "id": "exf_hydro_perl_grow_bag",
+      "name": "Exfoliators Hydro-Perl Grow Bags",
+      "brand": "Exfoliators",
+      "category": "perlite",
+      "source": "dsc_mediums_perlite"
+    },
+    {
+      "id": "exf_perlite_coarse",
+      "name": "Exfoliators Premium Perlite — Coarse",
+      "brand": "Exfoliators",
+      "category": "perlite",
+      "source": "dsc_mediums_perlite"
+    },
+    {
+      "id": "exf_perlite_fine",
+      "name": "Exfoliators Premium Perlite — Fine",
+      "brand": "Exfoliators",
+      "category": "perlite",
+      "source": "dsc_mediums_perlite"
+    },
+    {
+      "id": "exf_perlite_medium",
+      "name": "Exfoliators Premium Perlite — Medium",
+      "brand": "Exfoliators",
+      "category": "perlite",
+      "source": "dsc_mediums_perlite"
+    },
+    {
+      "id": "exf_perlite_super_coarse",
+      "name": "Exfoliators Premium Perlite — Super Coarse (jumbo)",
+      "brand": "Exfoliators",
+      "category": "perlite",
+      "source": "dsc_mediums_perlite"
+    },
+    {
+      "id": "exf_vermiculite_grade_1",
+      "name": "Exfoliators Premium Vermiculite — Grade 1",
+      "brand": "Exfoliators",
+      "category": "vermiculite",
+      "source": "dsc_mediums_perlite"
+    },
+    {
+      "id": "exf_vermiculite_grade_2",
+      "name": "Exfoliators Premium Vermiculite — Grade 2",
+      "brand": "Exfoliators",
+      "category": "vermiculite",
+      "source": "dsc_mediums_perlite"
+    },
+    {
+      "id": "exf_vermiculite_grade_3_sieved",
+      "name": "Exfoliators Premium Vermiculite — Grade 3 Sieved",
+      "brand": "Exfoliators",
+      "category": "vermiculite",
+      "source": "dsc_mediums_perlite"
+    },
+    {
+      "id": "exf_vermiculite_grade_3_unsieved",
+      "name": "Exfoliators Premium Vermiculite — Grade 3 Unsieved",
+      "brand": "Exfoliators",
+      "category": "vermiculite",
+      "source": "dsc_mediums_perlite"
+    },
+    {
+      "id": "exf_vermiculite_grade_4",
+      "name": "Exfoliators Premium Vermiculite — Grade 4",
+      "brand": "Exfoliators",
+      "category": "vermiculite",
+      "source": "dsc_mediums_perlite"
+    },
+    {
+      "id": "accenthydroponics_future_soil_biocarbon_premium_biochar_engineered_carbo",
+      "name": "BIOCARBON - Premium Biochar (Engineered Carbon for Soil)",
+      "brand": "FUTURE SOIL",
+      "category": "Additives",
+      "source": "dsc_mediums_accenthydroponics"
+    },
+    {
+      "id": "accenthydroponics_easy_as_organics_easy_as_organics_water_only_soil_25_l",
+      "name": "EASY AS ORGANICS WATER ONLY SOIL 25 LITRE",
+      "brand": "Easy As Organics",
+      "category": null,
+      "source": "dsc_mediums_accenthydroponics"
+    },
+    {
+      "id": "accenthydroponics_green_planet_green_planet_cocolite_53_litre_bag_rhp_bo",
+      "name": "GREEN PLANET COCOLITE 53 LITRE BAG (RHP)",
+      "brand": "Green Planet",
+      "category": null,
+      "source": "dsc_mediums_accenthydroponics"
+    },
+    {
+      "id": "accenthydroponics_accent_hydroponics_co_co_brick_four_kg_lgd_compressed_",
+      "name": "CO-CO BRICK FOUR KG (LGD) COMPRESSED (MAKES 56 LITRES)",
+      "brand": "Accent Hydroponics",
+      "category": null,
+      "source": "dsc_mediums_accenthydroponics"
+    },
+    {
+      "id": "accenthydroponics_xtreme_gardening_mykos_granular_mycorrhizal_inoculant_",
+      "name": "MYKOS GRANULAR MYCORRHIZAL INOCULANT",
+      "brand": "Xtreme Gardening",
+      "category": null,
+      "source": "dsc_mediums_accenthydroponics"
+    },
+    {
+      "id": "accenthydroponics_exfoliators_perlite_8mm_to_12mm_coarse_yellow_bag_15p_",
+      "name": "PERLITE (8MM TO 12MM COARSE) YELLOW BAG (15P) 100 LITRE",
+      "brand": "Exfoliators",
+      "category": null,
+      "source": "dsc_mediums_accenthydroponics"
+    },
+    {
+      "id": "accenthydroponics_colossal_colossal_expanded_clay_8mm_16mm_fifty_litre_b",
+      "name": "COLOSSAL EXPANDED CLAY 8MM - 16MM FIFTY LITRE BAG",
+      "brand": "Colossal",
+      "category": null,
+      "source": "dsc_mediums_accenthydroponics"
+    },
+    {
+      "id": "accenthydroponics_xtreme_gardening_mykos_wettable_powder_mycorrhizal_ino",
+      "name": "MYKOS WETTABLE POWDER MYCORRHIZAL INOCULANT",
+      "brand": "Xtreme Gardening",
+      "category": null,
+      "source": "dsc_mediums_accenthydroponics"
+    },
+    {
+      "id": "accenthydroponics_easy_as_organics_insect_frass_bottle_1kg",
+      "name": "INSECT FRASS",
+      "brand": "Easy As Organics",
+      "category": null,
+      "source": "dsc_mediums_accenthydroponics"
+    },
+    {
+      "id": "accenthydroponics_cultiv8_heat_mat_flexible_medium_550_x_280mm_25_watt_b",
+      "name": "HEAT-MAT FLEXIBLE MEDIUM 550 X 280MM 25 WATT",
+      "brand": "Cultiv8",
+      "category": null,
+      "source": "dsc_mediums_accenthydroponics"
+    },
+    {
+      "id": "accenthydroponics_exfoliators_perlite_4mm_to_6mm_coarse_gradec1pwhite_10",
+      "name": "PERLITE (4MM TO 6MM COARSE GRADE)(C)(1P)WHITE 100 LITRE BAG",
+      "brand": "Exfoliators",
+      "category": null,
+      "source": "dsc_mediums_accenthydroponics"
+    },
+    {
+      "id": "accenthydroponics_hy_gen_hygen_co_co_husk_chips_fifty_litre_bag_bottle_d",
+      "name": "HYGEN CO-CO HUSK CHIPS FIFTY LITRE BAG",
+      "brand": "Hy-Gen",
+      "category": "Grow Media",
+      "source": "dsc_mediums_accenthydroponics"
+    },
+    {
+      "id": "accenthydroponics_easy_as_organics_regenerate_soil_top_dressing_bottle_2",
+      "name": "REGENERATE SOIL TOP DRESSING",
+      "brand": "Easy As Organics",
+      "category": null,
+      "source": "dsc_mediums_accenthydroponics"
+    },
+    {
+      "id": "accenthydroponics_hy_gen_hy_gen_co_co_brick_650_gram_compressed_makes_ap",
+      "name": "HY-GEN CO-CO BRICK 650 GRAM COMPRESSED (MAKES APPROX 10L)",
+      "brand": "Hy-Gen",
+      "category": null,
+      "source": "dsc_mediums_accenthydroponics"
+    },
+    {
+      "id": "accenthydroponics_hy_gen_co_co_brick_five_kg_hy_gen_compressed_makes_70_",
+      "name": "CO-CO BRICK FIVE KG HY-GEN COMPRESSED (MAKES 70 LTRS)",
+      "brand": "Hy-Gen",
+      "category": null,
+      "source": "dsc_mediums_accenthydroponics"
+    },
+    {
+      "id": "accenthydroponics_canna_canna_terra_professional_50_litre_bag_bottle_def",
+      "name": "CANNA TERRA PROFESSIONAL 50 LITRE BAG",
+      "brand": "CANNA",
+      "category": null,
+      "source": "dsc_mediums_accenthydroponics"
+    },
+    {
+      "id": "accenthydroponics_hy_gen_hygen_coirlite_70_30_coco_perl_50_lt_bottle_def",
+      "name": "HYGEN COIRLITE 70/30 COCO/PERL 50 LT",
+      "brand": "Hy-Gen",
+      "category": null,
+      "source": "dsc_mediums_accenthydroponics"
+    },
+    {
+      "id": "accenthydroponics_canna_canna_coco_professional_plus_50_litre_bag_bottle",
+      "name": "CANNA COCO PROFESSIONAL PLUS 50 LITRE BAG",
+      "brand": "CANNA",
+      "category": null,
+      "source": "dsc_mediums_accenthydroponics"
+    },
+    {
+      "id": "accenthydroponics_accent_hydroponics_microgreen_coco_coir_mat_567mm_x_27",
+      "name": "MICROGREEN COCO COIR MAT 567MM X 272MM X 4MM",
+      "brand": "Accent Hydroponics",
+      "category": null,
+      "source": "dsc_mediums_accenthydroponics"
+    },
+    {
+      "id": "accenthydroponics_hy_gen_hygen_ultimate_blend_50_litre_coco_bottle_defau",
+      "name": "HYGEN ULTIMATE BLEND 50 LITRE COCO",
+      "brand": "Hy-Gen",
+      "category": null,
+      "source": "dsc_mediums_accenthydroponics"
+    },
+    {
+      "id": "accenthydroponics_grodan_grodan_delta_4g_75mm_x_75mm_wrapped_cube_no_hol",
+      "name": "GRODAN DELTA 4G - 75MM X 75MM WRAPPED CUBE NO HOLE EACH",
+      "brand": "Grodan",
+      "category": null,
+      "source": "dsc_mediums_accenthydroponics"
+    },
+    {
+      "id": "accenthydroponics_exfoliators_vermiculite_grade_3_100_litre_bottle_defau",
+      "name": "VERMICULITE GRADE 3",
+      "brand": "Exfoliators",
+      "category": null,
+      "source": "dsc_mediums_accenthydroponics"
+    },
+    {
+      "id": "accenthydroponics_canna_canna_aqua_expanded_clay_45_litre_bag_bottle_def",
+      "name": "CANNA AQUA EXPANDED CLAY 45 LITRE BAG",
+      "brand": "CANNA",
+      "category": null,
+      "source": "dsc_mediums_accenthydroponics"
+    },
+    {
+      "id": "accenthydroponics_green_planet_greenplanet_professional_coco_53_litre_ba",
+      "name": "GREENPLANET PROFESSIONAL COCO 53 LITRE BAG",
+      "brand": "Green Planet",
+      "category": null,
+      "source": "dsc_mediums_accenthydroponics"
+    },
+    {
+      "id": "accenthydroponics_speedgrow_multigrow_rockwool_slab_100_x_15_x_10cm_each",
+      "name": "MULTIGROW ROCKWOOL SLAB 100 X 15 X 10CM EACH",
+      "brand": "Speedgrow",
+      "category": null,
+      "source": "dsc_mediums_accenthydroponics"
+    },
+    {
+      "id": "accenthydroponics_speedgrow_speedgrow_40_x_40_x_40mm_propagation_cubes_b",
+      "name": "SPEEDGROW 40 X 40 X 40MM PROPAGATION CUBES",
+      "brand": "Speedgrow",
+      "category": null,
+      "source": "dsc_mediums_accenthydroponics"
+    },
+    {
+      "id": "accenthydroponics_exfoliators_perlite_twenty_litre_grow_bag_bottle_defau",
+      "name": "PERLITE TWENTY LITRE GROW BAG",
+      "brand": "Exfoliators",
+      "category": null,
+      "source": "dsc_mediums_accenthydroponics"
+    },
+    {
+      "id": "accenthydroponics_grodan_grodan_mm_pm_40_40_wrapped_propagation_cube_eac",
+      "name": "GRODAN MM PM 40/40 WRAPPED PROPAGATION CUBE EACH",
+      "brand": "Grodan",
+      "category": "Grow Media",
+      "source": "dsc_mediums_accenthydroponics"
+    },
+    {
+      "id": "accenthydroponics_bluelab_bluelab_soil_ph_pen_bottle_default",
+      "name": "BLUELAB SOIL PH PEN",
+      "brand": "Bluelab",
+      "category": null,
+      "source": "dsc_mediums_accenthydroponics"
+    },
+    {
+      "id": "accenthydroponics_accent_hydroponics_microgreen_mat_tray_od_602mm_x_300m",
+      "name": "MICROGREEN MAT TRAY - OD - 602MM X 300MM X 30MM EACH",
+      "brand": "Accent Hydroponics",
+      "category": null,
+      "source": "dsc_mediums_accenthydroponics"
+    },
+    {
+      "id": "accenthydroponics_accent_hydroponics_coco_plugs_36mm_tray_of_50_cells_bo",
+      "name": "COCO PLUGS 36MM TRAY OF 50 CELLS",
+      "brand": "Accent Hydroponics",
+      "category": null,
+      "source": "dsc_mediums_accenthydroponics"
+    },
+    {
+      "id": "accenthydroponics_speedgrow_speedgrow_prop_84_plug_tray_38_x_40mm_with_h",
+      "name": "SPEEDGROW PROP 84 PLUG TRAY 38 X 40MM WITH HOLE",
+      "brand": "Speedgrow",
+      "category": null,
+      "source": "dsc_mediums_accenthydroponics"
+    },
+    {
+      "id": "accenthydroponics_grodan_grodan_hugo_blocks_150_x_150mm_bottle_default",
+      "name": "GRODAN HUGO BLOCKS 150 X 150MM",
+      "brand": "Grodan",
+      "category": null,
+      "source": "dsc_mediums_accenthydroponics"
+    },
+    {
+      "id": "accenthydroponics_cultilene_cultilene_wrapped_cube_75_x_75mm_hole_38_35_",
+      "name": "CULTILENE WRAPPED CUBE 75 X 75MM (HOLE 38/35)",
+      "brand": "Cultilene",
+      "category": null,
+      "source": "dsc_mediums_accenthydroponics"
+    },
+    {
+      "id": "accenthydroponics_cultilene_cultilene_wrapped_cube_100_x_100mm_hole_38_3",
+      "name": "CULTILENE WRAPPED CUBE 100 X 100MM (HOLE 38/35)",
+      "brand": "Cultilene",
+      "category": null,
+      "source": "dsc_mediums_accenthydroponics"
+    },
+    {
+      "id": "accenthydroponics_exfoliators_vermiculite_grade_4_100_litre_1p_bottle_de",
+      "name": "VERMICULITE GRADE 4 - 100 LITRE (1P)",
+      "brand": "Exfoliators",
+      "category": null,
+      "source": "dsc_mediums_accenthydroponics"
+    },
+    {
+      "id": "accenthydroponics_exfoliators_perlite_co_and_vermiculite_g3_50_50_mixed_",
+      "name": "PERLITE CO AND VERMICULITE G3 - 50% / 50% MIXED 20 LITRE GROW BAG",
+      "brand": "Exfoliators",
+      "category": null,
+      "source": "dsc_mediums_accenthydroponics"
+    },
+    {
+      "id": "accenthydroponics_exfoliators_perlite_2mm_to_4mm_medium_grade_100_litre_",
+      "name": "PERLITE (2MM TO 4MM MEDIUM GRADE) 100 LITRE",
+      "brand": "Exfoliators",
+      "category": null,
+      "source": "dsc_mediums_accenthydroponics"
+    },
+    {
+      "id": "accenthydroponics_accent_wholesale_acoustic_ducting_250mm_dbl_thick_rock",
+      "name": "ACOUSTIC DUCTING 250MM DBL THICK ROCKWOOL X FIVE METRE BOXED",
+      "brand": "accent-wholesale",
+      "category": null,
+      "source": "dsc_mediums_accenthydroponics"
+    },
+    {
+      "id": "accenthydroponics_grodan_grodan_floc_bag_bottle_20kg",
+      "name": "GRODAN GRANULATE FLOC BAG 20KG",
+      "brand": "Grodan",
+      "category": "Grow Media",
+      "source": "dsc_mediums_accenthydroponics"
+    },
+    {
+      "id": "accenthydroponics_grodan_grodan_crop_box_slabs_pack_of_four_bottle_defau",
+      "name": "GRODAN CROP-BOX SLAB",
+      "brand": "Grodan",
+      "category": "Grow Media",
+      "source": "dsc_mediums_accenthydroponics"
+    },
+    {
+      "id": "accenthydroponics_grodan_grodan_classic_wrapped_slab_300_x_900_x_75mm_bo",
+      "name": "GRODAN CLASSIC WRAPPED SLAB 300 X 900 X 75MM - EACH",
+      "brand": "Grodan",
+      "category": null,
+      "source": "dsc_mediums_accenthydroponics"
+    },
+    {
+      "id": "accenthydroponics_house_garden_h_g_coco_coir_fifty_litre_bag_bottle_defa",
+      "name": "H&G COCO COIR FIFTY LITRE BAG",
+      "brand": "House & Garden",
+      "category": null,
+      "source": "dsc_mediums_accenthydroponics"
+    },
+    {
+      "id": "accenthydroponics_accent_hydroponics_coco_plugs_36mm_diameter_bottle_def",
+      "name": "COCO PLUGS (36MM DIAMETER)",
+      "brand": "Accent Hydroponics",
+      "category": null,
+      "source": "dsc_mediums_accenthydroponics"
+    },
+    {
+      "id": "accenthydroponics_cvault_cvault_medium_personal_curing_1_oz_28gm_bottle_",
+      "name": "CVAULT MEDIUM PERSONAL CURING 1 OZ / 28GM",
+      "brand": "CVault",
+      "category": null,
+      "source": "dsc_mediums_accenthydroponics"
+    },
+    {
+      "id": "accenthydroponics_speedgrow_multigrow_rockwool_slab_100_x_15_x_7_5cm_eac",
+      "name": "MULTIGROW ROCKWOOL SLAB 100 X 15 X 7.5CM EACH",
+      "brand": "Speedgrow",
+      "category": null,
+      "source": "dsc_mediums_accenthydroponics"
+    },
+    {
+      "id": "accenthydroponics_speedgrow_speedgrow_150_x_150_x_150mm_grow_block_with_",
+      "name": "SPEEDGROW 150 X 150 X 150MM GROW BLOCK WITH HOLE",
+      "brand": "Speedgrow",
+      "category": null,
+      "source": "dsc_mediums_accenthydroponics"
+    },
+    {
+      "id": "accenthydroponics_speedgrow_speedgrow_100_x_100_x_65mm_prop_cubes_38mm_x",
+      "name": "SPEEDGROW 100 X 100 X 65MM PROP CUBES 38MM X 35MM HOLE",
+      "brand": "Speedgrow",
+      "category": null,
+      "source": "dsc_mediums_accenthydroponics"
+    },
+    {
+      "id": "accenthydroponics_speedgrow_speedgrow_75_x_75_x_65mm_prop_cubes_with_38_",
+      "name": "SPEEDGROW 75 X 75 X 65MM PROP CUBES WITH 38 X 35MM HOLE",
+      "brand": "Speedgrow",
+      "category": null,
+      "source": "dsc_mediums_accenthydroponics"
+    },
+    {
+      "id": "accenthydroponics_accent_wholesale_coco_rtu_thirty_litre_professional_la",
+      "name": "COCO RTU THIRTY LITRE PROFESSIONAL LAYERED POT BLOCK",
+      "brand": "accent-wholesale",
+      "category": null,
+      "source": "dsc_mediums_accenthydroponics"
+    },
+    {
+      "id": "accenthydroponics_cyco_cyco_coco_bitz_50_litre_bag_0mri_approved_bottle_",
+      "name": "CYCO COCO BITZ 50 LITRE BAG (0MRI APPROVED)",
+      "brand": "CYCO",
+      "category": null,
+      "source": "dsc_mediums_accenthydroponics"
+    },
+    {
+      "id": "accenthydroponics_cultilene_cultilene_wrapped_hugo_cube_150_x_150mm_hole",
+      "name": "CULTILENE WRAPPED HUGO CUBE 150 X 150MM (HOLE 38/35)",
+      "brand": "Cultilene",
+      "category": null,
+      "source": "dsc_mediums_accenthydroponics"
+    },
+    {
+      "id": "accenthydroponics_exfoliators_vermiculite_grade_2_100_litre_bottle_defau",
+      "name": "VERMICULITE GRADE 2",
+      "brand": "Exfoliators",
+      "category": null,
+      "source": "dsc_mediums_accenthydroponics"
+    },
+    {
+      "id": "accenthydroponics_exfoliators_perlite_and_vermiculite_50_50_mixed_100_li",
+      "name": "PERLITE AND VERMICULITE 50% / 50% MIXED 100 LITRE (GRADE 3)",
+      "brand": "Exfoliators",
+      "category": null,
+      "source": "dsc_mediums_accenthydroponics"
+    },
+    {
+      "id": "accenthydroponics_hy_gen_hygen_co_co_peat_premium_50_litre_bottle_defaul",
+      "name": "HYGEN CO-CO PEAT PREMIUM 50 LITRE",
+      "brand": "Hy-Gen",
+      "category": null,
+      "source": "dsc_mediums_accenthydroponics"
+    },
+    {
+      "id": "apexgrow_generic_perlite_100l_hydroponic_growing_medium_australia_bottle",
+      "name": "Perlite 100L",
+      "brand": "Generic",
+      "category": "Hydroponic Growing Medium",
+      "source": "dsc_mediums_apexgrow"
+    },
+    {
+      "id": "apexgrow_generic_vermiculite_100l_grade_3_hydroponic_growing_medium_aust",
+      "name": "Vermiculite 100L Grade 3",
+      "brand": "Generic",
+      "category": "Hydroponic Growing Medium",
+      "source": "dsc_mediums_apexgrow"
+    },
+    {
+      "id": "apexgrow_hydro_expanded_clay_clay_balls_leca_50l_hydroponic_growing_medi",
+      "name": "Clay Balls (LECA) 50L",
+      "brand": "Hydro Expanded Clay",
+      "category": "Hydroponic Growing Medium",
+      "source": "dsc_mediums_apexgrow"
+    },
+    {
+      "id": "apexgrow_ugro_ugro_pure_air_coco_50l_loose_buffered_coco_coir_australia_",
+      "name": "UGRO Pure Air Coco 50L",
+      "brand": "UGRO",
+      "category": "Hydroponic Growing Medium",
+      "source": "dsc_mediums_apexgrow"
+    },
+    {
+      "id": "apexgrow_ugro_ugro_pure_max_air_50l_coco_perlite_hydroponic_medium_austr",
+      "name": "UGRO Pure Max Air 50L + Perlite",
+      "brand": "UGRO",
+      "category": "Coco Coir Growing Medium",
+      "source": "dsc_mediums_apexgrow"
+    },
+    {
+      "id": "apexgrow_uber_uber_coco_perlite_clay_50l_hydroponic_growing_medium_austr",
+      "name": "UBER Coco / Perlite / Clay 50L",
+      "brand": "UBER",
+      "category": "Hydroponic Growing Medium",
+      "source": "dsc_mediums_apexgrow"
+    },
+    {
+      "id": "apexgrow_professor_s_nutrients_hydro_clay_balls_50l_leca_hydroponic_grow",
+      "name": "Professor's Nutrients Hydro Clay 50L",
+      "brand": "Professor's Nutrients",
+      "category": "Hydroponic Growing Medium",
+      "source": "dsc_mediums_apexgrow"
+    },
+    {
+      "id": "apexgrow_grodan_grodan_40mm_rockwool_cubes_australia_bottle_default",
+      "name": "Grodan 40mm Rockwool Cubes, Pack of 6. Hydroponic Propagation Starter Plugs Australia",
+      "brand": "Grodan",
+      "category": "Propagation Medium / Rockwool Cube",
+      "source": "dsc_mediums_apexgrow"
+    },
+    {
+      "id": "apexgrow_grodan_grodan_75mm_rockwool_cubes_with_hole_australia_bottle_de",
+      "name": "Grodan 75mm Rockwool Cubes With Hole, pack of 6. Hydroponic Cloning Blocks Australia",
+      "brand": "Grodan",
+      "category": "Rockwool Cube / Propagation Plug",
+      "source": "dsc_mediums_apexgrow"
+    },
+    {
+      "id": "apexgrow_grodan_grodan_75mm_rockwool_cubes_no_hole_australia_bottle_defa",
+      "name": "Grodan 75mm Rockwool Cubes No Hole, Pack of 6. Large Hydroponic Propagation Blocks Australia",
+      "brand": "Grodan",
+      "category": "Rockwool Cube / Propagation Block",
+      "source": "dsc_mediums_apexgrow"
+    },
+    {
+      "id": "apexgrow_tetrabase_tetrabase_reusable_dwc_hydroponic_grow_media_australi",
+      "name": "TetraBase Reusable DWC Grow Media",
+      "brand": "TetraBase",
+      "category": "Hydroponic Growing Medium",
+      "source": "dsc_mediums_apexgrow"
+    },
+    {
+      "id": "mfr_bio_diesel_prop_plugs_38mm",
+      "name": "Bio Diesel Coco Propagation Plugs — 38mm",
+      "brand": "Bio Diesel",
+      "category": "propagation",
+      "source": "dsc_mediums_bio_diesel"
+    },
+    {
+      "id": "intl_cultilene_rockwool_3inch_cubes_large_hole_strip_of_8_https",
+      "name": "Rockwool 3 Inch Cubes - Large Hole",
+      "brand": "Cultilene",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_cultilene"
+    },
+    {
+      "id": "intl_cultilene_rockwool_3inch_cubes_small_hole_https_hytechyd",
+      "name": "Rockwool 3 Inch Cubes - Small Hole",
+      "brand": "Cultilene",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_cultilene"
+    },
+    {
+      "id": "intl_cultilene_rockwool_4inch_cubes_large_hole_https_hytechyd",
+      "name": "Rockwool 4 Inch Cubes - Large Hole",
+      "brand": "Cultilene",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_cultilene"
+    },
+    {
+      "id": "intl_cultilene_rockwool_4inch_cubes_small_hole_https_hytechyd",
+      "name": "Rockwool 4 Inch Cubes - Small Hole",
+      "brand": "Cultilene",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_cultilene"
+    },
+    {
+      "id": "intl_cultilene_rockwool_hugo_cube_https_hytechydroponics_com",
+      "name": "Rockwool Hugo Cube",
+      "brand": "Cultilene",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_cultilene"
+    },
+    {
+      "id": "intl_cultilene_rockwool_1mtr_slabs_https_hytechydroponics_com",
+      "name": "Rockwool 1m Slabs",
+      "brand": "Cultilene",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_cultilene"
+    },
+    {
+      "id": "intl_cultilene_rockwool_8inch_cubes_large_hole_big_daddy_https",
+      "name": "Rockwool 8inch Cubes Big Daddy",
+      "brand": "Cultilene",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_cultilene"
+    },
+    {
+      "id": "intl_cultilene_rockwool_1_3mtr_slabs_https_hytechydroponics_c",
+      "name": "Rockwool 1.3m Slabs",
+      "brand": "Cultilene",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_cultilene"
+    },
+    {
+      "id": "intl_cultilene_rockwool_large_1_5inch_sbs_cube_tray_https_hyt",
+      "name": "Rockwool Mini Loose Grow Cubes 90L Bag",
+      "brand": "Cultilene",
+      "category": "clay_pebbles_leca",
+      "source": "dsc_mediums_cultilene"
+    },
+    {
+      "id": "intl_cultilene_rockwool_small_1inch_sbs_cube_tray_https_hytec",
+      "name": "Rockwool Small 1inch SBS Cube Tray",
+      "brand": "Cultilene",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_cultilene"
+    },
+    {
+      "id": "intl_cultilene_rockwool_small_1_5inch_sbs_cube_tray_https_hyt",
+      "name": "Rockwool Small 1.5inch SBS Cube Tray",
+      "brand": "Cultilene",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_cultilene"
+    },
+    {
+      "id": "mfr_eazy_plug_block_eazy_block",
+      "name": "Eazy Block",
+      "brand": "Eazy Plug",
+      "category": "propagation",
+      "source": "dsc_mediums_eazy_plug"
+    },
+    {
+      "id": "mfr_eazy_plug_cone_eazy_cone",
+      "name": "Eazy Cone / Avocado Cone",
+      "brand": "Eazy Plug",
+      "category": "propagation",
+      "source": "dsc_mediums_eazy_plug"
+    },
+    {
+      "id": "mfr_eazy_plug_mixx_eazy_mixx",
+      "name": "Eazy Mixx",
+      "brand": "Eazy Plug",
+      "category": "propagation",
+      "source": "dsc_mediums_eazy_plug"
+    },
+    {
+      "id": "mfr_eazy_plug_pyramid_eazy_pyramid",
+      "name": "Eazy Pyramid",
+      "brand": "Eazy Plug",
+      "category": "propagation",
+      "source": "dsc_mediums_eazy_plug"
+    },
+    {
+      "id": "mfr_eazy_plug_pyramid_eazy_pyramid_mini",
+      "name": "Eazy Pyramid mini",
+      "brand": "Eazy Plug",
+      "category": "propagation",
+      "source": "dsc_mediums_eazy_plug"
+    },
+    {
+      "id": "mfr_eazy_plug_starter_plugs_ct104",
+      "name": "Eazy Plug CT104",
+      "brand": "Eazy Plug",
+      "category": "propagation",
+      "source": "dsc_mediums_eazy_plug"
+    },
+    {
+      "id": "mfr_eazy_plug_starter_plugs_ct104c",
+      "name": "Eazy Plug CT104C",
+      "brand": "Eazy Plug",
+      "category": "propagation",
+      "source": "dsc_mediums_eazy_plug"
+    },
+    {
+      "id": "mfr_eazy_plug_starter_plugs_ct12",
+      "name": "Eazy Plug CT12",
+      "brand": "Eazy Plug",
+      "category": "propagation",
+      "source": "dsc_mediums_eazy_plug"
+    },
+    {
+      "id": "mfr_eazy_plug_starter_plugs_ct150",
+      "name": "Eazy Plug CT150",
+      "brand": "Eazy Plug",
+      "category": "propagation",
+      "source": "dsc_mediums_eazy_plug"
+    },
+    {
+      "id": "mfr_eazy_plug_starter_plugs_ct24",
+      "name": "Eazy Plug CT24",
+      "brand": "Eazy Plug",
+      "category": "propagation",
+      "source": "dsc_mediums_eazy_plug"
+    },
+    {
+      "id": "mfr_eazy_plug_starter_plugs_ct66",
+      "name": "Eazy Plug CT66",
+      "brand": "Eazy Plug",
+      "category": "propagation",
+      "source": "dsc_mediums_eazy_plug"
+    },
+    {
+      "id": "mfr_eazy_plug_starter_plugs_ct77",
+      "name": "Eazy Plug CT77",
+      "brand": "Eazy Plug",
+      "category": "propagation",
+      "source": "dsc_mediums_eazy_plug"
+    },
+    {
+      "id": "mfr_eazy_plug_starter_plugs_eazy_plug_bag_100",
+      "name": "Eazy Plug bag 100",
+      "brand": "Eazy Plug",
+      "category": "propagation",
+      "source": "dsc_mediums_eazy_plug"
+    },
+    {
+      "id": "mfr_eazy_plug_starter_plugs_eazy_plug_bag_50",
+      "name": "Eazy Plug bag 50",
+      "brand": "Eazy Plug",
+      "category": "propagation",
+      "source": "dsc_mediums_eazy_plug"
+    },
+    {
+      "id": "intl_ecothrive_ecothrive_living_soil_40l_https_hytechydroponi",
+      "name": "Ecothrive Living Soil 40L — Collect In Store",
+      "brand": "Ecothrive",
+      "category": "living_soil",
+      "source": "dsc_mediums_ecothrive"
+    },
+    {
+      "id": "intl_ecothrive_ecothrive_living_soil_40l_https_hytechydroponi",
+      "name": "Ecothrive Living Soil 40L — Shipping +£5 Per Box",
+      "brand": "Ecothrive",
+      "category": "living_soil",
+      "source": "dsc_mediums_ecothrive"
+    },
+    {
+      "id": "intl_ecothrive_ecothrive_coco_lite_50l_https_www_thehydrobros",
+      "name": "Ecothrive Coco Lite 50L | 70/30 Coco Coir & Perlite Growing Medium",
+      "brand": "Ecothrive",
+      "category": "coco",
+      "source": "dsc_mediums_ecothrive"
+    },
+    {
+      "id": "intl_ecothrive_ecothrive_charge_https_www_thehydrobros_com_pr",
+      "name": "Ecothrive Charge — 1L / 500g",
+      "brand": "Ecothrive",
+      "category": "soil_potting_mix",
+      "source": "dsc_mediums_ecothrive"
+    },
+    {
+      "id": "intl_ecothrive_ecothrive_charge_https_www_thehydrobros_com_pr",
+      "name": "Ecothrive Charge — 5L / 1.75kg",
+      "brand": "Ecothrive",
+      "category": "soil_potting_mix",
+      "source": "dsc_mediums_ecothrive"
+    },
+    {
+      "id": "intl_ecothrive_ecothrive_charge_https_www_thehydrobros_com_pr",
+      "name": "Ecothrive Charge — 10L / 3.5kg",
+      "brand": "Ecothrive",
+      "category": "soil_potting_mix",
+      "source": "dsc_mediums_ecothrive"
+    },
+    {
+      "id": "intl_ecothrive_ecothrive_life_cycle_organic_soil_recharger_http",
+      "name": "Ecothrive Life-Cycle — 1KG",
+      "brand": "Ecothrive",
+      "category": "living_soil",
+      "source": "dsc_mediums_ecothrive"
+    },
+    {
+      "id": "intl_ecothrive_ecothrive_life_cycle_organic_soil_recharger_http",
+      "name": "Ecothrive Life-Cycle — 5KG",
+      "brand": "Ecothrive",
+      "category": "living_soil",
+      "source": "dsc_mediums_ecothrive"
+    },
+    {
+      "id": "intl_ecothrive_ecothrive_living_soil_40l_premium_organic_soil_h",
+      "name": "Ecothrive Living Soil 40L - Premium Organic Soil — Living Soil Only",
+      "brand": "Ecothrive",
+      "category": "living_soil",
+      "source": "dsc_mediums_ecothrive"
+    },
+    {
+      "id": "intl_ecothrive_ecothrive_living_soil_40l_premium_organic_soil_h",
+      "name": "Ecothrive Living Soil 40L - Premium Organic Soil — Living Soil + 1kg of Soil Food Grow & Bloom & Regen",
+      "brand": "Ecothrive",
+      "category": "living_soil",
+      "source": "dsc_mediums_ecothrive"
+    },
+    {
+      "id": "intl_ecothrive_ecothrive_soil_food_organic_soil_amendment_https",
+      "name": "Ecothrive Soil Food - Organic Soil Amendment — 1KG / Grow",
+      "brand": "Ecothrive",
+      "category": "living_soil",
+      "source": "dsc_mediums_ecothrive"
+    },
+    {
+      "id": "intl_ecothrive_ecothrive_soil_food_organic_soil_amendment_https",
+      "name": "Ecothrive Soil Food - Organic Soil Amendment — 1KG / Bloom",
+      "brand": "Ecothrive",
+      "category": "living_soil",
+      "source": "dsc_mediums_ecothrive"
+    },
+    {
+      "id": "intl_ecothrive_ecothrive_soil_food_organic_soil_amendment_https",
+      "name": "Ecothrive Soil Food - Organic Soil Amendment — 1KG / Regen",
+      "brand": "Ecothrive",
+      "category": "living_soil",
+      "source": "dsc_mediums_ecothrive"
+    },
+    {
+      "id": "intl_ecothrive_ecothrive_soil_food_organic_soil_amendment_https",
+      "name": "Ecothrive Soil Food - Organic Soil Amendment — 1KG / 3 kit bundle - Grow & Bloom & Regen",
+      "brand": "Ecothrive",
+      "category": "living_soil",
+      "source": "dsc_mediums_ecothrive"
+    },
+    {
+      "id": "intl_ecothrive_ecothrive_soil_food_organic_soil_amendment_https",
+      "name": "Ecothrive Soil Food - Organic Soil Amendment — 5KG / Grow",
+      "brand": "Ecothrive",
+      "category": "living_soil",
+      "source": "dsc_mediums_ecothrive"
+    },
+    {
+      "id": "intl_ecothrive_ecothrive_soil_food_organic_soil_amendment_https",
+      "name": "Ecothrive Soil Food - Organic Soil Amendment — 5KG / Bloom",
+      "brand": "Ecothrive",
+      "category": "living_soil",
+      "source": "dsc_mediums_ecothrive"
+    },
+    {
+      "id": "intl_ecothrive_ecothrive_soil_food_organic_soil_amendment_https",
+      "name": "Ecothrive Soil Food - Organic Soil Amendment — 5KG / Regen",
+      "brand": "Ecothrive",
+      "category": "living_soil",
+      "source": "dsc_mediums_ecothrive"
+    },
+    {
+      "id": "intl_ecothrive_ecothrive_soil_food_organic_soil_amendment_https",
+      "name": "Ecothrive Soil Food - Organic Soil Amendment — 5KG / 3 kit bundle - Grow & Bloom & Regen",
+      "brand": "Ecothrive",
+      "category": "living_soil",
+      "source": "dsc_mediums_ecothrive"
+    },
+    {
+      "id": "intl_fibrgro_fibrgro_buffered_quick_fill_open_top_bag_1_gallo",
+      "name": "Fibrgro Buffered Quick Fill Open Top Bag - 1 Gallon — Singles",
+      "brand": "Fibrgro",
+      "category": "coco",
+      "source": "dsc_mediums_fibrgro"
+    },
+    {
+      "id": "intl_fibrgro_fibrgro_buffered_quick_fill_open_top_bag_1_gallo",
+      "name": "Fibrgro Buffered Quick Fill Open Top Bag - 1 Gallon — Box Quantity (39 Singles)",
+      "brand": "Fibrgro",
+      "category": "coco",
+      "source": "dsc_mediums_fibrgro"
+    },
+    {
+      "id": "intl_fibrgro_fibrgro_buffered_quick_fill_open_top_bag_2_gallo",
+      "name": "Fibrgro Buffered Quick Fill Bag - 2 Gallon — Singles",
+      "brand": "Fibrgro",
+      "category": "coco",
+      "source": "dsc_mediums_fibrgro"
+    },
+    {
+      "id": "intl_fibrgro_fibrgro_buffered_quick_fill_open_top_bag_2_gallo",
+      "name": "Fibrgro Buffered Quick Fill Bag - 2 Gallon — Box Quantity (18 Singles)",
+      "brand": "Fibrgro",
+      "category": "coco",
+      "source": "dsc_mediums_fibrgro"
+    },
+    {
+      "id": "intl_fibrgro_fibrgro_buffered_quick_fill_open_top_bag_3_gallo",
+      "name": "Fibrgro Buffered Quick Fill Open Top Bag - 3 Gallon — Singles *CLEARANCE*",
+      "brand": "Fibrgro",
+      "category": "coco",
+      "source": "dsc_mediums_fibrgro"
+    },
+    {
+      "id": "intl_fibrgro_fibrgro_buffered_quick_fill_open_top_bag_3_gallo",
+      "name": "Fibrgro Buffered Quick Fill Open Top Bag - 3 Gallon — Box Quantity (10 Singles)",
+      "brand": "Fibrgro",
+      "category": "coco",
+      "source": "dsc_mediums_fibrgro"
+    },
+    {
+      "id": "intl_fibrgro_fibrgro_quick_fill_bag_5_gallon_https_www_theh",
+      "name": "Fibrgro Quick Fill Bag - 5 Gallon",
+      "brand": "Fibrgro",
+      "category": "coco",
+      "source": "dsc_mediums_fibrgro"
+    },
+    {
+      "id": "intl_fibrgro_fibrgro_buffered_propagation_cubes_4_x4_x2_5_htt",
+      "name": "Fibrgro Buffered Propagation Cubes 4”x4”x2.5” — Singles",
+      "brand": "Fibrgro",
+      "category": "coco",
+      "source": "dsc_mediums_fibrgro"
+    },
+    {
+      "id": "intl_fibrgro_fibrgro_buffered_propagation_cubes_4_x4_x2_5_htt",
+      "name": "Fibrgro Buffered Propagation Cubes 4”x4”x2.5” — Box Quantity (192)",
+      "brand": "Fibrgro",
+      "category": "coco",
+      "source": "dsc_mediums_fibrgro"
+    },
+    {
+      "id": "intl_floraflex_floraflex_quickfill_bag_1_gallon_378l_https_ww",
+      "name": "FloraFlex Quick Fill Bag - 1 Gallon | White Plastic | 60% WHC — Single",
+      "brand": "FloraFlex",
+      "category": "coco",
+      "source": "dsc_mediums_floraflex"
+    },
+    {
+      "id": "intl_floraflex_floraflex_quickfill_bag_1_gallon_378l_https_ww",
+      "name": "FloraFlex Quick Fill Bag - 1 Gallon | White Plastic | 60% WHC — Box of 20",
+      "brand": "FloraFlex",
+      "category": "coco",
+      "source": "dsc_mediums_floraflex"
+    },
+    {
+      "id": "intl_floraflex_floraflex_quickfill_bag_2_gallon_757l_https_ww",
+      "name": "FloraFlex Quick Fill Bag - 2 Gallon | White Plastic | 60% WHC — Single",
+      "brand": "FloraFlex",
+      "category": "coco",
+      "source": "dsc_mediums_floraflex"
+    },
+    {
+      "id": "intl_floraflex_floraflex_quickfill_bag_2_gallon_757l_https_ww",
+      "name": "FloraFlex Quick Fill Bag - 2 Gallon | White Plastic | 60% WHC — Box of 15",
+      "brand": "FloraFlex",
+      "category": "coco",
+      "source": "dsc_mediums_floraflex"
+    },
+    {
+      "id": "intl_floraflex_floraflex_o2_quick_fill_bag_1_gallon_60_whc_378l",
+      "name": "FloraFlex Quick Fill Bag - 1 Gallon | Black O2 Fabric | 60% WHC — Single",
+      "brand": "FloraFlex",
+      "category": "coco",
+      "source": "dsc_mediums_floraflex"
+    },
+    {
+      "id": "intl_floraflex_floraflex_o2_quick_fill_bag_1_gallon_60_whc_378l",
+      "name": "FloraFlex Quick Fill Bag - 1 Gallon | Black O2 Fabric | 60% WHC — Box of 20",
+      "brand": "FloraFlex",
+      "category": "coco",
+      "source": "dsc_mediums_floraflex"
+    },
+    {
+      "id": "intl_floraflex_floraflex_quick_fill_2_gallon_o2_60_whc_https",
+      "name": "FloraFlex Quick Fill Bag - 2 Gallon | Black O2 Fabric | 60% WHC — Single Quickfill",
+      "brand": "FloraFlex",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_floraflex"
+    },
+    {
+      "id": "intl_floraflex_floraflex_quick_fill_2_gallon_o2_60_whc_https",
+      "name": "FloraFlex Quick Fill Bag - 2 Gallon | Black O2 Fabric | 60% WHC — Box of 15",
+      "brand": "FloraFlex",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_floraflex"
+    },
+    {
+      "id": "intl_floraflex_floraflex_quick_fill_bag_3_gallon_o2_60_whc_http",
+      "name": "FloraFlex Quick Fill Bag - 3 Gallon | Black O2 Fabric | 60% WHC — Single",
+      "brand": "FloraFlex",
+      "category": "coco",
+      "source": "dsc_mediums_floraflex"
+    },
+    {
+      "id": "intl_floraflex_floraflex_quick_fill_bag_3_gallon_o2_60_whc_http",
+      "name": "FloraFlex Quick Fill Bag - 3 Gallon | Black O2 Fabric | 60% WHC — Box of 10",
+      "brand": "FloraFlex",
+      "category": "coco",
+      "source": "dsc_mediums_floraflex"
+    },
+    {
+      "id": "intl_floraflex_floraflex_quick_fill_bag_3_gallon_60_whc_https",
+      "name": "FloraFlex Quick Fill Bag - 3 Gallon | White Plastic | 60% WHC — Single",
+      "brand": "FloraFlex",
+      "category": "coco",
+      "source": "dsc_mediums_floraflex"
+    },
+    {
+      "id": "intl_floraflex_floraflex_quick_fill_bag_3_gallon_60_whc_https",
+      "name": "FloraFlex Quick Fill Bag - 3 Gallon | White Plastic | 60% WHC — Box of 10",
+      "brand": "FloraFlex",
+      "category": "coco",
+      "source": "dsc_mediums_floraflex"
+    },
+    {
+      "id": "intl_floraflex_floraflex_quickfill_o2_coco_3_4_gal_https_www",
+      "name": "FloraFlex Quick Fill - 3/4 Gallon O2 | 60% WHC — Single Quickfill",
+      "brand": "FloraFlex",
+      "category": "coco",
+      "source": "dsc_mediums_floraflex"
+    },
+    {
+      "id": "intl_floraflex_floraflex_quickfill_o2_coco_3_4_gal_https_www",
+      "name": "FloraFlex Quick Fill - 3/4 Gallon O2 | 60% WHC — Box of 30",
+      "brand": "FloraFlex",
+      "category": "coco",
+      "source": "dsc_mediums_floraflex"
+    },
+    {
+      "id": "intl_floraflex_floraflex_quick_fill_1_4_gallon_o2_60_whc_https",
+      "name": "FloraFlex Quick Fill - 1/4 Gallon O2 | 60% WHC — Single Quickfill",
+      "brand": "FloraFlex",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_floraflex"
+    },
+    {
+      "id": "intl_floraflex_floraflex_quick_fill_1_4_gallon_o2_60_whc_https",
+      "name": "FloraFlex Quick Fill - 1/4 Gallon O2 | 60% WHC — Box of 144",
+      "brand": "FloraFlex",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_floraflex"
+    },
+    {
+      "id": "franshydroponics_high_powered_organics_gro_dirt_full_spectrum_blend_bott",
+      "name": "High Powered Organics FULL SPECTRUM Gro-Dirt 100% Organic Living Super Soil",
+      "brand": "High Powered Organics",
+      "category": "substrate",
+      "source": "dsc_mediums_franshydroponics"
+    },
+    {
+      "id": "franshydroponics_grodan_grodan_rockwool_cubes_bottle_40mmx40mmx40mm",
+      "name": "Grodan Rockwool Cubes",
+      "brand": "Grodan",
+      "category": "Propagation",
+      "source": "dsc_mediums_franshydroponics"
+    },
+    {
+      "id": "franshydroponics_canna_canna_terra_professional_bottle_default",
+      "name": "CANNA Terra Professional",
+      "brand": "CANNA",
+      "category": "Hydroponic Medium",
+      "source": "dsc_mediums_franshydroponics"
+    },
+    {
+      "id": "franshydroponics_green_planet_greenplanet_coco_7030_perlite_53_l_bag_bot",
+      "name": "Green Planet Coco 70/30 Perlite 53 L Bag",
+      "brand": "Green Planet",
+      "category": "Hydroponic Medium",
+      "source": "dsc_mediums_franshydroponics"
+    },
+    {
+      "id": "franshydroponics_high_powered_organics_gro_dirt_super_starter_bottle_1l",
+      "name": "High Powered Organics Gro-Dirt Super Starter",
+      "brand": "High Powered Organics",
+      "category": "Propagation",
+      "source": "dsc_mediums_franshydroponics"
+    },
+    {
+      "id": "franshydroponics_canna_canna_aqua_clay_balls_bottle_default",
+      "name": "Canna Aqua Clay Balls",
+      "brand": "CANNA",
+      "category": "Hydroponic Medium",
+      "source": "dsc_mediums_franshydroponics"
+    },
+    {
+      "id": "franshydroponics_chillago_perlite_100l_various_coarse_levels_bottle_medi",
+      "name": "Perlite 100L (Various Coarse Levels)",
+      "brand": "Chillago",
+      "category": "Hydroponic Medium",
+      "source": "dsc_mediums_franshydroponics"
+    },
+    {
+      "id": "franshydroponics_professor_s_nutrients_professors_coco_brick_5kg_bottle_",
+      "name": "Professors Coco Brick 5KG",
+      "brand": "Professor's Nutrients",
+      "category": "Hydroponic Medium",
+      "source": "dsc_mediums_franshydroponics"
+    },
+    {
+      "id": "franshydroponics_high_powered_organics_high_powr_humic_compost_20l_bottl",
+      "name": "High Powered Organics Humic Compost",
+      "brand": "High Powered Organics",
+      "category": "substrate",
+      "source": "dsc_mediums_franshydroponics"
+    },
+    {
+      "id": "franshydroponics_professor_s_nutrients_professors_coco_perlite_blend_bot",
+      "name": "Professors Coco-Perlite Blend",
+      "brand": "Professor's Nutrients",
+      "category": "Hydroponic Medium",
+      "source": "dsc_mediums_franshydroponics"
+    },
+    {
+      "id": "franshydroponics_the_salad_table_70_premium_rockwool_grow_cubes_in_propa",
+      "name": "70 Premium Rockwool Grow Cubes in Propagation Tray",
+      "brand": "The Salad Table",
+      "category": "Propagation",
+      "source": "dsc_mediums_franshydroponics"
+    },
+    {
+      "id": "franshydroponics_accent_hydroponics_med13010_bottle_8mm_to_16mm",
+      "name": "Clay Balls 50ltr",
+      "brand": "Accent Hydroponics",
+      "category": "Hydroponic Medium",
+      "source": "dsc_mediums_franshydroponics"
+    },
+    {
+      "id": "franshydroponics_hy_gen_hydroponic_generations_hy_gencocopeat_bottle_50l",
+      "name": "Hy-Gen Coirlite 50L Bag",
+      "brand": "Hy-Gen (Hydroponic Generations)",
+      "category": "Hydroponic Medium",
+      "source": "dsc_mediums_franshydroponics"
+    },
+    {
+      "id": "franshydroponics_high_powered_organics_gro_dirt_lite_100_organic_living_",
+      "name": "High Powered Organics Gro-Dirt LITE 100% Organic Living Soil",
+      "brand": "High Powered Organics",
+      "category": "Hydroponic Medium",
+      "source": "dsc_mediums_franshydroponics"
+    },
+    {
+      "id": "franshydroponics_way_to_grow_w2g_pro_coco_5_kg_block_bottle_2g",
+      "name": "W2G Pro Coco 5 kg Block",
+      "brand": "Way to Grow",
+      "category": "Hydroponic Medium",
+      "source": "dsc_mediums_franshydroponics"
+    },
+    {
+      "id": "franshydroponics_easy_as_organics_easy_as_organics_living_soil_kis_mix_b",
+      "name": "Easy As Organics Living Soil KiS Mix",
+      "brand": "Easy As Organics",
+      "category": "Hydroponic Medium",
+      "source": "dsc_mediums_franshydroponics"
+    },
+    {
+      "id": "franshydroponics_accent_hydroponics_med13011_bottle_default",
+      "name": "Clay Balls 8Ltr Bags",
+      "brand": "Accent Hydroponics",
+      "category": "Hydroponic Medium",
+      "source": "dsc_mediums_franshydroponics"
+    },
+    {
+      "id": "franshydroponics_ausperl_med13012_bottle_grade_3",
+      "name": "Vermiculite 100ltr",
+      "brand": "AusPerl",
+      "category": "Hydroponic Medium",
+      "source": "dsc_mediums_franshydroponics"
+    },
+    {
+      "id": "franshydroponics_professor_s_nutrients_professors_hydro_clay_balls_10l_b",
+      "name": "Professors Hydro Clay Balls",
+      "brand": "Professor's Nutrients",
+      "category": "Hydroponic Medium",
+      "source": "dsc_mediums_franshydroponics"
+    },
+    {
+      "id": "franshydroponics_grodan_gsbs_bottle_default",
+      "name": "Grodan SBS 36/77 - 77 cubes per tray",
+      "brand": "Grodan",
+      "category": "Hydroponic Medium",
+      "source": "dsc_mediums_franshydroponics"
+    },
+    {
+      "id": "franshydroponics_exfoliators_perliteandvermiculite5050mixed20litregrowba",
+      "name": "PERLITE AND VERMICULITE 50% / 50% MIXED 20 LITRE GROW BAG",
+      "brand": "Exfoliators",
+      "category": "Hydroponic Medium",
+      "source": "dsc_mediums_franshydroponics"
+    },
+    {
+      "id": "franshydroponics_autopot_autopotperlitevermiculite5050mix_5lbag_bottle_5",
+      "name": "AutoPot Perlite/Vermiculite 50/50 Mix - 5L bag",
+      "brand": "Autopot",
+      "category": "Hydroponic Medium",
+      "source": "dsc_mediums_franshydroponics"
+    },
+    {
+      "id": "franshydroponics_exfoliators_med130030_bottle_default",
+      "name": "Perlite 20ltr Grow Bag",
+      "brand": "Exfoliators",
+      "category": "Hydroponic Medium",
+      "source": "dsc_mediums_franshydroponics"
+    },
+    {
+      "id": "franshydroponics_plant_mechanics_plant_mechanics_coco_perlite_50l_bag_bo",
+      "name": "Plant Mechanics Coco-Perlite+ 50L Bag",
+      "brand": "Plant Mechanics",
+      "category": "Hydroponic Medium",
+      "source": "dsc_mediums_franshydroponics"
+    },
+    {
+      "id": "franshydroponics_kaya_coir_kaya_5kg_100_rhp_buffered_block_bottle_5kg",
+      "name": "Kaya 5KG 100% RHP Buffered Block",
+      "brand": "kaya coir",
+      "category": "Hydroponic Medium",
+      "source": "dsc_mediums_franshydroponics"
+    },
+    {
+      "id": "franshydroponics_quikgro_quickgro_rapid_rize_block_4x4_inch_bottle_defau",
+      "name": "Quik Gro Rapid Rise Block (4\"x4\")",
+      "brand": "QuikGro",
+      "category": "Hydroponic Medium",
+      "source": "dsc_mediums_franshydroponics"
+    },
+    {
+      "id": "franshydroponics_eazy_plug_eazy_plug_pyramid_mini_12_x_12_x_10cm_bottle_",
+      "name": "EAZY PLUG PYRAMID - MINI | 12 X 12 X 10CM",
+      "brand": "Eazy Plug",
+      "category": "General",
+      "source": "dsc_mediums_franshydroponics"
+    },
+    {
+      "id": "franshydroponics_hy_gen_hydroponic_generations_hy_gen_husk_chips_30l_bag",
+      "name": "Hy-Gen Co-Co Husk Chips",
+      "brand": "Hy-Gen (Hydroponic Generations)",
+      "category": "Hydroponic Medium",
+      "source": "dsc_mediums_franshydroponics"
+    },
+    {
+      "id": "franshydroponics_grodan_grodan_delta_bottle_8g",
+      "name": "Grodan Cube Delta 8g 100 x 100 with hole",
+      "brand": "Grodan",
+      "category": "General",
+      "source": "dsc_mediums_franshydroponics"
+    },
+    {
+      "id": "franshydroponics_grodan_med13028_bottle_default",
+      "name": "Grodan Slab 900 x 300 x 75",
+      "brand": "Grodan",
+      "category": "Hydroponic Medium",
+      "source": "dsc_mediums_franshydroponics"
+    },
+    {
+      "id": "franshydroponics_grodan_med13024_bottle_default",
+      "name": "Grodan Slab Crop Box (Thick)",
+      "brand": "Grodan",
+      "category": "Hydroponic Medium",
+      "source": "dsc_mediums_franshydroponics"
+    },
+    {
+      "id": "franshydroponics_uber_uber_premium_coco_blend_bottle_default",
+      "name": "Uber Premium Coco Blend",
+      "brand": "Uber",
+      "category": "Hydroponic Medium",
+      "source": "dsc_mediums_franshydroponics"
+    },
+    {
+      "id": "franshydroponics_kaya_coir_kaya_gorw_pot_various_sizes_bottle_5_individu",
+      "name": "Compressed Grow Pot",
+      "brand": "kaya coir",
+      "category": "Hydroponic Medium",
+      "source": "dsc_mediums_franshydroponics"
+    },
+    {
+      "id": "franshydroponics_green_planet_greenplanet_expanded_clay_25l_bag_bottle_2",
+      "name": "GreenPlanet Expanded Clay 25L Bag",
+      "brand": "Green Planet",
+      "category": "Hydroponic Medium",
+      "source": "dsc_mediums_franshydroponics"
+    },
+    {
+      "id": "franshydroponics_kaya_coir_kaya_coir_50l_coco_bags_bottle_50l",
+      "name": "Kaya Coir 50L Coco Bags",
+      "brand": "kaya coir",
+      "category": "Hydroponic Medium",
+      "source": "dsc_mediums_franshydroponics"
+    },
+    {
+      "id": "franshydroponics_quikgro_quikgro_rapid_rize_block_10x10_inch_bottle_sing",
+      "name": "Quik Gro Rapid Rise Block (10\"X10\")",
+      "brand": "QuikGro",
+      "category": "Hydroponic Medium",
+      "source": "dsc_mediums_franshydroponics"
+    },
+    {
+      "id": "franshydroponics_kaya_coir_kaya_coir_5_kg_cocochips_blocks_bottle_5kg",
+      "name": "Kaya Coir 5kg Coco-Chips Block",
+      "brand": "kaya coir",
+      "category": "Hydroponic Medium",
+      "source": "dsc_mediums_franshydroponics"
+    },
+    {
+      "id": "franshydroponics_eazy_plug_eazy_plug_sea_of_green_set_6x_x_plugs_4_x_min",
+      "name": "EAZY PLUG SEA OF GREEN SET (6x X PLUGS + 4 X MINI PYRIMID)",
+      "brand": "Eazy Plug",
+      "category": "General",
+      "source": "dsc_mediums_franshydroponics"
+    },
+    {
+      "id": "franshydroponics_hy_gen_hygen_ultimate_blend_50_litre_coco_bottle_defaul",
+      "name": "Hy-Gen Ultimate Blend 50 Litre Coco",
+      "brand": "Hy-Gen",
+      "category": "Hydroponic Medium",
+      "source": "dsc_mediums_franshydroponics"
+    },
+    {
+      "id": "franshydroponics_easy_as_organics_easy_as_organics_living_soil_grow_bund",
+      "name": "Easy As Organics Living Soil Grow Bundle",
+      "brand": "Easy As Organics",
+      "category": "Hydroponic Medium",
+      "source": "dsc_mediums_franshydroponics"
+    },
+    {
+      "id": "franshydroponics_de_ozzy_hydro_chunk_10kg_bottle_10kg",
+      "name": "HYDRO- CHUNK 10KG",
+      "brand": "De-Ozzy",
+      "category": "substrate",
+      "source": "dsc_mediums_franshydroponics"
+    },
+    {
+      "id": "franshydroponics_hy_gen_hy_gen_co_co_peat_premium_buffered_50l_bottle_50",
+      "name": "Hy-Gen Co-Co Peat Premium Buffered 50L",
+      "brand": "Hy-Gen",
+      "category": "Hydroponic Medium",
+      "source": "dsc_mediums_franshydroponics"
+    },
+    {
+      "id": "franshydroponics_professor_s_nutrients_professors_coco_chips_bottle_defa",
+      "name": "Professors Coco Chips",
+      "brand": "Professor's Nutrients",
+      "category": "Hydroponic Medium",
+      "source": "dsc_mediums_franshydroponics"
+    },
+    {
+      "id": "franshydroponics_plant_mechanics_plant_mechanics_complete_bundle_bottle_",
+      "name": "Plant Mechanics Complete Bundle",
+      "brand": "Plant Mechanics",
+      "category": "Nutrient Kit",
+      "source": "dsc_mediums_franshydroponics"
+    },
+    {
+      "id": "franshydroponics_kaya_coir_kaya_coir_coco_chips_50l_70_coco_30_coco_chip",
+      "name": "Kaya Coir Coco Chips 50L | 70% Coco 30% Coco Chip",
+      "brand": "kaya coir",
+      "category": null,
+      "source": "dsc_mediums_franshydroponics"
+    },
+    {
+      "id": "franshydroponics_cultilene_cultilene_large_prop_cubes_35mm_tray_of_77_bo",
+      "name": "CULTILENE LARGE PROP CUBES 35MM TRAY OF 77",
+      "brand": "Cultilene",
+      "category": "Hydroponic Medium",
+      "source": "dsc_mediums_franshydroponics"
+    },
+    {
+      "id": "franshydroponics_kaya_coir_kaya_coir_grow_bag_bottle_2gal",
+      "name": "Kaya Coir Grow Bag",
+      "brand": "kaya coir",
+      "category": "Hydroponic Medium",
+      "source": "dsc_mediums_franshydroponics"
+    },
+    {
+      "id": "franshydroponics_quikgro_quikgro_rapid_rize_block_8_x_8_bottle_default",
+      "name": "Quik Gro Rapid Rize Block (8\" X 8\")",
+      "brand": "QuikGro",
+      "category": "Hydroponic Medium",
+      "source": "dsc_mediums_franshydroponics"
+    },
+    {
+      "id": "franshydroponics_grodan_med130210_bottle_default",
+      "name": "Grodan Granulated Growool 20 k",
+      "brand": "Grodan",
+      "category": "Hydroponic Medium",
+      "source": "dsc_mediums_franshydroponics"
+    },
+    {
+      "id": "franshydroponics_grodan_grodan_ao36_40_30_sheets_x_98_cubes_2940_ctn_bot",
+      "name": "Grodan AO36/40 30 sheets x 98 cubes 2940/ctn",
+      "brand": "Grodan",
+      "category": "Substrates, Pots & Trays",
+      "source": "dsc_mediums_franshydroponics"
+    },
+    {
+      "id": "intl_gold_label_gold_label_60_40_https_hytechydroponics_com_pr",
+      "name": "Gold Label 60/40 Coco Pebble Mix 45L — Collect In Store",
+      "brand": "Gold Label",
+      "category": "clay_pebbles_leca",
+      "source": "dsc_mediums_gold_label"
+    },
+    {
+      "id": "intl_gold_label_gold_label_60_40_https_hytechydroponics_com_pr",
+      "name": "Gold Label 60/40 Coco Pebble Mix 45L — Shipping +£5 Per Bag",
+      "brand": "Gold Label",
+      "category": "clay_pebbles_leca",
+      "source": "dsc_mediums_gold_label"
+    },
+    {
+      "id": "intl_gold_label_gold_label_80_20_45l_https_hytechydroponics_co",
+      "name": "Gold Label 80/20 Coco Pebble Mix 45L — Collect In Store",
+      "brand": "Gold Label",
+      "category": "clay_pebbles_leca",
+      "source": "dsc_mediums_gold_label"
+    },
+    {
+      "id": "intl_gold_label_gold_label_80_20_45l_https_hytechydroponics_co",
+      "name": "Gold Label 80/20 Coco Pebble Mix 45L — Shipping +£5 Per Bag",
+      "brand": "Gold Label",
+      "category": "clay_pebbles_leca",
+      "source": "dsc_mediums_gold_label"
+    },
+    {
+      "id": "intl_gold_label_hydro_corn_clay_pebbles_45ltr_https_hytechydro",
+      "name": "Hydro Corn Clay Pebbles 45L — Collect In Store",
+      "brand": "Gold Label",
+      "category": "clay_pebbles_leca",
+      "source": "dsc_mediums_gold_label"
+    },
+    {
+      "id": "intl_gold_label_hydro_corn_clay_pebbles_45ltr_https_hytechydro",
+      "name": "Hydro Corn Clay Pebbles 45L — Shipping +£5 Per Bag",
+      "brand": "Gold Label",
+      "category": "clay_pebbles_leca",
+      "source": "dsc_mediums_gold_label"
+    },
+    {
+      "id": "intl_gold_label_gold_label_hydrococo_60_40_mix_45l_https_www_t",
+      "name": "Gold Label HydroCoco 60/40 mix 45L",
+      "brand": "Gold Label",
+      "category": "clay_pebbles_leca",
+      "source": "dsc_mediums_gold_label"
+    },
+    {
+      "id": "intl_gold_label_gold_label_special_mix_45l_https_www_thehydrob",
+      "name": "Gold Label Special Mix - GOLD (Green Font) 45L",
+      "brand": "Gold Label",
+      "category": "perlite",
+      "source": "dsc_mediums_gold_label"
+    },
+    {
+      "id": "intl_gold_label_gold_label_special_mix_light_45l_https_www_the",
+      "name": "Gold Label Special Mix - LIGHT (Yellow Font) 45L",
+      "brand": "Gold Label",
+      "category": "soil_potting_mix",
+      "source": "dsc_mediums_gold_label"
+    },
+    {
+      "id": "intl_gold_label_gold_label_hydrococo_80_20_45l_https_www_thehy",
+      "name": "Gold Label HydroCoco 80/20 45L",
+      "brand": "Gold Label",
+      "category": "clay_pebbles_leca",
+      "source": "dsc_mediums_gold_label"
+    },
+    {
+      "id": "mfr_green_planet_expanded_clay_25l",
+      "name": "Expanded Clay — 25L",
+      "brand": "Green Planet",
+      "category": "clay_pebbles_leca",
+      "source": "dsc_mediums_green_planet"
+    },
+    {
+      "id": "mfr_grodan_grodan_ao",
+      "name": "Grodan AO",
+      "brand": "Grodan",
+      "category": "rockwool",
+      "source": "dsc_mediums_grodan"
+    },
+    {
+      "id": "mfr_grodan_grodan_ax",
+      "name": "Grodan AX",
+      "brand": "Grodan",
+      "category": "rockwool",
+      "source": "dsc_mediums_grodan"
+    },
+    {
+      "id": "mfr_grodan_grodan_aqua",
+      "name": "Grodan Aqua",
+      "brand": "Grodan",
+      "category": "rockwool",
+      "source": "dsc_mediums_grodan"
+    },
+    {
+      "id": "mfr_grodan_grodan_classic_my_ng2_0",
+      "name": "Grodan Classic MY NG2.0",
+      "brand": "Grodan",
+      "category": "rockwool",
+      "source": "dsc_mediums_grodan"
+    },
+    {
+      "id": "mfr_grodan_grodan_classic_ng2_0",
+      "name": "Grodan Classic NG2.0",
+      "brand": "Grodan",
+      "category": "rockwool",
+      "source": "dsc_mediums_grodan"
+    },
+    {
+      "id": "mfr_grodan_grodan_cress",
+      "name": "Grodan Cress",
+      "brand": "Grodan",
+      "category": "rockwool",
+      "source": "dsc_mediums_grodan"
+    },
+    {
+      "id": "mfr_grodan_grodan_delta_ng2_0_block",
+      "name": "Grodan Delta NG2.0 Block",
+      "brand": "Grodan",
+      "category": "rockwool",
+      "source": "dsc_mediums_grodan"
+    },
+    {
+      "id": "mfr_grodan_grodan_elite_ng2_0",
+      "name": "Grodan Elite NG2.0",
+      "brand": "Grodan",
+      "category": "rockwool",
+      "source": "dsc_mediums_grodan"
+    },
+    {
+      "id": "mfr_grodan_grodan_gt_master_dry_ng2_0",
+      "name": "Grodan GT Master Dry NG2.0",
+      "brand": "Grodan",
+      "category": "rockwool",
+      "source": "dsc_mediums_grodan"
+    },
+    {
+      "id": "mfr_grodan_grodan_gt_master_ng2_0",
+      "name": "Grodan GT Master NG2.0",
+      "brand": "Grodan",
+      "category": "rockwool",
+      "source": "dsc_mediums_grodan"
+    },
+    {
+      "id": "mfr_grodan_grodan_granulate",
+      "name": "Grodan Granulate",
+      "brand": "Grodan",
+      "category": "rockwool",
+      "source": "dsc_mediums_grodan"
+    },
+    {
+      "id": "mfr_grodan_grodan_grocube",
+      "name": "Grodan Grocube",
+      "brand": "Grodan",
+      "category": "rockwool",
+      "source": "dsc_mediums_grodan"
+    },
+    {
+      "id": "mfr_grodan_grodan_grofit_ng2_0",
+      "name": "Grodan Grofit NG2.0",
+      "brand": "Grodan",
+      "category": "rockwool",
+      "source": "dsc_mediums_grodan"
+    },
+    {
+      "id": "mfr_grodan_grodan_lettuce_board",
+      "name": "Grodan Lettuce Board",
+      "brand": "Grodan",
+      "category": "rockwool",
+      "source": "dsc_mediums_grodan"
+    },
+    {
+      "id": "mfr_grodan_grodan_mm",
+      "name": "Grodan MM",
+      "brand": "Grodan",
+      "category": "rockwool",
+      "source": "dsc_mediums_grodan"
+    },
+    {
+      "id": "mfr_grodan_grodan_mu",
+      "name": "Grodan MU",
+      "brand": "Grodan",
+      "category": "rockwool",
+      "source": "dsc_mediums_grodan"
+    },
+    {
+      "id": "mfr_grodan_grodan_macro_ng2_0",
+      "name": "Grodan Macro NG2.0",
+      "brand": "Grodan",
+      "category": "rockwool",
+      "source": "dsc_mediums_grodan"
+    },
+    {
+      "id": "mfr_grodan_grodan_plantop_dry_ng2_0_block",
+      "name": "Grodan Plantop Dry NG2.0 Block",
+      "brand": "Grodan",
+      "category": "rockwool",
+      "source": "dsc_mediums_grodan"
+    },
+    {
+      "id": "mfr_grodan_grodan_plantop_ng2_0_block",
+      "name": "Grodan Plantop NG2.0 Block",
+      "brand": "Grodan",
+      "category": "rockwool",
+      "source": "dsc_mediums_grodan"
+    },
+    {
+      "id": "mfr_grodan_grodan_plantop_ng2_0_plug",
+      "name": "Grodan Plantop NG2.0 Plug",
+      "brand": "Grodan",
+      "category": "rockwool",
+      "source": "dsc_mediums_grodan"
+    },
+    {
+      "id": "mfr_grodan_grodan_plantop_rosa_ng2_0_block",
+      "name": "Grodan Plantop Rosa NG2. Block",
+      "brand": "Grodan",
+      "category": "rockwool",
+      "source": "dsc_mediums_grodan"
+    },
+    {
+      "id": "mfr_grodan_grodan_prestige_ng2_0",
+      "name": "Grodan Prestige NG2.0",
+      "brand": "Grodan",
+      "category": "rockwool",
+      "source": "dsc_mediums_grodan"
+    },
+    {
+      "id": "mfr_grodan_grodan_pro_vision_block",
+      "name": "Grodan Pro Vision Block",
+      "brand": "Grodan",
+      "category": "rockwool",
+      "source": "dsc_mediums_grodan"
+    },
+    {
+      "id": "mfr_grodan_grodan_pro_vision_plug",
+      "name": "Grodan Pro Vision Plug",
+      "brand": "Grodan",
+      "category": "rockwool",
+      "source": "dsc_mediums_grodan"
+    },
+    {
+      "id": "mfr_grodan_grodan_sbs",
+      "name": "Grodan SBS",
+      "brand": "Grodan",
+      "category": "rockwool",
+      "source": "dsc_mediums_grodan"
+    },
+    {
+      "id": "mfr_grodan_grodan_slab_block_ng2_0",
+      "name": "Grodan Slab-Block NG2.0",
+      "brand": "Grodan",
+      "category": "rockwool",
+      "source": "dsc_mediums_grodan"
+    },
+    {
+      "id": "mfr_grodan_grodan_supreme_ng2_0",
+      "name": "Grodan Supreme NG2.0",
+      "brand": "Grodan",
+      "category": "rockwool",
+      "source": "dsc_mediums_grodan"
+    },
+    {
+      "id": "mfr_grodan_grodan_taco",
+      "name": "Grodan Taco",
+      "brand": "Grodan",
+      "category": "rockwool",
+      "source": "dsc_mediums_grodan"
+    },
+    {
+      "id": "mfr_grodan_grodan_vitaflor_ng2_0",
+      "name": "Grodan Vitaflor NG2.0",
+      "brand": "Grodan",
+      "category": "rockwool",
+      "source": "dsc_mediums_grodan"
+    },
+    {
+      "id": "mfr_grodan_grodan_vital_dry_ng2_0",
+      "name": "Grodan Vital Dry NG2.0",
+      "brand": "Grodan",
+      "category": "rockwool",
+      "source": "dsc_mediums_grodan"
+    },
+    {
+      "id": "mfr_grodan_grodan_vital_ng2_0",
+      "name": "Grodan Vital NG2.0",
+      "brand": "Grodan",
+      "category": "rockwool",
+      "source": "dsc_mediums_grodan"
+    },
+    {
+      "id": "happyhydroponics_bio_diesel_nutrients_bio_diesel_coco_low_compression_br",
+      "name": "Bio Diesel Coco Low Compression Brick 70L",
+      "brand": "Bio Diesel Nutrients",
+      "category": "Growing Media",
+      "source": "dsc_mediums_happyhydroponics"
+    },
+    {
+      "id": "happyhydroponics_bio_diesel_nutrients_bio_diesel_coco_perlite_50l_bottle",
+      "name": "Bio Diesel Coco Perlite",
+      "brand": "Bio Diesel Nutrients",
+      "category": "Growing Media",
+      "source": "dsc_mediums_happyhydroponics"
+    },
+    {
+      "id": "happyhydroponics_brunnings_brunnings_perlite_potting_mix_5ml_bottle_5l",
+      "name": "Brunnings Perlite Potting Mix",
+      "brand": "Brunnings",
+      "category": null,
+      "source": "dsc_mediums_happyhydroponics"
+    },
+    {
+      "id": "happyhydroponics_canna_canna_coco_professional_50l_bag_bottle_50l",
+      "name": "Canna Coco Professional",
+      "brand": "Canna",
+      "category": "Growing Media",
+      "source": "dsc_mediums_happyhydroponics"
+    },
+    {
+      "id": "happyhydroponics_diatomaceous_earth_essential_soil_conditioner_bag_10kg_",
+      "name": "Essential Soil Conditioner Bag 10kg",
+      "brand": "Diatomaceous Earth",
+      "category": "Growing Media",
+      "source": "dsc_mediums_happyhydroponics"
+    },
+    {
+      "id": "happyhydroponics_coarse_grade_perlite_100l_bag_bottle_100l",
+      "name": "Exfoliators Premium Perlite - (100L Bag)",
+      "brand": "Coarse Grade",
+      "category": "Growing Media",
+      "source": "dsc_mediums_happyhydroponics"
+    },
+    {
+      "id": "happyhydroponics_coarse_grade_vermiculite_100l_bag_bottle_100l",
+      "name": "Exfoliators Premium Vermiculite 100L Bag",
+      "brand": "Coarse Grade",
+      "category": "Growing Media",
+      "source": "dsc_mediums_happyhydroponics"
+    },
+    {
+      "id": "happyhydroponics_green_planet_green_planet_professional_coco_53l_bag_bot",
+      "name": "Green Planet Professional COCO - 53L BAG",
+      "brand": "Green Planet",
+      "category": "Growing Media",
+      "source": "dsc_mediums_happyhydroponics"
+    },
+    {
+      "id": "happyhydroponics_green_planet_green_planet_professional_coco_perlite_70_",
+      "name": "Green Planet Professional Coco Perlite 70/30",
+      "brand": "Green Planet",
+      "category": "Growing Media",
+      "source": "dsc_mediums_happyhydroponics"
+    },
+    {
+      "id": "happyhydroponics_grodan_grodan_cubes_40mm_x_40mm_x_40mm_bottle_single",
+      "name": "Grodan Cubes - 40mm x 40mm x 40mm",
+      "brand": "Grodan",
+      "category": null,
+      "source": "dsc_mediums_happyhydroponics"
+    },
+    {
+      "id": "happyhydroponics_grodan_grodan_delta_4g_75mm_x_75mm_x_60mm_bottle_hole_s",
+      "name": "Grodan Delta 4G - 75mm x 75mm x 60mm",
+      "brand": "Grodan",
+      "category": null,
+      "source": "dsc_mediums_happyhydroponics"
+    },
+    {
+      "id": "happyhydroponics_hy_gen_nutrients_hy_gen_euro_clay_50l_bottle_50l",
+      "name": "Hy Gen Euro Clayballs",
+      "brand": "Hy-Gen Nutrients",
+      "category": null,
+      "source": "dsc_mediums_happyhydroponics"
+    },
+    {
+      "id": "happyhydroponics_hy_gen_nutrients_hy_gen_coco_premium_50l_bag_bottle_50l",
+      "name": "Hy-Gen Coco Premium 50L Bag",
+      "brand": "Hy-Gen Nutrients",
+      "category": null,
+      "source": "dsc_mediums_happyhydroponics"
+    },
+    {
+      "id": "happyhydroponics_hy_gen_nutrients_hy_gen_coirlite_50l_coco_perlite_70_30",
+      "name": "Hy-Gen Coirlite Coco Perlite 70/30 Blend",
+      "brand": "Hy-Gen Nutrients",
+      "category": "Growing Media",
+      "source": "dsc_mediums_happyhydroponics"
+    },
+    {
+      "id": "happyhydroponics_happy_hydroponics_au_hydro_chunk_10kg_bottle_10kg",
+      "name": "Hydro Chunk",
+      "brand": "Happy Hydroponics AU",
+      "category": null,
+      "source": "dsc_mediums_happyhydroponics"
+    },
+    {
+      "id": "happyhydroponics_nutrifield_nutrifield_coco_chips_blend_50_50_50l_bag_bo",
+      "name": "Nutrifield Coco Chips Blend 50/50 | 50L Bag",
+      "brand": "Nutrifield",
+      "category": "Growing Media",
+      "source": "dsc_mediums_happyhydroponics"
+    },
+    {
+      "id": "happyhydroponics_nutrifield_nutrifield_coco_perlite_blend_50l_bottle_50l",
+      "name": "Nutrifield Coco Perlite (Blend 70/30) 50L",
+      "brand": "Nutrifield",
+      "category": "Growing Media",
+      "source": "dsc_mediums_happyhydroponics"
+    },
+    {
+      "id": "happyhydroponics_nutrifield_nutrifield_coco_premium_50l_bottle_50l",
+      "name": "Nutrifield Coco Premium 50L",
+      "brand": "Nutrifield",
+      "category": "Growing Media",
+      "source": "dsc_mediums_happyhydroponics"
+    },
+    {
+      "id": "happyhydroponics_nutrifield_nutrifield_stonewool_slab_900x200x75mm_bottl",
+      "name": "Nutrifield Stonewool Slab 900x200x75mm",
+      "brand": "Nutrifield",
+      "category": null,
+      "source": "dsc_mediums_happyhydroponics"
+    },
+    {
+      "id": "happyhydroponics_nutrifield_nutrifield_substrate_booster_20l_bag_bottle_",
+      "name": "Nutrifield Substrate Booster 20L Bag",
+      "brand": "Nutrifield",
+      "category": "Growing Media",
+      "source": "dsc_mediums_happyhydroponics"
+    },
+    {
+      "id": "happyhydroponics_happy_hydroponics_au_organic_living_soil_bottle_default",
+      "name": "Organic Living Soil",
+      "brand": "Happy Hydroponics AU",
+      "category": null,
+      "source": "dsc_mediums_happyhydroponics"
+    },
+    {
+      "id": "happyhydroponics_professor_s_nutrients_professors_coco_chip_50_50_blend_",
+      "name": "Professor's Coco Chips (50/50 Blend) 50L",
+      "brand": "Professor's Nutrients",
+      "category": "Growing Media",
+      "source": "dsc_mediums_happyhydroponics"
+    },
+    {
+      "id": "happyhydroponics_professor_s_nutrients_professors_coco_perlite_50l_bottl",
+      "name": "Professor's Coco Perlite",
+      "brand": "Professor's Nutrients",
+      "category": "Growing Media",
+      "source": "dsc_mediums_happyhydroponics"
+    },
+    {
+      "id": "happyhydroponics_professor_s_nutrients_professors_coco_premium_50l_bottl",
+      "name": "Professor's Coco Premium 50L",
+      "brand": "Professor's Nutrients",
+      "category": "Growing Media",
+      "source": "dsc_mediums_happyhydroponics"
+    },
+    {
+      "id": "happyhydroponics_professor_s_nutrients_professors_hydro_clay_balls_100_l",
+      "name": "Professors Hydro Clay Balls (100% Leca)",
+      "brand": "Professor's Nutrients",
+      "category": null,
+      "source": "dsc_mediums_happyhydroponics"
+    },
+    {
+      "id": "happyhydroponics_urban_jardin_urban_jardin_coco_perlite_50l_bottle_50l",
+      "name": "Urban Jardin Coco Perlite",
+      "brand": "Urban Jardin",
+      "category": null,
+      "source": "dsc_mediums_happyhydroponics"
+    },
+    {
+      "id": "happyhydroponics_urban_jardin_copy_of_urban_jardin_coco_perlite_50l_bott",
+      "name": "Urban Jardin Coco Premium",
+      "brand": "Urban Jardin",
+      "category": null,
+      "source": "dsc_mediums_happyhydroponics"
+    },
+    {
+      "id": "happyhydroponics_way_to_grow_w2g_professional_coco_perlite_50l_bottle_2g",
+      "name": "W2G Professional Coco Perlite",
+      "brand": "Way To Grow",
+      "category": "Growing Media",
+      "source": "dsc_mediums_happyhydroponics"
+    },
+    {
+      "id": "mfr_hy_gen_product_coirlite_50l",
+      "name": "HY",
+      "brand": "Hy-Gen",
+      "category": "coco",
+      "source": "dsc_mediums_hy_gen"
+    },
+    {
+      "id": "hydrobros_med_canna_coco_professional_plus_50l_sku",
+      "name": "Canna Coco Professional PLUS 50L",
+      "brand": "CANNA",
+      "category": "coco",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_root_riot_tray_of_24",
+      "name": "Root Riot Propagation Cubes — Tray of 24",
+      "brand": "ROOT RIOT",
+      "category": "soil_potting_mix",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_root_riot_bag_of_50",
+      "name": "Root Riot Propagation Cubes — Bag of 50",
+      "brand": "ROOT RIOT",
+      "category": "soil_potting_mix",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_root_riot_tray_of_77",
+      "name": "Root Riot Propagation Cubes — Tray of 77",
+      "brand": "ROOT RIOT",
+      "category": "soil_potting_mix",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_root_riot_bag_of_100",
+      "name": "Root Riot Propagation Cubes — Bag of 100",
+      "brand": "ROOT RIOT",
+      "category": "soil_potting_mix",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_biobizz_all_mix_soil_50l_sku",
+      "name": "Biobizz All Mix Soil 50L",
+      "brand": "BIOBIZZ",
+      "category": "perlite",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_plug_life_peat_mix_104_single_tray",
+      "name": "Plug Life 80/20 (Peat Mix) 104 — Single Tray",
+      "brand": "PLUG LIFE",
+      "category": "propagation_plugs",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_plug_life_peat_mix_104_box_of_8_trays",
+      "name": "Plug Life 80/20 (Peat Mix) 104 — Box of 8 Trays",
+      "brand": "PLUG LIFE",
+      "category": "propagation_plugs",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_biobizz_light_mix_soil_sku",
+      "name": "Biobizz Light Mix Soil 50L",
+      "brand": "BIOBIZZ",
+      "category": "perlite",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_canna_terra_professional_50l_sku",
+      "name": "Canna Terra Professional 50L",
+      "brand": "CANNA",
+      "category": "perlite",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_canna_aqua_clay_pebbles_45l_sku",
+      "name": "Canna Aqua Clay Pebbles 45L",
+      "brand": "CANNA",
+      "category": "clay_pebbles_leca",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_tray_of_rockwool_propagation_cubes_large_77cubes_single_tr",
+      "name": "Grodan Tray of Rockwool Propagation Cubes — LARGE (77cubes) / Single Tray",
+      "brand": "GRODAN",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_tray_of_rockwool_propagation_cubes_small_150_cubes_single_",
+      "name": "Grodan Tray of Rockwool Propagation Cubes — SMALL (150 cubes) / Single Tray",
+      "brand": "GRODAN",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_tray_of_rockwool_propagation_cubes_large_77cubes_box_of_18",
+      "name": "Grodan Tray of Rockwool Propagation Cubes — LARGE (77cubes) / Box of 18 Trays",
+      "brand": "GRODAN",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_tray_of_rockwool_propagation_cubes_small_150_cubes_box_of_",
+      "name": "Grodan Tray of Rockwool Propagation Cubes — SMALL (150 cubes) / Box of 18 Trays",
+      "brand": "GRODAN",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_canna_coco_natural_50l_sku",
+      "name": "Canna Coco Natural Growing Medium - 50L",
+      "brand": "CANNA",
+      "category": "coco",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_4_inch_10cm_grodan_rockwool_blocks_2_5cm_small_hole_single",
+      "name": "Grodan Rockwool Blocks 4” (10cm) – Small or Large Hole — 2.5cm (Small Hole) / Single",
+      "brand": "GRODAN",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_4_inch_10cm_grodan_rockwool_blocks_2_5cm_small_hole_strip_",
+      "name": "Grodan Rockwool Blocks 4” (10cm) – Small or Large Hole — 2.5cm (Small Hole) / Strip of 6",
+      "brand": "GRODAN",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_4_inch_10cm_grodan_rockwool_blocks_2_5cm_small_hole_box_of",
+      "name": "Grodan Rockwool Blocks 4” (10cm) – Small or Large Hole — 2.5cm (Small Hole) / Box of 216",
+      "brand": "GRODAN",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_4_inch_10cm_grodan_rockwool_blocks_3_6cm_large_hole_single",
+      "name": "Grodan Rockwool Blocks 4” (10cm) – Small or Large Hole — 3.6cm (Large Hole) / Single",
+      "brand": "GRODAN",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_4_inch_10cm_grodan_rockwool_blocks_3_6cm_large_hole_strip_",
+      "name": "Grodan Rockwool Blocks 4” (10cm) – Small or Large Hole — 3.6cm (Large Hole) / Strip of 6",
+      "brand": "GRODAN",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_4_inch_10cm_grodan_rockwool_blocks_3_6cm_large_hole_box_of",
+      "name": "Grodan Rockwool Blocks 4” (10cm) – Small or Large Hole — 3.6cm (Large Hole) / Box of 216",
+      "brand": "GRODAN",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_jiffy_peat_pellets_50_singles",
+      "name": "Jiffy Peat Pellets — 50 Singles",
+      "brand": "JIFFY",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_jiffy_peat_pellets_box_of_1000",
+      "name": "Jiffy Peat Pellets — Box of 1000",
+      "brand": "JIFFY",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_3_inch_10cm_grodan_rockwool_blocks_2_5cm_small_hole_single",
+      "name": "Grodan Rockwool Blocks 3” (7.5cm) – Small or Large Hole — 2.5cm (Small Hole) / Single",
+      "brand": "GRODAN",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_3_inch_10cm_grodan_rockwool_blocks_2_5cm_small_hole_strip_",
+      "name": "Grodan Rockwool Blocks 3” (7.5cm) – Small or Large Hole — 2.5cm (Small Hole) / Strip of 8",
+      "brand": "GRODAN",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_3_inch_10cm_grodan_rockwool_blocks_2_5cm_small_hole_box_of",
+      "name": "Grodan Rockwool Blocks 3” (7.5cm) – Small or Large Hole — 2.5cm (Small Hole) / Box of 384",
+      "brand": "GRODAN",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_3_inch_10cm_grodan_rockwool_blocks_3_6cm_large_hole_single",
+      "name": "Grodan Rockwool Blocks 3” (7.5cm) – Small or Large Hole — 3.6cm (Large Hole) / Single",
+      "brand": "GRODAN",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_3_inch_10cm_grodan_rockwool_blocks_3_6cm_large_hole_strip_",
+      "name": "Grodan Rockwool Blocks 3” (7.5cm) – Small or Large Hole — 3.6cm (Large Hole) / Strip of 8",
+      "brand": "GRODAN",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_3_inch_10cm_grodan_rockwool_blocks_3_6cm_large_hole_box_of",
+      "name": "Grodan Rockwool Blocks 3” (7.5cm) – Small or Large Hole — 3.6cm (Large Hole) / Box of 384",
+      "brand": "GRODAN",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_eazy_plug_organic_propagation_cubes_tray_of_77_single_tray",
+      "name": "Eazy Plug Organic Propagation Cubes — Tray of 77 / Single Trays",
+      "brand": "EAZY PLUGS",
+      "category": "vermiculite",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_eazy_plug_organic_propagation_cubes_tray_of_150_smaller_cu",
+      "name": "Eazy Plug Organic Propagation Cubes — Tray of 150 (smaller cubes) / Single Trays",
+      "brand": "EAZY PLUGS",
+      "category": "vermiculite",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_eazy_plug_organic_propagation_cubes_tray_of_77_box_quantit",
+      "name": "Eazy Plug Organic Propagation Cubes — Tray of 77 / Box Quantity (10 Trays)",
+      "brand": "EAZY PLUGS",
+      "category": "vermiculite",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_eazy_plug_organic_propagation_cubes_tray_of_150_smaller_cu",
+      "name": "Eazy Plug Organic Propagation Cubes — Tray of 150 (smaller cubes) / Box Quantity (10 Trays)",
+      "brand": "EAZY PLUGS",
+      "category": "vermiculite",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_hugo_rockwool_block_36mm_hole_single_hugo_block",
+      "name": "Grodan - 6\" Hugo Block / Cube — Single Hugo Block",
+      "brand": "GRODAN",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_hugo_rockwool_block_36mm_hole_box_of_48",
+      "name": "Grodan - 6\" Hugo Block / Cube — Box of 48",
+      "brand": "GRODAN",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_plantit_perlite_10l_sku",
+      "name": "PlantIT Perlite - 10L",
+      "brand": "PLANT!T",
+      "category": "coco",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_canna_terra_professional_plus_50l_sku",
+      "name": "Canna Terra Professional PLUS 50L",
+      "brand": "CANNA",
+      "category": "perlite",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_perlite_100l_bag_sku",
+      "name": "Perlite 100L Bag",
+      "brand": "PLANT!T",
+      "category": "perlite",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_nft_spreader_matting_25ft_long_x_20cm_wide",
+      "name": "NFT Spreader Matting — 25ft Long x 20cm Wide",
+      "brand": "GRO-TANK",
+      "category": "other",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_nft_spreader_matting_50ft_long_x_20cm_wide",
+      "name": "NFT Spreader Matting — 50ft Long x 20cm Wide",
+      "brand": "GRO-TANK",
+      "category": "other",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_nft_spreader_matting_100ft_long_x_20cm_wide",
+      "name": "NFT Spreader Matting — 100ft Long x 20cm Wide",
+      "brand": "GRO-TANK",
+      "category": "other",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_nft_spreader_matting_500m_long_x_20cm_wide",
+      "name": "NFT Spreader Matting — 500m Long x 20cm Wide",
+      "brand": "GRO-TANK",
+      "category": "other",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_nft_spreader_matting_500m_long_x_40cm_wide",
+      "name": "NFT Spreader Matting — 500m Long x 40cm Wide",
+      "brand": "GRO-TANK",
+      "category": "other",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_ugro_rhiza_quick_fill_grow_bag_9l_singles_clearance",
+      "name": "Ugro Rhiza Pot9 Quick Fill Grow Bag - 9L — Singles *CLEARANCE*",
+      "brand": "UGRO",
+      "category": "coco",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_ugro_rhiza_quick_fill_grow_bag_9l_box_quantity_10_singles",
+      "name": "Ugro Rhiza Pot9 Quick Fill Grow Bag - 9L — Box Quantity (10 Singles)",
+      "brand": "UGRO",
+      "category": "coco",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_ugro_xl_70l_coco_block_11l_small_clearance",
+      "name": "Ugro Basic Coco Block — 11L (Small) *CLEARANCE*",
+      "brand": "UGRO",
+      "category": "coco",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_ugro_xl_70l_coco_block_70l_xl",
+      "name": "Ugro Basic Coco Block — 70L (XL)",
+      "brand": "UGRO",
+      "category": "coco",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_advanced_nutrients_coco_plus_70_30_50_sku",
+      "name": "Advanced Nutrients Cultivator Coco Plus (70/30) - 50L",
+      "brand": "ADVANCED NUTRIENTS",
+      "category": "clay_pebbles_leca",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_ugro_quick_fill_grow_bag_9l_singles_clearance",
+      "name": "Ugro Basic Pot9 Quick Fill Grow Bag - 9L — Singles *CLEARANCE*",
+      "brand": "UGRO",
+      "category": "coco",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_ugro_quick_fill_grow_bag_9l_box_quantity_10_singles",
+      "name": "Ugro Basic Pot9 Quick Fill Grow Bag - 9L — Box Quantity (10 singles)",
+      "brand": "UGRO",
+      "category": "coco",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_ugro_rhizo_xl_70l_coco_block_11l_small_clearance",
+      "name": "Ugro Rhiza Coco Block — 11L (Small) *CLEARANCE*",
+      "brand": "UGRO",
+      "category": "coco",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_ugro_rhizo_xl_70l_coco_block_70l_xl",
+      "name": "Ugro Rhiza Coco Block — 70L (XL)",
+      "brand": "UGRO",
+      "category": "coco",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_house_garden_bat_mix_special_50l_sku",
+      "name": "House & Garden Bat Mix Special 50L",
+      "brand": "HOUSE & GARDEN",
+      "category": "perlite",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_plug_life_big_phat_mother_plugger_77_tray_single_tray",
+      "name": "Plug Life Big Phat Mother Plugger 77 Tray — Single Tray",
+      "brand": "PLUG LIFE",
+      "category": "coco",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_plug_life_big_phat_mother_plugger_77_tray_box_of_seven_tra",
+      "name": "Plug Life Big Phat Mother Plugger 77 Tray — Box of SEVEN Trays",
+      "brand": "PLUG LIFE",
+      "category": "coco",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_advanced_nutrients_coco_cultivator_sku",
+      "name": "Advanced Nutrients Cultivator Coco Mix (50/30/20) - 50L",
+      "brand": "ADVANCED NUTRIENTS",
+      "category": "clay_pebbles_leca",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_biobizz_worm_humus_40l_sku",
+      "name": "Biobizz Worm Humus 40L",
+      "brand": "BIOBIZZ",
+      "category": "soil_potting_mix",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_grodan_1m_vital_rockwool_slab_sku",
+      "name": "Grodan - 1m Vital Rockwool Slab",
+      "brand": "GRODAN",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_potting_scoop_sku",
+      "name": "Potting scoop",
+      "brand": "N/A",
+      "category": "other",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_root_t_rooting_gel_150ml_sku",
+      "name": "Root!T Rooting Gel 150ml",
+      "brand": "ROOT!T",
+      "category": "propagation_plugs",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_cultiwool_25cm_x_fibre_mini_slab_single_slab",
+      "name": "Cultiwool 25cm  X-Fibre Mini Slab — Single Slab",
+      "brand": "CULTIWOOL",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_cultiwool_25cm_x_fibre_mini_slab_box_quantity_36",
+      "name": "Cultiwool 25cm  X-Fibre Mini Slab — Box quantity (36)",
+      "brand": "CULTIWOOL",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_eazy_block_organic_transplanting_cubes_sku",
+      "name": "Eazy Block Organic Transplanting Cubes",
+      "brand": "EAZY PLUGS",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_plagron_cocos_premium_growing_media_50_litres_sku",
+      "name": "Plagron Cocos Premium Growing Media 50L",
+      "brand": "PLAGRON",
+      "category": "coco",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_ugro_quick_fill_grow_bag_4l_singles_clearance",
+      "name": "Ugro Basic Pot4 Quick Fill Grow Bag - 4L — Singles *CLEARANCE*",
+      "brand": "UGRO",
+      "category": "coco",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_ugro_quick_fill_grow_bag_4l_box_quantity_20_singles",
+      "name": "Ugro Basic Pot4 Quick Fill Grow Bag - 4L — Box Quantity (20 Singles)",
+      "brand": "UGRO",
+      "category": "coco",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_wormganix_peat_free_worm_castings_soil_compost_fertiliser_",
+      "name": "Wormganix Peat Free Worm Castings Soil Compost Fertiliser — 1L",
+      "brand": "WORMGANIX",
+      "category": "soil_potting_mix",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_wormganix_peat_free_worm_castings_soil_compost_fertiliser_",
+      "name": "Wormganix Peat Free Worm Castings Soil Compost Fertiliser — 5L",
+      "brand": "WORMGANIX",
+      "category": "soil_potting_mix",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_wormganix_peat_free_worm_castings_soil_compost_fertiliser_",
+      "name": "Wormganix Peat Free Worm Castings Soil Compost Fertiliser — 20L",
+      "brand": "WORMGANIX",
+      "category": "soil_potting_mix",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_8_big_daddy_block_single_block",
+      "name": "Cultiwool 8\" Big Daddy Block — Single block",
+      "brand": "CULTIWOOL",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_8_big_daddy_block_box_quantity_18",
+      "name": "Cultiwool 8\" Big Daddy Block — Box quantity (18)",
+      "brand": "CULTIWOOL",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_grodan_gro_block_improved_hugo_4_w_hole_single",
+      "name": "Grodan Gro-Block Improved GR10 4\" w/ Hole — Single",
+      "brand": "GRODAN",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_grodan_gro_block_improved_hugo_4_w_hole_case_of_144",
+      "name": "Grodan Gro-Block Improved GR10 4\" w/ Hole — Case of 144",
+      "brand": "GRODAN",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_rootit_dry_pest_free_propagation_rooting_cells_tray_of_24",
+      "name": "Root!T Dry Peat Free  Propagation Plugs — Tray of 24",
+      "brand": "ROOT!T",
+      "category": "coco",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_rootit_dry_pest_free_propagation_rooting_cells_refill_bag_",
+      "name": "Root!T Dry Peat Free  Propagation Plugs — Refill Bag of 60",
+      "brand": "ROOT!T",
+      "category": "coco",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_ugro_rhiza_quick_fill_grow_bag_4l_singles",
+      "name": "Ugro Rhiza Pot4 Quick Fill Grow Bag - 4L — Singles",
+      "brand": "UGRO",
+      "category": "coco",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_ugro_rhiza_quick_fill_grow_bag_4l_box_quantity_20_singles",
+      "name": "Ugro Rhiza Pot4 Quick Fill Grow Bag - 4L — Box Quantity (20 Singles)",
+      "brand": "UGRO",
+      "category": "coco",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_plug_life_special_mix_peat_mix_104_single_tray",
+      "name": "Plug Life Special Mix 104 — Single Tray",
+      "brand": "PLUG LIFE",
+      "category": "propagation_plugs",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_plug_life_special_mix_peat_mix_104_box_of_8_trays",
+      "name": "Plug Life Special Mix 104 — Box of 8 Trays",
+      "brand": "PLUG LIFE",
+      "category": "propagation_plugs",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_root_t_propagator_60_hole_inserts_sku",
+      "name": "Root!T Propagator 60 Hole Inserts",
+      "brand": "ROOT!T",
+      "category": "propagation_plugs",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_grodan_6_hugo_block_cube_two_holes_single_hugo_block",
+      "name": "Grodan - 6\" Hugo Block / Cube (with new dripper hole) — Single Hugo Block",
+      "brand": "GRODAN",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_grodan_6_hugo_block_cube_two_holes_box_of_48",
+      "name": "Grodan - 6\" Hugo Block / Cube (with new dripper hole) — Box of 48",
+      "brand": "GRODAN",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_cultiwool_90l_bag_loose_mini_cubes_sku",
+      "name": "Cultiwool 90L Bag Loose Mini Cubes",
+      "brand": "CULTIWOOL",
+      "category": "clay_pebbles_leca",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_grodan_gro_block_improved_hugo_6x6x5_8_w_hole_sku",
+      "name": "Grodan Gro-Block Improved Hugo 6\"x 6\"x 5.8\" w/ Hole",
+      "brand": "GRODAN",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_vermiculite_100l_bag_sku",
+      "name": "Vermiculite 100L Bag",
+      "brand": "PLANT!T",
+      "category": "vermiculite",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_kaya_coco_lite_70_30_coco_perlite_loose_fill_grow_bags_2_3",
+      "name": "Kaya Coco Lite 70/30 Coco Perlite Loose Fill Grow Bags – 2 & 3 Gallon (RHP Certified) — 2 Gallon (Single Pot)",
+      "brand": "KAYA COIR",
+      "category": "coco",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_kaya_coco_lite_70_30_coco_perlite_loose_fill_grow_bags_2_3",
+      "name": "Kaya Coco Lite 70/30 Coco Perlite Loose Fill Grow Bags – 2 & 3 Gallon (RHP Certified) — 3 Gallon (Single Pot)",
+      "brand": "KAYA COIR",
+      "category": "coco",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_kaya_coco_lite_70_30_coco_perlite_loose_fill_grow_bags_2_3",
+      "name": "Kaya Coco Lite 70/30 Coco Perlite Loose Fill Grow Bags – 2 & 3 Gallon (RHP Certified) — Box of 2 Gallon (12)",
+      "brand": "KAYA COIR",
+      "category": "coco",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_kaya_coco_lite_70_30_coco_perlite_loose_fill_grow_bags_2_3",
+      "name": "Kaya Coco Lite 70/30 Coco Perlite Loose Fill Grow Bags – 2 & 3 Gallon (RHP Certified) — Box of 3 Gallon (6)",
+      "brand": "KAYA COIR",
+      "category": "coco",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_kaya_loose_fill_100_coco_grow_bags_1_25_gallon_single_pot",
+      "name": "Kaya Loose Fill 100% Coco Grow Bags | 1.25, 2 & 3 Gallon RHP Coco Coir — 1.25 Gallon (Single Pot)",
+      "brand": "KAYA COIR",
+      "category": "coco",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_kaya_loose_fill_100_coco_grow_bags_2_gallon_single_pot",
+      "name": "Kaya Loose Fill 100% Coco Grow Bags | 1.25, 2 & 3 Gallon RHP Coco Coir — 2 Gallon (Single Pot)",
+      "brand": "KAYA COIR",
+      "category": "coco",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_kaya_loose_fill_100_coco_grow_bags_3_gallon_single_pot",
+      "name": "Kaya Loose Fill 100% Coco Grow Bags | 1.25, 2 & 3 Gallon RHP Coco Coir — 3 Gallon (Single Pot)",
+      "brand": "KAYA COIR",
+      "category": "coco",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_kaya_loose_fill_100_coco_grow_bags_box_of_1_25_gallon_12",
+      "name": "Kaya Loose Fill 100% Coco Grow Bags | 1.25, 2 & 3 Gallon RHP Coco Coir — Box of 1.25 Gallon (12)",
+      "brand": "KAYA COIR",
+      "category": "coco",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_kaya_loose_fill_100_coco_grow_bags_box_of_2_gallon_12",
+      "name": "Kaya Loose Fill 100% Coco Grow Bags | 1.25, 2 & 3 Gallon RHP Coco Coir — Box of 2 Gallon (12)",
+      "brand": "KAYA COIR",
+      "category": "coco",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_kaya_loose_fill_100_coco_grow_bags_box_of_3_gallon_6",
+      "name": "Kaya Loose Fill 100% Coco Grow Bags | 1.25, 2 & 3 Gallon RHP Coco Coir — Box of 3 Gallon (6)",
+      "brand": "KAYA COIR",
+      "category": "coco",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_biobizz_peat_free_light_mix_soil_sku",
+      "name": "Biobizz Peat Free Light Mix Soil",
+      "brand": "BIOBIZZ",
+      "category": "coco",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_45l_guanokalong_soil_sku",
+      "name": "Guanokalong Potting Soil 50L",
+      "brand": "GUANO KALONG",
+      "category": "perlite",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_advanced_cultivator_coco_pure_50l_sku",
+      "name": "Advanced Nutrients Cultivator Coco Pure 50L",
+      "brand": "ADVANCED NUTRIENTS",
+      "category": "clay_pebbles_leca",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_easyfeed_r_30l_coco_brick_sku",
+      "name": "EasyFeed® 30L Coco Brick",
+      "brand": "EASY FEED",
+      "category": "coco",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_bonsai_repotting_mix_sku",
+      "name": "Bonsai Focus Repotting Mix 3L",
+      "brand": "GROWTH TECHNOLOGY",
+      "category": "coco",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_jiffy_pro7_coco_block_70l_8l_individual_brick",
+      "name": "Jiffy PRO7 Coco Brick — 8L Individual Brick",
+      "brand": "JIFFY",
+      "category": "clay_pebbles_leca",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_jiffy_pro7_coco_block_70l_8l_box_of_24_bricks",
+      "name": "Jiffy PRO7 Coco Brick — 8L - Box of 24 Bricks",
+      "brand": "JIFFY",
+      "category": "clay_pebbles_leca",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_jiffy_pro7_coco_block_70l_70l",
+      "name": "Jiffy PRO7 Coco Brick — 70L",
+      "brand": "JIFFY",
+      "category": "clay_pebbles_leca",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_biobizz_pre_mix_5l",
+      "name": "Biobizz Pre-Mix — 5L",
+      "brand": "BIOBIZZ",
+      "category": "soil_potting_mix",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_biobizz_pre_mix_25l",
+      "name": "Biobizz Pre-Mix — 25L",
+      "brand": "BIOBIZZ",
+      "category": "soil_potting_mix",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_easyfeed_r_22l_coco_brick_sku",
+      "name": "EasyFeed® 22L Coco Brick",
+      "brand": "EASY FEED",
+      "category": "coco",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_organic_living_soil_50l_sku",
+      "name": "Soma's Sacred Super Soil – Premium Organic Living Soil 50L",
+      "brand": "SOMAS",
+      "category": "living_soil",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_eazy_plug_104_100_coco_tray_of_104_seed_cutting_propagatio",
+      "name": "Eazy Plug 104 100% Coco | Tray of 104 - Seed & Cutting Propagation Plugs — Single Tray",
+      "brand": "EAZY PLUGS",
+      "category": "coco",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_eazy_plug_104_100_coco_tray_of_104_seed_cutting_propagatio",
+      "name": "Eazy Plug 104 100% Coco | Tray of 104 - Seed & Cutting Propagation Plugs — Box of 6 Trays",
+      "brand": "EAZY PLUGS",
+      "category": "coco",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_plug_in_pro_push_out_tray_104_sku",
+      "name": "Plug Life - Push Out Tray (104)",
+      "brand": "PLUG LIFE",
+      "category": "coco",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_sohum_soil_42_5l_sku",
+      "name": "Sohum Soil 42.5L",
+      "brand": "SOHUM",
+      "category": "living_soil",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_biobizz_peat_free_all_mix_soil_sku",
+      "name": "Biobizz Peat Free All Mix Soil",
+      "brand": "BIOBIZZ",
+      "category": "coco",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_easyfeed_r_16l_coco_brick_sku",
+      "name": "EasyFeed® 16L Coco Brick",
+      "brand": "EASY FEED",
+      "category": "coco",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_jiffy_tray_84_x_30mm_coir_plugs_sku",
+      "name": "Jiffy Tray For 84 x 30mm Cell Jiffy-7C Coir Plugs",
+      "brand": "JIFFY",
+      "category": "coco",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_budplus_coco_natural_50l_sku",
+      "name": "Budplus Coco 100+ Natural 50L Buffered Coco Coir Growing Medium",
+      "brand": "BUDPLUS",
+      "category": "coco",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_plagron_next_gen_growplug_tray_of_84_single_tray",
+      "name": "Plagron Next Gen Growplug (Tray of 84) — Single Tray",
+      "brand": "PLAGRON",
+      "category": "coco",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_plagron_next_gen_growplug_tray_of_84_box_of_10_trays",
+      "name": "Plagron Next Gen Growplug (Tray of 84) — Box of 10 Trays",
+      "brand": "PLAGRON",
+      "category": "coco",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_grodan_1_3m_vital_rockwool_slab_sku",
+      "name": "Grodan - 1.3m Vital Rockwool Slab",
+      "brand": "GRODAN",
+      "category": "rockwool_stonewool",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_atami_bi_grow_mix_sku",
+      "name": "Atami Bi Grow Mix",
+      "brand": "ATAMI",
+      "category": "coco",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_flora_substrates_qik_fill_coco_slabs_1_gallon",
+      "name": "FLORA Substrates QIK FILL Rapid Rehydration Coco Slab Grow Media — 1 Gallon",
+      "brand": "FLORA SUBSTRATES",
+      "category": "coco",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_flora_substrates_qik_fill_coco_slabs_2_gallon",
+      "name": "FLORA Substrates QIK FILL Rapid Rehydration Coco Slab Grow Media — 2 Gallon",
+      "brand": "FLORA SUBSTRATES",
+      "category": "coco",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_flora_substrates_qik_fill_coco_slabs_3_gallon",
+      "name": "FLORA Substrates QIK FILL Rapid Rehydration Coco Slab Grow Media — 3 Gallon",
+      "brand": "FLORA SUBSTRATES",
+      "category": "coco",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_budplus_all_mix_sku",
+      "name": "Budplus All Mix 50L Pre-Fertilised Growing Medium",
+      "brand": "BUDPLUS",
+      "category": "perlite",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrobros_med_root_t_potting_biscuit_pack_of_20_sku",
+      "name": "Root!T Potting Biscuit - Pack of 20",
+      "brand": "ROOT!T",
+      "category": "coco",
+      "source": "dsc_mediums_hydrobros"
+    },
+    {
+      "id": "hydrohub_whg_wholesale_horticultural_group_green_planet_coco_70_30_perli",
+      "name": "GreenPlanet - Coco 70/30 Perlite 53L Bag",
+      "brand": "WHG - Wholesale Horticultural Group",
+      "category": null,
+      "source": "dsc_mediums_hydrohub"
+    },
+    {
+      "id": "hydrohub_whg_wholesale_horticultural_group_green_planet_professional_coc",
+      "name": "GreenPlanet - Professional Coco 53L Bag",
+      "brand": "WHG - Wholesale Horticultural Group",
+      "category": null,
+      "source": "dsc_mediums_hydrohub"
+    },
+    {
+      "id": "hydrohub_coco_house_australia_coco_house_buffered_coco_pure_blend_mix_50",
+      "name": "COCO House Buffered COCO PURE 50Lt Bags",
+      "brand": "Coco House Australia",
+      "category": null,
+      "source": "dsc_mediums_hydrohub"
+    },
+    {
+      "id": "hydrohub_jb_hydroponics_uber_coco_perlite_clay_balls_blend_50l_bottle_50",
+      "name": "UBER Coco/Perlite/Clay Balls Blend 50L",
+      "brand": "JB Hydroponics",
+      "category": null,
+      "source": "dsc_mediums_hydrohub"
+    },
+    {
+      "id": "hydrohub_coco_house_australia_coco_house_coco_peat_bricks_bottle_5kg",
+      "name": "COCO House Coco Peat Bricks",
+      "brand": "Coco House Australia",
+      "category": null,
+      "source": "dsc_mediums_hydrohub"
+    },
+    {
+      "id": "hydrohub_canna_canna_coco_pro_50l_bag_bottle_50l",
+      "name": "CANNA Coco Pro+ 50L Bag",
+      "brand": "CANNA",
+      "category": null,
+      "source": "dsc_mediums_hydrohub"
+    },
+    {
+      "id": "hydrohub_whg_wholesale_horticultural_group_green_planet_coco_60_40_chips",
+      "name": "Green Planet - Coco 60/40 Chips 53 L Bag",
+      "brand": "WHG - Wholesale Horticultural Group",
+      "category": null,
+      "source": "dsc_mediums_hydrohub"
+    },
+    {
+      "id": "hydrohub_coco_house_australia_coco_house_husk_chip_bricks_bottle_default",
+      "name": "COCO House Husk Chip Bricks",
+      "brand": "Coco House Australia",
+      "category": null,
+      "source": "dsc_mediums_hydrohub"
+    },
+    {
+      "id": "hydrohub_coco_house_australia_coco_house_coco_peat_bricks_blend_70_30_bo",
+      "name": "COCO House Coco Peat Bricks Blend 70/30",
+      "brand": "Coco House Australia",
+      "category": null,
+      "source": "dsc_mediums_hydrohub"
+    },
+    {
+      "id": "hydrohub_dome_nutrifield_top_fill_coco_cube_5_8l_18x18x18cm_bottle_5_8l",
+      "name": "Nutrifield Top Fill Coco Cube 5.8L",
+      "brand": "Dome",
+      "category": null,
+      "source": "dsc_mediums_hydrohub"
+    },
+    {
+      "id": "hydrohub_dome_nutrifield_top_fill_coco_cube_1l_10x10x10cm_bottle_1l",
+      "name": "Nutrifield Top Fill Coco Cube 1L",
+      "brand": "Dome",
+      "category": null,
+      "source": "dsc_mediums_hydrohub"
+    },
+    {
+      "id": "hydrohub_whg_wholesale_horticultural_group_grodan_mm40_40_cubes_bottle_s",
+      "name": "Grodan MM40/40 Cubes",
+      "brand": "WHG - Wholesale Horticultural Group",
+      "category": null,
+      "source": "dsc_mediums_hydrohub"
+    },
+    {
+      "id": "hydrohub_whg_wholesale_horticultural_group_grodan_delta_4g_cubes_nohole_",
+      "name": "Grodan Delta 4G Cubes No/Hole (75x75x60 mm)",
+      "brand": "WHG - Wholesale Horticultural Group",
+      "category": "Substrates, Pots & Trays",
+      "source": "dsc_mediums_hydrohub"
+    },
+    {
+      "id": "hydrohub_whg_wholesale_horticultural_group_grodan_crop_box_slabs_370x550",
+      "name": "Grodan Crop Box Slabs (370x550x150 mm)",
+      "brand": "WHG - Wholesale Horticultural Group",
+      "category": "Substrates, Pots & Trays",
+      "source": "dsc_mediums_hydrohub"
+    },
+    {
+      "id": "hydrohub_whg_wholesale_horticultural_group_grodan_delta_4g_whole_75x75x6",
+      "name": "Grodan Delta 4G w/Hole (75x75x60 mm)",
+      "brand": "WHG - Wholesale Horticultural Group",
+      "category": "Substrates, Pots & Trays",
+      "source": "dsc_mediums_hydrohub"
+    },
+    {
+      "id": "hydrohub_whg_wholesale_horticultural_group_grodan_delta_10_cubes_with_ho",
+      "name": "Grodan Delta 10 Cubes with hole (100x100x100 mm)",
+      "brand": "WHG - Wholesale Horticultural Group",
+      "category": "Substrates, Pots & Trays",
+      "source": "dsc_mediums_hydrohub"
+    },
+    {
+      "id": "hydrohub_whg_wholesale_horticultural_group_grodan_wrapped_slab_300_mm_x_",
+      "name": "Grodan Wrapped Slab 300 mm x 900 x 75 mm",
+      "brand": "WHG - Wholesale Horticultural Group",
+      "category": "Substrates, Pots & Trays",
+      "source": "dsc_mediums_hydrohub"
+    },
+    {
+      "id": "hydrohub_whg_wholesale_horticultural_group_grodan_hugo_cubes_150x150x142",
+      "name": "Grodan Hugo Cubes (150x150x142 mm)",
+      "brand": "WHG - Wholesale Horticultural Group",
+      "category": "Substrates, Pots & Trays",
+      "source": "dsc_mediums_hydrohub"
+    },
+    {
+      "id": "hydrohub_hydro_hub_tu_rockwool_starter_cubes_bottle_default",
+      "name": "Rockwool Starter Cubes 100pk",
+      "brand": "Hydro Hub - TU",
+      "category": null,
+      "source": "dsc_mediums_hydrohub"
+    },
+    {
+      "id": "hydrohub_whg_wholesale_horticultural_group_grodan_granulate_fine_20kg_ba",
+      "name": "Grodan Granulate Fine 20kg Bag",
+      "brand": "WHG - Wholesale Horticultural Group",
+      "category": "Substrates, Pots & Trays",
+      "source": "dsc_mediums_hydrohub"
+    },
+    {
+      "id": "hydrohub_fastway_hydroponics_perlite_course_100l_bottle_100l",
+      "name": "Perlite Coarse 100L",
+      "brand": "Fastway Hydroponics",
+      "category": null,
+      "source": "dsc_mediums_hydrohub"
+    },
+    {
+      "id": "hydrohub_fastway_hydroponics_vermiculite_grade_3_100l_bottle_100l",
+      "name": "Vermiculite Grade 3 - Course 100L",
+      "brand": "Fastway Hydroponics",
+      "category": null,
+      "source": "dsc_mediums_hydrohub"
+    },
+    {
+      "id": "hydrohub_dome_perlite_super_coarse_100l_bottle_100l",
+      "name": "Perlite Super Coarse 100L",
+      "brand": "Dome",
+      "category": null,
+      "source": "dsc_mediums_hydrohub"
+    },
+    {
+      "id": "hydrohub_dome_vermiculite_grade_4_100l_bottle_100l",
+      "name": "Vermiculite Grade 4 100L",
+      "brand": "Dome",
+      "category": null,
+      "source": "dsc_mediums_hydrohub"
+    },
+    {
+      "id": "hydrohub_fastway_hydroponics_perlite_vermiculite_100ltr_50_50mix_bottle_",
+      "name": "Perlite/Vermiculite 100ltr 50/50mix",
+      "brand": "Fastway Hydroponics",
+      "category": null,
+      "source": "dsc_mediums_hydrohub"
+    },
+    {
+      "id": "hydrohub_holland_forge_hydro_pearl_25_litre_bottle_default",
+      "name": "Hydro Perl 25 Litre",
+      "brand": "Holland Forge",
+      "category": null,
+      "source": "dsc_mediums_hydrohub"
+    },
+    {
+      "id": "hydrohub_hydroponic_generations_hy_gen_euroclay_bottle_default",
+      "name": "HY-GEN EuroClay 50Ltr",
+      "brand": "Hydroponic Generations",
+      "category": null,
+      "source": "dsc_mediums_hydrohub"
+    },
+    {
+      "id": "hydrohub_hydroponic_generations_hy_gen_euroclay_3l_bottle_4l",
+      "name": "HY-GEN EuroClay 4L",
+      "brand": "Hydroponic Generations",
+      "category": null,
+      "source": "dsc_mediums_hydrohub"
+    },
+    {
+      "id": "hydrohub_holland_forge_professors_nutrients_hydro_clay_balls_bottle_10l",
+      "name": "Professor's Nutrients - Hydro Clay Balls",
+      "brand": "Holland Forge",
+      "category": null,
+      "source": "dsc_mediums_hydrohub"
+    },
+    {
+      "id": "hydrohub_whg_wholesale_horticultural_group_greenplanet_expanded_clay_bal",
+      "name": "Green Planet - Expanded Clay Balls 25 L",
+      "brand": "WHG - Wholesale Horticultural Group",
+      "category": null,
+      "source": "dsc_mediums_hydrohub"
+    },
+    {
+      "id": "hydrohub_holland_forge_eazyplug_bottle_square_cubes_tray_of_6",
+      "name": "EazyPlug",
+      "brand": "Holland Forge",
+      "category": null,
+      "source": "dsc_mediums_hydrohub"
+    },
+    {
+      "id": "hydrohub_holland_forge_round_plug_sowing_set_bottle_default",
+      "name": "Eazy Plug - Round Plug Sowing Set",
+      "brand": "Holland Forge",
+      "category": null,
+      "source": "dsc_mediums_hydrohub"
+    },
+    {
+      "id": "hydrohub_grow_lush_jiffy_7c_pellet_50mm_bottle_default",
+      "name": "Jiffy 7C Pellet 50mm",
+      "brand": "Grow Lush",
+      "category": null,
+      "source": "dsc_mediums_hydrohub"
+    },
+    {
+      "id": "hydrohub_grow_lush_jiffy_pellet_42mm_bottle_default",
+      "name": "Jiffy 7 Pellet 42mm",
+      "brand": "Grow Lush",
+      "category": null,
+      "source": "dsc_mediums_hydrohub"
+    },
+    {
+      "id": "hydrohub_hydro_hub_tu_black_cloning_collar_bottle_default",
+      "name": "Black Cloning Collar",
+      "brand": "Hydro Hub - TU",
+      "category": null,
+      "source": "dsc_mediums_hydrohub"
+    },
+    {
+      "id": "hydrohub_holland_forge_eazy_plug_start_up_kit_bottle_default",
+      "name": "*CLEARANCE* Eazy Plug - Startup Kit",
+      "brand": "Holland Forge",
+      "category": null,
+      "source": "dsc_mediums_hydrohub"
+    },
+    {
+      "id": "hydrohub_whg_wholesale_horticultural_group_easy_as_organics_living_soil_",
+      "name": "Easy As Organics Living Soil – KiS Mix 25L",
+      "brand": "WHG - Wholesale Horticultural Group",
+      "category": null,
+      "source": "dsc_mediums_hydrohub"
+    },
+    {
+      "id": "hydrohub_stealth_dr_greenthumbs_turbodirt_water_only_super_soil_bottle_2",
+      "name": "Dr Greenthumbs - Turbo Dirt Water Only Super Soil 27L",
+      "brand": "Stealth",
+      "category": null,
+      "source": "dsc_mediums_hydrohub"
+    },
+    {
+      "id": "hydrohub_garden_city_plastics_besgrow_spagmoss_classic_150g_compressed_s",
+      "name": "Besgrow - Spagmoss Classic, 150g Compressed Sphagnum Moss",
+      "brand": "Garden City Plastics",
+      "category": null,
+      "source": "dsc_mediums_hydrohub"
+    },
+    {
+      "id": "hydrohub_organic_gardening_solutions_ogs_worm_castings_bottle_25l",
+      "name": "OGS - Worm Castings 25L",
+      "brand": "Organic Gardening Solutions",
+      "category": null,
+      "source": "dsc_mediums_hydrohub"
+    },
+    {
+      "id": "hydrohub_organic_gardening_solutions_ogs_supersoil_compost_mix_bottle_25",
+      "name": "OGS - \"SuperSoil\" Compost Mix 25L",
+      "brand": "Organic Gardening Solutions",
+      "category": null,
+      "source": "dsc_mediums_hydrohub"
+    },
+    {
+      "id": "hydrohub_garden_city_plastics_peat_general_purpose_succulent_mix_bottle_",
+      "name": "Peat General Purpose (Succulent Mix)",
+      "brand": "Garden City Plastics",
+      "category": null,
+      "source": "dsc_mediums_hydrohub"
+    },
+    {
+      "id": "hydrohub_organic_gardening_solutions_ogs_bokashi_mix_bottle_1kg",
+      "name": "OGS - Bokashi Mix 1kg",
+      "brand": "Organic Gardening Solutions",
+      "category": null,
+      "source": "dsc_mediums_hydrohub"
+    },
+    {
+      "id": "hydrohub_organic_gardening_solutions_ogs_sphagnum_peat_moss_25l_bottle_2",
+      "name": "OGS - Sphagnum Peat Moss 25L",
+      "brand": "Organic Gardening Solutions",
+      "category": null,
+      "source": "dsc_mediums_hydrohub"
+    },
+    {
+      "id": "hydrohub_whg_wholesale_horticultural_group_dig_it_up_mate_worm_castings_",
+      "name": "Dig it Up Mate - Worm Castings",
+      "brand": "WHG - Wholesale Horticultural Group",
+      "category": "Substrates, Pots & Trays",
+      "source": "dsc_mediums_hydrohub"
+    },
+    {
+      "id": "hytec_med_eazy_block_3_inch_sku",
+      "name": "Eazy Block 3 inch",
+      "brand": "Eazy Plug",
+      "category": "coco",
+      "source": "dsc_mediums_hytec"
+    },
+    {
+      "id": "hytec_med_plant_magic_open_top_grow_bags_3_8l",
+      "name": "Plant Magic Open Top Grow Bags — 3.8L",
+      "brand": "Plant Magic",
+      "category": "coco",
+      "source": "dsc_mediums_hytec"
+    },
+    {
+      "id": "hytec_med_plant_magic_open_top_grow_bags_7l",
+      "name": "Plant Magic Open Top Grow Bags — 7L",
+      "brand": "Plant Magic",
+      "category": "coco",
+      "source": "dsc_mediums_hytec"
+    },
+    {
+      "id": "hytec_med_ugro_pot4_basic_4l_500g_sku",
+      "name": "Ugro Pot4 Basic 4L (500g)",
+      "brand": "Simply Organic",
+      "category": "coco",
+      "source": "dsc_mediums_hytec"
+    },
+    {
+      "id": "hytec_med_ugro_pot4_rhiza_4l_sku",
+      "name": "Pot4 Rhiza 4L (500g)",
+      "brand": "Simply Organic",
+      "category": "coco",
+      "source": "dsc_mediums_hytec"
+    },
+    {
+      "id": "hytec_med_kaya_coco_grow_bags_1_25_gallon_single_pot",
+      "name": "Kaya Coco 100% Coco Loose Fill Grow Bags | 1.25, 2 & 3 Gallon (RHP Certified) — 1.25 Gallon (Single Pot)",
+      "brand": "Kaya Coir",
+      "category": "coco",
+      "source": "dsc_mediums_hytec"
+    },
+    {
+      "id": "hytec_med_kaya_coco_grow_bags_2_gallon_single_pot",
+      "name": "Kaya Coco 100% Coco Loose Fill Grow Bags | 1.25, 2 & 3 Gallon (RHP Certified) — 2 Gallon (Single Pot)",
+      "brand": "Kaya Coir",
+      "category": "coco",
+      "source": "dsc_mediums_hytec"
+    },
+    {
+      "id": "hytec_med_kaya_coco_grow_bags_3_gallon_single_pot",
+      "name": "Kaya Coco 100% Coco Loose Fill Grow Bags | 1.25, 2 & 3 Gallon (RHP Certified) — 3 Gallon (Single Pot)",
+      "brand": "Kaya Coir",
+      "category": "coco",
+      "source": "dsc_mediums_hytec"
+    },
+    {
+      "id": "hytec_med_kaya_coco_grow_bags_box_of_1_25_gallon_12",
+      "name": "Kaya Coco 100% Coco Loose Fill Grow Bags | 1.25, 2 & 3 Gallon (RHP Certified) — Box of 1.25 Gallon (12)",
+      "brand": "Kaya Coir",
+      "category": "coco",
+      "source": "dsc_mediums_hytec"
+    },
+    {
+      "id": "hytec_med_kaya_coco_grow_bags_box_of_2_gallon_12",
+      "name": "Kaya Coco 100% Coco Loose Fill Grow Bags | 1.25, 2 & 3 Gallon (RHP Certified) — Box of 2 Gallon (12)",
+      "brand": "Kaya Coir",
+      "category": "coco",
+      "source": "dsc_mediums_hytec"
+    },
+    {
+      "id": "hytec_med_kaya_coco_grow_bags_box_of_3_gallon_6",
+      "name": "Kaya Coco 100% Coco Loose Fill Grow Bags | 1.25, 2 & 3 Gallon (RHP Certified) — Box of 3 Gallon (6)",
+      "brand": "Kaya Coir",
+      "category": "coco",
+      "source": "dsc_mediums_hytec"
+    },
+    {
+      "id": "hytec_med_ugro_pot9_basic_9l_900g_sku",
+      "name": "Ugro Pot9 Basic 9L (900g)",
+      "brand": "Simply Organic",
+      "category": "coco",
+      "source": "dsc_mediums_hytec"
+    },
+    {
+      "id": "hytec_med_ugro_pot9_rhiza_9l_900g_sku",
+      "name": "Ugro Pot9 Rhiza 9L (900g)",
+      "brand": "Simply Organic",
+      "category": "coco",
+      "source": "dsc_mediums_hytec"
+    },
+    {
+      "id": "hytec_med_kaya_coco_lite_grow_bags_2_gallon_single_pot",
+      "name": "Kaya Coco Lite 70/30 Coco Perlite Loose Fill Grow Bags | 2 & 3 Gallon (RHP Certified) — 2 Gallon (Single Pot)",
+      "brand": "Kaya Coir",
+      "category": "coco",
+      "source": "dsc_mediums_hytec"
+    },
+    {
+      "id": "hytec_med_kaya_coco_lite_grow_bags_3_gallon_single_pot",
+      "name": "Kaya Coco Lite 70/30 Coco Perlite Loose Fill Grow Bags | 2 & 3 Gallon (RHP Certified) — 3 Gallon (Single Pot)",
+      "brand": "Kaya Coir",
+      "category": "coco",
+      "source": "dsc_mediums_hytec"
+    },
+    {
+      "id": "hytec_med_kaya_coco_lite_grow_bags_box_of_2_gallon_12",
+      "name": "Kaya Coco Lite 70/30 Coco Perlite Loose Fill Grow Bags | 2 & 3 Gallon (RHP Certified) — Box of 2 Gallon (12)",
+      "brand": "Kaya Coir",
+      "category": "coco",
+      "source": "dsc_mediums_hytec"
+    },
+    {
+      "id": "hytec_med_kaya_coco_lite_grow_bags_box_of_3_gallon_6",
+      "name": "Kaya Coco Lite 70/30 Coco Perlite Loose Fill Grow Bags | 2 & 3 Gallon (RHP Certified) — Box of 3 Gallon (6)",
+      "brand": "Kaya Coir",
+      "category": "coco",
+      "source": "dsc_mediums_hytec"
+    },
+    {
+      "id": "hytec_med_jiffy_pro7_light_collect_in_store",
+      "name": "Jiffy PRO7 Light Peat Potting Mix – 50L — Collect In Store",
+      "brand": "Jiffy",
+      "category": "perlite",
+      "source": "dsc_mediums_hytec"
+    },
+    {
+      "id": "hytec_med_jiffy_pro7_light_shipping_5_per_bag",
+      "name": "Jiffy PRO7 Light Peat Potting Mix – 50L — Shipping +£5 Per Bag",
+      "brand": "Jiffy",
+      "category": "perlite",
+      "source": "dsc_mediums_hytec"
+    },
+    {
+      "id": "hytec_med_house_garden_bat_special_50ltr_collect_in_store",
+      "name": "House & Garden Bat Mix Special 50L — Collect In Store",
+      "brand": "House and Garden",
+      "category": "perlite",
+      "source": "dsc_mediums_hytec"
+    },
+    {
+      "id": "hytec_med_house_garden_bat_special_50ltr_shipping_5_per_bag",
+      "name": "House & Garden Bat Mix Special 50L — Shipping +£5 Per Bag",
+      "brand": "House and Garden",
+      "category": "perlite",
+      "source": "dsc_mediums_hytec"
+    },
+    {
+      "id": "hytec_med_canna_terra_pro50l_collect_in_store",
+      "name": "Canna Terra Professional 50L — Collect In Store",
+      "brand": "Canna",
+      "category": "soil_potting_mix",
+      "source": "dsc_mediums_hytec"
+    },
+    {
+      "id": "hytec_med_canna_terra_pro50l_shipping_5_per_bag",
+      "name": "Canna Terra Professional 50L — Shipping + £5 Per Bag",
+      "brand": "Canna",
+      "category": "soil_potting_mix",
+      "source": "dsc_mediums_hytec"
+    },
+    {
+      "id": "hytec_med_plagron_growmix_collect_in_store",
+      "name": "Plagron Growmix 50L — Collect In Store",
+      "brand": "Plagron",
+      "category": "perlite",
+      "source": "dsc_mediums_hytec"
+    },
+    {
+      "id": "hytec_med_plagron_growmix_shipping_5_per_bag",
+      "name": "Plagron Growmix 50L — Shipping +£5 Per Bag",
+      "brand": "Plagron",
+      "category": "perlite",
+      "source": "dsc_mediums_hytec"
+    },
+    {
+      "id": "hytec_med_nutrifield_coco_5kg_sku",
+      "name": "Nutrifield Coco Mega Brick 5kg",
+      "brand": "Nutrifield",
+      "category": "coco",
+      "source": "dsc_mediums_hytec"
+    },
+    {
+      "id": "hytec_med_vitalink_clay_pebbles_bag_45_ltr_collect_in_store",
+      "name": "VitaLink Clay Pebbles 45L — Collect In Store",
+      "brand": "Vitalink",
+      "category": "clay_pebbles_leca",
+      "source": "dsc_mediums_hytec"
+    },
+    {
+      "id": "hytec_med_vitalink_clay_pebbles_bag_45_ltr_shipping_5_per_bag",
+      "name": "VitaLink Clay Pebbles 45L — Shipping +£5 Per Bag",
+      "brand": "Vitalink",
+      "category": "clay_pebbles_leca",
+      "source": "dsc_mediums_hytec"
+    },
+    {
+      "id": "hytec_med_atami_high_porosity_cocos_collect_in_store",
+      "name": "Atami High Porosity Cocos 70/30 Coco - 50L — Collect In Store",
+      "brand": "Atami",
+      "category": "coco",
+      "source": "dsc_mediums_hytec"
+    },
+    {
+      "id": "hytec_med_atami_high_porosity_cocos_shipping_5_per_bag",
+      "name": "Atami High Porosity Cocos 70/30 Coco - 50L — Shipping +£5 Per Bag",
+      "brand": "Atami",
+      "category": "coco",
+      "source": "dsc_mediums_hytec"
+    },
+    {
+      "id": "hytec_med_canna_coco_professional_50l_collect_in_store",
+      "name": "Canna Coco Professional Plus 50L — Collect In Store",
+      "brand": "Canna",
+      "category": "coco",
+      "source": "dsc_mediums_hytec"
+    },
+    {
+      "id": "hytec_med_canna_coco_professional_50l_shipping_5_per_bag",
+      "name": "Canna Coco Professional Plus 50L — Shipping +£5 Per Bag",
+      "brand": "Canna",
+      "category": "coco",
+      "source": "dsc_mediums_hytec"
+    },
+    {
+      "id": "hytec_med_jiffy_pro7_70_30_coco_collect_in_store",
+      "name": "Jiffy PRO7 70/30 Coco Perlite Mix – 50L BAG — Collect In Store",
+      "brand": "Jiffy",
+      "category": "coco",
+      "source": "dsc_mediums_hytec"
+    },
+    {
+      "id": "hytec_med_jiffy_pro7_70_30_coco_shipping_5_per_bag",
+      "name": "Jiffy PRO7 70/30 Coco Perlite Mix – 50L BAG — Shipping +£5 Per Bag",
+      "brand": "Jiffy",
+      "category": "coco",
+      "source": "dsc_mediums_hytec"
+    },
+    {
+      "id": "hytec_med_biobizz_all_mix_collect_in_store",
+      "name": "Biobizz All-Mix — Collect In Store",
+      "brand": "Biobizz",
+      "category": "living_soil",
+      "source": "dsc_mediums_hytec"
+    },
+    {
+      "id": "hytec_med_biobizz_all_mix_shipping_5_per_bag",
+      "name": "Biobizz All-Mix — Shipping +£5 Per Bag",
+      "brand": "Biobizz",
+      "category": "living_soil",
+      "source": "dsc_mediums_hytec"
+    },
+    {
+      "id": "hytec_med_canna_coco_coarse_50l_collect_in_store",
+      "name": "Canna Coco Coarse 50L — Collect In Store",
+      "brand": "Canna",
+      "category": "coco",
+      "source": "dsc_mediums_hytec"
+    },
+    {
+      "id": "hytec_med_canna_coco_coarse_50l_shipping_5_per_bag",
+      "name": "Canna Coco Coarse 50L — Shipping +£5 Per Bag",
+      "brand": "Canna",
+      "category": "coco",
+      "source": "dsc_mediums_hytec"
+    },
+    {
+      "id": "hytec_med_perlite_100ltr_sku",
+      "name": "Horticultural Perlite - 100L Sack",
+      "brand": "Plant!t",
+      "category": "coco",
+      "source": "dsc_mediums_hytec"
+    },
+    {
+      "id": "hytec_med_somas_sacred_super_soil_premium_organic_living_soil_50l_collec",
+      "name": "Soma's Sacred Super Soil | Premium Organic Living Soil 50L — Collect in Store",
+      "brand": "Hytec Horticulture",
+      "category": "living_soil",
+      "source": "dsc_mediums_hytec"
+    },
+    {
+      "id": "hytec_med_somas_sacred_super_soil_premium_organic_living_soil_50l_shippi",
+      "name": "Soma's Sacred Super Soil | Premium Organic Living Soil 50L — Shipping Plus £5 per Bag",
+      "brand": "Hytec Horticulture",
+      "category": "living_soil",
+      "source": "dsc_mediums_hytec"
+    },
+    {
+      "id": "hytec_med_plant_magic_coco_bricks_sku",
+      "name": "Plant Magic Coco Bricks",
+      "brand": "Plant Magic",
+      "category": "coco",
+      "source": "dsc_mediums_hytec"
+    },
+    {
+      "id": "hytec_med_vermiculite_100ltr_sack_sku",
+      "name": "Horticultural Vermiculite - 100L Sack",
+      "brand": "Plant!t",
+      "category": "vermiculite",
+      "source": "dsc_mediums_hytec"
+    },
+    {
+      "id": "hytec_med_kaya_coir_10_grow_pot_11_35lt_3_gallon_sku",
+      "name": "Kaya Coir 10\" Grow Pot 11.35lt (3 gallon) | Box of 12",
+      "brand": "Kaya Coir",
+      "category": "coco",
+      "source": "dsc_mediums_hytec"
+    },
+    {
+      "id": "mfr_jiffy_gel_jiffy_gel",
+      "name": "Jiffy Gel",
+      "brand": "Jiffy",
+      "category": "propagation",
+      "source": "dsc_mediums_jiffy"
+    },
+    {
+      "id": "mfr_jiffy_growbags_jiffy_50_50_growbag",
+      "name": "Jiffy 50-50 Growbag",
+      "brand": "Jiffy",
+      "category": "coco",
+      "source": "dsc_mediums_jiffy"
+    },
+    {
+      "id": "mfr_jiffy_growbags_jiffy_70_30_growbag",
+      "name": "Jiffy 70/30 Growbag",
+      "brand": "Jiffy",
+      "category": "coco",
+      "source": "dsc_mediums_jiffy"
+    },
+    {
+      "id": "mfr_jiffy_growbags_jiffy_easyfill_growbag",
+      "name": "Jiffy EasyFill Growbag",
+      "brand": "Jiffy",
+      "category": "coco",
+      "source": "dsc_mediums_jiffy"
+    },
+    {
+      "id": "mfr_jiffy_growbags_jiffy_finesse_growbag",
+      "name": "Jiffy Finesse Growbag",
+      "brand": "Jiffy",
+      "category": "coco",
+      "source": "dsc_mediums_jiffy"
+    },
+    {
+      "id": "mfr_jiffy_growbags_jiffy_high_yield_growbag",
+      "name": "Jiffy High Yield Growbag",
+      "brand": "Jiffy",
+      "category": "coco",
+      "source": "dsc_mediums_jiffy"
+    },
+    {
+      "id": "mfr_jiffy_growbags_jiffy_husk_chips_hc_growbag",
+      "name": "Jiffy Husk Chips (HC) Growbag",
+      "brand": "Jiffy",
+      "category": "coco",
+      "source": "dsc_mediums_jiffy"
+    },
+    {
+      "id": "mfr_jiffy_growblocks_jiffy_bump_up_growblock",
+      "name": "Jiffy Bump-Up Growblock",
+      "brand": "Jiffy",
+      "category": "coco",
+      "source": "dsc_mediums_jiffy"
+    },
+    {
+      "id": "mfr_jiffy_growblocks_jiffy_growblock",
+      "name": "Jiffy Growblock",
+      "brand": "Jiffy",
+      "category": "coco",
+      "source": "dsc_mediums_jiffy"
+    },
+    {
+      "id": "mfr_jiffy_growblocks_jiffy_o_growblock",
+      "name": "Jiffy O'Growblock",
+      "brand": "Jiffy",
+      "category": "coco",
+      "source": "dsc_mediums_jiffy"
+    },
+    {
+      "id": "mfr_jiffy_pellets_jiffy_cd_pellet",
+      "name": "Jiffy CD Pellet",
+      "brand": "Jiffy",
+      "category": "propagation",
+      "source": "dsc_mediums_jiffy"
+    },
+    {
+      "id": "mfr_jiffy_pellets_jiffy_j7_j7c_pellet_pack_in_tray",
+      "name": "Jiffy J7/J7C Pellet-Pack (in tray)",
+      "brand": "Jiffy",
+      "category": "propagation",
+      "source": "dsc_mediums_jiffy"
+    },
+    {
+      "id": "mfr_jiffy_pellets_jiffy_7_pellet",
+      "name": "Jiffy-7 Pellet",
+      "brand": "Jiffy",
+      "category": "propagation",
+      "source": "dsc_mediums_jiffy"
+    },
+    {
+      "id": "mfr_jiffy_pellets_jiffy_7c_pellet",
+      "name": "Jiffy-7C Pellet",
+      "brand": "Jiffy",
+      "category": "propagation",
+      "source": "dsc_mediums_jiffy"
+    },
+    {
+      "id": "mfr_jiffy_pots_jiffy_pot_round_5_5_15_cm",
+      "name": "Jiffy Pot (round 5.5–15 cm)",
+      "brand": "Jiffy",
+      "category": "propagation",
+      "source": "dsc_mediums_jiffy"
+    },
+    {
+      "id": "mfr_jiffy_pots_jiffy_pot_square_4_9_cm",
+      "name": "Jiffy Pot (square 4–9 cm)",
+      "brand": "Jiffy",
+      "category": "propagation",
+      "source": "dsc_mediums_jiffy"
+    },
+    {
+      "id": "mfr_jiffy_preforma_jiffy_preforma_plug",
+      "name": "Jiffy Preforma Plug",
+      "brand": "Jiffy",
+      "category": "propagation",
+      "source": "dsc_mediums_jiffy"
+    },
+    {
+      "id": "mfr_jiffy_preforma_jiffy_preforma_plug_peat_free",
+      "name": "Jiffy Preforma Plug (peat-free)",
+      "brand": "Jiffy",
+      "category": "propagation",
+      "source": "dsc_mediums_jiffy"
+    },
+    {
+      "id": "mfr_jiffy_substrates_jiffy_flexistart",
+      "name": "Jiffy Flexistart",
+      "brand": "Jiffy",
+      "category": "soil",
+      "source": "dsc_mediums_jiffy"
+    },
+    {
+      "id": "mfr_jiffy_substrates_jiffy_substrates_blended_mixes",
+      "name": "Jiffy Substrates (blended mixes)",
+      "brand": "Jiffy",
+      "category": "soil",
+      "source": "dsc_mediums_jiffy"
+    },
+    {
+      "id": "mfr_professors_hydro_clay_10l",
+      "name": "Hydro Clay — 10L",
+      "brand": "Professor's Nutrients",
+      "category": "clay_pebbles_leca",
+      "source": "dsc_mediums_leca"
+    },
+    {
+      "id": "mfr_professors_hydro_clay_50l",
+      "name": "Hydro Clay — 50L",
+      "brand": "Professor's Nutrients",
+      "category": "clay_pebbles_leca",
+      "source": "dsc_mediums_leca"
+    },
+    {
+      "id": "mfr_eazy_plug_starter_plugs_starter_plugs",
+      "name": "Eazy Plug Starter Plugs",
+      "brand": "Eazy Plug",
+      "category": "propagation",
+      "source": "dsc_mediums_propagation"
+    },
+    {
+      "id": "mfr_jiffy_pellets_pellets",
+      "name": "Jiffy Pellets (Jiffy-7 / Jiffy-7C line)",
+      "brand": "Jiffy",
+      "category": "propagation",
+      "source": "dsc_mediums_propagation"
+    },
+    {
+      "id": "grodan_mfr_grodan_plantop_rosa_ng2_0_block",
+      "name": "Grodan Plantop Rosa NG2.0 Block",
+      "brand": "Grodan",
+      "category": "rockwool",
+      "source": "dsc_mediums_rockwool"
+    },
+    {
+      "id": "tghydroponics_coco_coir_canna_coco_professional_plus_50l_bottle_50l",
+      "name": "Canna Coco Professional 50L",
+      "brand": "Coco Coir",
+      "category": null,
+      "source": "dsc_mediums_tghydroponics"
+    },
+    {
+      "id": "tghydroponics_coco_coir_nutrifield_coco_premium_50l_rhp_certified_bottle",
+      "name": "Nutrifield Coco Premium 50L RHP certified",
+      "brand": "Coco Coir",
+      "category": null,
+      "source": "dsc_mediums_tghydroponics"
+    },
+    {
+      "id": "tghydroponics_coco_coir_nutrifield_coco_chips_blend_50_50_50l_rhp_certif",
+      "name": "Nutrifield Coco Chips Blend 50/50 50L RHP certified",
+      "brand": "Coco Coir",
+      "category": null,
+      "source": "dsc_mediums_tghydroponics"
+    },
+    {
+      "id": "tghydroponics_coco_coir_nutrifield_coco_perlite_blend_70_30_50l_rhp_cert",
+      "name": "Nutrifield Coco Perlite Blend 70/30 50L RHP certified",
+      "brand": "Coco Coir",
+      "category": null,
+      "source": "dsc_mediums_tghydroponics"
+    },
+    {
+      "id": "tghydroponics_coco_coir_nutrifield_coco_brick_mega_5kg_makes_55l_rhp_cer",
+      "name": "Nutrifield Coco Brick Mega 5KG Makes 55L RHP certified",
+      "brand": "Coco Coir",
+      "category": null,
+      "source": "dsc_mediums_tghydroponics"
+    },
+    {
+      "id": "tghydroponics_coco_coir_professors_coco_chips_50_50_blend_50l_bag_bottle",
+      "name": "PROFESSORS COCO CHIPS 50/50 BLEND | 50L BAG",
+      "brand": "Coco Coir",
+      "category": null,
+      "source": "dsc_mediums_tghydroponics"
+    },
+    {
+      "id": "tghydroponics_coco_coir_professors_coco_perlite_50l_bag_bottle_50l",
+      "name": "PROFESSORS COCO PERLITE 50L BAG",
+      "brand": "Coco Coir",
+      "category": null,
+      "source": "dsc_mediums_tghydroponics"
+    },
+    {
+      "id": "tghydroponics_coco_coir_professors_coco_premium_50l_bag_bottle_50l",
+      "name": "PROFESSORS COCO PREMIUM 50L BAG",
+      "brand": "Coco Coir",
+      "category": null,
+      "source": "dsc_mediums_tghydroponics"
+    },
+    {
+      "id": "tghydroponics_perlite_vermiculite_perlite_coarse_grade_100l_bag_bottle_d",
+      "name": "Perlite Coarse Grade",
+      "brand": "Perlite/Vermiculite",
+      "category": null,
+      "source": "dsc_mediums_tghydroponics"
+    },
+    {
+      "id": "tghydroponics_perlite_vermiculite_vermiculite_100l_bottle_default",
+      "name": "Vermiculite",
+      "brand": "Perlite/Vermiculite",
+      "category": null,
+      "source": "dsc_mediums_tghydroponics"
+    },
+    {
+      "id": "tghydroponics_grow_wool_rockwool_growool_premium_rockwool_floc_13_6kg_11",
+      "name": "Growool Premium Rockwool Floc 13.6KG 110 L",
+      "brand": "Grow wool / Rockwool",
+      "category": null,
+      "source": "dsc_mediums_tghydroponics"
+    },
+    {
+      "id": "tghydroponics_grow_wool_rockwool_eazy_plug_coco_peat_propagation_tray_77",
+      "name": "Eazy Plug - 12 | 24 | 77 packs",
+      "brand": "Grow wool / Rockwool",
+      "category": null,
+      "source": "dsc_mediums_tghydroponics"
+    },
+    {
+      "id": "tghydroponics_other_substrates_and_soils_easy_as_organic_living_soil_25l",
+      "name": "Easy as Organic Living Soil 25L",
+      "brand": "Other Substrates and Soils",
+      "category": null,
+      "source": "dsc_mediums_tghydroponics"
+    },
+    {
+      "id": "tghydroponics_propagation_42mm_jiffy_pellets_25_pack_bottle_default",
+      "name": "42mm Jiffy Pellets 25 Pack",
+      "brand": "Propagation",
+      "category": null,
+      "source": "dsc_mediums_tghydroponics"
+    },
+    {
+      "id": "tghydroponics_propagation_42mm_jiffy_coco_coir_propagation_pallets_1000_",
+      "name": "42MM JIFFY COCO COIR PROPAGATION PALLETS - 1000 PCS",
+      "brand": "Propagation",
+      "category": null,
+      "source": "dsc_mediums_tghydroponics"
+    },
+    {
+      "id": "tghydroponics_coco_coir_urban_jardin_coco_premium_grow_media_50ltr_bottl",
+      "name": "URBAN JARDIN COCO PREMIUM Grow Media 50LTR",
+      "brand": "Coco Coir",
+      "category": null,
+      "source": "dsc_mediums_tghydroponics"
+    },
+    {
+      "id": "tghydroponics_perlite_vermiculite_urban_jardin_premium_coco_perlite_medi",
+      "name": "URBAN JARDIN PREMIUM COCO PERLITE MEDIA 50LTR",
+      "brand": "Perlite/Vermiculite",
+      "category": null,
+      "source": "dsc_mediums_tghydroponics"
+    },
+    {
+      "id": "tghydroponics_propagation_grodan_crop_box_slab_classic_550_x_370_x_150_b",
+      "name": "Grodan Crop Box Slab Classic 550 x 370 x 150",
+      "brand": "Propagation",
+      "category": null,
+      "source": "dsc_mediums_tghydroponics"
+    },
+    {
+      "id": "tghydroponics_coco_coir_bio_diesel_max_air_coco_perlite_70_30_mix_50l_bo",
+      "name": "Bio Diesel Max Air Coco Perlite 70-30 Mix [50L]",
+      "brand": "Coco Coir",
+      "category": null,
+      "source": "dsc_mediums_tghydroponics"
+    },
+    {
+      "id": "tghydroponics_coco_coir_bio_diesel_living_organic_soil_lite_30l_bottle_3",
+      "name": "Bio Diesel Living Organic Soil Lite",
+      "brand": "Coco Coir",
+      "category": null,
+      "source": "dsc_mediums_tghydroponics"
+    },
+    {
+      "id": "tghydroponics_other_substrates_and_soils_de_ozzy_essential_natural_soil_",
+      "name": "De-Ozzy Essential Natural Soil Conditioner",
+      "brand": "Other Substrates and Soils",
+      "category": null,
+      "source": "dsc_mediums_tghydroponics"
+    },
+    {
+      "id": "tghydroponics_clay_balls_hy_gen_euro_clay_50l_bag_bottle_50l",
+      "name": "Hy-Gen Euro Clay 50L Bag",
+      "brand": "Clay Balls",
+      "category": null,
+      "source": "dsc_mediums_tghydroponics"
+    },
+    {
+      "id": "tghydroponics_coco_coir_house_garden_cocos_50l_bag_bottle_50l",
+      "name": "House & Garden Cocos 50L Bag",
+      "brand": "Coco Coir",
+      "category": null,
+      "source": "dsc_mediums_tghydroponics"
+    },
+    {
+      "id": "tghydroponics_coco_coir_hy_gen_coco_coir_lite_50l_bag_bottle_50l",
+      "name": "Hy-Gen Coco Coir Lite 50L Bag",
+      "brand": "Coco Coir",
+      "category": null,
+      "source": "dsc_mediums_tghydroponics"
+    },
+    {
+      "id": "tghydroponics_coco_coir_hy_gen_coco_chips_ultimate_blend_50l_bag_bottle_",
+      "name": "Hy-Gen Coco Chips Ultimate Blend 50L Bag",
+      "brand": "Coco Coir",
+      "category": null,
+      "source": "dsc_mediums_tghydroponics"
+    },
+    {
+      "id": "tghydroponics_coco_coir_hy_gen_cocopeat_blocks_bottle_650g",
+      "name": "Hy-Gen CocoPeat Blocks",
+      "brand": "Coco Coir",
+      "category": null,
+      "source": "dsc_mediums_tghydroponics"
+    },
+    {
+      "id": "tghydroponics_clay_balls_professors_nutrients_hydro_50l_clay_bottle_50l",
+      "name": "Professor's Nutrients Hydro 50L Clay",
+      "brand": "Clay Balls",
+      "category": null,
+      "source": "dsc_mediums_tghydroponics"
+    },
+    {
+      "id": "tghydroponics_other_substrates_and_soils_hydro_chunk_10kg_bag_silica_roc",
+      "name": "Hydro Chunk 10Kg Bag Silica Rock",
+      "brand": "Other Substrates and Soils",
+      "category": null,
+      "source": "dsc_mediums_tghydroponics"
+    },
+    {
+      "id": "tghydroponics_eazy_plug_eazy_plug_6_plug_sowing_set_bottle_default",
+      "name": "Eazy Plug 6 Plug Sowing Set",
+      "brand": "Eazy Plug",
+      "category": null,
+      "source": "dsc_mediums_tghydroponics"
+    },
+    {
+      "id": "tghydroponics_canna_canna_coco_professional_plus_cube_bottle_20l",
+      "name": "Canna Coco Professional Plus+ Cube",
+      "brand": "Canna",
+      "category": "cube",
+      "source": "dsc_mediums_tghydroponics"
+    },
+    {
+      "id": "thegrowguys_green_planet_coco_70_30_perlite_by_green_planet_bottle_53l",
+      "name": "Coco 70/30 Perlite by Green Planet — Buffered RHP-Certified Coco & Perlite Mix, 53L",
+      "brand": "Green Planet",
+      "category": "Substrate",
+      "source": "dsc_mediums_thegrowguys"
+    },
+    {
+      "id": "thegrowguys_grodan_rockwool_cubes_by_grodan_bottle_40mm_x_40mm_x_40mm",
+      "name": "Rockwool Cubes by Grodan",
+      "brand": "Grodan",
+      "category": null,
+      "source": "dsc_mediums_thegrowguys"
+    },
+    {
+      "id": "thegrowguys_plant_mechanics_coco_perlite_by_plant_mechanics_bottle_50l",
+      "name": "Coco Perlite w/ Croutons by Plant Mechanics",
+      "brand": "Plant Mechanics",
+      "category": null,
+      "source": "dsc_mediums_thegrowguys"
+    },
+    {
+      "id": "thegrowguys_eazy_plug_square_cubes_by_eazy_plug_bottle_12",
+      "name": "Square Cubes by Eazy Plug – Fast, Fuss-Free Propagation Plugs",
+      "brand": "Eazy Plug",
+      "category": "propagation cubes",
+      "source": "dsc_mediums_thegrowguys"
+    },
+    {
+      "id": "thegrowguys_professor_s_nutrients_hydro_clay_by_professors_nutrients_bot",
+      "name": "Hydro Clay by Professor's Nutrients",
+      "brand": "Professor's Nutrients",
+      "category": null,
+      "source": "dsc_mediums_thegrowguys"
+    },
+    {
+      "id": "thegrowguys_green_planet_professional_coco_53l_by_green_planet_bottle_53",
+      "name": "Professional Coco by Green Planet — Cal-Mag Buffered RHP Coco Coir, 53L",
+      "brand": "Green Planet",
+      "category": "Substrate",
+      "source": "dsc_mediums_thegrowguys"
+    },
+    {
+      "id": "thegrowguys_exfoliators_perlite_coarse_100l_by_exfoliators_bottle_defaul",
+      "name": "Perlite Coarse by Exfoliators",
+      "brand": "Exfoliators",
+      "category": null,
+      "source": "dsc_mediums_thegrowguys"
+    },
+    {
+      "id": "thegrowguys_canna_terra_professional_by_canna_bottle_50l",
+      "name": "Terra Professional by Canna — Nitrogen-Rich Pre-Fertilised Potting Mix 50L",
+      "brand": "Canna",
+      "category": "Organic & Soil Blends",
+      "source": "dsc_mediums_thegrowguys"
+    },
+    {
+      "id": "thegrowguys_way_to_grow_professional_coco_block_5kg_by_way_to_grow_bottl",
+      "name": "Professional Coco Block by Way to Grow",
+      "brand": "Way to Grow",
+      "category": null,
+      "source": "dsc_mediums_thegrowguys"
+    },
+    {
+      "id": "thegrowguys_bio_diesel_organic_living_soil_by_bio_diesel_bottle_30l",
+      "name": "Organic Living Soil by Bio Diesel",
+      "brand": "Bio Diesel",
+      "category": null,
+      "source": "dsc_mediums_thegrowguys"
+    },
+    {
+      "id": "thegrowguys_grodan_rockwool_slabs_by_grodan_bottle_550mm_x_370mm_x_150mm",
+      "name": "Rockwool Slabs by Grodan",
+      "brand": "Grodan",
+      "category": null,
+      "source": "dsc_mediums_thegrowguys"
+    },
+    {
+      "id": "thegrowguys_green_planet_expanded_clay_by_green_planet_bottle_25l",
+      "name": "Expanded Clay 25L by Green Planet — 8-15mm LECA for Hydro & Drainage",
+      "brand": "Green Planet",
+      "category": "Substrate",
+      "source": "dsc_mediums_thegrowguys"
+    },
+    {
+      "id": "thegrowguys_hy_gen_coirlite_by_hy_gen_bottle_default",
+      "name": "Coirlite by Hy-Gen",
+      "brand": "HY-GEN",
+      "category": null,
+      "source": "dsc_mediums_thegrowguys"
+    },
+    {
+      "id": "thegrowguys_house_garden_coco_by_house_garden_bottle_50l",
+      "name": "Coco by House & Garden — Premium Pre-Buffered Coco Coir 50L",
+      "brand": "House & Garden",
+      "category": "Coco Coir",
+      "source": "dsc_mediums_thegrowguys"
+    },
+    {
+      "id": "thegrowguys_dr_greenthumbs_turbo_dirt_27l_by_dr_greenthumbs_bottle_27l",
+      "name": "Turbo Dirt by Dr Greenthumbs",
+      "brand": "Dr Greenthumbs",
+      "category": null,
+      "source": "dsc_mediums_thegrowguys"
+    },
+    {
+      "id": "thegrowguys_hy_gen_cocopeat_by_hy_gen_bottle_650g",
+      "name": "CocoPeat by Hy-gen",
+      "brand": "HY-GEN",
+      "category": null,
+      "source": "dsc_mediums_thegrowguys"
+    },
+    {
+      "id": "thegrowguys_ugro_max_air_coco_perlite_by_ugro_bottle_50l",
+      "name": "Max Air Coco/Perlite by UGRO",
+      "brand": "UGRO",
+      "category": null,
+      "source": "dsc_mediums_thegrowguys"
+    },
+    {
+      "id": "thegrowguys_exfoliators_perlite_super_coarse_by_exfoliators_bottle_defau",
+      "name": "Perlite Super Coarse by Exfoliators",
+      "brand": "Exfoliators",
+      "category": null,
+      "source": "dsc_mediums_thegrowguys"
+    },
+    {
+      "id": "thegrowguys_professor_s_nutrients_coco_premium_by_professors_nutrients_b",
+      "name": "Coco Premium by Professor's Nutrients",
+      "brand": "Professor's Nutrients",
+      "category": null,
+      "source": "dsc_mediums_thegrowguys"
+    },
+    {
+      "id": "thegrowguys_exfoliators_vermiculite_100l_by_exfoliators_bottle_100l",
+      "name": "Vermiculite by Exfoliators",
+      "brand": "Exfoliators",
+      "category": null,
+      "source": "dsc_mediums_thegrowguys"
+    },
+    {
+      "id": "thegrowguys_higgins_higgins_superior_soil_aroid_tropical_potting_mix_8l_",
+      "name": "Higgins Superior Soil — Premium Aroid & Tropical Potting Mix 8L",
+      "brand": "Higgins",
+      "category": "Substrate",
+      "source": "dsc_mediums_thegrowguys"
+    },
+    {
+      "id": "thegrowguys_the_grow_guys_coco_coir_mats_by_the_grow_guys_bottle_567mm_x",
+      "name": "Coco Coir Mats by The Grow Guys",
+      "brand": "The Grow Guys",
+      "category": null,
+      "source": "dsc_mediums_thegrowguys"
+    },
+    {
+      "id": "thegrowguys_canna_coco_profession_plus_by_canna_bottle_50l",
+      "name": "Coco Professional Plus+ by Canna — RHP Certified Buffered Coco Coir 50L",
+      "brand": "Canna",
+      "category": "Coco Coir",
+      "source": "dsc_mediums_thegrowguys"
+    },
+    {
+      "id": "thegrowguys_hy_gen_ultimate_coco_chips_by_hy_gen_bottle_50l",
+      "name": "Ultimate - Coco & Chips by Hy-gen",
+      "brand": "HY-GEN",
+      "category": null,
+      "source": "dsc_mediums_thegrowguys"
+    },
+    {
+      "id": "thegrowguys_daltons_daltons_orchiata_power_9_12mm_bottle_5l",
+      "name": "Orchiata Power 9-12mm by Daltons — Orchid Bark for Young & Mature Orchids",
+      "brand": "Daltons",
+      "category": "Orchid Bark",
+      "source": "dsc_mediums_thegrowguys"
+    },
+    {
+      "id": "thegrowguys_daltons_daltons_orchiata_classic_6_9mm_bottle_5l",
+      "name": "Orchiata Classic 6-9mm by Daltons — Orchid Bark for Repotting Young Orchids",
+      "brand": "Daltons",
+      "category": "Orchid Bark",
+      "source": "dsc_mediums_thegrowguys"
+    },
+    {
+      "id": "thegrowguys_daltons_daltons_orchiata_precision_3_6mm_35l_bottle_35l",
+      "name": "Orchiata Precision 3-6mm 35L by Daltons — Orchid Bark for Seedlings & Young Orchids",
+      "brand": "Daltons",
+      "category": "Orchid Bark",
+      "source": "dsc_mediums_thegrowguys"
+    },
+    {
+      "id": "thegrowguys_green_planet_coco_60_40_chips_by_green_planet_bottle_53l",
+      "name": "Coco 60/40 Chips by Green Planet — Buffered RHP Coco & Chip Blend, 53L",
+      "brand": "Green Planet",
+      "category": "Substrate",
+      "source": "dsc_mediums_thegrowguys"
+    },
+    {
+      "id": "thegrowguys_gardeners_friend_gardeners_friend_potting_mix_25l_bottle_25l",
+      "name": "Gardeners Friend Potting Mix 25L — Tasmanian-Made Seedling & Garden Blend",
+      "brand": "Gardeners Friend",
+      "category": "Substrate",
+      "source": "dsc_mediums_thegrowguys"
+    },
+    {
+      "id": "thegrowguys_gardeners_friend_gardeners_friend_premium_potting_mix_30l_bo",
+      "name": "Gardeners Friend Premium Potting Mix 30L — Tasmanian-Made Garden Blend",
+      "brand": "Gardeners Friend",
+      "category": "Substrate",
+      "source": "dsc_mediums_thegrowguys"
+    },
+    {
+      "id": "thegrowguys_eazy_plug_start_up_kit_by_eazy_plug_bottle_default",
+      "name": "Start Up Kit by Eazy Plug – From Seed to Strong Start, The Organic Way",
+      "brand": "Eazy Plug",
+      "category": "Rooting + Growth Kit",
+      "source": "dsc_mediums_thegrowguys"
+    },
+    {
+      "id": "thegrowguys_eazy_plug_sea_of_green_set_by_eazy_plug_bottle_default",
+      "name": "Sea of Green Set by Eazy Plug – Next-Level Organic Propagation Made Easy",
+      "brand": "Eazy Plug",
+      "category": "Propagation Set (Rooting + Grow Kit)",
+      "source": "dsc_mediums_thegrowguys"
+    },
+    {
+      "id": "thegrowguys_quikgro_rapid_rize_coco_block_by_quikgro_bottle_xs_4_x_4_x_3",
+      "name": "Rapid Rize Coco Block by QuikGro",
+      "brand": "QuikGro",
+      "category": null,
+      "source": "dsc_mediums_thegrowguys"
+    },
+    {
+      "id": "thegrowguys_jb_hydroponics_gnat_nix_10l_by_bottle_10l",
+      "name": "Gnat Nix by JB Hydroponics",
+      "brand": "JB Hydroponics",
+      "category": null,
+      "source": "dsc_mediums_thegrowguys"
+    },
+    {
+      "id": "thegrowguys_grodan_rockwool_granulate_by_grodan_bottle_13_6kg",
+      "name": "Rockwool Granulate by Grodan",
+      "brand": "Grodan",
+      "category": null,
+      "source": "dsc_mediums_thegrowguys"
+    },
+    {
+      "id": "thegrowguys_daltons_daltons_orchiata_super_18_25mm_35l_bottle_35l",
+      "name": "Orchiata Super 18-25mm 35L by Daltons — Largest Orchid Bark for Maximum Airflow",
+      "brand": "Daltons",
+      "category": "Orchid Bark",
+      "source": "dsc_mediums_thegrowguys"
+    },
+    {
+      "id": "thegrowguys_daltons_daltons_orchiata_power_plus_12_18mm_bottle_5l",
+      "name": "Orchiata Power+ 12-18mm by Daltons — Orchid Bark for Mature Orchids & Large Roots",
+      "brand": "Daltons",
+      "category": "Orchid Bark",
+      "source": "dsc_mediums_thegrowguys"
+    },
+    {
+      "id": "thegrowguys_de_ozzy_essential_natural_soil_conditioner_by_de_ozzy_bottle",
+      "name": "Essential Natural Soil Conditioner by DE‑OZZY – Silica Rock Substrate",
+      "brand": "DE Ozzy",
+      "category": "Natural Soil Conditioner / Silica Rock",
+      "source": "dsc_mediums_thegrowguys"
+    },
+    {
+      "id": "thegrowguys_hy_gen_perlite_50l_by_hygen_bottle_50l",
+      "name": "Perlite by Hy-gen",
+      "brand": "HY-GEN",
+      "category": null,
+      "source": "dsc_mediums_thegrowguys"
+    }
+  ]
+}
