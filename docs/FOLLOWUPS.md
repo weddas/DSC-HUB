@@ -871,10 +871,12 @@ New 5s `tx_fleet_heartbeat` / `tx_peer_time` broadcast load on top of 2s vitals 
 
 ## 2026-08-06 — Pass B/C deepen (CFM honesty + model fidelity)
 
+Runbook: [`docs/qa/LIVE-UI-DASH-PASS-BC-CFM.md`](qa/LIVE-UI-DASH-PASS-BC-CFM.md).
+
 ### done
 - **Pass B:** Absolute CFM only for duct/fan/particle motion (removed fan-% fake motion at 0 CFM). Cascade plume mixes in 4×8 then biases toward OUT vs RECIRC by `outShare`/`recircShare`. `mixMain` intensity = intake+cascade (no out double-count); mix curl center pulls toward weighted exhaust ports. ACH floors to 0 when dead; room lung bob gated on recirc CFM.
 - **Pass C:** Tent eave/ridge poles + front door/zipper strip. Intake curves pierce front walls; cinch at room-side + wall pierce. Cascade flex rings; denser Al flex (~48–52). Duct soft particles `depthTest: true`.
-- **Deploy:** Node-concat ~901KB → `/local/dsc-system-map-card.js` + hard reload.
+- **Deploy:** Node-concat ~897–901KB → `/local/dsc-system-map-card.js` + hard reload.
 
 ### soak / operator
 - With hub live: confirm intake→mix→OUT/RECIRC split reads; at 0 CFM no particle/lung bob (idle shells OK).

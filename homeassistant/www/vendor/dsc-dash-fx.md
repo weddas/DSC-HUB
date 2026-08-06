@@ -20,3 +20,15 @@ bash scripts/sync-hacs-dist.sh
 ```
 
 Concat order: `dsc-system-map-card.js` → `dsc-airflow-map-card.js` → `vendor/three.min.js` → `vendor/dsc-dash-fx.js` → `dsc-the-dash-card.js` → `dist/DSC-HUB.js` and `dist/dsc-system-map-card.js`. The `dsc-hub-sync` add-on uses the same order when staging `/config/www`.
+
+## Scene motion contract (Pass B/C — `dsc-the-dash-card.js`)
+
+FX helpers here supply ribbons / curl / bloom. **CFM honesty and tent/duct
+density live in the Dash card**, not this bridge:
+
+- Particle / fan / ACH / lung motion → absolute CFM only (`cfmNorm`, threshold
+  ≈ 0.04 after `/80`).
+- Cascade plume + `mixMain` pull → biased by `outShare` / `recircShare`.
+- Models → tent rails/door/zipper, dual intake cinches, denser Al flex rings.
+
+Operator runbook: [`docs/qa/LIVE-UI-DASH-PASS-BC-CFM.md`](../../../docs/qa/LIVE-UI-DASH-PASS-BC-CFM.md).

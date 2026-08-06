@@ -83,12 +83,20 @@ graph enlarge, appliance consoles, pot detail. Install from HACS →
 Integrations, restart HA, then **Settings → Devices & Services →
 Add Integration → Browser Mod**. Without it the popup taps silently no-op.
 
-## Local custom cards — SYSTEM MAP + AIRFLOW STATUS
+## Local custom cards — SYSTEM MAP + AIRFLOW STATUS + The Dash
 
 | Card | Type | View |
 |---|---|---|
 | Neon isometric map | `custom:dsc-system-map-card` | Home |
 | GUI tent airflow scene | `custom:dsc-airflow-map-card` | Climate Engine |
+| Cinematic Dash | `custom:dsc-the-dash-card` | `/dsc-hub-pro/dash` |
+
+**The Dash Pass B/C (2026-08-06, `7bce2f4`):** scene motion is **absolute CFM
+only** (no fan-% fake motion at 0 CFM). Cascade mixes in the 4×8 then biases
+toward OUT vs RECIRC by fan-% share; tent frame / door zipper / cinch pierces /
+denser Al flex are visual fidelity only. After every www deploy, **hard-reload**.
+Runbook: [`../docs/qa/LIVE-UI-DASH-PASS-BC-CFM.md`](../docs/qa/LIVE-UI-DASH-PASS-BC-CFM.md).
+FX bridge (MeshLine / confined curl / depth opt-in): [`www/vendor/dsc-dash-fx.md`](www/vendor/dsc-dash-fx.md).
 
 ### Preferred — HACS Dashboard custom repository
 
