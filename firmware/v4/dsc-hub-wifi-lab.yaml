@@ -17,6 +17,11 @@ wifi:
   # false: Lock WiFi AP / preferred BSSID needs a scan to leave a sticky
   # Nest point. fast_connect rejoined the wrong AP after bounce (3 Aug).
   fast_connect: false
+  # ESPHome default true: every 5 min (RSSI < -49) off-channel roam scan
+  # while STA stays "connected". That hops the single radio off Nest ch11
+  # and kills ESP-NOW (dsc-hub-logs (5) 09:50 storm). Hub Lock + preferred
+  # BSSID already pin the Nest point — roaming fights that pin.
+  post_connect_roaming: false
   ap:
     ssid: DSC-HUB Fallback Hotspot
     password: ${ap_password_val}

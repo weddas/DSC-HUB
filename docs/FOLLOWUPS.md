@@ -701,3 +701,56 @@ New 5s `tx_fleet_heartbeat` / `tx_peer_time` broadcast load on top of 2s vitals 
 | N-038 | EVT last-per-code freshness: don't re-publish identical `API_BLIP` every few seconds | HA autofix dedupe assumes change |
 | F-004 | Nest channel lock | Not indicated this soak (RF stays ch11 OK between sweeps); sweeps are hub-local, not Nest hop |
 | N-039 | Pot 0xD7 RX expects u32 epoch; hub/Control use calendar fields | Align pot parser to Control calendar pack (or dual-decode) |
+
+---
+
+## 2026-08-05 — Main dashboard “stopped working” (hub API wedge)
+
+### symptom
+- `/dsc-hub-pro/dash` + Home showed HUB OFFLINE / `--` climate / 0 CFM. Lovelace bundle healthy (~864KB); not F-011 stub wipe.
+- ~147 `dsc_hub_*` unavailable; Control 5.1.16 + pots 1/2/4 OK.
+
+### diagnosis
+- Hub on Wi-Fi (`192.168.86.33`) but native API **ListEntities hangs 60s** then peer reset. DeviceInfo OK (`project 5.1.9`).
+- ESP-NOW silent (Control hello-ping; pot “hub never heard this boot”).
+- `:6053` flaps; OTA `:3232` often closed. `max_connections: 3` + competing probes worsen wedge.
+- No smart-plug path for hub (same as prior FOLLOWUPS).
+
+### actions taken (remote)
+- HA Core restart; ESPHome DSC-HUB disable/enable; Fleet Fix + restart button presses; aioesphomeapi DeviceInfo OK / ListEntities fail; HA entry left **enabled** for post–power-cycle reconnect.
+- HA surface bookkeeping: `sensor.dsc_ha_surface_version` + `input_text.dsc_expected_release` → **5.1.9** (package deployed).
+
+### operator
+| ID | Item | Notes |
+|---|---|---|
+| N-040 | **Physical power-cycle DSC-HUB** | Required — remote API cannot finish entity list / cannot OTA while flapping |
+| N-041 | After power cycle: confirm `dsc_hub_link=on`, FW 5.1.9, Dash climate/CFM live | Hard-refresh `/dsc-hub-pro/dash` |
+| N-042 | Soak whether 5.1.9 ESP-NOW cadence still OOMs under load | If ListEntities hangs again, treat as FW defect not dashboard |
+
+---
+
+## 2026-08-06 — Hub / ESP-NOW flap investigation (live)
+
+### runtime (pre-fix probe, ~110s)
+- `scripts/debug_hub_flap_probe.py` → `debug-91519d.log`: **9 mode flips** in 20 samples (~2.5s).
+- ICMP **12/20**, API `:6053` **13/20**, OTA `:3232` **11/20`.
+- Modes seen: `alive` / `wifi_down` / `partial` / `ota_only` (OTA up while ICMP+API dead).
+- HA: early snapshot had `DSC Hub Link=off` + ~all `dsc_hub_*` unavailable; later samples `on`. Pots 1/2/4 soil still live; pot3 unavailable (F-003).
+
+### hypotheses (open)
+| ID | Hypothesis | Status |
+|---|---|---|
+| A | Hub WiFi STA path flapping (Nest/RF) | Partial — ICMP loss real; roam scans amplify |
+| B | Native API intermittent / wedge (`:6053`) | Confirmed in probe + log client disconnects |
+| C | Half-alive OTA-only state | Confirmed in probe samples |
+| D | ESP-NOW OOM / channel-sweep (N-037 peer hunt) | **OOM rejected** (0 in log5); channel lines are STA observer not peer hunt |
+| E | Link-recovery bounce amplifying flaps | **Rejected** — Link Recovery Bounces=0, reason=none |
+| F | ESPHome `post_connect_roaming` off-channel scans | **Confirmed** — default true, RSSI~-70 &lt; -49 gate; 1…14 storm while RF stays E2A/ch11 |
+
+### fix (in tree, needs flash)
+- Hub **5.1.10** / Control **5.1.17** / Pots **5.1.8**: `post_connect_roaming: false` on all lab+kit WiFi packages.
+- Verify: soak hub logs ≥15 min with **zero** `Wifi Channel is changed` storms; Panel ESP-NOW stays LINKED; ping loss down.
+
+### next
+- Flash hub 5.1.10 first (OTA when `:3232` up, else power-cycle then OTA); then Control/pots
+- Do **not** flash speculative FW until A–C vs D–E separated; N-040 still applies if ListEntities hangs again |

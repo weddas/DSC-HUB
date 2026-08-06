@@ -8,6 +8,8 @@ wifi:
   # false: Lock WiFi AP / preferred BSSID needs a scan to leave a sticky
   # Nest point. fast_connect rejoined the wrong AP after bounce (3 Aug).
   fast_connect: false
+  # See dsc-hub-wifi-lab.yaml — off-channel roam scans break ESP-NOW.
+  post_connect_roaming: false
   ap:
     ssid: "DSC-Setup"
     password: ${setup_ap_password}

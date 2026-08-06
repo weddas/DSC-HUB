@@ -9,7 +9,7 @@ input_text:
   dsc_expected_release:
     name: "DSC Expected Release"
     icon: mdi:tag-check
-    initial: "5.1.6"
+    initial: "5.1.10"
     max: 32
 
 template:
@@ -17,7 +17,7 @@ template:
       - name: "DSC HA Surface Version"
         unique_id: dsc_ha_surface_version
         icon: mdi:home-assistant
-        state: "5.1.8"
+        state: "5.1.10"
         attributes:
           packages: dsc_v4_*
           dashboard: dsc-hub-pro (strains + nutrient-science + crop UI)
@@ -30,13 +30,16 @@ template:
           sensor_cal: peer sync + push-to-ESP + lab wet (pot FW 5.1.6+)
           sensor_trust: stuck/MAD/DHT + keep-up gaps
           derived_faults: vent-conflict + ineffective suspects
+          light_quota: hub ledger debt/catch-up + Lighting view (hub FW 5.1.7+)
+          fleet_heal: EVT autofix + coherence notify (hub 5.1.8+ / Control 5.1.16)
+          wifi_roam: post_connect_roaming off (hub 5.1.10+) — ESP-NOW channel hold
 
       - name: "DSC Fleet Version Status"
         unique_id: dsc_fleet_version_status
         icon: mdi:clipboard-check
         state: >-
           {% set exp = states('input_text.dsc_expected_release')|trim %}
-            {% if exp in ['unknown','unavailable','', none] %}{% set exp = '5.1.6' %}{% endif %}
+            {% if exp in ['unknown','unavailable','', none] %}{% set exp = '5.1.10' %}{% endif %}
           {% set checks = [
             ('hub', states('sensor.dsc_hub_firmware_version')),
             ('panel', states('sensor.dsc_control_firmware_version')),
@@ -72,7 +75,7 @@ template:
         attributes:
           expected: >-
             {% set exp = states('input_text.dsc_expected_release')|trim %}
-            {{ '5.1.6' if exp in ['unknown','unavailable',''] else exp }}
+            {{ '5.1.10' if exp in ['unknown','unavailable',''] else exp }}
           hub: "{{ states('sensor.dsc_hub_firmware_version') }}"
           panel: "{{ states('sensor.dsc_control_firmware_version') }}"
           pot1: "{{ states('sensor.dsc_pot1_firmware_version') }}"

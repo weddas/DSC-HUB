@@ -163,7 +163,7 @@ esphome:
     # the dashboard and HA's device page both described DSC-CONTROL as
     # being the DSC HUB. Purely cosmetic, but confusing enough to matter.
     name: "digital_emotions.dsc-control"
-    version: "5.1.16"
+    version: "5.1.17"
   on_boot:
     # Seed the 0xDC command seq from hardware RNG so a panel reboot is
     # unlikely to replay the hub's last-seen seq even before the hub's
@@ -1272,7 +1272,7 @@ text_sensor:
     name: "Firmware Version"
     id: fw_version
     icon: mdi:tag-check
-    lambda: 'return {"5.1.16"};'
+    lambda: 'return {"5.1.17"};'
     update_interval: 60s
   - platform: template
     id: sel_stage

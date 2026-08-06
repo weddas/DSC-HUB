@@ -120,7 +120,7 @@ esphome:
   friendly_name: ${friendly_name}
   project:
     name: digital_emotions.dsc-pot
-    version: "5.1.7"
+    version: "5.1.8"
 
 esp32:
   board: esp32dev
@@ -658,7 +658,7 @@ text_sensor:
   - platform: template
     name: "Firmware Version"
     icon: mdi:tag-check
-    lambda: 'return {"5.1.7"};'
+    lambda: 'return {"5.1.8"};'
     update_interval: 60s
   # Diagnostic only — see 0xD7 RX note in globals/espnow below. This node
   # cannot set its own clock from the packet, so this is the only trace

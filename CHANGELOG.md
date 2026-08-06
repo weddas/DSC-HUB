@@ -1,11 +1,23 @@
 # Changelog
 
+## Hub 5.1.10 / Control 5.1.17 / Pots 5.1.8 — kill post-connect roam scans (2026-08-06)
+
+- **ESP-NOW flap:** ESPHome `post_connect_roaming` defaults **true** and runs
+  off-channel Wi‑Fi scans every 5 min when RSSI &lt; −49 (hub sits ~−70). The
+  single radio leaves Nest ch11 while STA stays “connected”; `espnow` only
+  *observes* that as `Wifi Channel is changed 11→N` (not a peer hunt).
+  `dsc-hub-logs (5)`: one 1…14 storm at 09:50, no OOM, Link Recovery = 0.
+- Set `post_connect_roaming: false` on hub/Control/pot lab+kit WiFi packages.
+  Preferred-BSSID Lock already owns Nest pin; roam scans fought that pin.
+
 ## Hub 5.1.9 — ESP-NOW TX cadence (2026-08-05)
 
 - **N-037:** One outbound ESP-NOW frame every 5s — alternate medium `0xD0`
   (sparse `0xD7`) and large vitals (sparse config/soil/names). Register
   broadcast peer so sends do not channel-sweep off Nest. 15s TX backoff on
   send fail. Stops the 5.1.8 OOM + `11→1…14→11` thrash seen in soak logs.
+  *(Note: OOM fixed; residual channel thrash on 5.1.9 was post-connect roam
+  scans — closed in 5.1.10.)*
 
 ## Hub 5.1.8 + Control 5.1.16 + Pots 5.1.7 — fleet self-heal train (2026-08-05)
 
