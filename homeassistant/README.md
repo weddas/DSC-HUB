@@ -351,13 +351,17 @@ not humidifier lock — entity id kept for compatibility.
 | Piece | Version |
 |---|---|
 | Hub / pots / Sonoffs / kits | **`5.1.10`** hub roam-scan off; Control **5.1.17**; pots **5.1.8** |
-| Panel (DSC-CONTROL) | **`5.1.x`** lean-cut patch train |
-| HA surface (packages + dashboard) | **`5.1.8`** |
+| Panel (DSC-CONTROL) | **`5.1.17`** lean-cut patch train |
+| HA surface (packages + dashboard) | **`5.1.10`** |
 | Dashboard | DSC-HUB Pro (4-col, browser_mod popups) |
 | `espnow_cmd_tag` | `54727` (`0xD5C7`) on hub **and** panel |
 
 Fleet drift chip (`sensor.dsc_fleet_version_status`) compares the
 **major.minor** train, so mixed patch levels inside `5.1.x` stay `ok`.
+
+**WiFi / ESP-NOW:** hub **5.1.10+** disables ESPHome `post_connect_roaming` so
+off-channel STA scans do not yank the shared radio off Nest while Lock pins
+BSSID. Runbook: [`../docs/qa/HUB-WIFI-POST-CONNECT-ROAMING-5.1.10.md`](../docs/qa/HUB-WIFI-POST-CONNECT-ROAMING-5.1.10.md).
 
 **Mat votes:** `switch.dsc_hub_mat_vote_pot_1`…`4` — Root Zone is source of truth; Climate links there.
 

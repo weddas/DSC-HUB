@@ -18,6 +18,15 @@ Commit checklist for lab + kit packages. Firmware Install is always **manual**.
 3. [ ] Pots 1–4 → **5.1.0**; soil + ESP-NOW
 4. [ ] Sonoffs → **5.1.0**; followers track demands
 
+## Live train — WiFi roam / ESP-NOW channel (5.1.10+)
+
+See [`HUB-WIFI-POST-CONNECT-ROAMING-5.1.10.md`](HUB-WIFI-POST-CONNECT-ROAMING-5.1.10.md).
+
+- [ ] Hub / Control / pot lab+kit WiFi packages set `post_connect_roaming: false`
+- [ ] Hub FW text **5.1.10**, Control **5.1.17**, pots **5.1.8** after flash
+- [ ] Soak ≥15 min: no rapid `Wifi Channel is changed 11→1…14` storms
+- [ ] Panel ESP-NOW stays LINKED while hub STA RSSI remains below −49
+
 ## Behavioral smoke
 
 - [ ] Ladder: dehum → hum → heat → AC → mat with reality gates
