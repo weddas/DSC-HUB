@@ -84,12 +84,14 @@ export DRY_RUN=1
 | Syncs on push (ha-sync) | Does not sync / other channel |
 |---|---|
 | `packages/dsc_v4_*.yaml` | `secrets.yaml` |
-| `dashboards/dsc-hub-v4-dashboard.yaml` | `.storage/` |
-| `www/` system-map SVG + **bundled** `dsc-system-map-card.js` (system+airflow) | Non-DSC house packages |
-| ESPHome stubs only if `SYNC_ESPHOME=1` | Firmware flash / ESPHome Install |
-| | **SYSTEM MAP card via HACS** — [`HACS-FRONTEND.md`](HACS-FRONTEND.md) |
+| `dashboards/dsc-hub-v4-dashboard.yaml` + `dsc-build-plant-dashboard.yaml` | `.storage/` |
+| `www/` SVG + **bundled** `dsc-system-map-card.js` (system+airflow+Three+Dash+Build a Plant) | Non-DSC house packages |
+| `www/dsc-catalog/*.json` (Build a Plant typeahead) | Firmware flash / ESPHome Install |
+| ESPHome stubs only if `SYNC_ESPHOME=1` | |
+| | **Cards via HACS** — [`HACS-FRONTEND.md`](HACS-FRONTEND.md) |
 
-Prefer HACS for the SYSTEM MAP card; ha-sync still mirrors `www/` for sites
-not using HACS yet.
+Prefer HACS for Lovelace cards; ha-sync still mirrors `www/` (+ catalog) for
+sites not using HACS. Build a Plant ops:
+[`docs/qa/LIVE-UI-BUILD-A-PLANT.md`](../docs/qa/LIVE-UI-BUILD-A-PLANT.md).
 
 Firmware still: Cursor → push → ESPHome Validate/Install per device.

@@ -80,21 +80,39 @@ target — edit those services to match your HA devices (`notify.mobile_app_…`
 Package pot/tank **push** notifiers are not shipped in **v5.0.0**
 (alert binary sensors remain).
 
+## Build a Plant (separate dashboard)
+
+Composition surface at **`/dsc-build-plant/build`** — not a Pro tab. Package
+`dsc_v4_build_plant.yaml` + Lit card + `/local/dsc-catalog/` typeahead indexes.
+
+| Action | Script / sensor |
+|---|---|
+| Mix ml total | `sensor.dsc_mix_calculator` (`dose × L × strength%`) |
+| Soil % valid | `sensor.dsc_blend_summary` attr `valid` (must sum **100**) |
+| Commit to roster | `script.dsc_build_plant_commit` (next empty of 8 slots) |
+| Assign to pot | `script.dsc_plant_assign_to_pot` |
+| Apply climate Want | `script.dsc_apply_climate_want` (Custom temp/RH ≠0 only) |
+
+Ops runbook: [`../docs/qa/LIVE-UI-BUILD-A-PLANT.md`](../docs/qa/LIVE-UI-BUILD-A-PLANT.md).
+Requires Sync add-on **5.1.4+** (or ha-sync) for dashboard YAML + catalog JSON;
+HACS alone registers the custom element.
+
 ## HACS cards
 
-mushroom · apexcharts-card · plotly-graph-card · mini-graph-card · gauge-card-pro · modern-circular-gauge · logbook-card · auto-entities · vertical-stack-in-card · card-mod · bar-card · ph-meter-temperature · **expander-card** · **browser_mod** · **DSC-HUB** (Dashboard custom repo — system map + airflow map)
+mushroom · apexcharts-card · plotly-graph-card · mini-graph-card · gauge-card-pro · modern-circular-gauge · logbook-card · auto-entities · vertical-stack-in-card · card-mod · bar-card · ph-meter-temperature · **expander-card** · **browser_mod** · **DSC-HUB** (Dashboard custom repo — system map + airflow + The Dash + Build a Plant)
 
 `browser_mod` (HACS **Integration**, not a card) powers the popup layer —
 graph enlarge, appliance consoles, pot detail. Install from HACS →
 Integrations, restart HA, then **Settings → Devices & Services →
 Add Integration → Browser Mod**. Without it the popup taps silently no-op.
 
-## Local custom cards — SYSTEM MAP + AIRFLOW STATUS
+## Local custom cards — SYSTEM MAP + AIRFLOW + Build a Plant
 
 | Card | Type | View |
 |---|---|---|
 | Neon isometric map | `custom:dsc-system-map-card` | Home |
 | GUI tent airflow scene | `custom:dsc-airflow-map-card` | Climate Engine |
+| Build a Plant composition | `custom:dsc-build-plant-card` | `/dsc-build-plant/build` |
 
 ### Preferred — HACS Dashboard custom repository
 
@@ -103,20 +121,22 @@ Add Integration → Browser Mod**. Without it the popup taps silently no-op.
 3. Category: **Dashboard**
 4. Download **DSC-HUB System Map**, restart/reload when prompted, hard-refresh browser
 
-HACS serves `/hacsfiles/DSC-HUB/DSC-HUB.js` (both cards + SVG beside it). Full steps:
+HACS serves `/hacsfiles/DSC-HUB/DSC-HUB.js` (system map + airflow + The Dash +
+Build a Plant + SVG beside it). Full steps:
 [`../scripts/HACS-FRONTEND.md`](../scripts/HACS-FRONTEND.md).
 
 ### Manual fallback (`/config/www/`)
 
-1. Copy into Home Assistant `/config/www/` (or rely on ha-sync):
+1. Copy into Home Assistant `/config/www/` (or rely on Sync **5.1.4+** / ha-sync):
    - [`www/dsc-system-map.svg`](www/dsc-system-map.svg)
-   - Bundled JS as `/local/dsc-system-map-card.js` (system map **and** airflow —
-     ha-sync builds this from the two www sources)
-   - Optional: [`www/dsc-airflow-map-card.js`](www/dsc-airflow-map-card.js) standalone
+   - Bundled JS as `/local/dsc-system-map-card.js` (system map + airflow + Three +
+     Dash FX + The Dash + Build a Plant)
+   - [`www/dsc-catalog/*.json`](www/dsc-catalog/) for Build a Plant typeahead
+   - Optional standalones: airflow / the-dash / build-plant cards
 2. **Settings → Dashboards → ⋮ → Resources → Add resource** (JavaScript, not module):
-   - `/local/dsc-system-map-card.js` (one resource registers both cards)
+   - `/local/dsc-system-map-card.js` (one resource registers all bundled cards)
    - Or HACS `/hacsfiles/DSC-HUB/DSC-HUB.js`
-3. YAML dashboard already includes both cards. Hard-refresh the browser.
+3. YAML dashboards already include the cards. Hard-refresh the browser.
 
 Optional entity overrides:
 

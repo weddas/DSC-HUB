@@ -13,7 +13,11 @@ One resource (`DSC-HUB.js`) registers:
 - `custom:dsc-build-plant-card` — Build a Plant composition (separate dashboard)
 
 Standalone `/local/dsc-build-plant-card.js` + `/local/dsc-catalog/*.json` are also
-published for sites that register the builder resource separately.
+published for sites that register the builder resource separately. HACS alone
+registers the custom element; **search indexes** still need Sync / ha-sync (or
+manual copy of `www/dsc-catalog/`) under `/config/www/dsc-catalog/`.
+
+Ops runbook: [`docs/qa/LIVE-UI-BUILD-A-PLANT.md`](../docs/qa/LIVE-UI-BUILD-A-PLANT.md).
 
 ## Add the custom repository
 
@@ -75,10 +79,12 @@ Without it, popup `tap_action`s silently do nothing — no error is shown.
 | Path | Role |
 |---|---|
 | [`hacs.json`](../hacs.json) | HACS manifest (repo root) |
-| [`dist/DSC-HUB.js`](../dist/DSC-HUB.js) | Bundled cards (repo-name match) |
+| [`dist/DSC-HUB.js`](../dist/DSC-HUB.js) | Bundled cards (repo-name match; ~941 KB with Build a Plant) |
 | [`dist/dsc-system-map-card.js`](../dist/dsc-system-map-card.js) | Same bundle (legacy `/local` filename) |
 | [`dist/dsc-system-map.svg`](../dist/dsc-system-map.svg) | System map artwork |
 | [`dist/dsc-airflow-map-card.js`](../dist/dsc-airflow-map-card.js) | Airflow card standalone source |
+| [`dist/dsc-build-plant-card.js`](../dist/dsc-build-plant-card.js) | Build a Plant standalone |
+| [`dist/dsc-catalog/`](../dist/dsc-catalog/) | Slim search indexes (not auto-served by HACS path) |
 
 | `homeassistant/www/*` | **Source of truth** — run `scripts/sync-hacs-dist.sh` after edits |
 
@@ -93,6 +99,7 @@ plugins — they deploy via [`ha-sync.sh`](ha-sync.sh) / Unraid runner
 
 | Surface | Delivery |
 |---|---|
-| SYSTEM MAP + AIRFLOW STATUS cards | **HACS Dashboard** (this doc) |
-| `packages/dsc_v4_*.yaml` + YAML dashboard + www fallback | Git push → HA sync |
+| SYSTEM MAP + AIRFLOW + The Dash + Build a Plant cards | **HACS Dashboard** (this doc) |
+| Build a Plant catalog indexes + dashboard YAML | Sync add-on **5.1.4+** / `ha-sync.sh` |
+| `packages/dsc_v4_*.yaml` + YAML dashboards + www fallback | Git push → HA sync |
 | ESPHome firmware | Validate/Install (manual) |
