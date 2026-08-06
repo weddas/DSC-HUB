@@ -83,12 +83,21 @@ graph enlarge, appliance consoles, pot detail. Install from HACS →
 Integrations, restart HA, then **Settings → Devices & Services →
 Add Integration → Browser Mod**. Without it the popup taps silently no-op.
 
-## Local custom cards — SYSTEM MAP + AIRFLOW STATUS
+## Local custom cards — SYSTEM MAP + AIRFLOW STATUS + The Dash
 
 | Card | Type | View |
 |---|---|---|
 | Neon isometric map | `custom:dsc-system-map-card` | Home |
 | GUI tent airflow scene | `custom:dsc-airflow-map-card` | Climate Engine |
+| Cinematic Dash | `custom:dsc-the-dash-card` | `/dsc-hub-pro/dash` |
+
+**The Dash air journey polish (2026-08-06, `6d8e42e`):** particles pace **fast on
+ducts**, **slow in the mid-tent pool**, then **accelerate** to exits. CFM-gated
+dashed guide ribbons show pierce→exit (clone→cascade, main→OUT, main→RECIRC).
+Intake port jets sit at the tent pierce. After every www deploy, **hard-reload**.
+Runbook: [`../docs/qa/LIVE-UI-DASH-AIR-JOURNEY.md`](../docs/qa/LIVE-UI-DASH-AIR-JOURNEY.md).
+FX bridge: [`www/vendor/dsc-dash-fx.md`](www/vendor/dsc-dash-fx.md). Pair with the
+cinematic pathline runbook when merged (`LIVE-UI-DASH-CINEMATIC-AIRFLOW.md`).
 
 ### Preferred — HACS Dashboard custom repository
 
