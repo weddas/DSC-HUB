@@ -1,10 +1,12 @@
 # DSC-HUB firmware v4
 
 Working directory for ESPHome configs. Current fleet release string:
-**Live train:** hub **5.1.10** · Control **5.1.17** · pots **5.1.8** (tagged marketing
+**Live train:** hub **5.1.11** · Control **5.1.17** · pots **5.1.8** (tagged marketing
 cut remains `v5.1.0`). See the repo root README / CHANGELOG / FOLLOWUPS.
 
 Firmware QA: [docs/qa/FIRMWARE-QA-5.1.0.md](../../docs/qa/FIRMWARE-QA-5.1.0.md).
+Full Auto default startup (5.1.11):
+[docs/qa/HUB-FULL-AUTO-DEFAULT-STARTUP-5.1.11.md](../../docs/qa/HUB-FULL-AUTO-DEFAULT-STARTUP-5.1.11.md).
 Repo [README](../../README.md) and [INSTALL.md](../../INSTALL.md) for from-scratch HA setup.
 Standalone SoftAP unboxing (no HA): [SETUP.md](../../SETUP.md).
 
@@ -73,6 +75,27 @@ ESP-NOW (glass ↔ hub) does **not** need the HA API. Fix API only for OTA, diag
 | Hub | 30 s Wi‑Fi channel poll (silent Nest hops) | OTA fine |
 | Panel 4.0.11 | Live `gv_*` UI + channel poll | **USB** if heap-sensitive / still looping |
 | HA packages / automations / dashboard | Push sync (or copy) + reload | See [`../../RELEASE.md`](../../RELEASE.md) · [`../../scripts/HA-SYNC-BOOTSTRAP.md`](../../scripts/HA-SYNC-BOOTSTRAP.md) |
+
+## Hub Full Auto default startup (5.1.11)
+
+Every boot (except Manual Takeover restored ON) forces Full Auto +
+`arm_full_auto` so fans, ladder Autos, and photoperiod come up armed —
+even when NVS still holds a stale Full Auto OFF. Mid-session OFF still
+works until the next reboot. Ladder Auto globals (humidifier /
+dehumidifier / heater / grow mat) default **true** on fresh NVS; AC /
+clone mister remain gated by in-service.
+
+```mermaid
+flowchart TD
+  boot["hub boot"] --> take{"Takeover NVS ON?"}
+  take -->|yes| leave["leave Full Auto alone"]
+  take -->|no| force["force Full Auto + arm_full_auto"]
+  force --> stack["fans + ladder + photoperiod armed"]
+```
+
+Ops runbook: [`HUB-FULL-AUTO-DEFAULT-STARTUP-5.1.11.md`](../../docs/qa/HUB-FULL-AUTO-DEFAULT-STARTUP-5.1.11.md).
+Closes FOLLOWUPS **N-006**. Keep `project.version` and text Firmware Version
+lockstep at **5.1.11**.
 
 ## Hub mat votes
 

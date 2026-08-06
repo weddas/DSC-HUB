@@ -350,9 +350,10 @@ not humidifier lock — entity id kept for compatibility.
 
 | Piece | Version |
 |---|---|
-| Hub / pots / Sonoffs / kits | **`5.1.10`** hub roam-scan off; Control **5.1.17**; pots **5.1.8** |
+| Hub / pots / Sonoffs / kits | Hub **`5.1.11`** Full Auto default boot; Control **5.1.17**; pots **5.1.8** |
 | Panel (DSC-CONTROL) | **`5.1.x`** lean-cut patch train |
-| HA surface (packages + dashboard) | **`5.1.8`** |
+| HA surface (packages + dashboard) | **`5.1.10`** |
+
 | Dashboard | DSC-HUB Pro (4-col, browser_mod popups) |
 | `espnow_cmd_tag` | `54727` (`0xD5C7`) on hub **and** panel |
 
