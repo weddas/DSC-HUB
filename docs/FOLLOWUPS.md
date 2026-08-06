@@ -903,6 +903,9 @@ New 5s `tx_fleet_heartbeat` / `tx_peer_time` broadcast load on top of 2s vitals 
 
 ## 2026-08-06 — Air flow rewrite (kill blur-box)
 
+See cinematic runbook: [`docs/qa/LIVE-UI-DASH-CINEMATIC-AIRFLOW.md`](qa/LIVE-UI-DASH-CINEMATIC-AIRFLOW.md)
+(supersedes scene expectation of live `mixClone`/`mixMain` confined curl).
+
 ### done
 - Removed confined GPU curl mix + ACH blue volume boxes (read as bouncing blur balls in a box).
 - **Intake streams** ride ducts; **flowClone/flowMain** continue pierce → mid-tent pool → pull to exits.
@@ -917,10 +920,12 @@ New 5s `tx_fleet_heartbeat` / `tx_peer_time` broadcast load on top of 2s vitals 
 
 ## 2026-08-06 — Cinematic airflow + room light
 
+Runbook: [`docs/qa/LIVE-UI-DASH-CINEMATIC-AIRFLOW.md`](qa/LIVE-UI-DASH-CINEMATIC-AIRFLOW.md).
+
 ### done
 - **Lighting:** Ceiling fixtures + wash PointLight + twin SpotLights over tents; floor bounce; warmer key / cooler fill; tent fills react to clone light / intake CFM. Floor sheen + lit ceiling plane (room no longer a black void).
 - **Air (HVAC pathline cinema):** Soft additive smoke-test shafts + port jet flares gated by CFM; streak particles (elongated sprites); stronger MeshLine ribbons with CFM-scaled dash speed/width. Keeps intake→pool→exhaust story (no blur-box curl).
-- **Bloom:** Slightly stronger for shafts/ribbons. Bundle ~916KB on HA www.
+- **Bloom:** Slightly stronger for shafts/ribbons. Bundle ~911–916KB (repo dist ~911KB).
 
 ### soak
 - Hard-refresh Dash (?v= bump). Streams need CFM > 0 (live/held).
