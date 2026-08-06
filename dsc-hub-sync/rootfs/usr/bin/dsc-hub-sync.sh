@@ -136,6 +136,13 @@ stage_and_commit() {
   else
     warn "Dashboard YAML missing — skipped"
   fi
+  local build_dash="${src}/dashboards/dsc-build-plant-dashboard.yaml"
+  if [[ -f "${build_dash}" ]]; then
+    cp -f "${build_dash}" "${STAGE}/dashboards/dsc-build-plant-dashboard.yaml"
+    log "Staged dashboards/dsc-build-plant-dashboard.yaml"
+  else
+    warn "Build a Plant dashboard YAML missing — skipped"
+  fi
   # Modular views (!include modules/view_*.yaml) — must ship with the shell
   mkdir -p "${STAGE}/dashboards/modules"
   local mods=("${src}/dashboards/modules"/view_*.yaml)
@@ -149,21 +156,23 @@ stage_and_commit() {
   fi
 
   if bashio::config.true 'sync_www'; then
-    log "Syncing www system-map SVG + bundled cards (system map + airflow + Three + Dash FX)"
-    mkdir -p "${STAGE}/www/vendor"
+    log "Syncing www system-map SVG + bundled cards (system map + airflow + Three + Dash FX + Build a Plant)"
+    mkdir -p "${STAGE}/www/vendor" "${STAGE}/www/dsc-catalog"
     if [[ -f "${src}/www/dsc-system-map.svg" ]]; then
       cp -f "${src}/www/dsc-system-map.svg" "${STAGE}/www/dsc-system-map.svg"
       log "Staged www/dsc-system-map.svg"
     else
       warn "Missing repo www/dsc-system-map.svg"
     fi
-    # Bundle cards + Three.js + cinematic FX into dsc-system-map-card.js (Lovelace resource)
-    # and DSC-HUB.js (HACS filename). Never stage a map-only stub — that wipes The Dash (F-013).
+    # Bundle cards + Three.js + cinematic FX + Build a Plant into dsc-system-map-card.js
+    # (Lovelace resource) and DSC-HUB.js (HACS filename). Never stage a map-only stub
+    # — that wipes The Dash (F-013). Build a Plant must be in the concat or Sync will
+    # silently demote a HACS-complete live bundle (N-084).
     local bundled=0
     local min_bundle=500000
     if [[ -f "${src}/www/dsc-system-map-card.js" && -f "${src}/www/dsc-airflow-map-card.js" \
        && -f "${src}/www/vendor/three.min.js" && -f "${src}/www/vendor/dsc-dash-fx.js" \
-       && -f "${src}/www/dsc-the-dash-card.js" ]]; then
+       && -f "${src}/www/dsc-the-dash-card.js" && -f "${src}/www/dsc-build-plant-card.js" ]]; then
       {
         cat "${src}/www/dsc-system-map-card.js"
         printf '\n'
@@ -174,6 +183,8 @@ stage_and_commit() {
         cat "${src}/www/vendor/dsc-dash-fx.js"
         printf '\n'
         cat "${src}/www/dsc-the-dash-card.js"
+        printf '\n'
+        cat "${src}/www/dsc-build-plant-card.js"
       } > "${STAGE}/www/dsc-system-map-card.js"
       bundled=1
     elif [[ -f "${src}/dist/dsc-system-map-card.js" ]]; then
@@ -192,12 +203,28 @@ stage_and_commit() {
         cp -f "${STAGE}/www/dsc-system-map-card.js" "${STAGE}/www/DSC-HUB.js"
         [[ -f "${src}/www/dsc-airflow-map-card.js" ]] && cp -f "${src}/www/dsc-airflow-map-card.js" "${STAGE}/www/dsc-airflow-map-card.js"
         [[ -f "${src}/www/dsc-the-dash-card.js" ]] && cp -f "${src}/www/dsc-the-dash-card.js" "${STAGE}/www/dsc-the-dash-card.js"
+        [[ -f "${src}/www/dsc-build-plant-card.js" ]] && cp -f "${src}/www/dsc-build-plant-card.js" "${STAGE}/www/dsc-build-plant-card.js"
         [[ -f "${src}/www/vendor/dsc-dash-fx.js" ]] && cp -f "${src}/www/vendor/dsc-dash-fx.js" "${STAGE}/www/vendor/dsc-dash-fx.js"
         [[ -f "${src}/www/vendor/three.min.js" ]] && cp -f "${src}/www/vendor/three.min.js" "${STAGE}/www/vendor/three.min.js"
+        if [[ -d "${src}/www/dsc-catalog" ]]; then
+          for f in "${src}/www/dsc-catalog"/*.json; do
+            [[ -f "${f}" ]] || continue
+            cp -f "${f}" "${STAGE}/www/dsc-catalog/$(basename "${f}")"
+          done
+          log "Staged www/dsc-catalog/*.json"
+        elif [[ -d "${src}/dist/dsc-catalog" ]]; then
+          for f in "${src}/dist/dsc-catalog"/*.json; do
+            [[ -f "${f}" ]] || continue
+            cp -f "${f}" "${STAGE}/www/dsc-catalog/$(basename "${f}")"
+          done
+          warn "Used dist/dsc-catalog fallback"
+        else
+          warn "Missing www/dsc-catalog — Build a Plant typeahead will be empty"
+        fi
         log "Staged bundled www/dsc-system-map-card.js (${bytes} bytes)"
       fi
     else
-      warn "Missing system-map / airflow / three / dash-fx / dash (and no dist fallback) — www card sync skipped"
+      warn "Missing system-map / airflow / three / dash-fx / dash / build-plant (and no dist fallback) — www card sync skipped"
     fi
   fi
 
@@ -240,6 +267,11 @@ stage_and_commit() {
     cp -f "${STAGE}/dashboards/dsc-hub-v4-dashboard.yaml" \
       "${HA_CONFIG}/dashboards/dsc-hub-v4-dashboard.yaml"
   fi
+  if [[ -f "${STAGE}/dashboards/dsc-build-plant-dashboard.yaml" ]]; then
+    cp -f "${STAGE}/dashboards/dsc-build-plant-dashboard.yaml" \
+      "${HA_CONFIG}/dashboards/dsc-build-plant-dashboard.yaml"
+    log "Installed /config/dashboards/dsc-build-plant-dashboard.yaml"
+  fi
   if [[ -d "${STAGE}/dashboards/modules" ]]; then
     mkdir -p "${HA_CONFIG}/dashboards/modules"
     for f in "${STAGE}/dashboards/modules"/view_*.yaml; do
@@ -248,7 +280,7 @@ stage_and_commit() {
     done
   fi
   if bashio::config.true 'sync_www'; then
-    for name in dsc-system-map.svg dsc-system-map-card.js DSC-HUB.js dsc-airflow-map-card.js dsc-the-dash-card.js; do
+    for name in dsc-system-map.svg dsc-system-map-card.js DSC-HUB.js dsc-airflow-map-card.js dsc-the-dash-card.js dsc-build-plant-card.js; do
       if [[ -f "${STAGE}/www/${name}" ]]; then
         # Guard: never replace a healthy cinematic bundle with a tiny stub
         if [[ "${name}" == "dsc-system-map-card.js" || "${name}" == "DSC-HUB.js" ]]; then
@@ -267,6 +299,14 @@ stage_and_commit() {
         log "Installed /config/www/${name}"
       fi
     done
+    if [[ -d "${STAGE}/www/dsc-catalog" ]]; then
+      mkdir -p "${HA_CONFIG}/www/dsc-catalog"
+      for f in "${STAGE}/www/dsc-catalog"/*.json; do
+        [[ -f "${f}" ]] || continue
+        cp -f "${f}" "${HA_CONFIG}/www/dsc-catalog/$(basename "${f}")"
+        log "Installed /config/www/dsc-catalog/$(basename "${f}")"
+      done
+    fi
     if [[ -d "${STAGE}/www/vendor" ]]; then
       mkdir -p "${HA_CONFIG}/www/vendor"
       for f in "${STAGE}/www/vendor"/*; do
@@ -345,7 +385,8 @@ do_sync() {
 DSC-HUB Sync add-on is writing packages / dashboards / www / esphome stubs.
 
 Once: merge homeassistant/configuration.snippet.yaml into configuration.yaml
-(packages include + YAML-mode lovelace dashboard dsc-hub-pro), then restart HA.
+(packages include + YAML-mode lovelace dashboards dsc-hub-pro + dsc-build-plant),
+then restart HA.
 
 After a major cut (e.g. 5.1.0) with new input_* helpers: Restart Home Assistant
 Core once — reload alone often does not create new helpers.
