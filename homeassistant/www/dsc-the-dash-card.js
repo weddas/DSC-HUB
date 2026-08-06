@@ -736,30 +736,60 @@
       group.add(tray);
       for (const sx of [-1, 1]) {
         for (const sz of [-1, 1]) {
-          const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, h, 10), poleMat);
+          const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.038, 0.038, h, 12), poleMat);
           pole.position.set((sx * w) / 2, h / 2, (sz * d) / 2);
           pole.castShadow = true;
           group.add(pole);
         }
       }
+      // Eave / ridge tubes — grow-tent frame cue (not just 4 vertical poles)
+      const railR = 0.028;
+      const addRail = (len, pos, axis) => {
+        const rail = new THREE.Mesh(new THREE.CylinderGeometry(railR, railR, len, 10), poleMat);
+        rail.position.set(pos[0], pos[1], pos[2]);
+        if (axis === "x") rail.rotation.z = Math.PI / 2;
+        if (axis === "z") rail.rotation.x = Math.PI / 2;
+        rail.castShadow = true;
+        group.add(rail);
+      };
+      addRail(w, [0, h, -d / 2], "x");
+      addRail(w, [0, h, d / 2], "x");
+      addRail(d, [-w / 2, h, 0], "z");
+      addRail(d, [w / 2, h, 0], "z");
+      addRail(w, [0, 0.06, -d / 2], "x");
+      addRail(w, [0, 0.06, d / 2], "x");
       const frame = new THREE.LineSegments(
         new THREE.EdgesGeometry(new THREE.BoxGeometry(w, h, d)),
-        new THREE.LineBasicMaterial({ color: accent, transparent: true, opacity: 0.76 })
+        new THREE.LineBasicMaterial({ color: accent, transparent: true, opacity: 0.55 })
       );
       frame.position.y = h / 2;
       group.add(frame);
-      const veil = new THREE.Mesh(
-        new THREE.PlaneGeometry(w * 0.94, h * 0.92),
-        new THREE.MeshBasicMaterial({
-          color: accent,
+      // Front door panel + zipper strip (replaces flat accent veil)
+      const door = new THREE.Mesh(
+        new THREE.PlaneGeometry(w * 0.88, h * 0.9),
+        new THREE.MeshStandardMaterial({
+          color: 0x0e141c,
+          metalness: 0.08,
+          roughness: 0.88,
           transparent: true,
-          opacity: 0.025,
+          opacity: 0.55,
           side: THREE.DoubleSide,
-          depthWrite: false,
         })
       );
-      veil.position.set(0, h / 2, d / 2 - 0.012);
-      group.add(veil);
+      door.position.set(0, h / 2, d / 2 + 0.002);
+      group.add(door);
+      const zipper = new THREE.Mesh(
+        new THREE.BoxGeometry(0.035, h * 0.86, 0.012),
+        new THREE.MeshStandardMaterial({ color: 0x90a4ae, metalness: 0.7, roughness: 0.35, emissive: accent, emissiveIntensity: 0.15 })
+      );
+      zipper.position.set(0, h / 2, d / 2 + 0.01);
+      group.add(zipper);
+      const seam = new THREE.Mesh(
+        new THREE.PlaneGeometry(w * 0.02, h * 0.88),
+        new THREE.MeshBasicMaterial({ color: accent, transparent: true, opacity: 0.35, depthWrite: false })
+      );
+      seam.position.set(-w * 0.22, h / 2, d / 2 + 0.014);
+      group.add(seam);
 
       const lightBar = new THREE.Mesh(
         new THREE.BoxGeometry(w * 0.62, 0.075, 0.24),
@@ -842,19 +872,22 @@
         0.18
       );
     // Duct ports are independent (no shared Y-stub). Tent anchors:
-    // 2x4 @ (-2.75,0,0.3) ~2.4×2.1×1.5; 4x8 @ (2.15,0,0.08) ~3.8×2.45×2.15.
+    // 2x4 @ (-2.75,0,0.3) ~2.4×2.1×1.5 → front face z≈1.05
+    // 4x8 @ (2.15,0,0.08) ~3.8×2.45×2.15 → front z≈1.155; right x≈4.05; rear z≈-0.995
     const curves = {
       intakeClone: mkCurve([
         [-2.75, 0.38, 2.95],
         [-2.75, 0.38, 2.05],
-        [-2.75, 0.38, 1.15],
-        [-2.75, 0.38, 0.52],
+        [-2.75, 0.38, 1.35],
+        [-2.75, 0.38, 1.05],
+        [-2.75, 0.42, 0.78],
       ]),
       intakeMain: mkCurve([
         [2.15, 0.38, 2.95],
         [2.15, 0.38, 2.05],
-        [2.15, 0.38, 1.15],
-        [2.15, 0.38, 0.52],
+        [2.15, 0.38, 1.45],
+        [2.15, 0.38, 1.155],
+        [2.15, 0.42, 0.85],
       ]),
       cascade: mkCurve([
         [-1.55, 1.15, 0.28],
@@ -936,8 +969,8 @@
     addPath("recirc", 0.118, 50, 0x6a6288);
 
     const addFlexRings = (curve, count, radius) => {
-      const geometry = new THREE.TorusGeometry(radius, 0.015, 6, 16);
-      const material = new THREE.MeshStandardMaterial({ color: 0xc5d0d8, metalness: 0.82, roughness: 0.28 });
+      const geometry = new THREE.TorusGeometry(radius, 0.011, 6, 18);
+      const material = new THREE.MeshStandardMaterial({ color: 0xc8d2da, metalness: 0.88, roughness: 0.24 });
       const rings = new THREE.InstancedMesh(geometry, material, count);
       const matrix = new THREE.Matrix4();
       const scale = new THREE.Vector3(1, 1, 1);
@@ -952,10 +985,11 @@
       rings.castShadow = true;
       ductGroup.add(rings);
     };
-    addFlexRings(curves.intakeClone, 28, 0.126);
-    addFlexRings(curves.intakeMain, 28, 0.137);
-    addFlexRings(curves.out, 26, 0.138);
-    addFlexRings(curves.recirc, 26, 0.134);
+    addFlexRings(curves.intakeClone, 48, 0.126);
+    addFlexRings(curves.intakeMain, 48, 0.137);
+    addFlexRings(curves.cascade, 36, 0.118);
+    addFlexRings(curves.out, 52, 0.138);
+    addFlexRings(curves.recirc, 52, 0.134);
 
     const flangePrimitives = [];
     const mkFlange = (point, tangent, radius) => {
@@ -994,10 +1028,14 @@
       ductGroup.add(g);
       return g;
     };
+    // Tent cinch-port collars at fabric pierces (grow-tent style)
     mkCinchPort(curves.out.getPoint(0.02), curves.out.getTangent(0.02), 0.16, 0xff765e);
     mkCinchPort(curves.recirc.getPoint(0.02), curves.recirc.getTangent(0.02), 0.155, 0xa85be0);
-    mkCinchPort(curves.intakeClone.getPoint(0.98), curves.intakeClone.getTangent(0.98), 0.14, 0x42a5f5);
-    mkCinchPort(curves.intakeMain.getPoint(0.98), curves.intakeMain.getTangent(0.98), 0.145, 0x42a5f5);
+    // Intakes: room-side collar + front-wall pierce (~t 0.72 on 5-point curves)
+    mkCinchPort(curves.intakeClone.getPoint(0.02), curves.intakeClone.getTangent(0.02), 0.135, 0x42a5f5);
+    mkCinchPort(curves.intakeClone.getPoint(0.72), curves.intakeClone.getTangent(0.72), 0.14, 0x42a5f5);
+    mkCinchPort(curves.intakeMain.getPoint(0.02), curves.intakeMain.getTangent(0.02), 0.14, 0x42a5f5);
+    mkCinchPort(curves.intakeMain.getPoint(0.72), curves.intakeMain.getTangent(0.72), 0.145, 0x42a5f5);
     mkCinchPort(curves.cascade.getPoint(0.02), curves.cascade.getTangent(0.02), 0.13, 0xffb74d);
     mkCinchPort(curves.cascade.getPoint(0.98), curves.cascade.getTangent(0.98), 0.13, 0xffb74d);
 
@@ -1449,7 +1487,7 @@
         `,
         transparent: true,
         depthWrite: false,
-        depthTest: false,
+        depthTest: true,
         blending: THREE.AdditiveBlending,
         toneMapped: false,
       });
@@ -1727,23 +1765,35 @@
       system.points.geometry.attributes.position.needsUpdate = true;
     };
 
-    const updateCascadePlume = (dt, intensity) => {
+    const updateCascadePlume = (dt, intensity, outShare, recShare) => {
       air.cascade.setColor(live.matOn ? particleColors.cascadeWarm : particleColors.cascade);
+      const outBias = Math.max(0, Number(outShare) || 0);
+      const recBias = Math.max(0, Number(recShare) || 0);
+      const splitSum = Math.max(0.001, outBias + recBias);
+      const outW = outBias / splitSum;
+      const recW = recBias / splitSum;
+      const outPort = curves.out.getPoint(0.02);
+      const recPort = curves.recirc.getPoint(0.02);
       updateSystem("cascade", curves.cascade, dt, intensity, (t, seed, i) => {
-        if (t < 0.78) return sampleCurve(curves.cascade, t / 0.78, 0.03 + t * 0.02, seed);
-        // After cascade entry: bleed into 4×8 mix volume (not leap to OUT port)
-        const u = (t - 0.78) / 0.22;
+        if (t < 0.72) return sampleCurve(curves.cascade, t / 0.72, 0.03 + t * 0.02, seed);
+        // After cascade entry: mix in 4×8, then bias toward OUT vs RECIRC by mass-balance share
+        const u = (t - 0.72) / 0.28;
         const entry = curves.cascade.getPoint(1);
         const size = tentMain.userData.size;
+        const towardOut = i % 2 === 0 ? outW >= recW : seed < outW;
+        const target = towardOut ? outPort : recPort;
         const point = entry.clone();
-        point.x += (seed - 0.5) * size.w * 0.35 * u;
-        point.y += 0.15 + u * size.h * 0.35 + ((i % 5) / 5) * 0.12;
-        point.z += (((i * 0.618) % 1) - 0.5) * size.d * 0.4 * u;
+        // Early: swirl in tent; late: drift toward chosen exhaust port
+        const swirl = 1 - u * u;
+        const pull = u * u;
+        point.x += (seed - 0.5) * size.w * 0.32 * swirl + (target.x - entry.x) * pull * 0.85;
+        point.y += 0.12 + u * size.h * 0.28 * swirl + (target.y - entry.y) * pull * 0.75 + ((i % 5) / 5) * 0.08;
+        point.z += (((i * 0.618) % 1) - 0.5) * size.d * 0.36 * swirl + (target.z - entry.z) * pull * 0.85;
         return point;
       });
     };
 
-    const updateTentMix = (name, tent, dt, intensity, warmBlend) => {
+    const updateTentMix = (name, tent, dt, intensity, warmBlend, pullTarget) => {
       const system = air[name];
       if (!system) return;
       const active = intensity >= 0.04;
@@ -1755,6 +1805,13 @@
         if (!active) {
           system.setOpacity(0);
           return;
+        }
+        // Bias confined curl AABB center toward exhaust pull (OUT/RECIRC split)
+        if (pullTarget && system.material && system.material.uniforms && system.material.uniforms.uCenter) {
+          const size = tent.userData.size;
+          const base = tent.localToWorld(new THREE.Vector3(0, size.h * 0.42, 0));
+          const biased = base.clone().lerp(pullTarget, 0.28);
+          system.material.uniforms.uCenter.value.copy(biased);
         }
         system.curl.update(dt, intensity);
         system.setOpacity(Math.min(0.48, 0.1 + intensity * 0.34));
@@ -1775,6 +1832,7 @@
           Math.sin(ang * 0.85) * size.d * 0.28 * rad
         );
         tent.localToWorld(local);
+        if (pullTarget) local.lerp(pullTarget, 0.12);
         system.positions[i * 3] = local.x;
         system.positions[i * 3 + 1] = local.y;
         system.positions[i * 3 + 2] = local.z;
@@ -1818,13 +1876,15 @@
         const intakeClone = cfmNorm(live.cfmClone, 80);
         const intakeMain = cfmNorm(live.cfmMain, 80);
         const cascade = cfmNorm(live.cascadeCfm, 80);
-        const out = cfmNorm(live.cfmOut, 80);
-        const recirc = cfmNorm(live.cfmRecirc, 80);
-        const exhaustFan = Math.max(0, Number(live.fanExhaust) || 0);
-        const recircFan = Math.max(0, Number(live.fanRecirc) || 0);
-        // Fall back to fan-% when CFM held at 0 but fans report duty (rare)
-        const outVis = out >= 0.04 ? out : exhaustFan * Math.max(0, Number(live.outShare) || 0);
-        const recVis = recirc >= 0.04 ? recirc : recircFan * Math.max(0, Number(live.recircShare) || 0);
+        // Absolute CFM only for particle/fan motion (no fan-% fake motion at 0 CFM)
+        const outVis = cfmNorm(live.cfmOut, 80);
+        const recVis = cfmNorm(live.cfmRecirc, 80);
+        const outShare = Math.max(0, Number(live.outShare) || 0);
+        const recShare = Math.max(0, Number(live.recircShare) || 0);
+        const shareSum = Math.max(0.001, outShare + recShare);
+        const mixPull = new THREE.Vector3()
+          .addScaledVector(curves.out.getPoint(0.02), outShare / shareSum)
+          .addScaledVector(curves.recirc.getPoint(0.02), recShare / shareSum);
 
         updatePathVisual("intakeClone", intakeClone, now);
         updatePathVisual("intakeMain", intakeMain, now);
@@ -1833,7 +1893,7 @@
         updatePathVisual("recirc", recVis, now);
         updateSystem("intakeClone", curves.intakeClone, dt, intakeClone);
         updateSystem("intakeMain", curves.intakeMain, dt, intakeMain);
-        updateCascadePlume(dt, cascade);
+        updateCascadePlume(dt, cascade, outShare, recShare);
         updateSystem("out", curves.out, dt, outVis);
         updateSystem("recirc", curves.recirc, dt, recVis);
         updateTentMix("mixClone", tentClone, dt, intakeClone, live.matOn ? 0.35 : 0.1);
@@ -1841,8 +1901,9 @@
           "mixMain",
           tentMain,
           dt,
-          Math.min(1, intakeMain * 0.55 + cascade * 0.45 + outVis * 0.15),
-          0.25 + cascade * 0.45
+          Math.min(1, intakeMain * 0.55 + cascade * 0.45),
+          0.22 + cascade * 0.5,
+          Math.max(outVis, recVis, cascade) >= 0.04 ? mixPull : null
         );
         updateMatHeat(dt, live.matOn ? 1 : 0);
 
@@ -1881,18 +1942,19 @@
             slice.material.opacity = base * (0.55 + i * 0.28);
           });
         };
-        setAch(tentClone, intakeClone >= 0.04 ? 0.025 + intakeClone * 0.085 : 0.008);
+        setAch(tentClone, intakeClone >= 0.04 ? 0.025 + intakeClone * 0.085 : 0);
         setAch(
           tentMain,
-          Math.max(intakeMain, cascade, outVis) >= 0.04
-            ? 0.026 + Math.max(intakeMain, cascade, outVis) * 0.09
-            : 0.008
+          Math.max(intakeMain, cascade, outVis, recVis) >= 0.04
+            ? 0.026 + Math.max(intakeMain, cascade, outVis, recVis) * 0.09
+            : 0
         );
         roomShell.material.opacity = 0.024 + recVis * 0.045;
         roomEdges.material.opacity = 0.14 + recVis * 0.12;
         roomLungSlices.forEach((slice, i) => {
-          slice.material.opacity = (0.01 + recVis * 0.055) * (0.55 + i * 0.18);
-          slice.position.y = 0.55 + i * 0.72 + Math.sin(now * 0.00055 + i) * 0.04 * (0.4 + recVis);
+          const liveLung = recVis >= 0.04;
+          slice.material.opacity = liveLung ? (0.01 + recVis * 0.055) * (0.55 + i * 0.18) : 0.004;
+          slice.position.y = 0.55 + i * 0.72 + (liveLung ? Math.sin(now * 0.00055 + i) * 0.04 * recVis : 0);
         });
 
         fans.intakeClone.userData.speed = intakeClone * 15;
