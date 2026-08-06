@@ -1096,9 +1096,11 @@
       shaft.renderOrder = 2;
       ductGroup.add(shaft);
       paths[name].shaft = shaft;
-      // Port jet flare at duct start (exhaust suction / intake entry cue)
+      const isIntake = name.startsWith("intake");
+      // Intakes: flare at tent pierce (suck-in). Exhaust: flare just inside port (suction).
+      const jetT = isIntake ? 0.92 : 0.04;
       const jet = new THREE.Mesh(
-        new THREE.ConeGeometry(radius * 1.6, radius * 3.2, 16, 1, true),
+        new THREE.ConeGeometry(radius * (isIntake ? 1.35 : 1.7), radius * (isIntake ? 2.4 : 3.4), 16, 1, true),
         new THREE.MeshBasicMaterial({
           color: pathColors[name],
           transparent: true,
@@ -1108,10 +1110,12 @@
           side: THREE.DoubleSide,
         })
       );
-      const p0 = curve.getPoint(0.02);
-      const t0 = curve.getTangent(0.02).normalize();
-      jet.position.copy(p0).addScaledVector(t0, -radius * 0.6);
-      jet.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), t0.clone().negate());
+      const p0 = curve.getPoint(jetT);
+      const t0 = curve.getTangent(jetT).normalize();
+      // Point along flow: intakes into tent (+tangent), exhaust out of tent (+tangent from port)
+      jet.position.copy(p0);
+      jet.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), isIntake ? t0 : t0);
+      if (!isIntake) jet.position.addScaledVector(t0, -radius * 0.5);
       ductGroup.add(jet);
       paths[name].portJet = jet;
     };
@@ -1835,10 +1839,10 @@
       const idleGlow = name === "out" || name === "recirc" ? 0.14 : 0;
       path.shell.material.opacity = active ? Math.max(idleGlow, 0.1 + shown * 0.48) : idleGlow;
       if (path.shaft) {
-        path.shaft.material.opacity = active ? 0.04 + shown * 0.16 : 0;
+        path.shaft.material.opacity = active ? 0.055 + shown * 0.2 : 0;
       }
       if (path.portJet) {
-        path.portJet.material.opacity = active ? 0.08 + shown * 0.28 : 0;
+        path.portJet.material.opacity = active ? 0.12 + shown * 0.35 : 0;
         const pulse = 0.92 + Math.sin(now * 0.008 + shown * 4) * 0.08;
         path.portJet.scale.setScalar(pulse);
       }
@@ -1884,7 +1888,7 @@
 
     const cfmNorm = (cfm, scale = 80) => Math.min(1, Math.max(0, Number(cfm) || 0) / scale);
 
-    const updateSystem = (name, curve, dt, intensity, mapper) => {
+    const updateSystem = (name, curve, dt, intensity, mapper, speedAt) => {
       const system = air[name];
       if (!system || !system.positions) return;
       const active = intensity >= 0.04;
@@ -1892,20 +1896,21 @@
       const shown = active ? Math.min(1, intensity * boost) : 0;
       system.intensity = shown;
       system.points.visible = active;
-      system.setOpacity(active ? Math.min(1, 0.35 + shown * 0.65) : 0);
+      system.setOpacity(active ? Math.min(1, 0.42 + shown * 0.58) : 0);
       if (!active) return;
-      // CFM-scaled speed: higher absolute CFM → faster stream along path
-      const speed = 0.16 + shown * 0.95;
-      const activeCount = Math.max(12, Math.floor(system.count * (0.45 + shown * 0.55)));
+      const baseSpeed = 0.2 + shown * 1.05;
+      const activeCount = Math.max(16, Math.floor(system.count * (0.5 + shown * 0.5)));
       for (let i = 0; i < system.count; i++) {
         if (i >= activeCount) {
           system.positions[i * 3 + 1] = -99;
           continue;
         }
-        system.phase[i] = (system.phase[i] + dt * speed * (0.82 + (i % 7) * 0.045)) % 1;
+        const t0 = system.phase[i];
+        const pace = typeof speedAt === "function" ? Math.max(0.12, speedAt(t0, system.seed[i])) : 1;
+        system.phase[i] = (t0 + dt * baseSpeed * pace * (0.82 + (i % 7) * 0.045)) % 1;
         const point = mapper
           ? mapper(system.phase[i], system.seed[i], i)
-          : sampleCurve(curve, system.phase[i], 0.022, system.seed[i]);
+          : sampleCurve(curve, system.phase[i], 0.016, system.seed[i]);
         system.positions[i * 3] = point.x;
         system.positions[i * 3 + 1] = point.y;
         system.positions[i * 3 + 2] = point.z;
@@ -1921,55 +1926,123 @@
     };
 
     /**
-     * In-tent CFM story after intake pierce: entry → mid pool → pull to exit(s).
-     * Duct suck-in is the separate intake* streams; exhaust* continues past the port.
+     * Full journey: duct → entry → slow pool → exit pull.
+     * 0–0.38 duct, 0.38–0.52 entry, 0.52–0.78 pool, 0.78–1 exit.
      */
-    const flowThroughTent = (t, seed, i, opts) => {
+    const journeyThroughTent = (t, seed, i, opts) => {
       const intakeCurve = opts.intakeCurve;
       const exits = opts.exits || [];
       const tent = opts.tent;
-      const ductEnd = intakeCurve.getPoint(1);
       let pick = exits[0] && exits[0].point;
       let acc = 0;
       const totalW = exits.reduce((s, e) => s + Math.max(0, e.weight || 0), 0) || 1;
-      const roll = seed;
       for (let e = 0; e < exits.length; e++) {
         acc += Math.max(0, exits[e].weight || 0) / totalW;
-        if (roll <= acc) {
+        if (seed <= acc) {
           pick = exits[e].point;
           break;
         }
       }
-      if (!pick) pick = ductEnd;
+      if (!pick) pick = intakeCurve.getPoint(1);
 
-      if (t < 0.4) {
-        // Entry plume just inside the pierce — continues the intake suck visually
-        const u = t / 0.4;
+      if (t < 0.38) return sampleCurve(intakeCurve, t / 0.38, 0.016, seed);
+      if (t < 0.52) {
+        const u = (t - 0.38) / 0.14;
+        const entry = intakeCurve.getPoint(1);
         const inside = tentPoint(
           tent,
-          (seed - 0.5) * 0.25,
-          0.18 + seed * 0.12,
-          0.35 - u * 0.25 + (seed - 0.5) * 0.1
+          (seed - 0.5) * 0.2,
+          0.16 + seed * 0.1,
+          0.32 - u * 0.2 + (seed - 0.5) * 0.08
         );
-        return ductEnd.clone().lerp(inside, u);
+        return entry.clone().lerp(inside, u);
       }
-      if (t < 0.7) {
-        // Pool / settle in mid-lower volume
-        const u = (t - 0.4) / 0.3;
-        const from = tentPoint(tent, (seed - 0.5) * 0.25, 0.22, 0.15);
+      if (t < 0.78) {
+        const u = (t - 0.52) / 0.26;
+        const from = tentPoint(tent, (seed - 0.5) * 0.2, 0.2, 0.12);
         const pool = tentPoint(
           tent,
-          (seed - 0.5) * 0.55,
-          0.2 + seed * 0.2 + Math.sin(u * Math.PI) * 0.06,
-          (seed - 0.5) * 0.4
+          (seed - 0.5) * 0.5,
+          0.22 + seed * 0.18 + Math.sin(u * Math.PI) * 0.05,
+          (seed - 0.5) * 0.35
         );
         return from.lerp(pool, u);
       }
-      // Pull toward exhaust port (handoff to OUT/RECIRC/cascade streams)
-      const u = (t - 0.7) / 0.3;
+      const u = (t - 0.78) / 0.22;
       const ease = u * u;
-      const pool = tentPoint(tent, (seed - 0.5) * 0.35, 0.28 + ((i % 5) / 5) * 0.1, (seed - 0.5) * 0.25);
-      return pool.lerp(pick, 0.2 + ease * 0.8);
+      const pool = tentPoint(tent, (seed - 0.5) * 0.3, 0.3 + ((i % 5) / 5) * 0.08, (seed - 0.5) * 0.22);
+      return pool.lerp(pick, 0.15 + ease * 0.85);
+    };
+
+    const journeyPace = (t) => {
+      if (t < 0.38) return 1.35;
+      if (t < 0.52) return 0.95;
+      if (t < 0.78) return 0.28;
+      return 1.55;
+    };
+
+    const flowThroughTent = journeyThroughTent;
+
+    // In-tent dashed guide ribbons (visible when that leg has CFM)
+    const tentGuides = {};
+    const mkTentGuide = (key, pts, color) => {
+      const curve = new THREE.CatmullRomCurve3(pts, false, "catmullrom", 0.22);
+      let ribbon = null;
+      if (fx && typeof fx.makeFlowRibbon === "function") {
+        try {
+          ribbon = fx.makeFlowRibbon(curve, {
+            radius: 0.03,
+            tubular: 48,
+            color,
+            opacity: 0,
+            dashArray: [0.09, 0.07],
+          });
+          ribbon.userData.flow = { curve, tubular: 48, baseRadius: 0.03, lastWidth: -1 };
+          root.add(ribbon);
+        } catch (_) {
+          ribbon = null;
+        }
+      }
+      tentGuides[key] = { ribbon };
+    };
+    mkTentGuide(
+      "clone",
+      [
+        curves.intakeClone.getPoint(1),
+        tentPoint(tentClone, 0, 0.28, 0.15),
+        tentPoint(tentClone, 0.15, 0.35, -0.05),
+        curves.cascade.getPoint(0.02),
+      ],
+      0x81d4fa
+    );
+    mkTentGuide(
+      "mainOut",
+      [
+        curves.intakeMain.getPoint(1),
+        tentPoint(tentMain, 0, 0.32, 0.1),
+        tentPoint(tentMain, 0.05, 0.5, -0.15),
+        curves.out.getPoint(0.02),
+      ],
+      0xff8a65
+    );
+    mkTentGuide(
+      "mainRec",
+      [
+        curves.intakeMain.getPoint(1),
+        tentPoint(tentMain, 0.1, 0.3, 0.05),
+        tentPoint(tentMain, 0.28, 0.45, 0.05),
+        curves.recirc.getPoint(0.02),
+      ],
+      0xce93d8
+    );
+    const updateTentGuide = (key, intensity) => {
+      const g = tentGuides[key];
+      if (!g || !g.ribbon) return;
+      const active = intensity >= 0.04;
+      const shown = active ? Math.min(1, intensity) : 0;
+      const u = g.ribbon.material.userData;
+      u.uOpacity.value = active ? 0.22 + shown * 0.55 : 0;
+      u.uDashOffset.value -= 0.01 + shown * 0.028;
     };
 
     const updateCascadePlume = (dt, intensity, outShare, recShare) => {
@@ -1979,37 +2052,42 @@
       const splitSum = Math.max(0.001, outBias + recBias);
       const outPort = curves.out.getPoint(0.02);
       const recPort = curves.recirc.getPoint(0.02);
-      updateSystem("cascade", curves.cascade, dt, intensity, (t, seed, i) => {
-        if (t < 0.55) return sampleCurve(curves.cascade, t / 0.55, 0.022, seed);
-        // Into 4×8 then pull to OUT/RECIRC ports (handoff into exhaust streams)
-        const u = (t - 0.55) / 0.45;
-        const entry = curves.cascade.getPoint(1);
-        const towardOut = seed < outBias / splitSum;
-        const target = towardOut ? outPort : recPort;
-        if (u < 0.45) {
-          const pool = tentPoint(tentMain, (seed - 0.5) * 0.35, 0.35 + u * 0.15, (seed - 0.5) * 0.3);
-          return entry.clone().lerp(pool, u / 0.45);
-        }
-        const v = (u - 0.45) / 0.55;
-        const pool = tentPoint(tentMain, (seed - 0.5) * 0.25, 0.45, (seed - 0.5) * 0.2);
-        return pool.lerp(target, v * v);
-      });
+      updateSystem(
+        "cascade",
+        curves.cascade,
+        dt,
+        intensity,
+        (t, seed, i) => {
+          if (t < 0.42) return sampleCurve(curves.cascade, t / 0.42, 0.018, seed);
+          const u = (t - 0.42) / 0.58;
+          const entry = curves.cascade.getPoint(1);
+          const target = seed < outBias / splitSum ? outPort : recPort;
+          if (u < 0.4) {
+            const pool = tentPoint(tentMain, (seed - 0.5) * 0.3, 0.32 + u * 0.12, (seed - 0.5) * 0.25);
+            return entry.clone().lerp(pool, u / 0.4);
+          }
+          const v = (u - 0.4) / 0.6;
+          const pool = tentPoint(tentMain, (seed - 0.5) * 0.22, 0.42, (seed - 0.5) * 0.18);
+          return pool.lerp(target, v * v);
+        },
+        (t) => (t < 0.42 ? 1.25 : t < 0.66 ? 0.32 : 1.5)
+      );
     };
 
-    /** Exhaust stream starts inside tent at the port, then rides the duct — reads as suction. */
+    /** Exhaust: gather from pool toward port, then ride duct. */
     const exhaustFromInside = (t, seed, ductCurve, tent, portLocal) => {
       const port = ductCurve.getPoint(0.02);
-      if (t < 0.32) {
-        const u = t / 0.32;
+      if (t < 0.28) {
+        const u = t / 0.28;
         const inside = tentPoint(
           tent,
-          portLocal[0] * (0.35 + seed * 0.2),
-          portLocal[1] + (seed - 0.5) * 0.08,
-          portLocal[2] * (0.35 + seed * 0.2)
+          portLocal[0] * (0.55 + seed * 0.25),
+          portLocal[1] + (seed - 0.5) * 0.1,
+          portLocal[2] * (0.55 + seed * 0.25)
         );
         return inside.lerp(port, u * u);
       }
-      return sampleCurve(ductCurve, (t - 0.32) / 0.68, 0.02, seed);
+      return sampleCurve(ductCurve, (t - 0.28) / 0.72, 0.016, seed);
     };
 
     const updateMatHeat = (dt, intensity) => {
@@ -2062,46 +2140,69 @@
         updatePathVisual("out", outVis, now);
         updatePathVisual("recirc", recVis, now);
 
-        // Intake ducts only (tight tube stream) — through-flow handles tent story
-        updateSystem("intakeClone", curves.intakeClone, dt, intakeClone);
-        updateSystem("intakeMain", curves.intakeMain, dt, intakeMain);
+        // Journey streams: duct → pool → exit (pace slows in pool so settle reads)
+        updateSystem("intakeClone", curves.intakeClone, dt, Math.min(1, intakeClone * 0.85), null, () => 1.2);
+        updateSystem("intakeMain", curves.intakeMain, dt, Math.min(1, intakeMain * 0.85), null, () => 1.2);
         updateCascadePlume(dt, cascade, outShare, recShare);
 
-        // Exhaust: suction from inside tent → duct → dump/room
-        updateSystem("out", curves.out, dt, outVis, (t, seed) =>
-          exhaustFromInside(t, seed, curves.out, tentMain, [0.05, 0.55, -0.42])
+        updateSystem(
+          "out",
+          curves.out,
+          dt,
+          outVis,
+          (t, seed) => exhaustFromInside(t, seed, curves.out, tentMain, [0.05, 0.55, -0.42]),
+          (t) => (t < 0.28 ? 0.55 : 1.45)
         );
-        updateSystem("recirc", curves.recirc, dt, recVis, (t, seed) =>
-          exhaustFromInside(t, seed, curves.recirc, tentMain, [0.42, 0.48, 0.02])
+        updateSystem(
+          "recirc",
+          curves.recirc,
+          dt,
+          recVis,
+          (t, seed) => exhaustFromInside(t, seed, curves.recirc, tentMain, [0.42, 0.48, 0.02]),
+          (t) => (t < 0.28 ? 0.55 : 1.45)
         );
 
-        // 2×4: intake → pool → cascade exit
         air.flowClone.setColor(
           particleColors.mixCool.clone().lerp(particleColors.mixWarm, live.matOn ? 0.35 : 0.1)
         );
-        updateSystem("flowClone", curves.intakeClone, dt, intakeClone, (t, seed, i) =>
-          flowThroughTent(t, seed, i, {
-            tent: tentClone,
-            intakeCurve: curves.intakeClone,
-            exits: [{ point: cascadeExit, weight: 1 }],
-          })
+        updateSystem(
+          "flowClone",
+          curves.intakeClone,
+          dt,
+          intakeClone,
+          (t, seed, i) =>
+            journeyThroughTent(t, seed, i, {
+              tent: tentClone,
+              intakeCurve: curves.intakeClone,
+              exits: [{ point: cascadeExit, weight: 1 }],
+            }),
+          journeyPace
         );
 
-        // 4×8: intake → pool → OUT/RECIRC by mass-balance share
         const mainFlow = Math.min(1, intakeMain * 0.55 + cascade * 0.45);
         air.flowMain.setColor(
           particleColors.mixCool.clone().lerp(particleColors.mixWarm, 0.22 + cascade * 0.5)
         );
-        updateSystem("flowMain", curves.intakeMain, dt, mainFlow, (t, seed, i) =>
-          flowThroughTent(t, seed, i, {
-            tent: tentMain,
-            intakeCurve: curves.intakeMain,
-            exits: [
-              { point: curves.out.getPoint(0.02), weight: outShare / shareSum },
-              { point: curves.recirc.getPoint(0.02), weight: recShare / shareSum },
-            ],
-          })
+        updateSystem(
+          "flowMain",
+          curves.intakeMain,
+          dt,
+          mainFlow,
+          (t, seed, i) =>
+            journeyThroughTent(t, seed, i, {
+              tent: tentMain,
+              intakeCurve: curves.intakeMain,
+              exits: [
+                { point: curves.out.getPoint(0.02), weight: outShare / shareSum },
+                { point: curves.recirc.getPoint(0.02), weight: recShare / shareSum },
+              ],
+            }),
+          journeyPace
         );
+
+        updateTentGuide("clone", intakeClone);
+        updateTentGuide("mainOut", Math.min(1, mainFlow * (outShare / shareSum) + outVis * 0.5));
+        updateTentGuide("mainRec", Math.min(1, mainFlow * (recShare / shareSum) + recVis * 0.5));
         updateMatHeat(dt, live.matOn ? 1 : 0);
 
         if (live.matOn) {

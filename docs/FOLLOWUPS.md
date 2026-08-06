@@ -924,3 +924,13 @@ New 5s `tx_fleet_heartbeat` / `tx_peer_time` broadcast load on top of 2s vitals 
 
 ### soak
 - Hard-refresh Dash (?v= bump). Streams need CFM > 0 (live/held).
+
+---
+
+## 2026-08-06 — Air journey polish
+
+### done
+- Phase-paced journeys: fast duct suck, slow mid-tent pool dwell, accelerating exhaust pull.
+- In-tent dashed guide ribbons (clone→cascade, main→OUT, main→RECIRC) CFM-gated.
+- Intake port jets at pierce; stronger shafts/jets; denser streak particles.
+- Deploy ~bundle on HA; hard-refresh required.
