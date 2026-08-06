@@ -1240,6 +1240,7 @@ Memo: [`docs/DSC-PRODUCT-RESEARCH.md`](DSC-PRODUCT-RESEARCH.md).
 | N-081 | Light photometrics pack (PPFD/spectrum URLs) | **Done** (2026-08-07): `clean_light_map_assets.py` + `dsc_light_pack_photometrics.yaml` + `dsc_v4_light_catalog.yaml`; Vivosun still 0 maps (JS storefront) |
 | N-082 | Catalog → Pro dash surface | **Done** (2026-08-07): Strains / Nutrient Science / Lighting views show catalog packs; SF1000 nameplate watts sync → `input_number.dsc_sf1000_w` |
 | N-083 | Build a Plant (separate surface) | **Done** (2026-08-07): `dsc-build-plant` dashboard + card + `dsc_v4_build_plant.yaml`; Vivosun stated PPE/PPFD/datasheets; map URLs still 0 |
+| N-084 | Sync add-on Build a Plant parity | **Done** (docs train): Sync **5.1.4** concat + dashboard YAML + `www/dsc-catalog/`; rebuild add-on after merge |
 
 ### deferred
 
@@ -1252,14 +1253,15 @@ Memo: [`docs/DSC-PRODUCT-RESEARCH.md`](DSC-PRODUCT-RESEARCH.md).
 - Package `dsc_v4_build_plant.yaml`: soil % blend (sum-100), 8-slot plant roster, `sensor.dsc_mix_calculator`, Want temp/RH sensors, `script.dsc_apply_climate_want` / `dsc_build_plant_commit` / `dsc_plant_assign_to_pot`
 - Lit card `www/dsc-build-plant-card.js` + `dist/` copy; search indexes under `www/dsc-catalog/`
 - Vivosun importer: `__NEXT_DATA__` wattage / PPE / stated point-PPFD / PDF datasheets; map URLs still **0** (CDN hashes unlabeled)
+- **N-084:** Sync add-on **5.1.4** now matches `ha-sync.sh` / HACS dist (dashboard + catalog + bundle concat). Ops runbook: [`docs/qa/LIVE-UI-BUILD-A-PLANT.md`](qa/LIVE-UI-BUILD-A-PLANT.md)
 
 ### verify (operator)
-- Add Lovelace resource `/local/dsc-build-plant-card.js` **or** rely on bundled `DSC-HUB.js` / `dsc-system-map-card.js` (now includes Build a Plant via `sync-hacs-dist.sh` / `ha-sync.sh`)
+- Rebuild Sync **5.1.4+** (or HACS Redownload + manual catalog) — Sync ≤5.1.3 stopped concat at The Dash
 - Ensure `dsc-build-plant` dashboard is registered (configuration.snippet)
 - Reload packages; open `/dsc-build-plant/build`
 - Soil sliders valid only at 100%; mix ml = dose × tank L × strength%
 - Apply climate Want no-ops when custom temp/RH are 0
-- Search indexes under `/local/dsc-catalog/` (ha-sync copies `www/dsc-catalog/`)
+- Search indexes under `/local/dsc-catalog/`
 
 ### extension points & gaps (next pass)
 

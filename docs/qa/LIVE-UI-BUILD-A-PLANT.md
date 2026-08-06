@@ -1,0 +1,165 @@
+# Build a Plant — composition surface (N-083)
+
+Operator / developer runbook for the separate **Build a Plant** Lovelace
+dashboard and catalog-backed composition card. Shipped in `09fac80`
+(2026-08-07). Closes FOLLOWUPS **N-083**. Sync delivery parity is **N-084**.
+
+| Surface | Role |
+|---|---|
+| Dashboard URL | **`/dsc-build-plant/build`** (panel view, composition card only) |
+| Card | `custom:dsc-build-plant-card` |
+| Package SoT | `homeassistant/packages/dsc_v4_build_plant.yaml` |
+| Generator | `scripts/gen_dsc_v4_build_plant.py` (prefer editing this) |
+| Search indexes | `/local/dsc-catalog/*.json` |
+| Related packs | strain / nutrient / medium / light catalogs |
+
+**Not** a Pro-dash tab. Strains view links out; The Dash stays ops cinema.
+
+## Intent
+
+Compose a plant from catalog typeahead (strain · medium % blend · nutrients ·
+light · optional climate Want), then **commit** into an 8-slot roster and/or
+**assign** to a pot. Metric only. Does **not** invent catalog climate bands or
+PPFD heatmaps.
+
+```mermaid
+flowchart TD
+  indexes["/local/dsc-catalog indexes"] --> card["dsc-build-plant-card"]
+  card --> helpers["input_* build / blend / roster"]
+  helpers --> mix["sensor.dsc_mix_calculator"]
+  helpers --> blend["sensor.dsc_blend_summary"]
+  card --> commit["script.dsc_build_plant_commit"]
+  card --> assign["script.dsc_plant_assign_to_pot"]
+  card --> climate["script.dsc_apply_climate_want"]
+  card --> accept["script.dsc_accept_mix"]
+  commit --> roster["8-slot plant roster"]
+  assign --> pot["pot strain + sprout helpers"]
+  climate --> hub["hub target temp / RH bands"]
+```
+
+## Architecture
+
+### Dashboard + card
+
+| Piece | Path |
+|---|---|
+| YAML dashboard | `homeassistant/dashboards/dsc-build-plant-dashboard.yaml` |
+| Sidebar registration | `configuration.snippet.yaml` → `lovelace.dashboards.dsc-build-plant` |
+| Lit card source | `homeassistant/www/dsc-build-plant-card.js` |
+| HACS / `/local` bundle | last segment of `DSC-HUB.js` / `dsc-system-map-card.js` |
+| Standalone resource | `/local/dsc-build-plant-card.js` (optional) |
+
+Concat order (HACS + Sync + ha-sync):
+
+`system-map` → `airflow` → `three.min` → `dsc-dash-fx` → `the-dash` → **`build-plant`**
+
+Healthy bundle after Build a Plant: **~941 KB** (`dist/DSC-HUB.js`). Sync still
+refuses `< 500000` (F-013).
+
+### Package (`dsc_v4_build_plant.yaml`)
+
+| Domain | Entities (selected) |
+|---|---|
+| Builder identity | `input_text.dsc_build_nickname` / `dsc_build_strain`, `input_datetime.dsc_build_sprout_date` |
+| Soil blend | 3× `dsc_blend_component_*_name` + `dsc_blend_pct_*` + `dsc_blend_total_l` |
+| Roster | 8 slots: nickname / strain / blend / recipe / sprout / pot / status |
+| Climate apply target | `input_select.dsc_build_climate_pot` (`Fleet` \| `1`–`4`) |
+| Assign pot | `input_select.dsc_build_assign_pot` (`none` \| `1`–`4`) |
+| Mix glue | reads nutrient catalog slots → `sensor.dsc_mix_calculator` |
+| Want sensors | `sensor.dsc_pot{N}_want_temp_*` / `want_rh_*` — **Custom** slots only when ≠0 |
+
+**Scripts**
+
+| Script | Behavior |
+|---|---|
+| `dsc_build_plant_commit` | Next empty roster slot ← builder fields; status `active` if pot assigned else `stock` |
+| `dsc_plant_assign_to_pot` | Strain + sprout → pot HA helpers (+ pot entities when online, `continue_on_error`) |
+| `dsc_apply_climate_want` | Midpoint temp + RH min/max → hub numbers when Want ≠0; notify skip otherwise |
+| `dsc_accept_mix` | Existing nutrient Accept (burns stock; **no pumps**) |
+
+### Search indexes
+
+Built by `python scripts/build_catalog_search_indexes.py` →
+`homeassistant/www/dsc-catalog/` + `dist/dsc-catalog/`.
+
+| File | Cap (verified) | Contents |
+|---|---|---|
+| `dsc_strains_search_index.json` | **2500** | Slim name / type / breeder |
+| `dsc_nutrients_search_index.json` | **1500** | Name / brand / optional dose |
+| `dsc_mediums_search_index.json` | **800** (777 live) | Substrate names |
+| `dsc_lights_search_index.json` | **800** | Fixture names + stated W when present |
+
+Card fetches `${CATALOG_BASE}/${file}` with `CATALOG_BASE = "/local/dsc-catalog"`.
+Missing indexes → empty typeahead (no hard fail).
+
+### Delivery paths
+
+| Path | Dashboard YAML | Bundle includes card | Catalog JSON |
+|---|---|---|---|
+| **HACS** Redownload | no (config snippet once) | yes (`dist/DSC-HUB.js`) | no — need Sync / ha-sync / manual |
+| **ha-sync.sh** | yes | yes | yes |
+| **Sync add-on 5.1.4+** | yes | yes | yes |
+| Sync add-on **≤5.1.3** | **no** | **no** (concat stopped at Dash) | **no** |
+
+**N-084:** Sync ≤5.1.3 would rebuild a Dash-only concat from www sources and
+could demote a HACS-complete live bundle. Rebuild Sync **5.1.4+** after merge.
+
+## Constraints
+
+- Soil % valid only when `pct1+pct2+pct3 == 100` (`sensor.dsc_blend_summary` attr `valid`).
+- Mix ml = `dose_ml_l × tank_L × (strength% / 100)`.
+- Apply climate Want **no-ops** when custom temp/RH are **0** — no catalog invent.
+- Catalog picker strains have **no** climate Want bands by design (N-055 custom only).
+- Strain index is capped; full merged dump (~36k) is not in the browser payload.
+- Vivosun stated W/PPE/point-PPFD/datasheets may exist; **keyword-labeled map image URLs still 0**.
+- Metric only (°C, L, ml/L, µmol, %).
+- Prefer editing `gen_dsc_v4_build_plant.py` then regenerate the package YAML.
+
+## Bring-up checklist
+
+- [ ] `configuration.snippet.yaml` merged — sidebar shows **Build a Plant**
+- [ ] Package `dsc_v4_build_plant.yaml` present; Core restarted once for new helpers
+- [ ] Sync **5.1.4+** rebuilt **or** HACS Redownload **plus** catalog copy under `/config/www/dsc-catalog/`
+- [ ] Hard-refresh browser; open `/dsc-build-plant/build`
+- [ ] Typeahead (≥2 chars) returns hits for strain / medium / nutrient / light
+- [ ] Soil sliders: chip shows valid only at 100%
+- [ ] Mix lines update when dose / tank L / strength change
+- [ ] **Add to inventory** fills next empty roster slot + persistent notification
+- [ ] **Assign to pot now** writes pot strain (requires Assign pot ≠ `none`)
+- [ ] **Apply climate Want** with unset Custom Want → skip notification; with set Want → hub targets move
+
+## Pitfalls
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| Custom element missing | Old Sync ≤5.1.3 www concat, or stale HACS | Rebuild Sync 5.1.4+ **or** HACS Redownload + hard-refresh |
+| Typeahead empty | `/local/dsc-catalog/` missing | Sync/ha-sync catalog copy, or manual `www/dsc-catalog/*.json` |
+| Dashboard 404 | Snippet not merged / YAML not on HA | Merge snippet; ensure `dashboards/dsc-build-plant-dashboard.yaml` |
+| Commit does nothing | All 8 roster slots occupied | Clear a slot status back to `empty` |
+| Climate Apply “skipped” | Custom Want temp/RH still 0 | Set Custom slot climate Want, or leave alone (expected) |
+| Assign silent | Assign pot = `none` or empty strain | Pick pot 1–4 + strain name |
+| Strain not in picker after assign | Name not in pot `input_select` options | Use catalog picker seed / Custom slot on Pro Strains view |
+| Bundle “too small” refused | Staging stub &lt; 500 KB | F-013 guard — check Sync log; fix concat inputs |
+
+## Regenerate indexes / package
+
+```bash
+python scripts/gen_dsc_v4_build_plant.py
+python scripts/build_catalog_search_indexes.py
+./scripts/sync-hacs-dist.sh   # refresh dist/DSC-HUB.js + dist/dsc-catalog/
+```
+
+## Soak / acceptance
+
+1. Commit one plant → roster occupied count +1; notification titled “Build a Plant · committed”.
+2. Accept mix with known doses → stock decreases; calculator total matches `dose × L × strength`.
+3. Custom Want temp/RH set → Apply writes `number.dsc_hub_target_temp` midpoint and RH min/max.
+4. Hard-reload Pro Dash still works (Build a Plant must not break cinematic concat).
+
+## Related
+
+- FOLLOWUPS **N-083** / **N-084** — [`docs/FOLLOWUPS.md`](../FOLLOWUPS.md)
+- HA layout — [`homeassistant/README.md`](../../homeassistant/README.md)
+- HACS — [`scripts/HACS-FRONTEND.md`](../../scripts/HACS-FRONTEND.md)
+- Sync — [`dsc-hub-sync/DOCS.md`](../../dsc-hub-sync/DOCS.md) · [`scripts/ADDON.md`](../../scripts/ADDON.md)
+- Catalog research trail — FOLLOWUPS 2026-08-07 product landscape sections

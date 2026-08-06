@@ -17,6 +17,8 @@ Home Assistant surfaces that sync on every git push.
 - **ESP-NOW primary** panel ↔ hub — works when Home Assistant is down.
 - **DSC-HUB Pro** dashboard (`/dsc-hub-pro`) — Home, Climate, Learning, tents,
   Root Zone, Tank, Light, Trends, System.
+- **Build a Plant** (`/dsc-build-plant/build`) — separate composition dashboard
+  (strain · soil % · nutrients · light · climate Want → roster / pot).
 - **Learn Phase A + B** — Phase A EMA efficiencies & ETA; Phase B (opt-in)
   rate-limited writes to ladder **wait bases** only.
 - **Fleet version chip** — at-a-glance `ok` / `warn` / `error` vs expected **5.1.6** train.
@@ -46,6 +48,7 @@ flowchart LR
 | [`docs/qa/FIRMWARE-QA-5.1.0.md`](docs/qa/FIRMWARE-QA-5.1.0.md) | Firmware Validate / flash QC |
 | [`docs/qa/ADDON-QA-5.1.0.md`](docs/qa/ADDON-QA-5.1.0.md) | Sync add-on QC |
 | [`homeassistant/README.md`](homeassistant/README.md) | Packages, HACS, entity notes |
+| [`docs/qa/LIVE-UI-BUILD-A-PLANT.md`](docs/qa/LIVE-UI-BUILD-A-PLANT.md) | Build a Plant composition ops (N-083) |
 | [`firmware/v4/README.md`](firmware/v4/README.md) | Local validate / flash |
 
 **HAOS delivery:** Settings → Add-ons → Repositories → `https://github.com/weddas/DSC-HUB`
@@ -74,10 +77,11 @@ Flash order: hub → panel → pots → Sonoffs. Living backlog: [`docs/FOLLOWUP
 
 | Piece | Path |
 |---|---|
-| Sync add-on | [`dsc-hub-sync/`](dsc-hub-sync/) |
+| Sync add-on | [`dsc-hub-sync/`](dsc-hub-sync/) (**5.1.4+** ships Build a Plant + catalog) |
 | Lovelace (Pro) | `homeassistant/dashboards/dsc-hub-v4-dashboard.yaml` → URL **`dsc-hub-pro`** |
+| Lovelace (Build a Plant) | `homeassistant/dashboards/dsc-build-plant-dashboard.yaml` → URL **`dsc-build-plant`** |
 | Packages | `homeassistant/packages/dsc_v4_*.yaml` |
-| Config snippet | `homeassistant/configuration.snippet.yaml` |
+| Config snippet | `homeassistant/configuration.snippet.yaml` (Pro + Build a Plant) |
 | ESPHome stubs | `homeassistant/esphome/dsc-*.yaml` |
 
 After Sync lands new `input_*` helpers: **restart HA Core once**.

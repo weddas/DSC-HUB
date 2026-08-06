@@ -17,12 +17,15 @@ Repo: https://github.com/weddas/DSC-HUB · tag **`v5.1.0`** · branch **`master`
 |---|---|
 | `homeassistant/packages/dsc_v4_*.yaml` | `/config/packages/` |
 | `homeassistant/dashboards/dsc-hub-v4-dashboard.yaml` | `/config/dashboards/` (YAML-mode Lovelace) |
+| `homeassistant/dashboards/dsc-build-plant-dashboard.yaml` | `/config/dashboards/` (Build a Plant) |
 | `homeassistant/esphome/dsc-*.yaml` | `/config/esphome/` |
-| `homeassistant/www/dsc-system-map.*` | `/config/www/` |
+| `homeassistant/www/dsc-system-map.*` | `/config/www/` (bundled cards) |
+| `homeassistant/www/dsc-catalog/*.json` | `/config/www/dsc-catalog/` (Build a Plant typeahead) |
 | `firmware/v4/secrets.yaml.template` | `/config/esphome/secrets.yaml` (fill in; never commit) |
 
 Merge [`homeassistant/configuration.snippet.yaml`](homeassistant/configuration.snippet.yaml)
-into `configuration.yaml` (packages + YAML dashboard **`dsc-hub-pro`**).
+into `configuration.yaml` (packages + YAML dashboards **`dsc-hub-pro`** and
+**`dsc-build-plant`**).
 
 ### Add-on (recommended)
 
@@ -66,8 +69,10 @@ fire countdowns, fleet version status.
 
 ## 2. Dashboard
 
-YAML mode URL **`dsc-hub-pro`** only. Disable any storage dashboard still named
-DSC-HUB / `dsc-hub-v4`. Sidebar: single **DSC-HUB Pro** entry.
+YAML mode URLs **`dsc-hub-pro`** (ops) and **`dsc-build-plant`** (composition).
+Disable any storage dashboard still named DSC-HUB / `dsc-hub-v4`. Sidebar:
+**DSC-HUB Pro** + **Build a Plant**. Ops checklist:
+[`docs/qa/LIVE-UI-BUILD-A-PLANT.md`](docs/qa/LIVE-UI-BUILD-A-PLANT.md).
 
 ---
 
