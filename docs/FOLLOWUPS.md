@@ -87,7 +87,7 @@ After each execution pass, append:
 |---|---|---|
 | N-001 | Preferred BSSID ? current while Lock ON | Still open after 5.1.3 |
 | N-002 | Flash Control/pots if wifi stubs not live | Mesh patches in tree; verify versions |
-| N-006 | Full Auto NVS after OTA | Came up Full Auto **off** once after flash; operator re-armed |
+| N-006 | Full Auto NVS after OTA | **Closed 5.1.11** — boot forces Full Auto ON unless Takeover |
 | N-007 | Purge orphan `dsc_ac_actuator_wired` entity if still in registry | Done 2026-08-05 Full Inclusion Pass 4 (registry strip + core restart) |
 | N-008 | UNC-path ESPHome compile | Windows build must use local temp, not NAS path |
 
@@ -611,6 +611,7 @@ No climate control regression during soak window.
 - Hub **5.1.5**: sync after `arm_full_auto` / photoperiod switch; on_boot re-arms photoperiod when Takeover clear.
 - Hub **5.1.6**: on-hub light-quota ledger + debt catch-up under min dark floor (HA cannot meter during flaps).
 - Hub **5.1.7**: first-ledger NVS seed so mid-dark OTA cannot invent catch-up debt (5.1.6 first-flash blaze).
+- Hub **5.1.11**: boot **forces Full Auto ON** (unless Takeover) — stale NVS OFF can no longer leave the stack idle after recovery reboot.
 - HA: `binary_sensor.dsc_clone_light_missing_in_window`; GUARD re-arms photoperiod if disarmed >45s without Takeover; ALERT if light missing in window >2min; dark-period violation exempts catch-up.
 
 ### next

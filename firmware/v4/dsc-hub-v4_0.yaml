@@ -76,7 +76,7 @@ esphome:
   friendly_name: DSC-HUB
   project:
     name: "digital_emotions.dsc-hub"
-    version: "5.1.10"
+    version: "5.1.11"
   on_boot:
     - priority: -100
       then:
@@ -112,9 +112,7 @@ esphome:
             // v2.4.2 (BUG-3): SEED THE SAFE VENTILATION BASELINE UNCONDITIONALLY.
             // Previously an auto-resume boot left fans at LEDC 0% for the old
             // resume-prompt window. Every boot now comes up on moving air;
-            // v2.4.4 re-arms Full Auto from the persisted flag so the curve
-            // takes over on the next tick. (Restore persisted manual targets,
-            // else a min floor.)
+            // the curve takes over once Full Auto re-arms below.
             int o = id(local_target_out)          > 0 ? id(local_target_out)          : 25;
             int r = id(local_target_recirc)       > 0 ? id(local_target_recirc)       : 20;
             int m = id(local_target_intake_main)  > 0 ? id(local_target_intake_main)  : 15;
@@ -123,38 +121,29 @@ esphome:
             auto fr = id(fan_exhaust_recirc).make_call(); fr.set_state(true); fr.set_speed(r); fr.perform();
             auto fm = id(fan_intake_main).make_call();    fm.set_state(true); fm.set_speed(m); fm.perform();
             auto fc = id(fan_intake_clone).make_call();   fc.set_state(true); fc.set_speed(c); fc.perform();
-            // v2.4.4 · PERSIST + RE-ARM ON BOOT.
-            // full_auto_mode already restores from NVS. The bug was that
-            // restore alone never re-ran arm_full_auto, and the old resume
-            // gate parked the ladder until a tap. Clear the gate; if Full
-            // Auto was ON (and Takeover is not), on_boot turns the switch
-            // on so arm_full_auto runs again. If it was OFF, stay OFF.
-            //
-            // v5.1.5 · PLANT-CRITICAL: Auto Photoperiod must NOT die when
-            // Full Auto NVS is stale OFF. Full Auto's climate loop only
-            // keeps photoperiod true in RAM (never flushed); a recovery
-            // reboot then restored both OFF and left the SF1000 dark for
-            // ~5.5h mid-window (5 Aug 2026). Takeover still owns the light.
+            // v5.1.11 · FULL AUTO IS THE DEFAULT STARTUP STATE.
+            // Every boot (except Manual Takeover) forces Full Auto ON and
+            // re-runs arm_full_auto so fans + ladder + photoperiod come up
+            // armed — even when NVS still holds a stale OFF (5 Aug overnight
+            // drop: recovery reboot restored Full Auto OFF mid-window).
+            // Mid-session OFF still works until the next reboot; Takeover
+            // restored from NVS still wins.
             id(boot_resume_pending) = false;
             if (id(ha_takeover_active)) {
               ESP_LOGW("boot", "Manual Takeover restored -> Full Auto/photoperiod left alone (baseline Out %d Room %d IntM %d Int2 %d)", o, r, m, c);
-            } else if (id(full_auto_mode)) {
-              ESP_LOGI("boot", "Full Auto restored ON -> re-arming stack (baseline Out %d Room %d IntM %d Int2 %d)", o, r, m, c);
             } else {
-              ESP_LOGI("boot", "Full Auto restored OFF -> staying OFF; photoperiod will still re-arm (baseline Out %d Room %d IntM %d Int2 %d)", o, r, m, c);
+              ESP_LOGI("boot", "Startup -> forcing Full Auto + arming stack (baseline Out %d Room %d IntM %d Int2 %d)", o, r, m, c);
             }
         # Plant-safe: schedule owns the light whenever Takeover is clear.
-        # Full Auto OFF must not equal lights OFF.
         - if:
             condition:
               lambda: 'return !id(ha_takeover_active);'
             then:
               - switch.turn_on: photoperiod_switch
-        # Re-run arm_full_auto only when Full Auto was already on (and not
-        # in Manual Takeover). Does not force ON if the user left it off.
+        # Default startup = Full Auto for everything (unless Takeover).
         - if:
             condition:
-              lambda: 'return !id(ha_takeover_active) && id(full_auto_mode);'
+              lambda: 'return !id(ha_takeover_active);'
             then:
               - switch.turn_on: full_auto_switch
         # Re-assert Lock WiFi AP after STA is up (on_connect also runs this;
@@ -236,8 +225,9 @@ ota:
 #  Device: dsc-hub   (ESP32 + SH1106 128x64 OLED + rotary UI)
 #  ---------------------------------------------------------------
 #  2026-08-03 — NVS SYNC ON MODE CHANGE + LINK / AP PIN
-#  Mode transitions flush NVS immediately (API-recovery reboot cannot
-#  resurrect a stale Full Auto OFF). Link ladder: soft nudge on handshake
+#  Mode transitions flush NVS immediately. v5.1.11 also forces Full Auto
+#  ON at every boot (except Takeover), so a stale NVS OFF cannot idle the
+#  stack after recovery reboot. Link ladder: soft nudge on handshake
 #  ≥90s; bounce/reboot need a dead API client (or hs ≥10/15 min while
 #  "connected"). Lock WiFi AP: mismatch bounce backoff; fast_connect off;
 #  wifi_ap_learn_or_pin on every STA connect + delayed on_boot.
@@ -246,10 +236,16 @@ ota:
 #  ------------------------------------------------------------------
 #  full_auto_mode already persists in NVS. The reboot gap was that
 #  restore never re-ran arm_full_auto, and boot_resume_pending parked
-#  the ladder behind a tap/timeout. on_boot now clears that gate and,
-#  if Full Auto was ON (and Manual Takeover is not), turns the switch
-#  on so the stack re-arms. If Full Auto was OFF, it stays OFF.
-#  (Built on v2.4.3 below.)
+#  the ladder behind a tap/timeout. on_boot now clears that gate and
+#  re-arms. (Built on v2.4.3 below.)
+#
+#  v5.1.11 — FULL AUTO DEFAULT STARTUP (7 Aug 2026)
+#  ------------------------------------------------------------------
+#  Boot no longer preserves a stale Full Auto OFF from NVS. Every start
+#  (except Manual Takeover restored ON) forces Full Auto + arm_full_auto
+#  so fans, ladder Autos, and photoperiod come up armed. Closes the
+#  5 Aug overnight drop where recovery reboot left Full Auto OFF mid-
+#  photoperiod window. Mid-session OFF still works until next reboot.
 #
 #  v2.4.3 — FULL AUTO = MASTER + GROW-MAT ROOT-SAFETY (19 Jul 2026)
 #  * FULL AUTO IS NOW THE MASTER AUTOMATION MODE. Being in Full Auto
@@ -263,10 +259,8 @@ ota:
 #    flash the ladder came up disarmed and silent.)
 #  * FAIL INTO AUTOMATION: full_auto_mode + auto_photoperiod now DEFAULT
 #    ON, so a fresh flash or a wiped/non-preserved NVS reboots straight
-#    into Full Auto instead of idle Standby.
-#  * v2.4.4 · BOOT PERSIST + RE-ARM: if Full Auto was ON, reboot re-runs
-#    arm_full_auto (no resume prompt). If it was OFF, it stays OFF.
-#    Manual Takeover restored from NVS still wins.
+#    into Full Auto instead of idle Standby. v5.1.11 also forces that on
+#    every boot (stale NVS OFF cannot win).
 #  * GROW-MAT ROOT-ZONE SAFETY (the 10:32pm "mat off at air 21C / roots
 #    17C" bug): the mat had FALSE-tripped its root-zone fault and fallen
 #    to clone-AIR control, which cuts the mat when the AIR hits target —
@@ -735,19 +729,19 @@ globals:
   - id: humidifier_auto_enabled
     type: bool
     restore_value: true
-    initial_value: 'false'
+    initial_value: 'true'          # v5.1.11: boot into Full Auto stack armed
   - id: dehumidifier_auto_enabled
     type: bool
     restore_value: true
-    initial_value: 'false'
+    initial_value: 'true'
   - id: heater_auto_enabled
     type: bool
     restore_value: true
-    initial_value: 'false'
+    initial_value: 'true'
   - id: growmat_auto_enabled
     type: bool
     restore_value: true
-    initial_value: 'false'
+    initial_value: 'true'
   # Per-pot mat vote: exclude a dying probe without a reflash.
   # POT3 defaults OFF (known flat-0°C fault); others ON.
   - id: mat_vote_1
@@ -5004,14 +4998,13 @@ interval:
             id(boot_time_synced_at) = millis();
           if (id(boot_time_synced_at) != 0 && (millis() - id(boot_time_synced_at)) > 60000) {
             id(boot_resume_pending) = false;
-            // Belt-and-suspenders for anything still using the old resume
-            // gate: if Full Auto was restored ON, re-arm the stack.
-            if (!id(ha_takeover_active) && id(full_auto_mode)) {
-              id(full_auto_switch).publish_state(true);
-              id(arm_full_auto).execute();
-              ESP_LOGI("boot", "Resume gate cleared -> Full Auto re-armed from persisted ON");
+            // Belt-and-suspenders: force Full Auto unless Takeover owns
+            // the wheel (matches on_boot v5.1.11 default-startup policy).
+            if (!id(ha_takeover_active)) {
+              id(full_auto_switch).turn_on();
+              ESP_LOGI("boot", "Resume gate cleared -> Full Auto forced ON");
             } else {
-              ESP_LOGI("boot", "Resume prompt timed out");
+              ESP_LOGI("boot", "Resume prompt timed out (Takeover held)");
             }
           }
 
