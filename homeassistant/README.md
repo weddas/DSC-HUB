@@ -76,19 +76,29 @@ Package pot/tank **push** notifiers are not shipped in **v5.0.0**
 
 ## HACS cards
 
-mushroom · apexcharts-card · plotly-graph-card · mini-graph-card · gauge-card-pro · modern-circular-gauge · logbook-card · auto-entities · vertical-stack-in-card · card-mod · bar-card · ph-meter-temperature · **expander-card** · **browser_mod** · **DSC-HUB** (Dashboard custom repo — system map + airflow map)
+mushroom · apexcharts-card · plotly-graph-card · mini-graph-card · gauge-card-pro · modern-circular-gauge · logbook-card · auto-entities · vertical-stack-in-card · card-mod · bar-card · ph-meter-temperature · **expander-card** · **browser_mod** · **DSC-HUB** (Dashboard custom repo — system map + airflow map + The Dash FX)
 
 `browser_mod` (HACS **Integration**, not a card) powers the popup layer —
 graph enlarge, appliance consoles, pot detail. Install from HACS →
 Integrations, restart HA, then **Settings → Devices & Services →
 Add Integration → Browser Mod**. Without it the popup taps silently no-op.
 
-## Local custom cards — SYSTEM MAP + AIRFLOW STATUS
+## Local custom cards — SYSTEM MAP + AIRFLOW STATUS + The Dash
 
 | Card | Type | View |
 |---|---|---|
 | Neon isometric map | `custom:dsc-system-map-card` | Home |
 | GUI tent airflow scene | `custom:dsc-airflow-map-card` | Climate Engine |
+| Cinematic Dash | `custom:dsc-the-dash-card` | `/dsc-hub-pro/dash` |
+
+**The Dash FX (2026-08-06):** HACS/Sync bundle concatenates `three.min.js` →
+`vendor/dsc-dash-fx.js` → `dsc-the-dash-card.js`. Live scene uses **MeshLine**
+flow ribbons + **confined** in-tent curl (`mixClone`/`mixMain`); ambient room
+curl is retired. Bloom `DepthTexture` stays **default off** — opt in only via
+`FEATURES.depthSoftParticles` / `enableDepthTexture(true)`. After every www
+deploy, **hard-reload** the browser. API + verify checklist:
+[`www/vendor/dsc-dash-fx.md`](www/vendor/dsc-dash-fx.md) ·
+[`../docs/qa/LIVE-UI-DASH-DEFERRED-FX.md`](../docs/qa/LIVE-UI-DASH-DEFERRED-FX.md).
 
 ### Preferred — HACS Dashboard custom repository
 
