@@ -45,6 +45,7 @@ flowchart LR
 | [`scripts/ADDON.md`](scripts/ADDON.md) | **Primary delivery** — HAOS Sync add-on |
 | [`docs/qa/FIRMWARE-QA-5.1.0.md`](docs/qa/FIRMWARE-QA-5.1.0.md) | Firmware Validate / flash QC |
 | [`docs/qa/ADDON-QA-5.1.0.md`](docs/qa/ADDON-QA-5.1.0.md) | Sync add-on QC |
+| [`docs/qa/LIVE-UI-DASH-DEFERRED-FX.md`](docs/qa/LIVE-UI-DASH-DEFERRED-FX.md) | The Dash MeshLine / confined curl / depth opt-in |
 | [`homeassistant/README.md`](homeassistant/README.md) | Packages, HACS, entity notes |
 | [`firmware/v4/README.md`](firmware/v4/README.md) | Local validate / flash |
 
