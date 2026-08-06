@@ -575,7 +575,7 @@
     if ("outputColorSpace" in renderer && THREE.SRGBColorSpace) renderer.outputColorSpace = THREE.SRGBColorSpace;
     else if ("outputEncoding" in renderer && THREE.sRGBEncoding) renderer.outputEncoding = THREE.sRGBEncoding;
     if (THREE.ACESFilmicToneMapping) renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.05;
+    renderer.toneMappingExposure = 1.12;
     renderer.shadowMap.enabled = true;
     if (THREE.PCFSoftShadowMap) renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     host.appendChild(renderer.domElement);
@@ -585,9 +585,9 @@
       try {
         post = fx.createComposer(renderer, scene, camera);
         if (post && post.bloomPass) {
-          post.bloomPass.threshold = 0.72;
-          post.bloomPass.strength = 0.7;
-          post.bloomPass.radius = 0.55;
+          post.bloomPass.threshold = 0.68;
+          post.bloomPass.strength = 0.82;
+          post.bloomPass.radius = 0.62;
         }
       } catch (_) {
         post = null;
@@ -597,9 +597,9 @@
     const root = new THREE.Group();
     scene.add(root);
 
-    const hemi = new THREE.HemisphereLight(0x9fbad2, 0x161019, 0.32);
+    const hemi = new THREE.HemisphereLight(0xb8cce0, 0x1a1420, 0.48);
     scene.add(hemi);
-    const key = new THREE.DirectionalLight(0xffd8ad, 1.08);
+    const key = new THREE.DirectionalLight(0xffe2c4, 1.22);
     key.position.set(5.5, 9, 5);
     key.castShadow = true;
     key.shadow.mapSize.set(2048, 2048);
@@ -612,34 +612,110 @@
     key.shadow.camera.near = 1;
     key.shadow.camera.far = 22;
     scene.add(key);
-    const fill = new THREE.DirectionalLight(0x5aa9ff, 0.38);
+    const fill = new THREE.DirectionalLight(0x6eb4ff, 0.52);
     fill.position.set(-6, 4.5, 4);
     scene.add(fill);
-    const rim = new THREE.DirectionalLight(0xb66cff, 0.56);
+    const rim = new THREE.DirectionalLight(0xc9a0ff, 0.42);
     rim.position.set(4, 5, -6);
     scene.add(rim);
+    // Room practicals — ceiling wash + warm bounce (HVAC digital-twin cue)
+    const ceilWash = new THREE.PointLight(0xd8e6f5, 1.35, 14, 1.6);
+    ceilWash.position.set(0, 3.85, 0.2);
+    scene.add(ceilWash);
+    const ceilSpotA = new THREE.SpotLight(0xfff0dd, 1.8, 12, 0.55, 0.45, 1.2);
+    ceilSpotA.position.set(-2.6, 3.9, 0.4);
+    ceilSpotA.target.position.set(-2.75, 0.8, 0.3);
+    scene.add(ceilSpotA);
+    scene.add(ceilSpotA.target);
+    const ceilSpotB = new THREE.SpotLight(0xffe8d6, 2.1, 14, 0.6, 0.4, 1.2);
+    ceilSpotB.position.set(2.2, 3.95, 0.2);
+    ceilSpotB.target.position.set(2.15, 0.9, 0.08);
+    scene.add(ceilSpotB);
+    scene.add(ceilSpotB.target);
+    const floorBounce = new THREE.PointLight(0x5a7a98, 0.55, 10, 2);
+    floorBounce.position.set(0, 0.35, 0.2);
+    scene.add(floorBounce);
+    const tentFillClone = new THREE.PointLight(0x7ec8ff, 0.15, 3.2, 2);
+    tentFillClone.position.set(-2.75, 1.6, 0.3);
+    scene.add(tentFillClone);
+    const tentFillMain = new THREE.PointLight(0xffb08a, 0.2, 4.5, 2);
+    tentFillMain.position.set(2.15, 1.7, 0.08);
+    scene.add(tentFillMain);
 
     const floor = new THREE.Mesh(
       new THREE.BoxGeometry(11.5, 0.1, 8.2),
-      new THREE.MeshStandardMaterial({ color: 0x0c1119, metalness: 0.08, roughness: 0.92 })
+      new THREE.MeshStandardMaterial({ color: 0x101820, metalness: 0.12, roughness: 0.86 })
     );
     floor.position.y = -0.06;
     floor.receiveShadow = true;
     root.add(floor);
-    const grid = new THREE.GridHelper(10.8, 24, 0x263349, 0x131c29);
+    // Soft floor sheen card — reads lit room, not void
+    const floorSheen = new THREE.Mesh(
+      new THREE.PlaneGeometry(10.2, 7.2),
+      new THREE.MeshBasicMaterial({
+        color: 0x2a4058,
+        transparent: true,
+        opacity: 0.07,
+        depthWrite: false,
+      })
+    );
+    floorSheen.rotation.x = -Math.PI / 2;
+    floorSheen.position.y = 0.02;
+    root.add(floorSheen);
+    const grid = new THREE.GridHelper(10.8, 24, 0x31445c, 0x182230);
     grid.position.y = 0.005;
     if (grid.material) {
       grid.material.transparent = true;
-      grid.material.opacity = 0.42;
+      grid.material.opacity = 0.28;
     }
     root.add(grid);
 
+    // Ceiling plane + practical fixtures
+    const ceiling = new THREE.Mesh(
+      new THREE.PlaneGeometry(10.6, 7.1),
+      new THREE.MeshStandardMaterial({ color: 0x1a222c, metalness: 0.05, roughness: 0.92, side: THREE.DoubleSide })
+    );
+    ceiling.rotation.x = Math.PI / 2;
+    ceiling.position.y = 4.05;
+    ceiling.receiveShadow = true;
+    root.add(ceiling);
+    const mkCeilingFixture = (x, z) => {
+      const fixture = new THREE.Group();
+      const pan = new THREE.Mesh(
+        new THREE.BoxGeometry(0.9, 0.06, 0.35),
+        new THREE.MeshStandardMaterial({ color: 0xe8eef4, emissive: 0xfff6e8, emissiveIntensity: 0.85, roughness: 0.4 })
+      );
+      fixture.add(pan);
+      const glow = new THREE.Mesh(
+        new THREE.PlaneGeometry(1.1, 0.5),
+        new THREE.MeshBasicMaterial({
+          color: 0xfff3dd,
+          transparent: true,
+          opacity: 0.14,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false,
+          side: THREE.DoubleSide,
+        })
+      );
+      glow.rotation.x = Math.PI / 2;
+      glow.position.y = -0.04;
+      fixture.add(glow);
+      fixture.position.set(x, 3.98, z);
+      root.add(fixture);
+      return fixture;
+    };
+    mkCeilingFixture(-3.2, 0.2);
+    mkCeilingFixture(0, 0.2);
+    mkCeilingFixture(3.2, 0.2);
+
     const roomShell = new THREE.Mesh(
       new THREE.BoxGeometry(10.8, 4.3, 7.3),
-      new THREE.MeshBasicMaterial({
-        color: 0x183047,
+      new THREE.MeshStandardMaterial({
+        color: 0x1c2a38,
+        metalness: 0.08,
+        roughness: 0.9,
         transparent: true,
-        opacity: 0.026,
+        opacity: 0.12,
         side: THREE.BackSide,
         depthWrite: false,
       })
@@ -648,26 +724,26 @@
     root.add(roomShell);
     const roomEdges = new THREE.LineSegments(
       new THREE.EdgesGeometry(new THREE.BoxGeometry(10.8, 4.3, 7.3)),
-      new THREE.LineBasicMaterial({ color: 0x44637e, transparent: true, opacity: 0.18 })
+      new THREE.LineBasicMaterial({ color: 0x5a7a96, transparent: true, opacity: 0.22 })
     );
     roomEdges.position.copy(roomShell.position);
     root.add(roomEdges);
-    // Room lung — layered horizontal volumetric slices (read as body, not bare grid)
+    // Soft ceiling volumetric wash (not mid-room blue boxes)
     const roomLungSlices = [];
-    for (let s = 0; s < 4; s++) {
+    for (let s = 0; s < 3; s++) {
       const slice = new THREE.Mesh(
-        new THREE.PlaneGeometry(9.6 - s * 0.35, 6.2 - s * 0.25),
+        new THREE.PlaneGeometry(9.2 - s * 0.4, 5.8 - s * 0.3),
         new THREE.MeshBasicMaterial({
-          color: 0x3d7ea8,
+          color: 0xc5d8ea,
           transparent: true,
-          opacity: 0.012 + s * 0.004,
+          opacity: 0.018 + s * 0.006,
           blending: THREE.AdditiveBlending,
           depthWrite: false,
           side: THREE.DoubleSide,
         })
       );
       slice.rotation.x = -Math.PI / 2;
-      slice.position.set(0, 0.55 + s * 0.72, 0.15);
+      slice.position.set(0, 3.55 - s * 0.22, 0.15);
       root.add(slice);
       roomLungSlices.push(slice);
     }
@@ -691,19 +767,29 @@
     addContact(2.15, 0.08, 2.45, 1.5);
 
     const poleMat = new THREE.MeshStandardMaterial({ color: 0xb4c0c9, metalness: 0.72, roughness: 0.28 });
+    let surfaces = null;
+    if (fx && typeof fx.createPhotorealSurfaces === "function") {
+      try {
+        surfaces = fx.createPhotorealSurfaces();
+      } catch (_) {
+        surfaces = null;
+      }
+    }
     const mylarMat = new THREE.MeshStandardMaterial({
-      color: 0xb9c8d7,
-      metalness: 0.82,
-      roughness: 0.22,
+      color: 0xc5d4e2,
+      map: surfaces ? surfaces.mylar : null,
+      metalness: 0.88,
+      roughness: 0.18,
       transparent: true,
-      opacity: 0.35,
+      opacity: 0.42,
       side: THREE.BackSide,
     });
     const mkFabric = (opacity) =>
       new THREE.MeshStandardMaterial({
-        color: 0x111822,
-        metalness: 0.12,
-        roughness: 0.82,
+        color: 0x121a24,
+        map: surfaces ? surfaces.fabric : null,
+        metalness: 0.08,
+        roughness: 0.88,
         transparent: true,
         opacity,
         side: THREE.DoubleSide,
@@ -769,15 +855,40 @@
         new THREE.PlaneGeometry(w * 0.88, h * 0.9),
         new THREE.MeshStandardMaterial({
           color: 0x0e141c,
-          metalness: 0.08,
-          roughness: 0.88,
+          map: surfaces ? surfaces.fabric : null,
+          metalness: 0.06,
+          roughness: 0.9,
           transparent: true,
-          opacity: 0.55,
+          opacity: 0.72,
           side: THREE.DoubleSide,
         })
       );
       door.position.set(0, h / 2, d / 2 + 0.002);
       group.add(door);
+      // Viewing window mesh (clear PVC cue)
+      const windowPane = new THREE.Mesh(
+        new THREE.PlaneGeometry(w * 0.28, h * 0.22),
+        THREE.MeshPhysicalMaterial
+          ? new THREE.MeshPhysicalMaterial({
+              color: 0xa8c8e0,
+              metalness: 0.05,
+              roughness: 0.12,
+              transmission: 0.55,
+              transparent: true,
+              opacity: 0.55,
+              side: THREE.DoubleSide,
+            })
+          : new THREE.MeshStandardMaterial({
+              color: 0xa8c8e0,
+              metalness: 0.1,
+              roughness: 0.15,
+              transparent: true,
+              opacity: 0.35,
+              side: THREE.DoubleSide,
+            })
+      );
+      windowPane.position.set(w * 0.22, h * 0.62, d / 2 + 0.006);
+      group.add(windowPane);
       const zipper = new THREE.Mesh(
         new THREE.BoxGeometry(0.035, h * 0.86, 0.012),
         new THREE.MeshStandardMaterial({ color: 0x90a4ae, metalness: 0.7, roughness: 0.35, emissive: accent, emissiveIntensity: 0.15 })
@@ -960,13 +1071,55 @@
           ribbon = null;
         }
       }
-      paths[name] = { solid, shell, ribbon, intensity: 0 };
+      paths[name] = { solid, shell, ribbon, intensity: 0, shaft: null, portJet: null };
     };
     addPath("intakeClone", 0.11, 44);
     addPath("intakeMain", 0.12, 44);
     addPath("cascade", 0.105, 48);
     addPath("out", 0.122, 50, 0x8a6a62);
     addPath("recirc", 0.118, 50, 0x6a6288);
+
+    // Soft smoke-test shafts along ducts (HVAC pathline cinema — CFM-gated)
+    const mkFlowShaft = (name, radius) => {
+      const curve = curves[name];
+      const shaft = new THREE.Mesh(
+        new THREE.TubeGeometry(curve, 36, radius * 1.85, 8, false),
+        new THREE.MeshBasicMaterial({
+          color: pathColors[name],
+          transparent: true,
+          opacity: 0,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false,
+          side: THREE.DoubleSide,
+        })
+      );
+      shaft.renderOrder = 2;
+      ductGroup.add(shaft);
+      paths[name].shaft = shaft;
+      // Port jet flare at duct start (exhaust suction / intake entry cue)
+      const jet = new THREE.Mesh(
+        new THREE.ConeGeometry(radius * 1.6, radius * 3.2, 16, 1, true),
+        new THREE.MeshBasicMaterial({
+          color: pathColors[name],
+          transparent: true,
+          opacity: 0,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false,
+          side: THREE.DoubleSide,
+        })
+      );
+      const p0 = curve.getPoint(0.02);
+      const t0 = curve.getTangent(0.02).normalize();
+      jet.position.copy(p0).addScaledVector(t0, -radius * 0.6);
+      jet.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), t0.clone().negate());
+      ductGroup.add(jet);
+      paths[name].portJet = jet;
+    };
+    mkFlowShaft("intakeClone", 0.11);
+    mkFlowShaft("intakeMain", 0.12);
+    mkFlowShaft("cascade", 0.105);
+    mkFlowShaft("out", 0.122);
+    mkFlowShaft("recirc", 0.118);
 
     const addFlexRings = (curve, count, radius) => {
       const geometry = new THREE.TorusGeometry(radius, 0.011, 6, 18);
@@ -1322,71 +1475,96 @@
     addAppliance("clone_humidifier", -3.85, 1.35, 0x81d4fa);
 
     const pots = { clone: [], main: [] };
+    const leafPlane = new THREE.PlaneGeometry(1, 1.15);
     const mkPlant = (tall) => {
       const plant = new THREE.Group();
       const pot = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.17, 0.14, 0.2, 16),
-        new THREE.MeshStandardMaterial({ color: 0x4a3228, roughness: 0.86, metalness: 0.05 })
+        new THREE.CylinderGeometry(0.17, 0.14, 0.2, 20),
+        new THREE.MeshStandardMaterial({
+          color: 0x7a4530,
+          roughness: 0.9,
+          metalness: 0.04,
+        })
       );
       pot.position.y = 0.11;
       pot.castShadow = true;
       pot.receiveShadow = true;
       plant.add(pot);
       const rim = new THREE.Mesh(
-        new THREE.TorusGeometry(0.165, 0.012, 8, 20),
-        new THREE.MeshStandardMaterial({ color: 0x3a281f, roughness: 0.7 })
+        new THREE.TorusGeometry(0.165, 0.014, 10, 24),
+        new THREE.MeshStandardMaterial({ color: 0x4a2c1e, roughness: 0.75, metalness: 0.08 })
       );
       rim.rotation.x = Math.PI / 2;
       rim.position.y = 0.21;
       plant.add(rim);
       const soil = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.15, 0.15, 0.04, 14),
-        new THREE.MeshStandardMaterial({ color: 0x2a1c14, roughness: 1 })
+        new THREE.CylinderGeometry(0.15, 0.15, 0.045, 16),
+        new THREE.MeshStandardMaterial({
+          color: 0x2a1c14,
+          roughness: 1,
+          map: surfaces ? surfaces.soil : null,
+        })
       );
       soil.position.y = 0.2;
       plant.add(soil);
-      const stemHeight = tall ? 0.72 : 0.4;
+      const stemHeight = tall ? 0.78 : 0.42;
       const stem = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.018, 0.028, stemHeight, 8),
-        new THREE.MeshStandardMaterial({ color: 0x2a6b38, roughness: 0.7 })
+        new THREE.CylinderGeometry(0.016, 0.026, stemHeight, 10),
+        new THREE.MeshStandardMaterial({ color: 0x245a32, roughness: 0.65, metalness: 0.05 })
       );
       stem.position.y = 0.22 + stemHeight / 2;
       stem.castShadow = true;
       plant.add(stem);
       const leafMat = new THREE.MeshStandardMaterial({
-        color: 0x3f9a52,
-        emissive: 0x0c3014,
-        emissiveIntensity: 0.2,
-        roughness: 0.55,
+        color: surfaces && surfaces.leaf ? 0xffffff : 0x3f9a52,
+        map: surfaces ? surfaces.leaf : null,
+        transparent: !!(surfaces && surfaces.leaf),
+        alphaTest: surfaces && surfaces.leaf ? 0.28 : 0,
+        emissive: 0x0a2812,
+        emissiveIntensity: 0.16,
+        roughness: 0.48,
+        metalness: 0.02,
         side: THREE.DoubleSide,
+        depthWrite: false,
       });
       const leaflet = (scale) => {
-        const leaf = new THREE.Mesh(new THREE.CircleGeometry(0.09 * scale, 10), leafMat.clone());
-        leaf.scale.set(1.35, 0.55, 1);
+        const leaf = new THREE.Mesh(leafPlane.clone(), leafMat.clone());
+        leaf.scale.set(0.14 * scale, 0.14 * scale, 0.14 * scale);
         leaf.castShadow = true;
         return leaf;
       };
-      const tiers = tall ? 4 : 3;
-      const perTier = tall ? 5 : 4;
+      const tiers = tall ? 5 : 3;
+      const perTier = tall ? 6 : 4;
       for (let t = 0; t < tiers; t++) {
-        const y = 0.32 + (t / Math.max(1, tiers - 1)) * stemHeight * 0.78;
-        const rad = 0.1 + t * 0.035;
+        const y = 0.34 + (t / Math.max(1, tiers - 1)) * stemHeight * 0.82;
+        const rad = 0.08 + t * 0.04;
         for (let i = 0; i < perTier; i++) {
-          const angle = (i / perTier) * Math.PI * 2 + t * 0.35;
+          const angle = (i / perTier) * Math.PI * 2 + t * 0.4;
           const fan = new THREE.Group();
-          for (let f = 0; f < 5; f++) {
-            const pet = leaflet(tall ? 0.95 : 0.75);
-            const a = ((f - 2) / 2) * 0.55;
-            pet.position.set(Math.cos(a) * 0.06, 0, Math.sin(a) * 0.04);
-            pet.rotation.set(-0.55 + f * 0.05, a * 0.4, a * 0.35);
+          const fingers = tall ? 7 : 5;
+          for (let f = 0; f < fingers; f++) {
+            const mid = Math.floor(fingers / 2);
+            const pet = leaflet((tall ? 1.05 : 0.82) * (0.75 + (f === mid ? 0.35 : 0)));
+            const a = ((f - (fingers - 1) / 2) / ((fingers - 1) / 2 || 1)) * 0.7;
+            pet.position.set(Math.cos(a) * 0.05, 0.02, Math.sin(a) * 0.03);
+            pet.rotation.set(-0.85 + Math.abs(a) * 0.15, a * 0.35, a * 0.45);
             fan.add(pet);
           }
           fan.position.set(Math.cos(angle) * rad, y, Math.sin(angle) * rad);
           fan.rotation.y = -angle;
-          fan.rotation.x = -0.35 - t * 0.05;
+          fan.rotation.x = -0.4 - t * 0.04;
           plant.add(fan);
         }
       }
+      const cola = new THREE.Group();
+      for (let c = 0; c < (tall ? 5 : 3); c++) {
+        const tip = leaflet(tall ? 0.7 : 0.55);
+        tip.position.set((c - 2) * 0.03, stemHeight * 0.02, ((c % 2) - 0.5) * 0.02);
+        tip.rotation.x = -1.1;
+        cola.add(tip);
+      }
+      cola.position.y = 0.22 + stemHeight + 0.02;
+      plant.add(cola);
       plant.userData.canopyMaterial = leafMat;
       plant.visible = false;
       return plant;
@@ -1468,11 +1646,14 @@
             return (2.0 * near * far) / (far + near - z * (far - near));
           }
           void main() {
-            vec2 uv = gl_PointCoord;
-            float softEdge = 1.0 - smoothstep(0.32, 0.5, length(uv - 0.5));
+            // Elongated streak (HVAC pathline / smoke-test cue), not round blur balls
+            vec2 uv = gl_PointCoord - 0.5;
+            uv.y *= 2.8;
+            float softEdge = 1.0 - smoothstep(0.22, 0.5, length(uv));
             float alpha = softEdge * vViewSoft * uOpacity;
             if (uHasMap > 0.5) {
-              alpha *= texture2D(uMap, uv).a;
+              vec2 mapUv = vec2(gl_PointCoord.x, 0.5 + (gl_PointCoord.y - 0.5) * 0.55);
+              alpha *= texture2D(uMap, mapUv).a;
             }
             if (uHasDepth > 0.5) {
               vec2 screenUv = gl_FragCoord.xy / uResolution;
@@ -1521,59 +1702,15 @@
         },
       };
     };
-    mkAir("intakeClone", 0x42a5f5, 58, 0.095);
-    mkAir("intakeMain", 0x42a5f5, 66, 0.095);
-    mkAir("cascade", 0xffb74d, 72, 0.1);
-    mkAir("out", 0xff765e, 68, 0.1);
-    mkAir("recirc", 0xa85be0, 68, 0.1);
+    mkAir("intakeClone", 0x5eb8ff, 88, 0.055);
+    mkAir("intakeMain", 0x5eb8ff, 96, 0.055);
+    mkAir("cascade", 0xffc107, 96, 0.058);
+    mkAir("out", 0xff8a65, 96, 0.058);
+    mkAir("recirc", 0xce93d8, 96, 0.058);
     mkAir("matHeat", 0xff6d00, 34, 0.09);
-
-    const confinedMix = [];
-    const mkConfinedMix = (name, tent, color, count) => {
-      if (!fx || typeof fx.createConfinedCurlHaze !== "function" || !renderer) {
-        mkAir(name, color, count, 0.085);
-        return;
-      }
-      const size = tent.userData.size;
-      const worldCenter = tent.localToWorld(new THREE.Vector3(0, size.h * 0.42, 0));
-      let haze = null;
-      try {
-        haze = fx.createConfinedCurlHaze(renderer, {
-          count,
-          color,
-          center: worldCenter,
-          halfExtents: new THREE.Vector3(size.w * 0.38, size.h * 0.32, size.d * 0.38),
-        });
-      } catch (_) {
-        haze = null;
-      }
-      if (!haze) {
-        mkAir(name, color, count, 0.085);
-        return;
-      }
-      if (post && typeof post.registerSoftParticleMaterial === "function") {
-        post.registerSoftParticleMaterial(haze.material);
-        if (post.depthTexture) haze.points.layers.set(1);
-      }
-      root.add(haze.points);
-      confinedMix.push(haze);
-      air[name] = {
-        points: haze.points,
-        material: haze.material,
-        curl: haze,
-        confined: true,
-        count,
-        intensity: 0,
-        setOpacity: (v) => {
-          haze.material.uniforms.uOpacity.value = v;
-        },
-        setColor: (c) => {
-          haze.material.uniforms.uColor.value.copy(c);
-        },
-      };
-    };
-    mkConfinedMix("mixClone", tentClone, 0x5eb8f0, 56);
-    mkConfinedMix("mixMain", tentMain, 0xff9a6b, 84);
+    // Through-tent flow legs (not confined curl haze — that read as bouncing blur balls)
+    mkAir("flowClone", 0x81d4fa, 72, 0.05);
+    mkAir("flowMain", 0xffab91, 110, 0.05);
     const particleColors = {
       intake: new THREE.Color(0x42a5f5),
       intakeWarm: new THREE.Color(0x66a4d9).lerp(new THREE.Color(0xff9b55), 0.16),
@@ -1585,6 +1722,7 @@
 
     // Ambient room curl haze retired — it read as flying blur balls, not CFM flow.
     let curl = null;
+    const confinedMix = [];
 
     const sampleCurve = (curve, t, radius, seed) => {
       const clamped = Math.max(0, Math.min(1, t));
@@ -1695,7 +1833,15 @@
       const shown = active ? Math.min(1, intensity * boost) : 0;
       path.intensity = shown;
       const idleGlow = name === "out" || name === "recirc" ? 0.14 : 0;
-      path.shell.material.opacity = active ? Math.max(idleGlow, 0.08 + shown * 0.38) : idleGlow;
+      path.shell.material.opacity = active ? Math.max(idleGlow, 0.1 + shown * 0.48) : idleGlow;
+      if (path.shaft) {
+        path.shaft.material.opacity = active ? 0.04 + shown * 0.16 : 0;
+      }
+      if (path.portJet) {
+        path.portJet.material.opacity = active ? 0.08 + shown * 0.28 : 0;
+        const pulse = 0.92 + Math.sin(now * 0.008 + shown * 4) * 0.08;
+        path.portJet.scale.setScalar(pulse);
+      }
       (arrowByPath[name] || []).forEach((arrow) => {
         arrow.visible = active || name === "out" || name === "recirc";
         if (arrow.visible) arrow.scale.setScalar(0.88 + Math.sin(now * 0.005) * 0.12);
@@ -1703,12 +1849,13 @@
       if (path.ribbon) {
         const uniforms = path.ribbon.material.userData;
         uniforms.uOpacity.value = active
-          ? (name === "cascade" ? 0.46 : 0.25) + shown * 0.58
+          ? (name === "cascade" ? 0.55 : 0.38) + shown * 0.55
           : name === "out" || name === "recirc"
-            ? 0.12
+            ? 0.14
             : 0;
-        uniforms.uDashOffset.value -= 0.005 + shown * 0.018;
-        const width = active ? 0.46 + shown * 0.86 : 0.32;
+        // Velocity-band dash speed ∝ CFM (duct-network sim cue)
+        uniforms.uDashOffset.value -= 0.008 + shown * 0.032;
+        const width = active ? 0.55 + shown * 1.05 : 0.34;
         if (Math.abs(width - path.ribbon.userData.flow.lastWidth) > 0.08) {
           const nextRadius = path.ribbon.userData.flow.baseRadius * width;
           if (typeof path.ribbon.userData.rebuildFlowRibbon === "function") {
@@ -1739,16 +1886,17 @@
 
     const updateSystem = (name, curve, dt, intensity, mapper) => {
       const system = air[name];
+      if (!system || !system.positions) return;
       const active = intensity >= 0.04;
       const boost = highlights(name) || (name.startsWith("intake") && highlights("intake")) ? 1.42 : 1;
       const shown = active ? Math.min(1, intensity * boost) : 0;
       system.intensity = shown;
       system.points.visible = active;
-      system.setOpacity(active ? Math.min(1, 0.28 + shown * 0.72) : 0);
+      system.setOpacity(active ? Math.min(1, 0.35 + shown * 0.65) : 0);
       if (!active) return;
-      // CFM-scaled speed: higher absolute CFM → faster stream along duct
-      const speed = 0.12 + shown * 0.78;
-      const activeCount = Math.max(8, Math.floor(system.count * (0.35 + shown * 0.65)));
+      // CFM-scaled speed: higher absolute CFM → faster stream along path
+      const speed = 0.16 + shown * 0.95;
+      const activeCount = Math.max(12, Math.floor(system.count * (0.45 + shown * 0.55)));
       for (let i = 0; i < system.count; i++) {
         if (i >= activeCount) {
           system.positions[i * 3 + 1] = -99;
@@ -1757,7 +1905,7 @@
         system.phase[i] = (system.phase[i] + dt * speed * (0.82 + (i % 7) * 0.045)) % 1;
         const point = mapper
           ? mapper(system.phase[i], system.seed[i], i)
-          : sampleCurve(curve, system.phase[i], 0.028, system.seed[i]);
+          : sampleCurve(curve, system.phase[i], 0.022, system.seed[i]);
         system.positions[i * 3] = point.x;
         system.positions[i * 3 + 1] = point.y;
         system.positions[i * 3 + 2] = point.z;
@@ -1765,79 +1913,103 @@
       system.points.geometry.attributes.position.needsUpdate = true;
     };
 
+    /** World point inside a tent (local fractions: x/z -0.5..0.5, y 0..1). */
+    const tentPoint = (tent, fx, fy, fz) => {
+      const size = tent.userData.size;
+      const local = new THREE.Vector3(fx * size.w, fy * size.h, fz * size.d);
+      return tent.localToWorld(local);
+    };
+
+    /**
+     * In-tent CFM story after intake pierce: entry → mid pool → pull to exit(s).
+     * Duct suck-in is the separate intake* streams; exhaust* continues past the port.
+     */
+    const flowThroughTent = (t, seed, i, opts) => {
+      const intakeCurve = opts.intakeCurve;
+      const exits = opts.exits || [];
+      const tent = opts.tent;
+      const ductEnd = intakeCurve.getPoint(1);
+      let pick = exits[0] && exits[0].point;
+      let acc = 0;
+      const totalW = exits.reduce((s, e) => s + Math.max(0, e.weight || 0), 0) || 1;
+      const roll = seed;
+      for (let e = 0; e < exits.length; e++) {
+        acc += Math.max(0, exits[e].weight || 0) / totalW;
+        if (roll <= acc) {
+          pick = exits[e].point;
+          break;
+        }
+      }
+      if (!pick) pick = ductEnd;
+
+      if (t < 0.4) {
+        // Entry plume just inside the pierce — continues the intake suck visually
+        const u = t / 0.4;
+        const inside = tentPoint(
+          tent,
+          (seed - 0.5) * 0.25,
+          0.18 + seed * 0.12,
+          0.35 - u * 0.25 + (seed - 0.5) * 0.1
+        );
+        return ductEnd.clone().lerp(inside, u);
+      }
+      if (t < 0.7) {
+        // Pool / settle in mid-lower volume
+        const u = (t - 0.4) / 0.3;
+        const from = tentPoint(tent, (seed - 0.5) * 0.25, 0.22, 0.15);
+        const pool = tentPoint(
+          tent,
+          (seed - 0.5) * 0.55,
+          0.2 + seed * 0.2 + Math.sin(u * Math.PI) * 0.06,
+          (seed - 0.5) * 0.4
+        );
+        return from.lerp(pool, u);
+      }
+      // Pull toward exhaust port (handoff to OUT/RECIRC/cascade streams)
+      const u = (t - 0.7) / 0.3;
+      const ease = u * u;
+      const pool = tentPoint(tent, (seed - 0.5) * 0.35, 0.28 + ((i % 5) / 5) * 0.1, (seed - 0.5) * 0.25);
+      return pool.lerp(pick, 0.2 + ease * 0.8);
+    };
+
     const updateCascadePlume = (dt, intensity, outShare, recShare) => {
       air.cascade.setColor(live.matOn ? particleColors.cascadeWarm : particleColors.cascade);
       const outBias = Math.max(0, Number(outShare) || 0);
       const recBias = Math.max(0, Number(recShare) || 0);
       const splitSum = Math.max(0.001, outBias + recBias);
-      const outW = outBias / splitSum;
-      const recW = recBias / splitSum;
       const outPort = curves.out.getPoint(0.02);
       const recPort = curves.recirc.getPoint(0.02);
       updateSystem("cascade", curves.cascade, dt, intensity, (t, seed, i) => {
-        if (t < 0.72) return sampleCurve(curves.cascade, t / 0.72, 0.03 + t * 0.02, seed);
-        // After cascade entry: mix in 4×8, then bias toward OUT vs RECIRC by mass-balance share
-        const u = (t - 0.72) / 0.28;
+        if (t < 0.55) return sampleCurve(curves.cascade, t / 0.55, 0.022, seed);
+        // Into 4×8 then pull to OUT/RECIRC ports (handoff into exhaust streams)
+        const u = (t - 0.55) / 0.45;
         const entry = curves.cascade.getPoint(1);
-        const size = tentMain.userData.size;
-        const towardOut = i % 2 === 0 ? outW >= recW : seed < outW;
+        const towardOut = seed < outBias / splitSum;
         const target = towardOut ? outPort : recPort;
-        const point = entry.clone();
-        // Early: swirl in tent; late: drift toward chosen exhaust port
-        const swirl = 1 - u * u;
-        const pull = u * u;
-        point.x += (seed - 0.5) * size.w * 0.32 * swirl + (target.x - entry.x) * pull * 0.85;
-        point.y += 0.12 + u * size.h * 0.28 * swirl + (target.y - entry.y) * pull * 0.75 + ((i % 5) / 5) * 0.08;
-        point.z += (((i * 0.618) % 1) - 0.5) * size.d * 0.36 * swirl + (target.z - entry.z) * pull * 0.85;
-        return point;
+        if (u < 0.45) {
+          const pool = tentPoint(tentMain, (seed - 0.5) * 0.35, 0.35 + u * 0.15, (seed - 0.5) * 0.3);
+          return entry.clone().lerp(pool, u / 0.45);
+        }
+        const v = (u - 0.45) / 0.55;
+        const pool = tentPoint(tentMain, (seed - 0.5) * 0.25, 0.45, (seed - 0.5) * 0.2);
+        return pool.lerp(target, v * v);
       });
     };
 
-    const updateTentMix = (name, tent, dt, intensity, warmBlend, pullTarget) => {
-      const system = air[name];
-      if (!system) return;
-      const active = intensity >= 0.04;
-      system.points.visible = active;
-      const cool = particleColors.mixCool;
-      const warm = particleColors.mixWarm;
-      system.setColor(cool.clone().lerp(warm, Math.max(0, Math.min(1, warmBlend || 0))));
-      if (system.confined && system.curl) {
-        if (!active) {
-          system.setOpacity(0);
-          return;
-        }
-        // Bias confined curl AABB center toward exhaust pull (OUT/RECIRC split)
-        if (pullTarget && system.material && system.material.uniforms && system.material.uniforms.uCenter) {
-          const size = tent.userData.size;
-          const base = tent.localToWorld(new THREE.Vector3(0, size.h * 0.42, 0));
-          const biased = base.clone().lerp(pullTarget, 0.28);
-          system.material.uniforms.uCenter.value.copy(biased);
-        }
-        system.curl.update(dt, intensity);
-        system.setOpacity(Math.min(0.48, 0.1 + intensity * 0.34));
-        return;
-      }
-      system.setOpacity(active ? Math.min(0.85, 0.22 + intensity * 0.55) : 0);
-      if (!active) return;
-      const size = tent.userData.size;
-      const speed = 0.08 + intensity * 0.35;
-      for (let i = 0; i < system.count; i++) {
-        system.phase[i] = (system.phase[i] + dt * speed * (0.7 + (i % 5) * 0.04)) % 1;
-        const u = system.phase[i];
-        const ang = u * Math.PI * 2 + system.seed[i] * 6.28;
-        const rad = 0.2 + system.seed[i] * 0.55;
-        const local = new THREE.Vector3(
-          Math.cos(ang) * size.w * 0.28 * rad,
-          size.h * (0.18 + (u * 0.55 + ((i % 7) / 7) * 0.12) % 0.62),
-          Math.sin(ang * 0.85) * size.d * 0.28 * rad
+    /** Exhaust stream starts inside tent at the port, then rides the duct — reads as suction. */
+    const exhaustFromInside = (t, seed, ductCurve, tent, portLocal) => {
+      const port = ductCurve.getPoint(0.02);
+      if (t < 0.32) {
+        const u = t / 0.32;
+        const inside = tentPoint(
+          tent,
+          portLocal[0] * (0.35 + seed * 0.2),
+          portLocal[1] + (seed - 0.5) * 0.08,
+          portLocal[2] * (0.35 + seed * 0.2)
         );
-        tent.localToWorld(local);
-        if (pullTarget) local.lerp(pullTarget, 0.12);
-        system.positions[i * 3] = local.x;
-        system.positions[i * 3 + 1] = local.y;
-        system.positions[i * 3 + 2] = local.z;
+        return inside.lerp(port, u * u);
       }
-      system.points.geometry.attributes.position.needsUpdate = true;
+      return sampleCurve(ductCurve, (t - 0.32) / 0.68, 0.02, seed);
     };
 
     const updateMatHeat = (dt, intensity) => {
@@ -1882,28 +2054,53 @@
         const outShare = Math.max(0, Number(live.outShare) || 0);
         const recShare = Math.max(0, Number(live.recircShare) || 0);
         const shareSum = Math.max(0.001, outShare + recShare);
-        const mixPull = new THREE.Vector3()
-          .addScaledVector(curves.out.getPoint(0.02), outShare / shareSum)
-          .addScaledVector(curves.recirc.getPoint(0.02), recShare / shareSum);
+        const cascadeExit = curves.cascade.getPoint(0.02);
 
         updatePathVisual("intakeClone", intakeClone, now);
         updatePathVisual("intakeMain", intakeMain, now);
         updatePathVisual("cascade", cascade, now);
         updatePathVisual("out", outVis, now);
         updatePathVisual("recirc", recVis, now);
+
+        // Intake ducts only (tight tube stream) — through-flow handles tent story
         updateSystem("intakeClone", curves.intakeClone, dt, intakeClone);
         updateSystem("intakeMain", curves.intakeMain, dt, intakeMain);
         updateCascadePlume(dt, cascade, outShare, recShare);
-        updateSystem("out", curves.out, dt, outVis);
-        updateSystem("recirc", curves.recirc, dt, recVis);
-        updateTentMix("mixClone", tentClone, dt, intakeClone, live.matOn ? 0.35 : 0.1);
-        updateTentMix(
-          "mixMain",
-          tentMain,
-          dt,
-          Math.min(1, intakeMain * 0.55 + cascade * 0.45),
-          0.22 + cascade * 0.5,
-          Math.max(outVis, recVis, cascade) >= 0.04 ? mixPull : null
+
+        // Exhaust: suction from inside tent → duct → dump/room
+        updateSystem("out", curves.out, dt, outVis, (t, seed) =>
+          exhaustFromInside(t, seed, curves.out, tentMain, [0.05, 0.55, -0.42])
+        );
+        updateSystem("recirc", curves.recirc, dt, recVis, (t, seed) =>
+          exhaustFromInside(t, seed, curves.recirc, tentMain, [0.42, 0.48, 0.02])
+        );
+
+        // 2×4: intake → pool → cascade exit
+        air.flowClone.setColor(
+          particleColors.mixCool.clone().lerp(particleColors.mixWarm, live.matOn ? 0.35 : 0.1)
+        );
+        updateSystem("flowClone", curves.intakeClone, dt, intakeClone, (t, seed, i) =>
+          flowThroughTent(t, seed, i, {
+            tent: tentClone,
+            intakeCurve: curves.intakeClone,
+            exits: [{ point: cascadeExit, weight: 1 }],
+          })
+        );
+
+        // 4×8: intake → pool → OUT/RECIRC by mass-balance share
+        const mainFlow = Math.min(1, intakeMain * 0.55 + cascade * 0.45);
+        air.flowMain.setColor(
+          particleColors.mixCool.clone().lerp(particleColors.mixWarm, 0.22 + cascade * 0.5)
+        );
+        updateSystem("flowMain", curves.intakeMain, dt, mainFlow, (t, seed, i) =>
+          flowThroughTent(t, seed, i, {
+            tent: tentMain,
+            intakeCurve: curves.intakeMain,
+            exits: [
+              { point: curves.out.getPoint(0.02), weight: outShare / shareSum },
+              { point: curves.recirc.getPoint(0.02), weight: recShare / shareSum },
+            ],
+          })
         );
         updateMatHeat(dt, live.matOn ? 1 : 0);
 
@@ -1920,6 +2117,8 @@
           shaft.material.opacity = live.cloneLit ? (0.055 + lightLevel * 0.14) * lightBoost : 0;
           shaft.position.y = tentClone.userData.size.h * 0.5 + Math.sin(now * 0.0007 + i) * 0.02;
         });
+        tentFillClone.intensity = live.cloneLit ? 0.35 + lightLevel * 1.4 : 0.12;
+        tentFillMain.intensity = 0.18 + Math.max(intakeMain, cascade) * 0.55;
         tentMain.userData.lightBar.material.emissiveIntensity = 0;
         tentMain.userData.lightBar.material.opacity = 0.025;
 
@@ -1937,25 +2136,23 @@
           }
         }
 
-        const setAch = (tent, base) => {
-          (tent.userData.achSlices || []).forEach((slice, i) => {
-            slice.material.opacity = base * (0.55 + i * 0.28);
-          });
-        };
-        setAch(tentClone, intakeClone >= 0.04 ? 0.025 + intakeClone * 0.085 : 0);
-        setAch(
-          tentMain,
-          Math.max(intakeMain, cascade, outVis, recVis) >= 0.04
-            ? 0.026 + Math.max(intakeMain, cascade, outVis, recVis) * 0.09
-            : 0
-        );
-        roomShell.material.opacity = 0.024 + recVis * 0.045;
-        roomEdges.material.opacity = 0.14 + recVis * 0.12;
-        roomLungSlices.forEach((slice, i) => {
-          const liveLung = recVis >= 0.04;
-          slice.material.opacity = liveLung ? (0.01 + recVis * 0.055) * (0.55 + i * 0.18) : 0.004;
-          slice.position.y = 0.55 + i * 0.72 + (liveLung ? Math.sin(now * 0.00055 + i) * 0.04 * recVis : 0);
+        // ACH volume boxes retired — they read as “blur balls in a blue box”
+        (tentClone.userData.achSlices || []).forEach((slice) => {
+          slice.material.opacity = 0;
+          slice.visible = false;
         });
+        (tentMain.userData.achSlices || []).forEach((slice) => {
+          slice.material.opacity = 0;
+          slice.visible = false;
+        });
+        roomShell.material.opacity = 0.1 + recVis * 0.06;
+        roomEdges.material.opacity = 0.18 + recVis * 0.1;
+        roomLungSlices.forEach((slice, i) => {
+          // Ceiling wash only — do not bob mid-room volumes
+          slice.material.opacity = 0.016 + i * 0.006 + (recVis >= 0.04 ? recVis * 0.02 : 0);
+          slice.position.y = 3.55 - i * 0.22;
+        });
+        ceilWash.intensity = 1.15 + (live.cloneLit ? 0.35 : 0) + recVis * 0.25;
 
         fans.intakeClone.userData.speed = intakeClone * 15;
         fans.intakeMain.userData.speed = intakeMain * 15;

@@ -882,3 +882,45 @@ New 5s `tx_fleet_heartbeat` / `tx_peer_time` broadcast load on top of 2s vitals 
 
 ### deferred
 - Full photoreal GLTF tents/plants; DepthTexture default-on; hardware soak items unchanged.
+
+---
+
+## 2026-08-06 — Photoreal surfaces (tents + plants)
+
+### done
+- **Surfaces in `dsc-dash-fx`:** `createFabricTexture`, `createMylarTexture`, `createLeafTexture`, `createSoilTexture`, `createPhotorealSurfaces` (+ optional `createLeafGeometry`).
+- **Tents:** Oxford fabric map on shells/door; crinkled mylar lining map; PVC viewing window (`MeshPhysicalMaterial` when available); exposure 1.12.
+- **Plants:** Serrated leaf albedo+alpha on plane leaflets (7-finger tall / 5-finger clone), denser tiers + cola tip; soil texture on media surface.
+- **Deploy:** ~911KB Node-concat; `?v=photoreal-*` + hard reload.
+
+### honesty
+- Still procedural/canvas photoreal cues — not scanned/authored GLTF packs. Next step if wanted: offline multi-mesh GLTF plants/tents.
+
+### deferred
+- Authored multi-mesh GLTF tent/plant packs; DepthTexture default-on; hardware soak.
+
+---
+
+## 2026-08-06 — Air flow rewrite (kill blur-box)
+
+### done
+- Removed confined GPU curl mix + ACH blue volume boxes (read as bouncing blur balls in a box).
+- **Intake streams** ride ducts; **flowClone/flowMain** continue pierce → mid-tent pool → pull to exits.
+- **OUT/RECIRC** start *inside* the tent at the port then ride the duct (suction cue).
+- Cascade: duct → 4×8 pool → OUT/RECIRC by share. Plants left alone.
+- Deploy ~911KB; hard reload required.
+
+### soak
+- Needs absolute CFM > 0 (live or held) to see streams; 0 CFM stays quiet by design.
+
+---
+
+## 2026-08-06 — Cinematic airflow + room light
+
+### done
+- **Lighting:** Ceiling fixtures + wash PointLight + twin SpotLights over tents; floor bounce; warmer key / cooler fill; tent fills react to clone light / intake CFM. Floor sheen + lit ceiling plane (room no longer a black void).
+- **Air (HVAC pathline cinema):** Soft additive smoke-test shafts + port jet flares gated by CFM; streak particles (elongated sprites); stronger MeshLine ribbons with CFM-scaled dash speed/width. Keeps intake→pool→exhaust story (no blur-box curl).
+- **Bloom:** Slightly stronger for shafts/ribbons. Bundle ~916KB on HA www.
+
+### soak
+- Hard-refresh Dash (?v= bump). Streams need CFM > 0 (live/held).

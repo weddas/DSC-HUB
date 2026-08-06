@@ -1220,6 +1220,210 @@
     return setTextureSRGB(texture);
   }
 
+  function _makeCanvas(size) {
+    size = size == null ? 256 : Math.max(32, Math.floor(size));
+    var canvas = root.document
+      ? root.document.createElement('canvas')
+      : typeof OffscreenCanvas !== 'undefined'
+        ? new OffscreenCanvas(size, size)
+        : null;
+    if (!canvas) throw new Error('dsc-dash-fx: canvas required for surface textures');
+    canvas.width = size;
+    canvas.height = size;
+    return { canvas: canvas, ctx: canvas.getContext('2d'), size: size };
+  }
+
+  function _canvasTexture(canvas, name, repeat) {
+    var texture = new THREE.CanvasTexture(canvas);
+    texture.name = name;
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    texture.generateMipmaps = true;
+    texture.minFilter = THREE.LinearMipmapLinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+    if (repeat) {
+      texture.repeat.set(repeat, repeat);
+    }
+    return setTextureSRGB(texture);
+  }
+
+  /** Dark oxford nylon / canvas weave for grow-tent shells. */
+  function createFabricTexture(size) {
+    var pack = _makeCanvas(size || 256);
+    var ctx = pack.ctx;
+    var n = pack.size;
+    ctx.fillStyle = '#101820';
+    ctx.fillRect(0, 0, n, n);
+    var i;
+    var j;
+    for (i = 0; i < n; i += 2) {
+      for (j = 0; j < n; j += 2) {
+        var weave = ((i >> 1) + (j >> 1)) % 2 === 0;
+        var shade = weave ? 18 + ((i * 3 + j * 7) % 10) : 12 + ((i * 5 + j) % 8);
+        ctx.fillStyle = 'rgb(' + shade + ',' + (shade + 4) + ',' + (shade + 10) + ')';
+        ctx.fillRect(i, j, 2, 2);
+      }
+    }
+    // Subtle seam / stitch rows
+    ctx.strokeStyle = 'rgba(55,70,85,0.35)';
+    ctx.lineWidth = 1;
+    for (i = 16; i < n; i += 32) {
+      ctx.beginPath();
+      ctx.moveTo(0, i);
+      ctx.lineTo(n, i);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(i, 0);
+      ctx.lineTo(i, n);
+      ctx.stroke();
+    }
+    return _canvasTexture(pack.canvas, 'DSCDashFX.Fabric', 3);
+  }
+
+  /** Crinkled silver mylar lining cue. */
+  function createMylarTexture(size) {
+    var pack = _makeCanvas(size || 256);
+    var ctx = pack.ctx;
+    var n = pack.size;
+    var g = ctx.createLinearGradient(0, 0, n, n);
+    g.addColorStop(0, '#9eb0c2');
+    g.addColorStop(0.35, '#d5e0ea');
+    g.addColorStop(0.55, '#8fa3b5');
+    g.addColorStop(1, '#c8d4e0');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, n, n);
+    var k;
+    for (k = 0; k < 90; k++) {
+      var x = Math.random() * n;
+      var y = Math.random() * n;
+      var w = 8 + Math.random() * 40;
+      var h = 2 + Math.random() * 6;
+      ctx.fillStyle = 'rgba(255,255,255,' + (0.04 + Math.random() * 0.12) + ')';
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(Math.random() * Math.PI);
+      ctx.fillRect(-w / 2, -h / 2, w, h);
+      ctx.restore();
+    }
+    return _canvasTexture(pack.canvas, 'DSCDashFX.Mylar', 2);
+  }
+
+  /** Serrated cannabis-style leaf albedo with alpha. */
+  function createLeafTexture(size) {
+    var pack = _makeCanvas(size || 256);
+    var ctx = pack.ctx;
+    var n = pack.size;
+    ctx.clearRect(0, 0, n, n);
+    var cx = n * 0.5;
+    var cy = n * 0.55;
+    ctx.beginPath();
+    ctx.moveTo(cx, n * 0.08);
+    var lobes = 7;
+    var L;
+    for (L = 0; L <= lobes; L++) {
+      var t = L / lobes;
+      var ang = -Math.PI * 0.55 + t * Math.PI * 1.1;
+      var tip = 0.42 + 0.08 * Math.sin(t * Math.PI);
+      var mid = tip * 0.55;
+      var x1 = cx + Math.cos(ang - 0.12) * n * mid;
+      var y1 = cy + Math.sin(ang - 0.12) * n * mid * 0.95;
+      var x2 = cx + Math.cos(ang) * n * tip;
+      var y2 = cy + Math.sin(ang) * n * tip * 0.95;
+      ctx.quadraticCurveTo(x1, y1, x2, y2);
+      // Serrations along outer edge
+      var s;
+      for (s = 1; s <= 3; s++) {
+        var u = s / 4;
+        var sx = cx + Math.cos(ang + 0.05) * n * tip * (1 - u * 0.35);
+        var sy = cy + Math.sin(ang + 0.05) * n * tip * (1 - u * 0.35) * 0.95;
+        var notch = 0.92 - (s % 2) * 0.06;
+        ctx.lineTo(
+          cx + Math.cos(ang + 0.08) * n * tip * notch * (1 - u * 0.2),
+          cy + Math.sin(ang + 0.08) * n * tip * notch * (1 - u * 0.2) * 0.95
+        );
+        ctx.lineTo(sx, sy);
+      }
+    }
+    ctx.closePath();
+    var lg = ctx.createRadialGradient(cx, cy * 0.7, 4, cx, cy, n * 0.5);
+    lg.addColorStop(0, '#5ecf6a');
+    lg.addColorStop(0.45, '#2f9a45');
+    lg.addColorStop(1, '#1a5c2a');
+    ctx.fillStyle = lg;
+    ctx.fill();
+    // Midrib + veins
+    ctx.strokeStyle = 'rgba(20,70,30,0.55)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(cx, n * 0.12);
+    ctx.lineTo(cx, n * 0.88);
+    ctx.stroke();
+    for (L = 0; L < lobes; L++) {
+      var a2 = -Math.PI * 0.5 + (L / (lobes - 1)) * Math.PI;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy * 0.85);
+      ctx.quadraticCurveTo(
+        cx + Math.cos(a2) * n * 0.12,
+        cy + Math.sin(a2) * n * 0.1,
+        cx + Math.cos(a2) * n * 0.38,
+        cy + Math.sin(a2) * n * 0.36
+      );
+      ctx.stroke();
+    }
+    var texture = _canvasTexture(pack.canvas, 'DSCDashFX.Leaf', 1);
+    texture.wrapS = THREE.ClampToEdgeWrapping;
+    texture.wrapT = THREE.ClampToEdgeWrapping;
+    return texture;
+  }
+
+  function createSoilTexture(size) {
+    var pack = _makeCanvas(size || 128);
+    var ctx = pack.ctx;
+    var n = pack.size;
+    ctx.fillStyle = '#2a1c14';
+    ctx.fillRect(0, 0, n, n);
+    var i;
+    for (i = 0; i < 900; i++) {
+      var r = 1 + Math.random() * 2.5;
+      var shade = 28 + Math.floor(Math.random() * 40);
+      ctx.fillStyle = 'rgb(' + shade + ',' + (shade - 8) + ',' + (shade - 14) + ')';
+      ctx.beginPath();
+      ctx.arc(Math.random() * n, Math.random() * n, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    return _canvasTexture(pack.canvas, 'DSCDashFX.Soil', 2);
+  }
+
+  /** Serrated leaf plane geometry (unit-ish blade along +Y). */
+  function createLeafGeometry() {
+    var shape = new THREE.Shape();
+    shape.moveTo(0, 0.95);
+    var lobes = [
+      [-0.12, 0.78], [-0.38, 0.62], [-0.22, 0.55], [-0.48, 0.38], [-0.2, 0.32],
+      [-0.42, 0.12], [-0.12, 0.08], [-0.18, -0.05], [0, 0.02],
+      [0.18, -0.05], [0.12, 0.08], [0.42, 0.12], [0.2, 0.32], [0.48, 0.38],
+      [0.22, 0.55], [0.38, 0.62], [0.12, 0.78]
+    ];
+    var i;
+    for (i = 0; i < lobes.length; i++) {
+      shape.lineTo(lobes[i][0], lobes[i][1]);
+    }
+    shape.closePath();
+    var geometry = new THREE.ShapeGeometry(shape, 8);
+    geometry.rotateX(-Math.PI / 2);
+    geometry.computeVertexNormals();
+    return geometry;
+  }
+
+  function createPhotorealSurfaces() {
+    return {
+      fabric: createFabricTexture(256),
+      mylar: createMylarTexture(256),
+      leaf: createLeafTexture(256),
+      soil: createSoilTexture(128)
+    };
+  }
+
   function loadSimpleGltf(url, onLoad, onError) {
     function fail(err) {
       if (typeof onError === 'function') onError(err);
@@ -1283,6 +1487,12 @@
     createCurlHaze: createCurlHaze,
     createConfinedCurlHaze: createConfinedCurlHaze,
     createColorRamp: createColorRamp,
+    createFabricTexture: createFabricTexture,
+    createMylarTexture: createMylarTexture,
+    createLeafTexture: createLeafTexture,
+    createSoilTexture: createSoilTexture,
+    createLeafGeometry: createLeafGeometry,
+    createPhotorealSurfaces: createPhotorealSurfaces,
     loadSimpleGltf: loadSimpleGltf
   });
 })(typeof globalThis !== 'undefined' ? globalThis : this);
