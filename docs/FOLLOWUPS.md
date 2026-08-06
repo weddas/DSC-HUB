@@ -929,8 +929,13 @@ New 5s `tx_fleet_heartbeat` / `tx_peer_time` broadcast load on top of 2s vitals 
 
 ## 2026-08-06 — Air journey polish
 
+Runbook: [`docs/qa/LIVE-UI-DASH-AIR-JOURNEY.md`](qa/LIVE-UI-DASH-AIR-JOURNEY.md).
+
 ### done
 - Phase-paced journeys: fast duct suck, slow mid-tent pool dwell, accelerating exhaust pull.
 - In-tent dashed guide ribbons (clone→cascade, main→OUT, main→RECIRC) CFM-gated.
 - Intake port jets at pierce; stronger shafts/jets; denser streak particles.
 - Deploy ~bundle on HA; hard-refresh required.
+
+### soak
+- Hard-refresh Dash (?v= bump). Confirm pool dwell + dashed guides with CFM > 0; quiet at 0 CFM.

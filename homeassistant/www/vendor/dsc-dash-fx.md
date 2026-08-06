@@ -20,3 +20,21 @@ bash scripts/sync-hacs-dist.sh
 ```
 
 Concat order: `dsc-system-map-card.js` → `dsc-airflow-map-card.js` → `vendor/three.min.js` → `vendor/dsc-dash-fx.js` → `dsc-the-dash-card.js` → `dist/DSC-HUB.js` and `dist/dsc-system-map-card.js`. The `dsc-hub-sync` add-on uses the same order when staging `/config/www`.
+
+## 2026-08-06 — In-tent guide ribbons (card consumer)
+
+`dsc-the-dash-card.js` builds three CFM-gated dashed guides with
+`makeFlowRibbon(curve, { radius: 0.03, tubular: 48, dashArray: [0.09, 0.07], … })`:
+
+| Key | Story |
+|---|---|
+| `clone` | 2×4 pierce → cascade |
+| `mainOut` | 4×8 pierce → OUT |
+| `mainRec` | 4×8 pierce → RECIRC |
+
+Opacity / dash offset are driven each frame from absolute-CFM intensity (same
+`≥ 0.04` honesty gate as particles). If `makeFlowRibbon` is missing or throws,
+guides stay null — duct streaks can still run. Journey pacing
+(`journeyThroughTent` / `journeyPace`) lives entirely in the card, not this bridge.
+
+Operator runbook: [`docs/qa/LIVE-UI-DASH-AIR-JOURNEY.md`](../../../docs/qa/LIVE-UI-DASH-AIR-JOURNEY.md).
