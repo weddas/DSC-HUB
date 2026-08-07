@@ -14,9 +14,7 @@ input_select:
       - "Spider Farmer SF1000"
       - "Spider Farmer SF2000"
       - "Spider Farmer SE7000"
-      - "Mars Hydro FC-E3000"
       - "Mars Hydro TS1000"
-      - "Digi-Lumen (best map)"
       - "Treegers (best map)"
       - "Custom / other"
     initial: "Spider Farmer SF1000"
@@ -49,7 +47,7 @@ template:
           note: >-
             PPFD/spectrum/beam are manufacturer image or PDF URLs only.
             Do not invent heatmap cells.
-          fixtures: "{\"Spider Farmer SF1000\":{\"pack_id\":\"spider_farmer_sf1000\",\"wattage_w\":100.0,\"ppf_umol_s\":211.0,\"efficacy_umol_j\":2.5,\"ppfd_map_url\":\"https://www.spider-farmer.com/wp-content/uploads/2026/03/SF1000-2512-PPFD-Map-Bridgelux-values-same-as-Samsung-phone.jpg\",\"spectrum_map_url\":\"https://www.spider-farmer.com/wp-content/uploads/2021/05/EVO-SF1000-Samsung-lm301h-evo-led-grow-light-full-spectrum.jpg\",\"url\":\"https://www.spider-farmer.com/products/sf-1000-led-grow-light/\"},\"Spider Farmer SF2000\":{\"pack_id\":\"spider_farmer_sf2000\",\"wattage_w\":200.0,\"ppf_umol_s\":211.0,\"efficacy_umol_j\":2.7,\"ppfd_map_url\":\"https://www.spider-farmer.com/wp-content/uploads/2021/05/SF2000-2512-PPFD-Map-Bridgelux-values-same-as-Samsung.jpg\",\"spectrum_map_url\":\"https://www.spider-farmer.com/wp-content/uploads/2021/05/Bridgelux-Diodes-Full-Spectrum.jpg\",\"url\":\"https://www.spider-farmer.com/products/sf-2000-led-grow-light/\"},\"Spider Farmer SE7000\":{\"pack_id\":\"spider_farmer_se7000\",\"wattage_w\":730.0,\"ppf_umol_s\":2146.0,\"efficacy_umol_j\":2.9,\"ppfd_map_url\":\"https://www.spider-farmer.com/wp-content/uploads/2021/09/SE7000-evo-led-PPFD-MAP.jpg\",\"spectrum_map_url\":\"https://www.spider-farmer.com/wp-content/uploads/2021/09/SE7000-EVO-Spectrum-Ratio.jpg\",\"url\":\"https://www.spider-farmer.com/products/spider-farmer-upgraded-se7000-730w-commercial-led-grow-light/\"},\"Mars Hydro FC-E3000\":{\"pack_id\":\"mars_hydro_fc_e3000\",\"wattage_w\":300.0,\"ppf_umol_s\":832.0,\"efficacy_umol_j\":2.8,\"ppfd_map_url\":\"https://marshydroau.com/wp-content/uploads/2023/05/2mars-hydro-fc-e3000-led-grow-light-ppfd-map-e1683785683423.jpg\",\"spectrum_map_url\":\"https://marshydroau.com/wp-content/uploads/2023/05/3mars-hydro-FC-E3000-LED-grow-light-plant-favored-full-spectrum-e1683785724759.jpg\",\"url\":\"https://marshydroau.com/products/fc-e3000-300w-led-grow-light-100x100x180cm-grow-tent-combo/\"},\"Mars Hydro TS1000\":{\"pack_id\":\"mars_hydro_ts1000\",\"wattage_w\":150.0,\"ppf_umol_s\":343.0,\"efficacy_umol_j\":2.3,\"ppfd_map_url\":\"https://marshydroau.com/wp-content/uploads/2021/07/TS1000-PPFD.jpg\",\"spectrum_map_url\":null,\"url\":\"https://marshydroau.com/products/ts-1000-led-with-icontrol-kits/\"},\"Digi-Lumen (best map)\":{\"pack_id\":\"digi_lumen_best\",\"wattage_w\":250.0,\"ppf_umol_s\":662.0,\"efficacy_umol_j\":2.65,\"ppfd_map_url\":\"https://digilumen.com.au/wp-content/uploads/2026/06/662-umols-150x150.jpg\",\"spectrum_map_url\":null,\"url\":\"https://digilumen.com.au/250-w-side-bar-led\"},\"Treegers (best map)\":{\"pack_id\":\"treegers_best\",\"wattage_w\":1000.0,\"ppf_umol_s\":3090.0,\"efficacy_umol_j\":3.1,\"ppfd_map_url\":\"https://treegers.com/cdn/shop/files/GL1000WPPFD04_-_1.jpg?v=1738143166&amp;width=1600\",\"spectrum_map_url\":\"https://cdn.shopify.com/s/files/1/0764/5288/8851/files/Full-Spectrum-HybridF_480x480.png?v=1711605519\",\"url\":\"https://treegers.com/products/gl1000w-led\"}}"
+          fixtures: "{\"Spider Farmer SF1000\":{\"pack_id\":\"spider_farmer_sf1000\",\"wattage_w\":100.0,\"ppf_umol_s\":null,\"efficacy_umol_j\":2.5,\"ppfd_map_url\":\"https://www.spider-farmer.com/wp-content/uploads/2026/03/SF1000-2512-PPFD-Map-Bridgelux-values-same-as-Samsung-phone.jpg\",\"spectrum_map_url\":\"https://www.spider-farmer.com/wp-content/uploads/2021/05/EVO-SF1000-Samsung-lm301h-evo-led-grow-light-full-spectrum.jpg\",\"url\":\"https://www.spider-farmer.com/products/sf-1000-led-grow-light/\"},\"Spider Farmer SF2000\":{\"pack_id\":\"spider_farmer_sf2000\",\"wattage_w\":200.0,\"ppf_umol_s\":null,\"efficacy_umol_j\":2.7,\"ppfd_map_url\":\"https://www.spider-farmer.com/wp-content/uploads/2021/05/SF2000-2512-PPFD-Map-Bridgelux-values-same-as-Samsung.jpg\",\"spectrum_map_url\":\"https://www.spider-farmer.com/wp-content/uploads/2021/05/Bridgelux-Diodes-Full-Spectrum.jpg\",\"url\":\"https://www.spider-farmer.com/products/sf-2000-led-grow-light/\"},\"Spider Farmer SE7000\":{\"pack_id\":\"spider_farmer_se7000\",\"wattage_w\":730.0,\"ppf_umol_s\":2146.0,\"efficacy_umol_j\":2.9,\"ppfd_map_url\":\"https://www.spider-farmer.com/wp-content/uploads/2021/05/SF4000-2512-PPFD-Map-Bridgelux-values-same-as-Samsung.jpg\",\"spectrum_map_url\":\"https://www.spider-farmer.com/wp-content/uploads/2022/01/2024-Newest-Version-Spider-Farmer-Dimmable-Foldable-Full-Spectrum-1000W-Led-Grow-Light-G-Series-G1000W-Precision-Dimming-Box-1.jpg\",\"url\":\"https://www.spider-farmer.com/products/spider-farmer-5x5x6-5-complete-grow-tent-kit-i-se7000-evo-730w-led-grow-light-i-6-inch-inline-fan-with-temperture-and-humidity-controller/\"},\"Mars Hydro TS1000\":{\"pack_id\":\"mars_hydro_ts1000\",\"wattage_w\":150.0,\"ppf_umol_s\":null,\"efficacy_umol_j\":null,\"ppfd_map_url\":\"https://marshydroau.com/wp-content/uploads/2021/07/TS1000-PPFD.jpg\",\"spectrum_map_url\":null,\"url\":\"https://marshydroau.com/products/ts-1000-led-with-icontrol-kits/\"},\"Treegers (best map)\":{\"pack_id\":\"treegers_best\",\"wattage_w\":null,\"ppf_umol_s\":null,\"efficacy_umol_j\":null,\"ppfd_map_url\":\"https://cdn.shopify.com/s/files/1/0764/5288/8851/files/GB30PPFD02.jpg?v=1738162548\",\"spectrum_map_url\":null,\"url\":\"https://treegers.com/products/treegers-gb30w-led-grow-bulb\"}}"
 
       - name: "DSC Light Active Summary"
         unique_id: dsc_light_active_summary
@@ -69,11 +67,9 @@ template:
           {% if custom %}{{ custom }}
           {% elif f == 'Spider Farmer SF1000' %}https://www.spider-farmer.com/wp-content/uploads/2026/03/SF1000-2512-PPFD-Map-Bridgelux-values-same-as-Samsung-phone.jpg
           {% elif f == 'Spider Farmer SF2000' %}https://www.spider-farmer.com/wp-content/uploads/2021/05/SF2000-2512-PPFD-Map-Bridgelux-values-same-as-Samsung.jpg
-          {% elif f == 'Spider Farmer SE7000' %}https://www.spider-farmer.com/wp-content/uploads/2021/09/SE7000-evo-led-PPFD-MAP.jpg
-          {% elif f == 'Mars Hydro FC-E3000' %}https://marshydroau.com/wp-content/uploads/2023/05/2mars-hydro-fc-e3000-led-grow-light-ppfd-map-e1683785683423.jpg
+          {% elif f == 'Spider Farmer SE7000' %}https://www.spider-farmer.com/wp-content/uploads/2021/05/SF4000-2512-PPFD-Map-Bridgelux-values-same-as-Samsung.jpg
           {% elif f == 'Mars Hydro TS1000' %}https://marshydroau.com/wp-content/uploads/2021/07/TS1000-PPFD.jpg
-          {% elif f == 'Digi-Lumen (best map)' %}https://digilumen.com.au/wp-content/uploads/2026/06/662-umols-150x150.jpg
-          {% elif f == 'Treegers (best map)' %}https://treegers.com/cdn/shop/files/GL1000WPPFD04_-_1.jpg?v=1738143166&amp;width=1600
+          {% elif f == 'Treegers (best map)' %}https://cdn.shopify.com/s/files/1/0764/5288/8851/files/GB30PPFD02.jpg?v=1738162548
           {% else %}unknown{% endif %}
 
       - name: "DSC Light Spectrum Map"
@@ -85,9 +81,7 @@ template:
           {% if custom %}{{ custom }}
           {% elif f == 'Spider Farmer SF1000' %}https://www.spider-farmer.com/wp-content/uploads/2021/05/EVO-SF1000-Samsung-lm301h-evo-led-grow-light-full-spectrum.jpg
           {% elif f == 'Spider Farmer SF2000' %}https://www.spider-farmer.com/wp-content/uploads/2021/05/Bridgelux-Diodes-Full-Spectrum.jpg
-          {% elif f == 'Spider Farmer SE7000' %}https://www.spider-farmer.com/wp-content/uploads/2021/09/SE7000-EVO-Spectrum-Ratio.jpg
-          {% elif f == 'Mars Hydro FC-E3000' %}https://marshydroau.com/wp-content/uploads/2023/05/3mars-hydro-FC-E3000-LED-grow-light-plant-favored-full-spectrum-e1683785724759.jpg
-          {% elif f == 'Treegers (best map)' %}https://cdn.shopify.com/s/files/1/0764/5288/8851/files/Full-Spectrum-HybridF_480x480.png?v=1711605519
+          {% elif f == 'Spider Farmer SE7000' %}https://www.spider-farmer.com/wp-content/uploads/2022/01/2024-Newest-Version-Spider-Farmer-Dimmable-Foldable-Full-Spectrum-1000W-Led-Grow-Light-G-Series-G1000W-Precision-Dimming-Box-1.jpg
           {% else %}unknown{% endif %}
 
       - name: "DSC Light Wattage"
@@ -98,10 +92,7 @@ template:
           {% if f == 'Spider Farmer SF1000' %}100.0
           {% elif f == 'Spider Farmer SF2000' %}200.0
           {% elif f == 'Spider Farmer SE7000' %}730.0
-          {% elif f == 'Mars Hydro FC-E3000' %}300.0
           {% elif f == 'Mars Hydro TS1000' %}150.0
-          {% elif f == 'Digi-Lumen (best map)' %}250.0
-          {% elif f == 'Treegers (best map)' %}1000.0
           {% else %}unknown{% endif %}
 
       - name: "DSC Light PPF"
@@ -109,13 +100,7 @@ template:
         unit_of_measurement: "µmol/s"
         state: >
           {% set f = states('input_select.dsc_light_fixture') %}
-          {% if f == 'Spider Farmer SF1000' %}211.0
-          {% elif f == 'Spider Farmer SF2000' %}211.0
-          {% elif f == 'Spider Farmer SE7000' %}2146.0
-          {% elif f == 'Mars Hydro FC-E3000' %}832.0
-          {% elif f == 'Mars Hydro TS1000' %}343.0
-          {% elif f == 'Digi-Lumen (best map)' %}662.0
-          {% elif f == 'Treegers (best map)' %}3090.0
+          {% if f == 'Spider Farmer SE7000' %}2146.0
           {% else %}unknown{% endif %}
 
       - name: "DSC Light PPE"
@@ -126,10 +111,6 @@ template:
           {% if f == 'Spider Farmer SF1000' %}2.5
           {% elif f == 'Spider Farmer SF2000' %}2.7
           {% elif f == 'Spider Farmer SE7000' %}2.9
-          {% elif f == 'Mars Hydro FC-E3000' %}2.8
-          {% elif f == 'Mars Hydro TS1000' %}2.3
-          {% elif f == 'Digi-Lumen (best map)' %}2.65
-          {% elif f == 'Treegers (best map)' %}3.1
           {% else %}unknown{% endif %}
 
 # Sync catalog nameplate watts into climate physics when the 2x4 fixture is SF1000.

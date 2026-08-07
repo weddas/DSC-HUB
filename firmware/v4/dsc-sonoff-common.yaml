@@ -29,13 +29,12 @@
 #  appliance layer — the demands would fire into a void and the tent
 #  would sit there getting cold while HA reports everything is fine.
 #
-#  ACTUATION PATH (by design): Sonoff BASIC R2 is ESP8285 — no ESP-NOW.
-#  Hub demand switches publish over the HA API; HA automations flip these
-#  relays. Panel/hub climate logic still runs without HA (fans + SF1000
-#  are local), but humidifiers / heater / mat / AC will not move until HA
-#  is up. The panel alert "Appliances need HA (Sonoffs offline)" surfaces
-#  that. A future ESP32 appliance bridge would be needed to cut HA out.
-#  Design: docs/brain/F010_APPLIANCE_BRIDGE.md + dsc-appliance-bridge.yaml (sketch).
+#  ACTUATION PATH (v5.2): Sonoff BASIC R2 is ESP8285 — no ESP-NOW.
+#  Primary: DSC-BRIDGE (ETH01) follows hub 0xD8 demand via native API client.
+#  Fallback: HA demand followers still flip these relays when HA is up.
+#  Dual API clients (HA + bridge) expected — grace clears when ANY client
+#  is connected. Panel alert: "Appliances need bridge or HA".
+#  Design: docs/brain/F010_APPLIANCE_BRIDGE.md · firmware/v4/dsc-bridge.yaml
 # ==================================================================
 
 substitutions:
@@ -57,7 +56,7 @@ esphome:
   # device's project version — "which nodes are behind?" at a glance.
   project:
     name: digital_emotions.dsc-sonoff
-    version: "5.1.0"
+    version: "5.2.0"
 
 esp8266:
   board: esp8285
@@ -69,6 +68,8 @@ logger:
 # Rotate on flash — a leaked API key on a mains-switching device is
 # someone else's heater.
 api:
+  # HA + DSC-BRIDGE dual clients (F-010)
+  max_connections: 3
   encryption:
     key: ${api_key_val}
   # EXPLICIT, not inherited. The default 15-min reboot was half of the

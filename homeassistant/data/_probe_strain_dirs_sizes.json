@@ -1,0 +1,175 @@
+{
+  "sizes": {
+    "https://www.allbud.com/sitemap-strains.xml": {
+      "status": 200,
+      "content_length": null,
+      "ctype": "application/xml",
+      "read": 60000,
+      "loc_in_chunk": 344,
+      "loc_sample": [
+        "https://www.allbud.com/marijuana-strains/hybrid/007-breath",
+        "https://www.allbud.com/marijuana-strains/hybrid/007up",
+        "https://www.allbud.com/marijuana-strains/sativa/0-0-swerdlow",
+        "https://www.allbud.com/marijuana-strains/indica-dominant-hybrid/1",
+        "https://www.allbud.com/marijuana-strains/hybrid/100-og",
+        "https://www.allbud.com/marijuana-strains/sativa-dominant-hybrid/100-rackz"
+      ],
+      "body_head": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n<url><loc>https://www.allbud.com/marijuana-strains/hybrid/007-breath</loc><lastmod>2022-08-22</lastmod><changefreq>weekly</changefreq><priority>0.5</priority></url><url><loc>https://www.allbud.com/marijuana-strains/hybrid/007up</loc><lastmod>2024-03-"
+    },
+    "https://www.allbud.com/sitemap-strains-varieties.xml": {
+      "status": 200,
+      "content_length": null,
+      "ctype": "application/xml",
+      "read": 1292,
+      "loc_in_chunk": 7,
+      "loc_sample": [
+        "https://www.allbud.com/marijuana-strains/variety/hybrid",
+        "https://www.allbud.com/marijuana-strains/variety/indica",
+        "https://www.allbud.com/marijuana-strains/variety/indica-dominant-hybrid",
+        "https://www.allbud.com/marijuana-strains/variety/ruderalis",
+        "https://www.allbud.com/marijuana-strains/variety/ruderalis-dominant-hybrid",
+        "https://www.allbud.com/marijuana-strains/variety/sativa"
+      ],
+      "body_head": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n<url><loc>https://www.allbud.com/marijuana-strains/variety/hybrid</loc><lastmod>2026-07-30</lastmod><changefreq>weekly</changefreq><priority>0.5</priority></url><url><loc>https://www.allbud.com/marijuana-strains/variety/indica</loc><lastmod>2026-07-2"
+    },
+    "https://www.leafly.com/leafly-sitemaps/strains-sitemap-1.xml.gz": {
+      "status": 200,
+      "content_length": "102193",
+      "ctype": "application/gzip",
+      "read": 60000,
+      "loc_in_chunk": 0,
+      "loc_sample": [],
+      "body_head": "\u001f\ufffd\b\u0000\ufffd\ufffduj\u0000\u0003\ufffd\ufffd\u06f2\u4e15\ufffdy\ufffdOQ\ufffd{\ufffd22R\ufffd\u0331\ufffd\ufffdy\ufffd\ufffd\u0007\u0000I8\ufffd\ufffd \ufffd\u0004\ufffd\ufffd\ufffd\ufffd\ufffdC\ufffd\u0004\ufffd\ufffdS\ufffdc\ufffd\ufffdMR\ufffd\ufffd\ufffd\ufffd\ufffd\t\u0002\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd?z\ufffdo\ufffd\u028f\ufffd\ufffd\ufffd\ufffd\u06f7\u007f\ufffd\ufffdo\ufffd\ufffdl\ufffd\u001am\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\u001f\ufffd9{3\ufffd\ufffd\u07d6\u007f\u060e\ufffd\ufffd\ufffdn\ufffd\ufffd\ufffd\ufffd\ufffd\u007f\u007f<\u001e\ufffd>\ufffdI\ufffdr\u0018\ufffd\ufffd\ufffd\ufffd\ufffdc\ufffd-\ufffd\u0019\ufffd\ufffd\ufffd\ufffd\ufffd\u007f\ufffd\ufffd?\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd-\ufffd\ufffd\ufffd\ufffd\ufffdW\ufffd\ufffd\ufffd\u001d\ufffd\ufffdq\ufffd\ufffd\ufffd\ufffd7\ufffd\ufffd\ufffd\ufffd\ufffd\u007f\u001f'/\ufffd\u001d\ufffdn\ufffd8\ufffd\ufffd\ufffd\ufffd\ufffdO\ufffd\u007f\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\u000f\"\ufffd\ufffd\u007f\"\ufffd\ufffd{\ufffd\ufffd\u0543\ufffdD\u007f\u001f:7\ufffdbV\ufffd\ufffd\u001b\ufffdh)\u000e\ufffd\u0193\ufffd,\ufffd\ufffd\ufffd\ufffdZA\u0018j\ufffd\u0007\ufffdY\ufffd8\u000f\u028bQ\ufffd\ufffd%\u0014\ufffd\ufffdY\ufffd\ufffd\u0017 \ufffd\ufffdW0\ufffd\rX\ufffdNy+\ufffdn\ufffdi\u0014\ufffd\u001f<\ufffd\ufffd\u000e\ufffd C\ufffd\ufffd\ufffdG-\u0007\b\ufffd=\ufffd\u001d\u01ec\ufffd2\ufffd\u0012\ufffd\u0011\ufffd\ufffd\ufffdM\ufffd\ufffd\ufffd\ufffd\ufffdH\ufffd\ufffd\ufffd\ufffd\ufffd,\ufffd\ufffd8\ufffd\u0001v\ufffde\ufffd^\u06a6\ufffdM\ufffd\u0014\ufffd\ufffd\u0007S"
+    },
+    "https://seedfinder.eu/sitemap/sitemap1.xml.gz": {
+      "status": 200,
+      "content_length": "695371",
+      "ctype": "application/octet-stream",
+      "read": 60000,
+      "loc_in_chunk": 0,
+      "loc_sample": [],
+      "body_head": "\u001f\ufffd\b\u0000\u0000\u0000\u0000\u0000\u0000\u0003\ufffdKs#\u02f5\ufffd9\ufffd_\ufffd\u05b4\r\ufffd\ufffd\ufffd\ufffd\ufffd\ufffdj\ufffdmmV=\ufffdj\ufffd\u001e\ufffd\u0004\u0004#I\\\ufffd\u0000\u000b\u00003\ufffd\ufffd\ufffdw 3\ufffd\u0012'\ufffd\ufffd\ufffd=|\ufffd\u001d\ufffdQ:\ufffdy)\u0275V\ufffdK\u0000\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\u03f7\ufffd_\ufffd\ufffd\ufffd\ufffdz\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\u076evO\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\u001f\ufffd\u01e2\ufffd\ufffd\u007f\ufffd\ufffd\u007f\ufffd\ufffd\ufffd\ufffdX<\ufffd\ufffdv\ufffd<\ufffd\ufffd\ufffd\ufffdfy8\ufffd\ufffd_\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffdc\ufffd\ufffd|\ufffd?\ufffd\ufffd\ufffd\ufffd\ufffd\u0017\u007f],\ufffd\ufffd\ufffd_\ufffd\ufffd\ufffd\\'\ufffd\ufffd\u0005\ufffd\ufffd\ufffd\ufffd\ufffd\u0005\u0017\u0285\ufffd\u0017\ufffd\ufffd\u001f\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffdo~\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\u001e\ufffd\ufffd\ufffd\ufffdvf^\ufffd\ufffd\ufffd\u007f{x\ufffd\ufffd\ufffd\ufffd\ufffd\u000e?\ufffd\u000f\u007f\ufffd\ufffd\u001f\u000e\ufffd\ufffd\ufffd\u001f\u000e\u000f\ufffd\ufffd\ufffd\ufffd[\ufffd\u05df_\ufffdo\ufffd|9\ufffdm\ufffd\ufffd\ufffd\u07f2\u001f_\u36e6y\ufffd\ufffd\ufffd\ufffd\ufffd/\ufffd\ufffd~jw\u007f\ufffd\ufffd\u03fb\ufffd\ufffd\ufffd\ufffdj\ufffd\u0597X\ufffd\ufffd\ufffd\u000f\ufffdo\ufffd?\ufffdz\ufffd\ufffd|n\ufffd_\ufffd\ufffd\u0017\ufffd\u007f\ufffd?\u000f\ufffdk&\ufffds\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\u007f\ufffd\ufffd\ufffd\ufffd\ufffd\ufffdp\\nWm\ufffdU\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffdm\ufffdZ\u001e\u007f<"
+    },
+    "https://strain-database.com/sitemap/0.xml": {
+      "status": 200,
+      "content_length": null,
+      "ctype": "application/xml; charset=utf-8",
+      "read": 60000,
+      "loc_in_chunk": 127,
+      "loc_sample": [
+        "https://strain-database.com",
+        "https://strain-database.com/de",
+        "https://strain-database.com/strains",
+        "https://strain-database.com/de/strains",
+        "https://strain-database.com/verified",
+        "https://strain-database.com/de/verified"
+      ],
+      "body_head": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\"\n        xmlns:xhtml=\"http://www.w3.org/1999/xhtml\"\n        xmlns:image=\"http://www.google.com/schemas/sitemap-image/1.1\">\n  <url>\n    <loc>https://strain-database.com</loc>\n    <changefreq>daily</changefreq>\n    <priority>1</priority>\n    <xhtml:link "
+    },
+    "https://strain-database.com/sitemap/1.xml": {
+      "status": 200,
+      "content_length": null,
+      "ctype": "application/xml; charset=utf-8",
+      "read": 60000,
+      "loc_in_chunk": 83,
+      "loc_sample": [
+        "https://strain-database.com/strain/riot-seeds-killer-crack",
+        "https://strain-database.com/de/strain/riot-seeds-killer-crack",
+        "https://strain-database.com/strain/lambs-durban",
+        "https://strain-database.com/de/strain/lambs-durban",
+        "https://strain-database.com/strain/mtg-seeds-steal-your-face",
+        "https://strain-database.com/de/strain/mtg-seeds-steal-your-face"
+      ],
+      "body_head": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\"\n        xmlns:xhtml=\"http://www.w3.org/1999/xhtml\"\n        xmlns:image=\"http://www.google.com/schemas/sitemap-image/1.1\">\n  <url>\n    <loc>https://strain-database.com/strain/riot-seeds-killer-crack</loc>\n    <lastmod>2026-05-27</lastmod>\n    <changefr"
+    },
+    "https://weedmaps.com/sitemap.xml.gz": {
+      "status": 200,
+      "content_length": "417",
+      "ctype": "application/gzip",
+      "read": 417,
+      "loc_in_chunk": 0,
+      "loc_sample": [],
+      "body_head": "\u001f\ufffd\b\u0000a\ufffduj\u0000\u0003\ufffd\ufffdAo\ufffd \u0014\u01ff\ufffd\ufffdTP\u06f55\ufffd\ufffdv\ufffdN\ufffd\ufffd\f\u0005bI\u0014\u001a\u001e\ufffd\ufffd>\ufffd\ufffd9\ufffd#\ufffd\ufffd\u000b!\ufffd\ufffd\ufffd\ufffd\u01df<\ufffd\ufffd\ufffd\ufffd\u000e\u07b9\u0006\ufffd\ufffd.\ufffd#\u001c\u0006\\R\u0144\ufffdv\ufffd\ufffd\ufffdi\ufffd\t\ufffdE\u000e\ufffd\ufffd\ufffd\\\ufffdd\ufffd\u0016\ufffd\b\t\ufffd\r\ufffd.<\u001bs\ufffd\u0010j\ufffd6j\ufffdH\ufffd\n%\u0018\ufffd\ufffd\ufffd\ufffd\ufffdB\ufffd6b!$\u0018\")\u000f\u0003\ufffd\u03e0_<(JL\ufffd\ufffd\u0015>\u0010\ufffd\ufffd\ufffd[\u0007hXD8\ufffd\u0006wh\ufffdy\ufffdkt\u0003\u0016~'|\u0017-\u001cK.\ufffdZ\u0462\u000b\ufffd.\ufffds\ufffd\ufffdQ\ufffd &\ufffd\ufffd%\u0010\ufffd\u0011YBT}\ufffd\ufffd\ufffd5\u0001\ufffd(V$8y\\\ufffd\ufffd\u0002\ufffd\ufffdx\ufffda\ufffd\ufffd\ufffd\u001b\ufffd\ufffd\r\ufffd\u001c\ufffd\u0018\u0007\u001e\ufffd\ufffdu\u0299\ufffdN\ufffd)j\ufffd\ufffd\u00e2'V\ufffd\ufffdqO\ufffd\ufffd\u0195\ufffdW\ufffd&\ufffd'\ufffd`\ufffdgjo\ufffd_\ufffdh\ufffd\ufffd\u0003&5\ufffdE^\ufffdbWj<\ufffdN\ufffdH\ufffd\ufffdZNg\ufffdw\u0597lfd\u018e\ufffdtNh\ufffd\b]\ufffd\u70d6\ufffdA\ufffd\u0482\ufffd\ufffd\ufffdj\ufffdN\ufffd\ufffd\u0004\ufffdl5\ufffdr\ufffdj\ufffd\u007fK!\ufffd\ufffdx;\ufffdY8\ufffd\ufffd,\ufffd\ufffdr\ufffd\ufffdD\ufffdu\ufffd\u000e6\ufffd\ufffdA"
+    }
+  },
+  "seedfinder_links": {
+    "abs_count": 314,
+    "abs_sample": [
+      "https://seedfinder.eu/en/strain-info/Banana-Blast/multiverse-genetics",
+      "https://seedfinder.eu/en/strain-info/Banana-Breath/atlas-seed",
+      "https://seedfinder.eu/en/strain-info/auto-bamiyan/green-fantasy-seeds",
+      "https://seedfinder.eu/en/strain-info/auto-banana-blaze/dutch-passion",
+      "https://seedfinder.eu/en/strain-info/auto-banana-cookies/advanced-seeds",
+      "https://seedfinder.eu/en/strain-info/auto-banana-monkey/bulk-seed-bank",
+      "https://seedfinder.eu/en/strain-info/auto-banana-punch/dutch-headshop",
+      "https://seedfinder.eu/en/strain-info/auto-banana-punch/linda-seeds",
+      "https://seedfinder.eu/en/strain-info/auto-banana-xl/gb-strains",
+      "https://seedfinder.eu/en/strain-info/auto-berry/g13-labs"
+    ],
+    "rel_count": 0,
+    "rel_sample": [],
+    "other_sample": [
+      "https://seedfinder.eu/de/database/strains/alphabetical/b",
+      "https://seedfinder.eu/en/database/strains",
+      "https://seedfinder.eu/en/database/strains/alphabetical/1234567890",
+      "https://seedfinder.eu/en/database/strains/alphabetical/A",
+      "https://seedfinder.eu/en/database/strains/alphabetical/B",
+      "https://seedfinder.eu/en/database/strains/alphabetical/C",
+      "https://seedfinder.eu/en/database/strains/alphabetical/D",
+      "https://seedfinder.eu/en/database/strains/alphabetical/E",
+      "https://seedfinder.eu/en/database/strains/alphabetical/F",
+      "https://seedfinder.eu/en/database/strains/alphabetical/G",
+      "https://seedfinder.eu/en/database/strains/alphabetical/H",
+      "https://seedfinder.eu/en/database/strains/alphabetical/I",
+      "https://seedfinder.eu/en/database/strains/alphabetical/J",
+      "https://seedfinder.eu/en/database/strains/alphabetical/K",
+      "https://seedfinder.eu/en/database/strains/alphabetical/L",
+      "https://seedfinder.eu/en/database/strains/alphabetical/M",
+      "https://seedfinder.eu/en/database/strains/alphabetical/N",
+      "https://seedfinder.eu/en/database/strains/alphabetical/O",
+      "https://seedfinder.eu/en/database/strains/alphabetical/P",
+      "https://seedfinder.eu/en/database/strains/alphabetical/Q"
+    ],
+    "size_mentions": [
+      "713",
+      "254,",
+      "242,",
+      "242",
+      "100",
+      "254,",
+      "226,",
+      "226",
+      "200",
+      "254,"
+    ]
+  },
+  "cannareviews_api": {
+    "https://cannareviews.health/api/v5.2.1/products/export": {
+      "status": 202,
+      "content_length": null,
+      "ctype": "application/json",
+      "read": 149,
+      "loc_in_chunk": 0,
+      "loc_sample": [],
+      "body_head": "{\"status\":\"processing\",\"message\":\"Your export request is being processed.\",\"estimated_time\":\"30 seconds\",\"job_id\":\"3d87259673daf5859452f8faca370c62\"}"
+    },
+    "https://cannareviews.health/api/v5.2.1/data/download": {
+      "status": 202,
+      "content_length": null,
+      "ctype": "application/json",
+      "read": 179,
+      "loc_in_chunk": 0,
+      "loc_sample": [],
+      "body_head": "{\"status\":\"queued\",\"message\":\"Large export queued. Check back in 60 seconds.\",\"download_url\":\"https:\\/\\/cannareviews.health\\/api\\/v3\\/downloads\\/4c969ddf528c84dac8b547456683e035\"}"
+    },
+    "https://cannareviews.health/api/v5.2.1/products/bulk": {
+      "status": 202,
+      "content_length": null,
+      "ctype": "application/json",
+      "read": 149,
+      "loc_in_chunk": 0,
+      "loc_sample": [],
+      "body_head": "{\"status\":\"processing\",\"message\":\"Your export request is being processed.\",\"estimated_time\":\"30 seconds\",\"job_id\":\"3aeae09e4e376aad0c0b3948d2a64f59\"}"
+    }
+  }
+}

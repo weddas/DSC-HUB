@@ -1,0 +1,426 @@
+truenorth: sitemap cache 2942 from dsc_strains_truenorth.sitemap_urls.json
+truenorth: 2942 urls queued; resume done=0 dump_items=0 skipped=0
+  ok #1 idx=1/2942 name='2046 Fast Version'
+  ok #2 idx=2/2942 name='2046 Fast Version'
+  ok #3 idx=3/2942 name='2046 Fast Version'
+  ok #25 idx=25/2942 name='A M S'
+  truenorth checkpoint items=25 done=25 skipped=0 this_run=25 rate=0.53/s idx=25/2942
+  ok #50 idx=50/2942 name='Afghan Kush'
+  truenorth checkpoint items=50 done=50 skipped=0 this_run=50 rate=0.49/s idx=50/2942
+  ok #75 idx=75/2942 name='Ak 59'
+  truenorth checkpoint items=75 done=75 skipped=0 this_run=75 rate=0.45/s idx=75/2942
+  ok #100 idx=100/2942 name='Alaskan Thunder Fuck'
+  truenorth checkpoint items=100 done=100 skipped=0 this_run=100 rate=0.43/s idx=100/2942
+  ok #125 idx=125/2942 name='Alien Technology'
+  truenorth checkpoint items=125 done=125 skipped=0 this_run=125 rate=0.44/s idx=125/2942
+  ok #150 idx=150/2942 name='Amnesia Haze'
+  truenorth checkpoint items=150 done=150 skipped=0 this_run=150 rate=0.45/s idx=150/2942
+  ok #175 idx=175/2942 name='Amnesia X Cafe Racer'
+  truenorth checkpoint items=175 done=175 skipped=0 this_run=175 rate=0.45/s idx=175/2942
+  ok #200 idx=201/2942 name='Apple Fritter'
+  truenorth checkpoint items=200 done=201 skipped=1 this_run=200 rate=0.45/s idx=201/2942
+  ok #225 idx=226/2942 name='Auto Aurora Borealis'
+  truenorth checkpoint items=225 done=226 skipped=1 this_run=225 rate=0.45/s idx=226/2942
+  ok #250 idx=256/2942 name='Auto Great White Shark'
+  truenorth checkpoint items=250 done=256 skipped=6 this_run=250 rate=0.44/s idx=256/2942
+  ok #275 idx=284/2942 name='Auto Power Plant'
+  truenorth checkpoint items=275 done=284 skipped=9 this_run=275 rate=0.45/s idx=284/2942
+  ok #300 idx=310/2942 name='Badazz Cheese'
+  truenorth checkpoint items=300 done=310 skipped=10 this_run=300 rate=0.45/s idx=310/2942
+  ok #325 idx=335/2942 name='Banana Split'
+  truenorth checkpoint items=325 done=335 skipped=10 this_run=325 rate=0.45/s idx=335/2942
+  ok #350 idx=360/2942 name='Big Tooth'
+  truenorth checkpoint items=350 done=360 skipped=10 this_run=350 rate=0.44/s idx=360/2942
+  ok #375 idx=385/2942 name='Black Domina'
+  truenorth checkpoint items=375 done=385 skipped=10 this_run=375 rate=0.44/s idx=385/2942
+  ok #400 idx=411/2942 name='Black Runtz'
+  truenorth checkpoint items=400 done=411 skipped=11 this_run=400 rate=0.44/s idx=411/2942
+truenorth staging: {
+  "family": "bank_truenorth",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_truenorth.sqlite3",
+  "count": 400,
+  "bulk": false,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 205,
+    "strain_variant": 356,
+    "chemistry_profile": 0,
+    "grow_trait": 398,
+    "entity_link": 0,
+    "attribute_kv": 3866,
+    "raw_record": 400,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 12,
+    "source_record": 1
+  }
+}
+  ok #425 idx=436/2942 name='Blood Diamond Og'
+  truenorth checkpoint items=425 done=436 skipped=11 this_run=425 rate=0.44/s idx=436/2942
+  ok #450 idx=462/2942 name='Blue Dream'
+  truenorth checkpoint items=450 done=462 skipped=12 this_run=450 rate=0.44/s idx=462/2942
+  ok #475 idx=487/2942 name='Blue Mystic'
+  truenorth checkpoint items=475 done=487 skipped=12 this_run=475 rate=0.44/s idx=487/2942
+  ok #500 idx=512/2942 name='Blueberry Kush Auto'
+  truenorth checkpoint items=500 done=512 skipped=12 this_run=500 rate=0.44/s idx=512/2942
+  ok #525 idx=537/2942 name='Bruce Banner 3 Auto'
+  truenorth checkpoint items=525 done=537 skipped=12 this_run=525 rate=0.44/s idx=537/2942
+  ok #550 idx=562/2942 name='Bruce Banner X Grapefruit'
+  truenorth checkpoint items=550 done=562 skipped=12 this_run=550 rate=0.44/s idx=562/2942
+  ok #575 idx=587/2942 name='Bubblegum'
+  truenorth checkpoint items=575 done=587 skipped=12 this_run=575 rate=0.44/s idx=587/2942
+  ok #600 idx=612/2942 name='California Dream'
+  truenorth checkpoint items=600 done=612 skipped=12 this_run=600 rate=0.44/s idx=612/2942
+  ok #625 idx=638/2942 name='Candyland Peyote'
+  truenorth checkpoint items=625 done=638 skipped=13 this_run=625 rate=0.44/s idx=638/2942
+  skip non-product (1) https://www.truenorthseedbank.com/cannabis-seeds-promotions
+  ok #650 idx=667/2942 name='Cbd Gorilla Glue 4 Fast Version'
+  truenorth checkpoint items=650 done=667 skipped=17 this_run=650 rate=0.44/s idx=667/2942
+  ok #675 idx=694/2942 name='Cheese'
+  truenorth checkpoint items=675 done=694 skipped=19 this_run=675 rate=0.43/s idx=694/2942
+  ok #700 idx=719/2942 name='Chemdog Diesel'
+  truenorth checkpoint items=700 done=719 skipped=19 this_run=700 rate=0.44/s idx=719/2942
+  ok #725 idx=744/2942 name='Cherry Pie'
+  truenorth checkpoint items=725 done=744 skipped=19 this_run=725 rate=0.44/s idx=744/2942
+  ok #750 idx=770/2942 name='Chocolopez'
+  truenorth checkpoint items=750 done=770 skipped=20 this_run=750 rate=0.44/s idx=770/2942
+  ok #775 idx=795/2942 name='Cinderella99 X Early Skunk'
+  truenorth checkpoint items=775 done=795 skipped=20 this_run=775 rate=0.44/s idx=795/2942
+  ok #800 idx=820/2942 name='Cookie Dunes'
+  truenorth checkpoint items=800 done=820 skipped=20 this_run=800 rate=0.44/s idx=820/2942
+truenorth staging: {
+  "family": "bank_truenorth",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_truenorth.sqlite3",
+  "count": 800,
+  "bulk": false,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 388,
+    "strain_variant": 712,
+    "chemistry_profile": 0,
+    "grow_trait": 794,
+    "entity_link": 0,
+    "attribute_kv": 7632,
+    "raw_record": 800,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 12,
+    "source_record": 1
+  }
+}
+  ok #825 idx=846/2942 name='Cream Mandarine Auto'
+  truenorth checkpoint items=825 done=846 skipped=21 this_run=825 rate=0.44/s idx=846/2942
+  ok #850 idx=871/2942 name='Critical Bilbo'
+  truenorth checkpoint items=850 done=871 skipped=21 this_run=850 rate=0.44/s idx=871/2942
+  ok #875 idx=896/2942 name='Critical Jack'
+  truenorth checkpoint items=875 done=896 skipped=21 this_run=875 rate=0.44/s idx=896/2942
+  ok #900 idx=921/2942 name='Critical Purple'
+  truenorth checkpoint items=900 done=921 skipped=21 this_run=900 rate=0.44/s idx=921/2942
+  ok #925 idx=946/2942 name='Crockett S Dawg'
+  truenorth checkpoint items=925 done=946 skipped=21 this_run=925 rate=0.44/s idx=946/2942
+  ok #950 idx=971/2942 name='Desert Gelato'
+  truenorth checkpoint items=950 done=971 skipped=21 this_run=950 rate=0.44/s idx=971/2942
+  ok #975 idx=996/2942 name='Do Si Dos'
+  truenorth checkpoint items=975 done=996 skipped=21 this_run=975 rate=0.44/s idx=996/2942
+  ok #1000 idx=1021/2942 name='Durban Poison'
+  truenorth checkpoint items=1000 done=1021 skipped=21 this_run=1000 rate=0.44/s idx=1021/2942
+  ok #1025 idx=1046/2942 name='El Patron'
+  truenorth checkpoint items=1025 done=1046 skipped=21 this_run=1025 rate=0.44/s idx=1046/2942
+  ok #1050 idx=1071/2942 name='Fire Alien Strawberry'
+  truenorth checkpoint items=1050 done=1071 skipped=21 this_run=1050 rate=0.44/s idx=1071/2942
+  ok #1075 idx=1096/2942 name='Fro Yo'
+  truenorth checkpoint items=1075 done=1096 skipped=21 this_run=1075 rate=0.44/s idx=1096/2942
+  ok #1100 idx=1122/2942 name='G13 X Nebula'
+  truenorth checkpoint items=1100 done=1122 skipped=22 this_run=1100 rate=0.44/s idx=1122/2942
+  ok #1125 idx=1148/2942 name='Gelato'
+  truenorth checkpoint items=1125 done=1148 skipped=23 this_run=1125 rate=0.44/s idx=1148/2942
+  ok #1150 idx=1173/2942 name='Gelonade'
+  truenorth checkpoint items=1150 done=1173 skipped=23 this_run=1150 rate=0.44/s idx=1173/2942
+  ok #1175 idx=1198/2942 name='Girl Scout Cookies'
+  truenorth checkpoint items=1175 done=1198 skipped=23 this_run=1175 rate=0.44/s idx=1198/2942
+  ok #1200 idx=1223/2942 name='Girl Scout Cookies X Somango'
+  truenorth checkpoint items=1200 done=1223 skipped=23 this_run=1200 rate=0.44/s idx=1223/2942
+truenorth staging: {
+  "family": "bank_truenorth",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_truenorth.sqlite3",
+  "count": 1200,
+  "bulk": false,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 596,
+    "strain_variant": 1071,
+    "chemistry_profile": 0,
+    "grow_trait": 1192,
+    "entity_link": 0,
+    "attribute_kv": 11473,
+    "raw_record": 1200,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 12,
+    "source_record": 1
+  }
+}
+  ok #1225 idx=1248/2942 name='God Bud'
+  truenorth checkpoint items=1225 done=1248 skipped=23 this_run=1225 rate=0.44/s idx=1248/2942
+  ok #1250 idx=1273/2942 name='Gorilla Glue 4'
+  truenorth checkpoint items=1250 done=1273 skipped=23 this_run=1250 rate=0.45/s idx=1273/2942
+  ok #1275 idx=1298/2942 name='Gorilla Glue X Girl Scout Cookies'
+  truenorth checkpoint items=1275 done=1298 skipped=23 this_run=1275 rate=0.44/s idx=1298/2942
+  ok #1300 idx=1323/2942 name='Gorilla Zookies'
+  truenorth checkpoint items=1300 done=1323 skipped=23 this_run=1300 rate=0.44/s idx=1323/2942
+  ok #1325 idx=1349/2942 name='Grape Ape'
+  truenorth checkpoint items=1325 done=1349 skipped=24 this_run=1325 rate=0.45/s idx=1349/2942
+  ok #1350 idx=1374/2942 name='Grease Monkey'
+  truenorth checkpoint items=1350 done=1374 skipped=24 this_run=1350 rate=0.45/s idx=1374/2942
+  ok #1375 idx=1399/2942 name='Green Crack X Super Silver Haze'
+  truenorth checkpoint items=1375 done=1399 skipped=24 this_run=1375 rate=0.45/s idx=1399/2942
+  ok #1400 idx=1425/2942 name='Harlequin Cbd'
+  truenorth checkpoint items=1400 done=1425 skipped=25 this_run=1400 rate=0.45/s idx=1425/2942
+  ok #1425 idx=1450/2942 name='Head Band'
+  truenorth checkpoint items=1425 done=1450 skipped=25 this_run=1425 rate=0.45/s idx=1450/2942
+  ok #1450 idx=1475/2942 name='Holy Grail Kush'
+  truenorth checkpoint items=1450 done=1475 skipped=25 this_run=1450 rate=0.45/s idx=1475/2942
+  ok #1475 idx=1500/2942 name='Irish Cream'
+  truenorth checkpoint items=1475 done=1500 skipped=25 this_run=1475 rate=0.45/s idx=1500/2942
+  ok #1500 idx=1525/2942 name='Jack Herer X Super Skunk'
+  truenorth checkpoint items=1500 done=1525 skipped=25 this_run=1500 rate=0.45/s idx=1525/2942
+  ok #1525 idx=1550/2942 name='Jock Horror'
+  truenorth checkpoint items=1525 done=1550 skipped=25 this_run=1525 rate=0.45/s idx=1550/2942
+  ok #1550 idx=1575/2942 name='Killer Bruce'
+  truenorth checkpoint items=1550 done=1575 skipped=25 this_run=1550 rate=0.45/s idx=1575/2942
+  ok #1575 idx=1600/2942 name='Kryptonite Kush Fast'
+  truenorth checkpoint items=1575 done=1600 skipped=25 this_run=1575 rate=0.45/s idx=1600/2942
+  ok #1600 idx=1625/2942 name='Larry Og'
+  truenorth checkpoint items=1600 done=1625 skipped=25 this_run=1600 rate=0.45/s idx=1625/2942
+truenorth staging: {
+  "family": "bank_truenorth",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_truenorth.sqlite3",
+  "count": 1600,
+  "bulk": false,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 807,
+    "strain_variant": 1433,
+    "chemistry_profile": 0,
+    "grow_trait": 1591,
+    "entity_link": 0,
+    "attribute_kv": 15260,
+    "raw_record": 1600,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 12,
+    "source_record": 1
+  }
+}
+  ok #1625 idx=1650/2942 name='Lemon Haze Fast Version'
+  truenorth checkpoint items=1625 done=1650 skipped=25 this_run=1625 rate=0.45/s idx=1650/2942
+  ok #1650 idx=1675/2942 name='Lemon Tree'
+  truenorth checkpoint items=1650 done=1675 skipped=25 this_run=1650 rate=0.45/s idx=1675/2942
+  ok #1675 idx=1700/2942 name='Lsd'
+  truenorth checkpoint items=1675 done=1700 skipped=25 this_run=1675 rate=0.44/s idx=1700/2942
+  ok #1700 idx=1727/2942 name='Mandarin Cookies'
+  truenorth checkpoint items=1700 done=1727 skipped=27 this_run=1700 rate=0.44/s idx=1727/2942
+  ok #1725 idx=1752/2942 name='Master Yoda Auto'
+  truenorth checkpoint items=1725 done=1752 skipped=27 this_run=1725 rate=0.44/s idx=1752/2942
+  ok #1750 idx=1778/2942 name='Mc Early'
+  truenorth checkpoint items=1750 done=1778 skipped=28 this_run=1750 rate=0.44/s idx=1778/2942
+  ok #1775 idx=1803/2942 name='Milky Way F1 Auto'
+  truenorth checkpoint items=1775 done=1803 skipped=28 this_run=1775 rate=0.45/s idx=1803/2942
+  ok #1800 idx=1828/2942 name='Mk Ultra'
+  truenorth checkpoint items=1800 done=1828 skipped=28 this_run=1800 rate=0.45/s idx=1828/2942
+  ok #1825 idx=1853/2942 name='Money Maker'
+  truenorth checkpoint items=1825 done=1853 skipped=28 this_run=1825 rate=0.44/s idx=1853/2942
+  ok #1850 idx=1878/2942 name='New York Diesel'
+  truenorth checkpoint items=1850 done=1878 skipped=28 this_run=1850 rate=0.44/s idx=1878/2942
+  ok #1875 idx=1903/2942 name='Northern Lights Fast'
+  truenorth checkpoint items=1875 done=1903 skipped=28 this_run=1875 rate=0.44/s idx=1903/2942
+  ok #1900 idx=1928/2942 name='Northern Lights X Skunk'
+  truenorth checkpoint items=1900 done=1928 skipped=28 this_run=1900 rate=0.44/s idx=1928/2942
+  ok #1925 idx=1953/2942 name='Og Kush'
+  truenorth checkpoint items=1925 done=1953 skipped=28 this_run=1925 rate=0.44/s idx=1953/2942
+  ok #1950 idx=1979/2942 name='Orange Sherbet Auto'
+  truenorth checkpoint items=1950 done=1979 skipped=29 this_run=1950 rate=0.44/s idx=1979/2942
+  ok #1975 idx=2004/2942 name='Original Auto Jack Herer'
+  truenorth checkpoint items=1975 done=2004 skipped=29 this_run=1975 rate=0.44/s idx=2004/2942
+  ok #2000 idx=2029/2942 name='Orka'
+  truenorth checkpoint items=2000 done=2029 skipped=29 this_run=2000 rate=0.44/s idx=2029/2942
+truenorth staging: {
+  "family": "bank_truenorth",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_truenorth.sqlite3",
+  "count": 2000,
+  "bulk": false,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 1020,
+    "strain_variant": 1796,
+    "chemistry_profile": 0,
+    "grow_trait": 1990,
+    "entity_link": 0,
+    "attribute_kv": 19079,
+    "raw_record": 2000,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 12,
+    "source_record": 1
+  }
+}
+  ok #2025 idx=2055/2942 name='Permanent Marker'
+  truenorth checkpoint items=2025 done=2055 skipped=30 this_run=2025 rate=0.44/s idx=2055/2942
+  ok #2050 idx=2080/2942 name='Pineapple Kush'
+  truenorth checkpoint items=2050 done=2080 skipped=30 this_run=2050 rate=0.44/s idx=2080/2942
+  ok #2075 idx=2106/2942 name='Pink Runtz'
+  truenorth checkpoint items=2075 done=2106 skipped=31 this_run=2075 rate=0.44/s idx=2106/2942
+  ok #2100 idx=2131/2942 name='Pure Ak'
+  truenorth checkpoint items=2100 done=2131 skipped=31 this_run=2100 rate=0.44/s idx=2131/2942
+  ok #2125 idx=2156/2942 name='Purple Haze'
+  truenorth checkpoint items=2125 done=2156 skipped=31 this_run=2125 rate=0.44/s idx=2156/2942
+  ok #2150 idx=2181/2942 name='Purple Punch'
+  truenorth checkpoint items=2150 done=2181 skipped=31 this_run=2150 rate=0.44/s idx=2181/2942
+  ok #2175 idx=2206/2942 name='Purple Zkittlez Lemon Bean'
+  truenorth checkpoint items=2175 done=2206 skipped=31 this_run=2175 rate=0.44/s idx=2206/2942
+  ok #2200 idx=2231/2942 name='Recon Auto'
+  truenorth checkpoint items=2200 done=2231 skipped=31 this_run=2200 rate=0.44/s idx=2231/2942
+  ok #2225 idx=2257/2942 name='Rosenthal'
+  truenorth checkpoint items=2225 done=2257 skipped=32 this_run=2225 rate=0.44/s idx=2257/2942
+  ok #2250 idx=2282/2942 name='Royal Madre'
+  truenorth checkpoint items=2250 done=2282 skipped=32 this_run=2250 rate=0.44/s idx=2282/2942
+  ok #2275 idx=2307/2942 name='Runtz X Layer Cake'
+  truenorth checkpoint items=2275 done=2307 skipped=32 this_run=2275 rate=0.44/s idx=2307/2942
+  ok #2300 idx=2333/2942 name='Sherbet Kush'
+  truenorth checkpoint items=2300 done=2333 skipped=33 this_run=2300 rate=0.44/s idx=2333/2942
+  ok #2325 idx=2358/2942 name='Sirius Black'
+  truenorth checkpoint items=2325 done=2358 skipped=33 this_run=2325 rate=0.44/s idx=2358/2942
+  ok #2350 idx=2384/2942 name='Skunk X Cinderella 99 Fast Version'
+  truenorth checkpoint items=2350 done=2384 skipped=34 this_run=2350 rate=0.44/s idx=2384/2942
+  ok #2375 idx=2409/2942 name='Skywalker X Girl Scout Cookies'
+  truenorth checkpoint items=2375 done=2409 skipped=34 this_run=2375 rate=0.45/s idx=2409/2942
+  ok #2400 idx=2434/2942 name='Somango'
+  truenorth checkpoint items=2400 done=2434 skipped=34 this_run=2400 rate=0.45/s idx=2434/2942
+truenorth staging: {
+  "family": "bank_truenorth",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_truenorth.sqlite3",
+  "count": 2400,
+  "bulk": false,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 1242,
+    "strain_variant": 2164,
+    "chemistry_profile": 0,
+    "grow_trait": 2390,
+    "entity_link": 0,
+    "attribute_kv": 22907,
+    "raw_record": 2400,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 12,
+    "source_record": 1
+  }
+}
+  ok #2425 idx=2459/2942 name='Sour Diesel X Og Kush'
+  truenorth checkpoint items=2425 done=2459 skipped=34 this_run=2425 rate=0.45/s idx=2459/2942
+  ok #2450 idx=2485/2942 name='Special Kush 1'
+  truenorth checkpoint items=2450 done=2485 skipped=35 this_run=2450 rate=0.45/s idx=2485/2942
+  ok #2475 idx=2510/2942 name='Strawberry Banana Auto'
+  truenorth checkpoint items=2475 done=2510 skipped=35 this_run=2475 rate=0.45/s idx=2510/2942
+  ok #2500 idx=2536/2942 name='Strawberry'
+  truenorth checkpoint items=2500 done=2536 skipped=36 this_run=2500 rate=0.45/s idx=2536/2942
+  ok #2525 idx=2561/2942 name='Sugar Haze'
+  truenorth checkpoint items=2525 done=2561 skipped=36 this_run=2525 rate=0.45/s idx=2561/2942
+  ok #2550 idx=2586/2942 name='Super Lemon Haze'
+  truenorth checkpoint items=2550 done=2586 skipped=36 this_run=2550 rate=0.45/s idx=2586/2942
+  ok #2575 idx=2611/2942 name='Sweet Black Angel'
+  truenorth checkpoint items=2575 done=2611 skipped=36 this_run=2575 rate=0.45/s idx=2611/2942
+  ok #2600 idx=2637/2942 name='Sweet Tooth'
+  truenorth checkpoint items=2600 done=2637 skipped=37 this_run=2600 rate=0.45/s idx=2637/2942
+  ok #2625 idx=2662/2942 name='Tangerine Dream'
+  truenorth checkpoint items=2625 done=2662 skipped=37 this_run=2625 rate=0.45/s idx=2662/2942
+  ok #2650 idx=2687/2942 name='Thailand Ryder'
+  truenorth checkpoint items=2650 done=2687 skipped=37 this_run=2650 rate=0.45/s idx=2687/2942
+  ok #2675 idx=2712/2942 name='Trainwreck'
+  truenorth checkpoint items=2675 done=2712 skipped=37 this_run=2675 rate=0.45/s idx=2712/2942
+  ok #2700 idx=2737/2942 name='Tropicana Cookies Fast Version'
+  truenorth checkpoint items=2700 done=2737 skipped=37 this_run=2700 rate=0.45/s idx=2737/2942
+  skip non-product (2) https://www.truenorthseedbank.com/true-loyalty-program
+  ok #2725 idx=2763/2942 name='Viente Uno Cbd'
+  truenorth checkpoint items=2725 done=2763 skipped=38 this_run=2725 rate=0.45/s idx=2763/2942
+  ok #2750 idx=2788/2942 name='Wedding Cake'
+  truenorth checkpoint items=2750 done=2788 skipped=38 this_run=2750 rate=0.45/s idx=2788/2942
+  ok #2775 idx=2813/2942 name='White Banner'
+  truenorth checkpoint items=2775 done=2813 skipped=38 this_run=2775 rate=0.45/s idx=2813/2942
+  ok #2800 idx=2838/2942 name='White Russian'
+  truenorth checkpoint items=2800 done=2838 skipped=38 this_run=2800 rate=0.45/s idx=2838/2942
+truenorth staging: {
+  "family": "bank_truenorth",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_truenorth.sqlite3",
+  "count": 2800,
+  "bulk": false,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 1461,
+    "strain_variant": 2527,
+    "chemistry_profile": 0,
+    "grow_trait": 2785,
+    "entity_link": 0,
+    "attribute_kv": 26708,
+    "raw_record": 2800,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 12,
+    "source_record": 1
+  }
+}
+  ok #2825 idx=2863/2942 name='White Widow'
+  truenorth checkpoint items=2825 done=2863 skipped=38 this_run=2825 rate=0.45/s idx=2863/2942
+  skip non-product (3) https://www.truenorthseedbank.com/win-free-cannabis-seeds
+  ok #2850 idx=2889/2942 name='Wonder Pie'
+  truenorth checkpoint items=2850 done=2889 skipped=39 this_run=2850 rate=0.45/s idx=2889/2942
+  ok #2875 idx=2914/2942 name='Zkittlez Kush'
+  truenorth checkpoint items=2875 done=2914 skipped=39 this_run=2875 rate=0.45/s idx=2914/2942
+  ok #2900 idx=2939/2942 name='Ztrawberry'
+  truenorth checkpoint items=2900 done=2939 skipped=39 this_run=2900 rate=0.45/s idx=2939/2942
+  truenorth checkpoint items=2903 done=2942 skipped=39 this_run=2903 rate=0.45/s idx=2942/2942
+wrote dsc_strains_truenorth.json count=2903 skipped=39 errors=0
+truenorth staging: {
+  "family": "bank_truenorth",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_truenorth.sqlite3",
+  "count": 2903,
+  "bulk": false,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 1504,
+    "strain_variant": 2619,
+    "chemistry_profile": 0,
+    "grow_trait": 2888,
+    "entity_link": 0,
+    "attribute_kv": 27695,
+    "raw_record": 2903,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 12,
+    "source_record": 1
+  }
+}

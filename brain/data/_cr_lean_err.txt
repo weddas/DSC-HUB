@@ -1,0 +1,17 @@
+Traceback (most recent call last):
+  File "Y:\Digital Stealth Care\Projects\DSC-HUB\_run_cr_lean.py", line 22, in <module>
+    init_corpus(DEFAULT_DB)
+    ~~~~~~~~~~~^^^^^^^^^^^^
+  File "y:\Digital Stealth Care\Projects\DSC-HUB\brain\dsc_brain\corpus.py", line 117, in init_corpus
+    conn = connect(path)
+  File "y:\Digital Stealth Care\Projects\DSC-HUB\brain\dsc_brain\corpus.py", line 57, in connect
+    if _table_exists(conn, "strain_canonical") and _table_exists(conn, "meta"):
+       ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "y:\Digital Stealth Care\Projects\DSC-HUB\brain\dsc_brain\corpus.py", line 109, in _table_exists
+    row = conn.execute(
+          ~~~~~~~~~~~~^
+        "SELECT 1 FROM sqlite_master WHERE type='table' AND name=? LIMIT 1", (name,)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ).fetchone()
+    ^
+sqlite3.OperationalError: database is locked

@@ -1,0 +1,38 @@
+cropking: sitemap cache 3990 URLs from dsc_strains_cropking.sitemap_urls.json
+cropking: sitemap=3990 pending=75 resume done=3915 dump_items=3915
+  fetching first pending: https://www.cropkingseeds.com/feminized-seeds/mango-fudge-strain-feminized-seeds/
+  ok #1 idx=1/75 name='Mango Fudge Strain Feminized'
+  ok #2 idx=2/75 name='GMO Gush Mints Strain Feminized'
+  ok #3 idx=3/75 name='Dino Bites Strain Feminized'
+  ok #10 idx=10/75 name='Ayahuasca Purple Strain Feminized'
+  ok #20 idx=20/75 name='Purple Milk'
+  checkpoint items=3940 done=3940 this_run=25 rate=0.64/s batch=25/75
+  ok #30 idx=30/75 name='White Choco Runtz Strain Feminized'
+  ok #40 idx=40/75 name='LG Gummy Strain Feminized'
+  ok #50 idx=50/75 name='Amnesia Kush'
+  checkpoint items=3965 done=3965 this_run=50 rate=0.64/s batch=50/75
+  ok #60 idx=60/75 name='Guava Berry Strain Feminized'
+  ok #70 idx=70/75 name='Pancake Ice Strain Feminized'
+  checkpoint items=3990 done=3990 this_run=75 rate=0.61/s batch=75/75
+wrote dsc_strains_cropking.json count=3990 errors=1
+staging: {
+  "family": "cropking",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\cropking.sqlite3",
+  "count": 3990,
+  "stats": {
+    "strain_canonical": 3961,
+    "strain_variant": 3961,
+    "chemistry_profile": 3985,
+    "grow_trait": 3968,
+    "entity_link": 3985,
+    "attribute_kv": 0,
+    "raw_record": 3990,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 0,
+    "source_record": 1
+  }
+}

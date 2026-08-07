@@ -1,0 +1,148 @@
+partition tier_A_second_half slice=[96:192] rows=96 (tiers.A=192)
+targets=32 skipped_done=0 skipped_parked=0 skipped_first_half=0
+probing 32 targets…
+  probe whitehurst-genetix: tier=A platform=woocommerce ok caps=['sitemap']
+  probe yankee-seed: tier=A platform=woocommerce ok caps=['sitemap']
+  probe yellowhammer-genetics: tier=A platform=magento ok caps=['sitemap']
+  probe yin-yang-seeds: tier=A platform=woocommerce ok caps=['sitemap']
+  probe zambeza: tier=A platform=magento ok caps=['sitemap']
+  probe zaza-genetics: tier=A platform=magento ok caps=['sitemap']
+  probe dna-genetics-seeds: tier=A platform=woocommerce ok caps=['sitemap', 'sitemap_index', 'wc_product_sitemap']
+  probe tastebudz-seeds: tier=A platform=woocommerce ok caps=['sitemap', 'sitemap_index', 'wc_product_sitemap']
+  probe crickets-and-cicada-seeds: tier=A platform=woocommerce ok caps=['sitemap', 'sitemap_index', 'wc_product_sitemap']
+  probe finest-picker-genetics: tier=A platform=woocommerce ok caps=['sitemap', 'sitemap_index', 'wc_product_sitemap']
+  probe diamond-rock-genetics: tier=A platform=woocommerce ok caps=['sitemap', 'sitemap_index', 'wc_product_sitemap']
+  probe expert-seeds: tier=A platform=woocommerce ok caps=['sitemap_index', 'wc_product_sitemap']
+  probe spice-of-life-seeds: tier=A platform=woocommerce ok caps=['sitemap']
+  probe sunleaf-seed-co: tier=A platform=woocommerce ok caps=['sitemap']
+  probe tempest-grove-genetics: tier=A platform=woocommerce ok caps=['sitemap', 'sitemap_index']
+  probe 00-seeds-bank: tier=A platform=woocommerce ok caps=['sitemap', 'sitemap_index', 'wc_product_sitemap']
+  probe reggae-seeds: tier=A platform=None ok caps=['sitemap', 'wc_product_sitemap']
+  probe ace-seeds: tier=C platform=None no_catalog_signal caps=[]
+  probe bohemiaseeds: tier=A platform=None ok caps=['sitemap']
+  probe cosmic-wisdom: tier=A platform=None ok caps=['sitemap']
+  probe dutchfem: tier=C platform=None no_catalog_signal caps=[]
+  probe evermore-genetics: tier=C platform=None no_catalog_signal caps=[]
+  probe freestone-genetics: tier=A platform=None ok caps=['sitemap']
+  probe g13-labs: tier=A platform=None ok caps=['sitemap']
+  probe great-lakes-genetics: tier=C platform=None no_catalog_signal caps=[]
+  probe higher-perspective-genetics: tier=A platform=None ok caps=['sitemap']
+  probe lit-farms: tier=A platform=shopify ok caps=['shopify_json', 'sitemap']
+  probe neptune-seed-bank: tier=C platform=None no_catalog_signal caps=[]
+  probe seattle-chronic-seeds: tier=A platform=None ok caps=['sitemap']
+  probe serious-seeds: tier=A platform=None ok caps=['sitemap']
+  probe sticky-finger-seeds: tier=C platform=None no_catalog_signal caps=[]
+  probe universally-seeded: tier=A platform=None ok caps=['sitemap']
+=== scrape lit-farms (Lit Farms) platform=shopify caps=['shopify_json', 'sitemap']
+lit-farms staging: family=bank_lit_farms raw=449 db=\\192.168.86.2\Digital-Documents\Digital Stealth Care\Projects\DSC-HUB\brain\data\staging\bank_lit_farms.sqlite3
+=== scrape 00-seeds-bank (00 Seeds Bank) platform=woocommerce caps=['sitemap', 'sitemap_index', 'wc_product_sitemap']
+  00-seeds-bank products.json page 1 fail: HTTP Error 404: Not Found
+  sitemap https://00seeds.com/product-sitemap.xml +children -> +0 (total 0)
+  sitemap https://00seeds.com/product-sitemap1.xml +children -> +0 (total 0)
+  sitemap https://00seeds.com/sitemap_index.xml +children -> +0 (total 0)
+  sitemap https://00seeds.com/sitemap.xml +children -> +0 (total 0)
+  sitemap https://00seeds.com/wp-sitemap-posts-product-1.xml +children -> +0 (total 0)
+  sitemap https://www.00seeds.com/product-sitemap.xml +children -> +0 (total 0)
+  sitemap https://www.00seeds.com/product-sitemap1.xml +children -> +0 (total 0)
+  sitemap https://www.00seeds.com/sitemap_index.xml +children -> +0 (total 0)
+  sitemap https://www.00seeds.com/wp-sitemap-posts-product-1.xml +children -> +0 (total 0)
+00-seeds-bank: sitemap/product urls=0
+=== scrape crickets-and-cicada-seeds (Crickets and Cicada Seeds) platform=woocommerce caps=['sitemap', 'sitemap_index', 'wc_product_sitemap']
+  crickets-and-cicada-seeds products.json page 1 fail: HTTP Error 404: Not Found
+  sitemap https://cricketsandcicada.com/product-sitemap.xml +children -> +25 (total 25)
+crickets-and-cicada-seeds: sitemap/product urls=25
+  crickets-and-cicada-seeds ok #1 'Chemdog 91 x PNW HP BC2 (UNTESTED)'
+  crickets-and-cicada-seeds ok #2 'Chemdog D x Sensi Star BC2 (UNTESTED)'
+  crickets-and-cicada-seeds checkpoint items=20 scraped=20 rate=0.34/s
+  crickets-and-cicada-seeds checkpoint items=23 scraped=23 rate=0.34/s
+crickets-and-cicada-seeds staging: family=bank_crickets_and_cicada_seeds raw=23 db=\\192.168.86.2\Digital-Documents\Digital Stealth Care\Projects\DSC-HUB\brain\data\staging\bank_crickets_and_cicada_seeds.sqlite3
+=== scrape diamond-rock-genetics (Diamond Rock Genetics) platform=woocommerce caps=['sitemap', 'sitemap_index', 'wc_product_sitemap']
+  diamond-rock-genetics products.json page 1 fail: HTTP Error 404: Not Found
+  sitemap https://www.diamondrock.com/product-sitemap.xml +children -> +0 (total 0)
+  sitemap https://www.diamondrock.com/product-sitemap1.xml +children -> +0 (total 0)
+  sitemap https://www.diamondrock.com/sitemap_index.xml +children -> +0 (total 0)
+  sitemap https://www.diamondrock.com/sitemap.xml +children -> +0 (total 0)
+  sitemap https://www.diamondrock.com/wp-sitemap-posts-product-1.xml +children -> +0 (total 0)
+  sitemap https://diamondrock.com/product-sitemap.xml +children -> +0 (total 0)
+  sitemap https://diamondrock.com/product-sitemap1.xml +children -> +0 (total 0)
+  sitemap https://diamondrock.com/sitemap_index.xml +children -> +0 (total 0)
+  sitemap https://diamondrock.com/sitemap.xml +children -> +0 (total 0)
+  sitemap https://diamondrock.com/wp-sitemap-posts-product-1.xml +children -> +0 (total 0)
+diamond-rock-genetics: sitemap/product urls=0
+=== scrape dna-genetics-seeds (DNA Genetics Seeds) platform=woocommerce caps=['sitemap', 'sitemap_index', 'wc_product_sitemap']
+  dna-genetics-seeds products.json page 1 fail: HTTP Error 404: Not Found
+  sitemap https://dnagenetics.com/product-sitemap.xml +children -> +87 (total 87)
+dna-genetics-seeds: sitemap/product urls=87
+  dna-genetics-seeds ok #1 'Tangielope Kush Reg Cannabis Seeds'
+  dna-genetics-seeds ok #2 '3Peat Fem Cannabis Seeds'
+  dna-genetics-seeds checkpoint items=20 scraped=20 rate=0.67/s
+  dna-genetics-seeds ok #25 'DNA GENETICS - THCa FLOWER - CHOCO MINTZ'
+  dna-genetics-seeds checkpoint items=40 scraped=40 rate=0.67/s
+  dna-genetics-seeds ok #50 'Kosher Kush Reg Cannabis Seeds'
+  dna-genetics-seeds checkpoint items=60 scraped=60 rate=0.67/s
+dna-genetics-seeds staging: family=bank_dna raw=60 db=\\192.168.86.2\Digital-Documents\Digital Stealth Care\Projects\DSC-HUB\brain\data\staging\bank_dna.sqlite3
+  dna-genetics-seeds ok #75 'TANGIE REG Cannabis Seeds'
+  dna-genetics-seeds checkpoint items=80 scraped=80 rate=0.66/s
+  dna-genetics-seeds checkpoint items=87 scraped=87 rate=0.66/s
+dna-genetics-seeds staging: family=bank_dna raw=87 db=\\192.168.86.2\Digital-Documents\Digital Stealth Care\Projects\DSC-HUB\brain\data\staging\bank_dna.sqlite3
+=== scrape expert-seeds (Expert Seeds) platform=woocommerce caps=['sitemap_index', 'wc_product_sitemap']
+  expert-seeds products.json page 1 fail: Expecting value: line 1 column 1 (char 0)
+  sitemap https://expertseedbank.com/product-sitemap.xml +children -> +0 (total 0)
+  sitemap https://expertseedbank.com/product-sitemap1.xml +children -> +0 (total 0)
+  sitemap https://expertseedbank.com/sitemap_index.xml +children -> +0 (total 0)
+  sitemap https://www.expertseedbank.com/product-sitemap.xml +children -> +0 (total 0)
+  sitemap https://www.expertseedbank.com/product-sitemap1.xml +children -> +0 (total 0)
+  sitemap https://www.expertseedbank.com/sitemap_index.xml +children -> +0 (total 0)
+  category https://expertseedbank.com/en/autoflowering-seeds -> +32 (total 32)
+  category https://expertseedbank.com/shop/ -> +1 (total 33)
+  category https://www.expertseedbank.com/en/autoflowering-seeds -> +10 (total 43)
+expert-seeds: sitemap/product urls=43
+  expert-seeds ok #1 'Autoflowering Cannabis Seeds'
+  expert-seeds ok #2 'Beginner Cannabis Seeds Archives'
+  expert-seeds checkpoint items=20 scraped=20 rate=0.22/s
+  expert-seeds ok #25 'Cheese cannabis seeds Archives'
+  expert-seeds checkpoint items=40 scraped=40 rate=0.28/s
+  expert-seeds checkpoint items=43 scraped=43 rate=0.28/s
+expert-seeds staging: family=bank_expert_seeds raw=43 db=\\192.168.86.2\Digital-Documents\Digital Stealth Care\Projects\DSC-HUB\brain\data\staging\bank_expert_seeds.sqlite3
+=== scrape finest-picker-genetics (Finest Picker Genetics) platform=woocommerce caps=['sitemap', 'sitemap_index', 'wc_product_sitemap']
+  finest-picker-genetics products.json page 1 fail: HTTP Error 404: Not Found
+  sitemap https://www.finestpicker.com/product-sitemap.xml +children -> +4 (total 4)
+  sitemap https://www.finestpicker.com/product-sitemap1.xml +children -> +0 (total 4)
+  sitemap https://www.finestpicker.com/sitemap_index.xml +children -> +0 (total 4)
+  sitemap https://www.finestpicker.com/sitemap.xml +children -> +0 (total 4)
+  sitemap https://www.finestpicker.com/wp-sitemap-posts-product-1.xml +children -> +0 (total 4)
+  sitemap https://finestpicker.com/product-sitemap.xml +children -> +0 (total 4)
+  sitemap https://finestpicker.com/product-sitemap1.xml +children -> +0 (total 4)
+  sitemap https://finestpicker.com/sitemap_index.xml +children -> +0 (total 4)
+  sitemap https://finestpicker.com/wp-sitemap-posts-product-1.xml +children -> +0 (total 4)
+finest-picker-genetics: sitemap/product urls=4
+  finest-picker-genetics ok #1 'Glen Allen Service Station'
+  finest-picker-genetics ok #2 'Glen Allen Skunk s1'
+  finest-picker-genetics checkpoint items=4 scraped=4 rate=0.33/s
+finest-picker-genetics staging: family=bank_finest_picker_genetics raw=4 db=\\192.168.86.2\Digital-Documents\Digital Stealth Care\Projects\DSC-HUB\brain\data\staging\bank_finest_picker_genetics.sqlite3
+=== scrape reggae-seeds (Reggae Seeds) platform=None caps=['sitemap', 'wc_product_sitemap']
+  reggae-seeds products.json page 1 fail: HTTP Error 404: Not Found
+  sitemap https://www.reggaeseeds.com/product-sitemap.xml +children -> +579 (total 579)
+reggae-seeds: sitemap/product urls=579
+  reggae-seeds checkpoint items=0 scraped=0 rate=0.00/s
+  reggae-seeds ok #1 'Reggae Seeds distribuidor banco de semillas de marihuana, las mejores genéticas de cannabis. Semillas regulares, semillas feminizadas. Génetica con alto contenido en CBD para uso lúdico y medicinal.'
+  reggae-seeds ok #2 '3r premio hachís JUANITA LA LAGRIMOSA x DIESEL. High Life 2005, Barcelona.'
+  reggae-seeds checkpoint items=20 scraped=20 rate=0.49/s
+  reggae-seeds ok #25 '1er premio interior bio RESPECT. Cannabis Champions Cup 2012, Barcelona.'
+  reggae-seeds checkpoint items=40 scraped=40 rate=0.50/s
+  reggae-seeds ok #50 'Musik, Kleidung und Accessoires'
+  reggae-seeds checkpoint items=60 scraped=60 rate=0.51/s
+reggae-seeds staging: family=bank_reggae_seeds raw=60 db=\\192.168.86.2\Digital-Documents\Digital Stealth Care\Projects\DSC-HUB\brain\data\staging\bank_reggae_seeds.sqlite3
+  reggae-seeds ok #75 'Reggae Seeds dealer, marijuana seeds bank, best cannabis genetics. Regular seeds, feminized seeds. Genetic high in CBD for recreational and medicinal use.'
+  reggae-seeds checkpoint items=80 scraped=80 rate=0.50/s
+  reggae-seeds ok #100 'Award Barbacup 2009 DANCEHALL. 3st Barbacup 2009, Girona'
+  reggae-seeds checkpoint items=100 scraped=100 rate=0.51/s
+  reggae-seeds checkpoint items=120 scraped=120 rate=0.51/s
+reggae-seeds staging: family=bank_reggae_seeds raw=120 db=\\192.168.86.2\Digital-Documents\Digital Stealth Care\Projects\DSC-HUB\brain\data\staging\bank_reggae_seeds.sqlite3
+  reggae-seeds ok #125 'Reggae Seeds cbd rich varieties cannabis magazine February 2015'
+  reggae-seeds checkpoint items=140 scraped=140 rate=0.50/s
+  reggae-seeds ok #150 'Reggae Seeds travels to Extremadura, IV Extremadura meeting cannabic'
+  reggae-seeds checkpoint items=160 scraped=160 rate=0.51/s
+  reggae-seeds ok #175 'Music, clothing and complements'
+  reggae-seeds checkpoint items=180 scraped=180 rate=0.51/s
+reggae-seeds staging: family=bank_reggae_seeds raw=180 db=\\192.168.86.2\Digital-Documents\Digital Stealth Care\Projects\DSC-HUB\brain\data\staging\bank_reggae_seeds.sqlite3

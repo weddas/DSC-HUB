@@ -3,13 +3,20 @@
 #  Nest DHCP reservation: 192.168.86.177 (panel mDNS is off — OTA must
 #  target use_address, not dsc-control.local).
 #
-#  AP PIN: networks[0] prefers ${wifi_bssid}. Production stubs stay
-#  00:00:00:00:00:00 — hub Lock WiFi AP learns the site BSSID into NVS
-#  and 0xD0 fleet-beats it; Control adopts via adopt_hub_wifi_ap.
-#  Do not bake a lab Nest MAC into YAML.
+#  Prefer DSC-Anchor SoftAP (F-012); Nest/home is fallback. Production
+#  stubs keep wifi_bssid 00:00:00:00:00:00 — hub Lock WiFi AP learns
+#  Anchor BSSID into NVS and 0xD0 fleet-beats it; Control adopts via
+#  adopt_hub_wifi_ap. Do not bake a site MAC into YAML.
 # ==================================================================
 wifi:
   networks:
+    - ssid: ${anchor_ssid}
+      password: ${anchor_ap_password}
+      bssid: ${wifi_bssid}
+      priority: 20
+    - ssid: ${anchor_ssid}
+      password: ${anchor_ap_password}
+      priority: 15
     - ssid: ${wifi_ssid}
       password: ${wifi_password}
       bssid: ${wifi_bssid}
@@ -18,6 +25,7 @@ wifi:
       password: ${wifi_password}
       priority: 0
   # OTA / ESPHome dashboard target (device IP from Nest reservation).
+  # When on SoftAP Anchor subnet, OTA via Ethernet HA path / known IP.
   use_address: 192.168.86.177
   power_save_mode: none
   # Match hub: false so bounce can scan onto hub's *learned* preferred AP.

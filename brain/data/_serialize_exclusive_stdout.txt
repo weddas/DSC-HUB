@@ -1,0 +1,8 @@
+2026-08-08 02:33:50 EXCLUSIVE SERIALIZE START v2
+2026-08-08 02:34:12 locked 1: database is locked
+2026-08-08 02:34:36 locked 2: database is locked
+2026-08-08 02:34:59 locked 3: database is locked
+2026-08-08 02:35:23 locked 4: database is locked
+2026-08-08 02:36:05 unlocked attempt=5
+2026-08-08 02:36:37 BEFORE {"strain_canonical": 69150, "strain_variant": 30543, "chemistry_profile": 356165, "grow_trait": 40829, "entity_link": 891502, "attribute_kv": 1075, "raw_record": 0, "light_fixture": 7, "nutrient_product": 3, "medium_product": 1, "media_asset": 16, "followup_gap": 1, "schema_extension_log": 13, "source_record": 51}
+2026-08-08 02:36:37 MERGE hytiva raw=3560

@@ -1,0 +1,28 @@
+Tier B first half: 7 banks (queue partial=True tier_B=14)
+
+=== Alex Beck http://alex-beck.com/ ===
+
+=== AlienLabs https://alienlabs.com/ ===
+
+=== Altitude Genetics https://fanlink.tv/altitudegenetics ===
+
+=== Azarius Seeds https://www.azarius-seeds.com/ ===
+  OK bank_azarius_seeds items=27 method=home_link_scan
+
+=== Beleaf Cannabis https://beleafcannabis.com/ ===
+
+=== Beyond Genetics https://beyond-genetics.com/ ===
+
+=== Breeders Choice https://breeders-choice.com/ ===
+
+=== SUMMARY ===
+{
+  "attempted": 7,
+  "ok": 1,
+  "items_total": 27,
+  "by_status": {
+    "empty_or_unclear": 5,
+    "skipped_linkhub": 1,
+    "ok": 1
+  }
+}

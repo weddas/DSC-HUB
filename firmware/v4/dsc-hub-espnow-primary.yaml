@@ -33,6 +33,7 @@
 # ==================================================================
 substitutions:
   panel_mac: "30:76:F5:E9:22:0C"      # DSC-CYD#1 / DSC-CONTROL — stub may override
+  bridge_mac: "00:00:00:00:00:00"      # DSC-BRIDGE SoftAP MAC — stub / SoftAP hello
   # MUST match dsc-control stub. Not the default 0xABCD / 43981.
   espnow_cmd_tag: "54727"             # 0xD5C7
 
@@ -40,9 +41,10 @@ espnow:
   # Merged into the hub's existing espnow: block (peers list concatenates,
   # so the four pots stay). auto_add_peer stays false from the base config.
   # Register broadcast explicitly so ESPHome does not channel-sweep looking
-  # for FF:FF… when 0xD0 / 0xD7 go out (N-037 — caused Nest STA thrash + OOM).
+  # for FF:FF… when 0xD0 / 0xD7 / 0xD8 / 0xD1 go out (N-037).
   peers:
     - ${panel_mac}
+    - ${bridge_mac}
     - FF:FF:FF:FF:FF:FF
   on_receive:
     - lambda: |-
@@ -315,9 +317,10 @@ script:
           int ph = id(espnow_tx_phase);
           id(espnow_tx_phase) = ph + 1;
           if ((ph & 1) == 0) {
-            // Medium slot — 0xD0 most of the time; 0xD7 every 6th medium (60s).
+            // Medium slot — rotate 0xD0 / 0xD8 / 0xD7 (N-037: one frame).
             int med = ph / 2;
             if (med % 6 == 5) id(tx_peer_time).execute();
+            else if (med % 2 == 1) id(tx_appliance_demand).execute();
             else id(tx_fleet_heartbeat).execute();
           } else {
             // Large slot — vitals default; rotate config/soil/names sparsely.
@@ -330,12 +333,12 @@ script:
           bool linked = id(panel_last_ms) != 0 && (now - id(panel_last_ms)) < 30000u;
           id(panel_link).publish_state(linked);
 
-  # ---- VITALS (0xD1) — live values ----
+  # ---- VITALS (0xD1) — live values (broadcast: panel + bridge F-013) ----
   - id: tx_vitals
     mode: single
     then:
       - espnow.send:
-          address: ${panel_mac}
+          address: FF:FF:FF:FF:FF:FF
           wait_for_sent: false
           continue_on_error: true
           on_error:
@@ -371,6 +374,37 @@ script:
             cu(id(sens_ac_countdown).state);  cu(id(sens_mat_countdown).state);   cu(id(sens_clone_hum_countdown).state);
             cu(id(sens_hum_cooldown).state);  cu(id(sens_dehum_cooldown).state);  cu(id(sens_heater_cooldown).state);
             cu(id(sens_ac_cooldown).state);   cu(id(sens_mat_cooldown).state);    cu(id(sens_clone_hum_cooldown).state);
+            return p;
+
+  # ---- APPLIANCE DEMAND (0xD8) — bridge F-010 ----
+  # {0xD8,0x01,dem,seq_lo,seq_hi,tag_lo,tag_hi}
+  - id: tx_appliance_demand
+    mode: single
+    then:
+      - espnow.send:
+          address: FF:FF:FF:FF:FF:FF
+          wait_for_sent: false
+          continue_on_error: true
+          on_error:
+            - lambda: |-
+                id(espnow_tx_backoff_until) = millis() + 15000u;
+                ESP_LOGW("espnow", "0xD8 TX fail — backoff 15s");
+          data: !lambda |-
+            std::vector<uint8_t> p;
+            p.reserve(8);
+            p.push_back(0xD8); p.push_back(0x01);
+            uint8_t dem=0;
+            if (id(humidifier_demand).state) dem |= 1;
+            if (id(dehumidifier_demand).state) dem |= 2;
+            if (id(heater_demand).state) dem |= 4;
+            if (id(growmat_demand).state) dem |= 8;
+            if (id(ac_demand).state) dem |= 16;
+            if (id(clone_hum_demand).state) dem |= 32;
+            p.push_back(dem);
+            uint16_t seq = (uint16_t) id(tx_seq)++;
+            p.push_back(seq & 0xFF); p.push_back((seq >> 8) & 0xFF);
+            uint16_t tg = (uint16_t) ${espnow_cmd_tag};
+            p.push_back(tg & 0xFF); p.push_back((tg >> 8) & 0xFF);
             return p;
 
   # ---- CONFIG (0xD2) — setpoints ----

@@ -965,11 +965,36 @@ Memo: [`docs/DSC-OS-EXPLORATION.md`](DSC-OS-EXPLORATION.md). Research only; no i
 
 | ID | Item | Notes |
 |---|---|---|
-| F-010 | ESP-NOW appliance bridge (Sonoffs without HA) | Still required for honest HA-down humidity/heat; Pi packaging does not fix |
+| F-010 | ESP-NOW appliance bridge (Sonoffs without HA) | **Superseded 2026-08-08** — see ETH01 pass below |
+| F-011 | SoftAP / kit portal offload onto ETH01 | Deferred; kit portal still on hub |
 
-### out-of-scope (this pass)
+---
 
-- Custom Yocto/Balena “DSC Linux”; Supervised install; installing/forking OpenGrowBox; HA-as-climate-brain
+## 2026-08-08 — ETH01 bridge pass (F-010 + F-012 + F-013)
+
+Firmware: `dsc-bridge.yaml` / `dsc-bridge-kit.yaml` · `components/dsc_api_client/` · hub `0xD8` + broadcast `0xD1`.
+
+### closed / soak
+
+| ID | Item | Notes |
+|---|---|---|
+| F-010 | Appliance bridge | ETH01 Noise client → Sonoff `main_relay`; 45s stale OFF; HA followers fallback |
+| F-012 | Channel anchor SoftAP | `DSC-Anchor` fixed ch11; fleet prefer BSSID via Lock WiFi / 0xD0 |
+| F-013 | Hub HA wired presence | Read-only ESP-NOW→Ethernet vitals/demand mirror (writes still hub API) |
+
+### deferred
+
+| ID | Item | Notes |
+|---|---|---|
+| F-011 | SoftAP portal host on ETH01 | Invert kit host after F-010/12 soak |
+| F-014 | Bridge SoftAP kit hello without `wifi:` | ESPHome forbids `wifi:` + `ethernet:`; SoftAP is `dsc_anchor_ap`. Kit satellite STA join to hub `DSC-Setup-*` deferred — paste `sensor.dsc_bridge_anchor_bssid` into hub `bridge_mac` / Lock WiFi after first ethernet boot |
+
+### mitigated-by
+
+| ID | Item | Notes |
+|---|---|---|
+| F-004 | Nest channel lock | Prefer DSC-Anchor SoftAP instead of Nest for hub/panel/pots |
+| F-006 | HA-link flap | Monitoring can use bridge Ethernet mirror; hub `:6053` still for writes/OTA |
 
 ---
 
@@ -1395,7 +1420,7 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 | N-090 | Notion Product layers doc pass | Hub + 12 child pages; Wiki home / Architecture / Roadmap / Eng Ops wired; diagrams |
 | N-091 | Repo architecture + HA scaffold docs | `docs/DSC-BRAIN.md`, `docs/HA-SCAFFOLD.md`, `docs/brain/*` |
 | N-092 | Brain catalog SQLite + Want + dry-run tick | `brain/dsc_brain/` CLI + FastAPI stub; loads curated packs without HA |
-| N-093 | F-010 bridge design + firmware sketch | `docs/brain/F010_APPLIANCE_BRIDGE.md`, `firmware/v4/dsc-appliance-bridge.yaml` (not flashable yet) |
+| N-093 | F-010 bridge design + ETH01 firmware | **Done 2026-08-08** — `dsc-bridge*.yaml` + `dsc_api_client`; sketch retired |
 
 ### next-plan
 
@@ -1410,7 +1435,7 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 
 | ID | Item | Notes |
 |---|---|---|
-| F-010 | ESP-NOW appliance bridge (Sonoffs without HA) | **Promoted to critical path** for product claim; sketch only today |
+| F-010 | ESP-NOW appliance bridge (Sonoffs without HA) | **Done 2026-08-08** — ETH01 pass; soak open |
 | F-014 | HAOS golden appliance / Integration “app” shell | Optional packaging only — not product SoT |
 
 ### out-of-scope (unchanged)
@@ -1443,7 +1468,10 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 
 | ID | Item | Notes |
 |---|---|---|
-| N-087 | Research corpus + HA projection | SQLite science↔seed schema (`corpus_schema` / `corpus.py`); Wave A OpenTHC (~12.8k) + Seed City CC0 (~8.9k) + Wikileaf grow_data (~2.8k) + Cannlytics MD labs (30k rows); Wave B bank scrapers (ILGM/Herbies/RQS + discovery list); Wave C PPFD download/crop → `media_asset` + [`docs/qa/CATALOG-GAPS.md`](qa/CATALOG-GAPS.md); ingest + link report + community export stub; HA indexes from SQLite projection; surface **5.1.13**; runbook [`docs/qa/CATALOG-RESEARCH-CORPUS.md`](qa/CATALOG-RESEARCH-CORPUS.md) |
+| N-087 | Research corpus + HA projection | SQLite science↔seed schema (`corpus_schema` / `corpus.py`); Wave A OpenTHC (~12.8k) + Seed City CC0 (~8.9k) + Wikileaf grow_data (~2.8k) + Cannlytics MD labs (30k rows); Wave B bank scrapers (ILGM/Herbies/RQS + discovery list); Wave C PPFD download/crop → `media_asset` + [`docs/qa/CATALOG-GAPS.md`](qa/CATALOG-GAPS.md); ingest + link report + community export stub; HA indexes from SQLite projection; surface **5.1.13**; runbook [`docs/qa/CATALOG-RESEARCH-CORPUS.md`](qa/CATALOG-RESEARCH-CORPUS.md); **collation SoT:** [`docs/qa/CATALOG-COLLATION-CONTRACT.md`](qa/CATALOG-COLLATION-CONTRACT.md) |
+| N-087b | DB DUMP + public dataset expansion | Local `DB DUMP` ingest (`import_local_db_dump.py`): Seed City local, Leafly flat/features, replication labs (~215k), pickle archive; GitHub Kushy MIT (~9.5k) + MaxValue terpenes (~43k); discovery list for Mendeley/CT/SDP; corpus rebuilt with slim typed payloads (raw dumps remain SoT for overflow) |
+| N-087c | Multi-DB staging → master ingest | Per-source staging under `brain/data/staging/<family>.sqlite3` with **FULL** `raw_record` payloads (NAS >1 TB; multi-GB OK); master `dsc_brain.sqlite3` receives matched typed+chem+grow+links via `merge_staging_to_master.py` (additive; keep both chem when conflicting); never explode bulk scores into `attribute_kv`; runbook updated in [`CATALOG-RESEARCH-CORPUS.md`](qa/CATALOG-RESEARCH-CORPUS.md) |
+| N-087-COLLATION | Collation contract (notes / reviews / lineage) | Durable architecture landed 2026-08-08 in [`CATALOG-COLLATION-CONTRACT.md`](qa/CATALOG-COLLATION-CONTRACT.md); merge worker one-pager `brain/data/_COLLATION_CONTRACT_FOR_MERGE.txt`. **Gaps vs schema v3 (do not block merges):** no first-class `observation` / `review` tables (forums lean canonical+`raw_record`); `entity_link` exists but genetics parses do not systematically emit `parent_of`/`child_of` + unresolved literals; wordcloud builder not started; CannaReviews full text still medauth-gated. Prefer small schema stub later when exclusive — not a fat refactor mid-merge. |
 
 ### deferred / honesty
 
@@ -1451,9 +1479,165 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 - SeedFinder alphabetical pages are JS-rendered — sitemap/API scrape still needed for full SF dump
 - Seedsman / some bank list routes 404 or bot-walled — discovery list retained for next wave
 - Cannlytics uses MD state CSV (strain_name present); full multi-state / `data/all` (~2.5GB) not ingested this pass
-- Bank HTML scrapes stay `redistributable=false` until legal review; open export = OpenTHC + Seed City + Wikileaf + Cannlytics CC-BY only
+- **2026-08-08 Cannlytics HF expand (job #3):** `import_lab_terpenes_cannlytics.py` multi-state → dumps `dsc_lab_terpenes_cannlytics_{state}.json` + staging `cannlytics_expand.sqlite3` (CC-BY-4.0). CSV OK: ny/ut/mi/hi/ma/nv/fl (+ ca CSV cached). **404 xlsx-only:** wa/ct/co. **No strain names:** ri/or. Staging ~82k chem / ~73k unique (`attribute_kv=0`); unique-first projection; pesticide panels stay in dumps/CSV not master attrs. CA full JSON dump skipped (SMB Errno 22 on multi-GB write); CA staging interrupted mid-pass — resume `python scripts/run_lab_state_expand.py --state ca` then `merge_staging_to_master.py --only cannlytics_expand` when master unlocked. Do not pull `data/all`.
+- Bank HTML scrapes stay `redistributable=false` until legal review; open export = OpenTHC + Seed City + Wikileaf + Cannlytics CC-BY + Kushy MIT (+ MaxValue when license clear)
 - Full public GitHub dump upload of research scrapes deferred
 - Pi webserver UI over full corpus remains out of scope (N-095 track)
 - `build_catalog_search_indexes` SQLite projection is N+1 per canonical (slow on network DB) — batch JOIN refactor later
-- HA strain projection capped at 2500 of ~20k canonical; raise cap or page when UI needs it
+- HA strain projection capped at 2500 of ~57k canonical; raise cap or page when UI needs it
 - Nutrient/medium brand dumps still thin (pack seeds only this pass); Wave D brand crawl next
+- Parquet `train-00000-of-00002.parquet` is **image+label only** (158 rows) — not strain chem; correctly skipped (not an allowlist problem)
+- Deep DB DUMP staging pass (`import_db_dump_deep.py`) wrote 11 families under `brain/data/staging/`; **merge into master was blocked by concurrent master writers** — re-run `python scripts/merge_staging_to_master.py` (or `_n087_merge_retry.py`) when exclusive
+- Mendeley “800+ strains effects+chemistry” and Strain Data Project need manual DOI/license fetch
+- NAS SQLite I/O errors on 50MB+ dump reads — keep lab dumps slim; raw CSVs stay in DB DUMP
+- First bloated ingest (~6GB attribute_kv explosion) taught: bulk dumps must not mirror every Leafly score into `attribute_kv` — use staging `raw_record` (full payloads OK) + typed master merge (N-087c)
+- Fan-out workers: write only own `brain/data/staging/<family>.sqlite3`; serialize `merge_staging_to_master` + HA index rebuild (no concurrent master writers)
+- **strain-database.com**: Cloudflare human check (HTTP 403) — authenticate in browser at https://strain-database.com/strains then re-run scrape_strain_directories.py --dir strain_database
+- **2026-08-08 strain-database.com**: Script ready (`scripts/scrape_strain_database.py` + `lineage_to_mermaid.py` → dump `dsc_strains_straindatabase.json` + staging `strain_database.sqlite3` full raw + `lineage_mermaid`). HTTPS scrapers still get CF 403. Cookie path: pass CF in normal Chrome → **close Chrome briefly** (Cookies DB is exclusive-locked while Chrome runs) → `python scripts/chrome_cookies_for_domain.py` (writes `homeassistant/data/_strain_database_cookies.json` + scraper jar) → `python scripts/scrape_strain_database.py --import-chrome-cookies --stage`. Or: copy `%LOCALAPPDATA%\Google\Chrome\User Data\Default\Network\Cookies` manually and pass `--cookies-db`. Never use chrome://.
+- Leafly / Weedmaps / Wikileaf live HTML bot-walled; use local Leafly dumps
+- Attitude Seedbank domain parked (HugeDomains); North Atlantic live HTML HTTP 403 (local dump ~2959 still usable); Alchimia list regex was wrong — real PDPs are `*-product-N.php` via `en/sitemap-products.xml` (5433 locs; Cannabis seeds filter → **3098** in `dsc_strains_alchimia.json` + `brain/data/staging/alchimia.sqlite3`, `scripts/scrape_alchimia.py`, redistributable=false)
+- Forum thread scrapes: first-pass XenForo public scrape done via `scripts/scrape_xenforo_forums.py` — 420mag 400 / phenohunter 400 / mjpassion 300 → `dsc_forum_*.json` + `brain/data/staging/forum_*.sqlite3` (no invented chem; chemistry_profile=0). Resume via checkpoints. CF-walled forums still pending auth (THCfarmer/ICMag/Grasscity/UK420/etc.)
+- **2026-08-08 storefront/forum discovery probe** (`scripts/_probe_storefront_forum_discovery.py` → `homeassistant/data/_probe_discovery_2026-08-08.json`): many bank configs wrongly assumed Shopify `/collections|products/`. WooCommerce `/product/` ready: DC Seed Exchange (~1k sitemap), Multiverse Beans (**full product-sitemap1–17 ≈ 2986** PDPs, not just sitemap1 ~200), Weed Seeds Express (sitemap-en ~364 `/product/`). Crop King product-sitemap ~997. Seedsman list 404/SPA but USA sitemap `us-en/{slug}` works (~1.7k+ truncated). Greenhouse catalog is `shop.greenhouseseeds.nl` (not marketing root). Dead/DNS: Beaver, Organic Earth; Growers Choice coming-soon. Forums public high-yield: 420 Magazine, Phenohunter, Marijuana Passion; CF 403: THCfarmer/ICMag/Grasscity/UK420/etc.
+- **Seedsman USA fan-out (2026-08-08):** list routes 404/SPA; scrape path is sitemap → GraphQL PDP (`urlResolver`→sku→`products`). Script `scripts/scrape_seedsman.py` → dump `dsc_strains_seedsman.json` (**2206**, redistributable=false) + staging `brain/data/staging/seedsman.sqlite3` (raw_record **2206**, grow **2101**, chem **1413**, attribute_kv=0). Sitemap PDPs 2389; prefilter merch ~61; skipped product_empty 39 / resolver_miss 87 / not_seed 1. HTML shell empty (ScandiPWA); `seeds_effect_filter` unused (effects=0). Do not use old list-page bank config in `scrape_seed_banks.py` for Seedsman.
+- Woo bank fan-out scraper: `scripts/scrape_wc_seed_banks.py` (Multiverse + Weed Seeds Express → dumps + `bank_multiverse` / `bank_weedseedsexpress` staging)
+  - **Weed Seeds Express**: dump **364** / staging raw_record **364** (`sitemap-en.xml`; redistributable=false)
+  - **Multiverse Beans**: sitemap **2986** locs → live dump **1452** (skipped_404 **1530** stale sitemap); staging raw_record **1452**; thin chem on PDP (lineage/breeder-rich)
+- **Crop King + DC Seed Exchange fan-out** (`scripts/scrape_cropking_dcseed.py` + `_resume_bank_scrape.py` batches): sitemap-first. Dumps `dsc_strains_{cropking,dcseedexchange}.json` + staging `{cropking,dcseedexchange}.sqlite3` FULL `raw_record`; redistributable=false. Host kills long runs ~15m — use batched resume (`--batch-limit`). Later merge via `merge_staging_to_master.py --only cropking,dcseedexchange`. Crop King has 4 product sitemaps (~3990 PDPs), not only sitemap1’s ~997. DC WooCommerce `/product/` (~1654). Checkpoint saves use atomic `.tmp` replace.
+- DoltHub marijuana_data API 400; WA aggregate SQL timed out (local Replication_Data is SoT)
+- Concurrent NAS SQLite writers cause lock storms — serialize ingest/link/index jobs
+- Re-ingest needed for post-scrape dumps if first ingest saw empty shells: CannaConnection 200, Crop King 55 (Hytiva superseded 2026-08-08 — see below; Zamnesia/SeedSupreme/Herbies/ILGM/RQS full dumps superseded 2026-08-08 — see priority banks note)
+- **Priority seed banks full sitemap scrapes (2026-08-08):** Expanded beyond smoke dumps (~40–50). Sitemap-first via `scripts/scrape_seed_banks.py` (Herbies/RQS/Zamnesia) + `scripts/scrape_bank_sitemaps.py` (ILGM/SeedSupreme). CREATE_NO_WINDOW launches; **no master merge**. Counts (dump = staging `raw_record`): Herbies **4142**/4142 → `bank_herbies.sqlite3`; ILGM **375**/375 → `bank_ilgm`; RQS **188**/188 → `bank_royal_queen`; Zamnesia **2299** (sitemap 2291 + resume extras) → `bank_zamnesia`; SeedSupreme **537**/537 → `bank_seed_supreme`. Transient timeouts/502s recovered on retry; no hard bot-wall aborts. Follow-up: staging `attribute_kv` still non-zero on these bank families (grow/chem typed OK) — trim KV on next staging ingest pass; merge via `merge_staging_to_master.py --only bank_herbies,bank_ilgm,bank_royal_queen,bank_zamnesia,bank_seed_supreme` when exclusive.
+- **Hytiva fan-out #1 (2026-08-08):** `scripts/scrape_hytiva.py` → dump `dsc_strains_hytiva.json` (**3559**) + staging **`brain/data/staging/hytiva.sqlite3`** (raw_record **3559**, canonical **3529**, chem **1979**, grow **51**, **attribute_kv=0**, redistributable=false). Typed merge into master printed OK; post-merge `corpus_stats` hit master lock storm — re-run `python scripts/merge_staging_to_master.py --only hytiva --no-link --no-search` when writers are idle. Hybrid list still +25 at `--max-pages 200` (possible truncation beyond ~5k hybrids); one transient `WinError 10054` on `/strains/hybrid/royal-wappa` (retry in `_finish_hytiva.py`). No CF. Serialize master merges across fan-out workers.
+- **DB DUMP inventory (N-087c read-only):** Cannabis Intelligence MIT imported — dump `dsc_strains_cannabis_intelligence.json` (15739) + staging `cannabis_intelligence.sqlite3` (canonical 14573 / variant 15394 / chem 4587 / grow 13175 / raw 15739 / `attribute_kv=0`); master merge landed source + chem 4587 + grow 13175 + links 4587 (variant `source_id` counts may drop if later merges overwrite the same `name_norm::breeder` id). North Atlantic via `import_strains_northatlantic.py`; Leafly flat over-slimmed (re-enrich allowlist, never full `attribute_kv`); parquet train vision blobs — skip; MaxValue terpenes already imported.
+- **Phytochem Smith lab (discovery fan-out #1):** `import_lab_phytochemical_diversity.py` → dump `dsc_lab_phytochemical_diversity.json` (full rows + terpene panels) + staging `brain/data/staging/phytochem_smith.sqlite3`; master merge = one `chemistry_profile` per `strain_slug` with rich `payload_json` (no `attribute_kv` column explosion). NAS space is ample — maximize staging/dumps.
+- **Fan-out lock storm (2026-08-08):** concurrent staging merges on `dsc_brain.sqlite3` over SMB caused `database is locked` / silent hung connects; phytochem dump+staging completed (89923 raw / 3087 chem) but master merge must be serialized (`merge_staging_to_master.py --only phytochem_smith` or priority merge ORDER entry).
+- **Leafly flat re-enrich (2026-08-08):** `scripts/enrich_leafly_flat.py` → staging `brain/data/staging/leafly_flat_enrich.sqlite3` (**106.8 MB**; raw_record **8492** full JSONL rows; chem **8482**; science_alias **8492**; **attribute_kv=0**). Master `payload_json` carries full non-null effect/flavor score dicts + terpene panel + cannabinoid percentiles (not KV). Master apply pending lock clear: `python -u scripts/enrich_leafly_flat.py --apply-from-staging`.
+- **CannaReviews AU (2026-08-08):** `scripts/import_cannareviews_health.py` scrapes sitemap PDPs (JSON-LD + Livewire aggregates). Export APIs (`/api/v5.2.1/products/export|bulk|data/download`) are honeypots (202 → forever-processing progress). Full AUD prices + review text need medauth cookie (`--cookie`); `/products` is login-walled. Rate-limit (HTTP 429) if workers>~3 — use `--resume --workers 1 --delay 0.8`. Staging family `cannareviews`.
+
+- **2026-08-08 strain-database Chrome cookies (ABE):** Cookies DB unlocks after full Chrome quit (Default`Network\Cookies` copyable; Profile 1 + legacy `Default\Cookies` absent). SQLite has 4 host rows (`cf_clearance`, `age_verified`, `sdb_vseed`, `techaro.lol-anubis-auth`) but decrypt fails `InvalidTag` — Local State has `app_bound_encrypted_key` (v20 ABE). `browser_cookie3` / plain DPAPI / `decrypt-cookies` (Access denied) cannot unwrap. Jar `cookie_count=0`; scrape exits before PDP; bare HTTPS PDP still **403** CF interstitial. Need ABE-capable export (elevation COM as Chrome) or non-Chrome cookie capture — quit-Chrome alone is no longer sufficient.
+- **2026-08-08 strain-database alternate auth (worked):** Playwright `channel=chrome` + fresh `user_data_dir` (headed). Headless retriggers CF. `cf_clearance` jar alone fails in curl_cffi (TLS-bound). Path: `python scripts/_pw_strain_db_capture.py` then `python -u scripts/_pw_scrape_strain_database.py --limit=100 --headed` → dump + `brain/data/staging/strain_database.sqlite3`. **Cookies.txt fallback:** Chrome extension “Get cookies.txt LOCALLY” → export `strain-database.com` → `homeassistant/data/dsc_strains_straindatabase.cookies.txt` (Netscape); scraper loads it (UA/TLS may still fail — prefer Playwright). Never chrome://.
+
+- **2026-08-08 strain-database Chrome v20 cookies**: `chrome_cookies_for_domain.py` finds 4 host rows (incl. `cf_clearance`) but decrypt fails (`v20` + `app_bound_encrypted_key` / IElevator `DecryptData` ACCESS_DENIED for non-chrome.exe). Exported jar via Playwright profile `%LOCALAPPDATA%\Temp\dsc-chrome-fresh-pw` works in-browser; `curl_cffi` still 403 (CF clearance TLS-bound). Prefer headed Playwright scrape for this source until ABE export is fixed or scrape stays in-browser.
+- **2026-08-08 strain-database resume blocked (post-429):** Checkpoint/staging at **n=70** / 5000 EN (`brain/data/staging/strain_database.sqlite3` raw_record=70). After rate-limit storm, headed Playwright CF challenge briefly shows “Just a moment…” then collapses to `chrome-error://chromewebdata/` (`net::ERR_HTTP_RESPONSE_CODE_FAILURE`). Soft-navigate after that error makes it worse — catch and leave challenge HTML. Do not expect urllib/curl_cffi alone. Never chrome://.
+- **2026-08-08 StrainDB paused by user:** Stop all scrape/probe traffic so CF can unlock. Checkpoint left intact at **n≈70**. **Resume only on explicit ask.** When resumed: headed Playwright path only, polite **delay ≥3–5s**, checkpoint often; no urllib/curl_cffi-alone, no chrome://, no auto cool-down resume.
+
+## Staging→master serialize pass (2026-08-08)
+
+### red-flag
+| ID | Item | Notes |
+|---|---|---|
+| F-N087-LOCK | Multi-agent master SQLite contention | Concurrent `merge_staging_to_master`, nuclear PowerShell `Stop-Process` watchdogs, and NAS SMB locks killed serialized merges mid-txn (RC -1 / network errors). Need a single exclusive merge lease (file lock + no foreign killers). **2026-08-08:** `north_atlantic` staging ready (2953; prefer over `north_atlantic_local` 3043) — merge blocked after 10+ retries; master has `source_record` `northatlantic` but **0** variants/grow. Re-run `--only north_atlantic.sqlite3` then `--only north_atlantic_local.sqlite3` when apply/journal/killers idle. |
+
+### deferred
+| ID | Item | Notes |
+|---|---|---|
+| D-N087-REMAIN | Finish priority families | Merged seedcity + kushy_crosses_local. Still need: cannabis_intelligence, phytochem_smith, leafly_flat_enrich, replication_labs, **north_atlantic** (prefer) + north_atlantic_local, medical_effects, cannia, pickle_archive, strains_master, cannaconnection, seedfinder (journal). Then `build_catalog_search_indexes.py`. |
+| D-N087-BATCH | merge_staging batch inserts | Added `executemany` batches + `PRAGMA synchronous=NORMAL` in `merge_staging_to_master.py` to survive NAS latency; keep. |
+
+
+- **Master SQLite lock contention (2026-08-08):** concurrent merge agents on NAS dsc_brain.sqlite3 caused long locks and intermittent process deaths (EXIT=-1) while waiting; forum merges eventually succeeded in a short unlock window. Consider a single-writer merge queue / lockfile before more fan-out merges.
+
+
+- Windows agents must launch Python with CREATE_NO_WINDOW / `scripts/_win_no_window.py` / pythonw — Temp `alc_*waiter*.py` consoles steal fullscreen focus.
+
+- **Windows console spam (2026-08-08):** Agents + Scheduled Tasks (DSC_AlcLocal, DSC_CR_*, DSC_Alc*) kept launching Temp `alc_*waiter*.py` / `alc_immediate.py` / `cmd /K` bats as visible `python.exe` consoles (file-DONE / quiet / proc waiters). Unregistered those tasks; stub-locked Temp waiters; disabled `dsc_ce_merge/*.bat` and phyto `launch_*.bat`. Do **not** spawn companion waiters — use in-shell wait or `CREATE_NO_WINDOW` / `pythonw` / `scripts/_win_no_window.py` only.
+
+## 2026-08-08 — master SQLite corruption under concurrent SMB merges
+- Live `brain/data/dsc_brain.sqlite3` hit `database disk image is malformed` / `btreeInitPage error 11` during overlapping staging merges (cannaconnection atomic, phytochem CLI, cannabis_intelligence, leafly unlock apply, serialize exclusive).
+- Healthy local artifact with phytochem applied: `%TEMP%\dsc_phyto_merge_work\master_local.sqlite3` (quick_check=ok, chem=359252, phytochem_smith=3087).
+- `scripts/merge_staging_to_master.py`: commit leftover txn before `PRAGMA synchronous` (Python 3.14 / connect meta upsert).
+- Do not run parallel writers against master on SMB; serialize merges; prefer local merge then short apply, or single exclusive holder.
+- [ ] **Master merge contention (2026-08-08):** Parallel `merge_staging_to_master` / in-proc merges on NAS `dsc_brain.sqlite3` starve each other; CLI exits `-1` under lock; long `chemistry_profile` INSERT OR IGNORE txns hang. Serialize merges or use local master copy + swap. CannaReviews staging ready (~4195 raw) still pending exclusive window.
+
+## 2026-08-08 — prioritized seed-bank scrape pass
+
+### soak
+| ID | Item | Notes |
+|---|---|---|
+| S-BANK-RESUME | Priority bank scrapes | **2026-08-08 done (no master merge):** Crop King 3990, Herbies 4142, True North 2903, Zamnesia 2299, DC Seed 1654, SeedSupreme 537, ILGM 375, RQS 188 + Wave2 breeders. **Pacific HARD_BLOCK** 275/915 (HTTP 429×200) — resume later delay≥2s. Report: `homeassistant/data/_bank_scrape_logs/final_report.json`. |
+| S-WAVE2-NEW | Wave 2 new breeders (dump+staging done) | Merge-paused Wave 2 (plan **Wave B**): extended `scrape_bank_sitemaps.py` + `SOURCE_FAMILY_MAP`. Launched via `scripts/_launch_wave2_banks.py` (CREATE_NO_WINDOW). **Done dumps+staging (raw_record full; no master merge):** Fast Buds **120** → `bank_fastbuds.sqlite3`; Barney's Farm **111** → `bank_barneys.sqlite3`; Green House shop **69** → `bank_greenhouse.sqlite3`; Mephisto **356** → `bank_mephisto.sqlite3`; DNA Genetics **85** → `bank_dna.sqlite3`; Dutch Passion **171** → `bank_dutchpassion.sqlite3` (**912** new items). StrainDB skipped (paused). |
+| S-WAVE3-LIGHTS | Wave 3 lights/PPFD dumps+staging | Merge-paused Wave 3 (plan **Wave C**): rebuilt missing `dsc_lights_*.json` via `scripts/scrape_grow_lights.py` + Vivosun importer; staging `lights_*.sqlite3` + `ppfd_maps.sqlite3` only (**no master merge**). Counts: Spider Farmer **273** (ppfd rows 120), Mars Hydro AU **134** (37), Grow Kings **182**, ViparSpectra **19**, Treegers **12**, Vivosun **22**, Digi-Lumen carve **15**. PPFD archival: processed **200** / ok **194** → `homeassistant/data/media/ppfd/` (~614 files / 203 crops). Photometrics pack rebuilt (5 fixtures). |
+
+### deferred
+| ID | Item | Notes |
+|---|---|---|
+| D-BANK-DEAD | Unusable priority storefronts | Beaver / Organic Earth DNS fail; Night Owl / MSNL DNS fail; Great Lakes / Neptune empty shells; Growers Choice empty sitemaps; Oregon Elite WP without product-sitemap; Attitude domain parked / no usable sitemap; Quebec not WC/Shopify products.json. Revisit only with browser/manual discovery. |
+| D-BREEDER-URLS | 1482 inventory lacks official URLs | Phase A queue `homeassistant/data/_breeder_scrape_queue_1482.json` used known-map + domain guesses; many Tier C/D are unresolved or wrong-host. Need Seedfinder-homepage harvest (CF/403) or curated URL map before treating C as scrapeable. |
+| D-TIERA-FALSEHOST | Tier A host false-positives | Ranked `tiers.A` still includes wrong hosts (parked/hugedomains, unrelated brands) and already-covered banks (e.g. `DNA Genetics Seeds` → dnagenetics.com already `bank_dna`). Partition scrapers skip hugedomains + skip re-staging DNA into `bank_dna`. Tighten classifier host↔name match before treating A count as scrapeable. |
+| S-TIERA-2ND | Tier A second_half scrape in flight | `partitions.tier_A_second_half` = `tiers.A[96:192]` (96). Dump+staging only via `scripts/_launch_tier_a_second_half.py` (CREATE_NO_WINDOW, 3 shards). Snapshot: `homeassistant/data/_tier_a_second_half_scrape_results.json`. No master merge. |
+| D-BANK-RATE | Pacific 429 / DC Seed 503 | Pacific Seed Bank rate-limited hard (200×429) — keep delay ≥1.0s. DC Seed Exchange bursts 503 — keep delay ≥1.25s and retry failed URLs on resume (do not mark 503 as skipped). |
+| D-LIGHT-MAPS | Thin photometric map URLs | ViparSpectra + Vivosun dumps still **0** keyword-labeled PPFD/spectrum map URLs after PDP enrich (JS/CDN unlabeled). DigiLumen D2C not productized — GK carve only (ppfd=0). Spider Farmer sitemap ~317 locs → dump **273** (non-PDP / duplicate locs). Resume map chase with brand HTML galleries / datasheet PDFs when merge window returns. |
+
+## 2026-08-08 — thin-field expansion (N-087, merges paused)
+
+**Assessed thinness (staging samples; no invented chem):**
+- **grow_trait height (cm):** still weak globally — Leafly enrich heights are categorical only (`Short`/`Medium`/`Tall`, n≈355); Seed City / CannaConnection / RQS / Seedsman better for numeric grow.
+- **flowering days:** better on bank PDPs + Leafly enrich (`grow_floweringDays` ≈3.2k non-null after projection).
+- **lineage/parents:** Leafly enrich `parent_slugs` ≈5.3k; SeedFinder mid-scrape; StrainDB paused; Multiverse/Alchimia lineage-rich; OpenTHC identity-only.
+- **effects:** Leafly enrich ≈7.3k scored; Kushy + `leafly_github` + `medical_effects` help; Seedsman effects=0.
+- **terpenes:** MaxValue + Cannlytics + phytochem + Leafly enrich panels; labs ≫ seed grow.
+- **science↔seed:** 70 chem gaps remain ([`CATALOG-SCIENCE-SEED-LINKS.md`](qa/CATALOG-SCIENCE-SEED-LINKS.md)); OpenTHC/Kushy identity helps matching, not chem invention.
+- **forums:** only 3/35 scraped (420mag / phenohunter / mjpassion).
+- **name-only thin:** `cannia`, `strains_master`, `pickle_archive`, OpenTHC (names/type).
+
+### shipped this pass (dump/staging only — NO master merge, no StrainDB)
+| ID | Item | Notes |
+|---|---|---|
+| N-087-THIN-STAGE | Missing high-signal dumps → staging | Staged existing dumps: `openthc`, `wikileaf`, `kushy` (chem+effects+links), `lynch_figshare`, `leafly_github`→`leafly_flat`, `maxvalue_terpenes` |
+| N-087-THIN-GROW | Leafly grow projection | New `brain/data/staging/leafly_flat_grow.sqlite3`: **7889** `grow_trait` (flowering≈3224, parents≈5355, effects-in-payload≈7351; height band Short/Med/Tall in payload — not fake cm) |
+| N-087-THIN-CSV | Fresh GitHub CSVs | Re-fetched MaxValue `results.csv` + Wikileaf `ALL_data.csv` → dumps + staging refresh; discovery log `dsc_thin_field_discovery_2026-08-08.json` |
+
+### deferred / punch-list (found, not fully ingested)
+| ID | Item | Weak fields helped | Notes |
+|---|---|---|---|
+| D-N087-MENDELEY | Mendeley 800+ effects+chem (`6zwcgrttkp/1`) | effects, terpenes, science↔seed | **2026-08-08:** landing OK but DOI/`plu.mx` + login UI; **no credentials → skipped**. Needs manual authenticated download then dump+stage |
+| D-N087-SDP | Strain Data Project | terpenes | Research site reachable; no bulk CSV URL confirmed |
+| D-N087-MA-CCC | MA CCC open testing CSVs | lab chem (THC); rarely terpenes | **2026-08-08 audited:** Strain unusable — 2024 Strain blank (~440k), 2021–23 anonymized `Strain_N`, 2025 no Strain col; terpenes absent. Status dump `dsc_lab_ma_ccc.json` (verdict `no_usable_strain_names`). Prefer Cannlytics MA expand or future CCC release with names |
+| D-N087-FORUM4+ | Forums beyond 3 | grow anecdotes, flowering/height notes | **Partial ship:** Rollitup **349** → `dsc_forum_rollitup.json` / `forum_rollitup.sqlite3`; OZ Stoners IPS search-pass **29** → `dsc_forum_ozstoners.json` / `forum_ozstoners.sqlite3`. **Skip:** Sensi `forum.sensiseeds.com` redirects to marketing (no XF boards). **CF 403 after retry:** Growery. Timeout still: Autoflower, OpenGrow. Prior CF: THCtalk/THCfarmer/ICMag/Grasscity/UK420 |
+| D-N087-GREENHOUSE | Greenhouse EU shop | flowering, height, yield, lineage | **Shipped dump+staging:** sitemap+category crawl → **127** PDPs (`dsc_strains_greenhouse.json` / `bank_greenhouse.sqlite3`); grow_trait **118**; flowering_days **73**, height_cm **59**, parents/lineage **46**, effects **97**. Sitemap still ~541 locs but majority merch/non-PDP |
+| D-N087-BANKS-THIN | Neptune / True North / Pacific / Quebec | grow + lineage | Storefronts reachable; Neptune shell thin; True North/Pacific already in bank scrape soak; Quebec not WC/Shopify products.json |
+| D-N087-WAYBACK-SF | Wayback SeedFinder CDX | lineage | **Left deferred** — CDX probe OK; bulk recover still needs ToS/legal plan (do not scrape) |
+| D-N087-CT-LABS | CT Open Data / Cannlytics xlsx-only states | terpenes/lab | CT portal search; WA/CT/CO xlsx-only 404 on HF CSV path — separate importer |
+| D-N087-JMIR-LEAFLY | JMIR Formative 2026 Leafly reviews dataset (~7037) | effects over time | CC-BY paper claims repo dump — locate DOI/repo and stage if redistributable |
+| D-N087-WIKILEAF-NLP | Wikileaf `info`/`more_info` NLP | flowering/height from free text | ≈303/2793 rows mention grow words; parse carefully, never invent numbers |
+| D-N087-HEIGHT-BAND | Leafly height bands | height (ordinal) | Map Short/Medium/Tall → typed payload only; do not invent cm ranges |
+| D-N087-MERGE-LATER | Serialize merge of new families | all above | When master healthy/exclusive: `leafly_flat_grow`, `openthc`, `wikileaf`, `kushy`, `lynch_figshare`, refreshed `maxvalue_terpenes`, **`bank_greenhouse`**, **`forum_rollitup`**, **`forum_ozstoners`** — not this pause |
+| D-GH-SITEMAP | Greenhouse shop coverage | Was 69 PDPs; now **127** via climate-zone category crawl + deeper `product_re`. Further fan-out limited (autoflowering/regular roots 404; board pages JS). |
+| D-OZ-IPS-BOARDS | OZ Stoners forum boards | `?forumId=N` HTML is empty shell (JS); first-pass used `/search/?q=…&type=forums_topic`. Browser/API needed for full Grow Rooms board crawl |
+
+### 2026-08-08 continuation (dump/staging ONLY — no master merge, no StrainDB, CREATE_NO_WINDOW)
+| Path | Count / stats |
+|---|---|
+| `homeassistant/data/dsc_strains_greenhouse.json` | **127** (was 69); flowering **73**, height_cm **59**, parents/lineage **46**, effects **97**, yield_outdoor **67** |
+| `brain/data/staging/bank_greenhouse.sqlite3` | canonical **109** / grow_trait **118** / chem **100** / raw **127** |
+| `homeassistant/data/dsc_forum_rollitup.json` | **349** threads; grow_notes rich; explicit flowering/height rare in OP text |
+| `brain/data/staging/forum_rollitup.sqlite3` | canonical **345** / raw **349** / chem **0** (no invented) |
+| `homeassistant/data/dsc_forum_ozstoners.json` | **29** IPS topics (search discovery) |
+| `brain/data/staging/forum_ozstoners.sqlite3` | canonical **29** / raw **29** |
+| `homeassistant/data/dsc_lab_ma_ccc.json` | status-only; `usable_named_strain_rows=0` |
+| Skipped | Mendeley (DOI/login); Wayback SeedFinder (ToS); Sensi forum (dead); Growery (CF 403) |
+
+## 2026-08-08 — HA config warnings (sensor_cal + EVT autofix)
+
+### done
+- **Package `dsc_v4_sensor_cal` “duplicate key `alias`”:** UI-managed `/config/scripts.yaml` also defined `dsc_pots_reset_peer_captures` (same entity as the package). HA package merge fails when both declare `alias`. Removed the UI copy; package is SoT. Do not re-save that script from the UI.
+- **Repair “EVT autofix … unknown action”:** issue was `service_not_found_input_text.set_value` attributed via nested script; also wrong follower entity_ids (`automation.dsc_follower_*` vs live `automation.dsc_hub_*_follows_*`). Fixed in `dsc_v4_fleet_heal.yaml` (helpers before script, `action:` syntax, correct entity_ids).
+
+### next-plan / soak
+| ID | Item | Notes |
+|---|---|---|
+| N-HA-UI-DUP | Cull other UI↔package collisions | Repair registry still has `validation_failed_blueprint` on several `dsc_hub_*_follows_*` automations — likely old UI/blueprint copies; confirm after soak and delete UI dupes if present |
+| N-HA-EVT-REPAIR | Dismiss stale EVT repair after reload | After core restart, ignore/repair-dismiss if issue persists as stale |
+
+## Custom panel surface 6.0.0 (2026-08-08)
+- React+Vite panel at `/dsc-hub` (`custom_components/dsc_hub`); Lovelace `dsc-hub-pro` sidebar hidden.
+- Legacy Dash/catalog/build cards mount via `LegacyCardHost` — need `/local` Lovelace resources still registered for those elements.
+- Build tip: `npm` on NAS share can stall; build on local disk then copy `www/dsc-hub-panel.js`.
+- Add-on `dsc-hub-sync` patched to stage `custom_components/dsc_hub` (rebuild add-on image to pick up).
+
+## 2026-08-08 — catalog collation contract remembered
+
+### done
+- Durable architecture written: [`docs/qa/CATALOG-COLLATION-CONTRACT.md`](qa/CATALOG-COLLATION-CONTRACT.md) (grow notes as documents, reviews→collate→wordcloud, lineage via `entity_link`, three layers, merge order).
+- Pointers: N-087 / **N-087-COLLATION** above; link from [`CATALOG-RESEARCH-CORPUS.md`](qa/CATALOG-RESEARCH-CORPUS.md); merge one-pager `brain/data/_COLLATION_CONTRACT_FOR_MERGE.txt`.
+- Schema skim: no observation/review tables yet; no systematic parent_of/child_of emit; wordcloud deferred — gaps only, no refactor mid-merge.

@@ -1,0 +1,176 @@
+Tier B first half pass 1/1: slice=36 todo=35 (queue partial=False tier_B=72)
+
+=== Afghan Selection https://www.afghanselection.com/ ===
+  RESUME bank_afghan_selection items=4
+
+=== Breeders Choice https://breederschoice.com/ ===
+  bank_breeders_choice: discovering sitemaps…
+  bank_breeders_choice: sitemap products=0
+  bank_breeders_choice: home_link_scan candidates=0
+
+=== BSB Genetics https://www.bsbgenetics.com/ ===
+  RESUME bank_bsb_genetics items=64
+
+=== BSF Seeds https://bsfseeds.com/en/ ===
+  RESUME bank_bsf_seeds items=30
+
+=== Cannabella Genetics https://www.cannabellagenetics.com/ ===
+  bank_cannabella_genetics: discovering sitemaps…
+  bank_cannabella_genetics: sitemap products=38
+
+=== Chef's Genetix https://chefsgenetix.com/ ===
+  bank_chefs_genetix: discovering sitemaps…
+  bank_chefs_genetix: sitemap products=0
+  bank_chefs_genetix: home_link_scan candidates=3
+  OK bank_chefs_genetix items=3 method=home_link_scan
+
+=== Dawg Star https://dawgstar.com/ ===
+  bank_dawg_star: discovering sitemaps…
+  bank_dawg_star: sitemap products=0
+  bank_dawg_star: home_link_scan candidates=0
+
+=== Defiant Creations https://defiantcreations.com/ ===
+  bank_defiant_creations: discovering sitemaps…
+  bank_defiant_creations: sitemap products=0
+  bank_defiant_creations: home_link_scan candidates=0
+
+=== Delicious Seeds https://www.deliciousseeds.com/ ===
+  RESUME bank_delicious_seeds items=21
+
+=== Dr. Blaze https://drblaze.com/ ===
+  bank_dr_blaze: discovering sitemaps…
+  bank_dr_blaze: sitemap products=0
+  bank_dr_blaze: home_link_scan candidates=0
+
+=== Dr. Greenthumb https://drgreenthumb.com/ ===
+  RESUME bank_dr_greenthumb items=30
+
+=== East Coast Cultivars https://www.eastcoastcultivars.com/ ===
+  bank_east_coast_cultivars: discovering sitemaps…
+  bank_east_coast_cultivars: sitemap products=0
+  bank_east_coast_cultivars: home_link_scan candidates=0
+
+=== Elevated Patriot https://elevatedpatriot.com/password ===
+
+=== Energenetics Old World Farm https://energenetics-old-world-farm.com/ ===
+  RESUME bank_energenetics_old_world_farm items=16
+
+=== Finola http://finola.fi/ ===
+  bank_finola: discovering sitemaps…
+  bank_finola: sitemap products=0
+  bank_finola: home_link_scan candidates=2
+  OK bank_finola items=2 method=home_link_scan
+
+=== Flying Dutchmen https://flyingdutchmen.com/en/ ===
+  RESUME bank_flying_dutchmen items=28
+
+=== Flying Genetics https://flyinggenetics.com/ ===
+  bank_flying_genetics: discovering sitemaps…
+  bank_flying_genetics: sitemap products=0
+  bank_flying_genetics: home_link_scan candidates=1
+  OK bank_flying_genetics items=1 method=home_link_scan
+
+=== Freedom Seeds https://freedomseeds.com/ ===
+  RESUME bank_freedom_seeds items=30
+
+=== Gnomes Garden https://gnomesgarden.com/ ===
+  bank_gnomes_garden: discovering sitemaps…
+  bank_gnomes_garden: sitemap products=0
+  bank_gnomes_garden: home_link_scan candidates=0
+
+=== Green Hornet https://greenhornet.com/ ===
+  bank_green_hornet: discovering sitemaps…
+  bank_green_hornet: sitemap products=0
+  bank_green_hornet: home_link_scan candidates=0
+
+=== Greenfield Seeds https://greenfieldseeds.com/ ===
+  bank_greenfield_seeds: discovering sitemaps…
+  bank_greenfield_seeds: sitemap products=0
+  bank_greenfield_seeds: home_link_scan candidates=0
+
+=== Heavyweight Seeds https://heavyweightseeds.com/en/home/ ===
+  bank_heavyweight_seeds: discovering sitemaps…
+  bank_heavyweight_seeds: sitemap products=0
+  bank_heavyweight_seeds: home_link_scan candidates=0
+
+=== Holy Perogy https://holyperogy.com/ ===
+  bank_holy_perogy: discovering sitemaps…
+  bank_holy_perogy: sitemap products=8
+  OK bank_holy_perogy items=8 method=sitemap_html
+
+=== Howe Farms https://howefarms.com/ ===
+  bank_howe_farms: discovering sitemaps…
+  bank_howe_farms: sitemap products=0
+  bank_howe_farms: home_link_scan candidates=0
+
+=== KalySeeds https://onlineshop.kalyseeds.eu/es/ ===
+  bank_kalyseeds: discovering sitemaps…
+  bank_kalyseeds: sitemap products=0
+  bank_kalyseeds: home_link_scan candidates=0
+
+=== KropDuster https://kropduster.com/ ===
+  bank_kropduster: discovering sitemaps…
+  bank_kropduster: sitemap products=0
+  bank_kropduster: home_link_scan candidates=4
+  OK bank_kropduster items=4 method=home_link_scan
+
+=== Master Thai https://masterthai.com/ ===
+  bank_master_thai: discovering sitemaps…
+  bank_master_thai: sitemap products=0
+  bank_master_thai: home_link_scan candidates=0
+
+=== Night Owl Seeds https://nightowlseeds.com/ ===
+  bank_night_owl_seeds: discovering sitemaps…
+  bank_night_owl_seeds: sitemap products=0
+  bank_night_owl_seeds: home_link_scan candidates=5
+
+=== Nuggy’s Seed Company https://nuggysseedcompany.com/ ===
+  bank_nuggy_s_seed_company: discovering sitemaps…
+  bank_nuggy_s_seed_company: sitemap products=0
+  bank_nuggy_s_seed_company: home_link_scan candidates=0
+
+=== OA Seeds https://oaseeds.com/en/ ===
+  bank_oa_seeds: discovering sitemaps…
+  bank_oa_seeds: sitemap products=0
+  bank_oa_seeds: home_link_scan candidates=30
+  OK bank_oa_seeds items=30 method=home_link_scan
+
+=== Pyramid Seeds https://pyramidseeds.com/es/ ===
+  bank_pyramid_seeds: discovering sitemaps…
+  bank_pyramid_seeds: sitemap products=0
+  bank_pyramid_seeds: home_link_scan candidates=8
+  OK bank_pyramid_seeds items=8 method=home_link_scan
+
+=== Real Gorilla Seeds https://www.realgorillaseeds.com/ ===
+  bank_real_gorilla_seeds: discovering sitemaps…
+  bank_real_gorilla_seeds: sitemap products=0
+  bank_real_gorilla_seeds: home_link_scan candidates=30
+  OK bank_real_gorilla_seeds items=30 method=home_link_scan
+
+=== Samsara Seeds https://samsaraseeds.com/ ===
+  bank_samsara_seeds: discovering sitemaps…
+  bank_samsara_seeds: sitemap products=0
+  bank_samsara_seeds: home_link_scan candidates=23
+  OK bank_samsara_seeds items=23 method=home_link_scan
+
+=== Seedbleed http://seedbleed.com/ ===
+
+=== SeedStockers https://seedstockers.com/ ===
+  bank_seedstockers: discovering sitemaps…
+  bank_seedstockers: sitemap products=0
+  bank_seedstockers: home_link_scan candidates=30
+  OK bank_seedstockers items=30 method=home_link_scan
+
+=== SUMMARY ===
+{
+  "attempted": 35,
+  "ok": 18,
+  "items_total": 362,
+  "by_status": {
+    "ok": 18,
+    "empty_or_unclear": 13,
+    "empty_catalog": 2,
+    "skipped_password": 1,
+    "failed_dns_or_http": 1
+  }
+}

@@ -1,0 +1,312 @@
+{
+  "partition": "tier_C_first_half",
+  "slice": 311,
+  "attempted": 285,
+  "claimed_by_AB_not_run": 26,
+  "partition_accounted": 311,
+  "succeeded": 36,
+  "skipped": 275,
+  "items_total": 9925,
+  "by_status": {
+    "skipped_no_sitemap": 190,
+    "failed_dns_or_http": 28,
+    "ok": 36,
+    "skipped_heavy_js": 9,
+    "blocked_cf": 2,
+    "empty_shopify": 5,
+    "skipped_already_staged": 1,
+    "skipped_linkhub": 14,
+    "skipped_claimed_by_ab": 26
+  },
+  "ok_banks": [
+    {
+      "name": "Cannabeizein",
+      "items": 52,
+      "method": "sitemap_html",
+      "dump": true,
+      "staging": true,
+      "bank": "bank_cannabeizein"
+    },
+    {
+      "name": "Divine Genetics",
+      "items": 1,
+      "method": "sitemap_html",
+      "dump": true,
+      "staging": true,
+      "bank": "bank_divine_genetics"
+    },
+    {
+      "name": "Moe Yield",
+      "items": 5,
+      "method": "sitemap_html",
+      "dump": true,
+      "staging": true,
+      "bank": "bank_moe_yield"
+    },
+    {
+      "name": "Rheinland Genetics",
+      "items": 4,
+      "method": "sitemap_html",
+      "dump": true,
+      "staging": true,
+      "bank": "bank_rheinland_genetics"
+    },
+    {
+      "name": "Naledi Seeds",
+      "items": 250,
+      "method": "sitemap_html",
+      "dump": true,
+      "staging": true,
+      "bank": "bank_naledi_seeds"
+    },
+    {
+      "name": "Olympic Seeds",
+      "items": 45,
+      "method": "sitemap_html",
+      "dump": true,
+      "staging": true,
+      "bank": "bank_olympic_seeds"
+    },
+    {
+      "name": "Duppy Sensi Genetics",
+      "items": 23,
+      "method": "sitemap_html",
+      "dump": true,
+      "staging": true,
+      "bank": "bank_duppy_sensi_genetics"
+    },
+    {
+      "name": "Archive Seeds",
+      "items": 11,
+      "method": "sitemap_html",
+      "dump": true,
+      "staging": true,
+      "bank": "bank_archive_seeds"
+    },
+    {
+      "name": "The Bulldog Seeds",
+      "items": 236,
+      "method": "sitemap_html",
+      "dump": true,
+      "staging": true,
+      "bank": "bank_the_bulldog_seeds"
+    },
+    {
+      "name": "Bad Fish Genetics",
+      "items": 19,
+      "method": "sitemap_html",
+      "dump": true,
+      "staging": true,
+      "bank": "bank_bad_fish_genetics"
+    },
+    {
+      "name": "Green Rose Seeds",
+      "items": 60,
+      "method": "shopify_products_json",
+      "dump": true,
+      "staging": true,
+      "bank": "bank_green_rose_seeds"
+    },
+    {
+      "name": "Hang On! Genetics",
+      "items": 250,
+      "method": "sitemap_html",
+      "dump": true,
+      "staging": true,
+      "bank": "bank_hang_on_genetics"
+    },
+    {
+      "name": "Just Seed Co",
+      "items": 4989,
+      "method": "shopify_products_json",
+      "dump": true,
+      "staging": true,
+      "bank": "bank_just_seed_co"
+    },
+    {
+      "name": "Marshall Seeds",
+      "items": 245,
+      "method": "sitemap_html",
+      "dump": true,
+      "staging": true,
+      "bank": "bank_marshall_seeds"
+    },
+    {
+      "name": "Smoke One Genetics",
+      "items": 46,
+      "method": "shopify_products_json",
+      "dump": true,
+      "staging": true,
+      "bank": "bank_smoke_one_genetics"
+    },
+    {
+      "name": "Turn It Up Genetics",
+      "items": 12,
+      "method": "sitemap_html",
+      "dump": true,
+      "staging": true,
+      "bank": "bank_turn_it_up_genetics"
+    },
+    {
+      "name": "Ultra Fire Genetics",
+      "items": 4,
+      "method": "shopify_products_json",
+      "dump": true,
+      "staging": true,
+      "bank": "bank_ultra_fire_genetics"
+    },
+    {
+      "name": "Vida Verde Seeds",
+      "items": 23,
+      "method": "sitemap_html",
+      "dump": true,
+      "staging": true,
+      "bank": "bank_vida_verde_seeds"
+    },
+    {
+      "name": "Love Genetics",
+      "items": 2917,
+      "method": "shopify_products_json",
+      "dump": true,
+      "staging": true,
+      "bank": "bank_love_genetics"
+    },
+    {
+      "name": "The Plant Preservation",
+      "items": 127,
+      "method": "sitemap_html",
+      "dump": true,
+      "staging": true,
+      "bank": "bank_the_plant_preservation"
+    },
+    {
+      "name": "Bradley Danks",
+      "items": 79,
+      "method": "sitemap_html",
+      "dump": true,
+      "staging": true,
+      "bank": "bank_bradley_danks"
+    },
+    {
+      "name": "Golden Temple",
+      "items": 74,
+      "method": "sitemap_html",
+      "dump": true,
+      "staging": true,
+      "bank": "bank_golden_temple"
+    },
+    {
+      "name": "Reefermans Seeds",
+      "items": 16,
+      "method": "sitemap_html",
+      "dump": true,
+      "staging": true,
+      "bank": "bank_reefermans_seeds"
+    },
+    {
+      "name": "B.I.G. Seeds",
+      "items": 1,
+      "method": "sitemap_html",
+      "dump": true,
+      "staging": true,
+      "bank": "bank_b_i_g_seeds"
+    },
+    {
+      "name": "Saiyan Seeds",
+      "items": 4,
+      "method": "sitemap_html",
+      "dump": true,
+      "staging": true,
+      "bank": "bank_saiyan_seeds"
+    },
+    {
+      "name": "Treemoney",
+      "items": 1,
+      "method": "sitemap_html",
+      "dump": true,
+      "staging": true,
+      "bank": "bank_treemoney"
+    },
+    {
+      "name": "Antenna Seeds",
+      "items": 79,
+      "method": "sitemap_html",
+      "dump": true,
+      "staging": true,
+      "bank": "bank_antenna_seeds"
+    },
+    {
+      "name": "Big Dans Genetix",
+      "items": 86,
+      "method": "shopify_products_json",
+      "dump": true,
+      "staging": true,
+      "bank": "bank_big_dans_genetix"
+    },
+    {
+      "name": "Christiania Seedbank",
+      "items": 43,
+      "method": "sitemap_html",
+      "dump": true,
+      "staging": true,
+      "bank": "bank_christiania_seedbank"
+    },
+    {
+      "name": "Sherpa Seeds",
+      "items": 8,
+      "method": "sitemap_html",
+      "dump": true,
+      "staging": true,
+      "bank": "bank_sherpa_seeds"
+    },
+    {
+      "name": "Underground Originals",
+      "items": 20,
+      "method": "shopify_products_json",
+      "dump": true,
+      "staging": true,
+      "bank": "bank_underground_originals"
+    },
+    {
+      "name": "WGW Genetics",
+      "items": 19,
+      "method": "shopify_products_json",
+      "dump": true,
+      "staging": true,
+      "bank": "bank_wgw_genetics"
+    },
+    {
+      "name": "Big Sky Beans",
+      "items": 85,
+      "method": "sitemap_html",
+      "dump": true,
+      "staging": true,
+      "bank": "bank_big_sky_beans"
+    },
+    {
+      "name": "Dank Flow Genetics",
+      "items": 89,
+      "method": "sitemap_html",
+      "dump": true,
+      "staging": true,
+      "bank": "bank_dank_flow_genetics"
+    },
+    {
+      "name": "Empire Breeding Co.",
+      "items": 1,
+      "method": "sitemap_html",
+      "dump": true,
+      "staging": true,
+      "bank": "bank_empire_breeding_co"
+    },
+    {
+      "name": "Gnostic Seeds",
+      "items": 1,
+      "method": "sitemap_html",
+      "dump": true,
+      "staging": true,
+      "bank": "bank_gnostic_seeds"
+    }
+  ],
+  "staging_dbs_ok": 36
+}

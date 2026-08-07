@@ -1,0 +1,19 @@
+dcseedexchange: sitemap cache 1654 URLs from dsc_strains_dcseedexchange.sitemap_urls.json
+dcseedexchange: 1654 urls queued; resume done=155 dump_items=155
+  fetching first pending: https://dcseedexchange.com/product/bodhi-seeds-green-lotus-f1-green-crack-x-snow-lotus-11-regular-seeds-3/
+  ok #1 idx=156/1654 name='Bodhi Seeds Green Lotus F1'
+  ok #2 idx=157/1654 name='Bodhi Seeds Mimosa x 88g13/HP'
+  ok #3 idx=158/1654 name='Mountain Top Seeds Eastbay Catpiss x Grape Creak Cake'
+  ok #10 idx=165/1654 name='Green Bodhi Tenzin Kush #2 x Ancient OG'
+  ok #20 idx=175/1654 name='Bodhi Seeds Dragonade'
+  ok #30 idx=185/1654 name='Ethos Seeds Citral Flo R1'
+  ok #40 idx=195/1654 name='Seed No Evil Point Break x GMO BX'
+  checkpoint items=195 done=195 this_run=40 rate=0.11/s idx=195/1654
+  ok #50 idx=205/1654 name='Bodhi Seeds Katsu Bubba x 88g13/hp'
+  ok #60 idx=215/1654 name='Bodhi Seeds Supernatural Selections 019 Eden Transmission'
+  ok #70 idx=225/1654 name='Swami Organic Seeds Dickweed'
+  ok #80 idx=235/1654 name='Swami Organic Seeds Blue Orca x Black Kandahar'
+  checkpoint items=235 done=235 this_run=80 rate=0.11/s idx=235/1654
+  ok #90 idx=245/1654 name='Bodhi Seeds Black Lotus'
+  ok #100 idx=255/1654 name='Ethos Genetics Glittlez R1'
+  ok #110 idx=265/1654 name='Bodhi Seeds Supernatural Selections 023 Holy Hand Grenade'

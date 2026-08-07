@@ -1,8 +1,12 @@
-"""N-087 research corpus SQLite schema (science + seed + overflow attrs)."""
+"""N-087 research corpus SQLite schema (science + seed + overflow attrs).
+
+Schema v3 adds `raw_record` for fat source payloads (staging overflow / sidecars)
+so importers never explode high-cardinality columns into `attribute_kv`.
+"""
 
 from __future__ import annotations
 
-SCHEMA_VERSION = "2"
+SCHEMA_VERSION = "3"
 
 CORPUS_SCHEMA = """
 CREATE TABLE IF NOT EXISTS meta (
@@ -99,6 +103,20 @@ CREATE TABLE IF NOT EXISTS attribute_kv (
   source_id TEXT
 );
 
+-- Fat overflow: FULL source row payloads (staging multi-GB OK on NAS >1TB).
+-- Prefer this over attribute_kv for bulk dumps / score columns.
+CREATE TABLE IF NOT EXISTS raw_record (
+  id TEXT PRIMARY KEY,
+  source_id TEXT NOT NULL,
+  entity_kind TEXT NOT NULL,
+  entity_id TEXT,
+  name_norm TEXT,
+  payload_json TEXT NOT NULL,
+  payload_sha1 TEXT,
+  stored_at TEXT,
+  FOREIGN KEY(source_id) REFERENCES source_record(id)
+);
+
 CREATE TABLE IF NOT EXISTS schema_extension_log (
   key TEXT PRIMARY KEY,
   entity_kind TEXT NOT NULL,
@@ -182,4 +200,8 @@ CREATE INDEX IF NOT EXISTS idx_chem_norm ON chemistry_profile(name_norm);
 CREATE INDEX IF NOT EXISTS idx_attr_entity ON attribute_kv(entity_kind, entity_id);
 CREATE INDEX IF NOT EXISTS idx_link_to ON entity_link(to_kind, to_id);
 CREATE INDEX IF NOT EXISTS idx_link_from ON entity_link(from_kind, from_id);
+CREATE INDEX IF NOT EXISTS idx_raw_source ON raw_record(source_id);
+CREATE INDEX IF NOT EXISTS idx_raw_norm ON raw_record(name_norm);
+CREATE INDEX IF NOT EXISTS idx_raw_sha ON raw_record(payload_sha1);
+CREATE INDEX IF NOT EXISTS idx_alias_norm ON science_alias(name_norm);
 """

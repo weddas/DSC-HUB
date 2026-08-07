@@ -163,7 +163,7 @@ esphome:
     # the dashboard and HA's device page both described DSC-CONTROL as
     # being the DSC HUB. Purely cosmetic, but confusing enough to matter.
     name: "digital_emotions.dsc-control"
-    version: "5.1.17"
+    version: "5.2.0"
   on_boot:
     # Seed the 0xDC command seq from hardware RNG so a panel reboot is
     # unlikely to replay the hub's last-seen seq even before the hub's
@@ -1272,7 +1272,7 @@ text_sensor:
     name: "Firmware Version"
     id: fw_version
     icon: mdi:tag-check
-    lambda: 'return {"5.1.17"};'
+    lambda: 'return {"5.2.0"};'
     update_interval: 60s
   - platform: template
     id: sel_stage
@@ -1520,6 +1520,12 @@ globals:
     type: uint32_t
     initial_value: '0'
   - id: api_was
+    type: bool
+    initial_value: 'false'
+  - id: bridge_since
+    type: uint32_t
+    initial_value: '0'
+  - id: bridge_was
     type: bool
     initial_value: 'false'
   # ---- Fleet Fix (v5.1.16) — hold "Fleet Fix" on Connections >=1.5s.
@@ -2038,8 +2044,9 @@ lvgl:
             - label: {id: al_row7, text: "", text_font: f_body, align: TOP_LEFT, x: 12, y: 202, text_color: 0xC0C6CC}
 
       # ---- CONNECTIONS screen (tap the Wi-Fi pill on Pulse) ----
-      # Live link table: Wi-Fi, Home Assistant API, ESP-NOW, Fleet Fix. Each
-      # link row shows an up-counter that resets to 0 the moment it drops.
+      # Live link table: Wi-Fi, Home Assistant API, Bridge SoftAP,
+      # ESP-NOW, Fleet Fix. Each link row shows an up-counter that resets
+      # to 0 the moment it drops. Scrollable — five rows exceed 240 px.
       # v5.1.16 — the Bluetooth "radio off" stub row is gone (this panel has
       # no BT hardware use); its slot is now the Fleet Fix hold button.
       - obj:
@@ -2054,7 +2061,7 @@ lvgl:
           border_width: 0
           radius: 0
           pad_all: 0
-          scrollable: false
+          scrollable: true
           widgets:
             - label: {text: "\U000F05A9", text_font: mdi_22, align: TOP_LEFT, x: 12, y: 12, text_color: 0x00E676}
             - label: {text: "CONNECTIONS", text_font: f_med, align: TOP_LEFT, x: 44, y: 14, text_color: 0xFFFFFF}
@@ -2084,12 +2091,6 @@ lvgl:
                 border_color: 0x232A33
                 border_width: 1
                 radius: 8
-                # v4.0.2 — same 33-into-26 squeeze as the soil cards: this row
-                # stacks an f_body title (~18 px) over an f_small sub-line
-                # (~15 px), and 42 px of height minus a 1 px border and 6 px
-                # of top/bottom padding leaves only 28 px. Trimming just the
-                # vertical padding to 2 gives 36 px and un-overlaps them;
-                # left/right stay at 6 so the up-counter column is unmoved.
                 pad_all: 6
                 pad_top: 2
                 pad_bottom: 2
@@ -2097,18 +2098,6 @@ lvgl:
                 widgets:
                   - label: {id: conn_wifi_ic, text: "\U000F05A9", text_font: mdi_22, align: LEFT_MID, x: 2, text_color: 0x00E676}
                   - label: {text: "Wi-Fi", text_font: f_body, align: TOP_LEFT, x: 36, y: 0, text_color: 0xFFFFFF}
-                  # v4.0.2 — was `width: 180, long_mode: SCROLL_CIRCULAR`.
-                  # SCROLL_CIRCULAR is not cosmetic: it runs an lv_anim at the
-                  # display refresh rate, and every frame invalidates the label,
-                  # so LVGL re-renders each glyph and takes a fresh 32-byte
-                  # aligned A8 mask off the system heap for it (ESPHome sets
-                  # LV_USE_STDLIB_MALLOC = LV_STDLIB_CUSTOM, so LVGL has no
-                  # pool of its own — every one of those goes to the ESP-IDF
-                  # heap). That is hundreds of aligned alloc/free cycles a
-                  # second, which is what shredded the heap until the logged
-                  # 768-byte (24x32, cf:14 = A8) draw buffer could not be
-                  # served. DOTS renders once and stays still. 180 -> 200 px
-                  # also stops "SSID · -xxdBm" colliding with the value column.
                   - label: {id: conn_wifi_sub, text: "—", text_font: f_small, align: BOTTOM_LEFT, x: 36, y: 0, width: 200, long_mode: DOT, text_color: 0x8A929C}
                   - label: {id: conn_wifi_up, text: "0s", text_font: f_body, align: RIGHT_MID, x: -2, text_color: 0x00E676}
             # --- Home Assistant API ---
@@ -2130,14 +2119,30 @@ lvgl:
                   - label: {text: "Home Assistant", text_font: f_body, align: TOP_LEFT, x: 36, y: 0, text_color: 0xFFFFFF}
                   - label: {id: conn_api_sub, text: "—", text_font: f_small, align: BOTTOM_LEFT, x: 36, y: 0, text_color: 0x8A929C}
                   - label: {id: conn_api_up, text: "0s", text_font: f_body, align: RIGHT_MID, x: -2, text_color: 0x00E676}
-            # --- Fleet Fix (v5.1.16) — was the Bluetooth stub row (this
-            # panel has no BT hardware use; dead weight). Hold >=1.5s to
-            # run fleet_fix_run: pins the glass on page_boot and walks
-            # Hub -> Control(self) -> Pot1..4, all status via boot_msg.
+            # --- Bridge SoftAP (F-012 Anchor) ---
+            - obj:
+                x: 10
+                y: 136
+                width: 300
+                height: 42
+                bg_color: 0x0E1116
+                border_color: 0x232A33
+                border_width: 1
+                radius: 8
+                pad_all: 6
+                pad_top: 2
+                pad_bottom: 2
+                scrollable: false
+                widgets:
+                  - label: {id: conn_bridge_ic, text: "\U000F12DB", text_font: mdi_22, align: LEFT_MID, x: 2, text_color: 0x3A4550}
+                  - label: {text: "Bridge AP", text_font: f_body, align: TOP_LEFT, x: 36, y: 0, text_color: 0xFFFFFF}
+                  - label: {id: conn_bridge_sub, text: "not on DSC-Anchor", text_font: f_small, align: BOTTOM_LEFT, x: 36, y: 0, width: 200, long_mode: DOT, text_color: 0x8A929C}
+                  - label: {id: conn_bridge_up, text: "0s", text_font: f_body, align: RIGHT_MID, x: -2, text_color: 0x5A6472}
+            # --- Fleet Fix ---
             - button:
                 id: fleet_fix_btn
                 x: 10
-                y: 136
+                y: 182
                 width: 300
                 height: 42
                 bg_color: 0x0E1116
@@ -2167,7 +2172,7 @@ lvgl:
             # --- ESP-NOW ---
             - obj:
                 x: 10
-                y: 182
+                y: 228
                 width: 300
                 height: 42
                 bg_color: 0x0E1116
@@ -2179,14 +2184,6 @@ lvgl:
                 pad_bottom: 2
                 scrollable: false
                 widgets:
-                  # v4.0.2 — this row was written before the hub's ESP-NOW
-                  # layer shipped and still said "arrives with hub firmware"
-                  # with a dead grey icon and an em-dash value, on a panel
-                  # whose entire telemetry path has been ESP-NOW since v4.0.
-                  # It is now driven live from gv_hub_last (millis of the last
-                  # hub packet) in refresh_ui — which makes it the one row on
-                  # the panel that tells you whether the link you actually
-                  # depend on is up, independent of Wi-Fi and the HA API.
                   - label: {id: conn_espnow_ic,  text: "\U000F0002", text_font: mdi_22, align: LEFT_MID, x: 2, text_color: 0x3A4550}
                   - label: {text: "ESP-NOW", text_font: f_body, align: TOP_LEFT, x: 36, y: 0, text_color: 0xC0C6CC}
                   - label: {id: conn_espnow_sub, text: "no hub packet yet", text_font: f_small, align: BOTTOM_LEFT, x: 36, y: 0, width: 200, long_mode: DOT, text_color: 0x5A6472}
@@ -4787,6 +4784,11 @@ script:
             id(wifi_was) = w;
             if (link && !id(api_was)) id(api_since) = nowms;
             id(api_was) = link;
+            const std::string &ssid_now = id(wifi_ssid_ts).state;
+            bool on_anchor = w && ssid_now.size() >= 9 &&
+                             ssid_now.compare(0, 9, "DSC-Anchor") == 0;
+            if (on_anchor && !id(bridge_was)) id(bridge_since) = nowms;
+            id(bridge_was) = on_anchor;
           }
 
           // ---- alerts (always — drives LED + silence banner) ----
@@ -4813,7 +4815,7 @@ script:
           AL(fault_climate, "Climate sensor fault");
           AL(fault_rootzone, "Root-zone probe fault");
           AL(fault_aux, "Aux sensor offline");
-          AL(any_dem && !link, "Appliances need HA (Sonoffs offline)");
+          AL(any_dem && !link, "Appliances need bridge or HA");
           if (id(wifi_channel_hopped)) {
             snprintf(hb, sizeof(hb), "WiFi channel hop -> %d (check ESP-NOW)", id(wifi_channel));
             AL(true, hb);
@@ -4895,6 +4897,18 @@ script:
             }
             setl(id(conn_wifi_sub), b);
             setl(id(conn_api_sub), id(wifi_ip_ts).state.c_str());
+            bool on_anchor = w && ssid != nullptr && strncmp(ssid, "DSC-Anchor", 10) == 0;
+            upstr(u, sizeof(u), on_anchor, id(bridge_since), nowms);
+            setl(id(conn_bridge_up), u);
+            setc(id(conn_bridge_up), on_anchor ? NEON : GREY);
+            setc(id(conn_bridge_ic), on_anchor ? NEON : RED);
+            if (on_anchor) {
+              if (ch > 0) snprintf(b, sizeof(b), "%s · ch%d", ssid, ch);
+              else snprintf(b, sizeof(b), "%s", ssid);
+            } else {
+              snprintf(b, sizeof(b), "not on DSC-Anchor");
+            }
+            setl(id(conn_bridge_sub), b);
             uint32_t hub_age = nowms - id(gv_hub_last);
             bool espn = id(gv_hub_last) != 0 && hub_age < 6000;
             setc(id(conn_espnow_ic), espn ? NEON : RED);

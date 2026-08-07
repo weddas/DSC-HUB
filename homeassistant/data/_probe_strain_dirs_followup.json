@@ -1,0 +1,1404 @@
+{
+  "followup": {
+    "https://strain-database.com/robots.txt": {
+      "ok": true,
+      "status": 200,
+      "final_url": "https://strain-database.com/robots.txt",
+      "server": "cloudflare",
+      "cf_ray": true,
+      "ctype": "text/plain",
+      "bytes": 256,
+      "title": "",
+      "snippet": "User-Agent: * Allow: / Disallow: /admin/ Disallow: /api/ User-Agent: GPTBot User-Agent: ChatGPT-User User-Agent: CCBot User-Agent: anthropic-ai Disallow: / User-Agent: meta-webindexer Disallow: /compare/ Sitemap: https://strain-database.com/sitemap.xml",
+      "href_sample": [],
+      "size_mentions": [],
+      "api_hints": [],
+      "wall": [
+        "cloudflare-headers"
+      ],
+      "has_next_data": false,
+      "sitemap_refs": [
+        "https://strain-database.com/sitemap.xml"
+      ],
+      "robots_preview": "User-Agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /api/\n\nUser-Agent: GPTBot\nUser-Agent: ChatGPT-User\nUser-Agent: CCBot\nUser-Agent: anthropic-ai\nDisallow: /\n\nUser-Agent: meta-webindexer\nDisallow: /compare/\n\nSitemap: https://strain-database.com/sitemap.xml\n",
+      "loc_sample": []
+    },
+    "https://cannareviews.health/robots.txt": {
+      "ok": true,
+      "status": 200,
+      "final_url": "https://cannareviews.health/robots.txt",
+      "server": "cloudflare",
+      "cf_ray": true,
+      "ctype": "text/plain; charset=utf-8",
+      "bytes": 536,
+      "title": "",
+      "snippet": "User-agent: * Disallow: /admin Disallow: /*.pdf$ Disallow: /*.xls$ Disallow: /*.xlsx$ Disallow: /*.csv$ Disallow: /dash Disallow: /*?utm* Disallow: /forgot-password Disallow: /resetpasswordconfirmation Disallow: /confirmcontact Disallow: /confirmregister Noindex: /admin Noindex: /*.pdf$ Noindex: /*.xls$ Noindex: /*.xlsx$ Noindex: /*.csv$ Noindex: /",
+      "href_sample": [],
+      "size_mentions": [],
+      "api_hints": [],
+      "wall": [
+        "cloudflare-headers"
+      ],
+      "has_next_data": false,
+      "sitemap_refs": [
+        "https://cannareviews.health/sitemap.xml"
+      ],
+      "robots_preview": "User-agent: *\nDisallow: /admin\nDisallow: /*.pdf$\nDisallow: /*.xls$\nDisallow: /*.xlsx$\nDisallow: /*.csv$\nDisallow: /dash\nDisallow: /*?utm*\nDisallow: /forgot-password\nDisallow: /resetpasswordconfirmation\nDisallow: /confirmcontact\nDisallow: /confirmregister\n\nNoindex: /admin\nNoindex: /*.pdf$\nNoindex: /*.xls$\nNoindex: /*.xlsx$\nNoindex: /*.csv$\nNoindex: /dash\nNoindex: /*?utm*\nNoindex: /forgot-password\nNoindex: /resetpasswordconfirmation\nNoindex: /confirmcontact\nNoindex: /confirmregister\n\nSitemap: https://cannareviews.health/sitemap.xml\n",
+      "loc_sample": []
+    },
+    "https://en.seedfinder.eu/robots.txt": {
+      "ok": true,
+      "status": 200,
+      "final_url": "https://en.seedfinder.eu/robots.txt",
+      "server": "cloudflare",
+      "cf_ray": true,
+      "ctype": "text/plain; charset=utf-8",
+      "bytes": 195,
+      "title": "",
+      "snippet": "User-agent: * Disallow: /en/database/suggest Disallow: /de/database/suggest Disallow: /es/database/suggest Disallow: /fr/database/suggest Sitemap: https://seedfinder.eu/sitemap/sitemap-index.xml",
+      "href_sample": [],
+      "size_mentions": [],
+      "api_hints": [],
+      "wall": [
+        "cloudflare-headers"
+      ],
+      "has_next_data": false,
+      "sitemap_refs": [
+        "https://seedfinder.eu/sitemap/sitemap-index.xml"
+      ],
+      "robots_preview": "User-agent: *\nDisallow: /en/database/suggest\nDisallow: /de/database/suggest\nDisallow: /es/database/suggest\nDisallow: /fr/database/suggest\nSitemap: https://seedfinder.eu/sitemap/sitemap-index.xml\n",
+      "loc_sample": []
+    },
+    "https://www.leafly.com/robots.txt": {
+      "ok": true,
+      "status": 200,
+      "final_url": "https://www.leafly.com/robots.txt",
+      "server": "cloudflare",
+      "cf_ray": true,
+      "ctype": "text/plain",
+      "bytes": 2647,
+      "title": "",
+      "snippet": "# Modified: 03/11/2026 User-agent: * Disallow: /wp-admin/ Allow: /wp-admin/admin-ajax.php Disallow: /web-strain-explorer/api Disallow: /migration/ Disallow: /store-locator/ Disallow: /shop*filter%5Bprice%5D* Disallow: /shop*filter%5Bdispensary_name%5D* Disallow: /shop*filter%5Bbrand_name%5D* Disallow: /shop*filter%5Bamount%5D* Disallow: /shop*filte",
+      "href_sample": [],
+      "size_mentions": [],
+      "api_hints": [],
+      "wall": [
+        "cloudflare-headers"
+      ],
+      "has_next_data": false,
+      "sitemap_refs": [
+        "https://www.leafly.com/leafly-sitemaps/sitemap-index.xml",
+        "https://www.leafly.com/news/sitemap_index.xml"
+      ],
+      "robots_preview": "# Modified: 03/11/2026\n\nUser-agent: *\nDisallow: /wp-admin/\nAllow: /wp-admin/admin-ajax.php\nDisallow: /web-strain-explorer/api\nDisallow: /migration/\nDisallow: /store-locator/\nDisallow: /shop*filter%5Bprice%5D*\nDisallow: /shop*filter%5Bdispensary_name%5D*\nDisallow: /shop*filter%5Bbrand_name%5D*\nDisallow: /shop*filter%5Bamount%5D*\nDisallow: /shop*filter%5Bstrain_category%5D*\nDisallow: /shop*filter%5Bstrain_name%5D*\nDisallow: /shop*filter%5Bstrain_effects%5D*\nDisallow: /dispensaries*sort=default*\nDisallow: /dispensaries*sort=online-ordering*\nDisallow: /dispensaries*sort=distance*\nDisallow: /dispensaries*sort=most-reviews*\nDisallow: /dispensaries*sort=a-z*\nDisallow: /dispensaries*sort=z-a*\nDisallow: *filter[*filter[\n\n# Block OpenAI/ChatGPT crawlers except for specific articles\nUser-agent: GPTBot\nDisallow: /\nAllow: /news/strains-products/best-back-to-school-weed-products\nAllow: /news/strains-products/best-grow-lights\nAllow: /news/strains-products/best-weed-products-of-summer\nAllow: /news/strains-products/best-thca-concentrates\nAllow: /news/strains-products/best-oil-day-products\nAllow: /news/strains-products/4th-of-july-weekend-product-picks\nAllow: /news/strains-products/best-dab-rigs\nAllow: /news/strains-products/best-cbd-for-dogs\nAllow: /news/strains-products/fathers-day-weed-gift-guide\nAllow: /news/strains-products/best-thca-pre-rolls\nAllow: /news/strains-products/memorial-day-weekend-product-picks\nAllow: /news/strains-products/best-high-potency-hemp-products\nAllow: /news/strains-products/best-thca-strains\nAllow: /news/strains-products/best-energizing-thc-gummies\nAllow: /news/strains-products/best-thca-vape-carts\nAllow: /news/strains-products/best-bongs\nAllow: /news/strains-products/best-hemp-pre-rolls\nAllow: /news/strains-products/best-thca-flower\nAllow: /news/strains-products/best-cbd-creams\nAllow: /news/strains-products/best-delta-9-gummies\nAllow: /news/strains-products/best-thc-drinks\nAllow: /news/strains-products/best-cbd-gummies\nAllow: /news/strains-products/best-cbd-gummies-for-sleep\nAllow: /news/strains-products/top-6-cbd-brands\nAllow: /news/strains-products/best-vaporizers-cannabis-flower\nAllow: /news/strains-products/best-cbd-oils-and-tinctures\n\n# Block Meta AI Training Crawlers\nUser-agent: meta-externalagent\nDisallow: /\n\nUser-agent: FacebookBot\nDisallow: /\n\nUser-agent: Meta-ExternalFetcher\nDisallow: /\n\n# Allow link preview crawler (optional - comment out to block everything)\nUser-agent: facebookexternalhit\nAllow: /\n\nUser-agent: CloudflareBrowserRend",
+      "loc_sample": []
+    },
+    "https://www.wikileaf.com/robots.txt": {
+      "ok": false,
+      "status": 403,
+      "final_url": "https://www.wikileaf.com/robots.txt",
+      "server": "",
+      "cf_ray": false,
+      "bytes": 520,
+      "title": "403 Forbidden",
+      "wall": [],
+      "snippet": "403 Forbidden 403 Forbidden",
+      "error": "HTTP Error 403: Forbidden",
+      "robots_preview": "<html>\r\n<head><title>403 Forbidden</title></head>\r\n<body>\r\n<center><h1>403 Forbidden</h1></center>\r\n</body>\r\n</html>\r\n<!-- a padding to disable MSIE and Chrome friendly error page -->\r\n<!-- a padding to disable MSIE and Chrome friendly error page -->\r\n<!-- a padding to disable MSIE and Chrome friendly error page -->\r\n<!-- a padding to disable MSIE and Chrome friendly error page -->\r\n<!-- a padding to disable MSIE and Chrome friendly error page -->\r\n<!-- a padding to disable MSIE and Chrome friendly error page -->\r\n"
+    },
+    "https://www.allbud.com/robots.txt": {
+      "ok": true,
+      "status": 200,
+      "final_url": "https://www.allbud.com/robots.txt",
+      "server": "gunicorn/19.9.0",
+      "cf_ray": false,
+      "ctype": "text/plain",
+      "bytes": 780,
+      "title": "",
+      "snippet": "User-agent: * Disallow: /dispensaries/register Disallow: /dispensaries/claim Disallow: /marijuana-doctors/register-clinic Disallow: /marijuana-doctors/claim Disallow: /terms-of-use Disallow: /privacy-policy Disallow: /copyright-policy Disallow: /api/v1/locations/address-validation Disallow: /search-autocomplete Disallow: /account/logout Disallow: /",
+      "href_sample": [],
+      "size_mentions": [],
+      "api_hints": [],
+      "wall": [],
+      "has_next_data": false,
+      "sitemap_refs": [
+        "https://www.allbud.com/sitemap.xml",
+        "https://www.allbud.com/sitemap-regionfaqs.xml"
+      ],
+      "robots_preview": "User-agent: *\nDisallow: /dispensaries/register\nDisallow: /dispensaries/claim\nDisallow: /marijuana-doctors/register-clinic\nDisallow: /marijuana-doctors/claim\nDisallow: /terms-of-use\nDisallow: /privacy-policy\nDisallow: /copyright-policy\nDisallow: /api/v1/locations/address-validation\nDisallow: /search-autocomplete\nDisallow: /account/logout\nDisallow: /*sort=\nDisallow: /*filter=\nDisallow: /*from_menu=\nDisallow: /learn/search*type=\nDisallow: /learn/aggarticle/*page=\nDisallow: /learn/story/*page=\nDisallow: /search?*\nAllow: /products/producer/*\nAllow: /dispensaries/*/*/*sort=\nAllow: /dispensaries/*/*/*filter=\nAllow: /dispensaries/*/*/*from_menu=\nAllow: /marijuana-strains/*/*sort=\n\nSitemap: https://www.allbud.com/sitemap.xml\nSitemap: https://www.allbud.com/sitemap-regionfaqs.xml",
+      "loc_sample": []
+    },
+    "https://weedmaps.com/robots.txt": {
+      "ok": true,
+      "status": 200,
+      "final_url": "https://weedmaps.com/robots.txt",
+      "server": "",
+      "cf_ray": false,
+      "ctype": "text/plain; charset=UTF-8",
+      "bytes": 2560,
+      "title": "",
+      "snippet": "\ufeffUser-agent: * Disallow: /user/* Disallow: /users/* Disallow: /auth/* Disallow: /login*?* Disallow: /signup*?* Disallow: /listings/* Disallow: /results?* Disallow: *?*search=* Disallow: ?search Disallow: *?*filter Disallow: /seg/* Disallow: /search?product=* Allow: /strains/*?filter[species]* Disallow: *?addToCart=1 # WP Defaults Disallow: /*/cgi-b",
+      "href_sample": [],
+      "size_mentions": [],
+      "api_hints": [],
+      "wall": [],
+      "has_next_data": false,
+      "sitemap_refs": [
+        "https://weedmaps.com/sitemap.xml.gz"
+      ],
+      "robots_preview": "\ufeffUser-agent: *\r\nDisallow: /user/*\r\nDisallow: /users/*\r\nDisallow: /auth/*\r\nDisallow: /login*?*\r\nDisallow: /signup*?*\r\nDisallow: /listings/*\r\nDisallow: /results?*\r\nDisallow: *?*search=*\r\nDisallow: ?search\r\nDisallow: *?*filter\r\nDisallow: /seg/*\r\nDisallow: /search?product=*\r\nAllow: /strains/*?filter[species]*\r\nDisallow: *?addToCart=1\r\n\r\n\r\n\r\n\r\n# WP Defaults\r\nDisallow: /*/cgi-bin/\r\nDisallow: /*/wp-admin/\r\nDisallow: /*/trackback/\r\nDisallow: /*/search/\r\nDisallow: /*/tag/\r\nDisallow: /*/category/\r\nAllow: /brands/category/\r\nDisallow: /*/uncategorized/\r\n\r\n\r\n# WP Learn\r\nDisallow: /learn/*/comment-page\r\nDisallow: /learn/*/order/\r\nDisallow: /learn/*/feed/\r\nDisallow: /learn/*/xmlrpc.php\r\nDisallow: /learn/*/trackback/\r\nDisallow: /learn/*?wptheme=\r\nDisallow: /learn/*?comments=\r\nDisallow: /learn/*?replytocom\r\nDisallow: /learn/*?s=\r\nDisallow: /learn/*&s=\r\n\r\n\r\n# WP News\r\nDisallow: /news/*/comment-page\r\nDisallow: /news/*/page\r\nDisallow: /news/*/order/\r\nDisallow: /news/*/feed/\r\nDisallow: /news/*/xmlrpc.php\r\nDisallow: /news/*/trackback/\r\nDisallow: /news/*?wptheme=\r\nDisallow: /news/*?comments=\r\nDisallow: /news/*?replytocom\r\nDisallow: /news/*?s=\r\nDisallow: /news/*&s=\r\n\r\n\r\n# WP Open CA\r\nDisallow: /openca/*/comment-page\r\nDisallow: /openca/*/page\r\nDisallow: /openca/*/order/\r\nDisallow: /openca/*/feed/\r\nDisallow: /openca/*/xmlrpc.php\r\nDisallow: /openca/*/trackback/\r\nDisallow: /openca/*?wptheme=\r\nDisallow: /openca/*?comments=\r\nDisallow: /openca/*?replytocom\r\nDisallow: /openca/*?s=\r\n\r\n\r\n# WP Sports\r\nDisallow: /sports/*/comment-page\r\nDisallow: /sports/*/page\r\nDisallow: /sports/*/order/\r\nDisallow: /sports/*/feed/\r\nDisallow: /sports/*/xmlrpc.php\r\nDisallow: /sports/*/trackback/\r\nDisallow: /sports/*?wptheme=\r\nDisallow: /sports/*?comments=\r\nDisallow: /sports/*?replytocom\r\nDisallow: /sports/*?s=\r\n\r\n\r\n# WP Verified\r\nDisallow: /verified/*/comment-page\r\nDisallow: /verified/*/page\r\nDisallow: /verified/*/order/\r\nDisallow: /verified/*/feed/\r\nDisallow: /verified/*/xmlrpc.php\r\nDisallow: /verified/*/trackback/\r\nDisallow: /verified/*?wptheme=\r\nDisallow: /verified/*?comments=\r\nDisallow: /verified/*?replytocom\r\nDisallow: /verified/*?s=\r\n\r\n\r\n# WP Weed Facts\r\nDisallow: /weedfacts/*/comment-page\r\nDisallow: /weedfacts/*/page\r\nDisallow: /weedfacts/*/order/\r\nDisallow: /weedfacts/*/feed/\r\nDisallow: /weedfacts/*/xmlrpc.php\r\nDisallow: /weedfacts/*/trackback/\r\nDisallow: /weedfacts/*?wptheme=\r\nDisallow: /weedfacts/*?comments=\r\nDisallow: /weedfacts/*?replytocom\r\nDisallow: /weedfacts/*?s=\r\n\r\n\r\n\r\n\r\nSitemap: https://weedm",
+      "loc_sample": []
+    },
+    "https://wayofleaf.com/robots.txt": {
+      "ok": true,
+      "status": 200,
+      "final_url": "https://marijuanabreak.com/robots.txt",
+      "server": "cloudflare",
+      "cf_ray": true,
+      "ctype": "text/plain",
+      "bytes": 1217,
+      "title": "",
+      "snippet": "# global User-Agent: * Allow: /wp-content/uploads/ Allow: /wp-includes/css/ Allow: /wp-includes/js/ Allow: /wp-includes/images/ Allow: /wp-content/*.css Allow: /wp-content/*.js Allow: /wp-content/*.png Allow: /wp-content/*.jpg Allow: /wp-content/*.jpeg Allow: /wp-content/*.gif Allow: /wp-content/*.svg Allow: /wp-admin/admin-ajax.php Allow: /wp-cont",
+      "href_sample": [],
+      "size_mentions": [],
+      "api_hints": [],
+      "wall": [
+        "cloudflare-headers"
+      ],
+      "has_next_data": false,
+      "sitemap_refs": [
+        "https://marijuanabreak.com/sitemap/index.xml"
+      ],
+      "robots_preview": "# global\nUser-Agent: *\n\nAllow: /wp-content/uploads/\nAllow: /wp-includes/css/\nAllow: /wp-includes/js/\nAllow: /wp-includes/images/\nAllow: /wp-content/*.css\nAllow: /wp-content/*.js\nAllow: /wp-content/*.png\nAllow: /wp-content/*.jpg\nAllow: /wp-content/*.jpeg\nAllow: /wp-content/*.gif\nAllow: /wp-content/*.svg\nAllow: /wp-admin/admin-ajax.php\nAllow: /wp-content/plugins/\nAllow: /wp-content/themes/\n\nDisallow: /test/\nDisallow: /wp-login.php\nDisallow: /wp-register.php\nDisallow: /xmlrpc.php\nDisallow: /template.html\nDisallow: /wp-admin\nDisallow: /wp-includes\nDisallow: /course\nDisallow: /*?s=*\nDisallow: /*?nonamp=*\nDisallow: /*?key=*\nDisallow: /*?step=*\nDisallow: /*?search_keywords=*\nDisallow: /*?fbclid=*\nDisallow: /*?share=*\nDisallow: /*?platform=*\nDisallow: /*?cid=*\nDisallow: /*?ref=*\nDisallow: /*?rel=*\nDisallow: /*?submit=*\nDisallow: /*?utm_campaign=*\nDisallow: /*?utm_medium=*\nDisallow: /*?replytocom*\nDisallow: /*?utm_source=*\nDisallow: /cdn-cgi/l/email-protection\nDisallow: /jobs\nDisallow: /purchases/\nDisallow: /post_tag/\nDisallow: /directory\nDisallow: /hotels\nDisallow: /results\nDisallow: /tabletes1t\nDisallow: /ebook.pdf\nDisallow: /course/\nDisallow: /*.pdf\n\nSitemap: https://marijuanabreak.com/sitemap/index.xml ",
+      "loc_sample": []
+    },
+    "https://www.hytiva.com/robots.txt": {
+      "ok": false,
+      "status": 404,
+      "final_url": "https://www.hytiva.com/robots.txt",
+      "server": "",
+      "cf_ray": false,
+      "bytes": 17403,
+      "title": "Page Not Found",
+      "wall": [],
+      "snippet": "Page Not Found Create A Hytiva Account or Sign In Get access to exclusive deals from your local dispensary. Order Order cannabis at a local dispensary near you! Dispensaries Brands Order Delivery or Pickup Find a local dispensary & product that's right for you. Strains Explore Hytiva's extensive library of cannabis strains. Sativa Strains that offe",
+      "error": "HTTP Error 404: Not Found",
+      "robots_preview": "<!DOCTYPE html>\n<html lang=\"en-US\">\n\t<head>\n\t\t\t\t<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width\">\n<meta http-equiv=\"Accept-CH\" content=\"DPR,Width,Viewport-Width,Downlink,ECT\">\n<title>Page Not Found</title>\n<meta name=\"description\" content=\"The page you requested was not found on this server.\">\n\t\t<meta name=\"apple-itunes-app\" content=\"app-id=1634505174\">\n\t\t\t\t\t<meta name=\"robots\" content=\"index, follow\">\n\t\t\t\t        \t\t\t\t<link rel=\"preload\" href=\"/asset/fonts/Inter-ExtraBold.woff2\" as=\"font\" type=\"font/woff2\" crossorigin=\"anonymous\">\n\t\t<link rel=\"preload\" href=\"/asset/fonts/Inter-SemiBold.woff2\" as=\"font\" type=\"font/woff2\" crossorigin=\"anonymous\">\n\n\t\t\t\t<link rel=\"preload\" href=\"/asset/fonts/icons.woff2?AAABn8QJGpc\" as=\"font\" type=\"font/woff2\" crossorigin=\"anonymous\">\n\n\t\t\t\t<link rel=\"preload\" href=\"/asset/css/app.css?AAABn8QJGpc\" as=\"style\">\n\t\t<link rel=\"stylesheet\" href=\"/asset/css/app.css?AAABn8QJGpc\">\n\n\t\t\t\t\t\t\t<link rel=\"preload\" href=\"/asset/css/app-landing.css?AAABn8QJGpc\" as=\"style\">\n\t\t\t<link rel=\"stylesheet\" href=\"/asset/css/app-landing.css?AAABn8QJGpc\">\n\t\t\n\t\t\t\t<link rel=\"preconnect\" href=\"//images.hytiva.com\">\n\t\t<link rel=\"dns-prefetch\" href=\"//images.hytiva.com\">\n\n\t\t\t\t<link rel=\"preload\" href=\"/asset/js/app.js?AAABn8QJGpc\" as=\"script\">\n\t\t<link rel=\"preconnect\" href=\"//e.hytiva.com\">\n\n\t\t\n\t\t<meta property=\"og:type\" content=\"website\">\n<meta property=\"og:title\" content=\"Page Not Found\">\n<meta property=\"og:description\" content=\"The page you requested was not found on this server.\">\n\t\t\t\t<link rel=\"icon\" href=\"/asset/images/favicon.ico\" sizes=\"32x32\">\n\t\t<link rel=\"icon\" href=\"/asset/images/logos/logo-symbol.svg\" type=\"image/svg+xml\">\n\t\t<link rel=\"apple-touch-icon\" href=\"/asset/images/apple-touch-icon.png\">\n\t\t<link rel=\"manifest\" href=\"/asset/files/hytiva-manifest.json?AAABn8QJGpc\">\n\n\t\t<script type=\"application/ld+json\">{\"@context\":\"https://schema.org\",\"@graph\":[{\"@type\":\"Organization\",\"name\":\"Hytiva: Cannabis on Demand\u00ae\",\"url\":\"https://www.hytiva.com\",\"@id\":\"https://www.hytiva.com#organization\",\"logo\":{\"@type\":\"ImageObject\",\"url\":\"https://images.hytiva.com/Hytiva-Logo.png?mw1200\",\"caption\":\"Hytiva: Cannabis on Demand\u00ae Logo\"},\"sameAs\":[\"https://x.com/hytiva\",\"https://www.linkedin.com/company/hytiva\"]}]}</script>\n\t</head>\n\t<body id=\"top\" class=\"Page landing  light\">\n\t\t<header class=\"Page-Header\">\n\t\t\t<div class=\"Page-Viewport\">\n\t\t\t\t<div class=\"Header\">\n\t\t\t\t\t\t\t\t\t\t\t\n\n\t<a class=\"Logo\" href=\"/\" aria-label=\"Hytiva Cannabis On Demand Logo\">\n\t\t"
+    },
+    "https://www.cannaconnection.com/robots.txt": {
+      "ok": false,
+      "status": 403,
+      "final_url": "https://www.cannaconnection.com/robots.txt",
+      "server": "cloudflare",
+      "cf_ray": true,
+      "bytes": 5572,
+      "title": "Just a moment...",
+      "wall": [
+        "cloudflare-headers",
+        "cf-challenge"
+      ],
+      "snippet": "Just a moment... Enable JavaScript and cookies to continue",
+      "error": "HTTP Error 403: Forbidden",
+      "robots_preview": "<!DOCTYPE html><html lang=\"en-US\"><head><title>Just a moment...</title><meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"><meta http-equiv=\"X-UA-Compatible\" content=\"IE=Edge\"><meta name=\"robots\" content=\"noindex,nofollow\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><meta http-equiv=\"content-security-policy\" content=\"default-src &#39;none&#39;; script-src &#39;nonce-D1WUBeb2ZqIGhTCoHUJDcq&#39; &#39;unsafe-eval&#39; https://challenges.cloudflare.com; script-src-attr &#39;none&#39;; style-src &#39;unsafe-inline&#39;; img-src &#39;self&#39; https://challenges.cloudflare.com; connect-src &#39;self&#39; https://challenges.cloudflare.com; frame-src &#39;self&#39; https://challenges.cloudflare.com blob:; child-src &#39;self&#39; https://challenges.cloudflare.com blob:; worker-src blob:; form-action http: https:; base-uri &#39;self&#39;\"><style>*{box-sizing:border-box;margin:0;padding:0}html{line-height:1.15;-webkit-text-size-adjust:100%;color:#313131;font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,\"Helvetica Neue\",Arial,\"Noto Sans\",sans-serif,\"Apple Color Emoji\",\"Segoe UI Emoji\",\"Segoe UI Symbol\",\"Noto Color Emoji\"}body{display:flex;flex-direction:column;height:100vh;min-height:100vh}.main-content{margin:8rem auto;padding-left:1.5rem;max-width:60rem}@media (width <= 720px){.main-content{margin-top:4rem}}#challenge-error-text{background-image:url(\"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiIgZmlsbD0ibm9uZSI+PHBhdGggZmlsbD0iI0IyMEYwMyIgZD0iTTE2IDNhMTMgMTMgMCAxIDAgMTMgMTNBMTMuMDE1IDEzLjAxNSAwIDAgMCAxNiAzbTAgMjRhMTEgMTEgMCAxIDEgMTEtMTEgMTEuMDEgMTEuMDEgMCAwIDEtMTEgMTEiLz48cGF0aCBmaWxsPSIjQjIwRjAzIiBkPSJNMTcuMDM4IDE4LjYxNUgxNC44N0wxNC41NjMgOS41aDIuNzgzem0tMS4wODQgMS40MjdxLjY2IDAgMS4wNTcuMzg4LjQwNy4zODkuNDA3Ljk5NCAwIC41OTYtLjQwNy45ODQtLjM5Ny4zOS0xLjA1Ny4zODktLjY1IDAtMS4wNTYtLjM4OS0uMzk4LS4zODktLjM5OC0uOTg0IDAtLjU5Ny4zOTgtLjk4NS40MDYtLjM5NyAxLjA1Ni0uMzk3Ii8+PC9zdmc+\");background-repeat:no-repeat;background-size:contain;padding-left:34px}</style><meta http-equiv=\"refresh\" content=\"360\"></head><body><div class=\"main-wrapper\" role=\"main\"><div class=\"main-content\"><noscript><div class=\"h2\"><span id=\"challenge-error-text\">Enable JavaScript and cookies to continue</span></div></noscript></div></div><script nonce=\"D1WUBeb2ZqIGhTCoHUJDcq\">(function(){window._cf_chl_opt = {cFPWv: 'b',cH: 'w98a_q8kEg9h.rPehOzOjmyu1tnvSoInGeJEO_mhpBY-1786113612-1.2.1.1-Bj8"
+    },
+    "https://strain-database.com/sitemap.xml": {
+      "ok": true,
+      "status": 200,
+      "final_url": "https://strain-database.com/sitemap.xml",
+      "server": "cloudflare",
+      "cf_ray": true,
+      "ctype": "application/xml; charset=utf-8",
+      "bytes": 353,
+      "title": "",
+      "snippet": "https://strain-database.com/sitemap/0.xml 2026-08-06 https://strain-database.com/sitemap/1.xml 2026-08-06",
+      "href_sample": [],
+      "size_mentions": [],
+      "api_hints": [],
+      "wall": [
+        "cloudflare-headers"
+      ],
+      "has_next_data": false,
+      "sitemap_refs": [],
+      "robots_preview": "",
+      "loc_sample": [
+        "https://strain-database.com/sitemap/0.xml",
+        "https://strain-database.com/sitemap/1.xml"
+      ]
+    },
+    "https://cannareviews.health/sitemap.xml": {
+      "ok": true,
+      "status": 200,
+      "final_url": "https://cannareviews.health/sitemap.xml",
+      "server": "cloudflare",
+      "cf_ray": true,
+      "ctype": "text/xml; charset=UTF-8",
+      "bytes": 200000,
+      "title": "",
+      "snippet": "https://cannareviews.health 2026-08-07T14:40:13+00:00 daily 1.0 https://cannareviews.health/products/legal-cannabis-product-list-australia 2026-08-07T14:40:13+00:00 daily 0.9 https://cannareviews.health/cannabis-brands-australia 2026-08-07T14:40:13+00:00 weekly 0.8 https://cannareviews.health/research 2026-08-07T14:40:13+00:00 weekly 0.8 https://ca",
+      "href_sample": [],
+      "size_mentions": [],
+      "api_hints": [],
+      "wall": [
+        "cloudflare-headers"
+      ],
+      "has_next_data": false,
+      "sitemap_refs": [],
+      "robots_preview": "",
+      "loc_sample": [
+        "https://cannareviews.health",
+        "https://cannareviews.health/products/legal-cannabis-product-list-australia",
+        "https://cannareviews.health/cannabis-brands-australia",
+        "https://cannareviews.health/research",
+        "https://cannareviews.health/faq",
+        "https://cannareviews.health/about",
+        "https://cannareviews.health/contact",
+        "https://cannareviews.health/cannabis-dispensary-pharmacies",
+        "https://cannareviews.health/product/beacon-medical-sensi-star-flower-10g",
+        "https://cannareviews.health/product/antg-mariposa-thc16-flower-10g",
+        "https://cannareviews.health/product/antg-solace-thc22-flower-10g",
+        "https://cannareviews.health/product/antg-eve-cbd16-flower-10g"
+      ]
+    },
+    "https://www.allbud.com/sitemap.xml": {
+      "ok": true,
+      "status": 200,
+      "final_url": "https://www.allbud.com/sitemap.xml",
+      "server": "gunicorn/19.9.0",
+      "cf_ray": false,
+      "ctype": "application/xml",
+      "bytes": 1290,
+      "title": "",
+      "snippet": "https://www.allbud.com/sitemap-dispensary-locations.xml https://www.allbud.com/sitemap-dispensaries.xml https://www.allbud.com/sitemap-strains-symptoms.xml https://www.allbud.com/sitemap-strains-varieties.xml https://www.allbud.com/sitemap-clinic-regions.xml https://www.allbud.com/sitemap-clinics.xml https://www.allbud.com/sitemap-strains-effects.x",
+      "href_sample": [],
+      "size_mentions": [],
+      "api_hints": [],
+      "wall": [],
+      "has_next_data": false,
+      "sitemap_refs": [],
+      "robots_preview": "",
+      "loc_sample": [
+        "https://www.allbud.com/sitemap-dispensary-locations.xml",
+        "https://www.allbud.com/sitemap-dispensaries.xml",
+        "https://www.allbud.com/sitemap-strains-symptoms.xml",
+        "https://www.allbud.com/sitemap-strains-varieties.xml",
+        "https://www.allbud.com/sitemap-clinic-regions.xml",
+        "https://www.allbud.com/sitemap-clinics.xml",
+        "https://www.allbud.com/sitemap-strains-effects.xml",
+        "https://www.allbud.com/sitemap-regionfaqs.xml",
+        "https://www.allbud.com/sitemap-dispensary-cities.xml",
+        "https://www.allbud.com/sitemap-strains-aromas.xml",
+        "https://www.allbud.com/sitemap-articles.xml",
+        "https://www.allbud.com/sitemap-producer.xml"
+      ]
+    },
+    "https://wayofleaf.com/sitemap.xml": {
+      "ok": true,
+      "status": 200,
+      "final_url": "https://marijuanabreak.com/",
+      "server": "cloudflare",
+      "cf_ray": true,
+      "ctype": "text/html; charset=UTF-8",
+      "bytes": 171288,
+      "title": "More Than a Leaf, a Way of Life",
+      "snippet": "--> More Than a Leaf, a Way of Life Join Premium --> Login/Register Cannabis Lifestyle Education Science Detox Recipes Strains Growing Staff Picks strains Learn all about top strains and how they can work for you mmj cards All the information you need per state, including doctor guides, MMJ services, and more Growing Discover cannabis growing infor",
+      "href_sample": [
+        "https://marijuanabreak.com/strains/",
+        "/strains/",
+        "https://marijuanabreak.com/staff-picks/best-weed-strains-right-now/",
+        "https://marijuanabreak.com/staff-picks/best-sativa-strains/",
+        "https://marijuanabreak.com/staff-picks/best-and-strongest-marijuana-strains/",
+        "https://marijuanabreak.com/cannabis/education/differences-between-indica-and-sativa-strains/",
+        "https://marijuanabreak.com/staff-picks/strains-for-movie-night/"
+      ],
+      "size_mentions": [],
+      "api_hints": [
+        "https://marijuanabreak.com/cannabis/education/the-pros-and-cons-of-vaping-marijuana/"
+      ],
+      "wall": [
+        "cloudflare-headers",
+        "captcha"
+      ],
+      "has_next_data": false,
+      "sitemap_refs": [],
+      "robots_preview": "",
+      "loc_sample": []
+    },
+    "https://www.leafly.com/sitemap_index.xml": {
+      "ok": false,
+      "status": 404,
+      "final_url": "https://www.leafly.com/sitemap_index.xml",
+      "server": "cloudflare",
+      "cf_ray": true,
+      "bytes": 59992,
+      "title": "404 | Leafly",
+      "wall": [
+        "cloudflare-headers",
+        "age-gate"
+      ],
+      "snippet": "404 | Leafly We use cookies for certain features and to improve your experience. See our Cookie Policy and Privacy Policy to learn more advertise on Leafly Sydney, NSW change Shop Dispensaries Delivery Deals Strains Brands Products Leafly Picks CBD Doctors Cannabis 101 Social impact Sign in Create account Strains Shop Shop Dispensaries Delivery Dea",
+      "error": "HTTP Error 404: Not Found",
+      "robots_preview": ""
+    },
+    "https://weedmaps.com/sitemap_index.xml": {
+      "ok": false,
+      "status": 404,
+      "final_url": "https://weedmaps.com/sitemap_index.xml",
+      "server": "",
+      "cf_ray": false,
+      "bytes": 60000,
+      "title": "Find Marijuana Dispensaries, Brands, Delivery, Deals &amp; Doctors",
+      "wall": [
+        "age-gate"
+      ],
+      "snippet": "Find Marijuana Dispensaries, Brands, Delivery, Deals &amp; Doctors This website uses cookies to enhance and analyze your experience and deliver advertising on our platform and across the web. If you wish to opt out of the sale or sharing of your personal information for the purpose of cross-context behavioral advertising, you may do so by clicking ",
+      "error": "HTTP Error 404: Not Found",
+      "robots_preview": ""
+    },
+    "https://en.seedfinder.eu/sitemap_index.xml": {
+      "ok": false,
+      "status": 404,
+      "final_url": "https://en.seedfinder.eu/sitemap_index.xml",
+      "server": "cloudflare",
+      "cf_ray": true,
+      "bytes": 6297,
+      "title": "Page not found",
+      "wall": [
+        "cloudflare-headers"
+      ],
+      "snippet": "Page not found 404 Dave&#039;s not here, man... The requested URL https://seedfinder.eu/en/sitemap_index.xml was not found on this server. If you are a cop or federal prosecutor, please check the url for spelling errors!",
+      "error": "HTTP Error 404: Not Found",
+      "robots_preview": ""
+    },
+    "https://www.hytiva.com/sitemap_index.xml": {
+      "ok": false,
+      "status": 404,
+      "final_url": "https://www.hytiva.com/sitemap_index.xml",
+      "server": "",
+      "cf_ray": false,
+      "bytes": 17403,
+      "title": "Page Not Found",
+      "wall": [],
+      "snippet": "Page Not Found Create A Hytiva Account or Sign In Get access to exclusive deals from your local dispensary. Order Order cannabis at a local dispensary near you! Dispensaries Brands Order Delivery or Pickup Find a local dispensary & product that's right for you. Strains Explore Hytiva's extensive library of cannabis strains. Sativa Strains that offe",
+      "error": "HTTP Error 404: Not Found",
+      "robots_preview": ""
+    },
+    "https://www.allbud.com/sitemap_index.xml": {
+      "ok": false,
+      "status": 404,
+      "final_url": "https://www.allbud.com/sitemap_index.xml",
+      "server": "gunicorn/19.9.0",
+      "cf_ray": false,
+      "bytes": 30153,
+      "title": "Page Not Found | AllBud",
+      "wall": [],
+      "snippet": "Page Not Found | AllBud &times; Enter your location Enter Zip Code, City or State Go! &times; Follow Our Newsletter Enter your email address below to receive exclusive information about AllBud and the Cannabis industry. &times; Why write a review? Help other customers find trustworthy businesses and make good decisions. To reward a company that has",
+      "error": "HTTP Error 404: NOT FOUND",
+      "robots_preview": ""
+    },
+    "https://cannareviews.health/": {
+      "ok": true,
+      "status": 200,
+      "final_url": "https://cannareviews.health/",
+      "server": "cloudflare",
+      "cf_ray": true,
+      "ctype": "text/html; charset=UTF-8",
+      "bytes": 70510,
+      "title": "Australias Trusted Cannabis Resource | Canna Reviews",
+      "snippet": "Australias Trusted Cannabis Resource | Canna Reviews cannareviews logo icon canna reviews cannareviews logo icon canna reviews Sign in Research Products Find a Product Explore Alternative Medicines Compare Products See what the differences are Pharmacies FAQ About cannareviews logo icon canna reviews Before continuing... --> CANNABIS IS A SCHEDULED",
+      "href_sample": [],
+      "size_mentions": [],
+      "api_hints": [
+        "https://api.pirsch.io/pirsch-extended.js",
+        "https://cannareviews.health/api/v5.2.1/products/export",
+        "https://cannareviews.health/api/v5.2.1/data/download",
+        "https://cannareviews.health/api/v5.2.1/products/bulk"
+      ],
+      "wall": [
+        "cloudflare-headers",
+        "age-gate"
+      ],
+      "has_next_data": false,
+      "sitemap_refs": [],
+      "robots_preview": "",
+      "loc_sample": []
+    },
+    "https://cannareviews.health/products": {
+      "ok": true,
+      "status": 200,
+      "final_url": "https://cannareviews.health/login",
+      "server": "cloudflare",
+      "cf_ray": true,
+      "ctype": "text/html; charset=UTF-8",
+      "bytes": 57977,
+      "title": "Sign in\n | Canna Reviews",
+      "snippet": "Sign in | Canna Reviews cannareviews logo icon canna reviews cannareviews logo icon canna reviews Research Products Find a Product Explore Alternative Medicines Compare Products See what the differences are Pharmacies FAQ About Sign in Patient Doctor, Pharmacist or Business Sign in as a Patient Patients, sign in with medauth to continue. Past Canna",
+      "href_sample": [],
+      "size_mentions": [],
+      "api_hints": [
+        "https://api.pirsch.io/pirsch-extended.js",
+        "https://cannareviews.health/api/v5.2.1/products/export",
+        "https://cannareviews.health/api/v5.2.1/data/download",
+        "https://cannareviews.health/api/v5.2.1/products/bulk"
+      ],
+      "wall": [
+        "cloudflare-headers",
+        "login-form"
+      ],
+      "has_next_data": false,
+      "sitemap_refs": [],
+      "robots_preview": "",
+      "loc_sample": []
+    },
+    "https://cannareviews.health/strains": {
+      "ok": true,
+      "status": 200,
+      "final_url": "https://cannareviews.health/strains",
+      "server": "cloudflare",
+      "cf_ray": true,
+      "ctype": "text/html; charset=UTF-8",
+      "bytes": 45637,
+      "title": "404 Page Not Found | Canna Reviews\n | Canna Reviews",
+      "snippet": "404 Page Not Found | Canna Reviews | Canna Reviews cannareviews logo icon canna reviews cannareviews logo icon canna reviews Sign in Research Products Find a Product Explore Alternative Medicines Compare Products See what the differences are Pharmacies FAQ About Whoops! Sorry, we couldn't find that page. Please let us know what went wrong or go bac",
+      "href_sample": [
+        "https://cannareviews.health/strains"
+      ],
+      "size_mentions": [],
+      "api_hints": [
+        "https://api.pirsch.io/pirsch-extended.js",
+        "https://cannareviews.health/api/v5.2.1/products/export",
+        "https://cannareviews.health/api/v5.2.1/data/download",
+        "https://cannareviews.health/api/v5.2.1/products/bulk"
+      ],
+      "wall": [
+        "cloudflare-headers"
+      ],
+      "has_next_data": false,
+      "sitemap_refs": [],
+      "robots_preview": "",
+      "loc_sample": []
+    },
+    "https://en.seedfinder.eu/": {
+      "ok": true,
+      "status": 200,
+      "final_url": "https://seedfinder.eu/en",
+      "server": "cloudflare",
+      "cf_ray": true,
+      "ctype": "text/html; charset=utf-8",
+      "bytes": 56968,
+      "title": "Marijuana Strain Database | Search | Research :: SeedFinder.eu",
+      "snippet": "Marijuana Strain Database | Search | Research :: SeedFinder.eu Strain Browser Search &amp; Find Strain Database Strain Research Shops Breeders Gallery Grow Tools Forum Contact Login EN DE EN FR ES EN DE EN FR ES Search &amp; Find Strain Database Strain Research SeedCop + Radar Breeders Strain Gallery Grow tools Forum Log in Contact What you seed is",
+      "href_sample": [
+        "https://seedfinder.eu/en/database/strains",
+        "https://seedfinder.eu/en/database/strains/origin",
+        "https://seedfinder.eu/en/database/strains/cloneonly",
+        "https://seedfinder.eu/en/database/strains/unknown-or-legendary",
+        "https://seedfinder.eu/en/database/strains/origin",
+        "https://seedfinder.eu/en/database/strains/alphabetical",
+        "https://seedfinder.eu/en/database/strains/autoflowering",
+        "https://seedfinder.eu/en/database/strains/cloneonly",
+        "https://seedfinder.eu/en/database/strains/cbd-rich",
+        "https://seedfinder.eu/en/research/strain-vs-strain"
+      ],
+      "size_mentions": [],
+      "api_hints": [],
+      "wall": [
+        "cloudflare-headers",
+        "captcha"
+      ],
+      "has_next_data": false,
+      "sitemap_refs": [],
+      "robots_preview": "",
+      "loc_sample": []
+    },
+    "https://en.seedfinder.eu/strain-info/Blue_Dream/Unknown_or_Legendary/": {
+      "ok": false,
+      "status": 404,
+      "final_url": "https://en.seedfinder.eu/strain-info/Blue_Dream/Unknown_or_Legendary/",
+      "server": "cloudflare",
+      "cf_ray": true,
+      "bytes": 6320,
+      "title": "Page not found",
+      "wall": [
+        "cloudflare-headers"
+      ],
+      "snippet": "Page not found 404 Dave&#039;s not here, man... The requested URL https://seedfinder.eu/en/strain-info/blue-dream/unknown-or-legendary was not found on this server. If you are a cop or federal prosecutor, please check the url for spelling errors!",
+      "error": "HTTP Error 404: Not Found",
+      "robots_preview": ""
+    },
+    "https://en.seedfinder.eu/database/strains/alphabetical/b/": {
+      "ok": true,
+      "status": 200,
+      "final_url": "https://seedfinder.eu/en/database/strains/alphabetical/b",
+      "server": "cloudflare",
+      "cf_ray": true,
+      "ctype": "text/html; charset=utf-8",
+      "bytes": 199998,
+      "title": "Cannabis Strains starting with b :: SeedFinder.eu",
+      "snippet": "Cannabis Strains starting with b :: SeedFinder.eu Strain Browser Search &amp; Find Strain Database Strain Research Shops Breeders Gallery Grow Tools Forum Contact Login EN DE EN FR ES EN DE EN FR ES Search &amp; Find Strain Database Strain Research SeedCop + Radar Breeders Strain Gallery Grow tools Forum Log in Contact Seedfinder Database Strains A",
+      "href_sample": [
+        "https://seedfinder.eu/en/database/strains/alphabetical/b",
+        "https://seedfinder.eu/de/database/strains/alphabetical/b",
+        "https://seedfinder.eu/en/database/strains/alphabetical/b",
+        "https://seedfinder.eu/fr/database/strains/alphabetical/b",
+        "https://seedfinder.eu/es/database/strains/alphabetical/b",
+        "https://seedfinder.eu/de/database/strains/alphabetical/b",
+        "https://seedfinder.eu/en/database/strains/alphabetical/b",
+        "https://seedfinder.eu/fr/database/strains/alphabetical/b",
+        "https://seedfinder.eu/es/database/strains/alphabetical/b",
+        "https://seedfinder.eu/de/database/strains/alphabetical/b",
+        "https://seedfinder.eu/en/database/strains/alphabetical/b",
+        "https://seedfinder.eu/fr/database/strains/alphabetical/b",
+        "https://seedfinder.eu/es/database/strains/alphabetical/b",
+        "https://seedfinder.eu/en/database/strains",
+        "https://seedfinder.eu/en/database/strains/alphabetical/b",
+        "https://seedfinder.eu/en/database/strains/alphabetical/1234567890",
+        "https://seedfinder.eu/en/database/strains/alphabetical/A",
+        "https://seedfinder.eu/en/database/strains/alphabetical/B",
+        "https://seedfinder.eu/en/database/strains/alphabetical/C",
+        "https://seedfinder.eu/en/database/strains/alphabetical/D"
+      ],
+      "size_mentions": [],
+      "api_hints": [],
+      "wall": [
+        "cloudflare-headers"
+      ],
+      "has_next_data": false,
+      "sitemap_refs": [],
+      "robots_preview": "",
+      "loc_sample": []
+    },
+    "https://www.allbud.com/": {
+      "ok": true,
+      "status": 200,
+      "final_url": "https://www.allbud.com/",
+      "server": "gunicorn/19.9.0",
+      "cf_ray": false,
+      "ctype": "text/html; charset=utf-8",
+      "bytes": 172645,
+      "title": "Find Best Marijuana Dispensary & Store Boston Massachusetts\n    \n | AllBud",
+      "snippet": "Find Best Marijuana Dispensary & Store Boston Massachusetts | AllBud &times; Enter your location Enter Zip Code, City or State Go! &times; Follow Our Newsletter Enter your email address below to receive exclusive information about AllBud and the Cannabis industry. &times; Why write a review? Help other customers find trustworthy businesses and make",
+      "href_sample": [
+        "/marijuana-strains/search",
+        "https://static.allbud.com/static/images/strains-icon.b23bd47450d2.svg",
+        "/marijuana-strains/effect/creative",
+        "/marijuana-strains/effect/focus",
+        "/marijuana-strains/effect/motivation",
+        "/marijuana-strains/effect/sociable",
+        "/marijuana-strains/effect/energizing",
+        "/marijuana-strains/effect/sleepy",
+        "/marijuana-strains/search?sort=-reviews_count",
+        "/marijuana-strains/effect/aroused",
+        "/marijuana-strains/search?sort=alphabet",
+        "https://static.allbud.com/static/images/strains-icon.b23bd47450d2.svg",
+        "/marijuana-strains/indica-dominant-hybrid/pure-glitter",
+        "/marijuana-strains/indica-dominant-hybrid/pure-glitter",
+        "/marijuana-strains/indica-dominant-hybrid/pure-glitter#write-review",
+        "/marijuana-strains/indica-dominant-hybrid/lunaven",
+        "/marijuana-strains/indica-dominant-hybrid/lunaven",
+        "/marijuana-strains/indica-dominant-hybrid/lunaven",
+        "/marijuana-strains/indica-dominant-hybrid/lunaven#write-review",
+        "/marijuana-strains/indica-dominant-hybrid/mendo-breath"
+      ],
+      "size_mentions": [
+        "371"
+      ],
+      "api_hints": [
+        "/api/strains/33405/set_rating",
+        "/api/strains/30691/set_rating",
+        "/api/strains/9213/set_rating",
+        "/api/strains/17323/set_rating",
+        "/api/strains/10413/set_rating",
+        "/api/strains/17802/set_rating",
+        "/api/strains/3447/set_rating",
+        "/api/strains/14974/set_rating",
+        "/api/strains/10/set_rating",
+        "/api/strains/1661/set_rating",
+        "/api/strains/7913/set_rating",
+        "/api/strains/581/set_rating",
+        "/api/strains/31791/set_rating",
+        "/api/strains/1046/set_rating",
+        "/api/strains/3405/set_rating"
+      ],
+      "wall": [],
+      "has_next_data": false,
+      "sitemap_refs": [],
+      "robots_preview": "",
+      "loc_sample": []
+    },
+    "https://www.allbud.com/marijuana-strains/search": {
+      "ok": true,
+      "status": 200,
+      "final_url": "https://www.allbud.com/marijuana-strains/search",
+      "server": "gunicorn/19.9.0",
+      "cf_ray": false,
+      "ctype": "text/html; charset=utf-8",
+      "bytes": 199998,
+      "title": "Marijuana Strains \u2013 Information, Reviews & Photos\n        \n    \n | AllBud",
+      "snippet": "Marijuana Strains \u2013 Information, Reviews & Photos | AllBud &times; Enter your location Enter Zip Code, City or State Go! &times; Follow Our Newsletter Enter your email address below to receive exclusive information about AllBud and the Cannabis industry. &times; Why write a review? Help other customers find trustworthy businesses and make good deci",
+      "href_sample": [
+        "https://static.allbud.com/static/css/compressed/strains.091ab274215e.css",
+        "https://www.allbud.com/marijuana-strains/search",
+        "/marijuana-strains/search",
+        "https://static.allbud.com/static/images/strains-icon-darkgreen.8b39622fcc74.svg",
+        "/marijuana-strains/search?sort=-reviews_count",
+        "/marijuana-strains/search?sort=reviews_count",
+        "/marijuana-strains/search?sort=-rating",
+        "/marijuana-strains/search?sort=rating",
+        "/marijuana-strains/search?sort=-thc_upper",
+        "/marijuana-strains/search?sort=thc_upper",
+        "/marijuana-strains/search?sort=-cbd_upper",
+        "/marijuana-strains/search?sort=cbd_upper",
+        "/marijuana-strains/search?sort=alphabet",
+        "/marijuana-strains/indica-dominant-hybrid/gumbo",
+        "/marijuana-strains/indica-dominant-hybrid/gumbo",
+        "/marijuana-strains/indica-dominant-hybrid/gumbo",
+        "/marijuana-strains/indica-dominant-hybrid/gumbo",
+        "/marijuana-strains/indica-dominant-hybrid/gumbo",
+        "/marijuana-strains/indica-dominant-hybrid/mendo-breath",
+        "/marijuana-strains/indica-dominant-hybrid/mendo-breath"
+      ],
+      "size_mentions": [],
+      "api_hints": [
+        "/api/strains/912/set_rating"
+      ],
+      "wall": [],
+      "has_next_data": false,
+      "sitemap_refs": [],
+      "robots_preview": "",
+      "loc_sample": []
+    },
+    "https://www.allbud.com/marijuana-strains/hybrid/blue-dream": {
+      "ok": true,
+      "status": 200,
+      "final_url": "https://www.allbud.com/marijuana-strains/sativa-dominant-hybrid/blue-dream",
+      "server": "gunicorn/19.9.0",
+      "cf_ray": false,
+      "ctype": "text/html; charset=utf-8",
+      "bytes": 142445,
+      "title": "Blue Dream Marijuana Strain Information & Reviews\n | AllBud",
+      "snippet": "Blue Dream Marijuana Strain Information & Reviews | AllBud &times; Enter your location Enter Zip Code, City or State Go! &times; Follow Our Newsletter Enter your email address below to receive exclusive information about AllBud and the Cannabis industry. &times; Why write a review? Help other customers find trustworthy businesses and make good deci",
+      "href_sample": [
+        "https://static.allbud.com/static/css/compressed/strains.091ab274215e.css",
+        "https://www.allbud.com/marijuana-strains/sativa-dominant-hybrid/blue-dream",
+        "/marijuana-strains/search",
+        "https://static.allbud.com/static/images/strains-icon-darkgreen.8b39622fcc74.svg",
+        "/marijuana-strains/variety/sativa-dominant-hybrid",
+        "/marijuana-strains/indica-dominant-hybrid/blueberry",
+        "/marijuana-strains/sativa-dominant-hybrid/x-haze",
+        "/marijuana-strains/effect/creative",
+        "/marijuana-strains/effect/euphoria",
+        "/marijuana-strains/effect/happy",
+        "/marijuana-strains/symptom/add-adhd",
+        "/marijuana-strains/symptom/anxiety",
+        "/marijuana-strains/symptom/bipolar-disorder",
+        "/marijuana-strains/symptom/chronic-pain",
+        "/marijuana-strains/symptom/depression",
+        "/marijuana-strains/symptom/headaches",
+        "/marijuana-strains/symptom/inflammation",
+        "/marijuana-strains/symptom/nausea",
+        "/marijuana-strains/symptom/ptsd",
+        "/marijuana-strains/symptom/stress"
+      ],
+      "size_mentions": [],
+      "api_hints": [
+        "https://www.google.com/recaptcha/api.js",
+        "/api/strains/65/set_rating",
+        "/api/v1/locations/address-validation"
+      ],
+      "wall": [
+        "captcha"
+      ],
+      "has_next_data": false,
+      "sitemap_refs": [],
+      "robots_preview": "",
+      "loc_sample": []
+    },
+    "https://www.allbud.com/marijuana-strains/indica/granddaddy-purple": {
+      "ok": true,
+      "status": 200,
+      "final_url": "https://www.allbud.com/marijuana-strains/indica-dominant-hybrid/granddaddy-purple",
+      "server": "gunicorn/19.9.0",
+      "cf_ray": false,
+      "ctype": "text/html; charset=utf-8",
+      "bytes": 140528,
+      "title": "Granddaddy Purple Marijuana Strain Information & Reviews\n | AllBud",
+      "snippet": "Granddaddy Purple Marijuana Strain Information & Reviews | AllBud &times; Enter your location Enter Zip Code, City or State Go! &times; Follow Our Newsletter Enter your email address below to receive exclusive information about AllBud and the Cannabis industry. &times; Why write a review? Help other customers find trustworthy businesses and make go",
+      "href_sample": [
+        "https://static.allbud.com/static/css/compressed/strains.091ab274215e.css",
+        "https://www.allbud.com/marijuana-strains/indica-dominant-hybrid/granddaddy-purple",
+        "/marijuana-strains/search",
+        "https://static.allbud.com/static/images/strains-icon-darkgreen.8b39622fcc74.svg",
+        "/marijuana-strains/variety/indica-dominant-hybrid",
+        "/marijuana-strains/indica-dominant-hybrid/grand-daddy-purple",
+        "/marijuana-strains/indica-dominant-hybrid/big-bud",
+        "/marijuana-strains/indica-dominant-hybrid/purple-urkle",
+        "/marijuana-strains/effect/euphoria",
+        "/marijuana-strains/effect/happy",
+        "/marijuana-strains/effect/hungry",
+        "/marijuana-strains/effect/relaxing",
+        "/marijuana-strains/symptom/arthritis",
+        "/marijuana-strains/symptom/chronic-pain",
+        "/marijuana-strains/symptom/depression",
+        "/marijuana-strains/symptom/insomnia",
+        "/marijuana-strains/symptom/loss-appetite",
+        "/marijuana-strains/symptom/migraines",
+        "/marijuana-strains/symptom/muscle-spasms",
+        "/marijuana-strains/symptom/ptsd"
+      ],
+      "size_mentions": [],
+      "api_hints": [
+        "https://www.google.com/recaptcha/api.js",
+        "/api/strains/1887/set_rating",
+        "/api/v1/locations/address-validation"
+      ],
+      "wall": [
+        "captcha"
+      ],
+      "has_next_data": false,
+      "sitemap_refs": [],
+      "robots_preview": "",
+      "loc_sample": []
+    },
+    "https://wayofleaf.com/strain-reviews": {
+      "ok": true,
+      "status": 200,
+      "final_url": "https://marijuanabreak.com/strains/",
+      "server": "cloudflare",
+      "cf_ray": true,
+      "ctype": "text/html; charset=UTF-8",
+      "bytes": 199998,
+      "title": "Strains | WayofLeaf",
+      "snippet": "--> Strains | WayofLeaf img:is([sizes=\"auto\" i],[sizes^=\"auto,\" i]){contain-intrinsic-size:3000px 1500px} /*! This file is auto-generated */ .wp-block-button__link{color:#fff;background-color:#32373c;border-radius:9999px;box-shadow:none;text-decoration:none;padding:calc(.667em + 2px) calc(1.333em + 2px);font-size:1.125em}.wp-block-file__button{back",
+      "href_sample": [
+        "https://marijuanabreak.com/strains/"
+      ],
+      "size_mentions": [],
+      "api_hints": [],
+      "wall": [
+        "cloudflare-headers",
+        "captcha",
+        "login-form"
+      ],
+      "has_next_data": false,
+      "sitemap_refs": [],
+      "robots_preview": "",
+      "loc_sample": []
+    },
+    "https://wayofleaf.com/cannabis/blue-dream": {
+      "ok": true,
+      "status": 200,
+      "final_url": "https://marijuanabreak.com/strains/blue-dream-strain/",
+      "server": "cloudflare",
+      "cf_ray": true,
+      "ctype": "text/html; charset=UTF-8",
+      "bytes": 199998,
+      "title": "Blue Dream Strain - Iconic West Coast Hybrid",
+      "snippet": "--> Blue Dream Strain - Iconic West Coast Hybrid img:is([sizes=\"auto\" i],[sizes^=\"auto,\" i]){contain-intrinsic-size:3000px 1500px} /*! This file is auto-generated */ .wp-block-button__link{color:#fff;background-color:#32373c;border-radius:9999px;box-shadow:none;text-decoration:none;padding:calc(.667em + 2px) calc(1.333em + 2px);font-size:1.125em}.w",
+      "href_sample": [
+        "https://marijuanabreak.com/strains/blue-dream-strain/"
+      ],
+      "size_mentions": [],
+      "api_hints": [],
+      "wall": [
+        "cloudflare-headers",
+        "captcha",
+        "login-form"
+      ],
+      "has_next_data": false,
+      "sitemap_refs": [],
+      "robots_preview": "",
+      "loc_sample": []
+    },
+    "https://www.hytiva.com/strains/hybrid/blue-dream": {
+      "ok": true,
+      "status": 200,
+      "final_url": "https://www.hytiva.com/strains/hybrid/blue-dream",
+      "server": "",
+      "cf_ray": false,
+      "ctype": "text/html",
+      "bytes": 39755,
+      "title": "Blue Dream Strain - Hybrid Cannabis Review, 30% THC, 1.0% CBD & 1mg/g Caryophyllene",
+      "snippet": "Blue Dream Strain - Hybrid Cannabis Review, 30% THC, 1.0% CBD & 1mg/g Caryophyllene Create A Hytiva Account or Sign In Get access to exclusive deals from your local dispensary. Order Order cannabis at a local dispensary near you! Dispensaries Brands Order Delivery or Pickup Find a local dispensary & product that's right for you. Strains Explore Hyt",
+      "href_sample": [
+        "/strains",
+        "/strains/sativa",
+        "/strains/indica",
+        "/strains/hybrid",
+        "/strains/explore",
+        "/strains?flavors=earthy",
+        "/strains?flavors=sweet",
+        "/strains?effects=energetic",
+        "/strains?effects=creative",
+        "/strains?effects=hungry",
+        "/strains?effects=dryEyes",
+        "/strains?effects=dryMouth",
+        "/strains?effects=nervous",
+        "/strains?pairsWellWith=artsCrafts",
+        "/strains?pairsWellWith=eating",
+        "/strains?pairsWellWith=goingOut",
+        "/strains?pairsWellWith=socialEvents",
+        "/strains/hybrid/blue-dream/review",
+        "/strains",
+        "/strains/hybrid"
+      ],
+      "size_mentions": [],
+      "api_hints": [],
+      "wall": [],
+      "has_next_data": false,
+      "sitemap_refs": [],
+      "robots_preview": "",
+      "loc_sample": []
+    },
+    "https://www.hytiva.com/strains/hybrid/oreoz": {
+      "ok": true,
+      "status": 200,
+      "final_url": "https://www.hytiva.com/strains/hybrid/oreoz",
+      "server": "",
+      "cf_ray": false,
+      "ctype": "text/html",
+      "bytes": 38524,
+      "title": "Oreoz Strain - Hybrid Cannabis Review, 30% THC & 6mg/g Caryophyllene",
+      "snippet": "Oreoz Strain - Hybrid Cannabis Review, 30% THC & 6mg/g Caryophyllene Create A Hytiva Account or Sign In Get access to exclusive deals from your local dispensary. Order Order cannabis at a local dispensary near you! Dispensaries Brands Order Delivery or Pickup Find a local dispensary & product that's right for you. Strains Explore Hytiva's extensive",
+      "href_sample": [
+        "/strains",
+        "/strains/sativa",
+        "/strains/indica",
+        "/strains/hybrid",
+        "/strains/explore",
+        "/strains?flavors=earthy",
+        "/strains?flavors=sweet",
+        "/strains?effects=creative",
+        "/strains?effects=happy",
+        "/strains?effects=sleepy",
+        "/strains?effects=tingly",
+        "/strains?pairsWellWith=doingNothing",
+        "/strains?pairsWellWith=fishing",
+        "/strains?pairsWellWith=sleeping",
+        "/strains?pairsWellWith=spa",
+        "/strains?pairsWellWith=watchingTV",
+        "/strains/hybrid/cookies-and-cream",
+        "/strains/hybrid/secret-weapon",
+        "/strains/hybrid/oreoz/review",
+        "/strains"
+      ],
+      "size_mentions": [],
+      "api_hints": [],
+      "wall": [],
+      "has_next_data": false,
+      "sitemap_refs": [],
+      "robots_preview": "",
+      "loc_sample": []
+    },
+    "https://weedmaps.com/strains/blue-dream": {
+      "ok": true,
+      "status": 200,
+      "final_url": "https://weedmaps.com/strains/blue-dream",
+      "server": "",
+      "cf_ray": false,
+      "ctype": "text/html; charset=utf-8",
+      "bytes": 199927,
+      "title": "Blue Dream (aka Blue Dream Diamond) Weed Strain Near Me | Weedmaps",
+      "snippet": "Blue Dream (aka Blue Dream Diamond) Weed Strain Near Me | Weedmaps This website uses cookies to enhance and analyze your experience and deliver advertising on our platform and across the web. If you wish to opt out of the sale or sharing of your personal information for the purpose of cross-context behavioral advertising, you may do so by clicking ",
+      "href_sample": [
+        "https://weedmaps.com/strains/blue-dream",
+        "/strains",
+        "/strains",
+        "/strains/hybrid",
+        "/strains/blueberry",
+        "/strains/haze",
+        "https://weedmaps.com/strains/blueberry",
+        "https://weedmaps.com/strains/og-kush",
+        "https://weedmaps.com/strains/azure-haze",
+        "https://weedmaps.com/strains/silver-haze",
+        "https://weedmaps.com/strains/super-silver-haze",
+        "/strains/blueberry-blast",
+        "/strains/dream-berry",
+        "/strains/blue-hawaiian",
+        "/strains/super-silver-haze",
+        "/strains/mango-dream",
+        "/strains/blue-diamond",
+        "/strains/loud-dream",
+        "/strains/blueberry-haze",
+        "/strains/blueberry-dream"
+      ],
+      "size_mentions": [],
+      "api_hints": [],
+      "wall": [
+        "age-gate"
+      ],
+      "has_next_data": false,
+      "sitemap_refs": [],
+      "robots_preview": "",
+      "loc_sample": []
+    },
+    "https://www.leafly.com/strains/blue-dream": {
+      "ok": true,
+      "status": 200,
+      "final_url": "https://www.leafly.com/strains/blue-dream",
+      "server": "cloudflare",
+      "cf_ray": true,
+      "ctype": "text/html; charset=utf-8",
+      "bytes": 199888,
+      "title": "Blue Dream Weed Strain Information | Leafly",
+      "snippet": "Blue Dream Weed Strain Information | Leafly We use cookies for certain features and to improve your experience. See our Cookie Policy and Privacy Policy to learn more advertise on Leafly Sydney, NSW change Shop Dispensaries Delivery Deals Strains Brands Products Leafly Picks CBD Doctors Cannabis 101 Social impact Sign in Create account Strains Shop",
+      "href_sample": [
+        "https://www.leafly.com/strains/blue-dream",
+        "https://www.leafly.com/strains/blue-dream",
+        "https://www.leafly.ca/strains/blue-dream",
+        "/strains/lists",
+        "https://sso.leafly.com/sign-in?rd=https%3A%2F%2Fwww.leafly.com%2Fstrains%2Fblue-dream",
+        "https://sso.leafly.com/sign-up?rd=https%3A%2F%2Fwww.leafly.com%2Fstrains%2Fblue-dream",
+        "/strains/lists",
+        "/strains/lists/category/hybrid",
+        "/strains/blue-dream#strain-reviews-section",
+        "#strain-sensations-section",
+        "#strain-sensations-section",
+        "#strain-sensations-section",
+        "/strains/lists/category/hybrid",
+        "/strains/blueberry",
+        "/strains/haze",
+        "/strains/lists/effect/relaxed",
+        "/strains/lists/flavor/berry",
+        "/strains/lists/condition/depression",
+        "/strains/blue-dream-cbd",
+        "/strains/double-dream"
+      ],
+      "size_mentions": [],
+      "api_hints": [
+        "https://consumer-api.leafly.com",
+        "https://maps.googleapis.com",
+        "https://api-og.internal.leafly.com/",
+        "https://api.leafly.com/",
+        "https://consumer-api.leafly.ca",
+        "https://api.iheartjane.com/v1/headless/embed.js",
+        "https://reservations-api.leafly.com",
+        "https://reservations-api.leafly.ca"
+      ],
+      "wall": [
+        "cloudflare-headers",
+        "age-gate"
+      ],
+      "has_next_data": true,
+      "sitemap_refs": [],
+      "robots_preview": "",
+      "loc_sample": []
+    },
+    "https://www.wikileaf.com/strain/blue-dream/": {
+      "ok": false,
+      "status": 403,
+      "final_url": "https://www.wikileaf.com/strain/blue-dream/",
+      "server": "",
+      "cf_ray": false,
+      "bytes": 520,
+      "title": "403 Forbidden",
+      "wall": [],
+      "snippet": "403 Forbidden 403 Forbidden",
+      "error": "HTTP Error 403: Forbidden",
+      "robots_preview": ""
+    },
+    "https://www.cannaconnection.com/strains/blue-dream": {
+      "ok": false,
+      "status": 403,
+      "final_url": "https://www.cannaconnection.com/strains/blue-dream",
+      "server": "cloudflare",
+      "cf_ray": true,
+      "bytes": 5596,
+      "title": "Just a moment...",
+      "wall": [
+        "cloudflare-headers",
+        "cf-challenge"
+      ],
+      "snippet": "Just a moment... Enable JavaScript and cookies to continue",
+      "error": "HTTP Error 403: Forbidden",
+      "robots_preview": ""
+    },
+    "https://strain-database.com/strains/blue-dream": {
+      "ok": false,
+      "status": 403,
+      "final_url": "https://strain-database.com/strains/blue-dream",
+      "server": "cloudflare",
+      "cf_ray": true,
+      "bytes": 5805,
+      "title": "Just a moment...",
+      "wall": [
+        "cloudflare-headers",
+        "cf-challenge"
+      ],
+      "snippet": "Just a moment... Enable JavaScript and cookies to continue",
+      "error": "HTTP Error 403: Forbidden",
+      "robots_preview": ""
+    },
+    "https://consumer-api.leafly.com/api/strains": {
+      "ok": false,
+      "status": 404,
+      "final_url": "https://consumer-api.leafly.com/api/strains",
+      "server": "cloudflare",
+      "cf_ray": true,
+      "bytes": 0,
+      "title": "",
+      "wall": [
+        "cloudflare-headers"
+      ],
+      "snippet": "",
+      "error": "HTTP Error 404: Not Found",
+      "robots_preview": ""
+    },
+    "https://www.leafly.com/strains-explorer/api/strains": {
+      "ok": false,
+      "status": 404,
+      "final_url": "https://www.leafly.com/strains-explorer/api/strains",
+      "server": "cloudflare",
+      "cf_ray": true,
+      "bytes": 59992,
+      "title": "404 | Leafly",
+      "wall": [
+        "cloudflare-headers",
+        "age-gate"
+      ],
+      "snippet": "404 | Leafly We use cookies for certain features and to improve your experience. See our Cookie Policy and Privacy Policy to learn more advertise on Leafly Sydney, NSW change Shop Dispensaries Delivery Deals Strains Brands Products Leafly Picks CBD Doctors Cannabis 101 Social impact Sign in Create account Strains Shop Shop Dispensaries Delivery Dea",
+      "error": "HTTP Error 404: Not Found",
+      "robots_preview": ""
+    }
+  },
+  "primary_compact": {
+    "strain-database": {
+      "home_status": 403,
+      "home_walls": [
+        "cloudflare-headers",
+        "cf-challenge"
+      ],
+      "home_title": "Just a moment...",
+      "home_size": [],
+      "home_api": [],
+      "home_hrefs": [],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://strain-database.com/sitemap.xml"
+      ],
+      "robots_notable": [
+        "Disallow: /api/"
+      ],
+      "robots_preview": "User-Agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /api/\nUser-Agent: GPTBot\nUser-Agent: ChatGPT-User\nUser-Agent: CCBot\nUser-Agent: anthropic-ai\nDisallow: /\nUser-Agent: meta-webindexer\nDisallow: /compare/\nSitemap: https://strain-database.com/sitemap.xml",
+      "sitemap_status": 200,
+      "sitemap_index": true,
+      "sitemap_locs": 2,
+      "sitemap_sample": [
+        "https://strain-database.com/sitemap/0.xml",
+        "https://strain-database.com/sitemap/1.xml"
+      ]
+    },
+    "cannareviews": {
+      "home_status": 200,
+      "home_walls": [
+        "cloudflare-headers"
+      ],
+      "home_title": "Australias Trusted Cannabis Resource | Canna Reviews",
+      "home_size": [],
+      "home_api": [
+        "https://api.pirsch.io/pirsch-extended.js",
+        "https://cannareviews.health/api/v5.2.1/products/export",
+        "https://cannareviews.health/api/v5.2.1/data/download",
+        "https://cannareviews.health/api/v5.2.1/products/bulk"
+      ],
+      "home_hrefs": [],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://cannareviews.health/sitemap.xml"
+      ],
+      "robots_notable": [],
+      "robots_preview": "User-agent: *\nDisallow: /admin\nDisallow: /*.pdf$\nDisallow: /*.xls$\nDisallow: /*.xlsx$\nDisallow: /*.csv$\nDisallow: /dash\nDisallow: /*?utm*\nDisallow: /forgot-password\nDisallow: /resetpasswordconfirmation\nDisallow: /confirmcontact\nDisallow: /confirmregister\nNoindex: /admin\nNoindex: /*.pdf$\nNoindex: /*.xls$\nNoindex: /*.xlsx$\nNoindex: /*.csv$\nNoindex: /dash\nNoindex: /*?utm*\nNoindex: /forgot-password\nNoindex: /resetpasswordconfirmation\nNoindex: /confirmcontact\nNoindex: /confirmregister\nSitemap: https://cannareviews.health/sitemap.xml",
+      "sitemap_status": 200,
+      "sitemap_index": false,
+      "sitemap_locs": 365,
+      "sitemap_sample": [
+        "https://cannareviews.health",
+        "https://cannareviews.health/products/legal-cannabis-product-list-australia",
+        "https://cannareviews.health/cannabis-brands-australia",
+        "https://cannareviews.health/research",
+        "https://cannareviews.health/faq",
+        "https://cannareviews.health/about",
+        "https://cannareviews.health/contact",
+        "https://cannareviews.health/cannabis-dispensary-pharmacies",
+        "https://cannareviews.health/product/beacon-medical-sensi-star-flower-10g",
+        "https://cannareviews.health/product/antg-mariposa-thc16-flower-10g"
+      ]
+    },
+    "seedfinder": {
+      "home_status": 200,
+      "home_walls": [
+        "cloudflare-headers",
+        "captcha"
+      ],
+      "home_title": "Marijuana Strain Database | Search | Research :: SeedFinder.eu",
+      "home_size": [],
+      "home_api": [],
+      "home_hrefs": [
+        "https://seedfinder.eu/en/database/strains",
+        "https://seedfinder.eu/en/database/strains/origin",
+        "https://seedfinder.eu/en/database/strains/cloneonly",
+        "https://seedfinder.eu/en/database/strains/unknown-or-legendary",
+        "https://seedfinder.eu/en/database/strains/origin",
+        "https://seedfinder.eu/en/database/strains/alphabetical",
+        "https://seedfinder.eu/en/database/strains/autoflowering",
+        "https://seedfinder.eu/en/database/strains/cloneonly",
+        "https://seedfinder.eu/en/database/strains/cbd-rich",
+        "https://seedfinder.eu/en/research/strain-vs-strain"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://seedfinder.eu/sitemap/sitemap-index.xml"
+      ],
+      "robots_notable": [],
+      "robots_preview": "User-agent: *\nDisallow: /en/database/suggest\nDisallow: /de/database/suggest\nDisallow: /es/database/suggest\nDisallow: /fr/database/suggest\nSitemap: https://seedfinder.eu/sitemap/sitemap-index.xml",
+      "sitemap_status": 404,
+      "sitemap_index": false,
+      "sitemap_locs": 0,
+      "sitemap_sample": []
+    },
+    "leafly": {
+      "home_status": 200,
+      "home_walls": [
+        "cloudflare-headers"
+      ],
+      "home_title": "Browse All Marijuana Strains on Leafly | Leafly",
+      "home_size": [],
+      "home_api": [
+        "https://consumer-api.leafly.com",
+        "https://maps.googleapis.com",
+        "https://api-og.internal.leafly.com/",
+        "https://api.leafly.com/",
+        "https://consumer-api.leafly.ca",
+        "https://api.iheartjane.com/v1/headless/embed.js",
+        "https://reservations-api.leafly.com",
+        "https://reservations-api.leafly.ca"
+      ],
+      "home_hrefs": [
+        "https://www.leafly.com/strains",
+        "https://www.leafly.com/strains",
+        "https://www.leafly.ca/strains",
+        "https://www.leafly.com/strains?page=2",
+        "/strains/lists",
+        "https://sso.leafly.com/sign-in?rd=https%3A%2F%2Fwww.leafly.com%2Fstrains",
+        "https://sso.leafly.com/sign-up?rd=https%3A%2F%2Fwww.leafly.com%2Fstrains",
+        "/strains/lists"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://www.leafly.com/leafly-sitemaps/sitemap-index.xml",
+        "https://www.leafly.com/news/sitemap_index.xml"
+      ],
+      "robots_notable": [
+        "Disallow: /web-strain-explorer/api",
+        "Disallow: /shop*filter%5Bstrain_category%5D*",
+        "Disallow: /shop*filter%5Bstrain_name%5D*",
+        "Disallow: /shop*filter%5Bstrain_effects%5D*",
+        "Allow: /news/strains-products/best-back-to-school-weed-products",
+        "Allow: /news/strains-products/best-grow-lights",
+        "Allow: /news/strains-products/best-weed-products-of-summer",
+        "Allow: /news/strains-products/best-thca-concentrates",
+        "Allow: /news/strains-products/best-oil-day-products",
+        "Allow: /news/strains-products/4th-of-july-weekend-product-picks",
+        "Allow: /news/strains-products/best-dab-rigs",
+        "Allow: /news/strains-products/best-cbd-for-dogs",
+        "Allow: /news/strains-products/fathers-day-weed-gift-guide",
+        "Allow: /news/strains-products/best-thca-pre-rolls",
+        "Allow: /news/strains-products/memorial-day-weekend-product-picks",
+        "Allow: /news/strains-products/best-high-potency-hemp-products",
+        "Allow: /news/strains-products/best-thca-strains",
+        "Allow: /news/strains-products/best-energizing-thc-gummies",
+        "Allow: /news/strains-products/best-thca-vape-carts",
+        "Allow: /news/strains-products/best-bongs",
+        "Allow: /news/strains-products/best-hemp-pre-rolls",
+        "Allow: /news/strains-products/best-thca-flower",
+        "Allow: /news/strains-products/best-cbd-creams",
+        "Allow: /news/strains-products/best-delta-9-gummies",
+        "Allow: /news/strains-products/best-thc-drinks"
+      ],
+      "robots_preview": "User-agent: *\nDisallow: /wp-admin/\nAllow: /wp-admin/admin-ajax.php\nDisallow: /web-strain-explorer/api\nDisallow: /migration/\nDisallow: /store-locator/\nDisallow: /shop*filter%5Bprice%5D*\nDisallow: /shop*filter%5Bdispensary_name%5D*\nDisallow: /shop*filter%5Bbrand_name%5D*\nDisallow: /shop*filter%5Bamount%5D*\nDisallow: /shop*filter%5Bstrain_category%5D*\nDisallow: /shop*filter%5Bstrain_name%5D*\nDisallow: /shop*filter%5Bstrain_effects%5D*\nDisallow: /dispensaries*sort=default*\nDisallow: /dispensaries*sort=online-ordering*\nDisallow: /dispensaries*sort=distance*\nDisallow: /dispensaries*sort=most-reviews*\nDisallow: /dispensaries*sort=a-z*\nDisallow: /dispensaries*sort=z-a*\nDisallow: *filter[*filter[\nUser-agent: GPTBot\nDisallow: /\nAllow: /news/strains-products/best-back-to-school-weed-products\nAllow: /news/strains-products/best-grow-lights\nAllow: /news/strains-products/best-weed-products-of-summer\nAllow: /news/strains-products/best-thca-concentrates\nAllow: /news/strains-products/best-oil-day-products\nAllow: /news/strains-products/4th-of-july-weekend-product-picks\nAllow: /news/strains-products/best-dab-rigs\nAllow: /news/strains-products/best-cbd-for-dogs\nAllow: /news/strains-products/fathers-day",
+      "sitemap_status": 404,
+      "sitemap_index": false,
+      "sitemap_locs": 0,
+      "sitemap_sample": []
+    },
+    "wikileaf": {
+      "home_status": 403,
+      "home_walls": [
+        "access-denied"
+      ],
+      "home_title": "403 Forbidden",
+      "home_size": [],
+      "home_api": [],
+      "home_hrefs": [],
+      "robots_status": 403,
+      "robots_sitemaps": [],
+      "robots_notable": [],
+      "robots_preview": "<html>\n<head><title>403 Forbidden</title></head>\n<body>\n<center><h1>403 Forbidden</h1></center>\n</body>\n</html>\n<!-- a padding to disable MSIE and Chrome friendly error page -->\n<!-- a padding to disable MSIE and Chrome friendly error page -->\n<!-- a padding to disable MSIE and Chrome friendly error page -->\n<!-- a padding to disable MSIE and Chrome friendly error page -->\n<!-- a padding to disable MSIE and Chrome friendly error page -->\n<!-- a padding to disable MSIE and Chrome friendly error page -->",
+      "sitemap_status": 403,
+      "sitemap_index": false,
+      "sitemap_locs": 0,
+      "sitemap_sample": []
+    },
+    "allbud": {
+      "home_status": 404,
+      "home_walls": [],
+      "home_title": "Page Not Found | AllBud",
+      "home_size": [
+        "10,000"
+      ],
+      "home_api": [
+        "/api/v1/locations/address-validation"
+      ],
+      "home_hrefs": [
+        "/marijuana-strains/search",
+        "/marijuana-strains/search",
+        "/marijuana-strains/search",
+        "/marijuana-strains/search"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://www.allbud.com/sitemap.xml",
+        "https://www.allbud.com/sitemap-regionfaqs.xml"
+      ],
+      "robots_notable": [
+        "Disallow: /api/v1/locations/address-validation",
+        "Disallow: /search-autocomplete",
+        "Disallow: /learn/search*type=",
+        "Disallow: /search?*",
+        "Allow: /marijuana-strains/*/*sort="
+      ],
+      "robots_preview": "User-agent: *\nDisallow: /dispensaries/register\nDisallow: /dispensaries/claim\nDisallow: /marijuana-doctors/register-clinic\nDisallow: /marijuana-doctors/claim\nDisallow: /terms-of-use\nDisallow: /privacy-policy\nDisallow: /copyright-policy\nDisallow: /api/v1/locations/address-validation\nDisallow: /search-autocomplete\nDisallow: /account/logout\nDisallow: /*sort=\nDisallow: /*filter=\nDisallow: /*from_menu=\nDisallow: /learn/search*type=\nDisallow: /learn/aggarticle/*page=\nDisallow: /learn/story/*page=\nDisallow: /search?*\nAllow: /products/producer/*\nAllow: /dispensaries/*/*/*sort=\nAllow: /dispensaries/*/*/*filter=\nAllow: /dispensaries/*/*/*from_menu=\nAllow: /marijuana-strains/*/*sort=\nSitemap: https://www.allbud.com/sitemap.xml\nSitemap: https://www.allbud.com/sitemap-regionfaqs.xml",
+      "sitemap_status": 200,
+      "sitemap_index": true,
+      "sitemap_locs": 15,
+      "sitemap_sample": [
+        "https://www.allbud.com/sitemap-dispensary-locations.xml",
+        "https://www.allbud.com/sitemap-dispensaries.xml",
+        "https://www.allbud.com/sitemap-strains-symptoms.xml",
+        "https://www.allbud.com/sitemap-strains-varieties.xml",
+        "https://www.allbud.com/sitemap-clinic-regions.xml",
+        "https://www.allbud.com/sitemap-clinics.xml",
+        "https://www.allbud.com/sitemap-strains-effects.xml",
+        "https://www.allbud.com/sitemap-regionfaqs.xml",
+        "https://www.allbud.com/sitemap-dispensary-cities.xml",
+        "https://www.allbud.com/sitemap-strains-aromas.xml"
+      ]
+    },
+    "weedmaps": {
+      "home_status": 200,
+      "home_walls": [],
+      "home_title": "Explore Weed Strains Info, Photos, and Reviews on Weedmaps",
+      "home_size": [],
+      "home_api": [],
+      "home_hrefs": [
+        "https://weedmaps.com/strains",
+        "https://weedmaps.com/strains?page=2",
+        "/strains",
+        "/strains/peanut-butter-breath",
+        "/strains/maui-wowie",
+        "/strains/tropicana-cherry",
+        "/strains/animal-mints",
+        "/strains/apples-and-bananas",
+        "/strains/donny-burger",
+        "/strains/the-soap",
+        "/strains/garlic-cocktail",
+        "/strains/hash-burger",
+        "/strains/whitethorn-rose",
+        "/strains/fuel-biscuits",
+        "/strains"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://weedmaps.com/sitemap.xml.gz"
+      ],
+      "robots_notable": [
+        "Disallow: *?*search=*",
+        "Disallow: ?search",
+        "Disallow: /search?product=*",
+        "Disallow: /*/search/",
+        "Allow: /strains/*?filter[species]*"
+      ],
+      "robots_preview": "\ufeffUser-agent: *\nDisallow: /user/*\nDisallow: /users/*\nDisallow: /auth/*\nDisallow: /login*?*\nDisallow: /signup*?*\nDisallow: /listings/*\nDisallow: /results?*\nDisallow: *?*search=*\nDisallow: ?search\nDisallow: *?*filter\nDisallow: /seg/*\nDisallow: /search?product=*\nAllow: /strains/*?filter[species]*\nDisallow: *?addToCart=1\nDisallow: /*/cgi-bin/\nDisallow: /*/wp-admin/\nDisallow: /*/trackback/\nDisallow: /*/search/\nDisallow: /*/tag/\nDisallow: /*/category/\nAllow: /brands/category/\nDisallow: /*/uncategorized/\nDisallow: /learn/*/comment-page\nDisallow: /learn/*/order/\nDisallow: /learn/*/feed/\nDisallow: /learn/*/xmlrpc.php\nDisallow: /learn/*/trackback/\nDisallow: /learn/*?wptheme=\nDisallow: /learn/*?comments=\nDisallow: /learn/*?replytocom\nDisallow: /learn/*?s=\nDisallow: /learn/*&s=\nDisallow: /news/*/comment-page\nDisallow: /news/*/page\nDisallow: /news/*/order/\nDisallow: /news/*/feed/\nDisallow: /news/*/xmlrpc.php\nDisallow: /news/*/trackback/\nDisallow: /news/*?wptheme=\nDisallow: /news/*?comments=\nDisallow: /news/*?replytocom\nDisallow: /news/*?s=\nDisallow: /news/*&s=\nDisallow: /openca/*/comment-page\nDisallow: /openca/*/page\nDisallow: /openca/*/order/\nDisallow: /openca/*/feed/\nDisallow: /openca/*/xmlrpc",
+      "sitemap_status": 404,
+      "sitemap_index": false,
+      "sitemap_locs": 0,
+      "sitemap_sample": []
+    },
+    "wayofleaf": {
+      "home_status": 200,
+      "home_walls": [
+        "cloudflare-headers",
+        "captcha",
+        "login-form-present"
+      ],
+      "home_title": "5 Best and Strongest Marijuana Strains of the Year [Reviewed]",
+      "home_size": [],
+      "home_api": [],
+      "home_hrefs": [
+        "https://marijuanabreak.com/staff-picks/best-and-strongest-marijuana-strains/"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://marijuanabreak.com/sitemap/index.xml"
+      ],
+      "robots_notable": [
+        "Disallow: /*?search_keywords=*"
+      ],
+      "robots_preview": "User-Agent: *\nAllow: /wp-content/uploads/\nAllow: /wp-includes/css/\nAllow: /wp-includes/js/\nAllow: /wp-includes/images/\nAllow: /wp-content/*.css\nAllow: /wp-content/*.js\nAllow: /wp-content/*.png\nAllow: /wp-content/*.jpg\nAllow: /wp-content/*.jpeg\nAllow: /wp-content/*.gif\nAllow: /wp-content/*.svg\nAllow: /wp-admin/admin-ajax.php\nAllow: /wp-content/plugins/\nAllow: /wp-content/themes/\nDisallow: /test/\nDisallow: /wp-login.php\nDisallow: /wp-register.php\nDisallow: /xmlrpc.php\nDisallow: /template.html\nDisallow: /wp-admin\nDisallow: /wp-includes\nDisallow: /course\nDisallow: /*?s=*\nDisallow: /*?nonamp=*\nDisallow: /*?key=*\nDisallow: /*?step=*\nDisallow: /*?search_keywords=*\nDisallow: /*?fbclid=*\nDisallow: /*?share=*\nDisallow: /*?platform=*\nDisallow: /*?cid=*\nDisallow: /*?ref=*\nDisallow: /*?rel=*\nDisallow: /*?submit=*\nDisallow: /*?utm_campaign=*\nDisallow: /*?utm_medium=*\nDisallow: /*?replytocom*\nDisallow: /*?utm_source=*\nDisallow: /cdn-cgi/l/email-protection\nDisallow: /jobs\nDisallow: /purchases/\nDisallow: /post_tag/\nDisallow: /directory\nDisallow: /hotels\nDisallow: /results\nDisallow: /tabletes1t\nDisallow: /ebook.pdf\nDisallow: /course/\nDisallow: /*.pdf",
+      "sitemap_status": 200,
+      "sitemap_index": false,
+      "sitemap_locs": 0,
+      "sitemap_sample": []
+    },
+    "hytiva": {
+      "home_status": 200,
+      "home_walls": [],
+      "home_title": "Cannabis Strains",
+      "home_size": [],
+      "home_api": [],
+      "home_hrefs": [
+        "/strains",
+        "/strains/sativa",
+        "/strains/indica",
+        "/strains/hybrid",
+        "/strains/explore",
+        "/strains/hybrid/oreoz",
+        "/strains/hybrid/gary-payton",
+        "/strains/hybrid/grandaddy-purple",
+        "/strains/hybrid/rainbow-sherbet",
+        "/strains/hybrid/gelato-41",
+        "/strains/hybrid/lemon-cherry-gelato",
+        "/strains/hybrid/cereal-milk",
+        "/strains/hybrid/london-poundcake",
+        "/strains/hybrid/gelatti",
+        "/strains/hybrid/runtz"
+      ],
+      "robots_status": 404,
+      "robots_sitemaps": [],
+      "robots_notable": [],
+      "robots_preview": "<!DOCTYPE html>\n<html lang=\"en-US\">\n<head>\n<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width\">\n<meta http-equiv=\"Accept-CH\" content=\"DPR,Width,Viewport-Width,Downlink,ECT\">\n<title>Page Not Found</title>\n<meta name=\"description\" content=\"The page you requested was not found on this server.\">\n<meta name=\"apple-itunes-app\" content=\"app-id=1634505174\">\n<meta name=\"robots\" content=\"index, follow\">\n<link rel=\"preload\" href=\"/asset/fonts/Inter-ExtraBold.woff2\" as=\"font\" type=\"font/woff2\" crossorigin=\"anonymous\">\n<link rel=\"preload\" href=\"/asset/fonts/Inter-SemiBold.woff2\" as=\"font\" type=\"font/woff2\" crossorigin=\"anonymous\">\n<link rel=\"preload\" href=\"/asset/fonts/icons.woff2?AAABn8QJGpc\" as=\"font\" type=\"font/woff2\" crossorigin=\"anonymous\">\n<link rel=\"preload\" href=\"/asset/css/app.css?AAABn8QJGpc\" as=\"style\">\n<link rel=\"stylesheet\" href=\"/asset/css/app.css?AAABn8QJGpc\">\n<link rel=\"preload\" href=\"/asset/css/app-landing.css?AAABn8QJGpc\" as=\"style\">\n<link rel=\"stylesheet\" href=\"/asset/css/app-landing.css?AAABn8QJGpc\">\n<link rel=\"preconnect\" href=\"//images.hytiva.com\">\n<link rel=\"dns-prefetch\" href=\"//images.hytiva.com\">\n<link rel=\"preload\" href=\"/asset/js/app.js?AAABn8QJ",
+      "sitemap_status": 404,
+      "sitemap_index": false,
+      "sitemap_locs": 0,
+      "sitemap_sample": []
+    },
+    "cannaconnection": {
+      "home_status": 403,
+      "home_walls": [
+        "cloudflare-headers",
+        "cf-challenge"
+      ],
+      "home_title": "Just a moment...",
+      "home_size": [],
+      "home_api": [],
+      "home_hrefs": [],
+      "robots_status": 403,
+      "robots_sitemaps": [],
+      "robots_notable": [],
+      "robots_preview": "<!DOCTYPE html><html lang=\"en-US\"><head><title>Just a moment...</title><meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"><meta http-equiv=\"X-UA-Compatible\" content=\"IE=Edge\"><meta name=\"robots\" content=\"noindex,nofollow\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><meta http-equiv=\"content-security-policy\" content=\"default-src &#39;none&#39;; script-src &#39;nonce-B7bz5FJce20eZMlvCsp71X&#39; &#39;unsafe-eval&#39; https://challenges.cloudflare.com; script-src-attr &#39;none&#39;; style-src &#39;unsafe-inline&#39;; img-src &#39;self&#39; https://challenges.cloudflare.com; connect-src &#39;self&#39; https://challenges.cloudflare.com; frame-src &#39;self&#39; https://challenges.cloudflare.com blob:; child-src &#39;self&#39; https://challenges.cloudflare.com blob:; worker-src blob:; form-action http: https:; base-uri &#39;self&#39;\"><style>*{box-sizing:border-box;margin:0;padding:0}html{line-height:1.15;-webkit-text-size-adjust:100%;color:#313131;font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,\"Helvetica Neue\",Arial,\"Noto Sans\",sans-serif,\"Apple Color Emoji\",\"Segoe UI Emoji\",\"Segoe UI Symbol\",\"Noto Color Emoji\"}body{displa",
+      "sitemap_status": 403,
+      "sitemap_index": false,
+      "sitemap_locs": 0,
+      "sitemap_sample": []
+    }
+  }
+}

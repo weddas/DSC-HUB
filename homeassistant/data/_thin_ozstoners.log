@@ -1,0 +1,47 @@
+=== OZ Stoners resume done=0 dump=0
+  oz home ?sortby=last_post&sortdirection=desc +14 queue=14 final=https://community.ozstoners.com/?sortby=last_post&sortdirection=desc
+  oz home ?sortby=posts&sortdirection=desc +15 queue=29 final=https://community.ozstoners.com/?sortby=posts&sortdirection=desc
+  oz home / +0 queue=29 final=https://community.ozstoners.com/
+  oz search q='grow journal' page=1 +0 queue=29
+  oz search q='grow journal' page=2 +0 queue=29
+  oz search q='grow diary' page=1 +0 queue=29
+  oz search q='grow diary' page=2 +0 queue=29
+  oz search q='grow log' page=1 +0 queue=29
+  oz search q='grow log' page=2 +0 queue=29
+  oz search q='strain' page=1 +0 queue=29
+  oz search q='strain' page=2 +0 queue=29
+  oz search q='seeds' page=1 +0 queue=29
+  oz search q='seeds' page=2 +0 queue=29
+  oz search q='flowering' page=1 +0 queue=29
+  oz search q='flowering' page=2 +0 queue=29
+  oz search q='autoflower' page=1 +0 queue=29
+  oz search q='autoflower' page=2 +0 queue=29
+  oz search q='indoor grow' page=1 +0 queue=29
+  oz search q='indoor grow' page=2 +0 queue=29
+  oz search q='outdoor grow' page=1 +0 queue=29
+  oz search q='outdoor grow' page=2 +0 queue=29
+  queued topics=29
+  checkpoint items=20 this_run=20 rate=0.74/s idx=20/29
+  checkpoint items=29 this_run=29 rate=0.76/s idx=29/29
+wrote dsc_forum_ozstoners.json count=29 blockers=0
+staging: {
+  "family": "forum_ozstoners",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\forum_ozstoners.sqlite3",
+  "count": 29,
+  "stats": {
+    "strain_canonical": 29,
+    "strain_variant": 0,
+    "chemistry_profile": 0,
+    "grow_trait": 0,
+    "entity_link": 0,
+    "attribute_kv": 232,
+    "raw_record": 29,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 8,
+    "source_record": 1
+  }
+}

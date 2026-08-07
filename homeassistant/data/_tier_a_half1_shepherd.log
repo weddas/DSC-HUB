@@ -1,0 +1,179 @@
+
+--- shepherd launch ---
+[0] pid=72136 alive=True freedom done=162/4064 dump=150 skipped=12 stale=0s | partition attempted=2 ok=2 items=115 /96
+[1] pid=72136 alive=True freedom done=187/4064 dump=175 skipped=12 stale=0s | partition attempted=2 ok=2 items=115 /96
+[2] pid=72136 alive=True freedom done=212/4064 dump=200 skipped=12 stale=0s | partition attempted=2 ok=2 items=115 /96
+[3] pid=72136 alive=True freedom done=238/4064 dump=225 skipped=13 stale=0s | partition attempted=2 ok=2 items=115 /96
+[4] pid=72136 alive=True freedom done=266/4064 dump=250 skipped=16 stale=0s | partition attempted=2 ok=2 items=115 /96
+[5] pid=72136 alive=True freedom done=297/4064 dump=275 skipped=22 stale=0s | partition attempted=2 ok=2 items=115 /96
+[6] pid=72136 alive=True freedom done=326/4064 dump=300 skipped=26 stale=0s | partition attempted=2 ok=2 items=115 /96
+[7] pid=72136 alive=True freedom done=352/4064 dump=325 skipped=27 stale=0s | partition attempted=2 ok=2 items=115 /96
+[8] pid=72136 alive=True freedom done=378/4064 dump=350 skipped=28 stale=0s | partition attempted=2 ok=2 items=115 /96
+[9] pid=72136 alive=True freedom done=403/4064 dump=375 skipped=28 stale=0s | partition attempted=2 ok=2 items=115 /96
+[10] pid=72136 alive=True freedom done=431/4064 dump=400 skipped=31 stale=0s | partition attempted=2 ok=2 items=115 /96
+[11] pid=72136 alive=True freedom done=457/4064 dump=425 skipped=32 stale=0s | partition attempted=2 ok=2 items=115 /96
+[12] pid=72136 alive=True freedom done=483/4064 dump=450 skipped=33 stale=0s | partition attempted=2 ok=2 items=115 /96
+[13] pid=72136 alive=True freedom done=508/4064 dump=475 skipped=33 stale=0s | partition attempted=2 ok=2 items=115 /96
+[14] pid=72136 alive=True freedom done=558/4064 dump=525 skipped=33 stale=0s | partition attempted=2 ok=2 items=115 /96
+[15] pid=72136 alive=True freedom done=584/4064 dump=550 skipped=34 stale=0s | partition attempted=2 ok=2 items=115 /96
+[16] pid=72136 alive=True freedom done=610/4064 dump=575 skipped=35 stale=0s | partition attempted=2 ok=2 items=115 /96
+[17] pid=72136 alive=True freedom done=636/4064 dump=600 skipped=36 stale=0s | partition attempted=2 ok=2 items=115 /96
+[18] pid=72136 alive=True freedom done=661/4064 dump=625 skipped=36 stale=0s | partition attempted=2 ok=2 items=115 /96
+[19] pid=72136 alive=True freedom done=686/4064 dump=650 skipped=36 stale=0s | partition attempted=2 ok=2 items=115 /96
+[20] pid=72136 alive=True freedom done=715/4064 dump=675 skipped=40 stale=0s | partition attempted=2 ok=2 items=115 /96
+[21] pid=72136 alive=True freedom done=740/4064 dump=700 skipped=40 stale=0s | partition attempted=2 ok=2 items=115 /96
+[22] pid=72136 alive=True freedom done=765/4064 dump=725 skipped=40 stale=0s | partition attempted=2 ok=2 items=115 /96
+[23] pid=72136 alive=True freedom done=790/4064 dump=750 skipped=40 stale=0s | partition attempted=2 ok=2 items=115 /96
+[24] pid=72136 alive=True freedom done=815/4064 dump=775 skipped=40 stale=0s | partition attempted=2 ok=2 items=115 /96
+[25] pid=72136 alive=True freedom done=840/4064 dump=800 skipped=40 stale=0s | partition attempted=2 ok=2 items=115 /96
+[26] pid=72136 alive=True freedom done=865/4064 dump=825 skipped=40 stale=0s | partition attempted=2 ok=2 items=115 /96
+[27] pid=72136 alive=True freedom done=915/4064 dump=875 skipped=40 stale=0s | partition attempted=2 ok=2 items=115 /96
+[28] pid=72136 alive=True freedom done=940/4064 dump=900 skipped=40 stale=0s | partition attempted=2 ok=2 items=115 /96
+[29] pid=72136 alive=True freedom done=965/4064 dump=925 skipped=40 stale=0s | partition attempted=2 ok=2 items=115 /96
+[30] pid=72136 alive=True freedom done=990/4064 dump=950 skipped=40 stale=0s | partition attempted=2 ok=2 items=115 /96
+[31] pid=72136 alive=True freedom done=1016/4064 dump=975 skipped=41 stale=0s | partition attempted=2 ok=2 items=115 /96
+[32] pid=72136 alive=True freedom done=1041/4064 dump=1000 skipped=41 stale=0s | partition attempted=2 ok=2 items=115 /96
+[33] pid=72136 alive=True freedom done=1066/4064 dump=1025 skipped=41 stale=0s | partition attempted=2 ok=2 items=115 /96
+[34] pid=72136 alive=True freedom done=1091/4064 dump=1050 skipped=41 stale=0s | partition attempted=2 ok=2 items=115 /96
+[35] pid=72136 alive=True freedom done=1117/4064 dump=1075 skipped=42 stale=0s | partition attempted=2 ok=2 items=115 /96
+[36] pid=72136 alive=True freedom done=1144/4064 dump=1100 skipped=44 stale=0s | partition attempted=2 ok=2 items=115 /96
+[37] pid=72136 alive=True freedom done=1169/4064 dump=1125 skipped=44 stale=0s | partition attempted=2 ok=2 items=115 /96
+[38] pid=72136 alive=True freedom done=1194/4064 dump=1150 skipped=44 stale=0s | partition attempted=2 ok=2 items=115 /96
+[39] pid=72136 alive=True freedom done=1219/4064 dump=1175 skipped=44 stale=0s | partition attempted=2 ok=2 items=115 /96
+[40] pid=72136 alive=True freedom done=1244/4064 dump=1200 skipped=44 stale=0s | partition attempted=2 ok=2 items=115 /96
+[41] pid=72136 alive=True freedom done=1269/4064 dump=1225 skipped=44 stale=0s | partition attempted=2 ok=2 items=115 /96
+[42] pid=72136 alive=True freedom done=1319/4064 dump=1275 skipped=44 stale=0s | partition attempted=2 ok=2 items=115 /96
+[43] pid=72136 alive=True freedom done=1344/4064 dump=1300 skipped=44 stale=0s | partition attempted=2 ok=2 items=115 /96
+[44] pid=72136 alive=True freedom done=1369/4064 dump=1325 skipped=44 stale=0s | partition attempted=2 ok=2 items=115 /96
+[45] pid=72136 alive=True freedom done=1394/4064 dump=1350 skipped=44 stale=0s | partition attempted=2 ok=2 items=115 /96
+[46] pid=72136 alive=True freedom done=1420/4064 dump=1375 skipped=45 stale=0s | partition attempted=2 ok=2 items=115 /96
+[47] pid=72136 alive=True freedom done=1445/4064 dump=1400 skipped=45 stale=0s | partition attempted=2 ok=2 items=115 /96
+[48] pid=72136 alive=True freedom done=1470/4064 dump=1425 skipped=45 stale=0s | partition attempted=2 ok=2 items=115 /96
+[49] pid=72136 alive=True freedom done=1495/4064 dump=1450 skipped=45 stale=0s | partition attempted=2 ok=2 items=115 /96
+[50] pid=72136 alive=True freedom done=1520/4064 dump=1475 skipped=45 stale=0s | partition attempted=2 ok=2 items=115 /96
+[51] pid=72136 alive=True freedom done=1545/4064 dump=1500 skipped=45 stale=0s | partition attempted=2 ok=2 items=115 /96
+[52] pid=72136 alive=True freedom done=1570/4064 dump=1525 skipped=45 stale=0s | partition attempted=2 ok=2 items=115 /96
+[53] pid=72136 alive=True freedom done=1600/4064 dump=1550 skipped=50 stale=0s | partition attempted=2 ok=2 items=115 /96
+[54] pid=72136 alive=True freedom done=1626/4064 dump=1575 skipped=51 stale=0s | partition attempted=2 ok=2 items=115 /96
+[55] pid=72136 alive=True freedom done=1651/4064 dump=1600 skipped=51 stale=0s | partition attempted=2 ok=2 items=115 /96
+[56] pid=72136 alive=True freedom done=1676/4064 dump=1625 skipped=51 stale=0s | partition attempted=2 ok=2 items=115 /96
+[57] pid=72136 alive=True freedom done=1676/4064 dump=1625 skipped=51 stale=91s | partition attempted=2 ok=2 items=115 /96
+[58] pid=72136 alive=True freedom done=1701/4064 dump=1650 skipped=51 stale=0s | partition attempted=2 ok=2 items=115 /96
+[59] pid=72136 alive=True freedom done=1726/4064 dump=1675 skipped=51 stale=0s | partition attempted=2 ok=2 items=115 /96
+[60] pid=72136 alive=True freedom done=1751/4064 dump=1700 skipped=51 stale=0s | partition attempted=2 ok=2 items=115 /96
+[61] pid=72136 alive=True freedom done=1776/4064 dump=1725 skipped=51 stale=0s | partition attempted=2 ok=2 items=115 /96
+[62] pid=72136 alive=True freedom done=1804/4064 dump=1750 skipped=54 stale=0s | partition attempted=2 ok=2 items=115 /96
+[63] pid=72136 alive=True freedom done=1829/4064 dump=1775 skipped=54 stale=0s | partition attempted=2 ok=2 items=115 /96
+[64] pid=72136 alive=True freedom done=1856/4064 dump=1800 skipped=56 stale=0s | partition attempted=2 ok=2 items=115 /96
+[65] pid=72136 alive=True freedom done=1881/4064 dump=1825 skipped=56 stale=0s | partition attempted=2 ok=2 items=115 /96
+[66] pid=72136 alive=True freedom done=1907/4064 dump=1850 skipped=57 stale=0s | partition attempted=2 ok=2 items=115 /96
+[67] pid=72136 alive=True freedom done=1933/4064 dump=1875 skipped=58 stale=0s | partition attempted=2 ok=2 items=115 /96
+[68] pid=72136 alive=True freedom done=1958/4064 dump=1900 skipped=58 stale=0s | partition attempted=2 ok=2 items=115 /96
+[69] pid=72136 alive=True freedom done=1985/4064 dump=1925 skipped=60 stale=0s | partition attempted=2 ok=2 items=115 /96
+[70] pid=72136 alive=True freedom done=2010/4064 dump=1950 skipped=60 stale=0s | partition attempted=2 ok=2 items=115 /96
+[71] pid=72136 alive=True freedom done=2035/4064 dump=1975 skipped=60 stale=0s | partition attempted=2 ok=2 items=115 /96
+[72] pid=72136 alive=True freedom done=2060/4064 dump=2000 skipped=60 stale=0s | partition attempted=2 ok=2 items=115 /96
+[73] pid=72136 alive=True freedom done=2085/4064 dump=2025 skipped=60 stale=0s | partition attempted=2 ok=2 items=115 /96
+[74] pid=72136 alive=True freedom done=2085/4064 dump=2025 skipped=60 stale=91s | partition attempted=2 ok=2 items=115 /96
+[75] pid=72136 alive=True freedom done=2110/4064 dump=2050 skipped=60 stale=0s | partition attempted=2 ok=2 items=115 /96
+[76] pid=72136 alive=True freedom done=2135/4064 dump=2075 skipped=60 stale=0s | partition attempted=2 ok=2 items=115 /96
+[77] pid=72136 alive=True freedom done=2160/4064 dump=2100 skipped=60 stale=0s | partition attempted=2 ok=2 items=115 /96
+[78] pid=72136 alive=True freedom done=2185/4064 dump=2125 skipped=60 stale=0s | partition attempted=2 ok=2 items=115 /96
+[79] pid=72136 alive=True freedom done=2210/4064 dump=2150 skipped=60 stale=0s | partition attempted=2 ok=2 items=115 /96
+[80] pid=72136 alive=True freedom done=2235/4064 dump=2175 skipped=60 stale=0s | partition attempted=2 ok=2 items=115 /96
+[81] pid=72136 alive=True freedom done=2260/4064 dump=2200 skipped=60 stale=0s | partition attempted=2 ok=2 items=115 /96
+[82] pid=72136 alive=True freedom done=2285/4064 dump=2225 skipped=60 stale=0s | partition attempted=2 ok=2 items=115 /96
+[83] pid=72136 alive=True freedom done=2310/4064 dump=2250 skipped=60 stale=0s | partition attempted=2 ok=2 items=115 /96
+[84] pid=72136 alive=True freedom done=2335/4064 dump=2275 skipped=60 stale=0s | partition attempted=2 ok=2 items=115 /96
+[85] pid=72136 alive=True freedom done=2360/4064 dump=2300 skipped=60 stale=0s | partition attempted=2 ok=2 items=115 /96
+[86] pid=72136 alive=True freedom done=2385/4064 dump=2325 skipped=60 stale=0s | partition attempted=2 ok=2 items=115 /96
+[87] pid=72136 alive=True freedom done=2410/4064 dump=2350 skipped=60 stale=0s | partition attempted=2 ok=2 items=115 /96
+[88] pid=72136 alive=True freedom done=2435/4064 dump=2375 skipped=60 stale=0s | partition attempted=2 ok=2 items=115 /96
+[89] pid=72136 alive=True freedom done=2460/4064 dump=2400 skipped=60 stale=0s | partition attempted=2 ok=2 items=115 /96
+[90] pid=72136 alive=True freedom done=2460/4064 dump=2400 skipped=60 stale=93s | partition attempted=2 ok=2 items=115 /96
+[91] pid=72136 alive=True freedom done=2486/4064 dump=2425 skipped=61 stale=0s | partition attempted=2 ok=2 items=115 /96
+[92] pid=72136 alive=True freedom done=2511/4064 dump=2450 skipped=61 stale=0s | partition attempted=2 ok=2 items=115 /96
+[93] pid=72136 alive=True freedom done=2536/4064 dump=2475 skipped=61 stale=0s | partition attempted=2 ok=2 items=115 /96
+[94] pid=72136 alive=True freedom done=2562/4064 dump=2500 skipped=62 stale=0s | partition attempted=2 ok=2 items=115 /96
+[95] pid=72136 alive=True freedom done=2587/4064 dump=2525 skipped=62 stale=0s | partition attempted=2 ok=2 items=115 /96
+[96] pid=72136 alive=True freedom done=2612/4064 dump=2550 skipped=62 stale=0s | partition attempted=2 ok=2 items=115 /96
+[97] pid=72136 alive=True freedom done=2639/4064 dump=2575 skipped=64 stale=0s | partition attempted=2 ok=2 items=115 /96
+[98] pid=72136 alive=True freedom done=2664/4064 dump=2600 skipped=64 stale=0s | partition attempted=2 ok=2 items=115 /96
+[99] pid=72136 alive=True freedom done=2689/4064 dump=2625 skipped=64 stale=0s | partition attempted=2 ok=2 items=115 /96
+[100] pid=72136 alive=True freedom done=2714/4064 dump=2650 skipped=64 stale=0s | partition attempted=2 ok=2 items=115 /96
+[101] pid=72136 alive=True freedom done=2739/4064 dump=2675 skipped=64 stale=0s | partition attempted=2 ok=2 items=115 /96
+[102] pid=72136 alive=True freedom done=2764/4064 dump=2700 skipped=64 stale=0s | partition attempted=2 ok=2 items=115 /96
+[103] pid=72136 alive=True freedom done=2789/4064 dump=2725 skipped=64 stale=0s | partition attempted=2 ok=2 items=115 /96
+[104] pid=72136 alive=True freedom done=2814/4064 dump=2750 skipped=64 stale=0s | partition attempted=2 ok=2 items=115 /96
+[105] pid=72136 alive=True freedom done=2839/4064 dump=2775 skipped=64 stale=0s | partition attempted=2 ok=2 items=115 /96
+[106] pid=72136 alive=True freedom done=2865/4064 dump=2800 skipped=65 stale=0s | partition attempted=2 ok=2 items=115 /96
+[107] pid=72136 alive=True freedom done=2890/4064 dump=2825 skipped=65 stale=0s | partition attempted=2 ok=2 items=115 /96
+[108] pid=72136 alive=True freedom done=2915/4064 dump=2850 skipped=65 stale=0s | partition attempted=2 ok=2 items=115 /96
+[109] pid=72136 alive=True freedom done=2940/4064 dump=2875 skipped=65 stale=0s | partition attempted=2 ok=2 items=115 /96
+[110] pid=72136 alive=True freedom done=2965/4064 dump=2900 skipped=65 stale=0s | partition attempted=2 ok=2 items=115 /96
+[111] pid=72136 alive=True freedom done=2990/4064 dump=2925 skipped=65 stale=0s | partition attempted=2 ok=2 items=115 /96
+[112] pid=72136 alive=True freedom done=3015/4064 dump=2950 skipped=65 stale=0s | partition attempted=2 ok=2 items=115 /96
+[113] pid=72136 alive=True freedom done=3040/4064 dump=2975 skipped=65 stale=0s | partition attempted=2 ok=2 items=115 /96
+[114] pid=72136 alive=True freedom done=3065/4064 dump=3000 skipped=65 stale=0s | partition attempted=2 ok=2 items=115 /96
+[115] pid=72136 alive=True freedom done=3065/4064 dump=3000 skipped=65 stale=91s | partition attempted=2 ok=2 items=115 /96
+[116] pid=72136 alive=True freedom done=3090/4064 dump=3025 skipped=65 stale=0s | partition attempted=2 ok=2 items=115 /96
+[117] pid=72136 alive=True freedom done=3115/4064 dump=3050 skipped=65 stale=0s | partition attempted=2 ok=2 items=115 /96
+[118] pid=72136 alive=True freedom done=3141/4064 dump=3075 skipped=66 stale=0s | partition attempted=2 ok=2 items=115 /96
+[119] pid=72136 alive=True freedom done=3166/4064 dump=3100 skipped=66 stale=0s | partition attempted=2 ok=2 items=115 /96
+[120] pid=72136 alive=True freedom done=3193/4064 dump=3125 skipped=68 stale=0s | partition attempted=2 ok=2 items=115 /96
+[121] pid=72136 alive=True freedom done=3218/4064 dump=3150 skipped=68 stale=0s | partition attempted=2 ok=2 items=115 /96
+[122] pid=72136 alive=True freedom done=3243/4064 dump=3175 skipped=68 stale=0s | partition attempted=2 ok=2 items=115 /96
+[123] pid=72136 alive=True freedom done=3268/4064 dump=3200 skipped=68 stale=0s | partition attempted=2 ok=2 items=115 /96
+[124] pid=72136 alive=True freedom done=3293/4064 dump=3225 skipped=68 stale=0s | partition attempted=2 ok=2 items=115 /96
+[125] pid=72136 alive=True freedom done=3318/4064 dump=3250 skipped=68 stale=0s | partition attempted=2 ok=2 items=115 /96
+[126] pid=72136 alive=True freedom done=3343/4064 dump=3275 skipped=68 stale=0s | partition attempted=2 ok=2 items=115 /96
+[127] pid=72136 alive=True freedom done=3368/4064 dump=3300 skipped=68 stale=0s | partition attempted=2 ok=2 items=115 /96
+[128] pid=72136 alive=True freedom done=3393/4064 dump=3325 skipped=68 stale=0s | partition attempted=2 ok=2 items=115 /96
+[129] pid=72136 alive=True freedom done=3418/4064 dump=3350 skipped=68 stale=0s | partition attempted=2 ok=2 items=115 /96
+[130] pid=72136 alive=True freedom done=3443/4064 dump=3375 skipped=68 stale=0s | partition attempted=2 ok=2 items=115 /96
+[131] pid=72136 alive=True freedom done=3468/4064 dump=3400 skipped=68 stale=0s | partition attempted=2 ok=2 items=115 /96
+[132] pid=72136 alive=True freedom done=3493/4064 dump=3425 skipped=68 stale=0s | partition attempted=2 ok=2 items=115 /96
+[133] pid=72136 alive=True freedom done=3518/4064 dump=3450 skipped=68 stale=0s | partition attempted=2 ok=2 items=115 /96
+[134] pid=72136 alive=True freedom done=3544/4064 dump=3475 skipped=69 stale=0s | partition attempted=2 ok=2 items=115 /96
+[135] pid=72136 alive=True freedom done=3569/4064 dump=3500 skipped=69 stale=0s | partition attempted=2 ok=2 items=115 /96
+[136] pid=72136 alive=True freedom done=3594/4064 dump=3525 skipped=69 stale=0s | partition attempted=2 ok=2 items=115 /96
+[137] pid=72136 alive=True freedom done=3619/4064 dump=3550 skipped=69 stale=0s | partition attempted=2 ok=2 items=115 /96
+[138] pid=72136 alive=True freedom done=3644/4064 dump=3575 skipped=69 stale=0s | partition attempted=2 ok=2 items=115 /96
+[139] pid=72136 alive=True freedom done=3669/4064 dump=3600 skipped=69 stale=0s | partition attempted=2 ok=2 items=115 /96
+[140] pid=72136 alive=True freedom done=3669/4064 dump=3600 skipped=69 stale=91s | partition attempted=2 ok=2 items=115 /96
+[141] pid=72136 alive=True freedom done=3694/4064 dump=3625 skipped=69 stale=0s | partition attempted=2 ok=2 items=115 /96
+[142] pid=72136 alive=True freedom done=3719/4064 dump=3650 skipped=69 stale=0s | partition attempted=2 ok=2 items=115 /96
+[143] pid=72136 alive=True freedom done=3744/4064 dump=3675 skipped=69 stale=0s | partition attempted=2 ok=2 items=115 /96
+[144] pid=72136 alive=True freedom done=3769/4064 dump=3700 skipped=69 stale=0s | partition attempted=2 ok=2 items=115 /96
+[145] pid=72136 alive=True freedom done=3794/4064 dump=3725 skipped=69 stale=0s | partition attempted=2 ok=2 items=115 /96
+[146] pid=72136 alive=True freedom done=3819/4064 dump=3750 skipped=69 stale=0s | partition attempted=2 ok=2 items=115 /96
+[147] pid=72136 alive=True freedom done=3844/4064 dump=3775 skipped=69 stale=0s | partition attempted=2 ok=2 items=115 /96
+[148] pid=72136 alive=True freedom done=3869/4064 dump=3800 skipped=69 stale=0s | partition attempted=2 ok=2 items=115 /96
+[149] pid=72136 alive=True freedom done=3894/4064 dump=3825 skipped=69 stale=0s | partition attempted=2 ok=2 items=115 /96
+[150] pid=72136 alive=True freedom done=3919/4064 dump=3850 skipped=69 stale=0s | partition attempted=2 ok=2 items=115 /96
+[151] pid=72136 alive=True freedom done=3944/4064 dump=3875 skipped=69 stale=0s | partition attempted=2 ok=2 items=115 /96
+[152] pid=72136 alive=True freedom done=3969/4064 dump=3900 skipped=69 stale=0s | partition attempted=2 ok=2 items=115 /96
+[153] pid=72136 alive=True freedom done=3994/4064 dump=3925 skipped=69 stale=0s | partition attempted=2 ok=2 items=115 /96
+
+--- shepherd relaunch longer ---
+[0] pid=72136 alive=True freedom done=4019/4064 dump=3950 skipped=69 stale=0s | partition attempted=2 ok=2 items=115 /96
+[1] pid=72136 alive=True freedom done=4049/4064 dump=3980 skipped=69 stale=0s | partition attempted=3 ok=3 items=4095 /96
+[2] pid=72136 alive=True freedom done=4049/4064 dump=3980 skipped=69 stale=91s | partition attempted=3 ok=3 items=4095 /96
+[3] pid=72136 alive=True freedom done=4049/4064 dump=3980 skipped=69 stale=182s | partition attempted=3 ok=3 items=4095 /96
+[4] pid=72136 alive=True freedom done=4049/4064 dump=3980 skipped=69 stale=273s | partition attempted=3 ok=3 items=4095 /96
+[5] pid=72136 alive=True freedom done=4049/4064 dump=3980 skipped=69 stale=364s | partition attempted=3 ok=3 items=4095 /96
+[6] pid=72136 alive=True freedom done=4049/4064 dump=3980 skipped=69 stale=455s | partition attempted=3 ok=3 items=4095 /96
+[7] pid=72136 alive=True freedom done=4049/4064 dump=3980 skipped=69 stale=547s | partition attempted=3 ok=3 items=4095 /96
+
+--- shepherd v2 relaunch ---
+[0] pid=72136 alive=True partition attempted=3 ok=3 items=4095/96 freedom=3980/4064 stale=0s |   terp-fi3nd checkpoint items=250 this_run=250 rate=0.44/s idx=250/432
+[1] pid=72136 alive=True partition attempted=3 ok=3 items=4095/96 freedom=3980/4064 stale=0s |   terp-fi3nd checkpoint items=275 this_run=275 rate=0.44/s idx=275/432
+[2] pid=72136 alive=True partition attempted=3 ok=3 items=4095/96 freedom=3980/4064 stale=0s |   terp-fi3nd checkpoint items=325 this_run=325 rate=0.43/s idx=325/432
+[3] pid=72136 alive=True partition attempted=3 ok=3 items=4095/96 freedom=3980/4064 stale=0s |   terp-fi3nd checkpoint items=350 this_run=350 rate=0.43/s idx=350/432
+[4] pid=72136 alive=True partition attempted=3 ok=3 items=4095/96 freedom=3980/4064 stale=0s |   terp-fi3nd checkpoint items=400 this_run=400 rate=0.44/s idx=400/432
+[5] pid=72136 alive=True partition attempted=4 ok=4 items=4527/96 freedom=3980/4064 stale=0s | === Atlas Seed (https://atlasseed.com/) plat=woocommerce ===
+[6] pid=72136 alive=True partition attempted=4 ok=4 items=4527/96 freedom=3980/4064 stale=0s |   atlas-seed checkpoint items=25 this_run=25 rate=0.30/s idx=36/299
+[7] pid=72136 alive=True partition attempted=4 ok=4 items=4527/96 freedom=3980/4064 stale=92s |   atlas-seed checkpoint items=25 this_run=25 rate=0.30/s idx=36/299
+[8] pid=72136 alive=True partition attempted=4 ok=4 items=4527/96 freedom=3980/4064 stale=184s |   atlas-seed checkpoint items=25 this_run=25 rate=0.30/s idx=36/299
+[9] pid=72136 alive=True partition attempted=4 ok=4 items=4527/96 freedom=3980/4064 stale=0s | 
+[10] pid=72136 alive=True partition attempted=4 ok=4 items=4527/96 freedom=3980/4064 stale=93s | 

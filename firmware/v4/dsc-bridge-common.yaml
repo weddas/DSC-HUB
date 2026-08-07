@@ -1,0 +1,347 @@
+# ==================================================================
+#  DSC-BRIDGE · package body (WT32-ETH01 v1.4)
+#  F-010 appliance drive · F-012 SoftAP channel anchor · F-013 HA mirror
+#  ------------------------------------------------------------------
+#  Stubs pass secrets + hub_mac / espnow_cmd_tag / Sonoff hosts+keys.
+#  Remote-git safe: no !secret in this file.
+# ==================================================================
+
+substitutions:
+  name: dsc-bridge
+  friendly_name: DSC-BRIDGE
+  anchor_channel: "11"
+  anchor_ssid: "DSC-Anchor"
+  anchor_ap_password: "CHANGEME"
+  espnow_cmd_tag: "54727"
+  hub_mac: "00:00:00:00:00:00"
+  # Sonoff hosts (IPs) + Noise PSKs — stubs override from secrets
+  dsc_heater_host: "0.0.0.0"
+  dsc_heatmat_host: "0.0.0.0"
+  dsc_humidifier_host: "0.0.0.0"
+  dsc_dehumidifier_host: "0.0.0.0"
+  dsc_heater_api_key: "CHANGEME"
+  dsc_heatmat_api_key: "CHANGEME"
+  dsc_humidifier_api_key: "CHANGEME"
+  dsc_dehumidifier_api_key: "CHANGEME"
+  demand_stale_ms: "45000"
+
+esphome:
+  name: ${name}
+  friendly_name: ${friendly_name}
+  project:
+    name: digital_emotions.dsc-bridge
+    version: "5.2.0"
+  platformio_options:
+    board_build.flash_mode: dio
+
+esp32:
+  board: wt32-eth01
+  framework:
+    type: esp-idf
+
+logger:
+  level: INFO
+
+api:
+  encryption:
+    key: ${api_key_val}
+  reboot_timeout: 0s
+
+ota:
+  - platform: esphome
+    password: ${ota_password_val}
+
+# Ethernet for HA + Sonoff TCP. SoftAP is dsc_anchor_ap (ESPHome forbids
+# wifi: + ethernet: together — SoftAP is a custom component).
+ethernet:
+  type: LAN8720
+  mdc_pin: GPIO23
+  mdio_pin: GPIO18
+  clk:
+    pin: GPIO0
+    mode: CLK_EXT_IN
+  phy_addr: 1
+  power_pin: GPIO16
+
+external_components:
+  - source:
+      type: local
+      path: components
+    components: [dsc_api_client, dsc_anchor_ap]
+
+# SoftAP channel anchor (F-012). Runs after espnow LATE wifi init.
+dsc_anchor_ap:
+  id: anchor_ap
+  ssid: ${anchor_ssid}
+  password: ${anchor_ap_password}
+  channel: ${anchor_channel}
+  bssid_sensor: anchor_bssid_ts
+  channel_sensor: anchor_channel_sensor
+  up_sensor: anchor_up
+
+espnow:
+  # Required when wifi: is absent (ethernet + SoftAP component).
+  channel: ${anchor_channel}
+  auto_add_peer: true
+  peers:
+    - ${hub_mac}
+    - FF:FF:FF:FF:FF:FF
+  on_receive:
+    - lambda: |-
+        if (size < 2) return;
+        uint8_t ty = data[0];
+        // ---- 0xD8 appliance demand ----
+        if (ty == 0xD8 && size >= 7 && data[1] == 0x01) {
+          uint16_t tag = (uint16_t)(data[5] | (data[6] << 8));
+          if (tag != (uint16_t) ${espnow_cmd_tag}) return;
+          uint8_t dem = data[2];
+          id(last_d8_ms) = millis();
+          id(dem_mask) = dem;
+          id(hub_link).publish_state(true);
+          id(demand_hum).publish_state(dem & 1);
+          id(demand_dehum).publish_state(dem & 2);
+          id(demand_heat).publish_state(dem & 4);
+          id(demand_mat).publish_state(dem & 8);
+          id(demand_ac).publish_state(dem & 16);
+          id(demand_clone).publish_state(dem & 32);
+          id(heater_client).set_desired(dem & 4);
+          id(heatmat_client).set_desired(dem & 8);
+          id(humidifier_client).set_desired(dem & 1);
+          id(dehumidifier_client).set_desired(dem & 2);
+          return;
+        }
+        // ---- 0xD1 vitals mirror (F-013) ----
+        if (ty == 0xD1 && data[1] == 0x01 && size >= 40) {
+          id(last_d1_ms) = millis();
+          id(hub_link).publish_state(true);
+          auto i16 = [&](int off) -> float {
+            int16_t raw = (int16_t)(data[off] | (data[off+1] << 8));
+            if (raw == (int16_t)0x8000) return NAN;
+            return raw / 100.0f;
+          };
+          id(mir_main_temp).publish_state(i16(2));
+          id(mir_clone_temp).publish_state(i16(4));
+          id(mir_room_temp).publish_state(i16(6));
+          id(mir_main_rh).publish_state(i16(8));
+          id(mir_clone_rh).publish_state(i16(10));
+          id(mir_room_rh).publish_state(i16(12));
+          id(mir_main_vpd).publish_state(i16(14));
+          id(mir_clone_vpd).publish_state(i16(16));
+          // dem @30 after: hdr2 + 8*i16 temps/rh/vpd + i16 co2 + 4fans + 2light + 4stage = 2+16+2+4+2+4 = 30
+          if (size > 30) {
+            uint8_t dem = data[30];
+            id(dem_mask) = dem;
+            id(demand_hum).publish_state(dem & 1);
+            id(demand_dehum).publish_state(dem & 2);
+            id(demand_heat).publish_state(dem & 4);
+            id(demand_mat).publish_state(dem & 8);
+            id(demand_ac).publish_state(dem & 16);
+            id(demand_clone).publish_state(dem & 32);
+          }
+          if (size > 33) {
+            uint8_t md = data[31];
+            uint8_t ft = data[33];
+            id(mir_sensor_fault).publish_state(ft & 1);
+            id(mir_full_auto).publish_state(md & 1);
+          }
+        }
+
+globals:
+  - id: last_d8_ms
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+  - id: last_d1_ms
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+  - id: dem_mask
+    type: uint8_t
+    restore_value: false
+    initial_value: '0'
+
+interval:
+  - interval: 5s
+    then:
+      - lambda: |-
+          uint32_t now = millis();
+          uint32_t d8 = id(last_d8_ms);
+          uint32_t d1 = id(last_d1_ms);
+          uint32_t age_d8 = d8 == 0 ? 999999u : (now - d8);
+          uint32_t age_d1 = d1 == 0 ? 999999u : (now - d1);
+          uint32_t age = age_d8 < age_d1 ? age_d8 : age_d1;
+          id(espnow_age).publish_state(age > 600000 ? 600000 : age);
+          bool linked = (d8 != 0 && age_d8 < 30000u) || (d1 != 0 && age_d1 < 30000u);
+          id(hub_link).publish_state(linked);
+          id(anchor_up).publish_state(true);
+          // F-010 stale safe-off
+          if (d8 != 0 && age_d8 > (uint32_t) ${demand_stale_ms}) {
+            ESP_LOGW("bridge", "0xD8 stale >%u s — all relays OFF",
+                     (unsigned)(${demand_stale_ms} / 1000));
+            id(last_d8_ms) = 0;
+            id(dem_mask) = 0;
+            id(demand_hum).publish_state(false);
+            id(demand_dehum).publish_state(false);
+            id(demand_heat).publish_state(false);
+            id(demand_mat).publish_state(false);
+            id(heater_client).set_desired(false);
+            id(heatmat_client).set_desired(false);
+            id(humidifier_client).set_desired(false);
+            id(dehumidifier_client).set_desired(false);
+          }
+
+dsc_api_client:
+  - id: heater_client
+    name: "Heater API Link"
+    host: ${dsc_heater_host}
+    encryption_key: ${dsc_heater_api_key}
+    switch_object_id: main_relay
+  - id: heatmat_client
+    name: "Heatmat API Link"
+    host: ${dsc_heatmat_host}
+    encryption_key: ${dsc_heatmat_api_key}
+    switch_object_id: main_relay
+  - id: humidifier_client
+    name: "Humidifier API Link"
+    host: ${dsc_humidifier_host}
+    encryption_key: ${dsc_humidifier_api_key}
+    switch_object_id: main_relay
+  - id: dehumidifier_client
+    name: "Dehumidifier API Link"
+    host: ${dsc_dehumidifier_host}
+    encryption_key: ${dsc_dehumidifier_api_key}
+    switch_object_id: main_relay
+
+binary_sensor:
+  - platform: template
+    name: "Hub ESP-NOW Link"
+    id: hub_link
+    device_class: connectivity
+    entity_category: diagnostic
+  - platform: template
+    name: "Anchor SoftAP Up"
+    id: anchor_up
+    device_class: connectivity
+    entity_category: diagnostic
+  - platform: template
+    name: "Demand Humidifier"
+    id: demand_hum
+    entity_category: diagnostic
+  - platform: template
+    name: "Demand Dehumidifier"
+    id: demand_dehum
+    entity_category: diagnostic
+  - platform: template
+    name: "Demand Heater"
+    id: demand_heat
+    entity_category: diagnostic
+  - platform: template
+    name: "Demand Grow Mat"
+    id: demand_mat
+    entity_category: diagnostic
+  - platform: template
+    name: "Demand AC"
+    id: demand_ac
+    entity_category: diagnostic
+  - platform: template
+    name: "Demand Clone Hum"
+    id: demand_clone
+    entity_category: diagnostic
+  - platform: template
+    name: "Mirror Sensor Fault"
+    id: mir_sensor_fault
+    entity_category: diagnostic
+  - platform: template
+    name: "Mirror Full Auto"
+    id: mir_full_auto
+    entity_category: diagnostic
+
+sensor:
+  - platform: template
+    name: "ESP-NOW Age"
+    id: espnow_age
+    unit_of_measurement: ms
+    accuracy_decimals: 0
+    entity_category: diagnostic
+    update_interval: never
+  - platform: template
+    name: "Anchor Channel"
+    id: anchor_channel_sensor
+    accuracy_decimals: 0
+    entity_category: diagnostic
+    update_interval: never
+  - platform: template
+    name: "Mirror Main Temp"
+    id: mir_main_temp
+    unit_of_measurement: "°C"
+    accuracy_decimals: 1
+    device_class: temperature
+    state_class: measurement
+    update_interval: never
+  - platform: template
+    name: "Mirror Clone Temp"
+    id: mir_clone_temp
+    unit_of_measurement: "°C"
+    accuracy_decimals: 1
+    device_class: temperature
+    state_class: measurement
+    update_interval: never
+  - platform: template
+    name: "Mirror Room Temp"
+    id: mir_room_temp
+    unit_of_measurement: "°C"
+    accuracy_decimals: 1
+    device_class: temperature
+    state_class: measurement
+    update_interval: never
+  - platform: template
+    name: "Mirror Main RH"
+    id: mir_main_rh
+    unit_of_measurement: "%"
+    accuracy_decimals: 1
+    device_class: humidity
+    state_class: measurement
+    update_interval: never
+  - platform: template
+    name: "Mirror Clone RH"
+    id: mir_clone_rh
+    unit_of_measurement: "%"
+    accuracy_decimals: 1
+    device_class: humidity
+    state_class: measurement
+    update_interval: never
+  - platform: template
+    name: "Mirror Room RH"
+    id: mir_room_rh
+    unit_of_measurement: "%"
+    accuracy_decimals: 1
+    device_class: humidity
+    state_class: measurement
+    update_interval: never
+  - platform: template
+    name: "Mirror Main VPD"
+    id: mir_main_vpd
+    unit_of_measurement: "kPa"
+    accuracy_decimals: 2
+    state_class: measurement
+    update_interval: never
+  - platform: template
+    name: "Mirror Clone VPD"
+    id: mir_clone_vpd
+    unit_of_measurement: "kPa"
+    accuracy_decimals: 2
+    state_class: measurement
+    update_interval: never
+  - platform: uptime
+    name: "Uptime"
+    entity_category: diagnostic
+
+text_sensor:
+  - platform: template
+    name: "Anchor BSSID"
+    id: anchor_bssid_ts
+    entity_category: diagnostic
+    update_interval: never
+  - platform: version
+    name: "ESPHome Version"
+    entity_category: diagnostic

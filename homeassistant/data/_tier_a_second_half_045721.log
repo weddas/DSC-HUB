@@ -1,0 +1,46 @@
+partition tier_A_second_half slice=[96:192] rows=96 (tiers.A=192)
+targets=4 skipped_done=0 skipped_parked=0 skipped_first_half=0
+probing 4 targets…
+  probe twisty-seeds: tier=A platform=woocommerce ok caps=['sitemap']
+  probe underworld-genetix: tier=A platform=magento ok caps=['sitemap']
+  probe united-seedbanks: tier=A platform=magento ok caps=['sitemap']
+  probe useful-seeds: tier=A platform=woocommerce ok caps=['sitemap']
+=== scrape twisty-seeds (Twisty Seeds) platform=woocommerce caps=['sitemap']
+  twisty-seeds products.json page 1 fail: HTTP Error 404: Not Found
+  sitemap https://www.twistyseeds.com/sitemap.xml +children -> +15 (total 15)
+  sitemap https://twistyseeds.com/sitemap.xml +children -> +0 (total 15)
+  sitemap https://twistyseeds.com/wp-sitemap-posts-product-1.xml +children -> +0 (total 15)
+twisty-seeds: sitemap/product urls=15
+  twisty-seeds ok #1 'Big Mike NFTs'
+  twisty-seeds ok #2 'CBD isolate'
+  twisty-seeds checkpoint items=14 scraped=14 rate=0.18/s
+twisty-seeds staging: family=bank_twisty_seeds raw=14 db=\\192.168.86.2\Digital-Documents\Digital Stealth Care\Projects\DSC-HUB\brain\data\staging\bank_twisty_seeds.sqlite3
+=== scrape useful-seeds (Useful Seeds) platform=woocommerce caps=['sitemap']
+  useful-seeds products.json page 1 fail: HTTP Error 404: Not Found
+  sitemap https://www.usefulseeds.com/sitemap.xml +children -> +94 (total 94)
+useful-seeds: sitemap/product urls=94
+  useful-seeds ok #1 'Asian Green - Hon Tsai Tai'
+  useful-seeds ok #2 'Asian Green - Senposai'
+  useful-seeds checkpoint items=20 scraped=20 rate=0.34/s
+  useful-seeds ok #25 "Parsley  - flat leaf - Jill's Selection"
+  useful-seeds checkpoint items=40 scraped=40 rate=0.33/s
+  useful-seeds ok #50 'Tomato - Dwarf Pink Passion'
+  useful-seeds checkpoint items=60 scraped=60 rate=0.34/s
+useful-seeds staging: family=bank_useful_seeds raw=60 db=\\192.168.86.2\Digital-Documents\Digital Stealth Care\Projects\DSC-HUB\brain\data\staging\bank_useful_seeds.sqlite3
+  useful-seeds ok #75 'Tomato - Robledillo de la Jara'
+  useful-seeds checkpoint items=80 scraped=80 rate=0.34/s
+  useful-seeds checkpoint items=93 scraped=93 rate=0.34/s
+useful-seeds staging: family=bank_useful_seeds raw=93 db=\\192.168.86.2\Digital-Documents\Digital Stealth Care\Projects\DSC-HUB\brain\data\staging\bank_useful_seeds.sqlite3
+=== scrape underworld-genetix (Underworld Genetix) platform=magento caps=['sitemap']
+  underworld-genetix products.json page 1 fail: HTTP Error 404: Not Found
+  sitemap https://underworldgenetix.com/sitemap.xml +children -> +0 (total 0)
+  sitemap https://www.underworldgenetix.com/sitemap.xml +children -> +0 (total 0)
+underworld-genetix: sitemap/product urls=0
+=== scrape united-seedbanks (United Seedbanks) platform=magento caps=['sitemap']
+  united-seedbanks products.json page 1 fail: HTTP Error 404: Not Found
+  sitemap https://www.unitedseedbanks.com/sitemap.xml +children -> +0 (total 0)
+  sitemap https://unitedseedbanks.com/sitemap.xml +children -> +0 (total 0)
+united-seedbanks: sitemap/product urls=0
+DONE ok=2 empty=2 err=0 items=107 skipped_dead=0
+  OK twisty-seeds: 14 (sitemap_pdp)
+  OK useful-seeds: 93 (sitemap_pdp)

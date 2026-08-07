@@ -1,0 +1,228 @@
+{
+ "ok": {
+  "brand": 4425,
+  "manufacturer": null,
+  "country_of_manufacture": " ",
+  "rating_summary": 0,
+  "review_count": 0,
+  "canonical_url": "medicine-man-regular-seeds-18-mrnmm",
+  "url_suffix": "",
+  "stock_status": "OUT_OF_STOCK",
+  "only_x_left_in_stock": null,
+  "meta_title": "Medicine Man Regular Seeds | Buy online now from Seedsman",
+  "meta_keyword": null,
+  "meta_description": "Purchase Medicine Man Regular Seeds - 18 from Seedsman today! Enjoy top-quality seeds at competitive prices,with delivery across the US in just 2-12 days",
+  "uid": "MTY0Mzk=",
+  "id": 16439,
+  "sku": "MRNMM",
+  "name": "Medicine Man Regular Seeds - 18",
+  "url_key": "medicine-man-regular-seeds-18-mrnmm",
+  "type_id": "simple"
+ },
+ "bad": [
+  "thc",
+  "cbd",
+  "flowering_time",
+  "breeder",
+  "genetics",
+  "yield",
+  "seed_type",
+  "type",
+  "indica_sativa",
+  "sativa",
+  "indica",
+  "height",
+  "effect",
+  "flavour",
+  "flavor",
+  "aroma",
+  "yield_indoor",
+  "yield_outdoor",
+  "flowering",
+  "sex",
+  "seedbank",
+  "seed_bank",
+  "awards",
+  "medical",
+  "grow_area",
+  "environment",
+  "difficulty",
+  "plant_height",
+  "harvest_month",
+  "thc_content",
+  "cbd_content",
+  "cannabinoid_content",
+  "phenotype",
+  "genotype",
+  "parents",
+  "cross",
+  "lineage",
+  "attributes",
+  "amasty_xsearch_boost",
+  "mpn",
+  "options",
+  "configurable_options"
+ ],
+ "configurable": {
+  "data": {
+   "products": {
+    "items": [
+     {
+      "id": 47782,
+      "sku": "UMSC-COTH-FEM",
+      "name": "Color Theory Feminized Seeds",
+      "url_key": "color-theory-feminized-seeds-umsc-coth-fem",
+      "type_id": "configurable",
+      "stock_status": "IN_STOCK",
+      "meta_title": "Buy Color Theory Feminised Seeds Online | Seedsman Seed Bank",
+      "meta_description": "Explore the vibrant world of Color Theory Feminised Seeds. High-quality seeds for a thriving garden. Easy to grow and care, perfect for beginner gardeners.",
+      "description": {
+       "html": "<p class=\"isSelectedEnd\">Color Theory by Umami Seed Co x DNA Genetics is a feminized, solventless-focused hybrid bred from Original Z x Strawberry Banana Z, stacking Z genetics on both sides for a clean, candy-forward terpene profile with serious wash potential. Expect bright Z sweetness, smooth sugary fruit and a subtle strawberry finish, giving Color Theory a focused flavour profile that feels pure, polished and easy to place for terp-driven growers.</p><p class=\"isSelectedEnd\"></p><p>Compact, efficient and fast-finishing, Color Theory stays short with minimal stretch, tight internodal spacing and dense, trichome-rich buds. Flowering takes just 7-8 weeks, with medium to high yield potential and sandy resin heads that are specifically noted for dumping well in the wash. It is a strong choice for growers looking for fast turnaround, limited-space efficiency, clean Z terps and solventless-ready resin performance.</p>"
+      },
+      "short_description": {
+       "html": "<p>Clean Z candy, subtle strawberry and sandy resin heads built to dump in the wash.</p><p></p>"
+      },
+      "categories": [
+       {
+        "id": 29,
+        "name": "Cannabis Seeds",
+        "url_path": "cannabis-seeds"
+       },
+       {
+        "id": 30,
+        "name": "Flowering type",
+        "url_path": "cannabis-seeds/flowering-type"
+       },
+       {
+        "id": 31,
+        "name": "Feminised",
+        "url_path": "cannabis-seeds/sex/feminised-cannabis-seeds"
+       },
+       {
+        "id": 32,
+        "name": "Breeders",
+        "url_path": "cannabis-seed-breeders"
+       },
+       {
+        "id": 34,
+        "name": "Variety trait",
+        "url_path": "cannabis-seeds/variety"
+       },
+       {
+        "id": 37,
+        "name": "Indoor",
+        "url_path": "cannabis-seeds/cultivation-type/grows-indoors"
+       },
+       {
+        "id": 40,
+        "name": "New releases",
+        "url_path": "cannabis-seeds/new"
+       },
+       {
+        "id": 770,
+        "name": "Photoperiod",
+        "url_path": "cannabis-seeds/flowering-type/photoperiod"
+       },
+       {
+        "id": 779,
+        "name": "Terpene rich",
+        "url_path": "cannabis-seeds/variety/terpene-rich"
+       },
+       {
+        "id": 781,
+        "name": "USA elite",
+        "url_path": "cannabis-seeds/genetics/usa-elite"
+       },
+       {
+        "id": 793,
+        "name": "Cultivation type",
+        "url_path": "cannabis-seeds/cultivation-type"
+       },
+       {
+        "id": 796,
+        "name": "Sex",
+        "url_path": "cannabis-seeds/sex"
+       },
+       {
+        "id": 797,
+        "name": "Genetics",
+        "url_path": "cannabis-seeds/genetics"
+       },
+       {
+        "id": 930,
+        "name": "Photoperiod",
+        "url_path": "cannabis-seeds/sex/photoperiod"
+       },
+       {
+        "id": 1141,
+        "name": "Washers (solventless extraction)",
+        "url_path": "cannabis-seeds/variety/washers"
+       },
+       {
+        "id": 1181,
+        "name": "Umami Seed Co.",
+        "url_path": "cannabis-seed-breeders/umami-seed-co"
+       }
+      ],
+      "media_gallery": [
+       {
+        "url": "https://seedsmanlive.gumlet.io/media/catalog/product/cache/bd4e0db00c7f51b7e2685856ddbf4f7a/1/7/175862_2760195_pimcore_1_1.jpg",
+        "label": "Color Theory strain from Umami Seed Co"
+       },
+       {
+        "url": "https://seedsmanlive.gumlet.io/media/catalog/product/cache/bd4e0db00c7f51b7e2685856ddbf4f7a/1/7/175866_2760196_pimcore_1_1.jpg",
+        "label": "Color Theory strain from Umami Seed Co"
+       },
+       {
+        "url": "https://seedsmanlive.gumlet.io/media/catalog/product/cache/bd4e0db00c7f51b7e2685856ddbf4f7a/1/7/175867_2760197_pimcore_1_1.jpg",
+        "label": "Color Theory strain from Umami Seed Co"
+       },
+       {
+        "url": "https://seedsmanlive.gumlet.io/media/catalog/product/cache/bd4e0db00c7f51b7e2685856ddbf4f7a/1/7/175868_2760198_pimcore_1_1.jpg",
+        "label": "Color Theory strain from Umami Seed Co"
+       },
+       {
+        "url": "https://seedsmanlive.gumlet.io/media/catalog/product/cache/bd4e0db00c7f51b7e2685856ddbf4f7a/1/7/175869_2760199_pimcore_1_1.jpg",
+        "label": "Color Theory strain from Umami Seed Co"
+       }
+      ],
+      "price_range": {
+       "minimum_price": {
+        "regular_price": {
+         "value": 70,
+         "currency": "USD"
+        },
+        "final_price": {
+         "value": 70,
+         "currency": "USD"
+        }
+       }
+      },
+      "configurable_options": [
+       {
+        "attribute_code": "seeds_number",
+        "label": "Pack size",
+        "values": [
+         {
+          "label": "3 Seeds",
+          "value_index": 1484
+         }
+        ]
+       }
+      ],
+      "variants": [
+       {
+        "product": {
+         "sku": "UMSC-COTH-FEM-3",
+         "name": "Color Theory Feminized Seeds - 3",
+         "stock_status": "IN_STOCK"
+        },
+        "attributes": null
+       }
+      ]
+     }
+    ]
+   }
+  }
+ }
+}

@@ -1,0 +1,60 @@
+=== viparspectra mode=shopify_json ===
+  shopify products fetched: 19
+  [1] ViparSpectra® XS2500 250W LED Grow Light, include Daisy ppfd=0 brand=ViparSpectra
+  [2] ViparSpectra® P4000 450W Full Spectrum Led Grow Light-  ppfd=0 brand=ViparSpectra
+  [3] ViparSpectra®P1000 100W LED Grow Light with Daisy Chain ppfd=0 brand=ViparSpectra
+  [4] ViparSpectra® USED XS1000 100W LED Grow Light, include  ppfd=0 brand=ViparSpectra
+  [5] ViparSpectra® Lens Design XS1500 Pro 150W LED Grow Ligh ppfd=0 brand=ViparSpectra
+  [6] ViparSpectra® V165 110W LED Aquarium Light Timer Contro ppfd=0 brand=ViparSpectra
+  [7] ViparSpectra® Lens Design  XS3000 Pro 300W LED Grow Lig ppfd=0 brand=ViparSpectra
+  [8] ViparSpectra® 2pcs P700 70W LED Dimmable Grow Light for ppfd=0 brand=ViparSpectra
+  [9] ViparSpectra® P2000 250W  Led Grow Light Full Spectrum  ppfd=0 brand=ViparSpectra
+  [10] ViparSpectra KS3000 320W LED Grow Light-USED Condition ppfd=0 brand=ViparSpectra
+  [11] ViparSpectra® P700 70W LED Dimmable Grow Light for 2x2  ppfd=0 brand=ViparSpectra
+  [12] ViparSpectra® Lens Design XS3000 Pro 300W LED Grow Ligh ppfd=0 brand=ViparSpectra
+  [13] ViparSpectra® NEW ARRIVAL P700 70W LED Dimmable Grow Li ppfd=0 brand=ViparSpectra
+  [14] ViparSpectra®  Newest P1000 100W LED Grow Light with Da ppfd=0 brand=ViparSpectra
+  [15] ViparSpectra® Newest P2000 250W Led Grow Light Full Spe ppfd=0 brand=ViparSpectra
+  [16] ViparSpectra® Updated P4000 450W Full Spectrum Led Grow ppfd=0 brand=ViparSpectra
+  [17] ViparSpectra® Lens Design XS1500 Pro 150W LED Grow Ligh ppfd=0 brand=ViparSpectra
+  [18] ViparSpectra® Upgraded XS2500 250W LED Grow Light, incl ppfd=0 brand=ViparSpectra
+  [19] ViparSpectra® Updated V165 110W LED Aquarium Light Time ppfd=0 brand=ViparSpectra
+  staged -> \\192.168.86.2\Digital-Documents\Digital Stealth Care\Projects\DSC-HUB\brain\data\staging\lights_viparspectra.sqlite3 n=19
+{
+  "brand": "viparspectra",
+  "count": 19,
+  "coverage": {
+    "wattage_w": 19,
+    "ppf_umol_s": 0,
+    "efficacy_umol_j": 0,
+    "ppfd_maps": 0,
+    "spectrum_maps": 0,
+    "beam_maps": 0,
+    "datasheets": 0
+  },
+  "dump": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\homeassistant\\data\\dsc_lights_viparspectra.json"
+}
+{
+  "summary": [
+    {
+      "brand": "viparspectra",
+      "dump": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\homeassistant\\data\\dsc_lights_viparspectra.json",
+      "count": 19,
+      "coverage": {
+        "wattage_w": 19,
+        "ppf_umol_s": 0,
+        "efficacy_umol_j": 0,
+        "ppfd_maps": 0,
+        "spectrum_maps": 0,
+        "beam_maps": 0,
+        "datasheets": 0
+      },
+      "failed": 0,
+      "staging": {
+        "family": "lights_viparspectra",
+        "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\lights_viparspectra.sqlite3",
+        "count": 19
+      }
+    }
+  ]
+}

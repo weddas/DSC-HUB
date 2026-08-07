@@ -1,0 +1,43 @@
+2026-08-07T20:11:25Z batched resume start pid=40440 bank=dcseedexchange batch=40
+2026-08-07T20:11:26Z round 1 sitemap=1654 done=1585 dump=1585
+dcseedexchange: sitemap cache 1654 URLs from dsc_strains_dcseedexchange.sitemap_urls.json
+dcseedexchange: sitemap=1654 pending=40 resume done=1585 dump_items=1585 batch_limit=40
+  fetching first pending: https://dcseedexchange.com/product/g13-sk-x-g13-nl2-10-regular-seeds/
+  ok #1 idx=1/40 name='G13/Sk x G13/NL2'
+  ok #2 idx=2/40 name='Iced Nectarines F1'
+  ok #3 idx=3/40 name='Jordan of the Islands Skunkberry'
+  ok #10 idx=10/40 name='Cult Classic Seeds Blanche DuBois'
+  checkpoint items=1595 done=1595 this_run=10 rate=0.14/s batch=10/40
+  ok #20 idx=20/40 name='JB Skunk F1'
+  checkpoint items=1605 done=1605 this_run=20 rate=0.14/s batch=20/40
+  ok #30 idx=30/40 name='Jack the Ripper F3'
+  checkpoint items=1615 done=1615 this_run=30 rate=0.15/s batch=30/40
+  ok #40 idx=40/40 name='Glue Sniffer BX4'
+  checkpoint items=1625 done=1625 this_run=40 rate=0.17/s batch=40/40
+wrote dsc_strains_dcseedexchange.json count=1625 errors=66
+2026-08-07T20:15:30Z round 1 end done=1625 dump=1625 delta=40
+2026-08-07T20:15:32Z round 2 sitemap=1654 done=1625 dump=1625
+2026-08-07T20:15:33Z dcseedexchange: coverage met
+2026-08-07T20:15:34Z FINAL sitemap=1654 done=1625 dump=1625
+staging: {
+  "family": "dcseedexchange",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\dcseedexchange.sqlite3",
+  "count": 1625,
+  "stats": {
+    "strain_canonical": 1535,
+    "strain_variant": 1537,
+    "chemistry_profile": 32,
+    "grow_trait": 575,
+    "entity_link": 32,
+    "attribute_kv": 0,
+    "raw_record": 1625,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 0,
+    "source_record": 1
+  }
+}
+2026-08-07T20:15:58Z staged count=1625 db=\\192.168.86.2\Digital-Documents\Digital Stealth Care\Projects\DSC-HUB\brain\data\staging\dcseedexchange.sqlite3

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import sqlite3
@@ -26,24 +27,89 @@ KNOWN_CANONICAL = {
     "thc_range",
     "cbd_range",
     "top_terpenes",
+    "top_effects",
+    "top_flavors",
     "height_cm",
     "flowering_days",
     "curated",
     "want",
+    "page_text_excerpt",
 }
+
+# High-cardinality community score columns → keep summary only, not every score in attribute_kv.
+_SKIP_ATTR_RE = re.compile(
+    r"(?i)(_score|_votes|_percentile\d*|reviewcount|photocount|totalfollowers|traitscount|energizescore)$"
+)
 
 
 def name_norm(value: str) -> str:
     return re.sub(r"[^a-z0-9]+", " ", (value or "").lower()).strip()
 
 
-def connect(db_path: Path | None = None) -> sqlite3.Connection:
+def connect(db_path: Path | None = None, *, timeout: float = 120.0) -> sqlite3.Connection:
     path = db_path or DEFAULT_DB
     path.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(path)
+    conn = sqlite3.connect(path, timeout=timeout)
     conn.row_factory = sqlite3.Row
+    conn.execute(f"PRAGMA busy_timeout={int(max(timeout, 1.0) * 1000)}")
+    # Avoid WRITE lock when core tables already exist (critical under concurrent fan-out).
+    # Full SCHEMA apply only for brand-new DBs; additive raw_record create is best-effort.
+    if _table_exists(conn, "strain_canonical") and _table_exists(conn, "meta"):
+        if not _table_exists(conn, "raw_record"):
+            try:
+                conn.executescript(
+                    """
+                    CREATE TABLE IF NOT EXISTS raw_record (
+                      id TEXT PRIMARY KEY,
+                      source_id TEXT NOT NULL,
+                      entity_kind TEXT NOT NULL,
+                      entity_id TEXT,
+                      name_norm TEXT,
+                      payload_json TEXT NOT NULL,
+                      payload_sha1 TEXT,
+                      stored_at TEXT
+                    );
+                    CREATE INDEX IF NOT EXISTS idx_raw_source ON raw_record(source_id);
+                    CREATE INDEX IF NOT EXISTS idx_raw_norm ON raw_record(name_norm);
+                    CREATE INDEX IF NOT EXISTS idx_raw_sha ON raw_record(payload_sha1);
+                    """
+                )
+            except sqlite3.OperationalError:
+                # Another writer holds the lock; caller can retry. Typed tables still usable.
+                pass
+        try:
+            conn.execute(
+                "INSERT INTO meta(key, value) VALUES(?, ?) "
+                "ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+                ("corpus_schema_version", SCHEMA_VERSION),
+            )
+        except sqlite3.OperationalError:
+            pass
+        return conn
     conn.executescript(CORPUS_SCHEMA)
+    _migrate_schema(conn)
     return conn
+
+
+def _migrate_schema(conn: sqlite3.Connection) -> None:
+    """Additive upgrades for DBs created before SCHEMA_VERSION bumps."""
+    cols = {r[1] for r in conn.execute("PRAGMA table_info(raw_record)").fetchall()} if _table_exists(
+        conn, "raw_record"
+    ) else set()
+    # CORPUS_SCHEMA CREATE IF NOT EXISTS already adds raw_record on connect.
+    _ = cols
+    conn.execute(
+        "INSERT INTO meta(key, value) VALUES(?, ?) "
+        "ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+        ("corpus_schema_version", SCHEMA_VERSION),
+    )
+
+
+def _table_exists(conn: sqlite3.Connection, name: str) -> bool:
+    row = conn.execute(
+        "SELECT 1 FROM sqlite_master WHERE type='table' AND name=? LIMIT 1", (name,)
+    ).fetchone()
+    return bool(row)
 
 
 def init_corpus(db_path: Path | None = None) -> Path:
@@ -121,10 +187,19 @@ def store_attributes(
     for key, value in row.items():
         if key in skip or value in (None, "", [], {}):
             continue
+        if _SKIP_ATTR_RE.search(key or ""):
+            # Still log novel key families once for schema extension, but do not explode kv.
+            if key.endswith("_score") or "percentile" in (key or "").lower():
+                _note_extension(conn, entity_kind, key.rsplit("_", 1)[0] + "_*")
+            continue
         if isinstance(value, (dict, list)):
             text = json.dumps(value, ensure_ascii=False)
+            if len(text) > 4000:
+                text = text[:4000] + "…"
         else:
             text = str(value)
+            if len(text) > 2000:
+                text = text[:2000] + "…"
         conn.execute(
             "INSERT INTO attribute_kv(entity_kind, entity_id, key, value, unit, source_id) "
             "VALUES(?,?,?,?,?,?)",
@@ -133,6 +208,44 @@ def store_attributes(
         _note_extension(conn, entity_kind, key)
         n += 1
     return n
+
+
+def store_raw_record(
+    conn: sqlite3.Connection,
+    *,
+    source_id: str,
+    entity_kind: str,
+    payload: dict[str, Any] | str,
+    entity_id: str | None = None,
+    name: str | None = None,
+    record_id: str | None = None,
+) -> str:
+    """Persist a full source row as one blob. Prefer over attribute_kv for fat dumps."""
+    if isinstance(payload, str):
+        text = payload
+    else:
+        text = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
+    sha = hashlib.sha1(text.encode("utf-8", errors="replace")).hexdigest()
+    existing = conn.execute(
+        "SELECT id FROM raw_record WHERE source_id=? AND payload_sha1=? LIMIT 1",
+        (source_id, sha),
+    ).fetchone()
+    if existing:
+        return existing["id"]
+    rid = record_id or f"{source_id}:{sha[:16]}"
+    key = name_norm(name or "") if name else None
+    if not key and isinstance(payload, dict):
+        key = name_norm(str(payload.get("name") or payload.get("strain") or "")) or None
+    now = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    conn.execute(
+        "INSERT INTO raw_record(id, source_id, entity_kind, entity_id, name_norm, "
+        "payload_json, payload_sha1, stored_at) VALUES(?,?,?,?,?,?,?,?) "
+        "ON CONFLICT(id) DO UPDATE SET "
+        "payload_json=excluded.payload_json, payload_sha1=excluded.payload_sha1, "
+        "stored_at=excluded.stored_at",
+        (rid, source_id, entity_kind, entity_id, key, text, sha, now),
+    )
+    return rid
 
 
 def upsert_canonical(
@@ -273,6 +386,17 @@ def add_grow(
 
     h0, h1 = _pair(payload.get("height_cm") or payload.get("height"))
     f0, f1 = _pair(payload.get("flowering_days") or payload.get("flowering"))
+
+    def _scalar_text(val: Any) -> str | None:
+        if val in (None, "", [], {}):
+            return None
+        if isinstance(val, (list, tuple)):
+            parts = [str(x).strip() for x in val if x not in (None, "", [], {})]
+            return ", ".join(parts) if parts else None
+        if isinstance(val, dict):
+            return json.dumps(val, ensure_ascii=False)
+        return str(val)
+
     conn.execute(
         "INSERT INTO grow_trait(id, name_norm, source_id, height_cm_min, height_cm_max, "
         "flowering_days_min, flowering_days_max, yield_indoor, yield_outdoor, climate, payload_json) "
@@ -285,9 +409,9 @@ def add_grow(
             h1,
             f0,
             f1,
-            payload.get("yield_indoor"),
-            payload.get("yield_outdoor"),
-            payload.get("climate"),
+            _scalar_text(payload.get("yield_indoor")),
+            _scalar_text(payload.get("yield_outdoor")),
+            _scalar_text(payload.get("climate")),
             json.dumps(payload, ensure_ascii=False),
         ),
     )
@@ -338,6 +462,8 @@ def ingest_strain_row(
     row: dict[str, Any],
     *,
     source_id: str,
+    store_attrs: bool = True,
+    store_raw: bool = False,
 ) -> str | None:
     """Parent/child upsert + overflow attrs. Returns name_norm."""
     name = str(row.get("name") or row.get("strain") or "").strip()
@@ -349,23 +475,63 @@ def ingest_strain_row(
         type_=str(row.get("type") or row.get("indica_sativa") or "") or None,
         summary={
             k: row[k]
-            for k in ("thc", "cbd", "lineage", "genetic_background", "effect", "flavor")
+            for k in (
+                "thc",
+                "cbd",
+                "lineage",
+                "lineage_structured",
+                "lineage_mermaid",
+                "genetic_background",
+                "parents",
+                "effect",
+                "effects",
+                "flavor",
+                "flavors",
+                "top_effects",
+                "top_flavors",
+                "description",
+                "descriptionPlain",
+                "grow_difficulty",
+                "seed_gender",
+                "flowering_behavior",
+                "rating",
+                "review_count",
+                "reviews",
+                "terpenes",
+                "top_terpenes",
+            )
             if row.get(k) not in (None, "", [], {})
         },
     )
     breeder = str(row.get("breeder") or row.get("brand") or row.get("seed_bank") or "").strip()
+    entity_kind = "strain_canonical"
+    entity_id = key
     if breeder and name_norm(breeder) not in {"", "generic", "unknown", "n a", "na"}:
         vid = upsert_variant(
             conn,
             name,
             breeder,
             source_id=source_id,
-            bank_url=row.get("url") or row.get("bank_url"),
+            bank_url=row.get("url") or row.get("bank_url") or row.get("product_url"),
             props=row.get("bank_props") if isinstance(row.get("bank_props"), dict) else {},
         )
-        store_attributes(conn, "strain_variant", vid, row, source_id=source_id)
+        entity_kind = "strain_variant"
+        entity_id = vid
+        if store_attrs:
+            store_attributes(conn, "strain_variant", vid, row, source_id=source_id)
     else:
-        store_attributes(conn, "strain_canonical", key, row, source_id=source_id)
+        if store_attrs:
+            store_attributes(conn, "strain_canonical", key, row, source_id=source_id)
+
+    if store_raw:
+        store_raw_record(
+            conn,
+            source_id=source_id,
+            entity_kind=entity_kind,
+            entity_id=entity_id,
+            name=name,
+            payload=row,
+        )
 
     chem = row.get("chemistry") if isinstance(row.get("chemistry"), dict) else None
     if not chem and (row.get("thc_range") or row.get("top_terpenes") or row.get("thc")):
@@ -391,9 +557,24 @@ def ingest_strain_row(
         "yield_indoor",
         "yield_outdoor",
         "climate",
+        "grow_difficulty",
+        "seed_gender",
+        "flowering_behavior",
     )
     if any(row.get(k) not in (None, "", [], {}) for k in grow_keys):
-        add_grow(conn, name, row, source_id=source_id)
+        add_grow(conn, name, {k: row.get(k) for k in grow_keys if row.get(k) not in (None, "", [], {})}, source_id=source_id)
+
+    gaps = row.get("followup_gap")
+    if isinstance(gaps, dict):
+        gaps = [gaps]
+    if isinstance(gaps, list):
+        for g in gaps:
+            if not isinstance(g, dict):
+                continue
+            field = str(g.get("field") or "").strip()
+            reason = str(g.get("reason") or "").strip()
+            if field and reason:
+                add_gap(conn, entity_kind, entity_id, field, reason)
 
     return key
 
@@ -430,10 +611,14 @@ def rebuild_search_docs(conn: sqlite3.Connection) -> int:
 
 
 def link_science_to_seed(conn: sqlite3.Connection) -> dict[str, int]:
-    """Exact name_norm links from chemistry profiles to canonical/variants."""
+    """Exact name_norm links from chemistry profiles to canonical/variants.
+
+    Skips edges that already exist (safe to re-run after incremental ingest).
+    """
     linked = 0
     to_parent = 0
     to_variant = 0
+    skipped = 0
     for row in conn.execute(
         "SELECT id, name_norm, name FROM chemistry_profile WHERE name_norm IS NOT NULL AND name_norm != ''"
     ):
@@ -442,22 +627,36 @@ def link_science_to_seed(conn: sqlite3.Connection) -> dict[str, int]:
             "SELECT name_norm FROM strain_canonical WHERE name_norm=?", (key,)
         ).fetchone()
         if parent:
-            add_link(
-                conn,
-                "chemistry_profile",
-                row["id"],
-                "strain_canonical",
-                key,
-                method="exact_name_norm",
-                confidence=1.0,
-                source="link_science_to_seed",
-            )
-            linked += 1
-            to_parent += 1
+            exists = conn.execute(
+                "SELECT 1 FROM entity_link WHERE from_kind=? AND from_id=? AND to_kind=? AND to_id=? LIMIT 1",
+                ("chemistry_profile", row["id"], "strain_canonical", key),
+            ).fetchone()
+            if exists:
+                skipped += 1
+            else:
+                add_link(
+                    conn,
+                    "chemistry_profile",
+                    row["id"],
+                    "strain_canonical",
+                    key,
+                    method="exact_name_norm",
+                    confidence=1.0,
+                    source="link_science_to_seed",
+                )
+                linked += 1
+                to_parent += 1
         variants = conn.execute(
             "SELECT id FROM strain_variant WHERE name_norm=?", (key,)
         ).fetchall()
         for v in variants:
+            exists = conn.execute(
+                "SELECT 1 FROM entity_link WHERE from_kind=? AND from_id=? AND to_kind=? AND to_id=? LIMIT 1",
+                ("chemistry_profile", row["id"], "strain_variant", v["id"]),
+            ).fetchone()
+            if exists:
+                skipped += 1
+                continue
             add_link(
                 conn,
                 "chemistry_profile",
@@ -471,8 +670,18 @@ def link_science_to_seed(conn: sqlite3.Connection) -> dict[str, int]:
             linked += 1
             to_variant += 1
         if not parent and not variants:
-            add_gap(conn, "chemistry_profile", row["id"], "seed_link", "no_matching_canonical")
-    return {"linked": linked, "to_parent": to_parent, "to_variant": to_variant}
+            gap = conn.execute(
+                "SELECT 1 FROM followup_gap WHERE entity_kind=? AND entity_id=? AND field=? LIMIT 1",
+                ("chemistry_profile", row["id"], "seed_link"),
+            ).fetchone()
+            if not gap:
+                add_gap(conn, "chemistry_profile", row["id"], "seed_link", "no_matching_canonical")
+    return {
+        "linked": linked,
+        "to_parent": to_parent,
+        "to_variant": to_variant,
+        "skipped_existing": skipped,
+    }
 
 
 def corpus_stats(conn: sqlite3.Connection) -> dict[str, int]:
@@ -484,6 +693,7 @@ def corpus_stats(conn: sqlite3.Connection) -> dict[str, int]:
         "grow_trait",
         "entity_link",
         "attribute_kv",
+        "raw_record",
         "light_fixture",
         "nutrient_product",
         "medium_product",

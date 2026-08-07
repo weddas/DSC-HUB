@@ -12,6 +12,7 @@ substitutions:
   setup_ap_password: !secret dsc_setup_ap_password
   espnow_key: !secret espnow_key
   panel_mac: "00:00:00:00:00:00"      # learned at SoftAP hello
+  bridge_mac: "00:00:00:00:00:00"     # learned when ETH01 bridge posts hello
   espnow_cmd_tag: "54727"
 
 packages:

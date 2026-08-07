@@ -1,0 +1,568 @@
+{
+ "urlResolver": {
+  "http": 200,
+  "data": {
+   "data": {
+    "urlResolver": {
+     "id": 16439,
+     "type": "PRODUCT",
+     "sku": "MRNMM",
+     "relative_url": null
+    }
+   }
+  }
+ },
+ "urlResolver_path": {
+  "http": 200,
+  "data": {
+   "data": {
+    "urlResolver": null
+   }
+  }
+ },
+ "products_url_key": {
+  "http": 200,
+  "data": {
+   "data": {
+    "products": {
+     "items": [
+      {
+       "id": 47782,
+       "sku": "UMSC-COTH-FEM",
+       "name": "Color Theory Feminized Seeds",
+       "url_key": "color-theory-feminized-seeds-umsc-coth-fem",
+       "type_id": "configurable",
+       "description": {
+        "html": "<p class=\"isSelectedEnd\">Color Theory by Umami Seed Co x DNA Genetics is a feminized, solventless-focused hybrid bred from Original Z x Strawberry Banana Z, stacking Z genetics on both sides for a clean, candy-forward terpene profile with serious wash potential. Expect bright Z sweetness, smooth sugary fruit and a subtle strawberry finish, giving Color Theory a focused flavour profile that feels pure, polished and easy to place for terp-driven growers.</p><p class=\"isSelectedEnd\"></p><p>Compact, efficient and fast-finishing, Color Theory stays short with minimal stretch, tight internodal spacing and dense, trichome-rich buds. Flowering takes just 7-8 weeks, with medium to high yield potential and sandy resin heads that are specifically noted for dumping well in the wash. It is a strong choice for growers looking for fast turnaround, limited-space efficiency, clean Z terps and solventless-ready resin performance.</p>"
+       },
+       "short_description": {
+        "html": "<p>Clean Z candy, subtle strawberry and sandy resin heads built to dump in the wash.</p><p></p>"
+       },
+       "variants": [
+        {
+         "product": {
+          "sku": "UMSC-COTH-FEM-3",
+          "name": "Color Theory Feminized Seeds - 3"
+         }
+        }
+       ]
+      },
+      {
+       "id": 47780,
+       "sku": "UMSC-JUPA-FEM",
+       "name": "Juice Pack Feminized Seeds",
+       "url_key": "juice-pack-feminized-seeds-umsc-jupa-fem",
+       "type_id": "configurable",
+       "description": {
+        "html": "<p class=\"isSelectedEnd\">Juice Pack by Umami Seed Co x DNA Genetics is a feminized, solventless-focused hybrid bred from Starburst 36 x Strawberry Banana Z, bringing together bright tropical fruit, sweet candy and sharp gas with serious washing potential. The profile opens like a strawberry banana smoothie, then pushes into citrus tang, kerosene and funky gas for a loud, juicy terpene profile built to carry through into hash and extract work.</p><p class=\"isSelectedEnd\"></p><p>Plants show strong early vigour, a wide canopy, solid branching and a moderate stretch of around 2x, building dense, frost-heavy buds with high yield potential. Flowering takes around 8-9 weeks, with sandy resin heads that make Juice Pack especially appealing for solventless-focused growers. The Strawberry Banana Z side adds proven resin value, while Starburst 36 brings brightness, structure and production. A strong pick for growers chasing fruit-forward flower, hash-friendly trichomes and a productive modern hybrid with real extract appeal.</p><p></p>"
+       },
+       "short_description": {
+        "html": "<p>Strawberry banana smoothie terps, kerosene gas and sandy resin heads built for solventless.</p><p></p>"
+       },
+       "variants": [
+        {
+         "product": {
+          "sku": "UMSC-JUPA-FEM-3",
+          "name": "Juice Pack Feminized Seeds - 3"
+         }
+        }
+       ]
+      },
+      {
+       "id": 47778,
+       "sku": "UMSC-MEMO-FEM",
+       "name": "Melt Mode Feminized Seeds",
+       "url_key": "melt-mode-feminized-seeds-umsc-memo-fem",
+       "type_id": "configurable",
+       "description": {
+        "html": "<p class=\"isSelectedEnd\">Melt Mode by Umami Seed Co x DNA Genetics is a feminized, solventless-focused hybrid bred from Zeclair x Strawberry Banana Z, blending candy sweetness, tropical Z gas and serious resin output. The terpene profile is loud and layered, moving from strawberry banana candy into sweet chemical menthol, gassy tropical fruit and a subtle Z-forward candy finish.</p><p class=\"isSelectedEnd\"></p><p>In the garden, Melt Mode shows vigorous late-veg growth, tight internodal spacing and a moderate stretch of around 2x, building dense, well-stacked colas with heavy trichome coverage. Flowering takes around 8-9 weeks, with medium to high yield potential and sandy resin heads bred with washing in mind. It is a strong choice for growers chasing flavour-rich flower, terpene-heavy extracts and modern Umami resin performance.</p><p></p>"
+       },
+       "short_description": {
+        "html": "<p>Strawberry banana candy, chemical menthol and tropical Z gas on resin-heavy washer flowers.</p><p></p>"
+       },
+       "variants": [
+        {
+         "product": {
+          "sku": "UMSC-MEMO-FEM-3",
+          "name": "Melt Mode Feminized Seeds - 3"
+         }
+        }
+       ]
+      },
+      {
+       "id": 47776,
+       "sku": "UMSC-PRLI-FEM",
+       "name": "Prime Lime Feminized Seeds",
+       "url_key": "prime-lime-feminized-seeds-umsc-prli-fem",
+       "type_id": "configurable",
+       "description": {
+        "html": "<p class=\"isSelectedEnd\">Strawzilla by Umami Seed Co x DNA Genetics is a feminized flavour-first hybrid bred from Kemo x Strawberry Banana Z, also detailed as (GMO x Key Limeade) x (Strawberry Banana x Z). This is a big, high-vigour cultivar with serious stretch, towering cola formation and a terpene profile that pushes well beyond standard fruit or dessert lines.</p><p class=\"isSelectedEnd\"></p><p>The aroma is wild, loud and unmistakably Umami - tropical fruit and fermented sweetness collide with dumpster funk, savoury gas, caramelised onion, butterscotch and a hint of soy-spice depth. Flowering takes around 9 weeks, with high yield potential, strong lateral branching and elongated, frost-heavy colas. Resin production is a key part of the appeal, with sandy, stringy heads and strong terpene retention making Strawzilla a compelling choice for growers chasing unique flavour output, big structure and standout modern flower.</p><p></p>"
+       },
+       "short_description": {
+        "html": "Umami Seed's Strawzilla is a high-yield, flavourful hybrid with a unique aroma."
+       },
+       "variants": [
+        {
+         "product": {
+          "sku": "UMSC-PRLI-FEM-3",
+          "name": "Prime Lime Feminized Seeds - 3"
+         }
+        }
+       ]
+      },
+      {
+       "id": 47774,
+       "sku": "UMSC-STRA-FEM",
+       "name": "Strawzilla Feminized Seeds",
+       "url_key": "strawzilla-feminized-seeds-umsc-stra-fem",
+       "type_id": "configurable",
+       "description": {
+        "html": "<p class=\"isSelectedEnd\">Strawzilla by Umami Seed Co x DNA Genetics is a feminized flavour-first hybrid bred from Kemo x Strawberry Banana Z, also detailed as (GMO x Key Limeade) x (Strawberry Banana x Z). This is a big, high-vigour cultivar with serious stretch, towering cola formation and a terpene profile that pushes well beyond standard fruit or dessert lines.</p><p class=\"isSelectedEnd\"></p><p>The aroma is wild, loud and unmistakably Umami - tropical fruit and fermented sweetness collide with dumpster funk, savoury gas, caramelised onion, butterscotch and a hint of soy-spice depth. Flowering takes around 9 weeks, with high yield potential, strong lateral branching and elongated, frost-heavy colas. Resin production is a key part of the appeal, with sandy, stringy heads and strong terpene retention making Strawzilla a compelling choice for growers chasing unique flavour output, big structure and standout modern flower.</p><p></p>"
+       },
+       "short_description": {
+        "html": "<p>Tropical fruit, dumpster funk and caramelised onion terps on towering, resin-heavy colas.</p><p></p>"
+       },
+       "variants": [
+        {
+         "product": {
+          "sku": "UMSC-STRA-FEM-3",
+          "name": "Strawzilla Feminized Seeds - 3"
+         }
+        }
+       ]
+      },
+      {
+       "id": 47771,
+       "sku": "ETHO-BFNF-FEM",
+       "name": "Big Fat N' Fruity Feminized Seeds",
+       "url_key": "big-fat-n'-fruity-feminized-seeds-etho-bfnf-fem",
+       "type_id": "configurable",
+       "description": {
+        "html": "<p class=\"isSelectedEnd\">Big Fat n’ Fruity R1 by Ethos Genetics is a feminized photoperiod bred from Big Grapefruit x Original Z Cut, and the name tells you exactly where this one is going - big fruit, chunky flowers and serious garden presence. The terpene profile is bright and mouth-watering, led by grapefruit candy, blueberries and a smooth sandalwood finish that gives the sweetness more depth and polish.</p><p class=\"isSelectedEnd\"></p><p>Flowering takes around 56 days, with high yield potential and 25%+ TAC. Plants grow strong, round and space-filling, with a deep canopy, great stacking and chunky, spongy flowers of medium density. Ethos notes that aggressive defoliation works well with this strain, helping open up the canopy and make the most of its vigorous structure. The effect is relaxing, social and mood-enhancing, giving Big Fat n’ Fruity R1 broad anytime appeal without losing its fruit-forward personality.</p><p></p>"
+       },
+       "short_description": {
+        "html": "<p>Grapefruit candy, blueberries and sandalwood over chunky flowers with high-yield Ethos power.</p><p></p>"
+       },
+       "variants": [
+        {
+         "product": {
+          "sku": "ETHO-BFNF-FEM-5",
+          "name": "Big Fat N' Fruity Feminized Seeds - 5"
+         }
+        }
+       ]
+      },
+      {
+       "id": 47769,
+       "sku": "ETHO-ZCURBX2-FEM",
+       "name": "Z Cut RBX2 Feminized Seeds",
+       "url_key": "z-cut-rbx2-feminized-seeds-etho-zcurbx2-fem",
+       "type_id": "configurable",
+       "description": {
+        "html": "<p class=\"isSelectedEnd\">Z Cut RBx2 by Ethos Genetics is a feminized photoperiod built around the original Z Cut, known widely as the original Zkittlez clone. Bred from (Z Cut x The Wrank) x Z Cut x Z Cut, this backcrossed release pushes deep into bold fruit territory, delivering a rainbow of sweet, pungent flavours with pronounced grape, bright citrus, earthy spice and soft floral undertones.</p><p class=\"isSelectedEnd\"></p><p>Flowering takes around 56-63 days, with compact, strong plants that are easy to manage and capable of above-average yields. The flowers are spongy, flavourful and extract-friendly, carrying strong terpene expression and a long-lasting, heavy effect. With 25% TAC, Z Cut RBx2 is a strong pick for growers looking for classic Z-style fruit, compact structure, reliable performance and rich, pungent resin quality.</p><p></p>"
+       },
+       "short_description": {
+        "html": "<p>Bold Z fruit, grape-citrus terps and compact, easy-growing plants with heavy effects.</p><p></p>"
+       },
+       "variants": [
+        {
+         "product": {
+          "sku": "ETHO-ZCURBX2-FEM-5",
+          "name": "Z Cut RBX2 Feminized Seeds - 5"
+         }
+        }
+       ]
+      },
+      {
+       "id": 47761,
+       "sku": "FB-GMO-AUTO-FEM",
+       "name": "GMO Auto Feminized Seeds",
+       "url_key": "gmo-auto-feminized-seeds-fb-gmo-auto-fem",
+       "type_id": "configurable",
+       "description": {
+        "html": "<p class=\"isSelectedEnd\">GMO Auto by Fast Buds is an F4 feminized autoflower bred from GMO Cut x Chemdog Auto, created to bring proper old-school funk into a stable auto format. This is a savoury, terpene-first strain with a bold profile of garlic, onion, earthy mushroom, herbal spice and diesel, giving it a raw, pungent character that stands apart from sweeter modern autos.</p><p class=\"isSelectedEnd\"></p><p>With 80% <a href=\"https://www.seedsman.com/us-en/cannabis-seeds/genetics/indica-strains\" title=\"Indica\" target=\"_self\">indica</a> / 20% <a href=\"https://www.seedsman.com/us-en/cannabis-seeds/genetics/sativa-strains\" title=\"Sativa\" target=\"_self\">sativa</a> genetics, GMO Auto grows into a medium-sized, well-structured plant with solid branching, tight internodal spacing and XL potential. The full lifecycle runs around 10-11 weeks, with plants reaching roughly 80-120 cm and producing up to 450-600 g/m2 <a href=\"https://www.seedsman.com/us-en/cannabis-seeds/cultivation-type/grows-indoors\" title=\"Indoors\" target=\"_self\">indoors</a> or 50-200 g/plant outdoors. THC levels reach up to 28%, while the resin-rich flowers and loud terpene quality make this a strong choice for hash-focused growers. Expect relaxing, happy and body-led effects with a heavier finish, backed by one of the most distinctive savoury terp profiles in the Fast Buds line-up.</p>"
+       },
+       "short_description": {
+        "html": "<p>Garlic, diesel and earthy mushroom funk with up to 28% THC and strong washer appeal.</p>"
+       },
+       "variants": [
+        {
+         "product": {
+          "sku": "FB-GMO-AUTO-FEM-3",
+          "name": "GMO Auto Feminized Seeds - 3"
+         }
+        },
+        {
+         "product": {
+          "sku": "FB-GMO-AUTO-FEM-5",
+          "name": "GMO Auto Feminized Seeds - 5"
+         }
+        },
+        {
+         "product": {
+          "sku": "FB-GMO-AUTO-FEM-1",
+          "name": "GMO Auto Feminized Seeds - 1"
+         }
+        },
+        {
+         "product": {
+          "sku": "FB-GMO-AUTO-FEM-10",
+          "name": "GMO Auto Feminized Seeds - 10"
+         }
+        }
+       ]
+      },
+      {
+       "id": 47756,
+       "sku": "FB-PIOG-AUTO-FEM",
+       "name": "Pineapple OG Auto Feminized Seeds",
+       "url_key": "pineapple-og-auto-feminized-seeds-fb-piog-auto-fem",
+       "type_id": "configurable",
+       "description": {
+        "html": "<p class=\"isSelectedEnd\">Pineapple OG Auto by Fast Buds is an F4 feminized autoflower bred from Pineapple Express x OG Kush Auto, combining juicy tropical fruit with the structure and power of a classic OG line. The flavour is led by sweet, sour pineapple - bright, sticky and instantly recognisable - with a tropical edge that keeps the profile fresh and fruit-forward from jar to smoke.</p><p class=\"isSelectedEnd\"></p><p>This 65% <a href=\"https://www.seedsman.com/us-en/cannabis-seeds/genetics/sativa-strains\" title=\"Sativa\" target=\"_self\">sativa</a> / 35% <a href=\"https://www.seedsman.com/us-en/cannabis-seeds/genetics/indica-strains\" title=\"Indica\" target=\"_self\">indica</a> autoflower reaches a full lifecycle of around 9 weeks, producing large, vigorous plants with XXL size potential and strong yields. Fast Buds lists indoor harvests of 425-550 g/m2 and outdoor potential of 60-300 g/plant, with plants reaching around 80-150 cm depending on conditions. With THC levels up to 30%, Pineapple OG Auto delivers a happy, uplifting and creative effect that eases into a relaxed finish, making it a strong choice for growers looking for big production, tropical terps and high-potency autoflower performance.</p><p></p>"
+       },
+       "short_description": {
+        "html": "<p>Sweet sour pineapple terps, XXL auto growth and up to 30% THC from Pineapple Express x OG Kush.</p><p></p>"
+       },
+       "variants": [
+        {
+         "product": {
+          "sku": "FB-PIOG-AUTO-FEM-3",
+          "name": "Pineapple OG Auto Feminized Seeds - 3"
+         }
+        },
+        {
+         "product": {
+          "sku": "FB-PIOG-AUTO-FEM-5",
+          "name": "Pineapple OG Auto Feminized Seeds - 5"
+         }
+        },
+        {
+         "product": {
+          "sku": "FB-PIOG-AUTO-FEM-1",
+          "name": "Pineapple OG Auto Feminized Seeds - 1"
+         }
+        },
+        {
+         "product": {
+          "sku": "FB-PIOG-AUTO-FEM-10",
+          "name": "Pineapple OG Auto Feminized Seeds - 10"
+         }
+        }
+       ]
+      },
+      {
+       "id": 47709,
+       "sku": "LIHE-BETA-FEM",
+       "name": "Berry Taboo Feminized Seeds",
+       "url_key": "berry-taboo-feminized-seeds-lihe-beta-fem",
+       "type_id": "configurable",
+       "description": {
+        "html": "<p class=\"isSelectedEnd\">Berry Taboo by Lovin In Her Eyes is a <a href=\"https://www.seedsman.com/us-en/cannabis-seeds/sex/feminised-cannabis-seeds\" title=\"Feminised\" target=\"_self\">feminised</a> hybrid bred from 2000s Bagged x Strawberry Cadillac, combining nostalgic bag seed character with rich berry-forward modern genetics. The aroma is led by pine and raspberry jam, with a spicy berry depth that gives the strain a loud, rounded and distinctive profile. It is a flavour-focused release with the kind of colour, vigour and terpene expression that fits Lovin In Her Eyes’ creative, small-batch breeding style.</p><p class=\"isSelectedEnd\"></p><p>Plants are typically medium to tall, with vigorous growth and a tendency to produce larger, expressive specimens. Flowering takes around 63 days, with many plants developing beautiful magenta-purple colouration as they mature. Berry Taboo is a strong option for growers looking for colour, size and standout berry terps, especially those drawn to sweet-spicy fruit profiles with a sharper pine edge.</p>"
+       },
+       "short_description": {
+        "html": "<p>Raspberry jam, pine spice, vigorous growth and magenta-purple flower appeal.</p><p></p>"
+       },
+       "variants": [
+        {
+         "product": {
+          "sku": "LIHE-BETA-FEM-5",
+          "name": "Berry Taboo Feminized Seeds - 5"
+         }
+        }
+       ]
+      },
+      {
+       "id": 47708,
+       "sku": "LIHE-LERU-FEM",
+       "name": "Lemons & Rubber Feminized Seeds",
+       "url_key": "lemons-&-rubber-feminized-seeds-lihe-leru-fem",
+       "type_id": "configurable",
+       "description": {
+        "html": "<p class=\"isSelectedEnd\">Lemons & Rubber by Lovin In Her Eyes is a <a href=\"https://www.seedsman.com/us-en/cannabis-seeds/sex/feminised-cannabis-seeds\" title=\"Feminised\" target=\"_self\">feminised</a> hybrid bred from 2001 Bag Seed x 2112 OG, bringing together old-school bag seed character with a refined in-house OG line. The standout profile is exactly what the name promises - sharp lemon brightness layered over rubbery, gassy depth. The 2112 OG side adds a carefully worked Marshmallow OG influence, shaped through Dosi Punch and a Marshmallow OG backcross to reinforce structure, shorten bloom time and lock in more expressive OG aromas.</p><p class=\"isSelectedEnd\"></p><p>In the garden, Lemons & Rubber grows with a medium to tall structure, strong branching and large green flowers stacked from top to bottom. Flowering runs 63+ days, with plants producing sizeable, sparkling blooms and consistent lemon-rubber aromatics across the line. This is a strong choice for growers looking for something loud, resinous and distinctive, with classic citrus funk rather than standard sweet fruit terps.</p><p></p>"
+       },
+       "short_description": {
+        "html": "<p>Sharp lemon, rubbery OG funk, strong structure and sparkling green flowers.</p><p></p>"
+       },
+       "variants": [
+        {
+         "product": {
+          "sku": "LIHE-LERU-FEM-5",
+          "name": "Lemons & Rubber Feminized Seeds - 5"
+         }
+        }
+       ]
+      },
+      {
+       "id": 47700,
+       "sku": "SMAN-NL99-FEM",
+       "name": "Northern Lights 99 (Brothers Grimm Collab) Feminized Seeds",
+       "url_key": "northern-lights-99-feminized-seeds-sman-nl99-fem",
+       "type_id": "configurable",
+       "description": {
+        "html": "<p class=\"isSelectedEnd\"><a href=\"https://www.seedsman.com/us-en/strain-type/northern-lights\" title=\"Northern Lights\" target=\"_self\">Northern Lights</a> 99 is what happens when <a href=\"https://www.seedsman.com/us-en/breeders/seedsman\" title=\"Seedsman\" target=\"_self\">Seedsman</a>’s global reach meets Brothers Grimm’s breeding pedigree. This collaboration puts one of Brothers Grimm’s most iconic creations - Cinderella 99 - alongside a standout <a href=\"https://www.seedsman.com/us-en/strain-type/northern-lights\" title=\"Northern Lights\" target=\"_self\">Northern Lights</a> <a href=\"https://www.seedsman.com/us-en/strain-type/haze\" title=\"Haze\" target=\"_self\">Haze</a> selection from F2 Nevil’s NL5 x <a href=\"https://www.seedsman.com/us-en/strain-type/haze\" title=\"Haze\" target=\"_self\">Haze</a> stock, giving <a href=\"https://www.seedsman.com/us-en/breeders/seedsman\" title=\"Seedsman\" target=\"_self\">Seedsman</a> growers access to something with real weight behind it. Not just a good name, not just another modern release - this is classic cannabis history reworked into a faster, more practical format for today’s home grower.</p><p class=\"isSelectedEnd\"></p><p class=\"isSelectedEnd\">If you love old-school <a href=\"https://www.seedsman.com/us-en/strain-type/haze\" title=\"Haze\" target=\"_self\">Haze</a> but do not want to wait forever, <a href=\"https://www.seedsman.com/us-en/strain-type/northern-lights\" title=\"Northern Lights\" target=\"_self\">Northern Lights</a> 99 hits a sweet spot. It keeps the soaring energy, psychoactive punch, and unmistakable terpene depth that made <a href=\"https://www.seedsman.com/us-en/strain-type/haze\" title=\"Haze\" target=\"_self\">Haze</a> legendary, then sharpens it with the resin production, flavour, and grower appeal of Cinderella 99. Flowering in around 9 weeks and finishing outdoors by mid October in suitable climates, it offers the kind of heirloom-driven character that many newer strains simply cannot match. This is the appeal of classic lineage at its best - more identity, more story, more substance, and a result that feels built to last rather than built for short-term hype.</p><p class=\"isSelectedEnd\"></p><p>In the grow room, <a href=\"https://www.seedsman.com/us-en/strain-type/northern-lights\" title=\"Northern Lights\" target=\"_self\">Northern Lights</a> 99 stays compact enough to perform well <a href=\"https://www.seedsman.com/us-en/cannabis-seeds/cultivation-type/grows-indoors\" title=\"Indoors\" target=\"_self\">indoors</a> while still delivering excellent yields, long colas, and flowers so heavily coated in resin they can look silver from a distance. The flavour is where it really starts to separate itself: tropical fruit and candy sweetness up front, followed by diesel fuel, old-school <a href=\"https://www.seedsman.com/us-en/strain-type/haze\" title=\"Haze\" target=\"_self\">Haze</a> funk, and a savoury edge that gives it real depth. With THC potential of 25%+, high resin production, and an uplifting, potent, cerebral effect, <a href=\"https://www.seedsman.com/us-en/strain-type/northern-lights\" title=\"Northern Lights\" target=\"_self\">Northern Lights</a> 99 is made for growers chasing standout flavour, strong bag appeal, and the kind of high-energy experience that keeps classic genetics relevant.</p>"
+       },
+       "short_description": {
+        "html": "<p><a href=\"https://www.seedsman.com/us-en/breeders/seedsman\" title=\"Seedsman\" target=\"_self\">Seedsman</a> x Brothers Grimm - old-school power, modern performance.</p><p></p>"
+       },
+       "variants": [
+        {
+         "product": {
+          "sku": "SMAN-NL99-FEM-3",
+          "name": "Northern Lights 99 Feminized Seeds - 3"
+         }
+        },
+        {
+         "product": {
+          "sku": "SMAN-NL99-FEM-5",
+          "name": "Northern Lights 99 Feminized Seeds - 5"
+         }
+        }
+       ]
+      },
+      {
+       "id": 47678,
+       "sku": "BGS-GRTR-FEM",
+       "name": "Grimm Truffles Feminized Seeds",
+       "url_key": "grimm-truffles-feminized-seeds-bgs-grtr-fem",
+       "type_id": "configurable",
+       "description": {
+        "html": "<p class=\"isSelectedEnd\">Grimm Truffles by Brothers Grimm is a returning tester seed release from breeder MrSoul, originally one of the brand’s most sought-after testers in 2022. This colourful, high-yielding hybrid is known for its exotic bag appeal, sticky resin production, and big, robust colas supported by strong, closely spaced branching. Visually, it is a standout plant with vibrant colour expression and a larger, leafier frame, making it a strong choice for collectors drawn to bold flower structure and distinctive presentation.</p><p class=\"isSelectedEnd\"></p><p>The aroma profile is rich, loud, and complex, blending gas, earth, grape, pine, and nutty notes into an exceptionally stinky yet smooth smoke. Flowering time is around 8 weeks, although some expressions may finish slightly earlier or later. The effect is happy, relaxing, euphoric, and daytime-friendly without becoming too racy, offering a vibey, feel-good experience with plenty of character. While Grimm Truffles is vigorous and powerful, Brothers Grimm notes occasional reports of hermaphroditism, so it is best suited to attentive growers who can keep conditions stable, avoid excessive light stress, and take a gentle approach to training.</p><p></p>"
+       },
+       "short_description": {
+        "html": "<p>Gassy grape-pine funk, colourful colas, and happy daytime effects without the raciness.</p><p></p>"
+       },
+       "variants": [
+        {
+         "product": {
+          "sku": "BGS-GRTR-FEM-9",
+          "name": "Grimm Truffles Feminized Seeds - 9"
+         }
+        }
+       ]
+      },
+      {
+       "id": 47652,
+       "sku": "FB-LETR-AUTO-FEM",
+       "name": "Lemon Tree Auto Feminized Seeds",
+       "url_key": "lemon-tree-auto-feminized-seeds-fb-letr-auto-fem",
+       "type_id": "configurable",
+       "description": {
+        "html": "<p class=\"isSelectedEnd\">Lemon Tree Auto by Fast Buds is an F4 feminized autoflower bred from a selected Lemon Tree cut x Z-Up Auto, created for growers who put terpene quality first but still want strong structure and reliable performance. This <a href=\"https://www.seedsman.com/us-en/cannabis-seeds/genetics/sativa-strains\" title=\"Sativa\" target=\"_self\">sativa</a>-leaning hybrid carries a bright, fresh profile built around sweet lemon, lime soda, sour citrus, mint, and soft floral notes, giving it a clean, evolving aroma that keeps developing as the flowers mature. Plants show strong vigour, stable growth, dark green colouration, and a balanced structure across the population, making Lemon Tree Auto a confident choice for growers looking for consistency as well as flavour.</p><p class=\"isSelectedEnd\"></p><p>Finishing in around 8-9 weeks, Lemon Tree Auto reaches 70-120 cm and can produce 450-600 g/m2 <a href=\"https://www.seedsman.com/us-en/cannabis-seeds/cultivation-type/grows-indoors\" title=\"Indoors\" target=\"_self\">indoors</a> or 60-300 g per plant outdoors. The buds are dense, resin-rich, and highly trichome-coated, with a low leaf-to-flower ratio that helps make trimming quicker and more efficient. With THC levels of up to 27%, XL plant potential, and suitability for indoor, outdoor, <a href=\"https://www.seedsman.com/us-en/catalog/category/view/s/cannabis-seeds/id/3/\" title=\"Greenhouse\" target=\"_self\">greenhouse</a>, and mixed-light setups, Lemon Tree Auto brings together sharp citrus terps, solid productivity, and extraction-friendly resin in a polished modern auto.</p><p></p>"
+       },
+       "short_description": {
+        "html": "<p>Sharp lemon-lime terps, minty freshness, dense resin, and strong <a href=\"https://www.seedsman.com/us-en/cannabis-seeds/genetics/sativa-strains\" title=\"Sativa\" target=\"_self\">sativa</a>-leaning performance.</p><p></p>"
+       },
+       "variants": [
+        {
+         "product": {
+          "sku": "FB-LETR-AUTO-FEM-3",
+          "name": "Lemon Tree Auto Feminized Seeds - 3"
+         }
+        },
+        {
+         "product": {
+          "sku": "FB-LETR-AUTO-FEM-5",
+          "name": "Lemon Tree Auto Feminized Seeds - 5"
+         }
+        },
+        {
+         "product": {
+          "sku": "FB-LETR-AUTO-FEM-10",
+          "name": "Lemon Tree Auto Feminized Seeds - 10"
+         }
+        },
+        {
+         "product": {
+          "sku": "FB-LETR-AUTO-FEM-1",
+          "name": "Lemon Tree Auto Feminized Seeds - 1"
+         }
+        }
+       ]
+      },
+      {
+       "id": 47640,
+       "sku": "SMAN-CL-ENBI-GAST",
+       "name": "Gastronaut Clones",
+       "url_key": "gastronaut-clones-sman-cl-enbi-gast",
+       "type_id": "configurable",
+       "description": {
+        "html": "<p class=\"isSelectedEnd\">Gastronaut clone from Endless Biotech is a terpene-forward hybrid built for growers who appreciate loud gas, layered citrus, and functional potency. Diesel, earthy herbs, citrus peel, and spice combine into a pungent aromatic profile that delivers bold flavour without becoming overpowering.</p><p class=\"isSelectedEnd\"></p><p class=\"isSelectedEnd\">In cultivation, Gastronaut develops dense, resin-rich flowers with reliable structure and consistent performance throughout bloom. Plants finish in approximately 9 weeks with medium yields and strong trichome coverage that supports premium flower production. THC levels commonly range between 22–26%, producing uplifting mental clarity, creativity, and euphoria before easing gently into smooth body relaxation. Gastronaut is a strong choice for growers seeking daytime-friendly potency paired with modern gas-forward terpene expression.</p><p></p>"
+       },
+       "short_description": {
+        "html": "<p>Loud fuel-and-citrus hybrid with creative daytime effects and resin-coated flower.</p><p></p>"
+       },
+       "variants": [
+        {
+         "product": {
+          "sku": "SMAN-CL-ENBI-GAST-1",
+          "name": "Gastronaut Clones - 1"
+         }
+        }
+       ]
+      },
+      {
+       "id": 47638,
+       "sku": "SMAN-CL-ENBI-GOG4",
+       "name": "GG4 Clones",
+       "url_key": "gorilla-glue-4-clones-sman-cl-enbi-gog4",
+       "type_id": "configurable",
+       "description": {
+        "html": "<p class=\"isSelectedEnd\">Gorilla Glue 4 clone from Endless Biotech is a powerhouse hybrid known for extreme resin production, loud diesel terps, and deeply relaxing effects. Built from Chem’s Sister, Sour Dubb, and Chocolate Diesel lineage, GG4 delivers a pungent mix of earthy pine, sour fuel, and subtle chocolate sweetness that still hits as hard today as it did when it first exploded onto the scene.</p><p class=\"isSelectedEnd\"></p><p class=\"isSelectedEnd\">In cultivation, Gorilla Glue 4 produces dense, trichome-heavy flowers with strong lateral branching and aggressive stacking through bloom. Plants finish in approximately 9 weeks and reward growers with high yields and thick, sticky resin coverage ideal for premium flower and extraction. THC levels commonly range between 29–33%, delivering an immediate euphoric rush before settling into heavy body relaxation and full evening-mode effects. GG4 remains a proven commercial favourite for growers chasing potency, resin, and unmistakable old-school gas.</p><p></p><p></p>"
+       },
+       "short_description": {
+        "html": "<p>Legendary diesel-heavy hybrid with massive resin production and knockout evening effects.</p><p></p>"
+       },
+       "variants": [
+        {
+         "product": {
+          "sku": "SMAN-CL-ENBI-GOG4-1",
+          "name": "GG4 Clones - 1"
+         }
+        }
+       ]
+      },
+      {
+       "id": 47632,
+       "sku": "SMAN-CL-ENBI-OCMI",
+       "name": "Octane Mintz Clones",
+       "url_key": "octane-mintz-clones-sman-cl-enbi-ocmi",
+       "type_id": "configurable",
+       "description": {
+        "html": "<p class=\"isSelectedEnd\">Octane Mintz clone from Endless Biotech is an <a href=\"https://www.seedsman.com/us-en/cannabis-seeds/genetics/indica-strains\" title=\"Indica\" target=\"_self\">indica</a>-dominant hybrid selected for its rich fuel-heavy terpene profile, dense resin production, and deeply relaxing effects. Combining Sunset Octane and Wedding Cake lineage, this cultivar delivers layered aromas of mint, gas, earthy funk, vanilla sweetness, and kush depth. The flavour is smooth and pungent, blending creamy fuel notes with lingering earthy spice and sweet dough undertones.</p><p class=\"isSelectedEnd\"></p><p>In cultivation, Octane Mintz develops dense, trichome-rich flowers with reliable structure and strong visual appeal throughout bloom. Plants finish in approximately 9 weeks with medium yields and dependable performance across indoor and <a href=\"https://www.seedsman.com/us-en/catalog/category/view/s/cannabis-seeds/id/3/\" title=\"Greenhouse\" target=\"_self\">greenhouse</a> environments. THC levels commonly range between 21–25%, delivering calming physical relaxation, mood elevation, and appetite stimulation that make this cultivar especially well suited to evening use. Heavy resin coverage supports premium flower quality and strong extraction potential, positioning Octane Mintz as a dependable choice for growers seeking loud gas terps, dense buds, and reliable commercial appeal.</p><p></p>"
+       },
+       "short_description": {
+        "html": "<p>Heavy mint-fuel <a href=\"https://www.seedsman.com/us-en/cannabis-seeds/genetics/indica-strains\" title=\"Indica\" target=\"_self\">indica</a> with calming effects, loud gas terps, and dense resin-rich flower.</p><p></p>"
+       },
+       "variants": [
+        {
+         "product": {
+          "sku": "SMAN-CL-ENBI-OCMI-1",
+          "name": "Octane Mintz Clones - 1"
+         }
+        }
+       ]
+      },
+      {
+       "id": 47628,
+       "sku": "SMAN-CL-ENBI-SUSP",
+       "name": "Sunset Spice Clones",
+       "url_key": "sunset-spice-clones-sman-cl-enbi-susp",
+       "type_id": "configurable",
+       "description": {
+        "html": "<p class=\"isSelectedEnd\">Sunset Spice clone from Endless Biotech is a balanced hybrid selected for its layered spice-forward terpene profile and approachable, feel-good effects. Herbal spice, citrus peel, pine, and earthy sweetness combine into a smooth, flavourful smoke that feels familiar while still offering enough complexity to stand out.</p><p class=\"isSelectedEnd\"></p><p class=\"MsoBodyText\">In cultivation, Sunset Spice produces dense, colourful flowers with deep orange and purple hues beneath a frosty trichome layer. Plants finish in approximately 9 weeks with medium yields and dependable structure suited to a wide range of grow styles. THC levels commonly range between 20–24%, delivering relaxing body effects paired with clear-headed calm and gentle creativity. Sunset Spice is an easy recommendation for growers seeking balanced potency, strong visual appeal, and versatile day-to-evening usability.</p>"
+       },
+       "short_description": {
+        "html": "<p class=\"MsoBodyText\">Smooth spice-and-citrus hybrid delivering balanced effects, colourful buds, and easy everyday appeal.</p><p></p>"
+       },
+       "variants": [
+        {
+         "product": {
+          "sku": "SMAN-CL-ENBI-SUSP-1",
+          "name": "Sunset Spice Clones - 1"
+         }
+        }
+       ]
+      },
+      {
+       "id": 47613,
+       "sku": "SMAN-CL-ENBI-SUBO",
+       "name": "Super Boof Clones",
+       "url_key": "super-boof-clones-sman-cl-enbi-subo",
+       "type_id": "configurable",
+       "description": {
+        "html": "<p class=\"isSelectedEnd\">Super Boof clone from Endless Biotech is one of the standout modern hybrids on the market, combining loud fruit terps, heavy resin production, and balanced but powerful effects. Derived from Black Cherry Punch and Tropicana Cookies lineage, this cultivar bursts with sweet cherry berry flavour, citrus zest, sour fruit, and subtle nutty depth, backed by pungent aromatic intensity that carries beautifully through cure.</p><p class=\"isSelectedEnd\"></p><p>In cultivation, Super Boof develops dense, heart-shaped flowers with emerald green tones, deep purple flashes, and thick amber trichome coverage that screams bag appeal. Plants finish in approximately 9 weeks with medium yields and strong resin production suited to both premium flower and flavour-forward extraction. THC levels commonly range between 28–32%, delivering energetic creativity, focus, and euphoric uplift balanced by smooth physical calm. With back-to-back Ego Clash hash wins and recognition as Leafly’s Strain of the Year 2024, Super Boof has earned its place as one of the most commercially relevant cultivars available today.</p>"
+       },
+       "short_description": {
+        "html": "<p class=\"FirstParagraph\">Award-winning cherry-citrus hybrid with huge bag appeal and uplifting all-day potency.</p><p></p>"
+       },
+       "variants": [
+        {
+         "product": {
+          "sku": "SMAN-CL-ENBI-SUBO-1",
+          "name": "Super Boof Clones - 1"
+         }
+        }
+       ]
+      },
+      {
+       "id": 47606,
+       "sku": "HUMB-ALBL-AUTO-FEM",
+       "name": "Apple Blossom Auto Feminized Seeds",
+       "url_key": "apple-blossom-auto-feminized-seeds-humb-albl-auto-fem",
+       "type_id": "configurable",
+       "description": {
+        "html": "<p>Apple Blossom by <a href=\"https://www.seedsman.com/us-en/breeders/humboldt-seed-co\" title=\"Humboldt Seed Co\" target=\"_self\">Humboldt</a> Seed Company is a balanced autoflower built from <a href=\"https://www.seedsman.com/us-en/strain-type/blueberry\" title=\"Blueberry\" target=\"_self\">Blueberry</a> Muffin x Dream Queen x Sour Apple Auto, combining standout flavour with strong production in one highly appealing package. Developed from two of <a href=\"https://www.seedsman.com/us-en/breeders/humboldt-seed-co\" title=\"Humboldt Seed Co\" target=\"_self\">Humboldt</a>’s earliest and most popular lines, it brings together the distinctive terpene appeal of <a href=\"https://www.seedsman.com/us-en/strain-type/blueberry\" title=\"Blueberry\" target=\"_self\">Blueberry</a> Muffin with the proven output of Dream Queen, then rounds it out in auto form with Sour Apple Auto. The result is a vigorous hybrid that produces dense, trichome-covered flowers with hints of blue and purple, backed by a soft, inviting aroma of sweet floral apple that feels delicate, fresh, and highly distinctive.</p><p></p><p>With a full lifecycle of around 70-80 days from seed to harvest, Apple Blossom stands out as a huge producer with a balanced 50/50 <a href=\"https://www.seedsman.com/us-en/cannabis-seeds/genetics/indica-strains\" title=\"Indica\" target=\"_self\">indica</a>-<a href=\"https://www.seedsman.com/us-en/cannabis-seeds/genetics/sativa-strains\" title=\"Sativa\" target=\"_self\">sativa</a> profile. The effect is strong, uplifting, and energising at first, before easing into a smoother, more relaxing finish, with an appetite-stimulating quality that adds to its versatility. For growers looking for an autoflower with generous yields, attractive colour, frosty flowers, and a sweeter, more refined terpene profile, Apple Blossom is a strong addition to the lineup.</p><p></p>"
+       },
+       "short_description": {
+        "html": "<p>Sweet floral apple terps, frosty colourful buds, and big yields with uplifting hybrid punch.</p><p></p>"
+       },
+       "variants": [
+        {
+         "product": {
+          "sku": "HUMB-ALBL-AUTO-FEM-3",
+          "name": "Apple Blossom Auto Feminized Seeds - 3"
+         }
+        },
+        {
+         "product": {
+          "sku": "HUMB-ALBL-AUTO-FEM-5",
+          "name": "Apple Blossom Auto Feminized Seeds - 5"
+         }
+        }
+       ]
+      }
+     ]
+    }
+   }
+  }
+ },
+ "product_detail": {
+  "http": 200,
+  "data": {
+   "errors": [
+    {
+     "message": "Cannot query field \"custom_attributes\" on type \"ProductInterface\".",
+     "locations": [
+      {
+       "line": 12,
+       "column": 19
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "scandi_product": {
+  "http": 200,
+  "data": {
+   "errors": [
+    {
+     "message": "Cannot query field \"product\" on type \"Query\".",
+     "locations": [
+      {
+       "line": 3,
+       "column": 15
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "https://www.seedsman.com/rest/us/V1/products/medicine-man-regular-seeds-18-mrnmm": {
+  "http": 401,
+  "body": "{\"message\":\"The consumer isn't authorized to access %resources.\",\"parameters\":{\"resources\":\"Magento_Catalog::products\"}}"
+ },
+ "https://www.seedsman.com/rest/V1/products/medicine-man-regular-seeds-18-mrnmm": {
+  "http": 401,
+  "body": "{\"message\":\"The consumer isn't authorized to access %resources.\",\"parameters\":{\"resources\":\"Magento_Catalog::products\"}}"
+ },
+ "https://www.seedsman.com/rest/us/V1/products?searchCriteria[filterGroups][0][fil": {
+  "http": 401,
+  "body": "{\"message\":\"The consumer isn't authorized to access %resources.\",\"parameters\":{\"resources\":\"Magento_Catalog::products\"}}"
+ },
+ "https://www.seedsman.com/graphql?query=%7B__typename%7D": {
+  "http": 200,
+  "body": "{\"data\":{\"__typename\":\"Query\"}}"
+ }
+}

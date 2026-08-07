@@ -18,6 +18,9 @@
 #  Capacity audit (soft hardening): HA must NOT run a second escalation
 #  ladder. Firmware owns fans + demand rungs; this file only mirrors the
 #  four wired Sonoffs (hum / dehum / heater / mat), alerts, and safe-off.
+#  v5.2: DSC-BRIDGE (ETH01) is the primary appliance driver over ESP-NOW
+#  0xD8 → native API. These followers stay as an idempotent HA fallback
+#  (same ON/OFF target). See dsc_v4_bridge.yaml.
 #  Verified: followers resync on HA start, relay restore, hub-link restore;
 #  skip while node test mode is on; hub-offline ≥30s forces all four OFF.
 #

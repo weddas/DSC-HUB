@@ -1,0 +1,1709 @@
+
+--- launch C:\Program Files\Python314\python.exe -u \\192.168.86.2\Digital-Documents\Digital Stealth Care\Projects\DSC-HUB\scripts\scrape_tier_a_storefronts.py --refresh-claim --delay 0.55 --refresh-urls ---
+claimed 52 banks: ['00 Seeds Bank', '11s Genetics', '1522 Genetics', '420 Genetics', '808 Genetics', 'A.B. Seed Company', 'ACE Seeds', 'Acumen Genetics', 'ADKGrass', 'Advanced Seeds', 'Afghan Selection', 'Alchemy Genetics', 'AlienLabs', 'All We Know Is Dank', 'Aloha Embassy', 'Altitude Ranch Genetics', 'ALTVM', 'Annunaki Genetics', 'Anomaly Seeds', 'Antenna Seeds', 'Apex Seeds', 'Archive Seed Bank', 'Archive Seeds', 'Arctic Genetics', 'Artizen Seeds', 'Atlas Seed', 'Aura Genetix', 'Authentic Genetics', 'Auto Seeds', 'AV3 Genetics', 'Avalanche Genetics', 'Azarius Seeds', 'B.C. Bud Depot', 'B.I.G. Seeds', 'B.O.G. Seeds', 'Bad Fish Genetics', 'BAMA Seeds', 'Bat Country Farms', "Beegen's Beans", 'Beta Seeds', 'Beyond Top Shelf', 'Big Dans Genetix', 'Big Head Seeds', 'Black Cat Seeds', 'Blim Burn Seeds', 'Bob Marley Seeds', 'Bohemiaseeds', 'Botafarm California', 'Bradley Danks', 'Breeders Choice', 'BSF Seeds', 'Bud White Genetics']
+
+=== 00 Seeds Bank (https://00seeds.com/) plat=woocommerce ===
+  shopify products.json fail page=1: HTTP 404 for https://00seeds.com/products.json?limit=250&page=1
+  nested sitemap https://00seeds.com/post-sitemap.xml
+  nested sitemap https://00seeds.com/page-sitemap.xml
+  nested sitemap https://00seeds.com/blocks-sitemap.xml
+  nested sitemap https://00seeds.com/product-sitemap.xml
+  nested sitemap https://00seeds.com/category-sitemap.xml
+  nested sitemap https://00seeds.com/product_cat-sitemap.xml
+  sitemap miss https://00seeds.com/sitemap-products.xml: HTTP 404 for https://00seeds.com/sitemap-products.xml
+  sitemap miss https://00seeds.com/media/sitemap/sitemap.xml: HTTP 404 for https://00seeds.com/media/sitemap/sitemap.xml
+00-seeds-bank: SKIP discover 'charmap' codec can't encode character '\u2192' in position 32: character maps to <undefined>
+{
+  "name": "00 Seeds Bank",
+  "slug": "00-seeds-bank",
+  "url": "https://00seeds.com/",
+  "platform": "woocommerce",
+  "status": "skip_discover_fail",
+  "count": 0,
+  "urls_discovered": 0,
+  "error": "'charmap' codec can't encode character '\\u2192' in position 32: character maps to <undefined>"
+}
+
+=== 11s Genetics (https://www.11sgenetics.com/) plat=magento ===
+  shopify products.json fail page=1: HTTP 404 for https://www.11sgenetics.com/products.json?limit=250&page=1
+  sitemap miss https://www.11sgenetics.com/sitemap_index.xml: HTTP 404 for https://www.11sgenetics.com/sitemap_index.xml
+  sitemap miss https://www.11sgenetics.com/product-sitemap.xml: HTTP 404 for https://www.11sgenetics.com/product-sitemap.xml
+  sitemap miss https://www.11sgenetics.com/product-sitemap1.xml: HTTP 404 for https://www.11sgenetics.com/product-sitemap1.xml
+  sitemap miss https://www.11sgenetics.com/wp-sitemap.xml: HTTP 404 for https://www.11sgenetics.com/wp-sitemap.xml
+  sitemap miss https://www.11sgenetics.com/wp-sitemap-posts-product-1.xml: HTTP 404 for https://www.11sgenetics.com/wp-sitemap-posts-product-1.xml
+  sitemap miss https://www.11sgenetics.com/sitemap-products.xml: HTTP 404 for https://www.11sgenetics.com/sitemap-products.xml
+  sitemap miss https://www.11sgenetics.com/media/sitemap/sitemap.xml: HTTP 404 for https://www.11sgenetics.com/media/sitemap/sitemap.xml
+11s-genetics: SKIP discover 'charmap' codec can't encode character '\u2192' in position 31: character maps to <undefined>
+{
+  "name": "11s Genetics",
+  "slug": "11s-genetics",
+  "url": "https://www.11sgenetics.com/",
+  "platform": "magento",
+  "status": "skip_discover_fail",
+  "count": 0,
+  "urls_discovered": 0,
+  "error": "'charmap' codec can't encode character '\\u2192' in position 31: character maps to <undefined>"
+}
+
+=== 1522 Genetics (https://www.1522-genetics.com/) plat=woocommerce ===
+  shopify products.json fail page=1: HTTP 404 for https://www.1522-genetics.com/products.json?limit=250&page=1
+  nested sitemap https://www.1522-genetics.com/wp-sitemap-posts-product-1.xml
+  nested sitemap https://www.1522-genetics.com/wp-sitemap-taxonomies-product_cat-1.xml
+  sitemap miss https://www.1522-genetics.com/sitemap_index.xml: HTTP 404 for https://www.1522-genetics.com/sitemap_index.xml
+  sitemap miss https://www.1522-genetics.com/product-sitemap.xml: HTTP 404 for https://www.1522-genetics.com/product-sitemap.xml
+  sitemap miss https://www.1522-genetics.com/product-sitemap1.xml: HTTP 404 for https://www.1522-genetics.com/product-sitemap1.xml
+  sitemap miss https://www.1522-genetics.com/sitemap-products.xml: HTTP 404 for https://www.1522-genetics.com/sitemap-products.xml
+  sitemap miss https://www.1522-genetics.com/media/sitemap/sitemap.xml: HTTP 404 for https://www.1522-genetics.com/media/sitemap/sitemap.xml
+1522-genetics: SKIP discover 'charmap' codec can't encode character '\u2192' in position 32: character maps to <undefined>
+{
+  "name": "1522 Genetics",
+  "slug": "1522-genetics",
+  "url": "https://www.1522-genetics.com/",
+  "platform": "woocommerce",
+  "status": "skip_discover_fail",
+  "count": 0,
+  "urls_discovered": 0,
+  "error": "'charmap' codec can't encode character '\\u2192' in position 32: character maps to <undefined>"
+}
+
+=== 420 Genetics (https://www.420.com/) plat=shopify ===
+  shopify page 1: +250 (kept cumulative 245)
+  shopify page 2: +55 (kept cumulative 299)
+420-genetics: SKIP discover 'charmap' codec can't encode character '\u2192' in position 36: character maps to <undefined>
+{
+  "name": "420 Genetics",
+  "slug": "420-genetics",
+  "url": "https://www.420.com/",
+  "platform": "shopify",
+  "status": "skip_discover_fail",
+  "count": 0,
+  "urls_discovered": 0,
+  "error": "'charmap' codec can't encode character '\\u2192' in position 36: character maps to <undefined>"
+}
+
+=== 808 Genetics (https://808genetics.com/) plat=woocommerce ===
+  shopify products.json fail page=1: HTTP 404 for https://808genetics.com/products.json?limit=250&page=1
+  sitemap miss https://808genetics.com/sitemap_index.xml: HTTP 404 for https://808genetics.com/sitemap_index.xml
+  sitemap miss https://808genetics.com/product-sitemap.xml: HTTP 404 for https://808genetics.com/product-sitemap.xml
+  sitemap miss https://808genetics.com/product-sitemap1.xml: HTTP 404 for https://808genetics.com/product-sitemap1.xml
+  nested sitemap https://808genetics.com/wp-sitemap-posts-product-1.xml
+  nested sitemap https://808genetics.com/wp-sitemap-taxonomies-product_cat-1.xml
+
+--- launch C:\Program Files\Python314\python.exe -u \\192.168.86.2\Digital-Documents\Digital Stealth Care\Projects\DSC-HUB\scripts\scrape_tier_a_storefronts.py --refresh-claim --delay 0.55 --refresh-urls ---
+claimed 59 banks: ['Bat Country Farms', "Beegen's Beans", 'Beta Seeds', 'Beyond Genetics', 'Beyond Top Shelf', 'Big Head Seeds', 'Black Cat Seeds', 'Divine Genetics', 'DNA Genetics Seeds', "Doctor's Choice", 'Dojo Seed Co.', 'Dominion Seed Company', 'Don Avalanche Seeds', 'Dr. Blaze', 'Dr. Greenthumb', 'Dr. Underground', 'DSP Genetics', 'Duppy Sensi Genetics', 'DutchFem', 'Dynasty Seeds', 'Earth Witch Seeds', 'East Coast Cultivars', 'East Island Seeds', 'Eazy Daze Cultivators', 'El Clandestino', 'Fountainhead Seeds', 'Freeborn Selections', 'Freedom of Seeds', 'Freestone Genetics', 'French Touch Seeds', 'Fusion Seeds', 'G.O.A.T Genetics', 'G13 Labs', 'Garden of Green', 'GB Strains', 'Generik', 'Genesis Genetics', 'Genetix Matter', 'Hawaiian Budline', 'Herbies Seeds', 'Hi-Elevation Genetics', 'High C Genetics', 'High Speed Buds', 'Higher Perspective Genetics', 'Hill Bomb Genetics', 'Hoku Seed Co', 'Holy Perogy', 'Honey Hive Genetics', 'Honey Pot Genetics', 'Honey Sticks Genetics', 'HortiLab', 'House Of The Great Gardener', 'Howe Farms', 'Huba Seed Bank', 'Humboldt Seed Company', 'Monkey Genetics', 'Motherlode Seeds', 'Mr. C Seeds', 'MzJill Genetics']
+
+=== Bat Country Farms (https://batcountryfarms.com/) plat=magento ===
+  shopify products.json fail page=1: HTTP 404 for https://batcountryfarms.com/products.json?limit=250&page=1
+  sitemap miss https://batcountryfarms.com/sitemap_index.xml: HTTP 404 for https://batcountryfarms.com/sitemap_index.xml
+  sitemap miss https://batcountryfarms.com/product-sitemap.xml: HTTP 404 for https://batcountryfarms.com/product-sitemap.xml
+  sitemap miss https://batcountryfarms.com/product-sitemap1.xml: HTTP 404 for https://batcountryfarms.com/product-sitemap1.xml
+  sitemap miss https://batcountryfarms.com/wp-sitemap.xml: HTTP 404 for https://batcountryfarms.com/wp-sitemap.xml
+  sitemap miss https://batcountryfarms.com/wp-sitemap-posts-product-1.xml: HTTP 404 for https://batcountryfarms.com/wp-sitemap-posts-product-1.xml
+  sitemap miss https://batcountryfarms.com/sitemap-products.xml: HTTP 404 for https://batcountryfarms.com/sitemap-products.xml
+  sitemap miss https://batcountryfarms.com/media/sitemap/sitemap.xml: HTTP 404 for https://batcountryfarms.com/media/sitemap/sitemap.xml
+bat-country-farms: sitemap discover -> 0
+bat-country-farms: SKIP empty catalog
+{
+  "name": "Bat Country Farms",
+  "slug": "bat-country-farms",
+  "url": "https://batcountryfarms.com/",
+  "platform": "magento",
+  "status": "skip_empty_catalog",
+  "count": 0,
+  "urls_discovered": 0,
+  "error": "no_product_urls"
+}
+
+=== Beegen's Beans (https://www.beegensbeans.com/) plat=magento ===
+  shopify products.json fail page=1: HTTP 400 for https://www.beegensbeans.com/products.json?limit=250&page=1
+  sitemap miss https://www.beegensbeans.com/sitemap.xml: HTTP 429 for https://www.beegensbeans.com/sitemap.xml
+  sitemap miss https://www.beegensbeans.com/sitemap_index.xml: HTTP 429 for https://www.beegensbeans.com/sitemap_index.xml
+  sitemap miss https://www.beegensbeans.com/product-sitemap.xml: HTTP 429 for https://www.beegensbeans.com/product-sitemap.xml
+  sitemap miss https://www.beegensbeans.com/product-sitemap1.xml: HTTP 429 for https://www.beegensbeans.com/product-sitemap1.xml
+  sitemap miss https://www.beegensbeans.com/wp-sitemap.xml: HTTP 429 for https://www.beegensbeans.com/wp-sitemap.xml
+  sitemap miss https://www.beegensbeans.com/wp-sitemap-posts-product-1.xml: HTTP 429 for https://www.beegensbeans.com/wp-sitemap-posts-product-1.xml
+  sitemap miss https://www.beegensbeans.com/sitemap-products.xml: HTTP 429 for https://www.beegensbeans.com/sitemap-products.xml
+  sitemap miss https://www.beegensbeans.com/media/sitemap/sitemap.xml: HTTP 429 for https://www.beegensbeans.com/media/sitemap/sitemap.xml
+beegens-beans: sitemap discover -> 0
+beegens-beans: SKIP empty catalog
+{
+  "name": "Beegen's Beans",
+  "slug": "beegens-beans",
+  "url": "https://www.beegensbeans.com/",
+  "platform": "magento",
+  "status": "skip_empty_catalog",
+  "count": 0,
+  "urls_discovered": 0,
+  "error": "no_product_urls"
+}
+
+=== Beta Seeds (https://www.betaseed.com/de/de/) plat=magento ===
+
+--- launch C:\Program Files\Python314\python.exe -u \\192.168.86.2\Digital-Documents\Digital Stealth Care\Projects\DSC-HUB\scripts\scrape_tier_a_storefronts.py --delay 0.55 --refresh-urls ---
+using existing claim 69 banks (updated_at=2026-08-07T17:57:02Z)
+claimed 69 banks: ['1522 Genetics', '420 Genetics', 'Annunaki Genetics', 'Anomaly Seeds', 'Antenna Seeds', 'Apex Seeds', 'Archive Seed Bank', 'Archive Seeds', 'Arctic Genetics', 'Artizen Seeds', 'Atlas Seed', 'Aura Genetix', 'Authentic Genetics', 'Auto Seeds', 'AV3 Genetics', 'Avalanche Genetics', 'Azarius Seeds', 'Aztech Genetics', 'B. Seeds Co.', 'B.C. Bud Depot', 'B.I.G. Seeds', 'B.O.G. Seeds', 'Bad Fish Genetics', 'BAMA Seeds', 'Bat Country Farms', "Beegen's Beans", 'Beta Seeds', 'Beyond Genetics', 'Beyond Top Shelf', 'Big Dans Genetix', 'Big Head Seeds', 'Black Cat Seeds', 'Crockett Family Farms', 'Cult Classics Seeds', 'Dark Horse Genetics', 'Darkarts Labs', 'Dead By Dawn Genetics', 'Defiant Creations', 'Delicious Seeds', 'Deluxe Seeds', 'Demonic Genetics', 'Diamond Rock Genetics', 'Dirt Farmer Genetics', 'Divine Genetics', "Doctor's Choice", 'Dojo Seed Co.', 'Dominion Seed Company', 'Don Avalanche Seeds', 'Dr. Blaze', 'Dr. Greenthumb', 'Dr. Underground', 'DSP Genetics', 'Duppy Sensi Genetics', 'DutchFem', 'Dynasty Seeds', 'Earth Witch Seeds', 'East Coast Cultivars', 'East Island Seeds', 'Eazy Daze Cultivators', 'El Clandestino', 'Evermore Genetics', 'Evolve Genetics', 'Exogen Genetics', 'Exotic Genetix', 'Exotic Herbal Blends', 'Expert Seeds', 'Farmer Brown Seeds', 'Fast Buds Company', 'Finest Picker Genetics']
+
+=== 1522 Genetics (https://www.1522-genetics.com/) plat=woocommerce ===
+  shopify products.json fail page=1: HTTP 404 for https://www.1522-genetics.com/products.json?limit=250&page=1
+  nested sitemap https://www.1522-genetics.com/wp-sitemap-posts-product-1.xml
+  nested sitemap https://www.1522-genetics.com/wp-sitemap-taxonomies-product_cat-1.xml
+  sitemap miss https://www.1522-genetics.com/sitemap_index.xml: HTTP 404 for https://www.1522-genetics.com/sitemap_index.xml
+  sitemap miss https://www.1522-genetics.com/product-sitemap.xml: HTTP 404 for https://www.1522-genetics.com/product-sitemap.xml
+  sitemap miss https://www.1522-genetics.com/product-sitemap1.xml: HTTP 404 for https://www.1522-genetics.com/product-sitemap1.xml
+  sitemap miss https://www.1522-genetics.com/sitemap-products.xml: HTTP 404 for https://www.1522-genetics.com/sitemap-products.xml
+  sitemap miss https://www.1522-genetics.com/media/sitemap/sitemap.xml: HTTP 404 for https://www.1522-genetics.com/media/sitemap/sitemap.xml
+1522-genetics: sitemap discover -> 15
+1522-genetics: queued=15 resume_done=0 dump_items=0
+  ok #1 idx=1/15 name='(Alien Mints x Permanent Marker) x Baked Soufflè (Regular)'
+  ok #2 idx=2/15 name='Burgundy Bliss Runtz (Feminized)'
+  ok #3 idx=3/15 name='Burgundy Bliss Runtz x Baked Soufflé (Regular)'
+  1522-genetics checkpoint items=15 this_run=15 rate=0.20/s idx=15/15
+wrote dsc_strains_1522-genetics.json count=15
+1522-genetics staging: {
+  "family": "bank_1522_genetics",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_1522_genetics.sqlite3",
+  "count": 15,
+  "bulk": true,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 15,
+    "strain_variant": 15,
+    "chemistry_profile": 0,
+    "grow_trait": 12,
+    "entity_link": 0,
+    "attribute_kv": 0,
+    "raw_record": 15,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 0,
+    "source_record": 1
+  }
+}
+{
+  "name": "1522 Genetics",
+  "slug": "1522-genetics",
+  "url": "https://www.1522-genetics.com/",
+  "platform": "woocommerce",
+  "status": "ok",
+  "count": 15,
+  "urls_discovered": 15,
+  "error": null,
+  "skipped": 0
+}
+
+=== 420 Genetics (https://www.420.com/) plat=shopify ===
+  shopify page 1: +250 (kept cumulative 245)
+  shopify page 2: +55 (kept cumulative 299)
+420-genetics: shopify products.json -> 299
+420-genetics: ingesting 299 from products.json (HTML may be walled)
+wrote dsc_strains_420-genetics.json count=299
+420-genetics staging: {
+  "family": "bank_420_genetics",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_420_genetics.sqlite3",
+  "count": 299,
+  "bulk": true,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 285,
+    "strain_variant": 286,
+    "chemistry_profile": 0,
+    "grow_trait": 0,
+    "entity_link": 0,
+    "attribute_kv": 0,
+    "raw_record": 299,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 0,
+    "source_record": 1
+  }
+}
+{
+  "name": "420 Genetics",
+  "slug": "420-genetics",
+  "url": "https://www.420.com/",
+  "platform": "shopify",
+  "status": "ok",
+  "count": 299,
+  "urls_discovered": 299,
+  "error": null,
+  "skipped": 0,
+  "mode": "shopify_json"
+}
+
+=== Annunaki Genetics (https://annunakigenetics.com/) plat=woocommerce ===
+  shopify products.json fail page=1: HTTP 404 for https://annunakigenetics.com/products.json?limit=250&page=1
+  nested sitemap https://annunakigenetics.com/wp-sitemap-posts-product-1.xml
+  nested sitemap https://annunakigenetics.com/wp-sitemap-taxonomies-product_cat-1.xml
+  nested sitemap https://annunakigenetics.com/wp-sitemap-taxonomies-product_tag-1.xml
+  nested sitemap https://annunakigenetics.com/wp-sitemap-taxonomies-product_shipping_class-1.xml
+  sitemap miss https://annunakigenetics.com/sitemap_index.xml: HTTP 404 for https://annunakigenetics.com/sitemap_index.xml
+  sitemap miss https://annunakigenetics.com/product-sitemap.xml: HTTP 404 for https://annunakigenetics.com/product-sitemap.xml
+  sitemap miss https://annunakigenetics.com/product-sitemap1.xml: HTTP 404 for https://annunakigenetics.com/product-sitemap1.xml
+  sitemap miss https://annunakigenetics.com/sitemap-products.xml: HTTP 404 for https://annunakigenetics.com/sitemap-products.xml
+  sitemap miss https://annunakigenetics.com/media/sitemap/sitemap.xml: HTTP 404 for https://annunakigenetics.com/media/sitemap/sitemap.xml
+annunaki-genetics: sitemap discover -> 100
+annunaki-genetics: queued=100 resume_done=0 dump_items=0
+  ok #1 idx=1/100 name='Comfort Zone (CBD)'
+  ok #2 idx=2/100 name='Annunaki GIFT'
+  ok #3 idx=3/100 name='Australian Bastard Cannabis (ABC)'
+  ok #25 idx=25/100 name='Dutch Soda'
+  annunaki-genetics checkpoint items=25 this_run=25 rate=0.59/s idx=25/100
+  ok #50 idx=50/100 name='New Dimension'
+  annunaki-genetics checkpoint items=50 this_run=50 rate=0.58/s idx=50/100
+  ok #75 idx=75/100 name='Santa Marta Colombia Gold unrooted cuttings'
+  annunaki-genetics checkpoint items=75 this_run=75 rate=0.58/s idx=75/100
+  ok #100 idx=100/100 name='Yours Truly (fems)'
+  annunaki-genetics checkpoint items=100 this_run=100 rate=0.57/s idx=100/100
+wrote dsc_strains_annunaki-genetics.json count=100
+annunaki-genetics staging: {
+  "family": "bank_annunaki_genetics",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_annunaki_genetics.sqlite3",
+  "count": 100,
+  "bulk": true,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 98,
+    "strain_variant": 98,
+    "chemistry_profile": 0,
+    "grow_trait": 11,
+    "entity_link": 0,
+    "attribute_kv": 0,
+    "raw_record": 100,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 0,
+    "source_record": 1
+  }
+}
+{
+  "name": "Annunaki Genetics",
+  "slug": "annunaki-genetics",
+  "url": "https://annunakigenetics.com/",
+  "platform": "woocommerce",
+  "status": "ok",
+  "count": 100,
+  "urls_discovered": 100,
+  "error": null,
+  "skipped": 0
+}
+
+=== Anomaly Seeds (https://www.anomaly.com/) plat=magento ===
+  shopify products.json fail page=1: HTTP 404 for https://www.anomaly.com/products.json?limit=250&page=1
+  sitemap miss https://www.anomaly.com/sitemap_index.xml: HTTP 404 for https://www.anomaly.com/sitemap_index.xml
+  sitemap miss https://www.anomaly.com/product-sitemap.xml: HTTP 404 for https://www.anomaly.com/product-sitemap.xml
+  sitemap miss https://www.anomaly.com/product-sitemap1.xml: HTTP 404 for https://www.anomaly.com/product-sitemap1.xml
+  sitemap miss https://www.anomaly.com/wp-sitemap.xml: HTTP 404 for https://www.anomaly.com/wp-sitemap.xml
+  sitemap miss https://www.anomaly.com/wp-sitemap-posts-product-1.xml: HTTP 404 for https://www.anomaly.com/wp-sitemap-posts-product-1.xml
+  sitemap miss https://www.anomaly.com/sitemap-products.xml: HTTP 404 for https://www.anomaly.com/sitemap-products.xml
+  sitemap miss https://www.anomaly.com/media/sitemap/sitemap.xml: HTTP 404 for https://www.anomaly.com/media/sitemap/sitemap.xml
+anomaly-seeds: sitemap discover -> 11
+anomaly-seeds: queued=11 resume_done=0 dump_items=0
+  anomaly-seeds checkpoint items=0 this_run=0 rate=0.00/s idx=1/11
+  anomaly-seeds checkpoint items=0 this_run=0 rate=0.00/s idx=2/11
+  anomaly-seeds checkpoint items=0 this_run=0 rate=0.00/s idx=3/11
+  anomaly-seeds checkpoint items=0 this_run=0 rate=0.00/s idx=4/11
+  ok #1 idx=5/11 name='Anomaly'
+  ok #2 idx=8/11 name='Philosophy — Anomaly'
+  ok #3 idx=10/11 name='Terms of Use — Anomaly'
+  anomaly-seeds checkpoint items=3 this_run=3 rate=0.17/s idx=11/11
+wrote dsc_strains_anomaly-seeds.json count=3
+anomaly-seeds staging: {
+  "family": "bank_anomaly_seeds",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_anomaly_seeds.sqlite3",
+  "count": 3,
+  "bulk": true,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 3,
+    "strain_variant": 3,
+    "chemistry_profile": 0,
+    "grow_trait": 0,
+    "entity_link": 0,
+    "attribute_kv": 0,
+    "raw_record": 3,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 0,
+    "source_record": 1
+  }
+}
+{
+  "name": "Anomaly Seeds",
+  "slug": "anomaly-seeds",
+  "url": "https://www.anomaly.com/",
+  "platform": "magento",
+  "status": "ok",
+  "count": 3,
+  "urls_discovered": 11,
+  "error": null,
+  "skipped": 8
+}
+
+=== Antenna Seeds (https://pctel.com/antenna-selector-wireless-routers-tool/) plat=magento ===
+  shopify products.json fail page=1: HTTP 404 for https://pctel.com/antenna-selector-wireless-routers-tool/products.json?limit=250&page=1
+  sitemap miss https://pctel.com/antenna-selector-wireless-routers-tool/sitemap.xml: HTTP 404 for https://pctel.com/antenna-selector-wireless-routers-tool/sitemap.xml
+  sitemap miss https://pctel.com/antenna-selector-wireless-routers-tool/sitemap_index.xml: HTTP 404 for https://pctel.com/antenna-selector-wireless-routers-tool/sitemap_index.xml
+  sitemap miss https://pctel.com/antenna-selector-wireless-routers-tool/product-sitemap.xml: HTTP 404 for https://pctel.com/antenna-selector-wireless-routers-tool/product-sitemap.xml
+  sitemap miss https://pctel.com/antenna-selector-wireless-routers-tool/product-sitemap1.xml: HTTP 404 for https://pctel.com/antenna-selector-wireless-routers-tool/product-sitemap1.xml
+  sitemap miss https://pctel.com/antenna-selector-wireless-routers-tool/wp-sitemap.xml: HTTP 404 for https://pctel.com/antenna-selector-wireless-routers-tool/wp-sitemap.xml
+  sitemap miss https://pctel.com/antenna-selector-wireless-routers-tool/wp-sitemap-posts-product-1.xml: HTTP 404 for https://pctel.com/antenna-selector-wireless-routers-tool/wp-sitemap-posts-product-1.xml
+  sitemap miss https://pctel.com/antenna-selector-wireless-routers-tool/sitemap-products.xml: HTTP 404 for https://pctel.com/antenna-selector-wireless-routers-tool/sitemap-products.xml
+  sitemap miss https://pctel.com/antenna-selector-wireless-routers-tool/media/sitemap/sitemap.xml: HTTP 404 for https://pctel.com/antenna-selector-wireless-routers-tool/media/sitemap/sitemap.xml
+antenna-seeds: sitemap discover -> 0
+antenna-seeds: SKIP empty catalog
+{
+  "name": "Antenna Seeds",
+  "slug": "antenna-seeds",
+  "url": "https://pctel.com/antenna-selector-wireless-routers-tool/",
+  "platform": "magento",
+  "status": "skip_empty_catalog",
+  "count": 0,
+  "urls_discovered": 0,
+  "error": "no_product_urls"
+}
+
+=== Apex Seeds (https://www.apexseeds.com/) plat=woocommerce ===
+  shopify products.json fail page=1: HTTP 404 for https://www.apexseeds.com/products.json?limit=250&page=1
+  nested sitemap https://www.apexseeds.com/post-sitemap.xml
+  nested sitemap https://www.apexseeds.com/page-sitemap.xml
+  nested sitemap https://www.apexseeds.com/attachment-sitemap.xml
+  nested sitemap https://www.apexseeds.com/our_coupons-sitemap.xml
+  nested sitemap https://www.apexseeds.com/cleaning_services-sitemap.xml
+  nested sitemap https://www.apexseeds.com/product-sitemap.xml
+  nested sitemap https://www.apexseeds.com/gallery-sitemap.xml
+  nested sitemap https://www.apexseeds.com/product_cat-sitemap.xml
+  sitemap miss https://www.apexseeds.com/wp-sitemap.xml: HTTP 404 for https://www.apexseeds.com/wp-sitemap.xml
+  sitemap miss https://www.apexseeds.com/wp-sitemap-posts-product-1.xml: HTTP 404 for https://www.apexseeds.com/wp-sitemap-posts-product-1.xml
+  sitemap miss https://www.apexseeds.com/sitemap-products.xml: HTTP 404 for https://www.apexseeds.com/sitemap-products.xml
+  sitemap miss https://www.apexseeds.com/media/sitemap/sitemap.xml: HTTP 404 for https://www.apexseeds.com/media/sitemap/sitemap.xml
+apex-seeds: sitemap discover -> 40
+apex-seeds: queued=40 resume_done=0 dump_items=0
+  ok #1 idx=1/40 name='Autoflowering seeds Marijuana quality'
+  ok #2 idx=2/40 name='Blog'
+  ok #3 idx=3/40 name='Pack Auto 1'
+
+--- launch C:\Program Files\Python314\python.exe -u \\192.168.86.2\Digital-Documents\Digital Stealth Care\Projects\DSC-HUB\scripts\scrape_tier_a_storefronts.py --delay 0.55 --refresh-urls ---
+using partition claim 96 banks (updated_at=2026-08-07T18:04:52Z)
+claimed 96 banks: ['Freedom of Seeds', 'Terp Fi3nd', 'Atlas Seed', 'Seed Canary', 'Riot Seeds', 'Socal Seed Vault', 'Crockett Family Farms', 'Nordland Seeds', 'French Touch Seeds', 'The Plant Stable', 'Umami Seed Co', 'Paradise Seeds', 'Colorado Seed Inc.', 'Apex Seeds', "Mack's Terps", 'Auto Seeds', 'Sunshine State Seed Company', 'Green Bodhi', 'Grounded Genetics', 'IDGSeeds', 'Pure Breeding', 'Theraplant', 'Growing Up Ganja', 'Medicann Seeds', 'GB Strains', 'House Of The Great Gardener', 'Soma Seeds', 'Romulan Genetics', 'Sugar Shack', 'Aloha Embassy', 'White Clouds Genetics', 'Staff Selects', 'Ceres Seeds', 'Ministry of Cannabis', 'Blim Burn Seeds', 'Advanced Seeds', 'B.C. Bud Depot', 'Black Farm Genetix', 'Cannabiogen', 'Carpathians Seeds', 'Demonic Genetics', 'El Clandestino', 'Elev8 Seeds', 'Exclusive Seeds Bank', 'Greenpoint Seeds', 'Huba Seed Bank', 'Hypno Seeds', 'Kingdom Organic Seeds', 'Laid Out Genetics', 'Mighty Irish Seeds', 'Monkey Genetics', 'Nuka Seeds', 'Oregon Green Seed', 'Pure Sunfarms', 'Raw Genetics', 'Trikoma Seeds', '11s Genetics', '1522 Genetics', '808 Genetics', 'A.B. Seed Company', 'ADKGrass', 'AlienLabs', 'ALTVM', 'Annunaki Genetics', 'Archive Seed Bank', 'BAMA Seeds', 'Black Cat Seeds', 'Botafarm California', 'Bud White Genetics', 'Califrosty', 'Canuk Seeds', 'Cartel Seeds', 'CBD Crew', 'Craft Cannabis of Vermont', 'Critical Mass Collective', 'Cult Classics Seeds', "Doctor's Choice", 'Dojo Seed Co.', 'Dr. Underground', 'DSP Genetics', 'Dynasty Seeds', 'Exotic Genetix', 'Exotic Herbal Blends', 'Fleur du Mal', 'Flower Bounty Farms', 'Freeborn Selections', 'G.O.A.T Genetics', 'Garden of Green', 'Generik', 'Genetix Matter', 'Grandmas Genetics', 'Green House Seeds', 'Green Source Gardens', 'Greenbud Seeds', 'Hawaiian Budline', 'High Speed Buds']
+
+=== Freedom of Seeds (https://freedomofseeds.com/) plat=woocommerce ===
+  shopify products.json fail page=1: HTTP 404 for https://freedomofseeds.com/products.json?limit=250&page=1
+  nested sitemap https://freedomofseeds.com/post-sitemap.xml
+  nested sitemap https://freedomofseeds.com/page-sitemap.xml
+  nested sitemap https://freedomofseeds.com/product-sitemap1.xml
+  nested sitemap https://freedomofseeds.com/product-sitemap2.xml
+  nested sitemap https://freedomofseeds.com/product-sitemap3.xml
+  nested sitemap https://freedomofseeds.com/product-sitemap4.xml
+  nested sitemap https://freedomofseeds.com/product-sitemap5.xml
+  nested sitemap https://freedomofseeds.com/product-sitemap6.xml
+  nested sitemap https://freedomofseeds.com/product-sitemap7.xml
+  nested sitemap https://freedomofseeds.com/product-sitemap8.xml
+  nested sitemap https://freedomofseeds.com/product-sitemap9.xml
+  nested sitemap https://freedomofseeds.com/product-sitemap10.xml
+  nested sitemap https://freedomofseeds.com/product-sitemap11.xml
+  nested sitemap https://freedomofseeds.com/product-sitemap12.xml
+  nested sitemap https://freedomofseeds.com/product-sitemap13.xml
+  nested sitemap https://freedomofseeds.com/product-sitemap14.xml
+  nested sitemap https://freedomofseeds.com/product-sitemap15.xml
+  nested sitemap https://freedomofseeds.com/product-sitemap16.xml
+  nested sitemap https://freedomofseeds.com/product-sitemap17.xml
+  nested sitemap https://freedomofseeds.com/product-sitemap18.xml
+  nested sitemap https://freedomofseeds.com/woo_product_badges-sitemap.xml
+  sitemap miss https://freedomofseeds.com/sitemap-products.xml: HTTP 404 for https://freedomofseeds.com/sitemap-products.xml
+  sitemap miss https://freedomofseeds.com/media/sitemap/sitemap.xml: HTTP 404 for https://freedomofseeds.com/media/sitemap/sitemap.xml
+freedom-of-seeds: sitemap discover -> 4082
+freedom-of-seeds: queued=4082 resume_done=0 dump_items=0
+  ok #1 idx=1/4082 name='Woo Product Badges Archive'
+  ok #2 idx=2/4082 name='Black Friday'
+  ok #3 idx=3/4082 name='Cannabis Seeds Brands'
+  ok #25 idx=25/4082 name='4G Feminised'
+  freedom-of-seeds checkpoint items=25 this_run=25 rate=0.32/s idx=25/4082
+  fail https://freedomofseeds.com/product/60-day-grapefruit-auto-feminised-seeds: HTTP 502 for https://freedomofseeds.com/product/60-day-grapefruit-auto-feminised-seeds
+  ok #50 idx=54/4082 name='Afghan Kush x Black Domina Feminised'
+  freedom-of-seeds checkpoint items=50 this_run=50 rate=0.28/s idx=54/4082
+
+--- launch C:\Program Files\Python314\python.exe -u \\192.168.86.2\Digital-Documents\Digital Stealth Care\Projects\DSC-HUB\scripts\scrape_tier_a_storefronts.py --delay 0.55 --refresh-urls ---
+using partition claim 96 banks (updated_at=2026-08-07T18:04:52Z)
+claimed 96 banks: ['Freedom of Seeds', 'Terp Fi3nd', 'Atlas Seed', 'Seed Canary', 'Riot Seeds', 'Socal Seed Vault', 'Crockett Family Farms', 'Nordland Seeds', 'French Touch Seeds', 'The Plant Stable', 'Umami Seed Co', 'Paradise Seeds', 'Colorado Seed Inc.', 'Apex Seeds', "Mack's Terps", 'Auto Seeds', 'Sunshine State Seed Company', 'Green Bodhi', 'Grounded Genetics', 'IDGSeeds', 'Pure Breeding', 'Theraplant', 'Growing Up Ganja', 'Medicann Seeds', 'GB Strains', 'House Of The Great Gardener', 'Soma Seeds', 'Romulan Genetics', 'Sugar Shack', 'Aloha Embassy', 'White Clouds Genetics', 'Staff Selects', 'Ceres Seeds', 'Ministry of Cannabis', 'Blim Burn Seeds', 'Advanced Seeds', 'B.C. Bud Depot', 'Black Farm Genetix', 'Cannabiogen', 'Carpathians Seeds', 'Demonic Genetics', 'El Clandestino', 'Elev8 Seeds', 'Exclusive Seeds Bank', 'Greenpoint Seeds', 'Huba Seed Bank', 'Hypno Seeds', 'Kingdom Organic Seeds', 'Laid Out Genetics', 'Mighty Irish Seeds', 'Monkey Genetics', 'Nuka Seeds', 'Oregon Green Seed', 'Pure Sunfarms', 'Raw Genetics', 'Trikoma Seeds', '11s Genetics', '1522 Genetics', '808 Genetics', 'A.B. Seed Company', 'ADKGrass', 'AlienLabs', 'ALTVM', 'Annunaki Genetics', 'Archive Seed Bank', 'BAMA Seeds', 'Black Cat Seeds', 'Botafarm California', 'Bud White Genetics', 'Califrosty', 'Canuk Seeds', 'Cartel Seeds', 'CBD Crew', 'Craft Cannabis of Vermont', 'Critical Mass Collective', 'Cult Classics Seeds', "Doctor's Choice", 'Dojo Seed Co.', 'Dr. Underground', 'DSP Genetics', 'Dynasty Seeds', 'Exotic Genetix', 'Exotic Herbal Blends', 'Fleur du Mal', 'Flower Bounty Farms', 'Freeborn Selections', 'G.O.A.T Genetics', 'Garden of Green', 'Generik', 'Genetix Matter', 'Grandmas Genetics', 'Green House Seeds', 'Green Source Gardens', 'Greenbud Seeds', 'Hawaiian Budline', 'High Speed Buds']
+
+=== Freedom of Seeds (https://freedomofseeds.com/) plat=woocommerce ===
+  shopify products.json fail page=1: HTTP 404 for https://freedomofseeds.com/products.json?limit=250&page=1
+  nested sitemap https://freedomofseeds.com/post-sitemap.xml
+  nested sitemap https://freedomofseeds.com/page-sitemap.xml
+  nested sitemap https://freedomofseeds.com/product-sitemap1.xml
+  nested sitemap https://freedomofseeds.com/product-sitemap2.xml
+  nested sitemap https://freedomofseeds.com/product-sitemap3.xml
+  nested sitemap https://freedomofseeds.com/product-sitemap4.xml
+  nested sitemap https://freedomofseeds.com/product-sitemap5.xml
+  nested sitemap https://freedomofseeds.com/product-sitemap6.xml
+  nested sitemap https://freedomofseeds.com/product-sitemap7.xml
+  nested sitemap https://freedomofseeds.com/product-sitemap8.xml
+  nested sitemap https://freedomofseeds.com/product-sitemap9.xml
+  nested sitemap https://freedomofseeds.com/product-sitemap10.xml
+  nested sitemap https://freedomofseeds.com/product-sitemap11.xml
+  nested sitemap https://freedomofseeds.com/product-sitemap12.xml
+  nested sitemap https://freedomofseeds.com/product-sitemap13.xml
+  nested sitemap https://freedomofseeds.com/product-sitemap14.xml
+  nested sitemap https://freedomofseeds.com/product-sitemap15.xml
+
+--- launch C:\Program Files\Python314\python.exe -u \\192.168.86.2\Digital-Documents\Digital Stealth Care\Projects\DSC-HUB\scripts\scrape_tier_a_storefronts.py --delay 0.55 --refresh-urls ---
+using partition claim 96 banks (updated_at=2026-08-07T18:04:52Z)
+claimed 96 banks: ['Freedom of Seeds', 'Terp Fi3nd', 'Atlas Seed', 'Seed Canary', 'Riot Seeds', 'Socal Seed Vault', 'Crockett Family Farms', 'Nordland Seeds', 'French Touch Seeds', 'The Plant Stable', 'Umami Seed Co', 'Paradise Seeds', 'Colorado Seed Inc.', 'Apex Seeds', "Mack's Terps", 'Auto Seeds', 'Sunshine State Seed Company', 'Green Bodhi', 'Grounded Genetics', 'IDGSeeds', 'Pure Breeding', 'Theraplant', 'Growing Up Ganja', 'Medicann Seeds', 'GB Strains', 'House Of The Great Gardener', 'Soma Seeds', 'Romulan Genetics', 'Sugar Shack', 'Aloha Embassy', 'White Clouds Genetics', 'Staff Selects', 'Ceres Seeds', 'Ministry of Cannabis', 'Blim Burn Seeds', 'Advanced Seeds', 'B.C. Bud Depot', 'Black Farm Genetix', 'Cannabiogen', 'Carpathians Seeds', 'Demonic Genetics', 'El Clandestino', 'Elev8 Seeds', 'Exclusive Seeds Bank', 'Greenpoint Seeds', 'Huba Seed Bank', 'Hypno Seeds', 'Kingdom Organic Seeds', 'Laid Out Genetics', 'Mighty Irish Seeds', 'Monkey Genetics', 'Nuka Seeds', 'Oregon Green Seed', 'Pure Sunfarms', 'Raw Genetics', 'Trikoma Seeds', '11s Genetics', '1522 Genetics', '808 Genetics', 'A.B. Seed Company', 'ADKGrass', 'AlienLabs', 'ALTVM', 'Annunaki Genetics', 'Archive Seed Bank', 'BAMA Seeds', 'Black Cat Seeds', 'Botafarm California', 'Bud White Genetics', 'Califrosty', 'Canuk Seeds', 'Cartel Seeds', 'CBD Crew', 'Craft Cannabis of Vermont', 'Critical Mass Collective', 'Cult Classics Seeds', "Doctor's Choice", 'Dojo Seed Co.', 'Dr. Underground', 'DSP Genetics', 'Dynasty Seeds', 'Exotic Genetix', 'Exotic Herbal Blends', 'Fleur du Mal', 'Flower Bounty Farms', 'Freeborn Selections', 'G.O.A.T Genetics', 'Garden of Green', 'Generik', 'Genetix Matter', 'Grandmas Genetics', 'Green House Seeds', 'Green Source Gardens', 'Greenbud Seeds', 'Hawaiian Budline', 'High Speed Buds']
+
+=== Freedom of Seeds (https://freedomofseeds.com/) plat=woocommerce ===
+  shopify products.json fail page=1: HTTP 404 for https://freedomofseeds.com/products.json?limit=250&page=1
+  nested sitemap https://freedomofseeds.com/product-sitemap1.xml
+  nested sitemap https://freedomofseeds.com/product-sitemap2.xml
+  nested sitemap https://freedomofseeds.com/product-sitemap3.xml
+  nested sitemap https://freedomofseeds.com/product-sitemap4.xml
+  nested sitemap https://freedomofseeds.com/product-sitemap5.xml
+  nested sitemap https://freedomofseeds.com/product-sitemap6.xml
+  nested sitemap https://freedomofseeds.com/product-sitemap7.xml
+  nested sitemap https://freedomofseeds.com/product-sitemap8.xml
+  nested sitemap https://freedomofseeds.com/product-sitemap9.xml
+  nested sitemap https://freedomofseeds.com/product-sitemap10.xml
+  nested sitemap https://freedomofseeds.com/product-sitemap11.xml
+  nested sitemap https://freedomofseeds.com/product-sitemap12.xml
+  nested sitemap https://freedomofseeds.com/product-sitemap13.xml
+  nested sitemap https://freedomofseeds.com/product-sitemap14.xml
+  nested sitemap https://freedomofseeds.com/product-sitemap15.xml
+  nested sitemap https://freedomofseeds.com/product-sitemap16.xml
+  nested sitemap https://freedomofseeds.com/product-sitemap17.xml
+  nested sitemap https://freedomofseeds.com/product-sitemap18.xml
+  sitemap miss https://freedomofseeds.com/sitemap-products.xml: HTTP 404 for https://freedomofseeds.com/sitemap-products.xml
+  sitemap miss https://freedomofseeds.com/media/sitemap/sitemap.xml: HTTP 404 for https://freedomofseeds.com/media/sitemap/sitemap.xml
+freedom-of-seeds: sitemap discover -> 4064
+freedom-of-seeds: queued=4064 resume_done=0 dump_items=0
+  ok #1 idx=1/4064 name='Cannabis Seeds Brands'
+  ok #2 idx=2/4064 name='#167B Auto Feminised'
+  ok #3 idx=3/4064 name='2 Fast 2 Vast Auto Feminised'
+  ok #25 idx=28/4064 name='Acapulco Gold Feminised'
+  freedom-of-seeds checkpoint items=25 this_run=25 rate=0.78/s idx=28/4064
+  ok #50 idx=53/4064 name='Afghani #1'
+  freedom-of-seeds checkpoint items=50 this_run=50 rate=0.82/s idx=53/4064
+  fail https://freedomofseeds.com/product/ak-48-feminised-seeds-2: HTTP 502 for https://freedomofseeds.com/product/ak-48-feminised-seeds-2
+  ok #75 idx=79/4064 name='AK 49 Feminised Vision'
+  freedom-of-seeds checkpoint items=75 this_run=75 rate=0.51/s idx=79/4064
+  ok #100 idx=104/4064 name='Alien OG Feminised'
+  freedom-of-seeds checkpoint items=100 this_run=100 rate=0.43/s idx=104/4064
+  ok #125 idx=135/4064 name='Amnesia Auto Feminised Nirvana'
+  freedom-of-seeds checkpoint items=125 this_run=125 rate=0.37/s idx=135/4064
+  ok #150 idx=163/4064 name='Amnesia Flash Feminised Cannabis Seeds Anesia'
+  freedom-of-seeds checkpoint items=150 this_run=150 rate=0.35/s idx=163/4064
+  ok #175 idx=188/4064 name='Amnesia Haze Feminised Bsb Genetics'
+  freedom-of-seeds checkpoint items=175 this_run=175 rate=0.35/s idx=188/4064
+  ok #200 idx=213/4064 name='Amsterdam Cheese Feminised'
+  freedom-of-seeds checkpoint items=200 this_run=200 rate=0.34/s idx=213/4064
+freedom-of-seeds staging: {
+  "family": "bank_freedom_of_seeds",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_freedom_of_seeds.sqlite3",
+  "count": 200,
+  "bulk": true,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 148,
+    "strain_variant": 148,
+    "chemistry_profile": 24,
+    "grow_trait": 50,
+    "entity_link": 24,
+    "attribute_kv": 0,
+    "raw_record": 200,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 0,
+    "source_record": 1
+  }
+}
+  ok #225 idx=239/4064 name='Apple Crumble Feminised'
+  freedom-of-seeds checkpoint items=225 this_run=225 rate=0.33/s idx=239/4064
+  ok #250 idx=267/4064 name="Arjan's Haze #1 Feminised Greenhouse"
+  freedom-of-seeds checkpoint items=250 this_run=250 rate=0.32/s idx=267/4064
+  ok #275 idx=298/4064 name='Auto AK Feminised'
+  freedom-of-seeds checkpoint items=275 this_run=275 rate=0.31/s idx=298/4064
+  ok #300 idx=327/4064 name='Auto Bite\xa0Autoflowering Feminised Cannabis'
+  freedom-of-seeds checkpoint items=300 this_run=300 rate=0.31/s idx=327/4064
+  ok #325 idx=353/4064 name='Auto Blueberry Feminised OO'
+  freedom-of-seeds checkpoint items=325 this_run=325 rate=0.31/s idx=353/4064
+  ok #350 idx=379/4064 name='Auto CBG Force Feminised Dutch Passion'
+  freedom-of-seeds checkpoint items=350 this_run=350 rate=0.30/s idx=379/4064
+  ok #375 idx=404/4064 name='Auto Critical Lemon CBD Feminised Advanced'
+  freedom-of-seeds checkpoint items=375 this_run=375 rate=0.30/s idx=404/4064
+  ok #400 idx=432/4064 name='Auto Fem Collection #3 Feminised Seeds by OO'
+  freedom-of-seeds checkpoint items=400 this_run=400 rate=0.30/s idx=432/4064
+freedom-of-seeds staging: {
+  "family": "bank_freedom_of_seeds",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_freedom_of_seeds.sqlite3",
+  "count": 400,
+  "bulk": true,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 303,
+    "strain_variant": 303,
+    "chemistry_profile": 69,
+    "grow_trait": 119,
+    "entity_link": 69,
+    "attribute_kv": 0,
+    "raw_record": 400,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 0,
+    "source_record": 1
+  }
+}
+  ok #425 idx=458/4064 name='Auto Gorilla Blue Feminised Advanced'
+  freedom-of-seeds checkpoint items=425 this_run=425 rate=0.30/s idx=458/4064
+  ok #450 idx=484/4064 name='Auto Kerosene Krash Feminised Dutch Passion'
+  freedom-of-seeds checkpoint items=450 this_run=450 rate=0.30/s idx=484/4064
+  ok #475 idx=509/4064 name='Auto Mimosa Punch Feminised'
+  freedom-of-seeds checkpoint items=475 this_run=475 rate=0.30/s idx=509/4064
+  ok #500 idx=534/4064 name='Auto Nova OG Feminised'
+  freedom-of-seeds checkpoint items=500 this_run=500 rate=0.30/s idx=534/4064
+  ok #525 idx=559/4064 name='Auto Purple Diesel Feminised Advanced'
+  freedom-of-seeds checkpoint items=525 this_run=525 rate=0.30/s idx=559/4064
+  ok #550 idx=585/4064 name='Auto Skush Feminised'
+  freedom-of-seeds checkpoint items=550 this_run=550 rate=0.30/s idx=585/4064
+  ok #575 idx=611/4064 name='Auto Strawberry Banana Feminised Cannabis Seeds Anesia'
+  freedom-of-seeds checkpoint items=575 this_run=575 rate=0.30/s idx=611/4064
+  ok #600 idx=637/4064 name='Auto Ultimate Feminised Dutch Passion'
+  freedom-of-seeds checkpoint items=600 this_run=600 rate=0.30/s idx=637/4064
+freedom-of-seeds staging: {
+  "family": "bank_freedom_of_seeds",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_freedom_of_seeds.sqlite3",
+  "count": 600,
+  "bulk": true,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 448,
+    "strain_variant": 448,
+    "chemistry_profile": 114,
+    "grow_trait": 168,
+    "entity_link": 114,
+    "attribute_kv": 0,
+    "raw_record": 600,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 0,
+    "source_record": 1
+  }
+}
+  ok #625 idx=662/4064 name='Auto Zkittlez Feminised Original Sensible'
+  freedom-of-seeds checkpoint items=625 this_run=625 rate=0.30/s idx=662/4064
+  ok #650 idx=687/4064 name='Baked Bomb Feminised'
+  freedom-of-seeds checkpoint items=650 this_run=650 rate=0.30/s idx=687/4064
+  ok #675 idx=716/4064 name='Banana MAC Feminised Cannabis Seeds Anesia'
+  freedom-of-seeds checkpoint items=675 this_run=675 rate=0.30/s idx=716/4064
+  ok #700 idx=741/4064 name='Bangi Haze Feminised'
+  freedom-of-seeds checkpoint items=700 this_run=700 rate=0.30/s idx=741/4064
+  ok #725 idx=766/4064 name='Big Bruce Feminised Seeds OUT OF STOCK'
+  freedom-of-seeds checkpoint items=725 this_run=725 rate=0.30/s idx=766/4064
+  ok #750 idx=791/4064 name='Big Devil XL Feminised'
+  freedom-of-seeds checkpoint items=750 this_run=750 rate=0.30/s idx=791/4064
+  ok #775 idx=816/4064 name='Biscotti Peach Feminised'
+  freedom-of-seeds checkpoint items=775 this_run=775 rate=0.30/s idx=816/4064
+  ok #800 idx=841/4064 name='Black Domina Feminised Sensi'
+  freedom-of-seeds checkpoint items=800 this_run=800 rate=0.30/s idx=841/4064
+freedom-of-seeds staging: {
+  "family": "bank_freedom_of_seeds",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_freedom_of_seeds.sqlite3",
+  "count": 800,
+  "bulk": true,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 599,
+    "strain_variant": 599,
+    "chemistry_profile": 152,
+    "grow_trait": 241,
+    "entity_link": 152,
+    "attribute_kv": 0,
+    "raw_record": 800,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 0,
+    "source_record": 1
+  }
+}
+  ok #825 idx=866/4064 name='Black Toffee Auto Feminised'
+  freedom-of-seeds checkpoint items=825 this_run=825 rate=0.30/s idx=866/4064
+  ok #850 idx=891/4064 name='Blackberry Rocks Feminised Bsb Genetics'
+  freedom-of-seeds checkpoint items=850 this_run=850 rate=0.30/s idx=891/4064
+  ok #875 idx=916/4064 name='Blue Bullet Auto 1 Feminised Sensi'
+  freedom-of-seeds checkpoint items=875 this_run=875 rate=0.30/s idx=916/4064
+  ok #900 idx=941/4064 name='Blue Dream Auto Feminised Garden Of Green'
+  freedom-of-seeds checkpoint items=900 this_run=900 rate=0.30/s idx=941/4064
+  fail https://freedomofseeds.com/product/blue-himalaya-feminised-seeds: HTTP 502 for https://freedomofseeds.com/product/blue-himalaya-feminised-seeds
+  ok #925 idx=967/4064 name='Blue Kripple Feminised'
+  freedom-of-seeds checkpoint items=925 this_run=925 rate=0.30/s idx=967/4064
+  ok #950 idx=992/4064 name="Blue Sunset Sherbert Feminised Barney's Farm"
+  freedom-of-seeds checkpoint items=950 this_run=950 rate=0.30/s idx=992/4064
+  ok #975 idx=1018/4064 name='Blueberry Feminised Dutch Passion'
+  freedom-of-seeds checkpoint items=975 this_run=975 rate=0.30/s idx=1018/4064
+  ok #1000 idx=1043/4064 name='Blueberry Sugar Pine Feminised'
+  freedom-of-seeds checkpoint items=1000 this_run=1000 rate=0.30/s idx=1043/4064
+freedom-of-seeds staging: {
+  "family": "bank_freedom_of_seeds",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_freedom_of_seeds.sqlite3",
+  "count": 1000,
+  "bulk": true,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 747,
+    "strain_variant": 747,
+    "chemistry_profile": 189,
+    "grow_trait": 299,
+    "entity_link": 189,
+    "attribute_kv": 0,
+    "raw_record": 1000,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 0,
+    "source_record": 1
+  }
+}
+  ok #1025 idx=1068/4064 name="Brain's Escape Feminised Kc Brains"
+  freedom-of-seeds checkpoint items=1025 this_run=1025 rate=0.30/s idx=1068/4064
+  ok #1050 idx=1093/4064 name='Bruce Banner Auto Feminised Sweet'
+  freedom-of-seeds checkpoint items=1050 this_run=1050 rate=0.30/s idx=1093/4064
+  ok #1075 idx=1119/4064 name='Bubba 76 Feminised Emerald Triangle'
+  freedom-of-seeds checkpoint items=1075 this_run=1075 rate=0.30/s idx=1119/4064
+  ok #1100 idx=1146/4064 name='Bubble Cheese Feminised'
+  freedom-of-seeds checkpoint items=1100 this_run=1100 rate=0.30/s idx=1146/4064
+  ok #1125 idx=1171/4064 name='Buddha Kush OG Feminised'
+  freedom-of-seeds checkpoint items=1125 this_run=1125 rate=0.30/s idx=1171/4064
+  ok #1150 idx=1196/4064 name='Cali Bay Dream Feminised'
+  freedom-of-seeds checkpoint items=1150 this_run=1150 rate=0.30/s idx=1196/4064
+  ok #1175 idx=1221/4064 name='California Train Wreck Feminised'
+  freedom-of-seeds checkpoint items=1175 this_run=1175 rate=0.30/s idx=1221/4064
+  ok #1200 idx=1246/4064 name='California Cream Feminised'
+  freedom-of-seeds checkpoint items=1200 this_run=1200 rate=0.30/s idx=1246/4064
+freedom-of-seeds staging: {
+  "family": "bank_freedom_of_seeds",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_freedom_of_seeds.sqlite3",
+  "count": 1200,
+  "bulk": true,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 892,
+    "strain_variant": 892,
+    "chemistry_profile": 213,
+    "grow_trait": 352,
+    "entity_link": 213,
+    "attribute_kv": 0,
+    "raw_record": 1200,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 0,
+    "source_record": 1
+  }
+}
+  ok #1225 idx=1271/4064 name='CBD 1:1 Silver Lime Haze Auto Feminised Seedstockers'
+  freedom-of-seeds checkpoint items=1225 this_run=1225 rate=0.30/s idx=1271/4064
+  ok #1250 idx=1296/4064 name="CBD Kong's Kush Feminised"
+  freedom-of-seeds checkpoint items=1250 this_run=1250 rate=0.30/s idx=1296/4064
+  ok #1275 idx=1321/4064 name='CEREAL MILK Feminised'
+  freedom-of-seeds checkpoint items=1275 this_run=1275 rate=0.30/s idx=1321/4064
+  ok #1300 idx=1346/4064 name='Cheese UK CBG'
+  freedom-of-seeds checkpoint items=1300 this_run=1300 rate=0.30/s idx=1346/4064
+  fail https://freedomofseeds.com/product/cheesy-headband-regular-emerald-triangle-seeds: HTTP 502 for https://freedomofseeds.com/product/cheesy-headband-regular-emerald-triangle-seeds
+  ok #1325 idx=1372/4064 name='Chemdog #4 Feminised'
+  freedom-of-seeds checkpoint items=1325 this_run=1325 rate=0.30/s idx=1372/4064
+  ok #1350 idx=1397/4064 name='Cherry O.G. Feminised Emerald Triangle'
+  freedom-of-seeds checkpoint items=1350 this_run=1350 rate=0.30/s idx=1397/4064
+  ok #1375 idx=1423/4064 name='Choc'
+  freedom-of-seeds checkpoint items=1375 this_run=1375 rate=0.30/s idx=1423/4064
+  ok #1400 idx=1448/4064 name='Chunky Skunk3 Feminised Sagarmatha'
+  freedom-of-seeds checkpoint items=1400 this_run=1400 rate=0.30/s idx=1448/4064
+freedom-of-seeds staging: {
+  "family": "bank_freedom_of_seeds",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_freedom_of_seeds.sqlite3",
+  "count": 1400,
+  "bulk": true,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 1045,
+    "strain_variant": 1045,
+    "chemistry_profile": 245,
+    "grow_trait": 422,
+    "entity_link": 245,
+    "attribute_kv": 0,
+    "raw_record": 1400,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 0,
+    "source_record": 1
+  }
+}
+  ok #1425 idx=1473/4064 name='Congo Feminised Cannabis Seeds Ace'
+  freedom-of-seeds checkpoint items=1425 this_run=1425 rate=0.30/s idx=1473/4064
+  ok #1450 idx=1498/4064 name='Cookies n Cream Auto Feminised'
+  freedom-of-seeds checkpoint items=1450 this_run=1450 rate=0.30/s idx=1498/4064
+  ok #1475 idx=1523/4064 name='Cream Caramel'
+  freedom-of-seeds checkpoint items=1475 this_run=1475 rate=0.30/s idx=1523/4064
+  ok #1500 idx=1548/4064 name='Critical 707 Feminised Emerald Triangle'
+  freedom-of-seeds checkpoint items=1500 this_run=1500 rate=0.30/s idx=1548/4064
+  ok #1525 idx=1573/4064 name='Critical Feminised'
+  freedom-of-seeds checkpoint items=1525 this_run=1525 rate=0.30/s idx=1573/4064
+  ok #1550 idx=1603/4064 name='Critical Poison Feminised'
+  freedom-of-seeds checkpoint items=1550 this_run=1550 rate=0.30/s idx=1603/4064
+  ok #1575 idx=1629/4064 name='Crystal Candy Auto Feminised'
+  freedom-of-seeds checkpoint items=1575 this_run=1575 rate=0.29/s idx=1629/4064
+  ok #1600 idx=1654/4064 name='Dankberry Feminised Cannabis Seeds Anesia'
+  freedom-of-seeds checkpoint items=1600 this_run=1600 rate=0.29/s idx=1654/4064
+freedom-of-seeds staging: {
+  "family": "bank_freedom_of_seeds",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_freedom_of_seeds.sqlite3",
+  "count": 1600,
+  "bulk": true,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 1203,
+    "strain_variant": 1203,
+    "chemistry_profile": 274,
+    "grow_trait": 468,
+    "entity_link": 274,
+    "attribute_kv": 0,
+    "raw_record": 1600,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 0,
+    "source_record": 1
+  }
+}
+  ok #1625 idx=1679/4064 name='Descojack Feminised'
+  freedom-of-seeds checkpoint items=1625 this_run=1625 rate=0.29/s idx=1679/4064
+  ok #1650 idx=1704/4064 name='Dieselicious Regular'
+  freedom-of-seeds checkpoint items=1650 this_run=1650 rate=0.29/s idx=1704/4064
+  ok #1675 idx=1729/4064 name='Dolly Kush Feminised'
+  freedom-of-seeds checkpoint items=1675 this_run=1675 rate=0.29/s idx=1729/4064
+  ok #1700 idx=1754/4064 name='Don OG Kush Auto Feminised'
+  freedom-of-seeds checkpoint items=1700 this_run=1700 rate=0.29/s idx=1754/4064
+  ok #1725 idx=1779/4064 name='Dream Machine Feminised'
+  freedom-of-seeds checkpoint items=1725 this_run=1725 rate=0.29/s idx=1779/4064
+  ok #1750 idx=1807/4064 name='DYNAMITE TRIPLOID'
+  freedom-of-seeds checkpoint items=1750 this_run=1750 rate=0.29/s idx=1807/4064
+  ok #1775 idx=1832/4064 name='Emerald Fire OG Cannabis'
+  freedom-of-seeds checkpoint items=1775 this_run=1775 rate=0.29/s idx=1832/4064
+  ok #1800 idx=1859/4064 name='Family Jewels Feminised'
+  freedom-of-seeds checkpoint items=1800 this_run=1800 rate=0.29/s idx=1859/4064
+freedom-of-seeds staging: {
+  "family": "bank_freedom_of_seeds",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_freedom_of_seeds.sqlite3",
+  "count": 1800,
+  "bulk": true,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 1368,
+    "strain_variant": 1368,
+    "chemistry_profile": 300,
+    "grow_trait": 527,
+    "entity_link": 300,
+    "attribute_kv": 0,
+    "raw_record": 1800,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 0,
+    "source_record": 1
+  }
+}
+  ok #1825 idx=1884/4064 name='Fire Dog Feminised'
+  freedom-of-seeds checkpoint items=1825 this_run=1825 rate=0.29/s idx=1884/4064
+  ok #1850 idx=1910/4064 name='Freedom Haze Regular'
+  freedom-of-seeds checkpoint items=1850 this_run=1850 rate=0.29/s idx=1910/4064
+  ok #1875 idx=1936/4064 name='Fruit Cake Auto Feminised'
+  freedom-of-seeds checkpoint items=1875 this_run=1875 rate=0.29/s idx=1936/4064
+  ok #1900 idx=1961/4064 name='G13 x Blueberry Headband Feminised'
+  freedom-of-seeds checkpoint items=1900 this_run=1900 rate=0.29/s idx=1961/4064
+  ok #1925 idx=1988/4064 name='Gelato Auto Feminised'
+  freedom-of-seeds checkpoint items=1925 this_run=1925 rate=0.29/s idx=1988/4064
+  ok #1950 idx=2013/4064 name="GGG3 Auto (Gelato Cookie D'Oh"
+  freedom-of-seeds checkpoint items=1950 this_run=1950 rate=0.29/s idx=2013/4064
+  ok #1975 idx=2038/4064 name='Girl Scout Cookies Auto Feminised'
+  freedom-of-seeds checkpoint items=1975 this_run=1975 rate=0.29/s idx=2038/4064
+  ok #2000 idx=2063/4064 name='Godberry Feminised'
+  freedom-of-seeds checkpoint items=2000 this_run=2000 rate=0.29/s idx=2063/4064
+freedom-of-seeds staging: {
+  "family": "bank_freedom_of_seeds",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_freedom_of_seeds.sqlite3",
+  "count": 2000,
+  "bulk": true,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 1515,
+    "strain_variant": 1515,
+    "chemistry_profile": 341,
+    "grow_trait": 615,
+    "entity_link": 341,
+    "attribute_kv": 0,
+    "raw_record": 2000,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 0,
+    "source_record": 1
+  }
+}
+  fail https://freedomofseeds.com/product/good-shit-auto-feminised-seeds: HTTP 502 for https://freedomofseeds.com/product/good-shit-auto-feminised-seeds
+  ok #2025 idx=2089/4064 name='Gorilla Banana Feminised'
+  freedom-of-seeds checkpoint items=2025 this_run=2025 rate=0.29/s idx=2089/4064
+  ok #2050 idx=2114/4064 name='Gorilla Glue #4 Feminised'
+  freedom-of-seeds checkpoint items=2050 this_run=2050 rate=0.29/s idx=2114/4064
+  ok #2075 idx=2139/4064 name='Gorilla Tooth Regular'
+  freedom-of-seeds checkpoint items=2075 this_run=2075 rate=0.28/s idx=2139/4064
+  ok #2100 idx=2164/4064 name='Granddaddy Purple Feminised'
+  freedom-of-seeds checkpoint items=2100 this_run=2100 rate=0.28/s idx=2164/4064
+  ok #2125 idx=2189/4064 name='Green Crack Auto'
+  freedom-of-seeds checkpoint items=2125 this_run=2125 rate=0.28/s idx=2189/4064
+  ok #2150 idx=2214/4064 name='Grizzly Purple Kush Feminised'
+  freedom-of-seeds checkpoint items=2150 this_run=2150 rate=0.28/s idx=2214/4064
+  ok #2175 idx=2239/4064 name='Hash Lover\xa0 Regular'
+  freedom-of-seeds checkpoint items=2175 this_run=2175 rate=0.28/s idx=2239/4064
+  ok #2200 idx=2264/4064 name='Heavy Grapefruit Feminized Bulk'
+  freedom-of-seeds checkpoint items=2200 this_run=2200 rate=0.28/s idx=2264/4064
+freedom-of-seeds staging: {
+  "family": "bank_freedom_of_seeds",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_freedom_of_seeds.sqlite3",
+  "count": 2200,
+  "bulk": true,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 1667,
+    "strain_variant": 1667,
+    "chemistry_profile": 373,
+    "grow_trait": 688,
+    "entity_link": 373,
+    "attribute_kv": 0,
+    "raw_record": 2200,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 0,
+    "source_record": 1
+  }
+}
+  ok #2225 idx=2289/4064 name='Honey Melon Kush Auto Feminised'
+  freedom-of-seeds checkpoint items=2225 this_run=2225 rate=0.28/s idx=2289/4064
+  ok #2250 idx=2314/4064 name='Ice Cream Cake Feminised'
+  freedom-of-seeds checkpoint items=2250 this_run=2250 rate=0.28/s idx=2314/4064
+  ok #2275 idx=2339/4064 name='Jack 47 Feminised'
+  freedom-of-seeds checkpoint items=2275 this_run=2275 rate=0.28/s idx=2339/4064
+  ok #2300 idx=2364/4064 name='Jamaican Pearl Feminised'
+  freedom-of-seeds checkpoint items=2300 this_run=2300 rate=0.28/s idx=2364/4064
+  fail https://freedomofseeds.com/product/jamaican-pearl-feminised-seeds-2: HTTP 502 for https://freedomofseeds.com/product/jamaican-pearl-feminised-seeds-2
+  ok #2325 idx=2390/4064 name='K'
+  freedom-of-seeds checkpoint items=2325 this_run=2325 rate=0.28/s idx=2390/4064
+  ok #2350 idx=2415/4064 name='KC36 Feminised'
+  freedom-of-seeds checkpoint items=2350 this_run=2350 rate=0.28/s idx=2415/4064
+  ok #2375 idx=2440/4064 name='King Louis Garcia Feminised'
+  freedom-of-seeds checkpoint items=2375 this_run=2375 rate=0.28/s idx=2440/4064
+  ok #2400 idx=2465/4064 name='Kush Fromage Auto Feminised'
+  freedom-of-seeds checkpoint items=2400 this_run=2400 rate=0.28/s idx=2465/4064
+freedom-of-seeds staging: {
+  "family": "bank_freedom_of_seeds",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_freedom_of_seeds.sqlite3",
+  "count": 2400,
+  "bulk": true,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 1825,
+    "strain_variant": 1825,
+    "chemistry_profile": 402,
+    "grow_trait": 754,
+    "entity_link": 402,
+    "attribute_kv": 0,
+    "raw_record": 2400,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 0,
+    "source_record": 1
+  }
+}
+  ok #2425 idx=2491/4064 name='Lava Freeze Feminised'
+  freedom-of-seeds checkpoint items=2425 this_run=2425 rate=0.28/s idx=2491/4064
+  ok #2450 idx=2516/4064 name='Lemon Haze Auto Feminised'
+  freedom-of-seeds checkpoint items=2450 this_run=2450 rate=0.28/s idx=2516/4064
+  ok #2475 idx=2541/4064 name='Lennon Feminised'
+  freedom-of-seeds checkpoint items=2475 this_run=2475 rate=0.28/s idx=2541/4064
+  ok #2500 idx=2567/4064 name='MAC #1 Feminised'
+  freedom-of-seeds checkpoint items=2500 this_run=2500 rate=0.28/s idx=2567/4064
+  ok #2525 idx=2592/4064 name='Malawi x Panama Feminised Cannabis'
+  freedom-of-seeds checkpoint items=2525 this_run=2525 rate=0.28/s idx=2592/4064
+  ok #2550 idx=2617/4064 name='Mango Feminised'
+  freedom-of-seeds checkpoint items=2550 this_run=2550 rate=0.28/s idx=2617/4064
+  fail https://freedomofseeds.com/product/marmalate-feminised-seeds-2: HTTP 502 for https://freedomofseeds.com/product/marmalate-feminised-seeds-2
+  ok #2575 idx=2645/4064 name='Master Kush Auto Feminised'
+  freedom-of-seeds checkpoint items=2575 this_run=2575 rate=0.28/s idx=2645/4064
+  ok #2600 idx=2670/4064 name='Medical OG Kush Feminised'
+  freedom-of-seeds checkpoint items=2600 this_run=2600 rate=0.28/s idx=2670/4064
+freedom-of-seeds staging: {
+  "family": "bank_freedom_of_seeds",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_freedom_of_seeds.sqlite3",
+  "count": 2600,
+  "bulk": true,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 1994,
+    "strain_variant": 1994,
+    "chemistry_profile": 435,
+    "grow_trait": 827,
+    "entity_link": 435,
+    "attribute_kv": 0,
+    "raw_record": 2600,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 0,
+    "source_record": 1
+  }
+}
+  ok #2625 idx=2695/4064 name='Midnight Blue Feminised'
+  freedom-of-seeds checkpoint items=2625 this_run=2625 rate=0.28/s idx=2695/4064
+  ok #2650 idx=2720/4064 name="Mind Can'trol Feminised"
+  freedom-of-seeds checkpoint items=2650 this_run=2650 rate=0.28/s idx=2720/4064
+  ok #2675 idx=2745/4064 name='Money Bush Feminised'
+  freedom-of-seeds checkpoint items=2675 this_run=2675 rate=0.28/s idx=2745/4064
+  ok #2700 idx=2770/4064 name="Mother's Finest Feminised"
+  freedom-of-seeds checkpoint items=2700 this_run=2700 rate=0.28/s idx=2770/4064
+  ok #2725 idx=2795/4064 name='Nicole Hindu Kush Feminised'
+  freedom-of-seeds checkpoint items=2725 this_run=2725 rate=0.28/s idx=2795/4064
+  ok #2750 idx=2820/4064 name='Northern Light Blue Auto Feminised'
+  freedom-of-seeds checkpoint items=2750 this_run=2750 rate=0.28/s idx=2820/4064
+  ok #2775 idx=2845/4064 name='Northern Lights Feminised'
+  freedom-of-seeds checkpoint items=2775 this_run=2775 rate=0.28/s idx=2845/4064
+  ok #2800 idx=2871/4064 name='NYC Sour D Auto Feminised'
+  freedom-of-seeds checkpoint items=2800 this_run=2800 rate=0.28/s idx=2871/4064
+freedom-of-seeds staging: {
+  "family": "bank_freedom_of_seeds",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_freedom_of_seeds.sqlite3",
+  "count": 2800,
+  "bulk": true,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 2152,
+    "strain_variant": 2152,
+    "chemistry_profile": 451,
+    "grow_trait": 880,
+    "entity_link": 451,
+    "attribute_kv": 0,
+    "raw_record": 2800,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 0,
+    "source_record": 1
+  }
+}
+  ok #2825 idx=2896/4064 name='OG Kush Feminised'
+  freedom-of-seeds checkpoint items=2825 this_run=2825 rate=0.28/s idx=2896/4064
+  ok #2850 idx=2921/4064 name='Orange Bud Auto Feminised'
+  freedom-of-seeds checkpoint items=2850 this_run=2850 rate=0.28/s idx=2921/4064
+  ok #2875 idx=2946/4064 name='Original Gorilla #4 Feminised Cannabis Seeds Anesia'
+  freedom-of-seeds checkpoint items=2875 this_run=2875 rate=0.28/s idx=2946/4064
+  fail https://freedomofseeds.com/product/original-juan-herer-feminised-seeds-2: HTTP 502 for https://freedomofseeds.com/product/original-juan-herer-feminised-seeds-2
+  fail https://freedomofseeds.com/product/orka-feminised-seeds: HTTP 502 for https://freedomofseeds.com/product/orka-feminised-seeds
+  ok #2900 idx=2973/4064 name='Panama x Malawi Feminised Cannabis Seeds Ace'
+  freedom-of-seeds checkpoint items=2900 this_run=2900 rate=0.28/s idx=2973/4064
+  ok #2925 idx=2998/4064 name='Permanent Marker Feminised'
+  freedom-of-seeds checkpoint items=2925 this_run=2925 rate=0.28/s idx=2998/4064
+  ok #2950 idx=3023/4064 name='Pineapple Poison Feminised'
+  freedom-of-seeds checkpoint items=2950 this_run=2950 rate=0.28/s idx=3023/4064
+  ok #2975 idx=3048/4064 name='Pink Runtz Auto Feminised'
+  freedom-of-seeds checkpoint items=2975 this_run=2975 rate=0.28/s idx=3048/4064
+  fail https://freedomofseeds.com/product/poddy-mouth-feminised-seeds: HTTP 502 for https://freedomofseeds.com/product/poddy-mouth-feminised-seeds
+  fail https://freedomofseeds.com/product/polar-express-feminised-seeds: HTTP 502 for https://freedomofseeds.com/product/polar-express-feminised-seeds
+  ok #3000 idx=3075/4064 name='Power Plant Feminised'
+  freedom-of-seeds checkpoint items=3000 this_run=3000 rate=0.28/s idx=3075/4064
+freedom-of-seeds staging: {
+  "family": "bank_freedom_of_seeds",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_freedom_of_seeds.sqlite3",
+  "count": 3000,
+  "bulk": true,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 2311,
+    "strain_variant": 2311,
+    "chemistry_profile": 494,
+    "grow_trait": 965,
+    "entity_link": 494,
+    "attribute_kv": 0,
+    "raw_record": 3000,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 0,
+    "source_record": 1
+  }
+}
+  ok #3025 idx=3100/4064 name='Purple Berry Kush Feminised'
+  freedom-of-seeds checkpoint items=3025 this_run=3025 rate=0.28/s idx=3100/4064
+  ok #3050 idx=3125/4064 name='Purple Haze x Malawi Feminised Cannabis'
+  freedom-of-seeds checkpoint items=3050 this_run=3050 rate=0.28/s idx=3125/4064
+  ok #3075 idx=3151/4064 name='Purple Punch OG Feminised'
+  freedom-of-seeds checkpoint items=3075 this_run=3075 rate=0.28/s idx=3151/4064
+  fail https://freedomofseeds.com/product/purple-sunset-auto-feminised-seeds: HTTP 502 for https://freedomofseeds.com/product/purple-sunset-auto-feminised-seeds
+  ok #3100 idx=3177/4064 name='Rainbow Donut Auto Feminised'
+  freedom-of-seeds checkpoint items=3100 this_run=3100 rate=0.28/s idx=3177/4064
+  ok #3125 idx=3204/4064 name='Red Mimosa XL Auto Feminised'
+  freedom-of-seeds checkpoint items=3125 this_run=3125 rate=0.28/s idx=3204/4064
+  ok #3150 idx=3229/4064 name='Rotten Apple TRIPLOID Feminised'
+  freedom-of-seeds checkpoint items=3150 this_run=3150 rate=0.28/s idx=3229/4064
+  ok #3175 idx=3254/4064 name='Royal Purple Kush Auto Feminised'
+  freedom-of-seeds checkpoint items=3175 this_run=3175 rate=0.28/s idx=3254/4064
+  ok #3200 idx=3279/4064 name='Runtz Fast Feminised'
+  freedom-of-seeds checkpoint items=3200 this_run=3200 rate=0.28/s idx=3279/4064
+freedom-of-seeds staging: {
+  "family": "bank_freedom_of_seeds",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_freedom_of_seeds.sqlite3",
+  "count": 3200,
+  "bulk": true,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 2485,
+    "strain_variant": 2485,
+    "chemistry_profile": 522,
+    "grow_trait": 1050,
+    "entity_link": 522,
+    "attribute_kv": 0,
+    "raw_record": 3200,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 0,
+    "source_record": 1
+  }
+}
+  ok #3225 idx=3304/4064 name='Satin Black Domina CBD 7 Feminised'
+  freedom-of-seeds checkpoint items=3225 this_run=3225 rate=0.28/s idx=3304/4064
+  ok #3250 idx=3329/4064 name='Sherbert Feminised Cannabis'
+  freedom-of-seeds checkpoint items=3250 this_run=3250 rate=0.28/s idx=3329/4064
+  ok #3275 idx=3354/4064 name='Short Nepali Auto'
+  freedom-of-seeds checkpoint items=3275 this_run=3275 rate=0.28/s idx=3354/4064
+  ok #3300 idx=3379/4064 name='Skunk\xa0#1\xa0Auto'
+  freedom-of-seeds checkpoint items=3300 this_run=3300 rate=0.28/s idx=3379/4064
+  ok #3325 idx=3404/4064 name='Skywalka Cookies Feminised'
+  freedom-of-seeds checkpoint items=3325 this_run=3325 rate=0.28/s idx=3404/4064
+  fail https://freedomofseeds.com/product/smurfberry-automatic-feminised-seeds: HTTP 502 for https://freedomofseeds.com/product/smurfberry-automatic-feminised-seeds
+  ok #3350 idx=3430/4064 name='Snow Ryder Feminised'
+  freedom-of-seeds checkpoint items=3350 this_run=3350 rate=0.28/s idx=3430/4064
+  ok #3375 idx=3455/4064 name='Sour Diesel Feminised'
+  freedom-of-seeds checkpoint items=3375 this_run=3375 rate=0.28/s idx=3455/4064
+  ok #3400 idx=3480/4064 name='Special Queen #1 Feminised'
+  freedom-of-seeds checkpoint items=3400 this_run=3400 rate=0.28/s idx=3480/4064
+freedom-of-seeds staging: {
+  "family": "bank_freedom_of_seeds",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_freedom_of_seeds.sqlite3",
+  "count": 3400,
+  "bulk": true,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 2646,
+    "strain_variant": 2646,
+    "chemistry_profile": 547,
+    "grow_trait": 1105,
+    "entity_link": 547,
+    "attribute_kv": 0,
+    "raw_record": 3400,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 0,
+    "source_record": 1
+  }
+}
+  fail https://freedomofseeds.com/product/stardawg-feminised-seeds-2: HTTP 502 for https://freedomofseeds.com/product/stardawg-feminised-seeds-2
+  ok #3425 idx=3506/4064 name='Stardawg Feminised'
+  freedom-of-seeds checkpoint items=3425 this_run=3425 rate=0.28/s idx=3506/4064
+  ok #3450 idx=3531/4064 name='Strawberry Banana Feminised'
+  freedom-of-seeds checkpoint items=3450 this_run=3450 rate=0.28/s idx=3531/4064
+  ok #3475 idx=3557/4064 name='Strawberry Gelato Feminised'
+  freedom-of-seeds checkpoint items=3475 this_run=3475 rate=0.28/s idx=3557/4064
+  fail https://freedomofseeds.com/product/strawberry-pie-auto-feminised-seeds: HTTP 502 for https://freedomofseeds.com/product/strawberry-pie-auto-feminised-seeds
+  fail https://freedomofseeds.com/product/strawberry-pop-rocks-feminised-seeds: HTTP 502 for https://freedomofseeds.com/product/strawberry-pop-rocks-feminised-seeds
+  ok #3500 idx=3584/4064 name='Sugar Black Rose Feminised'
+  freedom-of-seeds checkpoint items=3500 this_run=3500 rate=0.28/s idx=3584/4064
+  ok #3525 idx=3609/4064 name='Super Lemon Haze'
+  freedom-of-seeds checkpoint items=3525 this_run=3525 rate=0.28/s idx=3609/4064
+  ok #3550 idx=3634/4064 name='Super Skunk Automatic Feminised'
+  freedom-of-seeds checkpoint items=3550 this_run=3550 rate=0.28/s idx=3634/4064
+  ok #3575 idx=3659/4064 name='Sweet Cheese Fast V Feminised'
+  freedom-of-seeds checkpoint items=3575 this_run=3575 rate=0.27/s idx=3659/4064
+  ok #3600 idx=3684/4064 name='Sweet'
+  freedom-of-seeds checkpoint items=3600 this_run=3600 rate=0.27/s idx=3684/4064
+freedom-of-seeds staging: {
+  "family": "bank_freedom_of_seeds",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_freedom_of_seeds.sqlite3",
+  "count": 3600,
+  "bulk": true,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 2801,
+    "strain_variant": 2801,
+    "chemistry_profile": 572,
+    "grow_trait": 1166,
+    "entity_link": 572,
+    "attribute_kv": 0,
+    "raw_record": 3600,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 0,
+    "source_record": 1
+  }
+}
+  ok #3625 idx=3709/4064 name='Sweet Zombie Feminised'
+  freedom-of-seeds checkpoint items=3625 this_run=3625 rate=0.27/s idx=3709/4064
+  ok #3650 idx=3734/4064 name='THC Bomb Auto Feminised'
+  freedom-of-seeds checkpoint items=3650 this_run=3650 rate=0.27/s idx=3734/4064
+  ok #3675 idx=3759/4064 name='Timanfaya Auto Feminised'
+  freedom-of-seeds checkpoint items=3675 this_run=3675 rate=0.27/s idx=3759/4064
+  ok #3700 idx=3784/4064 name='Trekkie Sweets Feminised'
+  freedom-of-seeds checkpoint items=3700 this_run=3700 rate=0.27/s idx=3784/4064
+  ok #3725 idx=3809/4064 name='Tropicanna Banana Feminised'
+  freedom-of-seeds checkpoint items=3725 this_run=3725 rate=0.27/s idx=3809/4064
+  ok #3750 idx=3834/4064 name='Vanilla Frosting Feminised'
+  freedom-of-seeds checkpoint items=3750 this_run=3750 rate=0.27/s idx=3834/4064
+  ok #3775 idx=3859/4064 name='Vision Gorilla Feminised'
+  freedom-of-seeds checkpoint items=3775 this_run=3775 rate=0.27/s idx=3859/4064
+  ok #3800 idx=3884/4064 name='Wedding Cake Feminised'
+  freedom-of-seeds checkpoint items=3800 this_run=3800 rate=0.27/s idx=3884/4064
+freedom-of-seeds staging: {
+  "family": "bank_freedom_of_seeds",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_freedom_of_seeds.sqlite3",
+  "count": 3800,
+  "bulk": true,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 2969,
+    "strain_variant": 2969,
+    "chemistry_profile": 594,
+    "grow_trait": 1222,
+    "entity_link": 594,
+    "attribute_kv": 0,
+    "raw_record": 3800,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 0,
+    "source_record": 1
+  }
+}
+  ok #3825 idx=3909/4064 name='West Coast Bubbles Feminised'
+  freedom-of-seeds checkpoint items=3825 this_run=3825 rate=0.27/s idx=3909/4064
+  ok #3850 idx=3934/4064 name='White Ice Feminised'
+  freedom-of-seeds checkpoint items=3850 this_run=3850 rate=0.27/s idx=3934/4064
+  ok #3875 idx=3959/4064 name='White Widow Automatic Feminised'
+  freedom-of-seeds checkpoint items=3875 this_run=3875 rate=0.27/s idx=3959/4064
+  ok #3900 idx=3984/4064 name='White Widow x Big Bud Feminised'
+  freedom-of-seeds checkpoint items=3900 this_run=3900 rate=0.27/s idx=3984/4064
+  ok #3925 idx=4009/4064 name='Yumbolt Feminised'
+  freedom-of-seeds checkpoint items=3925 this_run=3925 rate=0.27/s idx=4009/4064
+  ok #3950 idx=4034/4064 name='Zkittlez 36 Auto Feminised'
+  freedom-of-seeds checkpoint items=3950 this_run=3950 rate=0.27/s idx=4034/4064
+  ok #3975 idx=4059/4064 name='Zoomiez Feminised Cannabis Seeds Anesia'
+  freedom-of-seeds checkpoint items=3975 this_run=3975 rate=0.27/s idx=4059/4064
+  freedom-of-seeds checkpoint items=3980 this_run=3980 rate=0.27/s idx=4064/4064
+wrote dsc_strains_freedom-of-seeds.json count=3980
+freedom-of-seeds staging: {
+  "family": "bank_freedom_of_seeds",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_freedom_of_seeds.sqlite3",
+  "count": 3980,
+  "bulk": true,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 3098,
+    "strain_variant": 3098,
+    "chemistry_profile": 619,
+    "grow_trait": 1285,
+    "entity_link": 619,
+    "attribute_kv": 0,
+    "raw_record": 3980,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 0,
+    "source_record": 1
+  }
+}
+{
+  "name": "Freedom of Seeds",
+  "slug": "freedom-of-seeds",
+  "url": "https://freedomofseeds.com/",
+  "platform": "woocommerce",
+  "status": "ok",
+  "count": 3980,
+  "urls_discovered": 4064,
+  "error": null,
+  "skipped": 69
+}
+
+=== Terp Fi3nd (https://terpfi3nd.com/) plat=woocommerce ===
+  shopify products.json fail page=1: HTTP 404 for https://terpfi3nd.com/products.json?limit=250&page=1
+  nested sitemap https://terpfi3nd.com/product-sitemap.xml
+  sitemap miss https://terpfi3nd.com/sitemap-products.xml: HTTP 404 for https://terpfi3nd.com/sitemap-products.xml
+  sitemap miss https://terpfi3nd.com/media/sitemap/sitemap.xml: HTTP 404 for https://terpfi3nd.com/media/sitemap/sitemap.xml
+terp-fi3nd: sitemap discover -> 432
+terp-fi3nd: queued=432 resume_done=0 dump_items=0
+  ok #1 idx=1/432 name='5TH DIMENSION'
+  ok #2 idx=2/432 name='706 Skunk F2'
+  ok #3 idx=3/432 name='A Family Affair'
+  ok #25 idx=25/432 name='Assorted Variety Pack V1.1'
+  terp-fi3nd checkpoint items=25 this_run=25 rate=0.46/s idx=25/432
+  ok #50 idx=50/432 name='Block Knocker'
+  terp-fi3nd checkpoint items=50 this_run=50 rate=0.46/s idx=50/432
+  ok #75 idx=75/432 name='Churros #5'
+  terp-fi3nd checkpoint items=75 this_run=75 rate=0.46/s idx=75/432
+  ok #100 idx=100/432 name='Darwin#2'
+  terp-fi3nd checkpoint items=100 this_run=100 rate=0.46/s idx=100/432
+  ok #125 idx=125/432 name='DOUBLE ALIEN'
+  terp-fi3nd checkpoint items=125 this_run=125 rate=0.46/s idx=125/432
+  ok #150 idx=150/432 name='Gassy Eddy'
+  terp-fi3nd checkpoint items=150 this_run=150 rate=0.45/s idx=150/432
+  ok #175 idx=175/432 name='Help On The Way'
+  terp-fi3nd checkpoint items=175 this_run=175 rate=0.45/s idx=175/432
+  ok #200 idx=200/432 name="Let's Go"
+  terp-fi3nd checkpoint items=200 this_run=200 rate=0.45/s idx=200/432
+terp-fi3nd staging: {
+  "family": "bank_terp_fi3nd",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_terp_fi3nd.sqlite3",
+  "count": 200,
+  "bulk": true,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 198,
+    "strain_variant": 198,
+    "chemistry_profile": 0,
+    "grow_trait": 43,
+    "entity_link": 0,
+    "attribute_kv": 0,
+    "raw_record": 200,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 0,
+    "source_record": 1
+  }
+}
+  ok #225 idx=225/432 name='Mind Crusher'
+  terp-fi3nd checkpoint items=225 this_run=225 rate=0.44/s idx=225/432
+  ok #250 idx=250/432 name='Nevermind'
+  terp-fi3nd checkpoint items=250 this_run=250 rate=0.44/s idx=250/432
+  ok #275 idx=275/432 name="PAN'S POISON"
+  terp-fi3nd checkpoint items=275 this_run=275 rate=0.44/s idx=275/432
+  ok #300 idx=300/432 name='Prestige Worldwide'
+  terp-fi3nd checkpoint items=300 this_run=300 rate=0.43/s idx=300/432
+  ok #325 idx=325/432 name='Royal Orange Afgoo OG'
+  terp-fi3nd checkpoint items=325 this_run=325 rate=0.43/s idx=325/432
+  ok #350 idx=350/432 name='Sour Tangerine Smoothie'
+  terp-fi3nd checkpoint items=350 this_run=350 rate=0.43/s idx=350/432
+  ok #375 idx=375/432 name='TERPS BRUH'
+  terp-fi3nd checkpoint items=375 this_run=375 rate=0.43/s idx=375/432
+  ok #400 idx=400/432 name='Titanosaurus #1'
+  terp-fi3nd checkpoint items=400 this_run=400 rate=0.44/s idx=400/432
+terp-fi3nd staging: {
+  "family": "bank_terp_fi3nd",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_terp_fi3nd.sqlite3",
+  "count": 400,
+  "bulk": true,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 396,
+    "strain_variant": 396,
+    "chemistry_profile": 0,
+    "grow_trait": 91,
+    "entity_link": 0,
+    "attribute_kv": 0,
+    "raw_record": 400,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 0,
+    "source_record": 1
+  }
+}
+  ok #425 idx=425/432 name='White Cherry Wedding Cake F2'
+  terp-fi3nd checkpoint items=425 this_run=425 rate=0.43/s idx=425/432
+  terp-fi3nd checkpoint items=432 this_run=432 rate=0.43/s idx=432/432
+wrote dsc_strains_terp-fi3nd.json count=432
+terp-fi3nd staging: {
+  "family": "bank_terp_fi3nd",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_terp_fi3nd.sqlite3",
+  "count": 432,
+  "bulk": true,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 427,
+    "strain_variant": 427,
+    "chemistry_profile": 0,
+    "grow_trait": 97,
+    "entity_link": 0,
+    "attribute_kv": 0,
+    "raw_record": 432,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 0,
+    "source_record": 1
+  }
+}
+{
+  "name": "Terp Fi3nd",
+  "slug": "terp-fi3nd",
+  "url": "https://terpfi3nd.com/",
+  "platform": "woocommerce",
+  "status": "ok",
+  "count": 432,
+  "urls_discovered": 432,
+  "error": null,
+  "skipped": 0
+}
+
+=== Atlas Seed (https://atlasseed.com/) plat=woocommerce ===
+  shopify products.json fail page=1: HTTP 404 for https://atlasseed.com/products.json?limit=250&page=1
+  nested sitemap https://atlasseed.com/product-sitemap.xml
+  sitemap miss https://atlasseed.com/sitemap-products.xml: HTTP 404 for https://atlasseed.com/sitemap-products.xml
+  sitemap miss https://atlasseed.com/media/sitemap/sitemap.xml: HTTP 404 for https://atlasseed.com/media/sitemap/sitemap.xml
+atlas-seed: sitemap discover -> 299
+atlas-seed: queued=299 resume_done=0 dump_items=0
+  ok #1 idx=1/299 name='Apple Gas Breath'
+  ok #2 idx=2/299 name='Commercial Heavy Yield Auto Pack'
+  ok #3 idx=3/299 name='Commercial Homegrower'
+  ok #25 idx=36/299 name='Blue Dream (Fast Finishing)'
+  atlas-seed checkpoint items=25 this_run=25 rate=0.30/s idx=36/299
+  fail https://atlasseed.com/product/dirty-laundry-seed-pack: HTTP 403 for https://atlasseed.com/product/dirty-laundry-seed-pack
+  fail https://atlasseed.com/product/divorce-cake-bulk-seed: HTTP 403 for https://atlasseed.com/product/divorce-cake-bulk-seed
+  fail https://atlasseed.com/product/divorce-cake-seedpack: HTTP 403 for https://atlasseed.com/product/divorce-cake-seedpack
+  fail https://atlasseed.com/product/dosidos-bulk-seed: HTTP 403 for https://atlasseed.com/product/dosidos-bulk-seed
+  fail https://atlasseed.com/product/dosidos-sft-seedpack: HTTP 403 for https://atlasseed.com/product/dosidos-sft-seedpack
+  fail https://atlasseed.com/product/dry-erase-marker-bulk-seed: HTTP 403 for https://atlasseed.com/product/dry-erase-marker-bulk-seed
+  fail https://atlasseed.com/product/dry-erase-marker-seed-pack: HTTP 403 for https://atlasseed.com/product/dry-erase-marker-seed-pack
+  fail https://atlasseed.com/product/durban-poison-s1-17-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/durban-poison-s1-17-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/face-fat-bulk-seed: HTTP 403 for https://atlasseed.com/product/face-fat-bulk-seed
+  fail https://atlasseed.com/product/face-fat-seedpack: HTTP 403 for https://atlasseed.com/product/face-fat-seedpack
+  fail https://atlasseed.com/product/farmers-ladder-tier-1-auto: HTTP 403 for https://atlasseed.com/product/farmers-ladder-tier-1-auto
+  fail https://atlasseed.com/product/farmers-ladder-tier-1-photo: HTTP 403 for https://atlasseed.com/product/farmers-ladder-tier-1-photo
+  fail https://atlasseed.com/product/farmers-ladder-tier-2-auto: HTTP 403 for https://atlasseed.com/product/farmers-ladder-tier-2-auto
+  fail https://atlasseed.com/product/farmers-ladder-tier-2-photo: HTTP 403 for https://atlasseed.com/product/farmers-ladder-tier-2-photo
+  fail https://atlasseed.com/product/farmers-ladder-tier-3-auto: HTTP 403 for https://atlasseed.com/product/farmers-ladder-tier-3-auto
+  fail https://atlasseed.com/product/farmers-ladder-tier-3-photo: HTTP 403 for https://atlasseed.com/product/farmers-ladder-tier-3-photo
+  fail https://atlasseed.com/product/farmers-ladder-tier-4-auto: HTTP 403 for https://atlasseed.com/product/farmers-ladder-tier-4-auto
+  fail https://atlasseed.com/product/farmers-ladder-tier-4-photo: HTTP 403 for https://atlasseed.com/product/farmers-ladder-tier-4-photo
+  fail https://atlasseed.com/product/fat-cake-breath-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/fat-cake-breath-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/fatso-84-seed-pack: HTTP 403 for https://atlasseed.com/product/fatso-84-seed-pack
+  fail https://atlasseed.com/product/fog-dog-auto-seedpack: HTTP 403 for https://atlasseed.com/product/fog-dog-auto-seedpack
+  fail https://atlasseed.com/product/fog-dog-bulk-seed: HTTP 403 for https://atlasseed.com/product/fog-dog-bulk-seed
+  fail https://atlasseed.com/product/froot-by-the-foot-bulk-seed: HTTP 403 for https://atlasseed.com/product/froot-by-the-foot-bulk-seed
+  fail https://atlasseed.com/product/froot-by-the-foot-seedpack: HTTP 403 for https://atlasseed.com/product/froot-by-the-foot-seedpack
+  fail https://atlasseed.com/product/frosted-banana-jelly-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/frosted-banana-jelly-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/frosted-banana-punch-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/frosted-banana-punch-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/frosted-gelato-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/frosted-gelato-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/fuegisima-bulk-seed: HTTP 403 for https://atlasseed.com/product/fuegisima-bulk-seed
+  fail https://atlasseed.com/product/fuegisima-seedpack: HTTP 403 for https://atlasseed.com/product/fuegisima-seedpack
+  fail https://atlasseed.com/product/galactic-guava-bulk-seed: HTTP 403 for https://atlasseed.com/product/galactic-guava-bulk-seed
+  fail https://atlasseed.com/product/galactic-guava-seed-pack: HTTP 403 for https://atlasseed.com/product/galactic-guava-seed-pack
+  fail https://atlasseed.com/product/garlic-jam-auto-seed-pack: HTTP 403 for https://atlasseed.com/product/garlic-jam-auto-seed-pack
+  fail https://atlasseed.com/product/garlic-jam-bulk-seed: HTTP 403 for https://atlasseed.com/product/garlic-jam-bulk-seed
+  fail https://atlasseed.com/product/gelato-41-bulk-seed: HTTP 403 for https://atlasseed.com/product/gelato-41-bulk-seed
+  fail https://atlasseed.com/product/gelato-41-fast-finishing-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/gelato-41-fast-finishing-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/gelato-41-s1-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/gelato-41-s1-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/gelato-41-seedpack: HTTP 403 for https://atlasseed.com/product/gelato-41-seedpack
+  fail https://atlasseed.com/product/gelato-cookie-18-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/gelato-cookie-18-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/gelato-mints-jealousy-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/gelato-mints-jealousy-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/gelato-punch-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/gelato-punch-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/gelato-rainbow-sherbert-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/gelato-rainbow-sherbert-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/gelato-scented-marker-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/gelato-scented-marker-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/glitter-bomb-fast-finishing-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/glitter-bomb-fast-finishing-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/glue-dream-12-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/glue-dream-12-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/gmo-auto-bulk-seed: HTTP 403 for https://atlasseed.com/product/gmo-auto-bulk-seed
+  fail https://atlasseed.com/product/gmo-auto-seedpack: HTTP 403 for https://atlasseed.com/product/gmo-auto-seedpack
+  fail https://atlasseed.com/product/gmo-bomb-bulk-seed: HTTP 403 for https://atlasseed.com/product/gmo-bomb-bulk-seed
+  fail https://atlasseed.com/product/gmo-bomb-seed-pack: HTTP 403 for https://atlasseed.com/product/gmo-bomb-seed-pack
+  fail https://atlasseed.com/product/gmo-og-auto-seedpack: HTTP 403 for https://atlasseed.com/product/gmo-og-auto-seedpack
+  fail https://atlasseed.com/product/gmo-og-bulk-seed: HTTP 403 for https://atlasseed.com/product/gmo-og-bulk-seed
+  fail https://atlasseed.com/product/gmo-star-auto-autoflower-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/gmo-star-auto-autoflower-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/gopher-glue-bulk-seed: HTTP 403 for https://atlasseed.com/product/gopher-glue-bulk-seed
+  fail https://atlasseed.com/product/gopher-glue-seedpack: HTTP 403 for https://atlasseed.com/product/gopher-glue-seedpack
+  fail https://atlasseed.com/product/gorilla-apple-candy-bulk-seed: HTTP 403 for https://atlasseed.com/product/gorilla-apple-candy-bulk-seed
+  fail https://atlasseed.com/product/gorilla-apple-candy-seed-pack: HTTP 403 for https://atlasseed.com/product/gorilla-apple-candy-seed-pack
+  fail https://atlasseed.com/product/gorilla-banana-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/gorilla-banana-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/gorilla-burger-bulk-seed: HTTP 403 for https://atlasseed.com/product/gorilla-burger-bulk-seed
+  fail https://atlasseed.com/product/gorilla-burger-seed-pack: HTTP 403 for https://atlasseed.com/product/gorilla-burger-seed-pack
+  fail https://atlasseed.com/product/gorilla-cake-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/gorilla-cake-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/gorilla-candy-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/gorilla-candy-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/gorilla-cookie-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/gorilla-cookie-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/gorilla-gelato-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/gorilla-gelato-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/gorilla-glitter-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/gorilla-glitter-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/gorilla-glue-s1-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/gorilla-glue-s1-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/gorilla-guava-bulk-seed: HTTP 403 for https://atlasseed.com/product/gorilla-guava-bulk-seed
+  fail https://atlasseed.com/product/gorilla-guava-seed-pack: HTTP 403 for https://atlasseed.com/product/gorilla-guava-seed-pack
+  fail https://atlasseed.com/product/gorilla-lemon-glue-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/gorilla-lemon-glue-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/gorilla-mac-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/gorilla-mac-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/gorilla-runtz-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/gorilla-runtz-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/gorilla-sherbert-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/gorilla-sherbert-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/gorilla-strawberry-diesel-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/gorilla-strawberry-diesel-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/grail-keeper-seedpack: HTTP 403 for https://atlasseed.com/product/grail-keeper-seedpack
+  fail https://atlasseed.com/product/grand-daddy-purple-auto-autoflower-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/grand-daddy-purple-auto-autoflower-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/grape-cookie-gas-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/grape-cookie-gas-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/grape-jam-seedpack: HTTP 403 for https://atlasseed.com/product/grape-jam-seedpack
+  fail https://atlasseed.com/product/grape-punch-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/grape-punch-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/grapes-n-cream-bulk-seed: HTTP 403 for https://atlasseed.com/product/grapes-n-cream-bulk-seed
+  fail https://atlasseed.com/product/grapes-n-cream-seedpack: HTTP 403 for https://atlasseed.com/product/grapes-n-cream-seedpack
+  fail https://atlasseed.com/product/gravenstein-auto-bulk-seed: HTTP 403 for https://atlasseed.com/product/gravenstein-auto-bulk-seed
+  fail https://atlasseed.com/product/grease-gun-bulk-seed: HTTP 403 for https://atlasseed.com/product/grease-gun-bulk-seed
+  fail https://atlasseed.com/product/grease-gun-seedpack: HTTP 403 for https://atlasseed.com/product/grease-gun-seedpack
+  fail https://atlasseed.com/product/green-apple-candy-bulk-seed: HTTP 403 for https://atlasseed.com/product/green-apple-candy-bulk-seed
+  fail https://atlasseed.com/product/green-apple-candy-seed-pack: HTTP 403 for https://atlasseed.com/product/green-apple-candy-seed-pack
+  fail https://atlasseed.com/product/green-apple-tangie-seed-pack: HTTP 403 for https://atlasseed.com/product/green-apple-tangie-seed-pack
+  fail https://atlasseed.com/product/guava-cookie-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/guava-cookie-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/guava-dream-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/guava-dream-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/gummibears-bulk-seed: HTTP 403 for https://atlasseed.com/product/gummibears-bulk-seed
+  fail https://atlasseed.com/product/gummibears-seed-pack: HTTP 403 for https://atlasseed.com/product/gummibears-seed-pack
+  fail https://atlasseed.com/product/huckleberry-pie-bulk-seed: HTTP 403 for https://atlasseed.com/product/huckleberry-pie-bulk-seed
+  fail https://atlasseed.com/product/huckleberry-pie-seed-pack: HTTP 403 for https://atlasseed.com/product/huckleberry-pie-seed-pack
+  fail https://atlasseed.com/product/ice-cream-cake-fast-finishing-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/ice-cream-cake-fast-finishing-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/ice-cream-cake-s1-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/ice-cream-cake-s1-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/ice-cream-gelato-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/ice-cream-gelato-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/ice-cream-sherbert-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/ice-cream-sherbert-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/ice-cream-truffle-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/ice-cream-truffle-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/ice-sangria-seed-pack: HTTP 403 for https://atlasseed.com/product/ice-sangria-seed-pack
+  fail https://atlasseed.com/product/iced-sangria-bulk-seed: HTTP 403 for https://atlasseed.com/product/iced-sangria-bulk-seed
+  fail https://atlasseed.com/product/jack-punch-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/jack-punch-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/kombucha-cream-bulk-seed: HTTP 403 for https://atlasseed.com/product/kombucha-cream-bulk-seed
+  fail https://atlasseed.com/product/kombucha-cream-seed-pack: HTTP 403 for https://atlasseed.com/product/kombucha-cream-seed-pack
+  fail https://atlasseed.com/product/la-jefa-bulk-seed: HTTP 403 for https://atlasseed.com/product/la-jefa-bulk-seed
+  fail https://atlasseed.com/product/la-jefa-seedpack: HTTP 403 for https://atlasseed.com/product/la-jefa-seedpack
+  fail https://atlasseed.com/product/laundry-list-bulk-seed: HTTP 403 for https://atlasseed.com/product/laundry-list-bulk-seed
+  fail https://atlasseed.com/product/laundry-list-seed-pack: HTTP 403 for https://atlasseed.com/product/laundry-list-seed-pack
+  fail https://atlasseed.com/product/laundry-shaman-seed-pack: HTTP 403 for https://atlasseed.com/product/laundry-shaman-seed-pack
+  fail https://atlasseed.com/product/lemon-cherry-gelato-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/lemon-cherry-gelato-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/mendo-breath-auto-seed-pack: HTTP 403 for https://atlasseed.com/product/mendo-breath-auto-seed-pack
+  fail https://atlasseed.com/product/mendo-breath-bulk-seed: HTTP 403 for https://atlasseed.com/product/mendo-breath-bulk-seed
+  fail https://atlasseed.com/product/mendo-breath-bulk-seed-2: HTTP 403 for https://atlasseed.com/product/mendo-breath-bulk-seed-2
+  fail https://atlasseed.com/product/mendo-breath-seedpack: HTTP 403 for https://atlasseed.com/product/mendo-breath-seedpack
+  fail https://atlasseed.com/product/mendo-butter-bulk-seed: HTTP 403 for https://atlasseed.com/product/mendo-butter-bulk-seed
+  fail https://atlasseed.com/product/mendo-butter-seedpack: HTTP 403 for https://atlasseed.com/product/mendo-butter-seedpack
+  fail https://atlasseed.com/product/mendo-cookie-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/mendo-cookie-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/mendo-fatso-fast-finishing-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/mendo-fatso-fast-finishing-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/mendo-frost-auto-5-packs: HTTP 403 for https://atlasseed.com/product/mendo-frost-auto-5-packs
+  fail https://atlasseed.com/product/mendo-star-auto-autoflower-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/mendo-star-auto-autoflower-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/mimosa-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/mimosa-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/mystery-5-seed-pack: HTTP 403 for https://atlasseed.com/product/mystery-5-seed-pack
+  fail https://atlasseed.com/product/mythic-cheetah-bulk-seed: HTTP 403 for https://atlasseed.com/product/mythic-cheetah-bulk-seed
+  fail https://atlasseed.com/product/mythic-cheetah-seedpack: HTTP 403 for https://atlasseed.com/product/mythic-cheetah-seedpack
+  fail https://atlasseed.com/product/neon-cowgirl-bulk-seed: HTTP 403 for https://atlasseed.com/product/neon-cowgirl-bulk-seed
+  fail https://atlasseed.com/product/neon-cowgirl-seedpack: HTTP 403 for https://atlasseed.com/product/neon-cowgirl-seedpack
+  fail https://atlasseed.com/product/nevada-city-og-bulk-seed: HTTP 403 for https://atlasseed.com/product/nevada-city-og-bulk-seed
+  fail https://atlasseed.com/product/nimbus-snacks-fast-finishing-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/nimbus-snacks-fast-finishing-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/orange-garlic-auto-autoflower-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/orange-garlic-auto-autoflower-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/orange-papaya-auto-autoflower-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/orange-papaya-auto-autoflower-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/orangutangie-bulk-seed: HTTP 403 for https://atlasseed.com/product/orangutangie-bulk-seed
+  fail https://atlasseed.com/product/orangutangie-seed-pack: HTTP 403 for https://atlasseed.com/product/orangutangie-seed-pack
+  fail https://atlasseed.com/product/oreo-banana-cream-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/oreo-banana-cream-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/oreo-crasher-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/oreo-crasher-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/oreoz-breath-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/oreoz-breath-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/oreoz-dream-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/oreoz-dream-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/oreoz-ice-cream-cake-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/oreoz-ice-cream-cake-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/pai-gow-seedpack: HTTP 403 for https://atlasseed.com/product/pai-gow-seedpack
+  fail https://atlasseed.com/product/papa-smurf-bulk-seed: HTTP 403 for https://atlasseed.com/product/papa-smurf-bulk-seed
+  fail https://atlasseed.com/product/papa-smurf-seedpack: HTTP 403 for https://atlasseed.com/product/papa-smurf-seedpack
+  fail https://atlasseed.com/product/papaya-banana-bomb-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/papaya-banana-bomb-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/papaya-breath-auto-autoflower-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/papaya-breath-auto-autoflower-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/papaya-candy-bulk-seed: HTTP 403 for https://atlasseed.com/product/papaya-candy-bulk-seed
+  fail https://atlasseed.com/product/papaya-candy-seedpack: HTTP 403 for https://atlasseed.com/product/papaya-candy-seedpack
+  fail https://atlasseed.com/product/papaya-gmo-auto-autoflower-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/papaya-gmo-auto-autoflower-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/papaya-wine: HTTP 403 for https://atlasseed.com/product/papaya-wine
+  fail https://atlasseed.com/product/papaya-wine-bulk-seed: HTTP 403 for https://atlasseed.com/product/papaya-wine-bulk-seed
+  fail https://atlasseed.com/product/peach-punch-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/peach-punch-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/peanut-butter-bomb-bulk-seed: HTTP 403 for https://atlasseed.com/product/peanut-butter-bomb-bulk-seed
+  fail https://atlasseed.com/product/peanut-butter-bomb-seedpack: HTTP 403 for https://atlasseed.com/product/peanut-butter-bomb-seedpack
+  fail https://atlasseed.com/product/peanut-butter-breath-bulk-seed: HTTP 403 for https://atlasseed.com/product/peanut-butter-breath-bulk-seed
+  fail https://atlasseed.com/product/peanut-butter-breath-seedpack: HTTP 403 for https://atlasseed.com/product/peanut-butter-breath-seedpack
+  fail https://atlasseed.com/product/peanut-butter-crashers-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/peanut-butter-crashers-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/peanut-butter-souffle-bulk-seed: HTTP 403 for https://atlasseed.com/product/peanut-butter-souffle-bulk-seed
+  fail https://atlasseed.com/product/peanut-butter-souffle-seedpack: HTTP 403 for https://atlasseed.com/product/peanut-butter-souffle-seedpack
+  fail https://atlasseed.com/product/permanent-marker-s1-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/permanent-marker-s1-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/pilot-light-auto-bulk-seed: HTTP 403 for https://atlasseed.com/product/pilot-light-auto-bulk-seed
+  fail https://atlasseed.com/product/pilot-light-auto-seedpack: HTTP 403 for https://atlasseed.com/product/pilot-light-auto-seedpack
+  fail https://atlasseed.com/product/platinum-green-apple-candy-bulk-seed: HTTP 403 for https://atlasseed.com/product/platinum-green-apple-candy-bulk-seed
+  fail https://atlasseed.com/product/platinum-green-apple-candy-seed-pack: HTTP 403 for https://atlasseed.com/product/platinum-green-apple-candy-seed-pack
+  fail https://atlasseed.com/product/platinum-lcg-seed-pack: HTTP 403 for https://atlasseed.com/product/platinum-lcg-seed-pack
+  fail https://atlasseed.com/product/platinum-runtz-bulk-seed: HTTP 403 for https://atlasseed.com/product/platinum-runtz-bulk-seed
+  fail https://atlasseed.com/product/platinum-runtz-seed-pack: HTTP 403 for https://atlasseed.com/product/platinum-runtz-seed-pack
+  fail https://atlasseed.com/product/platinum-zoap-bulk-seed: HTTP 403 for https://atlasseed.com/product/platinum-zoap-bulk-seed
+  fail https://atlasseed.com/product/platinum-zoap-seed-pack: HTTP 403 for https://atlasseed.com/product/platinum-zoap-seed-pack
+  fail https://atlasseed.com/product/purple-banana-punch-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/purple-banana-punch-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/purple-bazooka-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/purple-bazooka-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/purple-cherry-sunset-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/purple-cherry-sunset-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/purple-frosted-girl-scout-cookie-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/purple-frosted-girl-scout-cookie-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/purple-punch-bulk-seed: HTTP 403 for https://atlasseed.com/product/purple-punch-bulk-seed
+  fail https://atlasseed.com/product/purple-punch-s1-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/purple-punch-s1-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/purple-punch-seedpack: HTTP 403 for https://atlasseed.com/product/purple-punch-seedpack
+  fail https://atlasseed.com/product/purple-star-bulk-seed: HTTP 403 for https://atlasseed.com/product/purple-star-bulk-seed
+  fail https://atlasseed.com/product/purple-star-seedpack: HTTP 403 for https://atlasseed.com/product/purple-star-seedpack
+  fail https://atlasseed.com/product/quattro-leches-cake-seedpack: HTTP 403 for https://atlasseed.com/product/quattro-leches-cake-seedpack
+  fail https://atlasseed.com/product/ramen-shaman-seedpack: HTTP 403 for https://atlasseed.com/product/ramen-shaman-seedpack
+  fail https://atlasseed.com/product/red-runtz-1-s1-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/red-runtz-1-s1-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/red-runtz-20-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/red-runtz-20-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/red-runtz-auto-autoflower-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/red-runtz-auto-autoflower-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/roy-rogers-seedpack: HTTP 403 for https://atlasseed.com/product/roy-rogers-seedpack
+  fail https://atlasseed.com/product/seed-pack-stickers: HTTP 403 for https://atlasseed.com/product/seed-pack-stickers
+  fail https://atlasseed.com/product/sherbanger-22-cutting: HTTP 403 for https://atlasseed.com/product/sherbanger-22-cutting
+  fail https://atlasseed.com/product/sluripcane-bulk-seed: HTTP 403 for https://atlasseed.com/product/sluripcane-bulk-seed
+  fail https://atlasseed.com/product/slurpicane-seedpack: HTTP 403 for https://atlasseed.com/product/slurpicane-seedpack
+  fail https://atlasseed.com/product/slurri-punch-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/slurri-punch-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/snow-panda-bulk-seed: HTTP 403 for https://atlasseed.com/product/snow-panda-bulk-seed
+  fail https://atlasseed.com/product/snow-panda-seed-pack: HTTP 403 for https://atlasseed.com/product/snow-panda-seed-pack
+  fail https://atlasseed.com/product/snow-panda-seedpack: HTTP 403 for https://atlasseed.com/product/snow-panda-seedpack
+  fail https://atlasseed.com/product/sour-cherry-diesel-bulk-seed: HTTP 403 for https://atlasseed.com/product/sour-cherry-diesel-bulk-seed
+  fail https://atlasseed.com/product/sour-cherry-diesel-seed-pack: HTTP 403 for https://atlasseed.com/product/sour-cherry-diesel-seed-pack
+  fail https://atlasseed.com/product/sour-cookie-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/sour-cookie-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/sour-diesel-auto-autoflower-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/sour-diesel-auto-autoflower-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/sour-diesel-fast-finishing-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/sour-diesel-fast-finishing-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/sour-diesel-s1-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/sour-diesel-s1-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/space-mercenary-seedpack: HTTP 403 for https://atlasseed.com/product/space-mercenary-seedpack
+  fail https://atlasseed.com/product/space-panda-bulk-seed: HTTP 403 for https://atlasseed.com/product/space-panda-bulk-seed
+  fail https://atlasseed.com/product/space-panda-seedpack: HTTP 403 for https://atlasseed.com/product/space-panda-seedpack
+  fail https://atlasseed.com/product/squid-beak-seedpack: HTTP 403 for https://atlasseed.com/product/squid-beak-seedpack
+  fail https://atlasseed.com/product/strawberry-banana-kush-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/strawberry-banana-kush-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/strawberry-diesel-s1-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/strawberry-diesel-s1-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/strawberry-diesel-s1-photo-fem-atlas-rd-line-5-pack-2: HTTP 403 for https://atlasseed.com/product/strawberry-diesel-s1-photo-fem-atlas-rd-line-5-pack-2
+  fail https://atlasseed.com/product/super-banana-runtz-bulk-seed: HTTP 403 for https://atlasseed.com/product/super-banana-runtz-bulk-seed
+  fail https://atlasseed.com/product/super-banana-runtz-seed-pack: HTTP 403 for https://atlasseed.com/product/super-banana-runtz-seed-pack
+  fail https://atlasseed.com/product/super-sour-runtz-bulk-seed: HTTP 403 for https://atlasseed.com/product/super-sour-runtz-bulk-seed
+  fail https://atlasseed.com/product/super-sour-runtz-seed-pack: HTTP 403 for https://atlasseed.com/product/super-sour-runtz-seed-pack
+  fail https://atlasseed.com/product/tahoe-cookies-auto-bulk-seed: HTTP 403 for https://atlasseed.com/product/tahoe-cookies-auto-bulk-seed
+  fail https://atlasseed.com/product/tahoe-cookies-auto-seedpack: HTTP 403 for https://atlasseed.com/product/tahoe-cookies-auto-seedpack
+  fail https://atlasseed.com/product/tangerine-cbd-bulk-seed: HTTP 403 for https://atlasseed.com/product/tangerine-cbd-bulk-seed
+  fail https://atlasseed.com/product/tangerine-cbd-seedpack: HTTP 403 for https://atlasseed.com/product/tangerine-cbd-seedpack
+  fail https://atlasseed.com/product/tangie-star-auto-autoflower-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/tangie-star-auto-autoflower-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/thai-peanut-sauce-seedpack: HTTP 403 for https://atlasseed.com/product/thai-peanut-sauce-seedpack
+  fail https://atlasseed.com/product/the-pandalorian-bulk-seed: HTTP 403 for https://atlasseed.com/product/the-pandalorian-bulk-seed
+  fail https://atlasseed.com/product/thepanadalorian-seed-pack: HTTP 403 for https://atlasseed.com/product/thepanadalorian-seed-pack
+  fail https://atlasseed.com/product/time-lorde-seedpack: HTTP 403 for https://atlasseed.com/product/time-lorde-seedpack
+  fail https://atlasseed.com/product/top-gun-bulk-seed: HTTP 403 for https://atlasseed.com/product/top-gun-bulk-seed
+  fail https://atlasseed.com/product/top-gun-seedpack: HTTP 403 for https://atlasseed.com/product/top-gun-seedpack
+  fail https://atlasseed.com/product/tricross-bulk-seed: HTTP 403 for https://atlasseed.com/product/tricross-bulk-seed
+  fail https://atlasseed.com/product/tricross-seedpack: HTTP 403 for https://atlasseed.com/product/tricross-seedpack
+  fail https://atlasseed.com/product/tropical-cooler-bulk-seed: HTTP 403 for https://atlasseed.com/product/tropical-cooler-bulk-seed
+  fail https://atlasseed.com/product/tropical-cooler-seed-pack: HTTP 403 for https://atlasseed.com/product/tropical-cooler-seed-pack
+  fail https://atlasseed.com/product/turtle-taffy-bulk-seed: HTTP 403 for https://atlasseed.com/product/turtle-taffy-bulk-seed
+  fail https://atlasseed.com/product/turtle-taffy-seed-pack: HTTP 403 for https://atlasseed.com/product/turtle-taffy-seed-pack
+  fail https://atlasseed.com/product/unicorn-glitter-bulk-seed: HTTP 403 for https://atlasseed.com/product/unicorn-glitter-bulk-seed
+  fail https://atlasseed.com/product/unicorn-glitter-seed-pack: HTTP 403 for https://atlasseed.com/product/unicorn-glitter-seed-pack
+  fail https://atlasseed.com/product/vanilla-frosting-fast-finishing-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/vanilla-frosting-fast-finishing-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/watermelon-gelato-auto-autoflower-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/watermelon-gelato-auto-autoflower-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/wedding-breath-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/wedding-breath-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/wedding-cake-auto-bulk-seed: HTTP 403 for https://atlasseed.com/product/wedding-cake-auto-bulk-seed
+  fail https://atlasseed.com/product/wedding-cake-auto-seedpack: HTTP 403 for https://atlasseed.com/product/wedding-cake-auto-seedpack
+  fail https://atlasseed.com/product/whale-breath-bulk-seed: HTTP 403 for https://atlasseed.com/product/whale-breath-bulk-seed
+  fail https://atlasseed.com/product/whale-breath-seedpack: HTTP 403 for https://atlasseed.com/product/whale-breath-seedpack
+  fail https://atlasseed.com/product/white-runtz-s1-photo-fem-atlas-rd-line-5-pack: HTTP 403 for https://atlasseed.com/product/white-runtz-s1-photo-fem-atlas-rd-line-5-pack
+  fail https://atlasseed.com/product/white-widow-auto-bulk-seed: HTTP 403 for https://atlasseed.com/product/white-widow-auto-bulk-seed
+  fail https://atlasseed.com/product/white-widow-auto-seed-pack: HTTP 403 for https://atlasseed.com/product/white-widow-auto-seed-pack
+  fail https://atlasseed.com/product/wookie-burger-seed-pack: HTTP 403 for https://atlasseed.com/product/wookie-burger-seed-pack
+  fail https://atlasseed.com/product/zookie-troop-seed-pack: HTTP 403 for https://atlasseed.com/product/zookie-troop-seed-pack
+  atlas-seed checkpoint items=48 this_run=48 rate=0.09/s idx=299/299
+wrote dsc_strains_atlas-seed.json count=48
+atlas-seed staging: {
+  "family": "bank_atlas_seed",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_atlas_seed.sqlite3",
+  "count": 48,
+  "bulk": true,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 48,
+    "strain_variant": 48,
+    "chemistry_profile": 0,
+    "grow_trait": 21,
+    "entity_link": 0,
+    "attribute_kv": 0,
+    "raw_record": 48,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 0,
+    "source_record": 1
+  }
+}
+{
+  "name": "Atlas Seed",
+  "slug": "atlas-seed",
+  "url": "https://atlasseed.com/",
+  "platform": "woocommerce",
+  "status": "ok",
+  "count": 48,
+  "urls_discovered": 299,
+  "error": null,
+  "skipped": 19
+}
+
+=== Seed Canary (https://www.seedcanary.com/) plat=woocommerce ===
+  shopify products.json fail page=1: HTTP 404 for https://www.seedcanary.com/products.json?limit=250&page=1
+  nested sitemap https://www.seedcanary.com/product-sitemap.xml

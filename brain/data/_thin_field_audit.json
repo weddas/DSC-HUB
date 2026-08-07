@@ -1,0 +1,1252 @@
+{
+  "families": [
+    {
+      "file": "alchimia.sqlite3",
+      "mb": 57.25,
+      "raw": 3098,
+      "canonical": 2859,
+      "variant": 3037,
+      "chem": 2943,
+      "grow": 3038,
+      "links": 2943,
+      "alias": 0,
+      "kv": 77939,
+      "grow_keys": [],
+      "raw_sample_n": 40,
+      "raw_field_hits": {
+        "flower": 30,
+        "days": 30,
+        "lineage": 36,
+        "effect": 37,
+        "thc": 36,
+        "yield": 39,
+        "indoor": 39,
+        "outdoor": 37,
+        "cbd": 9
+      }
+    },
+    {
+      "file": "allbud.sqlite3",
+      "mb": 12.7,
+      "raw": 1681,
+      "canonical": 1681,
+      "variant": 0,
+      "chem": 1649,
+      "grow": 13,
+      "links": 1649,
+      "alias": 0,
+      "kv": 0,
+      "grow_keys": [],
+      "raw_sample_n": 40,
+      "raw_field_hits": {
+        "effect": 39,
+        "thc": 37,
+        "cbd": 10,
+        "yield": 1,
+        "indoor": 1
+      }
+    },
+    {
+      "file": "bank_multiverse.sqlite3",
+      "mb": 8.09,
+      "raw": 1452,
+      "canonical": 1404,
+      "variant": 1300,
+      "chem": 7,
+      "grow": 1436,
+      "links": 7,
+      "alias": 0,
+      "kv": 0,
+      "grow_keys": [],
+      "raw_sample_n": 40,
+      "raw_field_hits": {
+        "flower": 39,
+        "lineage": 14,
+        "cbd": 1,
+        "yield": 13,
+        "indoor": 13,
+        "days": 3
+      }
+    },
+    {
+      "file": "bank_royal_queen.sqlite3",
+      "mb": 1.22,
+      "raw": 188,
+      "canonical": 188,
+      "variant": 188,
+      "chem": 8,
+      "grow": 188,
+      "links": 8,
+      "alias": 0,
+      "kv": 376,
+      "grow_keys": [],
+      "raw_sample_n": 40,
+      "raw_field_hits": {
+        "height": 36,
+        "flower": 35,
+        "days": 35,
+        "yield": 40,
+        "indoor": 40,
+        "thc": 1
+      }
+    },
+    {
+      "file": "bank_weedseedsexpress.sqlite3",
+      "mb": 2.66,
+      "raw": 364,
+      "canonical": 364,
+      "variant": 364,
+      "chem": 323,
+      "grow": 364,
+      "links": 323,
+      "alias": 0,
+      "kv": 0,
+      "grow_keys": [],
+      "raw_sample_n": 40,
+      "raw_field_hits": {
+        "flower": 33,
+        "days": 30,
+        "effect": 30,
+        "thc": 31,
+        "yield": 40,
+        "indoor": 40,
+        "outdoor": 22,
+        "cbd": 1
+      }
+    },
+    {
+      "file": "bank_zamnesia.sqlite3",
+      "mb": 2.65,
+      "raw": 405,
+      "canonical": 405,
+      "variant": 405,
+      "chem": 307,
+      "grow": 334,
+      "links": 307,
+      "alias": 0,
+      "kv": 739,
+      "grow_keys": [],
+      "raw_sample_n": 40,
+      "raw_field_hits": {
+        "thc": 31,
+        "yield": 37,
+        "indoor": 37,
+        "cbd": 14
+      }
+    },
+    {
+      "file": "cannabis_intelligence.sqlite3",
+      "mb": 63.06,
+      "raw": 15739,
+      "canonical": 14573,
+      "variant": 15394,
+      "chem": 4587,
+      "grow": 13175,
+      "links": 4587,
+      "alias": 0,
+      "kv": 0,
+      "grow_keys": [],
+      "raw_sample_n": 40,
+      "raw_field_hits": {
+        "height": 19,
+        "flower": 34,
+        "days": 30,
+        "effect": 16,
+        "thc": 9,
+        "indoor": 21,
+        "terp": 3,
+        "yield": 5,
+        "cbd": 1
+      }
+    },
+    {
+      "file": "cannaconnection.sqlite3",
+      "mb": 22.46,
+      "raw": 1968,
+      "canonical": 1966,
+      "variant": 0,
+      "chem": 1960,
+      "grow": 1962,
+      "links": 1960,
+      "alias": 0,
+      "kv": 0,
+      "grow_keys": [],
+      "raw_sample_n": 40,
+      "raw_field_hits": {
+        "height": 39,
+        "flower": 40,
+        "days": 36,
+        "parent": 39,
+        "effect": 40,
+        "terp": 4,
+        "thc": 40,
+        "cbd": 40,
+        "yield": 40,
+        "indoor": 40,
+        "outdoor": 40
+      }
+    },
+    {
+      "file": "cannareviews.sqlite3",
+      "mb": 8.47,
+      "raw": 4195,
+      "canonical": 1503,
+      "variant": 0,
+      "chem": 1971,
+      "grow": 0,
+      "links": 1971,
+      "alias": 0,
+      "kv": 0,
+      "grow_keys": [],
+      "raw_sample_n": 40,
+      "raw_field_hits": {
+        "thc": 40,
+        "cbd": 40
+      }
+    },
+    {
+      "file": "cannia.sqlite3",
+      "mb": 1.46,
+      "raw": 1970,
+      "canonical": 1970,
+      "variant": 0,
+      "chem": 0,
+      "grow": 0,
+      "links": 0,
+      "alias": 0,
+      "kv": 0,
+      "grow_keys": [],
+      "raw_sample_n": 40,
+      "raw_field_hits": {
+        "effect": 40
+      }
+    },
+    {
+      "file": "cannlytics_expand.sqlite3",
+      "mb": 178.29,
+      "raw": 0,
+      "canonical": 72928,
+      "variant": 0,
+      "chem": 82657,
+      "grow": 0,
+      "links": 82657,
+      "alias": 0,
+      "kv": 0,
+      "grow_keys": []
+    },
+    {
+      "file": "forum_420mag.sqlite3",
+      "mb": 2.65,
+      "raw": 400,
+      "canonical": 398,
+      "variant": 0,
+      "chem": 0,
+      "grow": 13,
+      "links": 0,
+      "alias": 0,
+      "kv": 3171,
+      "grow_keys": [],
+      "raw_sample_n": 40,
+      "raw_field_hits": {
+        "height": 2,
+        "flower": 1,
+        "days": 1
+      }
+    },
+    {
+      "file": "forum_mjpassion.sqlite3",
+      "mb": 1.74,
+      "raw": 300,
+      "canonical": 295,
+      "variant": 0,
+      "chem": 0,
+      "grow": 4,
+      "links": 0,
+      "alias": 0,
+      "kv": 2396,
+      "grow_keys": [],
+      "raw_sample_n": 40,
+      "raw_field_hits": {}
+    },
+    {
+      "file": "forum_phenohunter.sqlite3",
+      "mb": 1.94,
+      "raw": 400,
+      "canonical": 398,
+      "variant": 0,
+      "chem": 0,
+      "grow": 22,
+      "links": 0,
+      "alias": 0,
+      "kv": 3204,
+      "grow_keys": [],
+      "raw_sample_n": 40,
+      "raw_field_hits": {
+        "flower": 1,
+        "days": 1
+      }
+    },
+    {
+      "file": "hytiva.sqlite3",
+      "mb": 38.23,
+      "raw": 3560,
+      "canonical": 3530,
+      "variant": 0,
+      "chem": 1979,
+      "grow": 51,
+      "links": 1979,
+      "alias": 0,
+      "kv": 0,
+      "grow_keys": [],
+      "raw_sample_n": 40,
+      "raw_field_hits": {
+        "thc": 35,
+        "cbd": 25
+      }
+    },
+    {
+      "file": "kushy_crosses_local.sqlite3",
+      "mb": 13.41,
+      "raw": 9520,
+      "canonical": 9473,
+      "variant": 8961,
+      "chem": 9523,
+      "grow": 0,
+      "links": 9523,
+      "alias": 0,
+      "kv": 0,
+      "grow_keys": [],
+      "raw_sample_n": 40,
+      "raw_field_hits": {
+        "effect": 19,
+        "terp": 1,
+        "thc": 40,
+        "cbd": 40
+      }
+    },
+    {
+      "file": "leafly_flat.sqlite3",
+      "mb": 9.15,
+      "raw": 8492,
+      "canonical": 8482,
+      "variant": 0,
+      "chem": 4249,
+      "grow": 0,
+      "links": 4249,
+      "alias": 0,
+      "kv": 0,
+      "grow_keys": [],
+      "raw_sample_n": 40,
+      "raw_field_hits": {
+        "effect": 40,
+        "thc": 23,
+        "cbd": 19
+      }
+    },
+    {
+      "file": "leafly_flat_enrich.sqlite3",
+      "mb": 106.84,
+      "raw": 8492,
+      "canonical": 8482,
+      "variant": 0,
+      "chem": 8482,
+      "grow": 0,
+      "links": 8482,
+      "alias": 8492,
+      "kv": 0,
+      "grow_keys": [],
+      "raw_sample_n": 40,
+      "raw_field_hits": {
+        "height": 40,
+        "flower": 40,
+        "days": 40,
+        "parent": 40,
+        "effect": 40,
+        "terp": 40,
+        "thc": 40,
+        "cbd": 40,
+        "yield": 40
+      }
+    },
+    {
+      "file": "medical_effects.sqlite3",
+      "mb": 4.8,
+      "raw": 4756,
+      "canonical": 4755,
+      "variant": 0,
+      "chem": 2730,
+      "grow": 0,
+      "links": 2730,
+      "alias": 0,
+      "kv": 0,
+      "grow_keys": [],
+      "raw_sample_n": 40,
+      "raw_field_hits": {
+        "effect": 40,
+        "terp": 15,
+        "thc": 16
+      }
+    },
+    {
+      "file": "north_atlantic.sqlite3",
+      "mb": 8.89,
+      "raw": 2953,
+      "canonical": 2953,
+      "variant": 2953,
+      "chem": 254,
+      "grow": 2953,
+      "links": 254,
+      "alias": 0,
+      "kv": 0,
+      "grow_keys": [],
+      "raw_sample_n": 40,
+      "raw_field_hits": {
+        "flower": 40,
+        "lineage": 28,
+        "yield": 19,
+        "indoor": 19,
+        "effect": 13,
+        "height": 6,
+        "days": 1,
+        "thc": 2,
+        "outdoor": 2
+      }
+    },
+    {
+      "file": "north_atlantic_local.sqlite3",
+      "mb": 8.21,
+      "raw": 3043,
+      "canonical": 3043,
+      "variant": 3043,
+      "chem": 254,
+      "grow": 1215,
+      "links": 254,
+      "alias": 0,
+      "kv": 6821,
+      "grow_keys": [],
+      "raw_sample_n": 40,
+      "raw_field_hits": {
+        "lineage": 29,
+        "effect": 13,
+        "flower": 11,
+        "height": 6,
+        "yield": 3,
+        "indoor": 2,
+        "thc": 2,
+        "outdoor": 2
+      }
+    },
+    {
+      "file": "phytochem_lab.sqlite3",
+      "mb": 5.72,
+      "raw": 3087,
+      "canonical": 3087,
+      "variant": 0,
+      "chem": 3087,
+      "grow": 0,
+      "links": 3087,
+      "alias": 0,
+      "kv": 0,
+      "grow_keys": [],
+      "raw_sample_n": 40,
+      "raw_field_hits": {
+        "terp": 40,
+        "thc": 40,
+        "cbd": 40
+      }
+    },
+    {
+      "file": "phytochem_smith.sqlite3",
+      "mb": 189.15,
+      "raw": 89923,
+      "canonical": 3087,
+      "variant": 0,
+      "chem": 3087,
+      "grow": 0,
+      "links": 3087,
+      "alias": 0,
+      "kv": 0,
+      "grow_keys": [],
+      "raw_sample_n": 40,
+      "raw_field_hits": {
+        "terp": 40,
+        "thc": 40,
+        "cbd": 40
+      }
+    },
+    {
+      "file": "pickle_archive.sqlite3",
+      "mb": 0.82,
+      "raw": 1217,
+      "canonical": 1217,
+      "variant": 0,
+      "chem": 0,
+      "grow": 0,
+      "links": 0,
+      "alias": 0,
+      "kv": 0,
+      "grow_keys": [],
+      "raw_sample_n": 40,
+      "raw_field_hits": {}
+    },
+    {
+      "file": "replication_labs.sqlite3",
+      "mb": 14.86,
+      "raw": 10183,
+      "canonical": 10182,
+      "variant": 0,
+      "chem": 10183,
+      "grow": 0,
+      "links": 10182,
+      "alias": 0,
+      "kv": 0,
+      "grow_keys": [],
+      "raw_sample_n": 40,
+      "raw_field_hits": {
+        "thc": 40,
+        "cbd": 40
+      }
+    },
+    {
+      "file": "seedcity.sqlite3",
+      "mb": 52.2,
+      "raw": 8910,
+      "canonical": 8054,
+      "variant": 8910,
+      "chem": 8910,
+      "grow": 8910,
+      "links": 8910,
+      "alias": 0,
+      "kv": 0,
+      "grow_keys": [],
+      "raw_sample_n": 40,
+      "raw_field_hits": {
+        "height": 40,
+        "flower": 40,
+        "effect": 40,
+        "thc": 40,
+        "cbd": 40,
+        "yield": 40,
+        "indoor": 40,
+        "outdoor": 40
+      }
+    },
+    {
+      "file": "seedfinder.sqlite3",
+      "mb": 226.94,
+      "raw": 814,
+      "canonical": 743,
+      "variant": 814,
+      "chem": 51,
+      "grow": 814,
+      "links": 51,
+      "alias": 0,
+      "kv": 0,
+      "grow_keys": [],
+      "raw_sample_n": 40,
+      "raw_field_hits": {
+        "height": 2,
+        "flower": 35,
+        "days": 35,
+        "lineage": 40,
+        "parent": 40,
+        "yield": 16,
+        "indoor": 16,
+        "thc": 4,
+        "cbd": 1
+      }
+    },
+    {
+      "file": "seedsman.sqlite3",
+      "mb": 33.52,
+      "raw": 2206,
+      "canonical": 2130,
+      "variant": 2205,
+      "chem": 1413,
+      "grow": 2101,
+      "links": 1413,
+      "alias": 0,
+      "kv": 0,
+      "grow_keys": [],
+      "raw_sample_n": 40,
+      "raw_field_hits": {
+        "height": 18,
+        "flower": 40,
+        "days": 20,
+        "yield": 27,
+        "indoor": 24
+      }
+    },
+    {
+      "file": "strain_database.sqlite3",
+      "mb": 1.16,
+      "raw": 70,
+      "canonical": 70,
+      "variant": 70,
+      "chem": 70,
+      "grow": 53,
+      "links": 70,
+      "alias": 0,
+      "kv": 0,
+      "grow_keys": [],
+      "raw_sample_n": 40,
+      "raw_field_hits": {
+        "lineage": 40,
+        "parent": 40,
+        "effect": 40,
+        "terp": 40,
+        "thc": 40,
+        "cbd": 34
+      }
+    },
+    {
+      "file": "strains_master.sqlite3",
+      "mb": 0.88,
+      "raw": 1477,
+      "canonical": 1477,
+      "variant": 0,
+      "chem": 0,
+      "grow": 0,
+      "links": 0,
+      "alias": 0,
+      "kv": 0,
+      "grow_keys": [],
+      "raw_sample_n": 40,
+      "raw_field_hits": {}
+    }
+  ],
+  "grow_key_global": {},
+  "notes": [],
+  "thin_summary": [
+    {
+      "file": "cannia.sqlite3",
+      "raw": 1970,
+      "chem_ratio": 0.0,
+      "grow_ratio": 0.0,
+      "grow_keys": [],
+      "likely_missing_typed": [
+        "height",
+        "flowering_days",
+        "flowering",
+        "lineage",
+        "parents",
+        "effects"
+      ],
+      "raw_field_hits": {
+        "effect": 40
+      }
+    },
+    {
+      "file": "pickle_archive.sqlite3",
+      "raw": 1217,
+      "chem_ratio": 0.0,
+      "grow_ratio": 0.0,
+      "grow_keys": [],
+      "likely_missing_typed": [
+        "height",
+        "flowering_days",
+        "flowering",
+        "lineage",
+        "parents",
+        "effects"
+      ],
+      "raw_field_hits": {}
+    },
+    {
+      "file": "strains_master.sqlite3",
+      "raw": 1477,
+      "chem_ratio": 0.0,
+      "grow_ratio": 0.0,
+      "grow_keys": [],
+      "likely_missing_typed": [
+        "height",
+        "flowering_days",
+        "flowering",
+        "lineage",
+        "parents",
+        "effects"
+      ],
+      "raw_field_hits": {}
+    },
+    {
+      "file": "phytochem_smith.sqlite3",
+      "raw": 89923,
+      "chem_ratio": 0.034,
+      "grow_ratio": 0.0,
+      "grow_keys": [],
+      "likely_missing_typed": [
+        "height",
+        "flowering_days",
+        "flowering",
+        "lineage",
+        "parents",
+        "effects"
+      ],
+      "raw_field_hits": {
+        "terp": 40,
+        "thc": 40,
+        "cbd": 40
+      }
+    },
+    {
+      "file": "cannareviews.sqlite3",
+      "raw": 4195,
+      "chem_ratio": 0.47,
+      "grow_ratio": 0.0,
+      "grow_keys": [],
+      "likely_missing_typed": [
+        "height",
+        "flowering_days",
+        "flowering",
+        "lineage",
+        "parents",
+        "effects"
+      ],
+      "raw_field_hits": {
+        "thc": 40,
+        "cbd": 40
+      }
+    },
+    {
+      "file": "leafly_flat.sqlite3",
+      "raw": 8492,
+      "chem_ratio": 0.5,
+      "grow_ratio": 0.0,
+      "grow_keys": [],
+      "likely_missing_typed": [
+        "height",
+        "flowering_days",
+        "flowering",
+        "lineage",
+        "parents",
+        "effects"
+      ],
+      "raw_field_hits": {
+        "effect": 40,
+        "thc": 23,
+        "cbd": 19
+      }
+    },
+    {
+      "file": "medical_effects.sqlite3",
+      "raw": 4756,
+      "chem_ratio": 0.574,
+      "grow_ratio": 0.0,
+      "grow_keys": [],
+      "likely_missing_typed": [
+        "height",
+        "flowering_days",
+        "flowering",
+        "lineage",
+        "parents",
+        "effects"
+      ],
+      "raw_field_hits": {
+        "effect": 40,
+        "terp": 15,
+        "thc": 16
+      }
+    },
+    {
+      "file": "leafly_flat_enrich.sqlite3",
+      "raw": 8492,
+      "chem_ratio": 0.999,
+      "grow_ratio": 0.0,
+      "grow_keys": [],
+      "likely_missing_typed": [
+        "height",
+        "flowering_days",
+        "flowering",
+        "lineage",
+        "parents",
+        "effects"
+      ],
+      "raw_field_hits": {
+        "height": 40,
+        "flower": 40,
+        "days": 40,
+        "parent": 40,
+        "effect": 40,
+        "terp": 40,
+        "thc": 40,
+        "cbd": 40,
+        "yield": 40
+      }
+    },
+    {
+      "file": "kushy_crosses_local.sqlite3",
+      "raw": 9520,
+      "chem_ratio": 1.0,
+      "grow_ratio": 0.0,
+      "grow_keys": [],
+      "likely_missing_typed": [
+        "height",
+        "flowering_days",
+        "flowering",
+        "lineage",
+        "parents",
+        "effects"
+      ],
+      "raw_field_hits": {
+        "effect": 19,
+        "terp": 1,
+        "thc": 40,
+        "cbd": 40
+      }
+    },
+    {
+      "file": "phytochem_lab.sqlite3",
+      "raw": 3087,
+      "chem_ratio": 1.0,
+      "grow_ratio": 0.0,
+      "grow_keys": [],
+      "likely_missing_typed": [
+        "height",
+        "flowering_days",
+        "flowering",
+        "lineage",
+        "parents",
+        "effects"
+      ],
+      "raw_field_hits": {
+        "terp": 40,
+        "thc": 40,
+        "cbd": 40
+      }
+    },
+    {
+      "file": "replication_labs.sqlite3",
+      "raw": 10183,
+      "chem_ratio": 1.0,
+      "grow_ratio": 0.0,
+      "grow_keys": [],
+      "likely_missing_typed": [
+        "height",
+        "flowering_days",
+        "flowering",
+        "lineage",
+        "parents",
+        "effects"
+      ],
+      "raw_field_hits": {
+        "thc": 40,
+        "cbd": 40
+      }
+    },
+    {
+      "file": "allbud.sqlite3",
+      "raw": 1681,
+      "chem_ratio": 0.981,
+      "grow_ratio": 0.008,
+      "grow_keys": [],
+      "likely_missing_typed": [
+        "height",
+        "flowering_days",
+        "flowering",
+        "lineage",
+        "parents",
+        "effects"
+      ],
+      "raw_field_hits": {
+        "effect": 39,
+        "thc": 37,
+        "cbd": 10,
+        "yield": 1,
+        "indoor": 1
+      }
+    },
+    {
+      "file": "forum_mjpassion.sqlite3",
+      "raw": 300,
+      "chem_ratio": 0.0,
+      "grow_ratio": 0.013,
+      "grow_keys": [],
+      "likely_missing_typed": [
+        "height",
+        "flowering_days",
+        "flowering",
+        "lineage",
+        "parents",
+        "effects"
+      ],
+      "raw_field_hits": {}
+    },
+    {
+      "file": "hytiva.sqlite3",
+      "raw": 3560,
+      "chem_ratio": 0.556,
+      "grow_ratio": 0.014,
+      "grow_keys": [],
+      "likely_missing_typed": [
+        "height",
+        "flowering_days",
+        "flowering",
+        "lineage",
+        "parents",
+        "effects"
+      ],
+      "raw_field_hits": {
+        "thc": 35,
+        "cbd": 25
+      }
+    },
+    {
+      "file": "forum_420mag.sqlite3",
+      "raw": 400,
+      "chem_ratio": 0.0,
+      "grow_ratio": 0.033,
+      "grow_keys": [],
+      "likely_missing_typed": [
+        "height",
+        "flowering_days",
+        "flowering",
+        "lineage",
+        "parents",
+        "effects"
+      ],
+      "raw_field_hits": {
+        "height": 2,
+        "flower": 1,
+        "days": 1
+      }
+    },
+    {
+      "file": "forum_phenohunter.sqlite3",
+      "raw": 400,
+      "chem_ratio": 0.0,
+      "grow_ratio": 0.055,
+      "grow_keys": [],
+      "likely_missing_typed": [
+        "height",
+        "flowering_days",
+        "flowering",
+        "lineage",
+        "parents",
+        "effects"
+      ],
+      "raw_field_hits": {
+        "flower": 1,
+        "days": 1
+      }
+    },
+    {
+      "file": "north_atlantic_local.sqlite3",
+      "raw": 3043,
+      "chem_ratio": 0.083,
+      "grow_ratio": 0.399,
+      "grow_keys": [],
+      "likely_missing_typed": [
+        "height",
+        "flowering_days",
+        "flowering",
+        "lineage",
+        "parents",
+        "effects"
+      ],
+      "raw_field_hits": {
+        "lineage": 29,
+        "effect": 13,
+        "flower": 11,
+        "height": 6,
+        "yield": 3,
+        "indoor": 2,
+        "thc": 2,
+        "outdoor": 2
+      }
+    },
+    {
+      "file": "strain_database.sqlite3",
+      "raw": 70,
+      "chem_ratio": 1.0,
+      "grow_ratio": 0.757,
+      "grow_keys": [],
+      "likely_missing_typed": [
+        "height",
+        "flowering_days",
+        "flowering",
+        "lineage",
+        "parents",
+        "effects"
+      ],
+      "raw_field_hits": {
+        "lineage": 40,
+        "parent": 40,
+        "effect": 40,
+        "terp": 40,
+        "thc": 40,
+        "cbd": 34
+      }
+    },
+    {
+      "file": "bank_zamnesia.sqlite3",
+      "raw": 405,
+      "chem_ratio": 0.758,
+      "grow_ratio": 0.825,
+      "grow_keys": [],
+      "likely_missing_typed": [
+        "height",
+        "flowering_days",
+        "flowering",
+        "lineage",
+        "parents",
+        "effects"
+      ],
+      "raw_field_hits": {
+        "thc": 31,
+        "yield": 37,
+        "indoor": 37,
+        "cbd": 14
+      }
+    },
+    {
+      "file": "cannabis_intelligence.sqlite3",
+      "raw": 15739,
+      "chem_ratio": 0.291,
+      "grow_ratio": 0.837,
+      "grow_keys": [],
+      "likely_missing_typed": [
+        "height",
+        "flowering_days",
+        "flowering",
+        "lineage",
+        "parents",
+        "effects"
+      ],
+      "raw_field_hits": {
+        "height": 19,
+        "flower": 34,
+        "days": 30,
+        "effect": 16,
+        "thc": 9,
+        "indoor": 21,
+        "terp": 3,
+        "yield": 5,
+        "cbd": 1
+      }
+    },
+    {
+      "file": "seedsman.sqlite3",
+      "raw": 2206,
+      "chem_ratio": 0.641,
+      "grow_ratio": 0.952,
+      "grow_keys": [],
+      "likely_missing_typed": [
+        "height",
+        "flowering_days",
+        "flowering",
+        "lineage",
+        "parents",
+        "effects"
+      ],
+      "raw_field_hits": {
+        "height": 18,
+        "flower": 40,
+        "days": 20,
+        "yield": 27,
+        "indoor": 24
+      }
+    },
+    {
+      "file": "alchimia.sqlite3",
+      "raw": 3098,
+      "chem_ratio": 0.95,
+      "grow_ratio": 0.981,
+      "grow_keys": [],
+      "likely_missing_typed": [
+        "height",
+        "flowering_days",
+        "flowering",
+        "lineage",
+        "parents",
+        "effects"
+      ],
+      "raw_field_hits": {
+        "flower": 30,
+        "days": 30,
+        "lineage": 36,
+        "effect": 37,
+        "thc": 36,
+        "yield": 39,
+        "indoor": 39,
+        "outdoor": 37,
+        "cbd": 9
+      }
+    },
+    {
+      "file": "bank_multiverse.sqlite3",
+      "raw": 1452,
+      "chem_ratio": 0.005,
+      "grow_ratio": 0.989,
+      "grow_keys": [],
+      "likely_missing_typed": [
+        "height",
+        "flowering_days",
+        "flowering",
+        "lineage",
+        "parents",
+        "effects"
+      ],
+      "raw_field_hits": {
+        "flower": 39,
+        "lineage": 14,
+        "cbd": 1,
+        "yield": 13,
+        "indoor": 13,
+        "days": 3
+      }
+    },
+    {
+      "file": "cannaconnection.sqlite3",
+      "raw": 1968,
+      "chem_ratio": 0.996,
+      "grow_ratio": 0.997,
+      "grow_keys": [],
+      "likely_missing_typed": [
+        "height",
+        "flowering_days",
+        "flowering",
+        "lineage",
+        "parents",
+        "effects"
+      ],
+      "raw_field_hits": {
+        "height": 39,
+        "flower": 40,
+        "days": 36,
+        "parent": 39,
+        "effect": 40,
+        "terp": 4,
+        "thc": 40,
+        "cbd": 40,
+        "yield": 40,
+        "indoor": 40,
+        "outdoor": 40
+      }
+    },
+    {
+      "file": "bank_royal_queen.sqlite3",
+      "raw": 188,
+      "chem_ratio": 0.043,
+      "grow_ratio": 1.0,
+      "grow_keys": [],
+      "likely_missing_typed": [
+        "height",
+        "flowering_days",
+        "flowering",
+        "lineage",
+        "parents",
+        "effects"
+      ],
+      "raw_field_hits": {
+        "height": 36,
+        "flower": 35,
+        "days": 35,
+        "yield": 40,
+        "indoor": 40,
+        "thc": 1
+      }
+    },
+    {
+      "file": "seedfinder.sqlite3",
+      "raw": 814,
+      "chem_ratio": 0.063,
+      "grow_ratio": 1.0,
+      "grow_keys": [],
+      "likely_missing_typed": [
+        "height",
+        "flowering_days",
+        "flowering",
+        "lineage",
+        "parents",
+        "effects"
+      ],
+      "raw_field_hits": {
+        "height": 2,
+        "flower": 35,
+        "days": 35,
+        "lineage": 40,
+        "parent": 40,
+        "yield": 16,
+        "indoor": 16,
+        "thc": 4,
+        "cbd": 1
+      }
+    },
+    {
+      "file": "north_atlantic.sqlite3",
+      "raw": 2953,
+      "chem_ratio": 0.086,
+      "grow_ratio": 1.0,
+      "grow_keys": [],
+      "likely_missing_typed": [
+        "height",
+        "flowering_days",
+        "flowering",
+        "lineage",
+        "parents",
+        "effects"
+      ],
+      "raw_field_hits": {
+        "flower": 40,
+        "lineage": 28,
+        "yield": 19,
+        "indoor": 19,
+        "effect": 13,
+        "height": 6,
+        "days": 1,
+        "thc": 2,
+        "outdoor": 2
+      }
+    },
+    {
+      "file": "bank_weedseedsexpress.sqlite3",
+      "raw": 364,
+      "chem_ratio": 0.887,
+      "grow_ratio": 1.0,
+      "grow_keys": [],
+      "likely_missing_typed": [
+        "height",
+        "flowering_days",
+        "flowering",
+        "lineage",
+        "parents",
+        "effects"
+      ],
+      "raw_field_hits": {
+        "flower": 33,
+        "days": 30,
+        "effect": 30,
+        "thc": 31,
+        "yield": 40,
+        "indoor": 40,
+        "outdoor": 22,
+        "cbd": 1
+      }
+    },
+    {
+      "file": "seedcity.sqlite3",
+      "raw": 8910,
+      "chem_ratio": 1.0,
+      "grow_ratio": 1.0,
+      "grow_keys": [],
+      "likely_missing_typed": [
+        "height",
+        "flowering_days",
+        "flowering",
+        "lineage",
+        "parents",
+        "effects"
+      ],
+      "raw_field_hits": {
+        "height": 40,
+        "flower": 40,
+        "effect": 40,
+        "thc": 40,
+        "cbd": 40,
+        "yield": 40,
+        "indoor": 40,
+        "outdoor": 40
+      }
+    }
+  ]
+}

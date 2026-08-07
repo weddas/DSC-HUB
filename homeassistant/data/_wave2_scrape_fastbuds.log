@@ -1,0 +1,63 @@
+  https://fastbuds.com/sitemap.xml -> accepted 121
+fastbuds: sitemap total 121 (cached dsc_strains_fastbuds.sitemap_urls.json)
+fastbuds: 121 urls queued; resume done=0 dump_items=0 skipped=0
+  ok #1 idx=1/121 name='Amnesia Z'
+  ok #2 idx=2/121 name='Apple Strudel Auto™'
+  ok #3 idx=3/121 name='Apricot'
+  fastbuds checkpoint items=20 done=20 skipped=0 this_run=20 rate=0.63/s idx=20/121
+  ok #25 idx=25/121 name='Cream Cookies'
+  fastbuds checkpoint items=40 done=40 skipped=0 this_run=40 rate=0.58/s idx=40/121
+  ok #50 idx=51/121 name='Green Crack'
+  fastbuds checkpoint items=60 done=61 skipped=1 this_run=60 rate=0.59/s idx=61/121
+  ok #75 idx=76/121 name='AK'
+  fastbuds checkpoint items=80 done=81 skipped=1 this_run=80 rate=0.58/s idx=81/121
+fastbuds staging: {
+  "family": "bank_fastbuds",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_fastbuds.sqlite3",
+  "count": 80,
+  "bulk": false,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 79,
+    "strain_variant": 79,
+    "chemistry_profile": 1,
+    "grow_trait": 72,
+    "entity_link": 1,
+    "attribute_kv": 1164,
+    "raw_record": 80,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 16,
+    "source_record": 1
+  }
+}
+  ok #100 idx=101/121 name='Purple Punch'
+  fastbuds checkpoint items=100 done=101 skipped=1 this_run=100 rate=0.58/s idx=101/121
+  fastbuds checkpoint items=120 done=121 skipped=1 this_run=120 rate=0.59/s idx=121/121
+wrote dsc_strains_fastbuds.json count=120 skipped=1 errors=0
+fastbuds staging: {
+  "family": "bank_fastbuds",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_fastbuds.sqlite3",
+  "count": 120,
+  "bulk": false,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 118,
+    "strain_variant": 118,
+    "chemistry_profile": 1,
+    "grow_trait": 106,
+    "entity_link": 1,
+    "attribute_kv": 1752,
+    "raw_record": 120,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 16,
+    "source_record": 1
+  }
+}

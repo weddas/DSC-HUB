@@ -1,0 +1,13 @@
+Traceback (most recent call last):
+  File "\\192.168.86.2\Digital-Documents\Digital Stealth Care\Projects\DSC-HUB\scripts\scrape_breeder_tier_c.py", line 883, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "\\192.168.86.2\Digital-Documents\Digital Stealth Care\Projects\DSC-HUB\scripts\scrape_breeder_tier_c.py", line 826, in main
+    print(f"\n=== {entry.get('name')} {entry.get('url')} ===", flush=True)
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python314\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u014d' in position 9: character maps to <undefined>
+
+--- relaunch ---

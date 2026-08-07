@@ -1,0 +1,348 @@
+{
+  "pages": {
+    "1": {
+      "n": 25,
+      "sample": [
+        "/strains/hybrid/animal-cookies",
+        "/strains/hybrid/berry-white",
+        "/strains/hybrid/black-diamond"
+      ],
+      "new": 25
+    },
+    "2": {
+      "n": 25,
+      "sample": [
+        "/strains/hybrid/apples-and-bananas",
+        "/strains/hybrid/birthday-cake",
+        "/strains/hybrid/black-ice"
+      ],
+      "new": 25
+    },
+    "3": {
+      "n": 25,
+      "sample": [
+        "/strains/hybrid/banana-og",
+        "/strains/hybrid/blueberry-kush",
+        "/strains/hybrid/blueberry-muffin"
+      ],
+      "new": 25
+    },
+    "4": {
+      "n": 25,
+      "sample": [
+        "/strains/hybrid/alien-cookies",
+        "/strains/hybrid/berry-pie",
+        "/strains/hybrid/blue-cookies"
+      ],
+      "new": 25
+    },
+    "5": {
+      "n": 25,
+      "sample": [
+        "/strains/hybrid/apple-fritter-x-sunset-sherbert",
+        "/strains/hybrid/bad-apple",
+        "/strains/hybrid/bk-satellite"
+      ],
+      "new": 25
+    },
+    "6": {
+      "n": 25,
+      "sample": [
+        "/strains/hybrid/adios-mf",
+        "/strains/hybrid/bakers-delight",
+        "/strains/hybrid/caribbean-cookies"
+      ],
+      "new": 25
+    },
+    "7": {
+      "n": 25,
+      "sample": [
+        "/strains/hybrid/747",
+        "/strains/hybrid/bada-bing",
+        "/strains/hybrid/big-apple-kush-mints"
+      ],
+      "new": 25
+    },
+    "8": {
+      "n": 25,
+      "sample": [
+        "/strains/hybrid/all-time-high",
+        "/strains/hybrid/bakers-dozen",
+        "/strains/hybrid/banana-cream-cake"
+      ],
+      "new": 25
+    },
+    "9": {
+      "n": 25,
+      "sample": [
+        "/strains/hybrid/8-inch-bagel",
+        "/strains/hybrid/anslingers-demise",
+        "/strains/hybrid/banana-jealousy"
+      ],
+      "new": 25
+    },
+    "10": {
+      "n": 25,
+      "sample": [
+        "/strains/hybrid/bangkok-purple",
+        "/strains/hybrid/blue-machine",
+        "/strains/hybrid/clean-freak"
+      ],
+      "new": 25
+    },
+    "11": {
+      "n": 25,
+      "sample": [
+        "/strains/hybrid/blood-honey",
+        "/strains/hybrid/chunk",
+        "/strains/hybrid/day-stripper"
+      ],
+      "new": 25
+    },
+    "12": {
+      "n": 25,
+      "sample": [
+        "/strains/hybrid/banana-guava",
+        "/strains/hybrid/caramel-apple-gelato",
+        "/strains/hybrid/dark-rainbow-5"
+      ],
+      "new": 25
+    },
+    "13": {
+      "n": 25,
+      "sample": [
+        "/strains/hybrid/black-card-og",
+        "/strains/hybrid/bubba-ghost",
+        "/strains/hybrid/chem-dogg-x-moby"
+      ],
+      "new": 25
+    },
+    "14": {
+      "n": 25,
+      "sample": [
+        "/strains/hybrid/22-af",
+        "/strains/hybrid/alien-tarantula",
+        "/strains/hybrid/bath-time"
+      ],
+      "new": 25
+    },
+    "15": {
+      "n": 25,
+      "sample": [
+        "/strains/hybrid/alien-rift",
+        "/strains/hybrid/banana-puddintain",
+        "/strains/hybrid/blood-orange-amethyst"
+      ],
+      "new": 25
+    },
+    "16": {
+      "n": 25,
+      "sample": [
+        "/strains/hybrid/87-limepop",
+        "/strains/hybrid/aspen-sky-og",
+        "/strains/hybrid/bi-polar-jackie"
+      ],
+      "new": 25
+    },
+    "17": {
+      "n": 25,
+      "sample": [
+        "/strains/hybrid/91-punch",
+        "/strains/hybrid/animal-house",
+        "/strains/hybrid/chem-cake"
+      ],
+      "new": 25
+    },
+    "18": {
+      "n": 25,
+      "sample": [
+        "/strains/hybrid/airplane-glue",
+        "/strains/hybrid/blueberry-pancakes",
+        "/strains/hybrid/blueberry-sunset"
+      ],
+      "new": 25
+    },
+    "19": {
+      "n": 25,
+      "sample": [
+        "/strains/hybrid/apd",
+        "/strains/hybrid/blueberry-flavor",
+        "/strains/hybrid/champagne-supernova"
+      ],
+      "new": 25
+    },
+    "20": {
+      "n": 25,
+      "sample": [
+        "/strains/hybrid/blueberry-sinmint",
+        "/strains/hybrid/cake-batter",
+        "/strains/hybrid/carson-city-kush"
+      ],
+      "new": 25
+    }
+  },
+  "cumulative_from_main": 500,
+  "type_hybrid": 750,
+  "type_indica": 245,
+  "type_sativa": 204,
+  "cumulative_with_types": 1217,
+  "filter_effects=energetic": {
+    "n": 25,
+    "new": 0
+  },
+  "filter_effects=energetic_p2": {
+    "n": 25,
+    "new": 0
+  },
+  "filter_effects=creative": {
+    "n": 25,
+    "new": 0
+  },
+  "filter_effects=creative_p2": {
+    "n": 25,
+    "new": 0
+  },
+  "filter_effects=happy": {
+    "n": 25,
+    "new": 0
+  },
+  "filter_effects=happy_p2": {
+    "n": 25,
+    "new": 0
+  },
+  "filter_effects=sleepy": {
+    "n": 25,
+    "new": 1
+  },
+  "filter_effects=sleepy_p2": {
+    "n": 25,
+    "new": 0
+  },
+  "filter_effects=relaxed": {
+    "n": 25,
+    "new": 0
+  },
+  "filter_effects=relaxed_p2": {
+    "n": 25,
+    "new": 0
+  },
+  "filter_effects=hungry": {
+    "n": 25,
+    "new": 0
+  },
+  "filter_effects=hungry_p2": {
+    "n": 25,
+    "new": 0
+  },
+  "filter_flavors=earthy": {
+    "n": 25,
+    "new": 0
+  },
+  "filter_flavors=earthy_p2": {
+    "n": 25,
+    "new": 0
+  },
+  "filter_flavors=sweet": {
+    "n": 25,
+    "new": 0
+  },
+  "filter_flavors=sweet_p2": {
+    "n": 25,
+    "new": 0
+  },
+  "filter_flavors=citrus": {
+    "n": 25,
+    "new": 0
+  },
+  "filter_flavors=citrus_p2": {
+    "n": 25,
+    "new": 0
+  },
+  "filter_flavors=berry": {
+    "n": 25,
+    "new": 0
+  },
+  "filter_flavors=berry_p2": {
+    "n": 25,
+    "new": 0
+  },
+  "filter_flavors=diesel": {
+    "n": 25,
+    "new": 0
+  },
+  "filter_flavors=diesel_p2": {
+    "n": 25,
+    "new": 0
+  },
+  "filter_pairsWellWith=sleeping": {
+    "n": 25,
+    "new": 0
+  },
+  "filter_pairsWellWith=sleeping_p2": {
+    "n": 25,
+    "new": 0
+  },
+  "filter_pairsWellWith=watchingTV": {
+    "n": 25,
+    "new": 0
+  },
+  "filter_pairsWellWith=watchingTV_p2": {
+    "n": 25,
+    "new": 0
+  },
+  "cumulative_after_filters": 1218,
+  "detail_snippets": {
+    "meta_desc": [
+      "Learn about the Blue Dream Hybrid cannabis strain a cross of Blueberry x Haze, with 30% THC, 1.0% CBD & 1mg/g Caryophyllene. Discover its effects, flavors, and lineage on Hytiva."
+    ],
+    "og_title": [
+      "Blue Dream Strain - Hybrid Cannabis Review, 30% THC, 1.0% CBD & 1mg/g Caryophyllene"
+    ],
+    "ld_json": "['{\"@context\":\"https://schema.org\",\"@graph\":[{\"@type\":\"Organization\",\"name\":\"Hytiva: Cannabis on Demand\u00ae\",\"url\":\"https://www.hytiva.com\",\"@id\":\"https://www.hytiva.com#organization\",\"logo\":{\"@type\":\"ImageObject\",\"url\":\"https://images.hytiva.com/Hytiva-Logo.png?mw1200\",\"caption\":\"Hytiva: Cannabis on Demand\u00ae Logo\"},\"sameAs\":[\"https://x.com/hytiva\",\"https://www.linkedin.com/company/hytiva\"]},{\"@type\":\"Product\",\"name\":\"Blue Dream\",\"url\":\"https://www.hytiva.com//strains/hybrid/blue-dream\",\"description\":\"The sativa-dominant hybrid Blue Dream is a favorite strain for both novice and veteran cannabis consumers. Its fragrance consists of a light and sweet blueberry perfume with a woody undertone. When harvest-ready, its buds are light green and often quite sticky with lots of trichomes and bright orange hairs. The THC level of this strain falls at around 15%, just enough for both experienced and first-time users to enjoy the effects of its high. The peak THC level for Blue Dream is approximately 21%. Its high consists of cerebral activity and a healthy body buzz with a delicate balance between sativa and indica effects. Blue Dream is a good wake-and- bake strain, relieving tension in the body while increasing both creativity and energy to the consumer. Blue Dream will induce the munchies. Recommended consumption time is no later than two hours before bedtime. Besides cotton mouth and dry eyes, paranoia may surface if too much is consumed. Growers recommend indoor cultivation for this strain because it is susceptible to spider mite infestations.\",\"image\":{\"@type\":\"ImageObject\",\"url\":\"https://images.hytiva.com/Blue-Dream.jpg\",\"caption\":\"Blue Dream Hybrid Cannabis Strain Bud\"},\"additionalProperty\":[{\"@type\":\"PropertyValue\",\"name\":\"THCA\",\"value\":\"32.872\",\"unitText\":\"%\"},{\"@type\":\"PropertyValue\",\"name\":\"THC\",\"value\":\"30.263\",\"unitText\":\"%\"},{\"@type\":\"PropertyValue\",\"name\":\"CBGA\",\"value\":\"1.314\",\"unitText\":\"%\"},{\"@type\":\"PropertyValue\",\"name\":\"CBD\",\"value\":\"1.0\",\"unitText\":\"%\"},{\"@",
+    "h1": [
+      "Blue Dream"
+    ],
+    "dt_dd": [],
+    "data_attrs": [],
+    "api_paths": [],
+    "json_blobs": []
+  },
+  "count_pat_(\\d[\\d,]*)\\s*(?:strains|results|found)": [],
+  "count_pat_Showing\\s+\\d+": [],
+  "count_pat_of\\s+(\\d[\\d,]*)": [],
+  "count_pat_page\\s+\\d+\\s+of\\s+(\\d+)": [],
+  "list_page_hrefs": [
+    "/strains?page=2"
+  ],
+  "max_page_in_list": 2,
+  "page_nums_in_list": [
+    2
+  ],
+  "https://www.hytiva.com/api/strains": {
+    "error": "HTTP Error 404: Not Found"
+  },
+  "https://www.hytiva.com/api/v1/strains": {
+    "error": "HTTP Error 404: Not Found"
+  },
+  "https://www.hytiva.com/api/strains?page=1": {
+    "error": "HTTP Error 404: Not Found"
+  },
+  "https://www.hytiva.com/strains.json": {
+    "error": "HTTP Error 404: Not Found"
+  },
+  "https://www.hytiva.com/strains?format=json": {
+    "status": 200,
+    "bytes": 49276,
+    "preview": "<!DOCTYPE html>\n<html lang=\"en-US\">\n\t<head>\n\t\t\t\t<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width\">\n<meta http-equiv=\"Accept-CH\" content=\"DPR,Width,Viewport-Width,Downlink,ECT\">\n<title>Cannabis Strains</title>\n<meta name=\"description\" content=\"Find the ideal cannabis strains w"
+  },
+  "https://www.hytiva.com/strains?ajax=1": {
+    "status": 200,
+    "bytes": 49271,
+    "preview": "<!DOCTYPE html>\n<html lang=\"en-US\">\n\t<head>\n\t\t\t\t<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width\">\n<meta http-equiv=\"Accept-CH\" content=\"DPR,Width,Viewport-Width,Downlink,ECT\">\n<title>Cannabis Strains</title>\n<meta name=\"description\" content=\"Find the ideal cannabis strains w"
+  },
+  "https://www.hytiva.com/asset/files/hytiva-manifest.json": {
+    "status": 200,
+    "bytes": 779,
+    "preview": "{\n\t\"short_name\": \"Hytiva\",\n\t\"name\": \"Hytiva: Cannabis on Demand\",\n\t\"start_url\": \"/\",\n\t\"theme_color\": \"#2EB6BE\",\n\t\"background_color\": \"#00A079\",\n\t\"display\": \"minimal-ui\",\n\t\"icons\": [\n\t\t{ \"type\": \"image/png\", \"sizes\": \"57x57\", \"src\": \"/asset/images/apple-touch-icon-57x57.png\" },\n\t\t{ \"type\": \"image/png"
+  }
+}

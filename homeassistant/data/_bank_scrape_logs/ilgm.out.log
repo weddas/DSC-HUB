@@ -1,0 +1,52 @@
+ilgm: sitemap cache 375 from dsc_strains_ilgm.sitemap_urls.json
+ilgm: 375 urls queued; resume done=0 dump_items=0 skipped=0
+  ok #1 idx=1/375 name='Afghan Autoflower'
+  ok #2 idx=2/375 name='Afghan Feminized'
+  ok #3 idx=3/375 name='Afghan Kush X Super Skunk'
+  ok #25 idx=25/375 name='Bacio Gelato'
+  ilgm checkpoint items=25 done=25 skipped=0 this_run=25 rate=0.32/s idx=25/375
+  ok #50 idx=50/375 name='Blue Cheese Feminized'
+  ilgm checkpoint items=50 done=50 skipped=0 this_run=50 rate=0.34/s idx=50/375
+  ok #75 idx=75/375 name='California Dream Feminized'
+  ilgm checkpoint items=75 done=75 skipped=0 this_run=75 rate=0.32/s idx=75/375
+  ok #100 idx=100/375 name='Chronic Widow Feminized'
+  ilgm checkpoint items=100 done=100 skipped=0 this_run=100 rate=0.31/s idx=100/375
+  ok #125 idx=125/375 name='Dosed Chocolate Chips'
+  ilgm checkpoint items=125 done=125 skipped=0 this_run=125 rate=0.33/s idx=125/375
+  ok #150 idx=150/375 name='G13 Feminized'
+  ilgm checkpoint items=150 done=150 skipped=0 this_run=150 rate=0.33/s idx=150/375
+  ok #175 idx=175/375 name='Gold Leaf Autoflower Seeds 50'
+  ilgm checkpoint items=175 done=175 skipped=0 this_run=175 rate=0.34/s idx=175/375
+  ok #200 idx=200/375 name='Grapericot Pie Feminized'
+  ilgm checkpoint items=200 done=200 skipped=0 this_run=200 rate=0.34/s idx=200/375
+ilgm staging: {
+  "family": "bank_ilgm",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_ilgm.sqlite3",
+  "count": 200,
+  "bulk": false,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 200,
+    "strain_variant": 200,
+    "chemistry_profile": 0,
+    "grow_trait": 141,
+    "entity_link": 0,
+    "attribute_kv": 1811,
+    "raw_record": 200,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 12,
+    "source_record": 1
+  }
+}
+  ok #225 idx=225/375 name='Jack Flash'
+  ilgm checkpoint items=225 done=225 skipped=0 this_run=225 rate=0.34/s idx=225/375
+  ok #250 idx=250/375 name='Lowryder Autoflower'
+  ilgm checkpoint items=250 done=250 skipped=0 this_run=250 rate=0.34/s idx=250/375
+  ok #275 idx=275/375 name='Oh My Thai Autoflower'
+  ilgm checkpoint items=275 done=275 skipped=0 this_run=275 rate=0.35/s idx=275/375
+  ok #300 idx=300/375 name='Purple Punch Feminized'
+  ilgm checkpoint items=300 done=300 skipped=0 this_run=300 rate=0.35/s idx=300/375

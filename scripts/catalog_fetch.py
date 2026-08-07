@@ -54,7 +54,9 @@ class Checkpoint:
 
     def save(self) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        self.path.write_text(json.dumps(self.data, indent=2), encoding="utf-8")
+        tmp = self.path.with_suffix(self.path.suffix + ".tmp")
+        tmp.write_text(json.dumps(self.data, indent=2), encoding="utf-8")
+        tmp.replace(self.path)
 
 
 def run_paginated(

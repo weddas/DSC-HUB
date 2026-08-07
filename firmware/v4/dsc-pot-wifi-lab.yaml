@@ -1,12 +1,20 @@
 # ==================================================================
 #  DSC pot · lab WiFi
 #
-#  AP PIN: networks[0] prefers ${wifi_bssid}. Production stubs stay
-#  00:00:00:00:00:00 — hub learns preferred AP at runtime and 0xD0
-#  broadcasts it; pots adopt via adopt_hub_wifi_ap. No site MAC in YAML.
+#  Prefer DSC-Anchor SoftAP (F-012); Nest/home is fallback. Stubs keep
+#  wifi_bssid 00:00:00:00:00:00 — hub learns preferred Anchor BSSID and
+#  0xD0 broadcasts it; pots adopt via adopt_hub_wifi_ap. No site MAC
+#  in YAML.
 # ==================================================================
 wifi:
   networks:
+    - ssid: ${anchor_ssid}
+      password: ${anchor_ap_password}
+      bssid: ${wifi_bssid}
+      priority: 20
+    - ssid: ${anchor_ssid}
+      password: ${anchor_ap_password}
+      priority: 15
     - ssid: ${wifi_ssid}
       password: ${wifi_password}
       bssid: ${wifi_bssid}

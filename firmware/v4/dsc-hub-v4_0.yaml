@@ -76,7 +76,7 @@ esphome:
   friendly_name: DSC-HUB
   project:
     name: "digital_emotions.dsc-hub"
-    version: "5.1.11"
+    version: "5.2.0"
   on_boot:
     - priority: -100
       then:
@@ -1681,6 +1681,10 @@ switch:
     id: humidifier_demand
     icon: "mdi:water-plus"
     optimistic: true
+    on_turn_on:
+      - script.execute: tx_appliance_demand
+    on_turn_off:
+      - script.execute: tx_appliance_demand
 
   # --- Dehumidifier soft switch (RH TOO HIGH — the one that matters in NSW flower) ---
   - platform: template
@@ -1702,6 +1706,10 @@ switch:
     id: dehumidifier_demand
     icon: "mdi:water-minus"
     optimistic: true
+    on_turn_on:
+      - script.execute: tx_appliance_demand
+    on_turn_off:
+      - script.execute: tx_appliance_demand
 
   # --- ESCALATION LADDER appliances (HA does the actual switching) ---
   # "X Auto" arms the ladder for that device; "X Demand" is the read-only
@@ -1724,6 +1732,10 @@ switch:
     id: heater_demand
     icon: "mdi:fire"
     optimistic: true
+    on_turn_on:
+      - script.execute: tx_appliance_demand
+    on_turn_off:
+      - script.execute: tx_appliance_demand
 
   - platform: template
     name: "Grow Mat Auto"
@@ -1742,6 +1754,10 @@ switch:
     id: growmat_demand
     icon: "mdi:heating-coil"
     optimistic: true
+    on_turn_on:
+      - script.execute: tx_appliance_demand
+    on_turn_off:
+      - script.execute: tx_appliance_demand
 
   # Per-pot mat eligibility — OFF pots are skipped by coldest/hottest vote
   # (still subject to the 5–45°C plausibility filter when ON).
@@ -2712,7 +2728,9 @@ text_sensor:
       name: "WiFi BSSID"
       id: network_bssid
       entity_category: diagnostic
-      # Copy this into wifi_bssid on hub/Control/pots stubs to pin one Nest AP.
+      # Copy this into wifi_bssid on hub/Control/pots stubs to pin one
+      # SoftAP Anchor (prefer sensor.dsc_bridge_anchor_bssid). Nest BSSID
+      # only if Anchor is not in use.
   - platform: version
     name: "ESPHome Version"
     id: esphome_version
@@ -2723,7 +2741,7 @@ text_sensor:
     name: "Firmware Version"
     id: fw_version
     icon: mdi:tag-check
-    lambda: 'return {"5.1.10"};'
+    lambda: 'return {"5.2.0"};'
     update_interval: 60s
 
   # F-006: last recovery action reason (bounce / reboot / none)
@@ -2767,7 +2785,8 @@ text_sensor:
       - lambda: 'id(plant_name_4) = x.size() > 16 ? x.substr(0, 16) : x;'
       - script.execute: tx_names
 
-# Optional Nest-AP pin (NVS). Empty = unlocked. Lock WiFi AP auto-fills
+# Optional SoftAP Anchor pin (NVS). Empty = unlocked. Lock WiFi AP auto-fills
+# from current BSSID or ${bridge_mac} when set (F-012).
 # this on connect; Control/pots can follow via 0xD0 BSSID bytes.
 text:
   - platform: template
@@ -3552,7 +3571,7 @@ binary_sensor:
 # 8. SCRIPTS  (stage engine + climate + photoperiod)
 # ==========================================
 script:
-  # ---- Optional AP pin: learn / prefer Nest BSSID (early, pre-GUI work) ----
+  # ---- Optional AP pin: learn / prefer SoftAP Anchor BSSID (F-012) ----
   - id: wifi_ap_capture_now
     mode: single
     then:
@@ -3582,6 +3601,20 @@ script:
                    cur[0], cur[1], cur[2], cur[3], cur[4], cur[5]);
 
           std::string pref = id(preferred_wifi_bssid).state;
+          // Prefer compile-time bridge SoftAP MAC when Lock is ON and
+          // preferred is still empty (lab paste of ${bridge_mac}).
+          {
+            std::string bridge = "${bridge_mac}";
+            if (id(wifi_ap_lock).state &&
+                (pref.empty() || pref == "00:00:00:00:00:00") &&
+                bridge.size() == 17 &&
+                bridge != "00:00:00:00:00:00") {
+              id(preferred_wifi_bssid).make_call().set_value(bridge).perform();
+              pref = bridge;
+              ESP_LOGI("wifi", "Lock WiFi AP: prefer bridge SoftAP BSSID %s",
+                       bridge.c_str());
+            }
+          }
           // Auto-learn once while Lock is ON and preferred is empty.
           if (id(wifi_ap_lock).state && (pref.empty() || pref == "00:00:00:00:00:00")) {
             id(preferred_wifi_bssid).make_call().set_value(cur_mac).perform();
@@ -3596,7 +3629,7 @@ script:
             char hex[3] = { pref[i * 3], pref[i * 3 + 1], 0 };
             want[i] = (uint8_t) strtol(hex, nullptr, 16);
           }
-          // Prefer this Nest point on the next association.
+          // Prefer this Anchor (or Nest) point on the next association.
           w->set_sta_priority(want, 127);
           bool same = true;
           for (int i = 0; i < 6; i++) if (cur[i] != want[i]) { same = false; break; }
@@ -3605,7 +3638,7 @@ script:
             ESP_LOGI("wifi", "On preferred AP %s (priority raised)", pref.c_str());
             return;
           }
-          // Backoff: fast_connect / sticky Nest can rejoin the wrong AP;
+          // Backoff: sticky AP can rejoin the wrong BSSID;
           // unbounded bounce loops tear the HA API and look like wedges.
           // After 3 failed bounces this boot: wait, then either retry or
           // self-heal by learning the AP we can actually stay on (preferred

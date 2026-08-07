@@ -1,0 +1,131 @@
+=== CHUNK merge 2026-08-07T16:44:32Z ===
+before={"strain_canonical": 69150, "unique_names": 69150, "chemistry_profile": 356165, "ce_chem": 30000, "strain_variant": 30543}
+merging strain_canonical...
+canonical merged n=72928
+merging source_record (1)...
+done source_record total=1 offset=1
+merging chemistry_profile (82657)...
+  checkpoint chemistry_profile 2000/82657
+  checkpoint chemistry_profile 4000/82657
+  checkpoint chemistry_profile 6000/82657
+  checkpoint chemistry_profile 8000/82657
+  checkpoint chemistry_profile 10000/82657
+  checkpoint chemistry_profile 12000/82657
+  checkpoint chemistry_profile 14000/82657
+  checkpoint chemistry_profile 16000/82657
+=== CHUNK resume 2026-08-07T16:45:24Z ===
+before_snapshot={"strain_canonical": 139055, "unique_names": 139055, "chemistry_profile": 374165, "ce_chem": 30000, "strain_variant": 30543}
+merging chemistry_profile from offset=16000 (src=82657)
+  checkpoint chemistry_profile 17000/82657
+  checkpoint chemistry_profile 18000/82657
+  checkpoint chemistry_profile 19000/82657
+  checkpoint chemistry_profile 20000/82657
+  checkpoint chemistry_profile 21000/82657
+  checkpoint chemistry_profile 22000/82657
+  checkpoint chemistry_profile 23000/82657
+  checkpoint chemistry_profile 24000/82657
+  checkpoint chemistry_profile 25000/82657
+  checkpoint chemistry_profile 26000/82657
+  checkpoint chemistry_profile 27000/82657
+  checkpoint chemistry_profile 28000/82657
+  checkpoint chemistry_profile 29000/82657
+=== CHUNK resume 2026-08-07T16:45:33Z ===
+before_snapshot={"strain_canonical": 139055, "unique_names": 139055, "chemistry_profile": 386165, "ce_chem": 30000, "strain_variant": 30543}
+merging strain_canonical...
+canonical merged n=72928
+merging chemistry_profile from offset=29000 (src=82657)
+  checkpoint chemistry_profile 30000/82657
+  checkpoint chemistry_profile 31000/82657
+  checkpoint chemistry_profile 32000/82657
+  checkpoint chemistry_profile 33000/82657
+  checkpoint chemistry_profile 34000/82657
+  checkpoint chemistry_profile 35000/82657
+  checkpoint chemistry_profile 36000/82657
+  checkpoint chemistry_profile 37000/82657
+  checkpoint chemistry_profile 38000/82657
+  checkpoint chemistry_profile 39000/82657
+  checkpoint chemistry_profile 40000/82657
+  checkpoint chemistry_profile 41000/82657
+  checkpoint chemistry_profile 42000/82657
+  checkpoint chemistry_profile 43000/82657
+  checkpoint chemistry_profile 44000/82657
+  checkpoint chemistry_profile 45000/82657
+  checkpoint chemistry_profile 46000/82657
+  checkpoint chemistry_profile 47000/82657
+  checkpoint chemistry_profile 48000/82657
+  checkpoint chemistry_profile 49000/82657
+  checkpoint chemistry_profile 50000/82657
+  checkpoint chemistry_profile 51000/82657
+  checkpoint chemistry_profile 52000/82657
+  checkpoint chemistry_profile 53000/82657
+  checkpoint chemistry_profile 54000/82657
+  checkpoint chemistry_profile 55000/82657
+  checkpoint chemistry_profile 56000/82657
+  checkpoint chemistry_profile 57000/82657
+  checkpoint chemistry_profile 58000/82657
+  checkpoint chemistry_profile 59000/82657
+  checkpoint chemistry_profile 60000/82657
+  checkpoint chemistry_profile 61000/82657
+  checkpoint chemistry_profile 62000/82657
+=== CHUNK resume 2026-08-07T16:46:14Z ===
+before_snapshot={"strain_canonical": 139055, "unique_names": 139055, "chemistry_profile": 419165, "ce_chem": 30000, "strain_variant": 30543}
+merging strain_canonical...
+canonical merged n=72928
+merging source_record from offset=0 (src=1)
+done source_record total=1 offset=1
+merging chemistry_profile from offset=0 (src=82657)
+  checkpoint chemistry_profile 1000/82657
+  checkpoint chemistry_profile 2000/82657
+  checkpoint chemistry_profile 3000/82657
+=== CHUNK resume 2026-08-07T16:47:11Z ===
+before_snapshot={"strain_canonical": 139055, "unique_names": 139055, "chemistry_profile": 419165, "ce_chem": 30000, "strain_variant": 30543}
+merging chemistry_profile from offset=63000 (src=82657)
+=== CHUNK resume 2026-08-07T16:47:15Z ===
+before_snapshot={"strain_canonical": 139055, "unique_names": 139055, "chemistry_profile": 419165, "ce_chem": 30000, "strain_variant": 30543}
+merging chemistry_profile from offset=63000 (src=82657)
+  checkpoint chemistry_profile 64000/82657
+  checkpoint chemistry_profile 65000/82657
+=== CHUNK resume 2026-08-07T16:47:35Z ===
+before_snapshot={"strain_canonical": 139055, "unique_names": 139055, "chemistry_profile": 421165, "ce_chem": 30000, "strain_variant": 30543}
+merging chemistry_profile from offset=65000 (src=82657)
+  checkpoint chemistry_profile 66000/82657
+=== CHUNK resume 2026-08-07T16:48:05Z ===
+before_snapshot={"strain_canonical": 139055, "unique_names": 139055, "chemistry_profile": 423165, "ce_chem": 30000, "strain_variant": 30543}
+merging chemistry_profile from offset=67000 (src=82657)
+  checkpoint chemistry_profile 68000/82657
+  checkpoint chemistry_profile 69000/82657
+  checkpoint chemistry_profile 70000/82657
+  checkpoint chemistry_profile 71000/82657
+  checkpoint chemistry_profile 72000/82657
+  checkpoint chemistry_profile 73000/82657
+=== CHUNK resume 2026-08-07T16:48:15Z ===
+before_snapshot={"strain_canonical": 139055, "unique_names": 139055, "chemistry_profile": 429165, "ce_chem": 30000, "strain_variant": 30543}
+merging chemistry_profile from offset=73000 (src=82657)
+  checkpoint chemistry_profile 74000/82657
+  checkpoint chemistry_profile 75000/82657
+=== FINISH pass 2026-08-07T16:49:49Z ===
+chem already=75000 staging=82657
+  chem 75500/82657
+  chem 76000/82657
+  chem 76500/82657
+  chem 77000/82657
+  chem 77500/82657
+  chem 78000/82657
+  chem 78500/82657
+  chem 79000/82657
+  chem 79500/82657
+  chem 80000/82657
+  chem 80500/82657
+  chem 81000/82657
+  chem 81500/82657
+  chem 82000/82657
+=== tail finish 02:50:43 ===
+chem have=82000 total=82657
+existing ids=82000
+  inserted +500
+inserted remaining=657
+after={"strain_canonical": 139055, "unique_names": 139055, "chemistry_profile": 438822, "ce_expand_chem": 82657, "strain_variant": 30543}
+delta={"strain_canonical": 69905, "unique_names": 69905, "chemistry_profile": 82657, "ce_expand_chem": 82657, "strain_variant": 0}
+busy database is locked; sleep 20 (1/15)
+copy_back after={"strain_canonical": 139055, "unique_names": 139055, "chemistry_profile": 438822, "ce_expand_chem": 82657, "strain_variant": 30543} delta={"strain_canonical": 69905, "unique_names": 69905, "chemistry_profile": 82657, "ce_expand_chem": 82657, "strain_variant": 0}
+copy_back after={"strain_canonical": 139055, "unique_names": 139055, "chemistry_profile": 438822, "ce_expand_chem": 82657, "strain_variant": 30543} delta={"strain_canonical": 69905, "unique_names": 69905, "chemistry_profile": 82657, "ce_expand_chem": 82657, "strain_variant": 0}

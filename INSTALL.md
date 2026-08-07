@@ -1,9 +1,10 @@
-# DSC-HUB v5.1.0 — Install (from scratch)
+# DSC-HUB v5.2.0 — Install (from scratch)
 
-Fresh Home Assistant + ESPHome bring-up for release **`v5.1.0`**
-(fleet firmware, Sync add-on, and HA surface all report **`5.1.0`**).
+Fresh Home Assistant + ESPHome bring-up for the **`5.2.0`** train
+(ETH01 bridge + SoftAP Anchor + fleet firmware / HA surface).
 
-Repo: https://github.com/weddas/DSC-HUB · tag **`v5.1.0`** · branch **`master`**
+Repo: https://github.com/weddas/DSC-HUB · branch **`master`**
+(last tagged release may still be **v5.1.0** until a 5.2 tag ships).
 
 > **Lab scaffold path.** Product unbox without HA is SoftAP — [`SETUP.md`](SETUP.md).
 > Pi brain / local webserver destination: [`docs/DSC-BRAIN.md`](docs/DSC-BRAIN.md).
@@ -84,23 +85,28 @@ Disable any storage dashboard still named DSC-HUB / `dsc-hub-v4`. Sidebar:
 
 | Stub | Body | Expect after flash |
 |---|---|---|
-| `dsc-hub.yaml` | hub v4_0 + espnow | **5.1.0** |
-| `dsc-control.yaml` | control-common | **5.1.4** |
-| pots / Sonoffs | pot-common / sonoff-common | **5.1.0** |
+| `dsc-hub.yaml` | hub v4_0 + espnow | **5.2.0** |
+| `dsc-control.yaml` | control-common | **5.2.0** |
+| pots | pot-common | **5.2.0** |
+| `dsc-bridge.yaml` | bridge-common + SoftAP Anchor | **5.2.0** |
+| Sonoffs | sonoff-common (dual API client) | **5.2.0** |
 
-Stub `ref: v5.1.0`. Kits Validate even if not flashed on lab.
+Stub `ref: master` (or tag when cut). Kits Validate even if not flashed on lab.
+Bridge needs `firmware/v4/components/dsc_api_client` beside the stub (Sync
+copies components, or flash from `firmware/v4/`). Secrets: `dsc_bridge_*`,
+`dsc_anchor_ap_password`, four `dsc_*_host`.
 
 ### Flash order
 
-1. Hub · 2. Panel · 3. Pots · 4. Sonoffs
+1. Hub · 2. Panel · 3. Pots · 4. **Bridge (ETH01)** · 5. Sonoffs
 
 ### Verify
 
-- [ ] `sensor.dsc_hub_firmware_version` = **5.1.0** (and peers)
-- [ ] `sensor.dsc_ha_surface_version` = **5.1.0**
+- [ ] `sensor.dsc_hub_firmware_version` = **5.2.0** (and peers)
+- [ ] `sensor.dsc_ha_surface_version` = **5.2.0**
 - [ ] `sensor.dsc_fleet_version_status` → **ok** after all flashes
 - [ ] `/dsc-hub-pro/home` + Learning Phase B controls present (B default off)
-- [ ] Panel ESP-NOW UP; Sonoff followers track demands
+- [ ] Panel ESP-NOW UP; Bridge Anchor SoftAP up; Sonoffs follow via bridge (HA followers fallback)
 
 ---
 

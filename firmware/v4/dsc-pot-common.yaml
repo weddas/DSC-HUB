@@ -15,6 +15,11 @@
 #  before the digit). Referenced by the HA stat/alert packages, the
 #  dashboard, and the HUB's closed-loop grow mat. Do not rename a node.
 #
+#  v5.2.0 — ETH01 SoftAP ANCHOR ADOPT (Aug 2026)
+#   * Preferred WiFi AP is DSC-Anchor (bridge SoftAP), not Nest. Hub Lock
+#     WiFi / 0xD0 still drive adopt_hub_wifi_ap — no new opcode.
+#   * project.version / Firmware Version → 5.2.0
+#
 #  v5.1.7 — FLEET CLOCK + RF CARD (Aug 2026)
 #   * time: sntp_time (SNTP, Australia/Sydney) added alongside ha_time.
 #     global clock_valid = sntp_time.now().is_valid() || ha_time.now()
@@ -120,7 +125,7 @@ esphome:
   friendly_name: ${friendly_name}
   project:
     name: digital_emotions.dsc-pot
-    version: "5.1.8"
+    version: "5.2.0"
 
 esp32:
   board: esp32dev
@@ -658,7 +663,7 @@ text_sensor:
   - platform: template
     name: "Firmware Version"
     icon: mdi:tag-check
-    lambda: 'return {"5.1.8"};'
+    lambda: 'return {"5.2.0"};'
     update_interval: 60s
   # Diagnostic only — see 0xD7 RX note in globals/espnow below. This node
   # cannot set its own clock from the packet, so this is the only trace

@@ -1,0 +1,338 @@
+cropking: sitemap cache 3990 URLs from dsc_strains_cropking.sitemap_urls.json
+cropking: sitemap=3990 pending=3185 resume done=805 dump_items=805
+  fetching first pending: https://www.cropkingseeds.com/feminized-seeds/garlato-feminized-seeds/
+  ok #1 idx=1/3185 name='Garlato Feminized'
+  ok #2 idx=2/3185 name='Garlic Crasher Feminized'
+  ok #3 idx=3/3185 name='Garlic Glue'
+  ok #10 idx=10/3185 name='Gary MAC Feminized'
+  ok #20 idx=20/3185 name='Ginger Tea Feminized'
+  ok #30 idx=30/3185 name='Goblet of Fire Feminized'
+  ok #40 idx=40/3185 name='Gorilla Skunk Feminized'
+  ok #50 idx=50/3185 name='Grape Essence Feminized'
+  checkpoint items=855 done=855 this_run=50 rate=0.21/s batch=50/3185
+  ok #60 idx=60/3185 name='Grape Octane'
+  ok #70 idx=70/3185 name='Greasy Grapes'
+  ok #80 idx=80/3185 name='Guava Mints Feminized'
+  ok #90 idx=90/3185 name='Gushlato Feminized Cannabis'
+  ok #100 idx=100/3185 name='Blue Strawberry Feminized'
+  checkpoint items=905 done=905 this_run=100 rate=0.20/s batch=100/3185
+  ok #110 idx=110/3185 name='Gelato Dream'
+  ok #120 idx=120/3185 name='Head Gasket Feminized'
+  ok #130 idx=130/3185 name='High Rise Feminized'
+  ok #140 idx=140/3185 name='Jamaican Pearl Feminized'
+  ok #150 idx=150/3185 name='Jellysickle Feminized'
+  checkpoint items=955 done=955 this_run=150 rate=0.20/s batch=150/3185
+  ok #160 idx=160/3185 name='Juggernaut Feminized'
+  ok #170 idx=170/3185 name='Jungle Mac Feminized'
+  ok #180 idx=180/3185 name='Gelato Punch'
+  ok #190 idx=190/3185 name='Bluefin Tuna Feminized'
+  ok #200 idx=200/3185 name='Bubba Bomb Feminized'
+  checkpoint items=1005 done=1005 this_run=200 rate=0.18/s batch=200/3185
+  ok #210 idx=210/3185 name='Lemon Thai Strain Feminized'
+  ok #220 idx=220/3185 name='Log Cabin Feminized'
+  ok #230 idx=230/3185 name='Nana’s Wedding Cake Feminized'
+  ok #240 idx=240/3185 name='Nightmare OG Feminized'
+  ok #250 idx=250/3185 name='Karma Feminized'
+  checkpoint items=1055 done=1055 this_run=250 rate=0.17/s batch=250/3185
+  ok #260 idx=260/3185 name='Kings Juice Feminized'
+  ok #270 idx=270/3185 name='Mac Mintz Feminized'
+  ok #280 idx=280/3185 name='Magnum Opus Feminized'
+  ok #290 idx=290/3185 name='Mandarin Gorilla Feminized'
+
+===== WATCH RESUME 2026-08-07T18:17:13Z =====
+cropking: sitemap cache 3990 URLs from dsc_strains_cropking.sitemap_urls.json
+cropking: sitemap=3990 pending=2885 resume done=1105 dump_items=1105
+  fetching first pending: https://www.cropkingseeds.com/new-strains/marmalade-feminized-seeds/
+  ok #1 idx=1/2885 name='Marmalade Feminized'
+  ok #2 idx=2/2885 name='Maroon Baboon Feminized'
+  ok #3 idx=3/2885 name='Mars OG Feminized'
+  ok #10 idx=10/2885 name='Melon Baller Feminized'
+  ok #20 idx=20/2885 name='Midnight Climax Feminized'
+  ok #30 idx=30/2885 name='Milk Bone Strain Feminized'
+  ok #40 idx=40/2885 name='Mitten Cake Batter Feminized'
+  ok #50 idx=50/2885 name='Momochi Feminized'
+  checkpoint items=1155 done=1155 this_run=50 rate=0.20/s batch=50/2885
+  ok #60 idx=60/2885 name='Moonraker Feminized'
+  ok #70 idx=70/2885 name='Oil Tanker'
+  ok #80 idx=80/2885 name='Oreo Cookies Feminized'
+  ok #90 idx=90/2885 name='Motorbreath 15'
+  ok #100 idx=100/2885 name="King's Stash Feminized"
+  checkpoint items=1205 done=1205 this_run=100 rate=0.17/s batch=100/2885
+  ok #110 idx=110/2885 name='Krispy Kreme Feminized'
+  ok #120 idx=120/2885 name='Pai Gow'
+  ok #130 idx=130/2885 name='Patapeake Shortbread'
+  ok #140 idx=140/2885 name='Peanut Butter Acai'
+  ok #150 idx=150/2885 name='Petrol Station Feminized'
+  checkpoint items=1255 done=1255 this_run=150 rate=0.18/s batch=150/2885
+  ok #160 idx=160/2885 name='Pillow Factory Feminized'
+  ok #170 idx=170/2885 name='Pineapple Jack Feminized'
+  ok #180 idx=180/2885 name='Pineapple Feminized'
+  ok #190 idx=190/2885 name='Pink Gummy Feminized'
+  ok #200 idx=200/2885 name='Key Lime Pie'
+  checkpoint items=1305 done=1305 this_run=200 rate=0.19/s batch=200/2885
+  ok #210 idx=210/2885 name='Pink Slushie Strain Feminized'
+  ok #220 idx=220/2885 name='Platinum Blue Dream'
+  ok #230 idx=230/2885 name='Polar Pop Feminized'
+  ok #240 idx=240/2885 name='Power Feminized'
+  ok #250 idx=250/2885 name='Project 4516 Feminized'
+  checkpoint items=1355 done=1355 this_run=250 rate=0.18/s batch=250/2885
+  ok #260 idx=260/2885 name='Purple Bud Feminized'
+  ok #270 idx=270/2885 name='Purple Dinosaur Feminized'
+  ok #280 idx=280/2885 name='Purple Grapes Feminized'
+  ok #290 idx=290/2885 name='Purple Rhino Feminized'
+  ok #300 idx=300/2885 name='Purple Queen'
+  checkpoint items=1405 done=1405 this_run=300 rate=0.18/s batch=300/2885
+  ok #310 idx=310/2885 name='Rainbow Poppers Feminized'
+  ok #320 idx=320/2885 name='Raspberry Boogie Feminized'
+
+===== WATCH RESUME 2026-08-07T18:48:05Z =====
+cropking: sitemap cache 3990 URLs from dsc_strains_cropking.sitemap_urls.json
+cropking: sitemap=3990 pending=2555 resume done=1435 dump_items=1435
+  fetching first pending: https://www.cropkingseeds.com/feminized-seeds/red-vines-feminized-seeds/
+  ok #1 idx=1/2555 name='Red Vines Feminized'
+  ok #2 idx=2/2555 name='Remedy Feminized'
+  ok #3 idx=3/2555 name='Ric Flair Drip Strain Feminized'
+  ok #10 idx=10/2555 name='Blueberry Gas Feminized'
+  ok #20 idx=20/2555 name='G Purps'
+  ok #30 idx=30/2555 name='Purple Certz Feminized'
+
+===== WATCH RESUME 2026-08-07T18:52:45Z =====
+cropking: sitemap cache 3990 URLs from dsc_strains_cropking.sitemap_urls.json
+cropking: sitemap=3990 pending=2515 resume done=1475 dump_items=1475
+  fetching first pending: https://www.cropkingseeds.com/feminized-seeds/rotten-rozay-feminized-seeds/
+  ok #1 idx=1/2515 name='Rotten Rozay Feminized'
+  ok #2 idx=2/2515 name='Roxanne Feminized'
+  ok #3 idx=3/2515 name='Royal Cherry Diesel Feminized'
+  ok #10 idx=10/2515 name='Zen Durian Ranger Strain Feminized'
+  ok #20 idx=20/2515 name='Runtz Smalls Feminized'
+  ok #30 idx=30/2515 name='Saturn OG Feminized'
+  ok #40 idx=40/2515 name='Sherbacio'
+  ok #50 idx=50/2515 name='Shroom Feminized'
+  checkpoint items=1525 done=1525 this_run=50 rate=0.17/s batch=50/2515
+  ok #60 idx=60/2515 name='DNA Cake Strain Feminized'
+  ok #70 idx=70/2515 name='Silver Surfer Feminized'
+  ok #80 idx=80/2515 name='Sleepy Joe Feminized'
+  ok #90 idx=90/2515 name='Snake Cake Feminized'
+  ok #100 idx=100/2515 name='Snozzberry'
+  checkpoint items=1575 done=1575 this_run=100 rate=0.17/s batch=100/2515
+  ok #110 idx=110/2515 name='Sour Biscotti Feminized'
+  ok #120 idx=120/2515 name='Tiki Rum Cake'
+  ok #130 idx=130/2515 name='Washington Apple'
+  ok #140 idx=140/2515 name='White Whale'
+  ok #150 idx=150/2515 name='Mint Candy Strain Feminized'
+  checkpoint items=1625 done=1625 this_run=150 rate=0.17/s batch=150/2515
+  ok #160 idx=160/2515 name='Z Cube'
+  ok #170 idx=170/2515 name='Zeclair Feminized'
+  ok #180 idx=180/2515 name='Electric Berry'
+  ok #190 idx=190/2515 name='Royal Wedding Feminized'
+  ok #200 idx=200/2515 name='Super OG Kush'
+  checkpoint items=1675 done=1675 this_run=200 rate=0.18/s batch=200/2515
+  ok #210 idx=210/2515 name='Skunk Glue'
+  ok #220 idx=220/2515 name='Melonade'
+  ok #230 idx=230/2515 name='Hawaiian Skunk'
+  ok #240 idx=240/2515 name='Lavender'
+  ok #250 idx=250/2515 name='Banana Acai'
+  checkpoint items=1725 done=1725 this_run=250 rate=0.18/s batch=250/2515
+  ok #260 idx=260/2515 name='Solar Zkittlez Strain Feminized'
+  ok #270 idx=270/2515 name='Cherry Fudge Strain Feminized'
+  ok #280 idx=280/2515 name='Gello Shotz Hybrid Strain Feminized'
+  ok #290 idx=290/2515 name='Passionfruit Parfait Strain Feminized'
+  ok #300 idx=300/2515 name='Turbo Gas Strain Feminized'
+  checkpoint items=1775 done=1775 this_run=300 rate=0.18/s batch=300/2515
+  ok #310 idx=310/2515 name='Durian Fuel Strain Feminized'
+  ok #320 idx=320/2515 name='Chemdog 4'
+  ok #330 idx=330/2515 name='Blueberry Badazz OG'
+  ok #340 idx=340/2515 name='Amnesia Haze'
+  ok #350 idx=350/2515 name='Hash Plant'
+  checkpoint items=1825 done=1825 this_run=350 rate=0.18/s batch=350/2515
+  ok #360 idx=360/2515 name='Grape Ape'
+  ok #370 idx=370/2515 name='Critical Northern Lights'
+  ok #380 idx=380/2515 name='Black Widow'
+  ok #390 idx=390/2515 name='Purple Haze'
+  ok #400 idx=400/2515 name='NY Diesel'
+  checkpoint items=1875 done=1875 this_run=400 rate=0.18/s batch=400/2515
+  ok #410 idx=410/2515 name='Master Kush'
+  ok #420 idx=420/2515 name='Killer'
+  ok #430 idx=430/2515 name='Pennywise Feminized'
+  ok #440 idx=440/2515 name='Strawberry Banana'
+  ok #450 idx=450/2515 name='Shiskaberry Kush'
+  checkpoint items=1925 done=1925 this_run=450 rate=0.18/s batch=450/2515
+  ok #460 idx=460/2515 name='Blood Orange Kush'
+  ok #470 idx=470/2515 name='Tijuana'
+  ok #480 idx=480/2515 name='Super Lemon Haze'
+  ok #490 idx=490/2515 name='Papaya Glue'
+  ok #500 idx=500/2515 name='Devil’s Crack'
+  checkpoint items=1975 done=1975 this_run=500 rate=0.20/s batch=500/2515
+  ok #510 idx=510/2515 name='Sugar Glue'
+  ok #520 idx=520/2515 name='Tokyo OG'
+  ok #530 idx=530/2515 name='Green Dream'
+  ok #540 idx=540/2515 name='Lychee Fuel Strain Feminized'
+  ok #550 idx=550/2515 name='Green Goblin'
+  checkpoint items=2025 done=2025 this_run=550 rate=0.21/s batch=550/2515
+  ok #560 idx=560/2515 name='Stay Puft'
+  ok #570 idx=570/2515 name='Zupa Candy Strain Feminized'
+  ok #580 idx=580/2515 name='Return of the Skunk Strain Feminized'
+  ok #590 idx=590/2515 name='Blue Halo Strain Feminized'
+  ok #600 idx=600/2515 name='Early Girl'
+  checkpoint items=2075 done=2075 this_run=600 rate=0.23/s batch=600/2515
+  ok #610 idx=610/2515 name='Fresh Candy'
+  ok #620 idx=620/2515 name='Agent Orange'
+  ok #630 idx=630/2515 name='Blue Mylk'
+  ok #640 idx=640/2515 name='Platinum Zushi Strain Feminized'
+  ok #650 idx=650/2515 name='Cheetah Piss'
+  checkpoint items=2125 done=2125 this_run=650 rate=0.24/s batch=650/2515
+  ok #660 idx=660/2515 name='GMO'
+  ok #670 idx=670/2515 name='Gorilla Glue #4'
+  ok #680 idx=680/2515 name='Snowball Weed'
+  ok #690 idx=690/2515 name='Zaza'
+  ok #700 idx=700/2515 name='Purple Wreck'
+  checkpoint items=2175 done=2175 this_run=700 rate=0.25/s batch=700/2515
+  ok #710 idx=710/2515 name='Mai Tai'
+  ok #720 idx=720/2515 name='Obama Runtz'
+  ok #730 idx=730/2515 name='Crunch Berries'
+
+===== WATCH RESUME 2026-08-07T19:41:45Z =====
+cropking: sitemap cache 3990 URLs from dsc_strains_cropking.sitemap_urls.json
+cropking: sitemap=3990 pending=1775 resume done=2215 dump_items=2215
+  fetching first pending: https://www.cropkingseeds.com/feminized-seeds/watermelon-zkittlez-strain-feminized-marijuana-seeds/
+  ok #1 idx=1/1775 name='Watermelon Zkittlez'
+  ok #2 idx=2/1775 name='Tropical Heat Wave Strain Feminized'
+  ok #3 idx=3/1775 name='Jungle Gelato Strain Feminized'
+  ok #10 idx=10/1775 name='Vanilla Frosting'
+  ok #20 idx=20/1775 name='White Cherry'
+  ok #30 idx=30/1775 name='White Gummy'
+  ok #40 idx=40/1775 name='Bubba Kush'
+  ok #50 idx=50/1775 name='Lona’s Widow Strain Feminized'
+  checkpoint items=2265 done=2265 this_run=50 rate=0.69/s batch=50/1775
+  ok #60 idx=60/1775 name='Strawberries and Cream'
+  ok #70 idx=70/1775 name='Strawberry Cough'
+  ok #80 idx=80/1775 name='Guava Cake'
+  ok #90 idx=90/1775 name='Gelato Mintz'
+  ok #100 idx=100/1775 name='Galactic Diesel Strain Feminized'
+  checkpoint items=2315 done=2315 this_run=100 rate=0.69/s batch=100/1775
+  ok #110 idx=110/1775 name='Rainbow Pie'
+  ok #120 idx=120/1775 name='Tres Leches'
+  ok #130 idx=130/1775 name='Runtz Cake'
+  ok #140 idx=140/1775 name='Sugar Biscuits'
+  ok #150 idx=150/1775 name='Hindu Zkittlez'
+  checkpoint items=2365 done=2365 this_run=150 rate=0.66/s batch=150/1775
+  ok #160 idx=160/1775 name='Hippie Crasher'
+  ok #170 idx=170/1775 name='Lemon Cookies'
+  ok #180 idx=180/1775 name='Fruit Loops'
+  ok #190 idx=190/1775 name='Sweeties'
+  ok #200 idx=200/1775 name='Hurricane'
+  checkpoint items=2415 done=2415 this_run=200 rate=0.66/s batch=200/1775
+  ok #210 idx=210/1775 name='B52 Bomber'
+  ok #220 idx=220/1775 name='Grape Jelly'
+  ok #230 idx=230/1775 name='Strawberry Fritter'
+  ok #240 idx=240/1775 name='Grape Candy'
+  ok #250 idx=250/1775 name='Bernie Hana Butter'
+  checkpoint items=2465 done=2465 this_run=250 rate=0.66/s batch=250/1775
+  ok #260 idx=260/1775 name='Boysenberry Strain Feminized'
+  ok #270 idx=270/1775 name='V6 Haze'
+  ok #280 idx=280/1775 name='Super Candy'
+  ok #290 idx=290/1775 name='Oreo Cake'
+  ok #300 idx=300/1775 name='Strawberry Mimosa'
+  checkpoint items=2515 done=2515 this_run=300 rate=0.66/s batch=300/1775
+  ok #310 idx=310/1775 name='Comatose OG Feminized'
+  ok #320 idx=320/1775 name='Drip Station'
+  ok #330 idx=330/1775 name='White Guava'
+  ok #340 idx=340/1775 name='Smarties'
+  ok #350 idx=350/1775 name='Strawberry Slush Feminized'
+  checkpoint items=2565 done=2565 this_run=350 rate=0.67/s batch=350/1775
+  ok #360 idx=360/1775 name='Strawberry Champagne Feminized'
+  ok #370 idx=370/1775 name='Zelato'
+  ok #380 idx=380/1775 name='Gello'
+  ok #390 idx=390/1775 name='Blue Sherbet'
+  ok #400 idx=400/1775 name='Star Pebbles Feminized'
+  checkpoint items=2615 done=2615 this_run=400 rate=0.67/s batch=400/1775
+  ok #410 idx=410/1775 name='South Beach Sunrise Feminized'
+  ok #420 idx=420/1775 name='Passion Fruit'
+  ok #430 idx=430/1775 name='Monster Cookies'
+  ok #440 idx=440/1775 name='Street Heat Feminized'
+  ok #450 idx=450/1775 name='Sweat Helmet'
+  checkpoint items=2665 done=2665 this_run=450 rate=0.67/s batch=450/1775
+  ok #460 idx=460/1775 name='Now and Later'
+  ok #470 idx=470/1775 name='Purple Rain'
+  ok #480 idx=480/1775 name='Kitchen Sink'
+  ok #490 idx=490/1775 name='Sour Patch Feminized'
+  ok #500 idx=500/1775 name='Sour Bubble Feminized'
+  checkpoint items=2715 done=2715 this_run=500 rate=0.68/s batch=500/1775
+  ok #510 idx=510/1775 name='Wap'
+  ok #520 idx=520/1775 name='Snowcap Feminized'
+  ok #530 idx=530/1775 name='Refined Taste Feminized'
+  ok #540 idx=540/1775 name='Mellowz'
+  ok #550 idx=550/1775 name='Peanut Butter Gelato'
+  checkpoint items=2765 done=2765 this_run=550 rate=0.67/s batch=550/1775
+  ok #560 idx=560/1775 name='Punch Breath'
+  ok #570 idx=570/1775 name='Waffle Womper Strain Feminized'
+  ok #580 idx=580/1775 name='Banana Cake'
+  ok #590 idx=590/1775 name='Blueberry Gelato'
+  ok #600 idx=600/1775 name='Mega Markerz Strain Feminized'
+  checkpoint items=2815 done=2815 this_run=600 rate=0.67/s batch=600/1775
+  ok #610 idx=610/1775 name='Purple Northern Lights Feminized'
+  ok #620 idx=620/1775 name='Pearly White Feminized'
+  ok #630 idx=630/1775 name='Laughing Buddha Feminized'
+  ok #640 idx=640/1775 name='Its It Feminized'
+  ok #650 idx=650/1775 name='Trophy Wife'
+  checkpoint items=2865 done=2865 this_run=650 rate=0.66/s batch=650/1775
+  ok #660 idx=660/1775 name='Tallymon'
+  ok #670 idx=670/1775 name='Purple Zkittlez'
+  ok #680 idx=680/1775 name='Iron Lion Feminized'
+  ok #690 idx=690/1775 name='Ice Cream Banana Feminized'
+  ok #700 idx=700/1775 name='Blue Agave'
+  checkpoint items=2915 done=2915 this_run=700 rate=0.66/s batch=700/1775
+  ok #710 idx=710/1775 name='Funnel Cake'
+  ok #720 idx=720/1775 name='Lemon Cherry Sherbet'
+  ok #730 idx=730/1775 name='Giggin Grapes Strain Feminized'
+  ok #740 idx=740/1775 name='Goldmember Feminized'
+  ok #750 idx=750/1775 name='Cherry Slurpee Feminized'
+  checkpoint items=2965 done=2965 this_run=750 rate=0.66/s batch=750/1775
+  ok #760 idx=760/1775 name='Zkittlez Cake'
+  ok #770 idx=770/1775 name='Death Star'
+  ok #780 idx=780/1775 name='Blueberry Cruffin'
+  ok #790 idx=790/1775 name='Grape Bubblegum'
+  ok #800 idx=800/1775 name='Uber Diesel Strain Feminized'
+  checkpoint items=3015 done=3015 this_run=800 rate=0.67/s batch=800/1775
+  ok #810 idx=810/1775 name='Blue Flame Feminized'
+  ok #820 idx=820/1775 name='Queso Feminized'
+  ok #830 idx=830/1775 name='Royal Highness'
+  ok #840 idx=840/1775 name='Deadhead OG'
+  ok #850 idx=850/1775 name='Betty White Feminized'
+  checkpoint items=3065 done=3065 this_run=850 rate=0.66/s batch=850/1775
+  ok #860 idx=860/1775 name='92 Cookies Feminized'
+  ok #870 idx=870/1775 name='Melo Soap Strain Feminized'
+  ok #880 idx=880/1775 name='Raspberry Kush'
+  ok #890 idx=890/1775 name='High Fructose Corn Syrup'
+  ok #900 idx=900/1775 name='Apple Mamba Strain Feminized'
+  checkpoint items=3115 done=3115 this_run=900 rate=0.67/s batch=900/1775
+  ok #910 idx=910/1775 name='Pina Grande'
+  ok #920 idx=920/1775 name='Apple Slushie Feminized'
+  ok #930 idx=930/1775 name='Sugar Face Feminized'
+  ok #940 idx=940/1775 name='Unicorn Cake Feminized'
+  ok #950 idx=950/1775 name='Platinum Punch'
+  checkpoint items=3165 done=3165 this_run=950 rate=0.67/s batch=950/1775
+  ok #960 idx=960/1775 name="Elmer's Glue"
+  ok #970 idx=970/1775 name='Vineyard Vibes Strain Feminized'
+  ok #980 idx=980/1775 name='Lemon Dosidos Strain Feminized'
+  ok #990 idx=990/1775 name='Strawberry Milk'
+  ok #1000 idx=1000/1775 name='Fat Bastard'
+  checkpoint items=3215 done=3215 this_run=1000 rate=0.66/s batch=1000/1775
+  ok #1010 idx=1010/1775 name='Pink Candy'
+  ok #1020 idx=1020/1775 name='Gas Truffle'
+  ok #1030 idx=1030/1775 name='Indica Princess Strain Feminized'
+  ok #1040 idx=1040/1775 name='Cold Snap'
+  ok #1050 idx=1050/1775 name='Ice Cream Sherbet'
+  checkpoint items=3265 done=3265 this_run=1050 rate=0.66/s batch=1050/1775
+  ok #1060 idx=1060/1775 name='Cookie Cake'
+  ok #1070 idx=1070/1775 name='Cedar Rush Strain Feminized'
+  ok #1080 idx=1080/1775 name='RS54'
+  ok #1090 idx=1090/1775 name='Blue Candy'
+  ok #1100 idx=1100/1775 name='Honeydew'
+  checkpoint items=3315 done=3315 this_run=1100 rate=0.66/s batch=1100/1775
+  ok #1110 idx=1110/1775 name='Purple Oreoz'
+  ok #1120 idx=1120/1775 name='Caesar'
+  ok #1130 idx=1130/1775 name='Grease Bucket'
+  ok #1140 idx=1140/1775 name='Vanilla Cream Pie'
+  ok #1150 idx=1150/1775 name='Russian Cream'
+  checkpoint items=3365 done=3365 this_run=1150 rate=0.66/s batch=1150/1775

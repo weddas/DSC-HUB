@@ -1,0 +1,96 @@
+{
+ "schema_version": 2,
+ "kind": "pharmacies",
+ "built_at": "2026-08-07T15:09:09Z",
+ "count": 14,
+ "source": "cannareviews",
+ "source_url": "https://cannareviews.health/cannabis-dispensary-pharmacies",
+ "license": "AU medical / site ToS — license unclear; research corpus only",
+ "redistributable": false,
+ "items": [
+  {
+   "source": "cannareviews",
+   "name": "reviews",
+   "name_norm": "reviews",
+   "entity": "pharmacy"
+  },
+  {
+   "source": "cannareviews",
+   "name": "Redirecting to Canary",
+   "name_norm": "redirecting to canary",
+   "entity": "pharmacy"
+  },
+  {
+   "source": "cannareviews",
+   "name": "Get Your Medicine Delivered",
+   "name_norm": "get your medicine delivered",
+   "entity": "pharmacy"
+  },
+  {
+   "source": "cannareviews",
+   "name": "Featured Pharmacies",
+   "name_norm": "featured pharmacies",
+   "entity": "pharmacy"
+  },
+  {
+   "source": "cannareviews",
+   "name": "The Centre Pharmacy",
+   "name_norm": "the centre pharmacy",
+   "entity": "pharmacy"
+  },
+  {
+   "source": "cannareviews",
+   "name": "Acpharm Ashmore",
+   "name_norm": "acpharm ashmore",
+   "entity": "pharmacy"
+  },
+  {
+   "source": "cannareviews",
+   "name": "Advantage Pharmacy Bairnsdale",
+   "name_norm": "advantage pharmacy bairnsdale",
+   "entity": "pharmacy"
+  },
+  {
+   "source": "cannareviews",
+   "name": "Advantage Pharmacy Rockdale",
+   "name_norm": "advantage pharmacy rockdale",
+   "entity": "pharmacy"
+  },
+  {
+   "source": "cannareviews",
+   "name": "Aireys Inlet Pharmacy",
+   "name_norm": "aireys inlet pharmacy",
+   "entity": "pharmacy"
+  },
+  {
+   "source": "cannareviews",
+   "name": "Albany Hills Pharmacy",
+   "name_norm": "albany hills pharmacy",
+   "entity": "pharmacy"
+  },
+  {
+   "source": "cannareviews",
+   "name": "Coverage by State",
+   "name_norm": "coverage by state",
+   "entity": "pharmacy"
+  },
+  {
+   "source": "cannareviews",
+   "name": "Medical Cannabis Dispensaries in Australia",
+   "name_norm": "medical cannabis dispensaries in australia",
+   "entity": "pharmacy"
+  },
+  {
+   "source": "cannareviews",
+   "name": "What to Look for in a Cannabis Dispensary",
+   "name_norm": "what to look for in a cannabis dispensary",
+   "entity": "pharmacy"
+  },
+  {
+   "source": "cannareviews",
+   "name": "States and Territories Covered",
+   "name_norm": "states and territories covered",
+   "entity": "pharmacy"
+  }
+ ]
+}

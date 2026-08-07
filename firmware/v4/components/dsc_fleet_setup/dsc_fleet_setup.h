@@ -11,7 +11,7 @@
 namespace esphome {
 namespace dsc_fleet_setup {
 
-enum class FleetRole : uint8_t { HUB = 1, CONTROL = 2, POT = 3 };
+enum class FleetRole : uint8_t { HUB = 1, CONTROL = 2, POT = 3, BRIDGE = 4 };
 enum class NetMode : uint8_t { UNCONFIGURED = 0, HOME_WIFI = 1, LOCAL_AP = 2 };
 
 struct PeerSlot {
@@ -71,8 +71,16 @@ class DscFleetSetup : public Component, public AsyncWebHandler {
         return true;
     return false;
   }
-  std::string hub_mac_str() const;
-  std::string panel_mac_str() const;
+  const uint8_t *bridge_mac() const { return this->bridge_mac_; }
+  bool has_bridge_mac() const {
+    if (!this->bridge_mac_valid_)
+      return false;
+    for (int i = 0; i < 6; i++)
+      if (this->bridge_mac_[i] != 0)
+        return true;
+    return false;
+  }
+  std::string bridge_mac_str() const;
   std::string setup_status_json() const;
 
   void factory_reset_fleet();
@@ -109,14 +117,16 @@ class DscFleetSetup : public Component, public AsyncWebHandler {
   char sta_pass_[65]{};
   uint8_t hub_mac_[6]{};
   uint8_t panel_mac_[6]{};
+  uint8_t bridge_mac_[6]{};
   bool hub_mac_valid_{false};
   bool panel_mac_valid_{false};
+  bool bridge_mac_valid_{false};
   uint8_t lab_hub_mac_[6]{};
   uint8_t lab_panel_mac_[6]{};
   bool lab_hub_mac_set_{false};
   bool lab_panel_mac_set_{false};
 
-  std::array<PeerSlot, 6> peers_{};
+  std::array<PeerSlot, 8> peers_{};
   bool portal_active_{false};
   bool add_device_window_{false};
   bool handler_registered_{false};

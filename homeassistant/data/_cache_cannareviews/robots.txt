@@ -1,0 +1,26 @@
+User-agent: *
+Disallow: /admin
+Disallow: /*.pdf$
+Disallow: /*.xls$
+Disallow: /*.xlsx$
+Disallow: /*.csv$
+Disallow: /dash
+Disallow: /*?utm*
+Disallow: /forgot-password
+Disallow: /resetpasswordconfirmation
+Disallow: /confirmcontact
+Disallow: /confirmregister
+
+Noindex: /admin
+Noindex: /*.pdf$
+Noindex: /*.xls$
+Noindex: /*.xlsx$
+Noindex: /*.csv$
+Noindex: /dash
+Noindex: /*?utm*
+Noindex: /forgot-password
+Noindex: /resetpasswordconfirmation
+Noindex: /confirmcontact
+Noindex: /confirmregister
+
+Sitemap: https://cannareviews.health/sitemap.xml

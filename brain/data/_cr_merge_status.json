@@ -1,0 +1,27 @@
+﻿{
+    "waiter":  {
+                   "script":  "C:\\Users\\cmgwe\\AppData\\Local\\Temp\\_cr_v12_merge.py",
+                   "pid":  10940,
+                   "note":  "Still waiting on BEGIN IMMEDIATE behind cannlytics_expand"
+               },
+    "staging":  {
+                    "raw_record":  4195,
+                    "strain_canonical":  1503,
+                    "strain_variant":  0,
+                    "entity_link":  1971,
+                    "chemistry_profile":  1971
+                },
+    "built_at":  "2026-08-07T16:59:10Z",
+    "family":  "cannareviews",
+    "blockers":  [
+                     "Master dsc_brain.sqlite3 under continuous exclusive contention from parallel merge_staging_to_master jobs (cannlytics_expand PID currently holding journal).",
+                     "Official CLI python scripts/merge_staging_to_master.py --only cannareviews exits -1 under contention (known).",
+                     "chemistry_profile INSERT OR IGNORE (~1971 rows into large master table) hangs on NAS when held in one long transaction."
+                 ],
+    "status":  "pending_lock",
+    "progress":  [
+                     "Validated batched strain_canonical INSERT OR IGNORE (1503 rows) under lock.",
+                     "source_record merge works (1 row).",
+                     "Medauth full review text intentionally not blocking."
+                 ]
+}

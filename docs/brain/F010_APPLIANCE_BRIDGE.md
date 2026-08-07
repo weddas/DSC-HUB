@@ -1,43 +1,42 @@
-# F-010 — ESP-NOW appliance bridge
+# F-010 / F-012 / F-013 — ETH01 appliance bridge + channel anchor + HA mirror
 
-**In one line:** Sonoffs cannot speak ESP-NOW; a bridge must follow hub demand without Home Assistant.
+**In one line:** WT32-ETH01 follows hub demand over ESP-NOW, drives Sonoffs without HA, SoftAP-pins the fleet channel, and mirrors hub vitals to HA over Ethernet.
 
-Notion: [Appliance bridge gap](https://app.notion.com/p/3b52b4cda3708107bfaeff8d9b8b1398)
-
-## Today (honest)
+## Paths
 
 ```
-Hub demand switch ──HA API──► HA automation ──► Sonoff relay
+Hub demand ──ESP-NOW 0xD8──► DSC-BRIDGE ──native API──► Sonoff relays
+Hub vitals ──ESP-NOW 0xD1 broadcast──► Bridge HA mirror (Ethernet)
+Fleet STA ──prefer DSC-Anchor SoftAP BSSID──► fixed channel (F-012)
+HA followers ──idempotent fallback──► same relays (when HA up)
 ```
 
-ESP8285 Sonoff BASIC R2 has no ESP-NOW. Control warns when appliances need HA.
+## Firmware
 
-## Destination
-
-```
-Hub demand ──ESP-NOW──► Bridge (ESP32) ──GPIO / Wi-Fi local──► Relays
-```
-
-Options ranked:
-
-1. **ESP32 bridge node** on ESP-NOW with hub peer; drives relays via GPIO expanders or UART to existing Sonoffs replaced later
-2. **Replace Sonoffs** with ESP32 relay modules that speak ESP-NOW natively (cleaner long-term)
-3. Keep HA followers as **optional mirror** when HA is present
+| Stub | Role |
+|---|---|
+| [`firmware/v4/dsc-bridge.yaml`](../../firmware/v4/dsc-bridge.yaml) | Lab |
+| [`firmware/v4/dsc-bridge-kit.yaml`](../../firmware/v4/dsc-bridge-kit.yaml) | Kit (ethernet + SoftAP; SoftAP hello deferred F-014) |
+| [`firmware/v4/components/dsc_api_client/`](../../firmware/v4/components/dsc_api_client/) | Noise native API client |
+| [`firmware/v4/components/dsc_anchor_ap/`](../../firmware/v4/components/dsc_anchor_ap/) | SoftAP with ethernet (ESPHome forbids `wifi:`+`ethernet:`) |
 
 ## Safety
 
-- Bridge must respect hub demand OFF as hard
-- API-loss / peer-loss → relays OFF (same failsafe class as Sonoff `api` loss today)
-- Manual button on appliance still local stop
-
-## Firmware sketch
-
-Stub package: [`firmware/v4/dsc-appliance-bridge.yaml`](../../firmware/v4/dsc-appliance-bridge.yaml)  
-Not production-flashed until board BOM and peer protocol are frozen.
+- Bridge respects demand OFF as hard
+- No fresh `0xD8` for 45s → all four relays OFF
+- Sonoff API-loss grace still applies if **all** clients disconnect
+- Manual button test mode still local stop (bridge skips commands)
 
 ## Acceptance
 
-- HA powered off; hub raises humidifier demand; relay follows within 2s
+- HA powered off; hub raises humidifier demand; relay follows within ~2s
 - Hub clears demand; relay off
-- Bridge peer lost; relay off
-- Control Connections UI no longer claims “appliances need HA” when bridge online
+- Bridge peer lost / stale; relays off
+- Control alert is “Appliances need bridge or HA” (not bare HA-only)
+- Fleet prefers Anchor BSSID; ESP-NOW holds without Nest hops
+- Pro System view shows bridge / anchor / Sonoff API links
+
+## Deferred
+
+- **F-011** — move kit `DSC-Setup-*` portal host onto ETH01
+- **F-014** — bridge SoftAP satellite hello without ESPHome `wifi:` (paste Anchor BSSID into hub)

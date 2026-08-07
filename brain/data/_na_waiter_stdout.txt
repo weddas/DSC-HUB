@@ -1,0 +1,12 @@
+01:43:30 START NA waiter (lockfile-only)
+01:43:30 poll 1/90 locks_held=True apply=True excl=False
+01:43:50 poll 2/90 locks_held=True apply=True excl=False
+01:44:10 poll 3/90 locks_held=True apply=True excl=False
+01:44:30 poll 4/90 locks_held=True apply=True excl=False
+01:44:50 poll 5/90 locks_held=True apply=True excl=False
+01:45:10 poll 6/90 locks_held=False apply=False excl=False
+01:45:12 LOCKS_CLEAR
+01:45:13 primary attempt 1/10
+01:45:56 not writable: database is locked
+01:46:11 primary attempt 2/10
+01:46:42 INPROCESS merge --only north_atlantic.sqlite3 --no-search --no-link

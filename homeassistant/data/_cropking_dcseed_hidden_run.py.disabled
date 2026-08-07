@@ -1,0 +1,137 @@
+"""Hidden durable runner for Crop King + DC Seed Exchange scrapes.
+
+Uses CREATE_NO_WINDOW so no CMD popups. Resumes from checkpoints.
+Stages after each bank; final --stage-only pass. Does NOT merge master.
+"""
+from __future__ import annotations
+
+import json
+import os
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+ROOT = Path(r"y:\Digital Stealth Care\Projects\DSC-HUB")
+DATA = ROOT / "homeassistant" / "data"
+PY = sys.executable
+LOG = DATA / "_cropking_dcseed_hidden_run.log"
+HB = DATA / "_cropking_dcseed_hidden_run.heartbeat"
+PIDF = DATA / "_cropking_dcseed_hidden_run.pid"
+CREATE_NO_WINDOW = 0x08000000
+
+
+def log(msg: str) -> None:
+    line = f"{time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())} {msg}"
+    print(line, flush=True)
+    with LOG.open("a", encoding="utf-8") as f:
+        f.write(line + "\n")
+    HB.write_text(line, encoding="utf-8")
+
+
+def counts(bank: str) -> tuple[int, int, int]:
+    stem = "dsc_strains_cropking" if bank == "cropking" else "dsc_strains_dcseedexchange"
+    dump = DATA / f"{stem}.json"
+    ck = DATA / f"{stem}.checkpoint.json"
+    sm = DATA / f"{stem}.sitemap_urls.json"
+    items = 0
+    done = 0
+    total = 0
+    if dump.exists():
+        items = len(json.loads(dump.read_text(encoding="utf-8")).get("items") or [])
+    if ck.exists():
+        done = len(json.loads(ck.read_text(encoding="utf-8")).get("done") or [])
+    if sm.exists():
+        total = int(json.loads(sm.read_text(encoding="utf-8")).get("count") or 0)
+    return items, done, total
+
+
+def run_bank(bank: str, delay: float) -> int:
+    log(f"START {bank} delay={delay}")
+    before = counts(bank)
+    log(f"  before dump={before[0]} done={before[1]} sitemap={before[2]}")
+    cmd = [
+        PY,
+        "-u",
+        str(ROOT / "scripts" / "scrape_cropking_dcseed.py"),
+        "--bank",
+        bank,
+        "--delay",
+        str(delay),
+        "--checkpoint-every",
+        "50",
+        "--stage",
+    ]
+    p = subprocess.Popen(
+        cmd,
+        cwd=str(ROOT),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        creationflags=CREATE_NO_WINDOW,
+    )
+    bank_log = DATA / f"_{bank}_scrape_stdout.log"
+    with bank_log.open("a", encoding="utf-8") as out:
+        out.write(
+            f"\n--- hidden durable start {time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())} ---\n"
+        )
+        assert p.stdout is not None
+        for line in p.stdout:
+            out.write(line)
+            out.flush()
+            if (
+                "checkpoint items=" in line
+                or line.startswith("wrote ")
+                or line.startswith("staging:")
+                or "aborting" in line
+                or "BOT_WALL" in line
+            ):
+                log(f"{bank}: {line.rstrip()}")
+    rc = p.wait()
+    after = counts(bank)
+    log(f"END {bank} rc={rc} dump={after[0]} done={after[1]} sitemap={after[2]}")
+    return rc
+
+
+def stage_only(bank: str) -> int:
+    cmd = [
+        PY,
+        "-u",
+        str(ROOT / "scripts" / "scrape_cropking_dcseed.py"),
+        "--bank",
+        bank,
+        "--stage-only",
+    ]
+    p = subprocess.run(
+        cmd,
+        cwd=str(ROOT),
+        capture_output=True,
+        text=True,
+        creationflags=CREATE_NO_WINDOW,
+    )
+    log(f"stage-only {bank} rc={p.returncode} out={(p.stdout or '')[-500:]}")
+    if p.stderr:
+        log(f"stage-only {bank} err={(p.stderr or '')[-300:]}")
+    return int(p.returncode)
+
+
+def main() -> int:
+    DATA.mkdir(parents=True, exist_ok=True)
+    PIDF.write_text(str(os.getpid()), encoding="ascii")
+    log("launcher begin")
+    # Sequential: CK first (larger), then DC a bit slower (503s under burst).
+    rc1 = run_bank("cropking", 0.4)
+    time.sleep(5)
+    rc2 = run_bank("dcseedexchange", 0.9)
+    log(f"launcher scrape phase done rc_ck={rc1} rc_dc={rc2}")
+    for bank in ("cropking", "dcseedexchange"):
+        stage_only(bank)
+    final = {b: counts(b) for b in ("cropking", "dcseedexchange")}
+    log(f"FINAL {json.dumps(final)}")
+    return 0 if rc1 == 0 and rc2 == 0 else 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

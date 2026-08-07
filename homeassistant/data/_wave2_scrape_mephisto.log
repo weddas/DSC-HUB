@@ -1,0 +1,155 @@
+  sitemap_index https://mephistogenetics.com/sitemap.xml -> 1 product sitemaps
+  https://mephistogenetics.com/sitemap_products_1.xml?from=7713169735875&to=15082106847598 -> accepted 356
+mephisto: sitemap total 356 (cached dsc_strains_mephisto.sitemap_urls.json)
+mephisto: 356 urls queued; resume done=0 dump_items=0 skipped=0
+  ok #1 idx=1/356 name='1:Walt'
+  ok #2 idx=2/356 name='12 Assed Raven'
+  ok #3 idx=3/356 name='24 Carat'
+  mephisto checkpoint items=20 done=20 skipped=0 this_run=20 rate=0.75/s idx=20/356
+  ok #25 idx=25/356 name='Bearmouth'
+  mephisto checkpoint items=40 done=40 skipped=0 this_run=40 rate=0.75/s idx=40/356
+  ok #50 idx=50/356 name='CBDank'
+  mephisto checkpoint items=60 done=60 skipped=0 this_run=60 rate=0.74/s idx=60/356
+  ok #75 idx=75/356 name='Do-si-delirium'
+  mephisto checkpoint items=80 done=80 skipped=0 this_run=80 rate=0.74/s idx=80/356
+mephisto staging: {
+  "family": "bank_mephisto",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_mephisto.sqlite3",
+  "count": 80,
+  "bulk": false,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 80,
+    "strain_variant": 80,
+    "chemistry_profile": 0,
+    "grow_trait": 5,
+    "entity_link": 0,
+    "attribute_kv": 1104,
+    "raw_record": 80,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 15,
+    "source_record": 1
+  }
+}
+  ok #100 idx=100/356 name='General Disarray'
+  mephisto checkpoint items=100 done=100 skipped=0 this_run=100 rate=0.73/s idx=100/356
+  mephisto checkpoint items=120 done=120 skipped=0 this_run=120 rate=0.73/s idx=120/356
+  ok #125 idx=125/356 name='Hubbabubbasmelloscope'
+  mephisto checkpoint items=140 done=140 skipped=0 this_run=140 rate=0.73/s idx=140/356
+  ok #150 idx=150/356 name='ILL#61'
+  mephisto checkpoint items=160 done=160 skipped=0 this_run=160 rate=0.74/s idx=160/356
+mephisto staging: {
+  "family": "bank_mephisto",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_mephisto.sqlite3",
+  "count": 160,
+  "bulk": false,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 160,
+    "strain_variant": 160,
+    "chemistry_profile": 0,
+    "grow_trait": 31,
+    "entity_link": 0,
+    "attribute_kv": 2249,
+    "raw_record": 160,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 17,
+    "source_record": 1
+  }
+}
+  ok #175 idx=175/356 name='Jolly Jay'
+  mephisto checkpoint items=180 done=180 skipped=0 this_run=180 rate=0.73/s idx=180/356
+  ok #200 idx=200/356 name='Mango Grove'
+  mephisto checkpoint items=200 done=200 skipped=0 this_run=200 rate=0.73/s idx=200/356
+  mephisto checkpoint items=220 done=220 skipped=0 this_run=220 rate=0.74/s idx=220/356
+  ok #225 idx=225/356 name='Obi Wonkanobi'
+  mephisto checkpoint items=240 done=240 skipped=0 this_run=240 rate=0.74/s idx=240/356
+mephisto staging: {
+  "family": "bank_mephisto",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_mephisto.sqlite3",
+  "count": 240,
+  "bulk": false,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 240,
+    "strain_variant": 240,
+    "chemistry_profile": 0,
+    "grow_trait": 39,
+    "entity_link": 0,
+    "attribute_kv": 3369,
+    "raw_record": 240,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 17,
+    "source_record": 1
+  }
+}
+  ok #250 idx=250/356 name='Piggy Stardust'
+  mephisto checkpoint items=260 done=260 skipped=0 this_run=260 rate=0.73/s idx=260/356
+  ok #275 idx=275/356 name='Ravenberry'
+  mephisto checkpoint items=280 done=280 skipped=0 this_run=280 rate=0.73/s idx=280/356
+  ok #300 idx=300/356 name='Sour Crack'
+  mephisto checkpoint items=300 done=300 skipped=0 this_run=300 rate=0.73/s idx=300/356
+  mephisto checkpoint items=320 done=320 skipped=0 this_run=320 rate=0.74/s idx=320/356
+mephisto staging: {
+  "family": "bank_mephisto",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_mephisto.sqlite3",
+  "count": 320,
+  "bulk": false,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 320,
+    "strain_variant": 320,
+    "chemistry_profile": 0,
+    "grow_trait": 40,
+    "entity_link": 0,
+    "attribute_kv": 4472,
+    "raw_record": 320,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 17,
+    "source_record": 1
+  }
+}
+  ok #325 idx=325/356 name='Tennessee Honeymoon'
+  mephisto checkpoint items=340 done=340 skipped=0 this_run=340 rate=0.73/s idx=340/356
+  ok #350 idx=350/356 name='Wedding Doves'
+  mephisto checkpoint items=356 done=356 skipped=0 this_run=356 rate=0.73/s idx=356/356
+wrote dsc_strains_mephisto.json count=356 skipped=0 errors=0
+mephisto staging: {
+  "family": "bank_mephisto",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_mephisto.sqlite3",
+  "count": 356,
+  "bulk": false,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 356,
+    "strain_variant": 356,
+    "chemistry_profile": 0,
+    "grow_trait": 41,
+    "entity_link": 0,
+    "attribute_kv": 4967,
+    "raw_record": 356,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 17,
+    "source_record": 1
+  }
+}

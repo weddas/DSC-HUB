@@ -141,6 +141,17 @@ template:
         state: "{{ is_state('binary_sensor.dsc_hub_ha_link_status', 'on') }}"
         availability: "{{ has_value('binary_sensor.dsc_hub_ha_link_status') }}"
 
+      # Appliances healthy = bridge ESP-NOW path OR (HA link as follower fallback).
+      - name: "DSC Appliances Healthy"
+        unique_id: dsc_appliances_healthy
+        icon: mdi:power-plug
+        state: >-
+          {% if has_value('binary_sensor.dsc_appliances_path_ok') %}
+            {{ is_state('binary_sensor.dsc_appliances_path_ok', 'on') }}
+          {% else %}
+            {{ is_state('binary_sensor.dsc_hub_ha_link_status', 'on') }}
+          {% endif %}
+
       # Soft capacity — intentional OOS, not a problem alert.
       - name: "DSC AC Capacity Offline"
         unique_id: dsc_ac_capacity_offline
@@ -198,6 +209,8 @@ template:
 
       # Preferred AP learned in NVS disagrees with current association while
       # Lock is ON — mesh/channel split risk until pin/relearn finishes.
+      # With F-012, preferred should be sensor.dsc_bridge_anchor_bssid
+      # (DSC-Anchor SoftAP), not a Nest point, when the bridge is in use.
       - name: "DSC WiFi Preferred AP Mismatch"
         unique_id: dsc_wifi_preferred_ap_mismatch
         device_class: problem

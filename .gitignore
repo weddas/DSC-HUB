@@ -19,6 +19,10 @@ firmware/v4/verify_v4.exe
 *.py[cod]
 brain/data/*.sqlite3
 brain/data/*.sqlite3-*
+brain/data/staging/*.sqlite3
+brain/data/staging/*.sqlite3-*
+brain/data/**/*.sqlite3
+brain/data/**/*.sqlite3-*
 
 # Never commit a live HA config
 home-assistant_v2.db*
@@ -58,3 +62,13 @@ firmware/DSC-HUB v4/**
 
 # Private business / marketing / build docs — keep local only, never push
 Media_and_Docs/
+
+# Local durable scrape backups (not for git)
+_BACKUP_N087_*/
+brain/data/*.pre_ce_copyback_*
+brain/data/_n087_exclusive_merge*.log
+brain/data/_n087_exclusive_merge_results.jsonl
+
+
+# Fat lab caches (NAS backup only; GitHub 100MB limit)
+brain/data/staging/_cache_cannlytics/

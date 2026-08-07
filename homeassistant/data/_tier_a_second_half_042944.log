@@ -1,0 +1,148 @@
+partition tier_A_second_half slice=[96:192] rows=96 (tiers.A=192)
+targets=16 skipped_done=0 skipped_parked=0 skipped_first_half=0
+probing 16 targets…
+  probe makka-seeds: tier=A platform=woocommerce ok caps=['sitemap']
+  probe mendo-dope-farms: tier=A platform=magento ok caps=['sitemap']
+  probe mgb-worldwide: tier=A platform=magento ok caps=['sitemap']
+  probe microgenetica: tier=A platform=magento ok caps=['sitemap']
+  probe nation-of-kamas: tier=A platform=shopify ok caps=['shopify_json', 'sitemap']
+  probe natural-genetics-seeds: tier=A platform=woocommerce ok caps=['sitemap']
+  probe nectar-seeds: tier=A platform=magento ok caps=['sitemap']
+  probe norden-seeds: tier=A platform=woocommerce ok caps=['sitemap']
+  probe norstar-genetics: tier=A platform=woocommerce ok caps=['sitemap']
+  probe ocean-grown-seeds: tier=A platform=magento ok caps=['sitemap']
+  probe octo-genetica: tier=A platform=woocommerce ok caps=['sitemap']
+  probe phat-panda: tier=A platform=magento ok caps=['sitemap']
+  probe pheno-hound-genetics: tier=A platform=magento ok caps=['sitemap']
+  probe pinehurst: tier=A platform=magento ok caps=['sitemap', 'sitemap_index']
+  probe pnw-cultivar: tier=A platform=magento ok caps=['sitemap']
+  probe precursor-genetics: tier=A platform=magento ok caps=['sitemap', 'wc_product_sitemap']
+=== scrape nation-of-kamas (Nation Of Kamas) platform=shopify caps=['shopify_json', 'sitemap']
+nation-of-kamas staging: family=bank_nation_of_kamas raw=2 db=\\192.168.86.2\Digital-Documents\Digital Stealth Care\Projects\DSC-HUB\brain\data\staging\bank_nation_of_kamas.sqlite3
+=== scrape makka-seeds (Makka Seeds) platform=woocommerce caps=['sitemap']
+  makka-seeds products.json page 1 fail: HTTP Error 404: Not Found
+  sitemap https://makkaseeds.com/sitemap.xml +children -> +0 (total 0)
+  sitemap https://www.makkaseeds.com/sitemap.xml +children -> +0 (total 0)
+  category https://makkaseeds.com/shop/ -> +6 (total 6)
+makka-seeds: sitemap/product urls=6
+makka-seeds staging: family=bank_makka_seeds raw=5 db=\\192.168.86.2\Digital-Documents\Digital Stealth Care\Projects\DSC-HUB\brain\data\staging\bank_makka_seeds.sqlite3
+=== scrape natural-genetics-seeds (Natural Genetics Seeds) platform=woocommerce caps=['sitemap']
+  natural-genetics-seeds products.json page 1 fail: Expecting value: line 1 column 1 (char 0)
+  sitemap http://naturalgeneticsseeds.com/sitemap.xml +children -> +0 (total 0)
+  sitemap http://naturalgeneticsseeds.com/wp-sitemap-posts-product-1.xml +children -> +0 (total 0)
+  sitemap http://www.naturalgeneticsseeds.com/sitemap.xml +children -> +0 (total 0)
+  sitemap http://www.naturalgeneticsseeds.com/wp-sitemap-posts-product-1.xml +children -> +0 (total 0)
+natural-genetics-seeds: sitemap/product urls=0
+=== scrape norden-seeds (Norden Seeds) platform=woocommerce caps=['sitemap']
+  norden-seeds products.json page 1 fail: HTTP Error 404: Not Found
+  sitemap https://nordenseeds.com/sitemap.xml +children -> +0 (total 0)
+  sitemap https://www.nordenseeds.com/sitemap.xml +children -> +0 (total 0)
+  sitemap https://www.nordenseeds.com/wp-sitemap-posts-product-1.xml +children -> +0 (total 0)
+norden-seeds: sitemap/product urls=0
+=== scrape norstar-genetics (NorStar Genetics) platform=woocommerce caps=['sitemap']
+  norstar-genetics products.json page 1 fail: HTTP Error 404: Not Found
+  sitemap https://norstargenetics.com/sitemap.xml +children -> +7 (total 7)
+  sitemap https://www.norstargenetics.com/sitemap.xml +children -> +0 (total 7)
+  sitemap https://www.norstargenetics.com/wp-sitemap-posts-product-1.xml +children -> +0 (total 7)
+norstar-genetics: sitemap/product urls=7
+  norstar-genetics ok #1 'Book'
+  norstar-genetics ok #2 'Cups'
+  norstar-genetics checkpoint items=5 scraped=5 rate=0.42/s
+norstar-genetics staging: family=bank_norstar_genetics raw=5 db=\\192.168.86.2\Digital-Documents\Digital Stealth Care\Projects\DSC-HUB\brain\data\staging\bank_norstar_genetics.sqlite3
+=== scrape octo-genetica (Octo Genetica) platform=woocommerce caps=['sitemap']
+  octo-genetica products.json page 1 fail: HTTP Error 404: Not Found
+  sitemap https://octogenetica.com/sitemap.xml +children -> +0 (total 0)
+  sitemap https://www.octogenetica.com/sitemap.xml +children -> +0 (total 0)
+  sitemap https://www.octogenetica.com/wp-sitemap-posts-product-1.xml +children -> +0 (total 0)
+octo-genetica: sitemap/product urls=0
+=== scrape precursor-genetics (Precursor Genetics) platform=magento caps=['sitemap', 'wc_product_sitemap']
+  precursor-genetics products.json page 1 fail: HTTP Error 404: Not Found
+  sitemap https://precursorgenetics.com/product-sitemap.xml +children -> +0 (total 0)
+  sitemap https://precursorgenetics.com/sitemap.xml +children -> +0 (total 0)
+  sitemap https://precursorgenetics.com/media/sitemap/sitemap.xml +children -> +0 (total 0)
+  sitemap https://precursorgenetics.com/pub/media/sitemap/sitemap.xml +children -> +0 (total 0)
+  sitemap https://www.precursorgenetics.com/product-sitemap.xml +children -> +0 (total 0)
+  sitemap https://www.precursorgenetics.com/sitemap.xml +children -> +0 (total 0)
+  sitemap https://www.precursorgenetics.com/media/sitemap/sitemap.xml +children -> +0 (total 0)
+  sitemap https://www.precursorgenetics.com/pub/media/sitemap/sitemap.xml +children -> +0 (total 0)
+precursor-genetics: sitemap/product urls=0
+=== scrape mendo-dope-farms (Mendo Dope Farms) platform=magento caps=['sitemap']
+  mendo-dope-farms products.json page 1 fail: HTTP Error 404: Not Found
+  sitemap https://mendodopefarms.com/sitemap.xml +children -> +0 (total 0)
+  sitemap https://www.mendodopefarms.com/sitemap.xml +children -> +0 (total 0)
+mendo-dope-farms: sitemap/product urls=0
+=== scrape mgb-worldwide (MGB Worldwide) platform=magento caps=['sitemap']
+  mgb-worldwide products.json page 1 fail: Expecting value: line 1 column 1 (char 0)
+  sitemap https://www.mgbworldwide.com/sitemap.xml +children -> +16 (total 16)
+  sitemap https://mgbworldwide.com/sitemap.xml +children -> +0 (total 16)
+mgb-worldwide: sitemap/product urls=16
+  mgb-worldwide ok #1 'MGB Architects Chapter'
+  mgb-worldwide ok #2 "MGB's First Global Convention in Bangkok, Thailand"
+  mgb-worldwide checkpoint items=13 scraped=13 rate=1.06/s
+mgb-worldwide staging: family=bank_mgb_worldwide raw=13 db=\\192.168.86.2\Digital-Documents\Digital Stealth Care\Projects\DSC-HUB\brain\data\staging\bank_mgb_worldwide.sqlite3
+=== scrape microgenetica (Microgenetica) platform=magento caps=['sitemap']
+  microgenetica products.json page 1 fail: HTTP Error 400: Bad Request
+microgenetica: sitemap/product urls=0
+=== scrape nectar-seeds (Nectar Seeds) platform=magento caps=['sitemap']
+  nectar-seeds products.json page 1 fail: HTTP Error 404: Not Found
+  sitemap https://nectar-seeds.com/sitemap.xml +children -> +0 (total 0)
+  sitemap https://www.nectar-seeds.com/sitemap.xml +children -> +0 (total 0)
+nectar-seeds: sitemap/product urls=0
+=== scrape ocean-grown-seeds (Ocean Grown Seeds) platform=magento caps=['sitemap']
+  ocean-grown-seeds products.json page 1 fail: HTTP Error 404: Not Found
+  sitemap https://www.oceangrownseeds.com/sitemap.xml +children -> +0 (total 0)
+  sitemap https://oceangrownseeds.com/sitemap.xml +children -> +0 (total 0)
+  category https://www.oceangrownseeds.com/shop/ -> +46 (total 46)
+ocean-grown-seeds: sitemap/product urls=46
+  ocean-grown-seeds ok #1 'Genetic Archive'
+  ocean-grown-seeds ok #2 'ALIEN RIFT'
+  ocean-grown-seeds checkpoint items=20 scraped=20 rate=1.30/s
+  ocean-grown-seeds ok #25 'MOLTEN CORE'
+  ocean-grown-seeds checkpoint items=40 scraped=40 rate=1.29/s
+  ocean-grown-seeds checkpoint items=46 scraped=46 rate=1.29/s
+ocean-grown-seeds staging: family=bank_ocean_grown_seeds raw=46 db=\\192.168.86.2\Digital-Documents\Digital Stealth Care\Projects\DSC-HUB\brain\data\staging\bank_ocean_grown_seeds.sqlite3
+=== scrape phat-panda (Phat Panda) platform=magento caps=['sitemap']
+  phat-panda products.json page 1 fail: HTTP Error 404: Not Found
+  sitemap https://phatpanda.com/sitemap.xml +children -> +3 (total 3)
+  sitemap https://www.phatpanda.com/sitemap.xml +children -> +0 (total 3)
+phat-panda: sitemap/product urls=3
+  phat-panda checkpoint items=0 scraped=0 rate=0.00/s
+  phat-panda ok #1 'Spring drop: four new live'
+  phat-panda checkpoint items=1 scraped=1 rate=0.36/s
+phat-panda staging: family=bank_phat_panda raw=1 db=\\192.168.86.2\Digital-Documents\Digital Stealth Care\Projects\DSC-HUB\brain\data\staging\bank_phat_panda.sqlite3
+=== scrape pheno-hound-genetics (Pheno Hound Genetics) platform=magento caps=['sitemap']
+  pheno-hound-genetics products.json page 1 fail: HTTP Error 400: Bad Request
+pheno-hound-genetics: sitemap/product urls=0
+=== scrape pinehurst (Pinehurst) platform=magento caps=['sitemap', 'sitemap_index']
+  pinehurst products.json page 1 fail: HTTP Error 404: Not Found
+  sitemap https://www.pinehurst.com/sitemap_index.xml +children -> +0 (total 0)
+  sitemap https://www.pinehurst.com/sitemap.xml +children -> +0 (total 0)
+  sitemap https://pinehurst.com/sitemap_index.xml +children -> +0 (total 0)
+  category https://www.pinehurst.com/shop/ -> +10 (total 10)
+  category https://www.pinehurst.com/collections/all -> +1 (total 11)
+  category https://pinehurst.com/shop/ -> +9 (total 20)
+pinehurst: sitemap/product urls=20
+  pinehurst ok #1 'Offers'
+  pinehurst ok #2 'Cottages at No. 8 Golf Package'
+  pinehurst fail https://www.pinehurst.com/products/mens-andy-hoodie: HTTP 429 for https://www.pinehurst.com/products/mens-andy-hoodie
+  pinehurst fail https://www.pinehurst.com/products/mens-pboy-performance-cap-copy-1: HTTP 429 for https://www.pinehurst.com/products/mens-pboy-performance-cap-copy-1
+  pinehurst fail https://www.pinehurst.com/products/pinehurst-pennant-flag: HTTP 429 for https://www.pinehurst.com/products/pinehurst-pennant-flag
+pinehurst staging: family=bank_pinehurst raw=2 db=\\192.168.86.2\Digital-Documents\Digital Stealth Care\Projects\DSC-HUB\brain\data\staging\bank_pinehurst.sqlite3
+=== scrape pnw-cultivar (PNW Cultivar) platform=magento caps=['sitemap']
+  pnw-cultivar products.json page 1 fail: HTTP Error 404: Not Found
+  sitemap https://www.pnwcultivar.com/sitemap.xml +children -> +8 (total 8)
+  sitemap https://pnwcultivar.com/sitemap.xml +children -> +0 (total 8)
+pnw-cultivar: sitemap/product urls=8
+  pnw-cultivar ok #1 'Animal 75 — Exotic Birdseeds — PNW Cultivar'
+  pnw-cultivar ok #2 'Cereal Berries F2 — Exotic Birdseeds — PNW Cultivar'
+  pnw-cultivar checkpoint items=7 scraped=7 rate=0.53/s
+pnw-cultivar staging: family=bank_pnw_cultivar raw=7 db=\\192.168.86.2\Digital-Documents\Digital Stealth Care\Projects\DSC-HUB\brain\data\staging\bank_pnw_cultivar.sqlite3
+DONE ok=8 empty=8 err=0 items=81 skipped_dead=0
+  OK nation-of-kamas: 2 (shopify_products_json)
+  OK makka-seeds: 5 (sitemap_pdp)
+  OK norstar-genetics: 5 (sitemap_pdp)
+  OK mgb-worldwide: 13 (sitemap_pdp)
+  OK ocean-grown-seeds: 46 (sitemap_pdp)
+  OK phat-panda: 1 (sitemap_pdp)
+  OK pinehurst: 2 (sitemap_pdp)
+  OK pnw-cultivar: 7 (sitemap_pdp)

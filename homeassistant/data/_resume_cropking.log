@@ -1,0 +1,170 @@
+2026-08-07T17:20:17Z resume wrapper start pid=72064 bank=cropking
+2026-08-07T17:20:18Z === round 1 cropking: sitemap=3990 done=485 dump=485
+2026-08-07T17:20:29Z resume wrapper start pid=41012 bank=cropking
+2026-08-07T17:20:30Z === round 1 cropking: sitemap=3990 done=490 dump=485
+2026-08-07T17:20:30Z round 1 exit=4294967295 now done=490 dump=485
+2026-08-07T17:20:32Z === round 2 cropking: sitemap=3990 done=490 dump=485
+2026-08-07T17:20:33Z round 1 exit=4294967295 now done=490 dump=485
+2026-08-07T17:20:35Z === round 2 cropking: sitemap=3990 done=490 dump=485
+2026-08-07T17:20:35Z round 2 exit=4294967295 now done=490 dump=485
+2026-08-07T17:20:38Z === round 3 cropking: sitemap=3990 done=490 dump=485
+2026-08-07T17:20:38Z round 2 exit=4294967295 now done=490 dump=485
+2026-08-07T17:20:40Z === round 3 cropking: sitemap=3990 done=490 dump=485
+2026-08-07T17:20:41Z round 3 exit=4294967295 now done=490 dump=485
+2026-08-07T17:20:43Z === round 4 cropking: sitemap=3990 done=490 dump=485
+2026-08-07T17:20:44Z round 3 exit=4294967295 now done=490 dump=485
+2026-08-07T17:20:46Z === round 4 cropking: sitemap=3990 done=490 dump=485
+2026-08-07T17:20:46Z round 4 exit=4294967295 now done=490 dump=485
+2026-08-07T17:20:48Z === round 5 cropking: sitemap=3990 done=490 dump=485
+2026-08-07T17:20:49Z round 4 exit=4294967295 now done=490 dump=485
+2026-08-07T17:20:51Z === round 5 cropking: sitemap=3990 done=490 dump=485
+2026-08-07T17:20:52Z cropking: stalled at done=490; stopping
+2026-08-07T17:20:52Z FINAL cropking: sitemap=3990 done=490 dump=485
+2026-08-07T17:21:00Z stage exit=0
+2026-08-07T17:21:54Z in-process resume start pid=23212 bank=cropking
+2026-08-07T17:21:55Z round 1 sitemap=3990 done=505 dump=485
+2026-08-07T17:23:12Z batched resume start pid=46940 bank=cropking batch=50
+2026-08-07T17:23:12Z round 1 sitemap=3990 done=525 dump=525
+2026-08-07T17:26:45Z round 1 end done=575 dump=575 delta=50
+2026-08-07T17:26:46Z round 2 sitemap=3990 done=575 dump=575
+2026-08-07T17:31:35Z round 2 end done=625 dump=625 delta=50
+2026-08-07T17:31:36Z round 3 sitemap=3990 done=625 dump=625
+2026-08-07T17:36:29Z round 3 end done=675 dump=675 delta=50
+2026-08-07T17:36:30Z round 4 sitemap=3990 done=675 dump=675
+2026-08-07T17:40:38Z round 4 end done=725 dump=725 delta=50
+2026-08-07T17:40:39Z round 5 sitemap=3990 done=725 dump=725
+2026-08-07T17:44:41Z round 5 end done=775 dump=775 delta=50
+2026-08-07T17:44:42Z round 6 sitemap=3990 done=775 dump=775
+2026-08-07T17:49:12Z round 6 end done=825 dump=825 delta=50
+2026-08-07T17:49:13Z round 7 sitemap=3990 done=825 dump=825
+2026-08-07T17:53:28Z round 7 end done=875 dump=875 delta=50
+2026-08-07T17:53:29Z round 8 sitemap=3990 done=875 dump=875
+2026-08-07T17:58:26Z round 8 end done=925 dump=925 delta=50
+2026-08-07T17:58:27Z round 9 sitemap=3990 done=925 dump=925
+2026-08-07T18:03:20Z round 9 end done=975 dump=975 delta=50
+2026-08-07T18:03:21Z round 10 sitemap=3990 done=975 dump=975
+2026-08-07T18:09:05Z round 10 end done=1025 dump=1025 delta=50
+2026-08-07T18:09:06Z round 11 sitemap=3990 done=1025 dump=1025
+2026-08-07T18:13:43Z round 11 end done=1075 dump=1075 delta=50
+2026-08-07T18:13:44Z round 12 sitemap=3990 done=1075 dump=1075
+2026-08-07T18:16:46Z batched resume start pid=42248 bank=cropking batch=50
+2026-08-07T18:16:47Z round 1 sitemap=3990 done=1105 dump=1105
+2026-08-07T18:18:06Z round 12 end done=1125 dump=1125 delta=50
+2026-08-07T18:18:07Z round 13 sitemap=3990 done=1125 dump=1125
+2026-08-07T18:21:28Z round 1 end done=1155 dump=1155 delta=50
+2026-08-07T18:21:30Z round 2 sitemap=3990 done=1155 dump=1155
+2026-08-07T18:24:03Z round 13 end done=1175 dump=1175 delta=50
+2026-08-07T18:24:04Z round 14 sitemap=3990 done=1175 dump=1175
+2026-08-07T18:29:01Z round 14 end done=1225 dump=1225 delta=50
+2026-08-07T18:29:02Z round 15 sitemap=3990 done=1225 dump=1225
+2026-08-07T18:32:54Z round 15 end done=1275 dump=1275 delta=50
+2026-08-07T18:32:55Z round 16 sitemap=3990 done=1275 dump=1275
+2026-08-07T18:37:28Z round 16 end done=1325 dump=1325 delta=50
+2026-08-07T18:37:30Z round 17 sitemap=3990 done=1325 dump=1325
+2026-08-07T18:42:56Z round 17 end done=1375 dump=1375 delta=50
+2026-08-07T18:42:58Z round 18 sitemap=3990 done=1375 dump=1375
+2026-08-07T18:46:56Z round 18 end done=1425 dump=1425 delta=50
+2026-08-07T18:46:57Z round 19 sitemap=3990 done=1425 dump=1425
+2026-08-07T18:48:04Z batched resume start pid=58684 bank=cropking batch=50
+2026-08-07T18:48:04Z round 1 sitemap=3990 done=1430 dump=1425
+2026-08-07T18:52:03Z round 19 end done=1475 dump=1475 delta=50
+2026-08-07T18:52:04Z round 20 sitemap=3990 done=1475 dump=1475
+2026-08-07T18:57:38Z round 20 end done=1525 dump=1525 delta=50
+2026-08-07T18:57:39Z round 21 sitemap=3990 done=1525 dump=1525
+2026-08-07T19:02:41Z round 21 end done=1575 dump=1575 delta=50
+2026-08-07T19:02:43Z round 22 sitemap=3990 done=1575 dump=1575
+2026-08-07T19:07:53Z round 22 end done=1625 dump=1625 delta=50
+2026-08-07T19:07:55Z round 23 sitemap=3990 done=1625 dump=1625
+2026-08-07T19:11:43Z round 23 end done=1675 dump=1675 delta=50
+2026-08-07T19:11:44Z round 24 sitemap=3990 done=1675 dump=1675
+2026-08-07T19:15:43Z round 24 end done=1725 dump=1725 delta=50
+2026-08-07T19:15:44Z round 25 sitemap=3990 done=1725 dump=1725
+2026-08-07T19:20:24Z round 25 end done=1775 dump=1775 delta=50
+2026-08-07T19:20:25Z round 26 sitemap=3990 done=1775 dump=1775
+2026-08-07T19:24:45Z round 26 end done=1825 dump=1825 delta=50
+2026-08-07T19:24:46Z round 27 sitemap=3990 done=1825 dump=1825
+2026-08-07T19:29:38Z round 27 end done=1875 dump=1875 delta=50
+2026-08-07T19:29:40Z round 28 sitemap=3990 done=1875 dump=1875
+2026-08-07T19:33:45Z round 28 end done=1925 dump=1925 delta=50
+2026-08-07T19:33:46Z round 29 sitemap=3990 done=1925 dump=1925
+2026-08-07T19:35:07Z round 29 end done=1975 dump=1975 delta=50
+2026-08-07T19:35:09Z round 30 sitemap=3990 done=1990 dump=1975
+2026-08-07T19:36:22Z round 30 end done=2025 dump=2025 delta=35
+2026-08-07T19:36:23Z round 31 sitemap=3990 done=2040 dump=2025
+2026-08-07T19:37:35Z round 31 end done=2075 dump=2075 delta=35
+2026-08-07T19:37:36Z round 32 sitemap=3990 done=2075 dump=2075
+2026-08-07T19:40:38Z batched resume start pid=25144 bank=cropking batch=50
+2026-08-07T19:40:38Z round 1 sitemap=3990 done=2205 dump=2175
+2026-08-07T19:41:56Z round 1 end done=2225 dump=2225 delta=20
+2026-08-07T19:41:58Z round 2 sitemap=3990 done=2220 dump=2225
+2026-08-07T19:43:09Z round 2 end done=2270 dump=2270 delta=50
+2026-08-07T19:43:11Z round 3 sitemap=3990 done=2270 dump=2270
+2026-08-07T19:44:23Z round 3 end done=2320 dump=2320 delta=50
+2026-08-07T19:44:25Z round 4 sitemap=3990 done=2320 dump=2320
+2026-08-07T19:45:41Z round 4 end done=2370 dump=2370 delta=50
+2026-08-07T19:45:42Z round 5 sitemap=3990 done=2370 dump=2370
+2026-08-07T19:46:52Z round 5 end done=2420 dump=2420 delta=50
+2026-08-07T19:46:53Z round 6 sitemap=3990 done=2420 dump=2420
+2026-08-07T19:48:06Z round 6 end done=2470 dump=2470 delta=50
+2026-08-07T19:48:07Z round 7 sitemap=3990 done=2470 dump=2470
+2026-08-07T19:49:21Z round 7 end done=2515 dump=2515 delta=45
+2026-08-07T19:49:23Z round 8 sitemap=3990 done=2515 dump=2515
+2026-08-07T19:50:37Z round 8 end done=2565 dump=2565 delta=50
+2026-08-07T19:50:38Z round 9 sitemap=3990 done=2565 dump=2565
+2026-08-07T19:51:49Z round 9 end done=2615 dump=2615 delta=50
+2026-08-07T19:51:50Z round 10 sitemap=3990 done=2615 dump=2615
+2026-08-07T19:53:04Z round 10 end done=2665 dump=2665 delta=50
+2026-08-07T19:53:06Z round 11 sitemap=3990 done=2670 dump=2665
+2026-08-07T19:54:15Z round 11 end done=2715 dump=2715 delta=45
+2026-08-07T19:54:16Z round 12 sitemap=3990 done=2720 dump=2715
+2026-08-07T19:55:43Z round 12 end done=2765 dump=2765 delta=45
+2026-08-07T19:55:45Z round 13 sitemap=3990 done=2765 dump=2765
+2026-08-07T19:57:01Z round 13 end done=2815 dump=2815 delta=50
+2026-08-07T19:57:02Z round 14 sitemap=3990 done=2815 dump=2815
+2026-08-07T19:58:18Z round 14 end done=2865 dump=2865 delta=50
+2026-08-07T19:58:19Z round 15 sitemap=3990 done=2865 dump=2865
+2026-08-07T19:59:30Z round 15 end done=2915 dump=2915 delta=50
+2026-08-07T19:59:32Z round 16 sitemap=3990 done=2920 dump=2915
+2026-08-07T20:00:48Z round 16 end done=2965 dump=2965 delta=45
+2026-08-07T20:00:49Z round 17 sitemap=3990 done=2970 dump=2965
+2026-08-07T20:01:58Z round 17 end done=3015 dump=3015 delta=45
+2026-08-07T20:02:00Z round 18 sitemap=3990 done=3020 dump=3015
+2026-08-07T20:03:16Z round 18 end done=3065 dump=3065 delta=45
+2026-08-07T20:03:18Z round 19 sitemap=3990 done=3065 dump=3065
+2026-08-07T20:04:29Z round 19 end done=3115 dump=3115 delta=50
+2026-08-07T20:04:31Z round 20 sitemap=3990 done=3120 dump=3115
+2026-08-07T20:05:42Z round 20 end done=3165 dump=3165 delta=45
+2026-08-07T20:05:44Z round 21 sitemap=3990 done=3170 dump=3165
+2026-08-07T20:06:59Z round 21 end done=3215 dump=3215 delta=45
+2026-08-07T20:07:00Z round 22 sitemap=3990 done=3215 dump=3215
+2026-08-07T20:08:18Z round 22 end done=3265 dump=3265 delta=50
+2026-08-07T20:08:19Z round 23 sitemap=3990 done=3265 dump=3265
+2026-08-07T20:09:49Z round 23 end done=3315 dump=3315 delta=50
+2026-08-07T20:09:51Z round 24 sitemap=3990 done=3315 dump=3315
+2026-08-07T20:11:08Z round 24 end done=3365 dump=3365 delta=50
+2026-08-07T20:11:09Z round 25 sitemap=3990 done=3365 dump=3365
+2026-08-07T20:12:48Z round 25 end done=3415 dump=3415 delta=50
+2026-08-07T20:12:51Z round 26 sitemap=3990 done=3415 dump=3415
+2026-08-07T20:14:16Z round 26 end done=3465 dump=3465 delta=50
+2026-08-07T20:14:18Z round 27 sitemap=3990 done=3465 dump=3465
+2026-08-07T20:15:46Z round 27 end done=3515 dump=3515 delta=50
+2026-08-07T20:15:51Z round 28 sitemap=3990 done=3515 dump=3515
+2026-08-07T20:17:22Z round 28 end done=3565 dump=3565 delta=50
+2026-08-07T20:17:25Z round 29 sitemap=3990 done=3565 dump=3565
+2026-08-07T20:18:47Z round 29 end done=3615 dump=3615 delta=50
+2026-08-07T20:18:49Z round 30 sitemap=3990 done=3615 dump=3615
+2026-08-07T20:20:09Z round 30 end done=3665 dump=3665 delta=50
+2026-08-07T20:20:10Z round 31 sitemap=3990 done=3665 dump=3665
+2026-08-07T20:21:25Z round 31 end done=3715 dump=3715 delta=50
+2026-08-07T20:21:26Z round 32 sitemap=3990 done=3715 dump=3715
+2026-08-07T20:22:36Z round 32 end done=3765 dump=3765 delta=50
+2026-08-07T20:22:38Z round 33 sitemap=3990 done=3765 dump=3765
+2026-08-07T20:23:49Z round 33 end done=3815 dump=3815 delta=50
+2026-08-07T20:23:50Z round 34 sitemap=3990 done=3815 dump=3815
+2026-08-07T20:24:55Z round 34 end done=3865 dump=3865 delta=50
+2026-08-07T20:24:56Z round 35 sitemap=3990 done=3865 dump=3865
+2026-08-07T20:26:03Z round 35 end done=3915 dump=3915 delta=50
+2026-08-07T20:26:05Z round 36 sitemap=3990 done=3915 dump=3915
+2026-08-07T20:26:05Z cropking: coverage met
+2026-08-07T20:26:05Z FINAL sitemap=3990 done=3915 dump=3915
+2026-08-07T20:26:10Z staged count=3915 db=\\192.168.86.2\Digital-Documents\Digital Stealth Care\Projects\DSC-HUB\brain\data\staging\cropking.sqlite3

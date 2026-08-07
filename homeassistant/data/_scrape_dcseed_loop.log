@@ -1,0 +1,17 @@
+2026-08-07T17:20:31Z resume wrapper start pid=30412 bank=dcseedexchange
+2026-08-07T17:20:31Z === round 1 dcseedexchange: sitemap=1654 done=235 dump=235
+  exclusive: killed 74104
+  exclusive: killed 44044
+running: C:\Program Files\Python314\python.exe -u \\192.168.86.2\Digital-Documents\Digital Stealth Care\Projects\DSC-HUB\scripts\scrape_cropking_dcseed.py --bank dcseedexchange --delay 0.55 --checkpoint-every 20
+2026-08-07T17:20:35Z round 1 exit=4294967295 now done=235 dump=235
+2026-08-07T17:20:37Z === round 2 dcseedexchange: sitemap=1654 done=235 dump=235
+  exclusive: killed 58304
+running: C:\Program Files\Python314\python.exe -u \\192.168.86.2\Digital-Documents\Digital Stealth Care\Projects\DSC-HUB\scripts\scrape_cropking_dcseed.py --bank dcseedexchange --delay 0.55 --checkpoint-every 20
+2026-08-07T17:20:41Z round 2 exit=4294967295 now done=235 dump=235
+2026-08-07T17:20:43Z === round 3 dcseedexchange: sitemap=1654 done=235 dump=235
+  exclusive: killed 26068
+running: C:\Program Files\Python314\python.exe -u \\192.168.86.2\Digital-Documents\Digital Stealth Care\Projects\DSC-HUB\scripts\scrape_cropking_dcseed.py --bank dcseedexchange --delay 0.55 --checkpoint-every 20
+2026-08-07T17:20:46Z round 3 exit=4294967295 now done=235 dump=235
+2026-08-07T17:20:48Z === round 4 dcseedexchange: sitemap=1654 done=235 dump=235
+  exclusive: killed 56784
+running: C:\Program Files\Python314\python.exe -u \\192.168.86.2\Digital-Documents\Digital Stealth Care\Projects\DSC-HUB\scripts\scrape_cropking_dcseed.py --bank dcseedexchange --delay 0.55 --checkpoint-every 20

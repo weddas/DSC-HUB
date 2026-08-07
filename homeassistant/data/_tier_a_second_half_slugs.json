@@ -1,0 +1,665 @@
+{
+  "count": 96,
+  "slice": [
+    96,
+    192
+  ],
+  "banks": [
+    {
+      "name": "Hoku Seed Co",
+      "url": "https://hokuseedco.com/",
+      "base": "https://hokuseedco.com",
+      "platform": "magento",
+      "tier": "A"
+    },
+    {
+      "name": "Honey Pot Genetics",
+      "url": "https://honeypotgenetics.com/",
+      "base": "https://honeypotgenetics.com",
+      "platform": "shopify",
+      "tier": "A"
+    },
+    {
+      "name": "HortiLab",
+      "url": "https://hortilab.nl/",
+      "base": "https://hortilab.nl",
+      "platform": "shopify",
+      "tier": "A"
+    },
+    {
+      "name": "Humboldt Seed Company",
+      "url": "https://humboldtseedcompany.com/",
+      "base": "https://humboldtseedcompany.com",
+      "platform": "magento",
+      "tier": "A"
+    },
+    {
+      "name": "Hybrid Department",
+      "url": "https://hybrid-department.com/",
+      "base": "https://hybrid-department.com",
+      "platform": "magento",
+      "tier": "A"
+    },
+    {
+      "name": "Hyp3rids",
+      "url": "https://hyp3rids.com/",
+      "base": "https://hyp3rids.com",
+      "platform": "woocommerce",
+      "tier": "A"
+    },
+    {
+      "name": "Irie Genetics",
+      "url": "https://iriegenetics.com/",
+      "base": "https://iriegenetics.com",
+      "platform": "woocommerce",
+      "tier": "A"
+    },
+    {
+      "name": "Jah Seeds",
+      "url": "https://jahseeds.ua/",
+      "base": "https://jahseeds.ua",
+      "platform": "magento",
+      "tier": "A"
+    },
+    {
+      "name": "Jungle Boys",
+      "url": "https://www.jungleboys.com/",
+      "base": "https://www.jungleboys.com",
+      "platform": "magento",
+      "tier": "A"
+    },
+    {
+      "name": "JYM Seeds",
+      "url": "https://www.jymseeds.com/",
+      "base": "https://www.jymseeds.com",
+      "platform": "magento",
+      "tier": "A"
+    },
+    {
+      "name": "Kalashnikov Seeds",
+      "url": "https://www.kalashnikov-seeds.com/",
+      "base": "https://www.kalashnikov-seeds.com",
+      "platform": "magento",
+      "tier": "A"
+    },
+    {
+      "name": "Krumme Gurken",
+      "url": "https://www.krumme-gurken.com/?bg_ref=oYBq6BZK7V/",
+      "base": "https://www.krumme-gurken.com",
+      "platform": "shopify",
+      "tier": "A"
+    },
+    {
+      "name": "La Chanvriere",
+      "url": "https://www.lachanvriere.com/",
+      "base": "https://www.lachanvriere.com",
+      "platform": "woocommerce",
+      "tier": "A"
+    },
+    {
+      "name": "La Devils Lettuce",
+      "url": "https://ladevilslettuce.com/?v=f24485ae434a",
+      "base": "https://ladevilslettuce.com",
+      "platform": "woocommerce",
+      "tier": "A"
+    },
+    {
+      "name": "La Maga",
+      "url": "https://lamaga.com/",
+      "base": "https://lamaga.com",
+      "platform": "magento",
+      "tier": "A"
+    },
+    {
+      "name": "Liberty Seeds",
+      "url": "https://libertyseeds.com/",
+      "base": "https://libertyseeds.com",
+      "platform": "magento",
+      "tier": "A"
+    },
+    {
+      "name": "Light Seeker Seeds",
+      "url": "https://lightseekerseeds.com/",
+      "base": "https://lightseekerseeds.com",
+      "platform": "shopify",
+      "tier": "A"
+    },
+    {
+      "name": "Lovin' in Her Eyes",
+      "url": "https://lovininhereyes.com/",
+      "base": "https://lovininhereyes.com",
+      "platform": "woocommerce",
+      "tier": "A"
+    },
+    {
+      "name": "Makka Seeds",
+      "url": "https://makkaseeds.com/",
+      "base": "https://makkaseeds.com",
+      "platform": "woocommerce",
+      "tier": "A"
+    },
+    {
+      "name": "Mendo Dope Farms",
+      "url": "https://mendodopefarms.com/",
+      "base": "https://mendodopefarms.com",
+      "platform": "magento",
+      "tier": "A"
+    },
+    {
+      "name": "Meraki Genetics",
+      "url": "https://merakigenetics.com/",
+      "base": "https://merakigenetics.com",
+      "platform": "shopify",
+      "tier": "A"
+    },
+    {
+      "name": "MGB Worldwide",
+      "url": "https://www.mgbworldwide.com/",
+      "base": "https://www.mgbworldwide.com",
+      "platform": "magento",
+      "tier": "A"
+    },
+    {
+      "name": "Microgenetica",
+      "url": "https://www.microgenetica.com/",
+      "base": "https://www.microgenetica.com",
+      "platform": "magento",
+      "tier": "A"
+    },
+    {
+      "name": "Nation Of Kamas",
+      "url": "https://nationofkamas.com/",
+      "base": "https://nationofkamas.com",
+      "platform": "shopify",
+      "tier": "A"
+    },
+    {
+      "name": "Natural Genetics Seeds",
+      "url": "http://naturalgeneticsseeds.com/",
+      "base": "http://naturalgeneticsseeds.com",
+      "platform": "woocommerce",
+      "tier": "A"
+    },
+    {
+      "name": "Nectar Seeds",
+      "url": "https://nectar-seeds.com/",
+      "base": "https://nectar-seeds.com",
+      "platform": "magento",
+      "tier": "A"
+    },
+    {
+      "name": "Next Generation Seed Company",
+      "url": "https://nextgenerationseedcompany.com/",
+      "base": "https://nextgenerationseedcompany.com",
+      "platform": "woocommerce",
+      "tier": "A"
+    },
+    {
+      "name": "Norden Seeds",
+      "url": "https://nordenseeds.com/",
+      "base": "https://nordenseeds.com",
+      "platform": "woocommerce",
+      "tier": "A"
+    },
+    {
+      "name": "NorStar Genetics",
+      "url": "https://norstargenetics.com/",
+      "base": "https://norstargenetics.com",
+      "platform": "woocommerce",
+      "tier": "A"
+    },
+    {
+      "name": "Ocean Grown Seeds",
+      "url": "https://www.oceangrownseeds.com/",
+      "base": "https://www.oceangrownseeds.com",
+      "platform": "magento",
+      "tier": "A"
+    },
+    {
+      "name": "Octo Genetica",
+      "url": "https://octogenetica.com/",
+      "base": "https://octogenetica.com",
+      "platform": "woocommerce",
+      "tier": "A"
+    },
+    {
+      "name": "Phat Panda",
+      "url": "https://phatpanda.com/",
+      "base": "https://phatpanda.com",
+      "platform": "magento",
+      "tier": "A"
+    },
+    {
+      "name": "Pheno Finder Seeds",
+      "url": "https://phenofinderseeds.com/",
+      "base": "https://phenofinderseeds.com",
+      "platform": "woocommerce",
+      "tier": "A"
+    },
+    {
+      "name": "Pheno Hound Genetics",
+      "url": "https://www.phenohoundgenetics.com/",
+      "base": "https://www.phenohoundgenetics.com",
+      "platform": "magento",
+      "tier": "A"
+    },
+    {
+      "name": "Pinehurst",
+      "url": "https://www.pinehurst.com/",
+      "base": "https://www.pinehurst.com",
+      "platform": "magento",
+      "tier": "A"
+    },
+    {
+      "name": "PNW Cultivar",
+      "url": "https://www.pnwcultivar.com/",
+      "base": "https://www.pnwcultivar.com",
+      "platform": "magento",
+      "tier": "A"
+    },
+    {
+      "name": "Precursor Genetics",
+      "url": "https://precursorgenetics.com/",
+      "base": "https://precursorgenetics.com",
+      "platform": "magento",
+      "tier": "A"
+    },
+    {
+      "name": "Pure Instinto",
+      "url": "https://pureinstinto.com/",
+      "base": "https://pureinstinto.com",
+      "platform": "woocommerce",
+      "tier": "A"
+    },
+    {
+      "name": "Purple City Genetics",
+      "url": "https://www.purplecitygenetics.com/",
+      "base": "https://www.purplecitygenetics.com",
+      "platform": "magento",
+      "tier": "A"
+    },
+    {
+      "name": "Quebec Cannabis Seeds",
+      "url": "https://quebeccannabisseeds.com/",
+      "base": "https://quebeccannabisseeds.com",
+      "platform": "magento",
+      "tier": "A"
+    },
+    {
+      "name": "Relic Seeds",
+      "url": "https://www.relicseeds.com/",
+      "base": "https://www.relicseeds.com",
+      "platform": "magento",
+      "tier": "A"
+    },
+    {
+      "name": "Seed Attics",
+      "url": "https://www.seedattics.com/",
+      "base": "https://www.seedattics.com",
+      "platform": "magento",
+      "tier": "A"
+    },
+    {
+      "name": "Sensi Seeds",
+      "url": "https://sensiseeds.com/",
+      "base": "https://sensiseeds.com",
+      "platform": "magento",
+      "tier": "A"
+    },
+    {
+      "name": "Shuga Seeds",
+      "url": "https://shugaseeds.com/",
+      "base": "https://shugaseeds.com",
+      "platform": "woocommerce",
+      "tier": "A"
+    },
+    {
+      "name": "Siam Seeds",
+      "url": "https://siamseeds.wordpress.com/",
+      "base": "https://siamseeds.wordpress.com",
+      "platform": "magento",
+      "tier": "A"
+    },
+    {
+      "name": "Silberhaze Genetics",
+      "url": "https://silberhazegenetics.com/",
+      "base": "https://silberhazegenetics.com",
+      "platform": "magento",
+      "tier": "A"
+    },
+    {
+      "name": "Silver River Seeds",
+      "url": "https://silverriverseeds.com/",
+      "base": "https://silverriverseeds.com",
+      "platform": "woocommerce",
+      "tier": "A"
+    },
+    {
+      "name": "Solfire Gardens",
+      "url": "https://solfiregardens.com/?v=8bcc25c96aa5",
+      "base": "https://solfiregardens.com",
+      "platform": "woocommerce",
+      "tier": "A"
+    },
+    {
+      "name": "Sub Rosa Gardens",
+      "url": "https://www.subrosagardens.com/",
+      "base": "https://www.subrosagardens.com",
+      "platform": "magento",
+      "tier": "A"
+    },
+    {
+      "name": "Sur Genetics",
+      "url": "https://sur-genetics.com/",
+      "base": "https://sur-genetics.com",
+      "platform": "magento",
+      "tier": "A"
+    },
+    {
+      "name": "Swordzman",
+      "url": "https://swordzman.com/",
+      "base": "https://swordzman.com",
+      "platform": "woocommerce",
+      "tier": "A"
+    },
+    {
+      "name": "TeamingWithTerps",
+      "url": "https://www.teamingwithterps.com/",
+      "base": "https://www.teamingwithterps.com",
+      "platform": "magento",
+      "tier": "A"
+    },
+    {
+      "name": "Terp Hogz",
+      "url": "https://terphogz.com/",
+      "base": "https://terphogz.com",
+      "platform": "woocommerce",
+      "tier": "A"
+    },
+    {
+      "name": "The Cali Connection",
+      "url": "https://thecaliconnection.com/",
+      "base": "https://thecaliconnection.com",
+      "platform": "magento",
+      "tier": "A"
+    },
+    {
+      "name": "The Captain",
+      "url": "https://thecaptain.com/",
+      "base": "https://thecaptain.com",
+      "platform": "woocommerce",
+      "tier": "A"
+    },
+    {
+      "name": "The Grass Menagerie",
+      "url": "https://thegrassmenagerie.org/",
+      "base": "https://thegrassmenagerie.org",
+      "platform": "magento",
+      "tier": "A"
+    },
+    {
+      "name": "The Northfire",
+      "url": "https://www.thenorthfireclothing.store/",
+      "base": "https://www.thenorthfireclothing.store",
+      "platform": "magento",
+      "tier": "A"
+    },
+    {
+      "name": "The Real Seed Company",
+      "url": "https://therealseedcompany.com/",
+      "base": "https://therealseedcompany.com",
+      "platform": "woocommerce",
+      "tier": "A"
+    },
+    {
+      "name": "Tiki Madman",
+      "url": "https://tikimadman.com/",
+      "base": "https://tikimadman.com",
+      "platform": "woocommerce",
+      "tier": "A"
+    },
+    {
+      "name": "Trich House",
+      "url": "https://trichhouse.myshopify.com/",
+      "base": "https://trichhouse.myshopify.com",
+      "platform": "shopify",
+      "tier": "A"
+    },
+    {
+      "name": "Twisty Seeds",
+      "url": "https://www.twistyseeds.com/",
+      "base": "https://www.twistyseeds.com",
+      "platform": "woocommerce",
+      "tier": "A"
+    },
+    {
+      "name": "Underworld Genetix",
+      "url": "https://underworldgenetix.com/",
+      "base": "https://underworldgenetix.com",
+      "platform": "magento",
+      "tier": "A"
+    },
+    {
+      "name": "United Seedbanks",
+      "url": "https://www.unitedseedbanks.com/",
+      "base": "https://www.unitedseedbanks.com",
+      "platform": "magento",
+      "tier": "A"
+    },
+    {
+      "name": "Useful Seeds",
+      "url": "https://www.usefulseeds.com/",
+      "base": "https://www.usefulseeds.com",
+      "platform": "woocommerce",
+      "tier": "A"
+    },
+    {
+      "name": "Whitehurst Genetix",
+      "url": "https://whitehurstgenetix.com/",
+      "base": "https://whitehurstgenetix.com",
+      "platform": "woocommerce",
+      "tier": "A"
+    },
+    {
+      "name": "Yankee Seed",
+      "url": "https://yankeeseed.com/",
+      "base": "https://yankeeseed.com",
+      "platform": "woocommerce",
+      "tier": "A"
+    },
+    {
+      "name": "Yellowhammer Genetics",
+      "url": "https://www.yellowhammergenetics.com/",
+      "base": "https://www.yellowhammergenetics.com",
+      "platform": "magento",
+      "tier": "A"
+    },
+    {
+      "name": "Yin Yang Seeds",
+      "url": "https://yinyangseeds.com/",
+      "base": "https://yinyangseeds.com",
+      "platform": "woocommerce",
+      "tier": "A"
+    },
+    {
+      "name": "Zambeza",
+      "url": "https://www.zambeza.com/",
+      "base": "https://www.zambeza.com",
+      "platform": "magento",
+      "tier": "A"
+    },
+    {
+      "name": "ZaZa Genetics",
+      "url": "https://www.zazagenetics.com/",
+      "base": "https://www.zazagenetics.com",
+      "platform": "magento",
+      "tier": "A"
+    },
+    {
+      "name": "DNA Genetics Seeds",
+      "url": "https://dnagenetics.com/",
+      "base": "https://dnagenetics.com",
+      "platform": "woocommerce",
+      "tier": "A"
+    },
+    {
+      "name": "Tastebudz Seeds",
+      "url": "https://tastebudzgenetics.com/",
+      "base": "https://tastebudzgenetics.com",
+      "platform": "woocommerce",
+      "tier": "A"
+    },
+    {
+      "name": "Crickets and Cicada Seeds",
+      "url": "https://cricketsandcicada.com/",
+      "base": "https://cricketsandcicada.com",
+      "platform": "woocommerce",
+      "tier": "A"
+    },
+    {
+      "name": "Finest Picker Genetics",
+      "url": "https://www.finestpicker.com/",
+      "base": "https://www.finestpicker.com",
+      "platform": "woocommerce",
+      "tier": "A"
+    },
+    {
+      "name": "Diamond Rock Genetics",
+      "url": "https://www.diamondrock.com/",
+      "base": "https://www.diamondrock.com",
+      "platform": "woocommerce",
+      "tier": "A"
+    },
+    {
+      "name": "Expert Seeds",
+      "url": "https://expertseedbank.com/",
+      "base": "https://expertseedbank.com",
+      "platform": "woocommerce",
+      "tier": "A"
+    },
+    {
+      "name": "Spice of Life Seeds",
+      "url": "https://spiceoflife.com/",
+      "base": "https://spiceoflife.com",
+      "platform": "woocommerce",
+      "tier": "A"
+    },
+    {
+      "name": "Sunleaf Seed Co",
+      "url": "https://sunleafseed.com/",
+      "base": "https://sunleafseed.com",
+      "platform": "woocommerce",
+      "tier": "A"
+    },
+    {
+      "name": "Tempest Grove Genetics",
+      "url": "https://www.tempestgrove.com/",
+      "base": "https://www.tempestgrove.com",
+      "platform": "woocommerce",
+      "tier": "A"
+    },
+    {
+      "name": "00 Seeds Bank",
+      "url": "https://00seeds.com/",
+      "base": "https://00seeds.com",
+      "platform": "woocommerce",
+      "tier": "A"
+    },
+    {
+      "name": "Reggae Seeds",
+      "url": "https://www.reggaeseeds.com/",
+      "base": "https://www.reggaeseeds.com",
+      "tier": "A"
+    },
+    {
+      "name": "ACE Seeds",
+      "url": "https://www.aceseeds.org/",
+      "base": "https://www.aceseeds.org",
+      "tier": "A"
+    },
+    {
+      "name": "Bohemiaseeds",
+      "url": "https://bohemiaseeds.com/",
+      "base": "https://bohemiaseeds.com",
+      "tier": "A"
+    },
+    {
+      "name": "Cosmic Wisdom",
+      "url": "https://cosmicwisdom.com/",
+      "base": "https://cosmicwisdom.com",
+      "tier": "A"
+    },
+    {
+      "name": "DutchFem",
+      "url": "https://dutchfem.com/",
+      "base": "https://dutchfem.com",
+      "tier": "A"
+    },
+    {
+      "name": "Evermore Genetics",
+      "url": "https://evermoregenetics.com/",
+      "base": "https://evermoregenetics.com",
+      "tier": "A"
+    },
+    {
+      "name": "Freestone Genetics",
+      "url": "https://www.freestonegenetics.com/",
+      "base": "https://www.freestonegenetics.com",
+      "tier": "A"
+    },
+    {
+      "name": "G13 Labs",
+      "url": "https://www.g13labs.com/",
+      "base": "https://www.g13labs.com",
+      "tier": "A"
+    },
+    {
+      "name": "Great Lakes Genetics",
+      "url": "https://greatlakesgenetics.com/",
+      "base": "https://greatlakesgenetics.com",
+      "tier": "A"
+    },
+    {
+      "name": "Higher Perspective Genetics",
+      "url": "https://higherperspectivegenetics.com/",
+      "base": "https://higherperspectivegenetics.com",
+      "tier": "A"
+    },
+    {
+      "name": "Lit Farms",
+      "url": "https://litfarms.com/",
+      "base": "https://litfarms.com",
+      "tier": "A"
+    },
+    {
+      "name": "Neptune Seed Bank",
+      "url": "https://neptuneseedbank.com/",
+      "base": "https://neptuneseedbank.com",
+      "tier": "A"
+    },
+    {
+      "name": "Seattle Chronic Seeds",
+      "url": "https://www.seattlechronicseeds.com/",
+      "base": "https://www.seattlechronicseeds.com",
+      "tier": "A"
+    },
+    {
+      "name": "Serious Seeds",
+      "url": "https://www.seriousseeds.com/",
+      "base": "https://www.seriousseeds.com",
+      "tier": "A"
+    },
+    {
+      "name": "Sticky Finger Seeds",
+      "url": "https://stickyfingerseeds.com/",
+      "base": "https://stickyfingerseeds.com",
+      "tier": "A"
+    },
+    {
+      "name": "Universally Seeded",
+      "url": "https://universallyseeded.com/",
+      "base": "https://universallyseeded.com",
+      "tier": "A"
+    }
+  ]
+}

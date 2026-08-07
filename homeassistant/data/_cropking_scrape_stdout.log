@@ -1,0 +1,21 @@
+cropking: sitemap cache 3990 URLs from dsc_strains_cropking.sitemap_urls.json
+cropking: 3990 urls queued; resume done=285 dump_items=285
+  fetching first pending: https://www.cropkingseeds.com/autoflowering-seeds/mint-melon-autoflowering-marijuana-seeds/
+  ok #1 idx=242/3990 name='Mint Melon Autoflower'
+  ok #2 idx=243/3990 name='Headband Autoflower'
+  ok #3 idx=244/3990 name='Sour Flower Autoflower'
+  ok #10 idx=252/3990 name='Strawberry Cough Autoflower'
+  ok #20 idx=262/3990 name='Killer Lemonade Strain Autoflowering'
+  ok #30 idx=272/3990 name='Banana'
+  ok #40 idx=282/3990 name='Cookie Dog'
+  ok #50 idx=292/3990 name='Royal Kush'
+  checkpoint items=335 done=335 this_run=50 rate=0.79/s idx=292/3990
+
+--- hidden durable start 2026-08-07T17:18:12Z ---
+cropking: sitemap cache 3990 URLs from dsc_strains_cropking.sitemap_urls.json
+cropking: 3990 urls queued; resume done=485 dump_items=485
+  fetching first pending: https://www.cropkingseeds.com/feminized-seeds/blueberry-lemonade-strain-feminized-marijuana-seeds/
+  ok #1 idx=443/3990 name='Blueberry Lemonade'
+  ok #2 idx=444/3990 name='Blueberry Mac Feminized'
+  ok #3 idx=445/3990 name='Blueberry Mojito Feminized'
+  ok #10 idx=452/3990 name='Bogeyman Feminized'

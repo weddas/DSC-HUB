@@ -1,0 +1,102 @@
+Tier B first half pass 1/1: slice=36 todo=35 (queue partial=False tier_B=72)
+
+=== Afghan Selection https://www.afghanselection.com/ ===
+  RESUME bank_afghan_selection items=4
+
+=== Breeders Choice https://breederschoice.com/ ===
+  bank_breeders_choice: discovering sitemaps…
+  bank_breeders_choice: sitemap products=0
+  bank_breeders_choice: home_link_scan candidates=0
+
+=== BSB Genetics https://www.bsbgenetics.com/ ===
+  bank_bsb_genetics: discovering sitemaps…
+  bank_bsb_genetics: sitemap products=64
+  bank_bsb_genetics checkpoint items=20 idx=20/64
+  bank_bsb_genetics checkpoint items=40 idx=40/64
+  bank_bsb_genetics checkpoint items=60 idx=60/64
+  OK bank_bsb_genetics items=64 method=sitemap_html
+
+=== BSF Seeds https://bsfseeds.com/en/ ===
+  bank_bsf_seeds: discovering sitemaps…
+  bank_bsf_seeds: sitemap products=0
+  bank_bsf_seeds: home_link_scan candidates=30
+  OK bank_bsf_seeds items=30 method=home_link_scan
+
+=== Cannabella Genetics https://www.cannabellagenetics.com/ ===
+  bank_cannabella_genetics: discovering sitemaps…
+  bank_cannabella_genetics: sitemap products=38
+
+=== Chef's Genetix https://chefsgenetix.com/ ===
+
+=== Dawg Star https://dawgstar.com/ ===
+  bank_dawg_star: discovering sitemaps…
+  bank_dawg_star: sitemap products=0
+  bank_dawg_star: home_link_scan candidates=0
+
+=== Defiant Creations https://defiantcreations.com/ ===
+  bank_defiant_creations: discovering sitemaps…
+  bank_defiant_creations: sitemap products=0
+  bank_defiant_creations: home_link_scan candidates=0
+
+=== Delicious Seeds https://www.deliciousseeds.com/ ===
+  bank_delicious_seeds: discovering sitemaps…
+  bank_delicious_seeds: sitemap products=0
+  bank_delicious_seeds: home_link_scan candidates=21
+  OK bank_delicious_seeds items=21 method=home_link_scan
+
+=== Dr. Blaze https://drblaze.com/ ===
+  bank_dr_blaze: discovering sitemaps…
+  bank_dr_blaze: sitemap products=0
+  bank_dr_blaze: home_link_scan candidates=0
+
+=== Dr. Greenthumb https://drgreenthumb.com/ ===
+  bank_dr_greenthumb: discovering sitemaps…
+  bank_dr_greenthumb: sitemap products=0
+  bank_dr_greenthumb: home_link_scan candidates=30
+  OK bank_dr_greenthumb items=30 method=home_link_scan
+
+=== East Coast Cultivars https://www.eastcoastcultivars.com/ ===
+  bank_east_coast_cultivars: discovering sitemaps…
+  bank_east_coast_cultivars: sitemap products=0
+  bank_east_coast_cultivars: home_link_scan candidates=0
+
+=== Elevated Patriot https://elevatedpatriot.com/password ===
+
+=== Energenetics Old World Farm https://energenetics-old-world-farm.com/ ===
+  bank_energenetics_old_world_farm: discovering sitemaps…
+  bank_energenetics_old_world_farm: sitemap products=0
+  bank_energenetics_old_world_farm: home_link_scan candidates=16
+  OK bank_energenetics_old_world_farm items=16 method=home_link_scan
+
+=== Finola http://finola.fi/ ===
+
+=== Flying Dutchmen https://flyingdutchmen.com/en/ ===
+  bank_flying_dutchmen: discovering sitemaps…
+  bank_flying_dutchmen: sitemap products=0
+  bank_flying_dutchmen: home_link_scan candidates=30
+  OK bank_flying_dutchmen items=28 method=home_link_scan
+
+=== Flying Genetics https://flyinggenetics.com/ ===
+  bank_flying_genetics: discovering sitemaps…
+  bank_flying_genetics: sitemap products=0
+  bank_flying_genetics: home_link_scan candidates=1
+  OK bank_flying_genetics items=1 method=home_link_scan
+
+=== Freedom Seeds https://freedomseeds.com/ ===
+  bank_freedom_seeds: discovering sitemaps…
+  bank_freedom_seeds: sitemap products=0
+  bank_freedom_seeds: home_link_scan candidates=30
+  OK bank_freedom_seeds items=30 method=home_link_scan
+
+=== Gnomes Garden https://gnomesgarden.com/ ===
+  bank_gnomes_garden: discovering sitemaps…
+  bank_gnomes_garden: sitemap products=0
+  bank_gnomes_garden: home_link_scan candidates=0
+
+=== Green Hornet https://greenhornet.com/ ===
+  bank_green_hornet: discovering sitemaps…
+  bank_green_hornet: sitemap products=0
+  bank_green_hornet: home_link_scan candidates=0
+
+=== Greenfield Seeds https://greenfieldseeds.com/ ===
+  bank_greenfield_seeds: discovering sitemaps…

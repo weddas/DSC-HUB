@@ -55,8 +55,10 @@ def _flowering(row: dict):
 def build_strains_from_sqlite(db_path: Path, *, cap: int = STRAIN_CAP) -> dict | None:
     if not db_path.exists():
         return None
-    conn = sqlite3.connect(db_path)
+    conn = sqlite3.connect(str(db_path), timeout=120)
     conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA busy_timeout=120000")
+    conn.execute("PRAGMA query_only=ON")
     rows: list[dict] = []
     seen: dict[str, int] = {}
 
@@ -128,68 +130,82 @@ def build_strains_from_sqlite(db_path: Path, *, cap: int = STRAIN_CAP) -> dict |
         except Exception as exc:  # noqa: BLE001
             print("yaml skip", exc)
 
-    for row in conn.execute(
-        "SELECT name_norm, name, type, summary_json, curated FROM strain_canonical "
-        "ORDER BY curated DESC, name"
-    ):
+    # One batched query (avoids N+1 against 50k+ canonical × 330k chem on NAS SQLite).
+    sql = """
+    WITH chem AS (
+      SELECT name_norm, thc_min, thc_max, cbd_min, cbd_max, top_terpenes_json,
+             ROW_NUMBER() OVER (
+               PARTITION BY name_norm
+               ORDER BY (top_terpenes_json IS NOT NULL) DESC, id
+             ) AS rn
+      FROM chemistry_profile
+      WHERE name_norm IS NOT NULL AND name_norm != ''
+    ),
+    grow AS (
+      SELECT name_norm, height_cm_min, height_cm_max, flowering_days_min, flowering_days_max,
+             ROW_NUMBER() OVER (PARTITION BY name_norm ORDER BY id) AS rn
+      FROM grow_trait
+    ),
+    variant AS (
+      SELECT name_norm, breeder,
+             ROW_NUMBER() OVER (PARTITION BY name_norm ORDER BY id) AS rn
+      FROM strain_variant
+    )
+    SELECT c.name_norm, c.name, c.type, c.summary_json, c.curated,
+           ch.thc_min, ch.thc_max, ch.cbd_min, ch.cbd_max, ch.top_terpenes_json,
+           g.height_cm_min, g.height_cm_max, g.flowering_days_min, g.flowering_days_max,
+           v.breeder
+    FROM strain_canonical c
+    LEFT JOIN chem ch ON ch.name_norm = c.name_norm AND ch.rn = 1
+    LEFT JOIN grow g ON g.name_norm = c.name_norm AND g.rn = 1
+    LEFT JOIN variant v ON v.name_norm = c.name_norm AND v.rn = 1
+    ORDER BY c.curated DESC, c.name
+    """
+    for row in conn.execute(sql):
+        if len(rows) >= cap and not row["curated"]:
+            break
         summary = {}
         try:
             summary = json.loads(row["summary_json"] or "{}")
         except json.JSONDecodeError:
             summary = {}
-        chem = conn.execute(
-            "SELECT thc_min, thc_max, cbd_min, cbd_max, top_terpenes_json FROM chemistry_profile "
-            "WHERE name_norm=? ORDER BY (top_terpenes_json IS NOT NULL) DESC LIMIT 1",
-            (row["name_norm"],),
-        ).fetchone()
         thc_range = cbd_range = None
         tops: list = []
-        if chem:
-            if chem["thc_min"] is not None and chem["thc_max"] is not None:
-                thc_range = [chem["thc_min"], chem["thc_max"]]
-            if chem["cbd_min"] is not None and chem["cbd_max"] is not None:
-                cbd_range = [chem["cbd_min"], chem["cbd_max"]]
-            if chem["top_terpenes_json"]:
-                try:
-                    tops = json.loads(chem["top_terpenes_json"]) or []
-                except json.JSONDecodeError:
-                    tops = []
-        grow = conn.execute(
-            "SELECT height_cm_min, height_cm_max, flowering_days_min, flowering_days_max "
-            "FROM grow_trait WHERE name_norm=? LIMIT 1",
-            (row["name_norm"],),
-        ).fetchone()
+        if row["thc_min"] is not None and row["thc_max"] is not None:
+            thc_range = [row["thc_min"], row["thc_max"]]
+        if row["cbd_min"] is not None and row["cbd_max"] is not None:
+            cbd_range = [row["cbd_min"], row["cbd_max"]]
+        if row["top_terpenes_json"]:
+            try:
+                tops = json.loads(row["top_terpenes_json"]) or []
+            except json.JSONDecodeError:
+                tops = []
         height_cm = flowering_days = None
-        if grow:
-            if grow["height_cm_min"] is not None:
-                if (
-                    grow["height_cm_max"] is not None
-                    and grow["height_cm_max"] != grow["height_cm_min"]
-                ):
-                    height_cm = [grow["height_cm_min"], grow["height_cm_max"]]
-                else:
-                    height_cm = grow["height_cm_min"]
-            if grow["flowering_days_min"] is not None:
-                if (
-                    grow["flowering_days_max"] is not None
-                    and grow["flowering_days_max"] != grow["flowering_days_min"]
-                ):
-                    flowering_days = [
-                        int(grow["flowering_days_min"]),
-                        int(grow["flowering_days_max"]),
-                    ]
-                else:
-                    flowering_days = int(grow["flowering_days_min"])
-        variant = conn.execute(
-            "SELECT breeder FROM strain_variant WHERE name_norm=? LIMIT 1",
-            (row["name_norm"],),
-        ).fetchone()
+        if row["height_cm_min"] is not None:
+            if (
+                row["height_cm_max"] is not None
+                and row["height_cm_max"] != row["height_cm_min"]
+            ):
+                height_cm = [row["height_cm_min"], row["height_cm_max"]]
+            else:
+                height_cm = row["height_cm_min"]
+        if row["flowering_days_min"] is not None:
+            if (
+                row["flowering_days_max"] is not None
+                and row["flowering_days_max"] != row["flowering_days_min"]
+            ):
+                flowering_days = [
+                    int(row["flowering_days_min"]),
+                    int(row["flowering_days_max"]),
+                ]
+            else:
+                flowering_days = int(row["flowering_days_min"])
         add(
             {
                 "id": _slug("strain", row["name"]),
                 "name": row["name"],
                 "type": row["type"] or summary.get("type"),
-                "breeder": variant["breeder"] if variant else None,
+                "breeder": row["breeder"],
                 "source": "sqlite",
                 "has_chemistry": bool(tops or thc_range or cbd_range),
                 "top_terpenes": tops[:3] if isinstance(tops, list) else [],
@@ -201,7 +217,6 @@ def build_strains_from_sqlite(db_path: Path, *, cap: int = STRAIN_CAP) -> dict |
                 "curated": bool(row["curated"]),
             }
         )
-
     conn.close()
     return {
         "schema_version": 2,

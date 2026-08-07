@@ -34,6 +34,8 @@ void DscFleetSetup::set_role(const std::string &role) {
     this->role_ = FleetRole::CONTROL;
   else if (role == "pot")
     this->role_ = FleetRole::POT;
+  else if (role == "bridge")
+    this->role_ = FleetRole::BRIDGE;
   else
     this->role_ = FleetRole::HUB;
 }
@@ -80,6 +82,14 @@ std::string DscFleetSetup::panel_mac_str() const {
   return std::string(b);
 }
 
+std::string DscFleetSetup::bridge_mac_str() const {
+  char b[18];
+  if (!this->bridge_mac_valid_)
+    return "";
+  mac_to_str_(this->bridge_mac_, b);
+  return std::string(b);
+}
+
 std::string DscFleetSetup::make_setup_ssid_() const {
   uint8_t mac[6];
   get_mac_address_raw(mac);
@@ -105,6 +115,9 @@ bool DscFleetSetup::load_nvs_() {
   mlen = 6;
   if (nvs_get_blob(h, "panel_mac", this->panel_mac_, &mlen) == ESP_OK && mlen == 6)
     this->panel_mac_valid_ = true;
+  mlen = 6;
+  if (nvs_get_blob(h, "bridge_mac", this->bridge_mac_, &mlen) == ESP_OK && mlen == 6)
+    this->bridge_mac_valid_ = true;
   for (size_t i = 0; i < this->peers_.size(); i++) {
     char key[12];
     snprintf(key, sizeof(key), "peer%u", (unsigned) i);
@@ -128,6 +141,8 @@ bool DscFleetSetup::save_nvs_() {
     nvs_set_blob(h, "hub_mac", this->hub_mac_, 6);
   if (this->panel_mac_valid_)
     nvs_set_blob(h, "panel_mac", this->panel_mac_, 6);
+  if (this->bridge_mac_valid_)
+    nvs_set_blob(h, "bridge_mac", this->bridge_mac_, 6);
   for (size_t i = 0; i < this->peers_.size(); i++) {
     char key[12];
     snprintf(key, sizeof(key), "peer%u", (unsigned) i);
@@ -159,6 +174,7 @@ void DscFleetSetup::apply_espnow_peers() {
   };
   if (this->role_ == FleetRole::HUB) {
     add(this->panel_mac_, this->panel_mac_valid_);
+    add(this->bridge_mac_, this->bridge_mac_valid_);
     for (auto &p : this->peers_) {
       if (p.present)
         add(p.mac, true);
@@ -187,6 +203,7 @@ void DscFleetSetup::factory_reset_fleet() {
   memset(this->sta_pass_, 0, sizeof(this->sta_pass_));
   this->hub_mac_valid_ = false;
   this->panel_mac_valid_ = false;
+  this->bridge_mac_valid_ = false;
   for (auto &p : this->peers_)
     p = PeerSlot{};
   nvs_handle_t h;
@@ -408,6 +425,9 @@ void DscFleetSetup::handle_hub_api_(AsyncWebServerRequest *request, const std::s
     if (role == "control") {
       memcpy(this->panel_mac_, mac, 6);
       this->panel_mac_valid_ = true;
+    } else if (role == "bridge") {
+      memcpy(this->bridge_mac_, mac, 6);
+      this->bridge_mac_valid_ = true;
     }
     this->save_nvs_();
     this->defer([this]() { this->apply_espnow_peers(); });
@@ -620,14 +640,26 @@ bool DscFleetSetup::satellite_pull_config_() {
 bool DscFleetSetup::satellite_post_hello_() {
   char mac_s[18];
   uint8_t mac[6];
-  get_mac_address_raw(mac);
+  // Bridge SoftAP MAC is the fleet peer / Anchor BSSID identity.
+  if (this->role_ == FleetRole::BRIDGE) {
+    if (esp_wifi_get_mac(WIFI_IF_AP, mac) != ESP_OK)
+      get_mac_address_raw(mac);
+  } else {
+    get_mac_address_raw(mac);
+  }
   mac_to_str_(mac, mac_s);
-  const char *role = this->role_ == FleetRole::CONTROL ? "control" : "pot";
+  const char *role = this->role_ == FleetRole::CONTROL  ? "control"
+                     : this->role_ == FleetRole::BRIDGE ? "bridge"
+                     : this->role_ == FleetRole::POT    ? "pot"
+                                                        : "pot";
   char name[24];
+  memset(name, 0, sizeof(name));
   if (!this->device_name_.empty())
     strncpy(name, this->device_name_.c_str(), sizeof(name) - 1);
   else if (this->role_ == FleetRole::POT)
     snprintf(name, sizeof(name), "pot%u", (unsigned) this->pot_index_);
+  else if (this->role_ == FleetRole::BRIDGE)
+    strncpy(name, "bridge", sizeof(name) - 1);
   else
     strncpy(name, "control", sizeof(name) - 1);
   char json[160];
@@ -728,7 +760,10 @@ void DscFleetSetup::dump_config() {
   ESP_LOGCONFIG(TAG, "DSC fleet setup:");
   ESP_LOGCONFIG(TAG, "  Enabled: %s", YESNO(this->enabled_));
   ESP_LOGCONFIG(TAG, "  Role: %s",
-                this->role_ == FleetRole::HUB ? "hub" : (this->role_ == FleetRole::CONTROL ? "control" : "pot"));
+                this->role_ == FleetRole::HUB       ? "hub"
+                : this->role_ == FleetRole::CONTROL ? "control"
+                : this->role_ == FleetRole::BRIDGE  ? "bridge"
+                                                    : "pot");
   ESP_LOGCONFIG(TAG, "  Net mode: %u", (unsigned) this->net_mode_);
   ESP_LOGCONFIG(TAG, "  Setup AP prefix: %s", this->setup_ap_prefix_.c_str());
 }

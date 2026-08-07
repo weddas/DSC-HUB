@@ -1,0 +1,61 @@
+  https://dnagenetics.com/product-sitemap.xml -> accepted 85
+dna: sitemap total 85 (cached dsc_strains_dna.sitemap_urls.json)
+dna: 85 urls queued; resume done=0 dump_items=0 skipped=0
+  ok #1 idx=1/85 name='Tangielope Kush Reg Cannabis'
+  ok #2 idx=2/85 name='3Peat Fem Cannabis'
+  ok #3 idx=3/85 name='Auto bahn Cannabis'
+  dna checkpoint items=20 done=20 skipped=0 this_run=20 rate=0.58/s idx=20/85
+  ok #25 idx=25/85 name='Gaz Money THCa Flower'
+  dna checkpoint items=40 done=40 skipped=0 this_run=40 rate=0.59/s idx=40/85
+  ok #50 idx=50/85 name='Kosher Pie Cannabis'
+  dna checkpoint items=60 done=60 skipped=0 this_run=60 rate=0.58/s idx=60/85
+  ok #75 idx=75/85 name='The\xa0Stinking\xa0Rose Fem Cannabis'
+  dna checkpoint items=80 done=80 skipped=0 this_run=80 rate=0.59/s idx=80/85
+dna staging: {
+  "family": "bank_dna",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_dna.sqlite3",
+  "count": 80,
+  "bulk": false,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 80,
+    "strain_variant": 80,
+    "chemistry_profile": 0,
+    "grow_trait": 66,
+    "entity_link": 0,
+    "attribute_kv": 1154,
+    "raw_record": 80,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 18,
+    "source_record": 1
+  }
+}
+  dna checkpoint items=85 done=85 skipped=0 this_run=85 rate=0.57/s idx=85/85
+wrote dsc_strains_dna.json count=85 skipped=0 errors=0
+dna staging: {
+  "family": "bank_dna",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_dna.sqlite3",
+  "count": 85,
+  "bulk": false,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 85,
+    "strain_variant": 85,
+    "chemistry_profile": 0,
+    "grow_trait": 69,
+    "entity_link": 0,
+    "attribute_kv": 1223,
+    "raw_record": 85,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 18,
+    "source_record": 1
+  }
+}

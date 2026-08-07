@@ -1,0 +1,38 @@
+2026-08-07T18:16:46Z batched resume start pid=42248 bank=cropking batch=50
+2026-08-07T18:16:47Z round 1 sitemap=3990 done=1105 dump=1105
+cropking: sitemap cache 3990 URLs from dsc_strains_cropking.sitemap_urls.json
+cropking: sitemap=3990 pending=50 resume done=1105 dump_items=1105 batch_limit=50
+  fetching first pending: https://www.cropkingseeds.com/new-strains/marmalade-feminized-seeds/
+  ok #1 idx=1/50 name='Marmalade Feminized'
+  ok #2 idx=2/50 name='Maroon Baboon Feminized'
+  ok #3 idx=3/50 name='Mars OG Feminized'
+  ok #10 idx=10/50 name='Melon Baller Feminized'
+  checkpoint items=1115 done=1115 this_run=10 rate=0.35/s batch=10/50
+  ok #20 idx=20/50 name='Midnight Climax Feminized'
+  checkpoint items=1125 done=1125 this_run=20 rate=0.26/s batch=20/50
+  ok #30 idx=30/50 name='Milk Bone Strain Feminized'
+  checkpoint items=1135 done=1135 this_run=30 rate=0.21/s batch=30/50
+  ok #40 idx=40/50 name='Mitten Cake Batter Feminized'
+  checkpoint items=1145 done=1145 this_run=40 rate=0.19/s batch=40/50
+  ok #50 idx=50/50 name='Momochi Feminized'
+  checkpoint items=1155 done=1155 this_run=50 rate=0.18/s batch=50/50
+wrote dsc_strains_cropking.json count=1155 errors=1
+2026-08-07T18:21:28Z round 1 end done=1155 dump=1155 delta=50
+2026-08-07T18:21:30Z round 2 sitemap=3990 done=1155 dump=1155
+cropking: sitemap cache 3990 URLs from dsc_strains_cropking.sitemap_urls.json
+cropking: sitemap=3990 pending=50 resume done=1155 dump_items=1155 batch_limit=50
+  fetching first pending: https://www.cropkingseeds.com/feminized-seeds/mona-lisa-strain/
+  ok #1 idx=1/50 name='Mona Lisa'
+  ok #2 idx=2/50 name='Money Maker'
+  ok #3 idx=3/50 name='Monkey Balls Feminized'
+  ok #10 idx=10/50 name='Moonraker Feminized'
+  checkpoint items=1165 done=1165 this_run=10 rate=0.15/s batch=10/50
+  ok #20 idx=20/50 name='Oil Tanker'
+  checkpoint items=1175 done=1175 this_run=20 rate=0.13/s batch=20/50
+  ok #30 idx=30/50 name='Oreo Cookies Feminized'
+  checkpoint items=1185 done=1185 this_run=30 rate=0.14/s batch=30/50
+  ok #40 idx=40/50 name='Motorbreath 15'
+  checkpoint items=1195 done=1195 this_run=40 rate=0.14/s batch=40/50
+  ok #50 idx=50/50 name="King's Stash Feminized"
+  checkpoint items=1205 done=1205 this_run=50 rate=0.16/s batch=50/50
+wrote dsc_strains_cropking.json count=1205 errors=1

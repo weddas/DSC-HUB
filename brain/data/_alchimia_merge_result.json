@@ -1,0 +1,28 @@
+{
+  "ok": true,
+  "family": "alchimia",
+  "by_source": {
+    "alchimia": {
+      "source": [
+        "alchimia",
+        "alchimia"
+      ],
+      "variant": 3037,
+      "chem": 2948,
+      "grow": 3043,
+      "links": 2948,
+      "canonical": null,
+      "canonical_note": [
+        "curated",
+        "name",
+        "name_norm",
+        "summary_json",
+        "type",
+        "updated_at"
+      ]
+    }
+  },
+  "entity_link_merged": 2948,
+  "built_at": "2026-08-07T17:29:14Z",
+  "note": "batched merge; entity_link finished after leafly unlock"
+}

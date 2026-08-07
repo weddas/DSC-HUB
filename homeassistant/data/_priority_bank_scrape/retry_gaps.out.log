@@ -1,0 +1,53 @@
+retry start 2026-08-07T20:21:55Z
+
+===== retry herbies =====
+herbies: sitemap cache 4142 from dsc_strains_herbies.sitemap_urls.json
+herbies: queued 4142 product URLs
+  herbies checkpoint items=4140 this_run=5 rate=0.27/s idx=3035/4142
+herbies staging: {
+  "family": "bank_herbies",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_herbies.sqlite3",
+  "count": 4140,
+  "bulk": false,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 3818,
+    "strain_variant": 3939,
+    "chemistry_profile": 953,
+    "grow_trait": 3041,
+    "entity_link": 953,
+    "attribute_kv": 11981,
+    "raw_record": 4140,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 7,
+    "source_record": 1
+  }
+}
+wrote dsc_strains_herbies.json count=4142
+herbies staging: {
+  "family": "bank_herbies",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_herbies.sqlite3",
+  "count": 4142,
+  "bulk": false,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 3820,
+    "strain_variant": 3941,
+    "chemistry_profile": 953,
+    "grow_trait": 3042,
+    "entity_link": 953,
+    "attribute_kv": 11988,
+    "raw_record": 4142,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 7,
+    "source_record": 1
+  }
+}

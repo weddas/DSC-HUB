@@ -1,0 +1,10 @@
+
+[1] 02:10:34 pri=True cpu=14.8 ccWait=True | 02:08:47 MERGE_START cannabis_intelligence | cc=2026-08-08 02:05:33 ROUND 2 open_master
+[2] 02:11:04 pri=True cpu=14.8 ccWait=True | 02:08:47 MERGE_START cannabis_intelligence | cc=2026-08-08 02:05:33 ROUND 2 open_master
+[3] 02:11:34 pri=True cpu=14.8 ccWait=True | 02:08:47 MERGE_START cannabis_intelligence | cc=2026-08-08 02:05:33 ROUND 2 open_master
+[4] 02:12:05 pri=True cpu=14.8 ccWait=True | 02:08:47 MERGE_START cannabis_intelligence | cc=2026-08-08 02:05:33 ROUND 2 open_master
+[5] 02:12:35 pri=True cpu=14.9 ccWait=True | 02:08:47 MERGE_START cannabis_intelligence | cc=2026-08-08 02:05:33 ROUND 2 open_master
+[6] 02:13:05 pri=True cpu=14.9 ccWait=True | 02:08:47 MERGE_START cannabis_intelligence | cc=2026-08-08 02:05:33 ROUND 2 open_master
+[7] 02:13:35 pri=True cpu=14.9 ccWait=True | 02:08:47 MERGE_START cannabis_intelligence | cc=2026-08-08 02:05:33 ROUND 2 open_master
+[8] 02:14:05 pri=False cpu=0.0 ccWait=False | 02:08:47 MERGE_START cannabis_intelligence | cc=2026-08-08 02:05:33 ROUND 2 open_master
+RESTARTED_CC_WAITER

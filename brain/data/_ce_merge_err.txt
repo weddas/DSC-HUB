@@ -1,0 +1,4 @@
+  File "y:\Digital", line 1
+    start Stealth Care\Projects\DSC-HUB\scripts\_mon.txt 
+                       ^
+SyntaxError: unexpected character after line continuation character

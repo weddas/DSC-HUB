@@ -1,0 +1,100 @@
+  https://dutch-passion.com/1_en_0_sitemap.xml -> accepted 174
+dutchpassion: sitemap total 174 (cached dsc_strains_dutchpassion.sitemap_urls.json)
+dutchpassion: 174 urls queued; resume done=0 dump_items=0 skipped=0
+  fail https://dutch-passion.com/en/cannabis-seeds/amsterdam-amnesia: HTTP 429 for https://dutch-passion.com/en/cannabis-seeds/amsterdam-amnesia
+  ok #1 idx=2/174 name='Auto Elephant'
+  ok #2 idx=3/174 name='Auto AK Triple Haze'
+  ok #3 idx=4/174 name='Auto Banana Blaze®'
+  fail https://dutch-passion.com/en/cannabis-seeds/auto-cinderella-jack: HTTP 429 for https://dutch-passion.com/en/cannabis-seeds/auto-cinderella-jack
+  fail https://dutch-passion.com/en/cannabis-seeds/auto-colorado-cookies: HTTP 429 for https://dutch-passion.com/en/cannabis-seeds/auto-colorado-cookies
+  dutchpassion checkpoint items=20 done=20 skipped=0 this_run=20 rate=0.70/s idx=23/174
+  ok #25 idx=28/174 name='Auto Mimosa Punch'
+  fail https://dutch-passion.com/en/cannabis-seeds/auto-thc-victory: HTTP 429 for https://dutch-passion.com/en/cannabis-seeds/auto-thc-victory
+  fail https://dutch-passion.com/en/cannabis-seeds/auto-think-different: HTTP 429 for https://dutch-passion.com/en/cannabis-seeds/auto-think-different
+  dutchpassion checkpoint items=40 done=40 skipped=0 this_run=40 rate=0.72/s idx=45/174
+  ok #50 idx=55/174 name='CBD Auto Blackberry Kush®'
+  dutchpassion checkpoint items=60 done=60 skipped=0 this_run=60 rate=0.74/s idx=65/174
+  ok #75 idx=80/174 name='Green Papaya'
+  dutchpassion checkpoint items=80 done=80 skipped=0 this_run=80 rate=0.76/s idx=85/174
+dutchpassion staging: {
+  "family": "bank_dutchpassion",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_dutchpassion.sqlite3",
+  "count": 80,
+  "bulk": false,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 80,
+    "strain_variant": 80,
+    "chemistry_profile": 0,
+    "grow_trait": 44,
+    "entity_link": 0,
+    "attribute_kv": 887,
+    "raw_record": 80,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 12,
+    "source_record": 1
+  }
+}
+  fail https://dutch-passion.com/en/cannabis-seeds/orange-bud: HTTP 429 for https://dutch-passion.com/en/cannabis-seeds/orange-bud
+  fail https://dutch-passion.com/en/cannabis-seeds/orange-bud-20: HTTP 429 for https://dutch-passion.com/en/cannabis-seeds/orange-bud-20
+  ok #100 idx=107/174 name='Pineapple Poison'
+  dutchpassion checkpoint items=100 done=100 skipped=0 this_run=100 rate=0.75/s idx=107/174
+  dutchpassion checkpoint items=120 done=120 skipped=0 this_run=120 rate=0.76/s idx=127/174
+  ok #125 idx=132/174 name='Auto Think Big®'
+  dutchpassion checkpoint items=140 done=140 skipped=0 this_run=140 rate=0.77/s idx=147/174
+  ok #150 idx=157/174 name='Jorge’s Diamonds #1®'
+  fail https://dutch-passion.com/en/discontinued-cannabis-strains/outlaw-amnesia: HTTP 429 for https://dutch-passion.com/en/discontinued-cannabis-strains/outlaw-amnesia
+  fail https://dutch-passion.com/en/discontinued-cannabis-strains/skywalker: HTTP 429 for https://dutch-passion.com/en/discontinued-cannabis-strains/skywalker
+  dutchpassion checkpoint items=160 done=160 skipped=0 this_run=160 rate=0.77/s idx=169/174
+dutchpassion staging: {
+  "family": "bank_dutchpassion",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_dutchpassion.sqlite3",
+  "count": 160,
+  "bulk": false,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 160,
+    "strain_variant": 160,
+    "chemistry_profile": 0,
+    "grow_trait": 54,
+    "entity_link": 0,
+    "attribute_kv": 1707,
+    "raw_record": 160,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 14,
+    "source_record": 1
+  }
+}
+  dutchpassion checkpoint items=165 done=165 skipped=0 this_run=165 rate=0.76/s idx=174/174
+wrote dsc_strains_dutchpassion.json count=165 skipped=0 errors=9
+dutchpassion staging: {
+  "family": "bank_dutchpassion",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_dutchpassion.sqlite3",
+  "count": 165,
+  "bulk": false,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 165,
+    "strain_variant": 165,
+    "chemistry_profile": 0,
+    "grow_trait": 54,
+    "entity_link": 0,
+    "attribute_kv": 1757,
+    "raw_record": 165,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 14,
+    "source_record": 1
+  }
+}

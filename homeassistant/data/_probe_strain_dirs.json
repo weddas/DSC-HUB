@@ -1,0 +1,742 @@
+{
+  "strain-database": {
+    "name": "strain-database",
+    "home": {
+      "status": 403,
+      "ok": false,
+      "final_url": "https://strain-database.com/strains",
+      "server": "cloudflare",
+      "cf_ray": true,
+      "ctype": "text/html; charset=UTF-8",
+      "walls": [
+        "cloudflare-headers",
+        "cf-challenge"
+      ],
+      "error": "HTTP Error 403: Forbidden",
+      "bytes": 5772,
+      "href_count": 0,
+      "strain_href_sample": [],
+      "size_mentions": [],
+      "title": "Just a moment...",
+      "api_hints": [],
+      "has_next_data": false,
+      "has_nuxt": false
+    },
+    "robots": {
+      "status": 200,
+      "ok": true,
+      "final_url": "https://strain-database.com/robots.txt",
+      "server": "cloudflare",
+      "cf_ray": true,
+      "ctype": "text/plain",
+      "walls": [
+        "cloudflare-headers"
+      ],
+      "error": null,
+      "bytes": 256,
+      "robots": {
+        "agents": 6,
+        "disallow_count": 4,
+        "sitemap_refs": [
+          "https://strain-database.com/sitemap.xml"
+        ],
+        "notable": [
+          "Disallow: /api/"
+        ],
+        "preview": "User-Agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /api/\nUser-Agent: GPTBot\nUser-Agent: ChatGPT-User\nUser-Agent: CCBot\nUser-Agent: anthropic-ai\nDisallow: /\nUser-Agent: meta-webindexer\nDisallow: /compare/\nSitemap: https://strain-database.com/sitemap.xml"
+      }
+    },
+    "sitemap": {
+      "status": 200,
+      "ok": true,
+      "final_url": "https://strain-database.com/sitemap.xml",
+      "server": "cloudflare",
+      "cf_ray": true,
+      "ctype": "application/xml; charset=utf-8",
+      "walls": [
+        "cloudflare-headers"
+      ],
+      "error": null,
+      "bytes": 353,
+      "loc_count_sample": 2,
+      "loc_sample": [
+        "https://strain-database.com/sitemap/0.xml",
+        "https://strain-database.com/sitemap/1.xml"
+      ],
+      "is_index": true
+    }
+  },
+  "cannareviews": {
+    "name": "cannareviews",
+    "home": {
+      "status": 200,
+      "ok": true,
+      "final_url": "https://cannareviews.health/",
+      "server": "cloudflare",
+      "cf_ray": true,
+      "ctype": "text/html; charset=UTF-8",
+      "walls": [
+        "cloudflare-headers"
+      ],
+      "error": null,
+      "bytes": 70869,
+      "href_count": 44,
+      "strain_href_sample": [],
+      "size_mentions": [],
+      "title": "Australias Trusted Cannabis Resource | Canna Reviews",
+      "api_hints": [
+        "https://api.pirsch.io/pirsch-extended.js",
+        "https://cannareviews.health/api/v5.2.1/products/export",
+        "https://cannareviews.health/api/v5.2.1/data/download",
+        "https://cannareviews.health/api/v5.2.1/products/bulk"
+      ],
+      "has_next_data": false,
+      "has_nuxt": false
+    },
+    "robots": {
+      "status": 200,
+      "ok": true,
+      "final_url": "https://cannareviews.health/robots.txt",
+      "server": "cloudflare",
+      "cf_ray": true,
+      "ctype": "text/plain; charset=utf-8",
+      "walls": [
+        "cloudflare-headers"
+      ],
+      "error": null,
+      "bytes": 536,
+      "robots": {
+        "agents": 1,
+        "disallow_count": 11,
+        "sitemap_refs": [
+          "https://cannareviews.health/sitemap.xml"
+        ],
+        "notable": [],
+        "preview": "User-agent: *\nDisallow: /admin\nDisallow: /*.pdf$\nDisallow: /*.xls$\nDisallow: /*.xlsx$\nDisallow: /*.csv$\nDisallow: /dash\nDisallow: /*?utm*\nDisallow: /forgot-password\nDisallow: /resetpasswordconfirmation\nDisallow: /confirmcontact\nDisallow: /confirmregister\nNoindex: /admin\nNoindex: /*.pdf$\nNoindex: /*.xls$\nNoindex: /*.xlsx$\nNoindex: /*.csv$\nNoindex: /dash\nNoindex: /*?utm*\nNoindex: /forgot-password\nNoindex: /resetpasswordconfirmation\nNoindex: /confirmcontact\nNoindex: /confirmregister\nSitemap: https://cannareviews.health/sitemap.xml"
+      }
+    },
+    "sitemap": {
+      "status": 200,
+      "ok": true,
+      "final_url": "https://cannareviews.health/sitemap.xml",
+      "server": "cloudflare",
+      "cf_ray": true,
+      "ctype": "text/xml; charset=UTF-8",
+      "walls": [
+        "cloudflare-headers"
+      ],
+      "error": null,
+      "bytes": 100000,
+      "loc_count_sample": 365,
+      "loc_sample": [
+        "https://cannareviews.health",
+        "https://cannareviews.health/products/legal-cannabis-product-list-australia",
+        "https://cannareviews.health/cannabis-brands-australia",
+        "https://cannareviews.health/research",
+        "https://cannareviews.health/faq",
+        "https://cannareviews.health/about",
+        "https://cannareviews.health/contact",
+        "https://cannareviews.health/cannabis-dispensary-pharmacies",
+        "https://cannareviews.health/product/beacon-medical-sensi-star-flower-10g",
+        "https://cannareviews.health/product/antg-mariposa-thc16-flower-10g"
+      ],
+      "is_index": false
+    }
+  },
+  "seedfinder": {
+    "name": "seedfinder",
+    "home": {
+      "status": 200,
+      "ok": true,
+      "final_url": "https://seedfinder.eu/en",
+      "server": "cloudflare",
+      "cf_ray": true,
+      "ctype": "text/html; charset=utf-8",
+      "walls": [
+        "cloudflare-headers",
+        "captcha"
+      ],
+      "error": null,
+      "bytes": 56980,
+      "href_count": 88,
+      "strain_href_sample": [
+        "https://seedfinder.eu/en/database/strains",
+        "https://seedfinder.eu/en/database/strains/origin",
+        "https://seedfinder.eu/en/database/strains/cloneonly",
+        "https://seedfinder.eu/en/database/strains/unknown-or-legendary",
+        "https://seedfinder.eu/en/database/strains/origin",
+        "https://seedfinder.eu/en/database/strains/alphabetical",
+        "https://seedfinder.eu/en/database/strains/autoflowering",
+        "https://seedfinder.eu/en/database/strains/cloneonly",
+        "https://seedfinder.eu/en/database/strains/cbd-rich",
+        "https://seedfinder.eu/en/research/strain-vs-strain"
+      ],
+      "size_mentions": [],
+      "title": "Marijuana Strain Database | Search | Research :: SeedFinder.eu",
+      "api_hints": [],
+      "has_next_data": false,
+      "has_nuxt": false
+    },
+    "robots": {
+      "status": 200,
+      "ok": true,
+      "final_url": "https://en.seedfinder.eu/robots.txt",
+      "server": "cloudflare",
+      "cf_ray": true,
+      "ctype": "text/plain; charset=utf-8",
+      "walls": [
+        "cloudflare-headers"
+      ],
+      "error": null,
+      "bytes": 195,
+      "robots": {
+        "agents": 1,
+        "disallow_count": 4,
+        "sitemap_refs": [
+          "https://seedfinder.eu/sitemap/sitemap-index.xml"
+        ],
+        "notable": [],
+        "preview": "User-agent: *\nDisallow: /en/database/suggest\nDisallow: /de/database/suggest\nDisallow: /es/database/suggest\nDisallow: /fr/database/suggest\nSitemap: https://seedfinder.eu/sitemap/sitemap-index.xml"
+      }
+    },
+    "sitemap": {
+      "status": 404,
+      "ok": false,
+      "final_url": "https://en.seedfinder.eu/sitemap.xml",
+      "server": "cloudflare",
+      "cf_ray": true,
+      "ctype": "text/html; charset=utf-8",
+      "walls": [
+        "cloudflare-headers"
+      ],
+      "error": "HTTP Error 404: Not Found",
+      "bytes": 6291,
+      "loc_count_sample": 0,
+      "loc_sample": [],
+      "is_index": false
+    }
+  },
+  "leafly": {
+    "name": "leafly",
+    "home": {
+      "status": 200,
+      "ok": true,
+      "final_url": "https://www.leafly.com/strains",
+      "server": "cloudflare",
+      "cf_ray": true,
+      "ctype": "text/html; charset=utf-8",
+      "walls": [
+        "cloudflare-headers"
+      ],
+      "error": null,
+      "bytes": 180000,
+      "href_count": 70,
+      "strain_href_sample": [
+        "https://www.leafly.com/strains",
+        "https://www.leafly.com/strains",
+        "https://www.leafly.ca/strains",
+        "https://www.leafly.com/strains?page=2",
+        "/strains/lists",
+        "https://sso.leafly.com/sign-in?rd=https%3A%2F%2Fwww.leafly.com%2Fstrains",
+        "https://sso.leafly.com/sign-up?rd=https%3A%2F%2Fwww.leafly.com%2Fstrains",
+        "/strains/lists"
+      ],
+      "size_mentions": [],
+      "title": "Browse All Marijuana Strains on Leafly | Leafly",
+      "api_hints": [
+        "https://consumer-api.leafly.com",
+        "https://maps.googleapis.com",
+        "https://api-og.internal.leafly.com/",
+        "https://api.leafly.com/",
+        "https://consumer-api.leafly.ca",
+        "https://api.iheartjane.com/v1/headless/embed.js",
+        "https://reservations-api.leafly.com",
+        "https://reservations-api.leafly.ca"
+      ],
+      "has_next_data": false,
+      "has_nuxt": false
+    },
+    "robots": {
+      "status": 200,
+      "ok": true,
+      "final_url": "https://www.leafly.com/robots.txt",
+      "server": "cloudflare",
+      "cf_ray": true,
+      "ctype": "text/plain",
+      "walls": [
+        "cloudflare-headers"
+      ],
+      "error": null,
+      "bytes": 2647,
+      "robots": {
+        "agents": 7,
+        "disallow_count": 23,
+        "sitemap_refs": [
+          "https://www.leafly.com/leafly-sitemaps/sitemap-index.xml",
+          "https://www.leafly.com/news/sitemap_index.xml"
+        ],
+        "notable": [
+          "Disallow: /web-strain-explorer/api",
+          "Disallow: /shop*filter%5Bstrain_category%5D*",
+          "Disallow: /shop*filter%5Bstrain_name%5D*",
+          "Disallow: /shop*filter%5Bstrain_effects%5D*",
+          "Allow: /news/strains-products/best-back-to-school-weed-products",
+          "Allow: /news/strains-products/best-grow-lights",
+          "Allow: /news/strains-products/best-weed-products-of-summer",
+          "Allow: /news/strains-products/best-thca-concentrates",
+          "Allow: /news/strains-products/best-oil-day-products",
+          "Allow: /news/strains-products/4th-of-july-weekend-product-picks",
+          "Allow: /news/strains-products/best-dab-rigs",
+          "Allow: /news/strains-products/best-cbd-for-dogs",
+          "Allow: /news/strains-products/fathers-day-weed-gift-guide",
+          "Allow: /news/strains-products/best-thca-pre-rolls",
+          "Allow: /news/strains-products/memorial-day-weekend-product-picks",
+          "Allow: /news/strains-products/best-high-potency-hemp-products",
+          "Allow: /news/strains-products/best-thca-strains",
+          "Allow: /news/strains-products/best-energizing-thc-gummies",
+          "Allow: /news/strains-products/best-thca-vape-carts",
+          "Allow: /news/strains-products/best-bongs",
+          "Allow: /news/strains-products/best-hemp-pre-rolls",
+          "Allow: /news/strains-products/best-thca-flower",
+          "Allow: /news/strains-products/best-cbd-creams",
+          "Allow: /news/strains-products/best-delta-9-gummies",
+          "Allow: /news/strains-products/best-thc-drinks"
+        ],
+        "preview": "User-agent: *\nDisallow: /wp-admin/\nAllow: /wp-admin/admin-ajax.php\nDisallow: /web-strain-explorer/api\nDisallow: /migration/\nDisallow: /store-locator/\nDisallow: /shop*filter%5Bprice%5D*\nDisallow: /shop*filter%5Bdispensary_name%5D*\nDisallow: /shop*filter%5Bbrand_name%5D*\nDisallow: /shop*filter%5Bamount%5D*\nDisallow: /shop*filter%5Bstrain_category%5D*\nDisallow: /shop*filter%5Bstrain_name%5D*\nDisallow: /shop*filter%5Bstrain_effects%5D*\nDisallow: /dispensaries*sort=default*\nDisallow: /dispensaries*sort=online-ordering*\nDisallow: /dispensaries*sort=distance*\nDisallow: /dispensaries*sort=most-reviews*\nDisallow: /dispensaries*sort=a-z*\nDisallow: /dispensaries*sort=z-a*\nDisallow: *filter[*filter[\nUser-agent: GPTBot\nDisallow: /\nAllow: /news/strains-products/best-back-to-school-weed-products\nAllow: /news/strains-products/best-grow-lights\nAllow: /news/strains-products/best-weed-products-of-summer\nAllow: /news/strains-products/best-thca-concentrates\nAllow: /news/strains-products/best-oil-day-products\nAllow: /news/strains-products/4th-of-july-weekend-product-picks\nAllow: /news/strains-products/best-dab-rigs\nAllow: /news/strains-products/best-cbd-for-dogs\nAllow: /news/strains-products/fathers-day-weed-gift-guide\nAllow: /news/strains-products/best-thca-pre-rolls\nAllow: /news/strains-products/memorial-day-weekend-product-picks\nAllow: /news/strains-products/best-high-potency-hemp-products\nAllow: /news/strains-products/best-thca-strains\nAllow: /news/strains-products/best-energizing-thc-gummies\nAllow: /news/strains-products/best-thca-vape-carts\nAllow: /news/strains-products/best-bongs\nAllow: /news/strains-products/best-hemp-pre-rolls\nAllow: /news/strains-products/best-thca-flower\nAllow: /news/strains-products/best-cbd-creams\nAllow: /news/strains-products/best-delta-9-gummies\nAllow: /news/strains-products/best-thc-drinks\nAllow: /news/strains-products/best-cbd-gummies\nAllow: /news/strains-products/best-cbd-gummies-for-sleep\nAllow: /news/strains-products/top-6-cbd-brands\nAllow: /news/strains-products/best-vaporizers-cannabis-flower\nAllow: /news/strains-products/best-cbd-oils-and-tinctures\nUser-agent: meta-externalagent\nDisallow: /"
+      }
+    },
+    "sitemap": {
+      "status": 404,
+      "ok": false,
+      "final_url": "https://www.leafly.com/sitemap.xml",
+      "server": "cloudflare",
+      "cf_ray": true,
+      "ctype": "text/html; charset=utf-8",
+      "walls": [
+        "cloudflare-headers"
+      ],
+      "error": "HTTP Error 404: Not Found",
+      "bytes": 79989,
+      "loc_count_sample": 0,
+      "loc_sample": [],
+      "is_index": false
+    }
+  },
+  "wikileaf": {
+    "name": "wikileaf",
+    "home": {
+      "status": 403,
+      "ok": false,
+      "final_url": "https://www.wikileaf.com/strains/",
+      "server": "",
+      "cf_ray": false,
+      "ctype": "text/html",
+      "walls": [
+        "access-denied"
+      ],
+      "error": "HTTP Error 403: Forbidden",
+      "bytes": 520,
+      "href_count": 0,
+      "strain_href_sample": [],
+      "size_mentions": [],
+      "title": "403 Forbidden",
+      "api_hints": [],
+      "has_next_data": false,
+      "has_nuxt": false
+    },
+    "robots": {
+      "status": 403,
+      "ok": false,
+      "final_url": "https://www.wikileaf.com/robots.txt",
+      "server": "",
+      "cf_ray": false,
+      "ctype": "text/html",
+      "walls": [
+        "access-denied"
+      ],
+      "error": "HTTP Error 403: Forbidden",
+      "bytes": 520,
+      "robots": {
+        "agents": 0,
+        "disallow_count": 0,
+        "sitemap_refs": [],
+        "notable": [],
+        "preview": "<html>\n<head><title>403 Forbidden</title></head>\n<body>\n<center><h1>403 Forbidden</h1></center>\n</body>\n</html>\n<!-- a padding to disable MSIE and Chrome friendly error page -->\n<!-- a padding to disable MSIE and Chrome friendly error page -->\n<!-- a padding to disable MSIE and Chrome friendly error page -->\n<!-- a padding to disable MSIE and Chrome friendly error page -->\n<!-- a padding to disable MSIE and Chrome friendly error page -->\n<!-- a padding to disable MSIE and Chrome friendly error page -->"
+      }
+    },
+    "sitemap": {
+      "status": 403,
+      "ok": false,
+      "final_url": "https://www.wikileaf.com/sitemap.xml",
+      "server": "",
+      "cf_ray": false,
+      "ctype": "text/html",
+      "walls": [
+        "access-denied"
+      ],
+      "error": "HTTP Error 403: Forbidden",
+      "bytes": 520,
+      "loc_count_sample": 0,
+      "loc_sample": [],
+      "is_index": false
+    }
+  },
+  "allbud": {
+    "name": "allbud",
+    "home": {
+      "status": 404,
+      "ok": false,
+      "final_url": "https://www.allbud.com/marijuana-strains",
+      "server": "gunicorn/19.9.0",
+      "cf_ray": false,
+      "ctype": "text/html; charset=utf-8",
+      "walls": [],
+      "error": "HTTP Error 404: NOT FOUND",
+      "bytes": 30153,
+      "href_count": 63,
+      "strain_href_sample": [
+        "/marijuana-strains/search",
+        "/marijuana-strains/search",
+        "/marijuana-strains/search",
+        "/marijuana-strains/search"
+      ],
+      "size_mentions": [
+        "10,000"
+      ],
+      "title": "Page Not Found | AllBud",
+      "api_hints": [
+        "/api/v1/locations/address-validation"
+      ],
+      "has_next_data": false,
+      "has_nuxt": false
+    },
+    "robots": {
+      "status": 200,
+      "ok": true,
+      "final_url": "https://www.allbud.com/robots.txt",
+      "server": "gunicorn/19.9.0",
+      "cf_ray": false,
+      "ctype": "text/plain",
+      "walls": [],
+      "error": null,
+      "bytes": 780,
+      "robots": {
+        "agents": 1,
+        "disallow_count": 17,
+        "sitemap_refs": [
+          "https://www.allbud.com/sitemap.xml",
+          "https://www.allbud.com/sitemap-regionfaqs.xml"
+        ],
+        "notable": [
+          "Disallow: /api/v1/locations/address-validation",
+          "Disallow: /search-autocomplete",
+          "Disallow: /learn/search*type=",
+          "Disallow: /search?*",
+          "Allow: /marijuana-strains/*/*sort="
+        ],
+        "preview": "User-agent: *\nDisallow: /dispensaries/register\nDisallow: /dispensaries/claim\nDisallow: /marijuana-doctors/register-clinic\nDisallow: /marijuana-doctors/claim\nDisallow: /terms-of-use\nDisallow: /privacy-policy\nDisallow: /copyright-policy\nDisallow: /api/v1/locations/address-validation\nDisallow: /search-autocomplete\nDisallow: /account/logout\nDisallow: /*sort=\nDisallow: /*filter=\nDisallow: /*from_menu=\nDisallow: /learn/search*type=\nDisallow: /learn/aggarticle/*page=\nDisallow: /learn/story/*page=\nDisallow: /search?*\nAllow: /products/producer/*\nAllow: /dispensaries/*/*/*sort=\nAllow: /dispensaries/*/*/*filter=\nAllow: /dispensaries/*/*/*from_menu=\nAllow: /marijuana-strains/*/*sort=\nSitemap: https://www.allbud.com/sitemap.xml\nSitemap: https://www.allbud.com/sitemap-regionfaqs.xml"
+      }
+    },
+    "sitemap": {
+      "status": 200,
+      "ok": true,
+      "final_url": "https://www.allbud.com/sitemap.xml",
+      "server": "gunicorn/19.9.0",
+      "cf_ray": false,
+      "ctype": "application/xml",
+      "walls": [],
+      "error": null,
+      "bytes": 1290,
+      "loc_count_sample": 15,
+      "loc_sample": [
+        "https://www.allbud.com/sitemap-dispensary-locations.xml",
+        "https://www.allbud.com/sitemap-dispensaries.xml",
+        "https://www.allbud.com/sitemap-strains-symptoms.xml",
+        "https://www.allbud.com/sitemap-strains-varieties.xml",
+        "https://www.allbud.com/sitemap-clinic-regions.xml",
+        "https://www.allbud.com/sitemap-clinics.xml",
+        "https://www.allbud.com/sitemap-strains-effects.xml",
+        "https://www.allbud.com/sitemap-regionfaqs.xml",
+        "https://www.allbud.com/sitemap-dispensary-cities.xml",
+        "https://www.allbud.com/sitemap-strains-aromas.xml"
+      ],
+      "is_index": true
+    }
+  },
+  "weedmaps": {
+    "name": "weedmaps",
+    "home": {
+      "status": 200,
+      "ok": true,
+      "final_url": "https://weedmaps.com/strains",
+      "server": "",
+      "cf_ray": false,
+      "ctype": "text/html; charset=utf-8",
+      "walls": [],
+      "error": null,
+      "bytes": 180000,
+      "href_count": 65,
+      "strain_href_sample": [
+        "https://weedmaps.com/strains",
+        "https://weedmaps.com/strains?page=2",
+        "/strains",
+        "/strains/peanut-butter-breath",
+        "/strains/maui-wowie",
+        "/strains/tropicana-cherry",
+        "/strains/animal-mints",
+        "/strains/apples-and-bananas",
+        "/strains/donny-burger",
+        "/strains/the-soap",
+        "/strains/garlic-cocktail",
+        "/strains/hash-burger",
+        "/strains/whitethorn-rose",
+        "/strains/fuel-biscuits",
+        "/strains"
+      ],
+      "size_mentions": [],
+      "title": "Explore Weed Strains Info, Photos, and Reviews on Weedmaps",
+      "api_hints": [],
+      "has_next_data": false,
+      "has_nuxt": false
+    },
+    "robots": {
+      "status": 200,
+      "ok": true,
+      "final_url": "https://weedmaps.com/robots.txt",
+      "server": "",
+      "cf_ray": false,
+      "ctype": "text/plain; charset=UTF-8",
+      "walls": [],
+      "error": null,
+      "bytes": 2560,
+      "robots": {
+        "agents": 0,
+        "disallow_count": 81,
+        "sitemap_refs": [
+          "https://weedmaps.com/sitemap.xml.gz"
+        ],
+        "notable": [
+          "Disallow: *?*search=*",
+          "Disallow: ?search",
+          "Disallow: /search?product=*",
+          "Disallow: /*/search/",
+          "Allow: /strains/*?filter[species]*"
+        ],
+        "preview": "\ufeffUser-agent: *\nDisallow: /user/*\nDisallow: /users/*\nDisallow: /auth/*\nDisallow: /login*?*\nDisallow: /signup*?*\nDisallow: /listings/*\nDisallow: /results?*\nDisallow: *?*search=*\nDisallow: ?search\nDisallow: *?*filter\nDisallow: /seg/*\nDisallow: /search?product=*\nAllow: /strains/*?filter[species]*\nDisallow: *?addToCart=1\nDisallow: /*/cgi-bin/\nDisallow: /*/wp-admin/\nDisallow: /*/trackback/\nDisallow: /*/search/\nDisallow: /*/tag/\nDisallow: /*/category/\nAllow: /brands/category/\nDisallow: /*/uncategorized/\nDisallow: /learn/*/comment-page\nDisallow: /learn/*/order/\nDisallow: /learn/*/feed/\nDisallow: /learn/*/xmlrpc.php\nDisallow: /learn/*/trackback/\nDisallow: /learn/*?wptheme=\nDisallow: /learn/*?comments=\nDisallow: /learn/*?replytocom\nDisallow: /learn/*?s=\nDisallow: /learn/*&s=\nDisallow: /news/*/comment-page\nDisallow: /news/*/page\nDisallow: /news/*/order/\nDisallow: /news/*/feed/\nDisallow: /news/*/xmlrpc.php\nDisallow: /news/*/trackback/\nDisallow: /news/*?wptheme=\nDisallow: /news/*?comments=\nDisallow: /news/*?replytocom\nDisallow: /news/*?s=\nDisallow: /news/*&s=\nDisallow: /openca/*/comment-page\nDisallow: /openca/*/page\nDisallow: /openca/*/order/\nDisallow: /openca/*/feed/\nDisallow: /openca/*/xmlrpc.php\nDisallow: /openca/*/trackback/"
+      }
+    },
+    "sitemap": {
+      "status": 404,
+      "ok": false,
+      "final_url": "https://weedmaps.com/sitemap.xml",
+      "server": "",
+      "cf_ray": false,
+      "ctype": "text/html; charset=utf-8",
+      "walls": [],
+      "error": "HTTP Error 404: Not Found",
+      "bytes": 80000,
+      "loc_count_sample": 0,
+      "loc_sample": [],
+      "is_index": false
+    }
+  },
+  "wayofleaf": {
+    "name": "wayofleaf",
+    "home": {
+      "status": 200,
+      "ok": true,
+      "final_url": "https://marijuanabreak.com/staff-picks/best-and-strongest-marijuana-strains/",
+      "server": "cloudflare",
+      "cf_ray": true,
+      "ctype": "text/html; charset=UTF-8",
+      "walls": [
+        "cloudflare-headers",
+        "captcha",
+        "login-form-present"
+      ],
+      "error": null,
+      "bytes": 179998,
+      "href_count": 5,
+      "strain_href_sample": [
+        "https://marijuanabreak.com/staff-picks/best-and-strongest-marijuana-strains/"
+      ],
+      "size_mentions": [],
+      "title": "5 Best and Strongest Marijuana Strains of the Year [Reviewed]",
+      "api_hints": [],
+      "has_next_data": false,
+      "has_nuxt": false
+    },
+    "robots": {
+      "status": 200,
+      "ok": true,
+      "final_url": "https://marijuanabreak.com/robots.txt",
+      "server": "cloudflare",
+      "cf_ray": true,
+      "ctype": "text/plain",
+      "walls": [
+        "cloudflare-headers"
+      ],
+      "error": null,
+      "bytes": 1217,
+      "robots": {
+        "agents": 1,
+        "disallow_count": 35,
+        "sitemap_refs": [
+          "https://marijuanabreak.com/sitemap/index.xml"
+        ],
+        "notable": [
+          "Disallow: /*?search_keywords=*"
+        ],
+        "preview": "User-Agent: *\nAllow: /wp-content/uploads/\nAllow: /wp-includes/css/\nAllow: /wp-includes/js/\nAllow: /wp-includes/images/\nAllow: /wp-content/*.css\nAllow: /wp-content/*.js\nAllow: /wp-content/*.png\nAllow: /wp-content/*.jpg\nAllow: /wp-content/*.jpeg\nAllow: /wp-content/*.gif\nAllow: /wp-content/*.svg\nAllow: /wp-admin/admin-ajax.php\nAllow: /wp-content/plugins/\nAllow: /wp-content/themes/\nDisallow: /test/\nDisallow: /wp-login.php\nDisallow: /wp-register.php\nDisallow: /xmlrpc.php\nDisallow: /template.html\nDisallow: /wp-admin\nDisallow: /wp-includes\nDisallow: /course\nDisallow: /*?s=*\nDisallow: /*?nonamp=*\nDisallow: /*?key=*\nDisallow: /*?step=*\nDisallow: /*?search_keywords=*\nDisallow: /*?fbclid=*\nDisallow: /*?share=*\nDisallow: /*?platform=*\nDisallow: /*?cid=*\nDisallow: /*?ref=*\nDisallow: /*?rel=*\nDisallow: /*?submit=*\nDisallow: /*?utm_campaign=*\nDisallow: /*?utm_medium=*\nDisallow: /*?replytocom*\nDisallow: /*?utm_source=*\nDisallow: /cdn-cgi/l/email-protection\nDisallow: /jobs\nDisallow: /purchases/\nDisallow: /post_tag/\nDisallow: /directory\nDisallow: /hotels\nDisallow: /results\nDisallow: /tabletes1t\nDisallow: /ebook.pdf\nDisallow: /course/\nDisallow: /*.pdf"
+      }
+    },
+    "sitemap": {
+      "status": 200,
+      "ok": true,
+      "final_url": "https://marijuanabreak.com/",
+      "server": "cloudflare",
+      "cf_ray": true,
+      "ctype": "text/html; charset=UTF-8",
+      "walls": [
+        "cloudflare-headers",
+        "captcha"
+      ],
+      "error": null,
+      "bytes": 99996,
+      "loc_count_sample": 0,
+      "loc_sample": [],
+      "is_index": false
+    }
+  },
+  "hytiva": {
+    "name": "hytiva",
+    "home": {
+      "status": 200,
+      "ok": true,
+      "final_url": "https://www.hytiva.com/strains",
+      "server": "",
+      "cf_ray": false,
+      "ctype": "text/html",
+      "walls": [],
+      "error": null,
+      "bytes": 49260,
+      "href_count": 106,
+      "strain_href_sample": [
+        "/strains",
+        "/strains/sativa",
+        "/strains/indica",
+        "/strains/hybrid",
+        "/strains/explore",
+        "/strains/hybrid/oreoz",
+        "/strains/hybrid/gary-payton",
+        "/strains/hybrid/grandaddy-purple",
+        "/strains/hybrid/rainbow-sherbet",
+        "/strains/hybrid/gelato-41",
+        "/strains/hybrid/lemon-cherry-gelato",
+        "/strains/hybrid/cereal-milk",
+        "/strains/hybrid/london-poundcake",
+        "/strains/hybrid/gelatti",
+        "/strains/hybrid/runtz"
+      ],
+      "size_mentions": [],
+      "title": "Cannabis Strains",
+      "api_hints": [],
+      "has_next_data": false,
+      "has_nuxt": false
+    },
+    "robots": {
+      "status": 404,
+      "ok": false,
+      "final_url": "https://www.hytiva.com/robots.txt",
+      "server": "",
+      "cf_ray": false,
+      "ctype": "text/html",
+      "walls": [],
+      "error": "HTTP Error 404: Not Found",
+      "bytes": 17403,
+      "robots": {
+        "agents": 0,
+        "disallow_count": 0,
+        "sitemap_refs": [],
+        "notable": [],
+        "preview": "<!DOCTYPE html>\n<html lang=\"en-US\">\n<head>\n<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width\">\n<meta http-equiv=\"Accept-CH\" content=\"DPR,Width,Viewport-Width,Downlink,ECT\">\n<title>Page Not Found</title>\n<meta name=\"description\" content=\"The page you requested was not found on this server.\">\n<meta name=\"apple-itunes-app\" content=\"app-id=1634505174\">\n<meta name=\"robots\" content=\"index, follow\">\n<link rel=\"preload\" href=\"/asset/fonts/Inter-ExtraBold.woff2\" as=\"font\" type=\"font/woff2\" crossorigin=\"anonymous\">\n<link rel=\"preload\" href=\"/asset/fonts/Inter-SemiBold.woff2\" as=\"font\" type=\"font/woff2\" crossorigin=\"anonymous\">\n<link rel=\"preload\" href=\"/asset/fonts/icons.woff2?AAABn8QJGpc\" as=\"font\" type=\"font/woff2\" crossorigin=\"anonymous\">\n<link rel=\"preload\" href=\"/asset/css/app.css?AAABn8QJGpc\" as=\"style\">\n<link rel=\"stylesheet\" href=\"/asset/css/app.css?AAABn8QJGpc\">\n<link rel=\"preload\" href=\"/asset/css/app-landing.css?AAABn8QJGpc\" as=\"style\">\n<link rel=\"stylesheet\" href=\"/asset/css/app-landing.css?AAABn8QJGpc\">\n<link rel=\"preconnect\" href=\"//images.hytiva.com\">\n<link rel=\"dns-prefetch\" href=\"//images.hytiva.com\">\n<link rel=\"preload\" href=\"/asset/js/app.js?AAABn8QJGpc\" as=\"script\">\n<link rel=\"preconnect\" href=\"//e.hytiva.com\">\n<meta property=\"og:type\" content=\"website\">\n<meta property=\"og:title\" content=\"Page Not Found\">\n<meta property=\"og:description\" content=\"The page you requested was not found on this server.\">\n<link rel=\"icon\" href=\"/asset/images/favicon.ico\" sizes=\"32x32\">\n<link rel=\"icon\" href=\"/asset/images/logos/logo-symbol.svg\" type=\"image/svg+xml\">\n<link rel=\"apple-touch-icon\" href=\"/asset/images/apple-touch-icon.png\">\n<link rel=\"manifest\" href=\"/asset/files/hytiva-manifest.json?AAABn8QJGpc\">\n<script type=\"application/ld+json\">{\"@context\":\"https://schema.org\",\"@graph\":[{\"@type\":\"Organization\",\"name\":\"Hytiva: Cannabis on Demand\u00ae\",\"url\":\"https://www.hytiva.com\",\"@id\":\"https://www.hytiva.com#organization\",\"logo\":{\"@type\":\"ImageObject\",\"url\":\"https://images.hytiva.com/Hytiva-Logo.png?mw1200\",\"caption\":\"Hytiva: Cannabis on Demand\u00ae Logo\"},\"sameAs\":[\"https://x.com/hytiva\",\"https://www.linkedin.com/company/hytiva\"]}]}</script>\n</head>\n<body id=\"top\" class=\"Page landing  light\">\n<header class=\"Page-Header\">\n<div class=\"Page-Viewport\">\n<div class=\"Header\">\n<a class=\"Logo\" href=\"/\" aria-label=\"Hytiva Cannabis On Demand Logo\">\n<svg class=\"Logo-Image\" viewBox=\"0 0 800 300\">\n<use xlink:href=\"/asset/images/logos/hytiva-logo.svg#Hytiva_Logo\"></use>\n</svg>\n</a>\n<nav class=\"Navigation primary\" aria-label=\"Top\">\n<ol class=\"Nav main\">\n<li class=\"Nav-Item login\">\n<a class=\"Nav-Link\" href=\"/sign-up\"><span class=\"Nav-Text\">Create A Hytiva Account or Sign In<i>Get access to exclusive deals from your local dispensary.</i></span></a>\n</li>\n<li class=\"Nav-Item sub\">\n<a class=\"Nav-Link\" href=\"/map\"><span class=\"Nav-Text\">Order<i>Order cannabis at a local dispensary near you!</i></span></a>\n<div class=\"Nav-Dropdown\">\n<ol class=\"Nav sub\">\n<li class=\"Nav-Item\"><a class=\"Nav-Link\" href=\"/d\">Dispensaries</a></li>\n<li class=\"Nav-Item\"><a class=\"Nav-Link\" href=\"/brands\">Brands</a></li>"
+      }
+    },
+    "sitemap": {
+      "status": 404,
+      "ok": false,
+      "final_url": "https://www.hytiva.com/sitemap.xml",
+      "server": "",
+      "cf_ray": false,
+      "ctype": "text/html",
+      "walls": [],
+      "error": "HTTP Error 404: Not Found",
+      "bytes": 17403,
+      "loc_count_sample": 0,
+      "loc_sample": [],
+      "is_index": false
+    }
+  },
+  "cannaconnection": {
+    "name": "cannaconnection",
+    "home": {
+      "status": 403,
+      "ok": false,
+      "final_url": "https://www.cannaconnection.com/strains",
+      "server": "cloudflare",
+      "cf_ray": true,
+      "ctype": "text/html; charset=UTF-8",
+      "walls": [
+        "cloudflare-headers",
+        "cf-challenge"
+      ],
+      "error": "HTTP Error 403: Forbidden",
+      "bytes": 5606,
+      "href_count": 0,
+      "strain_href_sample": [],
+      "size_mentions": [],
+      "title": "Just a moment...",
+      "api_hints": [],
+      "has_next_data": false,
+      "has_nuxt": false
+    },
+    "robots": {
+      "status": 403,
+      "ok": false,
+      "final_url": "https://www.cannaconnection.com/robots.txt",
+      "server": "cloudflare",
+      "cf_ray": true,
+      "ctype": "text/html; charset=UTF-8",
+      "walls": [
+        "cloudflare-headers",
+        "cf-challenge"
+      ],
+      "error": "HTTP Error 403: Forbidden",
+      "bytes": 5615,
+      "robots": {
+        "agents": 0,
+        "disallow_count": 0,
+        "sitemap_refs": [],
+        "notable": [],
+        "preview": "<!DOCTYPE html><html lang=\"en-US\"><head><title>Just a moment...</title><meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"><meta http-equiv=\"X-UA-Compatible\" content=\"IE=Edge\"><meta name=\"robots\" content=\"noindex,nofollow\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><meta http-equiv=\"content-security-policy\" content=\"default-src &#39;none&#39;; script-src &#39;nonce-B7bz5FJce20eZMlvCsp71X&#39; &#39;unsafe-eval&#39; https://challenges.cloudflare.com; script-src-attr &#39;none&#39;; style-src &#39;unsafe-inline&#39;; img-src &#39;self&#39; https://challenges.cloudflare.com; connect-src &#39;self&#39; https://challenges.cloudflare.com; frame-src &#39;self&#39; https://challenges.cloudflare.com blob:; child-src &#39;self&#39; https://challenges.cloudflare.com blob:; worker-src blob:; form-action http: https:; base-uri &#39;self&#39;\"><style>*{box-sizing:border-box;margin:0;padding:0}html{line-height:1.15;-webkit-text-size-adjust:100%;color:#313131;font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,\"Helvetica Neue\",Arial,\"Noto Sans\",sans-serif,\"Apple Color Emoji\",\"Segoe UI Emoji\",\"Segoe UI Symbol\",\"Noto Color Emoji\"}body{display:flex;flex-direction:column;height:100vh;min-height:100vh}.main-content{margin:8rem auto;padding-left:1.5rem;max-width:60rem}@media (width <= 720px){.main-content{margin-top:4rem}}#challenge-error-text{background-image:url(\"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiIgZmlsbD0ibm9uZSI+PHBhdGggZmlsbD0iI0IyMEYwMyIgZD0iTTE2IDNhMTMgMTMgMCAxIDAgMTMgMTNBMTMuMDE1IDEzLjAxNSAwIDAgMCAxNiAzbTAgMjRhMTEgMTEgMCAxIDEgMTEtMTEgMTEuMDEgMTEuMDEgMCAwIDEtMTEgMTEiLz48cGF0aCBmaWxsPSIjQjIwRjAzIiBkPSJNMTcuMDM4IDE4LjYxNUgxNC44N0wxNC41NjMgOS41aDIuNzgzem0tMS4wODQgMS40MjdxLjY2IDAgMS4wNTcuMzg4LjQwNy4zODkuNDA3Ljk5NCAwIC41OTYtLjQwNy45ODQtLjM5Ny4zOS0xLjA1Ny4zODktLjY1IDAtMS4wNTYtLjM4OS0uMzk4LS4zODktLjM5OC0uOTg0IDAtLjU5Ny4zOTgtLjk4NS40MDYtLjM5NyAxLjA1Ni0uMzk3Ii8+PC9zdmc+\");background-repeat:no-repeat;background-size:contain;padding-left:34px}</style><meta http-equiv=\"refresh\" content=\"360\"></head><body><div class=\"main-wrapper\" role=\"main\"><div class=\"main-content\"><noscript><div class=\"h2\"><span id=\"challenge-error-text\">Enable JavaScript and cookies to continue</span></div></noscript></div></div><script nonce=\"B7bz5FJce20eZMlvCsp71X\">(function(){window._cf_chl_opt = {cFPWv: 'b',cH: '6FK6FmNPyEmDjiaFHMV_pUEgvQAwF0dAQ9Nclp4iFD0-1786113547-1.2.1.1-gCxkmAZ8Okw4jMDn2QtoXq47TGW5lL3SQt.hKm7ZxRGLqfE3ED.k1awk99fyNUeg',cITimeS: '1786113547',cN: 'B7bz5FJce20eZMlvCsp71X',cRay: 'a2770768380d1544',cTplB: '0',cTplC:0,cTplO:0,cTplV:5,cType: 'managed',cUPMDTk:\"/robots.txt?__cf_chl_tk=9lTYLA752zyII33auDH58TbbP1p8tSuQCOah7qFffN4-1786113547-1.0.1.1-M7WEppHlrAmds1vEMmFOAxEwmPwIVpYCdx3IfFEg0II\",cvId: '3',cZone: 'www.cannaconnection.com',fa:\"/robots.txt?__cf_chl_f_tk=9lTYLA752zyII33auDH58TbbP1p8tSuQCOah7qFffN4-1786113547-1.0.1.1-M7WEppHlrAmds1vEMmFOAxEwmPwIVpYCdx3IfFEg0II\",md: 'T48tj0whYFP3sRi96L.ARvWE4RGlLeeADedwg6uAL.M-1786113547-1.2.1.1-7E.PGJ5iMlSVCHjGn6OlZqAwtnphyy0vDRq_iykaRSE0E21X3vLfbVQ9KPO5shBuV5zDsI9YiEMxIetnJg9pckyHj7G2gZ8EOqS6wibzAD.ZaU_LxneMTgxRUqJ04r4MGa.leZMT7oU..vmq7PjvNGrQMB4Dhxyq5P1daI4w9RGfObV76ARe5.r93Km86xxEc.VEtA6pOBFPw4mWbxEgOeuDOHbTRm7weHEDS4wm7_xcPT0hYrtSXRf_ZqSdVX8DpYSyhFgfhWdzcqf3J2Y2K0FHA4J8CgO1si1VVM6FkOcs6l19CqfBw7PeBcAPL6yUW9HpZUL1l._.EkuiS7GjYbwkeBOlO4LeRVoAtEcYtMgFxpZqQz83Yw2x4GtremEsdfYGziXUYbqcGFA0c9GYQmGlyGENFfJp4hO0i8djznHgL6sfKGR1vJce7efomN4CGxqn6rN3V_YheNTNPqfCVNtfKlFr9ciJC6LaoWOGdmuOc8o.UhQSYx1dW4cTm.nH3ZbzmQnhL9yfPnSWuv6Wqw7L_2bKGpzIOZochfbhf9ss.CMjr1z8tav4HzYUOjoBqE4eRdgOJtZh9VIvgyoC0hbeYE4k3FEH3pDPjEbCln8I1vjelYbobdhhMnQp2rbybemsZbHKlyG9EpqK9z7FHDVkf5nsRrnO6sFMUw0VYQpV3nFPWUqNvFXLSpR65yLjf7FDWOBYihcx3bgY3uokpCdpnNmBMzQb.mz3s9ADDVTzyCuOh3LFIqMrTKWqm88Vz2b0RwfePMMIHU3uLv48pmrhHhGeeJCZ5MjHpeKzXO7oT.yAX7pLHJeSyMWDPHeVrj8JuvBFBfTJ5uL29Zx5QAlMIyyxULibv5CA8_rbANKOtdoKtmunEsrLHlAWSlXEqANOTV6cZm27B4qKO0usFDv5OV3w1geX2WcTmIh9V5Rf6DzaizyMI6depx.3_VeYuvatloJuoOayot6BON06PIfoP87vzx1xNfossfamH_ZBVZIrAxriXDJRGhFwGWVL.mxx3bfT26uMCddGqJj8hUdZSwQAOA9DcqI0zEIqNletTv6Ljlvs6QhywfVQffv6CAenlDRZQgDzTbE.eOGpRQ',mdrd: 'W7A6yD6Gz63O07tbc_pKsucjMTkYuD1dEQfeDnz5BmM-1786113547-1.2.1.1-3EjEJ4zvjX.UPttbVJJzG_CxtIGFG9MsErYuew9LwIOsztglWnS3AmMqpjbDVQ1vYeOtR5W4Ng.AomWp9Rg8ZcETZeBgfksVQC3CUNcFYdtuU_jeitCvWfpmQ8VhLZVAtV4TvnY7FMderRF1Tbk9aRAio4VkutjuBC3JzfI6MzGNlYDbyy_jz5r2oZIvmGVK9ONDijZ0IOq1fXNhn0ppaYTSexMAXip5xPyzyNTdrYB17d5.C5DC.A9PCVIJDAKX4WYNP_38lIrRJcWAqML7fRPogAL7rC4PtpFwC2WA4LcyDfX3BrGd0ujus6vAZ5hBWYBzaxWp54hIDS58FJTbAPMjjlYeY0l.KvqI2kU7rqp09wtLRHU1.onK63IJcv05hHW.3CdIAD_p.ZP.NT8sIQ',};var a = document.createElement('script');a.nonce = 'B7bz5FJce20eZMlvCsp71X';a.src = '/cdn-cgi/challenge-platform/h/b/orchestrate/chl_page/v1?ray=a2770768380d1544';window._cf_chl_opt.cOgUHash = location.hash === '' && location.href.indexOf('#') !== -1 ? '#' : location.hash;window._cf_chl_opt.cOgUQuery = location.search === '' && location.href.slice(0, location.href.length - window._cf_chl_opt.cOgUHash.length).indexOf('?') !== -1 ? '?' : location.search;if (window.history && window.history.replaceState) {var ogU = location.pathname + window._cf_chl_opt.cOgUQuery + window._cf_chl_opt.cOgUHash;history.replaceState(null, null,\"/robots.txt?__cf_chl_rt_tk=9lTYLA752zyII33auDH58TbbP1p8tSuQCOah7qFffN4-1786113547-1.0.1.1-M7WEppHlrAmds1vEMmFOAxEwmPwIVpYCdx3IfFEg0II\"+ window._cf_chl_opt.cOgUHash);a.onload = function() {history.replaceState(null, null, ogU);}}document.getElementsByTagName('head')[0].appendChild(a);}());</script></body></html>"
+      }
+    },
+    "sitemap": {
+      "status": 403,
+      "ok": false,
+      "final_url": "https://www.cannaconnection.com/sitemap.xml",
+      "server": "cloudflare",
+      "cf_ray": true,
+      "ctype": "text/html; charset=UTF-8",
+      "walls": [
+        "cloudflare-headers",
+        "cf-challenge"
+      ],
+      "error": "HTTP Error 403: Forbidden",
+      "bytes": 5618,
+      "loc_count_sample": 0,
+      "loc_sample": [],
+      "is_index": false
+    }
+  }
+}

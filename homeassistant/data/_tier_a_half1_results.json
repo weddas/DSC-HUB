@@ -1,0 +1,63 @@
+{
+  "updated_at": "2026-08-07T22:40:19Z",
+  "attempted": 5,
+  "succeeded": 5,
+  "total_items": 4575,
+  "results": [
+    {
+      "name": "1522 Genetics",
+      "slug": "1522-genetics",
+      "url": "https://www.1522-genetics.com/",
+      "platform": "woocommerce",
+      "status": "ok",
+      "count": 15,
+      "urls_discovered": 15,
+      "error": null,
+      "skipped": 0
+    },
+    {
+      "name": "Annunaki Genetics",
+      "slug": "annunaki-genetics",
+      "url": "https://annunakigenetics.com/",
+      "platform": "woocommerce",
+      "status": "ok",
+      "count": 100,
+      "urls_discovered": 100,
+      "error": null,
+      "skipped": 0
+    },
+    {
+      "name": "Freedom of Seeds",
+      "slug": "freedom-of-seeds",
+      "url": "https://freedomofseeds.com/",
+      "platform": "woocommerce",
+      "status": "ok",
+      "count": 3980,
+      "urls_discovered": 4064,
+      "error": null,
+      "skipped": 69
+    },
+    {
+      "name": "Terp Fi3nd",
+      "slug": "terp-fi3nd",
+      "url": "https://terpfi3nd.com/",
+      "platform": "woocommerce",
+      "status": "ok",
+      "count": 432,
+      "urls_discovered": 432,
+      "error": null,
+      "skipped": 0
+    },
+    {
+      "name": "Atlas Seed",
+      "slug": "atlas-seed",
+      "url": "https://atlasseed.com/",
+      "platform": "woocommerce",
+      "status": "ok",
+      "count": 48,
+      "urls_discovered": 299,
+      "error": null,
+      "skipped": 19
+    }
+  ]
+}

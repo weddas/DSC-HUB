@@ -5,6 +5,11 @@
 #  handshake nudge, follower resync, sticky safe-off clear.
 #  Coherence / RF / CHX = notify only (no setpoint invent).
 #  FIX_ACTIVE defers safe-off automations.
+#
+#  Appliances (F-010): bridge Noise client is primary Sonoff path; HA
+#  demand followers remain idempotent fallback (resync unchanged).
+#  Prefer DSC-Anchor SoftAP BSSID (sensor.dsc_bridge_anchor_bssid) when
+#  Lock WiFi AP is on — see dsc_v4_bridge.yaml.
 # ==================================================================
 
 input_number:
@@ -17,6 +22,12 @@ input_number:
     unit_of_measurement: s
     mode: box
     icon: mdi:timer-outline
+
+input_text:
+  dsc_evt_autofix_last:
+    name: DSC EVT Autofix Last
+    max: 64
+    initial: ""
 
 template:
   - binary_sensor:
@@ -73,84 +84,86 @@ script:
         value_template: >
           {% set last = states('input_text.dsc_evt_autofix_last') %}
           {{ last != code ~ '|' ~ (now().timestamp()|int // 60) }}
-      - service: input_text.set_value
+      - action: input_text.set_value
         target: {entity_id: input_text.dsc_evt_autofix_last}
         data:
           value: "{{ code }}|{{ now().timestamp()|int // 60 }}"
       - choose:
-          - conditions: "{{ code == 'API_BLIP' }}"
+          - conditions:
+              - condition: template
+                value_template: "{{ code == 'API_BLIP' }}"
             sequence:
-              - service: homeassistant.update_entity
+              - action: homeassistant.update_entity
                 target:
                   entity_id: binary_sensor.dsc_hub_ha_link_status
-              - service: script.dsc_notify
+              - action: script.dsc_notify
                 data:
                   title: "DSC API blip"
                   message: "Hub API blip — refreshed link entity. Climate continues on hub."
-          - conditions: "{{ code == 'FOLLOWER_DRIFT' }}"
+          - conditions:
+              - condition: template
+                value_template: "{{ code == 'FOLLOWER_DRIFT' }}"
             sequence:
-              - service: automation.trigger
+              - action: automation.trigger
                 target:
                   entity_id:
-                    - automation.dsc_follower_heater
-                    - automation.dsc_follower_dehumidifier
-                    - automation.dsc_follower_humidifier
-                    - automation.dsc_follower_clone_humidifier
+                    - automation.dsc_hub_heater_follows_heater_demand
+                    - automation.dsc_hub_dehumidifier_follows_dehumidifier_demand
+                    - automation.dsc_hub_humidifier_follows_humidifier_demand
+                    - automation.dsc_hub_clone_humidifier_follows_clone_humidifier_demand
                 data: {skip_condition: true}
-              - service: script.dsc_notify
+              - action: script.dsc_notify
                 data:
                   title: "DSC follower drift"
                   message: "Resynced Sonoff demand followers from hub demands."
-          - conditions: "{{ code in ['COHERENCE','CHX','REJOIN','FLEET_JUMP'] }}"
+          - conditions:
+              - condition: template
+                value_template: "{{ code in ['COHERENCE','CHX','REJOIN','FLEET_JUMP'] }}"
             sequence:
-              - service: script.dsc_notify
+              - action: script.dsc_notify
                 data:
                   title: "DSC fleet {{ code }}"
                   message: >
                     {{ states('sensor.dsc_hub_last_evt') }}
                     · RF {{ states('sensor.dsc_hub_rf_status') }}
                     · Fix {{ 'ACTIVE' if fix_on else 'idle' }}
-          - conditions: "{{ code == 'FAILSAFE' }}"
+          - conditions:
+              - condition: template
+                value_template: "{{ code == 'FAILSAFE' }}"
             sequence:
-              - service: script.dsc_notify
+              - action: script.dsc_notify
                 data:
                   title: "DSC FAILSAFE"
                   message: "{{ states('sensor.dsc_hub_last_evt') }}"
-
-input_text:
-  dsc_evt_autofix_last:
-    name: DSC EVT Autofix Last
-    max: 64
-    initial: ""
 
 automation:
   - id: dsc_evt_autofix_on_change
     alias: "DSC-HUB · EVT autofix on last_evt change"
     mode: queued
     max: 5
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: sensor.dsc_hub_last_evt
-    condition:
+    conditions:
       - condition: state
         entity_id: binary_sensor.dsc_evt_fresh
         state: "on"
       - condition: template
         value_template: >
           {{ states('sensor.dsc_hub_evt_code') not in ['none','NONE','','unknown','unavailable'] }}
-    action:
-      - service: script.dsc_evt_autofix
+    actions:
+      - action: script.dsc_evt_autofix
 
   # FIX_ACTIVE: defer sticky safe-off / aggressive HA off paths
   - id: dsc_fix_active_defer_safe_off
     alias: "DSC-HUB · FIX_ACTIVE defers HA safe-off"
     mode: restart
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: binary_sensor.dsc_hub_fix_active
         to: "on"
-    action:
-      - service: script.dsc_notify
+    actions:
+      - action: script.dsc_notify
         data:
           title: "DSC Fleet Fix active"
           message: "HA safe-off deferred; hub local climate continues. OTA blocked on hub."
@@ -158,10 +171,10 @@ automation:
   - id: dsc_follower_drift_probe
     alias: "DSC-HUB · FOLLOWER_DRIFT probe"
     mode: single
-    trigger:
-      - platform: time_pattern
+    triggers:
+      - trigger: time_pattern
         minutes: "/5"
-    condition:
+    conditions:
       - condition: state
         entity_id: binary_sensor.dsc_hub_fix_active
         state: "off"
@@ -180,33 +193,33 @@ automation:
             {% endif %}
           {% endfor %}
           {{ ns.bad }}
-    action:
-      - service: persistent_notification.create
+    actions:
+      - action: persistent_notification.create
         data:
           title: "DSC follower drift"
-          message: "Demand ON but follower OFF > probe — triggering autofix map."
+          message: "Demand ON but follower OFF — probe — triggering autofix map."
           notification_id: dsc_follower_drift
       # Hub cannot emit EVT from HA; stamp a local notify and run autofix path
-      - service: script.dsc_notify
+      - action: script.dsc_notify
         data:
           title: "DSC FOLLOWER_DRIFT"
           message: "Demand/follower mismatch — resyncing followers."
-      - service: automation.trigger
+      - action: automation.trigger
         target:
           entity_id:
-            - automation.dsc_follower_heater
-            - automation.dsc_follower_dehumidifier
-            - automation.dsc_follower_humidifier
+            - automation.dsc_hub_heater_follows_heater_demand
+            - automation.dsc_hub_dehumidifier_follows_dehumidifier_demand
+            - automation.dsc_hub_humidifier_follows_humidifier_demand
         data: {skip_condition: true}
 
   - id: dsc_coherence_notify
     alias: "DSC-HUB · coherence mismatch notify"
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: binary_sensor.dsc_hub_coherence_mismatch
         to: "on"
-    action:
-      - service: script.dsc_notify
+    actions:
+      - action: script.dsc_notify
         data:
           title: "DSC settings coherence"
           message: >
@@ -216,13 +229,13 @@ automation:
 
   - id: dsc_chx_hygiene_cue
     alias: "DSC-HUB · Nest channel-split cue (F-004)"
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: binary_sensor.dsc_nest_channel_split
         to: "on"
         for: "00:10:00"
-    action:
-      - service: persistent_notification.create
+    actions:
+      - action: persistent_notification.create
         data:
           notification_id: dsc_f004_chx
           title: "DSC Nest channel lock (F-004)"

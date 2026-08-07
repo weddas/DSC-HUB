@@ -1,0 +1,34 @@
+# ==================================================================
+#  DSC-BRIDGE — KIT stub (Ethernet + SoftAP Anchor)
+#  SoftAP satellite hello to hub DSC-Setup is deferred (ESPHome cannot
+#  combine wifi: STA with ethernet:). After first boot, paste Anchor
+#  BSSID into hub bridge_mac / Lock WiFi (sensor.dsc_bridge_anchor_bssid).
+# ==================================================================
+
+substitutions:
+  name: dsc-bridge
+  friendly_name: DSC-BRIDGE
+  api_key_val: !secret dsc_bridge_api_key
+  ota_password_val: !secret dsc_bridge_ota_password
+  ap_password_val: !secret dsc_bridge_ap_password
+  setup_ap_password: !secret dsc_setup_ap_password
+  anchor_ap_password: !secret dsc_anchor_ap_password
+  anchor_ssid: "DSC-Anchor"
+  anchor_channel: "11"
+  hub_mac: "00:00:00:00:00:00"
+  espnow_cmd_tag: "54727"
+  espnow_key: !secret espnow_key
+  fleet_role: "bridge"
+  fleet_pot_index: "0"
+  dsc_heater_host: !secret dsc_heater_host
+  dsc_heatmat_host: !secret dsc_heatmat_host
+  dsc_humidifier_host: !secret dsc_humidifier_host
+  dsc_dehumidifier_host: !secret dsc_dehumidifier_host
+  dsc_heater_api_key: !secret dsc_heater_api_key
+  dsc_heatmat_api_key: !secret dsc_heatmat_api_key
+  dsc_humidifier_api_key: !secret dsc_humidifier_api_key
+  dsc_dehumidifier_api_key: !secret dsc_dehumidifier_api_key
+
+packages:
+  bridge: !include dsc-bridge-common.yaml
+  # SoftAP satellite hello deferred — see stub header.

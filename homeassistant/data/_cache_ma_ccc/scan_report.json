@@ -1,0 +1,134 @@
+{
+  "built_at": "2026-08-07T17:35:10Z",
+  "reports": [
+    {
+      "url": "https://masscannabiscontrol.com/resource/CCC_Testing_Results_2025.csv",
+      "fields": [
+        "DATE",
+        "METRC ID",
+        "METRC SOURCE TAG",
+        "ANALYTE/TEST ID",
+        "RESULT",
+        "TESTPASSED",
+        "LAB PERFORMING THE TEST",
+        "NOTES/COMMENTS"
+      ],
+      "named_strain_rows": 0,
+      "empty_strain_rows": 80000,
+      "anon_strain_rows": 0,
+      "thc_analyte_rows": 22904,
+      "terpene_analyte_rows": 0,
+      "unique_named_strains": 0,
+      "top_named_strains": [],
+      "top_analytes": [
+        [
+          "THC (%) Raw Plant Material",
+          11454
+        ],
+        [
+          "THCA (%) Raw Plant Material",
+          11450
+        ],
+        [
+          "Lead (ppm) Raw Plant Material",
+          11432
+        ],
+        [
+          "Arsenic (ppm) Raw Plant Material",
+          11428
+        ],
+        [
+          "Mercury (ppm) Raw Plant Material",
+          11428
+        ],
+        [
+          "Total Yeast and Mold (CFU/g) Raw Plant Material",
+          11419
+        ],
+        [
+          "Cadmium (ppm) Raw Plant Material",
+          11389
+        ]
+      ],
+      "id": "ccc_2025",
+      "note": "no Strain column; METRC + analyte only",
+      "ok": true
+    },
+    {
+      "url": "https://masscannabiscontrol.com/resource/Testing_Results_2024_20260415_OpenData.csv",
+      "fields": [
+        "Date",
+        "METRC ID",
+        "METRC source tag",
+        "Test ID",
+        "Strain",
+        "Lab performing the test",
+        "TestCategory",
+        "Analyte/Test ID",
+        "Result",
+        "Quantity",
+        "UnitOfMeasure",
+        "TestPassed",
+        "ProductCategoryTypeName",
+        "Notes/comments"
+      ],
+      "named_strain_rows": 0,
+      "empty_strain_rows": 80000,
+      "anon_strain_rows": 0,
+      "thc_analyte_rows": 0,
+      "terpene_analyte_rows": 0,
+      "unique_named_strains": 0,
+      "top_named_strains": [],
+      "top_analytes": [
+        [
+          "Arsenic (ppm) Raw Plant Material",
+          62935
+        ],
+        [
+          "Cadmium (ppm) Raw Plant Material",
+          17065
+        ]
+      ],
+      "id": "ccc_2024",
+      "note": "Strain column blank across full file (~440k rows)",
+      "ok": true
+    },
+    {
+      "url": "https://masscannabiscontrol.com/resource/Research-IndustryReport/Testing_Data_THC_THCA_Y%26M-2021-2023.csv",
+      "fields": [
+        "ProductCategoryType",
+        "MetrcID",
+        "Strain",
+        "TestingLab(ITL)",
+        "Test Type Name",
+        "TestResult",
+        "Test Performed Date",
+        "TestComment"
+      ],
+      "named_strain_rows": 0,
+      "empty_strain_rows": 0,
+      "anon_strain_rows": 80000,
+      "thc_analyte_rows": 53334,
+      "terpene_analyte_rows": 0,
+      "unique_named_strains": 0,
+      "top_named_strains": [],
+      "top_analytes": [
+        [
+          "THC (%) Raw Plant Material",
+          26667
+        ],
+        [
+          "THCA (%) Raw Plant Material",
+          26667
+        ],
+        [
+          "Total Yeast and Mold (CFU/g) Raw Plant Material",
+          26666
+        ]
+      ],
+      "id": "ccc_2021_2023",
+      "note": "Strain values anonymized as Strain_N",
+      "ok": true
+    }
+  ]
+}

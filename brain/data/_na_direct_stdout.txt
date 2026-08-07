@@ -1,0 +1,68 @@
+02:00:26 START direct NA merge
+02:00:27 attempt 1/10 north_atlantic.sqlite3
+02:02:41 exc database is locked
+Traceback (most recent call last):
+  File "Y:\Digital Stealth Care\Projects\DSC-HUB\scripts\_north_atlantic_direct.py", line 22, in <module>
+    rc = main(["--only", only, "--no-search", "--no-link"])
+  File "\\192.168.86.2\Digital-Documents\Digital Stealth Care\Projects\DSC-HUB\scripts\merge_staging_to_master.py", line 189, in main
+    init_corpus(args.master)
+    ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "\\192.168.86.2\Digital-Documents\Digital Stealth Care\Projects\DSC-HUB\brain\dsc_brain\corpus.py", line 123, in init_corpus
+    conn.commit()
+    ~~~~~~~~~~~^^
+sqlite3.OperationalError: database is locked
+02:06:20 START resilient NA merge
+02:06:21 attempt 1/10 north_atlantic.sqlite3
+02:06:21 waiting clear journal=True apply_lock=False
+02:06:31 waiting clear journal=True apply_lock=False
+02:06:41 waiting clear journal=True apply_lock=False
+02:06:51 waiting clear journal=True apply_lock=False
+02:07:01 waiting clear journal=True apply_lock=False
+02:07:11 waiting clear journal=True apply_lock=False
+02:07:21 waiting clear journal=True apply_lock=False
+02:07:31 waiting clear journal=True apply_lock=False
+02:07:41 waiting clear journal=True apply_lock=False
+02:07:51 waiting clear journal=True apply_lock=False
+02:08:01 waiting clear journal=True apply_lock=False
+02:08:11 waiting clear journal=True apply_lock=False
+02:08:21 waiting clear journal=True apply_lock=False
+02:08:31 waiting clear journal=True apply_lock=False
+02:08:41 waiting clear journal=True apply_lock=False
+02:08:51 clear-timeout; retry
+02:08:51 attempt 2/10 north_atlantic.sqlite3
+02:08:51 waiting clear journal=True apply_lock=False
+02:09:01 waiting clear journal=True apply_lock=False
+02:09:11 waiting clear journal=True apply_lock=False
+02:09:21 waiting clear journal=True apply_lock=False
+02:09:31 waiting clear journal=True apply_lock=False
+02:09:41 waiting clear journal=True apply_lock=False
+02:09:51 waiting clear journal=True apply_lock=False
+02:10:02 waiting clear journal=True apply_lock=False
+02:10:12 waiting clear journal=True apply_lock=False
+02:10:22 waiting clear journal=True apply_lock=False
+02:10:32 waiting clear journal=True apply_lock=False
+02:10:42 waiting clear journal=True apply_lock=False
+02:10:52 waiting clear journal=True apply_lock=False
+02:11:02 waiting clear journal=True apply_lock=False
+02:11:12 waiting clear journal=True apply_lock=False
+02:11:22 clear-timeout; retry
+02:11:22 attempt 3/10 north_atlantic.sqlite3
+02:11:22 waiting clear journal=True apply_lock=False
+02:11:32 waiting clear journal=True apply_lock=False
+02:11:42 waiting clear journal=True apply_lock=False
+02:11:52 waiting clear journal=True apply_lock=False
+02:12:02 waiting clear journal=True apply_lock=False
+02:12:12 waiting clear journal=True apply_lock=False
+02:12:22 waiting clear journal=True apply_lock=False
+02:12:32 waiting clear journal=True apply_lock=False
+02:12:42 waiting clear journal=True apply_lock=False
+02:12:52 waiting clear journal=True apply_lock=False
+02:13:02 waiting clear journal=True apply_lock=False
+02:13:12 waiting clear journal=True apply_lock=False
+02:13:22 waiting clear journal=True apply_lock=False
+02:13:32 waiting clear journal=True apply_lock=False
+02:13:42 waiting clear journal=True apply_lock=False
+02:13:52 clear-timeout; retry
+02:13:52 attempt 4/10 north_atlantic.sqlite3
+02:13:52 waiting clear journal=True apply_lock=False
+02:14:02 waiting clear journal=True apply_lock=False

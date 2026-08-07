@@ -1,0 +1,4 @@
+boot
+ROOT=\\192.168.86.2\Digital-Documents\Digital Stealth Care\Projects\DSC-HUB
+staging=\\192.168.86.2\Digital-Documents\Digital Stealth Care\Projects\DSC-HUB\brain\data\staging\cannabis_intelligence.sqlite3 exists=True
+connecting \\192.168.86.2\Digital-Documents\Digital Stealth Care\Projects\DSC-HUB\brain\data\dsc_brain.sqlite3

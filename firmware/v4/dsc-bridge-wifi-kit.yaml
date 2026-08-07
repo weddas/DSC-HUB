@@ -1,0 +1,7 @@
+# ==================================================================
+#  DSC-BRIDGE · kit network note
+#  SoftAP Anchor = dsc_anchor_ap (with ethernet). Kit SoftAP satellite
+#  hello to hub DSC-Setup still needs STA — F-011 / SoftAP-STA kit
+#  join for bridge is deferred; paste sensor.dsc_bridge_anchor_bssid
+#  into hub bridge_mac / Lock WiFi after first ethernet boot.
+# ==================================================================

@@ -1,0 +1,37 @@
+queue Tier A N–Z kept=11
+targets total: 19
+probing 19 targets…
+  probe nation-of-kamas: tier=A platform=shopify ok caps=['shopify_json', 'sitemap']
+  probe nectar-seeds: tier=A platform=magento ok caps=['sitemap']
+  probe next-generation-seed-company: tier=A platform=woocommerce ok caps=['sitemap']
+  probe nordland-seeds: tier=A platform=woocommerce ok caps=['sitemap', 'sitemap_index', 'wc_product_sitemap']
+  probe norstar-genetics: tier=A platform=woocommerce ok caps=['sitemap']
+  probe nuka-seeds: tier=A platform=woocommerce ok caps=['sitemap_index', 'wc_product_sitemap']
+  probe ocean-grown-seeds: tier=A platform=magento ok caps=['sitemap']
+  probe oregon-green-seed: tier=A platform=woocommerce ok caps=['sitemap', 'sitemap_index', 'wc_product_sitemap']
+  probe original-sensible-seeds: tier=A platform=magento ok caps=['sitemap']
+  probe pagoda-seeds: tier=A platform=magento ok caps=['sitemap']
+  probe pheno-finder-seeds: tier=A platform=woocommerce ok caps=['sitemap']
+  probe quebec-cannabis-seeds: tier=A platform=magento ok caps=['sitemap']
+  probe raw-genetics: tier=A platform=woocommerce ok caps=['sitemap', 'sitemap_index', 'wc_product_sitemap']
+  probe ripper-seeds: tier=D platform=None timeout caps=None
+  probe sensi-seeds: tier=A platform=magento ok caps=['sitemap', 'sitemap_index']
+  probe soma-seeds: tier=A platform=magento ok caps=['sitemap']
+  probe sweet-seeds: tier=A platform=magento ok caps=[]
+  probe the-real-seed-company: tier=A platform=woocommerce ok caps=['sitemap']
+  probe vision-seeds: tier=A platform=None ok caps=['sitemap']
+=== scrape nation-of-kamas (Nation Of Kamas) platform=shopify caps=['shopify_json', 'sitemap']
+nation-of-kamas staging: family=bank_nation_of_kamas raw=2 db=\\192.168.86.2\Digital-Documents\Digital Stealth Care\Projects\DSC-HUB\brain\data\staging\bank_nation_of_kamas.sqlite3
+=== scrape nectar-seeds (Nectar Seeds) platform=magento caps=['sitemap']
+  nectar-seeds products.json page 1 fail: HTTP Error 404: Not Found
+  sitemap https://nectar-seeds.com/sitemap.xml +children -> +0 (total 0)
+  sitemap https://www.nectar-seeds.com/sitemap.xml +children -> +0 (total 0)
+nectar-seeds: sitemap/product urls=0
+=== scrape next-generation-seed-company (Next Generation Seed Company) platform=woocommerce caps=['sitemap']
+  next-generation-seed-company products.json page 1 fail: HTTP Error 404: Not Found
+  sitemap https://nextgenerationseedcompany.com/sitemap.xml +children -> +68 (total 68)
+next-generation-seed-company: sitemap/product urls=68
+  next-generation-seed-company ok #1 'Acapulco Gold'
+  next-generation-seed-company ok #2 'Afghani Kush auto'
+  next-generation-seed-company checkpoint items=20 scraped=20 rate=0.26/s
+  next-generation-seed-company ok #25 'Dynamite'

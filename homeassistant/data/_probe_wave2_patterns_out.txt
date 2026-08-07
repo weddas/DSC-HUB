@@ -1,0 +1,300 @@
+﻿=== greenhouse_all count=541
+      5  4seg:/merchandise/à/green-house
+      4  3seg:/merchandise/à/green-house-seed-co
+      4  4seg:/merchandise/à/strain-hunters
+      2  4seg:/merchandise/à/green-house-seed-co
+      2  4seg:/merchandise/à/green-house-feeding
+      2  4seg:/merchandise/à/king-of-cannabis
+      2  3seg:/merchandise/à/green-house-feeding
+      2  4seg:/merchandise/à/strain-hunters-logo-black
+      2  4seg:/merchandise/à/green-house-logo-black
+      1  (root)
+      1  2seg:/medicinal-seeds/à/moderate-thc-seeds
+      1  3seg:/feminised-cannabis-seeds/à/indoor
+      1  3seg:/feminised-cannabis-seeds/à/outdoor
+      1  3seg:/feminised-cannabis-seeds/à/white-family-seeds
+      1  3seg:/feminised-cannabis-seeds/à/hybrid-cannabis-seeds
+  samples:
+    https://shop.greenhouseseeds.nl/
+    https://shop.greenhouseseeds.nl/medicinal-seeds/moderate-thc-seeds/
+    https://shop.greenhouseseeds.nl/feminised-cannabis-seeds/climate-zones/indoor/
+    https://shop.greenhouseseeds.nl/feminised-cannabis-seeds/climate-zones/outdoor/
+    https://shop.greenhouseseeds.nl/feminised-cannabis-seeds/families/white-family-seeds/
+    https://shop.greenhouseseeds.nl/feminised-cannabis-seeds/types-of-seeds/hybrid-cannabis-seeds/
+    https://shop.greenhouseseeds.nl/feminised-cannabis-seeds/climate-zones/tropical-and-mediterranean/
+    https://shop.greenhouseseeds.nl/feminised-cannabis-seeds/climate-zones/moderate-and-continental/
+    https://shop.greenhouseseeds.nl/feminised-cannabis-seeds/types-of-seeds/mostly-sativa-seeds/
+    https://shop.greenhouseseeds.nl/feminised-cannabis-seeds/families/arjans-haze-seeds/
+    https://shop.greenhouseseeds.nl/award-winning-seeds/high-times-cannabis-cup/
+    https://shop.greenhouseseeds.nl/award-winning-seeds/highlife-festival/
+
+=== greenhouse_seedish count=541
+      5  4seg:/merchandise/à/green-house
+      4  3seg:/merchandise/à/green-house-seed-co
+      4  4seg:/merchandise/à/strain-hunters
+      2  4seg:/merchandise/à/green-house-seed-co
+      2  4seg:/merchandise/à/green-house-feeding
+      2  4seg:/merchandise/à/king-of-cannabis
+      2  3seg:/merchandise/à/green-house-feeding
+      2  4seg:/merchandise/à/strain-hunters-logo-black
+      2  4seg:/merchandise/à/green-house-logo-black
+      1  (root)
+      1  2seg:/medicinal-seeds/à/moderate-thc-seeds
+      1  3seg:/feminised-cannabis-seeds/à/indoor
+      1  3seg:/feminised-cannabis-seeds/à/outdoor
+      1  3seg:/feminised-cannabis-seeds/à/white-family-seeds
+      1  3seg:/feminised-cannabis-seeds/à/hybrid-cannabis-seeds
+  samples:
+    https://shop.greenhouseseeds.nl/
+    https://shop.greenhouseseeds.nl/medicinal-seeds/moderate-thc-seeds/
+    https://shop.greenhouseseeds.nl/feminised-cannabis-seeds/climate-zones/indoor/
+    https://shop.greenhouseseeds.nl/feminised-cannabis-seeds/climate-zones/outdoor/
+    https://shop.greenhouseseeds.nl/feminised-cannabis-seeds/families/white-family-seeds/
+    https://shop.greenhouseseeds.nl/feminised-cannabis-seeds/types-of-seeds/hybrid-cannabis-seeds/
+    https://shop.greenhouseseeds.nl/feminised-cannabis-seeds/climate-zones/tropical-and-mediterranean/
+    https://shop.greenhouseseeds.nl/feminised-cannabis-seeds/climate-zones/moderate-and-continental/
+    https://shop.greenhouseseeds.nl/feminised-cannabis-seeds/types-of-seeds/mostly-sativa-seeds/
+    https://shop.greenhouseseeds.nl/feminised-cannabis-seeds/families/arjans-haze-seeds/
+    https://shop.greenhouseseeds.nl/award-winning-seeds/high-times-cannabis-cup/
+    https://shop.greenhouseseeds.nl/award-winning-seeds/highlife-festival/
+
+=== fastbuds_enish count=4156
+      4  3seg:/pl/à/przewodnik-tydzien-po-tygodniu-po-szczep
+      2  3seg:/ru/à/rukovodstvo-po-vyrashchivaniyu-v-indore-
+      2  3seg:/cz/à/navstivte-nas-na-cannafestu-praha-2023
+      2  3seg:/pl/à/podstawy-uprawy-automatycznej-w-glebie-o
+      2  3seg:/pl/à/10-najlepszych-automatycznie-kwitnacych-
+      2  3seg:/pl/à/jak-uprawiac-konopie-w-pomieszczeniach-p
+      2  3seg:/pl/à/5-najwazniejszych-wskazowek-dotyczacych-
+      2  3seg:/pl/à/najlepszy-harmonogram-swiatla-dla-konopi
+      2  3seg:/fi/à/breeding-gorilla-cookies-and-strawberry-
+      2  3seg:/ro/à/an-exclusive-interview-with-the-legend-h
+      1  1seg:autoflowering-cannabis-seeds
+      1  1seg:news
+      1  1seg:about
+      1  1seg:distributors
+      1  1seg:faq
+  samples:
+    https://fastbuds.com/autoflowering-cannabis-seeds
+    https://fastbuds.com/news
+    https://fastbuds.com/about
+    https://fastbuds.com/distributors
+    https://fastbuds.com/faq
+    https://fastbuds.com/contact
+    https://fastbuds.com/vaporizers
+    https://fastbuds.com/events
+    https://fastbuds.com/delivery
+    https://fastbuds.com/cod
+    https://fastbuds.com/check-authenticity
+    https://fastbuds.com/careers
+
+fastbuds top path[0]: [('videos', 939), ('pl', 579), ('cz', 375), ('ru', 370), ('gr', 314), ('ro', 307), ('nl', 293), ('fi', 293), ('th', 277), ('us', 200), ('seeds', 121), ('products', 43), ('news', 24), ('distributors', 2), ('autoflowering-cannabis-seeds', 1), ('about', 1), ('faq', 1), ('contact', 1), ('vaporizers', 1), ('events', 1)]
+=== fastbuds_prodish count=1661
+      1  1seg:autoflowering-cannabis-seeds
+      1  2seg:/seeds/à/c4
+      1  2seg:/seeds/à/californian-snow
+      1  2seg:/seeds/à/crystal-meth
+      1  2seg:/seeds/à/fastberry
+      1  2seg:/seeds/à/g14
+      1  2seg:/seeds/à/mexican-airlines
+      1  2seg:/seeds/à/rhino-ryder
+      1  2seg:/seeds/à/grapefruit
+      1  2seg:/seeds/à/lsd-25
+      1  2seg:/seeds/à/pineapple-express
+      1  2seg:/seeds/à/green-crack
+      1  2seg:/seeds/à/six-shooter
+      1  2seg:/seeds/à/girl-scout-cookies
+      1  2seg:/seeds/à/west-coast-og
+  samples:
+    https://fastbuds.com/autoflowering-cannabis-seeds
+    https://fastbuds.com/seeds/c4
+    https://fastbuds.com/seeds/californian-snow
+    https://fastbuds.com/seeds/crystal-meth
+    https://fastbuds.com/seeds/fastberry
+    https://fastbuds.com/seeds/g14
+    https://fastbuds.com/seeds/mexican-airlines
+    https://fastbuds.com/seeds/rhino-ryder
+    https://fastbuds.com/seeds/grapefruit
+    https://fastbuds.com/seeds/lsd-25
+    https://fastbuds.com/seeds/pineapple-express
+    https://fastbuds.com/seeds/green-crack
+
+=== barneys_com count=180
+      3  1seg:organic-rolling-papers-with-filter-tips-
+      1  (root)
+      1  1seg:special-offer-seeds
+      1  1seg:account
+      1  1seg:autoflowering-seeds
+      1  1seg:feminised-seeds
+      1  1seg:new-releases
+      1  1seg:cali-collection
+      1  1seg:high-thc-strains
+      1  1seg:high-yield-collection
+      1  1seg:precision-f1-hybrids
+      1  1seg:best-washer-strains-bubble-hash-rosin-ex
+      1  1seg:cannabis-cup-winners
+      1  1seg:chill-out-zone
+      1  1seg:high-cbd-strains
+  samples:
+    https://www.barneysfarm.com/
+    https://www.barneysfarm.com/special-offer-seeds
+    https://www.barneysfarm.com/account
+    https://www.barneysfarm.com/autoflowering-seeds
+    https://www.barneysfarm.com/feminised-seeds
+    https://www.barneysfarm.com/new-releases
+    https://www.barneysfarm.com/cali-collection
+    https://www.barneysfarm.com/high-thc-strains
+    https://www.barneysfarm.com/high-yield-collection
+    https://www.barneysfarm.com/precision-f1-hybrids
+    https://www.barneysfarm.com/best-washer-strains-bubble-hash-rosin-extracts
+    https://www.barneysfarm.com/cannabis-cup-winners
+
+barneys top path[0]: [('', 1), ('special-offer-seeds', 1), ('account', 1), ('autoflowering-seeds', 1), ('feminised-seeds', 1), ('new-releases', 1), ('cali-collection', 1), ('high-thc-strains', 1), ('high-yield-collection', 1), ('precision-f1-hybrids', 1), ('best-washer-strains-bubble-hash-rosin-extracts', 1), ('cannabis-cup-winners', 1), ('chill-out-zone', 1), ('high-cbd-strains', 1), ('amsterdam-classics', 1), ('its-all-about-the-taste', 1), ('regular-seeds', 1), ('merchandise', 1), ('banana-runtz-817', 1), ('durban-poison-815', 1), ('durban-z-813', 1), ('london-pound-cake-816', 1), ('mac-1-812', 1), ('purple-punch-x-lemon-drizzle-629', 1), ('runtz-x-layer-cake-597', 1)]
+mephisto children ['https://mephistogenetics.com/sitemap_agentic_discovery.xml', 'https://mephistogenetics.com/sitemap_products_1.xml?from=7713169735875&amp;to=15082106847598', 'https://mephistogenetics.com/sitemap_pages_1.xml?from=92453732547&amp;to=717509230958', 'https://mephistogenetics.com/sitemap_collections_1.xml?from=324016963779&amp;to=666575700334', 'https://mephistogenetics.com/sitemap_blogs_1.xml']
+=== mephisto_sitemap_products_1.xml?from=7713169735875&amp;to=15082106847598 count=364
+      1  (root)
+      1  2seg:/products/à/3-bears-og
+      1  2seg:/products/à/3wok-og
+      1  2seg:/products/à/4-assed-monkey
+      1  2seg:/products/à/alien-vs-triangle
+      1  2seg:/products/à/aunt-ginnys-elixir
+      1  2seg:/products/à/bear-assed-monkey
+      1  2seg:/products/à/bear-chillz
+      1  2seg:/products/à/beary-white
+      1  2seg:/products/à/bigfoot-baked-alaska
+      1  2seg:/products/à/bubbasquanch
+      1  2seg:/products/à/canna-cheese-1-1
+      1  2seg:/products/à/chemdogging
+      1  2seg:/products/à/creamzicle
+      1  2seg:/products/à/creme-bubbly
+  samples:
+    https://mephistogenetics.com/
+    https://mephistogenetics.com/products/3-bears-og
+    https://mephistogenetics.com/products/3wok-og
+    https://mephistogenetics.com/products/4-assed-monkey
+    https://mephistogenetics.com/products/alien-vs-triangle
+    https://mephistogenetics.com/products/aunt-ginnys-elixir
+    https://mephistogenetics.com/products/bear-assed-monkey
+    https://mephistogenetics.com/products/bear-chillz
+    https://mephistogenetics.com/products/beary-white
+    https://mephistogenetics.com/products/bigfoot-baked-alaska
+    https://mephistogenetics.com/products/bubbasquanch
+    https://mephistogenetics.com/products/canna-cheese-1-1
+
+dutch sitemaps from robots: ['https://dutch-passion.com/1_index_sitemap.xml', 'https://dutch-passion.com/prestablog_sitemap_master_1.xml']
+=== dutch_1_index_sitemap.xml count=10
+      1  1seg:1_nl_0_sitemap.xml
+      1  1seg:1_en_0_sitemap.xml
+      1  1seg:1_es_0_sitemap.xml
+      1  1seg:1_fr_0_sitemap.xml
+      1  1seg:1_it_0_sitemap.xml
+      1  1seg:1_pl_0_sitemap.xml
+      1  1seg:1_cs_0_sitemap.xml
+      1  1seg:1_hu_0_sitemap.xml
+      1  1seg:1_de_0_sitemap.xml
+      1  1seg:1_ru_0_sitemap.xml
+  samples:
+    https://dutch-passion.com/1_nl_0_sitemap.xml
+    https://dutch-passion.com/1_en_0_sitemap.xml
+    https://dutch-passion.com/1_es_0_sitemap.xml
+    https://dutch-passion.com/1_fr_0_sitemap.xml
+    https://dutch-passion.com/1_it_0_sitemap.xml
+    https://dutch-passion.com/1_pl_0_sitemap.xml
+    https://dutch-passion.com/1_cs_0_sitemap.xml
+    https://dutch-passion.com/1_hu_0_sitemap.xml
+    https://dutch-passion.com/1_de_0_sitemap.xml
+    https://dutch-passion.com/1_ru_0_sitemap.xml
+
+  path buckets: [('1_nl_0_sitemap.xml', 1), ('1_en_0_sitemap.xml', 1), ('1_es_0_sitemap.xml', 1), ('1_fr_0_sitemap.xml', 1), ('1_it_0_sitemap.xml', 1), ('1_pl_0_sitemap.xml', 1), ('1_cs_0_sitemap.xml', 1), ('1_hu_0_sitemap.xml', 1), ('1_de_0_sitemap.xml', 1), ('1_ru_0_sitemap.xml', 1)]
+=== dutch_prestablog_sitemap_master_1.xml count=20
+      1  1seg:prestablog_articles_nl_0.xml
+      1  1seg:prestablog_categories_nl_0.xml
+      1  1seg:prestablog_articles_en_0.xml
+      1  1seg:prestablog_categories_en_0.xml
+      1  1seg:prestablog_articles_es_0.xml
+      1  1seg:prestablog_categories_es_0.xml
+      1  1seg:prestablog_articles_fr_0.xml
+      1  1seg:prestablog_categories_fr_0.xml
+      1  1seg:prestablog_articles_it_0.xml
+      1  1seg:prestablog_categories_it_0.xml
+      1  1seg:prestablog_articles_pl_0.xml
+      1  1seg:prestablog_categories_pl_0.xml
+      1  1seg:prestablog_articles_cs_0.xml
+      1  1seg:prestablog_categories_cs_0.xml
+      1  1seg:prestablog_articles_hu_0.xml
+  samples:
+    https://dutch-passion.com/prestablog_articles_nl_0.xml
+    https://dutch-passion.com/prestablog_categories_nl_0.xml
+    https://dutch-passion.com/prestablog_articles_en_0.xml
+    https://dutch-passion.com/prestablog_categories_en_0.xml
+    https://dutch-passion.com/prestablog_articles_es_0.xml
+    https://dutch-passion.com/prestablog_categories_es_0.xml
+    https://dutch-passion.com/prestablog_articles_fr_0.xml
+    https://dutch-passion.com/prestablog_categories_fr_0.xml
+    https://dutch-passion.com/prestablog_articles_it_0.xml
+    https://dutch-passion.com/prestablog_categories_it_0.xml
+    https://dutch-passion.com/prestablog_articles_pl_0.xml
+    https://dutch-passion.com/prestablog_categories_pl_0.xml
+
+  path buckets: [('prestablog_articles_nl_0.xml', 1), ('prestablog_categories_nl_0.xml', 1), ('prestablog_articles_en_0.xml', 1), ('prestablog_categories_en_0.xml', 1), ('prestablog_articles_es_0.xml', 1), ('prestablog_categories_es_0.xml', 1), ('prestablog_articles_fr_0.xml', 1), ('prestablog_categories_fr_0.xml', 1), ('prestablog_articles_it_0.xml', 1), ('prestablog_categories_it_0.xml', 1), ('prestablog_articles_pl_0.xml', 1), ('prestablog_categories_pl_0.xml', 1), ('prestablog_articles_cs_0.xml', 1), ('prestablog_categories_cs_0.xml', 1), ('prestablog_articles_hu_0.xml', 1), ('prestablog_categories_hu_0.xml', 1), ('prestablog_articles_de_0.xml', 1), ('prestablog_categories_de_0.xml', 1), ('prestablog_articles_ru_0.xml', 1), ('prestablog_categories_ru_0.xml', 1)]
+dna children ['https://dnagenetics.com/post-sitemap.xml', 'https://dnagenetics.com/page-sitemap.xml', 'https://dnagenetics.com/research-sitemap.xml', 'https://dnagenetics.com/product-sitemap.xml', 'https://dnagenetics.com/product_cat-sitemap.xml', 'https://dnagenetics.com/author-sitemap.xml']
+=== dna_products count=88
+      1  1seg:shop
+      1  2seg:/product/à/chocolate-truffle-shuffle-fem
+      1  2seg:/product/à/chocolope-kush
+      1  2seg:/product/à/auto-bahn
+      1  2seg:/product/à/hg23-aka-michael-jordan-fem
+      1  2seg:/product/à/dna-genetics-lighter
+      1  2seg:/product/à/challah-bread
+      1  2seg:/product/à/seed-vault-membership
+      1  2seg:/product/à/chocolope-kush-reg
+      1  2seg:/product/à/kosher-kush-reg
+      1  2seg:/product/à/chocolope-256-reg
+      1  2seg:/product/à/four-prophets-reg
+      1  2seg:/product/à/generation-x-18-reg
+      1  2seg:/product/à/golden-fortunes-reg
+      1  2seg:/product/à/swiss-miss
+  samples:
+    https://dnagenetics.com/shop/
+    https://dnagenetics.com/product/chocolate-truffle-shuffle-fem/
+    https://dnagenetics.com/product/chocolope-kush/
+    https://dnagenetics.com/product/auto-bahn/
+    https://dnagenetics.com/product/hg23-aka-michael-jordan-fem/
+    https://dnagenetics.com/product/dna-genetics-lighter/
+    https://dnagenetics.com/product/challah-bread/
+    https://dnagenetics.com/product/seed-vault-membership/
+    https://dnagenetics.com/product/chocolope-kush-reg/
+    https://dnagenetics.com/product/kosher-kush-reg/
+    https://dnagenetics.com/product/chocolope-256-reg/
+    https://dnagenetics.com/product/four-prophets-reg/
+
+=== dna_products count=28
+      1  2seg:/product-category/à/beginner-friendly-seeds
+      1  2seg:/product-category/à/best-cannabis-seeds
+      1  2seg:/product-category/à/best-selling-seeds
+      1  2seg:/product-category/à/cannabis-clones
+      1  2seg:/product-category/à/cannabis-seed-catalog
+      1  2seg:/product-category/à/seed-deals
+      1  2seg:/product-category/à/cannabis-seed-mix-packs
+      1  2seg:/product-category/à/cheap-weed-seeds
+      1  2seg:/product-category/à/classic-strains
+      1  2seg:/product-category/à/fast-flowering-seeds
+      1  2seg:/product-category/à/high-cbd-seeds
+      1  2seg:/product-category/à/high-thc-seeds
+      1  2seg:/product-category/à/high-yield-seeds
+      1  2seg:/product-category/à/hybrid
+      1  2seg:/product-category/à/indica
+  samples:
+    https://dnagenetics.com/product-category/beginner-friendly-seeds/
+    https://dnagenetics.com/product-category/best-cannabis-seeds/
+    https://dnagenetics.com/product-category/best-selling-seeds/
+    https://dnagenetics.com/product-category/cannabis-clones/
+    https://dnagenetics.com/product-category/cannabis-seed-catalog/
+    https://dnagenetics.com/product-category/seed-deals/
+    https://dnagenetics.com/product-category/cannabis-seed-mix-packs/
+    https://dnagenetics.com/product-category/cheap-weed-seeds/
+    https://dnagenetics.com/product-category/classic-strains/
+    https://dnagenetics.com/product-category/fast-flowering-seeds/
+    https://dnagenetics.com/product-category/high-cbd-seeds/
+    https://dnagenetics.com/product-category/high-thc-seeds/
+

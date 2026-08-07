@@ -1,0 +1,342 @@
+pacific: sitemap cache 915 from dsc_strains_pacific.sitemap_urls.json
+pacific: queued=915 resume_done=281 skipped_404_cache=0 dump_items=275
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/black-cherry-punch-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/black-cherry-punch-seeds/
+  pacific progress idx=250/915 ok=296 404=0 this_run=21
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/black-cherry-soda-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/black-cherry-soda-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/black-diamond-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/black-diamond-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/black-diesel-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/black-diesel-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/black-russian-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/black-russian-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/black-widow-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/black-widow-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/blackberry-cream-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/blackberry-cream-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/blackberry-hashplant-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/blackberry-hashplant-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/blackberry-kush-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/blackberry-kush-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/blackberry-pie-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/blackberry-pie-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/blackberry-rhino-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/blackberry-rhino-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/blackwater-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/blackwater-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/blue-afghani-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/blue-afghani-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/blue-alien-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/blue-alien-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/blue-diesel-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/blue-diesel-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/blue-dragon-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/blue-dragon-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/blue-dream-haze-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/blue-dream-haze-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/blue-gushers-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/blue-gushers-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/blue-jay-way-cbd-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/blue-jay-way-cbd-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/blue-kush-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/blue-kush-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/blue-lights-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/blue-lights-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/blue-moon-rocks-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/blue-moon-rocks-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/blue-moonshine-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/blue-moonshine-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/blue-mystic-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/blue-mystic-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/blue-power-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/blue-power-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/blue-widow-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/blue-widow-feminized-marijuana-seeds/
+  pacific progress idx=275/915 ok=296 404=0 this_run=21
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/blue-zushi-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/blue-zushi-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/blueberry-skunk-feminized-marijuana-seeds-wff/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/blueberry-skunk-feminized-marijuana-seeds-wff/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/blueberry-sugar-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/blueberry-sugar-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/blueberry-waltz-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/blueberry-waltz-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/blueberry-yum-yum-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/blueberry-yum-yum-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/brooklyn-mango-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/brooklyn-mango-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/bubba-kush-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/bubba-kush-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/bubbas-gift-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/bubbas-gift-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/bubble-gum-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/bubble-gum-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/bubbleberry-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/bubbleberry-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/butterscotch-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/butterscotch-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/c4-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/c4-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/cali-kush-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/cali-kush-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/california-love-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/california-love-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/candy-jack-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/candy-jack-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/candyland-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/candyland-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/canna-tsu-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/canna-tsu-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/cascadia-kush-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/cascadia-kush-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/casey-jones-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/casey-jones-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/cbd-fast-eddy-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/cbd-fast-eddy-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/cbd-haze-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/cbd-haze-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/cbd-mango-haze-feminized-marijuana-seeds-2/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/cbd-mango-haze-feminized-marijuana-seeds-2/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/cbd-solomatic-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/cbd-solomatic-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/cbd-stress-killer-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/cbd-stress-killer-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/cbd-yummy-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/cbd-yummy-feminized-marijuana-seeds/
+  pacific progress idx=300/915 ok=296 404=0 this_run=21
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/cereal-milk-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/cereal-milk-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/champagne-kush-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/champagne-kush-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/cheese-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/cheese-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/cheese-quake-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/cheese-quake-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/chem-d-o-g-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/chem-d-o-g-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/chem-scout-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/chem-scout-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/chemdawg-91-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/chemdawg-91-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/cherry-ak-47-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/cherry-ak-47-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/chocolate-kush-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/chocolate-kush-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/chronic-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/chronic-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/cinderella-99-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/cinderella-99-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/cinderellas-dream-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/cinderellas-dream-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/cinex-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/cinex-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/clementine-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/clementine-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/cookie-breath-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/cookie-breath-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/copper-kush-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/copper-kush-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/cotton-candy-kush-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/cotton-candy-kush-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/cowboy-kush-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/cowboy-kush-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/cream-caramel-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/cream-caramel-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/critical-jack-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/critical-jack-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/cuvee-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/cuvee-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/dank-schrader-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/dank-schrader-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/darth-vader-og-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/darth-vader-og-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/deadhead-og-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/deadhead-og-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/death-star-feminized-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/death-star-feminized-seeds/
+  pacific progress idx=325/915 ok=296 404=0 this_run=21
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/deep-chunk-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/deep-chunk-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/deep-purple-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/deep-purple-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/donny-burger-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/donny-burger-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/double-purple-doja-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/double-purple-doja-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/dream-berry-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/dream-berry-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/durban-poison-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/durban-poison-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/dutch-treat-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/dutch-treat-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/dynamite-premium-feminized-seeds-mf/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/dynamite-premium-feminized-seeds-mf/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/early-girl-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/early-girl-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/early-skunk-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/early-skunk-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/east-coast-sour-diesel-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/east-coast-sour-diesel-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/endless-sky-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/endless-sky-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/eran-almog-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/eran-almog-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/euforia-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/euforia-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/fruity-chronic-juice-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/fruity-chronic-juice-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/fruity-pebbles-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/fruity-pebbles-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/fucking-incredible-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/fucking-incredible-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/funky-monkey-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/funky-monkey-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/g13-diesel-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/g13-diesel-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/garlic-bud-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/garlic-bud-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/ghost-og-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/ghost-og-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/gigabud-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/gigabud-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/girl-scout-cookies-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/girl-scout-cookies-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/glitter-bomb-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/glitter-bomb-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/glueberry-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/glueberry-seeds/
+  pacific progress idx=350/915 ok=296 404=0 this_run=21
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/godfather-og-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/godfather-og-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/gods-gift-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/gods-gift-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/goji-og-haze-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/goji-og-haze-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/gold-leaf-cannabis-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/gold-leaf-cannabis-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/gorilla-cookies-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/gorilla-cookies-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/gorilla-runtz-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/gorilla-runtz-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/grand-hindu-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/grand-hindu-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/granddaddy-purple-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/granddaddy-purple-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/grandmas-sugar-cookies-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/grandmas-sugar-cookies-feminized-marijuana-seeds/
+  fail https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/grape-ape-feminized-marijuana-seeds/: HTTP 429 for https://www.pacificseedbank.com/shop-all-marijuana-seeds/beginner-friendly-seeds/grape-ape-feminized-marijuana-seeds/
+
+===== POLITE RESUME 2026-08-08T06:43:38.0802515+10:00 delay=2.75 stage-every=100 =====
+
+
+===== POLITE RESUME 2026-08-07T20:43:51Z delay=2.75 stage-every=100 =====
+pacific: sitemap cache 915 from dsc_strains_pacific.sitemap_urls.json
+pacific: queued=915 resume_done=296 skipped_404_cache=0 dump_items=275
+  pacific checkpoint items=295 done=296 404=0 this_run=20 rate=0.23/s idx=248/915
+pacific staging: {
+  "family": "bank_pacific",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_pacific.sqlite3",
+  "count": 295,
+  "bulk": false,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 290,
+    "strain_variant": 294,
+    "chemistry_profile": 295,
+    "grow_trait": 295,
+    "entity_link": 295,
+    "attribute_kv": 4692,
+    "raw_record": 295,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 18,
+    "source_record": 1
+  }
+}
+  pacific checkpoint items=315 done=315 404=0 this_run=40 rate=0.22/s idx=268/915
+  pacific checkpoint items=335 done=335 404=0 this_run=60 rate=0.22/s idx=288/915
+  pacific checkpoint items=355 done=355 404=0 this_run=80 rate=0.22/s idx=308/915
+  pacific checkpoint items=375 done=375 404=0 this_run=100 rate=0.22/s idx=328/915
+  pacific checkpoint items=395 done=395 404=0 this_run=120 rate=0.22/s idx=348/915
+pacific staging: {
+  "family": "bank_pacific",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_pacific.sqlite3",
+  "count": 395,
+  "bulk": false,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 390,
+    "strain_variant": 394,
+    "chemistry_profile": 395,
+    "grow_trait": 395,
+    "entity_link": 395,
+    "attribute_kv": 6258,
+    "raw_record": 395,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 19,
+    "source_record": 1
+  }
+}
+  pacific checkpoint items=415 done=415 404=0 this_run=140 rate=0.22/s idx=368/915
+  pacific checkpoint items=435 done=435 404=0 this_run=160 rate=0.22/s idx=389/915
+  pacific checkpoint items=455 done=455 404=0 this_run=180 rate=0.22/s idx=409/915
+  pacific checkpoint items=475 done=475 404=0 this_run=200 rate=0.22/s idx=429/915
+  pacific checkpoint items=495 done=495 404=0 this_run=220 rate=0.22/s idx=451/915
+pacific staging: {
+  "family": "bank_pacific",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_pacific.sqlite3",
+  "count": 495,
+  "bulk": false,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 490,
+    "strain_variant": 494,
+    "chemistry_profile": 495,
+    "grow_trait": 495,
+    "entity_link": 495,
+    "attribute_kv": 7821,
+    "raw_record": 495,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 19,
+    "source_record": 1
+  }
+}
+  pacific checkpoint items=515 done=515 404=0 this_run=240 rate=0.22/s idx=471/915
+  pacific checkpoint items=535 done=535 404=0 this_run=260 rate=0.22/s idx=491/915
+  pacific checkpoint items=555 done=555 404=0 this_run=280 rate=0.22/s idx=514/915
+  pacific checkpoint items=575 done=575 404=0 this_run=300 rate=0.22/s idx=534/915
+  pacific checkpoint items=595 done=595 404=0 this_run=320 rate=0.22/s idx=554/915
+pacific staging: {
+  "family": "bank_pacific",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_pacific.sqlite3",
+  "count": 595,
+  "bulk": false,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 590,
+    "strain_variant": 594,
+    "chemistry_profile": 595,
+    "grow_trait": 595,
+    "entity_link": 595,
+    "attribute_kv": 9375,
+    "raw_record": 595,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 19,
+    "source_record": 1
+  }
+}
+  pacific checkpoint items=615 done=615 404=0 this_run=340 rate=0.22/s idx=615/915
+  pacific checkpoint items=635 done=635 404=0 this_run=360 rate=0.22/s idx=635/915
+  pacific checkpoint items=655 done=655 404=0 this_run=380 rate=0.22/s idx=655/915
+  pacific checkpoint items=675 done=675 404=0 this_run=400 rate=0.22/s idx=675/915
+  pacific checkpoint items=695 done=695 404=0 this_run=420 rate=0.22/s idx=695/915
+pacific staging: {
+  "family": "bank_pacific",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_pacific.sqlite3",
+  "count": 695,
+  "bulk": false,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 689,
+    "strain_variant": 693,
+    "chemistry_profile": 695,
+    "grow_trait": 695,
+    "entity_link": 695,
+    "attribute_kv": 11033,
+    "raw_record": 695,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 19,
+    "source_record": 1
+  }
+}
+  pacific checkpoint items=715 done=715 404=0 this_run=440 rate=0.22/s idx=715/915
+  pacific checkpoint items=735 done=735 404=0 this_run=460 rate=0.22/s idx=735/915
+  pacific checkpoint items=755 done=755 404=0 this_run=480 rate=0.23/s idx=755/915
+  pacific checkpoint items=775 done=775 404=0 this_run=500 rate=0.23/s idx=775/915
+  pacific checkpoint items=795 done=795 404=0 this_run=520 rate=0.23/s idx=795/915
+pacific staging: {
+  "family": "bank_pacific",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_pacific.sqlite3",
+  "count": 795,
+  "bulk": false,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 786,
+    "strain_variant": 793,
+    "chemistry_profile": 795,
+    "grow_trait": 795,
+    "entity_link": 795,
+    "attribute_kv": 12696,
+    "raw_record": 795,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 19,
+    "source_record": 1
+  }
+}
+  pacific checkpoint items=815 done=815 404=0 this_run=540 rate=0.23/s idx=815/915
+  pacific checkpoint items=835 done=835 404=0 this_run=560 rate=0.23/s idx=835/915
+  pacific checkpoint items=855 done=855 404=0 this_run=580 rate=0.23/s idx=855/915
+  pacific checkpoint items=875 done=875 404=0 this_run=600 rate=0.23/s idx=875/915
+  pacific checkpoint items=895 done=895 404=0 this_run=620 rate=0.23/s idx=895/915
+pacific staging: {
+  "family": "bank_pacific",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_pacific.sqlite3",
+  "count": 895,
+  "bulk": false,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 884,
+    "strain_variant": 893,
+    "chemistry_profile": 895,
+    "grow_trait": 895,
+    "entity_link": 895,
+    "attribute_kv": 14354,
+    "raw_record": 895,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 19,
+    "source_record": 1
+  }
+}
+  pacific checkpoint items=915 done=915 404=0 this_run=640 rate=0.23/s idx=915/915
+wrote dsc_strains_pacific.json count=915 skipped_404=0 errors=200
+pacific staging: {
+  "family": "bank_pacific",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_pacific.sqlite3",
+  "count": 915,
+  "bulk": false,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 903,
+    "strain_variant": 912,
+    "chemistry_profile": 915,
+    "grow_trait": 915,
+    "entity_link": 915,
+    "attribute_kv": 14694,
+    "raw_record": 915,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 19,
+    "source_record": 1
+  }
+}

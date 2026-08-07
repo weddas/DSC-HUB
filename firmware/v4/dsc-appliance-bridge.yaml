@@ -1,57 +1,6 @@
 # ==================================================================
-#  DSC appliance bridge — SKETCH (not production)
+#  DSC appliance bridge — MOVED
 #  ------------------------------------------------------------------
-#  Purpose: follow hub demand over ESP-NOW so Sonoff-class loads can
-#  move without Home Assistant (F-010).
-#
-#  Status: design stub only. Board BOM + peer packet IDs not frozen.
-#  See docs/brain/F010_APPLIANCE_BRIDGE.md
-#
-#  Do not flash this as a kit device until peer protocol + failsafe
-#  peer-loss → relays OFF is implemented and soak-tested.
+#  Production firmware: dsc-bridge.yaml / dsc-bridge-kit.yaml
+#  Docs: docs/brain/F010_APPLIANCE_BRIDGE.md
 # ==================================================================
-
-substitutions:
-  device_name: dsc-appliance-bridge
-  friendly_name: DSC Appliance Bridge
-  # Hub WiFi MAC for ESP-NOW peer — kit learns via SoftAP later.
-  hub_mac: "00:00:00:00:00:00"
-
-esphome:
-  name: ${device_name}
-  friendly_name: ${friendly_name}
-  # project:
-  #   name: digital_emotions.dsc-appliance-bridge
-  #   version: "0.0.0-sketch"
-
-esp32:
-  board: esp32dev
-  framework:
-    type: esp-idf
-
-logger:
-api:
-ota:
-
-wifi:
-  ssid: !secret wifi_ssid
-  password: !secret wifi_password
-
-# packet_transport / espnow peer to hub — TBD when protocol lands.
-# Expected behaviour:
-#   - subscribe hub demand bits (humidifier / dehumidifier / heater / mat)
-#   - drive local relays or UART to appliance modules
-#   - peer timeout → all relays OFF
-
-binary_sensor:
-  - platform: template
-    name: "${friendly_name} Sketch Placeholder"
-    id: bridge_sketch_ok
-    lambda: "return true;"
-
-text_sensor:
-  - platform: template
-    name: "${friendly_name} Status"
-    lambda: |-
-      return {"sketch-only: see docs/brain/F010_APPLIANCE_BRIDGE.md"};
-    update_interval: 60s

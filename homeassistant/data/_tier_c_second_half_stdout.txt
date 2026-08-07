@@ -1,0 +1,639 @@
+Tier C second half pass 1/1: slice=310 todo=303 (queue partial=False tier_C=621)
+
+=== Hempbrothers https://hempbrothers.com/ ===
+
+=== HillBilly Herb Grower https://hillbillyherbgrower.com/ ===
+
+=== HQFarms https://hqfarms.com/ ===
+
+=== Intuitive Genetics https://intuitivegenetics.com/ ===
+
+=== John Sinclair Seeds https://johnsinclairseeds.com/ ===
+
+=== Karma Genetics https://karmagenetics.com/ ===
+
+=== Keys to the Kingdom https://keys-to-the-kingdom.com/ ===
+
+=== Khalifa Genetics https://khalifagenetics.com/ ===
+
+=== Killa Treez https://killatreez.com/ ===
+
+=== Kindway Farms https://kindwayfarms.com/ ===
+  bank_kindway_farms checkpoint items=20 idx=20/82
+  bank_kindway_farms checkpoint items=40 idx=40/82
+  bank_kindway_farms checkpoint items=60 idx=60/82
+  bank_kindway_farms checkpoint items=80 idx=80/82
+  OK bank_kindway_farms items=82 method=sitemap_html
+
+=== Knock Out Genetics https://knockoutgenetics.com/ ===
+
+=== Kre8 Genetics https://kre8genetics.com/ ===
+
+=== La Pousse Genetics https://lapoussegenetics.com/ ===
+
+=== Landrace Seeds https://landraceseeds.com/ ===
+
+=== Lempire Farmaseed https://lempirefarmaseed.com/ ===
+
+=== Maconha Seeds Bank https://maconhaseedsbank.com/ ===
+
+=== Madd Farmer Genetics https://maddfarmergenetics.com/ ===
+
+=== Magic Strains https://magicstrains.com/ ===
+
+=== Massive Creations https://massivecreations.com/ ===
+
+=== Matchmaker Genetics https://matchmakergenetics.com/ ===
+
+=== Mean Beanz https://meanbeanz.com/ ===
+
+=== Medtree https://medtree.com/ ===
+
+=== Monster Flowers https://monsterflowers.com/ ===
+
+=== Monster Genetics https://monstergenetics.com/ ===
+
+=== Most Wanted Genetics https://mostwantedgenetics.com/ ===
+
+=== Mother Labs https://motherlabs.com/ ===
+
+=== Mountain Flowers https://mountainflowers.com/ ===
+
+=== Moxie 710 https://moxie710.com/ ===
+
+=== Mudballs https://mudballs.com/ ===
+
+=== Mutterschiff https://mutterschiff.com/ ===
+
+=== Mystic Seeds https://mysticseeds.com/ ===
+
+=== Nativ Canna http://nativcanna.com/ ===
+
+=== Nativo Club http://nativoclub.com/ ===
+
+=== New420Guy Seeds https://new420guyseeds.com/ ===
+
+=== Northern Virginia Hemp Company https://northernvirginiahempcompany.com/ ===
+  OK bank_northern_virginia_hemp_company items=1 method=sitemap_html
+
+=== Nuf Ced https://nufced.com/ ===
+
+=== Obsoul33t Genetics https://obsoul33tgenetics.com/ ===
+
+=== Odyssey Genetics https://odysseygenetics.com/ ===
+
+=== OG Naj https://ognaj.com/ ===
+
+=== OG Raskal Genetics https://ograskalgenetics.com/ ===
+
+=== Old J Seeds https://oldjseeds.com/ ===
+
+=== On The Vine Genetics http://onthevinegenetics.com/ ===
+
+=== Oregon Limited Edition https://oregonlimitededition.com/ ===
+
+=== Organarchist https://organarchist.com/ ===
+
+=== Propaganja Seeds https://propaganjaseeds.com/ ===
+
+=== Pure Melt https://puremelt.com/ ===
+
+=== Quantamon Seeds http://www.quantamonseeds.com/ ===
+
+=== R-KIEM Seeds http://r-kiemseeds.com/ ===
+
+=== Rare Terps https://rareterps.com/ ===
+
+=== Reberth Genetics https://www.reberthgenetics.com/ ===
+
+=== Relentless Genetics https://relentlessgenetics.com/ ===
+
+=== RocBudInc https://rocbudinc.com/ ===
+
+=== Round Boy https://roundboy.com/ ===
+
+=== Savage Genetics https://savagegenetics.com/ ===
+
+=== Second Generation Genetics https://secondgenerationgenetics.com/ ===
+
+=== Secret Society Seed Co https://secretsocietyseedco.com/ ===
+
+=== Seeds of Compassion https://seedsofcompassion.com/ ===
+
+=== Semyanich https://semyanich.com/ ===
+
+=== Sin City Seeds https://sincityseeds.com/ ===
+
+=== Sinisterslim https://sinisterslim.com/ ===
+
+=== Skunk Devil Genetics https://skunkdevilgenetics.com/ ===
+
+=== Sniper Seeds https://sniperseeds.com/ ===
+
+=== Source Genetics https://sourcegenetics.com/ ===
+
+=== Space GenetiX https://spacegenetix.com/ ===
+
+=== Sputnik Seeds https://sputnikseeds.com/ ===
+
+=== Stinky's Genetics https://stinkysgenetics.com/ ===
+  bank_stinkys_genetics checkpoint items=20 idx=20/91
+  bank_stinkys_genetics checkpoint items=40 idx=40/91
+  bank_stinkys_genetics checkpoint items=60 idx=60/91
+  bank_stinkys_genetics checkpoint items=80 idx=80/91
+  OK bank_stinkys_genetics items=91 method=sitemap_html
+
+=== Strain Reign http://strainreign.com/ ===
+
+=== Strayfox Gardenz https://strayfoxgardenz.com/ ===
+
+=== Sunny Side Up Farms https://sunnysideupfarms.com/ ===
+
+=== Sunnyvale http://sunnyvale.eu/ ===
+
+=== SuperCBDx https://supercbdx.com/ ===
+
+=== Sure Fire Seeds https://surefireseeds.com/ ===
+
+=== Taima Seeds https://taimaseeds.com/ ===
+
+=== Tarantula Genetics http://tarantulagenetics.com/ ===
+
+=== Teonana https://teonana.com/ ===
+
+=== Terpenos https://www.terpenos.com/ ===
+
+=== The Agrarian Society https://theagrariansociety.org/ ===
+
+=== The Breed https://thebreed.com/ ===
+
+=== The KushBrothers Seeds https://thekushbrothersseeds.com/ ===
+
+=== The Plant https://www.theplant.com/ ===
+
+=== Tinos Genetics https://tinosgenetics.com/ ===
+
+=== Top Dawg Seeds https://topdawgseeds.com/ ===
+
+=== TreeTown Seeds http://treetownseeds.com/ ===
+
+=== Trinity Genetics https://trinitygenetics.com/ ===
+
+=== Truleaf Medicinal https://truleafmedicinal.com/ ===
+
+=== Verified Genetics https://verifiedgenetics.com/ ===
+
+=== Vision Seeds https://www.visionseeds.com/ ===
+
+=== Weaving Genetics https://weavinggenetics.com/ ===
+
+=== Wolfpack Selections https://wolfpackselections.com/ ===
+
+=== World Trade Genetics https://worldtradegenetics.com/ ===
+  bank_world_trade_genetics checkpoint items=20 idx=20/28
+  OK bank_world_trade_genetics items=28 method=sitemap_html
+
+=== Zen Genetics https://zengenetics.com/ ===
+
+=== Élite Seeds https://liteseeds.com/ ===
+
+=== Absolute Cannabis Seeds https://absolutecannabis.com/ ===
+
+=== Amsterdam Finest Seeds http://amsterdamfinest.com/ ===
+
+=== Basic Seeds http://www.basicworld.it/ ===
+
+=== Black Bear Cannabis Company http://blackbearcannabis.com/ ===
+
+=== Blind Rooster Seeds https://blindrooster.com/ ===
+
+=== Blood Diamond Seeds http://blooddiamond.com/ ===
+
+=== Blurred Vision Genetics https://blurredvision.com/ ===
+
+=== Burning River Genetics https://burningriver.com/ ===
+
+=== Cabinet of Curiosities Seeds https://cabinetofcuriosities.com/ ===
+
+=== Canadian Seed Lab https://canadianseed.com/ ===
+
+=== Charlies Farm Seeds https://charliesfarm.com/ ===
+
+=== Control Group Genetics https://controlgroup.com/ ===
+
+=== Crate Digger Seeds https://cratedigger.com/ ===
+
+=== Dankonomics Genetics https://dankonomics.com/ ===
+
+=== Dungeon Of Dank Genetics https://dungeonofdank.com/ ===
+
+=== El Jardin de Maria Seeds https://eljardindemaria.com/ ===
+
+=== Eye of Providence Seeds https://www.eyeofprovidence.com/ ===
+
+=== Garden Ablaze Seeds https://gardenablaze.com/ ===
+
+=== Grandiflora Genetics https://grandiflora.com/ ===
+
+=== Hazardville Farms https://hazardville.com/ ===
+
+=== Humble Jungle Seeds https://humblejungle.com/ ===
+
+=== Hungry Hippo Farm https://hungryhippo.com/ ===
+
+=== Imperial Seal Seeds https://imperialseal.com/ ===
+
+=== Kush Cannabis Seeds https://kushcannabis.com/ ===
+
+=== Land and Heir Genetics https://landandheir.com/ ===
+
+=== Mandragora´s Seed Bank https://mandragoras.com/ ===
+
+=== Medical Seeds Co. https://medicalseeds.com/ ===
+
+=== Medusa Cannabis Co. https://medusacannabis.com/ ===
+
+=== Mountain Top Seeds http://mountaintop.com/ ===
+
+=== Mr. Green Jeans Genetics https://mrgreenjeans.com/ ===
+
+=== Panacea Medical Seeds https://panaceamedical.com/ ===
+
+=== People Under The Stairs Genetics https://peopleunderthestairs.com/ ===
+
+=== Prairie State Genetix https://prairiestate.com/ ===
+
+=== Shadow Corporation Genetics https://shadowcorporation.com/ ===
+
+=== Space Trooper Genetics https://spacetrooper.com/ ===
+
+=== Stars and Stripes Seed Co https://starsandstripesseed.com/ ===
+
+=== State of The Arts Farm https://stateofthearts.com/ ===
+
+=== Stillwater Genetics https://stillwaterinsurance.com/validate-policy ===
+
+=== Sunken Treasure Seeds https://sunkentreasure.com/ ===
+
+=== Swamp Donkey Seeds https://swampdonkey.com/ ===
+
+=== Sweet N Sticky Genetics https://sweetnsticky.com/ ===
+
+=== United Cannabis Seeds https://unitedcannabis.com/ ===
+
+=== 3rd Coast Genetics https://3rdcoast.com/ ===
+
+=== Abraxas Seeds https://abraxas.amsterdam/ ===
+
+=== Aeque Genetics https://aeque.com/ ===
+
+=== Afropips Seeds https://afropips.com/ ===
+
+=== Alienblood Genetix https://alienblood.com/ ===
+
+=== Andina Seeds https://andina.com/ ===
+
+=== Annibale Genetics http://annibale.com/ ===
+
+=== Baby Zeus Genetics https://babyzeus.com/ ===
+
+=== Bayou Boys Genetics https://bayouboys.com/ ===
+
+=== Bedrock Genetics https://bedrock.com/ ===
+
+=== Big Buddy Seeds https://bigbuddy.com/ ===
+
+=== Blasted Genetics https://www.blasted.com/ ===
+
+=== Blue Blood Genetics https://www.blueblood.com/ ===
+
+=== Bluenose Seed Bank http://bluenose.com/ ===
+
+=== Bone Yard Genetics https://boneyard.com/ ===
+
+=== Brain Dead Genetics https://braindead.com/ ===
+
+=== Cali Kush Farms http://calikush.com/ ===
+
+=== Chosen Few Genetics https://chosenfew.com/ ===
+
+=== Coast Genetics https://coast.com/ ===
+
+=== Compass Genetics https://www.compass.com/ ===
+
+=== County Line Genetics https://countyline.com/ ===
+
+=== Cream Crop Co. https://creamcrop.com/ ===
+
+=== Crop Circle Genetics https://cropcircle.com/ ===
+
+=== Divine Seeds https://www.divine.com/ ===
+
+=== EarthFire Genetics https://earthfire.com/ ===
+
+=== East Coast Genetix https://eastcoast.com/ ===
+
+=== Eskobar Seeds https://eskobar.com/ ===
+
+=== Farmhouse Genetics http://farmhouse.com/ ===
+
+=== FireFly Genetics https://firefly.com/ ===
+
+=== FireMids Genetics https://firemids.com/ ===
+
+=== Frostpops Genetics https://frostpops.com/ ===
+
+=== Gage Green Genetics https://gagegreen.com/ ===
+
+=== Gonzo Seeds https://gonzo.com/ ===
+
+=== GrassWorx Genetics https://grassworx.com/ ===
+
+=== Green Lion Seeds https://greenlion.com/ ===
+
+=== Happy Man Seeds https://happyman.com/ ===
+
+=== Hardcore Genetics http://hardcore.com/ ===
+
+=== Humminbird Genetics https://humminbird.com/ ===
+
+=== In-Tents Genetix https://intents.com/ ===
+
+=== Inseedious Seeds https://inseedious.com/ ===
+
+=== Johnston's Genetics https://johnstons.com/ ===
+
+=== Juiced Up Genetix https://juicedup.com/ ===
+
+=== Knuckle Genetics https://knuckle.com/ ===
+
+=== Kwaka Seeds http://kwaka.com/ ===
+
+=== Lefaltó Seeds https://lefalt.com/ ===
+
+=== Lone Star Genetix https://lonestar.com/ ===
+
+=== Loompa Farms https://loompa.com/ ===
+
+=== Lost River Seeds https://lostriver.com/ ===
+
+=== Magus Genetics https://magus.com/ ===
+
+=== Massive Seeds https://massive.com/ ===
+
+=== Meeko Genetics https://www.meeko.com/ ===
+
+=== Mogwai Genetics https://mogwai.com/ ===
+
+=== Moldavite Genetix https://moldavite.com/ ===
+
+=== Mr. Green Genetics https://www.mrgreen.com/regulation/restricted/ ===
+
+=== Mr. Natural Seeds https://mrnatural.com/ ===
+
+=== Nerds Genetics https://nerds.com/ ===
+
+=== Nilsson Seeds https://nilsson.com/ ===
+
+=== Nomad Seed Bank http://nomad.com/ ===
+
+=== NOT found Genetics http://notfound.com/ ===
+
+=== OG'naj Genetics https://ognaj.com/ ===
+
+=== Olfactory Genetics https://olfactory.com/ ===
+
+=== Oni Seed Co https://oniseed.com/ ===
+
+=== Palaces Seeds https://palaces.com/ ===
+
+=== Panther Genetics https://panther.com/ ===
+  OK bank_panther_genetics items=5 method=sitemap_html
+
+=== Pathetic Genetics https://www.pathetic.com/ ===
+
+=== Pompous Seeds http://www.pompous.com/ ===
+
+=== Prana Seeds https://www.prana.com/ ===
+
+=== Rebel Seeds https://www.rebel.com/en ===
+
+=== Sannie's Seeds https://sannies.com/ ===
+
+=== Scapegoat Genetics https://scapegoat.com/ ===
+
+=== Seedmakers Seeds http://seedmakers.com/ ===
+
+=== Sefirot Genetics https://sefirot.com/ ===
+
+=== Shangri-La Genetics https://shangrila.com/ ===
+
+=== Square One Genetics https://squareone.com/ ===
+
+=== Stone Free Seeds https://stonefree.com/ ===
+
+=== Stoner Genetics https://stoner.com/ ===
+
+=== Strainger Seeds https://strainger.com/ ===
+
+=== Strait A Genetics https://straita.com/ ===
+
+=== Tantric Genetics http://tantric.com/ ===
+
+=== Tempa Genetics https://tempa.com/ ===
+
+=== THC Plants Labs https://thcplants.com/ ===
+
+=== The Farm Genetics https://thefarm.com/ ===
+
+=== The Moon Seeds https://www.themoon.com/ ===
+
+=== Timberedge Farms https://timberedge.com/ ===
+
+=== Vulkania Seeds https://vulkania.com/ ===
+
+=== Wacky Weed Seeds http://wackyweed.com/ ===
+
+=== Walifornia Genetics https://walifornia.com/ ===
+
+=== Walipini Seeds https://walipini.com/ ===
+
+=== White Raven Seeds https://whiteraven.com/ ===
+
+=== Yardie Seeds https://yardie.com/ ===
+
+=== 593 Genetics https://593.com/ ===
+
+=== 707 Seed Bank https://707.com/ ===
+
+=== ChEM Lab https://chem.com/ ===
+
+=== Erks Genetics https://erks.com/ ===
+
+=== GLK Genetics https://glk.com/ ===
+
+=== illo Seeds https://illo.com/ ===
+
+=== Ohms Seeds http://ohms.com/ ===
+
+=== RTR Genetics http://rtr.com/ ===
+
+=== SOG Seeds https://sog.com/ ===
+
+=== Webb Genetics https://webb.com/ ===
+
+=== York Genetics https://www.york.com/ ===
+
+=== ABF Genetics https://arcb.com/shippers/solutions/less-than-truckload/abf-freight ===
+
+=== AC Genetics https://www.hugedomains.com/domain_profile.cfm?d=acgenetics.com ===
+
+=== Actual Seeds https://www.dynamo.com/assets.htm ===
+
+=== All Star Genetics https://www.hugedomains.com/domain_profile.cfm?d=allstargenetics.com ===
+
+=== Altitude Genetics https://www.hugedomains.com/domain_profile.cfm?d=altitudegenetics.com ===
+
+=== B. Seeds Co. https://www.hugedomains.com/domain_profile.cfm?d=bseeds.com ===
+
+=== Beyond Top Shelf https://www.hugedomains.com/domain_profile.cfm?d=beyondtopshelf.com ===
+
+=== Bluerecluse Genetics https://www.hugedomains.com/domain_profile.cfm?d=bluerecluse.com ===
+
+=== California Seed Farm https://www.hugedomains.com/domain_profile.cfm?d=californiaseed.com ===
+
+=== Cannabis Seeds USA https://www.hugedomains.com/domain_profile.cfm?d=cannabisseedsusa.com ===
+
+=== Chimera Seeds https://www.hugedomains.com/domain_profile.cfm?d=chimeraseeds.com ===
+
+=== Coastal Seed Co https://www.hugedomains.com/domain_profile.cfm?d=coastalseed.com ===
+
+=== Connoisseur Genetics https://www.hugedomains.com/domain_profile.cfm?d=connoisseurgenetics.com ===
+
+=== Costa Seeds https://www.hugedomains.com/domain_profile.cfm?d=costaseeds.com ===
+
+=== Dank House Seeds https://dankhaus.com/ ===
+
+=== Darwin Seeds https://www.mercer.com/solutions/health-and-benefits/employee-benefits-technology-platforms/darwin-employee-benefits-software/ ===
+
+=== Deluxe Seeds https://www.hugedomains.com/domain_profile.cfm?d=deluxeseeds.com ===
+
+=== Dirty Worms Farm https://adscheaper.com/ ===
+
+=== Dominion Seed Company https://www.hugedomains.com/domain_profile.cfm?d=dominionseed.com ===
+
+=== Earth Witch Seeds https://www.hugedomains.com/domain_profile.cfm?d=earthwitch.com ===
+
+=== Elemental Seeds https://www.hugedomains.com/domain_profile.cfm?d=elementalseeds.com ===
+
+=== Enlightened Genetics https://www.hugedomains.com/domain_profile.cfm?d=enlightenedgenetics.com ===
+
+=== Euro Seeds http://www.montaraz.com/ ===
+
+=== Flash Seeds https://www.hugedomains.com/domain_profile.cfm?d=flashseeds.com ===
+
+=== Fusion Seeds https://www.hugedomains.com/domain_profile.cfm?d=fusionseeds.com ===
+
+=== G.I_Genetix https://g-i.com/ ===
+
+=== Genesis Genetics https://www.hugedomains.com/domain_profile.cfm?d=genesisgenetics.com ===
+
+=== Grateful Seeds https://www.hugedomains.com/domain_profile.cfm?d=gratefulseeds.com ===
+
+=== Green Work Collective https://www.hugedomains.com/domain_profile.cfm?d=greenworkcollective.com ===
+
+=== GreenFire Genetics https://www.hugedomains.com/domain_profile.cfm?d=greenfiregenetics.com ===
+
+=== Heart & Soil Seeds https://heartandsoil.com/ ===
+
+=== Hempire Seeds co. https://domains.atom.com/lpd/name/hempireseeds.com ===
+
+=== Hill Bomb Genetics https://www.hugedomains.com/domain_profile.cfm?d=hillbomb.com ===
+
+=== Illuminati Seeds https://www.hugedomains.com/domain_profile.cfm?d=illuminatiseeds.com ===
+
+=== Indigenous Seed https://www.hugedomains.com/domain_profile.cfm?d=indigenousseed.com ===
+
+=== Just A Handful https://www.hugedomains.com/domain_profile.cfm?d=justahandful.com ===
+
+=== Kamikaz Seeds https://www.hugedomains.com/domain_profile.cfm?d=kamikaz.com ===
+
+=== Lifetime Seeds https://www.hugedomains.com/domain_profile.cfm?d=lifetimeseeds.com ===
+
+=== Limited Seeds https://www.belk.com/shop-by-brand/belk-exclusives/the-limited/ ===
+
+=== Mad Monkey Farm https://www.dynamo.com/assets.htm ===
+
+=== Mandalorian Genetics https://gnomeautomatics.com/ ===
+  OK bank_mandalorian_genetics items=2 method=sitemap_html
+
+=== Masonic Seeds https://www.pinworld.com/Masonic_c_10.html ===
+
+=== Midwest Best http://naturalpuredrinkingwater.com/ ===
+
+=== Mr. C Seeds https://hrcllc.com/ ===
+
+=== No Mercy Supply https://www.nomercy.nl/site/ ===
+
+=== OhMyGarden https://www.hugedomains.com/domain_profile.cfm?d=ohmygarden.com ===
+
+=== Old School Genetics https://www.hugedomains.com/domain_profile.cfm?d=oldschoolgenetics.com ===
+
+=== Olympia Genetics https://www.hugedomains.com/domain_profile.cfm?d=olympiagenetics.com ===
+
+=== Oregon Elite Seeds https://www.flasr.com/ ===
+
+=== Paisa Grow Seeds https://www.hugedomains.com/domain_profile.cfm?d=paisagrow.com ===
+
+=== Phoenix Seeds https://www.hugedomains.com/domain_profile.cfm?d=phoenixseeds.com ===
+
+=== Preservation Genetics https://gritbrokerage.org/domain/preservation.com ===
+
+=== Reserva Privada https://www.hugedomains.com/domain_profile.cfm?d=reservaprivada.com ===
+
+=== SmokeSmith Genetics https://www.hugedomains.com/domain_profile.cfm?d=smokesmith.com ===
+
+=== South Bay Genetics https://kealyconstruction.com/ ===
+
+=== Spliff Seeds https://www.hugedomains.com/domain_profile.cfm?d=spliffseeds.com ===
+
+=== Sun Grown Genetics https://www.hugedomains.com/domain_profile.cfm?d=sungrowngenetics.com ===
+
+=== Super Strains https://www.otcmarkets.com/stock/FMHS/profile/ ===
+
+=== Sweed Lab https://www.hugedomains.com/domain_profile.cfm?d=sweedlab.com ===
+
+=== The Fire Department https://www.hugedomains.com/domain_profile.cfm?d=thefiredepartment.com ===
+
+=== The Grateful Seeds https://www.hugedomains.com/domain_profile.cfm?d=thegrateful.com ===
+
+=== The Ranch https://www.hugedomains.com/domain_profile.cfm?d=the-ranch.com ===
+
+=== Three Ravens Farm https://www.hugedomains.com/domain_profile.cfm?d=threeravens.com ===
+
+=== UFO Genetics https://www.hugedomains.com/domain_profile.cfm?d=ufogenetics.com ===
+
+=== Viking Seeds https://www.hugedomains.com/domain_profile.cfm?d=vikingseeds.com ===
+
+=== Volcanic Genetics https://www.theaccessgroup.com/en-gb/products/volcanic/ ===
+
+=== Wiseguy Genetics https://peertutors.com/ ===
+
+=== Zoo Seeds https://www.hugedomains.com/domain_profile.cfm?d=zooseeds.com ===
+
+=== SUMMARY ===
+{
+  "attempted": 303,
+  "ok": 6,
+  "items_total": 209,
+  "by_status": {
+    "skipped_no_sitemap": 231,
+    "ok": 6,
+    "failed_dns_or_http": 8,
+    "skipped_linkhub": 50,
+    "blocked_cf": 1,
+    "empty_catalog": 2,
+    "empty_shopify": 1,
+    "skipped_heavy_js": 4
+  }
+}

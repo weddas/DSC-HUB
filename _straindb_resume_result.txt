@@ -1,0 +1,6 @@
+resumed=1
+n0=70
+final_n=120
+cursor=https://strain-database.com/strain/ace-seeds-green-haze-x-thai
+updated=2026-08-08T06:19:43.951924
+alive=True

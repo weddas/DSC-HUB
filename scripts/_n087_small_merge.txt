@@ -1,0 +1,3 @@
+merged=
+skipped=
+failed=alchimia,bank_weedseedsexpress,cannaconnection,cannareviews,cannia,forum_420mag,forum_mjpassion,forum_phenohunter,medical_effects,north_atlantic_local,pickle_archive,replication_labs,seedsman,strain_database,strains_master,allbud

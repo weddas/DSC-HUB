@@ -1,0 +1,192 @@
+{
+  "product_count": 1,
+  "product": {
+    "name": "IN HOUSE GENETICS - PLATINUM FLOAT STRAIN - FEM PHOTO | Multiverse Beans Seed Bank",
+    "sku": "IHG-PARENT-016",
+    "brand": null,
+    "description": "GMO Rootbeer bx1 x Platinum",
+    "category": "Breeders &gt; In House Genetics",
+    "gtin13": null,
+    "mpn": null,
+    "image": [
+      {
+        "@type": "ImageObject",
+        "url": "https://multiversebeans.com/wp-content/uploads/2024/04/9f8225_7b2417666cc149c190eaf07c415ff8afmv2-23.webp",
+        "height": "400",
+        "width": "400"
+      }
+    ]
+  },
+  "offers": {
+    "price": "60.00",
+    "priceCurrency": "USD",
+    "availability": "http://schema.org/InStock",
+    "url": "https://multiversebeans.com/product/in-house-genetics-platinum-float-strain-fem-photo/"
+  },
+  "h1": null,
+  "short": null,
+  "cats": [
+    [
+      "/product-category/autoflower/",
+      "Autoflowering"
+    ],
+    [
+      "/product-category/photoperiod/",
+      "Photoperiod"
+    ],
+    [
+      "/product-category/preservation-line/",
+      "Preservation Line"
+    ],
+    [
+      "/product-category/breeders/multiverse-genetics/",
+      "Multiverse Genetics"
+    ],
+    [
+      "https://multiversebeans.com/product-category/breeders/cali-connection/",
+      "Cali Connection"
+    ],
+    [
+      "https://multiversebeans.com/product-category/breeders/atlas-seed/",
+      "Atlas Seed"
+    ],
+    [
+      "https://multiversebeans.com/product-category/breeders/ethos/",
+      "Ethos"
+    ],
+    [
+      "https://multiversebeans.com/product-category/breeders/humboldt-seed-co/",
+      "Humboldt Seed Co"
+    ],
+    [
+      "https://multiversebeans.com/product-category/breeders/fast-buds/",
+      "Fast buds"
+    ],
+    [
+      "https://multiversebeans.com/product-category/breeders/in-house-genetics/",
+      "In House Genetics"
+    ],
+    [
+      "/product-category/preservation-line-bundles/",
+      "$2.94 per seed | Preservation Bundles"
+    ],
+    [
+      "https://multiversebeans.com/product-category/bogo/",
+      "BOGO By Breeder"
+    ],
+    [
+      "https://multiversebeans.com/product-category/bundle/",
+      "Bundles"
+    ],
+    [
+      "https://multiversebeans.com/product-category/breeders/thca-flower-bogo/",
+      "THCA Flower | BOGO"
+    ],
+    [
+      "https://multiversebeans.com/product-category/breeders/",
+      "Breeders"
+    ],
+    [
+      "https://multiversebeans.com/product-category/breeders/in-house-genetics/",
+      "In House Genetics"
+    ],
+    [
+      "/product-category/autoflower/",
+      "Shop AutoFlowers"
+    ],
+    [
+      "/product-category/photoperiod/",
+      "Shop PhotoPeriods"
+    ],
+    [
+      "https://multiversebeans.com/product-category/best-sellers/",
+      "Best Sellers"
+    ],
+    [
+      "/product-category/autoflower/",
+      "Autoflowering"
+    ],
+    [
+      "/product-category/photoperiod/",
+      "Photoperiod"
+    ],
+    [
+      "/product-category/preservation-line/",
+      "Preservation Line"
+    ],
+    [
+      "/product-category/breeders/multiverse-genetics/",
+      "Multiverse Genetics"
+    ],
+    [
+      "https://multiversebeans.com/product-category/breeders/cali-connection/",
+      "Cali Connection"
+    ],
+    [
+      "https://multiversebeans.com/product-category/breeders/atlas-seed/",
+      "Atlas Seed"
+    ],
+    [
+      "https://multiversebeans.com/product-category/breeders/ethos/",
+      "Ethos"
+    ],
+    [
+      "https://multiversebeans.com/product-category/breeders/humboldt-seed-co/",
+      "Humboldt Seed Co"
+    ],
+    [
+      "https://multiversebeans.com/product-category/breeders/fast-buds/",
+      "Fast buds"
+    ],
+    [
+      "https://multiversebeans.com/product-category/breeders/in-house-genetics/",
+      "In House Genetics"
+    ],
+    [
+      "/product-category/preservation-line-bundles/",
+      "$2.94 per seed | Preservation Bundles"
+    ]
+  ],
+  "attrs": [],
+  "desc": null,
+  "variation_count": 1,
+  "variation0_keys": [
+    "attributes",
+    "availability_html",
+    "backorders_allowed",
+    "dimensions",
+    "dimensions_html",
+    "display_price",
+    "display_regular_price",
+    "gallery_image_ids",
+    "gallery_images_html",
+    "image",
+    "image_id",
+    "is_downloadable",
+    "is_in_stock",
+    "is_purchasable",
+    "is_sold_individually",
+    "is_virtual",
+    "max_qty",
+    "min_qty",
+    "price_html",
+    "sku",
+    "variation_description",
+    "variation_id",
+    "variation_is_active",
+    "variation_is_visible",
+    "weight",
+    "weight_html",
+    "wpcvs_desc",
+    "wpcvs_name"
+  ],
+  "variation0": {
+    "sku": "12-02-IHG-03-046",
+    "display_price": 60,
+    "attributes": {
+      "attribute_pa_packsize": "3-pack"
+    },
+    "is_in_stock": true,
+    "variation_id": 276246
+  }
+}

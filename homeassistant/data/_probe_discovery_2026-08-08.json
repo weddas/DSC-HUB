@@ -1,0 +1,1489 @@
+{
+  "built_at": "2026-08-07T14:45:41Z",
+  "note": "discovery-only probe; no product fan-out",
+  "banks": [
+    {
+      "name": "ILGM",
+      "home": "https://ilgm.com/",
+      "list_ok": [
+        {
+          "url": "https://ilgm.com/collections/feminized-seeds",
+          "status": 200,
+          "final": "https://ilgm.com/collections/feminized-seeds",
+          "err": null,
+          "hits": 36,
+          "shopify_paths": 71,
+          "sample": [
+            "https://ilgm.com/products/agent-orange-feminized-seeds",
+            "https://ilgm.com/products/banana-kush-feminized-seeds",
+            "https://ilgm.com/products/black-widow-feminized-seeds",
+            "https://ilgm.com/products/blackberry-kush-feminized-seeds",
+            "https://ilgm.com/products/blue-cheese-feminized-seeds"
+          ]
+        },
+        {
+          "url": "https://ilgm.com/collections/all",
+          "status": 200,
+          "final": "https://ilgm.com/categories/cannabis-seeds",
+          "err": null,
+          "hits": 36,
+          "shopify_paths": 61,
+          "sample": [
+            "https://ilgm.com/products/afghan-autoflower-seeds",
+            "https://ilgm.com/products/afghan-feminized-seeds",
+            "https://ilgm.com/products/apple-fritter-autoflower-seeds",
+            "https://ilgm.com/products/apple-fritter-feminized-seeds",
+            "https://ilgm.com/products/apple-strudel-seeds"
+          ]
+        }
+      ],
+      "list_fail": [],
+      "product_hits": 36,
+      "sample": [
+        "https://ilgm.com/products/agent-orange-feminized-seeds",
+        "https://ilgm.com/products/banana-kush-feminized-seeds",
+        "https://ilgm.com/products/black-widow-feminized-seeds",
+        "https://ilgm.com/products/blackberry-kush-feminized-seeds",
+        "https://ilgm.com/products/blue-cheese-feminized-seeds"
+      ],
+      "shopify_paths": 71,
+      "sitemaps": [
+        "https://ilgm.com/sitemap.xml",
+        "https://ilgm.com/",
+        "https://ilgm.com/resources/guides/can-you-clone-autoflower-plants",
+        "https://ilgm.com/resources/guides/when-to-top-autoflowers",
+        "https://ilgm.com/resources/guides/photoperiod-vs-autoflower-seeds-explained",
+        "https://ilgm.com/resources/guides/spot-the-early-signs-of-a-hermie-plant",
+        "https://ilgm.com/resources/guides/best-medical-cannabis-card-providers",
+        "https://ilgm.com/resources/guides/how-when-to-top-weed-plants",
+        "https://ilgm.com/resources/guides/how-to-lst-autoflowers"
+      ],
+      "flags": [
+        "shopify"
+      ],
+      "platform": "shopify",
+      "home_status": 200,
+      "home_final": "https://ilgm.com/",
+      "sitemap_loc_count": 618,
+      "sitemap_productish": 386,
+      "sitemap_sample": [
+        "https://ilgm.com/products/15mg-sour-apple-delta-9-thc-gummies",
+        "https://ilgm.com/products/15mg-sour-lemon-delta-9-thc-gummies",
+        "https://ilgm.com/products/20mg-sour-apple-delta-9-thc-gummies",
+        "https://ilgm.com/products/20mg-sour-lemon-delta-9-thc-gummies",
+        "https://ilgm.com/products/20mg-zkittlez-delta-9-thc-gummies"
+      ],
+      "score": 105
+    },
+    {
+      "name": "Herbies",
+      "home": "https://herbiesheadshop.com/",
+      "list_ok": [
+        {
+          "url": "https://herbiesheadshop.com/us/feminized-cannabis-seeds",
+          "status": 200,
+          "final": "https://herbiesheadshop.com/us/feminized-cannabis-seeds",
+          "err": null,
+          "hits": 33,
+          "shopify_paths": 0,
+          "sample": [
+            "https://herbiesheadshop.com/cannabis-seeds/acapulco-gold",
+            "https://herbiesheadshop.com/cannabis-seeds/alpha-21",
+            "https://herbiesheadshop.com/cannabis-seeds/apple-betty-auto",
+            "https://herbiesheadshop.com/cannabis-seeds/apple-betty-herbies-seeds",
+            "https://herbiesheadshop.com/cannabis-seeds/blackberry-moonrocks"
+          ]
+        }
+      ],
+      "list_fail": [],
+      "product_hits": 33,
+      "sample": [
+        "https://herbiesheadshop.com/cannabis-seeds/acapulco-gold",
+        "https://herbiesheadshop.com/cannabis-seeds/alpha-21",
+        "https://herbiesheadshop.com/cannabis-seeds/apple-betty-auto",
+        "https://herbiesheadshop.com/cannabis-seeds/apple-betty-herbies-seeds",
+        "https://herbiesheadshop.com/cannabis-seeds/blackberry-moonrocks"
+      ],
+      "shopify_paths": 0,
+      "sitemaps": [
+        "https://herbiesheadshop.com/sitemap.xml",
+        "https://herbiesheadshop.com/sitemaps/de.xml",
+        "https://herbiesheadshop.com/sitemaps/fr.xml",
+        "https://herbiesheadshop.com/sitemaps/in.xml",
+        "https://herbiesheadshop.com/sitemaps/it.xml",
+        "https://herbiesheadshop.com/sitemaps/nz.xml",
+        "https://herbiesheadshop.com/sitemaps/ca.xml",
+        "https://herbiesheadshop.com/sitemaps/es.xml",
+        "https://herbiesheadshop.com/sitemaps/en.xml"
+      ],
+      "flags": [],
+      "platform": "magento",
+      "home_status": 200,
+      "home_final": "https://herbiesheadshop.com/",
+      "sitemap_loc_count": 14,
+      "sitemap_productish": 0,
+      "sitemap_sample": [
+        "https://herbiesheadshop.com/sitemaps/de.xml",
+        "https://herbiesheadshop.com/sitemaps/fr.xml",
+        "https://herbiesheadshop.com/sitemaps/in.xml",
+        "https://herbiesheadshop.com/sitemaps/it.xml",
+        "https://herbiesheadshop.com/sitemaps/nz.xml"
+      ],
+      "score": 50
+    },
+    {
+      "name": "Zamnesia",
+      "home": "https://www.zamnesia.com/",
+      "list_ok": [
+        {
+          "url": "https://www.zamnesia.com/35-cannabis-seeds",
+          "status": 200,
+          "final": "https://www.zamnesia.com/35-cannabis-seeds",
+          "err": null,
+          "hits": 34,
+          "shopify_paths": 0,
+          "sample": [
+            "https://www.zamnesia.com/1080-plenty-volcano.html",
+            "https://www.zamnesia.com/14337-vapman-click.html",
+            "https://www.zamnesia.com/14339-vapman-20.html",
+            "https://www.zamnesia.com/1842-arizer-extreme-q.html",
+            "https://www.zamnesia.com/3758-flowermate-v50-pro.html"
+          ]
+        },
+        {
+          "url": "https://www.zamnesia.com/",
+          "status": 200,
+          "final": "https://www.zamnesia.com/",
+          "err": null,
+          "hits": 55,
+          "shopify_paths": 0,
+          "sample": [
+            "https://www.zamnesia.com/1080-plenty-volcano.html",
+            "https://www.zamnesia.com/10922-zamnesia-seeds-tropicana-cookies-automatic.html",
+            "https://www.zamnesia.com/11237-zamnesia-seeds-king-louis.html",
+            "https://www.zamnesia.com/11242-zamnesia-seeds-lemon-cherry-gelato.html",
+            "https://www.zamnesia.com/11245-zamnesia-seeds-lemon-cherry-gelato-automatic.html"
+          ]
+        }
+      ],
+      "list_fail": [],
+      "product_hits": 55,
+      "sample": [
+        "https://www.zamnesia.com/1080-plenty-volcano.html",
+        "https://www.zamnesia.com/10922-zamnesia-seeds-tropicana-cookies-automatic.html",
+        "https://www.zamnesia.com/11237-zamnesia-seeds-king-louis.html",
+        "https://www.zamnesia.com/11242-zamnesia-seeds-lemon-cherry-gelato.html",
+        "https://www.zamnesia.com/11245-zamnesia-seeds-lemon-cherry-gelato-automatic.html"
+      ],
+      "shopify_paths": 0,
+      "sitemaps": [
+        "https://www.zamnesia.com/sitemap.xml",
+        "https://www.zamnesia.com/sitemapCOM.xml",
+        "https://www.zamnesia.com/us/sitemapUS.xml"
+      ],
+      "flags": [],
+      "platform": "magento",
+      "home_status": 200,
+      "home_final": "https://www.zamnesia.com/",
+      "sitemap_loc_count": 2,
+      "sitemap_productish": 0,
+      "sitemap_sample": [
+        "https://www.zamnesia.com/sitemapCOM.xml",
+        "https://www.zamnesia.com/us/sitemapUS.xml"
+      ],
+      "score": 40
+    },
+    {
+      "name": "SeedSupreme",
+      "home": "https://seedsupreme.com/",
+      "list_ok": [
+        {
+          "url": "https://seedsupreme.com/feminized-seeds.html",
+          "status": 200,
+          "final": "https://seedsupreme.com/feminized-seeds.html",
+          "err": null,
+          "hits": 0,
+          "shopify_paths": 0,
+          "sample": []
+        },
+        {
+          "url": "https://seedsupreme.com/",
+          "status": 200,
+          "final": "https://seedsupreme.com/",
+          "err": null,
+          "hits": 0,
+          "shopify_paths": 0,
+          "sample": []
+        }
+      ],
+      "list_fail": [],
+      "product_hits": 0,
+      "sample": [],
+      "shopify_paths": 0,
+      "sitemaps": [
+        "https://seedsupreme.com/media/sitemap/sitemap.xml"
+      ],
+      "flags": [],
+      "platform": "magento",
+      "home_status": 200,
+      "home_final": "https://seedsupreme.com/",
+      "sitemap_loc_count": 822,
+      "sitemap_productish": 683,
+      "sitemap_sample": [
+        "https://seedsupreme.com/cannabis-seeds.html",
+        "https://seedsupreme.com/marijuana-seeds-for-sale/seedfinder.html",
+        "https://seedsupreme.com/medicinal-seeds.html",
+        "https://seedsupreme.com/420-sale.html",
+        "https://seedsupreme.com/cannabis-seeds/hash-seeds.html"
+      ],
+      "score": 30
+    },
+    {
+      "name": "Greenhouse Seed Company",
+      "home": "https://www.greenhouseseeds.nl/",
+      "list_ok": [
+        {
+          "url": "https://www.greenhouseseeds.nl/",
+          "status": 200,
+          "final": "https://greenhouseseeds.nl/",
+          "err": null,
+          "hits": 17,
+          "shopify_paths": 0,
+          "sample": [
+            "https://greenhouseseeds.nl/css/animate.css",
+            "https://greenhouseseeds.nl/css/animate2.css",
+            "https://greenhouseseeds.nl/css/bootstrap.min.css",
+            "https://greenhouseseeds.nl/css/colorbox.css",
+            "https://greenhouseseeds.nl/css/font-awesome/css/font-awesome.min.css"
+          ]
+        }
+      ],
+      "list_fail": [
+        {
+          "url": "https://www.greenhouseseeds.nl/feminised-seeds",
+          "status": 404,
+          "final": "https://www.greenhouseseeds.nl/feminised-seeds",
+          "err": "HTTP Error 404: Not Found"
+        },
+        {
+          "url": "https://www.greenhouseseeds.nl/seeds",
+          "status": 404,
+          "final": "https://www.greenhouseseeds.nl/seeds",
+          "err": "HTTP Error 404: Not Found"
+        }
+      ],
+      "product_hits": 17,
+      "sample": [
+        "https://greenhouseseeds.nl/css/animate.css",
+        "https://greenhouseseeds.nl/css/animate2.css",
+        "https://greenhouseseeds.nl/css/bootstrap.min.css",
+        "https://greenhouseseeds.nl/css/colorbox.css",
+        "https://greenhouseseeds.nl/css/font-awesome/css/font-awesome.min.css"
+      ],
+      "shopify_paths": 0,
+      "sitemaps": [
+        "https://greenhouseseeds.nl/sitemap.xml",
+        "https://www.greenhouseseeds.nl/"
+      ],
+      "flags": [],
+      "platform": "magento",
+      "home_status": 200,
+      "home_final": "https://greenhouseseeds.nl/",
+      "sitemap_loc_count": 1,
+      "sitemap_productish": 0,
+      "sitemap_sample": [
+        "https://www.greenhouseseeds.nl/"
+      ],
+      "score": 25
+    },
+    {
+      "name": "Crop King Seeds",
+      "home": "https://www.cropkingseeds.com/",
+      "list_ok": [
+        {
+          "url": "https://www.cropkingseeds.com/feminized-seeds/",
+          "status": 200,
+          "final": "https://www.cropkingseeds.com/feminized-seeds/",
+          "err": null,
+          "hits": 0,
+          "shopify_paths": 0,
+          "sample": []
+        },
+        {
+          "url": "https://www.cropkingseeds.com/collections/all",
+          "status": 200,
+          "final": "https://www.cropkingseeds.com/regular-marijuana-seeds/all-cherries-jungle-boys-strain-feminized-seeds/",
+          "err": null,
+          "hits": 1,
+          "shopify_paths": 0,
+          "sample": [
+            "https://www.cropkingseeds.com/regular-marijuana-seeds/all-cherries-jungle-boys-strain-feminized-seeds/"
+          ]
+        },
+        {
+          "url": "https://www.cropkingseeds.com/",
+          "status": 200,
+          "final": "https://www.cropkingseeds.com/",
+          "err": null,
+          "hits": 4,
+          "shopify_paths": 0,
+          "sample": [
+            "https://www.cropkingseeds.com/autoflowering-seeds/candy-cane-marijuana-seeds/",
+            "https://www.cropkingseeds.com/autoflowering-seeds/early-miss-marijuana-seeds/",
+            "https://www.cropkingseeds.com/autoflowering-seeds/jack-herer-marijuana-seeds/",
+            "https://www.cropkingseeds.com/cup-winner-strains/amnesia-haze-marijuana-seeds/"
+          ]
+        }
+      ],
+      "list_fail": [],
+      "product_hits": 4,
+      "sample": [
+        "https://www.cropkingseeds.com/autoflowering-seeds/candy-cane-marijuana-seeds/",
+        "https://www.cropkingseeds.com/autoflowering-seeds/early-miss-marijuana-seeds/",
+        "https://www.cropkingseeds.com/autoflowering-seeds/jack-herer-marijuana-seeds/",
+        "https://www.cropkingseeds.com/cup-winner-strains/amnesia-haze-marijuana-seeds/"
+      ],
+      "shopify_paths": 0,
+      "sitemaps": [
+        "https://www.cropkingseeds.com/sitemap_index.xml",
+        "https://www.cropkingseeds.com/post-sitemap.xml",
+        "https://www.cropkingseeds.com/page-sitemap.xml",
+        "https://www.cropkingseeds.com/product-sitemap.xml",
+        "https://www.cropkingseeds.com/product-sitemap2.xml",
+        "https://www.cropkingseeds.com/product-sitemap3.xml",
+        "https://www.cropkingseeds.com/product-sitemap4.xml",
+        "https://www.cropkingseeds.com/wffn_ty-sitemap.xml",
+        "https://www.cropkingseeds.com/wfacp_checkout-sitemap.xml"
+      ],
+      "flags": [],
+      "platform": "magento",
+      "home_status": 200,
+      "home_final": "https://www.cropkingseeds.com/",
+      "sitemap_loc_count": 15,
+      "sitemap_productish": 0,
+      "sitemap_sample": [
+        "https://www.cropkingseeds.com/post-sitemap.xml",
+        "https://www.cropkingseeds.com/page-sitemap.xml",
+        "https://www.cropkingseeds.com/product-sitemap.xml",
+        "https://www.cropkingseeds.com/product-sitemap2.xml",
+        "https://www.cropkingseeds.com/product-sitemap3.xml"
+      ],
+      "score": 20
+    },
+    {
+      "name": "Alchimia",
+      "home": "https://www.alchimiaweb.com/",
+      "list_ok": [
+        {
+          "url": "https://www.alchimiaweb.com/en/feminized-cannabis-seeds-tag-2/",
+          "status": 200,
+          "final": "https://www.alchimiaweb.com/en/feminized-cannabis-seeds-tag-2/",
+          "err": null,
+          "hits": 0,
+          "shopify_paths": 0,
+          "sample": []
+        },
+        {
+          "url": "https://www.alchimiaweb.com/en/",
+          "status": 200,
+          "final": "https://www.alchimiaweb.com/en/",
+          "err": null,
+          "hits": 0,
+          "shopify_paths": 0,
+          "sample": []
+        }
+      ],
+      "list_fail": [],
+      "product_hits": 0,
+      "sample": [],
+      "shopify_paths": 0,
+      "sitemaps": [
+        "https://www.alchimiaweb.com/sitemap-index-global.xml"
+      ],
+      "flags": [],
+      "platform": "magento",
+      "home_status": 200,
+      "home_final": "https://www.alchimiaweb.com/",
+      "sitemap_loc_count": 4,
+      "sitemap_productish": 0,
+      "sitemap_sample": [
+        "https://www.alchimiaweb.com/sitemap-index.xml",
+        "https://www.alchimiaweb.com/fr/sitemap-index.xml",
+        "https://www.alchimiaweb.com/en/sitemap-index.xml",
+        "https://www.alchimiaweb.com/de/sitemap-index.xml"
+      ],
+      "score": 0
+    },
+    {
+      "name": "DC Seed Exchange",
+      "home": "https://dcseedexchange.com/",
+      "list_ok": [
+        {
+          "url": "https://dcseedexchange.com/collections/all",
+          "status": 200,
+          "final": "https://dcseedexchange.com/all-auctions/",
+          "err": null,
+          "hits": 0,
+          "shopify_paths": 0,
+          "sample": []
+        }
+      ],
+      "list_fail": [],
+      "product_hits": 0,
+      "sample": [],
+      "shopify_paths": 0,
+      "sitemaps": [
+        "https://dcseedexchange.com/sitemap_index.xml",
+        "https://dcseedexchange.com/page-sitemap.xml",
+        "https://dcseedexchange.com/product-sitemap.xml",
+        "https://dcseedexchange.com/product-sitemap2.xml",
+        "https://dcseedexchange.com/product_cat-sitemap.xml",
+        "https://dcseedexchange.com/product_shipping_class-sitemap.xml",
+        "https://dcseedexchange.com/pa_color-sitemap.xml",
+        "https://dcseedexchange.com/pa_size-sitemap.xml"
+      ],
+      "flags": [],
+      "platform": "wordpress",
+      "home_status": 200,
+      "home_final": "https://dcseedexchange.com/",
+      "sitemap_loc_count": 7,
+      "sitemap_productish": 0,
+      "sitemap_sample": [
+        "https://dcseedexchange.com/page-sitemap.xml",
+        "https://dcseedexchange.com/product-sitemap.xml",
+        "https://dcseedexchange.com/product-sitemap2.xml",
+        "https://dcseedexchange.com/product_cat-sitemap.xml",
+        "https://dcseedexchange.com/product_shipping_class-sitemap.xml"
+      ],
+      "score": 0
+    },
+    {
+      "name": "Growers Choice Seeds",
+      "home": "https://growerschoiceseeds.com/",
+      "list_ok": [
+        {
+          "url": "https://growerschoiceseeds.com/collections/all",
+          "status": 200,
+          "final": "https://www.growerschoiceseeds.com/collections/all",
+          "err": null,
+          "hits": 0,
+          "shopify_paths": 0,
+          "sample": []
+        }
+      ],
+      "list_fail": [],
+      "product_hits": 0,
+      "sample": [],
+      "shopify_paths": 0,
+      "sitemaps": [
+        "https://www.growerschoiceseeds.com/wp-sitemap.xml",
+        "https://www.growerschoiceseeds.com/sitemap_index.xml"
+      ],
+      "flags": [],
+      "platform": "wordpress",
+      "home_status": 200,
+      "home_final": "https://www.growerschoiceseeds.com/",
+      "sitemap_loc_count": 0,
+      "sitemap_productish": 0,
+      "sitemap_sample": [],
+      "score": 0
+    },
+    {
+      "name": "Multiverse Beans",
+      "home": "https://www.multiversebeans.com/",
+      "list_ok": [],
+      "list_fail": [
+        {
+          "url": "https://www.multiversebeans.com/collections/all",
+          "status": 500,
+          "final": "https://www.multiversebeans.com/collections/all",
+          "err": "HTTP Error 500: Internal Server Error"
+        }
+      ],
+      "product_hits": 0,
+      "sample": [],
+      "shopify_paths": 0,
+      "sitemaps": [
+        "https://multiversebeans.com/sitemap_index.xml",
+        "https://multiversebeans.com/post-sitemap.xml",
+        "https://multiversebeans.com/page-sitemap.xml",
+        "https://multiversebeans.com/product-sitemap1.xml",
+        "https://multiversebeans.com/product-sitemap2.xml",
+        "https://multiversebeans.com/product-sitemap3.xml",
+        "https://multiversebeans.com/product-sitemap4.xml",
+        "https://multiversebeans.com/product-sitemap5.xml",
+        "https://multiversebeans.com/product-sitemap6.xml"
+      ],
+      "flags": [],
+      "platform": "magento",
+      "home_status": 200,
+      "home_final": "https://multiversebeans.com/",
+      "sitemap_loc_count": 22,
+      "sitemap_productish": 0,
+      "sitemap_sample": [
+        "https://multiversebeans.com/post-sitemap.xml",
+        "https://multiversebeans.com/page-sitemap.xml",
+        "https://multiversebeans.com/product-sitemap1.xml",
+        "https://multiversebeans.com/product-sitemap2.xml",
+        "https://multiversebeans.com/product-sitemap3.xml"
+      ],
+      "score": 0
+    },
+    {
+      "name": "Quebec Cannabis Seeds",
+      "home": "https://quebeccannabisseeds.com/",
+      "list_ok": [],
+      "list_fail": [
+        {
+          "url": "https://quebeccannabisseeds.com/collections/all",
+          "status": 404,
+          "final": "https://quebeccannabisseeds.com/collections/all",
+          "err": "HTTP Error 404: Not Found"
+        }
+      ],
+      "product_hits": 0,
+      "sample": [],
+      "shopify_paths": 0,
+      "sitemaps": [
+        "https://quebeccannabisseeds.com/sitemap.xml",
+        "http://quebeccannabisseeds.com/",
+        "http://quebeccannabisseeds.com/index.php?rt=content/sitemap",
+        "http://quebeccannabisseeds.com/index.php?rt=content/contact",
+        "http://quebeccannabisseeds.com/index.php?rt=content/content&amp;amp;content_id=4",
+        "http://quebeccannabisseeds.com/index.php?rt=content/content&amp;amp;content_id=1",
+        "http://quebeccannabisseeds.com/index.php?rt=content/content&amp;amp;content_id=3",
+        "http://quebeccannabisseeds.com/index.php?rt=product/product&amp;amp;product_id=123",
+        "http://quebeccannabisseeds.com/index.php?rt=content/content&amp;amp;content_id=2"
+      ],
+      "flags": [],
+      "platform": "magento",
+      "home_status": 200,
+      "home_final": "https://quebeccannabisseeds.com/",
+      "sitemap_loc_count": 1411,
+      "sitemap_productish": 0,
+      "sitemap_sample": [
+        "http://quebeccannabisseeds.com/",
+        "http://quebeccannabisseeds.com/index.php?rt=content/sitemap",
+        "http://quebeccannabisseeds.com/index.php?rt=content/contact",
+        "http://quebeccannabisseeds.com/index.php?rt=content/content&amp;amp;content_id=4",
+        "http://quebeccannabisseeds.com/index.php?rt=content/content&amp;amp;content_id=1"
+      ],
+      "score": 0
+    },
+    {
+      "name": "Beaver Seeds",
+      "home": "https://www.beaverseeds.com/",
+      "list_ok": [],
+      "list_fail": [
+        {
+          "url": "https://www.beaverseeds.com/collections/all",
+          "status": null,
+          "final": "https://www.beaverseeds.com/collections/all",
+          "err": "<urlopen error [Errno 11001] getaddrinfo failed>"
+        },
+        {
+          "url": "https://www.beaverseeds.com/collections/feminized-seeds",
+          "status": null,
+          "final": "https://www.beaverseeds.com/collections/feminized-seeds",
+          "err": "<urlopen error [Errno 11002] getaddrinfo failed>"
+        }
+      ],
+      "product_hits": 0,
+      "sample": [],
+      "shopify_paths": 0,
+      "sitemaps": [],
+      "flags": [
+        "home_err:<urlopen error [Errno 11001] getaddrinfo failed>"
+      ],
+      "platform": "unknown",
+      "home_status": null,
+      "home_final": "https://www.beaverseeds.com/",
+      "score": -10
+    },
+    {
+      "name": "Organic Earth",
+      "home": "https://organicearthseeds.com/",
+      "list_ok": [],
+      "list_fail": [
+        {
+          "url": "https://organicearthseeds.com/collections/all",
+          "status": null,
+          "final": "https://organicearthseeds.com/collections/all",
+          "err": "<urlopen error [Errno 11001] getaddrinfo failed>"
+        },
+        {
+          "url": "https://organicearthseeds.com/",
+          "status": null,
+          "final": "https://organicearthseeds.com/",
+          "err": "<urlopen error [Errno 11001] getaddrinfo failed>"
+        }
+      ],
+      "product_hits": 0,
+      "sample": [],
+      "shopify_paths": 0,
+      "sitemaps": [],
+      "flags": [
+        "home_err:<urlopen error [Errno 11001] getaddrinfo failed>"
+      ],
+      "platform": "unknown",
+      "home_status": null,
+      "home_final": "https://organicearthseeds.com/",
+      "score": -10
+    },
+    {
+      "name": "Seedsman",
+      "home": "https://www.seedsman.com/",
+      "list_ok": [
+        {
+          "url": "https://www.seedsman.com/",
+          "status": 200,
+          "final": "https://www.seedsman.com/us-en/",
+          "err": null,
+          "hits": 0,
+          "shopify_paths": 0,
+          "sample": []
+        }
+      ],
+      "list_fail": [
+        {
+          "url": "https://www.seedsman.com/us/feminized-seeds",
+          "status": 404,
+          "final": "https://www.seedsman.com/us/feminized-seeds",
+          "err": "HTTP Error 404: Not Found",
+          "bot": true
+        },
+        {
+          "url": "https://www.seedsman.com/us/cannabis-seeds",
+          "status": 404,
+          "final": "https://www.seedsman.com/us/cannabis-seeds",
+          "err": "HTTP Error 404: Not Found",
+          "bot": true
+        }
+      ],
+      "product_hits": 0,
+      "sample": [],
+      "shopify_paths": 0,
+      "sitemaps": [
+        "https://www.seedsman.com/sitemaps/seedsman_usa_site_map_live.xml",
+        "https://www.seedsman.com/sitemaps/seedsman_uk_site_map_live.xml",
+        "https://www.seedsman.com/sitemaps/seedsman_eu_site_map_live.xml",
+        "https://www.seedsman.com/sitemaps/seedsman_eu_de_site_map_live.xml",
+        "https://www.seedsman.com/sitemaps/seedsman_eu_fr_site_map_live.xml",
+        "https://www.seedsman.com/sitemaps/seedsman_eu_bg_site_map_live.xml",
+        "https://www.seedsman.com/sitemaps/seedsman_za_site_map_live.xml",
+        "https://www.seedsman.com/sitemaps/seedsman_eu_pl_site_map_live.xml",
+        "https://www.seedsman.com/sitemaps/seedsman_eu_es_site_map_live.xml",
+        "https://www.seedsman.com/sitemaps/seedsman_eu_it_site_map_live.xml",
+        "https://www.seedsman.com/sitemaps/seedsman_eu_cs_site_map_live.xml",
+        "https://www.seedsman.com/sitemaps/seedsman_uk_pt_site_map_live.xml"
+      ],
+      "flags": [
+        "list_bot_wall"
+      ],
+      "platform": "magento",
+      "home_status": 200,
+      "home_final": "https://www.seedsman.com/us-en/",
+      "sitemap_loc_count": 1023,
+      "sitemap_productish": 0,
+      "sitemap_sample": [
+        "https://www.seedsman.com/us-en/medicine-man-regular-seeds-18-mrnmm",
+        "https://www.seedsman.com/us-en/nevilles-haze-regular-seeds-18-mrnnhz",
+        "https://www.seedsman.com/us-en/black-widow-regular-seeds-18-mrnbw",
+        "https://www.seedsman.com/us-en/mango-haze-regular-seeds-18-mrnmghz",
+        "https://www.seedsman.com/us-en/super-silver-haze-regular-seeds-18-mrnsshz"
+      ],
+      "score": -15
+    },
+    {
+      "name": "True North Seedbank",
+      "home": "https://truenorthseedbank.com/",
+      "list_ok": [],
+      "list_fail": [
+        {
+          "url": "https://truenorthseedbank.com/collections/all",
+          "status": 404,
+          "final": "https://truenorthseedbank.com/collections/all",
+          "err": "HTTP Error 404: Not Found",
+          "bot": true
+        }
+      ],
+      "product_hits": 0,
+      "sample": [],
+      "shopify_paths": 0,
+      "sitemaps": [
+        "https://truenorthseedbank.com/sitemap.xml",
+        "https://www.truenorthseedbank.com/",
+        "https://www.truenorthseedbank.com/cannabis-seeds",
+        "https://www.truenorthseedbank.com/cannabis-seeds/regular-seeds",
+        "https://www.truenorthseedbank.com/barney-s-farm",
+        "https://www.truenorthseedbank.com/blimburn-seeds",
+        "https://www.truenorthseedbank.com/bulk-seeds-guru",
+        "https://www.truenorthseedbank.com/cali-connection",
+        "https://www.truenorthseedbank.com/canuk-seeds"
+      ],
+      "flags": [
+        "list_bot_wall"
+      ],
+      "platform": "magento",
+      "home_status": 200,
+      "home_final": "https://www.truenorthseedbank.com/",
+      "sitemap_loc_count": 498,
+      "sitemap_productish": 0,
+      "sitemap_sample": [
+        "https://www.truenorthseedbank.com/",
+        "https://www.truenorthseedbank.com/cannabis-seeds",
+        "https://www.truenorthseedbank.com/cannabis-seeds/regular-seeds",
+        "https://www.truenorthseedbank.com/barney-s-farm",
+        "https://www.truenorthseedbank.com/blimburn-seeds"
+      ],
+      "score": -25
+    },
+    {
+      "name": "Weed Seeds Express",
+      "home": "https://weedseedsexpress.com/",
+      "list_ok": [],
+      "list_fail": [
+        {
+          "url": "https://weedseedsexpress.com/collections/all",
+          "status": 301,
+          "final": "https://weedseedsexpress.com/collections/all",
+          "err": "HTTP Error 301: The HTTP server returned a redirect error that would lead to an infinite loop.\nThe last 30x error message was:\nMoved Permanently",
+          "bot": true
+        }
+      ],
+      "product_hits": 0,
+      "sample": [],
+      "shopify_paths": 0,
+      "sitemaps": [
+        "https://weedseedsexpress.com/sitemap-en.xml",
+        "https://weedseedsexpress.com/de/sitemap-de.xml",
+        "https://weedseedsexpress.com/ca/sitemap-ca.xml",
+        "https://weedseedsexpress.com/us/sitemap-us.xml",
+        "https://weedseedsexpress.com/uk/sitemap-uk.xml",
+        "https://weedseedsexpress.com/au/sitemap-au.xml",
+        "https://weedseedsexpress.com/nz/sitemap-nz.xml",
+        "https://weedseedsexpress.com/sitemap.xml"
+      ],
+      "flags": [
+        "list_bot_wall",
+        "shopify"
+      ],
+      "platform": "magento",
+      "home_status": 200,
+      "home_final": "https://weedseedsexpress.com/",
+      "sitemap_loc_count": 204,
+      "sitemap_productish": 0,
+      "sitemap_sample": [
+        "https://weedseedsexpress.com/product/ak-47-autoflower-seeds",
+        "https://weedseedsexpress.com/product/power-kush-seeds",
+        "https://weedseedsexpress.com/product/ak-48-seeds",
+        "https://weedseedsexpress.com/product/ak-48-autoflower-seeds",
+        "https://weedseedsexpress.com/product/master-kush-regular-seeds"
+      ],
+      "score": -25
+    },
+    {
+      "name": "Great Lakes Genetics",
+      "home": "https://greatlakesgenetics.com/",
+      "list_ok": [],
+      "list_fail": [
+        {
+          "url": "https://greatlakesgenetics.com/collections/all",
+          "status": 202,
+          "final": "https://greatlakesgenetics.com/collections/all",
+          "err": null,
+          "bot": true
+        }
+      ],
+      "product_hits": 0,
+      "sample": [],
+      "shopify_paths": 0,
+      "sitemaps": [],
+      "flags": [
+        "list_bot_wall"
+      ],
+      "platform": "unknown",
+      "home_status": 202,
+      "home_final": "https://greatlakesgenetics.com/",
+      "score": -35
+    },
+    {
+      "name": "Neptune Seed Bank",
+      "home": "https://neptuneseedbank.com/",
+      "list_ok": [],
+      "list_fail": [
+        {
+          "url": "https://neptuneseedbank.com/collections/all",
+          "status": 202,
+          "final": "https://neptuneseedbank.com/collections/all",
+          "err": null,
+          "bot": true
+        }
+      ],
+      "product_hits": 0,
+      "sample": [],
+      "shopify_paths": 0,
+      "sitemaps": [],
+      "flags": [
+        "list_bot_wall"
+      ],
+      "platform": "unknown",
+      "home_status": 202,
+      "home_final": "https://neptuneseedbank.com/",
+      "score": -35
+    },
+    {
+      "name": "Oregon Elite Seeds",
+      "home": "https://oregoneliteseeds.com/",
+      "list_ok": [],
+      "list_fail": [
+        {
+          "url": "https://oregoneliteseeds.com/collections/all",
+          "status": 404,
+          "final": "https://oregoneliteseeds.com/collections/all",
+          "err": "HTTP Error 404: Not Found",
+          "bot": true
+        }
+      ],
+      "product_hits": 0,
+      "sample": [],
+      "shopify_paths": 0,
+      "sitemaps": [
+        "https://www.oregoneliteseeds.com/sitemap_index.xml",
+        "https://www.oregoneliteseeds.com/page-sitemap.xml",
+        "https://www.oregoneliteseeds.com/category-sitemap.xml"
+      ],
+      "flags": [
+        "list_bot_wall"
+      ],
+      "platform": "wordpress",
+      "home_status": 200,
+      "home_final": "https://www.flasr.com/",
+      "sitemap_loc_count": 2,
+      "sitemap_productish": 0,
+      "sitemap_sample": [
+        "https://www.oregoneliteseeds.com/page-sitemap.xml",
+        "https://www.oregoneliteseeds.com/category-sitemap.xml"
+      ],
+      "score": -35
+    },
+    {
+      "name": "Pacific Seed Bank",
+      "home": "https://pacificseedbank.com/",
+      "list_ok": [],
+      "list_fail": [
+        {
+          "url": "https://pacificseedbank.com/collections/all",
+          "status": 403,
+          "final": "https://pacificseedbank.com/collections/all",
+          "err": "HTTP Error 403: Forbidden",
+          "bot": true
+        }
+      ],
+      "product_hits": 0,
+      "sample": [],
+      "shopify_paths": 0,
+      "sitemaps": [
+        "https://www.pacificseedbank.com/post-sitemap.xml",
+        "https://www.pacificseedbank.com/page-sitemap.xml",
+        "https://www.pacificseedbank.com/product-sitemap.xml",
+        "https://www.pacificseedbank.com/product-sitemap2.xml",
+        "https://www.pacificseedbank.com/product-sitemap3.xml",
+        "https://www.pacificseedbank.com/product_cat-sitemap.xml",
+        "https://www.pacificseedbank.com/yith_product_brand-sitemap.xml",
+        "https://www.pacificseedbank.com/sitemap_index.xml",
+        "https://www.pacificseedbank.com/product-sitemap1.xml"
+      ],
+      "flags": [
+        "bot_wall",
+        "list_bot_wall"
+      ],
+      "platform": "magento",
+      "home_status": 403,
+      "home_final": "https://pacificseedbank.com/",
+      "sitemap_loc_count": 217,
+      "sitemap_productish": 0,
+      "sitemap_sample": [
+        "https://www.pacificseedbank.com/pacific-seed-bank-marijuana-seed-blog/",
+        "https://www.pacificseedbank.com/growing-marijuana/low-stress-training/",
+        "https://www.pacificseedbank.com/growing-marijuana/sea-of-green/",
+        "https://www.pacificseedbank.com/growing-marijuana/early-signs-of-female-plant/",
+        "https://www.pacificseedbank.com/legalization/where-the-2020-presidential-candidates-stand-on-marijuana/"
+      ],
+      "score": -45
+    },
+    {
+      "name": "Attitude Seedbank",
+      "home": "https://www.attitudeseedbank.com/",
+      "list_ok": [
+        {
+          "url": "https://www.attitudeseedbank.com/",
+          "status": 200,
+          "final": "https://www.hugedomains.com/domain_profile.cfm?d=attitudeseedbank.com",
+          "err": null,
+          "hits": 0,
+          "shopify_paths": 0,
+          "sample": []
+        },
+        {
+          "url": "https://www.attitudeseedbank.com/feminized-cannabis-seeds",
+          "status": 200,
+          "final": "https://www.hugedomains.com/domain_profile.cfm?d=attitudeseedbank.com",
+          "err": null,
+          "hits": 0,
+          "shopify_paths": 0,
+          "sample": []
+        }
+      ],
+      "list_fail": [],
+      "product_hits": 0,
+      "sample": [],
+      "shopify_paths": 0,
+      "sitemaps": [
+        "https://www.hugedomains.com/domain_profile.cfm?d=attitudeseedbank.com"
+      ],
+      "flags": [
+        "parked"
+      ],
+      "platform": "unknown",
+      "home_status": 200,
+      "home_final": "https://www.hugedomains.com/domain_profile.cfm?d=attitudeseedbank.com",
+      "score": -50
+    },
+    {
+      "name": "North Atlantic Seed Co",
+      "home": "https://northatlanticseed.com/",
+      "list_ok": [],
+      "list_fail": [
+        {
+          "url": "https://northatlanticseed.com/collections/all",
+          "status": 403,
+          "final": "https://northatlanticseed.com/collections/all",
+          "err": "HTTP Error 403: Forbidden",
+          "bot": true
+        },
+        {
+          "url": "https://northatlanticseed.com/",
+          "status": 403,
+          "final": "https://northatlanticseed.com/",
+          "err": "HTTP Error 403: Forbidden",
+          "bot": true
+        }
+      ],
+      "product_hits": 0,
+      "sample": [],
+      "shopify_paths": 0,
+      "sitemaps": [],
+      "flags": [
+        "bot_wall",
+        "list_bot_wall"
+      ],
+      "platform": "magento",
+      "home_status": 403,
+      "home_final": "https://northatlanticseed.com/",
+      "score": -55
+    },
+    {
+      "name": "Seed City",
+      "home": "https://www.seed-city.com/",
+      "list_ok": [],
+      "list_fail": [
+        {
+          "url": "https://www.seed-city.com/",
+          "status": 403,
+          "final": "https://www.seed-city.com/",
+          "err": "HTTP Error 403: Forbidden",
+          "bot": true
+        },
+        {
+          "url": "https://www.seed-city.com/feminised-cannabis-seeds",
+          "status": 403,
+          "final": "https://www.seed-city.com/feminised-cannabis-seeds",
+          "err": "HTTP Error 403: Forbidden",
+          "bot": true
+        }
+      ],
+      "product_hits": 0,
+      "sample": [],
+      "shopify_paths": 0,
+      "sitemaps": [
+        "https://www.seed-city.com/sitemap_index.xml"
+      ],
+      "flags": [
+        "bot_wall",
+        "list_bot_wall"
+      ],
+      "platform": "magento",
+      "home_status": 403,
+      "home_final": "https://www.seed-city.com/",
+      "score": -55
+    }
+  ],
+  "forums": [
+    {
+      "name": "420 Magazine",
+      "url": "https://www.420magazine.com/community/",
+      "status": 200,
+      "final": "https://www.420magazine.com/community/",
+      "platform": "xenforo",
+      "thread_links": 569,
+      "strain_hits": 21,
+      "must_login": false,
+      "flags": [],
+      "yield_score": 90
+    },
+    {
+      "name": "Phenohunter",
+      "url": "https://phenohunter.org/",
+      "status": 200,
+      "final": "https://phenohunter.org/",
+      "platform": "xenforo",
+      "thread_links": 208,
+      "strain_hits": 40,
+      "must_login": false,
+      "flags": [],
+      "yield_score": 90
+    },
+    {
+      "name": "Marijuana Passion",
+      "url": "https://www.marijuanapassion.com/",
+      "status": 200,
+      "final": "https://www.marijuanapassion.com/",
+      "platform": "xenforo",
+      "thread_links": 80,
+      "strain_hits": 2,
+      "must_login": false,
+      "flags": [],
+      "yield_score": 80
+    },
+    {
+      "name": "Grower.cz",
+      "url": "https://www.grower.cz/",
+      "status": 200,
+      "final": "https://grower.cz/",
+      "platform": "unknown",
+      "thread_links": 53,
+      "strain_hits": 0,
+      "must_login": false,
+      "flags": [],
+      "yield_score": 70
+    },
+    {
+      "name": "Overgrow",
+      "url": "https://www.overgrow.com/",
+      "status": 200,
+      "final": "https://overgrow.com/",
+      "platform": "discourse",
+      "thread_links": 2,
+      "strain_hits": 24,
+      "must_login": false,
+      "flags": [],
+      "yield_score": 60
+    },
+    {
+      "name": "Rollitup",
+      "url": "https://www.rollitup.org/",
+      "status": 200,
+      "final": "https://www.rollitup.org/",
+      "platform": "xenforo",
+      "thread_links": 4,
+      "strain_hits": 17,
+      "must_login": false,
+      "flags": [],
+      "yield_score": 60
+    },
+    {
+      "name": "CannabisCafe 2.0",
+      "url": "https://www.cannabiscafe.net/",
+      "status": 200,
+      "final": "https://www.cannabiscafe.net/",
+      "platform": "vbulletin",
+      "thread_links": 0,
+      "strain_hits": 0,
+      "must_login": false,
+      "flags": [],
+      "yield_score": 50
+    },
+    {
+      "name": "Cannabisanbauen.net",
+      "url": "https://www.cannabisanbauen.net/",
+      "status": 200,
+      "final": "https://www.cannabisanbauen.net/",
+      "platform": "unknown",
+      "thread_links": 0,
+      "strain_hits": 0,
+      "must_login": false,
+      "flags": [],
+      "yield_score": 40
+    },
+    {
+      "name": "Jointjedraaien.nl",
+      "url": "https://www.jointjedraaien.nl/",
+      "status": 200,
+      "final": "https://www.jointjedraaien.nl/",
+      "platform": "unknown",
+      "thread_links": 4,
+      "strain_hits": 0,
+      "must_login": false,
+      "flags": [],
+      "yield_score": 40
+    },
+    {
+      "name": "Marijuana Growing Forums",
+      "url": "https://www.marijuanagrowing.com/",
+      "status": 200,
+      "final": "https://marijuanagrowing.com/",
+      "platform": "unknown",
+      "thread_links": 0,
+      "strain_hits": 0,
+      "must_login": false,
+      "flags": [],
+      "yield_score": 40
+    },
+    {
+      "name": "OZ Stoners",
+      "url": "https://www.ozstoners.com/",
+      "status": 200,
+      "final": "https://ozstoners.com/",
+      "platform": "unknown",
+      "thread_links": 0,
+      "strain_hits": 2,
+      "must_login": false,
+      "flags": [],
+      "yield_score": 40
+    },
+    {
+      "name": "Olkpeace",
+      "url": "https://olkpeace.org/",
+      "status": 200,
+      "final": "https://olkpeace.org/cap.html?next=%2F",
+      "platform": "unknown",
+      "thread_links": 0,
+      "strain_hits": 0,
+      "must_login": false,
+      "flags": [],
+      "yield_score": 40
+    },
+    {
+      "name": "Sensi Seeds Forums",
+      "url": "https://forum.sensiseeds.com/",
+      "status": 200,
+      "final": "https://sensiseeds.com/",
+      "platform": "unknown",
+      "thread_links": 0,
+      "strain_hits": 1,
+      "must_login": false,
+      "flags": [],
+      "yield_score": 40
+    },
+    {
+      "name": "Strain Hunters",
+      "url": "https://www.strainhunters.com/",
+      "status": 200,
+      "final": "https://strainhunters.com/",
+      "platform": "unknown",
+      "thread_links": 0,
+      "strain_hits": 45,
+      "must_login": false,
+      "flags": [
+        "login_heavy"
+      ],
+      "yield_score": 35
+    },
+    {
+      "name": "Reddit Cannabis",
+      "url": "https://www.reddit.com/r/cannabis/",
+      "status": 200,
+      "final": "https://www.reddit.com/r/cannabis/",
+      "platform": "reddit",
+      "thread_links": 0,
+      "strain_hits": 0,
+      "must_login": false,
+      "flags": [],
+      "yield_score": 20
+    },
+    {
+      "name": "GreenPassion",
+      "url": "https://www.greenpassion.org/",
+      "status": 200,
+      "final": "https://www.greenpassion.org/",
+      "platform": "unknown",
+      "thread_links": 0,
+      "strain_hits": 0,
+      "must_login": false,
+      "flags": [],
+      "yield_score": 0
+    },
+    {
+      "name": "GrowKind",
+      "url": "https://www.growkind.com/",
+      "status": 500,
+      "final": "https://www.growkind.com/",
+      "platform": "unknown",
+      "thread_links": 0,
+      "strain_hits": 0,
+      "must_login": false,
+      "flags": [],
+      "yield_score": 0
+    },
+    {
+      "name": "The Green Circle",
+      "url": "https://www.thegreencircle.org/",
+      "status": 200,
+      "final": "https://www.thegreencircle.org/",
+      "platform": "unknown",
+      "thread_links": 0,
+      "strain_hits": 0,
+      "must_login": false,
+      "flags": [],
+      "yield_score": 0
+    },
+    {
+      "name": "Swecan",
+      "url": "https://www.swecan.org/",
+      "status": 503,
+      "final": "https://www.swecan.org/",
+      "platform": "unknown",
+      "thread_links": 0,
+      "strain_hits": 0,
+      "must_login": false,
+      "flags": [
+        "bot_wall"
+      ],
+      "yield_score": -25
+    },
+    {
+      "name": "Autoflower Network",
+      "url": "https://www.autoflower.org/",
+      "status": null,
+      "final": "https://www.autoflower.org/",
+      "platform": "unknown",
+      "thread_links": 0,
+      "strain_hits": 0,
+      "must_login": false,
+      "flags": [
+        "err:<urlopen error [WinError 10060] A connection attempt failed "
+      ],
+      "yield_score": -40
+    },
+    {
+      "name": "Cannabis.com Forums",
+      "url": "https://forums.cannabis.com/",
+      "status": null,
+      "final": "https://forums.cannabis.com/",
+      "platform": "unknown",
+      "thread_links": 0,
+      "strain_hits": 0,
+      "must_login": false,
+      "flags": [
+        "err:<urlopen error [Errno 11001] getaddrinfo failed>"
+      ],
+      "yield_score": -40
+    },
+    {
+      "name": "Chuckersparadise",
+      "url": "https://www.chuckersparadise.com/",
+      "status": null,
+      "final": "https://www.chuckersparadise.com/",
+      "platform": "unknown",
+      "thread_links": 0,
+      "strain_hits": 0,
+      "must_login": false,
+      "flags": [
+        "err:<urlopen error [Errno 11001] getaddrinfo failed>"
+      ],
+      "yield_score": -40
+    },
+    {
+      "name": "FCF",
+      "url": "https://forum.cannabisforum.nl/",
+      "status": null,
+      "final": "https://forum.cannabisforum.nl/",
+      "platform": "unknown",
+      "thread_links": 0,
+      "strain_hits": 0,
+      "must_login": false,
+      "flags": [
+        "err:<urlopen error [Errno 11001] getaddrinfo failed>"
+      ],
+      "yield_score": -40
+    },
+    {
+      "name": "Lamarihuana",
+      "url": "https://www.lamarihuana.com/foros/",
+      "status": null,
+      "final": "https://www.lamarihuana.com/foros/",
+      "platform": "unknown",
+      "thread_links": 0,
+      "strain_hits": 0,
+      "must_login": false,
+      "flags": [
+        "err:<urlopen error [WinError 10061] No connection could be made "
+      ],
+      "yield_score": -40
+    },
+    {
+      "name": "OpenGrow",
+      "url": "https://www.opengrow.com/",
+      "status": null,
+      "final": "https://www.opengrow.com/",
+      "platform": "unknown",
+      "thread_links": 0,
+      "strain_hits": 0,
+      "must_login": false,
+      "flags": [
+        "err:<urlopen error [WinError 10060] A connection attempt failed "
+      ],
+      "yield_score": -40
+    },
+    {
+      "name": "Wiet Forum NL",
+      "url": "https://www.wietforum.nl/",
+      "status": null,
+      "final": "https://www.wietforum.nl/",
+      "platform": "unknown",
+      "thread_links": 0,
+      "strain_hits": 0,
+      "must_login": false,
+      "flags": [
+        "err:<urlopen error [WinError 10060] A connection attempt failed "
+      ],
+      "yield_score": -40
+    },
+    {
+      "name": "Cannaweed",
+      "url": "https://www.cannaweed.com/",
+      "status": 403,
+      "final": "https://www.cannaweed.com/",
+      "platform": "unknown",
+      "thread_links": 0,
+      "strain_hits": 0,
+      "must_login": false,
+      "flags": [
+        "bot_wall",
+        "http_403"
+      ],
+      "yield_score": -45
+    },
+    {
+      "name": "Grasscity",
+      "url": "https://forum.grasscity.com/",
+      "status": 403,
+      "final": "https://forum.grasscity.com/",
+      "platform": "unknown",
+      "thread_links": 0,
+      "strain_hits": 0,
+      "must_login": false,
+      "flags": [
+        "bot_wall",
+        "http_403"
+      ],
+      "yield_score": -45
+    },
+    {
+      "name": "Grower.ch",
+      "url": "https://www.grower.ch/",
+      "status": 403,
+      "final": "https://www.grower.ch/",
+      "platform": "unknown",
+      "thread_links": 0,
+      "strain_hits": 0,
+      "must_login": false,
+      "flags": [
+        "bot_wall",
+        "http_403"
+      ],
+      "yield_score": -45
+    },
+    {
+      "name": "Growery",
+      "url": "https://www.growery.org/",
+      "status": 403,
+      "final": "https://www.growery.org/",
+      "platform": "unknown",
+      "thread_links": 0,
+      "strain_hits": 0,
+      "must_login": false,
+      "flags": [
+        "bot_wall",
+        "http_403"
+      ],
+      "yield_score": -45
+    },
+    {
+      "name": "ICMag",
+      "url": "https://www.icmag.com/forums/",
+      "status": 403,
+      "final": "https://www.icmag.com/forums/",
+      "platform": "unknown",
+      "thread_links": 3,
+      "strain_hits": 0,
+      "must_login": false,
+      "flags": [
+        "bot_wall",
+        "http_403"
+      ],
+      "yield_score": -45
+    },
+    {
+      "name": "Mr.Nice",
+      "url": "https://www.mrnice.nl/forum/",
+      "status": 403,
+      "final": "https://www.mrnice.nl/forum/",
+      "platform": "unknown",
+      "thread_links": 3,
+      "strain_hits": 0,
+      "must_login": false,
+      "flags": [
+        "bot_wall",
+        "http_403"
+      ],
+      "yield_score": -45
+    },
+    {
+      "name": "THCfarmer",
+      "url": "https://www.thcfarmer.com/",
+      "status": 403,
+      "final": "https://www.thcfarmer.com/",
+      "platform": "unknown",
+      "thread_links": 0,
+      "strain_hits": 0,
+      "must_login": false,
+      "flags": [
+        "bot_wall",
+        "http_403"
+      ],
+      "yield_score": -45
+    },
+    {
+      "name": "THCtalk",
+      "url": "https://www.thctalk.com/",
+      "status": 403,
+      "final": "https://www.thctalk.com/",
+      "platform": "unknown",
+      "thread_links": 0,
+      "strain_hits": 0,
+      "must_login": false,
+      "flags": [
+        "bot_wall",
+        "http_403"
+      ],
+      "yield_score": -45
+    },
+    {
+      "name": "UK420",
+      "url": "https://www.uk420.com/",
+      "status": 403,
+      "final": "https://www.uk420.com/",
+      "platform": "unknown",
+      "thread_links": 0,
+      "strain_hits": 0,
+      "must_login": false,
+      "flags": [
+        "bot_wall",
+        "http_403"
+      ],
+      "yield_score": -45
+    }
+  ]
+}

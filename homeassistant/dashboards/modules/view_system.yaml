@@ -156,16 +156,36 @@ sections:
             name: HA handshake counter
           - entity: binary_sensor.dsc_hub_panel_link
             name: Panel ESP-NOW link
+          - entity: binary_sensor.dsc_bridge_online
+            name: Bridge ESP-NOW (appliances)
+          - entity: binary_sensor.dsc_appliances_path_ok
+            name: Appliances path OK
+          - entity: binary_sensor.dsc_anchor_softap_up
+            name: Anchor SoftAP
+          - entity: sensor.dsc_anchor_bssid
+            name: Anchor BSSID
+          - entity: sensor.dsc_anchor_channel
+            name: Anchor channel
+          - entity: binary_sensor.dsc_bridge_heater_api_link
+            name: Bridge → heater API
+          - entity: binary_sensor.dsc_bridge_heatmat_api_link
+            name: Bridge → heatmat API
+          - entity: binary_sensor.dsc_bridge_humidifier_api_link
+            name: Bridge → humidifier API
+          - entity: binary_sensor.dsc_bridge_dehumidifier_api_link
+            name: Bridge → dehumidifier API
       - type: markdown
         content: >-
           *Handshake pings every few minutes; a wedged API with live WiFi
           for ≥5 min makes the hub NVS-sync and safe-reboot (max 2×/boot).
-          ≥30 s of true offline safe-offs the Sonoffs from HA's side.*
+          ≥30 s of true offline safe-offs the Sonoffs from HA's side.
+          v5.2: DSC-BRIDGE drives Sonoffs over ESP-NOW without HA; prefer
+          Lock WiFi AP → Anchor BSSID (DSC-Anchor SoftAP), not Nest.*
       - type: heading
-        heading: 📡 WIFI AP PINNING (v5.1)
+        heading: 📡 WIFI AP PINNING (v5.2)
         heading_style: subtitle
       - type: custom:expander-card
-        title: 📌 Pin fleet to one AP — mesh roaming fix
+        title: 📌 Pin fleet to DSC-Anchor (bridge SoftAP)
         expanded: false
         card_mod:
           style: |
@@ -186,16 +206,18 @@ sections:
                 name: Current BSSID
               - entity: text.dsc_hub_preferred_wifi_bssid
                 name: Preferred BSSID
+              - entity: sensor.dsc_anchor_bssid
+                name: Bridge Anchor BSSID
               - entity: button.dsc_hub_remember_current_wifi_ap
                 name: Remember current AP
               - entity: button.dsc_hub_clear_preferred_wifi_ap
                 name: Clear preferred AP
           - type: markdown
             content: >-
-              *Lock broadcasts the pinned BSSID over ESP-NOW 0xD0 — pots
-              and the panel adopt it, so the whole fleet camps on one mesh
-              node instead of roaming mid-grow. A recovery ladder unpins
-              automatically if the AP disappears.*
+              *F-012: copy Anchor BSSID into Preferred BSSID (or Lock while
+              associated to DSC-Anchor). Lock broadcasts the pin over ESP-NOW
+              0xD0 — pots and the panel adopt it. Sonoffs stay on home LAN WiFi;
+              the bridge reaches them over Ethernet.*
       - type: custom:mini-graph-card
         name: WiFi RSSI — 24 h
         hours_to_show: 24
@@ -423,7 +445,12 @@ sections:
         cards:
           - type: markdown
             content: >-
-              *v4 node safety (Sonoffs still HA-actuated — no ESP-NOW on ESP8285):*
+              *v5.2 node safety (Sonoffs dual-path — bridge primary, HA fallback):*
+
+
+              *• **DSC-BRIDGE** receives hub demand over ESP-NOW (`0xD8`) and
+              drives relays via native API. HA followers stay as an idempotent
+              backup when HA is up.*
 
 
               *• **`restore_mode: ALWAYS_OFF`** — a Sonoff that loses power
@@ -431,9 +458,8 @@ sections:
 
 
               *• **API-loss grace** — each node drops its relay after its own
-              grace window if the hub goes away: heater 60 s, heatmat/humidifier
-              90 s, dehumidifier 240 s (compressor). Tuned by consequence, not
-              by symmetry.*
+              grace window if *all* API clients go away: heater 60 s,
+              heatmat/humidifier 90 s, dehumidifier 240 s (compressor).*
 
 
               *• **Test mode** — bounded to 10 minutes, physical button only.

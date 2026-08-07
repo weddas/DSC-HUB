@@ -50,7 +50,7 @@ CONFIG_SCHEMA = cv.Schema(
     {
         cv.GenerateID(): cv.declare_id(DscFleetSetup),
         cv.GenerateID(CONF_WEB_SERVER_BASE_ID): cv.use_id(web_server_base.WebServerBase),
-        cv.Required(CONF_ROLE): cv.one_of("hub", "control", "pot", lower=True),
+        cv.Required(CONF_ROLE): cv.one_of("hub", "control", "pot", "bridge", lower=True),
         cv.Optional(CONF_ENABLED, default=True): cv.boolean,
         cv.Optional(CONF_SETUP_AP_PREFIX, default="DSC-Setup"): cv.string,
         cv.Required(CONF_SETUP_AP_PASSWORD): cv.string,

@@ -1,11 +1,19 @@
 # ==================================================================
-#  DSC-HUB · lab WiFi (compile-time SSID from secrets)
+#  DSC-HUB · lab WiFi
 #
-#  AP PIN: prefer ${wifi_bssid} so hub / Control / pots land on the same
-#  Nest point. 00:00:00:00:00:00 = any AP on the SSID (fallback network).
+#  Prefer DSC-Anchor SoftAP (ETH01 F-012) when present; Nest/home SSID
+#  remains fallback. Pin BSSID via Lock WiFi AP / ${wifi_bssid} —
+#  use sensor.dsc_bridge_anchor_bssid after first bridge boot.
 # ==================================================================
 wifi:
   networks:
+    - ssid: ${anchor_ssid}
+      password: ${anchor_ap_password}
+      bssid: ${wifi_bssid}
+      priority: 20
+    - ssid: ${anchor_ssid}
+      password: ${anchor_ap_password}
+      priority: 15
     - ssid: ${wifi_ssid}
       password: ${wifi_password}
       bssid: ${wifi_bssid}
@@ -15,12 +23,12 @@ wifi:
       priority: 0
   power_save_mode: none
   # false: Lock WiFi AP / preferred BSSID needs a scan to leave a sticky
-  # Nest point. fast_connect rejoined the wrong AP after bounce (3 Aug).
+  # AP. fast_connect rejoined the wrong AP after bounce (3 Aug).
   fast_connect: false
   # ESPHome default true: every 5 min (RSSI < -49) off-channel roam scan
-  # while STA stays "connected". That hops the single radio off Nest ch11
-  # and kills ESP-NOW (dsc-hub-logs (5) 09:50 storm). Hub Lock + preferred
-  # BSSID already pin the Nest point — roaming fights that pin.
+  # while STA stays "connected". That hops the single radio off the
+  # pinned channel and kills ESP-NOW. Lock + preferred BSSID pin the
+  # Anchor (or Nest) point — roaming fights that pin.
   post_connect_roaming: false
   ap:
     ssid: DSC-HUB Fallback Hotspot
@@ -39,7 +47,7 @@ wifi:
             last_ch = ch;
           }
         }
-    # Every STA connect / recovery boot — learn/pin preferred Nest BSSID.
+    # Every STA connect / recovery boot — learn/pin preferred Anchor/Nest BSSID.
     - script.execute: wifi_ap_learn_or_pin
 
 captive_portal:

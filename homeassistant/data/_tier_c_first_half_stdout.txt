@@ -1,0 +1,708 @@
+Tier C first half pass 1/1: slice=311 todo=285 (queue partial=False tier_C=621)
+
+=== Alchemy Genetics https://www.alchemygenetics.com/ ===
+
+=== All We Know Is Dank https://www.allweknowisdank.com/ ===
+
+=== Bat Country Farms https://batcountryfarms.com/ ===
+
+=== Beegen's Beans https://www.beegensbeans.com/ ===
+
+=== Big Head Seeds https://www.bigheadseeds.com/ ===
+
+=== Buddha Seeds http://buddhaseeds.com/ ===
+
+=== Bulk Seed Bank http://bulkseedbank.com/ ===
+
+=== Bursty https://www.bursty.nl/ ===
+
+=== Cannabeizein https://www.cannabeizein.org/ ===
+  bank_cannabeizein checkpoint items=20 idx=20/52
+  bank_cannabeizein checkpoint items=40 idx=40/52
+  OK bank_cannabeizein items=52 method=sitemap_html
+
+=== Cannapot https://www.cannapot.com/ ===
+
+=== Celestial Seeds http://celestialseeds.com/ ===
+
+=== Coldwater https://coldwater.nl/ ===
+
+=== Copa Genetics https://www.copagenetics.com/ ===
+
+=== Cream of the Crop Seeds https://www.creamofthecropseeds.com/ ===
+
+=== Dark Horse Genetics https://www.darkhorsegenetics.com/ ===
+
+=== Dinafem https://www.dinafem.org/ ===
+
+=== Dirt Farmer Genetics https://www.dirtfarmergenetics.com/ ===
+
+=== Divine Genetics https://divinegenetics.com/ ===
+  OK bank_divine_genetics items=1 method=sitemap_html
+
+=== Don Avalanche Seeds https://www.donavalancheseeds.com/ ===
+
+=== Dutch-Headshop https://www.dutch-headshop.nl/ ===
+
+=== Eleventen http://eleventen.nl/ ===
+
+=== Ethos Genetics https://ethosgenetics.com/ ===
+
+=== Five Trees https://fivetrees.nl/ ===
+
+=== French Canna Seeds http://www.frenchcannaseeds.com/ ===
+
+=== Grand Cru Genetics https://www.grandcrugenetics.com/ ===
+
+=== Green Mountain Greenhouse https://www.greenmountaingreenhouse.com/ ===
+
+=== Green Team Genetics https://www.greenteamgenetics.com/ ===
+
+=== Grow Today Genetics https://www.growtodaygenetics.com/ ===
+
+=== Half Skull Cannabis https://www.halfskullcannabis.com/ ===
+
+=== Happy Bird Seeds https://www.happybirdseeds.com/ ===
+
+=== Hi-Elevation Genetics https://www.hielevationgenetics.com/ ===
+
+=== Honey Hive Genetics https://www.honeyhivegenetics.com/ ===
+
+=== Honey Sticks Genetics https://www.honeysticksgenetics.com/ ===
+
+=== Hybrids from hell https://www.hybridsfromhell.eu/ ===
+
+=== Illusion Genetics https://www.illusiongenetics.com/ ===
+
+=== J Love https://jlove.eu/en-us ===
+
+=== Jaws Gear https://www.jawsgear.com/ ===
+
+=== Linda Seeds https://www.linda-seeds.com/?utm_source=seo&utm_medium=domain&utm_campaign=lindaseedsCOM ===
+
+=== Los Chicos https://loschicos.nl/ ===
+
+=== MassMedicalStrains https://www.massmedicalstrains.com/ ===
+
+=== Maxpowers http://maxpowers.org/cgi-sys/suspendedpage.cgi ===
+
+=== Moe Yield https://moeyield.com/ ===
+  OK bank_moe_yield items=5 method=sitemap_html
+
+=== NM Greenfire https://nmgreenfire.com/ ===
+
+=== OG Labs https://www.oglabs.net/ ===
+
+=== Pagoda Seeds https://www.pagodaseeds.com/ ===
+
+=== Piff Coast Farms https://www.piffcoastfarms.com/ ===
+
+=== Resin Seeds https://resinseeds.com/ ===
+
+=== Rheinland Genetics https://www.rheinland-genetics.de/ ===
+  OK bank_rheinland_genetics items=4 method=sitemap_html
+
+=== Royal Jellies https://royaljellies.substack.com/ ===
+
+=== Savetreez https://www.savetreez.com/ ===
+
+=== Seeds Mafia https://seedsmafia.com/en/ ===
+
+=== Sherbinskis https://www.sherbinskis.com/ ===
+
+=== Slabs http://slabs.nl/ ===
+
+=== Sour Genetics http://sourgenetics.com/ ===
+
+=== Stranger Seeds http://stranger-seeds.com/ ===
+
+=== The Vault Seed Bank https://www.thevaultseedbank.com/ ===
+
+=== Urban Legends https://www.urban-legends.com/ ===
+
+=== Wyeast Farms https://wyeastfarms.com/ ===
+
+=== Your Highness https://yourhighness.com/ ===
+
+=== Zativo https://www.zativo.com/ ===
+
+=== Zenseeds http://zenseeds.eu/ ===
+
+=== Zmoothiez https://zmoothiez.com/ ===
+
+=== Cookie Chris Genetics https://cookiechris.com/ ===
+
+=== Farmer Brown Seeds https://farmerbrown.com/ ===
+
+=== Fountainhead Seeds https://www.fountainhead.com/ ===
+
+=== Ganja Farmer Seeds https://ganjafarmer.com/ ===
+
+=== Green Mountain Seeds https://www.greenmountainenergy.com/ ===
+
+=== Happy Dreams Genetics https://www.happydreams.com/ ===
+
+=== Lineage Genetics https://lineage.plaync.com/conts/260624_update ===
+
+=== Lucky 13 Seed Company https://www.lucky13seeds.com/ ===
+
+=== ReeferMadness Genetics https://reefermadness.com/ ===
+
+=== Secret Valley Seeds https://secretvalley.com/ ===
+
+=== Southern Star Seeds https://southernstar.com/ ===
+
+=== Tropical Seeds Company https://www.tropicalseeds.com/ ===
+
+=== Zero Gravity Genetics https://zerogravity.com/en ===
+
+=== Naledi Seeds https://naledi.com/ ===
+  bank_naledi_seeds checkpoint items=20 idx=20/250
+  bank_naledi_seeds checkpoint items=40 idx=40/250
+  bank_naledi_seeds checkpoint items=60 idx=60/250
+  bank_naledi_seeds checkpoint items=80 idx=80/250
+  bank_naledi_seeds checkpoint items=100 idx=100/250
+  bank_naledi_seeds checkpoint items=120 idx=120/250
+  bank_naledi_seeds checkpoint items=140 idx=140/250
+  bank_naledi_seeds checkpoint items=160 idx=160/250
+  bank_naledi_seeds checkpoint items=180 idx=180/250
+  bank_naledi_seeds checkpoint items=200 idx=200/250
+  bank_naledi_seeds checkpoint items=220 idx=220/250
+  bank_naledi_seeds checkpoint items=240 idx=240/250
+  OK bank_naledi_seeds items=250 method=sitemap_html
+
+=== Olympic Seeds https://olympic.com/ ===
+  bank_olympic_seeds checkpoint items=20 idx=20/45
+  bank_olympic_seeds checkpoint items=40 idx=40/45
+  OK bank_olympic_seeds items=45 method=sitemap_html
+
+=== Duppy Sensi Genetics https://duppysensi.com/ ===
+  bank_duppy_sensi_genetics checkpoint items=20 idx=20/23
+  OK bank_duppy_sensi_genetics items=23 method=sitemap_html
+
+=== Archive Seeds https://archive.com/ ===
+  OK bank_archive_seeds items=11 method=sitemap_html
+
+=== The Bulldog Seeds https://thebulldog.com/ ===
+  bank_the_bulldog_seeds checkpoint items=20 idx=20/250
+  bank_the_bulldog_seeds checkpoint items=40 idx=40/250
+  bank_the_bulldog_seeds checkpoint items=60 idx=60/250
+  bank_the_bulldog_seeds checkpoint items=80 idx=80/250
+  bank_the_bulldog_seeds checkpoint items=100 idx=100/250
+  bank_the_bulldog_seeds checkpoint items=120 idx=120/250
+  bank_the_bulldog_seeds checkpoint items=140 idx=140/250
+  bank_the_bulldog_seeds checkpoint items=160 idx=160/250
+  bank_the_bulldog_seeds checkpoint items=180 idx=180/250
+  bank_the_bulldog_seeds checkpoint items=200 idx=202/250
+  bank_the_bulldog_seeds checkpoint items=220 idx=232/250
+  OK bank_the_bulldog_seeds items=236 method=sitemap_html
+
+=== Anomaly Seeds https://www.anomaly.com/ ===
+
+=== Artizen Seeds https://artizen.com/ ===
+
+=== Authentic Genetics https://authentic.com/ ===
+
+=== Aztech Genetics https://www.aztech.com/ ===
+
+=== Bad Fish Genetics https://www.badfish.com/ ===
+  OK bank_bad_fish_genetics items=19 method=sitemap_html
+
+=== Bob Marley Seeds https://www.bobmarley.com/ ===
+
+=== Cool Beans Seeds https://coolbeans.com/ ===
+
+=== Crescendo Genetics https://crescendo.com/en/ ===
+
+=== Dankmatter Genetics https://dankmatter.com/ ===
+
+=== Dark Side Genetics https://darkside.com/ ===
+
+=== Dead By Dawn Genetics https://deadbydawn.com/ ===
+
+=== East Island Seeds https://www.eastisland.com/ ===
+
+=== Evolve Genetics https://evolve.com/ ===
+
+=== Exogen Genetics https://www.exogen.com/au/ ===
+
+=== Fatboy Genetics https://www.fatboy.com/pt-en/ ===
+
+=== Glorious Genetics https://glorious.com/ ===
+
+=== God's Garden Genetics https://godsgarden.com/ ===
+
+=== Goodfellas Seeds https://goodfellas.com/ ===
+
+=== Goonie Genetics https://goonie.com/ ===
+
+=== Green Rose Seeds https://greenrose.com/ ===
+  OK bank_green_rose_seeds items=60 method=shopify_products_json
+
+=== Green Seed Bank https://green.com/ ===
+
+=== Green Wolf Genetics https://greenwolf.com/ ===
+
+=== Hang On! Genetics https://hangon.com/ ===
+  bank_hang_on_genetics checkpoint items=20 idx=20/250
+  bank_hang_on_genetics checkpoint items=40 idx=40/250
+  bank_hang_on_genetics checkpoint items=60 idx=60/250
+  bank_hang_on_genetics checkpoint items=80 idx=80/250
+  bank_hang_on_genetics checkpoint items=100 idx=100/250
+  bank_hang_on_genetics checkpoint items=120 idx=120/250
+  bank_hang_on_genetics checkpoint items=140 idx=140/250
+  bank_hang_on_genetics checkpoint items=160 idx=160/250
+  bank_hang_on_genetics checkpoint items=180 idx=180/250
+  bank_hang_on_genetics checkpoint items=200 idx=200/250
+  bank_hang_on_genetics checkpoint items=220 idx=220/250
+  bank_hang_on_genetics checkpoint items=240 idx=240/250
+  OK bank_hang_on_genetics items=250 method=sitemap_html
+
+=== High C Genetics https://highc.com/ ===
+
+=== Hunter Farms https://www.hunter.com/ ===
+
+=== HY-PRO Seeds https://www.hypro.com/ ===
+
+=== Intrepid Genetics https://www.intrepid.com/ ===
+
+=== Iron Fist Genetics https://ironfist.com/ ===
+
+=== Just Seed Co https://justseed.com/ ===
+  OK bank_just_seed_co items=4989 method=shopify_products_json
+
+=== Katsu Seeds https://katsu.com/ ===
+
+=== Kraken Genetix https://www.kraken.com/ ===
+
+=== Lazy Daizy Genetics https://lazydaizy.com/ ===
+
+=== Leafeater Genetics https://leafeater.com/ ===
+
+=== Lions Den Genetics https://www.lionsden.com/ ===
+
+=== Lost Relic Genetics https://www.lostrelic.com/ ===
+
+=== Lowlife Seeds https://lowlife.com/ ===
+
+=== Mallorca Seeds https://www.mallorca.com/en ===
+
+=== Marshall Seeds https://www.marshall.com/au/en ===
+  bank_marshall_seeds checkpoint items=20 idx=22/250
+  bank_marshall_seeds checkpoint items=40 idx=43/250
+  bank_marshall_seeds checkpoint items=60 idx=63/250
+  bank_marshall_seeds checkpoint items=80 idx=83/250
+  bank_marshall_seeds checkpoint items=100 idx=103/250
+  bank_marshall_seeds checkpoint items=120 idx=123/250
+  bank_marshall_seeds checkpoint items=140 idx=143/250
+  bank_marshall_seeds checkpoint items=160 idx=163/250
+  bank_marshall_seeds checkpoint items=180 idx=183/250
+  bank_marshall_seeds checkpoint items=200 idx=203/250
+  bank_marshall_seeds checkpoint items=220 idx=223/250
+  bank_marshall_seeds checkpoint items=240 idx=245/250
+  OK bank_marshall_seeds items=245 method=sitemap_html
+
+=== MzJill Genetics https://mzjill.com/ ===
+
+=== Newclear Genetics https://newclear.com/ ===
+
+=== North Genetics https://www.north.com:443/ ===
+
+=== Parabellum Genetics https://parabellum.com/ ===
+
+=== Polar Bear Genetics https://polarbear.com/ ===
+
+=== Power Seeds https://www.power.com/?segment=none ===
+
+=== Pura Vida Seeds https://puravida.com/ ===
+
+=== Rapper' Weed Genetics https://www.rapperweed.com/ ===
+
+=== Red Bee Seeds https://www.redbee.com/ ===
+
+=== Sankara Seeds https://sankara.com/ ===
+
+=== Seed Junky Genetics https://www.seedjunky.com/ ===
+
+=== Short Stuff Seedbank https://shortstuff.com/ ===
+
+=== Smoke One Genetics https://smokeone.com/ ===
+  OK bank_smoke_one_genetics items=46 method=shopify_products_json
+
+=== Sonic-Seeds https://www.sonic.com/ ===
+
+=== Stoic Seed https://stoic.com/ ===
+
+=== Stok'd Genetics https://www.stokd.com/ ===
+
+=== Stone City Genetics https://www.stonecity.com/ ===
+
+=== Superseed Company https://www.superseed.com/ ===
+
+=== Symbiotic Genetics https://www.symbiotic.com/ ===
+
+=== Terp n Seeds http://www.terpn.com/ ===
+
+=== The Bakery Genetics https://thebakery.com/ ===
+
+=== Therapy Seeds https://therapy.com/ ===
+
+=== Tokyo Seeds https://tokyo.com/ ===
+
+=== Treehouse Seeds https://treehouse.com/ ===
+
+=== Treeology Genetics https://www.treeology.com/ ===
+
+=== Turn It Up Genetics https://www.turnitup.com/ ===
+  OK bank_turn_it_up_genetics items=12 method=sitemap_html
+
+=== Ultra Fire Genetics https://www.ultrafire.com/ ===
+  OK bank_ultra_fire_genetics items=4 method=shopify_products_json
+
+=== Utopia Farms https://utopia.com/ ===
+
+=== Vermont Seeds https://vermont.com/ ===
+
+=== Vida Verde Seeds https://vidaverde.com/ ===
+  bank_vida_verde_seeds checkpoint items=20 idx=20/23
+  OK bank_vida_verde_seeds items=23 method=sitemap_html
+
+=== Wicked Sowa Seeds https://www.wickedsowa.com/ ===
+
+=== Wnek's Genetics http://wneks.com/ ===
+
+=== Zmoothiez Genetics https://zmoothiez.com/ ===
+
+=== Zorrino Seeds https://zorrino.com/ ===
+
+=== 420 Genetics https://www.420.com/ ===
+
+=== Aura Genetix https://www.aura.com/ ===
+
+=== Epik Genetics https://www.epik.com/ ===
+
+=== G2G Genetix https://www.g2g.com/au ===
+
+=== JONZ https://www.jonz.eu/ ===
+
+--- relaunch ---
+
+--- relaunch ---
+resumed 157 prior results from _tier_c_first_half_results.json
+Tier C first half pass 1/1: slice=311 todo=128 (queue partial=False tier_C=621)
+
+=== Kadō https://kad.com/ ===
+
+=== Love Genetics https://love.com/ ===
+  OK bank_love_genetics items=2917 method=shopify_products_json
+
+=== Moab Genetix https://www.moab.com/ ===
+
+=== Pax Genetics https://www.pax.com/ ===
+
+=== Trip Seeds https://au.trip.com/?locale=en-au ===
+
+=== VIP Seeds https://www.vip.com/ ===
+
+=== YAK https://yak.com/ ===
+
+=== The Plant Preservation https://theplantstable.com/ ===
+  bank_the_plant_preservation checkpoint items=20 idx=20/127
+  bank_the_plant_preservation checkpoint items=40 idx=40/127
+  bank_the_plant_preservation checkpoint items=60 idx=60/127
+  bank_the_plant_preservation checkpoint items=80 idx=80/127
+  bank_the_plant_preservation checkpoint items=100 idx=100/127
+  bank_the_plant_preservation checkpoint items=120 idx=120/127
+  OK bank_the_plant_preservation items=127 method=sitemap_html
+
+=== Bradley Danks https://bdanks.com/ ===
+  bank_bradley_danks checkpoint items=20 idx=20/79
+  bank_bradley_danks checkpoint items=40 idx=40/79
+  bank_bradley_danks checkpoint items=60 idx=60/79
+  OK bank_bradley_danks items=79 method=sitemap_html
+
+=== Golden Temple https://www.postconsumerbrands.com/brands/bulk-granola/ ===
+  bank_golden_temple checkpoint items=20 idx=20/74
+  bank_golden_temple checkpoint items=40 idx=40/74
+  bank_golden_temple checkpoint items=60 idx=60/74
+  OK bank_golden_temple items=74 method=sitemap_html
+
+=== Reefermans Seeds https://reefermangenetics.com/ ===
+  OK bank_reefermans_seeds items=16 method=sitemap_html
+
+=== B.I.G. Seeds https://big.com/ ===
+  OK bank_b_i_g_seeds items=1 method=sitemap_html
+
+=== Saiyan Seeds https://www.stonedgorillas.com/ ===
+  OK bank_saiyan_seeds items=4 method=sitemap_html
+
+=== Treemoney https://www.lendingtree.com/ ===
+  OK bank_treemoney items=1 method=sitemap_html
+
+=== Acumen Genetics https://www.humansynergistics.com/change-solutions/change-solutions-for-leaders-and-managers/assessments-for-leaders-and-managers/acumen-leadership-workstyles/ ===
+
+=== Altitude Ranch Genetics https://www.crestedbuttevacationhouse.com/ ===
+
+=== Ambitious Seeds https://www.domaineasy.com/buy-domain/ambitious.com ===
+
+=== Antenna Seeds https://pctel.com/antenna-selector-wireless-routers-tool/ ===
+  bank_antenna_seeds checkpoint items=20 idx=20/79
+  bank_antenna_seeds checkpoint items=40 idx=40/79
+  bank_antenna_seeds checkpoint items=60 idx=60/79
+  OK bank_antenna_seeds items=79 method=sitemap_html
+
+=== AV3 Genetics https://www.nameadvisor.com/ ===
+
+=== Avalanche Genetics https://www.avax.network/business ===
+
+=== B.O.G. Seeds https://bog.com/ ===
+
+=== Beefcake Genetics https://seniorsmeetonline.com/home.php?od=beefcake.com ===
+
+=== Best Coast Genetics https://perfectdomain.com/domain/bestcoast.com ===
+
+=== Beta Seeds https://www.betaseed.com/de/de/ ===
+
+=== Big Dans Genetix https://weedrepublic.com/ ===
+  OK bank_big_dans_genetix items=86 method=shopify_products_json
+
+=== Big Nose Genetics https://venture.com/domains/bignose.com ===
+
+=== Black Tuna https://vonoppenheim.us/en/ ===
+
+=== Budding Industries https://www.quickbooksconfidence.com/ ===
+
+=== Bulk Seeds https://venture.com/domains/bulkseeds.com ===
+
+=== CBD Plus Buds https://t.me/kiyotakaclub/6 ===
+
+=== CFF https://www.mooiedomeinnaam.nl/aanbod/cff.nl ===
+
+=== Christiania Seedbank https://www.caseeds.dk/ ===
+  bank_christiania_seedbank checkpoint items=20 idx=20/43
+  bank_christiania_seedbank checkpoint items=40 idx=40/43
+  OK bank_christiania_seedbank items=43 method=sitemap_html
+
+=== Chrome Seeds https://www.google.com/chrome/ ===
+
+=== Compound Genetics https://www.wyeastfarms.com/ ===
+
+=== Conscious Genetics https://www.domainriviera.com/conscious-com ===
+
+=== Croatoan Seeds https://strainly.io/en/croatoanseeds ===
+
+=== Darkarts Labs https://darkartlabs.com/ ===
+
+=== Eazy Daze Cultivators https://www.eazydazecutivators.com/ ===
+
+=== Fruity Genetics https://www.domaineasy.com/buy-domain/fruity.com ===
+
+=== GREASi Genetics https://5g6n4ddqyb-hnacy.wordpress.com/ ===
+
+=== H.B.K. Genetics https://www.hbk.com/ ===
+
+=== Joint Doctor https://www.sportklinik.de/ ===
+
+=== Kannabia Seeds https://www.amsterdamseedcenter.com/en/feminised-cannabis-seeds/kannabia-seeds ===
+
+=== LazyBoy Seeds https://www.la-z-boy.com/ ===
+
+=== Macaronesia Seeds https://synergytech.com/buy-domain/macaronesia.com?redirected=true ===
+
+=== Motherlode Seeds https://search.com/ ===
+
+=== Prima https://www.actiefwerkt.nl/ ===
+
+=== Sagarmatha Seeds https://xland.com/ ===
+
+=== Sativa Seedbank https://ganja.com/ ===
+
+=== Sherpa Seeds https://cannaplanners.net/wp-signup.php?new=sherpaseeds.com ===
+  OK bank_sherpa_seeds items=8 method=sitemap_html
+
+=== Solar Panel https://solarpower.com/ ===
+
+=== Strains Lab https://jdmmcomb.com/ ===
+
+=== Sunrise Side Seeds https://brandsly.com/name/sunriseside.com ===
+
+=== Super Sativa Seed Club https://dutch-passion.com/en/cannabis-families/super-sativa-seed-club ===
+
+=== The Bank https://www.nextierbank.com/ ===
+
+=== The Bank Genetics https://pengeluaranhongkong.live/ ===
+
+=== Thug Pug Genetics https://www.instagram.com/thugpug_com ===
+
+=== Tree of Life Seeds https://www.maronispizzakitchen.com/ ===
+
+=== Twenty 20 Genetics https://elements.envato.com/ ===
+
+=== Underground Originals https://ugorg.com/ ===
+  OK bank_underground_originals items=20 method=shopify_products_json
+
+=== Warlock https://www.mooiedomeinnaam.nl/aanbod/warlock.nl ===
+
+=== WGW Genetics https://wimberleyglassart.com/ ===
+  OK bank_wgw_genetics items=19 method=shopify_products_json
+
+=== World of Seeds Bank https://www.worldofseeds.com/ ===
+
+=== Zephyr Seeds https://www.domaineasy.com/buy-domain/zephyr.com ===
+
+=== 802 Genetix https://802genetix.com/ ===
+
+=== A-B-Seeds https://abseeds.com/ ===
+
+=== A1 Genetics https://a1genetics.com/ ===
+
+=== Accelerator Seeds https://acceleratorseeds.com/ ===
+
+=== Alabama Hemp Company https://alabamahempcompany.com/ ===
+
+=== Alien Genetics https://aliengenetics.com/ ===
+
+=== Aloha Island Genetics https://alohaislandgenetics.com/ ===
+
+=== Beebop Genetics https://beebopgenetics.com/ ===
+
+=== BestThingGrowing http://bestthinggrowing.com/ ===
+
+=== Big Sky Beans https://bigskybeans.com/ ===
+  bank_big_sky_beans checkpoint items=20 idx=20/85
+  bank_big_sky_beans checkpoint items=40 idx=40/85
+  bank_big_sky_beans checkpoint items=60 idx=60/85
+  bank_big_sky_beans checkpoint items=80 idx=80/85
+  OK bank_big_sky_beans items=85 method=sitemap_html
+
+=== Billy Budd https://billybudd.com/ ===
+
+=== Black Skull Seeds https://blackskullseeds.com/ ===
+
+=== Blockhead Buds https://blockheadbuds.com/ ===
+
+=== Blue Bloods Grow https://bluebloodsgrow.com/ ===
+
+=== Blue Star Seed Co https://bluestarseedco.com/ ===
+
+=== Brain Dead Beans https://braindeadbeans.com/ ===
+
+=== Brainstrap Genetics https://brainstrapgenetics.com/ ===
+
+=== Bred by 42 https://bredby42.com/ ===
+
+=== Breeders http://breeders.nl/ ===
+
+=== Brothers Grimm https://brothersgrimm.com/ ===
+
+=== Brothers In Farms https://brothersinfarms.com/ ===
+
+=== Cannabis 42° https://cannabis42.com/ ===
+
+=== Cannabis Genetics https://cannabisgenetics.com/ ===
+
+=== Chronic Logical https://chroniclogical.com/ ===
+
+=== Colors by Cultivar http://colorsbycultivar.com/ ===
+
+=== Copycat Genetix https://copycatgenetixx.com/ ===
+
+=== CopyCat Seeds http://copycatseeds.com/ ===
+
+=== DaHood Urban Seeds https://dahoodurbanseeds.com/ ===
+
+=== Dank Flow Genetics https://dankflowgenetics.com/ ===
+  bank_dank_flow_genetics checkpoint items=20 idx=20/89
+  bank_dank_flow_genetics checkpoint items=40 idx=40/89
+  bank_dank_flow_genetics checkpoint items=60 idx=60/89
+  bank_dank_flow_genetics checkpoint items=80 idx=80/89
+  OK bank_dank_flow_genetics items=89 method=sitemap_html
+
+=== Delicatessen http://www.delicatessen.com/ ===
+
+=== Dino Party https://dinoparty.com/ ===
+
+=== Dman Seeds https://dmanseeds.ca/ ===
+
+=== Doc's Dank Seeds https://docsdankseeds.com/ ===
+
+=== Domus Seeds https://domusseeds.com/ ===
+
+=== Dope Seeds https://dopeseeds.com/ ===
+
+=== Drohammad Seeds https://drohammadseeds.com/ ===
+
+=== Duffles http://duffles.com/ ===
+
+=== Dungeons Vault Genetics https://dungeonsvaultgenetics.com/ ===
+
+=== Duty Free Seeds https://dutyfreeseeds.com/ ===
+
+=== E-M Seeds https://emseeds.com/ ===
+
+=== Earthly Pleasures https://earthlypleasures.com/ ===
+
+=== Eastwood Gardens https://eastwoodgardens.com/ ===
+
+=== Emerald Triangle https://emeraldtriangle.com/ ===
+
+=== Empire Breeding Co. https://empirebreedingco.com/ ===
+  OK bank_empire_breeding_co items=1 method=sitemap_html
+
+=== Enchanted Seeds https://enchantedseeds.com/ ===
+
+=== Exclusive Seeds https://exclusiveseeds.com/ ===
+
+=== Exotic Seed https://exoticseed.com/ ===
+
+=== Ez Grown https://ezgrown.com/ ===
+
+=== Fancy Weed https://fancyweed.com/ ===
+
+=== Fatbush Seeds https://fatbushseeds.com/ ===
+
+=== Female Seeds http://www.femaleseeds.nl/ ===
+
+=== Flamingoz https://flamingoz.com/ ===
+
+=== Flavour Chasers http://flavourchasers.com/ ===
+
+=== Flip Side https://flip-side.com/ ===
+
+=== Forbidden Genetics https://forbiddengenetics.com/ ===
+
+=== Frankenseeds https://frankenseeds.com/ ===
+
+=== Freak Genetics https://freakgenetics.com/ ===
+
+=== Fygspray https://fygspray.com/ ===
+
+=== Ghost Fox https://ghostfox.com/ ===
+
+=== Glory https://glory.nl/ ===
+
+=== Gnostic Seeds https://gnosticseeds.com/ ===
+  OK bank_gnostic_seeds items=1 method=sitemap_html
+
+=== Good Airs https://goodairs.com/ ===
+
+=== GrassOmatic https://grassomatic.com/ ===
+
+=== Greenhand Genetics https://greenhandgenetics.com/ ===
+
+=== SUMMARY ===
+{
+  "attempted": 285,
+  "ok": 36,
+  "items_total": 9925,
+  "by_status": {
+    "skipped_no_sitemap": 190,
+    "failed_dns_or_http": 28,
+    "ok": 36,
+    "skipped_heavy_js": 9,
+    "blocked_cf": 2,
+    "empty_shopify": 5,
+    "skipped_already_staged": 1,
+    "skipped_linkhub": 14
+  }
+}

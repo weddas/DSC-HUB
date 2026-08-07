@@ -6,12 +6,14 @@ substitutions:
   friendly_name: DSC-POT#1
   wifi_ssid: !secret wifi_ssid
   wifi_password: !secret wifi_password
+  anchor_ssid: "DSC-Anchor"
+  anchor_ap_password: !secret dsc_anchor_ap_password
   espnow_key: !secret espnow_key
   api_key_val: !secret dsc_pot1_api_key
   ota_password_val: !secret dsc_pot1_ota_password
   ap_password_val: !secret dsc_pot1_ap_password
   hub_mac: "84:1F:E8:16:E6:60"
-  # Same Nest AP as hub — set to sensor.dsc_hub_wifi_bssid (all caps).
+  # Prefer Anchor SoftAP — set to sensor.dsc_bridge_anchor_bssid (all caps).
   wifi_bssid: "00:00:00:00:00:00"
   fleet_pot_index: "1"
 

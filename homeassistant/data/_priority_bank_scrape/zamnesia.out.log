@@ -1,0 +1,205 @@
+zamnesia: fetching sitemap https://www.zamnesia.com/sitemapCOM.xml
+zamnesia: sitemap total 2291 (cached dsc_strains_zamnesia.sitemap_urls.json)
+zamnesia: queued 2291 product URLs
+  zamnesia checkpoint items=75 this_run=25 rate=0.68/s idx=30/2291
+  zamnesia checkpoint items=100 this_run=50 rate=0.66/s idx=55/2291
+  zamnesia checkpoint items=125 this_run=75 rate=0.66/s idx=81/2291
+
+===== RESTART 2026-08-07T16:56:45Z =====
+zamnesia: sitemap cache 2291 from dsc_strains_zamnesia.sitemap_urls.json
+zamnesia: queued 2291 product URLs
+  zamnesia checkpoint items=165 this_run=40 rate=0.73/s idx=122/2291
+  zamnesia checkpoint items=205 this_run=80 rate=0.73/s idx=162/2291
+  zamnesia checkpoint items=245 this_run=120 rate=0.72/s idx=202/2291
+  zamnesia checkpoint items=285 this_run=160 rate=0.70/s idx=242/2291
+  zamnesia checkpoint items=325 this_run=200 rate=0.70/s idx=282/2291
+  zamnesia checkpoint items=365 this_run=240 rate=0.70/s idx=324/2291
+  zamnesia checkpoint items=405 this_run=280 rate=0.70/s idx=364/2291
+zamnesia staging: {
+  "family": "bank_zamnesia",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_zamnesia.sqlite3",
+  "count": 405,
+  "bulk": false,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 405,
+    "strain_variant": 405,
+    "chemistry_profile": 307,
+    "grow_trait": 334,
+    "entity_link": 307,
+    "attribute_kv": 739,
+    "raw_record": 405,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 2,
+    "source_record": 1
+  }
+}
+  zamnesia checkpoint items=445 this_run=320 rate=0.69/s idx=404/2291
+  zamnesia checkpoint items=485 this_run=360 rate=0.69/s idx=444/2291
+  zamnesia checkpoint items=525 this_run=400 rate=0.69/s idx=484/2291
+  zamnesia checkpoint items=565 this_run=440 rate=0.69/s idx=524/2291
+  zamnesia checkpoint items=605 this_run=480 rate=0.70/s idx=564/2291
+  zamnesia checkpoint items=645 this_run=520 rate=0.70/s idx=607/2291
+  zamnesia checkpoint items=685 this_run=560 rate=0.71/s idx=647/2291
+  zamnesia checkpoint items=725 this_run=600 rate=0.71/s idx=687/2291
+  zamnesia checkpoint items=765 this_run=640 rate=0.71/s idx=727/2291
+  zamnesia checkpoint items=805 this_run=680 rate=0.71/s idx=767/2291
+zamnesia staging: {
+  "family": "bank_zamnesia",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_zamnesia.sqlite3",
+  "count": 805,
+  "bulk": false,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 805,
+    "strain_variant": 805,
+    "chemistry_profile": 618,
+    "grow_trait": 661,
+    "entity_link": 618,
+    "attribute_kv": 1466,
+    "raw_record": 805,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 2,
+    "source_record": 1
+  }
+}
+  zamnesia checkpoint items=845 this_run=720 rate=0.71/s idx=815/2291
+  zamnesia checkpoint items=885 this_run=760 rate=0.72/s idx=856/2291
+  zamnesia checkpoint items=925 this_run=800 rate=0.72/s idx=902/2291
+  zamnesia checkpoint items=965 this_run=840 rate=0.72/s idx=942/2291
+  zamnesia checkpoint items=1005 this_run=880 rate=0.72/s idx=982/2291
+  zamnesia checkpoint items=1045 this_run=920 rate=0.72/s idx=1022/2291
+  zamnesia checkpoint items=1085 this_run=960 rate=0.72/s idx=1064/2291
+  zamnesia checkpoint items=1125 this_run=1000 rate=0.72/s idx=1104/2291
+  zamnesia checkpoint items=1165 this_run=1040 rate=0.72/s idx=1146/2291
+  zamnesia checkpoint items=1205 this_run=1080 rate=0.72/s idx=1191/2291
+zamnesia staging: {
+  "family": "bank_zamnesia",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_zamnesia.sqlite3",
+  "count": 1205,
+  "bulk": false,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 1205,
+    "strain_variant": 1205,
+    "chemistry_profile": 887,
+    "grow_trait": 1045,
+    "entity_link": 887,
+    "attribute_kv": 2250,
+    "raw_record": 1205,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 2,
+    "source_record": 1
+  }
+}
+  zamnesia checkpoint items=1245 this_run=1120 rate=0.72/s idx=1231/2291
+  zamnesia checkpoint items=1285 this_run=1160 rate=0.72/s idx=1271/2291
+  zamnesia checkpoint items=1325 this_run=1200 rate=0.72/s idx=1311/2291
+  zamnesia checkpoint items=1365 this_run=1240 rate=0.72/s idx=1351/2291
+  zamnesia checkpoint items=1405 this_run=1280 rate=0.72/s idx=1393/2291
+  zamnesia checkpoint items=1445 this_run=1320 rate=0.72/s idx=1437/2291
+  zamnesia checkpoint items=1485 this_run=1360 rate=0.72/s idx=1477/2291
+  zamnesia checkpoint items=1525 this_run=1400 rate=0.72/s idx=1517/2291
+  fail https://www.zamnesia.com/499-joint-doctor-chronic-ryder-autoflowering.html: HTTP 502 for https://www.zamnesia.com/499-joint-doctor-chronic-ryder-autoflowering.html
+  zamnesia checkpoint items=1565 this_run=1440 rate=0.72/s idx=1558/2291
+  zamnesia checkpoint items=1605 this_run=1480 rate=0.72/s idx=1598/2291
+zamnesia staging: {
+  "family": "bank_zamnesia",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_zamnesia.sqlite3",
+  "count": 1605,
+  "bulk": false,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 1605,
+    "strain_variant": 1605,
+    "chemistry_profile": 1137,
+    "grow_trait": 1401,
+    "entity_link": 1137,
+    "attribute_kv": 3006,
+    "raw_record": 1605,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 2,
+    "source_record": 1
+  }
+}
+  zamnesia checkpoint items=1645 this_run=1520 rate=0.72/s idx=1638/2291
+  zamnesia checkpoint items=1685 this_run=1560 rate=0.72/s idx=1678/2291
+  zamnesia checkpoint items=1725 this_run=1600 rate=0.72/s idx=1718/2291
+  zamnesia checkpoint items=1765 this_run=1640 rate=0.72/s idx=1758/2291
+  zamnesia checkpoint items=1805 this_run=1680 rate=0.72/s idx=1798/2291
+  zamnesia checkpoint items=1845 this_run=1720 rate=0.72/s idx=1838/2291
+  zamnesia checkpoint items=1885 this_run=1760 rate=0.72/s idx=1878/2291
+  zamnesia checkpoint items=1925 this_run=1800 rate=0.72/s idx=1918/2291
+  zamnesia checkpoint items=1965 this_run=1840 rate=0.72/s idx=1958/2291
+  zamnesia checkpoint items=2005 this_run=1880 rate=0.72/s idx=1998/2291
+zamnesia staging: {
+  "family": "bank_zamnesia",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_zamnesia.sqlite3",
+  "count": 2005,
+  "bulk": false,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 2005,
+    "strain_variant": 2005,
+    "chemistry_profile": 1415,
+    "grow_trait": 1786,
+    "entity_link": 1415,
+    "attribute_kv": 3791,
+    "raw_record": 2005,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 2,
+    "source_record": 1
+  }
+}
+  zamnesia checkpoint items=2045 this_run=1920 rate=0.72/s idx=2038/2291
+  zamnesia checkpoint items=2085 this_run=1960 rate=0.72/s idx=2078/2291
+  zamnesia checkpoint items=2125 this_run=2000 rate=0.72/s idx=2118/2291
+  zamnesia checkpoint items=2165 this_run=2040 rate=0.72/s idx=2158/2291
+  zamnesia checkpoint items=2205 this_run=2080 rate=0.72/s idx=2198/2291
+  zamnesia checkpoint items=2245 this_run=2120 rate=0.72/s idx=2238/2291
+  zamnesia checkpoint items=2285 this_run=2160 rate=0.72/s idx=2278/2291
+  zamnesia checkpoint items=2298 this_run=2173 rate=0.72/s idx=2291/2291
+wrote dsc_strains_zamnesia.json count=2298
+zamnesia staging: {
+  "family": "bank_zamnesia",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_zamnesia.sqlite3",
+  "count": 2298,
+  "bulk": false,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 2298,
+    "strain_variant": 2298,
+    "chemistry_profile": 1612,
+    "grow_trait": 2035,
+    "entity_link": 1612,
+    "attribute_kv": 4333,
+    "raw_record": 2298,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 2,
+    "source_record": 1
+  }
+}

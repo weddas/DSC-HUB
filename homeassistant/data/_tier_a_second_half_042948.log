@@ -1,0 +1,114 @@
+partition tier_A_second_half slice=[96:192] rows=96 (tiers.A=192)
+targets=16 skipped_done=0 skipped_parked=0 skipped_first_half=0
+probing 16 targets…
+  probe tempest-grove-genetics: tier=A platform=woocommerce ok caps=['sitemap_index']
+  probe 00-seeds-bank: tier=A platform=woocommerce ok caps=['sitemap', 'sitemap_index', 'wc_product_sitemap']
+  probe ace-seeds: tier=C platform=None no_catalog_signal caps=[]
+  probe bohemiaseeds: tier=A platform=None ok caps=['sitemap']
+  probe cosmic-wisdom: tier=A platform=None ok caps=['sitemap']
+  probe dutchfem: tier=C platform=None no_catalog_signal caps=[]
+  probe evermore-genetics: tier=C platform=None no_catalog_signal caps=[]
+  probe freestone-genetics: tier=A platform=None ok caps=['sitemap']
+  probe g13-labs: tier=A platform=None ok caps=['sitemap']
+  probe great-lakes-genetics: tier=C platform=None no_catalog_signal caps=[]
+  probe higher-perspective-genetics: tier=A platform=None ok caps=['sitemap']
+  probe neptune-seed-bank: tier=C platform=None no_catalog_signal caps=[]
+  probe seattle-chronic-seeds: tier=A platform=None ok caps=['sitemap']
+  probe serious-seeds: tier=A platform=None ok caps=['sitemap']
+  probe sticky-finger-seeds: tier=C platform=None no_catalog_signal caps=[]
+  probe universally-seeded: tier=A platform=None ok caps=['sitemap']
+=== scrape 00-seeds-bank (00 Seeds Bank) platform=woocommerce caps=['sitemap', 'sitemap_index', 'wc_product_sitemap']
+  00-seeds-bank products.json page 1 fail: HTTP Error 404: Not Found
+  sitemap https://00seeds.com/product-sitemap.xml +children -> +0 (total 0)
+  sitemap https://00seeds.com/product-sitemap1.xml +children -> +0 (total 0)
+  sitemap https://00seeds.com/sitemap_index.xml +children -> +0 (total 0)
+  sitemap https://00seeds.com/sitemap.xml +children -> +0 (total 0)
+  sitemap https://00seeds.com/wp-sitemap-posts-product-1.xml +children -> +0 (total 0)
+  sitemap https://www.00seeds.com/product-sitemap.xml +children -> +0 (total 0)
+  sitemap https://www.00seeds.com/product-sitemap1.xml +children -> +0 (total 0)
+  sitemap https://www.00seeds.com/sitemap_index.xml +children -> +0 (total 0)
+  sitemap https://www.00seeds.com/wp-sitemap-posts-product-1.xml +children -> +0 (total 0)
+00-seeds-bank: sitemap/product urls=0
+=== scrape tempest-grove-genetics (Tempest Grove Genetics) platform=woocommerce caps=['sitemap_index']
+  tempest-grove-genetics products.json page 1 fail: HTTP Error 404: Not Found
+  sitemap https://www.tempestgrove.com/sitemap_index.xml +children -> +0 (total 0)
+  sitemap https://www.tempestgrove.com/sitemap.xml +children -> +0 (total 0)
+  sitemap https://tempestgrove.com/sitemap_index.xml +children -> +0 (total 0)
+tempest-grove-genetics: sitemap/product urls=0
+=== scrape bohemiaseeds (Bohemiaseeds) platform=None caps=['sitemap']
+  bohemiaseeds products.json page 1 fail: HTTP Error 404: Not Found
+  sitemap https://bohemiaseeds.com/sitemap.xml +children -> +10 (total 10)
+  sitemap https://www.bohemiaseeds.com/sitemap.xml +children -> +0 (total 10)
+bohemiaseeds: sitemap/product urls=10
+  bohemiaseeds ok #1 'Buble Head'
+  bohemiaseeds ok #2 'Grape Krush Head'
+  bohemiaseeds checkpoint items=9 scraped=9 rate=0.29/s
+bohemiaseeds staging: family=bank_bohemiaseeds raw=9 db=\\192.168.86.2\Digital-Documents\Digital Stealth Care\Projects\DSC-HUB\brain\data\staging\bank_bohemiaseeds.sqlite3
+=== scrape cosmic-wisdom (Cosmic Wisdom) platform=None caps=['sitemap']
+  cosmic-wisdom products.json page 1 fail: HTTP Error 404: Not Found
+  sitemap https://cosmicwisdom.com/sitemap.xml +children -> +25 (total 25)
+cosmic-wisdom: sitemap/product urls=25
+  cosmic-wisdom checkpoint items=0 scraped=0 rate=0.00/s
+  cosmic-wisdom checkpoint items=0 scraped=0 rate=0.00/s
+  cosmic-wisdom ok #1 'VCF® is a Hormone Free Birth Control Option'
+  cosmic-wisdom ok #2 'How Effective is VCF® Contraceptive?'
+  cosmic-wisdom checkpoint items=20 scraped=20 rate=0.54/s
+cosmic-wisdom staging: family=bank_cosmic_wisdom raw=20 db=\\192.168.86.2\Digital-Documents\Digital Stealth Care\Projects\DSC-HUB\brain\data\staging\bank_cosmic_wisdom.sqlite3
+=== scrape freestone-genetics (Freestone Genetics) platform=None caps=['sitemap']
+  freestone-genetics products.json page 1 fail: HTTP Error 404: Not Found
+  sitemap https://www.freestonegenetics.com/sitemap.xml +children -> +15 (total 15)
+  sitemap https://www.freestonegenetics.com/media/sitemap/sitemap.xml +children -> +0 (total 15)
+  sitemap https://www.freestonegenetics.com/pub/media/sitemap/sitemap.xml +children -> +0 (total 15)
+  sitemap https://freestonegenetics.com/sitemap.xml +children -> +0 (total 15)
+  sitemap https://freestonegenetics.com/media/sitemap/sitemap.xml +children -> +0 (total 15)
+  sitemap https://freestonegenetics.com/pub/media/sitemap/sitemap.xml +children -> +0 (total 15)
+freestone-genetics: sitemap/product urls=15
+  freestone-genetics ok #1 'About'
+  freestone-genetics ok #2 'Canadian Cannabis Breeder'
+  freestone-genetics checkpoint items=14 scraped=14 rate=1.11/s
+freestone-genetics staging: family=bank_freestone_genetics raw=14 db=\\192.168.86.2\Digital-Documents\Digital Stealth Care\Projects\DSC-HUB\brain\data\staging\bank_freestone_genetics.sqlite3
+=== scrape g13-labs (G13 Labs) platform=None caps=['sitemap']
+  g13-labs products.json page 1 fail: HTTP Error 404: Not Found
+  sitemap https://www.g13labs.com/sitemap.xml +children -> +0 (total 0)
+  sitemap https://g13labs.com/sitemap.xml +children -> +0 (total 0)
+g13-labs: sitemap/product urls=0
+=== scrape higher-perspective-genetics (Higher Perspective Genetics) platform=None caps=['sitemap']
+  higher-perspective-genetics products.json page 1 fail: HTTP Error 404: Not Found
+  sitemap https://higherperspectivegenetics.com/sitemap.xml +children -> +0 (total 0)
+  sitemap https://www.higherperspectivegenetics.com/sitemap.xml +children -> +0 (total 0)
+higher-perspective-genetics: sitemap/product urls=0
+=== scrape seattle-chronic-seeds (Seattle Chronic Seeds) platform=None caps=['sitemap']
+  seattle-chronic-seeds products.json page 1 fail: HTTP Error 404: Not Found
+  sitemap https://www.seattlechronicseeds.com/sitemap.xml +children -> +13 (total 13)
+  sitemap https://www.seattlechronicseeds.com/media/sitemap/sitemap.xml +children -> +0 (total 13)
+  sitemap https://www.seattlechronicseeds.com/pub/media/sitemap/sitemap.xml +children -> +0 (total 13)
+  sitemap https://seattlechronicseeds.com/sitemap.xml +children -> +0 (total 13)
+  sitemap https://seattlechronicseeds.com/media/sitemap/sitemap.xml +children -> +0 (total 13)
+  sitemap https://seattlechronicseeds.com/pub/media/sitemap/sitemap.xml +children -> +0 (total 13)
+seattle-chronic-seeds: sitemap/product urls=13
+  seattle-chronic-seeds checkpoint items=0 scraped=0 rate=0.00/s
+  seattle-chronic-seeds ok #1 'Seattle Chronic Seeds'
+  seattle-chronic-seeds ok #2 'Organic/Probiotic Cultivars'
+  seattle-chronic-seeds checkpoint items=12 scraped=12 rate=1.01/s
+seattle-chronic-seeds staging: family=bank_seattle_chronic_seeds raw=12 db=\\192.168.86.2\Digital-Documents\Digital Stealth Care\Projects\DSC-HUB\brain\data\staging\bank_seattle_chronic_seeds.sqlite3
+=== scrape serious-seeds (Serious Seeds) platform=None caps=['sitemap']
+  serious-seeds products.json page 1 fail: HTTP Error 404: Not Found
+  sitemap https://www.seriousseeds.com/sitemap.xml +children -> +0 (total 0)
+  sitemap https://seriousseeds.com/sitemap.xml +children -> +0 (total 0)
+  category https://www.seriousseeds.com/cannabis-seeds -> +2 (total 2)
+  category https://seriousseeds.com/cannabis-seeds -> +2 (total 4)
+serious-seeds: sitemap/product urls=4
+  serious-seeds ok #1 'Nos Graines de Cannabis'
+  serious-seeds ok #2 'Nos Graines de Cannabis'
+serious-seeds staging: family=bank_serious_seeds raw=4 db=\\192.168.86.2\Digital-Documents\Digital Stealth Care\Projects\DSC-HUB\brain\data\staging\bank_serious_seeds.sqlite3
+=== scrape universally-seeded (Universally Seeded) platform=None caps=['sitemap']
+  universally-seeded products.json page 1 fail: HTTP Error 404: Not Found
+  sitemap https://universallyseeded.com/sitemap.xml +children -> +0 (total 0)
+  sitemap https://www.universallyseeded.com/sitemap.xml +children -> +0 (total 0)
+universally-seeded: sitemap/product urls=0
+DONE ok=5 empty=5 err=0 items=59 skipped_dead=6
+  OK bohemiaseeds: 9 (sitemap_pdp)
+  OK cosmic-wisdom: 20 (sitemap_pdp)
+  OK freestone-genetics: 14 (sitemap_pdp)
+  OK seattle-chronic-seeds: 12 (sitemap_pdp)
+  OK serious-seeds: 4 (sitemap_pdp)

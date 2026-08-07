@@ -9,12 +9,14 @@ substitutions:
   friendly_name: DSC-CONTROL
   wifi_ssid: !secret wifi_ssid
   wifi_password: !secret wifi_password
+  anchor_ssid: "DSC-Anchor"
+  anchor_ap_password: !secret dsc_anchor_ap_password
   api_key_val: !secret dsc_control_api_key
   ota_password_val: !secret dsc_control_ota_password
   ap_password_val: !secret dsc_control_ap_password
   hub_mac: "84:1F:E8:16:E6:60"        # DSC-HUB
   espnow_cmd_tag: "54727"             # 0xD5C7 — must match hub
-  # Same Nest AP as hub — set to sensor.dsc_hub_wifi_bssid (all caps).
+  # Prefer Anchor SoftAP — set to sensor.dsc_bridge_anchor_bssid (all caps).
   wifi_bssid: "00:00:00:00:00:00"
 
 packages:

@@ -1,0 +1,5 @@
+# ==================================================================
+#  DSC-BRIDGE · lab network note
+#  SoftAP is dsc_anchor_ap inside dsc-bridge-common (ethernet + SoftAP).
+#  ESPHome forbids wifi: alongside ethernet — do not add a wifi: block.
+# ==================================================================

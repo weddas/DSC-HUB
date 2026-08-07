@@ -1,0 +1,1260 @@
+{
+ "products": {
+  "MRNMM": {
+   "id": 16439,
+   "sku": "MRNMM",
+   "name": "Medicine Man Regular Seeds - 18",
+   "url_key": "medicine-man-regular-seeds-18-mrnmm",
+   "type_id": "simple",
+   "stock_status": "OUT_OF_STOCK",
+   "brand": 4425,
+   "meta_title": "Medicine Man Regular Seeds | Buy online now from Seedsman",
+   "meta_description": "Purchase Medicine Man Regular Seeds - 18 from Seedsman today! Enjoy top-quality seeds at competitive prices,with delivery across the US in just 2-12 days",
+   "description": {
+    "html": "<p>A proven medical marvel for those in need of high levels of the most active ingredient, THC. Almost toxic at times, so handle with care: don’t abuse the medicine-man. It has won many awards since its introduction as the White Rhino in the late 90’s.  An incredible strong genetic heritage stemming from a Brazilian <a href=\"https://www.seedsman.com/us-en/cannabis-seeds/genetics/sativa-strains\" title=\"Sativa\" target=\"_self\">sativa</a>/South Indian hybrid combined with a prodigious-yield Afghani.   It is a member of the <a href=\"https://www.seedsman.com/us-en/strain-type/white-widow\" title=\"White Widow\" target=\"_self\">White Widow</a> family and a proven champion for medicinal users. Those who prefer <a href=\"https://www.seedsman.com/us-en/cannabis-seeds/cultivation-type/grows-indoors\" title=\"Indoors\" target=\"_self\">indoors</a> can expect an incredibly resinous and compact <a href=\"https://www.seedsman.com/us-en/cannabis-seeds/genetics/indica-strains\" title=\"Indica\" target=\"_self\">Indica</a> appearance from this plant. It has an expected flowering time of 56 to 60 days. Outdoor growers in the northern hemisphere can expect harvest around October and those in the southern hemisphere by May.</p>"
+   },
+   "short_description": {
+    "html": "Very potent strain often favoured by medicinal cannabis patients."
+   },
+   "categories": [
+    {
+     "id": 29,
+     "name": "Cannabis Seeds",
+     "url_path": "cannabis-seeds"
+    },
+    {
+     "id": 30,
+     "name": "Flowering type",
+     "url_path": "cannabis-seeds/flowering-type"
+    },
+    {
+     "id": 32,
+     "name": "Breeders",
+     "url_path": "cannabis-seed-breeders"
+    },
+    {
+     "id": 34,
+     "name": "Variety trait",
+     "url_path": "cannabis-seeds/variety"
+    },
+    {
+     "id": 36,
+     "name": "Resources",
+     "url_path": "cultivation"
+    },
+    {
+     "id": 37,
+     "name": "Indoor",
+     "url_path": "cannabis-seeds/cultivation-type/grows-indoors"
+    },
+    {
+     "id": 38,
+     "name": "Outdoor",
+     "url_path": "cultivation/grows-outdoors"
+    },
+    {
+     "id": 42,
+     "name": "Therapeutic",
+     "url_path": "cannabis-seeds/medical-seeds"
+    },
+    {
+     "id": 45,
+     "name": "Pain",
+     "url_path": "cannabis-seeds/medical-seeds/pain"
+    },
+    {
+     "id": 51,
+     "name": "Big yield",
+     "url_path": "cannabis-seeds/variety/high-yielders"
+    },
+    {
+     "id": 64,
+     "name": "Regular",
+     "url_path": "cannabis-seeds/sex/regular-cannabis-seeds"
+    },
+    {
+     "id": 71,
+     "name": "Quick Flowering Seeds",
+     "url_path": "cultivation/quick-flowering"
+    },
+    {
+     "id": 360,
+     "name": "Best Greenhouse Seeds",
+     "url_path": "cultivation/green-house"
+    },
+    {
+     "id": 361,
+     "name": "Regular Cannabis Seeds",
+     "url_path": "archive/regular-cannabis-seeds"
+    },
+    {
+     "id": 362,
+     "name": "Seedsman Priority",
+     "url_path": "seedsman-priority"
+    },
+    {
+     "id": 365,
+     "name": "Indica/sativa hybrid",
+     "url_path": "cannabis-seeds/genetics/indica-sativa-hybrids"
+    },
+    {
+     "id": 369,
+     "name": "Mr Nice Seedbank",
+     "url_path": "cannabis-seed-breeders/mr-nice-seedbank"
+    },
+    {
+     "id": 376,
+     "name": "Cannabis Seeds for Migraines",
+     "url_path": "cannabis-seeds/medical-seeds/migraines"
+    },
+    {
+     "id": 377,
+     "name": "Cannabis Seeds for Stress",
+     "url_path": "cannabis-seeds/medical-seeds/stress"
+    },
+    {
+     "id": 770,
+     "name": "Photoperiod",
+     "url_path": "cannabis-seeds/flowering-type/photoperiod"
+    },
+    {
+     "id": 789,
+     "name": "ARCHIVE",
+     "url_path": "archive"
+    },
+    {
+     "id": 793,
+     "name": "Cultivation type",
+     "url_path": "cannabis-seeds/cultivation-type"
+    },
+    {
+     "id": 796,
+     "name": "Sex",
+     "url_path": "cannabis-seeds/sex"
+    },
+    {
+     "id": 797,
+     "name": "Genetics",
+     "url_path": "cannabis-seeds/genetics"
+    },
+    {
+     "id": 930,
+     "name": "Photoperiod",
+     "url_path": "cannabis-seeds/sex/photoperiod"
+    }
+   ],
+   "media_gallery": [
+    {
+     "url": "https://seedsmanlive.gumlet.io/media/catalog/product/cache/bd4e0db00c7f51b7e2685856ddbf4f7a/1/3/139988_2195876_pimcore_1_1.jpg",
+     "label": null
+    }
+   ],
+   "image": {
+    "url": "https://seedsmanlive.gumlet.io/media/catalog/product/cache/c3b74a149799263175fb901c5bb6f5cb/1/3/139988_2195876_pimcore_1_1.jpg",
+    "label": "Medicine Man Regular Seeds - 18"
+   },
+   "price_range": {
+    "minimum_price": {
+     "regular_price": {
+      "value": 117.13,
+      "currency": "USD"
+     },
+     "final_price": {
+      "value": 117.13,
+      "currency": "USD"
+     }
+    }
+   },
+   "genetic_description": "Brazilian sativa / South Indian indica x Afghani",
+   "seeds_climate": "1409,1414",
+   "seeds_auto_harvest_time": null,
+   "seeds_cbd_filter": null,
+   "seeds_effect_filter": null,
+   "seeds_feminised": 1370,
+   "seeds_flowering_time": null,
+   "seeds_flowering_type": 1366,
+   "seeds_plant_height": null,
+   "seeds_taste_filter": null,
+   "seeds_thc_filter": null,
+   "seeds_yield_filter": null,
+   "seeds_yield_indoor_filter": null,
+   "seeds_thc": "Unknown - High",
+   "s_attributes": [
+    {
+     "attribute_code": "sku",
+     "attribute_label": "SKU",
+     "attribute_value": "MRNMM",
+     "attribute_type": "text",
+     "attribute_options": []
+    },
+    {
+     "attribute_code": "brand",
+     "attribute_label": "Brand/breeder",
+     "attribute_value": "4425",
+     "attribute_type": "select",
+     "attribute_options": [
+      {
+       "label": "<a href=\"https://www.seedsman.com/us-en/breeders/mr-nice-seedbank\" title=\"Mr Nice Seedbank\" target=\"_self\">Mr Nice Seedbank</a>",
+       "value": "4425"
+      }
+     ]
+    },
+    {
+     "attribute_code": "product_tile_categories",
+     "attribute_label": "Product Tile Category",
+     "attribute_value": "4835,4841",
+     "attribute_type": "multiselect",
+     "attribute_options": [
+      {
+       "label": "Big yield",
+       "value": "4835"
+      },
+      {
+       "label": "Indica / sativa",
+       "value": "4841"
+      }
+     ]
+    },
+    {
+     "attribute_code": "seeds_number",
+     "attribute_label": "Pack size",
+     "attribute_value": "1495",
+     "attribute_type": "select",
+     "attribute_options": [
+      {
+       "label": "18 Seeds",
+       "value": "1495"
+      }
+     ]
+    },
+    {
+     "attribute_code": "genetic_description",
+     "attribute_label": "Parental lines",
+     "attribute_value": "Brazilian sativa / South Indian indica x Afghani",
+     "attribute_type": "text",
+     "attribute_options": []
+    },
+    {
+     "attribute_code": "seeds_flowering_type",
+     "attribute_label": "Flowering type",
+     "attribute_value": "1366",
+     "attribute_type": "select",
+     "attribute_options": [
+      {
+       "label": "Photoperiod",
+       "value": "1366"
+      }
+     ]
+    },
+    {
+     "attribute_code": "seeds_feminised",
+     "attribute_label": "Sex",
+     "attribute_value": "1370",
+     "attribute_type": "select",
+     "attribute_options": [
+      {
+       "label": "Regular",
+       "value": "1370"
+      }
+     ]
+    },
+    {
+     "attribute_code": "seeds_climate",
+     "attribute_label": "Suitable climates",
+     "attribute_value": "1409,1414",
+     "attribute_type": "multiselect",
+     "attribute_options": [
+      {
+       "label": "Dry",
+       "value": "1409"
+      },
+      {
+       "label": "Warm",
+       "value": "1414"
+      }
+     ]
+    },
+    {
+     "attribute_code": "seeds_award",
+     "attribute_label": "Awards list",
+     "attribute_value": null,
+     "attribute_type": "text",
+     "attribute_options": []
+    },
+    {
+     "attribute_code": "lab_report",
+     "attribute_label": "Lab Report File",
+     "attribute_value": null,
+     "attribute_type": "file",
+     "attribute_options": []
+    },
+    {
+     "attribute_code": "seed_coa",
+     "attribute_label": "Seed COA File",
+     "attribute_value": null,
+     "attribute_type": "file",
+     "attribute_options": []
+    },
+    {
+     "attribute_code": "zero_price_allowed",
+     "attribute_label": "Zero Price Allowed",
+     "attribute_value": "0",
+     "attribute_type": "boolean",
+     "attribute_options": []
+    },
+    {
+     "attribute_code": "usp",
+     "attribute_label": "USP",
+     "attribute_value": "526",
+     "attribute_type": "multiselect",
+     "attribute_options": []
+    },
+    {
+     "attribute_code": "affiliate_webgains_eventid",
+     "attribute_label": "WebGains Event ID",
+     "attribute_value": null,
+     "attribute_type": "text",
+     "attribute_options": []
+    },
+    {
+     "attribute_code": "clth_material",
+     "attribute_label": "Material",
+     "attribute_value": null,
+     "attribute_type": "text",
+     "attribute_options": []
+    }
+   ]
+  },
+  "UMSC-COTH-FEM": {
+   "id": 47782,
+   "sku": "UMSC-COTH-FEM",
+   "name": "Color Theory Feminized Seeds",
+   "url_key": "color-theory-feminized-seeds-umsc-coth-fem",
+   "type_id": "configurable",
+   "stock_status": "IN_STOCK",
+   "brand": 4954,
+   "meta_title": "Buy Color Theory Feminised Seeds Online | Seedsman Seed Bank",
+   "meta_description": "Explore the vibrant world of Color Theory Feminised Seeds. High-quality seeds for a thriving garden. Easy to grow and care, perfect for beginner gardeners.",
+   "description": {
+    "html": "<p class=\"isSelectedEnd\">Color Theory by Umami Seed Co x DNA Genetics is a feminized, solventless-focused hybrid bred from Original Z x Strawberry Banana Z, stacking Z genetics on both sides for a clean, candy-forward terpene profile with serious wash potential. Expect bright Z sweetness, smooth sugary fruit and a subtle strawberry finish, giving Color Theory a focused flavour profile that feels pure, polished and easy to place for terp-driven growers.</p><p class=\"isSelectedEnd\"></p><p>Compact, efficient and fast-finishing, Color Theory stays short with minimal stretch, tight internodal spacing and dense, trichome-rich buds. Flowering takes just 7-8 weeks, with medium to high yield potential and sandy resin heads that are specifically noted for dumping well in the wash. It is a strong choice for growers looking for fast turnaround, limited-space efficiency, clean Z terps and solventless-ready resin performance.</p>"
+   },
+   "short_description": {
+    "html": "<p>Clean Z candy, subtle strawberry and sandy resin heads built to dump in the wash.</p><p></p>"
+   },
+   "categories": [
+    {
+     "id": 29,
+     "name": "Cannabis Seeds",
+     "url_path": "cannabis-seeds"
+    },
+    {
+     "id": 30,
+     "name": "Flowering type",
+     "url_path": "cannabis-seeds/flowering-type"
+    },
+    {
+     "id": 31,
+     "name": "Feminised",
+     "url_path": "cannabis-seeds/sex/feminised-cannabis-seeds"
+    },
+    {
+     "id": 32,
+     "name": "Breeders",
+     "url_path": "cannabis-seed-breeders"
+    },
+    {
+     "id": 34,
+     "name": "Variety trait",
+     "url_path": "cannabis-seeds/variety"
+    },
+    {
+     "id": 37,
+     "name": "Indoor",
+     "url_path": "cannabis-seeds/cultivation-type/grows-indoors"
+    },
+    {
+     "id": 40,
+     "name": "New releases",
+     "url_path": "cannabis-seeds/new"
+    },
+    {
+     "id": 770,
+     "name": "Photoperiod",
+     "url_path": "cannabis-seeds/flowering-type/photoperiod"
+    },
+    {
+     "id": 779,
+     "name": "Terpene rich",
+     "url_path": "cannabis-seeds/variety/terpene-rich"
+    },
+    {
+     "id": 781,
+     "name": "USA elite",
+     "url_path": "cannabis-seeds/genetics/usa-elite"
+    },
+    {
+     "id": 793,
+     "name": "Cultivation type",
+     "url_path": "cannabis-seeds/cultivation-type"
+    },
+    {
+     "id": 796,
+     "name": "Sex",
+     "url_path": "cannabis-seeds/sex"
+    },
+    {
+     "id": 797,
+     "name": "Genetics",
+     "url_path": "cannabis-seeds/genetics"
+    },
+    {
+     "id": 930,
+     "name": "Photoperiod",
+     "url_path": "cannabis-seeds/sex/photoperiod"
+    },
+    {
+     "id": 1141,
+     "name": "Washers (solventless extraction)",
+     "url_path": "cannabis-seeds/variety/washers"
+    },
+    {
+     "id": 1181,
+     "name": "Umami Seed Co.",
+     "url_path": "cannabis-seed-breeders/umami-seed-co"
+    }
+   ],
+   "media_gallery": [
+    {
+     "url": "https://seedsmanlive.gumlet.io/media/catalog/product/cache/bd4e0db00c7f51b7e2685856ddbf4f7a/1/7/175862_2760195_pimcore_1_1.jpg",
+     "label": "Color Theory strain from Umami Seed Co"
+    },
+    {
+     "url": "https://seedsmanlive.gumlet.io/media/catalog/product/cache/bd4e0db00c7f51b7e2685856ddbf4f7a/1/7/175866_2760196_pimcore_1_1.jpg",
+     "label": "Color Theory strain from Umami Seed Co"
+    },
+    {
+     "url": "https://seedsmanlive.gumlet.io/media/catalog/product/cache/bd4e0db00c7f51b7e2685856ddbf4f7a/1/7/175867_2760197_pimcore_1_1.jpg",
+     "label": "Color Theory strain from Umami Seed Co"
+    },
+    {
+     "url": "https://seedsmanlive.gumlet.io/media/catalog/product/cache/bd4e0db00c7f51b7e2685856ddbf4f7a/1/7/175868_2760198_pimcore_1_1.jpg",
+     "label": "Color Theory strain from Umami Seed Co"
+    },
+    {
+     "url": "https://seedsmanlive.gumlet.io/media/catalog/product/cache/bd4e0db00c7f51b7e2685856ddbf4f7a/1/7/175869_2760199_pimcore_1_1.jpg",
+     "label": "Color Theory strain from Umami Seed Co"
+    }
+   ],
+   "image": {
+    "url": "https://seedsmanlive.gumlet.io/media/catalog/product/cache/c3b74a149799263175fb901c5bb6f5cb/1/7/175862_2760195_pimcore_1_1.jpg",
+    "label": "Color Theory strain from Umami Seed Co"
+   },
+   "price_range": {
+    "minimum_price": {
+     "regular_price": {
+      "value": 70,
+      "currency": "USD"
+     },
+     "final_price": {
+      "value": 70,
+      "currency": "USD"
+     }
+    }
+   },
+   "genetic_description": "Original Z x Strawberry Banana Z",
+   "seeds_climate": null,
+   "seeds_auto_harvest_time": null,
+   "seeds_cbd_filter": null,
+   "seeds_effect_filter": null,
+   "seeds_feminised": 1369,
+   "seeds_flowering_time": 4640,
+   "seeds_flowering_type": 1366,
+   "seeds_plant_height": null,
+   "seeds_taste_filter": "4649,4902",
+   "seeds_thc_filter": null,
+   "seeds_yield_filter": null,
+   "seeds_yield_indoor_filter": null,
+   "seeds_thc": null,
+   "s_attributes": [
+    {
+     "attribute_code": "sku",
+     "attribute_label": "SKU",
+     "attribute_value": "UMSC-COTH-FEM",
+     "attribute_type": "text",
+     "attribute_options": []
+    },
+    {
+     "attribute_code": "brand",
+     "attribute_label": "Brand/breeder",
+     "attribute_value": "4954",
+     "attribute_type": "select",
+     "attribute_options": [
+      {
+       "label": "Umami Seed Co.",
+       "value": "4954"
+      }
+     ]
+    },
+    {
+     "attribute_code": "product_tile_categories",
+     "attribute_label": "Product Tile Category",
+     "attribute_value": "4947,4874,4851,4914",
+     "attribute_type": "multiselect",
+     "attribute_options": [
+      {
+       "label": "Bag appeal",
+       "value": "4947"
+      },
+      {
+       "label": "Washer",
+       "value": "4914"
+      },
+      {
+       "label": "Dense buds",
+       "value": "4874"
+      },
+      {
+       "label": "Terpene rich",
+       "value": "4851"
+      }
+     ]
+    },
+    {
+     "attribute_code": "size",
+     "attribute_label": "Size",
+     "attribute_value": "1049",
+     "attribute_type": "select",
+     "attribute_options": []
+    },
+    {
+     "attribute_code": "seeds_number",
+     "attribute_label": "Pack size",
+     "attribute_value": null,
+     "attribute_type": "select",
+     "attribute_options": [
+      {
+       "label": "3 Seeds",
+       "value": "1484"
+      }
+     ]
+    },
+    {
+     "attribute_code": "genetic_description",
+     "attribute_label": "Parental lines",
+     "attribute_value": "Original Z x Strawberry Banana Z",
+     "attribute_type": "text",
+     "attribute_options": []
+    },
+    {
+     "attribute_code": "seeds_colour",
+     "attribute_label": "Color",
+     "attribute_value": "4623,1362",
+     "attribute_type": "multiselect",
+     "attribute_options": [
+      {
+       "label": "Green",
+       "value": "4623"
+      },
+      {
+       "label": "Silver",
+       "value": "1362"
+      }
+     ]
+    },
+    {
+     "attribute_code": "seeds_flowering_type",
+     "attribute_label": "Flowering type",
+     "attribute_value": "1366",
+     "attribute_type": "select",
+     "attribute_options": [
+      {
+       "label": "Photoperiod",
+       "value": "1366"
+      }
+     ]
+    },
+    {
+     "attribute_code": "seeds_feminised",
+     "attribute_label": "Sex",
+     "attribute_value": "1369",
+     "attribute_type": "select",
+     "attribute_options": [
+      {
+       "label": "Feminised",
+       "value": "1369"
+      }
+     ]
+    },
+    {
+     "attribute_code": "seeds_flowering_time",
+     "attribute_label": "Photoperiod flowering time",
+     "attribute_value": "4640",
+     "attribute_type": "select",
+     "attribute_options": [
+      {
+       "label": "7 to 9 weeks",
+       "value": "4640"
+      }
+     ]
+    },
+    {
+     "attribute_code": "seeds_taste_filter",
+     "attribute_label": "Aroma",
+     "attribute_value": "4649,4902",
+     "attribute_type": "multiselect",
+     "attribute_options": [
+      {
+       "label": "Sweet",
+       "value": "4902"
+      },
+      {
+       "label": "Fruity",
+       "value": "4649"
+      }
+     ]
+    },
+    {
+     "attribute_code": "seeds_award",
+     "attribute_label": "Awards list",
+     "attribute_value": null,
+     "attribute_type": "text",
+     "attribute_options": []
+    },
+    {
+     "attribute_code": "lab_report",
+     "attribute_label": "Lab Report File",
+     "attribute_value": null,
+     "attribute_type": "file",
+     "attribute_options": []
+    },
+    {
+     "attribute_code": "seed_coa",
+     "attribute_label": "Seed COA File",
+     "attribute_value": null,
+     "attribute_type": "file",
+     "attribute_options": []
+    },
+    {
+     "attribute_code": "zero_price_allowed",
+     "attribute_label": "Zero Price Allowed",
+     "attribute_value": "0",
+     "attribute_type": "boolean",
+     "attribute_options": []
+    },
+    {
+     "attribute_code": "affiliate_webgains_eventid",
+     "attribute_label": "WebGains Event ID",
+     "attribute_value": null,
+     "attribute_type": "text",
+     "attribute_options": []
+    },
+    {
+     "attribute_code": "clth_material",
+     "attribute_label": "Material",
+     "attribute_value": null,
+     "attribute_type": "text",
+     "attribute_options": []
+    }
+   ],
+   "configurable_options": [
+    {
+     "attribute_code": "seeds_number",
+     "label": "Pack size",
+     "values": [
+      {
+       "label": "3 Seeds",
+       "value_index": 1484
+      }
+     ]
+    }
+   ],
+   "variants": [
+    {
+     "product": {
+      "sku": "UMSC-COTH-FEM-3",
+      "name": "Color Theory Feminized Seeds - 3",
+      "stock_status": "IN_STOCK"
+     },
+     "attributes": null
+    }
+   ]
+  }
+ },
+ "option_maps": {
+  "affiliate_webgains_eventid": {},
+  "brand": {
+   "4959": "Abakaba Heirlooms",
+   "4951": "Boston Clone Co.",
+   "4950": "Clone To Home",
+   "4958": "Doja",
+   "4961": "Endless Biotech",
+   "4946": "Purple Caper Seeds",
+   "4954": "Umami Seed Co.",
+   "4949": "Wizard Trees",
+   "4953": "Zennetix",
+   "2148": "420 Science",
+   "4332": "710 Genetics",
+   "4350": "00 Seeds",
+   "4392": "Accelerator Seeds",
+   "4299": "Ace Seeds",
+   "4351": "Advanced Seeds",
+   "4291": "Afropips",
+   "4478": "Alpine Seeds",
+   "2113": "Alpha Cat",
+   "4343": "Alphakronik Genes",
+   "4387": "Amsterdam Genetics",
+   "4757": "Anesia Seeds",
+   "4871": "Anesia Merch.",
+   "4326": "Archive Seeds",
+   "2132": "Arizer",
+   "2115": "Atmos Vape",
+   "4423": "Atlas Seed",
+   "4398": "Auto Seeds",
+   "2108": "BANKSY",
+   "1516": "Barney's Farm",
+   "4786": "Barney's Farm Merch",
+   "4330": "BC Bud Depot",
+   "4428": "Big Buddha Seeds",
+   "2140": "BioBloom",
+   "4314": "Blimburn Seeds",
+   "4329": "Bodhi Seeds",
+   "4346": "Bomb Seeds",
+   "4513": "Bonguru Seeds",
+   "2153": "Boveda",
+   "4368": "Brothers Grimm Seeds",
+   "4319": "Buddha Seeds",
+   "2160": "BRNT Designs",
+   "4885": "BudTrainer",
+   "4869": "Bud Trainer",
+   "4533": "Burning Bush Nurseries",
+   "2105": "BUSTED",
+   "4399": "Cali Kush Farms",
+   "4504": "California Breeders As.",
+   "4898": "Cannakan",
+   "4517": "Cannaventure Seeds",
+   "4528": "CBD Botanic",
+   "4359": "CBD Seeds",
+   "2154": "C Vault",
+   "2151": "Caldwell's",
+   "4300": "Cali Connection",
+   "4322": "Cannabiogen",
+   "2162": "Cannabolish",
+   "2116": "Cannawell",
+   "4307": "CBD Crew",
+   "2155": "CBDfx",
+   "4500": "Centennial Seeds",
+   "4301": "Ceres Seeds",
+   "2106": "CHIMPANZEE",
+   "4754": "Clones",
+   "4633": "Compound Genetics",
+   "4400": "Connoisseur Genetics",
+   "4814": "Cookies Seed Bank",
+   "2117": "Crater",
+   "4394": "Dankonomics Genetics",
+   "2142": "Dalman",
+   "4411": "Dank Genetics",
+   "4365": "Dark Horse Genetics",
+   "2131": "Da Vinci",
+   "4380": "Delta 9 Labs",
+   "4357": "Devils Harvest",
+   "2130": "Discreet Vape",
+   "4493": "DJ Short",
+   "2107": "DMC",
+   "4289": "DNA Genetics",
+   "4408": "Doctor's Choice",
+   "4302": "Dready Seeds",
+   "4382": "Digital Genetics",
+   "4337": "Dinafem Seeds",
+   "4402": "Divine Genetics",
+   "4373": "Dr Krippling",
+   "4374": "Dr Underground",
+   "4544": "Dungeons Vault Genetics",
+   "4285": "Dutch Passion",
+   "4433": "Dutch Passion CBD",
+   "4873": "Dutch Passion Merch",
+   "4539": "Dynasty Genetics",
+   "2119": "E-CBD",
+   "2135": "ECS Gold Drops",
+   "4404": "Elev8 Seeds",
+   "4393": "Elite Seeds",
+   "4354": "Emerald Triangle",
+   "4634": "Ethos Genetics",
+   "4345": "Eva Seeds",
+   "4876": "Eva Seeds Merch",
+   "4906": "Events",
+   "4733": "Exotic Genetix",
+   "4355": "Exotic Seed",
+   "4360": "Expert Seeds",
+   "2181": "EZTEST",
+   "4788": "EZ Test POS",
+   "4372": "Fast Buds",
+   "4877": "Fast Buds Merch",
+   "4287": "Female Seeds",
+   "4417": "FENOCAN",
+   "2129": "Firefly",
+   "4294": "Flash Seeds",
+   "4303": "Flying Dutchmen",
+   "2139": "Flowermate",
+   "2147": "FourFiveCBD",
+   "4344": "French Touch Seeds",
+   "4353": "G13 Labs",
+   "4514": "Gage Green Seeds",
+   "4386": "Garden Of Green",
+   "4561": "GG Strains",
+   "4418": "GemmaCert",
+   "4361": "Genehtik Seeds",
+   "4313": "Grand Daddy Genetics",
+   "4297": "Grass-O-Matic Seeds",
+   "4631": "Green Bodhi",
+   "2161": "Green Jay",
+   "2102": "Greenhouse Seed Co.",
+   "2111": "Greenhouse - Strain Hunters",
+   "4884": "Greenhouse Merch.",
+   "4296": "Greenhouse Seed Co. Merch",
+   "4512": "Greenthumb Seeds",
+   "2144": "Grenco Science",
+   "4833": "Happy Valley Genetics",
+   "4395": "Harmony",
+   "4435": "Harmony Terpenes",
+   "4516": "HazeMan Seeds",
+   "4356": "Heavyweight Seeds",
+   "4681": "Heirloom Organics",
+   "4358": "Hero Seeds",
+   "4685": "Hi-Elevation Genetics",
+   "4421": "High Speed Buds",
+   "4304": "Holy Smoke Seeds",
+   "4317": "Homegrown Natural Wonders",
+   "4342": "House of the Great Gardener",
+   "4413": "Humboldt Seed Co.",
+   "4367": "Humboldt Seed Org.",
+   "2158": "Hush Kush",
+   "2149": "Incredibowl",
+   "4899": "In House Genetics",
+   "2163": "Integra Boost",
+   "2120": "Iolite",
+   "4896": "James Loud Genetics",
+   "4348": "Jinxproof Genetics",
+   "2134": "Joyetech",
+   "4347": "Kalashnikov Seeds",
+   "4328": "Kaliman Seeds",
+   "4292": "Kannabia Seeds",
+   "2205": "Kannastor",
+   "4397": "Kannaswiss",
+   "4333": "Karma Genetics",
+   "4320": "KC Brains",
+   "4414": "Khalifa Genetics",
+   "4603": "Landrace Warden",
+   "4510": "LaPlata Labs",
+   "4431": "LEAN",
+   "4388": "Lineage Genetics",
+   "2145": "Linx Vapor",
+   "4567": "Little Chief Collabs",
+   "4331": "Loud Seeds",
+   "4936": "Lovin In Her Eyes",
+   "4457": "Lowlife Seeds",
+   "2110": "Lowryder",
+   "4432": "Lowryder Merch",
+   "2128": "Magic Flight",
+   "4464": "Magus Genetics",
+   "4407": "Mamiko Seeds",
+   "4383": "Mandala Seeds",
+   "4371": "Medical Marijuana Genetics",
+   "4323": "Medical Seeds",
+   "2141": "Medihemp",
+   "4412": "Mega Buds",
+   "4338": "Mephisto Genetics",
+   "4349": "Ministry of Cannabis",
+   "4409": "Monster Genetics",
+   "4298": "Mosca Seeds",
+   "4529": "Moxie Seeds",
+   "4894": "Mr. Grow It",
+   "4477": "Mr Nice Merch",
+   "4425": "Mr Nice Seedbank",
+   "4511": "MTG Seeds",
+   "2157": "Myco",
+   "4686": "Night Owl Seeds",
+   "4941": "Nine Weeks Harvest",
+   "4308": "Nirvana Seeds",
+   "4878": "Nirvana Seeds Merch",
+   "4376": "Norstar Genetics",
+   "2225": "On Balance",
+   "4434": "ONE Premium CBD Seeds",
+   "2183": "OPen Vape",
+   "4547": "Original Delicatessen",
+   "4369": "Original Delicatessen Seeds",
+   "4290": "Paradise Seeds",
+   "2121": "PAX",
+   "4420": "Perfect Tree Seeds",
+   "2166": "PharmaHemp",
+   "4379": "Pheno Finder Seeds",
+   "4341": "Philosopher Seeds",
+   "4385": "Phoenix Seeds",
+   "2150": "Pokit Rokitz",
+   "4324": "Positronic Seeds",
+   "4422": "Purple City Genetics",
+   "4352": "Pyramid Seeds",
+   "4316": "Rare Dankness",
+   "2138": "RAW",
+   "4340": "Reeferman Seeds",
+   "4521": "Reggae Seeds",
+   "4305": "Resin Seeds",
+   "4375": "Ripper Seeds",
+   "4562": "R-KIEM Seeds",
+   "4309": "Royal Queen Seeds",
+   "4793": "Royal Queen Seeds Merch",
+   "2137": "RYOT",
+   "4384": "Sagarmatha Seeds",
+   "2104": "Sativa Bags",
+   "4492": "Seedism",
+   "4284": "Seedsman",
+   "4545": "Seedsman Goods",
+   "4430": "Seedsman Merch",
+   "4664": "Seedsman Packaging",
+   "4740": "Seedsman POS",
+   "4794": "Seedstockers",
+   "4426": "Sensi Seeds",
+   "4875": "Sensi Seeds Merch",
+   "2118": "Sensi Seed Products",
+   "4405": "Sensi Seeds Research",
+   "4282": "Serious Seeds",
+   "2159": "Session Goods",
+   "4339": "SickMeds Seeds",
+   "4424": "Silent Seeds",
+   "2133": "Shifa Shop CBD",
+   "4366": "SinCity Seeds",
+   "4901": "Solfire Gardens",
+   "4509": "Soma Seeds",
+   "4935": "Stash Blend",
+   "2127": "Storz & Bickel",
+   "4559": "Strain Hunters Merchandise",
+   "4315": "Subcool Seeds",
+   "2126": "Sublimator",
+   "4364": "Super CBDx",
+   "4403": "Super Sativa Seed Club",
+   "4401": "Super Strains",
+   "4363": "Sumo Seeds",
+   "4310": "Sweet Seeds",
+   "4792": "Sweet Seeds Merch",
+   "4419": "Terps USA",
+   "4663": "TerpyZ Mutant Genetics",
+   "4534": "The Bulldog Seedbank",
+   "4480": "The 7 Dwarfs",
+   "4281": "The Joint Doctor",
+   "4390": "The Plant Organic Seeds",
+   "4410": "The Plug Seedbank",
+   "4286": "The Real Seed Company",
+   "4900": "Tiger One Promo",
+   "4295": "Tiger One Bulk",
+   "2103": "THTC",
+   "4288": "T.H. Seeds",
+   "2168": "Tiger One Merch",
+   "2152": "Tightpac",
+   "2146": "TopBond",
+   "4381": "Top Tao Seeds",
+   "4632": "Trilogene Seeds",
+   "4327": "Tropical Seeds",
+   "2212": "Van Patten Publishing",
+   "2125": "Vapir",
+   "2124": "Vapium",
+   "4883": "Ventana Plant Science",
+   "4396": "V Elementum",
+   "4370": "Victory Seeds",
+   "2123": "Vaponic",
+   "4378": "Vision Seeds",
+   "2122": "Vivant",
+   "4389": "Wax Liquidizer",
+   "2167": "Weecke",
+   "4362": "White Label Seed Company",
+   "4280": "World of Seeds"
+  },
+  "clth_material": {},
+  "genetic_description": {},
+  "lab_report": {},
+  "product_tile_categories": {
+   "4947": "Bag appeal",
+   "4957": "Potent",
+   "4914": "Washer",
+   "4834": "Beginners",
+   "4835": "Big yield",
+   "4836": "Cup winner",
+   "4874": "Dense buds",
+   "4837": "Extracts",
+   "4838": "Heirloom",
+   "4839": "High CBD",
+   "4853": "High THC",
+   "4840": "Indica",
+   "4841": "Indica / sativa",
+   "4842": "Lab certified",
+   "4843": "Landrace",
+   "4844": "Large outdoor",
+   "4845": "Mould resistant",
+   "4846": "Mutant",
+   "4847": "Original breeder",
+   "4848": "Sativa",
+   "4849": "SCROG",
+   "4850": "SOG",
+   "4851": "Terpene rich",
+   "4852": "USA elite"
+  },
+  "seed_coa": {},
+  "seeds_auto_harvest_time": {
+   "1439": "less than 8 weeks",
+   "1440": "8 to 10 weeks",
+   "1441": "10 to 12 weeks",
+   "4630": "more than 12 weeks"
+  },
+  "seeds_award": {},
+  "seeds_cbd_filter": {
+   "1381": "High CBD (Over 5%)",
+   "1380": "Medium CBD (1-5%)",
+   "1379": "Low CBD (0-1%)"
+  },
+  "seeds_climate": {
+   "1408": "Cool",
+   "1409": "Dry",
+   "1410": "High altitude",
+   "1411": "Hot",
+   "1412": "Humid",
+   "1413": "Temperate",
+   "1414": "Warm",
+   "4673": "Wet"
+  },
+  "seeds_colour": {
+   "4621": "Amber",
+   "1355": "Black",
+   "1356": "Blue",
+   "4622": "Dark Green",
+   "4623": "Green",
+   "4624": "Light Green",
+   "1358": "Orange",
+   "1359": "Pink",
+   "1360": "Purple",
+   "1361": "Red",
+   "1362": "Silver",
+   "1364": "White"
+  },
+  "seeds_effect_filter": {
+   "4745": "Couch-lock",
+   "4746": "Creative",
+   "4747": "Energetic",
+   "4748": "Focused",
+   "4749": "Psychedelic",
+   "4750": "Sleepy",
+   "4751": "Uplifting"
+  },
+  "seeds_feminised": {
+   "1369": "Feminised",
+   "1370": "Regular"
+  },
+  "seeds_flowering_time": {
+   "4638": "5 to 7 weeks",
+   "4639": "6 to 8 weeks",
+   "4640": "7 to 9 weeks",
+   "4641": "8 to 10 weeks",
+   "4642": "9 to 11 weeks",
+   "4643": "10 to 12 weeks",
+   "4644": "11 to 13 weeks",
+   "4645": "12 to 14 weeks",
+   "4646": "13 to 15 weeks",
+   "4665": "14 to 16 weeks",
+   "4666": "more than 16 weeks"
+  },
+  "seeds_flowering_type": {
+   "1367": "Autoflowering",
+   "4730": "Early/fast",
+   "1366": "Photoperiod"
+  },
+  "seeds_number": {
+   "5013": "1+1 Seed",
+   "5014": "10+3 Seeds",
+   "4931": "10+4 Seeds",
+   "1481": "0 Seeds",
+   "3877": "1 Seed",
+   "1483": "2 Seeds",
+   "1484": "3 Seeds",
+   "1485": "4 Seeds",
+   "1486": "5 Seeds",
+   "1487": "6 Seeds",
+   "1488": "7 Seeds",
+   "1489": "8 Seeds",
+   "1490": "9 Seeds",
+   "1491": "10 Seeds",
+   "1492": "11 Seeds",
+   "1493": "13 Seeds",
+   "1494": "16 Seeds",
+   "1495": "18 Seeds",
+   "1496": "20 Seeds",
+   "1497": "24 Seeds",
+   "1498": "25 Seeds",
+   "1499": "30 Seeds",
+   "1500": "50 Seeds",
+   "1501": "100 Seeds",
+   "1502": "250 Seeds",
+   "1503": "500 Seeds",
+   "1504": "1000 Seeds",
+   "1505": "3+1 Seeds",
+   "1506": "3+2 Seeds",
+   "1507": "5+2 Seeds",
+   "1508": "5+3 Seeds",
+   "1509": "10+5 Seeds",
+   "1510": "15+8 Seeds",
+   "3804": "12 Seeds",
+   "3943": "15 Seeds",
+   "3974": "14 Seeds",
+   "4195": "40 Seeds",
+   "4661": "5+1 Seeds",
+   "4662": "10+2 Seeds",
+   "4755": "1 Clone",
+   "4789": "6+2 Seeds",
+   "4790": "9+3 Seeds"
+  },
+  "seeds_plant_height": {
+   "1404": "Large",
+   "1403": "Medium",
+   "1402": "Short"
+  },
+  "seeds_taste_filter": {
+   "4904": "Chem",
+   "4956": "Citrus",
+   "4903": "Creamy",
+   "4905": "Herbal",
+   "4907": "Sour",
+   "4902": "Sweet",
+   "4647": "Earthy",
+   "4648": "Floral",
+   "4649": "Fruity",
+   "4739": "Gassy",
+   "4650": "Minty",
+   "4651": "Piney",
+   "4652": "Skunky",
+   "4653": "Spicy",
+   "4654": "Woody"
+  },
+  "seeds_thc_filter": {
+   "4627": "Very High THC (25%+)",
+   "4626": "High THC (16-24%)",
+   "4684": "Medium THC (10-15%)",
+   "4625": "Low THC (5-9%)",
+   "1377": "Minimal THC (0-4%)"
+  },
+  "seeds_variety": {
+   "4618": "Indica dominant",
+   "4619": "Sativa dominant",
+   "4620": "Indica / Sativa hybrid"
+  },
+  "seeds_yield_filter": {
+   "1397": "Very High Yield (above 750gr/plant)",
+   "1396": "High Yield (450-750gr/plant)",
+   "1395": "Average Yield (200-450gr/plant)",
+   "1394": "Modest Yield (up to 200gr/plant)"
+  },
+  "seeds_yield_indoor_filter": {
+   "1401": "Very High Yield (above 600gr/m2)",
+   "1400": "High Yield (450-600gr/m2)",
+   "1399": "Average Yield (350-450gr/m2)",
+   "1398": "Modest Yield (up to 350gr/m2)"
+  },
+  "size": {
+   "4933": "1 Unit",
+   "4889": "12 Pack",
+   "4897": "16 oz",
+   "4887": "3 Pack",
+   "4909": "3Ga (11.3L)",
+   "4886": "4 oz",
+   "4910": "5Ga (18.9L)",
+   "4888": "6 Pack",
+   "4890": "7Ga (26.5L)",
+   "1052": "1 ml",
+   "1053": "10 gr",
+   "1054": "10 kg",
+   "1055": "10 ml",
+   "1056": "10 x 4 gr",
+   "1057": "10 x 8 gr",
+   "1058": "100 ml.",
+   "1059": "100 Pastilles",
+   "1060": "100 pack",
+   "1061": "100 x 67 gr.",
+   "1062": "1000 ml",
+   "1063": "12 per Box",
+   "1064": "12 x 67 gr",
+   "1065": "144 x 8 gr.",
+   "1066": "15 kg",
+   "1067": "15 ml",
+   "1068": "15 oz.",
+   "1069": "15 per Box",
+   "1070": "150 ml",
+   "1071": "16 per Box",
+   "1072": "2 fl.oz.",
+   "1073": "2 liter",
+   "1074": "2.2",
+   "1075": "2.4 quart",
+   "1076": "20 ml",
+   "1077": "20 per Box",
+   "1078": "20 x 1 gr",
+   "1079": "200 ml",
+   "1080": "200 x 4 gr.",
+   "1081": "21 liter",
+   "1082": "24 per Box",
+   "1083": "24 x 67 gr.",
+   "1084": "3 ml.",
+   "1085": "30 Capsule Pack",
+   "1086": "30 gr",
+   "1087": "30 ml",
+   "1088": "30 per Box",
+   "1089": "300 ml.",
+   "1090": "300 x 8 gr.",
+   "1091": "32 fl.oz.",
+   "1092": "32 per Box",
+   "1093": "320 gr.",
+   "1094": "4 gr.",
+   "1095": "4 liter",
+   "1096": "4 quart",
+   "1097": "4.5 gr",
+   "1098": "40 per Box",
+   "1099": "45 ml.",
+   "1100": "5 kg",
+   "1101": "50 ml",
+   "1102": "50 pack",
+   "1103": "55 Pastilles",
+   "1104": "5ml",
+   "1105": "6 per Box",
+   "1106": "6 x 320 gr",
+   "1107": "60 Capsule Pack",
+   "1108": "60 Gummy Bears",
+   "1109": "60 ml,600 x 4 gr.",
+   "1110": "67 gr.",
+   "1111": "7 oz.",
+   "1112": "8 oz",
+   "1113": "8 gr.",
+   "1114": "8 Gummy Bears",
+   "1115": "8 liter",
+   "1116": "80 Capsules",
+   "1117": "Book - 150 x 210 cm.",
+   "1118": "Large",
+   "1119": "Medium",
+   "1120": "Mini",
+   "1121": "Small",
+   "1122": "XL",
+   "1123": "XS",
+   "1124": "XXL",
+   "4065": "60 ml",
+   "4081": "783",
+   "4085": "0.5 gr",
+   "4442": "1 gr",
+   "4089": "2.2\"",
+   "4443": "0.5 ml",
+   "4129": "600 x 4 gr.",
+   "4162": "50 litre",
+   "4444": "50 per Box",
+   "4787": "100 units"
+  },
+  "sku": {},
+  "usp": {
+   "526": "Product Tile Category"
+  },
+  "zero_price_allowed": {
+   "1": "Yes",
+   "0": "No"
+  }
+ }
+}

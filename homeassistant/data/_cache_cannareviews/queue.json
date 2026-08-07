@@ -1,0 +1,19 @@
+{
+  "https://cannareviews.health/api/v5.2.1/products/export": {
+    "status": "processing",
+    "message": "Your export request is being processed.",
+    "estimated_time": "30 seconds",
+    "job_id": "881a048e0704d08164e658c9d4f9f545"
+  },
+  "https://cannareviews.health/api/v5.2.1/data/download": {
+    "status": "queued",
+    "message": "Large export queued. Check back in 60 seconds.",
+    "download_url": "https://cannareviews.health/api/v3/downloads/ca539671348d8a89fb5d0f43fbabdccc"
+  },
+  "https://cannareviews.health/api/v5.2.1/products/bulk": {
+    "status": "processing",
+    "message": "Your export request is being processed.",
+    "estimated_time": "30 seconds",
+    "job_id": "c2b276f188a4d478e0b7c2fca645fa68"
+  }
+}

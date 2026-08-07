@@ -1,0 +1,46 @@
+waiting queue… partial tier_B=32 probed=300
+waiting queue… partial tier_B=38 probed=360
+waiting queue… partial tier_B=50 probed=480
+waiting queue… partial tier_B=59 probed=540
+waiting queue… partial tier_B=66 probed=600
+waiting queue… partial tier_B=73 probed=660
+waiting queue… partial tier_B=73 probed=660
+waiting queue… partial tier_B=84 probed=720
+waiting queue… partial tier_B=91 probed=780
+waiting queue… partial tier_B=98 probed=840
+waiting queue… partial tier_B=103 probed=900
+waiting queue… partial tier_B=111 probed=960
+waiting queue… partial tier_B=114 probed=1020
+waiting queue… partial tier_B=120 probed=1080
+waiting queue… partial tier_B=128 probed=1140
+waiting queue… partial tier_B=139 probed=1200
+Tier B first half pass 1/5: slice=72 todo=69 (queue partial=True tier_B=144)
+
+=== 207 Genetics https://207genetics.net/ ===
+
+=== 3rd Shift Genetics https://thirdshift.com/ ===
+
+=== 3thirteen Seeds https://phenohunter.org/threads/3thirteen-seeds.24/ ===
+  OK bank_3thirteen_seeds items=25 method=home_link_scan
+
+=== 4:20 Seeds https://420seeds.com/ ===
+
+=== AK Bean Brains https://akbeanbrains.com/ ===
+
+=== Alex Beck http://alex-beck.com/ ===
+
+=== AlleyCat Genetics https://www.alleycatgenetics.com/ ===
+
+=== Ambitious Seeds https://www.domaineasy.com/buy-domain/ambitious.com ===
+
+=== Anthony Renee Genetics https://anthonyrenee.com/password ===
+
+=== Apothecary Genetics https://apothecary.komi.io/ ===
+
+=== Artifact Genetics https://artifact.com/ ===
+
+=== Atao Genetics http://www.atao.com/ ===
+
+=== AutoFem Seeds https://autofem.com/en/ ===
+
+=== Bay Seeds https://www.youstream.com/ ===

@@ -1,0 +1,192 @@
+{
+ "schema_version": 2,
+ "kind": "discovery",
+ "built_at": "2026-08-07T17:20:53Z",
+ "count": 22,
+ "source": "n087_thin_field_pass",
+ "note": "Thin-field source discovery while master merges paused; no StrainDB traffic",
+ "redistributable": false,
+ "items": [
+  {
+   "id": "openthc_vdb",
+   "url": "https://vdb.openthc.org/download/strains.json",
+   "bytes": 1836015,
+   "ok": true,
+   "redistributable": true,
+   "fields": "identity/type; grow/chem thin"
+  },
+  {
+   "id": "kushy_strains_csv",
+   "url": "https://raw.githubusercontent.com/kushyapp/cannabis-dataset/master/Dataset/Strains/strains-kushy_api.2017-11-14.csv",
+   "bytes": 1709155,
+   "ok": true,
+   "redistributable": true,
+   "fields": "effects,flavors,cannabinoids",
+   "license": "MIT"
+  },
+  {
+   "id": "wikileaf_all_data",
+   "url": "https://raw.githubusercontent.com/Loyal9-Elements/grow_data/master/Resources/csv/ALL_data.csv",
+   "bytes": 3633895,
+   "ok": true,
+   "redistributable": true,
+   "fields": "THC/CBD/type/info text (grow often in free text)",
+   "license": "MIT"
+  },
+  {
+   "id": "maxvalue_results_csv",
+   "url": "https://raw.githubusercontent.com/MaxValue/Terpene-Profile-Parser-for-Cannabis-Strains/master/results.csv",
+   "bytes": 7453769,
+   "ok": true,
+   "redistributable": true,
+   "fields": "terpene panels by lab/strain",
+   "license": "open/research"
+  },
+  {
+   "id": "mendeley_landing",
+   "url": "https://data.mendeley.com/datasets/6zwcgrttkp/1",
+   "bytes": 120450,
+   "ok": true,
+   "redistributable": false,
+   "fields": "effects + chemistry (~800 strains)",
+   "note": "manual download / DOI gate"
+  },
+  {
+   "id": "ma_ccc_catalog",
+   "url": "https://masscannabiscontrol.com/open-data/data-catalog",
+   "bytes": 128046,
+   "ok": true,
+   "redistributable": true,
+   "fields": "state lab THC/metals; terpenes usually absent; strain names variable"
+  },
+  {
+   "id": "strain_data_project",
+   "url": "https://straindataproject.org/research",
+   "bytes": 73283,
+   "ok": true,
+   "redistributable": false,
+   "fields": "terpene research; no clear bulk CSV"
+  },
+  {
+   "id": "cannlytics_data_science",
+   "url": "https://api.github.com/repos/cannlytics/cannabis-data-science/contents/",
+   "bytes": 8647,
+   "ok": true,
+   "redistributable": true,
+   "fields": "notebooks + occasional lab CSVs",
+   "license": "MIT"
+  },
+  {
+   "id": "forum_autoflower",
+   "url": "https://www.autoflower.org/",
+   "ok": false,
+   "error": "<urlopen error [WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has fai",
+   "redistributable": false,
+   "fields": "grow journals / flowering / height anecdotes"
+  },
+  {
+   "id": "forum_rollitup",
+   "url": "https://www.rollitup.org/",
+   "bytes": 210836,
+   "ok": true,
+   "redistributable": false,
+   "fields": "grow journals / flowering / height anecdotes"
+  },
+  {
+   "id": "forum_opengrow",
+   "url": "https://www.opengrow.com/",
+   "ok": false,
+   "error": "<urlopen error [WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has fai",
+   "redistributable": false,
+   "fields": "grow journals / flowering / height anecdotes"
+  },
+  {
+   "id": "forum_sensi",
+   "url": "https://forum.sensiseeds.com/",
+   "bytes": 26858,
+   "ok": true,
+   "redistributable": false,
+   "fields": "grow journals / flowering / height anecdotes"
+  },
+  {
+   "id": "forum_growery",
+   "url": "https://www.growery.org/",
+   "bytes": 12122,
+   "ok": true,
+   "redistributable": false,
+   "fields": "grow journals / flowering / height anecdotes"
+  },
+  {
+   "id": "forum_thctalk",
+   "url": "https://www.thctalk.com/",
+   "ok": false,
+   "error": "HTTP Error 403: Forbidden",
+   "redistributable": false,
+   "fields": "grow journals / flowering / height anecdotes"
+  },
+  {
+   "id": "forum_ozstoners",
+   "url": "https://www.ozstoners.com/",
+   "bytes": 54234,
+   "ok": true,
+   "redistributable": false,
+   "fields": "grow journals / flowering / height anecdotes"
+  },
+  {
+   "id": "greenhouse_shop_sitemap",
+   "url": "https://shop.greenhouseseeds.nl/sitemap.xml",
+   "bytes": 129643,
+   "ok": true,
+   "redistributable": false,
+   "fields": "flowering/height/yield/lineage on PDPs"
+  },
+  {
+   "id": "greenhouse_shop_index",
+   "url": "https://shop.greenhouseseeds.nl/sitemap_index.xml",
+   "ok": false,
+   "error": "HTTP Error 404: Not Found",
+   "redistributable": false,
+   "fields": "flowering/height/yield/lineage on PDPs"
+  },
+  {
+   "id": "neptune_home",
+   "url": "https://neptuneseedbank.com/",
+   "bytes": 168,
+   "ok": true,
+   "redistributable": false,
+   "fields": "flowering/height/yield/lineage on PDPs"
+  },
+  {
+   "id": "true_north_home",
+   "url": "https://truenorthseedbank.com/",
+   "bytes": 301941,
+   "ok": true,
+   "redistributable": false,
+   "fields": "flowering/height/yield/lineage on PDPs"
+  },
+  {
+   "id": "pacific_seed_home",
+   "url": "https://pacificseedbank.com/",
+   "bytes": 729252,
+   "ok": true,
+   "redistributable": false,
+   "fields": "flowering/height/yield/lineage on PDPs"
+  },
+  {
+   "id": "quebec_seeds_home",
+   "url": "https://quebeccannabisseeds.com/",
+   "bytes": 161550,
+   "ok": true,
+   "redistributable": false,
+   "fields": "flowering/height/yield/lineage on PDPs"
+  },
+  {
+   "id": "wayback_seedfinder_cdx",
+   "url": "https://web.archive.org/cdx/search/cdx?url=seedfinder.eu/*&output=json&limit=5",
+   "bytes": 703,
+   "ok": true,
+   "redistributable": false,
+   "fields": "lineage graph archive; ToS/legal review before bulk"
+  }
+ ]
+}

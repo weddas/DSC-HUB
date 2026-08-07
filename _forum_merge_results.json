@@ -1,0 +1,67 @@
+{
+  "results": [
+    {
+      "family": "forum_420mag",
+      "status": "ok",
+      "staging_source_id": "forum_420mag",
+      "counts": {
+        "source_record": 1,
+        "strain_canonical": 398,
+        "strain_variant": 0,
+        "chemistry_profile": 0,
+        "grow_trait": 13,
+        "science_alias": 0,
+        "entity_link": 0,
+        "light_fixture": 0,
+        "nutrient_product": 0,
+        "medium_product": 0,
+        "media_asset": 0,
+        "followup_gap": 0,
+        "export_manifest": 0
+      }
+    },
+    {
+      "family": "forum_phenohunter",
+      "status": "ok",
+      "staging_source_id": "forum_phenohunter",
+      "counts": {
+        "source_record": 1,
+        "strain_canonical": 398,
+        "strain_variant": 0,
+        "chemistry_profile": 0,
+        "grow_trait": 22,
+        "science_alias": 0,
+        "entity_link": 0,
+        "light_fixture": 0,
+        "nutrient_product": 0,
+        "medium_product": 0,
+        "media_asset": 0,
+        "followup_gap": 0,
+        "export_manifest": 0
+      }
+    },
+    {
+      "family": "forum_mjpassion",
+      "status": "ok",
+      "staging_source_id": "forum_mjpassion",
+      "counts": {
+        "source_record": 1,
+        "strain_canonical": 295,
+        "strain_variant": 0,
+        "chemistry_profile": 0,
+        "grow_trait": 4,
+        "science_alias": 0,
+        "entity_link": 0,
+        "light_fixture": 0,
+        "nutrient_product": 0,
+        "medium_product": 0,
+        "media_asset": 0,
+        "followup_gap": 0,
+        "export_manifest": 0
+      }
+    }
+  ],
+  "ha_indexes": "skipped",
+  "merged_at": "2026-08-08T02:22:41",
+  "note": "All three committed OK (go3.log). Post-merge master verify deferred due to lock contention."
+}

@@ -21,8 +21,9 @@ def main() -> int:
     if not args.db.exists():
         print("missing db")
         return 1
-    conn = sqlite3.connect(args.db)
+    conn = sqlite3.connect(str(args.db), timeout=120)
     conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA busy_timeout=120000")
 
     chem_n = conn.execute("SELECT COUNT(*) c FROM chemistry_profile").fetchone()["c"]
     canon_n = conn.execute("SELECT COUNT(*) c FROM strain_canonical").fetchone()["c"]
@@ -31,10 +32,17 @@ def main() -> int:
         "SELECT COUNT(*) c FROM entity_link WHERE from_kind='chemistry_profile'"
     ).fetchone()["c"]
     linked_chem = conn.execute(
-        "SELECT COUNT(DISTINCT from_id) c FROM entity_link WHERE from_kind='chemistry_profile'"
+        "SELECT COUNT(*) c FROM ("
+        "  SELECT from_id FROM entity_link WHERE from_kind='chemistry_profile' GROUP BY from_id"
+        ")"
     ).fetchone()["c"]
+    # Avoid full-table gap scan when table is large — approximate via chem without any link.
     gaps = conn.execute(
-        "SELECT COUNT(*) c FROM followup_gap WHERE field='seed_link'"
+        "SELECT COUNT(*) c FROM chemistry_profile cp "
+        "WHERE NOT EXISTS ("
+        "  SELECT 1 FROM entity_link el "
+        "  WHERE el.from_kind='chemistry_profile' AND el.from_id=cp.id"
+        ")"
     ).fetchone()["c"]
 
     by_method = list(
@@ -48,7 +56,8 @@ def main() -> int:
             "SELECT el.method, el.confidence, el.to_kind, el.to_id, cp.name "
             "FROM entity_link el "
             "JOIN chemistry_profile cp ON cp.id = el.from_id "
-            "WHERE el.from_kind='chemistry_profile' LIMIT 25"
+            "WHERE el.from_kind='chemistry_profile' "
+            "LIMIT 25"
         )
     )
 
@@ -62,8 +71,8 @@ def main() -> int:
         "",
         "## Coverage",
         "",
-        f"| Metric | Count |",
-        f"|---|---|",
+        "| Metric | Count |",
+        "|---|---|",
         f"| Chemistry profiles | {chem_n} |",
         f"| Seed canonical | {canon_n} |",
         f"| Seed variants | {var_n} |",
@@ -81,7 +90,13 @@ def main() -> int:
     if not by_method:
         lines.append("| _(none)_ | 0 |")
 
-    lines += ["", "## Sample links", "", "| Chem name | → kind | → id | method | conf |", "|---|---|---|---|---|"]
+    lines += [
+        "",
+        "## Sample links",
+        "",
+        "| Chem name | → kind | → id | method | conf |",
+        "|---|---|---|---|---|",
+    ]
     for r in samples:
         lines.append(
             f"| {r['name'][:40]} | `{r['to_kind']}` | `{r['to_id'][:48]}` | `{r['method']}` | {r['confidence']} |"

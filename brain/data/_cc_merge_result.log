@@ -1,0 +1,98 @@
+2026-08-08 02:18:33 APPLY start
+2026-08-08 02:18:33 staging raw=1968 typed={'canonical': 1966, 'chem': 1960, 'grow': 1962, 'links': 1960}
+2026-08-08 02:18:33 attempt 1 lock
+2026-08-08 02:18:54 attempt 1 FAIL OperationalError: database is locked
+Traceback (most recent call last):
+  File "C:\Users\cmgwe\AppData\Local\Temp\dsc_family_cannaconnection_apply.py", line 32, in main
+    gate.execute("BEGIN IMMEDIATE")
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+sqlite3.OperationalError: database is locked
+
+2026-08-08 02:18:59 attempt 2 lock
+2026-08-08 02:19:20 attempt 2 FAIL OperationalError: database is locked
+Traceback (most recent call last):
+  File "C:\Users\cmgwe\AppData\Local\Temp\dsc_family_cannaconnection_apply.py", line 32, in main
+    gate.execute("BEGIN IMMEDIATE")
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+sqlite3.OperationalError: database is locked
+
+2026-08-08 02:19:25 attempt 3 lock
+2026-08-08 02:19:46 attempt 3 FAIL OperationalError: database is locked
+Traceback (most recent call last):
+  File "C:\Users\cmgwe\AppData\Local\Temp\dsc_family_cannaconnection_apply.py", line 32, in main
+    gate.execute("BEGIN IMMEDIATE")
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+sqlite3.OperationalError: database is locked
+
+2026-08-08 02:19:51 attempt 4 lock
+2026-08-08 02:20:12 attempt 4 FAIL OperationalError: database is locked
+Traceback (most recent call last):
+  File "C:\Users\cmgwe\AppData\Local\Temp\dsc_family_cannaconnection_apply.py", line 32, in main
+    gate.execute("BEGIN IMMEDIATE")
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+sqlite3.OperationalError: database is locked
+
+2026-08-08 02:20:17 attempt 5 lock
+2026-08-08 02:20:38 attempt 5 FAIL OperationalError: database is locked
+Traceback (most recent call last):
+  File "C:\Users\cmgwe\AppData\Local\Temp\dsc_family_cannaconnection_apply.py", line 32, in main
+    gate.execute("BEGIN IMMEDIATE")
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+sqlite3.OperationalError: database is locked
+
+2026-08-08 02:20:43 attempt 6 lock
+2026-08-08 02:21:03 attempt 6 FAIL OperationalError: database is locked
+Traceback (most recent call last):
+  File "C:\Users\cmgwe\AppData\Local\Temp\dsc_family_cannaconnection_apply.py", line 32, in main
+    gate.execute("BEGIN IMMEDIATE")
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+sqlite3.OperationalError: database is locked
+
+2026-08-08 02:21:08 attempt 7 lock
+2026-08-08 02:21:29 attempt 7 FAIL OperationalError: database is locked
+Traceback (most recent call last):
+  File "C:\Users\cmgwe\AppData\Local\Temp\dsc_family_cannaconnection_apply.py", line 32, in main
+    gate.execute("BEGIN IMMEDIATE")
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+sqlite3.OperationalError: database is locked
+
+2026-08-08 02:21:34 attempt 8 lock
+2026-08-08 02:21:55 attempt 8 FAIL OperationalError: database is locked
+Traceback (most recent call last):
+  File "C:\Users\cmgwe\AppData\Local\Temp\dsc_family_cannaconnection_apply.py", line 32, in main
+    gate.execute("BEGIN IMMEDIATE")
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+sqlite3.OperationalError: database is locked
+
+2026-08-08 02:22:00 LONGWAIT start
+2026-08-08 02:22:00 DEFAULT_DB=\\192.168.86.2\Digital-Documents\Digital Stealth Care\Projects\DSC-HUB\brain\data\dsc_brain.sqlite3
+2026-08-08 02:22:00 staging raw=1968
+2026-08-08 02:27:29 PASSIVE start
+2026-08-08 02:27:29 staging raw=1968
+2026-08-08 02:29:23 WHEN_FREE boot
+2026-08-08 02:29:25 probe 0 busy: database is locked
+2026-08-08 02:30:48 STATUS_FAILED wrote result json
+2026-08-08 02:30:54 WHEN_FREE boot
+2026-08-08 02:30:57 probe 0 busy: database is locked
+2026-08-08 02:31:18 FREE at probe 3
+2026-08-08 02:32:05 HOLD_MERGE boot
+2026-08-08 02:32:06 staging raw=1968
+2026-08-08 02:32:31 ATOMIC boot
+2026-08-08 02:32:31 staging raw=1968
+2026-08-08 02:32:34 probe 1 3s OperationalError: database is locked
+2026-08-08 02:32:49 ATOMIC boot
+2026-08-08 02:32:49 staging raw=1968
+2026-08-08 02:32:53 probe 1 3s OperationalError: database is locked
+2026-08-08 02:33:34 ATOMIC boot
+2026-08-08 02:33:34 staging raw=1968
+2026-08-08 02:33:34 ATOMIC lock probe=1 held=0.1s
+2026-08-08 02:33:53 BEFORE {"strain_canonical": 69150, "strain_variant": 30543, "chemistry_profile": 356165, "grow_trait": 40829, "entity_link": 891502, "source_record": 51}
+2026-08-08 02:35:57 ATOMIC boot
+2026-08-08 02:35:57 staging raw=1968
+2026-08-08 02:36:00 probe 1 3s OperationalError: database is locked
+2026-08-08 02:36:31 ATOMIC boot
+2026-08-08 02:36:31 staging raw=1968
+2026-08-08 02:36:34 probe 1 4s OperationalError: database is locked
+2026-08-08 02:37:13 ATOMIC boot
+2026-08-08 02:37:13 staging raw=1968
+2026-08-08 02:37:16 probe 1 3s OperationalError: database is locked

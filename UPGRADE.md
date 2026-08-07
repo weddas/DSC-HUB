@@ -53,7 +53,7 @@ Remove duplicates before adding `dsc_v4_*` (same `unique_id`s create silent `*_2
 
 1. Stubs from [`homeassistant/esphome/`](homeassistant/esphome/) with `ref: v5.1.0`
 2. Keep `secrets.yaml`; match `hub_mac` / `panel_mac` / `espnow_cmd_tag` **54727**
-3. Flash hub → panel → pots → Sonoffs when firmware packages change
+3. Flash hub → panel → pots → bridge → Sonoffs when firmware packages change
 
 ### Post-flash checks
 

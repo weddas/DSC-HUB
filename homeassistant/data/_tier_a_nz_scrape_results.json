@@ -1,0 +1,224 @@
+{
+  "built_at": "2026-08-07T17:50:36Z",
+  "half": "N-Z",
+  "tier": "A",
+  "probed": 23,
+  "scrapeable": 16,
+  "skipped": [
+    {
+      "slug": "nirvana-seeds",
+      "name": "Nirvana Seeds",
+      "reason": "dns",
+      "tier": "D"
+    },
+    {
+      "slug": "pyramid-seeds",
+      "name": "Pyramid Seeds",
+      "reason": "timeout",
+      "tier": "D"
+    },
+    {
+      "slug": "reservoir-seeds",
+      "name": "Reservoir Seeds",
+      "reason": "timeout",
+      "tier": "D"
+    },
+    {
+      "slug": "ripper-seeds",
+      "name": "Ripper Seeds",
+      "reason": "timeout",
+      "tier": "D"
+    },
+    {
+      "slug": "world-of-seeds-bank",
+      "name": "World of Seeds Bank",
+      "reason": "ssl",
+      "tier": "D"
+    },
+    {
+      "slug": "neptune-seed-bank",
+      "name": "Neptune Seed Bank",
+      "reason": "no_catalog_signal",
+      "tier": "C"
+    },
+    {
+      "slug": "organic-earth",
+      "name": "Organic Earth",
+      "reason": "dns",
+      "tier": "D"
+    }
+  ],
+  "results": [
+    {
+      "name": "Night Owl Seeds",
+      "slug": "night-owl-seeds",
+      "url": "https://nightowlseeds.com",
+      "platform": "woocommerce",
+      "status": "empty",
+      "count": 0,
+      "method": "sitemap_pdp",
+      "skip_reason": "zero_products"
+    },
+    {
+      "name": "Oregon Elite Seeds",
+      "slug": "oregon-elite-seeds",
+      "url": "https://www.flasr.com",
+      "platform": null,
+      "status": "empty",
+      "count": 0,
+      "method": "sitemap_pdp",
+      "skip_reason": "zero_products"
+    },
+    {
+      "name": "Paradise Seeds",
+      "slug": "paradise-seeds",
+      "url": "https://www.paradise-seeds.com",
+      "platform": "woocommerce",
+      "status": "ok",
+      "count": 44,
+      "method": "sitemap_pdp",
+      "staging_family": "bank_paradise_seeds",
+      "staging_raw": 44
+    },
+    {
+      "name": "Philosopher Seeds",
+      "slug": "philosopher-seeds",
+      "url": "https://www.philosopherseeds.com",
+      "platform": "magento",
+      "status": "empty",
+      "count": 0,
+      "method": "sitemap_pdp",
+      "skip_reason": "zero_products"
+    },
+    {
+      "name": "Quebec Cannabis Seeds",
+      "slug": "quebec-cannabis-seeds",
+      "url": "https://quebeccannabisseeds.com",
+      "platform": "magento",
+      "status": "empty",
+      "count": 0,
+      "method": "sitemap_pdp",
+      "skip_reason": "zero_products"
+    },
+    {
+      "name": "Raw Genetics",
+      "slug": "raw-genetics",
+      "url": "https://rawgenetics.com",
+      "platform": "woocommerce",
+      "status": "empty",
+      "count": 0,
+      "method": "sitemap_pdp",
+      "skip_reason": "zero_products"
+    },
+    {
+      "name": "Relentless Genetics",
+      "slug": "relentless-genetics",
+      "url": "https://relentlessgenetics.com",
+      "platform": null,
+      "status": "empty",
+      "count": 0,
+      "method": "sitemap_pdp",
+      "skip_reason": "zero_products"
+    },
+    {
+      "name": "Seeds of Africa",
+      "slug": "seeds-of-africa",
+      "url": "https://www.hugedomains.com",
+      "platform": null,
+      "status": "empty",
+      "count": 0,
+      "method": "sitemap_pdp",
+      "skip_reason": "zero_products"
+    },
+    {
+      "name": "Sensi Seeds",
+      "slug": "sensi-seeds",
+      "url": "https://sensiseeds.com",
+      "platform": "magento",
+      "status": "empty",
+      "count": 0,
+      "method": "sitemap_pdp",
+      "skip_reason": "zero_products"
+    },
+    {
+      "name": "Serious Seeds",
+      "slug": "serious-seeds",
+      "url": "https://www.seriousseeds.com",
+      "platform": null,
+      "status": "ok",
+      "count": 2,
+      "method": "sitemap_pdp",
+      "staging_family": "bank_serious_seeds",
+      "staging_raw": 2
+    },
+    {
+      "name": "Solfire Gardens",
+      "slug": "solfire-gardens",
+      "url": "https://solfiregardens.com",
+      "platform": "woocommerce",
+      "status": "ok",
+      "count": 478,
+      "method": "sitemap_pdp",
+      "staging_family": "bank_solfire_gardens",
+      "staging_raw": 478
+    },
+    {
+      "name": "Soma Seeds",
+      "slug": "soma-seeds",
+      "url": "https://www.somaseeds.nl",
+      "platform": "magento",
+      "status": "ok",
+      "count": 21,
+      "method": "sitemap_pdp",
+      "staging_family": "bank_soma_seeds",
+      "staging_raw": 21
+    },
+    {
+      "name": "Super Sativa Seed Club",
+      "slug": "super-sativa-seed-club",
+      "url": "https://dutch-passion.com",
+      "platform": "magento",
+      "status": "empty",
+      "count": 0,
+      "method": "sitemap_pdp",
+      "skip_reason": "zero_products"
+    },
+    {
+      "name": "Sweet Seeds",
+      "slug": "sweet-seeds",
+      "url": "https://sweetseeds.com",
+      "platform": "magento",
+      "status": "empty",
+      "count": 0,
+      "method": "sitemap_pdp",
+      "skip_reason": "zero_products"
+    },
+    {
+      "name": "The Real Seed Company",
+      "slug": "the-real-seed-company",
+      "url": "https://therealseedcompany.com",
+      "platform": "woocommerce",
+      "status": "ok",
+      "count": 79,
+      "method": "sitemap_pdp",
+      "staging_family": "bank_the_real_seed_company",
+      "staging_raw": 79
+    },
+    {
+      "name": "Vision Seeds",
+      "slug": "vision-seeds",
+      "url": "https://www.visionseeds.com",
+      "platform": null,
+      "status": "empty",
+      "count": 0,
+      "method": "sitemap_pdp",
+      "skip_reason": "zero_products"
+    }
+  ],
+  "totals": {
+    "ok_banks": 5,
+    "empty_banks": 11,
+    "error_banks": 0,
+    "items": 624
+  }
+}

@@ -379,20 +379,23 @@ not humidifier lock — entity id kept for compatibility.
 - Clone humidifier / AC physical actuators — demands live; followers gated by wired flags
 - Recorder `purge_keep_days: ~120` — HA config
 - Fixed-channel AP — ops (root README)
-- POT3 probe swap, SCD41, ETH01 — post-release hardware
+- POT3 probe swap, SCD41 — post-release hardware
+- ETH01 bridge — **in tree** (`dsc-bridge.yaml` · F-010/F-012/F-013)
 
-## Firmware pairing (**v5.1.0**)
+## Firmware pairing (**5.2.0** train)
 
 | Piece | Version |
 |---|---|
-| Hub / pots / Sonoffs / kits | **`5.1.10`** hub roam-scan off; Control **5.1.17**; pots **5.1.8** |
-| Panel (DSC-CONTROL) | **`5.1.x`** lean-cut patch train |
-| HA surface (packages + dashboard) | **`5.1.8`** |
+| Hub / Control / pots / bridge / Sonoffs / kits | **`5.2.0`** |
+| HA surface (packages + dashboard) | **`5.2.0`** |
 | Dashboard | DSC-HUB Pro (4-col, browser_mod popups) |
 | `espnow_cmd_tag` | `54727` (`0xD5C7`) on hub **and** panel |
 
+Bridge entities: Anchor BSSID/channel, hub ESP-NOW link, demand mirrors,
+per-Sonoff API links. Setpoints still write the hub API.
+
 Fleet drift chip (`sensor.dsc_fleet_version_status`) compares the
-**major.minor** train, so mixed patch levels inside `5.1.x` stay `ok`.
+**major.minor** train, so mixed patch levels inside `5.2.x` stay `ok`.
 
 **Mat votes:** `switch.dsc_hub_mat_vote_pot_1`…`4` — Root Zone is source of truth; Climate links there.
 

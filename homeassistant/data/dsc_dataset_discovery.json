@@ -1,0 +1,90 @@
+{
+ "schema_version": 2,
+ "kind": "dataset_discovery",
+ "built_at": "2026-08-07T13:40:09Z",
+ "count": 9,
+ "source": "n087_public_discovery",
+ "note": "Catalog of public/research datasets for N-087 expansion",
+ "redistributable": true,
+ "items": [
+  {
+   "id": "kushy_mit",
+   "name": "Kushy cannabis-dataset (strains)",
+   "url": "https://github.com/kushyapp/cannabis-dataset",
+   "license": "MIT",
+   "redistributable": true,
+   "importer": "import_strains_kushy.py"
+  },
+  {
+   "id": "maxvalue_terpenes",
+   "name": "MaxValue Terpene Profile Parser results",
+   "url": "https://github.com/MaxValue/Terpene-Profile-Parser-for-Cannabis-Strains",
+   "license": "open/research (see repo)",
+   "redistributable": true,
+   "importer": "import_lab_terpenes_maxvalue.py"
+  },
+  {
+   "id": "grow_data_wikileaf",
+   "name": "Loyal9-Elements/grow_data Wikileaf CSV",
+   "url": "https://github.com/Loyal9-Elements/grow_data",
+   "license": "MIT",
+   "redistributable": true,
+   "importer": "import_strains_wikileaf.py",
+   "already": true
+  },
+  {
+   "id": "seedcity_cc0",
+   "name": "JonusNattapong Cannabis-Strains (Seed City)",
+   "url": "https://github.com/JonusNattapong/Cannabis-Strains",
+   "license": "CC0-1.0",
+   "redistributable": true,
+   "importer": "import_strains_seedcity.py / import_local_db_dump.py",
+   "already": true
+  },
+  {
+   "id": "cannlytics_hf",
+   "name": "Cannlytics cannabis_results (HF)",
+   "url": "https://huggingface.co/datasets/cannlytics/cannabis_results",
+   "license": "CC-BY-4.0",
+   "redistributable": true,
+   "importer": "import_lab_terpenes_cannlytics.py",
+   "already": true
+  },
+  {
+   "id": "openthc_vdb",
+   "name": "OpenTHC Variety Database",
+   "url": "https://vdb.openthc.org/download/strains.json",
+   "license": "OpenTHC open",
+   "redistributable": true,
+   "importer": "import_strains_openthc.py",
+   "already": true
+  },
+  {
+   "id": "mendeley_effects_chem",
+   "name": "Mendeley: 800+ strains subjective effects + chemistry",
+   "url": "https://data.mendeley.com/datasets/6zwcgrttkp/1",
+   "license": "see Mendeley dataset card",
+   "redistributable": false,
+   "note": "Manual download / DOI gate — listed for follow-up, not auto-fetched",
+   "skip": true
+  },
+  {
+   "id": "connecticut_open_data_terpenes",
+   "name": "Connecticut Open Data cannabis lab/terpene (via Cannlytics talks)",
+   "url": "https://data.ct.gov/",
+   "license": "public open data",
+   "redistributable": true,
+   "note": "Portal search required; CT subsets often already in Cannlytics HF",
+   "skip": true
+  },
+  {
+   "id": "strain_data_project",
+   "name": "Strain Data Project terpene research",
+   "url": "https://straindataproject.org/research",
+   "license": "unknown",
+   "redistributable": false,
+   "note": "Research site; no clear bulk CSV URL found — follow-up",
+   "skip": true
+  }
+ ]
+}

@@ -1,0 +1,73 @@
+02:00:26 START direct NA merge
+02:00:27 attempt 1/10 north_atlantic.sqlite3
+02:02:41 exc database is locked
+RELAUNCH 1
+02:06:20 START resilient NA merge
+02:06:21 attempt 1/10 north_atlantic.sqlite3
+02:06:21 waiting clear journal=True apply_lock=False
+02:06:31 waiting clear journal=True apply_lock=False
+02:06:41 waiting clear journal=True apply_lock=False
+02:06:51 waiting clear journal=True apply_lock=False
+02:07:01 waiting clear journal=True apply_lock=False
+02:07:11 waiting clear journal=True apply_lock=False
+02:07:21 waiting clear journal=True apply_lock=False
+02:07:31 waiting clear journal=True apply_lock=False
+02:07:41 waiting clear journal=True apply_lock=False
+02:07:51 waiting clear journal=True apply_lock=False
+02:08:01 waiting clear journal=True apply_lock=False
+02:08:11 waiting clear journal=True apply_lock=False
+02:08:21 waiting clear journal=True apply_lock=False
+02:08:31 waiting clear journal=True apply_lock=False
+02:08:41 waiting clear journal=True apply_lock=False
+02:08:51 clear-timeout; retry
+02:08:51 attempt 2/10 north_atlantic.sqlite3
+02:08:51 waiting clear journal=True apply_lock=False
+02:09:01 waiting clear journal=True apply_lock=False
+02:09:11 waiting clear journal=True apply_lock=False
+02:09:21 waiting clear journal=True apply_lock=False
+02:09:31 waiting clear journal=True apply_lock=False
+02:09:41 waiting clear journal=True apply_lock=False
+02:09:51 waiting clear journal=True apply_lock=False
+02:10:02 waiting clear journal=True apply_lock=False
+02:10:12 waiting clear journal=True apply_lock=False
+02:10:22 waiting clear journal=True apply_lock=False
+02:10:32 waiting clear journal=True apply_lock=False
+02:10:42 waiting clear journal=True apply_lock=False
+02:10:52 waiting clear journal=True apply_lock=False
+02:11:02 waiting clear journal=True apply_lock=False
+02:11:12 waiting clear journal=True apply_lock=False
+02:11:22 clear-timeout; retry
+02:11:22 attempt 3/10 north_atlantic.sqlite3
+02:11:22 waiting clear journal=True apply_lock=False
+02:11:32 waiting clear journal=True apply_lock=False
+02:11:42 waiting clear journal=True apply_lock=False
+02:11:52 waiting clear journal=True apply_lock=False
+02:12:02 waiting clear journal=True apply_lock=False
+02:12:12 waiting clear journal=True apply_lock=False
+02:12:22 waiting clear journal=True apply_lock=False
+02:12:32 waiting clear journal=True apply_lock=False
+02:12:42 waiting clear journal=True apply_lock=False
+02:12:52 waiting clear journal=True apply_lock=False
+02:13:02 waiting clear journal=True apply_lock=False
+02:13:12 waiting clear journal=True apply_lock=False
+02:13:22 waiting clear journal=True apply_lock=False
+02:13:32 waiting clear journal=True apply_lock=False
+02:13:42 waiting clear journal=True apply_lock=False
+02:13:52 clear-timeout; retry
+02:13:52 attempt 4/10 north_atlantic.sqlite3
+02:13:52 waiting clear journal=True apply_lock=False
+02:14:02 waiting clear journal=True apply_lock=False
+02:16:43 START resilient NA merge
+02:16:43 attempt 1/10 north_atlantic.sqlite3
+02:16:54 busy database is locked
+02:17:14 busy database is locked
+02:17:35 busy database is locked
+02:17:51 writable
+02:19:55 exc database is locked
+02:20:05 attempt 2/10 north_atlantic.sqlite3
+02:20:16 busy database is locked
+02:20:36 busy database is locked
+02:20:57 busy database is locked
+02:21:17 busy database is locked
+02:21:38 busy database is locked
+02:21:58 busy database is locked

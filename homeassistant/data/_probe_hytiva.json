@@ -1,0 +1,413 @@
+{
+  "https://www.hytiva.com/strains": {
+    "ok": true,
+    "bytes": 49260,
+    "strain_links": 25,
+    "sl_sample": [
+      "/strains/hybrid/animal-cookies",
+      "/strains/hybrid/berry-white",
+      "/strains/hybrid/black-diamond",
+      "/strains/hybrid/cereal-milk",
+      "/strains/hybrid/cherry-pie",
+      "/strains/hybrid/do-si-dos",
+      "/strains/hybrid/gary-payton",
+      "/strains/hybrid/gelato-41"
+    ],
+    "locs": 0,
+    "loc_sample": [],
+    "page_hrefs": [
+      "/strains?page=2"
+    ],
+    "ld_count": 1,
+    "ld_preview": "{\"@context\":\"https://schema.org\",\"@graph\":[{\"@type\":\"Organization\",\"name\":\"Hytiva: Cannabis on Demand\u00ae\",\"url\":\"https://www.hytiva.com\",\"@id\":\"https://www.hytiva.com#organization\",\"logo\":{\"@type\":\"ImageObject\",\"url\":\"https://images.hytiva.com/Hytiva-Logo.png?mw1200\",\"caption\":\"Hytiva: Cannabis on Demand\u00ae Logo\"},\"sameAs\":[\"https://x.com/hytiva\",\"https://www.linkedin.com/company/hytiva\"]},{\"@type\":\"WebPage\",\"name\":\"Cannabis Strains\",\"url\":\"https://www.hytiva.com/strains\",\"@id\":\"https://www.hytiva.c",
+    "state_hints": [],
+    "title": "Cannabis Strains"
+  },
+  "https://www.hytiva.com/strains?page=2": {
+    "ok": true,
+    "bytes": 47598,
+    "strain_links": 25,
+    "sl_sample": [
+      "/strains/hybrid/apples-and-bananas",
+      "/strains/hybrid/birthday-cake",
+      "/strains/hybrid/black-ice",
+      "/strains/hybrid/blue-dream",
+      "/strains/hybrid/gelato-33",
+      "/strains/hybrid/georgia-pie",
+      "/strains/hybrid/la-kush-cake",
+      "/strains/hybrid/mochi"
+    ],
+    "locs": 0,
+    "loc_sample": [],
+    "page_hrefs": [
+      "/strains?page=3"
+    ],
+    "ld_count": 1,
+    "ld_preview": "{\"@context\":\"https://schema.org\",\"@graph\":[{\"@type\":\"Organization\",\"name\":\"Hytiva: Cannabis on Demand\u00ae\",\"url\":\"https://www.hytiva.com\",\"@id\":\"https://www.hytiva.com#organization\",\"logo\":{\"@type\":\"ImageObject\",\"url\":\"https://images.hytiva.com/Hytiva-Logo.png?mw1200\",\"caption\":\"Hytiva: Cannabis on Demand\u00ae Logo\"},\"sameAs\":[\"https://x.com/hytiva\",\"https://www.linkedin.com/company/hytiva\"]},{\"@type\":\"WebPage\",\"name\":\"Cannabis Strains\",\"url\":\"https://www.hytiva.com/strains\",\"@id\":\"https://www.hytiva.c",
+    "state_hints": [],
+    "title": "Cannabis Strains"
+  },
+  "https://www.hytiva.com/strains?page=3": {
+    "ok": true,
+    "bytes": 47585,
+    "strain_links": 25,
+    "sl_sample": [
+      "/strains/hybrid/banana-og",
+      "/strains/hybrid/blueberry-kush",
+      "/strains/hybrid/blueberry-muffin",
+      "/strains/hybrid/cookies-and-cream",
+      "/strains/hybrid/cotton-candy",
+      "/strains/hybrid/donkey-butter",
+      "/strains/hybrid/duct-tape",
+      "/strains/hybrid/fire-og"
+    ],
+    "locs": 0,
+    "loc_sample": [],
+    "page_hrefs": [
+      "/strains?page=2",
+      "/strains?page=4"
+    ],
+    "ld_count": 1,
+    "ld_preview": "{\"@context\":\"https://schema.org\",\"@graph\":[{\"@type\":\"Organization\",\"name\":\"Hytiva: Cannabis on Demand\u00ae\",\"url\":\"https://www.hytiva.com\",\"@id\":\"https://www.hytiva.com#organization\",\"logo\":{\"@type\":\"ImageObject\",\"url\":\"https://images.hytiva.com/Hytiva-Logo.png?mw1200\",\"caption\":\"Hytiva: Cannabis on Demand\u00ae Logo\"},\"sameAs\":[\"https://x.com/hytiva\",\"https://www.linkedin.com/company/hytiva\"]},{\"@type\":\"WebPage\",\"name\":\"Cannabis Strains\",\"url\":\"https://www.hytiva.com/strains\",\"@id\":\"https://www.hytiva.c",
+    "state_hints": [],
+    "title": "Cannabis Strains"
+  },
+  "https://www.hytiva.com/strains/hybrid": {
+    "ok": true,
+    "bytes": 49415,
+    "strain_links": 25,
+    "sl_sample": [
+      "/strains/hybrid/animal-cookies",
+      "/strains/hybrid/berry-white",
+      "/strains/hybrid/black-diamond",
+      "/strains/hybrid/cereal-milk",
+      "/strains/hybrid/cherry-pie",
+      "/strains/hybrid/do-si-dos",
+      "/strains/hybrid/gary-payton",
+      "/strains/hybrid/gelato-41"
+    ],
+    "locs": 0,
+    "loc_sample": [],
+    "page_hrefs": [
+      "/strains/hybrid?page=2"
+    ],
+    "ld_count": 1,
+    "ld_preview": "{\"@context\":\"https://schema.org\",\"@graph\":[{\"@type\":\"Organization\",\"name\":\"Hytiva: Cannabis on Demand\u00ae\",\"url\":\"https://www.hytiva.com\",\"@id\":\"https://www.hytiva.com#organization\",\"logo\":{\"@type\":\"ImageObject\",\"url\":\"https://images.hytiva.com/Hytiva-Logo.png?mw1200\",\"caption\":\"Hytiva: Cannabis on Demand\u00ae Logo\"},\"sameAs\":[\"https://x.com/hytiva\",\"https://www.linkedin.com/company/hytiva\"]},{\"@type\":\"WebPage\",\"name\":\"Hybrid Cannabis Strains\",\"url\":\"https://www.hytiva.com/strains/hybrid\",\"@id\":\"https:",
+    "state_hints": [],
+    "title": "Hybrid Cannabis Strains"
+  },
+  "https://www.hytiva.com/strains/indica": {
+    "ok": true,
+    "bytes": 47025,
+    "strain_links": 25,
+    "sl_sample": [
+      "/strains/indica/91-tahoe",
+      "/strains/indica/afghan-kush",
+      "/strains/indica/baby-yoda",
+      "/strains/indica/banana-runtz",
+      "/strains/indica/bernie-hana-butter",
+      "/strains/indica/blood-diamond",
+      "/strains/indica/bubba-kush",
+      "/strains/indica/chem-sorbet"
+    ],
+    "locs": 0,
+    "loc_sample": [],
+    "page_hrefs": [
+      "/strains/indica?page=2"
+    ],
+    "ld_count": 1,
+    "ld_preview": "{\"@context\":\"https://schema.org\",\"@graph\":[{\"@type\":\"Organization\",\"name\":\"Hytiva: Cannabis on Demand\u00ae\",\"url\":\"https://www.hytiva.com\",\"@id\":\"https://www.hytiva.com#organization\",\"logo\":{\"@type\":\"ImageObject\",\"url\":\"https://images.hytiva.com/Hytiva-Logo.png?mw1200\",\"caption\":\"Hytiva: Cannabis on Demand\u00ae Logo\"},\"sameAs\":[\"https://x.com/hytiva\",\"https://www.linkedin.com/company/hytiva\"]},{\"@type\":\"WebPage\",\"name\":\"Indica Cannabis Strains\",\"url\":\"https://www.hytiva.com/strains/indica\",\"@id\":\"https:",
+    "state_hints": [],
+    "title": "Indica Cannabis Strains"
+  },
+  "https://www.hytiva.com/strains/sativa": {
+    "ok": true,
+    "bytes": 46530,
+    "strain_links": 25,
+    "sl_sample": [
+      "/strains/sativa/andromeda",
+      "/strains/sativa/blood-drive",
+      "/strains/sativa/chemdawg",
+      "/strains/sativa/cherry-pebble-ak",
+      "/strains/sativa/citrus-tsunami-9",
+      "/strains/sativa/congolese",
+      "/strains/sativa/congolese-sativa",
+      "/strains/sativa/desert-sunrise"
+    ],
+    "locs": 0,
+    "loc_sample": [],
+    "page_hrefs": [
+      "/strains/sativa?page=2"
+    ],
+    "ld_count": 1,
+    "ld_preview": "{\"@context\":\"https://schema.org\",\"@graph\":[{\"@type\":\"Organization\",\"name\":\"Hytiva: Cannabis on Demand\u00ae\",\"url\":\"https://www.hytiva.com\",\"@id\":\"https://www.hytiva.com#organization\",\"logo\":{\"@type\":\"ImageObject\",\"url\":\"https://images.hytiva.com/Hytiva-Logo.png?mw1200\",\"caption\":\"Hytiva: Cannabis on Demand\u00ae Logo\"},\"sameAs\":[\"https://x.com/hytiva\",\"https://www.linkedin.com/company/hytiva\"]},{\"@type\":\"WebPage\",\"name\":\"Sativa Cannabis Strains\",\"url\":\"https://www.hytiva.com/strains/sativa\",\"@id\":\"https:",
+    "state_hints": [],
+    "title": "Sativa Cannabis Strains"
+  },
+  "https://www.hytiva.com/strains/explore": {
+    "ok": true,
+    "bytes": 60300,
+    "strain_links": 32,
+    "sl_sample": [
+      "/strains/hybrid/berry-white",
+      "/strains/hybrid/bk-satellite",
+      "/strains/hybrid/cereal-milk",
+      "/strains/hybrid/cherry-fade",
+      "/strains/hybrid/church-og",
+      "/strains/hybrid/cinder-block-8",
+      "/strains/hybrid/donna-og",
+      "/strains/hybrid/gary-payton"
+    ],
+    "locs": 0,
+    "loc_sample": [],
+    "page_hrefs": [],
+    "ld_count": 1,
+    "ld_preview": "{\"@context\":\"https://schema.org\",\"@graph\":[{\"@type\":\"Organization\",\"name\":\"Hytiva: Cannabis on Demand\u00ae\",\"url\":\"https://www.hytiva.com\",\"@id\":\"https://www.hytiva.com#organization\",\"logo\":{\"@type\":\"ImageObject\",\"url\":\"https://images.hytiva.com/Hytiva-Logo.png?mw1200\",\"caption\":\"Hytiva: Cannabis on Demand\u00ae Logo\"},\"sameAs\":[\"https://x.com/hytiva\",\"https://www.linkedin.com/company/hytiva\"]},{\"@type\":\"WebPage\",\"name\":\"Explore Hytiva's Cannabis Strain Database\",\"url\":\"https://www.hytiva.com/strains/exp",
+    "state_hints": [],
+    "title": "Explore Hytiva's Cannabis Strain Database"
+  },
+  "https://www.hytiva.com/strains/hybrid?page=2": {
+    "ok": true,
+    "bytes": 47742,
+    "strain_links": 25,
+    "sl_sample": [
+      "/strains/hybrid/apples-and-bananas",
+      "/strains/hybrid/birthday-cake",
+      "/strains/hybrid/black-ice",
+      "/strains/hybrid/blue-dream",
+      "/strains/hybrid/blueberry-muffin",
+      "/strains/hybrid/donkey-butter",
+      "/strains/hybrid/gelato-33",
+      "/strains/hybrid/georgia-pie"
+    ],
+    "locs": 0,
+    "loc_sample": [],
+    "page_hrefs": [
+      "/strains/hybrid?page=3"
+    ],
+    "ld_count": 1,
+    "ld_preview": "{\"@context\":\"https://schema.org\",\"@graph\":[{\"@type\":\"Organization\",\"name\":\"Hytiva: Cannabis on Demand\u00ae\",\"url\":\"https://www.hytiva.com\",\"@id\":\"https://www.hytiva.com#organization\",\"logo\":{\"@type\":\"ImageObject\",\"url\":\"https://images.hytiva.com/Hytiva-Logo.png?mw1200\",\"caption\":\"Hytiva: Cannabis on Demand\u00ae Logo\"},\"sameAs\":[\"https://x.com/hytiva\",\"https://www.linkedin.com/company/hytiva\"]},{\"@type\":\"WebPage\",\"name\":\"Hybrid Cannabis Strains\",\"url\":\"https://www.hytiva.com/strains/hybrid\",\"@id\":\"https:",
+    "state_hints": [],
+    "title": "Hybrid Cannabis Strains"
+  },
+  "https://www.hytiva.com/sitemap.xml": {
+    "ok": false,
+    "error": "HTTP Error 404: Not Found"
+  },
+  "https://www.hytiva.com/sitemap_index.xml": {
+    "ok": false,
+    "error": "HTTP Error 404: Not Found"
+  },
+  "https://www.hytiva.com/strains/hybrid/blue-dream": {
+    "ok": true,
+    "bytes": 39755,
+    "strain_links": 6,
+    "sl_sample": [
+      "/strains/hybrid/blue-dream",
+      "/strains/hybrid/blueberry",
+      "/strains/hybrid/purple-thai",
+      "/strains/indica/afghani",
+      "/strains/sativa/haze",
+      "/strains/sativa/thai"
+    ],
+    "locs": 0,
+    "loc_sample": [],
+    "page_hrefs": [],
+    "ld_count": 1,
+    "ld_preview": "{\"@context\":\"https://schema.org\",\"@graph\":[{\"@type\":\"Organization\",\"name\":\"Hytiva: Cannabis on Demand\u00ae\",\"url\":\"https://www.hytiva.com\",\"@id\":\"https://www.hytiva.com#organization\",\"logo\":{\"@type\":\"ImageObject\",\"url\":\"https://images.hytiva.com/Hytiva-Logo.png?mw1200\",\"caption\":\"Hytiva: Cannabis on Demand\u00ae Logo\"},\"sameAs\":[\"https://x.com/hytiva\",\"https://www.linkedin.com/company/hytiva\"]},{\"@type\":\"Product\",\"name\":\"Blue Dream\",\"url\":\"https://www.hytiva.com//strains/hybrid/blue-dream\",\"description\":",
+    "state_hints": [],
+    "title": "Blue Dream Strain - Hybrid Cannabis Review, 30% THC, 1.0% CBD & 1mg/g Caryophyllene"
+  },
+  "detail_text_preview": "Blue Dream Strain - Hybrid Cannabis Review, 30% THC, 1.0% CBD & 1mg/g Caryophyllene Create A Hytiva Account or Sign In Get access to exclusive deals from your local dispensary. Order Order cannabis at a local dispensary near you! Dispensaries Brands Order Delivery or Pickup Find a local dispensary & product that's right for you. Strains Explore Hytiva's extensive library of cannabis strains. Sativa Strains that offer chilling & relaxing body high Indica Earthy, stimulating & uplifting head high Hybrid Similar effects to both sativa and indica dominant strains. Explore All Strains Find the perfect cannabis strain. Learn The basics of cannabis to make informed choices and feel confident. News Discover the many uses of cannabis in cooking, fitness, culture, health, relationships, and travel. Research Explore a curated collection of clinical studies and scholarly cannabinoid research. Hytiva Technology Suite &reg; A Suite of Services that is tailored to your unique business needs. Dispensary Use all or any combination of the Hytiva Technology Suite &reg; of Services. Hytiva Point Of Sale &reg; Customized software for your team Delivery Specialized delivery services for compliant cannabis Support Contact our support teams Dispensary Solutions Online & In-Store services Online Menus Real time menus Digital Displays In-Store menu displays Branded Mobile Apps Tailored mobile apps for your brand In Store Kiosks Reduce customer wait times Schedule a Demo Contact a Hytiva representative to learn more. Get Started Sign up for the Hytiva Technology Suite &reg; of Services My Account Update your profile & look at your previous orders. Hytiva Racing A force on the pavement, and testament to the relentless pursuit of excellence. Location Sign In Cart 0 Location Cart 0 Menu hybrid Blue Dream Strain Highlights Blueberry x Haze THC 30.263% CBD 1.0% Beta Caryophyllene 1.286mg/g Flavors Earthy Sweet Effects Energetic Creative Hungry Dry Eyes Dry Mouth Nervous Activities Arts &amp; Crafts Eating Going Out Social Events Hytiva's Review on Blue Dream The sativa-dominant hybrid Blue Dream is a favorite strain for both novice and veteran cannabis consumers. Its fragrance consists of a light and sweet blueberry perfume with a woody undertone. When harvest-ready, its buds are light green and often quite sticky with lots of trichomes and bright orange hairs. The THC level of this strain falls at around 15%, just enough for both experienced and first-time users to enjoy the effects of ",
+  "detail_h1": [
+    "Blue Dream"
+  ],
+  "detail_thc": [
+    [
+      "30",
+      ""
+    ],
+    [
+      "30",
+      ""
+    ],
+    [
+      "30",
+      ""
+    ],
+    [
+      "30",
+      ""
+    ],
+    [
+      "",
+      "0"
+    ],
+    [
+      "30",
+      ""
+    ],
+    [
+      "",
+      "3"
+    ],
+    [
+      "",
+      "2"
+    ],
+    [
+      "",
+      "3"
+    ],
+    [
+      "",
+      "3"
+    ],
+    [
+      "",
+      "0"
+    ],
+    [
+      "",
+      "4"
+    ],
+    [
+      "",
+      "7"
+    ],
+    [
+      "",
+      "4"
+    ]
+  ],
+  "detail_cbd": [
+    [
+      "1.0",
+      ""
+    ],
+    [
+      "1.0",
+      ""
+    ],
+    [
+      "1.0",
+      ""
+    ],
+    [
+      "1.0",
+      ""
+    ],
+    [
+      "1.0",
+      ""
+    ],
+    [
+      "",
+      "0"
+    ],
+    [
+      "",
+      "0"
+    ],
+    [
+      "",
+      "1"
+    ],
+    [
+      "",
+      "0"
+    ]
+  ],
+  "detail_terpene": [
+    [
+      "Caryophyllene",
+      "1.286"
+    ]
+  ],
+  "detail_effects": [
+    "energetic",
+    "creative",
+    "hungry",
+    "dryEyes",
+    "dryMouth",
+    "nervous"
+  ],
+  "detail_flavors": [
+    "earthy",
+    "sweet"
+  ],
+  "detail_lineage": [
+    "lineage",
+    "lineage",
+    "lineage",
+    "lineage",
+    "Lineage",
+    "lineage",
+    "lineage",
+    "lineage"
+  ],
+  "https://www.hytiva.com/strains/explore?page=2": {
+    "ok": true,
+    "bytes": 60300,
+    "strain_links": 32,
+    "sl_sample": [
+      "/strains/hybrid/berry-white",
+      "/strains/hybrid/bk-satellite",
+      "/strains/hybrid/cereal-milk",
+      "/strains/hybrid/cherry-fade",
+      "/strains/hybrid/church-og"
+    ]
+  },
+  "https://www.hytiva.com/strains/explore?page=10": {
+    "ok": true,
+    "bytes": 60300,
+    "strain_links": 32,
+    "sl_sample": [
+      "/strains/hybrid/berry-white",
+      "/strains/hybrid/bk-satellite",
+      "/strains/hybrid/cereal-milk",
+      "/strains/hybrid/cherry-fade",
+      "/strains/hybrid/church-og"
+    ]
+  },
+  "https://www.hytiva.com/strains?letter=A": {
+    "ok": true,
+    "bytes": 49273,
+    "strain_links": 25,
+    "sl_sample": [
+      "/strains/hybrid/animal-cookies",
+      "/strains/hybrid/berry-white",
+      "/strains/hybrid/black-diamond",
+      "/strains/hybrid/cereal-milk",
+      "/strains/hybrid/cherry-pie"
+    ]
+  },
+  "https://www.hytiva.com/strains?q=a": {
+    "ok": true,
+    "bytes": 49268,
+    "strain_links": 25,
+    "sl_sample": [
+      "/strains/hybrid/animal-cookies",
+      "/strains/hybrid/berry-white",
+      "/strains/hybrid/black-diamond",
+      "/strains/hybrid/cereal-milk",
+      "/strains/hybrid/cherry-pie"
+    ]
+  },
+  "https://www.hytiva.com/strains?sort=name": {
+    "ok": true,
+    "bytes": 49274,
+    "strain_links": 25,
+    "sl_sample": [
+      "/strains/hybrid/animal-cookies",
+      "/strains/hybrid/berry-white",
+      "/strains/hybrid/black-diamond",
+      "/strains/hybrid/cereal-milk",
+      "/strains/hybrid/cherry-pie"
+    ]
+  },
+  "https://e.hytiva.com/": {
+    "ok": false,
+    "error": "HTTP Error 404: Not Found"
+  }
+}

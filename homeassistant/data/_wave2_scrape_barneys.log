@@ -1,0 +1,64 @@
+  https://www.barneysfarm.com/sitemap-com.xml -> accepted 111
+  sitemap fail https://www.barneysfarm.com/us/sitemap-usa.xml: HTTP 404 for https://www.barneysfarm.com/us/sitemap-usa.xml
+barneys: sitemap total 111 (cached dsc_strains_barneys.sitemap_urls.json)
+barneys: 111 urls queued; resume done=0 dump_items=0 skipped=0
+  ok #1 idx=1/111 name='Acapulco Gold Strain'
+  ok #2 idx=2/111 name='Afghan Hash Plant Auto Strain'
+  ok #3 idx=3/111 name='AK Strain'
+  barneys checkpoint items=20 done=20 skipped=0 this_run=20 rate=0.80/s idx=20/111
+  ok #25 idx=25/111 name='Cookie Casket Strain'
+  barneys checkpoint items=40 done=40 skipped=0 this_run=40 rate=0.75/s idx=40/111
+  ok #50 idx=50/111 name='Laughing Buddha Strain'
+  barneys checkpoint items=60 done=60 skipped=0 this_run=60 rate=0.75/s idx=60/111
+  ok #75 idx=75/111 name='Pineapple Express Auto Strain'
+  barneys checkpoint items=80 done=80 skipped=0 this_run=80 rate=0.76/s idx=80/111
+barneys staging: {
+  "family": "bank_barneys",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_barneys.sqlite3",
+  "count": 80,
+  "bulk": false,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 80,
+    "strain_variant": 80,
+    "chemistry_profile": 0,
+    "grow_trait": 42,
+    "entity_link": 0,
+    "attribute_kv": 1183,
+    "raw_record": 80,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 17,
+    "source_record": 1
+  }
+}
+  ok #100 idx=100/111 name='Tropicana Cookies Auto Strain'
+  barneys checkpoint items=100 done=100 skipped=0 this_run=100 rate=0.76/s idx=100/111
+  barneys checkpoint items=111 done=111 skipped=0 this_run=111 rate=0.77/s idx=111/111
+wrote dsc_strains_barneys.json count=111 skipped=0 errors=0
+barneys staging: {
+  "family": "bank_barneys",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_barneys.sqlite3",
+  "count": 111,
+  "bulk": false,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 111,
+    "strain_variant": 111,
+    "chemistry_profile": 0,
+    "grow_trait": 59,
+    "entity_link": 0,
+    "attribute_kv": 1650,
+    "raw_record": 111,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 17,
+    "source_record": 1
+  }
+}

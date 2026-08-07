@@ -1,0 +1,1 @@
+alive\n\\192.168.86.2\Digital-Documents\Digital Stealth Care\Projects\DSC-HUB\_forum_boot_test.py

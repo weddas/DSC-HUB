@@ -1,0 +1,12 @@
+{
+  "size": 594989056,
+  "strain_canonical": 69535,
+  "strain_variant": 30543,
+  "chemistry_profile": 361459,
+  "grow_trait": 42791,
+  "entity_link": 896796,
+  "source_record": 53,
+  "src_col": "source_id",
+  "ce_chem": 0,
+  "cannlytics_chem": 30000
+}

@@ -112,7 +112,7 @@ $('btnApply').onclick = async ()=>{
   if($('timeLocal').value) body.time_local = $('timeLocal').value;
   try{
     await api('/setup/mode',{method:'POST',body:JSON.stringify(body)});
-    showMsg('Saved. Keep this page open and power Control, then pots.','ok');
+    showMsg('Saved. Keep this page open and power Control, pots, then the ETH01 bridge.','ok');
     refresh();
   }catch(e){ showMsg(String(e),'err'); }
 };

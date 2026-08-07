@@ -1,0 +1,69 @@
+Leafly flat re-enrich from y:\Digital Stealth Care\Projects\DB DUMP
+  staging -> \\192.168.86.2\Digital-Documents\Digital Stealth Care\Projects\DSC-HUB\brain\data\staging\leafly_flat_enrich.sqlite3
+  master  -> \\192.168.86.2\Digital-Documents\Digital Stealth Care\Projects\DSC-HUB\brain\data\dsc_brain.sqlite3
+Applying \\192.168.86.2\Digital-Documents\Digital Stealth Care\Projects\DSC-HUB\brain\data\staging\leafly_flat_enrich.sqlite3 -> \\192.168.86.2\Digital-Documents\Digital Stealth Care\Projects\DSC-HUB\brain\data\dsc_brain.sqlite3
+  master locked (attempt 1/360): database is locked; sleeping.
+  master open on attempt 5
+  … master apply 500
+  … master apply 1000
+  … master apply 1500
+  … master apply 2000
+  … master apply 2500
+  … master apply 3000
+  … master apply 3500
+  … master apply 4000
+  … master apply 4500
+  … master apply 5000
+  … master apply 5500
+  … master apply 6000
+  … master apply 6500
+  … master apply 7000
+  … master apply 7500
+  … master apply 8000
+{
+  "rows_projected": 8482,
+  "master_chem_inserted": 3988,
+  "master_chem_updated": 4494,
+  "master_links_added": 3988,
+  "master_aliases_upserted": 7982,
+  "canonical_touched": 8482,
+  "payload_bytes_master_chem": 20201138,
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\leafly_flat_enrich.sqlite3",
+  "master_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\dsc_brain.sqlite3",
+  "master_attr_kv_score_rows": 0,
+  "master_attr_kv_total": 1075,
+  "master_leafly_chem": 8484,
+  "sample_payload_lens": [
+    [
+      "Durban Biscotti",
+      1734
+    ],
+    [
+      "Gorilla Piss",
+      1509
+    ],
+    [
+      "Fat Kitty",
+      1475
+    ]
+  ],
+  "staging_attr_kv": 0,
+  "staging_raw": 8492,
+  "master_corpus": {
+    "strain_canonical": 70483,
+    "strain_variant": 32348,
+    "chemistry_profile": 368390,
+    "grow_trait": 45829,
+    "entity_link": 903184,
+    "attribute_kv": 1075,
+    "raw_record": 0,
+    "light_fixture": 7,
+    "nutrient_product": 3,
+    "medium_product": 1,
+    "media_asset": 16,
+    "followup_gap": 1,
+    "schema_extension_log": 13,
+    "source_record": 53
+  }
+}
+OK rows=8482 chem +3988/~4494 raw=8492 kv_scores=0 kv_total=1075

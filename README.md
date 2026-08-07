@@ -7,8 +7,8 @@ Home Assistant is the **lab soak / optional shell**; product destination is a
 Notion [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d3407556c)).
 
 **Current release tag:** [**v5.1.0**](https://github.com/weddas/DSC-HUB/releases/tag/v5.1.0)  
-**Live train (in tree):** HA surface **5.1.10** · pots **5.1.8** · Control **5.1.17** · hub **5.1.10** · Sync **5.1.3**  
-(Fleet chip compares major.minor — mixed `5.1.x` stays `ok`.)
+**Live train (in tree):** HA surface **5.2.0** · hub / Control / pots / bridge / Sonoffs **5.2.0** · Sync **5.1.3+**  
+(Fleet chip compares major.minor — mixed `5.2.x` stays `ok`.)
 
 ---
 
@@ -17,13 +17,14 @@ Notion [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d3407556
 - **Hub owns climate** — dehumidifier → humidifier → heater → AC → mat ladder
   with reality gates, failsafe, and min-off (HA never drives those safety rails).
 - **ESP-NOW primary** panel ↔ hub — works when Home Assistant is down.
+- **ETH01 bridge** — SoftAP channel anchor (`DSC-Anchor`) + Sonoff drive without HA (F-010); HA followers stay fallback.
 - **DSC-HUB Pro** dashboard (`/dsc-hub-pro`) — Home, Climate, Learning, tents,
   Root Zone, Tank, Light, Trends, System.
 - **Build a Plant** (`/dsc-build-plant/build`) — separate composition dashboard
   (strain · soil % · nutrients · light · climate Want → roster / pot).
 - **Learn Phase A + B** — Phase A EMA efficiencies & ETA; Phase B (opt-in)
   rate-limited writes to ladder **wait bases** only.
-- **Fleet version chip** — at-a-glance `ok` / `warn` / `error` vs expected **5.1.6** train.
+- **Fleet version chip** — at-a-glance `ok` / `warn` / `error` vs expected **5.2.0** train.
 - **Push → all Sync HAOS** — packages, Pro dashboard, www, ESPHome stubs;
   **device firmware stays manual Install** (never auto-flash).
 
@@ -31,7 +32,10 @@ Notion [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d3407556
 flowchart LR
   Hub[Hub_ladder] <-->|ESPNOW| Panel[DSC_CONTROL]
   Pots[Pots] -->|ESPNOW_soil| Hub
-  Hub --> Followers[Sonoff_followers]
+  Hub -->|ESPNOW_0xD8| Bridge[DSC_BRIDGE_ETH01]
+  Bridge --> Sonoffs[Sonoff_relays]
+  Hub --> Followers[HA_followers_fallback]
+  Followers --> Sonoffs
   Hub --> LearnA[PhaseA_EMA] --> LearnB[PhaseB_waits]
   Sync[dsc_hub_sync] --> Pro[dsc-hub-pro]
 ```
@@ -62,19 +66,20 @@ packages / dashboard / www / ESPHome stubs land in `/config`.
 
 ---
 
-## Fleet at 5.1.x (live train)
+## Fleet at 5.2.x (live train)
 
 | Device | Config | Version |
 |---|---|---|
-| Hub | `dsc-hub.yaml` → `dsc-hub-v4_0.yaml` + fleet-heal | **5.1.8** |
-| Panel | `dsc-control.yaml` → `dsc-control-common.yaml` | **5.1.16** |
-| Pots 1–4 | `dsc-pot{N}.yaml` → `dsc-pot-common.yaml` | **5.1.7** |
-| Sonoffs | heater / heatmat / humidifier / de-humidifier | **5.1.x** |
+| Hub | `dsc-hub.yaml` → `dsc-hub-v4_0.yaml` + fleet-heal | **5.2.0** |
+| Panel | `dsc-control.yaml` → `dsc-control-common.yaml` | **5.2.0** |
+| Pots 1–4 | `dsc-pot{N}.yaml` → `dsc-pot-common.yaml` | **5.2.0** |
+| Bridge | `dsc-bridge.yaml` → bridge-common (WT32-ETH01) | **5.2.0** |
+| Sonoffs | heater / heatmat / humidifier / de-humidifier | **5.2.0** |
 | Kits | `*-kit.yaml`, `*-wifi-kit.yaml`, fleet-setup kits | same bodies as device train |
-| Sync add-on | `dsc-hub-sync/` | **5.1.3** |
-| HA surface | `sensor.dsc_ha_surface_version` | **5.1.8** |
+| Sync add-on | `dsc-hub-sync/` | **5.1.3+** |
+| HA surface | `sensor.dsc_ha_surface_version` | **5.2.0** |
 
-Flash order: hub → panel → pots → Sonoffs. Living backlog: [`docs/FOLLOWUPS.md`](docs/FOLLOWUPS.md).
+Flash order: hub → panel → pots → **bridge** → Sonoffs. Living backlog: [`docs/FOLLOWUPS.md`](docs/FOLLOWUPS.md).
 
 ---
 

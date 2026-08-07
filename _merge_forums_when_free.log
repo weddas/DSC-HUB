@@ -1,0 +1,5 @@
+START families=['forum_420mag', 'forum_phenohunter', 'forum_mjpassion']
+master=\\192.168.86.2\Digital-Documents\Digital Stealth Care\Projects\DSC-HUB\brain\data\dsc_brain.sqlite3
+MASTER_OPEN ok attempt=1
+BEFORE {"strain_canonical": 57167, "strain_variant": 17718, "chemistry_profile": 330346, "grow_trait": 18287, "entity_link": 865683, "attribute_kv": 1075, "raw_record": 0, "light_fixture": 7, "nutrient_product": 3, "medium_product": 1, "media_asset": 16, "followup_gap": 1, "schema_extension_log": 13, "source_record": 45}
+MERGE forum_420mag path=\\192.168.86.2\Digital-Documents\Digital Stealth Care\Projects\DSC-HUB\brain\data\staging\forum_420mag.sqlite3 exists=True
