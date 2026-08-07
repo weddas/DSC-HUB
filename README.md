@@ -44,6 +44,7 @@ flowchart LR
 |---|---|
 | [`SETUP.md`](SETUP.md) | **Product unbox** — SoftAP kit without HA |
 | [`docs/DSC-BRAIN.md`](docs/DSC-BRAIN.md) | Pi offline brain + webserver product shape |
+| [`docs/qa/DSC-BRAIN-PHASE-B.md`](docs/qa/DSC-BRAIN-PHASE-B.md) | Phase B brain CLI / API ops + pitfalls |
 | [`docs/HA-SCAFFOLD.md`](docs/HA-SCAFFOLD.md) | HA = lab soak; promote-don't-deepen |
 | [`brain/README.md`](brain/README.md) | Catalog SQLite / Want / API stub (Phase B) |
 | [`INSTALL.md`](INSTALL.md) | Lab HA + fleet bring-up |
