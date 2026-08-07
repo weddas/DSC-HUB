@@ -99,8 +99,11 @@ shows the shared calculator and CANNA stage packs, and Lighting exposes the
 selected fixture plus PPFD map source.
 
 Ops runbook: [`../docs/qa/LIVE-UI-BUILD-A-PLANT.md`](../docs/qa/LIVE-UI-BUILD-A-PLANT.md).
+Data pipeline / assign bridge / chem·PPFD indexes:
+[`../docs/qa/BUILD-A-PLANT-DATA-PIPELINE.md`](../docs/qa/BUILD-A-PLANT-DATA-PIPELINE.md).
 Requires Sync add-on **5.1.4+** (or ha-sync) for dashboard YAML + catalog JSON;
-HACS alone registers the custom element.
+HACS alone registers the custom element. HA surface **5.1.11** marks
+`build_plant_inclusion: N-085`.
 
 ## HACS cards
 

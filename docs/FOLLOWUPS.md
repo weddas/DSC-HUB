@@ -1375,9 +1375,9 @@ Memo: [`docs/DSC-PRODUCT-RESEARCH.md`](DSC-PRODUCT-RESEARCH.md).
 
 | ID | Item | Notes |
 |---|---|---|
-| N-085 | Build a Plant Full Inclusion | Surface **5.1.11**; assign bridge + Pro cross-links + chem/PPFD selectable; POT3 browser evidence [`docs/qa/N-085-POT3-BROWSER.md`](qa/N-085-POT3-BROWSER.md); Sync add-on image **5.1.4** on HA, **stopped / boot=manual** until push |
+| N-085 | Build a Plant Full Inclusion | Surface **5.1.11**; assign bridge + Pro cross-links + chem/PPFD selectable; POT3 browser evidence [`docs/qa/N-085-POT3-BROWSER.md`](qa/N-085-POT3-BROWSER.md); pipeline ops [`docs/qa/BUILD-A-PLANT-DATA-PIPELINE.md`](qa/BUILD-A-PLANT-DATA-PIPELINE.md); Sync add-on image **5.1.4** |
 
 ### deferred (unchanged)
 - plant_id nursery DB; Dash merge; pumps N-012; irrigation N-013; PPFD OCR; N-061 public dumps
 - Hub/ESP offline during soak: `text.dsc_pot3_plant_name` + `number.dsc_hub_target_*` writes not live-proven
-- Re-enable Sync only after N-085 commit/push (or Sync will overwrite live packages from old master)
+- Sync resume soak: one controlled Sync start against post-N-085 `master`, confirm surface stays **5.1.11** + JSON-string catalog attrs before boot=auto
