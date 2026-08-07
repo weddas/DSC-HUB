@@ -11,6 +11,7 @@ also syncs `esphome/components/dsc_fleet_setup` since 5.1.2)
 | Repo path | HA destination |
 |---|---|
 | `homeassistant/packages/dsc_v4_*.yaml` | `/config/packages/` |
+| `homeassistant/custom_components/dsc_hub/` | `/config/custom_components/dsc_hub/` (React panel; strips `frontend/node_modules`) |
 | `homeassistant/dashboards/dsc-hub-v4-dashboard.yaml` | `/config/dashboards/` |
 | `homeassistant/dashboards/dsc-build-plant-dashboard.yaml` | `/config/dashboards/` |
 | `homeassistant/dashboards/modules/view_*.yaml` | `/config/dashboards/modules/` |
@@ -49,11 +50,17 @@ YAML dashboards refresh on navigation (`lovelace.reload` is 400 on current Core)
 ## One-time HA setup
 
 1. Install / Update add-on **5.1.4**, start, wait for first sync.
-2. Merge configuration snippet (packages + YAML dashboards `dsc-hub-pro` **and**
-   `dsc-build-plant`).
-3. Restart Home Assistant once.
-4. Remove duplicate DSC automation ids from UI if present.
-5. Set `input_text.dsc_notify_service` to your notify entity.
+2. Merge configuration snippet (`dsc_hub:` + packages + YAML dashboards
+   `dsc-hub-pro` **and** `dsc-build-plant`; Lovelace sidebar hidden for Pro).
+3. Restart Home Assistant once (required for the React panel to register).
+4. Confirm sidebar **DSC-HUB** opens `/dsc-hub` — ops:
+   [LIVE-UI-CUSTOM-PANEL.md](https://github.com/weddas/DSC-HUB/blob/master/docs/qa/LIVE-UI-CUSTOM-PANEL.md).
+5. Remove duplicate DSC automation ids from UI if present.
+6. Set `input_text.dsc_notify_service` to your notify entity.
+
+**Panel note:** Sync copies the built `www/dsc-hub-panel.js` + assets. Editing
+`frontend/src` needs a local `npm run build` before push; Core restart is still
+required after first enabling `dsc_hub:` or changing Python registration.
 
 ## Options
 

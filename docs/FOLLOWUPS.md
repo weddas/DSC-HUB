@@ -1443,7 +1443,7 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 
 | ID | Item | Notes |
 |---|---|---|
-| N-087 | Research corpus + HA projection | SQLite science↔seed schema (`corpus_schema` / `corpus.py`); Wave A OpenTHC (~12.8k) + Seed City CC0 (~8.9k) + Wikileaf grow_data (~2.8k) + Cannlytics MD labs (30k rows); Wave B bank scrapers (ILGM/Herbies/RQS + discovery list); Wave C PPFD download/crop → `media_asset` + [`docs/qa/CATALOG-GAPS.md`](qa/CATALOG-GAPS.md); ingest + link report + community export stub; HA indexes from SQLite projection; surface **5.1.13**; runbook [`docs/qa/CATALOG-RESEARCH-CORPUS.md`](qa/CATALOG-RESEARCH-CORPUS.md) |
+| N-087 | Research corpus + HA projection | SQLite science↔seed schema (`corpus_schema` / `corpus.py`); Wave A OpenTHC (~12.8k) + Seed City CC0 (~8.9k) + Wikileaf grow_data (~2.8k) + Cannlytics MD labs (30k rows); Wave B bank scrapers (ILGM/Herbies/RQS + discovery list); Wave C PPFD download/crop → `media_asset` + [`docs/qa/CATALOG-GAPS.md`](qa/CATALOG-GAPS.md); ingest + link report + community export stub; HA indexes from SQLite projection; surface **5.1.13** at land (panel train later **6.0.0**); runbook [`docs/qa/CATALOG-RESEARCH-CORPUS.md`](qa/CATALOG-RESEARCH-CORPUS.md) |
 
 ### deferred / honesty
 
@@ -1457,3 +1457,22 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 - `build_catalog_search_indexes` SQLite projection is N+1 per canonical (slow on network DB) — batch JOIN refactor later
 - HA strain projection capped at 2500 of ~20k canonical; raise cap or page when UI needs it
 - Nutrient/medium brand dumps still thin (pack seeds only this pass); Wave D brand crawl next
+
+---
+
+## 2026-08-08 — DSC-HUB React custom panel (surface 6.0.0)
+
+### shipped
+
+| ID | Item | Notes |
+|---|---|---|
+| Panel 6.0.0 | React custom panel | `custom_components/dsc_hub` — WashData-style `/dsc-hub` sidebar panel; HashRouter Ops/Plant/Advanced/System; `LegacyCardHost` for Dash/Build/Catalog/map; Sync + `ha-sync.sh` deploy; surface **6.0.0**; expected release initial **5.2.0**; runbook [`docs/qa/LIVE-UI-CUSTOM-PANEL.md`](qa/LIVE-UI-CUSTOM-PANEL.md) |
+
+### deferred / honesty
+
+- Strains / Nutrient science panel pages are scaffolds (helpers still HA); full roster UI remains brain / N-095 track
+- Advanced History is honesty stub — HA Recorder remains lab history store
+- Lovelace `dsc-hub-pro` kept for soak; remove sidebar dual-entry risk by keeping `show_in_sidebar: false`
+- Remove `dsc-build-plant` lovelace entry entirely after redirect soak
+- Panel rebuild is developer-local (`npm run build`); Sync does not compile frontend
+- Do not treat HA `input_*` as durable Want SoT — see [`docs/HA-SCAFFOLD.md`](HA-SCAFFOLD.md)

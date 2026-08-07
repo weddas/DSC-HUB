@@ -6,7 +6,8 @@ Canonical HA surface for firmware [`firmware/v4/`](../firmware/v4/).
 
 | Path | Role |
 |---|---|
-| `dashboards/dsc-hub-v4-dashboard.yaml` | Lovelace UX **v5.1.3** (`dsc-hub-pro`). In-service kit toggles; learn **Activity**; Root Zone Pots+Mat. |
+| `custom_components/dsc_hub/` | **React product panel** (surface **6.0.0**) — sidebar `/dsc-hub`; Vite app under `frontend/`; built `www/dsc-hub-panel.js` |
+| `dashboards/dsc-hub-v4-dashboard.yaml` | Lovelace **fallback** (`dsc-hub-pro`, sidebar hidden). In-service kit toggles; learn **Activity**; Root Zone Pots+Mat. |
 | `dashboards/dsc-build-plant-dashboard.yaml` | **Build a Plant** separate dashboard (`dsc-build-plant`) — composition card only |
 | `packages/dsc_v4_core_helpers.yaml` | Hub link, fan %, runtimes, **in-service** + capacity-offline + vent-conflict / ineffective cues |
 | `packages/dsc_v4_strain_catalog.yaml` | Strain catalog, sprout age, Want/Need/Got, peer offsets, Apply expected stage |
@@ -28,7 +29,7 @@ Canonical HA surface for firmware [`firmware/v4/`](../firmware/v4/).
 | `packages/dsc_v4_pots_alerts.yaml` | Per-pot moisture/pH/temp/EC/N alert binaries |
 | `packages/dsc_v4_alert_count.yaml` | `sensor.dsc_active_alert_count` for Home chip |
 | `packages/dsc_v4_automations.yaml` | Demand followers, climate/safety alerts, grow-log scribe |
-| `configuration.snippet.yaml` | Paste-once: packages include + YAML-mode `dsc-hub-pro` + `dsc-build-plant` dashboards |
+| `configuration.snippet.yaml` | Paste-once: `dsc_hub:` + packages include + YAML-mode `dsc-hub-pro` (sidebar off) + `dsc-build-plant` |
 | `automations.yaml` | Deprecated stub — points at the package above |
 | `www/dsc-build-plant-card.js` | Build a Plant Lovelace card → `/config/www/` (+ resource) |
 | `www/dsc-catalog/` | Slim search indexes for Build a Plant (`/local/dsc-catalog/…`) |
@@ -56,18 +57,20 @@ Quick copy list:
 
 | This folder | HA `/config/` |
 |---|---|
+| `custom_components/dsc_hub/` | `custom_components/dsc_hub/` (panel JS + assets; rebuild frontend before shipping source edits) |
 | `packages/dsc_v4_*.yaml` | `packages/` (helpers, learn, automations) |
-| `dashboards/dsc-hub-v4-dashboard.yaml` | `dashboards/` (YAML-mode URL **`dsc-hub-pro`**) |
+| `dashboards/dsc-hub-v4-dashboard.yaml` | `dashboards/` (YAML-mode URL **`dsc-hub-pro`**, sidebar hidden) |
 | `esphome/dsc-*.yaml` | `esphome/` |
 | `www/dsc-*-map*` | `www/` + `/local` or HACS `DSC-HUB.js` resources |
 
 Merge [`configuration.snippet.yaml`](configuration.snippet.yaml) into HA `configuration.yaml`
-(packages + YAML Lovelace). Filenames under `packages/` must use underscores.
-Restart HA after the first copy / `configuration.yaml` change.
+(`dsc_hub:` + packages + YAML Lovelace). Filenames under `packages/` must use underscores.
+Restart HA after the first copy / `configuration.yaml` change so the panel registers.
 
 **Ongoing:** install the **DSC-HUB Sync** add-on ([`../scripts/ADDON.md`](../scripts/ADDON.md))
-so pushes to `master` update packages, dashboard, and www automatically.
+so pushes to `master` update packages, custom panel, dashboard, and www automatically.
 Firmware Install stays manual — see [`../RELEASE.md`](../RELEASE.md).
+Panel ops: [`../docs/qa/LIVE-UI-CUSTOM-PANEL.md`](../docs/qa/LIVE-UI-CUSTOM-PANEL.md).
 
 ## Fan entity_ids
 
@@ -385,10 +388,10 @@ not humidifier lock — entity id kept for compatibility.
 
 | Piece | Version |
 |---|---|
-| Hub / pots / Sonoffs / kits | **`5.1.10`** hub roam-scan off; Control **5.1.17**; pots **5.1.8** |
-| Panel (DSC-CONTROL) | **`5.1.x`** lean-cut patch train |
-| HA surface (packages + dashboard) | **`5.1.8`** |
-| Dashboard | DSC-HUB Pro (4-col, browser_mod popups) |
+| Hub / pots / Sonoffs / kits | Hub **`5.1.11`** Full Auto default + roam-scan off; Control **5.1.17**; pots **5.1.8** |
+| Panel (DSC-CONTROL) | **`5.1.17`** lean-cut patch train |
+| HA surface (packages + custom panel) | **`6.0.0`** (`/dsc-hub` React panel; Lovelace `dsc-hub-pro` fallback) |
+| Dashboard | Custom panel Ops/Plant/Advanced/System; YAML Pro fallback |
 | `espnow_cmd_tag` | `54727` (`0xD5C7`) on hub **and** panel |
 
 Fleet drift chip (`sensor.dsc_fleet_version_status`) compares the

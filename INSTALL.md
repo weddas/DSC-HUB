@@ -28,8 +28,9 @@ Repo: https://github.com/weddas/DSC-HUB · tag **`v5.1.0`** · branch **`master`
 | `firmware/v4/secrets.yaml.template` | `/config/esphome/secrets.yaml` (fill in; never commit) |
 
 Merge [`homeassistant/configuration.snippet.yaml`](homeassistant/configuration.snippet.yaml)
-into `configuration.yaml` (packages + YAML dashboards **`dsc-hub-pro`** and
-**`dsc-build-plant`**).
+into `configuration.yaml` (`dsc_hub:` React panel + packages + YAML dashboards
+**`dsc-hub-pro`** and **`dsc-build-plant`**). Sidebar product UI is **`/dsc-hub`** —
+see [`docs/qa/LIVE-UI-CUSTOM-PANEL.md`](docs/qa/LIVE-UI-CUSTOM-PANEL.md).
 
 ### Add-on (recommended)
 
