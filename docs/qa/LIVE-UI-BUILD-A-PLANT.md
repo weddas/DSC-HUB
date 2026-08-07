@@ -72,17 +72,19 @@ refuses `< 500000` (F-013).
 | Roster | 8 slots: nickname / strain / blend / recipe / sprout / pot / status |
 | Climate apply target | `input_select.dsc_build_climate_pot` (`Fleet` \| `1`–`4`) |
 | Assign pot | `input_select.dsc_build_assign_pot` (`none` \| `1`–`4`) |
-| Mix glue | reads nutrient catalog slots → `sensor.dsc_mix_calculator` |
+| Mix glue | reads nutrient catalog slots → `sensor.dsc_mix_calculator` (`short_stock_any`) |
 | Want sensors | `sensor.dsc_pot{N}_want_temp_*` / `want_rh_*` — **Custom** slots only when ≠0 |
+| Assign Custom | `input_select.dsc_build_custom_slot` + `input_text.dsc_custom_strain_*_name` |
 
 **Scripts**
 
 | Script | Behavior |
 |---|---|
 | `dsc_build_plant_commit` | Next empty roster slot ← builder fields; status `active` if pot assigned else `stock` |
-| `dsc_plant_assign_to_pot` | Strain + sprout → pot HA helpers (+ pot entities when online, `continue_on_error`) |
+| `dsc_plant_assign_to_pot` | Free-text → direct Generic/Custom **or** fill Custom K; confirm **`input_select` only**; ESP entities `continue_on_error` |
+| `dsc_build_plant_commit_and_assign` | Commit then assign when Assign pot ∈ 1–4 |
 | `dsc_apply_climate_want` | Midpoint temp + RH min/max → hub numbers when Want ≠0; notify skip otherwise |
-| `dsc_accept_mix` | Existing nutrient Accept (burns stock; **no pumps**) |
+| `dsc_accept_mix` | Burns covered in-inventory lines; **skips short-stock lines** with notify (**no pumps**) |
 
 ### Search indexes
 
@@ -91,13 +93,15 @@ Built by `python scripts/build_catalog_search_indexes.py` →
 
 | File | Cap (verified) | Contents |
 |---|---|---|
-| `dsc_strains_search_index.json` | **2500** | Slim name / type / breeder |
+| `dsc_strains_search_index.json` | **2500** | Name / type / breeder + `has_chemistry` / `thc_range` / `cbd_range` / `top_terpenes` (≤3) |
 | `dsc_nutrients_search_index.json` | **1500** | Name / brand / optional dose |
-| `dsc_mediums_search_index.json` | **800** (777 live) | Substrate names |
-| `dsc_lights_search_index.json` | **800** | Fixture names + stated W when present |
+| `dsc_mediums_search_index.json` | **800** | Substrate names |
+| `dsc_lights_search_index.json` | **800** | Fixture names + stated W/PPF/PPE + `ppfd_url` / `spectrum_url` when present |
 
 Card fetches `${CATALOG_BASE}/${file}` with `CATALOG_BASE = "/local/dsc-catalog"`.
-Missing indexes → empty typeahead (no hard fail).
+Missing indexes → empty typeahead (no hard fail). Chemistry/PPFD chips need those
+fields on the selected hit — rebuild via the
+[`BUILD-A-PLANT-DATA-PIPELINE.md`](BUILD-A-PLANT-DATA-PIPELINE.md) toolchain.
 
 ### Delivery paths
 
@@ -142,16 +146,18 @@ could demote a HACS-complete live bundle. Rebuild Sync **5.1.4+** after merge.
 ## N-085 POT3 browser suite
 
 Run this suite against **POT3** because it exercises the known OOS/probe-fault
-surface while proving plant identity remains independent of sensor health:
+surface while proving plant identity remains independent of sensor health.
+Recorded evidence: [`N-085-POT3-BROWSER.md`](N-085-POT3-BROWSER.md).
 
-1. Open `/dsc-build-plant/build`; select a catalog strain, nickname, blend,
-   recipe, and Assign pot **3**.
-2. Commit + assign. Confirm the assign bridge writes
-   `text.dsc_pot3_plant_name`, the canonical `select.dsc_pot3_strain` /
-   `datetime.dsc_pot3_sprout_date`, and secondary underscore entities when
-   available.
-3. Open Pro Home and Root Zone. Confirm the POT3 chip/name and matching roster
-   nickname/blend/recipe render even while POT3 telemetry remains OOS.
+1. Open `/dsc-build-plant/build`; select a catalog strain with chemistry, a
+   light with `ppfd_url`, nickname, blend, recipe, and Assign pot **3**.
+2. Commit + assign. Confirm **HA SoT**:
+   `input_select.dsc_pot3_strain` = `Custom K` (or direct option), matching
+   `input_text.dsc_custom_*_name`, roster slot `active` / `pot: 3`.
+   ESP `text.dsc_pot3_plant_name` / `select.dsc_pot3_strain` are best-effort —
+   they may stay `unavailable` while the pot is offline (not an assign fail).
+3. Open Pro Home and Root Zone. Confirm roster nickname/blend/recipe context
+   even while POT3 telemetry remains OOS.
 4. Return to Build a Plant and verify the roster slot is active with `pot: 3`.
 5. Run Accept with one deliberately understocked enabled line. Confirm a
    **Mix short stock** notification, that line is unchanged, and covered lines
@@ -167,12 +173,17 @@ a free Custom slot; never accept a silent partial assignment.
 | Symptom | Likely cause | Fix |
 |---|---|---|
 | Custom element missing | Old Sync ≤5.1.3 www concat, or stale HACS | Rebuild Sync 5.1.4+ **or** HACS Redownload + hard-refresh |
-| Typeahead empty | `/local/dsc-catalog/` missing | Sync/ha-sync catalog copy, or manual `www/dsc-catalog/*.json` |
+| Typeahead empty | `/local/dsc-catalog/` missing **or** stale pre-`afda0ac` card | 404 → stage catalogs; 200 → redeploy card (`INDEX_KEY`) + Ctrl+F5 |
+| Chemistry / PPFD chip empty | Index lacks chem/`ppfd_url`, or stale catalogs | Rebuild pipeline; hard-refresh |
 | Dashboard 404 | Snippet not merged / YAML not on HA | Merge snippet; ensure `dashboards/dsc-build-plant-dashboard.yaml` |
 | Commit does nothing | All 8 roster slots occupied | Clear a slot status back to `empty` |
 | Climate Apply “skipped” | Custom Want temp/RH still 0 | Set Custom slot climate Want, or leave alone (expected) |
 | Assign silent | Assign pot = `none` or empty strain | Pick pot 1–4 + strain name |
-| Strain not in picker after assign | Name not in pot `input_select` options | Use catalog picker seed / Custom slot on Pro Strains view |
+| Assign failed / Custom full | All five Custom slots occupied | Clear a Custom name or pick `dsc_build_custom_slot` |
+| Strain not in picker after assign | Name not in pot `input_select` options | Expected for free-text — bridge fills Custom K |
+| `input_text` domain down | Light URL helper `max > 255` | Cap helpers at 255; restart Core |
+| Template sensor rejected | Nested `want_bands` / `fixtures` maps | Re-promote as JSON strings (HA 2026.8+) |
+| Surface dropped to 5.1.10 | Sync boot=auto pulled pre-N-085 `ref` | Point Sync at post-N-085 master; one controlled start |
 | Bundle “too small” refused | Staging stub &lt; 500 KB | F-013 guard — check Sync log; fix concat inputs |
 
 ## Regenerate indexes / package
@@ -192,8 +203,9 @@ python scripts/build_catalog_search_indexes.py
 
 ## Related
 
-- FOLLOWUPS **N-083** / **N-084** — [`docs/FOLLOWUPS.md`](../FOLLOWUPS.md)
+- FOLLOWUPS **N-083** / **N-084** / **N-085** — [`docs/FOLLOWUPS.md`](../FOLLOWUPS.md)
 - N-085 data pipeline, assign bridge, and MVP gate — [`BUILD-A-PLANT-DATA-PIPELINE.md`](BUILD-A-PLANT-DATA-PIPELINE.md)
+- N-085 POT3 browser evidence — [`N-085-POT3-BROWSER.md`](N-085-POT3-BROWSER.md)
 - HA layout — [`homeassistant/README.md`](../../homeassistant/README.md)
 - HACS — [`scripts/HACS-FRONTEND.md`](../../scripts/HACS-FRONTEND.md)
 - Sync — [`dsc-hub-sync/DOCS.md`](../../dsc-hub-sync/DOCS.md) · [`scripts/ADDON.md`](../../scripts/ADDON.md)

@@ -3,7 +3,7 @@
 **Date:** 2026-08-07  
 **HA:** `192.168.86.3` · surface **5.1.11** · Core **2026.8.0**  
 **Test plant:** POT3  
-**Sync add-on:** **5.1.4** installed, **stopped**, **boot=manual** (do not auto-start until N-085 is on `master` or Sync will overwrite live packages)
+**Sync add-on:** **5.1.4** installed; during the pass it was **stopped / boot=manual** so Sync would not pull pre-N-085 `master`. **N-085 is now on `master` (`1e5fc65`)** — Sync may be started once against that `ref`; confirm surface stays **5.1.11** with JSON-string `fixtures` / `want_bands` before returning boot=auto.
 
 ## Blockers found and fixed mid-pass
 
@@ -45,4 +45,12 @@ Captured via browser automation into Cursor temp screenshots (operator can archi
 
 ## Ops note
 
-Keep Sync **stopped / manual** until this tree is committed and pushed to the Sync `ref`, then start Sync once and confirm surface stays **5.1.11** with JSON `fixtures`/`want_bands`.
+N-085 landed on `master` as `1e5fc65`. Safe Sync resume:
+
+1. Confirm Sync add-on image **5.1.4+** and `ref` points at post-N-085 `master`
+2. One controlled start (or Keep boot=manual until that soak passes)
+3. Assert `sensor.dsc_ha_surface_version` = **5.1.11**, attribute `build_plant_inclusion: N-085`
+4. Assert light/strain catalog template sensors still load (JSON-string attrs)
+5. Only then consider boot=auto
+
+Developer rebuild path: [`BUILD-A-PLANT-DATA-PIPELINE.md`](BUILD-A-PLANT-DATA-PIPELINE.md).
