@@ -14,4 +14,4 @@ views:
     cards:
       - type: custom:dsc-build-plant-card
         title: Build a Plant
-        subtitle: Compose strain · medium · nutrition · light · climate — then commit to inventory.
+        subtitle: Compose strain / medium / nutrition / light / climate - then commit to inventory.

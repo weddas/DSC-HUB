@@ -1,7 +1,7 @@
 /**
- * DSC-HUB neon isometric system map ÔÇö Lovelace custom card.
+ * DSC-HUB neon isometric system map — Lovelace custom card.
  *
- * HACS Dashboard (preferred): install custom repo weddas/DSC-HUB ÔåÆ resource
+ * HACS Dashboard (preferred): install custom repo weddas/DSC-HUB → resource
  *   /hacsfiles/DSC-HUB/DSC-HUB.js  (SVG beside it in the same folder)
  * Manual /local fallback:
  *   /local/dsc-system-map-card.js + /local/dsc-system-map.svg
@@ -286,13 +286,13 @@
   window.customCards.push({
     type: CARD_TYPE,
     name: "DSC System Map",
-    description: "Neon isometric DSC-HUB map ÔÇö tents, fans, light, pots, appliances (live).",
+    description: "Neon isometric DSC-HUB map — tents, fans, light, pots, appliances (live).",
     preview: true,
   });
 })();
 
 /**
- * DSC-HUB airflow status ÔÇö GUI-first isometric tent scene.
+ * DSC-HUB airflow status — GUI-first isometric tent scene.
  *
  * type: custom:dsc-airflow-map-card
  * Editor: custom:dsc-airflow-map-card-editor (getConfigElement)
@@ -498,8 +498,8 @@
     if (typeof bri === "number") return Math.max(0, Math.min(1, bri / 255));
     return s.state === "on" ? 1 : 0;
   };
-  const fmtTemp = (t) => (Number.isFinite(t) ? `${t.toFixed(1)}┬░C` : "ÔÇö");
-  const fmtRh = (h) => (Number.isFinite(h) ? `${Math.round(h)}%` : "ÔÇö");
+  const fmtTemp = (t) => (Number.isFinite(t) ? `${t.toFixed(1)}°C` : "—");
+  const fmtRh = (h) => (Number.isFinite(h) ? `${Math.round(h)}%` : "—");
   const climatePair = (t, h) => `${fmtTemp(t)} ${fmtRh(h)}`;
   const flowFrac = (cfm, max) => {
     if (!Number.isFinite(cfm) || cfm <= FLOW_EPS) return 0;
@@ -665,7 +665,7 @@
         <text x="${t.x + t.w / 2}" y="${t.y + 28}" text-anchor="middle" class="af-tent-label">${esc(t.label || t.id)}</text>
         <foreignObject x="${t.x + 8}" y="${t.y + 36}" width="${Math.max(40, t.w - 16)}" height="54">
           <div xmlns="http://www.w3.org/1999/xhtml" class="af-hud">
-            <div class="af-hud-main">${esc(L.climate || "ÔÇö")}</div>
+            <div class="af-hud-main">${esc(L.climate || "—")}</div>
             <div class="af-hud-sub">${esc(L.meta || "")}</div>
             ${L.mark ? `<div class="af-hud-mark">${esc(L.mark)}</div>` : ""}
           </div>
@@ -791,7 +791,7 @@
   <!-- Room floor -->
   <rect x="${floor.x}" y="${floor.y}" width="${floor.w}" height="${floor.h}" rx="10"
     fill="url(#af-room)" stroke="#2a3548" stroke-width="1.5"/>
-  <text x="${floor.x + 12}" y="${floor.y + 18}" class="af-room-label">${esc(room.label || "Room")} ┬À ${esc(room.size || "")}</text>
+  <text x="${floor.x + 12}" y="${floor.y + 18}" class="af-room-label">${esc(room.label || "Room")} · ${esc(room.size || "")}</text>
   <text x="${floor.x + 12}" y="${floor.y + 34}" class="af-room-label">${esc(roomLive.climate || "")}</text>
 
   ${
@@ -941,8 +941,8 @@
         <div class="af-scene" id="af-scene"></div>
         <div class="af-blend">
           <div class="af-blend-label">
-            <span id="blend-left-lbl">Recirc ÔÇö</span>
-            <span id="blend-right-lbl">Out ÔÇö</span>
+            <span id="blend-left-lbl">Recirc —</span>
+            <span id="blend-right-lbl">Out —</span>
           </div>
           <div class="af-blend-track">
             <div class="af-blend-rec" id="blend-rec" style="width:0%"></div>
@@ -980,7 +980,7 @@
         else if (mat) mark = "MAT";
         live.zones[z.id] = {
           climate: climatePair(t, h),
-          meta: meta.join(" ┬À "),
+          meta: meta.join(" · "),
           light,
           mat,
           mark,
@@ -1042,19 +1042,19 @@
       if (left) left.innerHTML = `<strong>Recirc ${recPct}%</strong>`;
       if (right) {
         if (outPct > 0 && dumpPct > 0)
-          right.innerHTML = `<strong>Out ${outPct}% ┬À Dump ${dumpPct}%</strong>`;
+          right.innerHTML = `<strong>Out ${outPct}% · Dump ${dumpPct}%</strong>`;
         else if (dumpPct > 0)
-          right.innerHTML = `<strong>DumpÔåÆRoom ${dumpPct}%</strong>`;
+          right.innerHTML = `<strong>Dump→Room ${dumpPct}%</strong>`;
         else right.innerHTML = `<strong>Out ${outPct}%</strong>`;
       }
 
       const tents = cfg.zones.filter((z) => z.role === "tent").length;
       const hm = this._q("#af-head-meta");
-      if (hm) hm.textContent = `${tents} tent${tents === 1 ? "" : "s"} ┬À ${cfg.ducts.length} routes`;
+      if (hm) hm.textContent = `${tents} tent${tents === 1 ? "" : "s"} · ${cfg.ducts.length} routes`;
       const foot = this._q("#af-foot");
       if (foot) {
         foot.textContent =
-          "Room lung ÔåÆ tent intakes ÔåÆ cascade ÔåÆ exhaust blend. Only Recirc (and into-room dump) stays in the lung; through-wall Out leaves the room.";
+          "Room lung → tent intakes → cascade → exhaust blend. Only Recirc (and into-room dump) stays in the lung; through-wall Out leaves the room.";
       }
     }
   }
@@ -1232,7 +1232,7 @@
         </div>
 
         <details class="afe-adv">
-          <summary>Advanced ÔÇö raw config JSON</summary>
+          <summary>Advanced — raw config JSON</summary>
           <textarea id="afe-json">${esc(JSON.stringify({ title: cfg.title, zones: cfg.zones, ducts: cfg.ducts }, null, 2))}</textarea>
           <div class="afe-actions">
             <button type="button" class="afe-btn ghost" id="afe-apply-json">Apply JSON</button>
@@ -1327,7 +1327,7 @@
               ${(d.components || [])
                 .map(
                   (c, ci) =>
-                    `<span class="afe-comp" data-comp="${idx}:${ci}" title="tap to cycle position / right-click remove">${esc(c.type)} ┬À ${esc(c.at || "mid")}</span>`
+                    `<span class="afe-comp" data-comp="${idx}:${ci}" title="tap to cycle position / right-click remove">${esc(c.type)} · ${esc(c.at || "mid")}</span>`
                 )
                 .join("")}
             </div>
@@ -1617,7 +1617,7 @@
     type: CARD_TYPE,
     name: "DSC Airflow Tent Scene",
     description:
-      "GUI-configurable isometric tent airflow ÔÇö room size, tents, wall ports, fans, carbon filters, exhaust into room or through wall.",
+      "GUI-configurable isometric tent airflow — room size, tents, wall ports, fans, carbon filters, exhaust into room or through wall.",
     preview: true,
     documentationURL: "https://github.com/weddas/DSC-HUB",
   });
@@ -1736,7 +1736,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
 
     // DepthTexture soft-intersection is optional. Prefer it when the FBO is
     // complete; otherwise bloom still runs and particles use view-Z fade.
-    // Never attach DepthTexture on HalfFloat targets (incomplete FBO ÔåÆ black).
+    // Never attach DepthTexture on HalfFloat targets (incomplete FBO → black).
     var sceneTarget = makeTarget(1, 1, 'DSCDashFX.Scene', false);
     sceneTarget.depthBuffer = true;
     sceneTarget.stencilBuffer = false;
@@ -2639,7 +2639,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     return { points: points, material: material, update: update, dispose: dispose };
   }
 
-  /** GPU (or CPU fallback) curl confined to an AABB ÔÇö for in-tent mixing, not room fog. */
+  /** GPU (or CPU fallback) curl confined to an AABB — for in-tent mixing, not room fog. */
   function createConfinedCurlHaze(renderer, opts) {
     opts = opts || {};
     var count = opts.count == null ? 64 : Math.max(8, Math.floor(opts.count));
@@ -3131,7 +3131,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
 })(typeof globalThis !== 'undefined' ? globalThis : this);
 
 /**
- * DSC-HUB ÔÇö The Dash
+ * DSC-HUB — The Dash
  * Full-bleed cinematic ops surface: Three.js tent/duct scene + charts + flow.
  *
  * type: custom:dsc-the-dash-card
@@ -3157,7 +3157,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
   const DSC_DEFAULTS = () => ({
     type: `custom:${CARD_TYPE}`,
     title: "DSC-HUB // ADVANCED CULTIVATION CONTROL",
-    subtitle: "Zonal Cultivation Hub ÔÇö 2-Tent System",
+    subtitle: "Zonal Cultivation Hub — 2-Tent System",
     pots: [
       { id: "pot1", tent: "clone", slot: 0, prefix: "dsc_pot1", in_service: "input_boolean.dsc_pot1_in_service" },
       { id: "pot2", tent: "clone", slot: 1, prefix: "dsc_pot2", in_service: "input_boolean.dsc_pot2_in_service" },
@@ -3233,7 +3233,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     const s = stateOf(hass, id);
     return !s || s.state === "unavailable" || s.state === "unknown";
   };
-  const fmt = (n, digits = 1) => (Number.isFinite(n) ? n.toFixed(digits) : "ÔÇö");
+  const fmt = (n, digits = 1) => (Number.isFinite(n) ? n.toFixed(digits) : "—");
   const fmtHeld = (ms) => {
     const s = Math.max(0, Math.floor((Number(ms) || 0) / 1000));
     if (s < 60) return `${s}s`;
@@ -3264,7 +3264,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     if (Number.isFinite(flaps)) bits.push(`HA flaps 24h ${Math.round(flaps)}`);
     if (rf && rf !== "unavailable" && rf !== "unknown") bits.push(`RF ${rf}`);
     if (evt && evt !== "unavailable" && evt !== "unknown") bits.push(`EVT ${evt}`);
-    return bits.join(" ┬À ");
+    return bits.join(" · ");
   };
 
   const lightLevel = (hass, id) => {
@@ -3513,14 +3513,14 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
   `;
 
   /* ------------------------------------------------------------------ */
-  /* Flow diagram (device ÔåÆ split ÔåÆ exhaust)                             */
+  /* Flow diagram (device → split → exhaust)                             */
   /* ------------------------------------------------------------------ */
 
-  const fmtCfm = (n) => (Number.isFinite(n) ? `${Math.round(n)} CFM` : "ÔÇö CFM");
+  const fmtCfm = (n) => (Number.isFinite(n) ? `${Math.round(n)} CFM` : "— CFM");
 
   const renderFlow = (live) => {
     // Col1 Active gear | Col2 Intake environment (room climate)
-    // Col3 Intake CFM (2x4 + cascade transfer + 4x8 + ╬ú) | Col4 4x8 exhaust split
+    // Col3 Intake CFM (2x4 + cascade transfer + 4x8 + Σ) | Col4 4x8 exhaust split
     const devices = (live.devices || []).filter((d) => d.on && !String(d.id).startsWith("fan_"));
     const gearHtml =
       devices.length === 0
@@ -3543,7 +3543,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     const rPct = Math.round((live.recircShare || 0) * 100);
     const cfmOut = live.cfmOut ?? NaN;
     const cfmRec = live.cfmRecirc ?? NaN;
-    const roomParts = String(live.roomClimate || "ÔÇö ┬À ÔÇö ┬À ÔÇö").split("┬À").map((s) => s.trim());
+    const roomParts = String(live.roomClimate || "— · — · —").split("·").map((s) => s.trim());
 
     return `
       <div class="dash-flow-grid" role="img" aria-label="Intake environment to CFM to exhaust">
@@ -3554,37 +3554,37 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         <div class="dash-flow-col">
           <div class="col-h">Intake environment</div>
           <div class="dash-flow-box env" style="flex:1">
-            <div class="lbl">ROOM ÔåÆ TENTS</div>
-            <div class="val">${esc(roomParts[0] || "ÔÇö")}</div>
-            <div class="val">${esc(roomParts[1] || "ÔÇö")}</div>
-            <div class="val" style="color:#26c6da">${esc(roomParts[2] || "ÔÇö")}</div>
+            <div class="lbl">ROOM → TENTS</div>
+            <div class="val">${esc(roomParts[0] || "—")}</div>
+            <div class="val">${esc(roomParts[1] || "—")}</div>
+            <div class="val" style="color:#26c6da">${esc(roomParts[2] || "—")}</div>
             <div class="sub">shared lung air into intakes</div>
           </div>
         </div>
         <div class="dash-flow-col">
           <div class="col-h">Intake CFM</div>
           <div class="dash-flow-box clone">
-            <div class="lbl">2├ù4 from room</div>
+            <div class="lbl">2×4 from room</div>
             <div class="val">${esc(fmtCfm(cfm2))}</div>
           </div>
-          <div class="dash-flow-arrow">Ôåô transfer (not +)</div>
+          <div class="dash-flow-arrow">↓ transfer (not +)</div>
           <div class="dash-flow-box casc">
-            <div class="lbl">2├ù4 ÔåÆ 4├ù8 cascade</div>
+            <div class="lbl">2×4 → 4×8 cascade</div>
             <div class="val" style="color:#ffcc80;font-size:12px">${esc(fmtCfm(casc))}</div>
-            <div class="sub">same air ┬À neg. pressure</div>
+            <div class="sub">same air · neg. pressure</div>
           </div>
           <div class="dash-flow-box main">
-            <div class="lbl">4├ù8 from room</div>
+            <div class="lbl">4×8 from room</div>
             <div class="val">${esc(fmtCfm(cfm8))}</div>
           </div>
           <div class="dash-flow-box total">
-            <div class="lbl">╬ú into 4├ù8</div>
+            <div class="lbl">Σ into 4×8</div>
             <div class="val" style="font-size:12px">${esc(fmtCfm(throughput))}</div>
-            <div class="sub">2├ù4 + 4├ù8 intakes</div>
+            <div class="sub">2×4 + 4×8 intakes</div>
           </div>
         </div>
         <div class="dash-flow-col">
-          <div class="col-h">4├ù8 exhaust ┬À ${esc(fmtCfm(throughput))}</div>
+          <div class="col-h">4×8 exhaust · ${esc(fmtCfm(throughput))}</div>
           <div class="dash-flow-box out">
             <div class="lbl">DUMP OUTSIDE</div>
             <div class="val">${oPct}%</div>
@@ -3596,19 +3596,19 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
             <div class="sub">${esc(fmtCfm(cfmRec))}</div>
           </div>
           <div class="dash-flow-box total">
-            <div class="lbl">╬ú dump + recirc</div>
+            <div class="lbl">Σ dump + recirc</div>
             <div class="val" style="font-size:12px">${esc(
               fmtCfm(Number.isFinite(cfmOut) && Number.isFinite(cfmRec) ? cfmOut + cfmRec : NaN)
             )}</div>
-            <div class="sub">must equal ╬ú intake</div>
+            <div class="sub">must equal Σ intake</div>
           </div>
         </div>
       </div>
       <p class="dash-flow-caption" style="margin-top:8px">
-        Mass balance: exhaust CFM = ╬ú intake (${esc(fmtCfm(throughput))}) ├ù dump/recirc split (from fan %).
-        Cascade is a transfer of 2├ù4 air ÔÇö do not add it to intake total.
+        Mass balance: exhaust CFM = Σ intake (${esc(fmtCfm(throughput))}) × dump/recirc split (from fan %).
+        Cascade is a transfer of 2×4 air — do not add it to intake total.
         Raw sensor.dsc_cfm_exhaust_* stay nameplate proxies until Learning cal.
-        Heat mat is 2├ù4-only.
+        Heat mat is 2×4-only.
       </p>`;
   };
 
@@ -3750,7 +3750,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     const rim = new THREE.DirectionalLight(0xc9a0ff, 0.42);
     rim.position.set(4, 5, -6);
     scene.add(rim);
-    // Room practicals ÔÇö ceiling wash + warm bounce (HVAC digital-twin cue)
+    // Room practicals — ceiling wash + warm bounce (HVAC digital-twin cue)
     const ceilWash = new THREE.PointLight(0xd8e6f5, 1.35, 14, 1.6);
     ceilWash.position.set(0, 3.85, 0.2);
     scene.add(ceilWash);
@@ -3781,7 +3781,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     floor.position.y = -0.06;
     floor.receiveShadow = true;
     root.add(floor);
-    // Soft floor sheen card ÔÇö reads lit room, not void
+    // Soft floor sheen card — reads lit room, not void
     const floorSheen = new THREE.Mesh(
       new THREE.PlaneGeometry(10.2, 7.2),
       new THREE.MeshBasicMaterial({
@@ -3960,7 +3960,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
           group.add(pole);
         }
       }
-      // Eave / ridge tubes ÔÇö grow-tent frame cue (not just 4 vertical poles)
+      // Eave / ridge tubes — grow-tent frame cue (not just 4 vertical poles)
       const railR = 0.028;
       const addRail = (len, pos, axis) => {
         const rail = new THREE.Mesh(new THREE.CylinderGeometry(railR, railR, len, 10), poleMat);
@@ -4073,7 +4073,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       }
       group.add(shafts);
 
-      // Layered ACH volume stack (multi-slice additive haze ÔÇö not a single flat box)
+      // Layered ACH volume stack (multi-slice additive haze — not a single flat box)
       const achHaze = new THREE.Group();
       const achSlices = [];
       for (let s = 0; s < 3; s++) {
@@ -4115,8 +4115,8 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         0.18
       );
     // Duct ports are independent (no shared Y-stub). Tent anchors:
-    // 2x4 @ (-2.75,0,0.3) ~2.4├ù2.1├ù1.5 ÔåÆ front face zÔëê1.05
-    // 4x8 @ (2.15,0,0.08) ~3.8├ù2.45├ù2.15 ÔåÆ front zÔëê1.155; right xÔëê4.05; rear zÔëê-0.995
+    // 2x4 @ (-2.75,0,0.3) ~2.4×2.1×1.5 → front face z≈1.05
+    // 4x8 @ (2.15,0,0.08) ~3.8×2.45×2.15 → front z≈1.155; right x≈4.05; rear z≈-0.995
     const curves = {
       intakeClone: mkCurve([
         [-2.75, 0.38, 2.95],
@@ -4138,7 +4138,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         [-0.35, 1.15, 0.16],
         [0.25, 1.15, 0.1],
       ]),
-      // OUT: rear dump port on 4├ù8 (negative Z) ÔåÆ outdoor vent
+      // OUT: rear dump port on 4×8 (negative Z) → outdoor vent
       out: mkCurve([
         [2.55, 1.72, -1.12],
         [2.55, 1.88, -1.55],
@@ -4146,7 +4146,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         [2.55, 2.32, -2.55],
         [2.55, 2.42, -3.05],
       ]),
-      // RECIRC: right-wall port on 4├ù8 (+X) ÔåÆ room return (matches annotated layout)
+      // RECIRC: right-wall port on 4×8 (+X) → room return (matches annotated layout)
       recirc: mkCurve([
         [4.05, 1.55, 0.08],
         [4.55, 1.48, 0.28],
@@ -4211,7 +4211,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     addPath("out", 0.122, 50, 0x8a6a62);
     addPath("recirc", 0.118, 50, 0x6a6288);
 
-    // Soft smoke-test shafts along ducts (HVAC pathline cinema ÔÇö CFM-gated)
+    // Soft smoke-test shafts along ducts (HVAC pathline cinema — CFM-gated)
     const mkFlowShaft = (name, radius) => {
       const curve = curves[name];
       const shaft = new THREE.Mesh(
@@ -4530,7 +4530,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     let mergeRampTexture = null;
     if (fx && typeof fx.createColorRamp === "function") {
       try {
-        // Cascade ÔåÆ 4├ù8 merge cue only (OUT/RECIRC are separate ports ÔÇö no shared Y ramp).
+        // Cascade → 4×8 merge cue only (OUT/RECIRC are separate ports — no shared Y ramp).
         mergeRampTexture = fx.createColorRamp([
           { t: 0, color: 0x42a5f5 },
           { t: 0.55, color: 0xffb74d },
@@ -4844,7 +4844,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     mkAir("out", 0xff8a65, 96, 0.058);
     mkAir("recirc", 0xce93d8, 96, 0.058);
     mkAir("matHeat", 0xff6d00, 34, 0.09);
-    // Through-tent flow legs (not confined curl haze ÔÇö that read as bouncing blur balls)
+    // Through-tent flow legs (not confined curl haze — that read as bouncing blur balls)
     mkAir("flowClone", 0x81d4fa, 72, 0.05);
     mkAir("flowMain", 0xffab91, 110, 0.05);
     const particleColors = {
@@ -4856,7 +4856,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       mixWarm: new THREE.Color(0xff9a6b),
     };
 
-    // Ambient room curl haze retired ÔÇö it read as flying blur balls, not CFM flow.
+    // Ambient room curl haze retired — it read as flying blur balls, not CFM flow.
     let curl = null;
     const confinedMix = [];
 
@@ -4989,7 +4989,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
           : name === "out" || name === "recirc"
             ? 0.14
             : 0;
-        // Velocity-band dash speed ÔêØ CFM (duct-network sim cue)
+        // Velocity-band dash speed ∝ CFM (duct-network sim cue)
         uniforms.uDashOffset.value -= 0.008 + shown * 0.032;
         const width = active ? 0.55 + shown * 1.05 : 0.34;
         if (Math.abs(width - path.ribbon.userData.flow.lastWidth) > 0.08) {
@@ -5058,8 +5058,8 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     };
 
     /**
-     * Full journey: duct ÔåÆ entry ÔåÆ slow pool ÔåÆ exit pull.
-     * 0ÔÇô0.38 duct, 0.38ÔÇô0.52 entry, 0.52ÔÇô0.78 pool, 0.78ÔÇô1 exit.
+     * Full journey: duct → entry → slow pool → exit pull.
+     * 0–0.38 duct, 0.38–0.52 entry, 0.52–0.78 pool, 0.78–1 exit.
      */
     const journeyThroughTent = (t, seed, i, opts) => {
       const intakeCurve = opts.intakeCurve;
@@ -5272,7 +5272,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         updatePathVisual("out", outVis, now);
         updatePathVisual("recirc", recVis, now);
 
-        // Journey streams: duct ÔåÆ pool ÔåÆ exit (pace slows in pool so settle reads)
+        // Journey streams: duct → pool → exit (pace slows in pool so settle reads)
         updateSystem("intakeClone", curves.intakeClone, dt, Math.min(1, intakeClone * 0.85), null, () => 1.2);
         updateSystem("intakeMain", curves.intakeMain, dt, Math.min(1, intakeMain * 0.85), null, () => 1.2);
         updateCascadePlume(dt, cascade, outShare, recShare);
@@ -5369,7 +5369,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
           }
         }
 
-        // ACH volume boxes retired ÔÇö they read as ÔÇ£blur balls in a blue boxÔÇØ
+        // ACH volume boxes retired — they read as “blur balls in a blue box”
         (tentClone.userData.achSlices || []).forEach((slice) => {
           slice.material.opacity = 0;
           slice.visible = false;
@@ -5381,7 +5381,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         roomShell.material.opacity = 0.1 + recVis * 0.06;
         roomEdges.material.opacity = 0.18 + recVis * 0.1;
         roomLungSlices.forEach((slice, i) => {
-          // Ceiling wash only ÔÇö do not bob mid-room volumes
+          // Ceiling wash only — do not bob mid-room volumes
           slice.material.opacity = 0.016 + i * 0.006 + (recVis >= 0.04 ? recVis * 0.02 : 0);
           slice.position.y = 3.55 - i * 0.22;
         });
@@ -5638,28 +5638,28 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
               <div class="dash-brand" id="d-title">${esc(cfg.title)}</div>
               <div class="dash-sub" id="d-sub">${esc(cfg.subtitle)}</div>
             </div>
-            <div class="dash-pill" id="d-status">ONLINE // ÔÇª</div>
+            <div class="dash-pill" id="d-status">ONLINE // …</div>
           </div>
           <div class="dash-body">
             <div class="dash-main">
               <div class="dash-scene-wrap" id="d-scene">
-                ${typeof THREE === "undefined" ? `<div class="dash-missing">THREE.js not loaded ÔÇö redeploy DSC-HUB bundle.</div>` : ""}
+                ${typeof THREE === "undefined" ? `<div class="dash-missing">THREE.js not loaded — redeploy DSC-HUB bundle.</div>` : ""}
                 <div class="dash-hud left" id="d-hud-clone"></div>
                 <div class="dash-hud right" id="d-hud-main"></div>
                 <div class="dash-legend" id="d-legend">
                   <span data-path="light"><i class="dash-dot" style="background:#66bb6a"></i> 2x4 light</span>
                   <span data-path="mat"><i class="dash-dot" style="background:#ff6d00"></i> 2x4 heat mat</span>
                   <span data-path="intake"><i class="dash-dot" style="background:#42a5f5"></i> Room intake</span>
-                  <span data-path="cascade"><i class="dash-dot" style="background:#ffb74d"></i> Cascade 2x4ÔåÆ4x8</span>
+                  <span data-path="cascade"><i class="dash-dot" style="background:#ffb74d"></i> Cascade 2x4→4x8</span>
                   <span data-path="out"><i class="dash-dot" style="background:#ff8a65"></i> Dump OUT</span>
                   <span data-path="recirc"><i class="dash-dot" style="background:#ab47bc"></i> Recirc</span>
                 </div>
               </div>
               <div class="dash-charts">
-                <div class="dash-chart"><h4>Moisture ÔÇö pots</h4><canvas id="c-moist"></canvas></div>
-                <div class="dash-chart"><h4>Feed intake rate ÔÇö pots</h4><canvas id="c-rate"></canvas></div>
+                <div class="dash-chart"><h4>Moisture — pots</h4><canvas id="c-moist"></canvas></div>
+                <div class="dash-chart"><h4>Feed intake rate — pots</h4><canvas id="c-rate"></canvas></div>
                 <div class="dash-chart">
-                  <h4>Temperature ┬░C</h4>
+                  <h4>Temperature °C</h4>
                   <div class="leg"><span><i style="background:#26c6da"></i>2x4</span><span><i style="background:#ff8a65"></i>4x8</span><span><i style="background:#90a4ae"></i>Room</span></div>
                   <canvas id="c-temp"></canvas>
                 </div>
@@ -5681,8 +5681,8 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
                 <div id="d-timeline"></div>
               </div>
               <div class="dash-panel" style="flex:1">
-                <h3>Air path ┬À environment ÔåÆ CFM ÔåÆ exhaust</h3>
-                <p class="dash-flow-caption">Room climate ÔåÆ intake CFM (2├ù4 / 4├ù8) + cascade transfer ÔåÆ 4├ù8 exhaust mass-balanced to ╬ú intake ├ù dump/recirc split. Heat mat is 2├ù4-only.</p>
+                <h3>Air path · environment → CFM → exhaust</h3>
+                <p class="dash-flow-caption">Room climate → intake CFM (2×4 / 4×8) + cascade transfer → 4×8 exhaust mass-balanced to Σ intake × dump/recirc split. Heat mat is 2×4-only.</p>
                 <div id="d-flow" class="dash-flow"></div>
               </div>
               <div class="dash-panel">
@@ -5815,7 +5815,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         }
       }
       // Dump/recirc split: prefer live fan % (honest duty blend). Exhaust CFM sensors
-      // are pct├ùnameplate until Learning cal ÔÇö fine as a ratio fallback only.
+      // are pct×nameplate until Learning cal — fine as a ratio fallback only.
       const fo = numState(hass, e.fan_out, 0) / 100;
       const fr = numState(hass, e.fan_recirc, 0) / 100;
       const fs = fo + fr;
@@ -5831,7 +5831,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         outShare = cfmOutRaw / exSum;
         recircShare = cfmRecRaw / exSum;
       }
-      // Mass balance: absolute OUT/RECIRC CFM = intake throughput ├ù split.
+      // Mass balance: absolute OUT/RECIRC CFM = intake throughput × split.
       // Do not use sensor.dsc_cfm_exhaust_* as absolute duct flow on The Dash.
       const throughput = intakeSum;
       const cfmOut = throughput * outShare;
@@ -5844,12 +5844,12 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         { id: "dehumidifier", label: "Dehum", on: isOn(hass, e.dehumidifier), color: "#80cbc4" },
         { id: "clone_humidifier", label: "C-Hum", on: isOn(hass, e.clone_humidifier), color: "#81d4fa" },
       ];
-      // Grow mat is 2x4-only ÔÇö show under active gear but never as room heat
+      // Grow mat is 2x4-only — show under active gear but never as room heat
       if (isOn(hass, e.grow_mat)) {
         devices.push({ id: "grow_mat", label: "2x4 mat", on: true, color: "#ff6d00" });
       }
 
-      const cascadeCfm = cfmClone; // passive transfer Ôëê what entered the 2x4
+      const cascadeCfm = cfmClone; // passive transfer ≈ what entered the 2x4
       const cascadeNorm = Math.min(1, cascadeCfm / 80);
 
       const pots = activePots(cfg, hass);
@@ -5946,9 +5946,9 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         emerg,
         strategy,
         priority,
-        roomClimate: `${fmt(rT)}┬░C ┬À ${fmt(rH, 0)}% ┬À VPD ${fmt(roomVpd, 2)}`,
-        cloneClimate: `${fmt(numState(hass, e.clone_temp))}┬░C ┬À ${fmt(numState(hass, e.clone_humidity), 0)}% ┬À VPD ${fmt(numState(hass, e.clone_vpd), 2)}`,
-        mainClimate: `${fmt(numState(hass, e.tent_temp))}┬░C ┬À ${fmt(numState(hass, e.tent_humidity), 0)}% ┬À VPD ${fmt(numState(hass, e.tent_vpd), 2)}`,
+        roomClimate: `${fmt(rT)}°C · ${fmt(rH, 0)}% · VPD ${fmt(roomVpd, 2)}`,
+        cloneClimate: `${fmt(numState(hass, e.clone_temp))}°C · ${fmt(numState(hass, e.clone_humidity), 0)}% · VPD ${fmt(numState(hass, e.clone_vpd), 2)}`,
+        mainClimate: `${fmt(numState(hass, e.tent_temp))}°C · ${fmt(numState(hass, e.tent_humidity), 0)}% · VPD ${fmt(numState(hass, e.tent_vpd), 2)}`,
         climate: {
           room: { temperature: rT, humidity: rH, vpd: roomVpd },
           clone: {
@@ -5985,13 +5985,13 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
           hubOnline: false,
           hubHeld: true,
           hubOfflineMs: offlineMs,
-          diagLine: this._lastDiagLine || diagLine || "Hub link lost ÔÇö no prior diagnostic line cached",
+          diagLine: this._lastDiagLine || diagLine || "Hub link lost — no prior diagnostic line cached",
           emerg: live.emerg || this._lastGoodLive.emerg,
         };
       }
       live.hubHeld = false;
       live.hubOfflineMs = offlineMs;
-      live.diagLine = this._lastDiagLine || diagLine || "Hub offline ┬À waiting for first good sample";
+      live.diagLine = this._lastDiagLine || diagLine || "Hub offline · waiting for first good sample";
       return live;
     }
 
@@ -6012,7 +6012,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         } else if (!live.hubOnline) {
           status.textContent = `OFFLINE // hub ${fmtHeld(live.hubOfflineMs || 0)}`;
         } else {
-          status.textContent = `ONLINE // ${live.strategy || "NOMINAL"} ┬À ${live.priority || ""}`.trim();
+          status.textContent = `ONLINE // ${live.strategy || "NOMINAL"} · ${live.priority || ""}`.trim();
         }
       }
 
@@ -6023,20 +6023,20 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         const exp = numState(this._hass, hours, 18) * 60;
         const left = Number.isFinite(lightMins) ? Math.max(0, exp - lightMins) : NaN;
         lightNote = Number.isFinite(left)
-          ? `SF1000 on ┬À ${Math.floor(left / 60)}h ${Math.round(left % 60)}m to off`
+          ? `SF1000 on · ${Math.floor(left / 60)}h ${Math.round(left % 60)}m to off`
           : "SF1000 on";
       } else if (Number.isFinite(lightMins) && lightMins < 0) {
         const until = Math.abs(lightMins);
-        lightNote = `Dark ┬À ${Math.floor(until / 60)}h ${Math.round(until % 60)}m to lights-on`;
+        lightNote = `Dark · ${Math.floor(until / 60)}h ${Math.round(until % 60)}m to lights-on`;
       }
       const hudC = this.shadowRoot.getElementById("d-hud-clone");
       if (hudC) {
-        hudC.innerHTML = `<div class="k">2├ù4 Reservoir</div><div class="v">${esc(live.cloneClimate)}</div><div class="s">${esc(lightNote)}${live.matOn ? " ┬À heat mat ON" : ""}</div>`;
+        hudC.innerHTML = `<div class="k">2×4 Reservoir</div><div class="v">${esc(live.cloneClimate)}</div><div class="s">${esc(lightNote)}${live.matOn ? " · heat mat ON" : ""}</div>`;
       }
       const hudM = this.shadowRoot.getElementById("d-hud-main");
       if (hudM) {
-        const heldNote = live.hubHeld ? " ┬À HELD" : "";
-        hudM.innerHTML = `<div class="k">4├ù8 Main</div><div class="v">${esc(live.mainClimate)}</div><div class="s">No lamp ┬À cascade in ┬À OUT rear / RECIRC right wall${heldNote}</div>`;
+        const heldNote = live.hubHeld ? " · HELD" : "";
+        hudM.innerHTML = `<div class="k">4×8 Main</div><div class="v">${esc(live.mainClimate)}</div><div class="s">No lamp · cascade in · OUT rear / RECIRC right wall${heldNote}</div>`;
       }
 
       const tl = this.shadowRoot.getElementById("d-timeline");
@@ -6058,20 +6058,20 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         if (live.emerg) alerts.push(`<span class="err">EMERGENCY FAILSAFE</span>`);
         if (live.mixed) alerts.push(`<span class="alert">Mixed pot stages</span>`);
         if (live.hubHeld) {
-          alerts.push(`<span class="alert">Hub offline ┬À held ${esc(fmtHeld(live.hubOfflineMs))}</span>`);
+          alerts.push(`<span class="alert">Hub offline · held ${esc(fmtHeld(live.hubOfflineMs))}</span>`);
         } else if (!live.hubOnline) {
-          alerts.push(`<span class="alert">Hub offline ┬À ${esc(fmtHeld(live.hubOfflineMs || 0))}</span>`);
+          alerts.push(`<span class="alert">Hub offline · ${esc(fmtHeld(live.hubOfflineMs || 0))}</span>`);
         }
         const diag = live.diagLine || "";
         const diagHtml = diag
           ? `<span class="alert" title="Last hub diagnostic line">ESP/link: ${esc(diag)}</span>`
           : "";
         foot.innerHTML = `
-          <span>The Dash ┬À presentation surface</span>
+          <span>The Dash · presentation surface</span>
           <span>${new Date().toLocaleString()}</span>
-          ${alerts.join(" ┬À ") || `<span style="color:var(--ok)">All systems nominal</span>`}
+          ${alerts.join(" · ") || `<span style="color:var(--ok)">All systems nominal</span>`}
           ${diagHtml}
-          <span class="err" style="margin-left:auto">LOGS ÔåÆ Climate / Root Zone</span>`;
+          <span class="err" style="margin-left:auto">LOGS → Climate / Root Zone</span>`;
       }
     }
 
@@ -6168,11 +6168,11 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         <div style="padding:14px;display:grid;gap:12px;font-family:system-ui,sans-serif;max-width:640px">
           <p style="margin:0;color:#9aa;font-size:13px;line-height:1.45">
             <strong style="color:#cfd8e6">Air path (fixed topology):</strong>
-            Room lung ÔåÆ tent intakes ÔåÆ cascade 2├ù4ÔåÆ4├ù8 (neg. pressure) ÔåÆ 4├ù8 splits DUMP outside / RECIRC room.
-            Exhaust absolute CFM on The Dash is mass-balanced to ╬ú intake ├ù fan-% split ÔÇö not raw exhaust CFM sensors
+            Room lung → tent intakes → cascade 2×4→4×8 (neg. pressure) → 4×8 splits DUMP outside / RECIRC room.
+            Exhaust absolute CFM on The Dash is mass-balanced to Σ intake × fan-% split — not raw exhaust CFM sensors
             (those stay nameplate proxies until Learning cal). There is no central filter machine.
-            Heat mat is always the 2├ù4 element (not room heat).
-            Edit titles, pot slots, and airflow entity ids below ÔÇö duct geometry itself is not editable on-glass.
+            Heat mat is always the 2×4 element (not room heat).
+            Edit titles, pot slots, and airflow entity ids below — duct geometry itself is not editable on-glass.
           </p>
           <label style="display:grid;gap:4px">Title
             <input id="t" style="width:100%;padding:8px" value="${esc(c.title)}"/>
@@ -6183,19 +6183,19 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
           <div>
             <div style="font-size:12px;color:#888;margin-bottom:6px;font-weight:700;letter-spacing:0.06em">AIRFLOW ENTITIES</div>
             <div style="display:grid;grid-template-columns:160px 1fr;gap:6px;align-items:center;font-size:12px">
-              <span>2├ù4 intake CFM</span><input data-ent="cfm_intake_2x4" value="${esc(c.entities.cfm_intake_2x4 || "")}"/>
-              <span>4├ù8 intake CFM</span><input data-ent="cfm_intake_main" value="${esc(c.entities.cfm_intake_main || "")}"/>
+              <span>2×4 intake CFM</span><input data-ent="cfm_intake_2x4" value="${esc(c.entities.cfm_intake_2x4 || "")}"/>
+              <span>4×8 intake CFM</span><input data-ent="cfm_intake_main" value="${esc(c.entities.cfm_intake_main || "")}"/>
               <span>Dump OUT fan %</span><input data-ent="fan_out" value="${esc(c.entities.fan_out || "")}"/>
               <span>Recirc fan %</span><input data-ent="fan_recirc" value="${esc(c.entities.fan_recirc || "")}"/>
               <span>Dump OUT CFM (split fallback)</span><input data-ent="cfm_out" value="${esc(c.entities.cfm_out || "")}"/>
               <span>Recirc CFM (split fallback)</span><input data-ent="cfm_recirc" value="${esc(c.entities.cfm_recirc || "")}"/>
               <span>Room temp</span><input data-ent="room_temp" value="${esc(c.entities.room_temp || "")}"/>
               <span>Room humidity</span><input data-ent="room_humidity" value="${esc(c.entities.room_humidity || "")}"/>
-              <span>2├ù4 heat mat</span><input data-ent="grow_mat" value="${esc(c.entities.grow_mat || "")}"/>
+              <span>2×4 heat mat</span><input data-ent="grow_mat" value="${esc(c.entities.grow_mat || "")}"/>
             </div>
           </div>
           <div>
-            <div style="font-size:12px;color:#888;margin-bottom:6px;font-weight:700;letter-spacing:0.06em">POTS ÔåÆ TENT / SLOT</div>
+            <div style="font-size:12px;color:#888;margin-bottom:6px;font-weight:700;letter-spacing:0.06em">POTS → TENT / SLOT</div>
             <div style="display:grid;grid-template-columns:70px 1fr 90px 70px;gap:8px;font-size:11px;color:#777;margin-bottom:4px">
               <span></span><span>Entity prefix</span><span>Tent</span><span>Slot</span>
             </div>
@@ -6272,20 +6272,34 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
 })();
 
 /**
- * DSC-HUB â€” Build a Plant
+ * DSC-HUB - Build a Plant
  * Separate composition surface (not The Dash / system-map).
  * type: custom:dsc-build-plant-card
- * Metric only (Â°C, L, ml/L, Âµmol, %).
+ * Metric only (C, L, ml/L, umol, %).
+ * User-visible strings are ASCII-only to avoid HA/resource encoding mojibake.
  */
 (() => {
   const CARD_TYPE = "dsc-build-plant-card";
   const CATALOG_BASE = "/local/dsc-catalog";
   const COLORS = ["#5b9f6b", "#4a8f9f", "#c4a35a"];
+  /** UI kind -> catalog index key */
+  const INDEX_KEY = {
+    strain: "strains",
+    nutrient: "nutrients",
+    medium: "mediums",
+    light: "lights",
+  };
+  const SEARCH_IDS = {
+    strain: "q-strain",
+    medium: "q-medium",
+    nutrient: "q-nutrient",
+    light: "q-light",
+  };
 
   const DEFAULTS = () => ({
     type: `custom:${CARD_TYPE}`,
     title: "Build a Plant",
-    subtitle: "Compose strain Â· medium Â· nutrition Â· light Â· climate",
+    subtitle: "Compose strain / medium / nutrition / light / climate",
   });
 
   const css = `
@@ -6332,12 +6346,15 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     .chip.bad { background:rgba(180,70,70,.12); border-color:rgba(180,70,70,.4); color:#f0b4b4; }
     .search-box { position:relative; }
     .hits {
-      position:absolute; z-index:5; left:0; right:0; top:100%; max-height:220px; overflow:auto;
-      background:#0e1612; border:1px solid rgba(120,160,130,.35); margin:0; padding:0; list-style:none;
+      position:absolute; z-index:20; left:0; right:0; top:calc(100% + 2px); max-height:260px; overflow:auto;
+      background:#0e1612; border:1px solid rgba(120,160,130,.45); margin:0; padding:0; list-style:none;
+      box-shadow: 0 10px 28px rgba(0,0,0,.45);
     }
     .hits li { padding:8px 10px; cursor:pointer; border-bottom:1px solid rgba(120,160,130,.12); font-size:13px; }
-    .hits li:hover { background:rgba(91,159,107,.18); }
-    .hits .meta { color:#8a9c90; font-size:11px; }
+    .hits li:hover, .hits li.active { background:rgba(91,159,107,.22); }
+    .hits .meta { color:#8a9c90; font-size:11px; margin-top:2px; }
+    .hits .empty { padding:10px; color:#8a9c90; font-size:12px; cursor:default; }
+    .hits .empty:hover { background:transparent; }
     table { width:100%; border-collapse:collapse; font-size:13px; margin-top:8px; }
     th, td { text-align:left; padding:6px 4px; border-bottom:1px solid rgba(120,160,130,.12); }
     th { color:#8a9c90; font-weight:500; font-size:11px; letter-spacing:.06em; text-transform:uppercase; }
@@ -6361,10 +6378,14 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       this._config = DEFAULTS();
       this._hass = null;
       this._indexes = { strains: [], nutrients: [], mediums: [], lights: [] };
+      this._indexStatus = { loading: false, ok: false, errors: [] };
       this._q = { strain: "", nutrient: "", medium: "", light: "" };
       this._hits = { strain: [], nutrient: [], medium: [], light: [] };
+      this._hitActive = { strain: -1, nutrient: -1, medium: -1, light: -1 };
+      this._openKind = null;
       this._loaded = false;
       this._mediumSlot = 1;
+      this._focusRestore = null;
     }
 
     setConfig(config) {
@@ -6378,12 +6399,25 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         this._loaded = true;
         this._loadIndexes();
       }
+      // Avoid wiping an open typeahead / focused search on every HA state tick.
+      if (this._openKind || this._isSearchFocused()) return;
       this._render();
     }
 
     getCardSize() { return 12; }
 
+    _isSearchFocused() {
+      const ae = this.shadowRoot?.activeElement;
+      if (!ae || ae.tagName !== "INPUT") return false;
+      return Object.values(SEARCH_IDS).includes(ae.id);
+    }
+
+    _indexFor(kind) {
+      return this._indexes[INDEX_KEY[kind]] || [];
+    }
+
     async _loadIndexes() {
+      this._indexStatus = { loading: true, ok: false, errors: [] };
       const kinds = [
         ["strains", "dsc_strains_search_index.json"],
         ["nutrients", "dsc_nutrients_search_index.json"],
@@ -6393,14 +6427,23 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       await Promise.all(
         kinds.map(async ([key, file]) => {
           try {
-            const r = await fetch(`${CATALOG_BASE}/${file}`);
-            if (!r.ok) return;
+            const r = await fetch(`${CATALOG_BASE}/${file}`, { cache: "no-cache" });
+            if (!r.ok) {
+              this._indexStatus.errors.push(`${file} (${r.status})`);
+              return;
+            }
             const j = await r.json();
-            this._indexes[key] = j.items || [];
-          } catch (_) { /* offline / missing */ }
+            this._indexes[key] = Array.isArray(j.items) ? j.items : [];
+          } catch (err) {
+            this._indexStatus.errors.push(`${file}: ${err?.message || "fetch failed"}`);
+          }
         })
       );
-      this._render();
+      const total = Object.values(this._indexes).reduce((n, a) => n + (a?.length || 0), 0);
+      this._indexStatus.loading = false;
+      this._indexStatus.ok = total > 0;
+      if (!this._openKind) this._render();
+      else this._paintCatalogChip();
     }
 
     _st(id) {
@@ -6419,8 +6462,6 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
 
     _call(domain, service, data = {}, target) {
       if (!this._hass) return;
-      const msg = { domain, service, service_data: data };
-      if (target) msg.target = target;
       return this._hass.callService(domain, service, data, target);
     }
 
@@ -6441,28 +6482,67 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       this._call("input_datetime", "set_datetime", { date }, { entity_id: entity });
     }
 
-    _search(kind, q) {
-      this._q[kind] = q;
+    _filterItems(kind, q) {
+      const items = this._indexFor(kind);
       const needle = (q || "").trim().toLowerCase();
-      if (needle.length < 2) {
-        this._hits[kind] = [];
-        this._render();
-        return;
+      if (!needle) {
+        return items.slice(0, 12);
       }
-      const items = this._indexes[kind] || [];
-      this._hits[kind] = items
+      if (needle.length === 1) {
+        return items
+          .filter((it) => {
+            const hay = `${it.name || ""} ${it.brand || ""} ${it.breeder || ""}`.toLowerCase();
+            return hay.startsWith(needle) || hay.includes(` ${needle}`);
+          })
+          .slice(0, 12);
+      }
+      return items
         .filter((it) => {
           const hay = `${it.name || ""} ${it.brand || ""} ${it.breeder || ""}`.toLowerCase();
           return hay.includes(needle);
         })
         .slice(0, 12);
-      this._render();
+    }
+
+    _search(kind, q, { open = true } = {}) {
+      this._q[kind] = q;
+      this._hits[kind] = this._filterItems(kind, q);
+      this._hitActive[kind] = this._hits[kind].length ? 0 : -1;
+      this._openKind = open ? kind : null;
+      this._paintHits(kind);
+    }
+
+    _openSearch(kind) {
+      this._openKind = kind;
+      this._hits[kind] = this._filterItems(kind, this._q[kind] || "");
+      this._hitActive[kind] = this._hits[kind].length ? 0 : -1;
+      this._paintHits(kind);
+    }
+
+    _closeSearch(kind) {
+      if (kind && this._openKind !== kind) return;
+      this._openKind = null;
+      if (kind) {
+        this._hits[kind] = [];
+        this._hitActive[kind] = -1;
+        this._paintHits(kind);
+      }
+    }
+
+    _applyHit(kind, item) {
+      if (!item) return;
+      if (kind === "strain") this._pickStrain(item);
+      else if (kind === "medium") this._pickMedium(item);
+      else if (kind === "nutrient") this._addNutrient(item);
+      else if (kind === "light") this._pickLight(item);
     }
 
     _pickStrain(item) {
       this._setText("input_text.dsc_build_strain", item.name);
       this._q.strain = item.name;
       this._hits.strain = [];
+      this._hitActive.strain = -1;
+      this._openKind = null;
       this._render();
     }
 
@@ -6471,11 +6551,12 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       this._setText(`input_text.dsc_blend_component_${slot}_name`, item.name);
       this._q.medium = "";
       this._hits.medium = [];
+      this._hitActive.medium = -1;
+      this._openKind = null;
       this._render();
     }
 
     async _addNutrient(item) {
-      // First empty inventory slot
       for (let n = 1; n <= 8; n++) {
         const name = this._str(`input_text.dsc_nutrient_${n}_name`);
         const inv = this._st(`input_boolean.dsc_nutrient_${n}_in_inventory`)?.state === "on";
@@ -6490,11 +6571,12 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       }
       this._q.nutrient = "";
       this._hits.nutrient = [];
+      this._hitActive.nutrient = -1;
+      this._openKind = null;
       this._render();
     }
 
     _pickLight(item) {
-      // Prefer fixture select when pack label matches; else custom + URL overrides
       const fixture = this._st("input_select.dsc_light_fixture");
       const opts = fixture?.attributes?.options || [];
       const match = opts.find((o) => String(o).toLowerCase().includes(String(item.name || "").toLowerCase().slice(0, 18)));
@@ -6508,6 +6590,8 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       }
       this._q.light = item.name;
       this._hits.light = [];
+      this._hitActive.light = -1;
+      this._openKind = null;
       this._render();
     }
 
@@ -6537,17 +6621,68 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       return { lines, total: Math.round(total * 10) / 10, L, str };
     }
 
-    _renderHits(kind, onPick) {
+    _hitsHtml(kind) {
+      if (this._openKind !== kind) return "";
       const hits = this._hits[kind] || [];
-      if (!hits.length) return "";
-      return `<ul class="hits">${hits
+      const active = this._hitActive[kind] ?? -1;
+      const indexCount = this._indexFor(kind).length;
+      if (!this._indexStatus.ok && !this._indexStatus.loading) {
+        return `<ul class="hits" role="listbox"><li class="empty">Catalog index missing for ${this._esc(INDEX_KEY[kind] || kind)}. Check /local/dsc-catalog/.</li></ul>`;
+      }
+      if (this._indexStatus.loading && !indexCount) {
+        return `<ul class="hits" role="listbox"><li class="empty">Loading catalog...</li></ul>`;
+      }
+      if (!hits.length) {
+        const q = (this._q[kind] || "").trim();
+        return `<ul class="hits" role="listbox"><li class="empty">${q ? `No matches for "${this._esc(q)}"` : "Start typing to filter catalog"}</li></ul>`;
+      }
+      return `<ul class="hits" role="listbox">${hits
         .map((it, i) => {
           const meta = [it.brand || it.breeder, it.wattage_w != null ? `${it.wattage_w} W` : null, it.dose_ml_l != null ? `${it.dose_ml_l} ml/L` : null]
             .filter(Boolean)
-            .join(" Â· ");
-          return `<li data-kind="${kind}" data-i="${i}"><div>${this._esc(it.name)}</div>${meta ? `<div class="meta">${this._esc(meta)}</div>` : ""}</li>`;
+            .join(" | ");
+          return `<li role="option" data-kind="${kind}" data-i="${i}" class="${i === active ? "active" : ""}"><div>${this._esc(it.name)}</div>${meta ? `<div class="meta">${this._esc(meta)}</div>` : ""}</li>`;
         })
         .join("")}</ul>`;
+    }
+
+    _paintHits(kind) {
+      const box = this.shadowRoot?.querySelector(`#${SEARCH_IDS[kind]}`)?.closest(".search-box");
+      if (!box) return;
+      const existing = box.querySelector(".hits");
+      if (existing) existing.remove();
+      const html = this._hitsHtml(kind);
+      if (!html) return;
+      box.insertAdjacentHTML("beforeend", html);
+      box.querySelectorAll(".hits li[data-i]").forEach((li) => {
+        li.addEventListener("mousedown", (e) => {
+          e.preventDefault();
+          const i = Number(li.getAttribute("data-i"));
+          this._applyHit(kind, this._hits[kind]?.[i]);
+        });
+      });
+    }
+
+    _paintCatalogChip() {
+      const el = this.shadowRoot?.getElementById("catalog-status");
+      if (!el) return;
+      el.outerHTML = this._catalogChipHtml();
+    }
+
+    _catalogChipHtml() {
+      if (this._indexStatus.loading) {
+        return `<span class="chip warn" id="catalog-status">Loading catalogs...</span>`;
+      }
+      if (!this._indexStatus.ok) {
+        const detail = this._indexStatus.errors[0] || "no index items";
+        return `<span class="chip bad" id="catalog-status">Catalog load failed: ${this._esc(detail)}</span>`;
+      }
+      const n =
+        (this._indexes.strains?.length || 0) +
+        (this._indexes.mediums?.length || 0) +
+        (this._indexes.nutrients?.length || 0) +
+        (this._indexes.lights?.length || 0);
+      return `<span class="chip" id="catalog-status">${n} catalog items ready</span>`;
     }
 
     _esc(s) {
@@ -6566,7 +6701,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       const totalL = this._num("input_number.dsc_blend_total_l", 20);
       const mix = this._mixLines();
       const blendValid = Math.round(sumPct) === 100;
-      const roster = this._str("sensor.dsc_plant_roster_summary") || "â€”";
+      const roster = this._str("sensor.dsc_plant_roster_summary") || "-";
       const mixState = this._str("sensor.dsc_mix_calculator") || `${mix.total} ml total`;
       const lightName = this._str("sensor.dsc_light_active_summary") || this._str("input_select.dsc_light_fixture");
       const ppfd = this._str("sensor.dsc_light_ppfd_map");
@@ -6581,13 +6716,17 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
             .join("")
         : "";
 
+      const focus = this._focusRestore;
+      const openKind = this._openKind;
+
       this.shadowRoot.innerHTML = `
         <style>${css}</style>
         <div class="wrap">
           <div class="hero">
-            <p class="brand">Digital Stealth Care Â· DSC-HUB</p>
+            <p class="brand">Digital Stealth Care / DSC-HUB</p>
             <h1>${this._esc(cfg.title)}</h1>
-            <p class="sub">${this._esc(cfg.subtitle)} Metric only â€” no invented PPFD grids or feed rates.</p>
+            <p class="sub">${this._esc(cfg.subtitle)} - then commit to inventory. Metric only - no invented PPFD grids or feed rates.</p>
+            <div class="chips" style="margin-top:8px">${this._catalogChipHtml()}</div>
           </div>
           <div class="grid">
             <div class="stack">
@@ -6595,8 +6734,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
                 <h2>Identity</h2>
                 <label>Strain search</label>
                 <div class="search-box">
-                  <input type="text" id="q-strain" value="${this._esc(this._q.strain)}" placeholder="Type a strain nameâ€¦" />
-                  ${this._renderHits("strain")}
+                  <input type="text" id="q-strain" autocomplete="off" spellcheck="false" value="${this._esc(this._q.strain)}" placeholder="Type a strain name..." aria-autocomplete="list" />
                 </div>
                 <div class="row">
                   <div>
@@ -6615,12 +6753,11 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
               </section>
 
               <section>
-                <h2>Medium Â· % blend</h2>
+                <h2>Medium / % blend</h2>
                 <label>Search substrate (fills slot below)</label>
                 <div class="row">
                   <div style="flex:2" class="search-box">
-                    <input type="text" id="q-medium" value="${this._esc(this._q.medium)}" placeholder="Coco, perlite, LECAâ€¦" />
-                    ${this._renderHits("medium")}
+                    <input type="text" id="q-medium" autocomplete="off" spellcheck="false" value="${this._esc(this._q.medium)}" placeholder="Coco, perlite, LECA..." aria-autocomplete="list" />
                   </div>
                   <div>
                     <label>Target slot</label>
@@ -6640,7 +6777,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
                       <input type="text" data-blend-name="${n}" value="${this._esc(this._str(`input_text.dsc_blend_component_${n}_name`))}" />
                     </div>
                     <div>
-                      <label>% Â· ${this._num(`input_number.dsc_blend_pct_${n}`, 0)}%</label>
+                      <label>% / ${this._num(`input_number.dsc_blend_pct_${n}`, 0)}%</label>
                       <input type="range" min="0" max="100" data-blend-pct="${n}" value="${this._num(`input_number.dsc_blend_pct_${n}`, 0)}" />
                     </div>
                   </div>`
@@ -6656,17 +6793,16 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
                 <div class="chips">
                   <span class="chip ${blendValid ? "" : "bad"}">${Math.round(sumPct)}% ${blendValid ? "valid" : "must sum 100"}</span>
                   ${parts
-                    .map((p) => `<span class="chip">${this._esc(p.name)} Â· ${((p.pct / 100) * totalL).toFixed(1)} L</span>`)
+                    .map((p) => `<span class="chip">${this._esc(p.name)} / ${((p.pct / 100) * totalL).toFixed(1)} L</span>`)
                     .join("")}
                 </div>
               </section>
 
               <section>
-                <h2>Nutrition Â· ml / L</h2>
-                <label>Search nutrients â†’ add to inventory</label>
+                <h2>Nutrition / ml / L</h2>
+                <label>Search nutrients - add to inventory</label>
                 <div class="search-box">
-                  <input type="text" id="q-nutrient" value="${this._esc(this._q.nutrient)}" placeholder="CANNA Coco Aâ€¦" />
-                  ${this._renderHits("nutrient")}
+                  <input type="text" id="q-nutrient" autocomplete="off" spellcheck="false" value="${this._esc(this._q.nutrient)}" placeholder="CANNA Coco A..." aria-autocomplete="list" />
                 </div>
                 <div class="row">
                   <div>
@@ -6690,7 +6826,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
                       <td>${l.stock} ml</td>
                     </tr>`
                       )
-                      .join("") || `<tr><td colspan="4" class="muted">No doses yet â€” search and add bottles.</td></tr>`}
+                      .join("") || `<tr><td colspan="4" class="muted">No doses yet - search and add bottles.</td></tr>`}
                   </tbody>
                 </table>
                 <div class="chips">
@@ -6700,7 +6836,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
                 <div class="actions">
                   <button type="button" id="btn-accept">Accept mix (burn stock)</button>
                 </div>
-                <p class="muted">Accept uses script.dsc_accept_mix â€” QA gate, no pumps.</p>
+                <p class="muted">Accept uses script.dsc_accept_mix - QA gate, no pumps.</p>
               </section>
             </div>
 
@@ -6709,14 +6845,13 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
                 <h2>Light</h2>
                 <label>Search fixtures</label>
                 <div class="search-box">
-                  <input type="text" id="q-light" value="${this._esc(this._q.light)}" placeholder="Spider Farmer SF1000â€¦" />
-                  ${this._renderHits("light")}
+                  <input type="text" id="q-light" autocomplete="off" spellcheck="false" value="${this._esc(this._q.light)}" placeholder="Spider Farmer SF1000..." aria-autocomplete="list" />
                 </div>
                 <p style="margin:8px 0 4px;font-size:14px">${this._esc(lightName || "No fixture selected")}</p>
                 <div class="chips">
                   ${watts && watts !== "unknown" ? `<span class="chip">${this._esc(watts)} W</span>` : ""}
-                  ${ppf && ppf !== "unknown" ? `<span class="chip">${this._esc(ppf)} Âµmol/s</span>` : ""}
-                  ${ppe && ppe !== "unknown" ? `<span class="chip">${this._esc(ppe)} Âµmol/J</span>` : ""}
+                  ${ppf && ppf !== "unknown" ? `<span class="chip">${this._esc(ppf)} umol/s</span>` : ""}
+                  ${ppe && ppe !== "unknown" ? `<span class="chip">${this._esc(ppe)} umol/J</span>` : ""}
                   ${ppfd && ppfd !== "unknown" ? `<span class="chip"><a href="${this._esc(ppfd)}" target="_blank" rel="noopener" style="color:inherit">PPFD map</a></span>` : `<span class="chip warn">No PPFD map URL</span>`}
                   ${spectrum && spectrum !== "unknown" ? `<span class="chip"><a href="${this._esc(spectrum)}" target="_blank" rel="noopener" style="color:inherit">Spectrum</a></span>` : ""}
                 </div>
@@ -6724,7 +6859,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
 
               <section>
                 <h2>Climate Want</h2>
-                <p class="muted">Applies custom-slot temp/RH only when set (â‰ 0). Catalog strains have no invented climate bands.</p>
+                <p class="muted">Applies custom-slot temp/RH only when set (!= 0). Catalog strains have no invented climate bands.</p>
                 <div class="row">
                   <div>
                     <label>Apply for pot</label>
@@ -6766,6 +6901,21 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
 
       this._wire();
       this._fillRoster();
+      if (openKind) {
+        this._openKind = openKind;
+        this._paintHits(openKind);
+      }
+      if (focus) {
+        const inp = this.shadowRoot.getElementById(focus.id);
+        if (inp) {
+          inp.focus();
+          try {
+            const pos = typeof focus.pos === "number" ? focus.pos : inp.value.length;
+            inp.setSelectionRange(pos, pos);
+          } catch (_) { /* date/number inputs */ }
+        }
+        this._focusRestore = null;
+      }
     }
 
     _fillRoster() {
@@ -6777,34 +6927,62 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         return;
       }
       el.innerHTML = slots
-        .map((s) => `<div>#${s.slot} ${this._esc(s.nickname || s.strain || "â€”")} Â· ${this._esc(s.status)} Â· pot ${this._esc(s.pot)}</div>`)
+        .map((s) => `<div>#${s.slot} ${this._esc(s.nickname || s.strain || "-")} / ${this._esc(s.status)} / pot ${this._esc(s.pot)}</div>`)
         .join("");
+    }
+
+    _bindSearch(kind) {
+      const root = this.shadowRoot;
+      const id = SEARCH_IDS[kind];
+      const inp = root.getElementById(id);
+      if (!inp) return;
+
+      inp.addEventListener("input", (e) => {
+        this._focusRestore = { id, pos: e.target.selectionStart };
+        this._search(kind, e.target.value, { open: true });
+      });
+      inp.addEventListener("focus", () => this._openSearch(kind));
+      inp.addEventListener("blur", () => {
+        // Delay so mousedown on a hit can fire first.
+        setTimeout(() => {
+          if (this.shadowRoot?.activeElement?.id === id) return;
+          this._closeSearch(kind);
+        }, 120);
+      });
+      inp.addEventListener("keydown", (e) => {
+        const hits = this._hits[kind] || [];
+        if (e.key === "ArrowDown") {
+          e.preventDefault();
+          if (!this._openKind) this._openSearch(kind);
+          if (!hits.length) return;
+          this._hitActive[kind] = Math.min((this._hitActive[kind] ?? -1) + 1, hits.length - 1);
+          this._paintHits(kind);
+        } else if (e.key === "ArrowUp") {
+          e.preventDefault();
+          if (!hits.length) return;
+          this._hitActive[kind] = Math.max((this._hitActive[kind] ?? 0) - 1, 0);
+          this._paintHits(kind);
+        } else if (e.key === "Enter") {
+          if (this._openKind === kind && hits.length) {
+            e.preventDefault();
+            const i = this._hitActive[kind] >= 0 ? this._hitActive[kind] : 0;
+            this._applyHit(kind, hits[i]);
+          }
+        } else if (e.key === "Escape") {
+          e.preventDefault();
+          this._closeSearch(kind);
+        }
+      });
     }
 
     _wire() {
       const root = this.shadowRoot;
       if (!root) return;
 
-      root.getElementById("q-strain")?.addEventListener("input", (e) => this._search("strain", e.target.value));
-      root.getElementById("q-medium")?.addEventListener("input", (e) => this._search("medium", e.target.value));
-      root.getElementById("q-nutrient")?.addEventListener("input", (e) => this._search("nutrient", e.target.value));
-      root.getElementById("q-light")?.addEventListener("input", (e) => this._search("light", e.target.value));
+      ["strain", "medium", "nutrient", "light"].forEach((k) => this._bindSearch(k));
 
       root.getElementById("medium-slot")?.addEventListener("change", (e) => {
         this._mediumSlot = Number(e.target.value) || 1;
-      });
-
-      root.querySelectorAll(".hits li").forEach((li) => {
-        li.addEventListener("click", () => {
-          const kind = li.getAttribute("data-kind");
-          const i = Number(li.getAttribute("data-i"));
-          const item = this._hits[kind]?.[i];
-          if (!item) return;
-          if (kind === "strain") this._pickStrain(item);
-          if (kind === "medium") this._pickMedium(item);
-          if (kind === "nutrient") this._addNutrient(item);
-          if (kind === "light") this._pickLight(item);
-        });
       });
 
       root.getElementById("build-strain")?.addEventListener("change", (e) => this._setText("input_text.dsc_build_strain", e.target.value));
@@ -6858,3 +7036,4 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     description: "Separate Build a Plant composition (strain, soil %, nutrients, light, climate).",
   });
 })();
+

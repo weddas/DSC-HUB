@@ -1,18 +1,32 @@
 /**
- * DSC-HUB — Build a Plant
+ * DSC-HUB - Build a Plant
  * Separate composition surface (not The Dash / system-map).
  * type: custom:dsc-build-plant-card
- * Metric only (°C, L, ml/L, µmol, %).
+ * Metric only (C, L, ml/L, umol, %).
+ * User-visible strings are ASCII-only to avoid HA/resource encoding mojibake.
  */
 (() => {
   const CARD_TYPE = "dsc-build-plant-card";
   const CATALOG_BASE = "/local/dsc-catalog";
   const COLORS = ["#5b9f6b", "#4a8f9f", "#c4a35a"];
+  /** UI kind -> catalog index key */
+  const INDEX_KEY = {
+    strain: "strains",
+    nutrient: "nutrients",
+    medium: "mediums",
+    light: "lights",
+  };
+  const SEARCH_IDS = {
+    strain: "q-strain",
+    medium: "q-medium",
+    nutrient: "q-nutrient",
+    light: "q-light",
+  };
 
   const DEFAULTS = () => ({
     type: `custom:${CARD_TYPE}`,
     title: "Build a Plant",
-    subtitle: "Compose strain · medium · nutrition · light · climate",
+    subtitle: "Compose strain / medium / nutrition / light / climate",
   });
 
   const css = `
@@ -59,12 +73,15 @@
     .chip.bad { background:rgba(180,70,70,.12); border-color:rgba(180,70,70,.4); color:#f0b4b4; }
     .search-box { position:relative; }
     .hits {
-      position:absolute; z-index:5; left:0; right:0; top:100%; max-height:220px; overflow:auto;
-      background:#0e1612; border:1px solid rgba(120,160,130,.35); margin:0; padding:0; list-style:none;
+      position:absolute; z-index:20; left:0; right:0; top:calc(100% + 2px); max-height:260px; overflow:auto;
+      background:#0e1612; border:1px solid rgba(120,160,130,.45); margin:0; padding:0; list-style:none;
+      box-shadow: 0 10px 28px rgba(0,0,0,.45);
     }
     .hits li { padding:8px 10px; cursor:pointer; border-bottom:1px solid rgba(120,160,130,.12); font-size:13px; }
-    .hits li:hover { background:rgba(91,159,107,.18); }
-    .hits .meta { color:#8a9c90; font-size:11px; }
+    .hits li:hover, .hits li.active { background:rgba(91,159,107,.22); }
+    .hits .meta { color:#8a9c90; font-size:11px; margin-top:2px; }
+    .hits .empty { padding:10px; color:#8a9c90; font-size:12px; cursor:default; }
+    .hits .empty:hover { background:transparent; }
     table { width:100%; border-collapse:collapse; font-size:13px; margin-top:8px; }
     th, td { text-align:left; padding:6px 4px; border-bottom:1px solid rgba(120,160,130,.12); }
     th { color:#8a9c90; font-weight:500; font-size:11px; letter-spacing:.06em; text-transform:uppercase; }
@@ -88,10 +105,14 @@
       this._config = DEFAULTS();
       this._hass = null;
       this._indexes = { strains: [], nutrients: [], mediums: [], lights: [] };
+      this._indexStatus = { loading: false, ok: false, errors: [] };
       this._q = { strain: "", nutrient: "", medium: "", light: "" };
       this._hits = { strain: [], nutrient: [], medium: [], light: [] };
+      this._hitActive = { strain: -1, nutrient: -1, medium: -1, light: -1 };
+      this._openKind = null;
       this._loaded = false;
       this._mediumSlot = 1;
+      this._focusRestore = null;
     }
 
     setConfig(config) {
@@ -105,12 +126,25 @@
         this._loaded = true;
         this._loadIndexes();
       }
+      // Avoid wiping an open typeahead / focused search on every HA state tick.
+      if (this._openKind || this._isSearchFocused()) return;
       this._render();
     }
 
     getCardSize() { return 12; }
 
+    _isSearchFocused() {
+      const ae = this.shadowRoot?.activeElement;
+      if (!ae || ae.tagName !== "INPUT") return false;
+      return Object.values(SEARCH_IDS).includes(ae.id);
+    }
+
+    _indexFor(kind) {
+      return this._indexes[INDEX_KEY[kind]] || [];
+    }
+
     async _loadIndexes() {
+      this._indexStatus = { loading: true, ok: false, errors: [] };
       const kinds = [
         ["strains", "dsc_strains_search_index.json"],
         ["nutrients", "dsc_nutrients_search_index.json"],
@@ -120,14 +154,23 @@
       await Promise.all(
         kinds.map(async ([key, file]) => {
           try {
-            const r = await fetch(`${CATALOG_BASE}/${file}`);
-            if (!r.ok) return;
+            const r = await fetch(`${CATALOG_BASE}/${file}`, { cache: "no-cache" });
+            if (!r.ok) {
+              this._indexStatus.errors.push(`${file} (${r.status})`);
+              return;
+            }
             const j = await r.json();
-            this._indexes[key] = j.items || [];
-          } catch (_) { /* offline / missing */ }
+            this._indexes[key] = Array.isArray(j.items) ? j.items : [];
+          } catch (err) {
+            this._indexStatus.errors.push(`${file}: ${err?.message || "fetch failed"}`);
+          }
         })
       );
-      this._render();
+      const total = Object.values(this._indexes).reduce((n, a) => n + (a?.length || 0), 0);
+      this._indexStatus.loading = false;
+      this._indexStatus.ok = total > 0;
+      if (!this._openKind) this._render();
+      else this._paintCatalogChip();
     }
 
     _st(id) {
@@ -146,8 +189,6 @@
 
     _call(domain, service, data = {}, target) {
       if (!this._hass) return;
-      const msg = { domain, service, service_data: data };
-      if (target) msg.target = target;
       return this._hass.callService(domain, service, data, target);
     }
 
@@ -168,28 +209,67 @@
       this._call("input_datetime", "set_datetime", { date }, { entity_id: entity });
     }
 
-    _search(kind, q) {
-      this._q[kind] = q;
+    _filterItems(kind, q) {
+      const items = this._indexFor(kind);
       const needle = (q || "").trim().toLowerCase();
-      if (needle.length < 2) {
-        this._hits[kind] = [];
-        this._render();
-        return;
+      if (!needle) {
+        return items.slice(0, 12);
       }
-      const items = this._indexes[kind] || [];
-      this._hits[kind] = items
+      if (needle.length === 1) {
+        return items
+          .filter((it) => {
+            const hay = `${it.name || ""} ${it.brand || ""} ${it.breeder || ""}`.toLowerCase();
+            return hay.startsWith(needle) || hay.includes(` ${needle}`);
+          })
+          .slice(0, 12);
+      }
+      return items
         .filter((it) => {
           const hay = `${it.name || ""} ${it.brand || ""} ${it.breeder || ""}`.toLowerCase();
           return hay.includes(needle);
         })
         .slice(0, 12);
-      this._render();
+    }
+
+    _search(kind, q, { open = true } = {}) {
+      this._q[kind] = q;
+      this._hits[kind] = this._filterItems(kind, q);
+      this._hitActive[kind] = this._hits[kind].length ? 0 : -1;
+      this._openKind = open ? kind : null;
+      this._paintHits(kind);
+    }
+
+    _openSearch(kind) {
+      this._openKind = kind;
+      this._hits[kind] = this._filterItems(kind, this._q[kind] || "");
+      this._hitActive[kind] = this._hits[kind].length ? 0 : -1;
+      this._paintHits(kind);
+    }
+
+    _closeSearch(kind) {
+      if (kind && this._openKind !== kind) return;
+      this._openKind = null;
+      if (kind) {
+        this._hits[kind] = [];
+        this._hitActive[kind] = -1;
+        this._paintHits(kind);
+      }
+    }
+
+    _applyHit(kind, item) {
+      if (!item) return;
+      if (kind === "strain") this._pickStrain(item);
+      else if (kind === "medium") this._pickMedium(item);
+      else if (kind === "nutrient") this._addNutrient(item);
+      else if (kind === "light") this._pickLight(item);
     }
 
     _pickStrain(item) {
       this._setText("input_text.dsc_build_strain", item.name);
       this._q.strain = item.name;
       this._hits.strain = [];
+      this._hitActive.strain = -1;
+      this._openKind = null;
       this._render();
     }
 
@@ -198,11 +278,12 @@
       this._setText(`input_text.dsc_blend_component_${slot}_name`, item.name);
       this._q.medium = "";
       this._hits.medium = [];
+      this._hitActive.medium = -1;
+      this._openKind = null;
       this._render();
     }
 
     async _addNutrient(item) {
-      // First empty inventory slot
       for (let n = 1; n <= 8; n++) {
         const name = this._str(`input_text.dsc_nutrient_${n}_name`);
         const inv = this._st(`input_boolean.dsc_nutrient_${n}_in_inventory`)?.state === "on";
@@ -217,11 +298,12 @@
       }
       this._q.nutrient = "";
       this._hits.nutrient = [];
+      this._hitActive.nutrient = -1;
+      this._openKind = null;
       this._render();
     }
 
     _pickLight(item) {
-      // Prefer fixture select when pack label matches; else custom + URL overrides
       const fixture = this._st("input_select.dsc_light_fixture");
       const opts = fixture?.attributes?.options || [];
       const match = opts.find((o) => String(o).toLowerCase().includes(String(item.name || "").toLowerCase().slice(0, 18)));
@@ -235,6 +317,8 @@
       }
       this._q.light = item.name;
       this._hits.light = [];
+      this._hitActive.light = -1;
+      this._openKind = null;
       this._render();
     }
 
@@ -264,17 +348,68 @@
       return { lines, total: Math.round(total * 10) / 10, L, str };
     }
 
-    _renderHits(kind, onPick) {
+    _hitsHtml(kind) {
+      if (this._openKind !== kind) return "";
       const hits = this._hits[kind] || [];
-      if (!hits.length) return "";
-      return `<ul class="hits">${hits
+      const active = this._hitActive[kind] ?? -1;
+      const indexCount = this._indexFor(kind).length;
+      if (!this._indexStatus.ok && !this._indexStatus.loading) {
+        return `<ul class="hits" role="listbox"><li class="empty">Catalog index missing for ${this._esc(INDEX_KEY[kind] || kind)}. Check /local/dsc-catalog/.</li></ul>`;
+      }
+      if (this._indexStatus.loading && !indexCount) {
+        return `<ul class="hits" role="listbox"><li class="empty">Loading catalog...</li></ul>`;
+      }
+      if (!hits.length) {
+        const q = (this._q[kind] || "").trim();
+        return `<ul class="hits" role="listbox"><li class="empty">${q ? `No matches for "${this._esc(q)}"` : "Start typing to filter catalog"}</li></ul>`;
+      }
+      return `<ul class="hits" role="listbox">${hits
         .map((it, i) => {
           const meta = [it.brand || it.breeder, it.wattage_w != null ? `${it.wattage_w} W` : null, it.dose_ml_l != null ? `${it.dose_ml_l} ml/L` : null]
             .filter(Boolean)
-            .join(" · ");
-          return `<li data-kind="${kind}" data-i="${i}"><div>${this._esc(it.name)}</div>${meta ? `<div class="meta">${this._esc(meta)}</div>` : ""}</li>`;
+            .join(" | ");
+          return `<li role="option" data-kind="${kind}" data-i="${i}" class="${i === active ? "active" : ""}"><div>${this._esc(it.name)}</div>${meta ? `<div class="meta">${this._esc(meta)}</div>` : ""}</li>`;
         })
         .join("")}</ul>`;
+    }
+
+    _paintHits(kind) {
+      const box = this.shadowRoot?.querySelector(`#${SEARCH_IDS[kind]}`)?.closest(".search-box");
+      if (!box) return;
+      const existing = box.querySelector(".hits");
+      if (existing) existing.remove();
+      const html = this._hitsHtml(kind);
+      if (!html) return;
+      box.insertAdjacentHTML("beforeend", html);
+      box.querySelectorAll(".hits li[data-i]").forEach((li) => {
+        li.addEventListener("mousedown", (e) => {
+          e.preventDefault();
+          const i = Number(li.getAttribute("data-i"));
+          this._applyHit(kind, this._hits[kind]?.[i]);
+        });
+      });
+    }
+
+    _paintCatalogChip() {
+      const el = this.shadowRoot?.getElementById("catalog-status");
+      if (!el) return;
+      el.outerHTML = this._catalogChipHtml();
+    }
+
+    _catalogChipHtml() {
+      if (this._indexStatus.loading) {
+        return `<span class="chip warn" id="catalog-status">Loading catalogs...</span>`;
+      }
+      if (!this._indexStatus.ok) {
+        const detail = this._indexStatus.errors[0] || "no index items";
+        return `<span class="chip bad" id="catalog-status">Catalog load failed: ${this._esc(detail)}</span>`;
+      }
+      const n =
+        (this._indexes.strains?.length || 0) +
+        (this._indexes.mediums?.length || 0) +
+        (this._indexes.nutrients?.length || 0) +
+        (this._indexes.lights?.length || 0);
+      return `<span class="chip" id="catalog-status">${n} catalog items ready</span>`;
     }
 
     _esc(s) {
@@ -293,7 +428,7 @@
       const totalL = this._num("input_number.dsc_blend_total_l", 20);
       const mix = this._mixLines();
       const blendValid = Math.round(sumPct) === 100;
-      const roster = this._str("sensor.dsc_plant_roster_summary") || "—";
+      const roster = this._str("sensor.dsc_plant_roster_summary") || "-";
       const mixState = this._str("sensor.dsc_mix_calculator") || `${mix.total} ml total`;
       const lightName = this._str("sensor.dsc_light_active_summary") || this._str("input_select.dsc_light_fixture");
       const ppfd = this._str("sensor.dsc_light_ppfd_map");
@@ -308,13 +443,17 @@
             .join("")
         : "";
 
+      const focus = this._focusRestore;
+      const openKind = this._openKind;
+
       this.shadowRoot.innerHTML = `
         <style>${css}</style>
         <div class="wrap">
           <div class="hero">
-            <p class="brand">Digital Stealth Care · DSC-HUB</p>
+            <p class="brand">Digital Stealth Care / DSC-HUB</p>
             <h1>${this._esc(cfg.title)}</h1>
-            <p class="sub">${this._esc(cfg.subtitle)} Metric only — no invented PPFD grids or feed rates.</p>
+            <p class="sub">${this._esc(cfg.subtitle)} - then commit to inventory. Metric only - no invented PPFD grids or feed rates.</p>
+            <div class="chips" style="margin-top:8px">${this._catalogChipHtml()}</div>
           </div>
           <div class="grid">
             <div class="stack">
@@ -322,8 +461,7 @@
                 <h2>Identity</h2>
                 <label>Strain search</label>
                 <div class="search-box">
-                  <input type="text" id="q-strain" value="${this._esc(this._q.strain)}" placeholder="Type a strain name…" />
-                  ${this._renderHits("strain")}
+                  <input type="text" id="q-strain" autocomplete="off" spellcheck="false" value="${this._esc(this._q.strain)}" placeholder="Type a strain name..." aria-autocomplete="list" />
                 </div>
                 <div class="row">
                   <div>
@@ -342,12 +480,11 @@
               </section>
 
               <section>
-                <h2>Medium · % blend</h2>
+                <h2>Medium / % blend</h2>
                 <label>Search substrate (fills slot below)</label>
                 <div class="row">
                   <div style="flex:2" class="search-box">
-                    <input type="text" id="q-medium" value="${this._esc(this._q.medium)}" placeholder="Coco, perlite, LECA…" />
-                    ${this._renderHits("medium")}
+                    <input type="text" id="q-medium" autocomplete="off" spellcheck="false" value="${this._esc(this._q.medium)}" placeholder="Coco, perlite, LECA..." aria-autocomplete="list" />
                   </div>
                   <div>
                     <label>Target slot</label>
@@ -367,7 +504,7 @@
                       <input type="text" data-blend-name="${n}" value="${this._esc(this._str(`input_text.dsc_blend_component_${n}_name`))}" />
                     </div>
                     <div>
-                      <label>% · ${this._num(`input_number.dsc_blend_pct_${n}`, 0)}%</label>
+                      <label>% / ${this._num(`input_number.dsc_blend_pct_${n}`, 0)}%</label>
                       <input type="range" min="0" max="100" data-blend-pct="${n}" value="${this._num(`input_number.dsc_blend_pct_${n}`, 0)}" />
                     </div>
                   </div>`
@@ -383,17 +520,16 @@
                 <div class="chips">
                   <span class="chip ${blendValid ? "" : "bad"}">${Math.round(sumPct)}% ${blendValid ? "valid" : "must sum 100"}</span>
                   ${parts
-                    .map((p) => `<span class="chip">${this._esc(p.name)} · ${((p.pct / 100) * totalL).toFixed(1)} L</span>`)
+                    .map((p) => `<span class="chip">${this._esc(p.name)} / ${((p.pct / 100) * totalL).toFixed(1)} L</span>`)
                     .join("")}
                 </div>
               </section>
 
               <section>
-                <h2>Nutrition · ml / L</h2>
-                <label>Search nutrients → add to inventory</label>
+                <h2>Nutrition / ml / L</h2>
+                <label>Search nutrients - add to inventory</label>
                 <div class="search-box">
-                  <input type="text" id="q-nutrient" value="${this._esc(this._q.nutrient)}" placeholder="CANNA Coco A…" />
-                  ${this._renderHits("nutrient")}
+                  <input type="text" id="q-nutrient" autocomplete="off" spellcheck="false" value="${this._esc(this._q.nutrient)}" placeholder="CANNA Coco A..." aria-autocomplete="list" />
                 </div>
                 <div class="row">
                   <div>
@@ -417,7 +553,7 @@
                       <td>${l.stock} ml</td>
                     </tr>`
                       )
-                      .join("") || `<tr><td colspan="4" class="muted">No doses yet — search and add bottles.</td></tr>`}
+                      .join("") || `<tr><td colspan="4" class="muted">No doses yet - search and add bottles.</td></tr>`}
                   </tbody>
                 </table>
                 <div class="chips">
@@ -427,7 +563,7 @@
                 <div class="actions">
                   <button type="button" id="btn-accept">Accept mix (burn stock)</button>
                 </div>
-                <p class="muted">Accept uses script.dsc_accept_mix — QA gate, no pumps.</p>
+                <p class="muted">Accept uses script.dsc_accept_mix - QA gate, no pumps.</p>
               </section>
             </div>
 
@@ -436,14 +572,13 @@
                 <h2>Light</h2>
                 <label>Search fixtures</label>
                 <div class="search-box">
-                  <input type="text" id="q-light" value="${this._esc(this._q.light)}" placeholder="Spider Farmer SF1000…" />
-                  ${this._renderHits("light")}
+                  <input type="text" id="q-light" autocomplete="off" spellcheck="false" value="${this._esc(this._q.light)}" placeholder="Spider Farmer SF1000..." aria-autocomplete="list" />
                 </div>
                 <p style="margin:8px 0 4px;font-size:14px">${this._esc(lightName || "No fixture selected")}</p>
                 <div class="chips">
                   ${watts && watts !== "unknown" ? `<span class="chip">${this._esc(watts)} W</span>` : ""}
-                  ${ppf && ppf !== "unknown" ? `<span class="chip">${this._esc(ppf)} µmol/s</span>` : ""}
-                  ${ppe && ppe !== "unknown" ? `<span class="chip">${this._esc(ppe)} µmol/J</span>` : ""}
+                  ${ppf && ppf !== "unknown" ? `<span class="chip">${this._esc(ppf)} umol/s</span>` : ""}
+                  ${ppe && ppe !== "unknown" ? `<span class="chip">${this._esc(ppe)} umol/J</span>` : ""}
                   ${ppfd && ppfd !== "unknown" ? `<span class="chip"><a href="${this._esc(ppfd)}" target="_blank" rel="noopener" style="color:inherit">PPFD map</a></span>` : `<span class="chip warn">No PPFD map URL</span>`}
                   ${spectrum && spectrum !== "unknown" ? `<span class="chip"><a href="${this._esc(spectrum)}" target="_blank" rel="noopener" style="color:inherit">Spectrum</a></span>` : ""}
                 </div>
@@ -451,7 +586,7 @@
 
               <section>
                 <h2>Climate Want</h2>
-                <p class="muted">Applies custom-slot temp/RH only when set (≠0). Catalog strains have no invented climate bands.</p>
+                <p class="muted">Applies custom-slot temp/RH only when set (!= 0). Catalog strains have no invented climate bands.</p>
                 <div class="row">
                   <div>
                     <label>Apply for pot</label>
@@ -493,6 +628,21 @@
 
       this._wire();
       this._fillRoster();
+      if (openKind) {
+        this._openKind = openKind;
+        this._paintHits(openKind);
+      }
+      if (focus) {
+        const inp = this.shadowRoot.getElementById(focus.id);
+        if (inp) {
+          inp.focus();
+          try {
+            const pos = typeof focus.pos === "number" ? focus.pos : inp.value.length;
+            inp.setSelectionRange(pos, pos);
+          } catch (_) { /* date/number inputs */ }
+        }
+        this._focusRestore = null;
+      }
     }
 
     _fillRoster() {
@@ -504,34 +654,62 @@
         return;
       }
       el.innerHTML = slots
-        .map((s) => `<div>#${s.slot} ${this._esc(s.nickname || s.strain || "—")} · ${this._esc(s.status)} · pot ${this._esc(s.pot)}</div>`)
+        .map((s) => `<div>#${s.slot} ${this._esc(s.nickname || s.strain || "-")} / ${this._esc(s.status)} / pot ${this._esc(s.pot)}</div>`)
         .join("");
+    }
+
+    _bindSearch(kind) {
+      const root = this.shadowRoot;
+      const id = SEARCH_IDS[kind];
+      const inp = root.getElementById(id);
+      if (!inp) return;
+
+      inp.addEventListener("input", (e) => {
+        this._focusRestore = { id, pos: e.target.selectionStart };
+        this._search(kind, e.target.value, { open: true });
+      });
+      inp.addEventListener("focus", () => this._openSearch(kind));
+      inp.addEventListener("blur", () => {
+        // Delay so mousedown on a hit can fire first.
+        setTimeout(() => {
+          if (this.shadowRoot?.activeElement?.id === id) return;
+          this._closeSearch(kind);
+        }, 120);
+      });
+      inp.addEventListener("keydown", (e) => {
+        const hits = this._hits[kind] || [];
+        if (e.key === "ArrowDown") {
+          e.preventDefault();
+          if (!this._openKind) this._openSearch(kind);
+          if (!hits.length) return;
+          this._hitActive[kind] = Math.min((this._hitActive[kind] ?? -1) + 1, hits.length - 1);
+          this._paintHits(kind);
+        } else if (e.key === "ArrowUp") {
+          e.preventDefault();
+          if (!hits.length) return;
+          this._hitActive[kind] = Math.max((this._hitActive[kind] ?? 0) - 1, 0);
+          this._paintHits(kind);
+        } else if (e.key === "Enter") {
+          if (this._openKind === kind && hits.length) {
+            e.preventDefault();
+            const i = this._hitActive[kind] >= 0 ? this._hitActive[kind] : 0;
+            this._applyHit(kind, hits[i]);
+          }
+        } else if (e.key === "Escape") {
+          e.preventDefault();
+          this._closeSearch(kind);
+        }
+      });
     }
 
     _wire() {
       const root = this.shadowRoot;
       if (!root) return;
 
-      root.getElementById("q-strain")?.addEventListener("input", (e) => this._search("strain", e.target.value));
-      root.getElementById("q-medium")?.addEventListener("input", (e) => this._search("medium", e.target.value));
-      root.getElementById("q-nutrient")?.addEventListener("input", (e) => this._search("nutrient", e.target.value));
-      root.getElementById("q-light")?.addEventListener("input", (e) => this._search("light", e.target.value));
+      ["strain", "medium", "nutrient", "light"].forEach((k) => this._bindSearch(k));
 
       root.getElementById("medium-slot")?.addEventListener("change", (e) => {
         this._mediumSlot = Number(e.target.value) || 1;
-      });
-
-      root.querySelectorAll(".hits li").forEach((li) => {
-        li.addEventListener("click", () => {
-          const kind = li.getAttribute("data-kind");
-          const i = Number(li.getAttribute("data-i"));
-          const item = this._hits[kind]?.[i];
-          if (!item) return;
-          if (kind === "strain") this._pickStrain(item);
-          if (kind === "medium") this._pickMedium(item);
-          if (kind === "nutrient") this._addNutrient(item);
-          if (kind === "light") this._pickLight(item);
-        });
       });
 
       root.getElementById("build-strain")?.addEventListener("change", (e) => this._setText("input_text.dsc_build_strain", e.target.value));

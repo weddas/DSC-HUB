@@ -1340,3 +1340,19 @@ Memo: [`docs/DSC-PRODUCT-RESEARCH.md`](DSC-PRODUCT-RESEARCH.md).
 ### red-flag
 - Hub WiFi path still flapping hard; Dash HELD is honest. Climate continues on hub local stack when API is dark.
 
+---
+
+## 2026-08-07 — Build a Plant search UX fix
+
+### done (this pass)
+- Root cause: typeahead looked up `_indexes["strain"]` etc. while catalog keys are `strains` / `mediums` / `nutrients` / `lights` — always empty hits.
+- Mojibake: fancy Unicode (`·` `—` `…` `≠`) in card/dashboard strings → ASCII.
+- Predictive dropdowns + keyboard nav + catalog status chip; skip hass re-render while search open.
+- Deployed `/config/www/dsc-build-plant-card.js` + rebuilt `dsc-system-map-card.js` / `DSC-HUB.js` (bundle registers card first); cache-busted lovelace resources; HA core restarted.
+
+### deferred / next
+| ID | Item | Notes |
+|---|---|---|
+| N-068 | Interactive browser verify Build a Plant typeahead | cursor-ide-browser had no tab; browser-use blocked on Chrome remote-debugging Allow. Operator: Ctrl+F5 `/dsc-build-plant/build`, confirm dropdowns + no mojibake. |
+| N-069 | Commit Build a Plant UX when asked | Repo changes left uncommitted (sibling agent owns commit/push). |
+
