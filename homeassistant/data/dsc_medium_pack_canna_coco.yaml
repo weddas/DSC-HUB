@@ -1,0 +1,13 @@
+schema_version: 1
+id: canna_coco_mvp
+name: CANNA Coco Medium MVP Pack
+curated: true
+products:
+  - id: canna_coco_professional_plus
+    name: CANNA Coco Professional Plus
+    brand: CANNA
+    category: coco
+    composition_pct:
+      coco: 100
+    ph_range: [5.5, 6.2]
+    note: Composition is represented as pure coco; no perlite is assumed.

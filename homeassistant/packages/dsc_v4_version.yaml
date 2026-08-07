@@ -17,10 +17,11 @@ template:
       - name: "DSC HA Surface Version"
         unique_id: dsc_ha_surface_version
         icon: mdi:home-assistant
-        state: "5.1.10"
+        state: "5.1.11"
         attributes:
           packages: dsc_v4_*
           dashboard: dsc-hub-pro (strains + nutrient-science + crop UI)
+          build_plant_inclusion: N-085
           phase_b: present
           learn_activity: present
           multi_lever: F-005 residual attribution

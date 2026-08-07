@@ -93,6 +93,11 @@ Composition surface at **`/dsc-build-plant/build`** — not a Pro tab. Package
 | Assign to pot | `script.dsc_plant_assign_to_pot` |
 | Apply climate Want | `script.dsc_apply_climate_want` (Custom temp/RH ≠0 only) |
 
+Build a Plant is also included in the Pro operating surface: Home and Root
+Zone show assigned roster nickname/blend/recipe context, Nutrient Science
+shows the shared calculator and CANNA stage packs, and Lighting exposes the
+selected fixture plus PPFD map source.
+
 Ops runbook: [`../docs/qa/LIVE-UI-BUILD-A-PLANT.md`](../docs/qa/LIVE-UI-BUILD-A-PLANT.md).
 Requires Sync add-on **5.1.4+** (or ha-sync) for dashboard YAML + catalog JSON;
 HACS alone registers the custom element.

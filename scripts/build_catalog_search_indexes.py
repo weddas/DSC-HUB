@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Build slim catalog search indexes for Build a Plant (/local/dsc-catalog/).
 
-Metric-friendly fields only. No chemistry blobs, no invented photometrics.
-Caps keep browser payloads small.
+Metric-friendly fields only. Chemistry is limited to ranges and three terpene
+names; no full lab blobs or invented photometrics. Caps keep payloads small.
 
 Usage:
   python scripts/build_catalog_search_indexes.py
@@ -77,6 +77,15 @@ def build_strains() -> dict:
         if key in seen:
             return
         seen.add(key)
+        chemistry = extra.get("chemistry") if isinstance(extra.get("chemistry"), dict) else {}
+        top_terpenes = chemistry.get("top_terpenes") or chemistry.get("terpenes") or []
+        if isinstance(top_terpenes, dict):
+            top_terpenes = list(top_terpenes)
+        if not isinstance(top_terpenes, list):
+            top_terpenes = []
+        thc_range = chemistry.get("thc_range")
+        cbd_range = chemistry.get("cbd_range")
+        has_chemistry = bool(top_terpenes or thc_range or cbd_range)
         rows.append(
             {
                 "id": extra.get("id") or _slug("strain", name),
@@ -84,10 +93,34 @@ def build_strains() -> dict:
                 "type": extra.get("type"),
                 "breeder": extra.get("breeder"),
                 "source": extra.get("source"),
+                "has_chemistry": has_chemistry,
+                "top_terpenes": top_terpenes[:3],
+                "thc_range": thc_range,
+                "cbd_range": cbd_range,
             }
         )
 
-    # Curated YAML seeds
+    # Prefer the merged dump because it carries chemistry and bank overlays.
+    merged = DATA / "dsc_strains_merged.json"
+    if merged.exists():
+        try:
+            doc = json.loads(merged.read_text(encoding="utf-8"))
+            for row in doc.get("seeds") or doc.get("strains") or doc.get("products") or []:
+                if len(rows) >= STRAIN_CAP:
+                    break
+                if isinstance(row, dict):
+                    add(
+                        row.get("name"),
+                        id=row.get("id"),
+                        type=row.get("type") or row.get("lineage"),
+                        breeder=row.get("breeder") or row.get("bank"),
+                        chemistry=row.get("chemistry"),
+                        source="merged",
+                    )
+        except Exception as e:
+            print("merged skip", e)
+
+    # Curated YAML seeds fill names absent from the merged dump.
     yaml_path = DATA / "dsc_strain_catalog.yaml"
     if yaml_path.exists() and yaml:
         try:
@@ -104,7 +137,7 @@ def build_strains() -> dict:
         except Exception as e:
             print("yaml skip", e)
 
-    # Popular dump
+    # Popular dump is the final fallback.
     for row in _products(DATA / "dsc_strains_popular.json"):
         if len(rows) >= STRAIN_CAP:
             break
@@ -114,34 +147,19 @@ def build_strains() -> dict:
                 id=row.get("id"),
                 type=row.get("type") or row.get("species"),
                 breeder=row.get("breeder") or row.get("bank"),
+                chemistry=row.get("chemistry"),
                 source="popular",
             )
-
-    # Merged names (thin) if present
-    merged = DATA / "dsc_strains_merged.json"
-    if merged.exists() and len(rows) < STRAIN_CAP:
-        try:
-            doc = json.loads(merged.read_text(encoding="utf-8"))
-            for row in doc.get("seeds") or doc.get("strains") or doc.get("products") or []:
-                if len(rows) >= STRAIN_CAP:
-                    break
-                if isinstance(row, dict):
-                    add(
-                        row.get("name"),
-                        id=row.get("id"),
-                        type=row.get("type") or row.get("lineage"),
-                        breeder=row.get("breeder") or row.get("bank"),
-                        source="merged",
-                    )
-        except Exception as e:
-            print("merged skip", e)
 
     return {
         "schema_version": 1,
         "kind": "strains",
         "built_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "count": len(rows),
-        "note": "Slim name index for Build a Plant typeahead. No chemistry blobs.",
+        "note": (
+            "Slim strain index; merged dump preferred. Chemistry coverage is "
+            "intentionally slim and limited to ranges plus three terpene names."
+        ),
         "items": rows,
     }
 
@@ -263,6 +281,7 @@ def build_mediums() -> dict:
                     "name": name,
                     "brand": row.get("brand"),
                     "category": row.get("category") or row.get("kind"),
+                    "composition": row.get("composition") or row.get("composition_pct"),
                     "source": path.stem,
                 }
             )
@@ -284,6 +303,7 @@ def build_mediums() -> dict:
                     "name": label,
                     "brand": None,
                     "category": "substrate",
+                    "composition": None,
                     "source": "builder_seed",
                 },
             )

@@ -1,0 +1,18 @@
+schema_version: 1
+id: canna_coco_mvp
+name: CANNA Coco A+B MVP Pack
+curated: true
+note: Manufacturer-style full-strength baseline; tune strength to plant response.
+products:
+  - id: canna_coco_a
+    name: CANNA Coco A
+    brand: CANNA
+    category: base
+    dose_ml_l: 4.0
+    mix_order: 1
+  - id: canna_coco_b
+    name: CANNA Coco B
+    brand: CANNA
+    category: base
+    dose_ml_l: 4.0
+    mix_order: 2

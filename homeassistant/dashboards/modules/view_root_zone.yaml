@@ -74,6 +74,22 @@ sections:
           {% endfor %}
 
           *POT3 moisture probe fault (Faults and Repairs).*
+      - type: markdown
+        content: >-
+          {% set slots = state_attr('sensor.dsc_plant_roster_summary', 'slots') or [] %}
+          {% for p in ['1','2','3','4'] %}
+          {% set matches = slots | selectattr('pot', 'equalto', p) | list %}
+          {% if matches | length > 0 %}
+          {% set slot = matches | first %}
+          **POT{{ p }}:** {{ slot.nickname or slot.strain or ('roster slot ' ~ slot.slot) }}
+          {%- if slot.blend %} · blend {{ slot.blend }}{% endif %}
+          {%- if slot.recipe %} · recipe {{ slot.recipe }}{% endif %}
+
+          {% else %}
+          **POT{{ p }}:** no roster assignment
+
+          {% endif %}
+          {% endfor %}
   - type: grid
     column_span: 2
     cards:

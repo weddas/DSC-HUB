@@ -16,6 +16,7 @@ def roster_text() -> str:
             ("strain", 64, "Strain"),
             ("blend", 255, "Blend"),
             ("recipe", 255, "Recipe"),
+            ("notes", 255, "Notes"),
         ):
             lines.append(
                 f"""  dsc_plant_roster_{i}_{field}:
@@ -24,6 +25,22 @@ def roster_text() -> str:
     initial: ""
 """
             )
+    return "".join(lines)
+
+
+def roster_number() -> str:
+    lines = []
+    for i in range(1, 9):
+        lines.append(
+            f"""  dsc_plant_roster_{i}_seed_count:
+    name: "DSC Roster {i} Seed Count"
+    min: 0
+    max: 1000
+    step: 1
+    initial: 0
+    mode: box
+"""
+        )
     return "".join(lines)
 
 
@@ -58,6 +75,8 @@ def roster_select() -> str:
 
 
 def want_climate(pot: int) -> str:
+    # HA 2026.8 rejects non-numeric states on sensors with unit_of_measurement.
+    # Use 0 as the unset sentinel (Apply Climate already treats 0 as skip).
     return f"""
       - name: "DSC POT{pot} Want Temp Min"
         unique_id: dsc_pot{pot}_want_temp_min
@@ -66,9 +85,8 @@ def want_climate(pot: int) -> str:
           {{% set s = states('select.dsc_pot{pot}_strain') %}}
           {{% if s in ['unknown','unavailable',''] %}}{{% set s = states('input_select.dsc_pot{pot}_strain') %}}{{% endif %}}
           {{% if s.startswith('Custom') %}}
-            {{% set v = states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_temp_min')|float(0) %}}
-            {{{{ v if v != 0 else 'unknown' }}}}
-          {{% else %}}unknown{{% endif %}}
+            {{{{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_temp_min')|float(0) }}}}
+          {{% else %}}0{{% endif %}}
       - name: "DSC POT{pot} Want Temp Max"
         unique_id: dsc_pot{pot}_want_temp_max
         unit_of_measurement: "°C"
@@ -76,9 +94,8 @@ def want_climate(pot: int) -> str:
           {{% set s = states('select.dsc_pot{pot}_strain') %}}
           {{% if s in ['unknown','unavailable',''] %}}{{% set s = states('input_select.dsc_pot{pot}_strain') %}}{{% endif %}}
           {{% if s.startswith('Custom') %}}
-            {{% set v = states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_temp_max')|float(0) %}}
-            {{{{ v if v != 0 else 'unknown' }}}}
-          {{% else %}}unknown{{% endif %}}
+            {{{{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_temp_max')|float(0) }}}}
+          {{% else %}}0{{% endif %}}
       - name: "DSC POT{pot} Want RH Min"
         unique_id: dsc_pot{pot}_want_rh_min
         unit_of_measurement: "%"
@@ -86,9 +103,8 @@ def want_climate(pot: int) -> str:
           {{% set s = states('select.dsc_pot{pot}_strain') %}}
           {{% if s in ['unknown','unavailable',''] %}}{{% set s = states('input_select.dsc_pot{pot}_strain') %}}{{% endif %}}
           {{% if s.startswith('Custom') %}}
-            {{% set v = states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_rh_min')|float(0) %}}
-            {{{{ v if v != 0 else 'unknown' }}}}
-          {{% else %}}unknown{{% endif %}}
+            {{{{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_rh_min')|float(0) }}}}
+          {{% else %}}0{{% endif %}}
       - name: "DSC POT{pot} Want RH Max"
         unique_id: dsc_pot{pot}_want_rh_max
         unit_of_measurement: "%"
@@ -96,9 +112,8 @@ def want_climate(pot: int) -> str:
           {{% set s = states('select.dsc_pot{pot}_strain') %}}
           {{% if s in ['unknown','unavailable',''] %}}{{% set s = states('input_select.dsc_pot{pot}_strain') %}}{{% endif %}}
           {{% if s.startswith('Custom') %}}
-            {{% set v = states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_rh_max')|float(0) %}}
-            {{{{ v if v != 0 else 'unknown' }}}}
-          {{% else %}}unknown{{% endif %}}
+            {{{{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_rh_max')|float(0) }}}}
+          {{% else %}}0{{% endif %}}
 """
 
 
@@ -150,6 +165,7 @@ input_datetime:
     has_time: false
 {roster_datetime()}
 input_number:
+{roster_number()}
   dsc_blend_pct_1:
     name: "DSC Blend % 1"
     min: 0
@@ -184,6 +200,11 @@ input_number:
     mode: box
 
 input_select:
+  dsc_build_custom_slot:
+    name: "DSC Build Custom Strain Slot"
+    icon: mdi:database-edit
+    options: ["auto", "1", "2", "3", "4", "5"]
+    initial: "auto"
   dsc_build_assign_pot:
     name: "DSC Build Assign Pot"
     icon: mdi:flower
@@ -258,16 +279,20 @@ template:
           {{% set str = states('input_number.dsc_mix_strength_pct')|float(100) / 100 %}}
           {{% set lines = [] %}}
           {{% set total = namespace(v=0) %}}
+          {{% set short = namespace(v=false) %}}
           {{% for n in range(1,9) %}}
             {{% set name = states('input_text.dsc_nutrient_' ~ n ~ '_name')|trim %}}
             {{% set dose = states('input_number.dsc_nutrient_' ~ n ~ '_dose_ml_l')|float(0) %}}
             {{% if name and dose > 0 %}}
               {{% set ml = (dose * L * str)|round(1) %}}
               {{% set total.v = total.v + ml %}}
+              {{% set inv = is_state('input_boolean.dsc_nutrient_' ~ n ~ '_in_inventory','on') %}}
+              {{% set stock = states('input_number.dsc_nutrient_' ~ n ~ '_stock_ml')|float(0) %}}
+              {{% if inv and stock < ml %}}{{% set short.v = true %}}{{% endif %}}
               {{% set lines = lines + [name ~ ': ' ~ ml ~ ' ml @ ' ~ dose ~ ' ml/L'] %}}
             {{% endif %}}
           {{% endfor %}}
-          {{{{ (total.v|round(1) ~ ' ml total') if lines else 'No doses set' }}}}
+          {{{{ ((total.v|round(1) ~ ' ml total') ~ (' - SHORT STOCK' if short.v else '')) if lines else 'No doses set' }}}}
         attributes:
           tank_l: "{{{{ states('input_number.dsc_mix_tank_liters') }}}}"
           strength_pct: "{{{{ states('input_number.dsc_mix_strength_pct') }}}}"
@@ -282,10 +307,25 @@ template:
               {{% set inv = is_state('input_boolean.dsc_nutrient_' ~ n ~ '_in_inventory','on') %}}
               {{% if name and dose > 0 %}}
                 {{% set ml = (dose * L * str)|round(1) %}}
-                {{% set out = out + [{{'slot': n, 'name': name, 'dose_ml_l': dose, 'ml': ml, 'stock_ml': stock, 'in_inventory': inv}}] %}}
+                {{% set out = out + [{{'slot': n, 'name': name, 'dose_ml_l': dose, 'ml': ml, 'stock_ml': stock, 'in_inventory': inv, 'short_stock': inv and stock < ml}}] %}}
               {{% endif %}}
             {{% endfor %}}
             {{{{ out }}}}
+          short_stock_any: >
+            {{% set L = states('input_number.dsc_mix_tank_liters')|float(20) %}}
+            {{% set str = states('input_number.dsc_mix_strength_pct')|float(100) / 100 %}}
+            {{% set ns = namespace(short=false) %}}
+            {{% for n in range(1,9) %}}
+              {{% set dose = states('input_number.dsc_nutrient_' ~ n ~ '_dose_ml_l')|float(0) %}}
+              {{% set ml = dose * L * str %}}
+              {{% if is_state('input_boolean.dsc_nutrient_' ~ n ~ '_in_inventory','on')
+                    and states('input_text.dsc_nutrient_' ~ n ~ '_name')|trim
+                    and dose > 0
+                    and states('input_number.dsc_nutrient_' ~ n ~ '_stock_ml')|float(0) < ml %}}
+                {{% set ns.short = true %}}
+              {{% endif %}}
+            {{% endfor %}}
+            {{{{ ns.short }}}}
           total_ml: >
             {{% set L = states('input_number.dsc_mix_tank_liters')|float(20) %}}
             {{% set str = states('input_number.dsc_mix_strength_pct')|float(100) / 100 %}}
@@ -321,9 +361,13 @@ template:
                   'slot': i,
                   'nickname': states('input_text.dsc_plant_roster_' ~ i ~ '_nickname'),
                   'strain': states('input_text.dsc_plant_roster_' ~ i ~ '_strain'),
+                  'blend': states('input_text.dsc_plant_roster_' ~ i ~ '_blend'),
+                  'recipe': states('input_text.dsc_plant_roster_' ~ i ~ '_recipe'),
                   'sprout': states('input_datetime.dsc_plant_roster_' ~ i ~ '_sprout'),
                   'pot': states('input_select.dsc_plant_roster_' ~ i ~ '_pot'),
-                  'status': st
+                  'status': st,
+                  'seed_count': states('input_number.dsc_plant_roster_' ~ i ~ '_seed_count')|int(0),
+                  'notes': states('input_text.dsc_plant_roster_' ~ i ~ '_notes')
                 }}] %}}
               {{% endif %}}
             {{% endfor %}}
@@ -406,40 +450,140 @@ script:
 
   dsc_plant_assign_to_pot:
     alias: "DSC Build Plant · Assign to pot"
-    description: "Copy builder strain + sprout into pot HA helpers (and pot entities when online)."
+    description: "Resolve catalog/custom strain, write both pot ID forms, and activate the matching roster entry."
     mode: single
     fields:
       pot:
         name: Pot
         description: "1–4"
         example: "1"
-        required: true
+        required: false
         selector:
           select:
             options: ["1", "2", "3", "4"]
     sequence:
       - variables:
-          n: "{{{{ pot if pot is defined else states('input_select.dsc_build_assign_pot') }}}}"
+          n: "{{{{ (pot if pot is defined and pot|string|trim else states('input_select.dsc_build_assign_pot'))|string|trim }}}}"
           strain: "{{{{ states('input_text.dsc_build_strain')|trim }}}}"
+          nickname: "{{{{ states('input_text.dsc_build_nickname')|trim or states('input_text.dsc_build_strain')|trim }}}}"
           sprout: "{{{{ states('input_datetime.dsc_build_sprout_date')[:10] }}}}"
-      - condition: template
-        value_template: "{{{{ n|string in ['1','2','3','4'] and strain != '' }}}}"
-      - action: input_select.select_option
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{{{ n not in ['1','2','3','4'] }}}}"
+            sequence:
+              - action: persistent_notification.create
+                data:
+                  title: "Build a Plant · assignment failed"
+                  message: "Select a valid pot (1-4) before assigning."
+              - stop: "No valid pot selected"
+                error: true
+          - conditions:
+              - condition: template
+                value_template: "{{{{ strain == '' }}}}"
+            sequence:
+              - action: persistent_notification.create
+                data:
+                  title: "Build a Plant · assignment failed"
+                  message: "Strain is empty. Pick or enter a strain first."
+              - stop: "Strain is empty"
+                error: true
+      - variables:
+          direct_strain: "{{{{ strain in ['Generic Photoperiod','Generic Autoflower','Custom 1','Custom 2','Custom 3','Custom 4','Custom 5'] }}}}"
+          custom_slot: >
+            {{% if strain in ['Generic Photoperiod','Generic Autoflower','Custom 1','Custom 2','Custom 3','Custom 4','Custom 5'] %}}
+              0
+            {{% elif states('input_select.dsc_build_custom_slot') in ['1','2','3','4','5'] %}}
+              {{{{ states('input_select.dsc_build_custom_slot') }}}}
+            {{% else %}}
+              {{% set ns = namespace(slot=0) %}}
+              {{% for i in [1,2,3,4,5] %}}
+                {{% set current = states('input_text.dsc_custom_strain_' ~ i ~ '_name')|trim %}}
+                {{% if ns.slot == 0 and (current == '' or current in ['unknown','unavailable'] or current == strain) %}}
+                  {{% set ns.slot = i %}}
+                {{% endif %}}
+              {{% endfor %}}
+              {{{{ ns.slot }}}}
+            {{% endif %}}
+          roster_slot: >
+            {{% set ns = namespace(slot=0) %}}
+            {{% for i in range(1,9) %}}
+              {{% set rs = states('input_text.dsc_plant_roster_' ~ i ~ '_strain')|trim %}}
+              {{% set rn = states('input_text.dsc_plant_roster_' ~ i ~ '_nickname')|trim %}}
+              {{% if ns.slot == 0 and (rs == strain or (nickname and rn == nickname)) %}}
+                {{% set ns.slot = i %}}
+              {{% endif %}}
+            {{% endfor %}}
+            {{{{ ns.slot }}}}
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{{{ not direct_strain and custom_slot|int(0) == 0 }}}}"
+            sequence:
+              - action: persistent_notification.create
+                data:
+                  title: "Build a Plant · assignment failed"
+                  message: "All five custom strain slots are occupied. Choose a slot explicitly or clear one."
+              - stop: "No custom strain slot available"
+                error: true
+      - variables:
+          strain_option: "{{{{ strain if direct_strain else 'Custom ' ~ custom_slot }}}}"
+      - action: text.set_value
         target:
-          entity_id: "input_select.dsc_pot{{{{ n }}}}_strain"
+          entity_id: "text.dsc_pot{{{{ n }}}}_plant_name"
         data:
-          option: "{{{{ strain }}}}"
+          value: "{{{{ nickname }}}}"
         continue_on_error: true
-      - action: select.select_option
+      - action: text.set_value
         target:
-          entity_id: "select.dsc_pot{{{{ n }}}}_strain"
+          entity_id: "text.dsc_pot_{{{{ n }}}}_plant_name"
         data:
-          option: "{{{{ strain }}}}"
+          value: "{{{{ nickname }}}}"
         continue_on_error: true
       - choose:
           - conditions:
               - condition: template
-                value_template: "{{{{ sprout|length >= 8 }}}}"
+                value_template: "{{{{ not direct_strain }}}}"
+            sequence:
+              - action: input_text.set_value
+                target:
+                  entity_id: "input_text.dsc_custom_strain_{{{{ custom_slot }}}}_name"
+                data:
+                  value: "{{{{ strain }}}}"
+      - action: input_select.select_option
+        target:
+          entity_id: "input_select.dsc_pot{{{{ n }}}}_strain"
+        data:
+          option: "{{{{ strain_option }}}}"
+      - action: select.select_option
+        target:
+          entity_id: "select.dsc_pot{{{{ n }}}}_strain"
+        data:
+          option: "{{{{ strain_option }}}}"
+        continue_on_error: true
+      - action: select.select_option
+        target:
+          entity_id: "select.dsc_pot_{{{{ n }}}}_strain"
+        data:
+          option: "{{{{ strain_option }}}}"
+        continue_on_error: true
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: >-
+                  {{{{ states('input_select.dsc_pot' ~ n ~ '_strain') != strain_option }}}}
+            sequence:
+              - action: persistent_notification.create
+                data:
+                  title: "Build a Plant · assignment failed"
+                  message: "POT{{{{ n }}}} did not confirm strain option {{{{ strain_option }}}}. Check pot connectivity and entity IDs."
+              - stop: "Pot strain selection was not confirmed"
+                error: true
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: >-
+                  {{{{ sprout|regex_match('^\\d{{4}}-\\d{{2}}-\\d{{2}}$') }}}}
             sequence:
               - action: input_datetime.set_datetime
                 target:
@@ -452,10 +596,74 @@ script:
                 data:
                   date: "{{{{ sprout }}}}"
                 continue_on_error: true
+              - action: datetime.set_value
+                target:
+                  entity_id: "datetime.dsc_pot_{{{{ n }}}}_sprout_date"
+                data:
+                  date: "{{{{ sprout }}}}"
+                continue_on_error: true
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{{{ roster_slot|int(0) > 0 }}}}"
+            sequence:
+              - action: input_select.select_option
+                target:
+                  entity_id: "input_select.dsc_plant_roster_{{{{ roster_slot }}}}_pot"
+                data:
+                  option: "{{{{ n }}}}"
+              - action: input_select.select_option
+                target:
+                  entity_id: "input_select.dsc_plant_roster_{{{{ roster_slot }}}}_status"
+                data:
+                  option: "active"
       - action: logbook.log
         data:
           name: DSC Build Plant
-          message: "Assigned {{{{ strain }}}} / {{{{ sprout }}}} → POT{{{{ n }}}}"
+          message: "Assigned {{{{ nickname }}}} ({{{{ strain }}}} via {{{{ strain_option }}}}) → POT{{{{ n }}}}"
+      - action: persistent_notification.create
+        data:
+          title: "Build a Plant · assigned"
+          message: "{{{{ nickname }}}} / {{{{ strain }}}} assigned to POT{{{{ n }}}}{{{{ ' and roster slot ' ~ roster_slot if roster_slot|int(0) > 0 else '' }}}}."
+
+  dsc_build_plant_commit_and_assign:
+    alias: "DSC Build Plant · Commit and assign"
+    description: "Commit the builder to roster, then assign it when a pot is selected."
+    mode: single
+    sequence:
+      - action: script.dsc_build_plant_commit
+      - condition: template
+        value_template: "{{{{ states('input_select.dsc_build_assign_pot') in ['1','2','3','4'] }}}}"
+      - action: script.dsc_plant_assign_to_pot
+        data:
+          pot: "{{{{ states('input_select.dsc_build_assign_pot') }}}}"
+
+  dsc_blend_autofill_from_medium:
+    alias: "DSC Build Plant · Autofill medium blend"
+    description: "Apply the known CANNA coco composition to the blend helpers."
+    mode: restart
+    sequence:
+      - variables:
+          medium: "{{{{ states('input_text.dsc_blend_component_1_name')|trim|lower }}}}"
+      - condition: template
+        value_template: "{{{{ 'canna coco' in medium }}}}"
+      - action: input_text.set_value
+        target:
+          entity_id: input_text.dsc_blend_component_1_name
+        data:
+          value: "coco"
+      - action: input_number.set_value
+        target:
+          entity_id: input_number.dsc_blend_pct_1
+        data:
+          value: 100
+      - action: input_number.set_value
+        target:
+          entity_id:
+            - input_number.dsc_blend_pct_2
+            - input_number.dsc_blend_pct_3
+        data:
+          value: 0
 
   dsc_apply_climate_want:
     alias: "DSC Apply Climate Want"

@@ -1,24 +1,90 @@
-# DSC strain catalog — seed mirror (HA customs live in input_* slots)
-# Promote occupied customs: script.dsc_promote_customs_yaml_preview
-# or python scripts/promote_customs_to_yaml.py <ha-states.json>
-
+# Curated MVP Want bands. These are conservative operating bands, not a
+# substitute for breeder guidance or cultivar-specific observation.
+schema_version: 1
 seeds:
-  - id: generic_photoperiod
+  - &generic_photo
+    id: generic_photoperiod
     name: Generic Photoperiod
     type: photo
-    want:
+    curated: true
+    want: &photo_want
       ph: [5.8, 6.5]
       ec_veg_us: [1000, 1600]
       ec_flower_us: [1600, 2400]
       moisture_pct: [45, 70]
+      temp_c: [20, 28]
+      rh_pct: [45, 70]
   - id: generic_autoflower
     name: Generic Autoflower
     type: auto
-    want:
+    curated: true
+    want: &auto_want
       ph: [5.8, 6.5]
       ec_veg_us: [800, 1400]
       ec_flower_us: [1400, 2000]
       moisture_pct: [45, 70]
+      temp_c: [20, 27]
+      rh_pct: [45, 65]
+  - id: blue_dream
+    name: Blue Dream
+    type: photo
+    lineage: hybrid
+    curated: true
+    want: *photo_want
+  - id: wedding_cake
+    name: Wedding Cake
+    type: photo
+    lineage: hybrid
+    curated: true
+    want: *photo_want
+  - id: gorilla_glue
+    name: Gorilla Glue
+    type: photo
+    lineage: hybrid
+    curated: true
+    want: *photo_want
+  - id: og_kush
+    name: OG Kush
+    type: photo
+    lineage: hybrid
+    curated: true
+    want: *photo_want
+  - id: sour_diesel
+    name: Sour Diesel
+    type: photo
+    lineage: sativa
+    curated: true
+    want: *photo_want
+  - id: northern_lights
+    name: Northern Lights
+    type: photo
+    lineage: indica
+    curated: true
+    want: *photo_want
+  - id: white_widow
+    name: White Widow
+    type: photo
+    lineage: hybrid
+    curated: true
+    want: *photo_want
+  - id: jack_herer
+    name: Jack Herer
+    type: photo
+    lineage: sativa
+    curated: true
+    want: *photo_want
+  - id: amnesia_haze_auto
+    name: Amnesia Haze Auto
+    type: auto
+    lineage: sativa
+    curated: true
+    want: *auto_want
+  - id: zkittlez_auto
+    name: Zkittlez Auto
+    type: auto
+    lineage: hybrid
+    curated: true
+    want: *auto_want
 
 custom_slots: 5
-note: Got = raw + offset. Peer baseline script sets offsets to median.
+note: Got = raw + offset. Run promote_strain_catalog_to_ha.py after edits.

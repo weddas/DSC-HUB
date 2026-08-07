@@ -1,0 +1,29 @@
+# DSC-HUB medium catalog MVP. Keep labels aligned with the curated data pack.
+input_select:
+  dsc_grow_medium:
+    name: "DSC Grow Medium"
+    icon: mdi:seed
+    options:
+      - "CANNA Coco Professional Plus"
+      - "Coco / Perlite 70/30"
+      - "Perlite"
+      - "Custom"
+    initial: "CANNA Coco Professional Plus"
+
+template:
+  - sensor:
+      - name: "DSC Medium Summary"
+        unique_id: dsc_medium_summary
+        icon: mdi:land-plots
+        state: "{{ states('input_select.dsc_grow_medium') }}"
+        attributes:
+          composition: >-
+            {% set medium = states('input_select.dsc_grow_medium') %}
+            {% if medium == 'CANNA Coco Professional Plus' %}100% coco
+            {% elif medium == 'Coco / Perlite 70/30' %}70% coco / 30% perlite
+            {% elif medium == 'Perlite' %}100% perlite
+            {% else %}user-defined{% endif %}
+          ph_target: >-
+            {{ '5.5–6.2' if states('input_select.dsc_grow_medium') in
+               ['CANNA Coco Professional Plus', 'Coco / Perlite 70/30'] else 'not set' }}
+          measurement_system: "metric"

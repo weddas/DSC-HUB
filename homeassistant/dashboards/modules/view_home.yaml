@@ -1650,6 +1650,18 @@ sections:
             tap_action:
               action: navigate
               navigation_path: /dsc-hub-pro/root-zone
+      - type: markdown
+        content: >-
+          {% set slots = state_attr('sensor.dsc_plant_roster_summary', 'slots') or [] %}
+          {% for p in ['1','2','3','4'] %}
+          {% set matches = slots | selectattr('pot', 'equalto', p) | list %}
+          {% if matches | length > 0 %}
+          {% set slot = matches | first %}
+          **POT{{ p }} roster:** {{ slot.nickname or slot.strain or ('slot ' ~ slot.slot) }}
+          {%- if slot.blend %} · {{ slot.blend }}{% endif %}
+
+          {% endif %}
+          {% endfor %}
       - type: grid
         columns: 4
         square: false
@@ -1676,12 +1688,16 @@ sections:
                             icon: mdi:sprout
                           - entity: select.dsc_pot1_growth_stage
                             name: Growth stage
+                          - entity: select.dsc_pot1_strain
+                            name: Strain (pot contract)
                           - entity: select.dsc_pot_1_strain
-                            name: Strain (pot)
+                            name: Strain (pot underscore fallback)
                           - entity: input_select.dsc_pot1_strain
                             name: Strain (HA)
-                          - entity: date.dsc_pot_1_sprout_date
-                            name: Sprout (pot)
+                          - entity: datetime.dsc_pot1_sprout_date
+                            name: Sprout (pot contract)
+                          - entity: datetime.dsc_pot_1_sprout_date
+                            name: Sprout (pot underscore fallback)
                           - entity: input_datetime.dsc_pot1_sprout_date
                             name: Sprout (HA)
                           - entity: sensor.dsc_pot1_need_summary
@@ -1755,12 +1771,16 @@ sections:
                             icon: mdi:sprout
                           - entity: select.dsc_pot2_growth_stage
                             name: Growth stage
+                          - entity: select.dsc_pot2_strain
+                            name: Strain (pot contract)
                           - entity: select.dsc_pot_2_strain
-                            name: Strain (pot)
+                            name: Strain (pot underscore fallback)
                           - entity: input_select.dsc_pot2_strain
                             name: Strain (HA)
-                          - entity: date.dsc_pot_2_sprout_date
-                            name: Sprout (pot)
+                          - entity: datetime.dsc_pot2_sprout_date
+                            name: Sprout (pot contract)
+                          - entity: datetime.dsc_pot_2_sprout_date
+                            name: Sprout (pot underscore fallback)
                           - entity: input_datetime.dsc_pot2_sprout_date
                             name: Sprout (HA)
                           - entity: sensor.dsc_pot2_need_summary
@@ -1837,12 +1857,16 @@ sections:
                             icon: mdi:sprout
                           - entity: select.dsc_pot3_growth_stage
                             name: Growth stage
+                          - entity: select.dsc_pot3_strain
+                            name: Strain (pot contract)
                           - entity: select.dsc_pot_3_strain
-                            name: Strain (pot)
+                            name: Strain (pot underscore fallback)
                           - entity: input_select.dsc_pot3_strain
                             name: Strain (HA)
-                          - entity: date.dsc_pot_3_sprout_date
-                            name: Sprout (pot)
+                          - entity: datetime.dsc_pot3_sprout_date
+                            name: Sprout (pot contract)
+                          - entity: datetime.dsc_pot_3_sprout_date
+                            name: Sprout (pot underscore fallback)
                           - entity: input_datetime.dsc_pot3_sprout_date
                             name: Sprout (HA)
                           - entity: sensor.dsc_pot3_need_summary
@@ -1910,12 +1934,16 @@ sections:
                             icon: mdi:sprout
                           - entity: select.dsc_pot4_growth_stage
                             name: Growth stage
+                          - entity: select.dsc_pot4_strain
+                            name: Strain (pot contract)
                           - entity: select.dsc_pot_4_strain
-                            name: Strain (pot)
+                            name: Strain (pot underscore fallback)
                           - entity: input_select.dsc_pot4_strain
                             name: Strain (HA)
-                          - entity: date.dsc_pot_4_sprout_date
-                            name: Sprout (pot)
+                          - entity: datetime.dsc_pot4_sprout_date
+                            name: Sprout (pot contract)
+                          - entity: datetime.dsc_pot_4_sprout_date
+                            name: Sprout (pot underscore fallback)
                           - entity: input_datetime.dsc_pot4_sprout_date
                             name: Sprout (HA)
                           - entity: sensor.dsc_pot4_need_summary

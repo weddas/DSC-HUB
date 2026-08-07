@@ -1,4 +1,4 @@
-# Build a Plant — composition surface (N-083)
+# Build a Plant — composition + full inclusion (N-083 / N-085)
 
 Operator / developer runbook for the separate **Build a Plant** Lovelace
 dashboard and catalog-backed composition card. Shipped in `09fac80`
@@ -14,6 +14,13 @@ dashboard and catalog-backed composition card. Shipped in `09fac80`
 | Related packs | strain / nutrient / medium / light catalogs |
 
 **Not** a Pro-dash tab. Strains view links out; The Dash stays ops cinema.
+N-085 adds operational context to the Pro Home, Root Zone, Nutrient Science,
+and Lighting views without moving the composition workflow out of its
+dedicated dashboard.
+
+Data provenance, the assign bridge, and the browser-blocking acceptance gate
+are defined in
+[`BUILD-A-PLANT-DATA-PIPELINE.md`](BUILD-A-PLANT-DATA-PIPELINE.md).
 
 ## Intent
 
@@ -127,6 +134,33 @@ could demote a HACS-complete live bundle. Rebuild Sync **5.1.4+** after merge.
 - [ ] **Add to inventory** fills next empty roster slot + persistent notification
 - [ ] **Assign to pot now** writes pot strain (requires Assign pot ≠ `none`)
 - [ ] **Apply climate Want** with unset Custom Want → skip notification; with set Want → hub targets move
+- [ ] Pro Home pot chips use `text.dsc_potN_plant_name`; assigned roster nickname/blend appears below them
+- [ ] Root Zone shows assigned roster nickname, blend, and recipe per pot
+- [ ] Nutrient Science shows `sensor.dsc_mix_calculator`, short-stock state, recipe packs, and `/dsc-build-plant/build` link
+- [ ] Lighting shows fixture, active summary, and PPFD map entities
+
+## N-085 POT3 browser suite
+
+Run this suite against **POT3** because it exercises the known OOS/probe-fault
+surface while proving plant identity remains independent of sensor health:
+
+1. Open `/dsc-build-plant/build`; select a catalog strain, nickname, blend,
+   recipe, and Assign pot **3**.
+2. Commit + assign. Confirm the assign bridge writes
+   `text.dsc_pot3_plant_name`, the canonical `select.dsc_pot3_strain` /
+   `datetime.dsc_pot3_sprout_date`, and secondary underscore entities when
+   available.
+3. Open Pro Home and Root Zone. Confirm the POT3 chip/name and matching roster
+   nickname/blend/recipe render even while POT3 telemetry remains OOS.
+4. Return to Build a Plant and verify the roster slot is active with `pot: 3`.
+5. Run Accept with one deliberately understocked enabled line. Confirm a
+   **Mix short stock** notification, that line is unchanged, and covered lines
+   burn normally.
+
+The suite is blocked until the data-pipeline **MVP gate** passes: selectable
+chemistry, at least one PPFD URL, and non-empty nutrient/medium indexes. It
+also fails if the **assign bridge** cannot resolve the strain directly or via
+a free Custom slot; never accept a silent partial assignment.
 
 ## Pitfalls
 
@@ -159,6 +193,7 @@ python scripts/build_catalog_search_indexes.py
 ## Related
 
 - FOLLOWUPS **N-083** / **N-084** — [`docs/FOLLOWUPS.md`](../FOLLOWUPS.md)
+- N-085 data pipeline, assign bridge, and MVP gate — [`BUILD-A-PLANT-DATA-PIPELINE.md`](BUILD-A-PLANT-DATA-PIPELINE.md)
 - HA layout — [`homeassistant/README.md`](../../homeassistant/README.md)
 - HACS — [`scripts/HACS-FRONTEND.md`](../../scripts/HACS-FRONTEND.md)
 - Sync — [`dsc-hub-sync/DOCS.md`](../../dsc-hub-sync/DOCS.md) · [`scripts/ADDON.md`](../../scripts/ADDON.md)

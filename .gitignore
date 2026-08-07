@@ -22,6 +22,20 @@ firmware/v4/verify_v4.exe
 home-assistant_v2.db*
 .storage/
 
+# Generated catalog dumps (curated YAML and source inventories stay tracked)
+homeassistant/data/dsc_strains_*.json
+homeassistant/data/dsc_lab_*.json
+homeassistant/data/dsc_*_merged.json
+homeassistant/data/dsc_nutrients_*.json
+homeassistant/data/dsc_mediums_*.json
+homeassistant/data/dsc_lights_*.json
+homeassistant/data/dsc_strain_catalog_want_bands.json
+!homeassistant/data/dsc_*_catalog.yaml
+!homeassistant/data/dsc_*_pack_*.yaml
+!homeassistant/data/STRAIN_SOURCES.md
+!homeassistant/data/LIGHT_SOURCES.md
+!homeassistant/data/dsc_light_pack_photometrics.yaml
+
 # OS / editor
 .DS_Store
 Thumbs.db

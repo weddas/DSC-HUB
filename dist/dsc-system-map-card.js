@@ -6386,6 +6386,8 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       this._loaded = false;
       this._mediumSlot = 1;
       this._focusRestore = null;
+      this._selectedStrain = null;
+      this._selectedLight = null;
     }
 
     setConfig(config) {
@@ -6462,24 +6464,27 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
 
     _call(domain, service, data = {}, target) {
       if (!this._hass) return;
-      return this._hass.callService(domain, service, data, target);
+      const payload = { ...(data || {}) };
+      if (target && target.entity_id) payload.entity_id = target.entity_id;
+      // HA 2024+ callService is (domain, service, serviceData) — entity_id in data.
+      return this._hass.callService(domain, service, payload);
     }
 
     _setText(entity, value) {
-      this._call("input_text", "set_value", { value: value ?? "" }, { entity_id: entity });
+      this._call("input_text", "set_value", { entity_id: entity, value: value ?? "" });
     }
 
     _setNumber(entity, value) {
-      this._call("input_number", "set_value", { value }, { entity_id: entity });
+      this._call("input_number", "set_value", { entity_id: entity, value });
     }
 
     _setSelect(entity, option) {
-      this._call("input_select", "select_option", { option }, { entity_id: entity });
+      this._call("input_select", "select_option", { entity_id: entity, option });
     }
 
     _setDate(entity, date) {
       if (!date) return;
-      this._call("input_datetime", "set_datetime", { date }, { entity_id: entity });
+      this._call("input_datetime", "set_datetime", { entity_id: entity, date });
     }
 
     _filterItems(kind, q) {
@@ -6538,6 +6543,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     }
 
     _pickStrain(item) {
+      this._selectedStrain = item;
       this._setText("input_text.dsc_build_strain", item.name);
       this._q.strain = item.name;
       this._hits.strain = [];
@@ -6547,8 +6553,21 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     }
 
     _pickMedium(item) {
-      const slot = this._mediumSlot || 1;
-      this._setText(`input_text.dsc_blend_component_${slot}_name`, item.name);
+      const composition = item.composition && typeof item.composition === "object"
+        ? Object.entries(item.composition)
+            .filter(([, pct]) => Number.isFinite(Number(pct)) && Number(pct) > 0)
+            .slice(0, 3)
+        : [];
+      if (composition.length) {
+        for (let n = 1; n <= 3; n++) {
+          const part = composition[n - 1];
+          this._setText(`input_text.dsc_blend_component_${n}_name`, part ? part[0] : "");
+          this._setNumber(`input_number.dsc_blend_pct_${n}`, part ? Number(part[1]) : 0);
+        }
+      } else {
+        const slot = this._mediumSlot || 1;
+        this._setText(`input_text.dsc_blend_component_${slot}_name`, item.name);
+      }
       this._q.medium = "";
       this._hits.medium = [];
       this._hitActive.medium = -1;
@@ -6577,6 +6596,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     }
 
     _pickLight(item) {
+      this._selectedLight = item;
       const fixture = this._st("input_select.dsc_light_fixture");
       const opts = fixture?.attributes?.options || [];
       const match = opts.find((o) => String(o).toLowerCase().includes(String(item.name || "").toLowerCase().slice(0, 18)));
@@ -6615,8 +6635,10 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         const dose = this._num(`input_number.dsc_nutrient_${n}_dose_ml_l`, 0);
         if (!name || dose <= 0) continue;
         const ml = Math.round(dose * L * str * 10) / 10;
+        const stock = this._num(`input_number.dsc_nutrient_${n}_stock_ml`, 0);
+        const inv = this._st(`input_boolean.dsc_nutrient_${n}_in_inventory`)?.state === "on";
         total += ml;
-        lines.push({ n, name, dose, ml, stock: this._num(`input_number.dsc_nutrient_${n}_stock_ml`, 0) });
+        lines.push({ n, name, dose, ml, stock, short: inv && stock < ml });
       }
       return { lines, total: Math.round(total * 10) / 10, L, str };
     }
@@ -6703,12 +6725,37 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       const blendValid = Math.round(sumPct) === 100;
       const roster = this._str("sensor.dsc_plant_roster_summary") || "-";
       const mixState = this._str("sensor.dsc_mix_calculator") || `${mix.total} ml total`;
+      const shortStock = this._st("sensor.dsc_mix_calculator")?.attributes?.short_stock_any === true
+        || mix.lines.some((line) => line.short);
       const lightName = this._str("sensor.dsc_light_active_summary") || this._str("input_select.dsc_light_fixture");
-      const ppfd = this._str("sensor.dsc_light_ppfd_map");
+      const ppfd = this._selectedLight?.ppfd_url || this._str("sensor.dsc_light_ppfd_map");
       const spectrum = this._str("sensor.dsc_light_spectrum_map");
       const watts = this._str("sensor.dsc_light_wattage_w");
       const ppf = this._str("sensor.dsc_light_ppf_umol_s");
       const ppe = this._str("sensor.dsc_light_ppe_umol_j");
+      const strainHit = this._selectedStrain;
+      const chemistry = strainHit?.has_chemistry
+        ? [
+            Array.isArray(strainHit.thc_range) ? `THC ${strainHit.thc_range.join("-")}%` : null,
+            Array.isArray(strainHit.top_terpenes) && strainHit.top_terpenes.length
+              ? strainHit.top_terpenes.join(", ")
+              : null,
+          ].filter(Boolean).join(" | ")
+        : "";
+      const assignPot = this._str("input_select.dsc_build_assign_pot");
+      const livePot = ["1", "2", "3", "4"].includes(assignPot)
+        ? {
+            n: assignPot,
+            plant: this._str(`text.dsc_pot${assignPot}_plant_name`),
+            strain: this._str(`sensor.dsc_pot${assignPot}_strain_display`),
+            need: this._str(`sensor.dsc_pot${assignPot}_need_summary`),
+            days: this._str(`sensor.dsc_pot${assignPot}_days_since_sprout`),
+            ph: this._str(`sensor.dsc_pot${assignPot}_got_ph`),
+            ec: this._str(`sensor.dsc_pot${assignPot}_got_ec`),
+            moisture: this._str(`sensor.dsc_pot${assignPot}_got_moisture`),
+          }
+        : null;
+      const hasCommitAssign = !!this._st("script.dsc_build_plant_commit_and_assign");
 
       const barHtml = parts.length
         ? parts
@@ -6750,6 +6797,21 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
                     <input type="date" id="build-sprout" value="${this._esc((this._str("input_datetime.dsc_build_sprout_date") || "").slice(0, 10))}" />
                   </div>
                 </div>
+                <div class="row">
+                  <div>
+                    <label>Recipe note</label>
+                    <input type="text" id="recipe-note" value="${this._esc(this._str("input_text.dsc_build_recipe_note"))}" />
+                  </div>
+                  <div>
+                    <label>Custom strain slot</label>
+                    <select id="custom-slot">
+                      ${["auto", "1", "2", "3", "4", "5"]
+                        .map((o) => `<option value="${o}" ${this._str("input_select.dsc_build_custom_slot") === o ? "selected" : ""}>${o}</option>`)
+                        .join("")}
+                    </select>
+                  </div>
+                </div>
+                ${chemistry ? `<div class="chips"><span class="chip">Chemistry: ${this._esc(chemistry)}</span></div>` : ""}
               </section>
 
               <section>
@@ -6832,6 +6894,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
                 <div class="chips">
                   <span class="chip">${this._esc(mixState)}</span>
                   <span class="chip">${mix.total} ml total</span>
+                  ${shortStock ? `<span class="chip bad">SHORT STOCK</span>` : ""}
                 </div>
                 <div class="actions">
                   <button type="button" id="btn-accept">Accept mix (burn stock)</button>
@@ -6853,6 +6916,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
                   ${ppf && ppf !== "unknown" ? `<span class="chip">${this._esc(ppf)} umol/s</span>` : ""}
                   ${ppe && ppe !== "unknown" ? `<span class="chip">${this._esc(ppe)} umol/J</span>` : ""}
                   ${ppfd && ppfd !== "unknown" ? `<span class="chip"><a href="${this._esc(ppfd)}" target="_blank" rel="noopener" style="color:inherit">PPFD map</a></span>` : `<span class="chip warn">No PPFD map URL</span>`}
+                  ${this._selectedLight?.has_ppfd ? `<span class="chip">PPFD data available</span>` : ""}
                   ${spectrum && spectrum !== "unknown" ? `<span class="chip"><a href="${this._esc(spectrum)}" target="_blank" rel="noopener" style="color:inherit">Spectrum</a></span>` : ""}
                 </div>
               </section>
@@ -6890,7 +6954,19 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
                 <div class="actions">
                   <button type="button" class="primary" id="btn-commit">Add to inventory</button>
                   <button type="button" id="btn-assign">Assign to pot now</button>
+                  ${hasCommitAssign ? `<button type="button" class="primary" id="btn-commit-assign">Commit + assign</button>` : ""}
                 </div>
+                ${livePot ? `
+                  <div class="chips">
+                    <span class="chip">POT${livePot.n}</span>
+                    <span class="chip">${this._esc(livePot.plant || "No plant name")}</span>
+                    <span class="chip">${this._esc(livePot.strain || "No strain")}</span>
+                    <span class="chip">Day ${this._esc(livePot.days || "-")}</span>
+                    <span class="chip">pH ${this._esc(livePot.ph || "-")}</span>
+                    <span class="chip">EC ${this._esc(livePot.ec || "-")}</span>
+                    <span class="chip">Moisture ${this._esc(livePot.moisture || "-")}</span>
+                    <span class="chip ${livePot.need && livePot.need !== "OK" ? "warn" : ""}">${this._esc(livePot.need || "Need unavailable")}</span>
+                  </div>` : ""}
                 <p class="muted" style="margin-top:10px">Roster: ${this._esc(roster)}</p>
                 <div class="roster" id="roster-list"></div>
               </section>
@@ -6988,6 +7064,8 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       root.getElementById("build-strain")?.addEventListener("change", (e) => this._setText("input_text.dsc_build_strain", e.target.value));
       root.getElementById("build-nick")?.addEventListener("change", (e) => this._setText("input_text.dsc_build_nickname", e.target.value));
       root.getElementById("build-sprout")?.addEventListener("change", (e) => this._setDate("input_datetime.dsc_build_sprout_date", e.target.value));
+      root.getElementById("recipe-note")?.addEventListener("change", (e) => this._setText("input_text.dsc_build_recipe_note", e.target.value));
+      root.getElementById("custom-slot")?.addEventListener("change", (e) => this._setSelect("input_select.dsc_build_custom_slot", e.target.value));
 
       root.querySelectorAll("[data-blend-name]").forEach((inp) => {
         inp.addEventListener("change", (e) => {
@@ -7017,10 +7095,14 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       root.getElementById("btn-accept")?.addEventListener("click", () => this._call("script", "turn_on", {}, { entity_id: "script.dsc_accept_mix" }));
       root.getElementById("btn-climate")?.addEventListener("click", () => this._call("script", "turn_on", {}, { entity_id: "script.dsc_apply_climate_want" }));
       root.getElementById("btn-commit")?.addEventListener("click", () => this._call("script", "turn_on", {}, { entity_id: "script.dsc_build_plant_commit" }));
+      root.getElementById("btn-commit-assign")?.addEventListener("click", () => this._call("script", "turn_on", {}, { entity_id: "script.dsc_build_plant_commit_and_assign" }));
       root.getElementById("btn-assign")?.addEventListener("click", () => {
         const pot = this._str("input_select.dsc_build_assign_pot");
         if (!pot || pot === "none") return;
-        this._hass.callService("script", "dsc_plant_assign_to_pot", { pot });
+        this._call("script", "turn_on", {
+          entity_id: "script.dsc_plant_assign_to_pot",
+          variables: { pot },
+        });
       });
     }
   }

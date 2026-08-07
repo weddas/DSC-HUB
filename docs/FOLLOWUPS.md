@@ -1358,3 +1358,26 @@ Memo: [`docs/DSC-PRODUCT-RESEARCH.md`](DSC-PRODUCT-RESEARCH.md).
 | N-068 | Interactive browser verify Build a Plant typeahead | cursor-ide-browser had no tab; browser-use blocked on Chrome remote-debugging Allow. Operator: Ctrl+F5 `/dsc-build-plant/build`, confirm dropdowns + no mojibake. |
 | N-069 | Commit Build a Plant UX when asked | Repo changes left uncommitted (sibling agent owns commit/push). |
 
+
+## 2026-08-07 — Build a Plant Full Inclusion Pass (N-085)
+
+### honesty (tree vs prior Done claims)
+
+| ID | Prior claim | Reality at pass start | Action |
+|---|---|---|---|
+| N-054 | promote + want_bands Done | `promote_strain_catalog_to_ha.py` missing; `dsc_strain_catalog.yaml` = 2 Generic seeds; no want_bands attrs | Rebuilt in this pass (JSON want_bands) |
+| N-055 | custom climate + stage EC Done | temp/RH helpers absent; flat ec_min/max only | Finished in this pass |
+| N-058 / N-062 | merged ~36k + chemistry Done | `dsc_strains_merged.json` + importers **missing on disk** (never git) | MVP merge + toolchain; full crawl still best-effort |
+| N-064 | medium pack Done | no `dsc_v4_medium_catalog.yaml` | Landed |
+| N-081 | light photometrics Done | pack YAML present; many dumps missing | MVP PPFD wired; HA 2026.8 JSON fixtures |
+
+### shipped
+
+| ID | Item | Notes |
+|---|---|---|
+| N-085 | Build a Plant Full Inclusion | Surface **5.1.11**; assign bridge + Pro cross-links + chem/PPFD selectable; POT3 browser evidence [`docs/qa/N-085-POT3-BROWSER.md`](qa/N-085-POT3-BROWSER.md); Sync add-on image **5.1.4** on HA, **stopped / boot=manual** until push |
+
+### deferred (unchanged)
+- plant_id nursery DB; Dash merge; pumps N-012; irrigation N-013; PPFD OCR; N-061 public dumps
+- Hub/ESP offline during soak: `text.dsc_pot3_plant_name` + `number.dsc_hub_target_*` writes not live-proven
+- Re-enable Sync only after N-085 commit/push (or Sync will overwrite live packages from old master)

@@ -336,15 +336,103 @@ template:
         state: "{{ states('input_number.dsc_last_accepted_mix_ml')|float(0) }}"
 
 script:
+  dsc_mix_apply_recipe_pack:
+    alias: "DSC Mix · Apply CANNA Coco A+B recipe"
+    description: "Load CANNA Coco A/B into nutrient slots 1–2 at the selected stage dose."
+    mode: restart
+    fields:
+      stage:
+        name: Stage
+        description: "CANNA Coco A+B dose stage"
+        required: true
+        selector:
+          select:
+            options:
+              - seedling
+              - veg
+              - flower
+    sequence:
+      - variables:
+          selected_stage: "{{ stage|string|lower|trim }}"
+          dose: >-
+            {{ 2.0 if selected_stage == 'seedling'
+               else 3.0 if selected_stage == 'veg'
+               else 4.0 if selected_stage == 'flower'
+               else 0 }}
+      - condition: template
+        value_template: "{{ selected_stage in ['seedling', 'veg', 'flower'] }}"
+      - action: input_text.set_value
+        target:
+          entity_id: input_text.dsc_nutrient_1_name
+        data:
+          value: "CANNA Coco A"
+      - action: input_text.set_value
+        target:
+          entity_id: input_text.dsc_nutrient_2_name
+        data:
+          value: "CANNA Coco B"
+      - action: input_number.set_value
+        target:
+          entity_id:
+            - input_number.dsc_nutrient_1_dose_ml_l
+            - input_number.dsc_nutrient_2_dose_ml_l
+        data:
+          value: "{{ dose }}"
+      - action: input_boolean.turn_on
+        target:
+          entity_id:
+            - input_boolean.dsc_nutrient_1_in_inventory
+            - input_boolean.dsc_nutrient_2_in_inventory
+      - action: persistent_notification.create
+        data:
+          title: "Mix recipe applied"
+          message: "CANNA Coco A+B · {{ selected_stage }} · {{ dose }} ml/L each."
+
   dsc_accept_mix:
     alias: "DSC Accept Mix (QA)"
-    description: "Burn recipe ml from in-stock nutrients. Manual QA gate — no pumps."
+    description: "Burn covered recipe ml from in-stock nutrients; warn and skip short-stock lines. Manual QA gate — no pumps."
     mode: single
     sequence:
       - variables:
           L: "{{ states('input_number.dsc_mix_tank_liters')|float(20) }}"
           strength: "{{ states('input_number.dsc_mix_strength_pct')|float(100) / 100 }}"
-          total: 0
+          short_stock: >-
+            {% set ns = namespace(lines=[]) %}
+            {% for n in range(1,9) %}
+              {% set name = states('input_text.dsc_nutrient_' ~ n ~ '_name')|trim %}
+              {% set dose = states('input_number.dsc_nutrient_' ~ n ~ '_dose_ml_l')|float(0) %}
+              {% set stock = states('input_number.dsc_nutrient_' ~ n ~ '_stock_ml')|float(0) %}
+              {% set inv = is_state('input_boolean.dsc_nutrient_' ~ n ~ '_in_inventory','on') %}
+              {% set need = (dose * L * strength)|round(1) %}
+              {% if name and dose > 0 and inv and stock < need %}
+                {% set ns.lines = ns.lines + [name ~ ' (stock ' ~ stock|round(1) ~ ' ml, need ' ~ need ~ ' ml)'] %}
+              {% endif %}
+            {% endfor %}
+            {{ ns.lines|join(', ') }}
+          burn_total: >-
+            {% set ns = namespace(total=0) %}
+            {% for n in range(1,9) %}
+              {% set name = states('input_text.dsc_nutrient_' ~ n ~ '_name')|trim %}
+              {% set dose = states('input_number.dsc_nutrient_' ~ n ~ '_dose_ml_l')|float(0) %}
+              {% set stock = states('input_number.dsc_nutrient_' ~ n ~ '_stock_ml')|float(0) %}
+              {% set inv = is_state('input_boolean.dsc_nutrient_' ~ n ~ '_in_inventory','on') %}
+              {% set need = (dose * L * strength)|round(1) %}
+              {% if name and dose > 0 and inv and stock >= need %}
+                {% set ns.total = ns.total + need %}
+              {% endif %}
+            {% endfor %}
+            {{ ns.total|round(1) }}
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ short_stock|trim != '' }}"
+            sequence:
+              - action: persistent_notification.create
+                data:
+                  title: "Mix short stock"
+                  message: >-
+                    Skipped understocked lines: {{ short_stock }}.
+                    Covered in-inventory lines will still be burned.
       - repeat:
           for_each:
             - 1
@@ -363,32 +451,34 @@ script:
                 stock: "{{ states('input_number.dsc_nutrient_' ~ repeat.item ~ '_stock_ml')|float(0) }}"
                 inv: "{{ is_state('input_boolean.dsc_nutrient_' ~ repeat.item ~ '_in_inventory','on') }}"
                 need: "{{ (dose * L * strength)|round(1) }}"
-            - condition: template
-              value_template: "{{ name != '' and dose|float(0) > 0 and inv }}"
-            - condition: template
-              value_template: "{{ stock|float(0) >= need|float(0) }}"
-            - action: input_number.set_value
-              target:
-                entity_id: "input_number.dsc_nutrient_{{ repeat.item }}_stock_ml"
-              data:
-                value: "{{ (stock|float(0) - need|float(0))|round(1) }}"
-            - variables:
-                total: "{{ total|float(0) + need|float(0) }}"
+            - choose:
+                - conditions:
+                    - condition: template
+                      value_template: >-
+                        {{ name != '' and dose|float(0) > 0 and inv
+                           and stock|float(0) >= need|float(0) }}
+                  sequence:
+                    - action: input_number.set_value
+                      target:
+                        entity_id: "input_number.dsc_nutrient_{{ repeat.item }}_stock_ml"
+                      data:
+                        value: "{{ (stock|float(0) - need|float(0))|round(1) }}"
       - action: input_number.set_value
         target:
           entity_id: input_number.dsc_last_accepted_mix_ml
         data:
-          value: "{{ total|float(0)|round(1) }}"
+          value: "{{ burn_total|float(0)|round(1) }}"
       - action: persistent_notification.create
         data:
           title: "Mix accepted"
           message: >-
-            Burned {{ total|float(0)|round(1) }} ml total from stock for
+            Burned {{ burn_total|float(0)|round(1) }} ml total from covered stock for
             {{ states('input_number.dsc_mix_tank_liters') }} L @
             {{ states('input_number.dsc_mix_strength_pct') }}%.
+            {% if short_stock|trim %}Skipped: {{ short_stock }}.{% endif %}
             Recipe: {{ states('sensor.dsc_next_mix_recipe') }}
       - action: logbook.log
         data:
           name: DSC Accept Mix
-          message: "Accepted mix — {{ total|float(0)|round(1) }} ml burned"
+          message: "Accepted mix — {{ burn_total|float(0)|round(1) }} ml burned{{ '; skipped ' ~ short_stock if short_stock|trim else '' }}"
           entity_id: sensor.dsc_next_mix_recipe

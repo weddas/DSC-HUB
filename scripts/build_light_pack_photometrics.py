@@ -170,6 +170,9 @@ def main() -> int:
 
 def _write_ha_package(fixtures: list[dict]) -> None:
     pkg = ROOT / "homeassistant" / "packages" / "dsc_v4_light_catalog.yaml"
+    if not fixtures:
+        print(f"skip HA package rewrite: 0 fixtures (refusing to wipe {pkg.name})")
+        return
     labels = []
     by_label = {}
     for fx in fixtures:
@@ -194,6 +197,13 @@ def _write_ha_package(fixtures: list[dict]) -> None:
         by_label[label] = fx
 
     opt_lines = "\n".join(f'      - "{l}"' for l in labels + ["Custom / other"])
+
+    def _clean_url(val):
+        if not isinstance(val, str):
+            return val
+        # Manufacturer pages sometimes embed ZWSP; strip before packaging.
+        return "".join(ch for ch in val if ch not in ("\u200b", "\u200c", "\u200d", "\ufeff"))
+
     # Build jinja branches for maps / watts
     def branches(field_get, unknown="unknown"):
         lines = []
@@ -205,29 +215,33 @@ def _write_ha_package(fixtures: list[dict]) -> None:
                 val = val[0] if val else None
             if val is None:
                 continue
+            if isinstance(val, str):
+                val = _clean_url(val)
             lines.append(f"          {{% elif f == '{label}' %}}{val}")
         return "\n".join(lines)
 
+    # Also strip ZWSP from jinja URL branches so PPFD sensor states stay clean.
     ppfd_b = branches(lambda fx: (fx.get("ppfd_map_urls") or [None])[0])
     spec_b = branches(lambda fx: (fx.get("spectrum_map_urls") or [None])[0])
     watt_b = branches(lambda fx: fx.get("wattage_w"))
     ppf_b = branches(lambda fx: fx.get("ppf_umol_s"))
     ppe_b = branches(lambda fx: fx.get("efficacy_umol_j"))
 
-    fixtures_yaml = yaml.safe_dump(
-        {lab: {
+    fixtures_obj = {
+        lab: {
             "pack_id": fx["id"],
             "wattage_w": fx.get("wattage_w"),
             "ppf_umol_s": fx.get("ppf_umol_s"),
             "efficacy_umol_j": fx.get("efficacy_umol_j"),
-            "ppfd_map_url": (fx.get("ppfd_map_urls") or [None])[0],
-            "spectrum_map_url": (fx.get("spectrum_map_urls") or [None])[0],
-            "url": fx.get("url"),
-        } for lab, fx in by_label.items()},
-        sort_keys=False,
-        allow_unicode=True,
-    )
-    fixtures_indented = "\n".join("            " + ln if ln else "" for ln in fixtures_yaml.splitlines())
+            "ppfd_map_url": _clean_url((fx.get("ppfd_map_urls") or [None])[0]),
+            "spectrum_map_url": _clean_url((fx.get("spectrum_map_urls") or [None])[0]),
+            "url": _clean_url(fx.get("url")),
+        }
+        for lab, fx in by_label.items()
+    }
+    # HA 2026.8+ rejects nested mapping attributes on template sensors.
+    fixtures_json = json.dumps(fixtures_obj, ensure_ascii=False, separators=(",", ":"))
+    fixtures_indented = json.dumps(fixtures_json, ensure_ascii=False)
 
     initial = labels[0] if labels else "Custom / other"
     text = f"""# ==================================================================
@@ -253,11 +267,12 @@ input_text:
     initial: ""
   dsc_light_ppfd_map_url:
     name: "DSC Light PPFD Map URL (override)"
-    max: 512
+    # HA entity state max is 255 chars — higher values abort the whole input_text domain.
+    max: 255
     initial: ""
   dsc_light_spectrum_map_url:
     name: "DSC Light Spectrum Map URL (override)"
-    max: 512
+    max: 255
     initial: ""
 
 template:
@@ -273,8 +288,7 @@ template:
           note: >-
             PPFD/spectrum/beam are manufacturer image or PDF URLs only.
             Do not invent heatmap cells.
-          fixtures:
-{fixtures_indented}
+          fixtures: {fixtures_indented}
 
       - name: "DSC Light Active Summary"
         unique_id: dsc_light_active_summary
