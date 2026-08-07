@@ -54,6 +54,8 @@ flowchart LR
 | [`docs/qa/ADDON-QA-5.1.0.md`](docs/qa/ADDON-QA-5.1.0.md) | Sync add-on QC |
 | [`homeassistant/README.md`](homeassistant/README.md) | Packages, HACS, entity notes |
 | [`docs/qa/LIVE-UI-BUILD-A-PLANT.md`](docs/qa/LIVE-UI-BUILD-A-PLANT.md) | Build a Plant composition ops (N-083) |
+| [`docs/qa/LIVE-UI-PRODUCT-SHELL.md`](docs/qa/LIVE-UI-PRODUCT-SHELL.md) | Unified HA product shell (N-086) |
+| [`docs/qa/CATALOG-RESEARCH-CORPUS.md`](docs/qa/CATALOG-RESEARCH-CORPUS.md) | Research corpus + HA projection (N-087) |
 | [`firmware/v4/README.md`](firmware/v4/README.md) | Local validate / flash |
 
 **HAOS delivery:** Settings → Add-ons → Repositories → `https://github.com/weddas/DSC-HUB`
@@ -72,7 +74,7 @@ packages / dashboard / www / ESPHome stubs land in `/config`.
 | Sonoffs | heater / heatmat / humidifier / de-humidifier | **5.1.x** |
 | Kits | `*-kit.yaml`, `*-wifi-kit.yaml`, fleet-setup kits | same bodies as device train |
 | Sync add-on | `dsc-hub-sync/` | **5.1.3** |
-| HA surface | `sensor.dsc_ha_surface_version` | **5.1.8** |
+| HA surface | `sensor.dsc_ha_surface_version` | **5.1.13** |
 
 Flash order: hub → panel → pots → Sonoffs. Living backlog: [`docs/FOLLOWUPS.md`](docs/FOLLOWUPS.md).
 

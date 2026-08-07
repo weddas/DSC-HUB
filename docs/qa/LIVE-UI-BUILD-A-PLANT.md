@@ -90,12 +90,12 @@ refuses `< 500000` (F-013).
 Built by `python scripts/build_catalog_search_indexes.py` →
 `homeassistant/www/dsc-catalog/` + `dist/dsc-catalog/`.
 
-| File | Cap (verified) | Contents |
-|---|---|---|
-| `dsc_strains_search_index.json` | **2500** | Slim name / type / breeder |
-| `dsc_nutrients_search_index.json` | **1500** | Name / brand / optional dose |
-| `dsc_mediums_search_index.json` | **800** (777 live) | Substrate names |
-| `dsc_lights_search_index.json` | **800** | Fixture names + stated W when present |
+| File | Cap | Committed count (N-087) | Contents |
+|---|---|---|---|
+| `dsc_strains_search_index.json` | **2500** | **2500** (`with_height=21`, `with_want=12`) | SQLite projection + curated Want |
+| `dsc_nutrients_search_index.json` | **1500** | **3** | Name / brand / optional dose |
+| `dsc_mediums_search_index.json` | **800** | **5** | Substrate names (+ builder_seed labels) |
+| `dsc_lights_search_index.json` | **800** | **7** | Fixture names + stated W / map URL when present |
 
 Card fetches `${CATALOG_BASE}/${file}` with `CATALOG_BASE = "/local/dsc-catalog"`.
 Missing indexes → empty typeahead (no hard fail).
@@ -118,7 +118,7 @@ could demote a HACS-complete live bundle. Rebuild Sync **5.1.4+** after merge.
 - Mix ml = `dose_ml_l × tank_L × (strength% / 100)`.
 - Apply climate Want **no-ops** when custom temp/RH are **0** — no catalog invent.
 - Catalog picker strains have **no** climate Want bands by design (N-055 custom only).
-- Strain index is capped; full merged dump (~36k) is not in the browser payload.
+- Strain index is capped at **2500** of ~20k research canonical; full corpus is not in the browser payload.
 - Vivosun stated W/PPE/point-PPFD/datasheets may exist; **keyword-labeled map image URLs still 0**.
 - Metric only (°C, L, ml/L, µmol, %).
 - Prefer editing `gen_dsc_v4_build_plant.py` then regenerate the package YAML.
