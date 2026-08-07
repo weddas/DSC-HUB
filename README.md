@@ -7,7 +7,7 @@ Home Assistant is the **lab soak / optional shell**; product destination is a
 Notion [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d3407556c)).
 
 **Current release tag:** [**v5.1.0**](https://github.com/weddas/DSC-HUB/releases/tag/v5.1.0)  
-**Live train (in tree):** HA surface **5.1.10** · pots **5.1.8** · Control **5.1.17** · hub **5.1.10** · Sync **5.1.3**  
+**Live train (in tree):** HA surface **5.1.12** · hub **5.1.11** · Control **5.1.17** · pots **5.1.8** · Sync **5.1.4**  
 (Fleet chip compares major.minor — mixed `5.1.x` stays `ok`.)
 
 ---
@@ -17,10 +17,10 @@ Notion [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d3407556
 - **Hub owns climate** — dehumidifier → humidifier → heater → AC → mat ladder
   with reality gates, failsafe, and min-off (HA never drives those safety rails).
 - **ESP-NOW primary** panel ↔ hub — works when Home Assistant is down.
-- **DSC-HUB Pro** dashboard (`/dsc-hub-pro`) — Home, Climate, Learning, tents,
-  Root Zone, Tank, Light, Trends, System.
-- **Build a Plant** (`/dsc-build-plant/build`) — separate composition dashboard
-  (strain · soil % · nutrients · light · climate Want → roster / pot).
+- **DSC-HUB** product shell (`/dsc-hub-pro`) — one sidebar entry with primary
+  **Ops · Plant · Advanced · System** (N-086 / surface **5.1.12**).
+- **Plant** folds Compose (`/plant-build`) + Catalog Explorer (`/catalog`)
+  beside fleet seats / mix lab; The Dash stays Ops cinema.
 - **Learn Phase A + B** — Phase A EMA efficiencies & ETA; Phase B (opt-in)
   rate-limited writes to ladder **wait bases** only.
 - **Fleet version chip** — at-a-glance `ok` / `warn` / `error` vs expected **5.1.6** train.
@@ -33,7 +33,7 @@ flowchart LR
   Pots[Pots] -->|ESPNOW_soil| Hub
   Hub --> Followers[Sonoff_followers]
   Hub --> LearnA[PhaseA_EMA] --> LearnB[PhaseB_waits]
-  Sync[dsc_hub_sync] --> Pro[dsc-hub-pro]
+  Sync[dsc_hub_sync] --> Shell[dsc-hub-pro]
 ```
 
 ---
@@ -53,11 +53,12 @@ flowchart LR
 | [`docs/qa/FIRMWARE-QA-5.1.0.md`](docs/qa/FIRMWARE-QA-5.1.0.md) | Firmware Validate / flash QC |
 | [`docs/qa/ADDON-QA-5.1.0.md`](docs/qa/ADDON-QA-5.1.0.md) | Sync add-on QC |
 | [`homeassistant/README.md`](homeassistant/README.md) | Packages, HACS, entity notes |
-| [`docs/qa/LIVE-UI-BUILD-A-PLANT.md`](docs/qa/LIVE-UI-BUILD-A-PLANT.md) | Build a Plant composition ops (N-083) |
+| [`docs/qa/LIVE-UI-PRODUCT-SHELL.md`](docs/qa/LIVE-UI-PRODUCT-SHELL.md) | Unified HA product shell (N-086) |
+| [`docs/qa/LIVE-UI-BUILD-A-PLANT.md`](docs/qa/LIVE-UI-BUILD-A-PLANT.md) | Build a Plant composition ops (N-083–N-086) |
 | [`firmware/v4/README.md`](firmware/v4/README.md) | Local validate / flash |
 
 **HAOS delivery:** Settings → Add-ons → Repositories → `https://github.com/weddas/DSC-HUB`
-→ install / Update **DSC-HUB Sync** **5.1.3**. Push to `master` → poll (~60s) →
+→ install / Update **DSC-HUB Sync** **5.1.4**. Push to `master` → poll (~60s) →
 packages / dashboard / www / ESPHome stubs land in `/config`.
 
 ---
@@ -66,13 +67,13 @@ packages / dashboard / www / ESPHome stubs land in `/config`.
 
 | Device | Config | Version |
 |---|---|---|
-| Hub | `dsc-hub.yaml` → `dsc-hub-v4_0.yaml` + fleet-heal | **5.1.8** |
-| Panel | `dsc-control.yaml` → `dsc-control-common.yaml` | **5.1.16** |
-| Pots 1–4 | `dsc-pot{N}.yaml` → `dsc-pot-common.yaml` | **5.1.7** |
+| Hub | `dsc-hub.yaml` → `dsc-hub-v4_0.yaml` + fleet-heal | **5.1.11** |
+| Panel | `dsc-control.yaml` → `dsc-control-common.yaml` | **5.1.17** |
+| Pots 1–4 | `dsc-pot{N}.yaml` → `dsc-pot-common.yaml` | **5.1.8** |
 | Sonoffs | heater / heatmat / humidifier / de-humidifier | **5.1.x** |
 | Kits | `*-kit.yaml`, `*-wifi-kit.yaml`, fleet-setup kits | same bodies as device train |
-| Sync add-on | `dsc-hub-sync/` | **5.1.3** |
-| HA surface | `sensor.dsc_ha_surface_version` | **5.1.8** |
+| Sync add-on | `dsc-hub-sync/` | **5.1.4** |
+| HA surface | `sensor.dsc_ha_surface_version` | **5.1.12** |
 
 Flash order: hub → panel → pots → Sonoffs. Living backlog: [`docs/FOLLOWUPS.md`](docs/FOLLOWUPS.md).
 
@@ -82,11 +83,11 @@ Flash order: hub → panel → pots → Sonoffs. Living backlog: [`docs/FOLLOWUP
 
 | Piece | Path |
 |---|---|
-| Sync add-on | [`dsc-hub-sync/`](dsc-hub-sync/) (**5.1.4+** ships Build a Plant + catalog) |
-| Lovelace (Pro) | `homeassistant/dashboards/dsc-hub-v4-dashboard.yaml` → URL **`dsc-hub-pro`** |
-| Lovelace (Build a Plant) | `homeassistant/dashboards/dsc-build-plant-dashboard.yaml` → URL **`dsc-build-plant`** |
+| Sync add-on | [`dsc-hub-sync/`](dsc-hub-sync/) (**5.1.4+** ships Build/Nav/Catalog + catalog JSON) |
+| Lovelace (product shell) | `homeassistant/dashboards/dsc-hub-v4-dashboard.yaml` → URL **`dsc-hub-pro`** |
+| Lovelace (Build redirect stub) | `homeassistant/dashboards/dsc-build-plant-dashboard.yaml` → **`dsc-build-plant`** (sidebar hidden) |
 | Packages | `homeassistant/packages/dsc_v4_*.yaml` |
-| Config snippet | `homeassistant/configuration.snippet.yaml` (Pro + Build a Plant) |
+| Config snippet | `homeassistant/configuration.snippet.yaml` (one **DSC-HUB** sidebar entry) |
 | ESPHome stubs | `homeassistant/esphome/dsc-*.yaml` |
 
 After Sync lands new `input_*` helpers: **restart HA Core once**.

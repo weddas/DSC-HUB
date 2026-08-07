@@ -52,16 +52,19 @@ flowchart TD
 | Piece | Path |
 |---|---|
 | YAML dashboard | `homeassistant/dashboards/dsc-build-plant-dashboard.yaml` |
-| Sidebar registration | `configuration.snippet.yaml` → `lovelace.dashboards.dsc-build-plant` |
+| Compose path | `/dsc-hub-pro/plant-build` (product shell) |
+| Legacy redirect | `configuration.snippet.yaml` → `dsc-build-plant` (`show_in_sidebar: false`) |
 | Lit card source | `homeassistant/www/dsc-build-plant-card.js` |
-| HACS / `/local` bundle | last segment of `DSC-HUB.js` / `dsc-system-map-card.js` |
+| HACS / `/local` bundle | segment of `DSC-HUB.js` / `dsc-system-map-card.js` (before nav/catalog) |
 | Standalone resource | `/local/dsc-build-plant-card.js` (optional) |
+| Product shell | [`LIVE-UI-PRODUCT-SHELL.md`](LIVE-UI-PRODUCT-SHELL.md) |
 
 Concat order (HACS + Sync + ha-sync):
 
-`system-map` → `airflow` → `three.min` → `dsc-dash-fx` → `the-dash` → **`build-plant`**
+`system-map` → `airflow` → `three.min` → `dsc-dash-fx` → `the-dash` →
+**`build-plant`** → **`app-nav`** → **`catalog-browse`**
 
-Healthy bundle after Build a Plant: **~941 KB** (`dist/DSC-HUB.js`). Sync still
+Healthy bundle after N-086: **~979 KB** (`dist/DSC-HUB.js`). Sync still
 refuses `< 500000` (F-013).
 
 ### Package (`dsc_v4_build_plant.yaml`)
@@ -125,33 +128,34 @@ could demote a HACS-complete live bundle. Rebuild Sync **5.1.4+** after merge.
 
 ## Bring-up checklist
 
-- [ ] `configuration.snippet.yaml` merged — sidebar shows **Build a Plant**
+- [ ] `configuration.snippet.yaml` merged — sidebar shows one **DSC-HUB** entry
 - [ ] Package `dsc_v4_build_plant.yaml` present; Core restarted once for new helpers
 - [ ] Sync **5.1.4+** rebuilt **or** HACS Redownload **plus** catalog copy under `/config/www/dsc-catalog/`
-- [ ] Hard-refresh browser; open `/dsc-build-plant/build`
+- [ ] Hard-refresh browser; open `/dsc-hub-pro/plant-build` (legacy `/dsc-build-plant/build` redirects)
 - [ ] Typeahead (≥2 chars) returns hits for strain / medium / nutrient / light
 - [ ] Soil sliders: chip shows valid only at 100%
 - [ ] Mix lines update when dose / tank L / strength change
 - [ ] **Add to inventory** fills next empty roster slot + persistent notification
 - [ ] **Assign to pot now** writes pot strain (requires Assign pot ≠ `none`)
 - [ ] **Apply climate Want** with unset Custom Want → skip notification; with set Want → hub targets move
-- [ ] Pro Home pot chips use `text.dsc_potN_plant_name`; assigned roster nickname/blend appears below them
+- [ ] Ops Home pot chips use `text.dsc_potN_plant_name`; assigned roster nickname/blend appears below them
 - [ ] Root Zone shows assigned roster nickname, blend, and recipe per pot
-- [ ] Nutrient Science shows `sensor.dsc_mix_calculator`, short-stock state, recipe packs, and `/dsc-build-plant/build` link
+- [ ] Nutrient Science shows `sensor.dsc_mix_calculator`, short-stock state, recipe packs, and `/dsc-hub-pro/plant-build` link
 - [ ] Lighting shows fixture, active summary, and PPFD map entities
+- [ ] Catalog Explorer `/dsc-hub-pro/catalog` → Use in Build seeds helpers
 
 ## N-085 POT3 browser suite
 
 Run this suite against **POT3** because it exercises the known OOS/probe-fault
 surface while proving plant identity remains independent of sensor health:
 
-1. Open `/dsc-build-plant/build`; select a catalog strain, nickname, blend,
+1. Open `/dsc-hub-pro/plant-build`; select a catalog strain, nickname, blend,
    recipe, and Assign pot **3**.
 2. Commit + assign. Confirm the assign bridge writes
    `text.dsc_pot3_plant_name`, the canonical `select.dsc_pot3_strain` /
    `datetime.dsc_pot3_sprout_date`, and secondary underscore entities when
    available.
-3. Open Pro Home and Root Zone. Confirm the POT3 chip/name and matching roster
+3. Open Ops Home and Root Zone. Confirm the POT3 chip/name and matching roster
    nickname/blend/recipe render even while POT3 telemetry remains OOS.
 4. Return to Build a Plant and verify the roster slot is active with `pot: 3`.
 5. Run Accept with one deliberately understocked enabled line. Confirm a
