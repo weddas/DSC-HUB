@@ -2,7 +2,8 @@
 
 **Product unbox path.** SoftAP + hub + DSC-CONTROL is the local climate kit.
 Catalogs / Want / advanced UI destination: Pi offline brain — see
-[`docs/DSC-BRAIN.md`](docs/DSC-BRAIN.md) and Notion
+[`docs/DSC-BRAIN.md`](docs/DSC-BRAIN.md), Phase B ops
+[`docs/qa/DSC-BRAIN-PHASE-B.md`](docs/qa/DSC-BRAIN-PHASE-B.md), and Notion
 [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d3407556c).
 Home Assistant remains an optional lab scaffold ([`INSTALL.md`](INSTALL.md),
 [`docs/HA-SCAFFOLD.md`](docs/HA-SCAFFOLD.md)).

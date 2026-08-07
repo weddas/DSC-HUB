@@ -1394,7 +1394,7 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 |---|---|---|
 | N-090 | Notion Product layers doc pass | Hub + 12 child pages; Wiki home / Architecture / Roadmap / Eng Ops wired; diagrams |
 | N-091 | Repo architecture + HA scaffold docs | `docs/DSC-BRAIN.md`, `docs/HA-SCAFFOLD.md`, `docs/brain/*` |
-| N-092 | Brain catalog SQLite + Want + dry-run tick | `brain/dsc_brain/` CLI + FastAPI stub; loads curated packs without HA |
+| N-092 | Brain catalog SQLite + Want + dry-run tick | `brain/dsc_brain/` CLI + FastAPI stub; loads curated packs without HA. Ops: [`docs/qa/DSC-BRAIN-PHASE-B.md`](qa/DSC-BRAIN-PHASE-B.md) |
 | N-093 | F-010 bridge design + firmware sketch | `docs/brain/F010_APPLIANCE_BRIDGE.md`, `firmware/v4/dsc-appliance-bridge.yaml` (not flashable yet) |
 
 ### next-plan

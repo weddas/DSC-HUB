@@ -33,7 +33,8 @@ Options ranked:
 ## Firmware sketch
 
 Stub package: [`firmware/v4/dsc-appliance-bridge.yaml`](../../firmware/v4/dsc-appliance-bridge.yaml)  
-Not production-flashed until board BOM and peer protocol are frozen.
+Not production-flashed until board BOM and peer protocol are frozen (**N-096**).
+Brain Phase B dry-run does **not** drive appliances — see [`docs/qa/DSC-BRAIN-PHASE-B.md`](../qa/DSC-BRAIN-PHASE-B.md).
 
 ## Acceptance
 

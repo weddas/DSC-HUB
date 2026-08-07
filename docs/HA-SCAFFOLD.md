@@ -2,7 +2,7 @@
 
 **In one line:** Use HA to iterate fast in a real tent; do not make HA helpers the long-term home of catalogs or grower logic.
 
-Notion: [HA as lab scaffold](https://app.notion.com/p/3b52b4cda370810b9801c53d93a10c13)
+Notion: [HA as lab scaffold](https://app.notion.com/p/3b52b4cda370810b9801c53d93a10c13) · Brain ops: [`docs/qa/DSC-BRAIN-PHASE-B.md`](qa/DSC-BRAIN-PHASE-B.md)
 
 ## Rules
 
