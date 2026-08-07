@@ -48,11 +48,12 @@ flowchart LR
 | [`docs/qa/FIRMWARE-QA-5.1.0.md`](docs/qa/FIRMWARE-QA-5.1.0.md) | Firmware Validate / flash QC |
 | [`docs/qa/ADDON-QA-5.1.0.md`](docs/qa/ADDON-QA-5.1.0.md) | Sync add-on QC |
 | [`homeassistant/README.md`](homeassistant/README.md) | Packages, HACS, entity notes |
-| [`docs/qa/LIVE-UI-BUILD-A-PLANT.md`](docs/qa/LIVE-UI-BUILD-A-PLANT.md) | Build a Plant composition ops (N-083) |
+| [`docs/qa/LIVE-UI-BUILD-A-PLANT.md`](docs/qa/LIVE-UI-BUILD-A-PLANT.md) | Build a Plant composition ops (N-083 / N-085) |
+| [`docs/qa/BUILD-A-PLANT-DATA-PIPELINE.md`](docs/qa/BUILD-A-PLANT-DATA-PIPELINE.md) | Catalog toolchain, assign bridge, chem/PPFD indexes (N-085) |
 | [`firmware/v4/README.md`](firmware/v4/README.md) | Local validate / flash |
 
 **HAOS delivery:** Settings → Add-ons → Repositories → `https://github.com/weddas/DSC-HUB`
-→ install / Update **DSC-HUB Sync** **5.1.3**. Push to `master` → poll (~60s) →
+→ install / Update **DSC-HUB Sync** **5.1.4+**. Push to `master` → poll (~60s) →
 packages / dashboard / www / ESPHome stubs land in `/config`.
 
 ---
@@ -61,13 +62,13 @@ packages / dashboard / www / ESPHome stubs land in `/config`.
 
 | Device | Config | Version |
 |---|---|---|
-| Hub | `dsc-hub.yaml` → `dsc-hub-v4_0.yaml` + fleet-heal | **5.1.8** |
-| Panel | `dsc-control.yaml` → `dsc-control-common.yaml` | **5.1.16** |
-| Pots 1–4 | `dsc-pot{N}.yaml` → `dsc-pot-common.yaml` | **5.1.7** |
+| Hub | `dsc-hub.yaml` → `dsc-hub-v4_0.yaml` + fleet-heal | **5.1.11** |
+| Panel | `dsc-control.yaml` → `dsc-control-common.yaml` | **5.1.17** |
+| Pots 1–4 | `dsc-pot{N}.yaml` → `dsc-pot-common.yaml` | **5.1.8** |
 | Sonoffs | heater / heatmat / humidifier / de-humidifier | **5.1.x** |
 | Kits | `*-kit.yaml`, `*-wifi-kit.yaml`, fleet-setup kits | same bodies as device train |
-| Sync add-on | `dsc-hub-sync/` | **5.1.3** |
-| HA surface | `sensor.dsc_ha_surface_version` | **5.1.8** |
+| Sync add-on | `dsc-hub-sync/` | **5.1.4** |
+| HA surface | `sensor.dsc_ha_surface_version` | **5.1.11** (N-085) |
 
 Flash order: hub → panel → pots → Sonoffs. Living backlog: [`docs/FOLLOWUPS.md`](docs/FOLLOWUPS.md).
 
