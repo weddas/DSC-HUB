@@ -35,6 +35,7 @@
 #  are local), but humidifiers / heater / mat / AC will not move until HA
 #  is up. The panel alert "Appliances need HA (Sonoffs offline)" surfaces
 #  that. A future ESP32 appliance bridge would be needed to cut HA out.
+#  Design: docs/brain/F010_APPLIANCE_BRIDGE.md + dsc-appliance-bridge.yaml (sketch).
 # ==================================================================
 
 substitutions:

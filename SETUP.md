@@ -1,5 +1,12 @@
 # DSC-HUB — standalone SoftAP setup (no Home Assistant)
 
+**Product unbox path.** SoftAP + hub + DSC-CONTROL is the local climate kit.
+Catalogs / Want / advanced UI destination: Pi offline brain — see
+[`docs/DSC-BRAIN.md`](docs/DSC-BRAIN.md) and Notion
+[Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d3407556c).
+Home Assistant remains an optional lab scaffold ([`INSTALL.md`](INSTALL.md),
+[`docs/HA-SCAFFOLD.md`](docs/HA-SCAFFOLD.md)).
+
 Kit firmware stubs: `dsc-hub-kit.yaml`, `dsc-control-kit.yaml`, `dsc-pot{1..4}-kit.yaml`
 
 Lab/bench stubs (`dsc-hub.yaml`, etc.) keep compile-time WiFi and MACs and do **not** include `dsc_fleet_setup` (hub/panel/pots use `${panel_mac}` / `${hub_mac}`). Kit SoftAP builds still load fleet setup.

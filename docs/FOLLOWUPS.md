@@ -1381,3 +1381,39 @@ Memo: [`docs/DSC-PRODUCT-RESEARCH.md`](DSC-PRODUCT-RESEARCH.md).
 - plant_id nursery DB; Dash merge; pumps N-012; irrigation N-013; PPFD OCR; N-061 public dumps
 - Hub/ESP offline during soak: `text.dsc_pot3_plant_name` + `number.dsc_hub_target_*` writes not live-proven
 - Re-enable Sync only after N-085 commit/push (or Sync will overwrite live packages from old master)
+
+---
+
+## 2026-08-07 — Pi brain + local webserver product shape
+
+Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d3407556c) (Wiki Architecture + Eng Ops pointer). Repo memo: [`docs/DSC-BRAIN.md`](DSC-BRAIN.md).
+
+### done (this pass)
+
+| ID | Item | Notes |
+|---|---|---|
+| N-090 | Notion Product layers doc pass | Hub + 12 child pages; Wiki home / Architecture / Roadmap / Eng Ops wired; diagrams |
+| N-091 | Repo architecture + HA scaffold docs | `docs/DSC-BRAIN.md`, `docs/HA-SCAFFOLD.md`, `docs/brain/*` |
+| N-092 | Brain catalog SQLite + Want + dry-run tick | `brain/dsc_brain/` CLI + FastAPI stub; loads curated packs without HA |
+| N-093 | F-010 bridge design + firmware sketch | `docs/brain/F010_APPLIANCE_BRIDGE.md`, `firmware/v4/dsc-appliance-bridge.yaml` (not flashable yet) |
+
+### next-plan
+
+| ID | Item | Notes |
+|---|---|---|
+| N-094 | Brain hub ESPHome API client | Ingest live Got; still dry-run cmds until soak |
+| N-095 | Webserver MVP (ops + Build a Plant + updates) | Spec: `docs/brain/WEBUI.md` |
+| N-096 | F-010 board BOM + ESP-NOW demand protocol | Blocks honest HA-optional climate |
+| N-097 | Promote Want templates to call shared brain rules | Keep HA soak; stop deepening HA-only SoT |
+
+### deferred
+
+| ID | Item | Notes |
+|---|---|---|
+| F-010 | ESP-NOW appliance bridge (Sonoffs without HA) | **Promoted to critical path** for product claim; sketch only today |
+| F-014 | HAOS golden appliance / Integration “app” shell | Optional packaging only — not product SoT |
+
+### out-of-scope (unchanged)
+
+- Custom Yocto/Balena “DSC Linux”; forking HAOS Buildroot for branded img
+- Ollama on Pi4 4GB kit brain

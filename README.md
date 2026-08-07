@@ -1,8 +1,10 @@
 # DSC-HUB Pro
 
 Indoor grow climate fleet: **ESPHome hub**, **CYD touch panel** (DSC-CONTROL),
-**soil pots**, and **Sonoff demand followers** — local-first ladder control with
-Home Assistant surfaces that sync on every git push.
+**soil pots**, and **Sonoff demand followers** — local-first ladder control.
+Home Assistant is the **lab soak / optional shell**; product destination is a
+**Pi offline brain** + local webserver ([`docs/DSC-BRAIN.md`](docs/DSC-BRAIN.md),
+Notion [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d3407556c)).
 
 **Current release tag:** [**v5.1.0**](https://github.com/weddas/DSC-HUB/releases/tag/v5.1.0)  
 **Live train (in tree):** HA surface **5.1.10** · pots **5.1.8** · Control **5.1.17** · hub **5.1.10** · Sync **5.1.3**  
@@ -40,11 +42,14 @@ flowchart LR
 
 | Doc | When |
 |---|---|
-| [`INSTALL.md`](INSTALL.md) | From-scratch HA + fleet bring-up |
+| [`SETUP.md`](SETUP.md) | **Product unbox** — SoftAP kit without HA |
+| [`docs/DSC-BRAIN.md`](docs/DSC-BRAIN.md) | Pi offline brain + webserver product shape |
+| [`docs/HA-SCAFFOLD.md`](docs/HA-SCAFFOLD.md) | HA = lab soak; promote-don't-deepen |
+| [`brain/README.md`](brain/README.md) | Catalog SQLite / Want / API stub (Phase B) |
+| [`INSTALL.md`](INSTALL.md) | Lab HA + fleet bring-up |
 | [`UPGRADE.md`](UPGRADE.md) | 5.0 → 5.1 cutover (add-on Update + flash) |
-| [`SETUP.md`](SETUP.md) | SoftAP kit unboxing without HA |
 | [`RELEASE.md`](RELEASE.md) | What’s new, rollout checklist |
-| [`scripts/ADDON.md`](scripts/ADDON.md) | **Primary delivery** — HAOS Sync add-on |
+| [`scripts/ADDON.md`](scripts/ADDON.md) | Lab HA delivery — HAOS Sync add-on |
 | [`docs/qa/FIRMWARE-QA-5.1.0.md`](docs/qa/FIRMWARE-QA-5.1.0.md) | Firmware Validate / flash QC |
 | [`docs/qa/ADDON-QA-5.1.0.md`](docs/qa/ADDON-QA-5.1.0.md) | Sync add-on QC |
 | [`homeassistant/README.md`](homeassistant/README.md) | Packages, HACS, entity notes |

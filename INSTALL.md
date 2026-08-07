@@ -5,8 +5,12 @@ Fresh Home Assistant + ESPHome bring-up for release **`v5.1.0`**
 
 Repo: https://github.com/weddas/DSC-HUB · tag **`v5.1.0`** · branch **`master`**
 
-**Preferred ongoing delivery:** HAOS add-on — [`scripts/ADDON.md`](scripts/ADDON.md)  
-**Kit SoftAP (no HA first):** [`SETUP.md`](SETUP.md)  
+> **Lab scaffold path.** Product unbox without HA is SoftAP — [`SETUP.md`](SETUP.md).
+> Pi brain / local webserver destination: [`docs/DSC-BRAIN.md`](docs/DSC-BRAIN.md).
+> HA iteration rules: [`docs/HA-SCAFFOLD.md`](docs/HA-SCAFFOLD.md).
+
+**Preferred ongoing delivery (lab HA):** HAOS add-on — [`scripts/ADDON.md`](scripts/ADDON.md)  
+**Kit SoftAP (product / no HA first):** [`SETUP.md`](SETUP.md)  
 **Upgrading an existing site:** [`UPGRADE.md`](UPGRADE.md)
 
 ---

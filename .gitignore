@@ -17,6 +17,8 @@ firmware/v4/verify_v4
 firmware/v4/verify_v4.exe
 **/__pycache__/
 *.py[cod]
+brain/data/*.sqlite3
+brain/data/*.sqlite3-*
 
 # Never commit a live HA config
 home-assistant_v2.db*
