@@ -7036,4 +7036,3 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     description: "Separate Build a Plant composition (strain, soil %, nutrients, light, climate).",
   });
 })();
-
