@@ -32,6 +32,10 @@ homeassistant/data/dsc_nutrients_*.json
 homeassistant/data/dsc_mediums_*.json
 homeassistant/data/dsc_lights_*.json
 homeassistant/data/dsc_strain_catalog_want_bands.json
+homeassistant/data/dsc_bank_discovery.json
+homeassistant/data/*.checkpoint.json
+homeassistant/data/media/
+homeassistant/data/exports/
 !homeassistant/data/dsc_*_catalog.yaml
 !homeassistant/data/dsc_*_pack_*.yaml
 !homeassistant/data/STRAIN_SOURCES.md

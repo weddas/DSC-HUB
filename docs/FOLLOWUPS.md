@@ -1434,3 +1434,26 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 - Remove `dsc-build-plant` lovelace entry entirely after redirect soak
 - Pi webserver / brain API cutover of Build+Catalog cards remains N-095 track
 - Unrelated local `brain/` scaffold churn left out of this pass
+
+---
+
+## 2026-08-07 — Catalog Massive Rescrape (N-087)
+
+### shipped
+
+| ID | Item | Notes |
+|---|---|---|
+| N-087 | Research corpus + HA projection | SQLite science↔seed schema (`corpus_schema` / `corpus.py`); Wave A OpenTHC (~12.8k) + Seed City CC0 (~8.9k) + Wikileaf grow_data (~2.8k) + Cannlytics MD labs (30k rows); Wave B bank scrapers (ILGM/Herbies/RQS + discovery list); Wave C PPFD download/crop → `media_asset` + [`docs/qa/CATALOG-GAPS.md`](qa/CATALOG-GAPS.md); ingest + link report + community export stub; HA indexes from SQLite projection; surface **5.1.13**; runbook [`docs/qa/CATALOG-RESEARCH-CORPUS.md`](qa/CATALOG-RESEARCH-CORPUS.md) |
+
+### deferred / honesty
+
+- BudProfiles API offline (empty shell dump)
+- SeedFinder alphabetical pages are JS-rendered — sitemap/API scrape still needed for full SF dump
+- Seedsman / some bank list routes 404 or bot-walled — discovery list retained for next wave
+- Cannlytics uses MD state CSV (strain_name present); full multi-state / `data/all` (~2.5GB) not ingested this pass
+- Bank HTML scrapes stay `redistributable=false` until legal review; open export = OpenTHC + Seed City + Wikileaf + Cannlytics CC-BY only
+- Full public GitHub dump upload of research scrapes deferred
+- Pi webserver UI over full corpus remains out of scope (N-095 track)
+- `build_catalog_search_indexes` SQLite projection is N+1 per canonical (slow on network DB) — batch JOIN refactor later
+- HA strain projection capped at 2500 of ~20k canonical; raise cap or page when UI needs it
+- Nutrient/medium brand dumps still thin (pack seeds only this pass); Wave D brand crawl next

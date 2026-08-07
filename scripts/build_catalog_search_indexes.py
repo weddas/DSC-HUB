@@ -6,11 +6,14 @@ names; no full lab blobs or invented photometrics. Caps keep payloads small.
 
 Usage:
   python scripts/build_catalog_search_indexes.py
+  python scripts/build_catalog_search_indexes.py --from-dumps
 """
 from __future__ import annotations
 
+import argparse
 import json
 import re
+import sys
 import time
 from pathlib import Path
 
@@ -20,9 +23,13 @@ except ImportError:
     yaml = None  # type: ignore
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
+from catalog_sqlite_projection import build_strains_from_sqlite  # noqa: E402
+
 DATA = ROOT / "homeassistant" / "data"
 WWW = ROOT / "homeassistant" / "www" / "dsc-catalog"
 DIST = ROOT / "dist" / "dsc-catalog"
+DEFAULT_DB = ROOT / "brain" / "data" / "dsc_brain.sqlite3"
 
 STRAIN_CAP = 2500
 NUTE_CAP = 1500
@@ -210,20 +217,23 @@ def build_strains() -> dict:
         except Exception as e:
             print("yaml skip", e)
 
-    # Popular dump is the final fallback.
-    for row in _products(DATA / "dsc_strains_popular.json"):
-        if isinstance(row, dict):
-            add(
-                row.get("name"),
-                id=row.get("id"),
-                type=row.get("type") or row.get("species"),
-                breeder=row.get("breeder") or row.get("bank"),
-                chemistry=row.get("chemistry"),
-                want=row.get("want") if isinstance(row.get("want"), dict) else None,
-                height_cm=_height(row),
-                flowering_days=_flowering(row),
-                source="popular",
-            )
+    # Sweep strain dumps (OpenTHC / SeedCity / banks / popular).
+    for dump in sorted(DATA.glob("dsc_strains_*.json")):
+        if "checkpoint" in dump.name or "merged" in dump.name:
+            continue
+        for row in _products(dump):
+            if isinstance(row, dict):
+                add(
+                    row.get("name"),
+                    id=row.get("id"),
+                    type=row.get("type") or row.get("species"),
+                    breeder=row.get("breeder") or row.get("bank"),
+                    chemistry=row.get("chemistry"),
+                    want=row.get("want") if isinstance(row.get("want"), dict) else None,
+                    height_cm=_height(row),
+                    flowering_days=_flowering(row),
+                    source=dump.stem,
+                )
 
     with_want = sum(1 for r in rows if r.get("want"))
     with_height = sum(1 for r in rows if r.get("height_cm") is not None)
@@ -493,14 +503,24 @@ def build_lights() -> dict:
 
 
 def main() -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--from-dumps", action="store_true", help="Skip SQLite; use dump JSON only")
+    ap.add_argument("--db", type=Path, default=DEFAULT_DB)
+    args = ap.parse_args()
+
+    if args.from_dumps:
+        strains = build_strains()
+    else:
+        strains = build_strains_from_sqlite(args.db) or build_strains()
+
     outs = [
-        _write("dsc_strains_search_index.json", build_strains()),
+        _write("dsc_strains_search_index.json", strains),
         _write("dsc_nutrients_search_index.json", build_nutrients()),
         _write("dsc_mediums_search_index.json", build_mediums()),
         _write("dsc_lights_search_index.json", build_lights()),
     ]
     for p in outs:
-        print("wrote", p)
+        print("wrote", p, "count", json.loads(p.read_text(encoding="utf-8")).get("count"))
     return 0
 
 

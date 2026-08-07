@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "kind": "nutrients",
-  "built_at": "2026-08-07T10:02:06Z",
+  "built_at": "2026-08-07T13:11:07Z",
   "count": 3,
   "note": "Browse index v2. dose_ml_l/stage/npk only when stated in dump/pack.",
   "items": [

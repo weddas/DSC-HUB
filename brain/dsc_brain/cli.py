@@ -7,6 +7,8 @@ import json
 import sys
 
 from .catalog import init_db, reload_catalogs, search
+from .corpus import connect as corpus_connect
+from .corpus import corpus_stats, init_corpus
 from .decision_loop import decision_tick
 from .want import resolve_want
 
@@ -16,6 +18,8 @@ def main(argv: list[str] | None = None) -> int:
     sub = parser.add_subparsers(dest="cmd", required=True)
 
     sub.add_parser("init-db", help="Create SQLite schema")
+    sub.add_parser("init-corpus", help="Create N-087 research corpus tables")
+    sub.add_parser("corpus-stats", help="Print research corpus table counts")
     sub.add_parser("reload-catalogs", help="Load homeassistant/data packs into SQLite")
 
     p_search = sub.add_parser("search", help="Search catalog kind")
@@ -39,7 +43,19 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.cmd == "init-db":
         path = init_db()
+        init_corpus(path)
+        print(json.dumps({"db": str(path), "corpus": True}))
+        return 0
+
+    if args.cmd == "init-corpus":
+        path = init_corpus()
         print(json.dumps({"db": str(path)}))
+        return 0
+
+    if args.cmd == "corpus-stats":
+        conn = corpus_connect()
+        print(json.dumps(corpus_stats(conn), indent=2))
+        conn.close()
         return 0
 
     if args.cmd == "reload-catalogs":
