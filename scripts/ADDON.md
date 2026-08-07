@@ -32,9 +32,12 @@ DSC-HUB Sync 5.1.4 ──stage/cp──► /config/packages|dashboards|www|espho
 Sources: [`dsc-hub-sync/`](../dsc-hub-sync/) · [`repository.yaml`](../repository.yaml).
 
 **5.1.4 delta:** stages `dsc-build-plant-dashboard.yaml`, appends
-`dsc-build-plant-card.js` to the www bundle, copies `www/dsc-catalog/*.json`.
+`dsc-build-plant-card.js` to the www bundle, copies `www/dsc-catalog/*.json`
+(falls back to `dist/dsc-catalog/` with a warn). Concat requires all six www
+inputs; otherwise Sync uses `dist/dsc-system-map-card.js` and warns.
 Rebuild the add-on after Update — Sync ≤5.1.3 stopped concat at The Dash and
 could demote a HACS-complete live bundle (**N-084**).
+See [`docs/qa/LIVE-UI-BUILD-A-PLANT.md`](../docs/qa/LIVE-UI-BUILD-A-PLANT.md).
 
 ## Related
 

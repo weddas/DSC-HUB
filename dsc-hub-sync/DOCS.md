@@ -32,10 +32,22 @@ restores the last-good snapshot under `/data/last_good_sync`.
 
 `system-map` → `airflow` → `three.min` → `dsc-dash-fx` → `the-dash` → **`build-plant`**
 
+All six www inputs must exist for live concat. If any is missing, Sync copies
+`dist/dsc-system-map-card.js` instead and logs
+`Used dist/dsc-system-map-card.js fallback`.
+
 Refuses staging `< 500000` bytes (F-013). Healthy size ~941 KB with Build a Plant.
+
+**Catalogs:** prefer `homeassistant/www/dsc-catalog/*.json`; else
+`dist/dsc-catalog/` (warn). If neither exists, Sync warns
+`Missing www/dsc-catalog — Build a Plant typeahead will be empty` and still
+installs the JS bundle.
 
 **N-084:** Sync ≤5.1.3 stopped at The Dash — rebuild **5.1.4+** so Sync cannot
 demote a HACS-complete live bundle.
+
+Ops runbook (staging decision tree + index builder):
+[`docs/qa/LIVE-UI-BUILD-A-PLANT.md`](../docs/qa/LIVE-UI-BUILD-A-PLANT.md).
 
 ## Reloads (when `reload_after_sync`)
 

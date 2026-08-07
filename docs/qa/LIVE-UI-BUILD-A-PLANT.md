@@ -79,18 +79,36 @@ refuses `< 500000` (F-013).
 
 ### Search indexes
 
-Built by `python scripts/build_catalog_search_indexes.py` →
-`homeassistant/www/dsc-catalog/` + `dist/dsc-catalog/`.
+Built by `python scripts/build_catalog_search_indexes.py` → writes **both**
+`homeassistant/www/dsc-catalog/` and `dist/dsc-catalog/` (same payload).
 
-| File | Cap (verified) | Contents |
+| File | Cap (verified live) | `kind` (JSON) | Contents |
+|---|---|---|---|
+| `dsc_strains_search_index.json` | **2500** | `strains` | Slim name / type / breeder |
+| `dsc_nutrients_search_index.json` | **1500** | `nutrients` | Name / brand / optional `dose_ml_l` |
+| `dsc_mediums_search_index.json` | **800** (777 live) | `mediums` | Substrate names (+ builder seed labels) |
+| `dsc_lights_search_index.json` | **800** | `lights` | Fixture names + stated W when present |
+
+**Builder source order (verified in script):**
+
+| Index | Prefer first | Then |
 |---|---|---|
-| `dsc_strains_search_index.json` | **2500** | Slim name / type / breeder |
-| `dsc_nutrients_search_index.json` | **1500** | Name / brand / optional dose |
-| `dsc_mediums_search_index.json` | **800** (777 live) | Substrate names |
-| `dsc_lights_search_index.json` | **800** | Fixture names + stated W when present |
+| Strains | curated `dsc_strain_catalog.yaml` → `dsc_strains_popular.json` | fill to cap from `dsc_strains_merged.json` |
+| Nutrients | CANNA pack/YAML + preferred brand dumps | remaining `dsc_nutrients_*.json` (skip `*checkpoint*`) |
+| Mediums | CANNA / Cyco / coco preferred dumps | remaining `dsc_mediums_*.json` + hard-coded substrate seeds |
+| Lights | `dsc_light_pack_photometrics.yaml` | remaining light dumps to cap |
+
+Payload shape: `{ schema_version, kind, built_at, count, note, items[] }`.
+Metric-friendly fields only — no chemistry blobs, no invented PPFD maps.
 
 Card fetches `${CATALOG_BASE}/${file}` with `CATALOG_BASE = "/local/dsc-catalog"`.
 Missing indexes → empty typeahead (no hard fail).
+
+**Kind contract:** builder `kind` is **plural**. Card UI search kinds stay
+**singular** (`strain` …) and map via `INDEX_KEY` (`afda0ac`). Do not rename
+builder `kind` to singular without updating the card. If Network returns **200**
+but hits stay empty, triage the card key-map — not “indexes missing”
+(see pitfalls; full UX runbook in open docs PR **#40**).
 
 ### Delivery paths
 
@@ -98,11 +116,36 @@ Missing indexes → empty typeahead (no hard fail).
 |---|---|---|---|
 | **HACS** Redownload | no (config snippet once) | yes (`dist/DSC-HUB.js`) | no — need Sync / ha-sync / manual |
 | **ha-sync.sh** | yes | yes | yes |
-| **Sync add-on 5.1.4+** | yes | yes | yes |
+| **Sync add-on 5.1.4+** | yes | yes (www concat **or** `dist/` fallback) | yes (`www/dsc-catalog` **or** `dist/dsc-catalog`) |
 | Sync add-on **≤5.1.3** | **no** | **no** (concat stopped at Dash) | **no** |
 
 **N-084:** Sync ≤5.1.3 would rebuild a Dash-only concat from www sources and
 could demote a HACS-complete live bundle. Rebuild Sync **5.1.4+** after merge.
+
+```mermaid
+flowchart TD
+  sync["Sync 5.1.4+ sync_www"] --> gate{"www has system-map + airflow + three + dash-fx + the-dash + build-plant?"}
+  gate -->|yes| concat["Concat → STAGE www bundle"]
+  gate -->|no| distBundle{"dist/dsc-system-map-card.js present?"}
+  distBundle -->|yes| useDist["Copy dist bundle + warn"]
+  distBundle -->|no| skip["Skip www card sync"]
+  concat --> size{"bytes >= 500000?"}
+  useDist --> size
+  size -->|no| refuse["Refuse — leave live /config/www"]
+  size -->|yes| catalogs{"www/dsc-catalog/*.json?"}
+  catalogs -->|yes| stageCat["Stage www catalogs"]
+  catalogs -->|no| distCat{"dist/dsc-catalog?"}
+  distCat -->|yes| stageDistCat["Stage dist catalogs + warn"]
+  distCat -->|no| warnEmpty["Warn: typeahead will be empty"]
+  stageCat --> install["Install DSC-HUB.js + standalone cards + catalogs"]
+  stageDistCat --> install
+  warnEmpty --> install
+```
+
+**Sync log tells:** `Used dist/dsc-system-map-card.js fallback` means www concat
+inputs were incomplete (any of the six files missing). `Used dist/dsc-catalog
+fallback` means indexes were taken from `dist/`. `Missing www/dsc-catalog`
+means typeahead will be empty until indexes are staged.
 
 ## Constraints
 
@@ -133,7 +176,11 @@ could demote a HACS-complete live bundle. Rebuild Sync **5.1.4+** after merge.
 | Symptom | Likely cause | Fix |
 |---|---|---|
 | Custom element missing | Old Sync ≤5.1.3 www concat, or stale HACS | Rebuild Sync 5.1.4+ **or** HACS Redownload + hard-refresh |
-| Typeahead empty | `/local/dsc-catalog/` missing | Sync/ha-sync catalog copy, or manual `www/dsc-catalog/*.json` |
+| Typeahead empty; Network **404** on `/local/dsc-catalog/*` | Indexes not staged | Sync/ha-sync catalog copy, or manual `www/dsc-catalog/*.json` |
+| Typeahead empty; Network **200** + JSON has `items` | Pre-`afda0ac` card (singular `_indexes` lookup) **or** stale bundle | HACS Redownload / Sync www + **Ctrl+F5**; confirm card has `INDEX_KEY` |
+| Labels show `Â·` / `â€”` mojibake | Pre-ASCII card strings | Redeploy `afda0ac`+ card; hard-reload |
+| Sync log: dist bundle fallback | Missing one of six www concat inputs | Restore `www/dsc-build-plant-card.js` (and peers); prefer www concat over silent dist |
+| Sync log: missing catalog | Neither `www/` nor `dist/dsc-catalog` in clone | Run `build_catalog_search_indexes.py` + sync-hacs-dist; re-sync |
 | Dashboard 404 | Snippet not merged / YAML not on HA | Merge snippet; ensure `dashboards/dsc-build-plant-dashboard.yaml` |
 | Commit does nothing | All 8 roster slots occupied | Clear a slot status back to `empty` |
 | Climate Apply “skipped” | Custom Want temp/RH still 0 | Set Custom slot climate Want, or leave alone (expected) |
@@ -159,6 +206,9 @@ python scripts/build_catalog_search_indexes.py
 ## Related
 
 - FOLLOWUPS **N-083** / **N-084** — [`docs/FOLLOWUPS.md`](../FOLLOWUPS.md)
+- Typeahead / `INDEX_KEY` / mojibake (`afda0ac`) — open docs PR **#40**
+  (`LIVE-UI-BUILD-A-PLANT-TYPEAHEAD.md`); soak **N-068**
+- Index builder — `scripts/build_catalog_search_indexes.py`
 - HA layout — [`homeassistant/README.md`](../../homeassistant/README.md)
 - HACS — [`scripts/HACS-FRONTEND.md`](../../scripts/HACS-FRONTEND.md)
 - Sync — [`dsc-hub-sync/DOCS.md`](../../dsc-hub-sync/DOCS.md) · [`scripts/ADDON.md`](../../scripts/ADDON.md)

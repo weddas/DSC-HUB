@@ -3,7 +3,7 @@
 ## Unreleased
 
 - **Build a Plant (N-083)** — Separate product surface: dashboard `dsc-build-plant`, Lit card `dsc-build-plant-card`, package `dsc_v4_build_plant.yaml` (soil % blend, plant roster, mix calculator, Apply climate Want). Slim `/local/dsc-catalog/` search indexes via `scripts/build_catalog_search_indexes.py`. Vivosun NEXT_DATA enrich (wattage/PPE/stated point-PPFD/datasheets); keyword-labeled map URLs still **0** on CDN hashes. Wired into `sync-hacs-dist.sh` / `ha-sync.sh` (bundle + catalog + dashboard copy).
-- **Sync 5.1.4 (N-084)** — HAOS Sync add-on concatenates Build a Plant into www/`DSC-HUB.js`, stages `dsc-build-plant-dashboard.yaml` + `www/dsc-catalog/`. Rebuild add-on after Update (≤5.1.3 stopped at The Dash). Ops: `docs/qa/LIVE-UI-BUILD-A-PLANT.md`.
+- **Sync 5.1.4 (N-084)** — HAOS Sync add-on concatenates Build a Plant into www/`DSC-HUB.js`, stages `dsc-build-plant-dashboard.yaml` + `www/dsc-catalog/`. Rebuild add-on after Update (≤5.1.3 stopped at The Dash). Ops: `docs/qa/LIVE-UI-BUILD-A-PLANT.md` (catalog index builder + Sync staging decision tree / dist fallbacks; typeahead 404 vs 200 triage).
 - **Light photometrics (PPFD / spectrum)** — `clean_light_map_assets.py` strips non-image map URLs; `dsc_light_pack_photometrics.yaml` + `dsc_v4_light_catalog.yaml` surface map URLs + stated W/PPF/PPE for SF1000/SF2000/SE7000, Mars Hydro FC-E3000/TS1000, Digi-Lumen, Treegers.
 - **Catalog → Pro dash (N-082)** — Strains / Nutrient Science / Lighting views wired to catalog packs; SF1000 nameplate watts sync into climate physics.
 - **Medium pack (N-064)** — `dsc_medium_pack_canna_coco.yaml` + `dsc_v4_medium_catalog.yaml` (CANNA Coco Professional Plus).

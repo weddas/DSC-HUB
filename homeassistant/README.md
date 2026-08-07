@@ -93,9 +93,11 @@ Composition surface at **`/dsc-build-plant/build`** — not a Pro tab. Package
 | Assign to pot | `script.dsc_plant_assign_to_pot` |
 | Apply climate Want | `script.dsc_apply_climate_want` (Custom temp/RH ≠0 only) |
 
-Ops runbook: [`../docs/qa/LIVE-UI-BUILD-A-PLANT.md`](../docs/qa/LIVE-UI-BUILD-A-PLANT.md).
-Requires Sync add-on **5.1.4+** (or ha-sync) for dashboard YAML + catalog JSON;
-HACS alone registers the custom element.
+Ops runbook: [`../docs/qa/LIVE-UI-BUILD-A-PLANT.md`](../docs/qa/LIVE-UI-BUILD-A-PLANT.md)
+(index builder + Sync staging / dist fallbacks). Requires Sync add-on **5.1.4+**
+(or ha-sync) for dashboard YAML + catalog JSON; HACS alone registers the custom
+element. Typeahead empty with Network **200** → stale pre-`afda0ac` card
+(`INDEX_KEY`), not missing catalogs — see open docs PR **#40**.
 
 ## HACS cards
 
