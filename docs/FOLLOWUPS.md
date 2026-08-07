@@ -1349,10 +1349,12 @@ Memo: [`docs/DSC-PRODUCT-RESEARCH.md`](DSC-PRODUCT-RESEARCH.md).
 - Mojibake: fancy Unicode (`·` `—` `…` `≠`) in card/dashboard strings → ASCII.
 - Predictive dropdowns + keyboard nav + catalog status chip; skip hass re-render while search open.
 - Deployed `/config/www/dsc-build-plant-card.js` + rebuilt `dsc-system-map-card.js` / `DSC-HUB.js` (bundle registers card first); cache-busted lovelace resources; HA core restarted.
+- Landed on master as `afda0ac`; HACS dist sync `23cdd8e`.
+- Ops runbook: [`docs/qa/LIVE-UI-BUILD-A-PLANT-TYPEAHEAD.md`](qa/LIVE-UI-BUILD-A-PLANT-TYPEAHEAD.md) (complements composition ops in docs PR #39).
 
 ### deferred / next
 | ID | Item | Notes |
 |---|---|---|
-| N-068 | Interactive browser verify Build a Plant typeahead | cursor-ide-browser had no tab; browser-use blocked on Chrome remote-debugging Allow. Operator: Ctrl+F5 `/dsc-build-plant/build`, confirm dropdowns + no mojibake. |
-| N-069 | Commit Build a Plant UX when asked | Repo changes left uncommitted (sibling agent owns commit/push). |
+| N-068 | Interactive browser verify Build a Plant typeahead | Operator: Ctrl+F5 `/dsc-build-plant/build`, confirm dropdowns + no mojibake. Automation browsers blocked earlier. |
+| N-069 | Commit Build a Plant UX | **Done** — `afda0ac` (+ HACS sync `23cdd8e`). |
 
