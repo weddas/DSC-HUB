@@ -3,19 +3,24 @@
 #  ------------------------------------------------------------------
 #  Packages + YAML-mode Lovelace so git-push sync can update helpers,
 #  automations, and the dashboard by file copy alone.
+#  Custom panel (React) registers sidebar DSC-HUB at /dsc-hub.
 # ==================================================================
 
 homeassistant:
   packages: !include_dir_named packages
 
+# React product panel — WashData-style custom sidebar entry
+dsc_hub:
+
 lovelace:
   mode: storage
   dashboards:
+    # Lovelace shell kept as fallback; panel owns the sidebar title now.
     dsc-hub-pro:
       mode: yaml
-      title: DSC-HUB
+      title: DSC-HUB (YAML)
       icon: mdi:sprout
-      show_in_sidebar: true
+      show_in_sidebar: false
       filename: dashboards/dsc-hub-v4-dashboard.yaml
     # N-086: Build a Plant folded into Plant hub (/dsc-hub-pro/plant-build).
     # Keep YAML stub off the sidebar during redirect soak; remove after cutover.

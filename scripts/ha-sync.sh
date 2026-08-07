@@ -106,7 +106,34 @@ ha_service() {
 
 # --- remote dirs ----------------------------------------------------------
 log "Ensuring remote directories under ${HA_CONFIG_ROOT}"
-run_ssh "mkdir -p '${HA_CONFIG_ROOT}/packages' '${HA_CONFIG_ROOT}/dashboards' '${HA_CONFIG_ROOT}/www' '${HA_CONFIG_ROOT}/esphome'"
+run_ssh "mkdir -p '${HA_CONFIG_ROOT}/packages' '${HA_CONFIG_ROOT}/dashboards' '${HA_CONFIG_ROOT}/www' '${HA_CONFIG_ROOT}/esphome' '${HA_CONFIG_ROOT}/custom_components'"
+
+# --- custom_components/dsc_hub (React panel) ------------------------------
+cc_src="${HA_SRC}/custom_components/dsc_hub"
+if [[ -d "${cc_src}" ]]; then
+  log "Syncing custom_components/dsc_hub (panel + assets)"
+  run_ssh "mkdir -p '${HA_CONFIG_ROOT}/custom_components/dsc_hub/www/assets'"
+  # Python + manifest
+  for f in manifest.json const.py frontend.py __init__.py; do
+    [[ -f "${cc_src}/${f}" ]] || continue
+    run_scp "${cc_src}/${f}" "${HA_CONFIG_ROOT}/custom_components/dsc_hub/${f}"
+  done
+  # Built panel + assets tree
+  if [[ -f "${cc_src}/www/dsc-hub-panel.js" ]]; then
+    run_scp "${cc_src}/www/dsc-hub-panel.js" "${HA_CONFIG_ROOT}/custom_components/dsc_hub/www/dsc-hub-panel.js"
+  fi
+  if [[ -d "${cc_src}/www/assets" ]]; then
+    run_ssh "rm -rf '${HA_CONFIG_ROOT}/custom_components/dsc_hub/www/assets' && mkdir -p '${HA_CONFIG_ROOT}/custom_components/dsc_hub/www/assets'"
+    # tar over ssh is more reliable for trees; fall back to recursive scp -r
+    if [[ "${DRY_RUN}" == "1" ]]; then
+      log "DRY_RUN sync dsc_hub www/assets"
+    else
+      scp "${scp_opts[@]}" -r "${cc_src}/www/assets/." "${remote}:${HA_CONFIG_ROOT}/custom_components/dsc_hub/www/assets/"
+    fi
+  fi
+else
+  log "No custom_components/dsc_hub — skip panel sync"
+fi
 
 # --- packages (dsc_v4_* only) ---------------------------------------------
 log "Syncing packages/dsc_v4_*.yaml"

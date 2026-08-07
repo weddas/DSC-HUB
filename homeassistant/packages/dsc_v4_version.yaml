@@ -9,7 +9,7 @@ input_text:
   dsc_expected_release:
     name: "DSC Expected Release"
     icon: mdi:tag-check
-    initial: "5.1.10"
+    initial: "5.2.0"
     max: 32
 
 template:
@@ -17,10 +17,11 @@ template:
       - name: "DSC HA Surface Version"
         unique_id: dsc_ha_surface_version
         icon: mdi:home-assistant
-        state: "5.1.13"
+        state: "6.0.0"
         attributes:
           packages: dsc_v4_*
-          dashboard: dsc-hub-pro (strains + nutrient-science + crop UI)
+          dashboard: dsc-hub custom panel (/dsc-hub) React+Vite
+          lovelace_fallback: dsc-hub-pro YAML (sidebar hidden)
           build_plant_inclusion: N-085
           phase_b: present
           learn_activity: present
@@ -34,16 +35,19 @@ template:
           light_quota: hub ledger debt/catch-up + Lighting view (hub FW 5.1.7+)
           fleet_heal: EVT autofix + coherence notify (hub 5.1.8+ / Control 5.1.16)
           wifi_roam: post_connect_roaming off (hub 5.1.10+) — ESP-NOW channel hold
+          eth01_bridge: F-010 appliance + F-012 SoftAP anchor + F-013 HA mirror (5.2.0)
+          custom_panel: dsc_hub 0.1.0
 
       - name: "DSC Fleet Version Status"
         unique_id: dsc_fleet_version_status
         icon: mdi:clipboard-check
         state: >-
           {% set exp = states('input_text.dsc_expected_release')|trim %}
-            {% if exp in ['unknown','unavailable','', none] %}{% set exp = '5.1.10' %}{% endif %}
+            {% if exp in ['unknown','unavailable','', none] %}{% set exp = '5.2.0' %}{% endif %}
           {% set checks = [
             ('hub', states('sensor.dsc_hub_firmware_version')),
             ('panel', states('sensor.dsc_control_firmware_version')),
+            ('bridge', states('sensor.dsc_bridge_esphome_version')),
             ('pot1', states('sensor.dsc_pot1_firmware_version')),
             ('pot2', states('sensor.dsc_pot2_firmware_version')),
             ('pot3', states('sensor.dsc_pot3_firmware_version')),
@@ -59,7 +63,9 @@ template:
           {% set train = exp.split('.')[0:2]|join('.') %}
           {% set ns = namespace(missing=0, drift=0, ok=0) %}
           {% for name, ver in checks %}
-            {% if ver in ['unknown','unavailable',''] or ver is none %}
+            {% if name == 'bridge' and ver in ['unknown','unavailable',''] %}
+              {# Bridge optional until flashed — do not fail fleet chip. #}
+            {% elif ver in ['unknown','unavailable',''] or ver is none %}
               {% set ns.missing = ns.missing + 1 %}
             {% elif (ver|string|trim).split('.')[0:2]|join('.') != train %}
               {% set ns.drift = ns.drift + 1 %}
@@ -76,7 +82,7 @@ template:
         attributes:
           expected: >-
             {% set exp = states('input_text.dsc_expected_release')|trim %}
-            {{ '5.1.10' if exp in ['unknown','unavailable',''] else exp }}
+            {{ '5.2.0' if exp in ['unknown','unavailable',''] else exp }}
           hub: "{{ states('sensor.dsc_hub_firmware_version') }}"
           panel: "{{ states('sensor.dsc_control_firmware_version') }}"
           pot1: "{{ states('sensor.dsc_pot1_firmware_version') }}"

@@ -260,7 +260,23 @@ stage_and_commit() {
     fi
   fi
 
+  # Custom React panel
+  if [[ -d "${src}/custom_components/dsc_hub" ]]; then
+    mkdir -p "${STAGE}/custom_components"
+    rm -rf "${STAGE}/custom_components/dsc_hub"
+    cp -a "${src}/custom_components/dsc_hub" "${STAGE}/custom_components/dsc_hub"
+    rm -rf "${STAGE}/custom_components/dsc_hub/frontend/node_modules" || true
+    log "Staged custom_components/dsc_hub"
+  fi
+
   # Promote stage → /config
+  if [[ -d "${STAGE}/custom_components/dsc_hub" ]]; then
+    mkdir -p "${HA_CONFIG}/custom_components"
+    rm -rf "${HA_CONFIG}/custom_components/dsc_hub"
+    cp -a "${STAGE}/custom_components/dsc_hub" "${HA_CONFIG}/custom_components/dsc_hub"
+    log "Installed /config/custom_components/dsc_hub"
+  fi
+
   mkdir -p \
     "${HA_CONFIG}/packages" \
     "${HA_CONFIG}/dashboards" \
