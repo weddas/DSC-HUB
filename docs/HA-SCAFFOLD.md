@@ -9,7 +9,7 @@ Notion: [HA as lab scaffold](https://app.notion.com/p/3b52b4cda370810b9801c53d93
 1. **Durable logic** (catalog schema, Want resolution, roster, Learning math) is expressed as **repo data + testable functions** under [`brain/`](../brain/) first.
 2. Wire into HA packages/cards only when you need **live soak**.
 3. **Promote** stable rules into the Pi brain; do not invent new SoT that only exists as `input_*` graphs.
-4. Lovelace Pro / Build a Plant cards are **prototypes** for the future webserver — reuse UX ideas, not `hass` entity_id coupling.
+4. Lovelace product shell (Ops / Plant / Advanced / System) and Build / Catalog cards are **prototypes** for the future webserver — reuse section jobs and UX ideas, not `hass` entity_id coupling ([`docs/qa/LIVE-UI-PRODUCT-SHELL.md`](qa/LIVE-UI-PRODUCT-SHELL.md)).
 5. Sync + HACS remain the **lab delivery** path (`INSTALL.md`). Product unbox is SoftAP (`SETUP.md`).
 
 ## When HA is still right

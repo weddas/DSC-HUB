@@ -6,8 +6,8 @@ Canonical HA surface for firmware [`firmware/v4/`](../firmware/v4/).
 
 | Path | Role |
 |---|---|
-| `dashboards/dsc-hub-v4-dashboard.yaml` | Lovelace UX **v5.1.3** (`dsc-hub-pro`). In-service kit toggles; learn **Activity**; Root Zone Pots+Mat. |
-| `dashboards/dsc-build-plant-dashboard.yaml` | **Build a Plant** separate dashboard (`dsc-build-plant`) — composition card only |
+| `dashboards/dsc-hub-v4-dashboard.yaml` | Lovelace product shell **5.1.12** (`dsc-hub-pro`) — Ops · Plant · Advanced · System (N-086) |
+| `dashboards/dsc-build-plant-dashboard.yaml` | Legacy **Build a Plant** redirect stub (`dsc-build-plant`, sidebar hidden) |
 | `packages/dsc_v4_core_helpers.yaml` | Hub link, fan %, runtimes, **in-service** + capacity-offline + vent-conflict / ineffective cues |
 | `packages/dsc_v4_strain_catalog.yaml` | Strain catalog, sprout age, Want/Need/Got, peer offsets, Apply expected stage |
 | `packages/dsc_v4_build_plant.yaml` | Build a Plant SoT: soil % blend, plant roster, mix calculator, Apply climate Want |
@@ -28,10 +28,12 @@ Canonical HA surface for firmware [`firmware/v4/`](../firmware/v4/).
 | `packages/dsc_v4_pots_alerts.yaml` | Per-pot moisture/pH/temp/EC/N alert binaries |
 | `packages/dsc_v4_alert_count.yaml` | `sensor.dsc_active_alert_count` for Home chip |
 | `packages/dsc_v4_automations.yaml` | Demand followers, climate/safety alerts, grow-log scribe |
-| `configuration.snippet.yaml` | Paste-once: packages include + YAML-mode `dsc-hub-pro` + `dsc-build-plant` dashboards |
+| `configuration.snippet.yaml` | Paste-once: packages include + YAML-mode `dsc-hub-pro` (+ hidden Build redirect) |
 | `automations.yaml` | Deprecated stub — points at the package above |
+| `www/dsc-app-nav-card.js` | Product shell section nav (Ops / Plant / Advanced / System) |
+| `www/dsc-catalog-browse-card.js` | Catalog Explorer browse / compare / Use in Build |
 | `www/dsc-build-plant-card.js` | Build a Plant Lovelace card → `/config/www/` (+ resource) |
-| `www/dsc-catalog/` | Slim search indexes for Build a Plant (`/local/dsc-catalog/…`) |
+| `www/dsc-catalog/` | Slim search indexes (`schema_version` 2) for Compose + Catalog Explorer |
 | `www/dsc-system-map.*` | SYSTEM MAP Lovelace card + SVG → `/config/www/` |
 | `www/dsc-airflow-map-card.js` | AIRFLOW STATUS Lovelace card → `/config/www/` |
 | `esphome/` | Thin device stubs — pull firmware packages from GitHub |
@@ -57,7 +59,7 @@ Quick copy list:
 | This folder | HA `/config/` |
 |---|---|
 | `packages/dsc_v4_*.yaml` | `packages/` (helpers, learn, automations) |
-| `dashboards/dsc-hub-v4-dashboard.yaml` | `dashboards/` (YAML-mode URL **`dsc-hub-pro`**) |
+| `dashboards/dsc-hub-v4-dashboard.yaml` + `modules/` | `dashboards/` (YAML-mode URL **`dsc-hub-pro`**, surface **5.1.12**) |
 | `esphome/dsc-*.yaml` | `esphome/` |
 | `www/dsc-*-map*` | `www/` + `/local` or HACS `DSC-HUB.js` resources |
 

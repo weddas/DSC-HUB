@@ -3,8 +3,9 @@
 Pulls [weddas/DSC-HUB](https://github.com/weddas/DSC-HUB) and copies HA surfaces
 into `/config` whenever the tracked git ref moves (default: `master`).
 
-**Add-on version:** **5.1.4** (Build a Plant dashboard + catalog + bundle concat;
-also syncs `esphome/components/dsc_fleet_setup` since 5.1.2)
+**Add-on version:** **5.1.4** (Build a Plant + Catalog Explorer + product-shell
+nav in www bundle concat; also syncs `esphome/components/dsc_fleet_setup` since
+5.1.2). HA product shell surface **5.1.12** (N-086).
 
 ## What it syncs
 
@@ -28,14 +29,18 @@ Never touches `secrets.yaml` or `.storage/`. Never auto-flashes ESP devices.
 Copies are staged under `/data/sync_stage` then promoted; on failure the add-on
 restores the last-good snapshot under `/data/last_good_sync`.
 
-### www bundle concat (5.1.4)
+### www bundle concat (5.1.4 + N-086)
 
-`system-map` → `airflow` → `three.min` → `dsc-dash-fx` → `the-dash` → **`build-plant`**
+`system-map` → `airflow` → `three.min` → `dsc-dash-fx` → `the-dash` →
+**`build-plant`** → **`app-nav`** → **`catalog-browse`**
 
-Refuses staging `< 500000` bytes (F-013). Healthy size ~941 KB with Build a Plant.
+Refuses staging `< 500000` bytes (F-013). Healthy size ~979 KB after N-086
+(nav + Catalog Explorer). Missing nav/catalog inputs fall back to `dist/` or
+skip www with a warn — do not ship a map-only stub.
 
-**N-084:** Sync ≤5.1.3 stopped at The Dash — rebuild **5.1.4+** so Sync cannot
-demote a HACS-complete live bundle.
+**N-084 / N-086:** Sync ≤5.1.3 stopped at The Dash; pre-N-086 5.1.4 stopped at
+Build a Plant — rebuild / redownload so Sync cannot demote a HACS-complete live
+bundle. Ops: [`docs/qa/LIVE-UI-PRODUCT-SHELL.md`](../docs/qa/LIVE-UI-PRODUCT-SHELL.md).
 
 ## Reloads (when `reload_after_sync`)
 
@@ -49,8 +54,8 @@ YAML dashboards refresh on navigation (`lovelace.reload` is 400 on current Core)
 ## One-time HA setup
 
 1. Install / Update add-on **5.1.4**, start, wait for first sync.
-2. Merge configuration snippet (packages + YAML dashboards `dsc-hub-pro` **and**
-   `dsc-build-plant`).
+2. Merge configuration snippet (packages + YAML dashboard `dsc-hub-pro`;
+   `dsc-build-plant` redirect stub is sidebar-hidden).
 3. Restart Home Assistant once.
 4. Remove duplicate DSC automation ids from UI if present.
 5. Set `input_text.dsc_notify_service` to your notify entity.
@@ -62,7 +67,7 @@ YAML dashboards refresh on navigation (`lovelace.reload` is 400 on current Core)
 | `repository` | `https://github.com/weddas/DSC-HUB.git` | Git remote |
 | `ref` | `master` | Branch or tag |
 | `poll_seconds` | `60` | Fetch interval |
-| `sync_www` | `true` | SYSTEM MAP / Dash / Build a Plant assets |
+| `sync_www` | `true` | SYSTEM MAP / Dash / Build / Nav / Catalog assets |
 | `sync_esphome` | **`true`** | Overwrite ESPHome stubs and copy `firmware/v4/components` → `/config/esphome/components` |
 | `reload_after_sync` | `true` | Broader reload set |
 
@@ -77,4 +82,5 @@ Auth failures appear clearly in the add-on log (no silent empty sync).
 [UPGRADE.md](https://github.com/weddas/DSC-HUB/UPGRADE.md) ·
 [scripts/ADDON.md](https://github.com/weddas/DSC-HUB/blob/master/scripts/ADDON.md) ·
 [docs/qa/ADDON-QA-5.1.0.md](https://github.com/weddas/DSC-HUB/blob/master/docs/qa/ADDON-QA-5.1.0.md) ·
+[docs/qa/LIVE-UI-PRODUCT-SHELL.md](https://github.com/weddas/DSC-HUB/blob/master/docs/qa/LIVE-UI-PRODUCT-SHELL.md) ·
 [docs/qa/LIVE-UI-BUILD-A-PLANT.md](https://github.com/weddas/DSC-HUB/blob/master/docs/qa/LIVE-UI-BUILD-A-PLANT.md)

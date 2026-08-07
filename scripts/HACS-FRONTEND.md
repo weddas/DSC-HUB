@@ -10,14 +10,17 @@ One resource (`DSC-HUB.js`) registers:
   (room size, tents, wall ports, fans, carbon filters, exhaust into room or
   through wall). Open **Edit card** for the visual editor; Add card uses DSC defaults.
 - `custom:dsc-the-dash-card` — The Dash ops surface
-- `custom:dsc-build-plant-card` — Build a Plant composition (separate dashboard)
+- `custom:dsc-build-plant-card` — Build a Plant composition (Plant → Compose)
+- `custom:dsc-app-nav-card` — product shell Ops / Plant / Advanced / System nav
+- `custom:dsc-catalog-browse-card` — Catalog Explorer browse / compare / Use in Build
 
-Standalone `/local/dsc-build-plant-card.js` + `/local/dsc-catalog/*.json` are also
-published for sites that register the builder resource separately. HACS alone
-registers the custom element; **search indexes** still need Sync / ha-sync (or
-manual copy of `www/dsc-catalog/`) under `/config/www/dsc-catalog/`.
+Standalone `/local/dsc-*-card.js` + `/local/dsc-catalog/*.json` are also
+published for sites that register resources separately. HACS alone registers the
+custom elements; **search indexes** still need Sync / ha-sync (or manual copy of
+`www/dsc-catalog/`) under `/config/www/dsc-catalog/`.
 
-Ops runbook: [`docs/qa/LIVE-UI-BUILD-A-PLANT.md`](../docs/qa/LIVE-UI-BUILD-A-PLANT.md).
+Ops runbooks: [`docs/qa/LIVE-UI-PRODUCT-SHELL.md`](../docs/qa/LIVE-UI-PRODUCT-SHELL.md) ·
+[`docs/qa/LIVE-UI-BUILD-A-PLANT.md`](../docs/qa/LIVE-UI-BUILD-A-PLANT.md).
 
 ## Add the custom repository
 
@@ -54,7 +57,16 @@ type: custom:dsc-build-plant-card
 title: Build a Plant
 ```
 
-Edit the card in the Lovelace UI to configure room size, tents (1–4), routes
+```yaml
+type: custom:dsc-app-nav-card
+```
+
+```yaml
+type: custom:dsc-catalog-browse-card
+title: Catalog
+```
+
+Edit the airflow card in the Lovelace UI to configure room size, tents (1–4), routes
 (wall → wall), fans, carbon filters, and whether exhaust goes **through the
 wall (Outside)** or **into the room**. Advanced JSON is available in the editor
 for dashboard-as-code workflows.
@@ -79,11 +91,13 @@ Without it, popup `tap_action`s silently do nothing — no error is shown.
 | Path | Role |
 |---|---|
 | [`hacs.json`](../hacs.json) | HACS manifest (repo root) |
-| [`dist/DSC-HUB.js`](../dist/DSC-HUB.js) | Bundled cards (repo-name match; ~941 KB with Build a Plant) |
+| [`dist/DSC-HUB.js`](../dist/DSC-HUB.js) | Bundled cards (repo-name match; ~979 KB with Build + Nav + Catalog) |
 | [`dist/dsc-system-map-card.js`](../dist/dsc-system-map-card.js) | Same bundle (legacy `/local` filename) |
 | [`dist/dsc-system-map.svg`](../dist/dsc-system-map.svg) | System map artwork |
 | [`dist/dsc-airflow-map-card.js`](../dist/dsc-airflow-map-card.js) | Airflow card standalone source |
 | [`dist/dsc-build-plant-card.js`](../dist/dsc-build-plant-card.js) | Build a Plant standalone |
+| [`dist/dsc-app-nav-card.js`](../dist/dsc-app-nav-card.js) | Product shell nav standalone |
+| [`dist/dsc-catalog-browse-card.js`](../dist/dsc-catalog-browse-card.js) | Catalog Explorer standalone |
 | [`dist/dsc-catalog/`](../dist/dsc-catalog/) | Slim search indexes (not auto-served by HACS path) |
 
 | `homeassistant/www/*` | **Source of truth** — run `scripts/sync-hacs-dist.sh` after edits |
@@ -99,7 +113,7 @@ plugins — they deploy via [`ha-sync.sh`](ha-sync.sh) / Unraid runner
 
 | Surface | Delivery |
 |---|---|
-| SYSTEM MAP + AIRFLOW + The Dash + Build a Plant cards | **HACS Dashboard** (this doc) |
-| Build a Plant catalog indexes + dashboard YAML | Sync add-on **5.1.4+** / `ha-sync.sh` |
+| SYSTEM MAP + AIRFLOW + The Dash + Build + Nav + Catalog cards | **HACS Dashboard** (this doc) |
+| Catalog indexes + product-shell dashboard YAML | Sync add-on **5.1.4+** / `ha-sync.sh` |
 | `packages/dsc_v4_*.yaml` + YAML dashboards + www fallback | Git push → HA sync |
 | ESPHome firmware | Validate/Install (manual) |

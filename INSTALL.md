@@ -73,9 +73,11 @@ fire countdowns, fleet version status.
 
 ## 2. Dashboard
 
-YAML mode URLs **`dsc-hub-pro`** (ops) and **`dsc-build-plant`** (composition).
-Disable any storage dashboard still named DSC-HUB / `dsc-hub-v4`. Sidebar:
-**DSC-HUB Pro** + **Build a Plant**. Ops checklist:
+YAML mode URL **`dsc-hub-pro`** is the unified product shell (Ops · Plant ·
+Advanced · System). Legacy **`dsc-build-plant`** stays registered as a redirect
+stub with `show_in_sidebar: false`. Disable any storage dashboard still named
+DSC-HUB / `dsc-hub-v4`. Sidebar: one **DSC-HUB** entry. Ops checklists:
+[`docs/qa/LIVE-UI-PRODUCT-SHELL.md`](docs/qa/LIVE-UI-PRODUCT-SHELL.md) ·
 [`docs/qa/LIVE-UI-BUILD-A-PLANT.md`](docs/qa/LIVE-UI-BUILD-A-PLANT.md).
 
 ---
@@ -99,7 +101,8 @@ Stub `ref: v5.1.0`. Kits Validate even if not flashed on lab.
 - [ ] `sensor.dsc_hub_firmware_version` = **5.1.0** (and peers)
 - [ ] `sensor.dsc_ha_surface_version` = **5.1.0**
 - [ ] `sensor.dsc_fleet_version_status` → **ok** after all flashes
-- [ ] `/dsc-hub-pro/home` + Learning Phase B controls present (B default off)
+- [ ] `/dsc-hub-pro/ops` landing + Plant Compose/Catalog; Learning under Advanced (B default off)
+- [ ] `sensor.dsc_ha_surface_version` = **5.1.12** after Sync
 - [ ] Panel ESP-NOW UP; Sonoff followers track demands
 
 ---
