@@ -1,4 +1,4 @@
-# Catalog research corpus (N-087)
+# Catalog research corpus (N-087 / N-087c)
 
 ## Mission
 
@@ -12,9 +12,21 @@ Build a **research-scale archival plant catalog** (science + seed + lights + nut
 | HA `/local/dsc-catalog/*.json` | Thin projection (cap ~2500 strains) | Product browse/typeahead |
 | Community export | Open/redistributable subset only | Public package after legal review |
 
+Collation layers (canonical / variant / observation, keep-both chem, lineage edges): [`CATALOG-COLLATION-CONTRACT.md`](CATALOG-COLLATION-CONTRACT.md).
+
 ## Multi-DB ingest architecture (N-087c)
 
 **Why:** A single-DB ingest that mirrored every Leafly score into `attribute_kv` blew up to ~6 GB and lost usable research I/O on the NAS. Staging keeps **full** source rows; master stays **matchable**.
+
+```mermaid
+flowchart TB
+  wave["source wave / DB DUMP / scrape"] --> dumps["homeassistant/data/dsc_*.json"]
+  dumps --> staging["brain/data/staging/family.sqlite3"]
+  staging --> merge["merge_staging_to_master.py"]
+  merge --> master[("dsc_brain.sqlite3")]
+  master --> idx["build_catalog_search_indexes.py"]
+  idx --> ha["/local/dsc-catalog"]
+```
 
 ```text
   source wave / DB DUMP / scrape
@@ -47,6 +59,8 @@ Build a **research-scale archival plant catalog** (science + seed + lights + nut
 | `bank_herbies.sqlite3` | Herbies scrape |
 | … | one file per source family |
 
+Code: `brain/dsc_brain/staging.py` (`FAMILY_MAP`, `write_dump_to_staging`, `list_staging_dbs`), `brain/dsc_brain/paths.py` (`STAGING_DIR`).
+
 ### How to run
 
 ```text
@@ -64,20 +78,25 @@ python scripts/ingest_corpus_dumps.py --staging-db brain/data/staging/kushy.sqli
 python scripts/merge_staging_to_master.py
 python scripts/merge_staging_to_master.py --only seedcity --only kushy
 # raw_record stays in staging unless: --include-raw
+# skip link/search rebuild during lock storms: --no-link --no-search
 
 # 4) HA indexes from master
 python scripts/build_catalog_search_indexes.py
 ```
 
-**Migration of current master:** existing `dsc_brain.sqlite3` is fine to keep. Schema v3 adds `raw_record` additively on connect. Prefer new waves to staging first, then merge; do not `--reset` master. Optional: re-run `--per-source-staging` for sources you want full payloads archived, then merge.
+**`--only` match:** substring against staging **filename** (case-insensitive). Prefer unique stems (`hytiva`, `phytochem_smith`) so you do not accidentally merge siblings.
+
+**Migration of current master:** existing `dsc_brain.sqlite3` is fine to keep. Schema v3 adds `raw_record` additively on connect. Prefer new waves to staging first, then merge; do **not** `--reset` master. Optional: re-run `--per-source-staging` for sources you want full payloads archived, then merge.
 
 **Fan-out workers:** each worker writes only its family staging file (no shared master writers). Serialize `merge_staging_to_master` + index rebuild. Discovery agents stay inventory-only.
+
+**Durable fat backup:** local `_BACKUP_N087_*/` trees are gitignored (see `.gitignore`). Do not commit multi-GB SQLite / Cannlytics CSVs (>100 MB GitHub block).
 
 ## Schema highlights
 
 - Collation layers / notes / reviews / lineage: [`CATALOG-COLLATION-CONTRACT.md`](CATALOG-COLLATION-CONTRACT.md)
 - `strain_canonical` + `strain_variant` (breeder children)
-- `chemistry_profile` (science evidence rows; conflicting chem rows kept)
+- `chemistry_profile` (science evidence rows; conflicting chem rows kept via `INSERT OR IGNORE`)
 - `grow_trait`, `entity_link`, `science_alias`
 - `raw_record` (full source JSON blob; staging SoT for fat rows)
 - `attribute_kv` + `schema_extension_log` (small bank/product overflow only — never bulk score columns)
@@ -85,6 +104,17 @@ python scripts/build_catalog_search_indexes.py
 - `media_asset` for cropped PPFD/spectrum graphs
 - `followup_gap` for missing/unparseable expected fields
 - *(gap)* first-class `observation` / `review` tables — see contract + FOLLOWUPS **N-087-COLLATION**
+
+**Dual schema, same file:** Phase B curated tables use `meta.schema_version=1`; corpus uses `corpus_schema_version` (v3). `init-db` creates both. `reload-catalogs` ≠ `corpus-stats`.
+
+### Merge copy set (verified in `merge_staging_to_master.py`)
+
+Copies typed tables only: `source_record`, `strain_canonical`, `strain_variant`, `chemistry_profile`, `grow_trait`, `science_alias`, `entity_link`, light/nutrient/medium products, `media_asset`, `followup_gap`, `export_manifest`.
+
+- **Never** copies `attribute_kv` (avoids score explosion).
+- **Does not** copy `raw_record` unless `--include-raw`.
+- Chemistry / grow / links / raw: `INSERT OR IGNORE` (keep both).
+- Canonical soft-merges empty `summary_json` fields only — never invents values.
 
 ## Pipelines
 
@@ -120,8 +150,32 @@ Fat dumps under `homeassistant/data/dsc_*.json` and `media/` are **gitignored**.
 
 **Capture policy (N-087):** Maximize staging capture; match later. Keep FULL raw HTML/JSON/CSV rows, reviews, prices, brands, scores, lineage text, forum excerpts — do not drop "unused" fields. Prefer over-capture in staging over premature filtering (NAS >1 TB).
 
-**Overflow policy:** Staging 
-aw_record keeps FULL source payloads (NAS capacity). Master stores typed identity + chemistry + grow + links + rich payload_json (+ structured extras when parseable; never invent). ttribute_kv is for smaller bank/product rows only so master stays usable.
+**Overflow policy:** Staging `raw_record` keeps FULL source payloads (NAS capacity). Master stores typed identity + chemistry + grow + links + rich `payload_json` (+ structured extras when parseable; never invent). `attribute_kv` is for smaller bank/product rows only so master stays usable.
+
+## Committed HA index numbers (www + dist)
+
+Verified on master after N-087c backup (`fc8c4cc`):
+
+| Index | `schema_version` | `count` | notes |
+|---|---|---|---|
+| strains | 2 | **2500** | `with_want=12`, `with_height=0` (never invent height) |
+| nutrients | 2 | **3** | pack/dump projection |
+| mediums | 2 | **5** | pack/dump projection |
+| lights | 2 | **7** | pack/dump projection |
+
+Caps in builder: strains **2500**, nutrients **1500**, mediums **800**, lights **800**.
+
+## Ops pitfalls
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| `database is locked` / hung connect on master | Concurrent `merge_staging_to_master` (esp. over SMB/NAS) | **One** exclusive merge at a time; use `--only <family>`; optional `--no-link --no-search` then link/search once idle |
+| Master `malformed` / btree errors | Overlapping writers + kill mid-txn | Stop all writers; recover from staging (master is rebuildable from staging families) |
+| Master balloons / unusable I/O | Score spam in `attribute_kv` | Never bulk-mirror Leafly/effect scores into KV; keep full JSON in staging `raw_record` / master `payload_json` |
+| Merge skipped unexpected families | Broad `--only` substring | Use unique stems; list `brain/data/staging/*.sqlite3` first |
+| Cloudflare / captcha wall | Live scrape blocked | Stop; user authenticates in headed browser / Playwright; resume — do not invent rows |
+| Git push rejected (large files) | Fat DBs / Cannlytics CSVs | Keep under `_BACKUP_N087_*/` or NAS; gitignore already covers `brain/data/**/*.sqlite3` |
+| HA typeahead empty / thin chem | Slim index lag vs research DB | Rebuild indexes after successful exclusive merge; product caps stay |
 
 ## Honesty rules
 
@@ -132,4 +186,4 @@ aw_record keeps FULL source payloads (NAS capacity). Master stores typed identit
 - Unfamiliar seed/product fields → staging `raw_record` (bulk) or `attribute_kv` (small); lab typed evidence in `payload_json`.
 - Cloudflare / captcha walls (strain-database.com, Leafly live, Weedmaps, Wikileaf live): stop; user authenticates in browser, then resume scrape.
 
-See also: [`CATALOG-COLLATION-CONTRACT.md`](CATALOG-COLLATION-CONTRACT.md) (layers, notes, reviews→wordcloud, lineage edges, merge order), [`CATALOG-SCIENCE-SEED-LINKS.md`](CATALOG-SCIENCE-SEED-LINKS.md), [`CATALOG-GAPS.md`](CATALOG-GAPS.md), FOLLOWUPS **N-087**.
+See also: [`CATALOG-COLLATION-CONTRACT.md`](CATALOG-COLLATION-CONTRACT.md), [`CATALOG-SCIENCE-SEED-LINKS.md`](CATALOG-SCIENCE-SEED-LINKS.md), [`CATALOG-GAPS.md`](CATALOG-GAPS.md), FOLLOWUPS **N-087** / **N-087c** / **N-087-COLLATION**.

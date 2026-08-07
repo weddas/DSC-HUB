@@ -382,20 +382,23 @@ not humidifier lock — entity id kept for compatibility.
 - POT3 probe swap, SCD41 — post-release hardware
 - ETH01 bridge — **in tree** (`dsc-bridge.yaml` · F-010/F-012/F-013)
 
-## Firmware pairing (**5.2.0** train)
+## Firmware pairing (**5.2.0** train) + HA surface **6.0.0**
 
 | Piece | Version |
 |---|---|
 | Hub / Control / pots / bridge / Sonoffs / kits | **`5.2.0`** |
-| HA surface (packages + dashboard) | **`5.2.0`** |
-| Dashboard | DSC-HUB Pro (4-col, browser_mod popups) |
+| HA surface (`sensor.dsc_ha_surface_version`) | **`6.0.0`** |
+| Fleet expected (`input_text.dsc_expected_release`) | **`5.2.0`** |
+| Product UI | React panel `/dsc-hub` · Lovelace `dsc-hub-pro` fallback |
 | `espnow_cmd_tag` | `54727` (`0xD5C7`) on hub **and** panel |
 
 Bridge entities: Anchor BSSID/channel, hub ESP-NOW link, demand mirrors,
-per-Sonoff API links. Setpoints still write the hub API.
+per-Sonoff API links (`packages/dsc_v4_bridge.yaml`). Setpoints still write the hub API.
+Ops: [`docs/brain/F010_APPLIANCE_BRIDGE.md`](../docs/brain/F010_APPLIANCE_BRIDGE.md) ·
+[`docs/qa/LIVE-UI-CUSTOM-PANEL.md`](../docs/qa/LIVE-UI-CUSTOM-PANEL.md).
 
 Fleet drift chip (`sensor.dsc_fleet_version_status`) compares the
-**major.minor** train, so mixed patch levels inside `5.2.x` stay `ok`.
+**major.minor** firmware train, so mixed patch levels inside `5.2.x` stay `ok`.
 
 **Mat votes:** `switch.dsc_hub_mat_vote_pot_1`…`4` — Root Zone is source of truth; Climate links there.
 

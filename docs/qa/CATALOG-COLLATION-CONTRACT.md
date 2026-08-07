@@ -14,6 +14,14 @@
 | **Variant** | Bank / breeder claims for a named cut | `strain_variant` (props from PDPs; not the place for forum anecdotes) |
 | **Observation** | Sourced, append-only facts | review / note / edge rows keyed by `source_id`; never squash |
 
+```mermaid
+flowchart LR
+  obs["Observation / review / note / edge"] --> canon["Canonical"]
+  obs --> variant["Variant bank claims"]
+  canon --> views["Mermaid / wordcloud views"]
+  variant --> views
+```
+
 **Flow:** observation/review/note/edge ← sourced append-only → feed **canonical** (reviews, notes, chem, consensus grow) and **variant** (bank claims). Mermaid and wordclouds are **views**, not sources of truth.
 
 ---
