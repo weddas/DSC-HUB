@@ -1,7 +1,8 @@
-# DSC-HUB v5.2.0 — Install (from scratch)
+# DSC-HUB — Install (from scratch)
 
-Fresh Home Assistant + ESPHome bring-up for the **`5.2.0`** train
-(ETH01 bridge + SoftAP Anchor + fleet firmware / HA surface).
+Fresh Home Assistant + ESPHome bring-up for the live train:
+**firmware 5.2.0** (ETH01 bridge + SoftAP Anchor) and **HA surface 6.0.0**
+(React `/dsc-hub` panel).
 
 Repo: https://github.com/weddas/DSC-HUB · branch **`master`**
 (last tagged release may still be **v5.1.0** until a 5.2 tag ships).
@@ -21,23 +22,24 @@ Repo: https://github.com/weddas/DSC-HUB · branch **`master`**
 | Repo source | Destination |
 |---|---|
 | `homeassistant/packages/dsc_v4_*.yaml` | `/config/packages/` |
-| `homeassistant/dashboards/dsc-hub-v4-dashboard.yaml` | `/config/dashboards/` (YAML-mode Lovelace) |
-| `homeassistant/dashboards/dsc-build-plant-dashboard.yaml` | `/config/dashboards/` (Build a Plant) |
+| `homeassistant/custom_components/dsc_hub/` | `/config/custom_components/dsc_hub/` (React panel) |
+| `homeassistant/dashboards/dsc-hub-v4-dashboard.yaml` | `/config/dashboards/` (YAML fallback; sidebar hidden) |
+| `homeassistant/dashboards/dsc-build-plant-dashboard.yaml` | `/config/dashboards/` (redirect stub) |
 | `homeassistant/esphome/dsc-*.yaml` | `/config/esphome/` |
-| `homeassistant/www/dsc-system-map.*` | `/config/www/` (bundled cards) |
+| `homeassistant/www/dsc-system-map.*` | `/config/www/` (bundled cards for LegacyCardHost) |
 | `homeassistant/www/dsc-catalog/*.json` | `/config/www/dsc-catalog/` (Build a Plant typeahead) |
 | `firmware/v4/secrets.yaml.template` | `/config/esphome/secrets.yaml` (fill in; never commit) |
 
 Merge [`homeassistant/configuration.snippet.yaml`](homeassistant/configuration.snippet.yaml)
-into `configuration.yaml` (packages + YAML dashboards **`dsc-hub-pro`** and
-**`dsc-build-plant`**).
+into `configuration.yaml` (`dsc_hub:` + YAML dashboards **`dsc-hub-pro`** /
+**`dsc-build-plant`** with `show_in_sidebar: false`).
 
 ### Add-on (recommended)
 
 1. Settings → Add-ons → Repositories → `https://github.com/weddas/DSC-HUB`
-2. Install **DSC-HUB Sync** **5.1.0** → Start (defaults include `sync_esphome: true`)
+2. Install **DSC-HUB Sync** **5.1.4** → Start (defaults include `sync_esphome: true`)
 3. Wait for “Synced to …” · confirm `/config/dsc-hub-sync.version`
-4. Merge configuration snippet → **Restart HA Core once** (creates new helpers)
+4. Merge configuration snippet → **Restart HA Core once** (helpers + panel register)
 
 Further pushes to `master` update packages / Pro dashboard / www / stubs automatically.
 Firmware Install stays **manual**.
@@ -72,12 +74,13 @@ fire countdowns, fleet version status.
 
 ---
 
-## 2. Dashboard
+## 2. Product UI
 
-YAML mode URLs **`dsc-hub-pro`** (ops) and **`dsc-build-plant`** (composition).
-Disable any storage dashboard still named DSC-HUB / `dsc-hub-v4`. Sidebar:
-**DSC-HUB Pro** + **Build a Plant**. Ops checklist:
+Sidebar **DSC-HUB** opens the React panel at **`/dsc-hub`** (surface **6.0.0**).
+YAML **`dsc-hub-pro`** remains a hidden Lovelace fallback. Ops checklist:
+[`docs/qa/LIVE-UI-CUSTOM-PANEL.md`](docs/qa/LIVE-UI-CUSTOM-PANEL.md) ·
 [`docs/qa/LIVE-UI-BUILD-A-PLANT.md`](docs/qa/LIVE-UI-BUILD-A-PLANT.md).
+Disable any storage dashboard still named DSC-HUB / `dsc-hub-v4` that fights the panel.
 
 ---
 
@@ -102,11 +105,13 @@ copies components, or flash from `firmware/v4/`). Secrets: `dsc_bridge_*`,
 
 ### Verify
 
-- [ ] `sensor.dsc_hub_firmware_version` = **5.2.0** (and peers)
-- [ ] `sensor.dsc_ha_surface_version` = **5.2.0**
+- [ ] `sensor.dsc_hub_firmware_version` = **5.2.0** (and peers / bridge)
+- [ ] `sensor.dsc_ha_surface_version` = **6.0.0**
+- [ ] `input_text.dsc_expected_release` = **5.2.0** (fleet firmware train)
 - [ ] `sensor.dsc_fleet_version_status` → **ok** after all flashes
-- [ ] `/dsc-hub-pro/home` + Learning Phase B controls present (B default off)
+- [ ] Sidebar **DSC-HUB** → `/dsc-hub` (Ops · Plant · Advanced · System)
 - [ ] Panel ESP-NOW UP; Bridge Anchor SoftAP up; Sonoffs follow via bridge (HA followers fallback)
+- [ ] System view shows bridge / Anchor BSSID / Sonoff API links
 
 ---
 
