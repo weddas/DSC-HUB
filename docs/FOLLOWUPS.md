@@ -1356,5 +1356,5 @@ Memo: [`docs/DSC-PRODUCT-RESEARCH.md`](DSC-PRODUCT-RESEARCH.md).
 | ID | Item | Notes |
 |---|---|---|
 | N-068 | Interactive browser verify Build a Plant typeahead | cursor-ide-browser had no tab; browser-use blocked on Chrome remote-debugging Allow. Operator: Ctrl+F5 `/dsc-build-plant/build`, confirm dropdowns + no mojibake. |
-| N-069 | Commit Build a Plant UX when asked | Repo changes left uncommitted (sibling agent owns commit/push). |
+| N-069 | Commit Build a Plant UX when asked | **Done** — landed as `afda0ac` + HACS dist sync `23cdd8e`. Ops: composition runbook typeahead triage + open docs PR **#40** (`LIVE-UI-BUILD-A-PLANT-TYPEAHEAD`). |
 
