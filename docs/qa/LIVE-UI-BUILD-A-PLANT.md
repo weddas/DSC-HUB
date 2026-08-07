@@ -2,22 +2,26 @@
 
 Operator / developer runbook for the **Build a Plant** composition card.
 Shipped as a separate dashboard in `09fac80` (2026-08-07); **N-086** folds it
-into the unified DSC-HUB product shell under **Plant → Compose**.
+into the unified DSC-HUB product shell under **Plant → Compose**; **6.0.0**
+hosts the same Lit card inside the React panel via `LegacyCardHost`.
 
 | Surface | Role |
 |---|---|
-| Dashboard URL | **`/dsc-hub-pro/plant-build`** (panel subview under Plant) |
-| Plant hub | `/dsc-hub-pro/plant` — Compose + Catalog chips |
-| Catalog Explorer | `/dsc-hub-pro/catalog` — browse / compare / Use in Build |
+| Panel URL (6.0.0) | **`/dsc-hub#/plant/build`** (primary) |
+| Lovelace fallback | `/dsc-hub-pro/plant-build` (sidebar hidden) |
+| Plant hub | `/dsc-hub#/plant` · YAML `/dsc-hub-pro/plant` |
+| Catalog Explorer | `/dsc-hub#/plant/catalog` · YAML `/dsc-hub-pro/catalog` |
 | Card | `custom:dsc-build-plant-card` |
 | Package SoT | `homeassistant/packages/dsc_v4_build_plant.yaml` |
 | Generator | `scripts/gen_dsc_v4_build_plant.py` (prefer editing this) |
 | Search indexes | `/local/dsc-catalog/*.json` |
 | Related packs | strain / nutrient / medium / light catalogs |
+| Custom panel | [`LIVE-UI-CUSTOM-PANEL.md`](LIVE-UI-CUSTOM-PANEL.md) |
 | Product shell | [`LIVE-UI-PRODUCT-SHELL.md`](LIVE-UI-PRODUCT-SHELL.md) |
 
 Legacy `/dsc-build-plant/build` is a redirect stub (sidebar hidden). Strains /
 Nutrient Science deep-link to Plant Compose. The Dash stays Ops cinema.
+Panel mounts require the www / HACS bundle so `dsc-build-plant-card` is defined.
 
 Data provenance, the assign bridge, and the browser-blocking acceptance gate
 are defined in
