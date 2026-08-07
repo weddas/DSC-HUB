@@ -15,6 +15,12 @@ One resource (`DSC-HUB.js`) registers:
 Standalone `/local/dsc-build-plant-card.js` + `/local/dsc-catalog/*.json` are also
 published for sites that register the builder resource separately.
 
+**Typeahead pitfall:** catalog indexes use plural keys (`strains` / `mediums` /
+`nutrients` / `lights`). Cards before `afda0ac` looked up singular kinds and
+always returned empty hits even when `/local/dsc-catalog/` was healthy.
+Redeploy the card (HACS Redownload or Sync www) + hard-refresh. See
+[`docs/qa/LIVE-UI-BUILD-A-PLANT-TYPEAHEAD.md`](../docs/qa/LIVE-UI-BUILD-A-PLANT-TYPEAHEAD.md).
+
 ## Add the custom repository
 
 1. Open **HACS** in Home Assistant  

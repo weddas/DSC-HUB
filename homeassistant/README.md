@@ -138,6 +138,23 @@ title: AIRFLOW STATUS
 exhaust **into room** vs **through wall**. Add card loads DSC defaults
 (Room + 2x4 + 4x8 + five routes).
 
+## Build a Plant (composition + typeahead)
+
+Separate dashboard URL **`/dsc-build-plant/build`** — not a Pro tab.
+Card `custom:dsc-build-plant-card` + package `dsc_v4_build_plant.yaml` +
+slim indexes under `/local/dsc-catalog/`.
+
+**Typeahead contract (`afda0ac`):** UI kinds are singular (`strain`);
+catalog JSON / `_indexes` keys are plural (`strains`). The card maps via
+`INDEX_KEY`. Empty hits with Network **200** on the JSON usually means a
+pre-fix card, not missing indexes. User-visible strings are ASCII-only
+(no `·`/`—` mojibake). Hass ticks skip full re-render while a search is
+open/focused.
+
+Ops: [`../docs/qa/LIVE-UI-BUILD-A-PLANT-TYPEAHEAD.md`](../docs/qa/LIVE-UI-BUILD-A-PLANT-TYPEAHEAD.md).
+Composition / Sync 5.1.4 delivery: docs PR **#39**
+[`LIVE-UI-BUILD-A-PLANT.md`](https://github.com/weddas/DSC-HUB/blob/cursor/engineering-documentation-d184/docs/qa/LIVE-UI-BUILD-A-PLANT.md).
+
 ## Climate capacity envelope
 
 The **hub firmware** owns the escalation ladder (fans first → appliances →
