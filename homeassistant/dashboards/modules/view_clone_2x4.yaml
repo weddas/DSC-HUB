@@ -1,6 +1,7 @@
 title: 2x4 Clone
 icon: mdi:sprout
 path: clone-2x4
+subview: true
 type: sections
 max_columns: 4
 sections:

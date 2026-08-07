@@ -1,9 +1,9 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "kind": "mediums",
-  "built_at": "2026-08-07T08:41:22Z",
+  "built_at": "2026-08-07T10:02:07Z",
   "count": 5,
-  "note": "Slim medium index for soil % blend search.",
+  "note": "Browse index v2 for soil % blend + catalog explorer.",
   "items": [
     {
       "id": "medium_clay_pebbles_leca",

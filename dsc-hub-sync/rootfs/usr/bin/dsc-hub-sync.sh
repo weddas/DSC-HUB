@@ -164,15 +164,16 @@ stage_and_commit() {
     else
       warn "Missing repo www/dsc-system-map.svg"
     fi
-    # Bundle cards + Three.js + cinematic FX + Build a Plant into dsc-system-map-card.js
+    # Bundle cards + Three.js + cinematic FX + Build/Nav/Catalog into dsc-system-map-card.js
     # (Lovelace resource) and DSC-HUB.js (HACS filename). Never stage a map-only stub
     # — that wipes The Dash (F-013). Build a Plant must be in the concat or Sync will
-    # silently demote a HACS-complete live bundle (N-084).
+    # silently demote a HACS-complete live bundle (N-084). Nav + Catalog Explorer (N-086).
     local bundled=0
     local min_bundle=500000
     if [[ -f "${src}/www/dsc-system-map-card.js" && -f "${src}/www/dsc-airflow-map-card.js" \
        && -f "${src}/www/vendor/three.min.js" && -f "${src}/www/vendor/dsc-dash-fx.js" \
-       && -f "${src}/www/dsc-the-dash-card.js" && -f "${src}/www/dsc-build-plant-card.js" ]]; then
+       && -f "${src}/www/dsc-the-dash-card.js" && -f "${src}/www/dsc-build-plant-card.js" \
+       && -f "${src}/www/dsc-app-nav-card.js" && -f "${src}/www/dsc-catalog-browse-card.js" ]]; then
       {
         cat "${src}/www/dsc-system-map-card.js"
         printf '\n'
@@ -185,6 +186,10 @@ stage_and_commit() {
         cat "${src}/www/dsc-the-dash-card.js"
         printf '\n'
         cat "${src}/www/dsc-build-plant-card.js"
+        printf '\n'
+        cat "${src}/www/dsc-app-nav-card.js"
+        printf '\n'
+        cat "${src}/www/dsc-catalog-browse-card.js"
       } > "${STAGE}/www/dsc-system-map-card.js"
       bundled=1
     elif [[ -f "${src}/dist/dsc-system-map-card.js" ]]; then
@@ -204,6 +209,8 @@ stage_and_commit() {
         [[ -f "${src}/www/dsc-airflow-map-card.js" ]] && cp -f "${src}/www/dsc-airflow-map-card.js" "${STAGE}/www/dsc-airflow-map-card.js"
         [[ -f "${src}/www/dsc-the-dash-card.js" ]] && cp -f "${src}/www/dsc-the-dash-card.js" "${STAGE}/www/dsc-the-dash-card.js"
         [[ -f "${src}/www/dsc-build-plant-card.js" ]] && cp -f "${src}/www/dsc-build-plant-card.js" "${STAGE}/www/dsc-build-plant-card.js"
+        [[ -f "${src}/www/dsc-app-nav-card.js" ]] && cp -f "${src}/www/dsc-app-nav-card.js" "${STAGE}/www/dsc-app-nav-card.js"
+        [[ -f "${src}/www/dsc-catalog-browse-card.js" ]] && cp -f "${src}/www/dsc-catalog-browse-card.js" "${STAGE}/www/dsc-catalog-browse-card.js"
         [[ -f "${src}/www/vendor/dsc-dash-fx.js" ]] && cp -f "${src}/www/vendor/dsc-dash-fx.js" "${STAGE}/www/vendor/dsc-dash-fx.js"
         [[ -f "${src}/www/vendor/three.min.js" ]] && cp -f "${src}/www/vendor/three.min.js" "${STAGE}/www/vendor/three.min.js"
         if [[ -d "${src}/www/dsc-catalog" ]]; then
@@ -280,7 +287,7 @@ stage_and_commit() {
     done
   fi
   if bashio::config.true 'sync_www'; then
-    for name in dsc-system-map.svg dsc-system-map-card.js DSC-HUB.js dsc-airflow-map-card.js dsc-the-dash-card.js dsc-build-plant-card.js; do
+    for name in dsc-system-map.svg dsc-system-map-card.js DSC-HUB.js dsc-airflow-map-card.js dsc-the-dash-card.js dsc-build-plant-card.js dsc-app-nav-card.js dsc-catalog-browse-card.js; do
       if [[ -f "${STAGE}/www/${name}" ]]; then
         # Guard: never replace a healthy cinematic bundle with a tiny stub
         if [[ "${name}" == "dsc-system-map-card.js" || "${name}" == "DSC-HUB.js" ]]; then

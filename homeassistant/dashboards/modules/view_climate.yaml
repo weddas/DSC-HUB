@@ -1,6 +1,7 @@
 title: Climate Engine
 icon: mdi:engine
 path: climate
+subview: true
 type: sections
 max_columns: 4
 sections:

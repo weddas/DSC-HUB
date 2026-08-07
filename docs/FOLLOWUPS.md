@@ -1417,3 +1417,20 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 
 - Custom Yocto/Balena “DSC Linux”; forking HAOS Buildroot for branded img
 - Ollama on Pi4 4GB kit brain
+
+---
+
+## 2026-08-07 — Unified HA Product Shell (N-086)
+
+### shipped
+
+| ID | Item | Notes |
+|---|---|---|
+| N-086 | Unified HA product shell | One sidebar **DSC-HUB**; primary **Ops · Plant · Advanced · System**; Build folded into Plant; Catalog Explorer browse/compare; surface **5.1.12**; runbook [`docs/qa/LIVE-UI-PRODUCT-SHELL.md`](qa/LIVE-UI-PRODUCT-SHELL.md) |
+
+### deferred / honesty
+
+- Strain dump **height** mostly absent (`with_height` often 0) — UI never invents; full Herbies recrawl out of scope
+- Remove `dsc-build-plant` lovelace entry entirely after redirect soak
+- Pi webserver / brain API cutover of Build+Catalog cards remains N-095 track
+- Unrelated local `brain/` scaffold churn left out of this pass

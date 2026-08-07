@@ -1,6 +1,7 @@
 title: Learning
 icon: mdi:brain
 path: learning
+subview: true
 type: sections
 max_columns: 4
 sections:

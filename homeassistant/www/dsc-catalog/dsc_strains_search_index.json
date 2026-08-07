@@ -1,9 +1,11 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "kind": "strains",
-  "built_at": "2026-08-07T08:41:22Z",
+  "built_at": "2026-08-07T10:02:06Z",
   "count": 44,
-  "note": "Slim strain index; merged dump preferred. Chemistry coverage is intentionally slim and limited to ranges plus three terpene names.",
+  "with_want": 12,
+  "with_height": 0,
+  "note": "Browse index v2: chem + curated want bands when present; height/flowering only when dump states them (never invented).",
   "items": [
     {
       "id": "mvp_acapulco_gold",
@@ -14,7 +16,11 @@
       "has_chemistry": false,
       "top_terpenes": [],
       "thc_range": null,
-      "cbd_range": null
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "flowering_days": null,
+      "curated": false
     },
     {
       "id": "mvp_ak_47",
@@ -25,7 +31,11 @@
       "has_chemistry": false,
       "top_terpenes": [],
       "thc_range": null,
-      "cbd_range": null
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "flowering_days": null,
+      "curated": false
     },
     {
       "id": "mvp_amnesia_haze",
@@ -46,7 +56,11 @@
       "cbd_range": [
         0,
         1
-      ]
+      ],
+      "want": null,
+      "height_cm": null,
+      "flowering_days": null,
+      "curated": false
     },
     {
       "id": "mvp_apple_fritter",
@@ -57,7 +71,11 @@
       "has_chemistry": false,
       "top_terpenes": [],
       "thc_range": null,
-      "cbd_range": null
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "flowering_days": null,
+      "curated": false
     },
     {
       "id": "mvp_blue_dream",
@@ -78,7 +96,36 @@
       "cbd_range": [
         0,
         2
-      ]
+      ],
+      "want": {
+        "ph": [
+          5.8,
+          6.5
+        ],
+        "ec_veg_us": [
+          1000,
+          1600
+        ],
+        "ec_flower_us": [
+          1600,
+          2400
+        ],
+        "moisture_pct": [
+          45,
+          70
+        ],
+        "temp_c": [
+          20,
+          28
+        ],
+        "rh_pct": [
+          45,
+          70
+        ]
+      },
+      "height_cm": null,
+      "flowering_days": null,
+      "curated": true
     },
     {
       "id": "mvp_blueberry",
@@ -99,7 +146,11 @@
       "cbd_range": [
         0,
         1
-      ]
+      ],
+      "want": null,
+      "height_cm": null,
+      "flowering_days": null,
+      "curated": false
     },
     {
       "id": "mvp_bruce_banner",
@@ -110,7 +161,11 @@
       "has_chemistry": false,
       "top_terpenes": [],
       "thc_range": null,
-      "cbd_range": null
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "flowering_days": null,
+      "curated": false
     },
     {
       "id": "mvp_bubba_kush",
@@ -121,7 +176,11 @@
       "has_chemistry": false,
       "top_terpenes": [],
       "thc_range": null,
-      "cbd_range": null
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "flowering_days": null,
+      "curated": false
     },
     {
       "id": "mvp_chemdawg",
@@ -132,7 +191,11 @@
       "has_chemistry": false,
       "top_terpenes": [],
       "thc_range": null,
-      "cbd_range": null
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "flowering_days": null,
+      "curated": false
     },
     {
       "id": "mvp_critical_mass",
@@ -143,7 +206,11 @@
       "has_chemistry": false,
       "top_terpenes": [],
       "thc_range": null,
-      "cbd_range": null
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "flowering_days": null,
+      "curated": false
     },
     {
       "id": "mvp_do_si_dos",
@@ -154,7 +221,11 @@
       "has_chemistry": false,
       "top_terpenes": [],
       "thc_range": null,
-      "cbd_range": null
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "flowering_days": null,
+      "curated": false
     },
     {
       "id": "mvp_durban_poison",
@@ -175,7 +246,11 @@
       "cbd_range": [
         0,
         1
-      ]
+      ],
+      "want": null,
+      "height_cm": null,
+      "flowering_days": null,
+      "curated": false
     },
     {
       "id": "mvp_forbidden_fruit",
@@ -186,7 +261,11 @@
       "has_chemistry": false,
       "top_terpenes": [],
       "thc_range": null,
-      "cbd_range": null
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "flowering_days": null,
+      "curated": false
     },
     {
       "id": "mvp_gary_payton",
@@ -197,7 +276,11 @@
       "has_chemistry": false,
       "top_terpenes": [],
       "thc_range": null,
-      "cbd_range": null
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "flowering_days": null,
+      "curated": false
     },
     {
       "id": "mvp_gelato",
@@ -218,7 +301,11 @@
       "cbd_range": [
         0,
         1
-      ]
+      ],
+      "want": null,
+      "height_cm": null,
+      "flowering_days": null,
+      "curated": false
     },
     {
       "id": "mvp_girl_scout_cookies",
@@ -239,7 +326,11 @@
       "cbd_range": [
         0,
         1
-      ]
+      ],
+      "want": null,
+      "height_cm": null,
+      "flowering_days": null,
+      "curated": false
     },
     {
       "id": "mvp_gorilla_glue",
@@ -260,7 +351,36 @@
       "cbd_range": [
         0,
         1
-      ]
+      ],
+      "want": {
+        "ph": [
+          5.8,
+          6.5
+        ],
+        "ec_veg_us": [
+          1000,
+          1600
+        ],
+        "ec_flower_us": [
+          1600,
+          2400
+        ],
+        "moisture_pct": [
+          45,
+          70
+        ],
+        "temp_c": [
+          20,
+          28
+        ],
+        "rh_pct": [
+          45,
+          70
+        ]
+      },
+      "height_cm": null,
+      "flowering_days": null,
+      "curated": true
     },
     {
       "id": "mvp_granddaddy_purple",
@@ -281,7 +401,11 @@
       "cbd_range": [
         0,
         1
-      ]
+      ],
+      "want": null,
+      "height_cm": null,
+      "flowering_days": null,
+      "curated": false
     },
     {
       "id": "mvp_green_crack",
@@ -292,7 +416,11 @@
       "has_chemistry": false,
       "top_terpenes": [],
       "thc_range": null,
-      "cbd_range": null
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "flowering_days": null,
+      "curated": false
     },
     {
       "id": "mvp_hindu_kush",
@@ -303,7 +431,11 @@
       "has_chemistry": false,
       "top_terpenes": [],
       "thc_range": null,
-      "cbd_range": null
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "flowering_days": null,
+      "curated": false
     },
     {
       "id": "mvp_ice_cream_cake",
@@ -314,7 +446,11 @@
       "has_chemistry": false,
       "top_terpenes": [],
       "thc_range": null,
-      "cbd_range": null
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "flowering_days": null,
+      "curated": false
     },
     {
       "id": "mvp_jack_herer",
@@ -335,7 +471,36 @@
       "cbd_range": [
         0,
         1
-      ]
+      ],
+      "want": {
+        "ph": [
+          5.8,
+          6.5
+        ],
+        "ec_veg_us": [
+          1000,
+          1600
+        ],
+        "ec_flower_us": [
+          1600,
+          2400
+        ],
+        "moisture_pct": [
+          45,
+          70
+        ],
+        "temp_c": [
+          20,
+          28
+        ],
+        "rh_pct": [
+          45,
+          70
+        ]
+      },
+      "height_cm": null,
+      "flowering_days": null,
+      "curated": true
     },
     {
       "id": "mvp_mac_1",
@@ -346,7 +511,11 @@
       "has_chemistry": false,
       "top_terpenes": [],
       "thc_range": null,
-      "cbd_range": null
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "flowering_days": null,
+      "curated": false
     },
     {
       "id": "mvp_maui_wowie",
@@ -357,7 +526,11 @@
       "has_chemistry": false,
       "top_terpenes": [],
       "thc_range": null,
-      "cbd_range": null
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "flowering_days": null,
+      "curated": false
     },
     {
       "id": "mvp_mimosa",
@@ -368,7 +541,11 @@
       "has_chemistry": false,
       "top_terpenes": [],
       "thc_range": null,
-      "cbd_range": null
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "flowering_days": null,
+      "curated": false
     },
     {
       "id": "mvp_northern_lights",
@@ -389,7 +566,36 @@
       "cbd_range": [
         0,
         1
-      ]
+      ],
+      "want": {
+        "ph": [
+          5.8,
+          6.5
+        ],
+        "ec_veg_us": [
+          1000,
+          1600
+        ],
+        "ec_flower_us": [
+          1600,
+          2400
+        ],
+        "moisture_pct": [
+          45,
+          70
+        ],
+        "temp_c": [
+          20,
+          28
+        ],
+        "rh_pct": [
+          45,
+          70
+        ]
+      },
+      "height_cm": null,
+      "flowering_days": null,
+      "curated": true
     },
     {
       "id": "mvp_og_kush",
@@ -410,7 +616,36 @@
       "cbd_range": [
         0,
         1
-      ]
+      ],
+      "want": {
+        "ph": [
+          5.8,
+          6.5
+        ],
+        "ec_veg_us": [
+          1000,
+          1600
+        ],
+        "ec_flower_us": [
+          1600,
+          2400
+        ],
+        "moisture_pct": [
+          45,
+          70
+        ],
+        "temp_c": [
+          20,
+          28
+        ],
+        "rh_pct": [
+          45,
+          70
+        ]
+      },
+      "height_cm": null,
+      "flowering_days": null,
+      "curated": true
     },
     {
       "id": "mvp_pineapple_express",
@@ -431,7 +666,11 @@
       "cbd_range": [
         0,
         1
-      ]
+      ],
+      "want": null,
+      "height_cm": null,
+      "flowering_days": null,
+      "curated": false
     },
     {
       "id": "mvp_purple_haze",
@@ -442,7 +681,11 @@
       "has_chemistry": false,
       "top_terpenes": [],
       "thc_range": null,
-      "cbd_range": null
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "flowering_days": null,
+      "curated": false
     },
     {
       "id": "mvp_runtz",
@@ -453,7 +696,11 @@
       "has_chemistry": false,
       "top_terpenes": [],
       "thc_range": null,
-      "cbd_range": null
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "flowering_days": null,
+      "curated": false
     },
     {
       "id": "mvp_skywalker_og",
@@ -464,7 +711,11 @@
       "has_chemistry": false,
       "top_terpenes": [],
       "thc_range": null,
-      "cbd_range": null
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "flowering_days": null,
+      "curated": false
     },
     {
       "id": "mvp_sour_diesel",
@@ -485,7 +736,36 @@
       "cbd_range": [
         0,
         1
-      ]
+      ],
+      "want": {
+        "ph": [
+          5.8,
+          6.5
+        ],
+        "ec_veg_us": [
+          1000,
+          1600
+        ],
+        "ec_flower_us": [
+          1600,
+          2400
+        ],
+        "moisture_pct": [
+          45,
+          70
+        ],
+        "temp_c": [
+          20,
+          28
+        ],
+        "rh_pct": [
+          45,
+          70
+        ]
+      },
+      "height_cm": null,
+      "flowering_days": null,
+      "curated": true
     },
     {
       "id": "mvp_strawberry_cough",
@@ -496,7 +776,11 @@
       "has_chemistry": false,
       "top_terpenes": [],
       "thc_range": null,
-      "cbd_range": null
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "flowering_days": null,
+      "curated": false
     },
     {
       "id": "mvp_sunset_sherbet",
@@ -507,7 +791,11 @@
       "has_chemistry": false,
       "top_terpenes": [],
       "thc_range": null,
-      "cbd_range": null
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "flowering_days": null,
+      "curated": false
     },
     {
       "id": "mvp_super_lemon_haze",
@@ -518,7 +806,11 @@
       "has_chemistry": false,
       "top_terpenes": [],
       "thc_range": null,
-      "cbd_range": null
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "flowering_days": null,
+      "curated": false
     },
     {
       "id": "mvp_tangie",
@@ -529,7 +821,11 @@
       "has_chemistry": false,
       "top_terpenes": [],
       "thc_range": null,
-      "cbd_range": null
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "flowering_days": null,
+      "curated": false
     },
     {
       "id": "mvp_trainwreck",
@@ -540,7 +836,11 @@
       "has_chemistry": false,
       "top_terpenes": [],
       "thc_range": null,
-      "cbd_range": null
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "flowering_days": null,
+      "curated": false
     },
     {
       "id": "mvp_wedding_cake",
@@ -561,7 +861,36 @@
       "cbd_range": [
         0,
         1
-      ]
+      ],
+      "want": {
+        "ph": [
+          5.8,
+          6.5
+        ],
+        "ec_veg_us": [
+          1000,
+          1600
+        ],
+        "ec_flower_us": [
+          1600,
+          2400
+        ],
+        "moisture_pct": [
+          45,
+          70
+        ],
+        "temp_c": [
+          20,
+          28
+        ],
+        "rh_pct": [
+          45,
+          70
+        ]
+      },
+      "height_cm": null,
+      "flowering_days": null,
+      "curated": true
     },
     {
       "id": "mvp_white_widow",
@@ -582,7 +911,36 @@
       "cbd_range": [
         0,
         1
-      ]
+      ],
+      "want": {
+        "ph": [
+          5.8,
+          6.5
+        ],
+        "ec_veg_us": [
+          1000,
+          1600
+        ],
+        "ec_flower_us": [
+          1600,
+          2400
+        ],
+        "moisture_pct": [
+          45,
+          70
+        ],
+        "temp_c": [
+          20,
+          28
+        ],
+        "rh_pct": [
+          45,
+          70
+        ]
+      },
+      "height_cm": null,
+      "flowering_days": null,
+      "curated": true
     },
     {
       "id": "mvp_zkittlez",
@@ -603,7 +961,11 @@
       "cbd_range": [
         0,
         1
-      ]
+      ],
+      "want": null,
+      "height_cm": null,
+      "flowering_days": null,
+      "curated": false
     },
     {
       "id": "generic_photoperiod",
@@ -614,7 +976,36 @@
       "has_chemistry": false,
       "top_terpenes": [],
       "thc_range": null,
-      "cbd_range": null
+      "cbd_range": null,
+      "want": {
+        "ph": [
+          5.8,
+          6.5
+        ],
+        "ec_veg_us": [
+          1000,
+          1600
+        ],
+        "ec_flower_us": [
+          1600,
+          2400
+        ],
+        "moisture_pct": [
+          45,
+          70
+        ],
+        "temp_c": [
+          20,
+          28
+        ],
+        "rh_pct": [
+          45,
+          70
+        ]
+      },
+      "height_cm": null,
+      "flowering_days": null,
+      "curated": true
     },
     {
       "id": "generic_autoflower",
@@ -625,7 +1016,36 @@
       "has_chemistry": false,
       "top_terpenes": [],
       "thc_range": null,
-      "cbd_range": null
+      "cbd_range": null,
+      "want": {
+        "ph": [
+          5.8,
+          6.5
+        ],
+        "ec_veg_us": [
+          800,
+          1400
+        ],
+        "ec_flower_us": [
+          1400,
+          2000
+        ],
+        "moisture_pct": [
+          45,
+          70
+        ],
+        "temp_c": [
+          20,
+          27
+        ],
+        "rh_pct": [
+          45,
+          65
+        ]
+      },
+      "height_cm": null,
+      "flowering_days": null,
+      "curated": true
     },
     {
       "id": "amnesia_haze_auto",
@@ -636,7 +1056,36 @@
       "has_chemistry": false,
       "top_terpenes": [],
       "thc_range": null,
-      "cbd_range": null
+      "cbd_range": null,
+      "want": {
+        "ph": [
+          5.8,
+          6.5
+        ],
+        "ec_veg_us": [
+          800,
+          1400
+        ],
+        "ec_flower_us": [
+          1400,
+          2000
+        ],
+        "moisture_pct": [
+          45,
+          70
+        ],
+        "temp_c": [
+          20,
+          27
+        ],
+        "rh_pct": [
+          45,
+          65
+        ]
+      },
+      "height_cm": null,
+      "flowering_days": null,
+      "curated": true
     },
     {
       "id": "zkittlez_auto",
@@ -647,7 +1096,36 @@
       "has_chemistry": false,
       "top_terpenes": [],
       "thc_range": null,
-      "cbd_range": null
+      "cbd_range": null,
+      "want": {
+        "ph": [
+          5.8,
+          6.5
+        ],
+        "ec_veg_us": [
+          800,
+          1400
+        ],
+        "ec_flower_us": [
+          1400,
+          2000
+        ],
+        "moisture_pct": [
+          45,
+          70
+        ],
+        "temp_c": [
+          20,
+          27
+        ],
+        "rh_pct": [
+          45,
+          65
+        ]
+      },
+      "height_cm": null,
+      "flowering_days": null,
+      "curated": true
     }
   ]
 }

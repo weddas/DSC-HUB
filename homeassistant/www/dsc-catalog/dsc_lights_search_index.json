@@ -1,9 +1,9 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "kind": "lights",
-  "built_at": "2026-08-07T08:41:22Z",
+  "built_at": "2026-08-07T10:02:07Z",
   "count": 7,
-  "note": "Slim light index. Map URLs only when present; stated_ppfd is a point reading, not a heatmap grid.",
+  "note": "Browse index v2. Map URLs only when present; stated_ppfd is a point reading, not a heatmap grid.",
   "items": [
     {
       "id": "spider_farmer_sf1000",

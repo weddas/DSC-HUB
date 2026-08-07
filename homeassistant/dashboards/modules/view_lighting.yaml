@@ -1,6 +1,7 @@
 title: Lighting
 icon: mdi:white-balance-sunny
 path: lighting
+subview: true
 type: sections
 max_columns: 4
 sections:

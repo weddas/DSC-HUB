@@ -67,16 +67,13 @@ def _products(path: Path) -> list[dict]:
 
 def build_strains() -> dict:
     rows: list[dict] = []
-    seen: set[str] = set()
+    seen: dict[str, int] = {}
 
     def add(name: str, **extra) -> None:
         name = (name or "").strip()
         if not name:
             return
         key = name.lower()
-        if key in seen:
-            return
-        seen.add(key)
         chemistry = extra.get("chemistry") if isinstance(extra.get("chemistry"), dict) else {}
         top_terpenes = chemistry.get("top_terpenes") or chemistry.get("terpenes") or []
         if isinstance(top_terpenes, dict):
@@ -86,19 +83,88 @@ def build_strains() -> dict:
         thc_range = chemistry.get("thc_range")
         cbd_range = chemistry.get("cbd_range")
         has_chemistry = bool(top_terpenes or thc_range or cbd_range)
-        rows.append(
-            {
-                "id": extra.get("id") or _slug("strain", name),
-                "name": name,
-                "type": extra.get("type"),
-                "breeder": extra.get("breeder"),
-                "source": extra.get("source"),
-                "has_chemistry": has_chemistry,
-                "top_terpenes": top_terpenes[:3],
-                "thc_range": thc_range,
-                "cbd_range": cbd_range,
-            }
-        )
+        want = extra.get("want") if isinstance(extra.get("want"), dict) else None
+        height_cm = extra.get("height_cm")
+        flowering_days = extra.get("flowering_days")
+        curated = bool(extra.get("curated"))
+        item = {
+            "id": extra.get("id") or _slug("strain", name),
+            "name": name,
+            "type": extra.get("type"),
+            "breeder": extra.get("breeder"),
+            "source": extra.get("source"),
+            "has_chemistry": has_chemistry,
+            "top_terpenes": top_terpenes[:3],
+            "thc_range": thc_range,
+            "cbd_range": cbd_range,
+            "want": want,
+            "height_cm": height_cm,
+            "flowering_days": flowering_days,
+            "curated": curated,
+        }
+        if key in seen:
+            # Overlay richer fields onto the first hit (never invent).
+            idx = seen[key]
+            cur = rows[idx]
+            for field in (
+                "id",
+                "type",
+                "breeder",
+                "source",
+                "thc_range",
+                "cbd_range",
+                "want",
+                "height_cm",
+                "flowering_days",
+            ):
+                if item.get(field) not in (None, "", [], {}):
+                    if cur.get(field) in (None, "", [], {}) or field in ("want",) and curated:
+                        cur[field] = item[field]
+            if item["top_terpenes"] and not cur.get("top_terpenes"):
+                cur["top_terpenes"] = item["top_terpenes"]
+            cur["has_chemistry"] = bool(
+                cur.get("top_terpenes") or cur.get("thc_range") or cur.get("cbd_range")
+            )
+            if curated:
+                cur["curated"] = True
+            return
+        if len(rows) >= STRAIN_CAP:
+            return
+        seen[key] = len(rows)
+        rows.append(item)
+
+    def _height(row: dict):
+        for k in ("height_cm", "height", "grow_height_cm", "plant_height_cm"):
+            v = row.get(k)
+            if v is None:
+                continue
+            if isinstance(v, (list, tuple)) and len(v) >= 2:
+                try:
+                    return [float(v[0]), float(v[1])]
+                except (TypeError, ValueError):
+                    continue
+            if isinstance(v, (int, float)):
+                return float(v)
+            if isinstance(v, dict):
+                lo, hi = v.get("min"), v.get("max")
+                if lo is not None and hi is not None:
+                    try:
+                        return [float(lo), float(hi)]
+                    except (TypeError, ValueError):
+                        pass
+        return None
+
+    def _flowering(row: dict):
+        for k in ("flowering_days", "flower_days", "flowering_time_days"):
+            v = row.get(k)
+            if isinstance(v, (int, float)):
+                return int(v)
+            if isinstance(v, (list, tuple)) and len(v) >= 2:
+                try:
+                    return [int(v[0]), int(v[1])]
+                except (TypeError, ValueError):
+                    continue
+        return None
 
     # Prefer the merged dump because it carries chemistry and bank overlays.
     merged = DATA / "dsc_strains_merged.json"
@@ -106,8 +172,6 @@ def build_strains() -> dict:
         try:
             doc = json.loads(merged.read_text(encoding="utf-8"))
             for row in doc.get("seeds") or doc.get("strains") or doc.get("products") or []:
-                if len(rows) >= STRAIN_CAP:
-                    break
                 if isinstance(row, dict):
                     add(
                         row.get("name"),
@@ -115,23 +179,32 @@ def build_strains() -> dict:
                         type=row.get("type") or row.get("lineage"),
                         breeder=row.get("breeder") or row.get("bank"),
                         chemistry=row.get("chemistry"),
+                        want=row.get("want"),
+                        height_cm=_height(row),
+                        flowering_days=_flowering(row),
                         source="merged",
                     )
         except Exception as e:
             print("merged skip", e)
 
-    # Curated YAML seeds fill names absent from the merged dump.
+    # Curated YAML seeds fill names + Want bands (authoritative when present).
     yaml_path = DATA / "dsc_strain_catalog.yaml"
     if yaml_path.exists() and yaml:
         try:
             doc = yaml.safe_load(yaml_path.read_text(encoding="utf-8")) or {}
             for s in doc.get("strains") or doc.get("seeds") or []:
                 if isinstance(s, dict):
+                    chem = s.get("chem_summary") or s.get("chemistry")
                     add(
                         s.get("name") or s.get("id"),
                         id=s.get("id"),
                         type=s.get("type") or s.get("lineage"),
                         breeder=(s.get("breeder") or s.get("bank")),
+                        chemistry=chem if isinstance(chem, dict) else None,
+                        want=s.get("want") if isinstance(s.get("want"), dict) else None,
+                        height_cm=_height(s),
+                        flowering_days=_flowering(s),
+                        curated=bool(s.get("curated")),
                         source="yaml",
                     )
         except Exception as e:
@@ -139,8 +212,6 @@ def build_strains() -> dict:
 
     # Popular dump is the final fallback.
     for row in _products(DATA / "dsc_strains_popular.json"):
-        if len(rows) >= STRAIN_CAP:
-            break
         if isinstance(row, dict):
             add(
                 row.get("name"),
@@ -148,17 +219,24 @@ def build_strains() -> dict:
                 type=row.get("type") or row.get("species"),
                 breeder=row.get("breeder") or row.get("bank"),
                 chemistry=row.get("chemistry"),
+                want=row.get("want") if isinstance(row.get("want"), dict) else None,
+                height_cm=_height(row),
+                flowering_days=_flowering(row),
                 source="popular",
             )
 
+    with_want = sum(1 for r in rows if r.get("want"))
+    with_height = sum(1 for r in rows if r.get("height_cm") is not None)
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "kind": "strains",
         "built_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "count": len(rows),
+        "with_want": with_want,
+        "with_height": with_height,
         "note": (
-            "Slim strain index; merged dump preferred. Chemistry coverage is "
-            "intentionally slim and limited to ranges plus three terpene names."
+            "Browse index v2: chem + curated want bands when present; "
+            "height/flowering only when dump states them (never invented)."
         ),
         "items": rows,
     }
@@ -212,6 +290,9 @@ def build_nutrients() -> dict:
             if dose is None:
                 # pack shape
                 dose = (row.get("dose") or {}).get("ml_l") if isinstance(row.get("dose"), dict) else None
+            stage = row.get("stage") or row.get("stages") or row.get("use_stage")
+            if isinstance(stage, list):
+                stage = ",".join(str(s) for s in stage)
             rows.append(
                 {
                     "id": row.get("id") or _slug("nute", name),
@@ -219,16 +300,19 @@ def build_nutrients() -> dict:
                     "brand": row.get("brand"),
                     "dose_ml_l": dose,
                     "category": row.get("category") or row.get("kind"),
+                    "stage": stage,
+                    "mix_order": row.get("mix_order"),
+                    "npk": row.get("npk") or row.get("npk_ratio"),
                     "source": path.stem,
                 }
             )
 
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "kind": "nutrients",
         "built_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "count": len(rows),
-        "note": "Slim nutrient index. dose_ml_l only when stated in dump/pack.",
+        "note": "Browse index v2. dose_ml_l/stage/npk only when stated in dump/pack.",
         "items": rows,
     }
 
@@ -309,11 +393,11 @@ def build_mediums() -> dict:
             )
 
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "kind": "mediums",
         "built_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "count": len(rows),
-        "note": "Slim medium index for soil % blend search.",
+        "note": "Browse index v2 for soil % blend + catalog explorer.",
         "items": rows,
     }
 
@@ -396,12 +480,12 @@ def build_lights() -> dict:
             )
 
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "kind": "lights",
         "built_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "count": len(rows),
         "note": (
-            "Slim light index. Map URLs only when present; stated_ppfd is a point "
+            "Browse index v2. Map URLs only when present; stated_ppfd is a point "
             "reading, not a heatmap grid."
         ),
         "items": rows,

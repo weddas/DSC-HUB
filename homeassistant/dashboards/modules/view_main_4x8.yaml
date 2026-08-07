@@ -1,6 +1,7 @@
 title: 4x8 Main
 icon: mdi:greenhouse
 path: main-4x8
+subview: true
 type: sections
 max_columns: 4
 sections:

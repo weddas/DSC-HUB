@@ -6,18 +6,26 @@ max_columns: 4
 sections:
   - type: grid
     cards:
+      - type: custom:dsc-app-nav-card
       - type: custom:mushroom-chips-card
         alignment: start
         chips:
           - type: template
             icon: mdi:home
             icon_color: teal
-            content: Back to Home
+            content: Ops home
+            tap_action:
+              action: navigate
+              navigation_path: /dsc-hub-pro/ops
+          - type: template
+            icon: mdi:monitor-dashboard
+            icon_color: cyan
+            content: Home full
             tap_action:
               action: navigate
               navigation_path: /dsc-hub-pro/home
       - type: heading
-        heading: 👑 HUB HEALTH
+        heading: HUB HEALTH
         heading_style: title
       - type: custom:mushroom-chips-card
         alignment: start

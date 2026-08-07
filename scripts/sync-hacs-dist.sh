@@ -19,10 +19,14 @@ THREE_JS="${SRC}/vendor/three.min.js"
 DASH_FX="${SRC}/vendor/dsc-dash-fx.js"
 DASH_JS="${SRC}/dsc-the-dash-card.js"
 BUILD_JS="${SRC}/dsc-build-plant-card.js"
+NAV_JS="${SRC}/dsc-app-nav-card.js"
+CATALOG_JS="${SRC}/dsc-catalog-browse-card.js"
 [[ -f "${THREE_JS}" ]] || { echo "Missing ${THREE_JS}" >&2; exit 1; }
 [[ -f "${DASH_FX}" ]] || { echo "Missing ${DASH_FX}" >&2; exit 1; }
 [[ -f "${DASH_JS}" ]] || { echo "Missing ${DASH_JS}" >&2; exit 1; }
 [[ -f "${BUILD_JS}" ]] || { echo "Missing ${BUILD_JS}" >&2; exit 1; }
+[[ -f "${NAV_JS}" ]] || { echo "Missing ${NAV_JS}" >&2; exit 1; }
+[[ -f "${CATALOG_JS}" ]] || { echo "Missing ${CATALOG_JS}" >&2; exit 1; }
 
 BUNDLE="${DIST}/DSC-HUB.js"
 {
@@ -37,6 +41,10 @@ BUNDLE="${DIST}/DSC-HUB.js"
   cat "${DASH_JS}"
   printf '\n'
   cat "${BUILD_JS}"
+  printf '\n'
+  cat "${NAV_JS}"
+  printf '\n'
+  cat "${CATALOG_JS}"
 } > "${BUNDLE}"
 
 cp -f "${SRC}/dsc-system-map.svg" "${DIST}/dsc-system-map.svg"
@@ -46,6 +54,8 @@ cp -f "${BUNDLE}" "${DIST}/dsc-system-map-card.js"
 cp -f "${SRC}/dsc-airflow-map-card.js" "${DIST}/dsc-airflow-map-card.js"
 cp -f "${DASH_JS}" "${DIST}/dsc-the-dash-card.js"
 cp -f "${BUILD_JS}" "${DIST}/dsc-build-plant-card.js"
+cp -f "${NAV_JS}" "${DIST}/dsc-app-nav-card.js"
+cp -f "${CATALOG_JS}" "${DIST}/dsc-catalog-browse-card.js"
 # Build a Plant search indexes
 mkdir -p "${DIST}/dsc-catalog"
 if [[ -d "${SRC}/dsc-catalog" ]]; then
@@ -58,4 +68,5 @@ cp -f "${DASH_FX}" "${DIST}/vendor/dsc-dash-fx.js"
 echo "HACS dist updated:"
 ls -la "${DIST}/DSC-HUB.js" "${DIST}/dsc-system-map.svg" \
   "${DIST}/dsc-system-map-card.js" "${DIST}/dsc-airflow-map-card.js" \
-  "${DIST}/dsc-the-dash-card.js" "${DIST}/dsc-build-plant-card.js"
+  "${DIST}/dsc-the-dash-card.js" "${DIST}/dsc-build-plant-card.js" \
+  "${DIST}/dsc-app-nav-card.js" "${DIST}/dsc-catalog-browse-card.js"

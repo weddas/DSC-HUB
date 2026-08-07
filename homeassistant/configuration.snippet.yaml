@@ -13,13 +13,15 @@ lovelace:
   dashboards:
     dsc-hub-pro:
       mode: yaml
-      title: DSC-HUB Pro
+      title: DSC-HUB
       icon: mdi:sprout
       show_in_sidebar: true
       filename: dashboards/dsc-hub-v4-dashboard.yaml
+    # N-086: Build a Plant folded into Plant hub (/dsc-hub-pro/plant-build).
+    # Keep YAML stub off the sidebar during redirect soak; remove after cutover.
     dsc-build-plant:
       mode: yaml
       title: Build a Plant
       icon: mdi:spa
-      show_in_sidebar: true
+      show_in_sidebar: false
       filename: dashboards/dsc-build-plant-dashboard.yaml

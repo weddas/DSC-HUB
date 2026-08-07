@@ -1,6 +1,7 @@
 title: Strains
 icon: mdi:dna
 path: strains
+subview: true
 type: sections
 max_columns: 4
 sections:
@@ -19,8 +20,9 @@ sections:
           Catalog SoT: `sensor.dsc_strain_catalog` (`want_bands` attribute).
           Promote: `python scripts/promote_strain_catalog_to_ha.py`.
 
-          **Compose a new plant** on the separate [Build a Plant](/dsc-build-plant/build)
-          dashboard (soil %, nutrients, light, climate Apply, roster inventory).
+          **Compose a new plant** under Plant → [Compose](/dsc-hub-pro/plant-build)
+          or browse the [Catalog](/dsc-hub-pro/catalog) (soil %, nutrients, light,
+          climate Apply, roster inventory).
 
           Operator rule: **peer OR ESP absolute cal, not both**.
 

@@ -1,6 +1,7 @@
 title: History
 icon: mdi:chart-timeline-variant
 path: history
+subview: true
 type: sections
 max_columns: 4
 sections:

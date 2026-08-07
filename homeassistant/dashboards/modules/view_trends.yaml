@@ -1,6 +1,7 @@
 title: Trends
 icon: mdi:chart-multiline
 path: trends
+subview: true
 type: sections
 max_columns: 4
 sections:

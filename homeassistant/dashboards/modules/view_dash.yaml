@@ -1,6 +1,7 @@
 title: The Dash
 icon: mdi:view-dashboard-variant
 path: dash
+subview: true
 type: panel
 cards:
   - type: custom:dsc-the-dash-card

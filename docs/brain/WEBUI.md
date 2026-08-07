@@ -9,7 +9,12 @@ Notion: [Local webserver UI](https://app.notion.com/p/3b52b4cda37081c19048e794d4
 | Route | Job |
 |---|---|
 | `/` | Ops overview (vitals, ladder summary, alerts) |
-| `/plant` | Build a Plant + roster |
+| `/plant` | Build a Plant + roster + catalog browse (research) |
+
+> **HA wireframe (N-086):** Home Assistant `/dsc-hub-pro/catalog` is the interim
+> research browser over `/local/dsc-catalog/*.json`. The durable web `/plant`
+> browse mode will call brain catalog APIs — reuse section jobs/labels, not HA
+> helper coupling ([`docs/HA-SCAFFOLD.md`](../HA-SCAFFOLD.md)).
 | `/advanced` | Profiles, cal, overrides (API calls only) |
 | `/updates` | Brain version, catalog reload, firmware flash checklist |
 

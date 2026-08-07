@@ -1,61 +1,42 @@
 # ==================================================================
-#  DSC-HUB Pro v5.1.5  ·  Lovelace dashboard
+#  DSC-HUB  ·  Lovelace product shell (N-086 / surface 5.1.12)
 #  ------------------------------------------------------------------
-#  Full rewrite of the v2.4.1 dashboard for firmware v4 (ESP-NOW primary
-#  panel + hub). Wire layout for 0xD1–0xD3 unchanged; plant names use
-#  canonical pot entity_ids and hub 0xD4 relay.
+#  Four primary sections (WEBUI wireframe): Ops · Plant · Advanced · System
+#  Former Pro pages are subviews. Build a Plant lives under Plant.
+#  The Dash is an Ops subview (cinema), not the product home.
 #
-#  THE ONE THING TO UNDERSTAND:
-#     The SF1000 is the 2x4 CLONE tent's light. The 4x8 has no lamp —
-#     its photoperiod is a VIRTUAL window (schedule / Follow-4x8).
+#  Default landing: Ops (/dsc-hub-pro/ops)
 #
-#  VIEW FLOW (modules/; dash untouched):
-#     Home        → Now (pulse+ops) · Space (map+running) · Bands (narrator)
-#     Climate     → master control, ladder, tunables, appliances
-#     Learning    → optional fan/PPFD cal, Phase A+B, appliance effect DB, ETA
-#     4x8 / 2x4   → tent-local vitals + equipment
-#     Root Zone   → soil matrix, mat votes, chemistry, EC uptake
-#     Tank / Strains / Nutrient Science / Light / Trends / System → support
-#
-#  Plant identity: strain + sprout — use input_select/input_datetime until pot
-#  5.1.3 NVS flash; prefer select.dsc_potN_strain / datetime.dsc_potN_sprout_date
-#  when available after flash.
-#
-#  v4 DELTA vs v2.4.1:
-#   * Plant / stage entity_ids are canonical:
-#       text.dsc_potN_plant_name · select.dsc_potN_growth_stage
-#   * System expects fleet firmware **5.1.0** (hub/panel/pots/Sonoffs)
-#   * Home + System surfaces DSC-CONTROL (panel online, free heap,
-#     largest free block) — dual-path health alongside pot ESP-NOW links
-#   * Mat / root-zone copy: all four pots, plausibility 5–45 °C,
-#     Mat Vote Pot 1–4 (Root Zone is source of truth; Climate links)
-#   * Dashboard URL must be **dsc-hub-pro** (navigation_path links)
-#
-#  REQUIRES packages:
-#     homeassistant/packages/dsc_v4_*.yaml (incl. dsc_v4_automations.yaml)
-#  Deploy: YAML-mode dashboard file under /config/dashboards/ (see
-#     homeassistant/configuration.snippet.yaml) — auto-sync on push when
-#     the Unraid runner is configured (scripts/HA-SYNC-BOOTSTRAP.md).
+#  REQUIRES packages: homeassistant/packages/dsc_v4_*.yaml
 #  HACS: mushroom · apexcharts · plotly-graph · mini-graph-card
 #        gauge-card-pro · modern-circular-gauge · logbook-card
 #        auto-entities · vertical-stack-in-card · card-mod · bar-card
-#        ph-meter-temperature · expander-card · browser_mod (popups)
-#        + DSC-HUB Dashboard repo (system map + airflow map)
+#        ph-meter-temperature · expander-card · browser_mod
+#        + DSC-HUB Dashboard repo (system map + airflow + Dash + Build + Catalog)
 # ==================================================================
 
-title: DSC-HUB Pro
+title: DSC-HUB
 views:
-  - !include modules/view_dash.yaml
+  # ---- Primary product sections (tab strip) ----
+  - !include modules/view_ops.yaml
+  - !include modules/view_plant.yaml
+  - !include modules/view_advanced.yaml
+  - !include modules/view_system.yaml
+  # ---- Ops subviews ----
   - !include modules/view_home.yaml
+  - !include modules/view_dash.yaml
   - !include modules/view_climate.yaml
   - !include modules/view_main_4x8.yaml
   - !include modules/view_clone_2x4.yaml
   - !include modules/view_root_zone.yaml
-  - !include modules/view_history.yaml
   - !include modules/view_tank.yaml
+  - !include modules/view_lighting.yaml
+  # ---- Plant subviews ----
+  - !include modules/view_plant_build.yaml
+  - !include modules/view_catalog.yaml
   - !include modules/view_strains.yaml
   - !include modules/view_nutrient_science.yaml
-  - !include modules/view_lighting.yaml
+  # ---- Advanced subviews ----
   - !include modules/view_learning.yaml
   - !include modules/view_trends.yaml
-  - !include modules/view_system.yaml
+  - !include modules/view_history.yaml

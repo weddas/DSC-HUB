@@ -1,6 +1,7 @@
 title: Nutrient Science
 icon: mdi:flask
 path: nutrient-science
+subview: true
 type: sections
 max_columns: 4
 sections:
@@ -42,7 +43,15 @@ sections:
         icon_color: green
         tap_action:
           action: navigate
-          navigation_path: /dsc-build-plant/build
+          navigation_path: /dsc-hub-pro/plant-build
+      - type: custom:mushroom-template-card
+        primary: Catalog Explorer
+        secondary: Browse / compare nutrients and strains
+        icon: mdi:bookshelf
+        icon_color: teal
+        tap_action:
+          action: navigate
+          navigation_path: /dsc-hub-pro/catalog
       - type: horizontal-stack
         cards:
           - type: custom:mushroom-template-card

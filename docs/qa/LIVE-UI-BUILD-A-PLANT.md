@@ -1,22 +1,23 @@
-# Build a Plant — composition + full inclusion (N-083 / N-085)
+# Build a Plant — composition + full inclusion (N-083 / N-085 / N-086)
 
-Operator / developer runbook for the separate **Build a Plant** Lovelace
-dashboard and catalog-backed composition card. Shipped in `09fac80`
-(2026-08-07). Closes FOLLOWUPS **N-083**. Sync delivery parity is **N-084**.
+Operator / developer runbook for the **Build a Plant** composition card.
+Shipped as a separate dashboard in `09fac80` (2026-08-07); **N-086** folds it
+into the unified DSC-HUB product shell under **Plant → Compose**.
 
 | Surface | Role |
 |---|---|
-| Dashboard URL | **`/dsc-build-plant/build`** (panel view, composition card only) |
+| Dashboard URL | **`/dsc-hub-pro/plant-build`** (panel subview under Plant) |
+| Plant hub | `/dsc-hub-pro/plant` — Compose + Catalog chips |
+| Catalog Explorer | `/dsc-hub-pro/catalog` — browse / compare / Use in Build |
 | Card | `custom:dsc-build-plant-card` |
 | Package SoT | `homeassistant/packages/dsc_v4_build_plant.yaml` |
 | Generator | `scripts/gen_dsc_v4_build_plant.py` (prefer editing this) |
 | Search indexes | `/local/dsc-catalog/*.json` |
 | Related packs | strain / nutrient / medium / light catalogs |
+| Product shell | [`LIVE-UI-PRODUCT-SHELL.md`](LIVE-UI-PRODUCT-SHELL.md) |
 
-**Not** a Pro-dash tab. Strains view links out; The Dash stays ops cinema.
-N-085 adds operational context to the Pro Home, Root Zone, Nutrient Science,
-and Lighting views without moving the composition workflow out of its
-dedicated dashboard.
+Legacy `/dsc-build-plant/build` is a redirect stub (sidebar hidden). Strains /
+Nutrient Science deep-link to Plant Compose. The Dash stays Ops cinema.
 
 Data provenance, the assign bridge, and the browser-blocking acceptance gate
 are defined in

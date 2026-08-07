@@ -1,6 +1,7 @@
 title: Tank
 icon: mdi:cup-water
 path: tank
+subview: true
 type: sections
 max_columns: 4
 sections:

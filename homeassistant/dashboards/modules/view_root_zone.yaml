@@ -1,6 +1,7 @@
 title: Root Zone
 icon: mdi:grass
 path: root-zone
+subview: true
 type: sections
 max_columns: 4
 sections:
