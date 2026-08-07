@@ -21,6 +21,7 @@ Notion (canonical Wiki): [Product layers](https://app.notion.com/p/3b52b4cda3708
 | Path | Role |
 |---|---|
 | [`brain/`](../brain/) | Pi brain package (catalog store, Want, decision loop, API stub) |
+| [`docs/qa/CATALOG-RESEARCH-CORPUS.md`](qa/CATALOG-RESEARCH-CORPUS.md) | N-087 research corpus + HA slim projection |
 | [`SETUP.md`](../SETUP.md) | SoftAP kit unbox (product path) |
 | [`INSTALL.md`](../INSTALL.md) | HA lab bring-up (scaffold) |
 | [`docs/HA-SCAFFOLD.md`](HA-SCAFFOLD.md) | Promote-don't-deepen rules |

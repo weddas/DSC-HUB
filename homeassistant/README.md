@@ -80,10 +80,16 @@ target — edit those services to match your HA devices (`notify.mobile_app_…`
 Package pot/tank **push** notifiers are not shipped in **v5.0.0**
 (alert binary sensors remain).
 
-## Build a Plant (separate dashboard)
+## Product shell + Build a Plant
 
-Composition surface at **`/dsc-build-plant/build`** — not a Pro tab. Package
-`dsc_v4_build_plant.yaml` + Lit card + `/local/dsc-catalog/` typeahead indexes.
+Primary Lovelace product is **`/dsc-hub-pro/*`** (N-086): Ops · Plant · Advanced ·
+System. Compose lives at **`/dsc-hub-pro/plant-build`**; Catalog Explorer at
+**`/dsc-hub-pro/catalog`**. Legacy `/dsc-build-plant/build` is a redirect stub
+(`show_in_sidebar: false`).
+
+Package `dsc_v4_build_plant.yaml` + Lit cards + `/local/dsc-catalog/` indexes
+(schema v2). Strain indexes project from the N-087 research SQLite corpus
+(cap 2500) — see [`../docs/qa/CATALOG-RESEARCH-CORPUS.md`](../docs/qa/CATALOG-RESEARCH-CORPUS.md).
 
 | Action | Script / sensor |
 |---|---|
