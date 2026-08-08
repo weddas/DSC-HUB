@@ -20,6 +20,7 @@
 |---|---|
 | `dsc-hub.yaml` | `dsc-hub-v4_0.yaml` **and** `dsc-hub-espnow-primary.yaml` |
 | `dsc-control.yaml` | `dsc-control-common.yaml` (+ `cyd_glyphs.yaml` via sibling `!include`) |
+| `dsc-bridge.yaml` | `dsc-bridge-common.yaml` (+ local `external_components`) |
 | `dsc-heater` / `heatmat` / `humidifier` / `de-humidifier` | `dsc-sonoff-common.yaml` |
 | `dsc-pot1` … `dsc-pot4` | `dsc-pot-common.yaml` |
 
@@ -28,14 +29,18 @@
 1. Ensure `/config/esphome/secrets.yaml` has the keys from
    `firmware/v4/secrets.yaml.template`.
 2. Copy every `dsc-*.yaml` from this folder into `/config/esphome/`.
-3. Validate each device, then Install as needed.
-4. After a push: Validate (or set `refresh: 0d` once to force re-pull).
+3. **Bridge only:** also place `dsc_api_client` and `dsc_anchor_ap` under
+   `/config/esphome/components/` (from `firmware/v4/components/`). Sync does
+   not copy those yet — see [`docs/brain/F010_APPLIANCE_BRIDGE.md`](../../docs/brain/F010_APPLIANCE_BRIDGE.md).
+4. Validate each device, then Install as needed.
+5. After a push: Validate (or set `refresh: 0d` once to force re-pull).
 
 ## Do not
 
 - Auto-flash the fleet on every git push
 - Commit HA `secrets.yaml`
 - Change `espnow_cmd_tag` on only one of hub/panel
+- Put `external_components` back into git-pulled package bodies (path breaks on HA)
 
 ## Bundle / Validate failures
 
@@ -43,5 +48,6 @@
 |---|---|---|
 | `Failed to load packages` · `… is not a valid YAML file` · `expected '<document start>'` | Package body header comment missing `#` (e.g. bare `v4.0.11:` before `substitutions:`) | Fix + push on GitHub; set stub `refresh: 0d`; Validate again |
 | Stale package after a known-good push | ESPHome cache still on old commit | `refresh: 0d` once, Validate, then restore `1d` |
+| Bridge Install cannot resolve `dsc_api_client` / `dsc_anchor_ap` | Components missing under `/config/esphome/components/` | Copy from `firmware/v4/components/`; Sync stages `dsc_fleet_setup` only (F-015) |
 
 Full install / upgrade: [`../../INSTALL.md`](../../INSTALL.md) · [`../../UPGRADE.md`](../../UPGRADE.md). Panel HA tips: [`../../firmware/v4/README.md`](../../firmware/v4/README.md).

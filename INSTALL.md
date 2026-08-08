@@ -92,9 +92,15 @@ Disable any storage dashboard still named DSC-HUB / `dsc-hub-v4`. Sidebar:
 | Sonoffs | sonoff-common (dual API client) | **5.2.0** |
 
 Stub `ref: master` (or tag when cut). Kits Validate even if not flashed on lab.
-Bridge needs `firmware/v4/components/dsc_api_client` beside the stub (Sync
-copies components, or flash from `firmware/v4/`). Secrets: `dsc_bridge_*`,
-`dsc_anchor_ap_password`, four `dsc_*_host`.
+
+**Bridge Install:** `external_components` live on the stubs (not in
+`dsc-bridge-common.yaml`) so HA can resolve `dsc_api_client` /
+`dsc_anchor_ap`. Lab flash from `firmware/v4/` already has
+`components/` beside the stub. On HA, copy those two trees into
+`/config/esphome/components/` — Sync with `sync_esphome` stages stubs and
+**`dsc_fleet_setup` only**, not the bridge components (FOLLOWUPS **F-015**).
+Secrets: `dsc_bridge_*`, `dsc_anchor_ap_password`, four `dsc_*_host`.
+Ops runbook: [`docs/brain/F010_APPLIANCE_BRIDGE.md`](docs/brain/F010_APPLIANCE_BRIDGE.md).
 
 ### Flash order
 
@@ -103,9 +109,9 @@ copies components, or flash from `firmware/v4/`). Secrets: `dsc_bridge_*`,
 ### Verify
 
 - [ ] `sensor.dsc_hub_firmware_version` = **5.2.0** (and peers)
-- [ ] `sensor.dsc_ha_surface_version` = **5.2.0**
+- [ ] `sensor.dsc_ha_surface_version` = **6.0.0** (React panel surface; not firmware)
 - [ ] `sensor.dsc_fleet_version_status` → **ok** after all flashes
-- [ ] `/dsc-hub-pro/home` + Learning Phase B controls present (B default off)
+- [ ] `/dsc-hub` (or `/dsc-hub-pro/home` Lovelace fallback) + Learning Phase B controls present (B default off)
 - [ ] Panel ESP-NOW UP; Bridge Anchor SoftAP up; Sonoffs follow via bridge (HA followers fallback)
 
 ---
