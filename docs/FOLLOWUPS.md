@@ -988,6 +988,7 @@ Firmware: `dsc-bridge.yaml` / `dsc-bridge-kit.yaml` · `components/dsc_api_clien
 |---|---|---|
 | F-011 | SoftAP portal host on ETH01 | Invert kit host after F-010/12 soak |
 | F-014 | Bridge SoftAP kit hello without `wifi:` | ESPHome forbids `wifi:` + `ethernet:`; SoftAP is `dsc_anchor_ap`. Kit satellite STA join to hub `DSC-Setup-*` deferred — paste `sensor.dsc_bridge_anchor_bssid` into hub `bridge_mac` / Lock WiFi after first ethernet boot |
+| F-015 | ha-sync copy ESPHome external components | **Mitigated** — bridge `external_components` now git-pulls `firmware/v4/components`; Sync still only SCP stubs when `SYNC_ESPHOME=1` |
 
 ### mitigated-by
 
@@ -1635,9 +1636,17 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 - Build tip: `npm` on NAS share can stall; build on local disk then copy `www/dsc-hub-panel.js`.
 - Add-on `dsc-hub-sync` patched to stage `custom_components/dsc_hub` (rebuild add-on image to pick up).
 
+## Custom panel surface 6.1.0 (Pass 2)
+- WS `state_changed` subscription + history-seeded charts; dense Ops Home; Climate CFM; `/local` card autoload.
+- Build: `pwsh -File scripts/build-dsc-hub-panel.ps1`.
+- Deferred to Pass 3: native React Catalog/Build; brain HTTP client; Lovelace YAML removal.
+
 ## 2026-08-08 — catalog collation contract remembered
 
 ### done
 - Durable architecture written: [`docs/qa/CATALOG-COLLATION-CONTRACT.md`](qa/CATALOG-COLLATION-CONTRACT.md) (grow notes as documents, reviews→collate→wordcloud, lineage via `entity_link`, three layers, merge order).
 - Pointers: N-087 / **N-087-COLLATION** above; link from [`CATALOG-RESEARCH-CORPUS.md`](qa/CATALOG-RESEARCH-CORPUS.md); merge one-pager `brain/data/_COLLATION_CONTRACT_FOR_MERGE.txt`.
 - Schema skim: no observation/review tables yet; no systematic parent_of/child_of emit; wordcloud deferred — gaps only, no refactor mid-merge.
+
+- [x] **StrainDB `save_cookies` crash** (fixed 2026-08-08): `Session.save_cookies` now normalizes jar via `_cookies_as_map` (handles str keys / Cookie objs / `get_dict`) and never raises. Warm n=140 finalize no longer dies on cookie write.
+- [ ] **StrainDB CF / cookie re-import still needed**: Paused at checkpoint **n=213** (`_pw_strain_db_PAUSE.txt`, ~3h cooldown). Headed Playwright warm hits CF → `chrome-error://chromewebdata/`. Before resume: pass CF in browser / refresh Playwright profile cookies (`_pw_strain_db_capture.py` or Netscape export); do not tight-retry. curl_cffi-alone still TLS-bound for `cf_clearance`.

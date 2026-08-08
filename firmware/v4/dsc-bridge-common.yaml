@@ -63,11 +63,8 @@ ethernet:
   phy_addr: 1
   power_pin: GPIO16
 
-external_components:
-  - source:
-      type: local
-      path: components
-    components: [dsc_api_client, dsc_anchor_ap]
+# external_components live in stubs (lab: local path · HA: git) —
+# package bodies must stay remote-git safe and path-agnostic.
 
 # SoftAP channel anchor (F-012). Runs after espnow LATE wifi init.
 dsc_anchor_ap:

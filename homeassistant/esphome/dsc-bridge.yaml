@@ -20,6 +20,14 @@ substitutions:
   dsc_humidifier_api_key: !secret dsc_humidifier_api_key
   dsc_dehumidifier_api_key: !secret dsc_dehumidifier_api_key
 
+# Components must exist under /config/esphome/components/ on the HA host
+# (dsc_api_client, dsc_anchor_ap). Sync does not copy these by default.
+external_components:
+  - source:
+      type: local
+      path: components
+    components: [dsc_api_client, dsc_anchor_ap]
+
 packages:
   bridge:
     url: https://github.com/weddas/DSC-HUB
@@ -27,7 +35,3 @@ packages:
     files:
       - firmware/v4/dsc-bridge-common.yaml
     refresh: 0s
-
-# Local components (dsc_api_client, dsc_anchor_ap) must live beside this stub
-# on the HA ESPHome host — Sync copies firmware/v4/components when configured,
-# or flash from firmware/v4/ on a machine that has components/.

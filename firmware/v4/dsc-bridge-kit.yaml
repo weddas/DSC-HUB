@@ -29,6 +29,12 @@ substitutions:
   dsc_humidifier_api_key: !secret dsc_humidifier_api_key
   dsc_dehumidifier_api_key: !secret dsc_dehumidifier_api_key
 
+external_components:
+  - source:
+      type: local
+      path: components
+    components: [dsc_api_client, dsc_anchor_ap]
+
 packages:
   bridge: !include dsc-bridge-common.yaml
   # SoftAP satellite hello deferred — see stub header.
