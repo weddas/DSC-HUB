@@ -20,9 +20,13 @@ Kit SoftAP setup: `dsc-hub-kit.yaml`, `dsc-control-kit.yaml`, `dsc-pot{1..4}-kit
 
 WiFi is split into `dsc-*-wifi-lab.yaml` / `dsc-*-wifi-kit.yaml` so kit builds omit compile-time SSIDs.
 Fleet component: `components/dsc_fleet_setup/` (phone portal on hub; Control/pots/bridge join `DSC-Setup-*`).
-Bridge also hosts SoftAP `DSC-Anchor` (F-012 channel pin) + `components/dsc_api_client/` (F-010).
+Bridge also hosts SoftAP `DSC-Anchor` (F-012 channel pin) + `components/dsc_api_client/` + `dsc_anchor_ap/` (F-010/F-012).
 
-Package bodies are remote-git safe (no `!secret`). Stubs pass credentials (and hub/panel MACs + `espnow_cmd_tag`) as substitutions.
+Package bodies are remote-git safe (no `!secret`, no relative `external_components`).
+Stubs pass credentials (and hub/panel MACs + `espnow_cmd_tag`) as substitutions.
+Bridge stubs declare `external_components` locally so HA Install can resolve
+`dsc_api_client` / `dsc_anchor_ap` against `/config/esphome/components/` —
+ops: [`docs/brain/F010_APPLIANCE_BRIDGE.md`](../../docs/brain/F010_APPLIANCE_BRIDGE.md).
 
 Pots (`dsc-pot-common` **5.1.6+**): each soil channel has **Cal … Offset** / **Cal … Scale**
 config numbers (NVS). Formula `raw * scale + offset` applies before range/median and feeds

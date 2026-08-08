@@ -988,7 +988,7 @@ Firmware: `dsc-bridge.yaml` / `dsc-bridge-kit.yaml` · `components/dsc_api_clien
 |---|---|---|
 | F-011 | SoftAP portal host on ETH01 | Invert kit host after F-010/12 soak |
 | F-014 | Bridge SoftAP kit hello without `wifi:` | ESPHome forbids `wifi:` + `ethernet:`; SoftAP is `dsc_anchor_ap`. Kit satellite STA join to hub `DSC-Setup-*` deferred — paste `sensor.dsc_bridge_anchor_bssid` into hub `bridge_mac` / Lock WiFi after first ethernet boot |
-| F-015 | ha-sync copy ESPHome external components | **Mitigated** — bridge `external_components` now git-pulls `firmware/v4/components`; Sync still only SCP stubs when `SYNC_ESPHOME=1` |
+| F-015 | ha-sync copy ESPHome external components | **Partial** — stubs declare `external_components` (common package stays path-agnostic) so HA can resolve names against `/config/esphome/components/`; Sync/add-on still copies **`dsc_fleet_setup` only**, not `dsc_api_client` / `dsc_anchor_ap`. Manual SCP or lab flash until Sync expands. |
 
 ### mitigated-by
 

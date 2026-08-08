@@ -4,7 +4,8 @@ Pulls [weddas/DSC-HUB](https://github.com/weddas/DSC-HUB) and copies HA surfaces
 into `/config` whenever the tracked git ref moves (default: `master`).
 
 **Add-on version:** **5.1.4** (Build a Plant dashboard + catalog + bundle concat;
-also syncs `esphome/components/dsc_fleet_setup` since 5.1.2)
+also syncs `esphome/components/dsc_fleet_setup` since 5.1.2 — **not** the
+full `firmware/v4/components` tree)
 
 ## What it syncs
 
@@ -17,6 +18,11 @@ also syncs `esphome/components/dsc_fleet_setup` since 5.1.2)
 | Bundled `www` cards + SVG + vendor | `/config/www/` (default on) |
 | `homeassistant/www/dsc-catalog/*.json` | `/config/www/dsc-catalog/` |
 | `homeassistant/esphome/dsc-*.yaml` | `/config/esphome/` (**default on** in 5.1.0) |
+| `firmware/v4/components/dsc_fleet_setup` | `/config/esphome/components/dsc_fleet_setup` (with `sync_esphome`) |
+
+**Not synced today:** `dsc_api_client` / `dsc_anchor_ap` (bridge Install needs
+them under `/config/esphome/components/` — copy manually or flash from
+`firmware/v4/`; see [`docs/brain/F010_APPLIANCE_BRIDGE.md`](../docs/brain/F010_APPLIANCE_BRIDGE.md) · FOLLOWUPS **F-015**).
 
 Also writes:
 
@@ -63,7 +69,7 @@ YAML dashboards refresh on navigation (`lovelace.reload` is 400 on current Core)
 | `ref` | `master` | Branch or tag |
 | `poll_seconds` | `60` | Fetch interval |
 | `sync_www` | `true` | SYSTEM MAP / Dash / Build a Plant assets |
-| `sync_esphome` | **`true`** | Overwrite ESPHome stubs and copy `firmware/v4/components` → `/config/esphome/components` |
+| `sync_esphome` | **`true`** | Overwrite ESPHome stubs and copy **`dsc_fleet_setup` only** → `/config/esphome/components/` (bridge components are still manual — F-015) |
 | `reload_after_sync` | `true` | Broader reload set |
 
 ## Private repos
