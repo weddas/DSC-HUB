@@ -1,4 +1,4 @@
-# DSC-HUB — HA stub (pulls hub body + ESP-NOW package + lab WiFi from GitHub)
+# DSC-HUB ??? HA stub (pulls hub body + ESP-NOW package + lab WiFi from GitHub)
 substitutions:
   name: dsc-hub
   friendly_name: DSC-HUB
@@ -11,9 +11,9 @@ substitutions:
   ap_password_val: !secret dsc_hub_ap_password
   espnow_key: !secret espnow_key
   panel_mac: "30:76:F5:E9:22:0C"
-  bridge_mac: "00:00:00:00:00:00"
+  bridge_mac: "58:2A:BD:60:3C:1D"
   espnow_cmd_tag: "54727"
-  # Prefer Anchor SoftAP — copy sensor.dsc_bridge_anchor_bssid after first boot.
+  # Prefer Anchor SoftAP ??? copy sensor.dsc_bridge_anchor_bssid after first boot.
   wifi_bssid: "00:00:00:00:00:00"
 
 packages:
@@ -25,7 +25,8 @@ packages:
       - firmware/v4/dsc-hub-v4_0.yaml
       - firmware/v4/dsc-hub-fleet-heal.yaml
       - firmware/v4/dsc-hub-espnow-primary.yaml
-      # No dsc-fleet-setup-hub-lab.yaml — lab uses ${panel_mac}; kit SoftAP only.
+      # No dsc-fleet-setup-hub-lab.yaml ??? lab uses ${panel_mac}; kit SoftAP only.
     # 0s during fleet flash cycles so GitHub pushes are picked up immediately.
     # Raise to 1h once the fleet is stable to avoid constant git pulls.
     refresh: 0s
+

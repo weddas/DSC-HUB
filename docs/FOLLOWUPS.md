@@ -1528,6 +1528,7 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 | ID | Item | Notes |
 |---|---|---|
 | F-N087-LOCK | Multi-agent master SQLite contention | Concurrent `merge_staging_to_master`, nuclear PowerShell `Stop-Process` watchdogs, and NAS SMB locks killed serialized merges mid-txn (RC -1 / network errors). Need a single exclusive merge lease (file lock + no foreign killers). **2026-08-08:** `north_atlantic` staging ready (2953; prefer over `north_atlantic_local` 3043) — merge blocked after 10+ retries; master has `source_record` `northatlantic` but **0** variants/grow. Re-run `--only north_atlantic.sqlite3` then `--only north_atlantic_local.sqlite3` when apply/journal/killers idle. |
+| N-087-MERGE-LINK-NAS | Exclusive merge stuck on phytochem link (expected) | **Do not restart running merge.** Hours on `[1/207] phytochem_smith` is normal: typed chem is tiny (~3087); cost is `link_science_to_seed` after each family — Python per-row round-trips over **all** master `chemistry_profile` (~359k) on NAS/SMB (~0% CPU, ~2 KB/s WAL). Staging ~180MB / 89923 raw is a red herring (raw not copied without `--include-raw`). **Risk:** with `--no-search`, merge may not `commit()` after link before close → link/gap writes possibly rolled back (verify when family finishes). **Later families untenable** if each re-runs full link. Safe post-phytochem speedups: per-family `--no-link` + one link pass at end; commit after link under `--no-search`; set-based `INSERT…SELECT` linking; optional local-SSD merge. |
 
 ### deferred
 | ID | Item | Notes |
@@ -1650,3 +1651,12 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 
 - [x] **StrainDB `save_cookies` crash** (fixed 2026-08-08): `Session.save_cookies` now normalizes jar via `_cookies_as_map` (handles str keys / Cookie objs / `get_dict`) and never raises. Warm n=140 finalize no longer dies on cookie write.
 - [ ] **StrainDB CF / cookie re-import still needed**: Paused at checkpoint **n=213** (`_pw_strain_db_PAUSE.txt`, ~3h cooldown). Headed Playwright warm hits CF → `chrome-error://chromewebdata/`. Before resume: pass CF in browser / refresh Playwright profile cookies (`_pw_strain_db_capture.py` or Netscape export); do not tight-retry. curl_cffi-alone still TLS-bound for `cf_clearance`.
+
+## Fleet bring-up (2026-08-08 evening) — live status snapshot
+
+- Bridge `192.168.86.66` online **5.2.0**; SoftAP up ch11; Anchor BSSID `58:2A:BD:60:3C:1D`; all 4 Sonoff API links True; **Hub ESP-NOW Link False** (no 0xD8/0xD1).
+- Hub stub on HA now has `bridge_mac: 58:2A:BD:60:3C:1D`; `wifi_bssid` left `00…` so Nest OTA stays possible until ESP-NOW proves green, then lock SoftAP BSSID.
+- Hub/Control currently unreachable on LAN (hub last ESPHome online ~16:07; control ~16:29). Needs power-cycle + ESPHome Install for hub to pick up `bridge_mac`.
+- Pot3 absent from today's flash logs / no API on LAN. Pot1 API flaky.
+- HA surface package on live still reports `6.0.0` while expected train is `5.2.0` (version chip drift) — separate from bridge path.
+

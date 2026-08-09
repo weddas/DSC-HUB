@@ -102,6 +102,12 @@
 
 .dsc-secondary-tabs {
   margin-bottom: 16px;
+  mask-image: linear-gradient(90deg, #000 85%, transparent);
+}
+
+.dsc-secondary-tabs::after {
+  content: "";
+  flex: 0 0 12px;
 }
 
 .dsc-tab {
@@ -288,7 +294,228 @@
   background: #000;
 }
 
+.dsc-legacy-host--empty {
+  background: var(--dsc-gray-1);
+  min-height: 160px;
+}
+
 .dsc-legacy-host > * {
   display: block;
   width: 100%;
+}
+
+.dsc-status-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.dsc-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.dsc-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--dsc-gray-3);
+  background: var(--dsc-gray-1);
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--dsc-gray-5);
+}
+
+.dsc-chip--ok {
+  color: var(--dsc-neon);
+  border-color: var(--dsc-neon-dim);
+  background: rgba(57, 255, 20, 0.08);
+  box-shadow: 0 0 12px rgba(57, 255, 20, 0.12);
+}
+
+.dsc-chip--bad {
+  color: #ff8a8a;
+  border-color: rgba(255, 107, 107, 0.45);
+  background: rgba(255, 107, 107, 0.1);
+}
+
+.dsc-chip--warn {
+  color: #fbbf24;
+  border-color: rgba(251, 191, 36, 0.45);
+  background: rgba(251, 191, 36, 0.1);
+}
+
+.dsc-chip--muted {
+  color: var(--dsc-gray-5);
+}
+
+.dsc-chip--pulse {
+  animation: dsc-chip-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes dsc-chip-pulse {
+  0%, 100% { box-shadow: 0 0 0 rgba(57, 255, 20, 0); }
+  50% { box-shadow: 0 0 14px rgba(57, 255, 20, 0.35); }
+}
+
+.dsc-demand-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.dsc-demand-row--stack {
+  flex-direction: column;
+}
+
+.dsc-demand {
+  appearance: none;
+  flex: 1 1 110px;
+  min-height: 52px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--dsc-gray-3);
+  background: var(--dsc-gray-2);
+  color: var(--dsc-white);
+  font: inherit;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  box-shadow: var(--dsc-shadow-tight);
+  transition: transform 100ms ease, box-shadow 100ms ease, border-color 120ms ease, background 120ms ease;
+}
+
+.dsc-demand:hover {
+  border-color: var(--dsc-neon-dim);
+}
+
+.dsc-demand:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.65);
+}
+
+.dsc-demand.is-on {
+  border-color: var(--dsc-neon);
+  background: rgba(57, 255, 20, 0.1);
+  box-shadow: 0 0 0 1px rgba(57, 255, 20, 0.25), 0 0 18px rgba(57, 255, 20, 0.2);
+}
+
+.dsc-demand.is-missing {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.dsc-demand-label {
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--dsc-gray-5);
+}
+
+.dsc-demand.is-on .dsc-demand-label {
+  color: var(--dsc-neon);
+}
+
+.dsc-demand-state {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  font-size: 1rem;
+}
+
+.dsc-gauge-row {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.dsc-gauge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.dsc-gauge-label {
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--dsc-gray-5);
+}
+
+.dsc-chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+  min-height: 20px;
+}
+
+.dsc-chart-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: var(--dsc-gray-5);
+}
+
+.dsc-chart-legend-item i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 0 6px currentColor;
+}
+
+.dsc-chart-last {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+  color: var(--dsc-neon);
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.dsc-fault-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dsc-fault-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.dsc-empty {
+  padding: 18px 14px;
+  border: 1px dashed var(--dsc-gray-3);
+  border-radius: 8px;
+  color: var(--dsc-gray-5);
+  background: rgba(0, 0, 0, 0.25);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.dsc-empty--ok {
+  border-style: solid;
+  border-color: var(--dsc-neon-dim);
+  color: var(--dsc-neon);
+}
+
+.dsc-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }

@@ -209,21 +209,63 @@ class Session:
         return before
 
     def save_cookies(self) -> None:
+        """Persist jar for resume. Never raise — cookie write must not kill scrape."""
         if not self._cffi:
             return
-        jar = {c.name: c.value for c in self._cffi.cookies}
-        self.cookie_path.parent.mkdir(parents=True, exist_ok=True)
-        self.cookie_path.write_text(
-            json.dumps(
-                {
-                    "domain": "strain-database.com",
-                    "saved_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-                    "cookies": jar,
-                },
-                indent=2,
-            ),
-            encoding="utf-8",
-        )
+        try:
+            jar = self._cookies_as_map()
+            if not jar:
+                return
+            self.cookie_path.parent.mkdir(parents=True, exist_ok=True)
+            self.cookie_path.write_text(
+                json.dumps(
+                    {
+                        "domain": "strain-database.com",
+                        "saved_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                        "cookies": jar,
+                    },
+                    indent=2,
+                ),
+                encoding="utf-8",
+            )
+        except Exception as exc:  # noqa: BLE001
+            print(f"session: save_cookies skipped ({type(exc).__name__}: {exc})")
+
+    def _cookies_as_map(self) -> dict[str, str]:
+        """Normalize curl_cffi/requests jar (Cookie objs or str keys) → name→value."""
+        out: dict[str, str] = {}
+        raw = getattr(self._cffi, "cookies", None)
+        if raw is None:
+            return out
+        get_dict = getattr(raw, "get_dict", None)
+        if callable(get_dict):
+            try:
+                for name, value in (get_dict() or {}).items():
+                    if name and value is not None and value != "":
+                        out[str(name)] = str(value)
+                if out:
+                    return out
+            except Exception:  # noqa: BLE001
+                pass
+        try:
+            items = list(raw)
+        except Exception:  # noqa: BLE001
+            return out
+        for c in items:
+            if isinstance(c, str):
+                try:
+                    val = raw.get(c) if hasattr(raw, "get") else raw[c]
+                except Exception:  # noqa: BLE001
+                    continue
+                if val is None or val == "":
+                    continue
+                out[c] = str(getattr(val, "value", val))
+                continue
+            name = getattr(c, "name", None)
+            value = getattr(c, "value", None)
+            if name is not None and value is not None and value != "":
+                out[str(name)] = str(value)
+        return out
 
     def get(self, url: str, *, timeout: int = 60) -> tuple[int, str]:
         if not url.startswith("https://strain-database.com/"):

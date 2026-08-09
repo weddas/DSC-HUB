@@ -1,4 +1,4 @@
-# LIVE-UI — DSC-HUB custom panel (surface 6.0.0)
+# LIVE-UI — DSC-HUB custom panel (surface 6.1.0)
 
 React + Vite product panel hosted inside Home Assistant (WashData pattern).
 
@@ -7,11 +7,22 @@ React + Vite product panel hosted inside Home Assistant (WashData pattern).
 | Sidebar | **DSC-HUB** → `/dsc-hub` (custom panel) |
 | Deep routes | Hash routes: `/dsc-hub#/ops/home`, `#/plant/catalog`, … |
 | Lovelace fallback | `dsc-hub-pro` YAML — `show_in_sidebar: false` |
-| Surface version | `sensor.dsc_ha_surface_version` **6.0.0** |
+| Surface version | `sensor.dsc_ha_surface_version` **6.1.0** |
 | Integration | `homeassistant/custom_components/dsc_hub/` |
 | Enable | `dsc_hub:` in configuration.yaml (see snippet) |
 
 ## Build
+
+Prefer the local-disk script (NAS shares stall `npm`):
+
+```powershell
+pwsh -File scripts/build-dsc-hub-panel.ps1
+```
+
+This copies `frontend/` → `%TEMP%`, runs `npm ci` + `npm run build`, then copies
+`dsc-hub-panel.js` (+ map/assets) back to `homeassistant/custom_components/dsc_hub/www/`.
+
+Manual equivalent:
 
 ```bash
 cd homeassistant/custom_components/dsc_hub/frontend
@@ -19,25 +30,36 @@ npm install
 npm run build   # emits www/dsc-hub-panel.js (CSS inlined)
 ```
 
-Prefer building on a local disk if the NAS share stalls `npm`.
-
 ## Deploy
 
 `scripts/ha-sync.sh` syncs `custom_components/dsc_hub` (Python + www + assets).
 Then: HA **Developer Tools → YAML → Check configuration** → restart Core
 (or reload custom integrations if supported) so the panel registers.
 
+**Note:** the `dsc-hub-sync` add-on image still needs a rebuild to pick up
+`custom_components` staging from git. Panel JS under `/local` / integration
+`www` updates on sync after the Python package is present.
+
 ## Visual system
 
 Black / gray / neon green / white · tabbed primary+secondary · press feedback ·
-soft shadows · glowing live charts · desktop-first grid with narrow tile reflow.
+soft shadows · history-seeded glowing charts · demand toggles with neon ON edge ·
+desktop-first grid with narrow tile reflow.
 
-## Acceptance
+## Pass 2 acceptance
+
+- [ ] Cold open `/dsc-hub#/ops/home` — tent T/RH charts populate from history within seconds
+- [ ] Status strip reflects hub / panel / beat / alerts / fleet
+- [ ] Demand toggles (Heat/Cool/Hum/Dehum/Mat) call HA and match tent reality
+- [ ] Pot ESP-NOW chips + manual takeover / fan override visible
+- [ ] Ops · Climate shows VPD gauges + CFM / fan % KPIs and sparklines
+- [ ] Ops · Dash / Plant · Catalog load without visiting Lovelace first (auto `/local` inject)
+- [ ] `sensor.dsc_ha_surface_version` reads **6.1.0**
+- [ ] WashData / Overview / Frigate / other non-DSC panels unchanged
+- [ ] Narrow viewport tiles columns without breaking desktop layout
+
+## Pass 1 (still true)
 
 - [ ] Sidebar **DSC-HUB** opens `/dsc-hub` (not Lovelace YAML title)
 - [ ] Primary tabs Ops · Plant · Advanced · System
 - [ ] Secondary tabs navigate hash routes
-- [ ] Ops Home shows hub/climate KPIs when entities are live
-- [ ] Graphs pulse on live series; buttons depress on press
-- [ ] WashData / Overview / Frigate unchanged
-- [ ] Narrow viewport tiles columns without breaking desktop layout

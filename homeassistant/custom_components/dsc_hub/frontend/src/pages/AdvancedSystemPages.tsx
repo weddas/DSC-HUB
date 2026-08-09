@@ -12,7 +12,7 @@ export function AdvancedLearningPage() {
         <div className="dsc-col-6">
           <Card title="Status">
             <p className="dsc-muted" style={{ marginTop: 0 }}>
-              Surface: {state("sensor.dsc_ha_surface_version", "6.0.0")}. Durable learning math belongs in brain/.
+              Surface: {state("sensor.dsc_ha_surface_version", "6.1.0")}. Durable learning math belongs in brain/.
             </p>
           </Card>
         </div>
@@ -25,11 +25,11 @@ export function AdvancedLearningPage() {
 }
 
 export function AdvancedTrendsPage() {
-  const tSeries = useEntitySeries("sensor.dsc_hub_tent_temperature", 64);
-  const rhSeries = useEntitySeries("sensor.dsc_hub_tent_humidity", 64);
+  const tSeries = useEntitySeries("sensor.dsc_hub_tent_temperature", { maxPoints: 96 });
+  const rhSeries = useEntitySeries("sensor.dsc_hub_tent_humidity", { maxPoints: 96 });
   return (
     <div className="dsc-page">
-      <PageHeader title="Advanced · Trends" subtitle="Live rolling trends (session buffer)." />
+      <PageHeader title="Advanced · Trends" subtitle="History-seeded trends with live append." />
       <div className="dsc-grid">
         <div className="dsc-col-6">
           <Card title="Tent temperature">
@@ -78,7 +78,7 @@ export function SystemOverviewPage() {
           />
         </div>
         <div className="dsc-col-4">
-          <Kpi label="Surface" value={state("sensor.dsc_ha_surface_version", "6.0.0")} sub="Panel product shell" />
+          <Kpi label="Surface" value={state("sensor.dsc_ha_surface_version", "6.1.0")} sub="Panel product shell" />
         </div>
         <div className="dsc-col-4">
           <Kpi

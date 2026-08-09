@@ -48,9 +48,9 @@ def main() -> int:
         print(f"already_running pid={existing}")
         return 0
 
-    # Polite delay: CF hit at ~4.4k with 0.85s; bump after cool-down.
+    # Polite delay: CF hit ~9.4k at 1.25s; resume with 1.5–3s (+jitter in scraper).
     # Dump every 500: NAS rewrite of growing JSON every 25 pages is too expensive.
-    delay = "1.25"
+    delay = "1.5"
     ck_every = "25"
     dump_every = "500"
     cmd = [

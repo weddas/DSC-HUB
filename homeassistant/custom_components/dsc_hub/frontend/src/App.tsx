@@ -52,7 +52,7 @@ function Shell() {
           </div>
         </NavLink>
         <div className="dsc-muted" style={{ fontSize: 12, letterSpacing: "0.08em" }}>
-          SURFACE 6.0.0
+          SURFACE 6.1.0
         </div>
       </div>
 

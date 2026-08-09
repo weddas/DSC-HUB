@@ -1,8 +1,10 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useHass } from "../hooks/useHass";
+import { ensureLocalCard } from "../lib/ensureLocalCards";
 
 /**
- * Mount a legacy Lovelace custom element (IIFE) into a React host when the
- * global customElements registry already has it (e.g. /local bundle).
+ * Mount a legacy Lovelace custom element (IIFE) into a React host.
+ * Auto-injects /local DSC-HUB bundles when the tag is not yet registered.
  */
 export function LegacyCardHost({
   tag,
@@ -12,41 +14,67 @@ export function LegacyCardHost({
   config?: Record<string, unknown>;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  const { hass } = useHass();
+  const [status, setStatus] = useState<"loading" | "ready" | "missing">("loading");
+  const elRef = useRef<(HTMLElement & { setConfig?: (c: Record<string, unknown>) => void; hass?: unknown }) | null>(
+    null,
+  );
+
+  const configKey = JSON.stringify(config ?? {});
 
   useEffect(() => {
     const host = ref.current;
     if (!host) return;
-    host.innerHTML = "";
-    if (!customElements.get(tag)) {
-      const msg = document.createElement("div");
-      msg.className = "dsc-muted";
-      msg.style.padding = "24px";
-      msg.textContent = `${tag} not loaded yet — open once from Lovelace or ensure /local bundle is registered.`;
-      host.appendChild(msg);
-      return;
-    }
-    const el = document.createElement(tag) as HTMLElement & {
-      setConfig?: (c: Record<string, unknown>) => void;
-      hass?: unknown;
-    };
-    if (config && typeof el.setConfig === "function") {
-      el.setConfig({ type: `custom:${tag}`, ...config });
-    }
-    host.appendChild(el);
+    let cancelled = false;
+    const cfg = configKey ? (JSON.parse(configKey) as Record<string, unknown>) : {};
 
-    const hassRoot = document.querySelector("home-assistant") as
-      | (HTMLElement & { hass?: unknown })
-      | null;
-    const sync = () => {
-      if (hassRoot?.hass) el.hass = hassRoot.hass;
-    };
-    sync();
-    const id = window.setInterval(sync, 1000);
+    (async () => {
+      setStatus("loading");
+      host.innerHTML = "";
+      const ok = await ensureLocalCard(tag);
+      if (cancelled || !ref.current) return;
+      if (!ok) {
+        setStatus("missing");
+        const msg = document.createElement("div");
+        msg.className = "dsc-empty";
+        msg.innerHTML = `<strong>${tag}</strong> did not register.<br/>Tried /local/DSC-HUB.js and /local/dsc-system-map-card.js. Deploy the IIFE bundle or add it as a Lovelace resource, then hard-refresh.`;
+        host.appendChild(msg);
+        return;
+      }
+
+      const el = document.createElement(tag) as HTMLElement & {
+        setConfig?: (c: Record<string, unknown>) => void;
+        hass?: unknown;
+      };
+      if (typeof el.setConfig === "function") {
+        el.setConfig({ type: `custom:${tag}`, ...cfg });
+      }
+      if (hass) el.hass = hass;
+      host.appendChild(el);
+      elRef.current = el;
+      setStatus("ready");
+    })();
+
     return () => {
-      window.clearInterval(id);
+      cancelled = true;
+      elRef.current = null;
       host.innerHTML = "";
     };
-  }, [tag, config]);
+    // hass synced in separate effect; avoid remount on every hass tick
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tag, configKey]);
 
-  return <div className="dsc-legacy-host" ref={ref} />;
+  useEffect(() => {
+    if (elRef.current && hass) {
+      elRef.current.hass = hass;
+    }
+  }, [hass]);
+
+  return (
+    <div
+      className={`dsc-legacy-host${status === "missing" ? " dsc-legacy-host--empty" : ""}`}
+      ref={ref}
+      data-status={status}
+    />
+  );
 }

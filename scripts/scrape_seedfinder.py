@@ -21,6 +21,7 @@ import gzip
 import html as html_lib
 import io
 import json
+import random
 import re
 import sys
 import time
@@ -115,13 +116,17 @@ def fetch_bytes(url: str, *, timeout: int = 120) -> tuple[bytes, int, str]:
     except urllib.error.HTTPError as exc:
         body = exc.read() if hasattr(exc, "read") else b""
         text = body.decode("utf-8", errors="replace") if body else ""
-        if exc.code in (401, 403) or is_bot_wall(text, str(exc.code)):
+        # 429/401/403/bot-wall → hard stop (caller flushes dump+staging; no spin).
+        if exc.code in (401, 403, 429) or is_bot_wall(text, str(exc.code)):
             raise CloudflareBlocked(url, f"HTTP {exc.code}") from exc
         raise RuntimeError(f"HTTP {exc.code} for {url}") from exc
 
 
 def polite_bytes(url: str, *, delay: float, timeout: int = 90) -> tuple[bytes, int, str]:
-    time.sleep(max(0.5, delay))
+    # Base delay plus jitter into ~[delay, min(delay*2, delay+1.5)] (e.g. 1.5 → 1.5–3.0s).
+    base = max(0.5, float(delay))
+    hi = min(base * 2.0, base + 1.5)
+    time.sleep(random.uniform(base, max(base, hi)))
     return fetch_bytes(url, timeout=timeout)
 
 

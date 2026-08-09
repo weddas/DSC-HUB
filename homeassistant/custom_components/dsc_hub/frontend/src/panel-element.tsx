@@ -14,10 +14,8 @@ function PanelRoot({
   useEffect(() => {
     const sync = () => setHass(panel.hass);
     sync();
-    const id = window.setInterval(sync, 500);
     panel.addEventListener("hass-updated", sync);
     return () => {
-      window.clearInterval(id);
       panel.removeEventListener("hass-updated", sync);
     };
   }, [panel]);

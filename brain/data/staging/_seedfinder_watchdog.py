@@ -21,7 +21,7 @@ WATCH_LOG = STAGING / "seedfinder_watchdog.log"
 HB = STAGING / "seedfinder_scrape.heartbeat"
 
 CREATE_NO_WINDOW = 0x08000000
-DELAY = "1.25"
+DELAY = "1.5"  # scraper adds jitter → ~1.5–3.0s; CF/429 stops (no spin)
 CK_EVERY = "25"
 DUMP_EVERY = "500"
 
