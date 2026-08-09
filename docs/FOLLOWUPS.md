@@ -1477,7 +1477,7 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 ### deferred / honesty
 
 - BudProfiles API offline (empty shell dump)
-- SeedFinder alphabetical pages are JS-rendered — sitemap scrape in progress then **CF-blocked** (~10.3k/40638 as of 2026-08-09; see S-SEEDFINDER). Resume after browser CF; full SF dump still incomplete.
+- SeedFinder alphabetical pages are JS-rendered — urllib stays CF-403; **Playwright resume** via [`scripts/_pw_scrape_seedfinder.py`](../scripts/_pw_scrape_seedfinder.py) (see S-SEEDFINDER). Checkpoint climbing past ~10.5k/40638 as of 2026-08-09 afternoon; merge refresh after quiet.
 - Seedsman / some bank list routes 404 or bot-walled — discovery list retained for next wave
 - Cannlytics uses MD state CSV (strain_name present); full multi-state / `data/all` (~2.5GB) not ingested this pass
 - **2026-08-08 Cannlytics HF expand (job #3):** `import_lab_terpenes_cannlytics.py` multi-state → dumps `dsc_lab_terpenes_cannlytics_{state}.json` + staging `cannlytics_expand.sqlite3` (CC-BY-4.0). CSV OK: ny/ut/mi/hi/ma/nv/fl (+ ca CSV cached). **404 xlsx-only:** wa/ct/co. **No strain names:** ri/or. Staging ~82k chem / ~73k unique (`attribute_kv=0`); unique-first projection; pesticide panels stay in dumps/CSV not master attrs. CA full JSON dump skipped (SMB Errno 22 on multi-GB write); CA staging interrupted mid-pass — resume `python scripts/run_lab_state_expand.py --state ca` then `merge_staging_to_master.py --only cannlytics_expand` when master unlocked. Do not pull `data/all`.
@@ -1578,7 +1578,7 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 **Assessed thinness (staging samples; no invented chem):**
 - **grow_trait height (cm):** still weak globally — Leafly enrich heights are categorical only (`Short`/`Medium`/`Tall`, n≈355); Seed City / CannaConnection / RQS / Seedsman better for numeric grow.
 - **flowering days:** better on bank PDPs + Leafly enrich (`grow_floweringDays` ≈3.2k non-null after projection).
-- **lineage/parents:** Leafly enrich `parent_slugs` ≈5.3k; SeedFinder stalled CF ~10.3k/40638 (2026-08-09); StrainDB paused n=213; Multiverse/Alchimia lineage-rich; OpenTHC identity-only.
+- **lineage/parents:** Leafly enrich `parent_slugs` ≈5.3k; SeedFinder Playwright resume past ~10.5k/40638 (2026-08-09 afternoon); StrainDB headed resume ~263 done / ~4737 left; Multiverse/Alchimia lineage-rich; OpenTHC identity-only.
 - **effects:** Leafly enrich ≈7.3k scored; Kushy + `leafly_github` + `medical_effects` help; Seedsman effects=0.
 - **terpenes:** MaxValue + Cannlytics + phytochem + Leafly enrich panels; labs ≫ seed grow.
 - **science↔seed:** 70 chem gaps remain ([`CATALOG-SCIENCE-SEED-LINKS.md`](qa/CATALOG-SCIENCE-SEED-LINKS.md)); OpenTHC/Kushy identity helps matching, not chem invention.
@@ -1605,7 +1605,7 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 | D-N087-CT-LABS | CT Open Data / Cannlytics xlsx-only states | terpenes/lab | CT portal search; WA/CT/CO xlsx-only 404 on HF CSV path — separate importer |
 | D-N087-JMIR-LEAFLY | JMIR Formative 2026 Leafly reviews dataset (~7037) | effects over time | CC-BY paper claims repo dump — locate DOI/repo and stage if redistributable |
 | D-N087-WIKILEAF-NLP | Wikileaf `info`/`more_info` NLP | flowering/height from free text | ≈303/2793 rows mention grow words; parse carefully, never invent numbers |
-| D-N087-HEIGHT-BAND | Leafly height bands | height (ordinal) | Map Short/Medium/Tall → typed payload only; do not invent cm ranges |
+| D-N087-HEIGHT-BAND | Leafly height bands | height (ordinal) | **Shipped projector** [`scripts/project_leafly_height_bands.py`](../scripts/project_leafly_height_bands.py) → staging `leafly_height_bands` (`height_band` + `height_ordinal` 1/2/3; `height_cm_*=null`). Merge when quiet: `--only leafly_height_bands --no-link --no-search`. Does **not** raise HA `with_height` (that counter is cm-only). |
 | D-N087-MERGE-LATER | Serialize merge of new families | all above | **2026-08-09:** exclusive sole-writer running (seedsman [4/207]). Remaining thin-field families (`leafly_flat_grow`, `openthc`, `wikileaf`, `kushy`, `lynch_figshare`, refreshed `maxvalue_terpenes`, **`bank_greenhouse`**, **`forum_rollitup`**, **`forum_ozstoners`**, …) should already be in / feed the 207-family plan — do not start parallel merges. Prefer `--no-link` switch (N-087-MERGE-NOLINK) before burning more full-link hours. |
 | D-GH-SITEMAP | Greenhouse shop coverage | Was 69 PDPs; now **127** via climate-zone category crawl + deeper `product_re`. Further fan-out limited (autoflowering/regular roots 404; board pages JS). |
 | D-OZ-IPS-BOARDS | OZ Stoners forum boards | `?forumId=N` HTML is empty shell (JS); first-pass used `/search/?q=…&type=forums_topic`. Browser/API needed for full Grow Rooms board crawl |
@@ -1653,7 +1653,7 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 - Schema skim: no observation/review tables yet; no systematic parent_of/child_of emit; wordcloud deferred — gaps only, no refactor mid-merge.
 
 - [x] **StrainDB `save_cookies` crash** (fixed 2026-08-08): `Session.save_cookies` now normalizes jar via `_cookies_as_map` (handles str keys / Cookie objs / `get_dict`) and never raises. Warm n=140 finalize no longer dies on cookie write; storage_state save also guarded.
-- [ ] **StrainDB CF / cookie re-import still needed** (**2026-08-09 still paused**): Checkpoint **n=213** (`_pw_strain_db_PAUSE.txt`); `resume_after` 2026-08-08T18:39+10 elapsed — **not resumed**; scrape/shepherd PIDs dead. Headed Playwright warm hits CF → `chrome-error://chromewebdata/`. Before resume: pass CF in browser / refresh Playwright profile cookies (`_pw_strain_db_capture.py` or Netscape export); delay-min/max 8–20s; do not tight-retry. curl_cffi-alone still TLS-bound for `cf_clearance`.
+- [x] **StrainDB CF / cookie re-import** (**2026-08-09 resumed**): Capture OK (`cf_clearance` + anubis → storage_state). Headed scrape with `DSC_SDB_CHANNEL=chrome` + fresh `DSC_SDB_UD`, delay 8–20s; already_done≈263 / ~4737 remaining (see S-STRAINDB). curl_cffi-alone still TLS-bound for `cf_clearance`.
 
 ## 2026-08-09 — N-087 / catalog status snapshot (probed morning AEST)
 
@@ -1687,7 +1687,10 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 - [`brain/data/_n087_local_ssd_merge.py`](brain/data/_n087_local_ssd_merge.py): NAS bypass sole-writer path.
 - [`scripts/merge_staging_to_master.py`](scripts/merge_staging_to_master.py): `--link-only`, force-no-link flag/env, commit after link.
 - [`brain/dsc_brain/corpus.py`](brain/dsc_brain/corpus.py): set-based `link_science_to_seed`.
+- [`scripts/_pw_scrape_seedfinder.py`](scripts/_pw_scrape_seedfinder.py) + [`brain/data/staging/_seedfinder_launch.py`](brain/data/staging/_seedfinder_launch.py): headed Playwright SeedFinder resume (urllib abandoned for CF).
+- [`scripts/project_leafly_height_bands.py`](scripts/project_leafly_height_bands.py): Leafly Short/Medium/Tall → staging ordinal payload (no invented cm).
 - HA indexes rebuilt: `homeassistant/www/dsc-catalog/dsc_strains_search_index.json` (cap 2500) + nutrients/mediums/lights.
+- Ops runbook: [`docs/qa/CATALOG-RESEARCH-CORPUS.md`](qa/CATALOG-RESEARCH-CORPUS.md) § SeedFinder Playwright resume + Leafly height bands.
 
 ## Fleet bring-up (2026-08-08 evening) — live status snapshot
 
