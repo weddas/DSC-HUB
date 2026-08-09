@@ -382,20 +382,38 @@ not humidifier lock — entity id kept for compatibility.
 - POT3 probe swap, SCD41 — post-release hardware
 - ETH01 bridge — **in tree** (`dsc-bridge.yaml` · F-010/F-012/F-013)
 
-## Firmware pairing (**5.2.0** train)
+## Version pairing (firmware **5.2.0** · HA surface **6.x**)
 
-| Piece | Version |
-|---|---|
-| Hub / Control / pots / bridge / Sonoffs / kits | **`5.2.0`** |
-| HA surface (packages + dashboard) | **`5.2.0`** |
-| Dashboard | DSC-HUB Pro (4-col, browser_mod popups) |
-| `espnow_cmd_tag` | `54727` (`0xD5C7`) on hub **and** panel |
+Two independent version trains share the lab. Do **not** force them equal.
+
+| Piece | Version | Where |
+|---|---|---|
+| Hub / Control / pots / bridge / Sonoffs / kits | **`5.2.0`** | `esphome.project.version` + text **Firmware Version** |
+| HA surface (packages + React panel) | **`6.1.0`** | `sensor.dsc_ha_surface_version` |
+| Expected helper | **`5.2.0`** | `input_text.dsc_expected_release` (**firmware** only) |
+| Dashboard | DSC-HUB React `/dsc-hub` · Lovelace Pro fallback | `custom_components/dsc_hub` / `dsc-hub-pro` |
+| `espnow_cmd_tag` | `54727` (`0xD5C7`) | hub **and** panel |
+
+```mermaid
+flowchart LR
+  exp["input_text.dsc_expected_release 5.2.0"] --> chip["sensor.dsc_fleet_version_status"]
+  fw["device Firmware Version sensors"] --> chip
+  surface["sensor.dsc_ha_surface_version 6.x"] -.reported only.-> attrs["chip attributes.ha_surface"]
+```
+
+Fleet drift chip (`sensor.dsc_fleet_version_status` in `packages/dsc_v4_version.yaml`)
+compares **firmware** devices on **major.minor** only — mixed `5.2.x` patch levels
+stay `ok`. HA surface is listed in chip attributes for ops but is **not** scored
+(so `6.1.0` beside firmware `5.2.0` does not force `warn`).
+
+**Dual-string lockstep (firmware):** each ESPHome body must keep
+`project.version` and the template text **Firmware Version** on the same string
+in the same commit. Control also paints the string in LVGL labels / boot logs;
+Sonoffs expose it via the template sensor. After Bridge bring-up alignment
+(`4985431`), Control/Sonoff strings are **5.2.0** with the hub/pots/bridge train.
 
 Bridge entities: Anchor BSSID/channel, hub ESP-NOW link, demand mirrors,
 per-Sonoff API links. Setpoints still write the hub API.
-
-Fleet drift chip (`sensor.dsc_fleet_version_status`) compares the
-**major.minor** train, so mixed patch levels inside `5.2.x` stay `ok`.
 
 **Mat votes:** `switch.dsc_hub_mat_vote_pot_1`…`4` — Root Zone is source of truth; Climate links there.
 

@@ -7,8 +7,8 @@ Home Assistant is the **lab soak / optional shell**; product destination is a
 Notion [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d3407556c)).
 
 **Current release tag:** [**v5.1.0**](https://github.com/weddas/DSC-HUB/releases/tag/v5.1.0)  
-**Live train (in tree):** HA surface **5.2.0** · hub / Control / pots / bridge / Sonoffs **5.2.0** · Sync **5.1.3+**  
-(Fleet chip compares major.minor — mixed `5.2.x` stays `ok`.)
+**Live train (in tree):** firmware hub / Control / pots / bridge / Sonoffs **5.2.0** · HA surface **6.1.0** · Sync **5.1.4+**  
+(Fleet chip compares **firmware** major.minor only — mixed `5.2.x` stays `ok`. HA surface `6.x` is independent packaging.)
 
 ---
 
@@ -24,7 +24,7 @@ Notion [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d3407556
   (strain · soil % · nutrients · light · climate Want → roster / pot).
 - **Learn Phase A + B** — Phase A EMA efficiencies & ETA; Phase B (opt-in)
   rate-limited writes to ladder **wait bases** only.
-- **Fleet version chip** — at-a-glance `ok` / `warn` / `error` vs expected **5.2.0** train.
+- **Fleet version chip** — at-a-glance `ok` / `warn` / `error` vs expected firmware **5.2.0** train (`input_text.dsc_expected_release`; does not score HA surface).
 - **Push → all Sync HAOS** — packages, Pro dashboard, www, ESPHome stubs;
   **device firmware stays manual Install** (never auto-flash).
 
@@ -55,6 +55,7 @@ flowchart LR
 | [`RELEASE.md`](RELEASE.md) | What’s new, rollout checklist |
 | [`scripts/ADDON.md`](scripts/ADDON.md) | Lab HA delivery — HAOS Sync add-on |
 | [`docs/qa/FIRMWARE-QA-5.1.0.md`](docs/qa/FIRMWARE-QA-5.1.0.md) | Firmware Validate / flash QC |
+| [`docs/qa/FLEET-RECOVERY-5.2.0.md`](docs/qa/FLEET-RECOVERY-5.2.0.md) | Secrets match + 5.2.0 OTA recovery after Bridge |
 | [`docs/qa/ADDON-QA-5.1.0.md`](docs/qa/ADDON-QA-5.1.0.md) | Sync add-on QC |
 | [`homeassistant/README.md`](homeassistant/README.md) | Packages, HACS, entity notes |
 | [`docs/qa/LIVE-UI-BUILD-A-PLANT.md`](docs/qa/LIVE-UI-BUILD-A-PLANT.md) | Build a Plant composition ops (N-083) |
@@ -76,10 +77,12 @@ packages / dashboard / www / ESPHome stubs land in `/config`.
 | Bridge | `dsc-bridge.yaml` → bridge-common (WT32-ETH01) | **5.2.0** |
 | Sonoffs | heater / heatmat / humidifier / de-humidifier | **5.2.0** |
 | Kits | `*-kit.yaml`, `*-wifi-kit.yaml`, fleet-setup kits | same bodies as device train |
-| Sync add-on | `dsc-hub-sync/` | **5.1.3+** |
-| HA surface | `sensor.dsc_ha_surface_version` | **5.2.0** |
+| Sync add-on | `dsc-hub-sync/` | **5.1.4+** |
+| HA surface | `sensor.dsc_ha_surface_version` | **6.1.0** (React `/dsc-hub`; not in fleet-chip compare) |
 
 Flash order: hub → panel → pots → **bridge** → Sonoffs. Living backlog: [`docs/FOLLOWUPS.md`](docs/FOLLOWUPS.md).
+
+**Do not conflate trains:** `input_text.dsc_expected_release` = firmware **5.2.0**. After Bridge bring-up, Control/Sonoff text sensors and UI labels must also report **5.2.0** (dual-string lockstep with `project.version`). See [`homeassistant/README.md`](homeassistant/README.md) · [`firmware/v4/README.md`](firmware/v4/README.md).
 
 ---
 
