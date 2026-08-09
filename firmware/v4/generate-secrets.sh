@@ -3,7 +3,7 @@
 #  DSC-HUB v4 · SECRETS GENERATOR
 #  ------------------------------------------------------------------
 #  Generates a complete secrets.yaml with FRESH keys for the fleet
-#  (hub + 4 pots + 4 Sonoffs + DSC-CONTROL panel).
+#  (hub + 4 pots + 4 Sonoffs + DSC-CONTROL + DSC-BRIDGE / Anchor SoftAP).
 #
 #  Any key handed through a chat window is compromised on arrival.
 #  Run this on your own machine; never paste its output anywhere.
