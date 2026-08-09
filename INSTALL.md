@@ -107,6 +107,7 @@ copies components, or flash from `firmware/v4/`). Secrets: `dsc_bridge_*`,
 - [ ] `sensor.dsc_fleet_version_status` → **ok** after all flashes (firmware train only; surface not compared)
 - [ ] `/dsc-hub-pro/home` + Learning Phase B controls present (B default off)
 - [ ] Panel ESP-NOW UP; Bridge Anchor SoftAP up; Sonoffs follow via bridge (HA followers fallback)
+- [ ] After a secrets/OTA recovery pass: `binary_sensor.dsc_bridge_hub_esp_now_link` on once RF settles — see [`docs/qa/FLEET-RECOVERY-5.2.0.md`](docs/qa/FLEET-RECOVERY-5.2.0.md)
 
 ---
 

@@ -1690,6 +1690,8 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 
 ## Fleet recovery (2026-08-09) — secrets + 5.2.0 OTA pass
 
+Ops runbook (procedure + pitfalls): [`docs/qa/FLEET-RECOVERY-5.2.0.md`](qa/FLEET-RECOVERY-5.2.0.md).
+
 - **Secrets:** Lab ↔ HA `/config/esphome/secrets.yaml` fingerprints matched for all live device keys (API/OTA/AP/espnow/hosts). Only missing kit SoftAP `dsc_setup_ap_password` — appended from lab. Components `dsc_api_client` + `dsc_anchor_ap` present under `/config/esphome/components/`.
 - **Repo:** pushed `4985431` — Sonoff FW sensor + Control branding → 5.2.0; lab hub `bridge_mac` → Anchor BSSID; fleet chip no longer compares HA surface 6.x to firmware train; `generate-secrets.sh` emits bridge/anchor/host keys. `dsc_v4_version.yaml` SCP’d to HA packages.
 - **OTA done (ESPHome Device Builder):**

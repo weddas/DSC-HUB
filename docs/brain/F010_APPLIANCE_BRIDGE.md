@@ -82,7 +82,9 @@ flowchart LR
 4. Power-cycle hub if unreachable, then ESPHome **Install** so the substitution is compiled in.
 5. Confirm Hub ESP-NOW Link True + demand `0xD8` / vitals `0xD1`, then optionally pin SoftAP via `wifi_bssid`.
 
-**Pitfalls:** `bridge_mac` ≠ `wifi_bssid`; Sonoffs API True with Hub ESP-NOW Link False usually means hub never got the paste (or radio/channel), not a Sonoff fault; do not force SoftAP `wifi_bssid` before ESP-NOW is green if Nest-path OTA is still needed.
+**Pitfalls:** `bridge_mac` ≠ `wifi_bssid`; Sonoffs API True with Hub ESP-NOW Link False usually means hub never got the paste (or radio/channel), not a Sonoff fault; do not force SoftAP `wifi_bssid` before ESP-NOW is green if Nest-path OTA is still needed; **never** run `_patch_bridge_secrets.py` on live HA secrets (deterministic lab placeholders).
+
+**Recovery OTA runbook:** after Bridge bring-up, match secrets then flash firmware **5.2.0** per [`docs/qa/FLEET-RECOVERY-5.2.0.md`](../qa/FLEET-RECOVERY-5.2.0.md). Confirm `binary_sensor.dsc_bridge_hub_esp_now_link` before locking SoftAP.
 
 ## Deferred
 

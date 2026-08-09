@@ -55,6 +55,7 @@ flowchart LR
 | [`RELEASE.md`](RELEASE.md) | What’s new, rollout checklist |
 | [`scripts/ADDON.md`](scripts/ADDON.md) | Lab HA delivery — HAOS Sync add-on |
 | [`docs/qa/FIRMWARE-QA-5.1.0.md`](docs/qa/FIRMWARE-QA-5.1.0.md) | Firmware Validate / flash QC |
+| [`docs/qa/FLEET-RECOVERY-5.2.0.md`](docs/qa/FLEET-RECOVERY-5.2.0.md) | Secrets match + 5.2.0 OTA recovery after Bridge |
 | [`docs/qa/ADDON-QA-5.1.0.md`](docs/qa/ADDON-QA-5.1.0.md) | Sync add-on QC |
 | [`homeassistant/README.md`](homeassistant/README.md) | Packages, HACS, entity notes |
 | [`docs/qa/LIVE-UI-BUILD-A-PLANT.md`](docs/qa/LIVE-UI-BUILD-A-PLANT.md) | Build a Plant composition ops (N-083) |
