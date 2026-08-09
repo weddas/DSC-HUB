@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sqlite3
 import sys
 import time
@@ -184,7 +185,21 @@ def main(argv: list[str] | None = None) -> int:
     )
     ap.add_argument("--no-link", action="store_true")
     ap.add_argument("--no-search", action="store_true")
+    ap.add_argument(
+        "--link-only",
+        action="store_true",
+        help="skip staging merge; run science↔seed link (+ optional search) only",
+    )
     args = ap.parse_args(argv)
+
+    # Live exclusive wrapper may still omit --no-link; honor flag/env for next child.
+    force_no_link = (
+        os.environ.get("N087_FORCE_NO_LINK", "").strip() in ("1", "true", "yes")
+        or (ROOT / "brain" / "data" / "_n087_force_no_link.flag").exists()
+    )
+    if force_no_link and not args.link_only:
+        args.no_link = True
+        print("N087_FORCE_NO_LINK: treating as --no-link")
 
     init_corpus(args.master)
     master = connect(args.master)
@@ -196,32 +211,37 @@ def main(argv: list[str] | None = None) -> int:
     master.execute("PRAGMA temp_store=MEMORY")
     before = corpus_stats(master)
 
-    dbs = list_staging_dbs(args.staging_dir)
-    if args.only:
-        dbs = [p for p in dbs if any(f.lower() in p.name.lower() for f in args.only)]
-
-    print(f"Merging {len(dbs)} staging DBs into {args.master} (no wipe; no attribute_kv)")
     results = []
-    for path in dbs:
-        try:
-            st = merge_one(master, path, include_raw=args.include_raw)
-            master.commit()
-            results.append(st)
-            c = st["counts"]
-            print(
-                f"  ok {path.name}: canonical={c.get('strain_canonical')} "
-                f"variant={c.get('strain_variant')} chem={c.get('chemistry_profile')} "
-                f"grow={c.get('grow_trait')} links={c.get('entity_link')}"
-            )
-        except Exception as exc:  # noqa: BLE001
-            master.rollback()
-            print(f"  FAIL {path.name}: {exc}")
-            results.append({"family": path.stem, "error": str(exc)})
+    if not args.link_only:
+        dbs = list_staging_dbs(args.staging_dir)
+        if args.only:
+            dbs = [p for p in dbs if any(f.lower() in p.name.lower() for f in args.only)]
+
+        print(f"Merging {len(dbs)} staging DBs into {args.master} (no wipe; no attribute_kv)")
+        for path in dbs:
+            try:
+                st = merge_one(master, path, include_raw=args.include_raw)
+                master.commit()
+                results.append(st)
+                c = st["counts"]
+                print(
+                    f"  ok {path.name}: canonical={c.get('strain_canonical')} "
+                    f"variant={c.get('strain_variant')} chem={c.get('chemistry_profile')} "
+                    f"grow={c.get('grow_trait')} links={c.get('entity_link')}"
+                )
+            except Exception as exc:  # noqa: BLE001
+                master.rollback()
+                print(f"  FAIL {path.name}: {exc}")
+                results.append({"family": path.stem, "error": str(exc)})
+    else:
+        print(f"link-only on {args.master} (no staging merge)")
 
     link_stats = {}
     if not args.no_link:
         link_stats = link_science_to_seed(master)
         print("science<->seed links:", link_stats)
+        # N-087-MERGE-NOLINK: --no-search used to skip this commit and drop link writes.
+        master.commit()
 
     docs = 0
     if not args.no_search:

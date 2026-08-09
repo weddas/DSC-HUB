@@ -613,74 +613,81 @@ def rebuild_search_docs(conn: sqlite3.Connection) -> int:
 def link_science_to_seed(conn: sqlite3.Connection) -> dict[str, int]:
     """Exact name_norm links from chemistry profiles to canonical/variants.
 
-    Skips edges that already exist (safe to re-run after incremental ingest).
+    Set-based INSERT…SELECT (NAS-safe). Skips edges that already exist.
+    Safe to re-run after incremental ingest.
     """
-    linked = 0
-    to_parent = 0
-    to_variant = 0
-    skipped = 0
-    for row in conn.execute(
-        "SELECT id, name_norm, name FROM chemistry_profile WHERE name_norm IS NOT NULL AND name_norm != ''"
-    ):
-        key = row["name_norm"]
-        parent = conn.execute(
-            "SELECT name_norm FROM strain_canonical WHERE name_norm=?", (key,)
-        ).fetchone()
-        if parent:
-            exists = conn.execute(
-                "SELECT 1 FROM entity_link WHERE from_kind=? AND from_id=? AND to_kind=? AND to_id=? LIMIT 1",
-                ("chemistry_profile", row["id"], "strain_canonical", key),
-            ).fetchone()
-            if exists:
-                skipped += 1
-            else:
-                add_link(
-                    conn,
-                    "chemistry_profile",
-                    row["id"],
-                    "strain_canonical",
-                    key,
-                    method="exact_name_norm",
-                    confidence=1.0,
-                    source="link_science_to_seed",
-                )
-                linked += 1
-                to_parent += 1
-        variants = conn.execute(
-            "SELECT id FROM strain_variant WHERE name_norm=?", (key,)
-        ).fetchall()
-        for v in variants:
-            exists = conn.execute(
-                "SELECT 1 FROM entity_link WHERE from_kind=? AND from_id=? AND to_kind=? AND to_id=? LIMIT 1",
-                ("chemistry_profile", row["id"], "strain_variant", v["id"]),
-            ).fetchone()
-            if exists:
-                skipped += 1
-                continue
-            add_link(
-                conn,
-                "chemistry_profile",
-                row["id"],
-                "strain_variant",
-                v["id"],
-                method="exact_name_norm",
-                confidence=1.0,
-                source="link_science_to_seed",
-            )
-            linked += 1
-            to_variant += 1
-        if not parent and not variants:
-            gap = conn.execute(
-                "SELECT 1 FROM followup_gap WHERE entity_kind=? AND entity_id=? AND field=? LIMIT 1",
-                ("chemistry_profile", row["id"], "seed_link"),
-            ).fetchone()
-            if not gap:
-                add_gap(conn, "chemistry_profile", row["id"], "seed_link", "no_matching_canonical")
+    # chemistry_profile → strain_canonical
+    cur = conn.execute(
+        """
+        INSERT INTO entity_link(id, from_kind, from_id, to_kind, to_id, method, confidence, source)
+        SELECT lower(hex(randomblob(16))),
+               'chemistry_profile', c.id, 'strain_canonical', c.name_norm,
+               'exact_name_norm', 1.0, 'link_science_to_seed'
+        FROM chemistry_profile c
+        INNER JOIN strain_canonical s ON s.name_norm = c.name_norm
+        WHERE c.name_norm IS NOT NULL AND c.name_norm != ''
+          AND NOT EXISTS (
+            SELECT 1 FROM entity_link e
+            WHERE e.from_kind = 'chemistry_profile'
+              AND e.from_id = c.id
+              AND e.to_kind = 'strain_canonical'
+              AND e.to_id = c.name_norm
+          )
+        """
+    )
+    to_parent = cur.rowcount if cur.rowcount is not None and cur.rowcount >= 0 else 0
+
+    # chemistry_profile → strain_variant
+    cur = conn.execute(
+        """
+        INSERT INTO entity_link(id, from_kind, from_id, to_kind, to_id, method, confidence, source)
+        SELECT lower(hex(randomblob(16))),
+               'chemistry_profile', c.id, 'strain_variant', v.id,
+               'exact_name_norm', 1.0, 'link_science_to_seed'
+        FROM chemistry_profile c
+        INNER JOIN strain_variant v ON v.name_norm = c.name_norm
+        WHERE c.name_norm IS NOT NULL AND c.name_norm != ''
+          AND NOT EXISTS (
+            SELECT 1 FROM entity_link e
+            WHERE e.from_kind = 'chemistry_profile'
+              AND e.from_id = c.id
+              AND e.to_kind = 'strain_variant'
+              AND e.to_id = v.id
+          )
+        """
+    )
+    to_variant = cur.rowcount if cur.rowcount is not None and cur.rowcount >= 0 else 0
+
+    # Gaps: chem rows with name_norm but no canonical and no variant match
+    cur = conn.execute(
+        """
+        INSERT INTO followup_gap(entity_kind, entity_id, field, reason, created_at)
+        SELECT 'chemistry_profile', c.id, 'seed_link', 'no_matching_canonical',
+               strftime('%Y-%m-%dT%H:%M:%SZ', 'now')
+        FROM chemistry_profile c
+        WHERE c.name_norm IS NOT NULL AND c.name_norm != ''
+          AND NOT EXISTS (
+            SELECT 1 FROM strain_canonical s WHERE s.name_norm = c.name_norm
+          )
+          AND NOT EXISTS (
+            SELECT 1 FROM strain_variant v WHERE v.name_norm = c.name_norm
+          )
+          AND NOT EXISTS (
+            SELECT 1 FROM followup_gap g
+            WHERE g.entity_kind = 'chemistry_profile'
+              AND g.entity_id = c.id
+              AND g.field = 'seed_link'
+          )
+        """
+    )
+    gaps = cur.rowcount if cur.rowcount is not None and cur.rowcount >= 0 else 0
+
     return {
-        "linked": linked,
+        "linked": to_parent + to_variant,
         "to_parent": to_parent,
         "to_variant": to_variant,
-        "skipped_existing": skipped,
+        "gaps_added": gaps,
+        "skipped_existing": -1,  # set-based; not counted per-row
     }
 
 

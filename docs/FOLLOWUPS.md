@@ -1529,13 +1529,13 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 | ID | Item | Notes |
 |---|---|---|
 | F-N087-LOCK | Multi-agent master SQLite contention | Concurrent `merge_staging_to_master`, nuclear PowerShell `Stop-Process` watchdogs, and NAS SMB locks killed serialized merges mid-txn (RC -1 / network errors). Need a single exclusive merge lease (file lock + no foreign killers). **2026-08-08:** `north_atlantic` staging ready (2953; prefer over `north_atlantic_local` 3043) — merge blocked after 10+ retries; master has `source_record` `northatlantic` but **0** variants/grow. **2026-08-09:** exclusive sole-writer+shepherd is the lease — keep parallel writers off; north_atlantic still in remaining queue. |
-| N-087-MERGE-LINK-NAS | Exclusive merge: per-family link on NAS (in progress) | **2026-08-09 morning AEST (probed):** sole-writer exclusive still alive — wrapper **41208** / child **66108** (`merge --only seedsman --no-search`) / shepherd **50244** / cmd **72996**; shepherd `done_ok=2/207`, WAL ~250MB growing. **Do not restart mid-family.** Root cause stands: typed merges are small; dominant cost is `link_science_to_seed` scanning **all** master chem (now ≫359k) with per-row SQLite on NAS (~0% CPU). Staging ~180MB / 89923 raw is a red herring (raw not copied without `--include-raw`). **phytochem_smith [1/207]:** typed print OK (chem=3087) then **FAIL** `sqlite3.OperationalError: disk I/O error` inside `add_link` during link (~88342s, ~2026-08-08 23:26Z) — exclusive continued. **Verify when exclusive idle:** whether phytochem typed/link rows committed or rolled back (RO probe hung under writer 2026-08-09). **Then OK:** cannaconnection [2], cannareviews [3] (full link each). Wrapper still **no `--no-link`** — later families remain untenable if each re-links full chem. |
-| N-087-MERGE-NOLINK | Post-family: `--no-link` + one link pass | **Open (do not interrupt seedsman).** After current family finishes: switch `_n087_exclusive_merge.py` to `--no-link` for remaining families + single `link_science_to_seed` at end; fix missing `commit()` after link when `--no-search`; prefer set-based `INSERT…SELECT` linking; optional local-SSD merge. If phytochem typed missing after verify, re-merge `--only phytochem_smith --no-link --no-search` before/within remaining queue. |
+| N-087-MERGE-LINK-NAS | Exclusive merge: per-family link on NAS | **Done 2026-08-09 (mitigated):** seedsman NAS link stalled (WAL ~257MB, ~0% CPU); killed at typed boundary; finished via local-SSD `--no-link` + one end-link. See afternoon snapshot below. |
+| N-087-MERGE-NOLINK | Post-family: `--no-link` + one link pass | **Done 2026-08-09:** wrapper/resume `--no-link`; commit-after-link; set-based link; `--link-only`; local-SSD runner. End-link + indexes OK. |
 
 ### deferred
 | ID | Item | Notes |
 |---|---|---|
-| D-N087-REMAIN | Finish priority families | Exclusive queue **207** families; **2026-08-09:** phytochem_smith FAIL (disk I/O on link — typed commit unverified); cannaconnection OK; cannareviews OK; **in flight seedsman [4/207]**. Still queued among others: cannabis_intelligence, leafly_flat_enrich, replication_labs, **north_atlantic** (prefer) + north_atlantic_local, medical_effects, cannia, pickle_archive, strains_master, seedfinder (journal), bank/forum dumps. Then `build_catalog_search_indexes.py` (wrapper runs index after all families). |
+| D-N087-REMAIN | Finish priority families | **Done 2026-08-09:** local-SSD exclusive drained 207-family plan (ok=205 + 2 already-OK); indexes rebuilt. |
 | D-N087-BATCH | merge_staging batch inserts | Added `executemany` batches + `PRAGMA synchronous=NORMAL` in `merge_staging_to_master.py` to survive NAS latency; keep. |
 
 
@@ -1660,25 +1660,33 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 ### exclusive merge (master `dsc_brain.sqlite3`)
 | ID | Status | Notes |
 |---|---|---|
-| N-087-EXCL | **in progress** | Sole-writer plan unchanged (207 staging families). Alive: wrapper 41208 / child 66108 / shepherd 50244 / cmd 72996. Log at `[4/207] seedsman` (`--no-search`, still links). Shepherd `done_ok=2/207`. |
-| N-087-MERGE-LINK-NAS | **open / in progress** | See serialize-pass row above — refresh only; do not duplicate. phytochem FAIL disk I/O on link; cannaconnection+cannareviews OK; switch to `--no-link` still pending (N-087-MERGE-NOLINK). |
+| N-087-EXCL | **done (local-SSD)** | Finished 2026-08-09 afternoon AEST via `_n087_local_ssd_merge.py`. Stalled seedsman NAS link killed at typed boundary; remaining 205 families `--no-link` on local SSD; one end-link + indexes; master copied back (`dsc_brain.sqlite3.pre_local_ssd` bak). Summary: ok=205 fail=0 skipped_already_ok=2; canonical≈181473 chem≈602737 entity_link≈2752186 grow≈89235. |
+| N-087-MERGE-LINK-NAS | **done (mitigated)** | Per-family full-chem link abandoned. Wrapper/resume pass `--no-link --no-search`; `merge_staging_to_master` commits after link; `--link-only` + set-based `link_science_to_seed`; force flag `_n087_force_no_link.flag` for live children. End-link added **1.61M** variant edges in ~164s on local SSD. |
+| N-087-MERGE-NOLINK | **done** | See above; exclusive + resume scripts updated. |
 | N-087-COLLATION | **done (gaps deferred)** | Contract SoT [`docs/qa/CATALOG-COLLATION-CONTRACT.md`](qa/CATALOG-COLLATION-CONTRACT.md); pointers unchanged. No schema refactor mid-merge. |
-| N-087-BACKUP | **done** | Durable `_BACKUP_N087_2026-08-08` (~9.5GB) present; earlier git backup commit fc8c4cc. |
+| N-087-BACKUP | **done** | Durable `_BACKUP_N087_2026-08-08` (~9.5GB) present; earlier git backup commit fc8c4cc; plus `pre_local_ssd` bak before copy-back. |
 
 ### scrapes / corpus
 | ID | Status | Notes |
 |---|---|---|
-| S-SEEDFINDER | **blocked (CF)** | **2026-08-09 probed:** scrape pid 55216 + watchdog dead. Last stdout ~**10266/40638** then `CF_BLOCKED` on critical-sensi-star/delicious-seeds; staging_stats raw≈**10291** / canonical≈8891 / grow≈10291 / chem≈1160. Heartbeat stale (started 2026-08-08T04:30Z). Resume needs browser CF then checkpoint continue — do not thrash. |
-| S-STRAINDB | **paused** | n=213 PAUSED_CF; past resume_after; explicit ask to resume. |
-| S-TIERA-HALF1 | **done (dump/staging)** | 96 attempted / 68 ok / 13343 items — merge deferred. |
-| S-TIERA-2ND | **done (dump/staging)** | complete=true; 2806 items — merge deferred. |
-| Bank/forum dumps | **deferred merge** | Priority banks + Wave2 + forums etc. sit in staging; exclusive queue is the merge path. |
+| S-SEEDFINDER | **still blocked for urllib scrape** | Partial merge landed (staging ~10291 → master). 2026-08-09: Cursor browser cleared CF (homepage OK) but plain `urllib` probe to blocked PDP still **HTTP 403** — clearance is not IP-shared to the scraper. Do **not** thrash resume until cookie/browser-backed fetch exists or CF cools for urllib. Checkpoint remains ~10.3k/40638. |
+| S-STRAINDB | **paused (explicit ask only)** | n=213 PAUSED_CF; **not resumed** this pass (plan gate). Partial staging (213) merged into master via exclusive queue. |
+| S-TIERA-HALF1 | **done (dump/staging + merged)** | Was dump+staging; now included in local-SSD exclusive queue. |
+| S-TIERA-2ND | **done (dump/staging + merged)** | Was dump+staging; now included in local-SSD exclusive queue. |
+| Bank/forum dumps | **merged** | Priority banks + Wave2 + forums + thin-field families drained via local-SSD exclusive (207 plan). |
 
 ### open punch (merge speed / honesty)
-- [ ] After seedsman (or next safe boundary): exclusive wrapper → `--no-link` for remaining families + one link pass; commit-after-link under `--no-search`.
-- [ ] When exclusive idle: verify phytochem_smith chem/links on master; re-merge with `--no-link` if typed rolled back after disk I/O FAIL.
-- [ ] SeedFinder: CF clear + resume sitemap scrape from checkpoint (~10.3k).
-- [ ] StrainDB: CF/cookie re-import then headed resume at n=213 (8–20s jitter).
+- [x] After seedsman (or next safe boundary): exclusive wrapper → `--no-link` for remaining families + one link pass; commit-after-link under `--no-search`.
+- [x] When exclusive idle: verify phytochem_smith chem/links on master; re-merge with `--no-link` if typed rolled back after disk I/O FAIL. (chem was **0** on copy; re-merged OK on local SSD.)
+- [ ] SeedFinder: urllib still 403 after browser CF (2026-08-09); need cookie-aware / headed fetch or cool-down — then resume checkpoint (~10.3k) + `--only seedfinder --no-link` refresh.
+- [ ] StrainDB: CF/cookie re-import then headed resume at n=213 (8–20s jitter) — **wait for explicit ask** (not resumed this pass).
+
+### tooling landed this pass
+- [`brain/data/_n087_exclusive_merge.py`](brain/data/_n087_exclusive_merge.py) / [`_n087_exclusive_merge_resume.py`](brain/data/_n087_exclusive_merge_resume.py): `--no-link`, skip OK, end-link before indexes.
+- [`brain/data/_n087_local_ssd_merge.py`](brain/data/_n087_local_ssd_merge.py): NAS bypass sole-writer path.
+- [`scripts/merge_staging_to_master.py`](scripts/merge_staging_to_master.py): `--link-only`, force-no-link flag/env, commit after link.
+- [`brain/dsc_brain/corpus.py`](brain/dsc_brain/corpus.py): set-based `link_science_to_seed`.
+- HA indexes rebuilt: `homeassistant/www/dsc-catalog/dsc_strains_search_index.json` (cap 2500) + nutrients/mediums/lights.
 
 ## Fleet bring-up (2026-08-08 evening) — live status snapshot
 
@@ -1699,4 +1707,26 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
   - Pot1 `.47` / Pot2 `.22` / Pot4 `.49` → OTA successful
 - **Still open:** Pot3 offline (no Install path); Bridge left as-is (already 5.2.0 online earlier); confirm `binary_sensor.dsc_bridge_hub_esp_now_link` after RF settle; optional Lock WiFi to Anchor BSSID once link green.
 - **Do not** run `_patch_bridge_secrets.py` on live secrets (deterministic lab placeholders).
+
+## Hub↔Bridge ESP-NOW never links (2026-08-09 afternoon)
+
+**Symptoms:** `binary_sensor.dsc_bridge_hub_esp_now_link` stuck `off`; `sensor.dsc_bridge_esp_now_age` capped at `600000`; Control `panel_link` / pot ESP-NOW also dark. Secrets/cmd_tag/MAC were already aligned.
+
+**Root causes (stacked):**
+
+1. **Nest channel split (F-004):** Hub STA on Nest reported **ch2** (`RF|H|…|2|…|CHX`); bridge SoftAP/ESP-NOW was fixed on **ch11**. Packets never meet.
+2. **SoftAP preference orphans hub:** Hub wifi lab preferred `DSC-Anchor` (prio 15/20) over Nest. SoftAP on ETH01 has **no LAN/NAT** → hub can associate SoftAP, lose `.23`, and vanish from HA while ESP-NOW still fails.
+3. **ESPHome ESP-NOW `WIFI_IF_STA` on SoftAP-only bridge:** Stock `espnow` adds peers with `ifidx=WIFI_IF_STA`. SoftAP flips mode to APSTA after espnow LATE init — peers left on STA drop RF. `dsc_anchor_ap` now rebinds peers onto `WIFI_IF_AP` after SoftAP comes up.
+
+**Actions taken:**
+
+- Live + lab bridge `anchor_channel: "2"` (match Nest). Bridge OTA’d from local non-UNC build.
+- SoftAP temporarily renamed **`DSC-Anchor-hold`** (kick SoftAP clients; restore `DSC-Anchor` after hub Nest priority is flashed).
+- `dsc_anchor_ap.cpp`: rebind ESP-NOW peers → `WIFI_IF_AP` after SoftAP. SCP’d to `/config/esphome/components/`.
+- Hub wifi lab: **Nest priority above SoftAP** (SoftAP fallback only). Needs hub Install once LAN is back.
+- Lock WiFi left OFF; preferred BSSID set to Nest `C4:E3:CE:68:73:93`.
+
+**Blocked:** Hub `.23` still unreachable after SoftAP hold + restart — **needs physical power-cycle**. Then: confirm Nest SSID + link; Install hub wifi-priority change; restore SoftAP SSID `DSC-Anchor`; re-verify `hub_esp_now_link`.
+
+**Follow-up design debt:** SoftAP cannot be the preferred STA path until ETH01 SoftAP bridges/NATs onto Ethernet (or Nest is locked to SoftAP channel). Track under F-004/F-012.
 
