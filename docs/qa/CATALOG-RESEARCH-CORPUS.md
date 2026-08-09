@@ -65,6 +65,12 @@ python scripts/merge_staging_to_master.py
 python scripts/merge_staging_to_master.py --only seedcity --only kushy
 # raw_record stays in staging unless: --include-raw
 
+# Prefer on NAS (see merge-link section below):
+python scripts/merge_staging_to_master.py --only phytochem_smith --no-link --no-search
+# …repeat per family…
+python scripts/merge_staging_to_master.py --no-search   # one link pass over all chem
+python scripts/merge_staging_to_master.py --no-link      # optional: rebuild search docs
+
 # 4) HA indexes from master
 python scripts/build_catalog_search_indexes.py
 ```
@@ -72,6 +78,44 @@ python scripts/build_catalog_search_indexes.py
 **Migration of current master:** existing `dsc_brain.sqlite3` is fine to keep. Schema v3 adds `raw_record` additively on connect. Prefer new waves to staging first, then merge; do not `--reset` master. Optional: re-run `--per-source-staging` for sources you want full payloads archived, then merge.
 
 **Fan-out workers:** each worker writes only its family staging file (no shared master writers). Serialize `merge_staging_to_master` + index rebuild. Discovery agents stay inventory-only.
+
+## Merge-link on NAS (N-087-MERGE-LINK-NAS)
+
+**Symptom:** exclusive merge appears stuck for hours on a small family (e.g. `[1/207] phytochem_smith` with ~3087 typed chem) while CPU ~0% and WAL crawls (~KB/s).
+
+**Cause (verified in `merge_staging_to_master.py` + `brain/dsc_brain/corpus.py`):** within one script invocation, families commit typed rows first; then, unless `--no-link`, **one** `link_science_to_seed(master)` runs — a Python per-row loop over **all** `chemistry_profile` rows (~hundreds of thousands) with exact `name_norm` lookups. Staging size / `raw_record` count is a red herring: without `--include-raw`, fat staging payloads are not copied.
+
+Operators often invoke `--only <family>` once per family for exclusive windows. Each invocation still pays the full link cost unless `--no-link` — that is why later families become untenable on NAS.
+
+```mermaid
+flowchart TD
+  loop["for each staging DB"] --> fam["merge_one + commit"]
+  fam --> more{"more families?"}
+  more -->|yes| loop
+  more -->|no| link{"--no-link?"}
+  link -->|no| full["link_science_to_seed all chem"]
+  link -->|yes| searchGate["skip link"]
+  full --> search{"--no-search?"}
+  searchGate --> search
+  search -->|no| docs["rebuild_search_docs + commit"]
+  search -->|yes| close["close — link txn may be uncommitted"]
+```
+
+| Flag | Effect |
+|---|---|
+| `--no-link` | Skip `link_science_to_seed` after the family loop |
+| `--no-search` | Skip `rebuild_search_docs` (and the only `commit()` after the link block) |
+| `--include-raw` | Also copy `raw_record` (usually leave fat payloads in staging) |
+| `--only <substr>` | Case-insensitive filename filter; still links **all** master chem unless `--no-link` |
+
+**Operator rules**
+
+1. **Do not restart** a long-running exclusive merge that is still advancing WAL / journal — hours on the link pass is expected on SMB/NAS.
+2. For multi-family waves: invoke each family with `--no-link --no-search`, then run **one** final invocation without `--no-link` (empty/`--only` already-merged family is fine) so link runs once.
+3. **Risk:** with `--no-search`, code may not `commit()` after `link_science_to_seed` before `close()` — link/gap writes can roll back. Prefer a link pass that also rebuilds search docs, or verify link counts via `report_science_seed_links.py` after close.
+4. Safe speedups (code follow-ups, not docs fiction): commit after link under `--no-search`; set-based `INSERT…SELECT` linking; optional local-SSD merge then swap.
+
+See FOLLOWUPS **N-087-MERGE-LINK-NAS** / **F-N087-LOCK**.
 
 ## Schema highlights
 
@@ -120,8 +164,7 @@ Fat dumps under `homeassistant/data/dsc_*.json` and `media/` are **gitignored**.
 
 **Capture policy (N-087):** Maximize staging capture; match later. Keep FULL raw HTML/JSON/CSV rows, reviews, prices, brands, scores, lineage text, forum excerpts — do not drop "unused" fields. Prefer over-capture in staging over premature filtering (NAS >1 TB).
 
-**Overflow policy:** Staging 
-aw_record keeps FULL source payloads (NAS capacity). Master stores typed identity + chemistry + grow + links + rich payload_json (+ structured extras when parseable; never invent). ttribute_kv is for smaller bank/product rows only so master stays usable.
+**Overflow policy:** Staging `raw_record` keeps FULL source payloads (NAS capacity). Master stores typed identity + chemistry + grow + links + rich payload_json (+ structured extras when parseable; never invent). `attribute_kv` is for smaller bank/product rows only so master stays usable.
 
 ## Honesty rules
 
