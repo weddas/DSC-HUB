@@ -61,17 +61,66 @@ python scripts/ingest_corpus_dumps.py --per-source-staging --only leafly
 python scripts/ingest_corpus_dumps.py --staging-db brain/data/staging/kushy.sqlite3 --source-id kushy --only kushy
 
 # 3) Merge staging -> master (additive; keeps both chem rows when conflicting)
-python scripts/merge_staging_to_master.py
-python scripts/merge_staging_to_master.py --only seedcity --only kushy
+# Prefer --no-link --no-search per family, then one end-link (see Merge-link ops below)
+python scripts/merge_staging_to_master.py --only seedcity --no-link --no-search
+python scripts/merge_staging_to_master.py --only kushy --no-link --no-search
 # raw_record stays in staging unless: --include-raw
 
-# 4) HA indexes from master
+# 4) One science↔seed link pass after typed merges (set-based; commits even with --no-search)
+python scripts/merge_staging_to_master.py --link-only --no-search
+
+# 5) HA indexes from master
 python scripts/build_catalog_search_indexes.py
 ```
 
 **Migration of current master:** existing `dsc_brain.sqlite3` is fine to keep. Schema v3 adds `raw_record` additively on connect. Prefer new waves to staging first, then merge; do not `--reset` master. Optional: re-run `--per-source-staging` for sources you want full payloads archived, then merge.
 
 **Fan-out workers:** each worker writes only its family staging file (no shared master writers). Serialize `merge_staging_to_master` + index rebuild. Discovery agents stay inventory-only.
+
+## Merge-link ops (N-087-MERGE-NOLINK / local-SSD)
+
+**Why:** `link_science_to_seed` used to walk **every** `chemistry_profile` row after each family merge. On SMB/NAS that looks like a hung small-family merge (WAL grows, CPU ~0%). Hours “stuck” after a tiny family is almost always the full-chem link, not typed INSERT.
+
+**Default pattern (sole writer):**
+
+```text
+per family:  merge_staging_to_master.py --only <family> --no-link --no-search
+once:        merge_staging_to_master.py --link-only --no-search
+once:        build_catalog_search_indexes.py
+```
+
+```mermaid
+flowchart LR
+  fam["Per-family typed merge<br/>--no-link --no-search"] --> endLink["--link-only<br/>set-based link + commit"]
+  endLink --> idx["build_catalog_search_indexes"]
+  idx --> ha["/local/dsc-catalog"]
+```
+
+| Flag / lever | Behavior (verified) |
+|---|---|
+| `--no-link` | Skip science↔seed linking for this invocation |
+| `--no-search` | Skip `rebuild_search_docs`; **link path still `commit()`s** after `link_science_to_seed` |
+| `--link-only` | Skip staging merge; run link (+ optional search) only |
+| `N087_FORCE_NO_LINK=1` or `brain/data/_n087_force_no_link.flag` | Coerces next non-`--link-only` child to `--no-link` (live exclusive wrappers) |
+| `link_science_to_seed` | Set-based `INSERT…SELECT` exact `name_norm` → canonical + variants; skip existing edges; add `followup_gap` for unmatched chem |
+
+**Exclusive / local-SSD runners** (lab Windows paths; gitignored data under `brain/data/`):
+
+| Script | Job |
+|---|---|
+| `brain/data/_n087_exclusive_merge.py` | Sole-writer over plan file; per-family `--no-link --no-search`; end `--link-only`; then indexes |
+| `brain/data/_n087_exclusive_merge_resume.py` | Resume from results jsonl (skip OK families) |
+| `brain/data/_n087_local_ssd_merge.py` | Copy master (+WAL) to `%TEMP%`, merge remaining plan locally, end-link + indexes, copy master back (`*.pre_local_ssd` bak) |
+
+**2026-08-09 finish (source of truth in FOLLOWUPS):** local-SSD drained 207-family plan (`ok=205`, `fail=0`, `skipped_already_ok=2`); end-link added ~1.61M variant edges in ~164s on SSD; master approx canonical≈181473 / chem≈602737 / entity_link≈2752186 / grow≈89235. Committed HA strains index (`built_at` 2026-08-09T06:01:16Z): **2500** (`with_want=12`, `with_height=6`).
+
+**Constraints / pitfalls:**
+
+- Serialize all master writers (FOLLOWUPS **F-N087-LOCK**). Prefer local-SSD when NAS link I/O stalls.
+- Do **not** kill a “stuck” merge mid-txn without checking whether it is still in typed merge vs full-chem link.
+- Clear `_n087_force_no_link.flag` before `--link-only` (runners unlink it; manual runs must too).
+- Staging stays SoT for fat `raw_record`; never bulk Leafly scores into master `attribute_kv`.
+- Exact `name_norm` only — no fuzzy auto-links.
 
 ## Schema highlights
 
@@ -120,8 +169,7 @@ Fat dumps under `homeassistant/data/dsc_*.json` and `media/` are **gitignored**.
 
 **Capture policy (N-087):** Maximize staging capture; match later. Keep FULL raw HTML/JSON/CSV rows, reviews, prices, brands, scores, lineage text, forum excerpts — do not drop "unused" fields. Prefer over-capture in staging over premature filtering (NAS >1 TB).
 
-**Overflow policy:** Staging 
-aw_record keeps FULL source payloads (NAS capacity). Master stores typed identity + chemistry + grow + links + rich payload_json (+ structured extras when parseable; never invent). ttribute_kv is for smaller bank/product rows only so master stays usable.
+**Overflow policy:** Staging `raw_record` keeps FULL source payloads (NAS capacity). Master stores typed identity + chemistry + grow + links + rich `payload_json` (+ structured extras when parseable; never invent). `attribute_kv` is for smaller bank/product rows only so master stays usable.
 
 ## Honesty rules
 
@@ -132,4 +180,4 @@ aw_record keeps FULL source payloads (NAS capacity). Master stores typed identit
 - Unfamiliar seed/product fields → staging `raw_record` (bulk) or `attribute_kv` (small); lab typed evidence in `payload_json`.
 - Cloudflare / captcha walls (strain-database.com, Leafly live, Weedmaps, Wikileaf live): stop; user authenticates in browser, then resume scrape.
 
-See also: [`CATALOG-COLLATION-CONTRACT.md`](CATALOG-COLLATION-CONTRACT.md) (layers, notes, reviews→wordcloud, lineage edges, merge order), [`CATALOG-SCIENCE-SEED-LINKS.md`](CATALOG-SCIENCE-SEED-LINKS.md), [`CATALOG-GAPS.md`](CATALOG-GAPS.md), FOLLOWUPS **N-087**.
+See also: [`CATALOG-COLLATION-CONTRACT.md`](CATALOG-COLLATION-CONTRACT.md) (layers, notes, reviews→wordcloud, lineage edges, merge order), [`CATALOG-SCIENCE-SEED-LINKS.md`](CATALOG-SCIENCE-SEED-LINKS.md), [`CATALOG-GAPS.md`](CATALOG-GAPS.md), FOLLOWUPS **N-087** / **N-087-MERGE-NOLINK** / **N-087-EXCL** (2026-08-09 afternoon snapshot).

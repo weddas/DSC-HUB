@@ -4,6 +4,8 @@ Generated: 2026-08-07T14:37:43Z
 
 Matching policy: exact `name_norm` → canonical parent; also link matching variants. Fuzzy matches are not applied unless logged with confidence < 1.0.
 
+**Linker implementation (2026-08-09):** `brain/dsc_brain/corpus.py` `link_science_to_seed` is set-based `INSERT…SELECT` (NAS-safe). Prefer one end-link via `merge_staging_to_master.py --link-only` after typed `--no-link` family merges — see [`CATALOG-RESEARCH-CORPUS.md`](CATALOG-RESEARCH-CORPUS.md) § Merge-link ops. Table counts below are a mid-ingest snapshot; post exclusive local-SSD finish, FOLLOWUPS records master `entity_link≈2752186` and end-link ~1.61M new variant edges.
+
 ## Coverage
 
 | Metric | Count |

@@ -1686,7 +1686,8 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 - [`brain/data/_n087_local_ssd_merge.py`](brain/data/_n087_local_ssd_merge.py): NAS bypass sole-writer path.
 - [`scripts/merge_staging_to_master.py`](scripts/merge_staging_to_master.py): `--link-only`, force-no-link flag/env, commit after link.
 - [`brain/dsc_brain/corpus.py`](brain/dsc_brain/corpus.py): set-based `link_science_to_seed`.
-- HA indexes rebuilt: `homeassistant/www/dsc-catalog/dsc_strains_search_index.json` (cap 2500) + nutrients/mediums/lights.
+- HA indexes rebuilt (`built_at` 2026-08-09T06:01Z): strains **2500** (`with_want=12`, `with_height=6`); nutrients **3**; mediums **5**; lights **517**.
+- Ops runbook (flags + local-SSD diagram): [`docs/qa/CATALOG-RESEARCH-CORPUS.md`](qa/CATALOG-RESEARCH-CORPUS.md) § Merge-link ops.
 
 ## Fleet bring-up (2026-08-08 evening) — live status snapshot
 
