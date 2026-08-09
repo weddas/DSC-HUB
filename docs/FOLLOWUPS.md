@@ -1477,7 +1477,7 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 ### deferred / honesty
 
 - BudProfiles API offline (empty shell dump)
-- SeedFinder alphabetical pages are JS-rendered — sitemap/API scrape still needed for full SF dump
+- SeedFinder alphabetical pages are JS-rendered — sitemap scrape in progress then **CF-blocked** (~10.3k/40638 as of 2026-08-09; see S-SEEDFINDER). Resume after browser CF; full SF dump still incomplete.
 - Seedsman / some bank list routes 404 or bot-walled — discovery list retained for next wave
 - Cannlytics uses MD state CSV (strain_name present); full multi-state / `data/all` (~2.5GB) not ingested this pass
 - **2026-08-08 Cannlytics HF expand (job #3):** `import_lab_terpenes_cannlytics.py` multi-state → dumps `dsc_lab_terpenes_cannlytics_{state}.json` + staging `cannlytics_expand.sqlite3` (CC-BY-4.0). CSV OK: ny/ut/mi/hi/ma/nv/fl (+ ca CSV cached). **404 xlsx-only:** wa/ct/co. **No strain names:** ri/or. Staging ~82k chem / ~73k unique (`attribute_kv=0`); unique-first projection; pesticide panels stay in dumps/CSV not master attrs. CA full JSON dump skipped (SMB Errno 22 on multi-GB write); CA staging interrupted mid-pass — resume `python scripts/run_lab_state_expand.py --state ca` then `merge_staging_to_master.py --only cannlytics_expand` when master unlocked. Do not pull `data/all`.
@@ -1520,20 +1520,22 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 
 - **2026-08-08 strain-database Chrome v20 cookies**: `chrome_cookies_for_domain.py` finds 4 host rows (incl. `cf_clearance`) but decrypt fails (`v20` + `app_bound_encrypted_key` / IElevator `DecryptData` ACCESS_DENIED for non-chrome.exe). Exported jar via Playwright profile `%LOCALAPPDATA%\Temp\dsc-chrome-fresh-pw` works in-browser; `curl_cffi` still 403 (CF clearance TLS-bound). Prefer headed Playwright scrape for this source until ABE export is fixed or scrape stays in-browser.
 - **2026-08-08 strain-database resume blocked (post-429):** Checkpoint/staging at **n=70** / 5000 EN (`brain/data/staging/strain_database.sqlite3` raw_record=70). After rate-limit storm, headed Playwright CF challenge briefly shows “Just a moment…” then collapses to `chrome-error://chromewebdata/` (`net::ERR_HTTP_RESPONSE_CODE_FAILURE`). Soft-navigate after that error makes it worse — catch and leave challenge HTML. Do not expect urllib/curl_cffi alone. Never chrome://.
-- **2026-08-08 StrainDB paused by user:** Stop all scrape/probe traffic so CF can unlock. Checkpoint left intact at **n≈70**. **Resume only on explicit ask.** When resumed: headed Playwright path only, polite **delay ≥3–5s**, checkpoint often; no urllib/curl_cffi-alone, no chrome://, no auto cool-down resume.
+- **2026-08-08 StrainDB paused by user:** Stop all scrape/probe traffic so CF can unlock. Early pause was n≈70; later warm progressed then re-paused. **Resume only on explicit ask.** When resumed: headed Playwright path only, polite delay (prefer **8–20s** jitter per pause file), checkpoint often; no urllib/curl_cffi-alone, no chrome://, no auto cool-down resume.
+- **2026-08-09 StrainDB still paused:** `_pw_strain_db_PAUSE.txt` status=PAUSED_CF at **n=213**; `resume_after` was 2026-08-08T18:39+10; shepherd/scrape PIDs dead; not resumed. `save_cookies`/storage_state already try/except (non-fatal). Still needs CF pass / cookie re-import before headed resume — no tight retry.
 
 ## Staging→master serialize pass (2026-08-08)
 
 ### red-flag
 | ID | Item | Notes |
 |---|---|---|
-| F-N087-LOCK | Multi-agent master SQLite contention | Concurrent `merge_staging_to_master`, nuclear PowerShell `Stop-Process` watchdogs, and NAS SMB locks killed serialized merges mid-txn (RC -1 / network errors). Need a single exclusive merge lease (file lock + no foreign killers). **2026-08-08:** `north_atlantic` staging ready (2953; prefer over `north_atlantic_local` 3043) — merge blocked after 10+ retries; master has `source_record` `northatlantic` but **0** variants/grow. Re-run `--only north_atlantic.sqlite3` then `--only north_atlantic_local.sqlite3` when apply/journal/killers idle. |
-| N-087-MERGE-LINK-NAS | Exclusive merge stuck on phytochem link (expected) | **Do not restart running merge.** Hours on `[1/207] phytochem_smith` is normal: typed chem is tiny (~3087); cost is `link_science_to_seed` after each family — Python per-row round-trips over **all** master `chemistry_profile` (~359k) on NAS/SMB (~0% CPU, ~2 KB/s WAL). Staging ~180MB / 89923 raw is a red herring (raw not copied without `--include-raw`). **Risk:** with `--no-search`, merge may not `commit()` after link before close → link/gap writes possibly rolled back (verify when family finishes). **Later families untenable** if each re-runs full link. Safe post-phytochem speedups: per-family `--no-link` + one link pass at end; commit after link under `--no-search`; set-based `INSERT…SELECT` linking; optional local-SSD merge. |
+| F-N087-LOCK | Multi-agent master SQLite contention | Concurrent `merge_staging_to_master`, nuclear PowerShell `Stop-Process` watchdogs, and NAS SMB locks killed serialized merges mid-txn (RC -1 / network errors). Need a single exclusive merge lease (file lock + no foreign killers). **2026-08-08:** `north_atlantic` staging ready (2953; prefer over `north_atlantic_local` 3043) — merge blocked after 10+ retries; master has `source_record` `northatlantic` but **0** variants/grow. **2026-08-09:** exclusive sole-writer+shepherd is the lease — keep parallel writers off; north_atlantic still in remaining queue. |
+| N-087-MERGE-LINK-NAS | Exclusive merge: per-family link on NAS (in progress) | **2026-08-09 morning AEST (probed):** sole-writer exclusive still alive — wrapper **41208** / child **66108** (`merge --only seedsman --no-search`) / shepherd **50244** / cmd **72996**; shepherd `done_ok=2/207`, WAL ~250MB growing. **Do not restart mid-family.** Root cause stands: typed merges are small; dominant cost is `link_science_to_seed` scanning **all** master chem (now ≫359k) with per-row SQLite on NAS (~0% CPU). Staging ~180MB / 89923 raw is a red herring (raw not copied without `--include-raw`). **phytochem_smith [1/207]:** typed print OK (chem=3087) then **FAIL** `sqlite3.OperationalError: disk I/O error` inside `add_link` during link (~88342s, ~2026-08-08 23:26Z) — exclusive continued. **Verify when exclusive idle:** whether phytochem typed/link rows committed or rolled back (RO probe hung under writer 2026-08-09). **Then OK:** cannaconnection [2], cannareviews [3] (full link each). Wrapper still **no `--no-link`** — later families remain untenable if each re-links full chem. |
+| N-087-MERGE-NOLINK | Post-family: `--no-link` + one link pass | **Open (do not interrupt seedsman).** After current family finishes: switch `_n087_exclusive_merge.py` to `--no-link` for remaining families + single `link_science_to_seed` at end; fix missing `commit()` after link when `--no-search`; prefer set-based `INSERT…SELECT` linking; optional local-SSD merge. If phytochem typed missing after verify, re-merge `--only phytochem_smith --no-link --no-search` before/within remaining queue. |
 
 ### deferred
 | ID | Item | Notes |
 |---|---|---|
-| D-N087-REMAIN | Finish priority families | Merged seedcity + kushy_crosses_local. Still need: cannabis_intelligence, phytochem_smith, leafly_flat_enrich, replication_labs, **north_atlantic** (prefer) + north_atlantic_local, medical_effects, cannia, pickle_archive, strains_master, cannaconnection, seedfinder (journal). Then `build_catalog_search_indexes.py`. |
+| D-N087-REMAIN | Finish priority families | Exclusive queue **207** families; **2026-08-09:** phytochem_smith FAIL (disk I/O on link — typed commit unverified); cannaconnection OK; cannareviews OK; **in flight seedsman [4/207]**. Still queued among others: cannabis_intelligence, leafly_flat_enrich, replication_labs, **north_atlantic** (prefer) + north_atlantic_local, medical_effects, cannia, pickle_archive, strains_master, seedfinder (journal), bank/forum dumps. Then `build_catalog_search_indexes.py` (wrapper runs index after all families). |
 | D-N087-BATCH | merge_staging batch inserts | Added `executemany` batches + `PRAGMA synchronous=NORMAL` in `merge_staging_to_master.py` to survive NAS latency; keep. |
 
 
@@ -1549,7 +1551,7 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 - Healthy local artifact with phytochem applied: `%TEMP%\dsc_phyto_merge_work\master_local.sqlite3` (quick_check=ok, chem=359252, phytochem_smith=3087).
 - `scripts/merge_staging_to_master.py`: commit leftover txn before `PRAGMA synchronous` (Python 3.14 / connect meta upsert).
 - Do not run parallel writers against master on SMB; serialize merges; prefer local merge then short apply, or single exclusive holder.
-- [ ] **Master merge contention (2026-08-08):** Parallel `merge_staging_to_master` / in-proc merges on NAS `dsc_brain.sqlite3` starve each other; CLI exits `-1` under lock; long `chemistry_profile` INSERT OR IGNORE txns hang. Serialize merges or use local master copy + swap. CannaReviews staging ready (~4195 raw) still pending exclusive window.
+- [x] **Master merge contention (2026-08-08 → exclusive):** Sole-writer exclusive lease running (`_n087_exclusive_merge.py` + shepherd). Parallel writers must stay off master. **2026-08-09:** CannaReviews merged OK in exclusive queue; phytochem link died on NAS disk I/O (see N-087-MERGE-LINK-NAS). Still prefer local-SSD merge or `--no-link`+one link for remaining families.
 
 ## 2026-08-08 — prioritized seed-bank scrape pass
 
@@ -1566,16 +1568,17 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 | D-BANK-DEAD | Unusable priority storefronts | Beaver / Organic Earth DNS fail; Night Owl / MSNL DNS fail; Great Lakes / Neptune empty shells; Growers Choice empty sitemaps; Oregon Elite WP without product-sitemap; Attitude domain parked / no usable sitemap; Quebec not WC/Shopify products.json. Revisit only with browser/manual discovery. |
 | D-BREEDER-URLS | 1482 inventory lacks official URLs | Phase A queue `homeassistant/data/_breeder_scrape_queue_1482.json` used known-map + domain guesses; many Tier C/D are unresolved or wrong-host. Need Seedfinder-homepage harvest (CF/403) or curated URL map before treating C as scrapeable. |
 | D-TIERA-FALSEHOST | Tier A host false-positives | Ranked `tiers.A` still includes wrong hosts (parked/hugedomains, unrelated brands) and already-covered banks (e.g. `DNA Genetics Seeds` → dnagenetics.com already `bank_dna`). Partition scrapers skip hugedomains + skip re-staging DNA into `bank_dna`. Tighten classifier host↔name match before treating A count as scrapeable. |
-| S-TIERA-2ND | Tier A second_half scrape in flight | `partitions.tier_A_second_half` = `tiers.A[96:192]` (96). Dump+staging only via `scripts/_launch_tier_a_second_half.py` (CREATE_NO_WINDOW, 3 shards). Snapshot: `homeassistant/data/_tier_a_second_half_scrape_results.json`. No master merge. |
+| S-TIERA-HALF1 | Tier A first_half / 1482-breeder scrape | **2026-08-09 probed DONE** (PIDs dead): `_tier_a_half1_results.json` updated 2026-08-08T09:55Z — attempted **96** / succeeded **68** / items **13343**; statuses ok 68 / skip_empty_catalog 19 / empty_after_scrape 8 / skip_discover_fail 1. Dump+staging only; merge deferred into exclusive queue. Earlier mid-run note (~Freedom/blim-burn) superseded. |
+| S-TIERA-2ND | Tier A second_half scrape | **2026-08-09:** results mark `complete=true` — banks 96, items **2806**, ok 38 / thin 17 / empty 34 / skipped_dead 7 (`_tier_a_second_half_scrape_results.json`). Dump+staging only; no master merge. |
 | D-BANK-RATE | Pacific 429 / DC Seed 503 | Pacific Seed Bank rate-limited hard (200×429) — keep delay ≥1.0s. DC Seed Exchange bursts 503 — keep delay ≥1.25s and retry failed URLs on resume (do not mark 503 as skipped). |
 | D-LIGHT-MAPS | Thin photometric map URLs | ViparSpectra + Vivosun dumps still **0** keyword-labeled PPFD/spectrum map URLs after PDP enrich (JS/CDN unlabeled). DigiLumen D2C not productized — GK carve only (ppfd=0). Spider Farmer sitemap ~317 locs → dump **273** (non-PDP / duplicate locs). Resume map chase with brand HTML galleries / datasheet PDFs when merge window returns. |
 
-## 2026-08-08 — thin-field expansion (N-087, merges paused)
+## 2026-08-08 — thin-field expansion (N-087; exclusive merge now running — see 2026-08-09 snapshot)
 
 **Assessed thinness (staging samples; no invented chem):**
 - **grow_trait height (cm):** still weak globally — Leafly enrich heights are categorical only (`Short`/`Medium`/`Tall`, n≈355); Seed City / CannaConnection / RQS / Seedsman better for numeric grow.
 - **flowering days:** better on bank PDPs + Leafly enrich (`grow_floweringDays` ≈3.2k non-null after projection).
-- **lineage/parents:** Leafly enrich `parent_slugs` ≈5.3k; SeedFinder mid-scrape; StrainDB paused; Multiverse/Alchimia lineage-rich; OpenTHC identity-only.
+- **lineage/parents:** Leafly enrich `parent_slugs` ≈5.3k; SeedFinder stalled CF ~10.3k/40638 (2026-08-09); StrainDB paused n=213; Multiverse/Alchimia lineage-rich; OpenTHC identity-only.
 - **effects:** Leafly enrich ≈7.3k scored; Kushy + `leafly_github` + `medical_effects` help; Seedsman effects=0.
 - **terpenes:** MaxValue + Cannlytics + phytochem + Leafly enrich panels; labs ≫ seed grow.
 - **science↔seed:** 70 chem gaps remain ([`CATALOG-SCIENCE-SEED-LINKS.md`](qa/CATALOG-SCIENCE-SEED-LINKS.md)); OpenTHC/Kushy identity helps matching, not chem invention.
@@ -1603,7 +1606,7 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 | D-N087-JMIR-LEAFLY | JMIR Formative 2026 Leafly reviews dataset (~7037) | effects over time | CC-BY paper claims repo dump — locate DOI/repo and stage if redistributable |
 | D-N087-WIKILEAF-NLP | Wikileaf `info`/`more_info` NLP | flowering/height from free text | ≈303/2793 rows mention grow words; parse carefully, never invent numbers |
 | D-N087-HEIGHT-BAND | Leafly height bands | height (ordinal) | Map Short/Medium/Tall → typed payload only; do not invent cm ranges |
-| D-N087-MERGE-LATER | Serialize merge of new families | all above | When master healthy/exclusive: `leafly_flat_grow`, `openthc`, `wikileaf`, `kushy`, `lynch_figshare`, refreshed `maxvalue_terpenes`, **`bank_greenhouse`**, **`forum_rollitup`**, **`forum_ozstoners`** — not this pause |
+| D-N087-MERGE-LATER | Serialize merge of new families | all above | **2026-08-09:** exclusive sole-writer running (seedsman [4/207]). Remaining thin-field families (`leafly_flat_grow`, `openthc`, `wikileaf`, `kushy`, `lynch_figshare`, refreshed `maxvalue_terpenes`, **`bank_greenhouse`**, **`forum_rollitup`**, **`forum_ozstoners`**, …) should already be in / feed the 207-family plan — do not start parallel merges. Prefer `--no-link` switch (N-087-MERGE-NOLINK) before burning more full-link hours. |
 | D-GH-SITEMAP | Greenhouse shop coverage | Was 69 PDPs; now **127** via climate-zone category crawl + deeper `product_re`. Further fan-out limited (autoflowering/regular roots 404; board pages JS). |
 | D-OZ-IPS-BOARDS | OZ Stoners forum boards | `?forumId=N` HTML is empty shell (JS); first-pass used `/search/?q=…&type=forums_topic`. Browser/API needed for full Grow Rooms board crawl |
 
@@ -1649,8 +1652,33 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 - Pointers: N-087 / **N-087-COLLATION** above; link from [`CATALOG-RESEARCH-CORPUS.md`](qa/CATALOG-RESEARCH-CORPUS.md); merge one-pager `brain/data/_COLLATION_CONTRACT_FOR_MERGE.txt`.
 - Schema skim: no observation/review tables yet; no systematic parent_of/child_of emit; wordcloud deferred — gaps only, no refactor mid-merge.
 
-- [x] **StrainDB `save_cookies` crash** (fixed 2026-08-08): `Session.save_cookies` now normalizes jar via `_cookies_as_map` (handles str keys / Cookie objs / `get_dict`) and never raises. Warm n=140 finalize no longer dies on cookie write.
-- [ ] **StrainDB CF / cookie re-import still needed**: Paused at checkpoint **n=213** (`_pw_strain_db_PAUSE.txt`, ~3h cooldown). Headed Playwright warm hits CF → `chrome-error://chromewebdata/`. Before resume: pass CF in browser / refresh Playwright profile cookies (`_pw_strain_db_capture.py` or Netscape export); do not tight-retry. curl_cffi-alone still TLS-bound for `cf_clearance`.
+- [x] **StrainDB `save_cookies` crash** (fixed 2026-08-08): `Session.save_cookies` now normalizes jar via `_cookies_as_map` (handles str keys / Cookie objs / `get_dict`) and never raises. Warm n=140 finalize no longer dies on cookie write; storage_state save also guarded.
+- [ ] **StrainDB CF / cookie re-import still needed** (**2026-08-09 still paused**): Checkpoint **n=213** (`_pw_strain_db_PAUSE.txt`); `resume_after` 2026-08-08T18:39+10 elapsed — **not resumed**; scrape/shepherd PIDs dead. Headed Playwright warm hits CF → `chrome-error://chromewebdata/`. Before resume: pass CF in browser / refresh Playwright profile cookies (`_pw_strain_db_capture.py` or Netscape export); delay-min/max 8–20s; do not tight-retry. curl_cffi-alone still TLS-bound for `cf_clearance`.
+
+## 2026-08-09 — N-087 / catalog status snapshot (probed morning AEST)
+
+### exclusive merge (master `dsc_brain.sqlite3`)
+| ID | Status | Notes |
+|---|---|---|
+| N-087-EXCL | **in progress** | Sole-writer plan unchanged (207 staging families). Alive: wrapper 41208 / child 66108 / shepherd 50244 / cmd 72996. Log at `[4/207] seedsman` (`--no-search`, still links). Shepherd `done_ok=2/207`. |
+| N-087-MERGE-LINK-NAS | **open / in progress** | See serialize-pass row above — refresh only; do not duplicate. phytochem FAIL disk I/O on link; cannaconnection+cannareviews OK; switch to `--no-link` still pending (N-087-MERGE-NOLINK). |
+| N-087-COLLATION | **done (gaps deferred)** | Contract SoT [`docs/qa/CATALOG-COLLATION-CONTRACT.md`](qa/CATALOG-COLLATION-CONTRACT.md); pointers unchanged. No schema refactor mid-merge. |
+| N-087-BACKUP | **done** | Durable `_BACKUP_N087_2026-08-08` (~9.5GB) present; earlier git backup commit fc8c4cc. |
+
+### scrapes / corpus
+| ID | Status | Notes |
+|---|---|---|
+| S-SEEDFINDER | **blocked (CF)** | **2026-08-09 probed:** scrape pid 55216 + watchdog dead. Last stdout ~**10266/40638** then `CF_BLOCKED` on critical-sensi-star/delicious-seeds; staging_stats raw≈**10291** / canonical≈8891 / grow≈10291 / chem≈1160. Heartbeat stale (started 2026-08-08T04:30Z). Resume needs browser CF then checkpoint continue — do not thrash. |
+| S-STRAINDB | **paused** | n=213 PAUSED_CF; past resume_after; explicit ask to resume. |
+| S-TIERA-HALF1 | **done (dump/staging)** | 96 attempted / 68 ok / 13343 items — merge deferred. |
+| S-TIERA-2ND | **done (dump/staging)** | complete=true; 2806 items — merge deferred. |
+| Bank/forum dumps | **deferred merge** | Priority banks + Wave2 + forums etc. sit in staging; exclusive queue is the merge path. |
+
+### open punch (merge speed / honesty)
+- [ ] After seedsman (or next safe boundary): exclusive wrapper → `--no-link` for remaining families + one link pass; commit-after-link under `--no-search`.
+- [ ] When exclusive idle: verify phytochem_smith chem/links on master; re-merge with `--no-link` if typed rolled back after disk I/O FAIL.
+- [ ] SeedFinder: CF clear + resume sitemap scrape from checkpoint (~10.3k).
+- [ ] StrainDB: CF/cookie re-import then headed resume at n=213 (8–20s jitter).
 
 ## Fleet bring-up (2026-08-08 evening) — live status snapshot
 
@@ -1659,4 +1687,16 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 - Hub/Control currently unreachable on LAN (hub last ESPHome online ~16:07; control ~16:29). Needs power-cycle + ESPHome Install for hub to pick up `bridge_mac`.
 - Pot3 absent from today's flash logs / no API on LAN. Pot1 API flaky.
 - HA surface package on live still reports `6.0.0` while expected train is `5.2.0` (version chip drift) — separate from bridge path.
+
+## Fleet recovery (2026-08-09) — secrets + 5.2.0 OTA pass
+
+- **Secrets:** Lab ↔ HA `/config/esphome/secrets.yaml` fingerprints matched for all live device keys (API/OTA/AP/espnow/hosts). Only missing kit SoftAP `dsc_setup_ap_password` — appended from lab. Components `dsc_api_client` + `dsc_anchor_ap` present under `/config/esphome/components/`.
+- **Repo:** pushed `4985431` — Sonoff FW sensor + Control branding → 5.2.0; lab hub `bridge_mac` → Anchor BSSID; fleet chip no longer compares HA surface 6.x to firmware train; `generate-secrets.sh` emits bridge/anchor/host keys. `dsc_v4_version.yaml` SCP’d to HA packages.
+- **OTA done (ESPHome Device Builder):**
+  - Hub `.23` → **5.2.0** (logs showed Firmware Version 5.2.0)
+  - Control `.177` → OTA successful (API may take minutes to settle post-LVGL boot)
+  - Heater `.32` / HeatMat `.85` / Humidifier `.26` / Dehumidifier `.69` → **5.2.0** (Sonoff project + FW sensor)
+  - Pot1 `.47` / Pot2 `.22` / Pot4 `.49` → OTA successful
+- **Still open:** Pot3 offline (no Install path); Bridge left as-is (already 5.2.0 online earlier); confirm `binary_sensor.dsc_bridge_hub_esp_now_link` after RF settle; optional Lock WiFi to Anchor BSSID once link green.
+- **Do not** run `_patch_bridge_secrets.py` on live secrets (deterministic lab placeholders).
 
