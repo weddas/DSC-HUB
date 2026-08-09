@@ -1669,8 +1669,8 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 ### scrapes / corpus
 | ID | Status | Notes |
 |---|---|---|
-| S-SEEDFINDER | **still blocked for urllib scrape** | Partial merge landed (staging ~10291 → master). 2026-08-09: Cursor browser cleared CF (homepage OK) but plain `urllib` probe to blocked PDP still **HTTP 403** — clearance is not IP-shared to the scraper. Do **not** thrash resume until cookie/browser-backed fetch exists or CF cools for urllib. Checkpoint remains ~10.3k/40638. |
-| S-STRAINDB | **paused (explicit ask only)** | n=213 PAUSED_CF; **not resumed** this pass (plan gate). Partial staging (213) merged into master via exclusive queue. |
+| S-SEEDFINDER | **resumed (Playwright)** | urllib stays 403; new [`scripts/_pw_scrape_seedfinder.py`](scripts/_pw_scrape_seedfinder.py) + launch path. 2026-08-09 afternoon: warm_ok; checkpoint past **~10.5k/40638** and climbing (~30k todo). Staging journal live — merge refresh later with `--no-link`. |
+| S-STRAINDB | **resumed (Chrome PW)** | Capture OK (`cf_clearance` + anubis cookies → storage_state). Scrape `--headed` with `DSC_SDB_CHANNEL=chrome` + `DSC_SDB_UD=…/dsc-chrome-fresh-pw2`, delay 8–20s; warm_ok; already_done≈263 / ~4737 remaining. |
 | S-TIERA-HALF1 | **done (dump/staging + merged)** | Was dump+staging; now included in local-SSD exclusive queue. |
 | S-TIERA-2ND | **done (dump/staging + merged)** | Was dump+staging; now included in local-SSD exclusive queue. |
 | Bank/forum dumps | **merged** | Priority banks + Wave2 + forums + thin-field families drained via local-SSD exclusive (207 plan). |
@@ -1678,8 +1678,9 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 ### open punch (merge speed / honesty)
 - [x] After seedsman (or next safe boundary): exclusive wrapper → `--no-link` for remaining families + one link pass; commit-after-link under `--no-search`.
 - [x] When exclusive idle: verify phytochem_smith chem/links on master; re-merge with `--no-link` if typed rolled back after disk I/O FAIL. (chem was **0** on copy; re-merged OK on local SSD.)
-- [ ] SeedFinder: urllib still 403 after browser CF (2026-08-09); need cookie-aware / headed fetch or cool-down — then resume checkpoint (~10.3k) + `--only seedfinder --no-link` refresh.
-- [ ] StrainDB: CF/cookie re-import then headed resume at n=213 (8–20s jitter) — **wait for explicit ask** (not resumed this pass).
+- [x] SeedFinder: Playwright resume shipped + running (urllib abandoned for CF).
+- [x] StrainDB: Chrome CF capture + headed resume running (8–20s).
+- [ ] After scrape quiet: `merge_staging_to_master.py --only seedfinder,strain_database --no-link --no-search` (+ end-link if needed).
 
 ### tooling landed this pass
 - [`brain/data/_n087_exclusive_merge.py`](brain/data/_n087_exclusive_merge.py) / [`_n087_exclusive_merge_resume.py`](brain/data/_n087_exclusive_merge_resume.py): `--no-link`, skip OK, end-link before indexes.

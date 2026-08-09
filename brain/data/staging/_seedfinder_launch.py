@@ -48,29 +48,23 @@ def main() -> int:
         print(f"already_running pid={existing}")
         return 0
 
-    # Polite delay: CF hit ~9.4k at 1.25s; resume with 1.5–3s (+jitter in scraper).
-    # Dump every 500: NAS rewrite of growing JSON every 25 pages is too expensive.
-    delay = "1.5"
-    ck_every = "25"
-    dump_every = "500"
+    # Playwright path — urllib stays CF-403 even after browser unlock.
+    # Delay 1.5–3s; dump every 500 (NAS JSON rewrite is expensive).
     cmd = [
         sys.executable,
         "-u",
-        str(ROOT / "scripts" / "scrape_seedfinder.py"),
-        "--mode",
-        "sitemap",
-        "--delay",
-        delay,
-        "--checkpoint-every",
-        ck_every,
-        "--dump-every",
-        dump_every,
+        str(ROOT / "scripts" / "_pw_scrape_seedfinder.py"),
+        "--headed",
+        "--delay-min=1.5",
+        "--delay-max=3.0",
+        "--checkpoint-every=25",
+        "--dump-every=500",
     ]
     LOG_DIR.mkdir(parents=True, exist_ok=True)
     out_f = open(OUT, "a", encoding="utf-8", buffering=1)
     err_f = open(ERR, "a", encoding="utf-8", buffering=1)
     stamp = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-    out_f.write(f"\n===== launch {stamp} delay={delay} =====\n")
+    out_f.write(f"\n===== launch {stamp} pw_seedfinder delay=1.5-3.0 =====\n")
     out_f.flush()
 
     env = os.environ.copy()
@@ -95,10 +89,10 @@ def main() -> int:
     proc = subprocess.Popen(cmd, **kwargs)
     PID.write_text(str(proc.pid), encoding="utf-8")
     HB.write_text(
-        f"started={stamp}\npid={proc.pid}\ndelay={delay}\ncmd={' '.join(cmd)}\n",
+        f"started={stamp}\npid={proc.pid}\ndelay=1.5-3.0\ncmd={' '.join(cmd)}\n",
         encoding="utf-8",
     )
-    print(f"started pid={proc.pid} delay={delay} out={OUT}")
+    print(f"started pid={proc.pid} pw_seedfinder out={OUT}")
     return 0
 
 
