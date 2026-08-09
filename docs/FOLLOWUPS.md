@@ -1658,5 +1658,5 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 - Hub stub on HA now has `bridge_mac: 58:2A:BD:60:3C:1D`; `wifi_bssid` left `00…` so Nest OTA stays possible until ESP-NOW proves green, then lock SoftAP BSSID.
 - Hub/Control currently unreachable on LAN (hub last ESPHome online ~16:07; control ~16:29). Needs power-cycle + ESPHome Install for hub to pick up `bridge_mac`.
 - Pot3 absent from today's flash logs / no API on LAN. Pot1 API flaky.
-- HA surface package on live still reports `6.0.0` while expected train is `5.2.0` (version chip drift) — separate from bridge path.
+- ~~HA surface `6.0.0` vs expected `5.2.0` version chip drift~~ — **fixed in tree (`4985431`)**: fleet chip compares firmware train only; HA surface stays independent (`6.1.0` packaging). Also aligned Control/Sonoff version strings to **5.2.0**, hub firmware stub `bridge_mac` live paste, and `generate-secrets.sh` bridge key emission. Ops docs: root README · HA README · firmware README · [`docs/brain/F010_APPLIANCE_BRIDGE.md`](brain/F010_APPLIANCE_BRIDGE.md).
 
