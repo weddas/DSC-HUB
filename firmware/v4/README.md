@@ -2,11 +2,38 @@
 
 Working directory for ESPHome configs. Current fleet release string:
 **Live train:** hub / Control / bridge / pots / Sonoffs **5.2.0** (tagged marketing
-cut remains `v5.1.0`). See the repo root README / CHANGELOG / FOLLOWUPS.
+cut remains `v5.1.0`). HA surface packaging is **6.x** and is **not** part of this
+firmware train — see [`homeassistant/README.md`](../../homeassistant/README.md)
+version pairing. Root [README](../../README.md) / CHANGELOG / FOLLOWUPS.
 
 Firmware QA: [docs/qa/FIRMWARE-QA-5.1.0.md](../../docs/qa/FIRMWARE-QA-5.1.0.md).
 Repo [README](../../README.md) and [INSTALL.md](../../INSTALL.md) for from-scratch HA setup.
 Standalone SoftAP unboxing (no HA): [SETUP.md](../../SETUP.md).
+
+## Version identity (5.2.0 after Bridge bring-up)
+
+Intent: every flashing device reports the same firmware train so
+`sensor.dsc_fleet_version_status` can go `ok` without being polluted by HA surface `6.x`.
+
+| Device | Must match **5.2.0** |
+|---|---|
+| Hub / pots / bridge | `project.version` + text **Firmware Version** |
+| Control | same + LVGL about/boot strings (`DSC-CONTROL 5.2.0 …` / `v5.2.0`) |
+| Sonoffs | `project.version` + template **Firmware Version** lambda |
+
+```mermaid
+flowchart LR
+  project["project.version"] -.lockstep.-> text["Firmware Version text"]
+  text --> sensors["sensor.dsc_*_firmware_version"]
+  sensors --> chip["fleet chip major.minor"]
+  ha["HA surface 6.x"] -.->|not compared| chip
+```
+
+**Constraints**
+
+- Fleet chip (`packages/dsc_v4_version.yaml`) scores firmware devices only; bridge missing is optional (no fail).
+- Keep `input_text.dsc_expected_release` on the firmware train (**5.2.0**), never on the React surface string.
+- Lab hub stub may paste live Anchor BSSID into `bridge_mac` after first ETH01 boot; kits stay `00:00:00:00:00:00` until configured ([F010](../../docs/brain/F010_APPLIANCE_BRIDGE.md)).
 
 ## Local vs HA
 
@@ -89,7 +116,16 @@ esphome config dsc-pot1.yaml
 g++ -std=c++17 -Wall -Wextra -O2 -o verify_v4 verify_v4.cpp && ./verify_v4
 ```
 
-Requires `secrets.yaml` in this folder (gitignored). Start from `secrets.yaml.template` if needed.
+Requires `secrets.yaml` in this folder (gitignored). Start from `secrets.yaml.template`,
+or generate fresh keys:
+
+```bash
+./generate-secrets.sh
+```
+
+`generate-secrets.sh` emits hub / pots / Sonoffs / Control **and** bridge secrets:
+`dsc_bridge_*`, `dsc_anchor_ap_password`, plus per-Sonoff `dsc_*_host` placeholders
+for the bridge native API client. Never commit or paste the output.
 
 `espnow_cmd_tag` is **54727** (`0xD5C7`) on hub + panel — flash both after changing it.
 
