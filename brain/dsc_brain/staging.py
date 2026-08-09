@@ -49,6 +49,7 @@ SOURCE_FAMILY_MAP: dict[str, str] = {
     "leafly": "leafly_flat",
     "leafly_flat": "leafly_flat",
     "leafly_flat_enrich": "leafly_flat_enrich",
+    "leafly_height_bands": "leafly_height_bands",
     "leafly_features": "leafly_features",
     "leafly_github": "leafly_flat",
     "kushy": "kushy",

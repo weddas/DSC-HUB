@@ -121,7 +121,7 @@ class BrowserSession:
         assert self.page is not None
         return self.page.content(), self.page.title(), self.page.url
 
-    def open(self) -> None:
+    def open(self, *, max_attempts: int = 12) -> None:
         self.close()
         USER_DATA.mkdir(parents=True, exist_ok=True)
         self._pw = sync_playwright().start()
@@ -145,7 +145,8 @@ class BrowserSession:
         self.page = self.ctx.pages[0] if self.ctx.pages else self.ctx.new_page()
         html = title = url = ""
         last_err: Exception | None = None
-        for attempt in range(1, 12):
+        max_attempts = max(1, int(max_attempts))
+        for attempt in range(1, max_attempts + 1):
             try:
                 self._goto("https://strain-database.com/strains", timeout=90_000)
                 last_err = None
@@ -156,11 +157,16 @@ class BrowserSession:
                     break
                 # Settle CF in headed or headless (headed window is off-screen).
                 deadline = time.time() + (180 if self.headed else 120)
+                chrome_err_hits = 0
                 while time.time() < deadline:
                     if is_chrome_error_url(self.page.url):
-                        log("  chrome-error — re-nav /strains")
+                        chrome_err_hits += 1
+                        log(f"  chrome-error — re-nav /strains ({chrome_err_hits})")
+                        if chrome_err_hits >= 3:
+                            log("  chrome-error wall — abort settle loop")
+                            break
                         self._goto("https://strain-database.com/strains", timeout=60_000)
-                        time.sleep(2)
+                        time.sleep(5)
                     try_pass_cf_widgets(self.page)
                     time.sleep(3)
                     try:
@@ -433,8 +439,9 @@ def main() -> int:
                     stage=True,
                 )
                 time.sleep(wait)
+                # Limited re-warm only — never hammer CF with a full 12-attempt open.
                 try:
-                    session.open()
+                    session.open(max_attempts=2)
                     html, title = session.fetch(url)
                     page_url = session.page.url if session.page else ""
                 except Exception as cf_exc:  # noqa: BLE001

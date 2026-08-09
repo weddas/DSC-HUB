@@ -112,21 +112,16 @@ def main(argv: list[str] | None = None) -> int:
         name = str(row["name"] or payload.get("name") or row["name_norm"] or "").strip()
         if not name:
             continue
-        grow_payload = {
-            "height_band": band,
-            "height_ordinal": ordinal,
-            "height_source": "leafly_grow_height",
-            "height_raw": str(raw_h),
-            # Explicit: no cm invention
-            "height_cm_min": None,
-            "height_cm_max": None,
-        }
+        # Flat grow keys (ingest also unwraps nested grow) — never invent cm.
         strain = {
             "name": name,
             "name_norm": row["name_norm"] or name,
             "source": "leafly_height_bands",
             "props": {"height_band": band, "height_ordinal": ordinal},
-            "grow": grow_payload,
+            "height_band": band,
+            "height_ordinal": ordinal,
+            "height_source": "leafly_grow_height",
+            "height_raw": str(raw_h),
         }
         ingest_strain_row(
             out,

@@ -551,6 +551,10 @@ def ingest_strain_row(
         "height",
         "height_indoor",
         "height_outdoor",
+        "height_band",
+        "height_ordinal",
+        "height_source",
+        "height_raw",
         "flowering_days",
         "flowering_time",
         "indoor_flowering_time",
@@ -561,8 +565,19 @@ def ingest_strain_row(
         "seed_gender",
         "flowering_behavior",
     )
-    if any(row.get(k) not in (None, "", [], {}) for k in grow_keys):
-        add_grow(conn, name, {k: row.get(k) for k in grow_keys if row.get(k) not in (None, "", [], {})}, source_id=source_id)
+    grow_row = dict(row)
+    nested_grow = row.get("grow") if isinstance(row.get("grow"), dict) else None
+    if nested_grow:
+        for k, v in nested_grow.items():
+            if grow_row.get(k) in (None, "", [], {}) and v not in (None, "", [], {}):
+                grow_row[k] = v
+    if any(grow_row.get(k) not in (None, "", [], {}) for k in grow_keys):
+        add_grow(
+            conn,
+            name,
+            {k: grow_row.get(k) for k in grow_keys if grow_row.get(k) not in (None, "", [], {})},
+            source_id=source_id,
+        )
 
     gaps = row.get("followup_gap")
     if isinstance(gaps, dict):

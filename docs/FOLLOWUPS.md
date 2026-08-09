@@ -1605,7 +1605,7 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 | D-N087-CT-LABS | CT Open Data / Cannlytics xlsx-only states | terpenes/lab | CT portal search; WA/CT/CO xlsx-only 404 on HF CSV path — separate importer |
 | D-N087-JMIR-LEAFLY | JMIR Formative 2026 Leafly reviews dataset (~7037) | effects over time | CC-BY paper claims repo dump — locate DOI/repo and stage if redistributable |
 | D-N087-WIKILEAF-NLP | Wikileaf `info`/`more_info` NLP | flowering/height from free text | ≈303/2793 rows mention grow words; parse carefully, never invent numbers |
-| D-N087-HEIGHT-BAND | Leafly height bands | height (ordinal) | Map Short/Medium/Tall → typed payload only; do not invent cm ranges |
+| D-N087-HEIGHT-BAND | Leafly height bands | height (ordinal) | **Done 2026-08-09:** projected 355 Short/Med/Tall → staging `leafly_height_bands` (family map fixed; no invented cm); merged `--no-link` (master grow_trait 89235→89590). |
 | D-N087-MERGE-LATER | Serialize merge of new families | all above | **2026-08-09:** exclusive sole-writer running (seedsman [4/207]). Remaining thin-field families (`leafly_flat_grow`, `openthc`, `wikileaf`, `kushy`, `lynch_figshare`, refreshed `maxvalue_terpenes`, **`bank_greenhouse`**, **`forum_rollitup`**, **`forum_ozstoners`**, …) should already be in / feed the 207-family plan — do not start parallel merges. Prefer `--no-link` switch (N-087-MERGE-NOLINK) before burning more full-link hours. |
 | D-GH-SITEMAP | Greenhouse shop coverage | Was 69 PDPs; now **127** via climate-zone category crawl + deeper `product_re`. Further fan-out limited (autoflowering/regular roots 404; board pages JS). |
 | D-OZ-IPS-BOARDS | OZ Stoners forum boards | `?forumId=N` HTML is empty shell (JS); first-pass used `/search/?q=…&type=forums_topic`. Browser/API needed for full Grow Rooms board crawl |
@@ -1669,8 +1669,8 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 ### scrapes / corpus
 | ID | Status | Notes |
 |---|---|---|
-| S-SEEDFINDER | **resumed (Playwright)** | urllib stays 403; new [`scripts/_pw_scrape_seedfinder.py`](scripts/_pw_scrape_seedfinder.py) + launch path. 2026-08-09 afternoon: warm_ok; checkpoint past **~10.5k/40638** and climbing (~30k todo). Staging journal live — merge refresh later with `--no-link`. |
-| S-STRAINDB | **resumed (Chrome PW)** | Capture OK (`cf_clearance` + anubis cookies → storage_state). Scrape `--headed` with `DSC_SDB_CHANNEL=chrome` + `DSC_SDB_UD=…/dsc-chrome-fresh-pw2`, delay 8–20s; warm_ok; already_done≈263 / ~4737 remaining. |
+| S-SEEDFINDER | **in progress / CF intermittent** | PW path. Hit ~14.2k/40638 then died overnight (hb stale ~00:01 AEST 2026-08-10). Relanch after CF; staging journal live — merge refresh later with `--no-link`. |
+| S-STRAINDB | **PAUSED_CF (n≈289)** | Progressed ~263→289 then CF wall (`angola-roja-x-banghi`); chrome-error tight retry stopped. Capture attempt `CF_NOT_CLEARED`. Needs operator CF pass in headed Chrome before resume (8–20s). |
 | S-TIERA-HALF1 | **done (dump/staging + merged)** | Was dump+staging; now included in local-SSD exclusive queue. |
 | S-TIERA-2ND | **done (dump/staging + merged)** | Was dump+staging; now included in local-SSD exclusive queue. |
 | Bank/forum dumps | **merged** | Priority banks + Wave2 + forums + thin-field families drained via local-SSD exclusive (207 plan). |
@@ -1679,8 +1679,10 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 - [x] After seedsman (or next safe boundary): exclusive wrapper → `--no-link` for remaining families + one link pass; commit-after-link under `--no-search`.
 - [x] When exclusive idle: verify phytochem_smith chem/links on master; re-merge with `--no-link` if typed rolled back after disk I/O FAIL. (chem was **0** on copy; re-merged OK on local SSD.)
 - [x] SeedFinder: Playwright resume shipped + running (urllib abandoned for CF).
-- [x] StrainDB: Chrome CF capture + headed resume running (8–20s).
+- [x] StrainDB: Chrome CF capture + headed resume — then **re-paused CF** at n≈289; needs fresh operator unlock.
+- [x] D-N087-HEIGHT-BAND: staging + master merge (`--no-link`); ingest accepts `height_band` / nested `grow`.
 - [ ] After scrape quiet: `merge_staging_to_master.py --only seedfinder,strain_database --no-link --no-search` (+ end-link if needed).
+- [ ] StrainDB: operator CF pass → `_pw_strain_db_capture.py` → resume headed 8–20s (no tight retry).
 
 ### tooling landed this pass
 - [`brain/data/_n087_exclusive_merge.py`](brain/data/_n087_exclusive_merge.py) / [`_n087_exclusive_merge_resume.py`](brain/data/_n087_exclusive_merge_resume.py): `--no-link`, skip OK, end-link before indexes.
@@ -1730,4 +1732,12 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 **Blocked:** Hub `.23` still unreachable after SoftAP hold + restart — **needs physical power-cycle**. Then: confirm Nest SSID + link; Install hub wifi-priority change; restore SoftAP SSID `DSC-Anchor`; re-verify `hub_esp_now_link`.
 
 **Follow-up design debt:** SoftAP cannot be the preferred STA path until ETH01 SoftAP bridges/NATs onto Ethernet (or Nest is locked to SoftAP channel). Track under F-004/F-012.
+
+## Hub↔Bridge continue (2026-08-09 16:40+)
+
+- Hub returned on Nest; RF hopped **ch2 → ch11** (`RF|H|E2A|…|11|OK`). Bridge re-aligned to **ch11** and SoftAP SSID restored to `DSC-Anchor`.
+- Channel match alone still left `hub_esp_now_link` off / age `600000` — SoftAP `APSTA` flip after ESPHome ESP-NOW STA init is the remaining RF killer.
+- Attempted Nest STA join on bridge (so `WIFI_IF_STA` shares Nest with hub). That build **soft-bricked remote API/OTA** (ping OK, Noise/OTA EOF; HA last bridge update ~06:52Z). SoftAP-deferred (channel-pin only, no SoftAP/Nest STA) binary is compiled locally but **cannot OTA** until bridge is power-cycled (race) or USB-flashed.
+- Hub still intermittent on LAN (50–100% loss) — keep power solid while flashing bridge.
+- **2026-08-09 17:05 power-cycle:** 8× OTA race still failed (`Connected` then version handshake closed). Lab↔HA bridge API/OTA fingerprints still match. **USB serial flash required** — recovery bin staged at Desktop `dsc-bridge-recovery/` (`firmware.factory.bin` + README).
 
