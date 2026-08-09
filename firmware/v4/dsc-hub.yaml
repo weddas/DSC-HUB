@@ -22,7 +22,7 @@ substitutions:
   espnow_key: !secret espnow_key
   # Must match panel stub / dsc-control
   panel_mac: "30:76:F5:E9:22:0C"
-  bridge_mac: "00:00:00:00:00:00"     # DSC-BRIDGE SoftAP MAC (lab: paste after first boot)
+  bridge_mac: "58:2A:BD:60:3C:1D"     # DSC-BRIDGE SoftAP Anchor BSSID (live)
   espnow_cmd_tag: "54727"             # 0xD5C7
   # Pin fleet to Anchor SoftAP BSSID (copy sensor.dsc_bridge_anchor_bssid).
   wifi_bssid: "00:00:00:00:00:00"

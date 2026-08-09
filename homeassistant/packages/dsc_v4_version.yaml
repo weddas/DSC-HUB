@@ -44,6 +44,7 @@ template:
         state: >-
           {% set exp = states('input_text.dsc_expected_release')|trim %}
             {% if exp in ['unknown','unavailable','', none] %}{% set exp = '5.2.0' %}{% endif %}
+          {# Firmware train only. HA surface (6.x) is independent packaging. #}
           {% set checks = [
             ('hub', states('sensor.dsc_hub_firmware_version')),
             ('panel', states('sensor.dsc_control_firmware_version')),
@@ -55,8 +56,7 @@ template:
             ('heater', states('sensor.dsc_heater_firmware_version')),
             ('heatmat', states('sensor.dsc_heatmat_firmware_version')),
             ('humidifier', states('sensor.dsc_humidifier_firmware_version')),
-            ('dehumidifier', states('sensor.dsc_de_humidifier_firmware_version')),
-            ('ha_surface', states('sensor.dsc_ha_surface_version'))
+            ('dehumidifier', states('sensor.dsc_de_humidifier_firmware_version'))
           ] %}
           {# Fleet runs mixed patch levels within one release train (e.g.
              panel 5.1.14 beside hub 5.1.0), so drift compares major.minor. #}
@@ -99,7 +99,9 @@ template:
               {{ states('sensor.dsc_hub_sync_sha') }}
             {% else %}n/a{% endif %}
           meaning: >-
-            ok = all reporting devices + HA surface on the expected
+            ok = all reporting firmware devices on the expected
             major.minor release train (patch levels may differ).
+            HA surface (sensor.dsc_ha_surface_version) is reported for
+            ops but is not part of the firmware train compare.
             warn = some missing/unavailable or off-train version drift.
             error = learn/helpers missing or most devices unavailable.

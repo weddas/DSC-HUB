@@ -103,8 +103,8 @@ copies components, or flash from `firmware/v4/`). Secrets: `dsc_bridge_*`,
 ### Verify
 
 - [ ] `sensor.dsc_hub_firmware_version` = **5.2.0** (and peers)
-- [ ] `sensor.dsc_ha_surface_version` = **5.2.0**
-- [ ] `sensor.dsc_fleet_version_status` → **ok** after all flashes
+- [ ] `sensor.dsc_ha_surface_version` reports the HA pack (currently **6.x** — independent of firmware train)
+- [ ] `sensor.dsc_fleet_version_status` → **ok** after all flashes (firmware train only; surface not compared)
 - [ ] `/dsc-hub-pro/home` + Learning Phase B controls present (B default off)
 - [ ] Panel ESP-NOW UP; Bridge Anchor SoftAP up; Sonoffs follow via bridge (HA followers fallback)
 
