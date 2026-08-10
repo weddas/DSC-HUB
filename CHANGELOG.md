@@ -2,12 +2,13 @@
 
 ## Unreleased
 
-- **ETH01 bridge 5.2.0 (F-010 / F-012 / F-013)** — WT32-ETH01 SoftAP channel
-  anchor (`DSC-Anchor`), ESP-NOW `0xD8` appliance demand → Noise native API
-  client to Sonoffs (HA-down actuation), broadcast `0xD1` vitals mirror to HA
-  over Ethernet. Kit SoftAP role=`bridge`. HA package `dsc_v4_bridge.yaml` +
-  Pro System cards. SoftAP via `dsc_anchor_ap` (ESPHome forbids `wifi:`+`ethernet:`).
-  F-011 portal host on ETH01 still deferred; F-014 kit SoftAP hello deferred.
+- **ETH01 bridge 5.2.0 (F-010 / F-012 / F-013)** — WT32-ETH01 ESP-NOW channel
+  pin via `dsc_anchor_ap` (SoftAP/`APSTA` deferred — was dropping hub `0xD8`/`0xD1`
+  on `WIFI_IF_STA`), ESP-NOW demand → Noise native API client to Sonoffs
+  (HA-down actuation), broadcast `0xD1` vitals mirror to HA over Ethernet.
+  Kit SoftAP role=`bridge`. HA package `dsc_v4_bridge.yaml` + Pro System cards.
+  ESPHome forbids `wifi:`+`ethernet:`. F-011 portal host, F-012 SoftAP restore,
+  and F-014 kit SoftAP hello still deferred. Ops: `docs/brain/F010_APPLIANCE_BRIDGE.md`.
 - **Pi offline brain (Phase A/B start)** — Product destination documented in Notion [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d3407556c) + [`docs/DSC-BRAIN.md`](docs/DSC-BRAIN.md). New `brain/` package loads curated catalogs into SQLite, resolves Want, dry-runs decision ticks, exposes FastAPI stub (`:8787`). Specs: [`docs/brain/`](docs/brain/). HA is lab scaffold ([`docs/HA-SCAFFOLD.md`](docs/HA-SCAFFOLD.md)); SoftAP remains product unbox.
 - **Build a Plant Full Inclusion (N-085)** — Pro Home/Root Zone roster context, Nutrient Science calculator/deep-link/CANNA stage packs, Lighting catalog controls, short-stock-safe Accept, refreshed catalog indexes, and HA surface **5.1.11**.
 - **Build a Plant (N-083)** — Separate product surface: dashboard `dsc-build-plant`, Lit card `dsc-build-plant-card`, package `dsc_v4_build_plant.yaml` (soil % blend, plant roster, mix calculator, Apply climate Want). Slim `/local/dsc-catalog/` search indexes via `scripts/build_catalog_search_indexes.py`. Vivosun NEXT_DATA enrich (wattage/PPE/stated point-PPFD/datasheets); keyword-labeled map URLs still **0** on CDN hashes. Wired into `sync-hacs-dist.sh` / `ha-sync.sh` (bundle + catalog + dashboard copy).

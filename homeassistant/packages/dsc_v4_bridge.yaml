@@ -1,6 +1,6 @@
 # ==================================================================
 #  DSC-HUB · Bridge helpers (F-010 / F-012 / F-013)
-#  ETH01 SoftAP anchor + ESP-NOW demand drive + HA state mirror
+#  ETH01 channel pin (SoftAP deferred) + ESP-NOW demand + HA mirror
 # ==================================================================
 
 template:
@@ -22,6 +22,8 @@ template:
           {% set ha = is_state('binary_sensor.dsc_hub_ha_link_status','on') %}
           {{ bridge or ha }}
 
+      # Entity name lag: ESPHome still publishes binary_sensor.dsc_bridge_anchor_softap_up
+      # after SoftAP deferral — state means channel pin up, not SoftAP beaconing.
       - name: "DSC Anchor SoftAP Up"
         unique_id: dsc_anchor_softap_up
         device_class: connectivity

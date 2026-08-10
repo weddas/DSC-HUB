@@ -979,7 +979,7 @@ Firmware: `dsc-bridge.yaml` / `dsc-bridge-kit.yaml` · `components/dsc_api_clien
 | ID | Item | Notes |
 |---|---|---|
 | F-010 | Appliance bridge | ETH01 Noise client → Sonoff `main_relay`; 45s stale OFF; HA followers fallback |
-| F-012 | Channel anchor SoftAP | `DSC-Anchor` fixed ch11; fleet prefer BSSID via Lock WiFi / 0xD0 |
+| F-012 | Channel anchor SoftAP | **Partial** — SoftAP deferred (`6f198d1`); channel pin + peer rebind on `WIFI_IF_STA`. SoftAP restore soak-gated after `hub_esp_now_link` green |
 | F-013 | Hub HA wired presence | Read-only ESP-NOW→Ethernet vitals/demand mirror (writes still hub API) |
 
 ### deferred
@@ -994,7 +994,7 @@ Firmware: `dsc-bridge.yaml` / `dsc-bridge-kit.yaml` · `components/dsc_api_clien
 
 | ID | Item | Notes |
 |---|---|---|
-| F-004 | Nest channel lock | Prefer DSC-Anchor SoftAP instead of Nest for hub/panel/pots |
+| F-004 | Nest channel lock | SoftAP prefer blocked while F-012 SoftAP deferred; keep Nest/home fixed channel matched to `anchor_channel` |
 | F-006 | HA-link flap | Monitoring can use bridge Ethernet mirror; hub `:6053` still for writes/OTA |
 
 ---
@@ -1740,4 +1740,14 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 - Attempted Nest STA join on bridge (so `WIFI_IF_STA` shares Nest with hub). That build **soft-bricked remote API/OTA** (ping OK, Noise/OTA EOF; HA last bridge update ~06:52Z). SoftAP-deferred (channel-pin only, no SoftAP/Nest STA) binary is compiled locally but **cannot OTA** until bridge is power-cycled (race) or USB-flashed.
 - Hub still intermittent on LAN (50–100% loss) — keep power solid while flashing bridge.
 - **2026-08-09 17:05 power-cycle:** 8× OTA race still failed (`Connected` then version handshake closed). Lab↔HA bridge API/OTA fingerprints still match. **USB serial flash required** — recovery bin staged at Desktop `dsc-bridge-recovery/` (`firmware.factory.bin` + README).
+
+## SoftAP deferred so ESP-NOW stays on WIFI_IF_STA (2026-08-10 — `6f198d1`)
+
+**Shipped:** `dsc_anchor_ap` no longer calls SoftAP/`WIFI_MODE_APSTA`. It pins channel, rebinds peers to **`WIFI_IF_STA`**, and publishes STA MAC on `sensor.dsc_bridge_anchor_bssid`. HA Install pulls `dsc-bridge-common` from `master`, so reinstall (USB if OTA race) is required after pull.
+
+**Ops:** keep fleet on Nest/home; match `anchor_channel` to hub RF; do not Lock-prefer SoftAP until SoftAP returns. Entity `binary_sensor.dsc_bridge_anchor_softap_up` still means channel-pin up (name lag). YAML `sta_ssid`/`sta_password` are wired but association is not active (Nest STA join soft-bricked OTA).
+
+**Docs:** [`docs/brain/F010_APPLIANCE_BRIDGE.md`](brain/F010_APPLIANCE_BRIDGE.md) · SETUP · INSTALL · `firmware/v4/README.md`.
+
+**Still open:** confirm live `hub_esp_now_link` after flash; SoftAP restore (F-012 remainder) + F-004 SoftAP prefer; F-015 Sync component copy; Pot3 USB/OTA.
 
