@@ -84,22 +84,22 @@
     }
     .flow-col.mid { flex: 1.15 1 0; }
     .connector {
-      flex: 0 0 28px; align-self: stretch; position: relative; margin: 28px 4px 28px;
+      flex: 0 0 36px; align-self: stretch; position: relative; margin: 28px 4px 28px;
       min-height: 48px;
     }
     .connector::before {
-      content:""; position:absolute; left:50%; top:8%; bottom:8%; width:2px;
+      content:""; position:absolute; left:50%; top:8%; bottom:8%; width:3px;
       transform:translateX(-50%);
-      background: linear-gradient(180deg, transparent, var(--dsc-teal), transparent);
-      box-shadow: 0 0 10px var(--dsc-teal-glow);
-      opacity:.85;
+      background: linear-gradient(180deg, transparent, var(--dsc-teal), var(--dsc-neon), transparent);
+      box-shadow: 0 0 16px var(--dsc-teal-glow), 0 0 28px rgba(57,255,20,0.25);
+      opacity:.95;
     }
     .connector::after {
       content:""; position:absolute; left:50%; top:50%; width:0; height:0;
       transform:translate(-20%, -50%);
-      border-top:6px solid transparent; border-bottom:6px solid transparent;
-      border-left:8px solid var(--dsc-teal);
-      filter: drop-shadow(0 0 6px var(--dsc-teal-glow));
+      border-top:7px solid transparent; border-bottom:7px solid transparent;
+      border-left:10px solid var(--dsc-teal);
+      filter: drop-shadow(0 0 8px var(--dsc-teal-glow));
     }
     @media (max-width: 1100px) {
       .flow { flex-direction: column; }

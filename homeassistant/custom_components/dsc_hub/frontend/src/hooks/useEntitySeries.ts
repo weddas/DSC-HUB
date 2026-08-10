@@ -3,18 +3,24 @@ import { useHass } from "./useHass";
 import { useHistory } from "./useHistory";
 import type { SeriesPoint } from "../viz/charts";
 
+export interface EntitySeriesResult {
+  series: SeriesPoint[];
+  lastSyncAt: number | undefined;
+}
+
 /**
  * History-seeded numeric series with live appends on DSC state changes.
  */
 export function useEntitySeries(
   entityId: string,
   opts?: { maxPoints?: number; hours?: number },
-): SeriesPoint[] {
+): EntitySeriesResult {
   const maxPoints = opts?.maxPoints ?? 96;
   const hours = opts?.hours ?? 6;
   const { num, available, tick } = useHass();
   const { points: seed } = useHistory(entityId, hours, maxPoints);
   const [live, setLive] = useState<SeriesPoint[]>([]);
+  const [lastSyncAt, setLastSyncAt] = useState<number | undefined>(undefined);
   const last = useRef<number | null>(null);
   const seeded = useRef(false);
 
@@ -22,6 +28,7 @@ export function useEntitySeries(
     seeded.current = false;
     setLive([]);
     last.current = null;
+    setLastSyncAt(undefined);
   }, [entityId]);
 
   useEffect(() => {
@@ -42,15 +49,17 @@ export function useEntitySeries(
       if (now - prevT < 4000) return;
     }
     last.current = v;
+    const now = Date.now();
     setLive((prev) => {
-      const next = [...prev, { t: Date.now(), v }];
+      const next = [...prev, { t: now, v }];
       return next.slice(-maxPoints);
     });
+    setLastSyncAt(now);
     // tick drives live appends from HassProvider state_changed
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entityId, tick, available, num, maxPoints]);
 
-  return useMemo(() => {
+  const series = useMemo(() => {
     if (!seed.length && !live.length) return live;
     if (!live.length) return seed;
     if (!seed.length) return live;
@@ -59,4 +68,6 @@ export function useEntitySeries(
     const merged = [...head, ...live];
     return merged.length > maxPoints ? merged.slice(-maxPoints) : merged;
   }, [seed, live, maxPoints]);
+
+  return { series, lastSyncAt };
 }

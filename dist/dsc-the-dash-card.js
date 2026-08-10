@@ -277,12 +277,15 @@
     .dash-scene-wrap canvas { display: block; width: 100%; height: 100%; position: relative; z-index: 0; }
     .dash-hud {
       position: absolute; pointer-events: none; z-index: 2;
-      background: rgba(8,12,18,0.72); backdrop-filter: blur(8px);
-      border: 1px solid rgba(100,120,150,0.35); border-radius: 10px;
-      padding: 12px 14px; min-width: 148px;
+      background: rgba(8, 14, 16, 0.78); backdrop-filter: blur(12px);
+      border: 1px solid rgba(38, 198, 218, 0.38); border-radius: 12px;
+      padding: 12px 14px; min-width: 168px;
+      box-shadow: 0 0 24px rgba(38, 198, 218, 0.18), 0 8px 28px rgba(0,0,0,0.45);
+      transition: left 180ms ease, top 180ms ease, transform 180ms ease;
     }
     .dash-hud.left { left: 14px; top: 14px; }
     .dash-hud.right { right: 14px; top: 14px; }
+    .dash-hud.is-anchored { right: auto; }
     .dash-hud .k { font-size: 10px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
     .dash-hud .v { font-size: 20px; font-weight: 700; margin-top: 4px; letter-spacing: 0.01em; }
     .dash-hud .v-split {
@@ -294,6 +297,31 @@
     }
     .dash-hud .v-split .metric .mv { font-size: 18px; font-weight: 700; line-height: 1.1; }
     .dash-hud .s { font-size: 11px; color: var(--accent); margin-top: 6px; }
+    .dash-hud .band {
+      margin-top: 8px; height: 6px; border-radius: 999px;
+      background: rgba(255,255,255,0.08); position: relative; overflow: hidden;
+    }
+    .dash-hud .band .want {
+      position: absolute; top: 0; bottom: 0;
+      background: rgba(38,198,218,0.35); border-left: 1px solid rgba(38,198,218,0.85);
+      border-right: 1px solid rgba(38,198,218,0.85);
+    }
+    .dash-hud .band .got {
+      position: absolute; top: -2px; width: 3px; height: 10px;
+      background: #39ff14; border-radius: 2px;
+      box-shadow: 0 0 8px rgba(57,255,20,0.75);
+      transform: translateX(-50%);
+    }
+    .dash-hud .vpd-mini {
+      margin-top: 8px; display: flex; align-items: center; gap: 8px;
+    }
+    .dash-hud .vpd-mini svg { flex: 0 0 auto; }
+    .dash-hud .leader {
+      position: absolute; width: 18px; height: 18px; border-radius: 50%;
+      border: 1px solid rgba(38,198,218,0.55);
+      box-shadow: 0 0 12px rgba(38,198,218,0.35);
+      pointer-events: none;
+    }
     .dash-pot-chips {
       position: absolute; left: 50%; bottom: 44px; transform: translateX(-50%);
       z-index: 3; display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;
@@ -641,9 +669,9 @@
       try {
         post = fx.createComposer(renderer, scene, camera);
         if (post && post.bloomPass) {
-          post.bloomPass.threshold = 0.68;
-          post.bloomPass.strength = 0.82;
-          post.bloomPass.radius = 0.62;
+          post.bloomPass.threshold = 0.58;
+          post.bloomPass.strength = 1.05;
+          post.bloomPass.radius = 0.72;
         }
       } catch (_) {
         post = null;
@@ -1121,7 +1149,7 @@
             opacity: name === "out" || name === "recirc" ? 0.1 : 0,
             dashArray: name === "cascade" ? [0.12, 0.055] : [0.11, 0.085],
           });
-          ribbon.userData.flow = { name, curve: curves[name], tubular, baseRadius: radius * 0.38, lastWidth: -1 };
+          ribbon.userData.flow = { name, curve: curves[name], tubular, baseRadius: radius * 0.48, lastWidth: -1 };
           ductGroup.add(ribbon);
         } catch (_) {
           ribbon = null;
@@ -2536,6 +2564,26 @@
       resize,
       setLive,
       setSelectedPot,
+      projectTentAnchors() {
+        const w = host.clientWidth || 1;
+        const h = host.clientHeight || 1;
+        const project = (obj, yLift) => {
+          if (!obj) return null;
+          const v = new THREE.Vector3();
+          obj.getWorldPosition(v);
+          v.y += yLift;
+          v.project(camera);
+          return {
+            x: (v.x * 0.5 + 0.5) * w,
+            y: (-v.y * 0.5 + 0.5) * h,
+            behind: v.z > 1,
+          };
+        };
+        return {
+          clone: project(tentClone, 2.05),
+          main: project(tentMain, 2.15),
+        };
+      },
       dispose() {
         if (disposed) return;
         disposed = true;
@@ -3152,14 +3200,75 @@
           <div class="metric"><span class="mk">VPD</span><span class="mv">${esc(fmt(c.vpd, 2))}</span></div>
         </div>`;
       };
+      const bandHtml = (got, min, max, spanMin, spanMax) => {
+        if (![got, min, max].every(Number.isFinite)) return "";
+        const lo = Number.isFinite(spanMin) ? spanMin : Math.min(min, got) - 2;
+        const hi = Number.isFinite(spanMax) ? spanMax : Math.max(max, got) + 2;
+        const span = Math.max(hi - lo, 1e-6);
+        const left = ((min - lo) / span) * 100;
+        const width = ((max - min) / span) * 100;
+        const gotPct = ((got - lo) / span) * 100;
+        return `<div class="band"><div class="want" style="left:${left}%;width:${width}%"></div><div class="got" style="left:${Math.min(100, Math.max(0, gotPct))}%"></div></div>`;
+      };
+      const vpdMini = (vpd, min, max) => {
+        if (!Number.isFinite(vpd)) return "";
+        const span = Math.max((Number.isFinite(max) ? max : 2.5) - (Number.isFinite(min) ? min : 0), 0.2);
+        const base = Number.isFinite(min) ? min : 0;
+        const pct = Math.min(1, Math.max(0, (vpd - base) / span));
+        const c = 2 * Math.PI * 14 * 0.75;
+        const dash = c * pct;
+        return `<div class="vpd-mini"><svg width="42" height="28" viewBox="0 0 42 28" aria-hidden="true">
+          <path d="M4 24 A14 14 0 1 1 38 24" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="4" stroke-linecap="round"/>
+          <path d="M4 24 A14 14 0 1 1 38 24" fill="none" stroke="#26c6da" stroke-width="4" stroke-linecap="round" stroke-dasharray="${dash} ${c}"/>
+        </svg><span class="s" style="margin:0">Want ${esc(fmt(min, 2))}–${esc(fmt(max, 2))} kPa</span></div>`;
+      };
+      const placeHud = (el, anchor, fallbackClass) => {
+        if (!el) return;
+        el.classList.add(fallbackClass);
+        if (!anchor || anchor.behind) {
+          el.classList.remove("is-anchored");
+          el.style.left = "";
+          el.style.top = "";
+          el.style.transform = "";
+          return;
+        }
+        el.classList.add("is-anchored");
+        const x = Math.min((hostW || 400) - 190, Math.max(8, anchor.x - 84));
+        const y = Math.min((hostH || 400) - 140, Math.max(8, anchor.y - 110));
+        el.style.left = `${x}px`;
+        el.style.top = `${y}px`;
+        el.style.right = "auto";
+        el.style.transform = "none";
+      };
+      const wrap = this.shadowRoot.querySelector(".dash-scene-wrap");
+      const hostW = wrap ? wrap.clientWidth : 640;
+      const hostH = wrap ? wrap.clientHeight : 420;
+      const anchors =
+        this._scene && typeof this._scene.projectTentAnchors === "function"
+          ? this._scene.projectTentAnchors()
+          : null;
+      const hass = this._hass;
+      const e = this._cfg.entities;
+      const mainRhMin = numState(hass, "number.dsc_hub_rh_target_min", NaN);
+      const mainRhMax = numState(hass, "number.dsc_hub_rh_target_max", NaN);
+      const mainVpdMin = numState(hass, "number.dsc_hub_vpd_target_min", NaN);
+      const mainVpdMax = numState(hass, "number.dsc_hub_vpd_target_max", NaN);
+      const cloneRhMin = numState(hass, "number.dsc_hub_clone_rh_min", NaN);
+      const cloneRhMax = numState(hass, "number.dsc_hub_clone_rh_max", NaN);
+      const cloneVpdMin = numState(hass, "number.dsc_hub_clone_vpd_min", NaN);
+      const cloneVpdMax = numState(hass, "number.dsc_hub_clone_vpd_max", NaN);
       const hudC = this.shadowRoot.getElementById("d-hud-clone");
       if (hudC) {
-        hudC.innerHTML = `<div class="k">2×4 Reservoir</div>${hudMetric("clone")}<div class="s">${esc(lightNote)}${live.matOn ? " · heat mat ON" : ""}</div>`;
+        const c = (live.climate && live.climate.clone) || {};
+        hudC.innerHTML = `<div class="k">2×4 Reservoir</div>${hudMetric("clone")}${bandHtml(c.humidity, cloneRhMin, cloneRhMax, 0, 100)}${vpdMini(c.vpd, cloneVpdMin, cloneVpdMax)}<div class="s">${esc(lightNote)}${live.matOn ? " · heat mat ON" : ""} · <a href="#/ops/climate" style="color:inherit">⋯ Climate</a></div>`;
+        placeHud(hudC, anchors && anchors.clone, "left");
       }
       const hudM = this.shadowRoot.getElementById("d-hud-main");
       if (hudM) {
+        const m = (live.climate && live.climate.main) || {};
         const heldNote = live.hubHeld ? " · HELD" : "";
-        hudM.innerHTML = `<div class="k">4×8 Main</div>${hudMetric("main")}<div class="s">No lamp · cascade in · OUT rear / RECIRC right wall${heldNote}</div>`;
+        hudM.innerHTML = `<div class="k">4×8 Main</div>${hudMetric("main")}${bandHtml(m.humidity, mainRhMin, mainRhMax, 0, 100)}${vpdMini(m.vpd, mainVpdMin, mainVpdMax)}<div class="s">No lamp · cascade in${heldNote} · <a href="#/ops/climate" style="color:inherit">⋯ Climate</a></div>`;
+        placeHud(hudM, anchors && anchors.main, "right");
       }
 
       const chipsEl = this.shadowRoot.getElementById("d-pot-chips");

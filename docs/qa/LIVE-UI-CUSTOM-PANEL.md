@@ -1,4 +1,4 @@
-# LIVE-UI — DSC-HUB custom panel (surface 6.2.0)
+# LIVE-UI — DSC-HUB custom panel (surface 6.3.0)
 
 React + Vite product panel hosted inside Home Assistant (WashData pattern).
 
@@ -7,7 +7,7 @@ React + Vite product panel hosted inside Home Assistant (WashData pattern).
 | Sidebar | **DSC-HUB** → `/dsc-hub` (custom panel) |
 | Deep routes | Hash routes: `/dsc-hub#/ops/home`, `#/plant/catalog`, … |
 | Lovelace fallback | `dsc-hub-pro` YAML — `show_in_sidebar: false` |
-| Surface version | `sensor.dsc_ha_surface_version` **6.2.0** |
+| Surface version | `sensor.dsc_ha_surface_version` **6.3.0** |
 | Integration | `homeassistant/custom_components/dsc_hub/` |
 | Enable | `dsc_hub:` in configuration.yaml (see snippet) |
 
@@ -16,7 +16,7 @@ React + Vite product panel hosted inside Home Assistant (WashData pattern).
 Prefer the local-disk script (NAS shares stall `npm`):
 
 ```powershell
-pwsh -File scripts/build-dsc-hub-panel.ps1
+powershell -ExecutionPolicy Bypass -File scripts/build-dsc-hub-panel.ps1
 ```
 
 This copies `frontend/` → `%TEMP%`, runs `npm ci` + `npm run build`, then copies
@@ -42,12 +42,26 @@ Then: HA **Developer Tools → YAML → Check configuration** → restart Core
 
 ## Visual system
 
-Black / gray / neon green / teal / white · glass HUD · tabbed primary+secondary ·
+Black / gray / neon green / teal / amber / white · glass HUD · tabbed primary+secondary ·
 slide-out search drawers · overflow ⋯ / gear actions · press feedback · soft shadows ·
-history-seeded glowing charts · demand toggles with neon ON edge · desktop-first grid
-with narrow tile reflow · Plant Seat (soil / age / tent apply) · Dash pot pick + lerp.
+dual-axis glowing charts with time axis + hover + Want bands · Full Auto Mode card ·
+per-tent Want editors · demand toggles with neon ON edge · desktop-first grid
+with narrow tile reflow · Plant Seat (soil / age / tent apply) · Dash world HUD callouts.
 
-## Pass 2 acceptance
+## Pass 3 acceptance (6.3)
+
+- [ ] Live climate: dual axes readable; X times present; hover shows time + T + RH
+- [ ] Main/Clone charts use that tent’s Want overlays; edit Want → HA numbers update
+- [ ] Gauges show band ticks, target, extrema; VPD in real kPa
+- [ ] Full Auto + strategy + priority write HA; honesty chip on reduced kit
+- [ ] Fan override ON → four fan % sliders write
+- [ ] In-service toggles (AC / mister / pots) on Climate + System
+- [ ] Seat tab icon ≠ Root; page headers + chips have icons; wordmark in brand row
+- [ ] Search icon opens slide-out; settings/gear reachable; drawer close ≠ more
+- [ ] Dash callouts both tents with RH band + VPD mini; bloom stronger
+- [ ] `sensor.dsc_ha_surface_version` reads **6.3.0**
+
+## Pass 2 acceptance (still true)
 
 - [ ] Cold open `/dsc-hub#/ops/home` — tent T/RH charts populate from history within seconds
 - [ ] Status strip reflects hub / panel / beat / alerts / fleet
@@ -58,7 +72,6 @@ with narrow tile reflow · Plant Seat (soil / age / tent apply) · Dash pot pick
 - [ ] Ops · Dash / Plant · Catalog load without visiting Lovelace first (auto `/local` inject)
 - [ ] Ops · Dash pot click / chip → Plant Seat; Apply to tent lerps plant on Dash
 - [ ] Plant · Build result chips + slide-out search; soil cross-section; Commit+assign
-- [ ] `sensor.dsc_ha_surface_version` reads **6.2.0**
 - [ ] WashData / Overview / Frigate / other non-DSC panels unchanged
 - [ ] Narrow viewport tiles columns without breaking desktop layout
 

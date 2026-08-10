@@ -37,6 +37,7 @@ export function PlantSeatPage() {
   return (
     <div className="dsc-page">
       <PageHeader
+        icon="seat"
         title={`Plant seat · POT${pot}`}
         subtitle="Soil, age, nutrients, live Got — apply tent to move on The Dash."
       />

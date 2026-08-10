@@ -8,12 +8,13 @@ export function PlantHubPage() {
   return (
     <div className="dsc-page">
       <PageHeader
+        icon="plant"
         title="Plant"
         subtitle="Build, catalog research, roster seats, and mix tools."
       />
       <div className="dsc-grid">
         <div className="dsc-col-4">
-          <Card title="Build a Plant">
+          <Card className="dsc-glass" title="Build a Plant" icon="build">
             <p className="dsc-muted">Compose soil blend, roster, and climate Want.</p>
             <Link to="/plant/build">
               <Button primary>Open Build</Button>
@@ -21,7 +22,7 @@ export function PlantHubPage() {
           </Card>
         </div>
         <div className="dsc-col-4">
-          <Card title="Catalog Explorer">
+          <Card className="dsc-glass" title="Catalog Explorer" icon="catalog">
             <p className="dsc-muted">Browse strains, nutrients, mediums, lights.</p>
             <Link to="/plant/catalog">
               <Button primary>Open Catalog</Button>
@@ -29,17 +30,17 @@ export function PlantHubPage() {
           </Card>
         </div>
         <div className="dsc-col-4">
-          <Card title="Plant seat">
+          <Card className="dsc-glass" title="Plant seat" icon="seat">
             <p className="dsc-muted">Soil, age, nutrients, tent apply.</p>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               <Link to="/plant/seat?pot=1">
                 <Button primary>Open Seat</Button>
               </Link>
               <Link to="/plant/strains">
-                <Button>Strains</Button>
+                <Button teal>Strains</Button>
               </Link>
               <Link to="/plant/nutrient">
-                <Button>Nutrient</Button>
+                <Button teal>Nutrient</Button>
               </Link>
             </div>
           </Card>
@@ -52,7 +53,7 @@ export function PlantHubPage() {
 export function PlantBuildPage() {
   return (
     <div className="dsc-page">
-      <PageHeader title="Plant · Build" subtitle="Compose mode — result-first glass card." />
+      <PageHeader icon="build" title="Plant · Build" subtitle="Compose mode — result-first glass card." />
       <LegacyCardHost tag="dsc-build-plant-card" config={{}} />
     </div>
   );
@@ -61,7 +62,7 @@ export function PlantBuildPage() {
 export function PlantCatalogPage() {
   return (
     <div className="dsc-page">
-      <PageHeader title="Plant · Catalog" subtitle="Research browser over /local/dsc-catalog indexes." />
+      <PageHeader icon="catalog" title="Plant · Catalog" subtitle="Research browser over /local/dsc-catalog indexes." />
       <LegacyCardHost tag="dsc-catalog-browse-card" config={{}} />
     </div>
   );
@@ -74,8 +75,8 @@ export function PlantStrainsPage() {
 
   return (
     <div className="dsc-page">
-      <PageHeader title="Plant · Strains" subtitle="Roster seats — open a row for Plant Seat." />
-      <Card className="dsc-glass" title="Roster">
+      <PageHeader icon="strains" title="Plant · Strains" subtitle="Roster seats — open a row for Plant Seat." />
+      <Card className="dsc-glass" title="Roster" icon="strains">
         {!slots.length ? (
           <p className="dsc-muted" style={{ marginTop: 0 }}>
             No plants in roster yet. Commit from Build, then assign a pot.
@@ -136,7 +137,7 @@ export function PlantStrainsPage() {
 export function PlantNutrientPage() {
   return (
     <div className="dsc-page">
-      <PageHeader title="Plant · Nutrient science" subtitle="Mix lab / dose tools." />
+      <PageHeader icon="nutrient" title="Plant · Nutrient science" subtitle="Mix lab / dose tools." />
       <Card title="Mix lab">
         <p className="dsc-muted" style={{ marginTop: 0 }}>
           Nutrient dose and stage tools — open Build for the interactive mixer, Catalog for SKU research.

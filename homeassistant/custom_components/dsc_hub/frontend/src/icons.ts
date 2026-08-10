@@ -28,7 +28,8 @@ const ICONS = {
   gauge: "gauges/dsc-gauge-arc.svg",
   more: "icons/dsc-icon-more.svg",
   search: "icons/dsc-icon-search.svg",
-  seat: "icons/dsc-icon-root.svg",
+  close: "icons/dsc-icon-close.svg",
+  seat: "icons/dsc-icon-seat.svg",
 } as const;
 
 export type IconName = keyof typeof ICONS;

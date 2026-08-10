@@ -1800,6 +1800,21 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 ### next-plan
 - (none for this visual pass — live HA smoke + Sync deploy still operator-gated)
 
+## 2026-08-11 — DSC-Dashboard operator polish 6.3.0
+
+### done
+- Dual-axis MultiLineChart (time axis, hover, sync pulse, Want band overlays)
+- Per-tent Want editors (Main + Clone temp/RH/VPD) on Ops Home / Climate / zones
+- ArcGauge target/band/extrema; real kPa VPD
+- Full Auto + strategy/priority + fans + intake routing/RECIRC + kit in-service
+- Theme/icons: seat SVG, PageHeader icons, chip/toggle icons, wordmark, search/settings/close, tokenized colors
+- Dash world-anchored glass HUD + VPD mini + stronger bloom; Build connector glow
+- Surface **6.3.0** (`const.py` + `dsc_v4_version.yaml` + panel chrome); panel rebuilt
+
+### next-plan / soak
+- Deploy via `ha-sync` / add-on; confirm live `sensor.dsc_ha_surface_version` = **6.3.0**
+- Smoke Pass 3 checklist in `docs/qa/LIVE-UI-CUSTOM-PANEL.md`
+
 ## 2026-08-11 — F-004 SoftAP retarget (Nest-lock jam cleared)
 
 - [x] HA `dsc_v4_fleet_heal.yaml`: CHX persistent notify + binary display name → SoftAP orphan / preferred mismatch (unique_id `dsc_nest_channel_split` kept). EVT CHX notify SoftAP wording.

@@ -38,6 +38,8 @@ function isDscEntity(entityId: string | undefined): boolean {
     id.startsWith("binary_sensor.dsc") ||
     id.startsWith("number.dsc") ||
     id.startsWith("light.dsc") ||
+    id.startsWith("fan.dsc") ||
+    id.startsWith("select.dsc") ||
     id.startsWith("input_")
   );
 }

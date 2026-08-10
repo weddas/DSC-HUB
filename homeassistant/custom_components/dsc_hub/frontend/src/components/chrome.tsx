@@ -112,7 +112,7 @@ export function SlideDrawer({
         </button>
         <div className="dsc-drawer-head">
           <h2 id={titleId}>{title}</h2>
-          <IconButton label="Close" icon="more" onClick={onClose} />
+          <IconButton label="Close" icon="close" onClick={onClose} />
         </div>
         <div className="dsc-drawer-body">{children}</div>
       </aside>
@@ -122,7 +122,12 @@ export function SlideDrawer({
 
 export type SoilLayer = { name: string; pct: number; color?: string };
 
-const LAYER_COLORS = ["#5b9f6b", "#4a8f9f", "#c4a35a", "#8d6e63"];
+const LAYER_COLORS = [
+  "var(--dsc-soil-1)",
+  "var(--dsc-soil-2)",
+  "var(--dsc-soil-3)",
+  "var(--dsc-soil-4)",
+];
 
 /** Parse roster blend strings into soil layers. */
 export function parseBlendLayers(blend: string | undefined | null): SoilLayer[] {

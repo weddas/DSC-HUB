@@ -1,4 +1,12 @@
-import { useEffect, useId, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+} from "react";
 
 export interface SeriesPoint {
   t: number;
@@ -10,7 +18,25 @@ export interface NamedSeries {
   label: string;
   series: SeriesPoint[];
   color?: string;
+  axis?: "left" | "right";
+  unit?: string;
 }
+
+export interface ChartTarget {
+  axis?: "left" | "right";
+  value?: number;
+  min?: number;
+  max?: number;
+  color?: string;
+  label?: string;
+}
+
+const DEFAULT_PALETTE = [
+  "var(--dsc-neon)",
+  "var(--dsc-teal)",
+  "var(--dsc-amber)",
+  "var(--dsc-gray-5)",
+];
 
 function niceMax(values: number[]): number {
   const m = Math.max(...values, 1);
@@ -24,6 +50,14 @@ function niceMin(values: number[], floorZero = false): number {
   const span = Math.abs(m) || 1;
   const pow = 10 ** Math.floor(Math.log10(span));
   return Math.floor(m / pow) * pow;
+}
+
+function padDomain(min: number, max: number, padFrac = 0.08): { min: number; max: number } {
+  if (!Number.isFinite(min) || !Number.isFinite(max)) return { min: 0, max: 1 };
+  if (max <= min) return { min: min - 1, max: max + 1 };
+  const span = max - min;
+  const pad = span * padFrac || 1;
+  return { min: min - pad, max: max + pad };
 }
 
 function buildPath(
@@ -50,6 +84,44 @@ function buildPath(
     .join(" ");
 }
 
+function fmtTime(t: number): string {
+  const d = new Date(t);
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mm = String(d.getMinutes()).padStart(2, "0");
+  return `${hh}:${mm}`;
+}
+
+function yFor(
+  v: number,
+  min: number,
+  max: number,
+  height: number,
+  pad: { t: number; b: number },
+): number {
+  const span = Math.max(max - min, 1e-6);
+  return pad.t + (1 - (v - min) / span) * (height - pad.t - pad.b);
+}
+
+function domainForAxis(
+  series: NamedSeries[],
+  axis: "left" | "right",
+  fixed?: { min?: number; max?: number },
+): { min: number; max: number } {
+  const vals = series.filter((s) => (s.axis || "left") === axis).flatMap((s) => s.series.map((p) => p.v));
+  if (fixed?.min != null && fixed?.max != null) return { min: fixed.min, max: fixed.max };
+  if (!vals.length) {
+    if (axis === "right") return { min: 0, max: 100 };
+    return { min: 0, max: 1 };
+  }
+  if (axis === "right") {
+    const lo = Math.min(...vals, 0);
+    const hi = Math.max(...vals, 100);
+    if (hi <= 100 && lo >= 0) return { min: 0, max: 100 };
+    return padDomain(niceMin(vals, true), niceMax(vals));
+  }
+  return padDomain(niceMin(vals), niceMax(vals));
+}
+
 export function LiveLineChart({
   series,
   height = 160,
@@ -57,6 +129,8 @@ export function LiveLineChart({
   live = true,
   color = "var(--dsc-neon)",
   emptyLabel = "No history yet",
+  lastSyncAt,
+  targets,
 }: {
   series: SeriesPoint[];
   height?: number;
@@ -64,14 +138,18 @@ export function LiveLineChart({
   live?: boolean;
   color?: string;
   emptyLabel?: string;
+  lastSyncAt?: number;
+  targets?: ChartTarget[];
 }) {
   return (
     <MultiLineChart
-      series={[{ id: "main", label: "", series, color }]}
+      series={[{ id: "main", label: "", series, color, unit, axis: "left" }]}
       height={height}
       unit={unit}
       live={live}
       emptyLabel={emptyLabel}
+      lastSyncAt={lastSyncAt}
+      targets={targets}
     />
   );
 }
@@ -82,58 +160,174 @@ export function MultiLineChart({
   unit = "",
   live = true,
   emptyLabel = "No history yet",
+  lastSyncAt,
+  targets = [],
 }: {
   series: NamedSeries[];
   height?: number;
   unit?: string;
   live?: boolean;
   emptyLabel?: string;
+  lastSyncAt?: number;
+  targets?: ChartTarget[];
 }) {
   const gid = useId().replace(/:/g, "");
   const width = 640;
-  const pad = { l: 36, r: 12, t: 16, b: 22 };
-  const palette = ["var(--dsc-neon)", "#7dd3fc", "#fbbf24", "#f472b6"];
+  const hasRight = named.some((s) => s.axis === "right");
+  const pad = { l: 40, r: hasRight ? 40 : 14, t: 16, b: 28 };
+  const svgRef = useRef<SVGSVGElement | null>(null);
+  const [hover, setHover] = useState<{ t: number; x: number } | null>(null);
+  const [pinned, setPinned] = useState(false);
+  const [pulseKey, setPulseKey] = useState(0);
+  const lastSyncSeen = useRef<number | undefined>(undefined);
+
+  useEffect(() => {
+    if (lastSyncAt == null) return;
+    if (lastSyncSeen.current === lastSyncAt) return;
+    lastSyncSeen.current = lastSyncAt;
+    setPulseKey((k) => k + 1);
+  }, [lastSyncAt]);
 
   const model = useMemo(() => {
     const all = named.flatMap((s) => s.series);
     if (!all.length) return null;
-    const vals = all.map((p) => p.v);
-    const max = niceMax(vals);
-    const min = niceMin(vals, true);
+    const left = domainForAxis(named, "left");
+    const right = domainForAxis(named, "right");
     const t0 = Math.min(...all.map((p) => p.t));
     const t1 = Math.max(...all.map((p) => p.t));
-    const paths = named.map((s, i) => ({
-      ...s,
-      color: s.color || palette[i % palette.length],
-      d: buildPath(s.series, width, height, pad, min, max, t0, t1),
-      last: s.series.length ? s.series[s.series.length - 1] : null,
-    }));
-    return { min, max, t0, t1, paths };
-  }, [named, height]);
+    const paths = named.map((s, i) => {
+      const axis = s.axis || "left";
+      const dom = axis === "right" ? right : left;
+      return {
+        ...s,
+        axis,
+        color: s.color || DEFAULT_PALETTE[i % DEFAULT_PALETTE.length],
+        d: buildPath(s.series, width, height, pad, dom.min, dom.max, t0, t1),
+        last: s.series.length ? s.series[s.series.length - 1] : null,
+        dom,
+      };
+    });
+    return { left, right, t0, t1, paths };
+  }, [named, height, hasRight]);
 
-  const lastPrimary = model?.paths[0]?.last?.v ?? null;
-
-  const gridYs = useMemo(() => {
+  const gridLeft = useMemo(() => {
     if (!model) return [];
     const ticks = 4;
     const out: { y: number; label: string }[] = [];
     for (let i = 0; i <= ticks; i++) {
       const frac = i / ticks;
-      const v = model.max - frac * (model.max - model.min);
+      const v = model.left.max - frac * (model.left.max - model.left.min);
       const y = pad.t + frac * (height - pad.t - pad.b);
-      out.push({ y, label: v.toFixed(v >= 100 ? 0 : 1) });
+      out.push({ y, label: v.toFixed(Math.abs(v) >= 100 ? 0 : 1) });
     }
     return out;
   }, [model, height]);
 
+  const gridRight = useMemo(() => {
+    if (!model || !hasRight) return [];
+    const ticks = 4;
+    const out: { y: number; label: string }[] = [];
+    for (let i = 0; i <= ticks; i++) {
+      const frac = i / ticks;
+      const v = model.right.max - frac * (model.right.max - model.right.min);
+      const y = pad.t + frac * (height - pad.t - pad.b);
+      out.push({ y, label: v.toFixed(Math.abs(v) >= 100 ? 0 : 1) });
+    }
+    return out;
+  }, [model, height, hasRight]);
+
+  const timeTicks = useMemo(() => {
+    if (!model) return [];
+    const n = 5;
+    const out: { x: number; label: string }[] = [];
+    const span = Math.max(model.t1 - model.t0, 1);
+    const innerW = width - pad.l - pad.r;
+    for (let i = 0; i < n; i++) {
+      const frac = n === 1 ? 0 : i / (n - 1);
+      const t = model.t0 + frac * span;
+      out.push({ x: pad.l + frac * innerW, label: fmtTime(t) });
+    }
+    return out;
+  }, [model]);
+
+  const clientToChartX = useCallback(
+    (clientX: number) => {
+      const el = svgRef.current;
+      if (!el || !model) return null;
+      const rect = el.getBoundingClientRect();
+      const sx = ((clientX - rect.left) / Math.max(rect.width, 1)) * width;
+      const innerW = width - pad.l - pad.r;
+      const clamped = Math.min(width - pad.r, Math.max(pad.l, sx));
+      const frac = (clamped - pad.l) / Math.max(innerW, 1);
+      const t = model.t0 + frac * Math.max(model.t1 - model.t0, 1);
+      return { t, x: clamped };
+    },
+    [model],
+  );
+
+  const onPointerMove = (e: ReactPointerEvent) => {
+    if (pinned) return;
+    const hit = clientToChartX(e.clientX);
+    if (hit) setHover(hit);
+  };
+
+  const onPointerLeave = () => {
+    if (!pinned) setHover(null);
+  };
+
+  const onPointerDown = (e: ReactPointerEvent) => {
+    const hit = clientToChartX(e.clientX);
+    if (!hit) return;
+    if (pinned && hover && Math.abs(hover.x - hit.x) < 8) {
+      setPinned(false);
+      setHover(null);
+      return;
+    }
+    setPinned(true);
+    setHover(hit);
+  };
+
+  const hoverSamples = useMemo(() => {
+    if (!model || !hover) return [];
+    return model.paths.map((p) => {
+      if (!p.series.length) return { id: p.id, label: p.label, color: p.color, v: null as number | null, unit: p.unit || "" };
+      let best = p.series[0];
+      let bestD = Math.abs(best.t - hover.t);
+      for (const pt of p.series) {
+        const d = Math.abs(pt.t - hover.t);
+        if (d < bestD) {
+          best = pt;
+          bestD = d;
+        }
+      }
+      const y = yFor(best.v, p.dom.min, p.dom.max, height, pad);
+      return {
+        id: p.id,
+        label: p.label,
+        color: p.color,
+        v: best.v,
+        unit: p.unit || "",
+        y,
+        x: pad.l + ((best.t - model.t0) / Math.max(model.t1 - model.t0, 1)) * (width - pad.l - pad.r),
+      };
+    });
+  }, [model, hover, height]);
+
+  const lastPrimary = model?.paths[0]?.last?.v ?? null;
+
   return (
     <div className="dsc-chart" style={{ position: "relative", width: "100%" }}>
       <svg
+        ref={svgRef}
         viewBox={`0 0 ${width} ${height}`}
         width="100%"
         height={height}
         role="img"
         aria-label="Live chart"
+        className="dsc-chart-svg"
+        onPointerMove={onPointerMove}
+        onPointerLeave={onPointerLeave}
+        onPointerDown={onPointerDown}
       >
         <defs>
           {model?.paths.map((p) => (
@@ -142,18 +336,23 @@ export function MultiLineChart({
               <stop offset="100%" stopColor={p.color} stopOpacity="0" />
             </linearGradient>
           ))}
-          <filter id={`glow-${gid}`} x="-30%" y="-30%" width="160%" height="160%">
-            <feGaussianBlur stdDeviation="2.6" result="b" />
+          <filter id={`glow-${gid}`} x="-40%" y="-40%" width="180%" height="180%">
+            <feGaussianBlur stdDeviation="2.8" result="b" />
             <feMerge>
               <feMergeNode in="b" />
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
+          <filter id={`glow-soft-${gid}`} x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="4.2" result="b" />
+            <feMerge>
+              <feMergeNode in="b" />
+            </feMerge>
+          </filter>
         </defs>
 
-        {/* grid */}
-        {gridYs.map((g) => (
-          <g key={g.y}>
+        {gridLeft.map((g) => (
+          <g key={`L${g.y}`}>
             <line
               x1={pad.l}
               x2={width - pad.r}
@@ -176,6 +375,35 @@ export function MultiLineChart({
           </g>
         ))}
 
+        {gridRight.map((g) => (
+          <text
+            key={`R${g.y}`}
+            x={width - pad.r + 6}
+            y={g.y + 3}
+            textAnchor="start"
+            fill="var(--dsc-teal)"
+            fontSize="9"
+            fontFamily="var(--dsc-mono)"
+            opacity={0.85}
+          >
+            {g.label}
+          </text>
+        ))}
+
+        {timeTicks.map((t) => (
+          <text
+            key={t.x}
+            x={t.x}
+            y={height - 8}
+            textAnchor="middle"
+            fill="var(--dsc-gray-5)"
+            fontSize="9"
+            fontFamily="var(--dsc-mono)"
+          >
+            {t.label}
+          </text>
+        ))}
+
         {!model ? (
           <text
             x={width / 2}
@@ -187,76 +415,218 @@ export function MultiLineChart({
             {emptyLabel}
           </text>
         ) : (
-          model.paths.map((p) => {
-            if (!p.d) return null;
-            const area = `${p.d} L${width - pad.r} ${height - pad.b} L${pad.l} ${height - pad.b} Z`;
-            const pts = p.series;
-            const liveTail =
-              live && pts.length >= 2
-                ? buildPath(pts.slice(-2), width, height, pad, model.min, model.max, model.t0, model.t1)
-                : "";
-            const body =
-              live && pts.length >= 2
-                ? buildPath(pts.slice(0, -1), width, height, pad, model.min, model.max, model.t0, model.t1)
-                : p.d;
-            return (
-              <g key={p.id}>
-                <path d={area} fill={`url(#fill-${gid}-${p.id})`} opacity={0.9} />
-                <path
-                  d={body || p.d}
-                  fill="none"
-                  stroke={p.color}
-                  strokeWidth="2.2"
-                  strokeLinejoin="round"
-                  strokeLinecap="round"
-                  filter={`url(#glow-${gid})`}
-                  opacity={0.9}
-                />
-                {liveTail ? (
+          <>
+            {targets.map((tg, i) => {
+              const axis = tg.axis || "left";
+              const dom = axis === "right" ? model.right : model.left;
+              const color = tg.color || (axis === "right" ? "var(--dsc-teal)" : "var(--dsc-amber)");
+              if (tg.min != null && tg.max != null) {
+                const y1 = yFor(tg.max, dom.min, dom.max, height, pad);
+                const y2 = yFor(tg.min, dom.min, dom.max, height, pad);
+                return (
+                  <g key={`tg-${i}`}>
+                    <rect
+                      x={pad.l}
+                      y={Math.min(y1, y2)}
+                      width={width - pad.l - pad.r}
+                      height={Math.abs(y2 - y1)}
+                      fill={color}
+                      opacity={0.08}
+                    />
+                    <line
+                      x1={pad.l}
+                      x2={width - pad.r}
+                      y1={y1}
+                      y2={y1}
+                      stroke={color}
+                      strokeWidth="1"
+                      strokeDasharray="4 4"
+                      opacity={0.7}
+                    />
+                    <line
+                      x1={pad.l}
+                      x2={width - pad.r}
+                      y1={y2}
+                      y2={y2}
+                      stroke={color}
+                      strokeWidth="1"
+                      strokeDasharray="4 4"
+                      opacity={0.7}
+                    />
+                  </g>
+                );
+              }
+              if (tg.value == null || !Number.isFinite(tg.value)) return null;
+              const y = yFor(tg.value, dom.min, dom.max, height, pad);
+              return (
+                <g key={`tg-${i}`}>
+                  <line
+                    x1={pad.l}
+                    x2={width - pad.r}
+                    y1={y}
+                    y2={y}
+                    stroke={color}
+                    strokeWidth="1.2"
+                    strokeDasharray="5 4"
+                    opacity={0.85}
+                  />
+                  {tg.label ? (
+                    <text
+                      x={width - pad.r - 2}
+                      y={y - 4}
+                      textAnchor="end"
+                      fill={color}
+                      fontSize="8"
+                      fontFamily="var(--dsc-mono)"
+                    >
+                      {tg.label}
+                    </text>
+                  ) : null}
+                </g>
+              );
+            })}
+
+            {model.paths.map((p) => {
+              if (!p.d || p.series.length === 0) return null;
+              // Honest empty→first: skip area fill until ≥2 points
+              const area =
+                p.series.length >= 2
+                  ? `${p.d} L${width - pad.r} ${height - pad.b} L${pad.l} ${height - pad.b} Z`
+                  : "";
+              const lastPt = p.last;
+              const tipX =
+                lastPt && model
+                  ? pad.l +
+                    ((lastPt.t - model.t0) / Math.max(model.t1 - model.t0, 1)) * (width - pad.l - pad.r)
+                  : 0;
+              const tipY = lastPt ? yFor(lastPt.v, p.dom.min, p.dom.max, height, pad) : 0;
+              return (
+                <g key={p.id} className="dsc-chart-series">
+                  {area ? (
+                    <path d={area} fill={`url(#fill-${gid}-${p.id})`} opacity={0.9} className="dsc-chart-fill" />
+                  ) : null}
                   <path
-                    className="dsc-live-pulse"
-                    d={liveTail}
+                    d={p.d}
                     fill="none"
                     stroke={p.color}
-                    strokeWidth="2.8"
+                    strokeWidth="4.5"
+                    strokeLinejoin="round"
+                    strokeLinecap="round"
+                    filter={`url(#glow-soft-${gid})`}
+                    opacity={0.35}
+                    className="dsc-chart-glow"
+                  />
+                  <path
+                    d={p.d}
+                    fill="none"
+                    stroke={p.color}
+                    strokeWidth="2.2"
                     strokeLinejoin="round"
                     strokeLinecap="round"
                     filter={`url(#glow-${gid})`}
-                    style={{ animation: "dsc-line-pulse 2.2s ease-in-out infinite" }}
+                    opacity={0.95}
+                    className="dsc-chart-core"
                   />
-                ) : null}
+                  {live && lastPt && p.series.length >= 2 ? (
+                    <g key={`pulse-${pulseKey}-${p.id}`} className="dsc-chart-pulse-wrap">
+                      <path
+                        className="dsc-chart-pulse"
+                        d={p.d}
+                        fill="none"
+                        stroke={p.color}
+                        strokeWidth="2.6"
+                        strokeLinejoin="round"
+                        strokeLinecap="round"
+                        pathLength={1}
+                        style={{
+                          strokeDasharray: "0.18 0.82",
+                          animation: "dsc-sync-pulse 900ms ease-out 1",
+                        }}
+                      />
+                      <circle
+                        cx={tipX}
+                        cy={tipY}
+                        r={4}
+                        fill={p.color}
+                        className="dsc-chart-tip"
+                        filter={`url(#glow-${gid})`}
+                      />
+                    </g>
+                  ) : lastPt ? (
+                    <circle cx={tipX} cy={tipY} r={3.2} fill={p.color} opacity={0.9} />
+                  ) : null}
+                </g>
+              );
+            })}
+
+            {hover ? (
+              <g className="dsc-chart-crosshair">
+                <line
+                  x1={hover.x}
+                  x2={hover.x}
+                  y1={pad.t}
+                  y2={height - pad.b}
+                  stroke="var(--dsc-white)"
+                  strokeOpacity={0.35}
+                  strokeWidth="1"
+                />
+                {hoverSamples.map((s) =>
+                  s.v == null || s.y == null ? null : (
+                    <circle
+                      key={s.id}
+                      cx={s.x ?? hover.x}
+                      cy={s.y}
+                      r={4}
+                      fill={s.color}
+                      stroke="var(--dsc-black)"
+                      strokeWidth="1"
+                    />
+                  ),
+                )}
               </g>
-            );
-          })
+            ) : null}
+          </>
         )}
       </svg>
+
+      {hover && model ? (
+        <div
+          className="dsc-chart-tooltip"
+          style={{
+            left: `${Math.min(92, Math.max(8, (hover.x / width) * 100))}%`,
+          }}
+        >
+          <div className="dsc-chart-tooltip-time">{fmtTime(hover.t)}</div>
+          {hoverSamples.map((s) =>
+            s.v == null ? null : (
+              <div key={s.id} className="dsc-chart-tooltip-row">
+                <i style={{ background: s.color }} />
+                <span>
+                  {s.label || s.id} {s.v.toFixed(s.v >= 100 ? 0 : 1)}
+                  {s.unit ? ` ${s.unit}` : ""}
+                </span>
+              </div>
+            ),
+          )}
+        </div>
+      ) : null}
 
       <div className="dsc-chart-legend">
         {named
           .filter((s) => s.label)
           .map((s, i) => (
             <span key={s.id} className="dsc-chart-legend-item">
-              <i style={{ background: s.color || palette[i % palette.length] }} />
+              <i style={{ background: s.color || DEFAULT_PALETTE[i % DEFAULT_PALETTE.length] }} />
               {s.label}
             </span>
           ))}
         {lastPrimary != null ? (
           <span className="dsc-chart-last">
             {lastPrimary.toFixed(1)}
-            {unit ? ` ${unit}` : ""}
+            {unit ? ` ${unit}` : named[0]?.unit ? ` ${named[0].unit}` : ""}
           </span>
         ) : null}
       </div>
-
-      <style>{`
-        @keyframes dsc-line-pulse {
-          0%, 100% { opacity: 0.75; }
-          50% { opacity: 1; }
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .dsc-live-pulse { animation: none !important; }
-        }
-      `}</style>
     </div>
   );
 }
@@ -284,28 +654,58 @@ function useEased(value: number, ms = 280): number {
   return shown;
 }
 
+function arcPoint(cx: number, cy: number, r: number, angleRad: number): { x: number; y: number } {
+  return { x: cx + r * Math.cos(angleRad), y: cy + r * Math.sin(angleRad) };
+}
+
 export function ArcGauge({
   value,
   min = 0,
   max = 100,
   label,
   unit = "",
+  target,
+  band,
+  extrema,
 }: {
   value: number;
   min?: number;
   max?: number;
   label: string;
   unit?: string;
+  target?: number;
+  band?: { min: number; max: number };
+  extrema?: { min?: number; max?: number };
 }) {
   const eased = useEased(Number.isFinite(value) ? value : min);
   const clamped = Math.min(max, Math.max(min, Number.isFinite(eased) ? eased : min));
-  const pct = (clamped - min) / Math.max(max - min, 1e-6);
+  const span = Math.max(max - min, 1e-6);
+  const pct = (clamped - min) / span;
   const r = 46;
   const c = 2 * Math.PI * r * 0.75;
   const dash = c * pct;
+  const angAt = (v: number) => {
+    const p = Math.min(1, Math.max(0, (v - min) / span));
+    return Math.PI - p * Math.PI;
+  };
+  const inBand =
+    band && Number.isFinite(value) ? value >= band.min && value <= band.max : true;
+  const stroke = !Number.isFinite(value)
+    ? "var(--dsc-gray-4)"
+    : inBand
+      ? "var(--dsc-neon)"
+      : "var(--dsc-amber)";
+
+  const tickMarks: { v: number; kind: "band" | "ext" | "target" }[] = [];
+  if (band) {
+    tickMarks.push({ v: band.min, kind: "band" }, { v: band.max, kind: "band" });
+  }
+  if (extrema?.min != null) tickMarks.push({ v: extrema.min, kind: "ext" });
+  if (extrema?.max != null) tickMarks.push({ v: extrema.max, kind: "ext" });
+  if (target != null && Number.isFinite(target)) tickMarks.push({ v: target, kind: "target" });
 
   return (
-    <div className="dsc-gauge">
+    <div className={`dsc-gauge${!inBand && Number.isFinite(value) ? " is-warn" : ""}`}>
       <svg viewBox="0 0 120 90" width="140" height="105" aria-label={label}>
         <defs>
           <filter id="dsc-gauge-glow" x="-40%" y="-40%" width="180%" height="180%">
@@ -326,13 +726,37 @@ export function ArcGauge({
         <path
           d="M18 72 A46 46 0 1 1 102 72"
           fill="none"
-          stroke="var(--dsc-neon)"
+          stroke={stroke}
           strokeWidth="10"
           strokeLinecap="round"
           strokeDasharray={`${dash} ${c}`}
           filter="url(#dsc-gauge-glow)"
-          style={{ transition: "stroke-dasharray 220ms ease" }}
+          style={{ transition: "stroke-dasharray 220ms ease, stroke 220ms ease" }}
         />
+        {tickMarks.map((tm, i) => {
+          const ang = angAt(tm.v);
+          const o = arcPoint(60, 72, tm.kind === "ext" ? r - 2 : r + 1, ang);
+          const inn = arcPoint(60, 72, r - (tm.kind === "target" ? 14 : 10), ang);
+          const col =
+            tm.kind === "target"
+              ? "var(--dsc-teal)"
+              : tm.kind === "band"
+                ? "var(--dsc-amber)"
+                : "var(--dsc-gray-5)";
+          return (
+            <line
+              key={`${tm.kind}-${i}`}
+              x1={inn.x}
+              y1={inn.y}
+              x2={o.x}
+              y2={o.y}
+              stroke={col}
+              strokeWidth={tm.kind === "target" ? 2.4 : 1.6}
+              strokeLinecap="round"
+              opacity={tm.kind === "ext" ? 0.65 : 0.95}
+            />
+          );
+        })}
         <text
           x="60"
           y="58"
@@ -342,7 +766,7 @@ export function ArcGauge({
           fontWeight="700"
           fontFamily="var(--dsc-mono)"
         >
-          {Number.isFinite(value) ? value.toFixed(value >= 100 ? 0 : 1) : "—"}
+          {Number.isFinite(value) ? value.toFixed(value >= 100 ? 0 : value < 10 ? 2 : 1) : "—"}
         </text>
         <text x="60" y="74" textAnchor="middle" fill="var(--dsc-gray-5)" fontSize="10">
           {unit}
@@ -351,4 +775,16 @@ export function ArcGauge({
       <div className="dsc-gauge-label">{label}</div>
     </div>
   );
+}
+
+/** Session extrema from a series window. */
+export function seriesExtrema(series: SeriesPoint[]): { min?: number; max?: number } {
+  if (!series.length) return {};
+  let min = series[0].v;
+  let max = series[0].v;
+  for (const p of series) {
+    if (p.v < min) min = p.v;
+    if (p.v > max) max = p.v;
+  }
+  return { min, max };
 }

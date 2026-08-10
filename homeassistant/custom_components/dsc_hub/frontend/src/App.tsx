@@ -48,12 +48,16 @@ function Shell() {
         <NavLink className="dsc-brand" to="/ops/home">
           <Icon name="brand" size={36} color="var(--dsc-neon)" />
           <div className="dsc-brand-title">
-            <strong>DSC-HUB</strong>
+            <img
+              className="dsc-brand-wordmark"
+              src="/dsc_hub/assets/brand/dsc-brand-wordmark.svg"
+              alt="DSC-HUB"
+            />
             <span>Grow operations panel</span>
           </div>
         </NavLink>
         <div className="dsc-muted" style={{ fontSize: 12, letterSpacing: "0.08em" }}>
-          SURFACE 6.2.0
+          SURFACE 6.3.0
         </div>
       </div>
 
