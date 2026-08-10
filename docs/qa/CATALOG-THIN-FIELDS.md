@@ -1,41 +1,50 @@
-# Catalog thin fields & targeted rescrape chase
+# Catalog thin fields & next-scrape chase
 
-**Audience:** merge/scrape workers planning the next fill pass.  
-**Updated:** 2026-08-10 (post densify + SeedFinder quiet merge).  
-**Workset evidence:** local `C:\DSC\collation\dsc_brain.sqlite3`.
+**Audience:** next scrape / fill pass (on-disk densify drained).  
+**Updated:** 2026-08-10 (full local staging drain: 264/268 families).  
+**Workset:** `C:\DSC\collation\` (staging mirrored from NAS except 4 huge chem DBs already typed-merged).
 
-Do **not** invent values. Each row is something thin or missing and what would honestly fill it.
+## Done from existing disks (do not re-scrape for these)
 
-| Priority | Category / field | Evidence now | Blocked by | Suggested chase |
-|---|---|---|---|---|
-| P0 | `review` bodies | `review=0` | Medauth / login PDP | Medauth scrape → `project_reviews_from_raw.py` |
-| P1 | `grow_trait.height_cm_*` | **~12.2%** (12407/102141) after SF grow merge | Text without units | More numeric parsers; bands stay ordinal |
-| P1 | SeedFinder completeness | **Merged** partial (~22.8k variants / 22.8k raw); sitemap was ~40k | Scrape resume | Resume PW scrape for remainder; re-merge `--no-link` when quiet |
-| P1 | StrainDB | `DEFERRED_CF` n≈289 | Cloudflare | Explicit unlock only |
-| P1 | Subtype differentiation | `subtype_of`≈9605 after SF | Thin subtype chem/notes | Targeted PDP for high-degree subtypes |
-| P2 | `science_alias` | ~23.5k; merch SKU aliases cleaned (~181 deleted) | Residual accessory noise | Keep merch filter on harvest |
-| P2 | Optional SF end-link | Typed merge done without science↔seed link | Exclusive idle | `merge_staging_to_master.py --link-only` |
-| P2 | `nutrient_product` / `medium_product` | 3 / 1 | Wave D | Brand crawl |
-| P2 | CannaReviews descriptions | Thin public | Medauth | Medauth PDP |
-| P2 | `observation.kind=grow_note` | **1431** forums | Banks lack field | More diaries |
-| P3 | `lineage_unresolved` | ~8.8k after junk+resolve | No exact match | Alias when bases appear; no fuzzy |
-| P3 | Want bands | Rare | HA curation | Separate pass |
-
-## Snapshot (post SF merge + end-link + promote)
-
-| Metric | Approx |
+| Deliverable | Evidence |
 |---|---|
-| `strain_canonical` | ~188.7k |
-| `strain_variant` | ~89.1k (seedfinder ≈22.8k) |
-| `grow_trait` | ~102.1k · height_cm ~12.2% |
-| `observation` | ~99.5k (`bank_note`≈96.6k, `grow_note` 1431) |
-| `subtype_of` | ~9631 |
-| `science_alias` | ~23.6k |
-| `entity_link` | ~3.09M (incl. SF end-link) |
-| `lineage_unresolved` | ~8.7k |
+| Bank/forum/Wikileaf notes → `observation` | ~126k obs (`bank_note`≈123k, forums, grow_note 1431); **224** observation sources |
+| SeedFinder typed merge + end-link | ~22.8k SF variants; +283k science↔seed links |
+| Exact aliases | `science_alias` ≈26.7k (merch/page/post cleaned) |
+| Numeric height fill | `height_cm_*` ≈13.4% (13713/102141); bands still ordinal-only |
+| Subtypes | `subtype_of` ≈9703 |
+| Junk lineage quarantine | unresolved ≈5.7k |
 
-## Explicit non-goals
+Skipped local copy (already in master typed chem): `maxvalue_terpenes`, `phytochem_smith`, `cannlytics_expand`, `leafly_flat_enrich`.
 
-- Fuzzy/LLM parent collapse; strip F/OG/bx for matching
-- Inventing cm from Short/Medium/Tall
-- Starting StrainDB/medauth without operator gate
+## Next scrape must target (honest gaps)
+
+| Priority | Field / category | Why thin after drain | Suggested scrape |
+|---|---|---|---|
+| P0 | `review` bodies | Still **0**; public CannaReviews = aggregates/`login_gated` | Medauth PDP bodies |
+| P0 | `grow_trait.height_cm_*` | **~87% still empty**; remaining payloads lack numeric height | Leafly/bank pages with explicit cm/in; parser-ready text |
+| P1 | StrainDB remainder | Parked `DEFERRED_CF` | Headed CF unlock then resume |
+| P1 | SeedFinder remainder | Merged ~22.8k of ~40k sitemap | Resume PW scrape → quiet re-merge |
+| P1 | Subtype chem/grow/notes | Many `subtype_of` name-only | Targeted PDP for F2/bx/auto/OG cuts |
+| P1 | Wave D nutrients/media | `nutrient_product`=3 / `medium_product`=1 (pack seeds only) | Brand storefront crawl |
+| P2 | Herbies/Zamnesia real `description` | Notes from filtered excerpts only | Re-scrape PDP description DOM |
+| P2 | Height bands → usable UI | 355 bands in payload; HA surfaces `height_band` | Keep ordinal; do **not** invent cm |
+| P2 | Strain imagery | No strain `media_asset` | Optional image pass |
+| P3 | Want bands / HA curation | Rare on canonical | Separate HA pass |
+
+## Snapshot
+
+| Metric | Count |
+|---|---|
+| staging local | 264 sqlite |
+| `strain_canonical` | ~189.3k |
+| `observation` | ~126.0k |
+| `science_alias` | ~26.7k |
+| `subtype_of` | ~9703 |
+| `grow_trait` / height filled | 102141 / 13713 (~13.4%) |
+| `review` | 0 |
+| `nutrient_product` / `medium_product` | 3 / 1 |
+
+## Explicit non-goals until operator unlock
+
+- StrainDB CF resume, medauth login scrape, inventing height cm from Short/Med/Tall, fuzzy lineage collapse, strip F/OG/bx for matching

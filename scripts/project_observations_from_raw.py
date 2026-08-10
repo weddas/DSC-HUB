@@ -42,6 +42,7 @@ DEFAULT_GLOBS = (
     "hytiva.sqlite3",
     "dcseedexchange.sqlite3",
     "north_atlantic.sqlite3",
+    "wikileaf.sqlite3",
 )
 
 FORUM_BODY_KEYS = (
@@ -55,6 +56,9 @@ FORUM_BODY_KEYS = (
 )
 BANK_NOTE_KEYS = (
     "description",
+    "info",
+    "more_info",
+    "about_info",
 )
 GROW_NOTE_KEYS = (
     "grow_notes",
@@ -66,6 +70,8 @@ EXCERPT_ALLOW_STEMS = frozenset(
         "bank_zamnesia",
         "herbies",
         "zamnesia",
+        "bank_royal_queen",
+        "royal_queen",
     }
 )
 _EXCERPT_NOISE = (

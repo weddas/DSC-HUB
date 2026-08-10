@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "kind": "strains",
-  "built_at": "2026-08-10T07:51:40Z",
+  "built_at": "2026-08-10T08:10:26Z",
   "count": 2500,
   "with_want": 12,
   "with_height": 12,
@@ -7357,6 +7357,22 @@
         0.0,
         0.0
       ],
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_1994_jack_herer",
+      "name": "(1994 JACK HERER",
+      "type": null,
+      "breeder": null,
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
       "want": null,
       "height_cm": null,
       "height_band": null,
@@ -58706,32 +58722,6 @@
       "thc_range": [
         16.47,
         16.47
-      ],
-      "cbd_range": [
-        0.0,
-        0.0
-      ],
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_062821_eclair_t",
-      "name": "062821-Eclair-T",
-      "type": null,
-      "breeder": null,
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [
-        "cannabinoids_terpenes_ratio",
-        "total_terpenes",
-        "beta_caryophyllene"
-      ],
-      "thc_range": [
-        11.89,
-        11.89
       ],
       "cbd_range": [
         0.0,

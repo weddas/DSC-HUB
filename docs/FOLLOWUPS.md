@@ -1665,7 +1665,7 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 | N-087-MERGE-LINK-NAS | **done (mitigated)** | Per-family full-chem link abandoned. Wrapper/resume pass `--no-link --no-search`; `merge_staging_to_master` commits after link; `--link-only` + set-based `link_science_to_seed`; force flag `_n087_force_no_link.flag` for live children. End-link added **1.61M** variant edges in ~164s on local SSD. |
 | N-087-MERGE-NOLINK | **done** | See above; exclusive + resume scripts updated. |
 | N-087-COLLATION | **done (v4 + debt + match-expand)** | Schema v4; parent_of + subtype_of; junk/tree quarantine; observations≈71k; review=0; thin chase doc. Local `C:\DSC\collation\`; baks `pre_collation_v4` / `pre_collation_debt` / `pre_match_expand`. |
-| N-087-DENSIFY | **done** | Height ~12.7%; alias ~23k (merch cleaned); obs ≈78.9k→**99.5k** after SF notes; SF merged quiet; bak `pre_catalog_densify` then post-SF copy-back. |
+| N-087-DENSIFY | **done (+ full staging drain)** | Local staging 264/268; obs≈126k; alias≈26.7k; height≈13.9%; SF merged+linked. Next scrape chase only: [`CATALOG-THIN-FIELDS.md`](qa/CATALOG-THIN-FIELDS.md). |
 | N-087-BACKUP | **done** | Durable `_BACKUP_N087_2026-08-08` (~9.5GB) present; earlier git backup commit fc8c4cc; plus `pre_local_ssd` bak before copy-back. |
 
 ### scrapes / corpus

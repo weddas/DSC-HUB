@@ -28,7 +28,8 @@ MERCH_RE = re.compile(
     r"cartridge|battery|threaded|preroll|pre roll|pre-roll|hashole|hashhole|"
     r"thcp|gummy|donut flame|care package|510\b|\b\d+g\b|2x2|"
     r"disposable|vape|wax pen|dab|concentrate cart|flame hashole|"
-    r"premium thcp|hashole|hashhole"
+    r"premium thcp|hashole|hashhole|"
+    r"page \d+|post \d+"
     r")\b",
     re.I,
 )
@@ -36,6 +37,8 @@ MERCH_RE = re.compile(
 
 def is_merch(alias_norm: str, alias: str, name_norm: str) -> bool:
     blob = f"{alias_norm} {alias} {name_norm}"
+    if re.match(r"^(page|post)\s+\d+$", alias_norm or "", re.I):
+        return True
     return bool(MERCH_RE.search(blob))
 
 

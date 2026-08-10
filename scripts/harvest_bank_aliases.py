@@ -29,10 +29,12 @@ MERCH_RE = re.compile(
     r"\b("
     r"cartridge|battery|threaded|preroll|pre roll|pre-roll|hashole|hashhole|"
     r"thcp|gummy|donut flame|care package|510\b|\b\d+g\b|2x2|"
-    r"disposable|vape|wax pen|dab|concentrate cart|premium thcp"
+    r"disposable|vape|wax pen|dab|concentrate cart|premium thcp|"
+    r"page \d+|post \d+"
     r")\b",
     re.I,
 )
+PAGE_POST_RE = re.compile(r"^(page|post)\s+\d+$", re.I)
 
 SLUG_FROM_URL = (
     # Herbies: /cannabis-seeds/{slug}
@@ -121,6 +123,8 @@ def main(argv: list[str] | None = None) -> int:
                 continue
             if MERCH_RE.search(name) or MERCH_RE.search(nn):
                 continue
+            if PAGE_POST_RE.match(nn) or PAGE_POST_RE.match(name):
+                continue
             slug = p.get("slug")
             if not isinstance(slug, str) or not slug.strip():
                 slug = slug_from_url(str(p.get("url") or p.get("product_url") or ""))
@@ -130,6 +134,8 @@ def main(argv: list[str] | None = None) -> int:
             if not sn or sn == nn:
                 continue
             if MERCH_RE.search(sn) or MERCH_RE.search(slug):
+                continue
+            if PAGE_POST_RE.match(sn):
                 continue
             # Prefer mapping slug alias → named canonical when name exists as canonical
             target = nn if nn in canonical else None
