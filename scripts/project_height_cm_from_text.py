@@ -35,6 +35,22 @@ HEIGHT_KEYS = (
     "plant_height_cm",
     "grow_height_cm",
     "height_raw",
+    "height_indoor",
+    "height_outdoor",
+)
+# Free-text: only when unit present near a height verb/noun (never bare HTML colors).
+_PROSE_HEIGHT = re.compile(
+    r"(?:height|tall|reach(?:es|ing)?|grows?(?:\s+up)?\s+to|up to)\D{0,40}?"
+    r"(\d+(?:\.\d+)?)\s*(?:-|to|–)?\s*(\d+(?:\.\d+)?)?\s*"
+    r"(cm|centimet(?:er|re)s?|inches|inch|in\b|ft|feet)",
+    re.I,
+)
+_PROSE_KEYS = (
+    "more_info",
+    "info",
+    "description",
+    "about_info",
+    "page_text_excerpt",
 )
 
 
@@ -97,6 +113,28 @@ def _extract_from_payload(payload: dict) -> tuple[float | None, float | None, st
             h0, h1 = parse_height_cm(grow.get(k))
             if h0 is not None:
                 return h0, h1, f"grow.{k}"
+    for k in _PROSE_KEYS:
+        text = payload.get(k)
+        if not isinstance(text, str) or len(text) < 12:
+            continue
+        # skip obvious HTML attribute noise
+        if 'font color' in text.lower() or 'href=' in text.lower()[:200]:
+            # still allow if explicit height+cm later in text
+            pass
+        m = _PROSE_HEIGHT.search(text)
+        if not m:
+            continue
+        a = float(m.group(1))
+        b = float(m.group(2)) if m.group(2) else a
+        unit = m.group(3).lower()
+        if unit.startswith("in") or unit in ("ft", "feet"):
+            if unit in ("ft", "feet"):
+                a, b = a * 30.48, b * 30.48
+            else:
+                a, b = a * 2.54, b * 2.54
+        if a <= 0 or b <= 0 or a > 2000 or b > 2000:
+            continue
+        return min(a, b), max(a, b), f"prose:{k}"
     return None, None, None
 
 

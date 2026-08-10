@@ -1,50 +1,44 @@
 # Catalog thin fields & next-scrape chase
 
-**Audience:** next scrape / fill pass (on-disk densify drained).  
-**Updated:** 2026-08-10 (full local staging drain: 264/268 families).  
-**Workset:** `C:\DSC\collation\` (staging mirrored from NAS except 4 huge chem DBs already typed-merged).
+**Audience:** next scrape / fill pass.  
+**Updated:** 2026-08-10 (height NLP + Wave D lite + SF resume).  
+**Workset:** `C:\DSC\collation\` (+ NAS master copy-back).
 
-## Done from existing disks (do not re-scrape for these)
+## Landed from existing disks + light scrapes
 
 | Deliverable | Evidence |
 |---|---|
-| Bank/forum/Wikileaf notes → `observation` | ~126k obs (`bank_note`≈123k, forums, grow_note 1431); **224** observation sources |
-| SeedFinder typed merge + end-link | ~22.8k SF variants; +283k science↔seed links |
-| Exact aliases | `science_alias` ≈26.7k (merch/page/post cleaned) |
-| Numeric height fill | `height_cm_*` ≈13.4% (13713/102141); bands still ordinal-only |
-| Subtypes | `subtype_of` ≈9703 |
-| Junk lineage quarantine | unresolved ≈5.7k |
+| Staging drain | 264 local staging DBs → obs ≈126k / 224 sources |
+| Height cm NLP | `height_cm_*` **~43.5%** (44376/102141) via indoor fields + prose with units |
+| Height bands | payload `height_band` ≈5145 (Short/Med/Tall — no fake cm) |
+| Wave D lite | Grow Kings Shopify → `nutrient_product` **416**, `medium_product` **255** |
+| SeedFinder | PW scrape **resumed** (~22853/40638 done; todo ~17.8k); checkpoint save hardened for NAS replace |
 
-Skipped local copy (already in master typed chem): `maxvalue_terpenes`, `phytochem_smith`, `cannlytics_expand`, `leafly_flat_enrich`.
+## Still thin / scrape targets
 
-## Next scrape must target (honest gaps)
-
-| Priority | Field / category | Why thin after drain | Suggested scrape |
+| Priority | Field | Blocked by | Next |
 |---|---|---|---|
-| P0 | `review` bodies | Still **0**; public CannaReviews = aggregates/`login_gated` | Medauth PDP bodies |
-| P0 | `grow_trait.height_cm_*` | **~87% still empty**; remaining payloads lack numeric height | Leafly/bank pages with explicit cm/in; parser-ready text |
-| P1 | StrainDB remainder | Parked `DEFERRED_CF` | Headed CF unlock then resume |
-| P1 | SeedFinder remainder | Merged ~22.8k of ~40k sitemap | Resume PW scrape → quiet re-merge |
-| P1 | Subtype chem/grow/notes | Many `subtype_of` name-only | Targeted PDP for F2/bx/auto/OG cuts |
-| P1 | Wave D nutrients/media | `nutrient_product`=3 / `medium_product`=1 (pack seeds only) | Brand storefront crawl |
-| P2 | Herbies/Zamnesia real `description` | Notes from filtered excerpts only | Re-scrape PDP description DOM |
-| P2 | Height bands → usable UI | 355 bands in payload; HA surfaces `height_band` | Keep ordinal; do **not** invent cm |
-| P2 | Strain imagery | No strain `media_asset` | Optional image pass |
-| P3 | Want bands / HA curation | Rare on canonical | Separate HA pass |
+| P0 | `review` bodies | Medauth | Login PDP scrape |
+| P0 | Remaining height (~56% empty) | No numeric text in payloads | Bank/Leafly pages with cm/in |
+| P1 | SeedFinder remainder | Running | Let PW finish → quiet re-merge `--no-link` |
+| P1 | StrainDB | `DEFERRED_CF` | Explicit unlock only |
+| P1 | Wave D depth | GK has titles only | Manufacturer PDPs for NPK/dose; more brands |
+| P1 | Subtype chem/notes | Name-only subtypes | Targeted F2/bx/auto PDPs |
+| P2 | Herbies/Zamnesia `description` | Excerpt-only notes | Re-scrape description DOM |
+| P3 | Want / imagery | Not scraped | Separate passes |
 
 ## Snapshot
 
 | Metric | Count |
 |---|---|
-| staging local | 264 sqlite |
-| `strain_canonical` | ~189.3k |
-| `observation` | ~126.0k |
-| `science_alias` | ~26.7k |
-| `subtype_of` | ~9703 |
-| `grow_trait` / height filled | 102141 / 13713 (~13.4%) |
+| `strain_canonical` | ~189k |
+| `observation` | ~126k |
+| `grow_trait` height filled | ~44376 (~43.5%) |
+| `height_band` in payload | ~5145 |
+| `nutrient_product` / `medium_product` | 416 / 255 |
 | `review` | 0 |
-| `nutrient_product` / `medium_product` | 3 / 1 |
+| SeedFinder scrape | resumed ~22.8k/40.6k |
 
-## Explicit non-goals until operator unlock
+## Non-goals without unlock
 
-- StrainDB CF resume, medauth login scrape, inventing height cm from Short/Med/Tall, fuzzy lineage collapse, strip F/OG/bx for matching
+StrainDB CF, medauth, inventing cm from Short/Med/Tall, fuzzy lineage, strip F/OG/bx.

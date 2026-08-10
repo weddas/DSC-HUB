@@ -1,11 +1,11 @@
 {
   "schema_version": 2,
   "kind": "strains",
-  "built_at": "2026-08-10T08:10:26Z",
+  "built_at": "2026-08-10T08:21:44Z",
   "count": 2500,
   "with_want": 12,
-  "with_height": 12,
-  "with_height_band": 1,
+  "with_height": 23,
+  "with_height_band": 3,
   "note": "Browse index v2 from research SQLite projection + curated Want; height_cm / height_band / flowering / chem only when corpus states them (never invented cm from bands).",
   "items": [
     {
@@ -176,7 +176,10 @@
           70
         ]
       },
-      "height_cm": null,
+      "height_cm": [
+        80.0,
+        120.0
+      ],
       "flowering_days": null,
       "curated": true
     },
@@ -276,7 +279,7 @@
           70
         ]
       },
-      "height_cm": null,
+      "height_cm": 154.0,
       "flowering_days": null,
       "curated": true
     },
@@ -413,7 +416,7 @@
           70
         ]
       },
-      "height_cm": null,
+      "height_cm": 179.0,
       "flowering_days": null,
       "curated": true
     },
@@ -542,7 +545,10 @@
           65
         ]
       },
-      "height_cm": null,
+      "height_cm": [
+        80.0,
+        120.0
+      ],
       "flowering_days": null,
       "curated": true
     },
@@ -1944,7 +1950,10 @@
       ],
       "cbd_range": null,
       "want": null,
-      "height_cm": null,
+      "height_cm": [
+        80.0,
+        120.0
+      ],
       "height_band": null,
       "flowering_days": null,
       "curated": false
@@ -22048,8 +22057,11 @@
         0.7
       ],
       "want": null,
-      "height_cm": null,
-      "height_band": null,
+      "height_cm": [
+        50.0,
+        90.0
+      ],
+      "height_band": "Short",
       "flowering_days": null,
       "curated": false
     },
@@ -23548,7 +23560,10 @@
       ],
       "cbd_range": null,
       "want": null,
-      "height_cm": null,
+      "height_cm": [
+        80.01,
+        109.982
+      ],
       "height_band": null,
       "flowering_days": [
         60,
@@ -23592,8 +23607,11 @@
       ],
       "cbd_range": null,
       "want": null,
-      "height_cm": null,
-      "height_band": null,
+      "height_cm": [
+        80.0,
+        100.0
+      ],
+      "height_band": "Short to Medium",
       "flowering_days": [
         65,
         75
@@ -23655,7 +23673,10 @@
       ],
       "cbd_range": null,
       "want": null,
-      "height_cm": null,
+      "height_cm": [
+        80.0,
+        120.0
+      ],
       "height_band": null,
       "flowering_days": 48,
       "curated": false
@@ -23696,7 +23717,10 @@
       ],
       "cbd_range": null,
       "want": null,
-      "height_cm": null,
+      "height_cm": [
+        80.01,
+        100.076
+      ],
       "height_band": null,
       "flowering_days": [
         55,
@@ -23778,7 +23802,10 @@
       ],
       "cbd_range": null,
       "want": null,
-      "height_cm": null,
+      "height_cm": [
+        74.93,
+        100.076
+      ],
       "height_band": null,
       "flowering_days": [
         50,

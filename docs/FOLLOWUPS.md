@@ -1671,7 +1671,7 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 ### scrapes / corpus
 | ID | Status | Notes |
 |---|---|---|
-| S-SEEDFINDER | **merged (partial scrape)** | 2026-08-10: scrape PID dead; orphan journal recovered; merged `--only seedfinder --no-link` from local copy (raw≈22847). Canonical≈188.6k / variant SF≈22.8k. Resume scrape later for remaining catalog; do not wait on StrainDB. |
+| S-SEEDFINDER | **side task (resumed)** | 2026-08-10 evening: PW scrape relaunched (~22853/40638; todo ~17.8k). Checkpoint `save()` hardened for NAS replace PermissionError. Merge again when quiet. |
 | S-STRAINDB | **DEFERRED_CF (n≈289)** | Parked 2026-08-10 by operator: CF too costly vs value right now. Pause file `status=DEFERRED_CF`. Resume only on explicit ask after headed CF unlock (8–20s). Not a gate for catalog work on master. |
 | S-TIERA-HALF1 | **done (dump/staging + merged)** | Was dump+staging; now included in local-SSD exclusive queue. |
 | S-TIERA-2ND | **done (dump/staging + merged)** | Was dump+staging; now included in local-SSD exclusive queue. |

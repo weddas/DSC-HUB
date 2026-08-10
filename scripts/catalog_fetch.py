@@ -54,9 +54,18 @@ class Checkpoint:
 
     def save(self) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)
+        payload = json.dumps(self.data, indent=2)
         tmp = self.path.with_suffix(self.path.suffix + ".tmp")
-        tmp.write_text(json.dumps(self.data, indent=2), encoding="utf-8")
-        tmp.replace(self.path)
+        tmp.write_text(payload, encoding="utf-8")
+        try:
+            tmp.replace(self.path)
+        except OSError:
+            # NAS/SMB often denies atomic replace while another handle is open.
+            self.path.write_text(payload, encoding="utf-8")
+            try:
+                tmp.unlink(missing_ok=True)
+            except OSError:
+                pass
 
 
 def run_paginated(
