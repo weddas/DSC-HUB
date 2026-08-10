@@ -1799,3 +1799,14 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 
 ### next-plan
 - (none for this visual pass — live HA smoke + Sync deploy still operator-gated)
+
+## 2026-08-11 — version trains docs (firmware vs surface)
+
+### done
+- Root `RELEASE.md` / `UPGRADE.md` / README / INSTALL / HA README still said HA surface **5.2.0** (or Sync **5.1.0/5.1.3**) while package SoT is surface **6.2.0**, firmware **5.2.0**, Sync **5.1.4**.
+- Added [`docs/qa/VERSION-TRAINS.md`](qa/VERSION-TRAINS.md) — dual-train rules, mermaid, upgrade path, pitfalls.
+- Kept tagged **v5.1.0** as historical cut; live-train rollout checklist points at firmware-only `dsc_expected_release`.
+
+### next-plan
+- Merge/close overlapping docs drafts (#50/#51 version split, #71 surface lockstep, #69 SoftAP) once reviewed.
+- Live smoke: sensor + System KPI + App SURFACE label all **6.2.0** after Core restart.

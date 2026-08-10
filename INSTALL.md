@@ -35,9 +35,9 @@ into `configuration.yaml` (packages + YAML dashboards **`dsc-hub-pro`** and
 ### Add-on (recommended)
 
 1. Settings → Add-ons → Repositories → `https://github.com/weddas/DSC-HUB`
-2. Install **DSC-HUB Sync** **5.1.0** → Start (defaults include `sync_esphome: true`)
+2. Install **DSC-HUB Sync** **5.1.4** → Start (defaults include `sync_esphome: true`)
 3. Wait for “Synced to …” · confirm `/config/dsc-hub-sync.version`
-4. Merge configuration snippet → **Restart HA Core once** (creates new helpers)
+4. Merge configuration snippet (include `dsc_hub:` for the React panel) → **Restart HA Core once** (creates new helpers)
 
 Further pushes to `master` update packages / Pro dashboard / www / stubs automatically.
 Firmware Install stays **manual**.
@@ -103,10 +103,13 @@ copies components, or flash from `firmware/v4/`). Secrets: `dsc_bridge_*`,
 ### Verify
 
 - [ ] `sensor.dsc_hub_firmware_version` = **5.2.0** (and peers)
-- [ ] `sensor.dsc_ha_surface_version` reports the HA pack (currently **6.x** — independent of firmware train)
+- [ ] `sensor.dsc_ha_surface_version` = **6.2.0** (independent of firmware train)
+- [ ] `input_text.dsc_expected_release` = **5.2.0** (never the surface string)
 - [ ] `sensor.dsc_fleet_version_status` → **ok** after all flashes (firmware train only; surface not compared)
-- [ ] `/dsc-hub-pro/home` + Learning Phase B controls present (B default off)
+- [ ] `/dsc-hub` (React) and/or `/dsc-hub-pro/home` + Learning Phase B controls present (B default off)
 - [ ] Panel ESP-NOW UP; Bridge Anchor SoftAP up; Sonoffs follow via bridge (HA followers fallback)
+
+Version model: [`docs/qa/VERSION-TRAINS.md`](docs/qa/VERSION-TRAINS.md).
 
 ---
 
