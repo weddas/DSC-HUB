@@ -382,20 +382,34 @@ not humidifier lock — entity id kept for compatibility.
 - POT3 probe swap, SCD41 — post-release hardware
 - ETH01 bridge — **in tree** (`dsc-bridge.yaml` · F-010/F-012/F-013)
 
-## Firmware pairing (**5.2.0** train)
+## Firmware / surface pairing (live train)
 
 | Piece | Version |
 |---|---|
 | Hub / Control / pots / bridge / Sonoffs / kits | **`5.2.0`** |
-| HA surface (packages + dashboard) | **`5.2.0`** |
-| Dashboard | DSC-HUB Pro (4-col, browser_mod popups) |
+| HA surface (`sensor.dsc_ha_surface_version`) | **`6.2.0`** |
+| `input_text.dsc_expected_release` | **`5.2.0`** (firmware only) |
+| Sync add-on | **`5.1.4`** |
+| Product panel | `/dsc-hub` React (`dsc_hub` integration) |
+| Lovelace fallback | DSC-HUB Pro YAML (`dsc-hub-pro`, sidebar hidden) |
 | `espnow_cmd_tag` | `54727` (`0xD5C7`) on hub **and** panel |
+
+```mermaid
+flowchart LR
+  fw["firmware 5.2.0"] --> chip["fleet chip"]
+  expected["dsc_expected_release 5.2.0"] --> chip
+  surface["HA surface 6.2.0"] -.->|"attrs only"| chip
+```
 
 Bridge entities: Anchor BSSID/channel, hub ESP-NOW link, demand mirrors,
 per-Sonoff API links. Setpoints still write the hub API.
 
 Fleet drift chip (`sensor.dsc_fleet_version_status`) compares the
-**major.minor** train, so mixed patch levels inside `5.2.x` stay `ok`.
+**major.minor firmware** train only, so mixed patch levels inside `5.2.x` stay `ok`.
+HA surface **6.2.0** beside firmware **5.2.0** is expected.
+
+Ops detail: [`../docs/qa/VERSION-TRAINS.md`](../docs/qa/VERSION-TRAINS.md) ·
+panel lockstep: [`../docs/qa/LIVE-UI-CUSTOM-PANEL.md`](../docs/qa/LIVE-UI-CUSTOM-PANEL.md).
 
 **Mat votes:** `switch.dsc_hub_mat_vote_pot_1`…`4` — Root Zone is source of truth; Climate links there.
 
