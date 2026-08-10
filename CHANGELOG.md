@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- **SoftAP fleet home + Fleet Fix (`bc2aa9b`)** — SoftAP-deferred channel-pin
+  path retired. `dsc_anchor_ap` brings up SoftAP `DSC-Anchor` with static
+  `192.168.4.1/24` (no DHCPS), LwIP NAPT, and ESP-NOW peer rebind onto
+  `WIFI_IF_AP`. Hub/Control/Sonoffs SoftAP-primary (`.10`/`.11`/`.20`–`.23`);
+  pots stay Nest/home ESP-NOW star. Glass Fleet Fix sends `0xDC` ops 60/62
+  (`FIX_ACTIVE` / `FLEET_JUMP`). Spec + ops:
+  [`docs/superpowers/specs/2026-08-10-softap-fleet-star-design.md`](docs/superpowers/specs/2026-08-10-softap-fleet-star-design.md),
+  [`docs/qa/SOFTAP-FLEET-HOME.md`](docs/qa/SOFTAP-FLEET-HOME.md),
+  [`docs/brain/F010_APPLIANCE_BRIDGE.md`](docs/brain/F010_APPLIANCE_BRIDGE.md).
+  HA needs SoftAP route `192.168.4.0/24 via` bridge ETH. F-011 / F-014 still deferred.
 - **ETH01 bridge 5.2.0 (F-010 / F-012 / F-013)** — WT32-ETH01 SoftAP channel
   anchor (`DSC-Anchor`), ESP-NOW `0xD8` appliance demand → Noise native API
   client to Sonoffs (HA-down actuation), broadcast `0xD1` vitals mirror to HA
