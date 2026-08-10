@@ -25,7 +25,7 @@ Bridge ──Ethernet──► HA (192.168.86.3)
 | SoftAP gateway | `192.168.4.1/24` (static client map; no SoftAP DHCPS in v1) |
 | Forwarding | LwIP IP forward + IPv4 NAPT on SoftAP netif |
 | ESP-NOW ifidx | `WIFI_IF_AP` after SoftAP up |
-| Max STA | ≥10 (hub + control + 4 sonoffs + headroom) |
+| Max STA | **4** in tree (`5893ea6` — runtime + sdkconfig cap until SoftAP set_config proven with a clean rebuild; design still wants headroom later) |
 
 ### Static SoftAP leases (clients)
 
@@ -42,12 +42,16 @@ Bridge `dsc_api_client` hosts use these SoftAP IPs. HA → SoftAP clients requir
 
 ## Wi‑Fi membership
 
+**Goal membership** (after SoftAP IP gate — see FOLLOWUPS / `docs/qa/SOFTAP-FLEET-HOME.md`):
+
 | Device | SoftAP | Nest | Notes |
 |---|---|---|---|
 | Hub | primary + static IP | fallback | Prefer Anchor BSSID via Lock / `bridge_mac` / `0xD0` |
 | Control | primary + static IP | fallback | Glass Fleet Fix |
 | Pots | **not preferred** | OTA/optional | ESP-NOW to hub only |
 | Sonoffs | primary + static IP | fallback | Bridge on/off only |
+
+**Current tree (`5893ea6`):** Nest-first for Hub / Control / Sonoffs; SoftAP secondary with static map reserved. SoftAP-primary orphaned the hub before HA could reach `.4.x`.
 
 ## Fleet Fix state machine (glass)
 

@@ -17,7 +17,7 @@ Notion [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d3407556
 - **Hub owns climate** — dehumidifier → humidifier → heater → AC → mat ladder
   with reality gates, failsafe, and min-off (HA never drives those safety rails).
 - **ESP-NOW primary** panel ↔ hub — works when Home Assistant is down.
-- **ETH01 bridge** — SoftAP channel anchor (`DSC-Anchor`) + Sonoff drive without HA (F-010); HA followers stay fallback.
+- **ETH01 bridge** — SoftAP channel anchor (`DSC-Anchor`) + Sonoff drive without HA (F-010); SoftAP-home membership paused / Nest-first until SoftAP IP gate ([runbook](docs/qa/SOFTAP-FLEET-HOME.md)); HA followers stay fallback.
 - **DSC-HUB Pro** dashboard (`/dsc-hub-pro`) — Home, Climate, Learning, tents,
   Root Zone, Tank, Light, Trends, System.
 - **Build a Plant** (`/dsc-build-plant/build`) — separate composition dashboard

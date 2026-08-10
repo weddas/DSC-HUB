@@ -1758,3 +1758,5 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 **Bridge notes:** SoftAP bring-up fixed to `WIFI_MODE_APSTA`, max STA capped at 4, eth static `192.168.86.66` (DHCP had moved to `.17` after power loss). Hub flash = **micro-USB** (`esp32dev`); bridge flash = USB-TTL + IO0/EN — do not conflate.
 
 **Flash recovery (hub):** Nest-first packages on `master` — HA ESPHome Verify/Install (USB micro on laptop is fine). Do not Install SoftAP-primary wifi until gate passes.
+
+**Ops runbook:** [`docs/qa/SOFTAP-FLEET-HOME.md`](qa/SOFTAP-FLEET-HOME.md) · architecture [`docs/brain/F010_APPLIANCE_BRIDGE.md`](brain/F010_APPLIANCE_BRIDGE.md).

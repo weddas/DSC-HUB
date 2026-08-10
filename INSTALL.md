@@ -88,7 +88,7 @@ Disable any storage dashboard still named DSC-HUB / `dsc-hub-v4`. Sidebar:
 | `dsc-hub.yaml` | hub v4_0 + espnow | **5.2.0** |
 | `dsc-control.yaml` | control-common | **5.2.0** |
 | pots | pot-common | **5.2.0** |
-| `dsc-bridge.yaml` | bridge-common + SoftAP Anchor | **5.2.0** |
+| `dsc-bridge.yaml` | bridge-common + SoftAP Anchor (Nest-first membership until SoftAP IP gate — [SOFTAP-FLEET-HOME](docs/qa/SOFTAP-FLEET-HOME.md)) | **5.2.0** |
 | Sonoffs | sonoff-common (dual API client) | **5.2.0** |
 
 Stub `ref: master` (or tag when cut). Kits Validate even if not flashed on lab.
