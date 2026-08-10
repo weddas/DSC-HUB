@@ -2,7 +2,8 @@
 
 **Audience:** merge/scrape workers planning the next fill pass.  
 **Updated:** 2026-08-10 (catalog densify pass).  
-**Workset evidence:** local `C:\DSC\collation\dsc_brain.sqlite3` after densify.
+**Workset evidence:** local `C:\DSC\collation\dsc_brain.sqlite3` after densify.  
+**Ops runbooks:** [`CATALOG-COLLATION-CONTRACT.md`](CATALOG-COLLATION-CONTRACT.md) § Match-expand ops / § Catalog densify ops · corpus overview [`CATALOG-RESEARCH-CORPUS.md`](CATALOG-RESEARCH-CORPUS.md).
 
 Do **not** invent values. Each row is something thin or missing and what would honestly fill it.
 
