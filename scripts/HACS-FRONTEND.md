@@ -89,7 +89,25 @@ Without it, popup `tap_action`s silently do nothing — no error is shown.
 | `homeassistant/www/*` | **Source of truth** — run `scripts/sync-hacs-dist.sh` after edits |
 
 CI workflow [`.github/workflows/hacs-dist.yml`](../.github/workflows/hacs-dist.yml)
-keeps `dist/` synced on pushes that touch `homeassistant/www/`.
+keeps `dist/` synced on pushes that touch `homeassistant/www/`. On `master` it
+commits `chore(hacs): sync dist/ from homeassistant/www` when `dist/` drifts.
+PRs fail if `dist/` is stale — run `./scripts/sync-hacs-dist.sh` before merge.
+
+**Visual pass 6.2.0 (`d6beefd` → HACS sync `5ccbc46`):** Dash glass + pot→tent
+lerp and Build slide-out search live in `homeassistant/www/`. After that lands on
+master, **HACS → DSC-HUB System Map → Redownload** + hard-refresh, or rely on
+Sync www concat. The React Plant Seat page is **not** in this HACS bundle — it
+ships via `custom_components/dsc_hub` (see
+[`docs/qa/LIVE-UI-CUSTOM-PANEL.md`](../docs/qa/LIVE-UI-CUSTOM-PANEL.md)).
+
+```mermaid
+flowchart LR
+  www["homeassistant/www"] --> script["sync-hacs-dist.sh"]
+  script --> dist["dist/DSC-HUB.js"]
+  dist --> hacs["HACS Redownload"]
+  www --> sync["Sync www concat"]
+  sync --> local["/local"]
+```
 
 ## Packages / dashboard YAML (not HACS)
 
@@ -100,6 +118,8 @@ plugins — they deploy via [`ha-sync.sh`](ha-sync.sh) / Unraid runner
 | Surface | Delivery |
 |---|---|
 | SYSTEM MAP + AIRFLOW + The Dash + Build a Plant cards | **HACS Dashboard** (this doc) |
+| React `/dsc-hub` panel + Plant Seat | Sync / `ha-sync` → `custom_components/dsc_hub` |
+| Pot → tent SoT (`dsc_v4_pot_tent.yaml`) | Sync packages + Core restart once |
 | Build a Plant catalog indexes + dashboard YAML | Sync add-on **5.1.4+** / `ha-sync.sh` |
 | `packages/dsc_v4_*.yaml` + YAML dashboards + www fallback | Git push → HA sync |
 | ESPHome firmware | Validate/Install (manual) |
