@@ -33,7 +33,7 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional(CONF_CHANNEL, default=11): cv.int_range(min=1, max=13),
         cv.Optional(CONF_AP_IP, default="192.168.4.1"): cv.string,
         cv.Optional(CONF_AP_NETMASK, default="255.255.255.0"): cv.string,
-        cv.Optional(CONF_MAX_CONNECTIONS, default=10): cv.int_range(min=1, max=15),
+        cv.Optional(CONF_MAX_CONNECTIONS, default=4): cv.int_range(min=1, max=15),
         cv.Optional(CONF_ENABLE_NAPT, default=True): cv.boolean,
         cv.Optional(CONF_BSSID_SENSOR): cv.use_id(text_sensor.TextSensor),
         cv.Optional(CONF_CHANNEL_SENSOR): cv.use_id(sensor.Sensor),

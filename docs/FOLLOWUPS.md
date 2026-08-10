@@ -1745,20 +1745,16 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 
 ## SoftAP fleet home + enhanced Fleet Fix (2026-08-10)
 
-**Decision:** SoftAP DSC-Anchor is the Wi‑Fi home for Hub / Control / Sonoffs. Pots stay ESP-NOW→hub→bridge (star). Nest is emergency fallback only. Spec: `docs/superpowers/specs/2026-08-10-softap-fleet-star-design.md`.
+**Decision (goal):** SoftAP DSC-Anchor is the Wi‑Fi home for Hub / Control / Sonoffs. Pots stay ESP-NOW→hub→bridge (star). Nest is emergency fallback only. Spec: `docs/superpowers/specs/2026-08-10-softap-fleet-star-design.md`.
 
-**Implementation landed in tree:**
-- `dsc_anchor_ap`: SoftAP + DHCP (`192.168.4.1/24`) + NAPT + ESP-NOW rebind to `WIFI_IF_AP` (SoftAP-deferred bring-up path retired).
-- Bridge sdkconfig: `CONFIG_LWIP_IP_FORWARD` / `CONFIG_LWIP_IPV4_NAPT` / SoftAP max STA 10.
-- Static SoftAP map: hub `.10`, control `.11`, heater `.20`, heatmat `.21`, humidifier `.22`, dehumidifier `.23`.
-- Hub/Control wifi lab: Anchor primary; pot wifi lab: Nest primary (SoftAP demoted).
-- Sonoff common: SoftAP primary + static IP; Nest fallback.
-- Fleet Fix glass: sends 0xDC op 60 (FIX_ACTIVE) + 62 (FLEET_JUMP); hub `rf_fleet_jump_arm` pins `bridge_mac` preferred + WiFi bounce.
+**2026-08-10 evening — SoftAP-home PAUSED (membership):** SoftAP-primary hub OTA orphaned the hub (Fallback Hotspot / offline) before SoftAP L3 path was proven. Spec criterion #2 (HA path to SoftAP clients) still fails from LAN (`.4.1` dark via eth). Tree reverted to **Nest-first** wifi for Hub / Control / Sonoffs; SoftAP remains secondary + bridge SoftAP beacon/ESP-NOW pin.
 
-**Ops required to go live:**
-1. Serial-flash bridge with new SoftAP+NAPT (do not rely on broken Noise OTA).
-2. On HA OS: `ip route add 192.168.4.0/24 via 192.168.86.66` (persist across reboot).
-3. Update live HA `secrets.yaml` host keys to SoftAP IPs; SCP `dsc_anchor_ap` + stubs.
-4. OTA Hub / Control / Sonoffs onto SoftAP-primary packages; confirm ESP-NOW link + Sonoff on/off via bridge.
+**Hard gate before SoftAP-primary anyone again:**
+1. SoftAP SSID up; Anchor BSSID published.
+2. Static SoftAP STA (e.g. `192.168.4.50`) can ping SoftAP gw `192.168.4.1`.
+3. Route `192.168.4.0/24 via 192.168.86.66` delivers SoftAP clients to HA.
+4. SoftAP-primary **hub only** → HA API at `.4.10` works; then Control; then Sonoffs one at a time.
 
-**F-004 / F-012:** SoftAP-as-preferred-STA debt closed *in design* once NAPT+route proven on hardware. Nest channel lock remains a backup if SoftAP is down.
+**Bridge notes:** SoftAP bring-up fixed to `WIFI_MODE_APSTA`, max STA capped at 4, eth static `192.168.86.66` (DHCP had moved to `.17` after power loss). Hub flash = **micro-USB** (`esp32dev`); bridge flash = USB-TTL + IO0/EN — do not conflate.
+
+**Flash recovery (hub):** Nest-first packages on `master` — HA ESPHome Verify/Install (USB micro on laptop is fine). Do not Install SoftAP-primary wifi until gate passes.

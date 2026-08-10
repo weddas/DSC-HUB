@@ -41,7 +41,8 @@ esp32:
     sdkconfig_options:
       CONFIG_LWIP_IP_FORWARD: y
       CONFIG_LWIP_IPV4_NAPT: y
-      CONFIG_ESP_WIFI_SOFTAP_MAX_NUM_STA: "10"
+      # Keep at 4 unless SoftAP set_config is proven with a clean sdkconfig rebuild.
+      CONFIG_ESP_WIFI_SOFTAP_MAX_NUM_STA: "4"
 
 logger:
   level: INFO
@@ -66,6 +67,13 @@ ethernet:
     mode: CLK_EXT_IN
   phy_addr: 1
   power_pin: GPIO16
+  # Pin LAN IP — DHCP after power loss moved us to .17 and broke the
+  # pfSense SoftAP route (192.168.4.0/24 via 192.168.86.66).
+  manual_ip:
+    static_ip: 192.168.86.66
+    gateway: 192.168.86.1
+    subnet: 255.255.255.0
+    dns1: 192.168.86.1
 
 # external_components live in stubs (lab: local path · HA: git) —
 # package bodies must stay remote-git safe and path-agnostic.
@@ -78,7 +86,7 @@ dsc_anchor_ap:
   channel: ${anchor_channel}
   ap_ip: "192.168.4.1"
   ap_netmask: "255.255.255.0"
-  max_connections: 10
+  max_connections: 4
   enable_napt: true
   bssid_sensor: anchor_bssid_ts
   channel_sensor: anchor_channel_sensor

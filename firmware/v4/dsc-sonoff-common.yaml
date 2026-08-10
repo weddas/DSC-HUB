@@ -100,23 +100,23 @@ ota:
   - platform: esphome
     password: ${ota_password_val}
 
-# WiFi: SoftAP DSC-Anchor primary (fleet home); Nest fallback.
-# Stubs pass wifi_* and optional softap_ip (default via substitutions).
+# WiFi: Nest-first until SoftAP IP gate passes (FOLLOWUPS). SoftAP secondary
+# with static map kept for later SoftAP-home migrate — do not prefer it yet.
+# Stubs pass wifi_* and softap_ip (unused while Nest-primary).
 wifi:
   networks:
+    - ssid: ${wifi_ssid}
+      password: ${wifi_password}
+      priority: 20
     - ssid: ${anchor_ssid}
       password: ${anchor_ap_password}
-      priority: 20
+      priority: 10
       manual_ip:
         static_ip: ${softap_ip}
         gateway: 192.168.4.1
         subnet: 255.255.255.0
         dns1: 192.168.4.1
-    - ssid: ${wifi_ssid}
-      password: ${wifi_password}
-      priority: 0
   power_save_mode: none          # fleet rule: mains device, no modem naps
-  use_address: ${softap_ip}
   ap:
     ssid: ${ap_ssid}
     password: ${ap_password_val}

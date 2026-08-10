@@ -1,38 +1,23 @@
 # ==================================================================
-#  DSC-CONTROL · lab WiFi
+#  DSC-CONTROL · lab WiFi (Nest-first until SoftAP IP gate passes)
 #
-#  SoftAP DSC-Anchor primary (fleet home). Nest fallback only.
-#  Static SoftAP IP 192.168.4.11. Hub Lock / 0xD0 advertises Anchor
-#  BSSID; Control adopts via adopt_hub_wifi_ap.
+#  SoftAP-home membership is paused: SoftAP eth↔.4.x was not proven
+#  before SoftAP-primary orphaned STAs. Nest primary; SoftAP secondary
+#  (no zero-BSSID pins). Re-elevate SoftAP only after FOLLOWUPS gate.
 # ==================================================================
 wifi:
   networks:
-    - ssid: ${anchor_ssid}
-      password: ${anchor_ap_password}
-      bssid: ${wifi_bssid}
+    - ssid: ${wifi_ssid}
+      password: ${wifi_password}
       priority: 20
-      manual_ip:
-        static_ip: 192.168.4.11
-        gateway: 192.168.4.1
-        subnet: 255.255.255.0
-        dns1: 192.168.4.1
     - ssid: ${anchor_ssid}
       password: ${anchor_ap_password}
-      priority: 15
+      priority: 10
       manual_ip:
         static_ip: 192.168.4.11
         gateway: 192.168.4.1
         subnet: 255.255.255.0
         dns1: 192.168.4.1
-    - ssid: ${wifi_ssid}
-      password: ${wifi_password}
-      bssid: ${wifi_bssid}
-      priority: 5
-    - ssid: ${wifi_ssid}
-      password: ${wifi_password}
-      priority: 0
-  # SoftAP fleet-home address (Nest fallback still uses DHCP).
-  use_address: 192.168.4.11
   power_save_mode: none
   # Match hub: false so bounce can scan onto hub's *learned* preferred AP.
   fast_connect: false

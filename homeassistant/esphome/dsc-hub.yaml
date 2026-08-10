@@ -13,7 +13,7 @@ substitutions:
   panel_mac: "30:76:F5:E9:22:0C"
   bridge_mac: "58:2A:BD:60:3C:1D"
   espnow_cmd_tag: "54727"
-  # Prefer Anchor SoftAP ??? copy sensor.dsc_bridge_anchor_bssid after first boot.
+  # SoftAP BSSID pin only after SoftAP IP gate + Nest recovery (00… = unset).
   wifi_bssid: "00:00:00:00:00:00"
 
 packages:

@@ -52,28 +52,28 @@ static void rebind_espnow_peers_(wifi_interface_t ifidx) {
            (int) ifidx);
 }
 
-bool DscAnchorAp::configure_ap_netif_() {
+void DscAnchorAp::configure_ap_netif_() {
   esp_netif_t *ap_netif = esp_netif_get_handle_from_ifkey("WIFI_AP_DEF");
   if (ap_netif == nullptr) {
     ap_netif = esp_netif_create_default_wifi_ap();
   }
   if (ap_netif == nullptr) {
-    ESP_LOGE(TAG, "No WIFI_AP_DEF netif");
-    return false;
+    ESP_LOGW(TAG, "No WIFI_AP_DEF netif — SoftAP radio up, IP/NAPT skipped");
+    return;
   }
 
   esp_netif_ip_info_t ip_info = {};
   ip_info.ip.addr = esp_ip4addr_aton(this->ap_ip_.c_str());
   ip_info.netmask.addr = esp_ip4addr_aton(this->ap_netmask_.c_str());
   if (ip_info.ip.addr == 0 || ip_info.netmask.addr == 0) {
-    ESP_LOGE(TAG, "Bad ap_ip/netmask %s / %s", this->ap_ip_.c_str(),
-             this->ap_netmask_.c_str());
-    return false;
+    ESP_LOGW(TAG, "Bad ap_ip/netmask %s / %s — leaving ESP-IDF SoftAP defaults",
+             this->ap_ip_.c_str(), this->ap_netmask_.c_str());
+    return;
   }
   ip_info.gw = ip_info.ip;
 
-  // Fleet members use static SoftAP IPs (hub/control/sonoffs). Avoid
-  // esp_netif_dhcps_* — ESPHome builds often omit LWIP DHCPS to save flash.
+  // Fleet members use static SoftAP IPs. Avoid esp_netif_dhcps_* — ESPHome
+  // builds often omit LWIP DHCPS. SoftAP radio must stay up even if IP fails.
   esp_err_t err = esp_netif_dhcpc_stop(ap_netif);
   if (err != ESP_OK && err != ESP_ERR_ESP_NETIF_DHCP_ALREADY_STOPPED &&
       err != ESP_ERR_ESP_NETIF_IF_NOT_READY) {
@@ -81,8 +81,9 @@ bool DscAnchorAp::configure_ap_netif_() {
   }
   err = esp_netif_set_ip_info(ap_netif, &ip_info);
   if (err != ESP_OK) {
-    ESP_LOGE(TAG, "set_ip_info: %s", esp_err_to_name(err));
-    return false;
+    ESP_LOGW(TAG, "set_ip_info: %s (SoftAP beacon still up)",
+             esp_err_to_name(err));
+    return;
   }
 
   esp_netif_dns_info_t dns = {};
@@ -104,7 +105,6 @@ bool DscAnchorAp::configure_ap_netif_() {
 #endif
   }
   ESP_LOGI(TAG, "SoftAP IP %s (static client map — no DHCPS)", this->ap_ip_.c_str());
-  return true;
 }
 
 bool DscAnchorAp::start_softap_() {
@@ -121,17 +121,11 @@ bool DscAnchorAp::start_softap_() {
     esp_wifi_set_ps(WIFI_PS_NONE);
   }
 
-  // Ensure default AP netif exists before set_mode(AP).
-  if (esp_netif_get_handle_from_ifkey("WIFI_AP_DEF") == nullptr) {
-    if (esp_netif_create_default_wifi_ap() == nullptr) {
-      ESP_LOGE(TAG, "esp_netif_create_default_wifi_ap failed");
-      return false;
-    }
-  }
-
-  err = esp_wifi_set_mode(WIFI_MODE_AP);
+  // APSTA matches the last known-good SoftAP on this ETH01. ESPHome espnow
+  // brings up WIFI_MODE_STA first; AP-only mode was a regression vs that path.
+  err = esp_wifi_set_mode(WIFI_MODE_APSTA);
   if (err != ESP_OK) {
-    ESP_LOGE(TAG, "set_mode AP: %s", esp_err_to_name(err));
+    ESP_LOGE(TAG, "set_mode APSTA: %s", esp_err_to_name(err));
     return false;
   }
 
@@ -140,10 +134,16 @@ bool DscAnchorAp::start_softap_() {
   if (ssid_len > sizeof(wifi_config.ap.ssid))
     ssid_len = sizeof(wifi_config.ap.ssid);
   memcpy(wifi_config.ap.ssid, this->ssid_.c_str(), ssid_len);
-  wifi_config.ap.ssid_len = ssid_len;
+  wifi_config.ap.ssid_len = static_cast<uint8_t>(ssid_len);
   wifi_config.ap.channel = this->channel_;
-  wifi_config.ap.max_connection = this->max_connections_;
+  // Cap at 4 unless sdkconfig SoftAP max STA is raised — ESP_ERR on overflow
+  // kills SoftAP with no beacon (SSID invisible).
+  uint8_t max_sta = this->max_connections_;
+  if (max_sta > 4)
+    max_sta = 4;
+  wifi_config.ap.max_connection = max_sta;
   wifi_config.ap.beacon_interval = 100;
+  wifi_config.ap.ssid_hidden = 0;
   if (this->password_.empty()) {
     wifi_config.ap.authmode = WIFI_AUTH_OPEN;
   } else {
@@ -170,9 +170,8 @@ bool DscAnchorAp::start_softap_() {
   esp_wifi_set_channel(this->channel_, WIFI_SECOND_CHAN_NONE);
   esp_wifi_set_promiscuous(false);
 
-  if (!this->configure_ap_netif_())
-    return false;
-
+  // IP/NAPT is best-effort — never tear SoftAP down if this fails.
+  this->configure_ap_netif_();
   rebind_espnow_peers_(WIFI_IF_AP);
   return true;
 }
@@ -180,6 +179,8 @@ bool DscAnchorAp::start_softap_() {
 void DscAnchorAp::setup() {
   if (!this->start_softap_()) {
     this->mark_failed();
+    if (this->up_sensor_ != nullptr)
+      this->up_sensor_->publish_state(false);
     return;
   }
 
@@ -188,7 +189,8 @@ void DscAnchorAp::setup() {
   esp_wifi_get_channel(&ch, &second);
 
   uint8_t mac[6] = {0};
-  esp_wifi_get_mac(WIFI_IF_AP, mac);
+  if (esp_wifi_get_mac(WIFI_IF_AP, mac) != ESP_OK)
+    esp_wifi_get_mac(WIFI_IF_STA, mac);
   char bssid[18];
   snprintf(bssid, sizeof(bssid), "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1],
            mac[2], mac[3], mac[4], mac[5]);
@@ -212,7 +214,8 @@ void DscAnchorAp::dump_config() {
   ESP_LOGCONFIG(TAG, "  Channel: %u", (unsigned) this->channel_);
   ESP_LOGCONFIG(TAG, "  Gateway: %s / %s", this->ap_ip_.c_str(),
                 this->ap_netmask_.c_str());
-  ESP_LOGCONFIG(TAG, "  Max STA: %u", (unsigned) this->max_connections_);
+  ESP_LOGCONFIG(TAG, "  Max STA: %u (runtime cap 4)",
+                (unsigned) this->max_connections_);
   ESP_LOGCONFIG(TAG, "  NAPT: %s", this->enable_napt_ ? "yes" : "no");
 }
 
