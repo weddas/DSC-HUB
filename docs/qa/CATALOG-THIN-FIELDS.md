@@ -21,16 +21,18 @@ Do **not** invent values. Each row is something thin or missing and what would h
 | P3 | `lineage_unresolved` | ~8.8k after junk+resolve | No exact match | Alias when bases appear; no fuzzy |
 | P3 | Want bands | Rare | HA curation | Separate pass |
 
-## Snapshot (post SF merge)
+## Snapshot (post SF merge + end-link + promote)
 
 | Metric | Approx |
 |---|---|
-| `strain_canonical` | ~188.6k |
+| `strain_canonical` | ~188.7k |
 | `strain_variant` | ~89.1k (seedfinder ≈22.8k) |
-| `grow_trait` | ~102.1k |
-| `observation` | ~99.5k (`bank_note`≈96.6k) |
-| `subtype_of` | ~9605 |
-| `science_alias` | ~23.5k |
+| `grow_trait` | ~102.1k · height_cm ~12.2% |
+| `observation` | ~99.5k (`bank_note`≈96.6k, `grow_note` 1431) |
+| `subtype_of` | ~9631 |
+| `science_alias` | ~23.6k |
+| `entity_link` | ~3.09M (incl. SF end-link) |
+| `lineage_unresolved` | ~8.7k |
 
 ## Explicit non-goals
 

@@ -53,7 +53,8 @@ MARKETING_PHRASE_RE = re.compile(
     r"("
     r"breeders we work with|affordable prices|not to throw shade|did not cut the mustard|"
     r"supposed .auto|in the market that|nuances of|particularly in their|"
-    r"and not to |at affordable|many breeders"
+    r"and not to |at affordable|many breeders|family tree map|show all|show less|"
+    r"no reviews yet|strain reviews|fully tested outside|germination tests"
     r")",
     re.I,
 )

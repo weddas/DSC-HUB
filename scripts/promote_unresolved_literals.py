@@ -13,6 +13,7 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import json
+import re
 import sys
 import time
 from pathlib import Path
@@ -49,6 +50,11 @@ SKIP_NORMS = frozenset(
         "germany",
     }
 )
+UI_GARBAGE_RE = re.compile(
+    r"(show all|show less|no reviews yet|strain reviews|family tree map|"
+    r"dynamic family|click here|add to cart|javascript)",
+    re.I,
+)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -82,6 +88,12 @@ def main(argv: list[str] | None = None) -> int:
             skipped_junk += 1
             continue
         if key in SKIP_NORMS:
+            skipped_junk += 1
+            continue
+        if len(literal) > 60 or len(key.split()) > 8:
+            skipped_junk += 1
+            continue
+        if UI_GARBAGE_RE.search(literal) or UI_GARBAGE_RE.search(key):
             skipped_junk += 1
             continue
         if not args.dry_run:
