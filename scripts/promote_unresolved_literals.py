@@ -96,6 +96,12 @@ def main(argv: list[str] | None = None) -> int:
         if UI_GARBAGE_RE.search(literal) or UI_GARBAGE_RE.search(key):
             skipped_junk += 1
             continue
+        if "\n" in literal or literal.startswith(">") or literal.startswith("("):
+            skipped_junk += 1
+            continue
+        if key.isdigit() or re.search(r"feminized photoperiod|landrace influence", literal, re.I):
+            skipped_junk += 1
+            continue
         if not args.dry_run:
             upsert_canonical(con, literal)
             # rewrite literal edges
