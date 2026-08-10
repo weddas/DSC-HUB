@@ -9,7 +9,7 @@ Build a **research-scale archival plant catalog** (science + seed + lights + nut
 | Staging SQLite (per source) | `brain/data/staging/<family>.sqlite3` | Full source payloads in `raw_record` (multi-GB OK; NAS >1 TB) + typed projections |
 | Master research SQLite | `brain/data/dsc_brain.sqlite3` | Matched canonical + variant + chem + grow + links (+ slim `payload_json`); queryable |
 | Fat JSON/CSV dumps | `homeassistant/data/dsc_*.json`, `Projects/DB DUMP` | Project copies / re-import inputs (gitignored) |
-| HA `/local/dsc-catalog/*.json` | Thin projection (cap ~2500 strains) | Product browse/typeahead |
+| HA `/local/dsc-catalog/*.json` | Thin projection (cap **10000** strains as of `8a968eb`) | Product browse/typeahead |
 | Community export | Open/redistributable subset only | Public package after legal review |
 
 ## Multi-DB ingest architecture (N-087c)
@@ -84,7 +84,7 @@ python scripts/build_catalog_search_indexes.py
 - `source_record.redistributable` gates community export
 - `media_asset` for cropped PPFD/spectrum graphs
 - `followup_gap` for missing/unparseable expected fields
-- *(gap)* first-class `observation` / `review` tables — see contract + FOLLOWUPS **N-087-COLLATION**
+- First-class `observation` / `review` (schema v4) — see contract + FOLLOWUPS **N-087-COLLATION**
 
 ## Pipelines
 
@@ -107,14 +107,22 @@ Wave B  scripts/scrape_seed_banks.py
         scripts/scrape_strain_directories.py
 Wave C  scripts/ingest_ppfd_maps.py
 Wave D  scripts/import_nutrients_mediums_packs.py (+ brand dumps)
+        scripts/scrape_shopify_nutrients_mediums.py  # multi-shop products.json
+        scripts/project_nutrient_npk_from_payload.py # honest NPK/dose from body_html
+Banks   scripts/enrich_bank_descriptions.py          # re-GET missing description
+Subtype scripts/project_subtype_chem_from_own_sources.py  # never copy parent chem
+Reviews scripts/_cannareviews_medauth_ingest_server.py + import_cannareviews_medauth_dump.py
+StrainDB scripts/_launch_strain_db_unlocked.py       # headed unlock; pause-gated
 Stage   scripts/ingest_corpus_dumps.py --per-source-staging
 Merge   scripts/merge_staging_to_master.py
         # raw_record stays in staging unless --include-raw
         # legacy direct: scripts/ingest_corpus_dumps.py --db ... --link
 Report  scripts/report_science_seed_links.py
-HA      scripts/build_catalog_search_indexes.py
+HA      scripts/build_catalog_search_indexes.py       # STRAIN_CAP=10000
 Export  scripts/export_community_catalog.py
 ```
+
+**HA browse after densify run-2 (`8a968eb`, `built_at` 2026-08-10T11:15:11Z):** strains **10000** (`with_want=12`, `with_height=238`, `with_height_band=81`), nutrients **837**, mediums **306**, lights **517**. Cap slice ≠ research rank. Chase ops: [`CATALOG-THIN-FIELDS.md`](CATALOG-THIN-FIELDS.md).
 
 Fat dumps under `homeassistant/data/dsc_*.json` and `media/` are **gitignored**. Staging + master SQLite under `brain/data/` are **gitignored**. Commit importers, schema, merge tooling, crop tools, gap/link docs, `SEED_BREEDERS.md`, and slim HA indexes.
 

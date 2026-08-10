@@ -100,10 +100,37 @@ See FOLLOWUPS **N-087-COLLATION**.
 - Thin-field chase list: [`CATALOG-THIN-FIELDS.md`](CATALOG-THIN-FIELDS.md).
 
 **Catalog densify (2026-08-10, bak `*.pre_catalog_densify`):**
-- Numeric height text → `grow_trait.height_cm_*` (~2% → ~12%); never invent cm from Short/Med/Tall.
+- Numeric height text → `grow_trait.height_cm_*` (~2% → ~12% early densify; later NLP + bands → ~47.7% / ~8783 bands — see run-2).
 - HA browse projection surfaces `height_band` from grow payload (ordinal; separate from `height_cm`).
 - Exact bank slug↔name `science_alias` harvest + merch/SKU cleanup filter.
 - Observations widened (forums `grow_note`, Herbies/Zamnesia filtered excerpts).
-- **SeedFinder quiet merge** (orphan journal recovered; scrape PID dead): typed `--no-link` → canonical≈188.6k, SF variants≈22.8k, obs≈99.5k; `subtype_of`≈9.6k. StrainDB / medauth still chase-only.
+- **SeedFinder quiet merge** (earlier orphan journal recovered): typed `--no-link` → canonical≈188.6k, SF variants≈22.8k. Evening scrape resumed again (~25.2k+); **do not merge while NAS journal is live**.
 
-**Still deferred:** wordcloud / collate-at-read UI; CannaReviews full review bodies (login/medauth); requiring `grow_trait` → observation FKs; SF scrape resume for remaining sitemap; optional `--link-only` after SF.
+**Densify run-2 + fill tooling (`8a968eb`, 2026-08-10):**
+- Height: `height_cm_*` **48752/102141 (~47.7%)**; payload `height_band` **~8783**.
+- Wave D multi-shop Shopify (`scrape_shopify_nutrients_mediums.py`): Apex Grow + TG Hydroponics (+ Grow Kings); master nutrients **867** / mediums **321**.
+- Honest NPK/dose mine (`project_nutrient_npk_from_payload.py`): NPK **51** / dose **143** from `body_html` patterns only.
+- Medauth CannaReviews: ingest server `:8765` + `import_cannareviews_medauth_dump.py` → **`review=94`**; then **PAUSED_DAILY_LIMIT** (~resume 2026-08-11).
+- Subtype own-source projector (`project_subtype_chem_from_own_sources.py`): chem **+24**, bank_note **+152**; **never** copies parent photoperiod chem/notes onto auto/F2/bx subtypes. Residual chem **2574** / notes **4751** need new PDPs.
+- Bank description enrich (`enrich_bank_descriptions.py`): Herbies/Zamnesia/RQS/SeedSupreme in flight; Seedsman meta-empty.
+- StrainDB unlock launcher (`_launch_strain_db_unlocked.py`); pause now **`PARKED_HTTP_FAIL` (~359)** — cool-off / fresh profile only.
+- HA browse cap raised **2500→10000** (`STRAIN_CAP` in `build_catalog_search_indexes.py` + `catalog_sqlite_projection.py`). Indexes `built_at` 2026-08-10T11:15:11Z: strains **10000** (`with_height=238`, `with_height_band=81`), nutrients **837**, mediums **306**, lights **517**.
+
+```mermaid
+flowchart TD
+  shop["Wave D Shopify shops"] --> nute["nutrient/medium stage"]
+  nute --> npk["NPK/dose projector"]
+  subtype["subtype_of rows"] --> own["own-source chem/notes"]
+  own -->|never| parent["parent photoperiod chem"]
+  medauth["browser medauth tab"] --> ingest[":8765 ingest"]
+  ingest --> review["review table"]
+  banks["bank PDP re-GET"] --> desc["description enrich"]
+  nute --> idx["build_catalog_search_indexes 10k"]
+  own --> idx
+  review --> idx
+  desc --> idx
+```
+
+Operator chase + commands: [`CATALOG-THIN-FIELDS.md`](CATALOG-THIN-FIELDS.md).
+
+**Still deferred:** wordcloud / collate-at-read UI; remaining medauth review bodies (daily limit); requiring `grow_trait` → observation FKs; SF quiet re-merge after journal settles; StrainDB resume after HTTP cool-off; optional `--link-only` after SF; manufacturer NPK/dose PDPs beyond retailer HTML.
