@@ -21,6 +21,8 @@ Kit SoftAP setup: `dsc-hub-kit.yaml`, `dsc-control-kit.yaml`, `dsc-pot{1..4}-kit
 WiFi is split into `dsc-*-wifi-lab.yaml` / `dsc-*-wifi-kit.yaml` so kit builds omit compile-time SSIDs.
 Fleet component: `components/dsc_fleet_setup/` (phone portal on hub; Control/pots/bridge join `DSC-Setup-*`).
 Bridge also hosts SoftAP `DSC-Anchor` (F-012 channel pin) + `components/dsc_api_client/` (F-010).
+SoftAP-primary fleet home (Hub/Control/Sonoffs/**pots**, max STA **14**, hub `0xD8`/`0xD1` unicast SoftAP MAC):
+[docs/qa/SOFTAP-FLEET-HOME.md](../../docs/qa/SOFTAP-FLEET-HOME.md) · [docs/brain/F010_APPLIANCE_BRIDGE.md](../../docs/brain/F010_APPLIANCE_BRIDGE.md).
 
 Package bodies are remote-git safe (no `!secret`). Stubs pass credentials (and hub/panel MACs + `espnow_cmd_tag`) as substitutions.
 

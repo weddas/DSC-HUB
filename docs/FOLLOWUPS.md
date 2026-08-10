@@ -1769,7 +1769,7 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 3. Route `192.168.4.0/24 via 192.168.86.66` (bridge eth static `.66`).
 4. Hub SoftAP-primary at `.4.10` answers HA API.
 
-**Bridge notes:** SoftAP `WIFI_MODE_APSTA`, max STA 10, eth static `192.168.86.66`. Hub flash = **micro-USB** / HA USB Install; bridge = USB-TTL + IO0/EN.
+**Bridge notes:** SoftAP `WIFI_MODE_APSTA`, max STA **14**, eth static `192.168.86.66`, `hub_mac` forced onto `WIFI_IF_AP`. Hub flash = **micro-USB** / HA USB Install; bridge = USB-TTL + IO0/EN. Ops: `docs/qa/SOFTAP-FLEET-HOME.md`.
 
 **2026-08-10 thrash note:** Nest-first push `5893ea6` was wrong for the design goal; SoftAP-primary + real BSSID pin restored. Orphan/Fallback was SoftAP L3 + zero-BSSID pins, not SoftAP preference itself.
 
