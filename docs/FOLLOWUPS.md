@@ -1796,6 +1796,8 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 - Plant Seat React page (soil / age / recipe / Got) + tent apply
 - `input_select.dsc_potN_tent` + `script.dsc_apply_pot_to_tent`; Dash lerp + pot pick
 - Ops Home / Root Zone / Strains wired to Plant Seat; surface **6.2.0**
+- HACS `dist/` synced from `homeassistant/www` (`5ccbc46` via `hacs-dist.yml`)
 
 ### next-plan
-- (none for this visual pass — live HA smoke + Sync deploy still operator-gated)
+- Live HA smoke: surface **6.2.0** + Plant Seat tent apply + Dash lerp; HACS Redownload or Sync www
+- Docs ops: [`docs/qa/LIVE-UI-CUSTOM-PANEL.md`](qa/LIVE-UI-CUSTOM-PANEL.md) (panel vs HACS dual path)
