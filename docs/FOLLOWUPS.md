@@ -1809,3 +1809,4 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 - [x] Deploy packages to HA + dismiss `dsc_f004_chx`; template reload refreshed SoftAP display names.
 - [x] Hub flashed from HA ESPHome Device Builder **2026.7.4** → SoftAP `192.168.4.10` / `DSC-Anchor`; `hub_esp_now_link` on; Lock WiFi AP on.
 - **Ops note:** Nest-orphan OTA needs temporary `use_address` / HA ESPHome entry host = Nest IP; after SoftAP rejoin set both back to `192.168.4.10` (package `dsc-hub-wifi-lab.yaml` hardcodes SoftAP `use_address`).
+- **Docs:** [`docs/qa/SOFTAP-FLEET-HOME.md`](qa/SOFTAP-FLEET-HOME.md) § F-004 · [`docs/brain/F010_APPLIANCE_BRIDGE.md`](brain/F010_APPLIANCE_BRIDGE.md) F-004 pointer.

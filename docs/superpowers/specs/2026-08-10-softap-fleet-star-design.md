@@ -68,7 +68,7 @@ Primary UX is glass (works without HA). HA button remains a duplicate trigger.
 
 - L2 SoftAP↔Ethernet bridge  
 - BLE orchestration  
-- Nest channel lock as primary heal path  
+- Nest router channel lock as a DSC heal path (F-004 = SoftAP preferred≠assoc / SoftAP orphan)  
 
 ## Success criteria
 
