@@ -12,6 +12,9 @@ substitutions:
   anchor_channel: "11"
   anchor_ssid: "DSC-Anchor"
   anchor_ap_password: "CHANGEME"
+  # Nest STA join (optional) — keeps ESP-NOW on WIFI_IF_STA with the hub.
+  wifi_ssid: ""
+  wifi_password: ""
   espnow_cmd_tag: "54727"
   hub_mac: "00:00:00:00:00:00"
   # Sonoff hosts (IPs) + Noise PSKs — stubs override from secrets
@@ -67,11 +70,14 @@ ethernet:
 # package bodies must stay remote-git safe and path-agnostic.
 
 # SoftAP channel anchor (F-012). Runs after espnow LATE wifi init.
+# Nest STA join puts ESP-NOW on the same radio path as the hub (F-004).
 dsc_anchor_ap:
   id: anchor_ap
   ssid: ${anchor_ssid}
   password: ${anchor_ap_password}
   channel: ${anchor_channel}
+  sta_ssid: ${wifi_ssid}
+  sta_password: ${wifi_password}
   bssid_sensor: anchor_bssid_ts
   channel_sensor: anchor_channel_sensor
   up_sensor: anchor_up

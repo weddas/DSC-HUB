@@ -11,7 +11,11 @@ substitutions:
   ap_password_val: !secret dsc_bridge_ap_password
   anchor_ap_password: !secret dsc_anchor_ap_password
   anchor_ssid: "DSC-Anchor"
+  # Match live Nest STA channel (hub RF). Nest hops — SoftAP/ESP-NOW track Nest;
+  # Nest STA join below also locks the radio to Nest's channel when associated.
   anchor_channel: "11"
+  wifi_ssid: !secret wifi_ssid
+  wifi_password: !secret wifi_password
   espnow_cmd_tag: "54727"
   # Hub WiFi/SoftAP MAC — peer for ESP-NOW (lab: paste hub MAC).
   hub_mac: "84:1F:E8:16:E6:60"

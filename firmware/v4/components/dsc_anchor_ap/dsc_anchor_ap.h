@@ -13,6 +13,8 @@ class DscAnchorAp : public Component {
   void set_ssid(const std::string &ssid) { this->ssid_ = ssid; }
   void set_password(const std::string &password) { this->password_ = password; }
   void set_channel(uint8_t channel) { this->channel_ = channel; }
+  void set_sta_ssid(const std::string &ssid) { this->sta_ssid_ = ssid; }
+  void set_sta_password(const std::string &password) { this->sta_password_ = password; }
   void set_bssid_sensor(text_sensor::TextSensor *s) { this->bssid_sensor_ = s; }
   void set_channel_sensor(sensor::Sensor *s) { this->channel_sensor_ = s; }
   void set_up_sensor(binary_sensor::BinarySensor *s) { this->up_sensor_ = s; }
@@ -25,6 +27,8 @@ class DscAnchorAp : public Component {
  protected:
   std::string ssid_;
   std::string password_;
+  std::string sta_ssid_;
+  std::string sta_password_;
   uint8_t channel_{11};
   text_sensor::TextSensor *bssid_sensor_{nullptr};
   sensor::Sensor *channel_sensor_{nullptr};
