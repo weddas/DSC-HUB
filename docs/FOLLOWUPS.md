@@ -1695,7 +1695,7 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 ## Fleet bring-up (2026-08-08 evening) — live status snapshot
 
 - Bridge `192.168.86.66` online **5.2.0**; SoftAP up ch11; Anchor BSSID `58:2A:BD:60:3C:1D`; all 4 Sonoff API links True; **Hub ESP-NOW Link False** (no 0xD8/0xD1).
-- Hub stub on HA now has `bridge_mac: 58:2A:BD:60:3C:1D`; `wifi_bssid` left `00…` so Nest OTA stays possible until ESP-NOW proves green, then lock SoftAP BSSID.
+- Hub stub on HA now has `bridge_mac: 58:2A:BD:60:3C:1D`. *(Historical note: earlier ops left `wifi_bssid` `00…` for Nest OTA; `21e34e5` pins SoftAP BSSID `58:2A:BD:60:3C:1D` on SoftAP nets only — never leave SoftAP pin as `00…`.)*
 - Hub/Control currently unreachable on LAN (hub last ESPHome online ~16:07; control ~16:29). Needs power-cycle + ESPHome Install for hub to pick up `bridge_mac`.
 - Pot3 absent from today's flash logs / no API on LAN. Pot1 API flaky.
 - HA surface package on live still reports `6.0.0` while expected train is `5.2.0` (version chip drift) — separate from bridge path.
@@ -1745,9 +1745,11 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 
 ## SoftAP fleet home + enhanced Fleet Fix (2026-08-10)
 
+**Ops runbook:** [`docs/qa/SOFTAP-FLEET-HOME.md`](qa/SOFTAP-FLEET-HOME.md) · architecture [`docs/brain/F010_APPLIANCE_BRIDGE.md`](brain/F010_APPLIANCE_BRIDGE.md).
+
 **Decision (goal):** SoftAP DSC-Anchor is the Wi‑Fi home for Hub / Control / Sonoffs so they **stop flapping across home APs** (that made ESP-NOW unusable). Pots stay ESP-NOW→hub→bridge (not SoftAP STAs). Home Wi‑Fi is emergency fallback only. Spec: `docs/superpowers/specs/2026-08-10-softap-fleet-star-design.md`.
 
-**Do not Nest-first as the steady state** — that reintroduces home-AP flap and nullifies SoftAP-home. SoftAP-primary membership is the product.
+**Do not Nest-first as the steady state** — that reintroduces home-AP flap and nullifies SoftAP-home. SoftAP-primary membership is the product (`21e34e5` restore after mistaken pause `5893ea6`).
 
 **Wifi YAML rules:** SoftAP prio > home Wi‑Fi; SoftAP entry pins Anchor BSSID `58:2A:BD:60:3C:1D` (`wifi_bssid` / `softap_bssid`); home Wi‑Fi has **no** BSSID pin; **never** `00:00:00:00:00:00`.
 

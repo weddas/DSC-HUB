@@ -17,7 +17,7 @@ Notion [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d3407556
 - **Hub owns climate** — dehumidifier → humidifier → heater → AC → mat ladder
   with reality gates, failsafe, and min-off (HA never drives those safety rails).
 - **ESP-NOW primary** panel ↔ hub — works when Home Assistant is down.
-- **ETH01 bridge** — SoftAP channel anchor (`DSC-Anchor`) + Sonoff drive without HA (F-010); HA followers stay fallback.
+- **ETH01 bridge** — SoftAP fleet home (`DSC-Anchor`, SoftAP-primary Hub/Control/Sonoffs) + Sonoff drive without HA (F-010); Nest fallback only; HA followers stay fallback.
 - **DSC-HUB Pro** dashboard (`/dsc-hub-pro`) — Home, Climate, Learning, tents,
   Root Zone, Tank, Light, Trends, System.
 - **Build a Plant** (`/dsc-build-plant/build`) — separate composition dashboard
@@ -59,6 +59,8 @@ flowchart LR
 | [`homeassistant/README.md`](homeassistant/README.md) | Packages, HACS, entity notes |
 | [`docs/qa/LIVE-UI-BUILD-A-PLANT.md`](docs/qa/LIVE-UI-BUILD-A-PLANT.md) | Build a Plant composition ops (N-083) |
 | [`firmware/v4/README.md`](firmware/v4/README.md) | Local validate / flash |
+| [`docs/qa/SOFTAP-FLEET-HOME.md`](docs/qa/SOFTAP-FLEET-HOME.md) | SoftAP-primary fleet home + Fleet Fix ops |
+| [`docs/brain/F010_APPLIANCE_BRIDGE.md`](docs/brain/F010_APPLIANCE_BRIDGE.md) | ETH01 SoftAP / NAPT / Sonoff bridge architecture |
 
 **HAOS delivery:** Settings → Add-ons → Repositories → `https://github.com/weddas/DSC-HUB`
 → install / Update **DSC-HUB Sync** **5.1.3**. Push to `master` → poll (~60s) →

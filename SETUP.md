@@ -42,9 +42,9 @@ From `firmware/v4/` with a filled `secrets.yaml`:
 5. Tap **Save & continue**. Keep the phone on the setup network.
 6. **Power DSC-CONTROL.** It finds `DSC-Setup-*`, registers with the hub, pulls credentials, reboots onto the target network. It does **not** run a captive portal (CYD RAM).
 7. **Power each pot.** Same automatic join / register / reboot.
-8. **Power the ETH01 bridge** (Ethernet cabled to the LAN). SoftAP **`DSC-Anchor`** comes up on channel 11 (custom SoftAP — ESPHome cannot combine `wifi:` with `ethernet:`). Copy `sensor.dsc_bridge_anchor_bssid` (or serial log BSSID) into hub `bridge_mac` / Lock WiFi prefer. Automatic SoftAP hello to hub `DSC-Setup-*` for the bridge is deferred (F-014).
-9. On the phone portal, confirm Control/pots appear under **Devices**, then tap **Finish setup**. Migrate hub/Control/pots onto **DSC-Anchor** (Lock WiFi prefer Anchor BSSID). Leave Nest as fallback only.
-10. Leave the setup Wi‑Fi. Use Control to run climate; Soil tab shows pot data over ESP-NOW. Sonoffs stay on home LAN; bridge drives them over Ethernet when demand is on.
+8. **Power the ETH01 bridge** (Ethernet cabled to the LAN). SoftAP **`DSC-Anchor`** comes up on channel 11 (custom SoftAP — ESPHome cannot combine `wifi:` with `ethernet:`). Copy `sensor.dsc_bridge_anchor_bssid` (or serial log BSSID) into hub `bridge_mac` / SoftAP `wifi_bssid` / Lock WiFi prefer (**never** `00:00:00:00:00:00`). Automatic SoftAP hello to hub `DSC-Setup-*` for the bridge is deferred (F-014).
+9. On the phone portal, confirm Control/pots appear under **Devices**, then tap **Finish setup**. Migrate hub/Control/Sonoffs onto **DSC-Anchor** SoftAP-primary (pin Anchor BSSID on SoftAP nets only). Leave Nest as emergency fallback only. Pots stay ESP-NOW→hub (not SoftAP STAs). Lab SoftAP STA budget: hub+control+4 sonoffs; bridge max STA **10**.
+10. Leave the setup Wi‑Fi. Use Control to run climate; Soil tab shows pot data over ESP-NOW. Sonoffs join SoftAP static map (`.20`–`.23`); bridge drives them when demand is on. Ops: [`docs/qa/SOFTAP-FLEET-HOME.md`](docs/qa/SOFTAP-FLEET-HOME.md).
 
 ### Add a device later
 

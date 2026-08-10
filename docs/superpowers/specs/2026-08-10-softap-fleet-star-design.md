@@ -2,11 +2,12 @@
 
 **Date:** 2026-08-10  
 **Status:** approved — SoftAP-primary membership is the steady state (stop home-AP flap); SoftAP L3/HA path still gated  
-**Related:** F-004, F-010, F-012, F-013, F-014
+**Related:** F-004, F-010, F-012, F-013, F-014  
+**Ops:** [`docs/qa/SOFTAP-FLEET-HOME.md`](../../qa/SOFTAP-FLEET-HOME.md) · restore commit `21e34e5` (BSSID pin + max STA 10)
 
 ## Goal
 
-Grow Wi‑Fi devices use `DSC-Anchor` SoftAP on the WT32-ETH01 as their home network. The bridge reaches HA over Ethernet and drives Sonoff on/off on the SoftAP subnet. Pots stay on the ESP-NOW hub star (no SoftAP STA). Nest is emergency fallback only.
+Grow Wi‑Fi devices use `DSC-Anchor` SoftAP on the WT32-ETH01 as their home network. The bridge reaches HA over Ethernet and drives Sonoff on/off on the SoftAP subnet. Pots stay on the ESP-NOW hub star (no SoftAP STA). Nest is emergency fallback only. Do **not** Nest-first as the steady state — that reintroduces home-AP flap.
 
 ## Topology
 
@@ -25,7 +26,8 @@ Bridge ──Ethernet──► HA (192.168.86.3)
 | SoftAP gateway | `192.168.4.1/24` (static client map; no SoftAP DHCPS in v1) |
 | Forwarding | LwIP IP forward + IPv4 NAPT on SoftAP netif |
 | ESP-NOW ifidx | `WIFI_IF_AP` after SoftAP up |
-| Max STA | ≥10 (hub + control + 4 sonoffs + headroom) |
+| Max STA | **10** (`max_connections` + `CONFIG_ESP_WIFI_SOFTAP_MAX_NUM_STA`; hub + control + 4 sonoffs + headroom) |
+| SoftAP BSSID pin | Anchor AP MAC on SoftAP wifi entries only (lab: `58:2A:BD:60:3C:1D`); never on home Wi‑Fi; never `00:00:00:00:00:00` |
 
 ### Static SoftAP leases (clients)
 
@@ -44,10 +46,10 @@ Bridge `dsc_api_client` hosts use these SoftAP IPs. HA → SoftAP clients requir
 
 | Device | SoftAP | Nest | Notes |
 |---|---|---|---|
-| Hub | primary + static IP | fallback | Prefer Anchor BSSID via Lock / `bridge_mac` / `0xD0` |
-| Control | primary + static IP | fallback | Glass Fleet Fix |
+| Hub | primary + static IP + SoftAP BSSID pin | fallback (no BSSID pin) | `wifi_bssid` / `bridge_mac` / Lock / `0xD0` |
+| Control | primary + static IP + SoftAP BSSID pin | fallback | Glass Fleet Fix |
 | Pots | **not preferred** | OTA/optional | ESP-NOW to hub only |
-| Sonoffs | primary + static IP | fallback | Bridge on/off only |
+| Sonoffs | primary + static IP + SoftAP BSSID pin | fallback | Bridge on/off only |
 
 ## Fleet Fix state machine (glass)
 
