@@ -1298,7 +1298,7 @@ Memo: [`docs/DSC-PRODUCT-RESEARCH.md`](DSC-PRODUCT-RESEARCH.md).
 | Plant inventory | 8 roster slots | Seed counts / plant IDs / mother stock |
 | Apply climate Want | Custom temp/RH → hub targets | Catalog seeds lack climate bands (by design) |
 | Vivosun / light graphs | NEXT_DATA photometrics + datasheets | Still **0** keyword-labeled map image URLs |
-| Search / select | `/local/dsc-catalog/` indexes | Strain index capped at 2500 of ~36k merged |
+| Search / select | `/local/dsc-catalog/` indexes | Strain index capped at **10000** (`STRAIN_CAP` after densify `8a968eb`) |
 
 ### deferred
 - OCR of PPFD heatmaps; pump dosing; absorbing Build a Plant into The Dash / Pro tabs
@@ -1486,7 +1486,7 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 - Full public GitHub dump upload of research scrapes deferred
 - Pi webserver UI over full corpus remains out of scope (N-095 track)
 - `build_catalog_search_indexes` SQLite projection is N+1 per canonical (slow on network DB) — batch JOIN refactor later
-- HA strain projection capped at 2500 of ~57k canonical; raise cap or page when UI needs it
+- HA strain projection capped at **10000** (`8a968eb`; was 2500) — raise further or page when UI needs more of ~189k canonical
 - Nutrient/medium brand dumps still thin (pack seeds only this pass); Wave D brand crawl next
 - Parquet `train-00000-of-00002.parquet` is **image+label only** (158 rows) — not strain chem; correctly skipped (not an allowlist problem)
 - Deep DB DUMP staging pass (`import_db_dump_deep.py`) wrote 11 families under `brain/data/staging/`; **merge into master was blocked by concurrent master writers** — re-run `python scripts/merge_staging_to_master.py` (or `_n087_merge_retry.py`) when exclusive
@@ -1700,7 +1700,7 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 - [`brain/data/_n087_local_ssd_merge.py`](brain/data/_n087_local_ssd_merge.py): NAS bypass sole-writer path.
 - [`scripts/merge_staging_to_master.py`](scripts/merge_staging_to_master.py): `--link-only`, force-no-link flag/env, commit after link.
 - [`brain/dsc_brain/corpus.py`](brain/dsc_brain/corpus.py): set-based `link_science_to_seed`.
-- HA indexes rebuilt: `homeassistant/www/dsc-catalog/dsc_strains_search_index.json` (cap 2500) + nutrients/mediums/lights.
+- HA indexes rebuilt (`8a968eb`, `built_at` 2026-08-10T11:15:11Z): strains **10000** + nutrients **837** / mediums **306** / lights **517**.
 
 ## Fleet bring-up (2026-08-08 evening) — live status snapshot
 
