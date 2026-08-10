@@ -2,16 +2,20 @@
 
 ```mermaid
 flowchart LR
-  dumps["Fat dumps gitignored"] --> merge["merge_strain_catalogs.py"]
-  merge --> merged["dsc_strains_merged.json"]
-  merged --> idx["build_catalog_search_indexes.py"]
+  master["dsc_brain.sqlite3"] --> idx["build_catalog_search_indexes.py"]
+  curated["dsc_strain_catalog.yaml"] --> idx
+  dumps["Fat dumps gitignored"] --> idx
   idx --> www["/local/dsc-catalog"]
   www --> card["Build a Plant card"]
-  curated["dsc_strain_catalog.yaml"] --> promote["promote_strain_catalog_to_ha.py"]
+  curated --> promote["promote_strain_catalog_to_ha.py"]
   promote --> ha["sensor.dsc_strain_catalog want_bands"]
   ha --> want["Want templates"]
   card -->|"Assign bridge"| seat["POT plant_name + Custom K"]
 ```
+
+Default index build prefers SQLite projection (`height_cm` + `height_band`); `--from-dumps`
+falls back to merged/dump JSON without band meta. Rebuild ops:
+[`CATALOG-COLLATION-CONTRACT.md`](CATALOG-COLLATION-CONTRACT.md) § HA browse index rebuild.
 
 ## SoT
 
@@ -23,7 +27,8 @@ flowchart LR
 | Draft inventory | 8-slot roster |
 | Mix | Shared nutrient slots + Accept (soak: no stock burn) |
 | Fat dumps | Local only (gitignore) |
-| Slim indexes | Committed under `www/dsc-catalog` / `dist/dsc-catalog` |
+| Research corpus | `brain/data/dsc_brain.sqlite3` (gitignored) |
+| Slim indexes | Committed under `www/dsc-catalog` / `dist/dsc-catalog` (`d4cdcab`: strains 2500 / `with_height=12` / `with_height_band=1`) |
 
 ## MVP gate (unblocks UI)
 

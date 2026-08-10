@@ -105,5 +105,68 @@ See FOLLOWUPS **N-087-COLLATION**.
 - Exact bank slug↔name `science_alias` harvest + merch/SKU cleanup filter.
 - Observations widened (forums `grow_note`, Herbies/Zamnesia filtered excerpts).
 - **SeedFinder quiet merge** (orphan journal recovered; scrape PID dead): typed `--no-link` → canonical≈188.6k, SF variants≈22.8k, obs≈99.5k; `subtype_of`≈9.6k. StrainDB / medauth still chase-only.
+- **HA indexes refreshed (`d4cdcab`):** see § HA browse index rebuild ops.
 
-**Still deferred:** wordcloud / collate-at-read UI; CannaReviews full review bodies (login/medauth); requiring `grow_trait` → observation FKs; SF scrape resume for remaining sitemap; optional `--link-only` after SF.
+**Still deferred:** wordcloud / collate-at-read UI; CannaReviews full review bodies (login/medauth); requiring `grow_trait` → observation FKs; SF scrape resume for remaining sitemap.
+
+---
+
+## HA browse index rebuild ops (`d4cdcab`)
+
+**Intent:** ship densified master coverage into Build a Plant / Catalog typeahead without widening the browser payload.
+
+**What changed (verified committed indexes):**
+
+| Index | Cap | Live count | Notes |
+|---|---|---|---|
+| `dsc_strains_search_index.json` | 2500 | **2500** | `built_at` **2026-08-10T07:51:40Z**; `with_want=12`, `with_height=12` (cm), `with_height_band=1` |
+| `dsc_nutrients_search_index.json` | 1500 | **3** | Pack seeds only |
+| `dsc_mediums_search_index.json` | 800 | **5** | Pack seeds only |
+| `dsc_lights_search_index.json` | 800 | **517** | Photometrics pack + dumps |
+
+Previous strain meta (`built_at` 2026-08-09T06:01Z) had `with_height=6` and **no** `with_height_band` counter. Rebuild doubled cm coverage in the capped slice and exposes ordinal bands when present.
+
+```mermaid
+flowchart LR
+  master["dsc_brain.sqlite3"] --> proj["catalog_sqlite_projection.py"]
+  yaml["dsc_strain_catalog.yaml"] --> proj
+  proj --> builder["build_catalog_search_indexes.py"]
+  packs["nutrient/medium/light packs"] --> builder
+  builder --> www["homeassistant/www/dsc-catalog/"]
+  builder --> dist["dist/dsc-catalog/"]
+  www --> ui["Build a Plant / Catalog browse"]
+```
+
+### How to rebuild
+
+```text
+# Default: SQLite projection when brain/data/dsc_brain.sqlite3 exists
+python scripts/build_catalog_search_indexes.py
+
+# Optional: skip SQLite; dump JSON only
+python scripts/build_catalog_search_indexes.py --from-dumps
+
+# Optional: explicit workset DB
+python scripts/build_catalog_search_indexes.py --db C:\DSC\collation\dsc_brain.sqlite3
+```
+
+Writes both `homeassistant/www/dsc-catalog/*_search_index.json` and `dist/dsc-catalog/` (same payloads). Sync / ha-sync / Sync add-on **5.1.4+** copy www indexes to `/local/dsc-catalog/`; HACS Redownload alone does **not**.
+
+### Strain projection rules (verified)
+
+- Order: curated YAML first, then `strain_canonical` `ORDER BY curated DESC, name` capped at **2500**.
+- Batched JOIN over chemistry / grow_trait / variant (not N+1).
+- `height_cm` from `grow_trait.height_cm_*` only; `with_height` counts rows with cm.
+- `height_band` from grow `payload_json` (`height_band` or nested `grow.height_band`); `with_height_band` is a **separate** meta counter.
+- Never invent cm from Short/Medium/Tall.
+- Dump-only path (`--from-dumps` / SQLite missing) does **not** emit `height_band` / `with_height_band`.
+
+### Pitfalls
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| Typeahead empty after rebuild | Indexes not on HA `/config/www/dsc-catalog/` | Sync 5.1.4+ / `ha-sync.sh` / manual copy |
+| `with_height` still low in UI | Cap slice is alphabetical+curated, not densify-ranked | Expected until cap raise / paging; corpus densify ≠ browse slice |
+| `with_height_band` ≈ 0–few | Leafly bands mostly outside first 2500 names | Honest; do not invent bands or expand cap casually |
+| Stale meta after local rebuild | Browser cache | Hard-refresh; confirm `built_at` in JSON |
+| Slow rebuild on NAS SQLite | Network DB I/O | Run against local workset copy, then commit indexes |

@@ -1473,7 +1473,7 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 | N-087b | DB DUMP + public dataset expansion | Local `DB DUMP` ingest (`import_local_db_dump.py`): Seed City local, Leafly flat/features, replication labs (~215k), pickle archive; GitHub Kushy MIT (~9.5k) + MaxValue terpenes (~43k); discovery list for Mendeley/CT/SDP; corpus rebuilt with slim typed payloads (raw dumps remain SoT for overflow) |
 | N-087c | Multi-DB staging → master ingest | Per-source staging under `brain/data/staging/<family>.sqlite3` with **FULL** `raw_record` payloads (NAS >1 TB; multi-GB OK); master `dsc_brain.sqlite3` receives matched typed+chem+grow+links via `merge_staging_to_master.py` (additive; keep both chem when conflicting); never explode bulk scores into `attribute_kv`; runbook updated in [`CATALOG-RESEARCH-CORPUS.md`](qa/CATALOG-RESEARCH-CORPUS.md) |
 | N-087-COLLATION | Collation contract (notes / reviews / lineage) | Durable architecture in [`CATALOG-COLLATION-CONTRACT.md`](qa/CATALOG-COLLATION-CONTRACT.md). **2026-08-10 v4 + debt + match-expand:** `observation`/`review`; `parent_of` SoT; `subtype_of` (~9.1k); junk/tree quarantine; observations≈71k; review=0 honest. Thin chase: [`CATALOG-THIN-FIELDS.md`](qa/CATALOG-THIN-FIELDS.md). Workset `C:\DSC\collation\`; baks `pre_collation_debt` + `pre_match_expand`. |
-| N-087-DENSIFY | Catalog densify (height / aliases / notes) | Offline pass after match-expand: numeric height text → `height_cm_*`; HA `height_band` surface; exact bank slug↔name `science_alias`; forum `grow_note` + filtered Herbies/Zamnesia excerpts. Chase-only: StrainDB CF, medauth reviews, SF merge-when-quiet. Workset `C:\DSC\collation\`; bak `pre_catalog_densify`. Thin chase: [`CATALOG-THIN-FIELDS.md`](qa/CATALOG-THIN-FIELDS.md). |
+| N-087-DENSIFY | Catalog densify (height / aliases / notes) | Offline pass after match-expand: numeric height text → `height_cm_*`; HA `height_band` surface; exact bank slug↔name `science_alias`; forum `grow_note` + filtered Herbies/Zamnesia excerpts. **HA indexes rebuilt `d4cdcab`** (`with_height=12`, `with_height_band=1` of 2500). Chase-only: StrainDB CF, medauth reviews, SF scrape remainder. Ops: [`CATALOG-COLLATION-CONTRACT.md`](qa/CATALOG-COLLATION-CONTRACT.md) § HA browse index rebuild. Thin chase: [`CATALOG-THIN-FIELDS.md`](qa/CATALOG-THIN-FIELDS.md). |
 
 ### deferred / honesty
 
@@ -1485,8 +1485,8 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 - Bank HTML scrapes stay `redistributable=false` until legal review; open export = OpenTHC + Seed City + Wikileaf + Cannlytics CC-BY + Kushy MIT (+ MaxValue when license clear)
 - Full public GitHub dump upload of research scrapes deferred
 - Pi webserver UI over full corpus remains out of scope (N-095 track)
-- `build_catalog_search_indexes` SQLite projection is N+1 per canonical (slow on network DB) — batch JOIN refactor later
-- HA strain projection capped at 2500 of ~57k canonical; raise cap or page when UI needs it
+- HA strain projection capped at 2500 of ~188k canonical; raise cap or page when UI needs denser height/band coverage in browse (corpus densify does not reorder the cap slice)
+- Index rebuild against NAS SQLite is still slow — prefer local workset DB then commit www/dist indexes
 - Nutrient/medium brand dumps still thin (pack seeds only this pass); Wave D brand crawl next
 - Parquet `train-00000-of-00002.parquet` is **image+label only** (158 rows) — not strain chem; correctly skipped (not an allowlist problem)
 - Deep DB DUMP staging pass (`import_db_dump_deep.py`) wrote 11 families under `brain/data/staging/`; **merge into master was blocked by concurrent master writers** — re-run `python scripts/merge_staging_to_master.py` (or `_n087_merge_retry.py`) when exclusive
@@ -1689,14 +1689,14 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 - [x] Promote high-frequency unresolved literals (≥5 edges) to exact canonicals — **done** (Ruderalys etc.; geo slips quarantined).
 - [ ] StrainDB: resume only on explicit ask after headed CF unlock (no tight retry).
 - [ ] SeedFinder scrape resume for remaining ~18k sitemap entries (optional; master already has partial).
-- [ ] Rebuild HA `dsc_strains_search_index.json` from densified master when convenient.
+- [x] Rebuild HA `dsc_strains_search_index.json` from densified master — **done `d4cdcab`** (`built_at` 2026-08-10T07:51:40Z; strains 2500 / `with_want=12` / `with_height=12` / `with_height_band=1`; nutrients 3; mediums 5; lights 517). Ops: [`CATALOG-COLLATION-CONTRACT.md`](qa/CATALOG-COLLATION-CONTRACT.md) § HA browse index rebuild.
 
 ### tooling landed this pass
 - [`brain/data/_n087_exclusive_merge.py`](brain/data/_n087_exclusive_merge.py) / [`_n087_exclusive_merge_resume.py`](brain/data/_n087_exclusive_merge_resume.py): `--no-link`, skip OK, end-link before indexes.
 - [`brain/data/_n087_local_ssd_merge.py`](brain/data/_n087_local_ssd_merge.py): NAS bypass sole-writer path.
 - [`scripts/merge_staging_to_master.py`](scripts/merge_staging_to_master.py): `--link-only`, force-no-link flag/env, commit after link.
 - [`brain/dsc_brain/corpus.py`](brain/dsc_brain/corpus.py): set-based `link_science_to_seed`.
-- HA indexes rebuilt: `homeassistant/www/dsc-catalog/dsc_strains_search_index.json` (cap 2500) + nutrients/mediums/lights.
+- HA indexes rebuilt (`d4cdcab`): `homeassistant/www/dsc-catalog/` + `dist/dsc-catalog/` — strains **2500** (`with_height=12`, `with_height_band=1`) + nutrients **3** / mediums **5** / lights **517**.
 
 ## Fleet bring-up (2026-08-08 evening) — live status snapshot
 

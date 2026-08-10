@@ -90,15 +90,23 @@ refuses `< 500000` (F-013).
 Built by `python scripts/build_catalog_search_indexes.py` →
 `homeassistant/www/dsc-catalog/` + `dist/dsc-catalog/`.
 
-| File | Cap (verified) | Contents |
-|---|---|---|
-| `dsc_strains_search_index.json` | **2500** | Slim name / type / breeder |
-| `dsc_nutrients_search_index.json` | **1500** | Name / brand / optional dose |
-| `dsc_mediums_search_index.json` | **800** (777 live) | Substrate names |
-| `dsc_lights_search_index.json` | **800** | Fixture names + stated W when present |
+Default path projects from research SQLite (`catalog_sqlite_projection.py`) when
+`brain/data/dsc_brain.sqlite3` exists; `--from-dumps` skips SQLite.
+
+| File | Cap | Live (`d4cdcab`, `built_at` 2026-08-10T07:51Z) | Contents |
+|---|---|---|---|
+| `dsc_strains_search_index.json` | **2500** | **2500** (`with_want=12`, `with_height=12`, `with_height_band=1`) | Slim name / type / breeder + cm height / ordinal band when corpus states them |
+| `dsc_nutrients_search_index.json` | **1500** | **3** | Name / brand / optional dose (pack seeds) |
+| `dsc_mediums_search_index.json` | **800** | **5** | Substrate names (pack seeds) |
+| `dsc_lights_search_index.json` | **800** | **517** | Fixture names + stated W / map URL when present |
 
 Card fetches `${CATALOG_BASE}/${file}` with `CATALOG_BASE = "/local/dsc-catalog"`.
 Missing indexes → empty typeahead (no hard fail).
+
+`with_height` = numeric cm only; `with_height_band` is separate (never invent cm from
+Short/Med/Tall). Browse cap is curated YAML + `ORDER BY curated DESC, name` — densify
+fills the corpus, not the 2500-name slice ranking. Full rebuild ops:
+[`CATALOG-COLLATION-CONTRACT.md`](CATALOG-COLLATION-CONTRACT.md) § HA browse index rebuild.
 
 ### Delivery paths
 
@@ -169,6 +177,7 @@ a free Custom slot; never accept a silent partial assignment.
 |---|---|---|
 | Custom element missing | Old Sync ≤5.1.3 www concat, or stale HACS | Rebuild Sync 5.1.4+ **or** HACS Redownload + hard-refresh |
 | Typeahead empty | `/local/dsc-catalog/` missing | Sync/ha-sync catalog copy, or manual `www/dsc-catalog/*.json` |
+| Height/band missing after densify | Stale HA www indexes, or name outside 2500 cap | Rebuild + Sync; check JSON `built_at` / `with_height` meta |
 | Dashboard 404 | Snippet not merged / YAML not on HA | Merge snippet; ensure `dashboards/dsc-build-plant-dashboard.yaml` |
 | Commit does nothing | All 8 roster slots occupied | Clear a slot status back to `empty` |
 | Climate Apply “skipped” | Custom Want temp/RH still 0 | Set Custom slot climate Want, or leave alone (expected) |
