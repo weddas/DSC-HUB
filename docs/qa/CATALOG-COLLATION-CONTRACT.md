@@ -95,7 +95,7 @@ See FOLLOWUPS **N-087-COLLATION**.
 **Match-expand (2026-08-10, bak `*.pre_match_expand`):**
 - Hard rule: `O.G.` / `F2` / `bx` / `cut` / `auto` stay in identity — never strip-to-match.
 - `entity_link.method='subtype_of'` (~9.1k): subtype → base when base exact-matches (e.g. `auto blue dream` → `blue dream`).
-- `o g`↔`og` exact `science_alias` hygiene (~68 pairs); junk literal quarantine (`null` / `Unknown *` / geo / marketing).
+- `o g`↔`og` exact `science_alias` hygiene (~68 pairs); junk literal quarantine (`null` / `Unknown *` / geo / marketing / review-chrome).
 - Observations ≈71k (`bank_note`≈69.5k + forums); kind `grow_note` supported (0 rows until sources expose `grow_notes`).
 - Thin-field chase list: [`CATALOG-THIN-FIELDS.md`](CATALOG-THIN-FIELDS.md).
 
@@ -106,4 +106,69 @@ See FOLLOWUPS **N-087-COLLATION**.
 - Observations widened (forums `grow_note`, Herbies/Zamnesia filtered excerpts).
 - **SeedFinder quiet merge** (orphan journal recovered; scrape PID dead): typed `--no-link` → canonical≈188.6k, SF variants≈22.8k, obs≈99.5k; `subtype_of`≈9.6k. StrainDB / medauth still chase-only.
 
-**Still deferred:** wordcloud / collate-at-read UI; CannaReviews full review bodies (login/medauth); requiring `grow_trait` → observation FKs; SF scrape resume for remaining sitemap; optional `--link-only` after SF.
+**Unresolved promote (2026-08-10, `05f189a` + harden `096acb4`):**
+- After SF end-link: promote high-frequency `lineage_unresolved` literals → exact `strain_canonical` + rewrite `parent_of` edges.
+- Promoter rejects UI/marketing garbage (length, word count, review-chrome / family-tree phrases). See **Unresolved promote ops** below.
+- Post-promote workset snapshot: canonical≈188.7k; `lineage_unresolved`≈8.7k; `subtype_of`≈9631; `science_alias`≈23.6k. Chase list: [`CATALOG-THIN-FIELDS.md`](CATALOG-THIN-FIELDS.md).
+
+**Still deferred:** wordcloud / collate-at-read UI; CannaReviews full review bodies (login/medauth); requiring `grow_trait` → observation FKs; SF scrape resume for remaining sitemap; fuzzy drain of `lineage_unresolved` (never).
+
+---
+
+## Unresolved promote ops (`05f189a` / `096acb4`)
+
+**Intent:** turn frequent unmatched parent strings into real canonicals **only when exact and non-junk**, then rewrite their `parent_of` edges. Do not fuzzy-match; do not promote UI chrome.
+
+```mermaid
+flowchart TD
+  unresolved["lineage_unresolved<br/>edge_count >= min"] --> classify["quarantine_junk_literals.classify"]
+  classify -->|junk| skip["skipped_junk"]
+  classify -->|clean| gates["SKIP_NORMS / len / words / UI_GARBAGE_RE"]
+  gates -->|fail| skip
+  gates -->|pass| upsert["upsert_canonical + rewrite parent_of"]
+  upsert --> alias["science_alias source=promote_unresolved_literal"]
+  upsert --> drop["DELETE lineage_unresolved row"]
+```
+
+### Recommended order
+
+Run on the local workset (`C:\DSC\collation\dsc_brain.sqlite3`) when writers are idle:
+
+```text
+# 1) Quarantine slipped junk / review-chrome parents (rebuilds lineage_unresolved)
+python scripts/quarantine_junk_literals.py --db C:\DSC\collation\dsc_brain.sqlite3 --dry-run
+python scripts/quarantine_junk_literals.py --db C:\DSC\collation\dsc_brain.sqlite3
+
+# 2) Promote frequent clean literals (exact only)
+python scripts/promote_unresolved_literals.py --db C:\DSC\collation\dsc_brain.sqlite3 --min-edges 5 --dry-run
+python scripts/promote_unresolved_literals.py --db C:\DSC\collation\dsc_brain.sqlite3 --min-edges 5
+# defaults: --min-edges 5 --limit 200
+```
+
+Optional earlier pipeline (already landed for densify/SF): `resolve_lineage_literals.py` seats leftovers; SF `--link-only` end-link before promote when exclusive is free.
+
+### Promoter reject gates (verified in `promote_unresolved_literals.py`)
+
+| Gate | Rule | Why |
+|---|---|---|
+| `classify(literal)` | Same as quarantine (`junk_literal_null` / `junk_unknown_parent` / `junk_geo_or_marketing`) | Shared SoT for junk |
+| `name_norm` empty / `< 2` | Skip | Not a usable key |
+| `SKIP_NORMS` | Place-ish tokens (`la`, `california`, `amsterdam`, …) | Not strains |
+| Length / words | `len(literal) > 60` **or** `len(name_norm.split()) > 8` | Long prose / marketing sentences |
+| `UI_GARBAGE_RE` | `show all`, `show less`, `no reviews yet`, `strain reviews`, `family tree map`, `dynamic family`, `click here`, `add to cart`, `javascript` | SeedFinder / bank review-chrome |
+
+On success (non-dry-run): `upsert_canonical` → rewrite `name_literal` `parent_of` → `strain_canonical` (dedupe-safe) → delete unresolved row → `INSERT OR IGNORE science_alias` with `source_id='promote_unresolved_literal'`.
+
+### Quarantine phrase harden (`096acb4`)
+
+`MARKETING_PHRASE_RE` also matches (anywhere): `family tree map`, `show all`, `show less`, `no reviews yet`, `strain reviews`, `fully tested outside`, `germination tests`.
+
+Quarantine **moves** matching `parent_of` `name_literal` edges into `entity_link_quarantine`, then rebuilds `lineage_unresolved` from remaining literals. Tree/mermaid parents stay `lineage_tree_not_sot` (debt cleanup) — never SoT.
+
+### Pitfalls
+
+- **Exact only.** No fuzzy / LLM collapse; never strip F/OG/bx/cut/auto to force a match.
+- **Dry-run first.** Stats JSON reports `candidates` / `promoted` / `skipped_junk` / `unresolved_after`.
+- **`--limit` defaults to 200.** Raise deliberately for larger drains; prefer re-running after new aliases land.
+- **Do not invent parents.** Leftovers stay in `lineage_unresolved` (~8.7k post-promote) until an exact canonical/alias appears.
+- Serialize against other master writers (same lease as N-087 merge).
