@@ -78,13 +78,15 @@ python scripts/build_catalog_search_indexes.py
 - Collation layers / notes / reviews / lineage: [`CATALOG-COLLATION-CONTRACT.md`](CATALOG-COLLATION-CONTRACT.md)
 - `strain_canonical` + `strain_variant` (breeder children)
 - `chemistry_profile` (science evidence rows; conflicting chem rows kept)
-- `grow_trait`, `entity_link`, `science_alias`
+- `grow_trait`, `entity_link` (`parent_of`, `subtype_of`), `science_alias`
+- **Landed (schema v4):** first-class `observation` + `review` (append-only; `review=0` until medauth bodies)
+- Debt tables: `entity_link_quarantine`, `lineage_unresolved`
 - `raw_record` (full source JSON blob; staging SoT for fat rows)
 - `attribute_kv` + `schema_extension_log` (small bank/product overflow only — never bulk score columns)
 - `source_record.redistributable` gates community export
 - `media_asset` for cropped PPFD/spectrum graphs
 - `followup_gap` for missing/unparseable expected fields
-- *(gap)* first-class `observation` / `review` tables — see contract + FOLLOWUPS **N-087-COLLATION**
+- Thin-field chase after densify: [`CATALOG-THIN-FIELDS.md`](CATALOG-THIN-FIELDS.md)
 
 ## Pipelines
 
@@ -111,8 +113,16 @@ Stage   scripts/ingest_corpus_dumps.py --per-source-staging
 Merge   scripts/merge_staging_to_master.py
         # raw_record stays in staging unless --include-raw
         # legacy direct: scripts/ingest_corpus_dumps.py --db ... --link
+Match   scripts/project_subtype_links.py
+        scripts/alias_og_spacing.py
+        scripts/quarantine_junk_literals.py
+Densify scripts/project_height_cm_from_text.py
+        scripts/harvest_bank_aliases.py
+        scripts/project_observations_from_raw.py
+        # ops: CATALOG-COLLATION-CONTRACT § Match-expand / Catalog densify
 Report  scripts/report_science_seed_links.py
 HA      scripts/build_catalog_search_indexes.py
+        # height_cm (numeric) + height_band (ordinal) separate; with_height = cm only
 Export  scripts/export_community_catalog.py
 ```
 
@@ -120,8 +130,21 @@ Fat dumps under `homeassistant/data/dsc_*.json` and `media/` are **gitignored**.
 
 **Capture policy (N-087):** Maximize staging capture; match later. Keep FULL raw HTML/JSON/CSV rows, reviews, prices, brands, scores, lineage text, forum excerpts — do not drop "unused" fields. Prefer over-capture in staging over premature filtering (NAS >1 TB).
 
-**Overflow policy:** Staging 
-aw_record keeps FULL source payloads (NAS capacity). Master stores typed identity + chemistry + grow + links + rich payload_json (+ structured extras when parseable; never invent). ttribute_kv is for smaller bank/product rows only so master stays usable.
+**Overflow policy:** Staging `raw_record` keeps FULL source payloads (NAS capacity). Master stores typed identity + chemistry + grow + links + rich payload_json (+ structured extras when parseable; never invent). `attribute_kv` is for smaller bank/product rows only so master stays usable.
+
+## Catalog densify (post match-expand)
+
+After typed merge + debt cleanup + match-expand, run the densify projectors on a local workset (`C:\DSC\collation\`, bak `*.pre_catalog_densify`). Full order, height parse table, and pitfalls: [`CATALOG-COLLATION-CONTRACT.md`](CATALOG-COLLATION-CONTRACT.md) § Catalog densify ops.
+
+| Pass | Outcome (2026-08-10 workset) |
+|---|---|
+| Height text → `grow_trait.height_cm_*` | ~2% → ~**12.7%** filled; bands stay ordinal |
+| Bank slug harvest → `science_alias` | ~970 → ~**23.2k** exact aliases |
+| Observation re-project | ≈**78.9k** (`bank_note`≈76.0k, `forum_post`≈1.5k, `grow_note`≈**1431**) |
+| SeedFinder merge | **Skipped** while staging journal present |
+| StrainDB / medauth reviews | Chase-only (`DEFERRED_CF` / `review=0`) |
+
+Do **not** invent cm from Short/Medium/Tall. HA `with_height` remains cm-only; `with_height_band` is separate.
 
 ## Honesty rules
 
@@ -131,5 +154,6 @@ aw_record keeps FULL source payloads (NAS capacity). Master stores typed identit
 - Bank HTML scrapes stay `redistributable=false` until legal review.
 - Unfamiliar seed/product fields → staging `raw_record` (bulk) or `attribute_kv` (small); lab typed evidence in `payload_json`.
 - Cloudflare / captcha walls (strain-database.com, Leafly live, Weedmaps, Wikileaf live): stop; user authenticates in browser, then resume scrape.
+- Genetic markers (`F2`/`bx`/`OG`/`cut`/`auto`) stay in identity — subtype links and aliases are exact-only.
 
-See also: [`CATALOG-COLLATION-CONTRACT.md`](CATALOG-COLLATION-CONTRACT.md) (layers, notes, reviews→wordcloud, lineage edges, merge order), [`CATALOG-SCIENCE-SEED-LINKS.md`](CATALOG-SCIENCE-SEED-LINKS.md), [`CATALOG-GAPS.md`](CATALOG-GAPS.md), FOLLOWUPS **N-087**.
+See also: [`CATALOG-COLLATION-CONTRACT.md`](CATALOG-COLLATION-CONTRACT.md) (layers, densify ops, lineage, merge order), [`CATALOG-THIN-FIELDS.md`](CATALOG-THIN-FIELDS.md), [`CATALOG-SCIENCE-SEED-LINKS.md`](CATALOG-SCIENCE-SEED-LINKS.md), [`CATALOG-GAPS.md`](CATALOG-GAPS.md), FOLLOWUPS **N-087** / **N-087-DENSIFY**.

@@ -107,3 +107,116 @@ See FOLLOWUPS **N-087-COLLATION**.
 - SeedFinder merge skipped (staging journal present). StrainDB / medauth still chase-only.
 
 **Still deferred:** wordcloud / collate-at-read UI; CannaReviews full review bodies (login/medauth); requiring `grow_trait` → observation FKs.
+
+---
+
+## Match-expand ops (`03a7251`)
+
+**Intent:** widen exact identity matches without stripping genetic markers, and clean junk lineage literals that are not real parents.
+
+**Hard rule:** `O.G.` / `F2` / `bx` / `cut` / `auto` / numbered phenos stay in `name_norm`. Markers are metadata for `subtype_of` only — never strip-to-match.
+
+```mermaid
+flowchart TD
+  can["strain_canonical"] --> subtype["project_subtype_links.py"]
+  subtype --> sof["entity_link.subtype_of"]
+  can --> og["alias_og_spacing.py"]
+  og --> alias["science_alias o g ↔ og"]
+  parent["parent_of name_literal"] --> junk["quarantine_junk_literals.py"]
+  junk --> q["entity_link_quarantine"]
+  staging["staging raw_record"] --> obs["project_observations_from_raw.py"]
+  obs --> bank["bank_note / forum_post"]
+```
+
+| Step | Script | What it does | Constraint |
+|---|---|---|---|
+| 1 | `scripts/project_subtype_links.py --db …` | Exact subtype → base when base exists (`auto blue dream` → `blue dream`) | Base must exact-match a canonical; markers kept on subtype |
+| 2 | `scripts/alias_og_spacing.py --db …` | Exact `o g` ↔ `og` `science_alias` (~68 pairs) | Prefer denser canonical as target; **no** canonical deletes |
+| 3 | `scripts/quarantine_junk_literals.py --db …` | Move junk `parent_of` literals (`null`, `Unknown *`, geo/marketing) | Does **not** quarantine OG/F/bx/cut names |
+| 4 | `scripts/project_observations_from_raw.py --db … --staging-dir …` | Widen `bank_note` from bank descriptions | Forums → `forum_post`; `grow_note` when diary fields exist |
+
+**Dry-run first** on each script (`--dry-run`). Workset bak: `*.pre_match_expand`.
+
+---
+
+## Catalog densify ops (`6e15e86`)
+
+**Intent:** fill typed height where numeric text already exists, harvest exact bank slug aliases, and project more observation documents — **without inventing values**.
+
+**Evidence after densify** (local `C:\DSC\collation\dsc_brain.sqlite3`): height_cm filled ~12.7% (11380/89590); `science_alias` ~23.2k; observations ≈78.9k (`grow_note` 1431); chase list in [`CATALOG-THIN-FIELDS.md`](CATALOG-THIN-FIELDS.md).
+
+```mermaid
+flowchart TD
+  grow["grow_trait empty height_cm"] --> ht["project_height_cm_from_text.py"]
+  stage["staging raw_record"] --> ht
+  ht --> filled["height_cm_min/max"]
+  band["payload height_band"] --> ha["catalog_sqlite_projection"]
+  filled --> ha
+  ha --> idx["HA index height_cm + height_band"]
+  stage --> harvest["harvest_bank_aliases.py"]
+  harvest --> sa["science_alias exact slug↔name"]
+  stage --> obs2["project_observations_from_raw.py"]
+  obs2 --> kinds["bank_note / forum_post / grow_note"]
+```
+
+### Recommended order
+
+```text
+# Optional baseline counts (hardcoded local paths — Windows workset helper)
+python scripts/_catalog_densify_baseline.py
+
+# 1) Numeric height only — updates rows where height_cm_min IS NULL
+python scripts/project_height_cm_from_text.py --db C:\DSC\collation\dsc_brain.sqlite3 \
+  --staging-dir C:\DSC\collation\staging
+# dry-run: add --dry-run
+
+# 2) Exact bank slug ↔ name aliases (unique exact only; skip collisions)
+python scripts/harvest_bank_aliases.py --db C:\DSC\collation\dsc_brain.sqlite3 \
+  --staging-dir C:\DSC\collation\staging
+
+# 3) Re-project observations (idempotent; copy never move)
+python scripts/project_observations_from_raw.py --db C:\DSC\collation\dsc_brain.sqlite3 \
+  --staging-dir C:\DSC\collation\staging
+
+# 4) Rebuild HA browse indexes when ready to ship denser height_cm / height_band
+python scripts/build_catalog_search_indexes.py
+```
+
+### Height parsing rules (verified)
+
+| Input | Result |
+|---|---|
+| `"120 cm"`, `120`, `[100,150]` | → `height_cm_min/max` |
+| inches / ft / `"` with no `cm` | convert ×2.54 |
+| bare numbers 20–400 | accept as cm-ish |
+| bare numbers 8–160 without unit | **skip** (ambiguous inches) |
+| `Short` / `Medium` / `Tall` / `average` | **reject** — stay ordinal `height_band` only |
+| text with short/medium/tall and **no** digits | **reject** |
+
+HA `with_height` counts **cm only**. `with_height_band` is a separate counter (`catalog_sqlite_projection.py`). Never invent cm from bands.
+
+### Alias harvest rules (verified)
+
+- Sources: `bank_*.sqlite3`, `seedsman`, `seedcity`, `herbies*`, `zamnesia*` under `--staging-dir`.
+- Slug from URL path (Herbies `/cannabis-seeds/{slug}`, Zamnesia `/{id}-{slug}.html`, else last path segment).
+- Alias only when slug-norm ≠ name-norm, both sides exact, and **no collision** across targets.
+- Accessory/SKU noise can land (cartridge/hashole) — optional later filter; do not fuzzy-merge.
+
+### Observation densify rules (verified)
+
+| Kind | Source | Notes |
+|---|---|---|
+| `grow_note` | `grow_notes` / `grow_note` fields | Forums and banks; preferred when diary field present |
+| `forum_post` | forum body keys | Always attempted for forum stems |
+| `bank_note` | `description`, else filtered `page_text_excerpt` | Excerpt only for Herbies/Zamnesia stems; noise filter (≥180 chars, reject nav soup) |
+
+Payload flags may include `excerpt_filtered=1`. Bank descriptions still preferred over excerpts for chase.
+
+### Pitfalls
+
+- **Do not** start SeedFinder merge while `seedfinder.sqlite3-journal` / `-wal` is hot — densify skipped SF merge for this reason.
+- **Do not** invent height from Leafly/ordinal bands; `project_leafly_height_bands.py` stays payload-only.
+- **Do not** strip F/OG/bx/auto to force aliases or subtypes.
+- StrainDB stays `DEFERRED_CF`; medauth reviews stay chase-only (`review=0` honest).
+- `_catalog_densify_baseline.py` is a **local Windows helper** (hardcoded `C:\DSC\…` / `Y:\…`) — not a portable CI step.
+- Workset bak before pass: `*.pre_catalog_densify`.
