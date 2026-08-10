@@ -1685,9 +1685,11 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 - [x] D-N087-HEIGHT-BAND: staging + master merge (`--no-link`); ingest accepts `height_band` / nested `grow`.
 - [x] **2026-08-10:** StrainDB deferred (CF); SeedFinder continues as side task; catalog work proceeds on current master (~181k canonical).
 - [x] When SeedFinder quiet: `merge_staging_to_master.py --only seedfinder --no-link --no-search` (+ end-link if needed). StrainDB merge separate / later. **Done 2026-08-10** (orphan journal cleared; partial scrape ~22.8k variants).
+- [x] Optional `--link-only` after SF typed merge — **done 2026-08-10** (+283k variant edges).
+- [x] Promote high-frequency unresolved literals (≥5 edges) to exact canonicals — **done** (Ruderalys etc.; geo slips quarantined).
 - [ ] StrainDB: resume only on explicit ask after headed CF unlock (no tight retry).
 - [ ] SeedFinder scrape resume for remaining ~18k sitemap entries (optional; master already has partial).
-- [ ] Optional `--link-only` after SF typed merge (science↔seed) when exclusive idle.
+- [ ] Rebuild HA `dsc_strains_search_index.json` from densified master when convenient.
 
 ### tooling landed this pass
 - [`brain/data/_n087_exclusive_merge.py`](brain/data/_n087_exclusive_merge.py) / [`_n087_exclusive_merge_resume.py`](brain/data/_n087_exclusive_merge_resume.py): `--no-link`, skip OK, end-link before indexes.
