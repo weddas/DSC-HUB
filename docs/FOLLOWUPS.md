@@ -1653,7 +1653,7 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 - Schema skim: no observation/review tables yet; no systematic parent_of/child_of emit; wordcloud deferred — gaps only, no refactor mid-merge.
 
 - [x] **StrainDB `save_cookies` crash** (fixed 2026-08-08): `Session.save_cookies` now normalizes jar via `_cookies_as_map` (handles str keys / Cookie objs / `get_dict`) and never raises. Warm n=140 finalize no longer dies on cookie write; storage_state save also guarded.
-- [ ] **StrainDB CF / cookie re-import still needed** (**2026-08-09 still paused**): Checkpoint **n=213** (`_pw_strain_db_PAUSE.txt`); `resume_after` 2026-08-08T18:39+10 elapsed — **not resumed**; scrape/shepherd PIDs dead. Headed Playwright warm hits CF → `chrome-error://chromewebdata/`. Before resume: pass CF in browser / refresh Playwright profile cookies (`_pw_strain_db_capture.py` or Netscape export); delay-min/max 8–20s; do not tight-retry. curl_cffi-alone still TLS-bound for `cf_clearance`.
+- [ ] **StrainDB CF / cookie re-import — DEFERRED_CF n≈289** (parked 2026-08-10): Pause file `status=DEFERRED_CF` (was PAUSED_CF). Progressed past earlier n=213, then CF wall; operator parked CF cost vs value. Soft retries abort after chrome-error wall / limited re-warm (`max_attempts=2`) — see [`CATALOG-RESEARCH-CORPUS.md`](qa/CATALOG-RESEARCH-CORPUS.md) § StrainDB. Resume **only on explicit ask** after headed CF unlock (`_launch_strain_db_capture.py` / `_pw_strain_db_capture.py`); delay 8–20s; no tight retry. Not a gate for SeedFinder merge or catalog work on master.
 
 ## 2026-08-09 — N-087 / catalog status snapshot (probed morning AEST)
 
@@ -1679,17 +1679,24 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 - [x] After seedsman (or next safe boundary): exclusive wrapper → `--no-link` for remaining families + one link pass; commit-after-link under `--no-search`.
 - [x] When exclusive idle: verify phytochem_smith chem/links on master; re-merge with `--no-link` if typed rolled back after disk I/O FAIL. (chem was **0** on copy; re-merged OK on local SSD.)
 - [x] SeedFinder: Playwright resume shipped + running (urllib abandoned for CF).
-- [x] StrainDB: Chrome CF capture + headed resume — then **re-paused CF** at n≈289; needs fresh operator unlock.
+- [x] StrainDB: Chrome CF capture + headed resume — then **DEFERRED_CF** park at n≈289 (operator 2026-08-10); resume only on explicit ask.
 - [x] D-N087-HEIGHT-BAND: staging + master merge (`--no-link`); ingest accepts `height_band` / nested `grow`.
-- [x] **2026-08-10:** StrainDB deferred (CF); SeedFinder continues as side task; catalog work proceeds on current master (~181k canonical).
-- [ ] When SeedFinder quiet: `merge_staging_to_master.py --only seedfinder --no-link --no-search` (+ end-link if needed). StrainDB merge separate / later.
-- [ ] StrainDB: resume only on explicit ask after headed CF unlock (no tight retry).
+- [x] **2026-08-10:** StrainDB deferred (CF); SeedFinder continues as side task (~22.1k/40638); catalog work proceeds on current master (~181k canonical).
+- [ ] When SeedFinder quiet: `merge_staging_to_master.py --only seedfinder --no-link --no-search` (+ end-link if needed). StrainDB merge separate / later — do **not** wait on StrainDB.
+- [ ] StrainDB: resume only on explicit ask after headed CF unlock (no tight retry); clear/update `_pw_strain_db_PAUSE.txt` when resuming.
 
 ### tooling landed this pass
 - [`brain/data/_n087_exclusive_merge.py`](brain/data/_n087_exclusive_merge.py) / [`_n087_exclusive_merge_resume.py`](brain/data/_n087_exclusive_merge_resume.py): `--no-link`, skip OK, end-link before indexes.
 - [`brain/data/_n087_local_ssd_merge.py`](brain/data/_n087_local_ssd_merge.py): NAS bypass sole-writer path.
 - [`scripts/merge_staging_to_master.py`](scripts/merge_staging_to_master.py): `--link-only`, force-no-link flag/env, commit after link.
-- [`brain/dsc_brain/corpus.py`](brain/dsc_brain/corpus.py): set-based `link_science_to_seed`.
+- [`brain/dsc_brain/corpus.py`](brain/dsc_brain/corpus.py): set-based `link_science_to_seed`; grow ingest accepts `height_band` / `height_ordinal` / nested `grow`.
+- [`brain/dsc_brain/staging.py`](brain/dsc_brain/staging.py): `SOURCE_FAMILY_MAP["leafly_height_bands"]` (no `leafly_flat` alias).
+- [`scripts/project_leafly_height_bands.py`](scripts/project_leafly_height_bands.py) + [`_merge_leafly_height_bands_once.py`](scripts/_merge_leafly_height_bands_once.py): ordinal projector + verify/merge.
+- [`scripts/_pw_scrape_seedfinder.py`](scripts/_pw_scrape_seedfinder.py) + [`brain/data/staging/_seedfinder_launch.py`](brain/data/staging/_seedfinder_launch.py): SeedFinder PW side-task scrape.
+- [`scripts/_pw_scrape_strain_database.py`](scripts/_pw_scrape_strain_database.py): chrome-error wall (≥3) + limited CF re-warm (`max_attempts=2`).
+- [`scripts/_launch_strain_db_capture.py`](scripts/_launch_strain_db_capture.py): visible Chrome CF capture launcher.
+- Pause / park SoT: [`homeassistant/data/_pw_strain_db_PAUSE.txt`](../homeassistant/data/_pw_strain_db_PAUSE.txt) (`status=DEFERRED_CF`).
+- Ops runbook: [`docs/qa/CATALOG-RESEARCH-CORPUS.md`](qa/CATALOG-RESEARCH-CORPUS.md) § SeedFinder / StrainDB Playwright + Leafly height bands.
 - HA indexes rebuilt: `homeassistant/www/dsc-catalog/dsc_strains_search_index.json` (cap 2500) + nutrients/mediums/lights.
 
 ## Fleet bring-up (2026-08-08 evening) — live status snapshot
