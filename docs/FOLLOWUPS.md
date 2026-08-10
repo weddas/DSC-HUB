@@ -1487,7 +1487,7 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 - Pi webserver UI over full corpus remains out of scope (N-095 track)
 - `build_catalog_search_indexes` SQLite projection is N+1 per canonical (slow on network DB) — batch JOIN refactor later
 - HA strain projection capped at 2500 of ~57k canonical; raise cap or page when UI needs it
-- Nutrient/medium brand dumps still thin (pack seeds only this pass); Wave D brand crawl next
+- Wave D lite seeded from Grow Kings (`3c24951`: nutrients 416 / mediums 255 titles only); next = manufacturer PDPs for NPK/dose + more brands
 - Parquet `train-00000-of-00002.parquet` is **image+label only** (158 rows) — not strain chem; correctly skipped (not an allowlist problem)
 - Deep DB DUMP staging pass (`import_db_dump_deep.py`) wrote 11 families under `brain/data/staging/`; **merge into master was blocked by concurrent master writers** — re-run `python scripts/merge_staging_to_master.py` (or `_n087_merge_retry.py`) when exclusive
 - Mendeley “800+ strains effects+chemistry” and Strain Data Project need manual DOI/license fetch
@@ -1665,7 +1665,7 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 | N-087-MERGE-LINK-NAS | **done (mitigated)** | Per-family full-chem link abandoned. Wrapper/resume pass `--no-link --no-search`; `merge_staging_to_master` commits after link; `--link-only` + set-based `link_science_to_seed`; force flag `_n087_force_no_link.flag` for live children. End-link added **1.61M** variant edges in ~164s on local SSD. |
 | N-087-MERGE-NOLINK | **done** | See above; exclusive + resume scripts updated. |
 | N-087-COLLATION | **done (v4 + debt + match-expand)** | Schema v4; parent_of + subtype_of; junk/tree quarantine; observations≈71k; review=0; thin chase doc. Local `C:\DSC\collation\`; baks `pre_collation_v4` / `pre_collation_debt` / `pre_match_expand`. |
-| N-087-DENSIFY | **done (+ full staging drain)** | Local staging 264/268; obs≈126k; alias≈26.7k; height≈13.9%; SF merged+linked. Next scrape chase only: [`CATALOG-THIN-FIELDS.md`](qa/CATALOG-THIN-FIELDS.md). |
+| N-087-DENSIFY | **done (+ drain + height NLP + Wave D lite)** | Staging 264/268; obs≈126k; alias≈26.7k; then `3c24951` height_cm≈**43.5%**, `height_band`≈5145, GK nutrients **416** / mediums **255**; SF scrape resumed + NAS checkpoint harden. Chase: [`CATALOG-THIN-FIELDS.md`](qa/CATALOG-THIN-FIELDS.md). Ops: [`CATALOG-COLLATION-CONTRACT.md`](qa/CATALOG-COLLATION-CONTRACT.md) § Height NLP / Wave D. |
 | N-087-BACKUP | **done** | Durable `_BACKUP_N087_2026-08-08` (~9.5GB) present; earlier git backup commit fc8c4cc; plus `pre_local_ssd` bak before copy-back. |
 
 ### scrapes / corpus
@@ -1688,8 +1688,8 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 - [x] Optional `--link-only` after SF typed merge — **done 2026-08-10** (+283k variant edges).
 - [x] Promote high-frequency unresolved literals (≥5 edges) to exact canonicals — **done** (Ruderalys etc.; geo slips quarantined).
 - [ ] StrainDB: resume only on explicit ask after headed CF unlock (no tight retry).
-- [ ] SeedFinder scrape resume for remaining ~18k sitemap entries (optional; master already has partial).
-- [ ] Rebuild HA `dsc_strains_search_index.json` from densified master when convenient.
+- [ ] SeedFinder scrape finish remaining ~17.8k sitemap entries, then quiet re-merge `--no-link` (PW resumed 2026-08-10 evening; checkpoint NAS harden landed).
+- [x] Rebuild HA catalog indexes after height NLP + Wave D (`3c24951`, `built_at` 2026-08-10T08:21:44Z): strains 2500 (`with_height=23` / `with_height_band=3`), nutrients **416**, mediums **259**, lights 517.
 
 ### tooling landed this pass
 - [`brain/data/_n087_exclusive_merge.py`](brain/data/_n087_exclusive_merge.py) / [`_n087_exclusive_merge_resume.py`](brain/data/_n087_exclusive_merge_resume.py): `--no-link`, skip OK, end-link before indexes.
