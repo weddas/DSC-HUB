@@ -21,6 +21,8 @@ Kit SoftAP setup: `dsc-hub-kit.yaml`, `dsc-control-kit.yaml`, `dsc-pot{1..4}-kit
 WiFi is split into `dsc-*-wifi-lab.yaml` / `dsc-*-wifi-kit.yaml` so kit builds omit compile-time SSIDs.
 Fleet component: `components/dsc_fleet_setup/` (phone portal on hub; Control/pots/bridge join `DSC-Setup-*`).
 Bridge also hosts SoftAP `DSC-Anchor` (F-012 channel pin) + `components/dsc_api_client/` (F-010).
+SoftAP-primary fleet home + F-004 SoftAP orphan / CHX ops:
+[`docs/qa/SOFTAP-FLEET-HOME.md`](../../docs/qa/SOFTAP-FLEET-HOME.md).
 
 Package bodies are remote-git safe (no `!secret`). Stubs pass credentials (and hub/panel MACs + `espnow_cmd_tag`) as substitutions.
 
@@ -40,7 +42,7 @@ Package body: [`dsc-control-common.yaml`](dsc-control-common.yaml).
 | Hold-to-lock | Hold ~3 s on primary tabs; hold lock screen to unlock |
 | Demand / takeover gate | Confirm → Engage (not one stray tap) |
 | Connections | Wi‑Fi channel; ESP-NOW RX age + TX seq; silent → ping/WiFi bounce |
-| AP pin | Runtime only: hub **Lock WiFi AP** learns preferred BSSID into NVS; 0xD0 fleet-beats it; Control/pots `adopt_hub_wifi_ap`. Stubs stay `00:00:00:00:00:00` — never bake a site MAC into YAML. |
+| AP pin | SoftAP wifi entry pins Anchor BSSID (`wifi_bssid` / `softap_bssid`); hub **Lock WiFi AP** learns preferred into NVS; 0xD0 fleet-beats it. Home Wi‑Fi entry has **no** BSSID pin — never SoftAP `00:00:00:00:00:00`. |
 | Pulse VPD trend | 12×5 min ring → one label (no canvas charts) |
 | HA API | **Plaintext** (no Noise); **mDNS off** — add by IP only |
 | Stability | **4.0.10** page-gated `refresh_ui` @ 5 s |
@@ -55,7 +57,7 @@ The `api:` block lives in [`dsc-control-common.yaml`](dsc-control-common.yaml). 
 | Check | What to do |
 |---|---|
 | Panel boot-looping / no Wi‑Fi | USB flash; serial must show `DSC-CONTROL 4.0.11 up — free_heap=…`. OTA will not recover a looping board. |
-| Host / mDNS | **IP only** — lab Nest reservation **`192.168.86.177`** (`use_address` in `dsc-control-wifi-lab.yaml`). Do not use `dsc-control.local`. |
+| Host / mDNS | **IP only** — SoftAP-primary **`192.168.4.11`** (`use_address` in `dsc-control-wifi-lab.yaml`); Nest IP only for temporary orphan OTA. Do not use `dsc-control.local`. |
 | Encryption | Leave the key **blank** when adding/reconfiguring. If HA still has an old encrypted entry, **delete it** and re-add. |
 | Stale `dsc-cyd1` | Delete old **dsc-cyd1** ESPHome device in HA Integrations if present. |
 | Secrets on HA | Still need `dsc_control_ota_password` / `_ap_password` for Install/fallback AP (`dsc_control_api_key` unused by panel firmware). |
