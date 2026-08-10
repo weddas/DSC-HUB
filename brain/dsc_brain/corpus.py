@@ -11,7 +11,12 @@ import uuid
 from pathlib import Path
 from typing import Any
 
-from .corpus_schema import CORPUS_SCHEMA, SCHEMA_VERSION, SCHEMA_V4_OBSERVATION_REVIEW
+from .corpus_schema import (
+    CORPUS_SCHEMA,
+    SCHEMA_VERSION,
+    SCHEMA_V4_DEBT_CLEANUP,
+    SCHEMA_V4_OBSERVATION_REVIEW,
+)
 from .paths import DEFAULT_DB
 
 KNOWN_CANONICAL = {
@@ -100,6 +105,11 @@ def _migrate_schema(conn: sqlite3.Connection) -> None:
     # v4: observation + review (CREATE IF NOT EXISTS — safe to re-run).
     if not _table_exists(conn, "observation") or not _table_exists(conn, "review"):
         conn.executescript(SCHEMA_V4_OBSERVATION_REVIEW)
+    # Debt cleanup: quarantine + lineage_unresolved.
+    if not _table_exists(conn, "entity_link_quarantine") or not _table_exists(
+        conn, "lineage_unresolved"
+    ):
+        conn.executescript(SCHEMA_V4_DEBT_CLEANUP)
     conn.execute(
         "INSERT INTO meta(key, value) VALUES(?, ?) "
         "ON CONFLICT(key) DO UPDATE SET value=excluded.value",
@@ -567,7 +577,22 @@ def add_lineage_edge(
     if resolved:
         from_kind, from_id = "strain_canonical", parent_key
     else:
-        from_kind, from_id = "name_literal", parent_raw
+        # Exact alias → unique canonical only (never invent fuzzy links).
+        alias_hits = conn.execute(
+            "SELECT DISTINCT name_norm FROM science_alias WHERE alias_norm=? AND name_norm IS NOT NULL",
+            (parent_key,),
+        ).fetchall()
+        norms = sorted(
+            {
+                (r["name_norm"] if isinstance(r, sqlite3.Row) else r[0])
+                for r in alias_hits
+                if (r["name_norm"] if isinstance(r, sqlite3.Row) else r[0])
+            }
+        )
+        if len(norms) == 1:
+            from_kind, from_id = "strain_canonical", norms[0]
+        else:
+            from_kind, from_id = "name_literal", parent_raw
     existing = conn.execute(
         "SELECT id FROM entity_link WHERE method='parent_of' AND from_kind=? AND from_id=? "
         "AND to_kind='strain_canonical' AND to_id=? LIMIT 1",

@@ -1472,7 +1472,7 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 | N-087 | Research corpus + HA projection | SQLite science↔seed schema (`corpus_schema` / `corpus.py`); Wave A OpenTHC (~12.8k) + Seed City CC0 (~8.9k) + Wikileaf grow_data (~2.8k) + Cannlytics MD labs (30k rows); Wave B bank scrapers (ILGM/Herbies/RQS + discovery list); Wave C PPFD download/crop → `media_asset` + [`docs/qa/CATALOG-GAPS.md`](qa/CATALOG-GAPS.md); ingest + link report + community export stub; HA indexes from SQLite projection; surface **5.1.13**; runbook [`docs/qa/CATALOG-RESEARCH-CORPUS.md`](qa/CATALOG-RESEARCH-CORPUS.md); **collation SoT:** [`docs/qa/CATALOG-COLLATION-CONTRACT.md`](qa/CATALOG-COLLATION-CONTRACT.md) |
 | N-087b | DB DUMP + public dataset expansion | Local `DB DUMP` ingest (`import_local_db_dump.py`): Seed City local, Leafly flat/features, replication labs (~215k), pickle archive; GitHub Kushy MIT (~9.5k) + MaxValue terpenes (~43k); discovery list for Mendeley/CT/SDP; corpus rebuilt with slim typed payloads (raw dumps remain SoT for overflow) |
 | N-087c | Multi-DB staging → master ingest | Per-source staging under `brain/data/staging/<family>.sqlite3` with **FULL** `raw_record` payloads (NAS >1 TB; multi-GB OK); master `dsc_brain.sqlite3` receives matched typed+chem+grow+links via `merge_staging_to_master.py` (additive; keep both chem when conflicting); never explode bulk scores into `attribute_kv`; runbook updated in [`CATALOG-RESEARCH-CORPUS.md`](qa/CATALOG-RESEARCH-CORPUS.md) |
-| N-087-COLLATION | Collation contract (notes / reviews / lineage) | Durable architecture in [`CATALOG-COLLATION-CONTRACT.md`](qa/CATALOG-COLLATION-CONTRACT.md). **2026-08-10 v4 landed (additive):** `observation` + `review` tables; `parent_of` lineage via `entity_link` (no inverse rows); projectors + ingest dual-write hooks. Master workset on `C:\DSC\collation\` then copy-back (`*.pre_collation_v4` bak). Counts after pass: observation≈1478 (forum_* staging copy); review=0 (CannaReviews public payload has no review bodies — login_gated); parent_of≈285k (≈77k unresolved `name_literal`). Wordcloud still deferred. |
+| N-087-COLLATION | Collation contract (notes / reviews / lineage) | Durable architecture in [`CATALOG-COLLATION-CONTRACT.md`](qa/CATALOG-COLLATION-CONTRACT.md). **2026-08-10 v4 + debt cleanup:** `observation`/`review`; `parent_of` SoT; quarantine of ~240k `lineage_tree` edges; `lineage_unresolved` exact-fail queue; observations≈65.7k from local staging banks/forums; review=0 honest (no bodies on disk). Workset `C:\DSC\collation\`; bak `*.pre_collation_debt`. Wordcloud still deferred. |
 
 ### deferred / honesty
 
@@ -1663,7 +1663,7 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 | N-087-EXCL | **done (local-SSD)** | Finished 2026-08-09 afternoon AEST via `_n087_local_ssd_merge.py`. Stalled seedsman NAS link killed at typed boundary; remaining 205 families `--no-link` on local SSD; one end-link + indexes; master copied back (`dsc_brain.sqlite3.pre_local_ssd` bak). Summary: ok=205 fail=0 skipped_already_ok=2; canonical≈181473 chem≈602737 entity_link≈2752186 grow≈89235. |
 | N-087-MERGE-LINK-NAS | **done (mitigated)** | Per-family full-chem link abandoned. Wrapper/resume pass `--no-link --no-search`; `merge_staging_to_master` commits after link; `--link-only` + set-based `link_science_to_seed`; force flag `_n087_force_no_link.flag` for live children. End-link added **1.61M** variant edges in ~164s on local SSD. |
 | N-087-MERGE-NOLINK | **done** | See above; exclusive + resume scripts updated. |
-| N-087-COLLATION | **done (v4 stubs + projectors)** | Schema v4 observation/review; parent_of lineage SoT; local SSD workset `C:\DSC\collation\`; copy-back + `pre_collation_v4` bak. See contract gaps section (updated 2026-08-10). |
+| N-087-COLLATION | **done (v4 + debt cleanup)** | Schema v4 observation/review; parent_of SoT; quarantine ~240k lineage_tree; lineage_unresolved queue; observations≈65.7k; review=0 honest. Local `C:\DSC\collation\`; bak `pre_collation_v4` + `pre_collation_debt`. |
 | N-087-BACKUP | **done** | Durable `_BACKUP_N087_2026-08-08` (~9.5GB) present; earlier git backup commit fc8c4cc; plus `pre_local_ssd` bak before copy-back. |
 
 ### scrapes / corpus
@@ -1745,16 +1745,18 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 
 ## SoftAP fleet home + enhanced Fleet Fix (2026-08-10)
 
-**Decision (goal):** SoftAP DSC-Anchor is the Wi‑Fi home for Hub / Control / Sonoffs. Pots stay ESP-NOW→hub→bridge (star). Nest is emergency fallback only. Spec: `docs/superpowers/specs/2026-08-10-softap-fleet-star-design.md`.
+**Decision (goal):** SoftAP DSC-Anchor is the Wi‑Fi home for Hub / Control / Sonoffs so they **stop flapping across home APs** (that made ESP-NOW unusable). Pots stay ESP-NOW→hub→bridge. Home Wi‑Fi is emergency fallback only. Spec: `docs/superpowers/specs/2026-08-10-softap-fleet-star-design.md`.
 
-**2026-08-10 evening — SoftAP-home PAUSED (membership):** SoftAP-primary hub OTA orphaned the hub (Fallback Hotspot / offline) before SoftAP L3 path was proven. Spec criterion #2 (HA path to SoftAP clients) still fails from LAN (`.4.1` dark via eth). Tree reverted to **Nest-first** wifi for Hub / Control / Sonoffs; SoftAP remains secondary + bridge SoftAP beacon/ESP-NOW pin.
+**Do not Nest-first as the steady state** — that reintroduces home-AP flap and nullifies SoftAP-home. SoftAP-primary membership stays.
 
-**Hard gate before SoftAP-primary anyone again:**
+**Hard gate for HA reachability (not for SoftAP preference):** SoftAP radio can pin RF before eth→`.4.x` is perfect; HA/OTA to SoftAP clients still needs:
 1. SoftAP SSID up; Anchor BSSID published.
-2. Static SoftAP STA (e.g. `192.168.4.50`) can ping SoftAP gw `192.168.4.1`.
-3. Route `192.168.4.0/24 via 192.168.86.66` delivers SoftAP clients to HA.
-4. SoftAP-primary **hub only** → HA API at `.4.10` works; then Control; then Sonoffs one at a time.
+2. Static SoftAP STA can ping SoftAP gw `192.168.4.1`.
+3. Route `192.168.4.0/24 via 192.168.86.66` (bridge eth static `.66`).
+4. Hub SoftAP-primary at `.4.10` answers HA API.
 
-**Bridge notes:** SoftAP bring-up fixed to `WIFI_MODE_APSTA`, max STA capped at 4, eth static `192.168.86.66` (DHCP had moved to `.17` after power loss). Hub flash = **micro-USB** (`esp32dev`); bridge flash = USB-TTL + IO0/EN — do not conflate.
+**Wifi YAML rules:** SoftAP prio > home Wi‑Fi; **never** `bssid: 00:00:00:00:00:00` (never matches → preferred nets fail → Fallback Hotspot). Optional Anchor BSSID pin only with a real BSSID.
 
-**Flash recovery (hub):** Nest-first packages on `master` — HA ESPHome Verify/Install (USB micro on laptop is fine). Do not Install SoftAP-primary wifi until gate passes.
+**Bridge notes:** SoftAP bring-up `WIFI_MODE_APSTA`, max STA 4, eth static `192.168.86.66`. Hub flash = **micro-USB** / HA USB Install; bridge = USB-TTL + IO0/EN.
+
+**2026-08-10 thrash note:** Temporary Nest-first push was wrong for the design goal (re-homed SoftAP-primary). Orphan symptom was SoftAP L3 + bad BSSID pins, not “SoftAP preference itself.”

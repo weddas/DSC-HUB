@@ -1,11 +1,16 @@
 #!/usr/bin/env python3
-"""Idempotent projector: staging/raw forum notes → observation (copy, never move).
+"""Idempotent projector: staging raw notes → observation (copy, never move).
 
 Master often has raw_record=0; read from local staging copies under --staging-dir.
 
+Supports forum_* and bank/PDP families. Bank descriptions / grow_notes map to
+kind=bank_note (never review). Forum bodies map to kind=forum_post.
+
 Usage:
   python scripts/project_observations_from_raw.py --db C:\\DSC\\collation\\dsc_brain.sqlite3 \\
-    --staging-dir C:\\DSC\\collation\\staging --source-id forum_rollitup
+    --staging-dir C:\\DSC\\collation\\staging
+  python scripts/project_observations_from_raw.py --db ... --staging-dir ... --glob "*.sqlite3"
+  python scripts/project_observations_from_raw.py --db ... --staging-dir ... --source-id cannareviews
 """
 
 from __future__ import annotations
@@ -22,38 +27,73 @@ sys.path.insert(0, str(ROOT))
 
 from brain.dsc_brain.corpus import add_observation, connect, ensure_source, name_norm  # noqa: E402
 
-DEFAULT_FORUM_GLOBS = (
+DEFAULT_GLOBS = (
     "forum_*.sqlite3",
+    "cannareviews*.sqlite3",
+    "bank_*.sqlite3",
+    "allbud.sqlite3",
+    "alchimia.sqlite3",
+    "seedsman.sqlite3",
+    "seedcity.sqlite3",
+    "cannaconnection.sqlite3",
+    "cropking.sqlite3",
+    "hytiva.sqlite3",
+    "dcseedexchange.sqlite3",
+    "north_atlantic.sqlite3",
+)
+
+FORUM_BODY_KEYS = (
+    "body",
+    "body_text",
+    "forum_body",
+    "post_text",
+    "text",
+    "content",
+    "page_text_excerpt",
+)
+BANK_NOTE_KEYS = (
+    "grow_notes",
+    "grow_note",
+    "description",
 )
 
 
-def _body_from_payload(payload: dict) -> tuple[str | None, str | None]:
-    title = None
+def _kind_for_file(stem: str, source_id: str) -> str:
+    s = (source_id or stem or "").lower()
+    if s.startswith("forum_") or "forum" in s:
+        return "forum_post"
+    return "bank_note"
+
+
+def _title_from_payload(payload: dict) -> str | None:
     for k in ("thread_title", "title", "subject", "name"):
         if payload.get(k):
-            title = str(payload[k]).strip()
-            break
-    for k in (
-        "body",
-        "body_text",
-        "forum_body",
-        "post_text",
-        "text",
-        "content",
-        "grow_notes",
-        "description",
-        "page_text_excerpt",
-    ):
+            return str(payload[k]).strip()
+    return None
+
+
+def _body_for_kind(payload: dict, kind: str) -> tuple[str | None, str | None]:
+    """Return (title, body). Prefer bank note fields for bank_note; forum fields for forum_post."""
+    title = _title_from_payload(payload)
+    keys = BANK_NOTE_KEYS if kind == "bank_note" else FORUM_BODY_KEYS + BANK_NOTE_KEYS
+    # For bank_note never fall back to dumping whole JSON / page_text_excerpt alone
+    # unless description/grow_notes missing — still allow page_text_excerpt as last resort
+    # only for forums.
+    for k in keys:
         v = payload.get(k)
         if isinstance(v, str) and v.strip():
             return title, v.strip()
-    # Some forum rows stash OP text under nested keys
-    for nest in ("thread", "post", "op"):
-        n = payload.get(nest)
-        if isinstance(n, dict):
-            t2, b2 = _body_from_payload(n)
-            if b2:
-                return title or t2, b2
+    if kind == "forum_post":
+        for nest in ("thread", "post", "op"):
+            n = payload.get(nest)
+            if isinstance(n, dict):
+                t2, b2 = _body_for_kind(n, kind)
+                if b2:
+                    return title or t2, b2
+        for k in FORUM_BODY_KEYS:
+            v = payload.get(k)
+            if isinstance(v, str) and v.strip():
+                return title, v.strip()
     return title, None
 
 
@@ -67,7 +107,15 @@ def project_one_staging(
 ) -> dict:
     src = sqlite3.connect(str(staging_path))
     src.row_factory = sqlite3.Row
-    stats = {"file": staging_path.name, "scanned": 0, "written": 0, "skipped_empty": 0}
+    default_kind = _kind_for_file(staging_path.stem, staging_path.stem)
+    stats = {
+        "file": staging_path.name,
+        "kind": default_kind,
+        "scanned": 0,
+        "written": 0,
+        "skipped_empty": 0,
+        "skipped_filter": 0,
+    }
     try:
         rows = src.execute(
             "SELECT id, source_id, name_norm, entity_id, payload_json FROM raw_record"
@@ -83,7 +131,9 @@ def project_one_staging(
             break
         source_id = row["source_id"] or staging_path.stem
         if source_filter and source_id != source_filter and staging_path.stem != source_filter:
+            stats["skipped_filter"] += 1
             continue
+        kind = _kind_for_file(staging_path.stem, source_id)
         try:
             payload = json.loads(row["payload_json"] or "{}")
         except json.JSONDecodeError:
@@ -92,18 +142,21 @@ def project_one_staging(
         if not isinstance(payload, dict):
             stats["skipped_empty"] += 1
             continue
-        title, body = _body_from_payload(payload)
+        title, body = _body_for_kind(payload, kind)
         if not body:
-            # Fall back: dump a compact JSON excerpt so the note is not lost
-            excerpt = json.dumps(
-                {k: payload[k] for k in list(payload)[:12]},
-                ensure_ascii=False,
-            )
-            if len(excerpt) < 40:
+            if kind == "forum_post":
+                excerpt = json.dumps(
+                    {k: payload[k] for k in list(payload)[:12]},
+                    ensure_ascii=False,
+                )
+                if len(excerpt) < 40:
+                    stats["skipped_empty"] += 1
+                    continue
+                body = excerpt
+                title = title or payload.get("thread_title") or payload.get("name")
+            else:
                 stats["skipped_empty"] += 1
                 continue
-            body = excerpt
-            title = title or payload.get("thread_title") or payload.get("name")
         key = row["name_norm"] or name_norm(str(payload.get("name") or title or ""))
         if not key:
             stats["skipped_empty"] += 1
@@ -111,15 +164,16 @@ def project_one_staging(
         if dry_run:
             stats["written"] += 1
             continue
-        ensure_source(master, source_id, source_id, redistributable=False, note="forum observation projector")
+        note = "forum observation projector" if kind == "forum_post" else "bank_note observation projector"
+        ensure_source(master, source_id, source_id, redistributable=False, note=note)
         oid = add_observation(
             master,
             name_norm_key=key,
             source_id=source_id,
             body_text=body,
-            kind="forum_post",
+            kind=kind,
             title=str(title).strip() if title else None,
-            payload={"projected_from": staging_path.name},
+            payload={"projected_from": staging_path.name, "kind": kind},
             raw_record_id=row["id"],
         )
         if oid:
@@ -128,19 +182,38 @@ def project_one_staging(
     return stats
 
 
+def _collect_files(staging_dir: Path, globs: list[str]) -> list[Path]:
+    seen: set[Path] = set()
+    out: list[Path] = []
+    for pattern in globs:
+        for f in sorted(staging_dir.glob(pattern)):
+            if f in seen:
+                continue
+            seen.add(f)
+            out.append(f)
+    return out
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--db", type=Path, required=True)
     ap.add_argument("--staging-dir", type=Path, required=True)
     ap.add_argument("--source-id", type=str, default="")
+    ap.add_argument(
+        "--glob",
+        action="append",
+        default=[],
+        help="Glob under staging-dir (repeatable). Default: forum + bank families.",
+    )
     ap.add_argument("--dry-run", action="store_true")
-    ap.add_argument("--limit", type=int, default=0, help="Max observations written (0=all)")
+    ap.add_argument("--limit", type=int, default=0, help="Max observations written per file (0=all)")
     args = ap.parse_args(argv)
 
     master = connect(args.db)
-    files = sorted(args.staging_dir.glob("forum_*.sqlite3"))
+    globs = args.glob or list(DEFAULT_GLOBS)
+    files = _collect_files(args.staging_dir, globs)
     if not files:
-        print(json.dumps({"error": "no forum_*.sqlite3 in staging-dir", "dir": str(args.staging_dir)}))
+        print(json.dumps({"error": "no matching staging sqlite", "dir": str(args.staging_dir), "globs": globs}))
         return 2
     all_stats = []
     before = master.execute("SELECT COUNT(*) FROM observation").fetchone()[0]
@@ -157,13 +230,19 @@ def main(argv: list[str] | None = None) -> int:
             master.commit()
             print(f"  done {f.name} {st}")
     after = master.execute("SELECT COUNT(*) FROM observation").fetchone()[0]
+    by_kind = [
+        {"kind": r[0], "c": r[1]}
+        for r in master.execute("SELECT kind, COUNT(*) FROM observation GROUP BY kind ORDER BY 2 DESC")
+    ]
     master.close()
     print(
         json.dumps(
             {
                 "before": before,
                 "after": after,
+                "by_kind": by_kind,
                 "dry_run": args.dry_run,
+                "globs": globs,
                 "families": all_stats,
                 "built_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
             },

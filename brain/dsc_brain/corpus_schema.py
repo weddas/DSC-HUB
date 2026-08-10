@@ -246,6 +246,35 @@ CREATE INDEX IF NOT EXISTS idx_rev_norm ON review(name_norm);
 CREATE INDEX IF NOT EXISTS idx_rev_source ON review(source_id);
 CREATE INDEX IF NOT EXISTS idx_rev_raw ON review(raw_record_id);
 CREATE INDEX IF NOT EXISTS idx_rev_kind ON review(kind);
+
+-- Debt cleanup: quarantine noisy lineage edges (copy-out; rollback = copy back).
+CREATE TABLE IF NOT EXISTS entity_link_quarantine (
+  id TEXT PRIMARY KEY,
+  from_kind TEXT NOT NULL,
+  from_id TEXT NOT NULL,
+  to_kind TEXT NOT NULL,
+  to_id TEXT NOT NULL,
+  method TEXT NOT NULL,
+  confidence REAL NOT NULL DEFAULT 1.0,
+  source TEXT,
+  reason TEXT NOT NULL,
+  quarantined_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_elq_to ON entity_link_quarantine(to_kind, to_id);
+CREATE INDEX IF NOT EXISTS idx_elq_from ON entity_link_quarantine(from_kind, from_id);
+CREATE INDEX IF NOT EXISTS idx_elq_reason ON entity_link_quarantine(reason);
+
+-- Durable unmatched parent literals (exact resolve failed — not a soft skip).
+CREATE TABLE IF NOT EXISTS lineage_unresolved (
+  literal TEXT NOT NULL,
+  literal_norm TEXT NOT NULL,
+  edge_count INTEGER NOT NULL DEFAULT 0,
+  reason TEXT NOT NULL,
+  sample_child_norm TEXT,
+  updated_at TEXT NOT NULL,
+  PRIMARY KEY (literal)
+);
+CREATE INDEX IF NOT EXISTS idx_lin_unres_norm ON lineage_unresolved(literal_norm);
 """
 
 # Additive DDL for existing DBs (applied by _migrate_schema).
@@ -286,4 +315,33 @@ CREATE INDEX IF NOT EXISTS idx_rev_norm ON review(name_norm);
 CREATE INDEX IF NOT EXISTS idx_rev_source ON review(source_id);
 CREATE INDEX IF NOT EXISTS idx_rev_raw ON review(raw_record_id);
 CREATE INDEX IF NOT EXISTS idx_rev_kind ON review(kind);
+"""
+
+# Additive DDL: quarantine + unresolved lineage queue (debt cleanup).
+SCHEMA_V4_DEBT_CLEANUP = """
+CREATE TABLE IF NOT EXISTS entity_link_quarantine (
+  id TEXT PRIMARY KEY,
+  from_kind TEXT NOT NULL,
+  from_id TEXT NOT NULL,
+  to_kind TEXT NOT NULL,
+  to_id TEXT NOT NULL,
+  method TEXT NOT NULL,
+  confidence REAL NOT NULL DEFAULT 1.0,
+  source TEXT,
+  reason TEXT NOT NULL,
+  quarantined_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_elq_to ON entity_link_quarantine(to_kind, to_id);
+CREATE INDEX IF NOT EXISTS idx_elq_from ON entity_link_quarantine(from_kind, from_id);
+CREATE INDEX IF NOT EXISTS idx_elq_reason ON entity_link_quarantine(reason);
+CREATE TABLE IF NOT EXISTS lineage_unresolved (
+  literal TEXT NOT NULL,
+  literal_norm TEXT NOT NULL,
+  edge_count INTEGER NOT NULL DEFAULT 0,
+  reason TEXT NOT NULL,
+  sample_child_norm TEXT,
+  updated_at TEXT NOT NULL,
+  PRIMARY KEY (literal)
+);
+CREATE INDEX IF NOT EXISTS idx_lin_unres_norm ON lineage_unresolved(literal_norm);
 """
