@@ -84,7 +84,7 @@ python scripts/build_catalog_search_indexes.py
 - `source_record.redistributable` gates community export
 - `media_asset` for cropped PPFD/spectrum graphs
 - `followup_gap` for missing/unparseable expected fields
-- *(gap)* first-class `observation` / `review` tables — see contract + FOLLOWUPS **N-087-COLLATION**
+- First-class `observation` / `review` tables (schema v4) — lineage SoT + promote ops in [`CATALOG-COLLATION-CONTRACT.md`](CATALOG-COLLATION-CONTRACT.md); chase list [`CATALOG-THIN-FIELDS.md`](CATALOG-THIN-FIELDS.md)
 
 ## Pipelines
 
@@ -111,6 +111,11 @@ Stage   scripts/ingest_corpus_dumps.py --per-source-staging
 Merge   scripts/merge_staging_to_master.py
         # raw_record stays in staging unless --include-raw
         # legacy direct: scripts/ingest_corpus_dumps.py --db ... --link
+        # prefer --no-link per family, then one --link-only
+Collate scripts/quarantine_junk_literals.py
+        scripts/resolve_lineage_literals.py
+        scripts/promote_unresolved_literals.py   # exact; UI/marketing + shape gates
+        # densify helpers: height_cm / bank aliases / observations (see contract)
 Report  scripts/report_science_seed_links.py
 HA      scripts/build_catalog_search_indexes.py
 Export  scripts/export_community_catalog.py
@@ -120,8 +125,9 @@ Fat dumps under `homeassistant/data/dsc_*.json` and `media/` are **gitignored**.
 
 **Capture policy (N-087):** Maximize staging capture; match later. Keep FULL raw HTML/JSON/CSV rows, reviews, prices, brands, scores, lineage text, forum excerpts — do not drop "unused" fields. Prefer over-capture in staging over premature filtering (NAS >1 TB).
 
-**Overflow policy:** Staging 
-aw_record keeps FULL source payloads (NAS capacity). Master stores typed identity + chemistry + grow + links + rich payload_json (+ structured extras when parseable; never invent). ttribute_kv is for smaller bank/product rows only so master stays usable.
+**Overflow policy:** Staging `raw_record` keeps FULL source payloads (NAS capacity). Master stores typed identity + chemistry + grow + links + rich `payload_json` (+ structured extras when parseable; never invent). `attribute_kv` is for smaller bank/product rows only so master stays usable.
+
+**Unresolved promote (post end-link):** `quarantine_junk_literals.py` then `promote_unresolved_literals.py` — exact-only; reject long/UI/review-chrome parents (`096acb4`) plus newlines, leading punctuation, pure digits, and photoperiod chrome (`c1d6881`). Ops: contract § Unresolved promote ops. Workset after promote: `lineage_unresolved`≈8.7k (honest leftovers).
 
 ## Honesty rules
 
