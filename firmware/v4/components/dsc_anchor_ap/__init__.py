@@ -1,5 +1,6 @@
 # SoftAP fleet home for ETH01 (F-012) — works with ethernet (no wifi: component).
-# SoftAP + DHCP + NAPT so Hub/Control/Sonoffs reach HA via Ethernet.
+# SoftAP + static client map (no DHCPS) + NAPT. SoftAP-home membership paused
+# until SoftAP IP path is proven (Nest-first wifi packages — see FOLLOWUPS).
 import esphome.codegen as cg
 from esphome.components import binary_sensor, text_sensor, sensor
 import esphome.config_validation as cv

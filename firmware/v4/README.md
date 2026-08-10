@@ -20,7 +20,7 @@ Kit SoftAP setup: `dsc-hub-kit.yaml`, `dsc-control-kit.yaml`, `dsc-pot{1..4}-kit
 
 WiFi is split into `dsc-*-wifi-lab.yaml` / `dsc-*-wifi-kit.yaml` so kit builds omit compile-time SSIDs.
 Fleet component: `components/dsc_fleet_setup/` (phone portal on hub; Control/pots/bridge join `DSC-Setup-*`).
-Bridge also hosts SoftAP `DSC-Anchor` (F-012 channel pin) + `components/dsc_api_client/` (F-010).
+Bridge also hosts SoftAP `DSC-Anchor` (F-012 channel pin + NAPT) + `components/dsc_api_client/` (F-010). SoftAP-home **membership is paused** (`5893ea6`) — Hub/Control/Sonoff wifi packages are Nest-first until SoftAP IP gate; see [`docs/qa/SOFTAP-FLEET-HOME.md`](../../docs/qa/SOFTAP-FLEET-HOME.md).
 
 Package bodies are remote-git safe (no `!secret`). Stubs pass credentials (and hub/panel MACs + `espnow_cmd_tag`) as substitutions.
 
@@ -55,7 +55,7 @@ The `api:` block lives in [`dsc-control-common.yaml`](dsc-control-common.yaml). 
 | Check | What to do |
 |---|---|
 | Panel boot-looping / no Wi‑Fi | USB flash; serial must show `DSC-CONTROL 4.0.11 up — free_heap=…`. OTA will not recover a looping board. |
-| Host / mDNS | **IP only** — lab Nest reservation **`192.168.86.177`** (`use_address` in `dsc-control-wifi-lab.yaml`). Do not use `dsc-control.local`. |
+| Host / mDNS | **IP only** — lab Nest DHCP/reservation (do not set SoftAP `use_address` `.4.11` until SoftAP IP gate). Do not use `dsc-control.local`. |
 | Encryption | Leave the key **blank** when adding/reconfiguring. If HA still has an old encrypted entry, **delete it** and re-add. |
 | Stale `dsc-cyd1` | Delete old **dsc-cyd1** ESPHome device in HA Integrations if present. |
 | Secrets on HA | Still need `dsc_control_ota_password` / `_ap_password` for Install/fallback AP (`dsc_control_api_key` unused by panel firmware). |

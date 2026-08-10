@@ -2,12 +2,17 @@
 
 ## Unreleased
 
-- **ETH01 bridge 5.2.0 (F-010 / F-012 / F-013)** — WT32-ETH01 SoftAP channel
-  anchor (`DSC-Anchor`), ESP-NOW `0xD8` appliance demand → Noise native API
-  client to Sonoffs (HA-down actuation), broadcast `0xD1` vitals mirror to HA
-  over Ethernet. Kit SoftAP role=`bridge`. HA package `dsc_v4_bridge.yaml` +
-  Pro System cards. SoftAP via `dsc_anchor_ap` (ESPHome forbids `wifi:`+`ethernet:`).
-  F-011 portal host on ETH01 still deferred; F-014 kit SoftAP hello deferred.
+- **SoftAP-home membership paused (`5893ea6`)** — SoftAP-primary hub OTA
+  orphaned the hub before SoftAP L3 (`.4.x` via eth) was proven. Nest-first
+  wifi for Hub / Control / Sonoffs; SoftAP remains secondary + bridge SoftAP
+  beacon/`APSTA`/NAPT/ESP-NOW pin; eth static `.66`; SoftAP max STA capped at
+  4. Hard SoftAP IP gate in FOLLOWUPS + [`docs/qa/SOFTAP-FLEET-HOME.md`](docs/qa/SOFTAP-FLEET-HOME.md).
+- **ETH01 bridge SoftAP+NAPT (`bc2aa9b`, F-010 / F-012 / F-013)** — WT32-ETH01
+  SoftAP `DSC-Anchor` with static `192.168.4.1/24` (**no DHCPS**), LwIP NAPT,
+  ESP-NOW rebind to `WIFI_IF_AP`, ESP-NOW `0xD8` demand → Noise native API to
+  Sonoffs, broadcast `0xD1` vitals mirror to HA over Ethernet. SoftAP-home
+  membership later paused by `5893ea6` until SoftAP IP gate. F-011 / F-014
+  still deferred; F-015 Sync component copy still Partial.
 - **Pi offline brain (Phase A/B start)** — Product destination documented in Notion [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d3407556c) + [`docs/DSC-BRAIN.md`](docs/DSC-BRAIN.md). New `brain/` package loads curated catalogs into SQLite, resolves Want, dry-runs decision ticks, exposes FastAPI stub (`:8787`). Specs: [`docs/brain/`](docs/brain/). HA is lab scaffold ([`docs/HA-SCAFFOLD.md`](docs/HA-SCAFFOLD.md)); SoftAP remains product unbox.
 - **Build a Plant Full Inclusion (N-085)** — Pro Home/Root Zone roster context, Nutrient Science calculator/deep-link/CANNA stage packs, Lighting catalog controls, short-stock-safe Accept, refreshed catalog indexes, and HA surface **5.1.11**.
 - **Build a Plant (N-083)** — Separate product surface: dashboard `dsc-build-plant`, Lit card `dsc-build-plant-card`, package `dsc_v4_build_plant.yaml` (soil % blend, plant roster, mix calculator, Apply climate Want). Slim `/local/dsc-catalog/` search indexes via `scripts/build_catalog_search_indexes.py`. Vivosun NEXT_DATA enrich (wattage/PPE/stated point-PPFD/datasheets); keyword-labeled map URLs still **0** on CDN hashes. Wired into `sync-hacs-dist.sh` / `ha-sync.sh` (bundle + catalog + dashboard copy).
