@@ -33,6 +33,9 @@ esphome:
     version: "5.2.0"
   platformio_options:
     board_build.flash_mode: dio
+    # Allow SoftAP↔eth forward when packet arrives on eth destined for SoftAP subnet.
+    build_flags:
+      - -DIP_FORWARD_ALLOW_TX_ON_RX_NETIF=1
 
 esp32:
   board: wt32-eth01
@@ -41,8 +44,10 @@ esp32:
     sdkconfig_options:
       CONFIG_LWIP_IP_FORWARD: y
       CONFIG_LWIP_IPV4_NAPT: y
-      # Hub + Control + 4 Sonoffs (+ headroom). Pots are ESP-NOW→hub, not SoftAP STAs.
-      CONFIG_ESP_WIFI_SOFTAP_MAX_NUM_STA: "10"
+      # Required for eth↔SoftAP L3 (ESP-IDF eth2ap / NAT-router guidance).
+      CONFIG_LWIP_L2_TO_L3_COPY: y
+      # Hub + Control + 4 Sonoffs + 4 pots (+ headroom). SoftAP channel pin for ESP-NOW.
+      CONFIG_ESP_WIFI_SOFTAP_MAX_NUM_STA: "14"
 
 logger:
   level: INFO
@@ -86,8 +91,10 @@ dsc_anchor_ap:
   channel: ${anchor_channel}
   ap_ip: "192.168.4.1"
   ap_netmask: "255.255.255.0"
-  max_connections: 10
+  max_connections: 14
   enable_napt: true
+  # Force hub SoftAP-STA MAC onto WIFI_IF_AP after SoftAP bring-up.
+  hub_mac: ${hub_mac}
   bssid_sensor: anchor_bssid_ts
   channel_sensor: anchor_channel_sensor
   up_sensor: anchor_up

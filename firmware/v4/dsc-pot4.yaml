@@ -10,7 +10,9 @@ substitutions:
   ota_password_val: !secret dsc_pot4_ota_password
   ap_password_val: !secret dsc_pot4_ap_password
   hub_mac: "84:1F:E8:16:E6:60"
-  wifi_bssid: "00:00:00:00:00:00"
+  softap_bssid: "58:2A:BD:60:3C:1D"
+  softap_ip: "192.168.4.15"
+  wifi_bssid: "58:2A:BD:60:3C:1D"
   fleet_pot_index: "4"
 
 packages:

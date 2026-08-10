@@ -333,7 +333,9 @@ script:
           bool linked = id(panel_last_ms) != 0 && (now - id(panel_last_ms)) < 30000u;
           id(panel_link).publish_state(linked);
 
-  # ---- VITALS (0xD1) — live values (broadcast: panel + bridge F-013) ----
+  # ---- VITALS (0xD1) — live values ----
+  # SoftAP STA broadcast can miss the SoftAP host (bridge WIFI_IF_AP).
+  # Broadcast still reaches Control/pots; unicast SoftAP MAC reaches bridge.
   - id: tx_vitals
     mode: single
     then:
@@ -375,14 +377,48 @@ script:
             cu(id(sens_hum_cooldown).state);  cu(id(sens_dehum_cooldown).state);  cu(id(sens_heater_cooldown).state);
             cu(id(sens_ac_cooldown).state);   cu(id(sens_mat_cooldown).state);    cu(id(sens_clone_hum_cooldown).state);
             return p;
+      - espnow.send:
+          address: ${bridge_mac}
+          wait_for_sent: false
+          continue_on_error: true
+          data: !lambda |-
+            // Same vitals frame as broadcast — SoftAP host unicast path.
+            std::vector<uint8_t> p; p.reserve(60);
+            auto i16 = [&](float v, float sc){ int16_t t = isnan(v) ? (int16_t)0x8000 : (int16_t) lroundf(v * sc); p.push_back(t & 0xFF); p.push_back((t >> 8) & 0xFF); };
+            auto u8  = [&](int v){ p.push_back((uint8_t)(v < 0 ? 0 : (v > 255 ? 255 : v))); };
+            p.push_back(0xD1); p.push_back(0x01);
+            i16(id(temp_sensor).state,100);   i16(id(clone_temp).state,100); i16(id(room_temp).state,100);
+            i16(id(humidity_sensor).state,100); i16(id(clone_rh).state,100); i16(id(room_rh).state,100);
+            i16(id(vpd_sensor).state,100);    i16(id(clone_vpd).state,100);
+            i16(id(co2_ppm_estimate).state,1);
+            u8(id(fan_exhaust_out).state    ? id(fan_exhaust_out).speed    : 0);
+            u8(id(fan_exhaust_recirc).state ? id(fan_exhaust_recirc).speed : 0);
+            u8(id(fan_intake_main).state    ? id(fan_intake_main).speed    : 0);
+            u8(id(fan_intake_clone).state   ? id(fan_intake_clone).speed   : 0);
+            u8((int) id(light_current_pct)); u8(id(light_ramp_state));
+            u8((int) id(grow_stage).active_index().value_or(0));
+            u8(id(control_strategy_idx)); u8(id(clone_mode_idx)); u8(id(priority_tent_main) ? 1 : 0);
+            uint8_t dem=0; if(id(humidifier_demand).state)dem|=1; if(id(dehumidifier_demand).state)dem|=2; if(id(heater_demand).state)dem|=4; if(id(growmat_demand).state)dem|=8; if(id(ac_demand).state)dem|=16; if(id(clone_hum_demand).state)dem|=32; p.push_back(dem);
+            uint8_t md=0; if(id(full_auto_mode))md|=1; if(id(local_manual_mode).state)md|=2; if(id(ha_takeover_active))md|=4; if(id(auto_photoperiod_enabled))md|=8; if(id(manual_light_hold))md|=16; if(id(main_active))md|=32; if(id(clone_active))md|=64; p.push_back(md);
+            uint8_t ar=0; if(id(humidifier_auto_enabled))ar|=1; if(id(dehumidifier_auto_enabled))ar|=2; if(id(heater_auto_enabled))ar|=4; if(id(growmat_auto_enabled))ar|=8; if(id(ac_auto_enabled))ar|=16; if(id(clone_hum_auto_enabled))ar|=32; p.push_back(ar);
+            uint8_t ft=0; if(id(sensor_fault_active))ft|=1; if(id(room_fault_active))ft|=2; if(id(clone_fault_active))ft|=4; if(id(rootzone_fault_active))ft|=8; if(id(ha_connected).state)ft|=16; if(id(lights_currently_on))ft|=32; if(id(clone_lights_on))ft|=64; if(id(emergency_failsafe_active))ft|=128; p.push_back(ft);
+            uint8_t co=0; if(id(hum_intake_routing))co|=1; if(id(destrat_pulse_enable))co|=2; if(id(pot1_espnow_link).state)co|=4; if(id(pot2_espnow_link).state)co|=8; if(id(pot3_espnow_link).state)co|=16; if(id(pot4_espnow_link).state)co|=32; if(id(clone_photo_follow))co|=64; p.push_back(co);
+            p.push_back((uint8_t) id(tx_seq)++);
+            auto cu = [&](float v){ uint16_t t = isnan(v)||v<0 ? 0 : (v>65535 ? 65535 : (uint16_t)v); p.push_back(t&0xFF); p.push_back((t>>8)&0xFF); };
+            cu(id(sens_hum_countdown).state); cu(id(sens_dehum_countdown).state); cu(id(sens_heater_countdown).state);
+            cu(id(sens_ac_countdown).state);  cu(id(sens_mat_countdown).state);   cu(id(sens_clone_hum_countdown).state);
+            cu(id(sens_hum_cooldown).state);  cu(id(sens_dehum_cooldown).state);  cu(id(sens_heater_cooldown).state);
+            cu(id(sens_ac_cooldown).state);   cu(id(sens_mat_cooldown).state);    cu(id(sens_clone_hum_cooldown).state);
+            return p;
 
   # ---- APPLIANCE DEMAND (0xD8) — bridge F-010 ----
+  # Unicast SoftAP MAC — SoftAP host often misses STA ESP-NOW broadcasts.
   # {0xD8,0x01,dem,seq_lo,seq_hi,tag_lo,tag_hi}
   - id: tx_appliance_demand
     mode: single
     then:
       - espnow.send:
-          address: FF:FF:FF:FF:FF:FF
+          address: ${bridge_mac}
           wait_for_sent: false
           continue_on_error: true
           on_error:

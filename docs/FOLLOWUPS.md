@@ -1755,13 +1755,13 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 
 ## SoftAP fleet home + enhanced Fleet Fix (2026-08-10)
 
-**Decision (goal):** SoftAP DSC-Anchor is the Wi‑Fi home for Hub / Control / Sonoffs so they **stop flapping across home APs** (that made ESP-NOW unusable). Pots stay ESP-NOW→hub→bridge (not SoftAP STAs). Home Wi‑Fi is emergency fallback only. Spec: `docs/superpowers/specs/2026-08-10-softap-fleet-star-design.md`.
+**Decision (goal):** SoftAP DSC-Anchor is the Wi‑Fi home for Hub / Control / Sonoffs / **pots** so they **stop flapping across home APs** (that made ESP-NOW unusable). Pots SoftAP STA pins the same channel as the hub (ESP-NOW needs it); pot data volume is tiny so SoftAP cost is fine. Home Wi‑Fi is emergency fallback only. Spec: `docs/superpowers/specs/2026-08-10-softap-fleet-star-design.md`.
 
 **Do not Nest-first as the steady state** — that reintroduces home-AP flap and nullifies SoftAP-home. SoftAP-primary membership is the product.
 
 **Wifi YAML rules:** SoftAP prio > home Wi‑Fi; SoftAP entry pins Anchor BSSID `58:2A:BD:60:3C:1D` (`wifi_bssid` / `softap_bssid`); home Wi‑Fi has **no** BSSID pin; **never** `00:00:00:00:00:00`.
 
-**SoftAP STA budget:** hub + control + 4 sonoffs = 6; bridge `max_connections` / `CONFIG_ESP_WIFI_SOFTAP_MAX_NUM_STA` = **10**. Pots do not count.
+**SoftAP STA budget:** hub + control + 4 sonoffs + 4 pots = 10; bridge `max_connections` / `CONFIG_ESP_WIFI_SOFTAP_MAX_NUM_STA` = **14**. Pot SoftAP IPs: `.12`–`.15`.
 
 **Hard gate for HA reachability (not for SoftAP preference):**
 1. SoftAP SSID up; Anchor BSSID published.
@@ -1777,6 +1777,10 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 
 **SoftAP L3 (2026-08-10):** **Proved.** LAN/HA ping `.4.1` + hub `.4.10` (MAC `84:1F:E8:16:E6:60` SoftAP STA, wifi_mode=APSTA). Root causes: (1) SoftAP lwIP before `wifi_start` + `L2_TO_L3_COPY`; (2) espnow STA clobber — SoftAP after espnow with **stop→APSTA→config→single start** (STA→APSTA+set_config double `AP_START` asserted); (3) never manual `esp_netif_action_start`. Bridge = **OTA `.66`**.
 
+**Pots SoftAP (2026-08-10 evening):** SoftAP-primary pots for channel pin (low data). IPs `.12`–`.15`. Bridge max STA → **14**. OTA proved: pot1 `.12`, pot2 `.13`, pot4 `.15` (API/OTA). **Pot3** still absent on Nest/SoftAP. After bridge power-cycle, Control/Sonoffs SoftAP STAs may need rejoin time (or Nest fallback OTA bounce).
+
+**Hub↔bridge ESP-NOW (2026-08-10 night):** SoftAP Wi‑Fi OK + pot→hub ESP-NOW OK, but `hub_esp_now_link` stuck off / age `600000` (no 0xD8/0xD1 on bridge). Root cause: SoftAP host misses STA **broadcast** ESP-NOW + peers needed on `WIFI_IF_AP`. Fix: hub unicasts 0xD8/0xD1 to SoftAP MAC; bridge forces hub+broadcast peers onto `WIFI_IF_AP`. **Proved 2026-08-11:** hub OTA from Nest `.55` → SoftAP `.4.10`; `hub_esp_now_link=true`, age ~1s.
+
 ## 2026-08-10 — subtype own-source chem/notes chase
 
 - [x] Honest projector `scripts/project_subtype_chem_from_own_sources.py` (never copies parent photoperiod chem/notes onto auto/F2/bx subtypes).
@@ -1784,3 +1788,9 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 - [x] `project_subtype_links.py` re-run: 0 new links (9703 subtype_of; 14333 base_missing still).
 - **Coverage:** chem 7105→7129 (+24 staging typed); bank_note 4800→4952 (+152 staging raw). Still lacking chem **2574** / notes **4751** — no honest own-source left on disk.
 - [ ] **next-plan:** targeted F2/bx/auto PDP scrapes for remaining subtype chem/notes (see `docs/qa/CATALOG-THIN-FIELDS.md` P1). SoftAP out of scope.
+
+## 2026-08-10 — DSC-Dashboard visual inspiration
+
+### next-plan
+- N-xxx (visual): Apply concept renders in `docs/assets/inspiration/` as north star for custom panel + Build a Plant + The Dash — glass HUD over digital twin, teal/neon flow lines, sparse anchored metrics; keep metric honesty (no invented PPFD grids / feed rates).
+- N-xxx (plant seat dash): Per-plant detail — soil blend cross-section + age + nutrients/recipe + live soil Got; select from Dash pot / Root Zone / roster. Reuse Build Medium graphic language; do not invent feed schedules. See `docs/assets/README.md` inspiration notes.

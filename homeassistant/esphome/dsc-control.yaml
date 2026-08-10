@@ -1,7 +1,6 @@
 # DSC-CONTROL — HA stub
-# Lab OTA target: Nest reservation 192.168.86.177 (mDNS off on panel).
-# wifi-lab package sets use_address; keep this overlay in sync if the
-# reservation changes before the package lands on master.
+# SoftAP fleet home 192.168.4.11 (via bridge eth 192.168.86.66).
+# Nest reservation 192.168.86.177 is fallback-only after SoftAP-primary.
 substitutions:
   name: dsc-control
   friendly_name: DSC-CONTROL
@@ -29,4 +28,4 @@ packages:
     refresh: 0s
 
 wifi:
-  use_address: 192.168.86.177
+  use_address: 192.168.4.11

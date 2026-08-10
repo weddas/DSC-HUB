@@ -1,28 +1,30 @@
 # ==================================================================
 #  DSC pot · lab WiFi
 #
-#  Pots are ESP-NOW-only to the hub (SoftAP fleet-star). Nest/home is
-#  for OTA/optional LAN only — do NOT prefer DSC-Anchor SoftAP (wastes
-#  SoftAP STA slots and is not required for climate).
+#  SoftAP DSC-Anchor primary — same channel pin as hub for ESP-NOW.
+#  Pot traffic is tiny (vitals); SoftAP STA cost is fine. Nest/home
+#  is emergency fallback only. SoftAP BSSID pin on SoftAP entry only.
+#  Stubs set softap_ip + softap_bssid / wifi_bssid.
 # ==================================================================
 wifi:
   networks:
-    - ssid: ${wifi_ssid}
-      password: ${wifi_password}
-      bssid: ${wifi_bssid}
-      priority: 20
-    - ssid: ${wifi_ssid}
-      password: ${wifi_password}
-      priority: 10
-    # SoftAP last-resort only (e.g. Nest down during OTA) — never preferred.
     - ssid: ${anchor_ssid}
       password: ${anchor_ap_password}
-      priority: 0
+      bssid: ${softap_bssid}
+      priority: 20
+      manual_ip:
+        static_ip: ${softap_ip}
+        gateway: 192.168.4.1
+        subnet: 255.255.255.0
+        dns1: 192.168.4.1
+    - ssid: ${wifi_ssid}
+      password: ${wifi_password}
+      priority: 5
   power_save_mode: none
-  # Match hub: false so bounce can scan onto a preferred Nest BSSID if set.
   fast_connect: false
-  # Match hub: off-channel roam scans break ESP-NOW (shared radio).
+  # Off-channel roam scans break ESP-NOW (shared radio).
   post_connect_roaming: false
+  use_address: ${softap_ip}
   ap:
     ssid: "${friendly_name} Fallback"
     password: ${ap_password_val}
