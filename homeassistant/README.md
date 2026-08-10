@@ -380,7 +380,7 @@ not humidifier lock — entity id kept for compatibility.
 - Recorder `purge_keep_days: ~120` — HA config
 - Fixed-channel AP — ops (root README)
 - POT3 probe swap, SCD41 — post-release hardware
-- ETH01 bridge — **in tree** (`dsc-bridge.yaml` · F-010/F-012/F-013)
+- ETH01 bridge — **in tree** (`dsc-bridge.yaml` · F-010/F-012/F-013; SoftAP deferred, channel pin on `WIFI_IF_STA` — see [`docs/brain/F010_APPLIANCE_BRIDGE.md`](../docs/brain/F010_APPLIANCE_BRIDGE.md))
 
 ## Firmware pairing (**5.2.0** train)
 
