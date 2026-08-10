@@ -93,3 +93,70 @@ See FOLLOWUPS **N-087-COLLATION**.
 - `review=0` is correct: public CannaReviews + `dsc_reviews_cannareviews.json` are aggregates/`login_gated` only — no review bodies on disk. Projector skip counters: `skipped_login_gated` / `skipped_description_only` / `skipped_no_review_body`.
 
 **Still deferred:** wordcloud / collate-at-read UI; CannaReviews full review bodies (login/medauth); requiring `grow_trait` → observation FKs.
+
+---
+
+## Debt-cleanup ops runbook (lineage + observations)
+
+**Intent:** keep structured parents as lineage SoT; seat unmatched parent strings in a durable queue; project bank/forum notes into `observation` without lying about login-gated reviews.
+
+```mermaid
+flowchart TD
+  tree["entity_link parent_of<br/>source LIKE %lineage_tree%"] --> q["quarantine_lineage_noise.py<br/>→ entity_link_quarantine"]
+  q --> structured["project_lineage_edges.py<br/>parents / parent_slugs / lineage_structured"]
+  structured --> resolve["resolve_lineage_literals.py<br/>exact canonical or unique alias only"]
+  resolve --> live["entity_link parent_of live"]
+  resolve --> unres["lineage_unresolved queue"]
+  staging["staging/*.sqlite3 raw_record"] --> obs["project_observations_from_raw.py"]
+  staging --> rev["project_reviews_from_raw.py"]
+  obs --> observation["observation bank_note / forum_post"]
+  rev --> review["review or honest skip counters"]
+```
+
+### Script order (local SSD workset)
+
+Prefer `C:\DSC\collation\dsc_brain.sqlite3` (+ staging copy). Always `--dry-run` first on destructive steps.
+
+```text
+# 1) Copy-out noisy tree edges (INSERT quarantine, then DELETE live)
+python scripts/quarantine_lineage_noise.py --db C:\DSC\collation\dsc_brain.sqlite3 --dry-run
+python scripts/quarantine_lineage_noise.py --db C:\DSC\collation\dsc_brain.sqlite3
+
+# 2) Re-project structured parents only (never mermaid / lineage_tree)
+python scripts/project_lineage_edges.py --db C:\DSC\collation\dsc_brain.sqlite3
+
+# 3) Exact-resolve name_literal parents; rebuild lineage_unresolved
+python scripts/resolve_lineage_literals.py --db C:\DSC\collation\dsc_brain.sqlite3 --dry-run
+python scripts/resolve_lineage_literals.py --db C:\DSC\collation\dsc_brain.sqlite3
+
+# 4) Widen observations from local staging (copy into observation; never move raw)
+python scripts/project_observations_from_raw.py --db C:\DSC\collation\dsc_brain.sqlite3 \
+  --staging-dir C:\DSC\collation\staging
+
+# 5) Reviews only when bodies exist (expect review=0 on public CannaReviews)
+python scripts/project_reviews_from_raw.py --db C:\DSC\collation\dsc_brain.sqlite3 \
+  --staging-dir C:\DSC\collation\staging --source-id cannareviews
+```
+
+`connect()` applies additive DDL `SCHEMA_V4_DEBT_CLEANUP` (`entity_link_quarantine`, `lineage_unresolved`) when missing.
+
+### Constraints (verified in scripts)
+
+| Rule | Where |
+|---|---|
+| Quarantine before delete; rollback = copy quarantine rows back | `quarantine_lineage_noise.py` |
+| Default match: `source LIKE '%lineage_tree%'`, reason `lineage_tree_not_sot` | same |
+| Parent fields SoT: `parents`, `parent_slugs`, `lineage_structured` only | `project_lineage_edges.py` |
+| Oversize parent list → `followup_gap` (`oversize_parent_list`), not truncate | same (`--oversize-bound`, default 32) |
+| Resolve = exact `name_norm` or **unique** `science_alias`; never fuzzy | `resolve_lineage_literals.py`, `add_lineage_edge` |
+| Ambiguous alias / no hit → stay `name_literal` + `lineage_unresolved` | same |
+| `*null` suffix stripped before match; bare `null` → `junk_literal_null` | same |
+| Bank/PDP text → `observation.kind=bank_note`; forums → `forum_post` | `project_observations_from_raw.py` |
+| Description / `login_gated` / aggregate-only ≠ review body | `project_reviews_from_raw.py` |
+
+### Pitfalls
+
+- Do **not** treat `lineage_mermaid` / deep SeedFinder tree walks as SoT again.
+- Do **not** invent fuzzy parent links to drain `lineage_unresolved`.
+- `review=0` after the projector is success when counters show `skipped_login_gated` / `skipped_description_only` / `skipped_no_review_body` — not a broken pipeline.
+- Re-run quarantine only when new `lineage_tree` edges appear; projectors are idempotent and never delete existing good edges.
