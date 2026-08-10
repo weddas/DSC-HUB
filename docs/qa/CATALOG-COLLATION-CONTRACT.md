@@ -106,4 +106,69 @@ See FOLLOWUPS **N-087-COLLATION**.
 - Observations widened (forums `grow_note`, Herbies/Zamnesia filtered excerpts).
 - **SeedFinder quiet merge** (orphan journal recovered; scrape PID dead): typed `--no-link` → canonical≈188.6k, SF variants≈22.8k, obs≈99.5k; `subtype_of`≈9.6k. StrainDB / medauth still chase-only.
 
-**Still deferred:** wordcloud / collate-at-read UI; CannaReviews full review bodies (login/medauth); requiring `grow_trait` → observation FKs; SF scrape resume for remaining sitemap; optional `--link-only` after SF.
+**Staging drain (2026-08-10, `c8e0cd4`):**
+- Mirrored almost all NAS staging into local `C:\DSC\collation\staging` (**264/268** families). Skipped huge chem DBs already typed-merged: `maxvalue_terpenes`, `phytochem_smith`, `cannlytics_expand`, `leafly_flat_enrich`.
+- Re-ran observation + alias projectors against the mirrored set (copy notes; never move/`DELETE` staging).
+- Post-drain workset: obs≈**126k** (`bank_note`≈123k, forums, `grow_note` 1431; **224** observation sources); `science_alias`≈**26.7k**; height_cm≈**13.4%** (13713/102141); `subtype_of`≈9703; unresolved≈5.7k after prior promote; `review=0` still honest.
+- Thin chase is **scrape-only** now — see [`CATALOG-THIN-FIELDS.md`](CATALOG-THIN-FIELDS.md). Do not re-scrape for densify/drain deliverables already on disk.
+- HA browse indexes refreshed (`built_at` 2026-08-10T08:10:26Z): same caps (strains **2500**, `with_height=12`, `with_height_band=1`) — densify rank ≠ cap slice.
+
+**Still deferred:** wordcloud / collate-at-read UI; CannaReviews full review bodies (login/medauth); requiring `grow_trait` → observation FKs; SF scrape resume for remaining sitemap; StrainDB `DEFERRED_CF` unlock; inventing cm from Short/Med/Tall; fuzzy lineage collapse.
+
+---
+
+## Staging drain ops (`c8e0cd4`)
+
+**Intent:** finish projecting notes/aliases from on-disk staging before the next scrape wave. After this pass, remaining thin fields need new HTML/PDP capture — not another projector rerun on the same blobs.
+
+```mermaid
+flowchart TD
+  nas["NAS staging families"] --> mirror["Local staging 264/268"]
+  mirror --> obs["project_observations_from_raw"]
+  mirror --> alias["harvest_bank_aliases"]
+  alias --> clean["clean_merch_aliases"]
+  obs --> master["dsc_brain.sqlite3"]
+  clean --> master
+  master --> thin["CATALOG-THIN-FIELDS scrape chase"]
+  master --> idx["build_catalog_search_indexes"]
+```
+
+### Observation projector
+
+`scripts/project_observations_from_raw.py` reads staging `raw_record` (master often has `raw_record=0`).
+
+| Input | Behavior |
+|---|---|
+| Default globs | `forum_*`, `bank_*`, CannaReviews, Seedsman/Seed City/…, plus **`wikileaf.sqlite3`** |
+| Bank note keys | `description`, **`info`**, **`more_info`**, **`about_info`** → kind `bank_note` |
+| Grow note keys | `grow_notes` / `grow_note` → kind `grow_note` (preferred when present) |
+| Forum bodies | `body` / `body_text` / … → `forum_post` |
+| Filtered excerpts | `page_text_excerpt` allowed for Herbies / Zamnesia / **Royal Queen** stems only; noise filter rejects cart/cookie/login chrome |
+
+Idempotent: copy into `observation` with provenance; never squash notes; never invent typed height from prose here.
+
+### Alias harvest + merch/page cleanup
+
+| Script | Job |
+|---|---|
+| `harvest_bank_aliases.py` | Exact bank name ↔ URL slug → `science_alias`; skip collisions / fuzzy |
+| `clean_merch_aliases.py` | Delete `bank_slug_alias:*` rows that look like merch/SKU noise |
+
+**Noise filters (harvest + clean, `c8e0cd4`):** cartridges / prerolls / batteries / THCP / gummies / `510` / weight tokens, **and** pagination chrome `page N` / `post N` (word-boundary `page|post` + digits, plus exact `^(page|post)\s+\d+$` on `alias_norm`).
+
+```text
+# Local workset example
+python scripts/project_observations_from_raw.py --db C:\DSC\collation\dsc_brain.sqlite3 --staging-dir C:\DSC\collation\staging
+python scripts/harvest_bank_aliases.py --db C:\DSC\collation\dsc_brain.sqlite3 --staging-dir C:\DSC\collation\staging
+python scripts/clean_merch_aliases.py --db C:\DSC\collation\dsc_brain.sqlite3 --dry-run
+python scripts/clean_merch_aliases.py --db C:\DSC\collation\dsc_brain.sqlite3
+python scripts/build_catalog_search_indexes.py
+```
+
+### Pitfalls
+
+- Do **not** re-scrape banks just to refill `observation` / alias after a successful drain — chase scrape-only gaps in thin-fields.
+- Skipping the four huge chem staging files is intentional; they are already in master typed chem.
+- `page N` / `post N` aliases are reject/delete only — never promote them as strain names.
+- Cap-slice `with_height=12` can stay flat while research `height_cm_*` rises; rebuild indexes after drain but do not invent cm to fatten the browse slice.
+- Prefer Unresolved promote ops docs (shape guards / UI quarantine) when draining `lineage_unresolved` — exact match only; no fuzzy.

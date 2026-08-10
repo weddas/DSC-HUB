@@ -17,6 +17,8 @@
 
 Skipped local copy (already in master typed chem): `maxvalue_terpenes`, `phytochem_smith`, `cannlytics_expand`, `leafly_flat_enrich`.
 
+**Projectors used (do not re-run expecting new rows without new staging):** `project_observations_from_raw.py` (adds Wikileaf + bank `info`/`more_info`/`about_info` + Royal Queen excerpts), `harvest_bank_aliases.py` + `clean_merch_aliases.py` (reject `page N` / `post N` chrome). Ops: [`CATALOG-COLLATION-CONTRACT.md`](CATALOG-COLLATION-CONTRACT.md) § Staging drain ops.
+
 ## Next scrape must target (honest gaps)
 
 | Priority | Field / category | Why thin after drain | Suggested scrape |
