@@ -84,7 +84,21 @@ python scripts/build_catalog_search_indexes.py
 - `source_record.redistributable` gates community export
 - `media_asset` for cropped PPFD/spectrum graphs
 - `followup_gap` for missing/unparseable expected fields
-- *(gap)* first-class `observation` / `review` tables — see contract + FOLLOWUPS **N-087-COLLATION**
+- First-class `observation` / `review` (schema v4) — see contract + FOLLOWUPS **N-087-COLLATION**
+
+## Post-merge densify → staging drain
+
+After typed merge + match-expand, project remaining on-disk staging into observations/aliases before scrape chase:
+
+```text
+project_observations_from_raw.py   # bank/forum/Wikileaf notes → observation
+harvest_bank_aliases.py            # exact slug↔name science_alias
+clean_merch_aliases.py             # merch + page/post noise delete
+# optional: quarantine_junk_literals / promote_unresolved_literals (exact only)
+build_catalog_search_indexes.py    # slim HA caps (not densify rank)
+```
+
+**Staging drain (`c8e0cd4`):** local mirror **264/268** families → obs≈126k, alias≈26.7k, height_cm≈13.4%. Skipped already-merged chem staging: `maxvalue_terpenes`, `phytochem_smith`, `cannlytics_expand`, `leafly_flat_enrich`. Next fill is scrape-only — [`CATALOG-THIN-FIELDS.md`](CATALOG-THIN-FIELDS.md). Ops detail: [`CATALOG-COLLATION-CONTRACT.md`](CATALOG-COLLATION-CONTRACT.md) § Staging drain ops.
 
 ## Pipelines
 
@@ -111,6 +125,9 @@ Stage   scripts/ingest_corpus_dumps.py --per-source-staging
 Merge   scripts/merge_staging_to_master.py
         # raw_record stays in staging unless --include-raw
         # legacy direct: scripts/ingest_corpus_dumps.py --db ... --link
+Drain   scripts/project_observations_from_raw.py
+        scripts/harvest_bank_aliases.py
+        scripts/clean_merch_aliases.py
 Report  scripts/report_science_seed_links.py
 HA      scripts/build_catalog_search_indexes.py
 Export  scripts/export_community_catalog.py
@@ -120,8 +137,7 @@ Fat dumps under `homeassistant/data/dsc_*.json` and `media/` are **gitignored**.
 
 **Capture policy (N-087):** Maximize staging capture; match later. Keep FULL raw HTML/JSON/CSV rows, reviews, prices, brands, scores, lineage text, forum excerpts — do not drop "unused" fields. Prefer over-capture in staging over premature filtering (NAS >1 TB).
 
-**Overflow policy:** Staging 
-aw_record keeps FULL source payloads (NAS capacity). Master stores typed identity + chemistry + grow + links + rich payload_json (+ structured extras when parseable; never invent). ttribute_kv is for smaller bank/product rows only so master stays usable.
+**Overflow policy:** Staging `raw_record` keeps FULL source payloads (NAS capacity). Master stores typed identity + chemistry + grow + links + rich `payload_json` (+ structured extras when parseable; never invent). `attribute_kv` is for smaller bank/product rows only so master stays usable.
 
 ## Honesty rules
 
