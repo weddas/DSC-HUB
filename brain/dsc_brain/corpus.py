@@ -11,7 +11,7 @@ import uuid
 from pathlib import Path
 from typing import Any
 
-from .corpus_schema import CORPUS_SCHEMA, SCHEMA_VERSION
+from .corpus_schema import CORPUS_SCHEMA, SCHEMA_VERSION, SCHEMA_V4_OBSERVATION_REVIEW
 from .paths import DEFAULT_DB
 
 KNOWN_CANONICAL = {
@@ -78,6 +78,10 @@ def connect(db_path: Path | None = None, *, timeout: float = 120.0) -> sqlite3.C
                 # Another writer holds the lock; caller can retry. Typed tables still usable.
                 pass
         try:
+            _migrate_schema(conn)
+        except sqlite3.OperationalError:
+            pass
+        try:
             conn.execute(
                 "INSERT INTO meta(key, value) VALUES(?, ?) "
                 "ON CONFLICT(key) DO UPDATE SET value=excluded.value",
@@ -93,11 +97,9 @@ def connect(db_path: Path | None = None, *, timeout: float = 120.0) -> sqlite3.C
 
 def _migrate_schema(conn: sqlite3.Connection) -> None:
     """Additive upgrades for DBs created before SCHEMA_VERSION bumps."""
-    cols = {r[1] for r in conn.execute("PRAGMA table_info(raw_record)").fetchall()} if _table_exists(
-        conn, "raw_record"
-    ) else set()
-    # CORPUS_SCHEMA CREATE IF NOT EXISTS already adds raw_record on connect.
-    _ = cols
+    # v4: observation + review (CREATE IF NOT EXISTS — safe to re-run).
+    if not _table_exists(conn, "observation") or not _table_exists(conn, "review"):
+        conn.executescript(SCHEMA_V4_OBSERVATION_REVIEW)
     conn.execute(
         "INSERT INTO meta(key, value) VALUES(?, ?) "
         "ON CONFLICT(key) DO UPDATE SET value=excluded.value",
@@ -438,6 +440,187 @@ def add_link(
     return lid
 
 
+def _stable_doc_id(*parts: str) -> str:
+    blob = "|".join(parts)
+    return hashlib.sha1(blob.encode("utf-8", errors="replace")).hexdigest()
+
+
+def add_observation(
+    conn: sqlite3.Connection,
+    *,
+    name_norm_key: str,
+    source_id: str,
+    body_text: str,
+    kind: str = "grow_note",
+    title: str | None = None,
+    variant_id: str | None = None,
+    observed_at: str | None = None,
+    payload: dict[str, Any] | None = None,
+    raw_record_id: str | None = None,
+    obs_id: str | None = None,
+) -> str | None:
+    """Append-only observation. Insert-or-ignore by stable id. Returns id or None if empty."""
+    body = (body_text or "").strip()
+    if not body:
+        return None
+    key = name_norm(name_norm_key) if name_norm_key else ""
+    if not key:
+        return None
+    payload_json = json.dumps(payload or {}, ensure_ascii=False)
+    oid = obs_id or _stable_doc_id(source_id, kind, key, body[:2000], raw_record_id or "")
+    now = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    conn.execute(
+        "INSERT OR IGNORE INTO observation("
+        "id, name_norm, variant_id, source_id, observed_at, kind, title, body_text, "
+        "payload_json, raw_record_id, created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)",
+        (
+            oid,
+            key,
+            variant_id,
+            source_id,
+            observed_at,
+            kind,
+            title,
+            body,
+            payload_json,
+            raw_record_id,
+            now,
+        ),
+    )
+    return oid
+
+
+def add_review(
+    conn: sqlite3.Connection,
+    *,
+    name_norm_key: str,
+    source_id: str,
+    body_text: str,
+    kind: str = "review",
+    title: str | None = None,
+    variant_id: str | None = None,
+    observed_at: str | None = None,
+    rating: float | None = None,
+    reviewer: str | None = None,
+    payload: dict[str, Any] | None = None,
+    raw_record_id: str | None = None,
+    review_id: str | None = None,
+) -> str | None:
+    """Append-only review. Insert-or-ignore by stable id. Returns id or None if empty."""
+    body = (body_text or "").strip()
+    if not body:
+        return None
+    key = name_norm(name_norm_key) if name_norm_key else ""
+    if not key:
+        return None
+    payload_json = json.dumps(payload or {}, ensure_ascii=False)
+    rid = review_id or _stable_doc_id(source_id, kind, key, body[:2000], raw_record_id or "")
+    now = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    conn.execute(
+        "INSERT OR IGNORE INTO review("
+        "id, name_norm, variant_id, source_id, observed_at, kind, title, body_text, "
+        "rating, reviewer, payload_json, raw_record_id, created_at) "
+        "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)",
+        (
+            rid,
+            key,
+            variant_id,
+            source_id,
+            observed_at,
+            kind,
+            title,
+            body,
+            rating,
+            reviewer,
+            payload_json,
+            raw_record_id,
+            now,
+        ),
+    )
+    return rid
+
+
+def add_lineage_edge(
+    conn: sqlite3.Connection,
+    *,
+    child_norm: str,
+    parent: str,
+    source_id: str,
+    confidence: float = 1.0,
+) -> str | None:
+    """SoT lineage: method=parent_of, from=parent → to=child. No inverse insert.
+
+    If parent resolves to an existing strain_canonical.name_norm, from_kind=strain_canonical.
+    Otherwise from_kind=name_literal with the raw parent string (unresolved queue).
+    Idempotent: skips if an equivalent parent_of edge already exists.
+    """
+    child = name_norm(child_norm)
+    parent_raw = (parent or "").strip()
+    if not child or not parent_raw:
+        return None
+    parent_key = name_norm(parent_raw)
+    if not parent_key or parent_key == child:
+        return None
+    resolved = conn.execute(
+        "SELECT 1 FROM strain_canonical WHERE name_norm=? LIMIT 1", (parent_key,)
+    ).fetchone()
+    if resolved:
+        from_kind, from_id = "strain_canonical", parent_key
+    else:
+        from_kind, from_id = "name_literal", parent_raw
+    existing = conn.execute(
+        "SELECT id FROM entity_link WHERE method='parent_of' AND from_kind=? AND from_id=? "
+        "AND to_kind='strain_canonical' AND to_id=? LIMIT 1",
+        (from_kind, from_id, child),
+    ).fetchone()
+    if existing:
+        return existing["id"] if isinstance(existing, sqlite3.Row) else existing[0]
+    return add_link(
+        conn,
+        from_kind,
+        from_id,
+        "strain_canonical",
+        child,
+        method="parent_of",
+        confidence=confidence,
+        source=source_id,
+    )
+
+
+def _iter_parent_names(value: Any) -> list[str]:
+    """Extract parent name strings from common payload shapes — never invent."""
+    out: list[str] = []
+    if value in (None, "", [], {}):
+        return out
+    if isinstance(value, str):
+        # Split common separators; leave mermaid alone (caller should not pass it).
+        if "-->" in value or value.strip().lower().startswith("graph"):
+            return out
+        parts = re.split(r"[,;/]| x | × |\s+x\s+", value)
+        for p in parts:
+            p = p.strip()
+            if p and len(p) < 120:
+                out.append(p)
+        return out
+    if isinstance(value, (list, tuple)):
+        for item in value:
+            if isinstance(item, str):
+                out.extend(_iter_parent_names(item))
+            elif isinstance(item, dict):
+                name = item.get("name") or item.get("strain") or item.get("slug")
+                if name:
+                    out.append(str(name).strip())
+        return out
+    if isinstance(value, dict):
+        name = value.get("name") or value.get("strain")
+        if name:
+            out.append(str(name).strip())
+        for k in ("parents", "parent", "mother", "father"):
+            if k in value:
+                out.extend(_iter_parent_names(value.get(k)))
+    return out
+
+
 def add_gap(
     conn: sqlite3.Connection,
     entity_kind: str,
@@ -590,6 +773,41 @@ def ingest_strain_row(
             reason = str(g.get("reason") or "").strip()
             if field and reason:
                 add_gap(conn, entity_kind, entity_id, field, reason)
+
+    # Opt-in collation dual-write (additive; never replaces raw/chem/grow).
+    note_body = row.get("observation_body") or row.get("grow_note") or row.get("forum_body")
+    if isinstance(note_body, str) and note_body.strip():
+        add_observation(
+            conn,
+            name_norm_key=key,
+            source_id=source_id,
+            body_text=note_body,
+            kind=str(row.get("observation_kind") or "grow_note"),
+            title=(str(row["observation_title"]).strip() if row.get("observation_title") else None),
+            variant_id=entity_id if entity_kind == "strain_variant" else None,
+            observed_at=str(row["observed_at"]).strip() if row.get("observed_at") else None,
+        )
+    review_body = row.get("review_body") or row.get("review_text")
+    if isinstance(review_body, str) and review_body.strip():
+        rating = row.get("rating")
+        try:
+            rating_f = float(rating) if rating not in (None, "") else None
+        except (TypeError, ValueError):
+            rating_f = None
+        add_review(
+            conn,
+            name_norm_key=key,
+            source_id=source_id,
+            body_text=review_body,
+            title=(str(row["review_title"]).strip() if row.get("review_title") else None),
+            variant_id=entity_id if entity_kind == "strain_variant" else None,
+            rating=rating_f,
+            reviewer=(str(row["reviewer"]).strip() if row.get("reviewer") else None),
+            observed_at=str(row["observed_at"]).strip() if row.get("observed_at") else None,
+        )
+    for parent_field in ("parents", "parent_slugs", "lineage_structured"):
+        for pname in _iter_parent_names(row.get(parent_field)):
+            add_lineage_edge(conn, child_norm=key, parent=pname, source_id=source_id)
 
     return key
 

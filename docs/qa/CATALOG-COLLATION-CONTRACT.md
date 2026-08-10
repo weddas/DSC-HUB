@@ -74,6 +74,15 @@
 
 ---
 
-## Schema gaps vs this contract (as of 2026-08-08)
+## Schema gaps vs this contract (as of 2026-08-10)
 
-See FOLLOWUPS **N-087-COLLATION**. Current `corpus_schema` v3 has canonical / variant / chem / grow / `entity_link` / `raw_record`, but **no first-class `observation` / `review` tables**; forums currently lean on canonical + raw. Lineage edges are not yet systematically `parent_of`/`child_of` on every genetics parse. Wordcloud is not built. Do not block merges for a full refactor — land typed merges now; add observation/review stubs when safe.
+See FOLLOWUPS **N-087-COLLATION**.
+
+**Landed (schema v4, additive):**
+- First-class `observation` + `review` tables (append-only; provenance via `source_id` / optional `raw_record_id`).
+- Helpers: `add_observation`, `add_review`, `add_lineage_edge`.
+- Lineage SoT: `entity_link.method='parent_of'` with `from=parent → to=child`. Unresolved parents use `from_kind='name_literal'`. No inverse `child_of` rows (invert at read time).
+- Idempotent projectors: `scripts/project_lineage_edges.py`, `project_observations_from_raw.py`, `project_reviews_from_raw.py`.
+- Opt-in dual-write from `ingest_strain_row` when row carries note/review/parent fields — still keeps `raw_record` / chem / grow.
+
+**Still deferred:** wordcloud / collate-at-read UI; CannaReviews full review bodies (login/medauth — public scrape has `description` + `review_count` only); requiring `grow_trait` → observation FKs.

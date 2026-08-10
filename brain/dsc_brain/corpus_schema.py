@@ -2,11 +2,14 @@
 
 Schema v3 adds `raw_record` for fat source payloads (staging overflow / sidecars)
 so importers never explode high-cardinality columns into `attribute_kv`.
+
+Schema v4 adds first-class `observation` + `review` tables (collation contract).
+Additive only — never drops or rewrites existing tables.
 """
 
 from __future__ import annotations
 
-SCHEMA_VERSION = "3"
+SCHEMA_VERSION = "4"
 
 CORPUS_SCHEMA = """
 CREATE TABLE IF NOT EXISTS meta (
@@ -103,8 +106,7 @@ CREATE TABLE IF NOT EXISTS attribute_kv (
   source_id TEXT
 );
 
--- Fat overflow: FULL source row payloads (staging multi-GB OK on NAS >1TB).
--- Prefer this over attribute_kv for bulk dumps / score columns.
+-- Fat overflow: FULL source row payloads (staging overflow / sidecars).
 CREATE TABLE IF NOT EXISTS raw_record (
   id TEXT PRIMARY KEY,
   source_id TEXT NOT NULL,
@@ -115,6 +117,38 @@ CREATE TABLE IF NOT EXISTS raw_record (
   payload_sha1 TEXT,
   stored_at TEXT,
   FOREIGN KEY(source_id) REFERENCES source_record(id)
+);
+
+-- v4: append-only grow notes / forum docs / bank note blobs (collation contract).
+CREATE TABLE IF NOT EXISTS observation (
+  id TEXT PRIMARY KEY,
+  name_norm TEXT NOT NULL,
+  variant_id TEXT,
+  source_id TEXT NOT NULL,
+  observed_at TEXT,
+  kind TEXT NOT NULL,
+  title TEXT,
+  body_text TEXT NOT NULL,
+  payload_json TEXT NOT NULL DEFAULT '{}',
+  raw_record_id TEXT,
+  created_at TEXT
+);
+
+-- v4: user/review bodies — separate from lab chem and effects vibes.
+CREATE TABLE IF NOT EXISTS review (
+  id TEXT PRIMARY KEY,
+  name_norm TEXT NOT NULL,
+  variant_id TEXT,
+  source_id TEXT NOT NULL,
+  observed_at TEXT,
+  kind TEXT NOT NULL DEFAULT 'review',
+  title TEXT,
+  body_text TEXT NOT NULL,
+  rating REAL,
+  reviewer TEXT,
+  payload_json TEXT NOT NULL DEFAULT '{}',
+  raw_record_id TEXT,
+  created_at TEXT
 );
 
 CREATE TABLE IF NOT EXISTS schema_extension_log (
@@ -204,4 +238,52 @@ CREATE INDEX IF NOT EXISTS idx_raw_source ON raw_record(source_id);
 CREATE INDEX IF NOT EXISTS idx_raw_norm ON raw_record(name_norm);
 CREATE INDEX IF NOT EXISTS idx_raw_sha ON raw_record(payload_sha1);
 CREATE INDEX IF NOT EXISTS idx_alias_norm ON science_alias(name_norm);
+CREATE INDEX IF NOT EXISTS idx_obs_norm ON observation(name_norm);
+CREATE INDEX IF NOT EXISTS idx_obs_source ON observation(source_id);
+CREATE INDEX IF NOT EXISTS idx_obs_raw ON observation(raw_record_id);
+CREATE INDEX IF NOT EXISTS idx_obs_kind ON observation(kind);
+CREATE INDEX IF NOT EXISTS idx_rev_norm ON review(name_norm);
+CREATE INDEX IF NOT EXISTS idx_rev_source ON review(source_id);
+CREATE INDEX IF NOT EXISTS idx_rev_raw ON review(raw_record_id);
+CREATE INDEX IF NOT EXISTS idx_rev_kind ON review(kind);
+"""
+
+# Additive DDL for existing DBs (applied by _migrate_schema).
+SCHEMA_V4_OBSERVATION_REVIEW = """
+CREATE TABLE IF NOT EXISTS observation (
+  id TEXT PRIMARY KEY,
+  name_norm TEXT NOT NULL,
+  variant_id TEXT,
+  source_id TEXT NOT NULL,
+  observed_at TEXT,
+  kind TEXT NOT NULL,
+  title TEXT,
+  body_text TEXT NOT NULL,
+  payload_json TEXT NOT NULL DEFAULT '{}',
+  raw_record_id TEXT,
+  created_at TEXT
+);
+CREATE TABLE IF NOT EXISTS review (
+  id TEXT PRIMARY KEY,
+  name_norm TEXT NOT NULL,
+  variant_id TEXT,
+  source_id TEXT NOT NULL,
+  observed_at TEXT,
+  kind TEXT NOT NULL DEFAULT 'review',
+  title TEXT,
+  body_text TEXT NOT NULL,
+  rating REAL,
+  reviewer TEXT,
+  payload_json TEXT NOT NULL DEFAULT '{}',
+  raw_record_id TEXT,
+  created_at TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_obs_norm ON observation(name_norm);
+CREATE INDEX IF NOT EXISTS idx_obs_source ON observation(source_id);
+CREATE INDEX IF NOT EXISTS idx_obs_raw ON observation(raw_record_id);
+CREATE INDEX IF NOT EXISTS idx_obs_kind ON observation(kind);
+CREATE INDEX IF NOT EXISTS idx_rev_norm ON review(name_norm);
+CREATE INDEX IF NOT EXISTS idx_rev_source ON review(source_id);
+CREATE INDEX IF NOT EXISTS idx_rev_raw ON review(raw_record_id);
+CREATE INDEX IF NOT EXISTS idx_rev_kind ON review(kind);
 """
