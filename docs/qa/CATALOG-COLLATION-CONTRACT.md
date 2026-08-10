@@ -100,10 +100,10 @@ See FOLLOWUPS **N-087-COLLATION**.
 - Thin-field chase list: [`CATALOG-THIN-FIELDS.md`](CATALOG-THIN-FIELDS.md).
 
 **Catalog densify (2026-08-10, bak `*.pre_catalog_densify`):**
-- Numeric height text → `grow_trait.height_cm_*` (~2% → ~12.7%); never invent cm from Short/Med/Tall.
+- Numeric height text → `grow_trait.height_cm_*` (~2% → ~12%); never invent cm from Short/Med/Tall.
 - HA browse projection surfaces `height_band` from grow payload (ordinal; separate from `height_cm`).
-- Exact bank slug↔name `science_alias` harvest (~970 → ~23.2k).
-- Observations ≈78.9k (`bank_note`≈76.0k, `forum_post`≈1.5k, `grow_note`≈1.4k); Herbies/Zamnesia filtered excerpts; forums emit `grow_note` when diary fields present.
-- SeedFinder merge skipped (staging journal present). StrainDB / medauth still chase-only.
+- Exact bank slug↔name `science_alias` harvest + merch/SKU cleanup filter.
+- Observations widened (forums `grow_note`, Herbies/Zamnesia filtered excerpts).
+- **SeedFinder quiet merge** (orphan journal recovered; scrape PID dead): typed `--no-link` → canonical≈188.6k, SF variants≈22.8k, obs≈99.5k; `subtype_of`≈9.6k. StrainDB / medauth still chase-only.
 
-**Still deferred:** wordcloud / collate-at-read UI; CannaReviews full review bodies (login/medauth); requiring `grow_trait` → observation FKs.
+**Still deferred:** wordcloud / collate-at-read UI; CannaReviews full review bodies (login/medauth); requiring `grow_trait` → observation FKs; SF scrape resume for remaining sitemap; optional `--link-only` after SF.

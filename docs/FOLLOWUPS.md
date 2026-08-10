@@ -1665,13 +1665,13 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 | N-087-MERGE-LINK-NAS | **done (mitigated)** | Per-family full-chem link abandoned. Wrapper/resume pass `--no-link --no-search`; `merge_staging_to_master` commits after link; `--link-only` + set-based `link_science_to_seed`; force flag `_n087_force_no_link.flag` for live children. End-link added **1.61M** variant edges in ~164s on local SSD. |
 | N-087-MERGE-NOLINK | **done** | See above; exclusive + resume scripts updated. |
 | N-087-COLLATION | **done (v4 + debt + match-expand)** | Schema v4; parent_of + subtype_of; junk/tree quarantine; observations≈71k; review=0; thin chase doc. Local `C:\DSC\collation\`; baks `pre_collation_v4` / `pre_collation_debt` / `pre_match_expand`. |
-| N-087-DENSIFY | **done** | Height ~12.7%; alias ~23.2k; obs ≈78.9k (grow_note 1431); SF merge skipped (journal); bak `pre_catalog_densify`. |
+| N-087-DENSIFY | **done** | Height ~12.7%; alias ~23k (merch cleaned); obs ≈78.9k→**99.5k** after SF notes; SF merged quiet; bak `pre_catalog_densify` then post-SF copy-back. |
 | N-087-BACKUP | **done** | Durable `_BACKUP_N087_2026-08-08` (~9.5GB) present; earlier git backup commit fc8c4cc; plus `pre_local_ssd` bak before copy-back. |
 
 ### scrapes / corpus
 | ID | Status | Notes |
 |---|---|---|
-| S-SEEDFINDER | **side task (running)** | PW scrape left running (~22.1k/40638 as of 2026-08-10 ~11:23 AEST). Do not merge while staging journal live. Merge `seedfinder` alone with `--no-link` when quiet (~1 day ETA) — do **not** wait on StrainDB. |
+| S-SEEDFINDER | **merged (partial scrape)** | 2026-08-10: scrape PID dead; orphan journal recovered; merged `--only seedfinder --no-link` from local copy (raw≈22847). Canonical≈188.6k / variant SF≈22.8k. Resume scrape later for remaining catalog; do not wait on StrainDB. |
 | S-STRAINDB | **DEFERRED_CF (n≈289)** | Parked 2026-08-10 by operator: CF too costly vs value right now. Pause file `status=DEFERRED_CF`. Resume only on explicit ask after headed CF unlock (8–20s). Not a gate for catalog work on master. |
 | S-TIERA-HALF1 | **done (dump/staging + merged)** | Was dump+staging; now included in local-SSD exclusive queue. |
 | S-TIERA-2ND | **done (dump/staging + merged)** | Was dump+staging; now included in local-SSD exclusive queue. |
@@ -1684,8 +1684,10 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 - [x] StrainDB: Chrome CF capture + headed resume — then **re-paused CF** at n≈289; needs fresh operator unlock.
 - [x] D-N087-HEIGHT-BAND: staging + master merge (`--no-link`); ingest accepts `height_band` / nested `grow`.
 - [x] **2026-08-10:** StrainDB deferred (CF); SeedFinder continues as side task; catalog work proceeds on current master (~181k canonical).
-- [ ] When SeedFinder quiet: `merge_staging_to_master.py --only seedfinder --no-link --no-search` (+ end-link if needed). StrainDB merge separate / later.
+- [x] When SeedFinder quiet: `merge_staging_to_master.py --only seedfinder --no-link --no-search` (+ end-link if needed). StrainDB merge separate / later. **Done 2026-08-10** (orphan journal cleared; partial scrape ~22.8k variants).
 - [ ] StrainDB: resume only on explicit ask after headed CF unlock (no tight retry).
+- [ ] SeedFinder scrape resume for remaining ~18k sitemap entries (optional; master already has partial).
+- [ ] Optional `--link-only` after SF typed merge (science↔seed) when exclusive idle.
 
 ### tooling landed this pass
 - [`brain/data/_n087_exclusive_merge.py`](brain/data/_n087_exclusive_merge.py) / [`_n087_exclusive_merge_resume.py`](brain/data/_n087_exclusive_merge_resume.py): `--no-link`, skip OK, end-link before indexes.

@@ -48,6 +48,15 @@ MARKETING_RE = re.compile(
     re.I,
 )
 UNKNOWN_RE = re.compile(r"^unknown\b", re.I)
+# Phrase fragments that are never parents (match anywhere / as whole after norm)
+MARKETING_PHRASE_RE = re.compile(
+    r"("
+    r"breeders we work with|affordable prices|not to throw shade|did not cut the mustard|"
+    r"supposed .auto|in the market that|nuances of|particularly in their|"
+    r"and not to |at affordable|many breeders"
+    r")",
+    re.I,
+)
 
 
 def classify(raw: str) -> str | None:
@@ -61,10 +70,24 @@ def classify(raw: str) -> str | None:
         return "junk_geo_or_marketing"
     if MARKETING_RE.match(s) or MARKETING_RE.match(key):
         return "junk_geo_or_marketing"
-    # long marketing sentences
-    if len(s) > 80 and (" " in s) and not re.search(r"\b(f2|f3|bx|og|auto|kush|haze|dream)\b", s, re.I):
-        if re.search(r"\b(we|the market|supposed|nuances|affordable|breeders we)\b", s, re.I):
+    if MARKETING_PHRASE_RE.search(s) or MARKETING_PHRASE_RE.search(key):
+        return "junk_geo_or_marketing"
+    # long marketing sentences / prose parents
+    if len(s) > 60 and (" " in s):
+        if re.search(
+            r"\b(we|the market|supposed|nuances|affordable|breeders we|throw shade|"
+            r"cut the mustard|particularly)\b",
+            s,
+            re.I,
+        ):
             return "junk_geo_or_marketing"
+        # many words, no strain-like markers
+        words = s.split()
+        if len(words) >= 8 and not re.search(
+            r"\b(f2|f3|f4|bx\d*|og|auto|kush|haze|dream|gelato|cookies)\b", s, re.I
+        ):
+            if re.search(r"\b(the|and|with|that|their|have|from)\b", s, re.I):
+                return "junk_geo_or_marketing"
     return None
 
 
