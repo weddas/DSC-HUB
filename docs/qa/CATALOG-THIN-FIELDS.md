@@ -6,13 +6,15 @@
 
 ## Landed from existing disks + light scrapes
 
-| Deliverable | Evidence |
+| Deliverable | Evidence / scripts |
 |---|---|
 | Staging drain | 264 local staging DBs → obs ≈126k / 224 sources |
-| Height cm NLP | `height_cm_*` **~43.5%** (44376/102141) via indoor fields + prose with units |
-| Height bands | payload `height_band` ≈5145 (Short/Med/Tall — no fake cm) |
-| Wave D lite | Grow Kings Shopify → `nutrient_product` **416**, `medium_product` **255** |
-| SeedFinder | PW scrape **resumed** (~22853/40638 done; todo ~17.8k); checkpoint save hardened for NAS replace |
+| Height cm NLP | `height_cm_*` **~43.5%** (44376/102141) — `scripts/project_height_cm_from_text.py` |
+| Height bands | payload `height_band` ≈5145 — `scripts/project_height_bands_from_text.py` (no fake cm) |
+| Wave D lite | Grow Kings Shopify → nutrients **416** / mediums **255** — `scripts/scrape_growkings_nutrients_mediums.py` |
+| SeedFinder | PW scrape **resumed** (~22853/40638); `catalog_fetch.Checkpoint.save()` NAS replace fallback |
+
+Operator detail: [`CATALOG-COLLATION-CONTRACT.md`](CATALOG-COLLATION-CONTRACT.md) § Height NLP + bands / Wave D lite.
 
 ## Still thin / scrape targets
 

@@ -104,6 +104,108 @@ See FOLLOWUPS **N-087-COLLATION**.
 - HA browse projection surfaces `height_band` from grow payload (ordinal; separate from `height_cm`).
 - Exact bank slug↔name `science_alias` harvest + merch/SKU cleanup filter.
 - Observations widened (forums `grow_note`, Herbies/Zamnesia filtered excerpts).
-- **SeedFinder quiet merge** (orphan journal recovered; scrape PID dead): typed `--no-link` → canonical≈188.6k, SF variants≈22.8k, obs≈99.5k; `subtype_of`≈9.6k. StrainDB / medauth still chase-only.
+- **SeedFinder quiet merge** (orphan journal recovered): typed `--no-link` → canonical≈188.6k, SF variants≈22.8k; later drain raised obs≈126k. StrainDB / medauth still chase-only.
 
-**Still deferred:** wordcloud / collate-at-read UI; CannaReviews full review bodies (login/medauth); requiring `grow_trait` → observation FKs; SF scrape resume for remaining sitemap; optional `--link-only` after SF.
+**Staging drain (2026-08-10, `c8e0cd4`):**
+- Local staging mirror **264/268** → obs≈**126k** (224 sources); `science_alias`≈**26.7k**; height_cm then ≈**13.4%**. Thin chase became scrape-oriented — see [`CATALOG-THIN-FIELDS.md`](CATALOG-THIN-FIELDS.md). (Full drain projector table lives in prior docs PR #66 when merged.)
+
+**Height NLP + Wave D lite (2026-08-10, `3c24951`):**
+- Unit-backed prose → `grow_trait.height_cm_*` ≈**43.5%** (44376/102141); categorical bands → payload `height_band` ≈5145 (no fake cm).
+- Grow Kings Shopify Wave D → `nutrient_product` **416**, `medium_product` **255** (titles/tags only; NPK/dose null until manufacturer PDPs).
+- SeedFinder PW scrape **resumed** (~22853/40638); `Checkpoint.save()` falls back to direct write when NAS `os.replace` fails.
+- HA browse indexes (`built_at` 2026-08-10T08:21:44Z): strains **2500** (`with_height=23`, `with_height_band=3`), nutrients **416**, mediums **259**, lights **517**.
+
+**Still deferred:** wordcloud / collate-at-read UI; CannaReviews full review bodies (login/medauth); requiring `grow_trait` → observation FKs; inventing cm from Short/Med/Tall; StrainDB `DEFERRED_CF`; Wave D NPK/dose depth; SF remainder scrape → quiet re-merge.
+
+---
+
+## Height NLP + bands ops (`3c24951`)
+
+**Intent:** fill typed height and ordinal bands from text already on disk (master `grow_trait.payload_json` + staging `raw_record`) before more bank scrapes. Cm and bands stay separate honesty rails.
+
+```mermaid
+flowchart TD
+  staging["staging raw_record"] --> cm["project_height_cm_from_text"]
+  masterPay["grow_trait payload"] --> cm
+  staging --> band["project_height_bands_from_text"]
+  cm --> gt["grow_trait.height_cm_min/max"]
+  band --> payload["payload_json.height_band"]
+  gt --> idx["build_catalog_search_indexes"]
+  payload --> idx
+  idx --> ha["www/dist dsc-catalog"]
+```
+
+### Cm projector
+
+`scripts/project_height_cm_from_text.py` — updates rows where `height_cm_min IS NULL` only.
+
+| Input | Behavior |
+|---|---|
+| Structured keys | `height_indoor` / `height_outdoor` / `grow_height` / `height` / nested `grow.*` |
+| Prose keys | `more_info` / `info` / `description` / `about_info` / `page_text_excerpt` |
+| Prose rule | Height verb/noun + number + **unit** (`cm` / `in` / `ft`); bare unitless numbers rejected unless clearly cm-ish (20–400) |
+| Rejects | Pure Short/Medium/Tall; ambiguous inch-ish bare numbers; inventing cm from bands |
+
+```text
+python scripts/project_height_cm_from_text.py --db C:\DSC\collation\dsc_brain.sqlite3 \
+  --staging-dir C:\DSC\collation\staging
+python scripts/project_height_cm_from_text.py --db ... --dry-run
+```
+
+### Band projector
+
+`scripts/project_height_bands_from_text.py` — fills `payload_json.height_band` (+ optional `height_ordinal`) when missing. Skips values that look like unit-backed numeric heights (those belong to the cm projector).
+
+| Band | Ordinal |
+|---|---|
+| Short | 1 |
+| Short to Medium | 2 |
+| Medium / Med | 3 |
+| Medium to Tall | 4 |
+| Tall | 5 |
+
+```text
+python scripts/project_height_bands_from_text.py --db C:\DSC\collation\dsc_brain.sqlite3 \
+  --staging-dir C:\DSC\collation\staging
+```
+
+### Pitfalls
+
+- Never convert Short/Med/Tall → cm for HA or research.
+- Cap-slice `with_height` / `with_height_band` can stay low while research coverage rises; rebuild indexes after projectors but do not invent cm to fatten browse.
+- Re-running cm projector is idempotent on already-filled rows; bands skip rows that already have `height_band`.
+
+---
+
+## Wave D lite — Grow Kings nutrients/mediums (`3c24951`)
+
+**Intent:** seed `nutrient_product` / `medium_product` from the public Grow Kings Shopify `products.json` feed (same path family as lights). Titles/tags/URLs only — **no invented NPK or dose**.
+
+```mermaid
+flowchart LR
+  shop["growkings.com.au/products.json"] --> scrape["scrape_growkings_nutrients_mediums"]
+  scrape --> dumps["dsc_nutrients_growkings.json / dsc_mediums_growkings.json"]
+  scrape --> master["nutrient_product / medium_product"]
+  master --> idx["build_catalog_search_indexes"]
+```
+
+| Flag | Effect |
+|---|---|
+| (default) | Write gitignored dumps under `homeassistant/data/` |
+| `--stage` | Also `INSERT OR REPLACE` into local collation + repo masters when present |
+| `--limit N` / `--max-pages` | Cap crawl |
+
+Classifier uses nutrient/medium regexes on title/type/tags/handle; skips lights/tents/seeds/hardware unless a nutrient/medium cue also matches. `dose_ml_l` / `stage` / `npk` / `composition` stay **null**.
+
+```text
+python scripts/scrape_growkings_nutrients_mediums.py --stage
+python scripts/build_catalog_search_indexes.py
+```
+
+**Pitfalls:** dump files are gitignored — only slim HA indexes commit; `redistributable=false` for growkings source; deeper Wave D needs manufacturer PDPs + more brands (see thin-fields).
+
+---
+
+## SeedFinder checkpoint NAS harden (`3c24951`)
+
+`scripts/catalog_fetch.Checkpoint.save()` writes `.tmp` then `replace()`. On NAS/SMB, replace often raises `PermissionError` while another handle is open — catch `OSError`, overwrite the checkpoint path in place, then best-effort unlink the temp. PW scrape can resume without losing progress across SMB races.

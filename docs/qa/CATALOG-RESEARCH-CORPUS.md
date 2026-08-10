@@ -107,6 +107,9 @@ Wave B  scripts/scrape_seed_banks.py
         scripts/scrape_strain_directories.py
 Wave C  scripts/ingest_ppfd_maps.py
 Wave D  scripts/import_nutrients_mediums_packs.py (+ brand dumps)
+        scripts/scrape_growkings_nutrients_mediums.py  # Wave D lite Shopify → nutrient/medium
+Height  scripts/project_height_cm_from_text.py         # unit-backed prose → height_cm_*
+        scripts/project_height_bands_from_text.py      # Short/Med/Tall → payload only
 Stage   scripts/ingest_corpus_dumps.py --per-source-staging
 Merge   scripts/merge_staging_to_master.py
         # raw_record stays in staging unless --include-raw
@@ -116,12 +119,25 @@ HA      scripts/build_catalog_search_indexes.py
 Export  scripts/export_community_catalog.py
 ```
 
+### Height NLP + Wave D lite (2026-08-10, `3c24951`)
+
+After staging drain, fill remaining typed height from on-disk text and seed Wave D SKUs from Grow Kings before more bank scrapes.
+
+| Step | Script / evidence |
+|---|---|
+| Cm fill | `project_height_cm_from_text.py` → `height_cm_*` ≈**43.5%** (44376/102141) |
+| Band fill | `project_height_bands_from_text.py` → payload `height_band` ≈5145 (never → cm) |
+| Wave D lite | `scrape_growkings_nutrients_mediums.py --stage` → nutrients **416** / mediums **255** |
+| SF resume | PW scrape ~22853/40638; `catalog_fetch.Checkpoint.save()` direct-write fallback on NAS replace fail |
+| HA indexes | `built_at` 2026-08-10T08:21:44Z — strains 2500 (`with_height=23`, `with_height_band=3`), nutrients **416**, mediums **259**, lights 517 |
+
+Ops detail: [`CATALOG-COLLATION-CONTRACT.md`](CATALOG-COLLATION-CONTRACT.md) § Height NLP + bands / Wave D lite / SeedFinder checkpoint. Chase list: [`CATALOG-THIN-FIELDS.md`](CATALOG-THIN-FIELDS.md).
+
 Fat dumps under `homeassistant/data/dsc_*.json` and `media/` are **gitignored**. Staging + master SQLite under `brain/data/` are **gitignored**. Commit importers, schema, merge tooling, crop tools, gap/link docs, `SEED_BREEDERS.md`, and slim HA indexes.
 
 **Capture policy (N-087):** Maximize staging capture; match later. Keep FULL raw HTML/JSON/CSV rows, reviews, prices, brands, scores, lineage text, forum excerpts — do not drop "unused" fields. Prefer over-capture in staging over premature filtering (NAS >1 TB).
 
-**Overflow policy:** Staging 
-aw_record keeps FULL source payloads (NAS capacity). Master stores typed identity + chemistry + grow + links + rich payload_json (+ structured extras when parseable; never invent). ttribute_kv is for smaller bank/product rows only so master stays usable.
+**Overflow policy:** Staging `raw_record` keeps FULL source payloads (NAS capacity). Master stores typed identity + chemistry + grow + links + rich `payload_json` (+ structured extras when parseable; never invent). `attribute_kv` is for smaller bank/product rows only so master stays usable.
 
 ## Honesty rules
 
