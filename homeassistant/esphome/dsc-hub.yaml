@@ -1,4 +1,4 @@
-# DSC-HUB ??? HA stub (pulls hub body + ESP-NOW package + lab WiFi from GitHub)
+# DSC-HUB — HA stub (pulls hub body + ESP-NOW package + lab WiFi from GitHub)
 substitutions:
   name: dsc-hub
   friendly_name: DSC-HUB
@@ -13,7 +13,7 @@ substitutions:
   panel_mac: "30:76:F5:E9:22:0C"
   bridge_mac: "58:2A:BD:60:3C:1D"
   espnow_cmd_tag: "54727"
-  # SoftAP Anchor BSSID — SoftAP wifi entry only (not home Wi‑Fi).
+  # SoftAP Anchor BSSID — SoftAP wifi entry only (not home Wi-Fi).
   wifi_bssid: "58:2A:BD:60:3C:1D"
 
 packages:
@@ -25,8 +25,11 @@ packages:
       - firmware/v4/dsc-hub-v4_0.yaml
       - firmware/v4/dsc-hub-fleet-heal.yaml
       - firmware/v4/dsc-hub-espnow-primary.yaml
-      # No dsc-fleet-setup-hub-lab.yaml ??? lab uses ${panel_mac}; kit SoftAP only.
-    # 0s during fleet flash cycles so GitHub pushes are picked up immediately.
-    # Raise to 1h once the fleet is stable to avoid constant git pulls.
+      # No dsc-fleet-setup-hub-lab.yaml — lab peers use ${panel_mac}.
     refresh: 0s
+
+wifi:
+  # SoftAP fleet home. If hub orphans onto Nest, temporarily set Nest IP for OTA,
+  # then restore .4.10 and update HA ESPHome config entry host to match.
+  use_address: 192.168.4.10
 

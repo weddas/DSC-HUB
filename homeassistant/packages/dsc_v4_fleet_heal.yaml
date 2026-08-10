@@ -10,6 +10,9 @@
 #  demand followers remain idempotent fallback (resync unchanged).
 #  Prefer DSC-Anchor SoftAP BSSID (sensor.dsc_bridge_anchor_bssid) when
 #  Lock WiFi AP is on — see dsc_v4_bridge.yaml.
+#
+#  F-004 / CHX: SoftAP-primary membership mismatch (preferred SoftAP BSSID
+#  != associated). Not a Nest router channel-lock cue.
 # ==================================================================
 
 input_number:
@@ -50,7 +53,9 @@ template:
             {% endif %}
           {% endif %}
 
-      - name: "DSC Nest Channel Split"
+      # unique_id kept stable (entity_id stays dsc_nest_channel_split).
+      # Display name: SoftAP orphan / preferred-BSSID mismatch (F-004).
+      - name: "DSC SoftAP Preferred Mismatch"
         unique_id: dsc_nest_channel_split
         device_class: problem
         icon: mdi:access-point-network
@@ -118,7 +123,20 @@ script:
                   message: "Resynced Sonoff demand followers from hub demands."
           - conditions:
               - condition: template
-                value_template: "{{ code in ['COHERENCE','CHX','REJOIN','FLEET_JUMP'] }}"
+                value_template: "{{ code == 'CHX' }}"
+            sequence:
+              - action: script.dsc_notify
+                data:
+                  title: "DSC SoftAP orphan (CHX)"
+                  message: >
+                    Preferred SoftAP BSSID not associated.
+                    {{ states('sensor.dsc_hub_last_evt') }}
+                    · RF {{ states('sensor.dsc_hub_rf_status') }}
+                    · Fix {{ 'ACTIVE' if fix_on else 'idle' }}
+                    — check DSC-Anchor SoftAP / hub SoftAP join (not Nest channel lock).
+          - conditions:
+              - condition: template
+                value_template: "{{ code in ['COHERENCE','REJOIN','FLEET_JUMP'] }}"
             sequence:
               - action: script.dsc_notify
                 data:
@@ -228,7 +246,7 @@ automation:
             epoch {{ states('sensor.dsc_hub_coherence_epoch') }}.
 
   - id: dsc_chx_hygiene_cue
-    alias: "DSC-HUB · Nest channel-split cue (F-004)"
+    alias: "DSC-HUB · SoftAP preferred mismatch cue (F-004)"
     triggers:
       - trigger: state
         entity_id: binary_sensor.dsc_nest_channel_split
@@ -238,7 +256,9 @@ automation:
       - action: persistent_notification.create
         data:
           notification_id: dsc_f004_chx
-          title: "DSC Nest channel lock (F-004)"
+          title: "DSC SoftAP orphan (F-004)"
           message: >
-            Persistent CHX on hub RF status. Self-heal cannot lock Nest —
-            pin preferred BSSID / lock AP channel in router.
+            Persistent CHX: hub preferred SoftAP BSSID is not the associated AP.
+            Check DSC-Anchor SoftAP up, hub SoftAP join (192.168.4.10), and
+            preferred BSSID = sensor.dsc_bridge_anchor_bssid. Do not lock Nest
+            channel — SoftAP-primary is the heal path.

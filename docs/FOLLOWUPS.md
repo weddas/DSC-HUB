@@ -19,7 +19,7 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 | F-001 | Physical AC hardware + follower relay | In-service stays OFF until installed |
 | F-002 | Physical clone mister + follower | In-service stays OFF |
 | F-003 | Replace/repair POT3 probe | In-service OFF; mat vote excluded |
-| F-004 | Nest / home AP channel lock | No router changes in DSC scope |
+| F-004 | SoftAP preferred-BSSID mismatch (CHX) | Nest router channel lock remains out-of-scope; SoftAP-primary is the heal path |
 | F-005 | Multi-lever learn baseline engine | Fans+mat air-lever gate is interim |
 | F-006 | HA-link flap root-cause campaign | Softened bounce in 5.1.x; still ~frequent offs |
 | F-007 | Panel OOM / LVGL discipline | Panel on 5.1.14 heap healthier; keep watching |
@@ -994,7 +994,7 @@ Firmware: `dsc-bridge.yaml` / `dsc-bridge-kit.yaml` · `components/dsc_api_clien
 
 | ID | Item | Notes |
 |---|---|---|
-| F-004 | Nest channel lock | Prefer DSC-Anchor SoftAP instead of Nest for hub/panel/pots |
+| F-004 | SoftAP preferred-BSSID mismatch (CHX) | SoftAP-primary is the heal path; Nest router lock remains OOS |
 | F-006 | HA-link flap | Monitoring can use bridge Ethernet mirror; hub `:6053` still for writes/OTA |
 
 ---
@@ -1799,3 +1799,13 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 
 ### next-plan
 - (none for this visual pass — live HA smoke + Sync deploy still operator-gated)
+
+## 2026-08-11 — F-004 SoftAP retarget (Nest-lock jam cleared)
+
+- [x] HA `dsc_v4_fleet_heal.yaml`: CHX persistent notify + binary display name → SoftAP orphan / preferred mismatch (unique_id `dsc_nest_channel_split` kept). EVT CHX notify SoftAP wording.
+- [x] `dsc_v4_alert_count.yaml`: dropped `dsc_wifi_preferred_ap_mismatch` from Home chip (same class as CHX — no double-count).
+- [x] `dsc_v4_core_helpers.yaml`: Lock mismatch renamed SoftAP Lock Mismatch (unique_id stable).
+- [x] Standing F-004 definition: SoftAP preferred-BSSID mismatch; Nest router lock remains OOS.
+- [x] Deploy packages to HA + dismiss `dsc_f004_chx`; template reload refreshed SoftAP display names.
+- [x] Hub flashed from HA ESPHome Device Builder **2026.7.4** → SoftAP `192.168.4.10` / `DSC-Anchor`; `hub_esp_now_link` on; Lock WiFi AP on.
+- **Ops note:** Nest-orphan OTA needs temporary `use_address` / HA ESPHome entry host = Nest IP; after SoftAP rejoin set both back to `192.168.4.10` (package `dsc-hub-wifi-lab.yaml` hardcodes SoftAP `use_address`).

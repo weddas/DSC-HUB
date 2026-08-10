@@ -13,6 +13,9 @@ template:
         unique_id: dsc_active_alert_count
         icon: mdi:sprout
         # Pin subscriptions — do not use states.binary_sensor scans.
+        # SoftAP preferred≠assoc (CHX) via dsc_nest_channel_split only.
+        # Lock-gated dsc_wifi_preferred_ap_mismatch omitted (same class — no double-count).
+        # Do not put # comments inside the Jinja list — TemplateSyntaxError.
         state: >
           {% set alerts = [
             'binary_sensor.dsc_hub_emergency_failsafe',
@@ -23,7 +26,6 @@ template:
             'binary_sensor.dsc_clone_light_missing_in_window',
             'binary_sensor.dsc_hub_coherence_mismatch',
             'binary_sensor.dsc_nest_channel_split',
-            'binary_sensor.dsc_wifi_preferred_ap_mismatch',
             'binary_sensor.dsc_humidifier_vent_conflict',
             'binary_sensor.dsc_heater_vent_conflict',
             'binary_sensor.dsc_humidifier_ineffective_suspect',

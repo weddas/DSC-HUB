@@ -207,11 +207,11 @@ template:
             {% endfor %}
             {{ ns.items | join(', ') }}
 
-      # Preferred AP learned in NVS disagrees with current association while
-      # Lock is ON — mesh/channel split risk until pin/relearn finishes.
-      # With F-012, preferred should be sensor.dsc_bridge_anchor_bssid
-      # (DSC-Anchor SoftAP), not a Nest point, when the bridge is in use.
-      - name: "DSC WiFi Preferred AP Mismatch"
+      # Preferred SoftAP BSSID (NVS / Lock) disagrees with current association
+      # while Lock is ON — SoftAP orphan risk until rejoin. F-012: preferred
+      # should be sensor.dsc_bridge_anchor_bssid (DSC-Anchor SoftAP), not Nest.
+      # Not listed in dsc_active_alert_count (CHX binary covers the Home chip).
+      - name: "DSC SoftAP Lock Mismatch"
         unique_id: dsc_wifi_preferred_ap_mismatch
         device_class: problem
         icon: mdi:wifi-alert
