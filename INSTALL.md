@@ -88,17 +88,24 @@ Disable any storage dashboard still named DSC-HUB / `dsc-hub-v4`. Sidebar:
 | `dsc-hub.yaml` | hub v4_0 + espnow | **5.2.0** |
 | `dsc-control.yaml` | control-common | **5.2.0** |
 | pots | pot-common | **5.2.0** |
-| `dsc-bridge.yaml` | bridge-common + SoftAP Anchor | **5.2.0** |
-| Sonoffs | sonoff-common (dual API client) | **5.2.0** |
+| `dsc-bridge.yaml` | bridge-common + SoftAP Anchor + NAPT | **5.2.0** |
+| Sonoffs | sonoff-common (SoftAP primary + dual API) | **5.2.0** |
 
 Stub `ref: master` (or tag when cut). Kits Validate even if not flashed on lab.
-Bridge needs `firmware/v4/components/dsc_api_client` beside the stub (Sync
-copies components, or flash from `firmware/v4/`). Secrets: `dsc_bridge_*`,
-`dsc_anchor_ap_password`, four `dsc_*_host`.
+Bridge needs `firmware/v4/components/{dsc_api_client,dsc_anchor_ap}` beside the
+stub (Sync stages stubs + `dsc_fleet_setup` only — **F-015**; copy components
+manually or flash from `firmware/v4/`). Secrets: `dsc_bridge_*`,
+`dsc_anchor_ap_password`, four SoftAP `dsc_*_host` (`.20`–`.23`).
+
+**SoftAP fleet home:** Hub/Control/Sonoffs join `DSC-Anchor` (`192.168.4.10` /
+`.11` / `.20`–`.23`). Pots stay Nest/home for OTA (ESP-NOW star). On HA OS add
+`ip route add 192.168.4.0/24 via <bridge-eth-ip>` (lab: `192.168.86.66`).
+Ops: [`docs/qa/SOFTAP-FLEET-HOME.md`](docs/qa/SOFTAP-FLEET-HOME.md) ·
+[`docs/brain/F010_APPLIANCE_BRIDGE.md`](docs/brain/F010_APPLIANCE_BRIDGE.md).
 
 ### Flash order
 
-1. Hub · 2. Panel · 3. Pots · 4. **Bridge (ETH01)** · 5. Sonoffs
+1. **Bridge (ETH01, prefer USB)** · 2. Hub · 3. Panel · 4. Sonoffs · 5. Pots
 
 ### Verify
 
@@ -106,7 +113,9 @@ copies components, or flash from `firmware/v4/`). Secrets: `dsc_bridge_*`,
 - [ ] `sensor.dsc_ha_surface_version` reports the HA pack (currently **6.x** — independent of firmware train)
 - [ ] `sensor.dsc_fleet_version_status` → **ok** after all flashes (firmware train only; surface not compared)
 - [ ] `/dsc-hub-pro/home` + Learning Phase B controls present (B default off)
-- [ ] Panel ESP-NOW UP; Bridge Anchor SoftAP up; Sonoffs follow via bridge (HA followers fallback)
+- [ ] Bridge SoftAP up; Anchor BSSID = SoftAP AP MAC; hub/Control on SoftAP IPs
+- [ ] HA SoftAP route present; Sonoffs Noise links True; `dsc_bridge_hub_esp_now_link` on
+- [ ] Glass Fleet Fix (ops 60/62) walks Hub → Control SoftAP bounce → pot star bits
 
 ---
 
