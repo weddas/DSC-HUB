@@ -1,7 +1,7 @@
 # DSC-HUB v5.2.0 — Install (from scratch)
 
 Fresh Home Assistant + ESPHome bring-up for the **`5.2.0`** train
-(ETH01 bridge + SoftAP Anchor + fleet firmware / HA surface).
+(ETH01 bridge + ESP-NOW channel pin / SoftAP deferred + fleet firmware / HA surface).
 
 Repo: https://github.com/weddas/DSC-HUB · branch **`master`**
 (last tagged release may still be **v5.1.0** until a 5.2 tag ships).
@@ -88,7 +88,7 @@ Disable any storage dashboard still named DSC-HUB / `dsc-hub-v4`. Sidebar:
 | `dsc-hub.yaml` | hub v4_0 + espnow | **5.2.0** |
 | `dsc-control.yaml` | control-common | **5.2.0** |
 | pots | pot-common | **5.2.0** |
-| `dsc-bridge.yaml` | bridge-common + SoftAP Anchor | **5.2.0** |
+| `dsc-bridge.yaml` | bridge-common + channel pin (SoftAP deferred) | **5.2.0** |
 | Sonoffs | sonoff-common (dual API client) | **5.2.0** |
 
 Stub `ref: master` (or tag when cut). Kits Validate even if not flashed on lab.
@@ -106,7 +106,7 @@ copies components, or flash from `firmware/v4/`). Secrets: `dsc_bridge_*`,
 - [ ] `sensor.dsc_ha_surface_version` reports the HA pack (currently **6.x** — independent of firmware train)
 - [ ] `sensor.dsc_fleet_version_status` → **ok** after all flashes (firmware train only; surface not compared)
 - [ ] `/dsc-hub-pro/home` + Learning Phase B controls present (B default off)
-- [ ] Panel ESP-NOW UP; Bridge Anchor SoftAP up; Sonoffs follow via bridge (HA followers fallback)
+- [ ] Panel ESP-NOW UP; `binary_sensor.dsc_bridge_hub_esp_now_link` on (SoftAP deferred — channel pin on `WIFI_IF_STA`); Sonoffs follow via bridge (HA followers fallback)
 
 ---
 
