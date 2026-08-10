@@ -110,7 +110,8 @@ cp secrets.yaml.template secrets.yaml   # or ./generate-secrets.sh
 Never commit `secrets.yaml`. Panel `hub_mac` ↔ hub WiFi MAC; hub `panel_mac` ↔
 panel WiFi MAC; `espnow_cmd_tag` **54727** (`0xD5C7`) on both.
 
-Sonoffs have no ESP-NOW — demand followers need HA.
+Sonoffs have no ESP-NOW — bridge SoftAP Noise API follows hub `0xD8` without HA;
+HA demand followers remain the fallback. SoftAP fleet home: [`docs/qa/SOFTAP-FLEET-HOME.md`](docs/qa/SOFTAP-FLEET-HOME.md).
 
 ## Validate
 
