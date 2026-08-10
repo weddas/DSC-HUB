@@ -1810,10 +1810,13 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 - Theme/icons: seat SVG, PageHeader icons, chip/toggle icons, wordmark, search/settings/close, tokenized colors
 - Dash world-anchored glass HUD + VPD mini + stronger bloom; Build connector glow
 - Surface **6.3.0** (`const.py` + `dsc_v4_version.yaml` + panel chrome); panel rebuilt
+- HACS dist sync `dae4522` (Dash/Build www → `dist/`)
+- Docs: `LIVE-UI-CUSTOM-PANEL.md` (entity map + dual path + lockstep) · `VERSION-TRAINS.md` (5.2.0 vs 6.3.0) · `HACS-FRONTEND.md`
 
 ### next-plan / soak
 - Deploy via `ha-sync` / add-on; confirm live `sensor.dsc_ha_surface_version` = **6.3.0**
 - Smoke Pass 3 checklist in `docs/qa/LIVE-UI-CUSTOM-PANEL.md`
+- Prefer this surface/VERSION train over open docs drafts still pinned at **6.2.0** (#70–#72) once merged
 
 ## 2026-08-11 — F-004 SoftAP retarget (Nest-lock jam cleared)
 

@@ -382,14 +382,18 @@ not humidifier lock — entity id kept for compatibility.
 - POT3 probe swap, SCD41 — post-release hardware
 - ETH01 bridge — **in tree** (`dsc-bridge.yaml` · F-010/F-012/F-013)
 
-## Firmware pairing (**5.2.0** train)
+## Firmware pairing (**5.2.0** firmware / **6.3.0** surface)
 
 | Piece | Version |
 |---|---|
 | Hub / Control / pots / bridge / Sonoffs / kits | **`5.2.0`** |
-| HA surface (packages + dashboard) | **`5.2.0`** |
-| Dashboard | DSC-HUB Pro (4-col, browser_mod popups) |
+| HA surface (packages + React `/dsc-hub` panel) | **`6.3.0`** |
+| Dashboard | DSC-HUB custom panel + Pro YAML fallback |
 | `espnow_cmd_tag` | `54727` (`0xD5C7`) on hub **and** panel |
+
+Do **not** put surface **6.3.0** into `input_text.dsc_expected_release` (firmware only).
+Ops: [`../docs/qa/VERSION-TRAINS.md`](../docs/qa/VERSION-TRAINS.md) ·
+panel: [`../docs/qa/LIVE-UI-CUSTOM-PANEL.md`](../docs/qa/LIVE-UI-CUSTOM-PANEL.md).
 
 Bridge entities: Anchor BSSID/channel, hub ESP-NOW link, demand mirrors,
 per-Sonoff API links. Setpoints still write the hub API.

@@ -7,8 +7,8 @@ Home Assistant is the **lab soak / optional shell**; product destination is a
 Notion [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d3407556c)).
 
 **Current release tag:** [**v5.1.0**](https://github.com/weddas/DSC-HUB/releases/tag/v5.1.0)  
-**Live train (in tree):** HA surface **5.2.0** · hub / Control / pots / bridge / Sonoffs **5.2.0** · Sync **5.1.3+**  
-(Fleet chip compares major.minor — mixed `5.2.x` stays `ok`.)
+**Live train (in tree):** HA surface **6.3.0** · hub / Control / pots / bridge / Sonoffs **5.2.0** · Sync **5.1.4**  
+(Fleet chip compares firmware major.minor only — surface `6.x` is independent. See [`docs/qa/VERSION-TRAINS.md`](docs/qa/VERSION-TRAINS.md).)
 
 ---
 
@@ -51,22 +51,24 @@ flowchart LR
 | [`docs/HA-SCAFFOLD.md`](docs/HA-SCAFFOLD.md) | HA = lab soak; promote-don't-deepen |
 | [`brain/README.md`](brain/README.md) | Catalog SQLite / Want / API stub (Phase B) |
 | [`INSTALL.md`](INSTALL.md) | Lab HA + fleet bring-up |
-| [`UPGRADE.md`](UPGRADE.md) | 5.0 → 5.1 cutover (add-on Update + flash) |
-| [`RELEASE.md`](RELEASE.md) | What’s new, rollout checklist |
+| [`UPGRADE.md`](UPGRADE.md) | 5.1.x → live train (add-on Update + flash) |
+| [`RELEASE.md`](RELEASE.md) | Live train + tagged cut notes |
+| [`docs/qa/VERSION-TRAINS.md`](docs/qa/VERSION-TRAINS.md) | Firmware vs HA surface (do not conflate) |
 | [`scripts/ADDON.md`](scripts/ADDON.md) | Lab HA delivery — HAOS Sync add-on |
 | [`docs/qa/FIRMWARE-QA-5.1.0.md`](docs/qa/FIRMWARE-QA-5.1.0.md) | Firmware Validate / flash QC |
 | [`docs/qa/ADDON-QA-5.1.0.md`](docs/qa/ADDON-QA-5.1.0.md) | Sync add-on QC |
 | [`homeassistant/README.md`](homeassistant/README.md) | Packages, HACS, entity notes |
+| [`docs/qa/LIVE-UI-CUSTOM-PANEL.md`](docs/qa/LIVE-UI-CUSTOM-PANEL.md) | React `/dsc-hub` panel ops (surface 6.3) |
 | [`docs/qa/LIVE-UI-BUILD-A-PLANT.md`](docs/qa/LIVE-UI-BUILD-A-PLANT.md) | Build a Plant composition ops (N-083) |
 | [`firmware/v4/README.md`](firmware/v4/README.md) | Local validate / flash |
 
 **HAOS delivery:** Settings → Add-ons → Repositories → `https://github.com/weddas/DSC-HUB`
-→ install / Update **DSC-HUB Sync** **5.1.3**. Push to `master` → poll (~60s) →
+→ install / Update **DSC-HUB Sync** **5.1.4**. Push to `master` → poll (~60s) →
 packages / dashboard / www / ESPHome stubs land in `/config`.
 
 ---
 
-## Fleet at 5.2.x (live train)
+## Fleet at 5.2.x firmware / 6.3.x surface (live train)
 
 | Device | Config | Version |
 |---|---|---|
@@ -76,8 +78,8 @@ packages / dashboard / www / ESPHome stubs land in `/config`.
 | Bridge | `dsc-bridge.yaml` → bridge-common (WT32-ETH01) | **5.2.0** |
 | Sonoffs | heater / heatmat / humidifier / de-humidifier | **5.2.0** |
 | Kits | `*-kit.yaml`, `*-wifi-kit.yaml`, fleet-setup kits | same bodies as device train |
-| Sync add-on | `dsc-hub-sync/` | **5.1.3+** |
-| HA surface | `sensor.dsc_ha_surface_version` | **5.2.0** |
+| Sync add-on | `dsc-hub-sync/` | **5.1.4** |
+| HA surface | `sensor.dsc_ha_surface_version` | **6.3.0** |
 
 Flash order: hub → panel → pots → **bridge** → Sonoffs. Living backlog: [`docs/FOLLOWUPS.md`](docs/FOLLOWUPS.md).
 
