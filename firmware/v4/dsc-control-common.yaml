@@ -43,22 +43,10 @@
 #  v5.1.15: VPD curve editor (page_set_vpd from Control), Pulse 1h VPD
 #  ASCII sparkline in lbl_spark (ring buffer; no lv_chart / LV_USE_CHART),
 #  per-device power drill-down (page_power_detail from ladder/Clone/Main).
-#  v5.1.16: Fleet Fix — hold "Fleet Fix" (Connections, was the Bluetooth
-#  stub row) >=1.5s to run fleet_fix_run: pins the glass on page_boot,
-#  gates refresh_ui off (fix_active), and walks Hub -> Control(self) ->
-#  Pot1..4 in order, up to 5 tries each (skip + continue on repeated
-#  fail), driving boot_msg + boot_paint the whole time — never the tab
-#  UI. Success gate = preferred-AP match + fresh hub beat + valid clock
-#  + non-skipped pots OK; reports Success / Done - skipped <list> then
-#  returns to Connections. All Fleet Fix / boot_msg strings are ASCII-
-#  only now (no "…"/"–"/"→") so a missing glyph can never blank the
-#  status line mid-heal; cyd_glyphs.yaml still gained "…"/"–" as a
-#  belt-and-suspenders (the Pulse sparkline keeps the en dash). Added
-#  ESP-NOW: TX tx_rf_card (0xD5, 10 s while WiFi is up) and RX for hub
-#  0xD7 TIME packs (noted, not applied — SNTP/HA time stay authoritative)
-#  + tolerate a v2 (extended) 0xD0. Removed the "radio off" Bluetooth
-#  stub row (dead weight — this panel has no BT hardware use).
-#
+#  v5.1.16+: Fleet Fix — hold "Fleet Fix" (Connections) >=1.5s to run
+#  fleet_fix_run: FIX_ACTIVE + FLEET_JUMP SoftAP heal, then Hub ->
+#  Control(self) -> Pot1..4 (ESP-NOW star). SoftAP is fleet Wi‑Fi home;
+#  pots stay ESP-NOW-only. ASCII boot_msg only.
 #  RAM RULE (crash postmortems v4.0–4.0.2 + 5.1.0): never call lv_label_set_text
 #  every frame; guard with strcmp. No SCROLL_CIRCULAR, no breathe anim.
 #  Watch heap INFO lines — largest_block < 12 KB means stop adding widgets.
@@ -3975,7 +3963,7 @@ script:
   # v5.1.4: pend_* + write-through gv_* ONLY — no lv_label_set_text under the
   # tap (Full Auto / Modes letter-draw crashes). ui_dirty lets the 200 ms
   # drain paint grey via refresh_ui once the indev stack is clear.
-  # Prefer hub's Nest AP (from 0xD0). Runs during Starting before full GUI.
+  # Prefer hub's SoftAP/preferred AP (from 0xD0). Runs during Starting before full GUI.
   - id: adopt_hub_wifi_ap
     mode: single
     then:
@@ -3990,7 +3978,7 @@ script:
           bool same = true;
           for (int i = 0; i < 6; i++) if (cur[i] != want[i]) { same = false; break; }
           if (same) {
-            ESP_LOGI("wifi", "Already on hub Nest AP %02X:%02X:%02X:%02X:%02X:%02X",
+            ESP_LOGI("wifi", "Already on hub preferred AP %02X:%02X:%02X:%02X:%02X:%02X",
                      want[0], want[1], want[2], want[3], want[4], want[5]);
             return;
           }
@@ -3999,7 +3987,7 @@ script:
           if (id(link_rec_wifi_bounces) >= 3) return;
           last_adopt_ms = millis();
           id(link_rec_wifi_bounces) = id(link_rec_wifi_bounces) + 1;
-          ESP_LOGW("wifi", "Adopting hub Nest AP %02X:%02X:%02X:%02X:%02X:%02X — WiFi bounce #%d",
+          ESP_LOGW("wifi", "Adopting hub SoftAP/preferred %02X:%02X:%02X:%02X:%02X:%02X — WiFi bounce #%d",
                    want[0], want[1], want[2], want[3], want[4], want[5],
                    id(link_rec_wifi_bounces));
           id(link_wifi_bounce).execute();
@@ -4021,18 +4009,11 @@ script:
       - lambda: 'App.safe_reboot();'
 
   # ================================================================
-  #  FLEET FIX (v5.1.16) — hold "Fleet Fix" on Connections >=1.5s.
-  #  Pins the glass on page_boot (refresh_ui bails via fix_active) and
-  #  drives status ONLY through boot_msg + boot_paint — never the tab
-  #  UI — while it walks the fleet in order: Hub -> Control (self) ->
-  #  Pot1 -> Pot2 -> Pot3 -> Pot4. Each device gets up to 5 tries; one
-  #  that never comes good is recorded in fix_skip_mask and the run
-  #  moves on (no device can block the others). Soft heal only: Hub
-  #  and the pots are pure wait-for-vitals (nothing this panel can
-  #  push to them over ESP-NOW); self additionally gets a WiFi bounce
-  #  between tries. NO hub reboot from glass, ever. Every string here
-  #  is ASCII (no "…"/"–"/"→") — cyd_glyphs.yaml is a safety net, not
-  #  the plan.
+  #  FLEET FIX — SoftAP heal orchestrator (fleet-star design).
+  #  Hold "Fleet Fix" on Connections >=1.5s (or HA button).
+  #  Pins glass on page_boot; sends FIX_ACTIVE + FLEET_JUMP to hub;
+  #  walks Hub -> Control(self SoftAP bounce) -> Pot1..4 (ESP-NOW wait).
+  #  NO hub reboot from glass. ASCII status only.
   # ================================================================
   - id: fleet_fix_run
     mode: single
@@ -4056,9 +4037,28 @@ script:
       - script.execute: {id: boot_paint, pct: 2}
       - delay: 150ms
 
-      # ---- 1: HUB — pure wait; hub already beats 0xD0 every 5s / vitals
-      # every 2s regardless of this panel, and it is never rebooted from
-      # here. ----
+      # ---- 0: arm hub FIX_ACTIVE + FLEET_JUMP (SoftAP prefer + bounce) ----
+      - lambda: |-
+          id(fix_phase) = 0;
+          id(fix_msg) = "arming hub FIX_ACTIVE...";
+          id(boot_msg) = id(fix_msg);
+      - script.execute: {id: boot_paint, pct: 4}
+      - script.execute:
+          id: hub_cmd
+          op: 60
+          val: 1
+      - delay: 400ms
+      - lambda: |-
+          id(fix_msg) = "FLEET_JUMP to SoftAP...";
+          id(boot_msg) = id(fix_msg);
+      - script.execute: {id: boot_paint, pct: 6}
+      - script.execute:
+          id: hub_cmd
+          op: 62
+          val: 1
+      - delay: 800ms
+
+      # ---- 1: HUB — wait for vitals (hub never rebooted from glass) ----
       - lambda: 'id(fix_phase) = 1; id(fix_try_count) = 0; id(fix_dev_ok) = id(gv_hub_last) != 0 && (millis() - id(gv_hub_last)) < 6000u;'
       - repeat:
           count: 5
@@ -4069,20 +4069,19 @@ script:
                   - lambda: |-
                       id(fix_try_count)++;
                       char m[48];
-                      snprintf(m, sizeof(m), "polling Nest - hub - try %d/5...", id(fix_try_count));
+                      snprintf(m, sizeof(m), "polling hub SoftAP - try %d/5...", id(fix_try_count));
                       id(fix_msg) = m; id(boot_msg) = id(fix_msg);
-                  - script.execute: {id: boot_paint, pct: 6}
+                  - script.execute: {id: boot_paint, pct: 10}
                   - delay: 2500ms
                   - lambda: 'id(fix_dev_ok) = id(gv_hub_last) != 0 && (millis() - id(gv_hub_last)) < 6000u;'
       - lambda: |-
           if (!id(fix_dev_ok)) { id(fix_skip_mask) |= 1; id(fix_msg) = "hub skipped after 5 fails"; }
           else id(fix_msg) = "hub - linked";
           id(boot_msg) = id(fix_msg);
-      - script.execute: {id: boot_paint, pct: 14}
+      - script.execute: {id: boot_paint, pct: 18}
       - delay: 300ms
 
-      # ---- 2: CONTROL (self) — the one device this panel can actually
-      # heal: bounce WiFi between tries. ----
+      # ---- 2: CONTROL (self) — SoftAP bounce between tries ----
       - lambda: 'id(fix_phase) = 2; id(fix_try_count) = 0; id(fix_dev_ok) = id(wifi_conn);'
       - repeat:
           count: 5
@@ -4093,26 +4092,27 @@ script:
                   - lambda: |-
                       id(fix_try_count)++;
                       char m[48];
-                      snprintf(m, sizeof(m), "control (self) - try %d/5 - bounce", id(fix_try_count));
+                      snprintf(m, sizeof(m), "control SoftAP - try %d/5 - bounce", id(fix_try_count));
                       id(fix_msg) = m; id(boot_msg) = id(fix_msg);
-                  - script.execute: {id: boot_paint, pct: 18}
+                  - script.execute: {id: boot_paint, pct: 22}
                   - wifi.disable:
                   - delay: 1500ms
                   - wifi.enable:
                   - wait_until:
                       condition: {lambda: 'return id(wifi_conn);'}
-                      timeout: 6s
-                  - lambda: 'id(fix_dev_ok) = id(wifi_conn);'
+                      timeout: 8s
+                  - lambda: |-
+                      id(fix_dev_ok) = id(wifi_conn);
+                      if (id(hub_ap_bssid_ok) && id(wifi_conn))
+                        id(adopt_hub_wifi_ap).execute();
       - lambda: |-
           if (!id(fix_dev_ok)) { id(fix_skip_mask) |= 2; id(fix_msg) = "control skipped after 5 fails"; }
           else id(fix_msg) = "control (self) - linked";
           id(boot_msg) = id(fix_msg);
-      - script.execute: {id: boot_paint, pct: 30}
+      - script.execute: {id: boot_paint, pct: 34}
       - delay: 300ms
 
-      # ---- 3-6: POT1..4 — pure wait on the hub-relayed link bit (0xD1
-      # gv_coord bits 2..5). This panel has no command that can reconnect
-      # a pot; ESP-NOW vitals recovering is the only signal available. ----
+      # ---- 3-6: POT1..4 — ESP-NOW star wait (no SoftAP) ----
       - lambda: 'id(fix_phase) = 3; id(fix_try_count) = 0; id(fix_dev_ok) = (id(gv_coord) >> 2) & 1;'
       - repeat:
           count: 5
@@ -4125,14 +4125,14 @@ script:
                       char m[48];
                       snprintf(m, sizeof(m), "waiting pot1 - try %d/5 - vitals...", id(fix_try_count));
                       id(fix_msg) = m; id(boot_msg) = id(fix_msg);
-                  - script.execute: {id: boot_paint, pct: 34}
+                  - script.execute: {id: boot_paint, pct: 40}
                   - delay: 2500ms
                   - lambda: 'id(fix_dev_ok) = (id(gv_coord) >> 2) & 1;'
       - lambda: |-
           if (!id(fix_dev_ok)) { id(fix_skip_mask) |= 4; id(fix_msg) = "pot1 skipped after 5 fails"; }
           else id(fix_msg) = "pot1 - linked";
           id(boot_msg) = id(fix_msg);
-      - script.execute: {id: boot_paint, pct: 42}
+      - script.execute: {id: boot_paint, pct: 48}
 
       - lambda: 'id(fix_phase) = 4; id(fix_try_count) = 0; id(fix_dev_ok) = (id(gv_coord) >> 3) & 1;'
       - repeat:
@@ -4146,14 +4146,14 @@ script:
                       char m[48];
                       snprintf(m, sizeof(m), "waiting pot2 - try %d/5 - vitals...", id(fix_try_count));
                       id(fix_msg) = m; id(boot_msg) = id(fix_msg);
-                  - script.execute: {id: boot_paint, pct: 46}
+                  - script.execute: {id: boot_paint, pct: 56}
                   - delay: 2500ms
                   - lambda: 'id(fix_dev_ok) = (id(gv_coord) >> 3) & 1;'
       - lambda: |-
           if (!id(fix_dev_ok)) { id(fix_skip_mask) |= 8; id(fix_msg) = "pot2 skipped after 5 fails"; }
           else id(fix_msg) = "pot2 - linked";
           id(boot_msg) = id(fix_msg);
-      - script.execute: {id: boot_paint, pct: 56}
+      - script.execute: {id: boot_paint, pct: 64}
 
       - lambda: 'id(fix_phase) = 5; id(fix_try_count) = 0; id(fix_dev_ok) = (id(gv_coord) >> 4) & 1;'
       - repeat:
@@ -4167,14 +4167,14 @@ script:
                       char m[48];
                       snprintf(m, sizeof(m), "waiting pot3 - try %d/5 - vitals...", id(fix_try_count));
                       id(fix_msg) = m; id(boot_msg) = id(fix_msg);
-                  - script.execute: {id: boot_paint, pct: 60}
+                  - script.execute: {id: boot_paint, pct: 72}
                   - delay: 2500ms
                   - lambda: 'id(fix_dev_ok) = (id(gv_coord) >> 4) & 1;'
       - lambda: |-
           if (!id(fix_dev_ok)) { id(fix_skip_mask) |= 16; id(fix_msg) = "pot3 skipped after 5 fails"; }
           else id(fix_msg) = "pot3 - linked";
           id(boot_msg) = id(fix_msg);
-      - script.execute: {id: boot_paint, pct: 70}
+      - script.execute: {id: boot_paint, pct: 80}
 
       - lambda: 'id(fix_phase) = 6; id(fix_try_count) = 0; id(fix_dev_ok) = (id(gv_coord) >> 5) & 1;'
       - repeat:
@@ -4188,25 +4188,22 @@ script:
                       char m[48];
                       snprintf(m, sizeof(m), "waiting pot4 - try %d/5 - vitals...", id(fix_try_count));
                       id(fix_msg) = m; id(boot_msg) = id(fix_msg);
-                  - script.execute: {id: boot_paint, pct: 74}
+                  - script.execute: {id: boot_paint, pct: 86}
                   - delay: 2500ms
                   - lambda: 'id(fix_dev_ok) = (id(gv_coord) >> 5) & 1;'
       - lambda: |-
           if (!id(fix_dev_ok)) { id(fix_skip_mask) |= 32; id(fix_msg) = "pot4 skipped after 5 fails"; }
           else id(fix_msg) = "pot4 - linked";
           id(boot_msg) = id(fix_msg);
-      - script.execute: {id: boot_paint, pct: 84}
+      - script.execute: {id: boot_paint, pct: 90}
       - delay: 300ms
 
-      # ---- 7: SUCCESS GATE — preferred-AP match (if one is known),
-      # fresh hub beat, a valid clock, and every non-skipped pot still OK.
-      # "Success" needs zero skips too; any skip reports "Done - skipped
-      # <list>" even if the gate itself would otherwise pass. ----
+      # ---- 7: SUCCESS GATE — SoftAP preferred (if known) + hub + clock + pots ----
       - lambda: |-
           id(fix_phase) = 7;
           id(fix_msg) = "checking success gate...";
           id(boot_msg) = id(fix_msg);
-      - script.execute: {id: boot_paint, pct: 90}
+      - script.execute: {id: boot_paint, pct: 94}
       - delay: 300ms
       - lambda: |-
           bool pref_ok = true;
@@ -4243,7 +4240,14 @@ script:
           id(boot_msg) = id(fix_msg);
       - script.execute: {id: boot_paint, pct: 100}
       - lambda: 'id(fix_phase) = 8;'
-      - delay: 2200ms
+      - delay: 1200ms
+
+      # ---- clear FIX_ACTIVE on hub ----
+      - script.execute:
+          id: hub_cmd
+          op: 60
+          val: 0
+      - delay: 400ms
 
       # ---- done: hand the glass back to Connections ----
       - lambda: |-

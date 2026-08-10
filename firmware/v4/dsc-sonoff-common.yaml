@@ -41,6 +41,12 @@ substitutions:
   # Overridable per node; these are the shipped defaults.
   test_max_runtime_ms: "600000"    # 10 min bounded button test (decided)
   api_grace_ms: "90000"            # API-loss grace; stubs override
+  # SoftAP fleet home — stubs override softap_ip + anchor credentials
+  softap_ip: "192.168.4.20"
+  anchor_ssid: "DSC-Anchor"
+  anchor_ap_password: "CHANGEME"
+  wifi_ssid: "CHANGEME"
+  wifi_password: "CHANGEME"
 # NOTE ON SECRETS: `!secret` is resolved by the YAML loader BEFORE
 # substitutions are applied, so `!secret ${prefix}_api_key` can never
 # work. The stubs therefore pass the secret VALUE in as a substitution
@@ -94,12 +100,23 @@ ota:
   - platform: esphome
     password: ${ota_password_val}
 
-# WiFi credentials come from the stub as substitutions so this package
-# stays remote-git safe (ESPHome forbids !secret inside git packages).
+# WiFi: SoftAP DSC-Anchor primary (fleet home); Nest fallback.
+# Stubs pass wifi_* and optional softap_ip (default via substitutions).
 wifi:
-  ssid: ${wifi_ssid}
-  password: ${wifi_password}
+  networks:
+    - ssid: ${anchor_ssid}
+      password: ${anchor_ap_password}
+      priority: 20
+      manual_ip:
+        static_ip: ${softap_ip}
+        gateway: 192.168.4.1
+        subnet: 255.255.255.0
+        dns1: 192.168.4.1
+    - ssid: ${wifi_ssid}
+      password: ${wifi_password}
+      priority: 0
   power_save_mode: none          # fleet rule: mains device, no modem naps
+  use_address: ${softap_ip}
   ap:
     ssid: ${ap_ssid}
     password: ${ap_password_val}

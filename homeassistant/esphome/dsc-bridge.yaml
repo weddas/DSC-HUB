@@ -8,16 +8,14 @@ substitutions:
   ap_password_val: !secret dsc_bridge_ap_password
   anchor_ap_password: !secret dsc_anchor_ap_password
   anchor_ssid: "DSC-Anchor"
-  # Match Nest channel (live hub STA ch11). Nest hops — revisit F-004.
+  # SoftAP fixed channel — fleet home on Anchor (NAPT to Ethernet).
   anchor_channel: "11"
-  wifi_ssid: !secret wifi_ssid
-  wifi_password: !secret wifi_password
   espnow_cmd_tag: "54727"
   hub_mac: "84:1F:E8:16:E6:60"
-  dsc_heater_host: !secret dsc_heater_host
-  dsc_heatmat_host: !secret dsc_heatmat_host
-  dsc_humidifier_host: !secret dsc_humidifier_host
-  dsc_dehumidifier_host: !secret dsc_dehumidifier_host
+  dsc_heater_host: "192.168.4.20"
+  dsc_heatmat_host: "192.168.4.21"
+  dsc_humidifier_host: "192.168.4.22"
+  dsc_dehumidifier_host: "192.168.4.23"
   dsc_heater_api_key: !secret dsc_heater_api_key
   dsc_heatmat_api_key: !secret dsc_heatmat_api_key
   dsc_humidifier_api_key: !secret dsc_humidifier_api_key

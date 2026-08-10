@@ -12,16 +12,13 @@ substitutions:
   anchor_channel: "11"
   anchor_ssid: "DSC-Anchor"
   anchor_ap_password: "CHANGEME"
-  # Nest STA join (optional) — keeps ESP-NOW on WIFI_IF_STA with the hub.
-  wifi_ssid: ""
-  wifi_password: ""
   espnow_cmd_tag: "54727"
   hub_mac: "00:00:00:00:00:00"
-  # Sonoff hosts (IPs) + Noise PSKs — stubs override from secrets
-  dsc_heater_host: "0.0.0.0"
-  dsc_heatmat_host: "0.0.0.0"
-  dsc_humidifier_host: "0.0.0.0"
-  dsc_dehumidifier_host: "0.0.0.0"
+  # SoftAP static map (fleet home) — stubs/secrets override
+  dsc_heater_host: "192.168.4.20"
+  dsc_heatmat_host: "192.168.4.21"
+  dsc_humidifier_host: "192.168.4.22"
+  dsc_dehumidifier_host: "192.168.4.23"
   dsc_heater_api_key: "CHANGEME"
   dsc_heatmat_api_key: "CHANGEME"
   dsc_humidifier_api_key: "CHANGEME"
@@ -41,6 +38,10 @@ esp32:
   board: wt32-eth01
   framework:
     type: esp-idf
+    sdkconfig_options:
+      CONFIG_LWIP_IP_FORWARD: y
+      CONFIG_LWIP_IPV4_NAPT: y
+      CONFIG_ESP_WIFI_SOFTAP_MAX_NUM_STA: "10"
 
 logger:
   level: INFO
@@ -69,15 +70,16 @@ ethernet:
 # external_components live in stubs (lab: local path · HA: git) —
 # package bodies must stay remote-git safe and path-agnostic.
 
-# SoftAP channel anchor (F-012). Runs after espnow LATE wifi init.
-# Nest STA join puts ESP-NOW on the same radio path as the hub (F-004).
+# SoftAP fleet home (F-012): DHCP + NAPT + ESP-NOW on WIFI_IF_AP.
 dsc_anchor_ap:
   id: anchor_ap
   ssid: ${anchor_ssid}
   password: ${anchor_ap_password}
   channel: ${anchor_channel}
-  sta_ssid: ${wifi_ssid}
-  sta_password: ${wifi_password}
+  ap_ip: "192.168.4.1"
+  ap_netmask: "255.255.255.0"
+  max_connections: 10
+  enable_napt: true
   bssid_sensor: anchor_bssid_ts
   channel_sensor: anchor_channel_sensor
   up_sensor: anchor_up

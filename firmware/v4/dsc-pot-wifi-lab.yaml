@@ -1,29 +1,25 @@
 # ==================================================================
 #  DSC pot · lab WiFi
 #
-#  Prefer DSC-Anchor SoftAP (F-012); Nest/home is fallback. Stubs keep
-#  wifi_bssid 00:00:00:00:00:00 — hub learns preferred Anchor BSSID and
-#  0xD0 broadcasts it; pots adopt via adopt_hub_wifi_ap. No site MAC
-#  in YAML.
+#  Pots are ESP-NOW-only to the hub (SoftAP fleet-star). Nest/home is
+#  for OTA/optional LAN only — do NOT prefer DSC-Anchor SoftAP (wastes
+#  SoftAP STA slots and is not required for climate).
 # ==================================================================
 wifi:
   networks:
-    - ssid: ${anchor_ssid}
-      password: ${anchor_ap_password}
+    - ssid: ${wifi_ssid}
+      password: ${wifi_password}
       bssid: ${wifi_bssid}
       priority: 20
+    - ssid: ${wifi_ssid}
+      password: ${wifi_password}
+      priority: 10
+    # SoftAP last-resort only (e.g. Nest down during OTA) — never preferred.
     - ssid: ${anchor_ssid}
       password: ${anchor_ap_password}
-      priority: 15
-    - ssid: ${wifi_ssid}
-      password: ${wifi_password}
-      bssid: ${wifi_bssid}
-      priority: 10
-    - ssid: ${wifi_ssid}
-      password: ${wifi_password}
       priority: 0
   power_save_mode: none
-  # Match hub: false so bounce can scan onto hub's *learned* preferred AP.
+  # Match hub: false so bounce can scan onto a preferred Nest BSSID if set.
   fast_connect: false
   # Match hub: off-channel roam scans break ESP-NOW (shared radio).
   post_connect_roaming: false

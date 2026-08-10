@@ -1,9 +1,10 @@
 # ==================================================================
 #  DSC-HUB · lab WiFi
 #
-#  Prefer DSC-Anchor SoftAP (ETH01 F-012) when present; Nest/home SSID
-#  remains fallback. Pin BSSID via Lock WiFi AP / ${wifi_bssid} —
-#  use sensor.dsc_bridge_anchor_bssid after first bridge boot.
+#  SoftAP DSC-Anchor is primary (fleet home + ESP-NOW channel pin).
+#  Nest/home is emergency fallback only. SoftAP NAPT on ETH01 provides
+#  the path to HA (see SoftAP fleet-star design). Static SoftAP IP
+#  192.168.4.10 — HA needs route 192.168.4.0/24 via bridge ETH.
 # ==================================================================
 wifi:
   networks:
@@ -11,13 +12,23 @@ wifi:
       password: ${anchor_ap_password}
       bssid: ${wifi_bssid}
       priority: 20
+      manual_ip:
+        static_ip: 192.168.4.10
+        gateway: 192.168.4.1
+        subnet: 255.255.255.0
+        dns1: 192.168.4.1
     - ssid: ${anchor_ssid}
       password: ${anchor_ap_password}
       priority: 15
+      manual_ip:
+        static_ip: 192.168.4.10
+        gateway: 192.168.4.1
+        subnet: 255.255.255.0
+        dns1: 192.168.4.1
     - ssid: ${wifi_ssid}
       password: ${wifi_password}
       bssid: ${wifi_bssid}
-      priority: 10
+      priority: 5
     - ssid: ${wifi_ssid}
       password: ${wifi_password}
       priority: 0
@@ -28,8 +39,10 @@ wifi:
   # ESPHome default true: every 5 min (RSSI < -49) off-channel roam scan
   # while STA stays "connected". That hops the single radio off the
   # pinned channel and kills ESP-NOW. Lock + preferred BSSID pin the
-  # Anchor (or Nest) point — roaming fights that pin.
+  # Anchor point — roaming fights that pin.
   post_connect_roaming: false
+  # SoftAP fleet-home address (Nest fallback still uses DHCP).
+  use_address: 192.168.4.10
   ap:
     ssid: DSC-HUB Fallback Hotspot
     password: ${ap_password_val}
@@ -47,7 +60,7 @@ wifi:
             last_ch = ch;
           }
         }
-    # Every STA connect / recovery boot — learn/pin preferred Anchor/Nest BSSID.
+    # Every STA connect / recovery boot — learn/pin preferred Anchor BSSID.
     - script.execute: wifi_ap_learn_or_pin
 
 captive_portal:

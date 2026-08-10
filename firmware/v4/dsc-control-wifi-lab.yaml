@@ -1,12 +1,9 @@
 # ==================================================================
 #  DSC-CONTROL · lab WiFi
-#  Nest DHCP reservation: 192.168.86.177 (panel mDNS is off — OTA must
-#  target use_address, not dsc-control.local).
 #
-#  Prefer DSC-Anchor SoftAP (F-012); Nest/home is fallback. Production
-#  stubs keep wifi_bssid 00:00:00:00:00:00 — hub Lock WiFi AP learns
-#  Anchor BSSID into NVS and 0xD0 fleet-beats it; Control adopts via
-#  adopt_hub_wifi_ap. Do not bake a site MAC into YAML.
+#  SoftAP DSC-Anchor primary (fleet home). Nest fallback only.
+#  Static SoftAP IP 192.168.4.11. Hub Lock / 0xD0 advertises Anchor
+#  BSSID; Control adopts via adopt_hub_wifi_ap.
 # ==================================================================
 wifi:
   networks:
@@ -14,19 +11,28 @@ wifi:
       password: ${anchor_ap_password}
       bssid: ${wifi_bssid}
       priority: 20
+      manual_ip:
+        static_ip: 192.168.4.11
+        gateway: 192.168.4.1
+        subnet: 255.255.255.0
+        dns1: 192.168.4.1
     - ssid: ${anchor_ssid}
       password: ${anchor_ap_password}
       priority: 15
+      manual_ip:
+        static_ip: 192.168.4.11
+        gateway: 192.168.4.1
+        subnet: 255.255.255.0
+        dns1: 192.168.4.1
     - ssid: ${wifi_ssid}
       password: ${wifi_password}
       bssid: ${wifi_bssid}
-      priority: 10
+      priority: 5
     - ssid: ${wifi_ssid}
       password: ${wifi_password}
       priority: 0
-  # OTA / ESPHome dashboard target (device IP from Nest reservation).
-  # When on SoftAP Anchor subnet, OTA via Ethernet HA path / known IP.
-  use_address: 192.168.86.177
+  # SoftAP fleet-home address (Nest fallback still uses DHCP).
+  use_address: 192.168.4.11
   power_save_mode: none
   # Match hub: false so bounce can scan onto hub's *learned* preferred AP.
   fast_connect: false
@@ -54,6 +60,6 @@ wifi:
     - delay: 500ms
     - lambda: |-
         const char *ip = id(wifi_ip_ts).state.empty() ? "(pending)" : id(wifi_ip_ts).state.c_str();
-        ESP_LOGI("wifi", "STA IP %s — HA API :6053 plaintext (mDNS off)", ip);
+        ESP_LOGI("wifi", "STA IP %s — HA API :6053", ip);
   on_disconnect:
     - lambda: 'id(wifi_conn) = false;'

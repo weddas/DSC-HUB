@@ -526,9 +526,18 @@ script:
             return;
           }
           id(rf_jump_last_ms) = now;
+          // Pin preferred AP to SoftAP Anchor (bridge_mac) when known.
+          std::string bridge = "${bridge_mac}";
+          if (bridge.size() == 17 && bridge != "00:00:00:00:00:00") {
+            id(preferred_wifi_bssid).make_call().set_value(bridge).perform();
+            ESP_LOGI("rf", "FLEET_JUMP — preferred SoftAP BSSID %s", bridge.c_str());
+          } else {
+            ESP_LOGW("rf", "FLEET_JUMP — bridge_mac unset; bouncing current preferred");
+          }
           id(evt_pending_code) = "FLEET_JUMP";
-          id(evt_pending_detail) = "arm";
+          id(evt_pending_detail) = "softap";
           id(emit_evt).execute();
+      - script.execute: link_wifi_bounce
 
   - id: tick_lateral_ledgers
     mode: single
