@@ -1669,8 +1669,8 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 ### scrapes / corpus
 | ID | Status | Notes |
 |---|---|---|
-| S-SEEDFINDER | **in progress / CF intermittent** | PW path. Hit ~14.2k/40638 then died overnight (hb stale ~00:01 AEST 2026-08-10). Relanch after CF; staging journal live — merge refresh later with `--no-link`. |
-| S-STRAINDB | **PAUSED_CF (n≈289)** | Progressed ~263→289 then CF wall (`angola-roja-x-banghi`); chrome-error tight retry stopped. Capture attempt `CF_NOT_CLEARED`. Needs operator CF pass in headed Chrome before resume (8–20s). |
+| S-SEEDFINDER | **side task (running)** | PW scrape left running (~22.1k/40638 as of 2026-08-10 ~11:23 AEST). Do not merge while staging journal live. Merge `seedfinder` alone with `--no-link` when quiet (~1 day ETA) — do **not** wait on StrainDB. |
+| S-STRAINDB | **DEFERRED_CF (n≈289)** | Parked 2026-08-10 by operator: CF too costly vs value right now. Pause file `status=DEFERRED_CF`. Resume only on explicit ask after headed CF unlock (8–20s). Not a gate for catalog work on master. |
 | S-TIERA-HALF1 | **done (dump/staging + merged)** | Was dump+staging; now included in local-SSD exclusive queue. |
 | S-TIERA-2ND | **done (dump/staging + merged)** | Was dump+staging; now included in local-SSD exclusive queue. |
 | Bank/forum dumps | **merged** | Priority banks + Wave2 + forums + thin-field families drained via local-SSD exclusive (207 plan). |
@@ -1681,8 +1681,9 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 - [x] SeedFinder: Playwright resume shipped + running (urllib abandoned for CF).
 - [x] StrainDB: Chrome CF capture + headed resume — then **re-paused CF** at n≈289; needs fresh operator unlock.
 - [x] D-N087-HEIGHT-BAND: staging + master merge (`--no-link`); ingest accepts `height_band` / nested `grow`.
-- [ ] After scrape quiet: `merge_staging_to_master.py --only seedfinder,strain_database --no-link --no-search` (+ end-link if needed).
-- [ ] StrainDB: operator CF pass → `_pw_strain_db_capture.py` → resume headed 8–20s (no tight retry).
+- [x] **2026-08-10:** StrainDB deferred (CF); SeedFinder continues as side task; catalog work proceeds on current master (~181k canonical).
+- [ ] When SeedFinder quiet: `merge_staging_to_master.py --only seedfinder --no-link --no-search` (+ end-link if needed). StrainDB merge separate / later.
+- [ ] StrainDB: resume only on explicit ask after headed CF unlock (no tight retry).
 
 ### tooling landed this pass
 - [`brain/data/_n087_exclusive_merge.py`](brain/data/_n087_exclusive_merge.py) / [`_n087_exclusive_merge_resume.py`](brain/data/_n087_exclusive_merge_resume.py): `--no-link`, skip OK, end-link before indexes.
