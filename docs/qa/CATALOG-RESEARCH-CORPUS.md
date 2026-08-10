@@ -69,22 +69,23 @@ python scripts/merge_staging_to_master.py --only seedcity --only kushy
 python scripts/build_catalog_search_indexes.py
 ```
 
-**Migration of current master:** existing `dsc_brain.sqlite3` is fine to keep. Schema v3 adds `raw_record` additively on connect. Prefer new waves to staging first, then merge; do not `--reset` master. Optional: re-run `--per-source-staging` for sources you want full payloads archived, then merge.
+**Migration of current master:** existing `dsc_brain.sqlite3` is fine to keep. Schema v3 adds `raw_record` additively on connect; schema **v4** adds `observation` + `review` the same way (`CREATE IF NOT EXISTS`, `meta.corpus_schema_version=4`). Prefer new waves to staging first, then merge; do not `--reset` master. Optional: re-run `--per-source-staging` for sources you want full payloads archived, then merge. After typed merges, run collation projectors on a local-SSD workset (see [`CATALOG-COLLATION-CONTRACT.md`](CATALOG-COLLATION-CONTRACT.md) § Operator runbook).
 
 **Fan-out workers:** each worker writes only its family staging file (no shared master writers). Serialize `merge_staging_to_master` + index rebuild. Discovery agents stay inventory-only.
 
 ## Schema highlights
 
-- Collation layers / notes / reviews / lineage: [`CATALOG-COLLATION-CONTRACT.md`](CATALOG-COLLATION-CONTRACT.md)
+- Collation layers / notes / reviews / lineage: [`CATALOG-COLLATION-CONTRACT.md`](CATALOG-COLLATION-CONTRACT.md) (**schema v4**)
 - `strain_canonical` + `strain_variant` (breeder children)
 - `chemistry_profile` (science evidence rows; conflicting chem rows kept)
-- `grow_trait`, `entity_link`, `science_alias`
+- `grow_trait`, `entity_link` (`method=parent_of` lineage SoT; no inverse `child_of` rows), `science_alias`
+- `observation` + `review` (append-only docs; provenance via `source_id` / optional `raw_record_id`)
 - `raw_record` (full source JSON blob; staging SoT for fat rows)
 - `attribute_kv` + `schema_extension_log` (small bank/product overflow only — never bulk score columns)
 - `source_record.redistributable` gates community export
 - `media_asset` for cropped PPFD/spectrum graphs
 - `followup_gap` for missing/unparseable expected fields
-- *(gap)* first-class `observation` / `review` tables — see contract + FOLLOWUPS **N-087-COLLATION**
+- *(deferred)* wordcloud UI; CannaReviews medauth bodies; `grow_trait`→observation FKs — FOLLOWUPS **N-087-COLLATION**
 
 ## Pipelines
 
@@ -111,6 +112,9 @@ Stage   scripts/ingest_corpus_dumps.py --per-source-staging
 Merge   scripts/merge_staging_to_master.py
         # raw_record stays in staging unless --include-raw
         # legacy direct: scripts/ingest_corpus_dumps.py --db ... --link
+Collate scripts/project_lineage_edges.py
+        scripts/project_observations_from_raw.py   # forum_*.sqlite3 staging → observation
+        scripts/project_reviews_from_raw.py        # cannareviews* → review (0 until medauth bodies)
 Report  scripts/report_science_seed_links.py
 HA      scripts/build_catalog_search_indexes.py
 Export  scripts/export_community_catalog.py
@@ -120,8 +124,7 @@ Fat dumps under `homeassistant/data/dsc_*.json` and `media/` are **gitignored**.
 
 **Capture policy (N-087):** Maximize staging capture; match later. Keep FULL raw HTML/JSON/CSV rows, reviews, prices, brands, scores, lineage text, forum excerpts — do not drop "unused" fields. Prefer over-capture in staging over premature filtering (NAS >1 TB).
 
-**Overflow policy:** Staging 
-aw_record keeps FULL source payloads (NAS capacity). Master stores typed identity + chemistry + grow + links + rich payload_json (+ structured extras when parseable; never invent). ttribute_kv is for smaller bank/product rows only so master stays usable.
+**Overflow policy:** Staging `raw_record` keeps FULL source payloads (NAS capacity). Master stores typed identity + chemistry + grow + links + rich payload_json (+ structured extras when parseable; never invent). `attribute_kv` is for smaller bank/product rows only so master stays usable.
 
 ## Honesty rules
 

@@ -1650,7 +1650,7 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 ### done
 - Durable architecture written: [`docs/qa/CATALOG-COLLATION-CONTRACT.md`](qa/CATALOG-COLLATION-CONTRACT.md) (grow notes as documents, reviews→collate→wordcloud, lineage via `entity_link`, three layers, merge order).
 - Pointers: N-087 / **N-087-COLLATION** above; link from [`CATALOG-RESEARCH-CORPUS.md`](qa/CATALOG-RESEARCH-CORPUS.md); merge one-pager `brain/data/_COLLATION_CONTRACT_FOR_MERGE.txt`.
-- Schema skim: no observation/review tables yet; no systematic parent_of/child_of emit; wordcloud deferred — gaps only, no refactor mid-merge.
+- Schema skim (2026-08-08): observation/review tables were still gaps then. **Superseded 2026-08-10:** schema v4 + projectors landed — see **N-087-COLLATION** status row and [`CATALOG-COLLATION-CONTRACT.md`](qa/CATALOG-COLLATION-CONTRACT.md). Wordcloud / medauth CannaReviews bodies still deferred.
 
 - [x] **StrainDB `save_cookies` crash** (fixed 2026-08-08): `Session.save_cookies` now normalizes jar via `_cookies_as_map` (handles str keys / Cookie objs / `get_dict`) and never raises. Warm n=140 finalize no longer dies on cookie write; storage_state save also guarded.
 - [ ] **StrainDB CF / cookie re-import still needed** (**2026-08-09 still paused**): Checkpoint **n=213** (`_pw_strain_db_PAUSE.txt`); `resume_after` 2026-08-08T18:39+10 elapsed — **not resumed**; scrape/shepherd PIDs dead. Headed Playwright warm hits CF → `chrome-error://chromewebdata/`. Before resume: pass CF in browser / refresh Playwright profile cookies (`_pw_strain_db_capture.py` or Netscape export); delay-min/max 8–20s; do not tight-retry. curl_cffi-alone still TLS-bound for `cf_clearance`.
