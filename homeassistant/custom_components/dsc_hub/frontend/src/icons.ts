@@ -26,6 +26,9 @@ const ICONS = {
   brand: "brand/dsc-brand-mark.svg",
   wordmark: "brand/dsc-brand-wordmark.svg",
   gauge: "gauges/dsc-gauge-arc.svg",
+  more: "icons/dsc-icon-more.svg",
+  search: "icons/dsc-icon-search.svg",
+  seat: "icons/dsc-icon-root.svg",
 } as const;
 
 export type IconName = keyof typeof ICONS;

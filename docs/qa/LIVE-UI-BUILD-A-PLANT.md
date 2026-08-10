@@ -130,11 +130,14 @@ could demote a HACS-complete live bundle. Rebuild Sync **5.1.4+** after merge.
 - [ ] Sync **5.1.4+** rebuilt **or** HACS Redownload **plus** catalog copy under `/config/www/dsc-catalog/`
 - [ ] Hard-refresh browser; open `/dsc-build-plant/build`
 - [ ] Typeahead (≥2 chars) returns hits for strain / medium / nutrient / light
-- [ ] Soil sliders: chip shows valid only at 100%
+- [ ] Result chip shown after pick; search lives in slide-out drawer (not permanent form)
+- [ ] Medium ⋯ Add layer / Remove / Change; empty slots hidden; soil cross-section valid at 100%
 - [ ] Mix lines update when dose / tank L / strength change
 - [ ] **Add to inventory** fills next empty roster slot + persistent notification
 - [ ] **Assign to pot now** writes pot strain (requires Assign pot ≠ `none`)
 - [ ] **Apply climate Want** with unset Custom Want → skip notification; with set Want → hub targets move
+- [ ] Plant Seat `/dsc-hub#/ops/plant-seat?pot=N` — soil + age + recipe; Apply to tent updates `input_select.dsc_potN_tent`
+- [ ] Dash pot lerp follows tent SoT; unassigned hides plant
 - [ ] Pro Home pot chips use `text.dsc_potN_plant_name`; assigned roster nickname/blend appears below them
 - [ ] Root Zone shows assigned roster nickname, blend, and recipe per pot
 - [ ] Nutrient Science shows `sensor.dsc_mix_calculator`, short-stock state, recipe packs, and `/dsc-build-plant/build` link

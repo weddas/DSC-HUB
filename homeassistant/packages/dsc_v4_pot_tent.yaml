@@ -1,0 +1,94 @@
+# ==================================================================
+#  DSC-HUB · POT → TENT PLACEMENT (digital twin)
+#  ------------------------------------------------------------------
+#  Ops placement of which physical pot lives in which tent.
+#  Does not rewire ESP IDs or invent climate Want.
+#  Defaults match prior Dash hardcode: 1–2 clone, 3–4 main.
+# ==================================================================
+
+input_select:
+  dsc_pot1_tent:
+    name: "DSC Pot 1 Tent"
+    icon: mdi:tent
+    options:
+      - "unassigned"
+      - "clone"
+      - "main"
+    initial: "clone"
+  dsc_pot2_tent:
+    name: "DSC Pot 2 Tent"
+    icon: mdi:tent
+    options:
+      - "unassigned"
+      - "clone"
+      - "main"
+    initial: "clone"
+  dsc_pot3_tent:
+    name: "DSC Pot 3 Tent"
+    icon: mdi:tent
+    options:
+      - "unassigned"
+      - "clone"
+      - "main"
+    initial: "main"
+  dsc_pot4_tent:
+    name: "DSC Pot 4 Tent"
+    icon: mdi:tent
+    options:
+      - "unassigned"
+      - "clone"
+      - "main"
+    initial: "main"
+
+script:
+  dsc_apply_pot_to_tent:
+    alias: "DSC Apply Pot to Tent"
+    description: "Set digital-twin tent for pot 1–4 (clone | main | unassigned)."
+    mode: queued
+    max: 4
+    fields:
+      pot:
+        name: Pot
+        required: true
+        selector:
+          select:
+            options: ["1", "2", "3", "4"]
+      tent:
+        name: Tent
+        required: true
+        selector:
+          select:
+            options: ["unassigned", "clone", "main"]
+    sequence:
+      - variables:
+          pot_n: "{{ pot | string }}"
+          tent_v: "{{ tent | string }}"
+          tent_entity: "input_select.dsc_pot{{ pot_n }}_tent"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ pot_n not in ['1','2','3','4'] }}"
+            sequence:
+              - service: persistent_notification.create
+                data:
+                  title: "DSC · tent apply"
+                  message: "Invalid pot (use 1–4)."
+              - stop: "Invalid pot"
+          - conditions:
+              - condition: template
+                value_template: "{{ tent_v not in ['unassigned','clone','main'] }}"
+            sequence:
+              - service: persistent_notification.create
+                data:
+                  title: "DSC · tent apply"
+                  message: "Invalid tent (use unassigned, clone, or main)."
+              - stop: "Invalid tent"
+      - service: input_select.select_option
+        target:
+          entity_id: "{{ tent_entity }}"
+        data:
+          option: "{{ tent_v }}"
+      - service: persistent_notification.create
+        data:
+          title: "DSC · tent apply"
+          message: "POT{{ pot_n }} → {{ tent_v }}."

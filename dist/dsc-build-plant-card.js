@@ -22,6 +22,21 @@
     nutrient: "q-nutrient",
     light: "q-light",
   };
+  const DRAWER_TITLES = {
+    strain: "Strain search",
+    medium: "Medium search",
+    nutrient: "Nutrient search",
+    light: "Light search",
+  };
+  const DRAWER_PLACEHOLDERS = {
+    strain: "Type a strain name...",
+    medium: "Coco, perlite, LECA...",
+    nutrient: "CANNA Coco A...",
+    light: "Spider Farmer SF1000...",
+  };
+
+  const ICO_SEARCH = `<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15.5 15.5L21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
+  const ICO_MORE = `<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><circle cx="12" cy="5" r="1.75" fill="currentColor"/><circle cx="12" cy="12" r="1.75" fill="currentColor"/><circle cx="12" cy="19" r="1.75" fill="currentColor"/></svg>`;
 
   const DEFAULTS = () => ({
     type: `custom:${CARD_TYPE}`,
@@ -30,55 +45,201 @@
   });
 
   const css = `
-    :host { display:block; font-family: "Segoe UI", "IBM Plex Sans", system-ui, sans-serif; color:#e8efe9; }
-    .wrap {
-      background: linear-gradient(165deg, #121a16 0%, #0c1210 48%, #10161c 100%);
-      border: 1px solid rgba(120,160,130,.18);
-      min-height: 92vh; padding: 20px 22px 36px; box-sizing: border-box;
+    :host {
+      display:block;
+      font-family: "Segoe UI", "IBM Plex Sans", system-ui, sans-serif;
+      color:#e8efe9;
+      --dsc-neon: #39ff14;
+      --dsc-neon-dim: rgba(57, 255, 20, 0.35);
+      --dsc-neon-glow: rgba(57, 255, 20, 0.55);
+      --dsc-teal: #26c6da;
+      --dsc-teal-dim: rgba(38, 198, 218, 0.4);
+      --dsc-teal-glow: rgba(38, 198, 218, 0.55);
+      --dsc-glass: rgba(12, 18, 16, 0.72);
+      --dsc-glass-border: rgba(120, 180, 160, 0.28);
     }
-    .hero { margin-bottom: 18px; }
+    .wrap {
+      position: relative;
+      background:
+        radial-gradient(900px 420px at 12% -8%, rgba(57,255,20,.06), transparent 55%),
+        radial-gradient(700px 380px at 92% 0%, rgba(38,198,218,.05), transparent 50%),
+        linear-gradient(165deg, #121a16 0%, #0c1210 48%, #10161c 100%);
+      border: 1px solid var(--dsc-glass-border);
+      min-height: 92vh; padding: 20px 22px 36px; box-sizing: border-box;
+      overflow: hidden;
+    }
+    .hero {
+      display:flex; flex-wrap:wrap; align-items:flex-start; justify-content:space-between;
+      gap:12px; margin-bottom: 18px;
+    }
     .brand { font-size: 11px; letter-spacing: .22em; text-transform: uppercase; color:#7fa88a; margin:0 0 6px; }
     h1 { margin:0; font-size: 28px; font-weight: 650; letter-spacing: .02em; color:#f2f7f3; }
-    .sub { margin: 6px 0 0; color:#9aada0; font-size: 14px; max-width: 52ch; }
-    .grid { display:grid; gap:14px; }
-    @media (min-width: 980px) { .grid { grid-template-columns: 1.15fr .85fr; } }
-    section {
-      background: rgba(18,28,22,.55); border: 1px solid rgba(120,160,130,.14);
-      border-radius: 4px; padding: 14px 14px 12px;
+    .sub { margin: 6px 0 0; color:#9aada0; font-size: 14px; max-width: 56ch; }
+    .flow {
+      display:flex; align-items:stretch; gap:0; flex-wrap:nowrap;
+    }
+    .flow-col {
+      flex: 1 1 0; min-width: 0;
+      display:flex; flex-direction:column; gap:14px;
+    }
+    .flow-col.mid { flex: 1.15 1 0; }
+    .connector {
+      flex: 0 0 28px; align-self: stretch; position: relative; margin: 28px 4px 28px;
+      min-height: 48px;
+    }
+    .connector::before {
+      content:""; position:absolute; left:50%; top:8%; bottom:8%; width:2px;
+      transform:translateX(-50%);
+      background: linear-gradient(180deg, transparent, var(--dsc-teal), transparent);
+      box-shadow: 0 0 10px var(--dsc-teal-glow);
+      opacity:.85;
+    }
+    .connector::after {
+      content:""; position:absolute; left:50%; top:50%; width:0; height:0;
+      transform:translate(-20%, -50%);
+      border-top:6px solid transparent; border-bottom:6px solid transparent;
+      border-left:8px solid var(--dsc-teal);
+      filter: drop-shadow(0 0 6px var(--dsc-teal-glow));
+    }
+    @media (max-width: 1100px) {
+      .flow { flex-direction: column; }
+      .connector { display:none; }
+      .flow-col, .flow-col.mid { flex: 1 1 auto; }
+    }
+    section.glass {
+      background: var(--dsc-glass);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid var(--dsc-glass-border);
+      border-radius: 12px;
+      padding: 14px 14px 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.35);
+    }
+    section.glass.valid-glow {
+      border-color: var(--dsc-teal-dim);
+      box-shadow: 0 0 0 1px rgba(38,198,218,.15), 0 0 24px rgba(38,198,218,.14);
     }
     section h2 {
       margin:0 0 10px; font-size: 13px; letter-spacing: .14em; text-transform: uppercase;
-      color:#8fb89a; display:flex; align-items:center; gap:8px;
+      color:#8fb89a; display:flex; align-items:center; justify-content:space-between; gap:8px;
     }
-    section h2 ha-icon, section h2 .ico { --mdc-icon-size:18px; width:18px; height:18px; opacity:.9; }
+    section h2 .h2-left { display:flex; align-items:center; gap:8px; }
     label { display:block; font-size:11px; color:#8a9c90; margin: 8px 0 4px; letter-spacing:.04em; }
     input[type=text], input[type=date], input[type=number], select {
       width:100%; box-sizing:border-box; background:#0b110e; color:#e8efe9;
-      border:1px solid rgba(120,160,130,.28); border-radius:3px; padding:8px 10px; font-size:14px;
+      border:1px solid rgba(120,160,130,.28); border-radius:8px; padding:8px 10px; font-size:14px;
     }
-    input[type=range] { width:100%; accent-color:#5b9f6b; }
+    input[type=range] { width:100%; accent-color: var(--dsc-teal); }
     .row { display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; }
     .row > * { flex:1; min-width:120px; }
-    .bar {
-      display:flex; height:18px; border-radius:3px; overflow:hidden; background:#0b110e;
-      border:1px solid rgba(120,160,130,.2); margin-top:8px;
+    .result-row {
+      display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:4px;
     }
-    .bar span { display:block; height:100%; }
+    .result-chip {
+      display:inline-flex; align-items:center; gap:8px; max-width:100%;
+      padding:8px 12px; border-radius:999px;
+      border:1px solid var(--dsc-teal-dim);
+      background: rgba(38,198,218,.1);
+      color:#f2f7f3; font-size:13px; min-width:0; flex:1 1 140px;
+    }
+    .result-chip.empty {
+      border-color: rgba(120,160,130,.28);
+      background: rgba(18,28,22,.45);
+      color:#8a9c90;
+    }
+    .result-chip span {
+      overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    }
+    .icon-btn {
+      appearance:none; width:36px; height:36px; padding:0;
+      display:inline-flex; align-items:center; justify-content:center;
+      border-radius:10px; border:1px solid rgba(120,160,130,.35);
+      background:#1a2a20; color:#e8efe9; cursor:pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,.4);
+      flex: 0 0 auto;
+    }
+    .icon-btn:hover { border-color: var(--dsc-teal-dim); color: var(--dsc-teal); }
+    .icon-btn:active { transform: translateY(1px); }
+    .overflow { position:relative; display:inline-block; }
+    .overflow-menu {
+      position:absolute; right:0; top:calc(100% + 6px); z-index:40;
+      min-width:180px; padding:6px;
+      background:#0c100d; border:1px solid rgba(120,160,130,.35);
+      border-radius:10px; box-shadow: 0 8px 24px rgba(0,0,0,.45);
+    }
+    .overflow-menu button {
+      appearance:none; width:100%; text-align:left; border:0;
+      background:transparent; color:#e8efe9; font:inherit; font-size:13px;
+      padding:10px 12px; border-radius:8px; cursor:pointer;
+    }
+    .overflow-menu button:hover {
+      background: rgba(38,198,218,.12); color: var(--dsc-teal);
+    }
+    .overflow-menu button:disabled { opacity:.4; cursor:not-allowed; }
     .chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
     .chip {
-      font-size:11px; padding:3px 8px; border-radius:2px;
+      font-size:11px; padding:3px 8px; border-radius:999px;
       background:rgba(91,159,107,.15); border:1px solid rgba(91,159,107,.35); color:#cfe8d5;
     }
     .chip.warn { background:rgba(196,163,90,.12); border-color:rgba(196,163,90,.4); color:#e8d7a8; }
     .chip.bad { background:rgba(180,70,70,.12); border-color:rgba(180,70,70,.4); color:#f0b4b4; }
-    .search-box { position:relative; }
+    .chip.ok {
+      background: rgba(57,255,20,.1); border-color: var(--dsc-neon-dim); color: var(--dsc-neon);
+      box-shadow: 0 0 12px rgba(57,255,20,.12);
+    }
+    .chip.teal {
+      background: rgba(38,198,218,.12); border-color: var(--dsc-teal-dim); color: #b8f0f7;
+    }
+    .catalog-pill {
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 14px; border-radius:999px;
+      border:1px solid var(--dsc-neon-dim);
+      background: rgba(57,255,20,.08);
+      color:#cfe8d5; font-size:12px;
+      box-shadow: 0 0 16px rgba(57,255,20,.12);
+    }
+    .catalog-pill .dot {
+      width:8px; height:8px; border-radius:50%; background: var(--dsc-neon);
+      box-shadow: 0 0 8px var(--dsc-neon-glow);
+    }
+    .catalog-pill.warn { border-color: rgba(196,163,90,.45); box-shadow:none; }
+    .catalog-pill.bad { border-color: rgba(180,70,70,.45); box-shadow:none; }
+    .catalog-pill.warn .dot, .catalog-pill.bad .dot { background:#c4a35a; box-shadow:none; }
+    .soil { width:100%; max-width:260px; margin: 10px auto 6px; }
+    .soil-pot {
+      position:relative; width:100%; aspect-ratio: 4 / 5;
+      border-radius: 12px 12px 28px 28px;
+      border: 2px solid rgba(120,160,130,.45);
+      background: linear-gradient(180deg, #1a1410 0%, #0e0c0a 100%);
+      overflow:hidden;
+      box-shadow: inset 0 0 24px rgba(0,0,0,.55), 0 0 20px rgba(38,198,218,.08);
+    }
+    .soil-pot.is-valid {
+      border-color: var(--dsc-teal-dim);
+      box-shadow: inset 0 0 24px rgba(0,0,0,.55), 0 0 28px rgba(38,198,218,.28);
+    }
+    .soil-layer {
+      position:absolute; left:8%; right:8%;
+      display:flex; align-items:center; justify-content:center;
+      font-size:11px; letter-spacing:.04em; color: rgba(244,247,244,.92);
+      text-shadow: 0 1px 2px rgba(0,0,0,.65);
+      border-top: 1px solid rgba(255,255,255,.08);
+      box-sizing:border-box; padding: 0 4px; text-align:center;
+    }
+    .soil-empty {
+      position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+      color:#8a9c90; font-size:13px; padding:16px; text-align:center;
+    }
+    .layer-block {
+      margin-top:10px; padding-top:8px;
+      border-top: 1px solid rgba(120,160,130,.12);
+    }
     .hits {
-      position:absolute; z-index:20; left:0; right:0; top:calc(100% + 2px); max-height:260px; overflow:auto;
-      background:#0e1612; border:1px solid rgba(120,160,130,.45); margin:0; padding:0; list-style:none;
-      box-shadow: 0 10px 28px rgba(0,0,0,.45);
+      margin:10px 0 0; padding:0; list-style:none; max-height:min(52vh, 420px); overflow:auto;
+      background:#0e1612; border:1px solid rgba(120,160,130,.35); border-radius:8px;
     }
     .hits li { padding:8px 10px; cursor:pointer; border-bottom:1px solid rgba(120,160,130,.12); font-size:13px; }
-    .hits li:hover, .hits li.active { background:rgba(91,159,107,.22); }
+    .hits li:hover, .hits li.active { background:rgba(38,198,218,.16); }
     .hits .meta { color:#8a9c90; font-size:11px; margin-top:2px; }
     .hits .empty { padding:10px; color:#8a9c90; font-size:12px; cursor:default; }
     .hits .empty:hover { background:transparent; }
@@ -88,14 +249,66 @@
     .actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
     button {
       background:#1a2a20; color:#e8efe9; border:1px solid rgba(120,160,130,.35);
-      border-radius:3px; padding:9px 12px; cursor:pointer; font-size:13px;
+      border-radius:8px; padding:9px 12px; cursor:pointer; font-size:13px;
     }
     button.primary { background:#2a4a34; border-color:#5b9f6b; }
+    button.teal {
+      border-color: var(--dsc-teal-dim);
+      background: rgba(38,198,218,.18);
+      color:#f2f7f3;
+      box-shadow: 0 0 18px rgba(38,198,218,.2);
+    }
+    button.teal.primary {
+      background: var(--dsc-teal);
+      color:#041018;
+      font-weight:650;
+      box-shadow: 0 0 22px var(--dsc-teal-glow);
+    }
     button:hover { filter:brightness(1.08); }
     button:disabled { opacity:.45; cursor:not-allowed; }
     .muted { color:#8a9c90; font-size:12px; }
     .roster { font-size:12px; }
     .roster div { padding:4px 0; border-bottom:1px solid rgba(120,160,130,.1); }
+    .drawer {
+      position:absolute; inset:0; z-index:80; pointer-events:none;
+    }
+    .drawer.is-open { pointer-events:auto; }
+    .drawer-scrim {
+      position:absolute; inset:0; background: rgba(0,0,0,.45);
+      opacity:0; transition: opacity 180ms ease;
+    }
+    .drawer.is-open .drawer-scrim { opacity:1; }
+    .drawer-panel {
+      position:absolute; top:0; bottom:0; right:0;
+      width: min(380px, 92%);
+      background: linear-gradient(165deg, #121a16, #0a100e);
+      border: 1px solid var(--dsc-glass-border);
+      border-radius: 14px 0 0 14px;
+      box-shadow: -12px 0 40px rgba(0,0,0,.55);
+      display:flex; flex-direction:column;
+      transform: translateX(105%);
+      transition: transform 220ms ease;
+    }
+    .drawer.is-open .drawer-panel { transform: none; }
+    .drawer-rail {
+      position:absolute; top:50%; left:-28px; transform:translateY(-50%);
+      width:28px; height:64px;
+      border:1px solid rgba(120,160,130,.35); background:#1a2a20; color:#e8efe9;
+      border-radius:10px 0 0 10px;
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer; z-index:2;
+    }
+    .drawer-head {
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      padding:14px 16px; border-bottom:1px solid rgba(120,160,130,.2);
+    }
+    .drawer-head h2 {
+      margin:0; font-size:13px; letter-spacing:.12em; text-transform:uppercase; color:#9aada0;
+    }
+    .drawer-body { flex:1; overflow:auto; padding:14px 16px; }
+    @media (prefers-reduced-motion: reduce) {
+      .drawer-panel, .drawer-scrim { transition: none !important; }
+    }
   `;
 
   class DscBuildPlantCard extends HTMLElement {
@@ -109,12 +322,13 @@
       this._q = { strain: "", nutrient: "", medium: "", light: "" };
       this._hits = { strain: [], nutrient: [], medium: [], light: [] };
       this._hitActive = { strain: -1, nutrient: -1, medium: -1, light: -1 };
-      this._openKind = null;
+      this._drawerKind = null;
       this._loaded = false;
       this._mediumSlot = 1;
       this._focusRestore = null;
       this._selectedStrain = null;
       this._selectedLight = null;
+      this._overflowMenu = null;
     }
 
     setConfig(config) {
@@ -128,8 +342,8 @@
         this._loaded = true;
         this._loadIndexes();
       }
-      // Avoid wiping an open typeahead / focused search on every HA state tick.
-      if (this._openKind || this._isSearchFocused()) return;
+      // Avoid wiping an open drawer / focused search on every HA state tick.
+      if (this._drawerKind || this._isSearchFocused()) return;
       this._render();
     }
 
@@ -171,7 +385,7 @@
       const total = Object.values(this._indexes).reduce((n, a) => n + (a?.length || 0), 0);
       this._indexStatus.loading = false;
       this._indexStatus.ok = total > 0;
-      if (!this._openKind) this._render();
+      if (!this._drawerKind) this._render();
       else this._paintCatalogChip();
     }
 
@@ -240,25 +454,32 @@
       this._q[kind] = q;
       this._hits[kind] = this._filterItems(kind, q);
       this._hitActive[kind] = this._hits[kind].length ? 0 : -1;
-      this._openKind = open ? kind : null;
+      if (open) this._drawerKind = kind;
       this._paintHits(kind);
     }
 
     _openSearch(kind) {
-      this._openKind = kind;
+      this._drawerKind = kind;
+      this._overflowMenu = null;
       this._hits[kind] = this._filterItems(kind, this._q[kind] || "");
       this._hitActive[kind] = this._hits[kind].length ? 0 : -1;
-      this._paintHits(kind);
+      this._focusRestore = { id: SEARCH_IDS[kind], pos: (this._q[kind] || "").length };
+      this._render();
     }
 
     _closeSearch(kind) {
-      if (kind && this._openKind !== kind) return;
-      this._openKind = null;
+      if (kind && this._drawerKind !== kind) return;
+      this._drawerKind = null;
       if (kind) {
         this._hits[kind] = [];
         this._hitActive[kind] = -1;
-        this._paintHits(kind);
       }
+      this._render();
+    }
+
+    _closeDrawer() {
+      this._drawerKind = null;
+      this._render();
     }
 
     _applyHit(kind, item) {
@@ -275,7 +496,7 @@
       this._q.strain = item.name;
       this._hits.strain = [];
       this._hitActive.strain = -1;
-      this._openKind = null;
+      this._drawerKind = null;
       this._render();
     }
 
@@ -298,7 +519,7 @@
       this._q.medium = "";
       this._hits.medium = [];
       this._hitActive.medium = -1;
-      this._openKind = null;
+      this._drawerKind = null;
       this._render();
     }
 
@@ -318,7 +539,7 @@
       this._q.nutrient = "";
       this._hits.nutrient = [];
       this._hitActive.nutrient = -1;
-      this._openKind = null;
+      this._drawerKind = null;
       this._render();
     }
 
@@ -338,7 +559,7 @@
       this._q.light = item.name;
       this._hits.light = [];
       this._hitActive.light = -1;
-      this._openKind = null;
+      this._drawerKind = null;
       this._render();
     }
 
@@ -350,6 +571,30 @@
         if (pct > 0) parts.push({ n, name: name || `#${n}`, pct });
       }
       return parts;
+    }
+
+    _activeMediumSlots() {
+      const slots = [];
+      for (let n = 1; n <= 3; n++) {
+        const name = this._str(`input_text.dsc_blend_component_${n}_name`);
+        const pct = this._num(`input_number.dsc_blend_pct_${n}`, 0);
+        if (name || pct > 0) slots.push({ n, name, pct });
+      }
+      return slots;
+    }
+
+    _nextEmptyMediumSlot() {
+      for (let n = 1; n <= 3; n++) {
+        const name = this._str(`input_text.dsc_blend_component_${n}_name`);
+        const pct = this._num(`input_number.dsc_blend_pct_${n}`, 0);
+        if (!name && pct <= 0) return n;
+      }
+      return null;
+    }
+
+    _clearMediumSlot(n) {
+      this._setText(`input_text.dsc_blend_component_${n}_name`, "");
+      this._setNumber(`input_number.dsc_blend_pct_${n}`, 0);
     }
 
     _mixLines() {
@@ -371,21 +616,21 @@
     }
 
     _hitsHtml(kind) {
-      if (this._openKind !== kind) return "";
+      if (this._drawerKind !== kind) return "";
       const hits = this._hits[kind] || [];
       const active = this._hitActive[kind] ?? -1;
       const indexCount = this._indexFor(kind).length;
       if (!this._indexStatus.ok && !this._indexStatus.loading) {
-        return `<ul class="hits" role="listbox"><li class="empty">Catalog index missing for ${this._esc(INDEX_KEY[kind] || kind)}. Check /local/dsc-catalog/.</li></ul>`;
+        return `<ul class="hits" id="drawer-hits" role="listbox"><li class="empty">Catalog index missing for ${this._esc(INDEX_KEY[kind] || kind)}. Check /local/dsc-catalog/.</li></ul>`;
       }
       if (this._indexStatus.loading && !indexCount) {
-        return `<ul class="hits" role="listbox"><li class="empty">Loading catalog...</li></ul>`;
+        return `<ul class="hits" id="drawer-hits" role="listbox"><li class="empty">Loading catalog...</li></ul>`;
       }
       if (!hits.length) {
         const q = (this._q[kind] || "").trim();
-        return `<ul class="hits" role="listbox"><li class="empty">${q ? `No matches for "${this._esc(q)}"` : "Start typing to filter catalog"}</li></ul>`;
+        return `<ul class="hits" id="drawer-hits" role="listbox"><li class="empty">${q ? `No matches for "${this._esc(q)}"` : "Start typing to filter catalog"}</li></ul>`;
       }
-      return `<ul class="hits" role="listbox">${hits
+      return `<ul class="hits" id="drawer-hits" role="listbox">${hits
         .map((it, i) => {
           const meta = [it.brand || it.breeder, it.wattage_w != null ? `${it.wattage_w} W` : null, it.dose_ml_l != null ? `${it.dose_ml_l} ml/L` : null]
             .filter(Boolean)
@@ -396,14 +641,14 @@
     }
 
     _paintHits(kind) {
-      const box = this.shadowRoot?.querySelector(`#${SEARCH_IDS[kind]}`)?.closest(".search-box");
-      if (!box) return;
-      const existing = box.querySelector(".hits");
+      const body = this.shadowRoot?.getElementById("drawer-body");
+      if (!body || this._drawerKind !== kind) return;
+      const existing = body.querySelector("#drawer-hits");
       if (existing) existing.remove();
       const html = this._hitsHtml(kind);
       if (!html) return;
-      box.insertAdjacentHTML("beforeend", html);
-      box.querySelectorAll(".hits li[data-i]").forEach((li) => {
+      body.insertAdjacentHTML("beforeend", html);
+      body.querySelectorAll("#drawer-hits li[data-i]").forEach((li) => {
         li.addEventListener("mousedown", (e) => {
           e.preventDefault();
           const i = Number(li.getAttribute("data-i"));
@@ -420,18 +665,104 @@
 
     _catalogChipHtml() {
       if (this._indexStatus.loading) {
-        return `<span class="chip warn" id="catalog-status">Loading catalogs...</span>`;
+        return `<span class="catalog-pill warn" id="catalog-status"><span class="dot"></span>Loading catalogs...</span>`;
       }
       if (!this._indexStatus.ok) {
         const detail = this._indexStatus.errors[0] || "no index items";
-        return `<span class="chip bad" id="catalog-status">Catalog load failed: ${this._esc(detail)}</span>`;
+        return `<span class="catalog-pill bad" id="catalog-status"><span class="dot"></span>Catalog load failed: ${this._esc(detail)}</span>`;
       }
       const n =
         (this._indexes.strains?.length || 0) +
         (this._indexes.mediums?.length || 0) +
         (this._indexes.nutrients?.length || 0) +
         (this._indexes.lights?.length || 0);
-      return `<span class="chip" id="catalog-status">${n} catalog items ready</span>`;
+      return `<span class="catalog-pill" id="catalog-status"><span class="dot"></span>${n} catalog items ready</span>`;
+    }
+
+    _soilHtml(parts, blendValid) {
+      if (!parts.length) {
+        return `<div class="soil"><div class="soil-pot"><div class="soil-empty">No medium layers yet</div></div></div>`;
+      }
+      let cursor = 0;
+      const layers = parts
+        .map((p, i) => {
+          const bottom = cursor;
+          cursor += p.pct;
+          const label = p.pct >= 12 ? `${this._esc(p.name)} ${Math.round(p.pct)}%` : "";
+          return `<div class="soil-layer" style="bottom:${bottom}%;height:${p.pct}%;background:${COLORS[i % COLORS.length]}" title="${this._esc(p.name)} ${p.pct}%">${label}</div>`;
+        })
+        .join("");
+      return `<div class="soil"><div class="soil-pot${blendValid ? " is-valid" : ""}">${layers}</div></div>`;
+    }
+
+    _resultRow(kind, label, emptyLabel) {
+      const has = !!(label && String(label).trim());
+      const menuOpen = this._overflowMenu === kind;
+      return `
+        <div class="result-row" data-result="${kind}">
+          <div class="result-chip${has ? "" : " empty"}"><span>${this._esc(has ? label : emptyLabel)}</span></div>
+          <button type="button" class="icon-btn" data-open-drawer="${kind}" aria-label="Search ${kind}">${ICO_SEARCH}</button>
+          <div class="overflow">
+            <button type="button" class="icon-btn" data-overflow="${kind}" aria-label="More ${kind} actions" aria-expanded="${menuOpen ? "true" : "false"}">${ICO_MORE}</button>
+            ${menuOpen ? this._overflowMenuHtml(kind) : ""}
+          </div>
+        </div>`;
+    }
+
+    _overflowMenuHtml(kind) {
+      if (kind === "medium") {
+        const next = this._nextEmptyMediumSlot();
+        const active = this._activeMediumSlots();
+        return `<div class="overflow-menu" role="menu">
+          <button type="button" role="menuitem" data-medium-action="add" ${next ? "" : "disabled"}>Add medium layer</button>
+          <button type="button" role="menuitem" data-medium-action="remove" ${active.length ? "" : "disabled"}>Remove layer</button>
+          <button type="button" role="menuitem" data-medium-action="change">Change</button>
+        </div>`;
+      }
+      if (kind === "strain") {
+        return `<div class="overflow-menu" role="menu">
+          <button type="button" role="menuitem" data-overflow-action="change" data-kind="strain">Change</button>
+          <button type="button" role="menuitem" data-overflow-action="clear-strain">Clear strain</button>
+        </div>`;
+      }
+      if (kind === "nutrient") {
+        return `<div class="overflow-menu" role="menu">
+          <button type="button" role="menuitem" data-overflow-action="change" data-kind="nutrient">Add nutrient</button>
+        </div>`;
+      }
+      if (kind === "light") {
+        return `<div class="overflow-menu" role="menu">
+          <button type="button" role="menuitem" data-overflow-action="change" data-kind="light">Change</button>
+        </div>`;
+      }
+      return "";
+    }
+
+    _drawerHtml() {
+      const kind = this._drawerKind;
+      const open = !!kind;
+      const title = kind ? DRAWER_TITLES[kind] : "Search";
+      const ph = kind ? DRAWER_PLACEHOLDERS[kind] : "";
+      const q = kind ? this._q[kind] || "" : "";
+      const sid = kind ? SEARCH_IDS[kind] : "q-drawer";
+      return `
+        <div class="drawer${open ? " is-open" : ""}" aria-hidden="${open ? "false" : "true"}">
+          <div class="drawer-scrim" id="drawer-scrim"></div>
+          <aside class="drawer-panel" role="dialog" aria-modal="true" aria-label="${this._esc(title)}">
+            <button type="button" class="drawer-rail" id="drawer-rail" aria-label="Close panel">&gt;</button>
+            <div class="drawer-head">
+              <h2>${this._esc(title)}</h2>
+              <button type="button" class="icon-btn" id="drawer-close" aria-label="Close">X</button>
+            </div>
+            <div class="drawer-body" id="drawer-body">
+              ${open ? `
+                <label for="${sid}">Filter catalog</label>
+                <input type="text" id="${sid}" autocomplete="off" spellcheck="false" value="${this._esc(q)}" placeholder="${this._esc(ph)}" aria-autocomplete="list" />
+                ${this._hitsHtml(kind)}
+              ` : ""}
+            </div>
+          </aside>
+        </div>`;
     }
 
     _esc(s) {
@@ -460,6 +791,7 @@
       const watts = this._str("sensor.dsc_light_wattage_w");
       const ppf = this._str("sensor.dsc_light_ppf_umol_s");
       const ppe = this._str("sensor.dsc_light_ppe_umol_j");
+      const strainName = this._str("input_text.dsc_build_strain") || this._selectedStrain?.name || "";
       const strainHit = this._selectedStrain;
       const chemistry = strainHit?.has_chemistry
         ? [
@@ -483,38 +815,33 @@
           }
         : null;
       const hasCommitAssign = !!this._st("script.dsc_build_plant_commit_and_assign");
-
-      const barHtml = parts.length
-        ? parts
-            .map((p, i) => `<span style="width:${p.pct}%;background:${COLORS[i % COLORS.length]}" title="${this._esc(p.name)}"></span>`)
-            .join("")
+      const activeMedium = this._activeMediumSlots();
+      const nutrientSummary = mix.lines.length
+        ? mix.lines.map((l) => l.name).slice(0, 3).join(", ") + (mix.lines.length > 3 ? ` +${mix.lines.length - 3}` : "")
         : "";
 
       const focus = this._focusRestore;
-      const openKind = this._openKind;
+      const drawerKind = this._drawerKind;
 
       this.shadowRoot.innerHTML = `
         <style>${css}</style>
         <div class="wrap">
           <div class="hero">
-            <p class="brand">Digital Stealth Care / DSC-HUB</p>
-            <h1>${this._esc(cfg.title)}</h1>
-            <p class="sub">${this._esc(cfg.subtitle)} - then commit to inventory. Metric only - no invented PPFD grids or feed rates.</p>
-            <div class="chips" style="margin-top:8px">${this._catalogChipHtml()}</div>
+            <div>
+              <p class="brand">Digital Stealth Care / DSC-HUB</p>
+              <h1>${this._esc(cfg.title)}</h1>
+              <p class="sub">${this._esc(cfg.subtitle)} - then commit to inventory. Metric only - no invented PPFD grids or feed rates.</p>
+            </div>
+            <div>${this._catalogChipHtml()}</div>
           </div>
-          <div class="grid">
-            <div class="stack">
-              <section>
-                <h2>Identity</h2>
-                <label>Strain search</label>
-                <div class="search-box">
-                  <input type="text" id="q-strain" autocomplete="off" spellcheck="false" value="${this._esc(this._q.strain)}" placeholder="Type a strain name..." aria-autocomplete="list" />
-                </div>
+
+          <div class="flow">
+            <div class="flow-col">
+              <section class="glass">
+                <h2><span class="h2-left">Identity</span></h2>
+                <label>Strain</label>
+                ${this._resultRow("strain", strainName, "No strain selected")}
                 <div class="row">
-                  <div>
-                    <label>Selected strain</label>
-                    <input type="text" id="build-strain" value="${this._esc(this._str("input_text.dsc_build_strain"))}" />
-                  </div>
                   <div>
                     <label>Nickname</label>
                     <input type="text" id="build-nick" value="${this._esc(this._str("input_text.dsc_build_nickname"))}" />
@@ -538,36 +865,38 @@
                     </select>
                   </div>
                 </div>
+                <input type="hidden" id="build-strain" value="${this._esc(strainName)}" />
                 ${chemistry ? `<div class="chips"><span class="chip">Chemistry: ${this._esc(chemistry)}</span></div>` : ""}
               </section>
+            </div>
 
-              <section>
-                <h2>Medium / % blend</h2>
-                <label>Search substrate (fills slot below)</label>
-                <div class="row">
-                  <div style="flex:2" class="search-box">
-                    <input type="text" id="q-medium" autocomplete="off" spellcheck="false" value="${this._esc(this._q.medium)}" placeholder="Coco, perlite, LECA..." aria-autocomplete="list" />
-                  </div>
-                  <div>
-                    <label>Target slot</label>
-                    <select id="medium-slot">
-                      <option value="1" ${this._mediumSlot === 1 ? "selected" : ""}>1</option>
-                      <option value="2" ${this._mediumSlot === 2 ? "selected" : ""}>2</option>
-                      <option value="3" ${this._mediumSlot === 3 ? "selected" : ""}>3</option>
-                    </select>
-                  </div>
-                </div>
-                ${[1, 2, 3]
+            <div class="connector" aria-hidden="true"></div>
+
+            <div class="flow-col mid">
+              <section class="glass${blendValid ? " valid-glow" : ""}">
+                <h2>
+                  <span class="h2-left">Medium</span>
+                </h2>
+                <label>Blend</label>
+                ${this._resultRow(
+                  "medium",
+                  parts.length ? parts.map((p) => `${p.name} ${Math.round(p.pct)}%`).join(" / ") : "",
+                  "No medium layers yet"
+                )}
+                ${this._soilHtml(parts, blendValid)}
+                ${activeMedium
                   .map(
-                    (n) => `
-                  <div class="row">
-                    <div style="flex:2">
-                      <label>Component ${n}</label>
-                      <input type="text" data-blend-name="${n}" value="${this._esc(this._str(`input_text.dsc_blend_component_${n}_name`))}" />
-                    </div>
-                    <div>
-                      <label>% / ${this._num(`input_number.dsc_blend_pct_${n}`, 0)}%</label>
-                      <input type="range" min="0" max="100" data-blend-pct="${n}" value="${this._num(`input_number.dsc_blend_pct_${n}`, 0)}" />
+                    (slot) => `
+                  <div class="layer-block">
+                    <div class="row">
+                      <div style="flex:2">
+                        <label>Layer ${slot.n}</label>
+                        <input type="text" data-blend-name="${slot.n}" value="${this._esc(slot.name)}" />
+                      </div>
+                      <div>
+                        <label>% / ${slot.pct}%</label>
+                        <input type="range" min="0" max="100" data-blend-pct="${slot.n}" value="${slot.pct}" />
+                      </div>
                     </div>
                   </div>`
                   )
@@ -578,21 +907,22 @@
                     <input type="number" id="blend-l" step="0.5" min="1" value="${totalL}" />
                   </div>
                 </div>
-                <div class="bar">${barHtml}</div>
                 <div class="chips">
-                  <span class="chip ${blendValid ? "" : "bad"}">${Math.round(sumPct)}% ${blendValid ? "valid" : "must sum 100"}</span>
+                  <span class="chip ${blendValid ? "ok" : "bad"}">${Math.round(sumPct)}% ${blendValid ? "valid" : "must sum 100"}</span>
                   ${parts
-                    .map((p) => `<span class="chip">${this._esc(p.name)} / ${((p.pct / 100) * totalL).toFixed(1)} L</span>`)
+                    .map((p) => `<span class="chip teal">${this._esc(p.name)} / ${((p.pct / 100) * totalL).toFixed(1)} L</span>`)
                     .join("")}
                 </div>
               </section>
+            </div>
 
-              <section>
-                <h2>Nutrition / ml / L</h2>
-                <label>Search nutrients - add to inventory</label>
-                <div class="search-box">
-                  <input type="text" id="q-nutrient" autocomplete="off" spellcheck="false" value="${this._esc(this._q.nutrient)}" placeholder="CANNA Coco A..." aria-autocomplete="list" />
-                </div>
+            <div class="connector" aria-hidden="true"></div>
+
+            <div class="flow-col">
+              <section class="glass">
+                <h2><span class="h2-left">Nutrition</span></h2>
+                <label>Bottles</label>
+                ${this._resultRow("nutrient", nutrientSummary, "No doses yet")}
                 <div class="row">
                   <div>
                     <label>Tank (L)</label>
@@ -628,16 +958,11 @@
                 </div>
                 <p class="muted">Accept uses script.dsc_accept_mix - QA gate, no pumps.</p>
               </section>
-            </div>
 
-            <div class="stack">
-              <section>
-                <h2>Light</h2>
-                <label>Search fixtures</label>
-                <div class="search-box">
-                  <input type="text" id="q-light" autocomplete="off" spellcheck="false" value="${this._esc(this._q.light)}" placeholder="Spider Farmer SF1000..." aria-autocomplete="list" />
-                </div>
-                <p style="margin:8px 0 4px;font-size:14px">${this._esc(lightName || "No fixture selected")}</p>
+              <section class="glass">
+                <h2><span class="h2-left">Light</span></h2>
+                <label>Fixture</label>
+                ${this._resultRow("light", lightName, "No fixture selected")}
                 <div class="chips">
                   ${watts && watts !== "unknown" ? `<span class="chip">${this._esc(watts)} W</span>` : ""}
                   ${ppf && ppf !== "unknown" ? `<span class="chip">${this._esc(ppf)} umol/s</span>` : ""}
@@ -648,8 +973,8 @@
                 </div>
               </section>
 
-              <section>
-                <h2>Climate Want</h2>
+              <section class="glass">
+                <h2><span class="h2-left">Climate Want</span></h2>
                 <p class="muted">Applies custom-slot temp/RH only when set (!= 0). Catalog strains have no invented climate bands.</p>
                 <div class="row">
                   <div>
@@ -665,9 +990,13 @@
                   <button type="button" class="primary" id="btn-climate">Apply climate Want</button>
                 </div>
               </section>
+            </div>
 
-              <section>
-                <h2>Commit</h2>
+            <div class="connector" aria-hidden="true"></div>
+
+            <div class="flow-col">
+              <section class="glass">
+                <h2><span class="h2-left">Commit</span></h2>
                 <div class="row">
                   <div>
                     <label>Assign pot</label>
@@ -681,7 +1010,7 @@
                 <div class="actions">
                   <button type="button" class="primary" id="btn-commit">Add to inventory</button>
                   <button type="button" id="btn-assign">Assign to pot now</button>
-                  ${hasCommitAssign ? `<button type="button" class="primary" id="btn-commit-assign">Commit + assign</button>` : ""}
+                  ${hasCommitAssign ? `<button type="button" class="teal primary" id="btn-commit-assign">Commit + assign</button>` : ""}
                 </div>
                 ${livePot ? `
                   <div class="chips">
@@ -699,14 +1028,16 @@
               </section>
             </div>
           </div>
+
+          ${this._drawerHtml()}
         </div>
       `;
 
       this._wire();
       this._fillRoster();
-      if (openKind) {
-        this._openKind = openKind;
-        this._paintHits(openKind);
+      if (drawerKind) {
+        this._drawerKind = drawerKind;
+        this._wireDrawerHits(drawerKind);
       }
       if (focus) {
         const inp = this.shadowRoot.getElementById(focus.id);
@@ -719,6 +1050,17 @@
         }
         this._focusRestore = null;
       }
+    }
+
+    _wireDrawerHits(kind) {
+      const root = this.shadowRoot;
+      root?.querySelectorAll("#drawer-hits li[data-i]").forEach((li) => {
+        li.addEventListener("mousedown", (e) => {
+          e.preventDefault();
+          const i = Number(li.getAttribute("data-i"));
+          this._applyHit(kind, this._hits[kind]?.[i]);
+        });
+      });
     }
 
     _fillRoster() {
@@ -744,19 +1086,11 @@
         this._focusRestore = { id, pos: e.target.selectionStart };
         this._search(kind, e.target.value, { open: true });
       });
-      inp.addEventListener("focus", () => this._openSearch(kind));
-      inp.addEventListener("blur", () => {
-        // Delay so mousedown on a hit can fire first.
-        setTimeout(() => {
-          if (this.shadowRoot?.activeElement?.id === id) return;
-          this._closeSearch(kind);
-        }, 120);
-      });
       inp.addEventListener("keydown", (e) => {
         const hits = this._hits[kind] || [];
         if (e.key === "ArrowDown") {
           e.preventDefault();
-          if (!this._openKind) this._openSearch(kind);
+          if (!this._drawerKind) this._openSearch(kind);
           if (!hits.length) return;
           this._hitActive[kind] = Math.min((this._hitActive[kind] ?? -1) + 1, hits.length - 1);
           this._paintHits(kind);
@@ -766,7 +1100,7 @@
           this._hitActive[kind] = Math.max((this._hitActive[kind] ?? 0) - 1, 0);
           this._paintHits(kind);
         } else if (e.key === "Enter") {
-          if (this._openKind === kind && hits.length) {
+          if (this._drawerKind === kind && hits.length) {
             e.preventDefault();
             const i = this._hitActive[kind] >= 0 ? this._hitActive[kind] : 0;
             this._applyHit(kind, hits[i]);
@@ -782,11 +1116,72 @@
       const root = this.shadowRoot;
       if (!root) return;
 
-      ["strain", "medium", "nutrient", "light"].forEach((k) => this._bindSearch(k));
+      if (this._drawerKind) this._bindSearch(this._drawerKind);
 
-      root.getElementById("medium-slot")?.addEventListener("change", (e) => {
-        this._mediumSlot = Number(e.target.value) || 1;
+      root.querySelectorAll("[data-open-drawer]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const kind = btn.getAttribute("data-open-drawer");
+          if (kind) this._openSearch(kind);
+        });
       });
+
+      root.querySelectorAll("[data-overflow]").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const kind = btn.getAttribute("data-overflow");
+          this._overflowMenu = this._overflowMenu === kind ? null : kind;
+          this._render();
+        });
+      });
+
+      root.querySelectorAll("[data-medium-action]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const action = btn.getAttribute("data-medium-action");
+          this._overflowMenu = null;
+          if (action === "add") {
+            const next = this._nextEmptyMediumSlot();
+            if (!next) return;
+            this._mediumSlot = next;
+            this._openSearch("medium");
+            return;
+          }
+          if (action === "remove") {
+            const active = this._activeMediumSlots();
+            const last = active[active.length - 1];
+            if (!last) return;
+            this._clearMediumSlot(last.n);
+            this._render();
+            return;
+          }
+          if (action === "change") {
+            const active = this._activeMediumSlots();
+            this._mediumSlot = active.length ? active[active.length - 1].n : this._nextEmptyMediumSlot() || 1;
+            this._openSearch("medium");
+          }
+        });
+      });
+
+      root.querySelectorAll("[data-overflow-action]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const action = btn.getAttribute("data-overflow-action");
+          const kind = btn.getAttribute("data-kind");
+          this._overflowMenu = null;
+          if (action === "change" && kind) {
+            this._openSearch(kind);
+            return;
+          }
+          if (action === "clear-strain") {
+            this._selectedStrain = null;
+            this._setText("input_text.dsc_build_strain", "");
+            this._q.strain = "";
+            this._render();
+          }
+        });
+      });
+
+      root.getElementById("drawer-scrim")?.addEventListener("click", () => this._closeDrawer());
+      root.getElementById("drawer-rail")?.addEventListener("click", () => this._closeDrawer());
+      root.getElementById("drawer-close")?.addEventListener("click", () => this._closeDrawer());
 
       root.getElementById("build-strain")?.addEventListener("change", (e) => this._setText("input_text.dsc_build_strain", e.target.value));
       root.getElementById("build-nick")?.addEventListener("change", (e) => this._setText("input_text.dsc_build_nickname", e.target.value));

@@ -1,7 +1,9 @@
+import { useNavigate } from "react-router-dom";
 import { Card, EntityToggle, Kpi, LinkChip, PageHeader, StatusChip } from "../components/ui";
 import { useHass } from "../hooks/useHass";
 import { useEntitySeries } from "../hooks/useEntitySeries";
 import { ArcGauge, MultiLineChart } from "../viz/charts";
+import { buildPlantSeat, tentLabel } from "../lib/seatModel";
 
 function fmtUptime(seconds: number): string {
   if (!Number.isFinite(seconds) || seconds <= 0) return "—";
@@ -20,7 +22,9 @@ const FAULTS: { id: string; label: string }[] = [
 ];
 
 export function OpsHomePage() {
-  const { state, num, available } = useHass();
+  const { state, num, available, entity, tick } = useHass();
+  const navigate = useNavigate();
+  void tick;
   const hubOnline = available("sensor.dsc_hub_uptime");
   const alerts = num("sensor.dsc_active_alert_count", 0);
   const tentT = num("sensor.dsc_hub_tent_temperature");
@@ -42,6 +46,7 @@ export function OpsHomePage() {
   const fanOverride = state("switch.dsc_hub_tent_manual_override") === "on";
 
   const activeFaults = FAULTS.filter((f) => state(f.id) === "on");
+  const seats = [1, 2, 3, 4].map((n) => buildPlantSeat(n, { state, entity }));
 
   return (
     <div className="dsc-page">
@@ -105,10 +110,29 @@ export function OpsHomePage() {
         <div className="dsc-col-3">
           <Kpi
             label="Surface"
-            value={state("sensor.dsc_ha_surface_version", "6.1.0")}
+            value={state("sensor.dsc_ha_surface_version", "6.2.0")}
             sub={`Fleet ${fleet}`}
             tone="ok"
           />
+        </div>
+
+        <div className="dsc-col-12">
+          <Card className="dsc-glass" title="Plant seats">
+            <div className="dsc-chip-row">
+              {seats.map((s) => (
+                <button
+                  key={s.pot}
+                  type="button"
+                  className="dsc-chip dsc-chip--ok"
+                  onClick={() => navigate(`/ops/plant-seat?pot=${s.pot}`)}
+                  title={s.blend || "Open plant seat"}
+                >
+                  P{s.pot} {s.plantName !== "—" ? s.plantName : "—"} · {tentLabel(s.tent)}
+                  {s.blend ? ` · ${s.blend.slice(0, 28)}` : ""}
+                </button>
+              ))}
+            </div>
+          </Card>
         </div>
 
         <div className="dsc-col-8">

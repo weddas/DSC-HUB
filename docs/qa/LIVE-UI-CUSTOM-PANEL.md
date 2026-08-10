@@ -7,7 +7,7 @@ React + Vite product panel hosted inside Home Assistant (WashData pattern).
 | Sidebar | **DSC-HUB** → `/dsc-hub` (custom panel) |
 | Deep routes | Hash routes: `/dsc-hub#/ops/home`, `#/plant/catalog`, … |
 | Lovelace fallback | `dsc-hub-pro` YAML — `show_in_sidebar: false` |
-| Surface version | `sensor.dsc_ha_surface_version` **6.1.0** |
+| Surface version | `sensor.dsc_ha_surface_version` **6.2.0** |
 | Integration | `homeassistant/custom_components/dsc_hub/` |
 | Enable | `dsc_hub:` in configuration.yaml (see snippet) |
 
@@ -42,19 +42,23 @@ Then: HA **Developer Tools → YAML → Check configuration** → restart Core
 
 ## Visual system
 
-Black / gray / neon green / white · tabbed primary+secondary · press feedback ·
-soft shadows · history-seeded glowing charts · demand toggles with neon ON edge ·
-desktop-first grid with narrow tile reflow.
+Black / gray / neon green / teal / white · glass HUD · tabbed primary+secondary ·
+slide-out search drawers · overflow ⋯ / gear actions · press feedback · soft shadows ·
+history-seeded glowing charts · demand toggles with neon ON edge · desktop-first grid
+with narrow tile reflow · Plant Seat (soil / age / tent apply) · Dash pot pick + lerp.
 
 ## Pass 2 acceptance
 
 - [ ] Cold open `/dsc-hub#/ops/home` — tent T/RH charts populate from history within seconds
 - [ ] Status strip reflects hub / panel / beat / alerts / fleet
+- [ ] Plant seat chips on Home open `/ops/plant-seat?pot=N`
 - [ ] Demand toggles (Heat/Cool/Hum/Dehum/Mat) call HA and match tent reality
 - [ ] Pot ESP-NOW chips + manual takeover / fan override visible
 - [ ] Ops · Climate shows VPD gauges + CFM / fan % KPIs and sparklines
 - [ ] Ops · Dash / Plant · Catalog load without visiting Lovelace first (auto `/local` inject)
-- [ ] `sensor.dsc_ha_surface_version` reads **6.1.0**
+- [ ] Ops · Dash pot click / chip → Plant Seat; Apply to tent lerps plant on Dash
+- [ ] Plant · Build result chips + slide-out search; soil cross-section; Commit+assign
+- [ ] `sensor.dsc_ha_surface_version` reads **6.2.0**
 - [ ] WashData / Overview / Frigate / other non-DSC panels unchanged
 - [ ] Narrow viewport tiles columns without breaking desktop layout
 

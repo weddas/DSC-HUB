@@ -17,12 +17,14 @@ template:
       - name: "DSC HA Surface Version"
         unique_id: dsc_ha_surface_version
         icon: mdi:home-assistant
-        state: "6.1.0"
+        state: "6.2.0"
         attributes:
           packages: dsc_v4_*
           dashboard: dsc-hub custom panel (/dsc-hub) React+Vite
           lovelace_fallback: dsc-hub-pro YAML (sidebar hidden)
           build_plant_inclusion: N-085
+          visual_pass: glass HUD + plant seat + pot tent SoT (6.2.0)
+          pot_tent: input_select.dsc_potN_tent + script.dsc_apply_pot_to_tent
           phase_b: present
           learn_activity: present
           multi_lever: F-005 residual attribution

@@ -1,19 +1,36 @@
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { LegacyCardHost } from "../components/LegacyCardHost";
-import { Card, Kpi, PageHeader } from "../components/ui";
+import { Card, Kpi, PageHeader, StatusChip } from "../components/ui";
 import { useHass } from "../hooks/useHass";
 import { useEntitySeries } from "../hooks/useEntitySeries";
 import { ArcGauge, LiveLineChart, MultiLineChart } from "../viz/charts";
+import { buildPlantSeat, tentLabel } from "../lib/seatModel";
 
 function fmt(n: number, digits = 1): string {
   return Number.isFinite(n) ? n.toFixed(digits) : "—";
 }
 
 export function OpsDashPage() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const onSelect = (ev: Event) => {
+      const detail = (ev as CustomEvent<{ pot?: number | string }>).detail;
+      const pot = Number(detail?.pot);
+      if (pot >= 1 && pot <= 4) {
+        navigate(`/ops/plant-seat?pot=${pot}`);
+      }
+    };
+    window.addEventListener("dsc-dash-select-pot", onSelect);
+    return () => window.removeEventListener("dsc-dash-select-pot", onSelect);
+  }, [navigate]);
+
   return (
     <div className="dsc-page">
       <PageHeader
         title="Ops · Dash"
-        subtitle="Cinematic digital twin — legacy Three.js card mounted in-panel."
+        subtitle="Cinematic digital twin — pick a pot to open Plant Seat."
       />
       <LegacyCardHost tag="dsc-the-dash-card" config={{}} />
     </div>
@@ -200,10 +217,14 @@ export function OpsClone2x4Page() {
 }
 
 export function OpsRootZonePage() {
-  const { num, state } = useHass();
+  const { num, state, entity, tick } = useHass();
+  const navigate = useNavigate();
+  void tick;
+  const pots = [1, 2, 3, 4].map((n) => buildPlantSeat(n, { state, entity }));
+
   return (
     <div className="dsc-page">
-      <PageHeader title="Ops · Root zone" subtitle="Coldest root and heat-mat context." />
+      <PageHeader title="Ops · Root zone" subtitle="Per-pot soil Got + roster blend — click a row for Plant Seat." />
       <div className="dsc-grid">
         <div className="dsc-col-4">
           <Kpi label="Coldest root" value={fmt(num("sensor.dsc_coldest_root_zone_temp"))} unit="°C" />
@@ -217,6 +238,44 @@ export function OpsRootZonePage() {
               Mat loop uses per-pot sense with plausibility filter. State:{" "}
               {state("sensor.dsc_coldest_root_zone_temp", "—")}
             </p>
+          </Card>
+        </div>
+        <div className="dsc-col-12">
+          <Card className="dsc-glass" title="Pots">
+            <table className="dsc-table">
+              <thead>
+                <tr>
+                  <th>Pot</th>
+                  <th>Name</th>
+                  <th>Tent</th>
+                  <th>M</th>
+                  <th>T</th>
+                  <th>EC</th>
+                  <th>pH</th>
+                  <th>NPK</th>
+                  <th>Blend</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pots.map((p) => (
+                  <tr key={p.pot} onClick={() => navigate(`/ops/plant-seat?pot=${p.pot}`)}>
+                    <td>P{p.pot}</td>
+                    <td>{p.plantName}</td>
+                    <td>
+                      <StatusChip label={tentLabel(p.tent)} tone={p.tent === "unassigned" ? "muted" : "ok"} />
+                    </td>
+                    <td>{p.moisture}</td>
+                    <td>{p.soilTemp}</td>
+                    <td>{p.ec}</td>
+                    <td>{p.ph}</td>
+                    <td>
+                      {p.n}/{p.p}/{p.k}
+                    </td>
+                    <td className="dsc-muted">{p.blend || "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </Card>
         </div>
       </div>

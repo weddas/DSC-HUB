@@ -179,6 +179,30 @@
 
   const potEntity = (prefix, suffix) => `sensor.${prefix}_${suffix}`;
 
+  /** Extract pot number from id/prefix (pot1 / dsc_pot1 -> 1). */
+  const potNumFrom = (p) => {
+    const raw = String((p && (p.id || p.prefix)) || "");
+    const m = raw.match(/pot\s*(\d+)/i);
+    return m ? parseInt(m[1], 10) : NaN;
+  };
+
+  /**
+   * Tent SoT: input_select.dsc_pot{N}_tent (unassigned | clone | main).
+   * Falls back to cfg.pots[].tent when the select is missing.
+   */
+  const readPotTent = (hass, p) => {
+    const n = potNumFrom(p);
+    const selectId = Number.isFinite(n) ? `input_select.dsc_pot${n}_tent` : "";
+    const sel = selectId ? stateOf(hass, selectId) : null;
+    if (sel && sel.state !== "unavailable" && sel.state !== "unknown") {
+      const v = String(sel.state || "").toLowerCase();
+      if (v === "clone" || v === "main" || v === "unassigned") return v;
+    }
+    const fb = String((p && p.tent) || "").toLowerCase();
+    if (fb === "clone" || fb === "main" || fb === "unassigned") return fb;
+    return "unassigned";
+  };
+
   /* ------------------------------------------------------------------ */
   /* Styles                                                             */
   /* ------------------------------------------------------------------ */
@@ -254,14 +278,45 @@
     .dash-hud {
       position: absolute; pointer-events: none; z-index: 2;
       background: rgba(8,12,18,0.72); backdrop-filter: blur(8px);
-      border: 1px solid rgba(100,120,150,0.35); border-radius: 8px;
-      padding: 8px 10px; min-width: 110px;
+      border: 1px solid rgba(100,120,150,0.35); border-radius: 10px;
+      padding: 12px 14px; min-width: 148px;
     }
     .dash-hud.left { left: 14px; top: 14px; }
     .dash-hud.right { right: 14px; top: 14px; }
     .dash-hud .k { font-size: 10px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
-    .dash-hud .v { font-size: 14px; font-weight: 700; margin-top: 2px; }
-    .dash-hud .s { font-size: 11px; color: var(--accent); margin-top: 4px; }
+    .dash-hud .v { font-size: 20px; font-weight: 700; margin-top: 4px; letter-spacing: 0.01em; }
+    .dash-hud .v-split {
+      display: flex; gap: 12px; margin-top: 6px; flex-wrap: wrap;
+    }
+    .dash-hud .v-split .metric { display: flex; flex-direction: column; gap: 2px; min-width: 3.2em; }
+    .dash-hud .v-split .metric .mk {
+      font-size: 9px; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; font-weight: 600;
+    }
+    .dash-hud .v-split .metric .mv { font-size: 18px; font-weight: 700; line-height: 1.1; }
+    .dash-hud .s { font-size: 11px; color: var(--accent); margin-top: 6px; }
+    .dash-pot-chips {
+      position: absolute; left: 50%; bottom: 44px; transform: translateX(-50%);
+      z-index: 3; display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;
+      max-width: calc(100% - 28px); pointer-events: auto;
+    }
+    .dash-pot-chip {
+      display: flex; flex-direction: column; gap: 2px;
+      min-width: 92px; padding: 7px 10px;
+      background: rgba(8,12,18,0.78); backdrop-filter: blur(8px);
+      border: 1px solid rgba(100,120,150,0.4); border-radius: 8px;
+      color: var(--text); cursor: pointer; text-align: left;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .dash-pot-chip:hover, .dash-pot-chip.on {
+      border-color: rgba(38,198,218,0.65);
+      background: rgba(16,28,40,0.9);
+    }
+    .dash-pot-chip .chip-id {
+      font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);
+    }
+    .dash-pot-chip .chip-name { font-size: 12px; font-weight: 700; max-width: 120px;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .dash-pot-chip .chip-meta { font-size: 10px; color: var(--accent); }
     .dash-legend {
       position: absolute; left: 14px; bottom: 12px; z-index: 2;
       display: flex; gap: 14px; flex-wrap: wrap;
@@ -555,8 +610,9 @@
   /* Three.js scene                                                     */
   /* ------------------------------------------------------------------ */
 
-  const createScene = (host) => {
+  const createScene = (host, opts) => {
     if (typeof THREE === "undefined") return null;
+    const onSelectPot = opts && typeof opts.onSelectPot === "function" ? opts.onSelectPot : null;
 
     const fx = THREE.DSCDashFX || null;
     const scene = new THREE.Scene();
@@ -1592,6 +1648,50 @@
     placePlants(tentClone, "clone", 4, 2, false);
     placePlants(tentMain, "main", 8, 4, true);
 
+    // Slot plants stay as invisible pad markers; free-floating potActors are the visible plants.
+    const padWorld = { clone: [], main: [] };
+    const _padTmp = new THREE.Vector3();
+    const _rootLocal = new THREE.Vector3();
+    ["clone", "main"].forEach((key) => {
+      pots[key].forEach((plant, i) => {
+        plant.visible = false;
+        plant.userData.padMarker = true;
+        padWorld[key][i] = new THREE.Vector3();
+      });
+    });
+    const potActors = {};
+    const refreshPadWorld = () => {
+      ["clone", "main"].forEach((key) => {
+        pots[key].forEach((plant, i) => {
+          plant.getWorldPosition(_padTmp);
+          root.worldToLocal(_rootLocal.copy(_padTmp));
+          padWorld[key][i].copy(_rootLocal);
+        });
+      });
+    };
+    for (let n = 1; n <= 4; n++) {
+      const actor = mkPlant(n >= 3);
+      actor.visible = false;
+      actor.userData.potNum = n;
+      actor.userData.potId = `pot${n}`;
+      actor.userData.lerpReady = false;
+      actor.userData.highlightUntil = 0;
+      root.add(actor);
+      potActors[`pot${n}`] = actor;
+    }
+    let selectedPotNum = 0;
+    const setSelectedPot = (n) => {
+      selectedPotNum = Number(n) || 0;
+      Object.values(potActors).forEach((actor) => {
+        const on = actor.userData.potNum === selectedPotNum;
+        if (on) actor.userData.highlightUntil = performance.now() + 1600;
+        const canopy = actor.userData.canopyMaterial;
+        if (canopy && canopy.emissiveIntensity != null) {
+          canopy.emissiveIntensity = on ? 0.55 : 0.16;
+        }
+      });
+    };
+
     let spriteTexture = null;
     if (fx && typeof fx.createSoftSpriteTexture === "function") {
       try {
@@ -1780,13 +1880,43 @@
       camera.lookAt(0, 1.15, 0.15);
     };
     applyCamera();
+    const raycaster = new THREE.Raycaster();
+    const pointerNdc = new THREE.Vector2();
+    let ptrDown = null;
+    const pickPotAt = (clientX, clientY) => {
+      const rect = renderer.domElement.getBoundingClientRect();
+      if (!rect.width || !rect.height) return 0;
+      pointerNdc.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+      pointerNdc.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+      raycaster.setFromCamera(pointerNdc, camera);
+      const targets = Object.values(potActors).filter((a) => a.visible);
+      if (!targets.length) return 0;
+      const hits = raycaster.intersectObjects(targets, true);
+      if (!hits.length) return 0;
+      let obj = hits[0].object;
+      while (obj && !obj.userData.potNum && obj.parent) obj = obj.parent;
+      return (obj && obj.userData.potNum) || 0;
+    };
     const onDown = (event) => {
       orbit.dragging = true;
       orbit.x = event.clientX;
       orbit.y = event.clientY;
+      ptrDown = { x: event.clientX, y: event.clientY };
     };
-    const onUp = () => {
+    const onUp = (event) => {
       orbit.dragging = false;
+      if (ptrDown) {
+        const dx = (event.clientX || 0) - ptrDown.x;
+        const dy = (event.clientY || 0) - ptrDown.y;
+        if (Math.hypot(dx, dy) < 6) {
+          const n = pickPotAt(event.clientX, event.clientY);
+          if (n) {
+            setSelectedPot(n);
+            if (onSelectPot) onSelectPot(n);
+          }
+        }
+      }
+      ptrDown = null;
     };
     const onMove = (event) => {
       if (!orbit.dragging) return;
@@ -2268,16 +2398,62 @@
           const on = !!(live.devices || []).find((device) => device.id === name && device.on);
           body.material.emissiveIntensity = on ? 0.72 : 0;
         });
-        const slots = live.potSlots || { clone: [], main: [] };
-        ["clone", "main"].forEach((key) => {
-          pots[key].forEach((plant, i) => {
-            const slot = slots[key] && slots[key][i];
-            plant.visible = !!slot;
-            if (slot && slot.color) {
-              plant.children.slice(2).forEach((leaf) => {
-                if (leaf.material && leaf.material.color) leaf.material.color.set(slot.color);
-              });
+
+        // Pad markers stay invisible; potActors lerp toward assigned pad world positions (~0.8s).
+        refreshPadWorld();
+        const poseList = Array.isArray(live.plantPose) ? live.plantPose : [];
+        const poseById = {};
+        poseList.forEach((pose) => {
+          if (pose && pose.id) poseById[pose.id] = pose;
+        });
+        // Fallback: derive poses from potSlots when plantPose absent
+        if (!poseList.length) {
+          const slots = live.potSlots || { clone: [], main: [] };
+          ["clone", "main"].forEach((key) => {
+            (slots[key] || []).forEach((slot, i) => {
+              if (slot && slot.id) poseById[slot.id] = { id: slot.id, tent: key, slot: i, color: slot.color };
+            });
+          });
+        }
+        const lerpAlpha = 1 - Math.exp(-dt / 0.8);
+        const nowMs = performance.now();
+        for (let n = 1; n <= 4; n++) {
+          const id = `pot${n}`;
+          const actor = potActors[id];
+          if (!actor) continue;
+          const pose = poseById[id];
+          const tent = pose && (pose.tent === "main" || pose.tent === "clone") ? pose.tent : null;
+          const slotIdx = pose && Number.isFinite(+pose.slot) ? +pose.slot : -1;
+          const pad = tent && slotIdx >= 0 && padWorld[tent] ? padWorld[tent][slotIdx] : null;
+          if (!pad) {
+            actor.visible = false;
+            actor.userData.lerpReady = false;
+            continue;
+          }
+          actor.visible = true;
+          if (!actor.userData.lerpReady) {
+            actor.position.copy(pad);
+            actor.userData.lerpReady = true;
+          } else {
+            actor.position.lerp(pad, lerpAlpha);
+          }
+          if (pose.color) {
+            const canopyTint = actor.userData.canopyMaterial;
+            if (canopyTint) {
+              if (canopyTint.map) canopyTint.emissive.set(pose.color);
+              else canopyTint.color.set(pose.color);
             }
+          }
+          const hi = actor.userData.potNum === selectedPotNum || nowMs < (actor.userData.highlightUntil || 0);
+          const canopy = actor.userData.canopyMaterial;
+          if (canopy && canopy.emissiveIntensity != null) {
+            canopy.emissiveIntensity = hi ? 0.55 : 0.16;
+          }
+        }
+        // Keep tent-slot marker plants hidden
+        ["clone", "main"].forEach((key) => {
+          pots[key].forEach((plant) => {
+            plant.visible = false;
           });
         });
 
@@ -2359,6 +2535,7 @@
     return {
       resize,
       setLive,
+      setSelectedPot,
       dispose() {
         if (disposed) return;
         disposed = true;
@@ -2514,6 +2691,7 @@
                 ${typeof THREE === "undefined" ? `<div class="dash-missing">THREE.js not loaded — redeploy DSC-HUB bundle.</div>` : ""}
                 <div class="dash-hud left" id="d-hud-clone"></div>
                 <div class="dash-hud right" id="d-hud-main"></div>
+                <div class="dash-pot-chips" id="d-pot-chips"></div>
                 <div class="dash-legend" id="d-legend">
                   <span data-path="light"><i class="dash-dot" style="background:#66bb6a"></i> 2x4 light</span>
                   <span data-path="mat"><i class="dash-dot" style="background:#ff6d00"></i> 2x4 heat mat</span>
@@ -2573,7 +2751,19 @@
       }
       const host = this.shadowRoot.getElementById("d-scene");
       if (host && typeof THREE !== "undefined") {
-        this._scene = createScene(host);
+        this._scene = createScene(host, {
+          onSelectPot: (n) => this._emitSelectPot(n),
+        });
+      }
+      const chips = this.shadowRoot.getElementById("d-pot-chips");
+      if (chips && !chips._dscBound) {
+        chips._dscBound = true;
+        chips.addEventListener("click", (ev) => {
+          const chip = ev.target && ev.target.closest ? ev.target.closest("[data-pot]") : null;
+          if (!chip) return;
+          const n = parseInt(chip.getAttribute("data-pot"), 10);
+          if (Number.isFinite(n) && n >= 1 && n <= 4) this._emitSelectPot(n);
+        });
       }
       if (this._ro) this._ro.disconnect();
       this._ro = new ResizeObserver(() => this._scene && this._scene.resize());
@@ -2659,6 +2849,29 @@
       this._histAt = Date.now();
     }
 
+    _emitSelectPot(n) {
+      const pot = Number(n);
+      if (!Number.isFinite(pot) || pot < 1 || pot > 4) return;
+      if (this._scene && typeof this._scene.setSelectedPot === "function") {
+        this._scene.setSelectedPot(pot);
+      }
+      this._selectedPot = pot;
+      this.dispatchEvent(
+        new CustomEvent("dsc-dash-select-pot", {
+          detail: { pot },
+          bubbles: true,
+          composed: true,
+        })
+      );
+      window.dispatchEvent(new CustomEvent("dsc-dash-select-pot", { detail: { pot } }));
+      const chips = this.shadowRoot && this.shadowRoot.getElementById("d-pot-chips");
+      if (chips) {
+        chips.querySelectorAll("[data-pot]").forEach((el) => {
+          el.classList.toggle("on", parseInt(el.getAttribute("data-pot"), 10) === pot);
+        });
+      }
+    }
+
     _buildLive() {
       const hass = this._hass;
       const cfg = this._cfg;
@@ -2721,13 +2934,41 @@
       const cascadeNorm = Math.min(1, cascadeCfm / 80);
 
       const pots = activePots(cfg, hass);
+      // Tent SoT: pack slots from input_select.dsc_potN_tent (not hardcoded cfg.pots[].tent).
       const potSlots = { clone: Array(4).fill(null), main: Array(8).fill(null) };
-      pots.forEach((p, idx) => {
-        const tent = p.tent === "main" ? "main" : "clone";
+      const byTent = { clone: [], main: [] };
+      const plantPose = [];
+      (cfg.pots || []).forEach((p, idx) => {
+        if (!p || !p.id) return;
+        const tent = readPotTent(hass, p);
+        const color = POT_COLORS[idx % POT_COLORS.length];
+        const n = potNumFrom(p);
+        const nameState = Number.isFinite(n) ? stateOf(hass, `text.dsc_pot${n}_plant_name`) : null;
+        const name =
+          nameState && nameState.state !== "unavailable" && nameState.state !== "unknown"
+            ? String(nameState.state)
+            : p.id;
+        if (tent !== "clone" && tent !== "main") {
+          // Unassigned: hidden from potSlots / no pad target
+          return;
+        }
+        byTent[tent].push({ id: p.id, color, name, tent, n, idx });
+      });
+      ["clone", "main"].forEach((tent) => {
         const max = tent === "main" ? 8 : 4;
-        let slot = Number.isFinite(+p.slot) ? +p.slot : idx;
-        if (slot < 0 || slot >= max) slot = 0;
-        potSlots[tent][slot] = { id: p.id, color: POT_COLORS[idx % POT_COLORS.length] };
+        byTent[tent]
+          .sort((a, b) => String(a.id).localeCompare(String(b.id), undefined, { numeric: true }))
+          .forEach((entry, slot) => {
+            if (slot >= max) return;
+            potSlots[tent][slot] = { id: entry.id, color: entry.color };
+            plantPose.push({
+              id: entry.id,
+              tent,
+              slot,
+              color: entry.color,
+              name: entry.name,
+            });
+          });
       });
 
       const stageBase = STAGE_ORDER.map((name) =>
@@ -2809,6 +3050,7 @@
         mainLit: false,
         matOn: isOn(hass, e.grow_mat),
         potSlots,
+        plantPose,
         timelineStages,
         mixed,
         emerg,
@@ -2838,7 +3080,12 @@
       };
 
       if (hubOnline) {
-        this._lastGoodLive = { ...live, devices: devices.map((d) => ({ ...d })), potSlots: { clone: [...potSlots.clone], main: [...potSlots.main] } };
+        this._lastGoodLive = {
+          ...live,
+          devices: devices.map((d) => ({ ...d })),
+          potSlots: { clone: [...potSlots.clone], main: [...potSlots.main] },
+          plantPose: plantPose.map((p) => ({ ...p })),
+        };
         this._hubOfflineSince = 0;
         if (diagLine) this._lastDiagLine = diagLine;
         return live;
@@ -2897,14 +3144,52 @@
         const until = Math.abs(lightMins);
         lightNote = `Dark · ${Math.floor(until / 60)}h ${Math.round(until % 60)}m to lights-on`;
       }
+      const hudMetric = (zone) => {
+        const c = (live.climate && live.climate[zone]) || {};
+        return `<div class="v-split">
+          <div class="metric"><span class="mk">T</span><span class="mv">${esc(fmt(c.temperature))}°</span></div>
+          <div class="metric"><span class="mk">RH</span><span class="mv">${esc(fmt(c.humidity, 0))}%</span></div>
+          <div class="metric"><span class="mk">VPD</span><span class="mv">${esc(fmt(c.vpd, 2))}</span></div>
+        </div>`;
+      };
       const hudC = this.shadowRoot.getElementById("d-hud-clone");
       if (hudC) {
-        hudC.innerHTML = `<div class="k">2×4 Reservoir</div><div class="v">${esc(live.cloneClimate)}</div><div class="s">${esc(lightNote)}${live.matOn ? " · heat mat ON" : ""}</div>`;
+        hudC.innerHTML = `<div class="k">2×4 Reservoir</div>${hudMetric("clone")}<div class="s">${esc(lightNote)}${live.matOn ? " · heat mat ON" : ""}</div>`;
       }
       const hudM = this.shadowRoot.getElementById("d-hud-main");
       if (hudM) {
         const heldNote = live.hubHeld ? " · HELD" : "";
-        hudM.innerHTML = `<div class="k">4×8 Main</div><div class="v">${esc(live.mainClimate)}</div><div class="s">No lamp · cascade in · OUT rear / RECIRC right wall${heldNote}</div>`;
+        hudM.innerHTML = `<div class="k">4×8 Main</div>${hudMetric("main")}<div class="s">No lamp · cascade in · OUT rear / RECIRC right wall${heldNote}</div>`;
+      }
+
+      const chipsEl = this.shadowRoot.getElementById("d-pot-chips");
+      if (chipsEl) {
+        const hass = this._hass;
+        const selected = this._selectedPot || 0;
+        chipsEl.innerHTML = (this._cfg.pots || [])
+          .map((p, idx) => {
+            const n = potNumFrom(p);
+            if (!Number.isFinite(n)) return "";
+            const tent = readPotTent(hass, p);
+            const nameState = stateOf(hass, `text.dsc_pot${n}_plant_name`);
+            const name =
+              nameState && nameState.state !== "unavailable" && nameState.state !== "unknown" && nameState.state
+                ? String(nameState.state)
+                : p.id;
+            const moistId = !isUnavailable(hass, potEntity(p.prefix, "got_moisture"))
+              ? potEntity(p.prefix, "got_moisture")
+              : potEntity(p.prefix, "soil_moisture");
+            const moist = numState(hass, moistId, NaN);
+            const tentLabel = tent === "main" ? "4×8" : tent === "clone" ? "2×4" : "—";
+            const color = POT_COLORS[idx % POT_COLORS.length];
+            const on = selected === n ? " on" : "";
+            return `<button type="button" class="dash-pot-chip${on}" data-pot="${n}" style="border-left:3px solid ${color}">
+              <span class="chip-id">Pot ${n}</span>
+              <span class="chip-name">${esc(name)}</span>
+              <span class="chip-meta">${esc(tentLabel)} · ${esc(fmt(moist, 0))}% moist</span>
+            </button>`;
+          })
+          .join("");
       }
 
       const tl = this.shadowRoot.getElementById("d-timeline");

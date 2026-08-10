@@ -19,6 +19,7 @@ import {
   PlantNutrientPage,
   PlantStrainsPage,
 } from "./pages/PlantPages";
+import { PlantSeatPage } from "./pages/PlantSeatPage";
 import {
   AdvancedHistoryPage,
   AdvancedLearningPage,
@@ -52,7 +53,7 @@ function Shell() {
           </div>
         </NavLink>
         <div className="dsc-muted" style={{ fontSize: 12, letterSpacing: "0.08em" }}>
-          SURFACE 6.1.0
+          SURFACE 6.2.0
         </div>
       </div>
 
@@ -94,11 +95,13 @@ function Shell() {
         <Route path="/ops/main-4x8" element={<OpsMain4x8Page />} />
         <Route path="/ops/clone-2x4" element={<OpsClone2x4Page />} />
         <Route path="/ops/root-zone" element={<OpsRootZonePage />} />
+        <Route path="/ops/plant-seat" element={<PlantSeatPage />} />
         <Route path="/ops/tank" element={<OpsTankPage />} />
         <Route path="/ops/lighting" element={<OpsLightingPage />} />
         <Route path="/plant" element={<PlantHubPage />} />
         <Route path="/plant/build" element={<PlantBuildPage />} />
         <Route path="/plant/catalog" element={<PlantCatalogPage />} />
+        <Route path="/plant/seat" element={<PlantSeatPage />} />
         <Route path="/plant/strains" element={<PlantStrainsPage />} />
         <Route path="/plant/nutrient" element={<PlantNutrientPage />} />
         <Route path="/advanced" element={<Navigate to="/advanced/learning" replace />} />

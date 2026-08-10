@@ -1,7 +1,7 @@
 /**
- * DSC-HUB neon isometric system map — Lovelace custom card.
+ * DSC-HUB neon isometric system map â€” Lovelace custom card.
  *
- * HACS Dashboard (preferred): install custom repo weddas/DSC-HUB → resource
+ * HACS Dashboard (preferred): install custom repo weddas/DSC-HUB â†’ resource
  *   /hacsfiles/DSC-HUB/DSC-HUB.js  (SVG beside it in the same folder)
  * Manual /local fallback:
  *   /local/dsc-system-map-card.js + /local/dsc-system-map.svg
@@ -286,13 +286,13 @@
   window.customCards.push({
     type: CARD_TYPE,
     name: "DSC System Map",
-    description: "Neon isometric DSC-HUB map — tents, fans, light, pots, appliances (live).",
+    description: "Neon isometric DSC-HUB map â€” tents, fans, light, pots, appliances (live).",
     preview: true,
   });
 })();
 
 /**
- * DSC-HUB airflow status — GUI-first isometric tent scene.
+ * DSC-HUB airflow status â€” GUI-first isometric tent scene.
  *
  * type: custom:dsc-airflow-map-card
  * Editor: custom:dsc-airflow-map-card-editor (getConfigElement)
@@ -498,8 +498,8 @@
     if (typeof bri === "number") return Math.max(0, Math.min(1, bri / 255));
     return s.state === "on" ? 1 : 0;
   };
-  const fmtTemp = (t) => (Number.isFinite(t) ? `${t.toFixed(1)}°C` : "—");
-  const fmtRh = (h) => (Number.isFinite(h) ? `${Math.round(h)}%` : "—");
+  const fmtTemp = (t) => (Number.isFinite(t) ? `${t.toFixed(1)}Â°C` : "â€”");
+  const fmtRh = (h) => (Number.isFinite(h) ? `${Math.round(h)}%` : "â€”");
   const climatePair = (t, h) => `${fmtTemp(t)} ${fmtRh(h)}`;
   const flowFrac = (cfm, max) => {
     if (!Number.isFinite(cfm) || cfm <= FLOW_EPS) return 0;
@@ -665,7 +665,7 @@
         <text x="${t.x + t.w / 2}" y="${t.y + 28}" text-anchor="middle" class="af-tent-label">${esc(t.label || t.id)}</text>
         <foreignObject x="${t.x + 8}" y="${t.y + 36}" width="${Math.max(40, t.w - 16)}" height="54">
           <div xmlns="http://www.w3.org/1999/xhtml" class="af-hud">
-            <div class="af-hud-main">${esc(L.climate || "—")}</div>
+            <div class="af-hud-main">${esc(L.climate || "â€”")}</div>
             <div class="af-hud-sub">${esc(L.meta || "")}</div>
             ${L.mark ? `<div class="af-hud-mark">${esc(L.mark)}</div>` : ""}
           </div>
@@ -791,7 +791,7 @@
   <!-- Room floor -->
   <rect x="${floor.x}" y="${floor.y}" width="${floor.w}" height="${floor.h}" rx="10"
     fill="url(#af-room)" stroke="#2a3548" stroke-width="1.5"/>
-  <text x="${floor.x + 12}" y="${floor.y + 18}" class="af-room-label">${esc(room.label || "Room")} · ${esc(room.size || "")}</text>
+  <text x="${floor.x + 12}" y="${floor.y + 18}" class="af-room-label">${esc(room.label || "Room")} Â· ${esc(room.size || "")}</text>
   <text x="${floor.x + 12}" y="${floor.y + 34}" class="af-room-label">${esc(roomLive.climate || "")}</text>
 
   ${
@@ -941,8 +941,8 @@
         <div class="af-scene" id="af-scene"></div>
         <div class="af-blend">
           <div class="af-blend-label">
-            <span id="blend-left-lbl">Recirc —</span>
-            <span id="blend-right-lbl">Out —</span>
+            <span id="blend-left-lbl">Recirc â€”</span>
+            <span id="blend-right-lbl">Out â€”</span>
           </div>
           <div class="af-blend-track">
             <div class="af-blend-rec" id="blend-rec" style="width:0%"></div>
@@ -980,7 +980,7 @@
         else if (mat) mark = "MAT";
         live.zones[z.id] = {
           climate: climatePair(t, h),
-          meta: meta.join(" · "),
+          meta: meta.join(" Â· "),
           light,
           mat,
           mark,
@@ -1042,19 +1042,19 @@
       if (left) left.innerHTML = `<strong>Recirc ${recPct}%</strong>`;
       if (right) {
         if (outPct > 0 && dumpPct > 0)
-          right.innerHTML = `<strong>Out ${outPct}% · Dump ${dumpPct}%</strong>`;
+          right.innerHTML = `<strong>Out ${outPct}% Â· Dump ${dumpPct}%</strong>`;
         else if (dumpPct > 0)
-          right.innerHTML = `<strong>Dump→Room ${dumpPct}%</strong>`;
+          right.innerHTML = `<strong>Dumpâ†’Room ${dumpPct}%</strong>`;
         else right.innerHTML = `<strong>Out ${outPct}%</strong>`;
       }
 
       const tents = cfg.zones.filter((z) => z.role === "tent").length;
       const hm = this._q("#af-head-meta");
-      if (hm) hm.textContent = `${tents} tent${tents === 1 ? "" : "s"} · ${cfg.ducts.length} routes`;
+      if (hm) hm.textContent = `${tents} tent${tents === 1 ? "" : "s"} Â· ${cfg.ducts.length} routes`;
       const foot = this._q("#af-foot");
       if (foot) {
         foot.textContent =
-          "Room lung → tent intakes → cascade → exhaust blend. Only Recirc (and into-room dump) stays in the lung; through-wall Out leaves the room.";
+          "Room lung â†’ tent intakes â†’ cascade â†’ exhaust blend. Only Recirc (and into-room dump) stays in the lung; through-wall Out leaves the room.";
       }
     }
   }
@@ -1232,7 +1232,7 @@
         </div>
 
         <details class="afe-adv">
-          <summary>Advanced — raw config JSON</summary>
+          <summary>Advanced â€” raw config JSON</summary>
           <textarea id="afe-json">${esc(JSON.stringify({ title: cfg.title, zones: cfg.zones, ducts: cfg.ducts }, null, 2))}</textarea>
           <div class="afe-actions">
             <button type="button" class="afe-btn ghost" id="afe-apply-json">Apply JSON</button>
@@ -1327,7 +1327,7 @@
               ${(d.components || [])
                 .map(
                   (c, ci) =>
-                    `<span class="afe-comp" data-comp="${idx}:${ci}" title="tap to cycle position / right-click remove">${esc(c.type)} · ${esc(c.at || "mid")}</span>`
+                    `<span class="afe-comp" data-comp="${idx}:${ci}" title="tap to cycle position / right-click remove">${esc(c.type)} Â· ${esc(c.at || "mid")}</span>`
                 )
                 .join("")}
             </div>
@@ -1617,7 +1617,7 @@
     type: CARD_TYPE,
     name: "DSC Airflow Tent Scene",
     description:
-      "GUI-configurable isometric tent airflow — room size, tents, wall ports, fans, carbon filters, exhaust into room or through wall.",
+      "GUI-configurable isometric tent airflow â€” room size, tents, wall ports, fans, carbon filters, exhaust into room or through wall.",
     preview: true,
     documentationURL: "https://github.com/weddas/DSC-HUB",
   });
@@ -1736,7 +1736,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
 
     // DepthTexture soft-intersection is optional. Prefer it when the FBO is
     // complete; otherwise bloom still runs and particles use view-Z fade.
-    // Never attach DepthTexture on HalfFloat targets (incomplete FBO → black).
+    // Never attach DepthTexture on HalfFloat targets (incomplete FBO â†’ black).
     var sceneTarget = makeTarget(1, 1, 'DSCDashFX.Scene', false);
     sceneTarget.depthBuffer = true;
     sceneTarget.stencilBuffer = false;
@@ -2639,7 +2639,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     return { points: points, material: material, update: update, dispose: dispose };
   }
 
-  /** GPU (or CPU fallback) curl confined to an AABB — for in-tent mixing, not room fog. */
+  /** GPU (or CPU fallback) curl confined to an AABB â€” for in-tent mixing, not room fog. */
   function createConfinedCurlHaze(renderer, opts) {
     opts = opts || {};
     var count = opts.count == null ? 64 : Math.max(8, Math.floor(opts.count));
@@ -3131,7 +3131,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
 })(typeof globalThis !== 'undefined' ? globalThis : this);
 
 /**
- * DSC-HUB — The Dash
+ * DSC-HUB â€” The Dash
  * Full-bleed cinematic ops surface: Three.js tent/duct scene + charts + flow.
  *
  * type: custom:dsc-the-dash-card
@@ -3157,7 +3157,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
   const DSC_DEFAULTS = () => ({
     type: `custom:${CARD_TYPE}`,
     title: "DSC-HUB // ADVANCED CULTIVATION CONTROL",
-    subtitle: "Zonal Cultivation Hub — 2-Tent System",
+    subtitle: "Zonal Cultivation Hub â€” 2-Tent System",
     pots: [
       { id: "pot1", tent: "clone", slot: 0, prefix: "dsc_pot1", in_service: "input_boolean.dsc_pot1_in_service" },
       { id: "pot2", tent: "clone", slot: 1, prefix: "dsc_pot2", in_service: "input_boolean.dsc_pot2_in_service" },
@@ -3233,7 +3233,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     const s = stateOf(hass, id);
     return !s || s.state === "unavailable" || s.state === "unknown";
   };
-  const fmt = (n, digits = 1) => (Number.isFinite(n) ? n.toFixed(digits) : "—");
+  const fmt = (n, digits = 1) => (Number.isFinite(n) ? n.toFixed(digits) : "â€”");
   const fmtHeld = (ms) => {
     const s = Math.max(0, Math.floor((Number(ms) || 0) / 1000));
     if (s < 60) return `${s}s`;
@@ -3264,7 +3264,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     if (Number.isFinite(flaps)) bits.push(`HA flaps 24h ${Math.round(flaps)}`);
     if (rf && rf !== "unavailable" && rf !== "unknown") bits.push(`RF ${rf}`);
     if (evt && evt !== "unavailable" && evt !== "unknown") bits.push(`EVT ${evt}`);
-    return bits.join(" · ");
+    return bits.join(" Â· ");
   };
 
   const lightLevel = (hass, id) => {
@@ -3310,6 +3310,30 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     });
 
   const potEntity = (prefix, suffix) => `sensor.${prefix}_${suffix}`;
+
+  /** Extract pot number from id/prefix (pot1 / dsc_pot1 -> 1). */
+  const potNumFrom = (p) => {
+    const raw = String((p && (p.id || p.prefix)) || "");
+    const m = raw.match(/pot\s*(\d+)/i);
+    return m ? parseInt(m[1], 10) : NaN;
+  };
+
+  /**
+   * Tent SoT: input_select.dsc_pot{N}_tent (unassigned | clone | main).
+   * Falls back to cfg.pots[].tent when the select is missing.
+   */
+  const readPotTent = (hass, p) => {
+    const n = potNumFrom(p);
+    const selectId = Number.isFinite(n) ? `input_select.dsc_pot${n}_tent` : "";
+    const sel = selectId ? stateOf(hass, selectId) : null;
+    if (sel && sel.state !== "unavailable" && sel.state !== "unknown") {
+      const v = String(sel.state || "").toLowerCase();
+      if (v === "clone" || v === "main" || v === "unassigned") return v;
+    }
+    const fb = String((p && p.tent) || "").toLowerCase();
+    if (fb === "clone" || fb === "main" || fb === "unassigned") return fb;
+    return "unassigned";
+  };
 
   /* ------------------------------------------------------------------ */
   /* Styles                                                             */
@@ -3386,14 +3410,45 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     .dash-hud {
       position: absolute; pointer-events: none; z-index: 2;
       background: rgba(8,12,18,0.72); backdrop-filter: blur(8px);
-      border: 1px solid rgba(100,120,150,0.35); border-radius: 8px;
-      padding: 8px 10px; min-width: 110px;
+      border: 1px solid rgba(100,120,150,0.35); border-radius: 10px;
+      padding: 12px 14px; min-width: 148px;
     }
     .dash-hud.left { left: 14px; top: 14px; }
     .dash-hud.right { right: 14px; top: 14px; }
     .dash-hud .k { font-size: 10px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
-    .dash-hud .v { font-size: 14px; font-weight: 700; margin-top: 2px; }
-    .dash-hud .s { font-size: 11px; color: var(--accent); margin-top: 4px; }
+    .dash-hud .v { font-size: 20px; font-weight: 700; margin-top: 4px; letter-spacing: 0.01em; }
+    .dash-hud .v-split {
+      display: flex; gap: 12px; margin-top: 6px; flex-wrap: wrap;
+    }
+    .dash-hud .v-split .metric { display: flex; flex-direction: column; gap: 2px; min-width: 3.2em; }
+    .dash-hud .v-split .metric .mk {
+      font-size: 9px; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; font-weight: 600;
+    }
+    .dash-hud .v-split .metric .mv { font-size: 18px; font-weight: 700; line-height: 1.1; }
+    .dash-hud .s { font-size: 11px; color: var(--accent); margin-top: 6px; }
+    .dash-pot-chips {
+      position: absolute; left: 50%; bottom: 44px; transform: translateX(-50%);
+      z-index: 3; display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;
+      max-width: calc(100% - 28px); pointer-events: auto;
+    }
+    .dash-pot-chip {
+      display: flex; flex-direction: column; gap: 2px;
+      min-width: 92px; padding: 7px 10px;
+      background: rgba(8,12,18,0.78); backdrop-filter: blur(8px);
+      border: 1px solid rgba(100,120,150,0.4); border-radius: 8px;
+      color: var(--text); cursor: pointer; text-align: left;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .dash-pot-chip:hover, .dash-pot-chip.on {
+      border-color: rgba(38,198,218,0.65);
+      background: rgba(16,28,40,0.9);
+    }
+    .dash-pot-chip .chip-id {
+      font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);
+    }
+    .dash-pot-chip .chip-name { font-size: 12px; font-weight: 700; max-width: 120px;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .dash-pot-chip .chip-meta { font-size: 10px; color: var(--accent); }
     .dash-legend {
       position: absolute; left: 14px; bottom: 12px; z-index: 2;
       display: flex; gap: 14px; flex-wrap: wrap;
@@ -3513,14 +3568,14 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
   `;
 
   /* ------------------------------------------------------------------ */
-  /* Flow diagram (device → split → exhaust)                             */
+  /* Flow diagram (device â†’ split â†’ exhaust)                             */
   /* ------------------------------------------------------------------ */
 
-  const fmtCfm = (n) => (Number.isFinite(n) ? `${Math.round(n)} CFM` : "— CFM");
+  const fmtCfm = (n) => (Number.isFinite(n) ? `${Math.round(n)} CFM` : "â€” CFM");
 
   const renderFlow = (live) => {
     // Col1 Active gear | Col2 Intake environment (room climate)
-    // Col3 Intake CFM (2x4 + cascade transfer + 4x8 + Σ) | Col4 4x8 exhaust split
+    // Col3 Intake CFM (2x4 + cascade transfer + 4x8 + Î£) | Col4 4x8 exhaust split
     const devices = (live.devices || []).filter((d) => d.on && !String(d.id).startsWith("fan_"));
     const gearHtml =
       devices.length === 0
@@ -3543,7 +3598,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     const rPct = Math.round((live.recircShare || 0) * 100);
     const cfmOut = live.cfmOut ?? NaN;
     const cfmRec = live.cfmRecirc ?? NaN;
-    const roomParts = String(live.roomClimate || "— · — · —").split("·").map((s) => s.trim());
+    const roomParts = String(live.roomClimate || "â€” Â· â€” Â· â€”").split("Â·").map((s) => s.trim());
 
     return `
       <div class="dash-flow-grid" role="img" aria-label="Intake environment to CFM to exhaust">
@@ -3554,37 +3609,37 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         <div class="dash-flow-col">
           <div class="col-h">Intake environment</div>
           <div class="dash-flow-box env" style="flex:1">
-            <div class="lbl">ROOM → TENTS</div>
-            <div class="val">${esc(roomParts[0] || "—")}</div>
-            <div class="val">${esc(roomParts[1] || "—")}</div>
-            <div class="val" style="color:#26c6da">${esc(roomParts[2] || "—")}</div>
+            <div class="lbl">ROOM â†’ TENTS</div>
+            <div class="val">${esc(roomParts[0] || "â€”")}</div>
+            <div class="val">${esc(roomParts[1] || "â€”")}</div>
+            <div class="val" style="color:#26c6da">${esc(roomParts[2] || "â€”")}</div>
             <div class="sub">shared lung air into intakes</div>
           </div>
         </div>
         <div class="dash-flow-col">
           <div class="col-h">Intake CFM</div>
           <div class="dash-flow-box clone">
-            <div class="lbl">2×4 from room</div>
+            <div class="lbl">2Ã—4 from room</div>
             <div class="val">${esc(fmtCfm(cfm2))}</div>
           </div>
-          <div class="dash-flow-arrow">↓ transfer (not +)</div>
+          <div class="dash-flow-arrow">â†“ transfer (not +)</div>
           <div class="dash-flow-box casc">
-            <div class="lbl">2×4 → 4×8 cascade</div>
+            <div class="lbl">2Ã—4 â†’ 4Ã—8 cascade</div>
             <div class="val" style="color:#ffcc80;font-size:12px">${esc(fmtCfm(casc))}</div>
-            <div class="sub">same air · neg. pressure</div>
+            <div class="sub">same air Â· neg. pressure</div>
           </div>
           <div class="dash-flow-box main">
-            <div class="lbl">4×8 from room</div>
+            <div class="lbl">4Ã—8 from room</div>
             <div class="val">${esc(fmtCfm(cfm8))}</div>
           </div>
           <div class="dash-flow-box total">
-            <div class="lbl">Σ into 4×8</div>
+            <div class="lbl">Î£ into 4Ã—8</div>
             <div class="val" style="font-size:12px">${esc(fmtCfm(throughput))}</div>
-            <div class="sub">2×4 + 4×8 intakes</div>
+            <div class="sub">2Ã—4 + 4Ã—8 intakes</div>
           </div>
         </div>
         <div class="dash-flow-col">
-          <div class="col-h">4×8 exhaust · ${esc(fmtCfm(throughput))}</div>
+          <div class="col-h">4Ã—8 exhaust Â· ${esc(fmtCfm(throughput))}</div>
           <div class="dash-flow-box out">
             <div class="lbl">DUMP OUTSIDE</div>
             <div class="val">${oPct}%</div>
@@ -3596,19 +3651,19 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
             <div class="sub">${esc(fmtCfm(cfmRec))}</div>
           </div>
           <div class="dash-flow-box total">
-            <div class="lbl">Σ dump + recirc</div>
+            <div class="lbl">Î£ dump + recirc</div>
             <div class="val" style="font-size:12px">${esc(
               fmtCfm(Number.isFinite(cfmOut) && Number.isFinite(cfmRec) ? cfmOut + cfmRec : NaN)
             )}</div>
-            <div class="sub">must equal Σ intake</div>
+            <div class="sub">must equal Î£ intake</div>
           </div>
         </div>
       </div>
       <p class="dash-flow-caption" style="margin-top:8px">
-        Mass balance: exhaust CFM = Σ intake (${esc(fmtCfm(throughput))}) × dump/recirc split (from fan %).
-        Cascade is a transfer of 2×4 air — do not add it to intake total.
+        Mass balance: exhaust CFM = Î£ intake (${esc(fmtCfm(throughput))}) Ã— dump/recirc split (from fan %).
+        Cascade is a transfer of 2Ã—4 air â€” do not add it to intake total.
         Raw sensor.dsc_cfm_exhaust_* stay nameplate proxies until Learning cal.
-        Heat mat is 2×4-only.
+        Heat mat is 2Ã—4-only.
       </p>`;
   };
 
@@ -3687,8 +3742,9 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
   /* Three.js scene                                                     */
   /* ------------------------------------------------------------------ */
 
-  const createScene = (host) => {
+  const createScene = (host, opts) => {
     if (typeof THREE === "undefined") return null;
+    const onSelectPot = opts && typeof opts.onSelectPot === "function" ? opts.onSelectPot : null;
 
     const fx = THREE.DSCDashFX || null;
     const scene = new THREE.Scene();
@@ -3750,7 +3806,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     const rim = new THREE.DirectionalLight(0xc9a0ff, 0.42);
     rim.position.set(4, 5, -6);
     scene.add(rim);
-    // Room practicals — ceiling wash + warm bounce (HVAC digital-twin cue)
+    // Room practicals â€” ceiling wash + warm bounce (HVAC digital-twin cue)
     const ceilWash = new THREE.PointLight(0xd8e6f5, 1.35, 14, 1.6);
     ceilWash.position.set(0, 3.85, 0.2);
     scene.add(ceilWash);
@@ -3781,7 +3837,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     floor.position.y = -0.06;
     floor.receiveShadow = true;
     root.add(floor);
-    // Soft floor sheen card — reads lit room, not void
+    // Soft floor sheen card â€” reads lit room, not void
     const floorSheen = new THREE.Mesh(
       new THREE.PlaneGeometry(10.2, 7.2),
       new THREE.MeshBasicMaterial({
@@ -3960,7 +4016,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
           group.add(pole);
         }
       }
-      // Eave / ridge tubes — grow-tent frame cue (not just 4 vertical poles)
+      // Eave / ridge tubes â€” grow-tent frame cue (not just 4 vertical poles)
       const railR = 0.028;
       const addRail = (len, pos, axis) => {
         const rail = new THREE.Mesh(new THREE.CylinderGeometry(railR, railR, len, 10), poleMat);
@@ -4073,7 +4129,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       }
       group.add(shafts);
 
-      // Layered ACH volume stack (multi-slice additive haze — not a single flat box)
+      // Layered ACH volume stack (multi-slice additive haze â€” not a single flat box)
       const achHaze = new THREE.Group();
       const achSlices = [];
       for (let s = 0; s < 3; s++) {
@@ -4115,8 +4171,8 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         0.18
       );
     // Duct ports are independent (no shared Y-stub). Tent anchors:
-    // 2x4 @ (-2.75,0,0.3) ~2.4×2.1×1.5 → front face z≈1.05
-    // 4x8 @ (2.15,0,0.08) ~3.8×2.45×2.15 → front z≈1.155; right x≈4.05; rear z≈-0.995
+    // 2x4 @ (-2.75,0,0.3) ~2.4Ã—2.1Ã—1.5 â†’ front face zâ‰ˆ1.05
+    // 4x8 @ (2.15,0,0.08) ~3.8Ã—2.45Ã—2.15 â†’ front zâ‰ˆ1.155; right xâ‰ˆ4.05; rear zâ‰ˆ-0.995
     const curves = {
       intakeClone: mkCurve([
         [-2.75, 0.38, 2.95],
@@ -4138,7 +4194,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         [-0.35, 1.15, 0.16],
         [0.25, 1.15, 0.1],
       ]),
-      // OUT: rear dump port on 4×8 (negative Z) → outdoor vent
+      // OUT: rear dump port on 4Ã—8 (negative Z) â†’ outdoor vent
       out: mkCurve([
         [2.55, 1.72, -1.12],
         [2.55, 1.88, -1.55],
@@ -4146,7 +4202,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         [2.55, 2.32, -2.55],
         [2.55, 2.42, -3.05],
       ]),
-      // RECIRC: right-wall port on 4×8 (+X) → room return (matches annotated layout)
+      // RECIRC: right-wall port on 4Ã—8 (+X) â†’ room return (matches annotated layout)
       recirc: mkCurve([
         [4.05, 1.55, 0.08],
         [4.55, 1.48, 0.28],
@@ -4211,7 +4267,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     addPath("out", 0.122, 50, 0x8a6a62);
     addPath("recirc", 0.118, 50, 0x6a6288);
 
-    // Soft smoke-test shafts along ducts (HVAC pathline cinema — CFM-gated)
+    // Soft smoke-test shafts along ducts (HVAC pathline cinema â€” CFM-gated)
     const mkFlowShaft = (name, radius) => {
       const curve = curves[name];
       const shaft = new THREE.Mesh(
@@ -4530,7 +4586,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     let mergeRampTexture = null;
     if (fx && typeof fx.createColorRamp === "function") {
       try {
-        // Cascade → 4×8 merge cue only (OUT/RECIRC are separate ports — no shared Y ramp).
+        // Cascade â†’ 4Ã—8 merge cue only (OUT/RECIRC are separate ports â€” no shared Y ramp).
         mergeRampTexture = fx.createColorRamp([
           { t: 0, color: 0x42a5f5 },
           { t: 0.55, color: 0xffb74d },
@@ -4724,6 +4780,50 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     placePlants(tentClone, "clone", 4, 2, false);
     placePlants(tentMain, "main", 8, 4, true);
 
+    // Slot plants stay as invisible pad markers; free-floating potActors are the visible plants.
+    const padWorld = { clone: [], main: [] };
+    const _padTmp = new THREE.Vector3();
+    const _rootLocal = new THREE.Vector3();
+    ["clone", "main"].forEach((key) => {
+      pots[key].forEach((plant, i) => {
+        plant.visible = false;
+        plant.userData.padMarker = true;
+        padWorld[key][i] = new THREE.Vector3();
+      });
+    });
+    const potActors = {};
+    const refreshPadWorld = () => {
+      ["clone", "main"].forEach((key) => {
+        pots[key].forEach((plant, i) => {
+          plant.getWorldPosition(_padTmp);
+          root.worldToLocal(_rootLocal.copy(_padTmp));
+          padWorld[key][i].copy(_rootLocal);
+        });
+      });
+    };
+    for (let n = 1; n <= 4; n++) {
+      const actor = mkPlant(n >= 3);
+      actor.visible = false;
+      actor.userData.potNum = n;
+      actor.userData.potId = `pot${n}`;
+      actor.userData.lerpReady = false;
+      actor.userData.highlightUntil = 0;
+      root.add(actor);
+      potActors[`pot${n}`] = actor;
+    }
+    let selectedPotNum = 0;
+    const setSelectedPot = (n) => {
+      selectedPotNum = Number(n) || 0;
+      Object.values(potActors).forEach((actor) => {
+        const on = actor.userData.potNum === selectedPotNum;
+        if (on) actor.userData.highlightUntil = performance.now() + 1600;
+        const canopy = actor.userData.canopyMaterial;
+        if (canopy && canopy.emissiveIntensity != null) {
+          canopy.emissiveIntensity = on ? 0.55 : 0.16;
+        }
+      });
+    };
+
     let spriteTexture = null;
     if (fx && typeof fx.createSoftSpriteTexture === "function") {
       try {
@@ -4844,7 +4944,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     mkAir("out", 0xff8a65, 96, 0.058);
     mkAir("recirc", 0xce93d8, 96, 0.058);
     mkAir("matHeat", 0xff6d00, 34, 0.09);
-    // Through-tent flow legs (not confined curl haze — that read as bouncing blur balls)
+    // Through-tent flow legs (not confined curl haze â€” that read as bouncing blur balls)
     mkAir("flowClone", 0x81d4fa, 72, 0.05);
     mkAir("flowMain", 0xffab91, 110, 0.05);
     const particleColors = {
@@ -4856,7 +4956,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       mixWarm: new THREE.Color(0xff9a6b),
     };
 
-    // Ambient room curl haze retired — it read as flying blur balls, not CFM flow.
+    // Ambient room curl haze retired â€” it read as flying blur balls, not CFM flow.
     let curl = null;
     const confinedMix = [];
 
@@ -4912,13 +5012,43 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       camera.lookAt(0, 1.15, 0.15);
     };
     applyCamera();
+    const raycaster = new THREE.Raycaster();
+    const pointerNdc = new THREE.Vector2();
+    let ptrDown = null;
+    const pickPotAt = (clientX, clientY) => {
+      const rect = renderer.domElement.getBoundingClientRect();
+      if (!rect.width || !rect.height) return 0;
+      pointerNdc.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+      pointerNdc.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+      raycaster.setFromCamera(pointerNdc, camera);
+      const targets = Object.values(potActors).filter((a) => a.visible);
+      if (!targets.length) return 0;
+      const hits = raycaster.intersectObjects(targets, true);
+      if (!hits.length) return 0;
+      let obj = hits[0].object;
+      while (obj && !obj.userData.potNum && obj.parent) obj = obj.parent;
+      return (obj && obj.userData.potNum) || 0;
+    };
     const onDown = (event) => {
       orbit.dragging = true;
       orbit.x = event.clientX;
       orbit.y = event.clientY;
+      ptrDown = { x: event.clientX, y: event.clientY };
     };
-    const onUp = () => {
+    const onUp = (event) => {
       orbit.dragging = false;
+      if (ptrDown) {
+        const dx = (event.clientX || 0) - ptrDown.x;
+        const dy = (event.clientY || 0) - ptrDown.y;
+        if (Math.hypot(dx, dy) < 6) {
+          const n = pickPotAt(event.clientX, event.clientY);
+          if (n) {
+            setSelectedPot(n);
+            if (onSelectPot) onSelectPot(n);
+          }
+        }
+      }
+      ptrDown = null;
     };
     const onMove = (event) => {
       if (!orbit.dragging) return;
@@ -4989,7 +5119,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
           : name === "out" || name === "recirc"
             ? 0.14
             : 0;
-        // Velocity-band dash speed ∝ CFM (duct-network sim cue)
+        // Velocity-band dash speed âˆ CFM (duct-network sim cue)
         uniforms.uDashOffset.value -= 0.008 + shown * 0.032;
         const width = active ? 0.55 + shown * 1.05 : 0.34;
         if (Math.abs(width - path.ribbon.userData.flow.lastWidth) > 0.08) {
@@ -5058,8 +5188,8 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     };
 
     /**
-     * Full journey: duct → entry → slow pool → exit pull.
-     * 0–0.38 duct, 0.38–0.52 entry, 0.52–0.78 pool, 0.78–1 exit.
+     * Full journey: duct â†’ entry â†’ slow pool â†’ exit pull.
+     * 0â€“0.38 duct, 0.38â€“0.52 entry, 0.52â€“0.78 pool, 0.78â€“1 exit.
      */
     const journeyThroughTent = (t, seed, i, opts) => {
       const intakeCurve = opts.intakeCurve;
@@ -5272,7 +5402,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         updatePathVisual("out", outVis, now);
         updatePathVisual("recirc", recVis, now);
 
-        // Journey streams: duct → pool → exit (pace slows in pool so settle reads)
+        // Journey streams: duct â†’ pool â†’ exit (pace slows in pool so settle reads)
         updateSystem("intakeClone", curves.intakeClone, dt, Math.min(1, intakeClone * 0.85), null, () => 1.2);
         updateSystem("intakeMain", curves.intakeMain, dt, Math.min(1, intakeMain * 0.85), null, () => 1.2);
         updateCascadePlume(dt, cascade, outShare, recShare);
@@ -5369,7 +5499,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
           }
         }
 
-        // ACH volume boxes retired — they read as “blur balls in a blue box”
+        // ACH volume boxes retired â€” they read as â€œblur balls in a blue boxâ€
         (tentClone.userData.achSlices || []).forEach((slice) => {
           slice.material.opacity = 0;
           slice.visible = false;
@@ -5381,7 +5511,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         roomShell.material.opacity = 0.1 + recVis * 0.06;
         roomEdges.material.opacity = 0.18 + recVis * 0.1;
         roomLungSlices.forEach((slice, i) => {
-          // Ceiling wash only — do not bob mid-room volumes
+          // Ceiling wash only â€” do not bob mid-room volumes
           slice.material.opacity = 0.016 + i * 0.006 + (recVis >= 0.04 ? recVis * 0.02 : 0);
           slice.position.y = 3.55 - i * 0.22;
         });
@@ -5400,16 +5530,62 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
           const on = !!(live.devices || []).find((device) => device.id === name && device.on);
           body.material.emissiveIntensity = on ? 0.72 : 0;
         });
-        const slots = live.potSlots || { clone: [], main: [] };
-        ["clone", "main"].forEach((key) => {
-          pots[key].forEach((plant, i) => {
-            const slot = slots[key] && slots[key][i];
-            plant.visible = !!slot;
-            if (slot && slot.color) {
-              plant.children.slice(2).forEach((leaf) => {
-                if (leaf.material && leaf.material.color) leaf.material.color.set(slot.color);
-              });
+
+        // Pad markers stay invisible; potActors lerp toward assigned pad world positions (~0.8s).
+        refreshPadWorld();
+        const poseList = Array.isArray(live.plantPose) ? live.plantPose : [];
+        const poseById = {};
+        poseList.forEach((pose) => {
+          if (pose && pose.id) poseById[pose.id] = pose;
+        });
+        // Fallback: derive poses from potSlots when plantPose absent
+        if (!poseList.length) {
+          const slots = live.potSlots || { clone: [], main: [] };
+          ["clone", "main"].forEach((key) => {
+            (slots[key] || []).forEach((slot, i) => {
+              if (slot && slot.id) poseById[slot.id] = { id: slot.id, tent: key, slot: i, color: slot.color };
+            });
+          });
+        }
+        const lerpAlpha = 1 - Math.exp(-dt / 0.8);
+        const nowMs = performance.now();
+        for (let n = 1; n <= 4; n++) {
+          const id = `pot${n}`;
+          const actor = potActors[id];
+          if (!actor) continue;
+          const pose = poseById[id];
+          const tent = pose && (pose.tent === "main" || pose.tent === "clone") ? pose.tent : null;
+          const slotIdx = pose && Number.isFinite(+pose.slot) ? +pose.slot : -1;
+          const pad = tent && slotIdx >= 0 && padWorld[tent] ? padWorld[tent][slotIdx] : null;
+          if (!pad) {
+            actor.visible = false;
+            actor.userData.lerpReady = false;
+            continue;
+          }
+          actor.visible = true;
+          if (!actor.userData.lerpReady) {
+            actor.position.copy(pad);
+            actor.userData.lerpReady = true;
+          } else {
+            actor.position.lerp(pad, lerpAlpha);
+          }
+          if (pose.color) {
+            const canopyTint = actor.userData.canopyMaterial;
+            if (canopyTint) {
+              if (canopyTint.map) canopyTint.emissive.set(pose.color);
+              else canopyTint.color.set(pose.color);
             }
+          }
+          const hi = actor.userData.potNum === selectedPotNum || nowMs < (actor.userData.highlightUntil || 0);
+          const canopy = actor.userData.canopyMaterial;
+          if (canopy && canopy.emissiveIntensity != null) {
+            canopy.emissiveIntensity = hi ? 0.55 : 0.16;
+          }
+        }
+        // Keep tent-slot marker plants hidden
+        ["clone", "main"].forEach((key) => {
+          pots[key].forEach((plant) => {
+            plant.visible = false;
           });
         });
 
@@ -5491,6 +5667,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     return {
       resize,
       setLive,
+      setSelectedPot,
       dispose() {
         if (disposed) return;
         disposed = true;
@@ -5638,28 +5815,29 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
               <div class="dash-brand" id="d-title">${esc(cfg.title)}</div>
               <div class="dash-sub" id="d-sub">${esc(cfg.subtitle)}</div>
             </div>
-            <div class="dash-pill" id="d-status">ONLINE // …</div>
+            <div class="dash-pill" id="d-status">ONLINE // â€¦</div>
           </div>
           <div class="dash-body">
             <div class="dash-main">
               <div class="dash-scene-wrap" id="d-scene">
-                ${typeof THREE === "undefined" ? `<div class="dash-missing">THREE.js not loaded — redeploy DSC-HUB bundle.</div>` : ""}
+                ${typeof THREE === "undefined" ? `<div class="dash-missing">THREE.js not loaded â€” redeploy DSC-HUB bundle.</div>` : ""}
                 <div class="dash-hud left" id="d-hud-clone"></div>
                 <div class="dash-hud right" id="d-hud-main"></div>
+                <div class="dash-pot-chips" id="d-pot-chips"></div>
                 <div class="dash-legend" id="d-legend">
                   <span data-path="light"><i class="dash-dot" style="background:#66bb6a"></i> 2x4 light</span>
                   <span data-path="mat"><i class="dash-dot" style="background:#ff6d00"></i> 2x4 heat mat</span>
                   <span data-path="intake"><i class="dash-dot" style="background:#42a5f5"></i> Room intake</span>
-                  <span data-path="cascade"><i class="dash-dot" style="background:#ffb74d"></i> Cascade 2x4→4x8</span>
+                  <span data-path="cascade"><i class="dash-dot" style="background:#ffb74d"></i> Cascade 2x4â†’4x8</span>
                   <span data-path="out"><i class="dash-dot" style="background:#ff8a65"></i> Dump OUT</span>
                   <span data-path="recirc"><i class="dash-dot" style="background:#ab47bc"></i> Recirc</span>
                 </div>
               </div>
               <div class="dash-charts">
-                <div class="dash-chart"><h4>Moisture — pots</h4><canvas id="c-moist"></canvas></div>
-                <div class="dash-chart"><h4>Feed intake rate — pots</h4><canvas id="c-rate"></canvas></div>
+                <div class="dash-chart"><h4>Moisture â€” pots</h4><canvas id="c-moist"></canvas></div>
+                <div class="dash-chart"><h4>Feed intake rate â€” pots</h4><canvas id="c-rate"></canvas></div>
                 <div class="dash-chart">
-                  <h4>Temperature °C</h4>
+                  <h4>Temperature Â°C</h4>
                   <div class="leg"><span><i style="background:#26c6da"></i>2x4</span><span><i style="background:#ff8a65"></i>4x8</span><span><i style="background:#90a4ae"></i>Room</span></div>
                   <canvas id="c-temp"></canvas>
                 </div>
@@ -5681,8 +5859,8 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
                 <div id="d-timeline"></div>
               </div>
               <div class="dash-panel" style="flex:1">
-                <h3>Air path · environment → CFM → exhaust</h3>
-                <p class="dash-flow-caption">Room climate → intake CFM (2×4 / 4×8) + cascade transfer → 4×8 exhaust mass-balanced to Σ intake × dump/recirc split. Heat mat is 2×4-only.</p>
+                <h3>Air path Â· environment â†’ CFM â†’ exhaust</h3>
+                <p class="dash-flow-caption">Room climate â†’ intake CFM (2Ã—4 / 4Ã—8) + cascade transfer â†’ 4Ã—8 exhaust mass-balanced to Î£ intake Ã— dump/recirc split. Heat mat is 2Ã—4-only.</p>
                 <div id="d-flow" class="dash-flow"></div>
               </div>
               <div class="dash-panel">
@@ -5705,7 +5883,19 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       }
       const host = this.shadowRoot.getElementById("d-scene");
       if (host && typeof THREE !== "undefined") {
-        this._scene = createScene(host);
+        this._scene = createScene(host, {
+          onSelectPot: (n) => this._emitSelectPot(n),
+        });
+      }
+      const chips = this.shadowRoot.getElementById("d-pot-chips");
+      if (chips && !chips._dscBound) {
+        chips._dscBound = true;
+        chips.addEventListener("click", (ev) => {
+          const chip = ev.target && ev.target.closest ? ev.target.closest("[data-pot]") : null;
+          if (!chip) return;
+          const n = parseInt(chip.getAttribute("data-pot"), 10);
+          if (Number.isFinite(n) && n >= 1 && n <= 4) this._emitSelectPot(n);
+        });
       }
       if (this._ro) this._ro.disconnect();
       this._ro = new ResizeObserver(() => this._scene && this._scene.resize());
@@ -5791,6 +5981,29 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       this._histAt = Date.now();
     }
 
+    _emitSelectPot(n) {
+      const pot = Number(n);
+      if (!Number.isFinite(pot) || pot < 1 || pot > 4) return;
+      if (this._scene && typeof this._scene.setSelectedPot === "function") {
+        this._scene.setSelectedPot(pot);
+      }
+      this._selectedPot = pot;
+      this.dispatchEvent(
+        new CustomEvent("dsc-dash-select-pot", {
+          detail: { pot },
+          bubbles: true,
+          composed: true,
+        })
+      );
+      window.dispatchEvent(new CustomEvent("dsc-dash-select-pot", { detail: { pot } }));
+      const chips = this.shadowRoot && this.shadowRoot.getElementById("d-pot-chips");
+      if (chips) {
+        chips.querySelectorAll("[data-pot]").forEach((el) => {
+          el.classList.toggle("on", parseInt(el.getAttribute("data-pot"), 10) === pot);
+        });
+      }
+    }
+
     _buildLive() {
       const hass = this._hass;
       const cfg = this._cfg;
@@ -5815,7 +6028,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         }
       }
       // Dump/recirc split: prefer live fan % (honest duty blend). Exhaust CFM sensors
-      // are pct×nameplate until Learning cal — fine as a ratio fallback only.
+      // are pctÃ—nameplate until Learning cal â€” fine as a ratio fallback only.
       const fo = numState(hass, e.fan_out, 0) / 100;
       const fr = numState(hass, e.fan_recirc, 0) / 100;
       const fs = fo + fr;
@@ -5831,7 +6044,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         outShare = cfmOutRaw / exSum;
         recircShare = cfmRecRaw / exSum;
       }
-      // Mass balance: absolute OUT/RECIRC CFM = intake throughput × split.
+      // Mass balance: absolute OUT/RECIRC CFM = intake throughput Ã— split.
       // Do not use sensor.dsc_cfm_exhaust_* as absolute duct flow on The Dash.
       const throughput = intakeSum;
       const cfmOut = throughput * outShare;
@@ -5844,22 +6057,50 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         { id: "dehumidifier", label: "Dehum", on: isOn(hass, e.dehumidifier), color: "#80cbc4" },
         { id: "clone_humidifier", label: "C-Hum", on: isOn(hass, e.clone_humidifier), color: "#81d4fa" },
       ];
-      // Grow mat is 2x4-only — show under active gear but never as room heat
+      // Grow mat is 2x4-only â€” show under active gear but never as room heat
       if (isOn(hass, e.grow_mat)) {
         devices.push({ id: "grow_mat", label: "2x4 mat", on: true, color: "#ff6d00" });
       }
 
-      const cascadeCfm = cfmClone; // passive transfer ≈ what entered the 2x4
+      const cascadeCfm = cfmClone; // passive transfer â‰ˆ what entered the 2x4
       const cascadeNorm = Math.min(1, cascadeCfm / 80);
 
       const pots = activePots(cfg, hass);
+      // Tent SoT: pack slots from input_select.dsc_potN_tent (not hardcoded cfg.pots[].tent).
       const potSlots = { clone: Array(4).fill(null), main: Array(8).fill(null) };
-      pots.forEach((p, idx) => {
-        const tent = p.tent === "main" ? "main" : "clone";
+      const byTent = { clone: [], main: [] };
+      const plantPose = [];
+      (cfg.pots || []).forEach((p, idx) => {
+        if (!p || !p.id) return;
+        const tent = readPotTent(hass, p);
+        const color = POT_COLORS[idx % POT_COLORS.length];
+        const n = potNumFrom(p);
+        const nameState = Number.isFinite(n) ? stateOf(hass, `text.dsc_pot${n}_plant_name`) : null;
+        const name =
+          nameState && nameState.state !== "unavailable" && nameState.state !== "unknown"
+            ? String(nameState.state)
+            : p.id;
+        if (tent !== "clone" && tent !== "main") {
+          // Unassigned: hidden from potSlots / no pad target
+          return;
+        }
+        byTent[tent].push({ id: p.id, color, name, tent, n, idx });
+      });
+      ["clone", "main"].forEach((tent) => {
         const max = tent === "main" ? 8 : 4;
-        let slot = Number.isFinite(+p.slot) ? +p.slot : idx;
-        if (slot < 0 || slot >= max) slot = 0;
-        potSlots[tent][slot] = { id: p.id, color: POT_COLORS[idx % POT_COLORS.length] };
+        byTent[tent]
+          .sort((a, b) => String(a.id).localeCompare(String(b.id), undefined, { numeric: true }))
+          .forEach((entry, slot) => {
+            if (slot >= max) return;
+            potSlots[tent][slot] = { id: entry.id, color: entry.color };
+            plantPose.push({
+              id: entry.id,
+              tent,
+              slot,
+              color: entry.color,
+              name: entry.name,
+            });
+          });
       });
 
       const stageBase = STAGE_ORDER.map((name) =>
@@ -5941,14 +6182,15 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         mainLit: false,
         matOn: isOn(hass, e.grow_mat),
         potSlots,
+        plantPose,
         timelineStages,
         mixed,
         emerg,
         strategy,
         priority,
-        roomClimate: `${fmt(rT)}°C · ${fmt(rH, 0)}% · VPD ${fmt(roomVpd, 2)}`,
-        cloneClimate: `${fmt(numState(hass, e.clone_temp))}°C · ${fmt(numState(hass, e.clone_humidity), 0)}% · VPD ${fmt(numState(hass, e.clone_vpd), 2)}`,
-        mainClimate: `${fmt(numState(hass, e.tent_temp))}°C · ${fmt(numState(hass, e.tent_humidity), 0)}% · VPD ${fmt(numState(hass, e.tent_vpd), 2)}`,
+        roomClimate: `${fmt(rT)}Â°C Â· ${fmt(rH, 0)}% Â· VPD ${fmt(roomVpd, 2)}`,
+        cloneClimate: `${fmt(numState(hass, e.clone_temp))}Â°C Â· ${fmt(numState(hass, e.clone_humidity), 0)}% Â· VPD ${fmt(numState(hass, e.clone_vpd), 2)}`,
+        mainClimate: `${fmt(numState(hass, e.tent_temp))}Â°C Â· ${fmt(numState(hass, e.tent_humidity), 0)}% Â· VPD ${fmt(numState(hass, e.tent_vpd), 2)}`,
         climate: {
           room: { temperature: rT, humidity: rH, vpd: roomVpd },
           clone: {
@@ -5970,7 +6212,12 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       };
 
       if (hubOnline) {
-        this._lastGoodLive = { ...live, devices: devices.map((d) => ({ ...d })), potSlots: { clone: [...potSlots.clone], main: [...potSlots.main] } };
+        this._lastGoodLive = {
+          ...live,
+          devices: devices.map((d) => ({ ...d })),
+          potSlots: { clone: [...potSlots.clone], main: [...potSlots.main] },
+          plantPose: plantPose.map((p) => ({ ...p })),
+        };
         this._hubOfflineSince = 0;
         if (diagLine) this._lastDiagLine = diagLine;
         return live;
@@ -5985,13 +6232,13 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
           hubOnline: false,
           hubHeld: true,
           hubOfflineMs: offlineMs,
-          diagLine: this._lastDiagLine || diagLine || "Hub link lost — no prior diagnostic line cached",
+          diagLine: this._lastDiagLine || diagLine || "Hub link lost â€” no prior diagnostic line cached",
           emerg: live.emerg || this._lastGoodLive.emerg,
         };
       }
       live.hubHeld = false;
       live.hubOfflineMs = offlineMs;
-      live.diagLine = this._lastDiagLine || diagLine || "Hub offline · waiting for first good sample";
+      live.diagLine = this._lastDiagLine || diagLine || "Hub offline Â· waiting for first good sample";
       return live;
     }
 
@@ -6012,7 +6259,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         } else if (!live.hubOnline) {
           status.textContent = `OFFLINE // hub ${fmtHeld(live.hubOfflineMs || 0)}`;
         } else {
-          status.textContent = `ONLINE // ${live.strategy || "NOMINAL"} · ${live.priority || ""}`.trim();
+          status.textContent = `ONLINE // ${live.strategy || "NOMINAL"} Â· ${live.priority || ""}`.trim();
         }
       }
 
@@ -6023,20 +6270,58 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         const exp = numState(this._hass, hours, 18) * 60;
         const left = Number.isFinite(lightMins) ? Math.max(0, exp - lightMins) : NaN;
         lightNote = Number.isFinite(left)
-          ? `SF1000 on · ${Math.floor(left / 60)}h ${Math.round(left % 60)}m to off`
+          ? `SF1000 on Â· ${Math.floor(left / 60)}h ${Math.round(left % 60)}m to off`
           : "SF1000 on";
       } else if (Number.isFinite(lightMins) && lightMins < 0) {
         const until = Math.abs(lightMins);
-        lightNote = `Dark · ${Math.floor(until / 60)}h ${Math.round(until % 60)}m to lights-on`;
+        lightNote = `Dark Â· ${Math.floor(until / 60)}h ${Math.round(until % 60)}m to lights-on`;
       }
+      const hudMetric = (zone) => {
+        const c = (live.climate && live.climate[zone]) || {};
+        return `<div class="v-split">
+          <div class="metric"><span class="mk">T</span><span class="mv">${esc(fmt(c.temperature))}Â°</span></div>
+          <div class="metric"><span class="mk">RH</span><span class="mv">${esc(fmt(c.humidity, 0))}%</span></div>
+          <div class="metric"><span class="mk">VPD</span><span class="mv">${esc(fmt(c.vpd, 2))}</span></div>
+        </div>`;
+      };
       const hudC = this.shadowRoot.getElementById("d-hud-clone");
       if (hudC) {
-        hudC.innerHTML = `<div class="k">2×4 Reservoir</div><div class="v">${esc(live.cloneClimate)}</div><div class="s">${esc(lightNote)}${live.matOn ? " · heat mat ON" : ""}</div>`;
+        hudC.innerHTML = `<div class="k">2Ã—4 Reservoir</div>${hudMetric("clone")}<div class="s">${esc(lightNote)}${live.matOn ? " Â· heat mat ON" : ""}</div>`;
       }
       const hudM = this.shadowRoot.getElementById("d-hud-main");
       if (hudM) {
-        const heldNote = live.hubHeld ? " · HELD" : "";
-        hudM.innerHTML = `<div class="k">4×8 Main</div><div class="v">${esc(live.mainClimate)}</div><div class="s">No lamp · cascade in · OUT rear / RECIRC right wall${heldNote}</div>`;
+        const heldNote = live.hubHeld ? " Â· HELD" : "";
+        hudM.innerHTML = `<div class="k">4Ã—8 Main</div>${hudMetric("main")}<div class="s">No lamp Â· cascade in Â· OUT rear / RECIRC right wall${heldNote}</div>`;
+      }
+
+      const chipsEl = this.shadowRoot.getElementById("d-pot-chips");
+      if (chipsEl) {
+        const hass = this._hass;
+        const selected = this._selectedPot || 0;
+        chipsEl.innerHTML = (this._cfg.pots || [])
+          .map((p, idx) => {
+            const n = potNumFrom(p);
+            if (!Number.isFinite(n)) return "";
+            const tent = readPotTent(hass, p);
+            const nameState = stateOf(hass, `text.dsc_pot${n}_plant_name`);
+            const name =
+              nameState && nameState.state !== "unavailable" && nameState.state !== "unknown" && nameState.state
+                ? String(nameState.state)
+                : p.id;
+            const moistId = !isUnavailable(hass, potEntity(p.prefix, "got_moisture"))
+              ? potEntity(p.prefix, "got_moisture")
+              : potEntity(p.prefix, "soil_moisture");
+            const moist = numState(hass, moistId, NaN);
+            const tentLabel = tent === "main" ? "4Ã—8" : tent === "clone" ? "2Ã—4" : "â€”";
+            const color = POT_COLORS[idx % POT_COLORS.length];
+            const on = selected === n ? " on" : "";
+            return `<button type="button" class="dash-pot-chip${on}" data-pot="${n}" style="border-left:3px solid ${color}">
+              <span class="chip-id">Pot ${n}</span>
+              <span class="chip-name">${esc(name)}</span>
+              <span class="chip-meta">${esc(tentLabel)} Â· ${esc(fmt(moist, 0))}% moist</span>
+            </button>`;
+          })
+          .join("");
       }
 
       const tl = this.shadowRoot.getElementById("d-timeline");
@@ -6058,20 +6343,20 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         if (live.emerg) alerts.push(`<span class="err">EMERGENCY FAILSAFE</span>`);
         if (live.mixed) alerts.push(`<span class="alert">Mixed pot stages</span>`);
         if (live.hubHeld) {
-          alerts.push(`<span class="alert">Hub offline · held ${esc(fmtHeld(live.hubOfflineMs))}</span>`);
+          alerts.push(`<span class="alert">Hub offline Â· held ${esc(fmtHeld(live.hubOfflineMs))}</span>`);
         } else if (!live.hubOnline) {
-          alerts.push(`<span class="alert">Hub offline · ${esc(fmtHeld(live.hubOfflineMs || 0))}</span>`);
+          alerts.push(`<span class="alert">Hub offline Â· ${esc(fmtHeld(live.hubOfflineMs || 0))}</span>`);
         }
         const diag = live.diagLine || "";
         const diagHtml = diag
           ? `<span class="alert" title="Last hub diagnostic line">ESP/link: ${esc(diag)}</span>`
           : "";
         foot.innerHTML = `
-          <span>The Dash · presentation surface</span>
+          <span>The Dash Â· presentation surface</span>
           <span>${new Date().toLocaleString()}</span>
-          ${alerts.join(" · ") || `<span style="color:var(--ok)">All systems nominal</span>`}
+          ${alerts.join(" Â· ") || `<span style="color:var(--ok)">All systems nominal</span>`}
           ${diagHtml}
-          <span class="err" style="margin-left:auto">LOGS → Climate / Root Zone</span>`;
+          <span class="err" style="margin-left:auto">LOGS â†’ Climate / Root Zone</span>`;
       }
     }
 
@@ -6168,11 +6453,11 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         <div style="padding:14px;display:grid;gap:12px;font-family:system-ui,sans-serif;max-width:640px">
           <p style="margin:0;color:#9aa;font-size:13px;line-height:1.45">
             <strong style="color:#cfd8e6">Air path (fixed topology):</strong>
-            Room lung → tent intakes → cascade 2×4→4×8 (neg. pressure) → 4×8 splits DUMP outside / RECIRC room.
-            Exhaust absolute CFM on The Dash is mass-balanced to Σ intake × fan-% split — not raw exhaust CFM sensors
+            Room lung â†’ tent intakes â†’ cascade 2Ã—4â†’4Ã—8 (neg. pressure) â†’ 4Ã—8 splits DUMP outside / RECIRC room.
+            Exhaust absolute CFM on The Dash is mass-balanced to Î£ intake Ã— fan-% split â€” not raw exhaust CFM sensors
             (those stay nameplate proxies until Learning cal). There is no central filter machine.
-            Heat mat is always the 2×4 element (not room heat).
-            Edit titles, pot slots, and airflow entity ids below — duct geometry itself is not editable on-glass.
+            Heat mat is always the 2Ã—4 element (not room heat).
+            Edit titles, pot slots, and airflow entity ids below â€” duct geometry itself is not editable on-glass.
           </p>
           <label style="display:grid;gap:4px">Title
             <input id="t" style="width:100%;padding:8px" value="${esc(c.title)}"/>
@@ -6183,19 +6468,19 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
           <div>
             <div style="font-size:12px;color:#888;margin-bottom:6px;font-weight:700;letter-spacing:0.06em">AIRFLOW ENTITIES</div>
             <div style="display:grid;grid-template-columns:160px 1fr;gap:6px;align-items:center;font-size:12px">
-              <span>2×4 intake CFM</span><input data-ent="cfm_intake_2x4" value="${esc(c.entities.cfm_intake_2x4 || "")}"/>
-              <span>4×8 intake CFM</span><input data-ent="cfm_intake_main" value="${esc(c.entities.cfm_intake_main || "")}"/>
+              <span>2Ã—4 intake CFM</span><input data-ent="cfm_intake_2x4" value="${esc(c.entities.cfm_intake_2x4 || "")}"/>
+              <span>4Ã—8 intake CFM</span><input data-ent="cfm_intake_main" value="${esc(c.entities.cfm_intake_main || "")}"/>
               <span>Dump OUT fan %</span><input data-ent="fan_out" value="${esc(c.entities.fan_out || "")}"/>
               <span>Recirc fan %</span><input data-ent="fan_recirc" value="${esc(c.entities.fan_recirc || "")}"/>
               <span>Dump OUT CFM (split fallback)</span><input data-ent="cfm_out" value="${esc(c.entities.cfm_out || "")}"/>
               <span>Recirc CFM (split fallback)</span><input data-ent="cfm_recirc" value="${esc(c.entities.cfm_recirc || "")}"/>
               <span>Room temp</span><input data-ent="room_temp" value="${esc(c.entities.room_temp || "")}"/>
               <span>Room humidity</span><input data-ent="room_humidity" value="${esc(c.entities.room_humidity || "")}"/>
-              <span>2×4 heat mat</span><input data-ent="grow_mat" value="${esc(c.entities.grow_mat || "")}"/>
+              <span>2Ã—4 heat mat</span><input data-ent="grow_mat" value="${esc(c.entities.grow_mat || "")}"/>
             </div>
           </div>
           <div>
-            <div style="font-size:12px;color:#888;margin-bottom:6px;font-weight:700;letter-spacing:0.06em">POTS → TENT / SLOT</div>
+            <div style="font-size:12px;color:#888;margin-bottom:6px;font-weight:700;letter-spacing:0.06em">POTS â†’ TENT / SLOT</div>
             <div style="display:grid;grid-template-columns:70px 1fr 90px 70px;gap:8px;font-size:11px;color:#777;margin-bottom:4px">
               <span></span><span>Entity prefix</span><span>Tent</span><span>Slot</span>
             </div>
@@ -6295,6 +6580,21 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     nutrient: "q-nutrient",
     light: "q-light",
   };
+  const DRAWER_TITLES = {
+    strain: "Strain search",
+    medium: "Medium search",
+    nutrient: "Nutrient search",
+    light: "Light search",
+  };
+  const DRAWER_PLACEHOLDERS = {
+    strain: "Type a strain name...",
+    medium: "Coco, perlite, LECA...",
+    nutrient: "CANNA Coco A...",
+    light: "Spider Farmer SF1000...",
+  };
+
+  const ICO_SEARCH = `<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15.5 15.5L21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
+  const ICO_MORE = `<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><circle cx="12" cy="5" r="1.75" fill="currentColor"/><circle cx="12" cy="12" r="1.75" fill="currentColor"/><circle cx="12" cy="19" r="1.75" fill="currentColor"/></svg>`;
 
   const DEFAULTS = () => ({
     type: `custom:${CARD_TYPE}`,
@@ -6303,55 +6603,201 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
   });
 
   const css = `
-    :host { display:block; font-family: "Segoe UI", "IBM Plex Sans", system-ui, sans-serif; color:#e8efe9; }
-    .wrap {
-      background: linear-gradient(165deg, #121a16 0%, #0c1210 48%, #10161c 100%);
-      border: 1px solid rgba(120,160,130,.18);
-      min-height: 92vh; padding: 20px 22px 36px; box-sizing: border-box;
+    :host {
+      display:block;
+      font-family: "Segoe UI", "IBM Plex Sans", system-ui, sans-serif;
+      color:#e8efe9;
+      --dsc-neon: #39ff14;
+      --dsc-neon-dim: rgba(57, 255, 20, 0.35);
+      --dsc-neon-glow: rgba(57, 255, 20, 0.55);
+      --dsc-teal: #26c6da;
+      --dsc-teal-dim: rgba(38, 198, 218, 0.4);
+      --dsc-teal-glow: rgba(38, 198, 218, 0.55);
+      --dsc-glass: rgba(12, 18, 16, 0.72);
+      --dsc-glass-border: rgba(120, 180, 160, 0.28);
     }
-    .hero { margin-bottom: 18px; }
+    .wrap {
+      position: relative;
+      background:
+        radial-gradient(900px 420px at 12% -8%, rgba(57,255,20,.06), transparent 55%),
+        radial-gradient(700px 380px at 92% 0%, rgba(38,198,218,.05), transparent 50%),
+        linear-gradient(165deg, #121a16 0%, #0c1210 48%, #10161c 100%);
+      border: 1px solid var(--dsc-glass-border);
+      min-height: 92vh; padding: 20px 22px 36px; box-sizing: border-box;
+      overflow: hidden;
+    }
+    .hero {
+      display:flex; flex-wrap:wrap; align-items:flex-start; justify-content:space-between;
+      gap:12px; margin-bottom: 18px;
+    }
     .brand { font-size: 11px; letter-spacing: .22em; text-transform: uppercase; color:#7fa88a; margin:0 0 6px; }
     h1 { margin:0; font-size: 28px; font-weight: 650; letter-spacing: .02em; color:#f2f7f3; }
-    .sub { margin: 6px 0 0; color:#9aada0; font-size: 14px; max-width: 52ch; }
-    .grid { display:grid; gap:14px; }
-    @media (min-width: 980px) { .grid { grid-template-columns: 1.15fr .85fr; } }
-    section {
-      background: rgba(18,28,22,.55); border: 1px solid rgba(120,160,130,.14);
-      border-radius: 4px; padding: 14px 14px 12px;
+    .sub { margin: 6px 0 0; color:#9aada0; font-size: 14px; max-width: 56ch; }
+    .flow {
+      display:flex; align-items:stretch; gap:0; flex-wrap:nowrap;
+    }
+    .flow-col {
+      flex: 1 1 0; min-width: 0;
+      display:flex; flex-direction:column; gap:14px;
+    }
+    .flow-col.mid { flex: 1.15 1 0; }
+    .connector {
+      flex: 0 0 28px; align-self: stretch; position: relative; margin: 28px 4px 28px;
+      min-height: 48px;
+    }
+    .connector::before {
+      content:""; position:absolute; left:50%; top:8%; bottom:8%; width:2px;
+      transform:translateX(-50%);
+      background: linear-gradient(180deg, transparent, var(--dsc-teal), transparent);
+      box-shadow: 0 0 10px var(--dsc-teal-glow);
+      opacity:.85;
+    }
+    .connector::after {
+      content:""; position:absolute; left:50%; top:50%; width:0; height:0;
+      transform:translate(-20%, -50%);
+      border-top:6px solid transparent; border-bottom:6px solid transparent;
+      border-left:8px solid var(--dsc-teal);
+      filter: drop-shadow(0 0 6px var(--dsc-teal-glow));
+    }
+    @media (max-width: 1100px) {
+      .flow { flex-direction: column; }
+      .connector { display:none; }
+      .flow-col, .flow-col.mid { flex: 1 1 auto; }
+    }
+    section.glass {
+      background: var(--dsc-glass);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid var(--dsc-glass-border);
+      border-radius: 12px;
+      padding: 14px 14px 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.35);
+    }
+    section.glass.valid-glow {
+      border-color: var(--dsc-teal-dim);
+      box-shadow: 0 0 0 1px rgba(38,198,218,.15), 0 0 24px rgba(38,198,218,.14);
     }
     section h2 {
       margin:0 0 10px; font-size: 13px; letter-spacing: .14em; text-transform: uppercase;
-      color:#8fb89a; display:flex; align-items:center; gap:8px;
+      color:#8fb89a; display:flex; align-items:center; justify-content:space-between; gap:8px;
     }
-    section h2 ha-icon, section h2 .ico { --mdc-icon-size:18px; width:18px; height:18px; opacity:.9; }
+    section h2 .h2-left { display:flex; align-items:center; gap:8px; }
     label { display:block; font-size:11px; color:#8a9c90; margin: 8px 0 4px; letter-spacing:.04em; }
     input[type=text], input[type=date], input[type=number], select {
       width:100%; box-sizing:border-box; background:#0b110e; color:#e8efe9;
-      border:1px solid rgba(120,160,130,.28); border-radius:3px; padding:8px 10px; font-size:14px;
+      border:1px solid rgba(120,160,130,.28); border-radius:8px; padding:8px 10px; font-size:14px;
     }
-    input[type=range] { width:100%; accent-color:#5b9f6b; }
+    input[type=range] { width:100%; accent-color: var(--dsc-teal); }
     .row { display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; }
     .row > * { flex:1; min-width:120px; }
-    .bar {
-      display:flex; height:18px; border-radius:3px; overflow:hidden; background:#0b110e;
-      border:1px solid rgba(120,160,130,.2); margin-top:8px;
+    .result-row {
+      display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:4px;
     }
-    .bar span { display:block; height:100%; }
+    .result-chip {
+      display:inline-flex; align-items:center; gap:8px; max-width:100%;
+      padding:8px 12px; border-radius:999px;
+      border:1px solid var(--dsc-teal-dim);
+      background: rgba(38,198,218,.1);
+      color:#f2f7f3; font-size:13px; min-width:0; flex:1 1 140px;
+    }
+    .result-chip.empty {
+      border-color: rgba(120,160,130,.28);
+      background: rgba(18,28,22,.45);
+      color:#8a9c90;
+    }
+    .result-chip span {
+      overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    }
+    .icon-btn {
+      appearance:none; width:36px; height:36px; padding:0;
+      display:inline-flex; align-items:center; justify-content:center;
+      border-radius:10px; border:1px solid rgba(120,160,130,.35);
+      background:#1a2a20; color:#e8efe9; cursor:pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,.4);
+      flex: 0 0 auto;
+    }
+    .icon-btn:hover { border-color: var(--dsc-teal-dim); color: var(--dsc-teal); }
+    .icon-btn:active { transform: translateY(1px); }
+    .overflow { position:relative; display:inline-block; }
+    .overflow-menu {
+      position:absolute; right:0; top:calc(100% + 6px); z-index:40;
+      min-width:180px; padding:6px;
+      background:#0c100d; border:1px solid rgba(120,160,130,.35);
+      border-radius:10px; box-shadow: 0 8px 24px rgba(0,0,0,.45);
+    }
+    .overflow-menu button {
+      appearance:none; width:100%; text-align:left; border:0;
+      background:transparent; color:#e8efe9; font:inherit; font-size:13px;
+      padding:10px 12px; border-radius:8px; cursor:pointer;
+    }
+    .overflow-menu button:hover {
+      background: rgba(38,198,218,.12); color: var(--dsc-teal);
+    }
+    .overflow-menu button:disabled { opacity:.4; cursor:not-allowed; }
     .chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
     .chip {
-      font-size:11px; padding:3px 8px; border-radius:2px;
+      font-size:11px; padding:3px 8px; border-radius:999px;
       background:rgba(91,159,107,.15); border:1px solid rgba(91,159,107,.35); color:#cfe8d5;
     }
     .chip.warn { background:rgba(196,163,90,.12); border-color:rgba(196,163,90,.4); color:#e8d7a8; }
     .chip.bad { background:rgba(180,70,70,.12); border-color:rgba(180,70,70,.4); color:#f0b4b4; }
-    .search-box { position:relative; }
+    .chip.ok {
+      background: rgba(57,255,20,.1); border-color: var(--dsc-neon-dim); color: var(--dsc-neon);
+      box-shadow: 0 0 12px rgba(57,255,20,.12);
+    }
+    .chip.teal {
+      background: rgba(38,198,218,.12); border-color: var(--dsc-teal-dim); color: #b8f0f7;
+    }
+    .catalog-pill {
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 14px; border-radius:999px;
+      border:1px solid var(--dsc-neon-dim);
+      background: rgba(57,255,20,.08);
+      color:#cfe8d5; font-size:12px;
+      box-shadow: 0 0 16px rgba(57,255,20,.12);
+    }
+    .catalog-pill .dot {
+      width:8px; height:8px; border-radius:50%; background: var(--dsc-neon);
+      box-shadow: 0 0 8px var(--dsc-neon-glow);
+    }
+    .catalog-pill.warn { border-color: rgba(196,163,90,.45); box-shadow:none; }
+    .catalog-pill.bad { border-color: rgba(180,70,70,.45); box-shadow:none; }
+    .catalog-pill.warn .dot, .catalog-pill.bad .dot { background:#c4a35a; box-shadow:none; }
+    .soil { width:100%; max-width:260px; margin: 10px auto 6px; }
+    .soil-pot {
+      position:relative; width:100%; aspect-ratio: 4 / 5;
+      border-radius: 12px 12px 28px 28px;
+      border: 2px solid rgba(120,160,130,.45);
+      background: linear-gradient(180deg, #1a1410 0%, #0e0c0a 100%);
+      overflow:hidden;
+      box-shadow: inset 0 0 24px rgba(0,0,0,.55), 0 0 20px rgba(38,198,218,.08);
+    }
+    .soil-pot.is-valid {
+      border-color: var(--dsc-teal-dim);
+      box-shadow: inset 0 0 24px rgba(0,0,0,.55), 0 0 28px rgba(38,198,218,.28);
+    }
+    .soil-layer {
+      position:absolute; left:8%; right:8%;
+      display:flex; align-items:center; justify-content:center;
+      font-size:11px; letter-spacing:.04em; color: rgba(244,247,244,.92);
+      text-shadow: 0 1px 2px rgba(0,0,0,.65);
+      border-top: 1px solid rgba(255,255,255,.08);
+      box-sizing:border-box; padding: 0 4px; text-align:center;
+    }
+    .soil-empty {
+      position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+      color:#8a9c90; font-size:13px; padding:16px; text-align:center;
+    }
+    .layer-block {
+      margin-top:10px; padding-top:8px;
+      border-top: 1px solid rgba(120,160,130,.12);
+    }
     .hits {
-      position:absolute; z-index:20; left:0; right:0; top:calc(100% + 2px); max-height:260px; overflow:auto;
-      background:#0e1612; border:1px solid rgba(120,160,130,.45); margin:0; padding:0; list-style:none;
-      box-shadow: 0 10px 28px rgba(0,0,0,.45);
+      margin:10px 0 0; padding:0; list-style:none; max-height:min(52vh, 420px); overflow:auto;
+      background:#0e1612; border:1px solid rgba(120,160,130,.35); border-radius:8px;
     }
     .hits li { padding:8px 10px; cursor:pointer; border-bottom:1px solid rgba(120,160,130,.12); font-size:13px; }
-    .hits li:hover, .hits li.active { background:rgba(91,159,107,.22); }
+    .hits li:hover, .hits li.active { background:rgba(38,198,218,.16); }
     .hits .meta { color:#8a9c90; font-size:11px; margin-top:2px; }
     .hits .empty { padding:10px; color:#8a9c90; font-size:12px; cursor:default; }
     .hits .empty:hover { background:transparent; }
@@ -6361,14 +6807,66 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     .actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
     button {
       background:#1a2a20; color:#e8efe9; border:1px solid rgba(120,160,130,.35);
-      border-radius:3px; padding:9px 12px; cursor:pointer; font-size:13px;
+      border-radius:8px; padding:9px 12px; cursor:pointer; font-size:13px;
     }
     button.primary { background:#2a4a34; border-color:#5b9f6b; }
+    button.teal {
+      border-color: var(--dsc-teal-dim);
+      background: rgba(38,198,218,.18);
+      color:#f2f7f3;
+      box-shadow: 0 0 18px rgba(38,198,218,.2);
+    }
+    button.teal.primary {
+      background: var(--dsc-teal);
+      color:#041018;
+      font-weight:650;
+      box-shadow: 0 0 22px var(--dsc-teal-glow);
+    }
     button:hover { filter:brightness(1.08); }
     button:disabled { opacity:.45; cursor:not-allowed; }
     .muted { color:#8a9c90; font-size:12px; }
     .roster { font-size:12px; }
     .roster div { padding:4px 0; border-bottom:1px solid rgba(120,160,130,.1); }
+    .drawer {
+      position:absolute; inset:0; z-index:80; pointer-events:none;
+    }
+    .drawer.is-open { pointer-events:auto; }
+    .drawer-scrim {
+      position:absolute; inset:0; background: rgba(0,0,0,.45);
+      opacity:0; transition: opacity 180ms ease;
+    }
+    .drawer.is-open .drawer-scrim { opacity:1; }
+    .drawer-panel {
+      position:absolute; top:0; bottom:0; right:0;
+      width: min(380px, 92%);
+      background: linear-gradient(165deg, #121a16, #0a100e);
+      border: 1px solid var(--dsc-glass-border);
+      border-radius: 14px 0 0 14px;
+      box-shadow: -12px 0 40px rgba(0,0,0,.55);
+      display:flex; flex-direction:column;
+      transform: translateX(105%);
+      transition: transform 220ms ease;
+    }
+    .drawer.is-open .drawer-panel { transform: none; }
+    .drawer-rail {
+      position:absolute; top:50%; left:-28px; transform:translateY(-50%);
+      width:28px; height:64px;
+      border:1px solid rgba(120,160,130,.35); background:#1a2a20; color:#e8efe9;
+      border-radius:10px 0 0 10px;
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer; z-index:2;
+    }
+    .drawer-head {
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      padding:14px 16px; border-bottom:1px solid rgba(120,160,130,.2);
+    }
+    .drawer-head h2 {
+      margin:0; font-size:13px; letter-spacing:.12em; text-transform:uppercase; color:#9aada0;
+    }
+    .drawer-body { flex:1; overflow:auto; padding:14px 16px; }
+    @media (prefers-reduced-motion: reduce) {
+      .drawer-panel, .drawer-scrim { transition: none !important; }
+    }
   `;
 
   class DscBuildPlantCard extends HTMLElement {
@@ -6382,12 +6880,13 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       this._q = { strain: "", nutrient: "", medium: "", light: "" };
       this._hits = { strain: [], nutrient: [], medium: [], light: [] };
       this._hitActive = { strain: -1, nutrient: -1, medium: -1, light: -1 };
-      this._openKind = null;
+      this._drawerKind = null;
       this._loaded = false;
       this._mediumSlot = 1;
       this._focusRestore = null;
       this._selectedStrain = null;
       this._selectedLight = null;
+      this._overflowMenu = null;
     }
 
     setConfig(config) {
@@ -6401,8 +6900,8 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         this._loaded = true;
         this._loadIndexes();
       }
-      // Avoid wiping an open typeahead / focused search on every HA state tick.
-      if (this._openKind || this._isSearchFocused()) return;
+      // Avoid wiping an open drawer / focused search on every HA state tick.
+      if (this._drawerKind || this._isSearchFocused()) return;
       this._render();
     }
 
@@ -6444,7 +6943,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       const total = Object.values(this._indexes).reduce((n, a) => n + (a?.length || 0), 0);
       this._indexStatus.loading = false;
       this._indexStatus.ok = total > 0;
-      if (!this._openKind) this._render();
+      if (!this._drawerKind) this._render();
       else this._paintCatalogChip();
     }
 
@@ -6466,7 +6965,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       if (!this._hass) return;
       const payload = { ...(data || {}) };
       if (target && target.entity_id) payload.entity_id = target.entity_id;
-      // HA 2024+ callService is (domain, service, serviceData) — entity_id in data.
+      // HA 2024+ callService is (domain, service, serviceData) â€” entity_id in data.
       return this._hass.callService(domain, service, payload);
     }
 
@@ -6513,25 +7012,32 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       this._q[kind] = q;
       this._hits[kind] = this._filterItems(kind, q);
       this._hitActive[kind] = this._hits[kind].length ? 0 : -1;
-      this._openKind = open ? kind : null;
+      if (open) this._drawerKind = kind;
       this._paintHits(kind);
     }
 
     _openSearch(kind) {
-      this._openKind = kind;
+      this._drawerKind = kind;
+      this._overflowMenu = null;
       this._hits[kind] = this._filterItems(kind, this._q[kind] || "");
       this._hitActive[kind] = this._hits[kind].length ? 0 : -1;
-      this._paintHits(kind);
+      this._focusRestore = { id: SEARCH_IDS[kind], pos: (this._q[kind] || "").length };
+      this._render();
     }
 
     _closeSearch(kind) {
-      if (kind && this._openKind !== kind) return;
-      this._openKind = null;
+      if (kind && this._drawerKind !== kind) return;
+      this._drawerKind = null;
       if (kind) {
         this._hits[kind] = [];
         this._hitActive[kind] = -1;
-        this._paintHits(kind);
       }
+      this._render();
+    }
+
+    _closeDrawer() {
+      this._drawerKind = null;
+      this._render();
     }
 
     _applyHit(kind, item) {
@@ -6548,7 +7054,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       this._q.strain = item.name;
       this._hits.strain = [];
       this._hitActive.strain = -1;
-      this._openKind = null;
+      this._drawerKind = null;
       this._render();
     }
 
@@ -6571,7 +7077,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       this._q.medium = "";
       this._hits.medium = [];
       this._hitActive.medium = -1;
-      this._openKind = null;
+      this._drawerKind = null;
       this._render();
     }
 
@@ -6591,7 +7097,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       this._q.nutrient = "";
       this._hits.nutrient = [];
       this._hitActive.nutrient = -1;
-      this._openKind = null;
+      this._drawerKind = null;
       this._render();
     }
 
@@ -6611,7 +7117,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       this._q.light = item.name;
       this._hits.light = [];
       this._hitActive.light = -1;
-      this._openKind = null;
+      this._drawerKind = null;
       this._render();
     }
 
@@ -6623,6 +7129,30 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         if (pct > 0) parts.push({ n, name: name || `#${n}`, pct });
       }
       return parts;
+    }
+
+    _activeMediumSlots() {
+      const slots = [];
+      for (let n = 1; n <= 3; n++) {
+        const name = this._str(`input_text.dsc_blend_component_${n}_name`);
+        const pct = this._num(`input_number.dsc_blend_pct_${n}`, 0);
+        if (name || pct > 0) slots.push({ n, name, pct });
+      }
+      return slots;
+    }
+
+    _nextEmptyMediumSlot() {
+      for (let n = 1; n <= 3; n++) {
+        const name = this._str(`input_text.dsc_blend_component_${n}_name`);
+        const pct = this._num(`input_number.dsc_blend_pct_${n}`, 0);
+        if (!name && pct <= 0) return n;
+      }
+      return null;
+    }
+
+    _clearMediumSlot(n) {
+      this._setText(`input_text.dsc_blend_component_${n}_name`, "");
+      this._setNumber(`input_number.dsc_blend_pct_${n}`, 0);
     }
 
     _mixLines() {
@@ -6644,21 +7174,21 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     }
 
     _hitsHtml(kind) {
-      if (this._openKind !== kind) return "";
+      if (this._drawerKind !== kind) return "";
       const hits = this._hits[kind] || [];
       const active = this._hitActive[kind] ?? -1;
       const indexCount = this._indexFor(kind).length;
       if (!this._indexStatus.ok && !this._indexStatus.loading) {
-        return `<ul class="hits" role="listbox"><li class="empty">Catalog index missing for ${this._esc(INDEX_KEY[kind] || kind)}. Check /local/dsc-catalog/.</li></ul>`;
+        return `<ul class="hits" id="drawer-hits" role="listbox"><li class="empty">Catalog index missing for ${this._esc(INDEX_KEY[kind] || kind)}. Check /local/dsc-catalog/.</li></ul>`;
       }
       if (this._indexStatus.loading && !indexCount) {
-        return `<ul class="hits" role="listbox"><li class="empty">Loading catalog...</li></ul>`;
+        return `<ul class="hits" id="drawer-hits" role="listbox"><li class="empty">Loading catalog...</li></ul>`;
       }
       if (!hits.length) {
         const q = (this._q[kind] || "").trim();
-        return `<ul class="hits" role="listbox"><li class="empty">${q ? `No matches for "${this._esc(q)}"` : "Start typing to filter catalog"}</li></ul>`;
+        return `<ul class="hits" id="drawer-hits" role="listbox"><li class="empty">${q ? `No matches for "${this._esc(q)}"` : "Start typing to filter catalog"}</li></ul>`;
       }
-      return `<ul class="hits" role="listbox">${hits
+      return `<ul class="hits" id="drawer-hits" role="listbox">${hits
         .map((it, i) => {
           const meta = [it.brand || it.breeder, it.wattage_w != null ? `${it.wattage_w} W` : null, it.dose_ml_l != null ? `${it.dose_ml_l} ml/L` : null]
             .filter(Boolean)
@@ -6669,14 +7199,14 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     }
 
     _paintHits(kind) {
-      const box = this.shadowRoot?.querySelector(`#${SEARCH_IDS[kind]}`)?.closest(".search-box");
-      if (!box) return;
-      const existing = box.querySelector(".hits");
+      const body = this.shadowRoot?.getElementById("drawer-body");
+      if (!body || this._drawerKind !== kind) return;
+      const existing = body.querySelector("#drawer-hits");
       if (existing) existing.remove();
       const html = this._hitsHtml(kind);
       if (!html) return;
-      box.insertAdjacentHTML("beforeend", html);
-      box.querySelectorAll(".hits li[data-i]").forEach((li) => {
+      body.insertAdjacentHTML("beforeend", html);
+      body.querySelectorAll("#drawer-hits li[data-i]").forEach((li) => {
         li.addEventListener("mousedown", (e) => {
           e.preventDefault();
           const i = Number(li.getAttribute("data-i"));
@@ -6693,18 +7223,104 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
 
     _catalogChipHtml() {
       if (this._indexStatus.loading) {
-        return `<span class="chip warn" id="catalog-status">Loading catalogs...</span>`;
+        return `<span class="catalog-pill warn" id="catalog-status"><span class="dot"></span>Loading catalogs...</span>`;
       }
       if (!this._indexStatus.ok) {
         const detail = this._indexStatus.errors[0] || "no index items";
-        return `<span class="chip bad" id="catalog-status">Catalog load failed: ${this._esc(detail)}</span>`;
+        return `<span class="catalog-pill bad" id="catalog-status"><span class="dot"></span>Catalog load failed: ${this._esc(detail)}</span>`;
       }
       const n =
         (this._indexes.strains?.length || 0) +
         (this._indexes.mediums?.length || 0) +
         (this._indexes.nutrients?.length || 0) +
         (this._indexes.lights?.length || 0);
-      return `<span class="chip" id="catalog-status">${n} catalog items ready</span>`;
+      return `<span class="catalog-pill" id="catalog-status"><span class="dot"></span>${n} catalog items ready</span>`;
+    }
+
+    _soilHtml(parts, blendValid) {
+      if (!parts.length) {
+        return `<div class="soil"><div class="soil-pot"><div class="soil-empty">No medium layers yet</div></div></div>`;
+      }
+      let cursor = 0;
+      const layers = parts
+        .map((p, i) => {
+          const bottom = cursor;
+          cursor += p.pct;
+          const label = p.pct >= 12 ? `${this._esc(p.name)} ${Math.round(p.pct)}%` : "";
+          return `<div class="soil-layer" style="bottom:${bottom}%;height:${p.pct}%;background:${COLORS[i % COLORS.length]}" title="${this._esc(p.name)} ${p.pct}%">${label}</div>`;
+        })
+        .join("");
+      return `<div class="soil"><div class="soil-pot${blendValid ? " is-valid" : ""}">${layers}</div></div>`;
+    }
+
+    _resultRow(kind, label, emptyLabel) {
+      const has = !!(label && String(label).trim());
+      const menuOpen = this._overflowMenu === kind;
+      return `
+        <div class="result-row" data-result="${kind}">
+          <div class="result-chip${has ? "" : " empty"}"><span>${this._esc(has ? label : emptyLabel)}</span></div>
+          <button type="button" class="icon-btn" data-open-drawer="${kind}" aria-label="Search ${kind}">${ICO_SEARCH}</button>
+          <div class="overflow">
+            <button type="button" class="icon-btn" data-overflow="${kind}" aria-label="More ${kind} actions" aria-expanded="${menuOpen ? "true" : "false"}">${ICO_MORE}</button>
+            ${menuOpen ? this._overflowMenuHtml(kind) : ""}
+          </div>
+        </div>`;
+    }
+
+    _overflowMenuHtml(kind) {
+      if (kind === "medium") {
+        const next = this._nextEmptyMediumSlot();
+        const active = this._activeMediumSlots();
+        return `<div class="overflow-menu" role="menu">
+          <button type="button" role="menuitem" data-medium-action="add" ${next ? "" : "disabled"}>Add medium layer</button>
+          <button type="button" role="menuitem" data-medium-action="remove" ${active.length ? "" : "disabled"}>Remove layer</button>
+          <button type="button" role="menuitem" data-medium-action="change">Change</button>
+        </div>`;
+      }
+      if (kind === "strain") {
+        return `<div class="overflow-menu" role="menu">
+          <button type="button" role="menuitem" data-overflow-action="change" data-kind="strain">Change</button>
+          <button type="button" role="menuitem" data-overflow-action="clear-strain">Clear strain</button>
+        </div>`;
+      }
+      if (kind === "nutrient") {
+        return `<div class="overflow-menu" role="menu">
+          <button type="button" role="menuitem" data-overflow-action="change" data-kind="nutrient">Add nutrient</button>
+        </div>`;
+      }
+      if (kind === "light") {
+        return `<div class="overflow-menu" role="menu">
+          <button type="button" role="menuitem" data-overflow-action="change" data-kind="light">Change</button>
+        </div>`;
+      }
+      return "";
+    }
+
+    _drawerHtml() {
+      const kind = this._drawerKind;
+      const open = !!kind;
+      const title = kind ? DRAWER_TITLES[kind] : "Search";
+      const ph = kind ? DRAWER_PLACEHOLDERS[kind] : "";
+      const q = kind ? this._q[kind] || "" : "";
+      const sid = kind ? SEARCH_IDS[kind] : "q-drawer";
+      return `
+        <div class="drawer${open ? " is-open" : ""}" aria-hidden="${open ? "false" : "true"}">
+          <div class="drawer-scrim" id="drawer-scrim"></div>
+          <aside class="drawer-panel" role="dialog" aria-modal="true" aria-label="${this._esc(title)}">
+            <button type="button" class="drawer-rail" id="drawer-rail" aria-label="Close panel">&gt;</button>
+            <div class="drawer-head">
+              <h2>${this._esc(title)}</h2>
+              <button type="button" class="icon-btn" id="drawer-close" aria-label="Close">X</button>
+            </div>
+            <div class="drawer-body" id="drawer-body">
+              ${open ? `
+                <label for="${sid}">Filter catalog</label>
+                <input type="text" id="${sid}" autocomplete="off" spellcheck="false" value="${this._esc(q)}" placeholder="${this._esc(ph)}" aria-autocomplete="list" />
+                ${this._hitsHtml(kind)}
+              ` : ""}
+            </div>
+          </aside>
+        </div>`;
     }
 
     _esc(s) {
@@ -6733,6 +7349,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       const watts = this._str("sensor.dsc_light_wattage_w");
       const ppf = this._str("sensor.dsc_light_ppf_umol_s");
       const ppe = this._str("sensor.dsc_light_ppe_umol_j");
+      const strainName = this._str("input_text.dsc_build_strain") || this._selectedStrain?.name || "";
       const strainHit = this._selectedStrain;
       const chemistry = strainHit?.has_chemistry
         ? [
@@ -6756,38 +7373,33 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
           }
         : null;
       const hasCommitAssign = !!this._st("script.dsc_build_plant_commit_and_assign");
-
-      const barHtml = parts.length
-        ? parts
-            .map((p, i) => `<span style="width:${p.pct}%;background:${COLORS[i % COLORS.length]}" title="${this._esc(p.name)}"></span>`)
-            .join("")
+      const activeMedium = this._activeMediumSlots();
+      const nutrientSummary = mix.lines.length
+        ? mix.lines.map((l) => l.name).slice(0, 3).join(", ") + (mix.lines.length > 3 ? ` +${mix.lines.length - 3}` : "")
         : "";
 
       const focus = this._focusRestore;
-      const openKind = this._openKind;
+      const drawerKind = this._drawerKind;
 
       this.shadowRoot.innerHTML = `
         <style>${css}</style>
         <div class="wrap">
           <div class="hero">
-            <p class="brand">Digital Stealth Care / DSC-HUB</p>
-            <h1>${this._esc(cfg.title)}</h1>
-            <p class="sub">${this._esc(cfg.subtitle)} - then commit to inventory. Metric only - no invented PPFD grids or feed rates.</p>
-            <div class="chips" style="margin-top:8px">${this._catalogChipHtml()}</div>
+            <div>
+              <p class="brand">Digital Stealth Care / DSC-HUB</p>
+              <h1>${this._esc(cfg.title)}</h1>
+              <p class="sub">${this._esc(cfg.subtitle)} - then commit to inventory. Metric only - no invented PPFD grids or feed rates.</p>
+            </div>
+            <div>${this._catalogChipHtml()}</div>
           </div>
-          <div class="grid">
-            <div class="stack">
-              <section>
-                <h2>Identity</h2>
-                <label>Strain search</label>
-                <div class="search-box">
-                  <input type="text" id="q-strain" autocomplete="off" spellcheck="false" value="${this._esc(this._q.strain)}" placeholder="Type a strain name..." aria-autocomplete="list" />
-                </div>
+
+          <div class="flow">
+            <div class="flow-col">
+              <section class="glass">
+                <h2><span class="h2-left">Identity</span></h2>
+                <label>Strain</label>
+                ${this._resultRow("strain", strainName, "No strain selected")}
                 <div class="row">
-                  <div>
-                    <label>Selected strain</label>
-                    <input type="text" id="build-strain" value="${this._esc(this._str("input_text.dsc_build_strain"))}" />
-                  </div>
                   <div>
                     <label>Nickname</label>
                     <input type="text" id="build-nick" value="${this._esc(this._str("input_text.dsc_build_nickname"))}" />
@@ -6811,36 +7423,38 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
                     </select>
                   </div>
                 </div>
+                <input type="hidden" id="build-strain" value="${this._esc(strainName)}" />
                 ${chemistry ? `<div class="chips"><span class="chip">Chemistry: ${this._esc(chemistry)}</span></div>` : ""}
               </section>
+            </div>
 
-              <section>
-                <h2>Medium / % blend</h2>
-                <label>Search substrate (fills slot below)</label>
-                <div class="row">
-                  <div style="flex:2" class="search-box">
-                    <input type="text" id="q-medium" autocomplete="off" spellcheck="false" value="${this._esc(this._q.medium)}" placeholder="Coco, perlite, LECA..." aria-autocomplete="list" />
-                  </div>
-                  <div>
-                    <label>Target slot</label>
-                    <select id="medium-slot">
-                      <option value="1" ${this._mediumSlot === 1 ? "selected" : ""}>1</option>
-                      <option value="2" ${this._mediumSlot === 2 ? "selected" : ""}>2</option>
-                      <option value="3" ${this._mediumSlot === 3 ? "selected" : ""}>3</option>
-                    </select>
-                  </div>
-                </div>
-                ${[1, 2, 3]
+            <div class="connector" aria-hidden="true"></div>
+
+            <div class="flow-col mid">
+              <section class="glass${blendValid ? " valid-glow" : ""}">
+                <h2>
+                  <span class="h2-left">Medium</span>
+                </h2>
+                <label>Blend</label>
+                ${this._resultRow(
+                  "medium",
+                  parts.length ? parts.map((p) => `${p.name} ${Math.round(p.pct)}%`).join(" / ") : "",
+                  "No medium layers yet"
+                )}
+                ${this._soilHtml(parts, blendValid)}
+                ${activeMedium
                   .map(
-                    (n) => `
-                  <div class="row">
-                    <div style="flex:2">
-                      <label>Component ${n}</label>
-                      <input type="text" data-blend-name="${n}" value="${this._esc(this._str(`input_text.dsc_blend_component_${n}_name`))}" />
-                    </div>
-                    <div>
-                      <label>% / ${this._num(`input_number.dsc_blend_pct_${n}`, 0)}%</label>
-                      <input type="range" min="0" max="100" data-blend-pct="${n}" value="${this._num(`input_number.dsc_blend_pct_${n}`, 0)}" />
+                    (slot) => `
+                  <div class="layer-block">
+                    <div class="row">
+                      <div style="flex:2">
+                        <label>Layer ${slot.n}</label>
+                        <input type="text" data-blend-name="${slot.n}" value="${this._esc(slot.name)}" />
+                      </div>
+                      <div>
+                        <label>% / ${slot.pct}%</label>
+                        <input type="range" min="0" max="100" data-blend-pct="${slot.n}" value="${slot.pct}" />
+                      </div>
                     </div>
                   </div>`
                   )
@@ -6851,21 +7465,22 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
                     <input type="number" id="blend-l" step="0.5" min="1" value="${totalL}" />
                   </div>
                 </div>
-                <div class="bar">${barHtml}</div>
                 <div class="chips">
-                  <span class="chip ${blendValid ? "" : "bad"}">${Math.round(sumPct)}% ${blendValid ? "valid" : "must sum 100"}</span>
+                  <span class="chip ${blendValid ? "ok" : "bad"}">${Math.round(sumPct)}% ${blendValid ? "valid" : "must sum 100"}</span>
                   ${parts
-                    .map((p) => `<span class="chip">${this._esc(p.name)} / ${((p.pct / 100) * totalL).toFixed(1)} L</span>`)
+                    .map((p) => `<span class="chip teal">${this._esc(p.name)} / ${((p.pct / 100) * totalL).toFixed(1)} L</span>`)
                     .join("")}
                 </div>
               </section>
+            </div>
 
-              <section>
-                <h2>Nutrition / ml / L</h2>
-                <label>Search nutrients - add to inventory</label>
-                <div class="search-box">
-                  <input type="text" id="q-nutrient" autocomplete="off" spellcheck="false" value="${this._esc(this._q.nutrient)}" placeholder="CANNA Coco A..." aria-autocomplete="list" />
-                </div>
+            <div class="connector" aria-hidden="true"></div>
+
+            <div class="flow-col">
+              <section class="glass">
+                <h2><span class="h2-left">Nutrition</span></h2>
+                <label>Bottles</label>
+                ${this._resultRow("nutrient", nutrientSummary, "No doses yet")}
                 <div class="row">
                   <div>
                     <label>Tank (L)</label>
@@ -6901,16 +7516,11 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
                 </div>
                 <p class="muted">Accept uses script.dsc_accept_mix - QA gate, no pumps.</p>
               </section>
-            </div>
 
-            <div class="stack">
-              <section>
-                <h2>Light</h2>
-                <label>Search fixtures</label>
-                <div class="search-box">
-                  <input type="text" id="q-light" autocomplete="off" spellcheck="false" value="${this._esc(this._q.light)}" placeholder="Spider Farmer SF1000..." aria-autocomplete="list" />
-                </div>
-                <p style="margin:8px 0 4px;font-size:14px">${this._esc(lightName || "No fixture selected")}</p>
+              <section class="glass">
+                <h2><span class="h2-left">Light</span></h2>
+                <label>Fixture</label>
+                ${this._resultRow("light", lightName, "No fixture selected")}
                 <div class="chips">
                   ${watts && watts !== "unknown" ? `<span class="chip">${this._esc(watts)} W</span>` : ""}
                   ${ppf && ppf !== "unknown" ? `<span class="chip">${this._esc(ppf)} umol/s</span>` : ""}
@@ -6921,8 +7531,8 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
                 </div>
               </section>
 
-              <section>
-                <h2>Climate Want</h2>
+              <section class="glass">
+                <h2><span class="h2-left">Climate Want</span></h2>
                 <p class="muted">Applies custom-slot temp/RH only when set (!= 0). Catalog strains have no invented climate bands.</p>
                 <div class="row">
                   <div>
@@ -6938,9 +7548,13 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
                   <button type="button" class="primary" id="btn-climate">Apply climate Want</button>
                 </div>
               </section>
+            </div>
 
-              <section>
-                <h2>Commit</h2>
+            <div class="connector" aria-hidden="true"></div>
+
+            <div class="flow-col">
+              <section class="glass">
+                <h2><span class="h2-left">Commit</span></h2>
                 <div class="row">
                   <div>
                     <label>Assign pot</label>
@@ -6954,7 +7568,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
                 <div class="actions">
                   <button type="button" class="primary" id="btn-commit">Add to inventory</button>
                   <button type="button" id="btn-assign">Assign to pot now</button>
-                  ${hasCommitAssign ? `<button type="button" class="primary" id="btn-commit-assign">Commit + assign</button>` : ""}
+                  ${hasCommitAssign ? `<button type="button" class="teal primary" id="btn-commit-assign">Commit + assign</button>` : ""}
                 </div>
                 ${livePot ? `
                   <div class="chips">
@@ -6972,14 +7586,16 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
               </section>
             </div>
           </div>
+
+          ${this._drawerHtml()}
         </div>
       `;
 
       this._wire();
       this._fillRoster();
-      if (openKind) {
-        this._openKind = openKind;
-        this._paintHits(openKind);
+      if (drawerKind) {
+        this._drawerKind = drawerKind;
+        this._wireDrawerHits(drawerKind);
       }
       if (focus) {
         const inp = this.shadowRoot.getElementById(focus.id);
@@ -6992,6 +7608,17 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         }
         this._focusRestore = null;
       }
+    }
+
+    _wireDrawerHits(kind) {
+      const root = this.shadowRoot;
+      root?.querySelectorAll("#drawer-hits li[data-i]").forEach((li) => {
+        li.addEventListener("mousedown", (e) => {
+          e.preventDefault();
+          const i = Number(li.getAttribute("data-i"));
+          this._applyHit(kind, this._hits[kind]?.[i]);
+        });
+      });
     }
 
     _fillRoster() {
@@ -7017,19 +7644,11 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         this._focusRestore = { id, pos: e.target.selectionStart };
         this._search(kind, e.target.value, { open: true });
       });
-      inp.addEventListener("focus", () => this._openSearch(kind));
-      inp.addEventListener("blur", () => {
-        // Delay so mousedown on a hit can fire first.
-        setTimeout(() => {
-          if (this.shadowRoot?.activeElement?.id === id) return;
-          this._closeSearch(kind);
-        }, 120);
-      });
       inp.addEventListener("keydown", (e) => {
         const hits = this._hits[kind] || [];
         if (e.key === "ArrowDown") {
           e.preventDefault();
-          if (!this._openKind) this._openSearch(kind);
+          if (!this._drawerKind) this._openSearch(kind);
           if (!hits.length) return;
           this._hitActive[kind] = Math.min((this._hitActive[kind] ?? -1) + 1, hits.length - 1);
           this._paintHits(kind);
@@ -7039,7 +7658,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
           this._hitActive[kind] = Math.max((this._hitActive[kind] ?? 0) - 1, 0);
           this._paintHits(kind);
         } else if (e.key === "Enter") {
-          if (this._openKind === kind && hits.length) {
+          if (this._drawerKind === kind && hits.length) {
             e.preventDefault();
             const i = this._hitActive[kind] >= 0 ? this._hitActive[kind] : 0;
             this._applyHit(kind, hits[i]);
@@ -7055,11 +7674,72 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       const root = this.shadowRoot;
       if (!root) return;
 
-      ["strain", "medium", "nutrient", "light"].forEach((k) => this._bindSearch(k));
+      if (this._drawerKind) this._bindSearch(this._drawerKind);
 
-      root.getElementById("medium-slot")?.addEventListener("change", (e) => {
-        this._mediumSlot = Number(e.target.value) || 1;
+      root.querySelectorAll("[data-open-drawer]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const kind = btn.getAttribute("data-open-drawer");
+          if (kind) this._openSearch(kind);
+        });
       });
+
+      root.querySelectorAll("[data-overflow]").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const kind = btn.getAttribute("data-overflow");
+          this._overflowMenu = this._overflowMenu === kind ? null : kind;
+          this._render();
+        });
+      });
+
+      root.querySelectorAll("[data-medium-action]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const action = btn.getAttribute("data-medium-action");
+          this._overflowMenu = null;
+          if (action === "add") {
+            const next = this._nextEmptyMediumSlot();
+            if (!next) return;
+            this._mediumSlot = next;
+            this._openSearch("medium");
+            return;
+          }
+          if (action === "remove") {
+            const active = this._activeMediumSlots();
+            const last = active[active.length - 1];
+            if (!last) return;
+            this._clearMediumSlot(last.n);
+            this._render();
+            return;
+          }
+          if (action === "change") {
+            const active = this._activeMediumSlots();
+            this._mediumSlot = active.length ? active[active.length - 1].n : this._nextEmptyMediumSlot() || 1;
+            this._openSearch("medium");
+          }
+        });
+      });
+
+      root.querySelectorAll("[data-overflow-action]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const action = btn.getAttribute("data-overflow-action");
+          const kind = btn.getAttribute("data-kind");
+          this._overflowMenu = null;
+          if (action === "change" && kind) {
+            this._openSearch(kind);
+            return;
+          }
+          if (action === "clear-strain") {
+            this._selectedStrain = null;
+            this._setText("input_text.dsc_build_strain", "");
+            this._q.strain = "";
+            this._render();
+          }
+        });
+      });
+
+      root.getElementById("drawer-scrim")?.addEventListener("click", () => this._closeDrawer());
+      root.getElementById("drawer-rail")?.addEventListener("click", () => this._closeDrawer());
+      root.getElementById("drawer-close")?.addEventListener("click", () => this._closeDrawer());
 
       root.getElementById("build-strain")?.addEventListener("change", (e) => this._setText("input_text.dsc_build_strain", e.target.value));
       root.getElementById("build-nick")?.addEventListener("change", (e) => this._setText("input_text.dsc_build_nickname", e.target.value));
@@ -7120,7 +7800,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
 })();
 
 /**
- * DSC-HUB — product shell section nav (wireframe for later webserver).
+ * DSC-HUB â€” product shell section nav (wireframe for later webserver).
  * type: custom:dsc-app-nav-card
  * ASCII-only user strings.
  */
@@ -7214,7 +7894,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
 })();
 
 /**
- * DSC-HUB — Catalog Explorer (browse / filter / compare / Use in Build).
+ * DSC-HUB â€” Catalog Explorer (browse / filter / compare / Use in Build).
  * type: custom:dsc-catalog-browse-card
  * Reads /local/dsc-catalog/*.json only. Missing fields = "not in catalog".
  */
@@ -7512,7 +8192,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         <div class="name" style="font-size:18px;font-weight:650">${this._esc(it.name)}</div>
         <div class="chips">${this._chips(it)}</div>
         <dl class="detail">
-          <dt>id / source</dt><dd>${this._esc(it.id || "-")} · ${this._esc(it.source || "-")}</dd>
+          <dt>id / source</dt><dd>${this._esc(it.id || "-")} Â· ${this._esc(it.source || "-")}</dd>
           ${
             this._domain === "strains"
               ? `
@@ -7674,7 +8354,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         <div class="wrap">
           <div class="brand">DSC-HUB / Plant</div>
           <h1>${this._esc(this._config.title || "Catalog")}</h1>
-          <p class="sub">Browse and compare catalog entries. Missing height/climate fields stay blank — never invented. ${this._esc(note)}</p>
+          <p class="sub">Browse and compare catalog entries. Missing height/climate fields stay blank â€” never invented. ${this._esc(note)}</p>
           <div class="tabs">
             ${DOMAINS.map(
               (d) =>
@@ -7682,7 +8362,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
             ).join("")}
           </div>
           ${this._filterBar()}
-          <p class="muted">${items.length} shown / ${count} indexed${this._meta?.with_want != null ? ` · ${this._meta.with_want} with Want · ${this._meta.with_height || 0} with height` : ""}</p>
+          <p class="muted">${items.length} shown / ${count} indexed${this._meta?.with_want != null ? ` Â· ${this._meta.with_want} with Want Â· ${this._meta.with_height || 0} with height` : ""}</p>
           <div class="layout">
             <div class="panel">
               <h2>Results</h2>
@@ -7721,3 +8401,4 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     description: "Browse/compare strains, nutrients, mediums, lights",
   });
 })();
+

@@ -1791,6 +1791,11 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 
 ## 2026-08-10 — DSC-Dashboard visual inspiration
 
+### done (2026-08-11 visual pass 6.2.0)
+- Glass HUD tokens + Build result-first slide-out search + soil cross-section
+- Plant Seat React page (soil / age / recipe / Got) + tent apply
+- `input_select.dsc_potN_tent` + `script.dsc_apply_pot_to_tent`; Dash lerp + pot pick
+- Ops Home / Root Zone / Strains wired to Plant Seat; surface **6.2.0**
+
 ### next-plan
-- N-xxx (visual): Apply concept renders in `docs/assets/inspiration/` as north star for custom panel + Build a Plant + The Dash — glass HUD over digital twin, teal/neon flow lines, sparse anchored metrics; keep metric honesty (no invented PPFD grids / feed rates).
-- N-xxx (plant seat dash): Per-plant detail — soil blend cross-section + age + nutrients/recipe + live soil Got; select from Dash pot / Root Zone / roster. Reuse Build Medium graphic language; do not invent feed schedules. See `docs/assets/README.md` inspiration notes.
+- (none for this visual pass — live HA smoke + Sync deploy still operator-gated)
