@@ -71,6 +71,56 @@ After editing Dash / Build under `homeassistant/www/`, either wait for the
 or run `./scripts/sync-hacs-dist.sh` locally before expecting HACS Redownload
 to pick up the change.
 
+## Surface version lockstep (`d456ce3`)
+
+Three strings must stay equal when shipping a surface bump. They are **not**
+automatically linked.
+
+| Layer | Path | Role |
+|---|---|---|
+| Package sensor (operator SoT) | `packages/dsc_v4_version.yaml` → `sensor.dsc_ha_surface_version` | What ops read; fleet chip attributes report it but do **not** score it |
+| Integration constant | `custom_components/dsc_hub/const.py` → `SURFACE_VERSION` | Written to `hass.data["dsc_hub"]["surface_version"]` on `async_setup` — bookkeeping only; **not** the sensor |
+| Panel UI fallbacks | `frontend/src/**` (`state(…, "6.2.0")`, App shell `SURFACE 6.2.0`) + rebuilt `www/dsc-hub-panel.js` | Shown when the sensor is missing / unavailable |
+
+```mermaid
+flowchart LR
+  pkg["dsc_v4_version.yaml<br/>state 6.2.0"] --> sensor["sensor.dsc_ha_surface_version"]
+  sensor --> ui["Ops Home / System KPIs"]
+  const["const.py SURFACE_VERSION"] --> hassData["hass.data dsc_hub.surface_version"]
+  fallbacks["TSX default strings"] --> bundle["www/dsc-hub-panel.js"]
+  bundle --> ui
+  sensor -.->|unavailable| fallbacks
+```
+
+### Constraints (verified against `d456ce3`)
+
+- `SURFACE_VERSION` does **not** create or update `sensor.dsc_ha_surface_version`.
+  Changing only `const.py` leaves the package sensor and KPI fallbacks stale.
+- UI `state("sensor.dsc_ha_surface_version", "6.2.0")` uses the second arg only
+  when HA has no state — a live sensor still wins after Sync packages.
+- `manifest.json` `version` (`0.1.0`) is the integration package version, **not**
+  the product surface string.
+- Firmware train / `input_text.dsc_expected_release` stay on **5.2.0**.
+
+### Bump procedure
+
+1. Set `state: "X.Y.Z"` (+ attributes) in `packages/dsc_v4_version.yaml`.
+2. Set `SURFACE_VERSION = "X.Y.Z"` in `custom_components/dsc_hub/const.py`.
+3. Grep/update hardcoded `"X.Y.Z"` / `SURFACE X.Y.Z` under
+   `custom_components/dsc_hub/frontend/src/`.
+4. Rebuild panel: `pwsh -File scripts/build-dsc-hub-panel.ps1`.
+5. Sync `packages/` + `custom_components/dsc_hub` → **Core restart** (Python
+   constant + template sensor) → hard-refresh `/dsc-hub`.
+6. Smoke: sensor = `X.Y.Z`; System Overview Surface KPI matches; App shell
+   shows `SURFACE X.Y.Z` even if you temporarily disable the template sensor.
+
+### Operator smoke (lockstep)
+
+1. After Sync + Core restart, `sensor.dsc_ha_surface_version` = **6.2.0**.
+2. `/dsc-hub#/system/overview` Surface KPI = **6.2.0** (same as Ops Home).
+3. App chrome shows `SURFACE 6.2.0` (bundled fallback / label).
+4. Confirm `input_text.dsc_expected_release` is still **5.2.0** (firmware).
+
 ## Visual system (6.2.0)
 
 Black / gray / neon green / teal / white · glass HUD · tabbed primary+secondary ·
@@ -138,6 +188,7 @@ flowchart LR
 - [ ] Ops · Dash pot click / chip → Plant Seat; Apply to tent lerps plant on Dash
 - [ ] Plant · Build result chips + slide-out search; soil cross-section; Commit+assign
 - [ ] `sensor.dsc_ha_surface_version` reads **6.2.0**
+- [ ] `const.py` / panel fallbacks / package sensor all say **6.2.0** (no 6.1.0 drift)
 - [ ] `input_select.dsc_potN_tent` exists after package sync + Core restart
 - [ ] HACS Redownload (or Sync www) lands post-`d6beefd` Dash/Build glass cards
 - [ ] WashData / Overview / Frigate / other non-DSC panels unchanged
@@ -156,4 +207,7 @@ flowchart LR
 - Dash plant stuck / no lerp → stale Lit card (HACS Redownload or Sync www + hard-refresh); or pot-tent package not loaded.
 - Apply tent no-ops → script/helpers absent until Core restart after first package land.
 - Stale HACS after www edit → wait for `chore(hacs): sync dist/…` on master, then Redownload.
-- Do not conflate surface **6.2.0** with firmware **5.2.0**.
+- Surface string drift → package bumped but `SURFACE_VERSION` / TSX fallbacks left on
+  **6.1.0** (fixed by `d456ce3`); always bump all three + rebuild `www/`.
+- Do not conflate surface **6.2.0** with firmware **5.2.0**, or with
+  `manifest.json` / Sync add-on versions.

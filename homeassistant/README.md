@@ -12,7 +12,7 @@ Canonical HA surface for firmware [`firmware/v4/`](../firmware/v4/).
 | `packages/dsc_v4_strain_catalog.yaml` | Strain catalog, sprout age, Want/Need/Got, peer offsets, Apply expected stage |
 | `packages/dsc_v4_build_plant.yaml` | Build a Plant SoT: soil % blend, plant roster, mix calculator, Apply climate Want |
 | `packages/dsc_v4_pot_tent.yaml` | Pot → tent digital-twin SoT (`input_select.dsc_potN_tent` + `script.dsc_apply_pot_to_tent`) |
-| `custom_components/dsc_hub/` | React product panel `/dsc-hub` (surface **6.2.0** — Plant Seat + glass Ops) |
+| `custom_components/dsc_hub/` | React product panel `/dsc-hub` (surface **6.2.0** — Plant Seat + glass Ops). Keep `const.py` `SURFACE_VERSION` + TSX fallbacks in lockstep with the package sensor — see [`docs/qa/LIVE-UI-CUSTOM-PANEL.md`](../docs/qa/LIVE-UI-CUSTOM-PANEL.md#surface-version-lockstep-d456ce3) |
 | `packages/dsc_v4_version.yaml` | `sensor.dsc_ha_surface_version` (**6.2.0**) + firmware fleet chip |
 | `packages/dsc_v4_sensor_cal.yaml` | Peer sync, dual-stack, push peer→ESP, **lab wet two-point** |
 | `packages/dsc_v4_sensor_trust.yaml` | Stuck/MAD/DHT trust, keep-up gaps, HA-link flap counter |

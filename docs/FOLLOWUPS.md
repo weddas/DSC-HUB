@@ -1797,7 +1797,8 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 - `input_select.dsc_potN_tent` + `script.dsc_apply_pot_to_tent`; Dash lerp + pot pick
 - Ops Home / Root Zone / Strains wired to Plant Seat; surface **6.2.0**
 - HACS `dist/` synced from `homeassistant/www` (`5ccbc46` via `hacs-dist.yml`)
+- **`d456ce3`:** `SURFACE_VERSION` + panel KPI fallbacks aligned to **6.2.0** (were still **6.1.0** while package sensor / visual pass already **6.2.0**). Lockstep runbook in [`docs/qa/LIVE-UI-CUSTOM-PANEL.md`](qa/LIVE-UI-CUSTOM-PANEL.md#surface-version-lockstep-d456ce3).
 
 ### next-plan
-- Live HA smoke: surface **6.2.0** + Plant Seat tent apply + Dash lerp; HACS Redownload or Sync www
-- Docs ops: [`docs/qa/LIVE-UI-CUSTOM-PANEL.md`](qa/LIVE-UI-CUSTOM-PANEL.md) (panel vs HACS dual path)
+- Live HA smoke: sensor + System KPI + App `SURFACE` label all **6.2.0** after Core restart; Plant Seat tent apply + Dash lerp; HACS Redownload or Sync www
+- Docs ops: [`docs/qa/LIVE-UI-CUSTOM-PANEL.md`](qa/LIVE-UI-CUSTOM-PANEL.md) (panel vs HACS dual path + SURFACE_VERSION lockstep)
