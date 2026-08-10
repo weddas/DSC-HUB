@@ -16,7 +16,8 @@ except ImportError:
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "homeassistant" / "data"
-STRAIN_CAP = 2500
+# Cap keeps HA picker payloads bounded; raised 2500→10000 after densify (2026-08-10).
+STRAIN_CAP = 10000
 
 
 def _slug(*parts: str) -> str:

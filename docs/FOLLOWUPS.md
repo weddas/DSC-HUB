@@ -1672,7 +1672,11 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 | ID | Status | Notes |
 |---|---|---|
 | S-SEEDFINDER | **side task (resumed)** | 2026-08-10 evening: PW scrape relaunched (~22853/40638; todo ~17.8k). Checkpoint `save()` hardened for NAS replace PermissionError. Merge again when quiet. |
-| S-STRAINDB | **DEFERRED_CF (n≈289)** | Parked 2026-08-10 by operator: CF too costly vs value right now. Pause file `status=DEFERRED_CF`. Resume only on explicit ask after headed CF unlock (8–20s). Not a gate for catalog work on master. |
+| S-STRAINDB | **PARKED_HTTP_FAIL (~359)** | Headed scrape reached ~70 new (~359 done) then hard `ERR_HTTP_RESPONSE_CODE_FAILURE` / chrome-error on warm. Cooldown relaunch still blocked — parked to avoid ban. Resume later with fresh PW profile / longer cool-off. |
+| S-MEDAUTH | **PAUSED_DAILY_LIMIT (+94 bodies)** | In-tab medauth scrape harvested **94** review bodies → `review` table on local+NAS masters. Site then hit “Slow Down / daily viewing limit / try again in 24 hours” even while signed in. Resume after ~2026-08-11; ingest server kept at `:8765`. Dump: `dsc_reviews_cannareviews_medauth.json`. |
+| S-BANK-DESC | **RUNNING** | Herbies ~410/4142 · Zamnesia ~725/2299 description enrich. |
+| S-SEEDFINDER | **RUNNING** | Headed PW ~23203 done; NAS staging journal live — do not merge yet. |
+| S-WAVE-D | **expanded** | Apex Grow + TG Hydroponics staged. Master nutrients **867** / mediums **321**; NPK **51** / dose **143** from body_html. |
 | S-TIERA-HALF1 | **done (dump/staging + merged)** | Was dump+staging; now included in local-SSD exclusive queue. |
 | S-TIERA-2ND | **done (dump/staging + merged)** | Was dump+staging; now included in local-SSD exclusive queue. |
 | Bank/forum dumps | **merged** | Priority banks + Wave2 + forums + thin-field families drained via local-SSD exclusive (207 plan). |
@@ -1768,3 +1772,15 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 **Bridge notes:** SoftAP `WIFI_MODE_APSTA`, max STA 10, eth static `192.168.86.66`. Hub flash = **micro-USB** / HA USB Install; bridge = USB-TTL + IO0/EN.
 
 **2026-08-10 thrash note:** Nest-first push `5893ea6` was wrong for the design goal; SoftAP-primary + real BSSID pin restored. Orphan/Fallback was SoftAP L3 + zero-BSSID pins, not SoftAP preference itself.
+
+**2026-08-10 SoftAP join proved:** After USB Install SoftAP-primary, hub is on SoftAP **`192.168.4.10`** (ESPHome shows it). Do **not** treat Nest reservation **`192.168.86.23`** as the hub — that IP/MAC answers as **dsc-de-humidifier** (`84:0D:8E:51:D3:B9`). SoftAP radio/BSSID/ch11 OK.
+
+**SoftAP L3 (2026-08-10):** **Proved.** LAN/HA ping `.4.1` + hub `.4.10` (MAC `84:1F:E8:16:E6:60` SoftAP STA, wifi_mode=APSTA). Root causes: (1) SoftAP lwIP before `wifi_start` + `L2_TO_L3_COPY`; (2) espnow STA clobber — SoftAP after espnow with **stop→APSTA→config→single start** (STA→APSTA+set_config double `AP_START` asserted); (3) never manual `esp_netif_action_start`. Bridge = **OTA `.66`**.
+
+## 2026-08-10 — subtype own-source chem/notes chase
+
+- [x] Honest projector `scripts/project_subtype_chem_from_own_sources.py` (never copies parent photoperiod chem/notes onto auto/F2/bx subtypes).
+- [x] Ran on local master `C:\DSC\collation\dsc_brain.sqlite3` + NAS via local work-copy/copyback. Summary: `C:\DSC\collation\_subtype_chem_own_sources_summary.json`.
+- [x] `project_subtype_links.py` re-run: 0 new links (9703 subtype_of; 14333 base_missing still).
+- **Coverage:** chem 7105→7129 (+24 staging typed); bank_note 4800→4952 (+152 staging raw). Still lacking chem **2574** / notes **4751** — no honest own-source left on disk.
+- [ ] **next-plan:** targeted F2/bx/auto PDP scrapes for remaining subtype chem/notes (see `docs/qa/CATALOG-THIN-FIELDS.md` P1). SoftAP out of scope.

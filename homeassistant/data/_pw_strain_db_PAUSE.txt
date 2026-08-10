@@ -1,5 +1,4 @@
-﻿status=DEFERRED_CF
-reason=Operator 2026-08-10: park StrainDB while SeedFinder runs as side task; work from current master (~181k canonical). Resume only on explicit ask after headed CF unlock.
-n=289
-cmd=python -u scripts/_pw_scrape_strain_database.py --headed --delay-min=8 --delay-max=20
-updated_at=2026-08-10T11:23:10.9363172+10:00
+status=PARKED_HTTP_FAIL
+reason=Repeated ERR_HTTP_RESPONSE_CODE_FAILURE / chrome-error on warm after cooldown. Parked to avoid ban. Resume later with fresh profile or longer cooldown.
+n=~359
+updated_at=2026-08-10T08:55:45Z

@@ -31,7 +31,8 @@ WWW = ROOT / "homeassistant" / "www" / "dsc-catalog"
 DIST = ROOT / "dist" / "dsc-catalog"
 DEFAULT_DB = ROOT / "brain" / "data" / "dsc_brain.sqlite3"
 
-STRAIN_CAP = 2500
+# Cap keeps HA picker payloads bounded; raised 2500→10000 after densify (2026-08-10).
+STRAIN_CAP = 10000
 NUTE_CAP = 1500
 MEDIUM_CAP = 800
 LIGHT_CAP = 800
@@ -511,7 +512,7 @@ def main() -> int:
     if args.from_dumps:
         strains = build_strains()
     else:
-        strains = build_strains_from_sqlite(args.db) or build_strains()
+        strains = build_strains_from_sqlite(args.db, cap=STRAIN_CAP) or build_strains()
 
     outs = [
         _write("dsc_strains_search_index.json", strains),

@@ -622,6 +622,26 @@ def scrape_bank(
             m = re.search(r"(?i)breeder[:\s]+([A-Za-z0-9][A-Za-z0-9 &\-\.]{1,40})", text)
             if m and not breeder:
                 breeder = m.group(1).strip()
+            description = None
+            for block in extract_json_ld(html):
+                for key in ("description", "abstract"):
+                    v = block.get(key)
+                    if isinstance(v, str) and len(v.strip()) > 40:
+                        description = clean(v)[:8000]
+                        break
+                if description:
+                    break
+            if not description:
+                for pat in (
+                    r'<meta[^>]+property=["\']og:description["\'][^>]+content=["\']([^"\']+)["\']',
+                    r'<meta[^>]+name=["\']description["\'][^>]+content=["\']([^"\']+)["\']',
+                    r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:description["\']',
+                    r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+name=["\']description["\']',
+                ):
+                    mm = re.search(pat, html, re.I)
+                    if mm and len(mm.group(1).strip()) > 40:
+                        description = clean(mm.group(1))[:8000]
+                        break
             row = {
                 "name": name,
                 "name_norm": name_norm(name),
@@ -632,6 +652,8 @@ def scrape_bank(
                 **props,
                 "page_text_excerpt": text[:1500],
             }
+            if description:
+                row["description"] = description
             by_url[url] = row
             done.add(url)
             scraped_this_run += 1

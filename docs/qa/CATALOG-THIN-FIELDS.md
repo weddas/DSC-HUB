@@ -1,44 +1,32 @@
 # Catalog thin fields & next-scrape chase
 
 **Audience:** next scrape / fill pass.  
-**Updated:** 2026-08-10 (height NLP + Wave D lite + SF resume).  
-**Workset:** `C:\DSC\collation\` (+ NAS master copy-back).
+**Updated:** 2026-08-10 21:15 (densify run-2).  
+**Workset:** `C:\DSC\collation\` (+ NAS).
 
-## Landed from existing disks + light scrapes
+## Landed (run-2)
 
 | Deliverable | Evidence |
 |---|---|
-| Staging drain | 264 local staging DBs → obs ≈126k / 224 sources |
-| Height cm NLP | `height_cm_*` **~43.5%** (44376/102141) via indoor fields + prose with units |
-| Height bands | payload `height_band` ≈5145 (Short/Med/Tall — no fake cm) |
-| Wave D lite | Grow Kings Shopify → `nutrient_product` **416**, `medium_product` **255** |
-| SeedFinder | PW scrape **resumed** (~22853/40638 done; todo ~17.8k); checkpoint save hardened for NAS replace |
-
-## Still thin / scrape targets
-
-| Priority | Field | Blocked by | Next |
-|---|---|---|---|
-| P0 | `review` bodies | Medauth | Login PDP scrape |
-| P0 | Remaining height (~56% empty) | No numeric text in payloads | Bank/Leafly pages with cm/in |
-| P1 | SeedFinder remainder | Running | Let PW finish → quiet re-merge `--no-link` |
-| P1 | StrainDB | `DEFERRED_CF` | Explicit unlock only |
-| P1 | Wave D depth | GK has titles only | Manufacturer PDPs for NPK/dose; more brands |
-| P1 | Subtype chem/notes | Name-only subtypes | Targeted F2/bx/auto PDPs |
-| P2 | Herbies/Zamnesia `description` | Excerpt-only notes | Re-scrape description DOM |
-| P3 | Want / imagery | Not scraped | Separate passes |
+| Herbies mid-stage + obs | bank_note projected; obs **128498 → 131716**; herbies_obs **7360** |
+| Height bands | payload `height_band` **~8783** (was ~5145) |
+| RQS descriptions | enrich running (188 need) |
+| SeedSupreme descriptions | **31/31** remaining filled + staged |
+| Seedsman remaining | 65 attempted, **0** extractable (no meta/JSON-LD) |
+| Alias / promote | already saturated (0 new; unresolved still ~5651) |
 
 ## Snapshot
 
 | Metric | Count |
 |---|---|
-| `strain_canonical` | ~189k |
-| `observation` | ~126k |
-| `grow_trait` height filled | ~44376 (~43.5%) |
-| `height_band` in payload | ~5145 |
-| `nutrient_product` / `medium_product` | 416 / 255 |
-| `review` | 0 |
-| SeedFinder scrape | resumed ~22.8k/40.6k |
+| observation | ~131.7k |
+| height_cm filled | 48752 / 102141 (~47.7%) |
+| height_band | ~8783 |
+| nutrients / mediums | 867 / 321 |
+| review | 94 |
+| SeedFinder | ~25.2k+ running |
+| Herbies desc enrich | ~3265/4142 running |
 
-## Non-goals without unlock
+## Still blocked / waiting
 
-StrainDB CF, medauth, inventing cm from Short/Med/Tall, fuzzy lineage, strip F/OG/bx.
+CannaReviews daily limit, StrainDB HTTP park, SF journal live (no merge yet), subtype chem gaps without own-source PDPs.
