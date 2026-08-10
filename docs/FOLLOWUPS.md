@@ -1745,10 +1745,10 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 
 ## SoftAP fleet home + enhanced Fleet Fix (2026-08-10)
 
-**Decision:** SoftAP DSC-Anchor is the Wi‑Fi home for Hub / Control / Sonoffs. Pots stay ESP-NOW→hub→bridge (star). Nest is emergency fallback only. Spec: `docs/superpowers/specs/2026-08-10-softap-fleet-star-design.md`.
+**Decision:** SoftAP DSC-Anchor is the Wi‑Fi home for Hub / Control / Sonoffs. Pots stay ESP-NOW→hub→bridge (star). Nest is emergency fallback only. Spec: `docs/superpowers/specs/2026-08-10-softap-fleet-star-design.md`. Ops: [`docs/qa/SOFTAP-FLEET-HOME.md`](qa/SOFTAP-FLEET-HOME.md) · [`docs/brain/F010_APPLIANCE_BRIDGE.md`](brain/F010_APPLIANCE_BRIDGE.md).
 
 **Implementation landed in tree:**
-- `dsc_anchor_ap`: SoftAP + DHCP (`192.168.4.1/24`) + NAPT + ESP-NOW rebind to `WIFI_IF_AP` (SoftAP-deferred bring-up path retired).
+- `dsc_anchor_ap`: SoftAP + static client map (`192.168.4.1/24`, **no DHCPS**) + NAPT + ESP-NOW rebind to `WIFI_IF_AP` (SoftAP-deferred bring-up path retired).
 - Bridge sdkconfig: `CONFIG_LWIP_IP_FORWARD` / `CONFIG_LWIP_IPV4_NAPT` / SoftAP max STA 10.
 - Static SoftAP map: hub `.10`, control `.11`, heater `.20`, heatmat `.21`, humidifier `.22`, dehumidifier `.23`.
 - Hub/Control wifi lab: Anchor primary; pot wifi lab: Nest primary (SoftAP demoted).
