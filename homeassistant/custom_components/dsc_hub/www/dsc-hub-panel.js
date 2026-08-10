@@ -13890,7 +13890,7 @@ function sg() {
     /* @__PURE__ */ r.jsxs("div", { className: "dsc-grid", children: [
       /* @__PURE__ */ r.jsx("div", { className: "dsc-col-6", children: /* @__PURE__ */ r.jsx(re, { title: "Status", children: /* @__PURE__ */ r.jsxs("p", { className: "dsc-muted", style: { marginTop: 0 }, children: [
         "Surface: ",
-        i("sensor.dsc_ha_surface_version", "6.1.0"),
+        i("sensor.dsc_ha_surface_version", "6.2.0"),
         ". Durable learning math belongs in brain/."
       ] }) }) }),
       /* @__PURE__ */ r.jsx("div", { className: "dsc-col-6", children: /* @__PURE__ */ r.jsx(Ue, { label: "Hub beat", value: i("sensor.dsc_hub_heartbeat", "—") }) })
@@ -13933,7 +13933,7 @@ function fg() {
           sub: `Uptime raw ${i("sensor.dsc_hub_uptime", "—")}`
         }
       ) }),
-      /* @__PURE__ */ r.jsx("div", { className: "dsc-col-4", children: /* @__PURE__ */ r.jsx(Ue, { label: "Surface", value: i("sensor.dsc_ha_surface_version", "6.1.0"), sub: "Panel product shell" }) }),
+      /* @__PURE__ */ r.jsx("div", { className: "dsc-col-4", children: /* @__PURE__ */ r.jsx(Ue, { label: "Surface", value: i("sensor.dsc_ha_surface_version", "6.2.0"), sub: "Panel product shell" }) }),
       /* @__PURE__ */ r.jsx("div", { className: "dsc-col-4", children: /* @__PURE__ */ r.jsx(
         Ue,
         {

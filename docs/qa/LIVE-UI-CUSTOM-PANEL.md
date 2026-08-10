@@ -1,4 +1,4 @@
-# LIVE-UI — DSC-HUB custom panel (surface 6.1.0)
+# LIVE-UI — DSC-HUB custom panel (surface 6.2.0)
 
 React + Vite product panel hosted inside Home Assistant (WashData pattern).
 

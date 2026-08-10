@@ -12,7 +12,7 @@ export function AdvancedLearningPage() {
         <div className="dsc-col-6">
           <Card title="Status">
             <p className="dsc-muted" style={{ marginTop: 0 }}>
-              Surface: {state("sensor.dsc_ha_surface_version", "6.1.0")}. Durable learning math belongs in brain/.
+              Surface: {state("sensor.dsc_ha_surface_version", "6.2.0")}. Durable learning math belongs in brain/.
             </p>
           </Card>
         </div>
@@ -78,7 +78,7 @@ export function SystemOverviewPage() {
           />
         </div>
         <div className="dsc-col-4">
-          <Kpi label="Surface" value={state("sensor.dsc_ha_surface_version", "6.1.0")} sub="Panel product shell" />
+          <Kpi label="Surface" value={state("sensor.dsc_ha_surface_version", "6.2.0")} sub="Panel product shell" />
         </div>
         <div className="dsc-col-4">
           <Kpi
