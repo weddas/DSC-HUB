@@ -92,9 +92,11 @@ Disable any storage dashboard still named DSC-HUB / `dsc-hub-v4`. Sidebar:
 | Sonoffs | sonoff-common (dual API client) | **5.2.0** |
 
 Stub `ref: master` (or tag when cut). Kits Validate even if not flashed on lab.
-Bridge needs `firmware/v4/components/dsc_api_client` beside the stub (Sync
-copies components, or flash from `firmware/v4/`). Secrets: `dsc_bridge_*`,
-`dsc_anchor_ap_password`, four `dsc_*_host`.
+Bridge needs `firmware/v4/components/dsc_api_client` + `dsc_anchor_ap` beside
+the stub (Sync stages stubs + `dsc_fleet_setup` only until **F-015** — copy
+bridge components manually, or flash from `firmware/v4/`). Secrets:
+`dsc_bridge_*`, `dsc_anchor_ap_password`, four `dsc_*_host` (SoftAP IPs when
+SoftAP-primary). SoftAP-primary ops: [`docs/qa/SOFTAP-FLEET-HOME.md`](docs/qa/SOFTAP-FLEET-HOME.md).
 
 ### Flash order
 
@@ -106,7 +108,8 @@ copies components, or flash from `firmware/v4/`). Secrets: `dsc_bridge_*`,
 - [ ] `sensor.dsc_ha_surface_version` reports the HA pack (currently **6.x** — independent of firmware train)
 - [ ] `sensor.dsc_fleet_version_status` → **ok** after all flashes (firmware train only; surface not compared)
 - [ ] `/dsc-hub-pro/home` + Learning Phase B controls present (B default off)
-- [ ] Panel ESP-NOW UP; Bridge Anchor SoftAP up; Sonoffs follow via bridge (HA followers fallback)
+- [ ] Panel ESP-NOW UP; Bridge Anchor SoftAP up; Hub/Control/Sonoffs SoftAP-primary (`.10`/`.11`/`.20`–`.23`); Sonoffs follow via bridge (HA followers fallback)
+- [ ] SoftAP BSSID pin is real Anchor MAC (not `00…`); HA SoftAP route `192.168.4.0/24 via 192.168.86.66` when validating SoftAP L3
 
 ---
 

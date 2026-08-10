@@ -7,6 +7,7 @@ cut remains `v5.1.0`). See the repo root README / CHANGELOG / FOLLOWUPS.
 Firmware QA: [docs/qa/FIRMWARE-QA-5.1.0.md](../../docs/qa/FIRMWARE-QA-5.1.0.md).
 Repo [README](../../README.md) and [INSTALL.md](../../INSTALL.md) for from-scratch HA setup.
 Standalone SoftAP unboxing (no HA): [SETUP.md](../../SETUP.md).
+SoftAP-primary fleet home ops: [SOFTAP-FLEET-HOME.md](../../docs/qa/SOFTAP-FLEET-HOME.md) · [F010](../../docs/brain/F010_APPLIANCE_BRIDGE.md).
 
 ## Local vs HA
 
@@ -20,7 +21,7 @@ Kit SoftAP setup: `dsc-hub-kit.yaml`, `dsc-control-kit.yaml`, `dsc-pot{1..4}-kit
 
 WiFi is split into `dsc-*-wifi-lab.yaml` / `dsc-*-wifi-kit.yaml` so kit builds omit compile-time SSIDs.
 Fleet component: `components/dsc_fleet_setup/` (phone portal on hub; Control/pots/bridge join `DSC-Setup-*`).
-Bridge also hosts SoftAP `DSC-Anchor` (F-012 channel pin) + `components/dsc_api_client/` (F-010).
+Bridge also hosts SoftAP `DSC-Anchor` (SoftAP-primary fleet home, max STA 10, NAPT) + `components/dsc_api_client/` (F-010). Hub/Control/Sonoffs pin SoftAP BSSID on SoftAP nets only; pots stay ESP-NOW.
 
 Package bodies are remote-git safe (no `!secret`). Stubs pass credentials (and hub/panel MACs + `espnow_cmd_tag`) as substitutions.
 

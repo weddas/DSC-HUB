@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- **ETH01 SoftAP-primary restore (`21e34e5`)** — SoftAP `DSC-Anchor` is again
+  Wi‑Fi home for Hub / Control / Sonoffs (Nest-first pause was wrong). SoftAP
+  entries pin Anchor BSSID; bridge SoftAP max STA **10**; pots stay ESP-NOW.
+  Ops: [`docs/qa/SOFTAP-FLEET-HOME.md`](docs/qa/SOFTAP-FLEET-HOME.md).
 - **ETH01 bridge 5.2.0 (F-010 / F-012 / F-013)** — WT32-ETH01 SoftAP channel
   anchor (`DSC-Anchor`), ESP-NOW `0xD8` appliance demand → Noise native API
   client to Sonoffs (HA-down actuation), broadcast `0xD1` vitals mirror to HA
