@@ -52,16 +52,23 @@ FORUM_BODY_KEYS = (
     "page_text_excerpt",
 )
 BANK_NOTE_KEYS = (
+    "description",
+)
+GROW_NOTE_KEYS = (
     "grow_notes",
     "grow_note",
-    "description",
 )
 
 
-def _kind_for_file(stem: str, source_id: str) -> str:
+def _kind_for_payload(stem: str, source_id: str, payload: dict) -> str:
     s = (source_id or stem or "").lower()
     if s.startswith("forum_") or "forum" in s:
         return "forum_post"
+    # Prefer grow_note when grow diary fields present (even if description also exists).
+    for k in GROW_NOTE_KEYS:
+        v = payload.get(k)
+        if isinstance(v, str) and v.strip():
+            return "grow_note"
     return "bank_note"
 
 
@@ -73,12 +80,14 @@ def _title_from_payload(payload: dict) -> str | None:
 
 
 def _body_for_kind(payload: dict, kind: str) -> tuple[str | None, str | None]:
-    """Return (title, body). Prefer bank note fields for bank_note; forum fields for forum_post."""
+    """Return (title, body) for the observation kind."""
     title = _title_from_payload(payload)
-    keys = BANK_NOTE_KEYS if kind == "bank_note" else FORUM_BODY_KEYS + BANK_NOTE_KEYS
-    # For bank_note never fall back to dumping whole JSON / page_text_excerpt alone
-    # unless description/grow_notes missing — still allow page_text_excerpt as last resort
-    # only for forums.
+    if kind == "grow_note":
+        keys: tuple[str, ...] = GROW_NOTE_KEYS
+    elif kind == "bank_note":
+        keys = BANK_NOTE_KEYS
+    else:
+        keys = FORUM_BODY_KEYS + GROW_NOTE_KEYS + BANK_NOTE_KEYS
     for k in keys:
         v = payload.get(k)
         if isinstance(v, str) and v.strip():
@@ -107,14 +116,13 @@ def project_one_staging(
 ) -> dict:
     src = sqlite3.connect(str(staging_path))
     src.row_factory = sqlite3.Row
-    default_kind = _kind_for_file(staging_path.stem, staging_path.stem)
     stats = {
         "file": staging_path.name,
-        "kind": default_kind,
         "scanned": 0,
         "written": 0,
         "skipped_empty": 0,
         "skipped_filter": 0,
+        "by_kind": {},
     }
     try:
         rows = src.execute(
@@ -133,7 +141,6 @@ def project_one_staging(
         if source_filter and source_id != source_filter and staging_path.stem != source_filter:
             stats["skipped_filter"] += 1
             continue
-        kind = _kind_for_file(staging_path.stem, source_id)
         try:
             payload = json.loads(row["payload_json"] or "{}")
         except json.JSONDecodeError:
@@ -142,6 +149,7 @@ def project_one_staging(
         if not isinstance(payload, dict):
             stats["skipped_empty"] += 1
             continue
+        kind = _kind_for_payload(staging_path.stem, source_id, payload)
         title, body = _body_for_kind(payload, kind)
         if not body:
             if kind == "forum_post":
@@ -163,8 +171,13 @@ def project_one_staging(
             continue
         if dry_run:
             stats["written"] += 1
+            stats["by_kind"][kind] = stats["by_kind"].get(kind, 0) + 1
             continue
-        note = "forum observation projector" if kind == "forum_post" else "bank_note observation projector"
+        note = {
+            "forum_post": "forum observation projector",
+            "grow_note": "grow_note observation projector",
+            "bank_note": "bank_note observation projector",
+        }.get(kind, "observation projector")
         ensure_source(master, source_id, source_id, redistributable=False, note=note)
         oid = add_observation(
             master,
@@ -178,6 +191,7 @@ def project_one_staging(
         )
         if oid:
             stats["written"] += 1
+            stats["by_kind"][kind] = stats["by_kind"].get(kind, 0) + 1
     src.close()
     return stats
 
