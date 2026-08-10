@@ -76,6 +76,7 @@ def build_strains_from_sqlite(db_path: Path, *, cap: int = STRAIN_CAP) -> dict |
                 "cbd_range",
                 "want",
                 "height_cm",
+                "height_band",
                 "flowering_days",
             ):
                 if item.get(field) not in (None, "", [], {}) and (
@@ -143,6 +144,7 @@ def build_strains_from_sqlite(db_path: Path, *, cap: int = STRAIN_CAP) -> dict |
     ),
     grow AS (
       SELECT name_norm, height_cm_min, height_cm_max, flowering_days_min, flowering_days_max,
+             payload_json,
              ROW_NUMBER() OVER (PARTITION BY name_norm ORDER BY id) AS rn
       FROM grow_trait
     ),
@@ -154,6 +156,7 @@ def build_strains_from_sqlite(db_path: Path, *, cap: int = STRAIN_CAP) -> dict |
     SELECT c.name_norm, c.name, c.type, c.summary_json, c.curated,
            ch.thc_min, ch.thc_max, ch.cbd_min, ch.cbd_max, ch.top_terpenes_json,
            g.height_cm_min, g.height_cm_max, g.flowering_days_min, g.flowering_days_max,
+           g.payload_json AS grow_payload_json,
            v.breeder
     FROM strain_canonical c
     LEFT JOIN chem ch ON ch.name_norm = c.name_norm AND ch.rn = 1
@@ -181,6 +184,7 @@ def build_strains_from_sqlite(db_path: Path, *, cap: int = STRAIN_CAP) -> dict |
             except json.JSONDecodeError:
                 tops = []
         height_cm = flowering_days = None
+        height_band = None
         if row["height_cm_min"] is not None:
             if (
                 row["height_cm_max"] is not None
@@ -189,6 +193,20 @@ def build_strains_from_sqlite(db_path: Path, *, cap: int = STRAIN_CAP) -> dict |
                 height_cm = [row["height_cm_min"], row["height_cm_max"]]
             else:
                 height_cm = row["height_cm_min"]
+        grow_payload = {}
+        if row["grow_payload_json"]:
+            try:
+                grow_payload = json.loads(row["grow_payload_json"]) or {}
+            except json.JSONDecodeError:
+                grow_payload = {}
+        if isinstance(grow_payload, dict):
+            band = grow_payload.get("height_band") or (
+                (grow_payload.get("grow") or {}).get("height_band")
+                if isinstance(grow_payload.get("grow"), dict)
+                else None
+            )
+            if isinstance(band, str) and band.strip():
+                height_band = band.strip()
         if row["flowering_days_min"] is not None:
             if (
                 row["flowering_days_max"] is not None
@@ -213,6 +231,7 @@ def build_strains_from_sqlite(db_path: Path, *, cap: int = STRAIN_CAP) -> dict |
                 "cbd_range": cbd_range,
                 "want": summary.get("want") if isinstance(summary.get("want"), dict) else None,
                 "height_cm": height_cm,
+                "height_band": height_band,
                 "flowering_days": flowering_days,
                 "curated": bool(row["curated"]),
             }
@@ -225,9 +244,11 @@ def build_strains_from_sqlite(db_path: Path, *, cap: int = STRAIN_CAP) -> dict |
         "count": len(rows),
         "with_want": sum(1 for r in rows if r.get("want")),
         "with_height": sum(1 for r in rows if r.get("height_cm") is not None),
+        "with_height_band": sum(1 for r in rows if r.get("height_band")),
         "note": (
             "Browse index v2 from research SQLite projection + curated Want; "
-            "height/flowering/chem only when corpus states them (never invented)."
+            "height_cm / height_band / flowering / chem only when corpus states them "
+            "(never invented cm from bands)."
         ),
         "items": rows,
     }

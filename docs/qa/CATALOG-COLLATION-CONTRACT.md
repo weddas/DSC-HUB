@@ -99,4 +99,11 @@ See FOLLOWUPS **N-087-COLLATION**.
 - Observations ≈71k (`bank_note`≈69.5k + forums); kind `grow_note` supported (0 rows until sources expose `grow_notes`).
 - Thin-field chase list: [`CATALOG-THIN-FIELDS.md`](CATALOG-THIN-FIELDS.md).
 
+**Catalog densify (2026-08-10, bak `*.pre_catalog_densify`):**
+- Numeric height text → `grow_trait.height_cm_*` (~2% → ~12.7%); never invent cm from Short/Med/Tall.
+- HA browse projection surfaces `height_band` from grow payload (ordinal; separate from `height_cm`).
+- Exact bank slug↔name `science_alias` harvest (~970 → ~23.2k).
+- Observations ≈78.9k (`bank_note`≈76.0k, `forum_post`≈1.5k, `grow_note`≈1.4k); Herbies/Zamnesia filtered excerpts; forums emit `grow_note` when diary fields present.
+- SeedFinder merge skipped (staging journal present). StrainDB / medauth still chase-only.
+
 **Still deferred:** wordcloud / collate-at-read UI; CannaReviews full review bodies (login/medauth); requiring `grow_trait` → observation FKs.

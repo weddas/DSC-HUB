@@ -1,50 +1,45 @@
 # Catalog thin fields & targeted rescrape chase
 
 **Audience:** merge/scrape workers planning the next fill pass.  
-**Updated:** 2026-08-10 (match-expand pass).  
-**Workset evidence:** local `C:\DSC\collation\dsc_brain.sqlite3` after subtype + observation widen.
+**Updated:** 2026-08-10 (catalog densify pass).  
+**Workset evidence:** local `C:\DSC\collation\dsc_brain.sqlite3` after densify.
 
 Do **not** invent values. Each row is something thin or missing and what would honestly fill it.
 
 | Priority | Category / field | Evidence now | Blocked by | Suggested chase |
 |---|---|---|---|---|
-| P0 | `review` bodies | `review=0`; CannaReviews staging is `login_gated` / aggregates; `dsc_reviews_cannareviews.json` has counts only | Medauth / login PDP | Separate medauth scrape → project via `project_reviews_from_raw.py` |
-| P0 | `grow_trait.height_cm_*` | ~2% filled (1780/89590); many payloads have `grow_height` text only | Parser / height_band coverage | Finish Leafly height_band projection; parse bank height text into cm |
-| P1 | Subtype differentiation | `subtype_of`≈9086 links; many subtypes are name-only (no own chem/grow/notes) | Incomplete bank/SF pages | Targeted SF/bank PDP for high-degree subtypes (auto / F2 / bx cuts) |
-| P1 | SeedFinder completeness | Variant `seedfinder`≈10k; scrape still running / journal live | CF + scrape quiet | When quiet: `merge_staging_to_master.py --only seedfinder --no-link` |
+| P0 | `review` bodies | `review=0`; CannaReviews staging is `login_gated` / aggregates | Medauth / login PDP | Separate medauth scrape → `project_reviews_from_raw.py` |
+| P1 | `grow_trait.height_cm_*` | **~12.7%** filled (11380/89590) after densify (was ~2%); bands still 355 in payload (no fake cm) | Remaining text lacks units / empty | More bank numeric height parsers; keep bands ordinal-only |
+| P1 | Subtype differentiation | `subtype_of`≈9086; many name-only | Incomplete bank/SF pages | Targeted SF/bank PDP for high-degree subtypes |
+| P1 | SeedFinder completeness | Journal still present (stale ~3h+); **not merged** this pass | Journal/scrape quiet | When quiet: `merge_staging_to_master.py --only seedfinder --no-link` |
 | P1 | StrainDB | Parked `DEFERRED_CF` n≈289 | Cloudflare | Resume only after headed CF unlock |
-| P1 | `science_alias` | ~970 after OG-spacing + promotes; still thin vs ~182k canonical | Exact bank slug↔name pairs not fully promoted | Alias harvest from staging `name`/`slug` exact pairs |
+| P2 | `science_alias` | **~23.2k** after bank slug harvest (was ~970); some merch/SKU noise from accessory banks | Quality filter | Optional: restrict harvest to seed-product URL patterns; drop cartridge/hashole SKUs |
 | P2 | `nutrient_product` / `medium_product` | 3 / 1 | Wave D not run | Brand crawl Wave D |
-| P2 | Herbies / Zamnesia notes | Staging present but `description` empty (page_text_excerpt only) → 0 `bank_note` | Scrape shape | Re-scrape PDP description fields or map excerpt carefully |
-| P2 | CannaReviews descriptions | Only ~11 of 4195 have `description` | Public scrape thin | Medauth PDP or richer public fields if available |
-| P2 | `observation.kind=grow_note` | 0 rows after widen (sources lack `grow_notes`) | Field absent in bank payloads | Forums + grow diaries; map when field appears |
-| P2 | Master `raw_record` | 0 by design | Staging holds fat | Keep; document families without note fields |
-| P2 | Strain imagery `media_asset` | 0 for strains; lights have PPFD/spectrum | Not scraped | Optional image pass later |
-| P3 | Want bands on canonical | Rare in `summary_json` | HA curation pass | Separate HA Want pass — not collation SoT |
-| P3 | `lineage_unresolved` leftovers | ~9.7k after junk quarantine | No exact canonical | Manual alias / subtype when bases appear; no fuzzy SoT |
-| P3 | Duplicate `o g` vs `og` canonicals | ~68 pairs aliased, not merged | Attachments on both | Later merge pass with attachment move — chase only |
+| P2 | Herbies / Zamnesia notes | **Densified:** filtered `page_text_excerpt` → `bank_note` (~6.4k); real `description` still empty | Scrape shape | Prefer later PDP description re-scrape over excerpts |
+| P2 | CannaReviews descriptions | Thin public `description` | Public scrape thin | Medauth PDP |
+| P2 | `observation.kind=grow_note` | **1431** from forums (was 0) | Bank payloads still lack `grow_notes` | More forums / diaries |
+| P2 | Master `raw_record` | 0 by design | Staging holds fat | Keep |
+| P2 | Strain imagery `media_asset` | 0 for strains | Not scraped | Optional image pass later |
+| P3 | Want bands on canonical | Rare in `summary_json` | HA curation | Separate HA Want pass |
+| P3 | `lineage_unresolved` leftovers | ~9.7k | No exact canonical | Manual alias / subtype when bases appear |
+| P3 | Duplicate `o g` vs `og` canonicals | ~68 pairs aliased, not merged | Attachments on both | Later merge with attachment move |
 
-## Categories in use (post match-expand)
+## Categories in use (post densify)
 
 | Kind / table | Role | Notes |
 |---|---|---|
 | `strain_canonical` | Identity hub | ~182k |
-| `strain_variant` | Bank SKU claims | |
-| `chemistry_profile` | Append-only lab/catalog chem | Popular names have thousands of lab rows — intentional |
-| `grow_trait` | Grow metrics | Height thin |
-| `observation.bank_note` | Marketing / PDP description | ~69.5k |
+| `grow_trait` | Grow metrics | height_cm ~12.7%; `height_band` in HA projection |
+| `observation.bank_note` | Marketing / PDP / filtered excerpt | ~76.0k |
 | `observation.forum_post` | Forum bodies | ~1.5k |
-| `observation.grow_note` | Grow diary field | **Added as kind; 0 rows until sources provide `grow_notes`** |
+| `observation.grow_note` | Grow diary field | **1431** |
 | `review` | User review bodies | Empty until medauth |
-| `entity_link.parent_of` | Lineage SoT | Structured only; tree quarantined |
-| `entity_link.subtype_of` | Genetic subtype → base | **New** this pass |
-| `entity_link.exact_name_norm` | Chem/variant ↔ canonical | |
-| `science_alias` | Exact alias → canonical | Incl. `o g`↔`og` |
-| `lineage_unresolved` | Exact-fail parent queue | |
-| `entity_link_quarantine` | Removed junk / tree noise | |
+| `science_alias` | Exact alias → canonical | Incl. OG spacing + bank slug harvest |
+| `entity_link.subtype_of` | Genetic subtype → base | ~9.1k |
 
 ## Explicit non-goals for chase
 
 - Fuzzy/LLM collapse of names into parents
 - Stripping F2/bx/OG tokens to force matches
+- Inventing cm from Short/Medium/Tall bands
 - Starting CF/medauth scrapes from this doc alone (needs operator gate)

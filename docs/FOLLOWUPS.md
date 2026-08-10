@@ -1473,6 +1473,7 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 | N-087b | DB DUMP + public dataset expansion | Local `DB DUMP` ingest (`import_local_db_dump.py`): Seed City local, Leafly flat/features, replication labs (~215k), pickle archive; GitHub Kushy MIT (~9.5k) + MaxValue terpenes (~43k); discovery list for Mendeley/CT/SDP; corpus rebuilt with slim typed payloads (raw dumps remain SoT for overflow) |
 | N-087c | Multi-DB staging → master ingest | Per-source staging under `brain/data/staging/<family>.sqlite3` with **FULL** `raw_record` payloads (NAS >1 TB; multi-GB OK); master `dsc_brain.sqlite3` receives matched typed+chem+grow+links via `merge_staging_to_master.py` (additive; keep both chem when conflicting); never explode bulk scores into `attribute_kv`; runbook updated in [`CATALOG-RESEARCH-CORPUS.md`](qa/CATALOG-RESEARCH-CORPUS.md) |
 | N-087-COLLATION | Collation contract (notes / reviews / lineage) | Durable architecture in [`CATALOG-COLLATION-CONTRACT.md`](qa/CATALOG-COLLATION-CONTRACT.md). **2026-08-10 v4 + debt + match-expand:** `observation`/`review`; `parent_of` SoT; `subtype_of` (~9.1k); junk/tree quarantine; observations≈71k; review=0 honest. Thin chase: [`CATALOG-THIN-FIELDS.md`](qa/CATALOG-THIN-FIELDS.md). Workset `C:\DSC\collation\`; baks `pre_collation_debt` + `pre_match_expand`. |
+| N-087-DENSIFY | Catalog densify (height / aliases / notes) | Offline pass after match-expand: numeric height text → `height_cm_*`; HA `height_band` surface; exact bank slug↔name `science_alias`; forum `grow_note` + filtered Herbies/Zamnesia excerpts. Chase-only: StrainDB CF, medauth reviews, SF merge-when-quiet. Workset `C:\DSC\collation\`; bak `pre_catalog_densify`. Thin chase: [`CATALOG-THIN-FIELDS.md`](qa/CATALOG-THIN-FIELDS.md). |
 
 ### deferred / honesty
 
@@ -1664,6 +1665,7 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 | N-087-MERGE-LINK-NAS | **done (mitigated)** | Per-family full-chem link abandoned. Wrapper/resume pass `--no-link --no-search`; `merge_staging_to_master` commits after link; `--link-only` + set-based `link_science_to_seed`; force flag `_n087_force_no_link.flag` for live children. End-link added **1.61M** variant edges in ~164s on local SSD. |
 | N-087-MERGE-NOLINK | **done** | See above; exclusive + resume scripts updated. |
 | N-087-COLLATION | **done (v4 + debt + match-expand)** | Schema v4; parent_of + subtype_of; junk/tree quarantine; observations≈71k; review=0; thin chase doc. Local `C:\DSC\collation\`; baks `pre_collation_v4` / `pre_collation_debt` / `pre_match_expand`. |
+| N-087-DENSIFY | **done** | Height ~12.7%; alias ~23.2k; obs ≈78.9k (grow_note 1431); SF merge skipped (journal); bak `pre_catalog_densify`. |
 | N-087-BACKUP | **done** | Durable `_BACKUP_N087_2026-08-08` (~9.5GB) present; earlier git backup commit fc8c4cc; plus `pre_local_ssd` bak before copy-back. |
 
 ### scrapes / corpus

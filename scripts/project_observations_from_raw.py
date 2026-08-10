@@ -4,7 +4,9 @@
 Master often has raw_record=0; read from local staging copies under --staging-dir.
 
 Supports forum_* and bank/PDP families. Bank descriptions / grow_notes map to
-kind=bank_note (never review). Forum bodies map to kind=forum_post.
+kind=bank_note or grow_note (never review). Forum bodies map to kind=forum_post;
+forum grow_notes fields also emit grow_note. Herbies/Zamnesia may use filtered
+page_text_excerpt → bank_note (excerpt_filtered=1).
 
 Usage:
   python scripts/project_observations_from_raw.py --db C:\\DSC\\collation\\dsc_brain.sqlite3 \\
@@ -58,17 +60,40 @@ GROW_NOTE_KEYS = (
     "grow_notes",
     "grow_note",
 )
+EXCERPT_ALLOW_STEMS = frozenset(
+    {
+        "bank_herbies",
+        "bank_zamnesia",
+        "herbies",
+        "zamnesia",
+    }
+)
+_EXCERPT_NOISE = (
+    "add to cart",
+    "cookie",
+    "javascript",
+    "sign in",
+    "log in",
+    "newsletter",
+    "privacy policy",
+    "shipping information",
+    "wishlist",
+)
+
+
+def _is_forum(stem: str, source_id: str) -> bool:
+    s = (source_id or stem or "").lower()
+    return s.startswith("forum_") or "forum" in s
 
 
 def _kind_for_payload(stem: str, source_id: str, payload: dict) -> str:
-    s = (source_id or stem or "").lower()
-    if s.startswith("forum_") or "forum" in s:
-        return "forum_post"
-    # Prefer grow_note when grow diary fields present (even if description also exists).
+    # Prefer grow_note when grow diary fields present (forums and banks).
     for k in GROW_NOTE_KEYS:
         v = payload.get(k)
         if isinstance(v, str) and v.strip():
             return "grow_note"
+    if _is_forum(stem, source_id):
+        return "forum_post"
     return "bank_note"
 
 
@@ -79,9 +104,30 @@ def _title_from_payload(payload: dict) -> str | None:
     return None
 
 
-def _body_for_kind(payload: dict, kind: str) -> tuple[str | None, str | None]:
-    """Return (title, body) for the observation kind."""
+def _filter_excerpt(text: str) -> str | None:
+    """Keep substantive PDP excerpts; reject nav/menu noise."""
+    body = " ".join((text or "").split())
+    if len(body) < 180:
+        return None
+    low = body.lower()
+    noise_hits = sum(1 for n in _EXCERPT_NOISE if n in low)
+    if noise_hits >= 3 and len(body) < 600:
+        return None
+    # Too many short tokens → menu soup
+    words = body.split()
+    if len(words) >= 40:
+        short = sum(1 for w in words[:80] if len(w) <= 2)
+        if short / min(len(words), 80) > 0.35:
+            return None
+    return body[:8000]
+
+
+def _body_for_kind(
+    payload: dict, kind: str, *, stem: str = "", allow_excerpt: bool = False
+) -> tuple[str | None, str | None, dict]:
+    """Return (title, body, extra_payload_flags)."""
     title = _title_from_payload(payload)
+    flags: dict = {}
     if kind == "grow_note":
         keys: tuple[str, ...] = GROW_NOTE_KEYS
     elif kind == "bank_note":
@@ -91,19 +137,27 @@ def _body_for_kind(payload: dict, kind: str) -> tuple[str | None, str | None]:
     for k in keys:
         v = payload.get(k)
         if isinstance(v, str) and v.strip():
-            return title, v.strip()
+            return title, v.strip(), flags
+    if kind == "bank_note" and allow_excerpt:
+        excerpt = payload.get("page_text_excerpt")
+        if isinstance(excerpt, str) and excerpt.strip():
+            filtered = _filter_excerpt(excerpt)
+            if filtered:
+                flags["excerpt_filtered"] = 1
+                flags["excerpt_stem"] = stem
+                return title, filtered, flags
     if kind == "forum_post":
         for nest in ("thread", "post", "op"):
             n = payload.get(nest)
             if isinstance(n, dict):
-                t2, b2 = _body_for_kind(n, kind)
+                t2, b2, f2 = _body_for_kind(n, kind, stem=stem, allow_excerpt=False)
                 if b2:
-                    return title or t2, b2
+                    return title or t2, b2, f2
         for k in FORUM_BODY_KEYS:
             v = payload.get(k)
             if isinstance(v, str) and v.strip():
-                return title, v.strip()
-    return title, None
+                return title, v.strip(), flags
+    return title, None, flags
 
 
 def project_one_staging(
@@ -149,49 +203,77 @@ def project_one_staging(
         if not isinstance(payload, dict):
             stats["skipped_empty"] += 1
             continue
-        kind = _kind_for_payload(staging_path.stem, source_id, payload)
-        title, body = _body_for_kind(payload, kind)
-        if not body:
-            if kind == "forum_post":
-                excerpt = json.dumps(
-                    {k: payload[k] for k in list(payload)[:12]},
-                    ensure_ascii=False,
-                )
-                if len(excerpt) < 40:
-                    stats["skipped_empty"] += 1
-                    continue
-                body = excerpt
-                title = title or payload.get("thread_title") or payload.get("name")
-            else:
-                stats["skipped_empty"] += 1
-                continue
-        key = row["name_norm"] or name_norm(str(payload.get("name") or title or ""))
-        if not key:
-            stats["skipped_empty"] += 1
-            continue
-        if dry_run:
-            stats["written"] += 1
-            stats["by_kind"][kind] = stats["by_kind"].get(kind, 0) + 1
-            continue
-        note = {
-            "forum_post": "forum observation projector",
-            "grow_note": "grow_note observation projector",
-            "bank_note": "bank_note observation projector",
-        }.get(kind, "observation projector")
-        ensure_source(master, source_id, source_id, redistributable=False, note=note)
-        oid = add_observation(
-            master,
-            name_norm_key=key,
-            source_id=source_id,
-            body_text=body,
-            kind=kind,
-            title=str(title).strip() if title else None,
-            payload={"projected_from": staging_path.name, "kind": kind},
-            raw_record_id=row["id"],
+        # Forums: emit grow_note when diary field present, else forum_post body.
+        # Banks: bank_note (description) or filtered excerpt for Herbies/Zamnesia.
+        kinds_to_write: list[str] = []
+        grow_present = any(
+            isinstance(payload.get(k), str) and payload.get(k).strip() for k in GROW_NOTE_KEYS
         )
-        if oid:
-            stats["written"] += 1
-            stats["by_kind"][kind] = stats["by_kind"].get(kind, 0) + 1
+        if grow_present:
+            kinds_to_write.append("grow_note")
+        if _is_forum(staging_path.stem, source_id):
+            kinds_to_write.append("forum_post")
+        else:
+            kinds_to_write.append("bank_note")
+        # de-dupe while preserving order
+        seen_k: set[str] = set()
+        ordered: list[str] = []
+        for k in kinds_to_write:
+            if k not in seen_k:
+                seen_k.add(k)
+                ordered.append(k)
+
+        allow_excerpt = staging_path.stem.lower() in EXCERPT_ALLOW_STEMS or (
+            (source_id or "").lower() in EXCERPT_ALLOW_STEMS
+        )
+        wrote_any = False
+        for kind in ordered:
+            title, body, flags = _body_for_kind(
+                payload, kind, stem=staging_path.stem, allow_excerpt=allow_excerpt
+            )
+            if not body:
+                if kind == "forum_post":
+                    excerpt = json.dumps(
+                        {k: payload[k] for k in list(payload)[:12]},
+                        ensure_ascii=False,
+                    )
+                    if len(excerpt) < 40:
+                        continue
+                    body = excerpt
+                    title = title or payload.get("thread_title") or payload.get("name")
+                else:
+                    continue
+            key = row["name_norm"] or name_norm(str(payload.get("name") or title or ""))
+            if not key:
+                continue
+            if dry_run:
+                stats["written"] += 1
+                stats["by_kind"][kind] = stats["by_kind"].get(kind, 0) + 1
+                wrote_any = True
+                continue
+            note = {
+                "forum_post": "forum observation projector",
+                "grow_note": "grow_note observation projector",
+                "bank_note": "bank_note observation projector",
+            }.get(kind, "observation projector")
+            ensure_source(master, source_id, source_id, redistributable=False, note=note)
+            payload_meta = {"projected_from": staging_path.name, "kind": kind, **flags}
+            oid = add_observation(
+                master,
+                name_norm_key=key,
+                source_id=source_id,
+                body_text=body,
+                kind=kind,
+                title=str(title).strip() if title else None,
+                payload=payload_meta,
+                raw_record_id=row["id"],
+            )
+            if oid:
+                stats["written"] += 1
+                stats["by_kind"][kind] = stats["by_kind"].get(kind, 0) + 1
+                wrote_any = True
+        if not wrote_any:
+            stats["skipped_empty"] += 1
     src.close()
     return stats
 
