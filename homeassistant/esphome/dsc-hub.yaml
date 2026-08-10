@@ -13,8 +13,8 @@ substitutions:
   panel_mac: "30:76:F5:E9:22:0C"
   bridge_mac: "58:2A:BD:60:3C:1D"
   espnow_cmd_tag: "54727"
-  # SoftAP BSSID pin only after SoftAP IP gate + Nest recovery (00… = unset).
-  wifi_bssid: "00:00:00:00:00:00"
+  # SoftAP Anchor BSSID — SoftAP wifi entry only (not home Wi‑Fi).
+  wifi_bssid: "58:2A:BD:60:3C:1D"
 
 packages:
   hub:

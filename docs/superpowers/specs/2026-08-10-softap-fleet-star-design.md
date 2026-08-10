@@ -1,7 +1,7 @@
 # SoftAP fleet home + enhanced Fleet Fix
 
 **Date:** 2026-08-10  
-**Status:** approved design — **hardware SoftAP IP gate incomplete**; Nest-first membership until gate passes (see FOLLOWUPS 2026-08-10 evening)  
+**Status:** approved — SoftAP-primary membership is the steady state (stop home-AP flap); SoftAP L3/HA path still gated  
 **Related:** F-004, F-010, F-012, F-013, F-014
 
 ## Goal

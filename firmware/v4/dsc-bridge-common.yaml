@@ -41,8 +41,8 @@ esp32:
     sdkconfig_options:
       CONFIG_LWIP_IP_FORWARD: y
       CONFIG_LWIP_IPV4_NAPT: y
-      # Keep at 4 unless SoftAP set_config is proven with a clean sdkconfig rebuild.
-      CONFIG_ESP_WIFI_SOFTAP_MAX_NUM_STA: "4"
+      # Hub + Control + 4 Sonoffs (+ headroom). Pots are ESP-NOW→hub, not SoftAP STAs.
+      CONFIG_ESP_WIFI_SOFTAP_MAX_NUM_STA: "10"
 
 logger:
   level: INFO
@@ -86,7 +86,7 @@ dsc_anchor_ap:
   channel: ${anchor_channel}
   ap_ip: "192.168.4.1"
   ap_netmask: "255.255.255.0"
-  max_connections: 4
+  max_connections: 10
   enable_napt: true
   bssid_sensor: anchor_bssid_ts
   channel_sensor: anchor_channel_sensor

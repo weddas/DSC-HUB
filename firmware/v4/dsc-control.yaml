@@ -16,8 +16,8 @@ substitutions:
   ap_password_val: !secret dsc_control_ap_password
   hub_mac: "84:1F:E8:16:E6:60"        # DSC-HUB
   espnow_cmd_tag: "54727"             # 0xD5C7 — must match hub
-  # Prefer Anchor SoftAP — set to sensor.dsc_bridge_anchor_bssid (all caps).
-  wifi_bssid: "00:00:00:00:00:00"
+  # SoftAP Anchor BSSID — SoftAP wifi entry only (not home Wi‑Fi).
+  wifi_bssid: "58:2A:BD:60:3C:1D"
 
 packages:
   wifi: !include dsc-control-wifi-lab.yaml

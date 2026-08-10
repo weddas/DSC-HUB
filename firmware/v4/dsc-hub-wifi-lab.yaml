@@ -1,29 +1,40 @@
 # ==================================================================
-#  DSC-HUB · lab WiFi (recovery / Nest-first)
+#  DSC-HUB · lab WiFi
 #
-#  SoftAP-primary orphaned the hub when SoftAP join failed and Nest
-#  entries were also pinned to wifi_bssid 00:00:00:00:00:00.
-#  Nest is primary again until SoftAP eth↔.4.x path is proven.
-#  SoftAP remains a secondary (no BSSID pin unless wifi_bssid is set).
+#  SoftAP DSC-Anchor is primary — pins channel / BSSID so the hub
+#  does not flap across home APs (that made ESP-NOW unusable).
+#  Home Wi‑Fi (wifi_ssid) is emergency fallback only.
+#  SoftAP static 192.168.4.10 — HA needs route 192.168.4.0/24 via
+#  bridge ETH (SoftAP IP gate). Do NOT set bssid to 00:00:00:00:00:00
+#  (that pin never matches and kills preferred SoftAP/Nest entries).
 # ==================================================================
 wifi:
   networks:
-    - ssid: ${wifi_ssid}
-      password: ${wifi_password}
-      priority: 20
     - ssid: ${anchor_ssid}
       password: ${anchor_ap_password}
-      priority: 10
+      # SoftAP Anchor BSSID only — never put on home Wi‑Fi fallback.
+      bssid: ${wifi_bssid}
+      priority: 20
       manual_ip:
         static_ip: 192.168.4.10
         gateway: 192.168.4.1
         subnet: 255.255.255.0
         dns1: 192.168.4.1
+    - ssid: ${wifi_ssid}
+      password: ${wifi_password}
+      priority: 5
   power_save_mode: none
+  # false: Lock WiFi AP / preferred BSSID needs a scan to leave a sticky
+  # AP. fast_connect rejoined the wrong AP after bounce (3 Aug).
   fast_connect: false
+  # ESPHome default true: every 5 min (RSSI < -49) off-channel roam scan
+  # while STA stays "connected". That hops the single radio off the
+  # pinned channel and kills ESP-NOW. SoftAP home + preferred BSSID
+  # pin the Anchor — roaming fights that pin.
   post_connect_roaming: false
-  # Nest DHCP for HA Install/USB. Do not set use_address to SoftAP .4.10
-  # until SoftAP IP gate passes (orphans Install toward a dead path).
+  # SoftAP fleet-home address. USB Install ignores this; wireless OTA
+  # after SoftAP join targets .4.10 (pfSense route via bridge .66).
+  use_address: 192.168.4.10
   ap:
     ssid: DSC-HUB Fallback Hotspot
     password: ${ap_password_val}
@@ -41,6 +52,7 @@ wifi:
             last_ch = ch;
           }
         }
+    # Every STA connect / recovery boot — learn/pin preferred Anchor BSSID.
     - script.execute: wifi_ap_learn_or_pin
 
 captive_portal:

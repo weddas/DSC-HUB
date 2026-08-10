@@ -36,8 +36,8 @@ class DscAnchorAp : public Component {
   std::string ap_ip_{"192.168.4.1"};
   std::string ap_netmask_{"255.255.255.0"};
   uint8_t channel_{11};
-  // Runtime capped at 4 in start_softap_ (safe vs default sdkconfig).
-  uint8_t max_connections_{4};
+  // SoftAP STA budget: hub+control+4 sonoffs (+headroom). Match bridge sdkconfig.
+  uint8_t max_connections_{10};
   bool enable_napt_{true};
   text_sensor::TextSensor *bssid_sensor_{nullptr};
   sensor::Sensor *channel_sensor_{nullptr};

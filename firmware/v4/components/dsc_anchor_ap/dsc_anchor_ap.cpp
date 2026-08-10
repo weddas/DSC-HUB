@@ -136,12 +136,8 @@ bool DscAnchorAp::start_softap_() {
   memcpy(wifi_config.ap.ssid, this->ssid_.c_str(), ssid_len);
   wifi_config.ap.ssid_len = static_cast<uint8_t>(ssid_len);
   wifi_config.ap.channel = this->channel_;
-  // Cap at 4 unless sdkconfig SoftAP max STA is raised — ESP_ERR on overflow
-  // kills SoftAP with no beacon (SSID invisible).
-  uint8_t max_sta = this->max_connections_;
-  if (max_sta > 4)
-    max_sta = 4;
-  wifi_config.ap.max_connection = max_sta;
+  // Requires CONFIG_ESP_WIFI_SOFTAP_MAX_NUM_STA >= max_connections_ (bridge: 10).
+  wifi_config.ap.max_connection = this->max_connections_;
   wifi_config.ap.beacon_interval = 100;
   wifi_config.ap.ssid_hidden = 0;
   if (this->password_.empty()) {
@@ -214,8 +210,7 @@ void DscAnchorAp::dump_config() {
   ESP_LOGCONFIG(TAG, "  Channel: %u", (unsigned) this->channel_);
   ESP_LOGCONFIG(TAG, "  Gateway: %s / %s", this->ap_ip_.c_str(),
                 this->ap_netmask_.c_str());
-  ESP_LOGCONFIG(TAG, "  Max STA: %u (runtime cap 4)",
-                (unsigned) this->max_connections_);
+  ESP_LOGCONFIG(TAG, "  Max STA: %u", (unsigned) this->max_connections_);
   ESP_LOGCONFIG(TAG, "  NAPT: %s", this->enable_napt_ ? "yes" : "no");
 }
 

@@ -18,6 +18,7 @@ substitutions:
   anchor_ssid: "DSC-Anchor"
   anchor_ap_password: !secret dsc_anchor_ap_password
   softap_ip: "192.168.4.21"
+  softap_bssid: "58:2A:BD:60:3C:1D"
   api_key_val: !secret dsc_heatmat_api_key
   ota_password_val: !secret dsc_heatmat_ota_password
   ap_password_val: !secret dsc_heatmat_ap_password

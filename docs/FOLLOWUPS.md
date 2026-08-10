@@ -1745,18 +1745,20 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 
 ## SoftAP fleet home + enhanced Fleet Fix (2026-08-10)
 
-**Decision (goal):** SoftAP DSC-Anchor is the Wi‑Fi home for Hub / Control / Sonoffs so they **stop flapping across home APs** (that made ESP-NOW unusable). Pots stay ESP-NOW→hub→bridge. Home Wi‑Fi is emergency fallback only. Spec: `docs/superpowers/specs/2026-08-10-softap-fleet-star-design.md`.
+**Decision (goal):** SoftAP DSC-Anchor is the Wi‑Fi home for Hub / Control / Sonoffs so they **stop flapping across home APs** (that made ESP-NOW unusable). Pots stay ESP-NOW→hub→bridge (not SoftAP STAs). Home Wi‑Fi is emergency fallback only. Spec: `docs/superpowers/specs/2026-08-10-softap-fleet-star-design.md`.
 
-**Do not Nest-first as the steady state** — that reintroduces home-AP flap and nullifies SoftAP-home. SoftAP-primary membership stays.
+**Do not Nest-first as the steady state** — that reintroduces home-AP flap and nullifies SoftAP-home. SoftAP-primary membership is the product.
 
-**Hard gate for HA reachability (not for SoftAP preference):** SoftAP radio can pin RF before eth→`.4.x` is perfect; HA/OTA to SoftAP clients still needs:
+**Wifi YAML rules:** SoftAP prio > home Wi‑Fi; SoftAP entry pins Anchor BSSID `58:2A:BD:60:3C:1D` (`wifi_bssid` / `softap_bssid`); home Wi‑Fi has **no** BSSID pin; **never** `00:00:00:00:00:00`.
+
+**SoftAP STA budget:** hub + control + 4 sonoffs = 6; bridge `max_connections` / `CONFIG_ESP_WIFI_SOFTAP_MAX_NUM_STA` = **10**. Pots do not count.
+
+**Hard gate for HA reachability (not for SoftAP preference):**
 1. SoftAP SSID up; Anchor BSSID published.
 2. Static SoftAP STA can ping SoftAP gw `192.168.4.1`.
 3. Route `192.168.4.0/24 via 192.168.86.66` (bridge eth static `.66`).
 4. Hub SoftAP-primary at `.4.10` answers HA API.
 
-**Wifi YAML rules:** SoftAP prio > home Wi‑Fi; **never** `bssid: 00:00:00:00:00:00` (never matches → preferred nets fail → Fallback Hotspot). Optional Anchor BSSID pin only with a real BSSID.
+**Bridge notes:** SoftAP `WIFI_MODE_APSTA`, max STA 10, eth static `192.168.86.66`. Hub flash = **micro-USB** / HA USB Install; bridge = USB-TTL + IO0/EN.
 
-**Bridge notes:** SoftAP bring-up `WIFI_MODE_APSTA`, max STA 4, eth static `192.168.86.66`. Hub flash = **micro-USB** / HA USB Install; bridge = USB-TTL + IO0/EN.
-
-**2026-08-10 thrash note:** Temporary Nest-first push was wrong for the design goal (re-homed SoftAP-primary). Orphan symptom was SoftAP L3 + bad BSSID pins, not “SoftAP preference itself.”
+**2026-08-10 thrash note:** Nest-first push `5893ea6` was wrong for the design goal; SoftAP-primary + real BSSID pin restored. Orphan/Fallback was SoftAP L3 + zero-BSSID pins, not SoftAP preference itself.
