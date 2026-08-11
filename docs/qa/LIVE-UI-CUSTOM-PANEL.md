@@ -1,13 +1,14 @@
-# LIVE-UI — DSC-HUB custom panel (surface 6.3.0)
+# LIVE-UI — DSC-HUB custom panel (surface 7.0.0)
 
 React + Vite product panel hosted inside Home Assistant (WashData pattern).
 
 | Surface | Role |
 |---|---|
 | Sidebar | **DSC-HUB** → `/dsc-hub` (custom panel) |
-| Deep routes | Hash routes: `/dsc-hub#/ops/home`, `#/plant/catalog`, … |
+| Deep routes | Hash routes: `/dsc-hub#/live/mission`, `#/grow/compose`, `#/fleet`, … |
+| Legacy redirects | `#/ops/*`, `#/plant/*`, `#/advanced/*`, `#/system` → Live/Grow/Tune/Fleet |
 | Lovelace fallback | `dsc-hub-pro` YAML — `show_in_sidebar: false` |
-| Surface version | `sensor.dsc_ha_surface_version` **6.3.0** |
+| Surface version | `sensor.dsc_ha_surface_version` **7.0.0** |
 | Integration | `homeassistant/custom_components/dsc_hub/` |
 | Enable | `dsc_hub:` in configuration.yaml (see snippet) |
 
@@ -40,43 +41,44 @@ Then: HA **Developer Tools → YAML → Check configuration** → restart Core
 `custom_components` staging from git. Panel JS under `/local` / integration
 `www` updates on sync after the Python package is present.
 
-## Visual system
+## Visual system (7.0)
 
-Black / gray / neon green / teal / amber / white · glass HUD · tabbed primary+secondary ·
-slide-out search drawers · overflow ⋯ / gear actions · press feedback · soft shadows ·
-dual-axis glowing charts with time axis + hover + Want bands · Full Auto Mode card ·
-per-tent Want editors · demand toggles with neon ON edge · desktop-first grid
-with narrow tile reflow · Plant Seat (soil / age / tent apply) · Dash world HUD callouts.
+Modern dark + **full colour** (blues / purples / greens / teal / amber by role) —
+not dank neon-green-only, not grey monochrome. Glass HUD · Live/Grow/Tune/Fleet
+primary tabs · guided PageHeader + NextRecommended · honesty rail · Twin keep-alive
+(Three.js CE persisted) · tent segment on Climate · Plant Seat drawers.
 
-## Pass 3 acceptance (6.3)
+## Pass 7.0 acceptance
+
+- [ ] Primary tabs = **Live / Grow / Tune / Fleet** (not Ops/Plant/Advanced/System)
+- [ ] Default land `#/live/mission`; Mission has **Do this next** + no full Climate chart wall
+- [ ] Climate tent segment Main | Clone | Compare; no Main/Clone sibling pages
+- [ ] Twin keep-alive: leave Twin and return without cold WebGL rebuild
+- [ ] Root/Roster open seat as drawer; dual seat routes gone (redirect)
+- [ ] Grow order Compose → Research → Roster
+- [ ] Fleet shows kit + map (+ tank note); Learning/Analytics under Tune
+- [ ] Honesty rail + reduced-kit / keepup / OOS chips
+- [ ] Colour tokens: blue/purple/green/teal live (not #39ff14 brand wash)
+- [ ] `sensor.dsc_ha_surface_version` reads **7.0.0**
+- [ ] Legacy `#/ops/home` etc. redirect cleanly
+
+## Pass 3 acceptance (6.3 — still relevant)
 
 - [ ] Live climate: dual axes readable; X times present; hover shows time + T + RH
-- [ ] Main/Clone charts use that tent’s Want overlays; edit Want → HA numbers update
+- [ ] Charts use that tent’s Want overlays; edit Want → HA numbers update
 - [ ] Gauges show band ticks, target, extrema; VPD in real kPa
 - [ ] Full Auto + strategy + priority write HA; honesty chip on reduced kit
 - [ ] Fan override ON → four fan % sliders write
-- [ ] In-service toggles (AC / mister / pots) on Climate + System
-- [ ] Seat tab icon ≠ Root; page headers + chips have icons; wordmark in brand row
-- [ ] Search icon opens slide-out; settings/gear reachable; drawer close ≠ more
-- [ ] Dash callouts both tents with RH band + VPD mini; bloom stronger
-- [ ] `sensor.dsc_ha_surface_version` reads **6.3.0**
+- [ ] In-service toggles on Climate + Fleet
+- [ ] Search icon opens slide-out; drawer close ≠ more
+- [ ] Dash/Twin callouts both tents with RH band + VPD mini
 
-## Pass 2 acceptance (still true)
+## Pass 2 / 1 (still true)
 
-- [ ] Cold open `/dsc-hub#/ops/home` — tent T/RH charts populate from history within seconds
-- [ ] Status strip reflects hub / panel / beat / alerts / fleet
-- [ ] Plant seat chips on Home open `/ops/plant-seat?pot=N`
-- [ ] Demand toggles (Heat/Cool/Hum/Dehum/Mat) call HA and match tent reality
-- [ ] Pot ESP-NOW chips + manual takeover / fan override visible
-- [ ] Ops · Climate shows VPD gauges + CFM / fan % KPIs and sparklines
-- [ ] Ops · Dash / Plant · Catalog load without visiting Lovelace first (auto `/local` inject)
-- [ ] Ops · Dash pot click / chip → Plant Seat; Apply to tent lerps plant on Dash
-- [ ] Plant · Build result chips + slide-out search; soil cross-section; Commit+assign
+- [ ] Cold open `/dsc-hub#/live/mission` — status strip reflects hub / panel / beat / alerts / fleet
+- [ ] Demand toggles call HA; pot ESP-NOW chips visible
+- [ ] Grow Compose / Research load without visiting Lovelace first (`/local` inject)
+- [ ] Twin pot pick → Root seat drawer; Apply to tent lerps plant on Twin
 - [ ] WashData / Overview / Frigate / other non-DSC panels unchanged
-- [ ] Narrow viewport tiles columns without breaking desktop layout
-
-## Pass 1 (still true)
-
-- [ ] Sidebar **DSC-HUB** opens `/dsc-hub` (not Lovelace YAML title)
-- [ ] Primary tabs Ops · Plant · Advanced · System
-- [ ] Secondary tabs navigate hash routes
+- [ ] Narrow viewport usable; reduced-motion safe
+- [ ] Sidebar **DSC-HUB** opens `/dsc-hub`

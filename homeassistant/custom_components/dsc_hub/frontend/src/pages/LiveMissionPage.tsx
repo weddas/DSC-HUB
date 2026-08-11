@@ -1,6 +1,7 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
+  Button,
   Card,
   EntityFanSlider,
   EntitySelect,
@@ -12,9 +13,8 @@ import {
 } from "../components/ui";
 import { IconButton, OverflowMenu, SlideDrawer } from "../components/chrome";
 import { TentTargetPanel } from "../components/TentTargets";
+import { NextRecommendedCard } from "../components/Honesty";
 import { useHass } from "../hooks/useHass";
-import { useEntitySeries } from "../hooks/useEntitySeries";
-import { ArcGauge, MultiLineChart, seriesExtrema } from "../viz/charts";
 import { buildPlantSeat, tentLabel } from "../lib/seatModel";
 
 function fmtUptime(seconds: number): string {
@@ -33,7 +33,7 @@ const FAULTS: { id: string; label: string }[] = [
   { id: "binary_sensor.dsc_reduced_kit", label: "Reduced kit" },
 ];
 
-export function OpsHomePage() {
+export function LiveMissionPage() {
   const { state, num, available, entity, tick } = useHass();
   const navigate = useNavigate();
   const [searchOpen, setSearchOpen] = useState(false);
@@ -46,23 +46,6 @@ export function OpsHomePage() {
   const roomT = num("sensor.dsc_hub_room_temperature");
   const cloneT = num("sensor.dsc_hub_clone_temperature");
   const cloneRh = num("sensor.dsc_hub_clone_humidity");
-
-  const { series: tempSeries, lastSyncAt: tempSync } = useEntitySeries(
-    "sensor.dsc_hub_tent_temperature",
-  );
-  const { series: rhSeries, lastSyncAt: rhSync } = useEntitySeries(
-    "sensor.dsc_hub_tent_humidity",
-  );
-  const chartSync = Math.max(tempSync ?? 0, rhSync ?? 0) || undefined;
-
-  const targetTemp = num("number.dsc_hub_target_temp");
-  const rhMin = num("number.dsc_hub_rh_target_min");
-  const rhMax = num("number.dsc_hub_rh_target_max");
-  const vpdMin = num("number.dsc_hub_vpd_target_min");
-  const vpdMax = num("number.dsc_hub_vpd_target_max");
-
-  const tempExt = useMemo(() => seriesExtrema(tempSeries), [tempSeries]);
-  const rhExt = useMemo(() => seriesExtrema(rhSeries), [rhSeries]);
 
   const panelLink = state("binary_sensor.dsc_hub_panel_link");
   const panelOk = panelLink === "on";
@@ -82,28 +65,35 @@ export function OpsHomePage() {
   return (
     <div className="dsc-page">
       <PageHeader
-        icon="home"
-        title="Ops · Home"
-        subtitle="Live vitals — mode, targets, faults, demands, climate."
+        icon="mission"
+        title="Mission"
+        subtitle="Job line — mode, vitals, seats, demands, faults. Charts live on Climate."
+        primaryAction={
+          <Button teal onClick={() => navigate("/live/twin")}>
+            Open Twin
+          </Button>
+        }
         actions={
           <>
+            <Button primary onClick={() => navigate("/live/climate")}>
+              Climate Want
+            </Button>
             <IconButton label="Search" icon="search" onClick={() => setSearchOpen(true)} />
             <OverflowMenu
-              label="Home settings"
+              label="Mission settings"
               items={[
                 {
                   id: "climate",
                   label: "Open Climate",
-                  onSelect: () => navigate("/ops/climate"),
+                  onSelect: () => navigate("/live/climate"),
                 },
                 {
-                  id: "system",
-                  label: "Open System",
-                  onSelect: () => navigate("/system"),
+                  id: "fleet",
+                  label: "Open Fleet",
+                  onSelect: () => navigate("/fleet"),
                 },
               ]}
             />
-            <IconButton label="Settings" icon="settings" onClick={() => navigate("/ops/climate")} />
           </>
         }
       />
@@ -115,7 +105,13 @@ export function OpsHomePage() {
           tone={hubOnline ? "ok" : "bad"}
         />
         <StatusChip
-          label={panelOk ? "PANEL ESP-NOW" : available("sensor.dsc_control_wifi_rssi") ? "PANEL HA-ONLY" : "PANEL OFFLINE"}
+          label={
+            panelOk
+              ? "PANEL ESP-NOW"
+              : available("sensor.dsc_control_wifi_rssi")
+                ? "PANEL HA-ONLY"
+                : "PANEL OFFLINE"
+          }
           tone={panelOk ? "ok" : available("sensor.dsc_control_wifi_rssi") ? "warn" : "bad"}
         />
         <StatusChip
@@ -174,10 +170,14 @@ export function OpsHomePage() {
         <div className="dsc-col-3">
           <Kpi
             label="Surface"
-            value={state("sensor.dsc_ha_surface_version", "6.3.0")}
+            value={state("sensor.dsc_ha_surface_version", "7.0.0")}
             sub={`Fleet ${fleet}`}
             tone="ok"
           />
+        </div>
+
+        <div className="dsc-col-12">
+          <NextRecommendedCard />
         </div>
 
         <div className="dsc-col-12">
@@ -244,93 +244,13 @@ export function OpsHomePage() {
                   key={s.pot}
                   type="button"
                   className="dsc-chip dsc-chip--ok"
-                  onClick={() => navigate(`/ops/plant-seat?pot=${s.pot}`)}
+                  onClick={() => navigate(`/live/root?pot=${s.pot}`)}
                   title={s.blend || "Open plant seat"}
                 >
                   P{s.pot} {s.plantName !== "—" ? s.plantName : "—"} · {tentLabel(s.tent)}
                   {s.blend ? ` · ${s.blend.slice(0, 28)}` : ""}
                 </button>
               ))}
-            </div>
-          </Card>
-        </div>
-
-        <div className="dsc-col-8">
-          <Card className="dsc-glass" title="Live climate — tent T + RH" icon="climate">
-            <MultiLineChart
-              live
-              lastSyncAt={chartSync}
-              series={[
-                {
-                  id: "temp",
-                  label: "Temp °C",
-                  series: tempSeries,
-                  color: "var(--dsc-neon)",
-                  axis: "left",
-                  unit: "°C",
-                },
-                {
-                  id: "rh",
-                  label: "RH %",
-                  series: rhSeries,
-                  color: "var(--dsc-teal)",
-                  axis: "right",
-                  unit: "%",
-                },
-              ]}
-              targets={[
-                {
-                  axis: "left",
-                  value: targetTemp,
-                  color: "var(--dsc-amber)",
-                  label: "Want T",
-                },
-                {
-                  axis: "right",
-                  min: rhMin,
-                  max: rhMax,
-                  color: "var(--dsc-teal)",
-                  label: "RH band",
-                },
-              ]}
-            />
-          </Card>
-        </div>
-        <div className="dsc-col-4">
-          <Card className="dsc-glass" title="Gauges" icon="gauge">
-            <div className="dsc-gauge-row">
-              <ArcGauge
-                label="Temp"
-                value={tentT}
-                min={10}
-                max={40}
-                unit="°C"
-                target={targetTemp}
-                band={
-                  Number.isFinite(targetTemp)
-                    ? { min: targetTemp - 2, max: targetTemp + 2 }
-                    : undefined
-                }
-                extrema={tempExt}
-              />
-              <ArcGauge
-                label="RH"
-                value={tentRh}
-                min={0}
-                max={100}
-                unit="%"
-                band={{ min: rhMin, max: rhMax }}
-                extrema={rhExt}
-              />
-              <ArcGauge
-                label="VPD"
-                value={vpd}
-                min={0}
-                max={2.5}
-                unit="kPa"
-                band={{ min: vpdMin, max: vpdMax }}
-                target={(vpdMin + vpdMax) / 2}
-              />
             </div>
           </Card>
         </div>
@@ -432,7 +352,7 @@ export function OpsHomePage() {
                 {alerts > 0 && activeFaults.length === 0 ? (
                   <li>
                     <StatusChip label={`${alerts} system alert(s)`} tone="bad" pulse icon="alert" />
-                    <span className="dsc-muted">See System for entity detail</span>
+                    <span className="dsc-muted">See Fleet for entity detail</span>
                   </li>
                 ) : null}
               </ul>
@@ -444,13 +364,13 @@ export function OpsHomePage() {
       <SlideDrawer open={searchOpen} onClose={() => setSearchOpen(false)} title="Quick jump">
         <div className="dsc-chip-row">
           {[
-            { path: "/ops/climate", label: "Climate" },
-            { path: "/ops/dash", label: "Dash" },
-            { path: "/ops/main-4x8", label: "Main 4×8" },
-            { path: "/ops/clone-2x4", label: "Clone 2×4" },
-            { path: "/ops/plant-seat", label: "Plant seat" },
-            { path: "/plant/build", label: "Build" },
-            { path: "/system", label: "System" },
+            { path: "/live/climate", label: "Climate" },
+            { path: "/live/twin", label: "Twin" },
+            { path: "/live/root", label: "Root" },
+            { path: "/live/light", label: "Light" },
+            { path: "/grow/compose", label: "Compose" },
+            { path: "/grow/roster", label: "Roster" },
+            { path: "/fleet", label: "Fleet" },
           ].map((l) => (
             <button
               key={l.path}

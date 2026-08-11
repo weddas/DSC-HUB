@@ -1,50 +1,79 @@
-export type PrimarySection = "ops" | "plant" | "advanced" | "system";
+export type PrimarySection = "live" | "grow" | "tune" | "fleet";
 
 export interface TabRoute {
   id: string;
   label: string;
   path: string;
+  /** Must be a registered IconName — icon gate. */
   icon: string;
 }
 
 export const PRIMARY_TABS: { id: PrimarySection; label: string; path: string; icon: string }[] = [
-  { id: "ops", label: "Ops", path: "/ops", icon: "ops" },
-  { id: "plant", label: "Plant", path: "/plant", icon: "plant" },
-  { id: "advanced", label: "Advanced", path: "/advanced", icon: "advanced" },
-  { id: "system", label: "System", path: "/system", icon: "system" },
+  { id: "live", label: "Live", path: "/live/mission", icon: "live" },
+  { id: "grow", label: "Grow", path: "/grow/compose", icon: "grow" },
+  { id: "tune", label: "Tune", path: "/tune/learning", icon: "tune" },
+  { id: "fleet", label: "Fleet", path: "/fleet", icon: "fleet" },
 ];
 
 export const SECONDARY_TABS: Record<PrimarySection, TabRoute[]> = {
-  ops: [
-    { id: "home", label: "Home", path: "/ops/home", icon: "home" },
-    { id: "dash", label: "Dash", path: "/ops/dash", icon: "dash" },
-    { id: "climate", label: "Climate", path: "/ops/climate", icon: "climate" },
-    { id: "main-4x8", label: "Main 4×8", path: "/ops/main-4x8", icon: "tent" },
-    { id: "clone-2x4", label: "Clone 2×4", path: "/ops/clone-2x4", icon: "clone" },
-    { id: "root-zone", label: "Root zone", path: "/ops/root-zone", icon: "root" },
-    { id: "plant-seat", label: "Plant seat", path: "/ops/plant-seat", icon: "seat" },
-    { id: "tank", label: "Tank", path: "/ops/tank", icon: "tank" },
-    { id: "lighting", label: "Lighting", path: "/ops/lighting", icon: "lighting" },
+  live: [
+    { id: "mission", label: "Mission", path: "/live/mission", icon: "mission" },
+    { id: "twin", label: "Twin", path: "/live/twin", icon: "twin" },
+    { id: "climate", label: "Climate", path: "/live/climate", icon: "climate" },
+    { id: "root", label: "Root", path: "/live/root", icon: "root" },
+    { id: "light", label: "Light", path: "/live/light", icon: "lighting" },
   ],
-  plant: [
-    { id: "hub", label: "Hub", path: "/plant", icon: "plant" },
-    { id: "build", label: "Build", path: "/plant/build", icon: "build" },
-    { id: "catalog", label: "Catalog", path: "/plant/catalog", icon: "catalog" },
-    { id: "seat", label: "Seat", path: "/plant/seat", icon: "seat" },
-    { id: "strains", label: "Strains", path: "/plant/strains", icon: "strains" },
-    { id: "nutrient", label: "Nutrient science", path: "/plant/nutrient", icon: "nutrient" },
+  grow: [
+    { id: "compose", label: "Compose", path: "/grow/compose", icon: "compose" },
+    { id: "research", label: "Research", path: "/grow/research", icon: "research" },
+    { id: "roster", label: "Roster", path: "/grow/roster", icon: "roster" },
   ],
-  advanced: [
-    { id: "learning", label: "Learning", path: "/advanced/learning", icon: "learning" },
-    { id: "trends", label: "Trends", path: "/advanced/trends", icon: "trends" },
-    { id: "history", label: "History", path: "/advanced/history", icon: "history" },
+  tune: [
+    { id: "learning", label: "Learning", path: "/tune/learning", icon: "learning" },
+    { id: "analytics", label: "Analytics", path: "/tune/analytics", icon: "analytics" },
   ],
-  system: [{ id: "overview", label: "Overview", path: "/system", icon: "system" }],
+  fleet: [{ id: "overview", label: "Overview", path: "/fleet", icon: "fleet" }],
+};
+
+/** Legacy paths → 7.0 destinations (query preserved by caller when needed). */
+export const LEGACY_REDIRECTS: Record<string, string> = {
+  "/": "/live/mission",
+  "/ops": "/live/mission",
+  "/ops/home": "/live/mission",
+  "/ops/dash": "/live/twin",
+  "/ops/climate": "/live/climate",
+  "/ops/main-4x8": "/live/climate?tent=main",
+  "/ops/clone-2x4": "/live/climate?tent=clone",
+  "/ops/root-zone": "/live/root",
+  "/ops/plant-seat": "/live/root",
+  "/ops/tank": "/fleet",
+  "/ops/lighting": "/live/light",
+  "/plant": "/grow/roster",
+  "/plant/build": "/grow/compose",
+  "/plant/catalog": "/grow/research",
+  "/plant/seat": "/grow/roster",
+  "/plant/strains": "/grow/roster",
+  "/plant/nutrient": "/grow/compose",
+  "/advanced": "/tune/learning",
+  "/advanced/learning": "/tune/learning",
+  "/advanced/trends": "/tune/analytics",
+  "/advanced/history": "/tune/analytics",
+  "/system": "/fleet",
 };
 
 export function sectionFromPath(pathname: string): PrimarySection {
-  if (pathname.includes("/plant")) return "plant";
-  if (pathname.includes("/advanced")) return "advanced";
-  if (pathname.includes("/system")) return "system";
-  return "ops";
+  if (pathname.startsWith("/grow") || pathname.startsWith("/plant")) return "grow";
+  if (pathname.startsWith("/tune") || pathname.startsWith("/advanced")) return "tune";
+  if (pathname.startsWith("/fleet") || pathname.startsWith("/system")) return "fleet";
+  return "live";
+}
+
+export function resolveLegacyRedirect(pathname: string, search: string): string | null {
+  const target = LEGACY_REDIRECTS[pathname];
+  if (!target) return null;
+  if (target.includes("?")) {
+    // Explicit query in map wins; append leftover search keys only if empty.
+    return target;
+  }
+  return `${target}${search || ""}`;
 }

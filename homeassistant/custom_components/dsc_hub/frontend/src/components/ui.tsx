@@ -126,13 +126,23 @@ export function PageHeader({
   title,
   subtitle,
   icon,
+  primaryAction,
   actions,
 }: {
   title: string;
   subtitle?: string;
   icon?: IconName;
+  /** Primary CTA rendered ahead of overflow/actions. */
+  primaryAction?: ReactNode;
   actions?: ReactNode;
 }) {
+  const trailing = primaryAction || actions ? (
+    <div className="dsc-page-header-actions">
+      {primaryAction}
+      {actions}
+    </div>
+  ) : null;
+
   return (
     <header className="dsc-page-header">
       <div className="dsc-page-header-main">
@@ -142,7 +152,7 @@ export function PageHeader({
           {subtitle ? <p className="dsc-muted" style={{ margin: 0 }}>{subtitle}</p> : null}
         </div>
       </div>
-      {actions ? <div className="dsc-page-header-actions">{actions}</div> : null}
+      {trailing}
     </header>
   );
 }

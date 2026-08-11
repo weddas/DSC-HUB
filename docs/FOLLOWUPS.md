@@ -1824,3 +1824,19 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 - [x] Deploy packages to HA + dismiss `dsc_f004_chx`; template reload refreshed SoftAP display names.
 - [x] Hub flashed from HA ESPHome Device Builder **2026.7.4** → SoftAP `192.168.4.10` / `DSC-Anchor`; `hub_esp_now_link` on; Lock WiFi AP on.
 - **Ops note:** Nest-orphan OTA needs temporary `use_address` / HA ESPHome entry host = Nest IP; after SoftAP rejoin set both back to `192.168.4.10` (package `dsc-hub-wifi-lab.yaml` hardcodes SoftAP `use_address`).
+
+## 2026-08-11 — DSC-Dashboard Surface 7.0 rebuild
+
+### done
+- Primary IA → **Live / Grow / Tune / Fleet** (Ops/Plant/Advanced/System retired with redirects).
+- Guided chrome: honesty rail, NextRecommended, PageHeader primary CTAs; Mission trimmed of Climate chart wall.
+- Climate tent segment Main|Clone|Compare; Main/Clone ZoneBoard pages removed from nav.
+- Twin keep-alive host (persist \dsc-the-dash-card\ — Lit+React overlay fitness **FAIL**; salvage = keep-alive + in-card HUD, not R3F this pass).
+- Modern dark **full colour** tokens (blue/purple/green/teal); surface **7.0.0**.
+- Grow Compose→Research→Roster; Tune Learning+Analytics; Fleet densify + map.
+
+### next-plan / deferred
+- R3F Twin rewrite still on the table if keep-alive + in-card HUD cannot hit inspiration quality after soak.
+- Curated MDI-in-panel if custom SVG registry gaps remain on Mode/demand chips.
+- Native React Catalog/Build (still Lit hosts); Lovelace YAML removal still deferred.
+- Port remaining Lovelace Climate ladder / Learning cal wizard depth into Tune/Live.

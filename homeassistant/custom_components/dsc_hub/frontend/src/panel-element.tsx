@@ -47,7 +47,7 @@ class DscHubPanel extends HTMLElement {
     }
     if (!this._mounted) {
       const style = document.createElement("style");
-      style.textContent = `:host{display:block;height:100%;background:#070907;color:#f4f7f4;}\n${DSC_PANEL_CSS}`;
+      style.textContent = `:host{display:block;height:100%;background:#0a0e18;color:#eef1f8;}\n${DSC_PANEL_CSS}`;
       this.shadowRoot!.appendChild(style);
 
       const mount = document.createElement("div");
