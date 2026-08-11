@@ -1,11 +1,11 @@
 {
   "schema_version": 2,
   "kind": "strains",
-  "built_at": "2026-08-10T11:15:11Z",
+  "built_at": "2026-08-11T15:00:55Z",
   "count": 10000,
   "with_want": 12,
-  "with_height": 238,
-  "with_height_band": 81,
+  "with_height": 212,
+  "with_height_band": 80,
   "note": "Browse index v2 from research SQLite projection + curated Want; height_cm / height_band / flowering / chem only when corpus states them (never invented cm from bands).",
   "items": [
     {
@@ -97,16 +97,16 @@
       "has_chemistry": true,
       "top_terpenes": [
         "Linalool",
-        "alpha-Pinene",
-        "beta-Myrcene"
+        "beta-Myrcene",
+        "alpha-Humulene"
       ],
       "thc_range": [
-        0.37,
-        11.79
+        0.75,
+        17.13
       ],
       "cbd_range": [
-        0.14,
-        0.16
+        0.15,
+        0.26
       ],
       "want": {
         "ph": [
@@ -134,9 +134,13 @@
           70
         ]
       },
-      "height_cm": null,
-      "flowering_days": 60,
-      "curated": true
+      "height_cm": 152.0,
+      "flowering_days": [
+        65,
+        70
+      ],
+      "curated": true,
+      "height_band": "Medium to Tall"
     },
     {
       "id": "wedding_cake",
@@ -146,61 +150,16 @@
       "source": "yaml",
       "has_chemistry": true,
       "top_terpenes": [
-        "terpenes"
-      ],
-      "thc_range": null,
-      "cbd_range": null,
-      "want": {
-        "ph": [
-          5.8,
-          6.5
-        ],
-        "ec_veg_us": [
-          1000,
-          1600
-        ],
-        "ec_flower_us": [
-          1600,
-          2400
-        ],
-        "moisture_pct": [
-          45,
-          70
-        ],
-        "temp_c": [
-          20,
-          28
-        ],
-        "rh_pct": [
-          45,
-          70
-        ]
-      },
-      "height_cm": [
-        80.0,
-        120.0
-      ],
-      "flowering_days": null,
-      "curated": true
-    },
-    {
-      "id": "gorilla_glue",
-      "name": "Gorilla Glue",
-      "type": "photo",
-      "breeder": "AFFCO",
-      "source": "yaml",
-      "has_chemistry": true,
-      "top_terpenes": [
-        "alpha-Pinene",
-        "beta-Myrcene",
-        "beta-Caryophyllene"
+        "alpha-Humulene",
+        "Terpinolene",
+        "beta-Myrcene"
       ],
       "thc_range": [
-        0.45,
-        23.76
+        0.68,
+        19.59
       ],
       "cbd_range": [
-        0.0,
+        0.05,
         0.06
       ],
       "want": {
@@ -229,28 +188,32 @@
           70
         ]
       },
-      "height_cm": null,
-      "flowering_days": 70,
-      "curated": true
+      "height_cm": 96.0,
+      "flowering_days": [
+        56,
+        63
+      ],
+      "curated": true,
+      "height_band": "Short"
     },
     {
-      "id": "og_kush",
-      "name": "OG Kush",
+      "id": "gorilla_glue",
+      "name": "Gorilla Glue",
       "type": "photo",
-      "breeder": "Abraxas Seeds Ak-48 Indica · 20% THC Same breeder: Abraxas Seeds White Widow Hybrid · 35% THC Same breeder: Abraxas Seeds Durban Delight Sativa · 23% THC Same breeder: Abraxas Seeds Gentler than OG Ku",
+      "breeder": "AFFCO",
       "source": "yaml",
       "has_chemistry": true,
       "top_terpenes": [
         "alpha-Humulene",
-        "beta-Caryophyllene",
-        "alpha-Pinene"
+        "alpha-Pinene",
+        "beta-Caryophyllene"
       ],
       "thc_range": [
-        0.68,
-        20.43
+        0.84,
+        21.01
       ],
       "cbd_range": [
-        0.06,
+        0.05,
         0.08
       ],
       "want": {
@@ -279,9 +242,70 @@
           70
         ]
       },
-      "height_cm": 154.0,
-      "flowering_days": null,
-      "curated": true
+      "height_cm": 30.0,
+      "flowering_days": [
+        70,
+        75
+      ],
+      "curated": true,
+      "height_band": "Short"
+    },
+    {
+      "id": "og_kush",
+      "name": "OG Kush",
+      "type": "photo",
+      "breeder": "420 Genetics",
+      "source": "yaml",
+      "has_chemistry": true,
+      "top_terpenes": [
+        "alpha-Humulene",
+        "Linalool",
+        "beta-Caryophyllene"
+      ],
+      "thc_range": [
+        0.62,
+        15.57
+      ],
+      "cbd_range": [
+        0.14,
+        0.2
+      ],
+      "want": {
+        "ph": [
+          5.8,
+          6.5
+        ],
+        "ec_veg_us": [
+          1000,
+          1600
+        ],
+        "ec_flower_us": [
+          1600,
+          2400
+        ],
+        "moisture_pct": [
+          45,
+          70
+        ],
+        "temp_c": [
+          20,
+          28
+        ],
+        "rh_pct": [
+          45,
+          70
+        ]
+      },
+      "height_cm": [
+        90.0,
+        160.0
+      ],
+      "flowering_days": [
+        50,
+        60
+      ],
+      "curated": true,
+      "height_band": "Medium"
     },
     {
       "id": "sour_diesel",
@@ -291,10 +315,18 @@
       "source": "yaml",
       "has_chemistry": true,
       "top_terpenes": [
-        "terpenes"
+        "alpha-Humulene",
+        "Linalool",
+        "beta-Caryophyllene"
       ],
-      "thc_range": null,
-      "cbd_range": null,
+      "thc_range": [
+        0.47,
+        17.63
+      ],
+      "cbd_range": [
+        0.15,
+        0.19
+      ],
       "want": {
         "ph": [
           5.8,
@@ -321,12 +353,16 @@
           70
         ]
       },
-      "height_cm": null,
+      "height_cm": [
+        90.0,
+        160.0
+      ],
       "flowering_days": [
-        56,
+        65,
         70
       ],
-      "curated": true
+      "curated": true,
+      "height_band": "Medium"
     },
     {
       "id": "northern_lights",
@@ -336,10 +372,18 @@
       "source": "yaml",
       "has_chemistry": true,
       "top_terpenes": [
-        "terpenes"
+        "alpha-Humulene",
+        "Linalool",
+        "beta-Caryophyllene"
       ],
-      "thc_range": null,
-      "cbd_range": null,
+      "thc_range": [
+        0.71,
+        12.25
+      ],
+      "cbd_range": [
+        0.06,
+        0.14
+      ],
       "want": {
         "ph": [
           5.8,
@@ -366,9 +410,10 @@
           70
         ]
       },
-      "height_cm": null,
-      "flowering_days": null,
-      "curated": true
+      "height_cm": 159.0,
+      "flowering_days": 68,
+      "curated": true,
+      "height_band": "Medium"
     },
     {
       "id": "white_widow",
@@ -379,16 +424,16 @@
       "has_chemistry": true,
       "top_terpenes": [
         "Linalool",
-        "alpha-Humulene",
-        "beta-Myrcene"
+        "beta-Myrcene",
+        "alpha-Pinene"
       ],
       "thc_range": [
-        0.38,
-        13.81
+        1.88,
+        5.57
       ],
       "cbd_range": [
-        0.1,
-        0.15
+        0.12,
+        0.12
       ],
       "want": {
         "ph": [
@@ -416,9 +461,16 @@
           70
         ]
       },
-      "height_cm": 179.0,
-      "flowering_days": null,
-      "curated": true
+      "height_cm": [
+        60.0,
+        100.0
+      ],
+      "flowering_days": [
+        55,
+        65
+      ],
+      "curated": true,
+      "height_band": "Short to Medium"
     },
     {
       "id": "jack_herer",
@@ -429,15 +481,16 @@
       "has_chemistry": true,
       "top_terpenes": [
         "alpha-Humulene",
+        "Linalool",
         "beta-Myrcene"
       ],
       "thc_range": [
-        0.39,
-        13.66
+        0.69,
+        10.9
       ],
       "cbd_range": [
-        0.03,
-        0.03
+        0.06,
+        0.13
       ],
       "want": {
         "ph": [
@@ -465,9 +518,10 @@
           70
         ]
       },
-      "height_cm": 127.0,
-      "flowering_days": null,
-      "curated": true
+      "height_cm": 99.0,
+      "flowering_days": 56,
+      "curated": true,
+      "height_band": "Short to Medium"
     },
     {
       "id": "amnesia_haze_auto",
@@ -475,10 +529,16 @@
       "type": "auto",
       "breeder": "42 Fast Buds",
       "source": "yaml",
-      "has_chemistry": false,
+      "has_chemistry": true,
       "top_terpenes": [],
-      "thc_range": null,
-      "cbd_range": null,
+      "thc_range": [
+        16.5,
+        16.5
+      ],
+      "cbd_range": [
+        1.5,
+        1.5
+      ],
       "want": {
         "ph": [
           5.8,
@@ -506,8 +566,9 @@
         ]
       },
       "height_cm": 154.0,
-      "flowering_days": null,
-      "curated": true
+      "flowering_days": 85,
+      "curated": true,
+      "height_band": "Tall"
     },
     {
       "id": "zkittlez_auto",
@@ -515,10 +576,16 @@
       "type": "auto",
       "breeder": "Auto Seeds",
       "source": "yaml",
-      "has_chemistry": false,
+      "has_chemistry": true,
       "top_terpenes": [],
-      "thc_range": null,
-      "cbd_range": null,
+      "thc_range": [
+        23.0,
+        23.0
+      ],
+      "cbd_range": [
+        1.0,
+        1.0
+      ],
       "want": {
         "ph": [
           5.8,
@@ -549,7 +616,10 @@
         80.0,
         120.0
       ],
-      "flowering_days": null,
+      "flowering_days": [
+        56,
+        63
+      ],
       "curated": true
     },
     {
@@ -557,6 +627,22 @@
       "name": "\"Afternoon Brunch\" Mimosa x Orange Punch Auto 2024",
       "type": null,
       "breeder": null,
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_autistic_biscuit",
+      "name": "\"Autistic Biscuit\"",
+      "type": null,
+      "breeder": "DojoSC",
       "source": "sqlite",
       "has_chemistry": false,
       "top_terpenes": [],
@@ -699,10 +785,58 @@
       "curated": false
     },
     {
+      "id": "strain_basin_fruit",
+      "name": "\"Basin Fruit\"",
+      "type": null,
+      "breeder": "DojoSC",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
       "id": "strain_bayside_sunset_key_largo_canvas_print",
       "name": "\"Bayside Sunset Key Largo\" Canvas Print",
       "type": null,
       "breeder": "Meraki Genetics",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_beaviz",
+      "name": "\"Beaviz\"",
+      "type": null,
+      "breeder": "DojoSC",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_bridge_walk",
+      "name": "\"Bridge Walk\"",
+      "type": null,
+      "breeder": "DojoSC",
       "source": "sqlite",
       "has_chemistry": false,
       "top_terpenes": [],
@@ -767,6 +901,70 @@
       "curated": false
     },
     {
+      "id": "strain_cocoonz",
+      "name": "\"Cocoonz\"",
+      "type": null,
+      "breeder": "DojoSC",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_cosmic_howler",
+      "name": "\"Cosmic Howler\"",
+      "type": null,
+      "breeder": "DojoSC",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_cotton_moth",
+      "name": "\"Cotton Moth\"",
+      "type": null,
+      "breeder": "DojoSC",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_dojo_haze",
+      "name": "\"Dojo Haze\"",
+      "type": null,
+      "breeder": "DojoSC",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
       "id": "strain_fritz_the_cat",
       "name": "\"FRITZ\" The Cat",
       "type": "hybrid",
@@ -780,6 +978,54 @@
       "height_cm": null,
       "height_band": null,
       "flowering_days": 60,
+      "curated": false
+    },
+    {
+      "id": "strain_gumlato",
+      "name": "\"Gumlato\"",
+      "type": null,
+      "breeder": "DojoSC",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_hypetrain_rider",
+      "name": "\"Hypetrain Rider\"",
+      "type": null,
+      "breeder": "DojoSC",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_iffy_piff",
+      "name": "\"Iffy Piff\"",
+      "type": null,
+      "breeder": "DojoSC",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
       "curated": false
     },
     {
@@ -815,10 +1061,74 @@
       "curated": false
     },
     {
+      "id": "strain_lime_skiddy",
+      "name": "\"Lime Skiddy\"",
+      "type": null,
+      "breeder": "DojoSC",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
       "id": "strain_limitless_looks_3pc_digital_styling_duo",
       "name": "\"Limitless Looks\" 3pc Digital Styling Duo",
       "type": "hybrid",
       "breeder": "Love Genetics",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_ninja_piff",
+      "name": "\"Ninja Piff\"",
+      "type": null,
+      "breeder": "DojoSC",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_pack",
+      "name": "\"Pack",
+      "type": null,
+      "breeder": "DojoSC",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_piffin_ain_t_easy",
+      "name": "\"Piffin Ain't Easy\"",
+      "type": null,
+      "breeder": "DojoSC",
       "source": "sqlite",
       "has_chemistry": false,
       "top_terpenes": [],
@@ -869,10 +1179,42 @@
       "curated": false
     },
     {
+      "id": "strain_trap_patties",
+      "name": "\"Trap Patties\"",
+      "type": null,
+      "breeder": "DojoSC",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
       "id": "strain_vpd_for_drying",
       "name": "\"VPD\" for drying",
       "type": null,
       "breeder": null,
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_zmash",
+      "name": "\"ZMASH\"",
+      "type": null,
+      "breeder": "DojoSC",
       "source": "sqlite",
       "has_chemistry": false,
       "top_terpenes": [],
@@ -1512,8 +1854,8 @@
     {
       "id": "strain_1_stunna",
       "name": "#1 Stunna",
-      "type": "Hybrid",
-      "breeder": null,
+      "type": "indica",
+      "breeder": "Relentless Genetics",
       "source": "sqlite",
       "has_chemistry": true,
       "top_terpenes": [],
@@ -1525,7 +1867,7 @@
       "want": null,
       "height_cm": null,
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": 56,
       "curated": false
     },
     {
@@ -1955,7 +2297,10 @@
         120.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        56,
+        63
+      ],
       "curated": false
     },
     {
@@ -4769,6 +5114,28 @@
       "curated": false
     },
     {
+      "id": "strain_41_zi",
+      "name": "#41 Zi",
+      "type": "hybrid",
+      "breeder": "Karma Genetics",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": [
+        80.0,
+        120.0
+      ],
+      "height_band": null,
+      "flowering_days": [
+        56,
+        63
+      ],
+      "curated": false
+    },
+    {
       "id": "strain_44_oil_patient_dropoff",
       "name": "#44 Oil (Patient Dropoff)",
       "type": null,
@@ -6162,30 +6529,6 @@
       "curated": false
     },
     {
-      "id": "strain_n_a",
-      "name": "#N/A",
-      "type": "unknown",
-      "breeder": null,
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [
-        "total_terpenes"
-      ],
-      "thc_range": [
-        26.573,
-        26.573
-      ],
-      "cbd_range": [
-        0.0,
-        0.0
-      ],
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
       "id": "strain_name",
       "name": "#NAME?",
       "type": "Hybrid",
@@ -6675,6 +7018,22 @@
       "curated": false
     },
     {
+      "id": "strain_lt_img_class_icon_title_src_https_ceresseeds_com_wp",
+      "name": "&lt;img class=\"icon_title\" src=\"https://ceresseeds.com/wp",
+      "type": "sativa",
+      "breeder": "Ceres Seeds",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
       "id": "strain_07_og",
       "name": "'07 OG",
       "type": null,
@@ -6822,6 +7181,22 @@
       "curated": false
     },
     {
+      "id": "strain_79z_adk_grass",
+      "name": "'79Z — ADK GRASS",
+      "type": null,
+      "breeder": "ADK GRASS",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
       "id": "strain_86_black_uw",
       "name": "'86 Black UW",
       "type": null,
@@ -6949,7 +7324,7 @@
     {
       "id": "strain_91_chemdawg",
       "name": "'91 Chemdawg",
-      "type": "hybrid",
+      "type": "sativa",
       "breeder": null,
       "source": "sqlite",
       "has_chemistry": true,
@@ -7038,6 +7413,22 @@
         6.399,
         6.399
       ],
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_92_kushberry",
+      "name": "'92 Kushberry",
+      "type": null,
+      "breeder": "Riot Seeds",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
       "cbd_range": null,
       "want": null,
       "height_cm": null,
@@ -9107,6 +9498,22 @@
         0.42096,
         1.49967
       ],
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_clementine_x_tangie_x_tangie",
+      "name": "(CLEMENTINE X TANGIE) X TANGIE",
+      "type": null,
+      "breeder": "Crockett Family Farms",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
       "want": null,
       "height_cm": null,
       "height_band": null,
@@ -16607,6 +17014,22 @@
       "curated": false
     },
     {
+      "id": "strain_og_x_sour_diesel_x_durban",
+      "name": "(OG X Sour Diesel) X Durban",
+      "type": "hybrid",
+      "breeder": "Ganja Rebel Seeds",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": 74,
+      "curated": false
+    },
+    {
       "id": "strain_purple_goat_x_tree_of_life_bx_x_pineapple_chakra_cannabeizein",
       "name": "(Purple Goat X Tree of Life BX) X Pineapple Chakra — Cannabeizein",
       "type": null,
@@ -19620,6 +20043,22 @@
       "curated": false
     },
     {
+      "id": "strain_strawnana_clementine_x_cheese",
+      "name": "(STRAWNANA CLEMENTINE) X CHEESE",
+      "type": null,
+      "breeder": "Crockett Family Farms",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
       "id": "strain_shake_trim_flap_jacks_1",
       "name": "(Shake/Trim) Flap Jacks #1",
       "type": null,
@@ -21923,7 +22362,7 @@
       "want": null,
       "height_cm": 172.0,
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": 72,
       "curated": false
     },
     {
@@ -21981,25 +22420,6 @@
       "curated": false
     },
     {
-      "id": "strain_speed_auto_feminized_seeds",
-      "name": "+ Speed Auto feminized seeds",
-      "type": "sativa",
-      "breeder": "Sweet Seeds",
-      "source": "sqlite",
-      "has_chemistry": false,
-      "top_terpenes": [],
-      "thc_range": null,
-      "cbd_range": null,
-      "want": null,
-      "height_cm": [
-        50.0,
-        70.0
-      ],
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
       "id": "strain_speed_auto_from_sweet",
       "name": "+ Speed Auto from Sweet",
       "type": "Sativa +60%",
@@ -22017,25 +22437,6 @@
         50.0,
         90.0
       ],
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_speed_auto",
-      "name": "+Speed Auto",
-      "type": "Hybrid",
-      "breeder": "North Atlantic Seed Company",
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        22.0,
-        22.0
-      ],
-      "cbd_range": null,
-      "want": null,
-      "height_cm": null,
       "height_band": null,
       "flowering_days": null,
       "curated": false
@@ -22062,7 +22463,7 @@
         90.0
       ],
       "height_band": "Short",
-      "flowering_days": null,
+      "flowering_days": 49,
       "curated": false
     },
     {
@@ -22322,7 +22723,7 @@
     {
       "id": "strain_508",
       "name": ".508",
-      "type": "indica",
+      "type": "Hybrid",
       "breeder": "2 Guns and a Guy Seed Company",
       "source": "sqlite",
       "has_chemistry": true,
@@ -22620,6 +23021,70 @@
         0.0,
         0.0
       ],
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_999_fine_silver_in_stimmy_we_trust_commemorative_coin",
+      "name": ".999 Fine Silver \"In Stimmy We Trust\" Commemorative Coin",
+      "type": null,
+      "breeder": "Exotic Genetix",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_999_fine_silver_in_stimmy_we_trust_commemorative_coin_random",
+      "name": ".999 Fine Silver \"In Stimmy We Trust\" Commemorative Coin (Random)",
+      "type": null,
+      "breeder": "Exotic Genetix",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_999_fine_silver_sommelier_stimmy_commemorative_coin",
+      "name": ".999 Fine Silver \"Sommelier Stimmy\" Commemorative Coin",
+      "type": null,
+      "breeder": "Exotic Genetix",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_999_fine_silver_blueberry_bang_bang_stimmy_commemorative_coin",
+      "name": ".999 Fine Silver Blueberry Bang Bang Stimmy Commemorative Coin",
+      "type": null,
+      "breeder": "Exotic Genetix",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
       "want": null,
       "height_cm": null,
       "height_band": null,
@@ -38931,8 +39396,11 @@
         80.0,
         120.0
       ],
-      "height_band": null,
-      "flowering_days": null,
+      "height_band": "Medium to Tall",
+      "flowering_days": [
+        56,
+        63
+      ],
       "curated": false
     },
     {
@@ -69107,7 +69575,10 @@
         120.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        56,
+        63
+      ],
       "curated": false
     },
     {
@@ -69129,7 +69600,10 @@
         120.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        56,
+        63
+      ],
       "curated": false
     },
     {
@@ -69514,6 +69988,22 @@
       "name": "1 girl 1 cup 1 chance",
       "type": null,
       "breeder": null,
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_1_on_1_video_consult",
+      "name": "1 on 1 Video Consult",
+      "type": null,
+      "breeder": "Riot Seeds",
       "source": "sqlite",
       "has_chemistry": false,
       "top_terpenes": [],
@@ -70388,6 +70878,22 @@
       "curated": false
     },
     {
+      "id": "strain_10_free_items_promo",
+      "name": "10 Free Items Promo",
+      "type": null,
+      "breeder": "Greenbud Seeds",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
       "id": "strain_10_free_seeds_600_to_800",
       "name": "10 Free Seeds - £600 to £800",
       "type": "Indica Dominant",
@@ -70403,7 +70909,10 @@
         120.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        56,
+        63
+      ],
       "curated": false
     },
     {
@@ -70444,7 +70953,10 @@
         120.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        56,
+        63
+      ],
       "curated": false
     },
     {
@@ -71564,6 +72076,22 @@
       "curated": false
     },
     {
+      "id": "strain_1000_doves",
+      "name": "1000 Doves",
+      "type": null,
+      "breeder": "Socal Seed Vault",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
       "id": "strain_1000_mg_full_spectrum",
       "name": "1000 MG Full Spectrum",
       "type": null,
@@ -71805,10 +72333,16 @@
       "type": null,
       "breeder": null,
       "source": "sqlite",
-      "has_chemistry": false,
+      "has_chemistry": true,
       "top_terpenes": [],
-      "thc_range": null,
-      "cbd_range": null,
+      "thc_range": [
+        0.0,
+        0.0
+      ],
+      "cbd_range": [
+        100.0,
+        100.0
+      ],
       "want": null,
       "height_cm": null,
       "height_band": null,
@@ -73282,6 +73816,22 @@
       "curated": false
     },
     {
+      "id": "strain_100k_retired",
+      "name": "100K (Retired)",
+      "type": null,
+      "breeder": "Exotic Genetix",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
       "id": "strain_100mg_brown_butter_sea_salt_bars",
       "name": "100MG Brown Butter Sea Salt Bars",
       "type": null,
@@ -74723,6 +75273,54 @@
         24.9,
         24.9
       ],
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_100ct_holo_drip_station_player_pack",
+      "name": "100ct Holo Drip Station Player Pack",
+      "type": null,
+      "breeder": "Exotic Genetix",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_100ct_player_pack_rainbow_chip",
+      "name": "100ct Player Pack Rainbow Chip",
+      "type": null,
+      "breeder": "Exotic Genetix",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_100k_strain_t",
+      "name": "100k Strain T",
+      "type": null,
+      "breeder": "Exotic Genetix",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
       "cbd_range": null,
       "want": null,
       "height_cm": null,
@@ -77668,7 +78266,7 @@
     {
       "id": "strain_1024",
       "name": "1024",
-      "type": "sativa",
+      "type": "hybrid",
       "breeder": "Medical Seeds",
       "source": "sqlite",
       "has_chemistry": true,
@@ -79970,6 +80568,25 @@
       "curated": false
     },
     {
+      "id": "strain_10th_planet_r1",
+      "name": "10Th Planet R1",
+      "type": "indica",
+      "breeder": "Ethos",
+      "source": "sqlite",
+      "has_chemistry": true,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": [
+        1.0,
+        1.0
+      ],
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": 63,
+      "curated": false
+    },
+    {
       "id": "strain_10x_delta",
       "name": "10X Delta",
       "type": null,
@@ -80047,6 +80664,38 @@
         56,
         63
       ],
+      "curated": false
+    },
+    {
+      "id": "strain_10in1_cream_masque_en_spray_soin_bbhair",
+      "name": "10in1 Cream Masque en Spray Soin BBHair",
+      "type": null,
+      "breeder": "BBHair",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_10in1_shampoo_shampooing_conditionneur_bbhair",
+      "name": "10in1 Shampoo / Shampooing Conditionneur BBHair",
+      "type": null,
+      "breeder": "BBHair",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
       "curated": false
     },
     {
@@ -81116,25 +81765,6 @@
       "height_cm": null,
       "height_band": null,
       "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_10th_planet_r1",
-      "name": "10th Planet R1",
-      "type": "Indica +60%",
-      "breeder": "Ethos",
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": null,
-      "cbd_range": [
-        1.0,
-        1.0
-      ],
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": 63,
       "curated": false
     },
     {
@@ -89119,6 +89749,22 @@
       "curated": false
     },
     {
+      "id": "strain_12_free_items_promo",
+      "name": "12 Free Items Promo",
+      "type": null,
+      "breeder": "Greenbud Seeds",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
       "id": "strain_12_free_seeds_800_to_1000",
       "name": "12 Free Seeds - £800 to £1000",
       "type": "Indica Dominant",
@@ -89137,7 +89783,10 @@
         120.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        56,
+        63
+      ],
       "curated": false
     },
     {
@@ -89197,6 +89846,22 @@
         14.91,
         14.91
       ],
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_12_serviettes_noires_bbhair_100_coton_330g_m",
+      "name": "12 Serviettes Noires BBHair 100% coton 330g/m²",
+      "type": null,
+      "breeder": "BBHair",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
       "cbd_range": null,
       "want": null,
       "height_cm": null,
@@ -96382,6 +97047,22 @@
       "curated": false
     },
     {
+      "id": "strain_12x_pinces_croco_noire",
+      "name": "12x Pinces Croco Noire",
+      "type": null,
+      "breeder": "Mezzo",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
       "id": "strain_13",
       "name": "13",
       "type": "indica",
@@ -96501,7 +97182,7 @@
     {
       "id": "strain_13_gorillas",
       "name": "13 Gorillas",
-      "type": "indica dominant hybrid",
+      "type": "hybrid",
       "breeder": null,
       "source": "sqlite",
       "has_chemistry": true,
@@ -97774,7 +98455,10 @@
         120.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        56,
+        63
+      ],
       "curated": false
     },
     {
@@ -101100,6 +101784,38 @@
       "curated": false
     },
     {
+      "id": "strain_15ct_jumbo_pack_blonuts",
+      "name": "15ct Jumbo Pack Blonuts",
+      "type": null,
+      "breeder": "Exotic Genetix",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_15ct_jumbo_pack_dj_icey",
+      "name": "15ct Jumbo Pack DJ ICEY",
+      "type": null,
+      "breeder": "Exotic Genetix",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
       "id": "strain_15mg_delta_9_rings",
       "name": "15mg Delta 9 Rings",
       "type": null,
@@ -102565,6 +103281,22 @@
       "curated": false
     },
     {
+      "id": "strain_18_free_seeds_promo",
+      "name": "18 Free Seeds Promo",
+      "type": null,
+      "breeder": "Greenbud Seeds",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
       "id": "strain_18_wheeler",
       "name": "18 Wheeler",
       "type": null,
@@ -103600,7 +104332,7 @@
       "want": null,
       "height_cm": null,
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": 154,
       "curated": false
     },
     {
@@ -104089,13 +104821,19 @@
     {
       "id": "strain_1998_mystery",
       "name": "1998 Mystery",
-      "type": "sativa",
+      "type": "Hybrid",
       "breeder": "Anjaneya Mountain Medicine",
       "source": "sqlite",
-      "has_chemistry": false,
+      "has_chemistry": true,
       "top_terpenes": [],
-      "thc_range": null,
-      "cbd_range": null,
+      "thc_range": [
+        5.0,
+        5.0
+      ],
+      "cbd_range": [
+        77.0,
+        77.0
+      ],
       "want": null,
       "height_cm": null,
       "height_band": null,
@@ -109203,7 +109941,10 @@
         120.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        56,
+        63
+      ],
       "curated": false
     },
     {
@@ -110204,7 +110945,7 @@
       "want": null,
       "height_cm": null,
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": 63,
       "curated": false
     },
     {
@@ -110585,8 +111326,11 @@
         80.0,
         120.0
       ],
-      "height_band": null,
-      "flowering_days": null,
+      "height_band": "Medium",
+      "flowering_days": [
+        56,
+        90
+      ],
       "curated": false
     },
     {
@@ -110624,7 +111368,10 @@
         120.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        56,
+        63
+      ],
       "curated": false
     },
     {
@@ -110821,7 +111568,7 @@
         120.0,
         150.0
       ],
-      "height_band": null,
+      "height_band": "Medium",
       "flowering_days": [
         60,
         70
@@ -110870,7 +111617,7 @@
         120.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": 56,
       "curated": false
     },
     {
@@ -111120,6 +111867,22 @@
       "name": "2 Syngonium Variety (Arrowhead Plant) / 4\" Pot / Live Plant",
       "type": null,
       "breeder": "Love Genetics",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_2_tasses_caf_bbhair_offertes",
+      "name": "2 TASSES À CAFÉ BBHAIR OFFERTES",
+      "type": null,
+      "breeder": "BBHair",
       "source": "sqlite",
       "has_chemistry": false,
       "top_terpenes": [],
@@ -113718,7 +114481,7 @@
     {
       "id": "strain_2010",
       "name": "2010",
-      "type": "indica dominant hybrid",
+      "type": "hybrid",
       "breeder": null,
       "source": "sqlite",
       "has_chemistry": false,
@@ -124599,6 +125362,22 @@
       "curated": false
     },
     {
+      "id": "strain_2024_pack_stimmys_choice",
+      "name": "2024 Pack Stimmys Choice",
+      "type": null,
+      "breeder": "Exotic Genetix",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
       "id": "strain_2024_grow_is_off_and_running",
       "name": "2024 grow is off and running!",
       "type": null,
@@ -124901,6 +125680,22 @@
       "curated": false
     },
     {
+      "id": "strain_2025",
+      "name": "2025",
+      "type": null,
+      "breeder": "Exotic Genetix",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
       "id": "strain_2025_holiday_collectors_box_auto_dawn",
       "name": "2025 Holiday Collectors Box Auto Dawn",
       "type": null,
@@ -124953,6 +125748,22 @@
       "name": "2025 Lunar New Year Collection",
       "type": null,
       "breeder": "Love Genetics",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_2026",
+      "name": "2026",
+      "type": null,
+      "breeder": "Exotic Genetix",
       "source": "sqlite",
       "has_chemistry": false,
       "top_terpenes": [],
@@ -125100,7 +125911,7 @@
     {
       "id": "strain_2046",
       "name": "2046",
-      "type": "sativa",
+      "type": "Sativa",
       "breeder": "Medical Seeds",
       "source": "sqlite",
       "has_chemistry": true,
@@ -125112,7 +125923,7 @@
       "cbd_range": null,
       "want": null,
       "height_cm": null,
-      "height_band": null,
+      "height_band": "Tall",
       "flowering_days": [
         91,
         105
@@ -125138,17 +125949,23 @@
     {
       "id": "strain_2046_fast_version",
       "name": "2046 Fast Version",
-      "type": null,
-      "breeder": "Bulk Seeds",
+      "type": "sativa",
+      "breeder": "Blimburn",
       "source": "sqlite",
-      "has_chemistry": false,
+      "has_chemistry": true,
       "top_terpenes": [],
-      "thc_range": null,
+      "thc_range": [
+        20.0,
+        20.0
+      ],
       "cbd_range": null,
       "want": null,
       "height_cm": null,
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        56,
+        70
+      ],
       "curated": false
     },
     {
@@ -126397,7 +127214,7 @@
     {
       "id": "strain_22_af",
       "name": "22 AF",
-      "type": "indica dominant hybrid",
+      "type": "hybrid",
       "breeder": null,
       "source": "sqlite",
       "has_chemistry": true,
@@ -137497,7 +138314,7 @@
         50.0,
         70.0
       ],
-      "height_band": null,
+      "height_band": "Short",
       "flowering_days": [
         60,
         65
@@ -137523,7 +138340,10 @@
         60.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        56,
+        63
+      ],
       "curated": false
     },
     {
@@ -138245,7 +139065,7 @@
       "id": "strain_24k",
       "name": "24K",
       "type": "indica dominant hybrid",
-      "breeder": null,
+      "breeder": "Crockett Family Farms",
       "source": "sqlite",
       "has_chemistry": true,
       "top_terpenes": [
@@ -138584,7 +139404,7 @@
       "id": "strain_24k_gold",
       "name": "24K Gold",
       "type": "hybrid",
-      "breeder": "Bulk Seeds",
+      "breeder": "Blimburn",
       "source": "sqlite",
       "has_chemistry": true,
       "top_terpenes": [
@@ -138593,9 +139413,15 @@
       "thc_range": null,
       "cbd_range": null,
       "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
+      "height_cm": [
+        12.7,
+        20.32
+      ],
+      "height_band": "Medium",
+      "flowering_days": [
+        56,
+        70
+      ],
       "curated": false
     },
     {
@@ -139038,6 +139864,28 @@
       "curated": false
     },
     {
+      "id": "strain_24k_gold_regular",
+      "name": "24K Gold Regular",
+      "type": "indica",
+      "breeder": "Blimburn",
+      "source": "sqlite",
+      "has_chemistry": true,
+      "top_terpenes": [],
+      "thc_range": [
+        19.0,
+        19.0
+      ],
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": [
+        63,
+        70
+      ],
+      "curated": false
+    },
+    {
       "id": "strain_24k_magic_0_33g",
       "name": "24K Magic (0.33g)",
       "type": null,
@@ -139413,6 +140261,25 @@
       "curated": false
     },
     {
+      "id": "strain_24k_gold_autoflower",
+      "name": "24k Gold Autoflower",
+      "type": "sativa",
+      "breeder": "Blimburn",
+      "source": "sqlite",
+      "has_chemistry": true,
+      "top_terpenes": [],
+      "thc_range": [
+        18.0,
+        18.0
+      ],
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
       "id": "strain_24k_gold_bulk_buds",
       "name": "24k Gold Bulk Buds",
       "type": null,
@@ -139707,6 +140574,22 @@
       "curated": false
     },
     {
+      "id": "strain_25_free_seeds_promo",
+      "name": "25 Free Seeds Promo",
+      "type": null,
+      "breeder": "Greenbud Seeds",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
       "id": "strain_25_lighterz",
       "name": "25 Lighterz",
       "type": "hybrid",
@@ -139883,28 +140766,6 @@
       "cbd_range": [
         0.2235,
         0.2235
-      ],
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_25_25",
-      "name": "25/25",
-      "type": null,
-      "breeder": null,
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        73.19,
-        73.19
-      ],
-      "cbd_range": [
-        0.078,
-        0.078
       ],
       "want": null,
       "height_cm": null,
@@ -140466,6 +141327,28 @@
       "curated": false
     },
     {
+      "id": "strain_25_25",
+      "name": "25:25",
+      "type": null,
+      "breeder": null,
+      "source": "sqlite",
+      "has_chemistry": true,
+      "top_terpenes": [],
+      "thc_range": [
+        73.19,
+        73.19
+      ],
+      "cbd_range": [
+        0.078,
+        0.078
+      ],
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
       "id": "strain_25_25_tilray_full_spectrum_thc25_cbd25_oral_solution_25_ml",
       "name": "25:25 - Tilray ® Full Spectrum THC25:CBD25 Oral Solution 25 mL",
       "type": null,
@@ -140591,6 +141474,22 @@
         25.0,
         25.0
       ],
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_25ct_bakers_dozen_reloaded_first_batch_player_pack_random",
+      "name": "25ct. Bakers Dozen Reloaded First Batch Player Pack Random",
+      "type": null,
+      "breeder": "Exotic Genetix",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
       "want": null,
       "height_cm": null,
       "height_band": null,
@@ -144949,8 +145848,11 @@
         80.0,
         120.0
       ],
-      "height_band": null,
-      "flowering_days": null,
+      "height_band": "Short",
+      "flowering_days": [
+        56,
+        63
+      ],
       "curated": false
     },
     {
@@ -145034,6 +145936,22 @@
       "curated": false
     },
     {
+      "id": "strain_2_lot_4_nouvelles_patines_generik_color_gel",
+      "name": "2× Lot 4 Nouvelles Patines Generik Color Gel",
+      "type": null,
+      "breeder": "Generik",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
       "id": "strain_2_4",
       "name": "2×4",
       "type": null,
@@ -145089,7 +146007,7 @@
         50.0,
         80.0
       ],
-      "height_band": null,
+      "height_band": "Short",
       "flowering_days": [
         60,
         70
@@ -145201,7 +146119,10 @@
       "want": null,
       "height_cm": null,
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        60,
+        70
+      ],
       "curated": false
     },
     {
@@ -145374,6 +146295,22 @@
       "curated": false
     },
     {
+      "id": "strain_3_free_items_promo",
+      "name": "3 Free Items Promo",
+      "type": null,
+      "breeder": "Greenbud Seeds",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
       "id": "strain_3_free_seeds_75_to_100",
       "name": "3 Free Seeds - £75 to £100",
       "type": "Indica Dominant",
@@ -145392,7 +146329,10 @@
         120.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        56,
+        63
+      ],
       "curated": false
     },
     {
@@ -145417,7 +146357,7 @@
     {
       "id": "strain_3_headed_dragon",
       "name": "3 Headed Dragon",
-      "type": "hybrid",
+      "type": "Hybrid",
       "breeder": "Cann AI Strains Breeders Terpenes Cups CSC Finder Best Tools",
       "source": "sqlite",
       "has_chemistry": true,
@@ -145433,7 +146373,10 @@
       "want": null,
       "height_cm": null,
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        60,
+        70
+      ],
       "curated": false
     },
     {
@@ -145693,7 +146636,10 @@
         120.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        56,
+        63
+      ],
       "curated": false
     },
     {
@@ -146950,7 +147896,10 @@
         120.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        56,
+        63
+      ],
       "curated": false
     },
     {
@@ -146982,7 +147931,10 @@
       "want": null,
       "height_cm": null,
       "height_band": "Medium",
-      "flowering_days": null,
+      "flowering_days": [
+        49,
+        63
+      ],
       "curated": false
     },
     {
@@ -148257,7 +149209,7 @@
     {
       "id": "strain_303_og",
       "name": "303 OG",
-      "type": "indica",
+      "type": "sativa",
       "breeder": "Unknown or Legendary",
       "source": "sqlite",
       "has_chemistry": true,
@@ -148914,7 +149866,10 @@
         120.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        56,
+        63
+      ],
       "curated": false
     },
     {
@@ -149501,7 +150456,7 @@
       "want": null,
       "height_cm": null,
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": 60,
       "curated": false
     },
     {
@@ -150077,6 +151032,22 @@
         20.876,
         20.876
       ],
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_36_og_shaolin_pheno_cannabis_seeds_by_socal_seed_vault",
+      "name": "36 OG (Shaolin Pheno) Cannabis Seeds by Socal Seed Vault",
+      "type": null,
+      "breeder": "Socal Seed Vault",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
       "cbd_range": null,
       "want": null,
       "height_cm": null,
@@ -152371,6 +153342,22 @@
       "curated": false
     },
     {
+      "id": "strain_3d_led_high",
+      "name": "3D LED High",
+      "type": null,
+      "breeder": "Socal Seed Vault",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
       "id": "strain_3d_mok_blauw_amp_amp_zwart",
       "name": "3D Mok Blauw &amp;amp; Zwart",
       "type": null,
@@ -152675,7 +153662,7 @@
         120.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": 63,
       "curated": false
     },
     {
@@ -152691,7 +153678,7 @@
       "want": null,
       "height_cm": null,
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": 63,
       "curated": false
     },
     {
@@ -152886,6 +153873,54 @@
       "name": "3ct - Gas Nana - Last Chance!",
       "type": null,
       "breeder": "Solfire Gardens",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_3ct_maroon_baboon_fem",
+      "name": "3ct Maroon Baboon (FEM)",
+      "type": null,
+      "breeder": "Exotic Genetix",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_3ct_project_z_bonus_pack",
+      "name": "3ct Project Z Bonus Pack",
+      "type": null,
+      "breeder": "Exotic Genetix",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_3ct_wet_betty_fem",
+      "name": "3ct Wet Betty (FEM)",
+      "type": null,
+      "breeder": "Exotic Genetix",
       "source": "sqlite",
       "has_chemistry": false,
       "top_terpenes": [],
@@ -153706,7 +154741,7 @@
       "want": null,
       "height_cm": null,
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": 65,
       "curated": false
     },
     {
@@ -153760,7 +154795,7 @@
     {
       "id": "strain_3x_crazy",
       "name": "3x Crazy",
-      "type": "indica",
+      "type": "hybrid",
       "breeder": "Unknown or Legendary",
       "source": "sqlite",
       "has_chemistry": true,
@@ -153777,6 +154812,22 @@
         0.0,
         0.05
       ],
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_3x_pinces_sibel_gator_s_par_14cm_noir",
+      "name": "3x Pinces Sibel Gator séparé 14cm noir",
+      "type": null,
+      "breeder": "Sibel",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
       "want": null,
       "height_cm": null,
       "height_band": null,
@@ -154259,14 +155310,17 @@
         80.0,
         120.0
       ],
-      "height_band": null,
-      "flowering_days": null,
+      "height_band": "Short",
+      "flowering_days": [
+        56,
+        63
+      ],
       "curated": false
     },
     {
       "id": "strain_4_assed_monkey_auto",
       "name": "4 Assed Monkey Auto",
-      "type": "indica",
+      "type": "auto",
       "breeder": "Mephisto Genetics",
       "source": "sqlite",
       "has_chemistry": false,
@@ -154279,7 +155333,10 @@
         70.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        60,
+        70
+      ],
       "curated": false
     },
     {
@@ -154730,7 +155787,10 @@
         120.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        56,
+        63
+      ],
       "curated": false
     },
     {
@@ -154866,7 +155926,10 @@
         120.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        56,
+        63
+      ],
       "curated": false
     },
     {
@@ -154914,7 +155977,7 @@
     {
       "id": "strain_4_locoz",
       "name": "4 Locoz",
-      "type": "hybrid",
+      "type": "Hybrid",
       "breeder": "Dying Breed Seeds",
       "source": "sqlite",
       "has_chemistry": true,
@@ -154930,7 +155993,10 @@
       "want": null,
       "height_cm": null,
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        60,
+        90
+      ],
       "curated": false
     },
     {
@@ -155129,7 +156195,7 @@
     {
       "id": "strain_4_times_sour",
       "name": "4 Times Sour",
-      "type": "sativa",
+      "type": "Sativa",
       "breeder": "Cann AI Strains Breeders Terpenes Cups CSC Finder Best Tools",
       "source": "sqlite",
       "has_chemistry": true,
@@ -155145,7 +156211,7 @@
       "want": null,
       "height_cm": null,
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": 70,
       "curated": false
     },
     {
@@ -155824,7 +156890,7 @@
     {
       "id": "strain_40_winks",
       "name": "40 Winks",
-      "type": "indica dominant hybrid",
+      "type": "hybrid",
       "breeder": null,
       "source": "sqlite",
       "has_chemistry": true,
@@ -156595,7 +157661,7 @@
     {
       "id": "strain_41_palms",
       "name": "41 Palms",
-      "type": "hybrid",
+      "type": "Hybrid",
       "breeder": "Cann AI Strains Breeders Terpenes Cups CSC Finder Best Tools",
       "source": "sqlite",
       "has_chemistry": true,
@@ -156645,7 +157711,10 @@
         120.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        56,
+        63
+      ],
       "curated": false
     },
     {
@@ -156698,25 +157767,6 @@
       "cbd_range": null,
       "want": null,
       "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_41_zi",
-      "name": "41 Zi",
-      "type": "Indica Dominant",
-      "breeder": "Karma Genetics",
-      "source": "sqlite",
-      "has_chemistry": false,
-      "top_terpenes": [],
-      "thc_range": null,
-      "cbd_range": null,
-      "want": null,
-      "height_cm": [
-        80.0,
-        120.0
-      ],
       "height_band": null,
       "flowering_days": null,
       "curated": false
@@ -157075,6 +158125,22 @@
       "curated": false
     },
     {
+      "id": "strain_420_apple_fritter_bundle",
+      "name": "420 Apple Fritter Bundle",
+      "type": null,
+      "breeder": "808 Genetics",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
       "id": "strain_420_ball_420_family",
       "name": "420 Ball (420 Family)",
       "type": null,
@@ -157123,10 +158189,106 @@
       "curated": false
     },
     {
+      "id": "strain_420_bundle",
+      "name": "420 Bundle",
+      "type": null,
+      "breeder": "808 Genetics",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_420_crippy_bundle",
+      "name": "420 Crippy Bundle",
+      "type": null,
+      "breeder": "808 Genetics",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_420_da_ricky_show_x_808_bundle",
+      "name": "420 Da Ricky Show x 808 Bundle",
+      "type": null,
+      "breeder": "808 Genetics",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_420_darkstar_giveback_024",
+      "name": "420 Darkstar Giveback 024",
+      "type": null,
+      "breeder": "808 Genetics",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_420_darkstars_da_man_giveback",
+      "name": "420 Darkstars Da Man Giveback",
+      "type": null,
+      "breeder": "808 Genetics",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
       "id": "strain_420_dry_room_swabs_1_5",
       "name": "420 Dry Room (swabs 1-5)",
       "type": null,
       "breeder": null,
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_420_fast_buds",
+      "name": "420 Fast Buds",
+      "type": "ruderalis",
+      "breeder": "Socal Seed Vault",
       "source": "sqlite",
       "has_chemistry": false,
       "top_terpenes": [],
@@ -157159,6 +158321,54 @@
       "name": "420 Flower Care Package",
       "type": null,
       "breeder": "420.com",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_420_gdp_bundle",
+      "name": "420 GDP Bundle",
+      "type": null,
+      "breeder": "808 Genetics",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_420_gg4_bundle",
+      "name": "420 GG4 Bundle",
+      "type": null,
+      "breeder": "808 Genetics",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_420_gmo_bundle",
+      "name": "420 GMO Bundle",
+      "type": null,
+      "breeder": "808 Genetics",
       "source": "sqlite",
       "has_chemistry": false,
       "top_terpenes": [],
@@ -157222,6 +158432,22 @@
       "curated": false
     },
     {
+      "id": "strain_420_kauai_electric_bundle",
+      "name": "420 Kauai Electric Bundle",
+      "type": null,
+      "breeder": "808 Genetics",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
       "id": "strain_420_kush",
       "name": "420 Kush",
       "type": "sativa",
@@ -157267,6 +158493,22 @@
       "curated": false
     },
     {
+      "id": "strain_420_peanut_butter_breath_bundle",
+      "name": "420 Peanut Butter Breath Bundle",
+      "type": null,
+      "breeder": "808 Genetics",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
       "id": "strain_420_pre",
       "name": "420 Pre",
       "type": null,
@@ -157298,7 +158540,10 @@
         120.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        56,
+        90
+      ],
       "curated": false
     },
     {
@@ -157333,6 +158578,102 @@
         0.1,
         0.64
       ],
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_420_runtz_bundle",
+      "name": "420 Runtz Bundle",
+      "type": null,
+      "breeder": "808 Genetics",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_420_sessions_vol_1",
+      "name": "420 SESSIONS: VOL.1",
+      "type": null,
+      "breeder": "IDGSeeds",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_420_sessions_vol_1_slowed_down",
+      "name": "420 SESSIONS: VOL.1 (Slowed Down)",
+      "type": null,
+      "breeder": "IDGSeeds",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_420_sessions_vol_2",
+      "name": "420 SESSIONS: VOL.2",
+      "type": null,
+      "breeder": "IDGSeeds",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_420_sessions_vol_2_slowed_down",
+      "name": "420 SESSIONS: VOL.2 (SLOWED DOWN)",
+      "type": null,
+      "breeder": "IDGSeeds",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_420_sherb_bundle",
+      "name": "420 Sherb Bundle",
+      "type": null,
+      "breeder": "808 Genetics",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
       "want": null,
       "height_cm": null,
       "height_band": null,
@@ -158231,7 +159572,7 @@
     {
       "id": "strain_443_f",
       "name": "443 F",
-      "type": "indica",
+      "type": "Indica",
       "breeder": "In House Genetics",
       "source": "sqlite",
       "has_chemistry": true,
@@ -158325,6 +159666,22 @@
       "height_cm": null,
       "height_band": null,
       "flowering_days": 69,
+      "curated": false
+    },
+    {
+      "id": "strain_45_day_autoflower_variety_pack",
+      "name": "45 Day Autoflower Variety Pack",
+      "type": "indica",
+      "breeder": "Auto Seeds",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
       "curated": false
     },
     {
@@ -160829,7 +162186,10 @@
         120.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        56,
+        63
+      ],
       "curated": false
     },
     {
@@ -160891,7 +162251,7 @@
     },
     {
       "id": "strain_4k_f",
-      "name": "4K (F)",
+      "name": "4K F",
       "type": "auto",
       "breeder": "Irie Genetics",
       "source": "sqlite",
@@ -161168,7 +162528,7 @@
     {
       "id": "strain_5_alarm_f",
       "name": "5 Alarm F",
-      "type": "hybrid",
+      "type": "auto",
       "breeder": "North Atlantic Seed Company",
       "source": "sqlite",
       "has_chemistry": true,
@@ -161191,7 +162551,7 @@
       "id": "strain_5_alive",
       "name": "5 Alive",
       "type": "hybrid",
-      "breeder": "Bulk Seeds",
+      "breeder": "Blimburn",
       "source": "sqlite",
       "has_chemistry": true,
       "top_terpenes": [
@@ -161208,9 +162568,12 @@
         0.0
       ],
       "want": null,
-      "height_cm": null,
+      "height_cm": 152.4,
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        56,
+        70
+      ],
       "curated": false
     },
     {
@@ -161391,6 +162754,22 @@
       "curated": false
     },
     {
+      "id": "strain_5_free_items_promo",
+      "name": "5 Free Items Promo",
+      "type": null,
+      "breeder": "Greenbud Seeds",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
       "id": "strain_5_free_seeds_150_to_250",
       "name": "5 Free Seeds - £150 to £250",
       "type": "Indica Dominant",
@@ -161406,13 +162785,16 @@
         120.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        56,
+        63
+      ],
       "curated": false
     },
     {
       "id": "strain_5_g_ogsd",
       "name": "5 G OGSD",
-      "type": "indica dominant hybrid",
+      "type": "hybrid",
       "breeder": null,
       "source": "sqlite",
       "has_chemistry": true,
@@ -161532,6 +162914,54 @@
         0.057,
         0.057
       ],
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_5_hole_10ml_display_stand",
+      "name": "5 Hole 10ML Display Stand",
+      "type": null,
+      "breeder": "Garden of Green",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_5_hole_cherry_wood_essential_oil_stand",
+      "name": "5 Hole Cherry Wood Essential Oil Stand",
+      "type": null,
+      "breeder": "GardenofGreen",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_5_hole_sugar_maple_essential_oil_stand",
+      "name": "5 Hole Sugar Maple Essential Oil Stand",
+      "type": null,
+      "breeder": "Garden of Green",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
       "want": null,
       "height_cm": null,
       "height_band": null,
@@ -161758,7 +163188,10 @@
         120.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        56,
+        63
+      ],
       "curated": false
     },
     {
@@ -163354,7 +164787,7 @@
     {
       "id": "strain_501st_og",
       "name": "501st OG",
-      "type": "indica",
+      "type": "sativa",
       "breeder": "Rare Dankness",
       "source": "sqlite",
       "has_chemistry": true,
@@ -163376,8 +164809,11 @@
         80.0,
         120.0
       ],
-      "height_band": null,
-      "flowering_days": null,
+      "height_band": "Short",
+      "flowering_days": [
+        56,
+        63
+      ],
       "curated": false
     },
     {
@@ -165734,7 +167170,10 @@
         120.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        56,
+        63
+      ],
       "curated": false
     },
     {
@@ -166072,7 +167511,7 @@
       "want": null,
       "height_cm": null,
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": 49,
       "curated": false
     },
     {
@@ -166097,7 +167536,10 @@
         130.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        63,
+        70
+      ],
       "curated": false
     },
     {
@@ -166122,7 +167564,10 @@
         100.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        77,
+        84
+      ],
       "curated": false
     },
     {
@@ -166147,7 +167592,10 @@
         100.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        77,
+        91
+      ],
       "curated": false
     },
     {
@@ -166172,7 +167620,7 @@
         90.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": 84,
       "curated": false
     },
     {
@@ -166191,7 +167639,10 @@
         120.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        63,
+        70
+      ],
       "curated": false
     },
     {
@@ -166216,7 +167667,10 @@
         120.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        63,
+        70
+      ],
       "curated": false
     },
     {
@@ -166235,7 +167689,10 @@
         120.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        56,
+        63
+      ],
       "curated": false
     },
     {
@@ -166254,7 +167711,10 @@
         120.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        63,
+        70
+      ],
       "curated": false
     },
     {
@@ -166273,7 +167733,10 @@
         150.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        56,
+        63
+      ],
       "curated": false
     },
     {
@@ -166298,7 +167761,10 @@
         120.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        70,
+        77
+      ],
       "curated": false
     },
     {
@@ -166664,7 +168130,7 @@
       "want": null,
       "height_cm": null,
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": 63,
       "curated": false
     },
     {
@@ -166801,8 +168267,11 @@
         80.0,
         120.0
       ],
-      "height_band": null,
-      "flowering_days": null,
+      "height_band": "Medium",
+      "flowering_days": [
+        55,
+        60
+      ],
       "curated": false
     },
     {
@@ -166856,6 +168325,25 @@
         120.0
       ],
       "height_band": null,
+      "flowering_days": [
+        56,
+        63
+      ],
+      "curated": false
+    },
+    {
+      "id": "strain_6_hole_10ml_essential_oil_stand",
+      "name": "6 Hole 10ML Essential Oil Stand",
+      "type": null,
+      "breeder": "Garden of Green",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
       "flowering_days": null,
       "curated": false
     },
@@ -166878,7 +168366,7 @@
     {
       "id": "strain_6_shooter",
       "name": "6 Shooter",
-      "type": "hybrid",
+      "type": "Hybrid",
       "breeder": "Empire Breeding Co.",
       "source": "sqlite",
       "has_chemistry": true,
@@ -166894,7 +168382,10 @@
       "want": null,
       "height_cm": null,
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        60,
+        90
+      ],
       "curated": false
     },
     {
@@ -166902,6 +168393,22 @@
       "name": "6 day old auto seedlings WDYT?",
       "type": null,
       "breeder": null,
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_6_steps_to_bringing_you_the_best_buds_pure_sunfarms",
+      "name": "6 steps to bringing you the best buds — Pure Sunfarms",
+      "type": null,
+      "breeder": "Pure Sunfarms",
       "source": "sqlite",
       "has_chemistry": false,
       "top_terpenes": [],
@@ -167326,7 +168833,10 @@
         100.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        63,
+        70
+      ],
       "curated": false
     },
     {
@@ -167434,7 +168944,7 @@
         120.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": 60,
       "curated": false
     },
     {
@@ -167456,17 +168966,23 @@
     {
       "id": "strain_60_day_wonder",
       "name": "60 Day Wonder",
-      "type": "ruderalis",
-      "breeder": "Bulk Seeds",
+      "type": "hybrid",
+      "breeder": "Blimburn",
       "source": "sqlite",
-      "has_chemistry": false,
+      "has_chemistry": true,
       "top_terpenes": [],
-      "thc_range": null,
+      "thc_range": [
+        18.0,
+        18.0
+      ],
       "cbd_range": null,
       "want": null,
       "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
+      "height_band": "Short",
+      "flowering_days": [
+        56,
+        70
+      ],
       "curated": false
     },
     {
@@ -169141,7 +170657,7 @@
     {
       "id": "strain_6th_sun",
       "name": "6th Sun",
-      "type": "sativa",
+      "type": "Sativa",
       "breeder": "Sativa Hoarders Seed Co",
       "source": "sqlite",
       "has_chemistry": true,
@@ -169158,6 +170674,22 @@
       "height_cm": null,
       "height_band": null,
       "flowering_days": 60,
+      "curated": false
+    },
+    {
+      "id": "strain_6x_pinces_de_s_paration_en_carbonne",
+      "name": "6x Pinces de séparation en carbonne",
+      "type": null,
+      "breeder": "Centaure",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
       "curated": false
     },
     {
@@ -169329,8 +170861,11 @@
         80.0,
         120.0
       ],
-      "height_band": null,
-      "flowering_days": null,
+      "height_band": "Medium",
+      "flowering_days": [
+        56,
+        63
+      ],
       "curated": false
     },
     {
@@ -169466,7 +171001,7 @@
     {
       "id": "strain_7_11",
       "name": "7-11",
-      "type": "hybrid",
+      "type": "Hybrid",
       "breeder": "Cann AI Strains Breeders Terpenes Cups CSC Finder Best Tools",
       "source": "sqlite",
       "has_chemistry": true,
@@ -170185,7 +171720,7 @@
     {
       "id": "strain_702_og",
       "name": "702 OG",
-      "type": "indica dominant hybrid",
+      "type": "hybrid",
       "breeder": null,
       "source": "sqlite",
       "has_chemistry": true,
@@ -170373,8 +171908,8 @@
         1.0
       ],
       "want": null,
-      "height_cm": null,
-      "height_band": null,
+      "height_cm": 152.0,
+      "height_band": "Tall",
       "flowering_days": 70,
       "curated": false
     },
@@ -170481,13 +172016,10 @@
       "has_chemistry": true,
       "top_terpenes": [],
       "thc_range": [
-        2.0,
-        2.0
+        707.0,
+        707.0
       ],
-      "cbd_range": [
-        3.0,
-        10.0
-      ],
+      "cbd_range": null,
       "want": null,
       "height_cm": null,
       "height_band": null,
@@ -170663,7 +172195,7 @@
     {
       "id": "strain_707_octane",
       "name": "707 Octane",
-      "type": "indica",
+      "type": "Hybrid",
       "breeder": "Red Scare Seed Company",
       "source": "sqlite",
       "has_chemistry": true,
@@ -170679,7 +172211,26 @@
       "want": null,
       "height_cm": null,
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": 63,
+      "curated": false
+    },
+    {
+      "id": "strain_707_seedbank_bubba_cut_x_blue_bonnet",
+      "name": "707 Seedbank Bubba Cut x Blue Bonnet",
+      "type": null,
+      "breeder": "Riot Seeds",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": [
+        56,
+        63
+      ],
       "curated": false
     },
     {
@@ -170816,7 +172367,10 @@
         120.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        56,
+        63
+      ],
       "curated": false
     },
     {
@@ -170864,6 +172418,22 @@
         0.21,
         0.55
       ],
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_70mm_mascotte_gomme_finest_quality_rolling_papers",
+      "name": "70mm Mascotte Gomme Finest Quality Rolling Papers",
+      "type": null,
+      "breeder": "IDGSeeds",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
       "want": null,
       "height_cm": null,
       "height_band": null,
@@ -170949,6 +172519,38 @@
       "name": "71 Wicked Flavors",
       "type": "indica",
       "breeder": "Madd Farmer Genetics",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_710_bombshell_blowout_bundle_pre_order",
+      "name": "710 Bombshell Blowout Bundle (PRE ORDER)",
+      "type": null,
+      "breeder": "808 Genetics",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_710_bombshell_bundle_pre_order",
+      "name": "710 Bombshell Bundle (Pre Order)",
+      "type": null,
+      "breeder": "808 Genetics",
       "source": "sqlite",
       "has_chemistry": false,
       "top_terpenes": [],
@@ -171087,8 +172689,8 @@
         80.0,
         120.0
       ],
-      "height_band": null,
-      "flowering_days": null,
+      "height_band": "Medium",
+      "flowering_days": 56,
       "curated": false
     },
     {
@@ -171179,8 +172781,11 @@
         150.0,
         250.0
       ],
-      "height_band": null,
-      "flowering_days": null,
+      "height_band": "Medium to Tall",
+      "flowering_days": [
+        63,
+        70
+      ],
       "curated": false
     },
     {
@@ -171221,7 +172826,7 @@
         170.0
       ],
       "height_band": "Medium to Tall",
-      "flowering_days": null,
+      "flowering_days": 63,
       "curated": false
     },
     {
@@ -171990,7 +173595,7 @@
       "want": null,
       "height_cm": null,
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": 63,
       "curated": false
     },
     {
@@ -172336,8 +173941,11 @@
         80.0,
         120.0
       ],
-      "height_band": null,
-      "flowering_days": null,
+      "height_band": "Short",
+      "flowering_days": [
+        56,
+        63
+      ],
       "curated": false
     },
     {
@@ -172514,7 +174122,10 @@
       "want": null,
       "height_cm": null,
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        56,
+        64
+      ],
       "curated": false
     },
     {
@@ -172614,7 +174225,10 @@
         120.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        59,
+        63
+      ],
       "curated": false
     },
     {
@@ -172622,6 +174236,22 @@
       "name": "78 Tenzin #4  - 11",
       "type": null,
       "breeder": "Seedsman",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_78_tenzin_4_reg",
+      "name": "78 Tenzin #4 (Reg)",
+      "type": "hybrid",
+      "breeder": "Green Bodhi",
       "source": "sqlite",
       "has_chemistry": false,
       "top_terpenes": [],
@@ -172806,24 +174436,6 @@
       "curated": false
     },
     {
-      "id": "strain_7up",
-      "name": "7Up",
-      "type": "hybrid",
-      "breeder": "Cann AI Strains Breeders Terpenes Cups CSC Finder Best Tools",
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [
-        "Terpene Guide"
-      ],
-      "thc_range": null,
-      "cbd_range": null,
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
       "id": "strain_7g",
       "name": "7g",
       "type": null,
@@ -172933,8 +174545,11 @@
         80.0,
         120.0
       ],
-      "height_band": null,
-      "flowering_days": null,
+      "height_band": "Medium",
+      "flowering_days": [
+        56,
+        63
+      ],
       "curated": false
     },
     {
@@ -172945,6 +174560,24 @@
       "source": "sqlite",
       "has_chemistry": false,
       "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_7up",
+      "name": "7up",
+      "type": "Hybrid",
+      "breeder": "Cann AI Strains Breeders Terpenes Cups CSC Finder Best Tools",
+      "source": "sqlite",
+      "has_chemistry": true,
+      "top_terpenes": [
+        "Terpene Guide"
+      ],
       "thc_range": null,
       "cbd_range": null,
       "want": null,
@@ -173039,8 +174672,11 @@
         80.0,
         120.0
       ],
-      "height_band": null,
-      "flowering_days": null,
+      "height_band": "Short",
+      "flowering_days": [
+        56,
+        63
+      ],
       "curated": false
     },
     {
@@ -173120,6 +174756,22 @@
       "curated": false
     },
     {
+      "id": "strain_8_free_items_promo",
+      "name": "8 Free Items Promo",
+      "type": null,
+      "breeder": "Greenbud Seeds",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
       "id": "strain_8_free_seeds_400_to_600",
       "name": "8 Free Seeds - £400 to £600",
       "type": "Indica Dominant",
@@ -173135,13 +174787,16 @@
         120.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        56,
+        63
+      ],
       "curated": false
     },
     {
       "id": "strain_8_inch_bagel",
       "name": "8 Inch Bagel",
-      "type": "Indica Dominant Hybrid",
+      "type": "hybrid",
       "breeder": "Crop King Seeds",
       "source": "sqlite",
       "has_chemistry": true,
@@ -173191,7 +174846,10 @@
         120.0
       ],
       "height_band": "Medium",
-      "flowering_days": null,
+      "flowering_days": [
+        56,
+        63
+      ],
       "curated": false
     },
     {
@@ -173363,6 +175021,38 @@
       "height_cm": null,
       "height_band": null,
       "flowering_days": 55,
+      "curated": false
+    },
+    {
+      "id": "strain_8_millas_high_feminized",
+      "name": "8 Millas High (Feminized)",
+      "type": "sativa",
+      "breeder": "Cartel Seeds",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_8_millas_high_regular",
+      "name": "8 Millas High (Regular)",
+      "type": "sativa",
+      "breeder": "Cartel Seeds",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
       "curated": false
     },
     {
@@ -173954,7 +175644,10 @@
       "want": null,
       "height_cm": null,
       "height_band": null,
-      "flowering_days": 90,
+      "flowering_days": [
+        84,
+        98
+      ],
       "curated": false
     },
     {
@@ -174196,6 +175889,70 @@
       "curated": false
     },
     {
+      "id": "strain_808_420_giveback",
+      "name": "808 420 Giveback",
+      "type": null,
+      "breeder": "808 Genetics",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_808_420_giveback_bundle",
+      "name": "808 420 Giveback Bundle",
+      "type": null,
+      "breeder": "808 Genetics",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_808_candy_bundle",
+      "name": "808 Candy Bundle",
+      "type": null,
+      "breeder": "808 Genetics",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_808_gas_bundle",
+      "name": "808 Gas Bundle",
+      "type": null,
+      "breeder": "808 Genetics",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
       "id": "strain_808_headband",
       "name": "808 Headband",
       "type": "sativa dominant hybrid",
@@ -174207,6 +175964,38 @@
         20.0,
         20.0
       ],
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_808_holiday_bundle",
+      "name": "808 Holiday Bundle",
+      "type": null,
+      "breeder": "808 Genetics",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_808_holiday_giveback",
+      "name": "808 Holiday Giveback",
+      "type": null,
+      "breeder": "808 Genetics",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
       "cbd_range": null,
       "want": null,
       "height_cm": null,
@@ -174228,6 +176017,86 @@
       "height_cm": null,
       "height_band": null,
       "flowering_days": 63,
+      "curated": false
+    },
+    {
+      "id": "strain_808_oz_bundle",
+      "name": "808 OZ Bundle",
+      "type": null,
+      "breeder": "808 Genetics",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_808_papaya_bundle",
+      "name": "808 Papaya Bundle",
+      "type": null,
+      "breeder": "808 Genetics",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_808_supa_santa",
+      "name": "808 Supa Santa",
+      "type": null,
+      "breeder": "808 Genetics",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_808_terp_collector",
+      "name": "808 Terp Collector",
+      "type": null,
+      "breeder": "808 Genetics",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_808_z_bundle",
+      "name": "808 Z Bundle",
+      "type": null,
+      "breeder": "808 Genetics",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
       "curated": false
     },
     {
@@ -174611,7 +176480,7 @@
       ],
       "want": null,
       "height_cm": null,
-      "height_band": null,
+      "height_band": "Medium",
       "flowering_days": [
         65,
         75
@@ -174795,7 +176664,10 @@
       "want": null,
       "height_cm": null,
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        56,
+        63
+      ],
       "curated": false
     },
     {
@@ -174812,6 +176684,28 @@
       "height_cm": null,
       "height_band": null,
       "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_818_headband_cannabis",
+      "name": "818 Headband Cannabis",
+      "type": "hybrid",
+      "breeder": "Alter Ego Genetics",
+      "source": "sqlite",
+      "has_chemistry": true,
+      "top_terpenes": [],
+      "thc_range": [
+        20.0,
+        20.0
+      ],
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": [
+        56,
+        63
+      ],
       "curated": false
     },
     {
@@ -174920,7 +176814,10 @@
         120.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        65,
+        75
+      ],
       "curated": false
     },
     {
@@ -175731,7 +177628,7 @@
     {
       "id": "strain_87_limepop",
       "name": "87 Limepop",
-      "type": "sativa dominant hybrid",
+      "type": "hybrid",
       "breeder": null,
       "source": "sqlite",
       "has_chemistry": true,
@@ -176494,6 +178391,22 @@
       "curated": false
     },
     {
+      "id": "strain_89_northern_lights_5_ibl_reg",
+      "name": "89 Northern Lights 5 IBL (Reg)",
+      "type": null,
+      "breeder": "Green Bodhi",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
       "id": "strain_89_super_lemon_haze_bx1_x_super_lemon_haze_bx1",
       "name": "89 SUPER LEMON HAZE BX1 x SUPER LEMON HAZE BX1",
       "type": null,
@@ -176971,7 +178884,7 @@
     {
       "id": "strain_9_pound_blueberry",
       "name": "9 Pound Blueberry",
-      "type": "indica dominant hybrid",
+      "type": "hybrid",
       "breeder": null,
       "source": "sqlite",
       "has_chemistry": true,
@@ -176994,7 +178907,7 @@
       "id": "strain_9_pound_hammer",
       "name": "9 Pound Hammer",
       "type": "hybrid",
-      "breeder": "Bulk Seeds",
+      "breeder": "Blimburn",
       "source": "sqlite",
       "has_chemistry": true,
       "top_terpenes": [
@@ -177013,7 +178926,7 @@
       "want": null,
       "height_cm": null,
       "height_band": "Medium",
-      "flowering_days": null,
+      "flowering_days": 63,
       "curated": false
     },
     {
@@ -177206,7 +179119,10 @@
       "want": null,
       "height_cm": null,
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        56,
+        70
+      ],
       "curated": false
     },
     {
@@ -177474,32 +179390,6 @@
       "curated": false
     },
     {
-      "id": "strain_9_lb_hammer",
-      "name": "9 lb Hammer",
-      "type": "Indica",
-      "breeder": null,
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [
-        "beta-Myrcene",
-        "beta-Caryophyllene",
-        "delta-Limonene"
-      ],
-      "thc_range": [
-        22.0,
-        22.0
-      ],
-      "cbd_range": [
-        0.19,
-        0.19
-      ],
-      "want": null,
-      "height_cm": null,
-      "height_band": "Medium",
-      "flowering_days": null,
-      "curated": false
-    },
-    {
       "id": "strain_9_lb_hammer_4",
       "name": "9 lb Hammer #4",
       "type": null,
@@ -177548,6 +179438,32 @@
       "want": null,
       "height_cm": null,
       "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_9_lb_hammer",
+      "name": "9 lb. Hammer",
+      "type": "Indica",
+      "breeder": null,
+      "source": "sqlite",
+      "has_chemistry": true,
+      "top_terpenes": [
+        "beta-Myrcene",
+        "beta-Caryophyllene",
+        "delta-Limonene"
+      ],
+      "thc_range": [
+        22.0,
+        22.0
+      ],
+      "cbd_range": [
+        0.19,
+        0.19
+      ],
+      "want": null,
+      "height_cm": null,
+      "height_band": "Medium",
       "flowering_days": null,
       "curated": false
     },
@@ -178786,6 +180702,54 @@
       "curated": false
     },
     {
+      "id": "strain_90s_boobies_f1",
+      "name": "90s Boobies F1",
+      "type": null,
+      "breeder": "Flower Bounty Farms",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_90s_bottoms_f1",
+      "name": "90s Bottoms F1",
+      "type": "indica",
+      "breeder": "Flower Bounty Farms",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_90s_gluebooty_f1",
+      "name": "90s Gluebooty F1",
+      "type": null,
+      "breeder": "Flower Bounty Farms",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
       "id": "strain_90s_haze",
       "name": "90s Haze",
       "type": "hybrid",
@@ -178801,6 +180765,22 @@
         1.0,
         1.0
       ],
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_90s_keester_f1",
+      "name": "90s Keester F1",
+      "type": null,
+      "breeder": "Flower Bounty Farms",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
       "want": null,
       "height_cm": null,
       "height_band": null,
@@ -178914,7 +180894,7 @@
       "want": null,
       "height_cm": null,
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": 72,
       "curated": false
     },
     {
@@ -178932,8 +180912,8 @@
         80.0,
         120.0
       ],
-      "height_band": null,
-      "flowering_days": null,
+      "height_band": "Medium to Tall",
+      "flowering_days": 72,
       "curated": false
     },
     {
@@ -179482,7 +181462,7 @@
     {
       "id": "strain_91_grapes_auto",
       "name": "91 Grapes Auto",
-      "type": "hybrid",
+      "type": "auto",
       "breeder": "Night Owl",
       "source": "sqlite",
       "has_chemistry": false,
@@ -179633,6 +181613,38 @@
         56,
         63
       ],
+      "curated": false
+    },
+    {
+      "id": "strain_91_octane_retired",
+      "name": "91 Octane (Retired)",
+      "type": null,
+      "breeder": "Exotic Genetix",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_91_octane_strain_t",
+      "name": "91 Octane Strain T",
+      "type": null,
+      "breeder": "Exotic Genetix",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
       "curated": false
     },
     {
@@ -179916,6 +181928,29 @@
       "curated": false
     },
     {
+      "id": "strain_91_sister",
+      "name": "91 Sister",
+      "type": "hybrid",
+      "breeder": null,
+      "source": "sqlite",
+      "has_chemistry": true,
+      "top_terpenes": [
+        "Limonene",
+        "Beta Myrcene",
+        "Beta Caryophyllene"
+      ],
+      "thc_range": [
+        24.3,
+        24.3
+      ],
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
       "id": "strain_91_skunk_1",
       "name": "91 Skunk #1",
       "type": null,
@@ -180025,7 +182060,7 @@
     {
       "id": "strain_91_tahoe",
       "name": "91 Tahoe",
-      "type": "indica dominant hybrid",
+      "type": "indica",
       "breeder": null,
       "source": "sqlite",
       "has_chemistry": true,
@@ -180139,29 +182174,6 @@
         0.0,
         0.0
       ],
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_91_sister",
-      "name": "91 sister",
-      "type": "indica dominant hybrid",
-      "breeder": null,
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [
-        "Limonene",
-        "Beta Myrcene",
-        "Beta Caryophyllene"
-      ],
-      "thc_range": [
-        24.3,
-        24.3
-      ],
-      "cbd_range": null,
       "want": null,
       "height_cm": null,
       "height_band": null,
@@ -180504,7 +182516,7 @@
     {
       "id": "strain_92_hollywood_hills",
       "name": "92 Hollywood Hills",
-      "type": "indica dominant hybrid",
+      "type": "hybrid",
       "breeder": null,
       "source": "sqlite",
       "has_chemistry": true,
@@ -181021,7 +183033,7 @@
     {
       "id": "strain_95_cookies",
       "name": "95 Cookies",
-      "type": "indica dominant hybrid",
+      "type": "hybrid",
       "breeder": null,
       "source": "sqlite",
       "has_chemistry": true,
@@ -181276,6 +183288,22 @@
         21.22,
         21.22
       ],
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_96_feuillets_de_protection",
+      "name": "96 Feuillets de Protection",
+      "type": null,
+      "breeder": "Sibel",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
       "cbd_range": null,
       "want": null,
       "height_cm": null,
@@ -182659,6 +184687,22 @@
       "curated": false
     },
     {
+      "id": "strain_9lb_boof_adk_grass",
+      "name": "9lb Boof — ADK GRASS",
+      "type": null,
+      "breeder": "ADK GRASS",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
       "id": "strain_9lb_candy_vape_bulk",
       "name": "9lb Candy Vape - Bulk",
       "type": null,
@@ -182687,7 +184731,7 @@
     {
       "id": "strain_9lb_flubber",
       "name": "9lb Flubber",
-      "type": "indica",
+      "type": "Hybrid",
       "breeder": "The Oregon Leaf Cultivation",
       "source": "sqlite",
       "has_chemistry": true,
@@ -182709,7 +184753,7 @@
     {
       "id": "strain_9lb_hammer",
       "name": "9lb Hammer",
-      "type": "indica",
+      "type": "Hybrid",
       "breeder": "Crop King Seeds",
       "source": "sqlite",
       "has_chemistry": true,
@@ -182732,7 +184776,10 @@
         120.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        56,
+        63
+      ],
       "curated": false
     },
     {
@@ -185572,7 +187619,10 @@
       "want": null,
       "height_cm": null,
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        56,
+        63
+      ],
       "curated": false
     },
     {
@@ -185699,7 +187749,7 @@
         80.0,
         120.0
       ],
-      "height_band": null,
+      "height_band": "Short",
       "flowering_days": [
         56,
         63
@@ -186572,7 +188622,7 @@
     {
       "id": "strain_a_dub",
       "name": "A-Dub",
-      "type": "hybrid",
+      "type": "sativa",
       "breeder": "Unknown Breeder",
       "source": "sqlite",
       "has_chemistry": true,
@@ -186889,7 +188939,10 @@
         10.0
       ],
       "want": null,
-      "height_cm": null,
+      "height_cm": [
+        119.888,
+        139.954
+      ],
       "height_band": null,
       "flowering_days": [
         55,
@@ -186970,7 +189023,10 @@
       "want": null,
       "height_cm": null,
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        60,
+        70
+      ],
       "curated": false
     },
     {
@@ -187170,7 +189226,7 @@
       "want": null,
       "height_cm": 86.0,
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": 67,
       "curated": false
     },
     {
@@ -191456,7 +193512,7 @@
       "want": null,
       "height_cm": null,
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": 56,
       "curated": false
     },
     {
@@ -191579,7 +193635,7 @@
     {
       "id": "strain_a1_purps",
       "name": "A1 Purps",
-      "type": "hybrid",
+      "type": "Hybrid",
       "breeder": "A1 Genetics",
       "source": "sqlite",
       "has_chemistry": true,
@@ -191595,7 +193651,7 @@
       "want": null,
       "height_cm": null,
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": 60,
       "curated": false
     },
     {
@@ -192134,7 +194190,7 @@
     {
       "id": "strain_a3",
       "name": "A3",
-      "type": "hybrid",
+      "type": "Hybrid",
       "breeder": "Cann AI Strains Breeders Terpenes Cups CSC Finder Best Tools",
       "source": "sqlite",
       "has_chemistry": true,
@@ -192150,7 +194206,10 @@
       "want": null,
       "height_cm": null,
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        60,
+        90
+      ],
       "curated": false
     },
     {
@@ -192213,7 +194272,10 @@
         120.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        98,
+        119
+      ],
       "curated": false
     },
     {
@@ -202492,7 +204554,7 @@
         3.57
       ],
       "want": null,
-      "height_cm": null,
+      "height_cm": 150.0,
       "height_band": "Medium",
       "flowering_days": [
         63,
@@ -202524,6 +204586,31 @@
       "height_cm": null,
       "height_band": null,
       "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_acdc_1_18",
+      "name": "ACDC (1:18)",
+      "type": "indica",
+      "breeder": "Blimburn",
+      "source": "sqlite",
+      "has_chemistry": true,
+      "top_terpenes": [],
+      "thc_range": [
+        0.5,
+        0.5
+      ],
+      "cbd_range": [
+        18.0,
+        18.0
+      ],
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": [
+        56,
+        70
+      ],
       "curated": false
     },
     {
@@ -203760,28 +205847,6 @@
       "curated": false
     },
     {
-      "id": "strain_acdc_x_otto_ii_f2",
-      "name": "ACDC x Otto II F2",
-      "type": "hybrid",
-      "breeder": "Cann AI Strains Breeders Terpenes Cups CSC Finder Best Tools",
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        25.0,
-        25.0
-      ],
-      "cbd_range": [
-        60.0,
-        90.0
-      ],
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": 70,
-      "curated": false
-    },
-    {
       "id": "strain_acdc_x_querkle",
       "name": "ACDC x Querkle",
       "type": "-unknown-",
@@ -204345,7 +206410,7 @@
       "want": null,
       "height_cm": null,
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": 56,
       "curated": false
     },
     {
@@ -204950,7 +207015,10 @@
         120.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        56,
+        63
+      ],
       "curated": false
     },
     {
@@ -205274,6 +207342,54 @@
       "curated": false
     },
     {
+      "id": "strain_afghani_bananas",
+      "name": "AFGHANI BANANAS",
+      "type": null,
+      "breeder": "Crockett Family Farms",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_afghani_cheese",
+      "name": "AFGHANI CHEESE",
+      "type": null,
+      "breeder": "Crockett Family Farms",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_afghani_spritzer",
+      "name": "AFGHANI SPRITZER",
+      "type": null,
+      "breeder": "Crockett Family Farms",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
       "id": "strain_afi",
       "name": "AFI",
       "type": null,
@@ -205452,6 +207568,22 @@
         0.096,
         0.096
       ],
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_african_grapes",
+      "name": "AFRICAN GRAPES",
+      "type": null,
+      "breeder": "Crockett Family Farms",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
       "want": null,
       "height_cm": null,
       "height_band": null,
@@ -205720,7 +207852,10 @@
         120.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        77,
+        91
+      ],
       "curated": false
     },
     {
@@ -206802,7 +208937,10 @@
       "want": null,
       "height_cm": null,
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        60,
+        70
+      ],
       "curated": false
     },
     {
@@ -206948,7 +209086,7 @@
     {
       "id": "strain_ak_47",
       "name": "AK 47",
-      "type": "sativa",
+      "type": "hybrid",
       "breeder": "Amaranta Seeds",
       "source": "sqlite",
       "has_chemistry": true,
@@ -206958,9 +209096,12 @@
       "thc_range": null,
       "cbd_range": null,
       "want": null,
-      "height_cm": 179.0,
-      "height_band": null,
-      "flowering_days": null,
+      "height_cm": [
+        100.0,
+        140.0
+      ],
+      "height_band": "Medium",
+      "flowering_days": 63,
       "curated": false
     },
     {
@@ -207119,6 +209260,28 @@
       "height_cm": null,
       "height_band": null,
       "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_ak_47_fast_version",
+      "name": "AK 47 Fast Version",
+      "type": "sativa",
+      "breeder": "Blimburn",
+      "source": "sqlite",
+      "has_chemistry": true,
+      "top_terpenes": [],
+      "thc_range": [
+        19.0,
+        19.0
+      ],
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": [
+        56,
+        70
+      ],
       "curated": false
     },
     {
@@ -207366,7 +209529,10 @@
         120.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        65,
+        75
+      ],
       "curated": false
     },
     {
@@ -207643,7 +209809,10 @@
         120.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        56,
+        63
+      ],
       "curated": false
     },
     {
@@ -207660,9 +209829,15 @@
       ],
       "cbd_range": null,
       "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
+      "height_cm": [
+        80.0,
+        120.0
+      ],
+      "height_band": "Medium",
+      "flowering_days": [
+        56,
+        63
+      ],
       "curated": false
     },
     {
@@ -207710,7 +209885,10 @@
         120.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        56,
+        63
+      ],
       "curated": false
     },
     {
@@ -207783,7 +209961,10 @@
         120.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        56,
+        63
+      ],
       "curated": false
     },
     {
@@ -208003,7 +210184,7 @@
         80.0,
         120.0
       ],
-      "height_band": null,
+      "height_band": "Short to Medium",
       "flowering_days": [
         50,
         60
@@ -208044,8 +210225,11 @@
         80.0,
         120.0
       ],
-      "height_band": null,
-      "flowering_days": null,
+      "height_band": "Short to Medium",
+      "flowering_days": [
+        56,
+        63
+      ],
       "curated": false
     },
     {
@@ -208455,7 +210639,10 @@
         70.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        55,
+        60
+      ],
       "curated": false
     },
     {
@@ -208610,7 +210797,10 @@
       "want": null,
       "height_cm": null,
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        49,
+        56
+      ],
       "curated": false
     },
     {
@@ -208627,6 +210817,25 @@
       "height_cm": null,
       "height_band": null,
       "flowering_days": 70,
+      "curated": false
+    },
+    {
+      "id": "strain_ak_x_white_widow_auto",
+      "name": "AK x White Widow Auto",
+      "type": "indica",
+      "breeder": "Blimburn",
+      "source": "sqlite",
+      "has_chemistry": true,
+      "top_terpenes": [],
+      "thc_range": [
+        18.0,
+        18.0
+      ],
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
       "curated": false
     },
     {
@@ -208828,7 +211037,10 @@
         120.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        56,
+        63
+      ],
       "curated": false
     },
     {
@@ -208847,7 +211059,10 @@
         120.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        56,
+        63
+      ],
       "curated": false
     },
     {
@@ -208906,8 +211121,11 @@
         80.0,
         120.0
       ],
-      "height_band": null,
-      "flowering_days": null,
+      "height_band": "Medium to Tall",
+      "flowering_days": [
+        56,
+        63
+      ],
       "curated": false
     },
     {
@@ -208978,9 +211196,15 @@
         0.43170021000000003
       ],
       "want": null,
-      "height_cm": null,
+      "height_cm": [
+        80.0,
+        140.0
+      ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        56,
+        63
+      ],
       "curated": false
     },
     {
@@ -209021,7 +211245,7 @@
         100.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": 63,
       "curated": false
     },
     {
@@ -209056,7 +211280,10 @@
         140.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        50,
+        65
+      ],
       "curated": false
     },
     {
@@ -209444,7 +211671,7 @@
         100.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": 70,
       "curated": false
     },
     {
@@ -209741,16 +211968,22 @@
       "id": "strain_ak_47_regular",
       "name": "AK-47 Regular",
       "type": "sativa",
-      "breeder": "WeedSeedsExpress",
+      "breeder": "Blimburn",
       "source": "sqlite",
-      "has_chemistry": false,
+      "has_chemistry": true,
       "top_terpenes": [],
-      "thc_range": null,
+      "thc_range": [
+        16.0,
+        16.0
+      ],
       "cbd_range": null,
       "want": null,
       "height_cm": null,
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        42,
+        56
+      ],
       "curated": false
     },
     {
@@ -210430,8 +212663,8 @@
       ],
       "want": null,
       "height_cm": 124.0,
-      "height_band": null,
-      "flowering_days": null,
+      "height_band": "Medium",
+      "flowering_days": 82,
       "curated": false
     },
     {
@@ -210453,7 +212686,7 @@
     {
       "id": "strain_ak_48_auto",
       "name": "AK-48 Auto",
-      "type": "Indica +60%",
+      "type": "indica",
       "breeder": "Nirvana",
       "source": "sqlite",
       "has_chemistry": true,
@@ -210467,7 +212700,10 @@
         15.0
       ],
       "want": null,
-      "height_cm": null,
+      "height_cm": [
+        80.0,
+        100.0
+      ],
       "height_band": null,
       "flowering_days": [
         63,
@@ -210504,7 +212740,10 @@
       "want": null,
       "height_cm": null,
       "height_band": "Short",
-      "flowering_days": null,
+      "flowering_days": [
+        63,
+        70
+      ],
       "curated": false
     },
     {
@@ -210621,7 +212860,7 @@
         50.0,
         70.0
       ],
-      "height_band": null,
+      "height_band": "Medium",
       "flowering_days": 56,
       "curated": false
     },
@@ -210695,7 +212934,10 @@
         120.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        56,
+        63
+      ],
       "curated": false
     },
     {
@@ -210745,7 +212987,10 @@
         120.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        56,
+        63
+      ],
       "curated": false
     },
     {
@@ -210999,7 +213244,7 @@
         120.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": 49,
       "curated": false
     },
     {
@@ -211037,7 +213282,10 @@
         120.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        56,
+        63
+      ],
       "curated": false
     },
     {
@@ -211053,7 +213301,10 @@
       "want": null,
       "height_cm": 126.0,
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        63,
+        70
+      ],
       "curated": false
     },
     {
@@ -211133,7 +213384,7 @@
       "want": null,
       "height_cm": null,
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": 56,
       "curated": false
     },
     {
@@ -211286,8 +213537,8 @@
         80.0,
         140.0
       ],
-      "height_band": null,
-      "flowering_days": null,
+      "height_band": "Short to Medium",
+      "flowering_days": 77,
       "curated": false
     },
     {
@@ -211322,7 +213573,7 @@
       "want": null,
       "height_cm": 110.0,
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": 89,
       "curated": false
     },
     {
@@ -211344,7 +213595,7 @@
         120.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": 56,
       "curated": false
     },
     {
@@ -211364,6 +213615,28 @@
       "height_cm": null,
       "height_band": null,
       "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_ak47_f1",
+      "name": "AK47 F1",
+      "type": "sativa",
+      "breeder": "Blimburn",
+      "source": "sqlite",
+      "has_chemistry": true,
+      "top_terpenes": [],
+      "thc_range": [
+        18.0,
+        18.0
+      ],
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": [
+        56,
+        70
+      ],
       "curated": false
     },
     {
@@ -211672,8 +213945,11 @@
         80.0,
         120.0
       ],
-      "height_band": null,
-      "flowering_days": null,
+      "height_band": "Tall",
+      "flowering_days": [
+        60,
+        65
+      ],
       "curated": false
     },
     {
@@ -211708,7 +213984,7 @@
         120.0
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": 56,
       "curated": false
     },
     {
@@ -211974,8 +214250,8 @@
       "cbd_range": null,
       "want": null,
       "height_cm": 144.0,
-      "height_band": null,
-      "flowering_days": null,
+      "height_band": "Short",
+      "flowering_days": 74,
       "curated": false
     },
     {
@@ -212026,26 +214302,7 @@
       "want": null,
       "height_cm": null,
       "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_ak59_auto",
-      "name": "AK59 Auto",
-      "type": null,
-      "breeder": null,
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        18.0,
-        18.0
-      ],
-      "cbd_range": null,
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
+      "flowering_days": 60,
       "curated": false
     },
     {
@@ -212165,8 +214422,11 @@
         80.0,
         120.0
       ],
-      "height_band": null,
-      "flowering_days": null,
+      "height_band": "Short",
+      "flowering_days": [
+        45,
+        55
+      ],
       "curated": false
     },
     {
@@ -212490,6 +214750,25 @@
       "height_cm": null,
       "height_band": null,
       "flowering_days": 70,
+      "curated": false
+    },
+    {
+      "id": "strain_alien_gorillaz",
+      "name": "ALIEN GORILLAZ",
+      "type": "hybrid",
+      "breeder": "Greenbud Seeds",
+      "source": "sqlite",
+      "has_chemistry": true,
+      "top_terpenes": [],
+      "thc_range": [
+        22.0,
+        24.0
+      ],
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": 65,
       "curated": false
     },
     {
@@ -213029,6 +215308,44 @@
       "curated": false
     },
     {
+      "id": "strain_aloha_limone_fem",
+      "name": "ALOHA LIMONE: FEM",
+      "type": "sativa",
+      "breeder": "Colorado Seed Inc.",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": [
+        56,
+        63
+      ],
+      "curated": false
+    },
+    {
+      "id": "strain_aloha_limone_reg",
+      "name": "ALOHA LIMONE: REG",
+      "type": "sativa",
+      "breeder": "Colorado Seed Inc.",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": [
+        56,
+        63
+      ],
+      "curated": false
+    },
+    {
       "id": "strain_alpha_runtz_bud",
       "name": "ALPHA RUNTZ BUD",
       "type": null,
@@ -213302,7 +215619,10 @@
         20.32
       ],
       "height_band": null,
-      "flowering_days": null,
+      "flowering_days": [
+        70,
+        77
+      ],
       "curated": false
     },
     {
@@ -213324,7 +215644,10 @@
         120.0
       ],
       "height_band": "Short to Medium",
-      "flowering_days": null,
+      "flowering_days": [
+        65,
+        70
+      ],
       "curated": false
     },
     {
@@ -213429,7 +215752,7 @@
     {
       "id": "strain_amg17",
       "name": "AMG17",
-      "type": "sativa dominant hybrid",
+      "type": "hybrid",
       "breeder": null,
       "source": "sqlite",
       "has_chemistry": true,
@@ -213592,6 +215915,22 @@
       "curated": false
     },
     {
+      "id": "strain_amped",
+      "name": "AMPED",
+      "type": null,
+      "breeder": "Exotic Genetix",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
       "id": "strain_ams",
       "name": "AMS",
       "type": "Hybrid",
@@ -213609,7 +215948,7 @@
       ],
       "want": null,
       "height_cm": null,
-      "height_band": null,
+      "height_band": "Tall",
       "flowering_days": [
         56,
         63
@@ -213626,6 +215965,22 @@
       "top_terpenes": [
         "terpenes"
       ],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_amsterdam_skunk",
+      "name": "AMSTERDAM SKUNK",
+      "type": "sativa",
+      "breeder": "Ceres Seeds",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
       "thc_range": null,
       "cbd_range": null,
       "want": null,
@@ -214276,6 +216631,22 @@
       "curated": false
     },
     {
+      "id": "strain_animal_mints_fem",
+      "name": "ANIMAL MINTS: FEM",
+      "type": "hybrid",
+      "breeder": "Colorado Seed Inc.",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": 56,
+      "curated": false
+    },
+    {
       "id": "strain_animal_mintz_buds",
       "name": "ANIMAL MINTZ BUDS",
       "type": null,
@@ -214680,7 +217051,7 @@
     {
       "id": "strain_apd",
       "name": "APD",
-      "type": "indica dominant hybrid",
+      "type": "hybrid",
       "breeder": null,
       "source": "sqlite",
       "has_chemistry": true,
@@ -215207,6 +217578,22 @@
       "curated": false
     },
     {
+      "id": "strain_apple_pie_x_guava_dawg_x_banana_sherbet",
+      "name": "APPLE PIE X (GUAVA DAWG X BANANA SHERBET)",
+      "type": null,
+      "breeder": "Crockett Family Farms",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
       "id": "strain_apple_sherbet_x_grape_sundae",
       "name": "APPLE SHERBET X GRAPE SUNDAE",
       "type": "sativa",
@@ -215227,6 +217614,38 @@
       "name": "APPLES & BANANAS)\nFeminized Photoperiod",
       "type": null,
       "breeder": null,
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_apples_amp_amp_bananas_wilson_x_cheese",
+      "name": "APPLES &amp;amp; BANANAS WILSON X CHEESE",
+      "type": null,
+      "breeder": "Crockett Family Farms",
+      "source": "sqlite",
+      "has_chemistry": false,
+      "top_terpenes": [],
+      "thc_range": null,
+      "cbd_range": null,
+      "want": null,
+      "height_cm": null,
+      "height_band": null,
+      "flowering_days": null,
+      "curated": false
+    },
+    {
+      "id": "strain_apples_amp_amp_cheese",
+      "name": "APPLES &amp;amp; CHEESE",
+      "type": null,
+      "breeder": "Crockett Family Farms",
       "source": "sqlite",
       "has_chemistry": false,
       "top_terpenes": [],
@@ -216913,30 +219332,6 @@
       "curated": false
     },
     {
-      "id": "strain_ash",
-      "name": "ASH",
-      "type": "indica",
-      "breeder": "Mr. Nice",
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [
-        "Caryophyllene"
-      ],
-      "thc_range": [
-        19.0,
-        19.0
-      ],
-      "cbd_range": null,
-      "want": null,
-      "height_cm": [
-        80.0,
-        120.0
-      ],
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
       "id": "strain_ash_afg_skunk_x_afg_haze_seeds",
       "name": "ASH (Afg Skunk x Afg Haze) Seeds",
       "type": "indica",
@@ -217318,2714 +219713,6 @@
       "height_cm": null,
       "height_band": null,
       "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_asteroid_beltz",
-      "name": "ASTEROID BELTZ",
-      "type": null,
-      "breeder": null,
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [
-        "total_terpenes"
-      ],
-      "thc_range": [
-        20.51,
-        20.51
-      ],
-      "cbd_range": [
-        0.05,
-        0.05
-      ],
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_astronaut_chimps_bubble_hash",
-      "name": "ASTRONAUT CHIMPS BUBBLE HASH",
-      "type": null,
-      "breeder": null,
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [
-        "total_terpenes"
-      ],
-      "thc_range": [
-        53.277,
-        53.277
-      ],
-      "cbd_range": [
-        0.208,
-        0.208
-      ],
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_at13_buds",
-      "name": "AT13 Buds",
-      "type": null,
-      "breeder": null,
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        18.576,
-        18.576
-      ],
-      "cbd_range": null,
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_ata_2006",
-      "name": "ATA 2006",
-      "type": null,
-      "breeder": null,
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [
-        "beta-Caryophyllene",
-        "alpha-Humulene",
-        "delta-Limonene"
-      ],
-      "thc_range": [
-        10.41,
-        56.6
-      ],
-      "cbd_range": [
-        0.0,
-        0.22
-      ],
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_ataraxia",
-      "name": "ATARAXIA",
-      "type": "indica",
-      "breeder": "Final Cause",
-      "source": "sqlite",
-      "has_chemistry": false,
-      "top_terpenes": [],
-      "thc_range": null,
-      "cbd_range": null,
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_atf",
-      "name": "ATF",
-      "type": "sativa dominant hybrid",
-      "breeder": null,
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [
-        "beta-Caryophyllene",
-        "alpha-Humulene",
-        "alpha-Pinene"
-      ],
-      "thc_range": [
-        9.54,
-        66.6
-      ],
-      "cbd_range": [
-        0.07,
-        0.07
-      ],
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_atf_2_oil",
-      "name": "ATF #2 Oil",
-      "type": null,
-      "breeder": null,
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [
-        "alpha-Humulene",
-        "beta-Myrcene"
-      ],
-      "thc_range": [
-        3.17,
-        74.41
-      ],
-      "cbd_range": [
-        0.29,
-        0.75
-      ],
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_atf_3_buds",
-      "name": "ATF #3 (Buds)",
-      "type": null,
-      "breeder": null,
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        22.14,
-        22.14
-      ],
-      "cbd_range": null,
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_atf_alaska_thunder_f",
-      "name": "ATF (Alaska Thunder F)",
-      "type": null,
-      "breeder": null,
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        14.21,
-        14.21
-      ],
-      "cbd_range": [
-        0.04,
-        0.04
-      ],
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_atf_baked_brindle",
-      "name": "ATF (Baked Brindle)",
-      "type": null,
-      "breeder": null,
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [
-        "beta-Caryophyllene",
-        "alpha-Humulene"
-      ],
-      "thc_range": [
-        0.37,
-        19.86
-      ],
-      "cbd_range": [
-        0.06,
-        0.11
-      ],
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_atf_buds",
-      "name": "ATF (Buds)",
-      "type": null,
-      "breeder": null,
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        13.09,
-        13.09
-      ],
-      "cbd_range": null,
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_atf_ff",
-      "name": "ATF (FF)",
-      "type": null,
-      "breeder": null,
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        70.55527,
-        70.55527
-      ],
-      "cbd_range": [
-        0.0,
-        0.0
-      ],
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_atf_green_world",
-      "name": "ATF (Green World)",
-      "type": null,
-      "breeder": null,
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [
-        "Linalool",
-        "alpha-Pinene",
-        "alpha-Humulene"
-      ],
-      "thc_range": [
-        0.46,
-        12.8
-      ],
-      "cbd_range": [
-        0.07,
-        0.16
-      ],
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_atf_high_tech",
-      "name": "ATF (High Tech)",
-      "type": null,
-      "breeder": null,
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [
-        "Linalool",
-        "alpha-Humulene",
-        "beta-Myrcene"
-      ],
-      "thc_range": [
-        0.48,
-        12.84
-      ],
-      "cbd_range": [
-        0.07,
-        0.08
-      ],
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_atf_jb_gardens",
-      "name": "ATF (JB Gardens)",
-      "type": null,
-      "breeder": null,
-      "source": "sqlite",
-      "has_chemistry": false,
-      "top_terpenes": [],
-      "thc_range": null,
-      "cbd_range": null,
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_atf_matanuska",
-      "name": "ATF (Matanuska)",
-      "type": null,
-      "breeder": null,
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [
-        "Linalool",
-        "beta-Myrcene",
-        "alpha-Pinene"
-      ],
-      "thc_range": [
-        0.25,
-        12.14
-      ],
-      "cbd_range": [
-        0.04,
-        0.17
-      ],
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_atf_nsc",
-      "name": "ATF (NSC)",
-      "type": null,
-      "breeder": null,
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [
-        "Linalool",
-        "alpha-Pinene",
-        "beta-Caryophyllene"
-      ],
-      "thc_range": [
-        0.28,
-        10.94
-      ],
-      "cbd_range": [
-        0.07,
-        0.15
-      ],
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_atf_one_love_herbal",
-      "name": "ATF (One Love Herbal)",
-      "type": null,
-      "breeder": null,
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        0.26,
-        19.45
-      ],
-      "cbd_range": [
-        0.01,
-        0.01
-      ],
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_atf_organic_nw",
-      "name": "ATF (Organic NW)",
-      "type": null,
-      "breeder": null,
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        0.11,
-        17.43
-      ],
-      "cbd_range": [
-        0.03,
-        0.03
-      ],
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_atf_02",
-      "name": "ATF 02",
-      "type": null,
-      "breeder": null,
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [
-        "alpha-Humulene",
-        "beta-Caryophyllene",
-        "beta-Myrcene"
-      ],
-      "thc_range": [
-        0.48,
-        23.65
-      ],
-      "cbd_range": [
-        0.06,
-        0.19
-      ],
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_atf_03",
-      "name": "ATF 03",
-      "type": null,
-      "breeder": null,
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [
-        "alpha-Humulene",
-        "beta-Caryophyllene"
-      ],
-      "thc_range": [
-        0.51,
-        24.6
-      ],
-      "cbd_range": [
-        0.07,
-        0.08
-      ],
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_atf_1",
-      "name": "ATF 1",
-      "type": null,
-      "breeder": null,
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [
-        "alpha-Humulene",
-        "beta-Caryophyllene",
-        "beta-Myrcene"
-      ],
-      "thc_range": [
-        0.48,
-        20.51
-      ],
-      "cbd_range": [
-        0.06,
-        0.07
-      ],
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_atf_2",
-      "name": "ATF 2",
-      "type": null,
-      "breeder": null,
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [
-        "alpha-Humulene",
-        "beta-Caryophyllene",
-        "beta-Myrcene"
-      ],
-      "thc_range": [
-        0.39,
-        22.8
-      ],
-      "cbd_range": [
-        0.06,
-        0.06
-      ],
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_atf_co2",
-      "name": "ATF CO2",
-      "type": null,
-      "breeder": null,
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [
-        "beta-Caryophyllene",
-        "alpha-Humulene",
-        "alpha-Pinene"
-      ],
-      "thc_range": [
-        33.76,
-        35.06
-      ],
-      "cbd_range": [
-        0.2,
-        0.2
-      ],
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_atf_caviar",
-      "name": "ATF Caviar",
-      "type": null,
-      "breeder": null,
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [
-        "delta-Limonene",
-        "alpha-Humulene",
-        "beta-Caryophyllene"
-      ],
-      "thc_range": [
-        1.97,
-        16.42
-      ],
-      "cbd_range": [
-        0.05,
-        0.09
-      ],
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_atf_full_extract_cannabis_oil_happy_cakes",
-      "name": "ATF Full Extract Cannabis Oil (Happy Cakes)",
-      "type": null,
-      "breeder": null,
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        0.04,
-        56.12
-      ],
-      "cbd_range": null,
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_atf_lab_sample",
-      "name": "ATF Lab Sample",
-      "type": null,
-      "breeder": null,
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [
-        "cannabinoids_terpenes_ratio",
-        "total_terpenes",
-        "beta_caryophyllene"
-      ],
-      "thc_range": [
-        96.85,
-        96.85
-      ],
-      "cbd_range": [
-        0.0,
-        0.0
-      ],
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_atf_og",
-      "name": "ATF OG",
-      "type": null,
-      "breeder": null,
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        7.83621,
-        7.83621
-      ],
-      "cbd_range": [
-        0.06139,
-        0.06139
-      ],
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_atf_poison",
-      "name": "ATF Poison",
-      "type": null,
-      "breeder": null,
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        0.6,
-        12.62
-      ],
-      "cbd_range": null,
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_atf_rx",
-      "name": "ATF Rx",
-      "type": null,
-      "breeder": null,
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        0.34,
-        20.47
-      ],
-      "cbd_range": null,
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_atf_shatter",
-      "name": "ATF Shatter",
-      "type": null,
-      "breeder": null,
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [
-        "delta-Limonene",
-        "alpha-Humulene",
-        "beta-Caryophyllene"
-      ],
-      "thc_range": [
-        1.34,
-        74.59
-      ],
-      "cbd_range": [
-        0.17,
-        0.8
-      ],
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_atf_shatter_smm",
-      "name": "ATF Shatter (SMM)",
-      "type": null,
-      "breeder": null,
-      "source": "sqlite",
-      "has_chemistry": false,
-      "top_terpenes": [],
-      "thc_range": null,
-      "cbd_range": null,
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_atf_snow_lotus",
-      "name": "ATF Snow Lotus",
-      "type": null,
-      "breeder": null,
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        18.1031,
-        18.1031
-      ],
-      "cbd_range": [
-        0.2877,
-        0.2877
-      ],
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_atf_uranus_cut",
-      "name": "ATF Uranus Cut",
-      "type": null,
-      "breeder": null,
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        6.23638,
-        69.0253
-      ],
-      "cbd_range": [
-        0.02,
-        0.32449
-      ],
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_atf_x_snow_lotus_2",
-      "name": "ATF X Snow Lotus #2",
-      "type": null,
-      "breeder": null,
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        16.4368,
-        16.4368
-      ],
-      "cbd_range": [
-        2877.0,
-        2877.0
-      ],
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_atf_x_snow_lotus_1",
-      "name": "ATF X Snow lotus #1",
-      "type": null,
-      "breeder": null,
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        18.2769,
-        18.2769
-      ],
-      "cbd_range": [
-        2877.0,
-        2877.0
-      ],
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_atf_ssp",
-      "name": "ATF ssp.",
-      "type": null,
-      "breeder": null,
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [
-        "beta-Myrcene",
-        "alpha-Humulene",
-        "beta-Caryophyllene"
-      ],
-      "thc_range": [
-        0.45,
-        19.95
-      ],
-      "cbd_range": [
-        0.05,
-        0.19
-      ],
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_atf_x_cinex_lifted_dream_extracts",
-      "name": "ATF x Cinex (Lifted Dream Extracts)",
-      "type": null,
-      "breeder": null,
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [
-        "alpha-Pinene",
-        "beta-Caryophyllene",
-        "alpha-Humulene"
-      ],
-      "thc_range": [
-        4.81,
-        76.18
-      ],
-      "cbd_range": [
-        0.26,
-        0.37
-      ],
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_atf_x_gdp",
-      "name": "ATF x GDP",
-      "type": "Hybrid",
-      "breeder": "Unknown Breeder",
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        0.0,
-        0.0
-      ],
-      "cbd_range": [
-        0.0,
-        0.0
-      ],
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_atfxge",
-      "name": "ATFxGE",
-      "type": null,
-      "breeder": null,
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        11.35833,
-        19.27
-      ],
-      "cbd_range": [
-        0.08,
-        0.11
-      ],
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_atl_confidential",
-      "name": "ATL Confidential",
-      "type": "indica",
-      "breeder": "Red Bee Seed Company",
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        0.0,
-        0.0
-      ],
-      "cbd_range": [
-        0.0,
-        0.0
-      ],
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": 60,
-      "curated": false
-    },
-    {
-      "id": "strain_atlienz",
-      "name": "ATLienz",
-      "type": "hybrid",
-      "breeder": "The Bakery Genetics",
-      "source": "sqlite",
-      "has_chemistry": false,
-      "top_terpenes": [],
-      "thc_range": null,
-      "cbd_range": null,
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": 63,
-      "curated": false
-    },
-    {
-      "id": "strain_atna_1",
-      "name": "ATNA #1",
-      "type": "indica dominant hybrid",
-      "breeder": null,
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        19.0,
-        19.0
-      ],
-      "cbd_range": [
-        1.0,
-        1.0
-      ],
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_atomic_bomb_strain_400_watt",
-      "name": "ATOMIC BOMB STRAIN 400 watt",
-      "type": null,
-      "breeder": null,
-      "source": "sqlite",
-      "has_chemistry": false,
-      "top_terpenes": [],
-      "thc_range": null,
-      "cbd_range": null,
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_atw",
-      "name": "ATW",
-      "type": null,
-      "breeder": null,
-      "source": "sqlite",
-      "has_chemistry": false,
-      "top_terpenes": [],
-      "thc_range": null,
-      "cbd_range": null,
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_atoa",
-      "name": "AToA",
-      "type": "sativa",
-      "breeder": "SoCal Seed Co.",
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        0.0,
-        0.0
-      ],
-      "cbd_range": [
-        0.0,
-        0.0
-      ],
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": 78,
-      "curated": false
-    },
-    {
-      "id": "strain_au_i_bc_i_bulk_flower_i_1g_s",
-      "name": "AU I BC I Bulk Flower I 1g(s)",
-      "type": null,
-      "breeder": null,
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        20.897,
-        20.897
-      ],
-      "cbd_range": null,
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_au_i_cb_i_bulk_flower_i_1g_s",
-      "name": "AU I CB I Bulk Flower I 1g(s)",
-      "type": null,
-      "breeder": null,
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        21.103,
-        21.103
-      ],
-      "cbd_range": null,
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_au_i_cc_i_bulk_flower_i_1g_s",
-      "name": "AU I CC I Bulk Flower I 1g(s)",
-      "type": null,
-      "breeder": null,
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        26.891,
-        26.891
-      ],
-      "cbd_range": null,
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_au_i_fl_i_bulk_flower_i_1g_s",
-      "name": "AU I FL I Bulk Flower I 1g(s)",
-      "type": null,
-      "breeder": null,
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        17.047,
-        17.047
-      ],
-      "cbd_range": null,
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_au_i_lo_i_bulk_flower_i_1g_s",
-      "name": "AU I LO I Bulk Flower I 1g(s)",
-      "type": null,
-      "breeder": null,
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        26.381,
-        26.381
-      ],
-      "cbd_range": null,
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_au_i_ls_i_bulk_flower_i_1g_s",
-      "name": "AU I LS I Bulk Flower I 1g(s)",
-      "type": null,
-      "breeder": null,
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        26.647,
-        26.647
-      ],
-      "cbd_range": null,
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_au_i_ms_i_bulk_flower_i_1g_s",
-      "name": "AU I MS I Bulk Flower I 1g(s)",
-      "type": null,
-      "breeder": null,
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        18.832,
-        18.832
-      ],
-      "cbd_range": null,
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_au_i_ss_i_bulk_flower_i_1g_s",
-      "name": "AU I SS I Bulk Flower I 1g(s)",
-      "type": null,
-      "breeder": null,
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        24.505,
-        24.505
-      ],
-      "cbd_range": null,
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_au_i_sour_slushy_i_bulk_flower_i_1g_s",
-      "name": "AU I Sour Slushy I Bulk Flower I 1g(s)",
-      "type": null,
-      "breeder": null,
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        24.725,
-        24.725
-      ],
-      "cbd_range": null,
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_au_i_wc_i_bulk_flower_i_1g_s",
-      "name": "AU I WC I Bulk Flower I 1g(s)",
-      "type": null,
-      "breeder": null,
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        23.874,
-        23.874
-      ],
-      "cbd_range": null,
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_aubizoo_3kg",
-      "name": "AUBIZOO 3kg",
-      "type": null,
-      "breeder": "La Chanvriere",
-      "source": "sqlite",
-      "has_chemistry": false,
-      "top_terpenes": [],
-      "thc_range": null,
-      "cbd_range": null,
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_auto_speed",
-      "name": "AUTO + Speed",
-      "type": "hybrid",
-      "breeder": "Sweet Seeds",
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        15.0,
-        20.0
-      ],
-      "cbd_range": [
-        15.0,
-        20.0
-      ],
-      "want": null,
-      "height_cm": [
-        50.0,
-        90.0
-      ],
-      "height_band": "Short",
-      "flowering_days": [
-        49,
-        56
-      ],
-      "curated": false
-    },
-    {
-      "id": "strain_auto_00_hashchis_aka_auto_00_cheese",
-      "name": "AUTO 00 Hashchis AKA AUTO 00 Cheese",
-      "type": null,
-      "breeder": "00 Seeds",
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        16.0,
-        16.0
-      ],
-      "cbd_range": null,
-      "want": null,
-      "height_cm": [
-        100.0,
-        150.0
-      ],
-      "height_band": "Short to Medium",
-      "flowering_days": [
-        65,
-        70
-      ],
-      "curated": false
-    },
-    {
-      "id": "strain_auto_ak48",
-      "name": "AUTO AK48",
-      "type": null,
-      "breeder": "Nirvana Seeds",
-      "source": "sqlite",
-      "has_chemistry": false,
-      "top_terpenes": [],
-      "thc_range": null,
-      "cbd_range": null,
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": [
-        49,
-        63
-      ],
-      "curated": false
-    },
-    {
-      "id": "strain_auto_afghani_dream",
-      "name": "AUTO Afghani Dream",
-      "type": null,
-      "breeder": "British Columbia Seeds",
-      "source": "sqlite",
-      "has_chemistry": false,
-      "top_terpenes": [],
-      "thc_range": null,
-      "cbd_range": null,
-      "want": null,
-      "height_cm": null,
-      "height_band": "Medium",
-      "flowering_days": [
-        45,
-        50
-      ],
-      "curated": false
-    },
-    {
-      "id": "strain_auto_baby_boom",
-      "name": "AUTO Baby Boom",
-      "type": null,
-      "breeder": "Kannabia Seeds",
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        18.7,
-        18.7
-      ],
-      "cbd_range": [
-        18.7,
-        18.7
-      ],
-      "want": null,
-      "height_cm": null,
-      "height_band": "Short to Medium",
-      "flowering_days": [
-        55,
-        60
-      ],
-      "curated": false
-    },
-    {
-      "id": "strain_auto_back_to_the_future_2",
-      "name": "AUTO Back To The Future #2",
-      "type": "indica",
-      "breeder": "Taste-Budz Seeds",
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        27.0,
-        27.0
-      ],
-      "cbd_range": null,
-      "want": null,
-      "height_cm": [
-        80.0,
-        150.0
-      ],
-      "height_band": null,
-      "flowering_days": [
-        6,
-        8
-      ],
-      "curated": false
-    },
-    {
-      "id": "strain_auto_baked_bomb",
-      "name": "AUTO Baked Bomb",
-      "type": null,
-      "breeder": "Bomb Seeds",
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        19.0,
-        19.0
-      ],
-      "cbd_range": null,
-      "want": null,
-      "height_cm": [
-        90.0,
-        130.0
-      ],
-      "height_band": "Short to Medium",
-      "flowering_days": [
-        56,
-        70
-      ],
-      "curated": false
-    },
-    {
-      "id": "strain_auto_berry_bomb",
-      "name": "AUTO Berry Bomb",
-      "type": null,
-      "breeder": "Bomb Seeds",
-      "source": "sqlite",
-      "has_chemistry": false,
-      "top_terpenes": [],
-      "thc_range": null,
-      "cbd_range": null,
-      "want": null,
-      "height_cm": [
-        70.0,
-        120.0
-      ],
-      "height_band": "Medium",
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_auto_big_bomb",
-      "name": "AUTO Big Bomb",
-      "type": null,
-      "breeder": "Bomb Seeds",
-      "source": "sqlite",
-      "has_chemistry": false,
-      "top_terpenes": [],
-      "thc_range": null,
-      "cbd_range": null,
-      "want": null,
-      "height_cm": [
-        65.0,
-        95.0
-      ],
-      "height_band": "Short",
-      "flowering_days": [
-        75,
-        85
-      ],
-      "curated": false
-    },
-    {
-      "id": "strain_auto_big_devil",
-      "name": "AUTO Big Devil",
-      "type": "hybrid",
-      "breeder": "Sweet Seeds",
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        15.0,
-        20.0
-      ],
-      "cbd_range": [
-        0.8,
-        1.2
-      ],
-      "want": null,
-      "height_cm": [
-        100.0,
-        150.0
-      ],
-      "height_band": "Medium",
-      "flowering_days": 63,
-      "curated": false
-    },
-    {
-      "id": "strain_auto_big_devil_2",
-      "name": "AUTO Big Devil #2",
-      "type": "hybrid",
-      "breeder": "Sweet Seeds",
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        19.0,
-        20.0
-      ],
-      "cbd_range": [
-        1.1,
-        1.1
-      ],
-      "want": null,
-      "height_cm": [
-        100.0,
-        150.0
-      ],
-      "height_band": "Medium",
-      "flowering_days": 63,
-      "curated": false
-    },
-    {
-      "id": "strain_auto_big_devil_xl",
-      "name": "AUTO Big Devil XL",
-      "type": "indica",
-      "breeder": "Sweet Seeds",
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        19.0,
-        20.0
-      ],
-      "cbd_range": [
-        0.8,
-        0.8
-      ],
-      "want": null,
-      "height_cm": [
-        110.0,
-        160.0
-      ],
-      "height_band": "Medium",
-      "flowering_days": 67,
-      "curated": false
-    },
-    {
-      "id": "strain_auto_big_stilton_aka_big_cheese_auto",
-      "name": "AUTO Big Stilton aka Big Cheese Auto",
-      "type": null,
-      "breeder": "Big Head Seeds",
-      "source": "sqlite",
-      "has_chemistry": false,
-      "top_terpenes": [],
-      "thc_range": null,
-      "cbd_range": null,
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_auto_bighead_superfast",
-      "name": "AUTO Bighead Superfast",
-      "type": null,
-      "breeder": "Big Head Seeds",
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        18.0,
-        20.0
-      ],
-      "cbd_range": null,
-      "want": null,
-      "height_cm": 80.0,
-      "height_band": "Short",
-      "flowering_days": 49,
-      "curated": false
-    },
-    {
-      "id": "strain_auto_biscotti_33",
-      "name": "AUTO Biscotti #33",
-      "type": null,
-      "breeder": "Taste-Budz Seeds",
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        23.0,
-        23.0
-      ],
-      "cbd_range": null,
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": [
-        49,
-        56
-      ],
-      "curated": false
-    },
-    {
-      "id": "strain_auto_biscotti_zkittlez",
-      "name": "AUTO Biscotti Zkittlez",
-      "type": null,
-      "breeder": "00 Seeds",
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        24.0,
-        24.0
-      ],
-      "cbd_range": null,
-      "want": null,
-      "height_cm": [
-        70.0,
-        90.0
-      ],
-      "height_band": "Short",
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_auto_bite",
-      "name": "AUTO Bite",
-      "type": "indica dominant hybrid",
-      "breeder": "Europa Seeds",
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        12.0,
-        12.0
-      ],
-      "cbd_range": [
-        2.0,
-        2.0
-      ],
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_auto_black_apple_fritter",
-      "name": "AUTO Black Apple Fritter",
-      "type": "sativa",
-      "breeder": "Taste-Budz Seeds",
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        27.0,
-        27.0
-      ],
-      "cbd_range": null,
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": [
-        63,
-        70
-      ],
-      "curated": false
-    },
-    {
-      "id": "strain_auto_black_cream",
-      "name": "AUTO Black Cream",
-      "type": "indica",
-      "breeder": "Sweet Seeds",
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        15.0,
-        18.0
-      ],
-      "cbd_range": [
-        0.8,
-        0.8
-      ],
-      "want": null,
-      "height_cm": [
-        60.0,
-        110.0
-      ],
-      "height_band": "Short to Medium",
-      "flowering_days": 56,
-      "curated": false
-    },
-    {
-      "id": "strain_auto_black_jack",
-      "name": "AUTO Black Jack",
-      "type": "sativa",
-      "breeder": "Sweet Seeds",
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        19.0,
-        19.0
-      ],
-      "cbd_range": [
-        1.1,
-        1.1
-      ],
-      "want": null,
-      "height_cm": [
-        40.0,
-        110.0
-      ],
-      "height_band": "Short to Medium",
-      "flowering_days": 63,
-      "curated": false
-    },
-    {
-      "id": "strain_auto_blow_mind",
-      "name": "AUTO Blow Mind",
-      "type": "sativa",
-      "breeder": "Sweet Seeds",
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        15.0,
-        20.0
-      ],
-      "cbd_range": [
-        0.5,
-        0.5
-      ],
-      "want": null,
-      "height_cm": [
-        60.0,
-        120.0
-      ],
-      "height_band": "Short to Medium",
-      "flowering_days": [
-        56,
-        63
-      ],
-      "curated": false
-    },
-    {
-      "id": "strain_auto_blue_ace_cbd",
-      "name": "AUTO Blue Ace CBD",
-      "type": "Indica +90%",
-      "breeder": "Delicious Seeds",
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        1.0,
-        15.0
-      ],
-      "cbd_range": null,
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": [
-        60,
-        65
-      ],
-      "curated": false
-    },
-    {
-      "id": "strain_auto_blue_mystic",
-      "name": "AUTO Blue Mystic",
-      "type": null,
-      "breeder": "Nirvana Seeds",
-      "source": "sqlite",
-      "has_chemistry": false,
-      "top_terpenes": [],
-      "thc_range": null,
-      "cbd_range": null,
-      "want": null,
-      "height_cm": null,
-      "height_band": "Short",
-      "flowering_days": [
-        63,
-        77
-      ],
-      "curated": false
-    },
-    {
-      "id": "strain_auto_blueberry_cheese_aka_auto_blue_cheese",
-      "name": "AUTO Blueberry Cheese AKA Auto Blue Cheese",
-      "type": "indica",
-      "breeder": "Barneys Farm Seeds",
-      "source": "sqlite",
-      "has_chemistry": false,
-      "top_terpenes": [],
-      "thc_range": null,
-      "cbd_range": null,
-      "want": null,
-      "height_cm": 100.0,
-      "height_band": "Short",
-      "flowering_days": [
-        70,
-        75
-      ],
-      "curated": false
-    },
-    {
-      "id": "strain_auto_blueberry_express_aka_auto_eter_express",
-      "name": "AUTO Blueberry Express aka AUTO Eter Express",
-      "type": "indica",
-      "breeder": "Dispensario Seeds",
-      "source": "sqlite",
-      "has_chemistry": false,
-      "top_terpenes": [],
-      "thc_range": null,
-      "cbd_range": null,
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": [
-        65,
-        70
-      ],
-      "curated": false
-    },
-    {
-      "id": "strain_auto_brooklyn_sunrise",
-      "name": "AUTO Brooklyn Sunrise",
-      "type": "hybrid",
-      "breeder": "Dutch Passion",
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": null,
-      "cbd_range": [
-        0.05,
-        0.05
-      ],
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_auto_bubbas_gift",
-      "name": "AUTO Bubbas Gift",
-      "type": null,
-      "breeder": "00 Seeds",
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        21.0,
-        21.0
-      ],
-      "cbd_range": null,
-      "want": null,
-      "height_cm": [
-        70.0,
-        85.0
-      ],
-      "height_band": "Short to Medium",
-      "flowering_days": [
-        70,
-        75
-      ],
-      "curated": false
-    },
-    {
-      "id": "strain_auto_bubble_runtz",
-      "name": "AUTO Bubble Runtz",
-      "type": null,
-      "breeder": "Taste-Budz Seeds",
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        25.0,
-        25.0
-      ],
-      "cbd_range": null,
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": [
-        49,
-        56
-      ],
-      "curated": false
-    },
-    {
-      "id": "strain_auto_cherry_bomb",
-      "name": "AUTO Cherry Bomb",
-      "type": null,
-      "breeder": "Bomb Seeds",
-      "source": "sqlite",
-      "has_chemistry": false,
-      "top_terpenes": [],
-      "thc_range": null,
-      "cbd_range": null,
-      "want": null,
-      "height_cm": [
-        50.0,
-        80.0
-      ],
-      "height_band": "Short",
-      "flowering_days": 10,
-      "curated": false
-    },
-    {
-      "id": "strain_auto_cherry_cheesecake",
-      "name": "AUTO Cherry Cheesecake",
-      "type": null,
-      "breeder": "Taste-Budz Seeds",
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        25.0,
-        25.0
-      ],
-      "cbd_range": null,
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": [
-        56,
-        63
-      ],
-      "curated": false
-    },
-    {
-      "id": "strain_auto_chiesel",
-      "name": "AUTO Chiesel",
-      "type": "indica",
-      "breeder": "Big Buddha Seeds",
-      "source": "sqlite",
-      "has_chemistry": false,
-      "top_terpenes": [],
-      "thc_range": null,
-      "cbd_range": null,
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_auto_clinical_mass_aka_auto_clinical",
-      "name": "AUTO Clinical Mass aka AUTO Clinical",
-      "type": "hybrid",
-      "breeder": "Dispensario Seeds",
-      "source": "sqlite",
-      "has_chemistry": false,
-      "top_terpenes": [],
-      "thc_range": null,
-      "cbd_range": null,
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": [
-        65,
-        70
-      ],
-      "curated": false
-    },
-    {
-      "id": "strain_auto_collection_1",
-      "name": "AUTO Collection #1",
-      "type": null,
-      "breeder": "Paradise Seeds",
-      "source": "sqlite",
-      "has_chemistry": false,
-      "top_terpenes": [],
-      "thc_range": null,
-      "cbd_range": null,
-      "want": null,
-      "height_cm": 70.0,
-      "height_band": "Short to Medium",
-      "flowering_days": [
-        60,
-        70
-      ],
-      "curated": false
-    },
-    {
-      "id": "strain_auto_collection_2",
-      "name": "AUTO Collection #2",
-      "type": "indica",
-      "breeder": "00 Seeds Bank",
-      "source": "sqlite",
-      "has_chemistry": false,
-      "top_terpenes": [],
-      "thc_range": null,
-      "cbd_range": null,
-      "want": null,
-      "height_cm": 70.0,
-      "height_band": null,
-      "flowering_days": [
-        60,
-        75
-      ],
-      "curated": false
-    },
-    {
-      "id": "strain_auto_collection_afghan_kush_ryder",
-      "name": "AUTO Collection Afghan Kush Ryder",
-      "type": "indica",
-      "breeder": "World of Seeds",
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        22.0,
-        22.0
-      ],
-      "cbd_range": null,
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": [
-        60,
-        70
-      ],
-      "curated": false
-    },
-    {
-      "id": "strain_auto_collection_amnesia_ryder",
-      "name": "AUTO Collection Amnesia Ryder",
-      "type": null,
-      "breeder": "World of Seeds",
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        21.0,
-        21.0
-      ],
-      "cbd_range": null,
-      "want": null,
-      "height_cm": 120.0,
-      "height_band": "Short to Medium",
-      "flowering_days": [
-        75,
-        85
-      ],
-      "curated": false
-    },
-    {
-      "id": "strain_auto_collection_colombian_gold_ryder_aka_sweet_coffee_ryder",
-      "name": "AUTO Collection Colombian Gold Ryder aka Sweet Coffee Ryder",
-      "type": null,
-      "breeder": "World of Seeds",
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        19.0,
-        19.0
-      ],
-      "cbd_range": null,
-      "want": null,
-      "height_cm": null,
-      "height_band": "Short to Medium",
-      "flowering_days": [
-        70,
-        80
-      ],
-      "curated": false
-    },
-    {
-      "id": "strain_auto_collection_neville_haze_ryder",
-      "name": "AUTO Collection Neville Haze Ryder",
-      "type": null,
-      "breeder": "World Of Seeds",
-      "source": "sqlite",
-      "has_chemistry": false,
-      "top_terpenes": [],
-      "thc_range": null,
-      "cbd_range": null,
-      "want": null,
-      "height_cm": null,
-      "height_band": "Medium to Tall",
-      "flowering_days": 90,
-      "curated": false
-    },
-    {
-      "id": "strain_auto_collection_northern_lights_x_big_bud_ryder",
-      "name": "AUTO Collection Northern Lights x Big Bud Ryder",
-      "type": null,
-      "breeder": "World of Seeds",
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        22.0,
-        22.0
-      ],
-      "cbd_range": null,
-      "want": null,
-      "height_cm": null,
-      "height_band": "Medium to Tall",
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_auto_collection_pakistan_ryder",
-      "name": "AUTO Collection Pakistan Ryder",
-      "type": "indica",
-      "breeder": "World of Seeds",
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        20.0,
-        20.0
-      ],
-      "cbd_range": null,
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": [
-        60,
-        70
-      ],
-      "curated": false
-    },
-    {
-      "id": "strain_auto_collection_sugar_mango_ryder",
-      "name": "AUTO Collection Sugar Mango Ryder",
-      "type": null,
-      "breeder": "World of Seeds",
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        18.0,
-        18.0
-      ],
-      "cbd_range": null,
-      "want": null,
-      "height_cm": [
-        40.0,
-        90.0
-      ],
-      "height_band": "Short to Medium",
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_auto_collection_wild_thailand_ryder",
-      "name": "AUTO Collection Wild Thailand Ryder",
-      "type": null,
-      "breeder": "World of Seeds",
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        19.0,
-        19.0
-      ],
-      "cbd_range": null,
-      "want": null,
-      "height_cm": 150.0,
-      "height_band": "Medium",
-      "flowering_days": [
-        75,
-        80
-      ],
-      "curated": false
-    },
-    {
-      "id": "strain_auto_colorado_cookies",
-      "name": "AUTO Colorado Cookies",
-      "type": "Indica +90%",
-      "breeder": "Dutch Passion",
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": null,
-      "cbd_range": [
-        0.68,
-        0.68
-      ],
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_auto_cookies_kush",
-      "name": "AUTO Cookies Kush",
-      "type": "indica",
-      "breeder": "Barneys Farm Seeds",
-      "source": "sqlite",
-      "has_chemistry": false,
-      "top_terpenes": [],
-      "thc_range": null,
-      "cbd_range": null,
-      "want": null,
-      "height_cm": 90.0,
-      "height_band": "Short to Medium",
-      "flowering_days": [
-        70,
-        75
-      ],
-      "curated": false
-    },
-    {
-      "id": "strain_auto_cosmic_bomb",
-      "name": "AUTO Cosmic Bomb",
-      "type": null,
-      "breeder": "Bomb Seeds",
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        16.0,
-        20.0
-      ],
-      "cbd_range": null,
-      "want": null,
-      "height_cm": [
-        90.0,
-        140.0
-      ],
-      "height_band": "Short to Medium",
-      "flowering_days": 65,
-      "curated": false
-    },
-    {
-      "id": "strain_auto_cream_caramel",
-      "name": "AUTO Cream Caramel",
-      "type": "sativa",
-      "breeder": "Sweet Seeds",
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        18.0,
-        18.0
-      ],
-      "cbd_range": [
-        1.6,
-        1.6
-      ],
-      "want": null,
-      "height_cm": [
-        40.0,
-        90.0
-      ],
-      "height_band": "Short",
-      "flowering_days": 56,
-      "curated": false
-    },
-    {
-      "id": "strain_auto_cream_mandarine",
-      "name": "AUTO Cream Mandarine",
-      "type": "sativa",
-      "breeder": "Sweet Seeds",
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        18.0,
-        20.0
-      ],
-      "cbd_range": [
-        1.0,
-        1.0
-      ],
-      "want": null,
-      "height_cm": [
-        50.0,
-        110.0
-      ],
-      "height_band": "Short to Medium",
-      "flowering_days": 63,
-      "curated": false
-    },
-    {
-      "id": "strain_auto_cream_mandarine_xl",
-      "name": "AUTO Cream Mandarine XL",
-      "type": "hybrid",
-      "breeder": "Sweet Seeds",
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        18.0,
-        23.0
-      ],
-      "cbd_range": [
-        0.6,
-        0.6
-      ],
-      "want": null,
-      "height_cm": [
-        110.0,
-        150.0
-      ],
-      "height_band": "Medium",
-      "flowering_days": 63,
-      "curated": false
-    },
-    {
-      "id": "strain_auto_critical_banana_smoothie",
-      "name": "AUTO Critical Banana Smoothie",
-      "type": "indica",
-      "breeder": "Taste-Budz Seeds",
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        25.0,
-        25.0
-      ],
-      "cbd_range": [
-        0.25,
-        0.25
-      ],
-      "want": null,
-      "height_cm": [
-        50.0,
-        120.0
-      ],
-      "height_band": "Short",
-      "flowering_days": [
-        56,
-        63
-      ],
-      "curated": false
-    },
-    {
-      "id": "strain_auto_critical_hash_cake",
-      "name": "AUTO Critical Hash Cake",
-      "type": "indica",
-      "breeder": "Taste-Budz Seeds",
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        23.0,
-        23.0
-      ],
-      "cbd_range": null,
-      "want": null,
-      "height_cm": null,
-      "height_band": "Medium",
-      "flowering_days": [
-        42,
-        56
-      ],
-      "curated": false
-    },
-    {
-      "id": "strain_auto_critical_jack_herer",
-      "name": "AUTO Critical Jack Herer",
-      "type": null,
-      "breeder": "Delicious Seeds",
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        18.0,
-        18.0
-      ],
-      "cbd_range": null,
-      "want": null,
-      "height_cm": null,
-      "height_band": "Medium",
-      "flowering_days": [
-        60,
-        65
-      ],
-      "curated": false
-    },
-    {
-      "id": "strain_auto_critical_neville_haze",
-      "name": "AUTO Critical Neville Haze",
-      "type": "sativa",
-      "breeder": "Delicious Seeds",
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        21.0,
-        21.0
-      ],
-      "cbd_range": null,
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": [
-        80,
-        85
-      ],
-      "curated": false
-    },
-    {
-      "id": "strain_auto_crystal_candy",
-      "name": "AUTO Crystal Candy",
-      "type": "hybrid",
-      "breeder": "Sweet Seeds",
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        14.0,
-        19.0
-      ],
-      "cbd_range": [
-        0.1,
-        0.1
-      ],
-      "want": null,
-      "height_cm": [
-        70.0,
-        130.0
-      ],
-      "height_band": "Short to Medium",
-      "flowering_days": 56,
-      "curated": false
-    },
-    {
-      "id": "strain_auto_crystal_candy_xl",
-      "name": "AUTO Crystal Candy XL",
-      "type": "hybrid",
-      "breeder": "Sweet Seeds",
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        14.0,
-        19.0
-      ],
-      "cbd_range": [
-        0.1,
-        0.1
-      ],
-      "want": null,
-      "height_cm": [
-        90.0,
-        140.0
-      ],
-      "height_band": "Short to Medium",
-      "flowering_days": 56,
-      "curated": false
-    },
-    {
-      "id": "strain_auto_crystal_gelato_aka_auto_gelato",
-      "name": "AUTO Crystal Gelato AKA AUTO Gelato",
-      "type": null,
-      "breeder": "Big Head Seeds",
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        22.0,
-        22.0
-      ],
-      "cbd_range": null,
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": [
-        56,
-        63
-      ],
-      "curated": false
-    },
-    {
-      "id": "strain_auto_crystal_lightning",
-      "name": "AUTO Crystal Lightning",
-      "type": null,
-      "breeder": "Europa Seeds",
-      "source": "sqlite",
-      "has_chemistry": false,
-      "top_terpenes": [],
-      "thc_range": null,
-      "cbd_range": null,
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_auto_dark_devil",
-      "name": "AUTO Dark Devil",
-      "type": "hybrid",
-      "breeder": "Sweet Seeds",
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        15.0,
-        20.0
-      ],
-      "cbd_range": [
-        0.9,
-        0.9
-      ],
-      "want": null,
-      "height_cm": [
-        80.0,
-        130.0
-      ],
-      "height_band": "Short to Medium",
-      "flowering_days": 60,
-      "curated": false
-    },
-    {
-      "id": "strain_auto_dark_purple_aka_auto_jota_mayuscula_purple",
-      "name": "AUTO Dark Purple AKA Auto Jota Mayuscula Purple",
-      "type": null,
-      "breeder": "Delicious Seeds",
-      "source": "sqlite",
-      "has_chemistry": false,
-      "top_terpenes": [],
-      "thc_range": null,
-      "cbd_range": null,
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": [
-        60,
-        65
-      ],
-      "curated": false
-    },
-    {
-      "id": "strain_auto_delicious_candy",
-      "name": "AUTO Delicious Candy",
-      "type": null,
-      "breeder": "Delicious Seeds",
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        17.0,
-        17.0
-      ],
-      "cbd_range": null,
-      "want": null,
-      "height_cm": null,
-      "height_band": "Medium to Tall",
-      "flowering_days": [
-        60,
-        65
-      ],
-      "curated": false
-    },
-    {
-      "id": "strain_auto_diablo_rojo_xl",
-      "name": "AUTO Diablo Rojo XL",
-      "type": null,
-      "breeder": "Sweet Seeds",
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        16.0,
-        23.0
-      ],
-      "cbd_range": [
-        0.1,
-        0.1
-      ],
-      "want": null,
-      "height_cm": null,
-      "height_band": "Short to Medium",
-      "flowering_days": 56,
-      "curated": false
-    },
-    {
-      "id": "strain_auto_diablos_delight_xl",
-      "name": "AUTO Diablos Delight XL",
-      "type": "hybrid",
-      "breeder": "Sweet Seeds",
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        18.0,
-        24.0
-      ],
-      "cbd_range": [
-        18.0,
-        24.0
-      ],
-      "want": null,
-      "height_cm": [
-        60.0,
-        130.0
-      ],
-      "height_band": "Short to Medium",
-      "flowering_days": 56,
-      "curated": false
-    },
-    {
-      "id": "strain_auto_do_si_dos_usa_range",
-      "name": "AUTO Do-Si-Dos USA Range",
-      "type": "hybrid",
-      "breeder": "Pyramid Seeds",
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        20.0,
-        23.0
-      ],
-      "cbd_range": [
-        20.0,
-        23.0
-      ],
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": [
-        60,
-        65
-      ],
-      "curated": false
-    },
-    {
-      "id": "strain_auto_dogstar_dawg",
-      "name": "AUTO Dogstar Dawg",
-      "type": null,
-      "breeder": "Big Head Seeds",
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        18.0,
-        24.0
-      ],
-      "cbd_range": null,
-      "want": null,
-      "height_cm": null,
-      "height_band": null,
-      "flowering_days": 56,
-      "curated": false
-    },
-    {
-      "id": "strain_auto_dos_si_dos",
-      "name": "AUTO Dos Si Dos",
-      "type": "hybrid",
-      "breeder": "Barneys Farm Seeds",
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        20.0,
-        20.0
-      ],
-      "cbd_range": null,
-      "want": null,
-      "height_cm": 100.0,
-      "height_band": "Short to Medium",
-      "flowering_days": [
-        70,
-        75
-      ],
-      "curated": false
-    },
-    {
-      "id": "strain_auto_easy_rider",
-      "name": "AUTO Easy Rider",
-      "type": null,
-      "breeder": "Ceres Seeds",
-      "source": "sqlite",
-      "has_chemistry": false,
-      "top_terpenes": [],
-      "thc_range": null,
-      "cbd_range": null,
-      "want": null,
-      "height_cm": [
-        90.0,
-        120.0
-      ],
-      "height_band": "Medium",
-      "flowering_days": null,
-      "curated": false
-    },
-    {
-      "id": "strain_auto_fast_bud",
-      "name": "AUTO Fast Bud",
-      "type": null,
-      "breeder": "Sweet Seeds",
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        16.0,
-        16.0
-      ],
-      "cbd_range": [
-        0.8,
-        0.8
-      ],
-      "want": null,
-      "height_cm": [
-        40.0,
-        90.0
-      ],
-      "height_band": "Short",
-      "flowering_days": 53,
-      "curated": false
-    },
-    {
-      "id": "strain_auto_fast_bud_2",
-      "name": "AUTO Fast Bud #2",
-      "type": null,
-      "breeder": "Sweet Seeds",
-      "source": "sqlite",
-      "has_chemistry": true,
-      "top_terpenes": [],
-      "thc_range": [
-        17.0,
-        17.0
-      ],
-      "cbd_range": [
-        0.8,
-        0.8
-      ],
-      "want": null,
-      "height_cm": 90.0,
-      "height_band": "Short",
-      "flowering_days": 53,
       "curated": false
     }
   ]

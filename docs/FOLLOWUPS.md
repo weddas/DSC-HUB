@@ -1298,7 +1298,7 @@ Memo: [`docs/DSC-PRODUCT-RESEARCH.md`](DSC-PRODUCT-RESEARCH.md).
 | Plant inventory | 8 roster slots | Seed counts / plant IDs / mother stock |
 | Apply climate Want | Custom temp/RH → hub targets | Catalog seeds lack climate bands (by design) |
 | Vivosun / light graphs | NEXT_DATA photometrics + datasheets | Still **0** keyword-labeled map image URLs |
-| Search / select | `/local/dsc-catalog/` indexes | Strain index capped at 2500 of ~36k merged |
+| Search / select | `/local/dsc-catalog/` indexes | Strain index capped at **10000** of densified master |
 
 ### deferred
 - OCR of PPFD heatmaps; pump dosing; absorbing Build a Plant into The Dash / Pro tabs
@@ -1666,17 +1666,18 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 | N-087-MERGE-NOLINK | **done** | See above; exclusive + resume scripts updated. |
 | N-087-COLLATION | **done (v4 + debt + match-expand)** | Schema v4; parent_of + subtype_of; junk/tree quarantine; observations≈71k; review=0; thin chase doc. Local `C:\DSC\collation\`; baks `pre_collation_v4` / `pre_collation_debt` / `pre_match_expand`. |
 | N-087-DENSIFY | **done (+ full staging drain)** | Local staging 264/268; obs≈126k; alias≈26.7k; height≈13.9%; SF merged+linked. Next scrape chase only: [`CATALOG-THIN-FIELDS.md`](qa/CATALOG-THIN-FIELDS.md). |
+| N-087-MASS-MERGE-MATCH | **done (saturated 2026-08-11)** | NAS→local staging copy (268 DBs, never clobber richer local); mass `--no-link` merge; match loops until 0; link-only; HA indexes; NAS copy-back byte-equal. Corpus: canonical **195266**, links **3298344**, height_cm **60290** (~52.3%), alias **29858**, subtype_of **9983**. Height projectors fixed to fill all duplicate `name_norm` rows. Orchestrator: `scripts/_mass_merge_and_match_saturate.py`. |
+| N-087-OFFLINE-EXTRA | **done 2026-08-11** | Flowering +40.7k; aliases +76.7k (Leafly/SF/OpenTHC/SKU); parent_of +34.3k; Wikileaf categorical chem rejected+purged; HA indexes 10k + curated Want enriched from brain. Scripts: project_flowering_days_from_text, project_external_id_aliases, project_leafly_parent_slugs, _offline_extra_saturate. |
 | N-087-BACKUP | **done** | Durable `_BACKUP_N087_2026-08-08` (~9.5GB) present; earlier git backup commit fc8c4cc; plus `pre_local_ssd` bak before copy-back. |
 
 ### scrapes / corpus
 | ID | Status | Notes |
 |---|---|---|
-| S-SEEDFINDER | **side task (resumed)** | 2026-08-10 evening: PW scrape relaunched (~22853/40638; todo ~17.8k). Checkpoint `save()` hardened for NAS replace PermissionError. Merge again when quiet. |
-| S-STRAINDB | **PARKED_HTTP_FAIL (~359)** | Headed scrape reached ~70 new (~359 done) then hard `ERR_HTTP_RESPONSE_CODE_FAILURE` / chrome-error on warm. Cooldown relaunch still blocked — parked to avoid ban. Resume later with fresh PW profile / longer cool-off. |
-| S-MEDAUTH | **PAUSED_DAILY_LIMIT (+94 bodies)** | In-tab medauth scrape harvested **94** review bodies → `review` table on local+NAS masters. Site then hit “Slow Down / daily viewing limit / try again in 24 hours” even while signed in. Resume after ~2026-08-11; ingest server kept at `:8765`. Dump: `dsc_reviews_cannareviews_medauth.json`. |
-| S-BANK-DESC | **RUNNING** | Herbies ~410/4142 · Zamnesia ~725/2299 description enrich. |
-| S-SEEDFINDER | **RUNNING** | Headed PW ~23203 done; NAS staging journal live — do not merge yet. |
-| S-WAVE-D | **expanded** | Apex Grow + TG Hydroponics staged. Master nutrients **867** / mediums **321**; NPK **51** / dose **143** from body_html. |
+| S-SEEDFINDER | **CLOSED (partial corpus)** | Operator 2026-08-11: **no more scraping**. PW stopped at **26390/40638** after CF/500. Quiet-merge `--no-link` landed on local (+link-only); local master ahead then copy-back. Do not relaunch SF. |
+| S-STRAINDB | **CLOSED (~359)** | No more scraping. Parked HTTP-fail corpus kept as-is; do not relaunch. |
+| S-MEDAUTH | **CLOSED (+94 bodies)** | No more scraping. Keep 94 review bodies already imported. Ingest server stopped. |
+| S-BANK-DESC | **CLOSED** | Herbies 3986/4142 · Zamnesia 2299 · RQS 188 · SeedSupreme 31 done; Seedsman leftover empty. No further bank PDP enrich. |
+| S-WAVE-D | **CLOSED (expanded)** | Apex + TG + GK + HW staged. Nutrients **867** / mediums **321**. No further Shopify brand scrapes. |
 | S-TIERA-HALF1 | **done (dump/staging + merged)** | Was dump+staging; now included in local-SSD exclusive queue. |
 | S-TIERA-2ND | **done (dump/staging + merged)** | Was dump+staging; now included in local-SSD exclusive queue. |
 | Bank/forum dumps | **merged** | Priority banks + Wave2 + forums + thin-field families drained via local-SSD exclusive (207 plan). |
@@ -1691,9 +1692,9 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 - [x] When SeedFinder quiet: `merge_staging_to_master.py --only seedfinder --no-link --no-search` (+ end-link if needed). StrainDB merge separate / later. **Done 2026-08-10** (orphan journal cleared; partial scrape ~22.8k variants).
 - [x] Optional `--link-only` after SF typed merge — **done 2026-08-10** (+283k variant edges).
 - [x] Promote high-frequency unresolved literals (≥5 edges) to exact canonicals — **done** (Ruderalys etc.; geo slips quarantined).
-- [ ] StrainDB: resume only on explicit ask after headed CF unlock (no tight retry).
-- [ ] SeedFinder scrape resume for remaining ~18k sitemap entries (optional; master already has partial).
-- [ ] Rebuild HA `dsc_strains_search_index.json` from densified master when convenient.
+- [x] StrainDB: resume only on explicit ask after headed CF unlock (no tight retry). **CLOSED_NO_MORE_SCRAPING 2026-08-11.**
+- [x] SeedFinder scrape resume for remaining ~18k sitemap entries (optional; master already has partial). **CLOSED_NO_MORE_SCRAPING 2026-08-11.**
+- [x] Rebuild HA `dsc_strains_search_index.json` from densified master when convenient. **Done 2026-08-11** (cap 10 000 + nutrients/mediums/lights) after mass-merge saturate.
 
 ### tooling landed this pass
 - [`brain/data/_n087_exclusive_merge.py`](brain/data/_n087_exclusive_merge.py) / [`_n087_exclusive_merge_resume.py`](brain/data/_n087_exclusive_merge_resume.py): `--no-link`, skip OK, end-link before indexes.
@@ -1863,6 +1864,45 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 ### Deferred art
 - Authored GLTF tents/plants/fans — later pass (real GLTFLoader required).
 
+## 2026-08-11 — Icons: root cause was **no deploy**
+
+### honesty
+- Inline-SVG icon fix was built locally (562KB panel) but live HA kept serving old mask-based panel (547KB) until SCP + core restart.
+- After deploy: 54 `.dsc-icon` nodes with SVG in shadow DOM; SURFACE **7.1.1**.
+- Control Center demand icons were present but **14px** on ~90px tiles — looked empty; bumped to 22px teal.
+- `PANEL OFF —` false positive on HA-ONLY path — gated to true offline only.
+
+### finish-pass misses (still)
+- Live API blip soak (HELD + OFF timer + reconnect) not operator-proven.
+- Climate airflow-map hard-reload soak not screenshot-proven after bundle push.
+- Twin on-scene pot chips not visually confirmed on live Twin tab.
+
+### problem
+Live HA served `/dsc_hub/dsc-hub-panel.js` (200) but `/dsc_hub/assets/icons/*` **404**. Icons used CSS `mask-image` against those URLs → blank chrome.
+
+### fix
+- Embed SVG bodies in `frontend/src/iconSvg.ts` (regen: `python scripts/gen-dsc-hub-icon-svg.py`).
+- `Icon` renders inline SVG via `currentColor` (no asset fetch).
+- Wordmark also inlined.
+- `frontend.py` also mounts whole `www` at `/dsc_hub` so synced assets still work.
+
+## 2026-08-11 — DSC-Dashboard Surface 7.1.1 finish gaps
+
+### done
+- Panel/beat OFF duration chips + honesty polish.
+- Root Rate column + learned-EC honesty on seat + Analytics (attrs only).
+- Twin on-scene pot glass chips (`projectPotAnchors`) + cyan intake/path bias; Node-concat `homeassistant/www/DSC-HUB.js` + `dist/` (~1.0MB).
+- Research/Compose honesty handoff + Use-in-Compose / Open Seat CTAs.
+- Panel rebuild via `scripts/build-dsc-hub-panel.ps1`; surface **7.1.1** (`const.py` + `dsc_v4_version.yaml` + chrome).
+
+### soak / honesty
+- Agent browser to `http://192.168.86.3:8123/dsc-hub` stayed on HA Loading (no session) — **live blip hold + airflow-map hard-reload soak needs operator after sync/deploy**.
+- Bundle self-check (local): `projectPotAnchors` + cyan `0x26c6da` pathColors in concat; panel build contains Rate / PANEL OFF / SURFACE 7.1.1.
+- Note: mid-pass NAS reverted uncommitted source once; finish pass re-applied via local TEMP then copy-back + verify.
+
+### still parked
+- R3F Twin, authored GLTF packs, DepthTexture-on, inventing CFM/PPFD, Pi WEBUI, full Learning wizard math.
+
 ## 2026-08-11 — DSC-Dashboard Surface 7.1 ship
 
 ### done
@@ -1874,11 +1914,10 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 - Twin/airflow: leaders, cyan Got marker, allocated CFM + airflow-map host on Climate.
 - Mission modern gauges/sparklines/GotWant/trend; Main/Clone tent cockpits restored.
 - Seat Want/Got/Need + inline editors + dryback/history; Root fleet matrix.
-- Learning densify + Analytics root pack; surface **7.1.0**.
+- Learning densify + Analytics root pack; surface **7.1.0** (superseded by **7.1.1** finish).
 
 ### soak / next
-- Live blip soak: confirm HELD + OFF timer on API flap.
-- Confirm `dsc-airflow-map-card` loads via panel `ensureLocalCard` after hard reload of `/local/DSC-HUB.js`.
+- ~~Live blip soak / airflow-map hard reload~~ → tracked under **7.1.1** soak (operator after deploy).
 - R3F / authored GLTF still deferred.
 
 ## 2026-08-11 — SoftAP OTA via NAPT is broken; Nest-hold OTA path
@@ -1899,5 +1938,33 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 - **Pot3 dead** — ignore; do not gate success on `.14`.
 - SoftAP NAPT OTA still broken (see section above).
 - Glass Fleet Fix hold soak + optional SoftAP-down Fallback smoke — operator Trip 3 residual.
-- Pot4 SoftAP `.15` at **6.0.0.0** but hub `POT4 ESP-NOW Link` may lag False after cutover — soak / glass Fleet Fix.
+- ~~Pot4 SoftAP `.15` ESP-NOW Link lag~~ → **root cause 2026-08-11:** SoftAP/API fine (`192.168.4.15`, MAC `EC:E3:34:7B:E7:A8`, fw 6.0.0.0). **Modbus soil probe all NaN** (raw + calibrated). Hub `POT4 ESP-NOW Link` is freshness of plausible `soil_temperature` (5–45 °C) — dead probe looks like “won’t connect”. Pot1/2 soil live. Physical: reseat RS485 probe / power-cycle Pot4; swap probe with Pot2 to isolate cable vs board. Diagnostic honesty: Link False ≠ radio fail when sensor NaN (consider separate sensor-fault cue).
 - Lab stubs still pass unused Nest `wifi_ssid` / `wifi_password` substitutions (cleanup when stubs next touched).
+
+## 2026-08-11 — Twin roofs + single-tent + OOS hide
+
+### done
+- Room ceiling + tent fabric roofs ~10% opacity; mylar walls-only (no ceiling) so interiors stay readable.
+- Twin HUD: hide cyan leaders when HUD is anchored; inline T/RH/VPD SVG icons; status wrap; wider pot chips.
+- Main/Clone (/live/main, /live/clone): Twin keep-alive with ocusTent single-tent scene.
+- Deactivated pots (input_boolean.dsc_potN_in_service = off): omitted from Mission seats/ESP chips, Root matrix/dryback, tent cockpits, seat pot chips, Twin chips/poses; honesty no longer names OOS pots. Fleet in-service toggles remain so pots can return.
+
+### soak
+- Hard-reload Twin + Main + Clone after deploy; confirm pot3 gone when OOS; roofs see-through; no cyan HUD ovals.
+
+### still parked
+- R3F Twin / authored GLTF / inventing CFM-PPFD (unchanged).
+
+
+## 2026-08-12 — Twin/Mission climate history + lit gauges
+
+### root cause
+- Dash etchHistory only read 
+esult[entityId]; HA often returns [[states]] → empty series. Empty hist locked for 60s.
+- Panel callWS had no connection.sendMessagePromise fallback → Mission sparks often unseeded.
+
+### done
+- Normalize history array/dict; retry empty climate hist sooner.
+- Twin charts: 2×4 + 4×8 Temp/RH/VPD (6 panes); amber glow when that tent's lights are on (2×4 = SF1000; 4×8 = no lamp yet).
+- Mission Live gauges: same 2×4 / 4×8 T·RH·VPD groups + lit glow.
+

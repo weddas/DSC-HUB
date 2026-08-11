@@ -81,11 +81,13 @@ def main(argv: list[str] | None = None) -> int:
     args = ap.parse_args(argv)
 
     con = connect(args.db)
-    # name_norm -> grow id with payload lacking height_band
-    targets: dict[str, tuple[str, dict]] = {}
+    # name_norm -> all grow rows lacking height_band (apply same band to duplicates)
+    targets: dict[str, list[tuple[str, dict]]] = {}
     for gid, nn, blob in con.execute(
         "SELECT id, name_norm, payload_json FROM grow_trait"
     ):
+        if not nn:
+            continue
         try:
             payload = json.loads(blob or "{}")
         except json.JSONDecodeError:
@@ -94,7 +96,7 @@ def main(argv: list[str] | None = None) -> int:
             payload = {}
         if payload.get("height_band"):
             continue
-        targets[nn] = (gid, payload)
+        targets.setdefault(nn, []).append((gid, payload))
 
     updated = 0
     samples: list[dict] = []
@@ -136,15 +138,24 @@ def main(argv: list[str] | None = None) -> int:
                         break
             if not band:
                 continue
-            gid, payload = targets.pop(key)
-            payload = dict(payload)
-            payload["height_band"] = band
-            if ordinal is not None:
-                payload["height_ordinal"] = ordinal
-            payload["height_band_source"] = f"{path.stem}:{src_k}"
-            batch.append((json.dumps(payload, ensure_ascii=False), gid))
+            entries = targets.pop(key)
+            for gid, payload in entries:
+                payload = dict(payload)
+                payload["height_band"] = band
+                if ordinal is not None:
+                    payload["height_ordinal"] = ordinal
+                payload["height_band_source"] = f"{path.stem}:{src_k}"
+                batch.append((json.dumps(payload, ensure_ascii=False), gid))
             if len(samples) < 12:
-                samples.append({"name_norm": key, "band": band, "from": src_k, "file": path.name})
+                samples.append(
+                    {
+                        "name_norm": key,
+                        "band": band,
+                        "from": src_k,
+                        "file": path.name,
+                        "rows": len(entries),
+                    }
+                )
         src.close()
         if not args.dry_run and batch:
             con.executemany(

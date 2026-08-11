@@ -92,7 +92,7 @@ Built by `python scripts/build_catalog_search_indexes.py` →
 
 | File | Cap (verified) | Contents |
 |---|---|---|
-| `dsc_strains_search_index.json` | **2500** | Slim name / type / breeder |
+| `dsc_strains_search_index.json` | **10000** | Slim name / type / breeder / height / flowering / chem ranges when present |
 | `dsc_nutrients_search_index.json` | **1500** | Name / brand / optional dose |
 | `dsc_mediums_search_index.json` | **800** (777 live) | Substrate names |
 | `dsc_lights_search_index.json` | **800** | Fixture names + stated W when present |
