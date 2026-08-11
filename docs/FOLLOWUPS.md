@@ -1840,3 +1840,8 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 - Curated MDI-in-panel if custom SVG registry gaps remain on Mode/demand chips.
 - Native React Catalog/Build (still Lit hosts); Lovelace YAML removal still deferred.
 - Port remaining Lovelace Climate ladder / Learning cal wizard depth into Tune/Live.
+
+### docs
+- Ops runbook: [`docs/qa/LIVE-UI-CUSTOM-PANEL.md`](qa/LIVE-UI-CUSTOM-PANEL.md) (surface **7.0.0** guided shell + lockstep).
+- Version trains: [`docs/qa/VERSION-TRAINS.md`](qa/VERSION-TRAINS.md) (firmware **5.2.0** vs surface **7.0.0**).
+- Prefer docs PR on `cursor/engineering-documentation-9c49` over open #74 surface **6.3.0** drafts once merged.

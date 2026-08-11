@@ -1,17 +1,24 @@
 # LIVE-UI — Unified HA product shell (N-086)
 
+> **Superseded for day-to-day ops by surface 7.0.** The React custom panel at
+> `/dsc-hub` is now **Live / Grow / Tune / Fleet** — see
+> [`LIVE-UI-CUSTOM-PANEL.md`](LIVE-UI-CUSTOM-PANEL.md) and
+> [`VERSION-TRAINS.md`](VERSION-TRAINS.md). This page remains the Lovelace
+> YAML / Catalog Explorer lab-scaffold record (N-086).
+
 Operator / developer runbook for the single **DSC-HUB** Lovelace product:
 four primary sections aligned to [`docs/brain/WEBUI.md`](../brain/WEBUI.md).
 
 | Surface | Role |
 |---|---|
-| Dashboard URL | **`/dsc-hub-pro/ops`** (default landing) |
-| Sidebar | One entry: **DSC-HUB** |
-| Primary tabs | Ops · Plant · Advanced · System |
-| Surface version | `sensor.dsc_ha_surface_version` **5.1.12** |
-| Shared chrome | `custom:dsc-app-nav-card` |
-| Catalog Explorer | `custom:dsc-catalog-browse-card` @ `/dsc-hub-pro/catalog` |
-| Compose | `custom:dsc-build-plant-card` @ `/dsc-hub-pro/plant-build` |
+| Dashboard URL | **`/dsc-hub-pro/ops`** (YAML fallback; sidebar hidden when React panel is enabled) |
+| Sidebar (product) | **DSC-HUB** → `/dsc-hub` React panel (surface **7.0.0**) |
+| Primary tabs (Lovelace YAML) | Ops · Plant · Advanced · System (historical N-086) |
+| Primary tabs (React 7.0) | Live · Grow · Tune · Fleet |
+| Surface version | `sensor.dsc_ha_surface_version` **7.0.0** |
+| Shared chrome (YAML) | `custom:dsc-app-nav-card` |
+| Catalog Explorer | `custom:dsc-catalog-browse-card` @ `/dsc-hub-pro/catalog` (also Grow · Research) |
+| Compose | `custom:dsc-build-plant-card` @ `/dsc-hub-pro/plant-build` (also Grow · Compose) |
 
 HA is the **lab scaffold / wireframe** for the later Pi webserver. Do not treat
 `input_*` coupling as durable product SoT — see [`docs/HA-SCAFFOLD.md`](../HA-SCAFFOLD.md).

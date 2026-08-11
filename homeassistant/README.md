@@ -382,13 +382,13 @@ not humidifier lock — entity id kept for compatibility.
 - POT3 probe swap, SCD41 — post-release hardware
 - ETH01 bridge — **in tree** (`dsc-bridge.yaml` · F-010/F-012/F-013)
 
-## Firmware pairing (**5.2.0** train)
+## Firmware pairing (**5.2.0** train) / surface **7.0.0**
 
 | Piece | Version |
 |---|---|
 | Hub / Control / pots / bridge / Sonoffs / kits | **`5.2.0`** |
-| HA surface (packages + dashboard) | **`5.2.0`** |
-| Dashboard | DSC-HUB Pro (4-col, browser_mod popups) |
+| HA surface (packages + React panel) | **`7.0.0`** — Live/Grow/Tune/Fleet; see [`docs/qa/VERSION-TRAINS.md`](../docs/qa/VERSION-TRAINS.md) |
+| Dashboard | `/dsc-hub` custom panel (primary) · `dsc-hub-pro` YAML fallback |
 | `espnow_cmd_tag` | `54727` (`0xD5C7`) on hub **and** panel |
 
 Bridge entities: Anchor BSSID/channel, hub ESP-NOW link, demand mirrors,
