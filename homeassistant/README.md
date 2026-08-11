@@ -126,22 +126,30 @@ Add Integration → Browser Mod**. Without it the popup taps silently no-op.
 3. Category: **Dashboard**
 4. Download **DSC-HUB System Map**, restart/reload when prompted, hard-refresh browser
 
-HACS serves `/hacsfiles/DSC-HUB/DSC-HUB.js` (system map + airflow + The Dash +
-Build a Plant + SVG beside it). Full steps:
+HACS serves `/hacsfiles/DSC-HUB/DSC-HUB.js` (system map + airflow + Three +
+Dash FX + The Dash + Build a Plant + app-nav + catalog-browse + SVG beside it;
+~**1013 KB**). Full steps + dual-path (React panel vs Lit Twin):
 [`../scripts/HACS-FRONTEND.md`](../scripts/HACS-FRONTEND.md).
+
+**React `/dsc-hub` shell is not in this HACS bundle** — it ships via
+`custom_components/dsc_hub` (Vite). Twin keep-alive still needs the Lit
+`dsc-the-dash-card` from `/local` or HACS.
 
 ### Manual fallback (`/config/www/`)
 
 1. Copy into Home Assistant `/config/www/` (or rely on Sync **5.1.4+** / ha-sync):
    - [`www/dsc-system-map.svg`](www/dsc-system-map.svg)
-   - Bundled JS as `/local/dsc-system-map-card.js` (system map + airflow + Three +
-     Dash FX + The Dash + Build a Plant)
+   - Bundled JS as `/local/dsc-system-map-card.js` (eight-file concat: system map +
+     airflow + Three + Dash FX + The Dash + Build a Plant + app-nav + catalog-browse)
    - [`www/dsc-catalog/*.json`](www/dsc-catalog/) for Build a Plant typeahead
-   - Optional standalones: airflow / the-dash / build-plant cards
+   - Optional standalones: airflow / the-dash / build-plant / nav / catalog cards
 2. **Settings → Dashboards → ⋮ → Resources → Add resource** (JavaScript, not module):
    - `/local/dsc-system-map-card.js` (one resource registers all bundled cards)
    - Or HACS `/hacsfiles/DSC-HUB/DSC-HUB.js`
+   - Do **not** register both for the same elements
 3. YAML dashboards already include the cards. Hard-refresh the browser.
+4. After www edits: `./scripts/sync-hacs-dist.sh` and confirm `git diff -- dist/`
+   is empty (www is SoT; a bad sync commit can drift HACS away from `/local`).
 
 Optional entity overrides:
 
