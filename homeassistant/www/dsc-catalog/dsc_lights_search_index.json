@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "kind": "lights",
-  "built_at": "2026-08-11T15:01:10Z",
+  "built_at": "2026-08-10T11:15:16Z",
   "count": 517,
   "note": "Browse index v2. Map URLs only when present; stated_ppfd is a point reading, not a heatmap grid.",
   "items": [

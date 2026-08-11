@@ -1,263 +1,90 @@
+# Curated MVP Want bands. These are conservative operating bands, not a
+# substitute for breeder guidance or cultivar-specific observation.
 schema_version: 1
 seeds:
-- id: generic_photoperiod
-  name: Generic Photoperiod
-  type: photo
-  curated: true
-  want: &id001
-    ph:
-    - 5.8
-    - 6.5
-    ec_veg_us:
-    - 1000
-    - 1600
-    ec_flower_us:
-    - 1600
-    - 2400
-    moisture_pct:
-    - 45
-    - 70
-    temp_c:
-    - 20
-    - 28
-    rh_pct:
-    - 45
-    - 70
-- id: generic_autoflower
-  name: Generic Autoflower
-  type: auto
-  curated: true
-  want: &id002
-    ph:
-    - 5.8
-    - 6.5
-    ec_veg_us:
-    - 800
-    - 1400
-    ec_flower_us:
-    - 1400
-    - 2000
-    moisture_pct:
-    - 45
-    - 70
-    temp_c:
-    - 20
-    - 27
-    rh_pct:
-    - 45
-    - 65
-- id: blue_dream
-  name: Blue Dream
-  type: photo
-  lineage: hybrid
-  curated: true
-  want: *id001
-  height_cm: 152.0
-  flowering_days:
-  - 65
-  - 70
-  height_band: Medium to Tall
-  chem_summary:
-    thc_range:
-    - 0.75
-    - 17.13
-    cbd_range:
-    - 0.15
-    - 0.26
-    top_terpenes:
-    - Linalool
-    - beta-Myrcene
-    - alpha-Humulene
-- id: wedding_cake
-  name: Wedding Cake
-  type: photo
-  lineage: hybrid
-  curated: true
-  want: *id001
-  height_cm: 96.0
-  flowering_days:
-  - 56
-  - 63
-  height_band: Short
-  chem_summary:
-    thc_range:
-    - 0.68
-    - 19.59
-    cbd_range:
-    - 0.05
-    - 0.06
-    top_terpenes:
-    - alpha-Humulene
-    - Terpinolene
-    - beta-Myrcene
-- id: gorilla_glue
-  name: Gorilla Glue
-  type: photo
-  lineage: hybrid
-  curated: true
-  want: *id001
-  height_cm: 30.0
-  flowering_days:
-  - 70
-  - 75
-  height_band: Short
-  chem_summary:
-    thc_range:
-    - 0.84
-    - 21.01
-    cbd_range:
-    - 0.05
-    - 0.08
-    top_terpenes:
-    - alpha-Humulene
-    - alpha-Pinene
-    - beta-Caryophyllene
-- id: og_kush
-  name: OG Kush
-  type: photo
-  lineage: hybrid
-  curated: true
-  want: *id001
-  height_cm:
-  - 90.0
-  - 160.0
-  flowering_days:
-  - 50
-  - 60
-  height_band: Medium
-  chem_summary:
-    thc_range:
-    - 0.62
-    - 15.57
-    cbd_range:
-    - 0.14
-    - 0.2
-    top_terpenes:
-    - alpha-Humulene
-    - Linalool
-    - beta-Caryophyllene
-- id: sour_diesel
-  name: Sour Diesel
-  type: photo
-  lineage: sativa
-  curated: true
-  want: *id001
-  height_cm:
-  - 90.0
-  - 160.0
-  flowering_days:
-  - 65
-  - 70
-  height_band: Medium
-  chem_summary:
-    thc_range:
-    - 0.47
-    - 17.63
-    cbd_range:
-    - 0.15
-    - 0.19
-    top_terpenes:
-    - alpha-Humulene
-    - Linalool
-    - beta-Caryophyllene
-- id: northern_lights
-  name: Northern Lights
-  type: photo
-  lineage: indica
-  curated: true
-  want: *id001
-  height_cm: 159.0
-  flowering_days: 68
-  height_band: Medium
-  chem_summary:
-    thc_range:
-    - 0.71
-    - 12.25
-    cbd_range:
-    - 0.06
-    - 0.14
-    top_terpenes:
-    - alpha-Humulene
-    - Linalool
-    - beta-Caryophyllene
-- id: white_widow
-  name: White Widow
-  type: photo
-  lineage: hybrid
-  curated: true
-  want: *id001
-  height_cm:
-  - 60.0
-  - 100.0
-  flowering_days:
-  - 55
-  - 65
-  height_band: Short to Medium
-  chem_summary:
-    thc_range:
-    - 1.88
-    - 5.57
-    cbd_range:
-    - 0.12
-    - 0.12
-    top_terpenes:
-    - Linalool
-    - beta-Myrcene
-    - alpha-Pinene
-- id: jack_herer
-  name: Jack Herer
-  type: photo
-  lineage: sativa
-  curated: true
-  want: *id001
-  height_cm: 99.0
-  flowering_days: 56
-  height_band: Short to Medium
-  chem_summary:
-    thc_range:
-    - 0.69
-    - 10.9
-    cbd_range:
-    - 0.06
-    - 0.13
-    top_terpenes:
-    - alpha-Humulene
-    - Linalool
-    - beta-Myrcene
-- id: amnesia_haze_auto
-  name: Amnesia Haze Auto
-  type: auto
-  lineage: sativa
-  curated: true
-  want: *id002
-  height_cm: 154.0
-  flowering_days: 85
-  height_band: Tall
-  chem_summary:
-    thc_range:
-    - 16.5
-    - 16.5
-    cbd_range:
-    - 1.5
-    - 1.5
-- id: zkittlez_auto
-  name: Zkittlez Auto
-  type: auto
-  lineage: hybrid
-  curated: true
-  want: *id002
-  height_cm:
-  - 80.0
-  - 120.0
-  flowering_days:
-  - 56
-  - 63
-  chem_summary:
-    thc_range:
-    - 23.0
-    - 23.0
-    cbd_range:
-    - 1.0
-    - 1.0
+  - &generic_photo
+    id: generic_photoperiod
+    name: Generic Photoperiod
+    type: photo
+    curated: true
+    want: &photo_want
+      ph: [5.8, 6.5]
+      ec_veg_us: [1000, 1600]
+      ec_flower_us: [1600, 2400]
+      moisture_pct: [45, 70]
+      temp_c: [20, 28]
+      rh_pct: [45, 70]
+  - id: generic_autoflower
+    name: Generic Autoflower
+    type: auto
+    curated: true
+    want: &auto_want
+      ph: [5.8, 6.5]
+      ec_veg_us: [800, 1400]
+      ec_flower_us: [1400, 2000]
+      moisture_pct: [45, 70]
+      temp_c: [20, 27]
+      rh_pct: [45, 65]
+  - id: blue_dream
+    name: Blue Dream
+    type: photo
+    lineage: hybrid
+    curated: true
+    want: *photo_want
+  - id: wedding_cake
+    name: Wedding Cake
+    type: photo
+    lineage: hybrid
+    curated: true
+    want: *photo_want
+  - id: gorilla_glue
+    name: Gorilla Glue
+    type: photo
+    lineage: hybrid
+    curated: true
+    want: *photo_want
+  - id: og_kush
+    name: OG Kush
+    type: photo
+    lineage: hybrid
+    curated: true
+    want: *photo_want
+  - id: sour_diesel
+    name: Sour Diesel
+    type: photo
+    lineage: sativa
+    curated: true
+    want: *photo_want
+  - id: northern_lights
+    name: Northern Lights
+    type: photo
+    lineage: indica
+    curated: true
+    want: *photo_want
+  - id: white_widow
+    name: White Widow
+    type: photo
+    lineage: hybrid
+    curated: true
+    want: *photo_want
+  - id: jack_herer
+    name: Jack Herer
+    type: photo
+    lineage: sativa
+    curated: true
+    want: *photo_want
+  - id: amnesia_haze_auto
+    name: Amnesia Haze Auto
+    type: auto
+    lineage: sativa
+    curated: true
+    want: *auto_want
+  - id: zkittlez_auto
+    name: Zkittlez Auto
+    type: auto
+    lineage: hybrid
+    curated: true
+    want: *auto_want
+
 custom_slots: 5
 note: Got = raw + offset. Run promote_strain_catalog_to_ha.py after edits.

@@ -1,0 +1,190 @@
+herbies: enrich 4142/4142 missing description
+  checkpoint filled=24 idx=25/4142
+  checkpoint filled=47 idx=50/4142
+  checkpoint filled=71 idx=75/4142
+  checkpoint filled=96 idx=100/4142
+  checkpoint filled=121 idx=125/4142
+  checkpoint filled=142 idx=150/4142
+  checkpoint filled=165 idx=175/4142
+  checkpoint filled=190 idx=200/4142
+  checkpoint filled=215 idx=225/4142
+  checkpoint filled=240 idx=250/4142
+  checkpoint filled=262 idx=275/4142
+  checkpoint filled=285 idx=300/4142
+  checkpoint filled=310 idx=325/4142
+  checkpoint filled=335 idx=350/4142
+  checkpoint filled=360 idx=375/4142
+  checkpoint filled=385 idx=400/4142
+  checkpoint filled=410 idx=425/4142
+  checkpoint filled=434 idx=450/4142
+  checkpoint filled=459 idx=475/4142
+  checkpoint filled=484 idx=500/4142
+  checkpoint filled=507 idx=525/4142
+  checkpoint filled=531 idx=550/4142
+  checkpoint filled=553 idx=575/4142
+  checkpoint filled=577 idx=600/4142
+  checkpoint filled=602 idx=625/4142
+  checkpoint filled=625 idx=650/4142
+  checkpoint filled=650 idx=675/4142
+  checkpoint filled=673 idx=700/4142
+  checkpoint filled=695 idx=725/4142
+  checkpoint filled=720 idx=750/4142
+  checkpoint filled=741 idx=775/4142
+  checkpoint filled=765 idx=800/4142
+  checkpoint filled=788 idx=825/4142
+  checkpoint filled=813 idx=850/4142
+  checkpoint filled=838 idx=875/4142
+  checkpoint filled=863 idx=900/4142
+  checkpoint filled=885 idx=925/4142
+  checkpoint filled=909 idx=950/4142
+  checkpoint filled=933 idx=975/4142
+  checkpoint filled=955 idx=1000/4142
+  checkpoint filled=978 idx=1025/4142
+  checkpoint filled=1001 idx=1050/4142
+  checkpoint filled=1024 idx=1075/4142
+  checkpoint filled=1047 idx=1100/4142
+  checkpoint filled=1069 idx=1125/4142
+  checkpoint filled=1093 idx=1150/4142
+  checkpoint filled=1118 idx=1175/4142
+  checkpoint filled=1143 idx=1200/4142
+  checkpoint filled=1167 idx=1225/4142
+  checkpoint filled=1191 idx=1250/4142
+  checkpoint filled=1216 idx=1275/4142
+  checkpoint filled=1241 idx=1300/4142
+  checkpoint filled=1266 idx=1325/4142
+  checkpoint filled=1291 idx=1350/4142
+  checkpoint filled=1315 idx=1375/4142
+  checkpoint filled=1338 idx=1400/4142
+  checkpoint filled=1363 idx=1425/4142
+  checkpoint filled=1387 idx=1450/4142
+  checkpoint filled=1411 idx=1475/4142
+  checkpoint filled=1436 idx=1500/4142
+  checkpoint filled=1461 idx=1525/4142
+  checkpoint filled=1485 idx=1550/4142
+  checkpoint filled=1510 idx=1575/4142
+  checkpoint filled=1535 idx=1600/4142
+  checkpoint filled=1560 idx=1625/4142
+  checkpoint filled=1585 idx=1650/4142
+  checkpoint filled=1609 idx=1675/4142
+  checkpoint filled=1633 idx=1700/4142
+  checkpoint filled=1656 idx=1725/4142
+  checkpoint filled=1678 idx=1750/4142
+  checkpoint filled=1702 idx=1775/4142
+  checkpoint filled=1726 idx=1800/4142
+  checkpoint filled=1748 idx=1825/4142
+  checkpoint filled=1773 idx=1850/4142
+  checkpoint filled=1794 idx=1875/4142
+  checkpoint filled=1814 idx=1900/4142
+  checkpoint filled=1839 idx=1925/4142
+  checkpoint filled=1864 idx=1950/4142
+  checkpoint filled=1887 idx=1975/4142
+  checkpoint filled=1912 idx=2000/4142
+  checkpoint filled=1936 idx=2025/4142
+  checkpoint filled=1961 idx=2050/4142
+  checkpoint filled=1985 idx=2075/4142
+  checkpoint filled=2010 idx=2100/4142
+  checkpoint filled=2032 idx=2125/4142
+  checkpoint filled=2057 idx=2150/4142
+  checkpoint filled=2082 idx=2175/4142
+  checkpoint filled=2106 idx=2200/4142
+  checkpoint filled=2131 idx=2225/4142
+  checkpoint filled=2155 idx=2250/4142
+  checkpoint filled=2180 idx=2275/4142
+  checkpoint filled=2204 idx=2300/4142
+  checkpoint filled=2228 idx=2325/4142
+  checkpoint filled=2252 idx=2350/4142
+  checkpoint filled=2273 idx=2375/4142
+  checkpoint filled=2297 idx=2400/4142
+  checkpoint filled=2320 idx=2425/4142
+  checkpoint filled=2345 idx=2450/4142
+  checkpoint filled=2370 idx=2475/4142
+  checkpoint filled=2395 idx=2500/4142
+  checkpoint filled=2419 idx=2525/4142
+  checkpoint filled=2444 idx=2550/4142
+  checkpoint filled=2469 idx=2575/4142
+  checkpoint filled=2493 idx=2600/4142
+  checkpoint filled=2518 idx=2625/4142
+  checkpoint filled=2542 idx=2650/4142
+  checkpoint filled=2567 idx=2675/4142
+  checkpoint filled=2592 idx=2700/4142
+  checkpoint filled=2615 idx=2725/4142
+  checkpoint filled=2636 idx=2750/4142
+  checkpoint filled=2660 idx=2775/4142
+  checkpoint filled=2683 idx=2800/4142
+  checkpoint filled=2707 idx=2825/4142
+  checkpoint filled=2732 idx=2850/4142
+  checkpoint filled=2756 idx=2875/4142
+  checkpoint filled=2781 idx=2900/4142
+  checkpoint filled=2805 idx=2925/4142
+  checkpoint filled=2829 idx=2950/4142
+  checkpoint filled=2853 idx=2975/4142
+  checkpoint filled=2877 idx=3000/4142
+  checkpoint filled=2901 idx=3025/4142
+  checkpoint filled=2924 idx=3050/4142
+  checkpoint filled=2948 idx=3075/4142
+  checkpoint filled=2971 idx=3100/4142
+  checkpoint filled=2996 idx=3125/4142
+  checkpoint filled=3021 idx=3150/4142
+  checkpoint filled=3046 idx=3175/4142
+  checkpoint filled=3071 idx=3200/4142
+  checkpoint filled=3094 idx=3225/4142
+  checkpoint filled=3118 idx=3250/4142
+  checkpoint filled=3143 idx=3275/4142
+  checkpoint filled=3168 idx=3300/4142
+  checkpoint filled=3193 idx=3325/4142
+  checkpoint filled=3218 idx=3350/4142
+  checkpoint filled=3242 idx=3375/4142
+  checkpoint filled=3265 idx=3400/4142
+  checkpoint filled=3290 idx=3425/4142
+  checkpoint filled=3314 idx=3450/4142
+  checkpoint filled=3338 idx=3475/4142
+  checkpoint filled=3363 idx=3500/4142
+  checkpoint filled=3388 idx=3525/4142
+  checkpoint filled=3412 idx=3550/4142
+  checkpoint filled=3437 idx=3575/4142
+  checkpoint filled=3462 idx=3600/4142
+  checkpoint filled=3486 idx=3625/4142
+  checkpoint filled=3507 idx=3650/4142
+  checkpoint filled=3530 idx=3675/4142
+  checkpoint filled=3555 idx=3700/4142
+  checkpoint filled=3580 idx=3725/4142
+  checkpoint filled=3605 idx=3750/4142
+  checkpoint filled=3630 idx=3775/4142
+  checkpoint filled=3655 idx=3800/4142
+  checkpoint filled=3680 idx=3825/4142
+  checkpoint filled=3703 idx=3850/4142
+  checkpoint filled=3728 idx=3875/4142
+  checkpoint filled=3753 idx=3900/4142
+  checkpoint filled=3778 idx=3925/4142
+  checkpoint filled=3801 idx=3950/4142
+  checkpoint filled=3826 idx=3975/4142
+  checkpoint filled=3851 idx=4000/4142
+  checkpoint filled=3875 idx=4025/4142
+  checkpoint filled=3898 idx=4050/4142
+  checkpoint filled=3922 idx=4075/4142
+  checkpoint filled=3947 idx=4100/4142
+  checkpoint filled=3970 idx=4125/4142
+herbies staging: {
+  "family": "bank_herbies",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\bank_herbies.sqlite3",
+  "count": 4142,
+  "bulk": false,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 3820,
+    "strain_variant": 3941,
+    "chemistry_profile": 953,
+    "grow_trait": 3042,
+    "entity_link": 4450,
+    "attribute_kv": 15974,
+    "raw_record": 4142,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 8,
+    "source_record": 1
+  }
+}
+{"bank": "herbies", "filled": 3986, "attempted": 4142}

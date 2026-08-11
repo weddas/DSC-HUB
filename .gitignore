@@ -23,6 +23,8 @@ brain/data/staging/*.sqlite3
 brain/data/staging/*.sqlite3-*
 brain/data/**/*.sqlite3
 brain/data/**/*.sqlite3-*
+# Named pre-* snapshots (do not match *.sqlite3 because suffix follows .sqlite3.)
+brain/data/dsc_brain.sqlite3.pre_*
 
 # Never commit a live HA config
 home-assistant_v2.db*

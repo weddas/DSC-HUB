@@ -1,0 +1,10 @@
+{"shop": "greengrow", "nutrients": 0, "mediums": 0, "error": "HTTP Error 404: Not Found", "nute_path": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\homeassistant\\data\\dsc_nutrients_greengrow.json"}
+{"shop": "growkings", "nutrients": 466, "mediums": 236, "error": null, "nute_path": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\homeassistant\\data\\dsc_nutrients_growkings.json"}
+{"master": "C:\\DSC\\collation\\dsc_brain.sqlite3", "shop": "growkings", "nutrient_product": 469, "medium_product": 255}
+{"master": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\dsc_brain.sqlite3", "shop": "growkings", "nutrient_product": 469, "medium_product": 255}
+{"shop": "hydrocentre", "nutrients": 0, "mediums": 0, "error": "<urlopen error [Errno 11001] getaddrinfo failed>", "nute_path": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\homeassistant\\data\\dsc_nutrients_hydrocentre.json"}
+{"shop": "hydrowarehouse", "nutrients": 84, "mediums": 2, "error": null, "nute_path": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\homeassistant\\data\\dsc_nutrients_hydrowarehouse.json"}
+{"master": "C:\\DSC\\collation\\dsc_brain.sqlite3", "shop": "hydrowarehouse", "nutrient_product": 553, "medium_product": 257}
+{"master": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\dsc_brain.sqlite3", "shop": "hydrowarehouse", "nutrient_product": 553, "medium_product": 257}
+{"shop": "simplyhydro", "nutrients": 0, "mediums": 0, "error": "HTTP Error 403: Forbidden", "nute_path": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\homeassistant\\data\\dsc_nutrients_simplyhydro.json"}
+{"totals": {"nutrients": 550, "mediums": 238, "shops_ok": 2, "shops_fail": 3}}

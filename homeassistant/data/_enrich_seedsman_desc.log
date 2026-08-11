@@ -1,0 +1,27 @@
+seedsman: enrich 65/2206 missing description
+  checkpoint filled=0 idx=25/65
+  checkpoint filled=0 idx=50/65
+seedsman staging: {
+  "family": "seedsman",
+  "staging_db": "\\\\192.168.86.2\\Digital-Documents\\Digital Stealth Care\\Projects\\DSC-HUB\\brain\\data\\staging\\seedsman.sqlite3",
+  "count": 2206,
+  "bulk": true,
+  "store_raw": true,
+  "stats": {
+    "strain_canonical": 2130,
+    "strain_variant": 2205,
+    "chemistry_profile": 1413,
+    "grow_trait": 2101,
+    "entity_link": 1413,
+    "attribute_kv": 0,
+    "raw_record": 2206,
+    "light_fixture": 0,
+    "nutrient_product": 0,
+    "medium_product": 0,
+    "media_asset": 0,
+    "followup_gap": 0,
+    "schema_extension_log": 0,
+    "source_record": 1
+  }
+}
+{"bank": "seedsman", "filled": 0, "attempted": 65}

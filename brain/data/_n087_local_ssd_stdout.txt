@@ -1,0 +1,335 @@
+2026-08-09T02:25:06.007206+00:00 LOCAL_SSD_START families=207 already_ok=2 local=C:\Users\cmgwe\AppData\Local\Temp\dsc_n087_merge_work\dsc_brain.sqlite3
+2026-08-09T02:25:06.068155+00:00 COPY_NAS_TO_LOCAL y:\Digital Stealth Care\Projects\DSC-HUB\brain\data\dsc_brain.sqlite3 -> C:\Users\cmgwe\AppData\Local\Temp\dsc_n087_merge_work\dsc_brain.sqlite3
+2026-08-09T02:25:24.705602+00:00   copied dsc_brain.sqlite3-wal (257186912 bytes)
+2026-08-09T02:25:25.871139+00:00   copied dsc_brain.sqlite3-shm (524288 bytes)
+2026-08-09T02:25:27.255854+00:00   local ready elapsed=20.9s canonical=142606 chem=444166 size=739966976
+2026-08-09T02:25:28.767454+00:00 phytochem_chem_before=0
+2026-08-09T02:25:30.242205+00:00 [1/207] merge --only phytochem_smith --no-link (local)
+2026-08-09T02:26:28.182292+00:00   OK phytochem_smith 56.3s
+2026-08-09T02:26:28.593184+00:00 [2/207] SKIP already OK cannaconnection
+2026-08-09T02:26:29.258188+00:00 [3/207] SKIP already OK cannareviews
+2026-08-09T02:26:29.393256+00:00 [4/207] merge --only seedsman --no-link (local)
+2026-08-09T02:28:16.280867+00:00   OK seedsman 106.1s
+2026-08-09T02:28:17.255724+00:00 [5/207] merge --only hytiva --no-link (local)
+2026-08-09T02:30:31.996956+00:00   OK hytiva 132.8s
+2026-08-09T02:30:33.221320+00:00 [6/207] merge --only north_atlantic --no-link (local)
+2026-08-09T02:32:22.525749+00:00   OK north_atlantic 108.2s
+2026-08-09T02:32:23.217458+00:00 [7/207] merge --only north_atlantic_local --no-link (local)
+2026-08-09T02:33:38.365694+00:00   OK north_atlantic_local 72.7s
+2026-08-09T02:33:38.648289+00:00 [8/207] merge --only leafly_flat_grow --no-link (local)
+2026-08-09T02:35:16.040263+00:00   OK leafly_flat_grow 96.8s
+2026-08-09T02:35:16.797020+00:00 [9/207] merge --only forum_420mag --no-link (local)
+2026-08-09T02:35:43.706368+00:00   OK forum_420mag 26.4s
+2026-08-09T02:35:44.303777+00:00 [10/207] merge --only forum_mjpassion --no-link (local)
+2026-08-09T02:35:54.178019+00:00   OK forum_mjpassion 8.9s
+2026-08-09T02:35:54.609747+00:00 [11/207] merge --only forum_ozstoners --no-link (local)
+2026-08-09T02:35:56.559319+00:00   OK forum_ozstoners 1.8s
+2026-08-09T02:35:56.577081+00:00 [12/207] merge --only forum_phenohunter --no-link (local)
+2026-08-09T02:36:17.042984+00:00   OK forum_phenohunter 19.6s
+2026-08-09T02:36:17.704735+00:00 [13/207] merge --only forum_rollitup --no-link (local)
+2026-08-09T02:36:56.925260+00:00   OK forum_rollitup 38.1s
+2026-08-09T02:36:57.465256+00:00 [14/207] merge --only bank_1522_genetics --no-link (local)
+2026-08-09T02:37:49.152699+00:00   OK bank_1522_genetics 51.0s
+2026-08-09T02:37:49.307487+00:00 [15/207] merge --only bank_3thirteen_seeds --no-link (local)
+2026-08-09T02:38:21.617825+00:00   OK bank_3thirteen_seeds 30.9s
+2026-08-09T02:38:22.064323+00:00 [16/207] merge --only bank_420_genetics --no-link (local)
+2026-08-09T02:39:14.670083+00:00   OK bank_420_genetics 51.1s
+2026-08-09T02:39:15.783879+00:00 [17/207] merge --only bank_afghan_selection --no-link (local)
+2026-08-09T02:40:04.432794+00:00   OK bank_afghan_selection 46.3s
+2026-08-09T02:40:05.390498+00:00 [18/207] merge --only bank_annunaki_genetics --no-link (local)
+2026-08-09T02:40:44.951266+00:00   OK bank_annunaki_genetics 38.6s
+2026-08-09T02:40:45.395225+00:00 [19/207] merge --only bank_anomaly_seeds --no-link (local)
+2026-08-09T02:41:23.864786+00:00   OK bank_anomaly_seeds 36.4s
+2026-08-09T02:41:24.410505+00:00 [20/207] merge --only bank_antenna_seeds --no-link (local)
+2026-08-09T02:42:01.154600+00:00   OK bank_antenna_seeds 34.7s
+2026-08-09T02:42:01.354973+00:00 [21/207] merge --only bank_archive_seeds --no-link (local)
+2026-08-09T02:42:26.582269+00:00   OK bank_archive_seeds 24.6s
+2026-08-09T02:42:26.912611+00:00 [22/207] merge --only bank_atlas_seed --no-link (local)
+2026-08-09T02:42:40.989382+00:00   OK bank_atlas_seed 13.6s
+2026-08-09T02:42:41.358320+00:00 [23/207] merge --only bank_azarius_seeds --no-link (local)
+2026-08-09T02:42:49.308231+00:00   OK bank_azarius_seeds 7.3s
+2026-08-09T02:42:49.460578+00:00 [24/207] merge --only bank_b_i_g_seeds --no-link (local)
+2026-08-09T02:43:01.731140+00:00   OK bank_b_i_g_seeds 11.6s
+2026-08-09T02:43:01.948399+00:00 [25/207] merge --only bank_bad_fish_genetics --no-link (local)
+2026-08-09T02:43:10.709300+00:00   OK bank_bad_fish_genetics 8.1s
+2026-08-09T02:43:10.773917+00:00 [26/207] merge --only bank_barneys --no-link (local)
+2026-08-09T02:43:54.199248+00:00   OK bank_barneys 42.9s
+2026-08-09T02:43:54.234475+00:00 [27/207] merge --only bank_big_dans_genetix --no-link (local)
+2026-08-09T02:44:30.090161+00:00   OK bank_big_dans_genetix 35.7s
+2026-08-09T02:44:30.317372+00:00 [28/207] merge --only bank_big_sky_beans --no-link (local)
+2026-08-09T02:45:06.932780+00:00   OK bank_big_sky_beans 35.7s
+2026-08-09T02:45:07.716610+00:00 [29/207] merge --only bank_bohemiaseeds --no-link (local)
+2026-08-09T02:45:38.886080+00:00   OK bank_bohemiaseeds 29.2s
+2026-08-09T02:45:39.826153+00:00 [30/207] merge --only bank_bradley_danks --no-link (local)
+2026-08-09T02:46:48.807725+00:00   OK bank_bradley_danks 67.7s
+2026-08-09T02:46:49.914415+00:00 [31/207] merge --only bank_bsb_genetics --no-link (local)
+2026-08-09T02:47:45.482769+00:00   OK bank_bsb_genetics 54.4s
+2026-08-09T02:47:46.188451+00:00 [32/207] merge --only bank_bsf_seeds --no-link (local)
+2026-08-09T02:48:55.273001+00:00   OK bank_bsf_seeds 67.9s
+2026-08-09T02:48:55.737693+00:00 [33/207] merge --only bank_cannabeizein --no-link (local)
+2026-08-09T02:49:59.037343+00:00   OK bank_cannabeizein 62.5s
+2026-08-09T02:50:00.178686+00:00 [34/207] merge --only bank_chefs_genetix --no-link (local)
+2026-08-09T02:50:56.738274+00:00   OK bank_chefs_genetix 55.1s
+2026-08-09T02:50:56.866403+00:00 [35/207] merge --only bank_christiania_seedbank --no-link (local)
+2026-08-09T02:51:35.990254+00:00   OK bank_christiania_seedbank 37.3s
+2026-08-09T02:51:36.297517+00:00 [36/207] merge --only bank_cosmic_wisdom --no-link (local)
+2026-08-09T02:52:03.488248+00:00   OK bank_cosmic_wisdom 26.1s
+2026-08-09T02:52:03.806214+00:00 [37/207] merge --only bank_crickets_and_cicada_seeds --no-link (local)
+2026-08-09T02:52:35.982665+00:00   OK bank_crickets_and_cicada_seeds 31.9s
+2026-08-09T02:52:36.190407+00:00 [38/207] merge --only bank_dank_flow_genetics --no-link (local)
+2026-08-09T02:53:15.171776+00:00   OK bank_dank_flow_genetics 38.1s
+2026-08-09T02:53:15.826207+00:00 [39/207] merge --only bank_delicious_seeds --no-link (local)
+2026-08-09T02:53:20.135747+00:00   OK bank_delicious_seeds 4.2s
+2026-08-09T02:53:20.155430+00:00 [40/207] merge --only bank_divine_genetics --no-link (local)
+2026-08-09T02:53:20.918182+00:00   OK bank_divine_genetics 0.7s
+2026-08-09T02:53:20.939211+00:00 [41/207] merge --only bank_dna --no-link (local)
+2026-08-09T02:53:21.882173+00:00   OK bank_dna 0.9s
+2026-08-09T02:53:21.899010+00:00 [42/207] merge --only bank_dr_greenthumb --no-link (local)
+2026-08-09T02:53:26.665640+00:00   OK bank_dr_greenthumb 4.7s
+2026-08-09T02:53:26.751811+00:00 [43/207] merge --only bank_duppy_sensi_genetics --no-link (local)
+2026-08-09T02:53:46.518970+00:00   OK bank_duppy_sensi_genetics 18.4s
+2026-08-09T02:53:46.607054+00:00 [44/207] merge --only bank_dutchpassion --no-link (local)
+2026-08-09T02:54:02.823953+00:00   OK bank_dutchpassion 15.4s
+2026-08-09T02:54:03.239728+00:00 [45/207] merge --only bank_empire_breeding_co --no-link (local)
+2026-08-09T02:54:13.023133+00:00   OK bank_empire_breeding_co 9.7s
+2026-08-09T02:54:13.879072+00:00 [46/207] merge --only bank_energenetics_old_world_farm --no-link (local)
+2026-08-09T02:54:36.991398+00:00   OK bank_energenetics_old_world_farm 22.4s
+2026-08-09T02:54:37.080744+00:00 [47/207] merge --only bank_expert_seeds --no-link (local)
+2026-08-09T02:55:35.397104+00:00   OK bank_expert_seeds 57.5s
+2026-08-09T02:55:35.455156+00:00 [48/207] merge --only bank_fastbuds --no-link (local)
+2026-08-09T02:56:29.378318+00:00   OK bank_fastbuds 52.5s
+2026-08-09T02:56:29.454456+00:00 [49/207] merge --only bank_finest_picker_genetics --no-link (local)
+2026-08-09T02:57:28.642963+00:00   OK bank_finest_picker_genetics 57.9s
+2026-08-09T02:57:29.725302+00:00 [50/207] merge --only bank_finola --no-link (local)
+2026-08-09T02:58:08.655149+00:00   OK bank_finola 37.1s
+2026-08-09T02:58:09.201983+00:00 [51/207] merge --only bank_flying_dutchmen --no-link (local)
+2026-08-09T02:58:40.629020+00:00   OK bank_flying_dutchmen 30.1s
+2026-08-09T02:58:41.693919+00:00 [52/207] merge --only bank_flying_genetics --no-link (local)
+2026-08-09T02:59:20.600201+00:00   OK bank_flying_genetics 38.0s
+2026-08-09T02:59:21.327473+00:00 [53/207] merge --only bank_freedom_of_seeds --no-link (local)
+2026-08-09T03:01:20.377427+00:00   OK bank_freedom_of_seeds 116.6s
+2026-08-09T03:01:21.475864+00:00 [54/207] merge --only bank_freedom_seeds --no-link (local)
+2026-08-09T03:01:43.880324+00:00   OK bank_freedom_seeds 21.7s
+2026-08-09T03:01:44.416044+00:00 [55/207] merge --only bank_freestone_genetics --no-link (local)
+2026-08-09T03:02:10.525439+00:00   OK bank_freestone_genetics 24.9s
+2026-08-09T03:02:11.300503+00:00 [56/207] merge --only bank_gea_seeds --no-link (local)
+2026-08-09T03:02:45.691968+00:00   OK bank_gea_seeds 33.2s
+2026-08-09T03:02:46.666487+00:00 [57/207] merge --only bank_gnostic_seeds --no-link (local)
+2026-08-09T03:03:17.581822+00:00   OK bank_gnostic_seeds 29.0s
+2026-08-09T03:03:17.730973+00:00 [58/207] merge --only bank_goat_and_monkey_seeds --no-link (local)
+2026-08-09T03:03:46.129456+00:00   OK bank_goat_and_monkey_seeds 27.1s
+2026-08-09T03:03:47.159437+00:00 [59/207] merge --only bank_golden_temple --no-link (local)
+2026-08-09T03:04:18.566333+00:00   OK bank_golden_temple 30.1s
+2026-08-09T03:04:19.006257+00:00 [60/207] merge --only bank_green_rose_seeds --no-link (local)
+2026-08-09T03:04:46.293141+00:00   OK bank_green_rose_seeds 26.9s
+2026-08-09T03:04:46.762741+00:00 [61/207] merge --only bank_greenhouse --no-link (local)
+2026-08-09T03:05:14.497770+00:00   OK bank_greenhouse 27.2s
+2026-08-09T03:05:14.646040+00:00 [62/207] merge --only bank_greenlabel_seeds --no-link (local)
+2026-08-09T03:05:47.727095+00:00   OK bank_greenlabel_seeds 32.4s
+2026-08-09T03:05:48.780916+00:00 [63/207] merge --only bank_hang_on_genetics --no-link (local)
+2026-08-09T03:06:22.392465+00:00   OK bank_hang_on_genetics 33.0s
+2026-08-09T03:06:22.920126+00:00 [64/207] merge --only bank_hemcy_genetics --no-link (local)
+2026-08-09T03:06:59.084645+00:00   OK bank_hemcy_genetics 34.7s
+2026-08-09T03:07:00.111574+00:00 [65/207] merge --only bank_herbies --no-link (local)
+2026-08-09T03:08:48.479843+00:00   OK bank_herbies 107.0s
+2026-08-09T03:08:48.632174+00:00 [66/207] merge --only bank_holy_perogy --no-link (local)
+2026-08-09T03:09:18.825492+00:00   OK bank_holy_perogy 29.6s
+2026-08-09T03:09:19.949992+00:00 [67/207] merge --only bank_honey_pot_genetics --no-link (local)
+2026-08-09T03:09:51.292730+00:00   OK bank_honey_pot_genetics 30.0s
+2026-08-09T03:09:51.591895+00:00 [68/207] merge --only bank_hortilab --no-link (local)
+2026-08-09T03:10:19.969592+00:00   OK bank_hortilab 28.2s
+2026-08-09T03:10:20.245453+00:00 [69/207] merge --only bank_humboldt_seed_company --no-link (local)
+2026-08-09T03:10:55.252022+00:00   OK bank_humboldt_seed_company 34.4s
+2026-08-09T03:10:55.337033+00:00 [70/207] merge --only bank_hybrid_department --no-link (local)
+2026-08-09T03:11:26.736920+00:00   OK bank_hybrid_department 31.2s
+2026-08-09T03:11:27.163241+00:00 [71/207] merge --only bank_hyp3rids --no-link (local)
+2026-08-09T03:12:06.454015+00:00   OK bank_hyp3rids 37.9s
+2026-08-09T03:12:07.088274+00:00 [72/207] merge --only bank_ilgm --no-link (local)
+2026-08-09T03:12:33.678401+00:00   OK bank_ilgm 25.6s
+2026-08-09T03:12:33.814221+00:00 [73/207] merge --only bank_just_seed_co --no-link (local)
+2026-08-09T03:12:59.799886+00:00   OK bank_just_seed_co 25.3s
+2026-08-09T03:13:00.677655+00:00 [74/207] merge --only bank_kalashnikov_seeds --no-link (local)
+2026-08-09T03:13:17.098819+00:00   OK bank_kalashnikov_seeds 15.6s
+2026-08-09T03:13:17.176635+00:00 [75/207] merge --only bank_kindway_farms --no-link (local)
+2026-08-09T03:13:39.488432+00:00   OK bank_kindway_farms 22.2s
+2026-08-09T03:13:39.556423+00:00 [76/207] merge --only bank_kropduster --no-link (local)
+2026-08-09T03:14:03.773995+00:00   OK bank_kropduster 23.8s
+2026-08-09T03:14:03.942785+00:00 [77/207] merge --only bank_la_chanvriere --no-link (local)
+2026-08-09T03:14:24.931792+00:00   OK bank_la_chanvriere 20.3s
+2026-08-09T03:14:25.297954+00:00 [78/207] merge --only bank_la_devils_lettuce --no-link (local)
+2026-08-09T03:14:54.449337+00:00   OK bank_la_devils_lettuce 28.6s
+2026-08-09T03:14:55.273626+00:00 [79/207] merge --only bank_liberty_seeds --no-link (local)
+2026-08-09T03:15:41.759896+00:00   OK bank_liberty_seeds 44.0s
+2026-08-09T03:15:43.328022+00:00 [80/207] merge --only bank_light_seeker_seeds --no-link (local)
+2026-08-09T03:16:20.197730+00:00   OK bank_light_seeker_seeds 35.5s
+2026-08-09T03:16:21.927974+00:00 [81/207] merge --only bank_lit_farms --no-link (local)
+2026-08-09T03:17:23.712139+00:00   OK bank_lit_farms 60.8s
+2026-08-09T03:17:24.571596+00:00 [82/207] merge --only bank_love_genetics --no-link (local)
+2026-08-09T03:18:33.195055+00:00   OK bank_love_genetics 67.7s
+2026-08-09T03:18:34.825688+00:00 [83/207] merge --only bank_lovin_in_her_eyes --no-link (local)
+2026-08-09T03:18:57.939598+00:00   OK bank_lovin_in_her_eyes 21.4s
+2026-08-09T03:18:59.000901+00:00 [84/207] merge --only bank_makka_seeds --no-link (local)
+2026-08-09T03:19:23.130535+00:00   OK bank_makka_seeds 22.7s
+2026-08-09T03:19:23.712049+00:00 [85/207] merge --only bank_mandalorian_genetics --no-link (local)
+2026-08-09T03:19:47.001503+00:00   OK bank_mandalorian_genetics 21.6s
+2026-08-09T03:19:47.653753+00:00 [86/207] merge --only bank_marshall_seeds --no-link (local)
+2026-08-09T03:20:14.047148+00:00   OK bank_marshall_seeds 24.4s
+2026-08-09T03:20:15.306500+00:00 [87/207] merge --only bank_mephisto --no-link (local)
+2026-08-09T03:20:49.626231+00:00   OK bank_mephisto 33.8s
+2026-08-09T03:20:49.744141+00:00 [88/207] merge --only bank_meraki_genetics --no-link (local)
+2026-08-09T03:21:23.923027+00:00   OK bank_meraki_genetics 33.9s
+2026-08-09T03:21:24.508772+00:00 [89/207] merge --only bank_mgb_worldwide --no-link (local)
+2026-08-09T03:21:43.216025+00:00   OK bank_mgb_worldwide 18.3s
+2026-08-09T03:21:43.267492+00:00 [90/207] merge --only bank_midnight_roots_genetics --no-link (local)
+2026-08-09T03:21:50.046048+00:00   OK bank_midnight_roots_genetics 5.7s
+2026-08-09T03:21:51.145323+00:00 [91/207] merge --only bank_moe_yield --no-link (local)
+2026-08-09T03:21:58.499993+00:00   OK bank_moe_yield 6.4s
+2026-08-09T03:21:58.574640+00:00 [92/207] merge --only bank_mog_seeds --no-link (local)
+2026-08-09T03:22:14.041834+00:00   OK bank_mog_seeds 14.6s
+2026-08-09T03:22:14.788809+00:00 [93/207] merge --only bank_multiverse --no-link (local)
+2026-08-09T03:22:53.575934+00:00   OK bank_multiverse 38.6s
+2026-08-09T03:22:53.704710+00:00 [94/207] merge --only bank_naledi_seeds --no-link (local)
+2026-08-09T03:23:19.580186+00:00   OK bank_naledi_seeds 25.7s
+2026-08-09T03:23:19.833454+00:00 [95/207] merge --only bank_nation_of_kamas --no-link (local)
+2026-08-09T03:23:47.847518+00:00   OK bank_nation_of_kamas 27.3s
+2026-08-09T03:23:48.482119+00:00 [96/207] merge --only bank_newt_brothers_genetics --no-link (local)
+2026-08-09T03:24:16.690436+00:00   OK bank_newt_brothers_genetics 27.4s
+2026-08-09T03:24:16.771921+00:00 [97/207] merge --only bank_next_generation_seed_company --no-link (local)
+2026-08-09T03:24:42.480230+00:00   OK bank_next_generation_seed_company 25.2s
+2026-08-09T03:24:43.000566+00:00 [98/207] merge --only bank_norstar_genetics --no-link (local)
+2026-08-09T03:25:04.771098+00:00   OK bank_norstar_genetics 21.5s
+2026-08-09T03:25:04.838848+00:00 [99/207] merge --only bank_northern_virginia_hemp_company --no-link (local)
+2026-08-09T03:25:32.170600+00:00   OK bank_northern_virginia_hemp_company 26.6s
+2026-08-09T03:25:33.171764+00:00 [100/207] merge --only bank_oa_seeds --no-link (local)
+2026-08-09T03:26:02.065787+00:00   OK bank_oa_seeds 28.3s
+2026-08-09T03:26:02.170409+00:00 [101/207] merge --only bank_ocean_grown_seeds --no-link (local)
+2026-08-09T03:26:29.093993+00:00   OK bank_ocean_grown_seeds 26.4s
+2026-08-09T03:26:30.520196+00:00 [102/207] merge --only bank_olympic_seeds --no-link (local)
+2026-08-09T03:26:53.256921+00:00   OK bank_olympic_seeds 20.8s
+2026-08-09T03:26:53.617929+00:00 [103/207] merge --only bank_organic_seeds --no-link (local)
+2026-08-09T03:27:22.820352+00:00   OK bank_organic_seeds 28.7s
+2026-08-09T03:27:23.453127+00:00 [104/207] merge --only bank_original_sensible_seeds --no-link (local)
+2026-08-09T03:27:52.359144+00:00   OK bank_original_sensible_seeds 26.0s
+2026-08-09T03:27:53.377573+00:00 [105/207] merge --only bank_pacific --no-link (local)
+2026-08-09T03:28:36.510249+00:00   OK bank_pacific 41.9s
+2026-08-09T03:28:37.751927+00:00 [106/207] merge --only bank_panther_genetics --no-link (local)
+2026-08-09T03:29:10.240994+00:00   OK bank_panther_genetics 31.3s
+2026-08-09T03:29:11.529198+00:00 [107/207] merge --only bank_paradise_seeds --no-link (local)
+2026-08-09T03:29:57.131043+00:00   OK bank_paradise_seeds 43.7s
+2026-08-09T03:29:58.454255+00:00 [108/207] merge --only bank_phat_panda --no-link (local)
+2026-08-09T03:30:34.978061+00:00   OK bank_phat_panda 34.7s
+2026-08-09T03:30:35.399406+00:00 [109/207] merge --only bank_pheno_finder_seeds --no-link (local)
+2026-08-09T03:31:17.108471+00:00   OK bank_pheno_finder_seeds 40.6s
+2026-08-09T03:31:17.752043+00:00 [110/207] merge --only bank_philosopher_seeds --no-link (local)
+2026-08-09T03:31:47.007042+00:00   OK bank_philosopher_seeds 28.7s
+2026-08-09T03:31:47.534898+00:00 [111/207] merge --only bank_pinehurst --no-link (local)
+2026-08-09T03:32:27.935223+00:00   OK bank_pinehurst 39.1s
+2026-08-09T03:32:28.471710+00:00 [112/207] merge --only bank_pnw_cultivar --no-link (local)
+2026-08-09T03:32:53.935289+00:00   OK bank_pnw_cultivar 24.2s
+2026-08-09T03:32:54.675586+00:00 [113/207] merge --only bank_pure_instinto --no-link (local)
+2026-08-09T03:33:29.658437+00:00   OK bank_pure_instinto 32.5s
+2026-08-09T03:33:29.770525+00:00 [114/207] merge --only bank_purple_caper_seeds --no-link (local)
+2026-08-09T03:34:00.491486+00:00   OK bank_purple_caper_seeds 30.2s
+2026-08-09T03:34:01.069496+00:00 [115/207] merge --only bank_purple_city_genetics --no-link (local)
+2026-08-09T03:34:27.383844+00:00   OK bank_purple_city_genetics 24.1s
+2026-08-09T03:34:28.351967+00:00 [116/207] merge --only bank_pyramid_seeds --no-link (local)
+2026-08-09T03:35:00.766452+00:00   OK bank_pyramid_seeds 32.2s
+2026-08-09T03:35:02.285569+00:00 [117/207] merge --only bank_rare_dankness_seeds --no-link (local)
+2026-08-09T03:35:44.661357+00:00   OK bank_rare_dankness_seeds 40.8s
+2026-08-09T03:35:45.825792+00:00 [118/207] merge --only bank_real_gorilla_seeds --no-link (local)
+2026-08-09T03:36:16.077323+00:00   OK bank_real_gorilla_seeds 29.0s
+2026-08-09T03:36:17.006722+00:00 [119/207] merge --only bank_reefermans_seeds --no-link (local)
+2026-08-09T03:37:24.425095+00:00   OK bank_reefermans_seeds 67.1s
+2026-08-09T03:37:24.743669+00:00 [120/207] merge --only bank_reggae_seeds --no-link (local)
+2026-08-09T03:38:02.650581+00:00   OK bank_reggae_seeds 36.9s
+2026-08-09T03:38:03.772819+00:00 [121/207] merge --only bank_rheinland_genetics --no-link (local)
+2026-08-09T03:38:31.745105+00:00   OK bank_rheinland_genetics 26.5s
+2026-08-09T03:38:32.556151+00:00 [122/207] merge --only bank_royal_queen --no-link (local)
+2026-08-09T03:39:03.348528+00:00   OK bank_royal_queen 29.6s
+2026-08-09T03:39:04.724828+00:00 [123/207] merge --only bank_saiyan_seeds --no-link (local)
+2026-08-09T03:39:32.963174+00:00   OK bank_saiyan_seeds 25.6s
+2026-08-09T03:39:34.121084+00:00 [124/207] merge --only bank_samsara_seeds --no-link (local)
+2026-08-09T03:39:53.433740+00:00   OK bank_samsara_seeds 18.4s
+2026-08-09T03:39:54.361477+00:00 [125/207] merge --only bank_seattle_chronic_seeds --no-link (local)
+2026-08-09T03:40:22.029424+00:00   OK bank_seattle_chronic_seeds 26.3s
+2026-08-09T03:40:23.356381+00:00 [126/207] merge --only bank_seed_attics --no-link (local)
+2026-08-09T03:40:44.570518+00:00   OK bank_seed_attics 19.6s
+2026-08-09T03:40:45.395104+00:00 [127/207] merge --only bank_seed_supreme --no-link (local)
+2026-08-09T03:41:20.374493+00:00   OK bank_seed_supreme 34.5s
+2026-08-09T03:41:20.454200+00:00 [128/207] merge --only bank_seedstockers --no-link (local)
+2026-08-09T03:41:48.084015+00:00   OK bank_seedstockers 26.8s
+2026-08-09T03:41:49.465082+00:00 [129/207] merge --only bank_sensi_seeds --no-link (local)
+2026-08-09T03:42:47.040351+00:00   OK bank_sensi_seeds 55.5s
+2026-08-09T03:42:48.014891+00:00 [130/207] merge --only bank_serious_seeds --no-link (local)
+2026-08-09T03:43:12.515317+00:00   OK bank_serious_seeds 22.9s
+2026-08-09T03:43:13.115605+00:00 [131/207] merge --only bank_sherpa_seeds --no-link (local)
+2026-08-09T03:43:44.562118+00:00   OK bank_sherpa_seeds 30.2s
+2026-08-09T03:43:44.678360+00:00 [132/207] merge --only bank_shuga_seeds --no-link (local)
+2026-08-09T03:44:13.620097+00:00   OK bank_shuga_seeds 28.4s
+2026-08-09T03:44:15.187230+00:00 [133/207] merge --only bank_silberhaze_genetics --no-link (local)
+2026-08-09T03:44:43.027338+00:00   OK bank_silberhaze_genetics 25.9s
+2026-08-09T03:44:44.343924+00:00 [134/207] merge --only bank_silent_seeds --no-link (local)
+2026-08-09T03:45:08.128464+00:00   OK bank_silent_seeds 22.7s
+2026-08-09T03:45:08.496449+00:00 [135/207] merge --only bank_smoke_one_genetics --no-link (local)
+2026-08-09T03:45:31.110480+00:00   OK bank_smoke_one_genetics 20.6s
+2026-08-09T03:45:32.101576+00:00 [136/207] merge --only bank_solfire_gardens --no-link (local)
+2026-08-09T03:46:01.852952+00:00   OK bank_solfire_gardens 27.7s
+2026-08-09T03:46:02.536092+00:00 [137/207] merge --only bank_soma_seeds --no-link (local)
+2026-08-09T03:46:24.944574+00:00   OK bank_soma_seeds 21.5s
+2026-08-09T03:46:25.706595+00:00 [138/207] merge --only bank_spice_of_life_seeds --no-link (local)
+2026-08-09T03:46:48.740504+00:00   OK bank_spice_of_life_seeds 21.1s
+2026-08-09T03:46:50.063954+00:00 [139/207] merge --only bank_stinkys_genetics --no-link (local)
+2026-08-09T03:47:16.686737+00:00   OK bank_stinkys_genetics 25.8s
+2026-08-09T03:47:16.789204+00:00 [140/207] merge --only bank_sunleaf_seed_co --no-link (local)
+2026-08-09T03:47:43.783562+00:00   OK bank_sunleaf_seed_co 26.4s
+2026-08-09T03:47:44.242524+00:00 [141/207] merge --only bank_sweet_seeds --no-link (local)
+2026-08-09T03:48:14.404941+00:00   OK bank_sweet_seeds 29.1s
+2026-08-09T03:48:15.710894+00:00 [142/207] merge --only bank_swordzman --no-link (local)
+2026-08-09T03:48:47.248900+00:00   OK bank_swordzman 30.3s
+2026-08-09T03:48:48.002484+00:00 [143/207] merge --only bank_tastebudz_seeds --no-link (local)
+2026-08-09T03:49:24.727440+00:00   OK bank_tastebudz_seeds 35.5s
+2026-08-09T03:49:25.273379+00:00 [144/207] merge --only bank_terp_fi3nd --no-link (local)
+2026-08-09T03:50:02.505711+00:00   OK bank_terp_fi3nd 35.9s
+2026-08-09T03:50:03.129545+00:00 [145/207] merge --only bank_terp_hogz --no-link (local)
+2026-08-09T03:50:39.815888+00:00   OK bank_terp_hogz 35.2s
+2026-08-09T03:50:40.199151+00:00 [146/207] merge --only bank_th_seeds --no-link (local)
+2026-08-09T03:51:10.346824+00:00   OK bank_th_seeds 27.2s
+2026-08-09T03:51:11.679514+00:00 [147/207] merge --only bank_the_bulldog_seeds --no-link (local)
+2026-08-09T03:51:43.108113+00:00   OK bank_the_bulldog_seeds 30.2s
+2026-08-09T03:51:44.412068+00:00 [148/207] merge --only bank_the_cali_connection --no-link (local)
+2026-08-09T03:52:51.217247+00:00   OK bank_the_cali_connection 65.7s
+2026-08-09T03:52:51.802292+00:00 [149/207] merge --only bank_the_plant_preservation --no-link (local)
+2026-08-09T03:53:15.766242+00:00   OK bank_the_plant_preservation 22.9s
+2026-08-09T03:53:16.007600+00:00 [150/207] merge --only bank_the_real_seed_company --no-link (local)
+2026-08-09T03:53:44.712749+00:00   OK bank_the_real_seed_company 28.5s
+2026-08-09T03:53:44.983904+00:00 [151/207] merge --only bank_tiki_madman --no-link (local)
+2026-08-09T03:54:12.054807+00:00   OK bank_tiki_madman 26.4s
+2026-08-09T03:54:13.408869+00:00 [152/207] merge --only bank_top_tao_seeds --no-link (local)
+2026-08-09T03:54:34.580852+00:00   OK bank_top_tao_seeds 20.2s
+2026-08-09T03:54:34.966103+00:00 [153/207] merge --only bank_treemoney --no-link (local)
+2026-08-09T03:54:56.449583+00:00   OK bank_treemoney 20.9s
+2026-08-09T03:54:58.244238+00:00 [154/207] merge --only bank_trich_house --no-link (local)
+2026-08-09T03:55:16.320217+00:00   OK bank_trich_house 15.4s
+2026-08-09T03:55:16.927178+00:00 [155/207] merge --only bank_truenorth --no-link (local)
+2026-08-09T03:55:57.116044+00:00   OK bank_truenorth 38.8s
+2026-08-09T03:55:57.230448+00:00 [156/207] merge --only bank_turn_it_up_genetics --no-link (local)
+2026-08-09T03:56:18.644034+00:00   OK bank_turn_it_up_genetics 21.1s
+2026-08-09T03:56:20.006922+00:00 [157/207] merge --only bank_turnspit_genetics --no-link (local)
+2026-08-09T03:56:35.437237+00:00   OK bank_turnspit_genetics 14.4s
+2026-08-09T03:56:35.526644+00:00 [158/207] merge --only bank_twisty_seeds --no-link (local)
+2026-08-09T03:56:49.145925+00:00   OK bank_twisty_seeds 13.0s
+2026-08-09T03:56:49.883549+00:00 [159/207] merge --only bank_ultra_fire_genetics --no-link (local)
+2026-08-09T03:56:53.081229+00:00   OK bank_ultra_fire_genetics 3.1s
+2026-08-09T03:56:53.147045+00:00 [160/207] merge --only bank_underground_originals --no-link (local)
+2026-08-09T03:57:01.956650+00:00   OK bank_underground_originals 7.5s
+2026-08-09T03:57:02.160874+00:00 [161/207] merge --only bank_useful_seeds --no-link (local)
+2026-08-09T03:57:44.630534+00:00   OK bank_useful_seeds 40.6s
+2026-08-09T03:57:45.532723+00:00 [162/207] merge --only bank_victory_seeds --no-link (local)
+2026-08-09T03:58:15.244283+00:00   OK bank_victory_seeds 28.0s
+2026-08-09T03:58:15.751512+00:00 [163/207] merge --only bank_vida_verde_seeds --no-link (local)
+2026-08-09T03:58:46.377253+00:00   OK bank_vida_verde_seeds 29.2s
+2026-08-09T03:58:47.472942+00:00 [164/207] merge --only bank_warped_genetics --no-link (local)
+2026-08-09T03:59:27.744581+00:00   OK bank_warped_genetics 38.9s
+2026-08-09T03:59:27.876337+00:00 [165/207] merge --only bank_weed_should_taste_good --no-link (local)
+2026-08-09T04:00:01.212839+00:00   OK bank_weed_should_taste_good 32.7s
+2026-08-09T04:00:02.017185+00:00 [166/207] merge --only bank_weedseedsexpress --no-link (local)

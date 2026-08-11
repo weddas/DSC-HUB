@@ -1,0 +1,14 @@
+{
+  "mode": "local_ssd",
+  "ok": 205,
+  "fail": 0,
+  "skipped_already_ok": 2,
+  "total": 207,
+  "done_ok_total": 208,
+  "phytochem_chem_before": 0,
+  "phytochem_chem_after": 6174,
+  "end_link_rc": 0,
+  "index_rc": 0,
+  "local_master": "C:\\Users\\cmgwe\\AppData\\Local\\Temp\\dsc_n087_merge_work\\dsc_brain.sqlite3",
+  "ts": "2026-08-09T06:02:30.574352+00:00"
+}
