@@ -41,6 +41,42 @@ Then: HA **Developer Tools → YAML → Check configuration** → restart Core
 `custom_components` staging from git. Panel JS under `/local` / integration
 `www` updates on sync after the Python package is present.
 
+### Dual path (React shell vs Lit Twin)
+
+| Path | Artifact | Delivery |
+|---|---|---|
+| React product shell | `www/dsc-hub-panel.js` (Vite) | Sync `custom_components/dsc_hub` |
+| Lit Twin / maps / Build | `homeassistant/www/*.js` → `/local` **or** HACS `dist/DSC-HUB.js` | Sync www concat **or** HACS Redownload |
+
+Plant Seat drawers + honesty rail are **panel-only** (not in the HACS bundle).
+
+### Twin keep-alive
+
+`components/TwinKeepAlive.tsx` mounts once and persists `dsc-the-dash-card`
+across hash routes (CSS-shown on `/live/twin`; legacy `/ops/dash` still active).
+`ensureLocalCards.ts` injects, in order: `/local/DSC-HUB.js` →
+`/local/dsc-system-map-card.js` → `/hacsfiles/DSC-HUB/DSC-HUB.js`.
+
+```mermaid
+flowchart TD
+  open["Open /dsc-hub"] --> ka["TwinKeepAlive mount"]
+  ka --> local{"/local bundle?"}
+  local -->|yes| ce["customElements dsc-the-dash-card"]
+  local -->|no| hacs["HACS /hacsfiles/DSC-HUB/DSC-HUB.js"]
+  hacs --> ce
+  ce --> hide["CSS-hide off Twin routes"]
+  hide --> return["Return to /live/twin — no cold WebGL"]
+```
+
+**Constraints**
+
+- Remount only if the host is lost. Leaving Twin must **not** cold-dispose WebGL.
+- Missing card → deploy Sync www or HACS Redownload, then hard-refresh.
+- Prefer `/local` when HACS and Sync disagree — load order tries `/local` first.
+- After Lit edits under `homeassistant/www/`, run `./scripts/sync-hacs-dist.sh`
+  (or wait for `hacs-dist.yml`) and confirm `git diff -- dist/` is empty before
+  treating HACS as current. See [`scripts/HACS-FRONTEND.md`](../../scripts/HACS-FRONTEND.md).
+
 ## Visual system (7.0)
 
 Modern dark + **full colour** (blues / purples / greens / teal / amber by role) —

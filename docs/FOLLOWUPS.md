@@ -1840,3 +1840,17 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 - Curated MDI-in-panel if custom SVG registry gaps remain on Mode/demand chips.
 - Native React Catalog/Build (still Lit hosts); Lovelace YAML removal still deferred.
 - Port remaining Lovelace Climate ladder / Learning cal wizard depth into Tune/Live.
+
+## 2026-08-11 — HACS dist sync drift after Surface 7.0
+
+### done
+- Trigger `60ccefb` `chore(hacs): sync dist/ from homeassistant/www` left `dist/DSC-HUB.js`
+  drifted from `homeassistant/www` SoT (Twin HUD bands / bloom / ribbon radii).
+- Restored via `./scripts/sync-hacs-dist.sh` on docs branch; ops runbook:
+  [`scripts/HACS-FRONTEND.md`](../scripts/HACS-FRONTEND.md) · Twin dual-path:
+  [`docs/qa/LIVE-UI-CUSTOM-PANEL.md`](qa/LIVE-UI-CUSTOM-PANEL.md).
+
+### verify
+- [ ] `./scripts/sync-hacs-dist.sh && git diff --stat -- dist/` empty on master tip
+- [ ] HACS Redownload + hard-refresh shows Twin RH band + VPD mini callouts (6.3 HUD retained)
+- [ ] TwinKeepAlive leave/return still no cold WebGL; missing-card path still points at `/local` first
