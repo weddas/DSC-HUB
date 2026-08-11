@@ -387,6 +387,12 @@ text_sensor:
         code = "WRB";
       }
       std::string pref = id(preferred_wifi_bssid).state;
+      // SoftAP-local CHX: prefer SoftAP Anchor (${bridge_mac}) over Nest NVS preferred.
+      {
+        std::string bridge = "${bridge_mac}";
+        if (bridge.size() == 17 && bridge != "00:00:00:00:00:00")
+          pref = bridge;
+      }
       if (pref.size() == 17) {
         // last octet + nibble of prior
         char hex[3] = { pref[15], pref[16], 0 };
@@ -514,7 +520,8 @@ script:
     mode: single
     then:
       - lambda: |-
-          if (!id(clock_valid)) {
+          // SoftAP Fleet Fix: while fix_active, pin SoftAP + bounce even if clock invalid.
+          if (!id(clock_valid) && !id(fix_active)) {
             id(evt_pending_code) = "CLK_HOLD";
             id(evt_pending_detail) = "jump";
             id(emit_evt).execute();

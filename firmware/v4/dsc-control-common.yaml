@@ -140,6 +140,10 @@ substitutions:
   hub_mac: "84:1F:E8:16:E6:60"        # DSC-HUB
   # MUST match dsc-hub-espnow-primary.yaml. Not the default 0xABCD.
   espnow_cmd_tag: "54727"             # 0xD5C7
+  # SoftAP Anchor (lab stub overrides; kit may leave zeros until provisioned).
+  anchor_ssid: "DSC-Anchor"
+  wifi_bssid: "00:00:00:00:00:00"
+  softap_bssid: "00:00:00:00:00:00"
 
 esphome:
   name: ${name}
@@ -151,7 +155,7 @@ esphome:
     # the dashboard and HA's device page both described DSC-CONTROL as
     # being the DSC HUB. Purely cosmetic, but confusing enough to matter.
     name: "digital_emotions.dsc-control"
-    version: "5.2.0"
+    version: "6.0.0.0"
   on_boot:
     # Seed the 0xDC command seq from hardware RNG so a panel reboot is
     # unlikely to replay the hub's last-seen seq even before the hub's
@@ -172,7 +176,7 @@ esphome:
       then:
         - light.turn_off: backlight
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 5.2.0 paused — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 6.0.0.0 paused — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
             id(boot_ui_ready) = false;
@@ -191,7 +195,7 @@ esphome:
               lambda: 'return heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL) < 20000;'
             then:
               - lambda: |-
-                  ESP_LOGW("boot", "DSC-CONTROL 5.2.0 heap still tight largest=%u — waiting longer",
+                  ESP_LOGW("boot", "DSC-CONTROL 6.0.0.0 heap still tight largest=%u — waiting longer",
                            (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
               - delay: 10s
         - lvgl.page.show: page_boot
@@ -200,7 +204,7 @@ esphome:
             id: boot_paint
             pct: 8
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 5.2.0 resume-lite — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 6.0.0.0 resume-lite — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
             id(touch_guard_until) = millis() + 5000;
@@ -219,12 +223,12 @@ esphome:
               lambda: 'return id(wifi_conn);'
             timeout: 25s
         - lambda: |-
-            id(boot_msg) = id(wifi_conn) ? "syncing Nest AP..." : "no Wi-Fi - announcing...";
+            id(boot_msg) = id(wifi_conn) ? "syncing SoftAP Anchor..." : "no Wi-Fi - announcing...";
         - script.execute:
             id: boot_paint
             pct: 24
-        # During Starting (before full GUI): wait for hub 0xD0 BSSID and
-        # prefer that Nest point so glass matches hub channel/AP.
+        # During Starting (before full GUI): wait for hub 0xD0 SoftAP
+        # Anchor BSSID and adopt only if it matches compile-time SoftAP.
         - wait_until:
             condition:
               lambda: 'return id(hub_ap_bssid_ok);'
@@ -295,7 +299,7 @@ esphome:
             id: boot_paint
             pct: 100
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 5.2.0 post-lite — free_heap=%u largest=%u hub=%d cfg=%d soil=%d",
+            ESP_LOGI("boot", "DSC-CONTROL 6.0.0.0 post-lite — free_heap=%u largest=%u hub=%d cfg=%d soil=%d",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL),
                      (int) (id(gv_hub_last) != 0), (int) id(gv_cfg_ok), (int) id(gv_soil_ok));
@@ -304,14 +308,14 @@ esphome:
         - lambda: 'lv_obj_clear_flag(id(tabbar), LV_OBJ_FLAG_HIDDEN);'
         - lvgl.page.show: page_pulse
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 5.2.0 resume-full — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 6.0.0.0 resume-full — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
             id(touch_guard_until) = millis() + 2000;
         - lvgl.resume:
         - delay: 3s
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 5.2.0 UI armed — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 6.0.0.0 UI armed — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
             id(boot_ui_ready) = true;
@@ -1260,7 +1264,7 @@ text_sensor:
     name: "Firmware Version"
     id: fw_version
     icon: mdi:tag-check
-    lambda: 'return {"5.2.0"};'
+    lambda: 'return {"6.0.0.0"};'
     update_interval: 60s
   - platform: template
     id: sel_stage
@@ -2220,7 +2224,7 @@ lvgl:
             y: 158
             text_color: 0x5A6472
         - label:
-            text: "v5.2.0"
+            text: "v6.0.0.0"
             text_font: f_small
             align: TOP_MID
             y: 188
@@ -3930,7 +3934,7 @@ lvgl:
                     - lambda: 'id(ui_vpd_editor) = true;'
                     - lvgl.page.show: page_set_vpd
                     - script.execute: refresh_ui
-              - label: {text: "DSC-CONTROL v5.2.0  ·  ESP-NOW primary", text_font: f_small, text_color: 0x3A4550, pad_top: 8, pad_bottom: 8}
+              - label: {text: "DSC-CONTROL v6.0.0.0  ·  ESP-NOW primary", text_font: f_small, text_color: 0x3A4550, pad_top: 8, pad_bottom: 8}
 # ==================================================================
 #  SCRIPTS
 # ==================================================================
@@ -3963,22 +3967,43 @@ script:
   # v5.1.4: pend_* + write-through gv_* ONLY — no lv_label_set_text under the
   # tap (Full Auto / Modes letter-draw crashes). ui_dirty lets the 200 ms
   # drain paint grey via refresh_ui once the indev stack is clear.
-  # Prefer hub's SoftAP/preferred AP (from 0xD0). Runs during Starting before full GUI.
+  # SoftAP-guard: adopt hub 0xD0 BSSID only when it matches compile-time SoftAP
+  # Anchor (${wifi_bssid}). Nest BSSID from 0xD0 is ignored.
   - id: adopt_hub_wifi_ap
     mode: single
     then:
       - lambda: |-
           if (!id(hub_ap_bssid_ok)) return;
+          std::string anchor = "${wifi_bssid}";
+          if (anchor.size() != 17 || anchor == "00:00:00:00:00:00") {
+            ESP_LOGW("wifi", "SoftAP Anchor unset — ignoring 0xD0 adopt");
+            return;
+          }
+          uint8_t ab[6];
+          for (int i = 0; i < 6; i++) {
+            char hex[3] = { anchor[i * 3], anchor[i * 3 + 1], 0 };
+            ab[i] = (uint8_t) strtol(hex, nullptr, 16);
+          }
+          for (int i = 0; i < 6; i++) {
+            if (id(hub_ap_bssid)[i] != ab[i]) {
+              ESP_LOGW("wifi",
+                       "0xD0 BSSID %02X:%02X:%02X:%02X:%02X:%02X is not SoftAP Anchor %s — ignore Nest",
+                       id(hub_ap_bssid)[0], id(hub_ap_bssid)[1], id(hub_ap_bssid)[2],
+                       id(hub_ap_bssid)[3], id(hub_ap_bssid)[4], id(hub_ap_bssid)[5],
+                       anchor.c_str());
+              return;
+            }
+          }
           auto *w = wifi::global_wifi_component;
           if (w == nullptr || !w->is_connected()) return;
           wifi::bssid_t want{};
-          for (int i = 0; i < 6; i++) want[i] = id(hub_ap_bssid)[i];
+          for (int i = 0; i < 6; i++) want[i] = ab[i];
           w->set_sta_priority(want, 127);
           auto cur = w->wifi_bssid();
           bool same = true;
           for (int i = 0; i < 6; i++) if (cur[i] != want[i]) { same = false; break; }
           if (same) {
-            ESP_LOGI("wifi", "Already on hub preferred AP %02X:%02X:%02X:%02X:%02X:%02X",
+            ESP_LOGI("wifi", "Already on SoftAP Anchor %02X:%02X:%02X:%02X:%02X:%02X",
                      want[0], want[1], want[2], want[3], want[4], want[5]);
             return;
           }
@@ -3987,12 +4012,12 @@ script:
           if (id(link_rec_wifi_bounces) >= 3) return;
           last_adopt_ms = millis();
           id(link_rec_wifi_bounces) = id(link_rec_wifi_bounces) + 1;
-          ESP_LOGW("wifi", "Adopting hub SoftAP/preferred %02X:%02X:%02X:%02X:%02X:%02X — WiFi bounce #%d",
+          ESP_LOGW("wifi", "Adopting SoftAP Anchor %02X:%02X:%02X:%02X:%02X:%02X — WiFi bounce #%d",
                    want[0], want[1], want[2], want[3], want[4], want[5],
                    id(link_rec_wifi_bounces));
           id(link_wifi_bounce).execute();
 
-  # WiFi bounce rebinds HA API TCP and re-associates (prefers wifi_bssid / hub AP).
+  # WiFi bounce rebinds HA API TCP and re-associates (prefers SoftAP wifi_bssid).
   - id: link_wifi_bounce
     mode: single
     then:
@@ -4081,8 +4106,30 @@ script:
       - script.execute: {id: boot_paint, pct: 18}
       - delay: 300ms
 
-      # ---- 2: CONTROL (self) — SoftAP bounce between tries ----
-      - lambda: 'id(fix_phase) = 2; id(fix_try_count) = 0; id(fix_dev_ok) = id(wifi_conn);'
+      # ---- 2: CONTROL (self) — SoftAP bounce; "linked" = SoftAP SSID + Anchor BSSID ----
+      - lambda: |-
+          id(fix_phase) = 2; id(fix_try_count) = 0;
+          id(fix_dev_ok) = false;
+          if (id(wifi_conn)) {
+            const std::string &ssid = id(wifi_ssid_ts).state;
+            std::string want_ssid = "${anchor_ssid}";
+            bool ssid_ok = !want_ssid.empty() && ssid.size() >= want_ssid.size() &&
+                           ssid.compare(0, want_ssid.size(), want_ssid) == 0;
+            std::string anchor = "${wifi_bssid}";
+            bool bssid_ok = false;
+            if (ssid_ok && anchor.size() == 17 && anchor != "00:00:00:00:00:00") {
+              auto *w = wifi::global_wifi_component;
+              if (w != nullptr && w->is_connected()) {
+                auto b = w->wifi_bssid();
+                bssid_ok = true;
+                for (int i = 0; i < 6; i++) {
+                  char hex[3] = { anchor[i * 3], anchor[i * 3 + 1], 0 };
+                  if (b[i] != (uint8_t) strtol(hex, nullptr, 16)) { bssid_ok = false; break; }
+                }
+              }
+            }
+            id(fix_dev_ok) = ssid_ok && bssid_ok;
+          }
       - repeat:
           count: 5
           then:
@@ -4102,7 +4149,27 @@ script:
                       condition: {lambda: 'return id(wifi_conn);'}
                       timeout: 8s
                   - lambda: |-
-                      id(fix_dev_ok) = id(wifi_conn);
+                      id(fix_dev_ok) = false;
+                      if (id(wifi_conn)) {
+                        const std::string &ssid = id(wifi_ssid_ts).state;
+                        std::string want_ssid = "${anchor_ssid}";
+                        bool ssid_ok = !want_ssid.empty() && ssid.size() >= want_ssid.size() &&
+                                       ssid.compare(0, want_ssid.size(), want_ssid) == 0;
+                        std::string anchor = "${wifi_bssid}";
+                        bool bssid_ok = false;
+                        if (ssid_ok && anchor.size() == 17 && anchor != "00:00:00:00:00:00") {
+                          auto *w = wifi::global_wifi_component;
+                          if (w != nullptr && w->is_connected()) {
+                            auto b = w->wifi_bssid();
+                            bssid_ok = true;
+                            for (int i = 0; i < 6; i++) {
+                              char hex[3] = { anchor[i * 3], anchor[i * 3 + 1], 0 };
+                              if (b[i] != (uint8_t) strtol(hex, nullptr, 16)) { bssid_ok = false; break; }
+                            }
+                          }
+                        }
+                        id(fix_dev_ok) = ssid_ok && bssid_ok;
+                      }
                       if (id(hub_ap_bssid_ok) && id(wifi_conn))
                         id(adopt_hub_wifi_ap).execute();
       - lambda: |-
@@ -4207,13 +4274,33 @@ script:
       - delay: 300ms
       - lambda: |-
           bool pref_ok = true;
-          if (id(hub_ap_bssid_ok)) {
-            auto *w = wifi::global_wifi_component;
+          std::string anchor = "${wifi_bssid}";
+          bool have_anchor = (anchor.size() == 17 && anchor != "00:00:00:00:00:00");
+          uint8_t ab[6] = {};
+          if (have_anchor) {
+            for (int i = 0; i < 6; i++) {
+              char hex[3] = { anchor[i * 3], anchor[i * 3 + 1], 0 };
+              ab[i] = (uint8_t) strtol(hex, nullptr, 16);
+            }
+          }
+          // Prefer compile-time SoftAP Anchor BSSID over hub_ap_bssid from 0xD0.
+          if (have_anchor) {
             pref_ok = false;
+            auto *w = wifi::global_wifi_component;
             if (w != nullptr && w->is_connected()) {
               auto b = w->wifi_bssid();
               pref_ok = true;
-              for (int i = 0; i < 6; i++) if (b[i] != id(hub_ap_bssid)[i]) { pref_ok = false; break; }
+              for (int i = 0; i < 6; i++) if (b[i] != ab[i]) { pref_ok = false; break; }
+            }
+          }
+          // If hub_ap_bssid present, only accept when it matches SoftAP Anchor (Nest fails).
+          if (id(hub_ap_bssid_ok)) {
+            if (!have_anchor) {
+              pref_ok = false;
+            } else {
+              for (int i = 0; i < 6; i++) {
+                if (id(hub_ap_bssid)[i] != ab[i]) { pref_ok = false; break; }
+              }
             }
           }
           bool hub_ok = id(gv_hub_last) != 0 && (millis() - id(gv_hub_last)) < 30000u;
@@ -4276,44 +4363,59 @@ script:
             uint16_t sq=id(cmd_tx_seq)++; p[10]=sq&0xFF; p[11]=(sq>>8)&0xFF;
             return p;
 
-  # ---- RF status card (0xD5), every 10s while WiFi is up (v5.1.16) ----
-  # {0xD5,0x01,role=1(control),assoc[6],pref[6],ch,rssi_u8,status}.
-  # assoc = current associated BSSID (zeros if not connected). pref =
-  # the hub's learned Nest BSSID (hub_ap_bssid from 0xD0), zeros if
-  # never learned — this panel has no NVS "preferred AP" of its own.
-  # rssi_u8 = |RSSI| clamped 0-255 (dBm is always <=0 here). status
-  # bits: 0 wifi up, 1 clock valid, 2 have preferred AP, 3 fix_active.
+  # ---- RF status card (0xD5), every 10s (SoftAP orphan / WRB / CHX) ----
+  # Hub-compatible 12-byte layout (role=1 control):
+  #   [0]=0xD5 [1]=0x01 [2]=role [3]=channel [4]=rssi_int8
+  #   [5]=assoc_ok [6]=assoc[4] [7]=assoc[5]
+  #   [8]=pref_ok [9]=pref[4] [10]=pref[5]
+  #   [11]=status  0=OK, 1=WRB (not associated), 2=CHX (assoc != SoftAP Anchor)
+  # pref = SoftAP Anchor last-2 (${wifi_bssid}/${softap_bssid}); Nest hub_ap never advertised.
   - id: tx_rf_card
     mode: single
     then:
-      - if:
-          condition:
-            lambda: 'return id(wifi_conn);'
-          then:
-            - espnow.send:
-                address: ${hub_mac}
-                wait_for_sent: false
-                data: !lambda |-
-                  std::vector<uint8_t> p(18, 0);
-                  p[0]=0xD5; p[1]=0x01; p[2]=1;
-                  auto *w = wifi::global_wifi_component;
-                  int rssi = 0;
-                  if (w != nullptr && w->is_connected()) {
-                    auto b = w->wifi_bssid();
-                    for (int i = 0; i < 6; i++) p[3+i] = b[i];
-                    rssi = (int) w->wifi_rssi();
-                  }
-                  if (id(hub_ap_bssid_ok)) {
-                    for (int i = 0; i < 6; i++) p[9+i] = id(hub_ap_bssid)[i];
-                  }
-                  p[15] = (uint8_t) (id(wifi_channel) < 0 ? 0 : (id(wifi_channel) > 255 ? 255 : id(wifi_channel)));
-                  p[16] = (uint8_t) (rssi < 0 ? (-rssi > 255 ? 255 : -rssi) : 0);
-                  uint8_t status = 1;   // gated by the if above -> wifi is up
-                  if (id(clock_valid)) status |= 2;
-                  if (id(hub_ap_bssid_ok)) status |= 4;
-                  if (id(fix_active)) status |= 8;
-                  p[17] = status;
-                  return p;
+      - espnow.send:
+          address: ${hub_mac}
+          wait_for_sent: false
+          data: !lambda |-
+            std::vector<uint8_t> p(12, 0);
+            p[0] = 0xD5; p[1] = 0x01; p[2] = 1;  // control
+
+            std::string anchor = "${wifi_bssid}";
+            if (anchor.size() != 17 || anchor == "00:00:00:00:00:00")
+              anchor = "${softap_bssid}";
+            bool anchor_ok = (anchor.size() == 17 && anchor != "00:00:00:00:00:00");
+            uint8_t ab4 = 0, ab5 = 0;
+            if (anchor_ok) {
+              char h4[3] = { anchor[12], anchor[13], 0 };
+              char h5[3] = { anchor[15], anchor[16], 0 };
+              ab4 = (uint8_t) strtol(h4, nullptr, 16);
+              ab5 = (uint8_t) strtol(h5, nullptr, 16);
+            }
+
+            auto *w = wifi::global_wifi_component;
+            bool connected = w != nullptr && w->is_connected();
+            uint8_t status = 0;  // OK
+            if (!connected) {
+              status = 1;  // WRB
+            } else {
+              p[3] = (uint8_t) w->get_wifi_channel();
+              int rssi = (int) w->wifi_rssi();
+              if (rssi < -128) rssi = -128;
+              if (rssi > 0) rssi = 0;
+              p[4] = (uint8_t)(int8_t) rssi;
+              auto b = w->wifi_bssid();
+              p[5] = 1; p[6] = b[4]; p[7] = b[5];
+              if (anchor_ok && (b[4] != ab4 || b[5] != ab5))
+                status = 2;  // CHX SoftAP orphan
+            }
+
+            // pref = SoftAP Anchor last-2 (${wifi_bssid}/${softap_bssid}).
+            // SoftAP-guarded hub_ap matches Anchor → same last-2; Nest hub_ap never advertised.
+            if (anchor_ok) {
+              p[8] = 1; p[9] = ab4; p[10] = ab5;
+            }
+            p[11] = status;
+            return p;
 
   - id: hub_cmd
     parameters:
@@ -5562,12 +5664,13 @@ interval:
           id(spark_idx) = (i + 1) % 12;
           if (id(spark_idx) == 0) id(spark_filled) = true;
 
-  # RF status card to the hub (0xD5) — 10s while WiFi is up (v5.1.16).
+  # RF status card to the hub (0xD5) — 12-byte SoftAP orphan card every 10s
+  # (including WRB while WiFi is down).
   - interval: 10s
     then:
       - if:
           condition:
-            lambda: 'return id(boot_ui_ready) && id(wifi_conn);'
+            lambda: 'return id(boot_ui_ready);'
           then:
             - script.execute: tx_rf_card
 

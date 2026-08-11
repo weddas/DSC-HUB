@@ -10,6 +10,7 @@
 #include <esp_now.h>
 #include <esp_wifi.h>
 #include <esp_wifi_default.h>
+#include <lwip/netif.h>
 
 namespace esphome {
 namespace dsc_anchor_ap {
@@ -197,6 +198,23 @@ void DscAnchorAp::configure_ap_netif_() {
   dns.ip.u_addr.ip4 = ip_info.ip;
   esp_netif_set_dns_info(ap_netif, ESP_NETIF_DNS_MAIN, &dns);
 
+  // SoftAP OTA via NAPT dies mid-chunk with default 1500 MTU — clamp SoftAP
+  // (+ WAN when present) so MSS fits NAPT. Prefer esp_netif_set_mtu when
+  // present; else lwIP netif->mtu (ESP-IDF glue on this tree).
+  static const uint16_t kSoftApMtu = 1280;
+  auto clamp_mtu_ = [](esp_netif_t *netif, uint16_t mtu, const char *label) {
+    if (netif == nullptr)
+      return;
+    struct netif *lwip = (struct netif *) esp_netif_get_netif_impl(netif);
+    if (lwip == nullptr) {
+      ESP_LOGW(TAG, "%s: no lwIP netif for MTU clamp", label);
+      return;
+    }
+    lwip->mtu = mtu;
+    ESP_LOGI(TAG, "%s MTU set to %u (OTA/NAPT MSS clamp)", label, (unsigned) mtu);
+  };
+  clamp_mtu_(ap_netif, kSoftApMtu, "SoftAP");
+
   if (this->enable_napt_) {
 #if defined(CONFIG_LWIP_IPV4_NAPT) || defined(IP_NAPT)
     // ESP-IDF: NAPT goes on the iface toward the *target* network. SoftAP
@@ -208,6 +226,7 @@ void DscAnchorAp::configure_ap_netif_() {
     if (wan == nullptr) {
       ESP_LOGW(TAG, "NAPT: no ETH_DEF/WIFI_STA_DEF — SoftAP clients may lack LAN");
     } else {
+      clamp_mtu_(wan, kSoftApMtu, "WAN");
       err = esp_netif_napt_enable(wan);
       if (err != ESP_OK) {
         ESP_LOGW(TAG,

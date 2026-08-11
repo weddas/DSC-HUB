@@ -1880,3 +1880,24 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 - Live blip soak: confirm HELD + OFF timer on API flap.
 - Confirm `dsc-airflow-map-card` loads via panel `ensureLocalCard` after hard reload of `/local/DSC-HUB.js`.
 - R3F / authored GLTF still deferred.
+
+## 2026-08-11 — SoftAP OTA via NAPT is broken; Nest-hold OTA path
+
+- **Symptom:** SoftAP-path OTA (HA Device Builder and laptop → `192.168.4.x`) dies mid-upload (`ERROR receiving chunk result` / `WinError 10054` / timeout) on ESP8266 Sonoffs and ESP32 hub/pots. Nest-path OTA works. MTU clamp **1280** in `dsc_anchor_ap` did **not** clear the fail — Phase A SoftAP OTA exit remains **unproven**.
+- **Workaround used (pre SoftAP-local cutover only):** Temporary bridge SoftAP SSID `DSC-Anchor-hold` → dual-network STAs fall to Nest → OTA → restore `DSC-Anchor`. **Do not** SoftAP-hold after SoftAP-local firmware is on a device (no Nest STA).
+- **Do not** treat SoftAP NAPT OTA as healthy until a full binary uploads to SoftAP STA reliably. Recovery for SoftAP-local bricks = device **Fallback AP** / USB.
+
+## 2026-08-11 — SoftAP-local cutover **6.0.0.0** (Phases C–F close)
+
+### done
+- SoftAP-fleet flashed SoftAP-local **6.0.0.0** / ESPHome **2026.7.4**: Hub `.10`, Control `.11`, Pot1/2/4 `.12/.13/.15`, Sonoffs `.20–.23`. SoftAP `DSC-Anchor` restored; Hub ESP-NOW green; Sonoff SoftAP `api_link` green.
+- Nest SoftAP-fleet OTA listeners: **absent** after cutover.
+- HA ESPHome entry hosts sticky SoftAP map (wrote while core stopped so in-memory Nest hosts could not overwrite). Device Builder stubs SoftAP `use_address`.
+- HA Fleet Fix button pressed on Control SoftAP (glass Trip 3 soak still operator).
+
+### out of scope / open
+- **Pot3 dead** — ignore; do not gate success on `.14`.
+- SoftAP NAPT OTA still broken (see section above).
+- Glass Fleet Fix hold soak + optional SoftAP-down Fallback smoke — operator Trip 3 residual.
+- Pot4 SoftAP `.15` at **6.0.0.0** but hub `POT4 ESP-NOW Link` may lag False after cutover — soak / glass Fleet Fix.
+- Lab stubs still pass unused Nest `wifi_ssid` / `wifi_password` substitutions (cleanup when stubs next touched).

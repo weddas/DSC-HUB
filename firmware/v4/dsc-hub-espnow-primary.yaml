@@ -48,12 +48,16 @@ espnow:
     - FF:FF:FF:FF:FF:FF
   on_receive:
     - lambda: |-
-        // ---- PEER RF CARD (0xD5): {0xD5,ver,role,assoc3[3],pref3[3],ch,rssi,status} ----
+        // ---- PEER RF CARD (0xD5) 12-byte SoftAP orphan card ----
+        // [0]=0xD5 [1]=ver [2]=role [3]=channel [4]=rssi_int8
+        // [5]=assoc_ok [6]=assoc[4] [7]=assoc[5]
+        // [8]=pref_ok [9]=pref[4] [10]=pref[5]
+        // [11]=status  0=OK, 1=WRB (not associated), 2=CHX (assoc != SoftAP Anchor)
         if (size >= 12 && data[0] == 0xD5 && (data[1] == 0x01 || data[1] == 0x02)) {
           uint8_t role = data[2];
-          int8_t rssi = (int8_t) data[10];
+          int8_t rssi = (int8_t) data[4];
           uint8_t st = data[11];
-          ESP_LOGI("rf", "0xD5 role=%u ch=%u rssi=%d st=%u", role, data[9], (int) rssi, st);
+          ESP_LOGI("rf", "0xD5 role=%u ch=%u rssi=%d st=%u", role, data[3], (int) rssi, st);
           // Aggregate into last EVT detail for CHX/WRB from peers (hub-orchestrated).
           if (st == 1) { // WRB
             id(evt_pending_code) = "REJOIN";
@@ -542,8 +546,36 @@ script:
             auto *w = wifi::global_wifi_component;
             if (w != nullptr && w->get_wifi_channel() > 0)
               p[2] = (uint8_t) w->get_wifi_channel();
+            std::string bridge = "${bridge_mac}";
+            bool have_bridge = (bridge.size() == 17 && bridge != "00:00:00:00:00:00");
+            // SoftAP-local: prefer SoftAP Anchor over Nest preferred NVS.
+            bool softap_local = false;
+            if (w != nullptr && w->is_connected()) {
+              const std::string &ssid = id(network_ssid).state;
+              if (ssid.size() >= 9 && ssid.compare(0, 9, "DSC-Anchor") == 0)
+                softap_local = true;
+              if (!softap_local && have_bridge) {
+                softap_local = true;
+                auto b = w->wifi_bssid();
+                for (int i = 0; i < 6; i++) {
+                  char hex[3] = { bridge[i * 3], bridge[i * 3 + 1], 0 };
+                  if (b[i] != (uint8_t) strtol(hex, nullptr, 16)) { softap_local = false; break; }
+                }
+              }
+            }
             std::string pref = id(preferred_wifi_bssid).state;
-            if (pref.size() == 17) {
+            if (have_bridge && softap_local) {
+              // SoftAP-local fleet: always advertise SoftAP Anchor (even if NVS has Nest).
+              for (int i = 0; i < 6; i++) {
+                char hex[3] = { bridge[i * 3], bridge[i * 3 + 1], 0 };
+                p[3 + i] = (uint8_t) strtol(hex, nullptr, 16);
+              }
+            } else if (have_bridge && (pref.empty() || pref.size() != 17 || pref == "00:00:00:00:00:00")) {
+              for (int i = 0; i < 6; i++) {
+                char hex[3] = { bridge[i * 3], bridge[i * 3 + 1], 0 };
+                p[3 + i] = (uint8_t) strtol(hex, nullptr, 16);
+              }
+            } else if (pref.size() == 17) {
               for (int i = 0; i < 6; i++) {
                 char hex[3] = { pref[i * 3], pref[i * 3 + 1], 0 };
                 p[3 + i] = (uint8_t) strtol(hex, nullptr, 16);

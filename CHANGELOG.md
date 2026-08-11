@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- **SoftAP-local fleet cutover 6.0.0.0** — Hub/Control/Pot1/2/4/Sonoffs SoftAP-only
+  STA (`DSC-Anchor` + BSSID pin + SoftAP static IPs); Nest STA removed; SoftAP-down
+  recovery = device Fallback AP (Control has no captive_portal — RAM). Fleet Fix
+  SoftAP-strict gates; Lock/0xD0 SoftAP-guard; HA sticky SoftAP `.4.x` hosts;
+  `expected_release` **6.0.0.0**. SoftAP NAPT OTA still unproven (`10054`) —
+  Nest-hold bootstrap used only for dual-network → SoftAP-local flash. Pot3 OOS
+  (dead hardware). Spec: `docs/superpowers/specs/2026-08-10-softap-fleet-star-design.md`.
 - **ETH01 bridge 5.2.0 (F-010 / F-012 / F-013)** — WT32-ETH01 SoftAP channel
   anchor (`DSC-Anchor`), ESP-NOW `0xD8` appliance demand → Noise native API
   client to Sonoffs (HA-down actuation), broadcast `0xD1` vitals mirror to HA

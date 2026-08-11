@@ -141,17 +141,6 @@ template:
         state: "{{ is_state('binary_sensor.dsc_hub_ha_link_status', 'on') }}"
         availability: "{{ has_value('binary_sensor.dsc_hub_ha_link_status') }}"
 
-      # Appliances healthy = bridge ESP-NOW path OR (HA link as follower fallback).
-      - name: "DSC Appliances Healthy"
-        unique_id: dsc_appliances_healthy
-        icon: mdi:power-plug
-        state: >-
-          {% if has_value('binary_sensor.dsc_appliances_path_ok') %}
-            {{ is_state('binary_sensor.dsc_appliances_path_ok', 'on') }}
-          {% else %}
-            {{ is_state('binary_sensor.dsc_hub_ha_link_status', 'on') }}
-          {% endif %}
-
       # Soft capacity — intentional OOS, not a problem alert.
       - name: "DSC AC Capacity Offline"
         unique_id: dsc_ac_capacity_offline
@@ -206,23 +195,6 @@ template:
               {% endif %}
             {% endfor %}
             {{ ns.items | join(', ') }}
-
-      # Preferred SoftAP BSSID (NVS / Lock) disagrees with current association
-      # while Lock is ON — SoftAP orphan risk until rejoin. F-012: preferred
-      # should be sensor.dsc_bridge_anchor_bssid (DSC-Anchor SoftAP), not Nest.
-      # Not listed in dsc_active_alert_count (CHX binary covers the Home chip).
-      - name: "DSC SoftAP Lock Mismatch"
-        unique_id: dsc_wifi_preferred_ap_mismatch
-        device_class: problem
-        icon: mdi:wifi-alert
-        state: >-
-          {% set lock = is_state('switch.dsc_hub_lock_wifi_ap', 'on') %}
-          {% set cur = states('sensor.dsc_hub_wifi_bssid')|trim|upper %}
-          {% set pref = states('text.dsc_hub_preferred_wifi_bssid')|trim|upper %}
-          {{ lock
-             and cur not in ['unknown','unavailable','']
-             and pref not in ['unknown','unavailable','','00:00:00:00:00:00']
-             and cur != pref }}
 
       # Buying moisture while dumping outside — wasteful (firmware 5.1.2+
       # clamps OUT during humidifier demand; cue catches unflashed hubs
