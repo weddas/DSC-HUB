@@ -9,7 +9,9 @@ import { type IconName } from "./icons";
 import { LiveMissionPage } from "./pages/LiveMissionPage";
 import {
   LiveClimatePage,
+  LiveClonePage,
   LiveLightPage,
+  LiveMainPage,
   LiveRootPage,
   LiveTwinPage,
 } from "./pages/LivePages";
@@ -75,7 +77,7 @@ function Shell() {
           </div>
         </NavLink>
         <div className="dsc-muted" style={{ fontSize: 12, letterSpacing: "0.08em" }}>
-          SURFACE 7.0.0
+          SURFACE 7.1.0
         </div>
       </div>
 
@@ -118,6 +120,8 @@ function Shell() {
         <Route path="/live/mission" element={<LiveMissionPage />} />
         <Route path="/live/twin" element={<LiveTwinPage />} />
         <Route path="/live/climate" element={<LiveClimatePage />} />
+        <Route path="/live/main" element={<LiveMainPage />} />
+        <Route path="/live/clone" element={<LiveClonePage />} />
         <Route path="/live/root" element={<LiveRootPage />} />
         <Route path="/live/light" element={<LiveLightPage />} />
         <Route path="/grow" element={<Navigate to="/grow/compose" replace />} />

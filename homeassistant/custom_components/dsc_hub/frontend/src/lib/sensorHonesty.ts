@@ -14,7 +14,9 @@ export type HonestyGap = {
 type HassLike = {
   state: (entityId: string, fallback?: string) => string;
   available?: (entityId: string) => boolean;
-  entity?: (entityId: string) => { attributes?: Record<string, unknown> } | undefined;
+  entity?: (
+    entityId: string,
+  ) => { attributes?: Record<string, unknown>; last_changed?: string } | undefined;
 };
 
 export function collectHonestyGaps(hass: HassLike): HonestyGap[] {
@@ -25,10 +27,19 @@ export function collectHonestyGaps(hass: HassLike): HonestyGap[] {
   const honesty = String(attrs.full_auto_honesty ?? "").trim();
 
   if (hass.available && !hass.available("sensor.dsc_hub_uptime")) {
+    const lc = hass.entity?.("sensor.dsc_hub_uptime")?.last_changed as string | undefined;
+    let off = "";
+    if (lc) {
+      const ms = Date.now() - Date.parse(lc);
+      if (Number.isFinite(ms) && ms >= 0) {
+        const min = Math.floor(ms / 60000);
+        off = min < 60 ? ` · offline ${Math.max(1, min)}m` : ` · offline ${(min / 60).toFixed(1)}h`;
+      }
+    }
     gaps.push({
       id: "hub-dark",
       label: "Hub offline",
-      detail: "Hub sensors unavailable — Live vitals may be stale.",
+      detail: `Showing last good vitals${off}. Reconnect snaps to live.`,
       tone: "bad",
       href: "/fleet",
       cta: "Open Fleet",

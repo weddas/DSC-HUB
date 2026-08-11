@@ -1840,3 +1840,43 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 - Curated MDI-in-panel if custom SVG registry gaps remain on Mode/demand chips.
 - Native React Catalog/Build (still Lit hosts); Lovelace YAML removal still deferred.
 - Port remaining Lovelace Climate ladder / Learning cal wizard depth into Tune/Live.
+
+## 2026-08-11 — Surface 7.1 prep freeze
+
+### Inspiration pack (`docs/assets/inspiration/`)
+- Existing: ops-dash-hud-vpd, ops-dash-climate-glass, build-a-plant-flow
+- Added: mission-chip-strip(.png), mission-blip-wipe, mission-blip-ops-home, mission-online-ops, gemini-mission-modern, airflow-card-verify
+
+### Entity freeze (recorder expected — default include, no DSC exclude found)
+| Role | Entity |
+|------|--------|
+| Hub link | `sensor.dsc_hub_uptime`, `sensor.dsc_hub_heartbeat`, `binary_sensor.dsc_hub_panel_link` |
+| Climate Got | `sensor.dsc_hub_tent_temperature`, `_humidity`, `_vpd_kpa`, `_room_temperature`, `sensor.dsc_hub_clone_*` |
+| Want | `number.dsc_hub_target_temp`, `number.dsc_hub_rh_target_*`, `number.dsc_hub_vpd_target_*`, clone equivalents |
+| CFM | `sensor.dsc_cfm_exhaust_{out,recirc}_allocated` (prefer) + nameplate `sensor.dsc_cfm_exhaust_{out,recirc}` |
+| Pot Got | `sensor.dsc_pot{N}_got_{moisture,ec,ph}` fallback soil_*; `sensor.dsc_pot{N}_dryback_pct` |
+| Identity | `text.dsc_pot{N}_plant_name`, `datetime.dsc_pot{N}_sprout_date`, `select.dsc_pot{N}_growth_stage`, `input_select.dsc_pot{N}_tent` |
+
+### Visual tokens (7.1)
+- Canvas: lifted indigo-slate; active chrome blue/cyan; green = live/ON only; stale = muted + HELD; kill dank `#39ff14` brand wash on Twin.
+
+### Deferred art
+- Authored GLTF tents/plants/fans — later pass (real GLTFLoader required).
+
+## 2026-08-11 — DSC-Dashboard Surface 7.1 ship
+
+### done
+- Prep inspiration pack + entity freeze (this file).
+- Hold last-known vitals + HUB OFFLINE / OFF Xm chips; reconnect clears hold.
+- Apply-to-tent: direct `input_select.select_option` + script `error: true` + inline entity_id.
+- Sharp contrast tokens (blue/cyan active chrome).
+- Gauge/KPI → History drawer + 1h|6h|24h|48h timespan.
+- Twin/airflow: leaders, cyan Got marker, allocated CFM + airflow-map host on Climate.
+- Mission modern gauges/sparklines/GotWant/trend; Main/Clone tent cockpits restored.
+- Seat Want/Got/Need + inline editors + dryback/history; Root fleet matrix.
+- Learning densify + Analytics root pack; surface **7.1.0**.
+
+### soak / next
+- Live blip soak: confirm HELD + OFF timer on API flap.
+- Confirm `dsc-airflow-map-card` loads via panel `ensureLocalCard` after hard reload of `/local/DSC-HUB.js`.
+- R3F / authored GLTF still deferred.

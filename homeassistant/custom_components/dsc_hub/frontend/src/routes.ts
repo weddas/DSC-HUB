@@ -20,6 +20,8 @@ export const SECONDARY_TABS: Record<PrimarySection, TabRoute[]> = {
     { id: "mission", label: "Mission", path: "/live/mission", icon: "mission" },
     { id: "twin", label: "Twin", path: "/live/twin", icon: "twin" },
     { id: "climate", label: "Climate", path: "/live/climate", icon: "climate" },
+    { id: "main", label: "Main", path: "/live/main", icon: "tent" },
+    { id: "clone", label: "Clone", path: "/live/clone", icon: "clone" },
     { id: "root", label: "Root", path: "/live/root", icon: "root" },
     { id: "light", label: "Light", path: "/live/light", icon: "lighting" },
   ],
@@ -35,15 +37,15 @@ export const SECONDARY_TABS: Record<PrimarySection, TabRoute[]> = {
   fleet: [{ id: "overview", label: "Overview", path: "/fleet", icon: "fleet" }],
 };
 
-/** Legacy paths → 7.0 destinations (query preserved by caller when needed). */
+/** Legacy paths → 7.1 destinations (query preserved by caller when needed). */
 export const LEGACY_REDIRECTS: Record<string, string> = {
   "/": "/live/mission",
   "/ops": "/live/mission",
   "/ops/home": "/live/mission",
   "/ops/dash": "/live/twin",
   "/ops/climate": "/live/climate",
-  "/ops/main-4x8": "/live/climate?tent=main",
-  "/ops/clone-2x4": "/live/climate?tent=clone",
+  "/ops/main-4x8": "/live/main",
+  "/ops/clone-2x4": "/live/clone",
   "/ops/root-zone": "/live/root",
   "/ops/plant-seat": "/live/root",
   "/ops/tank": "/fleet",

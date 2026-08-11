@@ -74,6 +74,7 @@ script:
                   title: "DSC · tent apply"
                   message: "Invalid pot (use 1–4)."
               - stop: "Invalid pot"
+                error: true
           - conditions:
               - condition: template
                 value_template: "{{ tent_v not in ['unassigned','clone','main'] }}"
@@ -83,9 +84,10 @@ script:
                   title: "DSC · tent apply"
                   message: "Invalid tent (use unassigned, clone, or main)."
               - stop: "Invalid tent"
+                error: true
       - service: input_select.select_option
         target:
-          entity_id: "{{ tent_entity }}"
+          entity_id: "input_select.dsc_pot{{ pot_n }}_tent"
         data:
           option: "{{ tent_v }}"
       - service: persistent_notification.create

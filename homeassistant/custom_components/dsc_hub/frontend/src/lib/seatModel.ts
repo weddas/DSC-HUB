@@ -82,6 +82,12 @@ export function buildPlantSeat(
     ? slots.find((s) => String(s.pot) === String(pot))
     : undefined;
 
+  const prefer = (primary: string, fallback: string) => {
+    const a = clean(state(primary, ""));
+    if (a !== "—") return a;
+    return clean(state(fallback, ""));
+  };
+
   const blend = clean(roster?.blend, "");
   return {
     pot,
@@ -96,16 +102,44 @@ export function buildPlantSeat(
     recipe: clean(roster?.recipe, ""),
     notes: clean(roster?.notes, ""),
     layers: parseBlendLayers(blend),
-    moisture: clean(state(`sensor.dsc_pot${pot}_soil_moisture`, "")),
+    moisture: prefer(`sensor.dsc_pot${pot}_got_moisture`, `sensor.dsc_pot${pot}_soil_moisture`),
     soilTemp: clean(state(`sensor.dsc_pot${pot}_soil_temperature`, "")),
-    ec: clean(state(`sensor.dsc_pot${pot}_soil_conductivity`, "")),
-    ph: clean(state(`sensor.dsc_pot${pot}_soil_ph`, "")),
+    ec: prefer(`sensor.dsc_pot${pot}_got_ec`, `sensor.dsc_pot${pot}_soil_conductivity`),
+    ph: prefer(`sensor.dsc_pot${pot}_got_ph`, `sensor.dsc_pot${pot}_soil_ph`),
     n: clean(state(`sensor.dsc_pot${pot}_soil_nitrogen`, "")),
     p: clean(state(`sensor.dsc_pot${pot}_soil_phosphorus`, "")),
     k: clean(state(`sensor.dsc_pot${pot}_soil_potassium`, "")),
     need: clean(state(`sensor.dsc_pot${pot}_need_summary`, "")),
     rosterSlot: roster?.slot ?? null,
   };
+}
+
+/** Entity id helpers for Got / dryback history. */
+export function potGotEntity(
+  pot: number,
+  kind: "moisture" | "ec" | "ph",
+  state: (id: string, fallback?: string) => string,
+): string {
+  const got = `sensor.dsc_pot${pot}_got_${kind}`;
+  const fb =
+    kind === "moisture"
+      ? `sensor.dsc_pot${pot}_soil_moisture`
+      : kind === "ec"
+        ? `sensor.dsc_pot${pot}_soil_conductivity`
+        : `sensor.dsc_pot${pot}_soil_ph`;
+  const raw = state(got, "");
+  if (raw && raw !== "unavailable" && raw !== "unknown") return got;
+  return fb;
+}
+
+export function potsInTent(
+  tent: TentId,
+  state: (id: string, fallback?: string) => string,
+  entity: (id: string) => { attributes?: Record<string, unknown> } | undefined,
+): PlantSeatModel[] {
+  return [1, 2, 3, 4]
+    .map((n) => buildPlantSeat(n, { state, entity }))
+    .filter((s) => s.tent === tent);
 }
 
 export function rosterSlots(

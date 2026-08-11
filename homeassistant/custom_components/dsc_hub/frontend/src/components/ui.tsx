@@ -96,28 +96,47 @@ export function Kpi({
   unit,
   sub,
   tone = "normal",
+  stale,
+  onClick,
 }: {
   label: string;
   value: string | number;
   unit?: string;
   sub?: string;
   tone?: "normal" | "ok" | "bad" | "muted";
+  stale?: boolean;
+  onClick?: () => void;
 }) {
   const toneClass =
     tone === "ok"
       ? "dsc-status-ok"
       : tone === "bad"
         ? "dsc-status-bad"
-        : tone === "muted"
+        : tone === "muted" || stale
           ? "dsc-status-muted"
           : "";
-  return (
-    <Card title={label}>
+  const body = (
+    <>
       <div className={`dsc-kpi-value ${toneClass}`.trim()}>
         {value}
         {unit ? <span className="dsc-kpi-unit">{unit}</span> : null}
+        {stale ? <span className="dsc-held-tag">HELD</span> : null}
       </div>
       {sub ? <div className="dsc-kpi-sub">{sub}</div> : null}
+    </>
+  );
+  if (onClick) {
+    return (
+      <button type="button" className="dsc-kpi-hit" onClick={onClick} title={`History · ${label}`}>
+        <Card title={label} className={stale ? "is-stale" : undefined}>
+          {body}
+        </Card>
+      </button>
+    );
+  }
+  return (
+    <Card title={label} className={stale ? "is-stale" : undefined}>
+      {body}
     </Card>
   );
 }

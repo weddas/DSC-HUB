@@ -1,4 +1,4 @@
-# LIVE-UI — DSC-HUB custom panel (surface 7.0.0)
+# LIVE-UI — DSC-HUB custom panel (surface 7.1.0)
 
 React + Vite product panel hosted inside Home Assistant (WashData pattern).
 
@@ -8,7 +8,7 @@ React + Vite product panel hosted inside Home Assistant (WashData pattern).
 | Deep routes | Hash routes: `/dsc-hub#/live/mission`, `#/grow/compose`, `#/fleet`, … |
 | Legacy redirects | `#/ops/*`, `#/plant/*`, `#/advanced/*`, `#/system` → Live/Grow/Tune/Fleet |
 | Lovelace fallback | `dsc-hub-pro` YAML — `show_in_sidebar: false` |
-| Surface version | `sensor.dsc_ha_surface_version` **7.0.0** |
+| Surface version | `sensor.dsc_ha_surface_version` **7.1.0** |
 | Integration | `homeassistant/custom_components/dsc_hub/` |
 | Enable | `dsc_hub:` in configuration.yaml (see snippet) |
 
@@ -20,10 +20,7 @@ Prefer the local-disk script (NAS shares stall `npm`):
 powershell -ExecutionPolicy Bypass -File scripts/build-dsc-hub-panel.ps1
 ```
 
-This copies `frontend/` → `%TEMP%`, runs `npm ci` + `npm run build`, then copies
-`dsc-hub-panel.js` (+ map/assets) back to `homeassistant/custom_components/dsc_hub/www/`.
-
-Manual equivalent:
+Manual:
 
 ```bash
 cd homeassistant/custom_components/dsc_hub/frontend
@@ -31,54 +28,38 @@ npm install
 npm run build   # emits www/dsc-hub-panel.js (CSS inlined)
 ```
 
-## Deploy
+After Twin/Dash edits, concat `/local/DSC-HUB.js` from `homeassistant/www/` card order
+(`dsc-system-map` → `dsc-airflow-map` → three → dash-fx → dash → build → catalog → app-nav)
+and hard-reload Lovelace/panel.
 
-`scripts/ha-sync.sh` syncs `custom_components/dsc_hub` (Python + www + assets).
-Then: HA **Developer Tools → YAML → Check configuration** → restart Core
-(or reload custom integrations if supported) so the panel registers.
+## Visual system (7.1)
 
-**Note:** the `dsc-hub-sync` add-on image still needs a rebuild to pick up
-`custom_components` staging from git. Panel JS under `/local` / integration
-`www` updates on sync after the Python package is present.
+Sharper contrast: lifted indigo-slate · **blue/cyan** active chrome · green = live/ON only ·
+amber HELD/stale · Twin leaders + cyan Got markers (no dank `#39ff14` brand wash).
 
-## Visual system (7.0)
+## Pass 7.1 acceptance
 
-Modern dark + **full colour** (blues / purples / greens / teal / amber by role) —
-not dank neon-green-only, not grey monochrome. Glass HUD · Live/Grow/Tune/Fleet
-primary tabs · guided PageHeader + NextRecommended · honesty rail · Twin keep-alive
-(Three.js CE persisted) · tent segment on Climate · Plant Seat drawers.
+- [ ] Hub/API blip: KPIs/gauges **hold last good** + HELD; chips **HUB OFFLINE** + **OFF Xm** (no `0.0` wipe)
+- [ ] Reconnect: chips green; values snap live; charts reseed
+- [ ] Click Tent T gauge → History drawer; 1h|6h|24h|48h reloads series
+- [ ] Apply Main/Clone/Unassigned from seat — no Invalid option
+- [ ] Live tabs include **Main** + **Clone** cockpits
+- [ ] Root fleet matrix dryback/EC/Need; seat edits name/sprout/stage without Compose
+- [ ] Climate hosts airflow-map + allocated CFM honesty
+- [ ] Learning shows learn status / CFM alloc vs nameplate
+- [ ] Active chrome blue/cyan
+- [ ] `sensor.dsc_ha_surface_version` = **7.1.0**
 
-## Pass 7.0 acceptance
+## Pass 7.0 acceptance (still)
 
-- [ ] Primary tabs = **Live / Grow / Tune / Fleet** (not Ops/Plant/Advanced/System)
-- [ ] Default land `#/live/mission`; Mission has **Do this next** + no full Climate chart wall
-- [ ] Climate tent segment Main | Clone | Compare; no Main/Clone sibling pages
-- [ ] Twin keep-alive: leave Twin and return without cold WebGL rebuild
-- [ ] Root/Roster open seat as drawer; dual seat routes gone (redirect)
-- [ ] Grow order Compose → Research → Roster
-- [ ] Fleet shows kit + map (+ tank note); Learning/Analytics under Tune
-- [ ] Honesty rail + reduced-kit / keepup / OOS chips
-- [ ] Colour tokens: blue/purple/green/teal live (not #39ff14 brand wash)
-- [ ] `sensor.dsc_ha_surface_version` reads **7.0.0**
-- [ ] Legacy `#/ops/home` etc. redirect cleanly
+- [ ] Primary tabs Live / Grow / Tune / Fleet
+- [ ] Default `#/live/mission` + NextRecommended
+- [ ] Twin keep-alive across tabs
+- [ ] Grow Compose → Research → Roster
+- [ ] Honesty rail + reduced-kit / keepup / OOS
+- [ ] Legacy `#/ops/*` redirects
 
-## Pass 3 acceptance (6.3 — still relevant)
+## Pass 3 / prior
 
-- [ ] Live climate: dual axes readable; X times present; hover shows time + T + RH
-- [ ] Charts use that tent’s Want overlays; edit Want → HA numbers update
-- [ ] Gauges show band ticks, target, extrema; VPD in real kPa
-- [ ] Full Auto + strategy + priority write HA; honesty chip on reduced kit
-- [ ] Fan override ON → four fan % sliders write
-- [ ] In-service toggles on Climate + Fleet
-- [ ] Search icon opens slide-out; drawer close ≠ more
-- [ ] Dash/Twin callouts both tents with RH band + VPD mini
-
-## Pass 2 / 1 (still true)
-
-- [ ] Cold open `/dsc-hub#/live/mission` — status strip reflects hub / panel / beat / alerts / fleet
-- [ ] Demand toggles call HA; pot ESP-NOW chips visible
-- [ ] Grow Compose / Research load without visiting Lovelace first (`/local` inject)
-- [ ] Twin pot pick → Root seat drawer; Apply to tent lerps plant on Twin
-- [ ] WashData / Overview / Frigate / other non-DSC panels unchanged
-- [ ] Narrow viewport usable; reduced-motion safe
-- [ ] Sidebar **DSC-HUB** opens `/dsc-hub`
+- [ ] Dual-axis charts, Want overlays, gauges, Full Auto / fans / in-service still work
+- [ ] Twin HUD callouts both tents with RH band + VPD mini + leaders

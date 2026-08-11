@@ -1,17 +1,23 @@
+import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { LegacyCardHost } from "../components/LegacyCardHost";
 import { OverflowMenu, SoilCrossSection, SlideDrawer } from "../components/chrome";
-import { Button, Card, Icon, PageHeader, StatusChip } from "../components/ui";
+import { HistoryDrawer } from "../components/HistoryDrawer";
+import { Button, Card, PageHeader, StatusChip } from "../components/ui";
 import { useHass } from "../hooks/useHass";
+import { useEntitySeries } from "../hooks/useEntitySeries";
+import { useHeldReading } from "../hooks/useHeldReading";
+import { ArcGauge, MultiLineChart } from "../viz/charts";
 import {
   buildPlantSeat,
+  potGotEntity,
+  readTent,
   rosterSlots,
   tentLabel,
-  readTent,
   type TentId,
 } from "../lib/seatModel";
 
-/** Shared seat body for Root / Roster drawers (Surface 7.0 — no standalone seat route). */
+/** Shared seat body for Root / Roster drawers (Surface 7.1). */
 export function PlantSeatPanel({
   pot,
   onSelectPot,
@@ -19,17 +25,96 @@ export function PlantSeatPanel({
   pot: number;
   onSelectPot?: (n: number) => void;
 }) {
-  const { state, entity, callService, tick } = useHass();
+  const { state, entity, callService, available, tick, num } = useHass();
   const navigate = useNavigate();
   void tick;
   const seat = buildPlantSeat(pot, { state, entity });
+  const [nameDraft, setNameDraft] = useState(seat.plantName === "—" ? "" : seat.plantName);
+  const [sproutDraft, setSproutDraft] = useState(seat.sprout === "—" ? "" : seat.sprout);
+  const [stageDraft, setStageDraft] = useState(seat.growthStage === "—" ? "" : seat.growthStage);
+  const [notesDraft, setNotesDraft] = useState(seat.notes === "—" ? "" : seat.notes);
+  const [applyErr, setApplyErr] = useState<string | null>(null);
+  const [hist, setHist] = useState<{ id: string; label: string; unit: string } | null>(null);
 
-  const applyTent = (tent: TentId) => {
-    void callService("script", "turn_on", {
-      entity_id: "script.dsc_apply_pot_to_tent",
-      variables: { pot: String(pot), tent },
+  useEffect(() => {
+    setNameDraft(seat.plantName === "—" ? "" : seat.plantName);
+    setSproutDraft(seat.sprout === "—" ? "" : seat.sprout);
+    setStageDraft(seat.growthStage === "—" ? "" : seat.growthStage);
+    setNotesDraft(seat.notes === "—" ? "" : seat.notes);
+  }, [pot, seat.plantName, seat.sprout, seat.growthStage, seat.notes]);
+
+  const moistId = potGotEntity(pot, "moisture", state);
+  const ecId = potGotEntity(pot, "ec", state);
+  const phId = potGotEntity(pot, "ph", state);
+  const drybackId = `sensor.dsc_pot${pot}_dryback_pct`;
+  const moistHeld = useHeldReading(moistId);
+  const drybackHeld = useHeldReading(drybackId);
+  const moistSeries = useEntitySeries(moistId, { hours: 6, maxPoints: 72 });
+  const ecSeries = useEntitySeries(ecId, { hours: 6, maxPoints: 72 });
+
+  const wantMoistMin = num(`number.dsc_pot${pot}_want_moisture_min`);
+  const wantMoistMax = num(`number.dsc_pot${pot}_want_moisture_max`);
+  const hasWant =
+    Number.isFinite(wantMoistMin) &&
+    Number.isFinite(wantMoistMax) &&
+    available(`number.dsc_pot${pot}_want_moisture_min`);
+  const genericStrain =
+    !seat.strainDisplay ||
+    seat.strainDisplay === "—" ||
+    /generic/i.test(seat.strainDisplay);
+
+  const applyTent = async (tent: TentId) => {
+    setApplyErr(null);
+    try {
+      await callService("input_select", "select_option", {
+        entity_id: `input_select.dsc_pot${pot}_tent`,
+        option: tent,
+      });
+      // Confirm option stuck (HA may resolve without throwing on invalid option).
+      window.setTimeout(() => {
+        const now = state(`input_select.dsc_pot${pot}_tent`, "");
+        if (now !== tent) {
+          setApplyErr("Tent apply failed — check helper options (clone|main|unassigned).");
+        }
+      }, 400);
+    } catch {
+      setApplyErr("Tent apply failed — check helper options (clone|main|unassigned).");
+    }
+  };
+
+  const saveName = () => {
+    if (!available(`text.dsc_pot${pot}_plant_name`)) return;
+    void callService("text", "set_value", {
+      entity_id: `text.dsc_pot${pot}_plant_name`,
+      value: nameDraft,
     });
   };
+
+  const saveSprout = () => {
+    const id = `datetime.dsc_pot${pot}_sprout_date`;
+    if (!available(id) || !sproutDraft) return;
+    const iso = sproutDraft.length === 10 ? `${sproutDraft}T00:00:00` : sproutDraft;
+    void callService("datetime", "set_value", { entity_id: id, datetime: iso });
+  };
+
+  const saveStage = () => {
+    const id = `select.dsc_pot${pot}_growth_stage`;
+    if (!available(id) || !stageDraft) return;
+    void callService("select", "select_option", { entity_id: id, option: stageDraft });
+  };
+
+  const saveNotes = () => {
+    if (seat.rosterSlot == null) return;
+    const id = `input_text.dsc_plant_roster_${seat.rosterSlot}_notes`;
+    if (!available(id) && !entity(id)) {
+      // try anyway for helpers that report briefly unavailable
+    }
+    void callService("input_text", "set_value", { entity_id: id, value: notesDraft });
+  };
+
+  const stageOpts =
+    (entity(`select.dsc_pot${pot}_growth_stage`)?.attributes?.options as string[] | undefined) ||
+    [];
 
   return (
     <div className="dsc-seat-panel">
@@ -50,6 +135,7 @@ export function PlantSeatPanel({
         ) : (
           <StatusChip label="No roster join" tone="warn" />
         )}
+        {moistHeld.stale ? <StatusChip label="HELD Got" tone="warn" /> : null}
       </div>
 
       <div className="dsc-seat-layout">
@@ -63,23 +149,54 @@ export function PlantSeatPanel({
         <div className="dsc-grid" style={{ gap: 14 }}>
           <div className="dsc-col-12">
             <Card className="dsc-glass" title="Identity">
-              <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-                <div>
-                  <div className="dsc-kpi-value" style={{ fontSize: "1.45rem" }}>
-                    {seat.plantName !== "—" ? seat.plantName : `POT${pot}`}
-                  </div>
-                  <div className="dsc-kpi-sub">{seat.strainDisplay}</div>
-                  <div className="dsc-chip-row" style={{ marginTop: 10 }}>
-                    <StatusChip label={`Day ${seat.days}`} tone="ok" />
-                    <StatusChip label={seat.stage} tone="muted" />
-                    <StatusChip label={`Sprout ${seat.sprout}`} tone="muted" />
-                  </div>
+              <div className="dsc-seat-editors">
+                <label>
+                  Nickname
+                  <input
+                    value={nameDraft}
+                    onChange={(e) => setNameDraft(e.target.value)}
+                    onBlur={saveName}
+                    disabled={!available(`text.dsc_pot${pot}_plant_name`)}
+                  />
+                </label>
+                <label>
+                  Sprout date
+                  <input
+                    type="date"
+                    value={sproutDraft.slice(0, 10)}
+                    onChange={(e) => setSproutDraft(e.target.value)}
+                    onBlur={saveSprout}
+                    disabled={!available(`datetime.dsc_pot${pot}_sprout_date`)}
+                  />
+                </label>
+                <label>
+                  Growth stage
+                  <select
+                    value={stageDraft}
+                    onChange={(e) => {
+                      setStageDraft(e.target.value);
+                    }}
+                    onBlur={saveStage}
+                    disabled={!available(`select.dsc_pot${pot}_growth_stage`)}
+                  >
+                    <option value="">—</option>
+                    {stageOpts.map((o) => (
+                      <option key={o} value={o}>
+                        {o}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <div className="dsc-chip-row">
+                  <StatusChip label={`Day ${seat.days}`} tone="ok" />
+                  <StatusChip label={seat.stage} tone="muted" />
+                  <StatusChip label={seat.strainDisplay} tone="muted" />
                 </div>
                 <OverflowMenu
                   items={[
                     {
                       id: "compose",
-                      label: "Open Compose",
+                      label: "Open Compose (strain/catalog)",
                       onSelect: () => navigate("/grow/compose"),
                     },
                     {
@@ -99,15 +216,100 @@ export function PlantSeatPanel({
           </div>
 
           <div className="dsc-col-6">
-            <Card title="Nutrition">
+            <Card className="dsc-glass" title="Want · Got · Need">
+              <div className="dsc-chip-row">
+                <StatusChip
+                  label={`Got M ${moistHeld.stale ? `${Number.isFinite(moistHeld.value) ? moistHeld.value.toFixed(0) : "—"}*` : seat.moisture}`}
+                  tone={moistHeld.stale ? "warn" : "ok"}
+                />
+                <StatusChip label={`EC ${seat.ec}`} tone="muted" />
+                <StatusChip label={`pH ${seat.ph}`} tone="muted" />
+                <StatusChip
+                  label={seat.need}
+                  tone={seat.need !== "—" && seat.need !== "OK" ? "warn" : "ok"}
+                />
+              </div>
+              {hasWant && !genericStrain ? (
+                <p className="dsc-muted" style={{ margin: "8px 0 0", fontSize: 12 }}>
+                  Want moisture {wantMoistMin}–{wantMoistMax}%
+                </p>
+              ) : (
+                <p className="dsc-honesty" style={{ margin: "8px 0 0" }}>
+                  <StatusChip label="No catalog Want" tone="warn" />{" "}
+                  {genericStrain
+                    ? "Generic / empty strain — Want bands not invented."
+                    : "Custom Want helpers missing — Got + Need only."}
+                </p>
+              )}
+            </Card>
+          </div>
+
+          <div className="dsc-col-6">
+            <Card className="dsc-glass" title="Dryback">
+              <ArcGauge
+                label="Dryback"
+                value={drybackHeld.value}
+                min={0}
+                max={100}
+                unit="%"
+                stale={drybackHeld.stale}
+                band={{ min: 0, max: 45 }}
+                onClick={() => setHist({ id: drybackId, label: "Dryback", unit: "%" })}
+              />
+            </Card>
+          </div>
+
+          <div className="dsc-col-12">
+            <Card className="dsc-glass" title="Got history">
+              <MultiLineChart
+                live
+                lastSyncAt={
+                  Math.max(moistSeries.lastSyncAt ?? 0, ecSeries.lastSyncAt ?? 0) || undefined
+                }
+                series={[
+                  {
+                    id: "m",
+                    label: "Moisture",
+                    series: moistSeries.series,
+                    color: "var(--dsc-blue)",
+                    axis: "left",
+                    unit: "%",
+                  },
+                  {
+                    id: "ec",
+                    label: "EC",
+                    series: ecSeries.series,
+                    color: "var(--dsc-amber)",
+                    axis: "right",
+                    unit: "",
+                  },
+                ]}
+              />
+              <div className="dsc-chip-row" style={{ marginTop: 8 }}>
+                <Button onClick={() => setHist({ id: moistId, label: "Moisture", unit: "%" })}>
+                  Moisture hist
+                </Button>
+                <Button onClick={() => setHist({ id: ecId, label: "EC", unit: "" })}>EC hist</Button>
+                <Button onClick={() => setHist({ id: phId, label: "pH", unit: "" })}>pH hist</Button>
+              </div>
+            </Card>
+          </div>
+
+          <div className="dsc-col-6">
+            <Card className="dsc-glass" title="Nutrition">
               <p style={{ margin: "0 0 6px" }}>
                 {seat.recipe || "No roster recipe — catalog doses only, never invented."}
               </p>
-              {seat.notes ? (
-                <p className="dsc-muted" style={{ margin: 0 }}>
-                  {seat.notes}
-                </p>
-              ) : null}
+              <label className="dsc-seat-editors">
+                Roster notes
+                <textarea
+                  rows={3}
+                  value={notesDraft}
+                  onChange={(e) => setNotesDraft(e.target.value)}
+                  onBlur={saveNotes}
+                  disabled={seat.rosterSlot == null}
+                />
+              </label>
               <div style={{ marginTop: 10 }}>
                 <Link to="/grow/compose">
                   <Button teal>Mix in Compose</Button>
@@ -117,7 +319,7 @@ export function PlantSeatPanel({
           </div>
 
           <div className="dsc-col-6">
-            <Card title="Live Got">
+            <Card className="dsc-glass" title="Live Got chips">
               <div className="dsc-chip-row">
                 <StatusChip label={`M ${seat.moisture}`} tone="muted" />
                 <StatusChip label={`T ${seat.soilTemp}`} tone="muted" />
@@ -126,13 +328,9 @@ export function PlantSeatPanel({
                 <StatusChip label={`N ${seat.n}`} tone="muted" />
                 <StatusChip label={`P ${seat.p}`} tone="muted" />
                 <StatusChip label={`K ${seat.k}`} tone="muted" />
-                <StatusChip
-                  label={seat.need}
-                  tone={seat.need !== "—" && seat.need !== "OK" ? "warn" : "ok"}
-                />
               </div>
               <p className="dsc-muted" style={{ margin: "8px 0 0", fontSize: 12 }}>
-                NPK = trend indicators. Unavailable stays —.
+                NPK = trend indicators. Unavailable stays —. Held shows last good on blip.
               </p>
             </Card>
           </div>
@@ -143,21 +341,34 @@ export function PlantSeatPanel({
                 Digital-twin placement. Moves the plant on Twin; does not rewrite climate Want.
               </p>
               <div className="dsc-seat-actions">
-                <Button primary={seat.tent === "clone"} onClick={() => applyTent("clone")}>
+                <Button primary={seat.tent === "clone"} onClick={() => void applyTent("clone")}>
                   Clone 2×4
                 </Button>
-                <Button primary={seat.tent === "main"} onClick={() => applyTent("main")}>
+                <Button primary={seat.tent === "main"} onClick={() => void applyTent("main")}>
                   Main 4×8
                 </Button>
-                <Button onClick={() => applyTent("unassigned")}>Unassigned</Button>
+                <Button onClick={() => void applyTent("unassigned")}>Unassigned</Button>
                 <Link to="/live/twin">
                   <Button>Open Twin</Button>
                 </Link>
               </div>
+              {applyErr ? (
+                <p className="dsc-honesty">
+                  <StatusChip label="Tent apply failed" tone="bad" /> {applyErr}
+                </p>
+              ) : null}
             </Card>
           </div>
         </div>
       </div>
+
+      <HistoryDrawer
+        open={hist != null}
+        onClose={() => setHist(null)}
+        entityId={hist?.id ?? null}
+        label={hist?.label ?? ""}
+        unit={hist?.unit}
+      />
     </div>
   );
 }
@@ -233,11 +444,7 @@ export function GrowRosterPage() {
         subtitle="Seats — open a row for Plant Seat drawer. Nutrient mix lives in Compose."
         primaryAction={
           <Link to="/grow/compose">
-            <Button primary>
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-                <Icon name="compose" size={14} /> Use in Compose
-              </span>
-            </Button>
+            <Button primary>Use in Compose</Button>
           </Link>
         }
       />

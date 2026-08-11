@@ -308,19 +308,21 @@
     }
     .dash-hud .band .got {
       position: absolute; top: -2px; width: 3px; height: 10px;
-      background: #39ff14; border-radius: 2px;
-      box-shadow: 0 0 8px rgba(57,255,20,0.75);
+      background: #2ec4d6; border-radius: 2px;
+      box-shadow: 0 0 8px rgba(46,196,214,0.75);
       transform: translateX(-50%);
     }
     .dash-hud .vpd-mini {
       margin-top: 8px; display: flex; align-items: center; gap: 8px;
     }
     .dash-hud .vpd-mini svg { flex: 0 0 auto; }
-    .dash-hud .leader {
+    .dash-hud.leader {
       position: absolute; width: 18px; height: 18px; border-radius: 50%;
       border: 1px solid rgba(38,198,218,0.55);
-      box-shadow: 0 0 12px rgba(38,198,218,0.35);
+      box-shadow: 0 0 12px rgba(46,196,214,0.45);
+      background: rgba(46,196,214,0.25);
       pointer-events: none;
+      z-index: 4;
     }
     .dash-pot-chips {
       position: absolute; left: 50%; bottom: 44px; transform: translateX(-50%);
@@ -2739,6 +2741,8 @@
                 ${typeof THREE === "undefined" ? `<div class="dash-missing">THREE.js not loaded — redeploy DSC-HUB bundle.</div>` : ""}
                 <div class="dash-hud left" id="d-hud-clone"></div>
                 <div class="dash-hud right" id="d-hud-main"></div>
+                <div class="dash-hud leader" id="d-leader-clone" aria-hidden="true"></div>
+                <div class="dash-hud leader" id="d-leader-main" aria-hidden="true"></div>
                 <div class="dash-pot-chips" id="d-pot-chips"></div>
                 <div class="dash-legend" id="d-legend">
                   <span data-path="light"><i class="dash-dot" style="background:#66bb6a"></i> 2x4 light</span>
@@ -3230,6 +3234,7 @@
           el.style.left = "";
           el.style.top = "";
           el.style.transform = "";
+          el.style.display = "";
           return;
         }
         el.classList.add("is-anchored");
@@ -3238,6 +3243,17 @@
         el.style.left = `${x}px`;
         el.style.top = `${y}px`;
         el.style.right = "auto";
+        el.style.transform = "none";
+      };
+      const placeLeader = (el, anchor) => {
+        if (!el) return;
+        if (!anchor || anchor.behind) {
+          el.style.display = "none";
+          return;
+        }
+        el.style.display = "block";
+        el.style.left = `${Math.max(4, anchor.x - 9)}px`;
+        el.style.top = `${Math.max(4, anchor.y - 9)}px`;
         el.style.transform = "none";
       };
       const wrap = this.shadowRoot.querySelector(".dash-scene-wrap");
@@ -3270,6 +3286,8 @@
         hudM.innerHTML = `<div class="k">4×8 Main</div>${hudMetric("main")}${bandHtml(m.humidity, mainRhMin, mainRhMax, 0, 100)}${vpdMini(m.vpd, mainVpdMin, mainVpdMax)}<div class="s">No lamp · cascade in${heldNote} · <a href="#/ops/climate" style="color:inherit">⋯ Climate</a></div>`;
         placeHud(hudM, anchors && anchors.main, "right");
       }
+      placeLeader(this.shadowRoot.getElementById("d-leader-clone"), anchors && anchors.clone);
+      placeLeader(this.shadowRoot.getElementById("d-leader-main"), anchors && anchors.main);
 
       const chipsEl = this.shadowRoot.getElementById("d-pot-chips");
       if (chipsEl) {

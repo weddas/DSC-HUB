@@ -29,7 +29,7 @@ export function useEntitySeries(
     setLive([]);
     last.current = null;
     setLastSyncAt(undefined);
-  }, [entityId]);
+  }, [entityId, hours, maxPoints]);
 
   useEffect(() => {
     if (seed.length && !seeded.current) {

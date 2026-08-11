@@ -1,37 +1,50 @@
 import { Card, EntityToggle, Kpi, PageHeader, StatusChip } from "../components/ui";
 import { LegacyCardHost } from "../components/LegacyCardHost";
+import { TimespanControl } from "../components/HistoryDrawer";
 import { useHass } from "../hooks/useHass";
 import { useEntitySeries } from "../hooks/useEntitySeries";
+import { useChartHours } from "../hooks/useChartHours";
 import { MultiLineChart } from "../viz/charts";
+import { potGotEntity } from "../lib/seatModel";
 
 function fmt(n: number, digits = 1): string {
   return Number.isFinite(n) ? n.toFixed(digits) : "—";
 }
 
 export function TuneLearningPage() {
-  const { state, num } = useHass();
+  const { state, num, available, entity } = useHass();
+  const outAlloc = available("sensor.dsc_cfm_exhaust_out_allocated")
+    ? num("sensor.dsc_cfm_exhaust_out_allocated")
+    : num("sensor.dsc_cfm_exhaust_out");
+  const recircAlloc = available("sensor.dsc_cfm_exhaust_recirc_allocated")
+    ? num("sensor.dsc_cfm_exhaust_recirc_allocated")
+    : num("sensor.dsc_cfm_exhaust_recirc");
+  const learnStatus = state("sensor.dsc_learn_status", "—");
+  const learnGate = state("binary_sensor.dsc_learn_gate", state("sensor.dsc_learn_gate", "—"));
+  const curves = String(entity("sensor.dsc_cfm_exhaust_out")?.attributes?.cal_curve ?? "");
+
   return (
     <div className="dsc-page">
       <PageHeader
         icon="learning"
         title="Learning"
-        subtitle="Densify stub — CFM KPIs and kit honesty. Durable math lives in brain/."
+        subtitle="Learn status, CFM honesty, kit — wizard math stays in Lovelace/brain."
       />
       <div className="dsc-grid">
         <div className="dsc-col-3">
           <Kpi
-            label="CFM OUT"
-            value={fmt(num("sensor.dsc_cfm_exhaust_out"), 0)}
+            label="CFM OUT alloc"
+            value={fmt(outAlloc, 0)}
             unit="cfm"
-            sub={`Fan ${fmt(num("sensor.dsc_fan_exhaust_outside_pct"), 0)}%`}
+            sub={`Nameplate ${fmt(num("sensor.dsc_cfm_exhaust_out"), 0)}`}
           />
         </div>
         <div className="dsc-col-3">
           <Kpi
-            label="CFM RECIRC"
-            value={fmt(num("sensor.dsc_cfm_exhaust_recirc"), 0)}
+            label="CFM RECIRC alloc"
+            value={fmt(recircAlloc, 0)}
             unit="cfm"
-            sub={`Fan ${fmt(num("sensor.dsc_fan_exhaust_room_pct"), 0)}%`}
+            sub={`Nameplate ${fmt(num("sensor.dsc_cfm_exhaust_recirc"), 0)}`}
           />
         </div>
         <div className="dsc-col-3">
@@ -42,15 +55,23 @@ export function TuneLearningPage() {
         </div>
 
         <div className="dsc-col-6">
-          <Card className="dsc-glass" title="Status" icon="learning">
-            <p className="dsc-muted" style={{ marginTop: 0 }}>
-              Surface: {state("sensor.dsc_ha_surface_version", "7.0.0")}. Hub beat:{" "}
-              {state("sensor.dsc_hub_heartbeat", "—")}.
-            </p>
+          <Card className="dsc-glass" title="Learn status" icon="learning">
+            <div className="dsc-chip-row">
+              <StatusChip label={`Status ${learnStatus}`} tone={learnStatus === "—" ? "muted" : "ok"} />
+              <StatusChip label={`Gate ${learnGate}`} tone="muted" />
+              <StatusChip
+                label={`Beat ${state("sensor.dsc_hub_heartbeat", "—")}`}
+                tone={available("sensor.dsc_hub_heartbeat") ? "ok" : "bad"}
+              />
+            </div>
             <p className="dsc-honesty" style={{ marginBottom: 0 }}>
-              <StatusChip icon="alert" label="Nameplate" tone="warn" /> CFM figures are nameplate /
-              model estimates unless a calibrated flow sensor is in kit — treat as relative, not lab
-              truth.
+              <StatusChip icon="alert" label="Nameplate" tone="warn" /> CFM figures are allocated /
+              nameplate proxies unless cal curves exist
+              {curves ? ` (${curves})` : " (no curve attrs)"}.
+            </p>
+            <p className="dsc-muted" style={{ marginBottom: 0 }}>
+              Surface: {state("sensor.dsc_ha_surface_version", "7.1.0")}. Full anemometer wizard remains
+              on Lovelace Learning — open dsc-hub-pro Learning for unported steps.
             </p>
           </Card>
         </div>
@@ -72,18 +93,33 @@ export function TuneLearningPage() {
 }
 
 export function TuneAnalyticsPage() {
-  const tSeries = useEntitySeries("sensor.dsc_hub_tent_temperature", { maxPoints: 96 });
-  const rhSeries = useEntitySeries("sensor.dsc_hub_tent_humidity", { maxPoints: 96 });
-  const outCfm = useEntitySeries("sensor.dsc_cfm_exhaust_out", { maxPoints: 96 });
-  const recircCfm = useEntitySeries("sensor.dsc_cfm_exhaust_recirc", { maxPoints: 96 });
+  const { state } = useHass();
+  const { hours, setHours, maxPoints } = useChartHours(6);
+  const tSeries = useEntitySeries("sensor.dsc_hub_tent_temperature", { maxPoints, hours });
+  const rhSeries = useEntitySeries("sensor.dsc_hub_tent_humidity", { maxPoints, hours });
+  const outCfm = useEntitySeries(
+    "sensor.dsc_cfm_exhaust_out_allocated",
+    { maxPoints, hours },
+  );
+  const recircCfm = useEntitySeries(
+    "sensor.dsc_cfm_exhaust_recirc_allocated",
+    { maxPoints, hours },
+  );
+  const p1m = useEntitySeries(potGotEntity(1, "moisture", state), { maxPoints, hours });
+  const p1db = useEntitySeries("sensor.dsc_pot1_dryback_pct", { maxPoints, hours });
+  const p2m = useEntitySeries(potGotEntity(2, "moisture", state), { maxPoints, hours });
+  const p4m = useEntitySeries(potGotEntity(4, "moisture", state), { maxPoints, hours });
 
   return (
     <div className="dsc-page">
       <PageHeader
         icon="analytics"
         title="Analytics"
-        subtitle="History-seeded trends with live append — MultiLine traces."
+        subtitle="History-seeded trends — climate + root pack. Change timespan to zoom."
       />
+      <div className="dsc-chip-row" style={{ marginBottom: 12 }}>
+        <TimespanControl hours={hours} setHours={setHours} />
+      </div>
       <div className="dsc-grid">
         <div className="dsc-col-12">
           <Card className="dsc-glass" title="Tent T + RH" icon="climate">
@@ -95,7 +131,7 @@ export function TuneAnalyticsPage() {
                   id: "t",
                   label: "Temp °C",
                   series: tSeries.series,
-                  color: "var(--dsc-neon)",
+                  color: "var(--dsc-blue)",
                   axis: "left",
                   unit: "°C",
                 },
@@ -112,7 +148,7 @@ export function TuneAnalyticsPage() {
           </Card>
         </div>
         <div className="dsc-col-12">
-          <Card className="dsc-glass" title="Exhaust CFM" icon="climate">
+          <Card className="dsc-glass" title="Exhaust CFM (allocated)" icon="climate">
             <MultiLineChart
               live
               unit="cfm"
@@ -122,15 +158,49 @@ export function TuneAnalyticsPage() {
                   id: "out",
                   label: "OUT",
                   series: outCfm.series,
-                  color: "var(--dsc-neon)",
+                  color: "var(--dsc-blue)",
                   unit: "cfm",
                 },
                 {
                   id: "recirc",
                   label: "RECIRC",
                   series: recircCfm.series,
-                  color: "var(--dsc-amber)",
+                  color: "var(--dsc-purple)",
                   unit: "cfm",
+                },
+              ]}
+            />
+          </Card>
+        </div>
+        <div className="dsc-col-12">
+          <Card className="dsc-glass" title="Root pack — moisture" icon="root">
+            <MultiLineChart
+              live
+              unit="%"
+              lastSyncAt={
+                Math.max(p1m.lastSyncAt ?? 0, p2m.lastSyncAt ?? 0, p4m.lastSyncAt ?? 0) || undefined
+              }
+              series={[
+                { id: "p1", label: "P1", series: p1m.series, color: "var(--dsc-blue)", unit: "%" },
+                { id: "p2", label: "P2", series: p2m.series, color: "var(--dsc-teal)", unit: "%" },
+                { id: "p4", label: "P4", series: p4m.series, color: "var(--dsc-purple)", unit: "%" },
+              ]}
+            />
+          </Card>
+        </div>
+        <div className="dsc-col-12">
+          <Card className="dsc-glass" title="P1 dryback" icon="root">
+            <MultiLineChart
+              live
+              unit="%"
+              lastSyncAt={p1db.lastSyncAt}
+              series={[
+                {
+                  id: "db",
+                  label: "Dryback",
+                  series: p1db.series,
+                  color: "var(--dsc-amber)",
+                  unit: "%",
                 },
               ]}
             />
@@ -163,7 +233,7 @@ export function FleetOverviewPage() {
         <div className="dsc-col-4">
           <Kpi
             label="Surface"
-            value={state("sensor.dsc_ha_surface_version", "7.0.0")}
+            value={state("sensor.dsc_ha_surface_version", "7.1.0")}
             sub="Panel product shell"
           />
         </div>

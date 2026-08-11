@@ -667,6 +667,8 @@ export function ArcGauge({
   target,
   band,
   extrema,
+  stale,
+  onClick,
 }: {
   value: number;
   min?: number;
@@ -676,11 +678,16 @@ export function ArcGauge({
   target?: number;
   band?: { min: number; max: number };
   extrema?: { min?: number; max?: number };
+  stale?: boolean;
+  onClick?: () => void;
 }) {
-  const eased = useEased(Number.isFinite(value) ? value : min);
-  const clamped = Math.min(max, Math.max(min, Number.isFinite(eased) ? eased : min));
+  // Hold needle at last good when stale/unavailable — never ease to min.
+  const display = Number.isFinite(value) ? value : NaN;
+  const eased = useEased(Number.isFinite(display) ? display : min);
+  const needle = Number.isFinite(display) ? eased : min;
+  const clamped = Math.min(max, Math.max(min, needle));
   const span = Math.max(max - min, 1e-6);
-  const pct = (clamped - min) / span;
+  const pct = Number.isFinite(display) ? (clamped - min) / span : 0;
   const r = 46;
   const c = 2 * Math.PI * r * 0.75;
   const dash = c * pct;
@@ -689,12 +696,14 @@ export function ArcGauge({
     return Math.PI - p * Math.PI;
   };
   const inBand =
-    band && Number.isFinite(value) ? value >= band.min && value <= band.max : true;
-  const stroke = !Number.isFinite(value)
+    band && Number.isFinite(display) ? display >= band.min && display <= band.max : true;
+  const stroke = !Number.isFinite(display)
     ? "var(--dsc-gray-4)"
-    : inBand
-      ? "var(--dsc-neon)"
-      : "var(--dsc-amber)";
+    : stale
+      ? "var(--dsc-amber)"
+      : inBand
+        ? "var(--dsc-teal)"
+        : "var(--dsc-amber)";
 
   const tickMarks: { v: number; kind: "band" | "ext" | "target" }[] = [];
   if (band) {
@@ -704,8 +713,10 @@ export function ArcGauge({
   if (extrema?.max != null) tickMarks.push({ v: extrema.max, kind: "ext" });
   if (target != null && Number.isFinite(target)) tickMarks.push({ v: target, kind: "target" });
 
-  return (
-    <div className={`dsc-gauge${!inBand && Number.isFinite(value) ? " is-warn" : ""}`}>
+  const gauge = (
+    <div
+      className={`dsc-gauge${!inBand && Number.isFinite(display) ? " is-warn" : ""}${stale ? " is-stale" : ""}${onClick ? " is-clickable" : ""}`}
+    >
       <svg viewBox="0 0 120 90" width="140" height="105" aria-label={label}>
         <defs>
           <filter id="dsc-gauge-glow" x="-40%" y="-40%" width="180%" height="180%">
@@ -766,13 +777,112 @@ export function ArcGauge({
           fontWeight="700"
           fontFamily="var(--dsc-mono)"
         >
-          {Number.isFinite(value) ? value.toFixed(value >= 100 ? 0 : value < 10 ? 2 : 1) : "—"}
+          {Number.isFinite(display)
+            ? display.toFixed(display >= 100 ? 0 : display < 10 ? 2 : 1)
+            : "—"}
         </text>
         <text x="60" y="74" textAnchor="middle" fill="var(--dsc-gray-5)" fontSize="10">
-          {unit}
+          {stale ? "HELD" : unit}
         </text>
       </svg>
       <div className="dsc-gauge-label">{label}</div>
+    </div>
+  );
+
+  if (onClick) {
+    return (
+      <button type="button" className="dsc-gauge-hit" onClick={onClick} title={`History · ${label}`}>
+        {gauge}
+      </button>
+    );
+  }
+  return gauge;
+}
+
+/** Compact sparkline for Mission / Root. */
+export function Sparkline({
+  series,
+  color = "var(--dsc-blue)",
+  width = 120,
+  height = 28,
+}: {
+  series: SeriesPoint[];
+  color?: string;
+  width?: number;
+  height?: number;
+}) {
+  if (series.length < 2) {
+    return <div className="dsc-sparkline dsc-muted" style={{ width, height }} />;
+  }
+  const vals = series.map((p) => p.v);
+  const lo = Math.min(...vals);
+  const hi = Math.max(...vals);
+  const span = Math.max(hi - lo, 1e-6);
+  const t0 = series[0].t;
+  const t1 = series[series.length - 1].t;
+  const tSpan = Math.max(t1 - t0, 1);
+  const d = series
+    .map((p, i) => {
+      const x = ((p.t - t0) / tSpan) * width;
+      const y = height - ((p.v - lo) / span) * (height - 4) - 2;
+      return `${i === 0 ? "M" : "L"}${x.toFixed(1)} ${y.toFixed(1)}`;
+    })
+    .join(" ");
+  return (
+    <svg className="dsc-sparkline" width={width} height={height} aria-hidden>
+      <path d={d} fill="none" stroke={color} strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function GotWantBars({
+  rows,
+}: {
+  rows: { label: string; got: number; wantMin?: number; wantMax?: number; want?: number; unit?: string }[];
+}) {
+  return (
+    <div className="dsc-gotwant">
+      {rows.map((row) => {
+        const want =
+          row.want != null
+            ? row.want
+            : row.wantMin != null && row.wantMax != null
+              ? (row.wantMin + row.wantMax) / 2
+              : NaN;
+        const max = Math.max(
+          Number.isFinite(row.got) ? row.got : 0,
+          Number.isFinite(want) ? want : 0,
+          row.wantMax ?? 0,
+          1,
+        );
+        const gotPct = Number.isFinite(row.got) ? (row.got / max) * 100 : 0;
+        const wantPct = Number.isFinite(want) ? (want / max) * 100 : 0;
+        return (
+          <div key={row.label} className="dsc-gotwant-row">
+            <div className="dsc-gotwant-label">{row.label}</div>
+            <div className="dsc-gotwant-track">
+              {Number.isFinite(want) ? (
+                <div className="dsc-gotwant-want" style={{ width: `${wantPct}%` }} />
+              ) : null}
+              <div className="dsc-gotwant-got" style={{ width: `${gotPct}%` }} />
+            </div>
+            <div className="dsc-gotwant-vals">
+              <span>
+                Got {Number.isFinite(row.got) ? row.got.toFixed(1) : "—"}
+                {row.unit || ""}
+              </span>
+              <span className="dsc-muted">
+                Want{" "}
+                {row.wantMin != null && row.wantMax != null
+                  ? `${row.wantMin}–${row.wantMax}`
+                  : Number.isFinite(want)
+                    ? want.toFixed(1)
+                    : "—"}
+              </span>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

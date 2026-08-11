@@ -17,7 +17,7 @@ template:
       - name: "DSC HA Surface Version"
         unique_id: dsc_ha_surface_version
         icon: mdi:home-assistant
-        state: "7.0.0"
+        state: "7.1.0"
         attributes:
           packages: dsc_v4_*
           dashboard: dsc-hub custom panel (/dsc-hub) React+Vite
