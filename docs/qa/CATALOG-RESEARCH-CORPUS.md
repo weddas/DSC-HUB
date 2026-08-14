@@ -9,8 +9,20 @@ Build a **research-scale archival plant catalog** (science + seed + lights + nut
 | Staging SQLite (per source) | `brain/data/staging/<family>.sqlite3` | Full source payloads in `raw_record` (multi-GB OK; NAS >1 TB) + typed projections |
 | Master research SQLite | `brain/data/dsc_brain.sqlite3` | Matched canonical + variant + chem + grow + links (+ slim `payload_json`); queryable |
 | Fat JSON/CSV dumps | `homeassistant/data/dsc_*.json`, `Projects/DB DUMP` | Project copies / re-import inputs (gitignored) |
-| HA `/local/dsc-catalog/*.json` | Thin projection (cap ~2500 strains) | Product browse/typeahead |
+| **Cannalib full-corpus API** | `services/cannalib/` → `https://cannalib.plausible-deniability.net` | Online typeahead over **all** `strain_canonical` (~195k); ops [`docs/ops/CANNALIB-API.md`](../ops/CANNALIB-API.md) |
+| HA `/local/dsc-catalog/*.json` | Thin projection (cap **10000** strains after densify run-2) | Offline fallback browse/typeahead only |
 | Community export | Open/redistributable subset only | Public package after legal review |
+
+```mermaid
+flowchart LR
+  master["dsc_brain.sqlite3"] --> idx["build_catalog_search_indexes.py"]
+  master --> cannalib["cannalib API :8790"]
+  idx --> local["/local/dsc-catalog JSON capped"]
+  cannalib --> cards["Build / Catalog cards"]
+  local -.->|"fallback when API down"| cards
+```
+
+Do **not** treat the HA static index count (~10k / local ~11.6k pill) as the research corpus size. Compose honesty reads `sensor.dsc_cannalib_corpus_strains` / `GET /v1/corpus`.
 
 ## Multi-DB ingest architecture (N-087c)
 

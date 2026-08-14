@@ -14,6 +14,16 @@ Full-corpus strain/product search API for DSC-HUB. Serves **~195 266** `strain
 | Origin (tunnel) | `http://127.0.0.1:8790` |
 | Follow-up | N-087-CANNALIB (`docs/FOLLOWUPS.md`) |
 
+```mermaid
+flowchart LR
+  brain["brain/data/dsc_brain.sqlite3<br/>~195k strain_canonical"] -->|ro + wal/shm| api["cannalib :8790<br/>standalone_server.py"]
+  api -->|LAN| haLan["HA / cards 192.168.86.2:8790"]
+  api -->|CF tunnel Wordpress| pub["cannalib.plausible-deniability.net"]
+  pub --> cards["Build / Catalog Lit cards"]
+  pub --> rest["dsc_v4_cannalib_api.yaml<br/>/v1/metrics"]
+  local["/local/dsc-catalog/*.json<br/>capped ~10k"] -.->|"offline fallback"| cards
+```
+
 ---
 
 ## 1. Credentials & auth
@@ -22,10 +32,10 @@ There is **no username / password** on this API. Auth is a single shared **API k
 
 ### 1.1 Current deploy secrets
 
-| Secret | Purpose | Where set | Current value |
+| Secret | Purpose | Where set | Notes |
 |---|---|---|---|
-| `CANNALIB_API_KEY` | Metrics auth; optional full-API lock | Compose env on Unraid stack `cannalib` | `MDFSLeCDOKhu1hJzTsjV3HmOkDSXoJUbehSeMGslS8U` |
-| HA `input_text.dsc_cannalib_api_key` | Same key for REST metrics + cards | Home Assistant helper | Set 2026-08-12 (matches compose) |
+| `CANNALIB_API_KEY` | Metrics auth; optional full-API lock | Compose env on Unraid stack `cannalib` (`docker-compose.yml`) | **Do not paste live keys into Wiki / chat / PR bodies.** Rotate via Unraid Compose Recreate. |
+| HA `input_text.dsc_cannalib_api_key` | Same key for REST metrics + cards | Home Assistant helper | Must match compose after rotate |
 | HA `input_text.dsc_cannalib_base_url` | Public base URL for sensors/cards | Home Assistant helper | `https://cannalib.plausible-deniability.net` |
 
 **Header name:** `X-Cannalib-Key` (override with `CANNALIB_API_KEY_HEADER`).
@@ -43,7 +53,9 @@ There is **no username / password** on this API. Auth is a single shared **API k
 ### 1.3 Example authenticated call
 
 ```bash
-curl -sS -H "X-Cannalib-Key: MDFSLeCDOKhu1hJzTsjV3HmOkDSXoJUbehSeMGslS8U" \
+# Read the live key from Unraid compose / HA helper — do not commit it into docs.
+export CANNALIB_API_KEY='…paste from Unraid compose…'
+curl -sS -H "X-Cannalib-Key: ${CANNALIB_API_KEY}" \
   https://cannalib.plausible-deniability.net/v1/metrics
 ```
 
@@ -55,8 +67,7 @@ curl -sS -H "X-Cannalib-Key: MDFSLeCDOKhu1hJzTsjV3HmOkDSXoJUbehSeMGslS8U" \
    - Unraid Compose Manager stack editor (if it holds a copy — stack uses **external** path to the repo compose; recreate still required)
 3. Compose **Recreate** stack `cannalib` (env is baked at container create).
 4. Paste the same value into HA `input_text.dsc_cannalib_api_key`.
-5. Update this doc’s credentials table.
-6. Confirm: metrics without key → `401`; with key → JSON.
+5. Confirm: metrics without key → `401`; with key → JSON. Do not re-embed the live key in this runbook.
 
 ### 1.5 Operator logins (not Cannalib-specific)
 
@@ -232,7 +243,9 @@ Expect corpus `strains` ≈ **195266**.
 | Home tiles | `homeassistant/dashboards/modules/view_home.yaml` |
 | Cards | `homeassistant/www/dsc-build-plant-card.js`, `dsc-catalog-browse-card.js` |
 
-Cards call `GET {base}/v1/catalogs/{domain}?q=&limit=` and send `X-Cannalib-Key` when the helper is non-empty. Local JSON under `/local/dsc-catalog/` remains **offline fallback** (capped).
+Cards call `GET {base}/v1/catalogs/{domain}?q=&limit=` and send `X-Cannalib-Key` when the helper is non-empty. Local JSON under `/local/dsc-catalog/` remains **offline fallback** (capped). Compose pill honesty prefers `sensor.dsc_cannalib_corpus_strains` / `/v1/corpus` over summing local JSON (~11.6k).
+
+After card edits under `homeassistant/www/`, run `./scripts/sync-hacs-dist.sh` and confirm `git diff -- dist/` is empty before trusting a CI HACS sync commit.
 
 REST poll: every 30s → `{base}/v1/metrics` with UA `HomeAssistant/DSC-HUB cannalib-ha`.
 
@@ -282,4 +295,4 @@ Flip private: set `CANNALIB_REQUIRE_API_KEY=true`, recreate, keep HA key in sync
 
 ---
 
-*Last verified: 2026-08-12 — public HTTPS health/search/corpus OK; `trust_proxy: true`; metrics keyed.*
+*Last verified: 2026-08-14 docs pass — public HTTPS health/search/corpus paths + HA package wiring checked against `standalone_server.py` / `dsc_v4_cannalib_api.yaml`; live key kept out of this runbook.*
