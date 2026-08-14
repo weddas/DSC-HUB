@@ -322,6 +322,8 @@
       this._hass = null;
       this._indexes = { strains: [], nutrients: [], mediums: [], lights: [] };
       this._indexStatus = { loading: false, ok: false, errors: [] };
+      /** @type {{ strains?: number, nutrients?: number, mediums?: number, lights?: number, source?: string } | null} */
+      this._corpus = null;
       this._q = { strain: "", nutrient: "", medium: "", light: "" };
       this._hits = { strain: [], nutrient: [], medium: [], light: [] };
       this._hitActive = { strain: -1, nutrient: -1, medium: -1, light: -1 };
@@ -364,14 +366,15 @@
 
     async _loadIndexes() {
       this._indexStatus = { loading: true, ok: false, errors: [] };
+      this._corpus = null;
       const kinds = [
         ["strains", "dsc_strains_search_index.json"],
         ["nutrients", "dsc_nutrients_search_index.json"],
         ["mediums", "dsc_mediums_search_index.json"],
         ["lights", "dsc_lights_search_index.json"],
       ];
-      await Promise.all(
-        kinds.map(async ([key, file]) => {
+      await Promise.all([
+        ...kinds.map(async ([key, file]) => {
           try {
             const r = await fetch(`${CATALOG_BASE}/${file}`, { cache: "no-cache" });
             if (!r.ok) {
@@ -383,13 +386,44 @@
           } catch (err) {
             this._indexStatus.errors.push(`${file}: ${err?.message || "fetch failed"}`);
           }
-        })
-      );
-      const total = Object.values(this._indexes).reduce((n, a) => n + (a?.length || 0), 0);
+        }),
+        this._loadCorpusCounts(),
+      ]);
+      const localTotal = Object.values(this._indexes).reduce((n, a) => n + (a?.length || 0), 0);
       this._indexStatus.loading = false;
-      this._indexStatus.ok = total > 0;
+      this._indexStatus.ok = localTotal > 0 || !!(this._corpus && this._corpus.strains);
       if (!this._drawerKind) this._render();
       else this._paintCatalogChip();
+    }
+
+    async _loadCorpusCounts() {
+      // Prefer live HA sensor (metrics poll) when present; else hit /v1/corpus.
+      const fromHa = Number(this._st("sensor.dsc_cannalib_corpus_strains")?.state);
+      if (Number.isFinite(fromHa) && fromHa > 0) {
+        this._corpus = {
+          strains: fromHa,
+          source: "ha-sensor",
+        };
+        return;
+      }
+      try {
+        const r = await fetch(`${this._cannalibBase()}/v1/corpus`, {
+          headers: this._cannalibHeaders(),
+          cache: "no-store",
+        });
+        if (!r.ok) throw new Error(`corpus ${r.status}`);
+        const j = await r.json();
+        const c = j?.counts || {};
+        this._corpus = {
+          strains: Number(c.strains) || 0,
+          nutrients: Number(c.nutrients) || 0,
+          mediums: Number(c.mediums) || 0,
+          lights: Number(c.lights) || 0,
+          source: "cannalib",
+        };
+      } catch {
+        this._corpus = null;
+      }
     }
 
     _cannalibBase() {
@@ -749,12 +783,28 @@
         const detail = this._indexStatus.errors[0] || "no index items";
         return `<span class="catalog-pill bad" id="catalog-status"><span class="dot"></span>Catalog load failed: ${this._esc(detail)}</span>`;
       }
-      const n =
-        (this._indexes.strains?.length || 0) +
+      const localProducts =
         (this._indexes.mediums?.length || 0) +
         (this._indexes.nutrients?.length || 0) +
         (this._indexes.lights?.length || 0);
-      return `<span class="catalog-pill" id="catalog-status"><span class="dot"></span>${n} catalog items ready</span>`;
+      const localStrains = this._indexes.strains?.length || 0;
+      const corpusStrains = Number(this._corpus?.strains) || 0;
+      // Honesty: do not sum capped local strains and call that "catalog ready".
+      if (corpusStrains > 0) {
+        const products =
+          (Number(this._corpus?.nutrients) || 0) +
+          (Number(this._corpus?.mediums) || 0) +
+          (Number(this._corpus?.lights) || 0);
+        const productBit =
+          products > 0
+            ? ` · ${products.toLocaleString()} products`
+            : localProducts > 0
+              ? ` · ${localProducts.toLocaleString()} local products`
+              : "";
+        return `<span class="catalog-pill" id="catalog-status" title="Strains via cannalib full corpus; local JSON is offline fallback only."><span class="dot"></span>${corpusStrains.toLocaleString()} strains (full corpus)${productBit}</span>`;
+      }
+      const n = localStrains + localProducts;
+      return `<span class="catalog-pill warn" id="catalog-status" title="Cannalib unreachable — showing capped /local/dsc-catalog indexes only."><span class="dot"></span>${n.toLocaleString()} local index items (capped)</span>`;
     }
 
     _soilHtml(parts, blendValid) {
@@ -1325,7 +1375,18 @@
     }
   }
 
-  if (!customElements.get(CARD_TYPE)) {
+  // Lovlace may already have registered a stale class from DSC-HUB.js.
+  // Upgrade the live prototype so Compose picks up corpus-honest chip/search.
+  const existing = customElements.get(CARD_TYPE);
+  if (existing) {
+    const proto = existing.prototype;
+    proto._loadIndexes = DscBuildPlantCard.prototype._loadIndexes;
+    proto._loadCorpusCounts = DscBuildPlantCard.prototype._loadCorpusCounts;
+    proto._catalogChipHtml = DscBuildPlantCard.prototype._catalogChipHtml;
+    proto._cannalibBase = DscBuildPlantCard.prototype._cannalibBase;
+    proto._cannalibHeaders = DscBuildPlantCard.prototype._cannalibHeaders;
+    proto._apiSearch = DscBuildPlantCard.prototype._apiSearch;
+  } else {
     customElements.define(CARD_TYPE, DscBuildPlantCard);
   }
 
