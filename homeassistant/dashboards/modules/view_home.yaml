@@ -92,6 +92,32 @@ sections:
             tap_action:
               action: navigate
               navigation_path: /dsc-hub-pro/system
+          - type: template
+            entity: sensor.dsc_cannalib_api_hits
+            icon: >-
+              {{ 'mdi:api' if is_state('binary_sensor.dsc_cannalib_api_online','on')
+                 else 'mdi:api-off' }}
+            icon_color: >-
+              {{ 'green' if is_state('binary_sensor.dsc_cannalib_api_online','on') else 'red' }}
+            content: >-
+              {% if is_state('binary_sensor.dsc_cannalib_api_online','on') %}
+                {{ 'CANNALIB ' ~ (states(entity)|int(0)) ~ ' hits' }}
+              {% else %}CANNALIB OFF{% endif %}
+            tap_action:
+              action: more-info
+              entity: sensor.dsc_cannalib_bandwidth_summary
+          - type: template
+            entity: sensor.dsc_cannalib_bandwidth_summary
+            icon: mdi:swap-vertical
+            icon_color: >-
+              {{ 'green' if is_state('binary_sensor.dsc_cannalib_api_online','on') else 'disabled' }}
+            content: >-
+              {% if is_state('binary_sensor.dsc_cannalib_api_online','on') %}
+                {{ states(entity) }}
+              {% else %}— MB{% endif %}
+            tap_action:
+              action: more-info
+              entity: sensor.dsc_cannalib_bandwidth_summary
         card_mod:
           style:
             ".": |
@@ -105,6 +131,32 @@ sections:
                 animation: dsc-pulse-glow 1.4s ease-in-out infinite;
                 {% endif %}
               }
+
+      - type: heading
+        heading: Cannalib catalog API
+        heading_style: subtitle
+      - type: tile
+        entity: sensor.dsc_cannalib_api_hits
+        name: Hits
+        icon: mdi:counter
+        vertical: false
+        color: green
+      - type: tile
+        entity: sensor.dsc_cannalib_bytes_in
+        name: Bandwidth in
+        icon: mdi:download-network
+        vertical: false
+      - type: tile
+        entity: sensor.dsc_cannalib_bytes_out
+        name: Bandwidth out
+        icon: mdi:upload-network
+        vertical: false
+      - type: tile
+        entity: sensor.dsc_cannalib_corpus_strains
+        name: Corpus strains
+        icon: mdi:cannabis
+        vertical: false
+        color: teal
 
       - type: conditional
         conditions:

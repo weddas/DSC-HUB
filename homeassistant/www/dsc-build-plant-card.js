@@ -8,6 +8,8 @@
 (() => {
   const CARD_TYPE = "dsc-build-plant-card";
   const CATALOG_BASE = "/local/dsc-catalog";
+  // Full-corpus host (all strains). Local JSON remains offline fallback (capped).
+  const CANNALIB_DEFAULT = "https://cannalib.plausible-deniability.net";
   const COLORS = ["#5b9f6b", "#4a8f9f", "#c4a35a"];
   /** UI kind -> catalog index key */
   const INDEX_KEY = {
@@ -183,6 +185,7 @@
     }
     .chip.warn { background:rgba(196,163,90,.12); border-color:rgba(196,163,90,.4); color:#e8d7a8; }
     .chip.bad { background:rgba(180,70,70,.12); border-color:rgba(180,70,70,.4); color:#f0b4b4; }
+    .chip.miss { background:rgba(120,120,130,.1); border-color:rgba(160,160,170,.35); color:#b0b4bc; }
     .chip.ok {
       background: rgba(57,255,20,.1); border-color: var(--dsc-neon-dim); color: var(--dsc-neon);
       box-shadow: 0 0 12px rgba(57,255,20,.12);
@@ -319,6 +322,8 @@
       this._hass = null;
       this._indexes = { strains: [], nutrients: [], mediums: [], lights: [] };
       this._indexStatus = { loading: false, ok: false, errors: [] };
+      /** @type {{ strains?: number, nutrients?: number, mediums?: number, lights?: number, source?: string } | null} */
+      this._corpus = null;
       this._q = { strain: "", nutrient: "", medium: "", light: "" };
       this._hits = { strain: [], nutrient: [], medium: [], light: [] };
       this._hitActive = { strain: -1, nutrient: -1, medium: -1, light: -1 };
@@ -361,14 +366,15 @@
 
     async _loadIndexes() {
       this._indexStatus = { loading: true, ok: false, errors: [] };
+      this._corpus = null;
       const kinds = [
         ["strains", "dsc_strains_search_index.json"],
         ["nutrients", "dsc_nutrients_search_index.json"],
         ["mediums", "dsc_mediums_search_index.json"],
         ["lights", "dsc_lights_search_index.json"],
       ];
-      await Promise.all(
-        kinds.map(async ([key, file]) => {
+      await Promise.all([
+        ...kinds.map(async ([key, file]) => {
           try {
             const r = await fetch(`${CATALOG_BASE}/${file}`, { cache: "no-cache" });
             if (!r.ok) {
@@ -380,13 +386,72 @@
           } catch (err) {
             this._indexStatus.errors.push(`${file}: ${err?.message || "fetch failed"}`);
           }
-        })
-      );
-      const total = Object.values(this._indexes).reduce((n, a) => n + (a?.length || 0), 0);
+        }),
+        this._loadCorpusCounts(),
+      ]);
+      const localTotal = Object.values(this._indexes).reduce((n, a) => n + (a?.length || 0), 0);
       this._indexStatus.loading = false;
-      this._indexStatus.ok = total > 0;
+      this._indexStatus.ok = localTotal > 0 || !!(this._corpus && this._corpus.strains);
       if (!this._drawerKind) this._render();
       else this._paintCatalogChip();
+    }
+
+    async _loadCorpusCounts() {
+      // Prefer live HA sensor (metrics poll) when present; else hit /v1/corpus.
+      const fromHa = Number(this._st("sensor.dsc_cannalib_corpus_strains")?.state);
+      if (Number.isFinite(fromHa) && fromHa > 0) {
+        this._corpus = {
+          strains: fromHa,
+          source: "ha-sensor",
+        };
+        return;
+      }
+      try {
+        const r = await fetch(`${this._cannalibBase()}/v1/corpus`, {
+          headers: this._cannalibHeaders(),
+          cache: "no-store",
+        });
+        if (!r.ok) throw new Error(`corpus ${r.status}`);
+        const j = await r.json();
+        const c = j?.counts || {};
+        this._corpus = {
+          strains: Number(c.strains) || 0,
+          nutrients: Number(c.nutrients) || 0,
+          mediums: Number(c.mediums) || 0,
+          lights: Number(c.lights) || 0,
+          source: "cannalib",
+        };
+      } catch {
+        this._corpus = null;
+      }
+    }
+
+    _cannalibBase() {
+      const u = this._str("input_text.dsc_cannalib_base_url");
+      return (u || CANNALIB_DEFAULT).replace(/\/$/, "");
+    }
+
+    _cannalibHeaders() {
+      const h = { Accept: "application/json" };
+      const key = this._str("input_text.dsc_cannalib_api_key");
+      if (key) h["X-Cannalib-Key"] = key;
+      return h;
+    }
+
+    async _apiSearch(kind, q, limit = 12) {
+      const map = {
+        strain: "strains",
+        nutrient: "nutrients",
+        medium: "mediums",
+        light: "lights",
+      };
+      const domain = map[kind];
+      if (!domain) return null;
+      const url = `${this._cannalibBase()}/v1/catalogs/${domain}?q=${encodeURIComponent(q || "")}&limit=${limit}`;
+      const r = await fetch(url, { headers: this._cannalibHeaders(), cache: "no-store" });
+      if (!r.ok) throw new Error(`cannalib ${r.status}`);
+      const j = await r.json();
+      return Array.isArray(j.items) ? j.items : [];
     }
 
     _st(id) {
@@ -452,6 +517,29 @@
 
     _search(kind, q, { open = true } = {}) {
       this._q[kind] = q;
+      if (open) this._drawerKind = kind;
+      // Strains: full corpus via cannalib; other kinds keep local index (near-complete).
+      if (kind === "strain") {
+        const seq = (this._apiSeq = (this._apiSeq || 0) + 1);
+        const needle = (q || "").trim();
+        clearTimeout(this._apiTimer);
+        this._apiTimer = setTimeout(async () => {
+          try {
+            const items = await this._apiSearch("strain", needle, 12);
+            if (seq !== this._apiSeq) return;
+            this._hits.strain = items || [];
+            this._apiLive = true;
+          } catch (_err) {
+            if (seq !== this._apiSeq) return;
+            this._hits.strain = this._filterItems("strain", needle);
+            this._apiLive = false;
+          }
+          this._hitActive.strain = this._hits.strain.length ? 0 : -1;
+          this._paintHits("strain");
+          this._paintCatalogChip();
+        }, needle.length ? 180 : 0);
+        return;
+      }
       this._hits[kind] = this._filterItems(kind, q);
       this._hitActive[kind] = this._hits[kind].length ? 0 : -1;
       if (open) this._drawerKind = kind;
@@ -461,8 +549,7 @@
     _openSearch(kind) {
       this._drawerKind = kind;
       this._overflowMenu = null;
-      this._hits[kind] = this._filterItems(kind, this._q[kind] || "");
-      this._hitActive[kind] = this._hits[kind].length ? 0 : -1;
+      this._search(kind, this._q[kind] || "", { open: true });
       this._focusRestore = { id: SEARCH_IDS[kind], pos: (this._q[kind] || "").length };
       this._render();
     }
@@ -615,6 +702,23 @@
       return { lines, total: Math.round(total * 10) / 10, L, str };
     }
 
+    _fmtRange(v, unit) {
+      if (v == null) return null;
+      if (Array.isArray(v) && v.length >= 2) return `${v[0]}-${v[1]}${unit || ""}`;
+      return `${v}${unit || ""}`;
+    }
+
+    _strainTraitMeta(it) {
+      if (!it) return [];
+      const bits = [];
+      if (it.breeder) bits.push(it.breeder);
+      if (it.type) bits.push(String(it.type));
+      if (it.height_cm != null) bits.push(`ht ${this._fmtRange(it.height_cm, "cm")}`);
+      if (it.flowering_days != null) bits.push(`flower ${this._fmtRange(it.flowering_days, "d")}`);
+      if (it.has_chemistry && Array.isArray(it.thc_range)) bits.push(`THC ${it.thc_range.join("-")}%`);
+      return bits;
+    }
+
     _hitsHtml(kind) {
       if (this._drawerKind !== kind) return "";
       const hits = this._hits[kind] || [];
@@ -632,7 +736,15 @@
       }
       return `<ul class="hits" id="drawer-hits" role="listbox">${hits
         .map((it, i) => {
-          const meta = [it.brand || it.breeder, it.wattage_w != null ? `${it.wattage_w} W` : null, it.dose_ml_l != null ? `${it.dose_ml_l} ml/L` : null]
+          const meta = (
+            kind === "strain"
+              ? this._strainTraitMeta(it)
+              : [
+                  it.brand || it.breeder,
+                  it.wattage_w != null ? `${it.wattage_w} W` : null,
+                  it.dose_ml_l != null ? `${it.dose_ml_l} ml/L` : null,
+                ]
+          )
             .filter(Boolean)
             .join(" | ");
           return `<li role="option" data-kind="${kind}" data-i="${i}" class="${i === active ? "active" : ""}"><div>${this._esc(it.name)}</div>${meta ? `<div class="meta">${this._esc(meta)}</div>` : ""}</li>`;
@@ -671,12 +783,28 @@
         const detail = this._indexStatus.errors[0] || "no index items";
         return `<span class="catalog-pill bad" id="catalog-status"><span class="dot"></span>Catalog load failed: ${this._esc(detail)}</span>`;
       }
-      const n =
-        (this._indexes.strains?.length || 0) +
+      const localProducts =
         (this._indexes.mediums?.length || 0) +
         (this._indexes.nutrients?.length || 0) +
         (this._indexes.lights?.length || 0);
-      return `<span class="catalog-pill" id="catalog-status"><span class="dot"></span>${n} catalog items ready</span>`;
+      const localStrains = this._indexes.strains?.length || 0;
+      const corpusStrains = Number(this._corpus?.strains) || 0;
+      // Honesty: do not sum capped local strains and call that "catalog ready".
+      if (corpusStrains > 0) {
+        const products =
+          (Number(this._corpus?.nutrients) || 0) +
+          (Number(this._corpus?.mediums) || 0) +
+          (Number(this._corpus?.lights) || 0);
+        const productBit =
+          products > 0
+            ? ` · ${products.toLocaleString()} products`
+            : localProducts > 0
+              ? ` · ${localProducts.toLocaleString()} local products`
+              : "";
+        return `<span class="catalog-pill" id="catalog-status" title="Strains via cannalib full corpus; local JSON is offline fallback only."><span class="dot"></span>${corpusStrains.toLocaleString()} strains (full corpus)${productBit}</span>`;
+      }
+      const n = localStrains + localProducts;
+      return `<span class="catalog-pill warn" id="catalog-status" title="Cannalib unreachable — showing capped /local/dsc-catalog indexes only."><span class="dot"></span>${n.toLocaleString()} local index items (capped)</span>`;
     }
 
     _soilHtml(parts, blendValid) {
@@ -801,6 +929,24 @@
               : null,
           ].filter(Boolean).join(" | ")
         : "";
+      const heightChip =
+        strainHit?.height_cm != null
+          ? `Height: ${this._fmtRange(strainHit.height_cm, " cm")}`
+          : "";
+      const flowerChip =
+        strainHit?.flowering_days != null
+          ? `Flower: ${this._fmtRange(strainHit.flowering_days, " d")}`
+          : "";
+      const strainChips = [
+        chemistry ? `<span class="chip">Chemistry: ${this._esc(chemistry)}</span>` : "",
+        heightChip ? `<span class="chip">${this._esc(heightChip)}</span>` : "",
+        flowerChip ? `<span class="chip">${this._esc(flowerChip)}</span>` : "",
+        strainHit && !chemistry && !heightChip && !flowerChip
+          ? `<span class="chip miss">No densified traits in catalog for this pick</span>`
+          : "",
+      ]
+        .filter(Boolean)
+        .join("");
       const assignPot = this._str("input_select.dsc_build_assign_pot");
       const livePot = ["1", "2", "3", "4"].includes(assignPot)
         ? {
@@ -866,7 +1012,7 @@
                   </div>
                 </div>
                 <input type="hidden" id="build-strain" value="${this._esc(strainName)}" />
-                ${chemistry ? `<div class="chips"><span class="chip">Chemistry: ${this._esc(chemistry)}</span></div>` : ""}
+                ${strainChips ? `<div class="chips">${strainChips}</div>` : ""}
               </section>
             </div>
 
@@ -1229,7 +1375,18 @@
     }
   }
 
-  if (!customElements.get(CARD_TYPE)) {
+  // Lovlace may already have registered a stale class from DSC-HUB.js.
+  // Upgrade the live prototype so Compose picks up corpus-honest chip/search.
+  const existing = customElements.get(CARD_TYPE);
+  if (existing) {
+    const proto = existing.prototype;
+    proto._loadIndexes = DscBuildPlantCard.prototype._loadIndexes;
+    proto._loadCorpusCounts = DscBuildPlantCard.prototype._loadCorpusCounts;
+    proto._catalogChipHtml = DscBuildPlantCard.prototype._catalogChipHtml;
+    proto._cannalibBase = DscBuildPlantCard.prototype._cannalibBase;
+    proto._cannalibHeaders = DscBuildPlantCard.prototype._cannalibHeaders;
+    proto._apiSearch = DscBuildPlantCard.prototype._apiSearch;
+  } else {
     customElements.define(CARD_TYPE, DscBuildPlantCard);
   }
 

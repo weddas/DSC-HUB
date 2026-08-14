@@ -1,0 +1,97 @@
+# ==================================================================
+#  DSC-HUB · Cannalib catalog API telemetry (full-corpus host)
+#  ------------------------------------------------------------------
+#  REST sensors → https://cannalib.plausible-deniability.net/v1/metrics
+#  Home tiles: hits + bandwidth in/out. Auth key optional until locked.
+# ==================================================================
+
+input_text:
+  dsc_cannalib_base_url:
+    name: "DSC Cannalib Base URL"
+    icon: mdi:api
+    initial: "https://cannalib.plausible-deniability.net"
+    max: 255
+
+  dsc_cannalib_api_key:
+    name: "DSC Cannalib API Key"
+    icon: mdi:key-variant
+    initial: ""
+    max: 128
+
+rest:
+  - resource_template: "{{ states('input_text.dsc_cannalib_base_url')|trim }}/v1/metrics"
+    scan_interval: 30
+    timeout: 15
+    headers:
+      User-Agent: "HomeAssistant/DSC-HUB cannalib-ha"
+      X-Cannalib-Key: "{{ states('input_text.dsc_cannalib_api_key')|trim }}"
+    sensor:
+      - name: "DSC Cannalib API Hits"
+        unique_id: dsc_cannalib_api_hits
+        value_template: "{{ value_json.hits_total | default(0) }}"
+        unit_of_measurement: "req"
+        icon: mdi:counter
+        json_attributes:
+          - hits_blocked_bot
+          - hits_rate_limited
+          - hits_unauthorized
+          - search_total
+          - hydrate_total
+          - uptime_s
+          - auth_mode
+          - corpus
+          - version
+
+      - name: "DSC Cannalib Bytes In"
+        unique_id: dsc_cannalib_bytes_in
+        value_template: "{{ value_json.bytes_in | default(0) }}"
+        unit_of_measurement: "B"
+        device_class: data_size
+        state_class: total_increasing
+        icon: mdi:download-network
+
+      - name: "DSC Cannalib Bytes Out"
+        unique_id: dsc_cannalib_bytes_out
+        value_template: "{{ value_json.bytes_out | default(0) }}"
+        unit_of_measurement: "B"
+        device_class: data_size
+        state_class: total_increasing
+        icon: mdi:upload-network
+
+      - name: "DSC Cannalib Corpus Strains"
+        unique_id: dsc_cannalib_corpus_strains
+        value_template: "{{ value_json.corpus.strains | default(0) }}"
+        unit_of_measurement: "strains"
+        icon: mdi:cannabis
+        json_attributes_path: "$.corpus"
+        json_attributes:
+          - variants
+          - aliases
+          - chemistry
+          - nutrients
+          - mediums
+          - lights
+
+template:
+  - binary_sensor:
+      - name: "DSC Cannalib API Online"
+        unique_id: dsc_cannalib_api_online
+        icon: mdi:cloud-check
+        state: >-
+          {{ states('sensor.dsc_cannalib_api_hits') not in ['unknown','unavailable',''] }}
+
+  - sensor:
+      - name: "DSC Cannalib Bandwidth Summary"
+        unique_id: dsc_cannalib_bw_summary
+        icon: mdi:swap-vertical
+        state: >-
+          {% set i = states('sensor.dsc_cannalib_bytes_in')|float(0) %}
+          {% set o = states('sensor.dsc_cannalib_bytes_out')|float(0) %}
+          {{ (i/1e6)|round(2) }}↓ / {{ (o/1e6)|round(2) }}↑ MB
+        attributes:
+          hits: "{{ states('sensor.dsc_cannalib_api_hits') }}"
+          blocked_bot: "{{ state_attr('sensor.dsc_cannalib_api_hits','hits_blocked_bot') }}"
+          rate_limited: "{{ state_attr('sensor.dsc_cannalib_api_hits','hits_rate_limited') }}"
+          corpus_strains: "{{ states('sensor.dsc_cannalib_corpus_strains') }}"
+          auth_mode: "{{ state_attr('sensor.dsc_cannalib_api_hits','auth_mode') }}"
+          note: "Full-corpus cannalib API (not the 10k HA static index)."

@@ -1,13 +1,15 @@
 /**
  * DSC-HUB — Catalog Explorer (browse / filter / compare / Use in Build).
  * type: custom:dsc-catalog-browse-card
- * Reads /local/dsc-catalog/*.json only. Missing fields = "not in catalog".
+ * Strains: full corpus via cannalib API. Other domains: /local/dsc-catalog JSON.
+ * Missing fields = "not in catalog".
  */
 (() => {
   const CARD_TYPE = "dsc-catalog-browse-card";
   const CATALOG_BASE = "/local/dsc-catalog";
+  const CANNALIB_DEFAULT = "https://cannalib.plausible-deniability.net";
   const DOMAINS = [
-    { id: "strains", label: "Strains", file: "dsc_strains_search_index.json" },
+    { id: "strains", label: "Strains", file: "dsc_strains_search_index.json", api: true },
     { id: "nutrients", label: "Nutrients", file: "dsc_nutrients_search_index.json" },
     { id: "mediums", label: "Mediums", file: "dsc_mediums_search_index.json" },
     { id: "lights", label: "Lights", file: "dsc_lights_search_index.json" },
@@ -105,6 +107,10 @@
     async _loadDomain(id) {
       const def = DOMAINS.find((d) => d.id === id);
       if (!def) return;
+      if (def.api) {
+        await this._apiSearchDomain(id, this._q || "");
+        return;
+      }
       if (this._cache[id]) {
         this._meta = this._cache[id];
         return;
@@ -117,6 +123,49 @@
       } catch (e) {
         this._cache[id] = { items: [], note: String(e), count: 0 };
         this._meta = this._cache[id];
+      }
+    }
+    _cannalibBase() {
+      const s = this._hass?.states?.["input_text.dsc_cannalib_base_url"]?.state;
+      const u = s && s !== "unknown" && s !== "unavailable" ? s : CANNALIB_DEFAULT;
+      return String(u).replace(/\/$/, "");
+    }
+    _cannalibHeaders() {
+      const h = { Accept: "application/json" };
+      const key = this._hass?.states?.["input_text.dsc_cannalib_api_key"]?.state;
+      if (key && key !== "unknown" && key !== "unavailable" && String(key).trim()) {
+        h["X-Cannalib-Key"] = String(key).trim();
+      }
+      return h;
+    }
+    async _apiSearchDomain(id, q) {
+      const seq = (this._apiSeq = (this._apiSeq || 0) + 1);
+      try {
+        const url = `${this._cannalibBase()}/v1/catalogs/${id}?q=${encodeURIComponent(q || "")}&limit=80`;
+        const res = await fetch(url, { headers: this._cannalibHeaders(), cache: "no-store" });
+        if (!res.ok) throw new Error(`cannalib ${res.status}`);
+        const doc = await res.json();
+        if (seq !== this._apiSeq) return;
+        this._meta = {
+          items: Array.isArray(doc.items) ? doc.items : [],
+          count: doc.count,
+          capped: false,
+          note: "Full corpus via cannalib (all records; typeahead).",
+          source: "cannalib",
+        };
+        this._apiLive = true;
+      } catch (e) {
+        // Fallback to capped local index so Research still works offline.
+        if (seq !== this._apiSeq) return;
+        this._apiLive = false;
+        const def = DOMAINS.find((d) => d.id === id);
+        try {
+          const res = await fetch(`${CATALOG_BASE}/${def.file}?v=${Date.now()}`, { cache: "no-store" });
+          const doc = await res.json();
+          this._meta = { ...doc, note: `API offline — local capped index. ${e}` };
+        } catch (e2) {
+          this._meta = { items: [], note: String(e2), count: 0 };
+        }
       }
     }
     _items() {
@@ -184,6 +233,8 @@
         else chips.push({ miss: true, t: "no climate" });
         if (it.height_cm != null) chips.push(`ht ${this._fmtRange(it.height_cm, "cm")}`);
         else chips.push({ miss: true, t: "no height" });
+        if (it.flowering_days != null) chips.push(`flower ${this._fmtRange(it.flowering_days, "d")}`);
+        else chips.push({ miss: true, t: "no flower days" });
         if (Array.isArray(it.top_terpenes) && it.top_terpenes.length) chips.push(it.top_terpenes.slice(0, 3).join(", "));
       } else if (this._domain === "nutrients") {
         if (it.brand) chips.push(it.brand);
@@ -417,6 +468,7 @@
         });
       });
       const syncFilters = () => {
+        const prevQ = this._q;
         this._q = root.querySelector("#q")?.value || "";
         this._type = root.querySelector("#type")?.value || "";
         this._tempMin = root.querySelector("#tmin")?.value || "";
@@ -427,6 +479,15 @@
         const flags = root.querySelector("#flags")?.value || "";
         this._chemOnly = flags === "chem";
         this._hasWant = flags === "want";
+        const def = DOMAINS.find((d) => d.id === this._domain);
+        if (def?.api && this._q !== prevQ) {
+          clearTimeout(this._apiTimer);
+          this._apiTimer = setTimeout(async () => {
+            await this._apiSearchDomain(this._domain, this._q);
+            this._render();
+          }, 200);
+          return;
+        }
         this._render();
       };
       ["q", "type", "tmin", "tmax", "hmin", "hmax", "cat", "flags"].forEach((id) => {

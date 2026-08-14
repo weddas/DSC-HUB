@@ -1654,7 +1654,7 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 - Schema skim: no observation/review tables yet; no systematic parent_of/child_of emit; wordcloud deferred — gaps only, no refactor mid-merge.
 
 - [x] **StrainDB `save_cookies` crash** (fixed 2026-08-08): `Session.save_cookies` now normalizes jar via `_cookies_as_map` (handles str keys / Cookie objs / `get_dict`) and never raises. Warm n=140 finalize no longer dies on cookie write; storage_state save also guarded.
-- [ ] **StrainDB CF / cookie re-import still needed** (**2026-08-09 still paused**): Checkpoint **n=213** (`_pw_strain_db_PAUSE.txt`); `resume_after` 2026-08-08T18:39+10 elapsed — **not resumed**; scrape/shepherd PIDs dead. Headed Playwright warm hits CF → `chrome-error://chromewebdata/`. Before resume: pass CF in browser / refresh Playwright profile cookies (`_pw_strain_db_capture.py` or Netscape export); delay-min/max 8–20s; do not tight-retry. curl_cffi-alone still TLS-bound for `cf_clearance`.
+- [x] **StrainDB CF / cookie re-import** — **CLOSED_NO_MORE_SCRAPING 2026-08-11** (superseded; do not resume). Was paused at n≈213 (`_pw_strain_db_PAUSE.txt`); CF/cookie unlock no longer an active chase.
 
 ## 2026-08-09 — N-087 / catalog status snapshot (probed morning AEST)
 
@@ -1788,7 +1788,7 @@ Notion hub: [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d34
 - [x] Ran on local master `C:\DSC\collation\dsc_brain.sqlite3` + NAS via local work-copy/copyback. Summary: `C:\DSC\collation\_subtype_chem_own_sources_summary.json`.
 - [x] `project_subtype_links.py` re-run: 0 new links (9703 subtype_of; 14333 base_missing still).
 - **Coverage:** chem 7105→7129 (+24 staging typed); bank_note 4800→4952 (+152 staging raw). Still lacking chem **2574** / notes **4751** — no honest own-source left on disk.
-- [ ] **next-plan:** targeted F2/bx/auto PDP scrapes for remaining subtype chem/notes (see `docs/qa/CATALOG-THIN-FIELDS.md` P1). SoftAP out of scope.
+- [x] **next-plan:** targeted F2/bx/auto PDP scrapes for remaining subtype chem/notes — **deferred under CATALOG-THIN-FIELDS no-scrape policy** (accepted thin gaps; not “chem filled”). SoftAP out of scope.
 
 ## 2026-08-10 — DSC-Dashboard visual inspiration
 
@@ -1967,4 +1967,67 @@ esult[entityId]; HA often returns [[states]] → empty series. Empty hist locked
 - Normalize history array/dict; retry empty climate hist sooner.
 - Twin charts: 2×4 + 4×8 Temp/RH/VPD (6 panes); amber glow when that tent's lights are on (2×4 = SF1000; 4×8 = no lamp yet).
 - Mission Live gauges: same 2×4 / 4×8 T·RH·VPD groups + lit glow.
+
+## 2026-08-12 — Tent pass (all tents) + 4×8 photoperiod glow
+
+### done
+- 4×8 Twin/Mission/airflow glow: prefer future `main_light` if present; else `binary_sensor.dsc_hub_4x8_window_open` (honest schedule/heat proxy — no GPIO5 lamp yet). Main tent light-bar/shafts driven like clone.
+- Twin focus framing: Main/Clone cockpits orbit toward the active tent.
+- Main/Clone cockpits: VPD + PHOTO/SF1000 chips, Want targets (single tent), tent fan strip, Twin keep-alive.
+- Airflow-map: main LIGHT mark no longer mis-points at SF1000; clone gets SF1000; Climate honesty note updated.
+
+### soak
+- Hard-reload Twin / Main / Clone / Climate after `/local/DSC-HUB.js?v=7.1.4-tent-pass`. Confirm 4×8 amber when window open; airflow LIGHT marks; cockpit chips.
+
+### still parked
+- Real 4×8 PWM lamp entity (GPIO5) — wire `entities.main_light` when instrumented.
+- SoftAP NAPT OTA (fleet update path) — separate from Twin UI.
+- R3F Twin / authored GLTF / inventing CFM-PPFD.
+
+---
+
+## 2026-08-12 — Cannalib full-corpus API (N-087-CANNALIB)
+
+**Ops SoT (credentials, mounts, tunnel, HA):** [`docs/ops/CANNALIB-API.md`](ops/CANNALIB-API.md)
+
+### done
+- Stdlib service `services/cannalib/standalone_server.py` on Digital-Gateway (`:8790`): full `strain_canonical` (~195k), not HA 10k index.
+- Hardening: RO rootfs, `cap_drop ALL`, DB `:ro` + WAL/SHM mounts, GET-only, keyed `/v1/metrics`, soft rate limits (no lock-held sleep), capped `q`/`limit`, no exception leak.
+- HA package + Home tiles; cards typeahead via cannalib with local JSON fallback.
+- Verified LAN: `/health`, search Blue Dream, `/v1/corpus` = 195266. Metrics → 401 without key.
+- **N-087-CANNALIB-DEPLOY**: CF tunnel (Wordpress) public hostname `cannalib.plausible-deniability.net` → `http://127.0.0.1:8790`; DNS CNAME created. Public HTTPS `/health`, `/v1/catalogs/strains`, `/v1/corpus` OK. `CANNALIB_TRUST_PROXY=true` live.
+- Ops runbook written (`docs/ops/CANNALIB-API.md`).
+- **N-087-CANNALIB-HA-KEY**: Deployed `dsc_v4_cannalib_api.yaml` to HA `/config/packages/` (fixed `max: 255`); set `input_text.dsc_cannalib_api_key`; sensors online (`corpus` 195266, `api_online` on).
+- **2026-08-15 Research card**: `ensureLocalCards` now loads dedicated `/local/dsc-*-card.js` (was only trying stale `DSC-HUB.js` / wrong `dsc-system-map-card.js`). Deployed cards + rebuilt panel; Research hosts `dsc-catalog-browse-card` again.
+- **2026-08-15 Compose chip honesty**: Catalog pill no longer sums capped local JSON (~11.6k). Shows cannalib `/v1/corpus` (e.g. **195,266 strains (full corpus)**); dedicated card upgrades stale `DSC-HUB.js` CE prototype.
+
+### next-plan
+| ID | Item | Notes |
+|---|---|---|
+| N-087-CANNALIB-FTS | Optional FTS5 / name index for sub-100ms typeahead | Warm SSD OK; array disk COUNT is slow once |
+
+### deferred
+- Cloudflare WAF custom rules / Access hard-private mode until abuse appears.
+- Flip `CANNALIB_REQUIRE_API_KEY=true` if catalog must stop being publicly scrapeable.
+- WordPress site scaffold on plausible-deniability.net (separate from API).
+
+## 2026-08-15 — POT3 / POT4 Modbus (not a firmware regression)
+
+Operator: soldered RS485 contacts + replaced MAX transceiver on pots 3 and 4; still “modbus issues.” Live check vs pots 1/2 (same `dsc-pot-common` **6.0.0.0**).
+
+### what is true
+- **Modbus YAML did not change.** UART GPIO17/16, DE/RE GPIO4, 4800 8N1, slave `1`, holding `0x0000–0x0006`. SoftAP 6.0.0.0 only moved Wi‑Fi home. Pots **1 and 2** on that exact binary have live soil (P1 49.5% / 20.9 °C / 295 µS / pH 6.0; P2 26.1% / 21.7 °C / 200 µS / pH 6.6). Same code cannot be “broken only on 3 and 4.”
+- **POT3 ESP is on SoftAP** `192.168.4.14` (ICMP + API `:6053` + OTA `:3232` open). HA still had *all* `dsc_pot3_*` **unavailable** (firmware/uptime/wifi included) — that is **API-not-bound**, not a Modbus decode. Old Nest `.40` still pings but is **not** ESPHome (6053/3232 closed). If HA’s ESPHome entry still points at `.40`, it will never attach. Confirm host = `192.168.4.14`.
+- **POT4 ESP is off SoftAP** `192.168.4.15` (no ping, no 6053/3232). Worse than 2026-08-11 (then API was fine, soil all NaN). After the rework the node is not on the fleet AP — bench unpowered, **Fallback AP**, or the rework took out 3V3/EN/Wi‑Fi, not just the MAX.
+- Hub `POT3/4 ESP-NOW Link` stays **off** while soil_temperature is missing/NaN. That bit is **probe freshness**, not radio. P1/P2 links were **on**.
+- F-003 (POT3 probe) and the 2026-08-11 POT4 NaN note are still the live faults. Soldering + MAX swap did not close them.
+
+### isolate (do this, in order)
+1. **POT4 power / AP:** USB serial boot. If it is on `DSC-POT#4 Fallback`, it will not be at `.15`. Rejoin `DSC-Anchor` → `.15` before judging Modbus.
+2. **Swap test (the only isolation that matters):** move **POT2’s known-good probe + cable** onto the POT3 (then POT4) board. Readings appear → original probe/cable is dead. Still NaN / “no response” → board-side (DE/RE GPIO4, A/B, probe VCC 5–24 V, MAX type/orientation).
+3. Do **not** keep replacing MAX chips on both dead pots without that swap — POT3 was already a documented dead probe (0.0% then offline). Two dead probes + two reworked boards look like “firmware changed.”
+4. Post-MAX checklist if the good probe still fails on that board: MAX3485 (3.3 V) vs MAX485 (5 V); pin-1 orientation; DE+RE both on GPIO4; A/B not swapped; RO←RX / DI→TX; probe VCC not 3.3 V-only; replacement probe baud/address (some clones are **9600** / not addr `1`).
+
+### honesty leftover
+- Separate **ESP online** vs **Modbus probe online** cues so Link-off is not read as radio fail (noted 2026-08-11; still open).
 

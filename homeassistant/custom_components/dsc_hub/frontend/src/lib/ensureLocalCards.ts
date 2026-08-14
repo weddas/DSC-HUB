@@ -1,12 +1,29 @@
 /** Script sources that register DSC Lovelace custom elements. */
-const SCRIPT_CANDIDATES = [
-  "/local/DSC-HUB.js",
-  "/local/dsc-system-map-card.js",
-  "/hacsfiles/DSC-HUB/DSC-HUB.js",
+/** Cache-bust: HA /local max-age ~31d; bump when Dash/Twin IIFE changes. */
+const BUNDLE_V = "7.1.4-corpus-chip2";
+
+/** Fat umbrella bundle (may contain several cards depending on build). */
+const UMBRELLA = [
+  `/local/DSC-HUB.js?v=${BUNDLE_V}`,
+  `/hacsfiles/DSC-HUB/DSC-HUB.js?v=${BUNDLE_V}`,
 ];
 
+/**
+ * Prefer the dedicated IIFE for each tag. The umbrella alone is not enough:
+ * HA often has a stale DSC-HUB.js while /local/dsc-*-card.js is current.
+ */
+const TAG_SCRIPTS: Record<string, string[]> = {
+  "dsc-catalog-browse-card": [`/local/dsc-catalog-browse-card.js?v=${BUNDLE_V}`],
+  "dsc-build-plant-card": [`/local/dsc-build-plant-card.js?v=${BUNDLE_V}`],
+  "dsc-the-dash-card": [`/local/dsc-the-dash-card.js?v=${BUNDLE_V}`],
+  "dsc-airflow-map-card": [`/local/dsc-airflow-map-card.js?v=${BUNDLE_V}`],
+  "dsc-system-map-card": [
+    `/local/dsc-system-map-card.js?v=${BUNDLE_V}`,
+    ...UMBRELLA,
+  ],
+};
+
 const loading = new Map<string, Promise<void>>();
-let attempted = false;
 
 function injectScript(src: string): Promise<void> {
   const existing = document.querySelector(`script[data-dsc-autoload="${src}"]`);
@@ -28,26 +45,40 @@ function injectScript(src: string): Promise<void> {
   return p;
 }
 
+function candidatesFor(tag: string): string[] {
+  const specific = TAG_SCRIPTS[tag] ?? [];
+  // Always try dedicated first, then umbrella (covers tags only in the fat build).
+  const out: string[] = [];
+  for (const src of [...specific, ...UMBRELLA]) {
+    if (!out.includes(src)) out.push(src);
+  }
+  return out;
+}
+
 /**
- * Ensure a legacy custom element is defined. Injects /local (or HACS) IIFE
- * bundles once when missing.
+ * Ensure a legacy custom element is defined. Always injects dedicated
+ * /local/dsc-*-card.js first (even if the tag already exists from a stale
+ * DSC-HUB.js Lovlace resource) so the card IIFE can upgrade the prototype.
  */
 export async function ensureLocalCard(tag: string, timeoutMs = 12000): Promise<boolean> {
+  const dedicated = TAG_SCRIPTS[tag] ?? [];
+  for (const src of dedicated) {
+    try {
+      await injectScript(src);
+    } catch {
+      /* try next */
+    }
+  }
+
   if (customElements.get(tag)) return true;
 
-  if (!attempted) {
-    attempted = true;
-    for (const src of SCRIPT_CANDIDATES) {
-      try {
-        await injectScript(src);
-        if (customElements.get(tag)) return true;
-      } catch {
-        /* try next candidate */
-      }
+  for (const src of UMBRELLA) {
+    try {
+      await injectScript(src);
+    } catch {
+      /* try next */
     }
-  } else {
-    // Scripts already requested — wait for definition / settle.
-    await Promise.allSettled([...loading.values()]);
+    if (customElements.get(tag)) return true;
   }
 
   try {
@@ -61,4 +92,9 @@ export async function ensureLocalCard(tag: string, timeoutMs = 12000): Promise<b
   } catch {
     return !!customElements.get(tag);
   }
+}
+
+/** Paths tried for a tag — used in missing-card UI copy. */
+export function localCardScriptHints(tag: string): string[] {
+  return candidatesFor(tag).map((s) => s.split("?")[0]!);
 }

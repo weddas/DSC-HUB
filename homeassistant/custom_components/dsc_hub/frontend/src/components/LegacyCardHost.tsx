@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useHass } from "../hooks/useHass";
-import { ensureLocalCard } from "../lib/ensureLocalCards";
+import { ensureLocalCard, localCardScriptHints } from "../lib/ensureLocalCards";
 
 /**
  * Mount a legacy Lovelace custom element (IIFE) into a React host.
@@ -37,7 +37,8 @@ export function LegacyCardHost({
         setStatus("missing");
         const msg = document.createElement("div");
         msg.className = "dsc-empty";
-        msg.innerHTML = `<strong>${tag}</strong> did not register.<br/>Tried /local/DSC-HUB.js and /local/dsc-system-map-card.js. Deploy the IIFE bundle or add it as a Lovelace resource, then hard-refresh.`;
+        const tried = localCardScriptHints(tag).join(", ");
+        msg.innerHTML = `<strong>${tag}</strong> did not register.<br/>Tried ${tried}. Deploy the card IIFE under /config/www (or add a Lovelace resource), then hard-refresh.`;
         host.appendChild(msg);
         return;
       }
