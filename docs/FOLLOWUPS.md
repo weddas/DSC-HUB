@@ -2021,6 +2021,7 @@ Operator: soldered RS485 contacts + replaced MAX transceiver on pots 3 and 4; st
 - **POT4 ESP is off SoftAP** `192.168.4.15` (no ping, no 6053/3232). Worse than 2026-08-11 (then API was fine, soil all NaN). After the rework the node is not on the fleet AP — bench unpowered, **Fallback AP**, or the rework took out 3V3/EN/Wi‑Fi, not just the MAX.
 - Hub `POT3/4 ESP-NOW Link` stays **off** while soil_temperature is missing/NaN. That bit is **probe freshness**, not radio. P1/P2 links were **on**.
 - F-003 (POT3 probe) and the 2026-08-11 POT4 NaN note are still the live faults. Soldering + MAX swap did not close them.
+- **ESPHome 2026.6+ / 2026.7 Modbus timing is a real suspect for POT4’s Aug 11 death, not a universal break.** 2026.6 cut inter-frame timeout from ~50 ms to spec 3.5 char-times ([esphome#17180](https://github.com/esphome/esphome/issues/17180), still open). 2026.7 then shipped a Modbus parser rewrite. Fleet SoftAP flash was **2026.7.4** — same day POT4 went all-NaN while POT1/2 on that binary stayed live. At 4800 baud the window is ~9 ms; sloppy JXCT inter-byte gaps + a weak MAX/cable miss it, a clean bus does not. Workaround (no YAML `frame_delay` yet): `uart.rx_full_threshold: 1` and `rx_timeout: 10`–`20`. Does **not** explain POT3’s long-standing dead probe, or POT4 being off `.15` after the rework. Still do the POT2 probe swap; add the UART soften on the next pot OTA.
 
 ### isolate (do this, in order)
 1. **POT4 power / AP:** USB serial boot. If it is on `DSC-POT#4 Fallback`, it will not be at `.15`. Rejoin `DSC-Anchor` → `.15` before judging Modbus.
@@ -2030,4 +2031,9 @@ Operator: soldered RS485 contacts + replaced MAX transceiver on pots 3 and 4; st
 
 ### honesty leftover
 - Separate **ESP online** vs **Modbus probe online** cues so Link-off is not read as radio fail (noted 2026-08-11; still open).
+
+### 2026-08-15 USB serial (POT3 then POT4, COM3 CP210x)
+- **POT3:** ESP-IDF 5.5.5, ESPHome **2026.7.4** compiled 2026-08-13 22:59, project **5.2.0**. Joins Anchor → `.14`. Modbus: `Stop waiting for response from 1 ~2000ms` → `device=1 set offline`. No CRC / no partial frame.
+- **POT4:** same IDF/ESPHome, compiled **2026-08-11 12:48** (SoftAP cutover), project **6.0.0.0**. Joins Anchor → `.15` (was dark on LAN until this USB boot). Same mute Modbus, no CRC. RSSI weaker than POT3 on the bench.
+- UART soften will not fix either. Both ESPs are fine; slave `1` is silent on both buses.
 
