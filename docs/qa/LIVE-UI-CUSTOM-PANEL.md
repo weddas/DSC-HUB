@@ -11,6 +11,27 @@ React + Vite product panel hosted inside Home Assistant (WashData pattern).
 | Surface version | `sensor.dsc_ha_surface_version` **7.1.0** |
 | Integration | `homeassistant/custom_components/dsc_hub/` |
 | Enable | `dsc_hub:` in configuration.yaml (see snippet) |
+| Version trains | [`VERSION-TRAINS.md`](VERSION-TRAINS.md) — do not conflate with firmware **5.2.0** |
+
+## Architecture (7.1 hold-last + history)
+
+```mermaid
+flowchart TB
+  hass["HA entity bus"] --> held["useHeldReading"]
+  held -->|"live finite"| gauges["KPIs / gauges live"]
+  held -->|"unavailable / hub-dark zero"| hold["last good + HELD / OFF timer"]
+  click["Tent gauge click"] --> drawer["HistoryDrawer"]
+  drawer --> hours["useChartHours 1/6/24/48"]
+  hours --> series["useEntitySeries"]
+  series --> chart["MultiLineChart"]
+```
+
+| Piece | Path | Behavior (verified) |
+|---|---|---|
+| Hold-last vitals | `frontend/src/hooks/useHeldReading.ts` | UI-only last-known-good; never writes fake HA states; never maps unavailable → `0`. Hub-dark + suspicious `0` keeps prior hold. |
+| Offline timer | `useHubOfflineMs()` | Uses `sensor.dsc_hub_uptime` `last_changed` when hub uptime unavailable. |
+| History drawer | `frontend/src/components/HistoryDrawer.tsx` | Slide drawer + `1h\|6h\|24h\|48h` timespan (`sessionStorage` key `dsc_chart_hours`). |
+| Tent cockpits | Live pages Main/Clone | Climate cockpits restored under Live; seat Apply Main/Clone/Unassigned. |
 
 ## Build
 

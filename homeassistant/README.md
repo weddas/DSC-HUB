@@ -9,6 +9,7 @@ Canonical HA surface for firmware [`firmware/v4/`](../firmware/v4/).
 | `dashboards/dsc-hub-v4-dashboard.yaml` | Lovelace UX **v5.1.3** (`dsc-hub-pro`). In-service kit toggles; learn **Activity**; Root Zone Pots+Mat. |
 | `dashboards/dsc-build-plant-dashboard.yaml` | **Build a Plant** separate dashboard (`dsc-build-plant`) — composition card only |
 | `packages/dsc_v4_core_helpers.yaml` | Hub link, fan %, runtimes, **in-service** + capacity-offline + vent-conflict / ineffective cues |
+| `packages/dsc_v4_cannalib_api.yaml` | Full-corpus cannalib REST sensors + base URL / API key helpers |
 | `packages/dsc_v4_strain_catalog.yaml` | Strain catalog, sprout age, Want/Need/Got, peer offsets, Apply expected stage |
 | `packages/dsc_v4_build_plant.yaml` | Build a Plant SoT: soil % blend, plant roster, mix calculator, Apply climate Want |
 | `packages/dsc_v4_sensor_cal.yaml` | Peer sync, dual-stack, push peer→ESP, **lab wet two-point** |
@@ -30,8 +31,9 @@ Canonical HA surface for firmware [`firmware/v4/`](../firmware/v4/).
 | `packages/dsc_v4_automations.yaml` | Demand followers, climate/safety alerts, grow-log scribe |
 | `configuration.snippet.yaml` | Paste-once: packages include + YAML-mode `dsc-hub-pro` + `dsc-build-plant` dashboards |
 | `automations.yaml` | Deprecated stub — points at the package above |
-| `www/dsc-build-plant-card.js` | Build a Plant Lovelace card → `/config/www/` (+ resource) |
-| `www/dsc-catalog/` | Slim search indexes for Build a Plant (`/local/dsc-catalog/…`) |
+| `www/dsc-build-plant-card.js` | Build a Plant Lovelace card → `/config/www/` (+ resource); prefers cannalib full-corpus typeahead |
+| `www/dsc-catalog-browse-card.js` | Research catalog browse card (cannalib + local JSON fallback) |
+| `www/dsc-catalog/` | Slim search indexes for offline fallback (`/local/dsc-catalog/…`) — not the full corpus |
 | `www/dsc-system-map.*` | SYSTEM MAP Lovelace card + SVG → `/config/www/` |
 | `www/dsc-airflow-map-card.js` | AIRFLOW STATUS Lovelace card → `/config/www/` |
 | `esphome/` | Thin device stubs — pull firmware packages from GitHub |
@@ -83,7 +85,9 @@ Package pot/tank **push** notifiers are not shipped in **v5.0.0**
 ## Build a Plant (separate dashboard)
 
 Composition surface at **`/dsc-build-plant/build`** — not a Pro tab. Package
-`dsc_v4_build_plant.yaml` + Lit card + `/local/dsc-catalog/` typeahead indexes.
+`dsc_v4_build_plant.yaml` + Lit card. Online typeahead uses **cannalib**
+full-corpus API ([`docs/ops/CANNALIB-API.md`](../docs/ops/CANNALIB-API.md));
+`/local/dsc-catalog/` JSON remains the offline capped fallback.
 
 | Action | Script / sensor |
 |---|---|
