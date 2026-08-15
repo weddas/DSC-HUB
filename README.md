@@ -58,6 +58,8 @@ flowchart LR
 | [`docs/qa/ADDON-QA-5.1.0.md`](docs/qa/ADDON-QA-5.1.0.md) | Sync add-on QC |
 | [`homeassistant/README.md`](homeassistant/README.md) | Packages, HACS, entity notes |
 | [`docs/qa/LIVE-UI-BUILD-A-PLANT.md`](docs/qa/LIVE-UI-BUILD-A-PLANT.md) | Build a Plant composition ops (N-083) |
+| [`docs/qa/LIVE-UI-CUSTOM-PANEL.md`](docs/qa/LIVE-UI-CUSTOM-PANEL.md) | React `/dsc-hub` panel build + surface strings |
+| [`docs/qa/LIVE-UI-BAR-RAISE.md`](docs/qa/LIVE-UI-BAR-RAISE.md) | Native Grow · Climate Command · neon Twin (waves 1–8) |
 | [`firmware/v4/README.md`](firmware/v4/README.md) | Local validate / flash |
 
 **HAOS delivery:** Settings → Add-ons → Repositories → `https://github.com/weddas/DSC-HUB`

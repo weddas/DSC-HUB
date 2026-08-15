@@ -2182,3 +2182,7 @@ Wave 5 fabric tent walls / R3F rewrite were not in scope. Do not claim soak unti
 - Light Independent unlocks clone start/hours
 - Reload HA packages for `dsc_v4_vessel.yaml` + tank dummies
 
+### docs (2026-08-15 automation)
+- Ops runbook: [`docs/qa/LIVE-UI-BAR-RAISE.md`](qa/LIVE-UI-BAR-RAISE.md) — native Grow · Climate Command · neon Twin soft APIs · surface string drift · soak checklist
+- Index pointers: [`LIVE-UI-CUSTOM-PANEL.md`](qa/LIVE-UI-CUSTOM-PANEL.md) · root `README.md` · `homeassistant/README.md`
+

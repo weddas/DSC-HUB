@@ -102,6 +102,12 @@ Ops runbook: [`../docs/qa/LIVE-UI-BUILD-A-PLANT.md`](../docs/qa/LIVE-UI-BUILD-A-
 Requires Sync add-on **5.1.4+** (or ha-sync) for dashboard YAML + catalog JSON;
 HACS alone registers the custom element.
 
+**React panel (operator path):** `/dsc-hub` — native Grow / Climate Command / neon Twin
+after waves 1–8 bar close. Ops: [`../docs/qa/LIVE-UI-BAR-RAISE.md`](../docs/qa/LIVE-UI-BAR-RAISE.md)
+· build notes: [`../docs/qa/LIVE-UI-CUSTOM-PANEL.md`](../docs/qa/LIVE-UI-CUSTOM-PANEL.md).
+Lovelace Build-a-Plant / Catalog cards remain fallback hosts; do not treat them as the
+primary compose path when the custom panel is enabled.
+
 ## HACS cards
 
 mushroom · apexcharts-card · plotly-graph-card · mini-graph-card · gauge-card-pro · modern-circular-gauge · logbook-card · auto-entities · vertical-stack-in-card · card-mod · bar-card · ph-meter-temperature · **expander-card** · **browser_mod** · **DSC-HUB** (Dashboard custom repo — system map + airflow + The Dash + Build a Plant)

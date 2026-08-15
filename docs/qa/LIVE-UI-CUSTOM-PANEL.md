@@ -1,15 +1,18 @@
-# LIVE-UI — DSC-HUB custom panel (surface 7.1.1)
+# LIVE-UI — DSC-HUB custom panel (surface 7.1.x)
 
 React + Vite product panel hosted inside Home Assistant (WashData pattern).
+Operator path after the Waves 1–8 bar close: **native Grow · Climate Command · neon Twin** —
+ops runbook [`LIVE-UI-BAR-RAISE.md`](LIVE-UI-BAR-RAISE.md).
 
 | Surface | Role |
 |---|---|
 | Sidebar | **DSC-HUB** → `/dsc-hub` (custom panel) |
-| Deep routes | Hash routes: `/dsc-hub#/live/mission`, `#/grow/compose`, `#/fleet`, … |
+| Deep routes | Hash routes: `/dsc-hub#/live/mission`, `#/live/climate`, `#/grow/compose`, `#/fleet`, … |
 | Legacy redirects | `#/ops/*`, `#/plant/*`, `#/advanced/*`, `#/system` → Live/Grow/Tune/Fleet |
 | Lovelace fallback | `dsc-hub-pro` YAML — `show_in_sidebar: false` |
-| Surface version | `sensor.dsc_ha_surface_version` **7.1.1** |
-| Integration | `homeassistant/custom_components/dsc_hub/` |
+| Surface version (operator SoT) | `sensor.dsc_ha_surface_version` **7.1.3** (package) |
+| Integration / chrome | `SURFACE_VERSION` **7.1.4** · App chrome **7.1.4** · `BUNDLE_V` **`7.1.7-bar-raise`** |
+| Integration path | `homeassistant/custom_components/dsc_hub/` |
 | Enable | `dsc_hub:` in configuration.yaml (see snippet) |
 
 ## Build
@@ -36,8 +39,10 @@ and hard-reload Lovelace/panel.
 
 Sharper contrast: lifted indigo-slate · **blue/cyan** active chrome · green = live/ON only ·
 amber HELD/stale · Twin leaders + cyan Got markers / cyan intake piping (no dank `#39ff14` brand wash).
+Neon glass vessels + HUD-off cockpits are part of the bar-raise Twin path — see
+[`LIVE-UI-BAR-RAISE.md`](LIVE-UI-BAR-RAISE.md).
 
-## Pass 7.1.1 finish gaps (this patch)
+## Pass 7.1.1 finish gaps (ancestry — superseded for ops by bar-raise)
 
 - [x] Panel/beat OFF duration chips (`PANEL OFF Xm` / `BEAT OFF Xm`) when dark
 - [x] Root Rate column (`sensor.dsc_pot{N}_soil_moisture_rate`)
@@ -58,7 +63,7 @@ amber HELD/stale · Twin leaders + cyan Got markers / cyan intake piping (no dan
 - [x] Climate hosts airflow-map + allocated CFM honesty
 - [x] Learning shows learn status / CFM alloc vs nameplate
 - [x] Active chrome blue/cyan
-- [x] `sensor.dsc_ha_surface_version` = **7.1.1** (in-tree; live HA after package reload)
+- [x] Surface strings present in-tree (package **7.1.3** SoT; chrome/const **7.1.4**; bundle tag **`7.1.7-bar-raise`**) — live HA after package reload / hard-reload
 
 ## Pass 7.0 acceptance (still)
 
