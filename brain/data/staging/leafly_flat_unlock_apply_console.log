@@ -1,2 +1,0 @@
-02:32:23 start wait-for-unlock then apply leafly_flat_enrich
-02:32:25 locked attempt=1/720 OperationalError: database is locked

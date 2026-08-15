@@ -9,7 +9,9 @@ import { useEntitySeries } from "../hooks/useEntitySeries";
 import { useHeldReading } from "../hooks/useHeldReading";
 import { ArcGauge, MultiLineChart } from "../viz/charts";
 import {
+  activePotNumbers,
   buildPlantSeat,
+  isPotInService,
   potGotEntity,
   readTent,
   rosterSlots,
@@ -51,6 +53,13 @@ export function PlantSeatPanel({
   const drybackHeld = useHeldReading(drybackId);
   const moistSeries = useEntitySeries(moistId, { hours: 6, maxPoints: 72 });
   const ecSeries = useEntitySeries(ecId, { hours: 6, maxPoints: 72 });
+  const learnedEcRaw = num(`input_number.dsc_pot${pot}_learned_ec_per_moisture`);
+  const learnedEc =
+    available(`input_number.dsc_pot${pot}_learned_ec_per_moisture`) &&
+    Number.isFinite(learnedEcRaw) &&
+    learnedEcRaw !== 0
+      ? learnedEcRaw
+      : NaN;
 
   const wantMoistMin = num(`number.dsc_pot${pot}_want_moisture_min`);
   const wantMoistMax = num(`number.dsc_pot${pot}_want_moisture_max`);
@@ -119,7 +128,7 @@ export function PlantSeatPanel({
   return (
     <div className="dsc-seat-panel">
       <div className="dsc-chip-row" style={{ marginBottom: 14 }}>
-        {[1, 2, 3, 4].map((n) => (
+        {activePotNumbers(state).map((n) => (
           <button
             key={n}
             type="button"
@@ -285,6 +294,11 @@ export function PlantSeatPanel({
                   },
                 ]}
               />
+              <p className="dsc-muted" style={{ margin: "8px 0 0", fontSize: 12 }}>
+                {Number.isFinite(learnedEc)
+                  ? `EC consumption honesty: learned ${learnedEc.toFixed(3)} EC per moisture (not feed invent).`
+                  : "EC over time shown — no learned_ec_per_moisture yet (not invented)."}
+              </p>
               <div className="dsc-chip-row" style={{ marginTop: 8 }}>
                 <Button onClick={() => setHist({ id: moistId, label: "Moisture", unit: "%" })}>
                   Moisture hist
@@ -383,10 +397,20 @@ export function GrowComposePage() {
         subtitle="Build soil blend, roster commit, and Want handoff."
         primaryAction={
           <Button teal onClick={() => navigate("/grow/roster")}>
-            Open Roster
+            Open Roster / Seat
+          </Button>
+        }
+        actions={
+          <Button primary onClick={() => navigate("/grow/research")}>
+            Browse Catalog
           </Button>
         }
       />
+      <p className="dsc-honesty" style={{ marginTop: 0 }}>
+        Densified catalog traits (height / flowering / chem) show when the index has them.
+        Empty catalog fields stay empty — Compose does not invent Want bands or strain genetics. After
+        commit, open Roster to assign a seat.
+      </p>
       <LegacyCardHost tag="dsc-build-plant-card" config={{}} />
     </div>
   );
@@ -411,6 +435,11 @@ export function GrowResearchPage() {
           </>
         }
       />
+      <p className="dsc-honesty" style={{ marginTop: 0 }}>
+        Catalog gaps are honesty, not placeholders. Height / flowering / chem chips come from densified
+        indexes when present. Use in Compose to draft a plant; Open Seat to assign
+        an existing roster row — neither invents missing Want/Got.
+      </p>
       <LegacyCardHost tag="dsc-catalog-browse-card" config={{}} />
     </div>
   );
@@ -422,9 +451,10 @@ export function GrowRosterPage() {
   void tick;
   const slots = rosterSlots(entity);
   const raw = Number(params.get("pot") || 0);
-  const pot = raw >= 1 && raw <= 4 ? raw : null;
+  const pot = raw >= 1 && raw <= 4 && isPotInService(raw, state) ? raw : null;
 
   const openPot = (n: number) => {
+    if (!isPotInService(n, state)) return;
     const next = new URLSearchParams(params);
     next.set("pot", String(n));
     setParams(next, { replace: true });
@@ -468,20 +498,21 @@ export function GrowRosterPage() {
             <tbody>
               {slots.map((s) => {
                 const p = Number(s.pot);
-                const tent = p >= 1 && p <= 4 ? tentLabel(readTent(state, p)) : "—";
+                const potLive = p >= 1 && p <= 4 && isPotInService(p, state);
+                const tent = potLive ? tentLabel(readTent(state, p)) : "—";
                 return (
                   <tr
                     key={s.slot}
                     onClick={() => {
-                      if (p >= 1 && p <= 4) openPot(p);
+                      if (potLive) openPot(p);
                     }}
-                    style={p >= 1 && p <= 4 ? { cursor: "pointer" } : undefined}
+                    style={potLive ? { cursor: "pointer" } : undefined}
                   >
                     <td>#{s.slot}</td>
                     <td>{s.nickname || "—"}</td>
                     <td>{s.strain || "—"}</td>
                     <td>{s.status || "—"}</td>
-                    <td>{p >= 1 && p <= 4 ? `P${p}` : "—"}</td>
+                    <td>{potLive ? `P${p}` : "—"}</td>
                     <td>
                       <StatusChip label={tent} tone="muted" />
                     </td>

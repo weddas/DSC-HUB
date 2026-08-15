@@ -1,6 +1,0 @@
-
-[1] 01:58:10 n087=True cpu=4.48 j=38855840 out@01:56:43 waiters=1 | APPLY cannabis_intelligence 0 | 2026-08-08 01:57:07 staging raw_record=1968
-[2] 01:58:40 n087=True cpu=5.5 j=60381584 out@01:56:43 waiters=1 | APPLY cannabis_intelligence 0 | 2026-08-08 01:57:07 staging raw_record=1968
-[3] 01:59:10 n087=False cpu=0 j=0 out@01:56:43 RESTARTED | APPLY cannabis_intelligence 0 | 2026-08-08 01:58:47 OPEN_WAIT attempt=0: OperationalError: Safety level may not be changed inside a transaction
-[4] 01:59:40 n087=False cpu=0 j=0 out@01:56:43 waiters=1 | APPLY cannabis_intelligence 0 | 2026-08-08 01:59:21 OPEN_WAIT attempt=1: OperationalError: Safety level may not be changed inside a transaction
-[5] 02:00:11 n087=False cpu=0 j=0 out@01:56:43 waiters=1 | APPLY cannabis_intelligence 0 | 2026-08-08 01:59:21 OPEN_WAIT attempt=1: OperationalError: Safety level may not be changed inside a transaction

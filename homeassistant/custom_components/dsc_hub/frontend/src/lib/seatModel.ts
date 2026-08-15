@@ -137,9 +137,27 @@ export function potsInTent(
   state: (id: string, fallback?: string) => string,
   entity: (id: string) => { attributes?: Record<string, unknown> } | undefined,
 ): PlantSeatModel[] {
-  return [1, 2, 3, 4]
+  return activePotNumbers(state)
     .map((n) => buildPlantSeat(n, { state, entity }))
     .filter((s) => s.tent === tent);
+}
+
+/** Pot is shown when in_service is on/missing; off = fully hidden until re-enabled. */
+export function isPotInService(
+  pot: number,
+  state: (id: string, fallback?: string) => string,
+): boolean {
+  const id = `input_boolean.dsc_pot${pot}_in_service`;
+  const raw = state(id, "on");
+  if (raw === "unavailable" || raw === "unknown" || raw === "") return true;
+  return raw === "on";
+}
+
+export function activePotNumbers(
+  state: (id: string, fallback?: string) => string,
+  pots: number[] = [1, 2, 3, 4],
+): number[] {
+  return pots.filter((n) => isPotInService(n, state));
 }
 
 export function rosterSlots(

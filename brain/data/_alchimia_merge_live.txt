@@ -1,2 +1,0 @@
-02:44:11 alc post-queue start
-02:44:11 poll 1 excl_done=False

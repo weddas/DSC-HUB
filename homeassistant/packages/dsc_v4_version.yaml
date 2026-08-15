@@ -17,13 +17,14 @@ template:
       - name: "DSC HA Surface Version"
         unique_id: dsc_ha_surface_version
         icon: mdi:home-assistant
-        state: "7.1.0"
+        state: "7.1.3"
         attributes:
           packages: dsc_v4_*
           dashboard: dsc-hub custom panel (/dsc-hub) React+Vite
           lovelace_fallback: dsc-hub-pro YAML (sidebar hidden)
           build_plant_inclusion: N-085
           visual_pass: Surface 7.0 Live/Grow/Tune/Fleet guided shell
+          densify_catalog: Compose+Research show height/flowering/chem from densified indexes
           pot_tent: input_select.dsc_potN_tent + script.dsc_apply_pot_to_tent
           phase_b: present
           learn_activity: present

@@ -1,4 +1,0 @@
-01:58:18 watch start utf16-aware
-01:58:19 alive=1 | APPLY bank_weedseedsexpress 0 || OK bank_weedseedsexpress {'source_record': 1, 'strain_canonical': 364, 'strain_variant': 364, 'chemistry_profile': 323, 'grow_trait': 364, 'science_alias': 0, 'entity_link': 323, 'light_fixture': 0, 'nutrient_product': 0, 'medium_product': 0, 'media_asset': 0, 'followup_gap': 0, 'export_manifest': 0} || APPLY cannabis_intelligence 0
-01:59:04 alive=0 | APPLY bank_weedseedsexpress 0 || OK bank_weedseedsexpress {'source_record': 1, 'strain_canonical': 364, 'strain_variant': 364, 'chemistry_profile': 323, 'grow_trait': 364, 'science_alias': 0, 'entity_link': 323, 'light_fixture': 0, 'nutrient_product': 0, 'medium_product': 0, 'media_asset': 0, 'followup_gap': 0, 'export_manifest': 0} || APPLY cannabis_intelligence 0
-01:59:12 APPLY_GONE

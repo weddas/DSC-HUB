@@ -110,8 +110,12 @@ export function HassProvider({
       return hass.callService(domain, service, data);
     };
     const callWS = <T = unknown>(msg: Record<string, unknown>) => {
-      if (!hass?.callWS) return Promise.resolve(null);
-      return hass.callWS<T>(msg);
+      if (hass?.callWS) return hass.callWS<T>(msg);
+      const conn = hass?.connection as
+        | { sendMessagePromise?: (m: Record<string, unknown>) => Promise<T> }
+        | undefined;
+      if (conn?.sendMessagePromise) return conn.sendMessagePromise(msg);
+      return Promise.resolve(null);
     };
     return { hass, entity, state, num, available, callService, callWS, tick };
   }, [hass, tick]);

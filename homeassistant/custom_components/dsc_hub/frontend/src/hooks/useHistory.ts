@@ -58,7 +58,13 @@ export function useHistory(
     let cancelled = false;
 
     async function load() {
-      if (!hass?.callWS || !entityId) {
+      if (!entityId) {
+        setPoints([]);
+        setLoading(false);
+        return;
+      }
+      // Prefer callWS helper; fall back wait if hass not ready yet.
+      if (!hass || (!hass.callWS && !hass.connection)) {
         setPoints([]);
         setLoading(false);
         return;
@@ -79,6 +85,11 @@ export function useHistory(
         });
 
         if (cancelled) return;
+        if (raw == null) {
+          setPoints([]);
+          setError("history unavailable");
+          return;
+        }
 
         let rows: HistoryState[] = [];
         if (Array.isArray(raw)) {

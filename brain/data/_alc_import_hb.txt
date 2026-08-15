@@ -1,4 +1,0 @@
-02:36:58 start
-02:36:58 importing merge_staging_to_master
-02:37:00 imported ok
-02:37:00 done

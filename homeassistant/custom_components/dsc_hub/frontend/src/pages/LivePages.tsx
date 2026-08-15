@@ -22,8 +22,10 @@ import { useZoneFocus, type ZoneFocus } from "../hooks/useZoneFocus";
 import { ArcGauge, MultiLineChart, Sparkline, seriesExtrema } from "../viz/charts";
 import {
   buildPlantSeat,
-  potGotEntity,
   potsInTent,
+  activePotNumbers,
+  isPotInService,
+  potGotEntity,
   tentLabel,
   type TentId,
 } from "../lib/seatModel";
@@ -60,7 +62,8 @@ export function LiveTwinPage() {
         }
       />
       <p className="dsc-honesty dsc-muted" style={{ marginTop: 0 }}>
-        Pick a pot in the twin to open its seat. Twin stays warm across tabs (keep-alive).
+        Pick a pot in the twin to open its seat. Twin stays warm across Twin / Main / Clone.
+        4×8 fixture glow follows photoperiod window until a main lamp is wired.
       </p>
     </div>
   );
@@ -361,7 +364,8 @@ export function LiveClimatePage() {
           <Card className="dsc-glass" title="Airflow honesty" icon="climate">
             <p className="dsc-honesty" style={{ marginTop: 0 }}>
               <StatusChip label="Allocated" tone="ok" /> Prefer allocated CFM over nameplate capacity.
-              Blend OUT/RECIRC is normal — map shows topology.
+              Blend OUT/RECIRC is normal — map shows topology. 4×8 LIGHT mark tracks photoperiod
+              window (no main lamp entity yet); 2×4 tracks SF1000.
             </p>
             <LegacyCardHost tag="dsc-airflow-map-card" config={{}} />
           </Card>
@@ -542,15 +546,35 @@ function TentCockpitPage({ tent }: { tent: Exclude<TentId, "unassigned"> }) {
 
   const seats = potsInTent(tent, state, entity);
   const raw = Number(params.get("pot") || 0);
-  const pot = raw >= 1 && raw <= 4 ? raw : null;
+  const pot =
+    raw >= 1 && raw <= 4 && isPotInService(raw, state) && seats.some((s) => s.pot === raw)
+      ? raw
+      : null;
 
   const tId =
     tent === "main" ? "sensor.dsc_hub_tent_temperature" : "sensor.dsc_hub_clone_temperature";
   const rhId = tent === "main" ? "sensor.dsc_hub_tent_humidity" : "sensor.dsc_hub_clone_humidity";
+  const vpdId = tent === "main" ? "sensor.dsc_hub_vpd_kpa" : "sensor.dsc_hub_clone_vpd_kpa";
   const tSeries = useEntitySeries(tId, { hours: 6 });
   const rhSeries = useEntitySeries(rhId, { hours: 6 });
   const tHeld = useHeldReading(tId);
   const rhHeld = useHeldReading(rhId);
+  const vpdHeld = useHeldReading(vpdId);
+  const windowOpen =
+    state(
+      tent === "main"
+        ? "binary_sensor.dsc_hub_4x8_window_open"
+        : "binary_sensor.dsc_hub_2x4_window_open",
+    ) === "on";
+  const cloneLampOn = state("light.dsc_hub_sf1000_dimmer") === "on";
+  const lit = tent === "clone" ? cloneLampOn : windowOpen;
+  const intakeCfm =
+    tent === "main" ? num("sensor.dsc_cfm_intake_main") : num("sensor.dsc_cfm_intake_2x4");
+  const outCfm =
+    num("sensor.dsc_cfm_exhaust_out_allocated") || num("sensor.dsc_cfm_exhaust_out");
+  const recircCfm =
+    num("sensor.dsc_cfm_exhaust_recirc_allocated") || num("sensor.dsc_cfm_exhaust_recirc");
+  const fanOverride = state("switch.dsc_hub_tent_manual_override") === "on";
 
   useEffect(() => {
     let cancelled = false;
@@ -617,7 +641,7 @@ function TentCockpitPage({ tent }: { tent: Exclude<TentId, "unassigned"> }) {
         subtitle={`Tent cockpit — ${seats.length} seat(s). ${pathNote}`}
         primaryAction={
           <Button teal onClick={() => navigate("/live/twin")}>
-            Focus Twin
+            Both tents
           </Button>
         }
         actions={
@@ -638,12 +662,39 @@ function TentCockpitPage({ tent }: { tent: Exclude<TentId, "unassigned"> }) {
           tone={rhHeld.stale ? "warn" : "ok"}
         />
         <StatusChip
-          label={`CFM OUT ${fmt(num("sensor.dsc_cfm_exhaust_out_allocated") || num("sensor.dsc_cfm_exhaust_out"), 0)}`}
-          tone="muted"
+          label={`VPD ${fmt(vpdHeld.value, 2)}`}
+          tone={vpdHeld.stale ? "warn" : "ok"}
         />
+        <StatusChip
+          label={
+            tent === "clone"
+              ? lit
+                ? "SF1000 ON"
+                : "SF1000 OFF"
+              : windowOpen
+                ? "PHOTO ON"
+                : "PHOTO OFF"
+          }
+          tone={lit ? "ok" : "muted"}
+        />
+        <StatusChip label={`IN ${fmt(intakeCfm, 0)} cfm`} tone="muted" />
+        {tent === "main" ? (
+          <>
+            <StatusChip label={`OUT ${fmt(outCfm, 0)}`} tone="muted" />
+            <StatusChip label={`RECIRC ${fmt(recircCfm, 0)}`} tone="muted" />
+          </>
+        ) : (
+          <StatusChip label={`CFM OUT ${fmt(outCfm, 0)}`} tone="muted" />
+        )}
       </div>
 
       <div className="dsc-grid">
+        <div className="dsc-col-12">
+          <Card className="dsc-glass" title="Want targets" icon="climate">
+            <TentTargetPanel only={tent} compact />
+          </Card>
+        </div>
+
         <div className="dsc-col-12">
           <Card className="dsc-glass" title="Seat strip" icon="seat">
             <div className="dsc-chip-row">
@@ -693,6 +744,50 @@ function TentCockpitPage({ tent }: { tent: Exclude<TentId, "unassigned"> }) {
                 },
               ]}
             />
+          </Card>
+        </div>
+
+        <div className="dsc-col-12">
+          <Card className="dsc-glass" title="Fans (this tent)" icon="climate">
+            {!fanOverride ? (
+              <p className="dsc-honesty" style={{ marginTop: 0 }}>
+                Fan sliders locked until Fan override is on (Climate → Command).
+              </p>
+            ) : null}
+            <div className="dsc-fan-stack">
+              {tent === "main" ? (
+                <>
+                  <EntityFanSlider
+                    entityId="fan.dsc_hub_4_inch_intake_fan_main"
+                    label="Intake Main"
+                    disabled={!fanOverride}
+                  />
+                  <EntityFanSlider
+                    entityId="fan.dsc_hub_6_inch_exhaust_room"
+                    label="Exhaust room (RECIRC)"
+                    disabled={!fanOverride}
+                  />
+                  <EntityFanSlider
+                    entityId="fan.dsc_hub_6_inch_exhaust_outside"
+                    label="Exhaust outside (OUT)"
+                    disabled={!fanOverride}
+                  />
+                </>
+              ) : (
+                <>
+                  <EntityFanSlider
+                    entityId="fan.dsc_hub_4_inch_intake_fan_2x4"
+                    label="Intake 2×4"
+                    disabled={!fanOverride}
+                  />
+                  <EntityToggle
+                    entityId="light.dsc_hub_sf1000_dimmer"
+                    label="SF1000"
+                    icon="lighting"
+                  />
+                </>
+              )}
+            </div>
           </Card>
         </div>
 
@@ -753,9 +848,9 @@ export function LiveRootPage() {
   const { state, entity, tick, num } = useHass();
   const [params, setParams] = useSearchParams();
   void tick;
-  const pots = [1, 2, 3, 4].map((n) => buildPlantSeat(n, { state, entity }));
+  const pots = activePotNumbers(state).map((n) => buildPlantSeat(n, { state, entity }));
   const raw = Number(params.get("pot") || 0);
-  const pot = raw >= 1 && raw <= 4 ? raw : null;
+  const pot = raw >= 1 && raw <= 4 && isPotInService(raw, state) ? raw : null;
 
   const openPot = (n: number) => {
     const next = new URLSearchParams(params);
@@ -794,7 +889,7 @@ export function LiveRootPage() {
         <div className="dsc-col-12">
           <Card className="dsc-glass" title="Dryback strip" icon="gauge">
             <div className="dsc-gauge-row">
-              {[1, 2, 3, 4].map((n) => (
+              {activePotNumbers(state).map((n) => (
                 <RootDrybackGauge key={n} pot={n} onOpen={() => openPot(n)} />
               ))}
             </div>
@@ -814,6 +909,7 @@ export function LiveRootPage() {
                   <th>EC</th>
                   <th>pH</th>
                   <th>Need</th>
+                  <th>Rate</th>
                   <th>Trend</th>
                 </tr>
               </thead>
@@ -855,11 +951,14 @@ function RootDrybackGauge({ pot, onOpen }: { pot: number; onOpen: () => void }) 
 }
 
 function RootMatrixRow({ pot, onOpen }: { pot: number; onOpen: () => void }) {
-  const { state, entity } = useHass();
+  const { state, entity, available } = useHass();
   const seat = buildPlantSeat(pot, { state, entity });
   const moistId = potGotEntity(pot, "moisture", state);
   const series = useEntitySeries(moistId, { hours: 6, maxPoints: 48 });
   const dry = useHeldReading(`sensor.dsc_pot${pot}_dryback_pct`);
+  const rateId = `sensor.dsc_pot${pot}_soil_moisture_rate`;
+  const rateHeld = useHeldReading(rateId);
+  const rate = available(rateId) || rateHeld.stale ? rateHeld.value : NaN;
   const tone =
     dry.stale
       ? "dsc-tone-stale"
@@ -881,6 +980,9 @@ function RootMatrixRow({ pot, onOpen }: { pot: number; onOpen: () => void }) {
       <td>{seat.ec}</td>
       <td>{seat.ph}</td>
       <td>{seat.need}</td>
+      <td className={rateHeld.stale ? "dsc-tone-stale" : undefined}>
+        {Number.isFinite(rate) ? rate.toFixed(2) : "—"}
+      </td>
       <td>
         <Sparkline series={series.series} color="var(--dsc-blue)" width={90} height={24} />
       </td>

@@ -5,8 +5,8 @@ Exact name_norm match only. Never invents Want climate bands.
 Leaves existing curated want blocks untouched.
 
 Usage:
-  python scripts/enrich_curated_catalog_from_brain.py \\
-    --db C:\\DSC\\collation\\dsc_brain.sqlite3
+  python scripts/enrich_curated_catalog_from_brain.py
+  python scripts/enrich_curated_catalog_from_brain.py --db path/to/dsc_brain.sqlite3
 """
 
 from __future__ import annotations
@@ -22,16 +22,18 @@ except ImportError as exc:
     raise SystemExit("PyYAML required") from exc
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
+CANNALIB = ROOT.parent / "CannaLib"
+sys.path.insert(0, str(CANNALIB))
 
 from brain.dsc_brain.corpus import connect, name_norm  # noqa: E402
+from brain.dsc_brain.paths import DEFAULT_DB as CANNALIB_DB  # noqa: E402
 
 SOURCE = ROOT / "homeassistant" / "data" / "dsc_strain_catalog.yaml"
 
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--db", type=Path, required=True)
+    ap.add_argument("--db", type=Path, default=CANNALIB_DB)
     ap.add_argument("--catalog", type=Path, default=SOURCE)
     args = ap.parse_args()
 

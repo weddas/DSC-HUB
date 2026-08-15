@@ -1,6 +1,0 @@
-2026-08-08 02:56:21 START compare
-2026-08-08 02:57:46 NAS {"size": 594989056, "strain_canonical": 69535, "chemistry_profile": 361459, "ce_chem": 0, "entity_link": 896796, "error": null}
-2026-08-08 02:57:46 LOCAL {"size": 727437312, "strain_canonical": 139055, "chemistry_profile": 438822, "ce_chem": 82657, "entity_link": 891502, "error": null}
-2026-08-08 02:57:46 DECISION merge_ce_on_nas :: NAS ahead (can=69535 links=896796) but CE behind (ce_chem=0, chem=361459)
-2026-08-08 02:57:46 running merge_staging_to_master --only cannlytics_expand
-2026-08-08 02:59:57 CE_MERGE_RC=4294967295

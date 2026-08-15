@@ -55,13 +55,25 @@ export function useHeldReading(entityId: string): HeldReading {
   return { value: NaN, stale: !liveOk, heldAt: undefined, live: false };
 }
 
-/** Hub offline duration from uptime entity last_changed. */
-export function useHubOfflineMs(): number | null {
+function useOfflineMs(entityId: string): number | null {
   const { available, entity, tick } = useHass();
   void tick;
-  if (available(HUB_UPTIME)) return null;
-  const lc = entity(HUB_UPTIME)?.last_changed;
+  if (available(entityId)) return null;
+  const lc = entity(entityId)?.last_changed;
   if (!lc) return null;
   const t = Date.parse(lc);
   return Number.isFinite(t) ? Date.now() - t : null;
+}
+
+/** Hub offline duration from uptime entity last_changed. */
+export function useHubOfflineMs(): number | null {
+  return useOfflineMs(HUB_UPTIME);
+}
+
+export function useBeatOfflineMs(): number | null {
+  return useOfflineMs(HUB_BEAT);
+}
+
+export function usePanelOfflineMs(): number | null {
+  return useOfflineMs("binary_sensor.dsc_hub_panel_link");
 }
