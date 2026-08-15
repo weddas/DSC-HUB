@@ -9040,4 +9040,3 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     description: "Browse/compare strains, nutrients, mediums, lights",
   });
 })();
-

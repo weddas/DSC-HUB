@@ -57,6 +57,7 @@
         volume: "input_number.dsc_vol_2x4_m3",
         ach: "sensor.dsc_ach_2x4",
         mat: "switch.dsc_hub_grow_mat_demand",
+        light: "light.dsc_hub_sf1000_dimmer",
       },
       {
         id: "main",
@@ -67,7 +68,8 @@
         humidity: "sensor.dsc_hub_tent_humidity",
         volume: "input_number.dsc_vol_4x8_m3",
         ach: "sensor.dsc_ach_4x8",
-        light: "light.dsc_hub_sf1000_dimmer",
+        // Photoperiod window until a 4×8 lamp entity exists (GPIO5 reserved).
+        light: "binary_sensor.dsc_hub_4x8_window_open",
       },
     ],
     ducts: [
