@@ -124,11 +124,12 @@ if [[ -d "${cc_src}" ]]; then
   fi
   if [[ -d "${cc_src}/www/assets" ]]; then
     run_ssh "rm -rf '${HA_CONFIG_ROOT}/custom_components/dsc_hub/www/assets' && mkdir -p '${HA_CONFIG_ROOT}/custom_components/dsc_hub/www/assets'"
-    # tar over ssh is more reliable for trees; fall back to recursive scp -r
+    # OpenSSH 9+ scp (SFTP) rejects a source of "dir/." with: unexpected filename: .
     if [[ "${DRY_RUN}" == "1" ]]; then
       log "DRY_RUN sync dsc_hub www/assets"
     else
-      scp "${scp_opts[@]}" -r "${cc_src}/www/assets/." "${remote}:${HA_CONFIG_ROOT}/custom_components/dsc_hub/www/assets/"
+      tar -C "${cc_src}/www/assets" -cf - . | ssh "${ssh_opts[@]}" "${remote}" \
+        "tar -C '${HA_CONFIG_ROOT}/custom_components/dsc_hub/www/assets' -xf -"
     fi
   fi
 else
