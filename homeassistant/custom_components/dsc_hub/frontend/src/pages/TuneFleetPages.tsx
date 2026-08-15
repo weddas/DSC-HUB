@@ -70,7 +70,7 @@ export function TuneLearningPage() {
               {curves ? ` (${curves})` : " (no curve attrs)"}.
             </p>
             <p className="dsc-muted" style={{ marginBottom: 0 }}>
-              Surface: {state("sensor.dsc_ha_surface_version", "7.1.0")}. Full anemometer wizard remains
+              Surface: {state("sensor.dsc_ha_surface_version", "7.1.1")}. Full anemometer wizard remains
               on Lovelace Learning — open dsc-hub-pro Learning for unported steps.
             </p>
           </Card>
@@ -93,7 +93,7 @@ export function TuneLearningPage() {
 }
 
 export function TuneAnalyticsPage() {
-  const { state } = useHass();
+  const { state, num, available } = useHass();
   const { hours, setHours, maxPoints } = useChartHours(6);
   const tSeries = useEntitySeries("sensor.dsc_hub_tent_temperature", { maxPoints, hours });
   const rhSeries = useEntitySeries("sensor.dsc_hub_tent_humidity", { maxPoints, hours });
@@ -109,6 +109,14 @@ export function TuneAnalyticsPage() {
   const p1db = useEntitySeries("sensor.dsc_pot1_dryback_pct", { maxPoints, hours });
   const p2m = useEntitySeries(potGotEntity(2, "moisture", state), { maxPoints, hours });
   const p4m = useEntitySeries(potGotEntity(4, "moisture", state), { maxPoints, hours });
+  const p1Ec = useEntitySeries(potGotEntity(1, "ec", state), { maxPoints, hours });
+  const learnedEcRaw = num("input_number.dsc_pot1_learned_ec_per_moisture");
+  const learnedEc =
+    available("input_number.dsc_pot1_learned_ec_per_moisture") &&
+    Number.isFinite(learnedEcRaw) &&
+    learnedEcRaw !== 0
+      ? learnedEcRaw
+      : NaN;
 
   return (
     <div className="dsc-page">
@@ -206,6 +214,28 @@ export function TuneAnalyticsPage() {
             />
           </Card>
         </div>
+        <div className="dsc-col-12">
+          <Card className="dsc-glass" title="P1 EC" icon="root">
+            <MultiLineChart
+              live
+              lastSyncAt={p1Ec.lastSyncAt}
+              series={[
+                {
+                  id: "ec",
+                  label: "EC",
+                  series: p1Ec.series,
+                  color: "var(--dsc-amber)",
+                  unit: "",
+                },
+              ]}
+            />
+            <p className="dsc-muted" style={{ margin: "8px 0 0", fontSize: 12 }}>
+              {Number.isFinite(learnedEc)
+                ? `EC consumption honesty: learned ${learnedEc.toFixed(3)} EC per moisture (not feed invent).`
+                : "EC over time shown — no learned_ec_per_moisture yet (not invented)."}
+            </p>
+          </Card>
+        </div>
       </div>
     </div>
   );
@@ -233,7 +263,7 @@ export function FleetOverviewPage() {
         <div className="dsc-col-4">
           <Kpi
             label="Surface"
-            value={state("sensor.dsc_ha_surface_version", "7.1.0")}
+            value={state("sensor.dsc_ha_surface_version", "7.1.1")}
             sub="Panel product shell"
           />
         </div>

@@ -3,10 +3,18 @@ import { useLocation } from "react-router-dom";
 import { useHass } from "../hooks/useHass";
 import { ensureLocalCard } from "../lib/ensureLocalCards";
 
+type FocusTent = "main" | "clone" | null;
+
+function focusTentFromPath(pathname: string): FocusTent {
+  if (pathname === "/live/main") return "main";
+  if (pathname === "/live/clone") return "clone";
+  return null;
+}
+
 /**
  * Persist dsc-the-dash-card across route changes so the Three.js Twin
  * does not cold-dispose on every leave (LegacyCardHost unmount = turd).
- * Hidden via CSS when not on /live/twin; remount only if host is lost.
+ * Active on /live/twin (both tents) and /live/main|/live/clone (single-tent).
  */
 export function TwinKeepAlive() {
   const location = useLocation();
@@ -16,7 +24,12 @@ export function TwinKeepAlive() {
     null,
   );
   const [status, setStatus] = useState<"loading" | "ready" | "missing">("loading");
-  const active = location.pathname === "/live/twin" || location.pathname === "/ops/dash";
+  const focusTent = focusTentFromPath(location.pathname);
+  const active =
+    location.pathname === "/live/twin" ||
+    location.pathname === "/ops/dash" ||
+    location.pathname === "/live/main" ||
+    location.pathname === "/live/clone";
 
   useEffect(() => {
     const host = ref.current;
@@ -36,7 +49,7 @@ export function TwinKeepAlive() {
         hass?: unknown;
       };
       if (typeof el.setConfig === "function") {
-        el.setConfig({ type: "custom:dsc-the-dash-card" });
+        el.setConfig({ type: "custom:dsc-the-dash-card", focusTent });
       }
       if (hass) el.hass = hass;
       host.appendChild(el);
@@ -54,11 +67,18 @@ export function TwinKeepAlive() {
     if (elRef.current && hass) elRef.current.hass = hass;
   }, [hass]);
 
+  useEffect(() => {
+    const el = elRef.current;
+    if (!el || typeof el.setConfig !== "function") return;
+    el.setConfig({ type: "custom:dsc-the-dash-card", focusTent });
+  }, [focusTent, active]);
+
   return (
     <div
       className={`dsc-twin-keepalive${active ? " is-active" : ""}`}
       aria-hidden={!active}
       data-status={status}
+      data-focus-tent={focusTent || "both"}
     >
       <div className="dsc-twin-keepalive-host" ref={ref} />
       {status === "missing" ? (

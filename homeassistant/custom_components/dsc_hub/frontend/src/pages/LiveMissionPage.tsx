@@ -15,12 +15,12 @@ import { TentTargetPanel } from "../components/TentTargets";
 import { HistoryDrawer } from "../components/HistoryDrawer";
 import { NextRecommendedCard } from "../components/Honesty";
 import { useHass } from "../hooks/useHass";
-import { useHeldReading, useHubOfflineMs } from "../hooks/useHeldReading";
+import { useHeldReading, useHubOfflineMs, useBeatOfflineMs, usePanelOfflineMs } from "../hooks/useHeldReading";
 import { useEntitySeries } from "../hooks/useEntitySeries";
 import { useChartHours } from "../hooks/useChartHours";
 import { TimespanControl } from "../components/HistoryDrawer";
 import { fmtDurationMs, fmtUptimeSeconds } from "../lib/formatDuration";
-import { buildPlantSeat, tentLabel } from "../lib/seatModel";
+import { buildPlantSeat, activePotNumbers, tentLabel } from "../lib/seatModel";
 import { ArcGauge, GotWantBars, MultiLineChart, Sparkline, seriesExtrema } from "../viz/charts";
 
 const FAULTS: { id: string; label: string }[] = [
@@ -48,30 +48,52 @@ export function LiveMissionPage() {
 
   const hubOnline = available("sensor.dsc_hub_uptime");
   const offlineMs = useHubOfflineMs();
+  const beatOfflineMs = useBeatOfflineMs();
+  const panelOfflineMs = usePanelOfflineMs();
   const alerts = num("sensor.dsc_active_alert_count", 0);
 
   const tentT = useHeldReading("sensor.dsc_hub_tent_temperature");
   const tentRh = useHeldReading("sensor.dsc_hub_tent_humidity");
-  const vpd = useHeldReading("sensor.dsc_hub_vpd_kpa");
+  const tentVpd = useHeldReading("sensor.dsc_hub_vpd_kpa");
   const roomT = useHeldReading("sensor.dsc_hub_room_temperature");
   const cloneT = useHeldReading("sensor.dsc_hub_clone_temperature");
   const cloneRh = useHeldReading("sensor.dsc_hub_clone_humidity");
+  const cloneVpd = useHeldReading("sensor.dsc_hub_clone_vpd_kpa");
 
   const tentTSeries = useEntitySeries("sensor.dsc_hub_tent_temperature", { hours, maxPoints });
   const tentRhSeries = useEntitySeries("sensor.dsc_hub_tent_humidity", { hours, maxPoints });
+  const tentVpdSeries = useEntitySeries("sensor.dsc_hub_vpd_kpa", {
+    hours,
+    maxPoints: Math.min(maxPoints, 64),
+  });
   const cloneTSeries = useEntitySeries("sensor.dsc_hub_clone_temperature", {
     hours,
-    maxPoints: Math.min(maxPoints, 96),
+    maxPoints: Math.min(maxPoints, 64),
+  });
+  const cloneRhSeries = useEntitySeries("sensor.dsc_hub_clone_humidity", {
+    hours,
+    maxPoints: Math.min(maxPoints, 64),
+  });
+  const cloneVpdSeries = useEntitySeries("sensor.dsc_hub_clone_vpd_kpa", {
+    hours,
+    maxPoints: Math.min(maxPoints, 64),
   });
 
   const targetTemp = num("number.dsc_hub_target_temp");
   const rhMin = num("number.dsc_hub_rh_target_min");
   const rhMax = num("number.dsc_hub_rh_target_max");
+  const vpdMin = num("number.dsc_hub_vpd_target_min");
+  const vpdMax = num("number.dsc_hub_vpd_target_max");
   const cloneTargetTemp = num("number.dsc_hub_clone_target_temp");
   const cloneRhMin = num("number.dsc_hub_clone_rh_min");
   const cloneRhMax = num("number.dsc_hub_clone_rh_max");
+  const cloneVpdMin = num("number.dsc_hub_clone_vpd_min");
+  const cloneVpdMax = num("number.dsc_hub_clone_vpd_max");
   const tentTempExt = useMemo(() => seriesExtrema(tentTSeries.series), [tentTSeries.series]);
   const tentRhExt = useMemo(() => seriesExtrema(tentRhSeries.series), [tentRhSeries.series]);
+  const cloneLit = state("light.dsc_hub_sf1000_dimmer") === "on";
+  // No 4×8 PWM lamp yet — photoperiod window is the honest schedule/heat proxy.
+  const mainLit = state("binary_sensor.dsc_hub_4x8_window_open") === "on";
 
   const panelLink = state("binary_sensor.dsc_hub_panel_link");
   const panelOk = panelLink === "on";
@@ -87,8 +109,8 @@ export function LiveMissionPage() {
   const climateFault = state("binary_sensor.dsc_hub_climate_sensor_fault") === "on";
 
   const activeFaults = FAULTS.filter((f) => state(f.id) === "on");
-  const seats = [1, 2, 3, 4].map((n) => buildPlantSeat(n, { state, entity }));
-  const anyHeld = tentT.stale || tentRh.stale || cloneT.stale;
+  const seats = activePotNumbers(state).map((n) => buildPlantSeat(n, { state, entity }));
+  const anyHeld = tentT.stale || tentRh.stale || tentVpd.stale || cloneT.stale || cloneRh.stale || cloneVpd.stale;
 
   const openHist = (entityId: string, label: string, unit: string, color?: string) =>
     setHist({ entityId, label, unit, color });
@@ -151,11 +173,21 @@ export function LiveMissionPage() {
           }
           tone={panelOk ? "ok" : available("sensor.dsc_control_wifi_rssi") ? "warn" : "bad"}
         />
+        {!panelOk && !available("sensor.dsc_control_wifi_rssi") ? (
+          <StatusChip
+            label={`PANEL OFF ${panelOfflineMs != null ? fmtDurationMs(panelOfflineMs) : "—"}`}
+            tone="bad"
+            pulse
+          />
+        ) : null}
         <StatusChip
           icon={beatOk ? "ok" : "alert"}
           label={beatOk ? `BEAT ${heartbeat}` : "NO BEAT"}
           tone={beatOk ? "ok" : "bad"}
         />
+        {!beatOk ? (
+          <StatusChip label={`BEAT OFF ${beatOfflineMs != null ? fmtDurationMs(beatOfflineMs) : "—"}`} tone="bad" pulse />
+        ) : null}
         <StatusChip
           label={`UP ${fmtUptimeSeconds(num("sensor.dsc_hub_uptime"))}`}
           tone={hubOnline ? "ok" : "muted"}
@@ -186,58 +218,104 @@ export function LiveMissionPage() {
 
         <div className="dsc-col-4">
           <Card className="dsc-glass" title="Live gauges" icon="gauge">
-            <div className="dsc-gauge-row">
-              <ArcGauge
-                label="Tent T"
-                value={tentT.value}
-                min={15}
-                max={35}
-                unit="°C"
-                target={targetTemp}
-                extrema={tentTempExt}
-                stale={tentT.stale}
-                onClick={() =>
-                  openHist("sensor.dsc_hub_tent_temperature", "Tent T", "°C", "var(--dsc-blue)")
-                }
-              />
-              <ArcGauge
-                label="Tent RH"
-                value={tentRh.value}
-                min={0}
-                max={100}
-                unit="%"
-                band={{ min: rhMin, max: rhMax }}
-                extrema={tentRhExt}
-                stale={tentRh.stale}
-                onClick={() =>
-                  openHist("sensor.dsc_hub_tent_humidity", "Tent RH", "%", "var(--dsc-teal)")
-                }
-              />
-              <ArcGauge
-                label="Clone T"
-                value={cloneT.value}
-                min={15}
-                max={35}
-                unit="°C"
-                target={cloneTargetTemp}
-                stale={cloneT.stale}
-                onClick={() =>
-                  openHist("sensor.dsc_hub_clone_temperature", "Clone T", "°C", "var(--dsc-purple)")
-                }
-              />
-            </div>
-            <div className="dsc-spark-row">
-              <div>
-                <span className="dsc-muted">Tent T</span>
-                <Sparkline series={tentTSeries.series} color="var(--dsc-blue)" />
+            <div className="dsc-gauge-matrix">
+              <div className={`dsc-gauge-row-3${cloneLit ? " is-lit" : ""}`}>
+                <div className="dsc-gauge-row-tag">2×4</div>
+                <div className="dsc-gauge-cell">
+                  <ArcGauge
+                    label="Temp"
+                    value={cloneT.value}
+                    min={15}
+                    max={35}
+                    unit="°C"
+                    target={cloneTargetTemp}
+                    stale={cloneT.stale}
+                    onClick={() =>
+                      openHist("sensor.dsc_hub_clone_temperature", "2×4 Temp", "°C", "var(--dsc-teal)")
+                    }
+                  />
+                  <Sparkline series={cloneTSeries.series} color="var(--dsc-teal)" width={88} height={18} />
+                </div>
+                <div className="dsc-gauge-cell">
+                  <ArcGauge
+                    label="RH"
+                    value={cloneRh.value}
+                    min={0}
+                    max={100}
+                    unit="%"
+                    band={{ min: cloneRhMin, max: cloneRhMax }}
+                    stale={cloneRh.stale}
+                    onClick={() =>
+                      openHist("sensor.dsc_hub_clone_humidity", "2×4 Humidity", "%", "var(--dsc-teal)")
+                    }
+                  />
+                  <Sparkline series={cloneRhSeries.series} color="var(--dsc-teal)" width={88} height={18} />
+                </div>
+                <div className="dsc-gauge-cell">
+                  <ArcGauge
+                    label="VPD"
+                    value={cloneVpd.value}
+                    min={0}
+                    max={2.5}
+                    unit="kPa"
+                    band={{ min: cloneVpdMin, max: cloneVpdMax }}
+                    stale={cloneVpd.stale}
+                    onClick={() =>
+                      openHist("sensor.dsc_hub_clone_vpd_kpa", "2×4 VPD", "kPa", "var(--dsc-teal)")
+                    }
+                  />
+                  <Sparkline series={cloneVpdSeries.series} color="var(--dsc-teal)" width={88} height={18} />
+                </div>
               </div>
-              <div>
-                <span className="dsc-muted">Tent RH</span>
-                <Sparkline series={tentRhSeries.series} color="var(--dsc-teal)" />
-              </div>
-              <div>
-                <span className="dsc-muted">Clone T</span>
-                <Sparkline series={cloneTSeries.series} color="var(--dsc-purple)" />
+              <div className={`dsc-gauge-row-3${mainLit ? " is-lit" : ""}`}>
+                <div className="dsc-gauge-row-tag">4×8</div>
+                <div className="dsc-gauge-cell">
+                  <ArcGauge
+                    label="Temp"
+                    value={tentT.value}
+                    min={15}
+                    max={35}
+                    unit="°C"
+                    target={targetTemp}
+                    extrema={tentTempExt}
+                    stale={tentT.stale}
+                    onClick={() =>
+                      openHist("sensor.dsc_hub_tent_temperature", "4×8 Temp", "°C", "var(--dsc-blue)")
+                    }
+                  />
+                  <Sparkline series={tentTSeries.series} color="var(--dsc-blue)" width={88} height={18} />
+                </div>
+                <div className="dsc-gauge-cell">
+                  <ArcGauge
+                    label="RH"
+                    value={tentRh.value}
+                    min={0}
+                    max={100}
+                    unit="%"
+                    band={{ min: rhMin, max: rhMax }}
+                    extrema={tentRhExt}
+                    stale={tentRh.stale}
+                    onClick={() =>
+                      openHist("sensor.dsc_hub_tent_humidity", "4×8 Humidity", "%", "var(--dsc-blue)")
+                    }
+                  />
+                  <Sparkline series={tentRhSeries.series} color="var(--dsc-blue)" width={88} height={18} />
+                </div>
+                <div className="dsc-gauge-cell">
+                  <ArcGauge
+                    label="VPD"
+                    value={tentVpd.value}
+                    min={0}
+                    max={2.5}
+                    unit="kPa"
+                    band={{ min: vpdMin, max: vpdMax }}
+                    stale={tentVpd.stale}
+                    onClick={() =>
+                      openHist("sensor.dsc_hub_vpd_kpa", "4×8 VPD", "kPa", "var(--dsc-blue)")
+                    }
+                  />
+                  <Sparkline series={tentVpdSeries.series} color="var(--dsc-blue)" width={88} height={18} />
+                </div>
               </div>
             </div>
           </Card>
@@ -331,12 +409,12 @@ export function LiveMissionPage() {
               ]}
             />
             <div className="dsc-kpi-sub" style={{ marginTop: 8 }}>
-              Room {fmtHeld(roomT.value)} °C · VPD {fmtHeld(vpd.value, 2)} kPa
-              {vpd.stale || roomT.stale ? " · HELD" : ""}
+              Room {fmtHeld(roomT.value)} °C · VPD {fmtHeld(tentVpd.value, 2)} kPa
+              {tentVpd.stale || roomT.stale ? " · HELD" : ""}
             </div>
             <Kpi
               label="Surface"
-              value={state("sensor.dsc_ha_surface_version", "7.1.0")}
+              value={state("sensor.dsc_ha_surface_version", "7.1.1")}
               sub={`Fleet ${fleet}`}
               tone="ok"
             />
@@ -479,22 +557,13 @@ export function LiveMissionPage() {
         <div className="dsc-col-6">
           <Card className="dsc-glass" title="Pot ESP-NOW" icon="root">
             <div className="dsc-chip-row">
-              <StatusChip
-                label={`P1 ${state("binary_sensor.dsc_hub_pot1_esp_now_link") === "on" ? "ON" : "OFF"}`}
-                tone={state("binary_sensor.dsc_hub_pot1_esp_now_link") === "on" ? "ok" : "muted"}
-              />
-              <StatusChip
-                label={`P2 ${state("binary_sensor.dsc_hub_pot2_esp_now_link") === "on" ? "ON" : "OFF"}`}
-                tone={state("binary_sensor.dsc_hub_pot2_esp_now_link") === "on" ? "ok" : "muted"}
-              />
-              <StatusChip
-                label={`P3 ${state("binary_sensor.dsc_hub_pot3_esp_now_link") === "on" ? "ON" : "OFF"}`}
-                tone={state("binary_sensor.dsc_hub_pot3_esp_now_link") === "on" ? "ok" : "muted"}
-              />
-              <StatusChip
-                label={`P4 ${state("binary_sensor.dsc_hub_pot4_esp_now_link") === "on" ? "ON" : "OFF"}`}
-                tone={state("binary_sensor.dsc_hub_pot4_esp_now_link") === "on" ? "ok" : "muted"}
-              />
+              {activePotNumbers(state).map((n) => {
+                const id = `binary_sensor.dsc_hub_pot${n}_esp_now_link`;
+                const on = state(id) === "on";
+                return (
+                  <StatusChip key={n} label={`P${n} ${on ? "ON" : "OFF"}`} tone={on ? "ok" : "muted"} />
+                );
+              })}
             </div>
           </Card>
         </div>

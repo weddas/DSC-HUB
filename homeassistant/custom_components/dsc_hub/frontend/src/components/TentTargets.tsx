@@ -151,12 +151,18 @@ function TentColumn({ tent, title }: { tent: TentKind; title: string }) {
 export function TentTargetPanel({
   compact,
   emphasize,
+  only,
 }: {
   compact?: boolean;
   emphasize?: TentKind;
+  /** Single-tent cockpits: show only that tent's Want editors. */
+  only?: TentKind;
 }) {
-  const order: TentKind[] =
-    emphasize === "clone" ? ["clone", "main"] : ["main", "clone"];
+  const order: TentKind[] = only
+    ? [only]
+    : emphasize === "clone"
+      ? ["clone", "main"]
+      : ["main", "clone"];
   return (
     <div className={`dsc-target-panel${compact ? " is-compact" : ""}`}>
       {order.map((t) => (

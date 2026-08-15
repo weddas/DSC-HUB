@@ -1,3 +1,6 @@
-"""DSC offline brain — catalogs, Want resolution, decision loop, API."""
+"""DSC offline brain — Want resolution, decision loop, operational catalog.
+
+Research corpus (N-087) lives in the sibling CannaLib repo.
+"""
 
 __version__ = "0.1.0"

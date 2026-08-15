@@ -90,6 +90,13 @@ def main() -> int:
             chemistry = row.get("chem_summary") or row.get("chemistry")
             if chemistry:
                 bands[key]["chem_summary"] = chemistry
+            # Densified brain traits (exact catalog only — never invent Want climate)
+            if row.get("height_cm") not in (None, "", [], {}):
+                bands[key]["height_cm"] = row.get("height_cm")
+            if row.get("flowering_days") not in (None, "", [], {}):
+                bands[key]["flowering_days"] = row.get("flowering_days")
+            if isinstance(row.get("height_band"), str) and row.get("height_band").strip():
+                bands[key]["height_band"] = row.get("height_band").strip()
     payload = {
         "schema_version": 1,
         "source": SOURCE.name,

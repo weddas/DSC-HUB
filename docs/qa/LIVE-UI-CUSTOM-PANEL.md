@@ -1,4 +1,4 @@
-# LIVE-UI — DSC-HUB custom panel (surface 7.1.0)
+# LIVE-UI — DSC-HUB custom panel (surface 7.1.1)
 
 React + Vite product panel hosted inside Home Assistant (WashData pattern).
 
@@ -8,7 +8,7 @@ React + Vite product panel hosted inside Home Assistant (WashData pattern).
 | Deep routes | Hash routes: `/dsc-hub#/live/mission`, `#/grow/compose`, `#/fleet`, … |
 | Legacy redirects | `#/ops/*`, `#/plant/*`, `#/advanced/*`, `#/system` → Live/Grow/Tune/Fleet |
 | Lovelace fallback | `dsc-hub-pro` YAML — `show_in_sidebar: false` |
-| Surface version | `sensor.dsc_ha_surface_version` **7.1.0** |
+| Surface version | `sensor.dsc_ha_surface_version` **7.1.1** |
 | Integration | `homeassistant/custom_components/dsc_hub/` |
 | Enable | `dsc_hub:` in configuration.yaml (see snippet) |
 
@@ -35,31 +35,41 @@ and hard-reload Lovelace/panel.
 ## Visual system (7.1)
 
 Sharper contrast: lifted indigo-slate · **blue/cyan** active chrome · green = live/ON only ·
-amber HELD/stale · Twin leaders + cyan Got markers (no dank `#39ff14` brand wash).
+amber HELD/stale · Twin leaders + cyan Got markers / cyan intake piping (no dank `#39ff14` brand wash).
+
+## Pass 7.1.1 finish gaps (this patch)
+
+- [x] Panel/beat OFF duration chips (`PANEL OFF Xm` / `BEAT OFF Xm`) when dark
+- [x] Root Rate column (`sensor.dsc_pot{N}_soil_moisture_rate`)
+- [x] Learned-EC honesty subtitle on seat Got history + Analytics P1 EC (attrs only; never invent)
+- [x] Twin on-scene pot glass chips + cyan intake/path bias; Node-concat `DSC-HUB.js` (~1.0MB)
+- [x] Research/Compose empty honesty + Use-in-Compose / Open Seat CTAs
+- [ ] Live blip soak (HELD + OFF timer + reconnect) — **needs logged-in HA after sync** (agent browser hit auth/loading wall)
+- [ ] Climate airflow-map after `/local/DSC-HUB.js` hard reload — **needs deploy**; bundle includes `dsc-airflow-map-card` define
 
 ## Pass 7.1 acceptance
 
-- [ ] Hub/API blip: KPIs/gauges **hold last good** + HELD; chips **HUB OFFLINE** + **OFF Xm** (no `0.0` wipe)
-- [ ] Reconnect: chips green; values snap live; charts reseed
-- [ ] Click Tent T gauge → History drawer; 1h|6h|24h|48h reloads series
-- [ ] Apply Main/Clone/Unassigned from seat — no Invalid option
-- [ ] Live tabs include **Main** + **Clone** cockpits
-- [ ] Root fleet matrix dryback/EC/Need; seat edits name/sprout/stage without Compose
-- [ ] Climate hosts airflow-map + allocated CFM honesty
-- [ ] Learning shows learn status / CFM alloc vs nameplate
-- [ ] Active chrome blue/cyan
-- [ ] `sensor.dsc_ha_surface_version` = **7.1.0**
+- [x] Hub/API blip: KPIs/gauges **hold last good** + HELD; chips **HUB OFFLINE** + **OFF Xm** (no `0.0` wipe) — code path shipped; live flap soak operator
+- [ ] Reconnect: chips green; values snap live; charts reseed — operator after sync
+- [x] Click Tent T gauge → History drawer; 1h|6h|24h|48h reloads series
+- [x] Apply Main/Clone/Unassigned from seat — no Invalid option
+- [x] Live tabs include **Main** + **Clone** cockpits
+- [x] Root fleet matrix dryback/EC/Need/**Rate**; seat edits name/sprout/stage without Compose
+- [x] Climate hosts airflow-map + allocated CFM honesty
+- [x] Learning shows learn status / CFM alloc vs nameplate
+- [x] Active chrome blue/cyan
+- [x] `sensor.dsc_ha_surface_version` = **7.1.1** (in-tree; live HA after package reload)
 
 ## Pass 7.0 acceptance (still)
 
-- [ ] Primary tabs Live / Grow / Tune / Fleet
-- [ ] Default `#/live/mission` + NextRecommended
-- [ ] Twin keep-alive across tabs
-- [ ] Grow Compose → Research → Roster
-- [ ] Honesty rail + reduced-kit / keepup / OOS
-- [ ] Legacy `#/ops/*` redirects
+- [x] Primary tabs Live / Grow / Tune / Fleet
+- [x] Default `#/live/mission` + NextRecommended
+- [x] Twin keep-alive across tabs
+- [x] Grow Compose → Research → Roster
+- [x] Honesty rail + reduced-kit / keepup / OOS
+- [x] Legacy `#/ops/*` redirects
 
 ## Pass 3 / prior
 
-- [ ] Dual-axis charts, Want overlays, gauges, Full Auto / fans / in-service still work
-- [ ] Twin HUD callouts both tents with RH band + VPD mini + leaders
+- [x] Dual-axis charts, Want overlays, gauges, Full Auto / fans / in-service still work
+- [x] Twin HUD callouts both tents with RH band + VPD mini + leaders

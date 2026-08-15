@@ -1,6 +1,0 @@
-2026-08-08 02:15:48 EXCLUSIVE cannareviews start staging=y:\Digital Stealth Care\Projects\DSC-HUB\brain\data\staging\cannareviews.sqlite3 size=8470528
-2026-08-08 02:15:48 staging_counts={'meta': 6, 'source_record': 1, 'strain_canonical': 1503, 'strain_variant': 0, 'chemistry_profile': 1971, 'grow_trait': 0, 'science_alias': 0, 'entity_link': 1971, 'attribute_kv': 0, 'sqlite_sequence': 0, 'raw_record': 4195, 'schema_extension_log': 0, 'light_fixture': 0, 'nutrient_product': 0, 'medium_product': 0, 'media_asset': 0, 'followup_gap': 0, 'export_manifest': 0, 'search_docs': 0} source_ids=['cannareviews']
-2026-08-08 02:15:48 attempt 1 acquire lock
-2026-08-08 02:16:20 attempt 1 FAIL OperationalError: database is locked
-2026-08-08 02:16:40 attempt 2 acquire lock
-2026-08-08 02:16:43 attempt 2 lock acquired

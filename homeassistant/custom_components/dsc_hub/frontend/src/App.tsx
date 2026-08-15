@@ -68,16 +68,11 @@ function Shell() {
         <NavLink className="dsc-brand" to="/live/mission">
           <Icon name="brand" size={36} color="var(--dsc-blue)" />
           <div className="dsc-brand-title">
-            <img
-              className="dsc-brand-wordmark"
-              src="/dsc_hub/assets/brand/dsc-brand-wordmark.svg"
-              alt="DSC-HUB"
-            />
-            <span>DSC-Dashboard</span>
+            <strong>DSC - A Plausible Deniability Project.</strong>
           </div>
         </NavLink>
         <div className="dsc-muted" style={{ fontSize: 12, letterSpacing: "0.08em" }}>
-          SURFACE 7.1.0
+          SURFACE 7.1.4
         </div>
       </div>
 
@@ -114,6 +109,8 @@ function Shell() {
         </nav>
       ) : null}
 
+      <TwinKeepAlive />
+
       <Routes>
         <Route path="/" element={<Navigate to="/live/mission" replace />} />
         <Route path="/live" element={<Navigate to="/live/mission" replace />} />
@@ -142,8 +139,6 @@ function Shell() {
         <Route path="/system" element={<LegacyRedirect />} />
         <Route path="*" element={<Navigate to="/live/mission" replace />} />
       </Routes>
-
-      <TwinKeepAlive />
     </div>
   );
 }

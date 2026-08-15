@@ -1988,7 +1988,9 @@ esult[entityId]; HA often returns [[states]] → empty series. Empty hist locked
 
 ## 2026-08-12 — Cannalib full-corpus API (N-087-CANNALIB)
 
-**Ops SoT (credentials, mounts, tunnel, HA):** [`docs/ops/CANNALIB-API.md`](ops/CANNALIB-API.md)
+**Moved 2026-08-15:** corpus, scrapers, API, and this ops runbook now live in sibling **`Y:\Digital Stealth Care\Projects\CannaLib`**. Hub keeps cards, Want YAML, and capped indexes. Stub: [`docs/ops/CANNALIB-API.md`](ops/CANNALIB-API.md). Remaining CannaLib work: `CannaLib/FOLLOWUPS.md`.
+
+**Ops SoT (credentials, mounts, tunnel, HA):** `CannaLib/docs/ops/CANNALIB-API.md`
 
 ### done
 - Stdlib service `services/cannalib/standalone_server.py` on Digital-Gateway (`:8790`): full `strain_canonical` (~195k), not HA 10k index.
@@ -2004,7 +2006,8 @@ esult[entityId]; HA often returns [[states]] → empty series. Empty hist locked
 ### next-plan
 | ID | Item | Notes |
 |---|---|---|
-| N-087-CANNALIB-FTS | Optional FTS5 / name index for sub-100ms typeahead | Warm SSD OK; array disk COUNT is slow once |
+| N-087-CANNALIB-FTS | Optional FTS5 / name index for sub-100ms typeahead | **Moved to CannaLib** `FOLLOWUPS.md` |
+| CL-DEPLOY-RECREATE | Unraid Recreate onto CannaLib mounts | Trampoline compose in `services/cannalib/`; then delete Hub `brain/data/dsc_brain.sqlite3*` |
 
 ### deferred
 - Cloudflare WAF custom rules / Access hard-private mode until abuse appears.
@@ -2037,3 +2040,79 @@ Operator: soldered RS485 contacts + replaced MAX transceiver on pots 3 and 4; st
 - **POT4:** same IDF/ESPHome, compiled **2026-08-11 12:48** (SoftAP cutover), project **6.0.0.0**. Joins Anchor → `.15` (was dark on LAN until this USB boot). Same mute Modbus, no CRC. RSSI weaker than POT3 on the bench.
 - UART soften will not fix either. Both ESPs are fine; slave `1` is silent on both buses.
 
+
+## 2026-08-15 — DSC-Dash UI audit (select-off / nav / drawers)
+
+Operator: cannot type / dropdowns select off; requested full Dash+panel audit.
+
+### root cause (not cosmetic)
+- **N-093-DASH-FOCUS:** `HassProvider` `isDscEntity` matches **all** `input_*` + every `dsc_*` `state_changed` → global `tick` → controlled `EntitySelect` / fan sliders / seat drafts fight the DOM. Lovelace `DscTheDashEditor.set hass` full `innerHTML` wipe is a second hard path.
+- Full register: canvas `dsc-dash-full-audit` (I-01…I-26 + data layer D-01…D-20).
+
+### next-plan
+| ID | Item | Notes |
+|---|---|---|
+| N-093-DASH-FOCUS | Fix tick filter + drafts + editor idle render | P0 — unblocks typing/selects |
+| N-093-DASH-NAV | Twin `data-nav` → `#/live/*`; retire `/dsc-hub-pro` CTAs | P0/P1 |
+| N-093-DASH-TWIN | Soft `setFocusTent` without `_renderShell`; pause rAF when hidden | P1 |
+| N-093-DASH-HISTORY | Stabilize `useHistory` deps (no refetch per tick) | P1 |
+| N-093-DASH-DRAWER | Focus trap + overflow menu close races | P1 |
+
+### data IA / coverage (2026-08-15 addendum — audit only, no UI impl)
+Data-scientist pass: page decisions × datapoint families (Got/Want/Need honesty). Canvas section **Data coverage** + D-IDs. Do not invent values; surface package/Dash entities already present.
+
+| ID | Item | Sev | Notes |
+|---|---|---|---|
+| N-094-DATA-MISSION-NEED | Mission plant chips → Got M + Need triage | P0 | D-01 — seatModel already has fields |
+| N-094-DATA-LIGHT-SCHED | Light: next_event + clone/main expected/delivered hours | P0 | D-02 / D-10 — Dash binds; React Light thin |
+| N-094-DATA-WANT-BANDS | Seat Want EC/pH bands + Need explanation | P0 | D-03 — packages have want_* ; UI moisture-only |
+| N-094-DATA-MISSION-CFM | Mission secondary CFM / lung OK chip | P1 | D-04 / D-09 — shared honesty badge |
+| N-094-DATA-HUB-LINK | Fleet (+ Mission) hub_link suite not uptime proxy | P1 | D-05 — match Dash pill |
+| N-094-DATA-ANALYTICS-POTS | Analytics: all in-service pots not Pot1-only | P1 | D-06 |
+| N-094-DATA-ROOT-COLS | Root matrix: soil °C (+ NPK secondary) | P1 | D-07 |
+| N-094-DATA-ROLE-SPLIT | Mission triage vs Climate command ownership | P1 | D-08 — cut duplicate controls |
+| N-094-DATA-POT-TRUST | Root/Mission: stuck/untrusted/peer_divergence | P1 | D-11 |
+| N-094-DATA-OOS-COUNT | OOS pot count honesty (not silent omit) | P2 | D-12 |
+| N-094-DATA-GOT-SOT | Align Dash soil_* vs React got_* | P2 | D-13 |
+| N-094-DATA-LEARN-SCOPE | Learning: port wizard or demote CFM echo | P2 | D-14 |
+| N-094-DATA-EFFICACY | Climate demand + efficacy/suspect strip | P2 | D-15 |
+| N-094-DATA-COCKPIT-NEED | Main/Clone chips: Need (+ dryback warn) | P2 | D-16 |
+| N-094-DATA-ROOM-AH | Climate room RH / AH | P2 | D-17 |
+| N-094-DATA-ROSTER-NEED | Roster optional Need column | P2 | D-18 |
+| N-094-DATA-TANK | Tank card when hardware entities exist | P3 | D-19 |
+| N-094-DATA-BRIDGE | Fleet bridge/ESP-NOW/firmware table | P3 | D-20 |
+
+### UX / design-systems (2026-08-15 addendum — audit only, no UI impl)
+UI/UX pass: one Dash, progressive disclosure (DecisionLayer), unused paid primitives, vessel silhouette, coupled mix. Canvas section **UX / design-systems** + U-IDs. Do not reskin Lovelace IIFEs; port onto React chrome/viz after the primitives exist.
+
+| ID | Item | Sev | Notes |
+|---|---|---|---|
+| N-095-UX-DECISION | DecisionLayer fade overlay + Help slot + ResultChip write-back | P0 | U-02 / U-12 / U-17 / U-19 / U-22 |
+| N-095-UX-VESSEL | VesselSpec silhouette + volumeL + material; share Compose/Roster/Root | P0 | U-03 / U-20 — not a 4:5 rounded box |
+| N-095-UX-MIX | Coupled blend sliders always 100%; lock + remainder; L recipe | P0 | U-04 — retire "must sum 100" homework |
+| N-095-UX-COMPOSE | Port Compose/Research off LegacyCardHost onto DecisionLayer + vessel + mix | P0 | U-01 / U-10 / U-18 — CatalogPicker Combobox |
+| N-095-UX-GHOST | GhostSeries (last 24h / cycle / sibling tent) + HistoryDrawer targets | P1 | U-05 / U-08 / U-13 / U-16 |
+| N-095-UX-MISSION | Slim Mission glance; command → Climate or DecisionLayer | P1 | U-06 — pairs D-08 |
+| N-095-UX-POT-OVERLAY | Twin/Mission pot pick opens seat overlay, not /live/root hop | P1 | U-09 — pairs I-15 |
+| N-095-UX-TWIN-CHROME | Twin as Three.js canvas in glass; strip Dash HUD / data-nav product | P1 | U-07 — pairs I-05 / N-093-DASH-NAV |
+| N-095-UX-LIGHT-VIZ | Light: next-event + hours gauge + photoperiod spark | P1 | U-14 — pairs D-02 / D-10 |
+| N-095-UX-PRIMITIVES | Use paid viz (GotWantBars, ResultChip, gauges); drop dead LiveLineChart | P1 | U-11 |
+| N-095-UX-MAP-HOSTS | Airflow + system map inherit dsc.css or React topology (no inset IIFE) | P2 | U-15 |
+| N-095-UX-ROOM-CHIP | Climate Room chip when RH/AH glance lands | P3 | U-21 — pairs D-17 / I-23 |
+
+### 3D / realtime viz (2026-08-15 addendum — audit + plan only, no 3D/UI impl)
+3D Artist pass: neon wireframe only (cyan/teal/purple on dark, `dsc.css` tokens). Existing Twin is a cinematic lung wearing plastic pots, cartoon leaflets, HVAC furniture, and HELD-still-alive particles. Climate airflow-map and Fleet system-map are misplaced twins. Canvas section **3D / realtime viz** + T-IDs. Do not invent sensor values; HELD/unavailable = dim / dashed / no glow.
+
+| ID | Item | Sev | Notes |
+|---|---|---|---|
+| N-096-3D-HONESTY | Twin HELD freeze + OOS/unassigned dashed empty pads | P0 | T-02 / T-04 — last-good wisps currently keep flying |
+| N-096-3D-STYLE | CUT terracotta pots, leaflet canopies, fabric/soil maps; neon wire tents | P0 | T-01 / VIZ-02 — style lock vs Dash cinematic |
+| N-096-3D-MAP-CUT | CUT Climate `dsc-airflow-map-card` (clone labeled Reservoir); REHOME Fleet system-map | P0 | T-05 / T-09 / U-15 — wrong page |
+| N-096-3D-VESSEL | VesselSpec neon glass: moisture column from floor, EC slab on top, dryback albedo, soil-T glow | P0 | T-06 / U-03 — swappable 25L fabric bag / 20L tall PET |
+| N-096-3D-LIGHT-PROXY | 4×8 shafts dashed + tagged Window proxy until GPIO lamp | P0/P1 | T-03 / I-18 — not a fake fixture |
+| N-096-3D-HUD | Strip Dash IIFE HUD; pause hidden Twin rAF; Main/Clone canvas-only | P1 | T-10 / T-14 / U-07 — pairs I-05 / I-11 / I-12 |
+| N-096-3D-PLANT | Generic neon plant extra (stage/Need/photoperiod/stress decay); no cultivar mesh | P1 | T-07 — no Grow Narrator copy engine exists |
+| N-096-3D-TANK | Dummy DSC-Tank contract (pump/level helpers) + cutaway; bind `dsc_v4_tank.yaml` tester | P1 | T-08 / D-19 — Fleet copy is stale; no firmware tank |
+| N-096-3D-KIT-PULSE | Wildcard: Kit Pulse / Grow Health constellation with holes for missing kit | P1 | T-19 / T-20 — Mission + Fleet glance |
+| N-096-3D-LUNG | Wildcard: extract Lung Loop (cascade 2×4→4×8; allocated solid / nameplate dashed) | P1 | T-13 / D-04 / D-09 — unique 3D, currently trapped |
+| N-096-3D-DEAD-MESH | CUT appliance cubes, ACH slices, WEEK ? timeline; restyle grow mat to neon plate | P2 | T-11 / T-12 / T-15 / T-16 / T-18 |

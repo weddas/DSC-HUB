@@ -1,2 +1,0 @@
-unlocked 0
-files ['dsc_brain.sqlite3', 'dsc_brain.sqlite3.pre_ce_bak']

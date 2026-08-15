@@ -1,5 +1,5 @@
 import type { CSSProperties, ReactNode } from "react";
-import { iconUrl, type IconName } from "../icons";
+import { iconSvg, type IconName } from "../icons";
 import { useHass } from "../hooks/useHass";
 
 export type { IconName };
@@ -17,24 +17,20 @@ export function Icon({
 }) {
   return (
     <span
-      className={className}
+      className={`dsc-icon${className ? ` ${className}` : ""}`}
       role="img"
       aria-hidden
       style={{
-        display: "inline-block",
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
         width: size,
         height: size,
-        backgroundColor: color,
-        WebkitMaskImage: `url(${iconUrl(name)})`,
-        maskImage: `url(${iconUrl(name)})`,
-        WebkitMaskSize: "contain",
-        maskSize: "contain",
-        WebkitMaskRepeat: "no-repeat",
-        maskRepeat: "no-repeat",
-        WebkitMaskPosition: "center",
-        maskPosition: "center",
+        color,
         flexShrink: 0,
+        lineHeight: 0,
       }}
+      dangerouslySetInnerHTML={{ __html: iconSvg(name) }}
     />
   );
 }
@@ -238,7 +234,7 @@ export function EntityToggle({
       disabled={!ok && !warnWhenMissing}
       title={ok ? entityId : warnWhenMissing || `${entityId} unavailable`}
     >
-      {icon ? <Icon name={icon} size={14} className="dsc-demand-icon" /> : null}
+      {icon ? <Icon name={icon} size={22} color="var(--dsc-teal)" className="dsc-demand-icon" /> : null}
       <span className="dsc-demand-label">{label}</span>
       <span className="dsc-demand-state">
         {!ok ? warnWhenMissing || "—" : brightness != null ? `${brightness}%` : on ? "ON" : "OFF"}

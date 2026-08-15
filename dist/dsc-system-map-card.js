@@ -350,6 +350,7 @@
         volume: "input_number.dsc_vol_2x4_m3",
         ach: "sensor.dsc_ach_2x4",
         mat: "switch.dsc_hub_grow_mat_demand",
+        light: "light.dsc_hub_sf1000_dimmer",
       },
       {
         id: "main",
@@ -360,7 +361,8 @@
         humidity: "sensor.dsc_hub_tent_humidity",
         volume: "input_number.dsc_vol_4x8_m3",
         ach: "sensor.dsc_ach_4x8",
-        light: "light.dsc_hub_sf1000_dimmer",
+        // Photoperiod window until a 4×8 lamp entity exists (GPIO5 reserved).
+        light: "binary_sensor.dsc_hub_4x8_window_open",
       },
     ],
     ducts: [
@@ -3182,6 +3184,10 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       fan_out: "sensor.dsc_fan_exhaust_outside_pct",
       fan_recirc: "sensor.dsc_fan_exhaust_room_pct",
       light: "light.dsc_hub_sf1000_dimmer",
+      // 4×8 has no PWM lamp yet (GPIO5 reserved). Photoperiod window is the honest
+      // "lights period" signal used by heat model + chart/Mission glow until instrumented.
+      main_window: "binary_sensor.dsc_hub_4x8_window_open",
+      main_light: "",
       grow_mat: "switch.dsc_hub_grow_mat_demand",
       heater: "switch.dsc_hub_heater_demand",
       ac: "switch.dsc_hub_ac_demand",
@@ -3209,12 +3215,15 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
   const normalizeConfig = (raw) => {
     const d = DSC_DEFAULTS();
     if (!raw || typeof raw !== "object") return d;
+    const focusRaw = String(raw.focusTent || raw.focus_tent || "").toLowerCase();
+    const focusTent = focusRaw === "main" || focusRaw === "clone" ? focusRaw : null;
     return {
       type: raw.type || d.type,
       title: raw.title || d.title,
       subtitle: raw.subtitle || d.subtitle,
       pots: Array.isArray(raw.pots) && raw.pots.length ? raw.pots : d.pots,
       entities: { ...d.entities, ...(raw.entities || {}) },
+      focusTent,
     };
   };
 
@@ -3305,7 +3314,12 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
   const activePots = (cfg, hass) =>
     (cfg.pots || []).filter((p) => {
       if (!p || !p.prefix) return false;
-      if (p.in_service && !isUnavailable(hass, p.in_service) && !isOn(hass, p.in_service)) return false;
+      const n = potNumFrom(p);
+      const svc =
+        p.in_service ||
+        (Number.isFinite(n) ? `input_boolean.dsc_pot${n}_in_service` : "");
+      // Explicit off = hide completely until brought back; missing/unavailable = keep.
+      if (svc && !isUnavailable(hass, svc) && !isOn(hass, svc)) return false;
       return true;
     });
 
@@ -3408,7 +3422,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     }
     .dash-scene-wrap canvas { display: block; width: 100%; height: 100%; position: relative; z-index: 0; }
     .dash-hud {
-      position: absolute; pointer-events: none; z-index: 2;
+      position: absolute; pointer-events: none; z-index: 5;
       background: rgba(8, 14, 16, 0.78); backdrop-filter: blur(12px);
       border: 1px solid rgba(38, 198, 218, 0.38); border-radius: 12px;
       padding: 12px 14px; min-width: 168px;
@@ -3428,7 +3442,6 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       font-size: 9px; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; font-weight: 600;
     }
     .dash-hud .v-split .metric .mv { font-size: 18px; font-weight: 700; line-height: 1.1; }
-    .dash-hud .s { font-size: 11px; color: var(--accent); margin-top: 6px; }
     .dash-hud .band {
       margin-top: 8px; height: 6px; border-radius: 999px;
       background: rgba(255,255,255,0.08); position: relative; overflow: hidden;
@@ -3449,34 +3462,55 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     }
     .dash-hud .vpd-mini svg { flex: 0 0 auto; }
     .dash-hud.leader {
-      position: absolute; width: 18px; height: 18px; border-radius: 50%;
-      border: 1px solid rgba(38,198,218,0.55);
-      box-shadow: 0 0 12px rgba(46,196,214,0.45);
-      background: rgba(46,196,214,0.25);
+      position: absolute; width: 14px; height: 14px; border-radius: 50%;
+      min-width: 0 !important; min-height: 0; padding: 0 !important;
+      border: 1px solid rgba(38,198,218,0.7);
+      box-shadow: 0 0 8px rgba(46,196,214,0.35);
+      background: rgba(46,196,214,0.35);
       pointer-events: none;
-      z-index: 4;
+      z-index: 6;
+      overflow: hidden;
     }
+    .dash-hud .s {
+      font-size: 11px; color: var(--accent); margin-top: 6px;
+      white-space: normal; overflow-wrap: anywhere; max-width: 220px; line-height: 1.35;
+    }
+    .dash-hud .metric .mk {
+      display: inline-flex; align-items: center; gap: 4px;
+    }
+    .dash-hud .metric .mk svg { width: 10px; height: 10px; flex: 0 0 auto; opacity: 0.9; }
     .dash-pot-chips {
-      position: absolute; left: 50%; bottom: 44px; transform: translateX(-50%);
-      z-index: 3; display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;
+      position: absolute; inset: 0; z-index: 3;
+      pointer-events: none;
+    }
+    .dash-pot-chips.is-strip {
+      inset: auto; left: 50%; bottom: 44px; transform: translateX(-50%);
+      display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;
       max-width: calc(100% - 28px); pointer-events: auto;
     }
     .dash-pot-chip {
+      position: absolute; pointer-events: auto;
       display: flex; flex-direction: column; gap: 2px;
-      min-width: 92px; padding: 7px 10px;
-      background: rgba(8,12,18,0.78); backdrop-filter: blur(8px);
-      border: 1px solid rgba(100,120,150,0.4); border-radius: 8px;
+      min-width: 96px; max-width: 168px; padding: 6px 9px;
+      background: rgba(8,14,22,0.72); backdrop-filter: blur(10px);
+      border: 1px solid rgba(38,198,218,0.42); border-radius: 10px;
       color: var(--text); cursor: pointer; text-align: left;
-      transition: border-color 0.15s, background 0.15s;
+      box-shadow: 0 0 16px rgba(38,198,218,0.14), 0 6px 18px rgba(0,0,0,0.4);
+      transition: border-color 0.15s, background 0.15s, left 160ms ease, top 160ms ease;
+      transform: translate(-50%, -110%);
+    }
+    .dash-pot-chips.is-strip .dash-pot-chip {
+      position: relative; transform: none;
     }
     .dash-pot-chip:hover, .dash-pot-chip.on {
-      border-color: rgba(38,198,218,0.65);
-      background: rgba(16,28,40,0.9);
+      border-color: rgba(38,198,218,0.85);
+      background: rgba(12,28,40,0.92);
+      box-shadow: 0 0 22px rgba(46,196,214,0.28), 0 8px 22px rgba(0,0,0,0.45);
     }
     .dash-pot-chip .chip-id {
       font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);
     }
-    .dash-pot-chip .chip-name { font-size: 12px; font-weight: 700; max-width: 120px;
+    .dash-pot-chip .chip-name { font-size: 12px; font-weight: 700; max-width: 148px;
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .dash-pot-chip .chip-meta { font-size: 10px; color: var(--accent); }
     .dash-legend {
@@ -3494,11 +3528,21 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     }
     .dash-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
     .dash-charts {
-      display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px;
+      display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px;
     }
     .dash-chart {
       background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
       padding: 8px 8px 6px; min-height: 110px; display: flex; flex-direction: column;
+      transition: box-shadow 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+    }
+    .dash-chart.is-lit {
+      border-color: rgba(255, 213, 79, 0.55);
+      background: linear-gradient(180deg, rgba(255, 193, 7, 0.10), rgba(18, 24, 36, 0.92));
+      box-shadow: 0 0 28px rgba(255, 193, 7, 0.28), inset 0 0 18px rgba(255, 213, 79, 0.08);
+    }
+    .dash-chart .zone {
+      font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);
+      margin: 0 0 2px;
     }
     .dash-chart h4 {
       margin: 0 0 4px; font-size: 9px; letter-spacing: 0.06em; color: var(--muted);
@@ -3888,10 +3932,18 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     }
     root.add(grid);
 
-    // Ceiling plane + practical fixtures
+    // Room ceiling near-clear so tent interiors read through the room shell.
     const ceiling = new THREE.Mesh(
       new THREE.PlaneGeometry(10.6, 7.1),
-      new THREE.MeshStandardMaterial({ color: 0x1a222c, metalness: 0.05, roughness: 0.92, side: THREE.DoubleSide })
+      new THREE.MeshStandardMaterial({
+        color: 0x1a222c,
+        metalness: 0.05,
+        roughness: 0.92,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.06,
+        depthWrite: false,
+      })
     );
     ceiling.rotation.x = Math.PI / 2;
     ceiling.position.y = 4.05;
@@ -4019,7 +4071,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         [new THREE.BoxGeometry(w, h, 0.065), [0, h / 2, -d / 2], 0.94],
         [new THREE.BoxGeometry(0.065, h, d), [-w / 2, h / 2, 0], 0.84],
         [new THREE.BoxGeometry(0.065, h, d), [w / 2, h / 2, 0], 0.84],
-        [new THREE.BoxGeometry(w, 0.065, d), [0, h, 0], 0.9],
+        // Roof omitted — open top so operators can see plants/pads inside.
       ];
       panels.forEach(([geometry, position, opacity]) => {
         const panel = new THREE.Mesh(geometry, mkFabric(opacity));
@@ -4028,9 +4080,22 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         panel.receiveShadow = true;
         group.add(panel);
       });
-      const inner = new THREE.Mesh(new THREE.BoxGeometry(w * 0.94, h * 0.94, d * 0.94), mylarMat.clone());
-      inner.position.y = h / 2;
-      group.add(inner);
+      // Mylar walls only (no ceiling) so the 10% roof does not still block the interior.
+      const iw = w * 0.94;
+      const ih = h * 0.92;
+      const id = d * 0.94;
+      const mylarWalls = [
+        [new THREE.PlaneGeometry(iw, ih), [0, h / 2, -id / 2], 0],
+        [new THREE.PlaneGeometry(iw, ih), [0, h / 2, id / 2], Math.PI],
+        [new THREE.PlaneGeometry(id, ih), [-iw / 2, h / 2, 0], Math.PI / 2],
+        [new THREE.PlaneGeometry(id, ih), [iw / 2, h / 2, 0], -Math.PI / 2],
+      ];
+      mylarWalls.forEach(([geometry, position, rotY]) => {
+        const wall = new THREE.Mesh(geometry, mylarMat.clone());
+        wall.position.set(...position);
+        wall.rotation.y = rotY;
+        group.add(wall);
+      });
       const tray = new THREE.Mesh(
         new THREE.BoxGeometry(w * 0.9, 0.05, d * 0.9),
         new THREE.MeshStandardMaterial({ color: 0x151e29, roughness: 0.78, metalness: 0.22 })
@@ -4247,12 +4312,13 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     const ductMat = new THREE.MeshStandardMaterial({ color: 0x7d8f9b, metalness: 0.76, roughness: 0.29 });
     const shellMaterials = {};
     const paths = {};
+    // Cyan-biased path wash (keep leaders readable; avoid dank #39ff14 green brand).
     const pathColors = {
-      intakeClone: 0x42a5f5,
-      intakeMain: 0x42a5f5,
+      intakeClone: 0x26c6da,
+      intakeMain: 0x26c6da,
       cascade: 0xffb74d,
       out: 0xff765e,
-      recirc: 0xa85be0,
+      recirc: 0xb388ff,
     };
     const addPath = (name, radius, tubular, solidColor) => {
       const mat = solidColor
@@ -4407,10 +4473,10 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     mkCinchPort(curves.out.getPoint(0.02), curves.out.getTangent(0.02), 0.16, 0xff765e);
     mkCinchPort(curves.recirc.getPoint(0.02), curves.recirc.getTangent(0.02), 0.155, 0xa85be0);
     // Intakes: room-side collar + front-wall pierce (~t 0.72 on 5-point curves)
-    mkCinchPort(curves.intakeClone.getPoint(0.02), curves.intakeClone.getTangent(0.02), 0.135, 0x42a5f5);
-    mkCinchPort(curves.intakeClone.getPoint(0.72), curves.intakeClone.getTangent(0.72), 0.14, 0x42a5f5);
-    mkCinchPort(curves.intakeMain.getPoint(0.02), curves.intakeMain.getTangent(0.02), 0.14, 0x42a5f5);
-    mkCinchPort(curves.intakeMain.getPoint(0.72), curves.intakeMain.getTangent(0.72), 0.145, 0x42a5f5);
+    mkCinchPort(curves.intakeClone.getPoint(0.02), curves.intakeClone.getTangent(0.02), 0.135, 0x26c6da);
+    mkCinchPort(curves.intakeClone.getPoint(0.72), curves.intakeClone.getTangent(0.72), 0.14, 0x26c6da);
+    mkCinchPort(curves.intakeMain.getPoint(0.02), curves.intakeMain.getTangent(0.02), 0.14, 0x26c6da);
+    mkCinchPort(curves.intakeMain.getPoint(0.72), curves.intakeMain.getTangent(0.72), 0.145, 0x26c6da);
     mkCinchPort(curves.cascade.getPoint(0.02), curves.cascade.getTangent(0.02), 0.13, 0xffb74d);
     mkCinchPort(curves.cascade.getPoint(0.98), curves.cascade.getTangent(0.98), 0.13, 0xffb74d);
 
@@ -4618,7 +4684,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       try {
         // Cascade → 4×8 merge cue only (OUT/RECIRC are separate ports — no shared Y ramp).
         mergeRampTexture = fx.createColorRamp([
-          { t: 0, color: 0x42a5f5 },
+          { t: 0, color: 0x26c6da },
           { t: 0.55, color: 0xffb74d },
           { t: 1, color: 0xff9148 },
         ]);
@@ -4978,11 +5044,11 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     mkAir("flowClone", 0x81d4fa, 72, 0.05);
     mkAir("flowMain", 0xffab91, 110, 0.05);
     const particleColors = {
-      intake: new THREE.Color(0x42a5f5),
-      intakeWarm: new THREE.Color(0x66a4d9).lerp(new THREE.Color(0xff9b55), 0.16),
+      intake: new THREE.Color(0x26c6da),
+      intakeWarm: new THREE.Color(0x4dd0e1).lerp(new THREE.Color(0xff9b55), 0.16),
       cascade: new THREE.Color(0xffb74d),
       cascadeWarm: new THREE.Color(0xff9148),
-      mixCool: new THREE.Color(0x5eb8f0),
+      mixCool: new THREE.Color(0x26c6da),
       mixWarm: new THREE.Color(0xff9a6b),
     };
 
@@ -5032,14 +5098,25 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       });
     };
 
-    const orbit = { theta: 0.72, phi: 1.0, radius: 11.7, dragging: false, x: 0, y: 0 };
+    const orbit = {
+      theta: 0.72,
+      phi: 1.0,
+      radius: 11.7,
+      dragging: false,
+      x: 0,
+      y: 0,
+      target: { x: 0, y: 1.15, z: 0.15 },
+    };
     const applyCamera = () => {
+      const tx = orbit.target.x;
+      const ty = orbit.target.y;
+      const tz = orbit.target.z;
       camera.position.set(
-        orbit.radius * Math.sin(orbit.phi) * Math.cos(orbit.theta),
+        tx + orbit.radius * Math.sin(orbit.phi) * Math.cos(orbit.theta),
         orbit.radius * Math.cos(orbit.phi),
-        orbit.radius * Math.sin(orbit.phi) * Math.sin(orbit.theta)
+        tz + orbit.radius * Math.sin(orbit.phi) * Math.sin(orbit.theta)
       );
-      camera.lookAt(0, 1.15, 0.15);
+      camera.lookAt(tx, ty, tz);
     };
     applyCamera();
     const raycaster = new THREE.Raycaster();
@@ -5502,18 +5579,32 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         } else {
           air.intakeClone.setColor(particleColors.intake);
         }
-        const lightLevel = Math.max(0, Number(live.lightLevel) || 0);
+        const cloneLevel = Math.max(0, Number(live.lightLevel) || 0);
+        const mainLevel = Math.max(0, Number(live.mainLightLevel) || 0);
         const lightBoost = highlights("light") ? 1.35 : 1;
-        tentClone.userData.lightBar.material.emissiveIntensity = live.cloneLit ? (2.2 + lightLevel * 4.2) * lightBoost : 0;
+        tentClone.userData.lightBar.material.emissiveIntensity = live.cloneLit
+          ? (2.2 + cloneLevel * 4.2) * lightBoost
+          : 0;
+        tentClone.userData.lightBar.material.opacity = live.cloneLit ? 0.85 : 0.08;
         tentClone.userData.shafts.visible = !!live.cloneLit;
         tentClone.userData.shafts.children.forEach((shaft, i) => {
-          shaft.material.opacity = live.cloneLit ? (0.055 + lightLevel * 0.14) * lightBoost : 0;
+          shaft.material.opacity = live.cloneLit ? (0.055 + cloneLevel * 0.14) * lightBoost : 0;
           shaft.position.y = tentClone.userData.size.h * 0.5 + Math.sin(now * 0.0007 + i) * 0.02;
         });
-        tentFillClone.intensity = live.cloneLit ? 0.35 + lightLevel * 1.4 : 0.12;
-        tentFillMain.intensity = 0.18 + Math.max(intakeMain, cascade) * 0.55;
-        tentMain.userData.lightBar.material.emissiveIntensity = 0;
-        tentMain.userData.lightBar.material.opacity = 0.025;
+        tentFillClone.intensity = live.cloneLit ? 0.35 + cloneLevel * 1.4 : 0.12;
+        // 4×8 fixture glow — lamp brightness when instrumented, else photoperiod window (full/off).
+        tentMain.userData.lightBar.material.emissiveIntensity = live.mainLit
+          ? (2.0 + mainLevel * 3.8) * lightBoost
+          : 0;
+        tentMain.userData.lightBar.material.opacity = live.mainLit ? 0.82 : 0.025;
+        tentMain.userData.shafts.visible = !!live.mainLit;
+        tentMain.userData.shafts.children.forEach((shaft, i) => {
+          shaft.material.opacity = live.mainLit ? (0.05 + mainLevel * 0.12) * lightBoost : 0;
+          shaft.position.y = tentMain.userData.size.h * 0.5 + Math.sin(now * 0.00065 + i) * 0.02;
+        });
+        tentFillMain.intensity = live.mainLit
+          ? 0.32 + mainLevel * 1.25
+          : 0.18 + Math.max(intakeMain, cascade) * 0.55;
 
         const pulse = 0.86 + Math.sin(now * 0.0045) * 0.14;
         matPlate.material.emissiveIntensity = live.matOn ? 3.4 * pulse * (highlights("mat") ? 1.35 : 1) : 0;
@@ -5545,7 +5636,8 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
           slice.material.opacity = 0.016 + i * 0.006 + (recVis >= 0.04 ? recVis * 0.02 : 0);
           slice.position.y = 3.55 - i * 0.22;
         });
-        ceilWash.intensity = 1.15 + (live.cloneLit ? 0.35 : 0) + recVis * 0.25;
+        ceilWash.intensity =
+          1.15 + (live.cloneLit ? 0.28 : 0) + (live.mainLit ? 0.32 : 0) + recVis * 0.25;
 
         fans.intakeClone.userData.speed = intakeClone * 15;
         fans.intakeMain.userData.speed = intakeMain * 15;
@@ -5694,15 +5786,41 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     resize();
     raf = requestAnimationFrame(tick);
 
+    let focusTentMode = null; // null | "main" | "clone"
+    const applyFocusTent = (mode) => {
+      focusTentMode = mode === "main" || mode === "clone" ? mode : null;
+      tentClone.visible = focusTentMode !== "main";
+      tentMain.visible = focusTentMode !== "clone";
+      // Frame the active tent so Main/Clone cockpits read as a single-tent Twin.
+      if (focusTentMode === "main") {
+        orbit.target = { x: tentMain.position.x, y: 1.25, z: tentMain.position.z };
+        orbit.theta = 0.52;
+        orbit.phi = 0.95;
+        orbit.radius = Math.min(Math.max(orbit.radius, 8.8), 10.8);
+      } else if (focusTentMode === "clone") {
+        orbit.target = { x: tentClone.position.x, y: 1.1, z: tentClone.position.z };
+        orbit.theta = 0.98;
+        orbit.phi = 0.98;
+        orbit.radius = Math.min(Math.max(orbit.radius, 8.2), 10.2);
+      } else {
+        orbit.target = { x: 0, y: 1.15, z: 0.15 };
+        orbit.theta = 0.72;
+        orbit.phi = 1.0;
+        orbit.radius = Math.min(Math.max(orbit.radius, 10.5), 12.5);
+      }
+      applyCamera();
+    };
+
     return {
       resize,
       setLive,
       setSelectedPot,
+      setFocusTent: applyFocusTent,
       projectTentAnchors() {
         const w = host.clientWidth || 1;
         const h = host.clientHeight || 1;
         const project = (obj, yLift) => {
-          if (!obj) return null;
+          if (!obj || obj.visible === false) return null;
           const v = new THREE.Vector3();
           obj.getWorldPosition(v);
           v.y += yLift;
@@ -5717,6 +5835,28 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
           clone: project(tentClone, 2.05),
           main: project(tentMain, 2.15),
         };
+      },
+      projectPotAnchors() {
+        const w = host.clientWidth || 1;
+        const h = host.clientHeight || 1;
+        const out = {};
+        const v = new THREE.Vector3();
+        for (let n = 1; n <= 4; n++) {
+          const actor = potActors[`pot${n}`];
+          if (!actor || !actor.visible) {
+            out[n] = null;
+            continue;
+          }
+          actor.getWorldPosition(v);
+          v.y += 0.85;
+          v.project(camera);
+          out[n] = {
+            x: (v.x * 0.5 + 0.5) * w,
+            y: (-v.y * 0.5 + 0.5) * h,
+            behind: v.z > 1 || v.z < -1,
+          };
+        }
+        return out;
       },
       dispose() {
         if (disposed) return;
@@ -5760,39 +5900,63 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
   /* History                                                            */
   /* ------------------------------------------------------------------ */
 
+  const normalizeHistoryRows = (result, entityId) => {
+    if (!result) return [];
+    if (Array.isArray(result)) {
+      // HA may return [[states...]] aligned to entity_ids order.
+      const first = result[0];
+      return Array.isArray(first) ? first : [];
+    }
+    if (typeof result === "object") {
+      const rows = result[entityId];
+      return Array.isArray(rows) ? rows : [];
+    }
+    return [];
+  };
+
+  const rowsToPoints = (rows) =>
+    (rows || [])
+      .map((r) => {
+        const t =
+          typeof r.lu === "number"
+            ? r.lu * 1000
+            : new Date(r.last_changed || r.last_updated).getTime();
+        const v = parseFloat(r.s != null ? r.s : r.state);
+        return { t, v };
+      })
+      .filter((p) => Number.isFinite(p.v) && Number.isFinite(p.t));
+
   const fetchHistory = async (hass, entityId, hours = 24) => {
-    if (!hass || !entityId || !hass.connection) return [];
+    if (!hass || !entityId) return [];
     const end = new Date();
     const start = new Date(end.getTime() - hours * 3600 * 1000);
+    const msg = {
+      type: "history/history_during_period",
+      start_time: start.toISOString(),
+      end_time: end.toISOString(),
+      significant_changes_only: false,
+      include_start_time_state: true,
+      minimal_response: true,
+      no_attributes: true,
+      entity_ids: [entityId],
+    };
     try {
-      const result = await hass.connection.sendMessagePromise({
-        type: "history/history_during_period",
-        start_time: start.toISOString(),
-        end_time: end.toISOString(),
-        significant_changes_only: false,
-        include_start_time_state: true,
-        minimal_response: true,
-        no_attributes: true,
-        entity_ids: [entityId],
-      });
-      const rows = result && result[entityId] ? result[entityId] : [];
-      return rows
-        .map((r) => ({
-          t: new Date(r.lu ? r.lu * 1000 : r.last_changed || r.last_updated).getTime(),
-          v: parseFloat(r.s != null ? r.s : r.state),
-        }))
-        .filter((p) => Number.isFinite(p.v) && Number.isFinite(p.t));
+      let result = null;
+      if (hass.connection && typeof hass.connection.sendMessagePromise === "function") {
+        result = await hass.connection.sendMessagePromise(msg);
+      } else if (typeof hass.callWS === "function") {
+        result = await hass.callWS(msg);
+      } else {
+        throw new Error("no history transport");
+      }
+      return rowsToPoints(normalizeHistoryRows(result, entityId));
     } catch (_) {
       try {
+        if (typeof hass.callApi !== "function") return [];
         const url = `history/period/${start.toISOString()}?filter_entity_id=${encodeURIComponent(entityId)}&end_time=${encodeURIComponent(end.toISOString())}&minimal_response`;
         const data = await hass.callApi("GET", url);
         const rows = Array.isArray(data) && data[0] ? data[0] : [];
-        return rows
-          .map((r) => ({
-            t: new Date(r.last_changed || r.last_updated).getTime(),
-            v: parseFloat(r.state),
-          }))
-          .filter((p) => Number.isFinite(p.v) && Number.isFinite(p.t));
+        return rowsToPoints(rows);
       } catch (__) {
         return [];
       }
@@ -5879,30 +6043,19 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
                 <div class="dash-legend" id="d-legend">
                   <span data-path="light"><i class="dash-dot" style="background:#66bb6a"></i> 2x4 light</span>
                   <span data-path="mat"><i class="dash-dot" style="background:#ff6d00"></i> 2x4 heat mat</span>
-                  <span data-path="intake"><i class="dash-dot" style="background:#42a5f5"></i> Room intake</span>
+                  <span data-path="intake"><i class="dash-dot" style="background:#26c6da"></i> Room intake</span>
                   <span data-path="cascade"><i class="dash-dot" style="background:#ffb74d"></i> Cascade 2x4→4x8</span>
                   <span data-path="out"><i class="dash-dot" style="background:#ff8a65"></i> Dump OUT</span>
-                  <span data-path="recirc"><i class="dash-dot" style="background:#ab47bc"></i> Recirc</span>
+                  <span data-path="recirc"><i class="dash-dot" style="background:#b388ff"></i> Recirc</span>
                 </div>
               </div>
-              <div class="dash-charts">
-                <div class="dash-chart"><h4>Moisture — pots</h4><canvas id="c-moist"></canvas></div>
-                <div class="dash-chart"><h4>Feed intake rate — pots</h4><canvas id="c-rate"></canvas></div>
-                <div class="dash-chart">
-                  <h4>Temperature °C</h4>
-                  <div class="leg"><span><i style="background:#26c6da"></i>2x4</span><span><i style="background:#ff8a65"></i>4x8</span><span><i style="background:#90a4ae"></i>Room</span></div>
-                  <canvas id="c-temp"></canvas>
-                </div>
-                <div class="dash-chart">
-                  <h4>Humidity %</h4>
-                  <div class="leg"><span><i style="background:#26c6da"></i>2x4</span><span><i style="background:#ff8a65"></i>4x8</span><span><i style="background:#90a4ae"></i>Room</span></div>
-                  <canvas id="c-rh"></canvas>
-                </div>
-                <div class="dash-chart">
-                  <h4>VPD kPa</h4>
-                  <div class="leg"><span><i style="background:#26c6da"></i>2x4</span><span><i style="background:#ff8a65"></i>4x8</span></div>
-                  <canvas id="c-vpd"></canvas>
-                </div>
+              <div class="dash-charts" id="d-charts">
+                <div class="dash-chart" data-zone="clone" id="chart-clone-t"><div class="zone">2×4</div><h4>Temp °C</h4><canvas id="c-clone-t"></canvas></div>
+                <div class="dash-chart" data-zone="clone" id="chart-clone-rh"><div class="zone">2×4</div><h4>Humidity %</h4><canvas id="c-clone-rh"></canvas></div>
+                <div class="dash-chart" data-zone="clone" id="chart-clone-vpd"><div class="zone">2×4</div><h4>VPD kPa</h4><canvas id="c-clone-vpd"></canvas></div>
+                <div class="dash-chart" data-zone="main" id="chart-main-t"><div class="zone">4×8</div><h4>Temp °C</h4><canvas id="c-main-t"></canvas></div>
+                <div class="dash-chart" data-zone="main" id="chart-main-rh"><div class="zone">4×8</div><h4>Humidity %</h4><canvas id="c-main-rh"></canvas></div>
+                <div class="dash-chart" data-zone="main" id="chart-main-vpd"><div class="zone">4×8</div><h4>VPD kPa</h4><canvas id="c-main-vpd"></canvas></div>
               </div>
             </div>
             <div class="dash-rail">
@@ -6030,7 +6183,12 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       this._hist.moisture = moist;
       this._hist.rate = rate;
       this._hist.climate = { tClone, tMain, tRoom, hClone, hMain, hRoom, vClone, vMain };
-      this._histAt = Date.now();
+      const climatePts = [tClone, tMain, hClone, hMain, vClone, vMain].reduce(
+        (n, a) => n + ((a && a.length) || 0),
+        0,
+      );
+      // If recorder returned nothing, retry soon instead of locking empty for 60s.
+      this._histAt = climatePts > 0 ? Date.now() : Date.now() - 50000;
     }
 
     _emitSelectPot(n) {
@@ -6119,10 +6277,12 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
 
       const pots = activePots(cfg, hass);
       // Tent SoT: pack slots from input_select.dsc_potN_tent (not hardcoded cfg.pots[].tent).
+      // OOS / deactivated pots are fully omitted (chips, poses, charts).
       const potSlots = { clone: Array(4).fill(null), main: Array(8).fill(null) };
       const byTent = { clone: [], main: [] };
       const plantPose = [];
-      (cfg.pots || []).forEach((p, idx) => {
+      const focusTent = cfg.focusTent === "main" || cfg.focusTent === "clone" ? cfg.focusTent : null;
+      pots.forEach((p, idx) => {
         if (!p || !p.id) return;
         const tent = readPotTent(hass, p);
         const color = POT_COLORS[idx % POT_COLORS.length];
@@ -6136,6 +6296,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
           // Unassigned: hidden from potSlots / no pad target
           return;
         }
+        if (focusTent && tent !== focusTent) return;
         byTent[tent].push({ id: p.id, color, name, tent, n, idx });
       });
       ["clone", "main"].forEach((tent) => {
@@ -6231,7 +6392,17 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         fanRecirc: fr,
         lightLevel: lightLevel(hass, e.light),
         cloneLit: lightLevel(hass, e.light) > 0.02,
-        mainLit: false,
+        // Prefer instrumented main lamp when present; else photoperiod window.
+        mainLightLevel: (() => {
+          const lampId = String(e.main_light || "").trim();
+          if (lampId && !isUnavailable(hass, lampId)) return lightLevel(hass, lampId);
+          return isOn(hass, e.main_window) ? 1 : 0;
+        })(),
+        mainLit: (() => {
+          const lampId = String(e.main_light || "").trim();
+          if (lampId && !isUnavailable(hass, lampId)) return lightLevel(hass, lampId) > 0.02;
+          return isOn(hass, e.main_window);
+        })(),
         matOn: isOn(hass, e.grow_mat),
         potSlots,
         plantPose,
@@ -6328,12 +6499,19 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         const until = Math.abs(lightMins);
         lightNote = `Dark · ${Math.floor(until / 60)}h ${Math.round(until % 60)}m to lights-on`;
       }
+      const metricIcon = (kind) => {
+        if (kind === "t")
+          return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 14.76V5a2 2 0 0 0-4 0v9.76a4 4 0 1 0 4 0z"/></svg>`;
+        if (kind === "rh")
+          return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3c-2 4-6 6-6 10a6 6 0 0 0 12 0c0-4-4-6-6-10z"/></svg>`;
+        return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg>`;
+      };
       const hudMetric = (zone) => {
         const c = (live.climate && live.climate[zone]) || {};
         return `<div class="v-split">
-          <div class="metric"><span class="mk">T</span><span class="mv">${esc(fmt(c.temperature))}°</span></div>
-          <div class="metric"><span class="mk">RH</span><span class="mv">${esc(fmt(c.humidity, 0))}%</span></div>
-          <div class="metric"><span class="mk">VPD</span><span class="mv">${esc(fmt(c.vpd, 2))}</span></div>
+          <div class="metric"><span class="mk">${metricIcon("t")}T</span><span class="mv">${esc(fmt(c.temperature))}°</span></div>
+          <div class="metric"><span class="mk">${metricIcon("rh")}RH</span><span class="mv">${esc(fmt(c.humidity, 0))}%</span></div>
+          <div class="metric"><span class="mk">${metricIcon("vpd")}VPD</span><span class="mv">${esc(fmt(c.vpd, 2))}</span></div>
         </div>`;
       };
       const bandHtml = (got, min, max, spanMin, spanMax) => {
@@ -6377,15 +6555,16 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         el.style.right = "auto";
         el.style.transform = "none";
       };
-      const placeLeader = (el, anchor) => {
+      const placeLeader = (el, anchor, hudEl) => {
         if (!el) return;
-        if (!anchor || anchor.behind) {
+        // When HUD is projected onto the tent, the big cyan disc is noise — hide it.
+        if ((hudEl && hudEl.classList.contains("is-anchored")) || !anchor || anchor.behind) {
           el.style.display = "none";
           return;
         }
         el.style.display = "block";
-        el.style.left = `${Math.max(4, anchor.x - 9)}px`;
-        el.style.top = `${Math.max(4, anchor.y - 9)}px`;
+        el.style.left = `${Math.max(4, anchor.x - 7)}px`;
+        el.style.top = `${Math.max(4, anchor.y - 7)}px`;
         el.style.transform = "none";
       };
       const wrap = this.shadowRoot.querySelector(".dash-scene-wrap");
@@ -6405,50 +6584,151 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       const cloneRhMax = numState(hass, "number.dsc_hub_clone_rh_max", NaN);
       const cloneVpdMin = numState(hass, "number.dsc_hub_clone_vpd_min", NaN);
       const cloneVpdMax = numState(hass, "number.dsc_hub_clone_vpd_max", NaN);
+      const focusTent =
+        this._cfg.focusTent === "main" || this._cfg.focusTent === "clone" ? this._cfg.focusTent : null;
+      if (this._scene && typeof this._scene.setFocusTent === "function") {
+        this._scene.setFocusTent(focusTent);
+      }
       const hudC = this.shadowRoot.getElementById("d-hud-clone");
       if (hudC) {
-        const c = (live.climate && live.climate.clone) || {};
-        hudC.innerHTML = `<div class="k">2×4 Reservoir</div>${hudMetric("clone")}${bandHtml(c.humidity, cloneRhMin, cloneRhMax, 0, 100)}${vpdMini(c.vpd, cloneVpdMin, cloneVpdMax)}<div class="s">${esc(lightNote)}${live.matOn ? " · heat mat ON" : ""} · <a href="#/ops/climate" style="color:inherit">⋯ Climate</a></div>`;
-        placeHud(hudC, anchors && anchors.clone, "left");
+        if (focusTent === "main") {
+          hudC.style.display = "none";
+        } else {
+          hudC.style.display = "";
+          const c = (live.climate && live.climate.clone) || {};
+          hudC.innerHTML = `<div class="k">2×4 Reservoir</div>${hudMetric("clone")}${bandHtml(c.humidity, cloneRhMin, cloneRhMax, 0, 100)}${vpdMini(c.vpd, cloneVpdMin, cloneVpdMax)}<div class="s" title="${esc(lightNote)}">${esc(lightNote)}${live.matOn ? " · heat mat ON" : ""} · <a href="#/ops/climate" style="color:inherit">⋯ Climate</a></div>`;
+          placeHud(hudC, anchors && anchors.clone, "left");
+        }
       }
       const hudM = this.shadowRoot.getElementById("d-hud-main");
       if (hudM) {
-        const m = (live.climate && live.climate.main) || {};
-        const heldNote = live.hubHeld ? " · HELD" : "";
-        hudM.innerHTML = `<div class="k">4×8 Main</div>${hudMetric("main")}${bandHtml(m.humidity, mainRhMin, mainRhMax, 0, 100)}${vpdMini(m.vpd, mainVpdMin, mainVpdMax)}<div class="s">No lamp · cascade in${heldNote} · <a href="#/ops/climate" style="color:inherit">⋯ Climate</a></div>`;
-        placeHud(hudM, anchors && anchors.main, "right");
+        if (focusTent === "clone") {
+          hudM.style.display = "none";
+        } else {
+          hudM.style.display = "";
+          const m = (live.climate && live.climate.main) || {};
+          const heldNote = live.hubHeld ? " · HELD" : "";
+          const mainNote = `No lamp · cascade in${heldNote}`;
+          hudM.innerHTML = `<div class="k">4×8 Main</div>${hudMetric("main")}${bandHtml(m.humidity, mainRhMin, mainRhMax, 0, 100)}${vpdMini(m.vpd, mainVpdMin, mainVpdMax)}<div class="s" title="${esc(mainNote)}">${esc(mainNote)} · <a href="#/ops/climate" style="color:inherit">⋯ Climate</a></div>`;
+          placeHud(hudM, anchors && anchors.main, "right");
+        }
       }
-      placeLeader(this.shadowRoot.getElementById("d-leader-clone"), anchors && anchors.clone);
-      placeLeader(this.shadowRoot.getElementById("d-leader-main"), anchors && anchors.main);
+      placeLeader(this.shadowRoot.getElementById("d-leader-clone"), anchors && anchors.clone, hudC);
+      placeLeader(this.shadowRoot.getElementById("d-leader-main"), anchors && anchors.main, hudM);
+
+      // Tent HUD boxes in scene-wrap coords — pot chips must clear these.
+      const hudAvoid = [];
+      const wrapRect = wrap ? wrap.getBoundingClientRect() : null;
+      [hudC, hudM].forEach((el) => {
+        if (!el || !wrapRect || el.style.display === "none") return;
+        if (getComputedStyle(el).display === "none") return;
+        const r = el.getBoundingClientRect();
+        if (r.width < 8 || r.height < 8) return;
+        hudAvoid.push({
+          left: r.left - wrapRect.left - 6,
+          top: r.top - wrapRect.top - 6,
+          right: r.right - wrapRect.left + 6,
+          bottom: r.bottom - wrapRect.top + 10,
+        });
+      });
+      const clearHudOverlap = (x, y) => {
+        const cw = 130;
+        const ch = 70;
+        let cx = x;
+        let cy = y;
+        for (let pass = 0; pass < 4; pass++) {
+          let moved = false;
+          const left = cx - cw / 2;
+          const right = cx + cw / 2;
+          const top = cy - ch * 1.1;
+          const bottom = cy - ch * 0.05;
+          for (const h of hudAvoid) {
+            const hit = !(right < h.left || left > h.right || bottom < h.top || top > h.bottom);
+            if (!hit) continue;
+            cy = h.bottom + ch * 1.15;
+            moved = true;
+          }
+          if (!moved) break;
+        }
+        return {
+          x: Math.min((hostW || 400) - 12, Math.max(12, cx)),
+          y: Math.min((hostH || 400) - 12, Math.max(12, cy)),
+        };
+      };
 
       const chipsEl = this.shadowRoot.getElementById("d-pot-chips");
       if (chipsEl) {
         const hass = this._hass;
         const selected = this._selectedPot || 0;
-        chipsEl.innerHTML = (this._cfg.pots || [])
-          .map((p, idx) => {
+        const potAnchors =
+          this._scene && typeof this._scene.projectPotAnchors === "function"
+            ? this._scene.projectPotAnchors()
+            : null;
+        const chipPots = activePots(this._cfg, hass).filter((p) => {
+          if (!focusTent) return true;
+          return readPotTent(hass, p) === focusTent;
+        });
+        const chipHtml = (p, idx, styleExtra) => {
+          const n = potNumFrom(p);
+          if (!Number.isFinite(n)) return "";
+          const tent = readPotTent(hass, p);
+          const nameState = stateOf(hass, `text.dsc_pot${n}_plant_name`);
+          const name =
+            nameState && nameState.state !== "unavailable" && nameState.state !== "unknown" && nameState.state
+              ? String(nameState.state)
+              : p.id;
+          const moistId = !isUnavailable(hass, potEntity(p.prefix, "got_moisture"))
+            ? potEntity(p.prefix, "got_moisture")
+            : potEntity(p.prefix, "soil_moisture");
+          const moist = numState(hass, moistId, NaN);
+          const tentLabel = tent === "main" ? "4×8" : tent === "clone" ? "2×4" : "—";
+          const color = POT_COLORS[idx % POT_COLORS.length];
+          const on = selected === n ? " on" : "";
+          return `<button type="button" class="dash-pot-chip${on}" data-pot="${n}" style="border-left:3px solid ${color}${styleExtra || ""}">
+            <span class="chip-id">Pot ${n}</span>
+            <span class="chip-name">${esc(name)}</span>
+            <span class="chip-meta">${esc(tentLabel)} · ${esc(fmt(moist, 0))}% moist</span>
+          </button>`;
+        };
+        let anchoredCount = 0;
+        if (potAnchors) {
+          chipPots.forEach((p) => {
             const n = potNumFrom(p);
-            if (!Number.isFinite(n)) return "";
-            const tent = readPotTent(hass, p);
-            const nameState = stateOf(hass, `text.dsc_pot${n}_plant_name`);
-            const name =
-              nameState && nameState.state !== "unavailable" && nameState.state !== "unknown" && nameState.state
-                ? String(nameState.state)
-                : p.id;
-            const moistId = !isUnavailable(hass, potEntity(p.prefix, "got_moisture"))
-              ? potEntity(p.prefix, "got_moisture")
-              : potEntity(p.prefix, "soil_moisture");
-            const moist = numState(hass, moistId, NaN);
-            const tentLabel = tent === "main" ? "4×8" : tent === "clone" ? "2×4" : "—";
-            const color = POT_COLORS[idx % POT_COLORS.length];
-            const on = selected === n ? " on" : "";
-            return `<button type="button" class="dash-pot-chip${on}" data-pot="${n}" style="border-left:3px solid ${color}">
-              <span class="chip-id">Pot ${n}</span>
-              <span class="chip-name">${esc(name)}</span>
-              <span class="chip-meta">${esc(tentLabel)} · ${esc(fmt(moist, 0))}% moist</span>
-            </button>`;
-          })
-          .join("");
+            const a = Number.isFinite(n) ? potAnchors[n] : null;
+            if (a && !a.behind) anchoredCount += 1;
+          });
+        }
+        const useStrip = !potAnchors || anchoredCount === 0;
+        chipsEl.classList.toggle("is-strip", useStrip);
+        if (useStrip) {
+          chipsEl.innerHTML = chipPots.map((p, idx) => chipHtml(p, idx, "")).join("");
+        } else {
+          chipsEl.innerHTML = chipPots
+            .map((p, idx) => {
+              const n = potNumFrom(p);
+              const anchor = Number.isFinite(n) ? potAnchors[n] : null;
+              if (!anchor || anchor.behind) {
+                return chipHtml(p, idx, ";visibility:hidden;pointer-events:none");
+              }
+              const placed = clearHudOverlap(anchor.x, anchor.y);
+              return chipHtml(p, idx, `;left:${placed.x}px;top:${placed.y}px`);
+            })
+            .join("");
+          const orphanHtml = chipPots
+            .map((p, idx) => {
+              const n = potNumFrom(p);
+              const anchor = Number.isFinite(n) ? potAnchors[n] : null;
+              if (anchor && !anchor.behind) return "";
+              return chipHtml(p, idx, "");
+            })
+            .join("");
+          if (orphanHtml.trim()) {
+            chipsEl.insertAdjacentHTML(
+              "beforeend",
+              `<div class="dash-pot-chips is-strip" style="position:absolute;left:50%;bottom:12px;transform:translateX(-50%);inset:auto;pointer-events:auto">${orphanHtml}</div>`,
+            );
+          }
+        }
       }
 
       const tl = this.shadowRoot.getElementById("d-timeline");
@@ -6488,44 +6768,58 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     }
 
     _drawCharts(live) {
-      const pots = live.pots || [];
       const e = this._cfg.entities;
-      const moistSeries = pots.map((p, i) => ({
-        color: POT_COLORS[i % POT_COLORS.length],
-        points: (this._hist.moisture[p.id] && this._hist.moisture[p.id].points) || [
-          { t: Date.now(), v: numState(this._hass, potEntity(p.prefix, "soil_moisture"), NaN) },
-        ],
-      }));
-      const rateSeries = pots.map((p, i) => ({
-        color: POT_COLORS[i % POT_COLORS.length],
-        points: (this._hist.rate[p.id] && this._hist.rate[p.id].points) || [
-          { t: Date.now(), v: numState(this._hass, potEntity(p.prefix, "soil_moisture_rate"), NaN) },
-        ],
-      }));
       const c = this._hist.climate || {};
-      const tip = (id, fallbackPts) =>
-        fallbackPts && fallbackPts.length
-          ? fallbackPts
-          : [{ t: Date.now(), v: numState(this._hass, id, NaN) }];
-      const tempSeries = [
+      const tip = (id, fallbackPts) => {
+        const livePt = { t: Date.now(), v: numState(this._hass, id, NaN) };
+        const pts = Array.isArray(fallbackPts)
+          ? fallbackPts.filter((p) => Number.isFinite(p.v) && Number.isFinite(p.t))
+          : [];
+        if (!pts.length) return Number.isFinite(livePt.v) ? [livePt] : [];
+        const last = pts[pts.length - 1];
+        if (
+          Number.isFinite(livePt.v) &&
+          (!last || Math.abs(last.v - livePt.v) > 1e-6 || livePt.t - last.t > 2000)
+        ) {
+          return pts.concat([livePt]);
+        }
+        return pts;
+      };
+      const cloneLit = !!(live && live.cloneLit);
+      // 4×8 glow: instrumented lamp if present, else photoperiod window (live.mainLit).
+      const mainLit = !!(live && live.mainLit);
+      this.shadowRoot
+        .querySelectorAll('.dash-chart[data-zone="clone"]')
+        .forEach((el) => el.classList.toggle("is-lit", cloneLit));
+      this.shadowRoot
+        .querySelectorAll('.dash-chart[data-zone="main"]')
+        .forEach((el) => el.classList.toggle("is-lit", mainLit));
+      drawMultiLineChart(this.shadowRoot.getElementById("c-clone-t"), [
         { color: "#26c6da", points: tip(e.clone_temp, c.tClone) },
+      ]);
+      drawMultiLineChart(
+        this.shadowRoot.getElementById("c-clone-rh"),
+        [{ color: "#26c6da", points: tip(e.clone_humidity, c.hClone) }],
+        { min: 0, max: 100 },
+      );
+      drawMultiLineChart(
+        this.shadowRoot.getElementById("c-clone-vpd"),
+        [{ color: "#26c6da", points: tip(e.clone_vpd, c.vClone) }],
+        { min: 0 },
+      );
+      drawMultiLineChart(this.shadowRoot.getElementById("c-main-t"), [
         { color: "#ff8a65", points: tip(e.tent_temp, c.tMain) },
-        { color: "#90a4ae", points: tip(e.room_temp, c.tRoom) },
-      ];
-      const rhSeries = [
-        { color: "#26c6da", points: tip(e.clone_humidity, c.hClone) },
-        { color: "#ff8a65", points: tip(e.tent_humidity, c.hMain) },
-        { color: "#90a4ae", points: tip(e.room_humidity, c.hRoom) },
-      ];
-      const vpdSeries = [
-        { color: "#26c6da", points: tip(e.clone_vpd, c.vClone) },
-        { color: "#ff8a65", points: tip(e.tent_vpd, c.vMain) },
-      ];
-      drawMultiLineChart(this.shadowRoot.getElementById("c-moist"), moistSeries, { min: 0, max: 100 });
-      drawMultiLineChart(this.shadowRoot.getElementById("c-rate"), rateSeries);
-      drawMultiLineChart(this.shadowRoot.getElementById("c-temp"), tempSeries);
-      drawMultiLineChart(this.shadowRoot.getElementById("c-rh"), rhSeries, { min: 0, max: 100 });
-      drawMultiLineChart(this.shadowRoot.getElementById("c-vpd"), vpdSeries, { min: 0 });
+      ]);
+      drawMultiLineChart(
+        this.shadowRoot.getElementById("c-main-rh"),
+        [{ color: "#ff8a65", points: tip(e.tent_humidity, c.hMain) }],
+        { min: 0, max: 100 },
+      );
+      drawMultiLineChart(
+        this.shadowRoot.getElementById("c-main-vpd"),
+        [{ color: "#ff8a65", points: tip(e.tent_vpd, c.vMain) }],
+        { min: 0 },
+      );
     }
   }
 
@@ -6868,6 +7162,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     }
     .chip.warn { background:rgba(196,163,90,.12); border-color:rgba(196,163,90,.4); color:#e8d7a8; }
     .chip.bad { background:rgba(180,70,70,.12); border-color:rgba(180,70,70,.4); color:#f0b4b4; }
+    .chip.miss { background:rgba(120,120,130,.1); border-color:rgba(160,160,170,.35); color:#b0b4bc; }
     .chip.ok {
       background: rgba(57,255,20,.1); border-color: var(--dsc-neon-dim); color: var(--dsc-neon);
       box-shadow: 0 0 12px rgba(57,255,20,.12);
@@ -7300,6 +7595,23 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       return { lines, total: Math.round(total * 10) / 10, L, str };
     }
 
+    _fmtRange(v, unit) {
+      if (v == null) return null;
+      if (Array.isArray(v) && v.length >= 2) return `${v[0]}-${v[1]}${unit || ""}`;
+      return `${v}${unit || ""}`;
+    }
+
+    _strainTraitMeta(it) {
+      if (!it) return [];
+      const bits = [];
+      if (it.breeder) bits.push(it.breeder);
+      if (it.type) bits.push(String(it.type));
+      if (it.height_cm != null) bits.push(`ht ${this._fmtRange(it.height_cm, "cm")}`);
+      if (it.flowering_days != null) bits.push(`flower ${this._fmtRange(it.flowering_days, "d")}`);
+      if (it.has_chemistry && Array.isArray(it.thc_range)) bits.push(`THC ${it.thc_range.join("-")}%`);
+      return bits;
+    }
+
     _hitsHtml(kind) {
       if (this._drawerKind !== kind) return "";
       const hits = this._hits[kind] || [];
@@ -7317,7 +7629,15 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       }
       return `<ul class="hits" id="drawer-hits" role="listbox">${hits
         .map((it, i) => {
-          const meta = [it.brand || it.breeder, it.wattage_w != null ? `${it.wattage_w} W` : null, it.dose_ml_l != null ? `${it.dose_ml_l} ml/L` : null]
+          const meta = (
+            kind === "strain"
+              ? this._strainTraitMeta(it)
+              : [
+                  it.brand || it.breeder,
+                  it.wattage_w != null ? `${it.wattage_w} W` : null,
+                  it.dose_ml_l != null ? `${it.dose_ml_l} ml/L` : null,
+                ]
+          )
             .filter(Boolean)
             .join(" | ");
           return `<li role="option" data-kind="${kind}" data-i="${i}" class="${i === active ? "active" : ""}"><div>${this._esc(it.name)}</div>${meta ? `<div class="meta">${this._esc(meta)}</div>` : ""}</li>`;
@@ -7486,6 +7806,24 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
               : null,
           ].filter(Boolean).join(" | ")
         : "";
+      const heightChip =
+        strainHit?.height_cm != null
+          ? `Height: ${this._fmtRange(strainHit.height_cm, " cm")}`
+          : "";
+      const flowerChip =
+        strainHit?.flowering_days != null
+          ? `Flower: ${this._fmtRange(strainHit.flowering_days, " d")}`
+          : "";
+      const strainChips = [
+        chemistry ? `<span class="chip">Chemistry: ${this._esc(chemistry)}</span>` : "",
+        heightChip ? `<span class="chip">${this._esc(heightChip)}</span>` : "",
+        flowerChip ? `<span class="chip">${this._esc(flowerChip)}</span>` : "",
+        strainHit && !chemistry && !heightChip && !flowerChip
+          ? `<span class="chip miss">No densified traits in catalog for this pick</span>`
+          : "",
+      ]
+        .filter(Boolean)
+        .join("");
       const assignPot = this._str("input_select.dsc_build_assign_pot");
       const livePot = ["1", "2", "3", "4"].includes(assignPot)
         ? {
@@ -7551,7 +7889,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
                   </div>
                 </div>
                 <input type="hidden" id="build-strain" value="${this._esc(strainName)}" />
-                ${chemistry ? `<div class="chips"><span class="chip">Chemistry: ${this._esc(chemistry)}</span></div>` : ""}
+                ${strainChips ? `<div class="chips">${strainChips}</div>` : ""}
               </section>
             </div>
 
@@ -8206,6 +8544,8 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         else chips.push({ miss: true, t: "no climate" });
         if (it.height_cm != null) chips.push(`ht ${this._fmtRange(it.height_cm, "cm")}`);
         else chips.push({ miss: true, t: "no height" });
+        if (it.flowering_days != null) chips.push(`flower ${this._fmtRange(it.flowering_days, "d")}`);
+        else chips.push({ miss: true, t: "no flower days" });
         if (Array.isArray(it.top_terpenes) && it.top_terpenes.length) chips.push(it.top_terpenes.slice(0, 3).join(", "));
       } else if (this._domain === "nutrients") {
         if (it.brand) chips.push(it.brand);
@@ -8528,3 +8868,4 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     description: "Browse/compare strains, nutrients, mediums, lights",
   });
 })();
+

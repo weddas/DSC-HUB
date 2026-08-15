@@ -73,6 +73,10 @@ async def async_register_panel(hass: HomeAssistant) -> bool:
         return False
 
     try:
+        # Mount the whole www tree at /dsc_hub so panel JS + assets share one path.
+        # (Separate /dsc_hub/assets mounts often 404 when only the panel JS was synced.)
+        await _async_register_path(hass, f"/{DOMAIN}", str(www))
+        # Keep explicit file registration for older HA / cache-busted module_url loads.
         await _async_register_path(hass, PANEL_JS_URL, str(panel_js))
         if await hass.async_add_executor_job(assets.is_dir):
             await _async_register_path(hass, ASSETS_URL, str(assets))

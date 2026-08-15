@@ -47,6 +47,30 @@ export function collectHonestyGaps(hass: HassLike): HonestyGap[] {
     });
   }
 
+  if (hass.available && !hass.available("sensor.dsc_hub_heartbeat")) {
+    gaps.push({
+      id: "beat-dark",
+      label: "Beat dark",
+      detail: "Hub heartbeat unavailable — Mission shows BEAT OFF duration; vitals stay held.",
+      tone: "bad",
+      href: "/live/mission",
+      cta: "Mission",
+      priority: 12,
+    });
+  }
+
+  if (hass.available && !hass.available("binary_sensor.dsc_hub_panel_link")) {
+    gaps.push({
+      id: "panel-dark",
+      label: "Panel link dark",
+      detail: "Panel link dark — Mission shows PANEL OFF duration; do not invent Got.",
+      tone: "warn",
+      href: "/fleet",
+      cta: "Open Fleet",
+      priority: 14,
+    });
+  }
+
   if (on("binary_sensor.dsc_reduced_kit")) {
     gaps.push({
       id: "reduced-kit",
@@ -71,17 +95,7 @@ export function collectHonestyGaps(hass: HassLike): HonestyGap[] {
     });
   }
 
-  if (st("input_boolean.dsc_pot3_in_service") === "off") {
-    gaps.push({
-      id: "pot3-oos",
-      label: "POT3 out of service",
-      detail: "Probe fault path — mat vote excluded while OOS.",
-      tone: "warn",
-      href: "/live/root?pot=3",
-      cta: "Inspect Root",
-      priority: 40,
-    });
-  }
+  // OOS pots are fully omitted from Live surfaces — no honesty chips naming them.
 
   if (on("binary_sensor.dsc_clone_dark_period_violation")) {
     gaps.push({
