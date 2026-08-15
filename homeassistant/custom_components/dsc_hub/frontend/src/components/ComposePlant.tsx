@@ -3,14 +3,14 @@ import { CatalogPicker } from "./CatalogPicker";
 import { CoupledMix } from "./CoupledMix";
 import { DecisionLayer, ResultChip } from "./DecisionLayer";
 import { VesselGlyph } from "./VesselGlyph";
-import { Button, Card, EntitySelect, EntityText, StatusChip } from "./ui";
+import { Button, Card, EntitySelect, EntityText, EntityDatetime, StatusChip } from "./ui";
 import { TargetNumber } from "./TentTargets";
 import { useHass } from "../hooks/useHass";
 import { DEFAULT_VESSEL, resolveVesselSpec, vesselEntityId, VESSEL_CATALOG } from "../lib/vesselSpec";
 import type { CatalogItem, CatalogKind } from "../lib/catalog";
 
 type DrawKind = CatalogKind | "vessel" | null;
-type ConfirmKind = "roster" | "assign" | "mix" | "climate" | null;
+type ConfirmKind = "roster" | "assign" | "seat" | "mix" | "climate" | null;
 
 const NUTRIENT_SLOTS = [1, 2, 3, 4, 5, 6, 7, 8] as const;
 
@@ -18,6 +18,8 @@ export function ComposePlant() {
   const { available, callService, entity, num, state } = useHass();
   const [draw, setDraw] = useState<DrawKind>(null);
   const [confirm, setConfirm] = useState<ConfirmKind>(null);
+  const [pickedStrain, setPickedStrain] = useState<CatalogItem | null>(null);
+  const [pickedLight, setPickedLight] = useState<CatalogItem | null>(null);
   const strain = state("input_text.dsc_build_strain", "");
   const nick = state("input_text.dsc_build_nickname", "");
   const assign = state("input_select.dsc_build_assign_pot", "none");
@@ -32,6 +34,7 @@ export function ComposePlant() {
 
   const pick = (kind: CatalogKind, item: CatalogItem) => {
     if (kind === "strain") {
+      setPickedStrain(item);
       void callService("input_text", "set_value", { entity_id: "input_text.dsc_build_strain", value: item.name });
     } else if (kind === "medium") {
       const composition =
@@ -78,6 +81,7 @@ export function ComposePlant() {
         }
       }
     } else if (kind === "light") {
+      setPickedLight(item);
       const opts = (entity("input_select.dsc_light_fixture")?.attributes?.options as string[]) || [];
       const match = opts.find((o) => o.toLowerCase().includes(String(item.name || "").toLowerCase().slice(0, 18)));
       if (match) {
@@ -134,7 +138,20 @@ export function ComposePlant() {
               empty={!strain || strain === "unknown"}
               onClick={() => setDraw("strain")}
             />
+            {pickedStrain ? (
+              <div className="dsc-chip-row" style={{ margin: "8px 0" }}>
+                {pickedStrain.type ? <StatusChip label={String(pickedStrain.type)} tone="muted" /> : null}
+                {pickedStrain.height_cm_min != null ? (
+                  <StatusChip
+                    label={`${pickedStrain.height_cm_min}${pickedStrain.height_cm_max != null ? `–${pickedStrain.height_cm_max}` : ""}cm`}
+                    tone="muted"
+                  />
+                ) : null}
+                {pickedStrain.thc_min != null ? <StatusChip label={`${pickedStrain.thc_min}% THC`} tone="muted" /> : null}
+              </div>
+            ) : null}
             <EntityText entityId="input_text.dsc_build_nickname" label="Nickname" />
+            <EntityDatetime entityId="input_datetime.dsc_build_sprout_date" label="Sprout date" />
             <EntitySelect entityId="input_select.dsc_build_custom_slot" label="Custom strain slot" />
           </Card>
         </div>
@@ -185,6 +202,19 @@ export function ComposePlant() {
               empty={!light || light === "unknown"}
               onClick={() => setDraw("light")}
             />
+            {pickedLight ? (
+              <div className="dsc-chip-row" style={{ margin: "8px 0" }}>
+                {pickedLight.wattage_w != null ? (
+                  <StatusChip label={`${pickedLight.wattage_w} W`} tone="muted" />
+                ) : null}
+                {pickedLight.efficacy_umol_j != null ? (
+                  <StatusChip label={`${pickedLight.efficacy_umol_j} µmol/J`} tone="muted" />
+                ) : null}
+                {pickedLight.has_ppfd || pickedLight.ppfd_url ? <StatusChip label="PPFD" tone="ok" /> : (
+                  <StatusChip label="No PPFD URL" tone="warn" />
+                )}
+              </div>
+            ) : null}
             <EntitySelect entityId="input_select.dsc_build_assign_pot" label="Assign pot" icon="root" />
             <EntitySelect entityId="input_select.dsc_build_climate_pot" label="Climate apply pot" icon="climate" />
             <div className="dsc-row-actions" style={{ marginTop: 12 }}>
@@ -194,6 +224,7 @@ export function ComposePlant() {
               <Button teal onClick={() => setConfirm("assign")}>
                 Commit + assign
               </Button>
+              <Button onClick={() => setConfirm("seat")}>Assign seat</Button>
               <Button onClick={() => setConfirm("mix")}>Accept mix</Button>
               <Button onClick={() => setConfirm("climate")}>Apply climate Want</Button>
             </div>
@@ -283,6 +314,27 @@ export function ComposePlant() {
         <p>
           Writes roster then assigns pot {assign === "none" ? "(none — pick a pot first)" : assign}. Copies vessel{" "}
           {vessel.id} onto <code>{assign === "none" ? "—" : vesselEntityId(Number(assign))}</code> if that helper exists.
+        </p>
+      </DecisionLayer>
+
+      <DecisionLayer
+        open={confirm === "seat"}
+        onDismiss={() => setConfirm(null)}
+        onConfirm={() => {
+          copyVesselToPot(assign);
+          void callService("script", "turn_on", {
+            entity_id: "script.dsc_plant_assign_to_pot",
+            variables: { pot: assign },
+          });
+          setConfirm(null);
+        }}
+        title="Assign to pot"
+        confirmLabel="Assign now"
+        help={null}
+      >
+        <p>
+          Assigns current roster plant to pot {assign === "none" ? "(none — pick a pot first)" : assign} via{" "}
+          <code>script.dsc_plant_assign_to_pot</code>. Does not invent a roster row.
         </p>
       </DecisionLayer>
 

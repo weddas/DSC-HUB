@@ -2160,3 +2160,25 @@ A prior note marked waves 1–8 done. That was files/sketches. **Only Wave 0 had
 - Twin tab-away: rAF paused (no GPU spin)
 - Vessel YAML: reload HA so `input_select.dsc_build_vessel` exists
 
+## 2026-08-16 — Waves 1–8 bar close
+
+Wave 1 was already holding. This pass raised waves 2–7 to the panel bar and kept Wave 8 documented rather than faked.
+
+### done this close
+- Wave 2: CoupledMix remainder always Σ=100; CFM badge on printed CFM; ResultChip / GotWantBars on Climate/Light/seat; Light schedule Confirm overlay
+- Wave 3: Mission triage only; Climate command + demands + efficacy; Light window-proxy; Root Soil °C / NPK toggle / trust tone; cockpit Need + dryback (no act glow when untrusted); Roster Need + vessel glyph; Room T/RH/AH
+- Wave 4: Native Compose/Research (CatalogPicker uncapped 100, sprout date, 8 nutrient slots, vessel + coupled mix, DecisionLayer commit/assign/mix/Want, Research compare fields from IIFE). IIFE remains Lovelace-only.
+- Wave 5: Neon glass vessels via setPots (silhouette / moisture column / EC slab / dryback albedo / soilT / Need rim); dashed pads; HELD freezes wisps + mat pulse; 4×8 dashed Window proxy until GPIO; HUD off on Twin/Main/Clone; React owns tent slots. Twin is still the Dash IIFE, not R3F.
+- Wave 6: LungLoop per-leg allocated vs nameplate; KitPulse constellation holes (including tank); TankCutaway bound to tester + dummy helpers; Fleet bridge table. Airflow-map / system-map not hosted in the panel.
+- Wave 7: HistoryDrawer prior-window ghost; Cycle/Photo timespan; Analytics in-service pots; LearningWizard ports view_learning + climate-learn YAML (gate/sample/accept/curves/Phase A-B); PlantExtra neon chips — no cultivar mesh, no narrator
+- Wave 8: Assist opt-in in `docs/ASSIST-MCP.md`; GPIO `entities.main_light` stays empty; Cannalib still LIKE; R3F extract parked until neon APIs soak
+
+### honesty
+Wave 5 fabric tent walls / R3F rewrite were not in scope. Do not claim soak until hard-reload + type/select while ticks.
+
+### soak
+- Type/select/Compose nickname while hub ticks
+- `/live/twin` canvas only; tab-away pauses rAF
+- Light Independent unlocks clone start/hours
+- Reload HA packages for `dsc_v4_vessel.yaml` + tank dummies
+

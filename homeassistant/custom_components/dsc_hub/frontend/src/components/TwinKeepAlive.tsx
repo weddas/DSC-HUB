@@ -103,17 +103,24 @@ export function TwinKeepAlive() {
   useEffect(() => {
     const el = elRef.current;
     if (!el?.setPots) return;
+    const tentSlots: Record<"clone" | "main", number[]> = { clone: [], main: [] };
+    ALL_POT_NUMBERS.forEach((n) => {
+      const tent = readTent(state, n);
+      if (tent === "clone" || tent === "main") tentSlots[tent].push(n);
+    });
     const pots: VesselLive[] = ALL_POT_NUMBERS.map((n) => {
       const seat = buildPlantSeat(n, { state, entity });
       const vessel = readPotVessel(n, state, entity);
       const trust = readPotTrust(n, state);
       const inService = isPotInService(n, state);
       const tent = readTent(state, n);
+      const slot =
+        tent === "clone" || tent === "main" ? Math.max(0, tentSlots[tent].indexOf(n)) : 0;
       return {
         id: `pot${n}`,
         pot: n,
         tent,
-        slot: 0,
+        slot,
         inService,
         silhouette: vessel.silhouette,
         moisture: Number(seat.moisture),

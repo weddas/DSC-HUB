@@ -1,21 +1,17 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Button,
   Card,
-  Kpi,
   PageHeader,
   StatusChip,
 } from "../components/ui";
 import { IconButton, OverflowMenu, SlideDrawer } from "../components/chrome";
-import { HistoryDrawer } from "../components/HistoryDrawer";
 import { NextRecommendedCard } from "../components/Honesty";
 import { useHass } from "../hooks/useHass";
 import { useHeldReading, useHubOfflineMs, useBeatOfflineMs, usePanelOfflineMs } from "../hooks/useHeldReading";
-import { useEntitySeries } from "../hooks/useEntitySeries";
-import { useChartHours } from "../hooks/useChartHours";
-import { fmtDurationMs, fmtUptimeSeconds } from "../lib/formatDuration";
-import { buildPlantSeat, ALL_POT_NUMBERS, inServiceCount, isPotInService, activePotNumbers } from "../lib/seatModel";
+import { fmtDurationMs } from "../lib/formatDuration";
+import { buildPlantSeat, ALL_POT_NUMBERS, inServiceCount, isPotInService } from "../lib/seatModel";
 import { HubLinkLine } from "../components/HubLinkLine";
 import { VesselGlyph } from "../components/VesselGlyph";
 import { readPotVessel } from "../lib/vesselSpec";
@@ -23,7 +19,6 @@ import { readPotTrust } from "../lib/potTrust";
 import { resolveCfm } from "../lib/cfmProvenance";
 import { CfmProvenanceBadge } from "../components/CfmBadge";
 import { KitPulse, type KitNode } from "../components/KitPulse";
-import { ArcGauge, GotWantBars, Sparkline, seriesExtrema } from "../viz/charts";
 
 const FAULTS: { id: string; label: string }[] = [
   { id: "binary_sensor.dsc_hub_emergency_failsafe", label: "Emergency failsafe" },
@@ -34,18 +29,10 @@ const FAULTS: { id: string; label: string }[] = [
   { id: "binary_sensor.dsc_reduced_kit", label: "Reduced kit" },
 ];
 
-type HistTarget = { entityId: string; label: string; unit: string; color?: string };
-
-function fmtHeld(n: number, digits = 1): string {
-  return Number.isFinite(n) ? n.toFixed(digits) : "—";
-}
-
 export function LiveMissionPage() {
   const { state, num, available, entity, tick } = useHass();
   const navigate = useNavigate();
   const [searchOpen, setSearchOpen] = useState(false);
-  const [hist, setHist] = useState<HistTarget | null>(null);
-  const { hours, maxPoints } = useChartHours(6);
   void tick;
 
   const hubOnline = available("sensor.dsc_hub_uptime");
@@ -57,58 +44,26 @@ export function LiveMissionPage() {
   const tentT = useHeldReading("sensor.dsc_hub_tent_temperature");
   const tentRh = useHeldReading("sensor.dsc_hub_tent_humidity");
   const tentVpd = useHeldReading("sensor.dsc_hub_vpd_kpa");
-  const roomT = useHeldReading("sensor.dsc_hub_room_temperature");
   const cloneT = useHeldReading("sensor.dsc_hub_clone_temperature");
   const cloneRh = useHeldReading("sensor.dsc_hub_clone_humidity");
   const cloneVpd = useHeldReading("sensor.dsc_hub_clone_vpd_kpa");
-
-  const tentTSeries = useEntitySeries("sensor.dsc_hub_tent_temperature", { hours, maxPoints });
-  const tentRhSeries = useEntitySeries("sensor.dsc_hub_tent_humidity", { hours, maxPoints });
-  const tentVpdSeries = useEntitySeries("sensor.dsc_hub_vpd_kpa", {
-    hours,
-    maxPoints: Math.min(maxPoints, 64),
-  });
-  const cloneTSeries = useEntitySeries("sensor.dsc_hub_clone_temperature", {
-    hours,
-    maxPoints: Math.min(maxPoints, 64),
-  });
-  const cloneRhSeries = useEntitySeries("sensor.dsc_hub_clone_humidity", {
-    hours,
-    maxPoints: Math.min(maxPoints, 64),
-  });
-  const cloneVpdSeries = useEntitySeries("sensor.dsc_hub_clone_vpd_kpa", {
-    hours,
-    maxPoints: Math.min(maxPoints, 64),
-  });
-
-  const targetTemp = num("number.dsc_hub_target_temp");
-  const rhMin = num("number.dsc_hub_rh_target_min");
-  const rhMax = num("number.dsc_hub_rh_target_max");
-  const vpdMin = num("number.dsc_hub_vpd_target_min");
-  const vpdMax = num("number.dsc_hub_vpd_target_max");
-  const cloneTargetTemp = num("number.dsc_hub_clone_target_temp");
-  const cloneRhMin = num("number.dsc_hub_clone_rh_min");
-  const cloneRhMax = num("number.dsc_hub_clone_rh_max");
-  const cloneVpdMin = num("number.dsc_hub_clone_vpd_min");
-  const cloneVpdMax = num("number.dsc_hub_clone_vpd_max");
-  const tentTempExt = useMemo(() => seriesExtrema(tentTSeries.series), [tentTSeries.series]);
-  const tentRhExt = useMemo(() => seriesExtrema(tentRhSeries.series), [tentRhSeries.series]);
-  const cloneLit = state("light.dsc_hub_sf1000_dimmer") === "on";
-  // No 4×8 PWM lamp yet — photoperiod window is the honest schedule/heat proxy.
-  const mainLit = state("binary_sensor.dsc_hub_4x8_window_open") === "on";
+  const potM1 = useHeldReading("sensor.dsc_pot1_got_moisture");
+  const potM2 = useHeldReading("sensor.dsc_pot2_got_moisture");
+  const potM3 = useHeldReading("sensor.dsc_pot3_got_moisture");
+  const potM4 = useHeldReading("sensor.dsc_pot4_got_moisture");
+  const potMoistureHeld = [potM1, potM2, potM3, potM4];
 
   const panelLink = state("binary_sensor.dsc_hub_panel_link");
   const panelOk = panelLink === "on";
   const heartbeat = state("sensor.dsc_hub_heartbeat", "NO BEAT");
   const beatOk = available("sensor.dsc_hub_heartbeat");
-  const fleet = state("sensor.dsc_fleet_version_status", "—");
   const takeover = state("switch.dsc_hub_manual_takeover") === "on";
   const fanOverride = state("switch.dsc_hub_tent_manual_override") === "on";
   const fullAuto = state("switch.dsc_hub_tent_full_auto_mode") === "on";
   const reducedKit = state("binary_sensor.dsc_reduced_kit") === "on";
   const honesty = String(entity("sensor.dsc_keepup_gaps")?.attributes?.full_auto_honesty ?? "");
   const autoDriven = fullAuto && !takeover;
-  const climateFault = state("binary_sensor.dsc_hub_climate_sensor_fault") === "on";
+  const fleet = state("sensor.dsc_fleet_version_status", "—");
 
   const activeFaults = FAULTS.filter((f) => state(f.id) === "on");
   const seats = ALL_POT_NUMBERS.map((n) => buildPlantSeat(n, { state, entity }));
@@ -117,20 +72,37 @@ export function LiveMissionPage() {
     available,
     num,
   });
+  const kitHole = (on: boolean, known: boolean): KitNode["status"] => {
+    if (!known) return "missing";
+    return on ? "ok" : "oos";
+  };
   const kitNodes: KitNode[] = [
     { id: "hub", label: "Hub", status: available("binary_sensor.dsc_hub_link") ? (state("binary_sensor.dsc_hub_link") === "on" ? "ok" : "dark") : "missing" },
-    { id: "ac", label: "AC", status: state("input_boolean.dsc_ac_in_service") === "on" ? "ok" : "oos" },
-    { id: "mister", label: "Mister", status: state("input_boolean.dsc_clone_humidifier_in_service") === "on" ? "ok" : "oos" },
+    {
+      id: "ac",
+      label: "AC",
+      status: kitHole(state("input_boolean.dsc_ac_in_service") === "on", available("input_boolean.dsc_ac_in_service")),
+    },
+    {
+      id: "mister",
+      label: "Mister",
+      status: kitHole(
+        state("input_boolean.dsc_clone_humidifier_in_service") === "on",
+        available("input_boolean.dsc_clone_humidifier_in_service"),
+      ),
+    },
     ...ALL_POT_NUMBERS.map((n) => ({
       id: `pot${n}`,
       label: `Pot ${n}`,
-      status: (isPotInService(n, state) ? "ok" : "oos") as KitNode["status"],
+      status: kitHole(isPotInService(n, state), available(`input_boolean.dsc_pot${n}_in_service`)),
     })),
+    {
+      id: "tank",
+      label: "Tank",
+      status: kitHole(state("input_boolean.dsc_tank_in_service") === "on", available("input_boolean.dsc_tank_in_service")),
+    },
   ];
   const anyHeld = tentT.stale || tentRh.stale || tentVpd.stale || cloneT.stale || cloneRh.stale || cloneVpd.stale;
-
-  const openHist = (entityId: string, label: string, unit: string, color?: string) =>
-    setHist({ entityId, label, unit, color });
 
   return (
     <div className="dsc-page">
@@ -207,10 +179,6 @@ export function LiveMissionPage() {
           <StatusChip label={`BEAT OFF ${beatOfflineMs != null ? fmtDurationMs(beatOfflineMs) : "—"}`} tone="bad" pulse />
         ) : null}
         <StatusChip
-          label={`UP ${fmtUptimeSeconds(num("sensor.dsc_hub_uptime"))}`}
-          tone={hubOnline ? "ok" : "muted"}
-        />
-        <StatusChip
           icon={alerts === 0 ? "ok" : "alert"}
           label={alerts === 0 ? "All clear" : `${alerts} alert(s)`}
           tone={alerts === 0 ? "ok" : "bad"}
@@ -244,177 +212,6 @@ export function LiveMissionPage() {
           </Card>
         </div>
 
-        <div className="dsc-col-4">
-          <Card className="dsc-glass" title="Live gauges" icon="gauge">
-            <div className="dsc-gauge-matrix">
-              <div className={`dsc-gauge-row-3${cloneLit ? " is-lit" : ""}`}>
-                <div className="dsc-gauge-row-tag">2×4</div>
-                <div className="dsc-gauge-cell">
-                  <ArcGauge
-                    label="Temp"
-                    value={cloneT.value}
-                    min={15}
-                    max={35}
-                    unit="°C"
-                    target={cloneTargetTemp}
-                    stale={cloneT.stale}
-                    onClick={() =>
-                      openHist("sensor.dsc_hub_clone_temperature", "2×4 Temp", "°C", "var(--dsc-teal)")
-                    }
-                  />
-                  <Sparkline series={cloneTSeries.series} color="var(--dsc-teal)" width={88} height={18} />
-                </div>
-                <div className="dsc-gauge-cell">
-                  <ArcGauge
-                    label="RH"
-                    value={cloneRh.value}
-                    min={0}
-                    max={100}
-                    unit="%"
-                    band={{ min: cloneRhMin, max: cloneRhMax }}
-                    stale={cloneRh.stale}
-                    onClick={() =>
-                      openHist("sensor.dsc_hub_clone_humidity", "2×4 Humidity", "%", "var(--dsc-teal)")
-                    }
-                  />
-                  <Sparkline series={cloneRhSeries.series} color="var(--dsc-teal)" width={88} height={18} />
-                </div>
-                <div className="dsc-gauge-cell">
-                  <ArcGauge
-                    label="VPD"
-                    value={cloneVpd.value}
-                    min={0}
-                    max={2.5}
-                    unit="kPa"
-                    band={{ min: cloneVpdMin, max: cloneVpdMax }}
-                    stale={cloneVpd.stale}
-                    onClick={() =>
-                      openHist("sensor.dsc_hub_clone_vpd_kpa", "2×4 VPD", "kPa", "var(--dsc-teal)")
-                    }
-                  />
-                  <Sparkline series={cloneVpdSeries.series} color="var(--dsc-teal)" width={88} height={18} />
-                </div>
-              </div>
-              <div className={`dsc-gauge-row-3${mainLit ? " is-lit" : ""}`}>
-                <div className="dsc-gauge-row-tag">4×8</div>
-                <div className="dsc-gauge-cell">
-                  <ArcGauge
-                    label="Temp"
-                    value={tentT.value}
-                    min={15}
-                    max={35}
-                    unit="°C"
-                    target={targetTemp}
-                    extrema={tentTempExt}
-                    stale={tentT.stale}
-                    onClick={() =>
-                      openHist("sensor.dsc_hub_tent_temperature", "4×8 Temp", "°C", "var(--dsc-blue)")
-                    }
-                  />
-                  <Sparkline series={tentTSeries.series} color="var(--dsc-blue)" width={88} height={18} />
-                </div>
-                <div className="dsc-gauge-cell">
-                  <ArcGauge
-                    label="RH"
-                    value={tentRh.value}
-                    min={0}
-                    max={100}
-                    unit="%"
-                    band={{ min: rhMin, max: rhMax }}
-                    extrema={tentRhExt}
-                    stale={tentRh.stale}
-                    onClick={() =>
-                      openHist("sensor.dsc_hub_tent_humidity", "4×8 Humidity", "%", "var(--dsc-blue)")
-                    }
-                  />
-                  <Sparkline series={tentRhSeries.series} color="var(--dsc-blue)" width={88} height={18} />
-                </div>
-                <div className="dsc-gauge-cell">
-                  <ArcGauge
-                    label="VPD"
-                    value={tentVpd.value}
-                    min={0}
-                    max={2.5}
-                    unit="kPa"
-                    band={{ min: vpdMin, max: vpdMax }}
-                    stale={tentVpd.stale}
-                    onClick={() =>
-                      openHist("sensor.dsc_hub_vpd_kpa", "4×8 VPD", "kPa", "var(--dsc-blue)")
-                    }
-                  />
-                  <Sparkline series={tentVpdSeries.series} color="var(--dsc-blue)" width={88} height={18} />
-                </div>
-              </div>
-            </div>
-          </Card>
-        </div>
-
-        <div className="dsc-col-4">
-          <Card className={`dsc-glass${autoDriven ? " is-auto" : ""}`} title="Mode glance" icon="climate">
-            <div className="dsc-chip-row">
-              <StatusChip label={fullAuto ? "FULL AUTO" : "MANUAL"} tone={fullAuto ? "ok" : "muted"} />
-              {takeover ? <StatusChip label="TAKEOVER" tone="warn" /> : null}
-              {fanOverride ? <StatusChip label="FAN OVERRIDE" tone="warn" /> : null}
-            </div>
-            <p className="dsc-muted" style={{ margin: "8px 0 0" }}>
-              Command lives on Climate.
-            </p>
-            <Button teal onClick={() => navigate("/live/climate")}>
-              Open Climate command
-            </Button>
-            {climateFault ? (
-              <p className="dsc-honesty">
-                <StatusChip label="Climate fault" tone="bad" /> Do not invent Got.
-              </p>
-            ) : null}
-          </Card>
-        </div>
-
-        <div className="dsc-col-4">
-          <Card className="dsc-glass" title="Got vs Want" icon="gauge">
-            <GotWantBars
-              rows={[
-                {
-                  label: "Main T",
-                  got: tentT.value,
-                  want: targetTemp,
-                  unit: "°C",
-                },
-                {
-                  label: "Main RH",
-                  got: tentRh.value,
-                  wantMin: rhMin,
-                  wantMax: rhMax,
-                  unit: "%",
-                },
-                {
-                  label: "Clone T",
-                  got: cloneT.value,
-                  want: cloneTargetTemp,
-                  unit: "°C",
-                },
-                {
-                  label: "Clone RH",
-                  got: cloneRh.value,
-                  wantMin: cloneRhMin,
-                  wantMax: cloneRhMax,
-                  unit: "%",
-                },
-              ]}
-            />
-            <div className="dsc-kpi-sub" style={{ marginTop: 8 }}>
-              Room {fmtHeld(roomT.value)} °C · VPD {fmtHeld(tentVpd.value, 2)} kPa
-              {tentVpd.stale || roomT.stale ? " · HELD" : ""}
-            </div>
-            <Kpi
-              label="Surface"
-              value={state("sensor.dsc_ha_surface_version", "7.1.1")}
-              sub={`Fleet ${fleet}`}
-              tone="ok"
-            />
-          </Card>
-        </div>
-
         <div className="dsc-col-12">
           <Card className="dsc-glass" title="Lung CFM" icon="climate">
             <div className="dsc-chip-row">
@@ -432,6 +229,7 @@ export function LiveMissionPage() {
               {seats.map((s) => {
                 const oos = !isPotInService(s.pot, state);
                 const trust = readPotTrust(s.pot, state);
+                const held = potMoistureHeld[s.pot - 1];
                 const glow = !oos && !trust.blockNeedAct && s.need && s.need !== "—" && s.need !== "ok";
                 return (
                   <button
@@ -444,35 +242,12 @@ export function LiveMissionPage() {
                     title={oos ? "OOS — no fake Got" : s.need}
                   >
                     <VesselGlyph spec={readPotVessel(s.pot, state, entity)} size={18} />
-                    P{s.pot} {s.plantName !== "—" ? s.plantName : "—"} · Got M {oos ? "—" : s.moisture}
+                    P{s.pot} {s.plantName !== "—" ? s.plantName : "—"} · Got M{" "}
+                    {oos ? "—" : held.stale ? `${Number.isFinite(held.value) ? held.value.toFixed(0) : "—"}*` : s.moisture}
                     {oos ? " · OOS" : ` · Need ${s.need}`}
+                    {held.stale && !oos ? " · HELD" : ""}
                     {trust.labels.length ? ` · ${trust.labels.join("/")}` : ""}
                   </button>
-                );
-              })}
-            </div>
-          </Card>
-        </div>
-
-        <div className="dsc-col-6">
-          <Card className={`dsc-glass${autoDriven ? " is-auto" : ""}`} title="Command" icon="climate">
-            <p className="dsc-honesty" style={{ marginTop: 0 }}>
-              Full Auto, strategy, fans, and demands live on Climate — Mission is triage.
-            </p>
-            <Button primary onClick={() => navigate("/live/climate")}>
-              Open Climate
-            </Button>
-          </Card>
-        </div>
-
-        <div className="dsc-col-6">
-          <Card className="dsc-glass" title="Pot ESP-NOW" icon="root">
-            <div className="dsc-chip-row">
-              {activePotNumbers(state).map((n) => {
-                const id = `binary_sensor.dsc_hub_pot${n}_esp_now_link`;
-                const on = state(id) === "on";
-                return (
-                  <StatusChip key={n} label={`P${n} ${on ? "ON" : "OFF"}`} tone={on ? "ok" : "muted"} />
                 );
               })}
             </div>
@@ -529,15 +304,6 @@ export function LiveMissionPage() {
           ))}
         </div>
       </SlideDrawer>
-
-      <HistoryDrawer
-        open={hist != null}
-        onClose={() => setHist(null)}
-        entityId={hist?.entityId ?? null}
-        label={hist?.label ?? ""}
-        unit={hist?.unit}
-        color={hist?.color}
-      />
     </div>
   );
 }

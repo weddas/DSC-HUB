@@ -19,6 +19,9 @@ export interface CatalogItem {
   ppfd_url?: string;
   spectrum_url?: string;
   category?: string;
+  wattage_w?: number;
+  efficacy_umol_j?: number;
+  has_ppfd?: boolean;
   matched_via?: string;
   [key: string]: unknown;
 }
@@ -76,22 +79,22 @@ async function searchLocal(kind: CatalogKind, q: string): Promise<CatalogItem[]>
   if (!r.ok) return [];
   const items = asItems(await r.json());
   const needle = q.trim().toLowerCase();
-  if (!needle) return items.slice(0, 40);
-  return items.filter((it) => itemName(it).toLowerCase().includes(needle)).slice(0, 40);
+  if (!needle) return items;
+  return items.filter((it) => itemName(it).toLowerCase().includes(needle));
 }
 
 export async function searchCatalog(
   kind: CatalogKind,
   q: string,
   state: (id: string, fallback?: string) => string,
-  limit = 24,
+  limit = 100,
 ): Promise<CatalogSearchResult> {
   try {
     const domain = API_KIND[kind];
     const url = `${cannalibBase(state)}/v1/catalogs/${domain}?q=${encodeURIComponent(q || "")}&limit=${limit}`;
     const r = await fetch(url, { headers: cannalibHeaders(state), cache: "no-store" });
     if (!r.ok) throw new Error(`cannalib ${r.status}`);
-    const items = asItems(await r.json()).slice(0, limit);
+    const items = asItems(await r.json());
     if (items.length || kind === "strain") {
       return {
         items,
@@ -106,6 +109,6 @@ export async function searchCatalog(
   return {
     items: local,
     source: "local",
-    note: "Cannalib unreachable — local JSON index (capped)",
+    note: "Cannalib unreachable — local JSON index",
   };
 }

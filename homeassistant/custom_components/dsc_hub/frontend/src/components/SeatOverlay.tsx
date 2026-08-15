@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { DecisionLayer } from "./DecisionLayer";
 import { PlantSeatPanel } from "../pages/GrowPages";

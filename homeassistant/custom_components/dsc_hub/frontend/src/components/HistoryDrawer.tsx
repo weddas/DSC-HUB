@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useEntitySeries } from "../hooks/useEntitySeries";
 import { useChartHours, type ChartHours, CHART_HOUR_OPTIONS } from "../hooks/useChartHours";
 import { SlideDrawer } from "./chrome";
@@ -62,6 +63,15 @@ export function HistoryDrawer({
 }) {
   const { hours, setHours, maxPoints } = useChartHours(6);
   const series = useEntitySeries(entityId || "", { hours, maxPoints });
+  const ghostSpan = hours <= 18 ? hours * 2 : Math.min(hours + 24, 48);
+  const ghostSrc = useEntitySeries(entityId || "", { hours: ghostSpan, maxPoints });
+  const ghost = useMemo(() => {
+    const windowMs = hours * 3600 * 1000;
+    const cutoff = Date.now() - windowMs;
+    return ghostSrc.series
+      .filter((p) => p.t < cutoff)
+      .map((p) => ({ t: p.t + windowMs, v: p.v }));
+  }, [ghostSrc.series, hours]);
   const thin = !entityId || series.series.length < 2;
 
   return (
@@ -71,15 +81,9 @@ export function HistoryDrawer({
       title={label ? `History · ${label}` : "History"}
     >
       <div className="dsc-chip-row" style={{ marginBottom: 12 }}>
-        <TimespanControl
-          hours={hours}
-          setHours={setHours}
-          extras={[
-            { label: "cycle", hours: 18 },
-            { label: "photo 12", hours: 12 },
-          ]}
-        />
+        <TimespanControl hours={hours} setHours={setHours} extras={CYCLE_TIMESPAN_EXTRAS} />
         {thin ? <StatusChip label="Thin recorder" tone="warn" /> : null}
+        {ghost.length > 1 ? <StatusChip label="Prior window ghost" tone="muted" /> : null}
       </div>
       {entityId ? (
         <MultiLineChart
@@ -94,6 +98,18 @@ export function HistoryDrawer({
               color,
               unit,
             },
+            ...(ghost.length > 1
+              ? [
+                  {
+                    id: `${entityId}-ghost`,
+                    label: `${label} prior`,
+                    series: ghost,
+                    color,
+                    unit,
+                    ghost: true,
+                  },
+                ]
+              : []),
           ]}
         />
       ) : null}

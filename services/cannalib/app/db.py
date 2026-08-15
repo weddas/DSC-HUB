@@ -196,7 +196,11 @@ def _row_to_strain_hit(row: sqlite3.Row, *, matched_via: str = "name") -> dict[s
 
 
 def search_strains(q: str, *, limit: int = 20) -> list[dict[str, Any]]:
-    """Typeahead across the FULL canonical set (+ aliases). No corpus cap."""
+    """Typeahead across the FULL canonical set (+ aliases). No corpus cap.
+
+    N-087-CANNALIB-FTS: still LIKE/prefix, not FTS5. Optional sqlite FTS5
+    index for sub-100ms typeahead lives in CannaLib follow-ups — not this panel.
+    """
     c = connect()
     limit = max(1, min(int(limit), 100))
     needle = _norm_q(q)

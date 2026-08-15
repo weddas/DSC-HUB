@@ -17,7 +17,7 @@ import { LungLoop } from "../components/LungLoop";
 import { CfmProvenanceBadge } from "../components/CfmBadge";
 import { resolveCfm } from "../lib/cfmProvenance";
 import { absoluteHumidity, readPotTrust } from "../lib/potTrust";
-import { DecisionLayer } from "../components/DecisionLayer";
+import { DecisionLayer, ResultChip } from "../components/DecisionLayer";
 import { VesselGlyph } from "../components/VesselGlyph";
 import { readPotVessel } from "../lib/vesselSpec";
 import { TargetNumber, TentTargetPanel } from "../components/TentTargets";
@@ -26,7 +26,7 @@ import { useEntitySeries } from "../hooks/useEntitySeries";
 import { useHeldReading } from "../hooks/useHeldReading";
 import { useChartHours } from "../hooks/useChartHours";
 import { useZoneFocus, type ZoneFocus } from "../hooks/useZoneFocus";
-import { ArcGauge, MultiLineChart, Sparkline, seriesExtrema } from "../viz/charts";
+import { ArcGauge, GotWantBars, MultiLineChart, Sparkline, seriesExtrema } from "../viz/charts";
 import {
   ALL_POT_NUMBERS,
   buildPlantSeat,
@@ -120,6 +120,16 @@ export function LiveClimatePage() {
     "sensor.dsc_cfm_exhaust_recirc",
     { available, num },
   );
+  const inMainReading = resolveCfm(
+    "sensor.dsc_cfm_intake_main_allocated",
+    "sensor.dsc_cfm_intake_main",
+    { available, num },
+  );
+  const inCloneReading = resolveCfm(
+    "sensor.dsc_cfm_intake_2x4_allocated",
+    "sensor.dsc_cfm_intake_2x4",
+    { available, num },
+  );
   const outNameplate = outReading.nameplate ?? num("sensor.dsc_cfm_exhaust_out");
   const outAlloc = outReading.value;
   const recircNameplate = recReading.nameplate ?? num("sensor.dsc_cfm_exhaust_recirc");
@@ -202,6 +212,21 @@ export function LiveClimatePage() {
               <EntitySelect entityId="select.dsc_hub_control_strategy" label="Strategy" icon="climate" />
               <EntitySelect entityId="select.dsc_hub_priority_tent" label="Priority tent" icon="tent" />
             </div>
+            <div className="dsc-demand-row" style={{ marginTop: 12 }}>
+              <EntityToggle entityId="switch.dsc_hub_heater_demand" label="Heat" icon="climate" />
+              <EntityToggle
+                entityId="switch.dsc_hub_ac_demand"
+                label="Cool"
+                icon="climate"
+                warnWhenMissing={
+                  state("binary_sensor.dsc_ac_capacity_offline") === "on" ? "AC ○" : undefined
+                }
+              />
+              <EntityToggle entityId="switch.dsc_hub_humidifier_demand" label="Hum" icon="climate" />
+              <EntityToggle entityId="switch.dsc_hub_dehumidifier_demand" label="Dehum" icon="climate" />
+              <EntityToggle entityId="switch.dsc_hub_grow_mat_demand" label="Mat" icon="root" />
+              <EntityToggle entityId="switch.dsc_hub_clone_humidifier_demand" label="C-Hum" icon="clone" />
+            </div>
             {fullAuto ? (
               <p className="dsc-honesty">
                 <StatusChip
@@ -218,6 +243,36 @@ export function LiveClimatePage() {
         <div className="dsc-col-12">
           <Card className="dsc-glass" title="Targets" icon="gauge">
             <TentTargetPanel emphasize={focus === "clone" ? "clone" : "main"} />
+            <GotWantBars
+              rows={[
+                {
+                  label: "Main T",
+                  got: tentTHeld.value,
+                  want: targetTemp,
+                  unit: "°C",
+                },
+                {
+                  label: "Main RH",
+                  got: tentRhHeld.value,
+                  wantMin: rhMin,
+                  wantMax: rhMax,
+                  unit: "%",
+                },
+                {
+                  label: "Clone T",
+                  got: cloneTHeld.value,
+                  want: cloneTargetTemp,
+                  unit: "°C",
+                },
+                {
+                  label: "Clone RH",
+                  got: cloneRhHeld.value,
+                  wantMin: cloneRhMin,
+                  wantMax: cloneRhMax,
+                  unit: "%",
+                },
+              ]}
+            />
           </Card>
         </div>
 
@@ -451,14 +506,17 @@ export function LiveClimatePage() {
             label="CFM RECIRC"
             value={fmt(recircAlloc, 0)}
             unit="cfm"
-            sub={`Alloc · nameplate ${fmt(recircNameplate, 0)}`}
+            sub={`Nameplate ${fmt(recircNameplate, 0)}`}
           />
+          <CfmProvenanceBadge reading={recReading} />
         </div>
         <div className="dsc-col-3">
-          <Kpi label="Intake main" value={fmt(num("sensor.dsc_cfm_intake_main"), 0)} unit="cfm" />
+          <Kpi label="Intake main" value={fmt(inMainReading.value, 0)} unit="cfm" />
+          <CfmProvenanceBadge reading={inMainReading} />
         </div>
         <div className="dsc-col-3">
-          <Kpi label="Intake 2×4" value={fmt(num("sensor.dsc_cfm_intake_2x4"), 0)} unit="cfm" />
+          <Kpi label="Intake 2×4" value={fmt(inCloneReading.value, 0)} unit="cfm" />
+          <CfmProvenanceBadge reading={inCloneReading} />
         </div>
 
         <div className="dsc-col-12">
@@ -468,11 +526,10 @@ export function LiveClimatePage() {
               Lung loop is mass-balance, not a second isometric tent. 4×8 light = window proxy until GPIO lamp.
             </p>
             <LungLoop
-              intakeClone={num("sensor.dsc_cfm_intake_2x4")}
-              intakeMain={num("sensor.dsc_cfm_intake_main")}
-              outCfm={outAlloc}
-              recircCfm={recircAlloc}
-              kind={outReading.kind}
+              intakeClone={inCloneReading}
+              intakeMain={inMainReading}
+              outCfm={outReading}
+              recircCfm={recReading}
             />
           </Card>
         </div>
@@ -629,6 +686,22 @@ export function LiveClimatePage() {
           <Card className="dsc-glass" title="Efficacy" icon="alert">
             <div className="dsc-chip-row">
               <StatusChip
+                label={`Heat ${state("switch.dsc_hub_heater_demand") === "on" ? "ON" : "off"}`}
+                tone={state("switch.dsc_hub_heater_demand") === "on" ? "ok" : "muted"}
+              />
+              <StatusChip
+                label={`Cool ${state("switch.dsc_hub_ac_demand") === "on" ? "ON" : "off"}`}
+                tone={state("switch.dsc_hub_ac_demand") === "on" ? "ok" : "muted"}
+              />
+              <StatusChip
+                label={`Hum ${state("switch.dsc_hub_humidifier_demand") === "on" ? "ON" : "off"}`}
+                tone={state("switch.dsc_hub_humidifier_demand") === "on" ? "ok" : "muted"}
+              />
+              <StatusChip
+                label={`Dehum ${state("switch.dsc_hub_dehumidifier_demand") === "on" ? "ON" : "off"}`}
+                tone={state("switch.dsc_hub_dehumidifier_demand") === "on" ? "ok" : "muted"}
+              />
+              <StatusChip
                 label={
                   state("binary_sensor.dsc_humidifier_ineffective_suspect") === "on"
                     ? "Hum ineffective"
@@ -641,6 +714,10 @@ export function LiveClimatePage() {
                   state("binary_sensor.dsc_heater_ineffective_suspect") === "on" ? "Heat ineffective" : "Heat ok"
                 }
                 tone={state("binary_sensor.dsc_heater_ineffective_suspect") === "on" ? "warn" : "muted"}
+              />
+              <StatusChip
+                label={`Heat on ${fmt(num("sensor.dsc_heater_relay_on_time"), 0)}s`}
+                tone="muted"
               />
               <StatusChip
                 label={`Hum on ${fmt(num("sensor.dsc_humidifier_relay_on_time"), 0)}s`}
@@ -675,7 +752,7 @@ export function LiveClimatePage() {
 }
 
 function TentCockpitPage({ tent }: { tent: Exclude<TentId, "unassigned"> }) {
-  const { state, entity, num, tick, callWS } = useHass();
+  const { state, entity, num, tick, callWS, available } = useHass();
   const navigate = useNavigate();
   const { setFocus } = useZoneFocus();
   const [params, setParams] = useSearchParams();
@@ -710,12 +787,20 @@ function TentCockpitPage({ tent }: { tent: Exclude<TentId, "unassigned"> }) {
     ) === "on";
   const cloneLampOn = state("light.dsc_hub_sf1000_dimmer") === "on";
   const lit = tent === "clone" ? cloneLampOn : windowOpen;
-  const intakeCfm =
-    tent === "main" ? num("sensor.dsc_cfm_intake_main") : num("sensor.dsc_cfm_intake_2x4");
-  const outCfm =
-    num("sensor.dsc_cfm_exhaust_out_allocated") || num("sensor.dsc_cfm_exhaust_out");
-  const recircCfm =
-    num("sensor.dsc_cfm_exhaust_recirc_allocated") || num("sensor.dsc_cfm_exhaust_recirc");
+  const intakeReading =
+    tent === "main"
+      ? resolveCfm("sensor.dsc_cfm_intake_main_allocated", "sensor.dsc_cfm_intake_main", { available, num })
+      : resolveCfm("sensor.dsc_cfm_intake_2x4_allocated", "sensor.dsc_cfm_intake_2x4", { available, num });
+  const outReadingCockpit = resolveCfm(
+    "sensor.dsc_cfm_exhaust_out_allocated",
+    "sensor.dsc_cfm_exhaust_out",
+    { available, num },
+  );
+  const recircReadingCockpit = resolveCfm(
+    "sensor.dsc_cfm_exhaust_recirc_allocated",
+    "sensor.dsc_cfm_exhaust_recirc",
+    { available, num },
+  );
   const fanOverride = state("switch.dsc_hub_tent_manual_override") === "on";
 
   useEffect(() => {
@@ -819,14 +904,20 @@ function TentCockpitPage({ tent }: { tent: Exclude<TentId, "unassigned"> }) {
           }
           tone={lit ? "ok" : "muted"}
         />
-        <StatusChip label={`IN ${fmt(intakeCfm, 0)} cfm`} tone="muted" />
+        <StatusChip label={`IN ${fmt(intakeReading.value, 0)} cfm`} tone="muted" />
+        <CfmProvenanceBadge reading={intakeReading} />
         {tent === "main" ? (
           <>
-            <StatusChip label={`OUT ${fmt(outCfm, 0)}`} tone="muted" />
-            <StatusChip label={`RECIRC ${fmt(recircCfm, 0)}`} tone="muted" />
+            <StatusChip label={`OUT ${fmt(outReadingCockpit.value, 0)}`} tone="muted" />
+            <CfmProvenanceBadge reading={outReadingCockpit} />
+            <StatusChip label={`RECIRC ${fmt(recircReadingCockpit.value, 0)}`} tone="muted" />
+            <CfmProvenanceBadge reading={recircReadingCockpit} />
           </>
         ) : (
-          <StatusChip label={`CFM OUT ${fmt(outCfm, 0)}`} tone="muted" />
+          <>
+            <StatusChip label={`CFM OUT ${fmt(outReadingCockpit.value, 0)}`} tone="muted" />
+            <CfmProvenanceBadge reading={outReadingCockpit} />
+          </>
         )}
       </div>
 
@@ -846,18 +937,22 @@ function TentCockpitPage({ tent }: { tent: Exclude<TentId, "unassigned"> }) {
                 seats.map((s) => {
                   const db = Number(state(`sensor.dsc_pot${s.pot}_dryback_pct`));
                   const drybackWarn = Number.isFinite(db) && db > 45;
+                  const trust = readPotTrust(s.pot, state);
+                  const glow = !trust.blockNeedAct && drybackWarn;
                   return (
                   <button
                     key={s.pot}
                     type="button"
-                    className={`dsc-chip dsc-chip--ok${drybackWarn ? " dsc-chip--pulse" : ""}`}
+                    className={`dsc-chip dsc-chip--ok${glow ? " dsc-chip--pulse" : ""}`}
                     onClick={() => {
                       const next = new URLSearchParams(params);
                       next.set("pot", String(s.pot));
                       setParams(next, { replace: true });
                     }}
                   >
-                    P{s.pot} {s.plantName} · M {s.moisture} · Need {s.need}
+                    <VesselGlyph spec={readPotVessel(s.pot, state, entity)} size={16} /> P{s.pot}{" "}
+                    {s.plantName} · M {s.moisture} · Need{" "}
+                    {trust.blockNeedAct ? `${s.need} (no act)` : s.need}
                     {drybackWarn ? " · dryback warn" : ""}
                   </button>
                   );
@@ -1142,10 +1237,15 @@ function RootMatrixRow({
   const needGlow = !oos && !trust.blockNeedAct && seat.need && seat.need !== "—" && seat.need !== "ok";
 
   return (
-    <tr onClick={onOpen} style={{ cursor: "pointer" }} className={trust.untrusted ? "dsc-tone-stale" : undefined}>
+    <tr
+      onClick={onOpen}
+      style={{ cursor: "pointer" }}
+      className={trust.tone === "muted" ? "dsc-tone-stale" : `dsc-tone-${trust.tone}`}
+    >
       <td>
         <VesselGlyph spec={readPotVessel(pot, state, entity)} size={18} /> P{pot}
         {oos ? " OOS" : ""}
+        {trust.labels.length ? ` · ${trust.labels.join("/")}` : ""}
       </td>
       <td>{oos ? "—" : seat.plantName}</td>
       <td>
@@ -1222,12 +1322,14 @@ export function LiveLightPage() {
       <div className="dsc-grid">
         <div className="dsc-col-3">
           <Kpi label="Next event" value={state("sensor.dsc_next_light_event", "—")} />
+          <ResultChip label={state("sensor.dsc_next_light_event", "—") || "No next event"} empty={!state("sensor.dsc_next_light_event") || state("sensor.dsc_next_light_event") === "unknown"} />
         </div>
         <div className="dsc-col-3">
           <Kpi label="Expected hours" value={fmt(hours, 1)} unit="h" />
         </div>
         <div className="dsc-col-3">
           <Kpi label="Clone expected" value={fmt(cloneHours, 1)} unit="h" />
+          <ArcGauge label="Clone h" value={cloneHours} min={0} max={24} unit="h" />
         </div>
         <div className="dsc-col-3">
           <ArcGauge label="Hours" value={hours} min={0} max={24} unit="h" />
@@ -1256,7 +1358,14 @@ export function LiveLightPage() {
           </Card>
         </div>
       </div>
-      <DecisionLayer open={edit} onDismiss={() => setEdit(false)} title="Light schedule" help={null}>
+      <DecisionLayer
+        open={edit}
+        onDismiss={() => setEdit(false)}
+        onConfirm={() => setEdit(false)}
+        title="Light schedule"
+        confirmLabel="Done"
+        help={null}
+      >
         <p className="dsc-muted">
           Same helpers as Lovelace lighting. 4×8 window is the schedule Got until a GPIO lamp exists.
         </p>

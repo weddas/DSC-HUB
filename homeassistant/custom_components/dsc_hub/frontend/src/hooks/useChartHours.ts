@@ -9,7 +9,7 @@ function readStored(): ChartHours {
   try {
     const raw = sessionStorage.getItem(STORAGE_KEY);
     const n = Number(raw);
-    if ((CHART_HOUR_OPTIONS as readonly number[]).includes(n)) return n as ChartHours;
+    if (Number.isFinite(n) && n > 0 && n <= 48) return n;
   } catch {
     /* ignore */
   }

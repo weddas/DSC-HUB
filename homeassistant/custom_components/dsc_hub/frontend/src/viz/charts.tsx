@@ -213,7 +213,7 @@ export function MultiLineChart({
     const span = Math.max(model.t1 - model.t0, 1);
     const innerW = width - pad.l - pad.r;
     for (let i = 0; i < n; i++) {
-      const frac = n === 1 ? 0 : i / (n - 1);
+      const frac = i / (n - 1);
       const t = model.t0 + frac * span;
       out.push({ x: pad.l + frac * innerW, label: fmtTime(t) });
     }

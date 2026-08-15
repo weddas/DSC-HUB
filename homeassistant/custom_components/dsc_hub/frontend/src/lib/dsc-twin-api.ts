@@ -9,7 +9,7 @@
  *   pause(bool)         — cancel rAF when keepalive is not .is-active / tab hidden
  *   setFocusTent(mode)  — camera + tent visibility; never setConfig for focus
  *   setHeld(bool)       — freeze wisps/fans/shafts (no last-good animation)
- *   setPots(VesselLive[]) — React-owned moisture/Need/OOS pads
+ *   setPots(VesselLive[]) — React-owned moisture/Need/OOS/silhouette/dryback/soilT
  *   setUiChrome({hideHud}) — Main/Clone cockpits: canvas only
  *
  * When extracting: copy those five methods into a module, keep HA SoT in React,

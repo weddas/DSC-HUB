@@ -12,10 +12,6 @@ import { MultiLineChart } from "../viz/charts";
 import { ALL_POT_NUMBERS, inServiceCount, isPotInService, potGotEntity } from "../lib/seatModel";
 import { resolveCfm } from "../lib/cfmProvenance";
 
-function fmt(n: number, digits = 1): string {
-  return Number.isFinite(n) ? n.toFixed(digits) : "—";
-}
-
 const POT_COLORS = ["var(--dsc-blue)", "var(--dsc-teal)", "var(--dsc-purple)", "var(--dsc-amber)"];
 
 export function TuneLearningPage() {
@@ -48,7 +44,7 @@ export function TuneLearningPage() {
 }
 
 export function TuneAnalyticsPage() {
-  const { state, num, available } = useHass();
+  const { state } = useHass();
   const { hours, setHours, maxPoints } = useChartHours(6);
   const tSeries = useEntitySeries("sensor.dsc_hub_tent_temperature", { maxPoints, hours });
   const rhSeries = useEntitySeries("sensor.dsc_hub_tent_humidity", { maxPoints, hours });

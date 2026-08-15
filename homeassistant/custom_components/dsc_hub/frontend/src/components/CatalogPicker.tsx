@@ -23,7 +23,7 @@ export function CatalogPicker({
     let cancelled = false;
     const handle = window.setTimeout(() => {
       setBusy(true);
-      void searchCatalog(kind, q, state, 40).then((res) => {
+      void searchCatalog(kind, q, state, 100).then((res) => {
         if (cancelled) return;
         setItems(res.items);
         setSource(res.source);

@@ -6,30 +6,28 @@ const LAYER_IDS = [1, 2, 3] as const;
 
 type PctMap = Record<number, number>;
 
+function remainderOf(locked: Record<number, boolean>, dragged?: number | null): number {
+  const rem = LAYER_IDS.find((i) => !locked[i] && i !== dragged);
+  return rem ?? LAYER_IDS.find((i) => !locked[i]) ?? 3;
+}
+
+/** One remainder channel absorbs leftover so Σ is always 100. Other unlocked channels stay put. */
 function computeCoupled(
   n: number,
   next: number,
   current: PctMap,
   locked: Record<number, boolean>,
 ): PctMap {
-  const clamped = Math.max(0, Math.min(100, Math.round(next)));
-  const others = LAYER_IDS.filter((i) => i !== n);
-  const lockedOthers = others.filter((i) => locked[i]);
-  const freeOthers = others.filter((i) => !locked[i]);
-  const lockedSum = lockedOthers.reduce((a, i) => a + (Number.isFinite(current[i]) ? current[i] : 0), 0);
-  let room = 100 - lockedSum;
-  const use = Math.min(clamped, room);
-  const out: PctMap = { ...current, [n]: use };
-  room -= use;
-  if (freeOthers.length === 1) {
-    out[freeOthers[0]] = Math.max(0, room);
-  } else if (freeOthers.length > 1) {
-    const currentFree = freeOthers.reduce((a, i) => a + (Number.isFinite(current[i]) ? current[i] : 0), 0);
-    freeOthers.forEach((i) => {
-      const share = currentFree > 0 ? (current[i] / currentFree) * room : room / freeOthers.length;
-      out[i] = Math.max(0, Math.round(share));
-    });
-  }
+  const rem = remainderOf(locked, n);
+  const sticky = LAYER_IDS.filter((i) => i !== n && i !== rem);
+  const stickySum = sticky.reduce((a, i) => a + (Number.isFinite(current[i]) ? Math.round(current[i]) : 0), 0);
+  const room = Math.max(0, 100 - stickySum);
+  const use = Math.max(0, Math.min(room, Math.round(next)));
+  const remVal = room - use;
+  const out: PctMap = { ...current, [n]: use, [rem]: remVal };
+  sticky.forEach((i) => {
+    out[i] = Math.round(Number.isFinite(current[i]) ? current[i] : 0);
+  });
   return out;
 }
 
@@ -53,7 +51,7 @@ export function CoupledMix({ volumeL }: { volumeL: number }) {
   }));
 
   const lockedCount = LAYER_IDS.filter((n) => locked[n]).length;
-  const remainderIndex = LAYER_IDS.find((n) => !locked[n]) ?? 3;
+  const remainderIndex = remainderOf(locked);
   const vol = Number.isFinite(volumeL) && volumeL > 0 ? volumeL : num("input_number.dsc_blend_total_l", 20);
   const sum = layers.reduce((a, l) => a + (Number.isFinite(l.pct) ? l.pct : 0), 0);
 
@@ -65,6 +63,13 @@ export function CoupledMix({ volumeL }: { volumeL: number }) {
         value: next[i],
       });
     });
+  };
+
+  const finishDrag = (n: number, raw: number) => {
+    const next = computeCoupled(n, raw, drafts ?? pcts, locked);
+    setDrafts(null);
+    setDragging(null);
+    commitPcts(next);
   };
 
   const toggleLock = (n: number) => {
@@ -80,7 +85,7 @@ export function CoupledMix({ volumeL }: { volumeL: number }) {
     () =>
       layers
         .filter((l) => l.pct > 0 && l.name && l.name !== "unknown")
-        .map((l) => `${l.name} ${(vol * l.pct) / 100}L (${Math.round(l.pct)}%)`)
+        .map((l) => `${l.name} ${((vol * l.pct) / 100).toFixed(1)}L (${Math.round(l.pct)}%)`)
         .join(" · "),
     [layers, vol],
   );
@@ -91,7 +96,7 @@ export function CoupledMix({ volumeL }: { volumeL: number }) {
         <StatusChip label={`Σ ${Math.round(sum)}%`} tone={Math.round(sum) === 100 ? "ok" : "warn"} />
         <StatusChip label={`${vol} L vessel`} tone="muted" />
         <span className="dsc-muted" style={{ fontSize: 12 }}>
-          Lock any but one remainder. Remainder channel is computed, not dragged.
+          Lock any but one remainder. Remainder absorbs leftover so Σ stays 100.
         </span>
       </div>
       {LAYER_IDS.map((n) => {
@@ -99,10 +104,7 @@ export function CoupledMix({ volumeL }: { volumeL: number }) {
         const isRem = n === remainderIndex && !locked[n];
         return (
           <div key={n} className="dsc-mix-row">
-            <EntityText
-              entityId={`input_text.dsc_blend_component_${n}_name`}
-              label={`Layer ${n}`}
-            />
+            <EntityText entityId={`input_text.dsc_blend_component_${n}_name`} label={`Layer ${n}`} />
             <input
               type="range"
               min={0}
@@ -117,19 +119,15 @@ export function CoupledMix({ volumeL }: { volumeL: number }) {
               }}
               onPointerUp={(e) => {
                 if (dragging !== n) return;
-                const next = computeCoupled(n, Number((e.target as HTMLInputElement).value), drafts ?? pcts, locked);
-                setDrafts(null);
-                setDragging(null);
-                commitPcts(next);
+                finishDrag(n, Number((e.target as HTMLInputElement).value));
               }}
               onPointerCancel={() => {
                 setDrafts(null);
                 setDragging(null);
               }}
-              onLostPointerCapture={() => {
+              onLostPointerCapture={(e) => {
                 if (dragging !== n) return;
-                setDrafts(null);
-                setDragging(null);
+                finishDrag(n, Number((e.target as HTMLInputElement).value));
               }}
               onChange={(e) => {
                 const value = Number(e.target.value);

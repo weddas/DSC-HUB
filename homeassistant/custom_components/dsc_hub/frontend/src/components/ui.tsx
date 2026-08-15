@@ -99,18 +99,28 @@ export function Kpi({
   value: string | number;
   unit?: string;
   sub?: string;
-  tone?: "normal" | "ok" | "bad" | "muted";
+  tone?: "normal" | "ok" | "warn" | "bad" | "muted";
   stale?: boolean;
   onClick?: () => void;
 }) {
-  const toneClass =
-    tone === "ok"
-      ? "dsc-status-ok"
-      : tone === "bad"
-        ? "dsc-status-bad"
-        : tone === "muted" || stale
-          ? "dsc-status-muted"
-          : "";
+  const toneClass = (() => {
+    switch (tone) {
+      case "ok":
+        return "dsc-status-ok";
+      case "warn":
+        return "dsc-status-warn";
+      case "bad":
+        return "dsc-status-bad";
+      case "muted":
+        return "dsc-status-muted";
+      case "normal":
+        return stale ? "dsc-status-muted" : "";
+      default: {
+        const _exhaustive: never = tone;
+        return _exhaustive;
+      }
+    }
+  })();
   const body = (
     <>
       <div className={`dsc-kpi-value ${toneClass}`.trim()}>
@@ -472,6 +482,53 @@ export function EntityTime({ entityId, label }: { entityId: string; label: strin
       <span className="dsc-target-num-label">{label}</span>
       <input
         type="time"
+        value={draft}
+        disabled={!ok}
+        onFocus={() => {
+          focused.current = true;
+        }}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={() => {
+          focused.current = false;
+          commit();
+        }}
+      />
+    </label>
+  );
+}
+
+/** Local draft for `input_datetime.*`. Date-only unless the helper has a time. */
+export function EntityDatetime({ entityId, label }: { entityId: string; label: string }) {
+  const { available, callService, entity, state } = useHass();
+  const ok = available(entityId);
+  const hasTime = Boolean(entity(entityId)?.attributes?.has_time);
+  const live = liveText(state(entityId, ""));
+  const toInput = (raw: string) => {
+    if (!raw) return "";
+    return hasTime ? raw.slice(0, 16).replace(" ", "T") : raw.slice(0, 10);
+  };
+  const [draft, setDraft] = useState(toInput(live));
+  const focused = useRef(false);
+
+  useEffect(() => {
+    if (!focused.current) setDraft(toInput(live));
+  }, [live, hasTime]);
+
+  const commit = () => {
+    if (!ok || !draft) return;
+    const value = hasTime ? draft.replace("T", " ") : draft;
+    if (hasTime) {
+      void callService("input_datetime", "set_datetime", { entity_id: entityId, datetime: value });
+    } else {
+      void callService("input_datetime", "set_datetime", { entity_id: entityId, date: draft });
+    }
+  };
+
+  return (
+    <label className={`dsc-target-num${!ok ? " is-disabled" : ""}`}>
+      <span className="dsc-target-num-label">{label}</span>
+      <input
+        type={hasTime ? "datetime-local" : "date"}
         value={draft}
         disabled={!ok}
         onFocus={() => {
