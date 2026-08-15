@@ -5520,6 +5520,20 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         const livePot = byId[id];
         if (!actor) continue;
         if (!livePot) continue;
+        const sil = livePot.silhouette || (n >= 3 ? "tall" : "bag");
+        if (actor.userData.silhouette !== sil) {
+          const fresh = mkPlant(false, sil);
+          while (actor.children.length) actor.remove(actor.children[0]);
+          fresh.children.slice().forEach((c) => actor.add(c));
+          actor.userData.moist = fresh.userData.moist;
+          actor.userData.ecSlab = fresh.userData.ecSlab;
+          actor.userData.phRim = fresh.userData.phRim;
+          actor.userData.stem = fresh.userData.stem;
+          actor.userData.body = fresh.userData.body;
+          actor.userData.canopyMaterial = fresh.userData.canopyMaterial;
+          actor.userData.vesselH = fresh.userData.vesselH;
+          actor.userData.silhouette = sil;
+        }
         const oos = livePot.inService === false;
         const parked = livePot.tent === "unassigned";
         const hollow = oos || parked;
@@ -5534,7 +5548,14 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         }
         if (actor.userData.body) {
           actor.userData.body.material.wireframe = !!hollow;
-          actor.userData.body.material.opacity = hollow ? 0.18 : 0.32;
+          const db = Number(livePot.dryback);
+          const dry = Number.isFinite(db) ? Math.max(0, Math.min(1, db / 100)) : 0.25;
+          const soilT = Number(livePot.soilT);
+          const glow = Number.isFinite(soilT) ? Math.max(0, Math.min(0.4, (soilT - 16) / 40)) : 0.08;
+          if (actor.userData.body.material.color) {
+            actor.userData.body.material.color.setHex(hollow ? 0x26c6da : dry > 0.55 ? 0xff8a65 : 0x26c6da);
+          }
+          actor.userData.body.material.opacity = hollow ? 0.18 : 0.22 + glow;
         }
         if (actor.userData.ecSlab) {
           const ec = Number(livePot.ec);
@@ -5542,9 +5563,11 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         }
         if (actor.userData.phRim) {
           const ph = Number(livePot.ph);
-          actor.userData.phRim.material.color.setHex(
-            Number.isFinite(ph) && ph < 5.8 ? 0xff8a65 : 0xb388ff
-          );
+          const need = String(livePot.need || "");
+          let hex = 0xb388ff;
+          if (/warn|dry|stress/i.test(need)) hex = 0xff8a65;
+          else if (Number.isFinite(ph) && ph < 5.8) hex = 0xff8a65;
+          actor.userData.phRim.material.color.setHex(hex);
         }
         if (actor.userData.body && livePot.held) {
           actor.userData.body.material.opacity = 0.18;
@@ -5694,7 +5717,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
           ? 0.32 + mainLevel * 1.25
           : 0.18 + Math.max(intakeMain, cascade) * 0.55;
 
-        const pulse = 0.86 + Math.sin(now * 0.0045) * 0.14;
+        const pulse = freezeFx ? 1 : 0.86 + Math.sin(now * 0.0045) * 0.14;
         matPlate.material.emissiveIntensity = live.matOn ? 3.4 * pulse * (highlights("mat") ? 1.35 : 1) : 0;
         matGlow.material.opacity = live.matOn ? 0.38 * pulse * (highlights("mat") ? 1.4 : 1) : 0;
         ventGlow.material.opacity = outVis >= 0.04 ? 0.09 + outVis * 0.4 : 0.015;
@@ -5755,6 +5778,26 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
             (slots[key] || []).forEach((slot, i) => {
               if (slot && slot.id) poseById[slot.id] = { id: slot.id, tent: key, slot: i, color: slot.color };
             });
+          });
+        }
+        // React setPots owns tent/slot when present (Wave 5 VesselLive).
+        if (Array.isArray(reactPots)) {
+          const assigned = { clone: [], main: [] };
+          reactPots.forEach((p) => {
+            const tent = p && (p.tent === "main" || p.tent === "clone") ? p.tent : null;
+            if (tent) assigned[tent].push(p);
+          });
+          ["clone", "main"].forEach((key) => {
+            assigned[key].forEach((p, i) => {
+              const id = p.id || `pot${p.pot}`;
+              const slot = Number.isFinite(+p.slot) ? +p.slot : i;
+              poseById[id] = { id, tent: key, slot };
+            });
+          });
+          reactPots.forEach((p) => {
+            if (p && p.tent === "unassigned") {
+              delete poseById[p.id || `pot${p.pot}`];
+            }
           });
         }
         const lerpAlpha = 1 - Math.exp(-dt / 0.8);
@@ -6551,7 +6594,6 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         })(),
         mainLightProxy: !String(e.main_light || "").trim(),
         mainWindowProxy: !String(e.main_light || "").trim(),
-        mainLightProxy: !String(e.main_light || "").trim(),
         matOn: isOn(hass, e.grow_mat),
         potSlots,
         plantPose,
@@ -6883,7 +6925,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       }
 
       const tl = this.shadowRoot.getElementById("d-timeline");
-      if (tl) tl.innerHTML = renderTimeline(live);
+      if (tl) tl.innerHTML = "";
       const flow = this.shadowRoot.getElementById("d-flow");
       if (flow) flow.innerHTML = renderFlow(live);
 
