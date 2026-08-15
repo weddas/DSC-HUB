@@ -45,5 +45,10 @@ could demote a HACS-complete live bundle (**N-084**).
 | [`ha-sync.sh`](ha-sync.sh) | Non-HAOS alternate (already had Build a Plant) |
 | ESPHome Install | Firmware only (manual) |
 
+**Note:** Add-on copies `custom_components/dsc_hub` with `cp -a` inside HAOS.
+The Unraid `ha-sync.sh` path uses **tar-over-ssh** for `www/assets/` (OpenSSH 9+
+rejects `scp -r dir/.`). See [`docs/qa/HA-SYNC-OPENSSH-ASSETS.md`](../docs/qa/HA-SYNC-OPENSSH-ASSETS.md)
+· [`HA-SYNC-BOOTSTRAP.md`](HA-SYNC-BOOTSTRAP.md).
+
 QA: [`docs/qa/ADDON-QA-5.1.0.md`](../docs/qa/ADDON-QA-5.1.0.md) ·
 Build a Plant: [`docs/qa/LIVE-UI-BUILD-A-PLANT.md`](../docs/qa/LIVE-UI-BUILD-A-PLANT.md)

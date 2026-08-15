@@ -2160,6 +2160,20 @@ A prior note marked waves 1–8 done. That was files/sketches. **Only Wave 0 had
 - Twin tab-away: rAF paused (no GPU spin)
 - Vessel YAML: reload HA so `input_select.dsc_build_vessel` exists
 
+## 2026-08-16 — HA sync OpenSSH 9+ assets (`4428621`)
+
+### done (docs)
+- Ops runbook [`docs/qa/HA-SYNC-OPENSSH-ASSETS.md`](qa/HA-SYNC-OPENSSH-ASSETS.md): panel `www/assets` now **tar-over-ssh**; `scp -r dir/.` fails on OpenSSH 9+ SFTP with `unexpected filename: .`
+- Bootstrap + ADDON + README index pointers; Notion Engineering Ops section
+
+### soak / verify
+- Next Unraid **HA sync** job: confirm `/config/custom_components/dsc_hub/www/assets/` non-empty after deploy
+- Add-on path unchanged (`cp -a`) — no OpenSSH involvement
+
+### next-plan
+- Prefer open docs PRs #81/#80/#79/#77 for panel/HACS/SoftAP topics still unmerged on tip
+- Do not reintroduce `scp -r …/assets/.` in `ha-sync.sh`
+
 ## 2026-08-16 — Waves 1–8 bar close
 
 Wave 1 was already holding. This pass raised waves 2–7 to the panel bar and kept Wave 8 documented rather than faked.

@@ -95,3 +95,33 @@ sites not using HACS. Build a Plant ops:
 [`docs/qa/LIVE-UI-BUILD-A-PLANT.md`](../docs/qa/LIVE-UI-BUILD-A-PLANT.md).
 
 Firmware still: Cursor → push → ESPHome Validate/Install per device.
+
+## 5. Panel `www/assets` + OpenSSH 9+
+
+Single files still use `scp`. The React panel **assets tree**
+(`custom_components/dsc_hub/www/assets/`) uses **tar over ssh**:
+
+```bash
+tar -C www/assets -cf - . | ssh … "tar -C …/www/assets -xf -"
+```
+
+**Why:** OpenSSH 9+ `scp` (SFTP) rejects a source of `dir/.` with
+`unexpected filename: .`. That used to leave panel brand/gauges/icons
+missing while packages still updated.
+
+| Path | Tool |
+|---|---|
+| Python / `dsc-hub-panel.js` | `scp` |
+| `www/assets/` tree | `tar \| ssh \| tar` |
+| HAOS Sync add-on | `cp -a` on-box (no scp) |
+
+Ops + troubleshooting:
+[`docs/qa/HA-SYNC-OPENSSH-ASSETS.md`](../docs/qa/HA-SYNC-OPENSSH-ASSETS.md).
+
+### Quick pitfalls
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| `scp: unexpected filename: .` | Old script / manual `scp -r dir/.` | Use tip `ha-sync.sh` (tar path) |
+| Panel JS updates, icons blank | Assets tree not copied | Re-run HA sync; `ls …/www/assets/` |
+| Runner missing `tar` | Minimal container image | Install `tar` on Unraid runner |
