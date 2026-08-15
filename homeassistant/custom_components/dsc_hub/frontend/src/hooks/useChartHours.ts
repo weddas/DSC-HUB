@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 
+export type ChartHours = number;
 export const CHART_HOUR_OPTIONS = [1, 6, 24, 48] as const;
-export type ChartHours = (typeof CHART_HOUR_OPTIONS)[number];
 
 const STORAGE_KEY = "dsc_chart_hours";
 

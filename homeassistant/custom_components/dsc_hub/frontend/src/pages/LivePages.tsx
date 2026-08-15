@@ -5,15 +5,22 @@ import {
   Card,
   EntityFanSlider,
   EntitySelect,
+  EntityTime,
   EntityToggle,
   Kpi,
   PageHeader,
   StatusChip,
 } from "../components/ui";
 import { OverflowMenu, SlideDrawer } from "../components/chrome";
-import { HistoryDrawer, TimespanControl } from "../components/HistoryDrawer";
-import { LegacyCardHost } from "../components/LegacyCardHost";
-import { TentTargetPanel } from "../components/TentTargets";
+import { HistoryDrawer, TimespanControl, CYCLE_TIMESPAN_EXTRAS } from "../components/HistoryDrawer";
+import { LungLoop } from "../components/LungLoop";
+import { CfmProvenanceBadge } from "../components/CfmBadge";
+import { resolveCfm } from "../lib/cfmProvenance";
+import { absoluteHumidity, readPotTrust } from "../lib/potTrust";
+import { DecisionLayer } from "../components/DecisionLayer";
+import { VesselGlyph } from "../components/VesselGlyph";
+import { readPotVessel } from "../lib/vesselSpec";
+import { TargetNumber, TentTargetPanel } from "../components/TentTargets";
 import { useHass } from "../hooks/useHass";
 import { useEntitySeries } from "../hooks/useEntitySeries";
 import { useHeldReading } from "../hooks/useHeldReading";
@@ -21,9 +28,11 @@ import { useChartHours } from "../hooks/useChartHours";
 import { useZoneFocus, type ZoneFocus } from "../hooks/useZoneFocus";
 import { ArcGauge, MultiLineChart, Sparkline, seriesExtrema } from "../viz/charts";
 import {
+  ALL_POT_NUMBERS,
   buildPlantSeat,
   potsInTent,
   activePotNumbers,
+  inServiceCount,
   isPotInService,
   potGotEntity,
   tentLabel,
@@ -38,6 +47,7 @@ function fmt(n: number, digits = 1): string {
 const FOCUS_OPTIONS: { id: ZoneFocus; label: string }[] = [
   { id: "main", label: "Main" },
   { id: "clone", label: "Clone" },
+  { id: "room", label: "Room" },
   { id: "compare", label: "Compare" },
 ];
 
@@ -101,10 +111,21 @@ export function LiveClimatePage() {
   const fanOut = useEntitySeries("sensor.dsc_fan_exhaust_outside_pct", { hours, maxPoints });
   const fanRecirc = useEntitySeries("sensor.dsc_fan_exhaust_room_pct", { hours, maxPoints });
 
-  const outNameplate = num("sensor.dsc_cfm_exhaust_out");
-  const outAlloc = num(outAllocId);
-  const recircNameplate = num("sensor.dsc_cfm_exhaust_recirc");
-  const recircAlloc = num(recircAllocId);
+  const outReading = resolveCfm("sensor.dsc_cfm_exhaust_out_allocated", "sensor.dsc_cfm_exhaust_out", {
+    available,
+    num,
+  });
+  const recReading = resolveCfm(
+    "sensor.dsc_cfm_exhaust_recirc_allocated",
+    "sensor.dsc_cfm_exhaust_recirc",
+    { available, num },
+  );
+  const outNameplate = outReading.nameplate ?? num("sensor.dsc_cfm_exhaust_out");
+  const outAlloc = outReading.value;
+  const recircNameplate = recReading.nameplate ?? num("sensor.dsc_cfm_exhaust_recirc");
+  const recircAlloc = recReading.value;
+  const roomAh = absoluteHumidity(num("sensor.dsc_hub_room_temperature"), num("sensor.dsc_hub_room_humidity"));
+  const showRoom = focus === "room" || focus === "compare";
 
   const targetTemp = num("number.dsc_hub_target_temp");
   const rhMin = num("number.dsc_hub_rh_target_min");
@@ -120,7 +141,7 @@ export function LiveClimatePage() {
   const tentTempExt = useMemo(() => seriesExtrema(tentT.series), [tentT.series]);
   const tentRhExt = useMemo(() => seriesExtrema(tentRh.series), [tentRh.series]);
 
-  const showMain = focus === "main" || focus === "compare" || focus === "room";
+  const showMain = focus === "main" || focus === "compare";
   const showClone = focus === "clone" || focus === "compare";
 
   return (
@@ -153,7 +174,7 @@ export function LiveClimatePage() {
             {opt.label}
           </button>
         ))}
-        <TimespanControl hours={hours} setHours={setHours} />
+        <TimespanControl hours={hours} setHours={setHours} extras={CYCLE_TIMESPAN_EXTRAS} />
         <Button teal onClick={() => navigate("/fleet")}>
           Kit / Fleet
         </Button>
@@ -268,7 +289,86 @@ export function LiveClimatePage() {
           </>
         ) : null}
 
-        {showMain ? (
+        {showRoom ? (
+          <>
+            <div className="dsc-col-3">
+              <Kpi label="Room °C" value={fmt(num("sensor.dsc_hub_room_temperature"))} unit="°C" />
+            </div>
+            <div className="dsc-col-3">
+              <Kpi label="Room RH" value={fmt(num("sensor.dsc_hub_room_humidity"), 0)} unit="%" />
+            </div>
+            <div className="dsc-col-3">
+              <Kpi
+                label="Room AH"
+                value={Number.isFinite(roomAh) ? roomAh.toFixed(1) : "—"}
+                unit="g/m³"
+                sub={!Number.isFinite(roomAh) ? "Need T+RH" : undefined}
+              />
+            </div>
+          </>
+        ) : null}
+
+        {focus === "compare" ? (
+          <div className="dsc-col-12">
+            <Card className="dsc-glass" title="Compare T + RH" icon="tent">
+              <p className="dsc-honesty" style={{ marginTop: 0 }}>
+                One chart: 4×8 solid, 2×4 ghost. Not two dashboards.
+              </p>
+              <MultiLineChart
+                lastSyncAt={
+                  Math.max(
+                    tentT.lastSyncAt ?? 0,
+                    tentRh.lastSyncAt ?? 0,
+                    cloneT.lastSyncAt ?? 0,
+                    cloneRh.lastSyncAt ?? 0,
+                  ) || undefined
+                }
+                series={[
+                  {
+                    id: "t",
+                    label: "4×8 T",
+                    series: tentT.series,
+                    color: "var(--dsc-blue)",
+                    axis: "left",
+                    unit: "°C",
+                  },
+                  {
+                    id: "rh",
+                    label: "4×8 RH",
+                    series: tentRh.series,
+                    color: "var(--dsc-teal)",
+                    axis: "right",
+                    unit: "%",
+                  },
+                  {
+                    id: "t-ghost",
+                    label: "2×4 T",
+                    series: cloneT.series,
+                    color: "var(--dsc-blue)",
+                    axis: "left",
+                    unit: "°C",
+                    ghost: true,
+                  },
+                  {
+                    id: "rh-ghost",
+                    label: "2×4 RH",
+                    series: cloneRh.series,
+                    color: "var(--dsc-teal)",
+                    axis: "right",
+                    unit: "%",
+                    ghost: true,
+                  },
+                ]}
+                targets={[
+                  { axis: "left", value: targetTemp, color: "var(--dsc-amber)", label: "Want T" },
+                  { axis: "right", min: rhMin, max: rhMax, color: "var(--dsc-teal)" },
+                ]}
+              />
+            </Card>
+          </div>
+        ) : null}
+
+        {showMain && focus !== "compare" ? (
           <div className={showClone ? "dsc-col-6" : "dsc-col-12"}>
             <Card className="dsc-glass" title="Main tent T + RH" icon="tent">
               <MultiLineChart
@@ -300,7 +400,7 @@ export function LiveClimatePage() {
           </div>
         ) : null}
 
-        {showClone ? (
+        {showClone && focus !== "compare" ? (
           <div className={showMain ? "dsc-col-6" : "dsc-col-12"}>
             <Card className="dsc-glass" title="Clone tent T + RH" icon="clone">
               <MultiLineChart
@@ -342,8 +442,9 @@ export function LiveClimatePage() {
             label="CFM OUT"
             value={fmt(outAlloc, 0)}
             unit="cfm"
-            sub={`Alloc · nameplate ${fmt(outNameplate, 0)}`}
+            sub={`Nameplate ${fmt(outNameplate, 0)}`}
           />
+          <CfmProvenanceBadge reading={outReading} />
         </div>
         <div className="dsc-col-3">
           <Kpi
@@ -363,11 +464,16 @@ export function LiveClimatePage() {
         <div className="dsc-col-12">
           <Card className="dsc-glass" title="Airflow honesty" icon="climate">
             <p className="dsc-honesty" style={{ marginTop: 0 }}>
-              <StatusChip label="Allocated" tone="ok" /> Prefer allocated CFM over nameplate capacity.
-              Blend OUT/RECIRC is normal — map shows topology. 4×8 LIGHT mark tracks photoperiod
-              window (no main lamp entity yet); 2×4 tracks SF1000.
+              <CfmProvenanceBadge reading={outReading} /> <CfmProvenanceBadge reading={recReading} />{" "}
+              Lung loop is mass-balance, not a second isometric tent. 4×8 light = window proxy until GPIO lamp.
             </p>
-            <LegacyCardHost tag="dsc-airflow-map-card" config={{}} />
+            <LungLoop
+              intakeClone={num("sensor.dsc_cfm_intake_2x4")}
+              intakeMain={num("sensor.dsc_cfm_intake_main")}
+              outCfm={outAlloc}
+              recircCfm={recircAlloc}
+              kind={outReading.kind}
+            />
           </Card>
         </div>
 
@@ -516,6 +622,42 @@ export function LiveClimatePage() {
                   />
                 </>
               ) : null}
+            </div>
+          </Card>
+        </div>
+        <div className="dsc-col-12">
+          <Card className="dsc-glass" title="Efficacy" icon="alert">
+            <div className="dsc-chip-row">
+              <StatusChip
+                label={
+                  state("binary_sensor.dsc_humidifier_ineffective_suspect") === "on"
+                    ? "Hum ineffective"
+                    : "Hum ok"
+                }
+                tone={state("binary_sensor.dsc_humidifier_ineffective_suspect") === "on" ? "warn" : "muted"}
+              />
+              <StatusChip
+                label={
+                  state("binary_sensor.dsc_heater_ineffective_suspect") === "on" ? "Heat ineffective" : "Heat ok"
+                }
+                tone={state("binary_sensor.dsc_heater_ineffective_suspect") === "on" ? "warn" : "muted"}
+              />
+              <StatusChip
+                label={`Hum on ${fmt(num("sensor.dsc_humidifier_relay_on_time"), 0)}s`}
+                tone="muted"
+              />
+              <StatusChip
+                label={
+                  state("binary_sensor.dsc_plant_specs_hum_rate_zero") === "on" ? "Hum rate 0" : "Hum rate"
+                }
+                tone={state("binary_sensor.dsc_plant_specs_hum_rate_zero") === "on" ? "warn" : "muted"}
+              />
+              <StatusChip
+                label={
+                  state("binary_sensor.dsc_plant_specs_dehum_rate_zero") === "on" ? "Dehum rate 0" : "Dehum rate"
+                }
+                tone={state("binary_sensor.dsc_plant_specs_dehum_rate_zero") === "on" ? "warn" : "muted"}
+              />
             </div>
           </Card>
         </div>
@@ -701,20 +843,25 @@ function TentCockpitPage({ tent }: { tent: Exclude<TentId, "unassigned"> }) {
               {seats.length === 0 ? (
                 <div className="dsc-empty">No pots assigned — Apply to tent from a seat.</div>
               ) : (
-                seats.map((s) => (
+                seats.map((s) => {
+                  const db = Number(state(`sensor.dsc_pot${s.pot}_dryback_pct`));
+                  const drybackWarn = Number.isFinite(db) && db > 45;
+                  return (
                   <button
                     key={s.pot}
                     type="button"
-                    className="dsc-chip dsc-chip--ok"
+                    className={`dsc-chip dsc-chip--ok${drybackWarn ? " dsc-chip--pulse" : ""}`}
                     onClick={() => {
                       const next = new URLSearchParams(params);
                       next.set("pot", String(s.pot));
                       setParams(next, { replace: true });
                     }}
                   >
-                    P{s.pot} {s.plantName} · M {s.moisture} · EC {s.ec}
+                    P{s.pot} {s.plantName} · M {s.moisture} · Need {s.need}
+                    {drybackWarn ? " · dryback warn" : ""}
                   </button>
-                ))
+                  );
+                })
               )}
             </div>
           </Card>
@@ -847,8 +994,10 @@ export function LiveClonePage() {
 export function LiveRootPage() {
   const { state, entity, tick, num } = useHass();
   const [params, setParams] = useSearchParams();
+  const [showNpk, setShowNpk] = useState(false);
   void tick;
-  const pots = activePotNumbers(state).map((n) => buildPlantSeat(n, { state, entity }));
+  const pots = ALL_POT_NUMBERS.map((n) => buildPlantSeat(n, { state, entity }));
+  const svc = inServiceCount(state);
   const raw = Number(params.get("pot") || 0);
   const pot = raw >= 1 && raw <= 4 && isPotInService(raw, state) ? raw : null;
 
@@ -869,7 +1018,7 @@ export function LiveRootPage() {
       <PageHeader
         icon="root"
         title="Root"
-        subtitle="Fleet glance — dryback / nutrition / Need. Click a row for seat + history."
+        subtitle={`${svc.inService} of ${svc.total} in service — OOS labeled, never fake Got.`}
       />
       <div className="dsc-grid">
         <div className="dsc-col-4">
@@ -898,6 +1047,9 @@ export function LiveRootPage() {
 
         <div className="dsc-col-12">
           <Card className="dsc-glass dsc-root-matrix" title="Fleet matrix" icon="root">
+            <div className="dsc-chip-row" style={{ marginBottom: 8 }}>
+              <Button onClick={() => setShowNpk((v) => !v)}>{showNpk ? "Hide NPK" : "Show NPK"}</Button>
+            </div>
             <table className="dsc-table">
               <thead>
                 <tr>
@@ -905,9 +1057,17 @@ export function LiveRootPage() {
                   <th>Name</th>
                   <th>Tent</th>
                   <th>M%</th>
+                  <th>Soil °C</th>
                   <th>Dryback</th>
                   <th>EC</th>
                   <th>pH</th>
+                  {showNpk ? (
+                    <>
+                      <th>N</th>
+                      <th>P</th>
+                      <th>K</th>
+                    </>
+                  ) : null}
                   <th>Need</th>
                   <th>Rate</th>
                   <th>Trend</th>
@@ -915,7 +1075,7 @@ export function LiveRootPage() {
               </thead>
               <tbody>
                 {pots.map((p) => (
-                  <RootMatrixRow key={p.pot} pot={p.pot} onOpen={() => openPot(p.pot)} />
+                  <RootMatrixRow key={p.pot} pot={p.pot} showNpk={showNpk} onOpen={() => openPot(p.pot)} />
                 ))}
               </tbody>
             </table>
@@ -950,9 +1110,19 @@ function RootDrybackGauge({ pot, onOpen }: { pot: number; onOpen: () => void }) 
   );
 }
 
-function RootMatrixRow({ pot, onOpen }: { pot: number; onOpen: () => void }) {
+function RootMatrixRow({
+  pot,
+  onOpen,
+  showNpk,
+}: {
+  pot: number;
+  onOpen: () => void;
+  showNpk?: boolean;
+}) {
   const { state, entity, available } = useHass();
   const seat = buildPlantSeat(pot, { state, entity });
+  const oos = !isPotInService(pot, state);
+  const trust = readPotTrust(pot, state);
   const moistId = potGotEntity(pot, "moisture", state);
   const series = useEntitySeries(moistId, { hours: 6, maxPoints: 48 });
   const dry = useHeldReading(`sensor.dsc_pot${pot}_dryback_pct`);
@@ -960,26 +1130,42 @@ function RootMatrixRow({ pot, onOpen }: { pot: number; onOpen: () => void }) {
   const rateHeld = useHeldReading(rateId);
   const rate = available(rateId) || rateHeld.stale ? rateHeld.value : NaN;
   const tone =
-    dry.stale
+    oos || trust.untrusted
       ? "dsc-tone-stale"
-      : Number.isFinite(dry.value) && dry.value > 55
-        ? "dsc-tone-bad"
-        : Number.isFinite(dry.value) && dry.value > 40
-          ? "dsc-tone-warn"
-          : "dsc-tone-ok";
+      : dry.stale
+        ? "dsc-tone-stale"
+        : Number.isFinite(dry.value) && dry.value > 55
+          ? "dsc-tone-bad"
+          : Number.isFinite(dry.value) && dry.value > 40
+            ? "dsc-tone-warn"
+            : "dsc-tone-ok";
+  const needGlow = !oos && !trust.blockNeedAct && seat.need && seat.need !== "—" && seat.need !== "ok";
 
   return (
-    <tr onClick={onOpen} style={{ cursor: "pointer" }}>
-      <td>P{pot}</td>
-      <td>{seat.plantName}</td>
+    <tr onClick={onOpen} style={{ cursor: "pointer" }} className={trust.untrusted ? "dsc-tone-stale" : undefined}>
       <td>
-        <StatusChip label={tentLabel(seat.tent)} tone={seat.tent === "unassigned" ? "muted" : "ok"} />
+        <VesselGlyph spec={readPotVessel(pot, state, entity)} size={18} /> P{pot}
+        {oos ? " OOS" : ""}
       </td>
-      <td>{seat.moisture}</td>
-      <td className={tone}>{fmt(dry.value, 0)}</td>
-      <td>{seat.ec}</td>
-      <td>{seat.ph}</td>
-      <td>{seat.need}</td>
+      <td>{oos ? "—" : seat.plantName}</td>
+      <td>
+        <StatusChip label={tentLabel(seat.tent)} tone={seat.tent === "unassigned" || oos ? "muted" : "ok"} />
+      </td>
+      <td>{oos ? "—" : seat.moisture}</td>
+      <td>{oos ? "—" : seat.soilTemp}</td>
+      <td className={tone}>{oos ? "—" : fmt(dry.value, 0)}</td>
+      <td>{oos ? "—" : seat.ec}</td>
+      <td>{oos ? "—" : seat.ph}</td>
+      {showNpk ? (
+        <>
+          <td>{oos ? "—" : seat.n}</td>
+          <td>{oos ? "—" : seat.p}</td>
+          <td>{oos ? "—" : seat.k}</td>
+        </>
+      ) : null}
+      <td className={needGlow ? "dsc-tone-warn" : undefined}>
+        {oos ? "OOS" : trust.blockNeedAct ? `${seat.need} (no act)` : seat.need}
+      </td>
       <td className={rateHeld.stale ? "dsc-tone-stale" : undefined}>
         {Number.isFinite(rate) ? rate.toFixed(2) : "—"}
       </td>
@@ -991,17 +1177,23 @@ function RootMatrixRow({ pot, onOpen }: { pot: number; onOpen: () => void }) {
 }
 
 export function LiveLightPage() {
-  const { state, num } = useHass();
+  const { available, state, num } = useHass();
   const navigate = useNavigate();
+  const [edit, setEdit] = useState(false);
   const darkViolation = state("binary_sensor.dsc_clone_dark_period_violation") === "on";
   const lightOn = state("light.dsc_hub_sf1000_dimmer") === "on";
+  const windowOpen = state("binary_sensor.dsc_hub_4x8_window_open") === "on";
+  const mainLamp = available("light.dsc_hub_4x8_dimmer") || available("light.dsc_hub_main_light");
+  const hours = num("sensor.dsc_expected_light_hours");
+  const cloneHours = num("sensor.dsc_clone_expected_light_hours");
+  const spark = useEntitySeries("binary_sensor.dsc_hub_4x8_window_open", { hours: 24, maxPoints: 96 });
 
   return (
     <div className="dsc-page">
       <PageHeader
         icon="lighting"
         title="Light"
-        subtitle="Photoperiod, SF1000, expected hours — Want stays on Climate."
+        subtitle="Photoperiod, SF1000, expected hours — 4×8 is window proxy until GPIO lamp."
         primaryAction={
           <Button teal onClick={() => navigate("/live/climate")}>
             Climate Want
@@ -1016,14 +1208,37 @@ export function LiveLightPage() {
           pulse={darkViolation}
         />
         <StatusChip label={lightOn ? "SF1000 ON" : "SF1000 OFF"} tone={lightOn ? "ok" : "muted"} />
+        <StatusChip
+          label={mainLamp ? "4×8 lamp" : windowOpen ? "4×8 Window proxy ON" : "4×8 Window proxy OFF"}
+          tone={mainLamp ? "ok" : "warn"}
+        />
+        {state("binary_sensor.dsc_hub_light_catchup_active") === "on" ? (
+          <StatusChip label="Catch-up" tone="warn" />
+        ) : null}
+        {state("binary_sensor.dsc_clone_light_missing_in_window") === "on" ? (
+          <StatusChip label="Missing in window" tone="bad" />
+        ) : null}
       </div>
       <div className="dsc-grid">
-        <div className="dsc-col-4">
-          <Kpi
-            label="Expected light hours"
-            value={fmt(num("sensor.dsc_expected_light_hours"), 1)}
-            unit="h"
-          />
+        <div className="dsc-col-3">
+          <Kpi label="Next event" value={state("sensor.dsc_next_light_event", "—")} />
+        </div>
+        <div className="dsc-col-3">
+          <Kpi label="Expected hours" value={fmt(hours, 1)} unit="h" />
+        </div>
+        <div className="dsc-col-3">
+          <Kpi label="Clone expected" value={fmt(cloneHours, 1)} unit="h" />
+        </div>
+        <div className="dsc-col-3">
+          <ArcGauge label="Hours" value={hours} min={0} max={24} unit="h" />
+        </div>
+        <div className="dsc-col-12">
+          <Card className="dsc-glass" title="Photoperiod spark" icon="lighting">
+            <Sparkline series={spark.series} color="var(--dsc-amber)" width={280} height={36} />
+            <p className="dsc-muted" style={{ fontSize: 12 }}>
+              Window binary is the 4×8 schedule Got until entities.main_light exists.
+            </p>
+          </Card>
         </div>
         <div className="dsc-col-8">
           <Card className="dsc-glass" title="SF1000" icon="lighting">
@@ -1034,14 +1249,39 @@ export function LiveLightPage() {
                 icon="lighting"
                 showBrightness
               />
+              <EntityToggle entityId="switch.dsc_hub_auto_photoperiod" label="Auto photoperiod" />
+              <EntityToggle entityId="switch.dsc_hub_manual_light_hold" label="Manual light hold" />
             </div>
-            <p className="dsc-muted" style={{ margin: "8px 0 0" }}>
-              Expected: {state("sensor.dsc_expected_light_hours", "—")}. Clone dark violation is binary
-              — schedule edits belong on Climate / packages, not invented here.
-            </p>
+            <Button onClick={() => setEdit(true)}>Edit schedule (DecisionLayer)</Button>
           </Card>
         </div>
       </div>
+      <DecisionLayer open={edit} onDismiss={() => setEdit(false)} title="Light schedule" help={null}>
+        <p className="dsc-muted">
+          Same helpers as Lovelace lighting. 4×8 window is the schedule Got until a GPIO lamp exists.
+        </p>
+        <EntityToggle entityId="switch.dsc_hub_auto_photoperiod" label="Auto photoperiod" />
+        <EntitySelect entityId="select.dsc_hub_clone_photoperiod" label="Window source" icon="clone" />
+        <div className="dsc-target-grid">
+          <EntityTime entityId="time.dsc_hub_lights_on_time" label="4×8 opens" />
+          <TargetNumber entityId="number.dsc_hub_sunrise_duration" label="Sunrise min" />
+          <TargetNumber entityId="number.dsc_hub_sunset_duration" label="Sunset min" />
+          <TargetNumber entityId="number.dsc_hub_min_dark_hours" label="Min dark h" />
+        </div>
+        {state("select.dsc_hub_clone_photoperiod") === "Independent" ? (
+          <div className="dsc-target-grid">
+            <EntityTime entityId="time.dsc_hub_clone_lights_on_time" label="Clone lights-on" />
+            <TargetNumber entityId="number.dsc_hub_clone_light_hours" label="Clone hours" />
+          </div>
+        ) : (
+          <p className="dsc-honesty">
+            Clone follows 4×8 ({state("time.dsc_hub_lights_on_time", "—")}). Switch Window source to Independent
+            to unlock clone start/hours.
+          </p>
+        )}
+        <EntityToggle entityId="light.dsc_hub_sf1000_dimmer" label="SF1000" showBrightness />
+        <EntityToggle entityId="switch.dsc_hub_manual_light_hold" label="Manual light hold" />
+      </DecisionLayer>
     </div>
   );
 }

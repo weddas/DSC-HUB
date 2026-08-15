@@ -1,6 +1,7 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button, Card, StatusChip } from "../components/ui";
+import { Button, Card, StatusChip } from "./ui";
+import { DecisionLayer } from "./DecisionLayer";
 import { useHass } from "../hooks/useHass";
 import { collectHonestyGaps, nextRecommended, type HonestyGap } from "../lib/sensorHonesty";
 
@@ -20,6 +21,8 @@ export function useHonestyGaps(): HonestyGap[] {
 export function HonestyRail({ gaps }: { gaps?: HonestyGap[] }) {
   const computed = useHonestyGaps();
   const list = gaps ?? computed;
+  const [open, setOpen] = useState<HonestyGap | null>(null);
+  const navigate = useNavigate();
   if (!list.length) {
     return (
       <div className="dsc-honesty-rail" aria-label="Honesty">
@@ -28,11 +31,37 @@ export function HonestyRail({ gaps }: { gaps?: HonestyGap[] }) {
     );
   }
   return (
-    <div className="dsc-honesty-rail" aria-label="Honesty gaps">
-      {list.slice(0, 6).map((g) => (
-        <StatusChip key={g.id} icon="alert" label={g.label} tone={g.tone === "bad" ? "bad" : "warn"} />
-      ))}
-    </div>
+    <>
+      <div className="dsc-honesty-rail" aria-label="Honesty gaps">
+        {list.slice(0, 6).map((g) => (
+          <button
+            key={g.id}
+            type="button"
+            className="dsc-honesty-hit"
+            onClick={() => setOpen(g)}
+          >
+            <StatusChip icon="alert" label={g.label} tone={g.tone === "bad" ? "bad" : "warn"} />
+          </button>
+        ))}
+      </div>
+      <DecisionLayer
+        open={open != null}
+        onDismiss={() => setOpen(null)}
+        onConfirm={
+          open
+            ? () => {
+                navigate(open.href);
+                setOpen(null);
+              }
+            : undefined
+        }
+        title={open?.label ?? "Honesty"}
+        confirmLabel={open?.cta ?? "Go"}
+        help={null}
+      >
+        <p>{open?.detail}</p>
+      </DecisionLayer>
+    </>
   );
 }
 

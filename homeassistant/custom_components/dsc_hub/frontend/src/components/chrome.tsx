@@ -1,17 +1,21 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { Icon } from "./ui";
 import type { IconName } from "../icons";
+import { VesselGlyph } from "./VesselGlyph";
+import { DEFAULT_VESSEL, type VesselSpec } from "../lib/vesselSpec";
 
 export function IconButton({
   label,
   icon,
   onClick,
   className = "",
+  expanded,
 }: {
   label: string;
   icon: IconName;
   onClick?: () => void;
   className?: string;
+  expanded?: boolean;
 }) {
   return (
     <button
@@ -19,10 +23,18 @@ export function IconButton({
       className={`dsc-icon-btn ${className}`.trim()}
       aria-label={label}
       title={label}
+      aria-expanded={expanded}
       onClick={onClick}
     >
       <Icon name={icon} size={16} />
     </button>
+  );
+}
+
+function isMoreInfoTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof Element)) return false;
+  return !!target.closest(
+    "ha-more-info-dialog, ha-dialog, ha-more-info-info, .ha-more-info, home-assistant-dialog",
   );
 }
 
@@ -39,15 +51,28 @@ export function OverflowMenu({
   useEffect(() => {
     if (!open) return;
     const onDoc = (e: MouseEvent) => {
+      if (isMoreInfoTarget(e.target)) return;
       if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
     };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
     document.addEventListener("mousedown", onDoc);
-    return () => document.removeEventListener("mousedown", onDoc);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDoc);
+      window.removeEventListener("keydown", onKey);
+    };
   }, [open]);
 
   return (
     <div className="dsc-overflow" ref={rootRef}>
-      <IconButton label={label} icon="more" onClick={() => setOpen((v) => !v)} />
+      <IconButton
+        label={label}
+        icon="more"
+        expanded={open}
+        onClick={() => setOpen((v) => !v)}
+      />
       {open ? (
         <div className="dsc-overflow-menu" role="menu">
           {items.map((item) => (
@@ -69,6 +94,14 @@ export function OverflowMenu({
   );
 }
 
+function focusables(root: HTMLElement): HTMLElement[] {
+  return Array.from(
+    root.querySelectorAll<HTMLElement>(
+      'a[href], button:not([disabled]), textarea, input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
+    ),
+  ).filter((el) => !el.hasAttribute("disabled") && el.tabIndex !== -1);
+}
+
 export function SlideDrawer({
   open,
   onClose,
@@ -83,20 +116,47 @@ export function SlideDrawer({
   children: ReactNode;
 }) {
   const titleId = useId();
+  const panelRef = useRef<HTMLElement | null>(null);
+  const restoreRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     if (!open) return;
+    restoreRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const panel = panelRef.current;
+    const first = panel ? focusables(panel)[0] : null;
+    first?.focus();
+
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onClose();
+        return;
+      }
+      if (e.key !== "Tab" || !panel) return;
+      const list = focusables(panel);
+      if (!list.length) return;
+      const firstEl = list[0];
+      const lastEl = list[list.length - 1];
+      if (e.shiftKey && document.activeElement === firstEl) {
+        e.preventDefault();
+        lastEl.focus();
+      } else if (!e.shiftKey && document.activeElement === lastEl) {
+        e.preventDefault();
+        firstEl.focus();
+      }
     };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      restoreRef.current?.focus?.();
+    };
   }, [open, onClose]);
 
   return (
     <div className={`dsc-drawer-root${open ? " is-open" : ""}`} aria-hidden={!open}>
       <div className="dsc-drawer-scrim" onClick={onClose} />
       <aside
+        ref={panelRef}
         className={`dsc-drawer-panel ${side}`}
         role="dialog"
         aria-modal="true"
@@ -105,10 +165,11 @@ export function SlideDrawer({
         <button
           type="button"
           className="dsc-drawer-rail"
-          aria-label="Close panel"
+          aria-label="Close"
+          title="Close"
           onClick={onClose}
         >
-          {side === "right" ? ">" : "<"}
+          Close
         </button>
         <div className="dsc-drawer-head">
           <h2 id={titleId}>{title}</h2>
@@ -121,13 +182,6 @@ export function SlideDrawer({
 }
 
 export type SoilLayer = { name: string; pct: number; color?: string };
-
-const LAYER_COLORS = [
-  "var(--dsc-soil-1)",
-  "var(--dsc-soil-2)",
-  "var(--dsc-soil-3)",
-  "var(--dsc-soil-4)",
-];
 
 /** Parse roster blend strings into soil layers. */
 export function parseBlendLayers(blend: string | undefined | null): SoilLayer[] {
@@ -158,40 +212,27 @@ export function SoilCrossSection({
   layers,
   valid,
   emptyLabel = "No blend on roster seat",
+  spec,
 }: {
   layers: SoilLayer[];
   valid?: boolean;
   emptyLabel?: string;
+  spec?: VesselSpec;
 }) {
+  const vessel = spec ?? DEFAULT_VESSEL;
   const sum = layers.reduce((a, l) => a + l.pct, 0);
   const isValid = valid ?? (layers.length > 0 && Math.round(sum) === 100);
-  let cursor = 0;
-  return (
-    <div className="dsc-soil">
-      <div className={`dsc-soil-pot${isValid && layers.length ? " is-valid" : ""}`}>
-        {!layers.length ? (
-          <div className="dsc-soil-empty">{emptyLabel}</div>
-        ) : (
-          layers.map((layer, i) => {
-            const bottom = cursor;
-            cursor += layer.pct;
-            return (
-              <div
-                key={`${layer.name}-${i}`}
-                className="dsc-soil-layer"
-                style={{
-                  bottom: `${bottom}%`,
-                  height: `${layer.pct}%`,
-                  background: layer.color || LAYER_COLORS[i % LAYER_COLORS.length],
-                }}
-                title={`${layer.name} ${layer.pct}%`}
-              >
-                {layer.pct >= 12 ? `${layer.name} ${Math.round(layer.pct)}%` : ""}
-              </div>
-            );
-          })
-        )}
+  if (!layers.length) {
+    return (
+      <div className="dsc-soil">
+        <VesselGlyph spec={vessel} size={160} />
+        <div className="dsc-soil-empty">{emptyLabel}</div>
       </div>
+    );
+  }
+  return (
+    <div className={`dsc-soil${isValid ? " is-valid" : ""}`}>
+      <VesselGlyph spec={vessel} layers={layers} size={180} label />
     </div>
   );
 }

@@ -1,0 +1,63 @@
+# =====================================================================
+# DSC vessel silhouette helpers — React VesselSpec / Compose / Twin pads
+# ---------------------------------------------------------------------
+# Options match frontend/src/lib/vesselSpec.ts CATALOG ids.
+# Roster attr `vessel` is fallback when the select is empty.
+# =====================================================================
+
+input_select:
+  dsc_build_vessel:
+    name: "DSC Build — vessel"
+    icon: mdi:bag-personal
+    options:
+      - generic_fabric_25l
+      - generic_tall_pet_20l
+      - generic_fabric_20l
+      - airpot_20l
+      - felt_15l
+      - plastic_taper_15l
+    initial: generic_fabric_20l
+  dsc_pot1_vessel:
+    name: "DSC Pot 1 vessel"
+    icon: mdi:bag-personal
+    options:
+      - generic_fabric_25l
+      - generic_tall_pet_20l
+      - generic_fabric_20l
+      - airpot_20l
+      - felt_15l
+      - plastic_taper_15l
+    initial: generic_fabric_20l
+  dsc_pot2_vessel:
+    name: "DSC Pot 2 vessel"
+    icon: mdi:bag-personal
+    options:
+      - generic_fabric_25l
+      - generic_tall_pet_20l
+      - generic_fabric_20l
+      - airpot_20l
+      - felt_15l
+      - plastic_taper_15l
+    initial: generic_fabric_20l
+  dsc_pot3_vessel:
+    name: "DSC Pot 3 vessel"
+    icon: mdi:bag-personal
+    options:
+      - generic_fabric_25l
+      - generic_tall_pet_20l
+      - generic_fabric_20l
+      - airpot_20l
+      - felt_15l
+      - plastic_taper_15l
+    initial: generic_tall_pet_20l
+  dsc_pot4_vessel:
+    name: "DSC Pot 4 vessel"
+    icon: mdi:bag-personal
+    options:
+      - generic_fabric_25l
+      - generic_tall_pet_20l
+      - generic_fabric_20l
+      - airpot_20l
+      - felt_15l
+      - plastic_taper_15l
+    initial: generic_tall_pet_20l

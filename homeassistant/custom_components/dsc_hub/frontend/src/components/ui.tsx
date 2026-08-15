@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { iconSvg, type IconName } from "../icons";
 import { useHass } from "../hooks/useHass";
 
@@ -257,8 +257,16 @@ export function EntitySelect({
   const current = state(entityId, "");
   const options = (entity(entityId)?.attributes?.options as string[] | undefined) || [];
   const domain = entityId.split(".")[0];
+  const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState(current);
+
+  useEffect(() => {
+    if (!open) setDraft(current);
+  }, [current, open]);
 
   const onChange = (value: string) => {
+    setDraft(value);
+    setOpen(false);
     if (!ok || !value) return;
     if (domain === "select") {
       void callService("select", "select_option", { entity_id: entityId, option: value });
@@ -267,15 +275,23 @@ export function EntitySelect({
     }
   };
 
+  const shown = open ? draft : current;
+
   return (
     <label className={`dsc-entity-select${!ok ? " is-disabled" : ""}`}>
       <span className="dsc-entity-select-label">
         {icon ? <Icon name={icon} size={13} color="var(--dsc-teal)" /> : null}
         {label}
       </span>
-      <select value={current} disabled={!ok} onChange={(e) => onChange(e.target.value)}>
-        {!options.includes(current) && current ? (
-          <option value={current}>{current}</option>
+      <select
+        value={shown}
+        disabled={!ok}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setOpen(false)}
+        onChange={(e) => onChange(e.target.value)}
+      >
+        {!options.includes(shown) && shown ? (
+          <option value={shown}>{shown}</option>
         ) : null}
         {options.map((opt) => (
           <option key={opt} value={opt}>
@@ -301,17 +317,25 @@ export function EntityFanSlider({
   const pct = Number(entity(entityId)?.attributes?.percentage ?? 0);
   const isOn = state(entityId) === "on";
   const locked = disabled || !ok;
+  const [dragging, setDragging] = useState(false);
+  const [draft, setDraft] = useState(Number.isFinite(pct) ? pct : 0);
 
-  const setPct = (value: number) => {
+  useEffect(() => {
+    if (!dragging && Number.isFinite(pct)) setDraft(pct);
+  }, [pct, dragging]);
+
+  const commit = (value: number) => {
     if (locked) return;
     void callService("fan", "set_percentage", { entity_id: entityId, percentage: value });
   };
+
+  const shown = dragging ? draft : Number.isFinite(pct) ? pct : 0;
 
   return (
     <label className={`dsc-fan-slider${locked ? " is-disabled" : ""}`}>
       <span className="dsc-fan-slider-label">
         {label}
-        <strong>{ok ? `${Math.round(pct)}%` : "—"}</strong>
+        <strong>{ok ? `${Math.round(shown)}%` : "—"}</strong>
         {!isOn && ok ? <em className="dsc-muted">off</em> : null}
       </span>
       <input
@@ -319,9 +343,23 @@ export function EntityFanSlider({
         min={0}
         max={100}
         step={1}
-        value={Number.isFinite(pct) ? pct : 0}
+        value={shown}
         disabled={locked}
-        onChange={(e) => setPct(Number(e.target.value))}
+        onPointerDown={(e) => {
+          (e.target as HTMLInputElement).setPointerCapture(e.pointerId);
+          setDragging(true);
+        }}
+        onPointerUp={(e) => {
+          setDragging(false);
+          commit(Number((e.target as HTMLInputElement).value));
+        }}
+        onPointerCancel={() => setDragging(false)}
+        onLostPointerCapture={() => setDragging(false)}
+        onChange={(e) => {
+          const value = Number(e.target.value);
+          setDraft(value);
+          if (!dragging) commit(value);
+        }}
       />
     </label>
   );
@@ -343,5 +381,108 @@ export function LinkChip({
       {icon ? <Icon name={icon} size={11} /> : null}
       {label} {on ? "ESP" : "HA"}
     </span>
+  );
+}
+
+function liveText(raw: string): string {
+  return !raw || raw === "unknown" || raw === "unavailable" ? "" : raw;
+}
+
+/** Local draft while focused; commit on blur. Does not fight climate ticks. */
+export function EntityText({
+  entityId,
+  label,
+  multiline = false,
+  rows = 2,
+}: {
+  entityId: string;
+  label: string;
+  multiline?: boolean;
+  rows?: number;
+}) {
+  const { available, callService, state } = useHass();
+  const ok = available(entityId);
+  const clean = liveText(state(entityId, ""));
+  const [draft, setDraft] = useState(clean);
+  const focused = useRef(false);
+
+  useEffect(() => {
+    if (!focused.current) setDraft(clean);
+  }, [clean]);
+
+  const commit = () => {
+    if (!ok) return;
+    void callService("input_text", "set_value", { entity_id: entityId, value: draft });
+  };
+
+  const bind = {
+    value: draft,
+    disabled: !ok,
+    onFocus: () => {
+      focused.current = true;
+    },
+    onChange: (e: { target: { value: string } }) => setDraft(e.target.value),
+    onBlur: () => {
+      focused.current = false;
+      commit();
+    },
+    onKeyDown: (e: { key: string; currentTarget: HTMLElement }) => {
+      if (e.key === "Enter" && !multiline) e.currentTarget.blur();
+    },
+  };
+
+  return (
+    <label className={`dsc-target-num${!ok ? " is-disabled" : ""}`}>
+      <span className="dsc-target-num-label">{label}</span>
+      {multiline ? <textarea rows={rows} {...bind} /> : <input type="text" {...bind} />}
+    </label>
+  );
+}
+
+function timeToInput(raw: string): string {
+  const s = liveText(raw);
+  if (!s) return "";
+  return s.slice(0, 5);
+}
+
+function timeToService(hhmm: string): string {
+  if (!hhmm) return "00:00:00";
+  return hhmm.length === 5 ? `${hhmm}:00` : hhmm;
+}
+
+/** Local draft for `time.*` helpers. Writes `time.set_value`. */
+export function EntityTime({ entityId, label }: { entityId: string; label: string }) {
+  const { available, callService, state } = useHass();
+  const ok = available(entityId);
+  const live = timeToInput(state(entityId, ""));
+  const [draft, setDraft] = useState(live);
+  const focused = useRef(false);
+
+  useEffect(() => {
+    if (!focused.current) setDraft(live);
+  }, [live]);
+
+  const commit = () => {
+    if (!ok || !draft) return;
+    void callService("time", "set_value", { entity_id: entityId, time: timeToService(draft) });
+  };
+
+  return (
+    <label className={`dsc-target-num${!ok ? " is-disabled" : ""}`}>
+      <span className="dsc-target-num-label">{label}</span>
+      <input
+        type="time"
+        value={draft}
+        disabled={!ok}
+        onFocus={() => {
+          focused.current = true;
+        }}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={() => {
+          focused.current = false;
+          commit();
+        }}
+      />
+    </label>
   );
 }

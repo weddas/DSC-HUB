@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -27,12 +28,29 @@ interface HassContextValue {
 
 const HassContext = createContext<HassContextValue | null>(null);
 
+const DSC_HELPER_DOMAINS = new Set([
+  "input_boolean",
+  "input_number",
+  "input_select",
+  "input_text",
+  "input_datetime",
+  "input_button",
+]);
+
 function isDscEntity(entityId: string | undefined): boolean {
   if (!entityId) return false;
   const id = entityId.toLowerCase();
+  const dot = id.indexOf(".");
+  const domain = dot >= 0 ? id.slice(0, dot) : "";
+  const objectId = dot >= 0 ? id.slice(dot + 1) : id;
+  if (objectId.startsWith("dsc_") || objectId.startsWith("dsc-") || objectId.includes("_dsc_")) {
+    return true;
+  }
+  if (id.includes("dsc_") || id.includes("dsc-")) return true;
+  if (DSC_HELPER_DOMAINS.has(domain)) {
+    return objectId.startsWith("dsc_") || objectId.includes("dsc_");
+  }
   return (
-    id.includes("dsc_") ||
-    id.includes("dsc-") ||
     id.startsWith("sensor.dsc") ||
     id.startsWith("switch.dsc") ||
     id.startsWith("binary_sensor.dsc") ||
@@ -40,9 +58,13 @@ function isDscEntity(entityId: string | undefined): boolean {
     id.startsWith("light.dsc") ||
     id.startsWith("fan.dsc") ||
     id.startsWith("select.dsc") ||
-    id.startsWith("input_")
+    id.startsWith("text.dsc") ||
+    id.startsWith("datetime.dsc") ||
+    id.startsWith("time.dsc")
   );
 }
+
+const TICK_DEBOUNCE_MS = 150;
 
 export function HassProvider({
   hass,
@@ -52,10 +74,21 @@ export function HassProvider({
   children: ReactNode;
 }) {
   const [tick, setTick] = useState(0);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hassRef = useRef(hass);
+  hassRef.current = hass;
+
+  const bumpTick = () => {
+    if (debounceRef.current) return;
+    debounceRef.current = setTimeout(() => {
+      debounceRef.current = null;
+      setTick((t) => t + 1);
+    }, TICK_DEBOUNCE_MS);
+  };
 
   useEffect(() => {
     if (!hass) return;
-    setTick((t) => t + 1);
+    bumpTick();
 
     const conn = hass.connection;
     if (!conn?.subscribeEvents) return;
@@ -66,7 +99,7 @@ export function HassProvider({
     const onEvent = (event: HassEvent) => {
       const entityId = event.data?.entity_id;
       if (!isDscEntity(entityId)) return;
-      setTick((t) => t + 1);
+      bumpTick();
     };
 
     Promise.resolve(conn.subscribeEvents(onEvent, "state_changed"))
@@ -84,8 +117,36 @@ export function HassProvider({
     return () => {
       cancelled = true;
       unsub?.();
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+        debounceRef.current = null;
+      }
     };
   }, [hass]);
+
+  const callService = useMemo(
+    () =>
+      (domain: string, service: string, data?: Record<string, unknown>) => {
+        const h = hassRef.current;
+        if (!h?.callService) return Promise.resolve(null);
+        return h.callService(domain, service, data);
+      },
+    [],
+  );
+
+  const callWS = useMemo(
+    () =>
+      <T = unknown>(msg: Record<string, unknown>): Promise<T | null> => {
+        const h = hassRef.current;
+        if (h?.callWS) return h.callWS<T>(msg);
+        const conn = h?.connection as
+          | { sendMessagePromise?: (m: Record<string, unknown>) => Promise<T> }
+          | undefined;
+        if (conn?.sendMessagePromise) return conn.sendMessagePromise(msg);
+        return Promise.resolve(null);
+      },
+    [],
+  );
 
   const value = useMemo<HassContextValue>(() => {
     const entity = (entityId: string) => hass?.states?.[entityId];
@@ -101,24 +162,8 @@ export function HassProvider({
       const n = Number(state(entityId, ""));
       return Number.isFinite(n) ? n : fallback;
     };
-    const callService = (
-      domain: string,
-      service: string,
-      data?: Record<string, unknown>,
-    ) => {
-      if (!hass?.callService) return Promise.resolve(null);
-      return hass.callService(domain, service, data);
-    };
-    const callWS = <T = unknown>(msg: Record<string, unknown>) => {
-      if (hass?.callWS) return hass.callWS<T>(msg);
-      const conn = hass?.connection as
-        | { sendMessagePromise?: (m: Record<string, unknown>) => Promise<T> }
-        | undefined;
-      if (conn?.sendMessagePromise) return conn.sendMessagePromise(msg);
-      return Promise.resolve(null);
-    };
     return { hass, entity, state, num, available, callService, callWS, tick };
-  }, [hass, tick]);
+  }, [hass, tick, callService, callWS]);
 
   return createElement(HassContext.Provider, { value }, children);
 }

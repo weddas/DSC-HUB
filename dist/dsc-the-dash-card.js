@@ -191,6 +191,16 @@
 
   const potEntity = (prefix, suffix) => `sensor.${prefix}_${suffix}`;
 
+  /** Same SoT as React seatModel.potGotEntity: got_* then soil_*. */
+  const potGotId = (hass, prefix, kind) => {
+    const got =
+      kind === "moisture" ? "got_moisture" : kind === "ec" ? "got_ec" : "got_ph";
+    const fb =
+      kind === "moisture" ? "soil_moisture" : kind === "ec" ? "soil_conductivity" : "soil_ph";
+    const gId = potEntity(prefix, got);
+    return isUnavailable(hass, gId) ? potEntity(prefix, fb) : gId;
+  };
+
   /** Extract pot number from id/prefix (pot1 / dsc_pot1 -> 1). */
   const potNumFrom = (p) => {
     const raw = String((p && (p.id || p.prefix)) || "");
@@ -247,6 +257,17 @@
       display: flex;
       flex-direction: column;
     }
+    /* Main/Clone cockpit: React chrome owns HUD; IIFE is canvas only (T-10 / U-07). */
+    .dash.is-hud-hidden .dash-header,
+    .dash.is-hud-hidden .dash-hud,
+    .dash.is-hud-hidden .dash-charts,
+    .dash.is-hud-hidden .dash-rail,
+    .dash.is-hud-hidden .dash-legend,
+    .dash.is-hud-hidden .dash-pot-chips,
+    .dash.is-hud-hidden .dash-footer { display: none !important; }
+    .dash.is-hud-hidden .dash-body { grid-template-columns: 1fr; padding: 0; gap: 0; }
+    .dash.is-hud-hidden .dash-scene-wrap { min-height: calc(100vh - 72px); border: none; border-radius: 0; }
+    .dash.is-hud-hidden { min-height: 100%; height: 100%; }
     ha-card, :host { background: transparent; }
     .dash-header {
       display: flex; align-items: center; justify-content: space-between;
@@ -287,6 +308,15 @@
       opacity: 0.85;
     }
     .dash-scene-wrap canvas { display: block; width: 100%; height: 100%; position: relative; z-index: 0; }
+    .dash.is-canvas-only .dash-header,
+    .dash.is-canvas-only .dash-rail,
+    .dash.is-canvas-only .dash-charts,
+    .dash.is-canvas-only .dash-hud,
+    .dash.is-canvas-only .dash-legend,
+    .dash.is-canvas-only .dash-pot-chips,
+    .dash.is-canvas-only .dash-footer { display: none !important; }
+    .dash.is-canvas-only .dash-body { grid-template-columns: 1fr; }
+    .dash.is-canvas-only .dash-scene-wrap { min-height: 100%; flex: 1; }
     .dash-hud {
       position: absolute; pointer-events: none; z-index: 5;
       background: rgba(8, 14, 16, 0.78); backdrop-filter: blur(12px);
@@ -903,14 +933,8 @@
     addContact(2.15, 0.08, 2.45, 1.5);
 
     const poleMat = new THREE.MeshStandardMaterial({ color: 0xb4c0c9, metalness: 0.72, roughness: 0.28 });
-    let surfaces = null;
-    if (fx && typeof fx.createPhotorealSurfaces === "function") {
-      try {
-        surfaces = fx.createPhotorealSurfaces();
-      } catch (_) {
-        surfaces = null;
-      }
-    }
+    // Wave 5: CUT oxford/mylar/soil CanvasTextures — neon wire, not photoreal fabric.
+    const surfaces = null;
     const mylarMat = new THREE.MeshStandardMaterial({
       color: 0xc5d4e2,
       map: surfaces ? surfaces.mylar : null,
@@ -1088,29 +1112,31 @@
         shaft.rotation.x = -0.06 * i;
         shafts.add(shaft);
       }
+      // Window-proxy dashed overlay (4×8 until GPIO lamp / entities.main_light).
+      const proxyPts = [
+        new THREE.Vector3(-w * 0.28, h * 0.2, 0.02),
+        new THREE.Vector3(-w * 0.28, h * 0.85, 0.02),
+        new THREE.Vector3(w * 0.28, h * 0.85, 0.02),
+        new THREE.Vector3(w * 0.28, h * 0.2, 0.02),
+        new THREE.Vector3(-w * 0.28, h * 0.2, 0.02),
+      ];
+      const proxyLine = new THREE.Line(
+        new THREE.BufferGeometry().setFromPoints(proxyPts),
+        new THREE.LineDashedMaterial({
+          color: 0x90a4ae,
+          dashSize: 0.08,
+          gapSize: 0.05,
+          transparent: true,
+          opacity: 0,
+        })
+      );
+      if (proxyLine.computeLineDistances) proxyLine.computeLineDistances();
+      shafts.add(proxyLine);
       group.add(shafts);
 
-      // Layered ACH volume stack (multi-slice additive haze — not a single flat box)
       const achHaze = new THREE.Group();
       const achSlices = [];
-      for (let s = 0; s < 3; s++) {
-        const slice = new THREE.Mesh(
-          new THREE.BoxGeometry(w * (0.78 + s * 0.04), h * (0.22 + s * 0.08), d * (0.72 + s * 0.04)),
-          new THREE.MeshBasicMaterial({
-            color: accent,
-            transparent: true,
-            opacity: 0,
-            blending: THREE.AdditiveBlending,
-            depthWrite: false,
-            side: THREE.DoubleSide,
-          })
-        );
-        slice.position.y = h * (0.28 + s * 0.14);
-        achHaze.add(slice);
-        achSlices.push(slice);
-      }
-      group.add(achHaze);
-      group.userData = { size: { w, d, h }, lightBar, shafts, achHaze, achSlices };
+      group.userData = { size: { w, d, h }, lightBar, shafts, achHaze, achSlices, proxyLine };
       return group;
     };
 
@@ -1579,17 +1605,27 @@
 
     const growMat = new THREE.Group();
     const matRim = new THREE.Mesh(
-      new THREE.BoxGeometry(1.68, 0.035, 1.14),
-      new THREE.MeshStandardMaterial({ color: 0x6d3d29, metalness: 0.35, roughness: 0.45 })
+      new THREE.BoxGeometry(1.68, 0.02, 1.14),
+      new THREE.MeshStandardMaterial({
+        color: 0x26c6da,
+        metalness: 0.4,
+        roughness: 0.25,
+        transparent: true,
+        opacity: 0.55,
+        emissive: 0x26c6da,
+        emissiveIntensity: 0.15,
+      })
     );
     growMat.add(matRim);
     const matPlate = new THREE.Mesh(
-      new THREE.BoxGeometry(1.58, 0.052, 1.04),
+      new THREE.BoxGeometry(1.58, 0.04, 1.04),
       new THREE.MeshStandardMaterial({
-        color: 0x3b1f18,
-        emissive: 0xff5a00,
+        color: 0x0a1218,
+        emissive: 0xff6d00,
         emissiveIntensity: 0,
-        roughness: 0.58,
+        roughness: 0.35,
+        transparent: true,
+        opacity: 0.85,
       })
     );
     matPlate.position.y = 0.025;
@@ -1612,124 +1648,108 @@
     tentClone.add(growMat);
 
     const appliances = {};
-    const addAppliance = (name, x, z, color) => {
-      const body = new THREE.Mesh(
-        new THREE.BoxGeometry(0.42, 0.36, 0.36),
-        new THREE.MeshStandardMaterial({ color: 0x202936, emissive: color, emissiveIntensity: 0, roughness: 0.48 })
-      );
-      body.position.set(x, 0.18, z);
-      body.castShadow = true;
-      root.add(body);
-      appliances[name] = body;
-    };
-    addAppliance("heater", -4.35, 1.4, 0xff7043);
-    addAppliance("ac", -4.35, 0.65, 0x4fc3f7);
-    addAppliance("humidifier", -4.35, -0.1, 0x29b6f6);
-    addAppliance("dehumidifier", -4.35, -0.85, 0x80cbc4);
-    addAppliance("clone_humidifier", -3.85, 1.35, 0x81d4fa);
 
     const pots = { clone: [], main: [] };
-    const leafPlane = new THREE.PlaneGeometry(1, 1.15);
-    const mkPlant = (tall) => {
+    const glassMat = () =>
+      THREE.MeshPhysicalMaterial
+        ? new THREE.MeshPhysicalMaterial({
+            color: 0x26c6da,
+            metalness: 0.08,
+            roughness: 0.12,
+            transmission: 0.55,
+            transparent: true,
+            opacity: 0.32,
+            side: THREE.DoubleSide,
+          })
+        : new THREE.MeshStandardMaterial({
+            color: 0x26c6da,
+            transparent: true,
+            opacity: 0.28,
+            side: THREE.DoubleSide,
+          });
+    const mkPadRing = () => {
+      const g = new THREE.Group();
+      const pts = [];
+      for (let i = 0; i <= 24; i++) {
+        const a = (i / 24) * Math.PI * 2;
+        pts.push(new THREE.Vector3(Math.cos(a) * 0.22, 0.03, Math.sin(a) * 0.22));
+      }
+      const line = new THREE.Line(
+        new THREE.BufferGeometry().setFromPoints(pts),
+        new THREE.LineDashedMaterial({
+          color: 0x26c6da,
+          dashSize: 0.05,
+          gapSize: 0.035,
+          transparent: true,
+          opacity: 0.6,
+        })
+      );
+      if (line.computeLineDistances) line.computeLineDistances();
+      g.add(line);
+      g.userData.padLine = line;
+      g.userData.padMarker = true;
+      return g;
+    };
+    const mkPlant = (tall, silhouette) => {
+      const sil = silhouette || (tall ? "tall" : "bag");
       const plant = new THREE.Group();
-      const pot = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.17, 0.14, 0.2, 20),
-        new THREE.MeshStandardMaterial({
-          color: 0x7a4530,
-          roughness: 0.9,
-          metalness: 0.04,
-        })
+      const H = sil === "tall" ? 0.34 : sil === "airpot" ? 0.28 : sil === "taper" ? 0.24 : 0.22;
+      const Rtop = sil === "taper" ? 0.12 : 0.16;
+      const Rbot = sil === "bag" ? 0.17 : sil === "taper" ? 0.16 : 0.13;
+      const body = new THREE.Mesh(new THREE.CylinderGeometry(Rtop, Rbot, H, 14, 1, true), glassMat());
+      body.position.y = H / 2;
+      plant.add(body);
+      const edges = new THREE.LineSegments(
+        new THREE.EdgesGeometry(new THREE.CylinderGeometry(Rtop, Rbot, H, 10)),
+        new THREE.LineBasicMaterial({ color: 0x26c6da, transparent: true, opacity: 0.85 })
       );
-      pot.position.y = 0.11;
-      pot.castShadow = true;
-      pot.receiveShadow = true;
-      plant.add(pot);
-      const rim = new THREE.Mesh(
-        new THREE.TorusGeometry(0.165, 0.014, 10, 24),
-        new THREE.MeshStandardMaterial({ color: 0x4a2c1e, roughness: 0.75, metalness: 0.08 })
+      edges.position.y = H / 2;
+      plant.add(edges);
+      const moist = new THREE.Mesh(
+        new THREE.CylinderGeometry(Math.min(Rtop, Rbot) * 0.7, Math.min(Rtop, Rbot) * 0.7, 1, 12),
+        new THREE.MeshBasicMaterial({ color: 0x26c6da, transparent: true, opacity: 0.38 })
       );
-      rim.rotation.x = Math.PI / 2;
-      rim.position.y = 0.21;
-      plant.add(rim);
-      const soil = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.15, 0.15, 0.045, 16),
-        new THREE.MeshStandardMaterial({
-          color: 0x2a1c14,
-          roughness: 1,
-          map: surfaces ? surfaces.soil : null,
-        })
+      moist.scale.y = 0.02;
+      moist.position.y = 0.02;
+      plant.add(moist);
+      const ec = new THREE.Mesh(
+        new THREE.CylinderGeometry(Rtop * 0.82, Rtop * 0.82, 0.018, 16),
+        new THREE.MeshBasicMaterial({ color: 0xffb74d, transparent: true, opacity: 0 })
       );
-      soil.position.y = 0.2;
-      plant.add(soil);
-      const stemHeight = tall ? 0.78 : 0.42;
-      const stem = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.016, 0.026, stemHeight, 10),
-        new THREE.MeshStandardMaterial({ color: 0x245a32, roughness: 0.65, metalness: 0.05 })
+      ec.position.y = H + 0.02;
+      plant.add(ec);
+      const phRim = new THREE.Mesh(
+        new THREE.TorusGeometry(Rtop, 0.012, 8, 24),
+        new THREE.MeshBasicMaterial({ color: 0xb388ff, transparent: true, opacity: 0.7 })
       );
-      stem.position.y = 0.22 + stemHeight / 2;
-      stem.castShadow = true;
+      phRim.rotation.x = Math.PI / 2;
+      phRim.position.y = H;
+      plant.add(phRim);
+      const stemH = tall ? 0.42 : 0.24;
+      const stemGeo = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(0, H, 0),
+        new THREE.Vector3(0, H + stemH, 0),
+      ]);
+      const stemMat = new THREE.LineBasicMaterial({ color: 0x66bb6a, transparent: true, opacity: 0.75 });
+      const stem = new THREE.Line(stemGeo, stemMat);
       plant.add(stem);
-      const leafMat = new THREE.MeshStandardMaterial({
-        color: surfaces && surfaces.leaf ? 0xffffff : 0x3f9a52,
-        map: surfaces ? surfaces.leaf : null,
-        transparent: !!(surfaces && surfaces.leaf),
-        alphaTest: surfaces && surfaces.leaf ? 0.28 : 0,
-        emissive: 0x0a2812,
-        emissiveIntensity: 0.16,
-        roughness: 0.48,
-        metalness: 0.02,
-        side: THREE.DoubleSide,
-        depthWrite: false,
-      });
-      const leaflet = (scale) => {
-        const leaf = new THREE.Mesh(leafPlane.clone(), leafMat.clone());
-        leaf.scale.set(0.14 * scale, 0.14 * scale, 0.14 * scale);
-        leaf.castShadow = true;
-        return leaf;
-      };
-      const tiers = tall ? 5 : 3;
-      const perTier = tall ? 6 : 4;
-      for (let t = 0; t < tiers; t++) {
-        const y = 0.34 + (t / Math.max(1, tiers - 1)) * stemHeight * 0.82;
-        const rad = 0.08 + t * 0.04;
-        for (let i = 0; i < perTier; i++) {
-          const angle = (i / perTier) * Math.PI * 2 + t * 0.4;
-          const fan = new THREE.Group();
-          const fingers = tall ? 7 : 5;
-          for (let f = 0; f < fingers; f++) {
-            const mid = Math.floor(fingers / 2);
-            const pet = leaflet((tall ? 1.05 : 0.82) * (0.75 + (f === mid ? 0.35 : 0)));
-            const a = ((f - (fingers - 1) / 2) / ((fingers - 1) / 2 || 1)) * 0.7;
-            pet.position.set(Math.cos(a) * 0.05, 0.02, Math.sin(a) * 0.03);
-            pet.rotation.set(-0.85 + Math.abs(a) * 0.15, a * 0.35, a * 0.45);
-            fan.add(pet);
-          }
-          fan.position.set(Math.cos(angle) * rad, y, Math.sin(angle) * rad);
-          fan.rotation.y = -angle;
-          fan.rotation.x = -0.4 - t * 0.04;
-          plant.add(fan);
-        }
-      }
-      const cola = new THREE.Group();
-      for (let c = 0; c < (tall ? 5 : 3); c++) {
-        const tip = leaflet(tall ? 0.7 : 0.55);
-        tip.position.set((c - 2) * 0.03, stemHeight * 0.02, ((c % 2) - 0.5) * 0.02);
-        tip.rotation.x = -1.1;
-        cola.add(tip);
-      }
-      cola.position.y = 0.22 + stemHeight + 0.02;
-      plant.add(cola);
-      plant.userData.canopyMaterial = leafMat;
+      plant.userData.canopyMaterial = stemMat;
+      plant.userData.moist = moist;
+      plant.userData.ecSlab = ec;
+      plant.userData.phRim = phRim;
+      plant.userData.stem = stem;
+      plant.userData.body = body;
+      plant.userData.vesselH = H;
       plant.visible = false;
       return plant;
     };
-    const placePlants = (tent, key, count, cols, tall) => {
+    const placePlants = (tent, key, count, cols) => {
       const size = tent.userData.size;
       for (let i = 0; i < count; i++) {
         const rows = Math.ceil(count / cols);
         const col = i % cols;
         const row = Math.floor(i / cols);
-        const plant = mkPlant(tall);
+        const plant = mkPadRing();
         plant.position.set(
           (col - (cols - 1) / 2) * size.w * 0.24,
           key === "clone" ? 0.13 : 0.08,
@@ -1739,16 +1759,16 @@
         pots[key].push(plant);
       }
     };
-    placePlants(tentClone, "clone", 4, 2, false);
-    placePlants(tentMain, "main", 8, 4, true);
+    placePlants(tentClone, "clone", 4, 2);
+    placePlants(tentMain, "main", 8, 4);
 
-    // Slot plants stay as invisible pad markers; free-floating potActors are the visible plants.
+    // Dashed pads stay visible (OOS/unassigned holes). potActors are live vessels.
     const padWorld = { clone: [], main: [] };
     const _padTmp = new THREE.Vector3();
     const _rootLocal = new THREE.Vector3();
     ["clone", "main"].forEach((key) => {
       pots[key].forEach((plant, i) => {
-        plant.visible = false;
+        plant.visible = true;
         plant.userData.padMarker = true;
         padWorld[key][i] = new THREE.Vector3();
       });
@@ -2350,13 +2370,70 @@
 
     let raf = 0;
     let disposed = false;
+    let paused = false;
+    let sceneHeld = false;
+    let reactPots = null;
     let last = performance.now();
+    const applyReactPots = () => {
+      if (!Array.isArray(reactPots)) return;
+      const byId = {};
+      reactPots.forEach((p) => {
+        if (p && (p.id || p.pot)) byId[p.id || `pot${p.pot}`] = p;
+      });
+      for (let n = 1; n <= 4; n++) {
+        const id = `pot${n}`;
+        const actor = potActors[id];
+        const livePot = byId[id];
+        if (!actor) continue;
+        if (!livePot) continue;
+        const oos = livePot.inService === false;
+        const parked = livePot.tent === "unassigned";
+        const hollow = oos || parked;
+        actor.visible = true;
+        const H = actor.userData.vesselH || 0.22;
+        const moistN = Number(livePot.moisture);
+        const frac = Number.isFinite(moistN) ? Math.max(0.02, Math.min(1, moistN / 100)) : 0.02;
+        if (actor.userData.moist) {
+          actor.userData.moist.scale.y = hollow ? 0.02 : frac * H;
+          actor.userData.moist.position.y = hollow ? 0.02 : (frac * H) / 2;
+          actor.userData.moist.material.opacity = hollow ? 0 : 0.38;
+        }
+        if (actor.userData.body) {
+          actor.userData.body.material.wireframe = !!hollow;
+          actor.userData.body.material.opacity = hollow ? 0.18 : 0.32;
+        }
+        if (actor.userData.ecSlab) {
+          const ec = Number(livePot.ec);
+          actor.userData.ecSlab.material.opacity = hollow || !Number.isFinite(ec) ? 0 : Math.min(0.7, 0.2 + ec / 800);
+        }
+        if (actor.userData.phRim) {
+          const ph = Number(livePot.ph);
+          actor.userData.phRim.material.color.setHex(
+            Number.isFinite(ph) && ph < 5.8 ? 0xff8a65 : 0xb388ff
+          );
+        }
+        if (actor.userData.body && livePot.held) {
+          actor.userData.body.material.opacity = 0.18;
+        }
+        if (actor.userData.stem) {
+          actor.userData.stem.visible = !hollow;
+          const need = String(livePot.need || "");
+          actor.userData.stem.material.color.setHex(/warn|dry|stress/i.test(need) ? 0xff8a65 : 0x66bb6a);
+        }
+      }
+    };
     const tick = (now) => {
       if (disposed) return;
+      if (paused) {
+        raf = 0;
+        return;
+      }
       raf = requestAnimationFrame(tick);
       try {
-        const dt = Math.min(0.05, Math.max(0.001, (now - last) / 1000));
+        const dtRaw = Math.min(0.05, Math.max(0.001, (now - last) / 1000));
         last = now;
+        const freezeFx = sceneHeld || !!(live && live.hubHeld);
+        const dt = freezeFx ? 0 : dtRaw;
 
         const intakeClone = cfmNorm(live.cfmClone, 80);
         const intakeMain = cfmNorm(live.cfmMain, 80);
@@ -2454,19 +2531,30 @@
         tentClone.userData.lightBar.material.opacity = live.cloneLit ? 0.85 : 0.08;
         tentClone.userData.shafts.visible = !!live.cloneLit;
         tentClone.userData.shafts.children.forEach((shaft, i) => {
+          if (shaft.isLine) {
+            shaft.material.opacity = 0;
+            return;
+          }
           shaft.material.opacity = live.cloneLit ? (0.055 + cloneLevel * 0.14) * lightBoost : 0;
-          shaft.position.y = tentClone.userData.size.h * 0.5 + Math.sin(now * 0.0007 + i) * 0.02;
+          shaft.position.y =
+            tentClone.userData.size.h * 0.5 + (freezeFx ? 0 : Math.sin(now * 0.0007 + i) * 0.02);
         });
         tentFillClone.intensity = live.cloneLit ? 0.35 + cloneLevel * 1.4 : 0.12;
-        // 4×8 fixture glow — lamp brightness when instrumented, else photoperiod window (full/off).
+        // 4×8 fixture glow — lamp when instrumented, else photoperiod window proxy (dashed).
         tentMain.userData.lightBar.material.emissiveIntensity = live.mainLit
           ? (2.0 + mainLevel * 3.8) * lightBoost
           : 0;
         tentMain.userData.lightBar.material.opacity = live.mainLit ? 0.82 : 0.025;
         tentMain.userData.shafts.visible = !!live.mainLit;
+        const mainProxy = !!live.mainLightProxy;
         tentMain.userData.shafts.children.forEach((shaft, i) => {
-          shaft.material.opacity = live.mainLit ? (0.05 + mainLevel * 0.12) * lightBoost : 0;
-          shaft.position.y = tentMain.userData.size.h * 0.5 + Math.sin(now * 0.00065 + i) * 0.02;
+          if (shaft.isLine) {
+            shaft.material.opacity = live.mainLit && mainProxy ? 0.55 : 0;
+            return;
+          }
+          shaft.material.opacity = live.mainLit && !mainProxy ? (0.05 + mainLevel * 0.12) * lightBoost : 0;
+          shaft.position.y =
+            tentMain.userData.size.h * 0.5 + (freezeFx ? 0 : Math.sin(now * 0.00065 + i) * 0.02);
         });
         tentFillMain.intensity = live.mainLit
           ? 0.32 + mainLevel * 1.25
@@ -2546,8 +2634,9 @@
           const slotIdx = pose && Number.isFinite(+pose.slot) ? +pose.slot : -1;
           const pad = tent && slotIdx >= 0 && padWorld[tent] ? padWorld[tent][slotIdx] : null;
           if (!pad) {
-            actor.visible = false;
+            actor.visible = true;
             actor.userData.lerpReady = false;
+            actor.position.set(-3.5 + (n - 1) * 0.48, 0.08, 2.45);
             continue;
           }
           actor.visible = true;
@@ -2570,13 +2659,14 @@
             canopy.emissiveIntensity = hi ? 0.55 : 0.16;
           }
         }
-        // Keep tent-slot marker plants hidden
+        // Dashed pads stay as holes; occupied slots still show the ring under the vessel.
         ["clone", "main"].forEach((key) => {
           pots[key].forEach((plant) => {
-            plant.visible = false;
+            plant.visible = true;
           });
         });
 
+        applyReactPots();
         if (post && typeof post.render === "function") {
           try {
             post.render();
@@ -2682,6 +2772,24 @@
       setLive,
       setSelectedPot,
       setFocusTent: applyFocusTent,
+      pause(p) {
+        paused = !!p;
+        if (paused) {
+          if (raf) cancelAnimationFrame(raf);
+          raf = 0;
+        } else if (!disposed && !raf) {
+          last = performance.now();
+          raf = requestAnimationFrame(tick);
+        }
+      },
+      setHeld(h) {
+        sceneHeld = !!h;
+        live = { ...live, hubHeld: !!h };
+      },
+      setPots(list) {
+        reactPots = Array.isArray(list) ? list : null;
+        applyReactPots();
+      },
       projectTentAnchors() {
         const w = host.clientWidth || 1;
         const h = host.clientHeight || 1;
@@ -2858,7 +2966,41 @@
 
     setConfig(config) {
       this._cfg = normalizeConfig(config);
+      if (!this.isConnected) return;
+      // I-11: never rebuild THREE for focus/config patches. Recreate only if shell/scene missing.
+      if (this._scene) {
+        const title = this.shadowRoot && this.shadowRoot.getElementById("d-title");
+        const sub = this.shadowRoot && this.shadowRoot.getElementById("d-sub");
+        if (title) title.textContent = this._cfg.title || "";
+        if (sub) sub.textContent = this._cfg.subtitle || "";
+        return;
+      }
       this._renderShell();
+    }
+
+    pause(paused) {
+      this._paused = !!paused;
+      if (this._scene && typeof this._scene.pause === "function") this._scene.pause(!!paused);
+    }
+    setFocusTent(mode) {
+      this._focusTent = mode === "main" || mode === "clone" ? mode : null;
+      if (this._scene && typeof this._scene.setFocusTent === "function") this._scene.setFocusTent(this._focusTent);
+    }
+    setHeld(held) {
+      this._held = !!held;
+      if (this._scene && typeof this._scene.setHeld === "function") this._scene.setHeld(!!held);
+    }
+    setPots(pots) {
+      this._potsLive = pots;
+      if (this._scene && typeof this._scene.setPots === "function") this._scene.setPots(pots);
+    }
+    setUiChrome(flags) {
+      this._hideHud = !!(flags && flags.hideHud);
+      this._applyUiChrome();
+    }
+    _applyUiChrome() {
+      const dash = this.shadowRoot && this.shadowRoot.querySelector(".dash");
+      if (dash) dash.classList.toggle("is-hud-hidden", !!this._hideHud);
     }
 
     set hass(hass) {
@@ -2937,10 +3079,10 @@
               <div class="dash-panel">
                 <h3>Actions</h3>
                 <div class="dash-actions">
-                  <button type="button" class="dash-btn" data-nav="/dsc-hub-pro/lighting">Master lighting</button>
+                  <button type="button" class="dash-btn" data-nav="/dsc-hub#/live/light">Master lighting</button>
                   <button type="button" class="dash-btn danger" data-more="binary_sensor.dsc_hub_emergency_failsafe">Emergency status</button>
-                  <button type="button" class="dash-btn guard" data-nav="/dsc-hub-pro/climate">Climate engine</button>
-                  <button type="button" class="dash-btn" data-nav="/dsc-hub-pro/root-zone">Root zone</button>
+                  <button type="button" class="dash-btn guard" data-nav="/dsc-hub#/live/climate">Climate engine</button>
+                  <button type="button" class="dash-btn" data-nav="/dsc-hub#/live/root">Root zone</button>
                 </div>
               </div>
             </div>
@@ -2972,11 +3114,21 @@
       this._ro = new ResizeObserver(() => this._scene && this._scene.resize());
       if (host) this._ro.observe(host);
 
+      if (this._scene) {
+        if (typeof this._scene.pause === "function") this._scene.pause(!!this._paused);
+        if (typeof this._scene.setFocusTent === "function") this._scene.setFocusTent(this._focusTent || null);
+        if (typeof this._scene.setHeld === "function") this._scene.setHeld(!!this._held);
+        if (this._potsLive && typeof this._scene.setPots === "function") this._scene.setPots(this._potsLive);
+      }
+      this._applyUiChrome();
+
       this.shadowRoot.querySelectorAll("[data-nav]").forEach((btn) => {
         btn.addEventListener("click", () => {
           const path = btn.getAttribute("data-nav");
+          if (!path) return;
           history.pushState(null, "", path);
           window.dispatchEvent(new Event("location-changed"));
+          if (path.includes("#")) window.dispatchEvent(new HashChangeEvent("hashchange"));
         });
       });
       this.shadowRoot.querySelectorAll("[data-more]").forEach((btn) => {
@@ -3028,9 +3180,7 @@
       await Promise.all(
         pots.map(async (p, idx) => {
           const color = POT_COLORS[idx % POT_COLORS.length];
-          const mId = !isUnavailable(hass, potEntity(p.prefix, "got_moisture"))
-            ? potEntity(p.prefix, "got_moisture")
-            : potEntity(p.prefix, "soil_moisture");
+          const mId = potGotId(hass, p.prefix, "moisture");
           const rId = potEntity(p.prefix, "soil_moisture_rate");
           moist[p.id] = { color, label: p.id, points: await fetchHistory(hass, mId, 24) };
           rate[p.id] = { color, label: p.id, points: await fetchHistory(hass, rId, 24) };
@@ -3211,11 +3361,7 @@
       if (curIdx + 1 < stages.length) stages[curIdx + 1].cls = stages[curIdx + 1].cls || "next";
       const timelineStages = stages.filter((_, i) => i >= Math.max(0, curIdx - 1) && i <= curIdx + 2);
       if (!timelineStages.length) {
-        timelineStages.push(
-          { label: "WEEK ?", cls: "on" },
-          { label: "Next", cls: "next" },
-          { label: "Later", cls: "" }
-        );
+        timelineStages.push({ label: "No stage — not invented", cls: "on" });
       }
 
       const emerg = isOn(hass, e.emergency);
@@ -3269,6 +3415,9 @@
           if (lampId && !isUnavailable(hass, lampId)) return lightLevel(hass, lampId) > 0.02;
           return isOn(hass, e.main_window);
         })(),
+        mainLightProxy: !String(e.main_light || "").trim(),
+        mainWindowProxy: !String(e.main_light || "").trim(),
+        mainLightProxy: !String(e.main_light || "").trim(),
         matOn: isOn(hass, e.grow_mat),
         potSlots,
         plantPose,
@@ -3451,7 +3600,11 @@
       const cloneVpdMin = numState(hass, "number.dsc_hub_clone_vpd_min", NaN);
       const cloneVpdMax = numState(hass, "number.dsc_hub_clone_vpd_max", NaN);
       const focusTent =
-        this._cfg.focusTent === "main" || this._cfg.focusTent === "clone" ? this._cfg.focusTent : null;
+        this._focusTent === "main" || this._focusTent === "clone"
+          ? this._focusTent
+          : this._cfg.focusTent === "main" || this._cfg.focusTent === "clone"
+            ? this._cfg.focusTent
+            : null;
       if (this._scene && typeof this._scene.setFocusTent === "function") {
         this._scene.setFocusTent(focusTent);
       }
@@ -3462,7 +3615,7 @@
         } else {
           hudC.style.display = "";
           const c = (live.climate && live.climate.clone) || {};
-          hudC.innerHTML = `<div class="k">2×4 Reservoir</div>${hudMetric("clone")}${bandHtml(c.humidity, cloneRhMin, cloneRhMax, 0, 100)}${vpdMini(c.vpd, cloneVpdMin, cloneVpdMax)}<div class="s" title="${esc(lightNote)}">${esc(lightNote)}${live.matOn ? " · heat mat ON" : ""} · <a href="#/ops/climate" style="color:inherit">⋯ Climate</a></div>`;
+          hudC.innerHTML = `<div class="k">2×4 Reservoir</div>${hudMetric("clone")}${bandHtml(c.humidity, cloneRhMin, cloneRhMax, 0, 100)}${vpdMini(c.vpd, cloneVpdMin, cloneVpdMax)}<div class="s" title="${esc(lightNote)}">${esc(lightNote)}${live.matOn ? " · heat mat ON" : ""} · <a href="/dsc-hub#/live/climate" style="color:inherit">⋯ Climate</a></div>`;
           placeHud(hudC, anchors && anchors.clone, "left");
         }
       }
@@ -3475,7 +3628,7 @@
           const m = (live.climate && live.climate.main) || {};
           const heldNote = live.hubHeld ? " · HELD" : "";
           const mainNote = `No lamp · cascade in${heldNote}`;
-          hudM.innerHTML = `<div class="k">4×8 Main</div>${hudMetric("main")}${bandHtml(m.humidity, mainRhMin, mainRhMax, 0, 100)}${vpdMini(m.vpd, mainVpdMin, mainVpdMax)}<div class="s" title="${esc(mainNote)}">${esc(mainNote)} · <a href="#/ops/climate" style="color:inherit">⋯ Climate</a></div>`;
+          hudM.innerHTML = `<div class="k">4×8 Main</div>${hudMetric("main")}${bandHtml(m.humidity, mainRhMin, mainRhMax, 0, 100)}${vpdMini(m.vpd, mainVpdMin, mainVpdMax)}<div class="s" title="${esc(mainNote)}">${esc(mainNote)} · <a href="/dsc-hub#/live/climate" style="color:inherit">⋯ Climate</a></div>`;
           placeHud(hudM, anchors && anchors.main, "right");
         }
       }
@@ -3543,9 +3696,7 @@
             nameState && nameState.state !== "unavailable" && nameState.state !== "unknown" && nameState.state
               ? String(nameState.state)
               : p.id;
-          const moistId = !isUnavailable(hass, potEntity(p.prefix, "got_moisture"))
-            ? potEntity(p.prefix, "got_moisture")
-            : potEntity(p.prefix, "soil_moisture");
+          const moistId = potGotId(hass, p.prefix, "moisture");
           const moist = numState(hass, moistId, NaN);
           const tentLabel = tent === "main" ? "4×8" : tent === "clone" ? "2×4" : "—";
           const color = POT_COLORS[idx % POT_COLORS.length];
@@ -3697,8 +3848,8 @@
     }
     set hass(h) {
       this._hass = h;
-      // Re-render once so entity names resolve if needed
-      if (this.isConnected) this._render();
+      // I-04: never rebuild DOM on hass ticks — that wipes focused editor inputs.
+      // This editor hydrates from config, not hass entity names.
     }
     setConfig(c) {
       this._cfg = normalizeConfig(c);

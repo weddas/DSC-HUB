@@ -20,6 +20,8 @@ export interface NamedSeries {
   color?: string;
   axis?: "left" | "right";
   unit?: string;
+  /** Ghost compare series (last cycle / sibling) — dashed, no fill. */
+  ghost?: boolean;
 }
 
 export interface ChartTarget {
@@ -120,38 +122,6 @@ function domainForAxis(
     return padDomain(niceMin(vals, true), niceMax(vals));
   }
   return padDomain(niceMin(vals), niceMax(vals));
-}
-
-export function LiveLineChart({
-  series,
-  height = 160,
-  unit = "",
-  live = true,
-  color = "var(--dsc-neon)",
-  emptyLabel = "No history yet",
-  lastSyncAt,
-  targets,
-}: {
-  series: SeriesPoint[];
-  height?: number;
-  unit?: string;
-  live?: boolean;
-  color?: string;
-  emptyLabel?: string;
-  lastSyncAt?: number;
-  targets?: ChartTarget[];
-}) {
-  return (
-    <MultiLineChart
-      series={[{ id: "main", label: "", series, color, unit, axis: "left" }]}
-      height={height}
-      unit={unit}
-      live={live}
-      emptyLabel={emptyLabel}
-      lastSyncAt={lastSyncAt}
-      targets={targets}
-    />
-  );
 }
 
 export function MultiLineChart({
@@ -502,9 +472,10 @@ export function MultiLineChart({
               const tipY = lastPt ? yFor(lastPt.v, p.dom.min, p.dom.max, height, pad) : 0;
               return (
                 <g key={p.id} className="dsc-chart-series">
-                  {area ? (
+                  {area && !p.ghost ? (
                     <path d={area} fill={`url(#fill-${gid}-${p.id})`} opacity={0.9} className="dsc-chart-fill" />
                   ) : null}
+                  {p.ghost ? null : (
                   <path
                     d={p.d}
                     fill="none"
@@ -516,18 +487,20 @@ export function MultiLineChart({
                     opacity={0.35}
                     className="dsc-chart-glow"
                   />
+                  )}
                   <path
                     d={p.d}
                     fill="none"
                     stroke={p.color}
-                    strokeWidth="2.2"
+                    strokeWidth={p.ghost ? 1.6 : 2.2}
                     strokeLinejoin="round"
                     strokeLinecap="round"
-                    filter={`url(#glow-${gid})`}
-                    opacity={0.95}
+                    strokeDasharray={p.ghost ? "5 4" : undefined}
+                    filter={p.ghost ? undefined : `url(#glow-${gid})`}
+                    opacity={p.ghost ? 0.55 : 0.95}
                     className="dsc-chart-core"
                   />
-                  {live && lastPt && p.series.length >= 2 ? (
+                  {live && lastPt && p.series.length >= 2 && !p.ghost ? (
                     <g key={`pulse-${pulseKey}-${p.id}`} className="dsc-chart-pulse-wrap">
                       <path
                         className="dsc-chart-pulse"

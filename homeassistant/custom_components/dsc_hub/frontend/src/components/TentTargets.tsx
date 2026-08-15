@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useHass } from "../hooks/useHass";
 import { OverflowMenu } from "./chrome";
 
@@ -44,9 +44,10 @@ export function TargetNumber({
   const max = Number(ent?.attributes?.max ?? 100);
   const step = stepProp ?? Number(ent?.attributes?.step ?? 0.1);
   const [draft, setDraft] = useState(String(Number.isFinite(live) ? live : ""));
+  const focused = useRef(false);
 
   useEffect(() => {
-    if (Number.isFinite(live)) setDraft(String(live));
+    if (!focused.current && Number.isFinite(live)) setDraft(String(live));
   }, [live]);
 
   const commit = () => {
@@ -57,7 +58,9 @@ export function TargetNumber({
       return;
     }
     const clamped = Math.min(max, Math.max(min, v));
-    void callService("number", "set_value", { entity_id: entityId, value: clamped });
+    const domain = entityId.split(".")[0];
+    const svc = domain === "input_number" ? "input_number" : "number";
+    void callService(svc, "set_value", { entity_id: entityId, value: clamped });
     setDraft(String(clamped));
   };
 
@@ -71,8 +74,14 @@ export function TargetNumber({
         min={min}
         max={max}
         step={step}
+        onFocus={() => {
+          focused.current = true;
+        }}
         onChange={(e) => setDraft(e.target.value)}
-        onBlur={commit}
+        onBlur={() => {
+          focused.current = false;
+          commit();
+        }}
         onKeyDown={(e) => {
           if (e.key === "Enter") (e.target as HTMLInputElement).blur();
         }}

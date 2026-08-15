@@ -1,8 +1,9 @@
 import { NavLink, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
-import { Icon } from "./components/ui";
+import { Button, Icon, PageHeader } from "./components/ui";
 import { HonestyRail } from "./components/Honesty";
 import { TwinKeepAlive } from "./components/TwinKeepAlive";
+import { SeatOverlayHost } from "./components/SeatOverlay";
 import { HassProvider } from "./hooks/useHass";
 import { ZoneFocusProvider } from "./hooks/useZoneFocus";
 import { type IconName } from "./icons";
@@ -35,13 +36,32 @@ import {
 import type { HomeAssistant } from "./vite-env";
 import dscCss from "./styles/dsc.css?inline";
 
+
 export const DSC_PANEL_CSS = dscCss;
+
+function NotFoundPage() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  return (
+    <div className="dsc-page">
+      <PageHeader
+        icon="alert"
+        title="Not found"
+        subtitle={`${location.pathname} is not a DSC route.`}
+      />
+      <p className="dsc-honesty">Unknown hash — not a silent Mission redirect.</p>
+      <Button primary onClick={() => navigate("/live/mission")}>
+        Go Mission
+      </Button>
+    </div>
+  );
+}
 
 function LegacyRedirect() {
   const location = useLocation();
   const target = resolveLegacyRedirect(location.pathname, location.search);
   if (target) return <Navigate to={target} replace />;
-  return <Navigate to="/live/mission" replace />;
+  return <NotFoundPage />;
 }
 
 function Shell() {
@@ -51,16 +71,14 @@ function Shell() {
   const secondary = SECONDARY_TABS[section];
 
   useEffect(() => {
-    const onSelect = (ev: Event) => {
-      const detail = (ev as CustomEvent<{ pot?: number | string }>).detail;
-      const pot = Number(detail?.pot);
-      if (pot >= 1 && pot <= 4) {
-        navigate(`/live/root?pot=${pot}`);
-      }
-    };
-    window.addEventListener("dsc-dash-select-pot", onSelect);
-    return () => window.removeEventListener("dsc-dash-select-pot", onSelect);
-  }, [navigate]);
+    if (location.pathname === "/live/climate") return;
+    const p = new URLSearchParams(location.search);
+    if (!p.has("tent") && !p.has("zone")) return;
+    p.delete("tent");
+    p.delete("zone");
+    const search = p.toString();
+    navigate({ pathname: location.pathname, search: search ? `?${search}` : "" }, { replace: true });
+  }, [location.pathname, location.search, navigate]);
 
   return (
     <div className="dsc-shell">
@@ -110,6 +128,7 @@ function Shell() {
       ) : null}
 
       <TwinKeepAlive />
+      <SeatOverlayHost />
 
       <Routes>
         <Route path="/" element={<Navigate to="/live/mission" replace />} />
@@ -137,7 +156,7 @@ function Shell() {
         <Route path="/advanced/*" element={<LegacyRedirect />} />
         <Route path="/advanced" element={<LegacyRedirect />} />
         <Route path="/system" element={<LegacyRedirect />} />
-        <Route path="*" element={<Navigate to="/live/mission" replace />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </div>
   );

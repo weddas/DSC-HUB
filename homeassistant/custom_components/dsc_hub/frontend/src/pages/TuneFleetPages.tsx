@@ -1,81 +1,36 @@
 import { Card, EntityToggle, Kpi, PageHeader, StatusChip } from "../components/ui";
-import { LegacyCardHost } from "../components/LegacyCardHost";
-import { TimespanControl } from "../components/HistoryDrawer";
+import { TimespanControl, CYCLE_TIMESPAN_EXTRAS } from "../components/HistoryDrawer";
+import { LearningWizard } from "../components/LearningWizard";
+import { TankCutaway } from "../components/TankCutaway";
+import { KitPulse, type KitNode, type KitNodeStatus } from "../components/KitPulse";
+import { HubLinkLine } from "../components/HubLinkLine";
+import { CfmProvenanceBadge } from "../components/CfmBadge";
 import { useHass } from "../hooks/useHass";
 import { useEntitySeries } from "../hooks/useEntitySeries";
 import { useChartHours } from "../hooks/useChartHours";
 import { MultiLineChart } from "../viz/charts";
-import { potGotEntity } from "../lib/seatModel";
+import { ALL_POT_NUMBERS, inServiceCount, isPotInService, potGotEntity } from "../lib/seatModel";
+import { resolveCfm } from "../lib/cfmProvenance";
 
 function fmt(n: number, digits = 1): string {
   return Number.isFinite(n) ? n.toFixed(digits) : "—";
 }
 
-export function TuneLearningPage() {
-  const { state, num, available, entity } = useHass();
-  const outAlloc = available("sensor.dsc_cfm_exhaust_out_allocated")
-    ? num("sensor.dsc_cfm_exhaust_out_allocated")
-    : num("sensor.dsc_cfm_exhaust_out");
-  const recircAlloc = available("sensor.dsc_cfm_exhaust_recirc_allocated")
-    ? num("sensor.dsc_cfm_exhaust_recirc_allocated")
-    : num("sensor.dsc_cfm_exhaust_recirc");
-  const learnStatus = state("sensor.dsc_learn_status", "—");
-  const learnGate = state("binary_sensor.dsc_learn_gate", state("sensor.dsc_learn_gate", "—"));
-  const curves = String(entity("sensor.dsc_cfm_exhaust_out")?.attributes?.cal_curve ?? "");
+const POT_COLORS = ["var(--dsc-blue)", "var(--dsc-teal)", "var(--dsc-purple)", "var(--dsc-amber)"];
 
+export function TuneLearningPage() {
   return (
     <div className="dsc-page">
       <PageHeader
         icon="learning"
         title="Learning"
-        subtitle="Learn status, CFM honesty, kit — wizard math stays in Lovelace/brain."
+        subtitle="Anemometer gate, sample, accept — scripts own the math. No dsc-hub-pro."
       />
       <div className="dsc-grid">
-        <div className="dsc-col-3">
-          <Kpi
-            label="CFM OUT alloc"
-            value={fmt(outAlloc, 0)}
-            unit="cfm"
-            sub={`Nameplate ${fmt(num("sensor.dsc_cfm_exhaust_out"), 0)}`}
-          />
+        <div className="dsc-col-12">
+          <LearningWizard />
         </div>
-        <div className="dsc-col-3">
-          <Kpi
-            label="CFM RECIRC alloc"
-            value={fmt(recircAlloc, 0)}
-            unit="cfm"
-            sub={`Nameplate ${fmt(num("sensor.dsc_cfm_exhaust_recirc"), 0)}`}
-          />
-        </div>
-        <div className="dsc-col-3">
-          <Kpi label="Intake main" value={fmt(num("sensor.dsc_cfm_intake_main"), 0)} unit="cfm" />
-        </div>
-        <div className="dsc-col-3">
-          <Kpi label="Intake 2×4" value={fmt(num("sensor.dsc_cfm_intake_2x4"), 0)} unit="cfm" />
-        </div>
-
-        <div className="dsc-col-6">
-          <Card className="dsc-glass" title="Learn status" icon="learning">
-            <div className="dsc-chip-row">
-              <StatusChip label={`Status ${learnStatus}`} tone={learnStatus === "—" ? "muted" : "ok"} />
-              <StatusChip label={`Gate ${learnGate}`} tone="muted" />
-              <StatusChip
-                label={`Beat ${state("sensor.dsc_hub_heartbeat", "—")}`}
-                tone={available("sensor.dsc_hub_heartbeat") ? "ok" : "bad"}
-              />
-            </div>
-            <p className="dsc-honesty" style={{ marginBottom: 0 }}>
-              <StatusChip icon="alert" label="Nameplate" tone="warn" /> CFM figures are allocated /
-              nameplate proxies unless cal curves exist
-              {curves ? ` (${curves})` : " (no curve attrs)"}.
-            </p>
-            <p className="dsc-muted" style={{ marginBottom: 0 }}>
-              Surface: {state("sensor.dsc_ha_surface_version", "7.1.1")}. Full anemometer wizard remains
-              on Lovelace Learning — open dsc-hub-pro Learning for unported steps.
-            </p>
-          </Card>
-        </div>
-        <div className="dsc-col-6">
+        <div className="dsc-col-12">
           <Card className="dsc-glass" title="Kit / In service" icon="settings">
             <div className="dsc-mode-row">
               <EntityToggle entityId="input_boolean.dsc_ac_in_service" label="AC in service" icon="climate" />
@@ -97,40 +52,41 @@ export function TuneAnalyticsPage() {
   const { hours, setHours, maxPoints } = useChartHours(6);
   const tSeries = useEntitySeries("sensor.dsc_hub_tent_temperature", { maxPoints, hours });
   const rhSeries = useEntitySeries("sensor.dsc_hub_tent_humidity", { maxPoints, hours });
-  const outCfm = useEntitySeries(
-    "sensor.dsc_cfm_exhaust_out_allocated",
-    { maxPoints, hours },
-  );
-  const recircCfm = useEntitySeries(
-    "sensor.dsc_cfm_exhaust_recirc_allocated",
-    { maxPoints, hours },
-  );
   const p1m = useEntitySeries(potGotEntity(1, "moisture", state), { maxPoints, hours });
-  const p1db = useEntitySeries("sensor.dsc_pot1_dryback_pct", { maxPoints, hours });
   const p2m = useEntitySeries(potGotEntity(2, "moisture", state), { maxPoints, hours });
+  const p3m = useEntitySeries(potGotEntity(3, "moisture", state), { maxPoints, hours });
   const p4m = useEntitySeries(potGotEntity(4, "moisture", state), { maxPoints, hours });
-  const p1Ec = useEntitySeries(potGotEntity(1, "ec", state), { maxPoints, hours });
-  const learnedEcRaw = num("input_number.dsc_pot1_learned_ec_per_moisture");
-  const learnedEc =
-    available("input_number.dsc_pot1_learned_ec_per_moisture") &&
-    Number.isFinite(learnedEcRaw) &&
-    learnedEcRaw !== 0
-      ? learnedEcRaw
-      : NaN;
+  const byPot = [
+    { n: 1 as const, series: p1m },
+    { n: 2 as const, series: p2m },
+    { n: 3 as const, series: p3m },
+    { n: 4 as const, series: p4m },
+  ];
+  const moistSeries = byPot.filter((p) => isPotInService(p.n, state));
+  const worstNeed = ALL_POT_NUMBERS.filter((n) => isPotInService(n, state))
+    .map((n) => ({ n, need: state(`sensor.dsc_pot${n}_need_summary`, "—") }))
+    .find((row) => row.need && row.need !== "—" && !/^ok$/i.test(row.need));
 
   return (
     <div className="dsc-page">
       <PageHeader
         icon="analytics"
         title="Analytics"
-        subtitle="History-seeded trends — climate + root pack. Change timespan to zoom."
+        subtitle="In-service pots. Climate charts live on Climate; this is the root pack."
       />
       <div className="dsc-chip-row" style={{ marginBottom: 12 }}>
-        <TimespanControl hours={hours} setHours={setHours} />
+        <TimespanControl
+          hours={hours}
+          setHours={setHours}
+          extras={CYCLE_TIMESPAN_EXTRAS}
+        />
       </div>
       <div className="dsc-grid">
         <div className="dsc-col-12">
-          <Card className="dsc-glass" title="Tent T + RH" icon="climate">
+          <Card className="dsc-glass" title="Tent T + RH (secondary)" icon="climate">
+            <p className="dsc-honesty" style={{ marginTop: 0 }}>
+              Primary traces sit on Climate. Ghost/compare there, not a second dashboard.
+            </p>
             <MultiLineChart
               live
               lastSyncAt={Math.max(tSeries.lastSyncAt ?? 0, rhSeries.lastSyncAt ?? 0) || undefined}
@@ -156,84 +112,28 @@ export function TuneAnalyticsPage() {
           </Card>
         </div>
         <div className="dsc-col-12">
-          <Card className="dsc-glass" title="Exhaust CFM (allocated)" icon="climate">
-            <MultiLineChart
-              live
-              unit="cfm"
-              lastSyncAt={Math.max(outCfm.lastSyncAt ?? 0, recircCfm.lastSyncAt ?? 0) || undefined}
-              series={[
-                {
-                  id: "out",
-                  label: "OUT",
-                  series: outCfm.series,
-                  color: "var(--dsc-blue)",
-                  unit: "cfm",
-                },
-                {
-                  id: "recirc",
-                  label: "RECIRC",
-                  series: recircCfm.series,
-                  color: "var(--dsc-purple)",
-                  unit: "cfm",
-                },
-              ]}
-            />
-          </Card>
-        </div>
-        <div className="dsc-col-12">
-          <Card className="dsc-glass" title="Root pack — moisture" icon="root">
-            <MultiLineChart
-              live
-              unit="%"
-              lastSyncAt={
-                Math.max(p1m.lastSyncAt ?? 0, p2m.lastSyncAt ?? 0, p4m.lastSyncAt ?? 0) || undefined
-              }
-              series={[
-                { id: "p1", label: "P1", series: p1m.series, color: "var(--dsc-blue)", unit: "%" },
-                { id: "p2", label: "P2", series: p2m.series, color: "var(--dsc-teal)", unit: "%" },
-                { id: "p4", label: "P4", series: p4m.series, color: "var(--dsc-purple)", unit: "%" },
-              ]}
-            />
-          </Card>
-        </div>
-        <div className="dsc-col-12">
-          <Card className="dsc-glass" title="P1 dryback" icon="root">
-            <MultiLineChart
-              live
-              unit="%"
-              lastSyncAt={p1db.lastSyncAt}
-              series={[
-                {
-                  id: "db",
-                  label: "Dryback",
-                  series: p1db.series,
-                  color: "var(--dsc-amber)",
+          <Card className="dsc-glass" title="Root pack — moisture (in service)" icon="root">
+            {!moistSeries.length ? (
+              <p className="dsc-muted">No in-service pots.</p>
+            ) : (
+              <MultiLineChart
+                live
+                unit="%"
+                lastSyncAt={Math.max(...moistSeries.map((p) => p.series.lastSyncAt ?? 0)) || undefined}
+                series={moistSeries.map((p, i) => ({
+                  id: `p${p.n}`,
+                  label: worstNeed?.n === p.n ? `P${p.n} Need` : `P${p.n}`,
+                  series: p.series.series,
+                  color: POT_COLORS[i % POT_COLORS.length],
                   unit: "%",
-                },
-              ]}
-            />
-          </Card>
-        </div>
-        <div className="dsc-col-12">
-          <Card className="dsc-glass" title="P1 EC" icon="root">
-            <MultiLineChart
-              live
-              lastSyncAt={p1Ec.lastSyncAt}
-              series={[
-                {
-                  id: "ec",
-                  label: "EC",
-                  series: p1Ec.series,
-                  color: "var(--dsc-amber)",
-                  unit: "",
-                },
-              ]}
-            />
-            <p className="dsc-muted" style={{ margin: "8px 0 0", fontSize: 12 }}>
-              {Number.isFinite(learnedEc)
-                ? `EC consumption honesty: learned ${learnedEc.toFixed(3)} EC per moisture (not feed invent).`
-                : "EC over time shown — no learned_ec_per_moisture yet (not invented)."}
-            </p>
+                }))}
+              />
+            )}
+            {worstNeed ? (
+              <p className="dsc-kpi-sub">
+                Worst Need P{worstNeed.n}: {worstNeed.need}
+              </p>
+            ) : null}
           </Card>
         </div>
       </div>
@@ -241,29 +141,86 @@ export function TuneAnalyticsPage() {
   );
 }
 
+function kitStatus(on: boolean, known: boolean): KitNodeStatus {
+  if (!known) return "missing";
+  return on ? "ok" : "oos";
+}
+
 export function FleetOverviewPage() {
   const { state, available, num } = useHass();
-  const hubOk = available("sensor.dsc_hub_uptime");
+  const svc = inServiceCount(state);
+  const linkOn = state("binary_sensor.dsc_hub_link") === "on";
+  const linkKnown = available("binary_sensor.dsc_hub_link");
+  const kit: KitNode[] = [
+    { id: "hub", label: "Hub", status: linkKnown ? (linkOn ? "ok" : "dark") : "missing" },
+    {
+      id: "ac",
+      label: "AC",
+      status: kitStatus(
+        state("input_boolean.dsc_ac_in_service") === "on",
+        available("input_boolean.dsc_ac_in_service"),
+      ),
+    },
+    {
+      id: "mister",
+      label: "Mister",
+      status: kitStatus(
+        state("input_boolean.dsc_clone_humidifier_in_service") === "on",
+        available("input_boolean.dsc_clone_humidifier_in_service"),
+      ),
+    },
+    ...ALL_POT_NUMBERS.map((n) => ({
+      id: `pot${n}`,
+      label: `P${n}`,
+      status: kitStatus(isPotInService(n, state), available(`input_boolean.dsc_pot${n}_in_service`)),
+    })),
+    {
+      id: "tank",
+      label: "Tank",
+      status: kitStatus(
+        state("input_boolean.dsc_tank_in_service") === "on",
+        available("input_boolean.dsc_tank_in_service"),
+      ),
+    },
+  ];
+  const out = resolveCfm("sensor.dsc_cfm_exhaust_out_allocated", "sensor.dsc_cfm_exhaust_out", {
+    available,
+    num,
+  });
+  const rows: { label: string; id: string }[] = [
+    { label: "Bridge hub ESP-NOW", id: "binary_sensor.dsc_bridge_hub_esp_now_link" },
+    { label: "ESP-NOW age", id: "sensor.dsc_bridge_esp_now_age" },
+    { label: "Hub firmware", id: "sensor.dsc_hub_firmware_version" },
+    { label: "Control firmware", id: "sensor.dsc_control_firmware_version" },
+    { label: "Pot1 firmware", id: "sensor.dsc_pot1_firmware_version" },
+    { label: "Pot2 firmware", id: "sensor.dsc_pot2_firmware_version" },
+    { label: "Pot3 firmware", id: "sensor.dsc_pot3_firmware_version" },
+    { label: "Pot4 firmware", id: "sensor.dsc_pot4_firmware_version" },
+    { label: "Nest / SoftAP channel", id: "sensor.dsc_hub_wifi_channel" },
+  ];
+
   return (
     <div className="dsc-page">
       <PageHeader
         icon="fleet"
         title="Fleet"
-        subtitle="Diagnostics, versions, kit densify, system map, tank note."
+        subtitle={`${svc.inService} of ${svc.total} in service. Kit Pulse holes, tank tester, bridge table.`}
       />
       <div className="dsc-grid">
+        <div className="dsc-col-12">
+          <HubLinkLine />
+        </div>
         <div className="dsc-col-4">
           <Kpi
-            label="Hub link"
-            value={hubOk ? "OK" : "DOWN"}
-            tone={hubOk ? "ok" : "bad"}
-            sub={`Uptime raw ${state("sensor.dsc_hub_uptime", "—")}`}
+            label="In service"
+            value={`${svc.inService}/${svc.total}`}
+            tone={svc.inService === svc.total ? "ok" : "warn"}
           />
         </div>
         <div className="dsc-col-4">
           <Kpi
             label="Surface"
-            value={state("sensor.dsc_ha_surface_version", "7.1.1")}
+            value={state("sensor.dsc_ha_surface_version", "7.1.4")}
             sub="Panel product shell"
           />
         </div>
@@ -277,6 +234,16 @@ export function FleetOverviewPage() {
             }
             tone={num("sensor.dsc_active_alert_count", 0) === 0 ? "ok" : "bad"}
           />
+          <CfmProvenanceBadge reading={out} />
+        </div>
+
+        <div className="dsc-col-12">
+          <Card className="dsc-glass" title="Kit Pulse" icon="system">
+            <p className="dsc-honesty" style={{ marginTop: 0 }}>
+              Holes are missing / OOS / dark hub — not a greenwashed map.
+            </p>
+            <KitPulse nodes={kit} />
+          </Card>
         </div>
 
         <div className="dsc-col-12">
@@ -292,37 +259,44 @@ export function FleetOverviewPage() {
               <EntityToggle entityId="input_boolean.dsc_pot2_in_service" label="Pot 2" icon="root" />
               <EntityToggle entityId="input_boolean.dsc_pot3_in_service" label="Pot 3" icon="root" />
               <EntityToggle entityId="input_boolean.dsc_pot4_in_service" label="Pot 4" icon="root" />
+              <EntityToggle entityId="input_boolean.dsc_tank_in_service" label="Tank" icon="tank" />
             </div>
           </Card>
         </div>
 
-        <div className="dsc-col-12">
-          <Card className="dsc-glass" title="System map" icon="system">
-            <LegacyCardHost tag="dsc-system-map-card" config={{}} />
-          </Card>
-        </div>
-
-        <div className="dsc-col-6">
-          <Card className="dsc-glass" title="Fleet version" icon="fleet">
-            <p className="dsc-muted" style={{ marginTop: 0 }}>
-              {state("sensor.dsc_fleet_version_status", "—")}
-            </p>
-          </Card>
-        </div>
         <div className="dsc-col-6">
           <Card className="dsc-glass" title="Tank" icon="tank">
-            <p className="dsc-muted" style={{ marginTop: 0 }}>
-              Reservoir / tank vitals land here as hardware comes online. Map above stays the
-              topology view; do not invent tank sensors.
+            <TankCutaway />
+            <p className="dsc-kpi-sub">
+              Stage {state("input_select.dsc_tank_stage", "—")} · Type{" "}
+              {state("input_select.dsc_tank_plant_type", "—")}
             </p>
           </Card>
         </div>
-        <div className="dsc-col-12">
-          <Card className="dsc-glass" title="Panel" icon="system">
-            <p className="dsc-muted" style={{ marginTop: 0 }}>
-              Custom panel <code>/dsc-hub</code> · React + Vite · assets under{" "}
-              <code>/dsc_hub/assets</code>.
-            </p>
+        <div className="dsc-col-6">
+          <Card className="dsc-glass" title="Bridge / firmware" icon="fleet">
+            <table className="dsc-table">
+              <thead>
+                <tr>
+                  <th>Signal</th>
+                  <th>State</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row) => (
+                  <tr key={row.id}>
+                    <td>{row.label}</td>
+                    <td>
+                      {available(row.id) ? (
+                        state(row.id, "—")
+                      ) : (
+                        <StatusChip label="hole" tone="warn" />
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </Card>
         </div>
       </div>

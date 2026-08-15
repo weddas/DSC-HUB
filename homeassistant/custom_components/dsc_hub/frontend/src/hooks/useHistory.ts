@@ -49,7 +49,8 @@ export function useHistory(
   hours = 6,
   maxPoints = 96,
 ): { points: SeriesPoint[]; loading: boolean; error: string | null } {
-  const { hass, callWS, available } = useHass();
+  const { hass, callWS } = useHass();
+  const connReady = !!(hass && (hass.callWS || hass.connection));
   const [points, setPoints] = useState<SeriesPoint[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -63,8 +64,7 @@ export function useHistory(
         setLoading(false);
         return;
       }
-      // Prefer callWS helper; fall back wait if hass not ready yet.
-      if (!hass || (!hass.callWS && !hass.connection)) {
+      if (!connReady) {
         setPoints([]);
         setLoading(false);
         return;
@@ -121,7 +121,7 @@ export function useHistory(
     return () => {
       cancelled = true;
     };
-  }, [hass, callWS, entityId, hours, maxPoints, available]);
+  }, [connReady, entityId, hours, maxPoints, callWS]);
 
   return { points, loading, error };
 }

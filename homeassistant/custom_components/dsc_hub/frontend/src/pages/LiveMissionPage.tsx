@@ -3,25 +3,27 @@ import { useNavigate } from "react-router-dom";
 import {
   Button,
   Card,
-  EntityFanSlider,
-  EntitySelect,
-  EntityToggle,
   Kpi,
   PageHeader,
   StatusChip,
 } from "../components/ui";
 import { IconButton, OverflowMenu, SlideDrawer } from "../components/chrome";
-import { TentTargetPanel } from "../components/TentTargets";
 import { HistoryDrawer } from "../components/HistoryDrawer";
 import { NextRecommendedCard } from "../components/Honesty";
 import { useHass } from "../hooks/useHass";
 import { useHeldReading, useHubOfflineMs, useBeatOfflineMs, usePanelOfflineMs } from "../hooks/useHeldReading";
 import { useEntitySeries } from "../hooks/useEntitySeries";
 import { useChartHours } from "../hooks/useChartHours";
-import { TimespanControl } from "../components/HistoryDrawer";
 import { fmtDurationMs, fmtUptimeSeconds } from "../lib/formatDuration";
-import { buildPlantSeat, activePotNumbers, tentLabel } from "../lib/seatModel";
-import { ArcGauge, GotWantBars, MultiLineChart, Sparkline, seriesExtrema } from "../viz/charts";
+import { buildPlantSeat, ALL_POT_NUMBERS, inServiceCount, isPotInService, activePotNumbers } from "../lib/seatModel";
+import { HubLinkLine } from "../components/HubLinkLine";
+import { VesselGlyph } from "../components/VesselGlyph";
+import { readPotVessel } from "../lib/vesselSpec";
+import { readPotTrust } from "../lib/potTrust";
+import { resolveCfm } from "../lib/cfmProvenance";
+import { CfmProvenanceBadge } from "../components/CfmBadge";
+import { KitPulse, type KitNode } from "../components/KitPulse";
+import { ArcGauge, GotWantBars, Sparkline, seriesExtrema } from "../viz/charts";
 
 const FAULTS: { id: string; label: string }[] = [
   { id: "binary_sensor.dsc_hub_emergency_failsafe", label: "Emergency failsafe" },
@@ -43,7 +45,7 @@ export function LiveMissionPage() {
   const navigate = useNavigate();
   const [searchOpen, setSearchOpen] = useState(false);
   const [hist, setHist] = useState<HistTarget | null>(null);
-  const { hours, setHours, maxPoints } = useChartHours(6);
+  const { hours, maxPoints } = useChartHours(6);
   void tick;
 
   const hubOnline = available("sensor.dsc_hub_uptime");
@@ -109,7 +111,22 @@ export function LiveMissionPage() {
   const climateFault = state("binary_sensor.dsc_hub_climate_sensor_fault") === "on";
 
   const activeFaults = FAULTS.filter((f) => state(f.id) === "on");
-  const seats = activePotNumbers(state).map((n) => buildPlantSeat(n, { state, entity }));
+  const seats = ALL_POT_NUMBERS.map((n) => buildPlantSeat(n, { state, entity }));
+  const svc = inServiceCount(state);
+  const outCfm = resolveCfm("sensor.dsc_cfm_exhaust_out_allocated", "sensor.dsc_cfm_exhaust_out", {
+    available,
+    num,
+  });
+  const kitNodes: KitNode[] = [
+    { id: "hub", label: "Hub", status: available("binary_sensor.dsc_hub_link") ? (state("binary_sensor.dsc_hub_link") === "on" ? "ok" : "dark") : "missing" },
+    { id: "ac", label: "AC", status: state("input_boolean.dsc_ac_in_service") === "on" ? "ok" : "oos" },
+    { id: "mister", label: "Mister", status: state("input_boolean.dsc_clone_humidifier_in_service") === "on" ? "ok" : "oos" },
+    ...ALL_POT_NUMBERS.map((n) => ({
+      id: `pot${n}`,
+      label: `Pot ${n}`,
+      status: (isPotInService(n, state) ? "ok" : "oos") as KitNode["status"],
+    })),
+  ];
   const anyHeld = tentT.stale || tentRh.stale || tentVpd.stale || cloneT.stale || cloneRh.stale || cloneVpd.stale;
 
   const openHist = (entityId: string, label: string, unit: string, color?: string) =>
@@ -120,7 +137,7 @@ export function LiveMissionPage() {
       <PageHeader
         icon="mission"
         title="Mission"
-        subtitle="Job line — mode, vitals, seats, demands. Click a gauge for history."
+        subtitle="Triage glance — Next, faults, seats, lung. Command lives on Climate."
         primaryAction={
           <Button teal onClick={() => navigate("/live/twin")}>
             Open Twin
@@ -163,6 +180,7 @@ export function LiveMissionPage() {
           />
         ) : null}
         {anyHeld ? <StatusChip label="HELD VITALS" tone="warn" /> : null}
+        <StatusChip label={`${svc.inService} of ${svc.total} in service`} tone={svc.inService === svc.total ? "ok" : "warn"} />
         <StatusChip
           label={
             panelOk
@@ -214,6 +232,16 @@ export function LiveMissionPage() {
       <div className="dsc-grid dsc-mission-modern">
         <div className="dsc-col-12">
           <NextRecommendedCard />
+        </div>
+        <div className="dsc-col-12">
+          <Card className="dsc-glass" title="Hub link" icon="fleet">
+            <HubLinkLine />
+          </Card>
+        </div>
+        <div className="dsc-col-12">
+          <Card className="dsc-glass" title="Kit pulse" icon="ok">
+            <KitPulse nodes={kitNodes} />
+          </Card>
         </div>
 
         <div className="dsc-col-4">
@@ -322,55 +350,21 @@ export function LiveMissionPage() {
         </div>
 
         <div className="dsc-col-4">
-          <Card className={`dsc-glass${autoDriven ? " is-auto" : ""}`} title="Control Center" icon="climate">
-            <div className="dsc-mode-row">
-              <EntityToggle
-                entityId="switch.dsc_hub_tent_full_auto_mode"
-                label="Full Auto"
-                icon="ok"
-              />
-              <EntityToggle
-                entityId="switch.dsc_hub_manual_takeover"
-                label="Manual takeover"
-                icon="alert"
-              />
-              <EntityToggle
-                entityId="switch.dsc_hub_tent_manual_override"
-                label="Fan override"
-                icon="climate"
-              />
-              <EntityToggle
-                entityId="switch.dsc_hub_humidifier_intake_routing"
-                label="Hum intake routing"
-                icon="climate"
-              />
-              <EntityToggle
-                entityId="switch.dsc_hub_recirc_de_strat_pulse"
-                label="RECIRC de-strat"
-                icon="climate"
-              />
+          <Card className={`dsc-glass${autoDriven ? " is-auto" : ""}`} title="Mode glance" icon="climate">
+            <div className="dsc-chip-row">
+              <StatusChip label={fullAuto ? "FULL AUTO" : "MANUAL"} tone={fullAuto ? "ok" : "muted"} />
+              {takeover ? <StatusChip label="TAKEOVER" tone="warn" /> : null}
+              {fanOverride ? <StatusChip label="FAN OVERRIDE" tone="warn" /> : null}
             </div>
-            <div className="dsc-mode-selects">
-              <EntitySelect
-                entityId="select.dsc_hub_control_strategy"
-                label="Strategy"
-                icon="climate"
-              />
-              <EntitySelect
-                entityId="select.dsc_hub_priority_tent"
-                label="Priority tent"
-                icon="tent"
-              />
-            </div>
-            {fullAuto && (reducedKit || honesty) ? (
-              <p className="dsc-honesty">
-                <StatusChip icon="alert" label="Honesty" tone="warn" />{" "}
-                {honesty || "Full Auto armed on reduced kit — capacity offline paths apply."}
-              </p>
-            ) : null}
+            <p className="dsc-muted" style={{ margin: "8px 0 0" }}>
+              Command lives on Climate.
+            </p>
+            <Button teal onClick={() => navigate("/live/climate")}>
+              Open Climate command
+            </Button>
             {climateFault ? (
               <p className="dsc-honesty">
-                <StatusChip label="Climate fault" tone="bad" /> Do not invent Got — trust held/—.
+                <StatusChip label="Climate fault" tone="bad" /> Do not invent Got.
               </p>
             ) : null}
           </Card>
@@ -422,135 +416,52 @@ export function LiveMissionPage() {
         </div>
 
         <div className="dsc-col-12">
-          <Card className="dsc-glass" title="Targets" icon="gauge">
-            <TentTargetPanel compact />
+          <Card className="dsc-glass" title="Lung CFM" icon="climate">
+            <div className="dsc-chip-row">
+              <CfmProvenanceBadge reading={outCfm} />
+              <button type="button" className="dsc-chip" onClick={() => navigate("/live/climate")}>
+                OUT {Number.isFinite(outCfm.value) ? Math.round(outCfm.value) : "—"} cfm → Climate
+              </button>
+            </div>
           </Card>
         </div>
 
         <div className="dsc-col-12">
           <Card className="dsc-glass" title="Plant seats" icon="seat">
             <div className="dsc-chip-row">
-              {seats.map((s) => (
-                <button
-                  key={s.pot}
-                  type="button"
-                  className="dsc-chip dsc-chip--ok"
-                  onClick={() => navigate(`/live/root?pot=${s.pot}`)}
-                  title={s.blend || "Open plant seat"}
-                >
-                  P{s.pot} {s.plantName !== "—" ? s.plantName : "—"} · {tentLabel(s.tent)}
-                  {s.blend ? ` · ${s.blend.slice(0, 28)}` : ""}
-                </button>
-              ))}
-            </div>
-          </Card>
-        </div>
-
-        <div className="dsc-col-12">
-          <Card className="dsc-glass" title="Live climate trend" icon="climate">
-            <div className="dsc-chip-row" style={{ marginBottom: 8 }}>
-              <TimespanControl hours={hours} setHours={setHours} />
-              <Button onClick={() => navigate("/live/climate")}>Open Climate</Button>
-            </div>
-            <MultiLineChart
-              live
-              lastSyncAt={
-                Math.max(tentTSeries.lastSyncAt ?? 0, tentRhSeries.lastSyncAt ?? 0) || undefined
-              }
-              series={[
-                {
-                  id: "t",
-                  label: "Temp °C",
-                  series: tentTSeries.series,
-                  color: "var(--dsc-blue)",
-                  axis: "left",
-                  unit: "°C",
-                },
-                {
-                  id: "rh",
-                  label: "RH %",
-                  series: tentRhSeries.series,
-                  color: "var(--dsc-teal)",
-                  axis: "right",
-                  unit: "%",
-                },
-              ]}
-              targets={[
-                { axis: "left", value: targetTemp, color: "var(--dsc-amber)", label: "Want T" },
-                { axis: "right", min: rhMin, max: rhMax, color: "var(--dsc-teal)" },
-              ]}
-            />
-          </Card>
-        </div>
-
-        <div className="dsc-col-6">
-          <Card className={`dsc-glass${autoDriven ? " is-auto" : ""}`} title="Demands" icon="climate">
-            {autoDriven ? (
-              <div className="dsc-chip-row" style={{ marginBottom: 8 }}>
-                <StatusChip label="AUTO" tone="ok" icon="ok" />
-              </div>
-            ) : null}
-            <div className="dsc-demand-row">
-              <EntityToggle entityId="switch.dsc_hub_heater_demand" label="Heat" icon="climate" />
-              <EntityToggle
-                entityId="switch.dsc_hub_ac_demand"
-                label="Cool"
-                icon="climate"
-                warnWhenMissing={
-                  state("binary_sensor.dsc_ac_capacity_offline") === "on" ? "AC ○" : undefined
-                }
-              />
-              <EntityToggle entityId="switch.dsc_hub_humidifier_demand" label="Hum" icon="climate" />
-              <EntityToggle
-                entityId="switch.dsc_hub_dehumidifier_demand"
-                label="Dehum"
-                icon="climate"
-              />
-              <EntityToggle entityId="switch.dsc_hub_grow_mat_demand" label="Mat" icon="root" />
-              <EntityToggle
-                entityId="switch.dsc_hub_clone_humidifier_demand"
-                label="C-Hum"
-                icon="clone"
-              />
-              <EntityToggle
-                entityId="light.dsc_hub_sf1000_dimmer"
-                label="SF1000"
-                icon="lighting"
-                showBrightness
-              />
+              {seats.map((s) => {
+                const oos = !isPotInService(s.pot, state);
+                const trust = readPotTrust(s.pot, state);
+                const glow = !oos && !trust.blockNeedAct && s.need && s.need !== "—" && s.need !== "ok";
+                return (
+                  <button
+                    key={s.pot}
+                    type="button"
+                    className={`dsc-chip${oos ? "" : " dsc-chip--ok"}${glow ? " dsc-chip--pulse" : ""}`}
+                    onClick={() =>
+                      window.dispatchEvent(new CustomEvent("dsc-dash-select-pot", { detail: { pot: s.pot } }))
+                    }
+                    title={oos ? "OOS — no fake Got" : s.need}
+                  >
+                    <VesselGlyph spec={readPotVessel(s.pot, state, entity)} size={18} />
+                    P{s.pot} {s.plantName !== "—" ? s.plantName : "—"} · Got M {oos ? "—" : s.moisture}
+                    {oos ? " · OOS" : ` · Need ${s.need}`}
+                    {trust.labels.length ? ` · ${trust.labels.join("/")}` : ""}
+                  </button>
+                );
+              })}
             </div>
           </Card>
         </div>
 
         <div className="dsc-col-6">
-          <Card className="dsc-glass" title="Fans" icon="climate">
-            <p className="dsc-muted" style={{ margin: "0 0 8px" }}>
-              {fanOverride
-                ? "Fan override ON — sliders write percentage."
-                : "Enable Fan override to set duty."}
+          <Card className={`dsc-glass${autoDriven ? " is-auto" : ""}`} title="Command" icon="climate">
+            <p className="dsc-honesty" style={{ marginTop: 0 }}>
+              Full Auto, strategy, fans, and demands live on Climate — Mission is triage.
             </p>
-            <div className="dsc-fan-stack">
-              <EntityFanSlider
-                entityId="fan.dsc_hub_4_inch_intake_fan_main"
-                label="Intake Main"
-                disabled={!fanOverride}
-              />
-              <EntityFanSlider
-                entityId="fan.dsc_hub_4_inch_intake_fan_2x4"
-                label="Intake 2×4"
-                disabled={!fanOverride}
-              />
-              <EntityFanSlider
-                entityId="fan.dsc_hub_6_inch_exhaust_room"
-                label="Exhaust room"
-                disabled={!fanOverride}
-              />
-              <EntityFanSlider
-                entityId="fan.dsc_hub_6_inch_exhaust_outside"
-                label="Exhaust outside"
-                disabled={!fanOverride}
-              />
-            </div>
+            <Button primary onClick={() => navigate("/live/climate")}>
+              Open Climate
+            </Button>
           </Card>
         </div>
 

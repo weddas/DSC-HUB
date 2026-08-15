@@ -142,7 +142,9 @@ export function potsInTent(
     .filter((s) => s.tent === tent);
 }
 
-/** Pot is shown when in_service is on/missing; off = fully hidden until re-enabled. */
+export const ALL_POT_NUMBERS = [1, 2, 3, 4] as const;
+
+/** Pot is shown when in_service is on/missing; off = OOS hole (never fake Got). */
 export function isPotInService(
   pot: number,
   state: (id: string, fallback?: string) => string,
@@ -155,9 +157,16 @@ export function isPotInService(
 
 export function activePotNumbers(
   state: (id: string, fallback?: string) => string,
-  pots: number[] = [1, 2, 3, 4],
+  pots: number[] = [...ALL_POT_NUMBERS],
 ): number[] {
   return pots.filter((n) => isPotInService(n, state));
+}
+
+export function inServiceCount(
+  state: (id: string, fallback?: string) => string,
+  pots: number[] = [...ALL_POT_NUMBERS],
+): { inService: number; total: number } {
+  return { inService: activePotNumbers(state, pots).length, total: pots.length };
 }
 
 export function rosterSlots(

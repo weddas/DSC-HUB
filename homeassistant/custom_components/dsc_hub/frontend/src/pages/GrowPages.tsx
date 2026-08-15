@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { LegacyCardHost } from "../components/LegacyCardHost";
+import { ComposePlant } from "../components/ComposePlant";
+import { CatalogResearch } from "../components/CatalogResearch";
 import { OverflowMenu, SoilCrossSection, SlideDrawer } from "../components/chrome";
 import { HistoryDrawer } from "../components/HistoryDrawer";
 import { Button, Card, PageHeader, StatusChip } from "../components/ui";
 import { useHass } from "../hooks/useHass";
 import { useEntitySeries } from "../hooks/useEntitySeries";
 import { useHeldReading } from "../hooks/useHeldReading";
-import { ArcGauge, MultiLineChart } from "../viz/charts";
+import { ArcGauge, GotWantBars, MultiLineChart } from "../viz/charts";
 import {
   activePotNumbers,
   buildPlantSeat,
@@ -18,6 +19,9 @@ import {
   tentLabel,
   type TentId,
 } from "../lib/seatModel";
+import { readPotVessel } from "../lib/vesselSpec";
+import { PlantExtra } from "../components/PlantExtra";
+import { VesselGlyph } from "../components/VesselGlyph";
 
 /** Shared seat body for Root / Roster drawers (Surface 7.1). */
 export function PlantSeatPanel({
@@ -27,7 +31,7 @@ export function PlantSeatPanel({
   pot: number;
   onSelectPot?: (n: number) => void;
 }) {
-  const { state, entity, callService, available, tick, num } = useHass();
+  const { hass, state, entity, callService, available, tick, num } = useHass();
   const navigate = useNavigate();
   void tick;
   const seat = buildPlantSeat(pot, { state, entity });
@@ -43,7 +47,8 @@ export function PlantSeatPanel({
     setSproutDraft(seat.sprout === "—" ? "" : seat.sprout);
     setStageDraft(seat.growthStage === "—" ? "" : seat.growthStage);
     setNotesDraft(seat.notes === "—" ? "" : seat.notes);
-  }, [pot, seat.plantName, seat.sprout, seat.growthStage, seat.notes]);
+    setApplyErr(null);
+  }, [pot]);
 
   const moistId = potGotEntity(pot, "moisture", state);
   const ecId = potGotEntity(pot, "ec", state);
@@ -61,12 +66,23 @@ export function PlantSeatPanel({
       ? learnedEcRaw
       : NaN;
 
-  const wantMoistMin = num(`number.dsc_pot${pot}_want_moisture_min`);
-  const wantMoistMax = num(`number.dsc_pot${pot}_want_moisture_max`);
+  const wantMoistMin = available(`sensor.dsc_pot${pot}_want_moisture_min`)
+    ? num(`sensor.dsc_pot${pot}_want_moisture_min`)
+    : num(`number.dsc_pot${pot}_want_moisture_min`);
+  const wantMoistMax = available(`sensor.dsc_pot${pot}_want_moisture_max`)
+    ? num(`sensor.dsc_pot${pot}_want_moisture_max`)
+    : num(`number.dsc_pot${pot}_want_moisture_max`);
+  const wantEcMin = num(`sensor.dsc_pot${pot}_want_ec_min`);
+  const wantEcMax = num(`sensor.dsc_pot${pot}_want_ec_max`);
+  const wantPhMin = num(`sensor.dsc_pot${pot}_want_ph_min`);
+  const wantPhMax = num(`sensor.dsc_pot${pot}_want_ph_max`);
   const hasWant =
     Number.isFinite(wantMoistMin) &&
     Number.isFinite(wantMoistMax) &&
-    available(`number.dsc_pot${pot}_want_moisture_min`);
+    (available(`sensor.dsc_pot${pot}_want_moisture_min`) ||
+      available(`number.dsc_pot${pot}_want_moisture_min`));
+  const hasWantEc = Number.isFinite(wantEcMin) && Number.isFinite(wantEcMax);
+  const hasWantPh = Number.isFinite(wantPhMin) && Number.isFinite(wantPhMax);
   const genericStrain =
     !seat.strainDisplay ||
     seat.strainDisplay === "—" ||
@@ -81,7 +97,7 @@ export function PlantSeatPanel({
       });
       // Confirm option stuck (HA may resolve without throwing on invalid option).
       window.setTimeout(() => {
-        const now = state(`input_select.dsc_pot${pot}_tent`, "");
+        const now = hass?.states?.[`input_select.dsc_pot${pot}_tent`]?.state || "";
         if (now !== tent) {
           setApplyErr("Tent apply failed — check helper options (clone|main|unassigned).");
         }
@@ -104,12 +120,6 @@ export function PlantSeatPanel({
     if (!available(id) || !sproutDraft) return;
     const iso = sproutDraft.length === 10 ? `${sproutDraft}T00:00:00` : sproutDraft;
     void callService("datetime", "set_value", { entity_id: id, datetime: iso });
-  };
-
-  const saveStage = () => {
-    const id = `select.dsc_pot${pot}_growth_stage`;
-    if (!available(id) || !stageDraft) return;
-    void callService("select", "select_option", { entity_id: id, option: stageDraft });
   };
 
   const saveNotes = () => {
@@ -135,7 +145,7 @@ export function PlantSeatPanel({
             className={`dsc-chip${n === pot ? " dsc-chip--ok" : ""}`}
             onClick={() => onSelectPot?.(n)}
           >
-            P{n}
+            <VesselGlyph spec={readPotVessel(n, state, entity)} size={16} /> P{n}
           </button>
         ))}
         <StatusChip label={tentLabel(seat.tent)} tone={seat.tent === "unassigned" ? "muted" : "ok"} />
@@ -149,7 +159,8 @@ export function PlantSeatPanel({
 
       <div className="dsc-seat-layout">
         <Card className="dsc-glass dsc-glass--glow" title="Medium">
-          <SoilCrossSection layers={seat.layers} />
+          <SoilCrossSection layers={seat.layers} spec={readPotVessel(pot, state, entity)} />
+          <PlantExtra pot={pot} />
           <p className="dsc-muted" style={{ marginTop: 10, fontSize: 12 }}>
             {seat.blend || "Blend lives on roster after commit — not invented here."}
           </p>
@@ -183,9 +194,13 @@ export function PlantSeatPanel({
                   <select
                     value={stageDraft}
                     onChange={(e) => {
-                      setStageDraft(e.target.value);
+                      const v = e.target.value;
+                      setStageDraft(v);
+                      if (!v) return;
+                      const id = `select.dsc_pot${pot}_growth_stage`;
+                      if (!available(id)) return;
+                      void callService("select", "select_option", { entity_id: id, option: v });
                     }}
-                    onBlur={saveStage}
                     disabled={!available(`select.dsc_pot${pot}_growth_stage`)}
                   >
                     <option value="">—</option>
@@ -239,9 +254,29 @@ export function PlantSeatPanel({
                 />
               </div>
               {hasWant && !genericStrain ? (
-                <p className="dsc-muted" style={{ margin: "8px 0 0", fontSize: 12 }}>
-                  Want moisture {wantMoistMin}–{wantMoistMax}%
-                </p>
+                <GotWantBars
+                  rows={[
+                    {
+                      label: "Moisture",
+                      got: Number(seat.moisture),
+                      wantMin: wantMoistMin,
+                      wantMax: wantMoistMax,
+                      unit: "%",
+                    },
+                    {
+                      label: "EC",
+                      got: Number(seat.ec),
+                      wantMin: hasWantEc ? wantEcMin : undefined,
+                      wantMax: hasWantEc ? wantEcMax : undefined,
+                    },
+                    {
+                      label: "pH",
+                      got: Number(seat.ph),
+                      wantMin: hasWantPh ? wantPhMin : undefined,
+                      wantMax: hasWantPh ? wantPhMax : undefined,
+                    },
+                  ]}
+                />
               ) : (
                 <p className="dsc-honesty" style={{ margin: "8px 0 0" }}>
                   <StatusChip label="No catalog Want" tone="warn" />{" "}
@@ -250,6 +285,7 @@ export function PlantSeatPanel({
                     : "Custom Want helpers missing — Got + Need only."}
                 </p>
               )}
+              <p className="dsc-kpi-sub">Need is derived (catalog vs Got), not a feed invent.</p>
             </Card>
           </div>
 
@@ -411,7 +447,7 @@ export function GrowComposePage() {
         Empty catalog fields stay empty — Compose does not invent Want bands or strain genetics. After
         commit, open Roster to assign a seat.
       </p>
-      <LegacyCardHost tag="dsc-build-plant-card" config={{}} />
+      <ComposePlant />
     </div>
   );
 }
@@ -440,7 +476,7 @@ export function GrowResearchPage() {
         indexes when present. Use in Compose to draft a plant; Open Seat to assign
         an existing roster row — neither invents missing Want/Got.
       </p>
-      <LegacyCardHost tag="dsc-catalog-browse-card" config={{}} />
+      <CatalogResearch />
     </div>
   );
 }
@@ -492,14 +528,18 @@ export function GrowRosterPage() {
                 <th>Strain</th>
                 <th>Status</th>
                 <th>Pot</th>
+                <th>Need</th>
                 <th>Tent</th>
               </tr>
             </thead>
             <tbody>
               {slots.map((s) => {
                 const p = Number(s.pot);
-                const potLive = p >= 1 && p <= 4 && isPotInService(p, state);
-                const tent = potLive ? tentLabel(readTent(state, p)) : "—";
+                const joined = p >= 1 && p <= 4;
+                const potLive = joined && isPotInService(p, state);
+                const tent = joined ? tentLabel(readTent(state, p)) : "—";
+                const need = joined ? state(`sensor.dsc_pot${p}_need_summary`, "—") : "—";
+                const vessel = joined ? readPotVessel(p, state, entity) : null;
                 return (
                   <tr
                     key={s.slot}
@@ -512,7 +552,18 @@ export function GrowRosterPage() {
                     <td>{s.nickname || "—"}</td>
                     <td>{s.strain || "—"}</td>
                     <td>{s.status || "—"}</td>
-                    <td>{potLive ? `P${p}` : "—"}</td>
+                    <td>
+                      {joined ? (
+                        <span className="dsc-chip-row">
+                          {vessel ? <VesselGlyph spec={vessel} size={22} /> : null}
+                          P{p}
+                          {!potLive ? <StatusChip label="OOS" tone="warn" /> : null}
+                        </span>
+                      ) : (
+                        "—"
+                      )}
+                    </td>
+                    <td>{need}</td>
                     <td>
                       <StatusChip label={tent} tone="muted" />
                     </td>

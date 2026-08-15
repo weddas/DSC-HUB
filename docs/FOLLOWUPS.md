@@ -2116,3 +2116,47 @@ UI/UX pass: one Dash, progressive disclosure (DecisionLayer), unused paid primit
 | N-096-3D-KIT-PULSE | Wildcard: Kit Pulse / Grow Health constellation with holes for missing kit | P1 | T-19 / T-20 — Mission + Fleet glance |
 | N-096-3D-LUNG | Wildcard: extract Lung Loop (cascade 2×4→4×8; allocated solid / nameplate dashed) | P1 | T-13 / D-04 / D-09 — unique 3D, currently trapped |
 | N-096-3D-DEAD-MESH | CUT appliance cubes, ACH slices, WEEK ? timeline; restyle grow mat to neon plate | P2 | T-11 / T-12 / T-15 / T-16 / T-18 |
+
+---
+
+## 2026-08-16 — DSC-HUB panel bar-raise (waves 0–8)
+
+React `/dsc-hub` is the product. Lovelace IIFEs remain as Twin scene host + leftover Lovelace cards.
+
+### honesty
+A prior note marked waves 1–8 done. That was files/sketches. **Only Wave 0 had been acceptance-tested** (type/select/slider while climate ticks). Later waves are incomplete until soak says otherwise.
+
+### done and holding
+- Wave 0: DSC-only tick debounce, drafts on select/slider/TargetNumber/seat notes, history deps, editor idle, drawer a11y
+
+### raised this pass (not a full-wave stamp)
+- Twin: `hideHud` on `/live/twin` and other Twin hosts so the IIFE is canvas-only (React chrome owns nav)
+- Compose: nickname/recipe/blend names/nutrient doses draft-on-focus; commit + assign + accept-mix go through DecisionLayer confirm; 8 nutrient slots + tank × strength ml; vessel copy onto `input_select.dsc_potN_vessel` on assign
+- Coupled mix: drag drafts remainder locally; commit percents on pointerup
+- Light: DecisionLayer writes `time.dsc_hub_lights_on_time`, ramps, min dark, clone Independent start/hours from Lovelace lighting
+- Mission: dropped the command T/RH MultiLineChart (Climate owns it)
+- Learning: sample inputs use TargetNumber drafts; finish overlay calls `script.dsc_cal_finish` (no invented accept-curve script)
+
+### still not the bar
+- Wave 5 3D: terracotta cut exists; VesselSpec moisture column / Need tone in Twin is still a first cut; Twin IIFE is not an R3F rewrite
+- Wave 6: LungLoop/KitPulse/tank cutaway are diagrams, not extracted Twin math / constellation
+- Wave 7: Research compare + Analytics still thin vs IIFE Research/Learning YAML
+- Wave 8 parked: Assist/MCP opt-in, GPIO 4×8 lamp, Cannalib FTS, R3F extract notes
+
+### next-plan / hardware leftovers (not skipped)
+| ID | Item | Notes |
+|---|---|---|
+| I-25 | Assist/MCP expose | Opt-in only — [`docs/ASSIST-MCP.md`](ASSIST-MCP.md). Do not silently expose the house. |
+| GPIO5 4×8 lamp | Wire `entities.main_light` when instrumented | Twin shafts stay dashed Window proxy until then. |
+| DSC-Tank firmware | Map dummy ids 1:1 | See comments in `homeassistant/packages/dsc_v4_tank_dummies.yaml`. Tester EC/pH already in `dsc_v4_tank.yaml`. |
+| R3F extract | After neon APIs | Soft APIs live on IIFE + [`dsc-twin-api.ts`](../homeassistant/custom_components/dsc_hub/frontend/src/lib/dsc-twin-api.ts). Do not rewrite a lying scene. |
+| N-087-CANNALIB-FTS | Catalog typeahead FTS5 | Still LIKE/prefix in `services/cannalib/app/db.py`. Not a Dash bar blocker. |
+| POT3/4 Modbus | Hardware isolate | Already in this file — not a panel task. |
+
+### soak
+- Type/select/Compose nickname while hub ticks after HA hard-reload
+- `/live/twin` shows canvas only (no IIFE HUD/charts/rail)
+- Light schedule times/hours stay put while ticks; Independent unlocks clone fields
+- Twin tab-away: rAF paused (no GPU spin)
+- Vessel YAML: reload HA so `input_select.dsc_build_vessel` exists
+

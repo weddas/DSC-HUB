@@ -26,6 +26,18 @@ export function collectHonestyGaps(hass: HassLike): HonestyGap[] {
   const attrs = hass.entity?.("sensor.dsc_keepup_gaps")?.attributes ?? {};
   const honesty = String(attrs.full_auto_honesty ?? "").trim();
 
+  if (hass.available && hass.available("binary_sensor.dsc_hub_link") && !on("binary_sensor.dsc_hub_link")) {
+    gaps.push({
+      id: "hub-link",
+      label: "Hub link down",
+      detail: "binary_sensor.dsc_hub_link is off — Mission/Fleet show HELD, not last-good animation.",
+      tone: "bad",
+      href: "/fleet",
+      cta: "Open Fleet",
+      priority: 9,
+    });
+  }
+
   if (hass.available && !hass.available("sensor.dsc_hub_uptime")) {
     const lc = hass.entity?.("sensor.dsc_hub_uptime")?.last_changed as string | undefined;
     let off = "";
@@ -106,6 +118,30 @@ export function collectHonestyGaps(hass: HassLike): HonestyGap[] {
       href: "/live/light",
       cta: "Open Light",
       priority: 25,
+    });
+  }
+
+  if (on("binary_sensor.dsc_clone_light_missing_in_window")) {
+    gaps.push({
+      id: "photo-missing",
+      label: "Light missing in window",
+      detail: "Photoperiod integrity — fixture did not deliver in the open window.",
+      tone: "bad",
+      href: "/live/light",
+      cta: "Open Light",
+      priority: 24,
+    });
+  }
+
+  if (on("binary_sensor.dsc_hub_light_catchup_active")) {
+    gaps.push({
+      id: "photo-catchup",
+      label: "Light catch-up",
+      detail: "Catch-up photoperiod is active — hours gauge is the Got, not invented.",
+      tone: "warn",
+      href: "/live/light",
+      cta: "Open Light",
+      priority: 28,
     });
   }
 

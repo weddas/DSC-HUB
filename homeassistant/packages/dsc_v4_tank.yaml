@@ -3,6 +3,7 @@
 # ---------------------------------------------------------------------
 # Live helper brought into git. EC normalized to µS/cm via multiplier.
 # Delete any older tank EC helpers with the same unique_ids first.
+# Pump / level / in-service dummies: dsc_v4_tank_dummies.yaml (1:1 map when firmware exists).
 # =====================================================================
 
 input_select:
