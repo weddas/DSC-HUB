@@ -1,7 +1,4 @@
-# Unraid trampoline — Compose Manager still points at DSC-HUB/services/cannalib.
-# Real project: Y:\Digital Stealth Care\Projects\CannaLib
-# After Recreate, retarget Compose Manager external path to CannaLib/services/cannalib
-# and delete this file.
+# Cannalib stdlib API on Digital-Gateway
 services:
   cannalib:
     image: python:3.12-slim
@@ -11,12 +8,11 @@ services:
     command: ["python", "-u", "/app/standalone_server.py"]
     ports:
       - "8790:8790"
-    env_file:
-      - /mnt/user/Digital-Documents/Digital Stealth Care/Projects/CannaLib/services/cannalib/.env
     environment:
       CANNALIB_DB_PATH: /data/dsc_brain.sqlite3
       CANNALIB_REQUIRE_API_KEY: "false"
       CANNALIB_METRICS_REQUIRE_KEY: "true"
+      CANNALIB_API_KEY: "MDFSLeCDOKhu1hJzTsjV3HmOkDSXoJUbehSeMGslS8U"
       CANNALIB_TRUST_PROXY: "true"
       CANNALIB_RATE_LIMIT_ENABLED: "true"
       CANNALIB_RATE_LIMIT_RPM: "120"
@@ -27,10 +23,11 @@ services:
       CANNALIB_MAX_Q_LEN: "120"
       CANNALIB_MAX_LIMIT: "50"
     volumes:
-      - "/mnt/user/Digital-Documents/Digital Stealth Care/Projects/CannaLib/services/cannalib/standalone_server.py:/app/standalone_server.py:ro"
-      - "/mnt/user/Digital-Documents/Digital Stealth Care/Projects/CannaLib/brain/data/dsc_brain.sqlite3:/data/dsc_brain.sqlite3:ro"
-      - "/mnt/user/Digital-Documents/Digital Stealth Care/Projects/CannaLib/brain/data/dsc_brain.sqlite3-wal:/data/dsc_brain.sqlite3-wal:ro"
-      - "/mnt/user/Digital-Documents/Digital Stealth Care/Projects/CannaLib/brain/data/dsc_brain.sqlite3-shm:/data/dsc_brain.sqlite3-shm:ro"
+      - "/mnt/user/Digital-Documents/Digital Stealth Care/Projects/DSC-HUB/services/cannalib/standalone_server.py:/app/standalone_server.py:ro"
+      # WAL DB needs the -wal/-shm siblings; do not mount only the main file.
+      - "/mnt/user/Digital-Documents/Digital Stealth Care/Projects/DSC-HUB/brain/data/dsc_brain.sqlite3:/data/dsc_brain.sqlite3:ro"
+      - "/mnt/user/Digital-Documents/Digital Stealth Care/Projects/DSC-HUB/brain/data/dsc_brain.sqlite3-wal:/data/dsc_brain.sqlite3-wal:ro"
+      - "/mnt/user/Digital-Documents/Digital Stealth Care/Projects/DSC-HUB/brain/data/dsc_brain.sqlite3-shm:/data/dsc_brain.sqlite3-shm:ro"
     read_only: true
     tmpfs:
       - /tmp
