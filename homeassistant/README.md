@@ -127,20 +127,27 @@ Add Integration → Browser Mod**. Without it the popup taps silently no-op.
 4. Download **DSC-HUB System Map**, restart/reload when prompted, hard-refresh browser
 
 HACS serves `/hacsfiles/DSC-HUB/DSC-HUB.js` (system map + airflow + The Dash +
-Build a Plant + SVG beside it). Full steps:
-[`../scripts/HACS-FRONTEND.md`](../scripts/HACS-FRONTEND.md).
+Build a Plant + app-nav + catalog-browse + SVG beside it; tip ~**1011 KB**).
+Full steps: [`../scripts/HACS-FRONTEND.md`](../scripts/HACS-FRONTEND.md).
+After `chore(hacs): sync dist/…`, verify
+`bash scripts/sync-hacs-dist.sh && git diff --stat -- dist/` is empty before
+trusting HACS-only sites.
 
 ### Manual fallback (`/config/www/`)
 
 1. Copy into Home Assistant `/config/www/` (or rely on Sync **5.1.4+** / ha-sync):
    - [`www/dsc-system-map.svg`](www/dsc-system-map.svg)
-   - Bundled JS as `/local/dsc-system-map-card.js` (system map + airflow + Three +
-     Dash FX + The Dash + Build a Plant)
+   - Bundled JS as `/local/dsc-system-map-card.js` / `/local/DSC-HUB.js`
+     (eight-file concat: system-map → airflow → three → dash-fx → the-dash →
+     build-plant → app-nav → catalog-browse)
+   - Dedicated standalones: `dsc-airflow-map-card.js`, `dsc-the-dash-card.js`,
+     `dsc-build-plant-card.js`, `dsc-app-nav-card.js`, `dsc-catalog-browse-card.js`
+     (React panel `ensureLocalCards` prefers these over a stale umbrella)
    - [`www/dsc-catalog/*.json`](www/dsc-catalog/) for Build a Plant typeahead
-   - Optional standalones: airflow / the-dash / build-plant cards
 2. **Settings → Dashboards → ⋮ → Resources → Add resource** (JavaScript, not module):
    - `/local/dsc-system-map-card.js` (one resource registers all bundled cards)
    - Or HACS `/hacsfiles/DSC-HUB/DSC-HUB.js`
+   - Do **not** register both for the same elements (double-define risk)
 3. YAML dashboards already include the cards. Hard-refresh the browser.
 
 Optional entity overrides:
@@ -162,6 +169,15 @@ title: AIRFLOW STATUS
 (GUI) to set room size, tents (1–4), wall ports, fans, carbon filters, and
 exhaust **into room** vs **through wall**. Add card loads DSC defaults
 (Room + 2x4 + 4x8 + five routes).
+
+Default tent LIGHT marks (do not point Main at SF1000):
+
+| Tent | Entity |
+|---|---|
+| Clone 2×4 | `light.dsc_hub_sf1000_dimmer` |
+| Main 4×8 | `binary_sensor.dsc_hub_4x8_window_open` (photoperiod proxy; GPIO5 lamp TBD) |
+
+Ops: [`../docs/qa/AIRFLOW-MAP-LIGHT-ENTITIES.md`](../docs/qa/AIRFLOW-MAP-LIGHT-ENTITIES.md).
 
 ## Climate capacity envelope
 

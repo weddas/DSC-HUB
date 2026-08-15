@@ -1979,6 +1979,13 @@ esult[entityId]; HA often returns [[states]] → empty series. Empty hist locked
 ### soak
 - Hard-reload Twin / Main / Clone / Climate after `/local/DSC-HUB.js?v=7.1.4-tent-pass`. Confirm 4×8 amber when window open; airflow LIGHT marks; cockpit chips.
 
+### docs (2026-08-15 automation)
+- HACS sync `e0db778` republished the airflow LIGHT remap into `dist/` — verified
+  `bash scripts/sync-hacs-dist.sh` → empty `git diff -- dist/`.
+- Ops runbook: [`docs/qa/AIRFLOW-MAP-LIGHT-ENTITIES.md`](qa/AIRFLOW-MAP-LIGHT-ENTITIES.md).
+- Master HACS docs brought to tip eight-file concat (~1011 KB) + dedicated-first
+  `ensureLocalCards` load order (`scripts/HACS-FRONTEND.md`).
+
 ### still parked
 - Real 4×8 PWM lamp entity (GPIO5) — wire `entities.main_light` when instrumented.
 - SoftAP NAPT OTA (fleet update path) — separate from Twin UI.
