@@ -68,6 +68,10 @@ template:
           {% for name, ver in checks %}
             {% if name == 'bridge' and ver in ['unknown','unavailable',''] %}
               {# Bridge optional until flashed — do not fail fleet chip. #}
+            {% elif name == 'pot3' and not is_state('input_boolean.dsc_pot3_in_service','on') %}
+              {# Planned OOS — firmware-missing is inventory, not fleet drift. #}
+            {% elif name.startswith('pot') and not is_state('input_boolean.dsc_' ~ name ~ '_in_service','on') %}
+              {# In-service off — skip firmware-missing for that node. #}
             {% elif ver in ['unknown','unavailable',''] or ver is none %}
               {% set ns.missing = ns.missing + 1 %}
             {% elif (ver|string|trim).split('.')[0:2]|join('.') != train %}

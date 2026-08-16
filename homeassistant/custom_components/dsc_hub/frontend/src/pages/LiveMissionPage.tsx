@@ -11,31 +11,30 @@ import { NextRecommendedCard } from "../components/Honesty";
 import { useHass } from "../hooks/useHass";
 import { useHeldReading, useHubOfflineMs, useBeatOfflineMs, usePanelOfflineMs } from "../hooks/useHeldReading";
 import { fmtDurationMs } from "../lib/formatDuration";
-import { buildPlantSeat, ALL_POT_NUMBERS, inServiceCount, isPotInService } from "../lib/seatModel";
+import { buildPlantSeat, ALL_POT_NUMBERS, isPotInService } from "../lib/seatModel";
 import { HubLinkLine } from "../components/HubLinkLine";
 import { VesselGlyph } from "../components/VesselGlyph";
 import { readPotVessel } from "../lib/vesselSpec";
 import { readPotTrust } from "../lib/potTrust";
 import { resolveCfm } from "../lib/cfmProvenance";
-import { CfmProvenanceBadge } from "../components/CfmBadge";
-import { KitPulse, type KitNode } from "../components/KitPulse";
-
-const FAULTS: { id: string; label: string }[] = [
-  { id: "binary_sensor.dsc_hub_emergency_failsafe", label: "Emergency failsafe" },
-  { id: "binary_sensor.dsc_hub_climate_sensor_fault", label: "Climate sensor fault" },
-  { id: "binary_sensor.dsc_hub_aux_sensor_fault", label: "Aux sensor fault" },
-  { id: "binary_sensor.dsc_hub_root_zone_sensor_fault", label: "Root-zone probes" },
-  { id: "binary_sensor.dsc_clone_dark_period_violation", label: "Clone dark violation" },
-  { id: "binary_sensor.dsc_reduced_kit", label: "Reduced kit" },
-];
+import { CfmTrustLine } from "../components/CfmBadge";
+import { KitPulse } from "../components/KitPulse";
+import { buildKitNodes, kitInServiceCount, type KitNode } from "../lib/kitInventory";
+import { useSettledAvailability } from "../hooks/useSettledAvailability";
+import { useAlertSnooze } from "../hooks/useAlertSnooze";
+import { useInspector } from "../components/InspectorHost";
+import { ALERT_ENTITY_IDS } from "../lib/alertPlaybook";
 
 export function LiveMissionPage() {
   const { state, num, available, entity, tick } = useHass();
   const navigate = useNavigate();
   const [searchOpen, setSearchOpen] = useState(false);
+  const settled = useSettledAvailability();
+  const { isSnoozed } = useAlertSnooze();
+  const inspector = useInspector();
   void tick;
 
-  const hubOnline = available("sensor.dsc_hub_uptime");
+  const hubOnline = settled("sensor.dsc_hub_uptime");
   const offlineMs = useHubOfflineMs();
   const beatOfflineMs = useBeatOfflineMs();
   const panelOfflineMs = usePanelOfflineMs();
@@ -56,7 +55,7 @@ export function LiveMissionPage() {
   const panelLink = state("binary_sensor.dsc_hub_panel_link");
   const panelOk = panelLink === "on";
   const heartbeat = state("sensor.dsc_hub_heartbeat", "NO BEAT");
-  const beatOk = available("sensor.dsc_hub_heartbeat");
+  const beatOk = settled("sensor.dsc_hub_heartbeat");
   const takeover = state("switch.dsc_hub_manual_takeover") === "on";
   const fanOverride = state("switch.dsc_hub_tent_manual_override") === "on";
   const fullAuto = state("switch.dsc_hub_tent_full_auto_mode") === "on";
@@ -65,44 +64,30 @@ export function LiveMissionPage() {
   const autoDriven = fullAuto && !takeover;
   const fleet = state("sensor.dsc_fleet_version_status", "—");
 
-  const activeFaults = FAULTS.filter((f) => state(f.id) === "on");
+  const activeFaults = ALERT_ENTITY_IDS.filter((id) => state(id) === "on" && !isSnoozed(id)).map((id) => ({
+    id,
+    label: id.split(".").pop()?.replace(/dsc_/, "").replace(/_/g, " ") || id,
+  }));
   const seats = ALL_POT_NUMBERS.map((n) => buildPlantSeat(n, { state, entity }));
-  const svc = inServiceCount(state);
+  const kitNodes: KitNode[] = buildKitNodes({ state, available }, settled);
+  const svc = kitInServiceCount(kitNodes);
   const outCfm = resolveCfm("sensor.dsc_cfm_exhaust_out_allocated", "sensor.dsc_cfm_exhaust_out", {
     available,
     num,
   });
-  const kitHole = (on: boolean, known: boolean): KitNode["status"] => {
-    if (!known) return "missing";
-    return on ? "ok" : "oos";
-  };
-  const kitNodes: KitNode[] = [
-    { id: "hub", label: "Hub", status: available("binary_sensor.dsc_hub_link") ? (state("binary_sensor.dsc_hub_link") === "on" ? "ok" : "dark") : "missing" },
-    {
-      id: "ac",
-      label: "AC",
-      status: kitHole(state("input_boolean.dsc_ac_in_service") === "on", available("input_boolean.dsc_ac_in_service")),
-    },
-    {
-      id: "mister",
-      label: "Mister",
-      status: kitHole(
-        state("input_boolean.dsc_clone_humidifier_in_service") === "on",
-        available("input_boolean.dsc_clone_humidifier_in_service"),
-      ),
-    },
-    ...ALL_POT_NUMBERS.map((n) => ({
-      id: `pot${n}`,
-      label: `Pot ${n}`,
-      status: kitHole(isPotInService(n, state), available(`input_boolean.dsc_pot${n}_in_service`)),
-    })),
-    {
-      id: "tank",
-      label: "Tank",
-      status: kitHole(state("input_boolean.dsc_tank_in_service") === "on", available("input_boolean.dsc_tank_in_service")),
-    },
-  ];
+  const panelSettled = settled("binary_sensor.dsc_hub_panel_link") || panelOk;
+  const panelHaOnly = !panelOk && available("sensor.dsc_control_wifi_rssi");
+  const panelOffline = !panelOk && !panelHaOnly && !panelSettled;
   const anyHeld = tentT.stale || tentRh.stale || tentVpd.stale || cloneT.stale || cloneRh.stale || cloneVpd.stale;
+  const openNode = (node: KitNode) =>
+    inspector.open({
+      entityId: node.entityId,
+      label: node.label,
+      kind: "kit",
+      runtimeToday: node.runtimeToday,
+      cyclesToday: node.cyclesToday,
+      demandEntity: node.demandEntity,
+    });
 
   return (
     <div className="dsc-page">
@@ -129,8 +114,8 @@ export function LiveMissionPage() {
                   label: "Open Climate",
                   onSelect: () => navigate("/live/climate"),
                 },
-                { id: "main", label: "Main cockpit", onSelect: () => navigate("/live/main") },
-                { id: "clone", label: "Clone cockpit", onSelect: () => navigate("/live/clone") },
+                { id: "main", label: "4×8 cockpit", onSelect: () => navigate("/live/4x8") },
+                { id: "clone", label: "2×4 cockpit", onSelect: () => navigate("/live/2x4") },
                 { id: "fleet", label: "Open Fleet", onSelect: () => navigate("/fleet") },
               ]}
             />
@@ -143,6 +128,9 @@ export function LiveMissionPage() {
           icon={hubOnline ? "ok" : "alert"}
           label={hubOnline ? "HUB ONLINE" : "HUB OFFLINE"}
           tone={hubOnline ? "ok" : "bad"}
+          onClick={() =>
+            inspector.open({ entityId: "binary_sensor.dsc_hub_link", label: "Hub", kind: "kit" })
+          }
         />
         {!hubOnline ? (
           <StatusChip
@@ -152,18 +140,19 @@ export function LiveMissionPage() {
           />
         ) : null}
         {anyHeld ? <StatusChip label="HELD VITALS" tone="warn" /> : null}
-        <StatusChip label={`${svc.inService} of ${svc.total} in service`} tone={svc.inService === svc.total ? "ok" : "warn"} />
         <StatusChip
-          label={
-            panelOk
-              ? "PANEL ESP-NOW"
-              : available("sensor.dsc_control_wifi_rssi")
-                ? "PANEL HA-ONLY"
-                : "PANEL OFFLINE"
-          }
-          tone={panelOk ? "ok" : available("sensor.dsc_control_wifi_rssi") ? "warn" : "bad"}
+          label={`${svc.inService} of ${svc.total} in service`}
+          tone={svc.dark > 0 ? "bad" : "ok"}
+          onClick={() => navigate("/fleet")}
         />
-        {!panelOk && !available("sensor.dsc_control_wifi_rssi") ? (
+        <StatusChip
+          label={panelOk ? "PANEL ESP-NOW" : panelHaOnly ? "PANEL HA-ONLY" : panelOffline ? "PANEL OFFLINE" : "PANEL…"}
+          tone={panelOk ? "ok" : panelHaOnly ? "warn" : "bad"}
+          onClick={() =>
+            inspector.open({ entityId: "binary_sensor.dsc_hub_panel_link", label: "Panel link", kind: "kit" })
+          }
+        />
+        {panelOffline ? (
           <StatusChip
             label={`PANEL OFF ${panelOfflineMs != null ? fmtDurationMs(panelOfflineMs) : "—"}`}
             tone="bad"
@@ -174,26 +163,56 @@ export function LiveMissionPage() {
           icon={beatOk ? "ok" : "alert"}
           label={beatOk ? `BEAT ${heartbeat}` : "NO BEAT"}
           tone={beatOk ? "ok" : "bad"}
+          onClick={() =>
+            inspector.open({ entityId: "sensor.dsc_hub_heartbeat", label: "Heartbeat", kind: "kit" })
+          }
         />
         {!beatOk ? (
           <StatusChip label={`BEAT OFF ${beatOfflineMs != null ? fmtDurationMs(beatOfflineMs) : "—"}`} tone="bad" pulse />
         ) : null}
         <StatusChip
-          icon={alerts === 0 ? "ok" : "alert"}
-          label={alerts === 0 ? "All clear" : `${alerts} alert(s)`}
-          tone={alerts === 0 ? "ok" : "bad"}
-          pulse={alerts > 0}
+          icon={activeFaults.length === 0 ? "ok" : "alert"}
+          label={activeFaults.length === 0 ? "All clear" : `${activeFaults.length} alert(s)`}
+          tone={activeFaults.length === 0 ? "ok" : "bad"}
+          pulse={activeFaults.length > 0}
+          onClick={() => {
+            const first = activeFaults[0];
+            inspector.open({
+              entityId: first?.id || "sensor.dsc_active_alert_count",
+              label: first?.label || "Alerts",
+              kind: "alert",
+            });
+          }}
         />
         <StatusChip
           label={fleet === "ok" ? "FLEET OK" : fleet === "warn" ? "FLEET WARN" : "FLEET DRIFT"}
           tone={fleet === "ok" ? "ok" : fleet === "warn" ? "warn" : "bad"}
+          onClick={() =>
+            inspector.open({
+              entityId: "sensor.dsc_fleet_version_status",
+              label: "Fleet version",
+              kind: "fleet",
+            })
+          }
         />
         {fullAuto ? <StatusChip icon="ok" label="FULL AUTO" tone="ok" pulse /> : null}
         {autoDriven ? <StatusChip label="AUTO-DRIVEN" tone="ok" /> : null}
         {takeover ? <StatusChip icon="alert" label="MANUAL TAKEOVER" tone="warn" pulse /> : null}
         {fanOverride ? <StatusChip icon="alert" label="FAN OVERRIDE" tone="warn" pulse /> : null}
         {fullAuto && reducedKit ? (
-          <StatusChip icon="alert" label={honesty || "REDUCED KIT"} tone="warn" pulse />
+          <StatusChip
+            icon="alert"
+            label={honesty || "UNEXPECTED OOS"}
+            tone="warn"
+            pulse
+            onClick={() =>
+              inspector.open({
+                entityId: "binary_sensor.dsc_reduced_kit",
+                label: "Unexpected OOS",
+                kind: "alert",
+              })
+            }
+          />
         ) : null}
       </div>
 
@@ -208,14 +227,14 @@ export function LiveMissionPage() {
         </div>
         <div className="dsc-col-12">
           <Card className="dsc-glass" title="Kit pulse" icon="ok">
-            <KitPulse nodes={kitNodes} />
+            <KitPulse nodes={kitNodes} onSelect={openNode} />
           </Card>
         </div>
 
         <div className="dsc-col-12">
           <Card className="dsc-glass" title="Lung CFM" icon="climate">
+            <CfmTrustLine readings={[outCfm]} />
             <div className="dsc-chip-row">
-              <CfmProvenanceBadge reading={outCfm} />
               <button type="button" className="dsc-chip" onClick={() => navigate("/live/climate")}>
                 OUT {Number.isFinite(outCfm.value) ? Math.round(outCfm.value) : "—"} cfm → Climate
               </button>
@@ -262,7 +281,13 @@ export function LiveMissionPage() {
               <ul className="dsc-fault-list">
                 {activeFaults.map((f) => (
                   <li key={f.id}>
-                    <StatusChip label={f.label} tone="bad" pulse icon="alert" />
+                    <StatusChip
+                      label={f.label}
+                      tone="bad"
+                      pulse
+                      icon="alert"
+                      onClick={() => inspector.open({ entityId: f.id, label: f.label, kind: "alert" })}
+                    />
                     <span className="dsc-muted">{f.id}</span>
                   </li>
                 ))}
@@ -283,8 +308,8 @@ export function LiveMissionPage() {
           {[
             { path: "/live/climate", label: "Climate" },
             { path: "/live/twin", label: "Twin" },
-            { path: "/live/main", label: "Main" },
-            { path: "/live/clone", label: "Clone" },
+            { path: "/live/4x8", label: "4×8" },
+            { path: "/live/2x4", label: "2×4" },
             { path: "/live/root", label: "Root" },
             { path: "/live/light", label: "Light" },
             { path: "/grow/compose", label: "Compose" },

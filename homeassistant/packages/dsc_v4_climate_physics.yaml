@@ -704,6 +704,45 @@ template:
           {{ states('sensor.dsc_hub_clone_temperature') not in ['unknown','unavailable']
              and states('sensor.dsc_hub_clone_humidity') not in ['unknown','unavailable'] }}
 
+      - name: "DSC Hub Room VPD kPa"
+        unique_id: dsc_hub_room_vpd_kpa
+        default_entity_id: sensor.dsc_hub_room_vpd_kpa
+        unit_of_measurement: "kPa"
+        state_class: measurement
+        icon: mdi:gauge
+        state: >-
+          {% set t = states('sensor.dsc_hub_room_temperature')|float(none) %}
+          {% set rh = states('sensor.dsc_hub_room_humidity')|float(none) %}
+          {% if t is none or rh is none %}unknown{% else %}
+            {% set svp = 0.6108 * (2.718281828 ** ((17.27 * t) / (t + 237.3))) %}
+            {{ (svp * (1 - rh / 100)) | round(3) }}
+          {% endif %}
+        availability: >-
+          {{ states('sensor.dsc_hub_room_temperature') not in ['unknown','unavailable']
+             and states('sensor.dsc_hub_room_humidity') not in ['unknown','unavailable'] }}
+
+      - name: "DSC Bought Runtime Today"
+        unique_id: dsc_bought_runtime_today
+        unit_of_measurement: "h"
+        state_class: measurement
+        icon: mdi:clock-outline
+        state: >-
+          {{ (
+            states('sensor.dsc_heater_runtime_today')|float(0)
+            + states('sensor.dsc_humidifier_runtime_today')|float(0)
+            + states('sensor.dsc_dehumidifier_runtime_today')|float(0)
+            + states('sensor.dsc_ac_runtime_today')|float(0)
+            + states('sensor.dsc_growmat_runtime_today')|float(0)
+          ) | round(2) }}
+        attributes:
+          heater_h: "{{ states('sensor.dsc_heater_runtime_today') }}"
+          humidifier_h: "{{ states('sensor.dsc_humidifier_runtime_today') }}"
+          dehumidifier_h: "{{ states('sensor.dsc_dehumidifier_runtime_today') }}"
+          ac_h: "{{ states('sensor.dsc_ac_runtime_today') }}"
+          mat_h: "{{ states('sensor.dsc_growmat_runtime_today') }}"
+          vent_heat_dump_btu: "{{ states('sensor.dsc_vent_heat_dump_btu') }}"
+          note: "Runtime hours of bought levers + current dump BTU. Not invented kWh."
+
       # Vent heat dump (once-through OUT vs room source air): ~1.08 × CFM × ΔT
       - name: "DSC Vent Heat Dump BTU"
         unique_id: dsc_vent_heat_dump_btu

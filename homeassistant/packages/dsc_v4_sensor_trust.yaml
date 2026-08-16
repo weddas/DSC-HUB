@@ -109,37 +109,30 @@ template:
         icon: mdi:shield-alert-outline
         state: >
           {% set ns = namespace(g=[]) %}
-          {% if not is_state('input_boolean.dsc_ac_in_service','on') %}
-            {% set ns.g = ns.g + ['Hot soak / lights-on heat dump needs AC'] %}
-          {% endif %}
-          {% if not is_state('input_boolean.dsc_clone_humidifier_in_service','on') %}
-            {% set ns.g = ns.g + ['Clone RH keep-up needs mister'] %}
-          {% endif %}
-          {% if not is_state('input_boolean.dsc_pot3_in_service','on') %}
-            {% set ns.g = ns.g + ['POT3 mat vote / chemistry blind'] %}
+          {% if is_state('binary_sensor.dsc_reduced_kit','on') %}
+            {% set off = state_attr('binary_sensor.dsc_reduced_kit','offline') %}
+            {% if off %}
+              {% set ns.g = ns.g + ['Unexpected OOS: ' ~ off] %}
+            {% endif %}
           {% endif %}
           {% if ns.g|length == 0 %}none
           {% else %}{{ ns.g|length }} gap(s){% endif %}
         attributes:
+          planned_oos: "{{ state_attr('binary_sensor.dsc_reduced_kit','planned_oos') }}"
           gaps: >
             {% set g = [] %}
-            {% if not is_state('input_boolean.dsc_ac_in_service','on') %}
-              {% set g = g + ['Hot soak / lights-on heat dump needs AC'] %}
-            {% endif %}
-            {% if not is_state('input_boolean.dsc_clone_humidifier_in_service','on') %}
-              {% set g = g + ['Clone RH keep-up needs mister'] %}
-            {% endif %}
-            {% if not is_state('input_boolean.dsc_pot3_in_service','on') %}
-              {% set g = g + ['POT3 mat vote / chemistry blind'] %}
+            {% if is_state('binary_sensor.dsc_reduced_kit','on') %}
+              {% set off = state_attr('binary_sensor.dsc_reduced_kit','offline') %}
+              {% if off %}{% set g = g + ['Unexpected OOS: ' ~ off] %}{% endif %}
             {% endif %}
             {{ g | join(' · ') }}
           full_auto_honesty: >-
             {% if is_state('switch.dsc_hub_tent_full_auto_mode','on')
                  and is_state('binary_sensor.dsc_reduced_kit','on') %}
-              Full Auto armed on reduced kit — next-best levers only; cannot invent missing capacity
+              Full Auto armed with unexpected OOS — next-best levers only; cannot invent missing capacity
             {% elif is_state('binary_sensor.dsc_reduced_kit','on') %}
-              Reduced kit — restore AC/mister/pots before claiming complete climate
-            {% else %}Complete kit{% endif %}
+              Unexpected OOS — restore the live lever before claiming complete climate
+            {% else %}Complete kit (planned holes are inventory, not keep-up faults){% endif %}
 
       - name: "DSC HA Link Flap Count 24h"
         unique_id: dsc_ha_link_flap_count_24h

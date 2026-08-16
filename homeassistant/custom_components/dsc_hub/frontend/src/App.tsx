@@ -4,6 +4,7 @@ import { Button, Icon, PageHeader } from "./components/ui";
 import { HonestyRail } from "./components/Honesty";
 import { TwinKeepAlive } from "./components/TwinKeepAlive";
 import { SeatOverlayHost } from "./components/SeatOverlay";
+import { InspectorProvider } from "./components/InspectorHost";
 import { HassProvider } from "./hooks/useHass";
 import { ZoneFocusProvider } from "./hooks/useZoneFocus";
 import { type IconName } from "./icons";
@@ -136,8 +137,10 @@ function Shell() {
         <Route path="/live/mission" element={<LiveMissionPage />} />
         <Route path="/live/twin" element={<LiveTwinPage />} />
         <Route path="/live/climate" element={<LiveClimatePage />} />
-        <Route path="/live/main" element={<LiveMainPage />} />
-        <Route path="/live/clone" element={<LiveClonePage />} />
+        <Route path="/live/4x8" element={<LiveMainPage />} />
+        <Route path="/live/2x4" element={<LiveClonePage />} />
+        <Route path="/live/main" element={<Navigate to="/live/4x8" replace />} />
+        <Route path="/live/clone" element={<Navigate to="/live/2x4" replace />} />
         <Route path="/live/root" element={<LiveRootPage />} />
         <Route path="/live/light" element={<LiveLightPage />} />
         <Route path="/grow" element={<Navigate to="/grow/compose" replace />} />
@@ -166,7 +169,9 @@ export function App({ hass }: { hass: HomeAssistant | null }) {
   return (
     <HassProvider hass={hass}>
       <ZoneFocusProvider>
-        <Shell />
+        <InspectorProvider>
+          <Shell />
+        </InspectorProvider>
       </ZoneFocusProvider>
     </HassProvider>
   );

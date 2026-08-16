@@ -8,8 +8,8 @@ import { readPotVessel } from "../lib/vesselSpec";
 import { readPotTrust } from "../lib/potTrust";
 
 function focusTentFromPath(pathname: string): TwinFocusTent {
-  if (pathname === "/live/main") return "main";
-  if (pathname === "/live/clone") return "clone";
+  if (pathname === "/live/main" || pathname === "/live/4x8") return "main";
+  if (pathname === "/live/clone" || pathname === "/live/2x4") return "clone";
   return null;
 }
 
@@ -19,7 +19,9 @@ function cockpitHidesHud(pathname: string): boolean {
     pathname === "/live/twin" ||
     pathname === "/ops/dash" ||
     pathname === "/live/main" ||
-    pathname === "/live/clone"
+    pathname === "/live/clone" ||
+    pathname === "/live/4x8" ||
+    pathname === "/live/2x4"
   );
 }
 
@@ -40,7 +42,9 @@ export function TwinKeepAlive() {
     location.pathname === "/live/twin" ||
     location.pathname === "/ops/dash" ||
     location.pathname === "/live/main" ||
-    location.pathname === "/live/clone";
+    location.pathname === "/live/clone" ||
+    location.pathname === "/live/4x8" ||
+    location.pathname === "/live/2x4";
   const hubHeld = available("binary_sensor.dsc_hub_link")
     ? state("binary_sensor.dsc_hub_link") !== "on"
     : !available("sensor.dsc_hub_uptime");

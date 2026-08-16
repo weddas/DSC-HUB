@@ -84,10 +84,12 @@ export function collectHonestyGaps(hass: HassLike): HonestyGap[] {
   }
 
   if (on("binary_sensor.dsc_reduced_kit")) {
+    const reduced = hass.entity?.("binary_sensor.dsc_reduced_kit")?.attributes ?? {};
+    const off = String(reduced.offline ?? "").trim();
     gaps.push({
       id: "reduced-kit",
-      label: "Reduced kit",
-      detail: "Full Auto keep-up is honesty-limited while kit is reduced.",
+      label: "Unexpected OOS",
+      detail: off || "A live lever is temp-OOS or lockout — planned holes are inventory.",
       tone: "warn",
       href: "/fleet",
       cta: "Review kit",
@@ -112,8 +114,8 @@ export function collectHonestyGaps(hass: HassLike): HonestyGap[] {
   if (on("binary_sensor.dsc_clone_dark_period_violation")) {
     gaps.push({
       id: "dark-viol",
-      label: "Clone dark violation",
-      detail: "Photoperiod honesty — check Light Cycle.",
+      label: "2×4 dark violation",
+      detail: "Photoperiod honesty — check Light.",
       tone: "bad",
       href: "/live/light",
       cta: "Open Light",

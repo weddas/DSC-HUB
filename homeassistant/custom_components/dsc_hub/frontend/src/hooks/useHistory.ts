@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useHass } from "./useHass";
 import type { SeriesPoint } from "../viz/charts";
+import { stateToNumber } from "../lib/seriesHold";
 
 type HistoryState = {
   s: string | number;
@@ -25,9 +26,7 @@ function toMs(point: HistoryState): number | null {
 }
 
 function toNum(point: HistoryState): number | null {
-  const raw = point.s ?? point.state;
-  const n = typeof raw === "number" ? raw : Number(raw);
-  return Number.isFinite(n) ? n : null;
+  return stateToNumber(point.s ?? point.state);
 }
 
 function downsample(points: SeriesPoint[], maxPoints: number): SeriesPoint[] {

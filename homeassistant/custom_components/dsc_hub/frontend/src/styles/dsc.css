@@ -1571,7 +1571,7 @@
 }
 .dsc-kit-constellation {
   width: 100%;
-  max-height: 240px;
+  max-height: 420px;
   color: inherit;
   margin-bottom: 8px;
 }
@@ -1640,3 +1640,181 @@
 .dsc-detail-list dd {
   margin: 0;
 }
+
+button.dsc-chip {
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+  color: inherit;
+}
+button.dsc-chip.is-clickable:hover {
+  border-color: var(--dsc-teal);
+}
+
+.dsc-duty-hit {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+}
+.dsc-duty-strip {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 8px 0;
+}
+.dsc-duty-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--dsc-gray-5);
+}
+.dsc-duty-svg {
+  width: 100%;
+  height: 18px;
+  display: block;
+}
+
+.dsc-inspector-playbook {
+  margin: 10px 0;
+  padding: 10px 12px;
+  border: 1px solid var(--dsc-glass-border);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.22);
+}
+.dsc-inspector-playbook strong {
+  display: block;
+  margin-bottom: 4px;
+}
+.dsc-inspector-playbook p {
+  margin: 4px 0;
+}
+
+.dsc-stage-track {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+.dsc-stage-pill {
+  font-size: 0.65rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 5px 8px;
+  border-radius: 6px;
+  background: var(--dsc-gray-2);
+  color: var(--dsc-gray-5);
+}
+.dsc-stage-pill.is-on {
+  background: color-mix(in srgb, var(--dsc-blue) 45%, transparent);
+  color: var(--dsc-white);
+}
+.dsc-stage-pill.is-next {
+  background: color-mix(in srgb, var(--dsc-amber) 22%, transparent);
+  color: var(--dsc-amber);
+}
+.dsc-scheduler-lanes {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+.dsc-scheduler-lane {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--dsc-gray-3);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.16);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.dsc-scheduler-lane:hover:not(:disabled) {
+  border-color: var(--dsc-teal);
+}
+.dsc-scheduler-lane.is-oos,
+.dsc-scheduler-lane:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.dsc-air-path {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.dsc-air-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  color: var(--dsc-white);
+}
+
+.dsc-target-heroes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+}
+.dsc-tent-targets.is-hero {
+  border-color: var(--dsc-teal-dim);
+  padding: 14px 16px;
+}
+.dsc-target-hint {
+  font-size: 0.65rem;
+  color: var(--dsc-gray-5);
+  letter-spacing: 0.03em;
+}
+.dsc-got-want-hit {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+}
+
+.dsc-pot-card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  margin-bottom: 8px;
+}
+.dsc-pot-card.is-oos {
+  opacity: 0.72;
+}
+.dsc-npk-hit {
+  appearance: none;
+  border: 1px solid var(--dsc-gray-3);
+  background: var(--dsc-gray-2);
+  color: inherit;
+  font: inherit;
+  font-size: 0.75rem;
+  border-radius: 8px;
+  padding: 6px 8px;
+  cursor: pointer;
+}
+.dsc-npk-hit:hover {
+  border-color: var(--dsc-teal);
+}
+
+.dsc-light-hero .dsc-honesty {
+  font-size: 0.78rem;
+}
+

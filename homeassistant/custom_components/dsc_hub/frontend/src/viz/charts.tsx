@@ -22,6 +22,10 @@ export interface NamedSeries {
   unit?: string;
   /** Ghost compare series (last cycle / sibling) — dashed, no fill. */
   ghost?: boolean;
+  /** Want / in-band — stroke turns amber then bad when leaving. */
+  band?: { min: number; max: number };
+  /** Step-after (duty / binary). Default is a diagonal between points. */
+  step?: boolean;
 }
 
 export interface ChartTarget {
@@ -62,6 +66,26 @@ function padDomain(min: number, max: number, padFrac = 0.08): { min: number; max
   return { min: min - pad, max: max + pad };
 }
 
+function xyFor(
+  p: SeriesPoint,
+  width: number,
+  height: number,
+  pad: { l: number; r: number; t: number; b: number },
+  min: number,
+  max: number,
+  t0: number,
+  t1: number,
+): { x: number; y: number } {
+  const span = Math.max(max - min, 1e-6);
+  const tSpan = Math.max(t1 - t0, 1);
+  const innerW = width - pad.l - pad.r;
+  const innerH = height - pad.t - pad.b;
+  return {
+    x: pad.l + ((p.t - t0) / tSpan) * innerW,
+    y: pad.t + (1 - (p.v - min) / span) * innerH,
+  };
+}
+
 function buildPath(
   series: SeriesPoint[],
   width: number,
@@ -71,19 +95,58 @@ function buildPath(
   max: number,
   t0: number,
   t1: number,
+  step = false,
 ): string {
   if (!series.length) return "";
-  const span = Math.max(max - min, 1e-6);
-  const tSpan = Math.max(t1 - t0, 1);
-  const innerW = width - pad.l - pad.r;
-  const innerH = height - pad.t - pad.b;
   return series
     .map((p, i) => {
-      const x = pad.l + ((p.t - t0) / tSpan) * innerW;
-      const y = pad.t + (1 - (p.v - min) / span) * innerH;
-      return `${i === 0 ? "M" : "L"}${x.toFixed(1)} ${y.toFixed(1)}`;
+      const { x, y } = xyFor(p, width, height, pad, min, max, t0, t1);
+      if (i === 0) return `M${x.toFixed(1)} ${y.toFixed(1)}`;
+      if (!step) return `L${x.toFixed(1)} ${y.toFixed(1)}`;
+      const prev = xyFor(series[i - 1], width, height, pad, min, max, t0, t1);
+      return `L${x.toFixed(1)} ${prev.y.toFixed(1)} L${x.toFixed(1)} ${y.toFixed(1)}`;
     })
     .join(" ");
+}
+
+function severityColor(v: number, band: { min: number; max: number } | undefined, base: string): string {
+  if (!band || !Number.isFinite(v)) return base;
+  const span = Math.max(band.max - band.min, 1e-6);
+  const m = span * 0.12;
+  if (v < band.min || v > band.max) return "var(--dsc-bad)";
+  if (v < band.min + m || v > band.max - m) return "var(--dsc-amber)";
+  return base;
+}
+
+function buildColoredSegments(
+  series: SeriesPoint[],
+  width: number,
+  height: number,
+  pad: { l: number; r: number; t: number; b: number },
+  min: number,
+  max: number,
+  t0: number,
+  t1: number,
+  band: { min: number; max: number } | undefined,
+  base: string,
+  step = false,
+): { d: string; color: string }[] {
+  if (series.length < 2) return [];
+  const segs: { d: string; color: string }[] = [];
+  for (let i = 1; i < series.length; i++) {
+    const a = series[i - 1];
+    const b = series[i];
+    const pa = xyFor(a, width, height, pad, min, max, t0, t1);
+    const pb = xyFor(b, width, height, pad, min, max, t0, t1);
+    const color = severityColor(b.v, band, base);
+    const d = step
+      ? `M${pa.x.toFixed(1)} ${pa.y.toFixed(1)} L${pb.x.toFixed(1)} ${pa.y.toFixed(1)} L${pb.x.toFixed(1)} ${pb.y.toFixed(1)}`
+      : `M${pa.x.toFixed(1)} ${pa.y.toFixed(1)} L${pb.x.toFixed(1)} ${pb.y.toFixed(1)}`;
+    const last = segs[segs.length - 1];
+    if (last && last.color === color) last.d += d.slice(1);
+    else segs.push({ d, color });
+  }
+  return segs;
 }
 
 function fmtTime(t: number): string {
@@ -109,8 +172,8 @@ function domainForAxis(
   axis: "left" | "right",
   fixed?: { min?: number; max?: number },
 ): { min: number; max: number } {
-  const vals = series.filter((s) => (s.axis || "left") === axis).flatMap((s) => s.series.map((p) => p.v));
   if (fixed?.min != null && fixed?.max != null) return { min: fixed.min, max: fixed.max };
+  const vals = series.filter((s) => (s.axis || "left") === axis).flatMap((s) => s.series.map((p) => p.v));
   if (!vals.length) {
     if (axis === "right") return { min: 0, max: 100 };
     return { min: 0, max: 1 };
@@ -129,9 +192,10 @@ export function MultiLineChart({
   height = 180,
   unit = "",
   live = true,
-  emptyLabel = "No history yet",
+  emptyLabel = "thin recorder",
   lastSyncAt,
   targets = [],
+  yDomain,
 }: {
   series: NamedSeries[];
   height?: number;
@@ -140,6 +204,7 @@ export function MultiLineChart({
   emptyLabel?: string;
   lastSyncAt?: number;
   targets?: ChartTarget[];
+  yDomain?: { left?: { min: number; max: number }; right?: { min: number; max: number } };
 }) {
   const gid = useId().replace(/:/g, "");
   const width = 640;
@@ -148,37 +213,35 @@ export function MultiLineChart({
   const svgRef = useRef<SVGSVGElement | null>(null);
   const [hover, setHover] = useState<{ t: number; x: number } | null>(null);
   const [pinned, setPinned] = useState(false);
-  const [pulseKey, setPulseKey] = useState(0);
-  const lastSyncSeen = useRef<number | undefined>(undefined);
 
-  useEffect(() => {
-    if (lastSyncAt == null) return;
-    if (lastSyncSeen.current === lastSyncAt) return;
-    lastSyncSeen.current = lastSyncAt;
-    setPulseKey((k) => k + 1);
-  }, [lastSyncAt]);
+  void lastSyncAt;
 
   const model = useMemo(() => {
     const all = named.flatMap((s) => s.series);
     if (!all.length) return null;
-    const left = domainForAxis(named, "left");
-    const right = domainForAxis(named, "right");
+    const left = domainForAxis(named, "left", yDomain?.left);
+    const right = domainForAxis(named, "right", yDomain?.right);
     const t0 = Math.min(...all.map((p) => p.t));
-    const t1 = Math.max(...all.map((p) => p.t));
+    const t1 = Math.max(...all.map((p) => p.t), Date.now());
     const paths = named.map((s, i) => {
       const axis = s.axis || "left";
       const dom = axis === "right" ? right : left;
+      const color = s.color || DEFAULT_PALETTE[i % DEFAULT_PALETTE.length];
       return {
         ...s,
         axis,
-        color: s.color || DEFAULT_PALETTE[i % DEFAULT_PALETTE.length],
-        d: buildPath(s.series, width, height, pad, dom.min, dom.max, t0, t1),
+        color,
+        d: buildPath(s.series, width, height, pad, dom.min, dom.max, t0, t1, s.step),
+        segs: s.ghost
+          ? []
+          : buildColoredSegments(s.series, width, height, pad, dom.min, dom.max, t0, t1, s.band, color, s.step),
         last: s.series.length ? s.series[s.series.length - 1] : null,
+        ext: seriesExtrema(s.series),
         dom,
       };
     });
     return { left, right, t0, t1, paths };
-  }, [named, height, hasRight]);
+  }, [named, height, hasRight, yDomain]);
 
   const gridLeft = useMemo(() => {
     if (!model) return [];
@@ -458,11 +521,6 @@ export function MultiLineChart({
 
             {model.paths.map((p) => {
               if (!p.d || p.series.length === 0) return null;
-              // Honest empty→first: skip area fill until ≥2 points
-              const area =
-                p.series.length >= 2
-                  ? `${p.d} L${width - pad.r} ${height - pad.b} L${pad.l} ${height - pad.b} Z`
-                  : "";
               const lastPt = p.last;
               const tipX =
                 lastPt && model
@@ -470,63 +528,61 @@ export function MultiLineChart({
                     ((lastPt.t - model.t0) / Math.max(model.t1 - model.t0, 1)) * (width - pad.l - pad.r)
                   : 0;
               const tipY = lastPt ? yFor(lastPt.v, p.dom.min, p.dom.max, height, pad) : 0;
+              const segs = p.segs.length ? p.segs : [{ d: p.d, color: p.color }];
               return (
                 <g key={p.id} className="dsc-chart-series">
-                  {area && !p.ghost ? (
-                    <path d={area} fill={`url(#fill-${gid}-${p.id})`} opacity={0.9} className="dsc-chart-fill" />
-                  ) : null}
-                  {p.ghost ? null : (
-                  <path
-                    d={p.d}
-                    fill="none"
-                    stroke={p.color}
-                    strokeWidth="4.5"
-                    strokeLinejoin="round"
-                    strokeLinecap="round"
-                    filter={`url(#glow-soft-${gid})`}
-                    opacity={0.35}
-                    className="dsc-chart-glow"
-                  />
-                  )}
-                  <path
-                    d={p.d}
-                    fill="none"
-                    stroke={p.color}
-                    strokeWidth={p.ghost ? 1.6 : 2.2}
-                    strokeLinejoin="round"
-                    strokeLinecap="round"
-                    strokeDasharray={p.ghost ? "5 4" : undefined}
-                    filter={p.ghost ? undefined : `url(#glow-${gid})`}
-                    opacity={p.ghost ? 0.55 : 0.95}
-                    className="dsc-chart-core"
-                  />
-                  {live && lastPt && p.series.length >= 2 && !p.ghost ? (
-                    <g key={`pulse-${pulseKey}-${p.id}`} className="dsc-chart-pulse-wrap">
+                  {p.ghost ? (
+                    <path
+                      d={p.d}
+                      fill="none"
+                      stroke={p.color}
+                      strokeWidth={1.6}
+                      strokeLinejoin="round"
+                      strokeLinecap="round"
+                      strokeDasharray="5 4"
+                      opacity={0.55}
+                      className="dsc-chart-core"
+                    />
+                  ) : (
+                    segs.map((seg, si) => (
                       <path
-                        className="dsc-chart-pulse"
-                        d={p.d}
+                        key={`${p.id}-seg-${si}`}
+                        d={seg.d}
                         fill="none"
-                        stroke={p.color}
-                        strokeWidth="2.6"
+                        stroke={seg.color}
+                        strokeWidth={2.2}
                         strokeLinejoin="round"
                         strokeLinecap="round"
-                        pathLength={1}
-                        style={{
-                          strokeDasharray: "0.18 0.82",
-                          animation: "dsc-sync-pulse 900ms ease-out 1",
-                        }}
-                      />
-                      <circle
-                        cx={tipX}
-                        cy={tipY}
-                        r={4}
-                        fill={p.color}
-                        className="dsc-chart-tip"
                         filter={`url(#glow-${gid})`}
+                        opacity={0.95}
+                        className="dsc-chart-core"
                       />
-                    </g>
-                  ) : lastPt ? (
-                    <circle cx={tipX} cy={tipY} r={3.2} fill={p.color} opacity={0.9} />
+                    ))
+                  )}
+                  {live && lastPt ? (
+                    <circle cx={tipX} cy={tipY} r={3} fill={p.color} opacity={0.9} className="dsc-chart-tip" />
+                  ) : null}
+                  {p.ext.min != null ? (
+                    <text
+                      x={pad.l + 2}
+                      y={yFor(p.ext.min, p.dom.min, p.dom.max, height, pad) + 8}
+                      fill={p.color}
+                      fontSize="8"
+                      opacity={0.7}
+                    >
+                      min {p.ext.min.toFixed(p.ext.min >= 100 ? 0 : 1)}
+                    </text>
+                  ) : null}
+                  {p.ext.max != null ? (
+                    <text
+                      x={pad.l + 2}
+                      y={yFor(p.ext.max, p.dom.min, p.dom.max, height, pad) - 3}
+                      fill={p.color}
+                      fontSize="8"
+                      opacity={0.7}
+                    >
+                      max {p.ext.max.toFixed(p.ext.max >= 100 ? 0 : 1)}
+                    </text>
                   ) : null}
                 </g>
               );

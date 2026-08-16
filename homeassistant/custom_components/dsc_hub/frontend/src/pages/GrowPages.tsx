@@ -22,6 +22,7 @@ import {
 import { readPotVessel } from "../lib/vesselSpec";
 import { PlantExtra } from "../components/PlantExtra";
 import { VesselGlyph } from "../components/VesselGlyph";
+import { CropScheduler } from "../components/CropScheduler";
 
 /** Shared seat body for Root / Roster drawers (Surface 7.1). */
 export function PlantSeatPanel({
@@ -392,10 +393,10 @@ export function PlantSeatPanel({
               </p>
               <div className="dsc-seat-actions">
                 <Button primary={seat.tent === "clone"} onClick={() => void applyTent("clone")}>
-                  Clone 2×4
+                  2×4
                 </Button>
                 <Button primary={seat.tent === "main"} onClick={() => void applyTent("main")}>
-                  Main 4×8
+                  4×8
                 </Button>
                 <Button onClick={() => void applyTent("unassigned")}>Unassigned</Button>
                 <Link to="/live/twin">
@@ -514,6 +515,9 @@ export function GrowRosterPage() {
           </Link>
         }
       />
+      <div style={{ marginBottom: 14 }}>
+        <CropScheduler compact />
+      </div>
       <Card className="dsc-glass" title="Roster" icon="roster">
         {!slots.length ? (
           <p className="dsc-muted" style={{ marginTop: 0 }}>

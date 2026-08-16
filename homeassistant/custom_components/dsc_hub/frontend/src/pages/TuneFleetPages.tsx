@@ -2,15 +2,18 @@ import { Card, EntityToggle, Kpi, PageHeader, StatusChip } from "../components/u
 import { TimespanControl, CYCLE_TIMESPAN_EXTRAS } from "../components/HistoryDrawer";
 import { LearningWizard } from "../components/LearningWizard";
 import { TankCutaway } from "../components/TankCutaway";
-import { KitPulse, type KitNode, type KitNodeStatus } from "../components/KitPulse";
+import { KitPulse } from "../components/KitPulse";
 import { HubLinkLine } from "../components/HubLinkLine";
-import { CfmProvenanceBadge } from "../components/CfmBadge";
+import { CfmTrustLine } from "../components/CfmBadge";
 import { useHass } from "../hooks/useHass";
 import { useEntitySeries } from "../hooks/useEntitySeries";
 import { useChartHours } from "../hooks/useChartHours";
 import { MultiLineChart } from "../viz/charts";
-import { ALL_POT_NUMBERS, inServiceCount, isPotInService, potGotEntity } from "../lib/seatModel";
+import { ALL_POT_NUMBERS, isPotInService, potGotEntity } from "../lib/seatModel";
 import { resolveCfm } from "../lib/cfmProvenance";
+import { buildKitNodes, kitInServiceCount, type KitNode } from "../lib/kitInventory";
+import { useSettledAvailability } from "../hooks/useSettledAvailability";
+import { useInspector } from "../components/InspectorHost";
 
 const POT_COLORS = ["var(--dsc-blue)", "var(--dsc-teal)", "var(--dsc-purple)", "var(--dsc-amber)"];
 
@@ -137,52 +140,25 @@ export function TuneAnalyticsPage() {
   );
 }
 
-function kitStatus(on: boolean, known: boolean): KitNodeStatus {
-  if (!known) return "missing";
-  return on ? "ok" : "oos";
-}
-
 export function FleetOverviewPage() {
   const { state, available, num } = useHass();
-  const svc = inServiceCount(state);
-  const linkOn = state("binary_sensor.dsc_hub_link") === "on";
-  const linkKnown = available("binary_sensor.dsc_hub_link");
-  const kit: KitNode[] = [
-    { id: "hub", label: "Hub", status: linkKnown ? (linkOn ? "ok" : "dark") : "missing" },
-    {
-      id: "ac",
-      label: "AC",
-      status: kitStatus(
-        state("input_boolean.dsc_ac_in_service") === "on",
-        available("input_boolean.dsc_ac_in_service"),
-      ),
-    },
-    {
-      id: "mister",
-      label: "Mister",
-      status: kitStatus(
-        state("input_boolean.dsc_clone_humidifier_in_service") === "on",
-        available("input_boolean.dsc_clone_humidifier_in_service"),
-      ),
-    },
-    ...ALL_POT_NUMBERS.map((n) => ({
-      id: `pot${n}`,
-      label: `P${n}`,
-      status: kitStatus(isPotInService(n, state), available(`input_boolean.dsc_pot${n}_in_service`)),
-    })),
-    {
-      id: "tank",
-      label: "Tank",
-      status: kitStatus(
-        state("input_boolean.dsc_tank_in_service") === "on",
-        available("input_boolean.dsc_tank_in_service"),
-      ),
-    },
-  ];
+  const settled = useSettledAvailability();
+  const inspector = useInspector();
+  const kit: KitNode[] = buildKitNodes({ state, available }, settled);
+  const svc = kitInServiceCount(kit);
   const out = resolveCfm("sensor.dsc_cfm_exhaust_out_allocated", "sensor.dsc_cfm_exhaust_out", {
     available,
     num,
   });
+  const openNode = (node: KitNode) =>
+    inspector.open({
+      entityId: node.entityId,
+      label: node.label,
+      kind: "kit",
+      runtimeToday: node.runtimeToday,
+      cyclesToday: node.cyclesToday,
+      demandEntity: node.demandEntity,
+    });
   const rows: { label: string; id: string }[] = [
     { label: "Bridge hub ESP-NOW", id: "binary_sensor.dsc_bridge_hub_esp_now_link" },
     { label: "ESP-NOW age", id: "sensor.dsc_bridge_esp_now_age" },
@@ -210,7 +186,7 @@ export function FleetOverviewPage() {
           <Kpi
             label="In service"
             value={`${svc.inService}/${svc.total}`}
-            tone={svc.inService === svc.total ? "ok" : "warn"}
+            tone={svc.dark > 0 ? "bad" : "ok"}
           />
         </div>
         <div className="dsc-col-4">
@@ -230,15 +206,15 @@ export function FleetOverviewPage() {
             }
             tone={num("sensor.dsc_active_alert_count", 0) === 0 ? "ok" : "bad"}
           />
-          <CfmProvenanceBadge reading={out} />
+          <CfmTrustLine readings={[out]} />
         </div>
 
         <div className="dsc-col-12">
           <Card className="dsc-glass" title="Kit Pulse" icon="system">
             <p className="dsc-honesty" style={{ marginTop: 0 }}>
-              Holes are missing / OOS / dark hub — not a greenwashed map.
+              Holes are missing / planned OOS / dark after cooldown — not a greenwashed map.
             </p>
-            <KitPulse nodes={kit} />
+            <KitPulse nodes={kit} onSelect={openNode} />
           </Card>
         </div>
 

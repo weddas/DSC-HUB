@@ -165,10 +165,11 @@ sections:
             state: "on"
         card:
           type: custom:mushroom-template-card
-          primary: "Reduced kit — capacity offline"
+          primary: "Unexpected OOS — capacity offline"
           secondary: >-
-            {{ state_attr('binary_sensor.dsc_reduced_kit','offline') | default('some levers out of service') }}
+            {{ state_attr('binary_sensor.dsc_reduced_kit','offline') | default('a live lever is parked') }}
             — Full Auto uses next-best in-service levers.
+            Planned holes ({{ state_attr('binary_sensor.dsc_reduced_kit','planned_oos') }}) are inventory, not this card.
             {% set gaps = state_attr('sensor.dsc_keepup_gaps','gaps') %}
             {% if gaps %} Keep-up gaps: {{ gaps }}.{% endif %}
             {{ state_attr('sensor.dsc_keepup_gaps','full_auto_honesty') }}

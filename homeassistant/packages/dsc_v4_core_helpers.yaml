@@ -156,20 +156,17 @@ template:
         unique_id: dsc_reduced_kit
         icon: mdi:package-variant-closed
         state: >-
-          {{ not is_state('input_boolean.dsc_ac_in_service', 'on')
-             or not is_state('input_boolean.dsc_clone_humidifier_in_service', 'on')
-             or not is_state('input_boolean.dsc_pot1_in_service', 'on')
-             or not is_state('input_boolean.dsc_pot2_in_service', 'on')
-             or not is_state('input_boolean.dsc_pot3_in_service', 'on')
-             or not is_state('input_boolean.dsc_pot4_in_service', 'on')
-             or is_state('input_boolean.dsc_humidifier_temp_oos', 'on')
+          {{ is_state('input_boolean.dsc_humidifier_temp_oos', 'on')
              or is_state('input_boolean.dsc_dehumidifier_temp_oos', 'on')
              or is_state('input_boolean.dsc_humidifier_operator_lockout', 'on')
              or is_state('input_boolean.dsc_dehumidifier_operator_lockout', 'on')
              or is_state('input_boolean.dsc_clone_humidifier_temp_oos', 'on')
-             or is_state('input_boolean.dsc_clone_humidifier_operator_lockout', 'on') }}
+             or is_state('input_boolean.dsc_clone_humidifier_operator_lockout', 'on')
+             or not is_state('input_boolean.dsc_pot1_in_service', 'on')
+             or not is_state('input_boolean.dsc_pot2_in_service', 'on')
+             or not is_state('input_boolean.dsc_pot4_in_service', 'on') }}
         attributes:
-          offline: >-
+          planned_oos: >-
             {% set ns = namespace(items=[]) %}
             {% if not is_state('input_boolean.dsc_ac_in_service', 'on') %}
               {% set ns.items = ns.items + ['AC'] %}
@@ -177,6 +174,15 @@ template:
             {% if not is_state('input_boolean.dsc_clone_humidifier_in_service', 'on') %}
               {% set ns.items = ns.items + ['Clone mister'] %}
             {% endif %}
+            {% if not is_state('input_boolean.dsc_pot3_in_service', 'on') %}
+              {% set ns.items = ns.items + ['POT3'] %}
+            {% endif %}
+            {% if not is_state('input_boolean.dsc_tank_in_service', 'on') %}
+              {% set ns.items = ns.items + ['Tank'] %}
+            {% endif %}
+            {{ ns.items | join(', ') }}
+          offline: >-
+            {% set ns = namespace(items=[]) %}
             {% if is_state('input_boolean.dsc_humidifier_temp_oos','on') %}
               {% set ns.items = ns.items + ['Humidifier (temp)'] %}
             {% endif %}
@@ -189,7 +195,13 @@ template:
             {% if is_state('input_boolean.dsc_dehumidifier_operator_lockout','on') %}
               {% set ns.items = ns.items + ['Dehumidifier (lock)'] %}
             {% endif %}
-            {% for n in [1,2,3,4] %}
+            {% if is_state('input_boolean.dsc_clone_humidifier_temp_oos','on') %}
+              {% set ns.items = ns.items + ['Clone mister (temp)'] %}
+            {% endif %}
+            {% if is_state('input_boolean.dsc_clone_humidifier_operator_lockout','on') %}
+              {% set ns.items = ns.items + ['Clone mister (lock)'] %}
+            {% endif %}
+            {% for n in [1,2,4] %}
               {% if not is_state('input_boolean.dsc_pot' ~ n ~ '_in_service', 'on') %}
                 {% set ns.items = ns.items + ['POT' ~ n] %}
               {% endif %}

@@ -2198,3 +2198,60 @@ Removed ~520 tracked scrape/backup/scratch files from git (working tree + index)
 - Commit this cleanup separately (do not mix with `scripts/ha-sync.sh` or in-progress panel work)
 - Optional: history purge of `_strain_database_cookies.json`
 
+## 2026-08-16 — Kit Pulse, Twin steer, scheduler, air path
+
+Operator-facing tents are **4×8** and **2×4** (HA entity ids unchanged). This pass wired kit honesty, inspector, Twin orbit/wisps/ports, Crop Scheduler, spatial air path, Climate triad, Root cards, and Light.
+
+### done
+- Mission/Fleet Kit Pulse is a clickable constellation over the full kit (heater, mat, AC, hum/dehum/mister, pots, tank). Planned OOS is dashed inventory, not a red hole.
+- `binary_sensor.dsc_reduced_kit` is unexpected loss only. Lovelace Home + honesty rail match.
+- Entity inspector: runtime, duty strip, playbook, snooze until hub reboot (`sensor.dsc_hub_uptime` last_changed).
+- Twin IIFE: frame camera only on focus-mode change; pointer capture; mouth bloom + extra ribbons vs CFM; 4×8/2×4 pages show one tent + labeled cascade port.
+- Lovelace Dash timeline/flow match the React scheduler and spatial air-path SVG.
+- Climate Room+2×4+4×8 triad, step-hold charts, Want-band severity, statistics entities (names slug to `sensor.dsc_hub_*_mean_24h`).
+- Root per-pot cards + human mat duration; Light two equal hero cards + 4×8 window-proxy honesty.
+
+### soak
+- Reload HA templates/stats so `sensor.dsc_hub_room_vpd_kpa` and `dsc_v4_climate_stats.yaml` means exist before Climate 24h Want bars light up.
+- Hard-reload panel + Lovelace Dash so `dsc-the-dash-card.js` orbit/wisp/port changes load (cache-bust www).
+- `/live/twin` orbit does not snap on hass ticks; `/live/4x8` is one tent + “from 2×4” port; `/live/2x4` inverse.
+- Planned OOS (AC, clone mister, POT3) does not pulse REDUCED KIT.
+
+### red-flag
+- None new. Physical AC / mister / POT3 still F-001–F-003.
+
+### next-plan
+- If Lovelace is served from repo `dist/dsc-the-dash-card.js` instead of `homeassistant/www/`, copy the www IIFE — they can drift.
+- GPIO 4×8 lamp (`entities.main_light`) still empty — window remains the Got proxy.
+- Intake `*_allocated` CFM sensors are not in packages yet; exhaust allocated exists. Trust line will stay mixed/nameplate on intakes until Learning writes them.
+
+### deferred
+- Full R3F Twin extract (still lying until neon APIs soak).
+- Hosting Lovelace airflow/system-map cards inside the panel.
+- New `*_in_service` helpers for heater/hum/dehum/heat mat.
+
+## 2026-08-16 — Kit Pulse remaining holes
+
+Closed Twin clone-cascade hide, Room VPD id, Light draft extrema, tent air-path focus, inspector chips, Grow scheduler, Climate prior-window ghosts. No plan-file edit. Types + frontend build clean.
+
+### done
+- Twin IIFE: pads/actors follow tent focus (not forced `visible=true` every tick). `/live/4x8` hides 2×4 body + clone pots. `/live/2x4` hides 4×8 + main pots, keeps 2×4 intake + “to 4×8” stub **and cascade wisps**. Twin (focus null) still shows both. Copied www → `dist/dsc-the-dash-card.js`. Orbit-on-mode-change unchanged.
+- Room VPD: template renamed “DSC Hub Room VPD kPa” + `default_entity_id: sensor.dsc_hub_room_vpd_kpa`. Climate falls back to `sensor.dsc_hub_room_vpd` if the kPa id is missing. Stats already target `sensor.dsc_hub_room_vpd_kpa`. 24h/48h unique_ids still slug to `sensor.dsc_hub_*_mean_24h` / `_48h`.
+- Light: min-dark and Independent 2×4 hours score the typed draft (`TargetNumber` `onLive` + `draftTone`). 4×8 hours chip scores implied photoperiod `24 − min-dark` (there is no 4×8 hours number entity; stage still owns `sensor.dsc_expected_light_hours`). 4×8 Got remains window-proxy.
+- Tent cockpit `AirPathMap` `focus`: that tent + room + cascade port stub. Twin/Climate keep the four-zone map. CfmTrustLine stays one sentence.
+- Inspector on Climate Room AH / Cool / Hum / Dehum / heater-today (+ heat ineffective), cockpit photo/window + CFM, Light hours-rail chips.
+- Compact `CropScheduler` on Grow Roster (same React card, not Twin-only).
+- Climate T/RH/VPD MultiLineCharts: muted prior-window ghost via `useEntitySeries({ withGhost: true })`. No CFM invented. Unavailable still not plotted as 0. Step-hold kept.
+
+### soak
+- Reload HA templates/packages so `default_entity_id` / rename actually registers `sensor.dsc_hub_room_vpd_kpa` (existing unique_id installs may keep `sensor.dsc_hub_room_vpd` until registry picks up the lock — frontend fallback covers that). Confirm stats VPD means attach to the live template id.
+- Hard-reload Lovelace Dash + panel so the Dash IIFE cache-busts. Confirm `/live/4x8` has **no clone pots**, `/live/2x4` cascade wisps still move toward “to 4×8” when CFM > 0 and freeze when CFM is 0.
+- Type min-dark / Independent 2×4 hours and watch extrema chips update before commit.
+
+### red-flag
+- None new. Physical AC / mister / POT3 still F-001–F-003.
+
+### next-plan
+- GPIO 4×8 lamp still empty — window remains Got proxy.
+- Intake `*_allocated` CFM still missing; tent-page trust line stays nameplate/mixed until Learning writes them.
+

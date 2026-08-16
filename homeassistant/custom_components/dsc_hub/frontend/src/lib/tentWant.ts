@@ -1,0 +1,205 @@
+import { ALL_POT_NUMBERS, isPotInService, potsInTent, type TentId } from "./seatModel";
+import { zoneTone, type ZoneTone } from "./zoneTone";
+
+/** Hub firmware stage presets (dsc-hub-v4_0 apply_stage) — labeled stage rail, not catalog Want. */
+export const STAGE_ORDER = [
+  "Germination",
+  "Seedling",
+  "Early Vegetative",
+  "Vegetative",
+  "Late (Push) Vegetative",
+  "Early Flowering",
+  "Flowering",
+  "Late Flowering",
+  "Final 48-72h Flowering",
+  "Dry Mode",
+] as const;
+
+export type StageName = (typeof STAGE_ORDER)[number];
+
+export type StageRail = {
+  temp: number;
+  vpdMin: number;
+  vpdMax: number;
+  rhMin: number;
+  rhMax: number;
+  lightHours: number;
+  short: string;
+};
+
+const STAGE_RAIL: Record<string, StageRail> = {
+  Germination: { temp: 25, vpdMin: 0.4, vpdMax: 0.8, rhMin: 70, rhMax: 80, lightHours: 18, short: "Germ" },
+  Seedling: { temp: 24, vpdMin: 0.5, vpdMax: 0.8, rhMin: 65, rhMax: 75, lightHours: 18, short: "Seedling" },
+  "Early Vegetative": { temp: 25, vpdMin: 0.7, vpdMax: 1.0, rhMin: 60, rhMax: 70, lightHours: 18, short: "Early Veg" },
+  Vegetative: { temp: 26, vpdMin: 0.8, vpdMax: 1.1, rhMin: 55, rhMax: 65, lightHours: 18, short: "Veg" },
+  "Late (Push) Vegetative": { temp: 26, vpdMin: 1.0, vpdMax: 1.2, rhMin: 50, rhMax: 60, lightHours: 18, short: "Push Veg" },
+  "Early Flowering": { temp: 25, vpdMin: 1.0, vpdMax: 1.2, rhMin: 50, rhMax: 55, lightHours: 12, short: "Early Flwr" },
+  Flowering: { temp: 24, vpdMin: 1.2, vpdMax: 1.4, rhMin: 45, rhMax: 50, lightHours: 12, short: "Flower" },
+  "Late Flowering": { temp: 22, vpdMin: 1.3, vpdMax: 1.5, rhMin: 40, rhMax: 45, lightHours: 12, short: "Late Flwr" },
+  "Final 48-72h Flowering": { temp: 21, vpdMin: 1.4, vpdMax: 1.6, rhMin: 35, rhMax: 45, lightHours: 12, short: "Flush" },
+  "Dry Mode": { temp: 19, vpdMin: 0.8, vpdMax: 1.0, rhMin: 55, rhMax: 62, lightHours: 0, short: "Dry" },
+};
+
+export type Band = { min: number; max: number; source: "plant" | "stage"; mixed: boolean };
+
+export type TentWantRail = {
+  temp: Band | null;
+  rh: Band | null;
+  vpd: Band | null;
+  lightHours: number | null;
+  mixed: boolean;
+  stages: string[];
+  needs: string[];
+  emptyLabel: string | null;
+};
+
+function numWant(state: (id: string, fb?: string) => string, id: string): number {
+  const n = Number(state(id, ""));
+  return Number.isFinite(n) && n > 0 ? n : NaN;
+}
+
+export function railForStage(stage: string): StageRail | null {
+  if (!stage || stage === "—" || stage === "Off" || stage === "Custom") return null;
+  const hit = STAGE_RAIL[stage];
+  if (hit) return hit;
+  const key = Object.keys(STAGE_RAIL).find((k) => stage.indexOf(k) >= 0);
+  return key ? STAGE_RAIL[key] : null;
+}
+
+function intersect(a: Band | null, b: { min: number; max: number; source: Band["source"] }): Band | null {
+  if (!Number.isFinite(b.min) || !Number.isFinite(b.max)) return a;
+  if (!a) return { ...b, mixed: false };
+  return {
+    min: Math.max(a.min, b.min),
+    max: Math.min(a.max, b.max),
+    source: a.source === "plant" || b.source === "plant" ? "plant" : "stage",
+    mixed: a.source !== b.source || a.mixed,
+  };
+}
+
+type HassBits = {
+  state: (id: string, fallback?: string) => string;
+  entity: (id: string) => { attributes?: Record<string, unknown> } | undefined;
+};
+
+export function tentWantRail(tent: Exclude<TentId, "unassigned">, hass: HassBits): TentWantRail {
+  const seats = potsInTent(tent, hass.state, hass.entity).filter((s) => isPotInService(s.pot, hass.state));
+  let temp: Band | null = null;
+  let rh: Band | null = null;
+  let vpd: Band | null = null;
+  let lightHours: number | null = null;
+  const stages: string[] = [];
+  const needs: string[] = [];
+  let mixed = false;
+
+  for (const s of seats) {
+    if (s.stage && s.stage !== "—") {
+      if (stages.length && !stages.includes(s.stage)) mixed = true;
+      if (!stages.includes(s.stage)) stages.push(s.stage);
+    }
+    if (s.need && s.need !== "—" && s.need !== "ok" && !needs.includes(s.need)) needs.push(s.need);
+
+    const tMin = numWant(hass.state, `sensor.dsc_pot${s.pot}_want_temp_min`);
+    const tMax = numWant(hass.state, `sensor.dsc_pot${s.pot}_want_temp_max`);
+    if (Number.isFinite(tMin) && Number.isFinite(tMax)) {
+      temp = intersect(temp, { min: tMin, max: tMax, source: "plant" });
+    }
+    const rMin = numWant(hass.state, `sensor.dsc_pot${s.pot}_want_rh_min`);
+    const rMax = numWant(hass.state, `sensor.dsc_pot${s.pot}_want_rh_max`);
+    if (Number.isFinite(rMin) && Number.isFinite(rMax)) {
+      rh = intersect(rh, { min: rMin, max: rMax, source: "plant" });
+    }
+
+    const rail = railForStage(s.stage);
+    if (rail) {
+      if (!temp) temp = { min: rail.temp - 1.5, max: rail.temp + 1.5, source: "stage", mixed: false };
+      if (!rh) rh = { min: rail.rhMin, max: rail.rhMax, source: "stage", mixed: false };
+      vpd = intersect(vpd, { min: rail.vpdMin, max: rail.vpdMax, source: "stage" });
+      lightHours =
+        lightHours == null ? rail.lightHours : Math.min(lightHours, rail.lightHours);
+    }
+  }
+
+  const tentStage =
+    tent === "main"
+      ? hass.state("select.dsc_hub_grow_stage", "")
+      : hass.state("select.dsc_hub_clone_mode", "");
+  if (!seats.length || (!temp && !rh && !vpd)) {
+    const fallbackStage =
+      tent === "clone"
+        ? tentStage === "Clones & Seedlings"
+          ? "Seedling"
+          : tentStage === "Mother"
+            ? "Vegetative"
+            : tentStage === "Follow 4x8"
+              ? hass.state("select.dsc_hub_grow_stage", "")
+              : ""
+        : tentStage;
+    const rail = railForStage(fallbackStage);
+    if (rail) {
+      if (!temp) temp = { min: rail.temp - 1.5, max: rail.temp + 1.5, source: "stage", mixed: false };
+      if (!rh) rh = { min: rail.rhMin, max: rail.rhMax, source: "stage", mixed: false };
+      if (!vpd) vpd = { min: rail.vpdMin, max: rail.vpdMax, source: "stage", mixed: false };
+      if (lightHours == null) lightHours = rail.lightHours;
+      if (fallbackStage && !stages.includes(fallbackStage)) stages.push(fallbackStage);
+    }
+  }
+
+  if (temp && temp.min > temp.max) temp = { ...temp, min: temp.max, max: temp.min, mixed: true };
+  if (rh && rh.min > rh.max) rh = { ...rh, min: rh.max, max: rh.min, mixed: true };
+  if (vpd && vpd.min > vpd.max) vpd = { ...vpd, min: vpd.max, max: vpd.min, mixed: true };
+
+  const empty = !temp && !rh && !vpd;
+  return {
+    temp,
+    rh,
+    vpd,
+    lightHours,
+    mixed,
+    stages,
+    needs,
+    emptyLabel: empty ? "no plant/stage rail" : null,
+  };
+}
+
+export function draftTone(
+  value: number,
+  band: Band | null,
+  pairBad?: boolean,
+): { tone: ZoneTone; label: string } {
+  if (pairBad) return { tone: "critical", label: "min > max" };
+  if (!band) return { tone: "muted", label: "no plant/stage rail" };
+  const tone = zoneTone({ value, band, margin: (band.max - band.min) * 0.12 });
+  const source = band.source === "plant" ? "plant Want" : "stage rail";
+  switch (tone) {
+    case "ok":
+      return { tone, label: `in-band · ${source}` };
+    case "warn":
+    case "stale":
+      return { tone: "warn", label: `approaching · ${source}` };
+    case "critical":
+      return { tone, label: `outside · ${source}` };
+    case "muted":
+      return { tone, label: source };
+    default: {
+      const _exhaustive: never = tone;
+      return _exhaustive;
+    }
+  }
+}
+
+export function potWantBand(
+  pot: number,
+  kind: "moisture" | "ec" | "ph",
+  state: (id: string, fb?: string) => string,
+): { min: number; max: number } | undefined {
+  const lo = Number(state(`sensor.dsc_pot${pot}_want_${kind}_min`, ""));
+  const hi = Number(state(`sensor.dsc_pot${pot}_want_${kind}_max`, ""));
+  if (lo > 0 && hi > 0 && hi >= lo) return { min: lo, max: hi };
+  if (kind === "moisture") return { min: 0, max: 45 };
+  return undefined;
+}
+
+export function inServicePots(state: (id: string, fb?: string) => string): number[] {
+  return ALL_POT_NUMBERS.filter((n) => isPotInService(n, state));
+}

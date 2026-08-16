@@ -56,9 +56,9 @@ export function readTent(
 export function tentLabel(tent: TentId): string {
   switch (tent) {
     case "clone":
-      return "Clone 2×4";
+      return "2×4";
     case "main":
-      return "Main 4×8";
+      return "4×8";
     case "unassigned":
       return "Unassigned";
     default: {
