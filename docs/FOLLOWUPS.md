@@ -2255,3 +2255,17 @@ Closed Twin clone-cascade hide, Room VPD id, Light draft extrema, tent air-path 
 - GPIO 4×8 lamp still empty — window remains Got proxy.
 - Intake `*_allocated` CFM still missing; tent-page trust line stays nameplate/mixed until Learning writes them.
 
+## 2026-08-16 — ESP-NOW on the shelf
+
+**Decision:** stop deepening ESP-NOW as the product radio. Public write-up: [ESP-NOW or Maybe Later](https://plausible-deniability.net/esp-now-or-maybe-later/).
+
+Climate ladder stays on the hub. Appliances follow the path that stays up (HA / Ethernet bridge). Pots may report without pretending they are a mesh. ESP-NOW code stays in tree as parked, not a promise.
+
+### why
+- One radio, two jobs. Home mesh hops broke same-channel ESP-NOW (F-004).
+- Real-time cadence + more nodes → TX OOM / channel thrash (5.1.8 soak), not more coverage.
+- Workarounds landed and still were not boring: TX cap (5.1.9), kill `post_connect_roaming` (5.1.10), SoftAP pin, `WIFI_IF_AP` rebind, unicast vs broadcast, ETH01 appliance bridge, probe-NaN ≠ radio fail.
+
+### deferred
+- Pick ESP-NOW back up only when ESPHome / ESP-NOW is boring on a multi-node, same-channel, real-time fleet. Do not resume SoftAP/ESP-NOW deepening as the default next task.
+
