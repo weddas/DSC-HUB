@@ -98,7 +98,11 @@ Zone show assigned roster nickname/blend/recipe context, Nutrient Science
 shows the shared calculator and CANNA stage packs, and Lighting exposes the
 selected fixture plus PPFD map source.
 
-Ops runbook: [`../docs/qa/LIVE-UI-BUILD-A-PLANT.md`](../docs/qa/LIVE-UI-BUILD-A-PLANT.md).
+Ops runbooks:
+[`../docs/qa/LIVE-UI-BUILD-A-PLANT.md`](../docs/qa/LIVE-UI-BUILD-A-PLANT.md) ·
+[`../docs/qa/LIVE-UI-KIT-PULSE.md`](../docs/qa/LIVE-UI-KIT-PULSE.md) (Kit Pulse /
+Twin orbit / Crop Scheduler) ·
+[`../docs/qa/LIVE-UI-CUSTOM-PANEL.md`](../docs/qa/LIVE-UI-CUSTOM-PANEL.md).
 Requires Sync add-on **5.1.4+** (or ha-sync) for dashboard YAML + catalog JSON;
 HACS alone registers the custom element.
 

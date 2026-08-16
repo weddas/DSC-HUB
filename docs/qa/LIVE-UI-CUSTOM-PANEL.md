@@ -1,4 +1,4 @@
-# LIVE-UI — DSC-HUB custom panel (surface 7.1.1)
+# LIVE-UI — DSC-HUB custom panel (surface 7.1.x)
 
 React + Vite product panel hosted inside Home Assistant (WashData pattern).
 
@@ -8,9 +8,14 @@ React + Vite product panel hosted inside Home Assistant (WashData pattern).
 | Deep routes | Hash routes: `/dsc-hub#/live/mission`, `#/grow/compose`, `#/fleet`, … |
 | Legacy redirects | `#/ops/*`, `#/plant/*`, `#/advanced/*`, `#/system` → Live/Grow/Tune/Fleet |
 | Lovelace fallback | `dsc-hub-pro` YAML — `show_in_sidebar: false` |
-| Surface version | `sensor.dsc_ha_surface_version` **7.1.1** |
+| Surface version (package SoT) | `sensor.dsc_ha_surface_version` **7.1.3** |
+| Integration / chrome | `SURFACE_VERSION` **7.1.4** · `BUNDLE_V` **`7.1.7-bar-raise`** |
 | Integration | `homeassistant/custom_components/dsc_hub/` |
 | Enable | `dsc_hub:` in configuration.yaml (see snippet) |
+
+**Tip ops (Kit Pulse / Twin orbit / Crop Scheduler):** see
+[`LIVE-UI-KIT-PULSE.md`](LIVE-UI-KIT-PULSE.md) after raise `e6539b0`. Historical
+7.1.1 finish checklist below remains a ship record, not the live SoT.
 
 ## Build
 
