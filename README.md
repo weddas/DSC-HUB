@@ -16,8 +16,10 @@ Notion [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d3407556
 
 - **Hub owns climate** — dehumidifier → humidifier → heater → AC → mat ladder
   with reality gates, failsafe, and min-off (HA never drives those safety rails).
-- **ESP-NOW primary** panel ↔ hub — works when Home Assistant is down.
-- **ETH01 bridge** — SoftAP channel anchor (`DSC-Anchor`) + Sonoff drive without HA (F-010); HA followers stay fallback.
+- **Appliances follow the path that stays up** — HA demand followers by default;
+  ETH01 SoftAP Anchor + Ethernet bridge when HA is optional (F-010).
+- **ESP-NOW is parked** as a product radio (code stays in tree; not a promise) —
+  see [`docs/qa/ESPNOW-PRODUCT-PARK.md`](docs/qa/ESPNOW-PRODUCT-PARK.md).
 - **DSC-HUB Pro** dashboard (`/dsc-hub-pro`) — Home, Climate, Learning, tents,
   Root Zone, Tank, Light, Trends, System.
 - **Build a Plant** (`/dsc-build-plant/build`) — separate composition dashboard
@@ -30,12 +32,12 @@ Notion [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d3407556
 
 ```mermaid
 flowchart LR
-  Hub[Hub_ladder] <-->|ESPNOW| Panel[DSC_CONTROL]
-  Pots[Pots] -->|ESPNOW_soil| Hub
-  Hub -->|ESPNOW_0xD8| Bridge[DSC_BRIDGE_ETH01]
-  Bridge --> Sonoffs[Sonoff_relays]
-  Hub --> Followers[HA_followers_fallback]
-  Followers --> Sonoffs
+  Hub[Hub_ladder] -->|HA_API| Followers[HA_demand_followers]
+  Followers --> Sonoffs[Sonoff_relays]
+  Hub -->|Ethernet_when_up| Bridge[DSC_BRIDGE_ETH01]
+  Bridge --> Sonoffs
+  Panel[DSC_CONTROL] -.->|parked_ESPNOW| Hub
+  Pots[Pots] -.->|parked_ESPNOW_soil| Hub
   Hub --> LearnA[PhaseA_EMA] --> LearnB[PhaseB_waits]
   Sync[dsc_hub_sync] --> Pro[dsc-hub-pro]
 ```
@@ -56,6 +58,7 @@ flowchart LR
 | [`scripts/ADDON.md`](scripts/ADDON.md) | Lab HA delivery — HAOS Sync add-on |
 | [`docs/qa/FIRMWARE-QA-5.1.0.md`](docs/qa/FIRMWARE-QA-5.1.0.md) | Firmware Validate / flash QC |
 | [`docs/qa/ADDON-QA-5.1.0.md`](docs/qa/ADDON-QA-5.1.0.md) | Sync add-on QC |
+| [`docs/qa/ESPNOW-PRODUCT-PARK.md`](docs/qa/ESPNOW-PRODUCT-PARK.md) | ESP-NOW parked as product radio — operator paths |
 | [`homeassistant/README.md`](homeassistant/README.md) | Packages, HACS, entity notes |
 | [`docs/qa/LIVE-UI-BUILD-A-PLANT.md`](docs/qa/LIVE-UI-BUILD-A-PLANT.md) | Build a Plant composition ops (N-083) |
 | [`firmware/v4/README.md`](firmware/v4/README.md) | Local validate / flash |
@@ -100,7 +103,7 @@ Set notify target: `input_text.dsc_notify_service` (e.g. `notify.mobile_app_your
 
 ---
 
-## Secrets & ESP-NOW
+## Secrets & radio
 
 ```bash
 cd firmware/v4
@@ -108,9 +111,12 @@ cp secrets.yaml.template secrets.yaml   # or ./generate-secrets.sh
 ```
 
 Never commit `secrets.yaml`. Panel `hub_mac` ↔ hub WiFi MAC; hub `panel_mac` ↔
-panel WiFi MAC; `espnow_cmd_tag` **54727** (`0xD5C7`) on both.
+panel WiFi MAC; `espnow_cmd_tag` **54727** (`0xD5C7`) on both when the parked
+ESP-NOW packages are still flashed as a pair.
 
-Sonoffs have no ESP-NOW — demand followers need HA.
+Sonoffs have no ESP-NOW — appliances follow **HA demand followers** (and/or the
+ETH01 Ethernet bridge). Do not deepen ESP-NOW as the product radio; see
+[`docs/qa/ESPNOW-PRODUCT-PARK.md`](docs/qa/ESPNOW-PRODUCT-PARK.md).
 
 ## Validate
 

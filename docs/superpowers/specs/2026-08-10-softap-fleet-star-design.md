@@ -1,12 +1,12 @@
 # SoftAP fleet home + enhanced Fleet Fix
 
 **Date:** 2026-08-10  
-**Status:** approved — SoftAP-primary membership is the steady state (stop home-AP flap); SoftAP L3/HA path still gated  
+**Status:** SoftAP-primary membership remains useful networking work; **ESP-NOW as product radio is parked (2026-08-16)** — see [`docs/qa/ESPNOW-PRODUCT-PARK.md`](../../qa/ESPNOW-PRODUCT-PARK.md). Do not resume SoftAP primarily to deepen ESP-NOW.  
 **Related:** F-004, F-010, F-012, F-013, F-014
 
 ## Goal
 
-Grow Wi‑Fi devices use `DSC-Anchor` SoftAP on the WT32-ETH01 as their home network. The bridge reaches HA over Ethernet and drives Sonoff on/off on the SoftAP subnet. **Pots are SoftAP STAs too** — same-channel pin with the hub for ESP-NOW; pot traffic is tiny so SoftAP cost is fine. Nest is emergency fallback only.
+Grow Wi‑Fi devices use `DSC-Anchor` SoftAP on the WT32-ETH01 as their home network. The bridge reaches HA over Ethernet and drives Sonoff on/off on the SoftAP subnet. **Pots may be SoftAP STAs too** for channel home with the hub; pot traffic is tiny so SoftAP cost is fine. Nest is emergency fallback only. Same-channel SoftAP helps parked ESP-NOW when present — it is not a reason to deepen the RF mesh product story.
 
 ## Topology
 

@@ -2258,6 +2258,7 @@ Closed Twin clone-cascade hide, Room VPD id, Light draft extrema, tent air-path 
 ## 2026-08-16 — ESP-NOW on the shelf
 
 **Decision:** stop deepening ESP-NOW as the product radio. Public write-up: [ESP-NOW or Maybe Later](https://plausible-deniability.net/esp-now-or-maybe-later/).
+Ops runbook: [`docs/qa/ESPNOW-PRODUCT-PARK.md`](qa/ESPNOW-PRODUCT-PARK.md).
 
 Climate ladder stays on the hub. Appliances follow the path that stays up (HA / Ethernet bridge). Pots may report without pretending they are a mesh. ESP-NOW code stays in tree as parked, not a promise.
 

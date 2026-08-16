@@ -22,6 +22,8 @@ WiFi is split into `dsc-*-wifi-lab.yaml` / `dsc-*-wifi-kit.yaml` so kit builds o
 Fleet component: `components/dsc_fleet_setup/` (phone portal on hub; Control/pots/bridge join `DSC-Setup-*`).
 Bridge also hosts SoftAP `DSC-Anchor` (F-012 channel pin) + `components/dsc_api_client/` (F-010).
 
+**ESP-NOW product posture (2026-08-16):** parked as the product radio — packages stay in tree, do not deepen SoftAP/ESP-NOW as the default next task. Operator paths: [`../../docs/qa/ESPNOW-PRODUCT-PARK.md`](../../docs/qa/ESPNOW-PRODUCT-PARK.md).
+
 Package bodies are remote-git safe (no `!secret`). Stubs pass credentials (and hub/panel MACs + `espnow_cmd_tag`) as substitutions.
 
 Pots (`dsc-pot-common` **5.1.6+**): each soil channel has **Cal … Offset** / **Cal … Scale**
@@ -62,7 +64,9 @@ The `api:` block lives in [`dsc-control-common.yaml`](dsc-control-common.yaml). 
 | Stub on HA | `/config/esphome/dsc-control.yaml` should match [`homeassistant/esphome/dsc-control.yaml`](../../homeassistant/esphome/dsc-control.yaml); Validate before Install. |
 | Bundle fails: `… is not a valid YAML file` / `expected '<document start>'` | Almost always a **header comment** in the package body that lost its `#` (looks like `v4.0.x:` at column 2). ESPHome then treats the changelog line as YAML and dies before `substitutions:`. Fix on git, push, set stub `refresh: 0d`, Validate again. |
 
-ESP-NOW (glass ↔ hub) does **not** need the HA API. Fix API only for OTA, diagnostics, and HA time backup.
+ESP-NOW (glass ↔ hub) does **not** need the HA API when that parked path is healthy.
+Treat ESP-NOW as **parked product radio** — fix HA API for OTA, diagnostics, demand
+followers, and HA time backup. See [`../../docs/qa/ESPNOW-PRODUCT-PARK.md`](../../docs/qa/ESPNOW-PRODUCT-PARK.md).
 
 **Package header rule:** changelog lines in `dsc-control-common.yaml` (and other bodies) must stay `#` comments. An uncommented `v4.0.11:`-style line breaks HA git-pull Install with `not a valid YAML file` at the first root key.
 

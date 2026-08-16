@@ -1,14 +1,16 @@
 # F-010 / F-012 / F-013 — ETH01 appliance bridge + channel anchor + HA mirror
 
-**In one line:** WT32-ETH01 follows hub demand over ESP-NOW, drives Sonoffs without HA, SoftAP-pins the fleet channel, and mirrors hub vitals to HA over Ethernet.
+**In one line:** WT32-ETH01 can follow hub demand (historically over ESP-NOW `0xD8`), drive Sonoffs without HA, SoftAP-pin the fleet channel, and mirror hub vitals to HA over Ethernet.
+
+**Product posture (2026-08-16):** ESP-NOW is **parked** as the product radio. Prefer **HA demand followers** and Ethernet SoftAP membership / Noise API appliance drive. Do not deepen hub↔bridge ESP-NOW demand as the default next task — [`docs/qa/ESPNOW-PRODUCT-PARK.md`](../qa/ESPNOW-PRODUCT-PARK.md).
 
 ## Paths
 
 ```
-Hub demand ──ESP-NOW 0xD8──► DSC-BRIDGE ──native API──► Sonoff relays
-Hub vitals ──ESP-NOW 0xD1 broadcast──► Bridge HA mirror (Ethernet)
+Hub demand ──HA followers (default)──► Sonoff relays
+Hub demand ──ESP-NOW 0xD8 (parked)──► DSC-BRIDGE ──native API──► Sonoff relays
+Hub vitals ──ESP-NOW 0xD1 (parked)──► Bridge HA mirror (Ethernet)
 Fleet STA ──prefer DSC-Anchor SoftAP BSSID──► fixed channel (F-012)
-HA followers ──idempotent fallback──► same relays (when HA up)
 ```
 
 ## Firmware
