@@ -1,3 +1,0 @@
-boot
-imports ok
-connect attempt 1

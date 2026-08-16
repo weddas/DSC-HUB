@@ -1,7 +1,0 @@
-﻿status=PAUSED_CF
-reason=CF/chrome-error spin; checkpoint frozen n=140
-stopped_at=2026-08-08T08:28:34.1980699+10:00
-resume_after=2026-08-08T09:13:34.1919517+10:00
-n=140
-cmd=python -u scripts/_pw_scrape_strain_database.py --headed --delay-min=8 --delay-max=20
-rule=No resume before resume_after. If CF on warm again, stop — no tight retry.

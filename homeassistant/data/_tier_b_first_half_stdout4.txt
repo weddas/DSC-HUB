@@ -1,8 +1,0 @@
-Tier B first half pass 1/1: slice=36 todo=35 (queue partial=False tier_B=72)
-
-=== Afghan Selection https://www.afghanselection.com/ ===
-  OK bank_afghan_selection items=4 method=home_link_scan
-
-=== Breeders Choice https://breederschoice.com/ ===
-
-=== BSB Genetics https://www.bsbgenetics.com/ ===

@@ -1,8 +1,0 @@
-user_data=C:\Users\cmgwe\AppData\Local\Temp\dsc-chrome-fresh-pw2 wait=180s
-tick title='Just a moment...' len=27583 url=https://strain-database.com/strains
-tick title='Just a moment...' len=27583 url=https://strain-database.com/strains
-tick title='Loading https://strain-database.com/strains' len=3143 url=https://strain-database.com/strains
-tick title='Browse 71,675 Cannabis Strains — Indica, Sativa, Hybrid | Strain Database' len=1015080 url=https://strain-database.com/strains
-pdp title='Blue Dream by Premium Cultivars - 21% THC Relaxed Hybrid' len=340058
-cookies=['techaro.lol-anubis-cookie-verification', 'techaro.lol-anubis-auth', 'sdb_vseed', 'cf_clearance']
-OK storage_state=\\192.168.86.2\Digital-Documents\Digital Stealth Care\Projects\DSC-HUB\homeassistant\data\dsc_strains_straindatabase.storage_state.json jar_count=4

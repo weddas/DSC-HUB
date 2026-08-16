@@ -48,6 +48,43 @@ homeassistant/data/exports/
 !homeassistant/data/LIGHT_SOURCES.md
 !homeassistant/data/dsc_light_pack_photometrics.yaml
 
+# Root lab scratch
+/_*.py
+/_*.txt
+/_*.log
+/_*.err
+/_*.pid
+/_*.out
+
+# Runtime artefacts anywhere
+*.log
+*.err
+*.pid
+*.latest
+
+# One-off lab scripts
+scripts/_*
+
+# HA data working set (curated YAML already excepted)
+homeassistant/data/_*
+homeassistant/data/_cache_*/
+homeassistant/data/_wave3_logs/
+homeassistant/data/*.json
+homeassistant/data/*.html
+homeassistant/data/*.xml
+homeassistant/data/*cookies*
+homeassistant/BlueDream*
+
+# Firmware compile scratch
+firmware/v4/*_out.txt
+firmware/v4/_patch_*.py
+
+# Brain scrape ops
+brain/data/_*.pid
+brain/data/_*.err
+brain/data/_*.cmd
+brain/data/_*.cmd.DISABLED
+
 # OS / editor
 .DS_Store
 Thumbs.db

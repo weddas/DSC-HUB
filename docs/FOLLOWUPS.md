@@ -2182,3 +2182,19 @@ Wave 5 fabric tent walls / R3F rewrite were not in scope. Do not claim soak unti
 - Light Independent unlocks clone start/hours
 - Reload HA packages for `dsc_v4_vessel.yaml` + tank dummies
 
+## 2026-08-16 — GitHub junk cleanup
+
+Removed ~520 tracked scrape/backup/scratch files from git (working tree + index). Tracked count **1018 → 498**. Dashboard/panel, `_Archive_Legacy_Code`, and `firmware/_history` were not touched.
+
+### done
+- `.gitignore` now blanks root `/_*`, `scripts/_*`, `homeassistant/data/_*` + `*.json` dumps, runtime `*.log`/`*.err`/`*.pid`, firmware compile scratch, brain scrape PIDs
+- Deleted cookie jar `homeassistant/data/_strain_database_cookies.json` (strain-database.com `cf_clearance` / Anubis session). Treat those cookies as burned.
+- Curated YAML catalogs remain the only tracked files under `homeassistant/data/`
+
+### red-flag
+- Cookie jar is gone from HEAD-to-be, but **still lives in git history**. This pass did **not** rewrite history. Optional later BFG / `git filter-repo` if the jar must disappear from old commits.
+
+### next-plan
+- Commit this cleanup separately (do not mix with `scripts/ha-sync.sh` or in-progress panel work)
+- Optional: history purge of `_strain_database_cookies.json`
+

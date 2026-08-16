@@ -1,8 +1,0 @@
-{
-  "owner": "tier_c_second_half",
-  "tier": "C",
-  "half": "second",
-  "claimed_at": "2026-08-07T18:05:07Z",
-  "queue": "homeassistant/data/_breeder_scrape_queue_1482.json",
-  "note": "second half of Tier C; sibling owns first half"
-}

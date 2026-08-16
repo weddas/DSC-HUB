@@ -1,8 +1,0 @@
-resume target_new=4880 remaining=4880 already_done=120 sitemap=5000 delay=4.0 headed=False ud=C:\Users\cmgwe\AppData\Local\Temp\dsc-pw-chromium-sdb
-launch channel=None ud=C:\Users\cmgwe\AppData\Local\Temp\dsc-pw-chromium-sdb
-warm attempt=1 title='Just a moment...' len=27589 url=https://strain-database.com/strains
-  warm_not_ready sleep=12s
-warm attempt=2 title='Just a moment...' len=27589 url=https://strain-database.com/strains
-  warm_not_ready sleep=24s
-warm attempt=3 title='Just a moment...' len=27589 url=https://strain-database.com/strains
-  warm_not_ready sleep=36s
