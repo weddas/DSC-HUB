@@ -3154,6 +3154,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     "Flowering",
     "Late Flowering",
     "Final 48-72h Flowering",
+    "Dry Mode",
   ];
 
   const DSC_DEFAULTS = () => ({
@@ -3596,12 +3597,12 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       margin: 0 0 10px; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
       color: var(--muted); font-weight: 700;
     }
-    .dash-timeline { display: flex; gap: 0; overflow: hidden; }
+    .dash-timeline { display: flex; flex-wrap: wrap; gap: 4px; overflow: visible; }
     .dash-chev {
-      flex: 1; position: relative; padding: 10px 8px 10px 18px;
-      background: #1a2230; color: var(--muted); font-size: 10px; font-weight: 700;
-      clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 0 100%, 10px 50%);
-      margin-left: -8px; text-align: center; letter-spacing: 0.04em;
+      flex: 1 1 68px; min-width: 60px; position: relative; padding: 8px 6px;
+      background: #1a2230; color: var(--muted); font-size: 9px; font-weight: 700;
+      clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 50%, calc(100% - 8px) 100%, 0 100%, 8px 50%);
+      text-align: center; letter-spacing: 0.03em;
     }
     .dash-chev:first-child { margin-left: 0; clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 0 100%); }
     .dash-chev.on { background: #1565c0; color: #fff; }
@@ -3644,6 +3645,15 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       text-align: center; font-size: 9px; color: #6a7788; letter-spacing: 0.04em;
       line-height: 1; padding: 0 0 2px;
     }
+    .dash-air-svg { width: 100%; height: auto; display: block; }
+    .dash-timeline-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; font-size: 10px; color: var(--muted); }
+    .dash-timeline-lanes { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
+    .dash-timeline-lane {
+      display: flex; gap: 8px; align-items: center; font-size: 11px;
+      background: #152030; border: 1px solid #243044; border-radius: 6px; padding: 6px 8px;
+    }
+    .dash-timeline-lane.oos { opacity: 0.45; }
+    .dash-timeline-lane strong { min-width: 22px; }
     .dash-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     .dash-btn {
       border: 1px solid var(--line); background: #1a222e; color: var(--text);
@@ -3676,106 +3686,102 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
   /* ------------------------------------------------------------------ */
 
   const fmtCfm = (n) => (Number.isFinite(n) ? `${Math.round(n)} CFM` : "— CFM");
+  const fmtShort = (n) => (Number.isFinite(n) ? String(Math.round(n)) : "—");
+
+  const ribbonCount = (cfm) => {
+    if (!Number.isFinite(cfm) || cfm <= 0) return 0;
+    if (cfm < 40) return 1;
+    if (cfm < 80) return 2;
+    if (cfm < 140) return 3;
+    if (cfm < 220) return 4;
+    return 5;
+  };
+
+  const svgRibbons = (x1, y1, x2, y2, cfm, color) => {
+    const n = ribbonCount(cfm);
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const len = Math.hypot(dx, dy) || 1;
+    const nx = (-dy / len) * 3.2;
+    const ny = (dx / len) * 3.2;
+    if (n === 0) {
+      return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color}" stroke-width="1.2" stroke-dasharray="2 6" opacity="0.35"/>`;
+    }
+    const start = -Math.floor((n - 1) / 2);
+    const sw = 1.4 + Math.min(2.2, cfm / 120);
+    return Array.from({ length: n }, (_, i) => {
+      const o = start + i;
+      return `<line x1="${x1 + nx * o}" y1="${y1 + ny * o}" x2="${x2 + nx * o}" y2="${y2 + ny * o}" stroke="${color}" stroke-width="${sw}" opacity="0.85"/>`;
+    }).join("");
+  };
 
   const renderFlow = (live) => {
-    // Col1 Active gear | Col2 Intake environment (room climate)
-    // Col3 Intake CFM (2x4 + cascade transfer + 4x8 + Σ) | Col4 4x8 exhaust split
-    const devices = (live.devices || []).filter((d) => d.on && !String(d.id).startsWith("fan_"));
-    const gearHtml =
-      devices.length === 0
-        ? `<div class="dash-flow-box idle">None on</div>`
-        : devices
-            .map(
-              (d) =>
-                `<div class="dash-flow-box gear" style="color:${esc(d.color)};border-color:${esc(d.color)}">
-                  <div class="val" style="font-size:11px">${esc(d.label)}</div>
-                </div>`
-            )
-            .join("");
-
     const cfm2 = live.cfmClone ?? NaN;
     const cfm8 = live.cfmMain ?? NaN;
     const casc = live.cascadeCfm ?? NaN;
     const throughput =
       Number.isFinite(cfm2) && Number.isFinite(cfm8) ? cfm2 + cfm8 : Number.isFinite(live.throughput) ? live.throughput : NaN;
-    const oPct = Math.round((live.outShare || 0) * 100);
-    const rPct = Math.round((live.recircShare || 0) * 100);
     const cfmOut = live.cfmOut ?? NaN;
     const cfmRec = live.cfmRecirc ?? NaN;
-    const roomParts = String(live.roomClimate || "— · — · —").split("·").map((s) => s.trim());
+    const trust = live.cfmTrust || "CFM guessed from fan % × nameplate — run Learning to measure.";
 
     return `
-      <div class="dash-flow-grid" role="img" aria-label="Intake environment to CFM to exhaust">
-        <div class="dash-flow-col">
-          <div class="col-h">Active gear</div>
-          ${gearHtml}
-        </div>
-        <div class="dash-flow-col">
-          <div class="col-h">Intake environment</div>
-          <div class="dash-flow-box env" style="flex:1">
-            <div class="lbl">ROOM → TENTS</div>
-            <div class="val">${esc(roomParts[0] || "—")}</div>
-            <div class="val">${esc(roomParts[1] || "—")}</div>
-            <div class="val" style="color:#26c6da">${esc(roomParts[2] || "—")}</div>
-            <div class="sub">shared lung air into intakes</div>
-          </div>
-        </div>
-        <div class="dash-flow-col">
-          <div class="col-h">Intake CFM</div>
-          <div class="dash-flow-box clone">
-            <div class="lbl">2×4 from room</div>
-            <div class="val">${esc(fmtCfm(cfm2))}</div>
-          </div>
-          <div class="dash-flow-arrow">↓ transfer (not +)</div>
-          <div class="dash-flow-box casc">
-            <div class="lbl">2×4 → 4×8 cascade</div>
-            <div class="val" style="color:#ffcc80;font-size:12px">${esc(fmtCfm(casc))}</div>
-            <div class="sub">same air · neg. pressure</div>
-          </div>
-          <div class="dash-flow-box main">
-            <div class="lbl">4×8 from room</div>
-            <div class="val">${esc(fmtCfm(cfm8))}</div>
-          </div>
-          <div class="dash-flow-box total">
-            <div class="lbl">Σ into 4×8</div>
-            <div class="val" style="font-size:12px">${esc(fmtCfm(throughput))}</div>
-            <div class="sub">2×4 + 4×8 intakes</div>
-          </div>
-        </div>
-        <div class="dash-flow-col">
-          <div class="col-h">4×8 exhaust · ${esc(fmtCfm(throughput))}</div>
-          <div class="dash-flow-box out">
-            <div class="lbl">DUMP OUTSIDE</div>
-            <div class="val">${oPct}%</div>
-            <div class="sub">${esc(fmtCfm(cfmOut))}</div>
-          </div>
-          <div class="dash-flow-box rec" style="margin-top:auto">
-            <div class="lbl">RECIRC ROOM</div>
-            <div class="val">${rPct}%</div>
-            <div class="sub">${esc(fmtCfm(cfmRec))}</div>
-          </div>
-          <div class="dash-flow-box total">
-            <div class="lbl">Σ dump + recirc</div>
-            <div class="val" style="font-size:12px">${esc(
-              fmtCfm(Number.isFinite(cfmOut) && Number.isFinite(cfmRec) ? cfmOut + cfmRec : NaN)
-            )}</div>
-            <div class="sub">must equal Σ intake</div>
-          </div>
-        </div>
-      </div>
+      <p class="dash-flow-caption">${esc(trust)}</p>
+      <svg viewBox="0 0 720 260" class="dash-air-svg" role="img" aria-label="Air path room to tents">
+        <rect x="16" y="78" width="120" height="110" rx="12" fill="none" stroke="#26c6da" stroke-width="1.8"/>
+        <text x="76" y="122" text-anchor="middle" fill="#e8eef6" font-size="13">Room</text>
+        <text x="76" y="142" text-anchor="middle" fill="#6a7788" font-size="10">umbrella lung</text>
+        <rect x="220" y="28" width="150" height="88" rx="10" fill="none" stroke="#26c6da" stroke-width="1.8"/>
+        <text x="295" y="64" text-anchor="middle" fill="#e8eef6" font-size="13">2×4 tent</text>
+        <text x="295" y="84" text-anchor="middle" fill="#6a7788" font-size="10">in ${esc(fmtShort(cfm2))} cfm</text>
+        <rect x="220" y="150" width="150" height="88" rx="10" fill="none" stroke="#64b5f6" stroke-width="1.8"/>
+        <text x="295" y="186" text-anchor="middle" fill="#e8eef6" font-size="13">4×8 tent</text>
+        <text x="295" y="206" text-anchor="middle" fill="#6a7788" font-size="10">in ${esc(fmtShort(cfm8))} cfm</text>
+        <rect x="560" y="150" width="140" height="88" rx="10" fill="none" stroke="#ff8a65" stroke-width="1.6"/>
+        <text x="630" y="186" text-anchor="middle" fill="#e8eef6" font-size="12">Outdoors</text>
+        <text x="630" y="206" text-anchor="middle" fill="#6a7788" font-size="10">dump ${esc(fmtShort(cfmOut))}</text>
+        ${svgRibbons(136, 110, 220, 72, cfm2, "#26c6da")}
+        ${svgRibbons(136, 140, 220, 194, cfm8, "#64b5f6")}
+        ${svgRibbons(295, 116, 295, 150, casc, "#ffb74d")}
+        <text x="370" y="140" fill="#ffcc80" font-size="10">cascade ${esc(fmtShort(casc))}</text>
+        <text x="370" y="152" fill="#6a7788" font-size="9">same air · not added to Σ</text>
+        ${svgRibbons(370, 194, 560, 194, cfmOut, "#ff8a65")}
+        ${svgRibbons(370, 220, 136, 168, cfmRec, "#b388ff")}
+        <text x="80" y="200" fill="#b388ff" font-size="10">recirc ${esc(fmtShort(cfmRec))}</text>
+      </svg>
       <p class="dash-flow-caption" style="margin-top:8px">
-        Mass balance: exhaust CFM = Σ intake (${esc(fmtCfm(throughput))}) × dump/recirc split (from fan %).
+        Mass-balance exhaust = Σ intake ${esc(fmtCfm(throughput))} × dump/recirc split.
         Cascade is a transfer of 2×4 air — do not add it to intake total.
-        Raw sensor.dsc_cfm_exhaust_* stay nameplate proxies until Learning cal.
-        Heat mat is 2×4-only.
       </p>`;
   };
 
   const renderTimeline = (live) => {
     const stages = live.timelineStages || [];
-    return `<div class="dash-timeline">${stages
-      .map((s) => `<div class="dash-chev ${s.cls}">${esc(s.label)}</div>`)
-      .join("")}</div>`;
+    const seats = live.timelineSeats || [];
+    const hours4 = Number.isFinite(live.expectedHoursMain) ? `${Math.round(live.expectedHoursMain)}h` : "—";
+    const hours2 = Number.isFinite(live.expectedHoursClone) ? `${Math.round(live.expectedHoursClone)}h` : "—";
+    const chips = [
+      `4×8 ${live.mainLit ? "window open" : "dark"} · Want ${hours4}`,
+      `2×4 ${live.cloneLit ? "window open" : "dark"} · Want ${hours2}`,
+      live.catchup ? "Catch-up" : "",
+      live.darkViol ? "2×4 dark violation" : "",
+      live.mixed ? "Mixed stages in tents" : "",
+    ].filter(Boolean);
+    return `
+      <div class="dash-timeline">${stages
+        .map((s) => `<div class="dash-chev ${s.cls}">${esc(s.label)}</div>`)
+        .join("")}</div>
+      <div class="dash-timeline-chips">${chips.map((c) => `<span>${esc(c)}</span>`).join("")}</div>
+      <div class="dash-timeline-lanes">${seats
+        .map((s) => {
+          const week = Number.isFinite(s.days) ? `W${Math.max(1, Math.ceil(s.days / 7))}` : "W—";
+          const tent = s.tent === "main" ? "4×8" : s.tent === "clone" ? "2×4" : "—";
+          const body = s.oos
+            ? "OOS"
+            : `${esc(s.name || "—")} · ${week} · ${Number.isFinite(s.days) ? `${s.days}d` : "—"} · ${esc(s.stage || "—")} · Need ${esc(s.need || "—")}`;
+          return `<div class="dash-timeline-lane${s.oos ? " oos" : ""}"><strong>P${esc(String(s.n))}</strong><span>${esc(tent)}</span><span>${body}</span></div>`;
+        })
+        .join("")}</div>`;
   };
 
   /* ------------------------------------------------------------------ */
@@ -4284,6 +4290,43 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     tentMain.userData.shafts.visible = false;
     root.add(tentMain);
 
+    const makePortStub = (caption) => {
+      const g = new THREE.Group();
+      const mouth = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.13, 0.2, 0.34, 16, 1, true),
+        new THREE.MeshStandardMaterial({
+          color: 0xffb74d,
+          emissive: 0x4a3200,
+          metalness: 0.45,
+          roughness: 0.38,
+          side: THREE.DoubleSide,
+        })
+      );
+      mouth.rotation.z = Math.PI / 2;
+      g.add(mouth);
+      const c = document.createElement("canvas");
+      c.width = 256;
+      c.height = 64;
+      const ctx = c.getContext("2d");
+      ctx.fillStyle = "#ffcc80";
+      ctx.font = "700 30px sans-serif";
+      ctx.fillText(caption, 8, 44);
+      const spr = new THREE.Sprite(
+        new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthTest: false })
+      );
+      spr.scale.set(1.55, 0.38, 1);
+      spr.position.set(0, 0.28, 0);
+      g.add(spr);
+      g.visible = false;
+      return g;
+    };
+    const portFromClone = makePortStub("from 2×4");
+    portFromClone.position.set(-tentMain.userData.size.w / 2, 1.15, 0.08);
+    tentMain.add(portFromClone);
+    const portToMain = makePortStub("to 4×8");
+    portToMain.position.set(tentClone.userData.size.w / 2, 1.12, 0.05);
+    tentClone.add(portToMain);
+
     const mkCurve = (points) =>
       new THREE.CatmullRomCurve3(
         points.map((p) => new THREE.Vector3(p[0], p[1], p[2])),
@@ -4346,6 +4389,22 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       out: 0xff765e,
       recirc: 0xb388ff,
     };
+    const offsetCurve = (curve, offset) => {
+      const pts = [];
+      const n = 20;
+      const up = new THREE.Vector3(0, 1, 0);
+      const side = new THREE.Vector3();
+      for (let i = 0; i <= n; i++) {
+        const t = i / n;
+        const p = curve.getPoint(t);
+        const tan = curve.getTangent(t);
+        side.crossVectors(tan, up);
+        if (side.lengthSq() < 1e-6) side.set(1, 0, 0);
+        else side.normalize();
+        pts.push(p.clone().addScaledVector(side, offset));
+      }
+      return new THREE.CatmullRomCurve3(pts);
+    };
     const addPath = (name, radius, tubular, solidColor) => {
       const mat = solidColor
         ? new THREE.MeshStandardMaterial({ color: solidColor, metalness: 0.72, roughness: 0.32 })
@@ -4381,7 +4440,23 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
           ribbon = null;
         }
       }
-      paths[name] = { solid, shell, ribbon, intensity: 0, shaft: null, portJet: null };
+      paths[name] = { solid, shell, ribbon, intensity: 0, shaft: null, portJet: null, strands: [] };
+      if (fx && typeof fx.makeFlowRibbon === "function") {
+        [-0.09, -0.045, 0.045, 0.09].forEach((off) => {
+          try {
+            const extra = fx.makeFlowRibbon(offsetCurve(curves[name], off), {
+              radius: radius * 0.2,
+              tubular: Math.max(24, Math.floor(tubular * 0.7)),
+              color: pathColors[name],
+              opacity: 0,
+              dashArray: name === "cascade" ? [0.12, 0.055] : [0.1, 0.08],
+            });
+            extra.visible = false;
+            ductGroup.add(extra);
+            paths[name].strands.push(extra);
+          } catch (_) {}
+        });
+      }
     };
     addPath("intakeClone", 0.11, 44);
     addPath("intakeMain", 0.12, 44);
@@ -5085,8 +5160,9 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       side.normalize();
       const up = new THREE.Vector3().crossVectors(tangent, side).normalize();
       const angle = seed * Math.PI * 2 + t * 8;
-      // Tight centerline jitter so duct streams read as flow, not fog
-      const r = radius * (0.22 + seed * 0.28);
+      const mouth = Math.min(clamped, 1 - clamped);
+      const bloom = mouth < 0.14 ? 1 + ((0.14 - mouth) / 0.14) * 3.2 : 1;
+      const r = radius * bloom * (0.22 + seed * 0.28);
       return point.addScaledVector(side, Math.cos(angle) * r).addScaledVector(up, Math.sin(angle) * r);
     };
 
@@ -5123,6 +5199,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       phi: 1.0,
       radius: 11.7,
       dragging: false,
+      dirty: false,
       x: 0,
       y: 0,
       target: { x: 0, y: 1.15, z: 0.15 },
@@ -5156,14 +5233,26 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       while (obj && !obj.userData.potNum && obj.parent) obj = obj.parent;
       return (obj && obj.userData.potNum) || 0;
     };
+    renderer.domElement.style.touchAction = "none";
+    renderer.domElement.style.userSelect = "none";
     const onDown = (event) => {
       orbit.dragging = true;
       orbit.x = event.clientX;
       orbit.y = event.clientY;
       ptrDown = { x: event.clientX, y: event.clientY };
+      if (renderer.domElement.setPointerCapture) {
+        try {
+          renderer.domElement.setPointerCapture(event.pointerId);
+        } catch (_) {}
+      }
     };
     const onUp = (event) => {
       orbit.dragging = false;
+      if (renderer.domElement.releasePointerCapture && event.pointerId != null) {
+        try {
+          renderer.domElement.releasePointerCapture(event.pointerId);
+        } catch (_) {}
+      }
       if (ptrDown) {
         const dx = (event.clientX || 0) - ptrDown.x;
         const dy = (event.clientY || 0) - ptrDown.y;
@@ -5179,6 +5268,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     };
     const onMove = (event) => {
       if (!orbit.dragging) return;
+      orbit.dirty = true;
       orbit.theta -= (event.clientX - orbit.x) * 0.005;
       orbit.phi = Math.max(0.34, Math.min(1.38, orbit.phi + (event.clientY - orbit.y) * 0.005));
       orbit.x = event.clientX;
@@ -5187,6 +5277,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     };
     const onWheel = (event) => {
       event.preventDefault();
+      orbit.dirty = true;
       orbit.radius = Math.max(7.5, Math.min(17, orbit.radius + event.deltaY * 0.01));
       applyCamera();
     };
@@ -5273,6 +5364,14 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
           path.ribbon.userData.flow.lastWidth = width;
         }
       }
+      const strandCount = !active ? 0 : shown > 0.75 ? 4 : shown > 0.5 ? 3 : shown > 0.28 ? 2 : shown > 0.12 ? 1 : 0;
+      (path.strands || []).forEach((strand, i) => {
+        strand.visible = i < strandCount;
+        if (!strand.visible || !strand.material || !strand.material.userData) return;
+        const uniforms = strand.material.userData;
+        if (uniforms.uOpacity) uniforms.uOpacity.value = 0.2 + shown * 0.5;
+        if (uniforms.uDashOffset) uniforms.uDashOffset.value -= 0.008 + shown * 0.032;
+      });
     };
 
     const cfmNorm = (cfm, scale = 80) => Math.min(1, Math.max(0, Number(cfm) || 0) / scale);
@@ -5288,7 +5387,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       system.setOpacity(active ? Math.min(1, 0.42 + shown * 0.58) : 0);
       if (!active) return;
       const baseSpeed = 0.2 + shown * 1.05;
-      const activeCount = Math.max(16, Math.floor(system.count * (0.5 + shown * 0.5)));
+      const activeCount = Math.max(shown < 0.08 ? 0 : 10, Math.floor(system.count * (0.22 + shown * 0.78)));
       for (let i = 0; i < system.count; i++) {
         if (i >= activeCount) {
           system.positions[i * 3 + 1] = -99;
@@ -5537,7 +5636,10 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         const oos = livePot.inService === false;
         const parked = livePot.tent === "unassigned";
         const hollow = oos || parked;
-        actor.visible = true;
+        const tentKey = livePot.tent === "main" || livePot.tent === "clone" ? livePot.tent : null;
+        actor.visible = tentKey
+          ? (tentKey === "clone" ? focusTentMode !== "main" : focusTentMode !== "clone")
+          : focusTentMode == null;
         const H = actor.userData.vesselH || 0.22;
         const moistN = Number(livePot.moisture);
         const frac = Number.isFinite(moistN) ? Math.max(0.02, Math.min(1, moistN / 100)) : 0.02;
@@ -5603,22 +5705,36 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         const shareSum = Math.max(0.001, outShare + recShare);
         const cascadeExit = curves.cascade.getPoint(0.02);
 
-        updatePathVisual("intakeClone", intakeClone, now);
-        updatePathVisual("intakeMain", intakeMain, now);
+        const cloneOk = focusTentMode !== "main";
+        const mainOk = focusTentMode !== "clone";
+        updatePathVisual("intakeClone", cloneOk ? intakeClone : 0, now);
+        updatePathVisual("intakeMain", mainOk ? intakeMain : 0, now);
+        // Cascade stays live on clone focus (wisps toward "to 4×8"). Zero CFM = no fake motion.
         updatePathVisual("cascade", cascade, now);
-        updatePathVisual("out", outVis, now);
-        updatePathVisual("recirc", recVis, now);
+        updatePathVisual("out", mainOk ? outVis : 0, now);
+        updatePathVisual("recirc", mainOk ? recVis : 0, now);
 
         // Journey streams: duct → pool → exit (pace slows in pool so settle reads)
-        updateSystem("intakeClone", curves.intakeClone, dt, Math.min(1, intakeClone * 0.85), null, () => 1.2);
-        updateSystem("intakeMain", curves.intakeMain, dt, Math.min(1, intakeMain * 0.85), null, () => 1.2);
-        updateCascadePlume(dt, cascade, outShare, recShare);
+        updateSystem("intakeClone", curves.intakeClone, dt, cloneOk ? Math.min(1, intakeClone * 0.85) : 0, null, () => 1.2);
+        updateSystem("intakeMain", curves.intakeMain, dt, mainOk ? Math.min(1, intakeMain * 0.85) : 0, null, () => 1.2);
+        if (focusTentMode === "clone") {
+          updateSystem(
+            "cascade",
+            curves.cascade,
+            dt,
+            cascade,
+            (t, seed) => sampleCurve(curves.cascade, t * 0.52, 0.018, seed),
+            () => 1.25
+          );
+        } else {
+          updateCascadePlume(dt, cascade, outShare, recShare);
+        }
 
         updateSystem(
           "out",
           curves.out,
           dt,
-          outVis,
+          mainOk ? outVis : 0,
           (t, seed) => exhaustFromInside(t, seed, curves.out, tentMain, [0.05, 0.55, -0.42]),
           (t) => (t < 0.28 ? 0.55 : 1.45)
         );
@@ -5626,7 +5742,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
           "recirc",
           curves.recirc,
           dt,
-          recVis,
+          mainOk ? recVis : 0,
           (t, seed) => exhaustFromInside(t, seed, curves.recirc, tentMain, [0.42, 0.48, 0.02]),
           (t) => (t < 0.28 ? 0.55 : 1.45)
         );
@@ -5638,7 +5754,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
           "flowClone",
           curves.intakeClone,
           dt,
-          intakeClone,
+          cloneOk ? intakeClone : 0,
           (t, seed, i) =>
             journeyThroughTent(t, seed, i, {
               tent: tentClone,
@@ -5656,7 +5772,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
           "flowMain",
           curves.intakeMain,
           dt,
-          mainFlow,
+          mainOk ? mainFlow : 0,
           (t, seed, i) =>
             journeyThroughTent(t, seed, i, {
               tent: tentMain,
@@ -5669,9 +5785,9 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
           journeyPace
         );
 
-        updateTentGuide("clone", intakeClone);
-        updateTentGuide("mainOut", Math.min(1, mainFlow * (outShare / shareSum) + outVis * 0.5));
-        updateTentGuide("mainRec", Math.min(1, mainFlow * (recShare / shareSum) + recVis * 0.5));
+        updateTentGuide("clone", cloneOk ? intakeClone : 0);
+        updateTentGuide("mainOut", mainOk ? Math.min(1, mainFlow * (outShare / shareSum) + outVis * 0.5) : 0);
+        updateTentGuide("mainRec", mainOk ? Math.min(1, mainFlow * (recShare / shareSum) + recVis * 0.5) : 0);
         updateMatHeat(dt, live.matOn ? 1 : 0);
 
         if (live.matOn) {
@@ -5811,12 +5927,12 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
           const slotIdx = pose && Number.isFinite(+pose.slot) ? +pose.slot : -1;
           const pad = tent && slotIdx >= 0 && padWorld[tent] ? padWorld[tent][slotIdx] : null;
           if (!pad) {
-            actor.visible = true;
+            actor.visible = focusTentMode == null;
             actor.userData.lerpReady = false;
             actor.position.set(-3.5 + (n - 1) * 0.48, 0.08, 2.45);
             continue;
           }
-          actor.visible = true;
+          actor.visible = tent === "clone" ? cloneOk : mainOk;
           if (!actor.userData.lerpReady) {
             actor.position.copy(pad);
             actor.userData.lerpReady = true;
@@ -5838,8 +5954,9 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         }
         // Dashed pads stay as holes; occupied slots still show the ring under the vessel.
         ["clone", "main"].forEach((key) => {
+          const vis = key === "clone" ? cloneOk : mainOk;
           pots[key].forEach((plant) => {
-            plant.visible = true;
+            plant.visible = vis;
           });
         });
 
@@ -5919,12 +6036,37 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     resize();
     raf = requestAnimationFrame(tick);
 
-    let focusTentMode = null; // null | "main" | "clone"
+    let focusTentMode = undefined; // unset until first setFocusTent
+    const setPathGroupVisible = (name, vis) => {
+      const path = paths[name];
+      if (!path) return;
+      path.solid.visible = vis;
+      path.shell.visible = vis;
+      if (path.ribbon) path.ribbon.visible = vis;
+      if (path.shaft) path.shaft.visible = vis;
+      if (path.portJet) path.portJet.visible = vis;
+      (path.strands || []).forEach((s) => {
+        if (!vis) s.visible = false;
+      });
+      if (air[name] && air[name].points) air[name].points.visible = vis && path.intensity > 0;
+    };
     const applyFocusTent = (mode) => {
-      focusTentMode = mode === "main" || mode === "clone" ? mode : null;
+      const next = mode === "main" || mode === "clone" ? mode : null;
+      const changed = focusTentMode !== next;
+      focusTentMode = next;
       tentClone.visible = focusTentMode !== "main";
       tentMain.visible = focusTentMode !== "clone";
-      // Frame the active tent so Main/Clone cockpits read as a single-tent Twin.
+      portFromClone.visible = focusTentMode === "main";
+      portToMain.visible = focusTentMode === "clone";
+      setPathGroupVisible("intakeClone", focusTentMode !== "main");
+      setPathGroupVisible("intakeMain", focusTentMode !== "clone");
+      // Keep cascade on clone (outlet wisps) and on 4×8 (cascade-in). Twin shows the full pipe.
+      setPathGroupVisible("cascade", true);
+      setPathGroupVisible("out", focusTentMode !== "clone");
+      setPathGroupVisible("recirc", focusTentMode !== "clone");
+      if (!changed) return;
+      orbit.dirty = false;
+      // Frame the active tent so 4×8 / 2×4 cockpits read as a single-tent Twin.
       if (focusTentMode === "main") {
         orbit.target = { x: tentMain.position.x, y: 1.25, z: tentMain.position.z };
         orbit.theta = 0.52;
@@ -6161,6 +6303,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     }
     setFocusTent(mode) {
       this._focusTent = mode === "main" || mode === "clone" ? mode : null;
+      this._lastPaintFocus = undefined;
       if (this._scene && typeof this._scene.setFocusTent === "function") this._scene.setFocusTent(this._focusTent);
     }
     setHeld(held) {
@@ -6250,7 +6393,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
               </div>
               <div class="dash-panel" style="flex:1">
                 <h3>Air path · environment → CFM → exhaust</h3>
-                <p class="dash-flow-caption">Room climate → intake CFM (2×4 / 4×8) + cascade transfer → 4×8 exhaust mass-balanced to Σ intake × dump/recirc split. Heat mat is 2×4-only.</p>
+                <p class="dash-flow-caption">Spatial air path — room lung to 2×4 / 4×8, cascade as transfer, dump / recirc. Heat mat is 2×4-only.</p>
                 <div id="d-flow" class="dash-flow"></div>
               </div>
               <div class="dash-panel">
@@ -6536,10 +6679,42 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       }
       if (curIdx >= 0) stages[curIdx].cls = "on";
       if (curIdx + 1 < stages.length) stages[curIdx + 1].cls = stages[curIdx + 1].cls || "next";
-      const timelineStages = stages.filter((_, i) => i >= Math.max(0, curIdx - 1) && i <= curIdx + 2);
-      if (!timelineStages.length) {
-        timelineStages.push({ label: "No stage — not invented", cls: "on" });
-      }
+      const timelineStages = stages.length ? stages : [{ label: "No stage — not invented", cls: "on" }];
+      const timelineSeats = (cfg.pots || []).map((p) => {
+        const n = potNumFrom(p);
+        const svc =
+          p.in_service ||
+          (Number.isFinite(n) ? `input_boolean.dsc_pot${n}_in_service` : "");
+        const oos = !!(svc && !isUnavailable(hass, svc) && !isOn(hass, svc));
+        const tent = readPotTent(hass, p);
+        const nameState = Number.isFinite(n) ? stateOf(hass, `text.dsc_pot${n}_plant_name`) : null;
+        const name =
+          nameState && nameState.state !== "unavailable" && nameState.state !== "unknown"
+            ? String(nameState.state)
+            : p.id;
+        return {
+          n: Number.isFinite(n) ? n : p.id,
+          oos,
+          tent,
+          name,
+          days: numState(hass, potEntity(p.prefix, "days_since_sprout"), NaN),
+          stage: stateOf(hass, potEntity(p.prefix, "expected_stage"))?.state || "—",
+          need: stateOf(hass, `sensor.dsc_pot${n}_need_summary`)?.state || "—",
+        };
+      });
+      const allocAvail = (id) => {
+        const st = stateOf(hass, id);
+        return !!(st && st.state !== "unavailable" && st.state !== "unknown" && Number.isFinite(parseFloat(st.state)));
+      };
+      const intakeNameplate =
+        !allocAvail("sensor.dsc_cfm_intake_2x4_allocated") && !allocAvail("sensor.dsc_cfm_intake_main_allocated");
+      const exhaustAllocated =
+        allocAvail("sensor.dsc_cfm_exhaust_out_allocated") || allocAvail("sensor.dsc_cfm_exhaust_recirc_allocated");
+      const cfmTrust = intakeNameplate && !exhaustAllocated
+        ? "CFM guessed from fan % × nameplate — run Learning to measure."
+        : intakeNameplate && exhaustAllocated
+          ? "Mixed CFM trust — some ducts from Learning, others still nameplate. Run Learning on the dashed paths."
+          : "CFM from Learning (anemometer).";
 
       const emerg = isOn(hass, e.emergency);
       const strategy = stateOf(hass, e.strategy)?.state || "";
@@ -6598,7 +6773,13 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         potSlots,
         plantPose,
         timelineStages,
+        timelineSeats,
         mixed,
+        catchup: isOn(hass, "binary_sensor.dsc_hub_light_catchup_active"),
+        darkViol: isOn(hass, "binary_sensor.dsc_clone_dark_period_violation"),
+        expectedHoursMain: numState(hass, e.expected_light_hours, NaN),
+        expectedHoursClone: numState(hass, e.clone_expected_light_hours, NaN),
+        cfmTrust,
         emerg,
         strategy,
         priority,
@@ -6781,7 +6962,8 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
           : this._cfg.focusTent === "main" || this._cfg.focusTent === "clone"
             ? this._cfg.focusTent
             : null;
-      if (this._scene && typeof this._scene.setFocusTent === "function") {
+      if (this._scene && typeof this._scene.setFocusTent === "function" && this._lastPaintFocus !== focusTent) {
+        this._lastPaintFocus = focusTent;
         this._scene.setFocusTent(focusTent);
       }
       const hudC = this.shadowRoot.getElementById("d-hud-clone");
