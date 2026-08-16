@@ -2255,3 +2255,15 @@ Closed Twin clone-cascade hide, Room VPD id, Light draft extrema, tent air-path 
 - GPIO 4×8 lamp still empty — window remains Got proxy.
 - Intake `*_allocated` CFM still missing; tent-page trust line stays nameplate/mixed until Learning writes them.
 
+## 2026-08-16 — Docs: Kit Pulse / Twin orbit / Crop Scheduler ops
+
+### done
+- Ops runbook [`docs/qa/LIVE-UI-KIT-PULSE.md`](qa/LIVE-UI-KIT-PULSE.md) for raise `e6539b0` + HACS tip sync `d051439`.
+- Indexed from README, `homeassistant/README.md`, `LIVE-UI-CUSTOM-PANEL.md`, `dist/README.md`.
+
+### soak
+- Prefer this runbook (and open docs PRs #82 OpenSSH · #81 bar-raise · #80 drafts · #79 HACS/airflow · #77 VERSION-TRAINS) until merged.
+
+### next-plan
+- Align tip surface lockstep (package 7.1.3 / const 7.1.4 / `BUNDLE_V`) in a code bump — not docs-only.
+
