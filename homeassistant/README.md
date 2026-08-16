@@ -44,7 +44,9 @@ On HA: copy `homeassistant/esphome/dsc-*.yaml` into `/config/esphome/`.
 Stubs pull package bodies from `github.com/weddas/DSC-HUB` (`master`,
 refresh daily). Secrets stay in HA `secrets.yaml` only.
 
-Hub + panel: flash as a pair when `espnow_cmd_tag` / wire contract changes.
+Hub + panel: flash as a pair when `espnow_cmd_tag` / wire contract changes
+(parked ESP-NOW packages still share that tag — see
+[`../docs/qa/ESPNOW-PRODUCT-PARK.md`](../docs/qa/ESPNOW-PRODUCT-PARK.md)).
 
 See [`esphome/README.md`](esphome/README.md).
 

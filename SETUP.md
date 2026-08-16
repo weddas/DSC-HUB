@@ -16,7 +16,7 @@ Lab/bench stubs (`dsc-hub.yaml`, etc.) keep compile-time WiFi and MACs and do **
 - Phone or laptop with Wi‑Fi
 - Kit card password = `dsc_setup_ap_password` in `secrets.yaml` (from `generate-secrets.sh`)
 - Power for HUB, DSC-CONTROL, and pot sensors
-- **Optional:** home 2.4 GHz Wi‑Fi (fixed channel strongly recommended — mesh/Nest hops break ESP-NOW)
+- **Optional:** home 2.4 GHz Wi‑Fi (fixed channel strongly recommended — mesh/Nest hops break same-channel ESP-NOW when that parked path is still flashed)
 - Internet is optional (SNTP clock when available; local-only mode works with Control alone)
 
 Sonoffs need their own flash + home LAN WiFi. After the ETH01 bridge is paired and Ethernet is up, appliances follow hub demand without HA (F-010). Local-only SoftAP without Ethernet cannot reach Sonoffs on a separate LAN.
@@ -44,7 +44,7 @@ From `firmware/v4/` with a filled `secrets.yaml`:
 7. **Power each pot.** Same automatic join / register / reboot.
 8. **Power the ETH01 bridge** (Ethernet cabled to the LAN). SoftAP **`DSC-Anchor`** comes up on channel 11 (custom SoftAP — ESPHome cannot combine `wifi:` with `ethernet:`). Copy `sensor.dsc_bridge_anchor_bssid` (or serial log BSSID) into hub `bridge_mac` / Lock WiFi prefer. Automatic SoftAP hello to hub `DSC-Setup-*` for the bridge is deferred (F-014).
 9. On the phone portal, confirm Control/pots appear under **Devices**, then tap **Finish setup**. Migrate hub/Control/pots onto **DSC-Anchor** (Lock WiFi prefer Anchor BSSID). Leave Nest as fallback only.
-10. Leave the setup Wi‑Fi. Use Control to run climate; Soil tab shows pot data over ESP-NOW. Sonoffs stay on home LAN; bridge drives them over Ethernet when demand is on.
+10. Leave the setup Wi‑Fi. Use Control (and HA when present) to run climate. Soil may still arrive over ESP-NOW when RF is healthy — that path is **parked**, not a product promise ([`docs/qa/ESPNOW-PRODUCT-PARK.md`](docs/qa/ESPNOW-PRODUCT-PARK.md)). Sonoffs stay on home LAN; prefer HA demand followers, or the ETH01 bridge over Ethernet when demand is on.
 
 ### Add a device later
 
