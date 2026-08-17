@@ -30,6 +30,17 @@ Full-corpus search (`strain_canonical` ~195k+), not the HA static 10k index.
 | Code | `standalone_server.py` + `docker-compose.yml` |
 | HA | `dsc_v4_cannalib_api.yaml` — paste key into `input_text.dsc_cannalib_api_key` |
 
+## Restart vs Recreate
+
+| Change | Unraid action |
+|---|---|
+| Bind-mounted code only | **Restart** container `cannalib` |
+| Env / mounts / Compose project path | **Recreate** from **CannaLib** `services/cannalib` (not this Hub trampoline) |
+
+There is **no** GitHub Actions restart workflow on tip (`9b82bb6` removed
+`restart-cannalib.yml`). The `unraid-ha-deploy` runner is for HA sync, not
+docker sock control. Full runbook: [`docs/qa/CANNALIB-RESTART.md`](../../docs/qa/CANNALIB-RESTART.md).
+
 ## Flip to private later
 
 1. Rotate / set `CANNALIB_API_KEY`.

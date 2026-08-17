@@ -2331,3 +2331,11 @@ The red **THREE.js not loaded — redeploy DSC-HUB bundle** on Twin was not stal
 
 - Still needs HA sync + hard-reload to prove Twin paints the scene on the box. Live HA was 7.1.x at last soak; 7.2.0 query-string is a new cache-buster vs that.
 
+
+## 2026-08-17 — CannaLib Actions restart removed
+
+Tip `9b82bb6` deleted `.github/workflows/restart-cannalib.yml` after sudo/nsenter attempts on `unraid-ha-deploy`. Bounce the API from Unraid Compose (**Restart** for bind-mounted code; **Recreate** for env/mounts / CannaLib project path). Do not Recreate from Hub `services/cannalib/docker-compose.yml` (STALE trampoline). Ops: [`docs/qa/CANNALIB-RESTART.md`](qa/CANNALIB-RESTART.md).
+
+### next-plan
+- Prefer Unraid UI for cannalib bounce until the runner has an intentional docker control plane.
+- Finish Hub→CannaLib mount cutover when Recreate is available (`brain/data/CANNALIB-MOVED.md`).
