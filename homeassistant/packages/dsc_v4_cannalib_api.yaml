@@ -60,7 +60,7 @@ rest:
 
       - name: "DSC Cannalib Corpus Strains"
         unique_id: dsc_cannalib_corpus_strains
-        value_template: "{{ value_json.corpus.strains | default(0) }}"
+        value_template: "{{ value_json.corpus.strains | default(states('sensor.dsc_cannalib_corpus_freeze') | int(0), true) }}"
         unit_of_measurement: "strains"
         icon: mdi:cannabis
         json_attributes_path: "$.corpus"
@@ -71,6 +71,28 @@ rest:
           - nutrients
           - mediums
           - lights
+
+  - resource_template: "{{ states('input_text.dsc_cannalib_base_url')|trim }}/v1/corpus"
+    scan_interval: 300
+    timeout: 60
+    headers:
+      User-Agent: "HomeAssistant/DSC-HUB cannalib-ha"
+      X-Cannalib-Key: "{{ states('input_text.dsc_cannalib_api_key')|trim }}"
+    sensor:
+      - name: "DSC Cannalib Corpus Freeze"
+        unique_id: dsc_cannalib_corpus_freeze
+        value_template: "{{ value_json.counts.strains | default(0) }}"
+        unit_of_measurement: "strains"
+        icon: mdi:database
+        json_attributes_path: "$.counts"
+        json_attributes:
+          - variants
+          - aliases
+          - chemistry
+          - nutrients
+          - mediums
+          - lights
+          - status
 
 template:
   - binary_sensor:
@@ -94,4 +116,4 @@ template:
           rate_limited: "{{ state_attr('sensor.dsc_cannalib_api_hits','hits_rate_limited') }}"
           corpus_strains: "{{ states('sensor.dsc_cannalib_corpus_strains') }}"
           auth_mode: "{{ state_attr('sensor.dsc_cannalib_api_hits','auth_mode') }}"
-          note: "Full-corpus cannalib API (not the 10k HA static index)."
+          note: "Full-corpus cannalib API (sqlite-exported /local/dsc-catalog is fallback only)."

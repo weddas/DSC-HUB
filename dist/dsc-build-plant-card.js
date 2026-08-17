@@ -518,24 +518,24 @@
     _search(kind, q, { open = true } = {}) {
       this._q[kind] = q;
       if (open) this._drawerKind = kind;
-      // Strains: full corpus via cannalib; other kinds keep local index (near-complete).
-      if (kind === "strain") {
+      // All four domains via cannalib; local JSON is offline fallback.
+      if (kind === "strain" || kind === "nutrient" || kind === "medium" || kind === "light") {
         const seq = (this._apiSeq = (this._apiSeq || 0) + 1);
         const needle = (q || "").trim();
         clearTimeout(this._apiTimer);
         this._apiTimer = setTimeout(async () => {
           try {
-            const items = await this._apiSearch("strain", needle, 12);
+            const items = await this._apiSearch(kind, needle, 12);
             if (seq !== this._apiSeq) return;
-            this._hits.strain = items || [];
+            this._hits[kind] = items || [];
             this._apiLive = true;
           } catch (_err) {
             if (seq !== this._apiSeq) return;
-            this._hits.strain = this._filterItems("strain", needle);
+            this._hits[kind] = this._filterItems(kind, needle);
             this._apiLive = false;
           }
-          this._hitActive.strain = this._hits.strain.length ? 0 : -1;
-          this._paintHits("strain");
+          this._hitActive[kind] = this._hits[kind].length ? 0 : -1;
+          this._paintHits(kind);
           this._paintCatalogChip();
         }, needle.length ? 180 : 0);
         return;

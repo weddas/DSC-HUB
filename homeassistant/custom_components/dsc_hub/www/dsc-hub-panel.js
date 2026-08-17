@@ -13259,7 +13259,7 @@ function A_({ gaps: l }) {
     ] })
   ] });
 }
-const Ga = "7.1.7-bar-raise", Gp = [
+const Ga = "7.1.8-cutover", Gp = [
   `/local/DSC-HUB.js?v=${Ga}`,
   `/hacsfiles/DSC-HUB/DSC-HUB.js?v=${Ga}`
 ], R_ = {

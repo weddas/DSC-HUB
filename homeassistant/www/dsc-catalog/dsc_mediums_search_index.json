@@ -1,33 +1,417 @@
 {
   "schema_version": 2,
   "kind": "mediums",
-  "built_at": "2026-08-11T15:01:04Z",
-  "count": 306,
-  "note": "Browse index v2 for soil % blend + catalog explorer.",
+  "built_at": "2026-08-17T05:14:31Z",
+  "count": 321,
+  "note": "Browse index from sqlite medium_product (not dump files).",
   "items": [
     {
-      "id": "medium_clay_pebbles_leca",
-      "name": "Clay pebbles / LECA",
-      "brand": null,
-      "category": "substrate",
+      "id": "growkings:3-in-1-soil-moisture-light-ph-meter-for-indoor-outdoor-plants-gardens-lawns",
+      "name": "3 in 1 Moisture, Light & Ph Tester - For Indoor / Outdoor Plants Gardens & Lawns",
+      "brand": "Grow Kings",
+      "category": "Testing Equipment",
       "composition": null,
-      "source": "builder_seed"
+      "source": "sqlite"
     },
     {
-      "id": "medium_perlite",
-      "name": "Perlite",
-      "brand": null,
-      "category": "substrate",
+      "id": "growkings:330mm-standard-black-bucket-no-hole-18l",
+      "name": "330mm Standard Black Bucket No Hole 18L",
+      "brand": "Grow Kings",
+      "category": "Substrates, Pots & Trays",
       "composition": null,
-      "source": "builder_seed"
+      "source": "sqlite"
     },
     {
-      "id": "medium_cyco_coco_lite_70_30",
-      "name": "Cyco Coco Lite 70/30",
-      "brand": null,
-      "category": "substrate",
+      "id": "tghydroponics:42mm-jiffy-coco-coir-propagation-pallets-1000-pcs",
+      "name": "42MM JIFFY COCO COIR PROPAGATION PALLETS - 1000 PCS",
+      "brand": "Propagation",
+      "category": null,
       "composition": null,
-      "source": "builder_seed"
+      "source": "sqlite"
+    },
+    {
+      "id": "tghydroponics:42mm-jiffy-pellets-25-pack",
+      "name": "42mm Jiffy Pellets 25 Pack",
+      "brand": "Propagation",
+      "category": null,
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:600w-hps-grow-light-kit-digital-ballast-with-defender-medium-reflector",
+      "name": "600W HPS Grow Light Kit – Digital Ballast with Medium Defender Reflector",
+      "brand": "Adjust-A-Wings",
+      "category": "Lighting",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:soil-sensor-probe-exclusively-for-controller-ai",
+      "name": "AC Infinity Soil Sensor Probe, Exclusively for Controller AI+",
+      "brand": "AC Infinity",
+      "category": "Home & Garden > Household Appliances > Climate Control Appliances > Fans > Ventilation Fans",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "tghydroponics:ac-infinity-soil-sensor-probe-for-controller-ai",
+      "name": "AC Infinity Soil Sensor Probe, for Controller AI+",
+      "brand": "TG-Hydroponics",
+      "category": "AC Infinity",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:adjust-a-wings-avenger-medium-w-e40-single-ended-lamp-holder",
+      "name": "Adjust-A-Wings Avenger Medium w/ E40 single ended lamp holder",
+      "brand": "Adjust-A-Wings",
+      "category": "Reflectors & Light Spreaders",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:adjust-a-wings-defender-medium-w-e40-single-ended-lamp-holder",
+      "name": "Adjust-A-Wings Defender Medium w/ E40 single ended lamp holder",
+      "brand": "Adjust-A-Wings",
+      "category": "Reflectors & Light Spreaders",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:advanced-nutrients-big-bud-coco-1l",
+      "name": "Advanced Nutrients Big Bud Coco - 1L",
+      "brand": "Advanced Nutrients",
+      "category": "Nutrients",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:aptus-starter-kit-hydro",
+      "name": "Aptus Starter Kit - Hydro",
+      "brand": "Aptus",
+      "category": "Nutrients",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "tghydroponics:aqua-master-tools-pro-substrate-ec-temp-meter-e300",
+      "name": "Aqua Master Tools Pro Substrate EC/Temp Meter E300",
+      "brand": "Aqua Master",
+      "category": null,
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "tghydroponics:aqua-master-tools-pro-substrate-handheld-meter-h600",
+      "name": "Aqua Master Tools Pro Substrate Handheld Meter H600",
+      "brand": "Aqua Master",
+      "category": null,
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "tghydroponics:aqua-master-tools-substrate-ph-temp-pro-2-s300",
+      "name": "Aqua Master Tools Substrate Ph Temp Pro 2 S300",
+      "brand": "Aqua Master",
+      "category": "Ph Temp",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:airstone-pvc-air-disk-encased-10cm-medium-qb-72",
+      "name": "Aqua One Airstone Pvc Air Disk Encased 10 x 10cm Medium",
+      "brand": "Aqua One",
+      "category": "Grow Systems",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:aquamaster-h600-pro-substrate-ph-ec-ppm-tds-temp-handheld-inc-case",
+      "name": "Aquamaster H600 Pro Substrate pH – EC – PPM – TDS – Temp Handheld Inc Case",
+      "brand": "Aquamaster Tools",
+      "category": "Testing Equipment",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:aquamaster-s300-pro-2-substrate-ph-temp-meter",
+      "name": "Aquamaster S300 Pro-2 Substrate PH – Temp Meter",
+      "brand": "Aquamaster Tools",
+      "category": "Testing Equipment",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "tghydroponics:aquamaster-tools-handheld-meter-ph-ec-temp-h600-pro",
+      "name": "Aquamaster Tools Handheld Meter PH,EC,TEMP H600 Pro",
+      "brand": "Aqua Master",
+      "category": null,
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:biocarbon",
+      "name": "BIOCARBON - Premium Biochar (Engineered Carbon for Soil) - 3L",
+      "brand": "FUTURE SOIL",
+      "category": "Additives",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:biocarbon-premium-biochar-engineered-carbon-for-soil-9l",
+      "name": "BIOCARBON - Premium Biochar (Engineered Carbon for Soil) - 9L",
+      "brand": "FUTURE SOIL",
+      "category": "Additives",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:biocarbon-premium-biochar-engineered-carbon-for-soil-25l",
+      "name": "BIOCARBON - Premium Biochar (Engineered Carbon for Soil) 25L",
+      "brand": "FUTURE SOIL",
+      "category": "Additives",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:balls-expanded-clay-30mm-plus-elongated-50-litre-bag",
+      "name": "Balls Expanded Clay 30mm Plus Elongated 50 Litre Bag",
+      "brand": "Accent Hydroponics",
+      "category": "Grow Mediums",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:bio-diesel-coco-propagation-plugs-38mm",
+      "name": "Bio Diesel - Coco Propagation Plugs - 38mm (100 Pack)",
+      "brand": "Bio Diesel",
+      "category": "Grow Mediums",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:aloevate-organic-plant-tonic-200-vitamins-and-minerals",
+      "name": "Bio Diesel Aloevate - Organic Plant Tonic (200+ Vitamins And Minerals) 1L, 5L, 20L",
+      "brand": "Bio Diesel",
+      "category": "Nutrients - Hydroponics",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:coco-low-compression-brick",
+      "name": "Bio Diesel Coco Low Compression Brick",
+      "brand": "Bio Diesel",
+      "category": "Grow Mediums",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "tghydroponics:bio-diesel-coco-low-compression-brick-70l",
+      "name": "Bio Diesel Coco Low Compression Brick 70L",
+      "brand": "Bio Diesel",
+      "category": null,
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:crystal-clear-coco-flush-and-brix-enhancer",
+      "name": "Bio Diesel Crystal Clear - Coco Flush And Brix Enhancer (1L, 5L, 20L)",
+      "brand": "Bio Diesel",
+      "category": "Nutrients - Hydroponics",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "tghydroponics:bio-diesel-living-organic-soil-lite-30l",
+      "name": "Bio Diesel Living Organic Soil Lite - 30L",
+      "brand": "Coco Coir",
+      "category": null,
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "tghydroponics:bio-diesel-max-air-coco-perlite-70-30-mix-50l",
+      "name": "Bio Diesel Max Air Coco Perlite 70-30 Mix [50L]",
+      "brand": "Coco Coir",
+      "category": null,
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:organic-living-soil-30l",
+      "name": "Bio Diesel Organic Living Soil 30L",
+      "brand": "Bio Diesel",
+      "category": "Grow Mediums",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:premium-max-air-70-30-coco-blend-50l",
+      "name": "Bio Diesel Premium MAX AIR 70/30 Coco Blend 50L",
+      "brand": "Bio Diesel",
+      "category": "Grow Mediums",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:rhino-k-organic-flower-hardener",
+      "name": "Bio Diesel Rhino K - Organic Flower Hardener (250mL, 1L, 5L, 20L)",
+      "brand": "Bio Diesel",
+      "category": "Nutrients - Hydroponics",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:super-natural-organic-root-and-shoot-stimulant",
+      "name": "Bio Diesel Super Natural - Organic Root And Shoot Stimulant (250mL, 1L, 5L, 20L)",
+      "brand": "Bio Diesel",
+      "category": "Nutrients - Hydroponics",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:bioguano",
+      "name": "BioGuano Liquid Seabird Guano - (1 or 5L)",
+      "brand": "BioGuano",
+      "category": null,
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:bioguano-nitrogen-formula-1-l",
+      "name": "BioGuano Organic Liquid Nitrogen - 1L",
+      "brand": "BioGuano",
+      "category": "Nutrients",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:bioguano-nitrogen-formula-5l",
+      "name": "BioGuano Organic Liquid Nitrogen - 5L",
+      "brand": "BioGuano",
+      "category": "Nutrients",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:bluelab-combo-plus-meter",
+      "name": "Bluelab Combo Meter Plus Leap Probe PH, EC Temp & Soil PH",
+      "brand": "Bluelab",
+      "category": "Testing Equipment",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:bluelab-soil-ph-pen",
+      "name": "Bluelab Ph Pen For Soil Testing",
+      "brand": "Bluelab",
+      "category": "Testing Equipment",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "apexgrow:bluelab-pulse-meter-soil-ec-moisture-sensor-australia",
+      "name": "Bluelab Pulse Meter | Soil EC Moisture Temperature Sensor Bluetooth Australia",
+      "brand": "Bluelab",
+      "category": "Hydroponic Testing Equipment",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "tghydroponics:bluelab-soil-ph-pen",
+      "name": "Bluelab Soil pH Pen",
+      "brand": "Testing Equipment /pH up & down",
+      "category": null,
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "apexgrow:bluelab-soil-ph-pen-soil-coco-ph-tester-australia",
+      "name": "Bluelab Soil pH Pen | Soil & Coco pH Temperature Tester Australia Waterproof",
+      "brand": "Bluelab",
+      "category": "Hydroponic Testing Equipment",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:bluelab-multi-media-ph-meter",
+      "name": "Bluelab pH Multimedia Meter And Leap pH Probe For Soil & Hydroponics",
+      "brand": "Bluelab",
+      "category": "Testing Equipment",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:budtrainer-budcups-black",
+      "name": "Budtrainer Budcup - Black",
+      "brand": "Bud Trainer",
+      "category": "Substrates, Pots & Trays",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:budtrainer-budcup-yellow",
+      "name": "Budtrainer Budcup - Yellow",
+      "brand": "Bud Trainer",
+      "category": "Substrates, Pots & Trays",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:byron-bay-gold-slab-of-gold-3-x-one-litre-a-b-sets",
+      "name": "Byron Bay Gold \"Slab Of Gold\" 3 x 1 Litre A + B Sets",
+      "brand": "Byron Bay Gold",
+      "category": "Nutrients - Hydroponics",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:byron-bay-gold-flower-a-b",
+      "name": "Byron Bay Gold Flower A+B (1, 5 or 20L)",
+      "brand": "Byron Bay Gold",
+      "category": "Nutrients - Hydroponics",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:byron-bay-gold-fruit-a-b",
+      "name": "Byron Bay Gold Fruit A+B (1, 5 or 20L)",
+      "brand": "Byron Bay Gold",
+      "category": "Nutrients - Hydroponics",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:byron-bay-gold-vegetative-a-b",
+      "name": "Byron Bay Gold Vegetative A+B (1, 5 or 20L)",
+      "brand": "Byron Bay Gold",
+      "category": "Nutrients - Hydroponics",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:canna-cannazym-250ml-1-or-5l-copy",
+      "name": "CANNA CANNAZYM - 1L",
+      "brand": "Canna",
+      "category": "Additives",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:canna-cannazym-250ml",
+      "name": "CANNA CANNAZYM - 250mL",
+      "brand": "Canna",
+      "category": "Additives",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:canna-cannazym",
+      "name": "CANNA CANNAZYM - 5L",
+      "brand": "Canna",
+      "category": "Additives",
+      "composition": null,
+      "source": "sqlite"
     },
     {
       "id": "canna_coco_professional_plus",
@@ -37,911 +421,7 @@
       "composition": {
         "coco": 100
       },
-      "source": "dsc_medium_pack_canna_coco"
-    },
-    {
-      "id": "growkings:spider-farmer-ggs-3-in-1-soil-sensor-pro-3-pack",
-      "name": "Spider Farmer GGS 3-in-1 Soil Sensor Pro - 3 Pack",
-      "brand": "Spider Farmer",
-      "category": "Ballasts, Light Kits & Controllers",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:perlite-8mm-to-12mm-coarse-yellow-bag-15p-100-litre",
-      "name": "Premium Perlite Extra Coarse 100 Litre Bag (8mm To 12mm Coarse)",
-      "brand": "Exfoliators",
-      "category": null,
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:house-and-garden-roots-excelurator-5l",
-      "name": "House and Garden Roots Excelurator - 5L",
-      "brand": "House & Garden",
-      "category": "Additives",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:premium-organic-living-soil-10l",
-      "name": "Premium Organic Living Soil - 10L",
-      "brand": "Grow Kings",
-      "category": "Grow Mediums",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:600w-hps-grow-light-kit-digital-ballast-with-defender-medium-reflector",
-      "name": "600W HPS Grow Light Kit – Digital Ballast with Medium Defender Reflector",
-      "brand": "Adjust-A-Wings",
-      "category": "Lighting",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:biocarbon-premium-biochar-engineered-carbon-for-soil-25l",
-      "name": "BIOCARBON - Premium Biochar (Engineered Carbon for Soil) 25L",
-      "brand": "FUTURE SOIL",
-      "category": "Additives",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:biocarbon-premium-biochar-engineered-carbon-for-soil-9l",
-      "name": "BIOCARBON - Premium Biochar (Engineered Carbon for Soil) - 9L",
-      "brand": "FUTURE SOIL",
-      "category": "Additives",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:biocarbon",
-      "name": "BIOCARBON - Premium Biochar (Engineered Carbon for Soil) - 3L",
-      "brand": "FUTURE SOIL",
-      "category": "Additives",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:perlite-twenty-litre-grow-bag",
-      "name": "Perlite Grow Bag - 20L",
-      "brand": "Exfoliators",
-      "category": "Grow Mediums",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:garland-value-growbag-tray-100-x-40-x-5cm",
-      "name": "Garland Value Growbag Tray – 100 x 40 x 5cm",
-      "brand": "Garland",
-      "category": "Substrates, Pots & Trays",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:garland-giant-plus-tray-120cm-x-55cm-x-5cm-1",
-      "name": "Garland Giant Plus Tray – 120 x 55 x 5cm",
-      "brand": "Garland",
-      "category": "Substrates, Pots & Trays",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:greenplanet-coco-60-40-chips-53l-bag",
-      "name": "GreenPlanet Coco 60/40 Chips - 53L Bag",
-      "brand": "Green Planet",
-      "category": "Grow Mediums",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:microtek-organics-worm-nuggets-9kg-pelletised-worm-castings",
-      "name": "Microtek Organics Worm Nuggets - 9kg - (Pelletised Worm Castings)",
-      "brand": "Microtek Organics",
-      "category": "Nutrients - Soil",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:microgreen-coco-coir-grow-mats",
-      "name": "Microgreen Coco Coir Grow Mat",
-      "brand": "growy",
-      "category": "Grow Mediums",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:microgreen-mat-tray-od-602mm-x-300mm-x-30mm-each",
-      "name": "Microgreen Mat Tray",
-      "brand": "growy",
-      "category": "Substrates, Pots & Trays",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:xtreme-gardening-mykos-granular-mycorrhizal-inoculant-9-1kg",
-      "name": "Xtreme Gardening Mykos Granular Mycorrhizal Inoculant - 9.1kg",
-      "brand": "Xtreme Gardening",
-      "category": "Additives",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:garland-square-tray-100cm-x-100cm-x-12cm",
-      "name": "Garland Square Tray 100cm x 100cm x 12cm – Heavy Duty 100L Hydroponic & Utility Tray",
-      "brand": "Garland",
-      "category": "Substrates, Pots & Trays",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:usa-style-3-ft-x-3-f-d-tray-900-x-900-x-110mm4mm-wall",
-      "name": "USA Style 3ft x 3ft Flood &amp; Drain Tray – 900 x 900 x 110mm, 4mm Wall",
-      "brand": "Grow Kings",
-      "category": "Substrates, Pots & Trays",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:med-tek-synergy-coir-benificial-microbes-275-grams",
-      "name": "Med-Tek Synergy Coir beneficial Microbes - 275g",
-      "brand": "Med Tek",
-      "category": "Beneficial Microbes",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:hy-gen-cocopeat-brick-five-kg-compressed-makes-70l-copy",
-      "name": "CoCopeat Brick 4Kg Compressed (Makes 56L)",
-      "brand": "LGD",
-      "category": "Grow Mediums",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:soil-sensor-probe-exclusively-for-controller-ai",
-      "name": "AC Infinity Soil Sensor Probe, Exclusively for Controller AI+",
-      "brand": "AC Infinity",
-      "category": "Home & Garden > Household Appliances > Climate Control Appliances > Fans > Ventilation Fans",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:rootit-medium-insulated-mat-600mm-x-400mm",
-      "name": "ROOTIT Medium Insulated Mat For Propagation Heat Mats - 600 x 400mm",
-      "brand": "ROOT!T",
-      "category": "Propagation",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:root-t-coco-coir-dry-propagation-plugs-tray-24-cell",
-      "name": "ROOT!T Coco Coir Dry Propagation Plugs - 24 Cell Tray",
-      "brand": "ROOT!T",
-      "category": "Propagation",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:root-t-dry-propagation-plugs-for-tray-refill-60-plugs",
-      "name": "ROOT!T Dry Propagation Plugs For Tray Refill - 60 Plugs",
-      "brand": "ROOT!T",
-      "category": "Propagation",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:plant-mechanics-coco-a-b-20l",
-      "name": "Plant Mechanics Coco+ A&B - 20L",
-      "brand": "Plant Mechanics",
-      "category": "Nutrients",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:plant-mechanics-coco-a-b-5l",
-      "name": "Plant Mechanics Coco+ A&B - 5L",
-      "brand": "Plant Mechanics",
-      "category": "Nutrients",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:plant-mechanics-coco-a-b-1l",
-      "name": "Plant Mechanics Coco+ A&B - 1L",
-      "brand": "Plant Mechanics",
-      "category": "Nutrients",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:green-planet-expanded-clay-balls-leca-8-15mm-25l-bag",
-      "name": "Green Planet Expanded Clay Balls (LECA) 8-15mm - 25L Bag",
-      "brand": "Green Planet",
-      "category": "Grow Mediums",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:grodan-rockwool-wrapped-propagation-cube-40mm-x-40mm-30pk",
-      "name": "Grodan Rockwool Wrapped Propagation Cube - 40mm x 40mm - 30pk",
-      "brand": "Grodan",
-      "category": "Propagation",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:homebox-vista-medium",
-      "name": "HOMEbox Vista Medium Grow Tent",
-      "brand": "Homebox",
-      "category": "Tents",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:dutchfest-coco-a-b",
-      "name": "Dutchfest Coco A & B - (1L or 5L)",
-      "brand": "Dutchfest",
-      "category": "Nutrients",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:grow-sack-fabric-grow-bag-30l",
-      "name": "Grow Sack Fabric Grow Bag - 30L",
-      "brand": "growy",
-      "category": "Substrates, Pots & Trays",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:wall-fabric-plant-bag-60cm-x-30cm-4-plants",
-      "name": "Wall Fabric Plant Bag - 60cm x 30cm - 4 Plants",
-      "brand": "Grow Kings",
-      "category": "Substrates, Pots & Trays",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:green-planet-root-builder-5l",
-      "name": "Green Planet Root Builder - 5L",
-      "brand": "Green Planet",
-      "category": "Nutrients",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:nutriponics-coco-a-b-20l",
-      "name": "Nutriponics Coco A&B - 20L",
-      "brand": "Growhard",
-      "category": "Nutrients",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:nutriponics-coco-a-b-5l",
-      "name": "Nutriponics Coco A&B - 5L",
-      "brand": "Growhard",
-      "category": "Nutrients",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:nutriponics-coco-2-part-1l",
-      "name": "Nutriponics Coco A&B - 1L",
-      "brand": "Growhard",
-      "category": "Nutrients",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:spoton-pocket-soil-moisture-meter",
-      "name": "Spoton Pocket Soil Moisture Meter",
-      "brand": "Innoquest",
-      "category": "Moisture Meters",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:budtrainer-budcups-black",
-      "name": "Budtrainer Budcup - Black",
-      "brand": "Bud Trainer",
-      "category": "Substrates, Pots & Trays",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:budtrainer-budcup-yellow",
-      "name": "Budtrainer Budcup - Yellow",
-      "brand": "Bud Trainer",
-      "category": "Substrates, Pots & Trays",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:run-off-trays-pvc-pipe-t-piece",
-      "name": "Run Off Trays PVC Pipe T piece",
-      "brand": "Grow Kings",
-      "category": "Substrates, Pots & Trays",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:emerald-harvest-cali-pro-kick-start-2-part-0-95l",
-      "name": "Emerald Harvest Cali Pro Kick Start 2 Part - 0.95L",
-      "brand": "Emerald Harvest",
-      "category": "Nutrients",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:330mm-standard-black-bucket-no-hole-18l",
-      "name": "330mm Standard Black Bucket No Hole 18L",
-      "brand": "Grow Kings",
-      "category": "Substrates, Pots & Trays",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:aptus-starter-kit-hydro",
-      "name": "Aptus Starter Kit - Hydro",
-      "brand": "Aptus",
-      "category": "Nutrients",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:nutrifield-starter-kit-w-stonewool",
-      "name": "Nutrifield Starter Kit W/Stonewool",
-      "brand": "Nutrifield",
-      "category": "Nutrients",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:greenplanet-professional-coco-coir-53l-bag",
-      "name": "GreenPlanet Professional Coco Coir 53L Bag",
-      "brand": "Green Planet",
-      "category": "Grow Mediums",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:greenplanet-coco-70-30-perlite-53l-bag",
-      "name": "GreenPlanet 70/30 Coco Perlite Blend 53L Bag",
-      "brand": "Green Planet",
-      "category": "Grow Mediums",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:growth-technology-succulent-focus-5l",
-      "name": "Growth Technology Succulent Focus - 5L",
-      "brand": "Growth Technology",
-      "category": "Nutrients",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:growth-technology-succulent-focus",
-      "name": "Growth Technology Succulent Focus - 250mL",
-      "brand": "Growth Technology",
-      "category": "Nutrients",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:growth-technology-succulent-focus-1l",
-      "name": "Growth Technology Succulent Focus - 1L",
-      "brand": "Growth Technology",
-      "category": "Nutrients",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:growth-technology-succulent-focus-20l",
-      "name": "Growth Technology Succulent Focus - 20L",
-      "brand": "Growth Technology",
-      "category": "Nutrients",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:garland-square-tray-60cm-x-60cm-x-12cm",
-      "name": "Garland Square Tray - 60cm x 60cm x 12cm",
-      "brand": "Garland",
-      "category": "Substrates, Pots & Trays",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:easy-as-organics-charman-biochar-20l",
-      "name": "Easy As Organics Charman Biochar - 20L",
-      "brand": "SNT",
-      "category": "Additives",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:charman-biochar",
-      "name": "Easy As Organics Charman Biochar - 2L",
-      "brand": "SNT",
-      "category": "Additives",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:run-off-drain-tray-22-56cm",
-      "name": "Run off Drain tray 22\" (56cm)",
-      "brand": "Grow Kings",
-      "category": "Substrates, Pots & Trays",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:run-off-tray-15",
-      "name": "Run off Drain tray 15\" (38cm)",
-      "brand": "Grow Kings",
-      "category": "Substrates, Pots & Trays",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:premium-coco-coir-and-coco-chips-washed-buffered-10l",
-      "name": "Premium Coco Coir & Coco Chips Blend - Washed & Buffered - 10L",
-      "brand": "Grow Kings",
-      "category": "Grow Mediums",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:hy-gen-ultimate-blend-coir-peat-coco-chips-50l-bag",
-      "name": "Hy-Gen Ultimate Blend Coir Peat + Coco Chips 50L Bag",
-      "brand": "Hy-Gen",
-      "category": "Grow Mediums",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:terra-aquatica-dualpart-coco-grow-1l",
-      "name": "Terra Aquatica DualPart Coco Grow - 1L",
-      "brand": "Terra Aquatica",
-      "category": "Nutrients - Hydroponics",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:kelp-meal-100-tasmanian-snt-5kg",
-      "name": "SNT Kelp Meal 100% Tasmanian - 5Kg",
-      "brand": "SNT",
-      "category": "Additives",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:kelp-meal-100-tasmanian-snt-1kg",
-      "name": "SNT Kelp Meal 100% Tasmanian - 1Kg",
-      "brand": "SNT",
-      "category": "Additives",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:vermiculite-10l",
-      "name": "Vermiculite - 10L",
-      "brand": "Grow Kings",
-      "category": "Grow Mediums",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:regenerate-soil-top-dressing-snt-5kg",
-      "name": "SNT Regenerate Soil Top Dressing - 5Kg",
-      "brand": "SNT",
-      "category": "Grow Mediums",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:regenerate-soil-top-dressing-snt-2kg",
-      "name": "SNT Regenerate Soil Top Dressing - 2Kg",
-      "brand": "SNT",
-      "category": "Grow Mediums",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:coco-coir-perlite-coco-chips-blend",
-      "name": "Premium Indoor Plant Blend - Coco Coir, Coco Chips & Perlite - 10L",
-      "brand": "Grow Kings",
-      "category": "Grow Mediums",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:aquamaster-h600-pro-substrate-ph-ec-ppm-tds-temp-handheld-inc-case",
-      "name": "Aquamaster H600 Pro Substrate pH – EC – PPM – TDS – Temp Handheld Inc Case",
-      "brand": "Aquamaster Tools",
-      "category": "Testing Equipment",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:coco-coir-perlite-70-30-blend-10l",
-      "name": "Premium Coco Coir Perlite 70 / 30 Blend - 10L",
-      "brand": "Grow Kings",
-      "category": "Grow Mediums",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:premium-coco-coir-washed-buffered-10l",
-      "name": "Premium Coco Coir Washed & Buffered - 10L",
-      "brand": "Grow Kings",
-      "category": "Grow Mediums",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:rootz-distribution-coco-m",
-      "name": "Rootz Distribution Coco-M",
-      "brand": "Rootz Distribution",
-      "category": "Grow Mediums",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:aquamaster-s300-pro-2-substrate-ph-temp-meter",
-      "name": "Aquamaster S300 Pro-2 Substrate PH – Temp Meter",
-      "brand": "Aquamaster Tools",
-      "category": "Testing Equipment",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:copy-of-grodan-rockwool-10l",
-      "name": "Growool Granulated Premium Rockwool - 10L",
-      "brand": "Grow Kings",
-      "category": "Grow Mediums",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:bluelab-multi-media-ph-meter",
-      "name": "Bluelab pH Multimedia Meter And Leap pH Probe For Soil & Hydroponics",
-      "brand": "Bluelab",
-      "category": "Testing Equipment",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:wall-fabric-plant-bag-82cm-x-132cm-25-plants",
-      "name": "Wall Fabric Plant Bag - 82cm x 132cm - 25 Plants",
-      "brand": "Grow Kings",
-      "category": "Substrates, Pots & Trays",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:expanded-clay-balls-for-growing-plants-hydroponic-systems-16mm-10l-bag",
-      "name": "Expanded Clay Balls For Growing plants / Hydroponic Systems 16mm - 10L Bag",
-      "brand": "Grow Kings",
-      "category": "Grow Mediums",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:copy-of-expanded-clay-balls-for-growing-plants-hydroponic-systems-16mm-10l-bag",
-      "name": "Expanded Clay Balls For Growing plants / Hydroponic Systems 30mm - 10L Bag",
-      "brand": "Grow Kings",
-      "category": "Grow Mediums",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:coco-coir-chips-washed-buffered-10l",
-      "name": "Premium Coco Coir Chips - Washed & Buffered - 10L",
-      "brand": "Grow Kings",
-      "category": "Grow Mediums",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:rootz-distribution-coco-perlite-70-30-blend-50l",
-      "name": "Rootz Distribution Coco Perlite 70/30 Blend - 50L",
-      "brand": "Rootz Distribution",
-      "category": "Grow Mediums",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:green-planet-nutrients-root-builder-1l",
-      "name": "Green Planet Root Builder - 1L",
-      "brand": "Green Planet",
-      "category": "Nutrients",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:premium-perlite-10litre-bag-course",
-      "name": "Premium Perlite 10L Bag - Course",
-      "brand": "growy",
-      "category": "Grow Mediums",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:perlite-4mm-to-6mm-coarsec1pwhite-100-litre-bag",
-      "name": "Premium Perlite 100 Litre Bag - Course",
-      "brand": "Exfoliators",
-      "category": "Grow Mediums",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:liquid-biochar-500ml",
-      "name": "Liquid Biochar - 500mL",
-      "brand": "SOS",
-      "category": "Additives",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:liquid-biochar",
-      "name": "Liquid Biochar - 1L",
-      "brand": "SOS",
-      "category": "Additives",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:h-amp-g-roots-excelurator-100ml",
-      "name": "House and Garden Roots Excelurator - 100mL",
-      "brand": "House & Garden",
-      "category": "Additives",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:acoustic-ducting-315mm-dbl-thick-rockwool-x-five-metre-boxed",
-      "name": "Sea-Hawk Acoustic Rockwool Noise Reducing Ducting - 315mm x 5m",
-      "brand": "Sea-Hawk",
-      "category": "Air Conditioning, Filtration & CO2",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:acoustic-ducting-300mm-dbl-thick-rockwool-x-five-metre-boxed",
-      "name": "Sea-Hawk Acoustic Rockwool Noise Reducing Ducting - 300mm x 5m",
-      "brand": "Sea-Hawk",
-      "category": "Air Conditioning, Filtration & CO2",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:acoustic-ducting-250mm-dbl-thick-rockwool-x-five-metre-boxed",
-      "name": "Sea-Hawk Acoustic Rockwool Noise Reducing Ducting - 250mm x 5m",
-      "brand": "Sea-Hawk",
-      "category": "Air Conditioning, Filtration & CO2",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:acoustic-ducting-200mm-dbl-thick-rockwool-x-five-metre-boxed",
-      "name": "Sea-Hawk Acoustic Rockwool Noise Reducing Ducting - 200mm x 5m",
-      "brand": "Sea-Hawk",
-      "category": "Air Conditioning, Filtration & CO2",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:acoustic-ducting-125mm-dbl-thick-rockwool-x-five-metre-boxed",
-      "name": "Sea-Hawk Acoustic Rockwool Noise Reducing Ducting - 125mm x 5m",
-      "brand": "Sea-Hawk",
-      "category": "Air Conditioning, Filtration & CO2",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:acoustic-ducting-150mm-dbl-thick-rockwool-x-five-metre-boxed",
-      "name": "Sea-Hawk Acoustic Rockwool Noise Reducing Ducting - 150mm x 5m",
-      "brand": "Sea-Hawk",
-      "category": "Air Conditioning, Filtration & CO2",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:growth-technology-complete-focus-20l",
-      "name": "Growth Technology Complete Focus - 20L",
-      "brand": "Growth Technology",
-      "category": "Nutrients - Hydroponics",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:growth-technology-complete-focus-5l",
-      "name": "Growth Technology Complete Focus - 5L",
-      "brand": "Growth Technology",
-      "category": "Nutrients - Hydroponics",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:growth-technology-complete-focus-250ml",
-      "name": "Growth Technology Complete Focus - 250mL",
-      "brand": "Growth Technology",
-      "category": "Nutrients - Hydroponics",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:eazy-plug-mini-pyramid",
-      "name": "Eazy Plug Mini Pyramid",
-      "brand": "Eazy Plug",
-      "category": "Propagation",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:eazy-plug-six-plug-sowing-set",
-      "name": "Eazy-Plug Six Plug Sowing Set",
-      "brand": "Eazy Plug",
-      "category": "Propagation",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:speedgrow-prop-84-plug-tray-38-x-40mm-with-hole",
-      "name": "Speedgrow Prop Plug 84pc Tray - 38 x 40mm With Hole",
-      "brand": "Speed Grow",
-      "category": "Propagation",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:de-ozzy-essential-natural-soil-conditioner-10kg",
-      "name": "De-Ozzy Essential Natural Soil Conditioner - 10Kg",
-      "brand": "De-Ozzy",
-      "category": "Pro Biotics, Root Repairs & Cleaners",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:growool-granulated-premium-rockwool-13-6-kg-bag-122-ltr",
-      "name": "Growool Granulated Premium Rockwool 13.6Kg Bag (122 Ltr)",
-      "brand": "GROWOOL",
-      "category": "Grow Mediums",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:professors-nutrients-coco-brick-5kg",
-      "name": "Professors Nutrients Coco Brick - 5kg",
-      "brand": "Professor's Nutrients",
-      "category": "Grow Mediums",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:professors-coco-chips-50l",
-      "name": "Professors Nutrients Coco Chips - 50L",
-      "brand": "Professor's Nutrients",
-      "category": "Grow Mediums",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:w2g-green-pro-coco-50-l-bag",
-      "name": "W2G Professional Coco 50L bag",
-      "brand": "Way to Grow",
-      "category": "Grow Mediums",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:eazy-plug-ct-77-tray",
-      "name": "Eazy-Plug Coco Peat Plug & Grow Propagation Tray - 77 Cubes",
-      "brand": "Eazy Plug",
-      "category": "Propagation",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:eazy-plug-ct-12-tray",
-      "name": "Eazy-Plug Coco Peat Plug & Grow Propagation Tray - 12 Cubes",
-      "brand": "Eazy Plug",
-      "category": "Propagation",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:eazy-plug-ct-24-tray",
-      "name": "Eazy-Plug Coco Peat Plug & Grow Propagation Tray - 24 Cubes",
-      "brand": "Eazy Plug",
-      "category": "Propagation",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:co-co-brick-650-gram-compressed",
-      "name": "Hy-Gen CoCopeat Brick 650 Gram Compressed",
-      "brand": "Hy-Gen",
-      "category": "Grow Mediums",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:bioguano-nitrogen-formula-5l",
-      "name": "BioGuano Organic Liquid Nitrogen - 5L",
-      "brand": "BioGuano",
-      "category": "Nutrients",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:professors-nutrients-hydro-clay-balls-10l",
-      "name": "Professors Nutrients Hydro Clay Balls - 10L",
-      "brand": "Professor's Nutrients",
-      "category": "Grow Mediums",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:si-super-si-5l",
-      "name": "Plant Mechanics Super Si Silicic Acid - 5L",
-      "brand": "Plant Mechanics",
-      "category": "Additives",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:si-super-si-1l",
-      "name": "Plant Mechanics Super Si Silicic Acid - 1L",
-      "brand": "Plant Mechanics",
-      "category": "Additives",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:si-super-si-500ml",
-      "name": "Plant Mechanics Super Si Silicic Acid - 500mL",
-      "brand": "Plant Mechanics",
-      "category": "Additives",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:si-super-si-250ml",
-      "name": "Plant Mechanics Super Si Silicic Acid - 250mL",
-      "brand": "Plant Mechanics",
-      "category": "Additives",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:dr-greenthumbs-fruit-roids-225g",
-      "name": "Dr Greenthumbs Fruit Roids- 225g",
-      "brand": "Dr Greenthumbs",
-      "category": "Additives",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:dr-greenthumbs-fruit-roids-100g",
-      "name": "Dr Greenthumbs Fruit Roids- 100g",
-      "brand": "Dr Greenthumbs",
-      "category": "Additives",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:cx-horticulture-regen-a-root-5l",
-      "name": "CX Horticulture Regen-A-Root - 5L",
-      "brand": "CX Horticulture",
-      "category": "Nutrients",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
+      "source": "sqlite"
     },
     {
       "id": "growkings:cx-horticulture",
@@ -949,1063 +429,79 @@
       "brand": "CX Horticulture",
       "category": "Nutrients",
       "composition": null,
-      "source": "dsc_mediums_growkings"
+      "source": "sqlite"
     },
     {
-      "id": "growkings:clay-balls-16mm",
-      "name": "Expanded Clay Balls For Growing plants / Hydroponic Systems 8-16mm - 10L Bag",
-      "brand": "Grow Kings",
-      "category": "Grow Mediums",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:current-culture-multi-mod-net-pots-5-5",
-      "name": "Current Culture Multi-Mod Net Pots - 5.5\" (140mm)",
-      "brand": "Current Culture",
-      "category": "Substrates, Pots & Trays",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:bioguano-nitrogen-formula-1-l",
-      "name": "BioGuano Organic Liquid Nitrogen - 1L",
-      "brand": "BioGuano",
+      "id": "growkings:cx-horticulture-regen-a-root-5l",
+      "name": "CX Horticulture Regen-A-Root - 5L",
+      "brand": "CX Horticulture",
       "category": "Nutrients",
       "composition": null,
-      "source": "dsc_mediums_growkings"
+      "source": "sqlite"
     },
     {
-      "id": "growkings:dr-greenthumbs-go-grow",
-      "name": "Dr Greenthumbs Go & Grow - 1.5Kg",
-      "brand": "Dr Greenthumbs",
-      "category": "Nutrients",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:dr-greenthumbs-root-roids",
-      "name": "Dr Greenthumbs Root Roids - 75g",
-      "brand": "Dr Greenthumbs",
-      "category": "Beneficial Microbes",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:dr-greenthumbs-root-roids-225g",
-      "name": "Dr Greenthumbs Root Roids - 225g",
-      "brand": "Dr Greenthumbs",
-      "category": "Beneficial Microbes",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:nutrifield-coco-a-b-1l",
-      "name": "Nutrifield Coco A&B - 1L",
-      "brand": "Nutrifield",
-      "category": "Nutrients - Hydroponics",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:coco-low-compression-brick",
-      "name": "Bio Diesel Coco Low Compression Brick",
-      "brand": "Bio Diesel",
+      "id": "growkings:canna-aqua-expanded-clay-45l",
+      "name": "Canna Aqua Expanded Clay Pebbles | Leca 8-16mm - 45L",
+      "brand": "Canna",
       "category": "Grow Mediums",
       "composition": null,
-      "source": "dsc_mediums_growkings"
+      "source": "sqlite"
     },
     {
-      "id": "growkings:h-amp-g-ph-stabiliser",
-      "name": "House and Garden PH Stabiliser - 1L",
-      "brand": "House & Garden",
-      "category": "Ph Up & Down",
+      "id": "growkings:canna-coco-a-b-1l",
+      "name": "Canna Coco A & B - 1L",
+      "brand": "Canna",
+      "category": "Nutrients - Hydroponics",
       "composition": null,
-      "source": "dsc_mediums_growkings"
+      "source": "sqlite"
     },
     {
-      "id": "growkings:bio-diesel-coco-propagation-plugs-38mm",
-      "name": "Bio Diesel - Coco Propagation Plugs - 38mm (100 Pack)",
-      "brand": "Bio Diesel",
+      "id": "growkings:canna-coco-a-b-2-x-1-5-or-20l",
+      "name": "Canna Coco A & B - 20L",
+      "brand": "Canna",
+      "category": "Nutrients - Hydroponics",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:canna-coco-a-b-5l",
+      "name": "Canna Coco A & B - 5L",
+      "brand": "Canna",
+      "category": "Nutrients - Hydroponics",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:canna-coco-professional-plus-50l-bag",
+      "name": "Canna Coco Professional Plus 50L bag",
+      "brand": "Canna",
       "category": "Grow Mediums",
       "composition": null,
-      "source": "dsc_mediums_growkings"
+      "source": "sqlite"
     },
     {
-      "id": "growkings:3-in-1-soil-moisture-light-ph-meter-for-indoor-outdoor-plants-gardens-lawns",
-      "name": "3 in 1 Moisture, Light & Ph Tester - For Indoor / Outdoor Plants Gardens & Lawns",
-      "brand": "Grow Kings",
-      "category": "Testing Equipment",
+      "id": "growkings:canna-terra-flores-1l",
+      "name": "Canna Terra Flores - 1L",
+      "brand": "Canna",
+      "category": "Nutrients - Hydroponics",
       "composition": null,
-      "source": "dsc_mediums_growkings"
+      "source": "sqlite"
     },
     {
-      "id": "growkings:airstone-pvc-air-disk-encased-10cm-medium-qb-72",
-      "name": "Aqua One Airstone Pvc Air Disk Encased 10 x 10cm Medium",
-      "brand": "Aqua One",
-      "category": "Grow Systems",
+      "id": "growkings:canna-terra-flores",
+      "name": "Canna Terra Flores - 5L",
+      "brand": "Canna",
+      "category": "Nutrients - Hydroponics",
       "composition": null,
-      "source": "dsc_mediums_growkings"
+      "source": "sqlite"
     },
     {
-      "id": "growkings:balls-expanded-clay-8mm-to-16mm-50-litre-bag",
-      "name": "Colossal Expanded Clay 8mm To 16mm 50 Litre Bag",
-      "brand": "Accent Hydroponics",
+      "id": "growkings:canna-terra-professional-50l-bag",
+      "name": "Canna Terra Professional 50L Bag",
+      "brand": "Canna",
       "category": "Grow Mediums",
       "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:balls-expanded-clay-16mm-plus-50-litre-bag",
-      "name": "Expanded Clay Balls 16mm - 50 Litre Bag",
-      "brand": "Balls Expanded Clay",
-      "category": "Grow Mediums",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:balls-expanded-clay-30mm-plus-elongated-50-litre-bag",
-      "name": "Balls Expanded Clay 30mm Plus Elongated 50 Litre Bag",
-      "brand": "Accent Hydroponics",
-      "category": "Grow Mediums",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:eazy-plug-sea-of-green-set",
-      "name": "Eazy Plug Sea Of Green Set",
-      "brand": "Eazy Plug",
-      "category": "propagation",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:bluelab-soil-ph-pen",
-      "name": "Bluelab Ph Pen For Soil Testing",
-      "brand": "Bluelab",
-      "category": "Testing Equipment",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:introducing-groden-rockwool-cube-40mm-x-40mm-8pk",
-      "name": "Grodan Rockwool Wrapped Propagation Cube - 40mm x 40mm - 12pk",
-      "brand": "Grodan",
-      "category": "propagation",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:mykos-wettable-powder-mycorrhizal-inoculant",
-      "name": "Mykos WP Pure Mycorrhizal Wettable Powder - 340g",
-      "brand": "Xtreme Gardening",
-      "category": "Beneficial Microbes",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:groden-rockwool-cube-75mm-x-75mm-no-hole",
-      "name": "Grodan Rockwool Cube - No Hole - 75mm x 75mm- 6pk",
-      "brand": "Grodan",
-      "category": "propagation",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:jiffy-7-propagation-pellets-42mm-30pk",
-      "name": "Jiffy-7 Propagation Pellets 42mm - 30pk",
-      "brand": "Jiffy",
-      "category": "propagation",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:h-amp-g-bud-xl-20l",
-      "name": "House and Garden Bud-Xl - 20L",
-      "brand": "House & Garden",
-      "category": "Additives",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:h-amp-g-bud-xl-5l",
-      "name": "House and Garden Bud-Xl - 5L",
-      "brand": "House & Garden",
-      "category": "Additives",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:h-amp-g-bud-xl-1l",
-      "name": "House and Garden Bud-Xl - 1L",
-      "brand": "House & Garden",
-      "category": "Additives",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:h-amp-g-bud-xl-500ml",
-      "name": "House and Garden Bud-Xl - 500mL",
-      "brand": "House & Garden",
-      "category": "Additives",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:h-amp-g-bud-xl-250ml",
-      "name": "House and Garden Bud-Xl - 250mL",
-      "brand": "House & Garden",
-      "category": "Additives",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:h-amp-g-drip-clean-1l",
-      "name": "House and Garden Drip Clean - 1L",
-      "brand": "House & Garden",
-      "category": "Additives",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:h-amp-g-drip-clean-500ml",
-      "name": "House and Garden Drip Clean - 500mL",
-      "brand": "House & Garden",
-      "category": "Additives",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:h-amp-g-drip-clean-250ml",
-      "name": "House and Garden Drip Clean - 250mL",
-      "brand": "House & Garden",
-      "category": "Additives",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:h-amp-g-drip-clean-5l",
-      "name": "House and Garden Drip Clean - 5L",
-      "brand": "House & Garden",
-      "category": "Additives",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:h-amp-g-multizyme-20l",
-      "name": "House and Garden Multizyme - 20L",
-      "brand": "House & Garden",
-      "category": "Additives",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:h-amp-g-multizyme-5l",
-      "name": "House and Garden Multizyme - 5L",
-      "brand": "House & Garden",
-      "category": "Additives",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:h-amp-g-multizyme-250ml",
-      "name": "House and Garden Multizyme - 250mL",
-      "brand": "House & Garden",
-      "category": "Additives",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:h-amp-g-multizyme-1l",
-      "name": "House and Garden Multizyme - 1L",
-      "brand": "House & Garden",
-      "category": "Additives",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:h-amp-g-multizyme-500ml",
-      "name": "House and Garden Multizyme - 500mL",
-      "brand": "House & Garden",
-      "category": "Additives",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:pro-mantis-organic-substrate-enhancer-2lt",
-      "name": "Frass Farmz - Pro Mantis Organic Substrate Enhancer 2L",
-      "brand": "Frass Farmz",
-      "category": "Beneficial Microbes",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:h-amp-g-soil-a-amp-b-20l",
-      "name": "House and Garden Soil A & B - 20L",
-      "brand": "House & Garden",
-      "category": "Nutrients",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:h-amp-g-soil-a-amp-b-10l",
-      "name": "House and Garden Soil A & B - 10L",
-      "brand": "House & Garden",
-      "category": "Nutrients",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:h-amp-g-soil-a-amp-b-1l",
-      "name": "House and Garden Soil A & B - 1L",
-      "brand": "House & Garden",
-      "category": "Nutrients",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:h-amp-g-cocos-a-amp-b-20l",
-      "name": "House and Garden Cocos A & B - 20L",
-      "brand": "House & Garden",
-      "category": "Nutrients",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:h-amp-g-cocos-a-amp-b-10l",
-      "name": "House and Garden Cocos A & B - 10L",
-      "brand": "House & Garden",
-      "category": "Nutrients",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:h-amp-g-cocos-a-amp-b-5l",
-      "name": "House and Garden Cocos A & B - 5L",
-      "brand": "House & Garden",
-      "category": "Nutrients",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:h-amp-g-cocos-a-amp-b-1l",
-      "name": "House and Garden Cocos A & B - 1L",
-      "brand": "House & Garden",
-      "category": "Nutrients",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:mykos-granular-mycorrhizal-inoculant-1kg",
-      "name": "Xtreme Gardening Mykos Granular Mycorrhizal Inoculant - 1kg",
-      "brand": "Xtreme Gardening",
-      "category": "Additives",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:mykos-granular-mycorrhizal-inoculant-100g",
-      "name": "Xtreme Gardening Mykos Granular Mycorrhizal Inoculant - 100g",
-      "brand": "Xtreme Gardening",
-      "category": "Additives",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:h-amp-g-roots-excelurator-500ml",
-      "name": "House and Garden Roots Excelurator - 500mL",
-      "brand": "House & Garden",
-      "category": "Additives",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:h-amp-g-roots-excelurator-250ml",
-      "name": "House and Garden Roots Excelurator - 250mL",
-      "brand": "House & Garden",
-      "category": "Additives",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:h-amp-g-roots-excelurator-1l",
-      "name": "House and Garden Roots Excelurator - 1L",
-      "brand": "House & Garden",
-      "category": "Additives",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:h-amp-g-soil-a-amp-b-5l",
-      "name": "House and Garden Soil A & B - 5L",
-      "brand": "House & Garden",
-      "category": "Nutrients",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:speedgrow-40-x-40-x-40mm-propagation-cubes-8-pack",
-      "name": "SPEEDGROW 40 x 40 x 40mm Propagation Cubes - 8 Pack",
-      "brand": "Speed Grow",
-      "category": "Grow Mediums",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:organic-living-soil-30l",
-      "name": "Bio Diesel Organic Living Soil 30L",
-      "brand": "Bio Diesel",
-      "category": "Grow Mediums",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:isn-nutrients-supreme-grow-a-b-1-litre-set",
-      "name": "ISN Nutrients Supreme Grow - A&B (2 x 1, 5 or 20L)",
-      "brand": "ISN",
-      "category": "Nutrients",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:easy-as-organics-water-only-soil-25-litre",
-      "name": "Easy As Organics Water Only Living Soil 25L",
-      "brand": "SNT",
-      "category": "Grow Mediums",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:flower-focus",
-      "name": "Growth Technology Flower Focus (250mL 1 or 5L)",
-      "brand": "Growth Technology",
-      "category": "Nutrients",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:growth-technology-complete-focus",
-      "name": "Growth Technology Complete Focus - 1L",
-      "brand": "Growth Technology",
-      "category": "Nutrients - Hydroponics",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:growth-technology-australian-native-focus",
-      "name": "Growth Technology Australian Native Focus (250mL 1, 5 or 20L)",
-      "brand": "Growth Technology",
-      "category": "Nutrients - Hydroponics",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:medtek-connoisseur-blooms",
-      "name": "Medtek Connoisseur Blooms (1, 5 or 20L)",
-      "brand": "Med Tek",
-      "category": "Nutrients",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:medtek-coir-flores",
-      "name": "Medtek Coir Flores A & B (1, 5 or 20L)",
-      "brand": "Med Tek",
-      "category": "Nutrients",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:byron-bay-gold-slab-of-gold-3-x-one-litre-a-b-sets",
-      "name": "Byron Bay Gold \"Slab Of Gold\" 3 x 1 Litre A + B Sets",
-      "brand": "Byron Bay Gold",
-      "category": "Nutrients - Hydroponics",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:byron-bay-gold-fruit-a-b",
-      "name": "Byron Bay Gold Fruit A+B (1, 5 or 20L)",
-      "brand": "Byron Bay Gold",
-      "category": "Nutrients - Hydroponics",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:byron-bay-gold-flower-a-b",
-      "name": "Byron Bay Gold Flower A+B (1, 5 or 20L)",
-      "brand": "Byron Bay Gold",
-      "category": "Nutrients - Hydroponics",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:byron-bay-gold-vegetative-a-b",
-      "name": "Byron Bay Gold Vegetative A+B (1, 5 or 20L)",
-      "brand": "Byron Bay Gold",
-      "category": "Nutrients - Hydroponics",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:heat-mat-flexible-medium-550-x-280mm-25-watt",
-      "name": "Cultiv8 Medium Flexible Heat Mat - 550x280mm",
-      "brand": "CULTIV8",
-      "category": null,
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:eazy-plug-start-up-kit",
-      "name": "Eazy Plug Start-up Kit",
-      "brand": "Eazy Plug",
-      "category": "propagation",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:worm-castings-snt-10-litre",
-      "name": "SNT Worm Castings - 10L",
-      "brand": "SNT",
-      "category": "Additives",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:rootit-rooting-sponge-24-cell-tray",
-      "name": "Rootit - Rooting Sponge 24 Cell Tray",
-      "brand": "ROOT!T",
-      "category": "propagation",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:rootit-rooting-sponge-propagation-kit",
-      "name": "Rootit - Rooting Sponge Propagation Kit (24 Cells)",
-      "brand": "ROOT!T",
-      "category": "propagation",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:rootit-natural-rooting-sponges-50-refill-bag",
-      "name": "Rootit - Natural Rooting Sponges (50 Refill Bag)",
-      "brand": "ROOT!T",
-      "category": "propagation",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:superthrive",
-      "name": "Superthrive (120, 480, 960mL or 3.7L)",
-      "brand": "Superthrive",
-      "category": "Additives",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:growth-technology-gt-foliage-focus",
-      "name": "Growth Technology Foliage Focus (250mL, 1, 5 or 20L)",
-      "brand": "Growth Technology",
-      "category": "Nutrients - Hydroponics",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:professors-organic-growers-kit",
-      "name": "Professor's Organic Growers Kit",
-      "brand": "Professor's Nutrients",
-      "category": "Nutrients - Hydroponics",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:professors-organic-grow-fast",
-      "name": "Professor's Organic Grow Fast (1, 5 or 10L)",
-      "brand": "Professor's Nutrients",
-      "category": "Nutrients - Hydroponics",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:professors-organic-grow",
-      "name": "Professor's Organic Grow (1 or 5L)",
-      "brand": "Professor's Nutrients",
-      "category": "Nutrients - Hydroponics",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:professors-organic-flower-boost",
-      "name": "Professor's Organic Flower Boost (1, 5 or 10L)",
-      "brand": "Professor's Nutrients",
-      "category": "Nutrients - Hydroponics",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:professors-extreme-boost",
-      "name": "Professor's Extreme Boost (250, 500g, 1kg or 5kg)",
-      "brand": "Professor's Nutrients",
-      "category": "Additives",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:co-co-brick-five-kg-hy-gen-compressed-makes-70-ltrs",
-      "name": "Hy-Gen CoCopeat Brick Five Kg Compressed (Makes 70L)",
-      "brand": "Hy-Gen",
-      "category": "Grow Mediums",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:hy-gen-coirlite-70-30-peat-perlite-4-8-premium-50-litre",
-      "name": "Hy-Gen Coirlite 70/30 Peat - Perlite 4/8 Premium 50 Litre",
-      "brand": "Hy-Gen",
-      "category": "Grow Mediums",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:humiboosta",
-      "name": "Hy-Gen Humiboosta (500mL, 1, 5 or 20L)",
-      "brand": "Hy-Gen",
-      "category": "Nutrients - Hydroponics",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:hy-gen-hydro-growth-single-part",
-      "name": "Hy-Gen Hydro Growth Single Part (1 or 5L)",
-      "brand": "Hy-Gen",
-      "category": "Nutrients - Hydroponics",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:sea-essentials",
-      "name": "Hy-Gen Sea Essentials (500mL, 1 , 5 or 20L)",
-      "brand": "Hy-Gen",
-      "category": "Nutrients - Hydroponics",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:nitro-k",
-      "name": "Hy-Gen Nitro-K (500mL, 1, 5 or 20L)",
-      "brand": "Hy-Gen",
-      "category": null,
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:hy-gen-hydro-growth-formula-a-b",
-      "name": "Hy-Gen Hydro Growth Formula A & B (2x1, 5 or 20L)",
-      "brand": "Hy-Gen",
-      "category": "Nutrients - Hydroponics",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:cornucopia-coco-grow-single-part",
-      "name": "Hy-Gen Cornucopia Coco-Grow Single Part (1 or 5L)",
-      "brand": "Hy-Gen",
-      "category": "Nutrients - Hydroponics",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:hy-gen-coco-growth-formula-a-b",
-      "name": "Hy-Gen Coco Growth Formula A & B (2 x 1, 5 Or 20L)",
-      "brand": "Hy-Gen",
-      "category": "Nutrients - Hydroponics",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:bluelab-combo-plus-meter",
-      "name": "Bluelab Combo Meter Plus Leap Probe PH, EC Temp & Soil PH",
-      "brand": "Bluelab",
-      "category": "Testing Equipment",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:growth-technology-fruit-focus",
-      "name": "Growth Technology Fruit Focus",
-      "brand": "Growth Technology",
-      "category": "Nutrients - Hydroponics",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:mykos-granular-mycorrhizal-inoculant",
-      "name": "Xtreme Gardening Mykos Granular Mycorrhizal Inoculant - 454g",
-      "brand": "Xtreme Gardening",
-      "category": "Additives",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:growth-technology-vegetable-focus",
-      "name": "Growth Technology Vegetable Focus",
-      "brand": "Growth Technology",
-      "category": "Nutrients - Hydroponics",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:herb-focus",
-      "name": "Growth Technology Herb Focus",
-      "brand": "Growth Technology",
-      "category": "Nutrients - Hydroponics",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:professors-go-roots",
-      "name": "Professor's Go Roots (100mL, 250mL, 500mL, 1L)",
-      "brand": "Professor's Nutrients",
-      "category": "Additives",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:chilli-focus",
-      "name": "Growth Technology Chilli Focus (250mL, 1L, 5L, 20L)",
-      "brand": "Growth Technology",
-      "category": "Nutrients - Soil",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:premium-max-air-70-30-coco-blend-50l",
-      "name": "Bio Diesel Premium MAX AIR 70/30 Coco Blend 50L",
-      "brand": "Bio Diesel",
-      "category": "Grow Mediums",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:super-natural-organic-root-and-shoot-stimulant",
-      "name": "Bio Diesel Super Natural - Organic Root And Shoot Stimulant (250mL, 1L, 5L, 20L)",
-      "brand": "Bio Diesel",
-      "category": "Nutrients - Hydroponics",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:rhino-k-organic-flower-hardener",
-      "name": "Bio Diesel Rhino K - Organic Flower Hardener (250mL, 1L, 5L, 20L)",
-      "brand": "Bio Diesel",
-      "category": "Nutrients - Hydroponics",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:crystal-clear-coco-flush-and-brix-enhancer",
-      "name": "Bio Diesel Crystal Clear - Coco Flush And Brix Enhancer (1L, 5L, 20L)",
-      "brand": "Bio Diesel",
-      "category": "Nutrients - Hydroponics",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:aloevate-organic-plant-tonic-200-vitamins-and-minerals",
-      "name": "Bio Diesel Aloevate - Organic Plant Tonic (200+ Vitamins And Minerals) 1L, 5L, 20L",
-      "brand": "Bio Diesel",
-      "category": "Nutrients - Hydroponics",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:grodan-crop-box-slabs-370x550x150-mm-4-pk",
-      "name": "Grodan Crop Box Slabs (370x550x150 mm) 4/pk",
-      "brand": "Grodan",
-      "category": "Substrates, Pots & Trays",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:grodan-delta-4g-cubes-no-hole-75x75x60-mm-384-ctn",
-      "name": "Grodan Delta 4G Cubes No/Hole (75x75x60 mm) 384/ctn",
-      "brand": "Grodan",
-      "category": "Substrates, Pots & Trays",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:grodan-delta-4g-w-hole-75x75x60-mm-384-carton",
-      "name": "Grodan Delta 4G w/Hole (75x75x60 mm) 384 Carton",
-      "brand": "Grodan",
-      "category": "Substrates, Pots & Trays",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:grodan-hugo-cubes-150x150x142-mm-48-ctn",
-      "name": "Grodan Hugo Cubes (150x150x142 mm) 48/ctn",
-      "brand": "Grodan",
-      "category": "Substrates, Pots & Trays",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:grodan-mm40-40-cubes-40x40x40-mm-cubes-2250-ctn",
-      "name": "Grodan MM40/40 Cubes (40x40x40 mm) Cubes 2250/ctn",
-      "brand": "Grodan",
-      "category": "Substrates, Pots & Trays",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:bioguano",
-      "name": "BioGuano Liquid Seabird Guano - (1 or 5L)",
-      "brand": "BioGuano",
-      "category": null,
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:grodan-delta-10-cubes-with-hole-100x100x100-mm-144-ctn",
-      "name": "Grodan Delta 10 Cubes with hole (100x100x100 mm) 144/ctn",
-      "brand": "Grodan",
-      "category": "Substrates, Pots & Trays",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:grodan-sbs-36-77-cubes-18-trays-77-cubes-per-tray-1386-ctn",
-      "name": "Grodan SBS 36/77 Cubes 18 Trays - 77 cubes per tray 1386/ctn",
-      "brand": "Grodan",
-      "category": "Substrates, Pots & Trays",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:grodan-wrapped-slab-300-mm-x-900-x-75-mm-8-pack",
-      "name": "Grodan Wrapped Slab 300 mm x 900 x 75 mm - 8 Pack",
-      "brand": "Grodan",
-      "category": "Substrates, Pots & Trays",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:jiffy-7-42-mm-pellet-1000-carton",
-      "name": "Jiffy-7 42 mm Pellet (1000) Carton",
-      "brand": "Jiffy",
-      "category": "Propagation",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:adjust-a-wings-avenger-medium-w-e40-single-ended-lamp-holder",
-      "name": "Adjust-A-Wings Avenger Medium w/ E40 single ended lamp holder",
-      "brand": "Adjust-A-Wings",
-      "category": "Reflectors & Light Spreaders",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:squid-power-1-l",
-      "name": "Squid Power 1, 5 or 25L",
-      "brand": "Squid Power",
-      "category": "Additives",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:dual-fuel-2-part-1-l",
-      "name": "Green Planet Dual Fuel (2 part) - Multiple Sizes",
-      "brand": "Green Planet",
-      "category": "Nutrients - Hydroponics",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:gp3-micro-1-l",
-      "name": "Green Planet - GP3 Micro (1L, 5L, or 20L)",
-      "brand": "Green Planet",
-      "category": "Nutrients - Hydroponics",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:gp3-grow-1-l",
-      "name": "Green Planet - GP3 Grow - (1L, 5L, or 20L)",
-      "brand": "Green Planet",
-      "category": "Nutrients - Hydroponics",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:adjust-a-wings-defender-medium-w-e40-single-ended-lamp-holder",
-      "name": "Adjust-A-Wings Defender Medium w/ E40 single ended lamp holder",
-      "brand": "Adjust-A-Wings",
-      "category": "Reflectors & Light Spreaders",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:w2g-pro-coco-5-kg-block",
-      "name": "W2G Professional Coco 5 kg Block (Makes 60L)",
-      "brand": "Way to Grow",
-      "category": "Grow Mediums",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:natures-soil-premium-potting-mix-30-l",
-      "name": "Natures Soil Premium Potting Mix 30 L",
-      "brand": "Natures Soil",
-      "category": "Grow Mediums",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:grodan-granulate-20-kg-bag",
-      "name": "Grodan Granulate 20kg bag",
-      "brand": "Grodan",
-      "category": "Substrates, Pots & Trays",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:g-pots-grid-leg-small-suits-30-50-l",
-      "name": "G-Pots Grid Leg Small suits 30 & 50 L",
-      "brand": "G-Pots",
-      "category": "Substrates, Pots & Trays",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:g-pots-grid-leg-large-suits-90-l",
-      "name": "G-Pots Grid Leg Large suits 90 L",
-      "brand": "G-Pots",
-      "category": "Substrates, Pots & Trays",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:g-pots-grid-470-mm-suits-gpb55",
-      "name": "G-Pots Grid 470 mm suits GPB55",
-      "brand": "G-Pots",
-      "category": "Substrates, Pots & Trays",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:g-pots-grid-330-mm",
-      "name": "G-Pots Grid 330 mm",
-      "brand": "G-Pots",
-      "category": "Substrates, Pots & Trays",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:vitathrive-1-l",
-      "name": "Green Planet - Vitathrive Propagation Solution (1L, 5L Or 20L)",
-      "brand": "Green Planet",
-      "category": "Additives",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:back-country-blend-grow-100-g",
-      "name": "Green Planet Back Country Blend Grow (5kg, 10kg or 20kg)",
-      "brand": "Green Planet",
-      "category": "Nutrients - Soil",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "growkings:back-country-blend-boost-100-g",
-      "name": "Green Planet Back Country Blend Boost (5Kg, or 10Kg)",
-      "brand": "Green Planet",
-      "category": "Nutrients - Soil",
-      "composition": null,
-      "source": "dsc_mediums_growkings"
-    },
-    {
-      "id": "apexgrow:standard-pot-250mm-8l-hydroponic",
-      "name": "Standard Pot 250mm | 8L Hydroponic & Soil Grow Container",
-      "brand": "Apex Grow",
-      "category": "Hydroponic Systems & Pots",
-      "composition": null,
-      "source": "dsc_mediums_apexgrow"
-    },
-    {
-      "id": "apexgrow:pot-330mm-18l-slimline-hole-hydroponic",
-      "name": "Pot 330mm | 18L Slimline Hydroponic Grow Pot with Drainage Hole",
-      "brand": "Apex Grow",
-      "category": "Hydroponic Systems & Pots",
-      "composition": null,
-      "source": "dsc_mediums_apexgrow"
-    },
-    {
-      "id": "apexgrow:pot-sox-hydroponic-pot-liners-20l-30l-50l",
-      "name": "Pot Sox | Hydroponic Pot Liners with Drawstring (20L, 30L & 50L)",
-      "brand": "Pot Sox",
-      "category": "Hydroponic Systems & Pots",
-      "composition": null,
-      "source": "dsc_mediums_apexgrow"
-    },
-    {
-      "id": "apexgrow:tetrabase-reusable-dwc-hydroponic-grow-media-australia",
-      "name": "TetraBase Reusable DWC Grow Media | Inert Hydroponic Substrate Australia",
-      "brand": "TetraBase",
-      "category": "Hydroponic Growing Medium",
-      "composition": null,
-      "source": "dsc_mediums_apexgrow"
-    },
-    {
-      "id": "apexgrow:ugro-pure-air-coco-50l-loose-buffered-coco-coir-australia",
-      "name": "UGRO Pure Air Coco 50L | Loose Buffered Coco Coir Hydroponic Medium Australia",
-      "brand": "UGRO",
-      "category": "Hydroponic Growing Medium",
-      "composition": null,
-      "source": "dsc_mediums_apexgrow"
-    },
-    {
-      "id": "apexgrow:hydro-clay-balls-50l-leca-hydroponic-growing-medium-australia",
-      "name": "Professor's Nutrients Hydro Clay 50L | LECA Clay Balls Hydroponic Growing Medium Australia",
-      "brand": "Professor's Nutrients",
-      "category": "Hydroponic Growing Medium",
-      "composition": null,
-      "source": "dsc_mediums_apexgrow"
-    },
-    {
-      "id": "apexgrow:vermiculite-100l-grade-3-hydroponic-growing-medium-australia",
-      "name": "Vermiculite 100L Grade 3 | Hydroponic & Seed Raising Medium Australia",
-      "brand": "Generic",
-      "category": "Hydroponic Growing Medium",
-      "composition": null,
-      "source": "dsc_mediums_apexgrow"
-    },
-    {
-      "id": "apexgrow:perlite-100l-hydroponic-growing-medium-australia",
-      "name": "Perlite 100L | Hydroponic Growing Medium for Drainage & Root Oxygenation Australia",
-      "brand": "Generic",
-      "category": "Hydroponic Growing Medium",
-      "composition": null,
-      "source": "dsc_mediums_apexgrow"
-    },
-    {
-      "id": "apexgrow:uber-coco-perlite-clay-50l-hydroponic-growing-medium-australia",
-      "name": "UBER Coco / Perlite / Clay 50L | High-Performance Triple Blend Hydroponic Growing Medium Australia",
-      "brand": "UBER",
-      "category": "Hydroponic Growing Medium",
-      "composition": null,
-      "source": "dsc_mediums_apexgrow"
-    },
-    {
-      "id": "apexgrow:ugro-pure-max-air-50l-coco-perlite-hydroponic-medium-australia",
-      "name": "UGRO Pure Max Air 50L + Perlite | Coco Coir Hydroponic Growing Medium Australia",
-      "brand": "UGRO",
-      "category": "Coco Coir Growing Medium",
-      "composition": null,
-      "source": "dsc_mediums_apexgrow"
+      "source": "sqlite"
     },
     {
       "id": "apexgrow:clay-balls-leca-50l-hydroponic-growing-medium-australia",
@@ -2013,87 +509,23 @@
       "brand": "Hydro Expanded Clay",
       "category": "Hydroponic Growing Medium",
       "composition": null,
-      "source": "dsc_mediums_apexgrow"
+      "source": "sqlite"
     },
     {
-      "id": "apexgrow:grodan-75mm-rockwool-cubes-with-hole-australia",
-      "name": "Grodan 75mm Rockwool Cubes With Hole, pack of 6. Hydroponic Cloning Blocks Australia",
-      "brand": "Grodan",
-      "category": "Rockwool Cube / Propagation Plug",
+      "id": "growkings:hy-gen-cocopeat-brick-five-kg-compressed-makes-70l-copy",
+      "name": "CoCopeat Brick 4Kg Compressed (Makes 56L)",
+      "brand": "LGD",
+      "category": "Grow Mediums",
       "composition": null,
-      "source": "dsc_mediums_apexgrow"
+      "source": "sqlite"
     },
     {
-      "id": "apexgrow:grodan-75mm-rockwool-cubes-no-hole-australia",
-      "name": "Grodan 75mm Rockwool Cubes No Hole, Pack of 6. Large Hydroponic Propagation Blocks Australia",
-      "brand": "Grodan",
-      "category": "Rockwool Cube / Propagation Block",
+      "id": "growkings:balls-expanded-clay-8mm-to-16mm-50-litre-bag",
+      "name": "Colossal Expanded Clay 8mm To 16mm 50 Litre Bag",
+      "brand": "Accent Hydroponics",
+      "category": "Grow Mediums",
       "composition": null,
-      "source": "dsc_mediums_apexgrow"
-    },
-    {
-      "id": "apexgrow:grodan-40mm-rockwool-cubes-australia",
-      "name": "Grodan 40mm Rockwool Cubes, Pack of 6. Hydroponic Propagation Starter Plugs Australia",
-      "brand": "Grodan",
-      "category": "Propagation Medium / Rockwool Cube",
-      "composition": null,
-      "source": "dsc_mediums_apexgrow"
-    },
-    {
-      "id": "apexgrow:bluelab-soil-ph-pen-soil-coco-ph-tester-australia",
-      "name": "Bluelab Soil pH Pen | Soil & Coco pH Temperature Tester Australia Waterproof",
-      "brand": "Bluelab",
-      "category": "Hydroponic Testing Equipment",
-      "composition": null,
-      "source": "dsc_mediums_apexgrow"
-    },
-    {
-      "id": "apexgrow:bluelab-pulse-meter-soil-ec-moisture-sensor-australia",
-      "name": "Bluelab Pulse Meter | Soil EC Moisture Temperature Sensor Bluetooth Australia",
-      "brand": "Bluelab",
-      "category": "Hydroponic Testing Equipment",
-      "composition": null,
-      "source": "dsc_mediums_apexgrow"
-    },
-    {
-      "id": "apexgrow:happy-soils-activate-organic-soil-booster",
-      "name": "Happy Soils Activate 1L | Organic Soil Booster & Microbial Activator",
-      "brand": "Happy Soils",
-      "category": "Plant Additives",
-      "composition": null,
-      "source": "dsc_mediums_apexgrow"
-    },
-    {
-      "id": "apexgrow:gnat-nix-fungus-gnat-control-australia",
-      "name": "Gnat Nix | Fungus Gnat Control, Larvae Killer & Soil Barrier Solution",
-      "brand": "Apex Grow",
-      "category": "Pest Control",
-      "composition": null,
-      "source": "dsc_mediums_apexgrow"
-    },
-    {
-      "id": "apexgrow:barrier-guard-soil-pest-control",
-      "name": "Guardian Barrier Guard 250g | Long-Lasting Soil Pest Control & Root Zone Protection",
-      "brand": "Guardian",
-      "category": "Pest Control",
-      "composition": null,
-      "source": "dsc_mediums_apexgrow"
-    },
-    {
-      "id": "apexgrow:dutch-fest-root-mass-enhancer-hydroponic-root-booster",
-      "name": "Dutch Fest Root Mass Enhancer | Hydroponic Root Booster & Stimulant",
-      "brand": "Dutchfest",
-      "category": "Root Stimulant",
-      "composition": null,
-      "source": "dsc_mediums_apexgrow"
-    },
-    {
-      "id": "hydrowarehouse:pm-coco-ab-set",
-      "name": "PM coco+ A + B set",
-      "brand": "Plant Mechanics",
-      "category": "Base Nutrients",
-      "composition": null,
-      "source": "dsc_mediums_hydrowarehouse"
+      "source": "sqlite"
     },
     {
       "id": "hydrowarehouse:crystal-clear-coco-flush-and-brix-enhancer",
@@ -2101,95 +533,15 @@
       "brand": "Bio Diesel",
       "category": "Additives & Boosters",
       "composition": null,
-      "source": "dsc_mediums_hydrowarehouse"
+      "source": "sqlite"
     },
     {
-      "id": "tghydroponics:green-planet-professional-coco-53l-bag",
-      "name": "Green Planet Professional COCO - 53L BAG",
-      "brand": "Green Planet",
+      "id": "growkings:heat-mat-flexible-medium-550-x-280mm-25-watt",
+      "name": "Cultiv8 Medium Flexible Heat Mat - 550x280mm",
+      "brand": "CULTIV8",
       "category": null,
       "composition": null,
-      "source": "dsc_mediums_tghydroponics"
-    },
-    {
-      "id": "tghydroponics:green-planet-professional-coco-perlite-70-30-53l",
-      "name": "Green Planet Professional Coco Perlite 70/30 - 53L",
-      "brand": "Green Planet",
-      "category": null,
-      "composition": null,
-      "source": "dsc_mediums_tghydroponics"
-    },
-    {
-      "id": "tghydroponics:aquamaster-tools-handheld-meter-ph-ec-temp-h600-pro",
-      "name": "Aquamaster Tools Handheld Meter PH,EC,TEMP H600 Pro",
-      "brand": "Aqua Master",
-      "category": null,
-      "composition": null,
-      "source": "dsc_mediums_tghydroponics"
-    },
-    {
-      "id": "tghydroponics:reiziger-coco-food-a-b-1l",
-      "name": "Reiziger Coco Food A+B 1L",
-      "brand": "Reiziger",
-      "category": "Reiziger",
-      "composition": null,
-      "source": "dsc_mediums_tghydroponics"
-    },
-    {
-      "id": "tghydroponics:ac-infinity-soil-sensor-probe-for-controller-ai",
-      "name": "AC Infinity Soil Sensor Probe, for Controller AI+",
-      "brand": "TG-Hydroponics",
-      "category": "AC Infinity",
-      "composition": null,
-      "source": "dsc_mediums_tghydroponics"
-    },
-    {
-      "id": "tghydroponics:nutrifield-substrate-booster-20l-bag",
-      "name": "Nutrifield Substrate Booster 20L Bag",
-      "brand": "Nutrifield",
-      "category": "Nutrifield",
-      "composition": null,
-      "source": "dsc_mediums_tghydroponics"
-    },
-    {
-      "id": "tghydroponics:bio-diesel-coco-low-compression-brick-70l",
-      "name": "Bio Diesel Coco Low Compression Brick 70L",
-      "brand": "Bio Diesel",
-      "category": null,
-      "composition": null,
-      "source": "dsc_mediums_tghydroponics"
-    },
-    {
-      "id": "tghydroponics:aqua-master-tools-pro-substrate-handheld-meter-h600",
-      "name": "Aqua Master Tools Pro Substrate Handheld Meter H600",
-      "brand": "Aqua Master",
-      "category": null,
-      "composition": null,
-      "source": "dsc_mediums_tghydroponics"
-    },
-    {
-      "id": "tghydroponics:aqua-master-tools-substrate-ph-temp-pro-2-s300",
-      "name": "Aqua Master Tools Substrate Ph Temp Pro 2 S300",
-      "brand": "Aqua Master",
-      "category": "Ph Temp",
-      "composition": null,
-      "source": "dsc_mediums_tghydroponics"
-    },
-    {
-      "id": "tghydroponics:aqua-master-tools-pro-substrate-ec-temp-meter-e300",
-      "name": "Aqua Master Tools Pro Substrate EC/Temp Meter E300",
-      "brand": "Aqua Master",
-      "category": null,
-      "composition": null,
-      "source": "dsc_mediums_tghydroponics"
-    },
-    {
-      "id": "tghydroponics:thc-coco-ab-pair",
-      "name": "THC Coco A&B Pair | Full size",
-      "brand": "THC NUTRIENTS",
-      "category": null,
-      "composition": null,
-      "source": "dsc_mediums_tghydroponics"
+      "source": "sqlite"
     },
     {
       "id": "tghydroponics:cultured-solutions-coco-cal",
@@ -2197,63 +549,55 @@
       "brand": "Current Culture",
       "category": null,
       "composition": null,
-      "source": "dsc_mediums_tghydroponics"
+      "source": "sqlite"
     },
     {
-      "id": "tghydroponics:pro-mantis-2l-tub-organic-substrate-enhancer-insect-frass",
-      "name": "Pro Mantis 2L Tub Organic Substrate Enhancer Insect Frass",
-      "brand": "Other Additives",
-      "category": null,
+      "id": "growkings:current-culture-multi-mod-net-pots-5-5",
+      "name": "Current Culture Multi-Mod Net Pots - 5.5\" (140mm)",
+      "brand": "Current Culture",
+      "category": "Substrates, Pots & Trays",
       "composition": null,
-      "source": "dsc_mediums_tghydroponics"
+      "source": "sqlite"
     },
     {
-      "id": "tghydroponics:hy-gen-hydro-complete-starter-pack",
-      "name": "Hy-Gen Hydro Complete Starter Pack",
-      "brand": "HY - GEN",
-      "category": null,
+      "id": "growkings:cyco-coco-bitz-50-litre-bag-0mri-approved",
+      "name": "Cyco Coco Bitz 50 Litre Bag (OMRI Approved)",
+      "brand": "CYCO",
+      "category": "Grow Mediums",
       "composition": null,
-      "source": "dsc_mediums_tghydroponics"
+      "source": "sqlite"
     },
     {
-      "id": "tghydroponics:nutrifield-starter-kit",
-      "name": "Nutrifield Starter Kit",
-      "brand": "Nutrifield",
-      "category": null,
+      "id": "growkings:cyco-coco-coir-50-litre-bag-omri-approved",
+      "name": "Cyco Coco Coir 50 Litre Bag (Omri Approved)",
+      "brand": "CYCO",
+      "category": "Grow Mediums",
       "composition": null,
-      "source": "dsc_mediums_tghydroponics"
+      "source": "sqlite"
     },
     {
-      "id": "tghydroponics:hy-gen-cocopeat-blocks",
-      "name": "Hy-Gen CocoPeat Blocks",
-      "brand": "Coco Coir",
-      "category": null,
+      "id": "growkings:cyco-coco-lite-50-litre-bag-70-30-omri-approved",
+      "name": "Cyco Coco Lite 50 Litre Bag (70 / 30) (OMRI Approved)",
+      "brand": "CYCO",
+      "category": "Grow Mediums",
       "composition": null,
-      "source": "dsc_mediums_tghydroponics"
+      "source": "sqlite"
     },
     {
-      "id": "tghydroponics:hy-gen-coco-chips-ultimate-blend-50l-bag",
-      "name": "Hy-Gen Coco Chips Ultimate Blend 50L Bag",
-      "brand": "Coco Coir",
+      "id": "growkings:cyco-kleanse",
+      "name": "Cyco Platinum Series Kleanse (1L, 5L or 20L)",
+      "brand": "CYCO",
       "category": null,
       "composition": null,
-      "source": "dsc_mediums_tghydroponics"
+      "source": "sqlite"
     },
     {
-      "id": "tghydroponics:hy-gen-coco-coir-lite-50l-bag",
-      "name": "Hy-Gen Coco Coir Lite 50L Bag",
-      "brand": "Coco Coir",
-      "category": null,
+      "id": "growkings:cyco-zyme",
+      "name": "Cyco Platinum Series Zyme (250mL, 1, 5 or 20L)",
+      "brand": "CYCO",
+      "category": "Additives",
       "composition": null,
-      "source": "dsc_mediums_tghydroponics"
-    },
-    {
-      "id": "tghydroponics:bluelab-soil-ph-pen",
-      "name": "Bluelab Soil pH Pen",
-      "brand": "Testing Equipment /pH up & down",
-      "category": null,
-      "composition": null,
-      "source": "dsc_mediums_tghydroponics"
+      "source": "sqlite"
     },
     {
       "id": "tghydroponics:de-ozzy-essential-natural-soil-conditioner",
@@ -2261,103 +605,95 @@
       "brand": "Other Substrates and Soils",
       "category": null,
       "composition": null,
-      "source": "dsc_mediums_tghydroponics"
+      "source": "sqlite"
     },
     {
-      "id": "tghydroponics:bio-diesel-living-organic-soil-lite-30l",
-      "name": "Bio Diesel Living Organic Soil Lite - 30L",
-      "brand": "Coco Coir",
-      "category": null,
+      "id": "growkings:de-ozzy-essential-natural-soil-conditioner-10kg",
+      "name": "De-Ozzy Essential Natural Soil Conditioner - 10Kg",
+      "brand": "De-Ozzy",
+      "category": "Pro Biotics, Root Repairs & Cleaners",
       "composition": null,
-      "source": "dsc_mediums_tghydroponics"
+      "source": "sqlite"
     },
     {
-      "id": "tghydroponics:bio-diesel-max-air-coco-perlite-70-30-mix-50l",
-      "name": "Bio Diesel Max Air Coco Perlite 70-30 Mix [50L]",
-      "brand": "Coco Coir",
-      "category": null,
+      "id": "growkings:dr-greenthumbs-fruit-roids-100g",
+      "name": "Dr Greenthumbs Fruit Roids- 100g",
+      "brand": "Dr Greenthumbs",
+      "category": "Additives",
       "composition": null,
-      "source": "dsc_mediums_tghydroponics"
+      "source": "sqlite"
     },
     {
-      "id": "tghydroponics:grodan-delta-4g-no-hole-75mm-block",
-      "name": "Grodan Rockwool Cubes",
-      "brand": "Propagation",
-      "category": null,
+      "id": "growkings:dr-greenthumbs-fruit-roids-225g",
+      "name": "Dr Greenthumbs Fruit Roids- 225g",
+      "brand": "Dr Greenthumbs",
+      "category": "Additives",
       "composition": null,
-      "source": "dsc_mediums_tghydroponics"
+      "source": "sqlite"
     },
     {
-      "id": "tghydroponics:nutrifield-coco-ab",
-      "name": "Nutrifield Coco A&B",
-      "brand": "NUTRIFIELD NUTRIENTS",
-      "category": null,
+      "id": "growkings:dr-greenthumbs-go-grow",
+      "name": "Dr Greenthumbs Go & Grow - 1.5Kg",
+      "brand": "Dr Greenthumbs",
+      "category": "Nutrients",
       "composition": null,
-      "source": "dsc_mediums_tghydroponics"
+      "source": "sqlite"
     },
     {
-      "id": "tghydroponics:hy-gen-starter-kit-1l-nutrients-500ml-additives-coco-brick-pot-sock-ph-test-kit",
-      "name": "HY-GEN STARTER KIT| | 1L NUTRIENTS | 500ml ADDITIVES | COCO BRICK |POT SOCK | PH TEST KIT",
-      "brand": "HY-GEN",
-      "category": null,
+      "id": "growkings:dr-greenthumbs-root-roids-225g",
+      "name": "Dr Greenthumbs Root Roids - 225g",
+      "brand": "Dr Greenthumbs",
+      "category": "Beneficial Microbes",
       "composition": null,
-      "source": "dsc_mediums_tghydroponics"
+      "source": "sqlite"
     },
     {
-      "id": "tghydroponics:hy-gen-cornucopia-coco-grow-single-part",
-      "name": "HY-GEN CORNUCOPIA COCO GROW | SINGLE PART",
-      "brand": "Hy - Gen",
-      "category": null,
+      "id": "growkings:dr-greenthumbs-root-roids",
+      "name": "Dr Greenthumbs Root Roids - 75g",
+      "brand": "Dr Greenthumbs",
+      "category": "Beneficial Microbes",
       "composition": null,
-      "source": "dsc_mediums_tghydroponics"
+      "source": "sqlite"
     },
     {
-      "id": "tghydroponics:urban-jardin-premium-coco-perlite-media-50ltr",
-      "name": "URBAN JARDIN PREMIUM COCO PERLITE MEDIA 50LTR",
-      "brand": "Perlite/Vermiculite",
-      "category": null,
+      "id": "apexgrow:dutch-fest-root-mass-enhancer-hydroponic-root-booster",
+      "name": "Dutch Fest Root Mass Enhancer | Hydroponic Root Booster & Stimulant",
+      "brand": "Dutchfest",
+      "category": "Root Stimulant",
       "composition": null,
-      "source": "dsc_mediums_tghydroponics"
+      "source": "sqlite"
     },
     {
-      "id": "tghydroponics:urban-jardin-coco-premium-grow-media-50ltr",
-      "name": "URBAN JARDIN COCO PREMIUM Grow Media 50LTR",
-      "brand": "Coco Coir",
-      "category": null,
+      "id": "growkings:dutchfest-coco-a-b",
+      "name": "Dutchfest Coco A & B - (1L or 5L)",
+      "brand": "Dutchfest",
+      "category": "Nutrients",
       "composition": null,
-      "source": "dsc_mediums_tghydroponics"
+      "source": "sqlite"
     },
     {
-      "id": "tghydroponics:seahawk-ultra-lite-silver-reflector-medium",
-      "name": "SEAHAWK ULTRA LITE SILVER REFLECTOR - MEDIUM",
-      "brand": "Reflectors",
-      "category": null,
+      "id": "growkings:easy-as-organics-charman-biochar-20l",
+      "name": "Easy As Organics Charman Biochar - 20L",
+      "brand": "SNT",
+      "category": "Additives",
       "composition": null,
-      "source": "dsc_mediums_tghydroponics"
+      "source": "sqlite"
     },
     {
-      "id": "tghydroponics:nutrifield-living-soil-pots-by-grassroots",
-      "name": "Nutrifield Living Soil Pots by Grassroots",
-      "brand": "Fabric Pots",
-      "category": "Pot System",
+      "id": "growkings:charman-biochar",
+      "name": "Easy As Organics Charman Biochar - 2L",
+      "brand": "SNT",
+      "category": "Additives",
       "composition": null,
-      "source": "dsc_mediums_tghydroponics"
+      "source": "sqlite"
     },
     {
-      "id": "tghydroponics:42mm-jiffy-coco-coir-propagation-pallets-1000-pcs",
-      "name": "42MM JIFFY COCO COIR PROPAGATION PALLETS - 1000 PCS",
-      "brand": "Propagation",
-      "category": null,
+      "id": "growkings:easy-as-organics-water-only-soil-25-litre",
+      "name": "Easy As Organics Water Only Living Soil 25L",
+      "brand": "SNT",
+      "category": "Grow Mediums",
       "composition": null,
-      "source": "dsc_mediums_tghydroponics"
-    },
-    {
-      "id": "tghydroponics:42mm-jiffy-pellets-25-pack",
-      "name": "42mm Jiffy Pellets 25 Pack",
-      "brand": "Propagation",
-      "category": null,
-      "composition": null,
-      "source": "dsc_mediums_tghydroponics"
+      "source": "sqlite"
     },
     {
       "id": "tghydroponics:easy-as-organic-living-soil-25l",
@@ -2365,7 +701,7 @@
       "brand": "Other Substrates and Soils",
       "category": null,
       "composition": null,
-      "source": "dsc_mediums_tghydroponics"
+      "source": "sqlite"
     },
     {
       "id": "tghydroponics:eazy-plug-coco-peat-propagation-tray-77-cubes",
@@ -2373,7 +709,447 @@
       "brand": "Grow wool / Rockwool",
       "category": null,
       "composition": null,
-      "source": "dsc_mediums_tghydroponics"
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:eazy-plug-mini-pyramid",
+      "name": "Eazy Plug Mini Pyramid",
+      "brand": "Eazy Plug",
+      "category": "Propagation",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:eazy-plug-sea-of-green-set",
+      "name": "Eazy Plug Sea Of Green Set",
+      "brand": "Eazy Plug",
+      "category": "propagation",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:eazy-plug-start-up-kit",
+      "name": "Eazy Plug Start-up Kit",
+      "brand": "Eazy Plug",
+      "category": "propagation",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:eazy-plug-ct-12-tray",
+      "name": "Eazy-Plug Coco Peat Plug & Grow Propagation Tray - 12 Cubes",
+      "brand": "Eazy Plug",
+      "category": "Propagation",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:eazy-plug-ct-24-tray",
+      "name": "Eazy-Plug Coco Peat Plug & Grow Propagation Tray - 24 Cubes",
+      "brand": "Eazy Plug",
+      "category": "Propagation",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:eazy-plug-ct-77-tray",
+      "name": "Eazy-Plug Coco Peat Plug & Grow Propagation Tray - 77 Cubes",
+      "brand": "Eazy Plug",
+      "category": "Propagation",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:eazy-plug-six-plug-sowing-set",
+      "name": "Eazy-Plug Six Plug Sowing Set",
+      "brand": "Eazy Plug",
+      "category": "Propagation",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:emerald-harvest-cali-pro-kick-start-2-part-0-95l",
+      "name": "Emerald Harvest Cali Pro Kick Start 2 Part - 0.95L",
+      "brand": "Emerald Harvest",
+      "category": "Nutrients",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:balls-expanded-clay-16mm-plus-50-litre-bag",
+      "name": "Expanded Clay Balls 16mm - 50 Litre Bag",
+      "brand": "Balls Expanded Clay",
+      "category": "Grow Mediums",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:expanded-clay-balls-for-growing-plants-hydroponic-systems-16mm-10l-bag",
+      "name": "Expanded Clay Balls For Growing plants / Hydroponic Systems 16mm - 10L Bag",
+      "brand": "Grow Kings",
+      "category": "Grow Mediums",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:copy-of-expanded-clay-balls-for-growing-plants-hydroponic-systems-16mm-10l-bag",
+      "name": "Expanded Clay Balls For Growing plants / Hydroponic Systems 30mm - 10L Bag",
+      "brand": "Grow Kings",
+      "category": "Grow Mediums",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:clay-balls-16mm",
+      "name": "Expanded Clay Balls For Growing plants / Hydroponic Systems 8-16mm - 10L Bag",
+      "brand": "Grow Kings",
+      "category": "Grow Mediums",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:pro-mantis-organic-substrate-enhancer-2lt",
+      "name": "Frass Farmz - Pro Mantis Organic Substrate Enhancer 2L",
+      "brand": "Frass Farmz",
+      "category": "Beneficial Microbes",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:g-pots-grid-330-mm",
+      "name": "G-Pots Grid 330 mm",
+      "brand": "G-Pots",
+      "category": "Substrates, Pots & Trays",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:g-pots-grid-470-mm-suits-gpb55",
+      "name": "G-Pots Grid 470 mm suits GPB55",
+      "brand": "G-Pots",
+      "category": "Substrates, Pots & Trays",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:g-pots-grid-leg-large-suits-90-l",
+      "name": "G-Pots Grid Leg Large suits 90 L",
+      "brand": "G-Pots",
+      "category": "Substrates, Pots & Trays",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:g-pots-grid-leg-small-suits-30-50-l",
+      "name": "G-Pots Grid Leg Small suits 30 & 50 L",
+      "brand": "G-Pots",
+      "category": "Substrates, Pots & Trays",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:garland-giant-plus-tray-120cm-x-55cm-x-5cm-1",
+      "name": "Garland Giant Plus Tray – 120 x 55 x 5cm",
+      "brand": "Garland",
+      "category": "Substrates, Pots & Trays",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:garland-square-tray-60cm-x-60cm-x-12cm",
+      "name": "Garland Square Tray - 60cm x 60cm x 12cm",
+      "brand": "Garland",
+      "category": "Substrates, Pots & Trays",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:garland-square-tray-100cm-x-100cm-x-12cm",
+      "name": "Garland Square Tray 100cm x 100cm x 12cm – Heavy Duty 100L Hydroponic & Utility Tray",
+      "brand": "Garland",
+      "category": "Substrates, Pots & Trays",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:garland-value-growbag-tray-100-x-40-x-5cm",
+      "name": "Garland Value Growbag Tray – 100 x 40 x 5cm",
+      "brand": "Garland",
+      "category": "Substrates, Pots & Trays",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "apexgrow:gnat-nix-fungus-gnat-control-australia",
+      "name": "Gnat Nix | Fungus Gnat Control, Larvae Killer & Soil Barrier Solution",
+      "brand": "Apex Grow",
+      "category": "Pest Control",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:gp3-grow-1-l",
+      "name": "Green Planet - GP3 Grow - (1L, 5L, or 20L)",
+      "brand": "Green Planet",
+      "category": "Nutrients - Hydroponics",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:gp3-micro-1-l",
+      "name": "Green Planet - GP3 Micro (1L, 5L, or 20L)",
+      "brand": "Green Planet",
+      "category": "Nutrients - Hydroponics",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:vitathrive-1-l",
+      "name": "Green Planet - Vitathrive Propagation Solution (1L, 5L Or 20L)",
+      "brand": "Green Planet",
+      "category": "Additives",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:back-country-blend-boost-100-g",
+      "name": "Green Planet Back Country Blend Boost (5Kg, or 10Kg)",
+      "brand": "Green Planet",
+      "category": "Nutrients - Soil",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:back-country-blend-grow-100-g",
+      "name": "Green Planet Back Country Blend Grow (5kg, 10kg or 20kg)",
+      "brand": "Green Planet",
+      "category": "Nutrients - Soil",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:dual-fuel-2-part-1-l",
+      "name": "Green Planet Dual Fuel (2 part) - Multiple Sizes",
+      "brand": "Green Planet",
+      "category": "Nutrients - Hydroponics",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:green-planet-expanded-clay-balls-leca-8-15mm-25l-bag",
+      "name": "Green Planet Expanded Clay Balls (LECA) 8-15mm - 25L Bag",
+      "brand": "Green Planet",
+      "category": "Grow Mediums",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "tghydroponics:green-planet-professional-coco-53l-bag",
+      "name": "Green Planet Professional COCO - 53L BAG",
+      "brand": "Green Planet",
+      "category": null,
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "tghydroponics:green-planet-professional-coco-perlite-70-30-53l",
+      "name": "Green Planet Professional Coco Perlite 70/30 - 53L",
+      "brand": "Green Planet",
+      "category": null,
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:green-planet-nutrients-root-builder-1l",
+      "name": "Green Planet Root Builder - 1L",
+      "brand": "Green Planet",
+      "category": "Nutrients",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:green-planet-root-builder-5l",
+      "name": "Green Planet Root Builder - 5L",
+      "brand": "Green Planet",
+      "category": "Nutrients",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:greenplanet-coco-70-30-perlite-53l-bag",
+      "name": "GreenPlanet 70/30 Coco Perlite Blend 53L Bag",
+      "brand": "Green Planet",
+      "category": "Grow Mediums",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:greenplanet-coco-60-40-chips-53l-bag",
+      "name": "GreenPlanet Coco 60/40 Chips - 53L Bag",
+      "brand": "Green Planet",
+      "category": "Grow Mediums",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:greenplanet-professional-coco-coir-53l-bag",
+      "name": "GreenPlanet Professional Coco Coir 53L Bag",
+      "brand": "Green Planet",
+      "category": "Grow Mediums",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "apexgrow:grodan-40mm-rockwool-cubes-australia",
+      "name": "Grodan 40mm Rockwool Cubes, Pack of 6. Hydroponic Propagation Starter Plugs Australia",
+      "brand": "Grodan",
+      "category": "Propagation Medium / Rockwool Cube",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "apexgrow:grodan-75mm-rockwool-cubes-no-hole-australia",
+      "name": "Grodan 75mm Rockwool Cubes No Hole, Pack of 6. Large Hydroponic Propagation Blocks Australia",
+      "brand": "Grodan",
+      "category": "Rockwool Cube / Propagation Block",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "apexgrow:grodan-75mm-rockwool-cubes-with-hole-australia",
+      "name": "Grodan 75mm Rockwool Cubes With Hole, pack of 6. Hydroponic Cloning Blocks Australia",
+      "brand": "Grodan",
+      "category": "Rockwool Cube / Propagation Plug",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:grodan-crop-box-slabs-370x550x150-mm-4-pk",
+      "name": "Grodan Crop Box Slabs (370x550x150 mm) 4/pk",
+      "brand": "Grodan",
+      "category": "Substrates, Pots & Trays",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:grodan-delta-10-cubes-with-hole-100x100x100-mm-144-ctn",
+      "name": "Grodan Delta 10 Cubes with hole (100x100x100 mm) 144/ctn",
+      "brand": "Grodan",
+      "category": "Substrates, Pots & Trays",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:grodan-delta-4g-cubes-no-hole-75x75x60-mm-384-ctn",
+      "name": "Grodan Delta 4G Cubes No/Hole (75x75x60 mm) 384/ctn",
+      "brand": "Grodan",
+      "category": "Substrates, Pots & Trays",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:grodan-delta-4g-w-hole-75x75x60-mm-384-carton",
+      "name": "Grodan Delta 4G w/Hole (75x75x60 mm) 384 Carton",
+      "brand": "Grodan",
+      "category": "Substrates, Pots & Trays",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:grodan-granulate-20-kg-bag",
+      "name": "Grodan Granulate 20kg bag",
+      "brand": "Grodan",
+      "category": "Substrates, Pots & Trays",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:grodan-hugo-cubes-150x150x142-mm-48-ctn",
+      "name": "Grodan Hugo Cubes (150x150x142 mm) 48/ctn",
+      "brand": "Grodan",
+      "category": "Substrates, Pots & Trays",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:grodan-mm40-40-cubes-40x40x40-mm-cubes-2250-ctn",
+      "name": "Grodan MM40/40 Cubes (40x40x40 mm) Cubes 2250/ctn",
+      "brand": "Grodan",
+      "category": "Substrates, Pots & Trays",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:groden-rockwool-cube-75mm-x-75mm-no-hole",
+      "name": "Grodan Rockwool Cube - No Hole - 75mm x 75mm- 6pk",
+      "brand": "Grodan",
+      "category": "propagation",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "tghydroponics:grodan-delta-4g-no-hole-75mm-block",
+      "name": "Grodan Rockwool Cubes",
+      "brand": "Propagation",
+      "category": null,
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:introducing-groden-rockwool-cube-40mm-x-40mm-8pk",
+      "name": "Grodan Rockwool Wrapped Propagation Cube - 40mm x 40mm - 12pk",
+      "brand": "Grodan",
+      "category": "propagation",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:grodan-rockwool-wrapped-propagation-cube-40mm-x-40mm-30pk",
+      "name": "Grodan Rockwool Wrapped Propagation Cube - 40mm x 40mm - 30pk",
+      "brand": "Grodan",
+      "category": "Propagation",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:grodan-sbs-36-77-cubes-18-trays-77-cubes-per-tray-1386-ctn",
+      "name": "Grodan SBS 36/77 Cubes 18 Trays - 77 cubes per tray 1386/ctn",
+      "brand": "Grodan",
+      "category": "Substrates, Pots & Trays",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:grodan-wrapped-slab-300-mm-x-900-x-75-mm-8-pack",
+      "name": "Grodan Wrapped Slab 300 mm x 900 x 75 mm - 8 Pack",
+      "brand": "Grodan",
+      "category": "Substrates, Pots & Trays",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:grow-sack-fabric-grow-bag-30l",
+      "name": "Grow Sack Fabric Grow Bag - 30L",
+      "brand": "growy",
+      "category": "Substrates, Pots & Trays",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:copy-of-grodan-rockwool-10l",
+      "name": "Growool Granulated Premium Rockwool - 10L",
+      "brand": "Grow Kings",
+      "category": "Grow Mediums",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:growool-granulated-premium-rockwool-13-6-kg-bag-122-ltr",
+      "name": "Growool Granulated Premium Rockwool 13.6Kg Bag (122 Ltr)",
+      "brand": "GROWOOL",
+      "category": "Grow Mediums",
+      "composition": null,
+      "source": "sqlite"
     },
     {
       "id": "tghydroponics:growool-premium-rockwool-floc-13-6kg-110-l",
@@ -2381,47 +1157,631 @@
       "brand": "Grow wool / Rockwool",
       "category": null,
       "composition": null,
-      "source": "dsc_mediums_tghydroponics"
+      "source": "sqlite"
     },
     {
-      "id": "tghydroponics:vermiculite-100l",
-      "name": "Vermiculite",
-      "brand": "Perlite/Vermiculite",
+      "id": "growkings:growth-technology-australian-native-focus",
+      "name": "Growth Technology Australian Native Focus (250mL 1, 5 or 20L)",
+      "brand": "Growth Technology",
+      "category": "Nutrients - Hydroponics",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:chilli-focus",
+      "name": "Growth Technology Chilli Focus (250mL, 1L, 5L, 20L)",
+      "brand": "Growth Technology",
+      "category": "Nutrients - Soil",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:growth-technology-complete-focus",
+      "name": "Growth Technology Complete Focus - 1L",
+      "brand": "Growth Technology",
+      "category": "Nutrients - Hydroponics",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:growth-technology-complete-focus-20l",
+      "name": "Growth Technology Complete Focus - 20L",
+      "brand": "Growth Technology",
+      "category": "Nutrients - Hydroponics",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:growth-technology-complete-focus-250ml",
+      "name": "Growth Technology Complete Focus - 250mL",
+      "brand": "Growth Technology",
+      "category": "Nutrients - Hydroponics",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:growth-technology-complete-focus-5l",
+      "name": "Growth Technology Complete Focus - 5L",
+      "brand": "Growth Technology",
+      "category": "Nutrients - Hydroponics",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:flower-focus",
+      "name": "Growth Technology Flower Focus (250mL 1 or 5L)",
+      "brand": "Growth Technology",
+      "category": "Nutrients",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:growth-technology-gt-foliage-focus",
+      "name": "Growth Technology Foliage Focus (250mL, 1, 5 or 20L)",
+      "brand": "Growth Technology",
+      "category": "Nutrients - Hydroponics",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:growth-technology-fruit-focus",
+      "name": "Growth Technology Fruit Focus",
+      "brand": "Growth Technology",
+      "category": "Nutrients - Hydroponics",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:herb-focus",
+      "name": "Growth Technology Herb Focus",
+      "brand": "Growth Technology",
+      "category": "Nutrients - Hydroponics",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:growth-technology-succulent-focus-1l",
+      "name": "Growth Technology Succulent Focus - 1L",
+      "brand": "Growth Technology",
+      "category": "Nutrients",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:growth-technology-succulent-focus-20l",
+      "name": "Growth Technology Succulent Focus - 20L",
+      "brand": "Growth Technology",
+      "category": "Nutrients",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:growth-technology-succulent-focus",
+      "name": "Growth Technology Succulent Focus - 250mL",
+      "brand": "Growth Technology",
+      "category": "Nutrients",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:growth-technology-succulent-focus-5l",
+      "name": "Growth Technology Succulent Focus - 5L",
+      "brand": "Growth Technology",
+      "category": "Nutrients",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:growth-technology-vegetable-focus",
+      "name": "Growth Technology Vegetable Focus",
+      "brand": "Growth Technology",
+      "category": "Nutrients - Hydroponics",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "apexgrow:barrier-guard-soil-pest-control",
+      "name": "Guardian Barrier Guard 250g | Long-Lasting Soil Pest Control & Root Zone Protection",
+      "brand": "Guardian",
+      "category": "Pest Control",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:homebox-vista-medium",
+      "name": "HOMEbox Vista Medium Grow Tent",
+      "brand": "Homebox",
+      "category": "Tents",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "tghydroponics:hy-gen-cornucopia-coco-grow-single-part",
+      "name": "HY-GEN CORNUCOPIA COCO GROW | SINGLE PART",
+      "brand": "Hy - Gen",
       "category": null,
       "composition": null,
-      "source": "dsc_mediums_tghydroponics"
+      "source": "sqlite"
     },
     {
-      "id": "tghydroponics:perlite-coarse-grade-100l-bag",
-      "name": "Perlite Coarse Grade",
-      "brand": "Perlite/Vermiculite",
+      "id": "tghydroponics:hy-gen-starter-kit-1l-nutrients-500ml-additives-coco-brick-pot-sock-ph-test-kit",
+      "name": "HY-GEN STARTER KIT| | 1L NUTRIENTS | 500ml ADDITIVES | COCO BRICK |POT SOCK | PH TEST KIT",
+      "brand": "HY-GEN",
       "category": null,
       "composition": null,
-      "source": "dsc_mediums_tghydroponics"
+      "source": "sqlite"
     },
     {
-      "id": "tghydroponics:professors-coco-premium-50l-bag",
-      "name": "PROFESSORS COCO PREMIUM 50L BAG",
+      "id": "apexgrow:happy-soils-activate-organic-soil-booster",
+      "name": "Happy Soils Activate 1L | Organic Soil Booster & Microbial Activator",
+      "brand": "Happy Soils",
+      "category": "Plant Additives",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:h-amp-g-bud-xl-1l",
+      "name": "House and Garden Bud-Xl - 1L",
+      "brand": "House & Garden",
+      "category": "Additives",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:h-amp-g-bud-xl-20l",
+      "name": "House and Garden Bud-Xl - 20L",
+      "brand": "House & Garden",
+      "category": "Additives",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:h-amp-g-bud-xl-250ml",
+      "name": "House and Garden Bud-Xl - 250mL",
+      "brand": "House & Garden",
+      "category": "Additives",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:h-amp-g-bud-xl-500ml",
+      "name": "House and Garden Bud-Xl - 500mL",
+      "brand": "House & Garden",
+      "category": "Additives",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:h-amp-g-bud-xl-5l",
+      "name": "House and Garden Bud-Xl - 5L",
+      "brand": "House & Garden",
+      "category": "Additives",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:h-amp-g-cocos-a-amp-b-10l",
+      "name": "House and Garden Cocos A & B - 10L",
+      "brand": "House & Garden",
+      "category": "Nutrients",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:h-amp-g-cocos-a-amp-b-1l",
+      "name": "House and Garden Cocos A & B - 1L",
+      "brand": "House & Garden",
+      "category": "Nutrients",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:h-amp-g-cocos-a-amp-b-20l",
+      "name": "House and Garden Cocos A & B - 20L",
+      "brand": "House & Garden",
+      "category": "Nutrients",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:h-amp-g-cocos-a-amp-b-5l",
+      "name": "House and Garden Cocos A & B - 5L",
+      "brand": "House & Garden",
+      "category": "Nutrients",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:h-amp-g-drip-clean-1l",
+      "name": "House and Garden Drip Clean - 1L",
+      "brand": "House & Garden",
+      "category": "Additives",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:h-amp-g-drip-clean-250ml",
+      "name": "House and Garden Drip Clean - 250mL",
+      "brand": "House & Garden",
+      "category": "Additives",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:h-amp-g-drip-clean-500ml",
+      "name": "House and Garden Drip Clean - 500mL",
+      "brand": "House & Garden",
+      "category": "Additives",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:h-amp-g-drip-clean-5l",
+      "name": "House and Garden Drip Clean - 5L",
+      "brand": "House & Garden",
+      "category": "Additives",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:h-amp-g-multizyme-1l",
+      "name": "House and Garden Multizyme - 1L",
+      "brand": "House & Garden",
+      "category": "Additives",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:h-amp-g-multizyme-20l",
+      "name": "House and Garden Multizyme - 20L",
+      "brand": "House & Garden",
+      "category": "Additives",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:h-amp-g-multizyme-250ml",
+      "name": "House and Garden Multizyme - 250mL",
+      "brand": "House & Garden",
+      "category": "Additives",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:h-amp-g-multizyme-500ml",
+      "name": "House and Garden Multizyme - 500mL",
+      "brand": "House & Garden",
+      "category": "Additives",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:h-amp-g-multizyme-5l",
+      "name": "House and Garden Multizyme - 5L",
+      "brand": "House & Garden",
+      "category": "Additives",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:h-amp-g-ph-stabiliser",
+      "name": "House and Garden PH Stabiliser - 1L",
+      "brand": "House & Garden",
+      "category": "Ph Up & Down",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:h-amp-g-roots-excelurator-100ml",
+      "name": "House and Garden Roots Excelurator - 100mL",
+      "brand": "House & Garden",
+      "category": "Additives",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:h-amp-g-roots-excelurator-1l",
+      "name": "House and Garden Roots Excelurator - 1L",
+      "brand": "House & Garden",
+      "category": "Additives",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:h-amp-g-roots-excelurator-250ml",
+      "name": "House and Garden Roots Excelurator - 250mL",
+      "brand": "House & Garden",
+      "category": "Additives",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:h-amp-g-roots-excelurator-500ml",
+      "name": "House and Garden Roots Excelurator - 500mL",
+      "brand": "House & Garden",
+      "category": "Additives",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:house-and-garden-roots-excelurator-5l",
+      "name": "House and Garden Roots Excelurator - 5L",
+      "brand": "House & Garden",
+      "category": "Additives",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:h-amp-g-soil-a-amp-b-10l",
+      "name": "House and Garden Soil A & B - 10L",
+      "brand": "House & Garden",
+      "category": "Nutrients",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:h-amp-g-soil-a-amp-b-1l",
+      "name": "House and Garden Soil A & B - 1L",
+      "brand": "House & Garden",
+      "category": "Nutrients",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:h-amp-g-soil-a-amp-b-20l",
+      "name": "House and Garden Soil A & B - 20L",
+      "brand": "House & Garden",
+      "category": "Nutrients",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:h-amp-g-soil-a-amp-b-5l",
+      "name": "House and Garden Soil A & B - 5L",
+      "brand": "House & Garden",
+      "category": "Nutrients",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:co-co-brick-650-gram-compressed",
+      "name": "Hy-Gen CoCopeat Brick 650 Gram Compressed",
+      "brand": "Hy-Gen",
+      "category": "Grow Mediums",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:co-co-brick-five-kg-hy-gen-compressed-makes-70-ltrs",
+      "name": "Hy-Gen CoCopeat Brick Five Kg Compressed (Makes 70L)",
+      "brand": "Hy-Gen",
+      "category": "Grow Mediums",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "tghydroponics:hy-gen-coco-chips-ultimate-blend-50l-bag",
+      "name": "Hy-Gen Coco Chips Ultimate Blend 50L Bag",
       "brand": "Coco Coir",
       "category": null,
       "composition": null,
-      "source": "dsc_mediums_tghydroponics"
+      "source": "sqlite"
     },
     {
-      "id": "tghydroponics:professors-coco-perlite-50l-bag",
-      "name": "Professors Coco Perlite 50L Bag",
+      "id": "tghydroponics:hy-gen-coco-coir-lite-50l-bag",
+      "name": "Hy-Gen Coco Coir Lite 50L Bag",
       "brand": "Coco Coir",
       "category": null,
       "composition": null,
-      "source": "dsc_mediums_tghydroponics"
+      "source": "sqlite"
     },
     {
-      "id": "tghydroponics:professors-coco-chips-50-50-blend-50l-bag",
-      "name": "PROFESSORS COCO CHIPS 50/50 BLEND | 50L BAG",
+      "id": "growkings:hy-gen-coco-growth-formula-a-b",
+      "name": "Hy-Gen Coco Growth Formula A & B (2 x 1, 5 Or 20L)",
+      "brand": "Hy-Gen",
+      "category": "Nutrients - Hydroponics",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "tghydroponics:hy-gen-cocopeat-blocks",
+      "name": "Hy-Gen CocoPeat Blocks",
       "brand": "Coco Coir",
       "category": null,
       "composition": null,
-      "source": "dsc_mediums_tghydroponics"
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:hy-gen-coirlite-70-30-peat-perlite-4-8-premium-50-litre",
+      "name": "Hy-Gen Coirlite 70/30 Peat - Perlite 4/8 Premium 50 Litre",
+      "brand": "Hy-Gen",
+      "category": "Grow Mediums",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:cornucopia-coco-grow-single-part",
+      "name": "Hy-Gen Cornucopia Coco-Grow Single Part (1 or 5L)",
+      "brand": "Hy-Gen",
+      "category": "Nutrients - Hydroponics",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:humiboosta",
+      "name": "Hy-Gen Humiboosta (500mL, 1, 5 or 20L)",
+      "brand": "Hy-Gen",
+      "category": "Nutrients - Hydroponics",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "tghydroponics:hy-gen-hydro-complete-starter-pack",
+      "name": "Hy-Gen Hydro Complete Starter Pack",
+      "brand": "HY - GEN",
+      "category": null,
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:hy-gen-hydro-growth-formula-a-b",
+      "name": "Hy-Gen Hydro Growth Formula A & B (2x1, 5 or 20L)",
+      "brand": "Hy-Gen",
+      "category": "Nutrients - Hydroponics",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:hy-gen-hydro-growth-single-part",
+      "name": "Hy-Gen Hydro Growth Single Part (1 or 5L)",
+      "brand": "Hy-Gen",
+      "category": "Nutrients - Hydroponics",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:nitro-k",
+      "name": "Hy-Gen Nitro-K (500mL, 1, 5 or 20L)",
+      "brand": "Hy-Gen",
+      "category": null,
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:sea-essentials",
+      "name": "Hy-Gen Sea Essentials (500mL, 1 , 5 or 20L)",
+      "brand": "Hy-Gen",
+      "category": "Nutrients - Hydroponics",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:hy-gen-ultimate-blend-coir-peat-coco-chips-50l-bag",
+      "name": "Hy-Gen Ultimate Blend Coir Peat + Coco Chips 50L Bag",
+      "brand": "Hy-Gen",
+      "category": "Grow Mediums",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:isn-nutrients-supreme-grow-a-b-1-litre-set",
+      "name": "ISN Nutrients Supreme Grow - A&B (2 x 1, 5 or 20L)",
+      "brand": "ISN",
+      "category": "Nutrients",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:jiffy-7-42-mm-pellet-1000-carton",
+      "name": "Jiffy-7 42 mm Pellet (1000) Carton",
+      "brand": "Jiffy",
+      "category": "Propagation",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:jiffy-7-propagation-pellets-42mm-30pk",
+      "name": "Jiffy-7 Propagation Pellets 42mm - 30pk",
+      "brand": "Jiffy",
+      "category": "propagation",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:liquid-biochar",
+      "name": "Liquid Biochar - 1L",
+      "brand": "SOS",
+      "category": "Additives",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:liquid-biochar-500ml",
+      "name": "Liquid Biochar - 500mL",
+      "brand": "SOS",
+      "category": "Additives",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:med-tek-synergy-coir-benificial-microbes-275-grams",
+      "name": "Med-Tek Synergy Coir beneficial Microbes - 275g",
+      "brand": "Med Tek",
+      "category": "Beneficial Microbes",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:medtek-coir-flores",
+      "name": "Medtek Coir Flores A & B (1, 5 or 20L)",
+      "brand": "Med Tek",
+      "category": "Nutrients",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:medtek-connoisseur-blooms",
+      "name": "Medtek Connoisseur Blooms (1, 5 or 20L)",
+      "brand": "Med Tek",
+      "category": "Nutrients",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:microgreen-coco-coir-grow-mats",
+      "name": "Microgreen Coco Coir Grow Mat",
+      "brand": "growy",
+      "category": "Grow Mediums",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:microgreen-mat-tray-od-602mm-x-300mm-x-30mm-each",
+      "name": "Microgreen Mat Tray",
+      "brand": "growy",
+      "category": "Substrates, Pots & Trays",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:microtek-organics-worm-nuggets-9kg-pelletised-worm-castings",
+      "name": "Microtek Organics Worm Nuggets - 9kg - (Pelletised Worm Castings)",
+      "brand": "Microtek Organics",
+      "category": "Nutrients - Soil",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:mykos-wettable-powder-mycorrhizal-inoculant",
+      "name": "Mykos WP Pure Mycorrhizal Wettable Powder - 340g",
+      "brand": "Xtreme Gardening",
+      "category": "Beneficial Microbes",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:natures-soil-premium-potting-mix-30-l",
+      "name": "Natures Soil Premium Potting Mix 30 L",
+      "brand": "Natures Soil",
+      "category": "Grow Mediums",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "tghydroponics:nutrifield-coco-ab",
+      "name": "Nutrifield Coco A&B",
+      "brand": "NUTRIFIELD NUTRIENTS",
+      "category": null,
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:nutrifield-coco-a-b-1l",
+      "name": "Nutrifield Coco A&B - 1L",
+      "brand": "Nutrifield",
+      "category": "Nutrients - Hydroponics",
+      "composition": null,
+      "source": "sqlite"
     },
     {
       "id": "tghydroponics:nutrifield-coco-brick-mega-5kg-makes-55l-rhp-certified",
@@ -2429,15 +1789,7 @@
       "brand": "Coco Coir",
       "category": null,
       "composition": null,
-      "source": "dsc_mediums_tghydroponics"
-    },
-    {
-      "id": "tghydroponics:nutrifield-coco-perlite-blend-70-30-50l-rhp-certified",
-      "name": "Nutrifield Coco Perlite Blend 70/30 50L RHP certified",
-      "brand": "Coco Coir",
-      "category": null,
-      "composition": null,
-      "source": "dsc_mediums_tghydroponics"
+      "source": "sqlite"
     },
     {
       "id": "tghydroponics:nutrifield-coco-chips-blend-50-50-50l-rhp-certified",
@@ -2445,7 +1797,15 @@
       "brand": "Coco Coir",
       "category": null,
       "composition": null,
-      "source": "dsc_mediums_tghydroponics"
+      "source": "sqlite"
+    },
+    {
+      "id": "tghydroponics:nutrifield-coco-perlite-blend-70-30-50l-rhp-certified",
+      "name": "Nutrifield Coco Perlite Blend 70/30 50L RHP certified",
+      "brand": "Coco Coir",
+      "category": null,
+      "composition": null,
+      "source": "sqlite"
     },
     {
       "id": "tghydroponics:nutrifield-coco-premium-50l-rhp-certified",
@@ -2453,7 +1813,767 @@
       "brand": "Coco Coir",
       "category": null,
       "composition": null,
-      "source": "dsc_mediums_tghydroponics"
+      "source": "sqlite"
+    },
+    {
+      "id": "tghydroponics:nutrifield-living-soil-pots-by-grassroots",
+      "name": "Nutrifield Living Soil Pots by Grassroots",
+      "brand": "Fabric Pots",
+      "category": "Pot System",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "tghydroponics:nutrifield-starter-kit",
+      "name": "Nutrifield Starter Kit",
+      "brand": "Nutrifield",
+      "category": null,
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:nutrifield-starter-kit-w-stonewool",
+      "name": "Nutrifield Starter Kit W/Stonewool",
+      "brand": "Nutrifield",
+      "category": "Nutrients",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "tghydroponics:nutrifield-substrate-booster-20l-bag",
+      "name": "Nutrifield Substrate Booster 20L Bag",
+      "brand": "Nutrifield",
+      "category": "Nutrifield",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:nutriponics-coco-2-part-1l",
+      "name": "Nutriponics Coco A&B - 1L",
+      "brand": "Growhard",
+      "category": "Nutrients",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:nutriponics-coco-a-b-20l",
+      "name": "Nutriponics Coco A&B - 20L",
+      "brand": "Growhard",
+      "category": "Nutrients",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:nutriponics-coco-a-b-5l",
+      "name": "Nutriponics Coco A&B - 5L",
+      "brand": "Growhard",
+      "category": "Nutrients",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "hydrowarehouse:pm-coco-ab-set",
+      "name": "PM coco+ A + B set",
+      "brand": "Plant Mechanics",
+      "category": "Base Nutrients",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "tghydroponics:professors-coco-chips-50-50-blend-50l-bag",
+      "name": "PROFESSORS COCO CHIPS 50/50 BLEND | 50L BAG",
+      "brand": "Coco Coir",
+      "category": null,
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "tghydroponics:professors-coco-premium-50l-bag",
+      "name": "PROFESSORS COCO PREMIUM 50L BAG",
+      "brand": "Coco Coir",
+      "category": null,
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "apexgrow:perlite-100l-hydroponic-growing-medium-australia",
+      "name": "Perlite 100L | Hydroponic Growing Medium for Drainage & Root Oxygenation Australia",
+      "brand": "Generic",
+      "category": "Hydroponic Growing Medium",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "tghydroponics:perlite-coarse-grade-100l-bag",
+      "name": "Perlite Coarse Grade",
+      "brand": "Perlite/Vermiculite",
+      "category": null,
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:perlite-twenty-litre-grow-bag",
+      "name": "Perlite Grow Bag - 20L",
+      "brand": "Exfoliators",
+      "category": "Grow Mediums",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:plant-mechanics-coco-a-b-1l",
+      "name": "Plant Mechanics Coco+ A&B - 1L",
+      "brand": "Plant Mechanics",
+      "category": "Nutrients",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:plant-mechanics-coco-a-b-20l",
+      "name": "Plant Mechanics Coco+ A&B - 20L",
+      "brand": "Plant Mechanics",
+      "category": "Nutrients",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:plant-mechanics-coco-a-b-5l",
+      "name": "Plant Mechanics Coco+ A&B - 5L",
+      "brand": "Plant Mechanics",
+      "category": "Nutrients",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:si-super-si-1l",
+      "name": "Plant Mechanics Super Si Silicic Acid - 1L",
+      "brand": "Plant Mechanics",
+      "category": "Additives",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:si-super-si-250ml",
+      "name": "Plant Mechanics Super Si Silicic Acid - 250mL",
+      "brand": "Plant Mechanics",
+      "category": "Additives",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:si-super-si-500ml",
+      "name": "Plant Mechanics Super Si Silicic Acid - 500mL",
+      "brand": "Plant Mechanics",
+      "category": "Additives",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:si-super-si-5l",
+      "name": "Plant Mechanics Super Si Silicic Acid - 5L",
+      "brand": "Plant Mechanics",
+      "category": "Additives",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "apexgrow:pot-330mm-18l-slimline-hole-hydroponic",
+      "name": "Pot 330mm | 18L Slimline Hydroponic Grow Pot with Drainage Hole",
+      "brand": "Apex Grow",
+      "category": "Hydroponic Systems & Pots",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "apexgrow:pot-sox-hydroponic-pot-liners-20l-30l-50l",
+      "name": "Pot Sox | Hydroponic Pot Liners with Drawstring (20L, 30L & 50L)",
+      "brand": "Pot Sox",
+      "category": "Hydroponic Systems & Pots",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:premium-coco-coir-and-coco-chips-washed-buffered-10l",
+      "name": "Premium Coco Coir & Coco Chips Blend - Washed & Buffered - 10L",
+      "brand": "Grow Kings",
+      "category": "Grow Mediums",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:coco-coir-chips-washed-buffered-10l",
+      "name": "Premium Coco Coir Chips - Washed & Buffered - 10L",
+      "brand": "Grow Kings",
+      "category": "Grow Mediums",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:coco-coir-perlite-70-30-blend-10l",
+      "name": "Premium Coco Coir Perlite 70 / 30 Blend - 10L",
+      "brand": "Grow Kings",
+      "category": "Grow Mediums",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:premium-coco-coir-washed-buffered-10l",
+      "name": "Premium Coco Coir Washed & Buffered - 10L",
+      "brand": "Grow Kings",
+      "category": "Grow Mediums",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:coco-coir-perlite-coco-chips-blend",
+      "name": "Premium Indoor Plant Blend - Coco Coir, Coco Chips & Perlite - 10L",
+      "brand": "Grow Kings",
+      "category": "Grow Mediums",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:premium-organic-living-soil-10l",
+      "name": "Premium Organic Living Soil - 10L",
+      "brand": "Grow Kings",
+      "category": "Grow Mediums",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:perlite-4mm-to-6mm-coarsec1pwhite-100-litre-bag",
+      "name": "Premium Perlite 100 Litre Bag - Course",
+      "brand": "Exfoliators",
+      "category": "Grow Mediums",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:premium-perlite-10litre-bag-course",
+      "name": "Premium Perlite 10L Bag - Course",
+      "brand": "growy",
+      "category": "Grow Mediums",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:perlite-8mm-to-12mm-coarse-yellow-bag-15p-100-litre",
+      "name": "Premium Perlite Extra Coarse 100 Litre Bag (8mm To 12mm Coarse)",
+      "brand": "Exfoliators",
+      "category": null,
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "tghydroponics:pro-mantis-2l-tub-organic-substrate-enhancer-insect-frass",
+      "name": "Pro Mantis 2L Tub Organic Substrate Enhancer Insect Frass",
+      "brand": "Other Additives",
+      "category": null,
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:professors-extreme-boost",
+      "name": "Professor's Extreme Boost (250, 500g, 1kg or 5kg)",
+      "brand": "Professor's Nutrients",
+      "category": "Additives",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:professors-go-roots",
+      "name": "Professor's Go Roots (100mL, 250mL, 500mL, 1L)",
+      "brand": "Professor's Nutrients",
+      "category": "Additives",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "apexgrow:hydro-clay-balls-50l-leca-hydroponic-growing-medium-australia",
+      "name": "Professor's Nutrients Hydro Clay 50L | LECA Clay Balls Hydroponic Growing Medium Australia",
+      "brand": "Professor's Nutrients",
+      "category": "Hydroponic Growing Medium",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:professors-organic-flower-boost",
+      "name": "Professor's Organic Flower Boost (1, 5 or 10L)",
+      "brand": "Professor's Nutrients",
+      "category": "Nutrients - Hydroponics",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:professors-organic-grow",
+      "name": "Professor's Organic Grow (1 or 5L)",
+      "brand": "Professor's Nutrients",
+      "category": "Nutrients - Hydroponics",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:professors-organic-grow-fast",
+      "name": "Professor's Organic Grow Fast (1, 5 or 10L)",
+      "brand": "Professor's Nutrients",
+      "category": "Nutrients - Hydroponics",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:professors-organic-growers-kit",
+      "name": "Professor's Organic Growers Kit",
+      "brand": "Professor's Nutrients",
+      "category": "Nutrients - Hydroponics",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "tghydroponics:professors-coco-perlite-50l-bag",
+      "name": "Professors Coco Perlite 50L Bag",
+      "brand": "Coco Coir",
+      "category": null,
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:professors-nutrients-coco-brick-5kg",
+      "name": "Professors Nutrients Coco Brick - 5kg",
+      "brand": "Professor's Nutrients",
+      "category": "Grow Mediums",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:professors-coco-chips-50l",
+      "name": "Professors Nutrients Coco Chips - 50L",
+      "brand": "Professor's Nutrients",
+      "category": "Grow Mediums",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:professors-nutrients-hydro-clay-balls-10l",
+      "name": "Professors Nutrients Hydro Clay Balls - 10L",
+      "brand": "Professor's Nutrients",
+      "category": "Grow Mediums",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:root-t-coco-coir-dry-propagation-plugs-tray-24-cell",
+      "name": "ROOT!T Coco Coir Dry Propagation Plugs - 24 Cell Tray",
+      "brand": "ROOT!T",
+      "category": "Propagation",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:root-t-dry-propagation-plugs-for-tray-refill-60-plugs",
+      "name": "ROOT!T Dry Propagation Plugs For Tray Refill - 60 Plugs",
+      "brand": "ROOT!T",
+      "category": "Propagation",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:rootit-medium-insulated-mat-600mm-x-400mm",
+      "name": "ROOTIT Medium Insulated Mat For Propagation Heat Mats - 600 x 400mm",
+      "brand": "ROOT!T",
+      "category": "Propagation",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "tghydroponics:reiziger-coco-food-a-b-1l",
+      "name": "Reiziger Coco Food A+B 1L",
+      "brand": "Reiziger",
+      "category": "Reiziger",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:rootit-natural-rooting-sponges-50-refill-bag",
+      "name": "Rootit - Natural Rooting Sponges (50 Refill Bag)",
+      "brand": "ROOT!T",
+      "category": "propagation",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:rootit-rooting-sponge-24-cell-tray",
+      "name": "Rootit - Rooting Sponge 24 Cell Tray",
+      "brand": "ROOT!T",
+      "category": "propagation",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:rootit-rooting-sponge-propagation-kit",
+      "name": "Rootit - Rooting Sponge Propagation Kit (24 Cells)",
+      "brand": "ROOT!T",
+      "category": "propagation",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:rootz-distribution-coco-perlite-70-30-blend-50l",
+      "name": "Rootz Distribution Coco Perlite 70/30 Blend - 50L",
+      "brand": "Rootz Distribution",
+      "category": "Grow Mediums",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:rootz-distribution-coco-m",
+      "name": "Rootz Distribution Coco-M",
+      "brand": "Rootz Distribution",
+      "category": "Grow Mediums",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:run-off-trays-pvc-pipe-t-piece",
+      "name": "Run Off Trays PVC Pipe T piece",
+      "brand": "Grow Kings",
+      "category": "Substrates, Pots & Trays",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:run-off-tray-15",
+      "name": "Run off Drain tray 15\" (38cm)",
+      "brand": "Grow Kings",
+      "category": "Substrates, Pots & Trays",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:run-off-drain-tray-22-56cm",
+      "name": "Run off Drain tray 22\" (56cm)",
+      "brand": "Grow Kings",
+      "category": "Substrates, Pots & Trays",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "tghydroponics:seahawk-ultra-lite-silver-reflector-medium",
+      "name": "SEAHAWK ULTRA LITE SILVER REFLECTOR - MEDIUM",
+      "brand": "Reflectors",
+      "category": null,
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:kelp-meal-100-tasmanian-snt-1kg",
+      "name": "SNT Kelp Meal 100% Tasmanian - 1Kg",
+      "brand": "SNT",
+      "category": "Additives",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:kelp-meal-100-tasmanian-snt-5kg",
+      "name": "SNT Kelp Meal 100% Tasmanian - 5Kg",
+      "brand": "SNT",
+      "category": "Additives",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:regenerate-soil-top-dressing-snt-2kg",
+      "name": "SNT Regenerate Soil Top Dressing - 2Kg",
+      "brand": "SNT",
+      "category": "Grow Mediums",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:regenerate-soil-top-dressing-snt-5kg",
+      "name": "SNT Regenerate Soil Top Dressing - 5Kg",
+      "brand": "SNT",
+      "category": "Grow Mediums",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:worm-castings-snt-10-litre",
+      "name": "SNT Worm Castings - 10L",
+      "brand": "SNT",
+      "category": "Additives",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:speedgrow-40-x-40-x-40mm-propagation-cubes-8-pack",
+      "name": "SPEEDGROW 40 x 40 x 40mm Propagation Cubes - 8 Pack",
+      "brand": "Speed Grow",
+      "category": "Grow Mediums",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:acoustic-ducting-125mm-dbl-thick-rockwool-x-five-metre-boxed",
+      "name": "Sea-Hawk Acoustic Rockwool Noise Reducing Ducting - 125mm x 5m",
+      "brand": "Sea-Hawk",
+      "category": "Air Conditioning, Filtration & CO2",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:acoustic-ducting-150mm-dbl-thick-rockwool-x-five-metre-boxed",
+      "name": "Sea-Hawk Acoustic Rockwool Noise Reducing Ducting - 150mm x 5m",
+      "brand": "Sea-Hawk",
+      "category": "Air Conditioning, Filtration & CO2",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:acoustic-ducting-200mm-dbl-thick-rockwool-x-five-metre-boxed",
+      "name": "Sea-Hawk Acoustic Rockwool Noise Reducing Ducting - 200mm x 5m",
+      "brand": "Sea-Hawk",
+      "category": "Air Conditioning, Filtration & CO2",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:acoustic-ducting-250mm-dbl-thick-rockwool-x-five-metre-boxed",
+      "name": "Sea-Hawk Acoustic Rockwool Noise Reducing Ducting - 250mm x 5m",
+      "brand": "Sea-Hawk",
+      "category": "Air Conditioning, Filtration & CO2",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:acoustic-ducting-300mm-dbl-thick-rockwool-x-five-metre-boxed",
+      "name": "Sea-Hawk Acoustic Rockwool Noise Reducing Ducting - 300mm x 5m",
+      "brand": "Sea-Hawk",
+      "category": "Air Conditioning, Filtration & CO2",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:acoustic-ducting-315mm-dbl-thick-rockwool-x-five-metre-boxed",
+      "name": "Sea-Hawk Acoustic Rockwool Noise Reducing Ducting - 315mm x 5m",
+      "brand": "Sea-Hawk",
+      "category": "Air Conditioning, Filtration & CO2",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:speedgrow-prop-84-plug-tray-38-x-40mm-with-hole",
+      "name": "Speedgrow Prop Plug 84pc Tray - 38 x 40mm With Hole",
+      "brand": "Speed Grow",
+      "category": "Propagation",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:spider-farmer-ggs-3-in-1-soil-sensor-pro-3-pack",
+      "name": "Spider Farmer GGS 3-in-1 Soil Sensor Pro - 3 Pack",
+      "brand": "Spider Farmer",
+      "category": "Ballasts, Light Kits & Controllers",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:spoton-pocket-soil-moisture-meter",
+      "name": "Spoton Pocket Soil Moisture Meter",
+      "brand": "Innoquest",
+      "category": "Moisture Meters",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:squid-power-1-l",
+      "name": "Squid Power 1, 5 or 25L",
+      "brand": "Squid Power",
+      "category": "Additives",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "apexgrow:standard-pot-250mm-8l-hydroponic",
+      "name": "Standard Pot 250mm | 8L Hydroponic & Soil Grow Container",
+      "brand": "Apex Grow",
+      "category": "Hydroponic Systems & Pots",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:cyco-suga-rush",
+      "name": "Suga Rush Cyco Platinum Series (250ml, 1, 5 or 20L)",
+      "brand": "CYCO",
+      "category": "Additives",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:superthrive",
+      "name": "Superthrive (120, 480, 960mL or 3.7L)",
+      "brand": "Superthrive",
+      "category": "Additives",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "tghydroponics:thc-coco-ab-pair",
+      "name": "THC Coco A&B Pair | Full size",
+      "brand": "THC NUTRIENTS",
+      "category": null,
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:terra-aquatica-dualpart-coco-grow-1l",
+      "name": "Terra Aquatica DualPart Coco Grow - 1L",
+      "brand": "Terra Aquatica",
+      "category": "Nutrients - Hydroponics",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "apexgrow:tetrabase-reusable-dwc-hydroponic-grow-media-australia",
+      "name": "TetraBase Reusable DWC Grow Media | Inert Hydroponic Substrate Australia",
+      "brand": "TetraBase",
+      "category": "Hydroponic Growing Medium",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "apexgrow:uber-coco-perlite-clay-50l-hydroponic-growing-medium-australia",
+      "name": "UBER Coco / Perlite / Clay 50L | High-Performance Triple Blend Hydroponic Growing Medium Australia",
+      "brand": "UBER",
+      "category": "Hydroponic Growing Medium",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "apexgrow:ugro-pure-air-coco-50l-loose-buffered-coco-coir-australia",
+      "name": "UGRO Pure Air Coco 50L | Loose Buffered Coco Coir Hydroponic Medium Australia",
+      "brand": "UGRO",
+      "category": "Hydroponic Growing Medium",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "apexgrow:ugro-pure-max-air-50l-coco-perlite-hydroponic-medium-australia",
+      "name": "UGRO Pure Max Air 50L + Perlite | Coco Coir Hydroponic Growing Medium Australia",
+      "brand": "UGRO",
+      "category": "Coco Coir Growing Medium",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "tghydroponics:urban-jardin-coco-premium-grow-media-50ltr",
+      "name": "URBAN JARDIN COCO PREMIUM Grow Media 50LTR",
+      "brand": "Coco Coir",
+      "category": null,
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "tghydroponics:urban-jardin-premium-coco-perlite-media-50ltr",
+      "name": "URBAN JARDIN PREMIUM COCO PERLITE MEDIA 50LTR",
+      "brand": "Perlite/Vermiculite",
+      "category": null,
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:usa-style-3-ft-x-3-f-d-tray-900-x-900-x-110mm4mm-wall",
+      "name": "USA Style 3ft x 3ft Flood &amp; Drain Tray – 900 x 900 x 110mm, 4mm Wall",
+      "brand": "Grow Kings",
+      "category": "Substrates, Pots & Trays",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "tghydroponics:vermiculite-100l",
+      "name": "Vermiculite",
+      "brand": "Perlite/Vermiculite",
+      "category": null,
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:vermiculite-10l",
+      "name": "Vermiculite - 10L",
+      "brand": "Grow Kings",
+      "category": "Grow Mediums",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "apexgrow:vermiculite-100l-grade-3-hydroponic-growing-medium-australia",
+      "name": "Vermiculite 100L Grade 3 | Hydroponic & Seed Raising Medium Australia",
+      "brand": "Generic",
+      "category": "Hydroponic Growing Medium",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:w2g-pro-coco-5-kg-block",
+      "name": "W2G Professional Coco 5 kg Block (Makes 60L)",
+      "brand": "Way to Grow",
+      "category": "Grow Mediums",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:w2g-green-pro-coco-50-l-bag",
+      "name": "W2G Professional Coco 50L bag",
+      "brand": "Way to Grow",
+      "category": "Grow Mediums",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:wall-fabric-plant-bag-60cm-x-30cm-4-plants",
+      "name": "Wall Fabric Plant Bag - 60cm x 30cm - 4 Plants",
+      "brand": "Grow Kings",
+      "category": "Substrates, Pots & Trays",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:wall-fabric-plant-bag-82cm-x-132cm-25-plants",
+      "name": "Wall Fabric Plant Bag - 82cm x 132cm - 25 Plants",
+      "brand": "Grow Kings",
+      "category": "Substrates, Pots & Trays",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:mykos-granular-mycorrhizal-inoculant-100g",
+      "name": "Xtreme Gardening Mykos Granular Mycorrhizal Inoculant - 100g",
+      "brand": "Xtreme Gardening",
+      "category": "Additives",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:mykos-granular-mycorrhizal-inoculant-1kg",
+      "name": "Xtreme Gardening Mykos Granular Mycorrhizal Inoculant - 1kg",
+      "brand": "Xtreme Gardening",
+      "category": "Additives",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:mykos-granular-mycorrhizal-inoculant",
+      "name": "Xtreme Gardening Mykos Granular Mycorrhizal Inoculant - 454g",
+      "brand": "Xtreme Gardening",
+      "category": "Additives",
+      "composition": null,
+      "source": "sqlite"
+    },
+    {
+      "id": "growkings:xtreme-gardening-mykos-granular-mycorrhizal-inoculant-9-1kg",
+      "name": "Xtreme Gardening Mykos Granular Mycorrhizal Inoculant - 9.1kg",
+      "brand": "Xtreme Gardening",
+      "category": "Additives",
+      "composition": null,
+      "source": "sqlite"
     }
   ]
 }

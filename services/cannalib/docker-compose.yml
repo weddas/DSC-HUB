@@ -1,3 +1,9 @@
+# STALE — do not Recreate from this file.
+# Unraid Compose Manager must use:
+#   /mnt/user/Digital-Documents/Digital Stealth Care/Projects/CannaLib/services/cannalib
+#   (docker-compose.yml + .env in that directory)
+# This Hub copy still bind-mounts DSC-HUB code/sqlite and has no /data/media.
+# Live media cutover is CannaLib GET /media, not Hub /local/.
 # Cannalib stdlib API on Digital-Gateway
 services:
   cannalib:

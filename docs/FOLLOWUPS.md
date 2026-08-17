@@ -2001,12 +2001,12 @@ esult[entityId]; HA often returns [[states]] → empty series. Empty hist locked
 - Ops runbook written (`docs/ops/CANNALIB-API.md`).
 - **N-087-CANNALIB-HA-KEY**: Deployed `dsc_v4_cannalib_api.yaml` to HA `/config/packages/` (fixed `max: 255`); set `input_text.dsc_cannalib_api_key`; sensors online (`corpus` 195266, `api_online` on).
 - **2026-08-15 Research card**: `ensureLocalCards` now loads dedicated `/local/dsc-*-card.js` (was only trying stale `DSC-HUB.js` / wrong `dsc-system-map-card.js`). Deployed cards + rebuilt panel; Research hosts `dsc-catalog-browse-card` again.
-- **2026-08-15 Compose chip honesty**: Catalog pill no longer sums capped local JSON (~11.6k). Shows cannalib `/v1/corpus` (e.g. **195,266 strains (full corpus)**); dedicated card upgrades stale `DSC-HUB.js` CE prototype.
+- **2026-08-17 cutover:** remade corpus **175,778** strains. Cards typeahead all four domains via API. `/local/dsc-catalog` sqlite export (867/321/696 products). Strain `{id}` hydrate + reference-images tab. Recreate `cannalib` from **CannaLib** compose, not Hub.
 
 ### next-plan
 | ID | Item | Notes |
 |---|---|---|
-| N-087-CANNALIB-FTS | Optional FTS5 / name index for sub-100ms typeahead | **Moved to CannaLib** `FOLLOWUPS.md` |
+| N-087-CANNALIB-FTS | FTS5 + hybrid alias search on CannaLib 0.3.4 | Built on remade master; Recreate CannaLib compose (not Hub). |
 | CL-DEPLOY-RECREATE | Unraid Recreate onto CannaLib mounts | Trampoline compose in `services/cannalib/`; then delete Hub `brain/data/dsc_brain.sqlite3*` |
 
 ### deferred
@@ -2150,7 +2150,7 @@ A prior note marked waves 1–8 done. That was files/sketches. **Only Wave 0 had
 | GPIO5 4×8 lamp | Wire `entities.main_light` when instrumented | Twin shafts stay dashed Window proxy until then. |
 | DSC-Tank firmware | Map dummy ids 1:1 | See comments in `homeassistant/packages/dsc_v4_tank_dummies.yaml`. Tester EC/pH already in `dsc_v4_tank.yaml`. |
 | R3F extract | After neon APIs | Soft APIs live on IIFE + [`dsc-twin-api.ts`](../homeassistant/custom_components/dsc_hub/frontend/src/lib/dsc-twin-api.ts). Do not rewrite a lying scene. |
-| N-087-CANNALIB-FTS | Catalog typeahead FTS5 | Still LIKE/prefix in `services/cannalib/app/db.py`. Not a Dash bar blocker. |
+| N-087-CANNALIB-FTS | Catalog typeahead FTS5 | Landed on CannaLib remade master (`search_docs_fts` + `science_alias`). Hub cards 7.1.8-cutover. |
 | POT3/4 Modbus | Hardware isolate | Already in this file — not a panel task. |
 
 ### soak

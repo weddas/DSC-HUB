@@ -14,7 +14,7 @@ Hub still owns the **client**:
 - `homeassistant/packages/dsc_v4_cannalib_api.yaml`
 - `dsc-build-plant-card.js` / `dsc-catalog-browse-card.js`
 - curated Want YAML
-- capped `www/dsc-catalog/` indexes (built by CannaLib, synced here)
+- capped `www/dsc-catalog/` indexes (built by CannaLib from sqlite, synced here)
 
 Live catalog is the CannaLib API (`input_text.dsc_cannalib_base_url`). Hub does not own the corpus.
 

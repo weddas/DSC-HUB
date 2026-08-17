@@ -1,8 +1,8 @@
 /**
  * DSC-HUB — Catalog Explorer (browse / filter / compare / Use in Build).
  * type: custom:dsc-catalog-browse-card
- * Strains: full corpus via cannalib API. Other domains: /local/dsc-catalog JSON.
- * Missing fields = "not in catalog".
+ * Strains + products: cannalib API when online. Local JSON is offline fallback.
+ * Missing fields = "not in catalog". Do not invent chem or attach comparative photos to cultivars.
  */
 (() => {
   const CARD_TYPE = "dsc-catalog-browse-card";
@@ -10,9 +10,10 @@
   const CANNALIB_DEFAULT = "https://cannalib.plausible-deniability.net";
   const DOMAINS = [
     { id: "strains", label: "Strains", file: "dsc_strains_search_index.json", api: true },
-    { id: "nutrients", label: "Nutrients", file: "dsc_nutrients_search_index.json" },
-    { id: "mediums", label: "Mediums", file: "dsc_mediums_search_index.json" },
-    { id: "lights", label: "Lights", file: "dsc_lights_search_index.json" },
+    { id: "nutrients", label: "Nutrients", file: "dsc_nutrients_search_index.json", api: true },
+    { id: "mediums", label: "Mediums", file: "dsc_mediums_search_index.json", api: true },
+    { id: "lights", label: "Lights", file: "dsc_lights_search_index.json", api: true },
+    { id: "media", label: "Reference images", file: null, api: true, media: true },
   ];
 
   const css = `
@@ -86,6 +87,8 @@
       this._heightMax = "";
       this._category = "";
       this._selected = null;
+      this._tree = null;
+      this._mediaKind = "pathology_photo";
       this._compare = [];
       this._meta = {};
     }
@@ -140,8 +143,15 @@
     }
     async _apiSearchDomain(id, q) {
       const seq = (this._apiSeq = (this._apiSeq || 0) + 1);
+      const def = DOMAINS.find((d) => d.id === id);
       try {
-        const url = `${this._cannalibBase()}/v1/catalogs/${id}?q=${encodeURIComponent(q || "")}&limit=80`;
+        let url;
+        if (def?.media) {
+          const kind = this._mediaKind || "pathology_photo";
+          url = `${this._cannalibBase()}/v1/catalogs/media?kind=${encodeURIComponent(kind)}&limit=80`;
+        } else {
+          url = `${this._cannalibBase()}/v1/catalogs/${id}?q=${encodeURIComponent(q || "")}&limit=80`;
+        }
         const res = await fetch(url, { headers: this._cannalibHeaders(), cache: "no-store" });
         if (!res.ok) throw new Error(`cannalib ${res.status}`);
         const doc = await res.json();
@@ -149,16 +159,20 @@
         this._meta = {
           items: Array.isArray(doc.items) ? doc.items : [],
           count: doc.count,
-          capped: false,
-          note: "Full corpus via cannalib (all records; typeahead).",
+          capped: Boolean(doc.capped),
+          note: def?.media
+            ? "Reference images by kind. Comparative/pathology are not cultivar portraits."
+            : "Full corpus via cannalib (typeahead). Local JSON is offline fallback only.",
           source: "cannalib",
         };
         this._apiLive = true;
       } catch (e) {
-        // Fallback to capped local index so Research still works offline.
         if (seq !== this._apiSeq) return;
         this._apiLive = false;
-        const def = DOMAINS.find((d) => d.id === id);
+        if (def?.media || !def?.file) {
+          this._meta = { items: [], note: `API offline — no local media index. ${e}`, count: 0 };
+          return;
+        }
         try {
           const res = await fetch(`${CATALOG_BASE}/${def.file}?v=${Date.now()}`, { cache: "no-store" });
           const doc = await res.json();
@@ -193,6 +207,14 @@
       return lo <= max && hi >= min;
     }
     _filtered() {
+      if (this._domain === "media") {
+        const q = this._q.trim().toLowerCase();
+        return this._items().filter((it) => {
+          if (!q) return true;
+          const hay = `${it.entity_id || ""} ${it.kind || ""} ${it.author_credit || ""}`.toLowerCase();
+          return hay.includes(q);
+        });
+      }
       const q = this._q.trim().toLowerCase();
       return this._items().filter((it) => {
         if (q && !(it.name || "").toLowerCase().includes(q) && !(it.brand || "").toLowerCase().includes(q))
@@ -246,6 +268,11 @@
         if (it.brand) chips.push(it.brand);
         if (it.category) chips.push(it.category);
         if (it.composition) chips.push(typeof it.composition === "string" ? it.composition : JSON.stringify(it.composition));
+      } else if (this._domain === "media") {
+        if (it.kind) chips.push(it.kind);
+        if (it.license_type) chips.push(it.license_type);
+        if (it.entity_id === "comparative") chips.push({ miss: true, t: "comparative" });
+        else if (it.entity_id) chips.push(it.entity_id);
       } else if (this._domain === "lights") {
         if (it.wattage_w != null) chips.push(`${it.wattage_w} W`);
         if (it.efficacy_umol_j != null) chips.push(`${it.efficacy_umol_j} umol/J`);
@@ -335,6 +362,27 @@
     }
     _detailHtml(it) {
       if (!it) return `<p class="muted">Select a row for detail.</p>`;
+      if (this._domain === "media") {
+        const label =
+          it.entity_id === "comparative"
+            ? "comparative / pathology reference — not a named cultivar"
+            : this._esc(it.entity_id);
+        const src = it.source_url || "";
+        return `
+          <h2>Reference image</h2>
+          <div class="name" style="font-size:18px;font-weight:650">${this._esc(it.kind)}</div>
+          <dl class="detail">
+            <dt>entity</dt><dd>${label}</dd>
+            <dt>license</dt><dd>${this._esc(it.license_type || "unknown")}</dd>
+            <dt>credit</dt><dd>${this._esc(it.author_credit || "—")}</dd>
+          </dl>
+          ${
+            src
+              ? `<p><img src="${this._esc(src)}" alt="" style="max-width:100%;height:auto;border-radius:4px" /></p>`
+              : `<p class="muted">No source_url</p>`
+          }
+        `;
+      }
       const missing = [];
       if (this._domain === "strains") {
         if (!it.want) missing.push("climate Want bands");
@@ -376,12 +424,52 @@
               : ""
           }
         </dl>
+        ${this._domain === "strains" ? this._treeHtml() : ""}
         ${missing.length ? `<p class="muted">Missing (honest): ${this._esc(missing.join(", "))}</p>` : ""}
         <div class="actions">
           <button class="act primary" data-act="use">Use in Build</button>
           ${this._domain === "strains" ? `<button class="act" data-act="custom">Fill Custom slot</button>` : ""}
           <button class="act" data-act="cmp">${this._compare.some((x) => (x.id || x.name) === (it.id || it.name)) ? "Remove compare" : "Add to compare"}</button>
         </div>
+      `;
+    }
+    _treeHtml() {
+      const tree = this._tree;
+      if (!tree || !tree.evidence) {
+        return `<p class="muted">Hydrating strain tree… empty media stays empty; no comparative pile on this name.</p>`;
+      }
+      const ev = tree.evidence;
+      const lin = ev.lineage || {};
+      const media = ev.media || {};
+      const chem = ev.chemistry || {};
+      const n = Number(media.n || 0);
+      const samples = Array.isArray(media.sample) ? media.sample : [];
+      const mediaBits = n
+        ? samples
+            .map((m) => {
+              const label =
+                m.entity_id === "comparative"
+                  ? "comparative (not this cultivar)"
+                  : `${m.kind || "photo"}`;
+              const src = m.source_url || "";
+              return `<div class="muted">${this._esc(label)}${
+                src
+                  ? ` · <a href="${this._esc(src)}" target="_blank" rel="noopener" style="color:#9fd0ad">open</a>`
+                  : ""
+              }</div>`;
+            })
+            .join("")
+        : `<p class="muted">media.n=0 — no cultivar photo on this id. Do not use the comparative dump here.</p>`;
+      const mermaid = lin.mermaid
+        ? `<pre class="muted" style="white-space:pre-wrap;font-size:11px">${this._esc(lin.mermaid)}</pre>`
+        : `<p class="muted">${this._esc(lin.parse_note || "no pedigree")}</p>`;
+      const span = (v) =>
+        Array.isArray(v) && v.length >= 2 ? `${v[0]}–${v[1]}` : v != null ? String(v) : "not in catalog";
+      return `
+        <p class="muted">THC span ${this._esc(span(chem.thc_span))} · CBD ${this._esc(span(chem.cbd_span))} (rows not blended)</p>
+        <p class="muted">Parents ${Array.isArray(lin.parents) ? lin.parents.length : 0} · children ${lin.children_n || 0}</p>
+        ${mermaid}
+        ${mediaBits}
       `;
     }
     _compareHtml() {
@@ -432,6 +520,31 @@
       `;
     }
     _filterBar() {
+      if (this._domain === "media") {
+        const kinds = [
+          "pathology_photo",
+          "seedling_photo",
+          "plant_photo",
+          "flower_photo",
+          "seed_photo",
+          "phenotype_photo",
+          "comparative_crop",
+        ];
+        return `
+          <div class="filters">
+            <div><label>Kind</label>
+              <select id="mkind">
+                ${kinds
+                  .map(
+                    (k) =>
+                      `<option value="${k}" ${this._mediaKind === k ? "selected" : ""}>${k}</option>`
+                  )
+                  .join("")}
+              </select>
+            </div>
+            <div><label>Filter</label><input type="text" id="q" value="${this._esc(this._q)}" placeholder="entity_id / credit" /></div>
+          </div>`;
+      }
       if (this._domain === "strains") {
         return `
           <div class="filters">
@@ -456,12 +569,35 @@
           <div><label>Category</label><input type="text" id="cat" value="${this._esc(this._category)}" placeholder="base / bloom / substrate" /></div>
         </div>`;
     }
+    async _hydrateSelected() {
+      const it = this._selected;
+      if (!it || this._domain !== "strains") return;
+      const sid = it.name_norm || it.id;
+      if (!sid) return;
+      const seq = (this._hydSeq = (this._hydSeq || 0) + 1);
+      try {
+        const res = await fetch(
+          `${this._cannalibBase()}/v1/catalogs/strains/${encodeURIComponent(sid)}`,
+          { headers: this._cannalibHeaders(), cache: "no-store" }
+        );
+        if (!res.ok) throw new Error(String(res.status));
+        const tree = await res.json();
+        if (seq !== this._hydSeq) return;
+        this._tree = tree;
+        this._render();
+      } catch (_e) {
+        if (seq !== this._hydSeq) return;
+        this._tree = { evidence: { lineage: { parse_note: "hydrate failed" }, media: { n: 0, sample: [] }, chemistry: {} } };
+        this._render();
+      }
+    }
     _bind() {
       const root = this.shadowRoot;
       root.querySelectorAll(".tabs button").forEach((btn) => {
         btn.addEventListener("click", async () => {
           this._domain = btn.dataset.domain;
           this._selected = null;
+          this._tree = null;
           this._compare = [];
           await this._loadDomain(this._domain);
           this._render();
@@ -476,6 +612,12 @@
         this._heightMin = root.querySelector("#hmin")?.value || "";
         this._heightMax = root.querySelector("#hmax")?.value || "";
         this._category = root.querySelector("#cat")?.value || "";
+        const mkind = root.querySelector("#mkind")?.value;
+        if (mkind && mkind !== this._mediaKind) {
+          this._mediaKind = mkind;
+          this._apiSearchDomain(this._domain, this._q).then(() => this._render());
+          return;
+        }
         const flags = root.querySelector("#flags")?.value || "";
         this._chemOnly = flags === "chem";
         this._hasWant = flags === "want";
@@ -490,7 +632,7 @@
         }
         this._render();
       };
-      ["q", "type", "tmin", "tmax", "hmin", "hmax", "cat", "flags"].forEach((id) => {
+      ["q", "type", "tmin", "tmax", "hmin", "hmax", "cat", "flags", "mkind"].forEach((id) => {
         const el = root.querySelector("#" + id);
         if (!el) return;
         el.addEventListener(el.tagName === "SELECT" ? "change" : "input", syncFilters);
@@ -499,7 +641,9 @@
         row.addEventListener("click", () => {
           const idx = Number(row.dataset.idx);
           this._selected = this._filtered()[idx];
+          this._tree = null;
           this._render();
+          this._hydrateSelected();
         });
       });
       root.querySelector("[data-act=use]")?.addEventListener("click", () => this._useInBuild(this._selected));
@@ -520,7 +664,7 @@
         <div class="wrap">
           <div class="brand">DSC-HUB / Plant</div>
           <h1>${this._esc(this._config.title || "Catalog")}</h1>
-          <p class="sub">Browse and compare catalog entries. Missing height/climate fields stay blank — never invented. ${this._esc(note)}</p>
+          <p class="sub">Live sqlite via cannalib; /local/dsc-catalog is offline fallback only. Missing height/climate stay blank. ${this._esc(note)}</p>
           <div class="tabs">
             ${DOMAINS.map(
               (d) =>
@@ -539,7 +683,7 @@
                       .map((it, idx) => {
                         const sel = this._selected && (this._selected.id || this._selected.name) === (it.id || it.name);
                         return `<div class="row ${sel ? "sel" : ""}" data-idx="${idx}">
-                          <div class="name">${this._esc(it.name)}</div>
+                          <div class="name">${this._esc(it.name || it.entity_id || it.kind || it.id)}</div>
                           <div class="chips">${this._chips(it)}</div>
                         </div>`;
                       })
