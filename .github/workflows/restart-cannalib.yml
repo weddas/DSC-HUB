@@ -17,15 +17,14 @@ jobs:
       - name: Restart cannalib
         run: |
           set -euo pipefail
-          id
-          ls -l /var/run/docker.sock /run/docker.sock 2>/dev/null || true
-          restart_cmd=""
           if sudo -n docker info >/dev/null 2>&1; then
             restart_cmd="sudo -n docker"
           elif docker info >/dev/null 2>&1; then
             restart_cmd="docker"
+          elif command -v nsenter >/dev/null 2>&1 && nsenter -t 1 -m docker info >/dev/null 2>&1; then
+            restart_cmd="nsenter -t 1 -m docker"
           else
-            echo "No docker access from this runner (need sock mount or sudo)." >&2
+            echo "No docker access from this runner (need sock mount, sudo, or host nsenter)." >&2
             exit 1
           fi
           $restart_cmd restart cannalib
