@@ -1,0 +1,38 @@
+# Bounce the bind-mounted CannaLib stdlib API so it picks up
+# CannaLib/services/cannalib/standalone_server.py. Restart only, not Recreate.
+name: Restart cannalib
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: restart-cannalib
+  cancel-in-progress: false
+
+jobs:
+  restart:
+    name: Restart cannalib container
+    runs-on: [self-hosted, unraid-ha-deploy]
+    steps:
+      - name: Restart cannalib
+        run: |
+          set -euo pipefail
+          if ! command -v docker >/dev/null 2>&1; then
+            echo "docker CLI missing on runner" >&2
+            ls -l /var/run/docker.sock || true
+            exit 1
+          fi
+          docker restart cannalib
+          # Bind-mounted Python: health should come back fast; search is the reason we bounced.
+          i=0
+          while [ "$i" -lt 20 ]; do
+            if curl -fsS --max-time 3 http://192.168.86.2:8790/health >/tmp/cl-health.json; then
+              cat /tmp/cl-health.json
+              echo
+              exit 0
+            fi
+            i=$((i + 1))
+            sleep 1
+          done
+          echo "cannalib health did not return" >&2
+          exit 1
