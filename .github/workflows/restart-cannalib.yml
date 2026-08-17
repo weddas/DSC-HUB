@@ -17,16 +17,22 @@ jobs:
       - name: Restart cannalib
         run: |
           set -euo pipefail
-          if ! command -v docker >/dev/null 2>&1; then
-            echo "docker CLI missing on runner" >&2
-            ls -l /var/run/docker.sock || true
+          id
+          ls -l /var/run/docker.sock /run/docker.sock 2>/dev/null || true
+          restart_cmd=""
+          if sudo -n docker info >/dev/null 2>&1; then
+            restart_cmd="sudo -n docker"
+          elif docker info >/dev/null 2>&1; then
+            restart_cmd="docker"
+          else
+            echo "No docker access from this runner (need sock mount or sudo)." >&2
             exit 1
           fi
-          docker restart cannalib
-          # Bind-mounted Python: health should come back fast; search is the reason we bounced.
+          $restart_cmd restart cannalib
           i=0
           while [ "$i" -lt 20 ]; do
-            if curl -fsS --max-time 3 http://192.168.86.2:8790/health >/tmp/cl-health.json; then
+            if curl -fsS --max-time 3 http://127.0.0.1:8790/health >/tmp/cl-health.json \
+              || curl -fsS --max-time 3 http://192.168.86.2:8790/health >/tmp/cl-health.json; then
               cat /tmp/cl-health.json
               echo
               exit 0
