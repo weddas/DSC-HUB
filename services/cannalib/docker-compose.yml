@@ -18,7 +18,7 @@ services:
       CANNALIB_DB_PATH: /data/dsc_brain.sqlite3
       CANNALIB_REQUIRE_API_KEY: "false"
       CANNALIB_METRICS_REQUIRE_KEY: "true"
-      CANNALIB_API_KEY: "MDFSLeCDOKhu1hJzTsjV3HmOkDSXoJUbehSeMGslS8U"
+      # Key lives in CannaLib .env — never commit it here.
       CANNALIB_TRUST_PROXY: "true"
       CANNALIB_RATE_LIMIT_ENABLED: "true"
       CANNALIB_RATE_LIMIT_RPM: "120"

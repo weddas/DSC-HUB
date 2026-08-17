@@ -656,6 +656,15 @@ sections:
             alignment: justify
             chips:
               - type: template
+                entity: sensor.dsc_coldest_root_zone_temp
+                icon: mdi:thermometer-chevron-down
+                icon_color: lime
+                content: >-
+                  {% set p = state_attr(entity,'pot') %}
+                  {% if not has_value(entity) %}Root —
+                  {%- else %}{{ states(entity)|float(0)|round(1) }}C{% if p and p != 'none' %} · POT{{ p }}{% endif %}
+                  {%- endif %}
+              - type: template
                 entity: sensor.dsc_grow_mat_runtime_today
                 icon: mdi:clock-outline
                 icon_color: amber

@@ -387,7 +387,12 @@ sections:
               {% if is_state('binary_sensor.dsc_hub_root_zone_sensor_fault','on') %}red
               {% elif is_state(entity,'on') %}orange
               {% else %}disabled{% endif %}
-            content: Mat
+            content: >-
+              {% set t = states('sensor.dsc_coldest_root_zone_temp') %}
+              {% set p = state_attr('sensor.dsc_coldest_root_zone_temp','pot') %}
+              {% if t in ['unknown','unavailable',''] %}Mat
+              {%- else %}Mat {{ t|float(0)|round(1) }}C{% if p and p != 'none' %} P{{ p }}{% endif %}
+              {%- endif %}
             tap_action:
               action: more-info
           - type: template
@@ -867,7 +872,10 @@ sections:
               ### 🌱 Root zone — *the mat's sense point*
 
               {% if rz_ok -%}
-              POT1 soil is **{{ rz | round(1) }}°C** (band {{ rz_lo }}–{{ rz_hi }}°C).
+              {%- set rz_pot = state_attr('sensor.dsc_coldest_root_zone_temp','pot') -%}
+              Coldest voted root{% if rz_pot and rz_pot not in ['none','unknown','unavailable'] %}
+              (POT{{ rz_pot }}){% endif %} is **{{ rz | round(1) }}°C** (band
+              {{ rz_lo }}–{{ rz_hi }}°C).
               {%- if mat_on %} Mat **ON**, climbing toward {{ rz_hi }}°C.
               {%- elif rz < rz_lo %} Below the floor — mat should fire shortly unless min-off is still running.
               {%- else %} Inside the band; mat resting.
@@ -1539,9 +1547,7 @@ sections:
 
           # v2.4: the mat's actual sense point, promoted to Home. It is a
           # control input now, not just telemetry — if this gauge is wrong
-          # the mat is wrong.
-          # v2.4.1: POT1 is the REPRESENTATIVE root-zone number; the mat
-          # itself heats on the coldest plausible pot of all four.
+          # the mat is wrong. Decision number is coldest voted root, not POT1.
           - type: custom:gauge-card-pro
             entity: sensor.dsc_coldest_root_zone_temp
             header: Root (coldest)
@@ -1573,6 +1579,11 @@ sections:
                       chart:
                         height: 380
                     series:
+                      - entity: sensor.dsc_coldest_root_zone_temp
+                        name: Coldest voted
+                        stroke_width: 3
+                        extend_to: now
+                        color: '#f97316'
                       - entity: sensor.dsc_pot1_soil_temperature
                         name: POT1
                         stroke_width: 2
@@ -1748,10 +1759,8 @@ sections:
                             name: Strain (pot underscore fallback)
                           - entity: input_select.dsc_pot1_strain
                             name: Strain (HA)
-                          - entity: datetime.dsc_pot1_sprout_date
-                            name: Sprout (pot contract)
-                          - entity: datetime.dsc_pot_1_sprout_date
-                            name: Sprout (pot underscore fallback)
+                          - entity: date.dsc_pot_1_sprout_date
+                            name: Sprout (pot)
                           - entity: input_datetime.dsc_pot1_sprout_date
                             name: Sprout (HA)
                           - entity: sensor.dsc_pot1_need_summary
@@ -1831,10 +1840,8 @@ sections:
                             name: Strain (pot underscore fallback)
                           - entity: input_select.dsc_pot2_strain
                             name: Strain (HA)
-                          - entity: datetime.dsc_pot2_sprout_date
-                            name: Sprout (pot contract)
-                          - entity: datetime.dsc_pot_2_sprout_date
-                            name: Sprout (pot underscore fallback)
+                          - entity: date.dsc_pot_2_sprout_date
+                            name: Sprout (pot)
                           - entity: input_datetime.dsc_pot2_sprout_date
                             name: Sprout (HA)
                           - entity: sensor.dsc_pot2_need_summary
@@ -1917,10 +1924,8 @@ sections:
                             name: Strain (pot underscore fallback)
                           - entity: input_select.dsc_pot3_strain
                             name: Strain (HA)
-                          - entity: datetime.dsc_pot3_sprout_date
-                            name: Sprout (pot contract)
-                          - entity: datetime.dsc_pot_3_sprout_date
-                            name: Sprout (pot underscore fallback)
+                          - entity: date.dsc_pot_3_sprout_date
+                            name: Sprout (pot)
                           - entity: input_datetime.dsc_pot3_sprout_date
                             name: Sprout (HA)
                           - entity: sensor.dsc_pot3_need_summary
@@ -1994,10 +1999,8 @@ sections:
                             name: Strain (pot underscore fallback)
                           - entity: input_select.dsc_pot4_strain
                             name: Strain (HA)
-                          - entity: datetime.dsc_pot4_sprout_date
-                            name: Sprout (pot contract)
-                          - entity: datetime.dsc_pot_4_sprout_date
-                            name: Sprout (pot underscore fallback)
+                          - entity: date.dsc_pot_4_sprout_date
+                            name: Sprout (pot)
                           - entity: input_datetime.dsc_pot4_sprout_date
                             name: Sprout (HA)
                           - entity: sensor.dsc_pot4_need_summary

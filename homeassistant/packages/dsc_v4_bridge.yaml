@@ -64,7 +64,7 @@ automation:
              ) }}
         for: "00:01:00"
     action:
-      - service: "{{ states('input_text.dsc_notify_service') | default('persistent_notification.create') }}"
+      - action: script.dsc_notify
         data:
           title: "DSC appliances — bridge offline"
           message: >-

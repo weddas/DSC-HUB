@@ -2269,3 +2269,48 @@ Climate ladder stays on the hub. Appliances follow the path that stays up (HA / 
 ### deferred
 - Pick ESP-NOW back up only when ESPHome / ESP-NOW is boring on a multi-node, same-channel, real-time fleet. Do not resume SoftAP/ESP-NOW deepening as the default next task.
 
+---
+
+## 2026-08-17 — Surface 7.2.0 / Fleet 6.0.0.0 completion pass
+
+Software-closable audit lies + Bug Box items landed **in git working tree**. Live HA still serves **7.1.3 / 7.1.4**. No commit/push this pass. Notion not marked Fixed (no post-sync soak). Leave Fix Approved for the operator.
+
+### soak
+
+- **Compile hub:** PASS from `C:\Users\cmgwe\esphome-dsc\v4` (`esphome compile dsc-hub.yaml`, 2026.7.4).
+- **OTA hub:** FAILED from this laptop. Hub Native API is up (`binary_sensor.dsc_hub_link` on, IP **192.168.4.10** on **DSC-Anchor**). `192.168.86.33:3232` refused (stale Nest address). HA ESPHome Builder shows DSC-HUB **Offline**. Need a host with the SoftAP route (`192.168.4.0/24` via ETH01) or Builder once it can see the device.
+- **Control OTA:** skipped. `sensor.dsc_control_firmware_version` / heap **unavailable**. F-007 stays open.
+- **Pots:** not OTAd (Modbus/hardware).
+- **HA sync:** blocked. `HA_TOKEN` unset; SSH `root@192.168.86.3` publickey denied. Add-on cannot pull unpushed work.
+- **Assist I-25:** still no DSC entities exposed (`GetLiveContext` name `dsc` empty).
+- Live kit gates holding: AC / mister / POT3 / tank in-service **off**; `dsc_reduced_kit` **off**.
+- Live tank alerts **still on** (packages not synced) — two Mission alerts remain tester EC/pH.
+- Climate while hub up: Room **22.1 °C / 65 % / 0.94 kPa**, not Got 0.0.
+- Twin React: **THREE.js not loaded — redeploy DSC-HUB bundle** (live panel not the 7.2.0 build).
+- Flap count 24h **357** (Phase 1 was 327). Handshake/OTA not on the box yet so this is not post-fix evidence.
+
+### done (repo only — prove on HA after sync)
+
+- Versions 7.2.0 / 6.0.0.0; RELEASE/INSTALL `/dsc-hub`; www→dist SHA match; compose key stripped.
+- Tank alerts + alert_count gated on `dsc_tank_in_service`.
+- FOLLOWER_DRIFT clone mister entity + real dehum relay; AC/clone relay→ON resync; bridge `script.dsc_notify`; MAD no longer untrusts all pots; Phase B mat wait ceil ≤300 s snapped to 5 s.
+- React C1–C8 (prior session) + rebuilt panel 7.2.0.
+- Hub D1–D10 already/now in `dsc-hub-v4_0.yaml` (room_live clear, Auto OFF parity, emergency dehum, reboot skip in safety, panel-only no bounce, handshake 90/180/300, ledger freeze/credit ≥0.5%, `photo_dur_was_zero` re-seed, `potN_espnow_link` via `rz_rx_*`). Control D11 never-heard-this-boot reboot skip already present.
+- Build-a-Plant: `date.dsc_pot_N_sprout_date` write, custom fill-or-zero Want, roster-full no-op, Fleet Apply refuses last-wins, Want resolvers dual-form, Sync F-015 `dsc_api_client`/`dsc_anchor_ap` + atomic promote.
+
+### red-flag
+
+- SoftAP-only hub is API-visible to HA but **OTA-invisible** to the Windows agent and to ESPHome Builder. That is the flap/OTA path until a route or a Builder-online window exists. Do not pretend 192.168.86.33 is the hub.
+
+### deferred
+
+- ESP-NOW protocol deepening (0xD5 layout, 0xD0/0xD7 cadence, SoftAP BSSID adopt, Nest-STA Sonoff) remains parked.
+- F-001–F-003, GPIO lamp, tank firmware, SCD41, allocated CFM, F-007 until Control is on HA.
+- Bug Box Fixed + Fix Approved: **after** HA sync + hub OTA + I2–I8 re-soak.
+
+### next-plan
+
+1. Operator: `HA_TOKEN` or push+Sync, then hard-reload.
+2. OTA hub from HA (or a machine on 192.168.4.0/24). Confirm `sensor.dsc_ha_link_flap_count_24h` after handshake 90/180/300.
+3. Re-run Wave I soak on 7.2.0 chrome. Then Notion Fixed-with-evidence.
+

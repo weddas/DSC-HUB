@@ -667,7 +667,7 @@ template:
         unit_of_measurement: "d"
         icon: mdi:calendar-start
         state: >
-          {% set d = states('datetime.dsc_pot1_sprout_date') %}{% if d in ['unknown','unavailable',''] %}{% set d = states('input_datetime.dsc_pot1_sprout_date') %}{% endif %}
+          {% set d = states('date.dsc_pot_1_sprout_date') %}{% if d in ['unknown','unavailable',''] %}{% set d = states('date.dsc_pot1_sprout_date') %}{% endif %}{% if d in ['unknown','unavailable',''] %}{% set d = states('datetime.dsc_pot1_sprout_date') %}{% endif %}{% if d in ['unknown','unavailable',''] %}{% set d = states('input_datetime.dsc_pot1_sprout_date') %}{% endif %}
           {% if d in ['unknown','unavailable',''] %}none
           {% else %}{{ ((as_timestamp(now()) - as_timestamp(d)) / 86400)|int }}
           {% endif %}
@@ -676,7 +676,7 @@ template:
         icon: mdi:timeline-clock
         state: >
           {% set days = states('sensor.dsc_pot1_days_since_sprout')|int(-1) %}
-          {% set strain = states('select.dsc_pot1_strain') %}{% if strain in ['unknown','unavailable',''] %}{% set strain = states('input_select.dsc_pot1_strain') %}{% endif %}
+          {% set strain = states('select.dsc_pot_1_strain') %}{% if strain in ['unknown','unavailable',''] %}{% set strain = states('select.dsc_pot1_strain') %}{% endif %}{% if strain in ['unknown','unavailable',''] %}{% set strain = states('input_select.dsc_pot1_strain') %}{% endif %}
           {% set auto = strain == 'Generic Autoflower' or
              (strain.startswith('Custom') and states('input_select.dsc_custom_strain_' ~ strain.split(' ')[1] ~ '_type') == 'auto') %}
           {% if days < 0 %}unknown
@@ -698,7 +698,7 @@ template:
         unique_id: dsc_pot1_strain_display
         icon: mdi:dna
         state: >
-          {% set s = states('select.dsc_pot1_strain') %}{% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot1_strain') %}{% endif %}
+          {% set s = states('select.dsc_pot_1_strain') %}{% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_pot1_strain') %}{% endif %}{% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot1_strain') %}{% endif %}
           {% if s.startswith('Custom') %}
             {% set n = states('input_text.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_name')|trim %}
             {{ n if n else s }}
@@ -706,7 +706,7 @@ template:
       - name: "DSC POT1 Want pH Min"
         unique_id: dsc_pot1_want_ph_min
         state: >
-          {% set s = states('select.dsc_pot1_strain') %}{% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot1_strain') %}{% endif %}
+          {% set s = states('select.dsc_pot_1_strain') %}{% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_pot1_strain') %}{% endif %}{% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot1_strain') %}{% endif %}
           {% if s.startswith('Custom') %}
             {{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_ph_min')|float(5.8) }}
           {% elif s == 'Generic Autoflower' %}5.8
@@ -714,7 +714,7 @@ template:
       - name: "DSC POT1 Want pH Max"
         unique_id: dsc_pot1_want_ph_max
         state: >
-          {% set s = states('select.dsc_pot1_strain') %}{% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot1_strain') %}{% endif %}
+          {% set s = states('select.dsc_pot_1_strain') %}{% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_pot1_strain') %}{% endif %}{% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot1_strain') %}{% endif %}
           {% if s.startswith('Custom') %}
             {{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_ph_max')|float(6.5) }}
           {% else %}6.5{% endif %}
@@ -722,7 +722,7 @@ template:
         unique_id: dsc_pot1_want_ec_min
         unit_of_measurement: "µS/cm"
         state: >
-          {% set s = states('select.dsc_pot1_strain') %}{% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot1_strain') %}{% endif %}
+          {% set s = states('select.dsc_pot_1_strain') %}{% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_pot1_strain') %}{% endif %}{% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot1_strain') %}{% endif %}
           {% set stage = states('sensor.dsc_pot1_expected_stage')|lower %}
           {% if s.startswith('Custom') %}
             {% set slot = s.split(' ')[1] %}
@@ -741,7 +741,7 @@ template:
         unique_id: dsc_pot1_want_ec_max
         unit_of_measurement: "µS/cm"
         state: >
-          {% set s = states('select.dsc_pot1_strain') %}{% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot1_strain') %}{% endif %}
+          {% set s = states('select.dsc_pot_1_strain') %}{% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_pot1_strain') %}{% endif %}{% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot1_strain') %}{% endif %}
           {% set stage = states('sensor.dsc_pot1_expected_stage')|lower %}
           {% if s.startswith('Custom') %}
             {% set slot = s.split(' ')[1] %}
@@ -760,7 +760,7 @@ template:
         unique_id: dsc_pot1_want_moisture_min
         unit_of_measurement: "%"
         state: >
-          {% set s = states('select.dsc_pot1_strain') %}{% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot1_strain') %}{% endif %}
+          {% set s = states('select.dsc_pot_1_strain') %}{% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_pot1_strain') %}{% endif %}{% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot1_strain') %}{% endif %}
           {% if s.startswith('Custom') %}
             {{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_moisture_min')|float(45) }}
           {% else %}45{% endif %}
@@ -768,7 +768,7 @@ template:
         unique_id: dsc_pot1_want_moisture_max
         unit_of_measurement: "%"
         state: >
-          {% set s = states('select.dsc_pot1_strain') %}{% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot1_strain') %}{% endif %}
+          {% set s = states('select.dsc_pot_1_strain') %}{% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_pot1_strain') %}{% endif %}{% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot1_strain') %}{% endif %}
           {% if s.startswith('Custom') %}
             {{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_moisture_max')|float(70) }}
           {% else %}70{% endif %}
@@ -830,7 +830,7 @@ template:
         unit_of_measurement: "d"
         icon: mdi:calendar-start
         state: >
-          {% set d = states('datetime.dsc_pot2_sprout_date') %}{% if d in ['unknown','unavailable',''] %}{% set d = states('input_datetime.dsc_pot2_sprout_date') %}{% endif %}
+          {% set d = states('date.dsc_pot_2_sprout_date') %}{% if d in ['unknown','unavailable',''] %}{% set d = states('date.dsc_pot2_sprout_date') %}{% endif %}{% if d in ['unknown','unavailable',''] %}{% set d = states('datetime.dsc_pot2_sprout_date') %}{% endif %}{% if d in ['unknown','unavailable',''] %}{% set d = states('input_datetime.dsc_pot2_sprout_date') %}{% endif %}
           {% if d in ['unknown','unavailable',''] %}none
           {% else %}{{ ((as_timestamp(now()) - as_timestamp(d)) / 86400)|int }}
           {% endif %}
@@ -839,7 +839,7 @@ template:
         icon: mdi:timeline-clock
         state: >
           {% set days = states('sensor.dsc_pot2_days_since_sprout')|int(-1) %}
-          {% set strain = states('select.dsc_pot2_strain') %}{% if strain in ['unknown','unavailable',''] %}{% set strain = states('input_select.dsc_pot2_strain') %}{% endif %}
+          {% set strain = states('select.dsc_pot_2_strain') %}{% if strain in ['unknown','unavailable',''] %}{% set strain = states('select.dsc_pot2_strain') %}{% endif %}{% if strain in ['unknown','unavailable',''] %}{% set strain = states('input_select.dsc_pot2_strain') %}{% endif %}
           {% set auto = strain == 'Generic Autoflower' or
              (strain.startswith('Custom') and states('input_select.dsc_custom_strain_' ~ strain.split(' ')[1] ~ '_type') == 'auto') %}
           {% if days < 0 %}unknown
@@ -861,7 +861,7 @@ template:
         unique_id: dsc_pot2_strain_display
         icon: mdi:dna
         state: >
-          {% set s = states('select.dsc_pot2_strain') %}{% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot2_strain') %}{% endif %}
+          {% set s = states('select.dsc_pot_2_strain') %}{% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_pot2_strain') %}{% endif %}{% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot2_strain') %}{% endif %}
           {% if s.startswith('Custom') %}
             {% set nme = states('input_text.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_name')|trim %}
             {{ nme if nme else s }}
@@ -869,14 +869,14 @@ template:
       - name: "DSC POT2 Want pH Min"
         unique_id: dsc_pot2_want_ph_min
         state: >
-          {% set s = states('select.dsc_pot2_strain') %}{% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot2_strain') %}{% endif %}
+          {% set s = states('select.dsc_pot_2_strain') %}{% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_pot2_strain') %}{% endif %}{% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot2_strain') %}{% endif %}
           {% if s.startswith('Custom') %}
             {{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_ph_min')|float(5.8) }}
           {% else %}5.8{% endif %}
       - name: "DSC POT2 Want pH Max"
         unique_id: dsc_pot2_want_ph_max
         state: >
-          {% set s = states('select.dsc_pot2_strain') %}{% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot2_strain') %}{% endif %}
+          {% set s = states('select.dsc_pot_2_strain') %}{% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_pot2_strain') %}{% endif %}{% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot2_strain') %}{% endif %}
           {% if s.startswith('Custom') %}
             {{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_ph_max')|float(6.5) }}
           {% else %}6.5{% endif %}
@@ -884,7 +884,7 @@ template:
         unique_id: dsc_pot2_want_ec_min
         unit_of_measurement: "µS/cm"
         state: >
-          {% set s = states('select.dsc_pot2_strain') %}{% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot2_strain') %}{% endif %}
+          {% set s = states('select.dsc_pot_2_strain') %}{% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_pot2_strain') %}{% endif %}{% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot2_strain') %}{% endif %}
           {% set stage = states('sensor.dsc_pot2_expected_stage')|lower %}
           {% if s.startswith('Custom') %}
             {% set slot = s.split(' ')[1] %}
@@ -903,7 +903,7 @@ template:
         unique_id: dsc_pot2_want_ec_max
         unit_of_measurement: "µS/cm"
         state: >
-          {% set s = states('select.dsc_pot2_strain') %}{% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot2_strain') %}{% endif %}
+          {% set s = states('select.dsc_pot_2_strain') %}{% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_pot2_strain') %}{% endif %}{% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot2_strain') %}{% endif %}
           {% set stage = states('sensor.dsc_pot2_expected_stage')|lower %}
           {% if s.startswith('Custom') %}
             {% set slot = s.split(' ')[1] %}
@@ -922,7 +922,7 @@ template:
         unique_id: dsc_pot2_want_moisture_min
         unit_of_measurement: "%"
         state: >
-          {% set s = states('select.dsc_pot2_strain') %}{% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot2_strain') %}{% endif %}
+          {% set s = states('select.dsc_pot_2_strain') %}{% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_pot2_strain') %}{% endif %}{% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot2_strain') %}{% endif %}
           {% if s.startswith('Custom') %}
             {{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_moisture_min')|float(45) }}
           {% else %}45{% endif %}
@@ -930,7 +930,7 @@ template:
         unique_id: dsc_pot2_want_moisture_max
         unit_of_measurement: "%"
         state: >
-          {% set s = states('select.dsc_pot2_strain') %}{% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot2_strain') %}{% endif %}
+          {% set s = states('select.dsc_pot_2_strain') %}{% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_pot2_strain') %}{% endif %}{% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot2_strain') %}{% endif %}
           {% if s.startswith('Custom') %}
             {{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_moisture_max')|float(70) }}
           {% else %}70{% endif %}
@@ -992,7 +992,7 @@ template:
         unit_of_measurement: "d"
         icon: mdi:calendar-start
         state: >
-          {% set d = states('datetime.dsc_pot3_sprout_date') %}{% if d in ['unknown','unavailable',''] %}{% set d = states('input_datetime.dsc_pot3_sprout_date') %}{% endif %}
+          {% set d = states('date.dsc_pot_3_sprout_date') %}{% if d in ['unknown','unavailable',''] %}{% set d = states('date.dsc_pot3_sprout_date') %}{% endif %}{% if d in ['unknown','unavailable',''] %}{% set d = states('datetime.dsc_pot3_sprout_date') %}{% endif %}{% if d in ['unknown','unavailable',''] %}{% set d = states('input_datetime.dsc_pot3_sprout_date') %}{% endif %}
           {% if d in ['unknown','unavailable',''] %}none
           {% else %}{{ ((as_timestamp(now()) - as_timestamp(d)) / 86400)|int }}
           {% endif %}
@@ -1001,7 +1001,7 @@ template:
         icon: mdi:timeline-clock
         state: >
           {% set days = states('sensor.dsc_pot3_days_since_sprout')|int(-1) %}
-          {% set strain = states('select.dsc_pot3_strain') %}{% if strain in ['unknown','unavailable',''] %}{% set strain = states('input_select.dsc_pot3_strain') %}{% endif %}
+          {% set strain = states('select.dsc_pot_3_strain') %}{% if strain in ['unknown','unavailable',''] %}{% set strain = states('select.dsc_pot3_strain') %}{% endif %}{% if strain in ['unknown','unavailable',''] %}{% set strain = states('input_select.dsc_pot3_strain') %}{% endif %}
           {% set auto = strain == 'Generic Autoflower' or
              (strain.startswith('Custom') and states('input_select.dsc_custom_strain_' ~ strain.split(' ')[1] ~ '_type') == 'auto') %}
           {% if days < 0 %}unknown
@@ -1023,7 +1023,7 @@ template:
         unique_id: dsc_pot3_strain_display
         icon: mdi:dna
         state: >
-          {% set s = states('select.dsc_pot3_strain') %}{% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot3_strain') %}{% endif %}
+          {% set s = states('select.dsc_pot_3_strain') %}{% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_pot3_strain') %}{% endif %}{% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot3_strain') %}{% endif %}
           {% if s.startswith('Custom') %}
             {% set nme = states('input_text.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_name')|trim %}
             {{ nme if nme else s }}
@@ -1031,14 +1031,14 @@ template:
       - name: "DSC POT3 Want pH Min"
         unique_id: dsc_pot3_want_ph_min
         state: >
-          {% set s = states('select.dsc_pot3_strain') %}{% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot3_strain') %}{% endif %}
+          {% set s = states('select.dsc_pot_3_strain') %}{% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_pot3_strain') %}{% endif %}{% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot3_strain') %}{% endif %}
           {% if s.startswith('Custom') %}
             {{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_ph_min')|float(5.8) }}
           {% else %}5.8{% endif %}
       - name: "DSC POT3 Want pH Max"
         unique_id: dsc_pot3_want_ph_max
         state: >
-          {% set s = states('select.dsc_pot3_strain') %}{% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot3_strain') %}{% endif %}
+          {% set s = states('select.dsc_pot_3_strain') %}{% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_pot3_strain') %}{% endif %}{% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot3_strain') %}{% endif %}
           {% if s.startswith('Custom') %}
             {{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_ph_max')|float(6.5) }}
           {% else %}6.5{% endif %}
@@ -1046,7 +1046,7 @@ template:
         unique_id: dsc_pot3_want_ec_min
         unit_of_measurement: "µS/cm"
         state: >
-          {% set s = states('select.dsc_pot3_strain') %}{% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot3_strain') %}{% endif %}
+          {% set s = states('select.dsc_pot_3_strain') %}{% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_pot3_strain') %}{% endif %}{% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot3_strain') %}{% endif %}
           {% set stage = states('sensor.dsc_pot3_expected_stage')|lower %}
           {% if s.startswith('Custom') %}
             {% set slot = s.split(' ')[1] %}
@@ -1065,7 +1065,7 @@ template:
         unique_id: dsc_pot3_want_ec_max
         unit_of_measurement: "µS/cm"
         state: >
-          {% set s = states('select.dsc_pot3_strain') %}{% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot3_strain') %}{% endif %}
+          {% set s = states('select.dsc_pot_3_strain') %}{% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_pot3_strain') %}{% endif %}{% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot3_strain') %}{% endif %}
           {% set stage = states('sensor.dsc_pot3_expected_stage')|lower %}
           {% if s.startswith('Custom') %}
             {% set slot = s.split(' ')[1] %}
@@ -1084,7 +1084,7 @@ template:
         unique_id: dsc_pot3_want_moisture_min
         unit_of_measurement: "%"
         state: >
-          {% set s = states('select.dsc_pot3_strain') %}{% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot3_strain') %}{% endif %}
+          {% set s = states('select.dsc_pot_3_strain') %}{% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_pot3_strain') %}{% endif %}{% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot3_strain') %}{% endif %}
           {% if s.startswith('Custom') %}
             {{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_moisture_min')|float(45) }}
           {% else %}45{% endif %}
@@ -1092,7 +1092,7 @@ template:
         unique_id: dsc_pot3_want_moisture_max
         unit_of_measurement: "%"
         state: >
-          {% set s = states('select.dsc_pot3_strain') %}{% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot3_strain') %}{% endif %}
+          {% set s = states('select.dsc_pot_3_strain') %}{% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_pot3_strain') %}{% endif %}{% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot3_strain') %}{% endif %}
           {% if s.startswith('Custom') %}
             {{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_moisture_max')|float(70) }}
           {% else %}70{% endif %}
@@ -1154,7 +1154,7 @@ template:
         unit_of_measurement: "d"
         icon: mdi:calendar-start
         state: >
-          {% set d = states('datetime.dsc_pot4_sprout_date') %}{% if d in ['unknown','unavailable',''] %}{% set d = states('input_datetime.dsc_pot4_sprout_date') %}{% endif %}
+          {% set d = states('date.dsc_pot_4_sprout_date') %}{% if d in ['unknown','unavailable',''] %}{% set d = states('date.dsc_pot4_sprout_date') %}{% endif %}{% if d in ['unknown','unavailable',''] %}{% set d = states('datetime.dsc_pot4_sprout_date') %}{% endif %}{% if d in ['unknown','unavailable',''] %}{% set d = states('input_datetime.dsc_pot4_sprout_date') %}{% endif %}
           {% if d in ['unknown','unavailable',''] %}none
           {% else %}{{ ((as_timestamp(now()) - as_timestamp(d)) / 86400)|int }}
           {% endif %}
@@ -1163,7 +1163,7 @@ template:
         icon: mdi:timeline-clock
         state: >
           {% set days = states('sensor.dsc_pot4_days_since_sprout')|int(-1) %}
-          {% set strain = states('select.dsc_pot4_strain') %}{% if strain in ['unknown','unavailable',''] %}{% set strain = states('input_select.dsc_pot4_strain') %}{% endif %}
+          {% set strain = states('select.dsc_pot_4_strain') %}{% if strain in ['unknown','unavailable',''] %}{% set strain = states('select.dsc_pot4_strain') %}{% endif %}{% if strain in ['unknown','unavailable',''] %}{% set strain = states('input_select.dsc_pot4_strain') %}{% endif %}
           {% set auto = strain == 'Generic Autoflower' or
              (strain.startswith('Custom') and states('input_select.dsc_custom_strain_' ~ strain.split(' ')[1] ~ '_type') == 'auto') %}
           {% if days < 0 %}unknown
@@ -1185,7 +1185,7 @@ template:
         unique_id: dsc_pot4_strain_display
         icon: mdi:dna
         state: >
-          {% set s = states('select.dsc_pot4_strain') %}{% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot4_strain') %}{% endif %}
+          {% set s = states('select.dsc_pot_4_strain') %}{% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_pot4_strain') %}{% endif %}{% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot4_strain') %}{% endif %}
           {% if s.startswith('Custom') %}
             {% set nme = states('input_text.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_name')|trim %}
             {{ nme if nme else s }}
@@ -1193,14 +1193,14 @@ template:
       - name: "DSC POT4 Want pH Min"
         unique_id: dsc_pot4_want_ph_min
         state: >
-          {% set s = states('select.dsc_pot4_strain') %}{% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot4_strain') %}{% endif %}
+          {% set s = states('select.dsc_pot_4_strain') %}{% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_pot4_strain') %}{% endif %}{% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot4_strain') %}{% endif %}
           {% if s.startswith('Custom') %}
             {{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_ph_min')|float(5.8) }}
           {% else %}5.8{% endif %}
       - name: "DSC POT4 Want pH Max"
         unique_id: dsc_pot4_want_ph_max
         state: >
-          {% set s = states('select.dsc_pot4_strain') %}{% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot4_strain') %}{% endif %}
+          {% set s = states('select.dsc_pot_4_strain') %}{% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_pot4_strain') %}{% endif %}{% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot4_strain') %}{% endif %}
           {% if s.startswith('Custom') %}
             {{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_ph_max')|float(6.5) }}
           {% else %}6.5{% endif %}
@@ -1208,7 +1208,7 @@ template:
         unique_id: dsc_pot4_want_ec_min
         unit_of_measurement: "µS/cm"
         state: >
-          {% set s = states('select.dsc_pot4_strain') %}{% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot4_strain') %}{% endif %}
+          {% set s = states('select.dsc_pot_4_strain') %}{% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_pot4_strain') %}{% endif %}{% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot4_strain') %}{% endif %}
           {% set stage = states('sensor.dsc_pot4_expected_stage')|lower %}
           {% if s.startswith('Custom') %}
             {% set slot = s.split(' ')[1] %}
@@ -1227,7 +1227,7 @@ template:
         unique_id: dsc_pot4_want_ec_max
         unit_of_measurement: "µS/cm"
         state: >
-          {% set s = states('select.dsc_pot4_strain') %}{% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot4_strain') %}{% endif %}
+          {% set s = states('select.dsc_pot_4_strain') %}{% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_pot4_strain') %}{% endif %}{% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot4_strain') %}{% endif %}
           {% set stage = states('sensor.dsc_pot4_expected_stage')|lower %}
           {% if s.startswith('Custom') %}
             {% set slot = s.split(' ')[1] %}
@@ -1246,7 +1246,7 @@ template:
         unique_id: dsc_pot4_want_moisture_min
         unit_of_measurement: "%"
         state: >
-          {% set s = states('select.dsc_pot4_strain') %}{% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot4_strain') %}{% endif %}
+          {% set s = states('select.dsc_pot_4_strain') %}{% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_pot4_strain') %}{% endif %}{% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot4_strain') %}{% endif %}
           {% if s.startswith('Custom') %}
             {{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_moisture_min')|float(45) }}
           {% else %}45{% endif %}
@@ -1254,7 +1254,7 @@ template:
         unique_id: dsc_pot4_want_moisture_max
         unit_of_measurement: "%"
         state: >
-          {% set s = states('select.dsc_pot4_strain') %}{% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot4_strain') %}{% endif %}
+          {% set s = states('select.dsc_pot_4_strain') %}{% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_pot4_strain') %}{% endif %}{% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot4_strain') %}{% endif %}
           {% if s.startswith('Custom') %}
             {{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_moisture_max')|float(70) }}
           {% else %}70{% endif %}
@@ -1673,16 +1673,23 @@ script:
           sequence:
             - variables:
                 pot: "{{ repeat.item }}"
-                pot_strain: "select.dsc_pot{{ pot }}_strain"
+                pot_strain: "select.dsc_pot_{{ pot }}_strain"
                 ha_strain: "input_select.dsc_pot{{ pot }}_strain"
-                pot_sprout: "datetime.dsc_pot{{ pot }}_sprout_date"
+                pot_sprout: "date.dsc_pot_{{ pot }}_sprout_date"
+                pot_sprout_alt: "date.dsc_pot{{ pot }}_sprout_date"
                 ha_sprout: "input_datetime.dsc_pot{{ pot }}_sprout_date"
             - condition: template
-              value_template: "{{ states(pot_strain) not in ['unknown','unavailable',''] }}"
+              value_template: >-
+                {{ states(pot_strain) not in ['unknown','unavailable','']
+                   or states('select.dsc_pot' ~ pot ~ '_strain') not in ['unknown','unavailable',''] }}
+            - variables:
+                live_strain: >-
+                  {% set a = states(pot_strain) %}
+                  {% if a in ['unknown','unavailable',''] %}{{ states('select.dsc_pot' ~ pot ~ '_strain') }}{% else %}{{ a }}{% endif %}
             - if:
                 - condition: template
                   value_template: >-
-                    {{ states(pot_strain) == 'Generic Photoperiod'
+                    {{ live_strain == 'Generic Photoperiod'
                        and states(ha_strain) not in ['unknown','unavailable','', 'Generic Photoperiod'] }}
               then:
                 - action: select.select_option
@@ -1690,19 +1697,34 @@ script:
                     entity_id: "{{ pot_strain }}"
                   data:
                     option: "{{ states(ha_strain) }}"
+                  continue_on_error: true
+                - action: select.select_option
+                  target:
+                    entity_id: "select.dsc_pot{{ pot }}_strain"
+                  data:
+                    option: "{{ states(ha_strain) }}"
+                  continue_on_error: true
             - if:
                 - condition: template
                   value_template: >-
                     {{ states(ha_sprout) not in ['unknown','unavailable','']
                        and (states(pot_sprout) in ['unknown','unavailable','']
+                            or states(pot_sprout_alt) in ['unknown','unavailable','']
                             or states(pot_sprout)[:10] in ['1970-01-01','0000-00-00']
-                            or states(pot_sprout)|length < 8) }}
+                            or (states(pot_sprout)|length > 0 and states(pot_sprout)|length < 8)) }}
               then:
-                - action: datetime.set_value
+                - action: date.set_value
                   target:
                     entity_id: "{{ pot_sprout }}"
                   data:
                     date: "{{ states(ha_sprout)[:10] }}"
+                  continue_on_error: true
+                - action: date.set_value
+                  target:
+                    entity_id: "{{ pot_sprout_alt }}"
+                  data:
+                    date: "{{ states(ha_sprout)[:10] }}"
+                  continue_on_error: true
   dsc_custom_fill_from_catalog:
     alias: "DSC Custom Fill From Catalog"
     description: "Fill one custom slot from sensor.dsc_strain_catalog Want bands."

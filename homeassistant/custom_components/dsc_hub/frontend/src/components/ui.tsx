@@ -279,11 +279,12 @@ export function EntitySelect({
   const options = (entity(entityId)?.attributes?.options as string[] | undefined) || [];
   const domain = entityId.split(".")[0];
   const [open, setOpen] = useState(false);
+  const interacting = useRef(false);
   const [draft, setDraft] = useState(current);
 
   useEffect(() => {
-    if (!open) setDraft(current);
-  }, [current, open]);
+    if (!interacting.current && !open) setDraft(current);
+  }, [current, open, entityId]);
 
   const onChange = (value: string) => {
     setDraft(value);
@@ -307,8 +308,14 @@ export function EntitySelect({
       <select
         value={shown}
         disabled={!ok}
-        onFocus={() => setOpen(true)}
-        onBlur={() => setOpen(false)}
+        onFocus={() => {
+          interacting.current = true;
+          setOpen(true);
+        }}
+        onBlur={() => {
+          interacting.current = false;
+          setOpen(false);
+        }}
         onChange={(e) => onChange(e.target.value)}
       >
         {!options.includes(shown) && shown ? (
@@ -339,11 +346,12 @@ export function EntityFanSlider({
   const isOn = state(entityId) === "on";
   const locked = disabled || !ok;
   const [dragging, setDragging] = useState(false);
+  const draggingRef = useRef(false);
   const [draft, setDraft] = useState(Number.isFinite(pct) ? pct : 0);
 
   useEffect(() => {
-    if (!dragging && Number.isFinite(pct)) setDraft(pct);
-  }, [pct, dragging]);
+    if (!draggingRef.current && !dragging && Number.isFinite(pct)) setDraft(pct);
+  }, [pct, dragging, entityId]);
 
   const commit = (value: number) => {
     if (locked) return;
@@ -368,18 +376,26 @@ export function EntityFanSlider({
         disabled={locked}
         onPointerDown={(e) => {
           (e.target as HTMLInputElement).setPointerCapture(e.pointerId);
+          draggingRef.current = true;
           setDragging(true);
         }}
         onPointerUp={(e) => {
+          draggingRef.current = false;
           setDragging(false);
           commit(Number((e.target as HTMLInputElement).value));
         }}
-        onPointerCancel={() => setDragging(false)}
-        onLostPointerCapture={() => setDragging(false)}
+        onPointerCancel={() => {
+          draggingRef.current = false;
+          setDragging(false);
+        }}
+        onLostPointerCapture={() => {
+          draggingRef.current = false;
+          setDragging(false);
+        }}
         onChange={(e) => {
           const value = Number(e.target.value);
           setDraft(value);
-          if (!dragging) commit(value);
+          if (!draggingRef.current) commit(value);
         }}
       />
     </label>

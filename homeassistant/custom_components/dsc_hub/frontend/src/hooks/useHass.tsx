@@ -22,7 +22,7 @@ interface HassContextValue {
     data?: Record<string, unknown>,
   ) => Promise<unknown>;
   callWS: <T = unknown>(msg: Record<string, unknown>) => Promise<T | null>;
-  /** Increments on DSC-relevant state_changed (and hass object replace). */
+  /** Increments on DSC-relevant state_changed (and first hass attach). */
   tick: number;
 }
 
@@ -77,6 +77,8 @@ export function HassProvider({
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hassRef = useRef(hass);
   hassRef.current = hass;
+  const conn = hass?.connection;
+  const hassPresent = !!hass;
 
   const bumpTick = () => {
     if (debounceRef.current) return;
@@ -86,11 +88,12 @@ export function HassProvider({
     }, TICK_DEBOUNCE_MS);
   };
 
+  // First attach (or drop) of the hass object — not every parent identity replace.
   useEffect(() => {
-    if (!hass) return;
-    bumpTick();
+    if (hassPresent) bumpTick();
+  }, [hassPresent]);
 
-    const conn = hass.connection;
+  useEffect(() => {
     if (!conn?.subscribeEvents) return;
 
     let unsub: (() => void) | undefined;
@@ -111,7 +114,7 @@ export function HassProvider({
         unsub = fn;
       })
       .catch(() => {
-        /* connection may not be ready yet — hass prop updates still refresh */
+        /* connection may not be ready yet — DSC state_changed still refreshes */
       });
 
     return () => {
@@ -122,7 +125,7 @@ export function HassProvider({
         debounceRef.current = null;
       }
     };
-  }, [hass]);
+  }, [conn]);
 
   const callService = useMemo(
     () =>
@@ -149,7 +152,7 @@ export function HassProvider({
   );
 
   const value = useMemo<HassContextValue>(() => {
-    const entity = (entityId: string) => hass?.states?.[entityId];
+    const entity = (entityId: string) => hassRef.current?.states?.[entityId];
     const available = (entityId: string) => {
       const st = entity(entityId)?.state;
       return !!st && st !== "unavailable" && st !== "unknown";
@@ -159,11 +162,12 @@ export function HassProvider({
       return entity(entityId)?.state ?? fallback;
     };
     const num = (entityId: string, fallback = NaN) => {
-      const n = Number(state(entityId, ""));
+      if (!available(entityId)) return fallback;
+      const n = Number(entity(entityId)?.state);
       return Number.isFinite(n) ? n : fallback;
     };
-    return { hass, entity, state, num, available, callService, callWS, tick };
-  }, [hass, tick, callService, callWS]);
+    return { hass: hassRef.current, entity, state, num, available, callService, callWS, tick };
+  }, [tick, callService, callWS]);
 
   return createElement(HassContext.Provider, { value }, children);
 }

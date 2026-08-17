@@ -107,6 +107,7 @@ function TentCockpitPage({ tent }: { tent: Exclude<TentId, "unassigned"> }) {
   }, [tent, setFocus]);
 
   const seats = potsInTent(tent, state, entity);
+  const seatKey = seats.map((s) => s.pot).join(",");
   const raw = Number(params.get("pot") || 0);
   const pot =
     raw >= 1 && raw <= 4 && isPotInService(raw, state) && seats.some((s) => s.pot === raw)
@@ -163,14 +164,20 @@ function TentCockpitPage({ tent }: { tent: Exclude<TentId, "unassigned"> }) {
   useEffect(() => {
     let cancelled = false;
     async function loadLog() {
-      if (!callWS || seats.length === 0) {
+      const pots = seatKey
+        ? seatKey
+            .split(",")
+            .map((p) => Number(p))
+            .filter((n) => Number.isFinite(n) && n > 0)
+        : [];
+      if (!callWS || pots.length === 0) {
         setLog([]);
         return;
       }
-      const ids = seats.flatMap((s) => [
-        `text.dsc_pot${s.pot}_plant_name`,
-        `input_select.dsc_pot${s.pot}_tent`,
-        `select.dsc_pot${s.pot}_growth_stage`,
+      const ids = pots.flatMap((n) => [
+        `text.dsc_pot${n}_plant_name`,
+        `input_select.dsc_pot${n}_tent`,
+        `select.dsc_pot${n}_growth_stage`,
       ]);
       const end = new Date();
       const start = new Date(end.getTime() - 48 * 3600 * 1000);
@@ -184,7 +191,7 @@ function TentCockpitPage({ tent }: { tent: Exclude<TentId, "unassigned"> }) {
           significant_changes_only: true,
           minimal_response: true,
           no_attributes: true,
-          entity_ids: ids.slice(0, 8),
+          entity_ids: ids,
         });
         if (cancelled || !rawHist) return;
         const lines: { t: number; text: string }[] = [];
@@ -202,7 +209,7 @@ function TentCockpitPage({ tent }: { tent: Exclude<TentId, "unassigned"> }) {
           }
         }
         lines.sort((a, b) => b.t - a.t);
-        setLog(lines.slice(0, 40).map((l) => l.text));
+        setLog(lines.map((l) => l.text));
       } catch {
         if (!cancelled) setLog([]);
       }
@@ -211,7 +218,7 @@ function TentCockpitPage({ tent }: { tent: Exclude<TentId, "unassigned"> }) {
     return () => {
       cancelled = true;
     };
-  }, [callWS, seats, tent]);
+  }, [callWS, seatKey, tent]);
 
   const wantT = tent === "main" ? num("number.dsc_hub_target_temp") : num("number.dsc_hub_clone_target_temp");
   const rhMin = tent === "main" ? num("number.dsc_hub_rh_target_min") : num("number.dsc_hub_clone_rh_min");
@@ -416,13 +423,20 @@ function TentCockpitPage({ tent }: { tent: Exclude<TentId, "unassigned"> }) {
               </p>
             ) : (
               <ul className="dsc-fault-list">
-                {log.map((line) => (
+                {log.slice(0, 40).map((line) => (
                   <li key={line}>
                     <span className="dsc-muted" style={{ fontFamily: "var(--dsc-mono)", fontSize: 12 }}>
                       {line}
                     </span>
                   </li>
                 ))}
+                {log.length > 40 ? (
+                  <li>
+                    <span className="dsc-muted" style={{ fontFamily: "var(--dsc-mono)", fontSize: 12 }}>
+                      +{log.length - 40} more
+                    </span>
+                  </li>
+                ) : null}
               </ul>
             )}
           </Card>

@@ -1,6 +1,6 @@
 /** Script sources that register DSC Lovelace custom elements. */
 /** Cache-bust: HA /local max-age ~31d; bump when Dash/Twin IIFE changes. */
-const BUNDLE_V = "7.1.7-bar-raise";
+const BUNDLE_V = "7.2.0";
 
 /** Fat umbrella bundle (may contain several cards depending on build). */
 const UMBRELLA = [

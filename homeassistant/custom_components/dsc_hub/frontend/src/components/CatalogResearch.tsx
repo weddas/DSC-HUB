@@ -132,7 +132,9 @@ export function CatalogResearch() {
 
   useEffect(() => {
     void searchCatalog(kind, "", state, 8).then((r) => setSourceNote(r.note));
-  }, [kind, state]);
+    // Tick-stable: do not refetch the source chip on every hass identity.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [kind]);
 
   const useInCompose = (item: CatalogItem | null) => {
     if (!item) return;

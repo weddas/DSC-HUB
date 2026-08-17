@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useHass } from "../hooks/useHass";
+import { useHeldReading } from "../hooks/useHeldReading";
 import { OverflowMenu } from "./chrome";
 import { draftTone, tentWantRail } from "../lib/tentWant";
 import { StatusChip } from "./ui";
@@ -114,13 +115,16 @@ export function TargetNumber({
 }
 
 function TentColumn({ tent, title, hero }: { tent: TentKind; title: string; hero?: boolean }) {
-  const { num, available, state, entity } = useHass();
+  const { num, state, entity } = useHass();
   const inspector = useInspector();
   const e = TENT_ENTITIES[tent];
   const rail = tentWantRail(tent, { state, entity });
-  const gotT = num(e.gotTemp);
-  const gotRh = num(e.gotRh);
-  const gotVpd = available(e.gotVpd) ? num(e.gotVpd) : NaN;
+  const tHeld = useHeldReading(e.gotTemp);
+  const rhHeld = useHeldReading(e.gotRh);
+  const vpdHeld = useHeldReading(e.gotVpd);
+  const gotT = tHeld.stale ? NaN : tHeld.value;
+  const gotRh = rhHeld.stale ? NaN : rhHeld.value;
+  const gotVpd = vpdHeld.stale ? NaN : vpdHeld.value;
   const wantT = num(e.temp);
   const wantRhMin = num(e.rhMin);
   const wantRhMax = num(e.rhMax);
@@ -164,8 +168,8 @@ function TentColumn({ tent, title, hero }: { tent: TentKind; title: string; hero
         onClick={() => openMoreInfo(e.gotTemp, `${title} Got T`, "°C")}
       >
         <span>
-          Got {Number.isFinite(gotT) ? gotT.toFixed(1) : "—"}°C /{" "}
-          {Number.isFinite(gotRh) ? gotRh.toFixed(0) : "—"}%
+          Got {Number.isFinite(gotT) ? `${gotT.toFixed(1)}°C` : "—"} /{" "}
+          {Number.isFinite(gotRh) ? `${gotRh.toFixed(0)}%` : "—"}
           {Number.isFinite(gotVpd) ? ` / ${gotVpd.toFixed(2)} kPa` : ""}
         </span>
         <span className="dsc-muted">

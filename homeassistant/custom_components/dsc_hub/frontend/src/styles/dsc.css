@@ -73,22 +73,42 @@
 }
 
 .dsc-twin-keepalive {
-  display: none;
-  margin-bottom: 12px;
+  /* Keep the Twin custom element mounted; do not display:none (kills WebGL size).
+     When idle: out of flow, not visible, no pointer hit-testing. */
+  position: fixed;
+  inset: 0;
+  visibility: hidden;
+  pointer-events: none;
+  z-index: -1;
+  overflow: hidden;
+  margin: 0;
   min-height: 0;
 }
 
 .dsc-twin-keepalive.is-active {
-  display: block;
+  position: relative;
+  inset: auto;
+  visibility: visible;
+  pointer-events: auto;
+  z-index: auto;
+  overflow: visible;
+  margin-bottom: 12px;
   min-height: min(70vh, 720px);
+}
+
+.dsc-twin-keepalive:not(.is-active),
+.dsc-twin-keepalive:not(.is-active) * {
+  pointer-events: none !important;
 }
 
 .dsc-twin-keepalive-host {
   min-height: min(68vh, 700px);
 }
 
-.dsc-twin-keepalive-host > * {
+.dsc-twin-keepalive.is-active .dsc-twin-keepalive-host,
+.dsc-twin-keepalive.is-active .dsc-twin-keepalive-host > * {
   min-height: min(68vh, 700px);
+  pointer-events: auto;
 }
 
 .dsc-tab--live.active { color: var(--dsc-blue); border-color: var(--dsc-blue-dim); }

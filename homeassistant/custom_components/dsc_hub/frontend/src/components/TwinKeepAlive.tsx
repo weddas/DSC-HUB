@@ -33,7 +33,7 @@ function cockpitHidesHud(pathname: string): boolean {
  */
 export function TwinKeepAlive() {
   const location = useLocation();
-  const { hass, available, num, state, entity } = useHass();
+  const { hass, available, num, state, entity, tick } = useHass();
   const ref = useRef<HTMLDivElement>(null);
   const elRef = useRef<TwinCardEl | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "missing">("loading");
@@ -80,7 +80,7 @@ export function TwinKeepAlive() {
 
   useEffect(() => {
     if (elRef.current && hass) elRef.current.hass = hass;
-  }, [hass]);
+  }, [hass, tick]);
 
   useEffect(() => {
     const el = elRef.current;
@@ -144,8 +144,21 @@ export function TwinKeepAlive() {
     <div
       className={`dsc-twin-keepalive${active ? " is-active" : ""}`}
       aria-hidden={!active}
+      inert={!active ? true : undefined}
       data-status={status}
       data-focus-tent={focusTent || "both"}
+      style={
+        active
+          ? undefined
+          : {
+              pointerEvents: "none",
+              position: "fixed",
+              visibility: "hidden",
+              inset: 0,
+              zIndex: -1,
+              overflow: "hidden",
+            }
+      }
     >
       <div className="dsc-twin-keepalive-host" ref={ref} />
       {status === "missing" ? (

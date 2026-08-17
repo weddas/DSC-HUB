@@ -57,6 +57,8 @@ export function PlantSeatPanel({
   const drybackId = `sensor.dsc_pot${pot}_dryback_pct`;
   const moistHeld = useHeldReading(moistId);
   const drybackHeld = useHeldReading(drybackId);
+  const ecHeld = useHeldReading(ecId);
+  const phHeld = useHeldReading(phId);
   const moistSeries = useEntitySeries(moistId, { hours: 6, maxPoints: 72 });
   const ecSeries = useEntitySeries(ecId, { hours: 6, maxPoints: 72 });
   const learnedEcRaw = num(`input_number.dsc_pot${pot}_learned_ec_per_moisture`);
@@ -259,20 +261,23 @@ export function PlantSeatPanel({
                   rows={[
                     {
                       label: "Moisture",
-                      got: Number(seat.moisture),
+                      got: moistHeld.value,
+                      stale: moistHeld.stale,
                       wantMin: wantMoistMin,
                       wantMax: wantMoistMax,
                       unit: "%",
                     },
                     {
                       label: "EC",
-                      got: Number(seat.ec),
+                      got: ecHeld.value,
+                      stale: ecHeld.stale,
                       wantMin: hasWantEc ? wantEcMin : undefined,
                       wantMax: hasWantEc ? wantEcMax : undefined,
                     },
                     {
                       label: "pH",
-                      got: Number(seat.ph),
+                      got: phHeld.value,
+                      stale: phHeld.stale,
                       wantMin: hasWantPh ? wantPhMin : undefined,
                       wantMax: hasWantPh ? wantPhMax : undefined,
                     },
@@ -460,7 +465,7 @@ export function GrowResearchPage() {
       <PageHeader
         icon="research"
         title="Research"
-        subtitle="Catalog browser over /local/dsc-catalog indexes."
+        subtitle="Live CannaLib catalog — strains, mediums, nutrients, and lights."
         actions={
           <>
             <Button primary onClick={() => navigate("/grow/compose")}>

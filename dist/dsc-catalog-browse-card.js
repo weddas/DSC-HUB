@@ -7,6 +7,7 @@
 (() => {
   const CARD_TYPE = "dsc-catalog-browse-card";
   const CATALOG_BASE = "/local/dsc-catalog";
+  const LIST_CAP = 200;
   const CANNALIB_DEFAULT = "https://cannalib.plausible-deniability.net";
   const DOMAINS = [
     { id: "strains", label: "Strains", file: "dsc_strains_search_index.json", api: true },
@@ -59,6 +60,7 @@
     .chip.miss { background:rgba(120,120,120,.12); border-color:rgba(140,140,140,.3); color:#9a9a9a; }
     .muted { color:#8a9c90; font-size:12px; }
     .actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+    .notice { color:#e8c07a; font-size:12px; margin:8px 0 0; }
     button.act {
       background:#1a2a20; color:#e8efe9; border:1px solid rgba(120,160,130,.35);
       border-radius:3px; padding:8px 11px; cursor:pointer; font-size:12px;
@@ -91,6 +93,7 @@
       this._mediaKind = "pathology_photo";
       this._compare = [];
       this._meta = {};
+      this._notice = "";
     }
     setConfig(config) {
       this._config = { type: `custom:${CARD_TYPE}`, title: "Catalog", ...(config || {}) };
@@ -291,34 +294,88 @@
       if (!this._hass) return Promise.resolve();
       return this._hass.callService(domain, service, data);
     }
-    async _useInBuild(it) {
-      if (!it) return;
-      // Navigate first so a hung callService cannot strand the operator on Catalog.
-      history.pushState(null, "", "/dsc-hub-pro/plant-build");
+    _helperState(id) {
+      const s = this._hass?.states?.[id]?.state;
+      return s && s !== "unknown" && s !== "unavailable" ? String(s).trim() : "";
+    }
+    _inventoryOn(n) {
+      return this._hass?.states?.[`input_boolean.dsc_nutrient_${n}_in_inventory`]?.state === "on";
+    }
+    _nextFreeNutrientSlot() {
+      for (let n = 1; n <= 8; n++) {
+        const name = this._helperState(`input_text.dsc_nutrient_${n}_name`);
+        if (!name && !this._inventoryOn(n)) return n;
+      }
+      return 0;
+    }
+    _nextFreeMediumSlot() {
+      for (let n = 1; n <= 3; n++) {
+        const name = this._helperState(`input_text.dsc_blend_component_${n}_name`);
+        const pct = parseFloat(this._hass?.states?.[`input_number.dsc_blend_pct_${n}`]?.state);
+        if (!name && !(Number.isFinite(pct) && pct > 0)) return n;
+      }
+      return 0;
+    }
+    _nextFreeCustomSlot() {
+      const selected = this._helperState("input_select.dsc_build_custom_slot");
+      const nSel = Number(selected);
+      const candidates = Number.isInteger(nSel) && nSel >= 1 && nSel <= 5 ? [nSel] : [1, 2, 3, 4, 5];
+      for (const n of candidates) {
+        if (!this._helperState(`input_text.dsc_custom_strain_${n}_name`)) return n;
+      }
+      return 0;
+    }
+    _goCompose() {
+      const path = "/dsc-hub#/grow/compose";
+      history.pushState(null, "", path);
       const ev = new Event("location-changed", { bubbles: true, composed: true });
       ev.detail = { replace: false };
       window.dispatchEvent(ev);
+      window.dispatchEvent(new HashChangeEvent("hashchange"));
+    }
+    async _useInBuild(it) {
+      if (!it) return;
       try {
         if (this._domain === "strains") {
+          this._goCompose();
           await this._call("input_text", "set_value", { entity_id: "input_text.dsc_build_strain", value: it.name });
           const nick = this._hass?.states?.["input_text.dsc_build_nickname"]?.state;
           if (!nick || nick === "unknown" || nick === "") {
             await this._call("input_text", "set_value", { entity_id: "input_text.dsc_build_nickname", value: it.name });
           }
+          this._notice = "";
         } else if (this._domain === "nutrients") {
-          await this._call("input_text", "set_value", { entity_id: "input_text.dsc_nutrient_1_name", value: it.name });
+          const n = this._nextFreeNutrientSlot();
+          if (!n) {
+            this._notice = "No free nutrient slot. Inventory-off bottles stay put; will not overwrite slot 1.";
+            this._render();
+            return;
+          }
+          this._goCompose();
+          await this._call("input_text", "set_value", { entity_id: `input_text.dsc_nutrient_${n}_name`, value: it.name });
           if (it.dose_ml_l != null) {
             await this._call("input_number", "set_value", {
-              entity_id: "input_number.dsc_nutrient_1_dose_ml_l",
+              entity_id: `input_number.dsc_nutrient_${n}_dose_ml_l`,
               value: Number(it.dose_ml_l),
             });
           }
+          await this._call("input_boolean", "turn_on", { entity_id: `input_boolean.dsc_nutrient_${n}_in_inventory` });
+          this._notice = `Wrote ${it.name} to nutrient slot ${n}.`;
         } else if (this._domain === "mediums") {
+          const n = this._nextFreeMediumSlot();
+          if (!n) {
+            this._notice = "No free medium slot. Will not overwrite slot 1.";
+            this._render();
+            return;
+          }
+          this._goCompose();
           await this._call("input_text", "set_value", {
-            entity_id: "input_text.dsc_blend_component_1_name",
+            entity_id: `input_text.dsc_blend_component_${n}_name`,
             value: it.name,
           });
+          this._notice = `Wrote ${it.name} to medium slot ${n}.`;
         } else if (this._domain === "lights") {
+          this._goCompose();
           const fixture = this._hass?.states?.["input_select.dsc_light_fixture"];
           const opts = fixture?.attributes?.options || [];
           const match = opts.find((o) => String(o).toLowerCase().includes(String(it.name).toLowerCase().slice(0, 12)));
@@ -343,15 +400,34 @@
               value: String(it.ppfd_url).slice(0, 255),
             });
           }
+          this._notice = "";
+        } else {
+          this._goCompose();
+          this._notice = "";
         }
       } catch (e) {
         console.warn("dsc-catalog Use in Build helpers", e);
+        this._notice = "Use in Build failed — helpers not written.";
       }
+      this._render();
     }
     async _fillCustom(it) {
       if (!it || this._domain !== "strains") return;
-      await this._call("input_text", "set_value", { entity_id: "input_text.dsc_build_strain", value: it.name });
-      await this._call("script", "dsc_custom_fill_from_catalog", {});
+      const slot = this._nextFreeCustomSlot();
+      if (!slot) {
+        this._notice = "No free custom strain slot (1–5). Will not overwrite slot 1.";
+        this._render();
+        return;
+      }
+      try {
+        await this._call("input_text", "set_value", { entity_id: "input_text.dsc_build_strain", value: it.name });
+        await this._call("script", "dsc_custom_fill_from_catalog", { slot, seed_name: it.name });
+        this._notice = `Filled custom strain slot ${slot} from ${it.name}.`;
+      } catch (e) {
+        console.warn("dsc-catalog Fill Custom", e);
+        this._notice = "Fill Custom failed — required slot/seed_name not written.";
+      }
+      this._render();
     }
     _toggleCompare(it) {
       const id = it.id || it.name;
@@ -452,11 +528,16 @@
                   ? "comparative (not this cultivar)"
                   : `${m.kind || "photo"}`;
               const src = m.source_url || "";
-              return `<div class="muted">${this._esc(label)}${
-                src
-                  ? ` · <a href="${this._esc(src)}" target="_blank" rel="noopener" style="color:#9fd0ad">open</a>`
-                  : ""
-              }</div>`;
+              const isComp = m.entity_id === "comparative";
+              const link = src
+                ? ` · <a href="${this._esc(src)}" target="_blank" rel="noopener" style="color:#9fd0ad">open</a>`
+                : "";
+              const showImg =
+                !isComp && (src.startsWith("https://") || src.startsWith("/media"));
+              const img = showImg
+                ? `<br/><img src="${this._esc(src)}" alt="" style="max-width:100%;height:auto;border-radius:4px" />`
+                : "";
+              return `<div class="muted">${this._esc(label)}${link}${img}</div>`;
             })
             .join("")
         : `<p class="muted">media.n=0 — no cultivar photo on this id. Do not use the comparative dump here.</p>`;
@@ -659,6 +740,10 @@
       const items = this._filtered();
       const note = this._meta?.note || "";
       const count = this._meta?.count ?? items.length;
+      const shown = items.slice(0, LIST_CAP);
+      const extra = this._meta?.with_want != null
+        ? ` · ${this._meta.with_want} with Want · ${this._meta.with_height || 0} with height`
+        : "";
       this.shadowRoot.innerHTML = `
         <style>${css}</style>
         <div class="wrap">
@@ -672,14 +757,14 @@
             ).join("")}
           </div>
           ${this._filterBar()}
-          <p class="muted">${items.length} shown / ${count} indexed${this._meta?.with_want != null ? ` · ${this._meta.with_want} with Want · ${this._meta.with_height || 0} with height` : ""}</p>
+          <p class="muted">${shown.length} shown / ${items.length} matched (cap ${LIST_CAP}) · ${count} indexed${extra}</p>
+          ${this._notice ? `<p class="notice">${this._esc(this._notice)}</p>` : ""}
           <div class="layout">
             <div class="panel">
               <h2>Results</h2>
               ${
-                items.length
-                  ? items
-                      .slice(0, 200)
+                shown.length
+                  ? shown
                       .map((it, idx) => {
                         const sel = this._selected && (this._selected.id || this._selected.name) === (it.id || it.name);
                         return `<div class="row ${sel ? "sel" : ""}" data-idx="${idx}">

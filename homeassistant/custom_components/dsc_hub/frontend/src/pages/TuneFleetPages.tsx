@@ -192,7 +192,7 @@ export function FleetOverviewPage() {
         <div className="dsc-col-4">
           <Kpi
             label="Surface"
-            value={state("sensor.dsc_ha_surface_version", "7.1.4")}
+            value={state("sensor.dsc_ha_surface_version", "7.2.0")}
             sub="Panel product shell"
           />
         </div>

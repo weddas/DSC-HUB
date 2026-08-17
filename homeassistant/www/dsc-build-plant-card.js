@@ -334,6 +334,7 @@
       this._selectedStrain = null;
       this._selectedLight = null;
       this._overflowMenu = null;
+      this._notice = "";
     }
 
     setConfig(config) {
@@ -599,9 +600,16 @@
           this._setText(`input_text.dsc_blend_component_${n}_name`, part ? part[0] : "");
           this._setNumber(`input_number.dsc_blend_pct_${n}`, part ? Number(part[1]) : 0);
         }
+        this._notice = "";
       } else {
-        const slot = this._mediumSlot || 1;
+        const slot = this._nextEmptyMediumSlot();
+        if (!slot) {
+          this._notice = "No free medium slot. Will not overwrite slot 1.";
+          this._render();
+          return;
+        }
         this._setText(`input_text.dsc_blend_component_${slot}_name`, item.name);
+        this._notice = `Wrote ${item.name} to medium slot ${slot}.`;
       }
       this._q.medium = "";
       this._hits.medium = [];
@@ -610,19 +618,28 @@
       this._render();
     }
 
-    async _addNutrient(item) {
+    _nextFreeNutrientSlot() {
       for (let n = 1; n <= 8; n++) {
         const name = this._str(`input_text.dsc_nutrient_${n}_name`);
         const inv = this._st(`input_boolean.dsc_nutrient_${n}_in_inventory`)?.state === "on";
-        if (!name || !inv) {
-          this._setText(`input_text.dsc_nutrient_${n}_name`, item.name);
-          if (item.dose_ml_l != null && Number.isFinite(Number(item.dose_ml_l))) {
-            this._setNumber(`input_number.dsc_nutrient_${n}_dose_ml_l`, Number(item.dose_ml_l));
-          }
-          this._call("input_boolean", "turn_on", {}, { entity_id: `input_boolean.dsc_nutrient_${n}_in_inventory` });
-          break;
-        }
+        if (!name && !inv) return n;
       }
+      return 0;
+    }
+
+    async _addNutrient(item) {
+      const n = this._nextFreeNutrientSlot();
+      if (!n) {
+        this._notice = "No free nutrient slot. Inventory-off bottles stay put; will not overwrite slot 1.";
+        this._render();
+        return;
+      }
+      this._setText(`input_text.dsc_nutrient_${n}_name`, item.name);
+      if (item.dose_ml_l != null && Number.isFinite(Number(item.dose_ml_l))) {
+        this._setNumber(`input_number.dsc_nutrient_${n}_dose_ml_l`, Number(item.dose_ml_l));
+      }
+      this._call("input_boolean", "turn_on", {}, { entity_id: `input_boolean.dsc_nutrient_${n}_in_inventory` });
+      this._notice = `Wrote ${item.name} to nutrient slot ${n}.`;
       this._q.nutrient = "";
       this._hits.nutrient = [];
       this._hitActive.nutrient = -1;
@@ -980,6 +997,7 @@
             </div>
             <div>${this._catalogChipHtml()}</div>
           </div>
+          ${this._notice ? `<p class="muted">${this._esc(this._notice)}</p>` : ""}
 
           <div class="flow">
             <div class="flow-col">

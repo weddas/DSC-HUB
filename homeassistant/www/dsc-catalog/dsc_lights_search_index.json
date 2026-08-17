@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "kind": "lights",
-  "built_at": "2026-08-17T05:14:31Z",
+  "built_at": "2026-08-17T09:41:01Z",
   "count": 696,
   "note": "Browse index from sqlite light_fixture (not dump files).",
   "items": [

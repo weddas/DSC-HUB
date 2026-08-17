@@ -54,6 +54,7 @@ export function useHistory(
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Seed once per entity/window. Do not refetch on DSC ticks / hass identity.
   useEffect(() => {
     let cancelled = false;
 
@@ -120,6 +121,7 @@ export function useHistory(
     return () => {
       cancelled = true;
     };
+    // callWS is identity-stable; omit tick / hass object
   }, [connReady, entityId, hours, maxPoints, callWS]);
 
   return { points, loading, error };

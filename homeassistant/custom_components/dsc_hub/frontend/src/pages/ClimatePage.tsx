@@ -304,13 +304,13 @@ export function LiveClimatePage() {
             </div>
             <GotWantBars
               rows={[
-                { label: "Room T", got: roomTHeld.value, want: num("sensor.dsc_hub_room_temp_mean_24h"), unit: "°C" },
-                { label: "2×4 T", got: cloneTHeld.value, want: cloneTargetTemp, unit: "°C" },
-                { label: "4×8 T", got: tentTHeld.value, want: targetTemp, unit: "°C" },
-                { label: "2×4 RH", got: cloneRhHeld.value, wantMin: cloneRhMin, wantMax: cloneRhMax, unit: "%" },
-                { label: "4×8 RH", got: tentRhHeld.value, wantMin: rhMin, wantMax: rhMax, unit: "%" },
-                { label: "2×4 VPD", got: cloneVpdHeld.value, wantMin: cloneVpdMin, wantMax: cloneVpdMax, unit: "kPa" },
-                { label: "4×8 VPD", got: tentVpdHeld.value, wantMin: vpdMin, wantMax: vpdMax, unit: "kPa" },
+                { label: "Room T", got: roomTHeld.value, stale: roomTHeld.stale, want: num("sensor.dsc_hub_room_temp_mean_24h"), unit: "°C" },
+                { label: "2×4 T", got: cloneTHeld.value, stale: cloneTHeld.stale, want: cloneTargetTemp, unit: "°C" },
+                { label: "4×8 T", got: tentTHeld.value, stale: tentTHeld.stale, want: targetTemp, unit: "°C" },
+                { label: "2×4 RH", got: cloneRhHeld.value, stale: cloneRhHeld.stale, wantMin: cloneRhMin, wantMax: cloneRhMax, unit: "%" },
+                { label: "4×8 RH", got: tentRhHeld.value, stale: tentRhHeld.stale, wantMin: rhMin, wantMax: rhMax, unit: "%" },
+                { label: "2×4 VPD", got: cloneVpdHeld.value, stale: cloneVpdHeld.stale, wantMin: cloneVpdMin, wantMax: cloneVpdMax, unit: "kPa" },
+                { label: "4×8 VPD", got: tentVpdHeld.value, stale: tentVpdHeld.stale, wantMin: vpdMin, wantMax: vpdMax, unit: "kPa" },
               ]}
             />
           </Card>

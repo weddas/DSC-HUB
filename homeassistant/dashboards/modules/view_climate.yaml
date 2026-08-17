@@ -76,10 +76,10 @@ sections:
           - condition: or
             conditions:
               - condition: state
-                entity_id: binary_sensor.dsc_ac_capacity_offline
+                entity: binary_sensor.dsc_ac_capacity_offline
                 state: "on"
               - condition: state
-                entity_id: binary_sensor.dsc_clone_humidifier_capacity_offline
+                entity: binary_sensor.dsc_clone_humidifier_capacity_offline
                 state: "on"
         card:
           type: markdown
@@ -279,6 +279,9 @@ sections:
                   font-weight: 600;
                   letter-spacing: 0.3px;
                 }
+      - type: grid
+        columns: 2
+        square: false
         cards:
           - type: custom:mushroom-template-card
             entity: sensor.dsc_plant_specs_status
@@ -469,6 +472,15 @@ sections:
             alignment: start
             chips:
               - type: template
+                entity: sensor.dsc_coldest_root_zone_temp
+                icon: mdi:thermometer-chevron-down
+                icon_color: lime
+                content: >-
+                  {% set p = state_attr(entity,'pot') %}
+                  {% if not has_value(entity) %}Root —
+                  {%- else %}{{ states(entity)|float(0)|round(1) }}C{% if p and p != 'none' %} · POT{{ p }}{% endif %}
+                  {%- endif %}
+              - type: template
                 icon: mdi:grass
                 icon_color: lime
                 content: Mat votes & soil → Root Zone
@@ -477,10 +489,11 @@ sections:
                   navigation_path: /dsc-hub-pro/root-zone
           - type: markdown
             content: >-
-              *The **gap between Low and High IS the hysteresis** — keep it
-              ≥ 2 °C. Mat vote switches live on **Root Zone** (source of
-              truth) so this page stays control-focused. Sensing arrives
-              over ESP-NOW with HA as per-pot fallback.*
+          *The **gap between Low and High IS the hysteresis** — keep it
+          ≥ 2 °C. Mat votes the **coldest plausible pot** (`sensor.dsc_coldest_root_zone_temp`,
+          pot attribute). Per-pot cards live on **Root Zone** (source of
+          truth) so this page stays control-focused. Sensing arrives
+          over ESP-NOW with HA as per-pot fallback.*
       - type: custom:expander-card
         title: 💧 Clone humidifier — the short-cycling fix
         expanded: false

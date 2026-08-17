@@ -74,6 +74,18 @@ run_scp() {
   scp "${scp_opts[@]}" "${src}" "${remote}:${dest}"
 }
 
+# Stage to dest.dscnew then mv (F-015 atomic promote).
+run_scp_atomic() {
+  local src="$1"
+  local dest="$2"
+  if [[ "${DRY_RUN}" == "1" ]]; then
+    log "DRY_RUN atomic scp ${src} -> ${remote}:${dest}"
+    return 0
+  fi
+  scp "${scp_opts[@]}" "${src}" "${remote}:${dest}.dscnew"
+  ssh "${ssh_opts[@]}" "${remote}" "mv -f '${dest}.dscnew' '${dest}'"
+}
+
 ha_api() {
   local method="$1"
   local path="$2"
@@ -142,7 +154,7 @@ shopt -s nullglob
 pkg_files=("${HA_SRC}/packages"/dsc_v4_*.yaml)
 [[ ${#pkg_files[@]} -gt 0 ]] || die "No dsc_v4_*.yaml packages found"
 for f in "${pkg_files[@]}"; do
-  run_scp "${f}" "${HA_CONFIG_ROOT}/packages/$(basename "${f}")"
+  run_scp_atomic "${f}" "${HA_CONFIG_ROOT}/packages/$(basename "${f}")"
 done
 
 # --- dashboard ------------------------------------------------------------
@@ -228,12 +240,17 @@ run_scp "${bundle}" "${HA_CONFIG_ROOT}/www/DSC-HUB.js"
 # HA serves /local with Cache-Control max-age ~31d — query must change.
 # Never replace lovelace_resources with an unvalidated jq write (empty/corrupt
 # file wipes every HACS card). Require non-trivial output before install.
-bust_ver="dash-$(date -u +%Y%m%d%H%M%S)"
+bust_ver="7.2.0"
 log "Bumping Lovelace resource cache-buster to ${bust_ver}"
 if [[ "${DRY_RUN}" == "1" ]]; then
   log "DRY_RUN resource bump"
 else
-  run_ssh "set -e; LR=${HA_CONFIG_ROOT}/.storage/lovelace_resources; test -s \"\${LR}\" || { echo 'lovelace_resources missing/empty — skip bump' >&2; exit 0; }; jq --arg v \"/local/dsc-system-map-card.js?v=${bust_ver}\" '(.data.items[] | select(.url|test(\"dsc-system-map\")).url) |= \$v' \"\${LR}\" > /tmp/lr.json; BYTES=\$(wc -c < /tmp/lr.json); test \"\${BYTES}\" -gt 500 || { echo \"jq output too small (\${BYTES}) — abort\" >&2; exit 1; }; cp -a \"\${LR}\" \"\${LR}.bak.\$(date +%s)\"; mv /tmp/lr.json \"\${LR}\""
+  run_ssh "set -e; LR=${HA_CONFIG_ROOT}/.storage/lovelace_resources; test -s \"\${LR}\" || { echo 'lovelace_resources missing/empty — skip bump' >&2; exit 0; }; jq --arg v \"${bust_ver}\" '
+    (.data.items[] | select(.url|test(\"dsc-system-map\")).url) |= (sub(\"\\\\?.*$\"; \"\") + \"?v=\" + \$v) |
+    (.data.items[] | select(.url|test(\"dsc-catalog-browse-card\\\\.js\")).url) |= (sub(\"\\\\?.*$\"; \"\") + \"?v=\" + \$v) |
+    (.data.items[] | select(.url|test(\"dsc-build-plant-card\\\\.js\")).url) |= (sub(\"\\\\?.*$\"; \"\") + \"?v=\" + \$v) |
+    (.data.items[] | select(.url|test(\"dsc-hub-panel\\\\.js\")).url) |= (sub(\"\\\\?.*$\"; \"\") + \"?v=\" + \$v)
+  ' \"\${LR}\" > /tmp/lr.json; BYTES=\$(wc -c < /tmp/lr.json); test \"\${BYTES}\" -gt 500 || { echo \"jq output too small (\${BYTES}) — abort\" >&2; exit 1; }; cp -a \"\${LR}\" \"\${LR}.bak.\$(date +%s)\"; mv /tmp/lr.json \"\${LR}\""
 fi
 
 # --- esphome stubs (optional) ---------------------------------------------
@@ -242,7 +259,23 @@ if [[ "${SYNC_ESPHOME}" == "1" ]]; then
   esphome_files=("${HA_SRC}/esphome"/dsc-*.yaml)
   [[ ${#esphome_files[@]} -gt 0 ]] || die "No dsc-*.yaml stubs in esphome/"
   for f in "${esphome_files[@]}"; do
-    run_scp "${f}" "${HA_CONFIG_ROOT}/esphome/$(basename "${f}")"
+    run_scp_atomic "${f}" "${HA_CONFIG_ROOT}/esphome/$(basename "${f}")"
+  done
+  # F-015: bridge stubs need dsc_api_client + dsc_anchor_ap beside /config/esphome.
+  fw_comp="${REPO_ROOT}/firmware/v4/components"
+  for comp in dsc_api_client dsc_anchor_ap dsc_fleet_setup; do
+    if [[ -d "${fw_comp}/${comp}" ]]; then
+      log "Syncing esphome/components/${comp}"
+      if [[ "${DRY_RUN}" == "1" ]]; then
+        log "DRY_RUN rsync components/${comp}"
+      else
+        run_ssh "mkdir -p '${HA_CONFIG_ROOT}/esphome/components' && rm -rf '${HA_CONFIG_ROOT}/esphome/components/${comp}'"
+        tar -C "${fw_comp}" -cf - "${comp}" | ssh "${ssh_opts[@]}" "${remote}" \
+          "tar -C '${HA_CONFIG_ROOT}/esphome/components' -xf -"
+      fi
+    else
+      log "WARN: missing ${fw_comp}/${comp} (F-015)"
+    fi
   done
 else
   log "Skipping ESPHome stubs (set SYNC_ESPHOME=1 to include)"

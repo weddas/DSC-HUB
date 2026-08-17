@@ -5,6 +5,7 @@ import { ensureLocalCard, localCardScriptHints } from "../lib/ensureLocalCards";
 /**
  * Mount a legacy Lovelace custom element (IIFE) into a React host.
  * Auto-injects /local DSC-HUB bundles when the tag is not yet registered.
+ * Remount only when `tag` changes — config object identity is not a dep.
  */
 export function LegacyCardHost({
   tag,
@@ -14,19 +15,19 @@ export function LegacyCardHost({
   config?: Record<string, unknown>;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const { hass } = useHass();
+  const { hass, tick } = useHass();
   const [status, setStatus] = useState<"loading" | "ready" | "missing">("loading");
   const elRef = useRef<(HTMLElement & { setConfig?: (c: Record<string, unknown>) => void; hass?: unknown }) | null>(
     null,
   );
-
-  const configKey = JSON.stringify(config ?? {});
+  const configRef = useRef(config);
+  configRef.current = config;
 
   useEffect(() => {
     const host = ref.current;
     if (!host) return;
     let cancelled = false;
-    const cfg = configKey ? (JSON.parse(configKey) as Record<string, unknown>) : {};
+    const cfg = configRef.current ?? {};
 
     (async () => {
       setStatus("loading");
@@ -61,15 +62,15 @@ export function LegacyCardHost({
       elRef.current = null;
       host.innerHTML = "";
     };
-    // hass synced in separate effect; avoid remount on every hass tick
+    // hass synced in separate effect; remount only when the custom element tag changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tag, configKey]);
+  }, [tag]);
 
   useEffect(() => {
     if (elRef.current && hass) {
       elRef.current.hass = hass;
     }
-  }, [hass]);
+  }, [hass, tick]);
 
   return (
     <div

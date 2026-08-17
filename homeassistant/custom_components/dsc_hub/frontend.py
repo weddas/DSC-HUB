@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-import os
 from pathlib import Path
 from typing import Any, cast
 
@@ -17,18 +16,15 @@ from .const import (
     PANEL_JS_URL,
     PANEL_REGISTERED_KEY,
     PANEL_URL_PATH,
+    SURFACE_VERSION,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_cache_buster(filename: str = PANEL_JS_NAME) -> str:
-    """Stable cache buster from panel bundle mtime."""
-    try:
-        path = Path(__file__).parent / "www" / filename
-        return str(int(os.path.getmtime(path)))
-    except OSError:
-        return "1"
+def get_cache_buster(_filename: str = PANEL_JS_NAME) -> str:
+    """Query-string token for HA dashboard loads (`?v=7.2.0`)."""
+    return SURFACE_VERSION
 
 
 async def _async_register_path(hass: HomeAssistant, url_path: str, path: str) -> None:

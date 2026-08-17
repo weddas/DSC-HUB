@@ -69,4 +69,13 @@ template:
             'binary_sensor.dsc_pot4_nitrogen_below_baseline',
             'binary_sensor.dsc_pot4_nitrogen_depleting_fast'
           ] %}
-          {{ expand(alerts) | selectattr('state', 'eq', 'on') | list | count }}
+          {% set tank = [
+            'binary_sensor.dsc_tank_ec_out_of_range',
+            'binary_sensor.dsc_tank_ph_out_of_range',
+            'binary_sensor.dsc_tank_water_too_warm'
+          ] %}
+          {% set on = expand(alerts) | selectattr('state', 'eq', 'on') | list %}
+          {% if not is_state('input_boolean.dsc_tank_in_service', 'on') %}
+            {% set on = on | rejectattr('entity_id', 'in', tank) | list %}
+          {% endif %}
+          {{ on | count }}

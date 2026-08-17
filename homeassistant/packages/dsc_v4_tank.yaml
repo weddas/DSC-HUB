@@ -106,10 +106,13 @@ template:
         delay_on:
           minutes: 15
         state: >
+          {% if not is_state('input_boolean.dsc_tank_in_service', 'on') %}false
+          {% else %}
           {% set v = states('sensor.dsc_tank_ec_normalized')|float(none) %}
           {% set lo = states('sensor.dsc_tank_ec_target_min')|float(0) %}
           {% set hi = states('sensor.dsc_tank_ec_target_max')|float(9999) %}
           {{ v is not none and (v < lo or v > hi) }}
+          {% endif %}
 
       # Feed-water pH for soil grows: 6.2-6.8 target, alarm outside 6.0-7.0
       - name: "DSC Tank pH Out of Range"
@@ -118,9 +121,12 @@ template:
         delay_on:
           minutes: 15
         state: >
+          {% if not is_state('input_boolean.dsc_tank_in_service', 'on') %}false
+          {% else %}
           {% set v = states('sensor.dsc_tank_ph_calibrated')|float(none) %}
           {% if v is none %}{% set v = states('sensor.water_tester_ph_current')|float(none) %}{% endif %}
           {{ v is not none and (v < 6.0 or v > 7.0) }}
+          {% endif %}
 
       # >24C = dissolved O2 drops, Pythium risk climbs. Most valuable
       # tank alert there is.
@@ -130,8 +136,11 @@ template:
         delay_on:
           minutes: 15
         state: >
+          {% if not is_state('input_boolean.dsc_tank_in_service', 'on') %}false
+          {% else %}
           {% set v = states('sensor.water_tester_temperature')|float(none) %}
           {{ v is not none and v > 24.0 }}
+          {% endif %}
 
 automation:
   # Push stage-appropriate thresholds into the Tuya device's own

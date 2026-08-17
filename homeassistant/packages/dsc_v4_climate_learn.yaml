@@ -1140,11 +1140,14 @@ automation:
                   value: >-
                     {% set e = states('input_number.dsc_learn_eff_mat')|float(1) %}
                     {% set fl = [floor|float(60), 30]|max %}
+                    {% set cap = [ceil|float(600), 300]|min %}
                     {% set raw = 60 / ([e, 0.1]|max) %}
-                    {% set tgt = ([fl, raw, ceil|float(600)]|sort)[1] %}
-                    {{ (alpha|float(0.15) * tgt
+                    {% set tgt = ([fl, raw, cap]|sort)[1] %}
+                    {% set blended = alpha|float(0.15) * tgt
                         + (1 - alpha|float(0.15))
-                          * states('number.dsc_hub_ladder_wait_mat')|float(60)) | round(0) }}
+                          * states('number.dsc_hub_ladder_wait_mat')|float(60) %}
+                    {% set snapped = ((blended / 5)|round(0) * 5)|int %}
+                    {{ ([30, snapped, 300]|sort)[1] }}
 
   - id: dsc_climate_learn_reset_waits
     alias: "DSC Climate Learn — Reset ladder waits to open-loop"

@@ -63,7 +63,7 @@ esphome:
   # device's project version — "which nodes are behind?" at a glance.
   project:
     name: digital_emotions.dsc-sonoff
-    version: "5.2.0"
+    version: "6.0.0.0"
 
 esp8266:
   board: esp8285

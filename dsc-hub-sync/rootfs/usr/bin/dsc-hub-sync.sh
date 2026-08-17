@@ -14,7 +14,7 @@ STATE_FILE="/data/last_synced_sha"
 LAST_GOOD="/data/last_good_sync"
 HA_CONFIG="${HA_CONFIG:-/config}"
 STAGE="/data/sync_stage"
-SURFACE_VERSION="5.1.0"
+SURFACE_VERSION="7.2.0"
 
 log() { bashio::log.info "$*"; }
 warn() { bashio::log.warning "$*"; }
@@ -53,6 +53,15 @@ ha_notify() {
     -H "Content-Type: application/json" \
     -d "{\"title\":\"${title}\",\"message\":\"${message}\",\"notification_id\":\"dsc_hub_sync\"}" \
     "http://supervisor/core/api/services/persistent_notification/create" >/dev/null 2>&1 || true
+}
+
+atomic_install() {
+  local src="$1"
+  local dest="$2"
+  mkdir -p "$(dirname "${dest}")"
+  local tmp="${dest}.dscnew.$$"
+  cp -f "${src}" "${tmp}"
+  mv -f "${tmp}" "${dest}"
 }
 
 ensure_clone() {
@@ -258,6 +267,26 @@ stage_and_commit() {
     else
       warn "Missing firmware/v4/components/dsc_fleet_setup — ESPHome Install will fail"
     fi
+    # F-015: bridge compile on HAOS needs dsc_api_client + dsc_anchor_ap next to stubs.
+    local fw_comp=""
+    if [[ -d "${src}/../firmware/v4/components" ]]; then
+      fw_comp="${src}/../firmware/v4/components"
+    elif [[ -d "${src}/firmware/v4/components" ]]; then
+      fw_comp="${src}/firmware/v4/components"
+    fi
+    if [[ -n "${fw_comp}" ]]; then
+      local comp
+      for comp in dsc_api_client dsc_anchor_ap; do
+        if [[ -d "${fw_comp}/${comp}" ]]; then
+          mkdir -p "${STAGE}/esphome/components"
+          rm -rf "${STAGE}/esphome/components/${comp}"
+          cp -a "${fw_comp}/${comp}" "${STAGE}/esphome/components/${comp}"
+          log "Staged esphome/components/${comp}"
+        else
+          warn "Missing firmware/v4/components/${comp} (F-015)"
+        fi
+      done
+    fi
   fi
 
   # Custom React panel
@@ -284,14 +313,14 @@ stage_and_commit() {
     "${HA_CONFIG}/esphome"
 
   for f in "${STAGE}/packages"/dsc_v4_*.yaml; do
-    cp -f "${f}" "${HA_CONFIG}/packages/$(basename "${f}")"
+    atomic_install "${f}" "${HA_CONFIG}/packages/$(basename "${f}")"
   done
   if [[ -f "${STAGE}/dashboards/dsc-hub-v4-dashboard.yaml" ]]; then
-    cp -f "${STAGE}/dashboards/dsc-hub-v4-dashboard.yaml" \
+    atomic_install "${STAGE}/dashboards/dsc-hub-v4-dashboard.yaml" \
       "${HA_CONFIG}/dashboards/dsc-hub-v4-dashboard.yaml"
   fi
   if [[ -f "${STAGE}/dashboards/dsc-build-plant-dashboard.yaml" ]]; then
-    cp -f "${STAGE}/dashboards/dsc-build-plant-dashboard.yaml" \
+    atomic_install "${STAGE}/dashboards/dsc-build-plant-dashboard.yaml" \
       "${HA_CONFIG}/dashboards/dsc-build-plant-dashboard.yaml"
     log "Installed /config/dashboards/dsc-build-plant-dashboard.yaml"
   fi
@@ -299,7 +328,7 @@ stage_and_commit() {
     mkdir -p "${HA_CONFIG}/dashboards/modules"
     for f in "${STAGE}/dashboards/modules"/view_*.yaml; do
       [[ -f "${f}" ]] || continue
-      cp -f "${f}" "${HA_CONFIG}/dashboards/modules/$(basename "${f}")"
+      atomic_install "${f}" "${HA_CONFIG}/dashboards/modules/$(basename "${f}")"
     done
   fi
   if bashio::config.true 'sync_www'; then
@@ -318,7 +347,8 @@ stage_and_commit() {
             fi
           fi
         fi
-        cp -f "${STAGE}/www/${name}" "${HA_CONFIG}/www/${name}"
+        cp -f "${STAGE}/www/${name}" "${HA_CONFIG}/www/${name}.dscnew.$$"
+        mv -f "${HA_CONFIG}/www/${name}.dscnew.$$" "${HA_CONFIG}/www/${name}"
         log "Installed /config/www/${name}"
       fi
     done
@@ -351,6 +381,16 @@ stage_and_commit() {
         "${HA_CONFIG}/esphome/components/dsc_fleet_setup"
       log "Installed /config/esphome/components/dsc_fleet_setup"
     fi
+    local comp
+    for comp in dsc_api_client dsc_anchor_ap; do
+      if [[ -d "${STAGE}/esphome/components/${comp}" ]]; then
+        mkdir -p "${HA_CONFIG}/esphome/components"
+        rm -rf "${HA_CONFIG}/esphome/components/${comp}"
+        cp -a "${STAGE}/esphome/components/${comp}" \
+          "${HA_CONFIG}/esphome/components/${comp}"
+        log "Installed /config/esphome/components/${comp}"
+      fi
+    done
   fi
 }
 

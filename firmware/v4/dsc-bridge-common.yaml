@@ -30,7 +30,7 @@ esphome:
   friendly_name: ${friendly_name}
   project:
     name: digital_emotions.dsc-bridge
-    version: "5.2.0"
+    version: "6.0.0.0"
   platformio_options:
     board_build.flash_mode: dio
     # Allow SoftAP↔eth forward when packet arrives on eth destined for SoftAP subnet.

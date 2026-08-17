@@ -402,14 +402,20 @@ sections:
             name: Reset Phase A coeffs
             icon: mdi:restore
             tap_action:
+              action: none
+            hold_action:
               action: call-service
               service: script.dsc_climate_learn_reset
           - type: button
             name: Reset waits → open-loop
             icon: mdi:timer-refresh
             tap_action:
+              action: none
+            hold_action:
               action: call-service
               service: script.dsc_climate_learn_reset_waits
+      - type: markdown
+        content: "*Hold to reset*"
 
   - type: grid
     cards:
@@ -876,15 +882,15 @@ sections:
                 name: AC ×
       - type: custom:mushroom-template-card
         primary: Reset coefficients to nameplate
-        secondary: Clears sample counts · fires dsc_climate_learn_reset
+        secondary: Hold to reset
         icon: mdi:restore
         icon_color: amber
         tap_action:
-          action: call-service
-          service: script.dsc_climate_learn_reset
-        hold_action:
           action: more-info
           entity: script.dsc_climate_learn_reset
+        hold_action:
+          action: call-service
+          service: script.dsc_climate_learn_reset
       - type: markdown
         content: >-
           *Plant nameplates (CFM / volumes / L/day) stay under

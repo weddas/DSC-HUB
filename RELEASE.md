@@ -1,17 +1,17 @@
-# DSC-HUB **v5.1.0**
+# DSC-HUB · HA surface **7.2.0** / expected firmware **6.0.0.0**
 
-Full-fleet force to **5.1.0**: lab + kit firmwares, Sonoffs, Sync add-on,
-HA packages, DSC-HUB Pro dashboard, and Learn Phase B (opt-in wait clamps).
+Honesty pass for the live SoftAP fleet. The sidebar panel is **`/dsc-hub`**
+(not DSC-HUB Pro). Lovelace YAML at `/dsc-hub-pro/*` remains the hidden fallback.
 
 | | |
 |---|---|
-| **GitHub tag** | `v5.1.0` |
-| **Hub / panel / pots / Sonoffs** | **`5.1.0`** |
-| **Sync add-on** | **`5.1.0`** (`sync_esphome: true` default) |
-| **HA surface** | `sensor.dsc_ha_surface_version` = **`5.1.0`** |
-| **Dashboard** | **DSC-HUB Pro** · URL **`dsc-hub-pro`** |
-| **ESP-NOW tag** | **`54727` (`0xD5C7`)** |
-| **Phase B** | Default **off** — wait bases only |
+| **HA surface** | `sensor.dsc_ha_surface_version` = **`7.2.0`** |
+| **Expected firmware** | `input_text.dsc_expected_release` / fleet fallback = **`6.0.0.0`** |
+| **Primary UI** | React panel **`/dsc-hub`** · sidebar is not “DSC-HUB Pro” |
+| **Fallback Lovelace** | YAML dashboard URL **`dsc-hub-pro`** (hidden ops fallback — keep it) |
+| **Last GitHub tag** | `v5.1.0` (historical cut; live train is 7.2.0 / 6.0.0.0) |
+| **ESP-NOW tag** | **`54727` (`0xD5C7`)** — protocol deepening parked this pass |
+| **Phase B mat wait** | Ceiling **≤ 300 s** |
 
 **Install:** [`INSTALL.md`](INSTALL.md) · **Upgrade:** [`UPGRADE.md`](UPGRADE.md) ·
 **Add-on:** [`scripts/ADDON.md`](scripts/ADDON.md) ·
@@ -19,9 +19,9 @@ HA packages, DSC-HUB Pro dashboard, and Learn Phase B (opt-in wait clamps).
 
 Repo: https://github.com/weddas/DSC-HUB · branch **`master`**
 
-> **Live train note (2026-08-04):** tagged cut remains `v5.1.0`. In-tree /
-> lab patch train is HA **5.1.8**, pots **5.1.6**, Control **5.1.15**, hub
-> **5.1.4**, Sync **5.1.3**. See [`CHANGELOG.md`](CHANGELOG.md) and
+> Hardware OOS stays gated: AC, clone mister, POT3, tank. Do not flash pots
+> this pass (Modbus). ESP-NOW 0xD5 / 0xD0 / SoftAP BSSID adopt stay parked.
+> See [`docs/AUDIT-2026-08-17.md`](docs/AUDIT-2026-08-17.md) and
 > [`docs/FOLLOWUPS.md`](docs/FOLLOWUPS.md).
 
 ---
@@ -45,14 +45,13 @@ remote ESP log capture; renaming `dsc_v4_*` filenames.
 
 ---
 
-## Rollout on all systems
+## Rollout (7.2.0 surface / 6.0.0.0 fleet)
 
-- [ ] Push `master` / tag `v5.1.0`
-- [ ] On **each** HAOS: Update **DSC-HUB Sync** add-on to **5.1.0** → Start/restart → wait for “Synced to …”
-- [ ] Restart HA Core **once** (new Learning / version helpers)
-- [ ] Confirm `/dsc-hub-pro/home` + fleet chip shows HA surface **5.1.0**
-- [ ] ESPHome: Validate/Install each device to firmware **5.1.0** (lab + field kits)
-- [ ] Chip → **ok**
+- [ ] Sync packages / www / React panel (add-on or `scripts/ha-sync.sh`)
+- [ ] Hard-reload HA; confirm sidebar **`/dsc-hub`** chrome says **7.2.0**
+- [ ] Fleet chip: expected **6.0.0.0**, no false 5.2.0 warn
+- [ ] OTA **hub** only this pass if firmware YAML changed (Control if on HA; **not** pots)
+- [ ] Lovelace `/dsc-hub-pro/ops` still renders (fallback, not the sidebar name)
 
 Firmware Install remains **manual** per device.
 

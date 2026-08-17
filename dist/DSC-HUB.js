@@ -3154,7 +3154,6 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     "Flowering",
     "Late Flowering",
     "Final 48-72h Flowering",
-    "Dry Mode",
   ];
 
   const DSC_DEFAULTS = () => ({
@@ -3326,16 +3325,6 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
 
   const potEntity = (prefix, suffix) => `sensor.${prefix}_${suffix}`;
 
-  /** Same SoT as React seatModel.potGotEntity: got_* then soil_*. */
-  const potGotId = (hass, prefix, kind) => {
-    const got =
-      kind === "moisture" ? "got_moisture" : kind === "ec" ? "got_ec" : "got_ph";
-    const fb =
-      kind === "moisture" ? "soil_moisture" : kind === "ec" ? "soil_conductivity" : "soil_ph";
-    const gId = potEntity(prefix, got);
-    return isUnavailable(hass, gId) ? potEntity(prefix, fb) : gId;
-  };
-
   /** Extract pot number from id/prefix (pot1 / dsc_pot1 -> 1). */
   const potNumFrom = (p) => {
     const raw = String((p && (p.id || p.prefix)) || "");
@@ -3392,17 +3381,6 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       display: flex;
       flex-direction: column;
     }
-    /* Main/Clone cockpit: React chrome owns HUD; IIFE is canvas only (T-10 / U-07). */
-    .dash.is-hud-hidden .dash-header,
-    .dash.is-hud-hidden .dash-hud,
-    .dash.is-hud-hidden .dash-charts,
-    .dash.is-hud-hidden .dash-rail,
-    .dash.is-hud-hidden .dash-legend,
-    .dash.is-hud-hidden .dash-pot-chips,
-    .dash.is-hud-hidden .dash-footer { display: none !important; }
-    .dash.is-hud-hidden .dash-body { grid-template-columns: 1fr; padding: 0; gap: 0; }
-    .dash.is-hud-hidden .dash-scene-wrap { min-height: calc(100vh - 72px); border: none; border-radius: 0; }
-    .dash.is-hud-hidden { min-height: 100%; height: 100%; }
     ha-card, :host { background: transparent; }
     .dash-header {
       display: flex; align-items: center; justify-content: space-between;
@@ -3443,15 +3421,6 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       opacity: 0.85;
     }
     .dash-scene-wrap canvas { display: block; width: 100%; height: 100%; position: relative; z-index: 0; }
-    .dash.is-canvas-only .dash-header,
-    .dash.is-canvas-only .dash-rail,
-    .dash.is-canvas-only .dash-charts,
-    .dash.is-canvas-only .dash-hud,
-    .dash.is-canvas-only .dash-legend,
-    .dash.is-canvas-only .dash-pot-chips,
-    .dash.is-canvas-only .dash-footer { display: none !important; }
-    .dash.is-canvas-only .dash-body { grid-template-columns: 1fr; }
-    .dash.is-canvas-only .dash-scene-wrap { min-height: 100%; flex: 1; }
     .dash-hud {
       position: absolute; pointer-events: none; z-index: 5;
       background: rgba(8, 14, 16, 0.78); backdrop-filter: blur(12px);
@@ -3597,12 +3566,12 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       margin: 0 0 10px; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
       color: var(--muted); font-weight: 700;
     }
-    .dash-timeline { display: flex; flex-wrap: wrap; gap: 4px; overflow: visible; }
+    .dash-timeline { display: flex; gap: 0; overflow: hidden; }
     .dash-chev {
-      flex: 1 1 68px; min-width: 60px; position: relative; padding: 8px 6px;
-      background: #1a2230; color: var(--muted); font-size: 9px; font-weight: 700;
-      clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 50%, calc(100% - 8px) 100%, 0 100%, 8px 50%);
-      text-align: center; letter-spacing: 0.03em;
+      flex: 1; position: relative; padding: 10px 8px 10px 18px;
+      background: #1a2230; color: var(--muted); font-size: 10px; font-weight: 700;
+      clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 0 100%, 10px 50%);
+      margin-left: -8px; text-align: center; letter-spacing: 0.04em;
     }
     .dash-chev:first-child { margin-left: 0; clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 0 100%); }
     .dash-chev.on { background: #1565c0; color: #fff; }
@@ -3645,15 +3614,6 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       text-align: center; font-size: 9px; color: #6a7788; letter-spacing: 0.04em;
       line-height: 1; padding: 0 0 2px;
     }
-    .dash-air-svg { width: 100%; height: auto; display: block; }
-    .dash-timeline-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; font-size: 10px; color: var(--muted); }
-    .dash-timeline-lanes { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
-    .dash-timeline-lane {
-      display: flex; gap: 8px; align-items: center; font-size: 11px;
-      background: #152030; border: 1px solid #243044; border-radius: 6px; padding: 6px 8px;
-    }
-    .dash-timeline-lane.oos { opacity: 0.45; }
-    .dash-timeline-lane strong { min-width: 22px; }
     .dash-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     .dash-btn {
       border: 1px solid var(--line); background: #1a222e; color: var(--text);
@@ -3686,102 +3646,106 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
   /* ------------------------------------------------------------------ */
 
   const fmtCfm = (n) => (Number.isFinite(n) ? `${Math.round(n)} CFM` : "— CFM");
-  const fmtShort = (n) => (Number.isFinite(n) ? String(Math.round(n)) : "—");
-
-  const ribbonCount = (cfm) => {
-    if (!Number.isFinite(cfm) || cfm <= 0) return 0;
-    if (cfm < 40) return 1;
-    if (cfm < 80) return 2;
-    if (cfm < 140) return 3;
-    if (cfm < 220) return 4;
-    return 5;
-  };
-
-  const svgRibbons = (x1, y1, x2, y2, cfm, color) => {
-    const n = ribbonCount(cfm);
-    const dx = x2 - x1;
-    const dy = y2 - y1;
-    const len = Math.hypot(dx, dy) || 1;
-    const nx = (-dy / len) * 3.2;
-    const ny = (dx / len) * 3.2;
-    if (n === 0) {
-      return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color}" stroke-width="1.2" stroke-dasharray="2 6" opacity="0.35"/>`;
-    }
-    const start = -Math.floor((n - 1) / 2);
-    const sw = 1.4 + Math.min(2.2, cfm / 120);
-    return Array.from({ length: n }, (_, i) => {
-      const o = start + i;
-      return `<line x1="${x1 + nx * o}" y1="${y1 + ny * o}" x2="${x2 + nx * o}" y2="${y2 + ny * o}" stroke="${color}" stroke-width="${sw}" opacity="0.85"/>`;
-    }).join("");
-  };
 
   const renderFlow = (live) => {
+    // Col1 Active gear | Col2 Intake environment (room climate)
+    // Col3 Intake CFM (2x4 + cascade transfer + 4x8 + Σ) | Col4 4x8 exhaust split
+    const devices = (live.devices || []).filter((d) => d.on && !String(d.id).startsWith("fan_"));
+    const gearHtml =
+      devices.length === 0
+        ? `<div class="dash-flow-box idle">None on</div>`
+        : devices
+            .map(
+              (d) =>
+                `<div class="dash-flow-box gear" style="color:${esc(d.color)};border-color:${esc(d.color)}">
+                  <div class="val" style="font-size:11px">${esc(d.label)}</div>
+                </div>`
+            )
+            .join("");
+
     const cfm2 = live.cfmClone ?? NaN;
     const cfm8 = live.cfmMain ?? NaN;
     const casc = live.cascadeCfm ?? NaN;
     const throughput =
       Number.isFinite(cfm2) && Number.isFinite(cfm8) ? cfm2 + cfm8 : Number.isFinite(live.throughput) ? live.throughput : NaN;
+    const oPct = Math.round((live.outShare || 0) * 100);
+    const rPct = Math.round((live.recircShare || 0) * 100);
     const cfmOut = live.cfmOut ?? NaN;
     const cfmRec = live.cfmRecirc ?? NaN;
-    const trust = live.cfmTrust || "CFM guessed from fan % × nameplate — run Learning to measure.";
+    const roomParts = String(live.roomClimate || "— · — · —").split("·").map((s) => s.trim());
 
     return `
-      <p class="dash-flow-caption">${esc(trust)}</p>
-      <svg viewBox="0 0 720 260" class="dash-air-svg" role="img" aria-label="Air path room to tents">
-        <rect x="16" y="78" width="120" height="110" rx="12" fill="none" stroke="#26c6da" stroke-width="1.8"/>
-        <text x="76" y="122" text-anchor="middle" fill="#e8eef6" font-size="13">Room</text>
-        <text x="76" y="142" text-anchor="middle" fill="#6a7788" font-size="10">umbrella lung</text>
-        <rect x="220" y="28" width="150" height="88" rx="10" fill="none" stroke="#26c6da" stroke-width="1.8"/>
-        <text x="295" y="64" text-anchor="middle" fill="#e8eef6" font-size="13">2×4 tent</text>
-        <text x="295" y="84" text-anchor="middle" fill="#6a7788" font-size="10">in ${esc(fmtShort(cfm2))} cfm</text>
-        <rect x="220" y="150" width="150" height="88" rx="10" fill="none" stroke="#64b5f6" stroke-width="1.8"/>
-        <text x="295" y="186" text-anchor="middle" fill="#e8eef6" font-size="13">4×8 tent</text>
-        <text x="295" y="206" text-anchor="middle" fill="#6a7788" font-size="10">in ${esc(fmtShort(cfm8))} cfm</text>
-        <rect x="560" y="150" width="140" height="88" rx="10" fill="none" stroke="#ff8a65" stroke-width="1.6"/>
-        <text x="630" y="186" text-anchor="middle" fill="#e8eef6" font-size="12">Outdoors</text>
-        <text x="630" y="206" text-anchor="middle" fill="#6a7788" font-size="10">dump ${esc(fmtShort(cfmOut))}</text>
-        ${svgRibbons(136, 110, 220, 72, cfm2, "#26c6da")}
-        ${svgRibbons(136, 140, 220, 194, cfm8, "#64b5f6")}
-        ${svgRibbons(295, 116, 295, 150, casc, "#ffb74d")}
-        <text x="370" y="140" fill="#ffcc80" font-size="10">cascade ${esc(fmtShort(casc))}</text>
-        <text x="370" y="152" fill="#6a7788" font-size="9">same air · not added to Σ</text>
-        ${svgRibbons(370, 194, 560, 194, cfmOut, "#ff8a65")}
-        ${svgRibbons(370, 220, 136, 168, cfmRec, "#b388ff")}
-        <text x="80" y="200" fill="#b388ff" font-size="10">recirc ${esc(fmtShort(cfmRec))}</text>
-      </svg>
+      <div class="dash-flow-grid" role="img" aria-label="Intake environment to CFM to exhaust">
+        <div class="dash-flow-col">
+          <div class="col-h">Active gear</div>
+          ${gearHtml}
+        </div>
+        <div class="dash-flow-col">
+          <div class="col-h">Intake environment</div>
+          <div class="dash-flow-box env" style="flex:1">
+            <div class="lbl">ROOM → TENTS</div>
+            <div class="val">${esc(roomParts[0] || "—")}</div>
+            <div class="val">${esc(roomParts[1] || "—")}</div>
+            <div class="val" style="color:#26c6da">${esc(roomParts[2] || "—")}</div>
+            <div class="sub">shared lung air into intakes</div>
+          </div>
+        </div>
+        <div class="dash-flow-col">
+          <div class="col-h">Intake CFM</div>
+          <div class="dash-flow-box clone">
+            <div class="lbl">2×4 from room</div>
+            <div class="val">${esc(fmtCfm(cfm2))}</div>
+          </div>
+          <div class="dash-flow-arrow">↓ transfer (not +)</div>
+          <div class="dash-flow-box casc">
+            <div class="lbl">2×4 → 4×8 cascade</div>
+            <div class="val" style="color:#ffcc80;font-size:12px">${esc(fmtCfm(casc))}</div>
+            <div class="sub">same air · neg. pressure</div>
+          </div>
+          <div class="dash-flow-box main">
+            <div class="lbl">4×8 from room</div>
+            <div class="val">${esc(fmtCfm(cfm8))}</div>
+          </div>
+          <div class="dash-flow-box total">
+            <div class="lbl">Σ into 4×8</div>
+            <div class="val" style="font-size:12px">${esc(fmtCfm(throughput))}</div>
+            <div class="sub">2×4 + 4×8 intakes</div>
+          </div>
+        </div>
+        <div class="dash-flow-col">
+          <div class="col-h">4×8 exhaust · ${esc(fmtCfm(throughput))}</div>
+          <div class="dash-flow-box out">
+            <div class="lbl">DUMP OUTSIDE</div>
+            <div class="val">${oPct}%</div>
+            <div class="sub">${esc(fmtCfm(cfmOut))}</div>
+          </div>
+          <div class="dash-flow-box rec" style="margin-top:auto">
+            <div class="lbl">RECIRC ROOM</div>
+            <div class="val">${rPct}%</div>
+            <div class="sub">${esc(fmtCfm(cfmRec))}</div>
+          </div>
+          <div class="dash-flow-box total">
+            <div class="lbl">Σ dump + recirc</div>
+            <div class="val" style="font-size:12px">${esc(
+              fmtCfm(Number.isFinite(cfmOut) && Number.isFinite(cfmRec) ? cfmOut + cfmRec : NaN)
+            )}</div>
+            <div class="sub">must equal Σ intake</div>
+          </div>
+        </div>
+      </div>
       <p class="dash-flow-caption" style="margin-top:8px">
-        Mass-balance exhaust = Σ intake ${esc(fmtCfm(throughput))} × dump/recirc split.
+        Mass balance: exhaust CFM = Σ intake (${esc(fmtCfm(throughput))}) × dump/recirc split (from fan %).
         Cascade is a transfer of 2×4 air — do not add it to intake total.
+        Raw sensor.dsc_cfm_exhaust_* stay nameplate proxies until Learning cal.
+        Heat mat is 2×4-only.
       </p>`;
   };
 
   const renderTimeline = (live) => {
     const stages = live.timelineStages || [];
-    const seats = live.timelineSeats || [];
-    const hours4 = Number.isFinite(live.expectedHoursMain) ? `${Math.round(live.expectedHoursMain)}h` : "—";
-    const hours2 = Number.isFinite(live.expectedHoursClone) ? `${Math.round(live.expectedHoursClone)}h` : "—";
-    const chips = [
-      `4×8 ${live.mainLit ? "window open" : "dark"} · Want ${hours4}`,
-      `2×4 ${live.cloneLit ? "window open" : "dark"} · Want ${hours2}`,
-      live.catchup ? "Catch-up" : "",
-      live.darkViol ? "2×4 dark violation" : "",
-      live.mixed ? "Mixed stages in tents" : "",
-    ].filter(Boolean);
-    return `
-      <div class="dash-timeline">${stages
-        .map((s) => `<div class="dash-chev ${s.cls}">${esc(s.label)}</div>`)
-        .join("")}</div>
-      <div class="dash-timeline-chips">${chips.map((c) => `<span>${esc(c)}</span>`).join("")}</div>
-      <div class="dash-timeline-lanes">${seats
-        .map((s) => {
-          const week = Number.isFinite(s.days) ? `W${Math.max(1, Math.ceil(s.days / 7))}` : "W—";
-          const tent = s.tent === "main" ? "4×8" : s.tent === "clone" ? "2×4" : "—";
-          const body = s.oos
-            ? "OOS"
-            : `${esc(s.name || "—")} · ${week} · ${Number.isFinite(s.days) ? `${s.days}d` : "—"} · ${esc(s.stage || "—")} · Need ${esc(s.need || "—")}`;
-          return `<div class="dash-timeline-lane${s.oos ? " oos" : ""}"><strong>P${esc(String(s.n))}</strong><span>${esc(tent)}</span><span>${body}</span></div>`;
-        })
-        .join("")}</div>`;
+    return `<div class="dash-timeline">${stages
+      .map((s) => `<div class="dash-chev ${s.cls}">${esc(s.label)}</div>`)
+      .join("")}</div>`;
   };
 
   /* ------------------------------------------------------------------ */
@@ -4073,8 +4037,14 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     addContact(2.15, 0.08, 2.45, 1.5);
 
     const poleMat = new THREE.MeshStandardMaterial({ color: 0xb4c0c9, metalness: 0.72, roughness: 0.28 });
-    // Wave 5: CUT oxford/mylar/soil CanvasTextures — neon wire, not photoreal fabric.
-    const surfaces = null;
+    let surfaces = null;
+    if (fx && typeof fx.createPhotorealSurfaces === "function") {
+      try {
+        surfaces = fx.createPhotorealSurfaces();
+      } catch (_) {
+        surfaces = null;
+      }
+    }
     const mylarMat = new THREE.MeshStandardMaterial({
       color: 0xc5d4e2,
       map: surfaces ? surfaces.mylar : null,
@@ -4252,31 +4222,29 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         shaft.rotation.x = -0.06 * i;
         shafts.add(shaft);
       }
-      // Window-proxy dashed overlay (4×8 until GPIO lamp / entities.main_light).
-      const proxyPts = [
-        new THREE.Vector3(-w * 0.28, h * 0.2, 0.02),
-        new THREE.Vector3(-w * 0.28, h * 0.85, 0.02),
-        new THREE.Vector3(w * 0.28, h * 0.85, 0.02),
-        new THREE.Vector3(w * 0.28, h * 0.2, 0.02),
-        new THREE.Vector3(-w * 0.28, h * 0.2, 0.02),
-      ];
-      const proxyLine = new THREE.Line(
-        new THREE.BufferGeometry().setFromPoints(proxyPts),
-        new THREE.LineDashedMaterial({
-          color: 0x90a4ae,
-          dashSize: 0.08,
-          gapSize: 0.05,
-          transparent: true,
-          opacity: 0,
-        })
-      );
-      if (proxyLine.computeLineDistances) proxyLine.computeLineDistances();
-      shafts.add(proxyLine);
       group.add(shafts);
 
+      // Layered ACH volume stack (multi-slice additive haze — not a single flat box)
       const achHaze = new THREE.Group();
       const achSlices = [];
-      group.userData = { size: { w, d, h }, lightBar, shafts, achHaze, achSlices, proxyLine };
+      for (let s = 0; s < 3; s++) {
+        const slice = new THREE.Mesh(
+          new THREE.BoxGeometry(w * (0.78 + s * 0.04), h * (0.22 + s * 0.08), d * (0.72 + s * 0.04)),
+          new THREE.MeshBasicMaterial({
+            color: accent,
+            transparent: true,
+            opacity: 0,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false,
+            side: THREE.DoubleSide,
+          })
+        );
+        slice.position.y = h * (0.28 + s * 0.14);
+        achHaze.add(slice);
+        achSlices.push(slice);
+      }
+      group.add(achHaze);
+      group.userData = { size: { w, d, h }, lightBar, shafts, achHaze, achSlices };
       return group;
     };
 
@@ -4289,43 +4257,6 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     tentMain.userData.lightBar.material.opacity = 0.025;
     tentMain.userData.shafts.visible = false;
     root.add(tentMain);
-
-    const makePortStub = (caption) => {
-      const g = new THREE.Group();
-      const mouth = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.13, 0.2, 0.34, 16, 1, true),
-        new THREE.MeshStandardMaterial({
-          color: 0xffb74d,
-          emissive: 0x4a3200,
-          metalness: 0.45,
-          roughness: 0.38,
-          side: THREE.DoubleSide,
-        })
-      );
-      mouth.rotation.z = Math.PI / 2;
-      g.add(mouth);
-      const c = document.createElement("canvas");
-      c.width = 256;
-      c.height = 64;
-      const ctx = c.getContext("2d");
-      ctx.fillStyle = "#ffcc80";
-      ctx.font = "700 30px sans-serif";
-      ctx.fillText(caption, 8, 44);
-      const spr = new THREE.Sprite(
-        new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthTest: false })
-      );
-      spr.scale.set(1.55, 0.38, 1);
-      spr.position.set(0, 0.28, 0);
-      g.add(spr);
-      g.visible = false;
-      return g;
-    };
-    const portFromClone = makePortStub("from 2×4");
-    portFromClone.position.set(-tentMain.userData.size.w / 2, 1.15, 0.08);
-    tentMain.add(portFromClone);
-    const portToMain = makePortStub("to 4×8");
-    portToMain.position.set(tentClone.userData.size.w / 2, 1.12, 0.05);
-    tentClone.add(portToMain);
 
     const mkCurve = (points) =>
       new THREE.CatmullRomCurve3(
@@ -4389,22 +4320,6 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       out: 0xff765e,
       recirc: 0xb388ff,
     };
-    const offsetCurve = (curve, offset) => {
-      const pts = [];
-      const n = 20;
-      const up = new THREE.Vector3(0, 1, 0);
-      const side = new THREE.Vector3();
-      for (let i = 0; i <= n; i++) {
-        const t = i / n;
-        const p = curve.getPoint(t);
-        const tan = curve.getTangent(t);
-        side.crossVectors(tan, up);
-        if (side.lengthSq() < 1e-6) side.set(1, 0, 0);
-        else side.normalize();
-        pts.push(p.clone().addScaledVector(side, offset));
-      }
-      return new THREE.CatmullRomCurve3(pts);
-    };
     const addPath = (name, radius, tubular, solidColor) => {
       const mat = solidColor
         ? new THREE.MeshStandardMaterial({ color: solidColor, metalness: 0.72, roughness: 0.32 })
@@ -4440,23 +4355,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
           ribbon = null;
         }
       }
-      paths[name] = { solid, shell, ribbon, intensity: 0, shaft: null, portJet: null, strands: [] };
-      if (fx && typeof fx.makeFlowRibbon === "function") {
-        [-0.09, -0.045, 0.045, 0.09].forEach((off) => {
-          try {
-            const extra = fx.makeFlowRibbon(offsetCurve(curves[name], off), {
-              radius: radius * 0.2,
-              tubular: Math.max(24, Math.floor(tubular * 0.7)),
-              color: pathColors[name],
-              opacity: 0,
-              dashArray: name === "cascade" ? [0.12, 0.055] : [0.1, 0.08],
-            });
-            extra.visible = false;
-            ductGroup.add(extra);
-            paths[name].strands.push(extra);
-          } catch (_) {}
-        });
-      }
+      paths[name] = { solid, shell, ribbon, intensity: 0, shaft: null, portJet: null };
     };
     addPath("intakeClone", 0.11, 44);
     addPath("intakeMain", 0.12, 44);
@@ -4814,27 +4713,17 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
 
     const growMat = new THREE.Group();
     const matRim = new THREE.Mesh(
-      new THREE.BoxGeometry(1.68, 0.02, 1.14),
-      new THREE.MeshStandardMaterial({
-        color: 0x26c6da,
-        metalness: 0.4,
-        roughness: 0.25,
-        transparent: true,
-        opacity: 0.55,
-        emissive: 0x26c6da,
-        emissiveIntensity: 0.15,
-      })
+      new THREE.BoxGeometry(1.68, 0.035, 1.14),
+      new THREE.MeshStandardMaterial({ color: 0x6d3d29, metalness: 0.35, roughness: 0.45 })
     );
     growMat.add(matRim);
     const matPlate = new THREE.Mesh(
-      new THREE.BoxGeometry(1.58, 0.04, 1.04),
+      new THREE.BoxGeometry(1.58, 0.052, 1.04),
       new THREE.MeshStandardMaterial({
-        color: 0x0a1218,
-        emissive: 0xff6d00,
+        color: 0x3b1f18,
+        emissive: 0xff5a00,
         emissiveIntensity: 0,
-        roughness: 0.35,
-        transparent: true,
-        opacity: 0.85,
+        roughness: 0.58,
       })
     );
     matPlate.position.y = 0.025;
@@ -4857,108 +4746,124 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     tentClone.add(growMat);
 
     const appliances = {};
+    const addAppliance = (name, x, z, color) => {
+      const body = new THREE.Mesh(
+        new THREE.BoxGeometry(0.42, 0.36, 0.36),
+        new THREE.MeshStandardMaterial({ color: 0x202936, emissive: color, emissiveIntensity: 0, roughness: 0.48 })
+      );
+      body.position.set(x, 0.18, z);
+      body.castShadow = true;
+      root.add(body);
+      appliances[name] = body;
+    };
+    addAppliance("heater", -4.35, 1.4, 0xff7043);
+    addAppliance("ac", -4.35, 0.65, 0x4fc3f7);
+    addAppliance("humidifier", -4.35, -0.1, 0x29b6f6);
+    addAppliance("dehumidifier", -4.35, -0.85, 0x80cbc4);
+    addAppliance("clone_humidifier", -3.85, 1.35, 0x81d4fa);
 
     const pots = { clone: [], main: [] };
-    const glassMat = () =>
-      THREE.MeshPhysicalMaterial
-        ? new THREE.MeshPhysicalMaterial({
-            color: 0x26c6da,
-            metalness: 0.08,
-            roughness: 0.12,
-            transmission: 0.55,
-            transparent: true,
-            opacity: 0.32,
-            side: THREE.DoubleSide,
-          })
-        : new THREE.MeshStandardMaterial({
-            color: 0x26c6da,
-            transparent: true,
-            opacity: 0.28,
-            side: THREE.DoubleSide,
-          });
-    const mkPadRing = () => {
-      const g = new THREE.Group();
-      const pts = [];
-      for (let i = 0; i <= 24; i++) {
-        const a = (i / 24) * Math.PI * 2;
-        pts.push(new THREE.Vector3(Math.cos(a) * 0.22, 0.03, Math.sin(a) * 0.22));
-      }
-      const line = new THREE.Line(
-        new THREE.BufferGeometry().setFromPoints(pts),
-        new THREE.LineDashedMaterial({
-          color: 0x26c6da,
-          dashSize: 0.05,
-          gapSize: 0.035,
-          transparent: true,
-          opacity: 0.6,
+    const leafPlane = new THREE.PlaneGeometry(1, 1.15);
+    const mkPlant = (tall) => {
+      const plant = new THREE.Group();
+      const pot = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.17, 0.14, 0.2, 20),
+        new THREE.MeshStandardMaterial({
+          color: 0x7a4530,
+          roughness: 0.9,
+          metalness: 0.04,
         })
       );
-      if (line.computeLineDistances) line.computeLineDistances();
-      g.add(line);
-      g.userData.padLine = line;
-      g.userData.padMarker = true;
-      return g;
-    };
-    const mkPlant = (tall, silhouette) => {
-      const sil = silhouette || (tall ? "tall" : "bag");
-      const plant = new THREE.Group();
-      const H = sil === "tall" ? 0.34 : sil === "airpot" ? 0.28 : sil === "taper" ? 0.24 : 0.22;
-      const Rtop = sil === "taper" ? 0.12 : 0.16;
-      const Rbot = sil === "bag" ? 0.17 : sil === "taper" ? 0.16 : 0.13;
-      const body = new THREE.Mesh(new THREE.CylinderGeometry(Rtop, Rbot, H, 14, 1, true), glassMat());
-      body.position.y = H / 2;
-      plant.add(body);
-      const edges = new THREE.LineSegments(
-        new THREE.EdgesGeometry(new THREE.CylinderGeometry(Rtop, Rbot, H, 10)),
-        new THREE.LineBasicMaterial({ color: 0x26c6da, transparent: true, opacity: 0.85 })
+      pot.position.y = 0.11;
+      pot.castShadow = true;
+      pot.receiveShadow = true;
+      plant.add(pot);
+      const rim = new THREE.Mesh(
+        new THREE.TorusGeometry(0.165, 0.014, 10, 24),
+        new THREE.MeshStandardMaterial({ color: 0x4a2c1e, roughness: 0.75, metalness: 0.08 })
       );
-      edges.position.y = H / 2;
-      plant.add(edges);
-      const moist = new THREE.Mesh(
-        new THREE.CylinderGeometry(Math.min(Rtop, Rbot) * 0.7, Math.min(Rtop, Rbot) * 0.7, 1, 12),
-        new THREE.MeshBasicMaterial({ color: 0x26c6da, transparent: true, opacity: 0.38 })
+      rim.rotation.x = Math.PI / 2;
+      rim.position.y = 0.21;
+      plant.add(rim);
+      const soil = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.15, 0.15, 0.045, 16),
+        new THREE.MeshStandardMaterial({
+          color: 0x2a1c14,
+          roughness: 1,
+          map: surfaces ? surfaces.soil : null,
+        })
       );
-      moist.scale.y = 0.02;
-      moist.position.y = 0.02;
-      plant.add(moist);
-      const ec = new THREE.Mesh(
-        new THREE.CylinderGeometry(Rtop * 0.82, Rtop * 0.82, 0.018, 16),
-        new THREE.MeshBasicMaterial({ color: 0xffb74d, transparent: true, opacity: 0 })
+      soil.position.y = 0.2;
+      plant.add(soil);
+      const stemHeight = tall ? 0.78 : 0.42;
+      const stem = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.016, 0.026, stemHeight, 10),
+        new THREE.MeshStandardMaterial({ color: 0x245a32, roughness: 0.65, metalness: 0.05 })
       );
-      ec.position.y = H + 0.02;
-      plant.add(ec);
-      const phRim = new THREE.Mesh(
-        new THREE.TorusGeometry(Rtop, 0.012, 8, 24),
-        new THREE.MeshBasicMaterial({ color: 0xb388ff, transparent: true, opacity: 0.7 })
-      );
-      phRim.rotation.x = Math.PI / 2;
-      phRim.position.y = H;
-      plant.add(phRim);
-      const stemH = tall ? 0.42 : 0.24;
-      const stemGeo = new THREE.BufferGeometry().setFromPoints([
-        new THREE.Vector3(0, H, 0),
-        new THREE.Vector3(0, H + stemH, 0),
-      ]);
-      const stemMat = new THREE.LineBasicMaterial({ color: 0x66bb6a, transparent: true, opacity: 0.75 });
-      const stem = new THREE.Line(stemGeo, stemMat);
+      stem.position.y = 0.22 + stemHeight / 2;
+      stem.castShadow = true;
       plant.add(stem);
-      plant.userData.canopyMaterial = stemMat;
-      plant.userData.moist = moist;
-      plant.userData.ecSlab = ec;
-      plant.userData.phRim = phRim;
-      plant.userData.stem = stem;
-      plant.userData.body = body;
-      plant.userData.vesselH = H;
+      const leafMat = new THREE.MeshStandardMaterial({
+        color: surfaces && surfaces.leaf ? 0xffffff : 0x3f9a52,
+        map: surfaces ? surfaces.leaf : null,
+        transparent: !!(surfaces && surfaces.leaf),
+        alphaTest: surfaces && surfaces.leaf ? 0.28 : 0,
+        emissive: 0x0a2812,
+        emissiveIntensity: 0.16,
+        roughness: 0.48,
+        metalness: 0.02,
+        side: THREE.DoubleSide,
+        depthWrite: false,
+      });
+      const leaflet = (scale) => {
+        const leaf = new THREE.Mesh(leafPlane.clone(), leafMat.clone());
+        leaf.scale.set(0.14 * scale, 0.14 * scale, 0.14 * scale);
+        leaf.castShadow = true;
+        return leaf;
+      };
+      const tiers = tall ? 5 : 3;
+      const perTier = tall ? 6 : 4;
+      for (let t = 0; t < tiers; t++) {
+        const y = 0.34 + (t / Math.max(1, tiers - 1)) * stemHeight * 0.82;
+        const rad = 0.08 + t * 0.04;
+        for (let i = 0; i < perTier; i++) {
+          const angle = (i / perTier) * Math.PI * 2 + t * 0.4;
+          const fan = new THREE.Group();
+          const fingers = tall ? 7 : 5;
+          for (let f = 0; f < fingers; f++) {
+            const mid = Math.floor(fingers / 2);
+            const pet = leaflet((tall ? 1.05 : 0.82) * (0.75 + (f === mid ? 0.35 : 0)));
+            const a = ((f - (fingers - 1) / 2) / ((fingers - 1) / 2 || 1)) * 0.7;
+            pet.position.set(Math.cos(a) * 0.05, 0.02, Math.sin(a) * 0.03);
+            pet.rotation.set(-0.85 + Math.abs(a) * 0.15, a * 0.35, a * 0.45);
+            fan.add(pet);
+          }
+          fan.position.set(Math.cos(angle) * rad, y, Math.sin(angle) * rad);
+          fan.rotation.y = -angle;
+          fan.rotation.x = -0.4 - t * 0.04;
+          plant.add(fan);
+        }
+      }
+      const cola = new THREE.Group();
+      for (let c = 0; c < (tall ? 5 : 3); c++) {
+        const tip = leaflet(tall ? 0.7 : 0.55);
+        tip.position.set((c - 2) * 0.03, stemHeight * 0.02, ((c % 2) - 0.5) * 0.02);
+        tip.rotation.x = -1.1;
+        cola.add(tip);
+      }
+      cola.position.y = 0.22 + stemHeight + 0.02;
+      plant.add(cola);
+      plant.userData.canopyMaterial = leafMat;
       plant.visible = false;
       return plant;
     };
-    const placePlants = (tent, key, count, cols) => {
+    const placePlants = (tent, key, count, cols, tall) => {
       const size = tent.userData.size;
       for (let i = 0; i < count; i++) {
         const rows = Math.ceil(count / cols);
         const col = i % cols;
         const row = Math.floor(i / cols);
-        const plant = mkPadRing();
+        const plant = mkPlant(tall);
         plant.position.set(
           (col - (cols - 1) / 2) * size.w * 0.24,
           key === "clone" ? 0.13 : 0.08,
@@ -4968,16 +4873,16 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         pots[key].push(plant);
       }
     };
-    placePlants(tentClone, "clone", 4, 2);
-    placePlants(tentMain, "main", 8, 4);
+    placePlants(tentClone, "clone", 4, 2, false);
+    placePlants(tentMain, "main", 8, 4, true);
 
-    // Dashed pads stay visible (OOS/unassigned holes). potActors are live vessels.
+    // Slot plants stay as invisible pad markers; free-floating potActors are the visible plants.
     const padWorld = { clone: [], main: [] };
     const _padTmp = new THREE.Vector3();
     const _rootLocal = new THREE.Vector3();
     ["clone", "main"].forEach((key) => {
       pots[key].forEach((plant, i) => {
-        plant.visible = true;
+        plant.visible = false;
         plant.userData.padMarker = true;
         padWorld[key][i] = new THREE.Vector3();
       });
@@ -5160,9 +5065,8 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       side.normalize();
       const up = new THREE.Vector3().crossVectors(tangent, side).normalize();
       const angle = seed * Math.PI * 2 + t * 8;
-      const mouth = Math.min(clamped, 1 - clamped);
-      const bloom = mouth < 0.14 ? 1 + ((0.14 - mouth) / 0.14) * 3.2 : 1;
-      const r = radius * bloom * (0.22 + seed * 0.28);
+      // Tight centerline jitter so duct streams read as flow, not fog
+      const r = radius * (0.22 + seed * 0.28);
       return point.addScaledVector(side, Math.cos(angle) * r).addScaledVector(up, Math.sin(angle) * r);
     };
 
@@ -5199,7 +5103,6 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       phi: 1.0,
       radius: 11.7,
       dragging: false,
-      dirty: false,
       x: 0,
       y: 0,
       target: { x: 0, y: 1.15, z: 0.15 },
@@ -5233,26 +5136,14 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       while (obj && !obj.userData.potNum && obj.parent) obj = obj.parent;
       return (obj && obj.userData.potNum) || 0;
     };
-    renderer.domElement.style.touchAction = "none";
-    renderer.domElement.style.userSelect = "none";
     const onDown = (event) => {
       orbit.dragging = true;
       orbit.x = event.clientX;
       orbit.y = event.clientY;
       ptrDown = { x: event.clientX, y: event.clientY };
-      if (renderer.domElement.setPointerCapture) {
-        try {
-          renderer.domElement.setPointerCapture(event.pointerId);
-        } catch (_) {}
-      }
     };
     const onUp = (event) => {
       orbit.dragging = false;
-      if (renderer.domElement.releasePointerCapture && event.pointerId != null) {
-        try {
-          renderer.domElement.releasePointerCapture(event.pointerId);
-        } catch (_) {}
-      }
       if (ptrDown) {
         const dx = (event.clientX || 0) - ptrDown.x;
         const dy = (event.clientY || 0) - ptrDown.y;
@@ -5268,7 +5159,6 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     };
     const onMove = (event) => {
       if (!orbit.dragging) return;
-      orbit.dirty = true;
       orbit.theta -= (event.clientX - orbit.x) * 0.005;
       orbit.phi = Math.max(0.34, Math.min(1.38, orbit.phi + (event.clientY - orbit.y) * 0.005));
       orbit.x = event.clientX;
@@ -5277,7 +5167,6 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     };
     const onWheel = (event) => {
       event.preventDefault();
-      orbit.dirty = true;
       orbit.radius = Math.max(7.5, Math.min(17, orbit.radius + event.deltaY * 0.01));
       applyCamera();
     };
@@ -5364,14 +5253,6 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
           path.ribbon.userData.flow.lastWidth = width;
         }
       }
-      const strandCount = !active ? 0 : shown > 0.75 ? 4 : shown > 0.5 ? 3 : shown > 0.28 ? 2 : shown > 0.12 ? 1 : 0;
-      (path.strands || []).forEach((strand, i) => {
-        strand.visible = i < strandCount;
-        if (!strand.visible || !strand.material || !strand.material.userData) return;
-        const uniforms = strand.material.userData;
-        if (uniforms.uOpacity) uniforms.uOpacity.value = 0.2 + shown * 0.5;
-        if (uniforms.uDashOffset) uniforms.uDashOffset.value -= 0.008 + shown * 0.032;
-      });
     };
 
     const cfmNorm = (cfm, scale = 80) => Math.min(1, Math.max(0, Number(cfm) || 0) / scale);
@@ -5387,7 +5268,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       system.setOpacity(active ? Math.min(1, 0.42 + shown * 0.58) : 0);
       if (!active) return;
       const baseSpeed = 0.2 + shown * 1.05;
-      const activeCount = Math.max(shown < 0.08 ? 0 : 10, Math.floor(system.count * (0.22 + shown * 0.78)));
+      const activeCount = Math.max(16, Math.floor(system.count * (0.5 + shown * 0.5)));
       for (let i = 0; i < system.count; i++) {
         if (i >= activeCount) {
           system.positions[i * 3 + 1] = -99;
@@ -5603,96 +5484,13 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
 
     let raf = 0;
     let disposed = false;
-    let paused = false;
-    let sceneHeld = false;
-    let reactPots = null;
     let last = performance.now();
-    const applyReactPots = () => {
-      if (!Array.isArray(reactPots)) return;
-      const byId = {};
-      reactPots.forEach((p) => {
-        if (p && (p.id || p.pot)) byId[p.id || `pot${p.pot}`] = p;
-      });
-      for (let n = 1; n <= 4; n++) {
-        const id = `pot${n}`;
-        const actor = potActors[id];
-        const livePot = byId[id];
-        if (!actor) continue;
-        if (!livePot) continue;
-        const sil = livePot.silhouette || (n >= 3 ? "tall" : "bag");
-        if (actor.userData.silhouette !== sil) {
-          const fresh = mkPlant(false, sil);
-          while (actor.children.length) actor.remove(actor.children[0]);
-          fresh.children.slice().forEach((c) => actor.add(c));
-          actor.userData.moist = fresh.userData.moist;
-          actor.userData.ecSlab = fresh.userData.ecSlab;
-          actor.userData.phRim = fresh.userData.phRim;
-          actor.userData.stem = fresh.userData.stem;
-          actor.userData.body = fresh.userData.body;
-          actor.userData.canopyMaterial = fresh.userData.canopyMaterial;
-          actor.userData.vesselH = fresh.userData.vesselH;
-          actor.userData.silhouette = sil;
-        }
-        const oos = livePot.inService === false;
-        const parked = livePot.tent === "unassigned";
-        const hollow = oos || parked;
-        const tentKey = livePot.tent === "main" || livePot.tent === "clone" ? livePot.tent : null;
-        actor.visible = tentKey
-          ? (tentKey === "clone" ? focusTentMode !== "main" : focusTentMode !== "clone")
-          : focusTentMode == null;
-        const H = actor.userData.vesselH || 0.22;
-        const moistN = Number(livePot.moisture);
-        const frac = Number.isFinite(moistN) ? Math.max(0.02, Math.min(1, moistN / 100)) : 0.02;
-        if (actor.userData.moist) {
-          actor.userData.moist.scale.y = hollow ? 0.02 : frac * H;
-          actor.userData.moist.position.y = hollow ? 0.02 : (frac * H) / 2;
-          actor.userData.moist.material.opacity = hollow ? 0 : 0.38;
-        }
-        if (actor.userData.body) {
-          actor.userData.body.material.wireframe = !!hollow;
-          const db = Number(livePot.dryback);
-          const dry = Number.isFinite(db) ? Math.max(0, Math.min(1, db / 100)) : 0.25;
-          const soilT = Number(livePot.soilT);
-          const glow = Number.isFinite(soilT) ? Math.max(0, Math.min(0.4, (soilT - 16) / 40)) : 0.08;
-          if (actor.userData.body.material.color) {
-            actor.userData.body.material.color.setHex(hollow ? 0x26c6da : dry > 0.55 ? 0xff8a65 : 0x26c6da);
-          }
-          actor.userData.body.material.opacity = hollow ? 0.18 : 0.22 + glow;
-        }
-        if (actor.userData.ecSlab) {
-          const ec = Number(livePot.ec);
-          actor.userData.ecSlab.material.opacity = hollow || !Number.isFinite(ec) ? 0 : Math.min(0.7, 0.2 + ec / 800);
-        }
-        if (actor.userData.phRim) {
-          const ph = Number(livePot.ph);
-          const need = String(livePot.need || "");
-          let hex = 0xb388ff;
-          if (/warn|dry|stress/i.test(need)) hex = 0xff8a65;
-          else if (Number.isFinite(ph) && ph < 5.8) hex = 0xff8a65;
-          actor.userData.phRim.material.color.setHex(hex);
-        }
-        if (actor.userData.body && livePot.held) {
-          actor.userData.body.material.opacity = 0.18;
-        }
-        if (actor.userData.stem) {
-          actor.userData.stem.visible = !hollow;
-          const need = String(livePot.need || "");
-          actor.userData.stem.material.color.setHex(/warn|dry|stress/i.test(need) ? 0xff8a65 : 0x66bb6a);
-        }
-      }
-    };
     const tick = (now) => {
       if (disposed) return;
-      if (paused) {
-        raf = 0;
-        return;
-      }
       raf = requestAnimationFrame(tick);
       try {
-        const dtRaw = Math.min(0.05, Math.max(0.001, (now - last) / 1000));
+        const dt = Math.min(0.05, Math.max(0.001, (now - last) / 1000));
         last = now;
-        const freezeFx = sceneHeld || !!(live && live.hubHeld);
-        const dt = freezeFx ? 0 : dtRaw;
 
         const intakeClone = cfmNorm(live.cfmClone, 80);
         const intakeMain = cfmNorm(live.cfmMain, 80);
@@ -5705,36 +5503,22 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         const shareSum = Math.max(0.001, outShare + recShare);
         const cascadeExit = curves.cascade.getPoint(0.02);
 
-        const cloneOk = focusTentMode !== "main";
-        const mainOk = focusTentMode !== "clone";
-        updatePathVisual("intakeClone", cloneOk ? intakeClone : 0, now);
-        updatePathVisual("intakeMain", mainOk ? intakeMain : 0, now);
-        // Cascade stays live on clone focus (wisps toward "to 4×8"). Zero CFM = no fake motion.
+        updatePathVisual("intakeClone", intakeClone, now);
+        updatePathVisual("intakeMain", intakeMain, now);
         updatePathVisual("cascade", cascade, now);
-        updatePathVisual("out", mainOk ? outVis : 0, now);
-        updatePathVisual("recirc", mainOk ? recVis : 0, now);
+        updatePathVisual("out", outVis, now);
+        updatePathVisual("recirc", recVis, now);
 
         // Journey streams: duct → pool → exit (pace slows in pool so settle reads)
-        updateSystem("intakeClone", curves.intakeClone, dt, cloneOk ? Math.min(1, intakeClone * 0.85) : 0, null, () => 1.2);
-        updateSystem("intakeMain", curves.intakeMain, dt, mainOk ? Math.min(1, intakeMain * 0.85) : 0, null, () => 1.2);
-        if (focusTentMode === "clone") {
-          updateSystem(
-            "cascade",
-            curves.cascade,
-            dt,
-            cascade,
-            (t, seed) => sampleCurve(curves.cascade, t * 0.52, 0.018, seed),
-            () => 1.25
-          );
-        } else {
-          updateCascadePlume(dt, cascade, outShare, recShare);
-        }
+        updateSystem("intakeClone", curves.intakeClone, dt, Math.min(1, intakeClone * 0.85), null, () => 1.2);
+        updateSystem("intakeMain", curves.intakeMain, dt, Math.min(1, intakeMain * 0.85), null, () => 1.2);
+        updateCascadePlume(dt, cascade, outShare, recShare);
 
         updateSystem(
           "out",
           curves.out,
           dt,
-          mainOk ? outVis : 0,
+          outVis,
           (t, seed) => exhaustFromInside(t, seed, curves.out, tentMain, [0.05, 0.55, -0.42]),
           (t) => (t < 0.28 ? 0.55 : 1.45)
         );
@@ -5742,7 +5526,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
           "recirc",
           curves.recirc,
           dt,
-          mainOk ? recVis : 0,
+          recVis,
           (t, seed) => exhaustFromInside(t, seed, curves.recirc, tentMain, [0.42, 0.48, 0.02]),
           (t) => (t < 0.28 ? 0.55 : 1.45)
         );
@@ -5754,7 +5538,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
           "flowClone",
           curves.intakeClone,
           dt,
-          cloneOk ? intakeClone : 0,
+          intakeClone,
           (t, seed, i) =>
             journeyThroughTent(t, seed, i, {
               tent: tentClone,
@@ -5772,7 +5556,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
           "flowMain",
           curves.intakeMain,
           dt,
-          mainOk ? mainFlow : 0,
+          mainFlow,
           (t, seed, i) =>
             journeyThroughTent(t, seed, i, {
               tent: tentMain,
@@ -5785,9 +5569,9 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
           journeyPace
         );
 
-        updateTentGuide("clone", cloneOk ? intakeClone : 0);
-        updateTentGuide("mainOut", mainOk ? Math.min(1, mainFlow * (outShare / shareSum) + outVis * 0.5) : 0);
-        updateTentGuide("mainRec", mainOk ? Math.min(1, mainFlow * (recShare / shareSum) + recVis * 0.5) : 0);
+        updateTentGuide("clone", intakeClone);
+        updateTentGuide("mainOut", Math.min(1, mainFlow * (outShare / shareSum) + outVis * 0.5));
+        updateTentGuide("mainRec", Math.min(1, mainFlow * (recShare / shareSum) + recVis * 0.5));
         updateMatHeat(dt, live.matOn ? 1 : 0);
 
         if (live.matOn) {
@@ -5804,36 +5588,25 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         tentClone.userData.lightBar.material.opacity = live.cloneLit ? 0.85 : 0.08;
         tentClone.userData.shafts.visible = !!live.cloneLit;
         tentClone.userData.shafts.children.forEach((shaft, i) => {
-          if (shaft.isLine) {
-            shaft.material.opacity = 0;
-            return;
-          }
           shaft.material.opacity = live.cloneLit ? (0.055 + cloneLevel * 0.14) * lightBoost : 0;
-          shaft.position.y =
-            tentClone.userData.size.h * 0.5 + (freezeFx ? 0 : Math.sin(now * 0.0007 + i) * 0.02);
+          shaft.position.y = tentClone.userData.size.h * 0.5 + Math.sin(now * 0.0007 + i) * 0.02;
         });
         tentFillClone.intensity = live.cloneLit ? 0.35 + cloneLevel * 1.4 : 0.12;
-        // 4×8 fixture glow — lamp when instrumented, else photoperiod window proxy (dashed).
+        // 4×8 fixture glow — lamp brightness when instrumented, else photoperiod window (full/off).
         tentMain.userData.lightBar.material.emissiveIntensity = live.mainLit
           ? (2.0 + mainLevel * 3.8) * lightBoost
           : 0;
         tentMain.userData.lightBar.material.opacity = live.mainLit ? 0.82 : 0.025;
         tentMain.userData.shafts.visible = !!live.mainLit;
-        const mainProxy = !!live.mainLightProxy;
         tentMain.userData.shafts.children.forEach((shaft, i) => {
-          if (shaft.isLine) {
-            shaft.material.opacity = live.mainLit && mainProxy ? 0.55 : 0;
-            return;
-          }
-          shaft.material.opacity = live.mainLit && !mainProxy ? (0.05 + mainLevel * 0.12) * lightBoost : 0;
-          shaft.position.y =
-            tentMain.userData.size.h * 0.5 + (freezeFx ? 0 : Math.sin(now * 0.00065 + i) * 0.02);
+          shaft.material.opacity = live.mainLit ? (0.05 + mainLevel * 0.12) * lightBoost : 0;
+          shaft.position.y = tentMain.userData.size.h * 0.5 + Math.sin(now * 0.00065 + i) * 0.02;
         });
         tentFillMain.intensity = live.mainLit
           ? 0.32 + mainLevel * 1.25
           : 0.18 + Math.max(intakeMain, cascade) * 0.55;
 
-        const pulse = freezeFx ? 1 : 0.86 + Math.sin(now * 0.0045) * 0.14;
+        const pulse = 0.86 + Math.sin(now * 0.0045) * 0.14;
         matPlate.material.emissiveIntensity = live.matOn ? 3.4 * pulse * (highlights("mat") ? 1.35 : 1) : 0;
         matGlow.material.opacity = live.matOn ? 0.38 * pulse * (highlights("mat") ? 1.4 : 1) : 0;
         ventGlow.material.opacity = outVis >= 0.04 ? 0.09 + outVis * 0.4 : 0.015;
@@ -5896,26 +5669,6 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
             });
           });
         }
-        // React setPots owns tent/slot when present (Wave 5 VesselLive).
-        if (Array.isArray(reactPots)) {
-          const assigned = { clone: [], main: [] };
-          reactPots.forEach((p) => {
-            const tent = p && (p.tent === "main" || p.tent === "clone") ? p.tent : null;
-            if (tent) assigned[tent].push(p);
-          });
-          ["clone", "main"].forEach((key) => {
-            assigned[key].forEach((p, i) => {
-              const id = p.id || `pot${p.pot}`;
-              const slot = Number.isFinite(+p.slot) ? +p.slot : i;
-              poseById[id] = { id, tent: key, slot };
-            });
-          });
-          reactPots.forEach((p) => {
-            if (p && p.tent === "unassigned") {
-              delete poseById[p.id || `pot${p.pot}`];
-            }
-          });
-        }
         const lerpAlpha = 1 - Math.exp(-dt / 0.8);
         const nowMs = performance.now();
         for (let n = 1; n <= 4; n++) {
@@ -5927,12 +5680,11 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
           const slotIdx = pose && Number.isFinite(+pose.slot) ? +pose.slot : -1;
           const pad = tent && slotIdx >= 0 && padWorld[tent] ? padWorld[tent][slotIdx] : null;
           if (!pad) {
-            actor.visible = focusTentMode == null;
+            actor.visible = false;
             actor.userData.lerpReady = false;
-            actor.position.set(-3.5 + (n - 1) * 0.48, 0.08, 2.45);
             continue;
           }
-          actor.visible = tent === "clone" ? cloneOk : mainOk;
+          actor.visible = true;
           if (!actor.userData.lerpReady) {
             actor.position.copy(pad);
             actor.userData.lerpReady = true;
@@ -5952,15 +5704,13 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
             canopy.emissiveIntensity = hi ? 0.55 : 0.16;
           }
         }
-        // Dashed pads stay as holes; occupied slots still show the ring under the vessel.
+        // Keep tent-slot marker plants hidden
         ["clone", "main"].forEach((key) => {
-          const vis = key === "clone" ? cloneOk : mainOk;
           pots[key].forEach((plant) => {
-            plant.visible = vis;
+            plant.visible = false;
           });
         });
 
-        applyReactPots();
         if (post && typeof post.render === "function") {
           try {
             post.render();
@@ -6036,37 +5786,12 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     resize();
     raf = requestAnimationFrame(tick);
 
-    let focusTentMode = undefined; // unset until first setFocusTent
-    const setPathGroupVisible = (name, vis) => {
-      const path = paths[name];
-      if (!path) return;
-      path.solid.visible = vis;
-      path.shell.visible = vis;
-      if (path.ribbon) path.ribbon.visible = vis;
-      if (path.shaft) path.shaft.visible = vis;
-      if (path.portJet) path.portJet.visible = vis;
-      (path.strands || []).forEach((s) => {
-        if (!vis) s.visible = false;
-      });
-      if (air[name] && air[name].points) air[name].points.visible = vis && path.intensity > 0;
-    };
+    let focusTentMode = null; // null | "main" | "clone"
     const applyFocusTent = (mode) => {
-      const next = mode === "main" || mode === "clone" ? mode : null;
-      const changed = focusTentMode !== next;
-      focusTentMode = next;
+      focusTentMode = mode === "main" || mode === "clone" ? mode : null;
       tentClone.visible = focusTentMode !== "main";
       tentMain.visible = focusTentMode !== "clone";
-      portFromClone.visible = focusTentMode === "main";
-      portToMain.visible = focusTentMode === "clone";
-      setPathGroupVisible("intakeClone", focusTentMode !== "main");
-      setPathGroupVisible("intakeMain", focusTentMode !== "clone");
-      // Keep cascade on clone (outlet wisps) and on 4×8 (cascade-in). Twin shows the full pipe.
-      setPathGroupVisible("cascade", true);
-      setPathGroupVisible("out", focusTentMode !== "clone");
-      setPathGroupVisible("recirc", focusTentMode !== "clone");
-      if (!changed) return;
-      orbit.dirty = false;
-      // Frame the active tent so 4×8 / 2×4 cockpits read as a single-tent Twin.
+      // Frame the active tent so Main/Clone cockpits read as a single-tent Twin.
       if (focusTentMode === "main") {
         orbit.target = { x: tentMain.position.x, y: 1.25, z: tentMain.position.z };
         orbit.theta = 0.52;
@@ -6091,24 +5816,6 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       setLive,
       setSelectedPot,
       setFocusTent: applyFocusTent,
-      pause(p) {
-        paused = !!p;
-        if (paused) {
-          if (raf) cancelAnimationFrame(raf);
-          raf = 0;
-        } else if (!disposed && !raf) {
-          last = performance.now();
-          raf = requestAnimationFrame(tick);
-        }
-      },
-      setHeld(h) {
-        sceneHeld = !!h;
-        live = { ...live, hubHeld: !!h };
-      },
-      setPots(list) {
-        reactPots = Array.isArray(list) ? list : null;
-        applyReactPots();
-      },
       projectTentAnchors() {
         const w = host.clientWidth || 1;
         const h = host.clientHeight || 1;
@@ -6196,13 +5903,29 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
   const normalizeHistoryRows = (result, entityId) => {
     if (!result) return [];
     if (Array.isArray(result)) {
-      // HA may return [[states...]] aligned to entity_ids order.
+      // HA WS/REST may return [[states...]] (entity groups) or [states...]
+      // (flat history). A lone `[stateObj, ...]` used to return [] and Twin
+      // climate charts stayed empty.
+      if (!result.length) return [];
       const first = result[0];
-      return Array.isArray(first) ? first : [];
+      if (Array.isArray(first)) {
+        const match = result.find(
+          (arr) =>
+            Array.isArray(arr) &&
+            arr[0] &&
+            (arr[0].entity_id === entityId || arr[0].entity_id == null)
+        );
+        return match || first;
+      }
+      if (first && typeof first === "object") return result;
+      return [];
     }
     if (typeof result === "object") {
       const rows = result[entityId];
-      return Array.isArray(rows) ? rows : [];
+      if (Array.isArray(rows)) return rows;
+      const values = Object.values(result);
+      if (values.length === 1 && Array.isArray(values[0])) return values[0];
+      return [];
     }
     return [];
   };
@@ -6248,8 +5971,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         if (typeof hass.callApi !== "function") return [];
         const url = `history/period/${start.toISOString()}?filter_entity_id=${encodeURIComponent(entityId)}&end_time=${encodeURIComponent(end.toISOString())}&minimal_response`;
         const data = await hass.callApi("GET", url);
-        const rows = Array.isArray(data) && data[0] ? data[0] : [];
-        return rowsToPoints(rows);
+        return rowsToPoints(normalizeHistoryRows(data, entityId));
       } catch (__) {
         return [];
       }
@@ -6285,42 +6007,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
 
     setConfig(config) {
       this._cfg = normalizeConfig(config);
-      if (!this.isConnected) return;
-      // I-11: never rebuild THREE for focus/config patches. Recreate only if shell/scene missing.
-      if (this._scene) {
-        const title = this.shadowRoot && this.shadowRoot.getElementById("d-title");
-        const sub = this.shadowRoot && this.shadowRoot.getElementById("d-sub");
-        if (title) title.textContent = this._cfg.title || "";
-        if (sub) sub.textContent = this._cfg.subtitle || "";
-        return;
-      }
       this._renderShell();
-    }
-
-    pause(paused) {
-      this._paused = !!paused;
-      if (this._scene && typeof this._scene.pause === "function") this._scene.pause(!!paused);
-    }
-    setFocusTent(mode) {
-      this._focusTent = mode === "main" || mode === "clone" ? mode : null;
-      this._lastPaintFocus = undefined;
-      if (this._scene && typeof this._scene.setFocusTent === "function") this._scene.setFocusTent(this._focusTent);
-    }
-    setHeld(held) {
-      this._held = !!held;
-      if (this._scene && typeof this._scene.setHeld === "function") this._scene.setHeld(!!held);
-    }
-    setPots(pots) {
-      this._potsLive = pots;
-      if (this._scene && typeof this._scene.setPots === "function") this._scene.setPots(pots);
-    }
-    setUiChrome(flags) {
-      this._hideHud = !!(flags && flags.hideHud);
-      this._applyUiChrome();
-    }
-    _applyUiChrome() {
-      const dash = this.shadowRoot && this.shadowRoot.querySelector(".dash");
-      if (dash) dash.classList.toggle("is-hud-hidden", !!this._hideHud);
     }
 
     set hass(hass) {
@@ -6393,7 +6080,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
               </div>
               <div class="dash-panel" style="flex:1">
                 <h3>Air path · environment → CFM → exhaust</h3>
-                <p class="dash-flow-caption">Spatial air path — room lung to 2×4 / 4×8, cascade as transfer, dump / recirc. Heat mat is 2×4-only.</p>
+                <p class="dash-flow-caption">Room climate → intake CFM (2×4 / 4×8) + cascade transfer → 4×8 exhaust mass-balanced to Σ intake × dump/recirc split. Heat mat is 2×4-only.</p>
                 <div id="d-flow" class="dash-flow"></div>
               </div>
               <div class="dash-panel">
@@ -6433,14 +6120,6 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       if (this._ro) this._ro.disconnect();
       this._ro = new ResizeObserver(() => this._scene && this._scene.resize());
       if (host) this._ro.observe(host);
-
-      if (this._scene) {
-        if (typeof this._scene.pause === "function") this._scene.pause(!!this._paused);
-        if (typeof this._scene.setFocusTent === "function") this._scene.setFocusTent(this._focusTent || null);
-        if (typeof this._scene.setHeld === "function") this._scene.setHeld(!!this._held);
-        if (this._potsLive && typeof this._scene.setPots === "function") this._scene.setPots(this._potsLive);
-      }
-      this._applyUiChrome();
 
       this.shadowRoot.querySelectorAll("[data-nav]").forEach((btn) => {
         btn.addEventListener("click", () => {
@@ -6500,7 +6179,9 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       await Promise.all(
         pots.map(async (p, idx) => {
           const color = POT_COLORS[idx % POT_COLORS.length];
-          const mId = potGotId(hass, p.prefix, "moisture");
+          const mId = !isUnavailable(hass, potEntity(p.prefix, "got_moisture"))
+            ? potEntity(p.prefix, "got_moisture")
+            : potEntity(p.prefix, "soil_moisture");
           const rId = potEntity(p.prefix, "soil_moisture_rate");
           moist[p.id] = { color, label: p.id, points: await fetchHistory(hass, mId, 24) };
           rate[p.id] = { color, label: p.id, points: await fetchHistory(hass, rId, 24) };
@@ -6679,42 +6360,14 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       }
       if (curIdx >= 0) stages[curIdx].cls = "on";
       if (curIdx + 1 < stages.length) stages[curIdx + 1].cls = stages[curIdx + 1].cls || "next";
-      const timelineStages = stages.length ? stages : [{ label: "No stage — not invented", cls: "on" }];
-      const timelineSeats = (cfg.pots || []).map((p) => {
-        const n = potNumFrom(p);
-        const svc =
-          p.in_service ||
-          (Number.isFinite(n) ? `input_boolean.dsc_pot${n}_in_service` : "");
-        const oos = !!(svc && !isUnavailable(hass, svc) && !isOn(hass, svc));
-        const tent = readPotTent(hass, p);
-        const nameState = Number.isFinite(n) ? stateOf(hass, `text.dsc_pot${n}_plant_name`) : null;
-        const name =
-          nameState && nameState.state !== "unavailable" && nameState.state !== "unknown"
-            ? String(nameState.state)
-            : p.id;
-        return {
-          n: Number.isFinite(n) ? n : p.id,
-          oos,
-          tent,
-          name,
-          days: numState(hass, potEntity(p.prefix, "days_since_sprout"), NaN),
-          stage: stateOf(hass, potEntity(p.prefix, "expected_stage"))?.state || "—",
-          need: stateOf(hass, `sensor.dsc_pot${n}_need_summary`)?.state || "—",
-        };
-      });
-      const allocAvail = (id) => {
-        const st = stateOf(hass, id);
-        return !!(st && st.state !== "unavailable" && st.state !== "unknown" && Number.isFinite(parseFloat(st.state)));
-      };
-      const intakeNameplate =
-        !allocAvail("sensor.dsc_cfm_intake_2x4_allocated") && !allocAvail("sensor.dsc_cfm_intake_main_allocated");
-      const exhaustAllocated =
-        allocAvail("sensor.dsc_cfm_exhaust_out_allocated") || allocAvail("sensor.dsc_cfm_exhaust_recirc_allocated");
-      const cfmTrust = intakeNameplate && !exhaustAllocated
-        ? "CFM guessed from fan % × nameplate — run Learning to measure."
-        : intakeNameplate && exhaustAllocated
-          ? "Mixed CFM trust — some ducts from Learning, others still nameplate. Run Learning on the dashed paths."
-          : "CFM from Learning (anemometer).";
+      const timelineStages = stages.filter((_, i) => i >= Math.max(0, curIdx - 1) && i <= curIdx + 2);
+      if (!timelineStages.length) {
+        timelineStages.push(
+          { label: "WEEK ?", cls: "on" },
+          { label: "Next", cls: "next" },
+          { label: "Later", cls: "" }
+        );
+      }
 
       const emerg = isOn(hass, e.emergency);
       const strategy = stateOf(hass, e.strategy)?.state || "";
@@ -6767,19 +6420,11 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
           if (lampId && !isUnavailable(hass, lampId)) return lightLevel(hass, lampId) > 0.02;
           return isOn(hass, e.main_window);
         })(),
-        mainLightProxy: !String(e.main_light || "").trim(),
-        mainWindowProxy: !String(e.main_light || "").trim(),
         matOn: isOn(hass, e.grow_mat),
         potSlots,
         plantPose,
         timelineStages,
-        timelineSeats,
         mixed,
-        catchup: isOn(hass, "binary_sensor.dsc_hub_light_catchup_active"),
-        darkViol: isOn(hass, "binary_sensor.dsc_clone_dark_period_violation"),
-        expectedHoursMain: numState(hass, e.expected_light_hours, NaN),
-        expectedHoursClone: numState(hass, e.clone_expected_light_hours, NaN),
-        cfmTrust,
         emerg,
         strategy,
         priority,
@@ -6957,13 +6602,8 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       const cloneVpdMin = numState(hass, "number.dsc_hub_clone_vpd_min", NaN);
       const cloneVpdMax = numState(hass, "number.dsc_hub_clone_vpd_max", NaN);
       const focusTent =
-        this._focusTent === "main" || this._focusTent === "clone"
-          ? this._focusTent
-          : this._cfg.focusTent === "main" || this._cfg.focusTent === "clone"
-            ? this._cfg.focusTent
-            : null;
-      if (this._scene && typeof this._scene.setFocusTent === "function" && this._lastPaintFocus !== focusTent) {
-        this._lastPaintFocus = focusTent;
+        this._cfg.focusTent === "main" || this._cfg.focusTent === "clone" ? this._cfg.focusTent : null;
+      if (this._scene && typeof this._scene.setFocusTent === "function") {
         this._scene.setFocusTent(focusTent);
       }
       const hudC = this.shadowRoot.getElementById("d-hud-clone");
@@ -6973,7 +6613,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         } else {
           hudC.style.display = "";
           const c = (live.climate && live.climate.clone) || {};
-          hudC.innerHTML = `<div class="k">2×4 Reservoir</div>${hudMetric("clone")}${bandHtml(c.humidity, cloneRhMin, cloneRhMax, 0, 100)}${vpdMini(c.vpd, cloneVpdMin, cloneVpdMax)}<div class="s" title="${esc(lightNote)}">${esc(lightNote)}${live.matOn ? " · heat mat ON" : ""} · <a href="/dsc-hub#/live/climate" style="color:inherit">⋯ Climate</a></div>`;
+          hudC.innerHTML = `<div class="k">2×4 Reservoir</div>${hudMetric("clone")}${bandHtml(c.humidity, cloneRhMin, cloneRhMax, 0, 100)}${vpdMini(c.vpd, cloneVpdMin, cloneVpdMax)}<div class="s" title="${esc(lightNote)}">${esc(lightNote)}${live.matOn ? " · heat mat ON" : ""} · <a href="#/ops/climate" style="color:inherit">⋯ Climate</a></div>`;
           placeHud(hudC, anchors && anchors.clone, "left");
         }
       }
@@ -6986,7 +6626,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
           const m = (live.climate && live.climate.main) || {};
           const heldNote = live.hubHeld ? " · HELD" : "";
           const mainNote = `No lamp · cascade in${heldNote}`;
-          hudM.innerHTML = `<div class="k">4×8 Main</div>${hudMetric("main")}${bandHtml(m.humidity, mainRhMin, mainRhMax, 0, 100)}${vpdMini(m.vpd, mainVpdMin, mainVpdMax)}<div class="s" title="${esc(mainNote)}">${esc(mainNote)} · <a href="/dsc-hub#/live/climate" style="color:inherit">⋯ Climate</a></div>`;
+          hudM.innerHTML = `<div class="k">4×8 Main</div>${hudMetric("main")}${bandHtml(m.humidity, mainRhMin, mainRhMax, 0, 100)}${vpdMini(m.vpd, mainVpdMin, mainVpdMax)}<div class="s" title="${esc(mainNote)}">${esc(mainNote)} · <a href="#/ops/climate" style="color:inherit">⋯ Climate</a></div>`;
           placeHud(hudM, anchors && anchors.main, "right");
         }
       }
@@ -7054,7 +6694,9 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
             nameState && nameState.state !== "unavailable" && nameState.state !== "unknown" && nameState.state
               ? String(nameState.state)
               : p.id;
-          const moistId = potGotId(hass, p.prefix, "moisture");
+          const moistId = !isUnavailable(hass, potEntity(p.prefix, "got_moisture"))
+            ? potEntity(p.prefix, "got_moisture")
+            : potEntity(p.prefix, "soil_moisture");
           const moist = numState(hass, moistId, NaN);
           const tentLabel = tent === "main" ? "4×8" : tent === "clone" ? "2×4" : "—";
           const color = POT_COLORS[idx % POT_COLORS.length];
@@ -7107,7 +6749,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       }
 
       const tl = this.shadowRoot.getElementById("d-timeline");
-      if (tl) tl.innerHTML = "";
+      if (tl) tl.innerHTML = renderTimeline(live);
       const flow = this.shadowRoot.getElementById("d-flow");
       if (flow) flow.innerHTML = renderFlow(live);
 
@@ -7206,8 +6848,8 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     }
     set hass(h) {
       this._hass = h;
-      // I-04: never rebuild DOM on hass ticks — that wipes focused editor inputs.
-      // This editor hydrates from config, not hass entity names.
+      // Re-render once so entity names resolve if needed
+      if (this.isConnected) this._render();
     }
     setConfig(c) {
       this._cfg = normalizeConfig(c);
@@ -7362,8 +7004,6 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
 (() => {
   const CARD_TYPE = "dsc-build-plant-card";
   const CATALOG_BASE = "/local/dsc-catalog";
-  // Full-corpus host (all strains). Local JSON remains offline fallback (capped).
-  const CANNALIB_DEFAULT = "https://cannalib.plausible-deniability.net";
   const COLORS = ["#5b9f6b", "#4a8f9f", "#c4a35a"];
   /** UI kind -> catalog index key */
   const INDEX_KEY = {
@@ -7676,8 +7316,6 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       this._hass = null;
       this._indexes = { strains: [], nutrients: [], mediums: [], lights: [] };
       this._indexStatus = { loading: false, ok: false, errors: [] };
-      /** @type {{ strains?: number, nutrients?: number, mediums?: number, lights?: number, source?: string } | null} */
-      this._corpus = null;
       this._q = { strain: "", nutrient: "", medium: "", light: "" };
       this._hits = { strain: [], nutrient: [], medium: [], light: [] };
       this._hitActive = { strain: -1, nutrient: -1, medium: -1, light: -1 };
@@ -7688,6 +7326,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       this._selectedStrain = null;
       this._selectedLight = null;
       this._overflowMenu = null;
+      this._notice = "";
     }
 
     setConfig(config) {
@@ -7720,15 +7359,14 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
 
     async _loadIndexes() {
       this._indexStatus = { loading: true, ok: false, errors: [] };
-      this._corpus = null;
       const kinds = [
         ["strains", "dsc_strains_search_index.json"],
         ["nutrients", "dsc_nutrients_search_index.json"],
         ["mediums", "dsc_mediums_search_index.json"],
         ["lights", "dsc_lights_search_index.json"],
       ];
-      await Promise.all([
-        ...kinds.map(async ([key, file]) => {
+      await Promise.all(
+        kinds.map(async ([key, file]) => {
           try {
             const r = await fetch(`${CATALOG_BASE}/${file}`, { cache: "no-cache" });
             if (!r.ok) {
@@ -7740,72 +7378,13 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
           } catch (err) {
             this._indexStatus.errors.push(`${file}: ${err?.message || "fetch failed"}`);
           }
-        }),
-        this._loadCorpusCounts(),
-      ]);
-      const localTotal = Object.values(this._indexes).reduce((n, a) => n + (a?.length || 0), 0);
+        })
+      );
+      const total = Object.values(this._indexes).reduce((n, a) => n + (a?.length || 0), 0);
       this._indexStatus.loading = false;
-      this._indexStatus.ok = localTotal > 0 || !!(this._corpus && this._corpus.strains);
+      this._indexStatus.ok = total > 0;
       if (!this._drawerKind) this._render();
       else this._paintCatalogChip();
-    }
-
-    async _loadCorpusCounts() {
-      // Prefer live HA sensor (metrics poll) when present; else hit /v1/corpus.
-      const fromHa = Number(this._st("sensor.dsc_cannalib_corpus_strains")?.state);
-      if (Number.isFinite(fromHa) && fromHa > 0) {
-        this._corpus = {
-          strains: fromHa,
-          source: "ha-sensor",
-        };
-        return;
-      }
-      try {
-        const r = await fetch(`${this._cannalibBase()}/v1/corpus`, {
-          headers: this._cannalibHeaders(),
-          cache: "no-store",
-        });
-        if (!r.ok) throw new Error(`corpus ${r.status}`);
-        const j = await r.json();
-        const c = j?.counts || {};
-        this._corpus = {
-          strains: Number(c.strains) || 0,
-          nutrients: Number(c.nutrients) || 0,
-          mediums: Number(c.mediums) || 0,
-          lights: Number(c.lights) || 0,
-          source: "cannalib",
-        };
-      } catch {
-        this._corpus = null;
-      }
-    }
-
-    _cannalibBase() {
-      const u = this._str("input_text.dsc_cannalib_base_url");
-      return (u || CANNALIB_DEFAULT).replace(/\/$/, "");
-    }
-
-    _cannalibHeaders() {
-      const h = { Accept: "application/json" };
-      const key = this._str("input_text.dsc_cannalib_api_key");
-      if (key) h["X-Cannalib-Key"] = key;
-      return h;
-    }
-
-    async _apiSearch(kind, q, limit = 12) {
-      const map = {
-        strain: "strains",
-        nutrient: "nutrients",
-        medium: "mediums",
-        light: "lights",
-      };
-      const domain = map[kind];
-      if (!domain) return null;
-      const url = `${this._cannalibBase()}/v1/catalogs/${domain}?q=${encodeURIComponent(q || "")}&limit=${limit}`;
-      const r = await fetch(url, { headers: this._cannalibHeaders(), cache: "no-store" });
-      if (!r.ok) throw new Error(`cannalib ${r.status}`);
-      const j = await r.json();
-      return Array.isArray(j.items) ? j.items : [];
     }
 
     _st(id) {
@@ -7871,29 +7450,6 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
 
     _search(kind, q, { open = true } = {}) {
       this._q[kind] = q;
-      if (open) this._drawerKind = kind;
-      // All four domains via cannalib; local JSON is offline fallback.
-      if (kind === "strain" || kind === "nutrient" || kind === "medium" || kind === "light") {
-        const seq = (this._apiSeq = (this._apiSeq || 0) + 1);
-        const needle = (q || "").trim();
-        clearTimeout(this._apiTimer);
-        this._apiTimer = setTimeout(async () => {
-          try {
-            const items = await this._apiSearch(kind, needle, 12);
-            if (seq !== this._apiSeq) return;
-            this._hits[kind] = items || [];
-            this._apiLive = true;
-          } catch (_err) {
-            if (seq !== this._apiSeq) return;
-            this._hits[kind] = this._filterItems(kind, needle);
-            this._apiLive = false;
-          }
-          this._hitActive[kind] = this._hits[kind].length ? 0 : -1;
-          this._paintHits(kind);
-          this._paintCatalogChip();
-        }, needle.length ? 180 : 0);
-        return;
-      }
       this._hits[kind] = this._filterItems(kind, q);
       this._hitActive[kind] = this._hits[kind].length ? 0 : -1;
       if (open) this._drawerKind = kind;
@@ -7903,7 +7459,8 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     _openSearch(kind) {
       this._drawerKind = kind;
       this._overflowMenu = null;
-      this._search(kind, this._q[kind] || "", { open: true });
+      this._hits[kind] = this._filterItems(kind, this._q[kind] || "");
+      this._hitActive[kind] = this._hits[kind].length ? 0 : -1;
       this._focusRestore = { id: SEARCH_IDS[kind], pos: (this._q[kind] || "").length };
       this._render();
     }
@@ -7953,9 +7510,16 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
           this._setText(`input_text.dsc_blend_component_${n}_name`, part ? part[0] : "");
           this._setNumber(`input_number.dsc_blend_pct_${n}`, part ? Number(part[1]) : 0);
         }
+        this._notice = "";
       } else {
-        const slot = this._mediumSlot || 1;
+        const slot = this._nextEmptyMediumSlot();
+        if (!slot) {
+          this._notice = "No free medium slot. Will not overwrite slot 1.";
+          this._render();
+          return;
+        }
         this._setText(`input_text.dsc_blend_component_${slot}_name`, item.name);
+        this._notice = `Wrote ${item.name} to medium slot ${slot}.`;
       }
       this._q.medium = "";
       this._hits.medium = [];
@@ -7964,19 +7528,28 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       this._render();
     }
 
-    async _addNutrient(item) {
+    _nextFreeNutrientSlot() {
       for (let n = 1; n <= 8; n++) {
         const name = this._str(`input_text.dsc_nutrient_${n}_name`);
         const inv = this._st(`input_boolean.dsc_nutrient_${n}_in_inventory`)?.state === "on";
-        if (!name || !inv) {
-          this._setText(`input_text.dsc_nutrient_${n}_name`, item.name);
-          if (item.dose_ml_l != null && Number.isFinite(Number(item.dose_ml_l))) {
-            this._setNumber(`input_number.dsc_nutrient_${n}_dose_ml_l`, Number(item.dose_ml_l));
-          }
-          this._call("input_boolean", "turn_on", {}, { entity_id: `input_boolean.dsc_nutrient_${n}_in_inventory` });
-          break;
-        }
+        if (!name && !inv) return n;
       }
+      return 0;
+    }
+
+    async _addNutrient(item) {
+      const n = this._nextFreeNutrientSlot();
+      if (!n) {
+        this._notice = "No free nutrient slot. Inventory-off bottles stay put; will not overwrite slot 1.";
+        this._render();
+        return;
+      }
+      this._setText(`input_text.dsc_nutrient_${n}_name`, item.name);
+      if (item.dose_ml_l != null && Number.isFinite(Number(item.dose_ml_l))) {
+        this._setNumber(`input_number.dsc_nutrient_${n}_dose_ml_l`, Number(item.dose_ml_l));
+      }
+      this._call("input_boolean", "turn_on", {}, { entity_id: `input_boolean.dsc_nutrient_${n}_in_inventory` });
+      this._notice = `Wrote ${item.name} to nutrient slot ${n}.`;
       this._q.nutrient = "";
       this._hits.nutrient = [];
       this._hitActive.nutrient = -1;
@@ -8137,28 +7710,12 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         const detail = this._indexStatus.errors[0] || "no index items";
         return `<span class="catalog-pill bad" id="catalog-status"><span class="dot"></span>Catalog load failed: ${this._esc(detail)}</span>`;
       }
-      const localProducts =
+      const n =
+        (this._indexes.strains?.length || 0) +
         (this._indexes.mediums?.length || 0) +
         (this._indexes.nutrients?.length || 0) +
         (this._indexes.lights?.length || 0);
-      const localStrains = this._indexes.strains?.length || 0;
-      const corpusStrains = Number(this._corpus?.strains) || 0;
-      // Honesty: do not sum capped local strains and call that "catalog ready".
-      if (corpusStrains > 0) {
-        const products =
-          (Number(this._corpus?.nutrients) || 0) +
-          (Number(this._corpus?.mediums) || 0) +
-          (Number(this._corpus?.lights) || 0);
-        const productBit =
-          products > 0
-            ? ` · ${products.toLocaleString()} products`
-            : localProducts > 0
-              ? ` · ${localProducts.toLocaleString()} local products`
-              : "";
-        return `<span class="catalog-pill" id="catalog-status" title="Strains via cannalib full corpus; local JSON is offline fallback only."><span class="dot"></span>${corpusStrains.toLocaleString()} strains (full corpus)${productBit}</span>`;
-      }
-      const n = localStrains + localProducts;
-      return `<span class="catalog-pill warn" id="catalog-status" title="Cannalib unreachable — showing capped /local/dsc-catalog indexes only."><span class="dot"></span>${n.toLocaleString()} local index items (capped)</span>`;
+      return `<span class="catalog-pill" id="catalog-status"><span class="dot"></span>${n} catalog items ready</span>`;
     }
 
     _soilHtml(parts, blendValid) {
@@ -8334,6 +7891,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
             </div>
             <div>${this._catalogChipHtml()}</div>
           </div>
+          ${this._notice ? `<p class="muted">${this._esc(this._notice)}</p>` : ""}
 
           <div class="flow">
             <div class="flow-col">
@@ -8729,18 +8287,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     }
   }
 
-  // Lovlace may already have registered a stale class from DSC-HUB.js.
-  // Upgrade the live prototype so Compose picks up corpus-honest chip/search.
-  const existing = customElements.get(CARD_TYPE);
-  if (existing) {
-    const proto = existing.prototype;
-    proto._loadIndexes = DscBuildPlantCard.prototype._loadIndexes;
-    proto._loadCorpusCounts = DscBuildPlantCard.prototype._loadCorpusCounts;
-    proto._catalogChipHtml = DscBuildPlantCard.prototype._catalogChipHtml;
-    proto._cannalibBase = DscBuildPlantCard.prototype._cannalibBase;
-    proto._cannalibHeaders = DscBuildPlantCard.prototype._cannalibHeaders;
-    proto._apiSearch = DscBuildPlantCard.prototype._apiSearch;
-  } else {
+  if (!customElements.get(CARD_TYPE)) {
     customElements.define(CARD_TYPE, DscBuildPlantCard);
   }
 
@@ -8849,19 +8396,17 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
 /**
  * DSC-HUB — Catalog Explorer (browse / filter / compare / Use in Build).
  * type: custom:dsc-catalog-browse-card
- * Strains + products: cannalib API when online. Local JSON is offline fallback.
- * Missing fields = "not in catalog". Do not invent chem or attach comparative photos to cultivars.
+ * Reads /local/dsc-catalog/*.json only. Missing fields = "not in catalog".
  */
 (() => {
   const CARD_TYPE = "dsc-catalog-browse-card";
   const CATALOG_BASE = "/local/dsc-catalog";
-  const CANNALIB_DEFAULT = "https://cannalib.plausible-deniability.net";
+  const LIST_CAP = 200;
   const DOMAINS = [
-    { id: "strains", label: "Strains", file: "dsc_strains_search_index.json", api: true },
-    { id: "nutrients", label: "Nutrients", file: "dsc_nutrients_search_index.json", api: true },
-    { id: "mediums", label: "Mediums", file: "dsc_mediums_search_index.json", api: true },
-    { id: "lights", label: "Lights", file: "dsc_lights_search_index.json", api: true },
-    { id: "media", label: "Reference images", file: null, api: true, media: true },
+    { id: "strains", label: "Strains", file: "dsc_strains_search_index.json" },
+    { id: "nutrients", label: "Nutrients", file: "dsc_nutrients_search_index.json" },
+    { id: "mediums", label: "Mediums", file: "dsc_mediums_search_index.json" },
+    { id: "lights", label: "Lights", file: "dsc_lights_search_index.json" },
   ];
 
   const css = `
@@ -8906,6 +8451,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     }
     .chip.miss { background:rgba(120,120,120,.12); border-color:rgba(140,140,140,.3); color:#9a9a9a; }
     .muted { color:#8a9c90; font-size:12px; }
+    .notice { color:#e8c07a; font-size:12px; margin:8px 0 0; }
     .actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
     button.act {
       background:#1a2a20; color:#e8efe9; border:1px solid rgba(120,160,130,.35);
@@ -8935,10 +8481,9 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       this._heightMax = "";
       this._category = "";
       this._selected = null;
-      this._tree = null;
-      this._mediaKind = "pathology_photo";
       this._compare = [];
       this._meta = {};
+      this._notice = "";
     }
     setConfig(config) {
       this._config = { type: `custom:${CARD_TYPE}`, title: "Catalog", ...(config || {}) };
@@ -8958,10 +8503,6 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     async _loadDomain(id) {
       const def = DOMAINS.find((d) => d.id === id);
       if (!def) return;
-      if (def.api) {
-        await this._apiSearchDomain(id, this._q || "");
-        return;
-      }
       if (this._cache[id]) {
         this._meta = this._cache[id];
         return;
@@ -8974,60 +8515,6 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       } catch (e) {
         this._cache[id] = { items: [], note: String(e), count: 0 };
         this._meta = this._cache[id];
-      }
-    }
-    _cannalibBase() {
-      const s = this._hass?.states?.["input_text.dsc_cannalib_base_url"]?.state;
-      const u = s && s !== "unknown" && s !== "unavailable" ? s : CANNALIB_DEFAULT;
-      return String(u).replace(/\/$/, "");
-    }
-    _cannalibHeaders() {
-      const h = { Accept: "application/json" };
-      const key = this._hass?.states?.["input_text.dsc_cannalib_api_key"]?.state;
-      if (key && key !== "unknown" && key !== "unavailable" && String(key).trim()) {
-        h["X-Cannalib-Key"] = String(key).trim();
-      }
-      return h;
-    }
-    async _apiSearchDomain(id, q) {
-      const seq = (this._apiSeq = (this._apiSeq || 0) + 1);
-      const def = DOMAINS.find((d) => d.id === id);
-      try {
-        let url;
-        if (def?.media) {
-          const kind = this._mediaKind || "pathology_photo";
-          url = `${this._cannalibBase()}/v1/catalogs/media?kind=${encodeURIComponent(kind)}&limit=80`;
-        } else {
-          url = `${this._cannalibBase()}/v1/catalogs/${id}?q=${encodeURIComponent(q || "")}&limit=80`;
-        }
-        const res = await fetch(url, { headers: this._cannalibHeaders(), cache: "no-store" });
-        if (!res.ok) throw new Error(`cannalib ${res.status}`);
-        const doc = await res.json();
-        if (seq !== this._apiSeq) return;
-        this._meta = {
-          items: Array.isArray(doc.items) ? doc.items : [],
-          count: doc.count,
-          capped: Boolean(doc.capped),
-          note: def?.media
-            ? "Reference images by kind. Comparative/pathology are not cultivar portraits."
-            : "Full corpus via cannalib (typeahead). Local JSON is offline fallback only.",
-          source: "cannalib",
-        };
-        this._apiLive = true;
-      } catch (e) {
-        if (seq !== this._apiSeq) return;
-        this._apiLive = false;
-        if (def?.media || !def?.file) {
-          this._meta = { items: [], note: `API offline — no local media index. ${e}`, count: 0 };
-          return;
-        }
-        try {
-          const res = await fetch(`${CATALOG_BASE}/${def.file}?v=${Date.now()}`, { cache: "no-store" });
-          const doc = await res.json();
-          this._meta = { ...doc, note: `API offline — local capped index. ${e}` };
-        } catch (e2) {
-          this._meta = { items: [], note: String(e2), count: 0 };
-        }
       }
     }
     _items() {
@@ -9055,14 +8542,6 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       return lo <= max && hi >= min;
     }
     _filtered() {
-      if (this._domain === "media") {
-        const q = this._q.trim().toLowerCase();
-        return this._items().filter((it) => {
-          if (!q) return true;
-          const hay = `${it.entity_id || ""} ${it.kind || ""} ${it.author_credit || ""}`.toLowerCase();
-          return hay.includes(q);
-        });
-      }
       const q = this._q.trim().toLowerCase();
       return this._items().filter((it) => {
         if (q && !(it.name || "").toLowerCase().includes(q) && !(it.brand || "").toLowerCase().includes(q))
@@ -9116,11 +8595,6 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         if (it.brand) chips.push(it.brand);
         if (it.category) chips.push(it.category);
         if (it.composition) chips.push(typeof it.composition === "string" ? it.composition : JSON.stringify(it.composition));
-      } else if (this._domain === "media") {
-        if (it.kind) chips.push(it.kind);
-        if (it.license_type) chips.push(it.license_type);
-        if (it.entity_id === "comparative") chips.push({ miss: true, t: "comparative" });
-        else if (it.entity_id) chips.push(it.entity_id);
       } else if (this._domain === "lights") {
         if (it.wattage_w != null) chips.push(`${it.wattage_w} W`);
         if (it.efficacy_umol_j != null) chips.push(`${it.efficacy_umol_j} umol/J`);
@@ -9139,34 +8613,88 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       if (!this._hass) return Promise.resolve();
       return this._hass.callService(domain, service, data);
     }
-    async _useInBuild(it) {
-      if (!it) return;
-      // Navigate first so a hung callService cannot strand the operator on Catalog.
-      history.pushState(null, "", "/dsc-hub-pro/plant-build");
+    _helperState(id) {
+      const s = this._hass?.states?.[id]?.state;
+      return s && s !== "unknown" && s !== "unavailable" ? String(s).trim() : "";
+    }
+    _inventoryOn(n) {
+      return this._hass?.states?.[`input_boolean.dsc_nutrient_${n}_in_inventory`]?.state === "on";
+    }
+    _nextFreeNutrientSlot() {
+      for (let n = 1; n <= 8; n++) {
+        const name = this._helperState(`input_text.dsc_nutrient_${n}_name`);
+        if (!name && !this._inventoryOn(n)) return n;
+      }
+      return 0;
+    }
+    _nextFreeMediumSlot() {
+      for (let n = 1; n <= 3; n++) {
+        const name = this._helperState(`input_text.dsc_blend_component_${n}_name`);
+        const pct = parseFloat(this._hass?.states?.[`input_number.dsc_blend_pct_${n}`]?.state);
+        if (!name && !(Number.isFinite(pct) && pct > 0)) return n;
+      }
+      return 0;
+    }
+    _nextFreeCustomSlot() {
+      const selected = this._helperState("input_select.dsc_build_custom_slot");
+      const nSel = Number(selected);
+      const candidates = Number.isInteger(nSel) && nSel >= 1 && nSel <= 5 ? [nSel] : [1, 2, 3, 4, 5];
+      for (const n of candidates) {
+        if (!this._helperState(`input_text.dsc_custom_strain_${n}_name`)) return n;
+      }
+      return 0;
+    }
+    _goCompose() {
+      const path = "/dsc-hub#/grow/compose";
+      history.pushState(null, "", path);
       const ev = new Event("location-changed", { bubbles: true, composed: true });
       ev.detail = { replace: false };
       window.dispatchEvent(ev);
+      window.dispatchEvent(new HashChangeEvent("hashchange"));
+    }
+    async _useInBuild(it) {
+      if (!it) return;
       try {
         if (this._domain === "strains") {
+          this._goCompose();
           await this._call("input_text", "set_value", { entity_id: "input_text.dsc_build_strain", value: it.name });
           const nick = this._hass?.states?.["input_text.dsc_build_nickname"]?.state;
           if (!nick || nick === "unknown" || nick === "") {
             await this._call("input_text", "set_value", { entity_id: "input_text.dsc_build_nickname", value: it.name });
           }
+          this._notice = "";
         } else if (this._domain === "nutrients") {
-          await this._call("input_text", "set_value", { entity_id: "input_text.dsc_nutrient_1_name", value: it.name });
+          const n = this._nextFreeNutrientSlot();
+          if (!n) {
+            this._notice = "No free nutrient slot. Inventory-off bottles stay put; will not overwrite slot 1.";
+            this._render();
+            return;
+          }
+          this._goCompose();
+          await this._call("input_text", "set_value", { entity_id: `input_text.dsc_nutrient_${n}_name`, value: it.name });
           if (it.dose_ml_l != null) {
             await this._call("input_number", "set_value", {
-              entity_id: "input_number.dsc_nutrient_1_dose_ml_l",
+              entity_id: `input_number.dsc_nutrient_${n}_dose_ml_l`,
               value: Number(it.dose_ml_l),
             });
           }
+          await this._call("input_boolean", "turn_on", { entity_id: `input_boolean.dsc_nutrient_${n}_in_inventory` });
+          this._notice = `Wrote ${it.name} to nutrient slot ${n}.`;
         } else if (this._domain === "mediums") {
+          const n = this._nextFreeMediumSlot();
+          if (!n) {
+            this._notice = "No free medium slot. Will not overwrite slot 1.";
+            this._render();
+            return;
+          }
+          this._goCompose();
           await this._call("input_text", "set_value", {
-            entity_id: "input_text.dsc_blend_component_1_name",
+            entity_id: `input_text.dsc_blend_component_${n}_name`,
             value: it.name,
           });
+          this._notice = `Wrote ${it.name} to medium slot ${n}.`;
         } else if (this._domain === "lights") {
+          this._goCompose();
           const fixture = this._hass?.states?.["input_select.dsc_light_fixture"];
           const opts = fixture?.attributes?.options || [];
           const match = opts.find((o) => String(o).toLowerCase().includes(String(it.name).toLowerCase().slice(0, 12)));
@@ -9191,15 +8719,34 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
               value: String(it.ppfd_url).slice(0, 255),
             });
           }
+          this._notice = "";
+        } else {
+          this._goCompose();
+          this._notice = "";
         }
       } catch (e) {
         console.warn("dsc-catalog Use in Build helpers", e);
+        this._notice = "Use in Build failed — helpers not written.";
       }
+      this._render();
     }
     async _fillCustom(it) {
       if (!it || this._domain !== "strains") return;
-      await this._call("input_text", "set_value", { entity_id: "input_text.dsc_build_strain", value: it.name });
-      await this._call("script", "dsc_custom_fill_from_catalog", {});
+      const slot = this._nextFreeCustomSlot();
+      if (!slot) {
+        this._notice = "No free custom strain slot (1–5). Will not overwrite slot 1.";
+        this._render();
+        return;
+      }
+      try {
+        await this._call("input_text", "set_value", { entity_id: "input_text.dsc_build_strain", value: it.name });
+        await this._call("script", "dsc_custom_fill_from_catalog", { slot, seed_name: it.name });
+        this._notice = `Filled custom strain slot ${slot} from ${it.name}.`;
+      } catch (e) {
+        console.warn("dsc-catalog Fill Custom", e);
+        this._notice = "Fill Custom failed — required slot/seed_name not written.";
+      }
+      this._render();
     }
     _toggleCompare(it) {
       const id = it.id || it.name;
@@ -9210,27 +8757,6 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     }
     _detailHtml(it) {
       if (!it) return `<p class="muted">Select a row for detail.</p>`;
-      if (this._domain === "media") {
-        const label =
-          it.entity_id === "comparative"
-            ? "comparative / pathology reference — not a named cultivar"
-            : this._esc(it.entity_id);
-        const src = it.source_url || "";
-        return `
-          <h2>Reference image</h2>
-          <div class="name" style="font-size:18px;font-weight:650">${this._esc(it.kind)}</div>
-          <dl class="detail">
-            <dt>entity</dt><dd>${label}</dd>
-            <dt>license</dt><dd>${this._esc(it.license_type || "unknown")}</dd>
-            <dt>credit</dt><dd>${this._esc(it.author_credit || "—")}</dd>
-          </dl>
-          ${
-            src
-              ? `<p><img src="${this._esc(src)}" alt="" style="max-width:100%;height:auto;border-radius:4px" /></p>`
-              : `<p class="muted">No source_url</p>`
-          }
-        `;
-      }
       const missing = [];
       if (this._domain === "strains") {
         if (!it.want) missing.push("climate Want bands");
@@ -9272,52 +8798,12 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
               : ""
           }
         </dl>
-        ${this._domain === "strains" ? this._treeHtml() : ""}
         ${missing.length ? `<p class="muted">Missing (honest): ${this._esc(missing.join(", "))}</p>` : ""}
         <div class="actions">
           <button class="act primary" data-act="use">Use in Build</button>
           ${this._domain === "strains" ? `<button class="act" data-act="custom">Fill Custom slot</button>` : ""}
           <button class="act" data-act="cmp">${this._compare.some((x) => (x.id || x.name) === (it.id || it.name)) ? "Remove compare" : "Add to compare"}</button>
         </div>
-      `;
-    }
-    _treeHtml() {
-      const tree = this._tree;
-      if (!tree || !tree.evidence) {
-        return `<p class="muted">Hydrating strain tree… empty media stays empty; no comparative pile on this name.</p>`;
-      }
-      const ev = tree.evidence;
-      const lin = ev.lineage || {};
-      const media = ev.media || {};
-      const chem = ev.chemistry || {};
-      const n = Number(media.n || 0);
-      const samples = Array.isArray(media.sample) ? media.sample : [];
-      const mediaBits = n
-        ? samples
-            .map((m) => {
-              const label =
-                m.entity_id === "comparative"
-                  ? "comparative (not this cultivar)"
-                  : `${m.kind || "photo"}`;
-              const src = m.source_url || "";
-              return `<div class="muted">${this._esc(label)}${
-                src
-                  ? ` · <a href="${this._esc(src)}" target="_blank" rel="noopener" style="color:#9fd0ad">open</a>`
-                  : ""
-              }</div>`;
-            })
-            .join("")
-        : `<p class="muted">media.n=0 — no cultivar photo on this id. Do not use the comparative dump here.</p>`;
-      const mermaid = lin.mermaid
-        ? `<pre class="muted" style="white-space:pre-wrap;font-size:11px">${this._esc(lin.mermaid)}</pre>`
-        : `<p class="muted">${this._esc(lin.parse_note || "no pedigree")}</p>`;
-      const span = (v) =>
-        Array.isArray(v) && v.length >= 2 ? `${v[0]}–${v[1]}` : v != null ? String(v) : "not in catalog";
-      return `
-        <p class="muted">THC span ${this._esc(span(chem.thc_span))} · CBD ${this._esc(span(chem.cbd_span))} (rows not blended)</p>
-        <p class="muted">Parents ${Array.isArray(lin.parents) ? lin.parents.length : 0} · children ${lin.children_n || 0}</p>
-        ${mermaid}
-        ${mediaBits}
       `;
     }
     _compareHtml() {
@@ -9368,31 +8854,6 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       `;
     }
     _filterBar() {
-      if (this._domain === "media") {
-        const kinds = [
-          "pathology_photo",
-          "seedling_photo",
-          "plant_photo",
-          "flower_photo",
-          "seed_photo",
-          "phenotype_photo",
-          "comparative_crop",
-        ];
-        return `
-          <div class="filters">
-            <div><label>Kind</label>
-              <select id="mkind">
-                ${kinds
-                  .map(
-                    (k) =>
-                      `<option value="${k}" ${this._mediaKind === k ? "selected" : ""}>${k}</option>`
-                  )
-                  .join("")}
-              </select>
-            </div>
-            <div><label>Filter</label><input type="text" id="q" value="${this._esc(this._q)}" placeholder="entity_id / credit" /></div>
-          </div>`;
-      }
       if (this._domain === "strains") {
         return `
           <div class="filters">
@@ -9417,42 +8878,18 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
           <div><label>Category</label><input type="text" id="cat" value="${this._esc(this._category)}" placeholder="base / bloom / substrate" /></div>
         </div>`;
     }
-    async _hydrateSelected() {
-      const it = this._selected;
-      if (!it || this._domain !== "strains") return;
-      const sid = it.name_norm || it.id;
-      if (!sid) return;
-      const seq = (this._hydSeq = (this._hydSeq || 0) + 1);
-      try {
-        const res = await fetch(
-          `${this._cannalibBase()}/v1/catalogs/strains/${encodeURIComponent(sid)}`,
-          { headers: this._cannalibHeaders(), cache: "no-store" }
-        );
-        if (!res.ok) throw new Error(String(res.status));
-        const tree = await res.json();
-        if (seq !== this._hydSeq) return;
-        this._tree = tree;
-        this._render();
-      } catch (_e) {
-        if (seq !== this._hydSeq) return;
-        this._tree = { evidence: { lineage: { parse_note: "hydrate failed" }, media: { n: 0, sample: [] }, chemistry: {} } };
-        this._render();
-      }
-    }
     _bind() {
       const root = this.shadowRoot;
       root.querySelectorAll(".tabs button").forEach((btn) => {
         btn.addEventListener("click", async () => {
           this._domain = btn.dataset.domain;
           this._selected = null;
-          this._tree = null;
           this._compare = [];
           await this._loadDomain(this._domain);
           this._render();
         });
       });
       const syncFilters = () => {
-        const prevQ = this._q;
         this._q = root.querySelector("#q")?.value || "";
         this._type = root.querySelector("#type")?.value || "";
         this._tempMin = root.querySelector("#tmin")?.value || "";
@@ -9460,27 +8897,12 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         this._heightMin = root.querySelector("#hmin")?.value || "";
         this._heightMax = root.querySelector("#hmax")?.value || "";
         this._category = root.querySelector("#cat")?.value || "";
-        const mkind = root.querySelector("#mkind")?.value;
-        if (mkind && mkind !== this._mediaKind) {
-          this._mediaKind = mkind;
-          this._apiSearchDomain(this._domain, this._q).then(() => this._render());
-          return;
-        }
         const flags = root.querySelector("#flags")?.value || "";
         this._chemOnly = flags === "chem";
         this._hasWant = flags === "want";
-        const def = DOMAINS.find((d) => d.id === this._domain);
-        if (def?.api && this._q !== prevQ) {
-          clearTimeout(this._apiTimer);
-          this._apiTimer = setTimeout(async () => {
-            await this._apiSearchDomain(this._domain, this._q);
-            this._render();
-          }, 200);
-          return;
-        }
         this._render();
       };
-      ["q", "type", "tmin", "tmax", "hmin", "hmax", "cat", "flags", "mkind"].forEach((id) => {
+      ["q", "type", "tmin", "tmax", "hmin", "hmax", "cat", "flags"].forEach((id) => {
         const el = root.querySelector("#" + id);
         if (!el) return;
         el.addEventListener(el.tagName === "SELECT" ? "change" : "input", syncFilters);
@@ -9489,9 +8911,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         row.addEventListener("click", () => {
           const idx = Number(row.dataset.idx);
           this._selected = this._filtered()[idx];
-          this._tree = null;
           this._render();
-          this._hydrateSelected();
         });
       });
       root.querySelector("[data-act=use]")?.addEventListener("click", () => this._useInBuild(this._selected));
@@ -9507,12 +8927,16 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       const items = this._filtered();
       const note = this._meta?.note || "";
       const count = this._meta?.count ?? items.length;
+      const shown = items.slice(0, LIST_CAP);
+      const extra = this._meta?.with_want != null
+        ? ` · ${this._meta.with_want} with Want · ${this._meta.with_height || 0} with height`
+        : "";
       this.shadowRoot.innerHTML = `
         <style>${css}</style>
         <div class="wrap">
           <div class="brand">DSC-HUB / Plant</div>
           <h1>${this._esc(this._config.title || "Catalog")}</h1>
-          <p class="sub">Live sqlite via cannalib; /local/dsc-catalog is offline fallback only. Missing height/climate stay blank. ${this._esc(note)}</p>
+          <p class="sub">Browse and compare catalog entries. Missing height/climate fields stay blank — never invented. ${this._esc(note)}</p>
           <div class="tabs">
             ${DOMAINS.map(
               (d) =>
@@ -9520,18 +8944,18 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
             ).join("")}
           </div>
           ${this._filterBar()}
-          <p class="muted">${items.length} shown / ${count} indexed${this._meta?.with_want != null ? ` · ${this._meta.with_want} with Want · ${this._meta.with_height || 0} with height` : ""}</p>
+          <p class="muted">${shown.length} shown / ${items.length} matched (cap ${LIST_CAP}) · ${count} indexed${extra}</p>
+          ${this._notice ? `<p class="notice">${this._esc(this._notice)}</p>` : ""}
           <div class="layout">
             <div class="panel">
               <h2>Results</h2>
               ${
-                items.length
-                  ? items
-                      .slice(0, 200)
+                shown.length
+                  ? shown
                       .map((it, idx) => {
                         const sel = this._selected && (this._selected.id || this._selected.name) === (it.id || it.name);
                         return `<div class="row ${sel ? "sel" : ""}" data-idx="${idx}">
-                          <div class="name">${this._esc(it.name || it.entity_id || it.kind || it.id)}</div>
+                          <div class="name">${this._esc(it.name)}</div>
                           <div class="chips">${this._chips(it)}</div>
                         </div>`;
                       })
@@ -9559,3 +8983,4 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     description: "Browse/compare strains, nutrients, mediums, lights",
   });
 })();
+

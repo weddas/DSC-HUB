@@ -5903,13 +5903,29 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
   const normalizeHistoryRows = (result, entityId) => {
     if (!result) return [];
     if (Array.isArray(result)) {
-      // HA may return [[states...]] aligned to entity_ids order.
+      // HA WS/REST may return [[states...]] (entity groups) or [states...]
+      // (flat history). A lone `[stateObj, ...]` used to return [] and Twin
+      // climate charts stayed empty.
+      if (!result.length) return [];
       const first = result[0];
-      return Array.isArray(first) ? first : [];
+      if (Array.isArray(first)) {
+        const match = result.find(
+          (arr) =>
+            Array.isArray(arr) &&
+            arr[0] &&
+            (arr[0].entity_id === entityId || arr[0].entity_id == null)
+        );
+        return match || first;
+      }
+      if (first && typeof first === "object") return result;
+      return [];
     }
     if (typeof result === "object") {
       const rows = result[entityId];
-      return Array.isArray(rows) ? rows : [];
+      if (Array.isArray(rows)) return rows;
+      const values = Object.values(result);
+      if (values.length === 1 && Array.isArray(values[0])) return values[0];
+      return [];
     }
     return [];
   };
@@ -5955,8 +5971,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         if (typeof hass.callApi !== "function") return [];
         const url = `history/period/${start.toISOString()}?filter_entity_id=${encodeURIComponent(entityId)}&end_time=${encodeURIComponent(end.toISOString())}&minimal_response`;
         const data = await hass.callApi("GET", url);
-        const rows = Array.isArray(data) && data[0] ? data[0] : [];
-        return rowsToPoints(rows);
+        return rowsToPoints(normalizeHistoryRows(data, entityId));
       } catch (__) {
         return [];
       }
@@ -6071,10 +6086,10 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
               <div class="dash-panel">
                 <h3>Actions</h3>
                 <div class="dash-actions">
-                  <button type="button" class="dash-btn" data-nav="/dsc-hub-pro/lighting">Master lighting</button>
+                  <button type="button" class="dash-btn" data-nav="/dsc-hub#/live/light">Master lighting</button>
                   <button type="button" class="dash-btn danger" data-more="binary_sensor.dsc_hub_emergency_failsafe">Emergency status</button>
-                  <button type="button" class="dash-btn guard" data-nav="/dsc-hub-pro/climate">Climate engine</button>
-                  <button type="button" class="dash-btn" data-nav="/dsc-hub-pro/root-zone">Root zone</button>
+                  <button type="button" class="dash-btn guard" data-nav="/dsc-hub#/live/climate">Climate engine</button>
+                  <button type="button" class="dash-btn" data-nav="/dsc-hub#/live/root">Root zone</button>
                 </div>
               </div>
             </div>
@@ -6109,8 +6124,10 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       this.shadowRoot.querySelectorAll("[data-nav]").forEach((btn) => {
         btn.addEventListener("click", () => {
           const path = btn.getAttribute("data-nav");
+          if (!path) return;
           history.pushState(null, "", path);
           window.dispatchEvent(new Event("location-changed"));
+          if (path.includes("#")) window.dispatchEvent(new HashChangeEvent("hashchange"));
         });
       });
       this.shadowRoot.querySelectorAll("[data-more]").forEach((btn) => {
@@ -7309,6 +7326,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       this._selectedStrain = null;
       this._selectedLight = null;
       this._overflowMenu = null;
+      this._notice = "";
     }
 
     setConfig(config) {
@@ -7492,9 +7510,16 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
           this._setText(`input_text.dsc_blend_component_${n}_name`, part ? part[0] : "");
           this._setNumber(`input_number.dsc_blend_pct_${n}`, part ? Number(part[1]) : 0);
         }
+        this._notice = "";
       } else {
-        const slot = this._mediumSlot || 1;
+        const slot = this._nextEmptyMediumSlot();
+        if (!slot) {
+          this._notice = "No free medium slot. Will not overwrite slot 1.";
+          this._render();
+          return;
+        }
         this._setText(`input_text.dsc_blend_component_${slot}_name`, item.name);
+        this._notice = `Wrote ${item.name} to medium slot ${slot}.`;
       }
       this._q.medium = "";
       this._hits.medium = [];
@@ -7503,19 +7528,28 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       this._render();
     }
 
-    async _addNutrient(item) {
+    _nextFreeNutrientSlot() {
       for (let n = 1; n <= 8; n++) {
         const name = this._str(`input_text.dsc_nutrient_${n}_name`);
         const inv = this._st(`input_boolean.dsc_nutrient_${n}_in_inventory`)?.state === "on";
-        if (!name || !inv) {
-          this._setText(`input_text.dsc_nutrient_${n}_name`, item.name);
-          if (item.dose_ml_l != null && Number.isFinite(Number(item.dose_ml_l))) {
-            this._setNumber(`input_number.dsc_nutrient_${n}_dose_ml_l`, Number(item.dose_ml_l));
-          }
-          this._call("input_boolean", "turn_on", {}, { entity_id: `input_boolean.dsc_nutrient_${n}_in_inventory` });
-          break;
-        }
+        if (!name && !inv) return n;
       }
+      return 0;
+    }
+
+    async _addNutrient(item) {
+      const n = this._nextFreeNutrientSlot();
+      if (!n) {
+        this._notice = "No free nutrient slot. Inventory-off bottles stay put; will not overwrite slot 1.";
+        this._render();
+        return;
+      }
+      this._setText(`input_text.dsc_nutrient_${n}_name`, item.name);
+      if (item.dose_ml_l != null && Number.isFinite(Number(item.dose_ml_l))) {
+        this._setNumber(`input_number.dsc_nutrient_${n}_dose_ml_l`, Number(item.dose_ml_l));
+      }
+      this._call("input_boolean", "turn_on", {}, { entity_id: `input_boolean.dsc_nutrient_${n}_in_inventory` });
+      this._notice = `Wrote ${item.name} to nutrient slot ${n}.`;
       this._q.nutrient = "";
       this._hits.nutrient = [];
       this._hitActive.nutrient = -1;
@@ -7857,6 +7891,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
             </div>
             <div>${this._catalogChipHtml()}</div>
           </div>
+          ${this._notice ? `<p class="muted">${this._esc(this._notice)}</p>` : ""}
 
           <div class="flow">
             <div class="flow-col">
@@ -8366,6 +8401,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
 (() => {
   const CARD_TYPE = "dsc-catalog-browse-card";
   const CATALOG_BASE = "/local/dsc-catalog";
+  const LIST_CAP = 200;
   const DOMAINS = [
     { id: "strains", label: "Strains", file: "dsc_strains_search_index.json" },
     { id: "nutrients", label: "Nutrients", file: "dsc_nutrients_search_index.json" },
@@ -8415,6 +8451,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     }
     .chip.miss { background:rgba(120,120,120,.12); border-color:rgba(140,140,140,.3); color:#9a9a9a; }
     .muted { color:#8a9c90; font-size:12px; }
+    .notice { color:#e8c07a; font-size:12px; margin:8px 0 0; }
     .actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
     button.act {
       background:#1a2a20; color:#e8efe9; border:1px solid rgba(120,160,130,.35);
@@ -8446,6 +8483,7 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       this._selected = null;
       this._compare = [];
       this._meta = {};
+      this._notice = "";
     }
     setConfig(config) {
       this._config = { type: `custom:${CARD_TYPE}`, title: "Catalog", ...(config || {}) };
@@ -8575,34 +8613,88 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       if (!this._hass) return Promise.resolve();
       return this._hass.callService(domain, service, data);
     }
-    async _useInBuild(it) {
-      if (!it) return;
-      // Navigate first so a hung callService cannot strand the operator on Catalog.
-      history.pushState(null, "", "/dsc-hub-pro/plant-build");
+    _helperState(id) {
+      const s = this._hass?.states?.[id]?.state;
+      return s && s !== "unknown" && s !== "unavailable" ? String(s).trim() : "";
+    }
+    _inventoryOn(n) {
+      return this._hass?.states?.[`input_boolean.dsc_nutrient_${n}_in_inventory`]?.state === "on";
+    }
+    _nextFreeNutrientSlot() {
+      for (let n = 1; n <= 8; n++) {
+        const name = this._helperState(`input_text.dsc_nutrient_${n}_name`);
+        if (!name && !this._inventoryOn(n)) return n;
+      }
+      return 0;
+    }
+    _nextFreeMediumSlot() {
+      for (let n = 1; n <= 3; n++) {
+        const name = this._helperState(`input_text.dsc_blend_component_${n}_name`);
+        const pct = parseFloat(this._hass?.states?.[`input_number.dsc_blend_pct_${n}`]?.state);
+        if (!name && !(Number.isFinite(pct) && pct > 0)) return n;
+      }
+      return 0;
+    }
+    _nextFreeCustomSlot() {
+      const selected = this._helperState("input_select.dsc_build_custom_slot");
+      const nSel = Number(selected);
+      const candidates = Number.isInteger(nSel) && nSel >= 1 && nSel <= 5 ? [nSel] : [1, 2, 3, 4, 5];
+      for (const n of candidates) {
+        if (!this._helperState(`input_text.dsc_custom_strain_${n}_name`)) return n;
+      }
+      return 0;
+    }
+    _goCompose() {
+      const path = "/dsc-hub#/grow/compose";
+      history.pushState(null, "", path);
       const ev = new Event("location-changed", { bubbles: true, composed: true });
       ev.detail = { replace: false };
       window.dispatchEvent(ev);
+      window.dispatchEvent(new HashChangeEvent("hashchange"));
+    }
+    async _useInBuild(it) {
+      if (!it) return;
       try {
         if (this._domain === "strains") {
+          this._goCompose();
           await this._call("input_text", "set_value", { entity_id: "input_text.dsc_build_strain", value: it.name });
           const nick = this._hass?.states?.["input_text.dsc_build_nickname"]?.state;
           if (!nick || nick === "unknown" || nick === "") {
             await this._call("input_text", "set_value", { entity_id: "input_text.dsc_build_nickname", value: it.name });
           }
+          this._notice = "";
         } else if (this._domain === "nutrients") {
-          await this._call("input_text", "set_value", { entity_id: "input_text.dsc_nutrient_1_name", value: it.name });
+          const n = this._nextFreeNutrientSlot();
+          if (!n) {
+            this._notice = "No free nutrient slot. Inventory-off bottles stay put; will not overwrite slot 1.";
+            this._render();
+            return;
+          }
+          this._goCompose();
+          await this._call("input_text", "set_value", { entity_id: `input_text.dsc_nutrient_${n}_name`, value: it.name });
           if (it.dose_ml_l != null) {
             await this._call("input_number", "set_value", {
-              entity_id: "input_number.dsc_nutrient_1_dose_ml_l",
+              entity_id: `input_number.dsc_nutrient_${n}_dose_ml_l`,
               value: Number(it.dose_ml_l),
             });
           }
+          await this._call("input_boolean", "turn_on", { entity_id: `input_boolean.dsc_nutrient_${n}_in_inventory` });
+          this._notice = `Wrote ${it.name} to nutrient slot ${n}.`;
         } else if (this._domain === "mediums") {
+          const n = this._nextFreeMediumSlot();
+          if (!n) {
+            this._notice = "No free medium slot. Will not overwrite slot 1.";
+            this._render();
+            return;
+          }
+          this._goCompose();
           await this._call("input_text", "set_value", {
-            entity_id: "input_text.dsc_blend_component_1_name",
+            entity_id: `input_text.dsc_blend_component_${n}_name`,
             value: it.name,
           });
+          this._notice = `Wrote ${it.name} to medium slot ${n}.`;
         } else if (this._domain === "lights") {
+          this._goCompose();
           const fixture = this._hass?.states?.["input_select.dsc_light_fixture"];
           const opts = fixture?.attributes?.options || [];
           const match = opts.find((o) => String(o).toLowerCase().includes(String(it.name).toLowerCase().slice(0, 12)));
@@ -8627,15 +8719,34 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
               value: String(it.ppfd_url).slice(0, 255),
             });
           }
+          this._notice = "";
+        } else {
+          this._goCompose();
+          this._notice = "";
         }
       } catch (e) {
         console.warn("dsc-catalog Use in Build helpers", e);
+        this._notice = "Use in Build failed — helpers not written.";
       }
+      this._render();
     }
     async _fillCustom(it) {
       if (!it || this._domain !== "strains") return;
-      await this._call("input_text", "set_value", { entity_id: "input_text.dsc_build_strain", value: it.name });
-      await this._call("script", "dsc_custom_fill_from_catalog", {});
+      const slot = this._nextFreeCustomSlot();
+      if (!slot) {
+        this._notice = "No free custom strain slot (1–5). Will not overwrite slot 1.";
+        this._render();
+        return;
+      }
+      try {
+        await this._call("input_text", "set_value", { entity_id: "input_text.dsc_build_strain", value: it.name });
+        await this._call("script", "dsc_custom_fill_from_catalog", { slot, seed_name: it.name });
+        this._notice = `Filled custom strain slot ${slot} from ${it.name}.`;
+      } catch (e) {
+        console.warn("dsc-catalog Fill Custom", e);
+        this._notice = "Fill Custom failed — required slot/seed_name not written.";
+      }
+      this._render();
     }
     _toggleCompare(it) {
       const id = it.id || it.name;
@@ -8816,6 +8927,10 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       const items = this._filtered();
       const note = this._meta?.note || "";
       const count = this._meta?.count ?? items.length;
+      const shown = items.slice(0, LIST_CAP);
+      const extra = this._meta?.with_want != null
+        ? ` · ${this._meta.with_want} with Want · ${this._meta.with_height || 0} with height`
+        : "";
       this.shadowRoot.innerHTML = `
         <style>${css}</style>
         <div class="wrap">
@@ -8829,14 +8944,14 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
             ).join("")}
           </div>
           ${this._filterBar()}
-          <p class="muted">${items.length} shown / ${count} indexed${this._meta?.with_want != null ? ` · ${this._meta.with_want} with Want · ${this._meta.with_height || 0} with height` : ""}</p>
+          <p class="muted">${shown.length} shown / ${items.length} matched (cap ${LIST_CAP}) · ${count} indexed${extra}</p>
+          ${this._notice ? `<p class="notice">${this._esc(this._notice)}</p>` : ""}
           <div class="layout">
             <div class="panel">
               <h2>Results</h2>
               ${
-                items.length
-                  ? items
-                      .slice(0, 200)
+                shown.length
+                  ? shown
                       .map((it, idx) => {
                         const sel = this._selected && (this._selected.id || this._selected.name) === (it.id || it.name);
                         return `<div class="row ${sel ? "sel" : ""}" data-idx="${idx}">

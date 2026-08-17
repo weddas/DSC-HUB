@@ -82,7 +82,8 @@ def want_climate(pot: int) -> str:
         unique_id: dsc_pot{pot}_want_temp_min
         unit_of_measurement: "°C"
         state: >
-          {{% set s = states('select.dsc_pot{pot}_strain') %}}
+          {{% set s = states('select.dsc_pot_{pot}_strain') %}}
+          {{% if s in ['unknown','unavailable',''] %}}{{% set s = states('select.dsc_pot{pot}_strain') %}}{{% endif %}}
           {{% if s in ['unknown','unavailable',''] %}}{{% set s = states('input_select.dsc_pot{pot}_strain') %}}{{% endif %}}
           {{% if s.startswith('Custom') %}}
             {{{{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_temp_min')|float(0) }}}}
@@ -91,7 +92,8 @@ def want_climate(pot: int) -> str:
         unique_id: dsc_pot{pot}_want_temp_max
         unit_of_measurement: "°C"
         state: >
-          {{% set s = states('select.dsc_pot{pot}_strain') %}}
+          {{% set s = states('select.dsc_pot_{pot}_strain') %}}
+          {{% if s in ['unknown','unavailable',''] %}}{{% set s = states('select.dsc_pot{pot}_strain') %}}{{% endif %}}
           {{% if s in ['unknown','unavailable',''] %}}{{% set s = states('input_select.dsc_pot{pot}_strain') %}}{{% endif %}}
           {{% if s.startswith('Custom') %}}
             {{{{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_temp_max')|float(0) }}}}
@@ -100,7 +102,8 @@ def want_climate(pot: int) -> str:
         unique_id: dsc_pot{pot}_want_rh_min
         unit_of_measurement: "%"
         state: >
-          {{% set s = states('select.dsc_pot{pot}_strain') %}}
+          {{% set s = states('select.dsc_pot_{pot}_strain') %}}
+          {{% if s in ['unknown','unavailable',''] %}}{{% set s = states('select.dsc_pot{pot}_strain') %}}{{% endif %}}
           {{% if s in ['unknown','unavailable',''] %}}{{% set s = states('input_select.dsc_pot{pot}_strain') %}}{{% endif %}}
           {{% if s.startswith('Custom') %}}
             {{{{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_rh_min')|float(0) }}}}
@@ -109,7 +112,8 @@ def want_climate(pot: int) -> str:
         unique_id: dsc_pot{pot}_want_rh_max
         unit_of_measurement: "%"
         state: >
-          {{% set s = states('select.dsc_pot{pot}_strain') %}}
+          {{% set s = states('select.dsc_pot_{pot}_strain') %}}
+          {{% if s in ['unknown','unavailable',''] %}}{{% set s = states('select.dsc_pot{pot}_strain') %}}{{% endif %}}
           {{% if s in ['unknown','unavailable',''] %}}{{% set s = states('input_select.dsc_pot{pot}_strain') %}}{{% endif %}}
           {{% if s.startswith('Custom') %}}
             {{{{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_rh_max')|float(0) }}}}
@@ -396,8 +400,17 @@ script:
               {{% if name and pct > 0 %}}{{% set parts = parts + [name ~ ' ' ~ pct|round(0) ~ '%'] %}}{{% endif %}}
             {{% endfor %}}
             {{{{ parts|join(' + ') }}}}
-      - condition: template
-        value_template: "{{{{ slot|int(0) > 0 }}}}"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{{{ slot|int(0) == 0 }}}}"
+            sequence:
+              - action: persistent_notification.create
+                data:
+                  title: "Build a Plant · roster full"
+                  message: "All eight roster slots are occupied. Clear a slot before committing. Plant was not seated."
+              - stop: "Roster full — commit no-op"
+                error: true
       - action: input_text.set_value
         target:
           entity_id: "input_text.dsc_plant_roster_{{{{ slot }}}}_nickname"
@@ -545,11 +558,46 @@ script:
               - condition: template
                 value_template: "{{{{ not direct_strain }}}}"
             sequence:
-              - action: input_text.set_value
-                target:
-                  entity_id: "input_text.dsc_custom_strain_{{{{ custom_slot }}}}_name"
+              - variables:
+                  existing_custom: "{{{{ states('input_text.dsc_custom_strain_' ~ custom_slot ~ '_name')|trim }}}}"
+              - choose:
+                  - conditions:
+                      - condition: template
+                        value_template: >-
+                          {{{{ existing_custom not in ['', 'unknown', 'unavailable']
+                             and existing_custom != strain }}}}
+                    sequence:
+                      - action: persistent_notification.create
+                        data:
+                          title: "Build a Plant · assignment failed"
+                          message: "Custom {{{{ custom_slot }}}} is '{{{{ existing_custom }}}}'. Choose another slot or clear it before assigning '{{{{ strain }}}}'."
+                      - stop: "Custom slot occupied by a different strain"
+                        error: true
+              - action: script.dsc_custom_fill_from_catalog
                 data:
-                  value: "{{{{ strain }}}}"
+                  slot: "{{{{ custom_slot }}}}"
+                  seed_name: "{{{{ strain }}}}"
+                continue_on_error: true
+              - choose:
+                  - conditions:
+                      - condition: template
+                        value_template: >-
+                          {{{{ states('input_text.dsc_custom_strain_' ~ custom_slot ~ '_name')|trim != strain }}}}
+                    sequence:
+                      - action: input_text.set_value
+                        target:
+                          entity_id: "input_text.dsc_custom_strain_{{{{ custom_slot }}}}_name"
+                        data:
+                          value: "{{{{ strain }}}}"
+                      - action: input_number.set_value
+                        target:
+                          entity_id:
+                            - "input_number.dsc_custom_strain_{{{{ custom_slot }}}}_temp_min"
+                            - "input_number.dsc_custom_strain_{{{{ custom_slot }}}}_temp_max"
+                            - "input_number.dsc_custom_strain_{{{{ custom_slot }}}}_rh_min"
+                            - "input_number.dsc_custom_strain_{{{{ custom_slot }}}}_rh_max"
+                        data:
+                          value: 0
       - action: input_select.select_option
         target:
           entity_id: "input_select.dsc_pot{{{{ n }}}}_strain"
@@ -590,6 +638,18 @@ script:
                   entity_id: "input_datetime.dsc_pot{{{{ n }}}}_sprout_date"
                 data:
                   date: "{{{{ sprout }}}}"
+              - action: date.set_value
+                target:
+                  entity_id: "date.dsc_pot_{{{{ n }}}}_sprout_date"
+                data:
+                  date: "{{{{ sprout }}}}"
+                continue_on_error: true
+              - action: date.set_value
+                target:
+                  entity_id: "date.dsc_pot{{{{ n }}}}_sprout_date"
+                data:
+                  date: "{{{{ sprout }}}}"
+                continue_on_error: true
               - action: datetime.set_value
                 target:
                   entity_id: "datetime.dsc_pot{{{{ n }}}}_sprout_date"
@@ -631,6 +691,26 @@ script:
     description: "Commit the builder to roster, then assign it when a pot is selected."
     mode: single
     sequence:
+      - variables:
+          roster_free: >
+            {{% set ns = namespace(s=0) %}}
+            {{% for i in range(1,9) %}}
+              {{% if ns.s == 0 and states('input_select.dsc_plant_roster_' ~ i ~ '_status') in ['empty','unknown','unavailable',''] %}}
+                {{% set ns.s = i %}}
+              {{% endif %}}
+            {{% endfor %}}
+            {{{{ ns.s }}}}
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{{{ roster_free|int(0) == 0 }}}}"
+            sequence:
+              - action: persistent_notification.create
+                data:
+                  title: "Build a Plant · roster full"
+                  message: "Roster is full. Commit+assign did not seat a pot."
+              - stop: "Roster full — assign skipped"
+                error: true
       - action: script.dsc_build_plant_commit
       - condition: template
         value_template: "{{{{ states('input_select.dsc_build_assign_pot') in ['1','2','3','4'] }}}}"
@@ -685,20 +765,38 @@ script:
           n: >
             {{% if which|string in ['1','2','3','4'] %}}{{{{ which }}}}
             {{% else %}}
-              {{% set ns = namespace(p='1') %}}
+              {{% set ns = namespace(ids=[]) %}}
               {{% for i in [1,2,3,4] %}}
-                {{% set tmin = states('sensor.dsc_pot' ~ i ~ '_want_temp_min') %}}
-                {{% if tmin not in ['unknown','unavailable',''] and tmin|float(0) != 0 %}}
-                  {{% set ns.p = i|string %}}
+                {{% set tw = states('sensor.dsc_pot' ~ i ~ '_want_temp_min')|float(0) %}}
+                {{% set rw = states('sensor.dsc_pot' ~ i ~ '_want_rh_min')|float(0) %}}
+                {{% if tw > 0 or rw > 0 %}}
+                  {{% set ns.ids = ns.ids + [i|string] %}}
                 {{% endif %}}
               {{% endfor %}}
-              {{{{ ns.p }}}}
+              {{% if ns.ids|length == 0 %}}none
+              {{% elif ns.ids|length == 1 %}}{{{{ ns.ids[0] }}}}
+              {{% else %}}multi:{{{{ ns.ids|join(',') }}}}
+              {{% endif %}}
             {{% endif %}}
-          tmin: "{{{{ states('sensor.dsc_pot' ~ n ~ '_want_temp_min')|float(0) }}}}"
-          tmax: "{{{{ states('sensor.dsc_pot' ~ n ~ '_want_temp_max')|float(0) }}}}"
-          rmin: "{{{{ states('sensor.dsc_pot' ~ n ~ '_want_rh_min')|float(0) }}}}"
-          rmax: "{{{{ states('sensor.dsc_pot' ~ n ~ '_want_rh_max')|float(0) }}}}"
+          tmin: "{{{{ states('sensor.dsc_pot' ~ n ~ '_want_temp_min')|float(0) if n in ['1','2','3','4'] else 0 }}}}"
+          tmax: "{{{{ states('sensor.dsc_pot' ~ n ~ '_want_temp_max')|float(0) if n in ['1','2','3','4'] else 0 }}}}"
+          rmin: "{{{{ states('sensor.dsc_pot' ~ n ~ '_want_rh_min')|float(0) if n in ['1','2','3','4'] else 0 }}}}"
+          rmax: "{{{{ states('sensor.dsc_pot' ~ n ~ '_want_rh_max')|float(0) if n in ['1','2','3','4'] else 0 }}}}"
           tmid: "{{{{ ((tmin|float(0) + tmax|float(0)) / 2)|round(1) }}}}"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{{{ n == 'none' or n.startswith('multi:') }}}}"
+            sequence:
+              - action: persistent_notification.create
+                data:
+                  title: "Climate Want · Fleet refused"
+                  message: >-
+                    {{% if n == 'none' %}}No pot has Climate Want set. Pick pot 1–4.
+                    {{% else %}}Multiple pots have Want ({{{{ n[6:] }}}}). Pick an explicit tent/pot.
+                    {{% endif %}}
+              - stop: "Fleet Apply requires a single Want source"
+                error: true
       - choose:
           - conditions:
               - condition: template

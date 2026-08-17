@@ -203,38 +203,36 @@ template:
              or (ec is not none and ec >= states('input_number.dsc_trust_mad_ec')|float(250))
              or (m is not none and m >= states('input_number.dsc_trust_mad_moisture')|float(12)) }}
 
+      # Fleet MAD is notify-only (dsc_peer_mad_alert). Do not stamp every
+      # in-service pot untrusted — that auto-cleared all mat votes.
       - name: "DSC POT1 Untrusted"
         unique_id: dsc_pot1_untrusted
         device_class: problem
         icon: mdi:shield-off
         state: >
           {{ is_state('input_boolean.dsc_pot1_in_service','on')
-             and (is_state('binary_sensor.dsc_pot1_sensor_stuck','on')
-                  or is_state('binary_sensor.dsc_peer_mad_alert','on')) }}
+             and is_state('binary_sensor.dsc_pot1_sensor_stuck','on') }}
       - name: "DSC POT2 Untrusted"
         unique_id: dsc_pot2_untrusted
         device_class: problem
         icon: mdi:shield-off
         state: >
           {{ is_state('input_boolean.dsc_pot2_in_service','on')
-             and (is_state('binary_sensor.dsc_pot2_sensor_stuck','on')
-                  or is_state('binary_sensor.dsc_peer_mad_alert','on')) }}
+             and is_state('binary_sensor.dsc_pot2_sensor_stuck','on') }}
       - name: "DSC POT3 Untrusted"
         unique_id: dsc_pot3_untrusted
         device_class: problem
         icon: mdi:shield-off
         state: >
           {{ is_state('input_boolean.dsc_pot3_in_service','on')
-             and (is_state('binary_sensor.dsc_pot3_sensor_stuck','on')
-                  or is_state('binary_sensor.dsc_peer_mad_alert','on')) }}
+             and is_state('binary_sensor.dsc_pot3_sensor_stuck','on') }}
       - name: "DSC POT4 Untrusted"
         unique_id: dsc_pot4_untrusted
         device_class: problem
         icon: mdi:shield-off
         state: >
           {{ is_state('input_boolean.dsc_pot4_in_service','on')
-             and (is_state('binary_sensor.dsc_pot4_sensor_stuck','on')
-                  or is_state('binary_sensor.dsc_peer_mad_alert','on')) }}
+             and is_state('binary_sensor.dsc_pot4_sensor_stuck','on') }}
 
       - name: "DSC DHT Disagreement"
         unique_id: dsc_dht_disagreement

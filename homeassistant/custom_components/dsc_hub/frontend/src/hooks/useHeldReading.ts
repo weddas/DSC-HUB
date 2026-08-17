@@ -11,37 +11,49 @@ export type HeldReading = {
 const HUB_UPTIME = "sensor.dsc_hub_uptime";
 const HUB_BEAT = "sensor.dsc_hub_heartbeat";
 
+/** Parse a live numeric HA state. Never maps unavailable/unknown/empty → 0. */
+function parseLiveNumber(raw: string | undefined, liveOk: boolean): number {
+  if (!liveOk || raw == null || raw === "") return NaN;
+  const s = raw.trim().toLowerCase();
+  if (s === "unavailable" || s === "unknown" || s === "none") return NaN;
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : NaN;
+}
+
 /**
  * UI-only last-known-good numeric reading.
  * Never writes fake HA states; never maps unavailable → 0.
  */
 export function useHeldReading(entityId: string): HeldReading {
-  const { num, available, tick, entity } = useHass();
+  const { available, tick, entity } = useHass();
   const hold = useRef<{ value: number; at: number } | null>(null);
+  const prevId = useRef(entityId);
   const [, bump] = useState(0);
+
+  // Switching pots/entities must not flash the previous row's HELD value.
+  if (prevId.current !== entityId) {
+    prevId.current = entityId;
+    hold.current = null;
+  }
 
   const hubDark = !available(HUB_UPTIME) || !available(HUB_BEAT);
   const liveOk = available(entityId);
-  const raw = num(entityId);
+  const raw = parseLiveNumber(entity(entityId)?.state, liveOk);
+  // Hub-dark + 0 only: keep prior hold. Live 0 while hub is online stays live.
+  const suspiciousZero = hubDark && raw === 0;
 
   useEffect(() => {
-    if (liveOk && Number.isFinite(raw)) {
-      // Hub-dark + suspicious zero: keep prior hold for climate-like sensors
-      if (hubDark && raw === 0 && hold.current != null) {
-        bump((n) => n + 1);
-        return;
-      }
+    if (liveOk && Number.isFinite(raw) && !suspiciousZero) {
       hold.current = { value: raw, at: Date.now() };
       bump((n) => n + 1);
       return;
     }
     bump((n) => n + 1);
-    // tick keeps stale clocks fresh for UI
     void tick;
     void entity;
-  }, [entityId, liveOk, raw, hubDark, tick, entity]);
+  }, [entityId, liveOk, raw, suspiciousZero, tick, entity]);
 
-  if (liveOk && Number.isFinite(raw) && !(hubDark && raw === 0 && hold.current != null)) {
+  if (liveOk && Number.isFinite(raw) && !suspiciousZero) {
     return { value: raw, stale: false, heldAt: hold.current?.at, live: true };
   }
   if (hold.current != null) {
@@ -52,7 +64,7 @@ export function useHeldReading(entityId: string): HeldReading {
       live: false,
     };
   }
-  return { value: NaN, stale: !liveOk, heldAt: undefined, live: false };
+  return { value: NaN, stale: true, heldAt: undefined, live: false };
 }
 
 function useOfflineMs(entityId: string): number | null {

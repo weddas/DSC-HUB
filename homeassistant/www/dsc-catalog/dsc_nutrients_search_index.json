@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "kind": "nutrients",
-  "built_at": "2026-08-17T05:14:31Z",
+  "built_at": "2026-08-17T09:41:01Z",
   "count": 867,
   "note": "Browse index from sqlite nutrient_product (not dump files).",
   "items": [

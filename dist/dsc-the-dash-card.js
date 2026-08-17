@@ -3062,13 +3062,29 @@
   const normalizeHistoryRows = (result, entityId) => {
     if (!result) return [];
     if (Array.isArray(result)) {
-      // HA may return [[states...]] aligned to entity_ids order.
+      // HA WS/REST may return [[states...]] (entity groups) or [states...]
+      // (flat history). A lone `[stateObj, ...]` used to return [] and Twin
+      // climate charts stayed empty.
+      if (!result.length) return [];
       const first = result[0];
-      return Array.isArray(first) ? first : [];
+      if (Array.isArray(first)) {
+        const match = result.find(
+          (arr) =>
+            Array.isArray(arr) &&
+            arr[0] &&
+            (arr[0].entity_id === entityId || arr[0].entity_id == null)
+        );
+        return match || first;
+      }
+      if (first && typeof first === "object") return result;
+      return [];
     }
     if (typeof result === "object") {
       const rows = result[entityId];
-      return Array.isArray(rows) ? rows : [];
+      if (Array.isArray(rows)) return rows;
+      const values = Object.values(result);
+      if (values.length === 1 && Array.isArray(values[0])) return values[0];
+      return [];
     }
     return [];
   };
@@ -3114,8 +3130,7 @@
         if (typeof hass.callApi !== "function") return [];
         const url = `history/period/${start.toISOString()}?filter_entity_id=${encodeURIComponent(entityId)}&end_time=${encodeURIComponent(end.toISOString())}&minimal_response`;
         const data = await hass.callApi("GET", url);
-        const rows = Array.isArray(data) && data[0] ? data[0] : [];
-        return rowsToPoints(rows);
+        return rowsToPoints(normalizeHistoryRows(data, entityId));
       } catch (__) {
         return [];
       }

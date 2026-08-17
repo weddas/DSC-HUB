@@ -1,3 +1,5 @@
+import { isPotInService } from "./seatModel";
+
 export type PotTrustTone = "ok" | "warn" | "bad" | "muted";
 
 export interface PotTrust {
@@ -14,16 +16,19 @@ export function readPotTrust(
   pot: number,
   state: (id: string, fallback?: string) => string,
 ): PotTrust {
+  const inService = isPotInService(pot, state);
   const stuck = state(`binary_sensor.dsc_pot${pot}_sensor_stuck`) === "on";
   const untrusted = state(`binary_sensor.dsc_pot${pot}_untrusted`) === "on";
+  const peerSummary = state("sensor.dsc_peer_divergence_summary", "");
   const peer =
-    state("sensor.dsc_peer_divergence_summary", "") !== "—" &&
-    state("sensor.dsc_peer_divergence_summary", "") !== "ok" &&
-    state("sensor.dsc_peer_divergence_summary", "").toLowerCase() !== "none" &&
-    state("sensor.dsc_peer_divergence_summary", "") !== "unknown" &&
-    state("sensor.dsc_peer_divergence_summary", "") !== "unavailable" &&
-    state("sensor.dsc_peer_divergence_summary", "").length > 0 &&
-    state("sensor.dsc_peer_divergence_summary", "") !== "0";
+    inService &&
+    peerSummary !== "—" &&
+    peerSummary !== "ok" &&
+    peerSummary.toLowerCase() !== "none" &&
+    peerSummary !== "unknown" &&
+    peerSummary !== "unavailable" &&
+    peerSummary.length > 0 &&
+    peerSummary !== "0";
   const labels: string[] = [];
   if (stuck) labels.push("stuck");
   if (untrusted) labels.push("untrusted");

@@ -1,8 +1,8 @@
 # DSC-HUB firmware v4
 
 Working directory for ESPHome configs. Current fleet release string:
-**Live train:** hub / Control / bridge / pots / Sonoffs **5.2.0** (tagged marketing
-cut remains `v5.1.0`). See the repo root README / CHANGELOG / FOLLOWUPS.
+**Live train:** hub / Control / bridge / pots / Sonoffs **6.0.0.0** (SoftAP cutover;
+HA surface **7.2.0**). Tagged marketing cut may still say `v5.1.0`. See CHANGELOG / FOLLOWUPS.
 
 Firmware QA: [docs/qa/FIRMWARE-QA-5.1.0.md](../../docs/qa/FIRMWARE-QA-5.1.0.md).
 Repo [README](../../README.md) and [INSTALL.md](../../INSTALL.md) for from-scratch HA setup.
@@ -30,7 +30,7 @@ HA + ESP-NOW. **Soil * Raw** diagnostic templates reverse cal for lab wet measur
 **Reset Sensor Calibration** restores defaults and clears provenance. **Mark Soil Cal Peer Median**
 (5.1.5+) and **Mark Soil Cal Lab Buffer** (5.1.6+) stamp method after HA push / lab wet.
 
-## Panel (DSC-CONTROL **4.0.11**)
+## Panel (DSC-CONTROL **6.0.0.0**)
 
 Package body: [`dsc-control-common.yaml`](dsc-control-common.yaml).
 

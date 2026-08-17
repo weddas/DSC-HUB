@@ -115,7 +115,7 @@ script:
                     - automation.dsc_hub_heater_follows_heater_demand
                     - automation.dsc_hub_dehumidifier_follows_dehumidifier_demand
                     - automation.dsc_hub_humidifier_follows_humidifier_demand
-                    - automation.dsc_hub_clone_humidifier_follows_clone_humidifier_demand
+                    - automation.dsc_hub_clone_mister_follows_demand_gated
                 data: {skip_condition: true}
               - action: script.dsc_notify
                 data:
@@ -200,7 +200,7 @@ automation:
         value_template: >
           {% set pairs = [
             ('switch.dsc_hub_heater_demand','switch.dsc_heater_main_relay'),
-            ('switch.dsc_hub_dehumidifier_demand','switch.dsc_dehumidifier_main_relay'),
+            ('switch.dsc_hub_dehumidifier_demand','switch.dsc_de_humidifier_main_relay'),
             ('switch.dsc_hub_humidifier_demand','switch.dsc_humidifier_main_relay')
           ] %}
           {% set ns = namespace(bad=false) %}

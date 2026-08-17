@@ -16,9 +16,11 @@
 # Symptom class: HA shows hub offline while DSC-CONTROL / ESP-NOW / WiFi
 # still look healthy — that is an API session blip (Noise client), not a
 # dead board. Short blips are absorbed by HA demand-follower debounce
-# (heater stays on). Soft nudge watches handshake ≥90s. Bounce/reboot
-# require a dead API client (≥180s / ≥300s) or wedged-while-connected
-# (handshake ≥10 / ≥15 min). Handshake lag alone must not bounce WiFi.
+# (heater stays on). Hybrid ladder: stage-1 ~90s (3x HA 30s ping —
+# Track B). Bounce ~180s / reboot ~300s need a dead API client. When
+# ha_connected, handshake age is not api_problem until that 90s
+# multi-miss. Wedged-while-connected (hs ≥10 / ≥15 min) is last-resort;
+# lag alone must not bounce WiFi. Panel-only silence never bounces.
 # api.reboot_timeout stays 0s (HA maintenance must not bounce climate).
 #
 # ===== v5.1.5 · PHOTOPERIOD NVS / LIGHTS-ON SURVIVAL =====
@@ -76,7 +78,7 @@ esphome:
   friendly_name: DSC-HUB
   project:
     name: "digital_emotions.dsc-hub"
-    version: "5.2.0"
+    version: "6.0.0.0"
   on_boot:
     - priority: -100
       then:
@@ -227,10 +229,12 @@ ota:
 #  2026-08-03 — NVS SYNC ON MODE CHANGE + LINK / AP PIN
 #  Mode transitions flush NVS immediately. v5.1.11 also forces Full Auto
 #  ON at every boot (except Takeover), so a stale NVS OFF cannot idle the
-#  stack after recovery reboot. Link ladder: soft nudge on handshake
-#  ≥90s; bounce/reboot need a dead API client (or hs ≥10/15 min while
-#  "connected"). Lock WiFi AP: mismatch bounce backoff; fast_connect off;
-#  wifi_ap_learn_or_pin on every STA connect + delayed on_boot.
+#  stack after recovery reboot. Link ladder: stage-1 ~90s (HA ping 30s
+#  Track B; multi-miss while connected); bounce ~180s / reboot ~300s on
+#  a dead API client (or hs ≥10/15 min while "connected"). Panel-only
+#  silence never bounces WiFi. Lock WiFi AP: mismatch bounce backoff;
+#  fast_connect off; wifi_ap_learn_or_pin on every STA connect + delayed
+#  on_boot.
 #
 #  v2.4.4 — BOOT PERSIST + RE-ARM FULL AUTO (31 Jul 2026)
 #  ------------------------------------------------------------------
@@ -894,6 +898,10 @@ globals:
     type: int
     restore_value: true
     initial_value: '0'
+  - id: photo_dur_was_zero         # Follow 4x8 Off/Dry (dur<=0) last tick
+    type: bool
+    restore_value: false
+    initial_value: 'false'
 
   # --- Failsafe snapshot (to restore state after an emergency) ---
   - id: saved_out
@@ -1270,9 +1278,11 @@ globals:
     initial_value: '0'
 
   # ===== v2.4.1 · ESP-NOW FRESHNESS STAMPS (millis; 0 = never heard) ==
-  # Per-pot arrival time of the last PLAUSIBLE ESP-NOW reading. The
-  # mat's source-select treats a pot's ESP-NOW value as live for 150s
-  # (2.5 missed 60s sends), then falls to that pot's HA mirror.
+  # rz_rx_*_at: any soil_temperature packet arrived (radio heard), even
+  # NaN / 0 °C — potN_espnow_link uses this so a dead Modbus probe is
+  # not a radio fail. rz_now_*_at: last PLAUSIBLE 5–45 °C reading; the
+  # mat's source-select treats that as live for 150s (2.5 missed 60s
+  # sends), then falls to that pot's HA mirror.
   - id: rz_now_1_at
     type: uint32_t
     restore_value: false
@@ -1286,6 +1296,22 @@ globals:
     restore_value: false
     initial_value: '0'
   - id: rz_now_4_at
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+  - id: rz_rx_1_at
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+  - id: rz_rx_2_at
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+  - id: rz_rx_3_at
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+  - id: rz_rx_4_at
     type: uint32_t
     restore_value: false
     initial_value: '0'
@@ -1726,6 +1752,7 @@ switch:
     turn_off_action:
       - globals.set: {id: heater_auto_enabled, value: 'false'}
       - switch.turn_off: heater_demand
+      - lambda: 'id(heater_off_at) = millis();'
       - script.execute: tx_panel_sync
   - platform: template
     name: "Heater Demand"          # 750W fan heater
@@ -2741,7 +2768,7 @@ text_sensor:
     name: "Firmware Version"
     id: fw_version
     icon: mdi:tag-check
-    lambda: 'return {"5.2.0"};'
+    lambda: 'return {"6.0.0.0"};'
     update_interval: 60s
 
   # F-006: last recovery action reason (bounce / reboot / none)
@@ -3417,6 +3444,7 @@ sensor:
     internal: true
     on_value:
       - lambda: |-
+          id(rz_rx_1_at) = millis();   // radio heard (even NaN / 0 °C)
           if (!isnan(x) && x > 5.0f && x < 45.0f) { id(rz_now_1_at) = millis(); id(last_valid_rootzone_time) = millis(); }
   - platform: packet_transport
     provider: dsc_pot2
@@ -3425,6 +3453,7 @@ sensor:
     internal: true
     on_value:
       - lambda: |-
+          id(rz_rx_2_at) = millis();
           if (!isnan(x) && x > 5.0f && x < 45.0f) { id(rz_now_2_at) = millis(); id(last_valid_rootzone_time) = millis(); }
   - platform: packet_transport
     provider: dsc_pot3
@@ -3433,6 +3462,7 @@ sensor:
     internal: true
     on_value:
       - lambda: |-
+          id(rz_rx_3_at) = millis();
           if (!isnan(x) && x > 5.0f && x < 45.0f) { id(rz_now_3_at) = millis(); id(last_valid_rootzone_time) = millis(); }
   - platform: packet_transport
     provider: dsc_pot4
@@ -3441,6 +3471,7 @@ sensor:
     internal: true
     on_value:
       - lambda: |-
+          id(rz_rx_4_at) = millis();
           if (!isnan(x) && x > 5.0f && x < 45.0f) { id(rz_now_4_at) = millis(); id(last_valid_rootzone_time) = millis(); }
 
 # ==========================================
@@ -3537,35 +3568,35 @@ binary_sensor:
     lambda: 'return id(photo_catchup_active);'
 
   # ===== v2.4.1 · PER-POT ESP-NOW LINK WATCHDOGS ====================
-  # Honest freshness-based link truth: ON while that pot's last
-  # plausible ESP-NOW reading is under 150s old (2.5 missed sends).
-  # device_class: connectivity — deliberately excluded from the Home
-  # alert list auto-include, so a link blip never pages anyone; the
-  # mat's own fallback chain is the functional response.
+  # Radio freshness (any soil_temperature packet, including NaN / 0 °C).
+  # ON while that pot's last ESP-NOW RX is under 150s old (2.5 missed
+  # sends). A dead Modbus probe must NOT look like a radio fail — the
+  # mat still ignores implausible values via rz_now_*_at. device_class:
+  # connectivity — excluded from the Home alert list auto-include.
   - platform: template
     name: "POT1 ESP-NOW Link"
     id: pot1_espnow_link
     device_class: connectivity
     entity_category: diagnostic
-    lambda: 'return id(rz_now_1_at) != 0 && (millis() - id(rz_now_1_at)) < 150000;'
+    lambda: 'return id(rz_rx_1_at) != 0 && (millis() - id(rz_rx_1_at)) < 150000;'
   - platform: template
     name: "POT2 ESP-NOW Link"
     id: pot2_espnow_link
     device_class: connectivity
     entity_category: diagnostic
-    lambda: 'return id(rz_now_2_at) != 0 && (millis() - id(rz_now_2_at)) < 150000;'
+    lambda: 'return id(rz_rx_2_at) != 0 && (millis() - id(rz_rx_2_at)) < 150000;'
   - platform: template
     name: "POT3 ESP-NOW Link"
     id: pot3_espnow_link
     device_class: connectivity
     entity_category: diagnostic
-    lambda: 'return id(rz_now_3_at) != 0 && (millis() - id(rz_now_3_at)) < 150000;'
+    lambda: 'return id(rz_rx_3_at) != 0 && (millis() - id(rz_rx_3_at)) < 150000;'
   - platform: template
     name: "POT4 ESP-NOW Link"
     id: pot4_espnow_link
     device_class: connectivity
     entity_category: diagnostic
-    lambda: 'return id(rz_now_4_at) != 0 && (millis() - id(rz_now_4_at)) < 150000;'
+    lambda: 'return id(rz_rx_4_at) != 0 && (millis() - id(rz_rx_4_at)) < 150000;'
 
 # ==========================================
 # 8. SCRIPTS  (stage engine + climate + photoperiod)
@@ -3703,17 +3734,26 @@ script:
           id(tx_vitals).execute();
 
   # Wedged HA API while WiFi up — sync NVS then reboot. Caps at 2/boot.
+  # Safety modes own the outputs: never reboot through an active >35 °C
+  # purge or sensor-fault safe-vent (latch is RAM-only; reboot would
+  # drop fans to boot baseline). Callers also gate; this is the last line.
   - id: stack_recovery_reboot
     mode: single
     then:
       - lambda: |-
+          if (id(emergency_failsafe_active) || id(sensor_fault_active)) {
+            ESP_LOGW("api", "API recovery reboot skipped — safety mode active (emergency/sensor fault)");
+            return;
+          }
           id(stack_recovery_reboots) = id(stack_recovery_reboots) + 1;
           ESP_LOGE("api",
                    "API RECOVERY #%d — WiFi up but HA session wedged; sync NVS + App.safe_reboot()",
                    id(stack_recovery_reboots));
           global_preferences->sync();
       - delay: 250ms
-      - lambda: 'App.safe_reboot();'
+      - lambda: |-
+          if (id(emergency_failsafe_active) || id(sensor_fault_active)) return;
+          App.safe_reboot();
 
   # Flush restore-backed mode globals immediately. flash_write_interval is
   # 60s — without this, an API-recovery reboot can resurrect a stale Full
@@ -4778,29 +4818,21 @@ script:
   #
   # v5.1.6 · LIGHT-QUOTA + DEBT CATCH-UP
   # Nominal window still drives clone_lights_on / 2x4 Window Open.
-  # Separately, NVS-backed delivered_s credits actual SF1000 output
-  # (≥ ramp floor). After nominal off, want_on continues while debt > 0
+  # Separately, NVS-backed delivered_s credits commanded ON
+  # (light_on && bri_pct >= 0.5; sf_ramp_floor is PWM min_power only).
+  # After nominal off, want_on continues while debt > 0
   # and remaining dark > min dark floor (catch-up). Leftover debt folds
-  # into the next cycle capped at +2h.
+  # into the next cycle capped at +2h. Clone Off / Takeover freeze or
+  # skip gaps so they cannot invent catch-up. dur<=0 (Follow Off/Dry)
+  # keeps debt 0; dur resume re-seeds and does not carry Off-time.
   - id: run_clone_photoperiod
     mode: single
     then:
       - lambda: |-
           if (id(boot_resume_pending)) return;    // waiting on resume prompt
           if (id(emergency_failsafe_active)) return;  // trip handler owns the light
-          if (id(ha_takeover_active)) {
-            id(light_ramp_state) = 0;
-            id(photo_catchup_active) = false;
-            return;
-          }
-          if (!id(clone_active)) {                // 2x4 Off: apply_clone_mode already darked it
-            id(clone_lights_on) = false;
-            id(light_ramp_state) = 0;
-            id(photo_catchup_active) = false;
-            return;
-          }
 
-          // Resolve the window source
+          // Resolve the window source first — Off/Takeover freeze needs target.
           int dur, on_m;
           if (id(clone_photo_follow)) {
             dur  = id(main_active) ? id(stage_light_hours) : 0;   // following an Off 4x8 = dark
@@ -4808,6 +4840,24 @@ script:
           } else {
             dur  = id(clone_light_hours);
             on_m = id(clone_lights_on_time).hour * 60 + id(clone_lights_on_time).minute;
+          }
+
+          if (id(ha_takeover_active)) {
+            id(light_ramp_state) = 0;
+            id(photo_catchup_active) = false;
+            id(photo_last_tick_ms) = millis();  // do not invent a dark-gap catch-up
+            return;
+          }
+          if (!id(clone_active)) {                // 2x4 Off: apply_clone_mode already darked it
+            id(clone_lights_on) = false;
+            id(light_ramp_state) = 0;
+            uint32_t target = (dur > 0)
+                ? ((uint32_t) dur * 3600u + id(photo_carry_s)) : 0u;
+            if (target > 0 && id(photo_delivered_s) < target)
+              id(photo_delivered_s) = target;     // freeze paid — re-enable in dark stays dark
+            id(photo_catchup_active) = false;
+            id(photo_last_tick_ms) = millis();    // do not invent a dark-gap catch-up
+            return;
           }
 
           auto now = id(sntp_time).now();
@@ -4857,7 +4907,7 @@ script:
                        cycle_key, (unsigned) id(photo_delivered_s));
             } else {
               uint32_t carry = 0;
-              if (id(photo_cycle_key) != 0 && dur > 0) {
+              if (id(photo_cycle_key) != 0 && dur > 0 && !id(photo_dur_was_zero)) {
                 uint32_t old_target = (uint32_t) dur * 3600u + id(photo_carry_s);
                 if (old_target > id(photo_delivered_s)) {
                   uint32_t old_debt = old_target - id(photo_delivered_s);
@@ -4872,6 +4922,25 @@ script:
             id(photo_cycle_key) = cycle_key;
             id(photo_last_tick_ms) = 0;
           }
+
+          // Follow 4x8 Off/Dry (dur<=0) must not invent catch-up when Main
+          // returns — re-seed from the current window, carry 0.
+          if (id(photo_dur_was_zero) && dur > 0) {
+            uint32_t target = (uint32_t) dur * 3600u;
+            if (in_nominal) {
+              uint32_t elapsed = (uint32_t)(since_on * 60.0f);
+              id(photo_delivered_s) = elapsed > target ? target : elapsed;
+            } else {
+              id(photo_delivered_s) = target;
+            }
+            id(photo_carry_s) = 0;
+            id(photo_dur_was_zero) = false;
+            id(photo_last_tick_ms) = millis();
+            ESP_LOGI("photoperiod",
+                     "dur resume after Off/Dry — re-seed delivered %us, no Off-time carry",
+                     (unsigned) id(photo_delivered_s));
+          }
+          if (dur <= 0) id(photo_dur_was_zero) = true;
 
           // ---- credit actual-on (hub truth; HA flaps do not matter) ----
           uint32_t now_ms = millis();
@@ -4888,8 +4957,10 @@ script:
           float bri_pct = light_on
               ? id(light_sf1000).remote_values.get_brightness() * 100.0f
               : 0.0f;
-          // Count photons only when commanded output clears the dead-zone floor
-          if (light_on && bri_pct >= id(sf_ramp_floor) - 0.5f) {
+          // Count commanded ON (bri ≥ 0.5%). sf_ramp_floor is PWM min_power
+          // only — crediting at the ramp floor undercounted delivered and
+          // invented nightly catch-up (D8).
+          if (dur > 0 && light_on && bri_pct >= 0.5f) {
             uint32_t d = id(photo_delivered_s);
             if (d < 200000u) id(photo_delivered_s) = d + dt_s;  // clamp absurd wrap
           }
@@ -5068,14 +5139,12 @@ interval:
           poll_ch = ch;
 
   # ---- Hub link recovery (same ladder as Control/pots) ----
-  # API wedge OR panel ESP-NOW gone quiet after it was alive.
-  # Soft nudge still watches handshake (≥90s) + panel (≥45s).
-  # Bounce/reboot require a dead API client (or wedged-while-connected
-  # handshake ≥10/15 min) — handshake automation lag alone must not
-  # bounce WiFi (3 Aug overnight reboot storm).
-  #   handshake ≥90s / panel ≥45s → fleet heartbeat + vitals nudge
-  #   API client dead ≥180s OR hs ≥600s while "connected" → WiFi bounce
-  #   API client dead ≥300s after bounce OR hs ≥900s → safe_reboot (max 2/boot)
+  # Hybrid (HA handshake ping = 30s, Track B):
+  #   stage-1 ~90s (3 missed pings) / panel ≥45s → fleet heartbeat + vitals
+  #   bounce ~180s dead API client (or hs ≥10 min while "connected")
+  #   reboot ~300s still dead after bounce (or hs ≥15 min) — max 2/boot
+  # When ha_connected, handshake age is not api_problem until the 90s
+  # multi-miss. Handshake lag alone must not bounce WiFi.
   # Panel-only silence never bounces or reboots the hub.
   # WiFi-down is logged only.
   - interval: 10s
@@ -5098,12 +5167,13 @@ interval:
                            (millis() - id(ha_handshake_last)) < 90000u;
               if (hs_ok) id(api_down_since) = 0;
 
-              // Soft nudge: handshake silent ≥90s (write-path watch).
+              // Stage-1 ~90s. When the API client is up, handshake lag is
+              // not an API problem until 3 missed 30s HA pings.
               bool api_problem = false;
-              if (id(ha_handshake_seen) && id(ha_handshake_last) != 0) {
-                api_problem = (millis() - id(ha_handshake_last)) >= 90000u;
-              }
-              if (!api_ok && id(api_ever_connected)) {
+              if (api_ok) {
+                if (id(ha_handshake_seen) && id(ha_handshake_last) != 0)
+                  api_problem = (millis() - id(ha_handshake_last)) >= 90000u;
+              } else if (id(api_ever_connected)) {
                 if (id(api_down_since) == 0) id(api_down_since) = millis();
                 if ((millis() - id(api_down_since)) >= 90000u) api_problem = true;
               }
@@ -5153,9 +5223,10 @@ interval:
                 hs_age = millis() - id(ha_handshake_last);
               uint32_t down_age = (id(api_down_since) != 0) ? (millis() - id(api_down_since)) : 0;
 
-              // Bounce when the API client is gone ≥180s, OR wedged-while-
-              // connected (handshake silent ≥10 min). Handshake lag alone
-              // with a live client must not bounce WiFi.
+              // Bounce ~180s: API client gone, OR wedged-while-connected
+              // (handshake silent ≥10 min). Handshake lag with a live
+              // client must not bounce. Panel-only silence never bounces
+              // unless api_problem is also true (it is not, here).
               bool api_problem = (!api_ok && id(api_ever_connected) && down_age >= 180000u) ||
                                  (api_ok && hs_age >= 600000u);
 
@@ -5191,8 +5262,8 @@ interval:
               if (id(link_rec_last_action) != 0 &&
                   (millis() - id(link_rec_last_action)) < 20000u) return false;
 
-              // Reboot after bounce when the client is still dead ≥300s —
-              // or wedged-while-connected ≥15 min. Never for panel-only silence.
+              // Reboot ~300s after bounce when the client is still dead —
+              // or wedged-while-connected ≥15 min. Never for panel-only.
               bool api_ok = id(ha_connected).state;
               uint32_t hs_age = 0;
               if (id(ha_handshake_seen) && id(ha_handshake_last) != 0)

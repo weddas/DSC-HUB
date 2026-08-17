@@ -867,7 +867,15 @@ export function Sparkline({
 export function GotWantBars({
   rows,
 }: {
-  rows: { label: string; got: number; wantMin?: number; wantMax?: number; want?: number; unit?: string }[];
+  rows: {
+    label: string;
+    got: number;
+    wantMin?: number;
+    wantMax?: number;
+    want?: number;
+    unit?: string;
+    stale?: boolean;
+  }[];
 }) {
   return (
     <div className="dsc-gotwant">
@@ -878,27 +886,30 @@ export function GotWantBars({
             : row.wantMin != null && row.wantMax != null
               ? (row.wantMin + row.wantMax) / 2
               : NaN;
+        const gotMissing = !!row.stale || !Number.isFinite(row.got);
         const max = Math.max(
-          Number.isFinite(row.got) ? row.got : 0,
+          gotMissing ? 0 : row.got,
           Number.isFinite(want) ? want : 0,
           row.wantMax ?? 0,
           1,
         );
-        const gotPct = Number.isFinite(row.got) ? (row.got / max) * 100 : 0;
+        const gotPct = gotMissing ? 0 : (row.got / max) * 100;
         const wantPct = Number.isFinite(want) ? (want / max) * 100 : 0;
         return (
-          <div key={row.label} className="dsc-gotwant-row">
+          <div key={row.label} className={`dsc-gotwant-row${gotMissing ? " is-stale" : ""}`}>
             <div className="dsc-gotwant-label">{row.label}</div>
             <div className="dsc-gotwant-track">
               {Number.isFinite(want) ? (
                 <div className="dsc-gotwant-want" style={{ width: `${wantPct}%` }} />
               ) : null}
-              <div className="dsc-gotwant-got" style={{ width: `${gotPct}%` }} />
+              {gotMissing ? null : (
+                <div className="dsc-gotwant-got" style={{ width: `${gotPct}%` }} />
+              )}
             </div>
             <div className="dsc-gotwant-vals">
               <span>
-                Got {Number.isFinite(row.got) ? row.got.toFixed(1) : "—"}
-                {row.unit || ""}
+                Got {gotMissing ? "—" : row.got.toFixed(1)}
+                {gotMissing ? "" : row.unit || ""}
               </span>
               <span className="dsc-muted">
                 Want{" "}

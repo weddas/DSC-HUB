@@ -5,6 +5,7 @@ export type CatalogSource = "cannalib" | "local";
 export interface CatalogItem {
   id?: string;
   name: string;
+  kind?: string;
   type?: string;
   summary?: string;
   breeder?: string;
@@ -23,6 +24,7 @@ export interface CatalogItem {
   efficacy_umol_j?: number;
   has_ppfd?: boolean;
   matched_via?: string;
+  science_alias?: string;
   [key: string]: unknown;
 }
 
@@ -74,6 +76,51 @@ function itemName(item: CatalogItem): string {
   return String(item.name || item.id || "").trim();
 }
 
+/**
+ * Strain browse must not list merch SKUs as cultivars.
+ * Prefer API `kind === "strain"`; still drop capsules/rosin/mg lots by name.
+ * Does not invent alias or SKU tables.
+ */
+export function isStrainCultivar(item: CatalogItem): boolean {
+  const kind = String(item.kind ?? "").trim().toLowerCase();
+  if (kind && kind !== "strain" && kind !== "cultivar") return false;
+  const name = itemName(item);
+  const n = name.toLowerCase();
+  if (/\bcapsules?\b/.test(n)) return false;
+  if (/\brosin\b/.test(n)) return false;
+  if (/\blubricant\b/.test(n)) return false;
+  if (/\bthca\s+pebbles?\b/.test(n)) return false;
+  if (/\d+\s*mg\b/.test(n)) return false;
+  if (/^#+\s*\d+/.test(name.trim())) return false;
+  return true;
+}
+
+function filterKind(kind: CatalogKind, items: CatalogItem[]): CatalogItem[] {
+  if (kind !== "strain") return items;
+  return items.filter(isStrainCultivar);
+}
+
+/** Rank API science_alias hits first. Never synthesizes alias mappings. */
+function preferScienceAliasHits(items: CatalogItem[], q: string): CatalogItem[] {
+  const needle = q.trim().toLowerCase();
+  if (!needle || items.length < 2) return items;
+  const score = (it: CatalogItem): number => {
+    const via = String(it.matched_via ?? "").toLowerCase();
+    if (via === "science_alias") return 0;
+    const alias = String(it.science_alias ?? "").toLowerCase();
+    if (
+      alias &&
+      alias
+        .split(/[,;/|]/)
+        .some((p) => p.trim() === needle || p.trim().includes(needle))
+    ) {
+      return 1;
+    }
+    return 2;
+  };
+  return [...items].sort((a, b) => score(a) - score(b));
+}
+
 async function searchLocal(kind: CatalogKind, q: string): Promise<CatalogItem[]> {
   const r = await fetch(INDEX_FILE[kind], { cache: "no-store" });
   if (!r.ok) return [];
@@ -94,21 +141,21 @@ export async function searchCatalog(
     const url = `${cannalibBase(state)}/v1/catalogs/${domain}?q=${encodeURIComponent(q || "")}&limit=${limit}`;
     const r = await fetch(url, { headers: cannalibHeaders(state), cache: "no-store" });
     if (!r.ok) throw new Error(`cannalib ${r.status}`);
-    const items = asItems(await r.json());
+    const items = preferScienceAliasHits(filterKind(kind, asItems(await r.json())), q);
     if (items.length || kind === "strain") {
       return {
         items,
         source: "cannalib",
-        note: "Cannalib full corpus",
+        note: "CannaLib live",
       };
     }
   } catch {
     /* local fallback */
   }
-  const local = await searchLocal(kind, q);
+  const local = preferScienceAliasHits(filterKind(kind, await searchLocal(kind, q)), q);
   return {
     items: local,
     source: "local",
-    note: "Cannalib unreachable — local JSON index",
+    note: "CannaLib unreachable — local JSON index",
   };
 }
