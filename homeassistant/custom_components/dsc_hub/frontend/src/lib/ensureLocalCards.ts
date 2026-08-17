@@ -8,20 +8,32 @@ const UMBRELLA = [
   `/hacsfiles/DSC-HUB/DSC-HUB.js?v=${BUNDLE_V}`,
 ];
 
+const THREE_JS = `/local/vendor/three.min.js?v=${BUNDLE_V}`;
+const DASH_FX = `/local/vendor/dsc-dash-fx.js?v=${BUNDLE_V}`;
+
 /**
  * Prefer the dedicated IIFE for each tag. The umbrella alone is not enough:
  * HA often has a stale DSC-HUB.js while /local/dsc-*-card.js is current.
+ *
+ * dsc-the-dash-card is not self-contained: it reads the THREE global at
+ * render time. Load vendor/three.min.js (then dash-fx) before the card IIFE.
  */
 const TAG_SCRIPTS: Record<string, string[]> = {
   "dsc-catalog-browse-card": [`/local/dsc-catalog-browse-card.js?v=${BUNDLE_V}`],
   "dsc-build-plant-card": [`/local/dsc-build-plant-card.js?v=${BUNDLE_V}`],
-  "dsc-the-dash-card": [`/local/dsc-the-dash-card.js?v=${BUNDLE_V}`],
+  "dsc-the-dash-card": [THREE_JS, DASH_FX, `/local/dsc-the-dash-card.js?v=${BUNDLE_V}`],
   "dsc-airflow-map-card": [`/local/dsc-airflow-map-card.js?v=${BUNDLE_V}`],
   "dsc-system-map-card": [
     `/local/dsc-system-map-card.js?v=${BUNDLE_V}`,
     ...UMBRELLA,
   ],
 };
+
+type ThreeHolder = { THREE?: unknown };
+
+function hasThree(): boolean {
+  return typeof (globalThis as ThreeHolder).THREE !== "undefined";
+}
 
 const loading = new Map<string, Promise<void>>();
 
@@ -55,12 +67,40 @@ function candidatesFor(tag: string): string[] {
   return out;
 }
 
+/** THREE global from vendor/three.min.js, or the concatenated umbrella. */
+async function ensureThree(): Promise<boolean> {
+  if (hasThree()) return true;
+  for (const src of [THREE_JS, ...UMBRELLA]) {
+    try {
+      await injectScript(src);
+    } catch {
+      /* try next */
+    }
+    if (hasThree()) return true;
+  }
+  return hasThree();
+}
+
 /**
  * Ensure a legacy custom element is defined. Always injects dedicated
  * /local/dsc-*-card.js first (even if the tag already exists from a stale
  * DSC-HUB.js Lovlace resource) so the card IIFE can upgrade the prototype.
+ *
+ * For The Dash / Twin: THREE must be on globalThis before the card renders,
+ * or the IIFE paints "THREE.js not loaded — redeploy DSC-HUB bundle."
  */
 export async function ensureLocalCard(tag: string, timeoutMs = 12000): Promise<boolean> {
+  if (tag === "dsc-the-dash-card") {
+    await ensureThree();
+    if (hasThree()) {
+      try {
+        await injectScript(DASH_FX);
+      } catch {
+        /* cinematic FX is optional; the scene still needs THREE */
+      }
+    }
+  }
+
   const dedicated = TAG_SCRIPTS[tag] ?? [];
   for (const src of dedicated) {
     try {
@@ -68,6 +108,10 @@ export async function ensureLocalCard(tag: string, timeoutMs = 12000): Promise<b
     } catch {
       /* try next */
     }
+  }
+
+  if (tag === "dsc-the-dash-card" && !hasThree()) {
+    await ensureThree();
   }
 
   if (customElements.get(tag)) return true;

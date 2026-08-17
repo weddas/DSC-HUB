@@ -2314,3 +2314,20 @@ Software-closable audit lies + Bug Box items landed **in git working tree**. Liv
 2. OTA hub from HA (or a machine on 192.168.4.0/24). Confirm `sensor.dsc_ha_link_flap_count_24h` after handshake 90/180/300.
 3. Re-run Wave I soak on 7.2.0 chrome. Then Notion Fixed-with-evidence.
 
+---
+
+## 2026-08-17 — Twin THREE.js missing on `/live/twin`
+
+The red **THREE.js not loaded — redeploy DSC-HUB bundle** on Twin was not stale HA assets. React `ensureLocalCards` loaded `/local/dsc-the-dash-card.js` alone. That IIFE reads the `THREE` global at `_renderShell` time; the dedicated card is not the fat concat. `ha-sync.sh` also concatenated `vendor/three.min.js` into `DSC-HUB.js` and never published `/config/www/vendor/three.min.js`.
+
+### done
+
+- Loader now injects `vendor/three.min.js` → `vendor/dsc-dash-fx.js` → dash card, and falls back to the umbrella bundle if the standalone THREE script 404s.
+- `ha-sync.sh` copies `three.min.js` to `/config/www/vendor/`.
+- Panel rebuilt (`dsc-hub-panel.js` contains `/local/vendor/three.min.js`).
+- Gate: `python scripts/check_twin_three_prereq.py`.
+
+### soak
+
+- Still needs HA sync + hard-reload to prove Twin paints the scene on the box. Live HA was 7.1.x at last soak; 7.2.0 query-string is a new cache-buster vs that.
+

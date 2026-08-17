@@ -207,6 +207,7 @@ run_scp "${build_js}" "${HA_CONFIG_ROOT}/www/dsc-build-plant-card.js"
 run_scp "${nav_js}" "${HA_CONFIG_ROOT}/www/dsc-app-nav-card.js"
 run_scp "${catalog_js}" "${HA_CONFIG_ROOT}/www/dsc-catalog-browse-card.js"
 run_ssh "mkdir -p '${HA_CONFIG_ROOT}/www/vendor' '${HA_CONFIG_ROOT}/www/dsc-catalog'"
+run_scp "${three_js}" "${HA_CONFIG_ROOT}/www/vendor/three.min.js"
 run_scp "${dash_fx}" "${HA_CONFIG_ROOT}/www/vendor/dsc-dash-fx.js"
 catalog_dir="${HA_SRC}/www/dsc-catalog"
 if [[ -d "${catalog_dir}" ]]; then
