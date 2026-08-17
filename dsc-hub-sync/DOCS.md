@@ -34,6 +34,10 @@ restores the last-good snapshot under `/data/last_good_sync`.
 
 Refuses staging `< 500000` bytes (F-013). Healthy size ~941 KB with Build a Plant.
 
+When present, Sync also copies standalone `www/vendor/three.min.js` (and
+`dsc-dash-fx.js`) so React Twin can load the dedicated dash IIFE without relying
+only on the fat concat. Ops: [`docs/qa/TWIN-THREE-PREREQ.md`](../docs/qa/TWIN-THREE-PREREQ.md).
+
 **N-084:** Sync ≤5.1.3 stopped at The Dash — rebuild **5.1.4+** so Sync cannot
 demote a HACS-complete live bundle.
 

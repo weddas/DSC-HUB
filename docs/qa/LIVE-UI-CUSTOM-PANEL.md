@@ -32,6 +32,13 @@ After Twin/Dash edits, concat `/local/DSC-HUB.js` from `homeassistant/www/` card
 (`dsc-system-map` → `dsc-airflow-map` → three → dash-fx → dash → build → catalog → app-nav)
 and hard-reload Lovelace/panel.
 
+**Twin THREE prerequisite (surface 7.2.0 / `b965e275`):** the dedicated
+`/local/dsc-the-dash-card.js` is **not** self-contained. React
+`ensureLocalCards` must load `/local/vendor/three.min.js` (then optional
+`dsc-dash-fx.js`) before the dash IIFE, and `ha-sync.sh` must publish
+`/config/www/vendor/three.min.js`. Gate: `python scripts/check_twin_three_prereq.py`.
+Ops: [`TWIN-THREE-PREREQ.md`](TWIN-THREE-PREREQ.md).
+
 ## Visual system (7.1)
 
 Sharper contrast: lifted indigo-slate · **blue/cyan** active chrome · green = live/ON only ·
