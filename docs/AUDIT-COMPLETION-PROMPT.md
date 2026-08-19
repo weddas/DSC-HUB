@@ -1,10 +1,18 @@
 # DSC-HUB — full audit, then version-completion plan
 
+Ops runbook (scan-friendly): [`docs/qa/AUDIT-VERSION-COMPLETION.md`](qa/AUDIT-VERSION-COMPLETION.md)  
+Prior Phase 1 artifact: [`docs/AUDIT-2026-08-17.md`](AUDIT-2026-08-17.md)
+
 Paste this entire file as the first message in a new Cursor chat rooted on this repo:
 
 `Y:\Digital Stealth Care\Projects\DSC-HUB`
 
 Do not implement the completion pass until Phase 1 is written and the user accepts the Phase 2 plan.
+
+**Tip versions change.** Re-probe SoT before scoring skew — do not treat the
+“last known” strings below as current tip. As of prompt land (`97d8295`): HA
+surface package/`SURFACE_VERSION`/`BUNDLE_V` = **7.2.0**; SoftAP-local expected
+firmware = **6.0.0.0**. Live HA may still lag; that is a defect to record.
 
 ---
 

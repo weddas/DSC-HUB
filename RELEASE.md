@@ -21,8 +21,10 @@ Repo: https://github.com/weddas/DSC-HUB · branch **`master`**
 
 > Hardware OOS stays gated: AC, clone mister, POT3, tank. Do not flash pots
 > this pass (Modbus). ESP-NOW 0xD5 / 0xD0 / SoftAP BSSID adopt stay parked.
-> See [`docs/AUDIT-2026-08-17.md`](docs/AUDIT-2026-08-17.md) and
-> [`docs/FOLLOWUPS.md`](docs/FOLLOWUPS.md).
+> See [`docs/AUDIT-2026-08-17.md`](docs/AUDIT-2026-08-17.md),
+> [`docs/qa/AUDIT-VERSION-COMPLETION.md`](docs/qa/AUDIT-VERSION-COMPLETION.md)
+> (paste prompt: [`docs/AUDIT-COMPLETION-PROMPT.md`](docs/AUDIT-COMPLETION-PROMPT.md)),
+> and [`docs/FOLLOWUPS.md`](docs/FOLLOWUPS.md).
 
 ---
 
