@@ -2331,3 +2331,54 @@ The red **THREE.js not loaded — redeploy DSC-HUB bundle** on Twin was not stal
 
 - Still needs HA sync + hard-reload to prove Twin paints the scene on the box. Live HA was 7.1.x at last soak; 7.2.0 query-string is a new cache-buster vs that.
 
+## 2026-08-20 — Studio Wi-Fi cutover (kill ESP-NOW)
+
+Hybrid lab path: **HA Native API is the live bus.** ESP-NOW / SoftAP stay in tree for kit builds; live lab joins **Digital-Emotions Studio** (2.4 GHz) on ESPHome **2026.8.0**, project train **6.1.0.0**.
+
+### done (repo)
+
+- Notion + gitignored secrets for studio SSID (password never in git/FOLLOWUPS).
+- Lab wifi packages → studio STA; Sonoff/pot/hub/control `lan_ip` + `use_address`.
+- Hub: dropped `dsc-hub-espnow-primary` include; soil/votes HA-primary.
+- Panel: `dsc-control-ha-bus.yaml` + `hub_cmd` → `dsc_panel_hub_cmd` event; ESP-NOW TX/keepalive/RF card parked; Connections shows ESP-NOW **PARKED**.
+- HA: `dsc_v4_panel_ha_bus.yaml`; fleet-heal/CHX copy retargeted; bridge helpers SoftAP parked; ESPHome stubs off `192.168.4.x`.
+- Pots: Modbus `turnaround_time` + UART soften + `probe_online` binary.
+- Bridge: SoftAP/ESP-NOW body parked; Sonoff API hosts on studio LAN; `dsc_anchor_ap` not loaded on lab stub.
+- README mermaid + kit-vs-lab split.
+
+### LAN map (free IPs — old Nest reclaim was occupied)
+
+| Device | IP |
+|---|---|
+| Hub | 192.168.86.180 |
+| Control | 192.168.86.177 |
+| Pot1–4 | .181 / .182 / .183 / .49 |
+| Heater / heatmat / humidifier / dehumidifier | .50 / .51 / .54 / .184 |
+| Bridge eth | .66 (unchanged) |
+
+Do **not** reclaim .33/.39/.40/.47/.23 — other hosts answered there at cutover.
+
+### soak / next-plan (operator)
+
+1. pfSense DHCP reservations for the table above; confirm studio AP is 2.4 GHz, same LAN as HA, no client isolation.
+2. Pin HA Device Builder add-on to **2026.8.0** (laptop CLI already 2026.8.0).
+3. USB order: hub → Pot2 canary → pots → Sonoffs → panel → soak ≥30 min → prove OTA (one ESP32 + one Sonoff) → **bridge SoftAP off last**.
+4. Re-add ESPHome integrations by new IPs; delete SoftAP hosts (`192.168.4.x`).
+5. Push/Sync packages so `dsc_v4_panel_ha_bus` lands; restart Core once.
+6. No ESP USB-UART adapter was present this session (COM1 / Blackmagic only) — physical flash blocked here.
+
+### deferred
+
+- Pi-brain hub-LAN bus when HA down.
+- Optional studio BSSID pin after soak.
+- Resume ESP-NOW only if ESPHome makes multi-node same-channel boring (standing deferral).
+- F-003 POT3 probe hardware; mute slaves stay hardware until probe swap.
+
+
+### compile (2026-08-20 session)
+
+- ESPHome CLI **2026.8.0**: all 11 stubs esphome compile PASS from C:\Users\cmgwe\esphome-dsc\v4 (hub, control, pot1-4, 4 Sonoffs, bridge).
+- Bridge fix: dsc_api_client noise-c pin **0.1.11 → 0.1.21** (2026.8 conflict).
+- Hub: dsc-hub-espnow-parked.yaml no-op TX scripts + panel_last_ms stamp while API connected.
+- Panel events: esphome.dsc_panel_hub_cmd (ESPHome event prefix required).
+

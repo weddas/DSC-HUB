@@ -1,11 +1,10 @@
-# DSC-HUB — HA stub (pulls hub body + ESP-NOW package + lab WiFi from GitHub)
+# DSC-HUB — HA stub (studio LAN · HA Native API bus · ESP-NOW parked)
 substitutions:
   name: dsc-hub
   friendly_name: DSC-HUB
   wifi_ssid: !secret wifi_ssid
   wifi_password: !secret wifi_password
-  anchor_ssid: "DSC-Anchor"
-  anchor_ap_password: !secret dsc_anchor_ap_password
+  lan_ip: "192.168.86.180"
   api_key_val: !secret dsc_hub_api_key
   ota_password_val: !secret dsc_hub_ota_password
   ap_password_val: !secret dsc_hub_ap_password
@@ -13,8 +12,7 @@ substitutions:
   panel_mac: "30:76:F5:E9:22:0C"
   bridge_mac: "58:2A:BD:60:3C:1D"
   espnow_cmd_tag: "54727"
-  # SoftAP Anchor BSSID — SoftAP wifi entry only (not home Wi-Fi).
-  wifi_bssid: "58:2A:BD:60:3C:1D"
+  wifi_bssid: "00:00:00:00:00:00"
 
 packages:
   hub:
@@ -24,12 +22,9 @@ packages:
       - firmware/v4/dsc-hub-wifi-lab.yaml
       - firmware/v4/dsc-hub-v4_0.yaml
       - firmware/v4/dsc-hub-fleet-heal.yaml
-      - firmware/v4/dsc-hub-espnow-primary.yaml
-      # No dsc-fleet-setup-hub-lab.yaml — lab peers use ${panel_mac}.
+      - firmware/v4/dsc-hub-espnow-parked.yaml
+      # espnow_control PARKED — do not pull dsc-hub-espnow-primary.yaml
     refresh: 0s
 
 wifi:
-  # SoftAP fleet home. If hub orphans onto Nest, temporarily set Nest IP for OTA,
-  # then restore .4.10 and update HA ESPHome config entry host to match.
-  use_address: 192.168.4.10
-
+  use_address: 192.168.86.180

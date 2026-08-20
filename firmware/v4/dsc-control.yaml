@@ -1,7 +1,6 @@
 # ==================================================================
 #  DSC-CONTROL — device stub (lab)
-#  Kit SoftAP setup: dsc-control-kit.yaml
-#  Lab IP: 192.168.86.177 (Nest reservation; see dsc-control-wifi-lab.yaml)
+#  Studio LAN: 192.168.86.177 — HA API plaintext / IP only
 # ==================================================================
 
 substitutions:
@@ -9,21 +8,18 @@ substitutions:
   friendly_name: DSC-CONTROL
   wifi_ssid: !secret wifi_ssid
   wifi_password: !secret wifi_password
-  anchor_ssid: "DSC-Anchor"
-  anchor_ap_password: !secret dsc_anchor_ap_password
+  lan_ip: "192.168.86.177"
   api_key_val: !secret dsc_control_api_key
   ota_password_val: !secret dsc_control_ota_password
   ap_password_val: !secret dsc_control_ap_password
-  hub_mac: "84:1F:E8:16:E6:60"        # DSC-HUB
-  espnow_cmd_tag: "54727"             # 0xD5C7 — must match hub
-  # SoftAP Anchor BSSID — SoftAP wifi entry only (not home Wi‑Fi).
-  wifi_bssid: "58:2A:BD:60:3C:1D"
+  # ESP-NOW parked — kept for kit SoftAP builds only
+  hub_mac: "84:1F:E8:16:E6:60"
+  espnow_cmd_tag: "54727"
+  wifi_bssid: "00:00:00:00:00:00"
+  softap_bssid: "00:00:00:00:00:00"
 
 packages:
   wifi: !include dsc-control-wifi-lab.yaml
   panel: !include dsc-control-common.yaml
-  # Lab: do NOT include dsc-fleet-setup-control-lab.yaml.
-  # Even with enabled: false the component AUTO_LOADs web_server_base + json
-  # (captive-class DRAM). That recreated the v4.0.x CYD heap crash mode as
-  # IllegalInstruction / Unknown on core 1 under ESPHome 2026.7 / IDF 5.5.
-  # Kit SoftAP still uses dsc-control-kit.yaml → dsc-fleet-setup-satellite.
+  ha_bus: !include dsc-control-ha-bus.yaml
+  # Lab: do NOT include dsc-fleet-setup-control-lab.yaml (CYD OOM / web_server_base).

@@ -1,23 +1,20 @@
 # ==================================================================
-#  DSC-CONTROL · lab WiFi (SoftAP-local membership)
+#  DSC-CONTROL · lab WiFi (Digital-Emotions Studio · HA bus cutover)
 #
-#  SoftAP-local only — STA joins DSC-Anchor (BSSID pin + SoftAP
-#  manual_ip). Never Nest/home Wi‑Fi. SoftAP-only STA retries SoftAP
-#  then Fallback AP. SoftAP BSSID pin on SoftAP entry only. Static
-#  SoftAP IP 192.168.4.11.
+#  Studio 2.4 GHz STA. Panel talks to hub via HA Native API (ESP-NOW
+#  parked). SoftAP Anchor membership removed.
 # ==================================================================
 wifi:
   networks:
-    - ssid: ${anchor_ssid}
-      password: ${anchor_ap_password}
-      bssid: ${wifi_bssid}
+    - ssid: ${wifi_ssid}
+      password: ${wifi_password}
       priority: 20
       manual_ip:
-        static_ip: 192.168.4.11
-        gateway: 192.168.4.1
+        static_ip: ${lan_ip}
+        gateway: 192.168.86.1
         subnet: 255.255.255.0
-        dns1: 192.168.4.1
-  use_address: 192.168.4.11
+        dns1: 192.168.86.1
+  use_address: ${lan_ip}
   power_save_mode: none
   fast_connect: false
   post_connect_roaming: false
@@ -33,9 +30,9 @@ wifi:
           if (ch > 0) {
             if (id(wifi_channel) != 0 && id(wifi_channel) != ch) {
               id(wifi_channel_hopped) = true;
-              ESP_LOGW("wifi", "channel hop %d -> %d (ESP-NOW needs hub on same ch)", id(wifi_channel), ch);
+              ESP_LOGW("wifi", "channel hop %d -> %d", id(wifi_channel), ch);
             } else {
-              ESP_LOGI("wifi", "STA channel %d", ch);
+              ESP_LOGI("wifi", "STA channel %d (studio LAN)", ch);
             }
             id(wifi_channel) = ch;
           }
@@ -46,3 +43,5 @@ wifi:
         ESP_LOGI("wifi", "STA IP %s — HA API :6053", ip);
   on_disconnect:
     - lambda: 'id(wifi_conn) = false;'
+
+captive_portal:

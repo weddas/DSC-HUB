@@ -41,9 +41,10 @@ substitutions:
   # Overridable per node; these are the shipped defaults.
   test_max_runtime_ms: "600000"    # 10 min bounded button test (decided)
   api_grace_ms: "90000"            # API-loss grace; stubs override
-  # SoftAP fleet home — stubs override softap_ip + anchor credentials + SoftAP BSSID
-  softap_ip: "192.168.4.20"
-  softap_bssid: "58:2A:BD:60:3C:1D"
+  # Studio LAN — stubs override lan_ip (was SoftAP softap_ip)
+  lan_ip: "192.168.86.50"
+  softap_ip: "192.168.86.50"
+  softap_bssid: "00:00:00:00:00:00"
   anchor_ssid: "DSC-Anchor"
   anchor_ap_password: "CHANGEME"
   wifi_ssid: "CHANGEME"
@@ -63,7 +64,7 @@ esphome:
   # device's project version — "which nodes are behind?" at a glance.
   project:
     name: digital_emotions.dsc-sonoff
-    version: "6.0.0.0"
+    version: "6.1.0.0"
 
 esp8266:
   board: esp8285
@@ -101,24 +102,22 @@ ota:
   - platform: esphome
     password: ${ota_password_val}
 
-# WiFi: SoftAP DSC-Anchor primary (stop home-AP flap); home Wi‑Fi fallback.
-# Stubs pass wifi_* / softap_ip / softap_bssid. SoftAP BSSID pin only on SoftAP.
+# WiFi: Digital-Emotions Studio (house LAN). SoftAP/ESP-NOW parked.
+# Stubs pass wifi_* / lan_ip.
 wifi:
   networks:
-    - ssid: ${anchor_ssid}
-      password: ${anchor_ap_password}
-      bssid: ${softap_bssid}
-      priority: 20
-      manual_ip:
-        static_ip: ${softap_ip}
-        gateway: 192.168.4.1
-        subnet: 255.255.255.0
-        dns1: 192.168.4.1
     - ssid: ${wifi_ssid}
       password: ${wifi_password}
-      priority: 5
+      priority: 20
+      manual_ip:
+        static_ip: ${lan_ip}
+        gateway: 192.168.86.1
+        subnet: 255.255.255.0
+        dns1: 192.168.86.1
   power_save_mode: none          # fleet rule: mains device, no modem naps
-  use_address: ${softap_ip}
+  fast_connect: false
+  post_connect_roaming: false
+  use_address: ${lan_ip}
   ap:
     ssid: ${ap_ssid}
     password: ${ap_password_val}

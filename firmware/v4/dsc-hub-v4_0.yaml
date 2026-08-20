@@ -78,7 +78,7 @@ esphome:
   friendly_name: DSC-HUB
   project:
     name: "digital_emotions.dsc-hub"
-    version: "6.0.0.0"
+    version: "6.1.0.0"
   on_boot:
     - priority: -100
       then:
@@ -4221,13 +4221,12 @@ script:
             if (id(clone_active) && id(growmat_auto_enabled)) {
               float rz_min = NAN, rz_max = NAN;
               {
-                // v2.4.1 · SOURCE SELECT (per pot): ESP-NOW first — it is
-                // local and survives HA loss — falling to the HA mirror
-                // when that pot's direct link is stale (>150s = 2.5
-                // missed 60s sends). Both sources feed the same
-                // plausibility filter below, so a faulted probe is
-                // ignored regardless of which path carried it.
+                // v6.1 · SOURCE SELECT (per pot): HA Native API first
+                // (studio Wi-Fi / ESP-NOW parked). Fall back to ESP-NOW
+                // packet_transport only if HA mirror is missing/implausible
+                // and a direct radio reading is still fresh (<150s).
                 auto pick = [nowms](float now_v, uint32_t now_at, float ha_v) -> float {
+                  if (!isnan(ha_v) && ha_v > 5.0f && ha_v < 45.0f) return ha_v;
                   bool fresh = now_at != 0 && (nowms - now_at) < 150000;
                   return fresh ? now_v : ha_v;
                 };
@@ -5397,7 +5396,8 @@ interval:
             auto live = [&](bool vote, uint32_t at, float now_v, float ha_v) -> bool {
               if (!vote) return false;
               bool fresh = at != 0 && (millis() - at) < 150000;
-              return (fresh && pl(now_v)) || pl(ha_v);
+              // HA primary (studio cutover); ESP-NOW freshness is parked fallback.
+              return pl(ha_v) || (fresh && pl(now_v));
             };
             bool have =
               live(id(mat_vote_1) && id(pot1_in_service), id(rz_now_1_at), id(rz_now_1).state, id(rootzone_temp).state) ||

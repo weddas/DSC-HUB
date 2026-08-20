@@ -1,0 +1,100 @@
+# ==================================================================
+#  DSC-HUB · ESP-NOW TX parked (studio Wi-Fi / HA bus)
+#  ------------------------------------------------------------------
+#  Lab no longer includes dsc-hub-espnow-primary.yaml. Hub body and
+#  fleet-heal still reference tx_* scripts + panel_last_ms — provide
+#  no-ops / globals so compile succeeds. Kit SoftAP keeps the real
+#  primary package.
+#
+#  panel_last_ms is stamped while Native API is connected so fleet-heal
+#  does not treat the glass as silent after SoftAP/ESP-NOW parking.
+# ==================================================================
+
+globals:
+  - id: panel_last_ms
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+  - id: cmd_last_seq
+    type: uint16_t
+    restore_value: false
+    initial_value: '0'
+  - id: cmd_last_ms
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+  - id: tx_seq
+    type: uint16_t
+    restore_value: false
+    initial_value: '0'
+  - id: cmd_fresh
+    type: bool
+    restore_value: false
+    initial_value: 'false'
+  - id: cmd_hello
+    type: bool
+    restore_value: false
+    initial_value: 'false'
+  - id: espnow_tx_backoff_until
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+  - id: espnow_tx_phase
+    type: uint8_t
+    restore_value: false
+    initial_value: '0'
+
+script:
+  - id: tx_panel_sync
+    mode: single
+    then:
+      - lambda: 'ESP_LOGD("espnow", "tx_panel_sync parked");'
+
+  - id: tx_vitals
+    mode: single
+    then:
+      - lambda: 'ESP_LOGD("espnow", "tx_vitals parked");'
+
+  - id: tx_fleet_heartbeat
+    mode: single
+    then:
+      - lambda: 'ESP_LOGD("espnow", "tx_fleet_heartbeat parked");'
+
+  - id: tx_appliance_demand
+    mode: single
+    then:
+      - lambda: 'ESP_LOGD("espnow", "tx_appliance_demand parked");'
+
+  - id: tx_names
+    mode: single
+    then:
+      - lambda: 'ESP_LOGD("espnow", "tx_names parked");'
+
+  - id: tx_config
+    mode: single
+    then:
+      - lambda: 'ESP_LOGD("espnow", "tx_config parked");'
+
+  - id: tx_soil
+    mode: single
+    then:
+      - lambda: 'ESP_LOGD("espnow", "tx_soil parked");'
+
+  - id: tx_peer_time
+    mode: single
+    then:
+      - lambda: 'ESP_LOGD("espnow", "tx_peer_time parked");'
+
+  - id: tx_espnow_cadence
+    mode: single
+    then:
+      - lambda: 'ESP_LOGD("espnow", "tx_espnow_cadence parked");'
+
+interval:
+  - interval: 15s
+    then:
+      - lambda: |-
+          // HA-connected glass is the presence signal (was ESP-NOW 0xDC).
+          if (global_api_server != nullptr && global_api_server->is_connected()) {
+            id(panel_last_ms) = millis();
+          }

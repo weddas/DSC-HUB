@@ -53,4 +53,4 @@ async def to_code(config):
     cg.add(var.set_test_mode_object_id(config[CONF_TEST_MODE_OBJECT_ID]))
 
     cg.add_define("USE_API_NOISE")
-    cg.add_library("esphome/noise-c", "0.1.11")
+    cg.add_library("esphome/noise-c", "0.1.21")

@@ -1,6 +1,7 @@
 # ==================================================================
-#  DSC-HUB · Bridge helpers (F-010 / F-012 / F-013)
-#  ETH01 SoftAP anchor + ESP-NOW demand drive + HA state mirror
+#  DSC-HUB · Bridge helpers (studio cutover)
+#  ETH01 ethernet + optional Sonoff API client. SoftAP / ESP-NOW parked.
+#  HA demand followers are the primary appliance path.
 # ==================================================================
 
 template:
@@ -9,53 +10,56 @@ template:
         unique_id: dsc_bridge_online
         device_class: connectivity
         state: >-
-          {{ states('binary_sensor.dsc_bridge_hub_esp_now_link') not in
+          {{ states('binary_sensor.dsc_bridge_status') not in
              ['unknown','unavailable','']
-             and is_state('binary_sensor.dsc_bridge_hub_esp_now_link','on') }}
-        availability: "{{ has_value('binary_sensor.dsc_bridge_hub_esp_now_link') }}"
+             or has_value('sensor.dsc_bridge_uptime') }}
+        availability: "{{ has_value('sensor.dsc_bridge_uptime') or has_value('binary_sensor.dsc_bridge_status') }}"
 
       - name: "DSC Appliances Path OK"
         unique_id: dsc_appliances_path_ok
         icon: mdi:transmission-tower
         state: >-
-          {% set bridge = is_state('binary_sensor.dsc_bridge_online','on') %}
           {% set ha = is_state('binary_sensor.dsc_hub_ha_link_status','on') %}
-          {{ bridge or ha }}
+          {{ ha }}
 
       - name: "DSC Anchor SoftAP Up"
         unique_id: dsc_anchor_softap_up
         device_class: connectivity
-        state: "{{ is_state('binary_sensor.dsc_bridge_anchor_softap_up','on') }}"
-        availability: "{{ has_value('binary_sensor.dsc_bridge_anchor_softap_up') }}"
+        icon: mdi:access-point-off
+        state: "false"
+        attributes:
+          note: SoftAP parked after studio Wi-Fi cutover
 
   - sensor:
-      # Do NOT name this "DSC Bridge ESP-NOW Age" — that slugs to the same
-      # entity_id as the ESPHome sensor and self-collides.
       - name: "DSC Bridge ESPNOW Age Mirror"
         unique_id: dsc_bridge_espnow_age_helper
         unit_of_measurement: ms
-        state: "{{ states('sensor.dsc_bridge_esp_now_age') }}"
+        state: "{{ states('sensor.dsc_bridge_esp_now_age') | default('0') }}"
         availability: "{{ has_value('sensor.dsc_bridge_esp_now_age') }}"
+        attributes:
+          note: ESP-NOW parked — diagnostic only
 
       - name: "DSC Anchor BSSID"
         unique_id: dsc_anchor_bssid_helper
-        state: "{{ states('sensor.dsc_bridge_anchor_bssid') }}"
-        availability: "{{ has_value('sensor.dsc_bridge_anchor_bssid') }}"
+        state: "PARKED"
+        attributes:
+          note: SoftAP disabled on live lab
 
       - name: "DSC Anchor Channel"
         unique_id: dsc_anchor_channel_helper
-        state: "{{ states('sensor.dsc_bridge_anchor_channel') }}"
-        availability: "{{ has_value('sensor.dsc_bridge_anchor_channel') }}"
+        state: "0"
+        attributes:
+          note: SoftAP disabled on live lab
 
 automation:
   - id: dsc_bridge_offline_demand_notify
-    alias: "DSC-HUB · Bridge offline while demand ON"
-    description: "Warn when appliances need path and bridge ESP-NOW is down (HA followers may still cover)."
+    alias: "DSC-HUB · HA path down while demand ON"
+    description: "Warn when appliances need HA followers and hub HA link is down."
     mode: single
     trigger:
       - platform: template
         value_template: >-
-          {{ is_state('binary_sensor.dsc_bridge_online','off')
+          {{ is_state('binary_sensor.dsc_hub_ha_link_status','off')
              and (
                is_state('switch.dsc_hub_humidifier_demand','on')
                or is_state('switch.dsc_hub_dehumidifier_demand','on')
@@ -66,34 +70,10 @@ automation:
     action:
       - action: script.dsc_notify
         data:
-          title: "DSC appliances — bridge offline"
+          title: "DSC appliances — HA path down"
           message: >-
-            Hub demand is ON but DSC-BRIDGE ESP-NOW link is down.
-            HA followers may still drive Sonoffs if HA is up.
+            Hub demand is ON but hub HA link is down.
+            SoftAP/ESP-NOW are parked; Sonoffs need HA followers.
         continue_on_error: true
 
-  - id: dsc_prefer_anchor_bssid
-    alias: "DSC-HUB · Prefer Anchor SoftAP BSSID"
-    description: >-
-      When Lock WiFi AP is on and the bridge publishes Anchor BSSID, seed
-      hub preferred BSSID so 0xD0 / Lock pin the fleet to DSC-Anchor (F-012).
-    mode: single
-    trigger:
-      - platform: state
-        entity_id: sensor.dsc_bridge_anchor_bssid
-    condition:
-      - condition: state
-        entity_id: switch.dsc_hub_lock_wifi_ap
-        state: "on"
-      - condition: template
-        value_template: >-
-          {% set b = states('sensor.dsc_bridge_anchor_bssid')|trim|upper %}
-          {{ b|length == 17 and b != '00:00:00:00:00:00'
-             and b not in ['unknown','unavailable',''] }}
-    action:
-      - action: text.set_value
-        target:
-          entity_id: text.dsc_hub_preferred_wifi_bssid
-        data:
-          value: "{{ states('sensor.dsc_bridge_anchor_bssid')|trim|upper }}"
-        continue_on_error: true
+  # Prefer-Anchor SoftAP BSSID automation retired (SoftAP parked).

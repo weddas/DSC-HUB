@@ -1,4 +1,4 @@
-# DSC-Heater — HA stub (pulls common package from GitHub)
+# DSC-Heater — HA stub (studio LAN)
 # Entity contract: switch.dsc_heater_main_relay
 substitutions:
   name: dsc-heater
@@ -6,10 +6,9 @@ substitutions:
   ap_ssid: "DSC-Heater Fallback Hotspot"
   wifi_ssid: !secret wifi_ssid
   wifi_password: !secret wifi_password
-  anchor_ssid: "DSC-Anchor"
-  anchor_ap_password: !secret dsc_anchor_ap_password
-  softap_ip: "192.168.4.20"
-  softap_bssid: "58:2A:BD:60:3C:1D"
+  lan_ip: "192.168.86.50"
+  softap_ip: "192.168.86.50"
+  softap_bssid: "00:00:00:00:00:00"
   api_key_val: !secret dsc_heater_api_key
   ota_password_val: !secret dsc_heater_ota_password
   ap_password_val: !secret dsc_heater_ap_password

@@ -1,20 +1,17 @@
-# DSC-CONTROL — HA stub
-# SoftAP fleet home 192.168.4.11 (via bridge eth 192.168.86.66).
-# Nest reservation 192.168.86.177 is fallback-only after SoftAP-primary.
+# DSC-CONTROL — HA stub (studio LAN 192.168.86.177 · HA bus)
 substitutions:
   name: dsc-control
   friendly_name: DSC-CONTROL
   wifi_ssid: !secret wifi_ssid
   wifi_password: !secret wifi_password
-  anchor_ssid: "DSC-Anchor"
-  anchor_ap_password: !secret dsc_anchor_ap_password
+  lan_ip: "192.168.86.177"
   api_key_val: !secret dsc_control_api_key
   ota_password_val: !secret dsc_control_ota_password
   ap_password_val: !secret dsc_control_ap_password
   hub_mac: "84:1F:E8:16:E6:60"
   espnow_cmd_tag: "54727"
-  # SoftAP Anchor BSSID — SoftAP wifi entry only (not home Wi‑Fi).
-  wifi_bssid: "58:2A:BD:60:3C:1D"
+  wifi_bssid: "00:00:00:00:00:00"
+  softap_bssid: "00:00:00:00:00:00"
 
 packages:
   panel:
@@ -23,9 +20,8 @@ packages:
     files:
       - firmware/v4/dsc-control-wifi-lab.yaml
       - firmware/v4/dsc-control-common.yaml
-      # No dsc-fleet-setup-control-lab.yaml — see firmware/v4/dsc-control.yaml
-      # (web_server_base on this CYD crash-loops; hub_cmd uses ${hub_mac}).
+      - firmware/v4/dsc-control-ha-bus.yaml
     refresh: 0s
 
 wifi:
-  use_address: 192.168.4.11
+  use_address: 192.168.86.177

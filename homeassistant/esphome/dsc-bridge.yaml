@@ -1,5 +1,5 @@
-# DSC-BRIDGE — HA stub (pulls common + wifi lab from GitHub)
-# WT32-ETH01 · F-010 / F-012 / F-013
+# DSC-BRIDGE — HA stub (ethernet .66 · SoftAP parked · studio Sonoff LAN)
+# WT32-ETH01
 substitutions:
   name: dsc-bridge
   friendly_name: DSC-BRIDGE
@@ -8,26 +8,25 @@ substitutions:
   ap_password_val: !secret dsc_bridge_ap_password
   anchor_ap_password: !secret dsc_anchor_ap_password
   anchor_ssid: "DSC-Anchor"
-  # SoftAP fixed channel — fleet home on Anchor (NAPT to Ethernet).
   anchor_channel: "11"
+  enable_anchor: "false"
   espnow_cmd_tag: "54727"
   hub_mac: "84:1F:E8:16:E6:60"
-  dsc_heater_host: "192.168.4.20"
-  dsc_heatmat_host: "192.168.4.21"
-  dsc_humidifier_host: "192.168.4.22"
-  dsc_dehumidifier_host: "192.168.4.23"
+  dsc_heater_host: "192.168.86.50"
+  dsc_heatmat_host: "192.168.86.51"
+  dsc_humidifier_host: "192.168.86.54"
+  dsc_dehumidifier_host: "192.168.86.184"
   dsc_heater_api_key: !secret dsc_heater_api_key
   dsc_heatmat_api_key: !secret dsc_heatmat_api_key
   dsc_humidifier_api_key: !secret dsc_humidifier_api_key
   dsc_dehumidifier_api_key: !secret dsc_dehumidifier_api_key
 
-# Components must exist under /config/esphome/components/ on the HA host
-# (dsc_api_client, dsc_anchor_ap). Sync does not copy these by default.
+# SoftAP component parked — API client only on live lab.
 external_components:
   - source:
       type: local
       path: components
-    components: [dsc_api_client, dsc_anchor_ap]
+    components: [dsc_api_client]
 
 packages:
   bridge:

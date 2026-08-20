@@ -3,16 +3,12 @@
 #  ------------------------------------------------------------------
 #  Freshness-gated remediation. ESP owns ESP. HA remediates HA-side:
 #  handshake nudge, follower resync, sticky safe-off clear.
-#  Coherence / RF / CHX = notify only (no setpoint invent).
+#  Coherence / RF = notify only (no setpoint invent).
 #  FIX_ACTIVE defers safe-off automations.
 #
-#  Appliances (F-010): bridge Noise client is primary Sonoff path; HA
-#  demand followers remain idempotent fallback (resync unchanged).
-#  Prefer DSC-Anchor SoftAP BSSID (sensor.dsc_bridge_anchor_bssid) when
-#  Lock WiFi AP is on — see dsc_v4_bridge.yaml.
-#
-#  F-004 / CHX: SoftAP-primary membership mismatch (preferred SoftAP BSSID
-#  != associated). Not a Nest router channel-lock cue.
+#  Studio Wi-Fi cutover (2026-08-20): SoftAP/ESP-NOW parked. CHX / SoftAP
+#  orphan cues retargeted to "not on Digital-Emotions Studio". HA demand
+#  followers are the primary Sonoff path; bridge API client is optional.
 # ==================================================================
 
 input_number:
@@ -54,13 +50,14 @@ template:
           {% endif %}
 
       # unique_id kept stable (entity_id stays dsc_nest_channel_split).
-      # Display name: SoftAP orphan / preferred-BSSID mismatch (F-004).
-      - name: "DSC SoftAP Preferred Mismatch"
+      # Display: studio Wi-Fi membership / RF leftover (F-004 retargeted).
+      - name: "DSC Studio WiFi Mismatch"
         unique_id: dsc_nest_channel_split
         device_class: problem
-        icon: mdi:access-point-network
+        icon: mdi:wifi-alert
         state: >
-          {{ 'CHX' in (states('sensor.dsc_hub_rf_status') | default('')) }}
+          {{ 'CHX' in (states('sensor.dsc_hub_rf_status') | default(''))
+             or 'WRB' in (states('sensor.dsc_hub_rf_status') | default('')) }}
 
   - sensor:
       - name: "DSC Hub EVT Code"
@@ -84,7 +81,6 @@ script:
       - variables:
           code: "{{ states('sensor.dsc_hub_evt_code') }}"
           fix_on: "{{ is_state('binary_sensor.dsc_hub_fix_active','on') }}"
-      # Dedup: skip if same code handled in last 60s (input_text stamp)
       - condition: template
         value_template: >
           {% set last = states('input_text.dsc_evt_autofix_last') %}
@@ -127,13 +123,13 @@ script:
             sequence:
               - action: script.dsc_notify
                 data:
-                  title: "DSC SoftAP orphan (CHX)"
+                  title: "DSC studio Wi-Fi mismatch (CHX)"
                   message: >
-                    Preferred SoftAP BSSID not associated.
+                    Node not on Digital-Emotions Studio (or stale RF card).
                     {{ states('sensor.dsc_hub_last_evt') }}
                     · RF {{ states('sensor.dsc_hub_rf_status') }}
                     · Fix {{ 'ACTIVE' if fix_on else 'idle' }}
-                    — check DSC-Anchor SoftAP / hub SoftAP join (not Nest channel lock).
+                    — check studio AP (2.4 GHz), no client isolation, reserved LAN IP.
           - conditions:
               - condition: template
                 value_template: "{{ code in ['COHERENCE','REJOIN','FLEET_JUMP'] }}"
@@ -172,7 +168,6 @@ automation:
     actions:
       - action: script.dsc_evt_autofix
 
-  # FIX_ACTIVE: defer sticky safe-off / aggressive HA off paths
   - id: dsc_fix_active_defer_safe_off
     alias: "DSC-HUB · FIX_ACTIVE defers HA safe-off"
     mode: restart
@@ -217,7 +212,6 @@ automation:
           title: "DSC follower drift"
           message: "Demand ON but follower OFF — probe — triggering autofix map."
           notification_id: dsc_follower_drift
-      # Hub cannot emit EVT from HA; stamp a local notify and run autofix path
       - action: script.dsc_notify
         data:
           title: "DSC FOLLOWER_DRIFT"
@@ -246,7 +240,7 @@ automation:
             epoch {{ states('sensor.dsc_hub_coherence_epoch') }}.
 
   - id: dsc_chx_hygiene_cue
-    alias: "DSC-HUB · SoftAP preferred mismatch cue (F-004)"
+    alias: "DSC-HUB · Studio Wi-Fi mismatch cue (F-004 retarget)"
     triggers:
       - trigger: state
         entity_id: binary_sensor.dsc_nest_channel_split
@@ -256,9 +250,9 @@ automation:
       - action: persistent_notification.create
         data:
           notification_id: dsc_f004_chx
-          title: "DSC SoftAP orphan (F-004)"
+          title: "DSC studio Wi-Fi mismatch (F-004)"
           message: >
-            Persistent CHX: hub preferred SoftAP BSSID is not the associated AP.
-            Check DSC-Anchor SoftAP up, hub SoftAP join (192.168.4.10), and
-            preferred BSSID = sensor.dsc_bridge_anchor_bssid. Do not lock Nest
-            channel — SoftAP-primary is the heal path.
+            Persistent CHX/WRB after SoftAP cutover: confirm the node is on
+            Digital-Emotions Studio (2.4 GHz), same LAN as HA (192.168.86.3),
+            no client isolation, and Device Builder host matches the reserved
+            studio IP (not 192.168.4.x / DSC-Anchor).

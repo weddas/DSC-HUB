@@ -1,0 +1,341 @@
+# ==================================================================
+#  DSC-HUB · Panel → Hub command bus (studio Wi-Fi cutover)
+#  ------------------------------------------------------------------
+#  Control glass emits homeassistant.event dsc_panel_hub_cmd {op,val}.
+#  Maps the former ESP-NOW 0xDC op table onto hub entities.
+#  ESP-NOW TX on the panel is parked.
+# ==================================================================
+
+automation:
+  - id: dsc_panel_hub_cmd
+    alias: "DSC-HUB · Panel hub_cmd via HA"
+    mode: queued
+    max: 20
+    triggers:
+      - trigger: event
+        event_type: esphome.dsc_panel_hub_cmd
+    variables:
+      op: "{{ trigger.event.data.op | int(-1) }}"
+      val: "{{ trigger.event.data.val | int(0) }}"
+      fv: "{{ (trigger.event.data.val | int(0)) / 100 }}"
+      onoff: "{{ 'on' if (trigger.event.data.val | int(0)) else 'off' }}"
+      grow_opts:
+        - Germination
+        - Seedling
+        - Early Vegetative
+        - Vegetative
+        - Late (Push) Vegetative
+        - Early Flowering
+        - Flowering
+        - Late Flowering
+        - Final 48-72h Flowering
+        - Dry Mode
+        - Custom
+        - Off
+      strat_opts:
+        - VPD
+        - Temperature
+        - Humidity
+      clone_opts:
+        - Follow 4x8
+        - Clones & Seedlings
+        - Mother
+        - Custom
+        - Off
+      clone_photo_opts:
+        - Follow 4x8
+        - Independent
+      prio_opts:
+        - 4x8 Main
+        - 2x4 Clone
+    actions:
+      - choose:
+          # ---- mode / auto switches (op 1..11) ----
+          - conditions: "{{ op == 1 }}"
+            sequence:
+              - action: "switch.turn_{{ onoff }}"
+                target: {entity_id: switch.dsc_hub_tent_full_auto_mode}
+          - conditions: "{{ op == 2 }}"
+            sequence:
+              - action: "switch.turn_{{ onoff }}"
+                target: {entity_id: switch.dsc_hub_tent_manual_override}
+          - conditions: "{{ op == 3 }}"
+            sequence:
+              - action: "switch.turn_{{ onoff }}"
+                target: {entity_id: switch.dsc_hub_manual_light_hold}
+          - conditions: "{{ op == 4 }}"
+            sequence:
+              - action: "switch.turn_{{ onoff }}"
+                target: {entity_id: switch.dsc_hub_auto_photoperiod}
+          - conditions: "{{ op == 5 }}"
+            sequence:
+              - action: "switch.turn_{{ onoff }}"
+                target: {entity_id: switch.dsc_hub_manual_takeover}
+          - conditions: "{{ op == 6 }}"
+            sequence:
+              - action: "switch.turn_{{ onoff }}"
+                target: {entity_id: switch.dsc_hub_humidifier_auto}
+          - conditions: "{{ op == 7 }}"
+            sequence:
+              - action: "switch.turn_{{ onoff }}"
+                target: {entity_id: switch.dsc_hub_dehumidifier_auto}
+          - conditions: "{{ op == 8 }}"
+            sequence:
+              - action: "switch.turn_{{ onoff }}"
+                target: {entity_id: switch.dsc_hub_heater_auto}
+          - conditions: "{{ op == 9 }}"
+            sequence:
+              - action: "switch.turn_{{ onoff }}"
+                target: {entity_id: switch.dsc_hub_grow_mat_auto}
+          - conditions: "{{ op == 10 }}"
+            sequence:
+              - action: "switch.turn_{{ onoff }}"
+                target: {entity_id: switch.dsc_hub_ac_auto}
+          - conditions: "{{ op == 11 }}"
+            sequence:
+              - action: "switch.turn_{{ onoff }}"
+                target: {entity_id: switch.dsc_hub_clone_humidifier_auto}
+
+          # ---- demands (12..17) ----
+          - conditions: "{{ op == 12 }}"
+            sequence:
+              - action: "switch.turn_{{ onoff }}"
+                target: {entity_id: switch.dsc_hub_humidifier_demand}
+          - conditions: "{{ op == 13 }}"
+            sequence:
+              - action: "switch.turn_{{ onoff }}"
+                target: {entity_id: switch.dsc_hub_dehumidifier_demand}
+          - conditions: "{{ op == 14 }}"
+            sequence:
+              - action: "switch.turn_{{ onoff }}"
+                target: {entity_id: switch.dsc_hub_heater_demand}
+          - conditions: "{{ op == 15 }}"
+            sequence:
+              - action: "switch.turn_{{ onoff }}"
+                target: {entity_id: switch.dsc_hub_grow_mat_demand}
+          - conditions: "{{ op == 16 }}"
+            sequence:
+              - action: "switch.turn_{{ onoff }}"
+                target: {entity_id: switch.dsc_hub_ac_demand}
+          - conditions: "{{ op == 17 }}"
+            sequence:
+              - action: "switch.turn_{{ onoff }}"
+                target: {entity_id: switch.dsc_hub_clone_humidifier_demand}
+
+          # ---- coord switches ----
+          - conditions: "{{ op == 18 }}"
+            sequence:
+              - action: "switch.turn_{{ onoff }}"
+                target: {entity_id: switch.dsc_hub_humidifier_intake_routing}
+          - conditions: "{{ op == 19 }}"
+            sequence:
+              - action: "switch.turn_{{ onoff }}"
+                target: {entity_id: switch.dsc_hub_recirc_de_strat_pulse}
+
+          # ---- selects (index) ----
+          - conditions: "{{ op == 20 and 0 <= val < grow_opts|length }}"
+            sequence:
+              - action: select.select_option
+                target: {entity_id: select.dsc_hub_grow_stage}
+                data: {option: "{{ grow_opts[val] }}"}
+          - conditions: "{{ op == 21 and 0 <= val < strat_opts|length }}"
+            sequence:
+              - action: select.select_option
+                target: {entity_id: select.dsc_hub_control_strategy}
+                data: {option: "{{ strat_opts[val] }}"}
+          - conditions: "{{ op == 22 and 0 <= val < clone_opts|length }}"
+            sequence:
+              - action: select.select_option
+                target: {entity_id: select.dsc_hub_clone_mode}
+                data: {option: "{{ clone_opts[val] }}"}
+          - conditions: "{{ op == 23 and 0 <= val < clone_photo_opts|length }}"
+            sequence:
+              - action: select.select_option
+                target: {entity_id: select.dsc_hub_clone_photoperiod}
+                data: {option: "{{ clone_photo_opts[val] }}"}
+          - conditions: "{{ op == 24 and 0 <= val < prio_opts|length }}"
+            sequence:
+              - action: select.select_option
+                target: {entity_id: select.dsc_hub_priority_tent}
+                data: {option: "{{ prio_opts[val] }}"}
+
+          # ---- fans / light (percent) ----
+          - conditions: "{{ op == 25 }}"
+            sequence:
+              - action: fan.set_percentage
+                target: {entity_id: fan.dsc_hub_6_inch_exhaust_outside}
+                data: {percentage: "{{ [[val,0]|max,100]|min }}"}
+          - conditions: "{{ op == 26 }}"
+            sequence:
+              - action: fan.set_percentage
+                target: {entity_id: fan.dsc_hub_6_inch_exhaust_room}
+                data: {percentage: "{{ [[val,0]|max,100]|min }}"}
+          - conditions: "{{ op == 27 }}"
+            sequence:
+              - action: fan.set_percentage
+                target: {entity_id: fan.dsc_hub_4_inch_intake_fan_main}
+                data: {percentage: "{{ [[val,0]|max,100]|min }}"}
+          - conditions: "{{ op == 28 }}"
+            sequence:
+              - action: fan.set_percentage
+                target: {entity_id: fan.dsc_hub_4_inch_intake_fan_2x4}
+                data: {percentage: "{{ [[val,0]|max,100]|min }}"}
+          - conditions: "{{ op == 29 }}"
+            sequence:
+              - action: light.turn_on
+                target: {entity_id: light.dsc_hub_sf1000_dimmer}
+                data: {brightness_pct: "{{ [[val,0]|max,100]|min }}"}
+
+          # ---- numbers (×0.01 float) ----
+          - conditions: "{{ op == 30 }}"
+            sequence:
+              - action: number.set_value
+                target: {entity_id: number.dsc_hub_target_temp}
+                data: {value: "{{ fv }}"}
+          - conditions: "{{ op == 31 }}"
+            sequence:
+              - action: number.set_value
+                target: {entity_id: number.dsc_hub_vpd_target_min}
+                data: {value: "{{ fv }}"}
+          - conditions: "{{ op == 32 }}"
+            sequence:
+              - action: number.set_value
+                target: {entity_id: number.dsc_hub_vpd_target_max}
+                data: {value: "{{ fv }}"}
+          - conditions: "{{ op == 33 }}"
+            sequence:
+              - action: number.set_value
+                target: {entity_id: number.dsc_hub_rh_target_min}
+                data: {value: "{{ fv }}"}
+          - conditions: "{{ op == 34 }}"
+            sequence:
+              - action: number.set_value
+                target: {entity_id: number.dsc_hub_rh_target_max}
+                data: {value: "{{ fv }}"}
+          - conditions: "{{ op == 35 }}"
+            sequence:
+              - action: number.set_value
+                target: {entity_id: number.dsc_hub_sunrise_duration}
+                data: {value: "{{ val }}"}
+          - conditions: "{{ op == 36 }}"
+            sequence:
+              - action: number.set_value
+                target: {entity_id: number.dsc_hub_sunset_duration}
+                data: {value: "{{ val }}"}
+          - conditions: "{{ op == 37 }}"
+            sequence:
+              - action: number.set_value
+                target: {entity_id: number.dsc_hub_clone_target_temp}
+                data: {value: "{{ fv }}"}
+          - conditions: "{{ op == 38 }}"
+            sequence:
+              - action: number.set_value
+                target: {entity_id: number.dsc_hub_clone_vpd_min}
+                data: {value: "{{ fv }}"}
+          - conditions: "{{ op == 39 }}"
+            sequence:
+              - action: number.set_value
+                target: {entity_id: number.dsc_hub_clone_vpd_max}
+                data: {value: "{{ fv }}"}
+          - conditions: "{{ op == 40 }}"
+            sequence:
+              - action: number.set_value
+                target: {entity_id: number.dsc_hub_clone_rh_min}
+                data: {value: "{{ fv }}"}
+          - conditions: "{{ op == 41 }}"
+            sequence:
+              - action: number.set_value
+                target: {entity_id: number.dsc_hub_clone_rh_max}
+                data: {value: "{{ fv }}"}
+          - conditions: "{{ op == 42 }}"
+            sequence:
+              - action: number.set_value
+                target: {entity_id: number.dsc_hub_clone_light_hours}
+                data: {value: "{{ val }}"}
+          - conditions: "{{ op == 43 }}"
+            sequence:
+              - action: number.set_value
+                target: {entity_id: number.dsc_hub_sf1000_ramp_floor}
+                data: {value: "{{ val }}"}
+          - conditions: "{{ op == 44 }}"
+            sequence:
+              - action: number.set_value
+                target: {entity_id: number.dsc_hub_clone_hum_hysteresis}
+                data: {value: "{{ fv }}"}
+          - conditions: "{{ op == 45 }}"
+            sequence:
+              - action: number.set_value
+                target: {entity_id: number.dsc_hub_clone_hum_min_off_time}
+                data: {value: "{{ val }}"}
+          - conditions: "{{ op == 46 }}"
+            sequence:
+              - action: number.set_value
+                target: {entity_id: number.dsc_hub_humidifier_min_off_time}
+                data: {value: "{{ val }}"}
+          - conditions: "{{ op == 47 }}"
+            sequence:
+              - action: number.set_value
+                target: {entity_id: number.dsc_hub_heater_min_off_time}
+                data: {value: "{{ val }}"}
+          - conditions: "{{ op == 48 }}"
+            sequence:
+              - action: number.set_value
+                target: {entity_id: number.dsc_hub_mat_root_zone_low}
+                data: {value: "{{ fv }}"}
+          - conditions: "{{ op == 49 }}"
+            sequence:
+              - action: number.set_value
+                target: {entity_id: number.dsc_hub_mat_root_zone_high}
+                data: {value: "{{ fv }}"}
+          - conditions: "{{ op == 50 }}"
+            sequence:
+              - action: number.set_value
+                target: {entity_id: number.dsc_hub_mat_min_off_time}
+                data: {value: "{{ val }}"}
+          - conditions: "{{ op == 51 }}"
+            sequence:
+              - action: number.set_value
+                target: {entity_id: number.dsc_hub_destrat_period}
+                data: {value: "{{ val }}"}
+          - conditions: "{{ op == 52 }}"
+            sequence:
+              - action: number.set_value
+                target: {entity_id: number.dsc_hub_destrat_burst}
+                data: {value: "{{ val }}"}
+          - conditions: "{{ op == 53 }}"
+            sequence:
+              - action: number.set_value
+                target: {entity_id: number.dsc_hub_destrat_level}
+                data: {value: "{{ val }}"}
+
+          # ---- lights-on times (minutes past midnight) ----
+          - conditions: "{{ op == 54 }}"
+            sequence:
+              - action: datetime.set_value
+                target: {entity_id: datetime.dsc_hub_lights_on_time}
+                data:
+                  time: "{{ '%02d:%02d:00' % ((val % 1440) // 60, (val % 1440) % 60) }}"
+          - conditions: "{{ op == 55 }}"
+            sequence:
+              - action: datetime.set_value
+                target: {entity_id: datetime.dsc_hub_clone_lights_on_time}
+                data:
+                  time: "{{ '%02d:%02d:00' % ((val % 1440) // 60, (val % 1440) % 60) }}"
+
+          # ---- presence / RF ops parked (57 hello, 58 keepalive, 60-62 fleet) ----
+          - conditions: "{{ op in [57, 58, 60, 61, 62] }}"
+            sequence:
+              - action: system_log.write
+                data:
+                  level: debug
+                  message: "DSC panel parked op {{ op }} val {{ val }} (no SoftAP/ESP-NOW path)"
+          - conditions: "{{ op == 56 }}"
+            sequence:
+              - action: button.press
+                target: {entity_id: button.dsc_hub_restart}
+                continue_on_error: true
+        default:
+          - action: system_log.write
+            data:
+              level: warning
+              message: "DSC panel hub_cmd unmapped op={{ op }} val={{ val }}"

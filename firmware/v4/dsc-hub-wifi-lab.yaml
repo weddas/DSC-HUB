@@ -1,36 +1,24 @@
 # ==================================================================
-#  DSC-HUB · lab WiFi (SoftAP-local membership)
+#  DSC-HUB · lab WiFi (Digital-Emotions Studio · HA bus cutover)
 #
-#  SoftAP-local only — STA joins DSC-Anchor (BSSID pin + SoftAP
-#  manual_ip). Never Nest/home Wi‑Fi. SoftAP-only STA retries SoftAP
-#  then Fallback AP. SoftAP static 192.168.4.10 — HA needs route
-#  192.168.4.0/24 via bridge ETH (SoftAP IP gate). Do NOT set bssid
-#  to 00:00:00:00:00:00 (that pin never matches and kills SoftAP).
+#  Studio 2.4 GHz STA on house LAN. SoftAP/ESP-NOW parking — no
+#  DSC-Anchor membership. Fallback hotspot for USB recovery only.
 # ==================================================================
 wifi:
   networks:
-    - ssid: ${anchor_ssid}
-      password: ${anchor_ap_password}
-      # SoftAP Anchor BSSID pin — SoftAP-local only (never Nest).
-      bssid: ${wifi_bssid}
+    - ssid: ${wifi_ssid}
+      password: ${wifi_password}
       priority: 20
       manual_ip:
-        static_ip: 192.168.4.10
-        gateway: 192.168.4.1
+        static_ip: ${lan_ip}
+        gateway: 192.168.86.1
         subnet: 255.255.255.0
-        dns1: 192.168.4.1
+        dns1: 192.168.86.1
   power_save_mode: none
-  # false: Lock WiFi AP / preferred BSSID needs a scan to leave a sticky
-  # AP. fast_connect rejoined the wrong AP after bounce (3 Aug).
   fast_connect: false
-  # ESPHome default true: every 5 min (RSSI < -49) off-channel roam scan
-  # while STA stays "connected". That hops the single radio off the
-  # pinned channel and kills ESP-NOW. SoftAP home + preferred BSSID
-  # pin the Anchor — roaming fights that pin.
+  # Off-channel roam scans still thrash STA; keep off even without ESP-NOW.
   post_connect_roaming: false
-  # SoftAP fleet-home address. USB Install ignores this; wireless OTA
-  # after SoftAP join targets .4.10 (pfSense route via bridge .66).
-  use_address: 192.168.4.10
+  use_address: ${lan_ip}
   ap:
     ssid: DSC-HUB Fallback Hotspot
     password: ${ap_password_val}
@@ -38,24 +26,9 @@ wifi:
     - lambda: |-
         auto *w = wifi::global_wifi_component;
         if (w != nullptr) {
-          static int last_ch = 0;
           int ch = (int) w->get_wifi_channel();
-          if (ch > 0) {
-            if (last_ch != 0 && last_ch != ch)
-              ESP_LOGW("wifi", "channel hop %d -> %d — panel ESP-NOW will drop until it follows", last_ch, ch);
-            else
-              ESP_LOGI("wifi", "STA channel %d", ch);
-            last_ch = ch;
-          }
+          if (ch > 0)
+            ESP_LOGI("wifi", "STA channel %d (studio LAN)", ch);
         }
-    # SoftAP-only: re-assert SoftAP BSSID priority (never Nest).
-    - script.execute: wifi_ap_learn_or_pin
-
-# SoftAP priority refresh (~5 min hygiene): re-pin SoftAP prefer so STA
-# retries SoftAP then Fallback AP, not a stale Nest association.
-interval:
-  - interval: 5min
-    then:
-      - script.execute: wifi_ap_learn_or_pin
 
 captive_portal:

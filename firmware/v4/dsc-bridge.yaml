@@ -1,5 +1,6 @@
 # ==================================================================
 #  DSC-BRIDGE — lab stub (WT32-ETH01 v1.4)
+#  Ethernet-only after SoftAP cutover. SoftAP / ESP-NOW parked.
 #  esphome run dsc-bridge.yaml
 # ==================================================================
 
@@ -9,18 +10,18 @@ substitutions:
   api_key_val: !secret dsc_bridge_api_key
   ota_password_val: !secret dsc_bridge_ota_password
   ap_password_val: !secret dsc_bridge_ap_password
+  # SoftAP disabled in common via enable_anchor: false — passwords kept for kit.
   anchor_ap_password: !secret dsc_anchor_ap_password
   anchor_ssid: "DSC-Anchor"
-  # SoftAP fixed channel — fleet STA joins Anchor (not Nest) for RF + LAN via NAPT.
   anchor_channel: "11"
+  enable_anchor: "false"
   espnow_cmd_tag: "54727"
-  # Hub WiFi/SoftAP MAC — peer for ESP-NOW (lab: paste hub MAC).
   hub_mac: "84:1F:E8:16:E6:60"
-  # SoftAP static Sonoff map (see docs/superpowers/specs/2026-08-10-softap-fleet-star-design.md)
-  dsc_heater_host: "192.168.4.20"
-  dsc_heatmat_host: "192.168.4.21"
-  dsc_humidifier_host: "192.168.4.22"
-  dsc_dehumidifier_host: "192.168.4.23"
+  # Studio LAN Sonoff map (HA demand followers primary; bridge API optional)
+  dsc_heater_host: "192.168.86.50"
+  dsc_heatmat_host: "192.168.86.51"
+  dsc_humidifier_host: "192.168.86.54"
+  dsc_dehumidifier_host: "192.168.86.184"
   dsc_heater_api_key: !secret dsc_heater_api_key
   dsc_heatmat_api_key: !secret dsc_heatmat_api_key
   dsc_humidifier_api_key: !secret dsc_humidifier_api_key
@@ -30,7 +31,7 @@ external_components:
   - source:
       type: local
       path: components
-    components: [dsc_api_client, dsc_anchor_ap]
+    components: [dsc_api_client]
 
 packages:
   bridge: !include dsc-bridge-common.yaml

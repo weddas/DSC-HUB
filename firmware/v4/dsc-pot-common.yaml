@@ -125,7 +125,7 @@ esphome:
   friendly_name: ${friendly_name}
   project:
     name: digital_emotions.dsc-pot
-    version: "6.0.0.0"
+    version: "6.1.0.0"
 
 esp32:
   board: esp32dev
@@ -160,11 +160,18 @@ uart:
   baud_rate: 4800
   parity: NONE
   stop_bits: 1
+  # ESPHome 2026.6+ tight inter-frame window (#17180) — deliver bytes ASAP
+  # so JXCT-style probes at 4800 baud do not get mid-frame discards.
+  rx_full_threshold: 1
+  rx_timeout: 20
 
 modbus:
   id: modbus1
   uart_id: rs485_uart
   flow_control_pin: GPIO4
+  send_wait_time: 2000ms
+  # Was modbus_controller.command_throttle (no-op on 2026.8+).
+  turnaround_time: 100ms
 
 modbus_controller:
   - id: soil_sensor_bus
@@ -174,8 +181,11 @@ modbus_controller:
     # hub's closed-loop mat sense rate (inside the mat's 5-min min-off
     # and the hub's 5-min root-zone stale window).
     update_interval: 60s
-    command_throttle: 100ms
     setup_priority: -10
+    on_online:
+      - lambda: 'id(probe_online) = true;'
+    on_offline:
+      - lambda: 'id(probe_online) = false;'
 
 # ==================================================================
 #  SENSOR CALIBRATION  —  config numbers (NVS-backed)
@@ -690,6 +700,13 @@ binary_sensor:
     entity_category: diagnostic
     icon: mdi:clock-check-outline
     lambda: 'return id(clock_valid);'
+  - platform: template
+    name: "Modbus Probe Online"
+    id: probe_online_bs
+    device_class: connectivity
+    entity_category: diagnostic
+    icon: mdi:serial-port
+    lambda: 'return id(probe_online);'
 
 button:
   - platform: restart
@@ -899,6 +916,12 @@ globals:
   # v5.1.7: sntp_time.now().is_valid() || ha_time.now().is_valid(), recomputed
   # every 15s (see interval below). Gates the 0xD7 "adopt peer time" path.
   - id: clock_valid
+    type: bool
+    restore_value: false
+    initial_value: 'false'
+  # Modbus probe online (separate from Wi-Fi / HA API). ESPHome 2026.8
+  # tracks offline per device; on_online/on_offline stamp this.
+  - id: probe_online
     type: bool
     restore_value: false
     initial_value: 'false'

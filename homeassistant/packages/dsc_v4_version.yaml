@@ -9,7 +9,7 @@ input_text:
   dsc_expected_release:
     name: "DSC Expected Release"
     icon: mdi:tag-check
-    initial: "6.0.0.0"
+    initial: "6.1.0.0"
     max: 32
 
 template:
@@ -38,7 +38,8 @@ template:
           light_quota: hub ledger debt/catch-up + Lighting view (hub FW 5.1.7+)
           fleet_heal: EVT autofix + coherence notify (hub 5.1.8+ / Control 5.1.16)
           wifi_roam: post_connect_roaming off (hub 5.1.10+) — ESP-NOW channel hold
-          eth01_bridge: F-010 appliance + F-012 SoftAP anchor + F-013 HA mirror (5.2.0)
+          eth01_bridge: ethernet + optional Sonoff API (SoftAP/ESP-NOW parked · 6.1.0)
+          studio_wifi: HA Native API live bus · Digital-Emotions Studio
           custom_panel: dsc_hub 0.1.0
 
       - name: "DSC Fleet Version Status"
@@ -46,7 +47,7 @@ template:
         icon: mdi:clipboard-check
         state: >-
           {% set exp = states('input_text.dsc_expected_release')|trim %}
-            {% if exp in ['unknown','unavailable','', none] %}{% set exp = '6.0.0.0' %}{% endif %}
+            {% if exp in ['unknown','unavailable','', none] %}{% set exp = '6.1.0.0' %}{% endif %}
           {# Firmware train only. HA surface (6.x) is independent packaging. #}
           {% set checks = [
             ('hub', states('sensor.dsc_hub_firmware_version')),

@@ -155,7 +155,7 @@ esphome:
     # the dashboard and HA's device page both described DSC-CONTROL as
     # being the DSC HUB. Purely cosmetic, but confusing enough to matter.
     name: "digital_emotions.dsc-control"
-    version: "6.0.0.0"
+    version: "6.1.0.0"
   on_boot:
     # Seed the 0xDC command seq from hardware RNG so a panel reboot is
     # unlikely to replay the hub's last-seen seq even before the hub's
@@ -4345,77 +4345,16 @@ script:
       - script.execute: show_active_tab
       - script.execute: open_connections
 
-  # BUG-FIX 2026-08-02: presence keepalive (op 58). The hub times panel
-  # liveness (panel_last_ms) from 0xDC RX only, and the panel only sends
-  # 0xDC on user commands — so an idle glass went "silent" after ~90s and
-  # falsely drove the hub's WiFi-bounce ladder. Dedicated script (not
-  # hub_cmd) so a background beat never touches touch_guard/ui_dirty.
+  # Presence keepalive / RF card PARKED (studio HA bus; no ESP-NOW TX).
   - id: hub_keepalive
     mode: single
     then:
-      - espnow.send:
-          address: ${hub_mac}
-          wait_for_sent: false
-          data: !lambda |-
-            std::vector<uint8_t> p(12, 0);
-            p[0]=0xDC; p[1]=0x01; p[2]=58; p[3]=0;
-            uint16_t tg=(uint16_t) ${espnow_cmd_tag}; p[8]=tg&0xFF; p[9]=(tg>>8)&0xFF;
-            uint16_t sq=id(cmd_tx_seq)++; p[10]=sq&0xFF; p[11]=(sq>>8)&0xFF;
-            return p;
+      - lambda: 'id(cmd_tx_seq)++;'
 
-  # ---- RF status card (0xD5), every 10s (SoftAP orphan / WRB / CHX) ----
-  # Hub-compatible 12-byte layout (role=1 control):
-  #   [0]=0xD5 [1]=0x01 [2]=role [3]=channel [4]=rssi_int8
-  #   [5]=assoc_ok [6]=assoc[4] [7]=assoc[5]
-  #   [8]=pref_ok [9]=pref[4] [10]=pref[5]
-  #   [11]=status  0=OK, 1=WRB (not associated), 2=CHX (assoc != SoftAP Anchor)
-  # pref = SoftAP Anchor last-2 (${wifi_bssid}/${softap_bssid}); Nest hub_ap never advertised.
   - id: tx_rf_card
     mode: single
     then:
-      - espnow.send:
-          address: ${hub_mac}
-          wait_for_sent: false
-          data: !lambda |-
-            std::vector<uint8_t> p(12, 0);
-            p[0] = 0xD5; p[1] = 0x01; p[2] = 1;  // control
-
-            std::string anchor = "${wifi_bssid}";
-            if (anchor.size() != 17 || anchor == "00:00:00:00:00:00")
-              anchor = "${softap_bssid}";
-            bool anchor_ok = (anchor.size() == 17 && anchor != "00:00:00:00:00:00");
-            uint8_t ab4 = 0, ab5 = 0;
-            if (anchor_ok) {
-              char h4[3] = { anchor[12], anchor[13], 0 };
-              char h5[3] = { anchor[15], anchor[16], 0 };
-              ab4 = (uint8_t) strtol(h4, nullptr, 16);
-              ab5 = (uint8_t) strtol(h5, nullptr, 16);
-            }
-
-            auto *w = wifi::global_wifi_component;
-            bool connected = w != nullptr && w->is_connected();
-            uint8_t status = 0;  // OK
-            if (!connected) {
-              status = 1;  // WRB
-            } else {
-              p[3] = (uint8_t) w->get_wifi_channel();
-              int rssi = (int) w->wifi_rssi();
-              if (rssi < -128) rssi = -128;
-              if (rssi > 0) rssi = 0;
-              p[4] = (uint8_t)(int8_t) rssi;
-              auto b = w->wifi_bssid();
-              p[5] = 1; p[6] = b[4]; p[7] = b[5];
-              if (anchor_ok && (b[4] != ab4 || b[5] != ab5))
-                status = 2;  // CHX SoftAP orphan
-            }
-
-            // pref = SoftAP Anchor last-2 (${wifi_bssid}/${softap_bssid}).
-            // SoftAP-guarded hub_ap matches Anchor → same last-2; Nest hub_ap never advertised.
-            if (anchor_ok) {
-              p[8] = 1; p[9] = ab4; p[10] = ab5;
-            }
-            p[11] = status;
-            return p;
+      - lambda: 'ESP_LOGD("rf", "tx_rf_card parked");'
 
   - id: hub_cmd
     parameters:
@@ -4485,19 +4424,14 @@ script:
           }
           id(touch_guard_until) = millis() + 450;
           id(ui_dirty) = true;
-      - espnow.send:
-          # Lab uses stub ${hub_mac}. Kit SoftAP builds override via fleet
-          # package lambdas only when provisioning is enabled — do not call
-          # id(fleet_setup) here or lab must link web_server_base (CYD OOM).
-          address: ${hub_mac}
-          wait_for_sent: false
-          data: !lambda |-
-            std::vector<uint8_t> p(12, 0);
-            p[0]=0xDC; p[1]=0x01; p[2]=(uint8_t) op; p[3]=0;
-            uint32_t uv=(uint32_t) val; p[4]=uv&0xFF; p[5]=(uv>>8)&0xFF; p[6]=(uv>>16)&0xFF; p[7]=(uv>>24)&0xFF;
-            uint16_t tg=(uint16_t) ${espnow_cmd_tag}; p[8]=tg&0xFF; p[9]=(tg>>8)&0xFF;
-            uint16_t sq=id(cmd_tx_seq)++; p[10]=sq&0xFF; p[11]=(sq>>8)&0xFF;
-            return p;
+      # HA bus (ESP-NOW TX parked). HA package dsc_v4_panel_ha_bus maps the event.
+      - homeassistant.event:
+          event: esphome.dsc_panel_hub_cmd
+          data:
+            op: !lambda |-
+              char b[16]; snprintf(b, sizeof(b), "%d", op); return std::string(b);
+            val: !lambda |-
+              char b[16]; snprintf(b, sizeof(b), "%d", val); return std::string(b);
 
   # ---- swipe navigation: show the page for active_tab (0..4) ----
   # active_tab is set FIRST (clamped), then this shows the matching page
@@ -5012,26 +4946,23 @@ script:
               if (ch > 0) snprintf(b, sizeof(b), "%s · ch%d", ssid, ch);
               else snprintf(b, sizeof(b), "%s", ssid);
             } else {
-              snprintf(b, sizeof(b), "not on DSC-Anchor");
+              snprintf(b, sizeof(b), "not on studio Wi-Fi");
             }
             setl(id(conn_bridge_sub), b);
+            setl(id(conn_espnow_val), "PARKED");
+            setc(id(conn_espnow_val), DIM);
+            setc(id(conn_espnow_ic), DIM);
             uint32_t hub_age = nowms - id(gv_hub_last);
-            bool espn = id(gv_hub_last) != 0 && hub_age < 6000;
-            setc(id(conn_espnow_ic), espn ? NEON : RED);
-            setl(id(conn_espnow_val), espn ? "LINKED" : "DOWN");
-            setc(id(conn_espnow_val), espn ? NEON : RED);
+            bool ha_fresh = id(gv_hub_last) != 0 && hub_age < 20000;
             if (id(gv_hub_last) == 0) {
-              snprintf(b, sizeof(b), "no hub packet · tx#%u", (unsigned) id(cmd_tx_seq));
-            } else if (espn) {
-              if (ch > 0)
-                snprintf(b, sizeof(b), "rx %us · tx#%u · ch%d", hub_age / 1000, (unsigned) id(cmd_tx_seq), ch);
-              else
-                snprintf(b, sizeof(b), "rx %us · tx#%u", hub_age / 1000, (unsigned) id(cmd_tx_seq));
+              snprintf(b, sizeof(b), "HA bus quiet · cmd#%u", (unsigned) id(cmd_tx_seq));
+            } else if (ha_fresh) {
+              snprintf(b, sizeof(b), "HA vitals %us · cmd#%u", hub_age / 1000, (unsigned) id(cmd_tx_seq));
             } else {
               uint32_t s = hub_age / 1000;
-              if (s < 3600)      snprintf(b, sizeof(b), "silent %um · tx#%u", s / 60 ? s / 60 : 1, (unsigned) id(cmd_tx_seq));
-              else if (s < 86400) snprintf(b, sizeof(b), "silent %uh · tx#%u", s / 3600, (unsigned) id(cmd_tx_seq));
-              else                snprintf(b, sizeof(b), "silent %ud · tx#%u", s / 86400, (unsigned) id(cmd_tx_seq));
+              if (s < 3600)      snprintf(b, sizeof(b), "HA stale %um · cmd#%u", s / 60 ? s / 60 : 1, (unsigned) id(cmd_tx_seq));
+              else if (s < 86400) snprintf(b, sizeof(b), "HA stale %uh · cmd#%u", s / 3600, (unsigned) id(cmd_tx_seq));
+              else                snprintf(b, sizeof(b), "HA stale %ud · cmd#%u", s / 86400, (unsigned) id(cmd_tx_seq));
             }
             setl(id(conn_espnow_sub), b);
           }
