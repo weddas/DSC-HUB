@@ -51,6 +51,7 @@ flowchart LR
 | Doc | When |
 |---|---|
 | [`SETUP.md`](SETUP.md) | **Product unbox** — SoftAP kit without HA |
+| [`docs/qa/STUDIO-WIFI-HA-BUS.md`](docs/qa/STUDIO-WIFI-HA-BUS.md) | **Live lab** — studio Wi-Fi + HA Native API bus |
 | [`docs/DSC-BRAIN.md`](docs/DSC-BRAIN.md) | Pi offline brain + webserver product shape |
 | [`docs/HA-SCAFFOLD.md`](docs/HA-SCAFFOLD.md) | HA = lab soak; promote-don't-deepen |
 | [`brain/README.md`](brain/README.md) | Catalog SQLite / Want / API stub (Phase B) |

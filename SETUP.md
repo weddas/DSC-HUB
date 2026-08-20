@@ -65,9 +65,12 @@ Portal → **Factory reset fleet config** clears NVS Wi‑Fi/pairing on the HUB 
 
 | | Lab stubs | Kit stubs |
 |---|---|---|
-| WiFi | `!secret wifi_ssid` baked in | SoftAP / NVS via portal |
-| Peers | Hardcoded MACs in stubs | Learned via `/setup/hello` |
+| WiFi | Studio STA (`!secret wifi_ssid`) + reserved LAN IPs | SoftAP / NVS via portal |
+| Bus | HA Native API (`dsc-control-ha-bus`, parked ESP-NOW) | ESP-NOW + SoftAP Anchor |
+| Peers | Hardcoded MACs kept for kit compatibility only | Learned via `/setup/hello` |
 | Command | `esphome run dsc-hub.yaml` | `esphome run dsc-hub-kit.yaml` |
+
+Lab cutover ops: [`docs/qa/STUDIO-WIFI-HA-BUS.md`](docs/qa/STUDIO-WIFI-HA-BUS.md).
 
 ## Files
 
