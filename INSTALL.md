@@ -1,12 +1,14 @@
 # DSC-HUB — Install (from scratch)
 
 Fresh Home Assistant + ESPHome bring-up for **HA surface 7.2.0** and
-**expected firmware 6.0.0.0** (live SoftAP fleet).
+**expected firmware 6.1.0.0** (live lab: studio Wi-Fi + HA Native API bus).
 
 Repo: https://github.com/weddas/DSC-HUB · branch **`master`**
 (last tagged GitHub release may still be **v5.1.0**).
 
-> **Lab scaffold path.** Product unbox without HA is SoftAP — [`SETUP.md`](SETUP.md).
+> **Lab scaffold path.** Live lab joins studio Wi-Fi with HA as the bus —
+> [`docs/qa/STUDIO-WIFI-HA-BUS.md`](docs/qa/STUDIO-WIFI-HA-BUS.md).
+> Product unbox without HA is SoftAP — [`SETUP.md`](SETUP.md).
 > Pi brain / local webserver destination: [`docs/DSC-BRAIN.md`](docs/DSC-BRAIN.md).
 > HA iteration rules: [`docs/HA-SCAFFOLD.md`](docs/HA-SCAFFOLD.md).
 
@@ -90,33 +92,33 @@ render. Ops checklist:
 
 | Stub | Body | Expect after flash |
 |---|---|---|
-| `dsc-hub.yaml` | hub v4_0 + espnow | **6.0.0.0** |
-| `dsc-control.yaml` | control-common | **6.0.0.0** |
-| pots | pot-common | **6.0.0.0** |
-| `dsc-bridge.yaml` | bridge-common + SoftAP Anchor | **6.0.0.0** |
-| Sonoffs | sonoff-common (dual API client) | **6.0.0.0** |
+| `dsc-hub.yaml` | hub v4_0 + **espnow-parked** | **6.1.0.0** |
+| `dsc-control.yaml` | control-common + **ha-bus** | **6.1.0.0** |
+| pots | pot-common (Modbus 2026.8) | **6.1.0.0** |
+| `dsc-bridge.yaml` | bridge-common · SoftAP **off** | **6.1.0.0** |
+| Sonoffs | sonoff-common (studio LAN) | **6.1.0.0** |
 
 Stub `ref: master` (or tag when cut). Kits Validate even if not flashed on lab.
-Bridge needs `firmware/v4/components/dsc_api_client` and `dsc_anchor_ap` beside
-the stub (Sync copies both when `sync_esphome: true`, or flash from
-`firmware/v4/`). Secrets: `dsc_bridge_*`, `dsc_anchor_ap_password`, four
-`dsc_*_host`.
+Lab HA bus ops: [`docs/qa/STUDIO-WIFI-HA-BUS.md`](docs/qa/STUDIO-WIFI-HA-BUS.md).
+Bridge needs `firmware/v4/components/dsc_api_client` beside the stub (Sync copies
+when `sync_esphome: true`, or flash from `firmware/v4/`). Lab keeps
+`enable_anchor: false`. Secrets: `dsc_bridge_*`, four `dsc_*_host` (studio IPs).
 
-### Flash order
+### Flash order (USB cutover)
 
-1. Hub · 2. Panel · 3. Pots · 4. **Bridge (ETH01)** · 5. Sonoffs
+1. Hub · 2. Pot2 canary · 3. Pot1/4/3 · 4. Sonoffs · 5. Panel · 6. **Bridge last** (SoftAP off)
 
-This 7.2.0 pass OTAs **hub** (Control if it is on HA). Do **not** OTA pots
-while Modbus/hardware is OOS.
+After soak + one wireless Install each of ESP32 + Sonoff, **OTA is the path**.
+Do **not** OTA pots while Modbus/hardware is OOS.
 
 ### Verify
 
-- [ ] `sensor.dsc_hub_firmware_version` = **6.0.0.0** (and peers that are flashed)
+- [ ] `sensor.dsc_hub_firmware_version` = **6.1.0.0** (and peers that are flashed)
 - [ ] `sensor.dsc_ha_surface_version` = **7.2.0**
-- [ ] `sensor.dsc_fleet_version_status` → **ok** (expected 6.0.0.0; no false 5.2.0 warn)
+- [ ] `sensor.dsc_fleet_version_status` → **ok** (expected 6.1.0.0)
 - [ ] Sidebar **`/dsc-hub`** + Learning Phase B controls present (B default off)
 - [ ] Lovelace `/dsc-hub-pro/ops` still renders
-- [ ] Panel ESP-NOW UP; Bridge Anchor SoftAP up; Sonoffs follow via bridge (HA followers fallback)
+- [ ] Panel Connections shows ESP-NOW **PARKED**; glass vitals via HA; Sonoffs follow HA demand
 
 ---
 

@@ -2333,6 +2333,8 @@ The red **THREE.js not loaded — redeploy DSC-HUB bundle** on Twin was not stal
 
 ## 2026-08-20 — Studio Wi-Fi cutover (kill ESP-NOW)
 
+Ops runbook (scan-friendly): [`docs/qa/STUDIO-WIFI-HA-BUS.md`](qa/STUDIO-WIFI-HA-BUS.md).
+
 Hybrid lab path: **HA Native API is the live bus.** ESP-NOW / SoftAP stay in tree for kit builds; live lab joins **Digital-Emotions Studio** (2.4 GHz) on ESPHome **2026.8.0**, project train **6.1.0.0**.
 
 ### done (repo)

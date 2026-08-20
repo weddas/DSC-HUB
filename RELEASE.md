@@ -1,16 +1,18 @@
-# DSC-HUB · HA surface **7.2.0** / expected firmware **6.0.0.0**
+# DSC-HUB · HA surface **7.2.0** / expected firmware **6.1.0.0**
 
-Honesty pass for the live SoftAP fleet. The sidebar panel is **`/dsc-hub`**
-(not DSC-HUB Pro). Lovelace YAML at `/dsc-hub-pro/*` remains the hidden fallback.
+Live lab train: studio Wi-Fi + HA Native API bus (ESP-NOW/SoftAP parked for lab).
+The sidebar panel is **`/dsc-hub`** (not DSC-HUB Pro). Lovelace YAML at
+`/dsc-hub-pro/*` remains the hidden fallback. Kit SoftAP product path: [`SETUP.md`](SETUP.md).
 
 | | |
 |---|---|
 | **HA surface** | `sensor.dsc_ha_surface_version` = **`7.2.0`** |
-| **Expected firmware** | `input_text.dsc_expected_release` / fleet fallback = **`6.0.0.0`** |
+| **Expected firmware** | `input_text.dsc_expected_release` / fleet fallback = **`6.1.0.0`** |
 | **Primary UI** | React panel **`/dsc-hub`** · sidebar is not “DSC-HUB Pro” |
 | **Fallback Lovelace** | YAML dashboard URL **`dsc-hub-pro`** (hidden ops fallback — keep it) |
-| **Last GitHub tag** | `v5.1.0` (historical cut; live train is 7.2.0 / 6.0.0.0) |
-| **ESP-NOW tag** | **`54727` (`0xD5C7`)** — protocol deepening parked this pass |
+| **Last GitHub tag** | `v5.1.0` (historical cut; live train is 7.2.0 / 6.1.0.0) |
+| **ESP-NOW tag** | **`54727` (`0xD5C7`)** — kept for kit / parked builds only |
+| **Lab bus** | HA Native API · ops [`docs/qa/STUDIO-WIFI-HA-BUS.md`](docs/qa/STUDIO-WIFI-HA-BUS.md) |
 | **Phase B mat wait** | Ceiling **≤ 300 s** |
 
 **Install:** [`INSTALL.md`](INSTALL.md) · **Upgrade:** [`UPGRADE.md`](UPGRADE.md) ·
@@ -19,9 +21,10 @@ Honesty pass for the live SoftAP fleet. The sidebar panel is **`/dsc-hub`**
 
 Repo: https://github.com/weddas/DSC-HUB · branch **`master`**
 
-> Hardware OOS stays gated: AC, clone mister, POT3, tank. Do not flash pots
-> this pass (Modbus). ESP-NOW 0xD5 / 0xD0 / SoftAP BSSID adopt stay parked.
-> See [`docs/AUDIT-2026-08-17.md`](docs/AUDIT-2026-08-17.md) and
+> Hardware OOS stays gated: AC, clone mister, POT3, tank. Lab ESP-NOW TX and
+> SoftAP Anchor are parked (`9cb577b`). See
+> [`docs/qa/STUDIO-WIFI-HA-BUS.md`](docs/qa/STUDIO-WIFI-HA-BUS.md),
+> [`docs/AUDIT-2026-08-17.md`](docs/AUDIT-2026-08-17.md), and
 > [`docs/FOLLOWUPS.md`](docs/FOLLOWUPS.md).
 
 ---
@@ -45,13 +48,14 @@ remote ESP log capture; renaming `dsc_v4_*` filenames.
 
 ---
 
-## Rollout (7.2.0 surface / 6.0.0.0 fleet)
+## Rollout (7.2.0 surface / 6.1.0.0 fleet)
 
-- [ ] Sync packages / www / React panel (add-on or `scripts/ha-sync.sh`)
+- [ ] Sync packages / www / React panel (add-on or `scripts/ha-sync.sh`) — includes `dsc_v4_panel_ha_bus`
 - [ ] Hard-reload HA; confirm sidebar **`/dsc-hub`** chrome says **7.2.0**
-- [ ] Fleet chip: expected **6.0.0.0**, no false 5.2.0 warn
-- [ ] OTA **hub** only this pass if firmware YAML changed (Control if on HA; **not** pots)
+- [ ] Fleet chip: expected **6.1.0.0**; studio LAN map in STUDIO-WIFI-HA-BUS
+- [ ] USB/OTA cutover per [`docs/qa/STUDIO-WIFI-HA-BUS.md`](docs/qa/STUDIO-WIFI-HA-BUS.md) (hub → Pot2 → … → bridge last)
 - [ ] Lovelace `/dsc-hub-pro/ops` still renders (fallback, not the sidebar name)
+- [ ] Panel Connections = ESP-NOW **PARKED**; glass commands move hub via HA event
 
 Firmware Install remains **manual** per device.
 

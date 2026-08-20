@@ -1,8 +1,11 @@
 # DSC-HUB firmware v4
 
 Working directory for ESPHome configs. Current fleet release string:
-**Live train:** hub / Control / bridge / pots / Sonoffs **6.0.0.0** (SoftAP cutover;
-HA surface **7.2.0**). Tagged marketing cut may still say `v5.1.0`. See CHANGELOG / FOLLOWUPS.
+**Live lab train:** hub / Control / bridge / pots / Sonoffs **6.1.0.0** on ESPHome
+**2026.8.0** (studio Wi-Fi + HA Native API bus; ESP-NOW/SoftAP parked for lab).
+HA surface **7.2.0**. Tagged marketing cut may still say `v5.1.0`.
+Ops: [docs/qa/STUDIO-WIFI-HA-BUS.md](../../docs/qa/STUDIO-WIFI-HA-BUS.md).
+See CHANGELOG / FOLLOWUPS.
 
 Firmware QA: [docs/qa/FIRMWARE-QA-5.1.0.md](../../docs/qa/FIRMWARE-QA-5.1.0.md).
 Repo [README](../../README.md) and [INSTALL.md](../../INSTALL.md) for from-scratch HA setup.
@@ -19,8 +22,10 @@ Entry points (local lab): `dsc-hub.yaml`, `dsc-control.yaml`, `dsc-bridge.yaml`,
 Kit SoftAP setup: `dsc-hub-kit.yaml`, `dsc-control-kit.yaml`, `dsc-pot{1..4}-kit.yaml`, `dsc-bridge-kit.yaml`
 
 WiFi is split into `dsc-*-wifi-lab.yaml` / `dsc-*-wifi-kit.yaml` so kit builds omit compile-time SSIDs.
-Fleet component: `components/dsc_fleet_setup/` (phone portal on hub; Control/pots/bridge join `DSC-Setup-*`).
-Bridge also hosts SoftAP `DSC-Anchor` (F-012 channel pin) + `components/dsc_api_client/` (F-010).
+**Lab:** studio STA + reserved LAN IPs; hub includes `dsc-hub-espnow-parked.yaml` (no primary);
+panel includes `dsc-control-ha-bus.yaml`; bridge `enable_anchor: false`.
+**Kit:** SoftAP portal (`components/dsc_fleet_setup/`) + real ESP-NOW primary; bridge may host
+`DSC-Anchor` + `components/dsc_api_client/` (F-010).
 
 Package bodies are remote-git safe (no `!secret`). Stubs pass credentials (and hub/panel MACs + `espnow_cmd_tag`) as substitutions.
 
@@ -30,41 +35,45 @@ HA + ESP-NOW. **Soil * Raw** diagnostic templates reverse cal for lab wet measur
 **Reset Sensor Calibration** restores defaults and clears provenance. **Mark Soil Cal Peer Median**
 (5.1.5+) and **Mark Soil Cal Lab Buffer** (5.1.6+) stamp method after HA push / lab wet.
 
-## Panel (DSC-CONTROL **6.0.0.0**)
+## Panel (DSC-CONTROL **6.1.0.0** · HA bus)
 
-Package body: [`dsc-control-common.yaml`](dsc-control-common.yaml).
+Package bodies: [`dsc-control-common.yaml`](dsc-control-common.yaml) +
+[`dsc-control-ha-bus.yaml`](dsc-control-ha-bus.yaml) (lab stub only).
 
 | Feature | Notes |
 |---|---|
-| Soil cards + detail | 0xD3 vitals / 0xD4 names; tap pot → NPK drill-down |
+| Soil / climate cards | Lab: HA `homeassistant` sensors → `gv_*` (no ESP-NOW 0xD1/0xD2/0xD3) |
+| Commands | `hub_cmd` → `esphome.dsc_panel_hub_cmd` → HA package `dsc_v4_panel_ha_bus` |
 | Hold-to-lock | Hold ~3 s on primary tabs; hold lock screen to unlock |
 | Demand / takeover gate | Confirm → Engage (not one stray tap) |
-| Connections | Wi‑Fi channel; ESP-NOW RX age + TX seq; silent → ping/WiFi bounce |
-| AP pin | Runtime only: hub **Lock WiFi AP** learns preferred BSSID into NVS; 0xD0 fleet-beats it; Control/pots `adopt_hub_wifi_ap`. Stubs stay `00:00:00:00:00:00` — never bake a site MAC into YAML. |
+| Connections | Wi‑Fi channel; ESP-NOW shows **PARKED** on lab train |
+| AP pin | Kit SoftAP path only. Lab stubs keep `00:00:00:00:00:00` — never bake a site MAC into YAML. |
 | Pulse VPD trend | 12×5 min ring → one label (no canvas charts) |
-| HA API | **Plaintext** (no Noise); **mDNS off** — add by IP only |
-| Stability | **4.0.10** page-gated `refresh_ui` @ 5 s |
-| Snappiness | **4.0.11** `refresh_ui` reads `gv_*` live (template mirrors parked); 30 s Wi‑Fi channel poll |
+| HA API | **Plaintext** (no Noise); **mDNS off** — add by IP only (**required** for lab bus) |
+| Stability | Page-gated `refresh_ui`; 30 s Wi‑Fi channel poll |
 
-After UI flashes: watch serial `boot` / `heap` lines. If the panel boot-loops, use **USB** not OTA until `DSC-CONTROL 4.0.11 up — free_heap=…` prints cleanly. See [`../_history/v4/crash-logs/`](../_history/v4/crash-logs/).
+After UI flashes: watch serial `boot` / `heap` lines. If the panel boot-loops, use **USB** not OTA until a clean up line prints. See [`../_history/v4/crash-logs/`](../_history/v4/crash-logs/).
 
-### Panel HA API reconnect
+### Panel HA API reconnect (lab bus)
 
-The `api:` block lives in [`dsc-control-common.yaml`](dsc-control-common.yaml). **v4.0.9+ has no Noise encryption** — LVGL RAM left the Noise handshake failing (`HANDSHAKESTATE_SETUP_FAILED`) and the teardown path double-freed the heap (reboot whenever HA probed). mDNS is **disabled** (setup OOM left it FAILED forever). ESPHome’s “Unable to connect… includes an `api` section” toast is **generic** — it does **not** mean the YAML is missing `api:`.
+The `api:` block lives in [`dsc-control-common.yaml`](dsc-control-common.yaml). **No Noise encryption** — LVGL RAM left the Noise handshake failing and the teardown path double-freed the heap. mDNS is **disabled**. ESPHome’s “Unable to connect… includes an `api` section” toast is **generic** — it does **not** mean the YAML is missing `api:`.
+
+On the **lab** train the HA API is the vitals/command bus, not optional diagnostics.
 
 | Check | What to do |
 |---|---|
-| Panel boot-looping / no Wi‑Fi | USB flash; serial must show `DSC-CONTROL 4.0.11 up — free_heap=…`. OTA will not recover a looping board. |
-| Host / mDNS | **IP only** — lab Nest reservation **`192.168.86.177`** (`use_address` in `dsc-control-wifi-lab.yaml`). Do not use `dsc-control.local`. |
+| Panel boot-looping / no Wi‑Fi | USB flash; serial must show a clean Control up line. OTA will not recover a looping board. |
+| Host / mDNS | **IP only** — studio reservation **`192.168.86.177`** (`use_address` in `dsc-control-wifi-lab.yaml`). Do not use `dsc-control.local`. |
 | Encryption | Leave the key **blank** when adding/reconfiguring. If HA still has an old encrypted entry, **delete it** and re-add. |
-| Stale `dsc-cyd1` | Delete old **dsc-cyd1** ESPHome device in HA Integrations if present. |
-| Secrets on HA | Still need `dsc_control_ota_password` / `_ap_password` for Install/fallback AP (`dsc_control_api_key` unused by panel firmware). |
-| Stub on HA | `/config/esphome/dsc-control.yaml` should match [`homeassistant/esphome/dsc-control.yaml`](../../homeassistant/esphome/dsc-control.yaml); Validate before Install. |
-| Bundle fails: `… is not a valid YAML file` / `expected '<document start>'` | Almost always a **header comment** in the package body that lost its `#` (looks like `v4.0.x:` at column 2). ESPHome then treats the changelog line as YAML and dies before `substitutions:`. Fix on git, push, set stub `refresh: 0d`, Validate again. |
+| Stale SoftAP host | Delete any `192.168.4.x` / old **dsc-cyd1** ESPHome devices after cutover. |
+| Secrets on HA | Still need `dsc_control_ota_password` / `_ap_password` for Install/fallback AP. |
+| Stub on HA | `/config/esphome/dsc-control.yaml` must pull `dsc-control-ha-bus.yaml`; Validate before Install. |
+| Taps no-op on hub | Sync `dsc_v4_panel_ha_bus.yaml` + restart Core; confirm `esphome.dsc_panel_hub_cmd` events. |
+| Bundle fails: `… is not a valid YAML file` / `expected '<document start>'` | Almost always a **header comment** in the package body that lost its `#`. Fix on git, push, set stub `refresh: 0d`, Validate again. |
 
-ESP-NOW (glass ↔ hub) does **not** need the HA API. Fix API only for OTA, diagnostics, and HA time backup.
+**Package header rule:** changelog lines in package bodies must stay `#` comments.
 
-**Package header rule:** changelog lines in `dsc-control-common.yaml` (and other bodies) must stay `#` comments. An uncommented `v4.0.11:`-style line breaks HA git-pull Install with `not a valid YAML file` at the first root key.
+Full cutover checklist: [docs/qa/STUDIO-WIFI-HA-BUS.md](../../docs/qa/STUDIO-WIFI-HA-BUS.md).
 
 ### Phase 1 fleet notes (stability + snappiness)
 
