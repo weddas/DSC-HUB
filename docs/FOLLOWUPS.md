@@ -2382,3 +2382,57 @@ Do **not** reclaim .33/.39/.40/.47/.23 — other hosts answered there at cutover
 - Hub: dsc-hub-espnow-parked.yaml no-op TX scripts + panel_last_ms stamp while API connected.
 - Panel events: esphome.dsc_panel_hub_cmd (ESPHome event prefix required).
 
+---
+
+
+
+---
+
+## 2026-08-24 — Brain Native API + WiFi-pref ops (`db85cbc`)
+
+Tip: `noise_psk` factory for ESPHome 2026; ingest/appliance `get_running_loop` start; `clear_hub_wifi_pref` + Pi wrappers; deploy/recreate brain env so compose picks up `.env`.
+
+### docs
+
+- Folded into [`docs/qa/PI-APPLIANCE-7.0.md`](qa/PI-APPLIANCE-7.0.md)
+
+### soak / next-plan
+
+1. After `.env` Noise key edits: `recreate-brain-env.sh`, confirm `KEYLEN` ≠ 0 and `/fleet` hub online.
+2. Hub still pin-bouncing SoftAP/Nest BSSID: `clear-hub-wifi-pref.sh`.
+
+## 2026-08-24 — FleetSnapshot SPA + prebuilt deploy (`47f6622`)
+
+Tip: Pi SPA migrates to typed FleetSnapshot reads; brain adds `POST /control/service` + `GET /history`; deploy uses `Dockerfile.prebuilt` + eth0 bring-up (image-build) with hot-patch fallback. Prior tip docs for Native API / WiFi-pref (`db85cbc`) and AP PSK (`8867b33`) stay in the same runbook.
+
+### docs
+
+- [`docs/qa/PI-APPLIANCE-7.0.md`](qa/PI-APPLIANCE-7.0.md) — FleetSnapshot / control / history / prebuilt+eth0 (tip SHA `47f6622`; superseded tip SHA on same file by `c1a451a` docs)
+- Pointers: Docker ops, DSC-BRAIN, WEBUI, compose README, brain README, root README, CHANGELOG
+
+### soak / next-plan
+
+1. Deploy with eth0 plugged; confirm log `DEPLOY_MODE=image-build` when Hub reachable, else accept hot-patch.
+2. Hard-refresh SPA; confirm `/fleet` seats update without HA; smoke `/control/service` + `/history`.
+3. Prefer tip docs including `c1a451a` hub.controls for SoT; supersede/close open docs #89/#90/#91/#92 once reviewed if overlapping.
+4. Island soak → tag `v7.0.0`; MAC→dnsmasq; SkyConnect by-id.
+
+## 2026-08-24 — Hub control poll + Climate native reads (`c1a451a`)
+
+Tip: Hub Native API ingest fills `hub.values.controls` (switch/number/fan/light/select); `control_ops` extends fan/light/select writes; SPA `useFleetEntity` + `fleetControlMap` wire Climate / EntityToggle / fans / TentTargets.
+
+### docs
+
+- [`docs/qa/PI-APPLIANCE-7.0.md`](qa/PI-APPLIANCE-7.0.md) — hub.controls + control proxy fan/light/select + useFleetEntity (tip SHA `c1a451a`)
+- [`docs/brain/WEBUI.md`](brain/WEBUI.md), [`docs/DSC-BRAIN.md`](DSC-BRAIN.md), brain README, CHANGELOG
+
+### red-flag
+
+- `control_ops.py` still references `_HUB_SWITCH_ENTITY_TO_OID` in switch write path while importing `HUB_SWITCH_ENTITY_TO_OID` from `hub_controls` — likely `NameError` on hub switch `/control/service` until aliased/fixed (fan/light/select/number paths use the correct names). Docs describe intended maps; fix is code, not docs.
+
+### soak / next-plan
+
+1. After deploy + hard-refresh: `jq '.hub.values.controls | keys | length'` on `/fleet` > 0 when hub online.
+2. Smoke Climate target write + fan `set_percentage` + Full Auto toggle on Pi SPA.
+3. Prefer this tip’s docs PR over #92 for tip SoT; close/supersede #89–#92 after review if overlapping.
+4. Fix `_HUB_SWITCH_ENTITY_TO_OID` alias before relying on hub switch proxy in soak.
