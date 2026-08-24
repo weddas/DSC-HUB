@@ -244,6 +244,24 @@ export function fleetToHassCompat(fleet: FleetSnapshot): Record<string, HassEnti
     if (fw && seat.firmware) set(fw, seat.firmware, seat.online);
   }
 
+  const controls = fleet.hub.values.controls as
+    | Record<string, { state: string; options?: string[]; percentage?: number; brightness?: number }>
+    | undefined;
+  if (controls) {
+    for (const [eid, ctrl] of Object.entries(controls)) {
+      const attrs: Record<string, unknown> = {};
+      if (ctrl.options?.length) attrs.options = ctrl.options;
+      if (ctrl.percentage != null) attrs.percentage = ctrl.percentage;
+      if (ctrl.brightness != null) attrs.brightness = ctrl.brightness;
+      states[eid] = {
+        entity_id: eid,
+        state: fleet.hub.online ? ctrl.state : "unavailable",
+        attributes: attrs,
+        last_changed: new Date().toISOString(),
+      };
+    }
+  }
+
   return states;
 }
 

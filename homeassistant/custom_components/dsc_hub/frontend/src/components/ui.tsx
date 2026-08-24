@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 
 import { iconSvg, type IconName } from "../icons";
 import { useHass } from "../hooks/useHass";
 import { useFleetActions } from "../hooks/useFleetActions";
+import { useFleetEntity } from "../hooks/useFleetEntity";
 
 export type { IconName };
 
@@ -227,10 +228,10 @@ export function EntityToggle({
   icon?: IconName;
   showBrightness?: boolean;
 }) {
-  const { state, available, entity } = useHass();
+  const { state, available, attributes } = useFleetEntity(entityId);
   const { callService } = useFleetActions();
-  const on = state(entityId, "off") === "on";
-  const ok = available(entityId);
+  const on = state === "on";
+  const ok = available;
   const domain = entityId.split(".")[0];
 
   const toggle = () => {
@@ -246,7 +247,7 @@ export function EntityToggle({
 
   const brightness =
     (showBrightness !== false) && domain === "light" && on
-      ? Math.round((Number(entity(entityId)?.attributes?.brightness ?? 0) / 255) * 100)
+      ? Math.round((Number(attributes?.brightness ?? 0) / 255) * 100)
       : null;
 
   return (
@@ -275,11 +276,11 @@ export function EntitySelect({
   label: string;
   icon?: IconName;
 }) {
-  const { state, available, entity } = useHass();
+  const { state, available, attributes } = useFleetEntity(entityId);
   const { callService } = useFleetActions();
-  const ok = available(entityId);
-  const current = state(entityId, "");
-  const options = (entity(entityId)?.attributes?.options as string[] | undefined) || [];
+  const ok = available;
+  const current = state;
+  const options = (attributes?.options as string[] | undefined) || [];
   const domain = entityId.split(".")[0];
   const [open, setOpen] = useState(false);
   const interacting = useRef(false);
@@ -343,11 +344,11 @@ export function EntityFanSlider({
   label: string;
   disabled?: boolean;
 }) {
-  const { available, entity, state } = useHass();
+  const { available, attributes, state: fanState } = useFleetEntity(entityId);
   const { callService } = useFleetActions();
-  const ok = available(entityId);
-  const pct = Number(entity(entityId)?.attributes?.percentage ?? 0);
-  const isOn = state(entityId) === "on";
+  const ok = available;
+  const pct = Number(attributes?.percentage ?? 0);
+  const isOn = fanState === "on";
   const locked = disabled || !ok;
   const [dragging, setDragging] = useState(false);
   const draggingRef = useRef(false);

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { useHass } from "../hooks/useHass";
 import { useFleetActions } from "../hooks/useFleetActions";
+import { useFleetEntity } from "../hooks/useFleetEntity";
 import { useHeldReading } from "../hooks/useHeldReading";
 import { OverflowMenu } from "./chrome";
 import { draftTone, tentWantRail } from "../lib/tentWant";
@@ -47,14 +47,13 @@ export function TargetNumber({
   hint?: string;
   onLive?: (value: number) => void;
 }) {
-  const { num, available, entity } = useHass();
+  const { state, available, attributes } = useFleetEntity(entityId);
   const { callService: fleetCallService } = useFleetActions();
-  const ok = available(entityId);
-  const ent = entity(entityId);
-  const live = num(entityId, NaN);
-  const min = Number(ent?.attributes?.min ?? 0);
-  const max = Number(ent?.attributes?.max ?? 100);
-  const step = stepProp ?? Number(ent?.attributes?.step ?? 0.1);
+  const ok = available;
+  const live = Number(state);
+  const min = Number(attributes?.min ?? 0);
+  const max = Number(attributes?.max ?? 100);
+  const step = stepProp ?? Number(attributes?.step ?? 0.1);
   const [draft, setDraft] = useState(String(Number.isFinite(live) ? live : ""));
   const focused = useRef(false);
 

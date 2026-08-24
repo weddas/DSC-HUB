@@ -19,6 +19,7 @@ import { resolveCfm } from "../lib/cfmProvenance";
 import { absoluteHumidity } from "../lib/potTrust";
 import { useHass } from "../hooks/useHass";
 import { useFleet, useHubVitals, useFleetSource, useFleetTick } from "../hooks/useFleet";
+import { useFleetEntity } from "../hooks/useFleetEntity";
 import { useEntitySeries } from "../hooks/useEntitySeries";
 import { useHeldReading } from "../hooks/useHeldReading";
 import { useChartHours } from "../hooks/useChartHours";
@@ -64,15 +65,14 @@ export function LiveClimatePage() {
   const { num, state, entity, available } = useHass();
   const fleet = useFleet();
   const hubVitals = useHubVitals();
-  void fleet;
   const navigate = useNavigate();
   const inspector = useInspector();
   const { focus, setFocus } = useZoneFocus();
   const { hours, setHours, maxPoints } = useChartHours(6);
-  const fanOverride = state("switch.dsc_hub_tent_manual_override") === "on";
-  const fullAuto = state("switch.dsc_hub_tent_full_auto_mode") === "on";
+  const fanOverride = useFleetEntity("switch.dsc_hub_tent_manual_override").state === "on";
+  const fullAuto = useFleetEntity("switch.dsc_hub_tent_full_auto_mode").state === "on";
   const honesty = String(entity("sensor.dsc_keepup_gaps")?.attributes?.full_auto_honesty ?? "");
-  const reducedKit = state("binary_sensor.dsc_reduced_kit") === "on";
+  const reducedKit = !!fleet.system.reduced_kit;
 
   const tentTHeld = useHeldReading("sensor.dsc_hub_tent_temperature");
   const tentRhHeld = useHeldReading("sensor.dsc_hub_tent_humidity");

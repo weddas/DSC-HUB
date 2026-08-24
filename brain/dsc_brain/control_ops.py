@@ -11,6 +11,14 @@ from .settings import list_inventory, upsert_inventory
 
 _logger = logging.getLogger(__name__)
 
+from .hub_controls import (
+    HUB_FAN_ENTITY_TO_OID,
+    HUB_LIGHT_ENTITY_TO_OID,
+    HUB_NUMBER_ENTITY_TO_OID,
+    HUB_SELECT_ENTITY_TO_OID,
+    HUB_SWITCH_ENTITY_TO_OID,
+)
+
 _IN_SERVICE_ENTITY_TO_SEAT: dict[str, str] = {
     "input_boolean.dsc_ac_in_service": "ac",
     "input_boolean.dsc_clone_humidifier_in_service": "mister",
@@ -19,15 +27,6 @@ _IN_SERVICE_ENTITY_TO_SEAT: dict[str, str] = {
     "input_boolean.dsc_pot3_in_service": "pot3",
     "input_boolean.dsc_pot4_in_service": "pot4",
     "input_boolean.dsc_tank_in_service": "tank",
-}
-
-_HUB_DEMAND_ENTITY_TO_OID: dict[str, str] = {
-    "switch.dsc_hub_heater_demand": "heater_demand",
-    "switch.dsc_hub_humidifier_demand": "humidifier_demand",
-    "switch.dsc_hub_dehumidifier_demand": "dehumidifier_demand",
-    "switch.dsc_hub_grow_mat_demand": "growmat_demand",
-    "switch.dsc_hub_ac_demand": "ac_demand",
-    "switch.dsc_hub_clone_humidifier_demand": "clone_humidifier_demand",
 }
 
 _SONOFF_RELAY_ENTITY_TO_SEAT: dict[str, str] = {
@@ -39,30 +38,14 @@ _SONOFF_RELAY_ENTITY_TO_SEAT: dict[str, str] = {
     "switch.dsc_clone_humidifier_main_relay": "mister",
 }
 
-_HUB_SWITCH_ENTITY_TO_OID: dict[str, str] = {
-    **_HUB_DEMAND_ENTITY_TO_OID,
-    "switch.dsc_hub_tent_full_auto_mode": "full_auto_switch",
-    "switch.dsc_hub_manual_takeover": "manual_takeover_switch",
-    "switch.dsc_hub_tent_manual_override": "tent_manual_override",
-    "switch.dsc_hub_humidifier_intake_routing": "humidifier_intake_routing",
-    "switch.dsc_hub_recirc_de_strat_pulse": "recirc_de_strat_pulse",
-}
-
-_NUMBER_ENTITY_TO_OID: dict[str, str] = {
-    "number.dsc_hub_target_temp": "target_temp",
-    "number.dsc_hub_rh_target_min": "rh_target_min",
-    "number.dsc_hub_rh_target_max": "rh_target_max",
-    "number.dsc_hub_vpd_target_min": "vpd_target_min",
-    "number.dsc_hub_vpd_target_max": "vpd_target_max",
-    "number.dsc_hub_clone_target_temp": "clone_target_temp",
-    "number.dsc_hub_clone_rh_min": "clone_rh_min",
-    "number.dsc_hub_clone_rh_max": "clone_rh_max",
-    "number.dsc_hub_clone_vpd_min": "clone_vpd_min",
-    "number.dsc_hub_clone_vpd_max": "clone_vpd_max",
-}
+_NUMBER_ENTITY_TO_OID = HUB_NUMBER_ENTITY_TO_OID
 
 _switch_keys: dict[str, dict[str, int]] = {}
 _number_keys: dict[str, dict[str, int]] = {}
+_fan_keys: dict[str, dict[str, int]] = {}
+_light_keys: dict[str, dict[str, int]] = {}
+_select_keys: dict[str, dict[str, int]] = {}
+_select_options: dict[str, dict[str, list[str]]] = {}
 
 
 def _inventory_row(seat_id: str) -> dict[str, Any] | None:
@@ -81,48 +64,68 @@ def _api_key(row: dict[str, Any] | None, seat_id: str) -> str:
     return os.environ.get(env_key, "")
 
 
-async def _ensure_switch_keys(host: str, api_key: str, cache_key: str, object_ids: set[str]) -> dict[str, int]:
-    if cache_key in _switch_keys and all(oid in _switch_keys[cache_key] for oid in object_ids):
-        return _switch_keys[cache_key]
+async def _ensure_entity_keys(
+    host: str,
+    api_key: str,
+    cache_key: str,
+    object_ids: set[str],
+    store: dict[str, dict[str, int]],
+) -> dict[str, int]:
+    if cache_key in store and all(oid in store[cache_key] for oid in object_ids):
+        return store[cache_key]
 
     client = make_api_client(host, api_key)
     try:
         await client.connect(login=True)
         entities, _services = await client.list_entities_services()
-        keys: dict[str, int] = dict(_switch_keys.get(cache_key, {}))
+        keys: dict[str, int] = dict(store.get(cache_key, {}))
         for ent in entities:
             oid = str(getattr(ent, "object_id", ""))
             if oid in object_ids and hasattr(ent, "key"):
                 keys[oid] = int(ent.key)
-        _switch_keys[cache_key] = keys
+        store[cache_key] = keys
         return keys
     finally:
         try:
             await client.disconnect()
         except Exception:  # noqa: BLE001
             pass
+
+
+async def _ensure_select_meta(
+    host: str,
+    api_key: str,
+    cache_key: str,
+    object_ids: set[str],
+) -> tuple[dict[str, int], dict[str, list[str]]]:
+    keys = await _ensure_entity_keys(host, api_key, cache_key, object_ids, _select_keys)
+    if cache_key in _select_options and all(oid in _select_options[cache_key] for oid in object_ids):
+        return keys, _select_options[cache_key]
+
+    client = make_api_client(host, api_key)
+    try:
+        await client.connect(login=True)
+        entities, _services = await client.list_entities_services()
+        opts: dict[str, list[str]] = dict(_select_options.get(cache_key, {}))
+        for ent in entities:
+            oid = str(getattr(ent, "object_id", ""))
+            if oid in object_ids and hasattr(ent, "options"):
+                opts[oid] = list(getattr(ent, "options", []) or [])
+        _select_options[cache_key] = opts
+        return keys, opts
+    finally:
+        try:
+            await client.disconnect()
+        except Exception:  # noqa: BLE001
+            pass
+
+
+async def _ensure_switch_keys(host: str, api_key: str, cache_key: str, object_ids: set[str]) -> dict[str, int]:
+    return await _ensure_entity_keys(host, api_key, cache_key, object_ids, _switch_keys)
 
 
 async def _ensure_number_keys(host: str, api_key: str, cache_key: str, object_ids: set[str]) -> dict[str, int]:
-    if cache_key in _number_keys and all(oid in _number_keys[cache_key] for oid in object_ids):
-        return _number_keys[cache_key]
-
-    client = make_api_client(host, api_key)
-    try:
-        await client.connect(login=True)
-        entities, _services = await client.list_entities_services()
-        keys: dict[str, int] = dict(_number_keys.get(cache_key, {}))
-        for ent in entities:
-            oid = str(getattr(ent, "object_id", ""))
-            if oid in object_ids and hasattr(ent, "key"):
-                keys[oid] = int(ent.key)
-        _number_keys[cache_key] = keys
-        return keys
-    finally:
-        try:
-            await client.disconnect()
-        except Exception:  # noqa: BLE001
-            pass
+    return await _ensure_entity_keys(host, api_key, cache_key, object_ids, _number_keys)
 
 
 async def _hub_switch(entity_id: str, on: bool) -> dict[str, Any]:
@@ -208,6 +211,91 @@ async def _hub_number(entity_id: str, value: float) -> dict[str, Any]:
             pass
 
 
+async def _hub_fan(entity_id: str, percentage: int) -> dict[str, Any]:
+    oid = HUB_FAN_ENTITY_TO_OID.get(entity_id)
+    if not oid:
+        raise ValueError(f"unsupported hub fan {entity_id}")
+    row = _inventory_row("hub")
+    host = (row or {}).get("host") or ""
+    api_key = _api_key(row, "hub")
+    if not host:
+        raise RuntimeError("hub host not configured")
+
+    keys = await _ensure_entity_keys(host, api_key, "hub", set(HUB_FAN_ENTITY_TO_OID.values()), _fan_keys)
+    key = keys.get(oid)
+    if key is None:
+        raise RuntimeError(f"hub fan {oid} not found")
+
+    pct = max(0, min(100, int(percentage)))
+    client = make_api_client(host, api_key)
+    try:
+        await client.connect(login=True)
+        client.fan_command(key, state=pct > 0, speed_level=pct)
+        return {"entity_id": entity_id, "state": "on" if pct > 0 else "off", "percentage": pct}
+    finally:
+        try:
+            await client.disconnect()
+        except Exception:  # noqa: BLE001
+            pass
+
+
+async def _hub_light(entity_id: str, on: bool, brightness: int | None = None) -> dict[str, Any]:
+    oid = HUB_LIGHT_ENTITY_TO_OID.get(entity_id)
+    if not oid:
+        raise ValueError(f"unsupported hub light {entity_id}")
+    row = _inventory_row("hub")
+    host = (row or {}).get("host") or ""
+    api_key = _api_key(row, "hub")
+    if not host:
+        raise RuntimeError("hub host not configured")
+
+    keys = await _ensure_entity_keys(host, api_key, "hub", set(HUB_LIGHT_ENTITY_TO_OID.values()), _light_keys)
+    key = keys.get(oid)
+    if key is None:
+        raise RuntimeError(f"hub light {oid} not found")
+
+    client = make_api_client(host, api_key)
+    try:
+        await client.connect(login=True)
+        if on and brightness is not None:
+            client.light_command(key, state=True, brightness=max(0, min(255, brightness)))
+        else:
+            client.light_command(key, state=on)
+        return {"entity_id": entity_id, "state": "on" if on else "off"}
+    finally:
+        try:
+            await client.disconnect()
+        except Exception:  # noqa: BLE001
+            pass
+
+
+async def _hub_select(entity_id: str, option: str) -> dict[str, Any]:
+    oid = HUB_SELECT_ENTITY_TO_OID.get(entity_id)
+    if not oid:
+        raise ValueError(f"unsupported hub select {entity_id}")
+    row = _inventory_row("hub")
+    host = (row or {}).get("host") or ""
+    api_key = _api_key(row, "hub")
+    if not host:
+        raise RuntimeError("hub host not configured")
+
+    keys, _opts = await _ensure_select_meta(host, api_key, "hub", set(HUB_SELECT_ENTITY_TO_OID.values()))
+    key = keys.get(oid)
+    if key is None:
+        raise RuntimeError(f"hub select {oid} not found")
+
+    client = make_api_client(host, api_key)
+    try:
+        await client.connect(login=True)
+        client.select_command(key, option)
+        return {"entity_id": entity_id, "state": option}
+    finally:
+        try:
+            await client.disconnect()
+        except Exception:  # noqa: BLE001
+            pass
+
+
 async def call_service_proxy(domain: str, service: str, data: dict[str, Any]) -> dict[str, Any]:
     entity_id = str(data.get("entity_id", ""))
     if not entity_id:
@@ -254,6 +342,39 @@ async def call_service_proxy(domain: str, service: str, data: dict[str, Any]) ->
         if entity_id in _NUMBER_ENTITY_TO_OID:
             return await _hub_number(entity_id, float(value))
         raise ValueError(f"unsupported number {entity_id}")
+
+    if domain == "fan":
+        if entity_id in HUB_FAN_ENTITY_TO_OID:
+            if service == "turn_on":
+                pct = int(data.get("percentage", 100))
+                return await _hub_fan(entity_id, pct)
+            if service == "turn_off":
+                return await _hub_fan(entity_id, 0)
+            if service == "set_percentage":
+                pct = data.get("percentage")
+                if pct is None:
+                    raise ValueError("percentage required")
+                return await _hub_fan(entity_id, int(pct))
+            raise ValueError(f"unsupported fan service {service}")
+        raise ValueError(f"unsupported fan {entity_id}")
+
+    if domain == "light":
+        if entity_id in HUB_LIGHT_ENTITY_TO_OID:
+            if service == "turn_on":
+                bri = data.get("brightness")
+                return await _hub_light(entity_id, True, int(bri) if bri is not None else None)
+            if service == "turn_off":
+                return await _hub_light(entity_id, False)
+            raise ValueError(f"unsupported light service {service}")
+        raise ValueError(f"unsupported light {entity_id}")
+
+    if domain == "select" and service == "select_option":
+        option = str(data.get("option", ""))
+        if not option:
+            raise ValueError("option required")
+        if entity_id in HUB_SELECT_ENTITY_TO_OID:
+            return await _hub_select(entity_id, option)
+        raise ValueError(f"unsupported select {entity_id}")
 
     raise ValueError(f"unsupported service {domain}.{service}")
 

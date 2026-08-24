@@ -10,6 +10,13 @@ from typing import Any
 
 from .appliance_driver import get_appliance_status
 from .fleet_state import FleetState, SeatState, get_fleet_state, update_fleet_state
+from .hub_controls import (
+    HUB_FAN_OID_TO_ENTITY,
+    HUB_LIGHT_OID_TO_ENTITY,
+    HUB_NUMBER_OID_TO_ENTITY,
+    HUB_SELECT_OID_TO_ENTITY,
+    HUB_SWITCH_OID_TO_ENTITY,
+)
 from .native_api import make_api_client
 from .paths import EXPECTED_FIRMWARE, SURFACE_VERSION
 from .settings import list_inventory, record_history
@@ -177,11 +184,66 @@ async def _fetch_device(host: str, api_key: str, role: str, seat_id: str) -> dic
                         values[field] = st.state
                     break
 
+        if role == "hub":
+            values["controls"] = _hub_controls_from_states(states, key_to_object, entities)
+
         values["host"] = host
         values["seat_id"] = seat_id
     finally:
         await client.disconnect()
     return {"firmware": fw, "values": values}
+
+
+def _hub_controls_from_states(
+    states: dict[int, Any],
+    key_to_object: dict[int, str],
+    entities: list[Any],
+) -> dict[str, dict[str, Any]]:
+    """Build HA-shaped control readback for hub switches/numbers/fans/selects/light."""
+    select_options: dict[str, list[str]] = {}
+    for ent in entities:
+        oid = str(getattr(ent, "object_id", ""))
+        if oid in HUB_SELECT_OID_TO_ENTITY and hasattr(ent, "options"):
+            select_options[oid] = list(getattr(ent, "options", []) or [])
+
+    controls: dict[str, dict[str, Any]] = {}
+
+    def put(entity_id: str, state: str, **attrs: Any) -> None:
+        entry: dict[str, Any] = {"state": state}
+        entry.update(attrs)
+        controls[entity_id] = entry
+
+    for key, st in states.items():
+        object_id = key_to_object.get(key, "")
+        if object_id in HUB_SWITCH_OID_TO_ENTITY:
+            entity_id = HUB_SWITCH_OID_TO_ENTITY[object_id]
+            on = bool(getattr(st, "state", False))
+            if isinstance(st.state, str):
+                on = st.state.lower() in ("on", "true", "1")
+            put(entity_id, "on" if on else "off")
+        elif object_id in HUB_NUMBER_OID_TO_ENTITY:
+            entity_id = HUB_NUMBER_OID_TO_ENTITY[object_id]
+            try:
+                put(entity_id, str(float(st.state)))
+            except (TypeError, ValueError):
+                put(entity_id, str(getattr(st, "state", "")))
+        elif object_id in HUB_FAN_OID_TO_ENTITY:
+            entity_id = HUB_FAN_OID_TO_ENTITY[object_id]
+            on = bool(getattr(st, "state", False))
+            pct = int(getattr(st, "speed_level", 0) or 0)
+            put(entity_id, "on" if on else "off", percentage=pct)
+        elif object_id in HUB_LIGHT_OID_TO_ENTITY:
+            entity_id = HUB_LIGHT_OID_TO_ENTITY[object_id]
+            on = bool(getattr(st, "state", False))
+            bri = int(getattr(st, "brightness", 0) or 0)
+            put(entity_id, "on" if on else "off", brightness=bri)
+        elif object_id in HUB_SELECT_OID_TO_ENTITY:
+            entity_id = HUB_SELECT_OID_TO_ENTITY[object_id]
+            state = str(getattr(st, "state", "") or "")
+            opts = select_options.get(object_id, [])
+            put(entity_id, state, options=opts)
+
+    return controls
 
 
 _ingest = EsphomeIngest()

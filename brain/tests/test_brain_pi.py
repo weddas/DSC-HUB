@@ -144,6 +144,23 @@ def test_network_apply(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     assert Path(result["hostapd"]).is_file()
 
 
+def test_hub_controls_from_states() -> None:
+    from types import SimpleNamespace
+
+    from dsc_brain.esphome_client import _hub_controls_from_states
+
+    states = {
+        1: SimpleNamespace(state=True),
+        2: SimpleNamespace(state=24.5),
+        3: SimpleNamespace(state=True, speed_level=42),
+    }
+    key_to_object = {1: "heater_demand", 2: "target_temp", 3: "fan_intake_main"}
+    controls = _hub_controls_from_states(states, key_to_object, [])
+    assert controls["switch.dsc_hub_heater_demand"]["state"] == "on"
+    assert controls["number.dsc_hub_target_temp"]["state"] == "24.5"
+    assert controls["fan.dsc_hub_4_inch_intake_fan_main"]["percentage"] == 42
+
+
 def test_esphome_job_queue(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("DSC_DATA", str(temp_db.parent))
     from dsc_brain.esphome_jobs import list_jobs, queue_job
