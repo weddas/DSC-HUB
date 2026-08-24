@@ -2,6 +2,9 @@
 
 **Release:** DSC-HUB 7.0.0 — The Pi Release.
 
+**Full ops runbook:** [`docs/qa/PI-APPLIANCE-7.0.md`](../qa/PI-APPLIANCE-7.0.md) (architecture, LAN map, API surface, appliance driver, pitfalls).  
+**Compose / bootstrap:** [`services/dsc-hub/README.md`](../../services/dsc-hub/README.md).
+
 ## Network
 
 - **AP:** `DSC-Brain` 2.4 GHz, locked channel (1/6/11), WPA2.
@@ -9,16 +12,16 @@
 - **eth0:** House uplink (optional). Climate runs island; Ollama + remote CannaLib need uplink.
 - **Avahi:** `dsc-brain.local`
 
-Fleet DHCP reservations live in `/etc/dsc-hub/dnsmasq.conf` (bootstrap template). After flash, add device MACs from Settings inventory.
+Fleet DHCP reservations live in `/etc/dsc-hub/dnsmasq.conf` (bootstrap template). After flash, add device MACs from Settings inventory. Default seats: hub `.10`, control `.11`, pots `.21–.24`, Sonoffs `.50/.51/.54/.55`.
 
 ## Cutover checklist
 
 1. Bootstrap Pi (`pi-bootstrap.sh`), compose up, `/health` green.
 2. Move SkyConnect from Unraid; z2m sees coordinator.
-3. Build firmware **7.0.0.0** (`wifi-pi` stubs); rotate Noise API keys → `.env` + Notion.
+3. Build firmware **7.0.0.0** (`wifi-pi` stubs); rotate Noise API keys → `.env` + Notion **API Keys & Credentials** (never paste live keys into Wiki/PRs).
 4. Flash order: hub → pot2 canary → remaining pots → Sonoffs → panel.
 5. Disable HA demand-follower automations and HA ESPHome integrations (do not delete packages until soak).
-6. Hub ESP-NOW parked on Pi path; brain polls hub demand switches and drives Sonoff relays (45s stale OFF).
+6. Hub ESP-NOW parked on Pi path; brain polls hub demand switches and drives Sonoff relays (45s stale OFF) via `appliance_driver.py`.
 7. **Island proof:** Nest + HA off; tent on Pi AP; fleet chip `7.0.0.0`.
 8. With eth0 up: Settings → Test Ollama + Test CannaLib green.
 9. With eth0 down: integrations HELD; catalog uses local fallback if present.

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- **DSC-HUB 7.0 Pi release (`c4eb97f`)** — Pi appliance: Docker stack
+  (`services/dsc-hub`), brain fleet/settings/appliance driver + SPA `:8787`,
+  firmware **7.0.0.0** `wifi-pi` train (`10.42.0.0/24`), hub ESP-NOW parked,
+  ETH01 demand path superseded by `appliance_driver.py`. Ops:
+  `docs/qa/PI-APPLIANCE-7.0.md`. Tree stays `7.0.0-dev` until island soak + tag.
 - **SoftAP-local fleet cutover 6.0.0.0** — Hub/Control/Pot1/2/4/Sonoffs SoftAP-only
   STA (`DSC-Anchor` + BSSID pin + SoftAP static IPs); Nest STA removed; SoftAP-down
   recovery = device Fallback AP (Control has no captive_portal — RAM). Fleet Fix
@@ -15,7 +20,8 @@
   over Ethernet. Kit SoftAP role=`bridge`. HA package `dsc_v4_bridge.yaml` +
   Pro System cards. SoftAP via `dsc_anchor_ap` (ESPHome forbids `wifi:`+`ethernet:`).
   F-011 portal host on ETH01 still deferred; F-014 kit SoftAP hello deferred.
-- **Pi offline brain (Phase A/B start)** — Product destination documented in Notion [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d3407556c) + [`docs/DSC-BRAIN.md`](docs/DSC-BRAIN.md). New `brain/` package loads curated catalogs into SQLite, resolves Want, dry-runs decision ticks, exposes FastAPI stub (`:8787`). Specs: [`docs/brain/`](docs/brain/). HA is lab scaffold ([`docs/HA-SCAFFOLD.md`](docs/HA-SCAFFOLD.md)); SoftAP remains product unbox.
+  **Superseded on Pi 7.0 product path** by brain appliance driver.
+- **Pi offline brain (Phase A/B → 7.0)** — Product destination documented in Notion [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d3407556c) + [`docs/DSC-BRAIN.md`](docs/DSC-BRAIN.md). `brain/` package: catalogs, Want, decision ticks, FastAPI + SPA, fleet ingest, appliance driver. Specs: [`docs/brain/`](docs/brain/). HA is lab scaffold ([`docs/HA-SCAFFOLD.md`](docs/HA-SCAFFOLD.md)).
 - **Build a Plant Full Inclusion (N-085)** — Pro Home/Root Zone roster context, Nutrient Science calculator/deep-link/CANNA stage packs, Lighting catalog controls, short-stock-safe Accept, refreshed catalog indexes, and HA surface **5.1.11**.
 - **Build a Plant (N-083)** — Separate product surface: dashboard `dsc-build-plant`, Lit card `dsc-build-plant-card`, package `dsc_v4_build_plant.yaml` (soil % blend, plant roster, mix calculator, Apply climate Want). Slim `/local/dsc-catalog/` search indexes via `scripts/build_catalog_search_indexes.py`. Vivosun NEXT_DATA enrich (wattage/PPE/stated point-PPFD/datasheets); keyword-labeled map URLs still **0** on CDN hashes. Wired into `sync-hacs-dist.sh` / `ha-sync.sh` (bundle + catalog + dashboard copy).
 - **Sync 5.1.4 (N-084)** — HAOS Sync add-on concatenates Build a Plant into www/`DSC-HUB.js`, stages `dsc-build-plant-dashboard.yaml` + `www/dsc-catalog/`. Rebuild add-on after Update (≤5.1.3 stopped at The Dash). Ops: `docs/qa/LIVE-UI-BUILD-A-PLANT.md`.

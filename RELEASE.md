@@ -1,32 +1,44 @@
-# DSC-HUB · HA surface **7.2.0** / expected firmware **6.0.0.0**
+# DSC-HUB · Pi product **7.0.0-dev** / firmware **7.0.0.0** · HA lab surface **7.2.0**
 
-Honesty pass for the live SoftAP fleet. The sidebar panel is **`/dsc-hub`**
-(not DSC-HUB Pro). Lovelace YAML at `/dsc-hub-pro/*` remains the hidden fallback.
+**Pi appliance (tip `c4eb97f`):** brain + SPA on `:8787`, `wifi-pi` fleet on
+`10.42.0.0/24`, appliance driver replaces ETH01. Ops:
+[`docs/qa/PI-APPLIANCE-7.0.md`](docs/qa/PI-APPLIANCE-7.0.md) · Compose:
+[`services/dsc-hub/README.md`](services/dsc-hub/README.md). Tag `v7.0.0` only after island soak.
+
+**HA lab (historical honesty):** sidebar panel **`/dsc-hub`** may still report surface
+**7.2.0**; Lovelace YAML at `/dsc-hub-pro/*` remains hidden fallback. Do not conflate
+lab Nest IPs with Pi AP seats.
 
 | | |
 |---|---|
-| **HA surface** | `sensor.dsc_ha_surface_version` = **`7.2.0`** |
-| **Expected firmware** | `input_text.dsc_expected_release` / fleet fallback = **`6.0.0.0`** |
-| **Primary UI** | React panel **`/dsc-hub`** · sidebar is not “DSC-HUB Pro” |
-| **Fallback Lovelace** | YAML dashboard URL **`dsc-hub-pro`** (hidden ops fallback — keep it) |
-| **Last GitHub tag** | `v5.1.0` (historical cut; live train is 7.2.0 / 6.0.0.0) |
-| **ESP-NOW tag** | **`54727` (`0xD5C7`)** — protocol deepening parked this pass |
+| **Pi brain / SPA** | **`7.0.0-dev`** until soak |
+| **Expected Pi firmware** | **`7.0.0.0`** |
+| **HA surface (lab)** | `sensor.dsc_ha_surface_version` = **`7.2.0`** |
+| **Last GitHub tag** | `v5.1.0` (historical cut) |
+| **ESP-NOW tag** | **`54727` (`0xD5C7`)** — parked on Pi path; kit SoftAP still uses mesh |
 | **Phase B mat wait** | Ceiling **≤ 300 s** |
 
-**Install:** [`INSTALL.md`](INSTALL.md) · **Upgrade:** [`UPGRADE.md`](UPGRADE.md) ·
-**Add-on:** [`scripts/ADDON.md`](scripts/ADDON.md) ·
+**Install:** Pi → [`docs/qa/PI-APPLIANCE-7.0.md`](docs/qa/PI-APPLIANCE-7.0.md) · HA lab → [`INSTALL.md`](INSTALL.md) · Kit SoftAP → [`SETUP.md`](SETUP.md) ·
+**Upgrade:** [`UPGRADE.md`](UPGRADE.md) · **Add-on:** [`scripts/ADDON.md`](scripts/ADDON.md) ·
 **QA:** [`docs/qa/`](docs/qa/)
 
 Repo: https://github.com/weddas/DSC-HUB · branch **`master`**
 
-> Hardware OOS stays gated: AC, clone mister, POT3, tank. Do not flash pots
-> this pass (Modbus). ESP-NOW 0xD5 / 0xD0 / SoftAP BSSID adopt stay parked.
-> See [`docs/AUDIT-2026-08-17.md`](docs/AUDIT-2026-08-17.md) and
+> Hardware OOS stays gated: AC, clone mister, POT3, tank. See
 > [`docs/FOLLOWUPS.md`](docs/FOLLOWUPS.md).
 
 ---
 
-## What’s new in v5.1.0
+## What’s new in v7.0 (Pi release)
+
+| Layer | Change |
+|---|---|
+| **Brain** | Fleet ingest, Settings/inventory, appliance driver, Zigbee hooks, SPA on `:8787` |
+| **Docker** | `services/dsc-hub` — brain, cannalib fallback, mosquitto, z2m, ESPHome dashboard |
+| **Firmware** | **7.0.0.0** + `*-wifi-pi.yaml`; hub ESP-NOW parked |
+| **Appliances** | Hub demand → Sonoff `main_relay` via brain (ETH01 superseded on product path) |
+
+## What’s new in v5.1.0 (historical HA cut)
 
 | Layer | Change |
 |---|---|

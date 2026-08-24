@@ -2382,3 +2382,24 @@ Do **not** reclaim .33/.39/.40/.47/.23 — other hosts answered there at cutover
 - Hub: dsc-hub-espnow-parked.yaml no-op TX scripts + panel_last_ms stamp while API connected.
 - Panel events: esphome.dsc_panel_hub_cmd (ESPHome event prefix required).
 
+---
+
+## 2026-08-24 — DSC-HUB 7.0 Pi release docs pass
+
+### done (docs)
+
+- Tip `c4eb97f` shipped Pi appliance code; docs now point product SoT at FW **7.0.0.0** + brain **7.0.0-dev**.
+- New ops runbook: [`docs/qa/PI-APPLIANCE-7.0.md`](qa/PI-APPLIANCE-7.0.md) (architecture, LAN, API, appliance driver, pitfalls).
+- Updated: `docs/DSC-BRAIN.md`, `docs/ops/DSC-HUB-DOCKER.md`, `brain/README.md`, `docs/brain/*`, root `README.md` / `SETUP.md` / `RELEASE.md`, `firmware/v4/README.md`, `services/dsc-hub/README.md` (no live secrets).
+
+### next-plan
+
+- Operator island soak → stamp `v7.0.0`; finish MAC→dnsmasq reservations.
+- Close/supersede older open docs PRs that still teach SoftAP/studio as tip SoT.
+- F-003 POT3 hardware still open.
+
+### deferred
+
+- Kit SoftAP / ETH01 remain valid for non-Pi unbox; do not deepen as default lab task.
+- Do not paste AP PSKs / Noise keys into FOLLOWUPS or Wiki.
+
