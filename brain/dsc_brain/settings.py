@@ -62,7 +62,7 @@ DEFAULT_INVENTORY: list[dict[str, Any]] = [
 
 DEFAULT_SETTINGS: dict[str, str] = {
     "ap_ssid": "DSC-Brain",
-    "ap_psk": "",
+    "ap_psk": "Digital1",
     "ap_channel": "6",
     "ollama_base_url": "",
     "ollama_model": "",
@@ -99,6 +99,12 @@ def init_settings_db(db_path: Path | None = None) -> None:
             (row["seat_id"], row["role"], row.get("host")),
         )
     conn.execute("DELETE FROM fleet_inventory WHERE seat_id='bridge'")
+    conn.execute(
+        """
+        UPDATE settings SET value='Digital1'
+        WHERE key='ap_psk' AND (value='' OR value='changeme-dsc-brain')
+        """
+    )
     conn.commit()
     conn.close()
 

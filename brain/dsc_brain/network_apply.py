@@ -37,7 +37,7 @@ def network_status() -> dict[str, Any]:
 
 def render_hostapd_conf(settings: dict[str, str]) -> str:
     ssid = settings.get("ap_ssid", "DSC-Brain")
-    psk = settings.get("ap_psk") or settings.get("DSC_AP_PSK", "changeme-dsc-brain")
+    psk = settings.get("ap_psk") or settings.get("DSC_AP_PSK", "Digital1")
     channel = settings.get("ap_channel", "6")
     if channel not in ALLOWED_CHANNELS:
         channel = "6"

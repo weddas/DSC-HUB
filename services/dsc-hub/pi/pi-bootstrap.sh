@@ -50,7 +50,7 @@ fi
 # AP + DHCP templates
 install -d /etc/dsc-hub
 AP_SSID="${DSC_AP_SSID:-DSC-Brain}"
-AP_PSK="${DSC_AP_PSK:-changeme-dsc-brain}"
+AP_PSK="${DSC_AP_PSK:-Digital1}"
 AP_CHANNEL="${DSC_AP_CHANNEL:-6}"
 AP_NET="10.42.0.1"
 AP_MASK="255.255.255.0"
