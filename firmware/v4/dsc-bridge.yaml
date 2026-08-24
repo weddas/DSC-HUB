@@ -17,11 +17,11 @@ substitutions:
   enable_anchor: "false"
   espnow_cmd_tag: "54727"
   hub_mac: "84:1F:E8:16:E6:60"
-  # Studio LAN Sonoff map (HA demand followers primary; bridge API optional)
-  dsc_heater_host: "192.168.86.50"
-  dsc_heatmat_host: "192.168.86.51"
-  dsc_humidifier_host: "192.168.86.54"
-  dsc_dehumidifier_host: "192.168.86.184"
+  # Pi AP — Sonoff native API targets (F-010)
+  dsc_heater_host: "10.42.0.50"
+  dsc_heatmat_host: "10.42.0.51"
+  dsc_humidifier_host: "10.42.0.54"
+  dsc_dehumidifier_host: "10.42.0.55"
   dsc_heater_api_key: !secret dsc_heater_api_key
   dsc_heatmat_api_key: !secret dsc_heatmat_api_key
   dsc_humidifier_api_key: !secret dsc_humidifier_api_key

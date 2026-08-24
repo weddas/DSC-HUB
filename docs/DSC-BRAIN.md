@@ -24,11 +24,11 @@ Notion (canonical Wiki): [Product layers](https://app.notion.com/p/3b52b4cda3708
 | [`SETUP.md`](../SETUP.md) | SoftAP kit unbox (product path) |
 | [`INSTALL.md`](../INSTALL.md) | HA lab bring-up (scaffold) |
 | [`docs/HA-SCAFFOLD.md`](HA-SCAFFOLD.md) | Promote-don't-deepen rules |
-| [`docs/brain/`](brain/) | Specs: decision loop, web UI, F-010 bridge |
+| [`docs/brain/`](brain/) | Specs: decision loop, web UI, Pi appliance path |
 
 ## Phases
 
 - **A** Architecture + Notion docs
 - **B** Brain core (this tree starts B)
 - **C** Webserver MVP
-- **D** Close loop + appliance bridge; HA optional
+- **D** Close loop + Pi appliance driver; HA optional integration

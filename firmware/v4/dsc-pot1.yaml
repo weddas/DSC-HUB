@@ -6,7 +6,7 @@ substitutions:
   friendly_name: DSC-POT#1
   wifi_ssid: !secret wifi_ssid
   wifi_password: !secret wifi_password
-  lan_ip: "192.168.86.181"
+  lan_ip: "10.42.0.21"
   espnow_key: !secret espnow_key
   api_key_val: !secret dsc_pot1_api_key
   ota_password_val: !secret dsc_pot1_ota_password
@@ -18,5 +18,5 @@ substitutions:
   fleet_pot_index: "1"
 
 packages:
-  wifi: !include dsc-pot-wifi-lab.yaml
+  wifi: !include dsc-pot-wifi-pi.yaml
   common: !include dsc-pot-common.yaml

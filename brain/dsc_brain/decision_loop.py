@@ -8,6 +8,11 @@ from typing import Any
 
 from .want import resolve_want
 
+try:
+    from .hub_native import emit_proposal_sync
+except ImportError:  # pragma: no cover
+    emit_proposal_sync = None  # type: ignore[assignment,misc]
+
 
 def _status(value: float | None, band: list[float] | None) -> str:
     if value is None or not band:
@@ -59,13 +64,19 @@ def decision_tick(
     if manual_takeover:
         advisories.append("Manual Takeover asserted — brain will not emit cmds")
     elif emit:
-        # Phase D: map Need → hub entity cmds. Intentionally empty until bridge/API client lands.
-        commands.append(
-            {
-                "type": "noop",
-                "reason": "live emit not enabled — dry-run only until Phase D",
-            }
-        )
+        proposal_cmds: list[dict[str, Any]] = []
+        for metric, status in need.items():
+            if status == "low":
+                proposal_cmds.append({"type": "demand_on", "metric": f"{metric}_low"})
+            elif status == "high":
+                proposal_cmds.append({"type": "demand_on", "metric": f"{metric}_high"})
+        if emit_proposal_sync and proposal_cmds:
+            emit_results = emit_proposal_sync(proposal_cmds)
+            commands.extend(emit_results)
+        elif not proposal_cmds:
+            commands.append({"type": "noop", "reason": "all metrics in band"})
+        else:
+            commands.append({"type": "noop", "reason": "hub emit unavailable"})
 
     return {
         "tick_id": str(uuid.uuid4()),

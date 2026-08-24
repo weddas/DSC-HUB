@@ -34,7 +34,10 @@ export const SECONDARY_TABS: Record<PrimarySection, TabRoute[]> = {
     { id: "learning", label: "Learning", path: "/tune/learning", icon: "learning" },
     { id: "analytics", label: "Analytics", path: "/tune/analytics", icon: "analytics" },
   ],
-  fleet: [{ id: "overview", label: "Overview", path: "/fleet", icon: "fleet" }],
+  fleet: [
+    { id: "overview", label: "Overview", path: "/fleet", icon: "fleet" },
+    { id: "settings", label: "Settings", path: "/fleet/settings", icon: "settings" },
+  ],
 };
 
 /** Legacy paths → 7.1 destinations (query preserved by caller when needed). */

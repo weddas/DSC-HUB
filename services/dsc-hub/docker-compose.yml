@@ -1,0 +1,111 @@
+# DSC-HUB 7.0.0 — The Pi Release
+# Run on Raspberry Pi 4 (linux/arm64). Not for Unraid Compose Manager.
+name: dsc-hub
+
+services:
+  brain:
+    build:
+      context: ../..
+      dockerfile: services/dsc-hub/brain/Dockerfile
+    image: dsc-hub-brain:7.0.0-dev
+    container_name: dsc-hub-brain
+    restart: unless-stopped
+    ports:
+      - "8787:8787"
+    environment:
+      DSC_DATA: /data
+      DSC_BRAIN_API_KEY: ${DSC_BRAIN_API_KEY:-}
+      DSC_EXPECTED_FIRMWARE: ${DSC_EXPECTED_FIRMWARE:-7.0.0.0}
+      DSC_SURFACE_VERSION: ${DSC_SURFACE_VERSION:-7.0.0-dev}
+      DSC_HUB_API_KEY: ${DSC_HUB_API_KEY:-}
+      DSC_CONTROL_API_KEY: ${DSC_CONTROL_API_KEY:-}
+      DSC_POT1_API_KEY: ${DSC_POT1_API_KEY:-}
+      DSC_POT2_API_KEY: ${DSC_POT2_API_KEY:-}
+      DSC_POT3_API_KEY: ${DSC_POT3_API_KEY:-}
+      DSC_POT4_API_KEY: ${DSC_POT4_API_KEY:-}
+      DSC_HEATER_API_KEY: ${DSC_HEATER_API_KEY:-}
+      DSC_HEATMAT_API_KEY: ${DSC_HEATMAT_API_KEY:-}
+      DSC_HUMIDIFIER_API_KEY: ${DSC_HUMIDIFIER_API_KEY:-}
+      DSC_DEHUMIDIFIER_API_KEY: ${DSC_DEHUMIDIFIER_API_KEY:-}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-}
+      CANNALIB_API_URL: ${CANNALIB_API_URL:-http://cannalib:8790}
+      CANNALIB_API_KEY: ${CANNALIB_API_KEY:-}
+      CANNALIB_USE_LOCAL_FALLBACK: ${CANNALIB_USE_LOCAL_FALLBACK:-true}
+      MQTT_HOST: mosquitto
+      MQTT_PORT: "1883"
+    volumes:
+      - ${DSC_DATA:-/var/lib/dsc-hub}/ops:/data
+      - ${DSC_DATA:-/var/lib/dsc-hub}/firmware:/firmware:ro
+    depends_on:
+      - mosquitto
+      - cannalib
+    networks:
+      - dsc
+
+  cannalib:
+    build:
+      context: ../cannalib
+      dockerfile: Dockerfile
+    image: dsc-hub-cannalib:7.0.0-dev
+    container_name: dsc-hub-cannalib
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8790:8790"
+    environment:
+      CANNALIB_DB_PATH: /data/dsc_brain.sqlite3
+      CANNALIB_REQUIRE_API_KEY: "false"
+      CANNALIB_METRICS_REQUIRE_KEY: "true"
+      CANNALIB_TRUST_PROXY: "true"
+      CANNALIB_RATE_LIMIT_ENABLED: "true"
+    volumes:
+      - ${DSC_DATA:-/var/lib/dsc-hub}/cannalib:/data:ro
+    read_only: true
+    tmpfs:
+      - /tmp
+    networks:
+      - dsc
+
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: dsc-hub-mosquitto
+    restart: unless-stopped
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - ${DSC_DATA:-/var/lib/dsc-hub}/mosquitto:/mosquitto/data
+    networks:
+      - dsc
+
+  zigbee2mqtt:
+    image: koenkk/zigbee2mqtt:2
+    container_name: dsc-hub-z2m
+    restart: unless-stopped
+  # Frontend off — brain Settings drives permit-join
+    environment:
+      TZ: Australia/Sydney
+    volumes:
+      - ./zigbee2mqtt/configuration.yaml:/app/data/configuration.yaml
+      - ${DSC_DATA:-/var/lib/dsc-hub}/z2m:/app/data
+    devices:
+      - ${ZIGBEE_DEVICE:-/dev/ttyACM0}:/dev/ttyACM0
+    depends_on:
+      - mosquitto
+    networks:
+      - dsc
+
+  esphome:
+    image: esphome/esphome:2025.12.4
+    container_name: dsc-hub-esphome
+    restart: unless-stopped
+    command: ["dashboard", "/config"]
+    ports:
+      - "6052:6052"
+    volumes:
+      - ../../firmware/v4:/config
+      - ${DSC_DATA:-/var/lib/dsc-hub}/esphome:/config/.esphome
+    networks:
+      - dsc
+
+networks:
+  dsc:
+    driver: bridge

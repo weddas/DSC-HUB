@@ -8,18 +8,17 @@ substitutions:
   friendly_name: DSC-CONTROL
   wifi_ssid: !secret wifi_ssid
   wifi_password: !secret wifi_password
-  lan_ip: "192.168.86.177"
+  lan_ip: "10.42.0.11"
   api_key_val: !secret dsc_control_api_key
   ota_password_val: !secret dsc_control_ota_password
   ap_password_val: !secret dsc_control_ap_password
-  # ESP-NOW parked — kept for kit SoftAP builds only
+  # Pi Release: ESP-NOW primary (hub peer). HA bus is lab-only (dsc-control-ha-bus.yaml).
   hub_mac: "84:1F:E8:16:E6:60"
   espnow_cmd_tag: "54727"
   wifi_bssid: "00:00:00:00:00:00"
   softap_bssid: "00:00:00:00:00:00"
 
 packages:
-  wifi: !include dsc-control-wifi-lab.yaml
+  wifi: !include dsc-control-wifi-pi.yaml
   panel: !include dsc-control-common.yaml
-  ha_bus: !include dsc-control-ha-bus.yaml
-  # Lab: do NOT include dsc-fleet-setup-control-lab.yaml (CYD OOM / web_server_base).
+  # Pi Release: ESP-NOW primary; HA bus is lab-only (dsc-control-ha-bus.yaml).

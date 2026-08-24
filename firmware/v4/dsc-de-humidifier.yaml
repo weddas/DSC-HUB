@@ -10,8 +10,8 @@ substitutions:
   ap_ssid: "DSC-De-Humidifi Fallback Hotspot"
   wifi_ssid: !secret wifi_ssid
   wifi_password: !secret wifi_password
-  lan_ip: "192.168.86.184"
-  softap_ip: "192.168.86.184"
+  lan_ip: "10.42.0.55"
+  softap_ip: "10.42.0.55"
   softap_bssid: "00:00:00:00:00:00"
   api_key_val: !secret dsc_dehumidifier_api_key
   ota_password_val: !secret dsc_dehumidifier_ota_password

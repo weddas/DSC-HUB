@@ -160,8 +160,7 @@ export function FleetOverviewPage() {
       demandEntity: node.demandEntity,
     });
   const rows: { label: string; id: string }[] = [
-    { label: "Bridge hub ESP-NOW", id: "binary_sensor.dsc_bridge_hub_esp_now_link" },
-    { label: "ESP-NOW age", id: "sensor.dsc_bridge_esp_now_age" },
+    { label: "Pi appliance link", id: "binary_sensor.dsc_pi_appliance_link" },
     { label: "Hub firmware", id: "sensor.dsc_hub_firmware_version" },
     { label: "Control firmware", id: "sensor.dsc_control_firmware_version" },
     { label: "Pot1 firmware", id: "sensor.dsc_pot1_firmware_version" },
@@ -176,7 +175,7 @@ export function FleetOverviewPage() {
       <PageHeader
         icon="fleet"
         title="Fleet"
-        subtitle={`${svc.inService} of ${svc.total} in service. Kit Pulse holes, tank tester, bridge table.`}
+        subtitle={`${svc.inService} of ${svc.total} in service. Kit Pulse holes, tank tester, fleet table.`}
       />
       <div className="dsc-grid">
         <div className="dsc-col-12">

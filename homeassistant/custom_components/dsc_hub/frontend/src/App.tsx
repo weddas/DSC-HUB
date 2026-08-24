@@ -27,6 +27,7 @@ import {
   TuneLearningPage,
   FleetOverviewPage,
 } from "./pages/TuneFleetPages";
+import { SettingsPage } from "./pages/SettingsPage";
 import {
   PRIMARY_TABS,
   SECONDARY_TABS,
@@ -65,7 +66,7 @@ function LegacyRedirect() {
   return <NotFoundPage />;
 }
 
-function Shell() {
+function Shell({ surfaceVersion = "7.2.0" }: { surfaceVersion?: string }) {
   const location = useLocation();
   const navigate = useNavigate();
   const section: PrimarySection = sectionFromPath(location.pathname);
@@ -91,7 +92,7 @@ function Shell() {
           </div>
         </NavLink>
         <div className="dsc-muted" style={{ fontSize: 12, letterSpacing: "0.08em" }}>
-          SURFACE 7.2.0
+          SURFACE {surfaceVersion}
         </div>
       </div>
 
@@ -151,6 +152,7 @@ function Shell() {
         <Route path="/tune/learning" element={<TuneLearningPage />} />
         <Route path="/tune/analytics" element={<TuneAnalyticsPage />} />
         <Route path="/fleet" element={<FleetOverviewPage />} />
+        <Route path="/fleet/settings" element={<SettingsPage />} />
         {/* Legacy → 7.0 */}
         <Route path="/ops/*" element={<LegacyRedirect />} />
         <Route path="/ops" element={<LegacyRedirect />} />
@@ -165,12 +167,18 @@ function Shell() {
   );
 }
 
-export function App({ hass }: { hass: HomeAssistant | null }) {
+export function App({
+  hass,
+  surfaceVersion = "7.2.0",
+}: {
+  hass: HomeAssistant | null;
+  surfaceVersion?: string;
+}) {
   return (
     <HassProvider hass={hass}>
       <ZoneFocusProvider>
         <InspectorProvider>
-          <Shell />
+          <Shell surfaceVersion={surfaceVersion} />
         </InspectorProvider>
       </ZoneFocusProvider>
     </HassProvider>

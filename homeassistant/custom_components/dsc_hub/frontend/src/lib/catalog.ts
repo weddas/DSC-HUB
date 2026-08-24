@@ -36,6 +36,8 @@ export interface CatalogSearchResult {
 
 const CANNALIB_DEFAULT = "https://cannalib.plausible-deniability.net";
 
+const PI_MODE = import.meta.env.VITE_DSC_PI === "1";
+
 const INDEX_FILE: Record<CatalogKind, string> = {
   strain: "/local/dsc-catalog/dsc_strains_search_index.json",
   medium: "/local/dsc-catalog/dsc_mediums_search_index.json",
@@ -136,6 +138,27 @@ export async function searchCatalog(
   state: (id: string, fallback?: string) => string,
   limit = 100,
 ): Promise<CatalogSearchResult> {
+  if (PI_MODE) {
+    try {
+      const domain = API_KIND[kind];
+      const url = `/v1/catalogs/${domain}?q=${encodeURIComponent(q || "")}&limit=${limit}`;
+      const r = await fetch(url, { cache: "no-store" });
+      if (!r.ok) throw new Error(`brain catalog ${r.status}`);
+      const items = preferScienceAliasHits(filterKind(kind, asItems(await r.json())), q);
+      return {
+        items,
+        source: "cannalib",
+        note: "Brain catalog proxy (remote API or local fallback)",
+      };
+    } catch {
+      const local = preferScienceAliasHits(filterKind(kind, await searchLocal(kind, q)), q);
+      return {
+        items: local,
+        source: "local",
+        note: "Brain proxy unreachable — local JSON index",
+      };
+    }
+  }
   try {
     const domain = API_KIND[kind];
     const url = `${cannalibBase(state)}/v1/catalogs/${domain}?q=${encodeURIComponent(q || "")}&limit=${limit}`;

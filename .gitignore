@@ -6,6 +6,9 @@ secrets.yaml
 **/secrets.yaml
 secrets.yaml.*
 !secrets.yaml.template
+.env
+**/.env
+!env.example
 *.old-*
 
 # ESPHome build artefacts

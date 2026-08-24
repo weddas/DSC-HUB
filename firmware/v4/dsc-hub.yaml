@@ -14,23 +14,21 @@ substitutions:
   friendly_name: DSC-HUB
   wifi_ssid: !secret wifi_ssid
   wifi_password: !secret wifi_password
-  # .33 occupied by non-fleet host — studio cutover reservation
-  lan_ip: "192.168.86.180"
+  # Pi AP subnet — Settings inventory is SoT; stubs ship defaults.
+  lan_ip: "10.42.0.10"
   api_key_val: !secret dsc_hub_api_key
   ota_password_val: !secret dsc_hub_ota_password
   ap_password_val: !secret dsc_hub_ap_password
-  # ESP-NOW parked (studio Wi-Fi / HA bus). Keys kept for kit SoftAP builds.
   espnow_key: !secret espnow_key
+  # Pi Release: Pi AP (DSC-Brain) is fleet anchor. Sonoffs follow hub demand via brain.
   panel_mac: "30:76:F5:E9:22:0C"
-  bridge_mac: "58:2A:BD:60:3C:1D"
+  bridge_mac: "00:00:00:00:00:00"
   espnow_cmd_tag: "54727"
   wifi_bssid: "00:00:00:00:00:00"
 
 packages:
-  wifi: !include dsc-hub-wifi-lab.yaml
+  wifi: !include dsc-hub-wifi-pi.yaml
   hub: !include dsc-hub-v4_0.yaml
   fleet_heal: !include dsc-hub-fleet-heal.yaml
-  # ESP-NOW TX parked — no-op scripts so hub body still compiles.
-  # Real radio: dsc-hub-espnow-primary.yaml (kit SoftAP only).
-  espnow_parked: !include dsc-hub-espnow-parked.yaml
+  espnow_control: !include dsc-hub-espnow-parked.yaml
   # Kit SoftAP: dsc-hub-kit.yaml → dsc-fleet-setup-hub.yaml

@@ -1,0 +1,30 @@
+# ==================================================================
+#  DSC-POT · Pi appliance WiFi (DSC-Brain AP)
+# ==================================================================
+wifi:
+  networks:
+    - ssid: ${wifi_ssid}
+      password: ${wifi_password}
+      priority: 20
+  power_save_mode: none
+  fast_connect: false
+  post_connect_roaming: false
+  use_address: ${lan_ip}
+  manual_ip:
+    static_ip: ${lan_ip}
+    gateway: 10.42.0.1
+    subnet: 255.255.255.0
+    dns1: 10.42.0.1
+  ap:
+    ssid: DSC-POT Fallback Hotspot
+    password: ${ap_password_val}
+  on_connect:
+    - lambda: |-
+        auto *w = wifi::global_wifi_component;
+        if (w != nullptr) {
+          int ch = (int) w->get_wifi_channel();
+          if (ch > 0)
+            ESP_LOGI("wifi", "STA channel %d (Pi AP)", ch);
+        }
+
+captive_portal:

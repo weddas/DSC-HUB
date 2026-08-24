@@ -78,7 +78,7 @@ esphome:
   friendly_name: DSC-HUB
   project:
     name: "digital_emotions.dsc-hub"
-    version: "6.1.0.0"
+    version: "7.0.0.0"
   on_boot:
     - priority: -100
       then:
@@ -193,7 +193,7 @@ api:
     key: ${api_key_val}
   # Cap clients so a half-open Noise handshake cannot fill the slot and
   # make HA flap "unavailable" while WiFi + ESP-NOW (Control) stay fine.
-  max_connections: 3
+  max_connections: 5
   # v2.4.1 · HA-DROP RESILIENCE: default reboot_timeout is 15 min and
   # used to bounce the hub on every HA outage. Stay at 0s — local climate
   # + ESP-NOW must keep running. Sustained API-wedge recovery (WiFi up,

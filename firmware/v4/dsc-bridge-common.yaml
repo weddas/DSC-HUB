@@ -15,10 +15,10 @@ substitutions:
   espnow_cmd_tag: "54727"
   hub_mac: "00:00:00:00:00:00"
   # SoftAP static map overridden by stubs — studio LAN Sonoffs
-  dsc_heater_host: "192.168.86.50"
-  dsc_heatmat_host: "192.168.86.51"
-  dsc_humidifier_host: "192.168.86.54"
-  dsc_dehumidifier_host: "192.168.86.184"
+  dsc_heater_host: "10.42.0.50"
+  dsc_heatmat_host: "10.42.0.51"
+  dsc_humidifier_host: "10.42.0.54"
+  dsc_dehumidifier_host: "10.42.0.55"
   dsc_heater_api_key: "CHANGEME"
   dsc_heatmat_api_key: "CHANGEME"
   dsc_humidifier_api_key: "CHANGEME"
@@ -30,7 +30,7 @@ esphome:
   friendly_name: ${friendly_name}
   project:
     name: digital_emotions.dsc-bridge
-    version: "6.1.0.0"
+    version: "7.0.0.0"
   platformio_options:
     board_build.flash_mode: dio
 
@@ -51,8 +51,7 @@ ota:
   - platform: esphome
     password: ${ota_password_val}
 
-# Ethernet for HA + optional Sonoff TCP. SoftAP / ESP-NOW parked
-# (studio Wi-Fi cutover — HA demand followers are the appliance path).
+# Ethernet for Pi-subnet Sonoff TCP (F-010). SoftAP / ESP-NOW 0xD8 parked on Pi path.
 ethernet:
   type: LAN8720
   mdc_pin: GPIO23
@@ -63,13 +62,12 @@ ethernet:
   phy_addr: 1
   power_pin: GPIO16
   manual_ip:
-    static_ip: 192.168.86.66
-    gateway: 192.168.86.1
+    static_ip: 10.42.0.5
+    gateway: 10.42.0.1
     subnet: 255.255.255.0
-    dns1: 192.168.86.1
+    dns1: 10.42.0.1
 
-# SoftAP (dsc_anchor_ap) + espnow 0xD8 path PARKED — files stay in tree
-# under components/ and kit builds. Live lab: HA Native API drives Sonoffs.
+# SoftAP (dsc_anchor_ap) + espnow 0xD8 path PARKED on Pi — dsc_api_client drives Sonoffs.
 
 globals:
   - id: dem_mask

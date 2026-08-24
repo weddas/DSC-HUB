@@ -29,12 +29,11 @@
 #  appliance layer — the demands would fire into a void and the tent
 #  would sit there getting cold while HA reports everything is fine.
 #
-#  ACTUATION PATH (v5.2): Sonoff BASIC R2 is ESP8285 — no ESP-NOW.
-#  Primary: DSC-BRIDGE (ETH01) follows hub 0xD8 demand via native API client.
-#  Fallback: HA demand followers still flip these relays when HA is up.
-#  Dual API clients (HA + bridge) expected — grace clears when ANY client
-#  is connected. Panel alert: "Appliances need bridge or HA".
-#  Design: docs/brain/F010_APPLIANCE_BRIDGE.md · firmware/v4/dsc-bridge.yaml
+#  ACTUATION PATH (7.0 Pi): Sonoff BASIC R2 is ESP8285 — no ESP-NOW.
+#  Primary: DSC-Brain polls hub demand switches → Native API main_relay.
+#  Optional: HA integration / demand followers when HA is up.
+#  Panel alert when neither Pi appliance link nor HA is driving relays.
+#  Legacy bridge (F-010) retired — see docs/brain/F010_APPLIANCE_BRIDGE.md.
 # ==================================================================
 
 substitutions:
@@ -42,8 +41,8 @@ substitutions:
   test_max_runtime_ms: "600000"    # 10 min bounded button test (decided)
   api_grace_ms: "90000"            # API-loss grace; stubs override
   # Studio LAN — stubs override lan_ip (was SoftAP softap_ip)
-  lan_ip: "192.168.86.50"
-  softap_ip: "192.168.86.50"
+  lan_ip: "10.42.0.50"
+  softap_ip: "10.42.0.50"
   softap_bssid: "00:00:00:00:00:00"
   anchor_ssid: "DSC-Anchor"
   anchor_ap_password: "CHANGEME"
@@ -64,7 +63,7 @@ esphome:
   # device's project version — "which nodes are behind?" at a glance.
   project:
     name: digital_emotions.dsc-sonoff
-    version: "6.1.0.0"
+    version: "7.0.0.0"
 
 esp8266:
   board: esp8285
@@ -77,7 +76,7 @@ logger:
 # someone else's heater.
 api:
   # HA + DSC-BRIDGE dual clients (F-010)
-  max_connections: 3
+  max_connections: 5
   encryption:
     key: ${api_key_val}
   # EXPLICIT, not inherited. The default 15-min reboot was half of the
@@ -111,9 +110,9 @@ wifi:
       priority: 20
       manual_ip:
         static_ip: ${lan_ip}
-        gateway: 192.168.86.1
+        gateway: 10.42.0.1
         subnet: 255.255.255.0
-        dns1: 192.168.86.1
+        dns1: 10.42.0.1
   power_save_mode: none          # fleet rule: mains device, no modem naps
   fast_connect: false
   post_connect_roaming: false
