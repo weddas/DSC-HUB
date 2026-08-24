@@ -6,6 +6,7 @@ import asyncio
 import logging
 from typing import Any
 
+from .native_api import make_api_client
 from .settings import get_setting, list_inventory
 
 _logger = logging.getLogger(__name__)
@@ -30,12 +31,12 @@ async def emit_proposal(commands: list[dict[str, Any]]) -> list[dict[str, Any]]:
         return [{"ok": False, "detail": "hub host missing"}]
 
     try:
-        from aioesphomeapi import APIClient
+        import aioesphomeapi  # noqa: F401
     except ImportError:
         return [{"ok": False, "detail": "aioesphomeapi not installed"}]
 
     results: list[dict[str, Any]] = []
-    client = APIClient(host, 6053, api_key or "")
+    client = make_api_client(host, api_key or "")
     try:
         await client.connect(login=True)
         for cmd in commands:

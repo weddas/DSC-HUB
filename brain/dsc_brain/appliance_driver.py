@@ -8,6 +8,7 @@ import os
 import time
 from typing import Any
 
+from .native_api import make_api_client
 from .settings import get_setting, list_inventory
 
 _logger = logging.getLogger(__name__)
@@ -53,14 +54,12 @@ def _api_key_for(seat_id: str, row: dict[str, Any]) -> str:
 
 
 async def _read_hub_demands(hub_row: dict[str, Any]) -> dict[str, bool] | None:
-    from aioesphomeapi import APIClient
-
     host = hub_row.get("host") or ""
     api_key = _api_key_for("hub", hub_row) or get_setting("dsc_hub_api_key", "")
     if not host:
         return None
 
-    client = APIClient(host, 6053, api_key or "")
+    client = make_api_client(host, api_key)
     try:
         await client.connect(login=True)
         entities, _services = await client.list_entities_services()
@@ -79,9 +78,10 @@ async def _read_hub_demands(hub_row: dict[str, Any]) -> dict[str, bool] | None:
             if oid:
                 live[oid] = bool(getattr(state, "state", False))
 
-        unsub = await client.subscribe_states(on_state)
+        unsub = client.subscribe_states(on_state)
         await asyncio.sleep(0.8)
-        unsub()
+        if unsub:
+            unsub()
 
         out: dict[str, bool] = {}
         for oid in DEMAND_TO_SEAT:
@@ -98,8 +98,6 @@ async def _read_hub_demands(hub_row: dict[str, Any]) -> dict[str, bool] | None:
 
 
 async def _set_sonoff_relay(seat_id: str, on: bool, inventory: dict[str, dict[str, Any]]) -> None:
-    from aioesphomeapi import APIClient
-
     if _relay_commanded.get(seat_id) is on:
         return
 
@@ -111,7 +109,7 @@ async def _set_sonoff_relay(seat_id: str, on: bool, inventory: dict[str, dict[st
     if not host:
         return
 
-    client = APIClient(host, 6053, api_key or "")
+    client = make_api_client(host, api_key)
     try:
         await client.connect(login=True)
         global _sonoff_switch_keys
@@ -125,7 +123,7 @@ async def _set_sonoff_relay(seat_id: str, on: bool, inventory: dict[str, dict[st
         if key is None:
             _logger.warning("Sonoff %s missing %s switch entity", seat_id, SONOFF_SWITCH_OBJECT)
             return
-        await client.switch_command(key, on)
+        client.switch_command(key, on)
         _relay_commanded[seat_id] = on
         _logger.info("appliance %s main_relay -> %s", seat_id, "ON" if on else "OFF")
     except Exception as exc:  # noqa: BLE001
@@ -191,13 +189,14 @@ def start_appliance_driver() -> None:
     global _task, _running
     if _task is not None:
         return
-    _running = True
     try:
-        loop = asyncio.get_event_loop()
-        _task = loop.create_task(_run())
-        _logger.info("Pi appliance driver started (hub demand → Sonoff relays)")
+        loop = asyncio.get_running_loop()
     except RuntimeError:
-        pass
+        _logger.warning("Appliance driver not started — no running event loop")
+        return
+    _running = True
+    _task = loop.create_task(_run())
+    _logger.info("Pi appliance driver started (hub demand → Sonoff relays)")
 
 
 async def stop_appliance_driver() -> None:

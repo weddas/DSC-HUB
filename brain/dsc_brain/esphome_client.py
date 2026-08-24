@@ -9,6 +9,7 @@ import time
 from typing import Any
 
 from .fleet_state import FleetState, SeatState, update_fleet_state
+from .native_api import make_api_client
 from .paths import EXPECTED_FIRMWARE, SURFACE_VERSION
 from .settings import list_inventory, record_history
 
@@ -38,13 +39,15 @@ class EsphomeIngest:
         self._running = False
 
     def start(self) -> None:
-        if self._task is None:
-            self._running = True
-            try:
-                loop = asyncio.get_event_loop()
-                self._task = loop.create_task(self._run())
-            except RuntimeError:
-                pass
+        if self._task is not None:
+            return
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            _logger.warning("ESPHome ingest not started — no running event loop")
+            return
+        self._running = True
+        self._task = loop.create_task(self._run())
 
     async def stop(self) -> None:
         self._running = False
@@ -115,9 +118,7 @@ class EsphomeIngest:
 
 async def _fetch_device(host: str, api_key: str, role: str, seat_id: str) -> dict[str, Any]:
     """Connect briefly and read entity states."""
-    from aioesphomeapi import APIClient
-
-    client = APIClient(host, 6053, api_key)
+    client = make_api_client(host, api_key)
     await client.connect(login=True)
     values: dict[str, Any] = {}
     fw = EXPECTED_FIRMWARE
@@ -130,9 +131,10 @@ async def _fetch_device(host: str, api_key: str, role: str, seat_id: str) -> dic
         def on_state(state: Any) -> None:
             states[state.key] = state
 
-        unsub = await client.subscribe_states(on_state)
+        unsub = client.subscribe_states(on_state)
         await asyncio.sleep(1.5)
-        unsub()
+        if unsub:
+            unsub()
 
         entities, _services = await client.list_entities_services()
         key_to_object: dict[int, str] = {}
