@@ -2382,3 +2382,37 @@ Do **not** reclaim .33/.39/.40/.47/.23 — other hosts answered there at cutover
 - Hub: dsc-hub-espnow-parked.yaml no-op TX scripts + panel_last_ms stamp while API connected.
 - Panel events: esphome.dsc_panel_hub_cmd (ESPHome event prefix required).
 
+---
+
+
+
+---
+
+## 2026-08-24 — Brain Native API + WiFi-pref ops (`db85cbc`)
+
+Tip: `noise_psk` factory for ESPHome 2026; ingest/appliance `get_running_loop` start; `clear_hub_wifi_pref` + Pi wrappers; deploy/recreate brain env so compose picks up `.env`.
+
+### docs
+
+- Folded into [`docs/qa/PI-APPLIANCE-7.0.md`](qa/PI-APPLIANCE-7.0.md)
+
+### soak / next-plan
+
+1. After `.env` Noise key edits: `recreate-brain-env.sh`, confirm `KEYLEN` ≠ 0 and `/fleet` hub online.
+2. Hub still pin-bouncing SoftAP/Nest BSSID: `clear-hub-wifi-pref.sh`.
+
+## 2026-08-24 — FleetSnapshot SPA + prebuilt deploy (`47f6622`)
+
+Tip: Pi SPA migrates to typed FleetSnapshot reads; brain adds `POST /control/service` + `GET /history`; deploy uses `Dockerfile.prebuilt` + eth0 bring-up (image-build) with hot-patch fallback. Prior tip docs for Native API / WiFi-pref (`db85cbc`) and AP PSK (`8867b33`) stay in the same runbook.
+
+### docs
+
+- [`docs/qa/PI-APPLIANCE-7.0.md`](qa/PI-APPLIANCE-7.0.md) — FleetSnapshot / control / history / prebuilt+eth0 (tip SHA `47f6622`)
+- Pointers: Docker ops, DSC-BRAIN, WEBUI, compose README, brain README, root README, CHANGELOG
+
+### soak / next-plan
+
+1. Deploy with eth0 plugged; confirm log `DEPLOY_MODE=image-build` when Hub reachable, else accept hot-patch.
+2. Hard-refresh SPA; confirm `/fleet` seats update without HA; smoke `/control/service` + `/history`.
+3. Prefer this tip’s docs PR for SoT; supersede/close open docs #89/#90/#91 once reviewed if overlapping.
+4. Island soak → tag `v7.0.0`; MAC→dnsmasq; SkyConnect by-id.
