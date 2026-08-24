@@ -2456,3 +2456,23 @@ Tip: Hub ingest adds room/clone sensors (`HUB_SENSOR_OID_TO_KEY`) + photoperiod 
 2. `jq '.hub.values | {room_temp_c, clone_temp_c, binaries, controls:(.controls|keys|length)}'` on `/fleet`.
 3. Prefer this tip’s docs PR over #93 for tip SoT; close/supersede #89–#93 after review if overlapping.
 4. Catalog/Compose/Learning still on raw `useHass` — migrate only if Pi needs those surfaces without HA.
+
+## 2026-08-24 — HA-coupled SPA residual (docs pass after `4aa67c5`)
+
+Tip code unchanged. Docs expand honesty for surfaces that still import `useHass` after ops pages moved to `useEntityBus`.
+
+### docs
+
+- [`docs/qa/PI-APPLIANCE-7.0.md`](qa/PI-APPLIANCE-7.0.md) — § HA-coupled SPA surfaces (Catalog search OK; Compose/Learning/Vessel/Tank writes → 400 on Pi; control proxy allow-list; brain roster/Want path)
+- [`docs/brain/WEBUI.md`](brain/WEBUI.md) — residual table
+- CHANGELOG Unreleased pointer
+
+### red-flag
+
+- `_HUB_SWITCH_ENTITY_TO_OID` NameError on hub switch `/control/service` (unchanged; code fix out of docs scope).
+
+### next-plan
+
+1. Prefer merge of tip SoT docs (this PR / #94 family); close/supersede #89–#93 after review.
+2. Migrate Compose/Learning only when Pi island must run Build-a-Plant / cal without HA — use `/v1/catalogs`, `/roster`, `/want` (do not invent height/chem/PPFD/NPK).
+3. Alias `_HUB_SWITCH_ENTITY_TO_OID` before soak relies on hub switch proxy.

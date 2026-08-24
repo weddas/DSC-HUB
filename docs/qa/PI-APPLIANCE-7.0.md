@@ -310,7 +310,70 @@ curl -s 'http://10.42.0.1:8787/history?entity_id=sensor.dsc_hub_clone_temperatur
 | **`useEntityBus`** | Drop-in for `useHass` on Pi: prefers `hub.values.controls`, then live metrics via `entityFleetMap`, else BrainProvider’s `fleetToHassCompat` shim | Mission, Climate, Root, Live, Grow, Light, Tune/Fleet pages + Honesty / DutyStrip / HubLinkLine / PlantExtra / EntityInspector / series / held-reading hooks |
 | **`useFleetEntity(id)`** | Single control entity read (state / available / attributes) for widgets that write via `/control/service` | `EntityToggle`, fan/light widgets, TentTargets control rows, Climate Full Auto / fan-override chips |
 
-On HA lab (`source !== "pi"`), `useEntityBus` returns plain `useHass`. Catalog / Compose / Learning / Vessel / Tank paths may still call `useHass` directly (not yet on the fleet bus).
+On HA lab (`source !== "pi"`), `useEntityBus` returns plain `useHass`.
+
+### HA-coupled SPA surfaces (not product-ready on Pi alone)
+
+**Intent:** Tip `4aa67c5` finished **ops** pages on FleetSnapshot. Catalog browse / Build-a-Plant compose / Learning / Vessel / Tank still import raw `useHass` and talk to HA helpers + scripts. On Pi they ride BrainProvider’s `fleetToHassCompat` shim for a **thin** state set and `POST /control/service` for writes — which is **not** enough for those flows.
+
+```mermaid
+flowchart TD
+  subgraph ready [Pi_ready_after_4aa67c5]
+    Ops[Mission_Climate_Root_Live_Grow_Tune]
+    Ops --> bus[useEntityBus]
+    Ops --> ufe[useFleetEntity]
+    bus --> fleet[FleetSnapshot]
+    ufe --> fleet
+  end
+  subgraph coupled [Still_HA_coupled]
+    Cat[CatalogResearch_Picker]
+    Comp[ComposePlant_CoupledMix]
+    Learn[LearningWizard]
+    Ves[VesselGlyph_TankCutaway]
+    Cat --> hass[useHass]
+    Comp --> hass
+    Learn --> hass
+    Ves --> hass
+  end
+  hass -->|Pi_shim| compat[fleetToHassCompat]
+  hass -->|Pi_write| proxy["POST /control/service"]
+  Cat -->|PI_MODE_search| v1["GET /v1/catalogs"]
+  proxy -->|allow| ok[hub_Sonoff_in_service_only]
+  proxy -->|reject_400| no[input_text_select_script]
+```
+
+| Surface | Files | What works on Pi today | What does **not** |
+|---|---|---|---|
+| **Catalog search** | `lib/catalog.ts`, `CatalogResearch.tsx`, `CatalogPicker.tsx` | `VITE_DSC_PI=1` → `GET /v1/catalogs/{kind}` (CannaLib prefer → local slim); JSON `/local/dsc-catalog/*` fallback | Writing picked strain/medium/nutrient/light into HA `input_text` / helpers |
+| **Compose / Build-a-Plant** | `ComposePlant.tsx`, `CoupledMix.tsx` | Catalog pick UI can list items via search above | Commit / assign / mix / apply-climate scripts; `input_text` / `input_select` / `input_number` blend slots; vessel select |
+| **Learning / cal** | `LearningWizard.tsx` | — | `script.dsc_cal_*` / learn-gate helpers; CFM curve sensors |
+| **Vessel / Tank** | `VesselGlyph.tsx`, `TankCutaway.tsx` | — | Vessel `input_select` + tank helper reads/writes |
+| **Charts** | `useHistory.ts` | Already dual-mode: Pi → `GET /history` | Unmapped entity ids still empty |
+
+**Control proxy allow-list** (`control_ops.call_service_proxy`) — only these domains succeed on Pi:
+
+| Domain | Allowed entities / services |
+|---|---|
+| `input_boolean` | In-service seats only (`dsc_*_in_service` → inventory) |
+| `switch` | Hub demand / mode switches + Sonoff `main_relay` |
+| `number` / `input_number` | Hub target numbers in `HUB_NUMBER_ENTITY_TO_OID` |
+| `fan` / `light` / `select` | Hub fan / SF1000 / strategy selects |
+
+Everything Compose/Learning uses (`input_text`, `input_select`, `script`, `input_datetime`, `time`, `text`) → **`400 unsupported service`**. Do not treat a 400 from those pages as a fleet outage.
+
+**Durable product path (when migrating):**
+
+| Concern | Call brain, not HA helpers |
+|---|---|
+| Catalog browse | Already: `/v1/catalogs/{kind}` + `/catalogs/{kind}` local |
+| Roster / seat assign | `GET/PATCH /roster/{seat_id}` |
+| Want / decision | `GET /want/{id}`, `POST /decision/tick` |
+| Learning log | `GET /learning` (read); cal write path still HA-script shaped |
+| Reload indexes | `POST /admin/reload-catalogs` |
+
+**Constraint:** Do **not** invent height/chem/PPFD/NPK in UI or docs. Migrate Catalog/Compose/Learning to brain APIs only when the Pi island must run those surfaces without HA — ops climate is already native.
+
+**Red-flag (code, not docs):** `control_ops.py` imports `HUB_SWITCH_ENTITY_TO_OID` but hub switch write path still calls `_HUB_SWITCH_ENTITY_TO_OID` → likely `NameError` until aliased. Fan/light/select/number paths use the correct names.
 
 ### Hub control readback (`hub.values.controls`)
 
@@ -473,6 +536,9 @@ Env template: `services/dsc-hub/env.example`. Secrets live in Notion **API Keys 
 | Window / light-catchup binaries missing | `hub.values.binaries` empty | Check hub object_ids `main_window_bs` / `clone_window_bs` / `light_catchup_bs`; unit `test_hub_binaries_from_states` |
 | Charts empty on Pi | unmapped `entity_id` or no samples | See `history_ops.ENTITY_METRIC_MAP` (incl. room/clone); wait for ingest |
 | Catalog empty offline | no local sqlite + remote down | Place checkpoint under `/var/lib/dsc-hub/cannalib/` |
+| Catalog search OK but Compose commit 400 on Pi | `input_text` / `script` not in control proxy | Expected — see **HA-coupled SPA surfaces**; use HA lab for Build-a-Plant until brain roster/Want UI lands |
+| Learning / cal buttons 400 on Pi | `script.dsc_cal_*` unsupported | Expected — Learning stays HA-coupled; climate ops still work via FleetSnapshot |
+| Hub Full Auto / demand toggle 500 on Pi | `_HUB_SWITCH_ENTITY_TO_OID` NameError in `control_ops` | Code fix: alias to `HUB_SWITCH_ENTITY_TO_OID`; fan/number/select still OK |
 | Pi power loss | AP dies; relays failsafe OFF | Expected honesty boundary — hub ladder alone cannot reach Sonoffs |
 | DHCP vs static Sonoffs | range starts at `.50` | Always set `dhcp-host=` MAC reservations after flash |
 | HA panel still 7.2.0 | lab surface | OK — product appliance is **7.0.0** on Pi |

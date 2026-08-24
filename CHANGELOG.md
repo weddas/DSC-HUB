@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- **Pi SPA HA-coupled residual (docs)** — Catalog search already uses `/v1/catalogs` on Pi; Compose/Learning/Vessel/Tank still HA-helper coupled (`useHass` + unsupported `/control/service` domains). Ops honesty: [`docs/qa/PI-APPLIANCE-7.0.md`](docs/qa/PI-APPLIANCE-7.0.md) § HA-coupled SPA surfaces.
 - **Pi SPA native fleet reads complete (`4aa67c5`)** — Hub ingest adds room/clone sensors + photoperiod binaries; SPA `useEntityBus` across Mission/Climate/Root/Live/Grow/Tune; `fleetToHassCompat` + history maps expanded; bundle `index-DdObn-6b`. Ops: [`docs/qa/PI-APPLIANCE-7.0.md`](docs/qa/PI-APPLIANCE-7.0.md).
 - **Hub control poll + Climate native reads (`c1a451a`)** — Brain ingests hub switch/number/fan/light/select into `hub.values.controls`; `control_ops` proxies fan/light/select writes; SPA `useFleetEntity` feeds EntityToggle / fans / TentTargets / Climate. Ops: [`docs/qa/PI-APPLIANCE-7.0.md`](docs/qa/PI-APPLIANCE-7.0.md).
 - **FleetSnapshot SPA + prebuilt deploy (`47f6622`)** — Pi UI reads typed `FleetSnapshot` (`/fleet`, `/ws/fleet`); `POST /control/service` + `GET /history` on brain; SPA ships via `Dockerfile.prebuilt` with eth0 bring-up before compose build (hot-patch fallback). Ops: [`docs/qa/PI-APPLIANCE-7.0.md`](docs/qa/PI-APPLIANCE-7.0.md).

@@ -46,7 +46,17 @@ flowchart LR
 |---|---|
 | `useEntityBus()` | Page / strip needs many entity reads (Mission, Climate body, Root, Live, Grow, Light, Tune) |
 | `useFleetEntity(id)` | Single control widget with attributes (`percentage`, `brightness`, `options`) |
-| `useHass()` | Catalog / Compose / Learning / Vessel / Tank (not yet on fleet bus) |
+| `useHass()` | Catalog / Compose / Learning / Vessel / Tank (still HA-helper coupled) |
+
+### HA-coupled residual (Pi honesty)
+
+| Works on Pi | Does **not** (yet) |
+|---|---|
+| Catalog **search** via `GET /v1/catalogs` when `VITE_DSC_PI=1` | Compose commit/assign/mix (`input_text` / `script.*`) |
+| Ops pages on FleetSnapshot | Learning cal scripts + learn helpers |
+| Charts via `GET /history` | Vessel / Tank helper reads/writes |
+
+`POST /control/service` allow-list is hub/Sonoff/in-service only — see [`docs/qa/PI-APPLIANCE-7.0.md`](../qa/PI-APPLIANCE-7.0.md) § HA-coupled SPA surfaces. Prefer brain `/roster`, `/want`, `/v1/catalogs` when migrating Build-a-Plant off HA.
 
 ## API dependency
 
