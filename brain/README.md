@@ -2,7 +2,7 @@
 
 Offline brain package: load curated catalogs into SQLite, resolve Want bands, dry-run decision ticks, and expose a small HTTP API.
 
-Canonical product story: [`docs/DSC-BRAIN.md`](../docs/DSC-BRAIN.md) · Notion [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d3407556c)
+Canonical product story: [`docs/DSC-BRAIN.md`](../docs/DSC-BRAIN.md) · ops [`docs/qa/PI-APPLIANCE-7.0.md`](../docs/qa/PI-APPLIANCE-7.0.md) · Notion [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d3407556c)
 
 ## Quick start
 
@@ -23,7 +23,10 @@ python -m dsc_brain.api   # http://127.0.0.1:8787/docs
 | `dsc_brain/catalog.py` | YAML/JSON packs → SQLite |
 | `dsc_brain/want.py` | Want resolution |
 | `dsc_brain/decision_loop.py` | Need vs Got + proposal |
-| `dsc_brain/api.py` | FastAPI surface for future web UI |
+| `dsc_brain/appliance_driver.py` | Hub demand → Sonoff `main_relay` (Pi path) |
+| `dsc_brain/network_apply.py` | hostapd/dnsmasq render (AP PSK from settings) |
+| `dsc_brain/settings.py` | Defaults + inventory seats (`10.42.0.x`) |
+| `dsc_brain/api.py` | FastAPI + SPA surface |
 | `dsc_brain/cli.py` | Offline ops without a server |
 
 Catalog authoring remains under `homeassistant/data/` until packs move; the brain **loads** them without needing Home Assistant.

@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- **Pi AP PSK defaults (`8867b33`)** — Brain settings / network apply / `pi-bootstrap` / `env.example` default AP PSK matches fleet firmware secrets (no more `changeme-dsc-brain`). Live repair: `services/dsc-hub/pi/fix-ap-psk.sh`. Ops: [`docs/qa/PI-APPLIANCE-7.0.md`](docs/qa/PI-APPLIANCE-7.0.md).
 - **SoftAP-local fleet cutover 6.0.0.0** — Hub/Control/Pot1/2/4/Sonoffs SoftAP-only
   STA (`DSC-Anchor` + BSSID pin + SoftAP static IPs); Nest STA removed; SoftAP-down
   recovery = device Fallback AP (Control has no captive_portal — RAM). Fleet Fix
