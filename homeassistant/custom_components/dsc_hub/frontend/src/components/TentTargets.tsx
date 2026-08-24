@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useHass } from "../hooks/useHass";
+import { useFleetActions } from "../hooks/useFleetActions";
 import { useHeldReading } from "../hooks/useHeldReading";
 import { OverflowMenu } from "./chrome";
 import { draftTone, tentWantRail } from "../lib/tentWant";
@@ -46,7 +47,8 @@ export function TargetNumber({
   hint?: string;
   onLive?: (value: number) => void;
 }) {
-  const { num, available, callService, entity } = useHass();
+  const { num, available, entity } = useHass();
+  const { callService: fleetCallService } = useFleetActions();
   const ok = available(entityId);
   const ent = entity(entityId);
   const live = num(entityId, NaN);
@@ -70,7 +72,7 @@ export function TargetNumber({
     const clamped = Math.min(max, Math.max(min, v));
     const domain = entityId.split(".")[0];
     const svc = domain === "input_number" ? "input_number" : "number";
-    void callService(svc, "set_value", { entity_id: entityId, value: clamped });
+    void fleetCallService(svc, "set_value", { entity_id: entityId, value: clamped });
     setDraft(String(clamped));
   };
 

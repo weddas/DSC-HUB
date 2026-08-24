@@ -9,7 +9,7 @@ import time
 from typing import Any
 
 from .native_api import make_api_client
-from .settings import get_setting, list_inventory
+from .settings import get_setting, list_inventory, record_history
 
 _logger = logging.getLogger(__name__)
 
@@ -125,6 +125,7 @@ async def _set_sonoff_relay(seat_id: str, on: bool, inventory: dict[str, dict[st
             return
         client.switch_command(key, on)
         _relay_commanded[seat_id] = on
+        record_history(seat_id, "relay_on", 1.0 if on else 0.0, time.time())
         _logger.info("appliance %s main_relay -> %s", seat_id, "ON" if on else "OFF")
     except Exception as exc:  # noqa: BLE001
         _logger.warning("Sonoff %s @ %s command failed: %s", seat_id, host, exc)

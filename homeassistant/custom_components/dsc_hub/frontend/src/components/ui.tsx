@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { iconSvg, type IconName } from "../icons";
 import { useHass } from "../hooks/useHass";
+import { useFleetActions } from "../hooks/useFleetActions";
 
 export type { IconName };
 
@@ -226,7 +227,8 @@ export function EntityToggle({
   icon?: IconName;
   showBrightness?: boolean;
 }) {
-  const { state, available, callService, entity } = useHass();
+  const { state, available, entity } = useHass();
+  const { callService } = useFleetActions();
   const on = state(entityId, "off") === "on";
   const ok = available(entityId);
   const domain = entityId.split(".")[0];
@@ -234,7 +236,7 @@ export function EntityToggle({
   const toggle = () => {
     if (!ok) return;
     if (domain === "switch" || domain === "input_boolean") {
-      void callService("homeassistant", "toggle", { entity_id: entityId });
+      void callService(domain, on ? "turn_off" : "turn_on", { entity_id: entityId });
       return;
     }
     if (domain === "light") {
@@ -273,7 +275,8 @@ export function EntitySelect({
   label: string;
   icon?: IconName;
 }) {
-  const { state, available, callService, entity } = useHass();
+  const { state, available, entity } = useHass();
+  const { callService } = useFleetActions();
   const ok = available(entityId);
   const current = state(entityId, "");
   const options = (entity(entityId)?.attributes?.options as string[] | undefined) || [];
@@ -340,7 +343,8 @@ export function EntityFanSlider({
   label: string;
   disabled?: boolean;
 }) {
-  const { available, callService, entity, state } = useHass();
+  const { available, entity, state } = useHass();
+  const { callService } = useFleetActions();
   const ok = available(entityId);
   const pct = Number(entity(entityId)?.attributes?.percentage ?? 0);
   const isOn = state(entityId) === "on";
@@ -437,7 +441,8 @@ export function EntityText({
   multiline?: boolean;
   rows?: number;
 }) {
-  const { available, callService, state } = useHass();
+  const { available, state } = useHass();
+  const { callService } = useFleetActions();
   const ok = available(entityId);
   const clean = liveText(state(entityId, ""));
   const [draft, setDraft] = useState(clean);
@@ -489,7 +494,8 @@ function timeToService(hhmm: string): string {
 
 /** Local draft for `time.*` helpers. Writes `time.set_value`. */
 export function EntityTime({ entityId, label }: { entityId: string; label: string }) {
-  const { available, callService, state } = useHass();
+  const { available, state } = useHass();
+  const { callService } = useFleetActions();
   const ok = available(entityId);
   const live = timeToInput(state(entityId, ""));
   const [draft, setDraft] = useState(live);
@@ -526,7 +532,8 @@ export function EntityTime({ entityId, label }: { entityId: string; label: strin
 
 /** Local draft for `input_datetime.*`. Date-only unless the helper has a time. */
 export function EntityDatetime({ entityId, label }: { entityId: string; label: string }) {
-  const { available, callService, entity, state } = useHass();
+  const { available, entity, state } = useHass();
+  const { callService } = useFleetActions();
   const ok = available(entityId);
   const hasTime = Boolean(entity(entityId)?.attributes?.has_time);
   const live = liveText(state(entityId, ""));

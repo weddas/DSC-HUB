@@ -82,7 +82,7 @@ def test_fleet_state_roundtrip() -> None:
     assert "sensor.dsc_ha_surface_version" in hass
 
 
-def test_fleet_api_includes_hass_states(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_fleet_api_native_snapshot(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("DSC_DATA", str(temp_db.parent))
     from fastapi.testclient import TestClient
 
@@ -92,8 +92,32 @@ def test_fleet_api_includes_hass_states(temp_db: Path, monkeypatch: pytest.Monke
     resp = client.get("/fleet")
     assert resp.status_code == 200
     body = resp.json()
-    assert "hass_states" in body
-    assert "binary_sensor.dsc_hub_link" in body["hass_states"]
+    assert "inventory" in body
+    assert "hub" in body
+    assert "hass_states" not in body
+
+    legacy = client.get("/fleet?include_hass=true")
+    assert legacy.status_code == 200
+    legacy_body = legacy.json()
+    assert "hass_states" in legacy_body
+    assert "binary_sensor.dsc_hub_link" in legacy_body["hass_states"]
+
+
+def test_history_api(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("DSC_DATA", str(temp_db.parent))
+    from fastapi.testclient import TestClient
+
+    from dsc_brain.api import app
+    from dsc_brain.settings import record_history
+
+    record_history("hub", "temp_c", 24.0)
+    record_history("hub", "temp_c", 25.0)
+    client = TestClient(app)
+    resp = client.get("/history", params={"entity_id": "sensor.dsc_hub_tent_temperature", "hours": 6})
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["entity_id"] == "sensor.dsc_hub_tent_temperature"
+    assert len(body["points"]) >= 2
 
 
 def test_health_endpoint() -> None:

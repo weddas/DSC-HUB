@@ -1,26 +1,40 @@
 import { StatusChip } from "./ui";
+import { useHubVitals, useFleet } from "../hooks/useFleet";
 import { useHass } from "../hooks/useHass";
 
-/** D-05: hub_link + ages/bounces/rf — not uptime as SoT. */
+/** D-05: hub_link + ages/bounces/rf — fleet-native link; HA-only extras from entity bus. */
 export function HubLinkLine() {
-  const { available, state } = useHass();
-  const linkOn = state("binary_sensor.dsc_hub_link") === "on";
-  const linkKnown = available("binary_sensor.dsc_hub_link");
-  const age = state("sensor.dsc_hub_api_down_age", "—");
-  const bounce = state("sensor.dsc_hub_link_recovery_bounces", "—");
-  const rf = state("sensor.dsc_hub_rf_status", "—");
-  const handshake = state("sensor.dsc_hub_ha_handshake_age", "—");
+  const { online, uptime, heartbeat } = useHubVitals();
+  const fleet = useFleet();
+  const { state, available } = useHass();
+
+  const age = available("sensor.dsc_hub_api_down_age")
+    ? state("sensor.dsc_hub_api_down_age", "—")
+    : uptime != null
+      ? String(uptime)
+      : "—";
+  const bounce = available("sensor.dsc_hub_link_recovery_bounces")
+    ? state("sensor.dsc_hub_link_recovery_bounces", "—")
+    : "—";
+  const rf = available("sensor.dsc_hub_rf_status") ? state("sensor.dsc_hub_rf_status", "—") : "—";
+  const handshake = available("sensor.dsc_hub_ha_handshake_age")
+    ? state("sensor.dsc_hub_ha_handshake_age", "—")
+    : heartbeat != null
+      ? String(heartbeat)
+      : "—";
+
   return (
     <div className="dsc-chip-row">
       <StatusChip
-        icon={linkOn ? "ok" : "alert"}
-        label={linkKnown ? (linkOn ? "HUB LINK" : "HUB LINK DOWN") : "HUB LINK —"}
-        tone={linkOn ? "ok" : "bad"}
+        icon={online ? "ok" : "alert"}
+        label={online ? "HUB LINK" : "HUB LINK DOWN"}
+        tone={online ? "ok" : "bad"}
       />
       <StatusChip label={`Age ${age}`} tone="muted" />
       <StatusChip label={`Bounces ${bounce}`} tone="muted" />
       <StatusChip label={`RF ${rf}`} tone="muted" />
-      <StatusChip label={`Handshake ${handshake}`} tone="muted" />
+      <StatusChip label={`Beat ${handshake}`} tone="muted" />
+      {fleet.surface ? <StatusChip label={fleet.surface} tone="muted" /> : null}
     </div>
   );
 }

@@ -200,6 +200,27 @@ def record_history(
     conn.close()
 
 
+def list_history(
+    seat_id: str,
+    metric: str,
+    since_ts: float,
+    limit: int = 2000,
+    db_path: Path | None = None,
+) -> list[dict[str, Any]]:
+    conn = connect(db_path)
+    rows = conn.execute(
+        """
+        SELECT value, ts FROM fleet_history
+        WHERE seat_id=? AND metric=? AND ts>=?
+        ORDER BY ts ASC
+        LIMIT ?
+        """,
+        (seat_id, metric, since_ts, limit),
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
 def list_roster(db_path: Path | None = None) -> list[dict[str, Any]]:
     conn = connect(db_path)
     rows = conn.execute(

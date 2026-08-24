@@ -1,0 +1,15 @@
+[Unit]
+Description=Bring up eth0 via dhcpcd (house LAN uplink)
+After=network-pre.target
+Before=network-online.target docker.service
+Wants=network-pre.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/sbin/dhcpcd -b eth0
+ExecStop=/sbin/dhcpcd -k eth0
+TimeoutStartSec=30
+
+[Install]
+WantedBy=multi-user.target

@@ -68,9 +68,12 @@ const TICK_DEBOUNCE_MS = 150;
 
 export function HassProvider({
   hass,
+  revision = 0,
   children,
 }: {
   hass: HomeAssistant | null;
+  /** Pi brain fleet revision — forces context refresh when synthetic states update. */
+  revision?: number;
   children: ReactNode;
 }) {
   const [tick, setTick] = useState(0);
@@ -92,6 +95,11 @@ export function HassProvider({
   useEffect(() => {
     if (hassPresent) bumpTick();
   }, [hassPresent]);
+
+  // Pi SPA: brain pushes new synthetic states via revision without HA connection events.
+  useEffect(() => {
+    if (revision > 0) bumpTick();
+  }, [revision]);
 
   useEffect(() => {
     if (!conn?.subscribeEvents) return;

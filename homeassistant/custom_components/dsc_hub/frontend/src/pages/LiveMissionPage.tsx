@@ -19,7 +19,8 @@ import { readPotTrust } from "../lib/potTrust";
 import { resolveCfm } from "../lib/cfmProvenance";
 import { CfmTrustLine } from "../components/CfmBadge";
 import { KitPulse } from "../components/KitPulse";
-import { buildKitNodes, kitInServiceCount, type KitNode } from "../lib/kitInventory";
+import { buildKitNodesFromFleet, kitInServiceCount, type KitNode } from "../lib/kitInventory";
+import { useFleet } from "../hooks/useFleet";
 import { useSettledAvailability } from "../hooks/useSettledAvailability";
 import { useAlertSnooze } from "../hooks/useAlertSnooze";
 import { useInspector } from "../components/InspectorHost";
@@ -27,6 +28,7 @@ import { ALERT_ENTITY_IDS } from "../lib/alertPlaybook";
 
 export function LiveMissionPage() {
   const { state, num, available, entity, tick } = useHass();
+  const fleet = useFleet();
   const navigate = useNavigate();
   const [searchOpen, setSearchOpen] = useState(false);
   const settled = useSettledAvailability();
@@ -34,7 +36,7 @@ export function LiveMissionPage() {
   const inspector = useInspector();
   void tick;
 
-  const hubOnline = settled("sensor.dsc_hub_uptime");
+  const hubOnline = fleet.hub.online || settled("sensor.dsc_hub_uptime");
   const offlineMs = useHubOfflineMs();
   const beatOfflineMs = useBeatOfflineMs();
   const panelOfflineMs = usePanelOfflineMs();
@@ -52,24 +54,30 @@ export function LiveMissionPage() {
   const potM4 = useHeldReading("sensor.dsc_pot4_got_moisture");
   const potMoistureHeld = [potM1, potM2, potM3, potM4];
 
-  const panelLink = state("binary_sensor.dsc_hub_panel_link");
-  const panelOk = panelLink === "on";
-  const heartbeat = state("sensor.dsc_hub_heartbeat", "NO BEAT");
-  const beatOk = settled("sensor.dsc_hub_heartbeat");
+  const panelLink = fleet.panel.online ? "on" : state("binary_sensor.dsc_hub_panel_link");
+  const panelOk = fleet.panel.online || panelLink === "on";
+  const heartbeat = fleet.hub.values.heartbeat != null
+    ? String(fleet.hub.values.heartbeat)
+    : state("sensor.dsc_hub_heartbeat", "NO BEAT");
+  const beatOk =
+    fleet.hub.online && fleet.hub.values.heartbeat != null
+      ? true
+      : settled("sensor.dsc_hub_heartbeat");
   const takeover = state("switch.dsc_hub_manual_takeover") === "on";
   const fanOverride = state("switch.dsc_hub_tent_manual_override") === "on";
   const fullAuto = state("switch.dsc_hub_tent_full_auto_mode") === "on";
   const reducedKit = state("binary_sensor.dsc_reduced_kit") === "on";
   const honesty = String(entity("sensor.dsc_keepup_gaps")?.attributes?.full_auto_honesty ?? "");
   const autoDriven = fullAuto && !takeover;
-  const fleet = state("sensor.dsc_fleet_version_status", "—");
+  const fleetStatus = state("sensor.dsc_fleet_version_status", fleet.expected_firmware || "—");
+  const fleetLabel = fleet.version === fleet.expected_firmware ? "ok" : fleetStatus === "warn" ? "warn" : "drift";
 
   const activeFaults = ALERT_ENTITY_IDS.filter((id) => state(id) === "on" && !isSnoozed(id)).map((id) => ({
     id,
     label: id.split(".").pop()?.replace(/dsc_/, "").replace(/_/g, " ") || id,
   }));
   const seats = ALL_POT_NUMBERS.map((n) => buildPlantSeat(n, { state, entity }));
-  const kitNodes: KitNode[] = buildKitNodes({ state, available }, settled);
+  const kitNodes: KitNode[] = buildKitNodesFromFleet(fleet);
   const svc = kitInServiceCount(kitNodes);
   const outCfm = resolveCfm("sensor.dsc_cfm_exhaust_out_allocated", "sensor.dsc_cfm_exhaust_out", {
     available,
@@ -185,12 +193,12 @@ export function LiveMissionPage() {
           }}
         />
         <StatusChip
-          label={fleet === "ok" ? "FLEET OK" : fleet === "warn" ? "FLEET WARN" : "FLEET DRIFT"}
-          tone={fleet === "ok" ? "ok" : fleet === "warn" ? "warn" : "bad"}
+          label={fleetLabel === "ok" ? "FLEET OK" : fleetLabel === "warn" ? "FLEET WARN" : "FLEET DRIFT"}
+          tone={fleetLabel === "ok" ? "ok" : fleetLabel === "warn" ? "warn" : "bad"}
           onClick={() =>
             inspector.open({
               entityId: "sensor.dsc_fleet_version_status",
-              label: "Fleet version",
+              label: `Fleet ${fleet.expected_firmware}`,
               kind: "fleet",
             })
           }

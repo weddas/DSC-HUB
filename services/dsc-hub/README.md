@@ -24,6 +24,30 @@ Raspberry Pi 4 product stack: brain + SPA (`:8787`), optional local CannaLib fal
 | zigbee2mqtt | —    | SkyConnect coordinator                    |
 | esphome   | 6052   | OTA / compile dashboard (AP-only)         |
 
+## Deploy brain to Pi (Windows → DSC-Brain AP)
+
+From repo root when Pi is on `10.42.0.1`:
+
+```powershell
+services/dsc-hub/pi/deploy-brain.ps1
+```
+
+This builds the Pi SPA, uploads brain Python + static, then on the Pi:
+1. Tries `docker compose build brain` (needs Docker Hub / eth0)
+2. Falls back to hot-patch if offline
+3. Logs deploy mode: `image-build` or `hot-patch`
+
+Verify after deploy:
+
+```bash
+curl -s http://10.42.0.1:8787/health
+curl -s http://10.42.0.1:8787/fleet | jq '.hub.online, .surface, .inventory | length'
+```
+
+Hard refresh `http://10.42.0.1:8787/#/fleet` (Ctrl+Shift+R).
+
+Pi layout: `/opt/dsc-hub` (compose), `/opt/dsc-hub-repo` (full repo for builds). Bootstrap creates both symlinks.
+
 ## Build brain image (dev)
 
 ```bash

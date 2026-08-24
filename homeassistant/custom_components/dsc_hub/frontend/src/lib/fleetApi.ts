@@ -1,3 +1,30 @@
+export async function get_entity_history(
+  entityId: string,
+  hours = 6,
+): Promise<Array<{ t: number; v: number }>> {
+  const resp = await fetch(`/history?entity_id=${encodeURIComponent(entityId)}&hours=${hours}`);
+  if (!resp.ok) return [];
+  const data = (await resp.json()) as { points?: Array<{ t: number; v: number }> };
+  return data.points ?? [];
+}
+
+export async function call_service(
+  domain: string,
+  service: string,
+  data: Record<string, unknown> = {},
+): Promise<unknown> {
+  const resp = await fetch("/control/service", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ domain, service, data }),
+  });
+  if (!resp.ok) {
+    const text = await resp.text();
+    throw new Error(text || "service call failed");
+  }
+  return resp.json();
+}
+
 export async function get_fleet_state(): Promise<Record<string, unknown>> {
   const resp = await fetch("/fleet");
   if (!resp.ok) throw new Error("fleet fetch failed");

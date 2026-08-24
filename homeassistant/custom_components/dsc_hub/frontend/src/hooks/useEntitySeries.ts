@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useHass } from "./useHass";
+import { useFleet, useFleetSource, useFleetTick } from "./useFleet";
+import { fleetEntityAvailable, fleetLiveNumber } from "../lib/entityFleetMap";
 import { useHistory } from "./useHistory";
 import type { SeriesPoint } from "../viz/charts";
 import { stateToNumber, stepHoldSeries } from "../lib/seriesHold";
@@ -36,6 +38,9 @@ export function useEntitySeries(
   const fetchHours = withGhost ? ghostSpanHours(hours) : hours;
   const fetchPoints = withGhost ? Math.min(Math.max(maxPoints * 2, maxPoints), 288) : maxPoints;
   const { num, available, tick, state } = useHass();
+  const fleet = useFleet();
+  const source = useFleetSource();
+  const fleetTick = useFleetTick();
   const { points: seed } = useHistory(entityId, fetchHours, fetchPoints);
   const [live, setLive] = useState<SeriesPoint[]>([]);
   const [lastSyncAt, setLastSyncAt] = useState<number | undefined>(undefined);
@@ -58,9 +63,16 @@ export function useEntitySeries(
   }, [seed]);
 
   useEffect(() => {
-    if (!entityId || !available(entityId)) return;
+    const liveOk = source === "pi" ? fleetEntityAvailable(entityId, fleet) : available(entityId);
+    if (!entityId || !liveOk) return;
+    const fleetNum = source === "pi" ? fleetLiveNumber(entityId, fleet) : null;
     const raw = num(entityId);
-    const mapped = Number.isFinite(raw) ? raw : stateToNumber(state(entityId, ""));
+    const mapped =
+      fleetNum != null && Number.isFinite(fleetNum)
+        ? fleetNum
+        : Number.isFinite(raw)
+          ? raw
+          : stateToNumber(state(entityId, ""));
     if (mapped == null || !Number.isFinite(mapped)) return;
     if (last.current === mapped && live.length > 0) {
       const now = Date.now();
@@ -74,9 +86,9 @@ export function useEntitySeries(
       return next.slice(-maxPoints);
     });
     setLastSyncAt(now);
-    // tick drives live appends from HassProvider state_changed
+    // tick / fleetTick drives live appends
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entityId, tick, available, num, state, maxPoints]);
+  }, [entityId, tick, fleetTick, source, fleet, available, num, state, maxPoints]);
 
   const heldCap = withGhost ? Math.max(fetchPoints, maxPoints * 2) : maxPoints * 2;
   const { series, ghost } = useMemo(() => {

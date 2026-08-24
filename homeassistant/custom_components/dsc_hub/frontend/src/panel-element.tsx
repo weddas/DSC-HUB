@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { HashRouter } from "react-router-dom";
 import { App, DSC_PANEL_CSS } from "./App";
+import { FleetProvider } from "./hooks/useFleet";
 import type { HomeAssistant } from "./vite-env";
 
 function PanelRoot({
@@ -10,9 +11,13 @@ function PanelRoot({
   panel: DscHubPanel;
 }) {
   const [hass, setHass] = useState<HomeAssistant | null>(() => panel.hass);
+  const [tick, setTick] = useState(0);
 
   useEffect(() => {
-    const sync = () => setHass(panel.hass);
+    const sync = () => {
+      setHass(panel.hass);
+      setTick((t) => t + 1);
+    };
     sync();
     panel.addEventListener("hass-updated", sync);
     return () => {
@@ -21,9 +26,11 @@ function PanelRoot({
   }, [panel]);
 
   return (
-    <HashRouter>
-      <App hass={hass} />
-    </HashRouter>
+    <FleetProvider hass={hass} tick={tick} source="ha">
+      <HashRouter>
+        <App hass={hass} fleetSource="ha" />
+      </HashRouter>
+    </FleetProvider>
   );
 }
 

@@ -11,22 +11,66 @@ $RepoRoot = Resolve-Path (Join-Path $PSScriptRoot "..\..\..")
 $EnvFile = Join-Path $RepoRoot "services\dsc-hub\.env"
 $BrainDir = Join-Path $RepoRoot "brain"
 $FirmwareHub = Join-Path $RepoRoot "firmware\v4\dsc-hub.yaml"
+$FrontendDir = Join-Path $RepoRoot "homeassistant\custom_components\dsc_hub\frontend"
+$ComposeFile = Join-Path $RepoRoot "services\dsc-hub\docker-compose.yml"
+$DockerPrebuilt = Join-Path $RepoRoot "services\dsc-hub\brain\Dockerfile.prebuilt"
 $RemoteSh = Join-Path $PSScriptRoot "deploy-brain-remote.sh"
 
 $plink = "plink -batch -hostkey `"$HostKey`" -pw $PiPassword ${PiUser}@${PiHost}"
 $pscp = "pscp -batch -hostkey `"$HostKey`" -pw $PiPassword"
 
+Write-Host "Build Pi SPA..."
+Push-Location $FrontendDir
+& npm.cmd run build:spa
+if ($LASTEXITCODE -ne 0) { throw "SPA build failed" }
+Pop-Location
+
+$SpaIndex = Join-Path $FrontendDir "spa-dist\index.html"
+if (Test-Path $SpaIndex) {
+    $indexHtml = Get-Content $SpaIndex -Raw
+    if ($indexHtml -match 'assets/(index-[^"]+\.js)') {
+        Write-Host "SPA bundle: $($Matches[1])"
+    }
+}
+
 Write-Host "Upload brain source..."
 $TarPath = Join-Path $env:TEMP "dsc-brain-src.tgz"
+$SpaTarPath = Join-Path $env:TEMP "dsc-spa-static.tgz"
 if (Test-Path $TarPath) { Remove-Item $TarPath -Force }
+if (Test-Path $SpaTarPath) { Remove-Item $SpaTarPath -Force }
 Push-Location $BrainDir
 tar -czf $TarPath dsc_brain requirements.txt
 Pop-Location
+Push-Location (Join-Path $FrontendDir "spa-dist")
+tar -czf $SpaTarPath .
+Pop-Location
 
-Invoke-Expression "$pscp `"$EnvFile`" ${PiUser}@${PiHost}:/tmp/dsc-hub.env"
+$DataDir = Join-Path $RepoRoot "homeassistant\data"
+$DataTarPath = Join-Path $env:TEMP "dsc-ha-data.tgz"
+if (Test-Path $DataTarPath) { Remove-Item $DataTarPath -Force }
+Push-Location $DataDir
+tar -czf $DataTarPath --exclude=_cache_cannareviews *
+Pop-Location
+
+# Normalize .env to LF before upload (prevents .env\r on Pi)
+$EnvUpload = Join-Path $env:TEMP "dsc-hub.env"
+if (Test-Path $EnvFile) {
+    $envText = [System.IO.File]::ReadAllText($EnvFile) -replace "`r`n", "`n" -replace "`r", "`n"
+    [System.IO.File]::WriteAllText($EnvUpload, $envText)
+} else {
+    throw "Missing $EnvFile"
+}
+
+Invoke-Expression "$pscp `"$EnvUpload`" ${PiUser}@${PiHost}:/tmp/dsc-hub.env"
 Invoke-Expression "$pscp `"$FirmwareHub`" ${PiUser}@${PiHost}:/tmp/dsc-hub.yaml"
 Invoke-Expression "$pscp `"$TarPath`" ${PiUser}@${PiHost}:/tmp/dsc-brain-src.tgz"
+Invoke-Expression "$pscp `"$SpaTarPath`" ${PiUser}@${PiHost}:/tmp/dsc-spa-static.tgz"
+Invoke-Expression "$pscp `"$DataTarPath`" ${PiUser}@${PiHost}:/tmp/dsc-ha-data.tgz"
 Invoke-Expression "$pscp `"$RemoteSh`" ${PiUser}@${PiHost}:/tmp/deploy-brain-remote.sh"
+Invoke-Expression "$pscp `"$ComposeFile`" ${PiUser}@${PiHost}:/tmp/docker-compose.yml"
+Invoke-Expression "$pscp `"$DockerPrebuilt`" ${PiUser}@${PiHost}:/tmp/Dockerfile.prebuilt"
+$EthScript = Join-Path $PSScriptRoot "bring-up-eth0.sh"
+Invoke-Expression "$pscp `"$EthScript`" ${PiUser}@${PiHost}:/tmp/bring-up-eth0.sh"
 
 Write-Host "Apply on Pi + rebuild brain container..."
 Invoke-Expression "$plink `"tr -d '\r' < /tmp/deploy-brain-remote.sh > /tmp/deploy.sh; bash /tmp/deploy.sh $PiPassword`""

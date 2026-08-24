@@ -18,6 +18,7 @@ import { TentTargetPanel } from "../components/TentTargets";
 import { resolveCfm } from "../lib/cfmProvenance";
 import { absoluteHumidity } from "../lib/potTrust";
 import { useHass } from "../hooks/useHass";
+import { useFleet, useHubVitals, useFleetSource, useFleetTick } from "../hooks/useFleet";
 import { useEntitySeries } from "../hooks/useEntitySeries";
 import { useHeldReading } from "../hooks/useHeldReading";
 import { useChartHours } from "../hooks/useChartHours";
@@ -61,6 +62,9 @@ const FOCUS_OPTIONS: { id: ZoneFocus; label: string }[] = [
 
 export function LiveClimatePage() {
   const { num, state, entity, available } = useHass();
+  const fleet = useFleet();
+  const hubVitals = useHubVitals();
+  void fleet;
   const navigate = useNavigate();
   const inspector = useInspector();
   const { focus, setFocus } = useZoneFocus();
@@ -172,6 +176,15 @@ export function LiveClimatePage() {
       />
 
       <div className="dsc-chip-row" style={{ marginBottom: 14 }} role="group" aria-label="Zone emphasis">
+        <StatusChip
+          icon={hubVitals.online ? "ok" : "alert"}
+          label={
+            hubVitals.online
+              ? `Hub ${hubVitals.temp_c != null ? `${hubVitals.temp_c.toFixed(1)}°C` : "live"}`
+              : "Hub offline"
+          }
+          tone={hubVitals.online ? "ok" : "bad"}
+        />
         {FOCUS_OPTIONS.map((opt) => (
           <button
             key={opt.id}

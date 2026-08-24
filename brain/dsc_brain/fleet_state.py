@@ -103,11 +103,19 @@ class FleetState:
 
         if self.hub.values.get("temp_c") is not None:
             set_entity("sensor.dsc_hub_temperature", self.hub.values["temp_c"])
+            set_entity("sensor.dsc_hub_tent_temperature", self.hub.values["temp_c"])
         if self.hub.values.get("rh_pct") is not None:
             set_entity("sensor.dsc_hub_humidity", self.hub.values["rh_pct"])
+            set_entity("sensor.dsc_hub_tent_humidity", self.hub.values["rh_pct"])
         if self.hub.values.get("vpd_kpa") is not None:
             set_entity(
                 "sensor.dsc_hub_vpd",
+                self.hub.values["vd_kpa"]
+                if "vd_kpa" in self.hub.values
+                else self.hub.values["vpd_kpa"],
+            )
+            set_entity(
+                "sensor.dsc_hub_vpd_kpa",
                 self.hub.values["vd_kpa"]
                 if "vd_kpa" in self.hub.values
                 else self.hub.values["vpd_kpa"],

@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useHass } from "./useHass";
+import { useFleet, useFleetSource } from "./useFleet";
+import { fleetEntityAvailable, fleetLiveNumber, hubFleetDark } from "../lib/entityFleetMap";
 
 export type HeldReading = {
   value: number;
@@ -22,24 +24,32 @@ function parseLiveNumber(raw: string | undefined, liveOk: boolean): number {
 
 /**
  * UI-only last-known-good numeric reading.
- * Never writes fake HA states; never maps unavailable → 0.
+ * Pi: prefers fleet metric; HA: entity bus. Never maps unavailable → 0.
  */
 export function useHeldReading(entityId: string): HeldReading {
   const { available, tick, entity } = useHass();
+  const fleet = useFleet();
+  const source = useFleetSource();
   const hold = useRef<{ value: number; at: number } | null>(null);
   const prevId = useRef(entityId);
   const [, bump] = useState(0);
 
-  // Switching pots/entities must not flash the previous row's HELD value.
   if (prevId.current !== entityId) {
     prevId.current = entityId;
     hold.current = null;
   }
 
-  const hubDark = !available(HUB_UPTIME) || !available(HUB_BEAT);
-  const liveOk = available(entityId);
-  const raw = parseLiveNumber(entity(entityId)?.state, liveOk);
-  // Hub-dark + 0 only: keep prior hold. Live 0 while hub is online stays live.
+  const fleetVal = source === "pi" ? fleetLiveNumber(entityId, fleet) : null;
+  const fleetOk = source === "pi" ? fleetEntityAvailable(entityId, fleet) : false;
+  const hubDark =
+    source === "pi"
+      ? hubFleetDark(fleet)
+      : !available(HUB_UPTIME) || !available(HUB_BEAT);
+  const liveOk = source === "pi" ? fleetOk || available(entityId) : available(entityId);
+  const raw =
+    fleetVal != null && Number.isFinite(fleetVal)
+      ? fleetVal
+      : parseLiveNumber(entity(entityId)?.state, liveOk);
   const suspiciousZero = hubDark && raw === 0;
 
   useEffect(() => {
@@ -69,7 +79,10 @@ export function useHeldReading(entityId: string): HeldReading {
 
 function useOfflineMs(entityId: string): number | null {
   const { available, entity, tick } = useHass();
+  const fleet = useFleet();
+  const source = useFleetSource();
   void tick;
+  if (source === "pi" && entityId === HUB_UPTIME && fleet.hub.online) return null;
   if (available(entityId)) return null;
   const lc = entity(entityId)?.last_changed;
   if (!lc) return null;
@@ -79,7 +92,13 @@ function useOfflineMs(entityId: string): number | null {
 
 /** Hub offline duration from uptime entity last_changed. */
 export function useHubOfflineMs(): number | null {
-  return useOfflineMs(HUB_UPTIME);
+  const fleet = useFleet();
+  const source = useFleetSource();
+  const fromEntity = useOfflineMs(HUB_UPTIME);
+  if (source === "pi" && !fleet.hub.online && fleet.hub.last_seen) {
+    return Date.now() - fleet.hub.last_seen * 1000;
+  }
+  return fromEntity;
 }
 
 export function useBeatOfflineMs(): number | null {
@@ -87,5 +106,10 @@ export function useBeatOfflineMs(): number | null {
 }
 
 export function usePanelOfflineMs(): number | null {
+  const fleet = useFleet();
+  const source = useFleetSource();
+  if (source === "pi" && !fleet.panel.online && fleet.panel.last_seen) {
+    return Date.now() - fleet.panel.last_seen * 1000;
+  }
   return useOfflineMs("binary_sensor.dsc_hub_panel_link");
 }

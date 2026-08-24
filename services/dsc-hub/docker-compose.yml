@@ -6,7 +6,7 @@ services:
   brain:
     build:
       context: ../..
-      dockerfile: services/dsc-hub/brain/Dockerfile
+      dockerfile: services/dsc-hub/brain/Dockerfile.prebuilt
     image: dsc-hub-brain:7.0.0-dev
     container_name: dsc-hub-brain
     restart: unless-stopped

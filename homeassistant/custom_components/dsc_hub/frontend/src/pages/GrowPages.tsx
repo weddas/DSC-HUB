@@ -6,6 +6,7 @@ import { OverflowMenu, SoilCrossSection, SlideDrawer } from "../components/chrom
 import { HistoryDrawer } from "../components/HistoryDrawer";
 import { Button, Card, PageHeader, StatusChip } from "../components/ui";
 import { useHass } from "../hooks/useHass";
+import { useFleetActions } from "../hooks/useFleetActions";
 import { useEntitySeries } from "../hooks/useEntitySeries";
 import { useHeldReading } from "../hooks/useHeldReading";
 import { ArcGauge, GotWantBars, MultiLineChart } from "../viz/charts";
@@ -32,7 +33,8 @@ export function PlantSeatPanel({
   pot: number;
   onSelectPot?: (n: number) => void;
 }) {
-  const { hass, state, entity, callService, available, tick, num } = useHass();
+  const { hass, state, entity, available, tick, num } = useHass();
+  const { callService } = useFleetActions();
   const navigate = useNavigate();
   void tick;
   const seat = buildPlantSeat(pot, { state, entity });

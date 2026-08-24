@@ -11,7 +11,8 @@ import { useChartHours } from "../hooks/useChartHours";
 import { MultiLineChart } from "../viz/charts";
 import { ALL_POT_NUMBERS, isPotInService, potGotEntity } from "../lib/seatModel";
 import { resolveCfm } from "../lib/cfmProvenance";
-import { buildKitNodes, kitInServiceCount, type KitNode } from "../lib/kitInventory";
+import { buildKitNodesFromFleet, kitInServiceCount, type KitNode } from "../lib/kitInventory";
+import { useFleet } from "../hooks/useFleet";
 import { useSettledAvailability } from "../hooks/useSettledAvailability";
 import { useInspector } from "../components/InspectorHost";
 
@@ -142,9 +143,9 @@ export function TuneAnalyticsPage() {
 
 export function FleetOverviewPage() {
   const { state, available, num } = useHass();
-  const settled = useSettledAvailability();
+  const fleet = useFleet();
   const inspector = useInspector();
-  const kit: KitNode[] = buildKitNodes({ state, available }, settled);
+  const kit: KitNode[] = buildKitNodesFromFleet(fleet);
   const svc = kitInServiceCount(kit);
   const out = resolveCfm("sensor.dsc_cfm_exhaust_out_allocated", "sensor.dsc_cfm_exhaust_out", {
     available,
@@ -191,7 +192,7 @@ export function FleetOverviewPage() {
         <div className="dsc-col-4">
           <Kpi
             label="Surface"
-            value={state("sensor.dsc_ha_surface_version", "7.2.0")}
+            value={fleet.surface || state("sensor.dsc_ha_surface_version", "7.2.0")}
             sub="Panel product shell"
           />
         </div>

@@ -174,6 +174,78 @@ export function collectHonestyGaps(hass: HassLike): HonestyGap[] {
   return gaps.sort((a, b) => a.priority - b.priority);
 }
 
+export function collectHonestyGapsFromFleet(
+  fleet: import("./fleetModel").FleetSnapshot,
+  hass?: HassLike,
+): HonestyGap[] {
+  const gaps: HonestyGap[] = [];
+
+  if (!fleet.hub.online) {
+    gaps.push({
+      id: "hub-link",
+      label: "Hub link down",
+      detail: "Hub offline on fleet bus — Mission/Fleet show HELD, not last-good animation.",
+      tone: "bad",
+      href: "/fleet",
+      cta: "Open Fleet",
+      priority: 9,
+    });
+    gaps.push({
+      id: "hub-dark",
+      label: "Hub offline",
+      detail: "Showing last good vitals. Reconnect snaps to live.",
+      tone: "bad",
+      href: "/fleet",
+      cta: "Open Fleet",
+      priority: 10,
+    });
+  }
+
+  if (fleet.hub.online && fleet.hub.values.heartbeat == null) {
+    gaps.push({
+      id: "beat-dark",
+      label: "Beat dark",
+      detail: "Hub heartbeat unavailable — Mission shows BEAT OFF duration; vitals stay held.",
+      tone: "bad",
+      href: "/live/mission",
+      cta: "Mission",
+      priority: 12,
+    });
+  }
+
+  if (!fleet.panel.online) {
+    gaps.push({
+      id: "panel-dark",
+      label: "Panel link dark",
+      detail: "Panel link dark — Mission shows PANEL OFF duration; do not invent Got.",
+      tone: "warn",
+      href: "/fleet",
+      cta: "Open Fleet",
+      priority: 14,
+    });
+  }
+
+  if (fleet.system.reduced_kit) {
+    gaps.push({
+      id: "reduced-kit",
+      label: "Unexpected OOS",
+      detail: "A live lever is temp-OOS or lockout — planned holes are inventory.",
+      tone: "warn",
+      href: "/fleet",
+      cta: "Review kit",
+      priority: 20,
+    });
+  }
+
+  if (hass) {
+    gaps.push(...collectHonestyGaps(hass).filter((g) =>
+      !["hub-link", "hub-dark", "beat-dark", "panel-dark", "reduced-kit"].includes(g.id),
+    ));
+  }
+
+  return gaps.sort((a, b) => a.priority - b.priority);
+}
+
 export function nextRecommended(gaps: HonestyGap[]): HonestyGap | null {
   return gaps[0] ?? null;
 }

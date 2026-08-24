@@ -143,6 +143,12 @@ if [[ ! -e /opt/dsc-hub ]]; then
   ln -sfn "${COMPOSE_DIR}" /opt/dsc-hub
 fi
 
+# Full repo path for docker compose build + deploy hot-patch source
+REPO_ROOT="$(cd "${COMPOSE_DIR}/../.." && pwd)"
+if [[ ! -e /opt/dsc-hub-repo ]]; then
+  ln -sfn "${REPO_ROOT}" /opt/dsc-hub-repo
+fi
+
 echo "Bootstrap complete. Next:"
 echo "  1. Edit ${COMPOSE_DIR}/.env (API keys, AP PSK, SkyConnect by-id)"
 echo "  2. Copy CannaLib checkpoint sqlite to ${DSC_DATA}/cannalib/dsc_brain.sqlite3"

@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
 import { useHass } from "./useHass";
+import { useFleetSource, useFleetTick } from "./useFleet";
+import { fleetEntityAvailable, fleetLiveNumber } from "../lib/entityFleetMap";
+import { get_entity_history } from "../lib/fleetApi";
 import type { SeriesPoint } from "../viz/charts";
 import { stateToNumber } from "../lib/seriesHold";
 
@@ -40,8 +43,7 @@ function downsample(points: SeriesPoint[], maxPoints: number): SeriesPoint[] {
 }
 
 /**
- * Seed a numeric series from HA history for the last `hours`, then keep it
- * static (live append is handled by useEntitySeries).
+ * Seed a numeric series from HA history (panel) or brain /history (Pi).
  */
 export function useHistory(
   entityId: string,
@@ -49,16 +51,35 @@ export function useHistory(
   maxPoints = 96,
 ): { points: SeriesPoint[]; loading: boolean; error: string | null } {
   const { hass, callWS } = useHass();
+  const source = useFleetSource();
   const connReady = !!(hass && (hass.callWS || hass.connection));
   const [points, setPoints] = useState<SeriesPoint[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Seed once per entity/window. Do not refetch on DSC ticks / hass identity.
   useEffect(() => {
     let cancelled = false;
 
-    async function load() {
+    async function loadPi() {
+      setLoading(true);
+      setError(null);
+      try {
+        const rows = await get_entity_history(entityId, hours);
+        if (cancelled) return;
+        const series = rows.filter((p) => Number.isFinite(p.t) && Number.isFinite(p.v));
+        series.sort((a, b) => a.t - b.t);
+        setPoints(downsample(series, maxPoints));
+      } catch (e) {
+        if (!cancelled) {
+          setError(e instanceof Error ? e.message : "history unavailable");
+          setPoints([]);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    async function loadHa() {
       if (!entityId) {
         setPoints([]);
         setLoading(false);
@@ -117,12 +138,16 @@ export function useHistory(
       }
     }
 
-    void load();
+    if (source === "pi") {
+      void loadPi();
+    } else {
+      void loadHa();
+    }
+
     return () => {
       cancelled = true;
     };
-    // callWS is identity-stable; omit tick / hass object
-  }, [connReady, entityId, hours, maxPoints, callWS]);
+  }, [source, connReady, entityId, hours, maxPoints, callWS]);
 
   return { points, loading, error };
 }

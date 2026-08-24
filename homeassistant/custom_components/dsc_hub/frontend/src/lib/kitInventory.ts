@@ -1,4 +1,6 @@
 import { ALL_POT_NUMBERS, isPotInService } from "./seatModel";
+import type { FleetSnapshot } from "./fleetModel";
+import { inventoryInService } from "./fleetModel";
 
 export type KitNodeStatus = "ok" | "missing" | "oos" | "dark" | "held" | "idle";
 
@@ -116,6 +118,149 @@ function presenceEntity(def: KitDef): string {
   return def.linkEntity || def.relayEntity || def.demandEntity || def.inServiceEntity || def.firmwareEntity || "";
 }
 
+export function buildKitNodesFromFleet(fleet: FleetSnapshot): KitNode[] {
+  return KIT_DEFS.map((d) => resolveKitNodeFromFleet(d, fleet));
+}
+
+export function resolveKitNodeFromFleet(def: KitDef, fleet: FleetSnapshot): KitNode {
+  const entityId = presenceEntity(def);
+  const hubLive = fleet.hub.online;
+
+  if (def.id === "hub") {
+    return {
+      id: def.id,
+      label: def.label,
+      status: fleet.hub.online ? "ok" : "dark",
+      entityId: "binary_sensor.dsc_hub_link",
+      firmwareEntity: def.firmwareEntity,
+    };
+  }
+
+  if (def.inServiceEntity) {
+    const inService = def.id.startsWith("pot") && def.id.length === 4
+      ? inventoryInService(fleet, def.id)
+      : inventoryInService(fleet, def.id);
+    if (!inService) {
+      return {
+        id: def.id,
+        label: def.label,
+        status: "oos",
+        subtitle: def.plannedWhenOff ? "Not built / parked" : "Out of service",
+        entityId: def.inServiceEntity,
+        inServiceEntity: def.inServiceEntity,
+        plannedOos: def.plannedWhenOff,
+        runtimeToday: def.runtimeToday,
+        cyclesToday: def.cyclesToday,
+        demandEntity: def.demandEntity,
+        firmwareEntity: def.firmwareEntity,
+      };
+    }
+  }
+
+  const sonoff = fleet.sonoffs[def.id];
+  const pot = fleet.pots[def.id];
+  const seatOnline = sonoff?.online ?? pot?.online ?? false;
+  const inventoryOn = def.inServiceEntity ? inventoryInService(fleet, def.id) : true;
+
+  if (def.id.startsWith("pot")) {
+    if (!inventoryOn) {
+      return {
+        id: def.id,
+        label: def.label,
+        status: "oos",
+        subtitle: def.plannedWhenOff ? "Not built / parked" : "Out of service",
+        entityId: def.inServiceEntity ?? entityId,
+        inServiceEntity: def.inServiceEntity,
+        plannedOos: def.plannedWhenOff,
+        firmwareEntity: def.firmwareEntity,
+      };
+    }
+    if (!seatOnline) {
+      return {
+        id: def.id,
+        label: def.label,
+        status: inventoryOn ? "dark" : "missing",
+        subtitle: inventoryOn ? "Dark" : undefined,
+        entityId: def.firmwareEntity ?? entityId,
+        inServiceEntity: def.inServiceEntity,
+        firmwareEntity: def.firmwareEntity,
+      };
+    }
+    return {
+      id: def.id,
+      label: def.label,
+      status: "idle",
+      subtitle: "Idle",
+      entityId: def.firmwareEntity ?? entityId,
+      inServiceEntity: def.inServiceEntity,
+      firmwareEntity: def.firmwareEntity,
+    };
+  }
+
+  if (sonoff) {
+    if (!seatOnline) {
+      return {
+        id: def.id,
+        label: def.label,
+        status: inventoryOn ? "dark" : "missing",
+        subtitle: inventoryOn ? "Dark" : undefined,
+        entityId: def.relayEntity ?? def.demandEntity ?? entityId,
+        inServiceEntity: def.inServiceEntity,
+        runtimeToday: def.runtimeToday,
+        cyclesToday: def.cyclesToday,
+        demandEntity: def.demandEntity,
+        firmwareEntity: def.firmwareEntity,
+      };
+    }
+    const running = sonoff.values.relay_on === true;
+    return {
+      id: def.id,
+      label: def.label,
+      status: running ? "ok" : "idle",
+      subtitle: running ? "Running" : "Idle",
+      entityId: def.demandEntity || def.relayEntity || entityId,
+      inServiceEntity: def.inServiceEntity,
+      runtimeToday: def.runtimeToday,
+      cyclesToday: def.cyclesToday,
+      demandEntity: def.demandEntity,
+      firmwareEntity: def.firmwareEntity,
+    };
+  }
+
+  if (def.id === "tank" || def.id === "ac" || def.id === "mister") {
+    const inSvc = inventoryInService(fleet, def.id);
+    if (!inSvc) {
+      return {
+        id: def.id,
+        label: def.label,
+        status: "oos",
+        subtitle: def.plannedWhenOff ? "Not built / parked" : "Out of service",
+        entityId: def.inServiceEntity ?? entityId,
+        inServiceEntity: def.inServiceEntity,
+        plannedOos: def.plannedWhenOff,
+      };
+    }
+    return {
+      id: def.id,
+      label: def.label,
+      status: "idle",
+      subtitle: "Idle",
+      entityId: def.inServiceEntity ?? entityId,
+      inServiceEntity: def.inServiceEntity,
+    };
+  }
+
+  return {
+    id: def.id,
+    label: def.label,
+    status: hubLive ? "dark" : "missing",
+    entityId,
+    inServiceEntity: def.inServiceEntity,
+    demandEntity: def.demandEntity,
+    firmwareEntity: def.firmwareEntity,
+  };
+}
+
 export function resolveKitNode(def: KitDef, hass: HassBits, settled: (id: string) => boolean): KitNode {
   const entityId = presenceEntity(def);
   if (def.id === "hub") {
@@ -158,14 +303,25 @@ export function resolveKitNode(def: KitDef, hass: HassBits, settled: (id: string
     }
   }
 
+  const hubLive =
+    hass.available("binary_sensor.dsc_hub_link") &&
+    hass.state("binary_sensor.dsc_hub_link") === "on";
+
   const probe = def.relayEntity || def.demandEntity || def.firmwareEntity || def.inServiceEntity || "";
   const known = probe ? hass.available(probe) : true;
   const live = probe ? settled(probe) : true;
+  const inventoryInService =
+    def.inServiceEntity &&
+    (def.id.startsWith("pot") && def.id.length === 4
+      ? isPotInService(Number(def.id.slice(3)), hass.state)
+      : hass.state(def.inServiceEntity) === "on");
+
   if (!known && !live) {
     return {
       id: def.id,
       label: def.label,
-      status: "missing",
+      status: inventoryInService && hubLive ? "dark" : "missing",
+      subtitle: inventoryInService && hubLive ? "Dark" : undefined,
       entityId: probe || entityId,
       inServiceEntity: def.inServiceEntity,
       runtimeToday: def.runtimeToday,
@@ -212,7 +368,7 @@ export function buildKitNodes(hass: HassBits, settled: (id: string) => boolean):
 
 export function kitInServiceCount(nodes: KitNode[]): { inService: number; total: number; dark: number } {
   const countable = nodes.filter((n) => n.id !== "hub");
-  const oos = countable.filter((n) => n.status === "oos" || n.status === "missing");
+  const oos = countable.filter((n) => n.status === "oos");
   const dark = countable.filter((n) => n.status === "dark").length;
   return {
     inService: countable.length - oos.length,

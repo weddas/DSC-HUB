@@ -170,12 +170,17 @@ function Shell({ surfaceVersion = "7.2.0" }: { surfaceVersion?: string }) {
 export function App({
   hass,
   surfaceVersion = "7.2.0",
+  hassRevision = 0,
+  fleetSource = "ha",
 }: {
   hass: HomeAssistant | null;
   surfaceVersion?: string;
+  hassRevision?: number;
+  fleetSource?: "pi" | "ha";
 }) {
+  void fleetSource;
   return (
-    <HassProvider hass={hass}>
+    <HassProvider hass={hass} revision={hassRevision}>
       <ZoneFocusProvider>
         <InspectorProvider>
           <Shell surfaceVersion={surfaceVersion} />

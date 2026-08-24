@@ -17,6 +17,8 @@ from pydantic import BaseModel, Field
 from . import __version__
 from .backup_ops import export_backup_zip, import_backup_zip
 from .catalog import get_strain, init_db, reload_catalogs, search
+from .control_ops import call_service_proxy
+from .history_ops import query_entity_history
 from .decision_loop import decision_tick
 from .appliance_driver import start_appliance_driver, stop_appliance_driver
 from .esphome_client import start_esphome_ingest, stop_esphome_ingest
@@ -55,6 +57,12 @@ class TickBody(BaseModel):
 
 class SettingsPatch(BaseModel):
     settings: dict[str, str] = Field(default_factory=dict)
+
+
+class ServiceCallBody(BaseModel):
+    domain: str
+    service: str
+    data: dict[str, Any] = Field(default_factory=dict)
 
 
 class InventoryPatch(BaseModel):
@@ -119,11 +127,13 @@ def health() -> dict[str, Any]:
 
 
 @app.get("/fleet")
-def fleet() -> dict[str, Any]:
+def fleet(include_hass: bool = Query(False, alias="include_hass")) -> dict[str, Any]:
     state = get_fleet_state()
     inventory = list_inventory()
     payload = state.to_dict()
-    payload["hass_states"] = state.to_hass_states(inventory)
+    payload["inventory"] = inventory
+    if include_hass:
+        payload["hass_states"] = state.to_hass_states(inventory)
     return payload
 
 
@@ -135,7 +145,7 @@ async def fleet_ws(websocket: WebSocket) -> None:
             st = get_fleet_state()
             inv = list_inventory()
             ws_payload = st.to_dict()
-            ws_payload["hass_states"] = st.to_hass_states(inv)
+            ws_payload["inventory"] = inv
             await websocket.send_json(ws_payload)
             import asyncio
 
@@ -163,6 +173,25 @@ def inventory_patch(seat_id: str, body: InventoryPatch) -> dict[str, Any]:
         return upsert_inventory(seat_id, patch)
     except KeyError as exc:
         raise HTTPException(404, f"unknown seat {seat_id}") from exc
+
+
+@app.post("/control/service")
+async def control_service(body: ServiceCallBody) -> dict[str, Any]:
+    try:
+        return await call_service_proxy(body.domain, body.service, body.data)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    except RuntimeError as exc:
+        raise HTTPException(503, str(exc)) from exc
+
+
+@app.get("/history")
+def history_get(
+    entity_id: str = Query(..., min_length=3),
+    hours: float = Query(6.0, ge=0.25, le=168.0),
+) -> dict[str, Any]:
+    points = query_entity_history(entity_id, hours)
+    return {"entity_id": entity_id, "hours": hours, "points": points}
 
 
 @app.get("/roster")

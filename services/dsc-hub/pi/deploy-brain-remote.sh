@@ -3,27 +3,63 @@ set -eu
 PASS="$1"
 run_sudo() { echo "$PASS" | sudo -S "$@"; }
 
-tar -xzf /tmp/dsc-brain-src.tgz -C /opt/dsc-hub-repo/brain
-cp /tmp/dsc-hub.yaml /opt/dsc-hub-repo/firmware/v4/dsc-hub.yaml
+REPO="/opt/dsc-hub-repo"
+COMPOSE_FILE="${REPO}/services/dsc-hub/docker-compose.yml"
+ENV_FILE="/tmp/dsc-hub-compose.env"
+
+tar -xzf /tmp/dsc-brain-src.tgz -C "${REPO}/brain"
+cp /tmp/dsc-hub.yaml "${REPO}/firmware/v4/dsc-hub.yaml"
+mkdir -p "${REPO}/services/dsc-hub/brain"
+cp /tmp/docker-compose.yml "${REPO}/services/dsc-hub/docker-compose.yml"
+cp /tmp/Dockerfile.prebuilt "${REPO}/services/dsc-hub/brain/Dockerfile.prebuilt"
+if [ -f /tmp/dsc-spa-static.tgz ]; then
+  mkdir -p "${REPO}/brain/static"
+  tar -xzf /tmp/dsc-spa-static.tgz -C "${REPO}/brain/static"
+fi
+if [ -f /tmp/dsc-ha-data.tgz ]; then
+  mkdir -p "${REPO}/homeassistant/data"
+  tar -xzf /tmp/dsc-ha-data.tgz -C "${REPO}/homeassistant/data"
+fi
 run_sudo install -m 600 /tmp/dsc-hub.env /opt/dsc-hub/.env
-run_sudo install -m 600 /tmp/dsc-hub.env /opt/dsc-hub-repo/services/dsc-hub/.env
-run_sudo chown -R dsc:dsc /opt/dsc-hub-repo/brain
+run_sudo install -m 600 /tmp/dsc-hub.env "${REPO}/services/dsc-hub/.env"
+run_sudo chown -R dsc:dsc "${REPO}/brain"
 
 echo "=== firmware ==="
-grep espnow_control /opt/dsc-hub-repo/firmware/v4/dsc-hub.yaml
-test -f /opt/dsc-hub-repo/brain/dsc_brain/appliance_driver.py && echo appliance_driver_ok
+grep espnow_control "${REPO}/firmware/v4/dsc-hub.yaml"
+test -f "${REPO}/brain/dsc_brain/appliance_driver.py" && echo appliance_driver_ok
 grep wpa_passphrase /etc/dsc-hub/hostapd.conf || true
 
-echo "=== reload brain env from .env ==="
-run_sudo cp /opt/dsc-hub/.env /tmp/dsc-hub-compose.env
-run_sudo chmod 644 /tmp/dsc-hub-compose.env
-run_sudo rm -f $'/opt/dsc-hub/.env\r' 2>/dev/null || true
-run_sudo docker compose -f /opt/dsc-hub/docker-compose.yml --env-file /tmp/dsc-hub-compose.env up -d --force-recreate brain
+echo "=== eth0 + docker DNS ==="
+if [ -f /tmp/bring-up-eth0.sh ]; then
+  tr -d '\r' < /tmp/bring-up-eth0.sh > /tmp/eth0-up.sh
+  bash /tmp/eth0-up.sh "${PASS}" || true
+elif [ -f "${REPO}/services/dsc-hub/pi/bring-up-eth0.sh" ]; then
+  bash "${REPO}/services/dsc-hub/pi/bring-up-eth0.sh" "${PASS}" || true
+fi
 
-echo "=== hot-patch brain container ==="
-run_sudo docker cp /opt/dsc-hub-repo/brain/dsc_brain/. dsc-hub-brain:/app/dsc_brain/
-run_sudo docker restart dsc-hub-brain
+echo "=== reload brain env from .env ==="
+run_sudo cp /opt/dsc-hub/.env "${ENV_FILE}"
+run_sudo chmod 644 "${ENV_FILE}"
+run_sudo rm -f $'/opt/dsc-hub/.env\r' 2>/dev/null || true
+
+DEPLOY_MODE="hot-patch"
+echo "=== try docker compose build brain (prebuilt SPA) ==="
+if run_sudo docker compose -f "${COMPOSE_FILE}" --env-file "${ENV_FILE}" --project-directory "${REPO}/services/dsc-hub" build --pull brain; then
+  echo "=== build OK — starting brain from image ==="
+  run_sudo docker compose -f "${COMPOSE_FILE}" --env-file "${ENV_FILE}" --project-directory "${REPO}/services/dsc-hub" up -d --force-recreate brain
+  DEPLOY_MODE="image-build"
+else
+  echo "=== build failed — force-recreate + hot-patch ==="
+  run_sudo docker compose -f "${COMPOSE_FILE}" --env-file "${ENV_FILE}" --project-directory "${REPO}/services/dsc-hub" up -d --force-recreate brain
+  echo "=== hot-patch brain Python ==="
+  run_sudo docker cp "${REPO}/brain/dsc_brain/." dsc-hub-brain:/app/dsc_brain/
+  if [ -d "${REPO}/brain/static" ]; then
+    run_sudo docker cp "${REPO}/brain/static/." dsc-hub-brain:/app/static/
+  fi
+fi
+
 sleep 3
-curl -s http://127.0.0.1:8787/health
-run_sudo docker exec dsc-hub-brain python -c "import dsc_brain.appliance_driver as a; print('driver_ok', list(a.DEMAND_TO_SEAT.keys()))"
-run_sudo docker logs dsc-hub-brain --tail 20
+echo "=== deploy mode: ${DEPLOY_MODE} ==="
+curl -s http://127.0.0.1:8787/health || true
+run_sudo docker exec dsc-hub-brain python -c "import dsc_brain.appliance_driver as a; print('driver_ok', list(a.DEMAND_TO_SEAT.keys()))" || true
+run_sudo docker logs dsc-hub-brain --tail 25

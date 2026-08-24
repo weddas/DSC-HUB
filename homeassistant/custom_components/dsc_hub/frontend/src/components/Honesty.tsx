@@ -3,18 +3,20 @@ import { useNavigate } from "react-router-dom";
 import { Button, Card, StatusChip } from "./ui";
 import { DecisionLayer } from "./DecisionLayer";
 import { useHass } from "../hooks/useHass";
-import { collectHonestyGaps, nextRecommended, type HonestyGap } from "../lib/sensorHonesty";
+import { useFleet } from "../hooks/useFleet";
+import { collectHonestyGaps, collectHonestyGapsFromFleet, nextRecommended, type HonestyGap } from "../lib/sensorHonesty";
 
 export function useHonestyGaps(): HonestyGap[] {
   const hass = useHass();
+  const fleet = useFleet();
   return useMemo(
     () =>
-      collectHonestyGaps({
+      collectHonestyGapsFromFleet(fleet, {
         state: hass.state,
         available: hass.available,
         entity: hass.entity,
       }),
-    [hass.state, hass.available, hass.entity, hass.tick],
+    [fleet, hass.state, hass.available, hass.entity, hass.tick],
   );
 }
 

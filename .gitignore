@@ -82,6 +82,9 @@ homeassistant/BlueDream*
 firmware/v4/*_out.txt
 firmware/v4/_patch_*.py
 
+# Pi SPA dev artifact (real bundle built in Docker frontend stage)
+brain/static/
+
 # Brain scrape ops
 brain/data/_*.pid
 brain/data/_*.err

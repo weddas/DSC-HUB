@@ -8,7 +8,8 @@ import os
 import time
 from typing import Any
 
-from .fleet_state import FleetState, SeatState, update_fleet_state
+from .appliance_driver import get_appliance_status
+from .fleet_state import FleetState, SeatState, get_fleet_state, update_fleet_state
 from .native_api import make_api_client
 from .paths import EXPECTED_FIRMWARE, SURFACE_VERSION
 from .settings import list_inventory, record_history
@@ -68,7 +69,15 @@ class EsphomeIngest:
             await asyncio.sleep(5.0)
 
     async def _poll_once(self) -> FleetState:
+        prev = get_fleet_state()
         state = FleetState(surface=SURFACE_VERSION)
+        state.hub = prev.hub
+        state.panel = prev.panel
+        state.pots = dict(prev.pots)
+        state.sonoffs = dict(prev.sonoffs)
+        state.canopy = dict(prev.canopy)
+        state.system = dict(prev.system)
+
         inventory = {r["seat_id"]: r for r in list_inventory()}
         try:
             import aioesphomeapi  # noqa: F401
@@ -76,7 +85,12 @@ class EsphomeIngest:
             _logger.debug("aioesphomeapi not installed — ingest idle")
             return state
 
-        for seat_id, row in inventory.items():
+        seat_order = sorted(
+            inventory.items(),
+            key=lambda item: (0 if item[0] == "hub" else 1, item[0]),
+        )
+
+        for seat_id, row in seat_order:
             if not row.get("in_service"):
                 continue
             host = row.get("host") or os.environ.get(f"DSC_{seat_id.upper()}_HOST")
@@ -87,8 +101,18 @@ class EsphomeIngest:
             try:
                 readings = await _fetch_device(host, api_key or "", role, seat_id)
                 self._apply_readings(state, seat_id, role, readings)
+                if seat_id == "hub":
+                    update_fleet_state(state)
             except Exception as exc:  # noqa: BLE001
                 _logger.debug("ESPHome %s @ %s: %s", seat_id, host, exc)
+
+        appliance = get_appliance_status()
+        state.system["appliance_link"] = appliance.get("hub_ok", False)
+        state.system["relays"] = dict(appliance.get("relays", {}))
+        for seat_id, relay_on in appliance.get("relays", {}).items():
+            sonoff = state.sonoffs.get(seat_id)
+            if sonoff is not None:
+                sonoff.values["relay_on"] = relay_on
 
         return state
 
