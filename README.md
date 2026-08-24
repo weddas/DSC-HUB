@@ -50,7 +50,8 @@ flowchart LR
 
 | Doc | When |
 |---|---|
-| [`SETUP.md`](SETUP.md) | **Product unbox** — SoftAP kit without HA |
+| [`SETUP.md`](SETUP.md) | SoftAP kit unbox (no Pi) |
+| [`docs/qa/PI-APPLIANCE-7.0.md`](docs/qa/PI-APPLIANCE-7.0.md) | **Pi product 7.0** — AP, Docker, noise_psk Native API, WiFi-pref clear |
 | [`docs/DSC-BRAIN.md`](docs/DSC-BRAIN.md) | Pi offline brain + webserver product shape |
 | [`docs/HA-SCAFFOLD.md`](docs/HA-SCAFFOLD.md) | HA = lab soak; promote-don't-deepen |
 | [`brain/README.md`](brain/README.md) | Catalog SQLite / Want / API stub (Phase B) |

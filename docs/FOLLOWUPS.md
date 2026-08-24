@@ -2382,3 +2382,38 @@ Do **not** reclaim .33/.39/.40/.47/.23 — other hosts answered there at cutover
 - Hub: dsc-hub-espnow-parked.yaml no-op TX scripts + panel_last_ms stamp while API connected.
 - Panel events: esphome.dsc_panel_hub_cmd (ESPHome event prefix required).
 
+
+---
+
+## 2026-08-24 — Pi AP PSK defaults (`8867b33`)
+
+Tip fixed brain / bootstrap / `env.example` so unset `ap_psk` no longer emits placeholder `changeme-dsc-brain`. Defaults match fleet firmware shared PSK (Notion *DSC-Brain Pi AP*). Live repair script: `services/dsc-hub/pi/fix-ap-psk.sh`.
+
+### docs
+
+- [`docs/qa/PI-APPLIANCE-7.0.md`](qa/PI-APPLIANCE-7.0.md) — AP PSK alignment + pitfalls
+- [`docs/ops/DSC-HUB-DOCKER.md`](ops/DSC-HUB-DOCKER.md), [`services/dsc-hub/README.md`](../services/dsc-hub/README.md), [`docs/DSC-BRAIN.md`](DSC-BRAIN.md)
+
+### soak / next-plan
+
+1. On any Pi already bootstrapped with the old placeholder hostapd passphrase: run `fix-ap-psk.sh`, confirm Settings `ap_psk`, confirm firmware `wifi_password` matches.
+2. Island soak → tag `v7.0.0`; MAC→dnsmasq reservations; SkyConnect by-id.
+
+---
+
+## 2026-08-24 — Brain Native API + WiFi-pref ops (`db85cbc`)
+
+Tip: `noise_psk` factory for ESPHome 2026; ingest/appliance `get_running_loop` start; `clear_hub_wifi_pref` + Pi wrappers; deploy/recreate brain env so compose picks up `.env`.
+
+### docs
+
+- [`docs/qa/PI-APPLIANCE-7.0.md`](qa/PI-APPLIANCE-7.0.md) — Native API, WiFi-pref clear, brain env recreate (tip SHA `db85cbc`)
+- Pointers in Docker ops, DSC-BRAIN, compose README, brain README, root README, CHANGELOG
+
+### soak / next-plan
+
+1. After `.env` Noise key edits: `recreate-brain-env.sh` (or deploy recreate), confirm `KEYLEN` ≠ 0 and `/fleet` hub online.
+2. Hub still pin-bouncing SoftAP/Nest BSSID: copy `brain/scripts/clear_hub_wifi_pref.py` → `/tmp/` then `clear-hub-wifi-pref.sh`.
+3. Prefer this tip’s docs PR for SoT; supersede open #89/#90 once reviewed if overlapping.
+4. Island soak → tag `v7.0.0`.
+
