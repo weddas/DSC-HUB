@@ -1,24 +1,28 @@
 # DSC-HUB Pi appliance — operations
 
-**Release:** DSC-HUB 7.0.0 — The Pi Release.
+**Release:** DSC-HUB 7.0.0 — The Pi Release. Tip includes AP PSK alignment (`8867b33`) and Native API / WiFi-pref ops (`db85cbc`).
+
+**Full ops runbook:** [`docs/qa/PI-APPLIANCE-7.0.md`](../qa/PI-APPLIANCE-7.0.md) (architecture, LAN map, AP PSK, **noise_psk** Native API, WiFi-pref clear, brain env recreate, API surface, pitfalls).  
+**Compose / bootstrap:** [`services/dsc-hub/README.md`](../../services/dsc-hub/README.md).
 
 ## Network
 
 - **AP:** `DSC-Brain` 2.4 GHz, locked channel (1/6/11), WPA2.
+- **PSK:** Shared fleet secret — brain `ap_psk` / `DSC_AP_PSK` / hostapd / firmware `wifi_password` must match. Canonical value in Notion **API Keys & Credentials** (*DSC-Brain Pi AP*). Tip `8867b33` removed `changeme-dsc-brain` defaults; live Pi with that placeholder → `services/dsc-hub/pi/fix-ap-psk.sh`.
 - **Subnet:** `10.42.0.0/24`, Pi AP `10.42.0.1`.
 - **eth0:** House uplink (optional). Climate runs island; Ollama + remote CannaLib need uplink.
 - **Avahi:** `dsc-brain.local`
 
-Fleet DHCP reservations live in `/etc/dsc-hub/dnsmasq.conf` (bootstrap template). After flash, add device MACs from Settings inventory.
+Fleet DHCP reservations live in `/etc/dsc-hub/dnsmasq.conf` (bootstrap template). After flash, add device MACs from Settings inventory. Default seats: hub `.10`, control `.11`, pots `.21–.24`, Sonoffs `.50/.51/.54/.55`.
 
 ## Cutover checklist
 
-1. Bootstrap Pi (`pi-bootstrap.sh`), compose up, `/health` green.
+1. Bootstrap Pi (`pi-bootstrap.sh`), compose up, `/health` green. Confirm AP PSK matches firmware secrets (Notion credentials).
 2. Move SkyConnect from Unraid; z2m sees coordinator.
-3. Build firmware **7.0.0.0** (`wifi-pi` stubs); rotate Noise API keys → `.env` + Notion.
-4. Flash order: hub → pot2 canary → remaining pots → Sonoffs → panel.
+3. Build firmware **7.0.0.0** (`wifi-pi` stubs); rotate Noise API keys → `.env` + Notion **API Keys & Credentials** (never paste live keys into Wiki/PRs). After `.env` edits: `recreate-brain-env.sh` or deploy path that force-recreates brain (hot-patch alone does not reload env).
+4. Flash order: hub → pot2 canary → remaining pots → Sonoffs → panel. If hub still prefers SoftAP/Nest BSSID: `clear-hub-wifi-pref.sh` (see runbook).
 5. Disable HA demand-follower automations and HA ESPHome integrations (do not delete packages until soak).
-6. Hub ESP-NOW parked on Pi path; brain polls hub demand switches and drives Sonoff relays (45s stale OFF).
+6. Hub ESP-NOW parked on Pi path; brain polls hub demand switches and drives Sonoff relays (45s stale OFF) via `appliance_driver.py` using **noise_psk** (`native_api.make_api_client`).
 7. **Island proof:** Nest + HA off; tent on Pi AP; fleet chip `7.0.0.0`.
 8. With eth0 up: Settings → Test Ollama + Test CannaLib green.
 9. With eth0 down: integrations HELD; catalog uses local fallback if present.

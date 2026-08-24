@@ -1,0 +1,279 @@
+# DSC-HUB 7.0 — Pi appliance ops
+
+**Intent:** Product path is a Raspberry Pi 4 island (`DSC-Brain` AP) running brain + SPA + MQTT/Zigbee + ESPHome dashboard. Hub keeps ladder safety. Brain polls hub demand switches and drives Sonoff `main_relay` over Native API. ETH01 bridge and hub ESP-NOW are **parked** on this path.
+
+**Tip commit:** `db85cbc` · **Firmware:** `7.0.0.0` · **Brain/SPA:** `7.0.0-dev` until island soak + tag `v7.0.0`.
+
+Prior tip notes still apply: AP PSK alignment (`8867b33`), Pi appliance ship (`c4eb97f`). This tip adds Native API **noise_psk** auth for ESPHome 2026, async ingest/driver start fixes, hub WiFi-pref clear ops, and brain compose env recreate on deploy.
+
+Compose quick start: [`services/dsc-hub/README.md`](../../services/dsc-hub/README.md) · Cutover checklist: [`docs/ops/DSC-HUB-DOCKER.md`](../ops/DSC-HUB-DOCKER.md) · Architecture: [`docs/DSC-BRAIN.md`](../DSC-BRAIN.md)
+
+---
+
+## Architecture
+
+```mermaid
+flowchart LR
+  subgraph pi [Pi_DSC_Brain]
+    AP[wlan0_AP_10.42.0.1]
+    Brain[brain_SPA_8787]
+    Z2M[zigbee2mqtt]
+    MQTT[mosquitto]
+    ESPDash[esphome_6052]
+    Brain --> MQTT
+    Z2M --> MQTT
+  end
+  Hub[Hub_ladder] -->|Native_API_vitals| Brain
+  Panel[DSC_CONTROL] -->|Native_API| Brain
+  Pots[Pots] -->|Native_API| Brain
+  Brain -->|poll_demand_switches| Hub
+  Brain -->|command_main_relay| Sonoffs[Sonoff_relays]
+  Hub -.->|ESP_NOW_parked| Panel
+  eth0[eth0_uplink_optional] --> AP
+```
+
+| Layer | Owns | Does not own |
+|---|---|---|
+| Hub | Ladder, failsafes, min-off, PWM | Catalog SoT, Sonoff drive on Pi path |
+| Brain | Inventory, fleet ingest, appliance driver, Want/decision, SPA | Hard safety if Pi power dies |
+| Sonoffs | Local `main_relay` + API-loss grace | Climate policy |
+| eth0 | Optional Ollama / remote CannaLib / house reach | Climate island (AP alone is enough) |
+
+---
+
+## Version trains (do not conflate)
+
+| Train | SoT | Notes |
+|---|---|---|
+| **Pi product** | FW **7.0.0.0**, brain/SPA **7.0.0(-dev)** | `*-wifi-pi.yaml`, `10.42.0.0/24` |
+| HA lab soak | Surface **7.2.0**, prior studio FW **6.1.0.0** | Still valid for Unraid/HA; not the Pi island |
+| Kit SoftAP | `*-kit.yaml` | Product unbox without Pi; separate path |
+
+---
+
+## Pi subnet map
+
+Defaults from `brain/dsc_brain/settings.py` + `firmware/v4/dsc-*.yaml` stubs + bootstrap `dnsmasq.conf`:
+
+| Seat | Host | Stub / package |
+|---|---|---|
+| Pi AP | `10.42.0.1` (`dsc-brain.local`) | `pi-bootstrap.sh` hostapd/dnsmasq |
+| Hub | `10.42.0.10` | `dsc-hub.yaml` → `dsc-hub-wifi-pi.yaml` + parked ESP-NOW |
+| Control | `10.42.0.11` | `dsc-control.yaml` → `dsc-control-wifi-pi.yaml` |
+| Pot1–4 | `10.42.0.21`–`.24` | `dsc-pot{N}.yaml` → `dsc-pot-wifi-pi.yaml` |
+| Heater / heatmat | `.50` / `.51` | Sonoff stubs + `dsc-sonoff-wifi-pi.yaml` |
+| Humidifier / dehumidifier | `.54` / `.55` | same |
+| Bridge (lab only) | eth archaeology | **Not** on Pi product path |
+
+After first flash, paste device MACs into Settings inventory / `/etc/dsc-hub/dnsmasq.conf` `dhcp-host=` lines so reservations stick.
+
+---
+
+## AP PSK alignment (fleet must match)
+
+**Constraint:** Pi hostapd passphrase, brain `ap_psk` / `DSC_AP_PSK`, and firmware `wifi_password` (Pi stubs) must be the **same** shared secret. Mismatch → devices never join `DSC-Brain`.
+
+Tip `8867b33` aligned code defaults to the fleet shared PSK (same value as `services/dsc-hub/README.md` / `env.example`). Canonical store: Notion **API Keys & Credentials** → *DSC-Brain Pi AP (fleet Wi-Fi)*. Do **not** paste the live PSK into Wiki or PR bodies.
+
+| Path | Behavior |
+|---|---|
+| `brain/dsc_brain/settings.py` | `DEFAULT_SETTINGS["ap_psk"]` = fleet default; `init_settings_db` upgrades `''` or `changeme-dsc-brain` → fleet default |
+| `brain/dsc_brain/network_apply.py` | `render_hostapd_conf` fallback when unset: fleet default (was placeholder) |
+| `services/dsc-hub/pi/pi-bootstrap.sh` | `DSC_AP_PSK` default = fleet default |
+| `services/dsc-hub/env.example` | `DSC_AP_PSK=` fleet default |
+| `services/dsc-hub/pi/fix-ap-psk.sh` | One-shot: if live `/etc/dsc-hub/hostapd.conf` still has `wpa_passphrase=changeme-dsc-brain`, rewrite + restart `dsc-hub-ap.service` |
+
+```mermaid
+flowchart TD
+  secrets[firmware_secrets_wifi_password] --> flash[wifi_pi_flash]
+  env[DSC_AP_PSK_or_settings_ap_psk] --> apply[network_apply_hostapd]
+  boot[pi_bootstrap_hostapd] --> live[/etc/dsc-hub/hostapd.conf]
+  apply --> live
+  live --> ap[DSC_Brain_AP]
+  flash --> sta[Fleet_STA]
+  ap --> sta
+```
+
+**Live Pi already bootstrapped before the tip:** run `bash services/dsc-hub/pi/fix-ap-psk.sh` on the Pi (or set Settings `ap_psk` + network apply, then copy rendered hostapd and restart AP). Confirm firmware secrets `wifi_password` matches before expecting STA joins.
+
+---
+
+## Native API auth (ESPHome 2026+)
+
+Firmware exposes Noise encryption (`api.encryption.key` ← secret `dsc_*_api_key`). Brain clients must pass that key as **`noise_psk`**, not legacy password positional auth.
+
+Factory: `brain/dsc_brain/native_api.py` → `make_api_client(host, api_key)`.
+
+| Caller | Role |
+|---|---|
+| `esphome_client.py` | Fleet vitals ingest (hub / pots / Sonoffs / panel) |
+| `appliance_driver.py` | Hub demand poll + Sonoff `main_relay` commands |
+| `hub_native.py` | Proposal path connect (emit still mostly logged) |
+| `brain/scripts/clear_hub_wifi_pref.py` | One-shot hub WiFi-pref clear |
+
+Keys come from inventory `api_key`, else `DSC_<SEAT>_API_KEY` / settings / compose `.env` (`DSC_HUB_API_KEY`, …). Canonical store: Notion **API Keys & Credentials** — never paste live Noise keys into Wiki/PRs.
+
+```mermaid
+flowchart LR
+  secrets[firmware_api_encryption_key] --> device[ESP_device_6053]
+  env[DSC_SEAT_API_KEY_or_inventory] --> factory[make_api_client]
+  factory -->|noise_psk| device
+```
+
+**Pitfall:** Passing the key as the third positional `password` argument to `APIClient` fails against ESPHome 2026 Noise-only devices (connect/login errors; ingest and appliance driver look “dead”).
+
+### Async start (must have a running loop)
+
+`EsphomeIngest.start()` and `start_appliance_driver()` use `asyncio.get_running_loop()` and create the background task only when called from a live loop. If started with no running loop they log a warning and **return without scheduling** (silent no-op is gone). Subscribe helpers that are sync in current `aioesphomeapi` are not `await`ed.
+
+---
+
+## Appliance driver (replaces ETH01)
+
+Code: `brain/dsc_brain/appliance_driver.py` (via `make_api_client`).
+
+| Constraint | Value |
+|---|---|
+| Poll | every **2 s** |
+| Hub → seat map | `heater_demand`→`heater`, `humidifier_demand`→`humidifier`, `dehumidifier_demand`→`dehumidifier`, `growmat_demand`→`heatmat` |
+| Sonoff switch | object_id `main_relay` |
+| Stale failsafe | no successful hub demand read for **45 s** → all mapped relays **OFF** |
+| Auth | inventory `api_key` else env/settings → **noise_psk** |
+
+Hub ESP-NOW package on Pi stubs: `dsc-hub-espnow-parked.yaml` (no primary mesh). Bridge demand path is lab archaeology — see [`docs/brain/F010_APPLIANCE_BRIDGE.md`](../brain/F010_APPLIANCE_BRIDGE.md).
+
+---
+
+## Clear stale hub WiFi preference
+
+**Intent:** After SoftAP/Nest → Pi AP moves, hub NVS may still hold **Preferred WiFi BSSID** and **Lock WiFi AP**. Lock + stale BSSID causes mismatch-bounce / refusal to stay on `DSC-Brain`.
+
+Hub entities (firmware `dsc-hub-v4_0.yaml`): switch `lock_wifi_ap`, text `preferred_wifi_bssid`, button `clear_preferred_wifi_ap` (“Clear Preferred WiFi AP”).
+
+| Script | Role |
+|---|---|
+| `brain/scripts/clear_hub_wifi_pref.py` | Native API: lock OFF → press clear button (else blank preferred text) |
+| `services/dsc-hub/pi/clear-hub-wifi-pref.sh` | Pi wrapper: read `DSC_HUB_API_KEY` from `/opt/dsc-hub/.env`, run script in `dsc-hub-brain`, print `/fleet` hub online + link bits |
+
+```bash
+# On the Pi (hub at 10.42.0.10)
+cp /opt/dsc-hub-repo/brain/scripts/clear_hub_wifi_pref.py /tmp/
+bash /opt/dsc-hub-repo/services/dsc-hub/pi/clear-hub-wifi-pref.sh
+```
+
+Env overrides for the Python script: `HUB_HOST` (default `10.42.0.10`), `HUB_KEY` or `DSC_HUB_API_KEY` (or `/tmp/hub_key.txt` after the wrapper).
+
+---
+
+## Reload brain container env on deploy
+
+Compose only picks up `.env` changes when the brain service is **recreated**. Tip `db85cbc` folds that into remote deploy and adds a one-shot helper.
+
+| Script | Role |
+|---|---|
+| `services/dsc-hub/pi/deploy-brain-remote.sh` | After sync: copy `.env` → `/tmp/dsc-hub-compose.env`, remove accidental `.env\r` Windows duplicate, `docker compose … up -d --force-recreate brain`, then hot-patch `dsc_brain/` |
+| `services/dsc-hub/pi/recreate-brain-env.sh` | Same recreate + hot-patch + `KEYLEN` / `/health` / `/fleet` checks (optional sudo password arg) |
+
+```mermaid
+flowchart TD
+  envfile["/opt/dsc-hub/.env"] --> tmp["/tmp/dsc-hub-compose.env"]
+  tmp --> recreate["compose_force_recreate_brain"]
+  code["repo_brain_dsc_brain"] --> docker_cp["docker_cp_into_container"]
+  recreate --> docker_cp
+  docker_cp --> restart["restart_dsc-hub-brain"]
+```
+
+**Pitfall:** Windows upload can leave a filename literally `.env\r` beside `.env`. Scripts delete that duplicate before recreate. Hot-patch alone does **not** refresh `DSC_HUB_API_KEY` inside the container — recreate does.
+
+---
+
+## Public HTTP / WS surface
+
+Brain listens on **`:8787`** (`dsc_brain.api`). SPA is served from `/` when `brain/static/` (or image `/app/static`) is built.
+
+| Method | Path | Role |
+|---|---|---|
+| GET | `/health` | version, surface, expected firmware |
+| GET | `/fleet` | fleet snapshot + hass-shaped states |
+| WS | `/ws/fleet` | same payload ~2 s |
+| GET/PATCH | `/settings` | settings blob |
+| PATCH | `/settings/inventory/{seat_id}` | host / mac / api_key / in_service |
+| GET/PATCH | `/roster`, `/roster/{seat_id}` | plant seats |
+| GET | `/learning` | learning log |
+| POST | `/settings/integrations/test-ollama` | uplink probe |
+| POST | `/settings/integrations/test-cannalib` | catalog probe |
+| POST | `/settings/zigbee/permit-join` | z2m permit join |
+| GET/POST | `/settings/network`, `/settings/network/apply` | AP/dnsmasq apply hooks |
+| GET/POST | `/settings/esphome/devices`, `/settings/esphome/jobs` | OTA job queue |
+| GET/POST | `/settings/backup/export`, `/settings/backup/import` | ops zip |
+| GET | `/v1/catalogs/{kind}` | CannaLib prefer → local slim |
+| GET | `/catalogs/{kind}`, `/want/{id}`, POST `/decision/tick` | local catalog / Want / dry-run |
+
+OpenAPI: `http://dsc-brain.local:8787/docs`.
+
+---
+
+## Docker stack
+
+Compose: `services/dsc-hub/docker-compose.yml` (Pi arm64 — **not** Unraid Compose Manager).
+
+| Service | Port | Role |
+|---|---|---|
+| brain | 8787 | FastAPI + SPA |
+| cannalib | 127.0.0.1:8790 | read-only local catalog fallback |
+| mosquitto | internal 1883 | z2m ↔ brain |
+| zigbee2mqtt | — | SkyConnect; permit-join from Settings |
+| esphome | 6052 | dashboard over `/firmware/v4` |
+
+Env template: `services/dsc-hub/env.example`. Secrets live in Notion **API Keys & Credentials** and gitignored `.env` / `firmware/v4/secrets.yaml` — **never** paste live keys or AP PSKs into Wiki/PRs.
+
+---
+
+## Cutover (operator)
+
+1. Flash Pi OS Lite 64-bit (hostname `dsc-brain`), clone repo to SSD, data under `/var/lib/dsc-hub`.
+2. `sudo services/dsc-hub/pi/pi-bootstrap.sh` → edit `.env` (AP PSK from Notion credentials) → copy CannaLib checkpoint sqlite → set `ZIGBEE_DEVICE` by-id.
+3. `systemctl start dsc-hub-ap.service` then `dsc-hub-compose.service`; `curl http://dsc-brain.local:8787/health`.
+4. Build/flash FW **7.0.0.0** (`wifi-pi` packages) with `wifi_ssid`/`wifi_password` matching the Pi AP. Order: **hub → Pot2 canary → pots → Sonoffs → panel**.
+5. Disable HA demand-follower automations / HA ESPHome integrations for the tent (keep packages until soak).
+6. Island proof: Nest + HA off; tent on Pi AP; fleet chip / health `expected_firmware` **7.0.0.0**.
+7. eth0 up: Settings → Test Ollama + Test CannaLib. eth0 down: integrations HELD; local cannalib fallback if present.
+8. Tag `v7.0.0` only after soak.
+
+---
+
+## Troubleshooting / pitfalls
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| Fleet never joins `DSC-Brain` | AP PSK ≠ firmware `wifi_password` | Align secrets + `.env` / Settings; see **AP PSK alignment**; live placeholder → `fix-ap-psk.sh` |
+| Hub joins then flaps / stays off preferred AP | Stale preferred BSSID + Lock WiFi AP | Run **Clear stale hub WiFi preference** scripts |
+| Ingest/appliance silent; `:6053` connect fails | Key passed as password not `noise_psk` | Tip `db85cbc` factory; recreate brain so `.env` Noise keys load |
+| “ESPHome ingest / appliance not started” in logs | `start()` called with no running event loop | Start from FastAPI lifespan / async context only |
+| Relays stuck / all OFF | Hub API unreachable >45 s | Check inventory host/keys; `/health` + hub `:6053`; recreate brain env if key empty (`KEYLEN=0`) |
+| Wrong Sonoff | seat not `in_service` or missing `main_relay` | Settings inventory; ESPHome entity list |
+| Devices on Nest IPs | Flashed lab/studio stubs | Re-flash Pi stubs (`*-wifi-pi.yaml`); clear SoftAP/Nest statics + hub WiFi pref |
+| SkyConnect missing | serial console stole ACM | Bootstrap strips `console=serial0`; use `/dev/serial/by-id/…` |
+| SPA 503 | static not built into image | `npm run build:spa` then rebuild brain image |
+| Catalog empty offline | no local sqlite + remote down | Place checkpoint under `/var/lib/dsc-hub/cannalib/` |
+| Pi power loss | AP dies; relays failsafe OFF | Expected honesty boundary — hub ladder alone cannot reach Sonoffs |
+| DHCP vs static Sonoffs | range starts at `.50` | Always set `dhcp-host=` MAC reservations after flash |
+| HA panel still 7.2.0 | lab surface | OK — product appliance is **7.0.0** on Pi |
+| Conflating `192.168.86.x` with `10.42.0.x` | Nest/studio vs Pi island | Use Pi map above for product path |
+
+---
+
+## Dev acceptance
+
+```bash
+pip install -r brain/requirements.txt pytest
+pytest brain/tests -q
+
+esphome config firmware/v4/dsc-hub.yaml
+esphome config firmware/v4/dsc-control.yaml
+
+cd homeassistant/custom_components/dsc_hub/frontend
+npm install && npm run build:spa
+```
+
+Monitoring: Uptime Kuma → `GET /health`; fleet WS → `ws://dsc-brain.local:8787/ws/fleet`.

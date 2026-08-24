@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **Brain Native API + Pi WiFi-pref ops (`db85cbc`)** — ESPHome 2026 clients use `noise_psk` (`native_api.make_api_client`); async ingest/appliance start requires a running loop; scripts clear stale hub preferred BSSID / Lock WiFi AP and force-recreate brain so `.env` Noise keys load. Ops: [`docs/qa/PI-APPLIANCE-7.0.md`](docs/qa/PI-APPLIANCE-7.0.md).
+- **Pi AP PSK defaults (`8867b33`)** — Brain settings / network apply / `pi-bootstrap` / `env.example` default AP PSK matches fleet firmware secrets (no more `changeme-dsc-brain`). Live repair: `services/dsc-hub/pi/fix-ap-psk.sh`.
 - **SoftAP-local fleet cutover 6.0.0.0** — Hub/Control/Pot1/2/4/Sonoffs SoftAP-only
   STA (`DSC-Anchor` + BSSID pin + SoftAP static IPs); Nest STA removed; SoftAP-down
   recovery = device Fallback AP (Control has no captive_portal — RAM). Fleet Fix
