@@ -12,7 +12,8 @@ flowchart LR
   loop --> want[Want bands]
   loop --> need[Need gaps]
   loop --> proposal[Proposal JSON]
-  proposal --> hub[Hub API / bridge]
+  proposal --> hub[Hub_API]
+  Appl[appliance_driver] -->|demand_to_Sonoffs| hub
   hub -->|clamp refuse| telemetry_next[Next tick]
 ```
 

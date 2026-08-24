@@ -1,15 +1,16 @@
 # DSC-HUB — standalone SoftAP setup (no Home Assistant)
 
-**Product unbox path.** SoftAP + hub + DSC-CONTROL is the local climate kit.
-Catalogs / Want / advanced UI destination: Pi offline brain — see
-[`docs/DSC-BRAIN.md`](docs/DSC-BRAIN.md) and Notion
+**Kit unbox path (no Pi).** SoftAP + hub + DSC-CONTROL is the local climate kit
+without the DSC-Brain appliance. Prefer the **Pi product path** when shipping the
+7.0 appliance: [`docs/qa/PI-APPLIANCE-7.0.md`](docs/qa/PI-APPLIANCE-7.0.md),
+[`docs/DSC-BRAIN.md`](docs/DSC-BRAIN.md), Notion
 [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d3407556c).
 Home Assistant remains an optional lab scaffold ([`INSTALL.md`](INSTALL.md),
 [`docs/HA-SCAFFOLD.md`](docs/HA-SCAFFOLD.md)).
 
 Kit firmware stubs: `dsc-hub-kit.yaml`, `dsc-control-kit.yaml`, `dsc-pot{1..4}-kit.yaml`, `dsc-bridge-kit.yaml`
 
-Lab/bench stubs (`dsc-hub.yaml`, etc.) keep compile-time WiFi and MACs and do **not** include `dsc_fleet_setup` (hub/panel/pots use `${panel_mac}` / `${hub_mac}`). Kit SoftAP builds still load fleet setup.
+Lab/Pi stubs (`dsc-hub.yaml`, etc.) use compile-time WiFi packages (`wifi-pi` on tip) and do **not** include `dsc_fleet_setup`. Kit SoftAP builds still load fleet setup.
 
 ## What you need
 
@@ -19,7 +20,7 @@ Lab/bench stubs (`dsc-hub.yaml`, etc.) keep compile-time WiFi and MACs and do **
 - **Optional:** home 2.4 GHz Wi‑Fi (fixed channel strongly recommended — mesh/Nest hops break ESP-NOW)
 - Internet is optional (SNTP clock when available; local-only mode works with Control alone)
 
-Sonoffs need their own flash + home LAN WiFi. After the ETH01 bridge is paired and Ethernet is up, appliances follow hub demand without HA (F-010). Local-only SoftAP without Ethernet cannot reach Sonoffs on a separate LAN.
+Sonoffs need their own flash + LAN WiFi. On the **kit SoftAP** path, appliances follow hub demand via the ETH01 bridge when Ethernet is up (F-010 archaeology). On the **Pi 7.0** path, brain `appliance_driver` replaces the bridge — see PI-APPLIANCE runbook. Local-only SoftAP without Ethernet or Pi cannot reach Sonoffs on a separate LAN.
 
 ## Flash order (factory / first kit)
 

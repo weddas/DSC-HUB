@@ -1,8 +1,8 @@
 # F-010 / F-012 / F-013 — ETH01 appliance bridge + channel anchor + HA mirror
 
-> **Superseded (DSC-HUB 7.0.0):** Bridge removed from the Pi product path. DSC-Brain polls hub demand switches and drives Sonoff relays via Native API (`brain/dsc_brain/appliance_driver.py`). Firmware below is lab archaeology only.
+> **Superseded (DSC-HUB 7.0.0):** Bridge removed from the Pi product path. DSC-Brain polls hub demand switches and drives Sonoff relays via Native API (`brain/dsc_brain/appliance_driver.py` — 2s poll, 45s stale OFF). Current ops: [`docs/qa/PI-APPLIANCE-7.0.md`](../qa/PI-APPLIANCE-7.0.md). Firmware below is lab archaeology only.
 
-**In one line:** WT32-ETH01 follows hub demand over ESP-NOW, drives Sonoffs without HA, SoftAP-pins the fleet channel, and mirrors hub vitals to HA over Ethernet.
+**In one line (historical):** WT32-ETH01 follows hub demand over ESP-NOW, drives Sonoffs without HA, SoftAP-pins the fleet channel, and mirrors hub vitals to HA over Ethernet.
 
 ## Paths
 
