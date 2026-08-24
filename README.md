@@ -51,6 +51,7 @@ flowchart LR
 | Doc | When |
 |---|---|
 | [`SETUP.md`](SETUP.md) | **Product unbox** — SoftAP kit without HA |
+| [`docs/qa/PI-APPLIANCE-7.0.md`](docs/qa/PI-APPLIANCE-7.0.md) | **Pi product 7.0** — FleetSnapshot SPA, Dash Home, `useEntityBus`, hub controls/sensors/binaries, compose helpers, `/control`/`/history`/`/grow-log`, prebuilt deploy, noise_psk, AP |
 | [`docs/DSC-BRAIN.md`](docs/DSC-BRAIN.md) | Pi offline brain + webserver product shape |
 | [`docs/HA-SCAFFOLD.md`](docs/HA-SCAFFOLD.md) | HA = lab soak; promote-don't-deepen |
 | [`brain/README.md`](brain/README.md) | Catalog SQLite / Want / API stub (Phase B) |
