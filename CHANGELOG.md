@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- **Hub control poll + Climate native reads (`c1a451a`)** — Brain ingests hub switch/number/fan/light/select into `hub.values.controls`; `control_ops` proxies fan/light/select writes; SPA `useFleetEntity` feeds EntityToggle / fans / TentTargets / Climate. Ops: [`docs/qa/PI-APPLIANCE-7.0.md`](docs/qa/PI-APPLIANCE-7.0.md).
+- **FleetSnapshot SPA + prebuilt deploy (`47f6622`)** — Pi UI reads typed `FleetSnapshot` (`/fleet`, `/ws/fleet`); `POST /control/service` + `GET /history` on brain; SPA ships via `Dockerfile.prebuilt` with eth0 bring-up before compose build (hot-patch fallback). Ops: [`docs/qa/PI-APPLIANCE-7.0.md`](docs/qa/PI-APPLIANCE-7.0.md).
+- **Brain Native API + Pi WiFi-pref ops (`db85cbc`)** — ESPHome 2026 clients use `noise_psk` (`native_api.make_api_client`); async ingest/appliance start requires a running loop; scripts clear stale hub preferred BSSID / Lock WiFi AP and force-recreate brain so `.env` Noise keys load.
+- **Pi AP PSK defaults (`8867b33`)** — Brain settings / network apply / `pi-bootstrap` / `env.example` default AP PSK matches fleet firmware secrets (no more `changeme-dsc-brain`). Live repair: `services/dsc-hub/pi/fix-ap-psk.sh`.
 - **SoftAP-local fleet cutover 6.0.0.0** — Hub/Control/Pot1/2/4/Sonoffs SoftAP-only
   STA (`DSC-Anchor` + BSSID pin + SoftAP static IPs); Nest STA removed; SoftAP-down
   recovery = device Fallback AP (Control has no captive_portal — RAM). Fleet Fix
