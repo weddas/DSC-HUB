@@ -2,7 +2,8 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card, Kpi, PageHeader, StatusChip } from "../components/ui";
 import { SlideDrawer } from "../components/chrome";
 import { DutyStrip } from "../components/DutyStrip";
-import { useHass } from "../hooks/useHass";
+import { useEntityBus } from "../hooks/useEntityBus";
+import { useFleet } from "../hooks/useFleet";
 import { useEntitySeries } from "../hooks/useEntitySeries";
 import { useHeldReading } from "../hooks/useHeldReading";
 import { useInspector } from "../components/InspectorHost";
@@ -27,7 +28,8 @@ function fmt(n: number, digits = 1): string {
 }
 
 export function LiveRootPage() {
-  const { state, entity, tick, num } = useHass();
+  const { state, entity, tick, num } = useEntityBus();
+  const fleet = useFleet();
   const inspector = useInspector();
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
@@ -145,7 +147,7 @@ export function LiveRootPage() {
 }
 
 function RootPotCard({ pot, oos, onOpenSeat }: { pot: number; oos: boolean; onOpenSeat: () => void }) {
-  const { state, entity, available } = useHass();
+  const { state, entity, available } = useEntityBus();
   const inspector = useInspector();
   const seat = buildPlantSeat(pot, { state, entity });
   const trust = readPotTrust(pot, state);

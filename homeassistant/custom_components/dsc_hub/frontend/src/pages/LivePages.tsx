@@ -17,7 +17,7 @@ import { resolveCfm } from "../lib/cfmProvenance";
 import { readPotTrust } from "../lib/potTrust";
 import { VesselGlyph } from "../components/VesselGlyph";
 import { readPotVessel } from "../lib/vesselSpec";
-import { useHass } from "../hooks/useHass";
+import { useEntityBus } from "../hooks/useEntityBus";
 import { useEntitySeries } from "../hooks/useEntitySeries";
 import { useHeldReading } from "../hooks/useHeldReading";
 import { useChartHours } from "../hooks/useChartHours";
@@ -37,7 +37,7 @@ function fmt(n: number, digits = 1): string {
 
 export function LiveTwinPage() {
   const navigate = useNavigate();
-  const { available, num } = useHass();
+  const { available, num } = useEntityBus();
   const inMain = resolveCfm("sensor.dsc_cfm_intake_main_allocated", "sensor.dsc_cfm_intake_main", {
     available,
     num,
@@ -93,7 +93,7 @@ export function LiveTwinPage() {
 }
 
 function TentCockpitPage({ tent }: { tent: Exclude<TentId, "unassigned"> }) {
-  const { state, entity, num, tick, callWS, available } = useHass();
+  const { state, entity, num, tick, callWS, available } = useEntityBus();
   const navigate = useNavigate();
   const inspector = useInspector();
   const { setFocus } = useZoneFocus();

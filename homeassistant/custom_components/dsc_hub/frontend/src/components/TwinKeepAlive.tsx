@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { useHass } from "../hooks/useHass";
+import { useEntityBus } from "../hooks/useEntityBus";
 import { ensureLocalCard } from "../lib/ensureLocalCards";
 import type { TwinCardEl, TwinFocusTent, VesselLive } from "../lib/dsc-twin-api";
 import { ALL_POT_NUMBERS, buildPlantSeat, isPotInService, readTent } from "../lib/seatModel";
@@ -33,7 +33,7 @@ function cockpitHidesHud(pathname: string): boolean {
  */
 export function TwinKeepAlive() {
   const location = useLocation();
-  const { hass, available, num, state, entity, tick } = useHass();
+  const { hass, available, num, state, entity, tick } = useEntityBus();
   const ref = useRef<HTMLDivElement>(null);
   const elRef = useRef<TwinCardEl | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "missing">("loading");

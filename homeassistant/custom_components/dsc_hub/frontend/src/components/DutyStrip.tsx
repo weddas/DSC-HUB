@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useHass } from "../hooks/useHass";
+import { useEntityBus } from "../hooks/useEntityBus";
 import { useHistory } from "../hooks/useHistory";
 import { stepHoldSeries } from "../lib/seriesHold";
 
@@ -17,7 +17,7 @@ export function DutyStrip({
   onClick?: () => void;
   label?: string;
 }) {
-  const { state, entity } = useHass();
+  const { state, entity } = useEntityBus();
   const { points, loading } = useHistory(entityId, hours, 720);
   const live = state(entityId, "off") === "on" ? 1 : 0;
   const now = Date.now();

@@ -1,9 +1,9 @@
-import { useHass } from "../hooks/useHass";
+import { useEntityBus } from "../hooks/useEntityBus";
 import { StatusChip } from "./ui";
 
 /** Generic neon plant extra — stage, days, Need/stress, awake/asleep. No cultivar mesh; no narrator. */
 export function PlantExtra({ pot }: { pot: number }) {
-  const { available, state, num } = useHass();
+  const { available, state, num } = useEntityBus();
   const stage = state(`sensor.dsc_pot${pot}_expected_stage`, "—");
   const days = state(`sensor.dsc_pot${pot}_days_since_sprout`, "—");
   const need = state(`sensor.dsc_pot${pot}_need_summary`, "—");

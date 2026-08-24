@@ -161,6 +161,17 @@ def test_hub_controls_from_states() -> None:
     assert controls["fan.dsc_hub_4_inch_intake_fan_main"]["percentage"] == 42
 
 
+def test_hub_binaries_from_states() -> None:
+    from types import SimpleNamespace
+
+    from dsc_brain.esphome_client import _hub_binaries_from_states
+
+    states = {1: SimpleNamespace(state=True)}
+    key_to_object = {1: "main_window_bs"}
+    binaries = _hub_binaries_from_states(states, key_to_object)
+    assert binaries["binary_sensor.dsc_hub_4x8_window_open"] is True
+
+
 def test_esphome_job_queue(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("DSC_DATA", str(temp_db.parent))
     from dsc_brain.esphome_jobs import list_jobs, queue_job

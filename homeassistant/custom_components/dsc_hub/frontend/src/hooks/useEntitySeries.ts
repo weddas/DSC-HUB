@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useHass } from "./useHass";
+import { useEntityBus } from "./useEntityBus";
 import { useFleet, useFleetSource, useFleetTick } from "./useFleet";
 import { fleetEntityAvailable, fleetLiveNumber } from "../lib/entityFleetMap";
 import { useHistory } from "./useHistory";
@@ -37,7 +37,7 @@ export function useEntitySeries(
   const withGhost = !!opts?.withGhost;
   const fetchHours = withGhost ? ghostSpanHours(hours) : hours;
   const fetchPoints = withGhost ? Math.min(Math.max(maxPoints * 2, maxPoints), 288) : maxPoints;
-  const { num, available, tick, state } = useHass();
+  const { num, available, tick, state } = useEntityBus();
   const fleet = useFleet();
   const source = useFleetSource();
   const fleetTick = useFleetTick();

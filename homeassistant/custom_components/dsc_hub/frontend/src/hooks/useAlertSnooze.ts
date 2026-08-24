@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from "react";
-import { useHass } from "./useHass";
+import { useEntityBus } from "./useEntityBus";
 
 const STORAGE_PREFIX = "dsc-hub-snooze:";
 
@@ -27,7 +27,7 @@ function writeMap(bootKey: string, map: SnoozeMap): void {
 
 /** Acknowledge until the next hub boot (`sensor.dsc_hub_uptime` last_changed). */
 export function useAlertSnooze() {
-  const { entity, tick } = useHass();
+  const { entity, tick } = useEntityBus();
   const bootKey = entity("sensor.dsc_hub_uptime")?.last_changed || "noboot";
   const map = useMemo(() => readMap(bootKey), [bootKey, tick]);
 

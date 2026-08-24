@@ -53,3 +53,22 @@ HUB_SELECT_ENTITY_TO_OID: dict[str, str] = {v: k for k, v in HUB_SELECT_OID_TO_E
 
 HUB_SWITCH_OID_TO_ENTITY: dict[str, str] = {v: k for k, v in HUB_SWITCH_ENTITY_TO_OID.items()}
 HUB_NUMBER_OID_TO_ENTITY: dict[str, str] = {v: k for k, v in HUB_NUMBER_ENTITY_TO_OID.items()}
+
+# ESPHome object_id → hub.values metric key (exact match)
+HUB_SENSOR_OID_TO_KEY: dict[str, str] = {
+    "temp_sensor": "temp_c",
+    "humidity_sensor": "rh_pct",
+    "vpd_sensor": "vpd_kpa",
+    "room_temp": "room_temp_c",
+    "room_rh": "room_rh_pct",
+    "clone_temp": "clone_temp_c",
+    "clone_rh": "clone_rh_pct",
+    "clone_vpd": "clone_vpd_kpa",
+}
+
+HUB_BINARY_OID_TO_ENTITY: dict[str, str] = {
+    "main_window_bs": "binary_sensor.dsc_hub_4x8_window_open",
+    "clone_window_bs": "binary_sensor.dsc_hub_2x4_window_open",
+    "light_catchup_bs": "binary_sensor.dsc_hub_light_catchup_active",
+}
+

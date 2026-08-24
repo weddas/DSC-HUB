@@ -1,12 +1,12 @@
 import { StatusChip } from "./ui";
 import { useHubVitals, useFleet } from "../hooks/useFleet";
-import { useHass } from "../hooks/useHass";
+import { useEntityBus } from "../hooks/useEntityBus";
 
 /** D-05: hub_link + ages/bounces/rf — fleet-native link; HA-only extras from entity bus. */
 export function HubLinkLine() {
   const { online, uptime, heartbeat } = useHubVitals();
   const fleet = useFleet();
-  const { state, available } = useHass();
+  const { state, available } = useEntityBus();
 
   const age = available("sensor.dsc_hub_api_down_age")
     ? state("sensor.dsc_hub_api_down_age", "—")

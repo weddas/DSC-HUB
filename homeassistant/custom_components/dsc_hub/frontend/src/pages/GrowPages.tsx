@@ -5,7 +5,7 @@ import { CatalogResearch } from "../components/CatalogResearch";
 import { OverflowMenu, SoilCrossSection, SlideDrawer } from "../components/chrome";
 import { HistoryDrawer } from "../components/HistoryDrawer";
 import { Button, Card, PageHeader, StatusChip } from "../components/ui";
-import { useHass } from "../hooks/useHass";
+import { useEntityBus } from "../hooks/useEntityBus";
 import { useFleetActions } from "../hooks/useFleetActions";
 import { useEntitySeries } from "../hooks/useEntitySeries";
 import { useHeldReading } from "../hooks/useHeldReading";
@@ -33,7 +33,7 @@ export function PlantSeatPanel({
   pot: number;
   onSelectPot?: (n: number) => void;
 }) {
-  const { hass, state, entity, available, tick, num } = useHass();
+  const { hass, state, entity, available, tick, num } = useEntityBus();
   const { callService } = useFleetActions();
   const navigate = useNavigate();
   void tick;
@@ -490,7 +490,7 @@ export function GrowResearchPage() {
 }
 
 export function GrowRosterPage() {
-  const { entity, state, tick } = useHass();
+  const { entity, state, tick } = useEntityBus();
   const [params, setParams] = useSearchParams();
   void tick;
   const slots = rosterSlots(entity);

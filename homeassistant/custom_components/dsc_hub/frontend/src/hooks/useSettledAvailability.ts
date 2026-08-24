@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useHass } from "./useHass";
+import { useEntityBus } from "./useEntityBus";
 
 /** Matches follower debounce in dsc_v4_automations.yaml — offline-only wait. */
 export const OFFLINE_COOLDOWN_MS = 25_000;
@@ -9,7 +9,7 @@ export const OFFLINE_COOLDOWN_MS = 25_000;
  * so HA-link flaps do not flash kit nodes. Never invents HA states.
  */
 export function useSettledAvailability(cooldownMs = OFFLINE_COOLDOWN_MS): (entityId: string) => boolean {
-  const { available, tick } = useHass();
+  const { available, tick } = useEntityBus();
   const lastOnline = useRef<Record<string, number>>({});
   const [, setNow] = useState(() => Date.now());
 

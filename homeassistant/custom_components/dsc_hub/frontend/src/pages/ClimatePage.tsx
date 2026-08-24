@@ -17,7 +17,7 @@ import { CropScheduler } from "../components/CropScheduler";
 import { TentTargetPanel } from "../components/TentTargets";
 import { resolveCfm } from "../lib/cfmProvenance";
 import { absoluteHumidity } from "../lib/potTrust";
-import { useHass } from "../hooks/useHass";
+import { useEntityBus } from "../hooks/useEntityBus";
 import { useFleet, useHubVitals, useFleetSource, useFleetTick } from "../hooks/useFleet";
 import { useFleetEntity } from "../hooks/useFleetEntity";
 import { useEntitySeries } from "../hooks/useEntitySeries";
@@ -62,7 +62,7 @@ const FOCUS_OPTIONS: { id: ZoneFocus; label: string }[] = [
 ];
 
 export function LiveClimatePage() {
-  const { num, state, entity, available } = useHass();
+  const { num, state, entity, available } = useEntityBus();
   const fleet = useFleet();
   const hubVitals = useHubVitals();
   const navigate = useNavigate();

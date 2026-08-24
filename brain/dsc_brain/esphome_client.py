@@ -11,10 +11,12 @@ from typing import Any
 from .appliance_driver import get_appliance_status
 from .fleet_state import FleetState, SeatState, get_fleet_state, update_fleet_state
 from .hub_controls import (
+    HUB_BINARY_OID_TO_ENTITY,
     HUB_FAN_OID_TO_ENTITY,
     HUB_LIGHT_OID_TO_ENTITY,
     HUB_NUMBER_OID_TO_ENTITY,
     HUB_SELECT_OID_TO_ENTITY,
+    HUB_SENSOR_OID_TO_KEY,
     HUB_SWITCH_OID_TO_ENTITY,
 )
 from .native_api import make_api_client
@@ -176,6 +178,13 @@ async def _fetch_device(host: str, api_key: str, role: str, seat_id: str) -> dic
         mapping = HUB_MAP if role == "hub" else POT_MAP if role == "pot" else {}
         for key, st in states.items():
             object_id = key_to_object.get(key, "")
+            if role == "hub" and object_id in HUB_SENSOR_OID_TO_KEY:
+                field = HUB_SENSOR_OID_TO_KEY[object_id]
+                try:
+                    values[field] = float(st.state)
+                except (TypeError, ValueError):
+                    values[field] = st.state
+                continue
             for suffix, field in mapping.items():
                 if object_id.endswith(suffix) or suffix in object_id:
                     try:
@@ -186,6 +195,7 @@ async def _fetch_device(host: str, api_key: str, role: str, seat_id: str) -> dic
 
         if role == "hub":
             values["controls"] = _hub_controls_from_states(states, key_to_object, entities)
+            values["binaries"] = _hub_binaries_from_states(states, key_to_object)
 
         values["host"] = host
         values["seat_id"] = seat_id
@@ -244,6 +254,23 @@ def _hub_controls_from_states(
             put(entity_id, state, options=opts)
 
     return controls
+
+
+def _hub_binaries_from_states(
+    states: dict[int, Any],
+    key_to_object: dict[int, str],
+) -> dict[str, bool]:
+    binaries: dict[str, bool] = {}
+    for key, st in states.items():
+        object_id = key_to_object.get(key, "")
+        entity_id = HUB_BINARY_OID_TO_ENTITY.get(object_id)
+        if not entity_id:
+            continue
+        on = bool(getattr(st, "state", False))
+        if isinstance(st.state, str):
+            on = st.state.lower() in ("on", "true", "1")
+        binaries[entity_id] = on
+    return binaries
 
 
 _ingest = EsphomeIngest()

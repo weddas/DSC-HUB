@@ -8,7 +8,7 @@ import {
 } from "../components/ui";
 import { IconButton, OverflowMenu, SlideDrawer } from "../components/chrome";
 import { NextRecommendedCard } from "../components/Honesty";
-import { useHass } from "../hooks/useHass";
+import { useEntityBus } from "../hooks/useEntityBus";
 import { useHeldReading, useHubOfflineMs, useBeatOfflineMs, usePanelOfflineMs } from "../hooks/useHeldReading";
 import { fmtDurationMs } from "../lib/formatDuration";
 import { buildPlantSeat, ALL_POT_NUMBERS, isPotInService } from "../lib/seatModel";
@@ -27,7 +27,7 @@ import { useInspector } from "../components/InspectorHost";
 import { ALERT_ENTITY_IDS } from "../lib/alertPlaybook";
 
 export function LiveMissionPage() {
-  const { state, num, available, entity, tick } = useHass();
+  const { state, num, available, entity, tick } = useEntityBus();
   const fleet = useFleet();
   const navigate = useNavigate();
   const [searchOpen, setSearchOpen] = useState(false);
@@ -66,7 +66,7 @@ export function LiveMissionPage() {
   const takeover = state("switch.dsc_hub_manual_takeover") === "on";
   const fanOverride = state("switch.dsc_hub_tent_manual_override") === "on";
   const fullAuto = state("switch.dsc_hub_tent_full_auto_mode") === "on";
-  const reducedKit = state("binary_sensor.dsc_reduced_kit") === "on";
+  const reducedKit = !!fleet.system.reduced_kit;
   const honesty = String(entity("sensor.dsc_keepup_gaps")?.attributes?.full_auto_honesty ?? "");
   const autoDriven = fullAuto && !takeover;
   const fleetStatus = state("sensor.dsc_fleet_version_status", fleet.expected_firmware || "—");

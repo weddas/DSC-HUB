@@ -2,12 +2,12 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button, Card, StatusChip } from "./ui";
 import { DecisionLayer } from "./DecisionLayer";
-import { useHass } from "../hooks/useHass";
+import { useEntityBus } from "../hooks/useEntityBus";
 import { useFleet } from "../hooks/useFleet";
 import { collectHonestyGaps, collectHonestyGapsFromFleet, nextRecommended, type HonestyGap } from "../lib/sensorHonesty";
 
 export function useHonestyGaps(): HonestyGap[] {
-  const hass = useHass();
+  const hass = useEntityBus();
   const fleet = useFleet();
   return useMemo(
     () =>

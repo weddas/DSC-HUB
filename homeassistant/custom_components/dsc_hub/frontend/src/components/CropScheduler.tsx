@@ -5,7 +5,7 @@ import {
   isPotInService,
   tentLabel,
 } from "../lib/seatModel";
-import { useHass } from "../hooks/useHass";
+import { useEntityBus } from "../hooks/useEntityBus";
 import { Card, StatusChip } from "./ui";
 import { VesselGlyph } from "./VesselGlyph";
 import { readPotVessel } from "../lib/vesselSpec";
@@ -21,7 +21,7 @@ function stageIndex(stage: string): number {
 }
 
 export function CropScheduler({ compact }: { compact?: boolean }) {
-  const { state, entity } = useHass();
+  const { state, entity } = useEntityBus();
   const seats = ALL_POT_NUMBERS.map((n) => ({
     seat: buildPlantSeat(n, { state, entity }),
     oos: !isPotInService(n, state),

@@ -210,9 +210,46 @@ export function fleetToHassCompat(fleet: FleetSnapshot): Record<string, HassEnti
   if (fleet.hub.firmware) {
     set("sensor.dsc_hub_firmware_version", fleet.hub.firmware, fleet.hub.online);
   }
+  if (fleet.panel.firmware) {
+    set("sensor.dsc_control_firmware_version", fleet.panel.firmware, fleet.panel.online);
+  }
   set("sensor.dsc_ha_surface_version", fleet.surface);
-  set("binary_sensor.dsc_pi_appliance_link", fleet.system.appliance_link ? "on" : "off");
-  set("binary_sensor.dsc_reduced_kit", fleet.system.reduced_kit ? "on" : "off");
+  set("sensor.dsc_fleet_version_status", fleet.version);
+  set("sensor.dsc_active_alert_count", "0");
+  set("binary_sensor.dsc_pi_appliance_link", fleet.system.appliance_link ? "on" : "off", true);
+  set("binary_sensor.dsc_reduced_kit", fleet.system.reduced_kit ? "on" : "off", true);
+
+  const hubLive = fleet.hub.online;
+  if (v.room_temp_c != null) {
+    set("sensor.dsc_hub_room_temperature", String(v.room_temp_c), hubLive);
+  }
+  if (v.room_rh_pct != null) {
+    set("sensor.dsc_hub_room_humidity", String(v.room_rh_pct), hubLive);
+  }
+  if (v.room_temp_c != null && v.room_rh_pct != null) {
+    const roomVpd = computeVpd(Number(v.room_temp_c), Number(v.room_rh_pct));
+    if (Number.isFinite(roomVpd)) {
+      set("sensor.dsc_hub_room_vpd_kpa", roomVpd.toFixed(2), hubLive);
+      set("sensor.dsc_hub_room_vpd", roomVpd.toFixed(2), hubLive);
+    }
+  }
+  if (v.clone_temp_c != null) {
+    set("sensor.dsc_hub_clone_temperature", String(v.clone_temp_c), hubLive);
+  }
+  if (v.clone_rh_pct != null) {
+    set("sensor.dsc_hub_clone_humidity", String(v.clone_rh_pct), hubLive);
+  }
+  if (v.clone_vpd_kpa != null) {
+    set("sensor.dsc_hub_clone_vpd_kpa", String(v.clone_vpd_kpa), hubLive);
+    set("sensor.dsc_hub_clone_vpd", String(v.clone_vpd_kpa), hubLive);
+  }
+
+  const binaries = v.binaries as Record<string, boolean> | undefined;
+  if (binaries) {
+    for (const [eid, on] of Object.entries(binaries)) {
+      set(eid, on ? "on" : "off", hubLive);
+    }
+  }
 
   for (const [seatId, row] of Object.entries(IN_SERVICE_ENTITIES)) {
     const inSvc = inventoryInServiceFromFleet(fleet, seatId);
@@ -221,11 +258,30 @@ export function fleetToHassCompat(fleet: FleetSnapshot): Record<string, HassEnti
 
   for (const [potId, seat] of Object.entries(fleet.pots)) {
     const n = potId.replace("pot", "");
-    if (seat.values.moisture_pct != null) {
-      set(`sensor.dsc_pot${n}_soil_moisture`, String(seat.values.moisture_pct), seat.online);
+    const live = seat.online;
+    const moisture = seat.values.moisture_pct;
+    if (moisture != null) {
+      const s = String(moisture);
+      set(`sensor.dsc_pot${n}_soil_moisture`, s, live);
+      set(`sensor.dsc_pot${n}_got_moisture`, s, live);
+    }
+    const soilT = seat.values.soil_temp_c;
+    if (soilT != null) {
+      set(`sensor.dsc_pot${n}_soil_temperature`, String(soilT), live);
+    }
+    const ec = seat.values.ec_us;
+    if (ec != null) {
+      set(`sensor.dsc_pot${n}_soil_ec`, String(ec), live);
+      set(`sensor.dsc_pot${n}_soil_conductivity`, String(ec), live);
+      set(`sensor.dsc_pot${n}_got_ec`, String(ec), live);
+    }
+    const ph = seat.values.ph;
+    if (ph != null) {
+      set(`sensor.dsc_pot${n}_soil_ph`, String(ph), live);
+      set(`sensor.dsc_pot${n}_got_ph`, String(ph), live);
     }
     if (seat.firmware) {
-      set(`sensor.dsc_pot${n}_firmware_version`, seat.firmware, seat.online);
+      set(`sensor.dsc_pot${n}_firmware_version`, seat.firmware, live);
     }
   }
 
@@ -263,6 +319,13 @@ export function fleetToHassCompat(fleet: FleetSnapshot): Record<string, HassEnti
   }
 
   return states;
+}
+
+function computeVpd(tempC: number, rhPct: number): number {
+  if (!Number.isFinite(tempC) || !Number.isFinite(rhPct) || rhPct <= 0) return NaN;
+  const svp = 0.6108 * Math.exp((17.27 * tempC) / (tempC + 237.3));
+  const avp = svp * (rhPct / 100);
+  return svp - avp;
 }
 
 function inventoryInServiceFromFleet(fleet: FleetSnapshot, seatId: string): boolean {

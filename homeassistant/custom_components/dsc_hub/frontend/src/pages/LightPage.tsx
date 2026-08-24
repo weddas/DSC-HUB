@@ -13,7 +13,7 @@ import {
 import { CropScheduler } from "../components/CropScheduler";
 import { DutyStrip } from "../components/DutyStrip";
 import { TargetNumber } from "../components/TentTargets";
-import { useHass } from "../hooks/useHass";
+import { useEntityBus } from "../hooks/useEntityBus";
 import { useInspector } from "../components/InspectorHost";
 import { ArcGauge } from "../viz/charts";
 import { draftTone, tentWantRail } from "../lib/tentWant";
@@ -34,7 +34,7 @@ function nextEventHuman(iso: string, now = Date.now()): string {
 }
 
 export function LiveLightPage() {
-  const { state, num, entity } = useHass();
+  const { state, num, entity } = useEntityBus();
   const navigate = useNavigate();
   const inspector = useInspector();
   const darkViolation = state("binary_sensor.dsc_clone_dark_period_violation") === "on";

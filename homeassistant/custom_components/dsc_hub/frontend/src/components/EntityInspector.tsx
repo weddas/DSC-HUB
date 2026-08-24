@@ -1,7 +1,8 @@
 import { useMemo } from "react";
 import { SlideDrawer } from "./chrome";
 import { Button, StatusChip } from "./ui";
-import { useHass } from "../hooks/useHass";
+import { useEntityBus } from "../hooks/useEntityBus";
+import { useFleetActions } from "../hooks/useFleetActions";
 import { useEntitySeries } from "../hooks/useEntitySeries";
 import { useChartHours } from "../hooks/useChartHours";
 import { useAlertSnooze } from "../hooks/useAlertSnooze";
@@ -40,7 +41,8 @@ export function EntityInspector({
   target: InspectorTarget | null;
   onClose: () => void;
 }) {
-  const { state, num, available, entity, callService } = useHass();
+  const { state, num, available, entity } = useEntityBus();
+  const { callService } = useFleetActions();
   const { hours, setHours, maxPoints } = useChartHours(6);
   const { isSnoozed, snooze, unsnooze } = useAlertSnooze();
   const entityId = target?.entityId ?? "";

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useHass } from "./useHass";
+import { useEntityBus } from "./useEntityBus";
 import { useFleet, useFleetSource } from "./useFleet";
 import { fleetEntityAvailable, fleetLiveNumber, hubFleetDark } from "../lib/entityFleetMap";
 
@@ -27,7 +27,7 @@ function parseLiveNumber(raw: string | undefined, liveOk: boolean): number {
  * Pi: prefers fleet metric; HA: entity bus. Never maps unavailable → 0.
  */
 export function useHeldReading(entityId: string): HeldReading {
-  const { available, tick, entity } = useHass();
+  const { available, tick, entity } = useEntityBus();
   const fleet = useFleet();
   const source = useFleetSource();
   const hold = useRef<{ value: number; at: number } | null>(null);
@@ -78,7 +78,7 @@ export function useHeldReading(entityId: string): HeldReading {
 }
 
 function useOfflineMs(entityId: string): number | null {
-  const { available, entity, tick } = useHass();
+  const { available, entity, tick } = useEntityBus();
   const fleet = useFleet();
   const source = useFleetSource();
   void tick;

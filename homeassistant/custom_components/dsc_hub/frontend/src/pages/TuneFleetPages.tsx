@@ -5,7 +5,7 @@ import { TankCutaway } from "../components/TankCutaway";
 import { KitPulse } from "../components/KitPulse";
 import { HubLinkLine } from "../components/HubLinkLine";
 import { CfmTrustLine } from "../components/CfmBadge";
-import { useHass } from "../hooks/useHass";
+import { useEntityBus } from "../hooks/useEntityBus";
 import { useEntitySeries } from "../hooks/useEntitySeries";
 import { useChartHours } from "../hooks/useChartHours";
 import { MultiLineChart } from "../viz/charts";
@@ -48,7 +48,7 @@ export function TuneLearningPage() {
 }
 
 export function TuneAnalyticsPage() {
-  const { state } = useHass();
+  const { state } = useEntityBus();
   const { hours, setHours, maxPoints } = useChartHours(6);
   const tSeries = useEntitySeries("sensor.dsc_hub_tent_temperature", { maxPoints, hours });
   const rhSeries = useEntitySeries("sensor.dsc_hub_tent_humidity", { maxPoints, hours });
@@ -142,7 +142,7 @@ export function TuneAnalyticsPage() {
 }
 
 export function FleetOverviewPage() {
-  const { state, available, num } = useHass();
+  const { state, available, num } = useEntityBus();
   const fleet = useFleet();
   const inspector = useInspector();
   const kit: KitNode[] = buildKitNodesFromFleet(fleet);
