@@ -18,6 +18,7 @@ export const PRIMARY_TABS: { id: PrimarySection; label: string; path: string; ic
 export const SECONDARY_TABS: Record<PrimarySection, TabRoute[]> = {
   live: [
     { id: "mission", label: "Mission", path: "/live/mission", icon: "mission" },
+    { id: "dash", label: "Dash", path: "/ops/home", icon: "twin" },
     { id: "twin", label: "Twin", path: "/live/twin", icon: "twin" },
     { id: "climate", label: "Climate", path: "/live/climate", icon: "climate" },
     { id: "main", label: "4×8", path: "/live/4x8", icon: "tent" },
@@ -43,9 +44,9 @@ export const SECONDARY_TABS: Record<PrimarySection, TabRoute[]> = {
 /** Legacy paths → 7.1 destinations (query preserved by caller when needed). */
 export const LEGACY_REDIRECTS: Record<string, string> = {
   "/": "/live/mission",
-  "/ops": "/live/mission",
-  "/ops/home": "/live/mission",
-  "/ops/dash": "/live/twin",
+  "/ops": "/ops/home",
+  "/ops/home": "/ops/home",
+  "/ops/dash": "/ops/dash",
   "/ops/climate": "/live/climate",
   "/ops/main-4x8": "/live/4x8",
   "/ops/clone-2x4": "/live/2x4",
@@ -70,6 +71,7 @@ export function sectionFromPath(pathname: string): PrimarySection {
   if (pathname.startsWith("/grow") || pathname.startsWith("/plant")) return "grow";
   if (pathname.startsWith("/tune") || pathname.startsWith("/advanced")) return "tune";
   if (pathname.startsWith("/fleet") || pathname.startsWith("/system")) return "fleet";
+  if (pathname.startsWith("/ops")) return "live";
   return "live";
 }
 

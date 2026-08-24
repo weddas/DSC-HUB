@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { CatalogPicker } from "./CatalogPicker";
 import { Button, Card, StatusChip } from "./ui";
-import { useHass } from "../hooks/useHass";
+import { useEntityBus } from "../hooks/useEntityBus";
+import { useFleetActions } from "../hooks/useFleetActions";
 import { searchCatalog, type CatalogItem, type CatalogKind } from "../lib/catalog";
 
 const DOMAINS: { id: CatalogKind; label: string }[] = [
@@ -122,7 +123,8 @@ function compareFields(kind: CatalogKind): { key: string; label: string }[] {
 }
 
 export function CatalogResearch() {
-  const { callService, state } = useHass();
+  const { state } = useEntityBus();
+  const { callService } = useFleetActions();
   const navigate = useNavigate();
   const [kind, setKind] = useState<CatalogKind>("strain");
   const [selected, setSelected] = useState<CatalogItem | null>(null);

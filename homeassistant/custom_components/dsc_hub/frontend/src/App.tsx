@@ -28,6 +28,7 @@ import {
   FleetOverviewPage,
 } from "./pages/TuneFleetPages";
 import { SettingsPage } from "./pages/SettingsPage";
+import { DashHomePage } from "./pages/DashHomePage";
 import {
   PRIMARY_TABS,
   SECONDARY_TABS,
@@ -153,9 +154,10 @@ function Shell({ surfaceVersion = "7.2.0" }: { surfaceVersion?: string }) {
         <Route path="/tune/analytics" element={<TuneAnalyticsPage />} />
         <Route path="/fleet" element={<FleetOverviewPage />} />
         <Route path="/fleet/settings" element={<SettingsPage />} />
+        <Route path="/ops/home" element={<DashHomePage />} />
+        <Route path="/ops/dash" element={<LiveTwinPage />} />
         {/* Legacy → 7.0 */}
         <Route path="/ops/*" element={<LegacyRedirect />} />
-        <Route path="/ops" element={<LegacyRedirect />} />
         <Route path="/plant/*" element={<LegacyRedirect />} />
         <Route path="/plant" element={<LegacyRedirect />} />
         <Route path="/advanced/*" element={<LegacyRedirect />} />

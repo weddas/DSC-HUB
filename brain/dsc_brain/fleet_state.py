@@ -136,6 +136,17 @@ class FleetState:
             self.hub.values.get("uptime", "—"),
             self.hub.online,
         )
+        if self.hub.values.get("clone_temp_c") is not None:
+            set_entity("sensor.dsc_hub_clone_temperature", self.hub.values["clone_temp_c"])
+        if self.hub.values.get("clone_rh_pct") is not None:
+            set_entity("sensor.dsc_hub_clone_humidity", self.hub.values["clone_rh_pct"])
+        if self.hub.values.get("clone_vpd_kpa") is not None:
+            set_entity("sensor.dsc_hub_clone_vpd_kpa", self.hub.values["clone_vpd_kpa"])
+        if self.hub.values.get("room_temp_c") is not None:
+            set_entity("sensor.dsc_hub_room_temperature", self.hub.values["room_temp_c"])
+        if self.hub.values.get("room_rh_pct") is not None:
+            set_entity("sensor.dsc_hub_room_humidity", self.hub.values["room_rh_pct"])
+
         if self.hub.firmware:
             set_entity("sensor.dsc_hub_firmware_version", self.hub.firmware, self.hub.online)
         if self.panel.firmware:
@@ -187,6 +198,12 @@ class FleetState:
             set_entity("sensor.dsc_canopy_temperature", self.canopy["temp_c"])
         if self.canopy.get("rh_pct") is not None:
             set_entity("sensor.dsc_canopy_humidity", self.canopy["rh_pct"])
+
+        from .computed_ops import build_computed_hass_states
+
+        computed = build_computed_hass_states(self, inventory)
+        for eid, ent in computed.items():
+            states[eid] = ent
 
         return states
 

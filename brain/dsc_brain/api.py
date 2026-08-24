@@ -17,8 +17,10 @@ from pydantic import BaseModel, Field
 from . import __version__
 from .backup_ops import export_backup_zip, import_backup_zip
 from .catalog import get_strain, init_db, reload_catalogs, search
+from .computed_ops import build_computed_hass_states
 from .control_ops import call_service_proxy
 from .history_ops import query_entity_history
+from .event_log import list_grow_log
 from .decision_loop import decision_tick
 from .appliance_driver import start_appliance_driver, stop_appliance_driver
 from .esphome_client import start_esphome_ingest, stop_esphome_ingest
@@ -114,6 +116,9 @@ app.add_middleware(
 
 if STATIC_DIR.is_dir():
     app.mount("/assets", StaticFiles(directory=str(STATIC_DIR / "assets")), name="assets")
+    vendor_dir = STATIC_DIR / "vendor"
+    if vendor_dir.is_dir():
+        app.mount("/vendor", StaticFiles(directory=str(vendor_dir)), name="vendor")
 
 
 @app.get("/health")
@@ -132,6 +137,7 @@ def fleet(include_hass: bool = Query(False, alias="include_hass")) -> dict[str, 
     inventory = list_inventory()
     payload = state.to_dict()
     payload["inventory"] = inventory
+    payload["hass_extras"] = build_computed_hass_states(state, inventory)
     if include_hass:
         payload["hass_states"] = state.to_hass_states(inventory)
     return payload
@@ -146,6 +152,7 @@ async def fleet_ws(websocket: WebSocket) -> None:
             inv = list_inventory()
             ws_payload = st.to_dict()
             ws_payload["inventory"] = inv
+            ws_payload["hass_extras"] = build_computed_hass_states(st, inv)
             await websocket.send_json(ws_payload)
             import asyncio
 
@@ -192,6 +199,15 @@ def history_get(
 ) -> dict[str, Any]:
     points = query_entity_history(entity_id, hours)
     return {"entity_id": entity_id, "hours": hours, "points": points}
+
+
+@app.get("/grow-log")
+def grow_log_get(
+    hours: float = Query(24.0, ge=1.0, le=168.0),
+    limit: int = Query(100, ge=1, le=500),
+) -> dict[str, Any]:
+    events = list_grow_log(hours=hours, limit=limit)
+    return {"hours": hours, "events": events}
 
 
 @app.get("/roster")

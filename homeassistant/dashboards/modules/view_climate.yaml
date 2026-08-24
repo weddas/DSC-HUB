@@ -489,11 +489,11 @@ sections:
                   navigation_path: /dsc-hub-pro/root-zone
           - type: markdown
             content: >-
-          *The **gap between Low and High IS the hysteresis** — keep it
-          ≥ 2 °C. Mat votes the **coldest plausible pot** (`sensor.dsc_coldest_root_zone_temp`,
-          pot attribute). Per-pot cards live on **Root Zone** (source of
-          truth) so this page stays control-focused. Sensing arrives
-          over ESP-NOW with HA as per-pot fallback.*
+              *The **gap between Low and High IS the hysteresis** — keep it
+              ≥ 2 °C. Mat votes the **coldest plausible pot** (`sensor.dsc_coldest_root_zone_temp`,
+              pot attribute). Per-pot cards live on **Root Zone** (source of
+              truth) so this page stays control-focused. Sensing arrives
+              over ESP-NOW with HA as per-pot fallback.*
       - type: custom:expander-card
         title: 💧 Clone humidifier — the short-cycling fix
         expanded: false

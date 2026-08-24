@@ -7,6 +7,8 @@ import logging
 from typing import Any
 
 from .native_api import make_api_client
+from .compose_ops import handle_script
+from .compose_store import set_helper
 from .settings import list_inventory, upsert_inventory
 
 _logger = logging.getLogger(__name__)
@@ -303,19 +305,32 @@ async def call_service_proxy(domain: str, service: str, data: dict[str, Any]) ->
 
     if domain == "input_boolean":
         seat = _IN_SERVICE_ENTITY_TO_SEAT.get(entity_id)
-        if not seat:
-            raise ValueError(f"unsupported input_boolean {entity_id}")
-        if service == "turn_on":
-            on = True
-        elif service == "turn_off":
-            on = False
-        elif service == "toggle":
-            row = _inventory_row(seat)
-            on = not bool((row or {}).get("in_service", False))
-        else:
-            raise ValueError(f"unsupported input_boolean service {service}")
-        upsert_inventory(seat, {"in_service": on})
-        return {"entity_id": entity_id, "state": "on" if on else "off"}
+        if seat:
+            if service == "turn_on":
+                on = True
+            elif service == "turn_off":
+                on = False
+            elif service == "toggle":
+                row = _inventory_row(seat)
+                on = not bool((row or {}).get("in_service", False))
+            else:
+                raise ValueError(f"unsupported input_boolean service {service}")
+            upsert_inventory(seat, {"in_service": on})
+            return {"entity_id": entity_id, "state": "on" if on else "off"}
+        if entity_id.startswith("input_boolean.dsc_"):
+            from .compose_store import get_helper
+
+            if service == "turn_on":
+                on = True
+            elif service == "turn_off":
+                on = False
+            elif service == "toggle":
+                on = get_helper(entity_id, "off") != "on"
+            else:
+                raise ValueError(f"unsupported input_boolean service {service}")
+            set_helper(entity_id, "on" if on else "off")
+            return {"entity_id": entity_id, "state": "on" if on else "off"}
+        raise ValueError(f"unsupported input_boolean {entity_id}")
 
     if domain == "switch":
         if entity_id in _HUB_SWITCH_ENTITY_TO_OID:
@@ -341,7 +356,8 @@ async def call_service_proxy(domain: str, service: str, data: dict[str, Any]) ->
             raise ValueError("value required")
         if entity_id in _NUMBER_ENTITY_TO_OID:
             return await _hub_number(entity_id, float(value))
-        raise ValueError(f"unsupported number {entity_id}")
+        set_helper(entity_id, float(value))
+        return {"entity_id": entity_id, "state": str(value)}
 
     if domain == "fan":
         if entity_id in HUB_FAN_ENTITY_TO_OID:
@@ -374,7 +390,37 @@ async def call_service_proxy(domain: str, service: str, data: dict[str, Any]) ->
             raise ValueError("option required")
         if entity_id in HUB_SELECT_ENTITY_TO_OID:
             return await _hub_select(entity_id, option)
-        raise ValueError(f"unsupported select {entity_id}")
+        set_helper(entity_id, option)
+        return {"entity_id": entity_id, "state": option}
+
+    if domain == "input_select" and service == "select_option":
+        option = str(data.get("option", ""))
+        if not option:
+            raise ValueError("option required")
+        set_helper(entity_id, option)
+        return {"entity_id": entity_id, "state": option}
+
+    if domain in ("input_text", "text") and service == "set_value":
+        value = str(data.get("value", ""))
+        set_helper(entity_id, value)
+        return {"entity_id": entity_id, "state": value}
+
+    if domain == "input_datetime" and service == "set_datetime":
+        date = str(data.get("date", ""))
+        if date:
+            set_helper(entity_id, date)
+            return {"entity_id": entity_id, "state": date}
+        raise ValueError("date required")
+
+    if domain == "datetime" and service == "set_value":
+        date = str(data.get("date", ""))
+        if date:
+            set_helper(entity_id, date)
+            return {"entity_id": entity_id, "state": date}
+        raise ValueError("date required")
+
+    if domain == "script" and service == "turn_on":
+        return handle_script(entity_id, data)
 
     raise ValueError(f"unsupported service {domain}.{service}")
 

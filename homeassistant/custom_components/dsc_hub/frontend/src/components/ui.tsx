@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { iconSvg, type IconName } from "../icons";
+import { useEntityBus } from "../hooks/useEntityBus";
 import { useHass } from "../hooks/useHass";
 import { useFleetActions } from "../hooks/useFleetActions";
 import { useFleetEntity } from "../hooks/useFleetEntity";
@@ -416,7 +417,7 @@ export function LinkChip({
   label: string;
   icon?: IconName;
 }) {
-  const { state, available } = useHass();
+  const { state, available } = useEntityBus();
   const on = available(entityId) && state(entityId) === "on";
   return (
     <span className={`dsc-chip ${on ? "dsc-chip--ok dsc-chip--pulse" : "dsc-chip--muted"}`}>
@@ -442,7 +443,7 @@ export function EntityText({
   multiline?: boolean;
   rows?: number;
 }) {
-  const { available, state } = useHass();
+  const { available, state } = useEntityBus();
   const { callService } = useFleetActions();
   const ok = available(entityId);
   const clean = liveText(state(entityId, ""));
@@ -495,7 +496,7 @@ function timeToService(hhmm: string): string {
 
 /** Local draft for `time.*` helpers. Writes `time.set_value`. */
 export function EntityTime({ entityId, label }: { entityId: string; label: string }) {
-  const { available, state } = useHass();
+  const { available, state } = useEntityBus();
   const { callService } = useFleetActions();
   const ok = available(entityId);
   const live = timeToInput(state(entityId, ""));
@@ -533,7 +534,7 @@ export function EntityTime({ entityId, label }: { entityId: string; label: strin
 
 /** Local draft for `input_datetime.*`. Date-only unless the helper has a time. */
 export function EntityDatetime({ entityId, label }: { entityId: string; label: string }) {
-  const { available, entity, state } = useHass();
+  const { available, entity, state } = useEntityBus();
   const { callService } = useFleetActions();
   const ok = available(entityId);
   const hasTime = Boolean(entity(entityId)?.attributes?.has_time);

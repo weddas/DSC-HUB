@@ -163,7 +163,8 @@ export function HassProvider({
     const entity = (entityId: string) => hassRef.current?.states?.[entityId];
     const available = (entityId: string) => {
       const st = entity(entityId)?.state;
-      return !!st && st !== "unavailable" && st !== "unknown";
+      if (st === undefined) return false;
+      return st !== "unavailable" && st !== "unknown";
     };
     const state = (entityId: string, fallback = "—") => {
       if (!available(entityId)) return fallback;

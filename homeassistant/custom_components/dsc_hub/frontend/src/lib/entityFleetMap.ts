@@ -18,7 +18,7 @@ export const ENTITY_FLEET_MAP: Record<string, EntityFleetRef> = {
   "sensor.dsc_hub_clone_humidity": { seatId: "hub", metric: "clone_rh_pct" },
   "sensor.dsc_hub_clone_vpd_kpa": { seatId: "hub", metric: "clone_vpd_kpa" },
   "sensor.dsc_hub_clone_vpd": { seatId: "hub", metric: "clone_vpd_kpa" },
-  "sensor.dsc_pot1_soil_moisture": { seatId: "pot1", metric: "moisture_pct" },
+  "sensor.dsc_coldest_root_zone_temp": { seatId: "hub", metric: "coldest_root_c" },
   "sensor.dsc_pot1_got_moisture": { seatId: "pot1", metric: "moisture_pct" },
   "sensor.dsc_pot2_soil_moisture": { seatId: "pot2", metric: "moisture_pct" },
   "sensor.dsc_pot2_got_moisture": { seatId: "pot2", metric: "moisture_pct" },

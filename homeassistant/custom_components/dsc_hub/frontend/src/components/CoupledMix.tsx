@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { useHass } from "../hooks/useHass";
+import { useEntityBus } from "../hooks/useEntityBus";
+import { useFleetActions } from "../hooks/useFleetActions";
 import { Button, EntityText, StatusChip } from "./ui";
 
 const LAYER_IDS = [1, 2, 3] as const;
@@ -32,7 +33,8 @@ function computeCoupled(
 }
 
 export function CoupledMix({ volumeL }: { volumeL: number }) {
-  const { state, num, available, callService } = useHass();
+  const { state, num, available } = useEntityBus();
+  const { callService } = useFleetActions();
   const [locked, setLocked] = useState<Record<number, boolean>>({ 1: false, 2: false, 3: false });
   const [dragging, setDragging] = useState<number | null>(null);
   const [drafts, setDrafts] = useState<PctMap | null>(null);

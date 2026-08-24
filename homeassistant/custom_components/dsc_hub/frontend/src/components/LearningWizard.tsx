@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Button, Card, EntitySelect, EntityToggle, StatusChip } from "./ui";
 import { DecisionLayer } from "./DecisionLayer";
 import { TargetNumber } from "./TentTargets";
-import { useHass } from "../hooks/useHass";
+import { useEntityBus } from "../hooks/useEntityBus";
+import { useFleetActions } from "../hooks/useFleetActions";
 
 const CAL_CURVES: { label: string; prefix: string; reset: string }[] = [
   { label: "OUT", prefix: "dsc_cal_cfm_out", reset: "script.dsc_cal_reset_curve_out" },
@@ -13,7 +14,8 @@ const CAL_CURVES: { label: string; prefix: string; reset: string }[] = [
 const PPFD_STEPS = [25, 50, 75, 100] as const;
 
 export function LearningWizard() {
-  const { callService, entity, state } = useHass();
+  const { entity, state } = useEntityBus();
+  const { callService } = useFleetActions();
   const [step, setStep] = useState<"gate" | "sample" | "accept" | "climate" | "curves" | null>(null);
   const learnStatus = state("sensor.dsc_learn_status", "—");
   const gateOpen = state("binary_sensor.dsc_learn_gate_open") === "on";

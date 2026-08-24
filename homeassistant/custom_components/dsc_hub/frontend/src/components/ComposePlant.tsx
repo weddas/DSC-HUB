@@ -5,7 +5,8 @@ import { DecisionLayer, ResultChip } from "./DecisionLayer";
 import { VesselGlyph } from "./VesselGlyph";
 import { Button, Card, EntitySelect, EntityText, EntityDatetime, StatusChip } from "./ui";
 import { TargetNumber } from "./TentTargets";
-import { useHass } from "../hooks/useHass";
+import { useEntityBus } from "../hooks/useEntityBus";
+import { useFleetActions } from "../hooks/useFleetActions";
 import { DEFAULT_VESSEL, resolveVesselSpec, vesselEntityId, VESSEL_CATALOG } from "../lib/vesselSpec";
 import type { CatalogItem, CatalogKind } from "../lib/catalog";
 
@@ -15,7 +16,8 @@ type ConfirmKind = "roster" | "assign" | "seat" | "mix" | "climate" | null;
 const NUTRIENT_SLOTS = [1, 2, 3, 4, 5, 6, 7, 8] as const;
 
 export function ComposePlant() {
-  const { available, callService, entity, num, state } = useHass();
+  const { available, entity, num, state } = useEntityBus();
+  const { callService } = useFleetActions();
   const [draw, setDraw] = useState<DrawKind>(null);
   const [confirm, setConfirm] = useState<ConfirmKind>(null);
   const [pickedStrain, setPickedStrain] = useState<CatalogItem | null>(null);

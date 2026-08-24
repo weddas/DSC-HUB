@@ -94,6 +94,8 @@ def test_fleet_api_native_snapshot(temp_db: Path, monkeypatch: pytest.MonkeyPatc
     body = resp.json()
     assert "inventory" in body
     assert "hub" in body
+    assert "hass_extras" in body
+    assert "sensor.dsc_fan_exhaust_outside_pct" in body["hass_extras"]
     assert "hass_states" not in body
 
     legacy = client.get("/fleet?include_hass=true")
@@ -101,6 +103,38 @@ def test_fleet_api_native_snapshot(temp_db: Path, monkeypatch: pytest.MonkeyPatc
     legacy_body = legacy.json()
     assert "hass_states" in legacy_body
     assert "binary_sensor.dsc_hub_link" in legacy_body["hass_states"]
+    assert "sensor.dsc_cfm_exhaust_out" in legacy_body["hass_states"]
+
+
+def test_compose_commit_roster(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("DSC_DATA", str(temp_db.parent))
+    from dsc_brain.compose_ops import commit_to_roster
+    from dsc_brain.compose_store import default_roster_slots, save_roster_slots, set_helper
+
+    save_roster_slots(default_roster_slots())
+    set_helper("input_text.dsc_build_strain", "Test Strain")
+    set_helper("input_text.dsc_build_nickname", "Tester")
+    result = commit_to_roster()
+    assert result["slot"] == 1
+
+
+def test_control_script_proxy(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("DSC_DATA", str(temp_db.parent))
+    from fastapi.testclient import TestClient
+
+    from dsc_brain.api import app
+
+    client = TestClient(app)
+    resp = client.post(
+        "/control/service",
+        json={
+            "domain": "input_text",
+            "service": "set_value",
+            "data": {"entity_id": "input_text.dsc_build_strain", "value": "Blue Dream"},
+        },
+    )
+    assert resp.status_code == 200
+    assert resp.json()["state"] == "Blue Dream"
 
 
 def test_history_api(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -170,6 +204,73 @@ def test_hub_binaries_from_states() -> None:
     key_to_object = {1: "main_window_bs"}
     binaries = _hub_binaries_from_states(states, key_to_object)
     assert binaries["binary_sensor.dsc_hub_4x8_window_open"] is True
+
+
+def test_hub_sensors_exact_map_ignores_number_entities() -> None:
+    from types import SimpleNamespace
+
+    from dsc_brain.esphome_client import _hub_sensors_from_states
+
+    states = {
+        1: SimpleNamespace(state=24.0),
+        2: SimpleNamespace(state=65.0),
+        3: SimpleNamespace(state=18.0),
+        4: SimpleNamespace(state=22.5),
+        5: SimpleNamespace(state=61.0),
+    }
+    key_to_object = {
+        1: "temp_sensor",
+        2: "humidity_sensor",
+        3: "num_clone_light_hours",
+        4: "clone_temp",
+        5: "clone_rh",
+    }
+    out = _hub_sensors_from_states(states, key_to_object)
+    assert out["temp_c"] == 24.0
+    assert out["rh_pct"] == 65.0
+    assert "vpd_kpa" not in out
+    assert out["clone_temp_c"] == 22.5
+    assert out["clone_rh_pct"] == 61.0
+
+
+def test_finalize_hub_climate_computes_vpd() -> None:
+    from dsc_brain.climate_math import compute_vpd_kpa, finalize_hub_climate
+
+    assert compute_vpd_kpa(24.0, 70.0) == pytest.approx(0.902, rel=0.02)
+    values = {"temp_c": 24.0, "rh_pct": 70.0, "vpd_kpa": 18.0}
+    finalize_hub_climate(values)
+    assert values["vpd_kpa"] == pytest.approx(0.902, rel=0.02)
+
+
+def test_finalize_hub_binaries_fills_pot_esp() -> None:
+    import time
+
+    from dsc_brain.esphome_client import _finalize_hub_binaries
+    from dsc_brain.fleet_state import FleetState, SeatState
+
+    state = FleetState()
+    state.hub = SeatState("hub", True, "1.0", {"binaries": {}}, time.time())
+    state.pots["pot1"] = SeatState("pot1", True, "1.0", {"soil_temp_c": 22.0}, time.time())
+    _finalize_hub_binaries(state)
+    binaries = state.hub.values["binaries"]
+    assert binaries["binary_sensor.dsc_hub_pot1_esp_now_link"] is True
+    assert binaries["binary_sensor.dsc_hub_pot2_esp_now_link"] is False
+    assert binaries["binary_sensor.dsc_hub_root_zone_sensor_fault"] is False
+
+
+def test_grow_log_api(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("DSC_DATA", str(temp_db.parent))
+    from fastapi.testclient import TestClient
+
+    from dsc_brain.api import app
+    from dsc_brain.event_log import record_grow_log
+
+    record_grow_log("Test grow event")
+    client = TestClient(app)
+    resp = client.get("/grow-log", params={"hours": 24})
+    assert resp.status_code == 200
+    body = resp.json()
+    assert any("Test grow event" in e["message"] for e in body["events"])
 
 
 def test_esphome_job_queue(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:

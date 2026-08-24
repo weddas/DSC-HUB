@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useEntityBus } from "../hooks/useEntityBus";
 import { useFleetActions } from "../hooks/useFleetActions";
+import { useFleetEntity } from "../hooks/useFleetEntity";
 import { useHeldReading } from "../hooks/useHeldReading";
 import { OverflowMenu } from "./chrome";
 import { draftTone, tentWantRail } from "../lib/tentWant";

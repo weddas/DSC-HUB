@@ -164,7 +164,8 @@ export function TwinKeepAlive() {
       {status === "missing" ? (
         <div className="dsc-empty">
           <strong>dsc-the-dash-card</strong> did not register. Deploy{" "}
-          <code>/local/dsc-the-dash-card.js</code> and hard-refresh.
+          <code>{import.meta.env.VITE_DSC_PI === "1" ? "/dsc-the-dash-card.js" : "/local/dsc-the-dash-card.js"}</code>{" "}
+          and hard-refresh.
         </div>
       ) : null}
     </div>

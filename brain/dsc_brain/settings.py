@@ -45,6 +45,11 @@ CREATE TABLE IF NOT EXISTS learning_log (
   payload_json TEXT NOT NULL DEFAULT '{}',
   ts REAL NOT NULL
 );
+CREATE TABLE IF NOT EXISTS grow_event_log (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  message TEXT NOT NULL,
+  ts REAL NOT NULL
+);
 """
 
 DEFAULT_INVENTORY: list[dict[str, Any]] = [

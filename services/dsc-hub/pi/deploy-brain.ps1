@@ -25,7 +25,23 @@ Push-Location $FrontendDir
 if ($LASTEXITCODE -ne 0) { throw "SPA build failed" }
 Pop-Location
 
-$SpaIndex = Join-Path $FrontendDir "spa-dist\index.html"
+$SpaDist = Join-Path $FrontendDir "spa-dist"
+$WwwDir = Join-Path $RepoRoot "homeassistant\www"
+New-Item -ItemType Directory -Force -Path (Join-Path $SpaDist "vendor") | Out-Null
+foreach ($name in @("three.min.js", "dsc-dash-fx.js")) {
+  $src = Join-Path $WwwDir "vendor\$name"
+  if (Test-Path $src) { Copy-Item $src (Join-Path $SpaDist "vendor\$name") -Force }
+}
+foreach ($card in @("dsc-the-dash-card.js", "dsc-airflow-map-card.js", "dsc-system-map-card.js")) {
+  $src = Join-Path $WwwDir $card
+  if (Test-Path $src) { Copy-Item $src (Join-Path $SpaDist $card) -Force }
+}
+foreach ($asset in @("dsc-system-map.svg")) {
+  $src = Join-Path $WwwDir $asset
+  if (Test-Path $src) { Copy-Item $src (Join-Path $SpaDist $asset) -Force }
+}
+
+$SpaIndex = Join-Path $SpaDist "index.html"
 if (Test-Path $SpaIndex) {
     $indexHtml = Get-Content $SpaIndex -Raw
     if ($indexHtml -match 'assets/(index-[^"]+\.js)') {
@@ -41,7 +57,7 @@ if (Test-Path $SpaTarPath) { Remove-Item $SpaTarPath -Force }
 Push-Location $BrainDir
 tar -czf $TarPath dsc_brain requirements.txt
 Pop-Location
-Push-Location (Join-Path $FrontendDir "spa-dist")
+Push-Location $SpaDist
 tar -czf $SpaTarPath .
 Pop-Location
 

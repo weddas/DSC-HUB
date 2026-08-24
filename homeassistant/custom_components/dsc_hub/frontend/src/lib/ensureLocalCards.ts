@@ -2,14 +2,22 @@
 /** Cache-bust: HA /local max-age ~31d; bump when Dash/Twin IIFE changes. */
 const BUNDLE_V = "7.2.0";
 
-/** Fat umbrella bundle (may contain several cards depending on build). */
-const UMBRELLA = [
-  `/local/DSC-HUB.js?v=${BUNDLE_V}`,
-  `/hacsfiles/DSC-HUB/DSC-HUB.js?v=${BUNDLE_V}`,
-];
+const PI_MODE = import.meta.env.VITE_DSC_PI === "1";
 
-const THREE_JS = `/local/vendor/three.min.js?v=${BUNDLE_V}`;
-const DASH_FX = `/local/vendor/dsc-dash-fx.js?v=${BUNDLE_V}`;
+/** Fat umbrella bundle (may contain several cards depending on build). */
+const UMBRELLA = PI_MODE
+  ? []
+  : [
+      `/local/DSC-HUB.js?v=${BUNDLE_V}`,
+      `/hacsfiles/DSC-HUB/DSC-HUB.js?v=${BUNDLE_V}`,
+    ];
+
+const THREE_JS = PI_MODE
+  ? `/vendor/three.min.js?v=${BUNDLE_V}`
+  : `/local/vendor/three.min.js?v=${BUNDLE_V}`;
+const DASH_FX = PI_MODE
+  ? `/vendor/dsc-dash-fx.js?v=${BUNDLE_V}`
+  : `/local/vendor/dsc-dash-fx.js?v=${BUNDLE_V}`;
 
 /**
  * Prefer the dedicated IIFE for each tag. The umbrella alone is not enough:
@@ -19,14 +27,19 @@ const DASH_FX = `/local/vendor/dsc-dash-fx.js?v=${BUNDLE_V}`;
  * render time. Load vendor/three.min.js (then dash-fx) before the card IIFE.
  */
 const TAG_SCRIPTS: Record<string, string[]> = {
-  "dsc-catalog-browse-card": [`/local/dsc-catalog-browse-card.js?v=${BUNDLE_V}`],
-  "dsc-build-plant-card": [`/local/dsc-build-plant-card.js?v=${BUNDLE_V}`],
-  "dsc-the-dash-card": [THREE_JS, DASH_FX, `/local/dsc-the-dash-card.js?v=${BUNDLE_V}`],
-  "dsc-airflow-map-card": [`/local/dsc-airflow-map-card.js?v=${BUNDLE_V}`],
-  "dsc-system-map-card": [
-    `/local/dsc-system-map-card.js?v=${BUNDLE_V}`,
-    ...UMBRELLA,
-  ],
+  "dsc-catalog-browse-card": PI_MODE
+    ? []
+    : [`/local/dsc-catalog-browse-card.js?v=${BUNDLE_V}`],
+  "dsc-build-plant-card": PI_MODE ? [] : [`/local/dsc-build-plant-card.js?v=${BUNDLE_V}`],
+  "dsc-the-dash-card": PI_MODE
+    ? [THREE_JS, DASH_FX, `/dsc-the-dash-card.js?v=${BUNDLE_V}`]
+    : [THREE_JS, DASH_FX, `/local/dsc-the-dash-card.js?v=${BUNDLE_V}`],
+  "dsc-airflow-map-card": PI_MODE
+    ? [`/dsc-airflow-map-card.js?v=${BUNDLE_V}`]
+    : [`/local/dsc-airflow-map-card.js?v=${BUNDLE_V}`],
+  "dsc-system-map-card": PI_MODE
+    ? [`/dsc-system-map-card.js?v=${BUNDLE_V}`]
+    : [`/local/dsc-system-map-card.js?v=${BUNDLE_V}`, ...UMBRELLA],
 };
 
 type ThreeHolder = { THREE?: unknown };
@@ -59,7 +72,6 @@ function injectScript(src: string): Promise<void> {
 
 function candidatesFor(tag: string): string[] {
   const specific = TAG_SCRIPTS[tag] ?? [];
-  // Always try dedicated first, then umbrella (covers tags only in the fat build).
   const out: string[] = [];
   for (const src of [...specific, ...UMBRELLA]) {
     if (!out.includes(src)) out.push(src);
@@ -71,6 +83,7 @@ function candidatesFor(tag: string): string[] {
 async function ensureThree(): Promise<boolean> {
   if (hasThree()) return true;
   for (const src of [THREE_JS, ...UMBRELLA]) {
+    if (!src) continue;
     try {
       await injectScript(src);
     } catch {
@@ -103,6 +116,7 @@ export async function ensureLocalCard(tag: string, timeoutMs = 12000): Promise<b
 
   const dedicated = TAG_SCRIPTS[tag] ?? [];
   for (const src of dedicated) {
+    if (!src) continue;
     try {
       await injectScript(src);
     } catch {

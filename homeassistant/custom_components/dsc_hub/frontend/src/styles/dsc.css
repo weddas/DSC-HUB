@@ -1838,3 +1838,75 @@ button.dsc-chip.is-clickable:hover {
   font-size: 0.78rem;
 }
 
+.dsc-dash-home .dsc-gauge-matrix--dense {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px 8px;
+}
+
+.dsc-band-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.dsc-band-cell .dsc-sparkline {
+  opacity: 0.85;
+}
+
+.dsc-dash-home .dsc-gauge-matrix--pots {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.dsc-banner {
+  border-radius: 10px;
+  padding: 12px 14px;
+  border-left: 3px solid rgba(148, 163, 184, 0.5);
+  background: rgba(15, 23, 42, 0.55);
+}
+
+.dsc-banner--warn {
+  border-left-color: rgba(251, 191, 36, 0.85);
+  background: rgba(251, 191, 36, 0.08);
+}
+
+.dsc-banner--bad {
+  border-left-color: rgba(239, 68, 68, 0.9);
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.dsc-banner strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.dsc-narrator {
+  margin-top: 12px;
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-left: 3px solid rgba(56, 189, 248, 0.45);
+  border-radius: 10px;
+  padding: 10px 14px;
+  background: rgba(12, 18, 28, 0.45);
+}
+
+.dsc-narrator summary {
+  cursor: pointer;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.dsc-grow-log {
+  font-size: 13px;
+  line-height: 1.5;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.dsc-grow-log li {
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+}

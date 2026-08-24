@@ -8,6 +8,15 @@ export async function get_entity_history(
   return data.points ?? [];
 }
 
+export type GrowLogEvent = { id: number; message: string; ts: number };
+
+export async function get_grow_log(hours = 24, limit = 100): Promise<GrowLogEvent[]> {
+  const resp = await fetch(`/grow-log?hours=${hours}&limit=${limit}`);
+  if (!resp.ok) return [];
+  const data = (await resp.json()) as { events?: GrowLogEvent[] };
+  return data.events ?? [];
+}
+
 export async function call_service(
   domain: string,
   service: string,
