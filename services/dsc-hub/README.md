@@ -6,9 +6,10 @@ Raspberry Pi 4 product stack: brain + SPA (`:8787`), optional local CannaLib fal
 
 1. Flash **Raspberry Pi OS Lite 64-bit** with Raspberry Pi Imager (hostname `dsc-brain`, SSH key).
 2. Clone this repo onto USB SSD; mount data at `/var/lib/dsc-hub`.
-3. Run `sudo services/dsc-hub/pi/pi-bootstrap.sh`.
+3. Run `sudo services/dsc-hub/pi/pi-bootstrap.sh` (default `DSC_AP_PSK` matches fleet firmware — see Notion *DSC-Brain Pi AP*).
 4. Copy `services/dsc-hub/env.example` → `services/dsc-hub/.env` and fill secrets (Notion **API Keys & Credentials**).
-   - Fill `firmware/v4/secrets.yaml` from `secrets.yaml.template` (Pi WiFi: `DSC-Brain` / `Digital1`).
+   - Fill `firmware/v4/secrets.yaml` from `secrets.yaml.template` — `wifi_ssid`/`wifi_password` must match Pi AP SSID/`DSC_AP_PSK` (fleet default documented in Notion *DSC-Brain Pi AP*; do not invent a second password).
+   - If a live Pi still has hostapd passphrase `changeme-dsc-brain`, run `services/dsc-hub/pi/fix-ap-psk.sh`.
    - From Windows when the Pi is on LAN: `services/dsc-hub/pi/sync-cutover.ps1`
 5. Copy CannaLib checkpoint sqlite to `/var/lib/dsc-hub/cannalib/dsc_brain.sqlite3`.
 6. Plug SkyConnect (USB2); set `ZIGBEE_DEVICE` in `.env`.
@@ -50,4 +51,4 @@ Until island proof succeeds, tree stays `7.0.0-dev`.
 - HA Core / house ZHA
 - CannaLib scrape / master DB (NAS)
 
-See `docs/ops/DSC-HUB-DOCKER.md` for cutover and acceptance.
+Full runbook: [`docs/qa/PI-APPLIANCE-7.0.md`](../../docs/qa/PI-APPLIANCE-7.0.md). Cutover checklist: [`docs/ops/DSC-HUB-DOCKER.md`](../../docs/ops/DSC-HUB-DOCKER.md).
