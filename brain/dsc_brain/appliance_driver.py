@@ -55,6 +55,20 @@ def _api_key_for(seat_id: str, row: dict[str, Any]) -> str:
     return os.environ.get(env_key, "") or get_setting(f"dsc_{seat_id}_api_key", "")
 
 
+def _demands_from_discovered(
+    discovered_oids: dict[str, int],
+    live: dict[str, bool],
+) -> dict[str, bool]:
+    """Report demand states for hub-discovered object_ids only.
+
+    ``DEMAND_TO_SEAT`` carries firmware-variant aliases
+    (``grow_mat_demand`` / ``growmat_demand``). Emitting an undiscovered
+    alias as False overwrites the real switch's ON on the same tick
+    (heatmat chatter, 2026-08-26).
+    """
+    return {oid: live.get(oid, False) for oid in discovered_oids}
+
+
 async def _read_hub_demands(hub_row: dict[str, Any]) -> dict[str, bool] | None:
     host = hub_row.get("host") or ""
     api_key = _api_key_for("hub", hub_row) or get_setting("dsc_hub_api_key", "")
@@ -89,10 +103,7 @@ async def _read_hub_demands(hub_row: dict[str, Any]) -> dict[str, bool] | None:
             if unsub:
                 unsub()
 
-            out: dict[str, bool] = {}
-            for oid in DEMAND_TO_SEAT:
-                out[oid] = live.get(oid, False)
-            return out
+            return _demands_from_discovered(_hub_switch_keys, live)
     except Exception as exc:  # noqa: BLE001
         _logger.debug("hub demand read failed @ %s: %s", host, exc)
         return None
