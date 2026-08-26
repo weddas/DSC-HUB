@@ -2382,3 +2382,28 @@ Do **not** reclaim .33/.39/.40/.47/.23 — other hosts answered there at cutover
 - Hub: dsc-hub-espnow-parked.yaml no-op TX scripts + panel_last_ms stamp while API connected.
 - Panel events: esphome.dsc_panel_hub_cmd (ESPHome event prefix required).
 
+---
+
+## 2026-08-26 — Pi ingest recovery + FleetState deploy
+
+### done
+
+- Hub ingest maps: dual ESPHome 2026 slug + legacy C++ ids (`hub_controls.py`, `esphome_client.py`, `dash_computed.py`).
+- `audit_hub_ingest.py --critical-only`; CI `brain-ci.yml` + `test_hub_ingest_critical_oids_mapped`.
+- Full `deploy-brain.ps1` → Pi `image-build`; SPA `index-BXZwXQYP.js`.
+- `docs/AUDIT-2026-08-26.md` with live `/fleet` evidence.
+
+### soak
+
+- 24h dash soak on Pi — confirm ladder countdown chips track live fires.
+- Hub firmware flash to 7.0.0.0 when binary ready (live 6.0.0.0 → fleet warn is honest).
+
+### red-flag
+
+- POT3 still in-service in Pi inventory while moisture null — reconcile with F-003 before trusting root-zone gates.
+
+### next-plan
+
+- Map non-critical hub entities (ladder waits, hub-side `*_in_service` switches) when tuning UI needs them.
+- Phase E: drop `hass_extras` / Pi `fleetToHass` shim after page migration soak.
+

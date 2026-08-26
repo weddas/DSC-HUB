@@ -5,7 +5,7 @@ import {
   type ReactNode,
 } from "react";
 import type { FleetSnapshot, InventoryRow, SeatSnapshot } from "../lib/fleetModel";
-import { EMPTY_FLEET, hubVitals, inventoryInService, parseFleetSnapshot } from "../lib/fleetModel";
+import { EMPTY_FLEET, hubVitals, inventoryInService, parseFleetSnapshot, tentVitals } from "../lib/fleetModel";
 import { fleetFromHass } from "../lib/fleetFromHass";
 import type { HomeAssistant } from "../vite-env";
 
@@ -106,6 +106,11 @@ export function useSeat(seatId: string): SeatSnapshot {
 export function useHubVitals() {
   const fleet = useFleet();
   return { ...hubVitals(fleet), online: fleet.hub.online };
+}
+
+export function useTentVitals(tent: "main" | "clone") {
+  const fleet = useFleet();
+  return { ...tentVitals(fleet, tent), online: fleet.hub.online };
 }
 
 export function useInventoryInService(seatId: string): boolean {

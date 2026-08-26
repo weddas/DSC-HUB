@@ -1,0 +1,37 @@
+# Brain ingest maps, FleetState API, and Pi deploy scripts — unit tests on every push.
+name: Brain CI
+
+on:
+  push:
+    branches: [master, main]
+    paths:
+      - "brain/**"
+      - ".github/workflows/brain-ci.yml"
+  pull_request:
+    paths:
+      - "brain/**"
+      - ".github/workflows/brain-ci.yml"
+
+jobs:
+  test:
+    name: pytest (brain)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r brain/requirements.txt -r brain/requirements-dev.txt
+
+      - name: Critical hub ingest manifest
+        run: |
+          python -m pytest brain/tests/test_brain_pi.py::test_hub_ingest_critical_oids_mapped -q
+
+      - name: Full brain test suite
+        run: |
+          python -m pytest brain/tests -q

@@ -117,3 +117,6 @@ brain/data/_n087_exclusive_merge_results.jsonl
 
 # Fat lab caches (NAS backup only; GitHub 100MB limit)
 brain/data/staging/_cache_cannlytics/
+brain/data/audit-*.txt
+brain/data/audit-*.json
+brain/data/*-snapshot.json

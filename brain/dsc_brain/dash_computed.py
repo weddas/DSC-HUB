@@ -342,3 +342,22 @@ def emit_dash_entities(
         raw = hub_vals.get(key)
         val = float(raw) if raw is not None else 0.0
         set_entity(states, eid, val, available=fleet.hub.online if fleet.hub else False)
+
+    cooldown_keys = {
+        "sensor.dsc_hub_humidifier_cooldown_remaining": "humidifier_cooldown_remaining",
+        "sensor.dsc_hub_dehumidifier_cooldown_remaining": "dehumidifier_cooldown_remaining",
+        "sensor.dsc_hub_heater_cooldown_remaining": "heater_cooldown_remaining",
+        "sensor.dsc_hub_ac_cooldown_remaining": "ac_cooldown_remaining",
+        "sensor.dsc_hub_grow_mat_cooldown_remaining": "grow_mat_cooldown_remaining",
+        "sensor.dsc_hub_clone_humidifier_cooldown_remaining": "clone_humidifier_cooldown_remaining",
+    }
+    for eid, key in cooldown_keys.items():
+        raw = hub_vals.get(key)
+        val = float(raw) if raw is not None else 0.0
+        set_entity(
+            states,
+            eid,
+            val,
+            available=fleet.hub.online if fleet.hub else False,
+            attributes={"unit_of_measurement": "s"},
+        )

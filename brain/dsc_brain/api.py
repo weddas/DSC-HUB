@@ -12,6 +12,7 @@ from fastapi import FastAPI, File, HTTPException, Query, UploadFile, WebSocket, 
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
+from starlette.types import Receive, Scope, Send
 from pydantic import BaseModel, Field
 
 from . import __version__
@@ -67,6 +68,23 @@ class ServiceCallBody(BaseModel):
     data: dict[str, Any] = Field(default_factory=dict)
 
 
+class DemandBody(BaseModel):
+    """Convenience proxy for hub appliance demand switches."""
+
+    seat: str = Field(..., description="heater | heatmat | humidifier | dehumidifier | ac | clone_humidifier")
+    on: bool = True
+
+
+SEAT_DEMAND_ENTITY: dict[str, str] = {
+    "heater": "switch.dsc_hub_heater_demand",
+    "heatmat": "switch.dsc_hub_grow_mat_demand",
+    "humidifier": "switch.dsc_hub_humidifier_demand",
+    "dehumidifier": "switch.dsc_hub_dehumidifier_demand",
+    "ac": "switch.dsc_hub_ac_demand",
+    "clone_humidifier": "switch.dsc_hub_clone_humidifier_demand",
+}
+
+
 class InventoryPatch(BaseModel):
     host: str | None = None
     mac: str | None = None
@@ -114,11 +132,33 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+class _SpaCacheStaticFiles(StaticFiles):
+    """Hashed bundles are immutable; avoid stale index.html caching old hashes."""
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        async def send_wrapper(message: dict) -> None:
+            if message["type"] == "http.response.start":
+                headers = list(message.get("headers", []))
+                headers = [(k, v) for k, v in headers if k.lower() != b"cache-control"]
+                headers.append((b"cache-control", b"public, max-age=31536000, immutable"))
+                message = {**message, "headers": headers}
+            await send(message)
+
+        await super().__call__(scope, receive, send_wrapper)
+
+
+def _spa_index_response(index: Path) -> FileResponse:
+    return FileResponse(
+        index,
+        headers={"Cache-Control": "no-cache, no-store, must-revalidate"},
+    )
+
+
 if STATIC_DIR.is_dir():
-    app.mount("/assets", StaticFiles(directory=str(STATIC_DIR / "assets")), name="assets")
+    app.mount("/assets", _SpaCacheStaticFiles(directory=str(STATIC_DIR / "assets")), name="assets")
     vendor_dir = STATIC_DIR / "vendor"
     if vendor_dir.is_dir():
-        app.mount("/vendor", StaticFiles(directory=str(vendor_dir)), name="vendor")
+        app.mount("/vendor", _SpaCacheStaticFiles(directory=str(vendor_dir)), name="vendor")
 
 
 @app.get("/health")
@@ -186,6 +226,21 @@ def inventory_patch(seat_id: str, body: InventoryPatch) -> dict[str, Any]:
 async def control_service(body: ServiceCallBody) -> dict[str, Any]:
     try:
         return await call_service_proxy(body.domain, body.service, body.data)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    except RuntimeError as exc:
+        raise HTTPException(503, str(exc)) from exc
+
+
+@app.post("/control/demand")
+async def control_demand(body: DemandBody) -> dict[str, Any]:
+    """Toggle hub appliance demand (heater, humidifier, …) without HA entity ceremony."""
+    entity_id = SEAT_DEMAND_ENTITY.get(body.seat)
+    if not entity_id:
+        raise HTTPException(400, f"unknown demand seat {body.seat}")
+    service = "turn_on" if body.on else "turn_off"
+    try:
+        return await call_service_proxy("switch", service, {"entity_id": entity_id})
     except ValueError as exc:
         raise HTTPException(400, str(exc)) from exc
     except RuntimeError as exc:
@@ -381,7 +436,7 @@ def spa_index() -> FileResponse:
     index = STATIC_DIR / "index.html"
     if not index.exists():
         raise HTTPException(503, "SPA not built — run npm run build:spa")
-    return FileResponse(index)
+    return _spa_index_response(index)
 
 
 @app.get("/{full_path:path}")
@@ -390,10 +445,12 @@ def spa_fallback(full_path: str) -> FileResponse:
         raise HTTPException(404)
     file_path = STATIC_DIR / full_path
     if file_path.is_file():
-        return FileResponse(file_path)
+        if full_path.endswith(".html"):
+            return _spa_index_response(file_path)
+        return FileResponse(file_path, headers={"Cache-Control": "public, max-age=31536000, immutable"})
     index = STATIC_DIR / "index.html"
     if index.exists():
-        return FileResponse(index)
+        return _spa_index_response(index)
     raise HTTPException(404)
 
 

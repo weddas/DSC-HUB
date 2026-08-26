@@ -7,6 +7,12 @@ REPO="/opt/dsc-hub-repo"
 COMPOSE_FILE="${REPO}/services/dsc-hub/docker-compose.yml"
 ENV_FILE="/tmp/dsc-hub-compose.env"
 
+mkdir -p \
+  "${REPO}/brain" \
+  "${REPO}/firmware/v4" \
+  "${REPO}/homeassistant/data" \
+  "${REPO}/services/dsc-hub/brain"
+
 tar -xzf /tmp/dsc-brain-src.tgz -C "${REPO}/brain"
 cp /tmp/dsc-hub.yaml "${REPO}/firmware/v4/dsc-hub.yaml"
 mkdir -p "${REPO}/services/dsc-hub/brain"
@@ -15,6 +21,10 @@ cp /tmp/Dockerfile.prebuilt "${REPO}/services/dsc-hub/brain/Dockerfile.prebuilt"
 if [ -f /tmp/dsc-spa-static.tgz ]; then
   mkdir -p "${REPO}/brain/static"
   tar -xzf /tmp/dsc-spa-static.tgz -C "${REPO}/brain/static"
+  if [ -f "${REPO}/brain/static/index.html" ]; then
+    SPA_HASH=$(grep -oE 'assets/index-[^"]+\.js' "${REPO}/brain/static/index.html" | head -1 || true)
+    echo "=== SPA bundle: ${SPA_HASH:-unknown} ==="
+  fi
 fi
 if [ -f /tmp/dsc-ha-data.tgz ]; then
   mkdir -p "${REPO}/homeassistant/data"
@@ -60,6 +70,19 @@ fi
 
 sleep 3
 echo "=== deploy mode: ${DEPLOY_MODE} ==="
-curl -s http://127.0.0.1:8787/health || true
+curl -sf http://127.0.0.1:8787/health && echo || echo "health check failed"
+echo "=== fleet acceptance ==="
+if command -v jq >/dev/null 2>&1; then
+  curl -sf http://127.0.0.1:8787/fleet | jq '{
+    hub_online: .hub.online,
+    surface: .surface,
+    version: .version,
+    inventory: (.inventory | length),
+    hub_temp: .hub.values.temp_c
+  }' || echo "fleet check failed"
+else
+  curl -sf http://127.0.0.1:8787/fleet | head -c 400 || echo "fleet check failed"
+  echo
+fi
 run_sudo docker exec dsc-hub-brain python -c "import dsc_brain.appliance_driver as a; print('driver_ok', list(a.DEMAND_TO_SEAT.keys()))" || true
 run_sudo docker logs dsc-hub-brain --tail 25

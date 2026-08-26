@@ -25,12 +25,9 @@ import { useHeldReading } from "../hooks/useHeldReading";
 import { useChartHours } from "../hooks/useChartHours";
 import { useZoneFocus, type ZoneFocus } from "../hooks/useZoneFocus";
 import { useInspector } from "../components/InspectorHost";
+import { withPriorGhost } from "../lib/chartSeries";
 import { ArcGauge, GotWantBars, MultiLineChart, seriesExtrema, type NamedSeries } from "../viz/charts";
 import { fmtDurationMs } from "../lib/formatDuration";
-
-function fmt(n: number, digits = 1): string {
-  return Number.isFinite(n) ? n.toFixed(digits) : "—";
-}
 
 function resolveRoomVpdId(entity: (id: string) => unknown): string {
   if (entity("sensor.dsc_hub_room_vpd_kpa")) return "sensor.dsc_hub_room_vpd_kpa";
@@ -38,20 +35,8 @@ function resolveRoomVpdId(entity: (id: string) => unknown): string {
   return "sensor.dsc_hub_room_vpd_kpa";
 }
 
-function withPriorGhost(
-  id: string,
-  label: string,
-  current: { series: { t: number; v: number }[]; ghost: { t: number; v: number }[] },
-  color: string,
-  unit: string,
-  extra?: Partial<NamedSeries>,
-): NamedSeries[] {
-  const live: NamedSeries = { id, label, series: current.series, color, unit, ...extra };
-  if (current.ghost.length <= 1) return [live];
-  return [
-    live,
-    { id: `${id}-ghost`, label: `${label} prior`, series: current.ghost, color, unit, ghost: true },
-  ];
+function fmt(n: number, digits = 1): string {
+  return Number.isFinite(n) ? n.toFixed(digits) : "—";
 }
 
 const FOCUS_OPTIONS: { id: ZoneFocus; label: string }[] = [

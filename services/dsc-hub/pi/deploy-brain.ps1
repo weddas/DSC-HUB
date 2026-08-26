@@ -92,3 +92,4 @@ Write-Host "Apply on Pi + rebuild brain container..."
 Invoke-Expression "$plink `"tr -d '\r' < /tmp/deploy-brain-remote.sh > /tmp/deploy.sh; bash /tmp/deploy.sh $PiPassword`""
 
 Write-Host "Done. Brain: http://${PiHost}:8787/health"
+Write-Host "Verify: services/dsc-hub/pi/verify-brain.ps1"

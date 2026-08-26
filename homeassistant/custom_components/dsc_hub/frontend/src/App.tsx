@@ -5,6 +5,7 @@ import { HonestyRail } from "./components/Honesty";
 import { TwinKeepAlive } from "./components/TwinKeepAlive";
 import { SeatOverlayHost } from "./components/SeatOverlay";
 import { InspectorProvider } from "./components/InspectorHost";
+import { BandChartProvider } from "./components/BandChartHost";
 import { HassProvider } from "./hooks/useHass";
 import { ZoneFocusProvider } from "./hooks/useZoneFocus";
 import { type IconName } from "./icons";
@@ -74,7 +75,7 @@ function Shell({ surfaceVersion = "7.2.0" }: { surfaceVersion?: string }) {
   const secondary = SECONDARY_TABS[section];
 
   useEffect(() => {
-    if (location.pathname === "/live/climate") return;
+    if (location.pathname === "/live/climate" || location.pathname === "/ops/home") return;
     const p = new URLSearchParams(location.search);
     if (!p.has("tent") && !p.has("zone")) return;
     p.delete("tent");
@@ -185,7 +186,9 @@ export function App({
     <HassProvider hass={hass} revision={hassRevision}>
       <ZoneFocusProvider>
         <InspectorProvider>
-          <Shell surfaceVersion={surfaceVersion} />
+          <BandChartProvider>
+            <Shell surfaceVersion={surfaceVersion} />
+          </BandChartProvider>
         </InspectorProvider>
       </ZoneFocusProvider>
     </HassProvider>

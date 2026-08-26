@@ -46,7 +46,15 @@ curl -s http://10.42.0.1:8787/fleet | jq '.hub.online, .surface, .inventory | le
 
 Hard refresh `http://10.42.0.1:8787/#/fleet` (Ctrl+Shift+R).
 
+From Windows after deploy:
+
+```powershell
+services/dsc-hub/pi/verify-brain.ps1
+```
+
 Pi layout: `/opt/dsc-hub` (compose), `/opt/dsc-hub-repo` (full repo for builds). Bootstrap creates both symlinks.
+
+`brain/static/` is a deploy artifact (gitignored). `deploy-brain.ps1` builds the SPA into `spa-dist/`, packs it into the brain image or hot-patches `/app/static/`.
 
 ## Build brain image (dev)
 

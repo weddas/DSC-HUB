@@ -526,9 +526,37 @@
   animation: dsc-chip-pulse 1.6s ease-in-out infinite;
 }
 
+.dsc-chip--duty {
+  animation: dsc-duty-pulse 1.8s ease-in-out infinite;
+}
+
+.dsc-chip--breathe {
+  animation: dsc-chip-breathe 2.4s ease-in-out infinite;
+}
+
+.dsc-chip--fan {
+  animation: dsc-chip-fan 1.3s linear infinite;
+}
+
 @keyframes dsc-chip-pulse {
   0%, 100% { box-shadow: 0 0 0 rgba(57, 255, 20, 0); }
   50% { box-shadow: 0 0 14px rgba(57, 255, 20, 0.35); }
+}
+
+@keyframes dsc-duty-pulse {
+  0%, 100% { box-shadow: 0 0 0 rgba(61, 222, 122, 0.05); border-color: var(--dsc-neon-dim); }
+  50% { box-shadow: 0 0 16px rgba(61, 222, 122, 0.32); border-color: var(--dsc-neon); }
+}
+
+@keyframes dsc-chip-breathe {
+  0%, 100% { box-shadow: 0 0 0 rgba(255, 183, 77, 0.05); }
+  50% { box-shadow: 0 0 14px rgba(255, 183, 77, 0.38); }
+}
+
+@keyframes dsc-chip-fan {
+  0% { box-shadow: 0 0 0 rgba(46, 196, 214, 0.05); }
+  50% { box-shadow: 0 0 12px rgba(46, 196, 214, 0.42); }
+  100% { box-shadow: 0 0 0 rgba(46, 196, 214, 0.05); }
 }
 
 .dsc-demand-row {
@@ -831,10 +859,44 @@
     animation: none !important;
     opacity: 0.85;
   }
+
+  .dsc-gauge-value,
+  .dsc-chip--pulse,
+  .dsc-chip--duty,
+  .dsc-chip--breathe,
+  .dsc-chip--fan,
+  .dsc-fan-spin,
+  .dsc-dash-home .dsc-band-cell:has(.dsc-gauge.is-warn),
+  .dsc-dash-home .dsc-band-cell:has(.dsc-gauge.is-bad) {
+    animation: none !important;
+  }
 }
 
 .dsc-gauge.is-warn .dsc-gauge-label {
   color: var(--dsc-amber);
+}
+
+.dsc-gauge.is-bad .dsc-gauge-label {
+  color: var(--dsc-bad-soft);
+}
+
+.dsc-gauge.is-ok:not(.is-stale) .dsc-gauge-value {
+  animation: dsc-gauge-live 3.2s ease-in-out infinite;
+}
+
+.dsc-gauge.is-warn .dsc-gauge-value,
+.dsc-gauge.is-bad .dsc-gauge-value {
+  animation: dsc-gauge-breathe 2.4s ease-in-out infinite;
+}
+
+@keyframes dsc-gauge-live {
+  0%, 100% { opacity: 0.92; filter: drop-shadow(0 0 4px rgba(46, 196, 214, 0.25)); }
+  50% { opacity: 1; filter: drop-shadow(0 0 10px rgba(46, 196, 214, 0.55)); }
+}
+
+@keyframes dsc-gauge-breathe {
+  0%, 100% { opacity: 0.88; filter: drop-shadow(0 0 4px rgba(255, 183, 77, 0.25)); }
+  50% { opacity: 1; filter: drop-shadow(0 0 12px rgba(255, 107, 138, 0.55)); }
 }
 
 .dsc-gauge-row {
@@ -1841,7 +1903,97 @@ button.dsc-chip.is-clickable:hover {
 .dsc-dash-home .dsc-gauge-matrix--dense {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px 8px;
+  gap: 12px 10px;
+}
+
+.dsc-gauge-matrix--bands {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dsc-gauge-matrix--bands .dsc-gauge-row-3 .dsc-band-cell {
+  min-width: 0;
+  padding: 6px 2px 8px;
+}
+
+.dsc-gauge-matrix--bands .dsc-gauge-row-3:not(.is-lit) {
+  opacity: 0.72;
+}
+
+.dsc-gauge-matrix--bands .dsc-gauge-row-3.is-lit {
+  opacity: 1;
+}
+
+@keyframes dsc-fan-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.dsc-fan-spin {
+  animation: dsc-fan-spin 1.3s linear infinite;
+  transform-origin: center center;
+}
+
+.dsc-chip--fan .dsc-fan-spin:nth-child(1) {
+  animation-duration: 1.3s;
+}
+
+.dsc-dash-home .dsc-band-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 4px 10px;
+  border-radius: 12px;
+  background: rgba(12, 18, 28, 0.35);
+  border: 1px solid rgba(130, 165, 230, 0.12);
+  transition: box-shadow 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+}
+
+.dsc-dash-home .dsc-band-cell--main {
+  border-color: rgba(249, 115, 22, 0.28);
+  background: linear-gradient(180deg, rgba(249, 115, 22, 0.07), rgba(12, 18, 28, 0.35));
+  box-shadow: inset 0 0 20px rgba(249, 115, 22, 0.05);
+}
+
+.dsc-dash-home .dsc-band-cell--clone {
+  border-color: rgba(34, 197, 94, 0.28);
+  background: linear-gradient(180deg, rgba(34, 197, 94, 0.07), rgba(12, 18, 28, 0.35));
+  box-shadow: inset 0 0 20px rgba(34, 197, 94, 0.05);
+}
+
+.dsc-dash-home .dsc-band-cell--room {
+  border-color: rgba(148, 163, 184, 0.24);
+  background: linear-gradient(180deg, rgba(148, 163, 184, 0.06), rgba(12, 18, 28, 0.35));
+}
+
+.dsc-dash-home .dsc-band-cell--root {
+  border-color: rgba(251, 191, 36, 0.28);
+  background: linear-gradient(180deg, rgba(251, 191, 36, 0.07), rgba(12, 18, 28, 0.35));
+  box-shadow: inset 0 0 20px rgba(251, 191, 36, 0.05);
+}
+
+.dsc-dash-home .dsc-band-cell:has(.dsc-gauge.is-warn),
+.dsc-dash-home .dsc-band-cell:has(.dsc-gauge.is-bad) {
+  animation: dsc-band-warn 2.6s ease-in-out infinite;
+}
+
+@keyframes dsc-band-warn {
+  0%, 100% { box-shadow: inset 0 0 16px rgba(255, 183, 77, 0.06); }
+  50% { box-shadow: inset 0 0 22px rgba(255, 183, 77, 0.18), 0 0 18px rgba(255, 183, 77, 0.12); }
+}
+
+.dsc-dash-home .dsc-band-cell .dsc-gauge-hit {
+  width: auto;
+  display: flex;
+  justify-content: center;
+}
+
+.dsc-dash-home .dsc-band-cell .dsc-gauge svg {
+  width: 100%;
+  max-width: 118px;
+  height: auto;
 }
 
 .dsc-band-cell {
@@ -1853,6 +2005,16 @@ button.dsc-chip.is-clickable:hover {
 
 .dsc-band-cell .dsc-sparkline {
   opacity: 0.85;
+}
+
+.dsc-dash-home .dsc-legacy-host {
+  max-height: min(52vh, 520px);
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+.dsc-dash-home .dsc-status-strip {
+  margin-bottom: 4px;
 }
 
 .dsc-dash-home .dsc-gauge-matrix--pots {

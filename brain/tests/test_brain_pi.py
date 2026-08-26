@@ -137,6 +137,53 @@ def test_control_script_proxy(temp_db: Path, monkeypatch: pytest.MonkeyPatch) ->
     assert resp.json()["state"] == "Blue Dream"
 
 
+def test_control_demand_unknown_seat(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("DSC_DATA", str(temp_db.parent))
+    from fastapi.testclient import TestClient
+
+    from dsc_brain.api import app
+
+    client = TestClient(app)
+    resp = client.post("/control/demand", json={"seat": "not_a_seat", "on": True})
+    assert resp.status_code == 400
+
+
+def test_hub_ingest_critical_oids_mapped() -> None:
+    """Operational ESPHome slugs must exist in ingest maps (no silent zero)."""
+    from dsc_brain.hub_controls import (
+        HUB_BINARY_OID_TO_ENTITY,
+        HUB_FAN_OID_TO_ENTITY,
+        HUB_LIGHT_OID_TO_ENTITY,
+        HUB_SENSOR_OID_TO_KEY,
+        HUB_SWITCH_OID_TO_ENTITY,
+        HUB_TEXT_SENSOR_OID_TO_KEY,
+    )
+
+    critical = [
+        "heater_demand",
+        "grow_mat_demand",
+        "humidifier_demand",
+        "humidifier_fire_countdown",
+        "4_inch_intake_fan__main_",
+        "tent_full_auto_mode",
+        "auto_photoperiod",
+        "sf1000_dimmer",
+        "firmware_version",
+        "emergency_failsafe",
+        "climate_sensor_fault",
+    ]
+    known = (
+        set(HUB_SWITCH_OID_TO_ENTITY)
+        | set(HUB_SENSOR_OID_TO_KEY)
+        | set(HUB_FAN_OID_TO_ENTITY)
+        | set(HUB_TEXT_SENSOR_OID_TO_KEY)
+        | set(HUB_LIGHT_OID_TO_ENTITY)
+        | set(HUB_BINARY_OID_TO_ENTITY)
+    )
+    missing = [oid for oid in critical if oid not in known]
+    assert not missing, f"critical hub oids not in ingest maps: {missing}"
+
+
 def test_history_api(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("DSC_DATA", str(temp_db.parent))
     from fastapi.testclient import TestClient
@@ -187,12 +234,70 @@ def test_hub_controls_from_states() -> None:
         1: SimpleNamespace(state=True),
         2: SimpleNamespace(state=24.5),
         3: SimpleNamespace(state=True, speed_level=42),
+        4: SimpleNamespace(state=True, brightness=1),
+        5: SimpleNamespace(state=True),
+        6: SimpleNamespace(state=True, speed_level=55),
+        7: SimpleNamespace(state="2x4 Clone"),
     }
-    key_to_object = {1: "heater_demand", 2: "target_temp", 3: "fan_intake_main"}
+    key_to_object = {
+        1: "heater_demand",
+        2: "target_temp",
+        3: "fan_intake_main",
+        4: "sf1000_dimmer",
+        5: "tent_full_auto_mode",
+        6: "4_inch_intake_fan__main_",
+        7: "priority_tent",
+    }
     controls = _hub_controls_from_states(states, key_to_object, [])
     assert controls["switch.dsc_hub_heater_demand"]["state"] == "on"
     assert controls["number.dsc_hub_target_temp"]["state"] == "24.5"
-    assert controls["fan.dsc_hub_4_inch_intake_fan_main"]["percentage"] == 42
+    assert controls["fan.dsc_hub_4_inch_intake_fan_main"]["percentage"] == 55
+    assert controls["light.dsc_hub_sf1000_dimmer"]["state"] == "on"
+    assert controls["switch.dsc_hub_tent_full_auto_mode"]["state"] == "on"
+    assert controls["select.dsc_hub_priority_tent"]["state"] == "2x4 Clone"
+
+
+def test_hub_binaries_safety_and_esp_slug() -> None:
+    from types import SimpleNamespace
+
+    from dsc_brain.esphome_client import _hub_binaries_from_states
+
+    states = {
+        1: SimpleNamespace(state=True),
+        2: SimpleNamespace(state=True),
+        3: SimpleNamespace(state=True),
+    }
+    key_to_object = {
+        1: "emergency_failsafe",
+        2: "climate_sensor_fault",
+        3: "pot1_esp-now_link",
+    }
+    binaries = _hub_binaries_from_states(states, key_to_object)
+    assert binaries["binary_sensor.dsc_hub_emergency_failsafe"] is True
+    assert binaries["binary_sensor.dsc_hub_climate_sensor_fault"] is True
+    assert binaries["binary_sensor.dsc_hub_pot1_esp_now_link"] is True
+
+
+def test_hub_sensors_cooldown_map() -> None:
+    from types import SimpleNamespace
+
+    from dsc_brain.esphome_client import _hub_sensors_from_states
+
+    states = {1: SimpleNamespace(state=90.0)}
+    key_to_object = {1: "heater_cooldown_remaining"}
+    out = _hub_sensors_from_states(states, key_to_object)
+    assert out["heater_cooldown_remaining"] == 90.0
+
+
+def test_hub_text_sensors_firmware_version() -> None:
+    from types import SimpleNamespace
+
+    from dsc_brain.esphome_client import _hub_text_sensors_from_states
+
+    states = {1: SimpleNamespace(state="6.0.0.0")}
+    key_to_object = {1: "firmware_version"}
+    out = _hub_text_sensors_from_states(states, key_to_object)
+    assert out["firmware_version"] == "6.0.0.0"
 
 
 def test_hub_binaries_from_states() -> None:
@@ -231,6 +336,24 @@ def test_hub_sensors_exact_map_ignores_number_entities() -> None:
     assert "vpd_kpa" not in out
     assert out["clone_temp_c"] == 22.5
     assert out["clone_rh_pct"] == 61.0
+
+
+def test_hub_sensors_fire_countdown_map() -> None:
+    from types import SimpleNamespace
+
+    from dsc_brain.esphome_client import _hub_sensors_from_states
+
+    states = {
+        1: SimpleNamespace(state=45.0),
+        2: SimpleNamespace(state=12.5),
+    }
+    key_to_object = {
+        1: "humidifier_fire_countdown",
+        2: "sens_heater_countdown",
+    }
+    out = _hub_sensors_from_states(states, key_to_object)
+    assert out["humidifier_fire_countdown"] == 45.0
+    assert out["heater_fire_countdown"] == 12.5
 
 
 def test_finalize_hub_climate_computes_vpd() -> None:

@@ -20,6 +20,7 @@ from .hub_controls import (
     HUB_SELECT_OID_TO_ENTITY,
     HUB_SENSOR_OID_TO_KEY,
     HUB_SWITCH_OID_TO_ENTITY,
+    HUB_TEXT_SENSOR_OID_TO_KEY,
 )
 from .native_api import make_api_client
 from .paths import EXPECTED_FIRMWARE, SURFACE_VERSION
@@ -224,9 +225,13 @@ async def _fetch_device(host: str, api_key: str, role: str, seat_id: str) -> dic
 
         if role == "hub":
             values.update(_hub_sensors_from_states(states, key_to_object))
+            values.update(_hub_text_sensors_from_states(states, key_to_object))
             values["controls"] = _hub_controls_from_states(states, key_to_object, entities)
             values["binaries"] = _hub_binaries_from_states(states, key_to_object, entities)
             finalize_hub_climate(values)
+            hub_fw = values.get("firmware_version")
+            if hub_fw:
+                fw = str(hub_fw).strip()
         elif role == "pot":
             for key, st in states.items():
                 object_id = key_to_object.get(key, "")
@@ -269,6 +274,23 @@ def _hub_sensors_from_states(
             out[field] = float(raw)
         except (TypeError, ValueError):
             out[field] = raw
+    return out
+
+
+def _hub_text_sensors_from_states(
+    states: dict[int, Any],
+    key_to_object: dict[int, str],
+) -> dict[str, Any]:
+    out: dict[str, Any] = {}
+    for key, st in states.items():
+        object_id = key_to_object.get(key, "")
+        field = HUB_TEXT_SENSOR_OID_TO_KEY.get(object_id)
+        if not field:
+            continue
+        raw = getattr(st, "state", None)
+        if raw is None:
+            continue
+        out[field] = str(raw).strip()
     return out
 
 

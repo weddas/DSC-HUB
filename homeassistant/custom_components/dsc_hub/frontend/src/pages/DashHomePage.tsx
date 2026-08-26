@@ -24,6 +24,7 @@ import { useFleet } from "../hooks/useFleet";
 import { useHeldReading, useHubOfflineMs, useBeatOfflineMs, usePanelOfflineMs } from "../hooks/useHeldReading";
 import { useSettledAvailability } from "../hooks/useSettledAvailability";
 import { useInspector } from "../components/InspectorHost";
+import { BAND_CHART_TITLES, useBandChart, type BandChartKind } from "../components/BandChartHost";
 import { resolveCfm } from "../lib/cfmProvenance";
 import { buildKitNodesFromFleet, kitInServiceCount, type KitNode } from "../lib/kitInventory";
 import { useAlertSnooze } from "../hooks/useAlertSnooze";
@@ -48,6 +49,10 @@ export function DashHomePage() {
   const settled = useSettledAvailability();
   const { isSnoozed } = useAlertSnooze();
   const inspector = useInspector();
+  const bandChart = useBandChart();
+
+  const openBandChart = (kind: BandChartKind) =>
+    bandChart.open({ kind, title: BAND_CHART_TITLES[kind] });
   void tick;
   void useHubOfflineMs();
   void useBeatOfflineMs();
@@ -107,9 +112,6 @@ export function DashHomePage() {
   const rosterSlots = (entity("sensor.dsc_plant_roster_summary")?.attributes?.slots || []) as RosterSlot[];
   const rosterLabel = state("sensor.dsc_plant_roster_summary", "—");
   const faultIds = activeAlertIds(state, isSnoozed);
-
-  const open = (entityId: string, label: string, unit?: string) =>
-    inspector.open({ entityId, label, unit, kind: "climate" });
 
   const openNode = (node: KitNode) =>
     inspector.open({
@@ -246,7 +248,7 @@ export function DashHomePage() {
             rootT: rootT.stale,
           },
         }}
-        onOpen={open}
+        onChartOpen={openBandChart}
       />
 
       <Card className="dsc-glass" title="Lung · CFM" icon="climate">
@@ -287,7 +289,7 @@ export function DashHomePage() {
         </Card>
       </div>
 
-      <DashRootTankSection bus={bus} rosterSlots={rosterSlots} onNavigate={navigate} onPot={openPot} />
+      <DashRootTankSection bus={bus} rosterSlots={rosterSlots} onNavigate={navigate} onPot={openPot} onPotChart={openBandChart} />
     </div>
   );
 }

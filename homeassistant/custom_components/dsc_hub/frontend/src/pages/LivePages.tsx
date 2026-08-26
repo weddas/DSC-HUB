@@ -18,6 +18,7 @@ import { readPotTrust } from "../lib/potTrust";
 import { VesselGlyph } from "../components/VesselGlyph";
 import { readPotVessel } from "../lib/vesselSpec";
 import { useEntityBus } from "../hooks/useEntityBus";
+import { useTentVitals } from "../hooks/useFleet";
 import { useEntitySeries } from "../hooks/useEntitySeries";
 import { useHeldReading } from "../hooks/useHeldReading";
 import { useChartHours } from "../hooks/useChartHours";
@@ -94,6 +95,7 @@ export function LiveTwinPage() {
 
 function TentCockpitPage({ tent }: { tent: Exclude<TentId, "unassigned"> }) {
   const { state, entity, num, tick, callWS, available } = useEntityBus();
+  const tentVitals = useTentVitals(tent);
   const navigate = useNavigate();
   const inspector = useInspector();
   const { setFocus } = useZoneFocus();
@@ -124,6 +126,9 @@ function TentCockpitPage({ tent }: { tent: Exclude<TentId, "unassigned"> }) {
   const tHeld = useHeldReading(tId);
   const rhHeld = useHeldReading(rhId);
   const vpdHeld = useHeldReading(vpdId);
+  const tDisplay = Number.isFinite(tHeld.value) ? tHeld.value : tentVitals.temp_c;
+  const rhDisplay = Number.isFinite(rhHeld.value) ? rhHeld.value : tentVitals.rh_pct;
+  const vpdDisplay = Number.isFinite(vpdHeld.value) ? vpdHeld.value : tentVitals.vpd_kpa;
   const windowOpen =
     state(
       tent === "main"
@@ -245,18 +250,18 @@ function TentCockpitPage({ tent }: { tent: Exclude<TentId, "unassigned"> }) {
       <div className="dsc-tent-cockpit-strip">
         <StatusChip label={`${seats.length} plants`} tone="ok" />
         <StatusChip
-          label={`T ${fmt(tHeld.value)}°C`}
-          tone={tHeld.stale ? "warn" : "ok"}
+          label={`T ${fmt(tDisplay)}°C`}
+          tone={tHeld.stale && !tentVitals.online ? "warn" : "ok"}
           onClick={() => inspector.open({ entityId: tId, label: `${title} T`, unit: "°C" })}
         />
         <StatusChip
-          label={`RH ${fmt(rhHeld.value, 0)}%`}
-          tone={rhHeld.stale ? "warn" : "ok"}
+          label={`RH ${fmt(rhDisplay, 0)}%`}
+          tone={rhHeld.stale && !tentVitals.online ? "warn" : "ok"}
           onClick={() => inspector.open({ entityId: rhId, label: `${title} RH`, unit: "%" })}
         />
         <StatusChip
-          label={`VPD ${fmt(vpdHeld.value, 2)}`}
-          tone={vpdHeld.stale ? "warn" : "ok"}
+          label={`VPD ${fmt(vpdDisplay, 2)}`}
+          tone={vpdHeld.stale && !tentVitals.online ? "warn" : "ok"}
           onClick={() => inspector.open({ entityId: vpdId, label: `${title} VPD`, unit: "kPa" })}
         />
         <StatusChip

@@ -119,6 +119,31 @@ export function hubVitals(fleet: FleetSnapshot): {
   };
 }
 
+/** Per-tent climate from fleet hub.values (4×8 main vs 2×4 clone). */
+export function tentVitals(
+  fleet: FleetSnapshot,
+  tent: "main" | "clone",
+): { temp_c: number | null; rh_pct: number | null; vpd_kpa: number | null } {
+  const v = fleet.hub.values;
+  if (tent === "clone") {
+    return {
+      temp_c: v.clone_temp_c != null ? Number(v.clone_temp_c) : null,
+      rh_pct: v.clone_rh_pct != null ? Number(v.clone_rh_pct) : null,
+      vpd_kpa:
+        v.clone_vpd_kpa != null
+          ? Number(v.clone_vpd_kpa)
+          : v.clone_vd_kpa != null
+            ? Number(v.clone_vd_kpa)
+            : null,
+    };
+  }
+  return {
+    temp_c: v.temp_c != null ? Number(v.temp_c) : null,
+    rh_pct: v.rh_pct != null ? Number(v.rh_pct) : null,
+    vpd_kpa: v.vpd_kpa != null ? Number(v.vpd_kpa) : v.vd_kpa != null ? Number(v.vd_kpa) : null,
+  };
+}
+
 export function inventoryInService(
   fleet: FleetSnapshot,
   seatId: string,

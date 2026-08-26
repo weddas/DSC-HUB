@@ -22,6 +22,7 @@ const ICON_PATH: Record<IconName, string> = {
   mission: "icons/dsc-icon-home.svg",
   twin: "icons/dsc-icon-dash.svg",
   climate: "icons/dsc-icon-climate.svg",
+  fan: "icons/dsc-icon-fan.svg",
   root: "icons/dsc-icon-root.svg",
   lighting: "icons/dsc-icon-lighting.svg",
   tent: "icons/dsc-icon-tent.svg",

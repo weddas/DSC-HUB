@@ -34,6 +34,27 @@ export async function call_service(
   return resp.json();
 }
 
+export type DemandSeat =
+  | "heater"
+  | "heatmat"
+  | "humidifier"
+  | "dehumidifier"
+  | "ac"
+  | "clone_humidifier";
+
+export async function post_demand(seat: DemandSeat, on: boolean): Promise<unknown> {
+  const resp = await fetch("/control/demand", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ seat, on }),
+  });
+  if (!resp.ok) {
+    const text = await resp.text();
+    throw new Error(text || "demand call failed");
+  }
+  return resp.json();
+}
+
 export async function get_fleet_state(): Promise<Record<string, unknown>> {
   const resp = await fetch("/fleet");
   if (!resp.ok) throw new Error("fleet fetch failed");

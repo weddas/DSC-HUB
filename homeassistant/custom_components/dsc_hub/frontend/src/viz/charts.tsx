@@ -7,6 +7,8 @@ import {
   useState,
   type PointerEvent as ReactPointerEvent,
 } from "react";
+import { toneClass, zoneTone } from "../lib/zoneTone";
+import { colorAtValue, type GaugeSegment } from "./gaugeTheme";
 
 export interface SeriesPoint {
   t: number;
@@ -687,6 +689,60 @@ function arcPoint(cx: number, cy: number, r: number, angleRad: number): { x: num
   return { x: cx + r * Math.cos(angleRad), y: cy + r * Math.sin(angleRad) };
 }
 
+function gaugeAngle(v: number, min: number, max: number): number {
+  const p = Math.min(1, Math.max(0, (v - min) / Math.max(max - min, 1e-6)));
+  return Math.PI - p * Math.PI;
+}
+
+function arcSlicePath(
+  vStart: number,
+  vEnd: number,
+  min: number,
+  max: number,
+  cx: number,
+  cy: number,
+  r: number,
+): string {
+  const a0 = gaugeAngle(vEnd, min, max);
+  const a1 = gaugeAngle(vStart, min, max);
+  const p0 = arcPoint(cx, cy, r, a0);
+  const p1 = arcPoint(cx, cy, r, a1);
+  return `M ${p0.x.toFixed(2)} ${p0.y.toFixed(2)} A ${r} ${r} 0 0 1 ${p1.x.toFixed(2)} ${p1.y.toFixed(2)}`;
+}
+
+function segmentArcs(
+  segments: GaugeSegment[],
+  min: number,
+  max: number,
+  cx: number,
+  cy: number,
+  r: number,
+): { d: string; color: string }[] {
+  const sorted = [...segments].sort((a, b) => a.from - b.from);
+  const out: { d: string; color: string }[] = [];
+  for (let i = 0; i < sorted.length; i++) {
+    const vStart = Math.max(min, sorted[i].from);
+    const vEnd = Math.min(max, i < sorted.length - 1 ? sorted[i + 1].from : max);
+    if (vEnd <= vStart) continue;
+    out.push({
+      d: arcSlicePath(vStart, vEnd, min, max, cx, cy, r),
+      color: sorted[i].color,
+    });
+  }
+  return out;
+}
+
+/** Hex palette — SVG presentation attrs cannot use CSS var(); must match dsc.css tokens. */
+const GAUGE_PALETTE = {
+  track: "#334566",
+  teal: "#2ec4d6",
+  amber: "#ffb74d",
+  bad: "#ff6b8a",
+  gray4: "#8b95ab",
+  gray5: "#b6bfd4",
+  white: "#f2f5fb",
+} as const;
+
 export function ArcGauge({
   value,
   min = 0,
@@ -695,6 +751,7 @@ export function ArcGauge({
   unit = "",
   target,
   band,
+  segments,
   extrema,
   stale,
   onClick,
@@ -706,6 +763,7 @@ export function ArcGauge({
   unit?: string;
   target?: number;
   band?: { min: number; max: number };
+  segments?: GaugeSegment[];
   extrema?: { min?: number; max?: number };
   stale?: boolean;
   onClick?: () => void;
@@ -720,19 +778,28 @@ export function ArcGauge({
   const r = 46;
   const c = 2 * Math.PI * r * 0.75;
   const dash = c * pct;
-  const angAt = (v: number) => {
-    const p = Math.min(1, Math.max(0, (v - min) / span));
-    return Math.PI - p * Math.PI;
-  };
-  const inBand =
-    band && Number.isFinite(display) ? display >= band.min && display <= band.max : true;
+  const angAt = (v: number) => gaugeAngle(v, min, max);
+  const tone = zoneTone({
+    value: display,
+    band,
+    margin: band ? Math.max((band.max - band.min) * 0.12, 0.05) : undefined,
+    stale,
+    available: Number.isFinite(display),
+  });
+  const toneCls = toneClass(tone);
+  const segArcs = segments?.length ? segmentArcs(segments, min, max, 60, 72, r) : [];
   const stroke = !Number.isFinite(display)
-    ? "var(--dsc-gray-4)"
+    ? GAUGE_PALETTE.gray4
     : stale
-      ? "var(--dsc-amber)"
-      : inBand
-        ? "var(--dsc-teal)"
-        : "var(--dsc-amber)";
+      ? GAUGE_PALETTE.amber
+      : segments?.length
+        ? colorAtValue(segments, display, GAUGE_PALETTE.teal)
+        : tone === "critical"
+          ? GAUGE_PALETTE.bad
+          : tone === "warn"
+            ? GAUGE_PALETTE.amber
+            : GAUGE_PALETTE.teal;
+  const filterId = `dsc-gauge-glow-${useId().replace(/:/g, "")}`;
 
   const tickMarks: { v: number; kind: "band" | "ext" | "target" }[] = [];
   if (band) {
@@ -744,11 +811,11 @@ export function ArcGauge({
 
   const gauge = (
     <div
-      className={`dsc-gauge${!inBand && Number.isFinite(display) ? " is-warn" : ""}${stale ? " is-stale" : ""}${onClick ? " is-clickable" : ""}`}
+      className={`dsc-gauge ${toneCls}${stale ? " is-stale" : ""}${onClick ? " is-clickable" : ""}`}
     >
       <svg viewBox="0 0 120 90" width="140" height="105" aria-label={label}>
         <defs>
-          <filter id="dsc-gauge-glow" x="-40%" y="-40%" width="180%" height="180%">
+          <filter id={filterId} x="-40%" y="-40%" width="180%" height="180%">
             <feGaussianBlur stdDeviation="3.2" result="b" />
             <feMerge>
               <feMergeNode in="b" />
@@ -756,22 +823,37 @@ export function ArcGauge({
             </feMerge>
           </filter>
         </defs>
+        {segArcs.length ? (
+          segArcs.map((seg, i) => (
+            <path
+              key={`seg-${i}`}
+              d={seg.d}
+              fill="none"
+              stroke={seg.color}
+              strokeWidth="10"
+              strokeLinecap="butt"
+              opacity={0.38}
+            />
+          ))
+        ) : (
+          <path
+            d="M18 72 A46 46 0 1 1 102 72"
+            fill="none"
+            stroke={GAUGE_PALETTE.track}
+            strokeWidth="10"
+            strokeLinecap="round"
+          />
+        )}
         <path
-          d="M18 72 A46 46 0 1 1 102 72"
-          fill="none"
-          stroke="var(--dsc-gray-3)"
-          strokeWidth="10"
-          strokeLinecap="round"
-        />
-        <path
+          className="dsc-gauge-value"
           d="M18 72 A46 46 0 1 1 102 72"
           fill="none"
           stroke={stroke}
           strokeWidth="10"
           strokeLinecap="round"
           strokeDasharray={`${dash} ${c}`}
-          filter="url(#dsc-gauge-glow)"
-          style={{ transition: "stroke-dasharray 220ms ease, stroke 220ms ease" }}
+          filter={`url(#${filterId})`}
+          style={{ transition: "stroke-dasharray 280ms ease, stroke 280ms ease" }}
         />
         {tickMarks.map((tm, i) => {
           const ang = angAt(tm.v);
@@ -779,10 +861,10 @@ export function ArcGauge({
           const inn = arcPoint(60, 72, r - (tm.kind === "target" ? 14 : 10), ang);
           const col =
             tm.kind === "target"
-              ? "var(--dsc-teal)"
+              ? GAUGE_PALETTE.teal
               : tm.kind === "band"
-                ? "var(--dsc-amber)"
-                : "var(--dsc-gray-5)";
+                ? GAUGE_PALETTE.amber
+                : GAUGE_PALETTE.gray5;
           return (
             <line
               key={`${tm.kind}-${i}`}
@@ -801,7 +883,7 @@ export function ArcGauge({
           x="60"
           y="58"
           textAnchor="middle"
-          fill="var(--dsc-white)"
+          fill={GAUGE_PALETTE.white}
           fontSize="20"
           fontWeight="700"
           fontFamily="var(--dsc-mono)"
@@ -810,7 +892,7 @@ export function ArcGauge({
             ? display.toFixed(display >= 100 ? 0 : display < 10 ? 2 : 1)
             : "—"}
         </text>
-        <text x="60" y="74" textAnchor="middle" fill="var(--dsc-gray-5)" fontSize="10">
+        <text x="60" y="74" textAnchor="middle" fill={GAUGE_PALETTE.gray5} fontSize="10">
           {stale ? "HELD" : unit}
         </text>
       </svg>
