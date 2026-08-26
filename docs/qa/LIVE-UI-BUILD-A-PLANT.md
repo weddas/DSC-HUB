@@ -1,5 +1,9 @@
 # Build a Plant — composition + full inclusion (N-083 / N-085 / N-086)
 
+> **Pi product path (7.1.2+):** tent select + sprout-derived stage live in the
+> brain Compose stack — see [`../brain/COMPOSE-STAGE.md`](../brain/COMPOSE-STAGE.md).
+> This page remains the **HA lab card** SoT (helpers/scripts/indexes).
+
 Operator / developer runbook for the **Build a Plant** composition card.
 Shipped as a separate dashboard in `09fac80` (2026-08-07); **N-086** folds it
 into the unified DSC-HUB product shell under **Plant → Compose**.

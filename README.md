@@ -19,7 +19,8 @@ Notion [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d3407556
 - **Pi offline brain** — DSC-Brain AP (`10.42.0.1`) + local SPA at `:8787`; HA is lab soak only
   ([`docs/DSC-BRAIN.md`](docs/DSC-BRAIN.md)).
 - **Lab live bus (optional):** HA Native API on studio LAN when soaking — not required for Pi island.
-- **Bridge retired (7.1)** — former ETH01 `dsc-bridge*.yaml` archived under `firmware/_history/`; Sonoffs follow hub demand via Pi brain.
+- **Bridge retired (7.1)** — former ETH01 `dsc-bridge*.yaml` archived under `firmware/_history/`; Sonoffs follow hub demand via Pi brain ([`docs/brain/FLEET-INGEST.md`](docs/brain/FLEET-INGEST.md), [`docs/ops/SONOFF-FLASH.md`](docs/ops/SONOFF-FLASH.md)).
+- **SPA gauges (7.1.2)** — one green/amber/red/grey severity scale; Compose tent + sprout stage ([`docs/brain/WEBUI.md`](docs/brain/WEBUI.md)).
 - **DSC-HUB Pro** dashboard (`/dsc-hub-pro`) — Home, Climate, Learning, tents,
   Root Zone, Tank, Light, Trends, System.
 - **Build a Plant** (`/dsc-build-plant/build`) — separate composition dashboard

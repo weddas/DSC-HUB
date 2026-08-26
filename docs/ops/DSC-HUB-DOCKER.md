@@ -1,13 +1,13 @@
 # DSC-HUB Pi appliance — operations
 
-**Release:** DSC-HUB 7.0.0 — The Pi Release.
+**Release:** DSC-HUB **7.1.2** island packet · brain/SPA **7.1.0** · firmware train **7.0.0.0** · tip `ab49dd8`.
 
 ## Network
 
 - **AP:** `DSC-Brain` 2.4 GHz, locked channel (1/6/11), WPA2.
 - **Subnet:** `10.42.0.0/24`, Pi AP `10.42.0.1`.
-- **eth0:** House uplink (optional). Climate runs island; Ollama + remote CannaLib need uplink.
-- **Avahi:** `dsc-brain.local`
+- **eth0:** House uplink (optional for climate; required for safe fallback OTA SSH, Ollama, remote CannaLib). Bring-up: `services/dsc-hub/pi/bring-up-eth0.sh` (re-asserts subnet/default routes when dhcpcd leaves `noprefixroute`).
+- **Avahi:** `dsc-brain.local` (lab eth0 lease may move — do not hard-code `.30` vs `.48` in runbooks).
 
 Fleet DHCP reservations live in `/etc/dsc-hub/dnsmasq.conf` (bootstrap template). After flash, add device MACs from Settings inventory.
 
@@ -16,13 +16,21 @@ Fleet DHCP reservations live in `/etc/dsc-hub/dnsmasq.conf` (bootstrap template)
 1. Bootstrap Pi (`pi-bootstrap.sh`), compose up, `/health` green.
 2. Move SkyConnect from Unraid; z2m sees coordinator.
 3. Build firmware **7.0.0.0** (`wifi-pi` stubs); rotate Noise API keys → `.env` + Notion.
-4. Flash order: hub → pot2 canary → remaining pots → Sonoffs → panel.
-5. Disable HA demand-follower automations and HA ESPHome integrations (do not delete packages until soak).
-6. Hub ESP-NOW parked on Pi path; brain polls hub demand switches and drives Sonoff relays (45s stale OFF).
-7. **Island proof:** Nest + HA off; tent on Pi AP; fleet chip `7.0.0.0`.
-8. With eth0 up: Settings → Test Ollama + Test CannaLib green.
-9. With eth0 down: integrations HELD; catalog uses local fallback if present.
-10. Stamp git tag `v7.0.0` only after soak.
+4. Flash order: hub → pot2 canary → remaining pots → Sonoffs → panel. **Do not flash** archived `dsc-bridge*` (ETH01 retired on Pi path).
+5. Sonoff / hub OTA helpers: [`SONOFF-FLASH.md`](SONOFF-FLASH.md) (`flash-sonoff-lan*`, `flash-sonoff-fallback*`, `flash-hub-fallback-remote.sh`).
+6. Disable HA demand-follower automations and HA ESPHome integrations (do not delete packages until soak).
+7. Hub ESP-NOW parked on Pi path; brain polls **discovered** hub demand switches and drives Sonoff relays (45s stale OFF). Ingest: [`../brain/FLEET-INGEST.md`](../brain/FLEET-INGEST.md).
+8. **Island proof:** Nest + HA off; tent on Pi AP; fleet chip `7.0.0.0` (panel plaintext; `grow_mat_demand` mapped; no phantom alias chatter).
+9. With eth0 up: Settings → Test Ollama + Test CannaLib green.
+10. With eth0 down: integrations HELD; catalog uses local fallback if present.
+11. Install soak cron: `setup-soak-cron.sh` → hourly `/home/dsc/soak-check.sh` → [`SOAK-2026-08-26.md`](SOAK-2026-08-26.md).
+12. Stamp git tag after soak (firmware remains `7.0.0.0`; surface bump only if SPA version string changes).
+
+## AP heal
+
+If hub or seats flap after compose/AP restarts: `diag-ap.sh`, `diag-hub.sh`, `check-ap-data.sh` — see [`SONOFF-FLASH.md`](SONOFF-FLASH.md#ap--hub-diagnostics). PSK mismatch → `fix-ap-psk.sh` (values only in Notion *DSC-Brain Pi AP*).
+
+Brain container restart briefly drops the hub AP; devices rejoin within ~2 min — expect a short fleet-offline window on every deploy.
 
 ## Acceptance tests
 
@@ -44,14 +52,16 @@ npm install && npm run build:spa
 
 - Uptime Kuma: `GET http://dsc-brain.local:8787/health`
 - Fleet WS: `ws://dsc-brain.local:8787/ws/fleet`
+- Soak log: `/var/lib/dsc-hub/soak-2026-08-26.log`
 
 ## Honesty boundaries
 
 - Pi power-off → AP dies; Sonoffs failsafe OFF.
-- Brain container restart (deploy/`compose up`) briefly drops the hub AP; hub and fleet devices rejoin within ~2 min. Expect a short fleet-offline window on every deploy — not a fault.
 - LLM prose is not catalog SoT.
 - Zigbee plugs are additive; climate legs stay on Sonoffs.
+- Bridge configs under `firmware/_history/v4/` are archive only.
+- Do not invent height/chem/PPFD/NPK.
 
 ## HA lab note
 
-HA custom panel may still show surface **7.2.0** in lab. Product appliance is **7.0.0** on Pi.
+HA custom panel may still show surface **7.2.0** in lab. Product appliance is brain/SPA **7.1.0** (island packet **7.1.2**) + firmware **7.0.0.0** on Pi. SPA bundle tip: `index-DwSYxFmR`.
