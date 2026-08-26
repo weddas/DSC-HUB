@@ -30,7 +30,7 @@ export function collectHonestyGaps(hass: HassLike): HonestyGap[] {
     gaps.push({
       id: "hub-link",
       label: "Hub link down",
-      detail: "binary_sensor.dsc_hub_link is off — Mission/Fleet show HELD, not last-good animation.",
+      detail: "The hub link is down — readings are held at their last known values.",
       tone: "bad",
       href: "/fleet",
       cta: "Open Fleet",
@@ -62,8 +62,8 @@ export function collectHonestyGaps(hass: HassLike): HonestyGap[] {
   if (hass.available && !hass.available("sensor.dsc_hub_heartbeat")) {
     gaps.push({
       id: "beat-dark",
-      label: "Beat dark",
-      detail: "Hub heartbeat unavailable — Mission shows BEAT OFF duration; vitals stay held.",
+      label: "Heartbeat missing",
+      detail: "The hub's heartbeat has stopped arriving — readings stay held until it returns.",
       tone: "bad",
       href: "/live/mission",
       cta: "Mission",
@@ -74,8 +74,8 @@ export function collectHonestyGaps(hass: HassLike): HonestyGap[] {
   if (hass.available && !hass.available("binary_sensor.dsc_hub_panel_link")) {
     gaps.push({
       id: "panel-dark",
-      label: "Panel link dark",
-      detail: "Panel link dark — Mission shows PANEL OFF duration; do not invent Got.",
+      label: "Panel link down",
+      detail: "The control panel link is down — Mission shows how long it has been out.",
       tone: "warn",
       href: "/fleet",
       cta: "Open Fleet",
@@ -88,8 +88,8 @@ export function collectHonestyGaps(hass: HassLike): HonestyGap[] {
     const off = String(reduced.offline ?? "").trim();
     gaps.push({
       id: "reduced-kit",
-      label: "Unexpected OOS",
-      detail: off || "A live lever is temp-OOS or lockout — planned holes are inventory.",
+      label: "Capacity offline",
+      detail: off || "A device that should be running is temporarily out of service or locked out.",
       tone: "warn",
       href: "/fleet",
       cta: "Review kit",
@@ -115,7 +115,7 @@ export function collectHonestyGaps(hass: HassLike): HonestyGap[] {
     gaps.push({
       id: "dark-viol",
       label: "2×4 dark violation",
-      detail: "Photoperiod honesty — check Light.",
+      detail: "The lamp is on during the dark period — check Light.",
       tone: "bad",
       href: "/live/light",
       cta: "Open Light",
@@ -127,7 +127,7 @@ export function collectHonestyGaps(hass: HassLike): HonestyGap[] {
     gaps.push({
       id: "photo-missing",
       label: "Light missing in window",
-      detail: "Photoperiod integrity — fixture did not deliver in the open window.",
+      detail: "The lamp did not deliver its hours in the open window.",
       tone: "bad",
       href: "/live/light",
       cta: "Open Light",
@@ -139,7 +139,7 @@ export function collectHonestyGaps(hass: HassLike): HonestyGap[] {
     gaps.push({
       id: "photo-catchup",
       label: "Light catch-up",
-      detail: "Catch-up photoperiod is active — hours gauge is the Got, not invented.",
+      detail: "Light catch-up is running — the hours gauge shows what was actually delivered.",
       tone: "warn",
       href: "/live/light",
       cta: "Open Light",
@@ -151,7 +151,7 @@ export function collectHonestyGaps(hass: HassLike): HonestyGap[] {
     gaps.push({
       id: "climate-fault",
       label: "Climate sensor fault",
-      detail: "Trust the honesty rail — do not invent Got.",
+      detail: "A climate sensor cannot be trusted right now — its readings are held.",
       tone: "bad",
       href: "/live/climate",
       cta: "Open Climate",
@@ -184,7 +184,7 @@ export function collectHonestyGapsFromFleet(
     gaps.push({
       id: "hub-link",
       label: "Hub link down",
-      detail: "Hub offline on fleet bus — Mission/Fleet show HELD, not last-good animation.",
+      detail: "The hub is offline — readings are held at their last known values.",
       tone: "bad",
       href: "/fleet",
       cta: "Open Fleet",
@@ -204,8 +204,8 @@ export function collectHonestyGapsFromFleet(
   if (fleet.hub.online && fleet.hub.values.heartbeat == null) {
     gaps.push({
       id: "beat-dark",
-      label: "Beat dark",
-      detail: "Hub heartbeat unavailable — Mission shows BEAT OFF duration; vitals stay held.",
+      label: "Heartbeat missing",
+      detail: "The hub's heartbeat has stopped arriving — readings stay held until it returns.",
       tone: "bad",
       href: "/live/mission",
       cta: "Mission",
@@ -216,8 +216,8 @@ export function collectHonestyGapsFromFleet(
   if (!fleet.panel.online) {
     gaps.push({
       id: "panel-dark",
-      label: "Panel link dark",
-      detail: "Panel link dark — Mission shows PANEL OFF duration; do not invent Got.",
+      label: "Panel link down",
+      detail: "The control panel link is down — Mission shows how long it has been out.",
       tone: "warn",
       href: "/fleet",
       cta: "Open Fleet",
@@ -228,8 +228,8 @@ export function collectHonestyGapsFromFleet(
   if (fleet.system.reduced_kit) {
     gaps.push({
       id: "reduced-kit",
-      label: "Unexpected OOS",
-      detail: "A live lever is temp-OOS or lockout — planned holes are inventory.",
+      label: "Capacity offline",
+      detail: "A device that should be running is temporarily out of service or locked out.",
       tone: "warn",
       href: "/fleet",
       cta: "Review kit",
