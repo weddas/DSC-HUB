@@ -14,6 +14,11 @@
 
 Native FleetState: `/fleet`; computed dash at `/fleet/computed`. Bridge retired; appliance driver only.
 
+**Sonoff OTA / AP heal:** [`docs/ops/SONOFF-FLASH.md`](docs/ops/SONOFF-FLASH.md)  
+**Pi ops:** [`docs/ops/DSC-HUB-DOCKER.md`](docs/ops/DSC-HUB-DOCKER.md)
+
+Calibration API: `GET|POST /settings/calibration/{device_id}` (`fan_cfm`, `light_par`) — SPA `/fleet/calibrate`.
+
 ---
 
 ## Pi appliance — **v7.0.0** (DSC-Brain island)

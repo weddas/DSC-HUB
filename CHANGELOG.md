@@ -13,7 +13,7 @@
 - **Fleet truth** — firmware ingest reads `firmware_version` text sensor on all roles; pot1 moisture history gap fixed.
 - **Control path** — per-host ESPHome API lock fixes concurrent ingest/write 500s; demand → relay verified on Pi island.
 - **DSC-Control** — USB flash to `7.0.0.0` at `10.42.0.11`; erase+NVS clear required for DSC-Brain WiFi join.
-- **Ops scripts** — Sonoff fallback/LAN flash helpers, AP diagnostics, `verify-brain` / `island-proof` acceptance.
+- **Ops scripts** — Sonoff fallback/LAN flash helpers, AP diagnostics, `verify-brain` / `island-proof` acceptance. Runbook: [`docs/ops/SONOFF-FLASH.md`](docs/ops/SONOFF-FLASH.md).
 
 ## Prior unreleased notes (7.0.0 island)
 
