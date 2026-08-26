@@ -9,15 +9,13 @@ import {
   type ReactNode,
 } from "react";
 import type { HassEntity, HomeAssistant } from "../vite-env";
-import { get_fleet_state, call_service } from "../lib/fleetApi";
+import { get_fleet_state, get_fleet_computed, call_service } from "../lib/fleetApi";
 import { parseFleetSnapshot } from "../lib/fleetModel";
-import { fleetToHassCompat } from "../lib/fleetFromHass";
 
 function mergeHassExtras(
   states: Record<string, HassEntity>,
-  fleet: Record<string, unknown>,
+  extras: Record<string, HassEntity> | undefined,
 ): void {
-  const extras = fleet.hass_extras as Record<string, HassEntity> | undefined;
   if (!extras) return;
   for (const [id, ent] of Object.entries(extras)) {
     states[id] = {
@@ -27,6 +25,29 @@ function mergeHassExtras(
       last_changed: ent.last_changed ?? new Date().toISOString(),
     };
   }
+}
+
+/** Pi compat shim — computed/helpers only; live reads go through useEntityBus + fleet. */
+export function fleetToHass(
+  fleet: Record<string, unknown>,
+  computed?: Record<string, unknown> | null,
+): HomeAssistant {
+  const states: Record<string, HassEntity> = {};
+  const extras = computed?.hass_extras as Record<string, HassEntity> | undefined;
+  mergeHassExtras(states, extras);
+  const parsed = parseFleetSnapshot(fleet);
+  states["binary_sensor.dsc_hub_link"] = {
+    entity_id: "binary_sensor.dsc_hub_link",
+    state: parsed.hub.online ? "on" : "off",
+    attributes: {},
+    last_changed: new Date().toISOString(),
+  };
+  return {
+    states,
+    callService: async (domain: string, service: string, data?: Record<string, unknown>) =>
+      call_service(domain, service, data ?? {}),
+    callWS: async () => null,
+  };
 }
 
 interface BrainContextValue {
@@ -48,21 +69,9 @@ export function useBrainContext(): BrainContextValue {
   return ctx;
 }
 
-/** Legacy compat shim — builds minimal HA states for unmigrated components. */
-export function fleetToHass(fleet: Record<string, unknown>): HomeAssistant {
-  const parsed = parseFleetSnapshot(fleet);
-  const states = fleetToHassCompat(parsed);
-  mergeHassExtras(states, fleet);
-  return {
-    states,
-    callService: async (domain: string, service: string, data?: Record<string, unknown>) =>
-      call_service(domain, service, data ?? {}),
-    callWS: async () => null,
-  };
-}
-
 export function BrainProvider({ children }: { children: ReactNode }) {
   const [fleet, setFleet] = useState<Record<string, unknown> | null>(null);
+  const [computed, setComputed] = useState<Record<string, unknown> | null>(null);
   const [tick, setTick] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -76,16 +85,25 @@ export function BrainProvider({ children }: { children: ReactNode }) {
     setLoading(false);
   }, []);
 
+  const refreshComputed = useCallback(async () => {
+    try {
+      const data = await get_fleet_computed();
+      setComputed(data);
+    } catch {
+      /* computed helpers are non-fatal */
+    }
+  }, []);
+
   const refresh = useCallback(async () => {
     try {
-      const data = await get_fleet_state();
+      const [data] = await Promise.all([get_fleet_state(), refreshComputed()]);
       applyFleet(data);
     } catch (exc) {
       const msg = exc instanceof Error ? exc.message : "fleet fetch failed";
       setError(msg);
       setLoading(false);
     }
-  }, [applyFleet]);
+  }, [applyFleet, refreshComputed]);
 
   useEffect(() => {
     void refresh();
@@ -97,6 +115,7 @@ export function BrainProvider({ children }: { children: ReactNode }) {
     ws.onmessage = (ev) => {
       try {
         applyFleet(JSON.parse(ev.data) as Record<string, unknown>);
+        void refreshComputed();
       } catch {
         /* ignore malformed ws payload */
       }
@@ -114,16 +133,24 @@ export function BrainProvider({ children }: { children: ReactNode }) {
       }
     };
 
+    const computedPoll = window.setInterval(() => {
+      void refreshComputed();
+    }, 2000);
+
     return () => {
       ws.close();
+      window.clearInterval(computedPoll);
       if (pollRef.current != null) {
         window.clearInterval(pollRef.current);
         pollRef.current = null;
       }
     };
-  }, [applyFleet, refresh]);
+  }, [applyFleet, refresh, refreshComputed]);
 
-  const hass = useMemo(() => (fleet ? fleetToHass(fleet) : null), [fleet]);
+  const hass = useMemo(
+    () => (fleet ? fleetToHass(fleet, computed) : null),
+    [fleet, computed],
+  );
 
   const value = useMemo<BrainContextValue>(
     () => ({

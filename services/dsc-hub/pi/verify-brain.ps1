@@ -7,10 +7,8 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$RepoRoot = Resolve-Path (Join-Path $PSScriptRoot "..\..\..")
 $VerifySh = Join-Path $PSScriptRoot "verify-brain.sh"
-$plink = "plink -batch -hostkey `"$HostKey`" -pw $PiPassword ${PiUser}@${PiHost}"
-$pscp = "pscp -batch -hostkey `"$HostKey`" -pw $PiPassword"
 
-Invoke-Expression "$pscp `"$VerifySh`" ${PiUser}@${PiHost}:/tmp/verify-brain.sh"
-Invoke-Expression "$plink `"tr -d '\r' < /tmp/verify-brain.sh > /tmp/verify.sh; bash /tmp/verify.sh http://127.0.0.1:8787 $PiPassword`""
+& pscp -batch -hostkey $HostKey -pw $PiPassword $VerifySh "${PiUser}@${PiHost}:/tmp/verify-brain.sh"
+$remote = "sed -i 's/`r$//' /tmp/verify-brain.sh; bash /tmp/verify-brain.sh http://127.0.0.1:8787 $PiPassword"
+& plink -batch -hostkey $HostKey -pw $PiPassword "${PiUser}@${PiHost}" $remote

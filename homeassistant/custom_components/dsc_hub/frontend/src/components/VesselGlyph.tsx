@@ -1,4 +1,4 @@
-import { useHass } from "../hooks/useHass";
+import { useEntityBus } from "../hooks/useEntityBus";
 import {
   materialStroke,
   type VesselSilhouette,
@@ -89,7 +89,7 @@ export function VesselSelect({
   pot: number;
   onPicked?: () => void;
 }) {
-  const { available, callService, entity, state } = useHass();
+  const { available, callService, entity, state } = useEntityBus();
   const id = `input_select.dsc_pot${pot}_vessel`;
   const ok = available(id);
   const options = (entity(id)?.attributes?.options as string[] | undefined) || [];

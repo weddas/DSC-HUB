@@ -58,7 +58,7 @@ class SeatState:
 @dataclass
 class FleetState:
     version: str = EXPECTED_FIRMWARE
-    surface: str = "7.0.0-dev"
+    surface: str = "7.0.0"
     hub: SeatState = field(default_factory=lambda: SeatState("hub"))
     panel: SeatState = field(default_factory=lambda: SeatState("panel"))
     pots: dict[str, SeatState] = field(default_factory=dict)

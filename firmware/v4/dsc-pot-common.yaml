@@ -673,7 +673,7 @@ text_sensor:
   - platform: template
     name: "Firmware Version"
     icon: mdi:tag-check
-    lambda: 'return {"6.0.0.0"};'
+    lambda: 'return {"7.0.0.0"};'
     update_interval: 60s
   # Diagnostic only — see 0xD7 RX note in globals/espnow below. This node
   # cannot set its own clock from the packet, so this is the only trace

@@ -1,4 +1,4 @@
-# DSC-HUB brain + SPA — Pi Release 7.0.0-dev
+# DSC-HUB brain + SPA — Pi Release 7.0.0
 FROM node:22-bookworm-slim AS frontend
 WORKDIR /build
 COPY homeassistant/custom_components/dsc_hub/frontend/package.json homeassistant/custom_components/dsc_hub/frontend/package-lock.json* ./

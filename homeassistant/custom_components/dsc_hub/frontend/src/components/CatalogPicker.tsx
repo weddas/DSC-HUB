@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useHass } from "../hooks/useHass";
+import { useEntityBus } from "../hooks/useEntityBus";
 import { searchCatalog, type CatalogItem, type CatalogKind, type CatalogSource } from "../lib/catalog";
 import { StatusChip } from "./ui";
 
@@ -12,7 +12,7 @@ export function CatalogPicker({
   onPick: (item: CatalogItem) => void;
   placeholder?: string;
 }) {
-  const { state } = useHass();
+  const { state } = useEntityBus();
   const [q, setQ] = useState("");
   const [items, setItems] = useState<CatalogItem[]>([]);
   const [source, setSource] = useState<CatalogSource>("local");

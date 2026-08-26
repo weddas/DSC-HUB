@@ -7,7 +7,7 @@ services:
     build:
       context: ../..
       dockerfile: services/dsc-hub/brain/Dockerfile.prebuilt
-    image: dsc-hub-brain:7.0.0-dev
+    image: dsc-hub-brain:7.0.0
     container_name: dsc-hub-brain
     restart: unless-stopped
     ports:
@@ -16,7 +16,7 @@ services:
       DSC_DATA: /data
       DSC_BRAIN_API_KEY: ${DSC_BRAIN_API_KEY:-}
       DSC_EXPECTED_FIRMWARE: ${DSC_EXPECTED_FIRMWARE:-7.0.0.0}
-      DSC_SURFACE_VERSION: ${DSC_SURFACE_VERSION:-7.0.0-dev}
+      DSC_SURFACE_VERSION: ${DSC_SURFACE_VERSION:-7.0.0}
       DSC_HUB_API_KEY: ${DSC_HUB_API_KEY:-}
       DSC_CONTROL_API_KEY: ${DSC_CONTROL_API_KEY:-}
       DSC_POT1_API_KEY: ${DSC_POT1_API_KEY:-}
@@ -47,7 +47,7 @@ services:
     build:
       context: ../cannalib
       dockerfile: Dockerfile
-    image: dsc-hub-cannalib:7.0.0-dev
+    image: dsc-hub-cannalib:7.0.0
     container_name: dsc-hub-cannalib
     restart: unless-stopped
     ports:

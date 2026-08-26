@@ -103,7 +103,8 @@ esphome:
             // writing the idx — so vitals could keep broadcasting the old
             // mode after a power cycle while Clone Mode was already Off.
             {
-              std::string m = id(clone_mode).current_option().str();
+              const char *opt = id(clone_mode).current_option();
+              std::string m = opt ? opt : "";
               if      (m == "Follow 4x8")         id(clone_mode_idx) = 0;
               else if (m == "Clones & Seedlings") id(clone_mode_idx) = 1;
               else if (m == "Mother")            id(clone_mode_idx) = 2;
@@ -2098,7 +2099,7 @@ number:
           else:
             - lambda: |-
                 ESP_LOGW("grow", "Reject Target Temp — stage '%s' (switch to Custom)",
-                         id(grow_stage).current_option().c_str());
+                         id(grow_stage).current_option());
                 id(num_target_temp).publish_state(id(stage_temp_target));
 
   - platform: template
@@ -2124,7 +2125,7 @@ number:
           else:
             - lambda: |-
                 ESP_LOGW("grow", "Reject VPD Min — stage '%s' (switch to Custom)",
-                         id(grow_stage).current_option().c_str());
+                         id(grow_stage).current_option());
                 id(num_vpd_min).publish_state(id(stage_vpd_min));
 
   - platform: template
@@ -2150,7 +2151,7 @@ number:
           else:
             - lambda: |-
                 ESP_LOGW("grow", "Reject VPD Max — stage '%s' (switch to Custom)",
-                         id(grow_stage).current_option().c_str());
+                         id(grow_stage).current_option());
                 id(num_vpd_max).publish_state(id(stage_vpd_max));
 
   - platform: template
@@ -2176,7 +2177,7 @@ number:
           else:
             - lambda: |-
                 ESP_LOGW("grow", "Reject RH Min — stage '%s' (switch to Custom)",
-                         id(grow_stage).current_option().c_str());
+                         id(grow_stage).current_option());
                 id(num_rh_min).publish_state(id(stage_rh_min));
 
   - platform: template
@@ -2202,7 +2203,7 @@ number:
           else:
             - lambda: |-
                 ESP_LOGW("grow", "Reject RH Max — stage '%s' (switch to Custom)",
-                         id(grow_stage).current_option().c_str());
+                         id(grow_stage).current_option());
                 id(num_rh_max).publish_state(id(stage_rh_max));
 
   # v2.4.1 · SENSOR EFFICIENCY: these polled template numbers only
@@ -2285,7 +2286,7 @@ number:
           else:
             - lambda: |-
                 ESP_LOGW("clone", "Reject Clone Target Temp — mode '%s' (switch to Custom)",
-                         id(clone_mode).current_option().c_str());
+                         id(clone_mode).current_option());
                 id(num_clone_temp).publish_state(id(clone_temp_target));
 
   - platform: template
@@ -2311,7 +2312,7 @@ number:
           else:
             - lambda: |-
                 ESP_LOGW("clone", "Reject Clone VPD Min — mode '%s' (switch to Custom)",
-                         id(clone_mode).current_option().c_str());
+                         id(clone_mode).current_option());
                 id(num_clone_vpd_min).publish_state(id(clone_vpd_min));
 
   - platform: template
@@ -2337,7 +2338,7 @@ number:
           else:
             - lambda: |-
                 ESP_LOGW("clone", "Reject Clone VPD Max — mode '%s' (switch to Custom)",
-                         id(clone_mode).current_option().c_str());
+                         id(clone_mode).current_option());
                 id(num_clone_vpd_max).publish_state(id(clone_vpd_max));
 
   - platform: template
@@ -2363,7 +2364,7 @@ number:
           else:
             - lambda: |-
                 ESP_LOGW("clone", "Reject Clone RH Min — mode '%s' (switch to Custom)",
-                         id(clone_mode).current_option().c_str());
+                         id(clone_mode).current_option());
                 id(num_clone_rh_min).publish_state(id(clone_rh_min));
 
   - platform: template
@@ -2389,7 +2390,7 @@ number:
           else:
             - lambda: |-
                 ESP_LOGW("clone", "Reject Clone RH Max — mode '%s' (switch to Custom)",
-                         id(clone_mode).current_option().c_str());
+                         id(clone_mode).current_option());
                 id(num_clone_rh_max).publish_state(id(clone_rh_max));
 
   - platform: template
@@ -2768,7 +2769,7 @@ text_sensor:
     name: "Firmware Version"
     id: fw_version
     icon: mdi:tag-check
-    lambda: 'return {"6.0.0.0"};'
+    lambda: 'return {"7.0.0.0"};'
     update_interval: 60s
 
   # F-006: last recovery action reason (bounce / reboot / none)
@@ -3807,7 +3808,8 @@ script:
     mode: restart
     then:
       - lambda: |-
-          std::string s = id(grow_stage).current_option().str();
+          const char *opt = id(grow_stage).current_option();
+          std::string s = opt ? opt : "";
           // v2.3: OFF = 4x8 out of service. Don't touch the numeric targets
           // (so returning to a stage restores your fine-tuning); just drop
           // the tent from arbitration.
@@ -3860,7 +3862,8 @@ script:
     mode: restart
     then:
       - lambda: |-
-          std::string s = id(grow_stage).current_option().str();
+          const char *opt = id(grow_stage).current_option();
+          std::string s = opt ? opt : "";
           if (s == "Off") { id(main_active) = false; id(stage_short) = "OFF"; id(stage_light_hours) = 0;
                             ESP_LOGI("grow", "Boot: 4x8 stage OFF (inactive)"); return; }
           id(main_active) = true;
@@ -3885,7 +3888,8 @@ script:
     mode: restart
     then:
       - lambda: |-
-          std::string m = id(clone_mode).current_option().str();
+          const char *opt = id(clone_mode).current_option();
+          std::string m = opt ? opt : "";
           // v2.3: OFF = 2x4 out of service. Excluded from arbitration and
           // from its donor/reservoir role; its intake trickles (see
           // run_climate_logic). Sliders untouched.

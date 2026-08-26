@@ -1,8 +1,8 @@
-import { useHass } from "../hooks/useHass";
+import { useEntityBus } from "../hooks/useEntityBus";
 import { StatusChip } from "./ui";
 
 export function TankCutaway() {
-  const { available, num, state } = useHass();
+  const { available, num, state } = useEntityBus();
   const inService = state("input_boolean.dsc_tank_in_service") === "on";
   const levelOk = available("input_number.dsc_tank_level_pct") || available("sensor.dsc_tank_level_pct");
   const level = available("sensor.dsc_tank_level_pct")

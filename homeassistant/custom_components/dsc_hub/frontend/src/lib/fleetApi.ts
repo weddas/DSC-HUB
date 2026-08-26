@@ -61,6 +61,12 @@ export async function get_fleet_state(): Promise<Record<string, unknown>> {
   return resp.json();
 }
 
+export async function get_fleet_computed(): Promise<Record<string, unknown>> {
+  const resp = await fetch("/fleet/computed");
+  if (!resp.ok) throw new Error("fleet computed fetch failed");
+  return resp.json();
+}
+
 export async function get_settings(): Promise<{
   settings: Record<string, string>;
   inventory: Array<Record<string, unknown>>;

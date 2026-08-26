@@ -1,4 +1,4 @@
-"""DSC Brain API — Pi Release 7.0.0-dev."""
+"""DSC Brain API — Pi Release 7.0.0."""
 
 from __future__ import annotations
 
@@ -172,15 +172,27 @@ def health() -> dict[str, Any]:
 
 
 @app.get("/fleet")
-def fleet(include_hass: bool = Query(False, alias="include_hass")) -> dict[str, Any]:
+def fleet(
+    include_hass: bool = Query(False, alias="include_hass"),
+    include_computed: bool = Query(False, alias="include_computed"),
+) -> dict[str, Any]:
     state = get_fleet_state()
     inventory = list_inventory()
     payload = state.to_dict()
     payload["inventory"] = inventory
-    payload["hass_extras"] = build_computed_hass_states(state, inventory)
+    if include_computed or include_hass:
+        payload["hass_extras"] = build_computed_hass_states(state, inventory)
     if include_hass:
         payload["hass_states"] = state.to_hass_states(inventory)
     return payload
+
+
+@app.get("/fleet/computed")
+def fleet_computed() -> dict[str, Any]:
+    """Computed dash helpers (CFM, alerts, fleet chip) — off the native /fleet hot path."""
+    state = get_fleet_state()
+    inventory = list_inventory()
+    return {"hass_extras": build_computed_hass_states(state, inventory)}
 
 
 @app.websocket("/ws/fleet")
@@ -192,7 +204,6 @@ async def fleet_ws(websocket: WebSocket) -> None:
             inv = list_inventory()
             ws_payload = st.to_dict()
             ws_payload["inventory"] = inv
-            ws_payload["hass_extras"] = build_computed_hass_states(st, inv)
             await websocket.send_json(ws_payload)
             import asyncio
 

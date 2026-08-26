@@ -1,4 +1,22 @@
-# DSC-HUB · HA surface **7.2.0** / expected firmware **6.0.0.0**
+# DSC-HUB releases
+
+## Pi appliance — **v7.0.0** (DSC-Brain island)
+
+| | |
+|---|---|
+| **Brain / SPA** | **7.0.0** (`dsc-hub-brain:7.0.0`) |
+| **Expected firmware** | **7.0.0.0** |
+| **Primary UI** | Pi SPA at `http://10.42.0.1:8787` |
+| **Git tag** | `v7.0.0` |
+| **Deploy** | [`services/dsc-hub/pi/deploy-brain.ps1`](services/dsc-hub/pi/deploy-brain.ps1) |
+| **Fleet flash** | [`services/dsc-hub/pi/flash-fleet-700.ps1`](services/dsc-hub/pi/flash-fleet-700.ps1) |
+| **Island proof** | [`docs/ops/DSC-HUB-DOCKER.md`](docs/ops/DSC-HUB-DOCKER.md) + [`docs/AUDIT-2026-08-26.md`](docs/AUDIT-2026-08-26.md) |
+
+Native FleetState: `/fleet` (no `hass_extras` on hot path); computed dash helpers at `/fleet/computed`.
+
+---
+
+## HA house panel — surface **7.2.0** / expected firmware **6.0.0.0**
 
 Honesty pass for the live SoftAP fleet. The sidebar panel is **`/dsc-hub`**
 (not DSC-HUB Pro). Lovelace YAML at `/dsc-hub-pro/*` remains the hidden fallback.

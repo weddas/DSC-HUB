@@ -45,7 +45,7 @@ export const EMPTY_SEAT = (seat_id: string): SeatSnapshot => ({
 
 export const EMPTY_FLEET: FleetSnapshot = {
   version: "7.0.0.0",
-  surface: "7.0.0-dev",
+  surface: "7.0.0",
   expected_firmware: "7.0.0.0",
   hub: EMPTY_SEAT("hub"),
   panel: EMPTY_SEAT("panel"),

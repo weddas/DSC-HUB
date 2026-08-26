@@ -235,6 +235,10 @@ async def _fetch_device(host: str, api_key: str, role: str, seat_id: str) -> dic
         elif role == "pot":
             for key, st in states.items():
                 object_id = key_to_object.get(key, "")
+                if object_id == "firmware_version":
+                    pot_fw = str(getattr(st, "state", "")).strip()
+                    if pot_fw:
+                        fw = pot_fw
                 for suffix, field in POT_MAP.items():
                     if object_id.endswith(suffix) or suffix in object_id:
                         try:

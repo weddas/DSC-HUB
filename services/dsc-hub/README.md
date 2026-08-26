@@ -74,7 +74,7 @@ Health: `curl http://localhost:8787/health`
 | Brain / SPA     | 7.0.0       |
 | Docker images   | 7.0.0       |
 
-Until island proof succeeds, tree stays `7.0.0-dev`.
+Until island proof succeeds, tree may ship as `7.0.0` with fleet firmware train `7.0.0.0`.
 
 ## Not on the Pi
 

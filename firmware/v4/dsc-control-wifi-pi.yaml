@@ -8,7 +8,6 @@ wifi:
       priority: 20
   power_save_mode: none
   fast_connect: false
-  post_connect_roaming: false
   use_address: ${lan_ip}
   manual_ip:
     static_ip: ${lan_ip}

@@ -57,7 +57,7 @@ DEFAULT_INVENTORY: list[dict[str, Any]] = [
     {"seat_id": "control", "role": "panel", "host": "10.42.0.11"},
     {"seat_id": "pot1", "role": "pot", "host": "10.42.0.21"},
     {"seat_id": "pot2", "role": "pot", "host": "10.42.0.22"},
-    {"seat_id": "pot3", "role": "pot", "host": "10.42.0.23"},
+    {"seat_id": "pot3", "role": "pot", "host": "10.42.0.23", "in_service": False},
     {"seat_id": "pot4", "role": "pot", "host": "10.42.0.24"},
     {"seat_id": "heater", "role": "sonoff_heater", "host": "10.42.0.50"},
     {"seat_id": "heatmat", "role": "sonoff_heatmat", "host": "10.42.0.51"},
@@ -95,13 +95,20 @@ def init_settings_db(db_path: Path | None = None) -> None:
             (key, value),
         )
     for row in DEFAULT_INVENTORY:
+        in_svc = 1 if row.get("in_service", True) else 0
         conn.execute(
             """
             INSERT INTO fleet_inventory(seat_id, role, in_service, host, mac, api_key, extra_json)
-            VALUES(?, ?, 1, ?, NULL, NULL, '{}')
+            VALUES(?, ?, ?, ?, NULL, NULL, '{}')
             ON CONFLICT(seat_id) DO NOTHING
             """,
-            (row["seat_id"], row["role"], row.get("host")),
+            (row["seat_id"], row["role"], in_svc, row.get("host")),
+        )
+    if get_setting("pot3_f003_gate", "", db_path) != "applied":
+        conn.execute("UPDATE fleet_inventory SET in_service=0 WHERE seat_id='pot3'")
+        conn.execute(
+            "INSERT INTO settings(key, value) VALUES('pot3_f003_gate', 'applied') "
+            "ON CONFLICT(key) DO UPDATE SET value='applied'"
         )
     conn.execute("DELETE FROM fleet_inventory WHERE seat_id='bridge'")
     conn.execute(

@@ -94,9 +94,18 @@ def test_fleet_api_native_snapshot(temp_db: Path, monkeypatch: pytest.MonkeyPatc
     body = resp.json()
     assert "inventory" in body
     assert "hub" in body
-    assert "hass_extras" in body
-    assert "sensor.dsc_fan_exhaust_outside_pct" in body["hass_extras"]
+    assert "hass_extras" not in body
     assert "hass_states" not in body
+
+    computed = client.get("/fleet/computed")
+    assert computed.status_code == 200
+    computed_body = computed.json()
+    assert "hass_extras" in computed_body
+    assert "sensor.dsc_fan_exhaust_outside_pct" in computed_body["hass_extras"]
+
+    with_computed = client.get("/fleet?include_computed=true")
+    assert with_computed.status_code == 200
+    assert "hass_extras" in with_computed.json()
 
     legacy = client.get("/fleet?include_hass=true")
     assert legacy.status_code == 200
@@ -211,7 +220,14 @@ def test_health_endpoint() -> None:
     assert resp.status_code == 200
     body = resp.json()
     assert body["status"] == "ok"
+    assert body["version"] == "7.0.0"
+    assert body["surface"] == "7.0.0"
     assert body["expected_firmware"] == "7.0.0.0"
+
+
+def test_pot3_default_out_of_service(temp_db: Path) -> None:
+    inv = {r["seat_id"]: r for r in list_inventory(temp_db)}
+    assert inv["pot3"]["in_service"] is False
 
 
 def test_network_apply(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
