@@ -10,6 +10,22 @@ fi
 if ip link show eth0 2>/dev/null | grep -q "state UP"; then
   echo "eth0 already up"
   ip -4 addr show eth0 || true
+  # Link up is not enough: dhcpcd renewals have dropped the IPv4 routes while
+  # the address stayed (noprefixroute), leaving replies to egress via wlan0.
+  # Re-assert the subnet + default routes whenever they are missing.
+  ETH_IP=$(ip -4 addr show eth0 | awk '/inet /{print $2}' | cut -d/ -f1 | head -1)
+  if [ -n "$ETH_IP" ]; then
+    SUBNET=$(echo "$ETH_IP" | awk -F. '{printf "%s.%s.%s.0/24", $1, $2, $3}')
+    GATEWAY=$(echo "$ETH_IP" | awk -F. '{printf "%s.%s.%s.1", $1, $2, $3}')
+    if ! ip route show | grep -q "$SUBNET dev eth0"; then
+      run_sudo ip route add "$SUBNET" dev eth0 src "$ETH_IP" 2>/dev/null || true
+      echo "re-added subnet route $SUBNET via eth0"
+    fi
+    if ! ip route show default | grep -q "dev eth0"; then
+      run_sudo ip route add default via "$GATEWAY" dev eth0 src "$ETH_IP" 2>/dev/null || true
+      echo "re-added default route via $GATEWAY on eth0"
+    fi
+  fi
   exit 0
 fi
 
