@@ -2407,3 +2407,33 @@ Do **not** reclaim .33/.39/.40/.47/.23 — other hosts answered there at cutover
 - Map non-critical hub entities (ladder waits, hub-side `*_in_service` switches) when tuning UI needs them.
 - Phase E: drop `hass_extras` / Pi `fleetToHass` shim after page migration soak.
 
+---
+
+## 2026-08-26 — DSC-Brain 7.0.0 island product + fleet flash
+
+### done
+
+- Phase E: native `GET /fleet` vs `GET /fleet/computed` (`api.py`, `useBrain` + `get_fleet_computed`).
+- Brain/SPA surface **7.0.0**; SPA `index-BJFHGKyp`.
+- Operator scripts: `flash-fleet-700.ps1` / `flash-fleet-remote.sh`, `island-proof.*`, `soak-check.*`.
+- Pot Modbus: drop `turnaround_time` for ESPHome **2025.12.4** on Pi (`504b82d`).
+- Flash seat quoting for Windows→plink (`f10ad40`); Sonoff text `Firmware Version` → **7.0.0.0**.
+- POT3 gated `in_service: false` (F-003).
+- Soak tooling + island-proof evidence in [`docs/ops/SOAK-2026-08-26.md`](ops/SOAK-2026-08-26.md) / audit.
+
+### soak
+
+- Finish remaining fleet OTA seats if any still on pre-7.0 text versions; hourly `soak-check` through T+24h.
+- Watch `warn: fans_all_zero` with hub online.
+
+### red-flag
+
+- None new beyond hardware OOS (AC / mister / POT3 probe).
+
+### next-plan
+
+- Tag `v7.0.0` after soak sign-off.
+- Code residuals: `_HUB_SWITCH_ENTITY_TO_OID` alias; `grow_mat_demand` in `DEMAND_TO_SEAT`.
+- Drop Pi `fleetToHass` shim after page migration soak.
+- Map non-critical hub entities when tuning UI needs them.
+

@@ -1,5 +1,10 @@
 # DSC-HUB firmware v4
 
+**Pi island product train:** hub / Control / pots / Sonoffs **7.0.0.0** (`*-wifi-pi.yaml`, `10.42.0.0/24`).
+OTA from Pi ESPHome via `services/dsc-hub/pi/flash-fleet-700.ps1` — see [`docs/qa/PI-APPLIANCE-7.0.md`](../../docs/qa/PI-APPLIANCE-7.0.md).
+Bump **both** `esphome.project.version` and text `Firmware Version` lambdas together (Sonoff `5.2.0` text lag was a real chip bug).
+Pot Modbus: do not use `turnaround_time` on ESPHome **2025.12.4** (Pi dashboard); `send_wait_time` is enough until 2026.8+.
+
 Working directory for ESPHome configs. Current fleet release string:
 **Live train:** hub / Control / bridge / pots / Sonoffs **6.0.0.0** (SoftAP cutover;
 HA surface **7.2.0**). Tagged marketing cut may still say `v5.1.0`. See CHANGELOG / FOLLOWUPS.
