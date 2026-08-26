@@ -13,6 +13,7 @@ export interface RosterSlot {
   status?: string;
   notes?: string;
   seed_count?: number;
+  tent?: string;
 }
 
 export interface PlantSeatModel {
@@ -44,13 +45,18 @@ function clean(v: string | undefined, fallback = "—"): string {
   return v;
 }
 
+export function normalizeTent(raw: string | undefined): TentId {
+  const v = String(raw || "").trim().toLowerCase();
+  if (v === "clone" || v === "2x4" || v === "2×4") return "clone";
+  if (v === "main" || v === "4x8" || v === "4×8") return "main";
+  return "unassigned";
+}
+
 export function readTent(
   state: (id: string, fallback?: string) => string,
   pot: number,
 ): TentId {
-  const raw = state(`input_select.dsc_pot${pot}_tent`, "unassigned");
-  if (raw === "clone" || raw === "main" || raw === "unassigned") return raw;
-  return "unassigned";
+  return normalizeTent(state(`input_select.dsc_pot${pot}_tent`, "unassigned"));
 }
 
 export function tentLabel(tent: TentId): string {

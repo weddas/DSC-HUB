@@ -1,0 +1,14 @@
+{
+  "online": true,
+  "firmware": "7.0.0.0",
+  "host": "192.168.86.48",
+  "controls": {
+    "select.dsc_hub_clone_mode": "Custom",
+    "select.dsc_hub_grow_stage": "Off",
+    "select.dsc_hub_clone_photoperiod": "Independent",
+    "number.dsc_hub_clone_light_hours": "18.0",
+    "switch.dsc_hub_manual_takeover": "off",
+    "switch.dsc_hub_tent_full_auto_mode": "on",
+    "switch.dsc_hub_tent_manual_override": "off"
+  }
+}

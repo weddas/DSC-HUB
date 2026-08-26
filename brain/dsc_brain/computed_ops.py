@@ -10,6 +10,8 @@ from .compose_store import all_helpers, get_helper, get_roster_slots
 from .device_calibration import get_calibration
 from .hub_controls import HUB_FAN_ENTITY_TO_OID
 from .settings import list_history, list_roster
+from .stage_model import expected_stage, tent_id
+from .want import resolve_want
 from .dash_computed import emit_dash_entities
 
 FAN_PCT_ENTITIES: dict[str, str] = {
@@ -60,10 +62,23 @@ VESSEL_OPTIONS = [
     "plastic_taper_15l",
 ]
 
+GROWTH_STAGE_OPTIONS = [
+    "Germination",
+    "Seedling",
+    "Early Vegetative",
+    "Vegetative",
+    "Late (Push) Vegetative",
+    "Early Flowering",
+    "Flowering",
+    "Late Flowering",
+    "Final 48-72h Flowering",
+]
+
 SELECT_OPTIONS: dict[str, list[str]] = {
     "input_select.dsc_build_custom_slot": ["auto", "1", "2", "3", "4", "5"],
     "input_select.dsc_build_assign_pot": ["none", "1", "2", "3", "4"],
     "input_select.dsc_build_climate_pot": ["Fleet", "1", "2", "3", "4"],
+    "input_select.dsc_build_tent": ["4x8", "2x4"],
     "input_select.dsc_build_vessel": VESSEL_OPTIONS,
     **{f"input_select.dsc_pot{n}_vessel": VESSEL_OPTIONS for n in range(1, 5)},
     **{f"input_select.dsc_pot{n}_tent": ["clone", "main", "unassigned"] for n in range(1, 5)},
@@ -354,9 +369,46 @@ def build_computed_hass_states(
         },
     )
 
+    # Intake-side mirror: total exhaust CFM (curve-or-nameplate) split across the
+    # two intake fans by their live pct share.
+    exh = cfm_values.get("sensor.dsc_cfm_exhaust_out", 0.0) + cfm_values.get("sensor.dsc_cfm_exhaust_recirc", 0.0)
+    pim = fan_pcts.get("sensor.dsc_fan_intake_main_pct", 0.0)
+    pi2 = fan_pcts.get("sensor.dsc_fan_intake_2x4_pct", 0.0)
+    ifs = pim + pi2
+    if ifs >= 0.5:
+        intake_main_alloc = round(exh * pim / ifs, 1)
+        intake_2x4_alloc = round(exh * pi2 / ifs, 1)
+    else:
+        intake_main_alloc = 0.0
+        intake_2x4_alloc = 0.0
+    _set_entity(
+        states,
+        "sensor.dsc_cfm_intake_main_allocated",
+        intake_main_alloc,
+        available=True,
+        attributes={
+            "unit_of_measurement": "CFM",
+            "model": "mass_balance_allocated",
+            "honesty": "Sigma_exhaust_times_fan_pct_split",
+            "companion_capacity": "sensor.dsc_cfm_intake_main",
+        },
+    )
+    _set_entity(
+        states,
+        "sensor.dsc_cfm_intake_2x4_allocated",
+        intake_2x4_alloc,
+        available=True,
+        attributes={
+            "unit_of_measurement": "CFM",
+            "model": "mass_balance_allocated",
+            "honesty": "Sigma_exhaust_times_fan_pct_split",
+            "companion_capacity": "sensor.dsc_cfm_intake_2x4",
+        },
+    )
+
     for eid, val in helpers.items():
         domain = eid.split(".", 1)[0] if "." in eid else "sensor"
-        if domain in ("input_text", "input_select", "input_number", "input_datetime", "text", "select"):
+        if domain in ("input_text", "input_select", "input_number", "input_datetime", "text", "select", "datetime"):
             attrs: dict[str, Any] | None = None
             if domain == "input_select":
                 opts = SELECT_OPTIONS.get(eid)
@@ -365,6 +417,23 @@ def build_computed_hass_states(
             _set_entity(states, eid, val, available=True, attributes=attrs)
         elif domain == "input_boolean":
             _set_entity(states, eid, val, available=True)
+
+    for script_id in (
+        "script.dsc_build_plant_commit",
+        "script.dsc_build_plant_commit_and_assign",
+        "script.dsc_plant_assign_to_pot",
+        "script.dsc_plant_retire",
+    ):
+        _set_entity(states, script_id, "off", available=True)
+
+    build_sprout = str(helpers.get("input_datetime.dsc_build_sprout_date") or "")
+    if build_sprout:
+        try:
+            build_days = (datetime.date.today() - datetime.date.fromisoformat(build_sprout[:10])).days
+            _set_entity(states, "sensor.dsc_build_days_since_sprout", max(0, build_days))
+            _set_entity(states, "sensor.dsc_build_expected_stage", expected_stage(max(0, build_days)))
+        except ValueError:
+            pass
 
     for runtime_id, (seat_id, metric) in RUNTIME_ENTITIES.items():
         hours = _runtime_hours_today(seat_id, metric)
@@ -383,21 +452,35 @@ def build_computed_hass_states(
         stage = row.get("stage") or "veg"
         plant_name = recipe.get("plant_name") or recipe.get("nickname") or ""
         strain_display = recipe.get("strain_display") or strain_id or ""
-        tent = recipe.get("tent") or get_helper(f"input_select.dsc_pot{pot_n}_tent", "unassigned")
+        tent = tent_id(str(recipe.get("tent") or get_helper(f"input_select.dsc_pot{pot_n}_tent", "unassigned")))
+        sprout = recipe.get("sprout_date") or get_helper(f"datetime.dsc_pot{pot_n}_sprout_date", "")
         growth_stage = recipe.get("growth_stage") or stage
-        sprout = recipe.get("sprout_date") or ""
-        _set_entity(states, f"text.dsc_pot{pot_n}_plant_name", plant_name)
-        _set_entity(states, f"select.dsc_pot{pot_n}_growth_stage", growth_stage)
-        _set_entity(states, f"input_select.dsc_pot{pot_n}_tent", tent, attributes={"options": SELECT_OPTIONS[f"input_select.dsc_pot{pot_n}_tent"]})
-        _set_entity(states, f"sensor.dsc_pot{pot_n}_strain_display", strain_display)
         if sprout:
-            _set_entity(states, f"datetime.dsc_pot{pot_n}_sprout_date", sprout[:10])
             try:
-                sprout_dt = datetime.date.fromisoformat(sprout[:10])
+                sprout_dt = datetime.date.fromisoformat(str(sprout)[:10])
                 days = (datetime.date.today() - sprout_dt).days
+                derived = expected_stage(max(0, days))
+                if derived and derived != "unknown":
+                    growth_stage = recipe.get("growth_stage") or derived
+                    _set_entity(states, f"sensor.dsc_pot{pot_n}_expected_stage", derived)
                 _set_entity(states, f"sensor.dsc_pot{pot_n}_days_since_sprout", max(0, days))
             except ValueError:
                 pass
+        _set_entity(states, f"text.dsc_pot{pot_n}_plant_name", plant_name)
+        _set_entity(
+            states,
+            f"select.dsc_pot{pot_n}_growth_stage",
+            growth_stage,
+            attributes={"options": GROWTH_STAGE_OPTIONS},
+        )
+        _set_entity(
+            states,
+            f"input_select.dsc_pot{pot_n}_tent",
+            tent,
+            attributes={"options": SELECT_OPTIONS[f"input_select.dsc_pot{pot_n}_tent"]},
+        )
+        _set_entity(states, f"sensor.dsc_pot{pot_n}_strain_display", strain_display)
+        _set_entity(states, f"datetime.dsc_pot{pot_n}_sprout_date", str(sprout)[:10] if sprout else "")
         if strain_id:
             want = resolve_want(strain_id=strain_id, stage=stage)
             bands = want.get("want") or {}

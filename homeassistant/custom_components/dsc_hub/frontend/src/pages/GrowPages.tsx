@@ -18,6 +18,7 @@ import {
   readTent,
   rosterSlots,
   tentLabel,
+  normalizeTent,
   type TentId,
 } from "../lib/seatModel";
 import { readPotVessel } from "../lib/vesselSpec";
@@ -104,11 +105,11 @@ export function PlantSeatPanel({
       window.setTimeout(() => {
         const now = hass?.states?.[`input_select.dsc_pot${pot}_tent`]?.state || "";
         if (now !== tent) {
-          setApplyErr("Tent apply failed — check helper options (clone|main|unassigned).");
+          setApplyErr("Tent change did not stick — the hub rejected it. Try again.");
         }
       }, 400);
     } catch {
-      setApplyErr("Tent apply failed — check helper options (clone|main|unassigned).");
+      setApplyErr("Tent change did not stick — the hub rejected it. Try again.");
     }
   };
 
@@ -157,9 +158,9 @@ export function PlantSeatPanel({
         {seat.rosterSlot != null ? (
           <StatusChip label={`Roster #${seat.rosterSlot}`} tone="muted" />
         ) : (
-          <StatusChip label="No roster join" tone="warn" />
+          <StatusChip label="Not on roster" tone="warn" />
         )}
-        {moistHeld.stale ? <StatusChip label="HELD Got" tone="warn" /> : null}
+        {moistHeld.stale ? <StatusChip label="Reading held" tone="warn" /> : null}
       </div>
 
       <div className="dsc-seat-layout">
@@ -167,7 +168,7 @@ export function PlantSeatPanel({
           <SoilCrossSection layers={seat.layers} spec={readPotVessel(pot, state, entity)} />
           <PlantExtra pot={pot} />
           <p className="dsc-muted" style={{ marginTop: 10, fontSize: 12 }}>
-            {seat.blend || "Blend lives on roster after commit — not invented here."}
+            {seat.blend || "No blend recorded yet — it appears here after you commit the plant."}
           </p>
         </Card>
 
@@ -287,13 +288,13 @@ export function PlantSeatPanel({
                 />
               ) : (
                 <p className="dsc-honesty" style={{ margin: "8px 0 0" }}>
-                  <StatusChip label="No catalog Want" tone="warn" />{" "}
+                  <StatusChip label="No target bands" tone="warn" />{" "}
                   {genericStrain
-                    ? "Generic / empty strain — Want bands not invented."
-                    : "Custom Want helpers missing — Got + Need only."}
+                    ? "No strain selected — target bands are unknown."
+                    : "Custom targets not set — showing measurements only."}
                 </p>
               )}
-              <p className="dsc-kpi-sub">Need is derived (catalog vs Got), not a feed invent.</p>
+              <p className="dsc-kpi-sub">Need compares the catalog targets against what was measured.</p>
             </Card>
           </div>
 
@@ -340,8 +341,8 @@ export function PlantSeatPanel({
               />
               <p className="dsc-muted" style={{ margin: "8px 0 0", fontSize: 12 }}>
                 {Number.isFinite(learnedEc)
-                  ? `EC consumption honesty: learned ${learnedEc.toFixed(3)} EC per moisture (not feed invent).`
-                  : "EC over time shown — no learned_ec_per_moisture yet (not invented)."}
+                  ? `Learned nutrient use: ${learnedEc.toFixed(3)} EC per moisture point, from this pot's own history.`
+                  : "EC over time shown — not enough history yet to learn this pot's nutrient use."}
               </p>
               <div className="dsc-chip-row" style={{ marginTop: 8 }}>
                 <Button onClick={() => setHist({ id: moistId, label: "Moisture", unit: "%" })}>
@@ -356,7 +357,7 @@ export function PlantSeatPanel({
           <div className="dsc-col-6">
             <Card className="dsc-glass" title="Nutrition">
               <p style={{ margin: "0 0 6px" }}>
-                {seat.recipe || "No roster recipe — catalog doses only, never invented."}
+                {seat.recipe || "No recipe recorded for this plant — catalog doses shown only."}
               </p>
               <label className="dsc-seat-editors">
                 Roster notes
@@ -451,9 +452,8 @@ export function GrowComposePage() {
         }
       />
       <p className="dsc-honesty" style={{ marginTop: 0 }}>
-        Densified catalog traits (height / flowering / chem) show when the index has them.
-        Empty catalog fields stay empty — Compose does not invent Want bands or strain genetics. After
-        commit, open Roster to assign a seat.
+        Catalog traits (height, flowering, chemistry) appear when the catalog has real data — empty fields stay
+        empty. After committing, open Roster to assign a seat.
       </p>
       <ComposePlant />
     </div>
@@ -480,9 +480,8 @@ export function GrowResearchPage() {
         }
       />
       <p className="dsc-honesty" style={{ marginTop: 0 }}>
-        Catalog gaps are honesty, not placeholders. Height / flowering / chem chips come from densified
-        indexes when present. Use in Compose to draft a plant; Open Seat to assign
-        an existing roster row — neither invents missing Want/Got.
+        Height, flowering, and chemistry chips appear only when the catalog has real data — gaps are shown as gaps.
+        Use in Compose to draft a plant, or Open Seat to work with a plant already on the roster.
       </p>
       <CatalogResearch />
     </div>
@@ -548,7 +547,8 @@ export function GrowRosterPage() {
                 const p = Number(s.pot);
                 const joined = p >= 1 && p <= 4;
                 const potLive = joined && isPotInService(p, state);
-                const tent = joined ? tentLabel(readTent(state, p)) : "—";
+                const potTent = joined ? readTent(state, p) : "unassigned";
+                const tent = tentLabel(potTent !== "unassigned" ? potTent : normalizeTent(s.tent));
                 const need = joined ? state(`sensor.dsc_pot${p}_need_summary`, "—") : "—";
                 const vessel = joined ? readPotVessel(p, state, entity) : null;
                 return (
@@ -568,7 +568,7 @@ export function GrowRosterPage() {
                         <span className="dsc-chip-row">
                           {vessel ? <VesselGlyph spec={vessel} size={22} /> : null}
                           P{p}
-                          {!potLive ? <StatusChip label="OOS" tone="warn" /> : null}
+                          {!potLive ? <StatusChip label="Out of service" tone="warn" /> : null}
                         </span>
                       ) : (
                         "—"

@@ -45,6 +45,8 @@ async def test_cannalib() -> dict[str, Any]:
             )
             search.raise_for_status()
             rows = search.json()
+            if isinstance(rows, dict):
+                rows = rows.get("items") or []
             return {"ok": True, "health": health.json(), "sample_count": len(rows)}
     except Exception as exc:  # noqa: BLE001
         return {"ok": False, "detail": str(exc)}
@@ -76,7 +78,14 @@ async def catalog_search(kind: str, q: str = "", limit: int = 20) -> list[dict[s
             headers=headers,
         )
         resp.raise_for_status()
-        return resp.json()
+        data = resp.json()
+        # CannaLib wraps hits in an envelope ({kind, q, count, items}); the
+        # brain contract is a bare list — unwrap or the /v1 proxy 500s on
+        # response validation.
+        if isinstance(data, dict):
+            items = data.get("items")
+            return items if isinstance(items, list) else []
+        return data if isinstance(data, list) else []
 
 
 async def catalog_status() -> dict[str, Any]:
