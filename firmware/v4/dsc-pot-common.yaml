@@ -170,8 +170,7 @@ modbus:
   uart_id: rs485_uart
   flow_control_pin: GPIO4
   send_wait_time: 2000ms
-  # Was modbus_controller.command_throttle (no-op on 2026.8+).
-  turnaround_time: 100ms
+  # turnaround_time requires ESPHome 2026.8+; send_wait_time covers 2025.12 Pi appliance.
 
 modbus_controller:
   - id: soil_sensor_bus
