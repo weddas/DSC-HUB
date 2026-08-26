@@ -1,6 +1,6 @@
-# DSC-HUB 7.0.0 — Pi appliance (Docker Compose)
+# DSC-HUB 7.1.0 — Pi appliance (Docker Compose)
 
-Raspberry Pi 4 product stack: brain + SPA (`:8787`), optional local CannaLib fallback (`:8790`), Mosquitto, Zigbee2MQTT (SkyConnect), ESPHome dashboard (`:6052`).
+Raspberry Pi 4 product stack: brain + SPA (`:8787`), optional local CannaLib fallback (`:8790`), Mosquitto, Zigbee2MQTT (SkyConnect), ESPHome dashboard (`:6052`). Firmware train remains **7.0.0.0**. ETH01 bridge is retired — Sonoff path is the brain appliance driver ([`docs/ops/SONOFF-FLASH.md`](../../docs/ops/SONOFF-FLASH.md)).
 
 ## Quick start (Pi)
 
@@ -71,15 +71,28 @@ Health: `curl http://localhost:8787/health`
 | Artifact        | Target      |
 |-----------------|-------------|
 | Firmware        | 7.0.0.0     |
-| Brain / SPA     | 7.0.0       |
-| Docker images   | 7.0.0       |
+| Brain / SPA     | 7.1.0       |
+| Docker images   | 7.0.0 (bump on next compose pass) |
 
-Until island proof succeeds, tree may ship as `7.0.0` with fleet firmware train `7.0.0.0`.
+## Ops scripts (`pi/`)
+
+| Script | Job |
+|--------|-----|
+| `deploy-brain.ps1` / `verify-brain.*` | Build/deploy SPA+brain; post-deploy gates |
+| `flash-fleet-700.ps1` | Bulk OTA seats already on Pi AP |
+| `flash-sonoff-lan.ps1` | Sonoff OTA via house LAN from Pi ESPHome |
+| `flash-sonoff-fallback-pi.ps1` | Sonoff SoftAP OTA; Pi `wlan0` client (stops Brain AP briefly) |
+| `flash-sonoff-fallback.ps1` | Windows SoftAP client path (elevated static IP) |
+| `diag-ap.*` / `diag-hub.sh` / `check-ap-data.sh` | AP / hub heal diagnostics |
+| `island-proof.*` / `soak-check.*` | Island + soak gates |
+
+Details: [`docs/ops/SONOFF-FLASH.md`](../../docs/ops/SONOFF-FLASH.md) · [`docs/ops/DSC-HUB-DOCKER.md`](../../docs/ops/DSC-HUB-DOCKER.md).
 
 ## Not on the Pi
 
 - Ollama (remote URL in Settings)
 - HA Core / house ZHA
 - CannaLib scrape / master DB (NAS)
+- Active ETH01 bridge flash (archived under `firmware/_history/v4/`)
 
 See `docs/ops/DSC-HUB-DOCKER.md` for cutover and acceptance.

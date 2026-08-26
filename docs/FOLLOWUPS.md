@@ -2407,3 +2407,28 @@ Do **not** reclaim .33/.39/.40/.47/.23 — other hosts answered there at cutover
 - Map non-critical hub entities (ladder waits, hub-side `*_in_service` switches) when tuning UI needs them.
 - Phase E: drop `hass_extras` / Pi `fleetToHass` shim after page migration soak.
 
+
+---
+
+## 2026-08-26 — Bridge retirement + Sonoff flash ops docs
+
+### done (docs)
+
+- Tip `00d48c8`: runbook [`docs/ops/SONOFF-FLASH.md`](ops/SONOFF-FLASH.md) for LAN / fallback SoftAP / AP heal scripts.
+- Point README / SETUP / INSTALL / firmware README / DSC-HUB-DOCKER / services README / WEBUI / RELEASE away from active ETH01 bridge flash.
+- Notion Wiki: Engineering Ops + Pi offline brain + Local webserver UI updated for **7.1.0** + Sonoff helpers (no secrets).
+
+### soak
+
+- Hub AP flaps after container/AP restart — finish browser screenshot pass when hub stable (`diag-ap` / `diag-hub`).
+- Remaining fleet OTA + hourly `soak-check` through T+24h.
+
+### next-plan
+
+- Close/supersede stale doc PRs #77–#98 after tip docs merge.
+- Do not reintroduce bridge as product Sonoff path; keep `_history` archive only.
+- Prefer brain `/roster`/`/want` UX over long-term helper-shaped Compose APIs; do not invent height/chem/PPFD/NPK.
+
+### red-flag
+
+- None new from docs pass — live acceptance still partial on hub AP settle + panel `/fleet` ingest.

@@ -32,15 +32,15 @@ Notion [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d3407556
 
 ```mermaid
 flowchart LR
-  Pots[Pots] -->|Native_API| HA[Home_Assistant]
-  Panel[DSC_CONTROL] -->|Native_API| HA
-  Hub[Hub_ladder] -->|Native_API| HA
-  Sonoffs[Sonoff_relays] -->|ESPHome_API| Brain[Pi_brain_8787]
-  Brain --> Hub
-  Hub --> LearnA[PhaseA_EMA] --> LearnB[PhaseB_waits]
-  Sync[dsc_hub_sync] --> Pro[dsc-hub-pro]
+  Pots[Pots] -->|Native_API| Brain[Pi_brain_8787]
+  Panel[DSC_CONTROL] -->|Native_API| Brain
+  Hub[Hub_ladder] -->|Native_API| Brain
+  Brain -->|main_relay| Sonoffs[Sonoff_relays]
+  Hub -->|demand| Brain
+  Brain --> SPA[SPA_Overview]
 ```
 
+HA Native API remains an optional lab soak bus — not required for Pi island.
 ---
 
 ## Start here
@@ -59,6 +59,9 @@ flowchart LR
 | [`docs/qa/ADDON-QA-5.1.0.md`](docs/qa/ADDON-QA-5.1.0.md) | Sync add-on QC |
 | [`homeassistant/README.md`](homeassistant/README.md) | Packages, HACS, entity notes |
 | [`docs/qa/LIVE-UI-BUILD-A-PLANT.md`](docs/qa/LIVE-UI-BUILD-A-PLANT.md) | Build a Plant composition ops (N-083) |
+| [`docs/ops/DSC-HUB-DOCKER.md`](docs/ops/DSC-HUB-DOCKER.md) | Pi cutover + island proof |
+| [`docs/ops/SONOFF-FLASH.md`](docs/ops/SONOFF-FLASH.md) | Sonoff LAN/fallback OTA + AP heal |
+| [`docs/qa/LIVE-ACCEPTANCE-7.1.md`](docs/qa/LIVE-ACCEPTANCE-7.1.md) | 7.1 live acceptance |
 | [`firmware/v4/README.md`](firmware/v4/README.md) | Local validate / flash |
 
 **HAOS delivery:** Settings → Add-ons → Repositories → `https://github.com/weddas/DSC-HUB`
@@ -109,28 +112,27 @@ cp secrets.yaml.template secrets.yaml   # or ./generate-secrets.sh
 Never commit `secrets.yaml`. Studio Wi-Fi lives in Notion **API Keys & Credentials**
 and gitignored secrets only — not in FOLLOWUPS or git.
 
-**Lab:** Native API on studio LAN. **Kit:** SoftAP + ESP-NOW pairing still documented in SETUP.
+**Lab:** Native API on studio LAN. **Kit:** SoftAP pairing still documented in SETUP.
 `espnow_cmd_tag` **54727** kept for parked / kit builds.
 
-Sonoffs have no ESP-NOW — demand followers need HA (lab primary path).
+**Pi island:** Sonoffs are Native API clients of the brain appliance driver (bridge retired). Flash helpers: [`docs/ops/SONOFF-FLASH.md`](docs/ops/SONOFF-FLASH.md). Lab HA demand followers remain a soak fallback only.
 
 ## Validate
 
 ```bash
 # N-008: compile from local tree, not the UNC repo
 cd C:\Users\cmgwe\esphome-dsc\v4
-esphome version   # expect 2026.8.0
+esphome version   # expect 2025.12.4 on Pi dashboard / 2026.8.0 lab CLI
 esphome config dsc-hub.yaml
 esphome config dsc-control.yaml
 esphome config dsc-pot1.yaml
 esphome config dsc-heater.yaml
-esphome config dsc-bridge.yaml
+# dsc-bridge.yaml is archived under firmware/_history/v4/
 ```
 
-## Flash order (lab USB cutover)
+## Flash order (Pi island USB / OTA)
 
-1. Hub · 2. Pot2 canary · 3. Pot1/4/3 · 4. Sonoffs · 5. Panel · 6. Bridge last (SoftAP off)
-After soak + one wireless Install each of ESP32 + Sonoff, **OTA is the path**.
+1. Hub · 2. Pot2 canary · 3. Pot1/4/3 · 4. Sonoffs ([`SONOFF-FLASH.md`](docs/ops/SONOFF-FLASH.md)) · 5. Panel  
+Do **not** flash ETH01 bridge for 7.1 product. After soak, OTA is the path (`flash-fleet-700.ps1` / Sonoff helpers).
 
-Firmware Install is always **manual**. Sync never auto-flashes. The fleet version
-chip stays `warn`/`error` until every device reports **6.1.0.0**.
+Firmware Install is always **manual**. Sync never auto-flashes.
