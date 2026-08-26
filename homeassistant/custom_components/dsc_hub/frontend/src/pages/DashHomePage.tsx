@@ -133,7 +133,7 @@ export function DashHomePage() {
       <PageHeader
         icon="home"
         title="Home"
-        subtitle="Operational dash — same story as the HA Home view, native on Pi."
+        subtitle="Everything running right now, at a glance."
         primaryAction={
           <Button teal onClick={() => navigate("/live/twin")}>
             Open Twin

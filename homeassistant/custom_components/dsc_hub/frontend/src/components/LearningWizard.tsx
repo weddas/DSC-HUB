@@ -34,16 +34,16 @@ export function LearningWizard() {
           <StatusChip label={calActive ? "SESSION ON" : "Session idle"} tone={calActive ? "ok" : "muted"} />
         </div>
         <p className="dsc-honesty">
-          CFM live numbers live on Climate. This wizard writes cal points only — do not invent them.
+          Live airflow numbers are on the Climate page. This wizard records only the readings you enter.
           {curves ? ` Curve: ${curves}` : ""}
         </p>
         <div className="dsc-row-actions">
-          <Button onClick={() => setStep("gate")}>Open gate</Button>
-          <Button onClick={() => setStep("sample")}>Sample points</Button>
-          <Button teal onClick={() => setStep("accept")}>
+          <Button variant="primary" onClick={() => setStep("gate")}>Open gate</Button>
+          <Button variant="secondary" onClick={() => setStep("sample")}>Sample points</Button>
+          <Button variant="secondary" onClick={() => setStep("accept")}>
             Finish session
           </Button>
-          <Button onClick={() => setStep("curves")}>Stored curves</Button>
+          <Button variant="secondary" onClick={() => setStep("curves")}>Stored curves</Button>
         </div>
       </Card>
 
@@ -56,18 +56,20 @@ export function LearningWizard() {
           <StatusChip label={`Trusted ${trusted}`} tone="muted" />
         </div>
         <p className="dsc-honesty">
-          One air appliance at a time. Fans/mat may stay on. Activity is SoT — gate open ≠ measuring. Phase B stays
-          off until Activity shows samples climbing.
+          One air appliance runs at a time; fans and the heat mat may stay on. Watch the Activity chip — an open gate
+          does not mean it is measuring yet. Phase B stays off until samples start climbing.
         </p>
-        <Button onClick={() => setStep("climate")}>Learn enable</Button>
+        <Button variant="secondary" onClick={() => setStep("climate")}>Learn enable</Button>
       </Card>
 
       <DecisionLayer open={step === "gate"} onDismiss={() => setStep(null)} title="Learn gate" help={null}>
-        <p className="dsc-muted">Target + session. Scripts own hold math.</p>
+        <p className="dsc-muted">
+          Pick what to calibrate, then start the session. The hub holds each step steady while you measure.
+        </p>
         <EntitySelect entityId="input_select.dsc_cal_target" label="Cal target" />
         <p className="dsc-kpi-sub">{state("input_text.dsc_cal_status", "")}</p>
         <Button
-          primary
+          variant="primary"
           onClick={() => {
             void callService("script", "turn_on", { entity_id: "script.dsc_cal_start" });
             setStep("sample");
@@ -78,7 +80,10 @@ export function LearningWizard() {
       </DecisionLayer>
 
       <DecisionLayer open={step === "sample"} onDismiss={() => setStep(null)} title="Sample" help={null}>
-        <p className="dsc-muted">Enter anemometer m/s or CFM. Skip rather than invent. Drafts hold until blur.</p>
+        <p className="dsc-muted">
+          Enter the anemometer reading in m/s or CFM. If you could not measure a step, skip it. Values save when you
+          leave the field.
+        </p>
         <div className="dsc-target-grid">
           <TargetNumber entityId="input_number.dsc_cal_reading_ms" label="m/s" />
           <TargetNumber entityId="input_number.dsc_cal_reading_cfm" label="CFM" />
@@ -90,16 +95,16 @@ export function LearningWizard() {
           <TargetNumber entityId="input_number.dsc_duct_intake_clone_cm" label="Intake 2×4 cm" />
         </div>
         <div className="dsc-row-actions">
-          <Button onClick={() => void callService("script", "turn_on", { entity_id: "script.dsc_cal_hold_next" })}>
+          <Button variant="secondary" onClick={() => void callService("script", "turn_on", { entity_id: "script.dsc_cal_hold_next" })}>
             Re-hold
           </Button>
-          <Button primary onClick={() => void callService("script", "turn_on", { entity_id: "script.dsc_cal_save_point" })}>
+          <Button variant="primary" onClick={() => void callService("script", "turn_on", { entity_id: "script.dsc_cal_save_point" })}>
             Save point
           </Button>
-          <Button onClick={() => void callService("script", "turn_on", { entity_id: "script.dsc_cal_skip_point" })}>
+          <Button variant="secondary" onClick={() => void callService("script", "turn_on", { entity_id: "script.dsc_cal_skip_point" })}>
             Skip
           </Button>
-          <Button onClick={() => void callService("script", "turn_on", { entity_id: "script.dsc_cal_abort" })}>
+          <Button variant="danger" onClick={() => void callService("script", "turn_on", { entity_id: "script.dsc_cal_abort" })}>
             Abort
           </Button>
         </div>
@@ -117,8 +122,8 @@ export function LearningWizard() {
         help={null}
       >
         <p>
-          Curve status {curveStatus}. Finish restores snapped fans/light. Points already saved at 25/50/75/100 stay;
-          this does not invent a fit.
+          Curve status {curveStatus}. Finishing returns fans and light to their previous settings. Points already
+          saved at 25/50/75/100% are kept.
         </p>
       </DecisionLayer>
 
@@ -130,7 +135,9 @@ export function LearningWizard() {
         confirmLabel="Done"
         help={null}
       >
-        <p className="dsc-muted">Toggles HA helpers. No invented samples. Blocked while failsafe/takeover/fault.</p>
+        <p className="dsc-muted">
+          Turns learning on or off. Learning pauses automatically during failsafe, manual takeover, or a fault.
+        </p>
         <EntityToggle entityId="input_boolean.dsc_climate_learn_enabled" label="Phase A enabled" />
         <EntityToggle entityId="input_boolean.dsc_climate_learn_phase_b_enabled" label="Phase B enabled" />
         <EntityToggle entityId="input_boolean.dsc_learn_phase_b_locked" label="Phase B lock" />
@@ -145,7 +152,8 @@ export function LearningWizard() {
 
       <DecisionLayer open={step === "curves"} onDismiss={() => setStep(null)} title="Stored curves" help={null}>
         <p className="dsc-honesty">
-          0 = unset → linear % × nameplate. Do not invent points. Reset scripts wipe a curve; they do not guess a fit.
+          0 means not measured — the hub then estimates from the fan&apos;s rated output. Reset clears a curve back to
+          not-measured; it never guesses.
         </p>
         {CAL_CURVES.map((c) => (
           <div key={c.prefix} className="dsc-cal-curve">
@@ -160,6 +168,7 @@ export function LearningWizard() {
               ))}
             </div>
             <Button
+              variant="danger"
               onClick={() => void callService("script", "turn_on", { entity_id: c.reset })}
             >
               Reset {c.label}
@@ -173,6 +182,7 @@ export function LearningWizard() {
           ))}
         </div>
         <Button
+          variant="danger"
           onClick={() => void callService("script", "turn_on", { entity_id: "script.dsc_cal_reset_curve_sf1000" })}
         >
           Reset PPFD

@@ -27,6 +27,7 @@ import { useZoneFocus, type ZoneFocus } from "../hooks/useZoneFocus";
 import { useInspector } from "../components/InspectorHost";
 import { withPriorGhost } from "../lib/chartSeries";
 import { ArcGauge, GotWantBars, MultiLineChart, seriesExtrema, type NamedSeries } from "../viz/charts";
+import { rhSegments, tempSegments, vpdSegments } from "../viz/gaugeTheme";
 import { fmtDurationMs } from "../lib/formatDuration";
 
 function resolveRoomVpdId(entity: (id: string) => unknown): string {
@@ -219,17 +220,17 @@ export function LiveClimatePage() {
               <p className="dsc-honesty">
                 <StatusChip
                   icon={reducedKit ? "alert" : "ok"}
-                  label={reducedKit ? "Unexpected OOS" : "Full Auto"}
+                  label={reducedKit ? "Capacity offline" : "Full Auto"}
                   tone={reducedKit ? "warn" : "ok"}
                   onClick={() =>
                     inspector.open({
                       entityId: reducedKit ? "binary_sensor.dsc_reduced_kit" : "switch.dsc_hub_tent_full_auto_mode",
-                      label: reducedKit ? "Unexpected OOS" : "Full Auto",
+                      label: reducedKit ? "Capacity offline" : "Full Auto",
                       kind: reducedKit ? "alert" : "binary",
                     })
                   }
                 />{" "}
-                {honesty || "Hub owns fans + appliance Autos when Full Auto is on."}
+                {honesty || "The hub drives fans and appliances automatically while Full Auto is on."}
               </p>
             ) : null}
           </Card>
@@ -289,15 +290,15 @@ export function LiveClimatePage() {
               </div>
               <div className={rowLit("clone")}>
                 <span className="dsc-gauge-row-tag">2×4</span>
-                <ArcGauge label="T" value={cloneTHeld.value} min={15} max={35} unit="°C" target={cloneTargetTemp} extrema={cloneTempExt} stale={cloneTHeld.stale} onClick={() => open("sensor.dsc_hub_clone_temperature", "2×4 T", "°C")} />
-                <ArcGauge label="RH" value={cloneRhHeld.value} min={0} max={100} unit="%" band={{ min: cloneRhMin, max: cloneRhMax }} extrema={cloneRhExt} stale={cloneRhHeld.stale} onClick={() => open("sensor.dsc_hub_clone_humidity", "2×4 RH", "%")} />
-                <ArcGauge label="VPD" value={cloneVpdHeld.value} min={0} max={2.5} unit="kPa" band={{ min: cloneVpdMin, max: cloneVpdMax }} extrema={cloneVpdExt} stale={cloneVpdHeld.stale} onClick={() => open("sensor.dsc_hub_clone_vpd_kpa", "2×4 VPD", "kPa")} />
+                <ArcGauge label="T" value={cloneTHeld.value} min={15} max={35} unit="°C" target={cloneTargetTemp} band={{ min: cloneTargetTemp - 2, max: cloneTargetTemp + 2 }} segments={tempSegments(cloneTargetTemp)} extrema={cloneTempExt} stale={cloneTHeld.stale} onClick={() => open("sensor.dsc_hub_clone_temperature", "2×4 T", "°C")} />
+                <ArcGauge label="RH" value={cloneRhHeld.value} min={0} max={100} unit="%" band={{ min: cloneRhMin, max: cloneRhMax }} segments={rhSegments(cloneRhMin, cloneRhMax)} extrema={cloneRhExt} stale={cloneRhHeld.stale} onClick={() => open("sensor.dsc_hub_clone_humidity", "2×4 RH", "%")} />
+                <ArcGauge label="VPD" value={cloneVpdHeld.value} min={0} max={2.5} unit="kPa" band={{ min: cloneVpdMin, max: cloneVpdMax }} segments={vpdSegments(cloneVpdMin, cloneVpdMax)} extrema={cloneVpdExt} stale={cloneVpdHeld.stale} onClick={() => open("sensor.dsc_hub_clone_vpd_kpa", "2×4 VPD", "kPa")} />
               </div>
               <div className={rowLit("main")}>
                 <span className="dsc-gauge-row-tag">4×8</span>
-                <ArcGauge label="T" value={tentTHeld.value} min={15} max={35} unit="°C" target={targetTemp} extrema={tentTempExt} stale={tentTHeld.stale} onClick={() => open("sensor.dsc_hub_tent_temperature", "4×8 T", "°C")} />
-                <ArcGauge label="RH" value={tentRhHeld.value} min={0} max={100} unit="%" band={{ min: rhMin, max: rhMax }} extrema={tentRhExt} stale={tentRhHeld.stale} onClick={() => open("sensor.dsc_hub_tent_humidity", "4×8 RH", "%")} />
-                <ArcGauge label="VPD" value={tentVpdHeld.value} min={0} max={2.5} unit="kPa" band={{ min: vpdMin, max: vpdMax }} extrema={tentVpdExt} stale={tentVpdHeld.stale} onClick={() => open("sensor.dsc_hub_vpd_kpa", "4×8 VPD", "kPa")} />
+                <ArcGauge label="T" value={tentTHeld.value} min={15} max={35} unit="°C" target={targetTemp} band={{ min: targetTemp - 2, max: targetTemp + 2 }} segments={tempSegments(targetTemp)} extrema={tentTempExt} stale={tentTHeld.stale} onClick={() => open("sensor.dsc_hub_tent_temperature", "4×8 T", "°C")} />
+                <ArcGauge label="RH" value={tentRhHeld.value} min={0} max={100} unit="%" band={{ min: rhMin, max: rhMax }} segments={rhSegments(rhMin, rhMax)} extrema={tentRhExt} stale={tentRhHeld.stale} onClick={() => open("sensor.dsc_hub_tent_humidity", "4×8 RH", "%")} />
+                <ArcGauge label="VPD" value={tentVpdHeld.value} min={0} max={2.5} unit="kPa" band={{ min: vpdMin, max: vpdMax }} segments={vpdSegments(vpdMin, vpdMax)} extrema={tentVpdExt} stale={tentVpdHeld.stale} onClick={() => open("sensor.dsc_hub_vpd_kpa", "4×8 VPD", "kPa")} />
               </div>
             </div>
             <GotWantBars

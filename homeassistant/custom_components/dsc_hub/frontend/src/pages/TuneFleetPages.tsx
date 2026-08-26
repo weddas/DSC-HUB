@@ -1,4 +1,4 @@
-import { Card, EntityToggle, Kpi, PageHeader, StatusChip } from "../components/ui";
+import { Card, EntityToggle, Kpi, PageHeader } from "../components/ui";
 import { TimespanControl, CYCLE_TIMESPAN_EXTRAS } from "../components/HistoryDrawer";
 import { LearningWizard } from "../components/LearningWizard";
 import { TankCutaway } from "../components/TankCutaway";
@@ -24,7 +24,7 @@ export function TuneLearningPage() {
       <PageHeader
         icon="learning"
         title="Learning"
-        subtitle="Anemometer gate, sample, accept — scripts own the math. No dsc-hub-pro."
+        subtitle="Measure fan output, review the sample, then accept it into the curve."
       />
       <div className="dsc-grid">
         <div className="dsc-col-12">
@@ -85,7 +85,7 @@ export function TuneAnalyticsPage() {
         <div className="dsc-col-12">
           <Card className="dsc-glass" title="Tent T + RH (secondary)" icon="climate">
             <p className="dsc-honesty" style={{ marginTop: 0 }}>
-              Primary traces sit on Climate. Ghost/compare there, not a second dashboard.
+              The full climate charts live on the Climate page.
             </p>
             <MultiLineChart
               live
@@ -160,23 +160,12 @@ export function FleetOverviewPage() {
       cyclesToday: node.cyclesToday,
       demandEntity: node.demandEntity,
     });
-  const rows: { label: string; id: string }[] = [
-    { label: "Pi appliance link", id: "binary_sensor.dsc_pi_appliance_link" },
-    { label: "Hub firmware", id: "sensor.dsc_hub_firmware_version" },
-    { label: "Control firmware", id: "sensor.dsc_control_firmware_version" },
-    { label: "Pot1 firmware", id: "sensor.dsc_pot1_firmware_version" },
-    { label: "Pot2 firmware", id: "sensor.dsc_pot2_firmware_version" },
-    { label: "Pot3 firmware", id: "sensor.dsc_pot3_firmware_version" },
-    { label: "Pot4 firmware", id: "sensor.dsc_pot4_firmware_version" },
-    { label: "Nest / SoftAP channel", id: "sensor.dsc_hub_wifi_channel" },
-  ];
-
   return (
     <div className="dsc-page">
       <PageHeader
         icon="fleet"
         title="Fleet"
-        subtitle={`${svc.inService} of ${svc.total} in service. Kit Pulse holes, tank tester, fleet table.`}
+        subtitle={`${svc.inService} of ${svc.total} devices in service. Device health, tank, and service toggles.`}
       />
       <div className="dsc-grid">
         <div className="dsc-col-12">
@@ -212,7 +201,7 @@ export function FleetOverviewPage() {
         <div className="dsc-col-12">
           <Card className="dsc-glass" title="Kit Pulse" icon="system">
             <p className="dsc-honesty" style={{ marginTop: 0 }}>
-              Holes are missing / planned OOS / dark after cooldown — not a greenwashed map.
+              Grey = offline or out of service. Every device shows its real state.
             </p>
             <KitPulse nodes={kit} onSelect={openNode} />
           </Card>
@@ -243,32 +232,6 @@ export function FleetOverviewPage() {
               Stage {state("input_select.dsc_tank_stage", "—")} · Type{" "}
               {state("input_select.dsc_tank_plant_type", "—")}
             </p>
-          </Card>
-        </div>
-        <div className="dsc-col-6">
-          <Card className="dsc-glass" title="Bridge / firmware" icon="fleet">
-            <table className="dsc-table">
-              <thead>
-                <tr>
-                  <th>Signal</th>
-                  <th>State</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((row) => (
-                  <tr key={row.id}>
-                    <td>{row.label}</td>
-                    <td>
-                      {available(row.id) ? (
-                        state(row.id, "—")
-                      ) : (
-                        <StatusChip label="hole" tone="warn" />
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
           </Card>
         </div>
       </div>

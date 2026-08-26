@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { Button, PageHeader, StatusChip } from "../components/ui";
+import { Button, Icon, PageHeader, StatusChip, type IconName } from "../components/ui";
+import { DecisionLayer } from "../components/DecisionLayer";
 import {
   apply_network,
   backup_export_url,
@@ -22,6 +23,26 @@ import {
 import { parseFleetSnapshot, type FleetSnapshot, type InventoryRow, type SeatSnapshot } from "../lib/fleetModel";
 
 const AP_CHANNELS = ["1", "6", "11"];
+
+/** Per-device glyph — seat_id → icon. */
+function seatIcon(seatId: string): IconName {
+  const id = seatId.toLowerCase();
+  if (id === "hub") return "system";
+  if (id === "panel" || id.includes("control")) return "dash";
+  if (id.startsWith("pot")) return "root";
+  if (id.includes("tank")) return "tank";
+  if (id.includes("mister") || id.includes("clone")) return "clone";
+  if (id.includes("hum") || id.includes("heater") || id.includes("ac")) return "climate";
+  if (id.includes("fan") || id.includes("intake") || id.includes("exhaust")) return "fan";
+  if (id.includes("light") || id.includes("sf1000")) return "lighting";
+  if (id.includes("mat")) return "root";
+  return "fleet";
+}
+
+/** Zigbee device type → icon. */
+function zigbeeIcon(type: string): IconName {
+  return type === "Router" ? "system" : "gauge";
+}
 
 function resolveSeat(fleet: FleetSnapshot, seatId: string): SeatSnapshot | null {
   if (seatId === "hub") return fleet.hub;
@@ -118,7 +139,8 @@ function DeviceDetailCard({
   const calPlace = extraField(row, "placement");
   return (
     <div className="dsc-card">
-      <h3>
+      <h3 style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <Icon name={seatIcon(seatId)} size={16} color="var(--dsc-teal)" />
         {seatId}
         <StatusChip label={online ? "ONLINE" : "OFFLINE"} tone={online ? "ok" : "bad"} />
       </h3>
@@ -163,6 +185,7 @@ export function SettingsPage() {
   const [cannalibResult, setCannalibResult] = useState<string>("");
   const [networkResult, setNetworkResult] = useState<string>("");
   const [importResult, setImportResult] = useState<string>("");
+  const [confirmNetwork, setConfirmNetwork] = useState(false);
 
   const refresh = async () => {
     const [s, net, cat, esp, j, fleetRaw, zigbee] = await Promise.all([
@@ -231,7 +254,7 @@ export function SettingsPage() {
 
       <section className="dsc-card">
         <h3>Fleet inventory</h3>
-        <p className="dsc-muted">Per-seat detail from /fleet + inventory — IP, MAC, firmware, online, in_service, last_seen.</p>
+        <p className="dsc-muted">Every device with its address, firmware, online state, and service status.</p>
         <div className="dsc-grid">
           {inventoryRows.map(({ seat, ...row }) => (
             <div key={String(row.seat_id)} className="dsc-col-4">
@@ -275,7 +298,9 @@ export function SettingsPage() {
 
       <section className="dsc-card">
         <h3>Network</h3>
-        <p className="dsc-muted">AP channel locked to 1 / 6 / 11. Apply restarts AP — fleet reconnects.</p>
+        <p className="dsc-muted">
+          Channel is limited to 1, 6, or 11. Applying restarts the hub&apos;s Wi-Fi — devices reconnect on their own.
+        </p>
         <label>
           AP SSID
           <input
@@ -325,16 +350,28 @@ export function SettingsPage() {
             </tbody>
           </table>
         ) : null}
-        <Button
-          onClick={async () => {
+        <Button variant="danger" onClick={() => setConfirmNetwork(true)}>
+          Apply network
+        </Button>
+        {networkResult ? <pre className="dsc-honesty">{networkResult}</pre> : null}
+        <DecisionLayer
+          open={confirmNetwork}
+          onDismiss={() => setConfirmNetwork(false)}
+          onConfirm={async () => {
+            setConfirmNetwork(false);
             await save();
             const r = await apply_network();
             setNetworkResult(JSON.stringify(r, null, 2));
           }}
+          title="Apply network settings"
+          confirmLabel="Apply and restart Wi-Fi"
+          help={null}
         >
-          Apply network
-        </Button>
-        {networkResult ? <pre className="dsc-honesty">{networkResult}</pre> : null}
+          <p>
+            Saves the network settings and restarts the hub&apos;s Wi-Fi. Devices drop off briefly and reconnect on
+            their own.
+          </p>
+        </DecisionLayer>
       </section>
 
       <section className="dsc-card">
@@ -397,7 +434,9 @@ export function SettingsPage() {
           {catalog ? String(catalog.note ?? "—") : "Loading…"} (source:{" "}
           {catalog ? String(catalog.source ?? "unknown") : "—"})
         </p>
-        <p className="dsc-muted">Chem / height / lineage stay CannaLib-honest — LLM does not invent.</p>
+        <p className="dsc-muted">
+          Chemistry, height, and lineage come straight from the catalog — gaps are never filled with guesses.
+        </p>
         <Button onClick={async () => setCatalog(await get_catalog_status())}>Refresh status</Button>
         <Button onClick={async () => reload_catalogs()}>Reload local catalogs</Button>
       </section>
@@ -405,9 +444,9 @@ export function SettingsPage() {
       <section className="dsc-card">
         <h3>ESPHome</h3>
         <p className="dsc-muted">
-          OTA preferred. Compile on Pi is one job at a time — swap warning applies. No silent auto-flash.
+          Updates are sent over the air. One build runs at a time, and nothing is flashed unless you queue it.
         </p>
-        <p className="dsc-muted">Pot 5+ is out until firmware exists.</p>
+        <p className="dsc-muted">Pot 5 and beyond are unavailable until their firmware exists.</p>
         <table className="dsc-table">
           <thead>
             <tr>
@@ -444,7 +483,7 @@ export function SettingsPage() {
 
       <section className="dsc-card">
         <h3>Zigbee (SkyConnect)</h3>
-        <p className="dsc-muted">Additive canopy / plugs — not climate ladder legs.</p>
+        <p className="dsc-muted">Extra canopy sensors and smart plugs — separate from climate control.</p>
         <div className="dsc-row-actions">
           <Button onClick={() => permit_join(true).then(refresh)}>Permit join (2 min)</Button>
           <Button onClick={() => permit_join(false).then(refresh)}>Stop join</Button>
@@ -464,7 +503,10 @@ export function SettingsPage() {
                 .filter((d) => d.type !== "Coordinator")
                 .map((d) => (
                   <tr key={String(d.ieee_address ?? d.friendly_name)}>
-                    <td>{String(d.friendly_name ?? "—")}</td>
+                    <td style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <Icon name={zigbeeIcon(String(d.type ?? ""))} size={14} color="var(--dsc-gray-5)" />
+                      {String(d.friendly_name ?? "—")}
+                    </td>
                     <td>{String(d.ieee_address ?? "—")}</td>
                     <td>{String(d.type ?? "—")}</td>
                     <td>
@@ -477,7 +519,7 @@ export function SettingsPage() {
           </table>
         ) : (
           <p className="dsc-muted" style={{ marginTop: 10 }}>
-            No Zigbee devices reported yet — enable permit join, then refresh. List from GET /settings/zigbee/devices.
+            No Zigbee devices reported yet — enable permit join, then refresh.
           </p>
         )}
       </section>

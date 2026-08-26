@@ -1,4 +1,6 @@
-:host, .dsc-root {
+/* Tokens live on :root (island SPA document), :host (HA panel shadow root) and
+   .dsc-root (explicit mount wrapper) so no surface can ever lose the cascade. */
+:root, :host, .dsc-root {
   /* HA Dash palette — bg/panel/line/text/muted + cyan accent */
   --dsc-black: #0b0e14;
   --dsc-black-2: #12171f;
@@ -43,6 +45,22 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; }
+
+/* Island SPA document base — inert inside the HA panel shadow root. */
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--dsc-black);
+  color: var(--dsc-white);
+  font-family: var(--dsc-font);
+}
+
+#root {
+  height: 100%;
+}
 
 .dsc-root {
   height: 100%;
@@ -877,6 +895,15 @@
   color: var(--dsc-amber);
 }
 
+/* No-data gauges: grey, quiet, no live/breathe motion. */
+.dsc-gauge.is-muted {
+  opacity: 0.75;
+}
+
+.dsc-gauge.is-muted .dsc-gauge-label {
+  color: var(--dsc-gray-5);
+}
+
 .dsc-gauge.is-bad .dsc-gauge-label {
   color: var(--dsc-bad-soft);
 }
@@ -925,9 +952,9 @@
 }
 
 .dsc-gauge-row-3.is-lit {
-  border-color: rgba(255, 213, 79, 0.5);
-  background: linear-gradient(180deg, rgba(255, 193, 7, 0.1), rgba(12, 18, 28, 0.35));
-  box-shadow: 0 0 28px rgba(255, 193, 7, 0.28), inset 0 0 16px rgba(255, 213, 79, 0.07);
+  border-color: rgba(38, 198, 218, 0.42);
+  background: linear-gradient(180deg, rgba(38, 198, 218, 0.08), rgba(12, 18, 28, 0.35));
+  box-shadow: 0 0 22px rgba(38, 198, 218, 0.16), inset 0 0 14px rgba(38, 198, 218, 0.05);
 }
 
 .dsc-gauge-row-tag {
@@ -978,9 +1005,9 @@
 }
 
 .dsc-gauge-zone.is-lit {
-  border-color: rgba(255, 213, 79, 0.5);
-  background: linear-gradient(180deg, rgba(255, 193, 7, 0.1), rgba(12, 18, 28, 0.35));
-  box-shadow: 0 0 28px rgba(255, 193, 7, 0.28), inset 0 0 16px rgba(255, 213, 79, 0.07);
+  border-color: rgba(38, 198, 218, 0.42);
+  background: linear-gradient(180deg, rgba(38, 198, 218, 0.08), rgba(12, 18, 28, 0.35));
+  box-shadow: 0 0 22px rgba(38, 198, 218, 0.16), inset 0 0 14px rgba(38, 198, 218, 0.05);
 }
 
 .dsc-gauge-zone-label {
@@ -1952,27 +1979,36 @@ button.dsc-chip.is-clickable:hover {
   transition: box-shadow 0.25s ease, border-color 0.25s ease, background 0.25s ease;
 }
 
-.dsc-dash-home .dsc-band-cell--main {
-  border-color: rgba(249, 115, 22, 0.28);
-  background: linear-gradient(180deg, rgba(249, 115, 22, 0.07), rgba(12, 18, 28, 0.35));
-  box-shadow: inset 0 0 20px rgba(249, 115, 22, 0.05);
-}
-
-.dsc-dash-home .dsc-band-cell--clone {
-  border-color: rgba(34, 197, 94, 0.28);
-  background: linear-gradient(180deg, rgba(34, 197, 94, 0.07), rgba(12, 18, 28, 0.35));
-  box-shadow: inset 0 0 20px rgba(34, 197, 94, 0.05);
-}
-
-.dsc-dash-home .dsc-band-cell--room {
-  border-color: rgba(148, 163, 184, 0.24);
-  background: linear-gradient(180deg, rgba(148, 163, 184, 0.06), rgba(12, 18, 28, 0.35));
-}
-
+/* Zone identity stays faint. Semantic tone owns the chrome — ROOT is not
+   permanently gold, and 4×8/2×4 are not permanently orange/green. */
+.dsc-dash-home .dsc-band-cell--main,
+.dsc-dash-home .dsc-band-cell--clone,
+.dsc-dash-home .dsc-band-cell--room,
 .dsc-dash-home .dsc-band-cell--root {
-  border-color: rgba(251, 191, 36, 0.28);
-  background: linear-gradient(180deg, rgba(251, 191, 36, 0.07), rgba(12, 18, 28, 0.35));
-  box-shadow: inset 0 0 20px rgba(251, 191, 36, 0.05);
+  border-color: rgba(130, 165, 230, 0.12);
+  background: rgba(12, 18, 28, 0.35);
+  box-shadow: none;
+}
+
+.dsc-dash-home .dsc-band-cell:has(.dsc-gauge.is-ok) {
+  border-color: rgba(102, 187, 106, 0.42);
+  background: linear-gradient(180deg, rgba(102, 187, 106, 0.08), rgba(12, 18, 28, 0.35));
+}
+
+.dsc-dash-home .dsc-band-cell:has(.dsc-gauge.is-warn),
+.dsc-dash-home .dsc-band-cell:has(.dsc-gauge.is-stale) {
+  border-color: rgba(255, 183, 77, 0.5);
+  background: linear-gradient(180deg, rgba(255, 183, 77, 0.08), rgba(12, 18, 28, 0.35));
+}
+
+.dsc-dash-home .dsc-band-cell:has(.dsc-gauge.is-bad) {
+  border-color: rgba(239, 83, 80, 0.55);
+  background: linear-gradient(180deg, rgba(239, 83, 80, 0.08), rgba(12, 18, 28, 0.35));
+}
+
+.dsc-dash-home .dsc-band-cell:has(.dsc-gauge.is-muted) {
+  border-color: rgba(139, 149, 168, 0.22);
+  background: rgba(12, 18, 28, 0.28);
 }
 
 .dsc-dash-home .dsc-band-cell:has(.dsc-gauge.is-warn),
@@ -2072,4 +2108,261 @@ button.dsc-chip.is-clickable:hover {
 .dsc-grow-log li {
   padding: 4px 0;
   border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+/* ————————————————————————————————————————————————————————————————
+   7.1.2 affordance pass — button hierarchy, native control skinning,
+   focus states, kit-pulse containment. Token-driven, works in both
+   the island SPA (:root) and the HA panel shadow root (:host).
+   ———————————————————————————————————————————————————————————————— */
+
+/* Button hierarchy */
+.dsc-btn.dsc-btn-primary {
+  background: var(--dsc-teal);
+  border-color: var(--dsc-teal);
+  color: #041018;
+  font-weight: 650;
+  box-shadow: 0 0 16px rgba(38, 198, 218, 0.28), var(--dsc-shadow-tight);
+}
+.dsc-btn.dsc-btn-primary:hover:not(:disabled) {
+  filter: brightness(1.1);
+  box-shadow: 0 0 22px rgba(38, 198, 218, 0.45), var(--dsc-shadow-tight);
+}
+.dsc-btn.dsc-btn-secondary {
+  background: var(--dsc-gray-2);
+  border-color: var(--dsc-gray-3);
+  color: var(--dsc-white);
+}
+.dsc-btn.dsc-btn-secondary:hover:not(:disabled) {
+  border-color: var(--dsc-teal-dim);
+  color: var(--dsc-teal);
+}
+.dsc-btn.dsc-btn-danger {
+  background: rgba(239, 83, 80, 0.14);
+  border-color: rgba(239, 83, 80, 0.55);
+  color: #ff9e9b;
+  font-weight: 600;
+}
+.dsc-btn.dsc-btn-danger:hover:not(:disabled) {
+  background: rgba(239, 83, 80, 0.26);
+  border-color: var(--dsc-bad);
+  color: #ffd7d5;
+}
+.dsc-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Keyboard focus — consistent teal ring on every interactive element */
+.dsc-btn:focus-visible,
+.dsc-icon-btn:focus-visible,
+button:focus-visible,
+[role="button"]:focus-visible,
+a:focus-visible,
+summary:focus-visible {
+  outline: 2px solid var(--dsc-teal);
+  outline-offset: 2px;
+}
+select:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--dsc-teal);
+  outline-offset: 1px;
+}
+
+/* Native range sliders */
+input[type="range"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  height: 28px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+}
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--dsc-gray-3);
+  border: 1px solid var(--dsc-glass-border);
+}
+input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  margin-top: -7px;
+  border-radius: 50%;
+  background: var(--dsc-teal);
+  border: 2px solid var(--dsc-black);
+  box-shadow: 0 0 8px var(--dsc-teal-dim);
+}
+input[type="range"]:hover:not(:disabled)::-webkit-slider-thumb {
+  box-shadow: 0 0 14px var(--dsc-teal-glow);
+}
+input[type="range"]::-moz-range-track {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--dsc-gray-3);
+  border: 1px solid var(--dsc-glass-border);
+}
+input[type="range"]::-moz-range-progress {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--dsc-teal-dim);
+}
+input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--dsc-teal);
+  border: 2px solid var(--dsc-black);
+  box-shadow: 0 0 8px var(--dsc-teal-dim);
+}
+input[type="range"]:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+input[type="range"]:disabled::-webkit-slider-thumb {
+  background: var(--dsc-gray-4);
+  box-shadow: none;
+}
+
+/* Native selects */
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  min-height: 38px;
+  border-radius: 8px;
+  border: 1px solid var(--dsc-gray-3);
+  background-color: var(--dsc-gray-2);
+  color: var(--dsc-white);
+  font: inherit;
+  padding: 8px 32px 8px 12px;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' fill='none' stroke='%238b95a8' stroke-width='2' stroke-linecap='round'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+}
+select:hover:not(:disabled) {
+  border-color: var(--dsc-teal-dim);
+}
+select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+select option {
+  background: var(--dsc-gray-1);
+  color: var(--dsc-white);
+}
+
+/* Native text / number / time inputs + textareas */
+input[type="text"],
+input[type="number"],
+input[type="search"],
+input[type="password"],
+input[type="time"],
+input[type="date"],
+input[type="datetime-local"],
+textarea {
+  min-height: 36px;
+  border-radius: 8px;
+  border: 1px solid var(--dsc-gray-3);
+  background: var(--dsc-gray-2);
+  color: var(--dsc-white);
+  font: inherit;
+  padding: 8px 10px;
+}
+input[type="text"]:hover:not(:disabled),
+input[type="number"]:hover:not(:disabled),
+input[type="search"]:hover:not(:disabled),
+textarea:hover:not(:disabled) {
+  border-color: var(--dsc-teal-dim);
+}
+input[type="text"]:focus,
+input[type="number"]:focus,
+input[type="search"]:focus,
+textarea:focus {
+  border-color: var(--dsc-teal);
+}
+input::placeholder,
+textarea::placeholder {
+  color: var(--dsc-gray-4);
+  opacity: 0.8;
+}
+
+/* Native checkboxes */
+input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  flex: none;
+  margin: 0 6px 0 0;
+  border-radius: 5px;
+  border: 1px solid var(--dsc-gray-3);
+  background: var(--dsc-gray-2);
+  display: inline-block;
+  vertical-align: middle;
+  position: relative;
+  cursor: pointer;
+}
+input[type="checkbox"]:hover:not(:disabled) {
+  border-color: var(--dsc-teal-dim);
+}
+input[type="checkbox"]:checked {
+  background: var(--dsc-teal);
+  border-color: var(--dsc-teal);
+}
+input[type="checkbox"]:checked::after {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 1.5px;
+  width: 5px;
+  height: 9px;
+  border: solid #06121a;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+input[type="checkbox"]:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Kit Pulse — contained map surface + running-node pulse */
+.dsc-kit-pulse .dsc-kit-constellation {
+  display: block;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--dsc-glass-border);
+  border-radius: var(--dsc-radius);
+  margin-bottom: 10px;
+}
+@keyframes dsc-kit-node-pulse {
+  0%, 100% { filter: drop-shadow(0 0 0 rgba(38, 198, 218, 0)); }
+  50% { filter: drop-shadow(0 0 6px rgba(38, 198, 218, 0.65)); }
+}
+.dsc-kit-node-running {
+  animation: dsc-kit-node-pulse 2.4s ease-in-out infinite;
+}
+
+/* Inspector "Details" disclosure */
+.dsc-inspector-details {
+  margin-top: 14px;
+  border-top: 1px solid var(--dsc-gray-3);
+  padding-top: 10px;
+}
+.dsc-inspector-details summary {
+  cursor: pointer;
+  color: var(--dsc-gray-5);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dsc-kit-node-running {
+    animation: none !important;
+  }
 }

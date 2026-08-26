@@ -95,7 +95,7 @@ export function VesselSelect({
   const options = (entity(id)?.attributes?.options as string[] | undefined) || [];
   const current = state(id, "");
   if (!ok && !options.length) {
-    return <span className="dsc-muted">No vessel helper — 20L fabric default.</span>;
+    return <span className="dsc-muted">No vessel recorded — showing the default 20 L fabric pot.</span>;
   }
   return (
     <label className="dsc-entity-select">

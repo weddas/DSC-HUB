@@ -4,6 +4,13 @@ import { StatusChip } from "./ui";
 const VIEW = { w: 720, h: 400 };
 const HUB = { x: 360, y: 188 };
 
+/** Appliance seats where "ok" means the relay is actually on right now. */
+const APPLIANCE_IDS = new Set(["heater", "heatmat", "humidifier", "dehumidifier", "ac", "mister"]);
+
+function isRunningAppliance(n: KitNode): boolean {
+  return APPLIANCE_IDS.has(n.id) && n.status === "ok";
+}
+
 function layoutFor(id: string, index: number, spokeCount: number): { x: number; y: number } {
   if (id === "hub") return HUB;
   const r = 148;
@@ -83,6 +90,7 @@ export function KitPulse({
             >
               <circle
                 r={n.id === "hub" ? 22 : 16}
+                className={isRunningAppliance(n) ? "dsc-kit-node-running" : undefined}
                 fill={hole || idle ? "none" : "rgba(38,198,218,0.12)"}
                 stroke={stroke(n.status)}
                 strokeWidth="1.8"
@@ -101,6 +109,7 @@ export function KitPulse({
             key={n.id}
             label={kitHoleLabel(n.status, n.label)}
             tone={kitTone(n.status)}
+            motion={isRunningAppliance(n) ? "duty" : undefined}
             onClick={onSelect ? () => onSelect(n) : undefined}
           />
         ))}

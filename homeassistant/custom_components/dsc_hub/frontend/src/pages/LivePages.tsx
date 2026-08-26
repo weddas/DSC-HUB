@@ -424,7 +424,7 @@ function TentCockpitPage({ tent }: { tent: Exclude<TentId, "unassigned"> }) {
           <Card className="dsc-glass" title="Plant log (48h)" icon="roster">
             {log.length === 0 ? (
               <p className="dsc-muted" style={{ margin: 0 }}>
-                Thin recorder / no recent identity changes — honesty empty, not invented.
+                Nothing logged in the last 48 hours.
               </p>
             ) : (
               <ul className="dsc-fault-list">

@@ -8,6 +8,8 @@ import { useEntitySeries } from "../hooks/useEntitySeries";
 import { useHeldReading } from "../hooks/useHeldReading";
 import { useInspector } from "../components/InspectorHost";
 import { ArcGauge, Sparkline } from "../viz/charts";
+import { moistureSegments } from "../viz/gaugeTheme";
+import { defaultBandMargin, toneCssColor, zoneTone } from "../lib/zoneTone";
 import {
   ALL_POT_NUMBERS,
   buildPlantSeat,
@@ -59,7 +61,7 @@ export function LiveRootPage() {
       <PageHeader
         icon="root"
         title="Root"
-        subtitle={`${svc.inService} of ${svc.total} pots in service — OOS labeled, never fake Got.`}
+        subtitle={`${svc.inService} of ${svc.total} pots in service. Pots without sensors show no data.`}
       />
       <div className="dsc-grid">
         <div className="dsc-col-4">
@@ -174,11 +176,11 @@ function RootPotCard({ pot, oos, onOpenSeat }: { pot: number; oos: boolean; onOp
       <div className="dsc-pot-card-head" onClick={onOpenSeat} role="presentation">
         <VesselGlyph spec={readPotVessel(pot, state, entity)} size={28} />
         <div>
-          <strong>{oos ? "OOS" : seat.plantName}</strong>
+          <strong>{oos ? "Out of service" : seat.plantName}</strong>
           <div className="dsc-chip-row">
             <StatusChip label={tentLabel(seat.tent)} tone={oos || seat.tent === "unassigned" ? "muted" : "ok"} />
             <StatusChip
-              label={oos ? "OOS" : trust.blockNeedAct ? `${seat.need} (no act)` : `Need ${seat.need}`}
+              label={oos ? "No data" : trust.blockNeedAct ? `${seat.need} (no act)` : `Need ${seat.need}`}
               tone={oos ? "muted" : seat.need && seat.need !== "ok" && seat.need !== "—" ? "warn" : "ok"}
             />
             {trust.labels.map((l) => (
@@ -186,13 +188,26 @@ function RootPotCard({ pot, oos, onOpenSeat }: { pot: number; oos: boolean; onOp
             ))}
           </div>
         </div>
-        <Sparkline series={series.series} color="var(--dsc-blue)" width={140} height={36} />
+        <Sparkline
+          series={series.series}
+          color={toneCssColor(
+            zoneTone({
+              value: moist.value,
+              band: mBand,
+              margin: defaultBandMargin(mBand),
+              stale: moist.stale,
+              available: Number.isFinite(moist.value),
+            }),
+          )}
+          width={140}
+          height={36}
+        />
       </div>
       {oos ? (
-        <p className="dsc-muted">Parked — no fake Got.</p>
+        <p className="dsc-muted">Out of service — not measuring.</p>
       ) : (
         <div className="dsc-gauge-row">
-          <ArcGauge label="Moisture" value={moist.value} min={0} max={100} unit="%" band={mBand} stale={moist.stale} onClick={() => inspector.open({ entityId: moistId, label: `P${pot} moisture`, unit: "%" })} />
+          <ArcGauge label="Moisture" value={moist.value} min={0} max={100} unit="%" band={mBand} segments={mBand ? moistureSegments(mBand.min, mBand.max) : moistureSegments()} stale={moist.stale} onClick={() => inspector.open({ entityId: moistId, label: `P${pot} moisture`, unit: "%" })} />
           <ArcGauge label="Soil °C" value={soil.value} min={10} max={40} unit="°C" stale={soil.stale} onClick={() => inspector.open({ entityId: `sensor.dsc_pot${pot}_soil_temperature`, label: `P${pot} soil T`, unit: "°C" })} />
           <ArcGauge label="Dryback" value={dry.value} min={0} max={100} unit="%" band={dryBand} stale={dry.stale} onClick={() => inspector.open({ entityId: `sensor.dsc_pot${pot}_dryback_pct`, label: `P${pot} dryback`, unit: "%" })} />
           <ArcGauge label="EC" value={ec.value} min={0} max={3000} unit="" band={ecBand} stale={ec.stale} onClick={() => inspector.open({ entityId: potGotEntity(pot, "ec", state), label: `P${pot} EC` })} />

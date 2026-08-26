@@ -6,160 +6,160 @@ export type PlaybookEntry = {
 
 const FLEET: PlaybookEntry = {
   title: "Fleet version",
-  what: "A reporting node is missing firmware or is off the expected major.minor train. Planned OOS nodes (AC, clone mister, POT3) are inventory, not this chip.",
-  fix: "Open Fleet. Flash the drifted device. If the hole is unbuilt kit, leave in_service off — do not treat it as fail.",
+  what: "A device is missing firmware or running a different version than expected. Devices deliberately out of service (AC, clone mister, pot 3) are not counted here.",
+  fix: "Open Fleet and update the outdated device. If the device is not built yet, leave it out of service — that is not a failure.",
 };
 
 const OOS: PlaybookEntry = {
   title: "Out of service",
-  what: "This lever is parked. Planned OOS (unbuilt AC / clone mister / POT3) is inventory. Unexpected OOS is a temp flag or operator lockout.",
-  fix: "If the device is built and should run, turn in_service on from Fleet. Temp OOS / lockout: clear the flag after the soak. Unbuilt kit stays OOS — not an alarm.",
+  what: "This device is not running. It may be deliberately out of service (not built yet), temporarily paused, or locked out by an operator.",
+  fix: "If the device is built and should run, switch it back in service from Fleet. If it was paused temporarily, clear that once the pause is over. Unbuilt devices stay out of service — not an alarm.",
 };
 
 const HUB: PlaybookEntry = {
   title: "Hub link",
-  what: "The hub is not answering ESP-NOW / HA. Mission holds last-good vitals instead of inventing Got.",
-  fix: "Check hub power, SoftAP/Nest channel, and Fleet firmware. Wait out a flap (25s cooldown) before chasing ghosts.",
+  what: "The hub is not responding. The display holds the last good readings instead of showing made-up values.",
+  fix: "Check hub power, the Wi-Fi channel, and firmware on Fleet. Brief dropouts recover on their own within about half a minute.",
 };
 
 const PANEL: PlaybookEntry = {
   title: "Panel link",
-  what: "Control panel is not on ESP-NOW. HA-only is a degraded path, not a green wall.",
-  fix: "Confirm Control firmware and ESP-NOW age on Fleet. If Wi-Fi RSSI is live, it is HA-only — not offline.",
+  what: "The control panel has lost its direct radio link. A limited fallback link may still be working — slower, but not offline.",
+  fix: "Check the panel's firmware and link age on Fleet. If its Wi-Fi signal is still reporting, the panel is on the fallback link, not offline.",
 };
 
 const BEAT: PlaybookEntry = {
   title: "Heartbeat",
-  what: "Hub heartbeat sensor is dark. Beat is the liveness pulse, separate from climate Got.",
-  fix: "If hub link is also down, fix the hub first. If link is on but beat is dark, check sensor.dsc_hub_heartbeat and reboot the hub.",
+  what: "The hub's regular liveness pulse has stopped arriving. This is separate from the climate readings.",
+  fix: "If the hub link is also down, fix the hub first. If the link is up but the heartbeat is missing, restart the hub.",
 };
 
 const KIT: PlaybookEntry = {
-  title: "Kit node",
-  what: "This spoke is inventory: running, idle, planned OOS, missing helper, or dark after the 25s offline cooldown.",
-  fix: "OOS: leave it parked if unbuilt. Dark: wait the cooldown, then Fleet. Missing: the helper is not in HA yet.",
+  title: "Device",
+  what: "This shows the device's real state: running, idle, deliberately out of service, not set up yet, or offline after a short grace period.",
+  fix: "Out of service: leave it if the device is not built. Offline: give it a moment, then check Fleet. Not set up: the device has not been added yet.",
 };
 
 const ALERTS: Record<string, PlaybookEntry> = {
   "binary_sensor.dsc_hub_emergency_failsafe": {
     title: "Emergency failsafe",
-    what: "Hub failsafe is armed — climate is in a protective path, not Full Auto keep-up.",
-    fix: "Open Mission, clear the cause (sensor fault, runaway heat), then cycle failsafe from the hub.",
+    what: "The hub's failsafe is armed — climate is running in a protective mode, not normal automation.",
+    fix: "Open Mission, clear the cause (sensor fault, runaway heat), then reset failsafe from the hub.",
   },
   "binary_sensor.dsc_hub_climate_sensor_fault": {
     title: "Climate sensor fault",
-    what: "Tent/room T or RH is untrusted. Do not invent Got or chase Want.",
-    fix: "Check the DHT/probe, hold vitals, then Climate once the sensor is live.",
+    what: "A tent or room temperature/humidity reading cannot be trusted right now.",
+    fix: "Check the sensor. Readings are held until it comes back — nothing is guessed.",
   },
   "binary_sensor.dsc_hub_aux_sensor_fault": {
     title: "Aux sensor fault",
-    what: "An auxiliary climate probe failed. Coupled mix may be incomplete.",
-    fix: "Fleet → sensor honesty. Do not turn Full Auto up to compensate.",
+    what: "A secondary climate sensor failed, so some readings may be incomplete.",
+    fix: "Check sensor health on Fleet. Do not turn automation up to compensate.",
   },
   "binary_sensor.dsc_hub_root_zone_sensor_fault": {
     title: "Root-zone probes",
-    what: "A pot probe the mat votes on is untrusted or missing.",
-    fix: "Open Root. OOS the bad pot if it is hardware. Do not let it vote.",
+    what: "A pot probe that heat-mat control relies on is missing or untrusted.",
+    fix: "Open Root. If the probe hardware failed, take that pot out of service so it stops influencing control.",
   },
   "binary_sensor.dsc_clone_dark_period_violation": {
     title: "2×4 dark violation",
-    what: "SF1000 is on while the 2×4 window is closed (and catch-up is not covering it). Herm risk.",
-    fix: "Open Light. Turn the lamp off or wait catch-up. Manual hold / takeover are intentional dark paths.",
+    what: "The light is on while the 2×4 tent should be dark. This risks stressing the plants.",
+    fix: "Open Light. Turn the lamp off or let catch-up finish. Manual hold and manual control are intentional exceptions.",
   },
   "binary_sensor.dsc_clone_light_missing_in_window": {
     title: "Light missing in window",
-    what: "2×4 window is open but the SF1000 did not deliver. Photoperiod ledger is honest debt, not a fake bar.",
-    fix: "Check SF1000, Auto photoperiod, and Light catch-up. Clone Off / takeover / manual hold skip this alert.",
+    what: "The 2×4 light window is open but the lamp has not delivered its hours yet. The shortfall is tracked, not hidden.",
+    fix: "Check the lamp, the automatic photoperiod, and light catch-up. This alert is skipped while the clone tent is off or under manual control.",
   },
   "binary_sensor.dsc_hub_coherence_mismatch": {
     title: "Coherence mismatch",
-    what: "Hub and HA disagree on a commanded lever.",
-    fix: "Fleet heal / re-push. Do not double-tap the same switch from two UIs.",
+    what: "The hub and the app disagree about a commanded device.",
+    fix: "Re-sync from Fleet. Avoid switching the same device from two places at once.",
   },
   "binary_sensor.dsc_nest_channel_split": {
-    title: "Nest channel split",
-    what: "SoftAP preferred BSSID and the associated AP are on different channels (CHX).",
-    fix: "This is F-004 — lock is out of scope. SoftAP-primary is the heal path; do not fight the Nest channel.",
+    title: "Wi-Fi channel split",
+    what: "The hub's access point and the house Wi-Fi are on different channels.",
+    fix: "Known limitation — the hub's own access point takes priority and recovers on its own.",
   },
   "binary_sensor.dsc_humidifier_vent_conflict": {
     title: "Humidifier vent conflict",
-    what: "Buying moisture while dumping outside. Wasteful; newer firmware clamps OUT.",
-    fix: "Drop OUT or stop humidifier demand. Check Climate dump/recirc split.",
+    what: "Adding moisture while venting it straight outside — wasteful.",
+    fix: "Lower the exhaust or stop the humidifier. Check the vent split on Climate.",
   },
   "binary_sensor.dsc_heater_vent_conflict": {
     title: "Heater vent conflict",
-    what: "Buying heat while dumping outside. Should be rare (heater interlock).",
-    fix: "Close OUT or stop heater. Confirm the interlock on Climate.",
+    what: "Adding heat while venting it straight outside. Should be rare.",
+    fix: "Close the exhaust or stop the heater. Confirm the interlock on Climate.",
   },
   "binary_sensor.dsc_humidifier_ineffective_suspect": {
     title: "Humidifier ineffective",
-    what: "Humidifier ran and RH did not move enough to believe the lever.",
-    fix: "Check water, fan path, and room lung. Do not leave demand on as theatre.",
+    what: "The humidifier ran but humidity did not rise enough to trust it.",
+    fix: "Check the water level, the fan path, and room airflow. Do not leave it running for show.",
   },
   "binary_sensor.dsc_heater_ineffective_suspect": {
     title: "Heater ineffective",
-    what: "Heater ran and tent T did not climb.",
-    fix: "Check relay, dump CFM, and room lung. Transfer before buying more kW.",
+    what: "The heater ran but tent temperature did not climb.",
+    fix: "Check the relay, the exhaust rate, and room airflow before buying more power.",
   },
   "binary_sensor.dsc_grow_mat_ineffective_suspect": {
     title: "Heat mat ineffective",
-    what: "Mat ran and root T did not climb on in-service pots.",
-    fix: "Open Root. Confirm mat demand vs relay, and that voting pots are in service.",
+    what: "The mat ran but root temperature did not climb on active pots.",
+    fix: "Open Root. Confirm the mat is actually switching, and that the right pots are in service.",
   },
   "binary_sensor.dsc_plant_specs_incomplete": {
     title: "Plant specs incomplete",
-    what: "Nameplate or volume helpers the physics budget needs are empty.",
-    fix: "Tune → plant specs / Learning. Empty specs are honesty, not default CFM.",
+    what: "Equipment ratings or volumes needed for climate planning are missing.",
+    fix: "Fill in the specs under Tune. Missing specs are shown as missing, not defaulted.",
   },
   "binary_sensor.dsc_plant_specs_intake_over_exhaust": {
     title: "Intake over exhaust",
-    what: "Nameplate intakes exceed exhaust capacity — mass balance cannot hold.",
-    fix: "Lower intake nameplates or raise exhaust. Learning allocated CFM is the Got.",
+    what: "Rated intake airflow exceeds exhaust capacity — the air budget cannot balance.",
+    fix: "Lower the intake ratings or raise the exhaust. Measured airflow from calibration takes priority.",
   },
   "binary_sensor.dsc_plant_specs_ac_capacity_missing": {
     title: "AC capacity missing",
-    what: "AC is in service (or assumed) without a capacity number.",
-    fix: "If AC is unbuilt, leave in_service off. If built, set the capacity spec.",
+    what: "The AC is marked in service but has no capacity rating.",
+    fix: "If the AC is not built, take it out of service. If it is built, enter its capacity.",
   },
   "binary_sensor.dsc_plant_specs_dehum_rate_zero": {
-    title: "Dehum rate 0",
-    what: "Dehumidifier rate helper is zero — Full Auto cannot budget moisture.",
-    fix: "Set the L/day spec, or stop claiming dehum keep-up.",
+    title: "Dehumidifier rate 0",
+    what: "The dehumidifier's rate is set to zero, so moisture removal cannot be planned.",
+    fix: "Enter the litres-per-day rating, or take the dehumidifier out of service.",
   },
   "binary_sensor.dsc_plant_specs_hum_rate_zero": {
-    title: "Hum rate 0",
-    what: "Humidifier rate helper is zero.",
-    fix: "Set the rate spec. Do not run demand with a zero budget.",
+    title: "Humidifier rate 0",
+    what: "The humidifier's rate is set to zero.",
+    fix: "Enter the rate. Do not run it with a zero budget.",
   },
   "binary_sensor.dsc_plant_specs_heater_zero": {
     title: "Heater spec 0",
-    what: "Heater capacity helper is zero.",
-    fix: "Set the watt/BTU spec or stop using heater demand as keep-up.",
+    what: "The heater's capacity is set to zero.",
+    fix: "Enter the watt or BTU rating, or stop relying on the heater for keep-up.",
   },
   "binary_sensor.dsc_tank_ec_out_of_range": {
     title: "Tank EC out of range",
-    what: "Tank EC is outside the tank stage band.",
-    fix: "Fleet tank tester. Do not invent a mix from a stale probe.",
+    what: "Tank nutrient strength is outside the band for the current stage.",
+    fix: "Test the tank. Confirm the probe before changing the mix.",
   },
   "binary_sensor.dsc_tank_ph_out_of_range": {
     title: "Tank pH out of range",
-    what: "Tank pH left the stage band.",
+    what: "Tank pH has left the band for the current stage.",
     fix: "Correct the tank. Confirm the probe before dosing.",
   },
   "binary_sensor.dsc_tank_water_too_warm": {
     title: "Tank too warm",
-    what: "Reservoir temperature is high enough to invite biology you do not want.",
-    fix: "Cool the tank / room lung. Do not ignore a live number.",
+    what: "Reservoir temperature is high enough to encourage unwanted growth.",
+    fix: "Cool the tank or improve room airflow.",
   },
   "binary_sensor.dsc_hub_light_catchup_active": {
     title: "Light catch-up",
-    what: "2×4 is paying photoperiod debt from the hub ledger. Hours gauge is Got.",
-    fix: "Let catch-up finish. Do not stack a second fake progress bar.",
+    what: "The 2×4 is making up missed light hours. The hours gauge shows what was actually delivered.",
+    fix: "Let catch-up finish on its own.",
   },
   "binary_sensor.dsc_reduced_kit": {
-    title: "Unexpected reduced kit",
-    what: "A lever that should be in service is temp-OOS or lockout — not the unbuilt AC/mister/POT3 inventory.",
-    fix: "Clear temp OOS / operator lockout, or restore the unexpected pot. Planned holes stay OOS and must not pulse this chip.",
+    title: "Capacity offline",
+    what: "A device that should be running is temporarily out of service or locked out — not one of the deliberately unbuilt devices.",
+    fix: "Clear the temporary pause or lockout, or bring the affected device back. Deliberately out-of-service devices do not trigger this.",
   },
 };
 
@@ -167,38 +167,38 @@ function potAlerts(n: number): Record<string, PlaybookEntry> {
   return {
     [`binary_sensor.dsc_pot${n}_moisture_out_of_range`]: {
       title: `Pot ${n} moisture`,
-      what: `Pot ${n} moisture left the Want/Need band.`,
-      fix: "Open Root → that pot's inspector. OOS pots must not fake Got.",
+      what: `Pot ${n} moisture has left its target band.`,
+      fix: "Open Root and check that pot. Pots out of service never show made-up readings.",
     },
     [`binary_sensor.dsc_pot${n}_ph_out_of_range`]: {
       title: `Pot ${n} pH`,
-      what: `Pot ${n} pH left the Want band.`,
-      fix: "Root inspector. Confirm the probe before dosing.",
+      what: `Pot ${n} pH has left its target band.`,
+      fix: "Check the pot on Root. Confirm the probe before dosing.",
     },
     [`binary_sensor.dsc_pot${n}_root_zone_temp_out_of_range`]: {
       title: `Pot ${n} root T`,
-      what: `Pot ${n} soil temperature left the trusted band.`,
-      fix: "Mat / lung first. Do not run the mat if this pot is OOS.",
+      what: `Pot ${n} soil temperature has left its trusted band.`,
+      fix: "Check the heat mat and airflow first. The mat should not run for a pot that is out of service.",
     },
     [`binary_sensor.dsc_pot${n}_ec_salt_build_up`]: {
       title: `Pot ${n} salt build-up`,
-      what: `Pot ${n} EC is high vs baseline.`,
-      fix: "Root card. Flush vs feed from Need, not from a red chip.",
+      what: `Pot ${n} nutrient strength is high compared with its baseline.`,
+      fix: "Check the pot on Root. Decide flush vs feed from the pot's Need reading, not just this alert.",
     },
     [`binary_sensor.dsc_pot${n}_ec_depleted_vs_baseline`]: {
       title: `Pot ${n} EC depleted`,
-      what: `Pot ${n} EC is low vs baseline.`,
-      fix: "Feed from Need. Confirm the probe is trusted.",
+      what: `Pot ${n} nutrient strength is low compared with its baseline.`,
+      fix: "Feed based on the pot's Need reading. Confirm the probe is trusted.",
     },
     [`binary_sensor.dsc_pot${n}_nitrogen_below_baseline`]: {
       title: `Pot ${n} N below baseline`,
-      what: `Pot ${n} nitrogen is below the rolling baseline.`,
-      fix: "Root NPK. Do not act on an untrusted probe.",
+      what: `Pot ${n} nitrogen is below its rolling baseline.`,
+      fix: "Check the NPK readings on Root. Do not act on an untrusted probe.",
     },
     [`binary_sensor.dsc_pot${n}_nitrogen_depleting_fast`]: {
       title: `Pot ${n} N depleting`,
-      what: `Pot ${n} nitrogen is falling faster than the rate band.`,
-      fix: "Root rate spark. Check irrigation vs Need.",
+      what: `Pot ${n} nitrogen is falling faster than expected.`,
+      fix: "Check the trend on Root and compare irrigation against the pot's Need.",
     },
   };
 }
@@ -217,9 +217,9 @@ export function playbookFor(
   if (entityId.includes("panel_link") || entityId.includes("control_wifi")) return PANEL;
   if (entityId.includes("heartbeat")) return BEAT;
   return {
-    title: entityId.split(".").pop()?.replace(/_/g, " ") || "Entity",
-    what: "Got from Home Assistant. Click timespan / ghost in this drawer — do not invent a second dashboard.",
-    fix: "If the number is wrong, fix the sensor or the Want. If it is unavailable, that is a hole, not a zero.",
+    title: entityId.split(".").pop()?.replace(/_/g, " ") || "Reading",
+    what: "A live reading recorded by the hub. Use the timespan buttons here to explore its history.",
+    fix: "If the number looks wrong, check the sensor or its target. If it shows no value, nothing was measured — it is not a zero.",
   };
 }
 

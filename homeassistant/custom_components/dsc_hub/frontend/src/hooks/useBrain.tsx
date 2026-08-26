@@ -85,12 +85,20 @@ export function BrainProvider({ children }: { children: ReactNode }) {
     setLoading(false);
   }, []);
 
+  const computedInFlight = useRef(false);
+
   const refreshComputed = useCallback(async () => {
+    // /fleet/computed can take several seconds on the Pi — never overlap requests,
+    // or the queue starves /fleet and the websocket and the UI wedges on "Connecting".
+    if (computedInFlight.current) return;
+    computedInFlight.current = true;
     try {
       const data = await get_fleet_computed();
       setComputed(data);
     } catch {
       /* computed helpers are non-fatal */
+    } finally {
+      computedInFlight.current = false;
     }
   }, []);
 
@@ -135,7 +143,7 @@ export function BrainProvider({ children }: { children: ReactNode }) {
 
     const computedPoll = window.setInterval(() => {
       void refreshComputed();
-    }, 2000);
+    }, 5000);
 
     return () => {
       ws.close();

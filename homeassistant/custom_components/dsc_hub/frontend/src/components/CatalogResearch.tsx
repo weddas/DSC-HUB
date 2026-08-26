@@ -183,7 +183,7 @@ export function CatalogResearch() {
         <div className="dsc-col-6">
           <Card className="dsc-glass" title="Detail" icon="roster">
             {!selected ? (
-              <p className="dsc-muted">Pick a row. Missing fields stay blank.</p>
+              <p className="dsc-muted">Pick an item to see its details. Fields without data stay blank.</p>
             ) : (
               <>
                 <h3 style={{ marginTop: 0 }}>{selected.name}</h3>

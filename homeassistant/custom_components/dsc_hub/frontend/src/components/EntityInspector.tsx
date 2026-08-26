@@ -74,10 +74,9 @@ export function EntityInspector({
 
   return (
     <SlideDrawer open={!!target.entityId} onClose={onClose} title={target.label}>
-      <p className="dsc-muted" style={{ marginTop: 0, fontFamily: "var(--dsc-mono)", fontSize: 12 }}>
-        {target.entityId}
-        {!available(target.entityId) ? " · unavailable" : ""}
-      </p>
+      {!available(target.entityId) ? (
+        <p className="dsc-muted" style={{ marginTop: 0 }}>No data — this reading is not reporting right now.</p>
+      ) : null}
       <div className="dsc-chip-row" style={{ marginBottom: 12 }}>
         <StatusChip label={`Last ${lastLabel}`} tone="muted" />
         {Number.isFinite(runtimeVal) ? (
@@ -130,8 +129,8 @@ export function EntityInspector({
 
       <div className="dsc-chip-row" style={{ margin: "12px 0" }}>
         <TimespanControl hours={hours} setHours={setHours} extras={CYCLE_TIMESPAN_EXTRAS} />
-        {thin ? <StatusChip label="Thin recorder" tone="warn" /> : null}
-        {ghost.length > 1 ? <StatusChip label="Prior window ghost" tone="muted" /> : null}
+        {thin ? <StatusChip label="Limited history" tone="warn" /> : null}
+        {ghost.length > 1 ? <StatusChip label="Previous period (faded)" tone="muted" /> : null}
       </div>
 
       <MultiLineChart
@@ -139,7 +138,7 @@ export function EntityInspector({
         unit={binary ? "" : target.unit || ""}
         lastSyncAt={series.lastSyncAt}
         yDomain={binary ? { left: { min: 0, max: 1 } } : undefined}
-        emptyLabel="thin recorder"
+        emptyLabel="no history yet"
         series={[
           {
             id: target.entityId,
@@ -163,6 +162,14 @@ export function EntityInspector({
             : []),
         ]}
       />
+
+      <details className="dsc-inspector-details">
+        <summary>Details</summary>
+        <p className="dsc-muted" style={{ fontFamily: "var(--dsc-mono)", fontSize: 12 }}>
+          {target.entityId}
+          {!available(target.entityId) ? " · unavailable" : ""}
+        </p>
+      </details>
     </SlideDrawer>
   );
 }

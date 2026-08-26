@@ -18,8 +18,8 @@ export function TankCutaway() {
   return (
     <div className="dsc-tank-cutaway">
       <div className="dsc-chip-row" style={{ marginBottom: 8 }}>
-        <StatusChip label={inService ? "In service" : "OOS"} tone={inService ? "ok" : "warn"} />
-        {!hasLevel ? <StatusChip label="Level unknown — empty, not guessed" tone="warn" /> : null}
+        <StatusChip label={inService ? "In service" : "Out of service"} tone={inService ? "ok" : "warn"} />
+        {!hasLevel ? <StatusChip label="Level not measured" tone="warn" /> : null}
         {pump ? <StatusChip label="Pump ON" tone="ok" pulse /> : <StatusChip label="Pump off" tone="muted" />}
       </div>
       <svg viewBox="0 0 180 220" className="dsc-tank-svg" aria-label="Tank cutaway">

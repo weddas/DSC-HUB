@@ -76,7 +76,7 @@ export function CropScheduler({ compact }: { compact?: boolean }) {
             >
               <VesselGlyph spec={readPotVessel(seat.pot, state, entity)} size={16} />
               <strong>P{seat.pot}</strong>
-              <span>{oos ? "OOS" : seat.plantName}</span>
+              <span>{oos ? "Out of service" : seat.plantName}</span>
               <StatusChip label={tentLabel(seat.tent)} tone={oos || seat.tent === "unassigned" ? "muted" : "ok"} />
               <span className="dsc-muted">
                 {oos
