@@ -9,7 +9,8 @@ import threading
 import time
 from typing import Any, Callable
 
-from .fleet_state import FleetState, get_fleet_state, update_fleet_state
+from .fleet_state import get_fleet_state, update_fleet_state
+from .settings import get_setting, list_inventory
 
 _logger = logging.getLogger(__name__)
 
@@ -17,6 +18,30 @@ try:
     import paho.mqtt.client as mqtt
 except ImportError:  # pragma: no cover
     mqtt = None  # type: ignore[assignment]
+
+
+def _placement_map() -> dict[str, str]:
+    """friendly_name → placement label (settings JSON + inventory extras)."""
+    out: dict[str, str] = {}
+    raw = get_setting("zigbee_placements", "")
+    if raw:
+        try:
+            parsed = json.loads(raw)
+            if isinstance(parsed, dict):
+                for k, v in parsed.items():
+                    if k and v:
+                        out[str(k)] = str(v)
+        except json.JSONDecodeError:
+            pass
+    for row in list_inventory():
+        extra = row.get("extra") or {}
+        if not isinstance(extra, dict):
+            continue
+        fname = extra.get("zigbee_friendly_name") or extra.get("friendly_name")
+        placement = extra.get("placement")
+        if fname and placement:
+            out[str(fname)] = str(placement)
+    return out
 
 
 class ZigbeeMqttIngest:
@@ -27,6 +52,8 @@ class ZigbeeMqttIngest:
         self._canopy: dict[str, Any] = {}
         self._devices: list[dict[str, Any]] = []
         self._devices_updated_at: float | None = None
+        self._device_states: dict[str, dict[str, Any]] = {}
+        self._by_placement: dict[str, dict[str, Any]] = {}
 
     def start(self) -> None:
         if mqtt is None:
@@ -76,15 +103,45 @@ class ZigbeeMqttIngest:
             return
         if not isinstance(payload, dict):
             return
+        if not topic.startswith("zigbee2mqtt/"):
+            return
+        friendly_name = topic.split("/", 1)[1]
+        if friendly_name.startswith("bridge"):
+            return
+
+        now = time.time()
+        state_row = {
+            "friendly_name": friendly_name,
+            "updated_at": now,
+            **payload,
+        }
+        self._device_states[friendly_name] = state_row
+
+        placements = _placement_map()
+        placement = placements.get(friendly_name)
+        if placement:
+            self._by_placement[placement] = dict(state_row)
+
+        # Legacy aggregate canopy (first temp/humidity seen or placement canopy/*).
         if "temperature" in payload:
             self._canopy["temp_c"] = payload.get("temperature")
         if "humidity" in payload:
             self._canopy["rh_pct"] = payload.get("humidity")
+        if placement and placement.lower().startswith("canopy"):
+            if "temperature" in payload:
+                self._canopy["temp_c"] = payload.get("temperature")
+            if "humidity" in payload:
+                self._canopy["rh_pct"] = payload.get("humidity")
         self._canopy["last_topic"] = topic
-        self._canopy["updated_at"] = time.time()
-        state = get_fleet_state()
-        state.canopy = dict(self._canopy)
-        update_fleet_state(state)
+        self._canopy["updated_at"] = now
+
+        fleet_state = get_fleet_state()
+        fleet_state.canopy = dict(self._canopy)
+        fleet_state.system = dict(fleet_state.system)
+        fleet_state.system["zigbee_device_states"] = dict(self._device_states)
+        fleet_state.system["zigbee_by_placement"] = dict(self._by_placement)
+        fleet_state.system["zigbee_placements"] = placements
+        update_fleet_state(fleet_state)
 
     def _update_devices(self, payload: Any) -> None:
         if not isinstance(payload, list):
@@ -98,8 +155,12 @@ class ZigbeeMqttIngest:
                     "ieee_address": item.get("ieee_address") or item.get("ieeeAddress"),
                     "friendly_name": item.get("friendly_name") or item.get("friendlyName"),
                     "type": item.get("type"),
-                    "model": (item.get("definition") or {}).get("model") if isinstance(item.get("definition"), dict) else item.get("model"),
-                    "vendor": (item.get("definition") or {}).get("vendor") if isinstance(item.get("definition"), dict) else item.get("vendor"),
+                    "model": (item.get("definition") or {}).get("model")
+                    if isinstance(item.get("definition"), dict)
+                    else item.get("model"),
+                    "vendor": (item.get("definition") or {}).get("vendor")
+                    if isinstance(item.get("definition"), dict)
+                    else item.get("vendor"),
                     "supported": item.get("supported"),
                     "disabled": item.get("disabled"),
                 }
@@ -126,6 +187,14 @@ def stop_zigbee_ingest() -> None:
 
 def get_zigbee_devices() -> list[dict[str, Any]]:
     return list(_ingest._devices)
+
+
+def get_zigbee_device_states() -> dict[str, dict[str, Any]]:
+    return dict(_ingest._device_states)
+
+
+def get_zigbee_by_placement() -> dict[str, dict[str, Any]]:
+    return dict(_ingest._by_placement)
 
 
 def set_permit_join(enabled: bool, callback: Callable[[bool], None] | None = None) -> None:

@@ -8,6 +8,7 @@ import os
 import time
 from typing import Any
 
+from .api_lock import host_lock
 from .native_api import make_api_client
 from .settings import get_setting, list_inventory, record_history
 
@@ -18,6 +19,7 @@ DEMAND_TO_SEAT: dict[str, str] = {
     "heater_demand": "heater",
     "humidifier_demand": "humidifier",
     "dehumidifier_demand": "dehumidifier",
+    "grow_mat_demand": "heatmat",
     "growmat_demand": "heatmat",
 }
 
@@ -61,32 +63,36 @@ async def _read_hub_demands(hub_row: dict[str, Any]) -> dict[str, bool] | None:
 
     client = make_api_client(host, api_key)
     try:
-        await client.connect(login=True)
-        entities, _services = await client.list_entities_services()
-        global _hub_switch_keys
-        if not _hub_switch_keys:
-            for ent in entities:
-                oid = str(getattr(ent, "object_id", ""))
-                if oid in DEMAND_TO_SEAT and hasattr(ent, "key"):
-                    _hub_switch_keys[oid] = int(ent.key)
+        async with host_lock(host):
+            await client.connect(login=True)
+            entities, _services = await client.list_entities_services()
+            global _hub_switch_keys
+            if not _hub_switch_keys:
+                for ent in entities:
+                    oid = str(getattr(ent, "object_id", ""))
+                    if oid in DEMAND_TO_SEAT and hasattr(ent, "key"):
+                        _hub_switch_keys[oid] = int(ent.key)
 
-        key_to_oid = {v: k for k, v in _hub_switch_keys.items()}
-        live: dict[int, bool] = {}
+            key_to_oid = {v: k for k, v in _hub_switch_keys.items()}
+            live: dict[str, bool] = {}
 
-        def on_state(state: Any) -> None:
-            oid = key_to_oid.get(getattr(state, "key", -1))
-            if oid:
-                live[oid] = bool(getattr(state, "state", False))
+            def on_state(state: Any) -> None:
+                oid = key_to_oid.get(getattr(state, "key", -1))
+                if oid:
+                    on = bool(getattr(state, "state", False))
+                    if isinstance(getattr(state, "state", None), str):
+                        on = str(state.state).lower() in ("on", "true", "1")
+                    live[oid] = on
 
-        unsub = client.subscribe_states(on_state)
-        await asyncio.sleep(0.8)
-        if unsub:
-            unsub()
+            unsub = client.subscribe_states(on_state)
+            await asyncio.sleep(0.8)
+            if unsub:
+                unsub()
 
-        out: dict[str, bool] = {}
-        for oid in DEMAND_TO_SEAT:
-            out[oid] = live.get(oid, False)
-        return out
+            out: dict[str, bool] = {}
+            for oid in DEMAND_TO_SEAT:
+                out[oid] = live.get(oid, False)
+            return out
     except Exception as exc:  # noqa: BLE001
         _logger.debug("hub demand read failed @ %s: %s", host, exc)
         return None
@@ -111,22 +117,23 @@ async def _set_sonoff_relay(seat_id: str, on: bool, inventory: dict[str, dict[st
 
     client = make_api_client(host, api_key)
     try:
-        await client.connect(login=True)
-        global _sonoff_switch_keys
-        if seat_id not in _sonoff_switch_keys:
-            entities, _services = await client.list_entities_services()
-            for ent in entities:
-                if str(getattr(ent, "object_id", "")) == SONOFF_SWITCH_OBJECT and hasattr(ent, "key"):
-                    _sonoff_switch_keys[seat_id] = int(ent.key)
-                    break
-        key = _sonoff_switch_keys.get(seat_id)
-        if key is None:
-            _logger.warning("Sonoff %s missing %s switch entity", seat_id, SONOFF_SWITCH_OBJECT)
-            return
-        client.switch_command(key, on)
-        _relay_commanded[seat_id] = on
-        record_history(seat_id, "relay_on", 1.0 if on else 0.0, time.time())
-        _logger.info("appliance %s main_relay -> %s", seat_id, "ON" if on else "OFF")
+        async with host_lock(host):
+            await client.connect(login=True)
+            global _sonoff_switch_keys
+            if seat_id not in _sonoff_switch_keys:
+                entities, _services = await client.list_entities_services()
+                for ent in entities:
+                    if str(getattr(ent, "object_id", "")) == SONOFF_SWITCH_OBJECT and hasattr(ent, "key"):
+                        _sonoff_switch_keys[seat_id] = int(ent.key)
+                        break
+            key = _sonoff_switch_keys.get(seat_id)
+            if key is None:
+                _logger.warning("Sonoff %s missing %s switch entity", seat_id, SONOFF_SWITCH_OBJECT)
+                return
+            client.switch_command(key, on)
+            _relay_commanded[seat_id] = on
+            record_history(seat_id, "relay_on", 1.0 if on else 0.0, time.time())
+            _logger.info("appliance %s main_relay -> %s", seat_id, "ON" if on else "OFF")
     except Exception as exc:  # noqa: BLE001
         _logger.warning("Sonoff %s @ %s command failed: %s", seat_id, host, exc)
     finally:

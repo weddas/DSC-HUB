@@ -33,6 +33,10 @@ CAL_PREFIX_DEVICE: dict[str, str] = {
     "dsc_cal_cfm_intake_clone": "dsc_cal_cfm_intake_clone",
 }
 
+LIGHT_OFF_LUX = 5.0
+LIGHT_OFF_PAR = 10.0
+NP_INTake_MARGIN = 1.02
+
 RUNTIME_ENTITIES: dict[str, tuple[str, str]] = {
     "sensor.dsc_heater_runtime_today": ("hub", "switch_dsc_hub_heater_demand"),
     "sensor.dsc_humidifier_runtime_today": ("hub", "switch_dsc_hub_humidifier_demand"),
@@ -155,6 +159,91 @@ def _cfm_from_pct(pct: float, nameplate: float, cal_prefix: str, helpers: dict[s
         return round(y0, 1), "curve", "measured_curve"
     val = y0 + (y1 - y0) * (pct - x0) / (x1 - x0)
     return round(val, 1), "curve", "measured_curve"
+
+
+def _light_curve_points() -> list[tuple[float, float, float]]:
+    """Return (dim_pct, lux, par) from sf1000 light_par calibration."""
+    rows = get_calibration("sf1000", "light_par")
+    by_step: dict[str, dict[str, float]] = {}
+    for row in rows:
+        key = str(row.get("step_key", ""))
+        if "_" not in key:
+            continue
+        step, field = key.rsplit("_", 1)
+        try:
+            val = float(row["measured_value"])
+        except (TypeError, ValueError):
+            continue
+        by_step.setdefault(step, {})[field] = val
+    out: list[tuple[float, float, float]] = []
+    for step, fields in by_step.items():
+        try:
+            pct = float(step)
+        except ValueError:
+            continue
+        lux = float(fields.get("lux", 0.0))
+        par = float(fields.get("par", 0.0))
+        out.append((pct, lux, par))
+    out.sort(key=lambda p: p[0])
+    return out
+
+
+def _effective_light_off_pct(helpers: dict[str, Any]) -> tuple[float, str]:
+    """Lowest dim % treated as off from calibrated LUX/PAR curve."""
+    points = _light_curve_points()
+    if points:
+        off_pct = 0.0
+        for pct, lux, par in points:
+            effectively_dark = lux < LIGHT_OFF_LUX and (par <= 0 or par < LIGHT_OFF_PAR)
+            if effectively_dark:
+                off_pct = pct
+            else:
+                break
+        if off_pct > 0:
+            return off_pct, "measured_curve"
+    try:
+        floor = float(
+            helpers.get("number.dsc_hub_sf1000_ramp_floor")
+            or helpers.get("input_number.dsc_hub_sf1000_ramp_floor")
+            or 5
+        )
+    except (TypeError, ValueError):
+        floor = 5.0
+    return max(0.0, floor), "ramp_floor_fallback"
+
+
+def _live_intake_over_exhaust(cfm_values: dict[str, float]) -> bool:
+    exhaust = cfm_values.get("sensor.dsc_cfm_exhaust_out", 0.0) + cfm_values.get(
+        "sensor.dsc_cfm_exhaust_recirc", 0.0
+    )
+    intake = cfm_values.get("sensor.dsc_cfm_intake_main", 0.0) + cfm_values.get(
+        "sensor.dsc_cfm_intake_2x4", 0.0
+    )
+    if exhaust < 0.5:
+        return False
+    return intake > exhaust * NP_INTake_MARGIN
+
+
+def _light_brightness_pct(states: dict[str, dict[str, Any]]) -> float | None:
+    ent = states.get("light.dsc_hub_sf1000_dimmer")
+    if not ent:
+        return None
+    if ent.get("state") != "on":
+        return 0.0
+    attrs = ent.get("attributes") or {}
+    bri = attrs.get("brightness")
+    if bri is not None:
+        try:
+            return round(float(bri) / 255.0 * 100.0, 1)
+        except (TypeError, ValueError):
+            pass
+    pct_attr = attrs.get("percentage")
+    if pct_attr is not None:
+        try:
+            return float(pct_attr)
+        except (TypeError, ValueError):
+            pass
+    return None
 
 
 def _midnight_ts() -> float:
@@ -391,12 +480,40 @@ def build_computed_hass_states(
             "binary_sensor.dsc_grow_mat_ineffective_suspect",
             "binary_sensor.dsc_humidifier_vent_conflict",
             "binary_sensor.dsc_heater_vent_conflict",
+            "binary_sensor.dsc_live_intake_over_exhaust",
         )
         if _control_state(states, eid) == "on"
     )
     _set_entity(states, "sensor.dsc_active_alert_count", alert_count)
 
     emit_dash_entities(states, fleet, set_entity=_set_entity, inventory=inventory)
+
+    off_pct, off_honesty = _effective_light_off_pct(helpers)
+    _set_entity(
+        states,
+        "number.dsc_hub_sf1000_effective_off_pct",
+        off_pct,
+        available=True,
+        attributes={"unit_of_measurement": "%", "honesty": off_honesty},
+    )
+    bri_pct = _light_brightness_pct(states)
+    if bri_pct is not None:
+        _set_entity(
+            states,
+            "binary_sensor.dsc_light_effectively_off",
+            bri_pct <= off_pct,
+            available=True,
+            attributes={"brightness_pct": bri_pct, "threshold_pct": off_pct},
+        )
+
+    np_breach = _live_intake_over_exhaust(cfm_values)
+    _set_entity(states, "binary_sensor.dsc_live_intake_over_exhaust", np_breach, available=hub_live)
+    _set_entity(
+        states,
+        "binary_sensor.dsc_plant_specs_intake_over_exhaust",
+        np_breach,
+        available=hub_live,
+    )
 
     dash_alerts = sum(
         1

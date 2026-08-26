@@ -124,7 +124,7 @@ esphome config dsc-hub.yaml
 esphome config dsc-control.yaml
 esphome config dsc-pot1.yaml
 esphome config dsc-heater.yaml
-esphome config dsc-bridge.yaml
+esphome config dsc-hub.yaml
 ```
 
 ## Flash order (lab USB cutover)

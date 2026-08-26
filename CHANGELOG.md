@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+## Pi appliance — **v7.1.1** (2026-08-26)
+
+- **Panel UI labels** — boot/about strings show `v7.0.0.0` (was hardcoded `v6.0.0.0`); OTA via Pi SSH tunnel.
+- **Panel ingest** — plaintext Native API only (`role=panel` skips Noise key from env).
+- **Appliance driver** — `grow_mat_demand` OID map + per-host API lock on hub/Sonoff sessions.
+- **Computed control** — calibration-driven negative-pressure breach + SF1000 effective-off threshold entities.
+- **Zigbee** — per-device MQTT state + placement map via settings/inventory extras.
+- **Ops closeout** — soak timestamps logged; LIVE acceptance + island/verify scripts green with full AP fleet.
+
 ## Pi appliance — **v7.1.0** (2026-08-26)
 
 - **Bridge retired** — `dsc-bridge*.yaml` archived to `firmware/_history/v4/`; Pi brain appliance driver is the sole Sonoff path.

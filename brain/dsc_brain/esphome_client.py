@@ -103,10 +103,13 @@ class EsphomeIngest:
             if not row.get("in_service"):
                 continue
             host = row.get("host") or os.environ.get(f"DSC_{seat_id.upper()}_HOST")
+            role = row.get("role", "")
             api_key = row.get("api_key") or os.environ.get(f"DSC_{seat_id.upper()}_API_KEY", "")
+            # Panel firmware disables Noise (RAM); plaintext API only.
+            if role == "panel":
+                api_key = row.get("api_key") or ""
             if not host:
                 continue
-            role = row.get("role", "")
             try:
                 readings = await _fetch_device(host, api_key or "", role, seat_id)
                 self._apply_readings(state, seat_id, role, readings)

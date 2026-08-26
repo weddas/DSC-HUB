@@ -1,5 +1,21 @@
 # DSC-HUB releases
 
+## Pi appliance — **v7.1.1** (DSC-Brain island closeout)
+
+| | |
+|---|---|
+| **Brain / SPA** | **7.1.0** brain · surface **7.1.0** |
+| **Expected firmware** | **7.0.0.0** |
+| **Primary UI** | Pi SPA at `http://10.42.0.1:8787` — **Overview** default landing |
+| **Git tag** | `v7.1.1` |
+| **Deploy** | [`services/dsc-hub/pi/deploy-brain.ps1`](services/dsc-hub/pi/deploy-brain.ps1) |
+| **Acceptance** | [`docs/qa/LIVE-ACCEPTANCE-7.1.md`](docs/qa/LIVE-ACCEPTANCE-7.1.md) |
+| **Soak** | [`docs/ops/SOAK-2026-08-26.md`](docs/ops/SOAK-2026-08-26.md) |
+
+Panel label OTA, fleet truth on AP, integrations verified, bridge retired.
+
+---
+
 ## Pi appliance — **v7.1.0** (DSC-Brain island)
 
 | | |

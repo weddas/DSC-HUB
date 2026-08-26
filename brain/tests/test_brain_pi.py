@@ -58,8 +58,8 @@ def test_appliance_demand_map() -> None:
     from dsc_brain.appliance_driver import DEMAND_TO_SEAT
 
     assert DEMAND_TO_SEAT["heater_demand"] == "heater"
-    assert DEMAND_TO_SEAT["growmat_demand"] == "heatmat"
-    assert len(DEMAND_TO_SEAT) == 4
+    assert DEMAND_TO_SEAT["grow_mat_demand"] == "heatmat"
+    assert len(DEMAND_TO_SEAT) == 5
 
 
 def test_fleet_hass_pi_appliance_link() -> None:

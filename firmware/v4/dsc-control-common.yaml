@@ -176,7 +176,7 @@ esphome:
       then:
         - light.turn_off: backlight
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 6.0.0.0 paused — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 7.0.0.0 paused — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
             id(boot_ui_ready) = false;
@@ -195,7 +195,7 @@ esphome:
               lambda: 'return heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL) < 20000;'
             then:
               - lambda: |-
-                  ESP_LOGW("boot", "DSC-CONTROL 6.0.0.0 heap still tight largest=%u — waiting longer",
+                  ESP_LOGW("boot", "DSC-CONTROL 7.0.0.0 heap still tight largest=%u — waiting longer",
                            (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
               - delay: 10s
         - lvgl.page.show: page_boot
@@ -204,7 +204,7 @@ esphome:
             id: boot_paint
             pct: 8
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 6.0.0.0 resume-lite — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 7.0.0.0 resume-lite — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
             id(touch_guard_until) = millis() + 5000;
@@ -299,7 +299,7 @@ esphome:
             id: boot_paint
             pct: 100
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 6.0.0.0 post-lite — free_heap=%u largest=%u hub=%d cfg=%d soil=%d",
+            ESP_LOGI("boot", "DSC-CONTROL 7.0.0.0 post-lite — free_heap=%u largest=%u hub=%d cfg=%d soil=%d",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL),
                      (int) (id(gv_hub_last) != 0), (int) id(gv_cfg_ok), (int) id(gv_soil_ok));
@@ -308,14 +308,14 @@ esphome:
         - lambda: 'lv_obj_clear_flag(id(tabbar), LV_OBJ_FLAG_HIDDEN);'
         - lvgl.page.show: page_pulse
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 6.0.0.0 resume-full — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 7.0.0.0 resume-full — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
             id(touch_guard_until) = millis() + 2000;
         - lvgl.resume:
         - delay: 3s
         - lambda: |-
-            ESP_LOGI("boot", "DSC-CONTROL 6.0.0.0 UI armed — free_heap=%u largest=%u",
+            ESP_LOGI("boot", "DSC-CONTROL 7.0.0.0 UI armed — free_heap=%u largest=%u",
                      (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
                      (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
             id(boot_ui_ready) = true;
@@ -353,10 +353,8 @@ esp32:
       # If 5.1.9 is clearly better, restore true as the fleet default.
       #
       # This CYD is an ESP32-D0WDQ6 rev 3.1. Declaring it drops the
-      # older-silicon compatibility shims from the binary. Kept.
-      minimum_chip_revision: "3.1"
-      # v5.1.8 — size over speed cuts I-cache pressure on a DRAM-tight
-      # LVGL build. loopTask 8 KB is ESPHome's LVGL floor; do not raise.
+      # older-silicon compatibility shims from the binary. Omitted on
+      # Pi ESPHome 2025.12.4 (invalid under advanced); Windows builds OK.
       compiler_optimization: SIZE
       loop_task_stack_size: 8192
     sdkconfig_options:
@@ -2223,7 +2221,7 @@ lvgl:
             y: 158
             text_color: 0x5A6472
         - label:
-            text: "v6.0.0.0"
+            text: "v7.0.0.0"
             text_font: f_small
             align: TOP_MID
             y: 188
@@ -3933,7 +3931,7 @@ lvgl:
                     - lambda: 'id(ui_vpd_editor) = true;'
                     - lvgl.page.show: page_set_vpd
                     - script.execute: refresh_ui
-              - label: {text: "DSC-CONTROL v6.0.0.0  ·  ESP-NOW primary", text_font: f_small, text_color: 0x3A4550, pad_top: 8, pad_bottom: 8}
+              - label: {text: "DSC-CONTROL v7.0.0.0  ·  Pi island", text_font: f_small, text_color: 0x3A4550, pad_top: 8, pad_bottom: 8}
 # ==================================================================
 #  SCRIPTS
 # ==================================================================
