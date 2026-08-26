@@ -33,6 +33,8 @@ Source: `docs/qa/LAYOUT-AUDIT-7.1.md`. Live Brain `192.168.86.48:8787`. No deplo
 
 ## 2026-08-27 — 7.1.2 closure triage
 
+> **Engineering SoT (docs):** [`brain/FLEET-TRUTH.md`](brain/FLEET-TRUTH.md) · [`brain/SETTINGS-OPS.md`](brain/SETTINGS-OPS.md) · [`brain/FLEET-INGEST.md`](brain/FLEET-INGEST.md) · [`ops/SONOFF-FLASH.md`](ops/SONOFF-FLASH.md) · closure [`qa/AUDIT-CLOSURE-7.1.2.md`](qa/AUDIT-CLOSURE-7.1.2.md). Tip `65d4104`.
+
 Verdict pass over open items below (history untouched; line refs point at the original entries). Basis: bridge retired from project, studio WiFi is SoT, live fleet verified 2026-08-26 on 7.0.0.0.
 
 ### retired (superseded — bridge removed / studio WiFi is SoT)

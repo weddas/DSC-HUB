@@ -24,12 +24,22 @@ Raspberry Pi 4 product stack: brain + SPA (`:8787`), optional local CannaLib fal
 | zigbee2mqtt | —    | SkyConnect coordinator                    |
 | esphome   | 6052   | OTA / compile dashboard (AP-only)         |
 
-## Deploy brain to Pi (Windows → DSC-Brain AP)
+## Docs
 
-From repo root when Pi is on `10.42.0.1`:
+- Cutover / honesty: [`docs/ops/DSC-HUB-DOCKER.md`](../../docs/ops/DSC-HUB-DOCKER.md)
+- Fleet truth / Settings: [`docs/brain/FLEET-TRUTH.md`](../../docs/brain/FLEET-TRUTH.md) · [`docs/brain/SETTINGS-OPS.md`](../../docs/brain/SETTINGS-OPS.md)
+- Flash: [`docs/ops/SONOFF-FLASH.md`](../../docs/ops/SONOFF-FLASH.md)
+- Ingest: [`docs/brain/FLEET-INGEST.md`](../../docs/brain/FLEET-INGEST.md)
+
+## Deploy brain to Pi (Windows → DSC-Brain AP / studio LAN)
+
+Default Pi host in scripts: **`192.168.86.48`** (also `dsc-brain.local` / AP `10.42.0.1`).
+
+From repo root:
 
 ```powershell
 services/dsc-hub/pi/deploy-brain.ps1
+# or: services/dsc-hub/pi/deploy-brain.ps1 -PiHost "dsc-brain.local"
 ```
 
 This builds the Pi SPA, uploads brain Python + static, then on the Pi:
@@ -71,8 +81,9 @@ Health: `curl http://localhost:8787/health`
 | Artifact        | Target      |
 |-----------------|-------------|
 | Firmware        | 7.0.0.0     |
-| Brain / SPA     | 7.0.0       |
-| Docker images   | 7.0.0       |
+| Brain / SPA     | 7.1.0 (`index-BoHeNp3o`) |
+| Island packet   | 7.1.2       |
+| Docker images   | 7.0.0 / brain 7.1.0 |
 
 Until island proof succeeds, tree may ship as `7.0.0` with fleet firmware train `7.0.0.0`.
 

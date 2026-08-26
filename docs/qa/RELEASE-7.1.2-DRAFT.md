@@ -40,6 +40,7 @@ Copy into [`CHANGELOG.md`](../../CHANGELOG.md) (Unreleased → **v7.1.2**) and
 | **Verify** | [`verify-brain.ps1`](../../services/dsc-hub/pi/verify-brain.ps1) + [`island-proof.ps1`](../../services/dsc-hub/pi/island-proof.ps1) |
 | **Acceptance** | [`docs/qa/LIVE-ACCEPTANCE-7.1.md`](LIVE-ACCEPTANCE-7.1.md) §7.1.2 |
 | **Closure** | [`docs/qa/AUDIT-CLOSURE-7.1.2.md`](AUDIT-CLOSURE-7.1.2.md) |
+| **Eng SoT** | [`FLEET-TRUTH.md`](../brain/FLEET-TRUTH.md) · [`SETTINGS-OPS.md`](../brain/SETTINGS-OPS.md) · [`FLEET-INGEST.md`](../brain/FLEET-INGEST.md) · [`SONOFF-FLASH.md`](../ops/SONOFF-FLASH.md) |
 | **Soak** | [`docs/ops/SOAK-2026-08-26.md`](../ops/SOAK-2026-08-26.md) |
 
 Themed island SPA, single Live home (Overview), DecisionLayer on all P0 writes, inventory in_service SoT, OTA worker + masked PSK, Zigbee radio-health honesty, 10-station AP heal, appliance driver alias fix, full 7.1 audit closure (49/49 tests, SPA `index-BoHeNp3o.js`).

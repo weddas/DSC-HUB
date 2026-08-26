@@ -49,6 +49,10 @@ flowchart LR
 |---|---|
 | [`SETUP.md`](SETUP.md) | **Product unbox** — SoftAP kit without HA |
 | [`docs/DSC-BRAIN.md`](docs/DSC-BRAIN.md) | Pi offline brain + webserver product shape |
+| [`docs/brain/FLEET-TRUTH.md`](docs/brain/FLEET-TRUTH.md) | in_service SoT · online expiry · history cap |
+| [`docs/brain/SETTINGS-OPS.md`](docs/brain/SETTINGS-OPS.md) | Settings honesty · Zigbee health · write gates |
+| [`docs/ops/DSC-HUB-DOCKER.md`](docs/ops/DSC-HUB-DOCKER.md) | Pi appliance cutover / soak |
+| [`docs/ops/SONOFF-FLASH.md`](docs/ops/SONOFF-FLASH.md) | Sonoff + hub SoftAP flash after bridge retirement |
 | [`docs/HA-SCAFFOLD.md`](docs/HA-SCAFFOLD.md) | HA = lab soak; promote-don't-deepen |
 | [`brain/README.md`](brain/README.md) | Catalog SQLite / Want / API stub (Phase B) |
 | [`INSTALL.md`](INSTALL.md) | Lab HA + fleet bring-up |
