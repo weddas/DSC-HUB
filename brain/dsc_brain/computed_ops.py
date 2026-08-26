@@ -7,6 +7,7 @@ import time
 from typing import Any
 
 from .compose_store import all_helpers, get_helper, get_roster_slots
+from .device_calibration import get_calibration
 from .hub_controls import HUB_FAN_ENTITY_TO_OID
 from .settings import list_history, list_roster
 from .dash_computed import emit_dash_entities
@@ -24,6 +25,13 @@ CFM_SPECS: list[tuple[str, str, str, str]] = [
     ("sensor.dsc_cfm_intake_main", "sensor.dsc_fan_intake_main_pct", "input_number.dsc_cfm_intake_main_max", "dsc_cal_cfm_intake_main"),
     ("sensor.dsc_cfm_intake_2x4", "sensor.dsc_fan_intake_2x4_pct", "input_number.dsc_cfm_intake_clone_max", "dsc_cal_cfm_intake_clone"),
 ]
+
+CAL_PREFIX_DEVICE: dict[str, str] = {
+    "dsc_cal_cfm_out": "dsc_cal_cfm_out",
+    "dsc_cal_cfm_recirc": "dsc_cal_cfm_recirc",
+    "dsc_cal_cfm_intake_main": "dsc_cal_cfm_intake_main",
+    "dsc_cal_cfm_intake_clone": "dsc_cal_cfm_intake_clone",
+}
 
 RUNTIME_ENTITIES: dict[str, tuple[str, str]] = {
     "sensor.dsc_heater_runtime_today": ("hub", "switch_dsc_hub_heater_demand"),
@@ -101,13 +109,32 @@ def _fan_pct_from_controls(controls: dict[str, Any], fan_entity: str) -> float:
         return 0.0
 
 
-def _cfm_from_pct(pct: float, nameplate: float, cal_prefix: str, helpers: dict[str, Any]) -> tuple[float, str, str]:
+def _cal_points_from_storage(cal_prefix: str, helpers: dict[str, Any]) -> list[tuple[float, float]]:
+    """Prefer device_calibration rows, then compose helper curves."""
+    device_id = CAL_PREFIX_DEVICE.get(cal_prefix, cal_prefix)
+    stored = get_calibration(device_id, "fan_cfm")
     points: list[tuple[float, float]] = [(0.0, 0.0)]
-    for step in (25, 50, 75, 100):
-        key = f"input_number.{cal_prefix}_{step}"
-        val = float(helpers.get(key, 0) or 0)
-        if val > 0:
-            points.append((float(step), val))
+    if stored:
+        for row in stored:
+            try:
+                step = float(row["step_key"])
+                val = float(row["measured_value"])
+            except (TypeError, ValueError):
+                continue
+            if val > 0:
+                points.append((step, val))
+    else:
+        for step in (25, 50, 75, 100):
+            key = f"input_number.{cal_prefix}_{step}"
+            val = float(helpers.get(key, 0) or 0)
+            if val > 0:
+                points.append((float(step), val))
+    points.sort(key=lambda p: p[0])
+    return points
+
+
+def _cfm_from_pct(pct: float, nameplate: float, cal_prefix: str, helpers: dict[str, Any]) -> tuple[float, str, str]:
+    points = _cal_points_from_storage(cal_prefix, helpers)
     measured = [v for _, v in points if v > 0]
     if len(measured) < 2:
         return round(pct / 100.0 * nameplate, 1), "linear", "capacity_proxy_nameplate"
@@ -296,7 +323,7 @@ def build_computed_hass_states(
     curve_count = sum(
         1
         for prefix in ("dsc_cal_cfm_out", "dsc_cal_cfm_recirc", "dsc_cal_cfm_intake_main", "dsc_cal_cfm_intake_clone")
-        if sum(1 for p in (25, 50, 75, 100) if float(helpers.get(f"input_number.{prefix}_{p}", 0) or 0) > 0) >= 2
+        if len([v for _, v in _cal_points_from_storage(prefix, helpers) if v > 0]) >= 2
     )
     _set_entity(states, "sensor.dsc_cfm_curves_status", f"{curve_count}/4 curves")
     _set_entity(states, "sensor.dsc_learn_status", "idle" if not cal_active else "cal_active")

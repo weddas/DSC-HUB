@@ -50,6 +50,15 @@ CREATE TABLE IF NOT EXISTS grow_event_log (
   message TEXT NOT NULL,
   ts REAL NOT NULL
 );
+CREATE TABLE IF NOT EXISTS device_calibration (
+  device_id TEXT NOT NULL,
+  cal_type TEXT NOT NULL,
+  step_key TEXT NOT NULL,
+  measured_value REAL NOT NULL,
+  unit TEXT NOT NULL DEFAULT '',
+  created_at REAL NOT NULL,
+  PRIMARY KEY (device_id, cal_type, step_key)
+);
 """
 
 DEFAULT_INVENTORY: list[dict[str, Any]] = [

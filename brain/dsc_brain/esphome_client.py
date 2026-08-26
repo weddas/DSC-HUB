@@ -22,6 +22,7 @@ from .hub_controls import (
     HUB_SWITCH_OID_TO_ENTITY,
     HUB_TEXT_SENSOR_OID_TO_KEY,
 )
+from .api_lock import host_lock
 from .native_api import make_api_client
 from .paths import EXPECTED_FIRMWARE, SURFACE_VERSION
 from .settings import list_inventory, record_history
@@ -194,66 +195,74 @@ class EsphomeIngest:
 async def _fetch_device(host: str, api_key: str, role: str, seat_id: str) -> dict[str, Any]:
     """Connect briefly and read entity states."""
     client = make_api_client(host, api_key)
-    await client.connect(login=True)
-    values: dict[str, Any] = {}
-    fw = EXPECTED_FIRMWARE
-    try:
-        info = await client.device_info()
-        if info and getattr(info, "esphome_version", None):
-            fw = str(info.esphome_version)
-        states: dict[int, Any] = {}
+    async with host_lock(host):
+        await client.connect(login=True)
+        values: dict[str, Any] = {}
+        fw = EXPECTED_FIRMWARE
+        try:
+            info = await client.device_info()
+            if info and getattr(info, "esphome_version", None):
+                fw = str(info.esphome_version)
+            states: dict[int, Any] = {}
 
-        def on_state(state: Any) -> None:
-            states[state.key] = state
+            def on_state(state: Any) -> None:
+                states[state.key] = state
 
-        entities, _services = await client.list_entities_services()
-        key_to_object: dict[int, str] = {}
-        binary_keys: set[int] = set()
-        for ent in entities:
-            if hasattr(ent, "key") and hasattr(ent, "object_id"):
-                oid = str(ent.object_id)
-                key_to_object[int(ent.key)] = oid
-                if oid in HUB_BINARY_OID_TO_ENTITY:
-                    binary_keys.add(int(ent.key))
+            entities, _services = await client.list_entities_services()
+            key_to_object: dict[int, str] = {}
+            binary_keys: set[int] = set()
+            for ent in entities:
+                if hasattr(ent, "key") and hasattr(ent, "object_id"):
+                    oid = str(ent.object_id)
+                    key_to_object[int(ent.key)] = oid
+                    if oid in HUB_BINARY_OID_TO_ENTITY:
+                        binary_keys.add(int(ent.key))
 
-        unsub = client.subscribe_states(on_state)
-        await asyncio.sleep(5.0 if role == "hub" else 3.0)
-        if role == "hub" and binary_keys:
-            missing = binary_keys - set(states.keys())
-            if missing:
-                await asyncio.sleep(3.0)
+            unsub = client.subscribe_states(on_state)
+            await asyncio.sleep(5.0 if role == "hub" else 3.0)
+            if role == "hub" and binary_keys:
+                missing = binary_keys - set(states.keys())
+                if missing:
+                    await asyncio.sleep(3.0)
 
-        if role == "hub":
-            values.update(_hub_sensors_from_states(states, key_to_object))
-            values.update(_hub_text_sensors_from_states(states, key_to_object))
-            values["controls"] = _hub_controls_from_states(states, key_to_object, entities)
-            values["binaries"] = _hub_binaries_from_states(states, key_to_object, entities)
-            finalize_hub_climate(values)
-            hub_fw = values.get("firmware_version")
-            if hub_fw:
-                fw = str(hub_fw).strip()
-        elif role == "pot":
+            if role == "hub":
+                values.update(_hub_sensors_from_states(states, key_to_object))
+                values.update(_hub_text_sensors_from_states(states, key_to_object))
+                values["controls"] = _hub_controls_from_states(states, key_to_object, entities)
+                values["binaries"] = _hub_binaries_from_states(states, key_to_object, entities)
+                finalize_hub_climate(values)
+                hub_fw = values.get("firmware_version")
+                if hub_fw:
+                    fw = str(hub_fw).strip()
+            elif role == "pot":
+                for key, st in states.items():
+                    object_id = key_to_object.get(key, "")
+                    for suffix, field in POT_MAP.items():
+                        if object_id.endswith(suffix) or suffix in object_id:
+                            try:
+                                values[field] = float(st.state)
+                            except (TypeError, ValueError):
+                                values[field] = st.state
+                            break
+
+            # Product firmware stamp from Firmware Version text sensor (all roles).
             for key, st in states.items():
                 object_id = key_to_object.get(key, "")
-                if object_id == "firmware_version":
-                    pot_fw = str(getattr(st, "state", "")).strip()
-                    if pot_fw:
-                        fw = pot_fw
-                for suffix, field in POT_MAP.items():
-                    if object_id.endswith(suffix) or suffix in object_id:
-                        try:
-                            values[field] = float(st.state)
-                        except (TypeError, ValueError):
-                            values[field] = st.state
-                        break
+                if object_id != "firmware_version":
+                    continue
+                product_fw = str(getattr(st, "state", "")).strip()
+                if product_fw:
+                    fw = product_fw
+                    values["firmware_version"] = product_fw
+                break
 
-        if unsub:
-            unsub()
+            if unsub:
+                unsub()
 
-        values["host"] = host
-        values["seat_id"] = seat_id
-    finally:
-        await client.disconnect()
+            values["host"] = host
+            values["seat_id"] = seat_id
+        finally:
+            await client.disconnect()
     return {"firmware": fw, "values": values}
 
 

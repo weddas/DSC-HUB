@@ -6,6 +6,7 @@ import asyncio
 import logging
 from typing import Any
 
+from .api_lock import host_lock
 from .native_api import make_api_client
 from .compose_ops import handle_script
 from .compose_store import set_helper
@@ -131,7 +132,7 @@ async def _ensure_number_keys(host: str, api_key: str, cache_key: str, object_id
 
 
 async def _hub_switch(entity_id: str, on: bool) -> dict[str, Any]:
-    oid = _HUB_SWITCH_ENTITY_TO_OID.get(entity_id)
+    oid = HUB_SWITCH_ENTITY_TO_OID.get(entity_id)
     if not oid:
         raise ValueError(f"unsupported hub switch {entity_id}")
     row = _inventory_row("hub")
@@ -140,21 +141,22 @@ async def _hub_switch(entity_id: str, on: bool) -> dict[str, Any]:
     if not host:
         raise RuntimeError("hub host not configured in inventory")
 
-    keys = await _ensure_switch_keys(host, api_key, "hub", set(_HUB_SWITCH_ENTITY_TO_OID.values()))
+    keys = await _ensure_switch_keys(host, api_key, "hub", set(HUB_SWITCH_ENTITY_TO_OID.values()))
     key = keys.get(oid)
     if key is None:
         raise RuntimeError(f"hub switch {oid} not found")
 
     client = make_api_client(host, api_key)
-    try:
-        await client.connect(login=True)
-        client.switch_command(key, on)
-        return {"entity_id": entity_id, "state": "on" if on else "off"}
-    finally:
+    async with host_lock(host):
         try:
-            await client.disconnect()
-        except Exception:  # noqa: BLE001
-            pass
+            await client.connect(login=True)
+            client.switch_command(key, on)
+            return {"entity_id": entity_id, "state": "on" if on else "off"}
+        finally:
+            try:
+                await client.disconnect()
+            except Exception:  # noqa: BLE001
+                pass
 
 
 async def _sonoff_switch(entity_id: str, on: bool) -> dict[str, Any]:
@@ -175,15 +177,16 @@ async def _sonoff_switch(entity_id: str, on: bool) -> dict[str, Any]:
         raise RuntimeError(f"{seat_id} main_relay not found")
 
     client = make_api_client(host, api_key)
-    try:
-        await client.connect(login=True)
-        client.switch_command(key, on)
-        return {"entity_id": entity_id, "state": "on" if on else "off"}
-    finally:
+    async with host_lock(host):
         try:
-            await client.disconnect()
-        except Exception:  # noqa: BLE001
-            pass
+            await client.connect(login=True)
+            client.switch_command(key, on)
+            return {"entity_id": entity_id, "state": "on" if on else "off"}
+        finally:
+            try:
+                await client.disconnect()
+            except Exception:  # noqa: BLE001
+                pass
 
 
 async def _hub_number(entity_id: str, value: float) -> dict[str, Any]:
@@ -202,15 +205,16 @@ async def _hub_number(entity_id: str, value: float) -> dict[str, Any]:
         raise RuntimeError(f"hub number {oid} not found")
 
     client = make_api_client(host, api_key)
-    try:
-        await client.connect(login=True)
-        client.number_command(key, value)
-        return {"entity_id": entity_id, "state": str(value)}
-    finally:
+    async with host_lock(host):
         try:
-            await client.disconnect()
-        except Exception:  # noqa: BLE001
-            pass
+            await client.connect(login=True)
+            client.number_command(key, value)
+            return {"entity_id": entity_id, "state": str(value)}
+        finally:
+            try:
+                await client.disconnect()
+            except Exception:  # noqa: BLE001
+                pass
 
 
 async def _hub_fan(entity_id: str, percentage: int) -> dict[str, Any]:
@@ -230,15 +234,16 @@ async def _hub_fan(entity_id: str, percentage: int) -> dict[str, Any]:
 
     pct = max(0, min(100, int(percentage)))
     client = make_api_client(host, api_key)
-    try:
-        await client.connect(login=True)
-        client.fan_command(key, state=pct > 0, speed_level=pct)
-        return {"entity_id": entity_id, "state": "on" if pct > 0 else "off", "percentage": pct}
-    finally:
+    async with host_lock(host):
         try:
-            await client.disconnect()
-        except Exception:  # noqa: BLE001
-            pass
+            await client.connect(login=True)
+            client.fan_command(key, state=pct > 0, speed_level=pct)
+            return {"entity_id": entity_id, "state": "on" if pct > 0 else "off", "percentage": pct}
+        finally:
+            try:
+                await client.disconnect()
+            except Exception:  # noqa: BLE001
+                pass
 
 
 async def _hub_light(entity_id: str, on: bool, brightness: int | None = None) -> dict[str, Any]:
@@ -257,18 +262,19 @@ async def _hub_light(entity_id: str, on: bool, brightness: int | None = None) ->
         raise RuntimeError(f"hub light {oid} not found")
 
     client = make_api_client(host, api_key)
-    try:
-        await client.connect(login=True)
-        if on and brightness is not None:
-            client.light_command(key, state=True, brightness=max(0, min(255, brightness)))
-        else:
-            client.light_command(key, state=on)
-        return {"entity_id": entity_id, "state": "on" if on else "off"}
-    finally:
+    async with host_lock(host):
         try:
-            await client.disconnect()
-        except Exception:  # noqa: BLE001
-            pass
+            await client.connect(login=True)
+            if on and brightness is not None:
+                client.light_command(key, state=True, brightness=max(0, min(255, brightness)))
+            else:
+                client.light_command(key, state=on)
+            return {"entity_id": entity_id, "state": "on" if on else "off"}
+        finally:
+            try:
+                await client.disconnect()
+            except Exception:  # noqa: BLE001
+                pass
 
 
 async def _hub_select(entity_id: str, option: str) -> dict[str, Any]:
@@ -287,15 +293,16 @@ async def _hub_select(entity_id: str, option: str) -> dict[str, Any]:
         raise RuntimeError(f"hub select {oid} not found")
 
     client = make_api_client(host, api_key)
-    try:
-        await client.connect(login=True)
-        client.select_command(key, option)
-        return {"entity_id": entity_id, "state": option}
-    finally:
+    async with host_lock(host):
         try:
-            await client.disconnect()
-        except Exception:  # noqa: BLE001
-            pass
+            await client.connect(login=True)
+            client.select_command(key, option)
+            return {"entity_id": entity_id, "state": option}
+        finally:
+            try:
+                await client.disconnect()
+            except Exception:  # noqa: BLE001
+                pass
 
 
 async def call_service_proxy(domain: str, service: str, data: dict[str, Any]) -> dict[str, Any]:
@@ -333,7 +340,7 @@ async def call_service_proxy(domain: str, service: str, data: dict[str, Any]) ->
         raise ValueError(f"unsupported input_boolean {entity_id}")
 
     if domain == "switch":
-        if entity_id in _HUB_SWITCH_ENTITY_TO_OID:
+        if entity_id in HUB_SWITCH_ENTITY_TO_OID:
             if service == "turn_on":
                 on = True
             elif service == "turn_off":

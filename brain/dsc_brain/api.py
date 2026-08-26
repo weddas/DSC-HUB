@@ -1,4 +1,4 @@
-"""DSC Brain API — Pi Release 7.0.0."""
+"""DSC Brain API — Pi Release 7.1.0."""
 
 from __future__ import annotations
 
@@ -41,7 +41,8 @@ from .settings import (
     upsert_roster,
 )
 from .want import resolve_want
-from .zigbee_mqtt import set_permit_join, start_zigbee_ingest, stop_zigbee_ingest
+from .device_calibration import get_calibration, set_calibration_step
+from .zigbee_mqtt import get_zigbee_devices, set_permit_join, start_zigbee_ingest, stop_zigbee_ingest
 
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
 if not STATIC_DIR.exists():
@@ -107,6 +108,17 @@ class PermitJoinBody(BaseModel):
 class EsphomeJobBody(BaseModel):
     seat_id: str
     action: str = "ota"
+
+
+class CalibrationStepBody(BaseModel):
+    step_key: str
+    measured_value: float
+    unit: str = ""
+
+
+class CalibrationWriteBody(BaseModel):
+    cal_type: str = "fan_cfm"
+    steps: list[CalibrationStepBody] = Field(default_factory=list)
 
 
 @asynccontextmanager
@@ -241,6 +253,8 @@ async def control_service(body: ServiceCallBody) -> dict[str, Any]:
         raise HTTPException(400, str(exc)) from exc
     except RuntimeError as exc:
         raise HTTPException(503, str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(503, f"control failed: {exc}") from exc
 
 
 @app.post("/control/demand")
@@ -256,6 +270,8 @@ async def control_demand(body: DemandBody) -> dict[str, Any]:
         raise HTTPException(400, str(exc)) from exc
     except RuntimeError as exc:
         raise HTTPException(503, str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(503, f"demand failed: {exc}") from exc
 
 
 @app.get("/history")
@@ -307,6 +323,39 @@ def zigbee_permit_join(body: PermitJoinBody) -> dict[str, bool]:
     set_permit_join(body.enabled)
     set_setting("zigbee_permit_join", "true" if body.enabled else "false")
     return {"permit_join": body.enabled}
+
+
+@app.get("/settings/zigbee/devices")
+def settings_zigbee_devices() -> dict[str, Any]:
+    return {"devices": get_zigbee_devices()}
+
+
+@app.get("/settings/calibration/{device_id}")
+def settings_calibration_get(
+    device_id: str,
+    cal_type: str | None = Query(None),
+) -> dict[str, Any]:
+    rows = get_calibration(device_id, cal_type)
+    return {"device_id": device_id, "calibrations": rows}
+
+
+@app.post("/settings/calibration/{device_id}")
+def settings_calibration_post(device_id: str, body: CalibrationWriteBody) -> dict[str, Any]:
+    saved: list[dict[str, Any]] = []
+    try:
+        for step in body.steps:
+            saved.append(
+                set_calibration_step(
+                    device_id,
+                    body.cal_type,
+                    step.step_key,
+                    step.measured_value,
+                    step.unit,
+                )
+            )
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    return {"device_id": device_id, "cal_type": body.cal_type, "calibrations": saved}
 
 
 @app.get("/settings/network")
