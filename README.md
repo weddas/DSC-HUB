@@ -6,9 +6,9 @@ Home Assistant is the **lab soak / optional shell**; product destination is a
 **Pi offline brain** + local webserver ([`docs/DSC-BRAIN.md`](docs/DSC-BRAIN.md),
 Notion [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d3407556c)).
 
-**Current release tag:** [**v5.1.0**](https://github.com/weddas/DSC-HUB/releases/tag/v5.1.0)  
-**Live lab train (in tree):** firmware **6.1.0.0** on ESPHome **2026.8.0** · HA surface **7.2.0** · Sync **5.1.3+**  
-**Product kit train:** SoftAP / ESP-NOW shaped (`*-kit.yaml`) — see [`SETUP.md`](SETUP.md). Live lab diverges (studio Wi-Fi + HA bus).
+**Current release tag:** [**v7.1.0**](https://github.com/weddas/DSC-HUB/releases/tag/v7.1.0)  
+**Live Pi island train (in tree):** firmware **7.0.0.0** on ESPHome **2025.12.4** (Pi) / **2026.8.0** (lab) · brain **7.1.0** · HA surface optional soak shell  
+**Product kit train:** SoftAP / ESP-NOW shaped (`*-kit.yaml`) — see [`SETUP.md`](SETUP.md). Pi island is primary (`docs/DSC-BRAIN.md`).
 
 ---
 
@@ -16,10 +16,10 @@ Notion [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d3407556
 
 - **Hub owns climate** — dehumidifier → humidifier → heater → AC → mat ladder
   with reality gates, failsafe, and min-off (HA never drives those safety rails).
-- **Lab live bus: HA Native API** — panel commands and pot soil via Home Assistant
-  on **Digital-Emotions Studio** (2.4 GHz). ESP-NOW stays in tree as **parked**.
-- **ETH01 bridge** — ethernet at `192.168.86.66`; SoftAP `DSC-Anchor` disabled after
-  cutover. Optional Sonoff API client; HA demand followers are primary.
+- **Pi offline brain** — DSC-Brain AP (`10.42.0.1`) + local SPA at `:8787`; HA is lab soak only
+  ([`docs/DSC-BRAIN.md`](docs/DSC-BRAIN.md)).
+- **Lab live bus (optional):** HA Native API on studio LAN when soaking — not required for Pi island.
+- **Bridge retired (7.1)** — former ETH01 `dsc-bridge*.yaml` archived under `firmware/_history/`; Sonoffs follow hub demand via Pi brain.
 - **DSC-HUB Pro** dashboard (`/dsc-hub-pro`) — Home, Climate, Learning, tents,
   Root Zone, Tank, Light, Trends, System.
 - **Build a Plant** (`/dsc-build-plant/build`) — separate composition dashboard
@@ -35,11 +35,8 @@ flowchart LR
   Pots[Pots] -->|Native_API| HA[Home_Assistant]
   Panel[DSC_CONTROL] -->|Native_API| HA
   Hub[Hub_ladder] -->|Native_API| HA
-  Sonoffs[Sonoff_relays] -->|Native_API| HA
-  HA -->|homeassistant_sensors| Hub
-  HA -->|homeassistant_action| Hub
-  HA -->|demand_followers| Sonoffs
-  Bridge[DSC_BRIDGE_eth] -.->|optional_API_client| Sonoffs
+  Sonoffs[Sonoff_relays] -->|ESPHome_API| Brain[Pi_brain_8787]
+  Brain --> Hub
   Hub --> LearnA[PhaseA_EMA] --> LearnB[PhaseB_waits]
   Sync[dsc_hub_sync] --> Pro[dsc-hub-pro]
 ```
@@ -70,20 +67,18 @@ packages / dashboard / www / ESPHome stubs land in `/config`.
 
 ---
 
-## Fleet at 6.1.x (live lab train)
+## Fleet at 7.0.x (Pi island)
 
-| Device | Config | Version | Studio LAN |
+| Device | Config | Version | Pi AP (DSC-Brain) |
 |---|---|---|---|
-| Hub | `dsc-hub.yaml` → v4_0 + fleet-heal (no ESP-NOW include) | **6.1.0.0** | `.180` |
-| Panel | `dsc-control.yaml` → common + `dsc-control-ha-bus.yaml` | **6.1.0.0** | `.177` |
-| Pots 1–4 | `dsc-pot{N}.yaml` → pot-common (Modbus 2026.8) | **6.1.0.0** | `.181` / `.182` / `.183` / `.49` |
-| Bridge | `dsc-bridge.yaml` → ethernet-only | **6.1.0.0** | eth `.66` |
-| Sonoffs | heater / heatmat / humidifier / de-humidifier | **6.1.0.0** | `.50` / `.51` / `.54` / `.184` |
+| Hub | `dsc-hub.yaml` → v4_0 + fleet-heal | **7.0.0.0** | `.10` |
+| Panel | `dsc-control.yaml` → common + `dsc-control-wifi-pi.yaml` | **7.0.0.0** | `.11` |
+| Pots 1–4 | `dsc-pot{N}.yaml` → pot-common | **7.0.0.0** | `.21`–`.24` |
+| Sonoffs | heater / heatmat / humidifier / dehumidifier | **7.0.0.0** | `.50` / `.51` / `.54` / `.55` |
 | Kits | `*-kit.yaml` SoftAP product path | kit train | SoftAP `192.168.4.x` |
-| Sync add-on | `dsc-hub-sync/` | **5.1.3+** | — |
-| HA surface | `sensor.dsc_ha_surface_version` | **7.2.0** | — |
+| Brain SPA | `homeassistant/custom_components/dsc_hub/frontend` | **7.1.0** | `:8787` |
 
-USB flash order (lab cutover): hub → Pot2 canary → pots → Sonoffs → panel → soak → prove OTA → **bridge SoftAP off last**. Living backlog: [`docs/FOLLOWUPS.md`](docs/FOLLOWUPS.md).
+USB flash order (Pi cutover): hub → pots → Sonoffs → panel → soak → prove OTA. Bridge configs retired — see `firmware/_history/v4/dsc-bridge*.yaml`. Living backlog: [`docs/FOLLOWUPS.md`](docs/FOLLOWUPS.md).
 
 ---
 

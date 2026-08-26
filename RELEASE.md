@@ -1,5 +1,21 @@
 # DSC-HUB releases
 
+## Pi appliance — **v7.1.0** (DSC-Brain island)
+
+| | |
+|---|---|
+| **Brain / SPA** | **7.1.0** (`dsc-hub-brain:7.0.0` image tag — bump on next compose pass) |
+| **Expected firmware** | **7.0.0.0** |
+| **Primary UI** | Pi SPA at `http://10.42.0.1:8787` — **Overview** default landing |
+| **Git tag** | `v7.1.0` |
+| **Deploy** | [`services/dsc-hub/pi/deploy-brain.ps1`](services/dsc-hub/pi/deploy-brain.ps1) |
+| **Acceptance** | [`docs/qa/LIVE-ACCEPTANCE-7.1.md`](docs/qa/LIVE-ACCEPTANCE-7.1.md) |
+| **Design audit** | [`docs/qa/DESIGN-AUDIT-7.1.md`](docs/qa/DESIGN-AUDIT-7.1.md) |
+
+Native FleetState: `/fleet`; computed dash at `/fleet/computed`. Bridge retired; appliance driver only.
+
+---
+
 ## Pi appliance — **v7.0.0** (DSC-Brain island)
 
 | | |

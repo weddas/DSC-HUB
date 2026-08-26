@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+## Pi appliance — **v7.1.0** (2026-08-26)
+
+- **Bridge retired** — `dsc-bridge*.yaml` archived to `firmware/_history/v4/`; Pi brain appliance driver is the sole Sonoff path.
+- **Operational Overview** — new default SPA landing at `/live/overview` (Mission tab retained).
+- **HA Dash retheme** — `dsc.css` tokens, gauge/chart palette, animated chart draw-in + transitions.
+- **Calibration framework** — brain `device_calibration` table + API; Fleet → Calibrate fan CFM stepper + light PAR/LUX wizard.
+- **Device management** — Settings inventory cards (IP/MAC/fw/uptime/RSSI), function/placement/capability assignment, Zigbee device list + permit join.
+- **Integrations** — CannaLib API + Ollama URLs in Settings; catalog status `remote_api`.
+- **Fleet truth** — firmware ingest reads `firmware_version` text sensor on all roles; pot1 moisture history gap fixed.
+- **Control path** — per-host ESPHome API lock fixes concurrent ingest/write 500s; demand → relay verified on Pi island.
+- **DSC-Control** — USB flash to `7.0.0.0` at `10.42.0.11`; erase+NVS clear required for DSC-Brain WiFi join.
+- **Ops scripts** — Sonoff fallback/LAN flash helpers, AP diagnostics, `verify-brain` / `island-proof` acceptance.
+
+## Prior unreleased notes (7.0.0 island)
+
 - **SoftAP-local fleet cutover 6.0.0.0** — Hub/Control/Pot1/2/4/Sonoffs SoftAP-only
   STA (`DSC-Anchor` + BSSID pin + SoftAP static IPs); Nest STA removed; SoftAP-down
   recovery = device Fallback AP (Control has no captive_portal — RAM). Fleet Fix
