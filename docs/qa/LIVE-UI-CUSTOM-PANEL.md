@@ -1,4 +1,4 @@
-# LIVE-UI — DSC-HUB custom panel (surface 7.1.1)
+# LIVE-UI — DSC-HUB custom panel (surface 7.1.x)
 
 React + Vite product panel hosted inside Home Assistant (WashData pattern).
 
@@ -8,9 +8,10 @@ React + Vite product panel hosted inside Home Assistant (WashData pattern).
 | Deep routes | Hash routes: `/dsc-hub#/live/mission`, `#/grow/compose`, `#/fleet`, … |
 | Legacy redirects | `#/ops/*`, `#/plant/*`, `#/advanced/*`, `#/system` → Live/Grow/Tune/Fleet |
 | Lovelace fallback | `dsc-hub-pro` YAML — `show_in_sidebar: false` |
-| Surface version | `sensor.dsc_ha_surface_version` **7.1.1** |
+| Surface version | Operator SoT: `sensor.dsc_ha_surface_version` (package tip **7.1.3**; `SURFACE_VERSION` const **7.1.4**; some TSX fallbacks **7.1.1**; panel bundle tag `7.1.5-bar-raise`) |
 | Integration | `homeassistant/custom_components/dsc_hub/` |
 | Enable | `dsc_hub:` in configuration.yaml (see snippet) |
+| Drafts vs ticks | [`LIVE-UI-PANEL-DRAFTS.md`](LIVE-UI-PANEL-DRAFTS.md) — local drafts + DecisionLayer + DSC-only tick debounce |
 
 ## Build
 
@@ -37,6 +38,13 @@ and hard-reload Lovelace/panel.
 Sharper contrast: lifted indigo-slate · **blue/cyan** active chrome · green = live/ON only ·
 amber HELD/stale · Twin leaders + cyan Got markers / cyan intake piping (no dank `#39ff14` brand wash).
 
+## Panel drafts (bar-raise `bc311d5`)
+
+Operator inputs use local drafts so climate `state_changed` bursts do not yank
+caret/slider mid-edit. Compose / Light / Learning confirmations go through
+`DecisionLayer`. Twin hosts call `setUiChrome({ hideHud: true })` so React owns
+chrome. Full runbook + soak: [`LIVE-UI-PANEL-DRAFTS.md`](LIVE-UI-PANEL-DRAFTS.md).
+
 ## Pass 7.1.1 finish gaps (this patch)
 
 - [x] Panel/beat OFF duration chips (`PANEL OFF Xm` / `BEAT OFF Xm`) when dark
@@ -58,7 +66,7 @@ amber HELD/stale · Twin leaders + cyan Got markers / cyan intake piping (no dan
 - [x] Climate hosts airflow-map + allocated CFM honesty
 - [x] Learning shows learn status / CFM alloc vs nameplate
 - [x] Active chrome blue/cyan
-- [x] `sensor.dsc_ha_surface_version` = **7.1.1** (in-tree; live HA after package reload)
+- [x] `sensor.dsc_ha_surface_version` reported in-tree (tip package **7.1.3**; live HA after package reload — do not treat TSX fallbacks as SoT)
 
 ## Pass 7.0 acceptance (still)
 

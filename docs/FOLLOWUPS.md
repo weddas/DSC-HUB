@@ -2123,6 +2123,9 @@ UI/UX pass: one Dash, progressive disclosure (DecisionLayer), unused paid primit
 
 React `/dsc-hub` is the product. Lovelace IIFEs remain as Twin scene host + leftover Lovelace cards.
 
+Ops runbook (drafts / DecisionLayer / tick filter / Twin hideHud soak):
+[`docs/qa/LIVE-UI-PANEL-DRAFTS.md`](qa/LIVE-UI-PANEL-DRAFTS.md).
+
 ### honesty
 A prior note marked waves 1–8 done. That was files/sketches. **Only Wave 0 had been acceptance-tested** (type/select/slider while climate ticks). Later waves are incomplete until soak says otherwise.
 
