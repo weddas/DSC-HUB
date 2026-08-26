@@ -2320,6 +2320,8 @@ Software-closable audit lies + Bug Box items landed **in git working tree**. Liv
 
 The red **THREE.js not loaded — redeploy DSC-HUB bundle** on Twin was not stale HA assets. React `ensureLocalCards` loaded `/local/dsc-the-dash-card.js` alone. That IIFE reads the `THREE` global at `_renderShell` time; the dedicated card is not the fat concat. `ha-sync.sh` also concatenated `vendor/three.min.js` into `DSC-HUB.js` and never published `/config/www/vendor/three.min.js`.
 
+Ops runbook: [`docs/qa/TWIN-THREE-PREREQ.md`](qa/TWIN-THREE-PREREQ.md).
+
 ### done
 
 - Loader now injects `vendor/three.min.js` → `vendor/dsc-dash-fx.js` → dash card, and falls back to the umbrella bundle if the standalone THREE script 404s.

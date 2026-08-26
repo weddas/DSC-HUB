@@ -84,7 +84,18 @@ Without it, popup `tap_action`s silently do nothing — no error is shown.
 | [`dist/dsc-system-map.svg`](../dist/dsc-system-map.svg) | System map artwork |
 | [`dist/dsc-airflow-map-card.js`](../dist/dsc-airflow-map-card.js) | Airflow card standalone source |
 | [`dist/dsc-build-plant-card.js`](../dist/dsc-build-plant-card.js) | Build a Plant standalone |
+| [`dist/vendor/three.min.js`](../dist/vendor/three.min.js) | Standalone Three.js (Twin dedicated IIFE path) |
+| [`dist/vendor/dsc-dash-fx.js`](../dist/vendor/dsc-dash-fx.js) | Optional Dash cinematic FX |
 | [`dist/dsc-catalog/`](../dist/dsc-catalog/) | Slim search indexes (not auto-served by HACS path) |
+
+### Twin / dedicated Dash path
+
+The React panel prefers dedicated `/local/dsc-*-card.js` over the fat umbrella.
+`dsc-the-dash-card` still needs a **`THREE` global** before it renders — the
+dedicated IIFE is not the concat. Sync / `ha-sync.sh` must publish
+`/config/www/vendor/three.min.js` (and preferably `dsc-dash-fx.js`). HACS
+umbrella alone is only the loader fallback. Ops:
+[`docs/qa/TWIN-THREE-PREREQ.md`](../docs/qa/TWIN-THREE-PREREQ.md).
 
 | `homeassistant/www/*` | **Source of truth** — run `scripts/sync-hacs-dist.sh` after edits |
 

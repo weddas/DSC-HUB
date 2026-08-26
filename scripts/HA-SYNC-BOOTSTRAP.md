@@ -86,6 +86,7 @@ export DRY_RUN=1
 | `packages/dsc_v4_*.yaml` | `secrets.yaml` |
 | `dashboards/dsc-hub-v4-dashboard.yaml` + `dsc-build-plant-dashboard.yaml` | `.storage/` |
 | `www/` SVG + **bundled** `dsc-system-map-card.js` (system+airflow+Three+Dash+Build a Plant) | Non-DSC house packages |
+| `www/vendor/three.min.js` + `dsc-dash-fx.js` (Twin dedicated path) | |
 | `www/dsc-catalog/*.json` (Build a Plant typeahead) | Firmware flash / ESPHome Install |
 | ESPHome stubs only if `SYNC_ESPHOME=1` | |
 | | **Cards via HACS** — [`HACS-FRONTEND.md`](HACS-FRONTEND.md) |
@@ -93,5 +94,11 @@ export DRY_RUN=1
 Prefer HACS for Lovelace cards; ha-sync still mirrors `www/` (+ catalog) for
 sites not using HACS. Build a Plant ops:
 [`docs/qa/LIVE-UI-BUILD-A-PLANT.md`](../docs/qa/LIVE-UI-BUILD-A-PLANT.md).
+
+**Twin THREE:** the fat www concat still embeds Three, but React Twin loads the
+dedicated dash IIFE and needs the **standalone**
+`/config/www/vendor/three.min.js` publish (`b965e275`). Gate:
+`python scripts/check_twin_three_prereq.py`. Ops:
+[`docs/qa/TWIN-THREE-PREREQ.md`](../docs/qa/TWIN-THREE-PREREQ.md).
 
 Firmware still: Cursor → push → ESPHome Validate/Install per device.
