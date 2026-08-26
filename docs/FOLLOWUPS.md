@@ -2316,6 +2316,27 @@ Software-closable audit lies + Bug Box items landed **in git working tree**. Liv
 
 ---
 
+## 2026-08-19 — Full-audit / version-completion prompt landed
+
+Trigger: `97d8295` added `docs/AUDIT-COMPLETION-PROMPT.md` (pasteable Cursor Phase 1 audit → Phase 2 plan). Ops runbook: `docs/qa/AUDIT-VERSION-COMPLETION.md`. Prior Phase 1: `docs/AUDIT-2026-08-17.md`.
+
+### done (docs)
+
+- Scan-friendly runbook: tip version re-probe table (surface **7.2.0** / SoftAP-local **6.0.0.0`), Phase 1/2 gates, hard rules, pitfalls
+- Pointers from RELEASE + README Start here; prompt header warns not to trust embedded “last known” versions
+
+### soak
+
+- Next audit chat must re-probe live HA surface vs tip **7.2.0** (Phase 1 still saw **7.1.3 / 7.1.4**)
+- Phase 2 coding still blocked until operator accepts a plan from a fresh Phase 1 artifact
+
+### next-plan
+
+- Prefer merging open docs PRs **#86** CannaLib restart · **#85** Twin THREE · **#84** ESP-NOW park · **#77** VERSION-TRAINS/SoftAP/cannalib pages still thin on master
+- Do not schedule ESP-NOW deepening as default completion work
+
+---
+
 ## 2026-08-17 — Twin THREE.js missing on `/live/twin`
 
 The red **THREE.js not loaded — redeploy DSC-HUB bundle** on Twin was not stale HA assets. React `ensureLocalCards` loaded `/local/dsc-the-dash-card.js` alone. That IIFE reads the `THREE` global at `_renderShell` time; the dedicated card is not the fat concat. `ha-sync.sh` also concatenated `vendor/three.min.js` into `DSC-HUB.js` and never published `/config/www/vendor/three.min.js`.

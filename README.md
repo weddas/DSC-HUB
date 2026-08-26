@@ -54,6 +54,7 @@ flowchart LR
 | [`INSTALL.md`](INSTALL.md) | Lab HA + fleet bring-up |
 | [`UPGRADE.md`](UPGRADE.md) | 5.0 → 5.1 cutover (add-on Update + flash) |
 | [`RELEASE.md`](RELEASE.md) | What’s new, rollout checklist |
+| [`docs/qa/AUDIT-VERSION-COMPLETION.md`](docs/qa/AUDIT-VERSION-COMPLETION.md) | Full audit → version-completion ops |
 | [`scripts/ADDON.md`](scripts/ADDON.md) | Lab HA delivery — HAOS Sync add-on |
 | [`docs/qa/FIRMWARE-QA-5.1.0.md`](docs/qa/FIRMWARE-QA-5.1.0.md) | Firmware Validate / flash QC |
 | [`docs/qa/ADDON-QA-5.1.0.md`](docs/qa/ADDON-QA-5.1.0.md) | Sync add-on QC |
