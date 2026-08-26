@@ -6,8 +6,8 @@ Home Assistant is the **lab soak / optional shell**; product destination is a
 **Pi offline brain** + local webserver ([`docs/DSC-BRAIN.md`](docs/DSC-BRAIN.md),
 Notion [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d3407556c)).
 
-**Current release tag:** [**v7.1.0**](https://github.com/weddas/DSC-HUB/releases/tag/v7.1.0)  
-**Live Pi island train (in tree):** firmware **7.0.0.0** on ESPHome **2025.12.4** (Pi) / **2026.8.0** (lab) · brain **7.1.0** · HA surface optional soak shell  
+**Current release tag:** [**v7.1.0**](https://github.com/weddas/DSC-HUB/releases/tag/v7.1.0) (in-tree closeout **7.1.1** — see [`RELEASE.md`](RELEASE.md))  
+**Live Pi island train (in tree):** firmware **7.0.0.0** on ESPHome **2025.12.4** (Pi) / **2026.8.0** (lab) · brain/SPA **7.1.0** · island acceptance **7.1.1** · HA surface optional soak shell  
 **Product kit train:** SoftAP / ESP-NOW shaped (`*-kit.yaml`) — see [`SETUP.md`](SETUP.md). Pi island is primary (`docs/DSC-BRAIN.md`).
 
 ---
@@ -19,7 +19,7 @@ Notion [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d3407556
 - **Pi offline brain** — DSC-Brain AP (`10.42.0.1`) + local SPA at `:8787`; HA is lab soak only
   ([`docs/DSC-BRAIN.md`](docs/DSC-BRAIN.md)).
 - **Lab live bus (optional):** HA Native API on studio LAN when soaking — not required for Pi island.
-- **Bridge retired (7.1)** — former ETH01 `dsc-bridge*.yaml` archived under `firmware/_history/`; Sonoffs follow hub demand via Pi brain.
+- **Bridge retired (7.1)** — former ETH01 `dsc-bridge*.yaml` archived under `firmware/_history/`; Sonoffs follow hub demand via Pi brain ([`docs/brain/FLEET-INGEST.md`](docs/brain/FLEET-INGEST.md), [`docs/ops/SONOFF-FLASH.md`](docs/ops/SONOFF-FLASH.md)).
 - **DSC-HUB Pro** dashboard (`/dsc-hub-pro`) — Home, Climate, Learning, tents,
   Root Zone, Tank, Light, Trends, System.
 - **Build a Plant** (`/dsc-build-plant/build`) — separate composition dashboard

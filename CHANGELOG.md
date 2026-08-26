@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **Docs** — Fleet ingest + appliance runbook (`docs/brain/FLEET-INGEST.md`); Sonoff flash/AP heal (`docs/ops/SONOFF-FLASH.md`); SETUP/INSTALL/F010 aligned to bridge retirement and 7.1.1 closeout.
+
 ## Pi appliance — **v7.1.1** (2026-08-26)
 
 - **Panel UI labels** — boot/about strings show `v7.0.0.0` (was hardcoded `v6.0.0.0`); OTA via Pi SSH tunnel.

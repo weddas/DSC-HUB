@@ -25,6 +25,9 @@ Notion (canonical Wiki): [Product layers](https://app.notion.com/p/3b52b4cda3708
 | [`INSTALL.md`](../INSTALL.md) | HA lab bring-up (scaffold) |
 | [`docs/HA-SCAFFOLD.md`](HA-SCAFFOLD.md) | Promote-don't-deepen rules |
 | [`docs/brain/`](brain/) | Specs: decision loop, web UI, Pi appliance path |
+| [`docs/ops/DSC-HUB-DOCKER.md`](ops/DSC-HUB-DOCKER.md) | Pi cutover / island proof |
+| [`docs/ops/SONOFF-FLASH.md`](ops/SONOFF-FLASH.md) | Sonoff LAN/fallback OTA after bridge retirement |
+| [`docs/brain/FLEET-INGEST.md`](brain/FLEET-INGEST.md) | Panel plaintext, appliance OID/lock, zigbee placement, computed cal (7.1.1) |
 
 ## Phases
 
@@ -32,3 +35,5 @@ Notion (canonical Wiki): [Product layers](https://app.notion.com/p/3b52b4cda3708
 - **B** Brain core (this tree starts B)
 - **C** Webserver MVP
 - **D** Close loop + Pi appliance driver; HA optional integration
+- **7.0 / 7.1** Pi island product: FleetSnapshot SPA, appliance driver replaces ETH01 bridge, Overview + calibration (7.1)
+- **7.1.1** Island closeout: panel labels/plaintext ingest, `grow_mat_demand` + `host_lock`, calibration in computed paths, zigbee-by-placement

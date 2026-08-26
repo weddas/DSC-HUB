@@ -1,13 +1,14 @@
 # DSC-HUB — standalone SoftAP setup (no Home Assistant)
 
 **Product unbox path.** SoftAP + hub + DSC-CONTROL is the local climate kit.
-Catalogs / Want / advanced UI destination: Pi offline brain — see
-[`docs/DSC-BRAIN.md`](docs/DSC-BRAIN.md) and Notion
-[Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d3407556c).
+**Pi island (current product):** DSC-Brain AP + SPA — see
+[`docs/DSC-BRAIN.md`](docs/DSC-BRAIN.md), [`docs/ops/DSC-HUB-DOCKER.md`](docs/ops/DSC-HUB-DOCKER.md),
+and Notion [Product layers](https://app.notion.com/p/3b52b4cda37081c2bcafc85d3407556c).
 Home Assistant remains an optional lab scaffold ([`INSTALL.md`](INSTALL.md),
 [`docs/HA-SCAFFOLD.md`](docs/HA-SCAFFOLD.md)).
 
-Kit firmware stubs: `dsc-hub-kit.yaml`, `dsc-control-kit.yaml`, `dsc-pot{1..4}-kit.yaml`, `dsc-bridge-kit.yaml`
+Kit firmware stubs: `dsc-hub-kit.yaml`, `dsc-control-kit.yaml`, `dsc-pot{1..4}-kit.yaml`  
+**Bridge kit retired (7.1):** former `dsc-bridge-kit.yaml` lives under `firmware/_history/v4/`.
 
 Lab/bench stubs (`dsc-hub.yaml`, etc.) keep compile-time WiFi and MACs and do **not** include `dsc_fleet_setup` (hub/panel/pots use `${panel_mac}` / `${hub_mac}`). Kit SoftAP builds still load fleet setup.
 
@@ -19,7 +20,9 @@ Lab/bench stubs (`dsc-hub.yaml`, etc.) keep compile-time WiFi and MACs and do **
 - **Optional:** home 2.4 GHz Wi‑Fi (fixed channel strongly recommended — mesh/Nest hops break ESP-NOW)
 - Internet is optional (SNTP clock when available; local-only mode works with Control alone)
 
-Sonoffs need their own flash + home LAN WiFi. After the ETH01 bridge is paired and Ethernet is up, appliances follow hub demand without HA (F-010). Local-only SoftAP without Ethernet cannot reach Sonoffs on a separate LAN.
+**Sonoffs (Pi island):** Flash onto DSC-Brain Wi‑Fi and let the brain appliance driver follow hub demand — [`docs/ops/SONOFF-FLASH.md`](docs/ops/SONOFF-FLASH.md). ETH01 bridge is archived; do not flash `_history` bridge YAML for new installs.
+
+**Sonoffs (legacy SoftAP-only kit without Pi):** Require HA demand followers or a revived bridge path — not the supported 7.1 product cut.
 
 ## Flash order (factory / first kit)
 
@@ -28,8 +31,7 @@ From `firmware/v4/` with a filled `secrets.yaml`:
 1. `esphome run dsc-hub-kit.yaml` (USB)
 2. `esphome run dsc-control-kit.yaml` (USB)
 3. `esphome run dsc-pot1-kit.yaml` … `dsc-pot4-kit.yaml` (USB; POT2 canary first if preferred)
-4. `esphome run dsc-bridge-kit.yaml` (USB · WT32-ETH01 · `flash_mode: dio`)
-5. Sonoffs (heater / heatmat / humidifier / dehumidifier) — home LAN WiFi; flash after bridge
+4. Sonoffs — prefer Pi island helpers in [`docs/ops/SONOFF-FLASH.md`](docs/ops/SONOFF-FLASH.md) (LAN or fallback SoftAP). Skip bridge.
 
 ## Unboxing (end user)
 
@@ -39,12 +41,13 @@ From `firmware/v4/` with a filled `secrets.yaml`:
 4. Choose:
    - **Home Wi‑Fi** — pick/type your 2.4 GHz SSID + password. Prefer a **fixed channel**.
    - **Local only** — fleet stays on the HUB hotspot (no router). Optional: set local time for photoperiod.
+   - **Pi island (preferred product):** migrate STA to `DSC-Brain` after Pi bootstrap — see [`docs/ops/DSC-HUB-DOCKER.md`](docs/ops/DSC-HUB-DOCKER.md).
 5. Tap **Save & continue**. Keep the phone on the setup network.
 6. **Power DSC-CONTROL.** It finds `DSC-Setup-*`, registers with the hub, pulls credentials, reboots onto the target network. It does **not** run a captive portal (CYD RAM).
 7. **Power each pot.** Same automatic join / register / reboot.
-8. **Power the ETH01 bridge** (Ethernet cabled to the LAN). SoftAP **`DSC-Anchor`** comes up on channel 11 (custom SoftAP — ESPHome cannot combine `wifi:` with `ethernet:`). Copy `sensor.dsc_bridge_anchor_bssid` (or serial log BSSID) into hub `bridge_mac` / Lock WiFi prefer. Automatic SoftAP hello to hub `DSC-Setup-*` for the bridge is deferred (F-014).
-9. On the phone portal, confirm Control/pots appear under **Devices**, then tap **Finish setup**. Migrate hub/Control/pots onto **DSC-Anchor** (Lock WiFi prefer Anchor BSSID). Leave Nest as fallback only.
-10. Leave the setup Wi‑Fi. Use Control to run climate; Soil tab shows pot data over ESP-NOW. Sonoffs stay on home LAN; bridge drives them over Ethernet when demand is on.
+8. **Do not power an ETH01 bridge for 7.1 Pi island** — configs are archived. Sonoffs join DSC-Brain; brain drives `main_relay`.
+9. On the phone portal, confirm Control/pots appear under **Devices**, then tap **Finish setup**.
+10. Leave the setup Wi‑Fi. Use Control (or Pi SPA `:8787`) to run climate; Soil tab shows pot data over ESP-NOW when that radio path is in use.
 
 ### Add a device later
 
