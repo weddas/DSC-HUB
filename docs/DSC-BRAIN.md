@@ -24,7 +24,11 @@ Notion (canonical Wiki): [Product layers](https://app.notion.com/p/3b52b4cda3708
 | [`SETUP.md`](../SETUP.md) | SoftAP kit unbox (product path) |
 | [`INSTALL.md`](../INSTALL.md) | HA lab bring-up (scaffold) |
 | [`docs/HA-SCAFFOLD.md`](HA-SCAFFOLD.md) | Promote-don't-deepen rules |
-| [`docs/brain/`](brain/) | Specs: decision loop, web UI, Pi appliance path |
+| [`docs/brain/`](brain/) | Specs: decision loop, web UI, fleet ingest, compose stage |
+| [`docs/ops/DSC-HUB-DOCKER.md`](ops/DSC-HUB-DOCKER.md) | Pi cutover + soak cron |
+| [`docs/ops/SONOFF-FLASH.md`](ops/SONOFF-FLASH.md) | Sonoff/hub OTA after bridge retirement |
+
+**Tip (`ab49dd8` / 7.1.2):** Panel plaintext ingest; appliance discovered-OID demands (no phantom `growmat_demand` OFF); Compose tent + sprout stage; SPA gauge green/amber/red/grey. See [`brain/FLEET-INGEST.md`](brain/FLEET-INGEST.md) · [`brain/WEBUI.md`](brain/WEBUI.md) · [`brain/COMPOSE-STAGE.md`](brain/COMPOSE-STAGE.md).
 
 ## Phases
 

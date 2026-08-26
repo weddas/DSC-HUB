@@ -64,7 +64,7 @@
 - [x] Calibration wired into computed negative-pressure + light-off threshold
 - [x] Zigbee per-device ingest keyed by placement (settings JSON + inventory extra)
 
-**Verdict:** **7.1.1 signed** — full fleet truth on AP; appliance demand→relay verified live on all four Sonoff seats (2026-08-26Z, Manual Takeover method, auto mode restored). Heatmat proof required an appliance-driver alias fix (deployed to Pi, uncommitted — see SOAK-2026-08-26 and FOLLOWUPS).
+**Verdict:** **7.1.1 signed** — full fleet truth on AP; appliance demand→relay verified live on all four Sonoff seats (2026-08-26Z, Manual Takeover method, auto mode restored). Heatmat proof required an appliance-driver alias fix (merged tip `ab49dd8` — see SOAK-2026-08-26, FLEET-INGEST, FOLLOWUPS).
 
 ## 2026-08-27 — Acceptance #5 Add-as-Plant / pot3 centerpiece
 

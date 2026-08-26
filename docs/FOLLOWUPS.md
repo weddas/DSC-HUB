@@ -2517,13 +2517,11 @@ Do **not** reclaim .33/.39/.40/.47/.23 — other hosts answered there at cutover
 
 ---
 
-## 2026-08-27 — appliance driver alias fix — in workspace, not yet committed
+## 2026-08-27 — appliance driver alias fix — MERGED tip `ab49dd8`
 
 - During the heatmat demand→relay proof (acceptance #1), `brain/dsc_brain/appliance_driver.py` `_read_hub_demands` was emitting undiscovered `DEMAND_TO_SEAT` aliases as False; the phantom `growmat_demand` overwrote the real `grow_mat_demand` ON every ~2 s tick → heatmat relay physically chattered ON/OFF (~10 s period, `fleet_history` 16:52–16:55Z). Fixed to only report object_ids discovered on the hub; heatmat then proved cleanly (details in `docs/ops/SOAK-2026-08-26.md`).
-- **Workspace source is present** (confirmed 2026-08-27 closure coordinator): `_read_hub_demands` → `_demands_from_discovered` reports discovered oids only. Live on the Pi since 16:57Z 2026-08-26 (`/opt/dsc-hub-repo/brain` synced, `dsc-hub-brain:7.0.0` rebuilt). This pass did **not** redeploy.
-- Unit test landed: `test_appliance_undiscovered_aliases_not_emitted` in `brain/tests/test_brain_pi.py` (undiscovered aliases must not be emitted as False).
-- Still **not git-committed**. Signoff commit must include `appliance_driver.py` + the test, or a clean-checkout deploy will regress the chatter bug.
-- Changelog/release bullets drafted at [`docs/qa/RELEASE-7.1.2-DRAFT.md`](qa/RELEASE-7.1.2-DRAFT.md) — siblings fill tent selector / sprout-date / pot3 Add-as-Plant / UX pass 2.
+- Helper `_demands_from_discovered` + unit test `test_appliance_undiscovered_aliases_not_emitted` merged in `67e08c5` / tip `ab49dd8`.
+- Ops SoT: [`docs/brain/FLEET-INGEST.md`](brain/FLEET-INGEST.md). Residual: finish T+24h soak-check; copy [`RELEASE-7.1.2-DRAFT.md`](qa/RELEASE-7.1.2-DRAFT.md) into CHANGELOG/RELEASE at tag.
 
 ---
 

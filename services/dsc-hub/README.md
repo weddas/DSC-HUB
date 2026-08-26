@@ -2,6 +2,8 @@
 
 Raspberry Pi 4 product stack: brain + SPA (`:8787`), optional local CannaLib fallback (`:8790`), Mosquitto, Zigbee2MQTT (SkyConnect), ESPHome dashboard (`:6052`).
 
+**Ops SoT (7.1.2 tip):** [`docs/ops/DSC-HUB-DOCKER.md`](../../docs/ops/DSC-HUB-DOCKER.md) · [`docs/ops/SONOFF-FLASH.md`](../../docs/ops/SONOFF-FLASH.md) · [`docs/brain/FLEET-INGEST.md`](../../docs/brain/FLEET-INGEST.md) · SPA [`docs/brain/WEBUI.md`](../../docs/brain/WEBUI.md).
+
 ## Quick start (Pi)
 
 1. Flash **Raspberry Pi OS Lite 64-bit** with Raspberry Pi Imager (hostname `dsc-brain`, SSH key).
