@@ -83,3 +83,65 @@
 | Revert | roster `[]`; pot3 `in_service` false; hub stage/mode restored Off/Custom |
 
 First compose-assign during a post-restart hub reconnect claimed applied but fleet still read Off/Custom. Direct `/control/service` selects then stuck. `apply_clone_tent_automation` now refuses when hub is offline and retries hub selects once.
+
+---
+
+## 7.1.2 — 2026-08-27 closure pass
+
+**Brain URL:** `http://192.168.86.48:8787` (studio LAN) · `http://10.42.0.1:8787` (AP) · `http://dsc-brain.local:8787`  
+**Surface:** 7.1.2  
+**Closure doc:** [`AUDIT-CLOSURE-7.1.2.md`](AUDIT-CLOSURE-7.1.2.md)  
+**Deploy:** [`services/dsc-hub/pi/deploy-brain.ps1`](../../services/dsc-hub/pi/deploy-brain.ps1) → target **`.48`** (not `.30`)  
+**Verify:** [`verify-brain.ps1`](../../services/dsc-hub/pi/verify-brain.ps1) + [`island-proof.ps1`](../../services/dsc-hub/pi/island-proof.ps1)
+
+> **Note:** Live deploy from the agent network timed out 2026-08-27. Rows below marked **PASS (code+test)** are proven in-tree (49/49 brain tests, SPA build `index-BoHeNp3o.js`). Re-run deploy + verify from studio LAN before tagging.
+
+### Environment (7.1.2)
+
+| Item | Status |
+|------|--------|
+| Brain health | `7.1.0` / surface **7.1.2** / expected firmware `7.0.0.0` |
+| Brain IP | **192.168.86.48** (`dsc-brain.local`) — `.30` is a different host |
+| CannaLib | `remote_api` — Settings URL is SoT for Catalog |
+| Ollama | Settings-configured — test warns if form dirty |
+| OTA worker | Brain-side worker in `esphome_jobs.py` — jobs reach terminal states |
+| AP PSK | **Masked** — `GET /settings` returns `ap_psk_set` only, never plaintext |
+| Zigbee | Radio-health gate — coordinator up/down chip; not "empty until paired" |
+
+### Control tests (7.1.2 delta)
+
+| # | Test | Method | Result | Notes |
+|---|------|--------|--------|-------|
+| 1 | Sonoff demand → relay | DecisionLayer + `POST /control/demand` | **PASS** (code+test) | `test_appliance_undiscovered_aliases_not_emitted`; re-verify live post-deploy |
+| 5 | Add-as-Plant / pot3 | Compose on `.48` | **PASS** (2026-08-27) | Prior proof retained — `pot3-fullgrow-step*.png` |
+| 7 | Settings device cards | `/fleet/settings` | **PASS** (code+test) | `control`→`panel` merge; product 7.0.0.0 + ESPHome build shown |
+| 8 | Zigbee permit join | API + Settings chip | **PASS** (code+test) | **Rewritten:** radio health first (`ZB-P0-2`). Permit-join uses `{"time":N}` with auto-expiry (`test_permit_join_expiry_clears_flag`). Empty device list with radio **down** shows **radio down**, not "empty until paired". |
+| 9 | Device assignment | Settings table | **PASS** (code+test) | `function` / `placement` / `capability_max_pct` wired |
+| — | Apply network | DecisionLayer → `POST /settings/network/apply` | **PASS** (code+test) | Restarts `dsc-hub-ap.service`; `max_num_sta=32` + deny file (`test_network_apply`) |
+| — | Queue OTA | Settings + worker | **PASS** (code+test) | `test_esphome_job_queue`; DecisionLayer confirm on queue |
+| — | PSK secrecy | `GET /settings` | **PASS** (code+test) | `test_settings_get_masks_ap_psk` |
+
+### SPA 7.1.2 features
+
+| Feature | Route | Result |
+|---------|-------|--------|
+| Overview default landing | `/live/overview` | **PASS** (code+test) |
+| Single Live home (IA) | chrome | **PASS** (code+test) |
+| DecisionLayer on P0 controls | Climate/Settings/OTA/Lamp | **PASS** (code+test) |
+| Inventory in_service SoT | Settings + Fleet | **PASS** (code+test) |
+| Error boundary | global | **PASS** (code+test) |
+| Theme tokens on `:root` | global CSS | **PASS** (code+test) |
+| Zigbee radio health chip | Settings | **PASS** (code+test) |
+
+### Sign-off (7.1.2)
+
+- [x] Closure audit [`AUDIT-CLOSURE-7.1.2.md`](AUDIT-CLOSURE-7.1.2.md) — 100% Appendix A PASS in-tree
+- [x] Brain tests 49/49
+- [x] SPA build `index-BoHeNp3o.js`
+- [x] PSK masked in `GET /settings`
+- [x] OTA worker + Zigbee permit-join expiry in code
+- [x] Deploy scripts default to `.48`
+- [ ] Live deploy + `verify-brain.ps1` from studio LAN (agent timeout 2026-08-27)
+- [ ] Closure screenshots `docs/qa/screens-7.1.2/closure-*`
+
+**Verdict:** **7.1.2 PASS in-tree** — re-verify live from studio LAN, then tag.

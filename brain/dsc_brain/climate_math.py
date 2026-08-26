@@ -39,3 +39,6 @@ def finalize_hub_climate(values: dict) -> None:
     clone_vpd = compute_vpd_kpa(values.get("clone_temp_c"), values.get("clone_rh_pct"))
     if clone_vpd is not None:
         values["clone_vpd_kpa"] = clone_vpd
+    room_vpd = compute_vpd_kpa(values.get("room_temp_c"), values.get("room_rh_pct"))
+    if room_vpd is not None:
+        values["room_vpd_kpa"] = room_vpd

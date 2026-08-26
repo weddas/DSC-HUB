@@ -161,6 +161,7 @@ export function LiveLightPage() {
               max={24}
               unit="h"
               target={rail4.lightHours ?? hours4}
+              progress
               onClick={() => open("sensor.dsc_lights_on_today_4x8", "4×8 hours today", "numeric")}
             />
             <Kpi label="Want hours" value={fmt(hours4, 0)} unit="h" onClick={() => open("sensor.dsc_expected_light_hours", "4×8 expected hours", "numeric")} />
@@ -212,6 +213,7 @@ export function LiveLightPage() {
               max={24}
               unit="h"
               target={rail2.lightHours ?? hours2}
+              progress
               onClick={() => open("sensor.dsc_lights_on_today_2x4", "2×4 hours today", "numeric")}
             />
             <Kpi label="Want hours" value={fmt(hours2, 0)} unit="h" onClick={() => open("sensor.dsc_clone_expected_light_hours", "2×4 expected hours", "numeric")} />
@@ -222,9 +224,19 @@ export function LiveLightPage() {
               onClick={() => open("light.dsc_hub_sf1000_dimmer", "SF1000", "binary")}
             />
             <div className="dsc-demand-row" style={{ marginTop: 12 }}>
-              <EntityToggle entityId="light.dsc_hub_sf1000_dimmer" label="SF1000" icon="lighting" showBrightness />
-              <EntityToggle entityId="switch.dsc_hub_auto_photoperiod" label="Auto photoperiod" />
-              <EntityToggle entityId="switch.dsc_hub_manual_light_hold" label="Manual light hold" />
+              <EntityToggle
+                confirm={{
+                  title: lightOn ? "Turn off SF1000" : "Turn on SF1000",
+                  body: "Manual lamp control during dark period can stress clones. Confirm only if you mean it.",
+                  confirmLabel: lightOn ? "Turn off" : "Turn on",
+                }}
+                entityId="light.dsc_hub_sf1000_dimmer"
+                label="SF1000"
+                icon="lighting"
+                showBrightness
+              />
+              <EntityToggle confirm entityId="switch.dsc_hub_auto_photoperiod" label="Auto photoperiod" />
+              <EntityToggle confirm entityId="switch.dsc_hub_manual_light_hold" label="Manual light hold" />
             </div>
             <EntitySelect entityId="select.dsc_hub_clone_photoperiod" label="Window source" icon="clone" />
             {independent ? (

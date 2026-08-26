@@ -1,0 +1,6571 @@
+[
+  {
+    "url": "http://192.168.86.48:8787/#/live/overview",
+    "title": "DSC-HUB 7.1.0",
+    "vw": 1280,
+    "vh": 720,
+    "scrollH": 1706,
+    "rootScrollH": 1706,
+    "bodyH": 720,
+    "chrome": {
+      "brand": {
+        "h": 36,
+        "present": true,
+        "top": 16,
+        "bottom": 52
+      },
+      "honesty": {
+        "h": 30,
+        "present": true,
+        "top": 62,
+        "bottom": 92
+      },
+      "primary": {
+        "h": 47,
+        "present": true,
+        "top": 102,
+        "bottom": 149
+      },
+      "secondary": {
+        "h": 42,
+        "present": true,
+        "top": 157,
+        "bottom": 199
+      },
+      "pageHeader": {
+        "h": 63,
+        "present": true,
+        "top": 215,
+        "bottom": 278
+      },
+      "chromeBottom": 199
+    },
+    "chromePx": 199,
+    "contentStart": 278,
+    "wastePct": 28,
+    "headerPlusChromePct": 39,
+    "cards": [
+      {
+        "title": "BANDS",
+        "h": 600,
+        "top": 292,
+        "inFold": true,
+        "foldFrac": 0.7133333333333334,
+        "textLen": 234
+      },
+      {
+        "title": "FAN DUTIES",
+        "h": 91,
+        "top": 892,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 55
+      },
+      {
+        "title": "RUNNING",
+        "h": 88,
+        "top": 983,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 58
+      },
+      {
+        "title": "ROOT & TANK",
+        "h": 269,
+        "top": 1071,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 100
+      },
+      {
+        "title": "GROW LOG",
+        "h": 302,
+        "top": 1340,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 2181
+      }
+    ],
+    "gauges": [
+      {
+        "label": "4\u00d78 T",
+        "value": "",
+        "inFold": true,
+        "empty": true
+      },
+      {
+        "label": "4\u00d78 RH",
+        "value": "",
+        "inFold": true,
+        "empty": true
+      },
+      {
+        "label": "4\u00d78 VPD",
+        "value": "",
+        "inFold": true,
+        "empty": true
+      },
+      {
+        "label": "2\u00d74 T",
+        "value": "",
+        "inFold": true,
+        "empty": true
+      },
+      {
+        "label": "2\u00d74 RH",
+        "value": "",
+        "inFold": true,
+        "empty": true
+      },
+      {
+        "label": "2\u00d74 VPD",
+        "value": "",
+        "inFold": true,
+        "empty": true
+      },
+      {
+        "label": "ROOM T",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "ROOM RH",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "ROOT",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "P1",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "P2",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "P3",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "P4",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      }
+    ],
+    "buttons": [
+      "Climate",
+      "Mission",
+      "All",
+      "4\u00d78",
+      "2\u00d74",
+      "Room",
+      "22.1 \u00b0C 4\u00d78 T",
+      "63.8 % 4\u00d78 RH",
+      "0.96 kPa 4\u00d78 VPD",
+      "23.6 \u00b0C 2\u00d74 T",
+      "63.9 % 2\u00d74 RH",
+      "1.05 kPa 2\u00d74 VPD",
+      "Close",
+      "1h",
+      "6h",
+      "24h",
+      "48h",
+      "Cycle",
+      "Photo"
+    ],
+    "tabs": [
+      {
+        "label": "Live",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "Grow",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Tune",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Fleet",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Overview",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "Mission",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Dash",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Twin",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Climate",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "4\u00d78",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "2\u00d74",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Root",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Light",
+        "active": false,
+        "inFold": true
+      }
+    ],
+    "honesty": "KIT HONEST",
+    "pageH1": "Overview Operational glance \u2014 alerts, area vitals, duties, root strip, grow log. Climate Mission",
+    "slug": "overview",
+    "viewport": "1280",
+    "shot": "space-audit-overview-1280.png"
+  },
+  {
+    "url": "http://192.168.86.48:8787/#/live/mission",
+    "title": "DSC-HUB 7.1.0",
+    "vw": 1280,
+    "vh": 720,
+    "scrollH": 1544,
+    "rootScrollH": 1544,
+    "bodyH": 720,
+    "chrome": {
+      "brand": {
+        "h": 36,
+        "present": true,
+        "top": 16,
+        "bottom": 52
+      },
+      "honesty": {
+        "h": 30,
+        "present": true,
+        "top": 62,
+        "bottom": 92
+      },
+      "primary": {
+        "h": 47,
+        "present": true,
+        "top": 102,
+        "bottom": 149
+      },
+      "secondary": {
+        "h": 42,
+        "present": true,
+        "top": 157,
+        "bottom": 199
+      },
+      "pageHeader": {
+        "h": 63,
+        "present": true,
+        "top": 215,
+        "bottom": 278
+      },
+      "chromeBottom": 199
+    },
+    "chromePx": 199,
+    "contentStart": 278,
+    "wastePct": 28,
+    "headerPlusChromePct": 39,
+    "cards": [
+      {
+        "title": "NEXT",
+        "h": 130,
+        "top": 341,
+        "inFold": true,
+        "foldFrac": 1,
+        "textLen": 69
+      },
+      {
+        "title": "HUB LINK",
+        "h": 88,
+        "top": 485,
+        "inFold": true,
+        "foldFrac": 1,
+        "textLen": 67
+      },
+      {
+        "title": "KIT PULSE",
+        "h": 564,
+        "top": 587,
+        "inFold": true,
+        "foldFrac": 0.23581560283687944,
+        "textLen": 245
+      },
+      {
+        "title": "LUNG CFM",
+        "h": 117,
+        "top": 1165,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 61
+      },
+      {
+        "title": "PLANT SEATS",
+        "h": 91,
+        "top": 1296,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 127
+      },
+      {
+        "title": "FAULTS / ALERTS",
+        "h": 115,
+        "top": 1401,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 45
+      }
+    ],
+    "gauges": [],
+    "buttons": [
+      "Open Twin",
+      "Climate Want",
+      "Search",
+      "Mission settings",
+      "HUB ONLINE",
+      "7 of 11 in service",
+      "PANEL LINKED",
+      "BEAT 703",
+      "All clear",
+      "FLEET OK",
+      "Close",
+      "Climate",
+      "Twin",
+      "4\u00d78",
+      "2\u00d74",
+      "Root",
+      "Light",
+      "Compose",
+      "Fleet",
+      "1h",
+      "6h",
+      "24h",
+      "48h",
+      "Cycle",
+      "Photo"
+    ],
+    "tabs": [
+      {
+        "label": "Live",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "Grow",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Tune",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Fleet",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Overview",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Mission",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "Dash",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Twin",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Climate",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "4\u00d78",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "2\u00d74",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Root",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Light",
+        "active": false,
+        "inFold": true
+      }
+    ],
+    "honesty": "KIT HONEST",
+    "pageH1": "Mission Triage glance \u2014 Next, faults, seats, lung. Command lives on Climate. Open Twin Climate Want",
+    "slug": "mission",
+    "viewport": "1280",
+    "shot": "space-audit-mission-1280.png"
+  },
+  {
+    "url": "http://192.168.86.48:8787/#/live/twin",
+    "title": "DSC-HUB 7.1.0",
+    "vw": 1280,
+    "vh": 720,
+    "scrollH": 2009,
+    "rootScrollH": 2009,
+    "bodyH": 720,
+    "chrome": {
+      "brand": {
+        "h": 36,
+        "present": true,
+        "top": 16,
+        "bottom": 52
+      },
+      "honesty": {
+        "h": 30,
+        "present": true,
+        "top": 62,
+        "bottom": 92
+      },
+      "primary": {
+        "h": 47,
+        "present": true,
+        "top": 102,
+        "bottom": 149
+      },
+      "secondary": {
+        "h": 42,
+        "present": true,
+        "top": 157,
+        "bottom": 199
+      },
+      "pageHeader": {
+        "h": 63,
+        "present": true,
+        "top": 942,
+        "bottom": 1005
+      },
+      "chromeBottom": 199
+    },
+    "chromePx": 199,
+    "contentStart": 1005,
+    "wastePct": 28,
+    "headerPlusChromePct": 140,
+    "cards": [
+      {
+        "title": "CROP SCHEDULER",
+        "h": 336,
+        "top": 1067,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 306
+      },
+      {
+        "title": "AIR PATH",
+        "h": 564,
+        "top": 1417,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 218
+      }
+    ],
+    "gauges": [],
+    "buttons": [
+      "Close",
+      "1h",
+      "6h",
+      "24h",
+      "48h",
+      "Cycle",
+      "Photo"
+    ],
+    "tabs": [
+      {
+        "label": "Live",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "Grow",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Tune",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Fleet",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Overview",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Mission",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Dash",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Twin",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "Climate",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "4\u00d78",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "2\u00d74",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Root",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Light",
+        "active": false,
+        "inFold": true
+      }
+    ],
+    "honesty": "KIT HONEST",
+    "pageH1": "Twin Cinematic digital twin \u2014 pick a pot to open Root seat. Set Climate Want 4\u00d78 cockpit 2\u00d74 cockpit",
+    "slug": "twin",
+    "viewport": "1280",
+    "shot": "space-audit-twin-1280.png"
+  },
+  {
+    "url": "http://192.168.86.48:8787/#/live/climate",
+    "title": "DSC-HUB 7.1.0",
+    "vw": 1280,
+    "vh": 720,
+    "scrollH": 4651,
+    "rootScrollH": 4651,
+    "bodyH": 720,
+    "chrome": {
+      "brand": {
+        "h": 36,
+        "present": true,
+        "top": 16,
+        "bottom": 52
+      },
+      "honesty": {
+        "h": 30,
+        "present": true,
+        "top": 62,
+        "bottom": 92
+      },
+      "primary": {
+        "h": 47,
+        "present": true,
+        "top": 102,
+        "bottom": 149
+      },
+      "secondary": {
+        "h": 42,
+        "present": true,
+        "top": 157,
+        "bottom": 199
+      },
+      "pageHeader": {
+        "h": 63,
+        "present": true,
+        "top": 215,
+        "bottom": 278
+      },
+      "chromeBottom": 199
+    },
+    "chromePx": 199,
+    "contentStart": 278,
+    "wastePct": 28,
+    "headerPlusChromePct": 39,
+    "cards": [
+      {
+        "title": "COMMAND",
+        "h": 366,
+        "top": 349,
+        "inFold": true,
+        "foldFrac": 1,
+        "textLen": 303
+      },
+      {
+        "title": "ROOM UMBRELLA",
+        "h": 527,
+        "top": 729,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 237
+      },
+      {
+        "title": "ROOM \u00b0C",
+        "h": 97,
+        "top": 770,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 14
+      },
+      {
+        "title": "ROOM RH",
+        "h": 97,
+        "top": 875,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 11
+      },
+      {
+        "title": "ROOM VPD",
+        "h": 97,
+        "top": 980,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 13
+      },
+      {
+        "title": "ROOM AH",
+        "h": 120,
+        "top": 1085,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 24
+      },
+      {
+        "title": "TRIAD \u00b7 T / RH / VPD",
+        "h": 678,
+        "top": 1566,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 330
+      },
+      {
+        "title": "TEMPERATURE",
+        "h": 264,
+        "top": 2258,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 152
+      },
+      {
+        "title": "HUMIDITY",
+        "h": 264,
+        "top": 2536,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 135
+      },
+      {
+        "title": "VPD",
+        "h": 264,
+        "top": 2814,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 98
+      },
+      {
+        "title": "AIR PATH",
+        "h": 564,
+        "top": 3092,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 218
+      },
+      {
+        "title": "FAN DUTY %",
+        "h": 498,
+        "top": 3670,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 106
+      },
+      {
+        "title": "EFFICACY \u00b7 BUYING KW BECAUSE THE LUNG COULD NOT TRANSFER",
+        "h": 91,
+        "top": 4182,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 153
+      },
+      {
+        "title": "CROP SCHEDULER",
+        "h": 336,
+        "top": 4287,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 306
+      }
+    ],
+    "gauges": [
+      {
+        "label": "T",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "RH",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "VPD",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "T",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "RH",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "VPD",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "T",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "RH",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "VPD",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      }
+    ],
+    "buttons": [
+      "Climate settings",
+      "All",
+      "4\u00d78",
+      "2\u00d74",
+      "Room",
+      "1h",
+      "6h",
+      "24h",
+      "48h",
+      "Cycle",
+      "Photo",
+      "Kit / Fleet",
+      "FULL AUTO ON",
+      "MASTER TAKEOVER OFF",
+      "FAN OVERRIDE OFF",
+      "HUM INTAKE ROUTING OFF",
+      "RECIRC DE-STRAT OFF",
+      "HEAT OFF",
+      "COOL OFF",
+      "HUM OFF",
+      "DEHUM OFF",
+      "MAT ON",
+      "MISTER OFF",
+      "Full Auto",
+      "Close"
+    ],
+    "tabs": [
+      {
+        "label": "Live",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "Grow",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Tune",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Fleet",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Overview",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Mission",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Dash",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Twin",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Climate",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "4\u00d78",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "2\u00d74",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Root",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Light",
+        "active": false,
+        "inFold": true
+      }
+    ],
+    "honesty": "KIT HONEST",
+    "pageH1": "Climate Room is the umbrella lung. 2\u00d74 and 4\u00d78 are grow rooms and transfer/storage. T, RH, VPD only together.",
+    "slug": "climate",
+    "viewport": "1280",
+    "shot": "space-audit-climate-1280.png"
+  },
+  {
+    "url": "http://192.168.86.48:8787/#/live/4x8",
+    "title": "DSC-HUB 7.1.0",
+    "vw": 1280,
+    "vh": 720,
+    "scrollH": 2889,
+    "rootScrollH": 2889,
+    "bodyH": 720,
+    "chrome": {
+      "brand": {
+        "h": 36,
+        "present": true,
+        "top": 16,
+        "bottom": 52
+      },
+      "honesty": {
+        "h": 30,
+        "present": true,
+        "top": 62,
+        "bottom": 92
+      },
+      "primary": {
+        "h": 47,
+        "present": true,
+        "top": 102,
+        "bottom": 149
+      },
+      "secondary": {
+        "h": 42,
+        "present": true,
+        "top": 157,
+        "bottom": 199
+      },
+      "pageHeader": {
+        "h": 63,
+        "present": true,
+        "top": 877,
+        "bottom": 940
+      },
+      "chromeBottom": 199
+    },
+    "chromePx": 199,
+    "contentStart": 940,
+    "wastePct": 28,
+    "headerPlusChromePct": 131,
+    "cards": [
+      {
+        "title": "CROP SCHEDULER",
+        "h": 336,
+        "top": 1216,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 306
+      },
+      {
+        "title": "AIR PATH",
+        "h": 526,
+        "top": 1566,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 126
+      },
+      {
+        "title": "SEAT STRIP",
+        "h": 115,
+        "top": 2106,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 56
+      },
+      {
+        "title": "TENT HISTORY",
+        "h": 273,
+        "top": 2234,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 168
+      },
+      {
+        "title": "FANS (THIS TENT)",
+        "h": 238,
+        "top": 2521,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 148
+      },
+      {
+        "title": "PLANT LOG (48H)",
+        "h": 88,
+        "top": 2773,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 52
+      }
+    ],
+    "gauges": [],
+    "buttons": [
+      "Close",
+      "1h",
+      "6h",
+      "24h",
+      "48h",
+      "Cycle",
+      "Photo"
+    ],
+    "tabs": [
+      {
+        "label": "Live",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "Grow",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Tune",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Fleet",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Overview",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Mission",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Dash",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Twin",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Climate",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "4\u00d78",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "2\u00d74",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Root",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Light",
+        "active": false,
+        "inFold": true
+      }
+    ],
+    "honesty": "KIT HONEST",
+    "pageH1": "4\u00d78 tent Tent cockpit \u2014 0 seat(s). Only the 4\u00d78 house in Twin. Cascade-in is a port stub from 2\u00d74, not a second tent. Both tents Climate Want",
+    "slug": "4x8",
+    "viewport": "1280",
+    "shot": "space-audit-4x8-1280.png"
+  },
+  {
+    "url": "http://192.168.86.48:8787/#/live/2x4?tent=clone",
+    "title": "DSC-HUB 7.1.0",
+    "vw": 1280,
+    "vh": 720,
+    "scrollH": 2935,
+    "rootScrollH": 2935,
+    "bodyH": 720,
+    "chrome": {
+      "brand": {
+        "h": 36,
+        "present": true,
+        "top": 16,
+        "bottom": 52
+      },
+      "honesty": {
+        "h": 30,
+        "present": true,
+        "top": 62,
+        "bottom": 92
+      },
+      "primary": {
+        "h": 47,
+        "present": true,
+        "top": 102,
+        "bottom": 149
+      },
+      "secondary": {
+        "h": 42,
+        "present": true,
+        "top": 157,
+        "bottom": 199
+      },
+      "pageHeader": {
+        "h": 63,
+        "present": true,
+        "top": 942,
+        "bottom": 1005
+      },
+      "chromeBottom": 199
+    },
+    "chromePx": 199,
+    "contentStart": 1005,
+    "wastePct": 28,
+    "headerPlusChromePct": 140,
+    "cards": [
+      {
+        "title": "CROP SCHEDULER",
+        "h": 336,
+        "top": 1281,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 306
+      },
+      {
+        "title": "AIR PATH",
+        "h": 526,
+        "top": 1631,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 96
+      },
+      {
+        "title": "SEAT STRIP",
+        "h": 91,
+        "top": 2171,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 47
+      },
+      {
+        "title": "TENT HISTORY",
+        "h": 273,
+        "top": 2276,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 168
+      },
+      {
+        "title": "FANS (THIS TENT)",
+        "h": 242,
+        "top": 2563,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 106
+      },
+      {
+        "title": "PLANT LOG (48H)",
+        "h": 88,
+        "top": 2819,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 52
+      }
+    ],
+    "gauges": [],
+    "buttons": [
+      "Close",
+      "1h",
+      "6h",
+      "24h",
+      "48h",
+      "Cycle",
+      "Photo"
+    ],
+    "tabs": [
+      {
+        "label": "Live",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "Grow",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Tune",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Fleet",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Overview",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Mission",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Dash",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Twin",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Climate",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "4\u00d78",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "2\u00d74",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "Root",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Light",
+        "active": false,
+        "inFold": true
+      }
+    ],
+    "honesty": "KIT HONEST",
+    "pageH1": "2\u00d74 tent Tent cockpit \u2014 1 seat(s). Only the 2\u00d74 house in Twin. Cascade-out is a port stub to 4\u00d78. Both tents Climate Want",
+    "slug": "2x4",
+    "viewport": "1280",
+    "shot": "space-audit-2x4-1280.png"
+  },
+  {
+    "url": "http://192.168.86.48:8787/#/live/root",
+    "title": "DSC-HUB 7.1.0",
+    "vw": 1280,
+    "vh": 720,
+    "scrollH": 4059,
+    "rootScrollH": 4059,
+    "bodyH": 720,
+    "chrome": {
+      "brand": {
+        "h": 36,
+        "present": true,
+        "top": 16,
+        "bottom": 52
+      },
+      "honesty": {
+        "h": 30,
+        "present": true,
+        "top": 62,
+        "bottom": 92
+      },
+      "primary": {
+        "h": 47,
+        "present": true,
+        "top": 102,
+        "bottom": 149
+      },
+      "secondary": {
+        "h": 42,
+        "present": true,
+        "top": 157,
+        "bottom": 199
+      },
+      "pageHeader": {
+        "h": 63,
+        "present": true,
+        "top": 215,
+        "bottom": 278
+      },
+      "chromeBottom": 199
+    },
+    "chromePx": 199,
+    "contentStart": 278,
+    "wastePct": 28,
+    "headerPlusChromePct": 39,
+    "cards": [
+      {
+        "title": "COLDEST ROOT",
+        "h": 97,
+        "top": 292,
+        "inFold": true,
+        "foldFrac": 1,
+        "textLen": 19
+      },
+      {
+        "title": "HEAT MAT TODAY",
+        "h": 97,
+        "top": 292,
+        "inFold": true,
+        "foldFrac": 1,
+        "textLen": 19
+      },
+      {
+        "title": "NOTES",
+        "h": 121,
+        "top": 292,
+        "inFold": true,
+        "foldFrac": 1,
+        "textLen": 117
+      },
+      {
+        "title": "POT 1",
+        "h": 810,
+        "top": 494,
+        "inFold": true,
+        "foldFrac": 0.27901234567901234,
+        "textLen": 108
+      },
+      {
+        "title": "POT 2",
+        "h": 810,
+        "top": 1367,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 115
+      },
+      {
+        "title": "POT 3",
+        "h": 810,
+        "top": 2240,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 125
+      },
+      {
+        "title": "POT 4",
+        "h": 810,
+        "top": 3113,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 125
+      }
+    ],
+    "gauges": [
+      {
+        "label": "MOISTURE",
+        "value": "",
+        "inFold": true,
+        "empty": true
+      },
+      {
+        "label": "SOIL \u00b0C",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "DRYBACK",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "EC",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "PH",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "MOISTURE",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "SOIL \u00b0C",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "DRYBACK",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "EC",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "PH",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "MOISTURE",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "SOIL \u00b0C",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "DRYBACK",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "EC",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "PH",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "MOISTURE",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "SOIL \u00b0C",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "DRYBACK",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "EC",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "PH",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      }
+    ],
+    "buttons": [
+      "COLDEST ROOT 18.4\u00b0C",
+      "HEAT MAT TODAY 4.0h",
+      "HEAT MAT 24H 0 CYCLES \u00b7 LAST 06:43 \u00b7 0.0H ON",
+      "21.9 % MOISTURE",
+      "Close",
+      "1h",
+      "6h",
+      "24h",
+      "48h",
+      "Cycle",
+      "Photo"
+    ],
+    "tabs": [
+      {
+        "label": "Live",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "Grow",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Tune",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Fleet",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Overview",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Mission",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Dash",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Twin",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Climate",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "4\u00d78",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "2\u00d74",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Root",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "Light",
+        "active": false,
+        "inFold": true
+      }
+    ],
+    "honesty": "KIT HONEST",
+    "pageH1": "Root 4 of 4 pots in service. Pots without sensors show no data.",
+    "slug": "root",
+    "viewport": "1280",
+    "shot": "space-audit-root-1280.png"
+  },
+  {
+    "url": "http://192.168.86.48:8787/#/live/light",
+    "title": "DSC-HUB 7.1.0",
+    "vw": 1280,
+    "vh": 720,
+    "scrollH": 1458,
+    "rootScrollH": 1458,
+    "bodyH": 720,
+    "chrome": {
+      "brand": {
+        "h": 36,
+        "present": true,
+        "top": 16,
+        "bottom": 52
+      },
+      "honesty": {
+        "h": 30,
+        "present": true,
+        "top": 62,
+        "bottom": 92
+      },
+      "primary": {
+        "h": 47,
+        "present": true,
+        "top": 102,
+        "bottom": 149
+      },
+      "secondary": {
+        "h": 42,
+        "present": true,
+        "top": 157,
+        "bottom": 199
+      },
+      "pageHeader": {
+        "h": 63,
+        "present": true,
+        "top": 215,
+        "bottom": 278
+      },
+      "chromeBottom": 199
+    },
+    "chromePx": 199,
+    "contentStart": 278,
+    "wastePct": 28,
+    "headerPlusChromePct": 39,
+    "cards": [
+      {
+        "title": "4\u00d78 LIGHT",
+        "h": 467,
+        "top": 341,
+        "inFold": true,
+        "foldFrac": 0.8115631691648822,
+        "textLen": 265
+      },
+      {
+        "title": "WANT HOURS",
+        "h": 97,
+        "top": 558,
+        "inFold": true,
+        "foldFrac": 1,
+        "textLen": 13
+      },
+      {
+        "title": "2\u00d74 LIGHT",
+        "h": 605,
+        "top": 341,
+        "inFold": true,
+        "foldFrac": 0.6264462809917355,
+        "textLen": 262
+      },
+      {
+        "title": "WANT HOURS",
+        "h": 97,
+        "top": 542,
+        "inFold": true,
+        "foldFrac": 1,
+        "textLen": 14
+      },
+      {
+        "title": "DEVIATION TODAY",
+        "h": 120,
+        "top": 960,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 38
+      },
+      {
+        "title": "CROP SCHEDULER",
+        "h": 336,
+        "top": 1094,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 306
+      }
+    ],
+    "gauges": [
+      {
+        "label": "GOT / WANT H",
+        "value": "",
+        "inFold": true,
+        "empty": true
+      },
+      {
+        "label": "GOT / WANT H",
+        "value": "",
+        "inFold": true,
+        "empty": true
+      }
+    ],
+    "buttons": [
+      "Climate Want",
+      "Dark period OK",
+      "Next \u2014",
+      "WINDOW OPEN",
+      "no plant/stage rail",
+      "0.00 h GOT / WANT H",
+      "WANT HOURS 0h",
+      "4\u00d78 WINDOW 24H 0 CYCLES \u00b7 LAST 06:43 \u00b7 0.0H ON",
+      "SF1000 ON",
+      "WANT HOURS 18h",
+      "SF1000 24H 0 CYCLES \u00b7 LAST 06:43 \u00b7 0.0H ON",
+      "SF1000 0%",
+      "AUTO PHOTOPERIOD ON",
+      "MANUAL LIGHT HOLD OFF",
+      "Close",
+      "1h",
+      "6h",
+      "24h",
+      "48h",
+      "Cycle",
+      "Photo"
+    ],
+    "tabs": [
+      {
+        "label": "Live",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "Grow",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Tune",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Fleet",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Overview",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Mission",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Dash",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Twin",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Climate",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "4\u00d78",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "2\u00d74",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Root",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Light",
+        "active": true,
+        "inFold": true
+      }
+    ],
+    "honesty": "KIT HONEST",
+    "pageH1": "Light Photoperiod desk \u2014 equal 4\u00d78 / 2\u00d74 cards. 4\u00d78 Got is the window until a GPIO lamp exists. Climate Want",
+    "slug": "light",
+    "viewport": "1280",
+    "shot": "space-audit-light-1280.png"
+  },
+  {
+    "url": "http://192.168.86.48:8787/#/grow/compose",
+    "title": "DSC-HUB 7.1.0",
+    "vw": 1280,
+    "vh": 720,
+    "scrollH": 1560,
+    "rootScrollH": 1560,
+    "bodyH": 720,
+    "chrome": {
+      "brand": {
+        "h": 36,
+        "present": true,
+        "top": 16,
+        "bottom": 52
+      },
+      "honesty": {
+        "h": 30,
+        "present": true,
+        "top": 62,
+        "bottom": 92
+      },
+      "primary": {
+        "h": 47,
+        "present": true,
+        "top": 102,
+        "bottom": 149
+      },
+      "secondary": {
+        "h": 42,
+        "present": true,
+        "top": 157,
+        "bottom": 199
+      },
+      "pageHeader": {
+        "h": 63,
+        "present": true,
+        "top": 215,
+        "bottom": 278
+      },
+      "chromeBottom": 199
+    },
+    "chromePx": 199,
+    "contentStart": 278,
+    "wastePct": 28,
+    "headerPlusChromePct": 39,
+    "cards": [
+      {
+        "title": "STRAIN",
+        "h": 286,
+        "top": 310,
+        "inFold": true,
+        "foldFrac": 1,
+        "textLen": 120
+      },
+      {
+        "title": "VESSEL + MIX",
+        "h": 448,
+        "top": 310,
+        "inFold": true,
+        "foldFrac": 0.914795704922605,
+        "textLen": 273
+      },
+      {
+        "title": "NUTRITION",
+        "h": 760,
+        "top": 772,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 252
+      },
+      {
+        "title": "LIGHT + ASSIGN",
+        "h": 388,
+        "top": 772,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 235
+      }
+    ],
+    "gauges": [],
+    "buttons": [
+      "Open Roster / Seat",
+      "Browse Catalog",
+      "Northern Lights",
+      "20L Generic Fabric Grow Bag",
+      "Remainder",
+      "Lock",
+      "Medium search",
+      "Close",
+      "1h",
+      "6h",
+      "24h",
+      "48h",
+      "Cycle",
+      "Photo"
+    ],
+    "tabs": [
+      {
+        "label": "Live",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Grow",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "Tune",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Fleet",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Compose",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "Research",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Roster",
+        "active": false,
+        "inFold": true
+      }
+    ],
+    "honesty": "KIT HONEST",
+    "pageH1": "Compose Build soil blend, roster commit, and Want handoff. Open Roster / Seat Browse Catalog",
+    "slug": "compose",
+    "viewport": "1280",
+    "shot": "space-audit-compose-1280.png"
+  },
+  {
+    "url": "http://192.168.86.48:8787/#/grow/research",
+    "title": "DSC-HUB 7.1.0",
+    "vw": 1280,
+    "vh": 720,
+    "scrollH": 720,
+    "rootScrollH": 720,
+    "bodyH": 720,
+    "chrome": {
+      "brand": {
+        "h": 36,
+        "present": true,
+        "top": 16,
+        "bottom": 52
+      },
+      "honesty": {
+        "h": 30,
+        "present": true,
+        "top": 62,
+        "bottom": 92
+      },
+      "primary": {
+        "h": 47,
+        "present": true,
+        "top": 102,
+        "bottom": 149
+      },
+      "secondary": {
+        "h": 42,
+        "present": true,
+        "top": 157,
+        "bottom": 199
+      },
+      "pageHeader": {
+        "h": 63,
+        "present": true,
+        "top": 215,
+        "bottom": 278
+      },
+      "chromeBottom": 199
+    },
+    "chromePx": 199,
+    "contentStart": 278,
+    "wastePct": 28,
+    "headerPlusChromePct": 39,
+    "cards": [
+      {
+        "title": "BROWSE",
+        "h": 162,
+        "top": 357,
+        "inFold": true,
+        "foldFrac": 1,
+        "textLen": 28
+      },
+      {
+        "title": "DETAIL",
+        "h": 109,
+        "top": 357,
+        "inFold": true,
+        "foldFrac": 1,
+        "textLen": 71
+      }
+    ],
+    "gauges": [],
+    "buttons": [
+      "Use in Compose",
+      "Open Seat",
+      "Strains",
+      "Mediums",
+      "Nutrients",
+      "Lights",
+      "Close",
+      "1h",
+      "6h",
+      "24h",
+      "48h",
+      "Cycle",
+      "Photo"
+    ],
+    "tabs": [
+      {
+        "label": "Live",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Grow",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "Tune",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Fleet",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Compose",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Research",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "Roster",
+        "active": false,
+        "inFold": true
+      }
+    ],
+    "honesty": "KIT HONEST",
+    "pageH1": "Research Live CannaLib catalog \u2014 strains, mediums, nutrients, and lights. Use in Compose Open Seat",
+    "slug": "research",
+    "viewport": "1280",
+    "shot": "space-audit-research-1280.png"
+  },
+  {
+    "url": "http://192.168.86.48:8787/#/grow/roster",
+    "title": "DSC-HUB 7.1.0",
+    "vw": 1280,
+    "vh": 720,
+    "scrollH": 1134,
+    "rootScrollH": 1134,
+    "bodyH": 720,
+    "chrome": {
+      "brand": {
+        "h": 36,
+        "present": true,
+        "top": 16,
+        "bottom": 52
+      },
+      "honesty": {
+        "h": 30,
+        "present": true,
+        "top": 62,
+        "bottom": 92
+      },
+      "primary": {
+        "h": 47,
+        "present": true,
+        "top": 102,
+        "bottom": 149
+      },
+      "secondary": {
+        "h": 42,
+        "present": true,
+        "top": 157,
+        "bottom": 199
+      },
+      "pageHeader": {
+        "h": 63,
+        "present": true,
+        "top": 215,
+        "bottom": 278
+      },
+      "chromeBottom": 199
+    },
+    "chromePx": 199,
+    "contentStart": 278,
+    "wastePct": 28,
+    "headerPlusChromePct": 39,
+    "cards": [
+      {
+        "title": "CROP SCHEDULER",
+        "h": 336,
+        "top": 292,
+        "inFold": true,
+        "foldFrac": 1,
+        "textLen": 306
+      },
+      {
+        "title": "ROSTER",
+        "h": 464,
+        "top": 642,
+        "inFold": true,
+        "foldFrac": 0.16810344827586207,
+        "textLen": 261
+      }
+    ],
+    "gauges": [],
+    "buttons": [
+      "Use in Compose",
+      "P1 \u2014 2\u00d74 W\u2014 \u00b7 \u2014 \u00b7 \u2014 \u00b7 Need \u2014",
+      "P2 \u2014 UNASSIGNED W\u2014 \u00b7 \u2014 \u00b7 \u2014 \u00b7 Need \u2014",
+      "P3 \u2014 UNASSIGNED W\u2014 \u00b7 \u2014 \u00b7 \u2014 \u00b7 Need \u2014",
+      "P4 \u2014 UNASSIGNED W\u2014 \u00b7 \u2014 \u00b7 \u2014 \u00b7 Need \u2014",
+      "Close",
+      "1h",
+      "6h",
+      "24h",
+      "48h",
+      "Cycle",
+      "Photo"
+    ],
+    "tabs": [
+      {
+        "label": "Live",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Grow",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "Tune",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Fleet",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Compose",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Research",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Roster",
+        "active": true,
+        "inFold": true
+      }
+    ],
+    "honesty": "KIT HONEST",
+    "pageH1": "Roster Seats \u2014 open a row for Plant Seat drawer. Nutrient mix lives in Compose. Use in Compose",
+    "slug": "roster",
+    "viewport": "1280",
+    "shot": "space-audit-roster-1280.png"
+  },
+  {
+    "url": "http://192.168.86.48:8787/#/tune/learning",
+    "title": "DSC-HUB 7.1.0",
+    "vw": 1280,
+    "vh": 720,
+    "scrollH": 816,
+    "rootScrollH": 816,
+    "bodyH": 720,
+    "chrome": {
+      "brand": {
+        "h": 36,
+        "present": true,
+        "top": 16,
+        "bottom": 52
+      },
+      "honesty": {
+        "h": 30,
+        "present": true,
+        "top": 62,
+        "bottom": 92
+      },
+      "primary": {
+        "h": 47,
+        "present": true,
+        "top": 102,
+        "bottom": 149
+      },
+      "secondary": {
+        "h": 42,
+        "present": true,
+        "top": 157,
+        "bottom": 199
+      },
+      "pageHeader": {
+        "h": 63,
+        "present": true,
+        "top": 215,
+        "bottom": 278
+      },
+      "chromeBottom": 199
+    },
+    "chromePx": 199,
+    "contentStart": 278,
+    "wastePct": 28,
+    "headerPlusChromePct": 39,
+    "cards": [
+      {
+        "title": "ANEMOMETER / PPFD CAL",
+        "h": 167,
+        "top": 292,
+        "inFold": true,
+        "foldFrac": 1,
+        "textLen": 200
+      },
+      {
+        "title": "CLIMATE LEARN (PHASE A/B)",
+        "h": 157,
+        "top": 459,
+        "inFold": true,
+        "foldFrac": 1,
+        "textLen": 281
+      },
+      {
+        "title": "KIT / IN SERVICE",
+        "h": 158,
+        "top": 630,
+        "inFold": true,
+        "foldFrac": 0.569620253164557,
+        "textLen": 47
+      }
+    ],
+    "gauges": [],
+    "buttons": [
+      "Open gate",
+      "Sample points",
+      "Finish session",
+      "Stored curves",
+      "Learn enable",
+      "AC IN SERVICE \u2014",
+      "CLONE MISTER \u2014",
+      "Close",
+      "1h",
+      "6h",
+      "24h",
+      "48h",
+      "Cycle",
+      "Photo"
+    ],
+    "tabs": [
+      {
+        "label": "Live",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Grow",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Tune",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "Fleet",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Learning",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "Analytics",
+        "active": false,
+        "inFold": true
+      }
+    ],
+    "honesty": "KIT HONEST",
+    "pageH1": "Learning Measure fan output, review the sample, then accept it into the curve.",
+    "slug": "learning",
+    "viewport": "1280",
+    "shot": "space-audit-learning-1280.png"
+  },
+  {
+    "url": "http://192.168.86.48:8787/#/tune/analytics",
+    "title": "DSC-HUB 7.1.0",
+    "vw": 1280,
+    "vh": 720,
+    "scrollH": 927,
+    "rootScrollH": 927,
+    "bodyH": 720,
+    "chrome": {
+      "brand": {
+        "h": 36,
+        "present": true,
+        "top": 16,
+        "bottom": 52
+      },
+      "honesty": {
+        "h": 30,
+        "present": true,
+        "top": 62,
+        "bottom": 92
+      },
+      "primary": {
+        "h": 47,
+        "present": true,
+        "top": 102,
+        "bottom": 149
+      },
+      "secondary": {
+        "h": 42,
+        "present": true,
+        "top": 157,
+        "bottom": 199
+      },
+      "pageHeader": {
+        "h": 63,
+        "present": true,
+        "top": 215,
+        "bottom": 278
+      },
+      "chromeBottom": 199
+    },
+    "chromePx": 199,
+    "contentStart": 278,
+    "wastePct": 28,
+    "headerPlusChromePct": 39,
+    "cards": [
+      {
+        "title": "TENT T + RH (SECONDARY)",
+        "h": 282,
+        "top": 339,
+        "inFold": true,
+        "foldFrac": 1,
+        "textLen": 208
+      },
+      {
+        "title": "ROOT PACK \u2014 MOISTURE (IN SERVICE)",
+        "h": 264,
+        "top": 635,
+        "inFold": true,
+        "foldFrac": 0.32196969696969696,
+        "textLen": 142
+      }
+    ],
+    "gauges": [],
+    "buttons": [
+      "1h",
+      "6h",
+      "24h",
+      "48h",
+      "Cycle",
+      "Photo",
+      "Close"
+    ],
+    "tabs": [
+      {
+        "label": "Live",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Grow",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Tune",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "Fleet",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Learning",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Analytics",
+        "active": true,
+        "inFold": true
+      }
+    ],
+    "honesty": "KIT HONEST",
+    "pageH1": "Analytics In-service pots. Climate charts live on Climate; this is the root pack.",
+    "slug": "analytics",
+    "viewport": "1280",
+    "shot": "space-audit-analytics-1280.png"
+  },
+  {
+    "url": "http://192.168.86.48:8787/#/fleet",
+    "title": "DSC-HUB 7.1.0",
+    "vw": 1280,
+    "vh": 720,
+    "scrollH": 2134,
+    "rootScrollH": 2134,
+    "bodyH": 720,
+    "chrome": {
+      "brand": {
+        "h": 36,
+        "present": true,
+        "top": 16,
+        "bottom": 52
+      },
+      "honesty": {
+        "h": 30,
+        "present": true,
+        "top": 62,
+        "bottom": 92
+      },
+      "primary": {
+        "h": 47,
+        "present": true,
+        "top": 102,
+        "bottom": 149
+      },
+      "secondary": {
+        "h": 42,
+        "present": true,
+        "top": 157,
+        "bottom": 199
+      },
+      "pageHeader": {
+        "h": 63,
+        "present": true,
+        "top": 215,
+        "bottom": 278
+      },
+      "chromeBottom": 199
+    },
+    "chromePx": 199,
+    "contentStart": 278,
+    "wastePct": 28,
+    "headerPlusChromePct": 39,
+    "cards": [
+      {
+        "title": "IN SERVICE",
+        "h": 97,
+        "top": 336,
+        "inFold": true,
+        "foldFrac": 1,
+        "textLen": 15
+      },
+      {
+        "title": "SURFACE",
+        "h": 120,
+        "top": 336,
+        "inFold": true,
+        "foldFrac": 1,
+        "textLen": 33
+      },
+      {
+        "title": "ALERTS",
+        "h": 97,
+        "top": 336,
+        "inFold": true,
+        "foldFrac": 1,
+        "textLen": 8
+      },
+      {
+        "title": "KIT PULSE",
+        "h": 582,
+        "top": 473,
+        "inFold": true,
+        "foldFrac": 0.42439862542955326,
+        "textLen": 314
+      },
+      {
+        "title": "KIT / IN SERVICE",
+        "h": 158,
+        "top": 1069,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 86
+      },
+      {
+        "title": "TANK",
+        "h": 865,
+        "top": 1241,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 82
+      }
+    ],
+    "gauges": [],
+    "buttons": [
+      "Close",
+      "1h",
+      "6h",
+      "24h",
+      "48h",
+      "Cycle",
+      "Photo"
+    ],
+    "tabs": [
+      {
+        "label": "Live",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Grow",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Tune",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Fleet",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "Overview",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "Calibrate",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Settings",
+        "active": false,
+        "inFold": true
+      }
+    ],
+    "honesty": "KIT HONEST",
+    "pageH1": "Fleet 7 of 11 devices in service. Device health, tank, and service toggles.",
+    "slug": "fleet",
+    "viewport": "1280",
+    "shot": "space-audit-fleet-1280.png"
+  },
+  {
+    "url": "http://192.168.86.48:8787/#/fleet/calibrate",
+    "title": "DSC-HUB 7.1.0",
+    "vw": 1280,
+    "vh": 720,
+    "scrollH": 720,
+    "rootScrollH": 720,
+    "bodyH": 720,
+    "chrome": {
+      "brand": {
+        "h": 36,
+        "present": true,
+        "top": 16,
+        "bottom": 52
+      },
+      "honesty": {
+        "h": 30,
+        "present": true,
+        "top": 62,
+        "bottom": 92
+      },
+      "primary": {
+        "h": 47,
+        "present": true,
+        "top": 102,
+        "bottom": 149
+      },
+      "secondary": {
+        "h": 42,
+        "present": true,
+        "top": 157,
+        "bottom": 199
+      },
+      "pageHeader": {
+        "h": 63,
+        "present": true,
+        "top": 215,
+        "bottom": 278
+      },
+      "chromeBottom": 199
+    },
+    "chromePx": 199,
+    "contentStart": 278,
+    "wastePct": 28,
+    "headerPlusChromePct": 39,
+    "cards": [
+      {
+        "title": "1 \u00b7 SELECT DUCT",
+        "h": 199,
+        "top": 383,
+        "inFold": true,
+        "foldFrac": 1,
+        "textLen": 242
+      }
+    ],
+    "gauges": [],
+    "buttons": [
+      "Fan CFM",
+      "Light PAR/LUX",
+      "OUT exhaust",
+      "RECIRC",
+      "Intake 4\u00d78",
+      "Intake 2\u00d74",
+      "Start OUT exhaust session",
+      "Close",
+      "1h",
+      "6h",
+      "24h",
+      "48h",
+      "Cycle",
+      "Photo"
+    ],
+    "tabs": [
+      {
+        "label": "Live",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Grow",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Tune",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Fleet",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "Overview",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Calibrate",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "Settings",
+        "active": false,
+        "inFold": true
+      }
+    ],
+    "honesty": "KIT HONEST",
+    "pageH1": "Calibrate Measure fan airflow and light output so the hub runs on real curves.",
+    "slug": "calibrate",
+    "viewport": "1280",
+    "shot": "space-audit-calibrate-1280.png"
+  },
+  {
+    "url": "http://192.168.86.48:8787/#/fleet/settings",
+    "title": "DSC-HUB 7.1.0",
+    "vw": 1280,
+    "vh": 720,
+    "scrollH": 5905,
+    "rootScrollH": 5905,
+    "bodyH": 720,
+    "chrome": {
+      "brand": {
+        "h": 36,
+        "present": true,
+        "top": 16,
+        "bottom": 52
+      },
+      "honesty": {
+        "h": 30,
+        "present": true,
+        "top": 62,
+        "bottom": 92
+      },
+      "primary": {
+        "h": 47,
+        "present": true,
+        "top": 102,
+        "bottom": 149
+      },
+      "secondary": {
+        "h": 42,
+        "present": true,
+        "top": 157,
+        "bottom": 199
+      },
+      "pageHeader": {
+        "h": 63,
+        "present": true,
+        "top": 215,
+        "bottom": 278
+      },
+      "chromeBottom": 199
+    },
+    "chromePx": 199,
+    "contentStart": 278,
+    "wastePct": 28,
+    "headerPlusChromePct": 39,
+    "cards": [
+      {
+        "title": "FLEET INVENTORY",
+        "h": 2527,
+        "top": 292,
+        "inFold": true,
+        "foldFrac": 0.1693456649685939,
+        "textLen": 1789
+      },
+      {
+        "title": "CONTROL OFFLINE",
+        "h": 568,
+        "top": 376,
+        "inFold": true,
+        "foldFrac": 0.6056338028169014,
+        "textLen": 140
+      },
+      {
+        "title": "DEHUMIDIFIER ONLINE",
+        "h": 568,
+        "top": 376,
+        "inFold": true,
+        "foldFrac": 0.6056338028169014,
+        "textLen": 177
+      },
+      {
+        "title": "HEATER ONLINE",
+        "h": 568,
+        "top": 376,
+        "inFold": true,
+        "foldFrac": 0.6056338028169014,
+        "textLen": 165
+      },
+      {
+        "title": "HEATMAT ONLINE",
+        "h": 568,
+        "top": 987,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 167
+      },
+      {
+        "title": "HUB ONLINE",
+        "h": 568,
+        "top": 987,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 164
+      },
+      {
+        "title": "HUMIDIFIER ONLINE",
+        "h": 568,
+        "top": 987,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 173
+      },
+      {
+        "title": "POT1 ONLINE",
+        "h": 568,
+        "top": 1597,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 153
+      },
+      {
+        "title": "POT2 ONLINE",
+        "h": 568,
+        "top": 1597,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 153
+      },
+      {
+        "title": "POT3 OFFLINE",
+        "h": 568,
+        "top": 1597,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 134
+      },
+      {
+        "title": "POT4 ONLINE",
+        "h": 568,
+        "top": 2208,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 153
+      },
+      {
+        "title": "DEVICE ASSIGNMENT",
+        "h": 711,
+        "top": 2819,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 321
+      },
+      {
+        "title": "NETWORK",
+        "h": 573,
+        "top": 3530,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 367
+      },
+      {
+        "title": "INTEGRATIONS",
+        "h": 140,
+        "top": 4103,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 140
+      },
+      {
+        "title": "CATALOG",
+        "h": 170,
+        "top": 4243,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 185
+      },
+      {
+        "title": "ESPHOME",
+        "h": 1110,
+        "top": 4413,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 1491
+      },
+      {
+        "title": "ZIGBEE (SKYCONNECT)",
+        "h": 189,
+        "top": 5523,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 186
+      },
+      {
+        "title": "BACKUP",
+        "h": 122,
+        "top": 5712,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 92
+      }
+    ],
+    "gauges": [],
+    "buttons": [
+      "Close",
+      "1h",
+      "6h",
+      "24h",
+      "48h",
+      "Cycle",
+      "Photo"
+    ],
+    "tabs": [
+      {
+        "label": "Live",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Grow",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Tune",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Fleet",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "Overview",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Calibrate",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Settings",
+        "active": true,
+        "inFold": true
+      }
+    ],
+    "honesty": "KIT HONEST",
+    "pageH1": "Settings DSC-HUB 7.1.0 \u2014 Pi appliance",
+    "slug": "settings",
+    "viewport": "1280",
+    "shot": "space-audit-settings-1280.png"
+  },
+  {
+    "url": "http://192.168.86.48:8787/#/ops/home",
+    "title": "DSC-HUB 7.1.0",
+    "vw": 1280,
+    "vh": 720,
+    "scrollH": 4425,
+    "rootScrollH": 4425,
+    "bodyH": 720,
+    "chrome": {
+      "brand": {
+        "h": 36,
+        "present": true,
+        "top": 16,
+        "bottom": 52
+      },
+      "honesty": {
+        "h": 30,
+        "present": true,
+        "top": 62,
+        "bottom": 92
+      },
+      "primary": {
+        "h": 47,
+        "present": true,
+        "top": 102,
+        "bottom": 149
+      },
+      "secondary": {
+        "h": 42,
+        "present": true,
+        "top": 157,
+        "bottom": 199
+      },
+      "pageHeader": {
+        "h": 63,
+        "present": true,
+        "top": 215,
+        "bottom": 278
+      },
+      "chromeBottom": 199
+    },
+    "chromePx": 199,
+    "contentStart": 278,
+    "wastePct": 28,
+    "headerPlusChromePct": 39,
+    "cards": [
+      {
+        "title": "CANNALIB CATALOG API",
+        "h": 153,
+        "top": 331,
+        "inFold": true,
+        "foldFrac": 1,
+        "textLen": 75
+      },
+      {
+        "title": "HITS",
+        "h": 97,
+        "top": 372,
+        "inFold": true,
+        "foldFrac": 1,
+        "textLen": 6
+      },
+      {
+        "title": "BANDWIDTH IN",
+        "h": 97,
+        "top": 372,
+        "inFold": true,
+        "foldFrac": 1,
+        "textLen": 14
+      },
+      {
+        "title": "BANDWIDTH OUT",
+        "h": 97,
+        "top": 372,
+        "inFold": true,
+        "foldFrac": 1,
+        "textLen": 15
+      },
+      {
+        "title": "CORPUS STRAINS",
+        "h": 97,
+        "top": 372,
+        "inFold": true,
+        "foldFrac": 1,
+        "textLen": 16
+      },
+      {
+        "title": "SYSTEM MAP",
+        "h": 476,
+        "top": 549,
+        "inFold": true,
+        "foldFrac": 0.3592436974789916,
+        "textLen": 32
+      },
+      {
+        "title": "RUNNING",
+        "h": 88,
+        "top": 1025,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 58
+      },
+      {
+        "title": "GROW LOG",
+        "h": 316,
+        "top": 1148,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 2181
+      },
+      {
+        "title": "OPERATIONAL NOW",
+        "h": 206,
+        "top": 1464,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 260
+      },
+      {
+        "title": "BANDS",
+        "h": 600,
+        "top": 1670,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 234
+      },
+      {
+        "title": "LUNG \u00b7 CFM",
+        "h": 599,
+        "top": 2270,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 181
+      },
+      {
+        "title": "OUT ALLOC",
+        "h": 97,
+        "top": 2337,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 15
+      },
+      {
+        "title": "RECIRC ALLOC",
+        "h": 97,
+        "top": 2337,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 18
+      },
+      {
+        "title": "INTAKE 4\u00d78",
+        "h": 97,
+        "top": 2337,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 16
+      },
+      {
+        "title": "INTAKE 2\u00d74",
+        "h": 97,
+        "top": 2337,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 16
+      },
+      {
+        "title": "TODAY",
+        "h": 91,
+        "top": 2869,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 52
+      },
+      {
+        "title": "PLANT ROSTER",
+        "h": 1168,
+        "top": 2960,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 207
+      },
+      {
+        "title": "KIT PULSE",
+        "h": 1168,
+        "top": 2960,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 245
+      },
+      {
+        "title": "ROOT & TANK",
+        "h": 269,
+        "top": 4128,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 100
+      }
+    ],
+    "gauges": [
+      {
+        "label": "4\u00d78 T",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "4\u00d78 RH",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "4\u00d78 VPD",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "2\u00d74 T",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "2\u00d74 RH",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "2\u00d74 VPD",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "ROOM T",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "ROOM RH",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "ROOT",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "P1",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "P2",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "P3",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "P4",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      }
+    ],
+    "buttons": [
+      "Open Twin",
+      "Climate",
+      "HUB ONLINE",
+      "PANEL LINKED",
+      "BEAT 706",
+      "All clear",
+      "FLEET 7.0.0",
+      "CANNALIB OFF",
+      "P1 direct",
+      "P2 direct",
+      "P3 direct",
+      "P4 direct",
+      "Close",
+      "1h",
+      "6h",
+      "24h",
+      "48h",
+      "Cycle",
+      "Photo"
+    ],
+    "tabs": [
+      {
+        "label": "Live",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "Grow",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Tune",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Fleet",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Overview",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Mission",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Dash",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "Twin",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Climate",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "4\u00d78",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "2\u00d74",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Root",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Light",
+        "active": false,
+        "inFold": true
+      }
+    ],
+    "honesty": "KIT HONEST",
+    "pageH1": "Home Everything running right now, at a glance. Open Twin Climate",
+    "slug": "dash",
+    "viewport": "1280",
+    "shot": "space-audit-dash-1280.png"
+  },
+  {
+    "url": "http://192.168.86.48:8787/#/live/overview",
+    "title": "DSC-HUB 7.1.0",
+    "vw": 390,
+    "vh": 844,
+    "scrollH": 1729,
+    "rootScrollH": 1729,
+    "bodyH": 844,
+    "chrome": {
+      "brand": {
+        "h": 42,
+        "present": true,
+        "top": 12,
+        "bottom": 54
+      },
+      "honesty": {
+        "h": 30,
+        "present": true,
+        "top": 64,
+        "bottom": 94
+      },
+      "primary": {
+        "h": 47,
+        "present": true,
+        "top": 104,
+        "bottom": 151
+      },
+      "secondary": {
+        "h": 42,
+        "present": true,
+        "top": 159,
+        "bottom": 201
+      },
+      "pageHeader": {
+        "h": 126,
+        "present": true,
+        "top": 217,
+        "bottom": 343
+      },
+      "chromeBottom": 201
+    },
+    "chromePx": 201,
+    "contentStart": 343,
+    "wastePct": 24,
+    "headerPlusChromePct": 41,
+    "cards": [
+      {
+        "title": "BANDS",
+        "h": 609,
+        "top": 357,
+        "inFold": true,
+        "foldFrac": 0.8003800328677074,
+        "textLen": 234
+      },
+      {
+        "title": "FAN DUTIES",
+        "h": 134,
+        "top": 965,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 55
+      },
+      {
+        "title": "RUNNING",
+        "h": 162,
+        "top": 1099,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 58
+      },
+      {
+        "title": "ROOT & TANK",
+        "h": 269,
+        "top": 1261,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 100
+      },
+      {
+        "title": "GROW LOG",
+        "h": 151,
+        "top": 1530,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 29
+      }
+    ],
+    "gauges": [
+      {
+        "label": "4\u00d78 T",
+        "value": "",
+        "inFold": true,
+        "empty": true
+      },
+      {
+        "label": "4\u00d78 RH",
+        "value": "",
+        "inFold": true,
+        "empty": true
+      },
+      {
+        "label": "4\u00d78 VPD",
+        "value": "",
+        "inFold": true,
+        "empty": true
+      },
+      {
+        "label": "2\u00d74 T",
+        "value": "",
+        "inFold": true,
+        "empty": true
+      },
+      {
+        "label": "2\u00d74 RH",
+        "value": "",
+        "inFold": true,
+        "empty": true
+      },
+      {
+        "label": "2\u00d74 VPD",
+        "value": "",
+        "inFold": true,
+        "empty": true
+      },
+      {
+        "label": "ROOM T",
+        "value": "",
+        "inFold": true,
+        "empty": true
+      },
+      {
+        "label": "ROOM RH",
+        "value": "",
+        "inFold": true,
+        "empty": true
+      },
+      {
+        "label": "ROOT",
+        "value": "",
+        "inFold": true,
+        "empty": true
+      },
+      {
+        "label": "P1",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "P2",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "P3",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "P4",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      }
+    ],
+    "buttons": [
+      "Climate",
+      "Mission",
+      "All",
+      "4\u00d78",
+      "2\u00d74",
+      "Room",
+      "22.0 \u00b0C 4\u00d78 T",
+      "64.2 % 4\u00d78 RH",
+      "0.95 kPa 4\u00d78 VPD",
+      "23.5 \u00b0C 2\u00d74 T",
+      "64.0 % 2\u00d74 RH",
+      "1.04 kPa 2\u00d74 VPD",
+      "23.6 \u00b0C ROOM T",
+      "61.1 % ROOM RH",
+      "18.4 \u00b0C ROOT",
+      "Close",
+      "1h",
+      "6h",
+      "24h",
+      "48h",
+      "Cycle",
+      "Photo"
+    ],
+    "tabs": [
+      {
+        "label": "Live",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "Grow",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Tune",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Fleet",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Overview",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "Mission",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Dash",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Twin",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Climate",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "4\u00d78",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "2\u00d74",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Root",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Light",
+        "active": false,
+        "inFold": true
+      }
+    ],
+    "honesty": "KIT HONEST",
+    "pageH1": "Overview Operational glance \u2014 alerts, area vitals, duties, root strip, grow log. Climate Mission",
+    "slug": "overview",
+    "viewport": "390",
+    "shot": "space-audit-overview-390.png"
+  },
+  {
+    "url": "http://192.168.86.48:8787/#/live/mission",
+    "title": "DSC-HUB 7.1.0",
+    "vw": 390,
+    "vh": 844,
+    "scrollH": 1865,
+    "rootScrollH": 1865,
+    "bodyH": 844,
+    "chrome": {
+      "brand": {
+        "h": 42,
+        "present": true,
+        "top": 12,
+        "bottom": 54
+      },
+      "honesty": {
+        "h": 30,
+        "present": true,
+        "top": 64,
+        "bottom": 94
+      },
+      "primary": {
+        "h": 47,
+        "present": true,
+        "top": 104,
+        "bottom": 151
+      },
+      "secondary": {
+        "h": 42,
+        "present": true,
+        "top": 159,
+        "bottom": 201
+      },
+      "pageHeader": {
+        "h": 189,
+        "present": true,
+        "top": 217,
+        "bottom": 406
+      },
+      "chromeBottom": 201
+    },
+    "chromePx": 201,
+    "contentStart": 406,
+    "wastePct": 24,
+    "headerPlusChromePct": 48,
+    "cards": [
+      {
+        "title": "NEXT",
+        "h": 130,
+        "top": 555,
+        "inFold": true,
+        "foldFrac": 1,
+        "textLen": 69
+      },
+      {
+        "title": "HUB LINK",
+        "h": 124,
+        "top": 699,
+        "inFold": true,
+        "foldFrac": 1,
+        "textLen": 67
+      },
+      {
+        "title": "KIT PULSE",
+        "h": 501,
+        "top": 837,
+        "inFold": false,
+        "foldFrac": 0.014025245441795231,
+        "textLen": 245
+      },
+      {
+        "title": "LUNG CFM",
+        "h": 117,
+        "top": 1352,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 61
+      },
+      {
+        "title": "PLANT SEATS",
+        "h": 241,
+        "top": 1483,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 127
+      },
+      {
+        "title": "FAULTS / ALERTS",
+        "h": 115,
+        "top": 1738,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 45
+      }
+    ],
+    "gauges": [],
+    "buttons": [
+      "Open Twin",
+      "Climate Want",
+      "Search",
+      "Mission settings",
+      "HUB ONLINE",
+      "7 of 11 in service",
+      "PANEL LINKED",
+      "BEAT 706",
+      "All clear",
+      "FLEET OK",
+      "Close",
+      "Climate",
+      "Twin",
+      "4\u00d78",
+      "2\u00d74",
+      "Root",
+      "Light",
+      "Compose",
+      "Fleet",
+      "1h",
+      "6h",
+      "24h",
+      "48h",
+      "Cycle",
+      "Photo"
+    ],
+    "tabs": [
+      {
+        "label": "Live",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "Grow",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Tune",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Fleet",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Overview",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Mission",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "Dash",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Twin",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Climate",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "4\u00d78",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "2\u00d74",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Root",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Light",
+        "active": false,
+        "inFold": true
+      }
+    ],
+    "honesty": "KIT HONEST",
+    "pageH1": "Mission Triage glance \u2014 Next, faults, seats, lung. Command lives on Climate. Open Twin Climate Want",
+    "slug": "mission",
+    "viewport": "390",
+    "shot": "space-audit-mission-390.png"
+  },
+  {
+    "url": "http://192.168.86.48:8787/#/live/twin",
+    "title": "DSC-HUB 7.1.0",
+    "vw": 390,
+    "vh": 844,
+    "scrollH": 1914,
+    "rootScrollH": 1914,
+    "bodyH": 844,
+    "chrome": {
+      "brand": {
+        "h": 42,
+        "present": true,
+        "top": 12,
+        "bottom": 54
+      },
+      "honesty": {
+        "h": 30,
+        "present": true,
+        "top": 64,
+        "bottom": 94
+      },
+      "primary": {
+        "h": 47,
+        "present": true,
+        "top": 104,
+        "bottom": 151
+      },
+      "secondary": {
+        "h": 42,
+        "present": true,
+        "top": 159,
+        "bottom": 201
+      },
+      "pageHeader": {
+        "h": 189,
+        "present": true,
+        "top": 820,
+        "bottom": 1009
+      },
+      "chromeBottom": 201
+    },
+    "chromePx": 201,
+    "contentStart": 1009,
+    "wastePct": 24,
+    "headerPlusChromePct": 120,
+    "cards": [
+      {
+        "title": "CROP SCHEDULER",
+        "h": 517,
+        "top": 1107,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 306
+      },
+      {
+        "title": "AIR PATH",
+        "h": 264,
+        "top": 1638,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 218
+      }
+    ],
+    "gauges": [],
+    "buttons": [
+      "Set Climate Want",
+      "4\u00d78 cockpit",
+      "2\u00d74 cockpit",
+      "Close",
+      "1h",
+      "6h",
+      "24h",
+      "48h",
+      "Cycle",
+      "Photo"
+    ],
+    "tabs": [
+      {
+        "label": "Live",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "Grow",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Tune",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Fleet",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Overview",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Mission",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Dash",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Twin",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "Climate",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "4\u00d78",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "2\u00d74",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Root",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Light",
+        "active": false,
+        "inFold": true
+      }
+    ],
+    "honesty": "KIT HONEST",
+    "pageH1": "Twin Cinematic digital twin \u2014 pick a pot to open Root seat. Set Climate Want 4\u00d78 cockpit 2\u00d74 cockpit",
+    "slug": "twin",
+    "viewport": "390",
+    "shot": "space-audit-twin-390.png"
+  },
+  {
+    "url": "http://192.168.86.48:8787/#/live/climate",
+    "title": "DSC-HUB 7.1.0",
+    "vw": 390,
+    "vh": 844,
+    "scrollH": 5808,
+    "rootScrollH": 5808,
+    "bodyH": 844,
+    "chrome": {
+      "brand": {
+        "h": 42,
+        "present": true,
+        "top": 12,
+        "bottom": 54
+      },
+      "honesty": {
+        "h": 30,
+        "present": true,
+        "top": 64,
+        "bottom": 94
+      },
+      "primary": {
+        "h": 47,
+        "present": true,
+        "top": 104,
+        "bottom": 151
+      },
+      "secondary": {
+        "h": 42,
+        "present": true,
+        "top": 159,
+        "bottom": 201
+      },
+      "pageHeader": {
+        "h": 105,
+        "present": true,
+        "top": 217,
+        "bottom": 322
+      },
+      "chromeBottom": 201
+    },
+    "chromePx": 201,
+    "contentStart": 322,
+    "wastePct": 24,
+    "headerPlusChromePct": 38,
+    "cards": [
+      {
+        "title": "COMMAND",
+        "h": 897,
+        "top": 479,
+        "inFold": true,
+        "foldFrac": 0.4069467670011148,
+        "textLen": 303
+      },
+      {
+        "title": "ROOM UMBRELLA",
+        "h": 559,
+        "top": 1390,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 237
+      },
+      {
+        "title": "ROOM \u00b0C",
+        "h": 97,
+        "top": 1431,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 14
+      },
+      {
+        "title": "ROOM RH",
+        "h": 97,
+        "top": 1536,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 11
+      },
+      {
+        "title": "ROOM VPD",
+        "h": 97,
+        "top": 1641,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 13
+      },
+      {
+        "title": "ROOM AH",
+        "h": 120,
+        "top": 1746,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 24
+      },
+      {
+        "title": "TRIAD \u00b7 T / RH / VPD",
+        "h": 678,
+        "top": 2715,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 330
+      },
+      {
+        "title": "TEMPERATURE",
+        "h": 264,
+        "top": 3407,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 152
+      },
+      {
+        "title": "HUMIDITY",
+        "h": 264,
+        "top": 3685,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 135
+      },
+      {
+        "title": "VPD",
+        "h": 264,
+        "top": 3963,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 98
+      },
+      {
+        "title": "AIR PATH",
+        "h": 264,
+        "top": 4241,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 218
+      },
+      {
+        "title": "FAN DUTY %",
+        "h": 498,
+        "top": 4519,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 106
+      },
+      {
+        "title": "EFFICACY \u00b7 BUYING KW BECAUSE THE LUNG COULD NOT TRANSFER",
+        "h": 234,
+        "top": 5031,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 153
+      },
+      {
+        "title": "CROP SCHEDULER",
+        "h": 517,
+        "top": 5279,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 306
+      }
+    ],
+    "gauges": [
+      {
+        "label": "T",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "RH",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "VPD",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "T",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "RH",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "VPD",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "T",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "RH",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "VPD",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      }
+    ],
+    "buttons": [
+      "Climate settings",
+      "All",
+      "4\u00d78",
+      "2\u00d74",
+      "Room",
+      "1h",
+      "6h",
+      "24h",
+      "48h",
+      "Cycle",
+      "Photo",
+      "Kit / Fleet",
+      "FULL AUTO ON",
+      "MASTER TAKEOVER OFF",
+      "FAN OVERRIDE OFF",
+      "HUM INTAKE ROUTING OFF",
+      "RECIRC DE-STRAT OFF",
+      "Close"
+    ],
+    "tabs": [
+      {
+        "label": "Live",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "Grow",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Tune",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Fleet",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Overview",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Mission",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Dash",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Twin",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Climate",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "4\u00d78",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "2\u00d74",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Root",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Light",
+        "active": false,
+        "inFold": true
+      }
+    ],
+    "honesty": "KIT HONEST",
+    "pageH1": "Climate Room is the umbrella lung. 2\u00d74 and 4\u00d78 are grow rooms and transfer/storage. T, RH, VPD only together.",
+    "slug": "climate",
+    "viewport": "390",
+    "shot": "space-audit-climate-390.png"
+  },
+  {
+    "url": "http://192.168.86.48:8787/#/live/4x8?tent=main",
+    "title": "DSC-HUB 7.1.0",
+    "vw": 390,
+    "vh": 844,
+    "scrollH": 3232,
+    "rootScrollH": 3232,
+    "bodyH": 844,
+    "chrome": {
+      "brand": {
+        "h": 42,
+        "present": true,
+        "top": 12,
+        "bottom": 54
+      },
+      "honesty": {
+        "h": 30,
+        "present": true,
+        "top": 64,
+        "bottom": 94
+      },
+      "primary": {
+        "h": 47,
+        "present": true,
+        "top": 104,
+        "bottom": 151
+      },
+      "secondary": {
+        "h": 42,
+        "present": true,
+        "top": 159,
+        "bottom": 201
+      },
+      "pageHeader": {
+        "h": 364,
+        "present": true,
+        "top": 820,
+        "bottom": 1184
+      },
+      "chromeBottom": 201
+    },
+    "chromePx": 201,
+    "contentStart": 1184,
+    "wastePct": 24,
+    "headerPlusChromePct": 140,
+    "cards": [
+      {
+        "title": "CROP SCHEDULER",
+        "h": 517,
+        "top": 1665,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 306
+      },
+      {
+        "title": "AIR PATH",
+        "h": 210,
+        "top": 2196,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 126
+      },
+      {
+        "title": "SEAT STRIP",
+        "h": 115,
+        "top": 2420,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 56
+      },
+      {
+        "title": "TENT HISTORY",
+        "h": 299,
+        "top": 2549,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 168
+      },
+      {
+        "title": "FANS (THIS TENT)",
+        "h": 256,
+        "top": 2862,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 148
+      },
+      {
+        "title": "PLANT LOG (48H)",
+        "h": 88,
+        "top": 3132,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 52
+      }
+    ],
+    "gauges": [],
+    "buttons": [
+      "Both tents",
+      "Climate Want",
+      "Close",
+      "1h",
+      "6h",
+      "24h",
+      "48h",
+      "Cycle",
+      "Photo"
+    ],
+    "tabs": [
+      {
+        "label": "Live",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "Grow",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Tune",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Fleet",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Overview",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Mission",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Dash",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Twin",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Climate",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "4\u00d78",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "2\u00d74",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Root",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Light",
+        "active": false,
+        "inFold": true
+      }
+    ],
+    "honesty": "KIT HONEST",
+    "pageH1": "4\u00d78 tent Tent cockpit \u2014 0 seat(s). Only the 4\u00d78 house in Twin. Cascade-in is a port stub from 2\u00d74, not a second tent. Both tents Climate Want",
+    "slug": "4x8",
+    "viewport": "390",
+    "shot": "space-audit-4x8-390.png"
+  },
+  {
+    "url": "http://192.168.86.48:8787/#/live/2x4?tent=clone",
+    "title": "DSC-HUB 7.1.0",
+    "vw": 390,
+    "vh": 844,
+    "scrollH": 3170,
+    "rootScrollH": 3170,
+    "bodyH": 844,
+    "chrome": {
+      "brand": {
+        "h": 42,
+        "present": true,
+        "top": 12,
+        "bottom": 54
+      },
+      "honesty": {
+        "h": 30,
+        "present": true,
+        "top": 64,
+        "bottom": 94
+      },
+      "primary": {
+        "h": 47,
+        "present": true,
+        "top": 104,
+        "bottom": 151
+      },
+      "secondary": {
+        "h": 42,
+        "present": true,
+        "top": 159,
+        "bottom": 201
+      },
+      "pageHeader": {
+        "h": 301,
+        "present": true,
+        "top": 820,
+        "bottom": 1121
+      },
+      "chromeBottom": 201
+    },
+    "chromePx": 201,
+    "contentStart": 1121,
+    "wastePct": 24,
+    "headerPlusChromePct": 133,
+    "cards": [
+      {
+        "title": "CROP SCHEDULER",
+        "h": 517,
+        "top": 1602,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 306
+      },
+      {
+        "title": "AIR PATH",
+        "h": 210,
+        "top": 2133,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 96
+      },
+      {
+        "title": "SEAT STRIP",
+        "h": 112,
+        "top": 2357,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 47
+      },
+      {
+        "title": "TENT HISTORY",
+        "h": 299,
+        "top": 2483,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 168
+      },
+      {
+        "title": "FANS (THIS TENT)",
+        "h": 260,
+        "top": 2796,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 106
+      },
+      {
+        "title": "PLANT LOG (48H)",
+        "h": 88,
+        "top": 3070,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 52
+      }
+    ],
+    "gauges": [],
+    "buttons": [
+      "Both tents",
+      "Climate Want",
+      "Close",
+      "1h",
+      "6h",
+      "24h",
+      "48h",
+      "Cycle",
+      "Photo"
+    ],
+    "tabs": [
+      {
+        "label": "Live",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "Grow",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Tune",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Fleet",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Overview",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Mission",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Dash",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Twin",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Climate",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "4\u00d78",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "2\u00d74",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "Root",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Light",
+        "active": false,
+        "inFold": true
+      }
+    ],
+    "honesty": "KIT HONEST",
+    "pageH1": "2\u00d74 tent Tent cockpit \u2014 1 seat(s). Only the 2\u00d74 house in Twin. Cascade-out is a port stub to 4\u00d78. Both tents Climate Want",
+    "slug": "2x4",
+    "viewport": "390",
+    "shot": "space-audit-2x4-390.png"
+  },
+  {
+    "url": "http://192.168.86.48:8787/#/live/root",
+    "title": "DSC-HUB 7.1.0",
+    "vw": 390,
+    "vh": 844,
+    "scrollH": 4402,
+    "rootScrollH": 4402,
+    "bodyH": 844,
+    "chrome": {
+      "brand": {
+        "h": 42,
+        "present": true,
+        "top": 12,
+        "bottom": 54
+      },
+      "honesty": {
+        "h": 30,
+        "present": true,
+        "top": 64,
+        "bottom": 94
+      },
+      "primary": {
+        "h": 47,
+        "present": true,
+        "top": 104,
+        "bottom": 151
+      },
+      "secondary": {
+        "h": 42,
+        "present": true,
+        "top": 159,
+        "bottom": 201
+      },
+      "pageHeader": {
+        "h": 84,
+        "present": true,
+        "top": 217,
+        "bottom": 301
+      },
+      "chromeBottom": 201
+    },
+    "chromePx": 201,
+    "contentStart": 301,
+    "wastePct": 24,
+    "headerPlusChromePct": 36,
+    "cards": [
+      {
+        "title": "COLDEST ROOT",
+        "h": 97,
+        "top": 315,
+        "inFold": true,
+        "foldFrac": 1,
+        "textLen": 19
+      },
+      {
+        "title": "HEAT MAT TODAY",
+        "h": 97,
+        "top": 426,
+        "inFold": true,
+        "foldFrac": 1,
+        "textLen": 19
+      },
+      {
+        "title": "NOTES",
+        "h": 121,
+        "top": 537,
+        "inFold": true,
+        "foldFrac": 1,
+        "textLen": 117
+      },
+      {
+        "title": "POT 1",
+        "h": 810,
+        "top": 739,
+        "inFold": true,
+        "foldFrac": 0.1296682098765432,
+        "textLen": 108
+      },
+      {
+        "title": "POT 2",
+        "h": 848,
+        "top": 1612,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 115
+      },
+      {
+        "title": "POT 3",
+        "h": 848,
+        "top": 2523,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 125
+      },
+      {
+        "title": "POT 4",
+        "h": 848,
+        "top": 3434,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 125
+      }
+    ],
+    "gauges": [
+      {
+        "label": "MOISTURE",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "SOIL \u00b0C",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "DRYBACK",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "EC",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "PH",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "MOISTURE",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "SOIL \u00b0C",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "DRYBACK",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "EC",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "PH",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "MOISTURE",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "SOIL \u00b0C",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "DRYBACK",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "EC",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "PH",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "MOISTURE",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "SOIL \u00b0C",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "DRYBACK",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "EC",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "PH",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      }
+    ],
+    "buttons": [
+      "COLDEST ROOT 18.4\u00b0C",
+      "HEAT MAT TODAY 4.0h",
+      "HEAT MAT 24H 0 CYCLES \u00b7 LAST 06:45 \u00b7 0.0H ON",
+      "Close",
+      "1h",
+      "6h",
+      "24h",
+      "48h",
+      "Cycle",
+      "Photo"
+    ],
+    "tabs": [
+      {
+        "label": "Live",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "Grow",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Tune",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Fleet",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Overview",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Mission",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Dash",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Twin",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Climate",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "4\u00d78",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "2\u00d74",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Root",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "Light",
+        "active": false,
+        "inFold": true
+      }
+    ],
+    "honesty": "KIT HONEST",
+    "pageH1": "Root 4 of 4 pots in service. Pots without sensors show no data.",
+    "slug": "root",
+    "viewport": "390",
+    "shot": "space-audit-root-390.png"
+  },
+  {
+    "url": "http://192.168.86.48:8787/#/live/light",
+    "title": "DSC-HUB 7.1.0",
+    "vw": 390,
+    "vh": 844,
+    "scrollH": 2361,
+    "rootScrollH": 2361,
+    "bodyH": 844,
+    "chrome": {
+      "brand": {
+        "h": 42,
+        "present": true,
+        "top": 12,
+        "bottom": 54
+      },
+      "honesty": {
+        "h": 30,
+        "present": true,
+        "top": 64,
+        "bottom": 94
+      },
+      "primary": {
+        "h": 47,
+        "present": true,
+        "top": 104,
+        "bottom": 151
+      },
+      "secondary": {
+        "h": 42,
+        "present": true,
+        "top": 159,
+        "bottom": 201
+      },
+      "pageHeader": {
+        "h": 126,
+        "present": true,
+        "top": 217,
+        "bottom": 343
+      },
+      "chromeBottom": 201
+    },
+    "chromePx": 201,
+    "contentStart": 343,
+    "wastePct": 24,
+    "headerPlusChromePct": 41,
+    "cards": [
+      {
+        "title": "4\u00d78 LIGHT",
+        "h": 546,
+        "top": 406,
+        "inFold": true,
+        "foldFrac": 0.8022550366300366,
+        "textLen": 265
+      },
+      {
+        "title": "WANT HOURS",
+        "h": 97,
+        "top": 639,
+        "inFold": true,
+        "foldFrac": 1,
+        "textLen": 13
+      },
+      {
+        "title": "2\u00d74 LIGHT",
+        "h": 718,
+        "top": 966,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 262
+      },
+      {
+        "title": "WANT HOURS",
+        "h": 97,
+        "top": 1210,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 14
+      },
+      {
+        "title": "DEVIATION TODAY",
+        "h": 120,
+        "top": 1698,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 38
+      },
+      {
+        "title": "CROP SCHEDULER",
+        "h": 517,
+        "top": 1832,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 306
+      }
+    ],
+    "gauges": [
+      {
+        "label": "GOT / WANT H",
+        "value": "",
+        "inFold": true,
+        "empty": true
+      },
+      {
+        "label": "GOT / WANT H",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      }
+    ],
+    "buttons": [
+      "Climate Want",
+      "Dark period OK",
+      "Next \u2014",
+      "WINDOW OPEN",
+      "no plant/stage rail",
+      "0.00 h GOT / WANT H",
+      "WANT HOURS 0h",
+      "4\u00d78 WINDOW 24H 0 CYCLES \u00b7 LAST 06:45 \u00b7 0.0H ON",
+      "Close",
+      "1h",
+      "6h",
+      "24h",
+      "48h",
+      "Cycle",
+      "Photo"
+    ],
+    "tabs": [
+      {
+        "label": "Live",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "Grow",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Tune",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Fleet",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Overview",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Mission",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Dash",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Twin",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Climate",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "4\u00d78",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "2\u00d74",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Root",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Light",
+        "active": true,
+        "inFold": true
+      }
+    ],
+    "honesty": "KIT HONEST",
+    "pageH1": "Light Photoperiod desk \u2014 equal 4\u00d78 / 2\u00d74 cards. 4\u00d78 Got is the window until a GPIO lamp exists. Climate Want",
+    "slug": "light",
+    "viewport": "390",
+    "shot": "space-audit-light-390.png"
+  },
+  {
+    "url": "http://192.168.86.48:8787/#/grow/compose",
+    "title": "DSC-HUB 7.1.0",
+    "vw": 390,
+    "vh": 844,
+    "scrollH": 2470,
+    "rootScrollH": 2470,
+    "bodyH": 844,
+    "chrome": {
+      "brand": {
+        "h": 42,
+        "present": true,
+        "top": 12,
+        "bottom": 54
+      },
+      "honesty": {
+        "h": 30,
+        "present": true,
+        "top": 64,
+        "bottom": 94
+      },
+      "primary": {
+        "h": 47,
+        "present": true,
+        "top": 104,
+        "bottom": 151
+      },
+      "secondary": {
+        "h": 42,
+        "present": true,
+        "top": 159,
+        "bottom": 201
+      },
+      "pageHeader": {
+        "h": 126,
+        "present": true,
+        "top": 217,
+        "bottom": 343
+      },
+      "chromeBottom": 201
+    },
+    "chromePx": 201,
+    "contentStart": 343,
+    "wastePct": 24,
+    "headerPlusChromePct": 41,
+    "cards": [
+      {
+        "title": "STRAIN",
+        "h": 286,
+        "top": 411,
+        "inFold": true,
+        "foldFrac": 1,
+        "textLen": 120
+      },
+      {
+        "title": "VESSEL + MIX",
+        "h": 464,
+        "top": 711,
+        "inFold": true,
+        "foldFrac": 0.2865894708496028,
+        "textLen": 273
+      },
+      {
+        "title": "NUTRITION",
+        "h": 798,
+        "top": 1189,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 252
+      },
+      {
+        "title": "LIGHT + ASSIGN",
+        "h": 457,
+        "top": 2001,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 235
+      }
+    ],
+    "gauges": [],
+    "buttons": [
+      "Open Roster / Seat",
+      "Browse Catalog",
+      "Northern Lights",
+      "20L Generic Fabric Grow Bag",
+      "Close",
+      "1h",
+      "6h",
+      "24h",
+      "48h",
+      "Cycle",
+      "Photo"
+    ],
+    "tabs": [
+      {
+        "label": "Live",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Grow",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "Tune",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Fleet",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Compose",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "Research",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Roster",
+        "active": false,
+        "inFold": true
+      }
+    ],
+    "honesty": "KIT HONEST",
+    "pageH1": "Compose Build soil blend, roster commit, and Want handoff. Open Roster / Seat Browse Catalog",
+    "slug": "compose",
+    "viewport": "390",
+    "shot": "space-audit-compose-390.png"
+  },
+  {
+    "url": "http://192.168.86.48:8787/#/grow/research",
+    "title": "DSC-HUB 7.1.0",
+    "vw": 390,
+    "vh": 844,
+    "scrollH": 895,
+    "rootScrollH": 895,
+    "bodyH": 844,
+    "chrome": {
+      "brand": {
+        "h": 42,
+        "present": true,
+        "top": 12,
+        "bottom": 54
+      },
+      "honesty": {
+        "h": 30,
+        "present": true,
+        "top": 64,
+        "bottom": 94
+      },
+      "primary": {
+        "h": 47,
+        "present": true,
+        "top": 104,
+        "bottom": 151
+      },
+      "secondary": {
+        "h": 42,
+        "present": true,
+        "top": 159,
+        "bottom": 201
+      },
+      "pageHeader": {
+        "h": 189,
+        "present": true,
+        "top": 217,
+        "bottom": 406
+      },
+      "chromeBottom": 201
+    },
+    "chromePx": 201,
+    "contentStart": 406,
+    "wastePct": 24,
+    "headerPlusChromePct": 48,
+    "cards": [
+      {
+        "title": "BROWSE",
+        "h": 162,
+        "top": 577,
+        "inFold": true,
+        "foldFrac": 1,
+        "textLen": 28
+      },
+      {
+        "title": "DETAIL",
+        "h": 130,
+        "top": 753,
+        "inFold": true,
+        "foldFrac": 0.7002403846153846,
+        "textLen": 71
+      }
+    ],
+    "gauges": [],
+    "buttons": [
+      "Use in Compose",
+      "Open Seat",
+      "Strains",
+      "Mediums",
+      "Nutrients",
+      "Lights",
+      "Close",
+      "1h",
+      "6h",
+      "24h",
+      "48h",
+      "Cycle",
+      "Photo"
+    ],
+    "tabs": [
+      {
+        "label": "Live",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Grow",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "Tune",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Fleet",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Compose",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Research",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "Roster",
+        "active": false,
+        "inFold": true
+      }
+    ],
+    "honesty": "KIT HONEST",
+    "pageH1": "Research Live CannaLib catalog \u2014 strains, mediums, nutrients, and lights. Use in Compose Open Seat",
+    "slug": "research",
+    "viewport": "390",
+    "shot": "space-audit-research-390.png"
+  },
+  {
+    "url": "http://192.168.86.48:8787/#/grow/roster",
+    "title": "DSC-HUB 7.1.0",
+    "vw": 390,
+    "vh": 844,
+    "scrollH": 1364,
+    "rootScrollH": 1364,
+    "bodyH": 844,
+    "chrome": {
+      "brand": {
+        "h": 42,
+        "present": true,
+        "top": 12,
+        "bottom": 54
+      },
+      "honesty": {
+        "h": 30,
+        "present": true,
+        "top": 64,
+        "bottom": 94
+      },
+      "primary": {
+        "h": 47,
+        "present": true,
+        "top": 104,
+        "bottom": 151
+      },
+      "secondary": {
+        "h": 42,
+        "present": true,
+        "top": 159,
+        "bottom": 201
+      },
+      "pageHeader": {
+        "h": 126,
+        "present": true,
+        "top": 217,
+        "bottom": 343
+      },
+      "chromeBottom": 201
+    },
+    "chromePx": 201,
+    "contentStart": 343,
+    "wastePct": 24,
+    "headerPlusChromePct": 41,
+    "cards": [
+      {
+        "title": "CROP SCHEDULER",
+        "h": 517,
+        "top": 357,
+        "inFold": true,
+        "foldFrac": 0.9420333655705996,
+        "textLen": 306
+      },
+      {
+        "title": "ROSTER",
+        "h": 464,
+        "top": 888,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 261
+      }
+    ],
+    "gauges": [],
+    "buttons": [
+      "Use in Compose",
+      "P1 \u2014 2\u00d74 W\u2014 \u00b7 \u2014 \u00b7 \u2014 \u00b7 Need \u2014",
+      "P2 \u2014 UNASSIGNED W\u2014 \u00b7 \u2014 \u00b7 \u2014 \u00b7 Need \u2014",
+      "P3 \u2014 UNASSIGNED W\u2014 \u00b7 \u2014 \u00b7 \u2014 \u00b7 Need \u2014",
+      "P4 \u2014 UNASSIGNED W\u2014 \u00b7 \u2014 \u00b7 \u2014 \u00b7 Need \u2014",
+      "Close",
+      "1h",
+      "6h",
+      "24h",
+      "48h",
+      "Cycle",
+      "Photo"
+    ],
+    "tabs": [
+      {
+        "label": "Live",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Grow",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "Tune",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Fleet",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Compose",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Research",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Roster",
+        "active": true,
+        "inFold": true
+      }
+    ],
+    "honesty": "KIT HONEST",
+    "pageH1": "Roster Seats \u2014 open a row for Plant Seat drawer. Nutrient mix lives in Compose. Use in Compose",
+    "slug": "roster",
+    "viewport": "390",
+    "shot": "space-audit-roster-390.png"
+  },
+  {
+    "url": "http://192.168.86.48:8787/#/tune/learning",
+    "title": "DSC-HUB 7.1.0",
+    "vw": 390,
+    "vh": 844,
+    "scrollH": 984,
+    "rootScrollH": 984,
+    "bodyH": 844,
+    "chrome": {
+      "brand": {
+        "h": 42,
+        "present": true,
+        "top": 12,
+        "bottom": 54
+      },
+      "honesty": {
+        "h": 30,
+        "present": true,
+        "top": 64,
+        "bottom": 94
+      },
+      "primary": {
+        "h": 47,
+        "present": true,
+        "top": 104,
+        "bottom": 151
+      },
+      "secondary": {
+        "h": 42,
+        "present": true,
+        "top": 159,
+        "bottom": 201
+      },
+      "pageHeader": {
+        "h": 84,
+        "present": true,
+        "top": 217,
+        "bottom": 301
+      },
+      "chromeBottom": 201
+    },
+    "chromePx": 201,
+    "contentStart": 301,
+    "wastePct": 24,
+    "headerPlusChromePct": 36,
+    "cards": [
+      {
+        "title": "ANEMOMETER / PPFD CAL",
+        "h": 236,
+        "top": 315,
+        "inFold": true,
+        "foldFrac": 1,
+        "textLen": 200
+      },
+      {
+        "title": "CLIMATE LEARN (PHASE A/B)",
+        "h": 249,
+        "top": 551,
+        "inFold": true,
+        "foldFrac": 1,
+        "textLen": 281
+      },
+      {
+        "title": "KIT / IN SERVICE",
+        "h": 158,
+        "top": 814,
+        "inFold": true,
+        "foldFrac": 0.19007120253164558,
+        "textLen": 47
+      }
+    ],
+    "gauges": [],
+    "buttons": [
+      "Open gate",
+      "Sample points",
+      "Finish session",
+      "Stored curves",
+      "Learn enable",
+      "Close",
+      "1h",
+      "6h",
+      "24h",
+      "48h",
+      "Cycle",
+      "Photo"
+    ],
+    "tabs": [
+      {
+        "label": "Live",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Grow",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Tune",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "Fleet",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Learning",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "Analytics",
+        "active": false,
+        "inFold": true
+      }
+    ],
+    "honesty": "KIT HONEST",
+    "pageH1": "Learning Measure fan output, review the sample, then accept it into the curve.",
+    "slug": "learning",
+    "viewport": "390",
+    "shot": "space-audit-learning-390.png"
+  },
+  {
+    "url": "http://192.168.86.48:8787/#/tune/analytics",
+    "title": "DSC-HUB 7.1.0",
+    "vw": 390,
+    "vh": 844,
+    "scrollH": 934,
+    "rootScrollH": 934,
+    "bodyH": 844,
+    "chrome": {
+      "brand": {
+        "h": 42,
+        "present": true,
+        "top": 12,
+        "bottom": 54
+      },
+      "honesty": {
+        "h": 30,
+        "present": true,
+        "top": 64,
+        "bottom": 94
+      },
+      "primary": {
+        "h": 47,
+        "present": true,
+        "top": 104,
+        "bottom": 151
+      },
+      "secondary": {
+        "h": 42,
+        "present": true,
+        "top": 159,
+        "bottom": 201
+      },
+      "pageHeader": {
+        "h": 84,
+        "present": true,
+        "top": 217,
+        "bottom": 301
+      },
+      "chromeBottom": 201
+    },
+    "chromePx": 201,
+    "contentStart": 301,
+    "wastePct": 24,
+    "headerPlusChromePct": 36,
+    "cards": [
+      {
+        "title": "TENT T + RH (SECONDARY)",
+        "h": 282,
+        "top": 362,
+        "inFold": true,
+        "foldFrac": 1,
+        "textLen": 208
+      },
+      {
+        "title": "ROOT PACK \u2014 MOISTURE (IN SERVICE)",
+        "h": 264,
+        "top": 658,
+        "inFold": true,
+        "foldFrac": 0.7046638257575758,
+        "textLen": 142
+      }
+    ],
+    "gauges": [],
+    "buttons": [
+      "1h",
+      "6h",
+      "24h",
+      "48h",
+      "Cycle",
+      "Photo",
+      "Close"
+    ],
+    "tabs": [
+      {
+        "label": "Live",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Grow",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Tune",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "Fleet",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Learning",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Analytics",
+        "active": true,
+        "inFold": true
+      }
+    ],
+    "honesty": "KIT HONEST",
+    "pageH1": "Analytics In-service pots. Climate charts live on Climate; this is the root pack.",
+    "slug": "analytics",
+    "viewport": "390",
+    "shot": "space-audit-analytics-390.png"
+  },
+  {
+    "url": "http://192.168.86.48:8787/#/fleet",
+    "title": "DSC-HUB 7.1.0",
+    "vw": 390,
+    "vh": 844,
+    "scrollH": 2415,
+    "rootScrollH": 2415,
+    "bodyH": 844,
+    "chrome": {
+      "brand": {
+        "h": 42,
+        "present": true,
+        "top": 12,
+        "bottom": 54
+      },
+      "honesty": {
+        "h": 30,
+        "present": true,
+        "top": 64,
+        "bottom": 94
+      },
+      "primary": {
+        "h": 47,
+        "present": true,
+        "top": 104,
+        "bottom": 151
+      },
+      "secondary": {
+        "h": 42,
+        "present": true,
+        "top": 159,
+        "bottom": 201
+      },
+      "pageHeader": {
+        "h": 84,
+        "present": true,
+        "top": 217,
+        "bottom": 301
+      },
+      "chromeBottom": 201
+    },
+    "chromePx": 201,
+    "contentStart": 301,
+    "wastePct": 24,
+    "headerPlusChromePct": 36,
+    "cards": [
+      {
+        "title": "IN SERVICE",
+        "h": 97,
+        "top": 397,
+        "inFold": true,
+        "foldFrac": 1,
+        "textLen": 15
+      },
+      {
+        "title": "SURFACE",
+        "h": 120,
+        "top": 508,
+        "inFold": true,
+        "foldFrac": 1,
+        "textLen": 33
+      },
+      {
+        "title": "ALERTS",
+        "h": 97,
+        "top": 642,
+        "inFold": true,
+        "foldFrac": 1,
+        "textLen": 8
+      },
+      {
+        "title": "KIT PULSE",
+        "h": 537,
+        "top": 779,
+        "inFold": true,
+        "foldFrac": 0.12102707261042775,
+        "textLen": 314
+      },
+      {
+        "title": "KIT / IN SERVICE",
+        "h": 458,
+        "top": 1330,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 86
+      },
+      {
+        "title": "TANK",
+        "h": 601,
+        "top": 1802,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 82
+      }
+    ],
+    "gauges": [],
+    "buttons": [
+      "Close",
+      "1h",
+      "6h",
+      "24h",
+      "48h",
+      "Cycle",
+      "Photo"
+    ],
+    "tabs": [
+      {
+        "label": "Live",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Grow",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Tune",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Fleet",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "Overview",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "Calibrate",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Settings",
+        "active": false,
+        "inFold": true
+      }
+    ],
+    "honesty": "KIT HONEST",
+    "pageH1": "Fleet 7 of 11 devices in service. Device health, tank, and service toggles.",
+    "slug": "fleet",
+    "viewport": "390",
+    "shot": "space-audit-fleet-390.png"
+  },
+  {
+    "url": "http://192.168.86.48:8787/#/fleet/calibrate",
+    "title": "DSC-HUB 7.1.0",
+    "vw": 390,
+    "vh": 844,
+    "scrollH": 844,
+    "rootScrollH": 844,
+    "bodyH": 844,
+    "chrome": {
+      "brand": {
+        "h": 42,
+        "present": true,
+        "top": 12,
+        "bottom": 54
+      },
+      "honesty": {
+        "h": 30,
+        "present": true,
+        "top": 64,
+        "bottom": 94
+      },
+      "primary": {
+        "h": 47,
+        "present": true,
+        "top": 104,
+        "bottom": 151
+      },
+      "secondary": {
+        "h": 42,
+        "present": true,
+        "top": 159,
+        "bottom": 201
+      },
+      "pageHeader": {
+        "h": 84,
+        "present": true,
+        "top": 217,
+        "bottom": 301
+      },
+      "chromeBottom": 201
+    },
+    "chromePx": 201,
+    "contentStart": 301,
+    "wastePct": 24,
+    "headerPlusChromePct": 36,
+    "cards": [
+      {
+        "title": "1 \u00b7 SELECT DUCT",
+        "h": 305,
+        "top": 406,
+        "inFold": true,
+        "foldFrac": 1,
+        "textLen": 242
+      }
+    ],
+    "gauges": [],
+    "buttons": [
+      "Fan CFM",
+      "Light PAR/LUX",
+      "OUT exhaust",
+      "RECIRC",
+      "Intake 4\u00d78",
+      "Intake 2\u00d74",
+      "Start OUT exhaust session",
+      "Close",
+      "1h",
+      "6h",
+      "24h",
+      "48h",
+      "Cycle",
+      "Photo"
+    ],
+    "tabs": [
+      {
+        "label": "Live",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Grow",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Tune",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Fleet",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "Overview",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Calibrate",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "Settings",
+        "active": false,
+        "inFold": true
+      }
+    ],
+    "honesty": "KIT HONEST",
+    "pageH1": "Calibrate Measure fan airflow and light output so the hub runs on real curves.",
+    "slug": "calibrate",
+    "viewport": "390",
+    "shot": "space-audit-calibrate-390.png"
+  },
+  {
+    "url": "http://192.168.86.48:8787/#/fleet/settings",
+    "title": "DSC-HUB 7.1.0",
+    "vw": 390,
+    "vh": 844,
+    "scrollH": 10827,
+    "rootScrollH": 10827,
+    "bodyH": 844,
+    "chrome": {
+      "brand": {
+        "h": 42,
+        "present": true,
+        "top": 12,
+        "bottom": 54
+      },
+      "honesty": {
+        "h": 30,
+        "present": true,
+        "top": 64,
+        "bottom": 94
+      },
+      "primary": {
+        "h": 47,
+        "present": true,
+        "top": 104,
+        "bottom": 151
+      },
+      "secondary": {
+        "h": 42,
+        "present": true,
+        "top": 159,
+        "bottom": 201
+      },
+      "pageHeader": {
+        "h": 63,
+        "present": true,
+        "top": 217,
+        "bottom": 280
+      },
+      "chromeBottom": 201
+    },
+    "chromePx": 201,
+    "contentStart": 280,
+    "wastePct": 24,
+    "headerPlusChromePct": 33,
+    "cards": [
+      {
+        "title": "FLEET INVENTORY",
+        "h": 6212,
+        "top": 294,
+        "inFold": true,
+        "foldFrac": 0.08854423438741939,
+        "textLen": 1789
+      },
+      {
+        "title": "CONTROL OFFLINE",
+        "h": 568,
+        "top": 399,
+        "inFold": true,
+        "foldFrac": 0.7835057218309859,
+        "textLen": 140
+      },
+      {
+        "title": "DEHUMIDIFIER ONLINE",
+        "h": 568,
+        "top": 1010,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 177
+      },
+      {
+        "title": "HEATER ONLINE",
+        "h": 568,
+        "top": 1620,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 165
+      },
+      {
+        "title": "HEATMAT ONLINE",
+        "h": 568,
+        "top": 2231,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 167
+      },
+      {
+        "title": "HUB ONLINE",
+        "h": 568,
+        "top": 2841,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 164
+      },
+      {
+        "title": "HUMIDIFIER ONLINE",
+        "h": 568,
+        "top": 3452,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 173
+      },
+      {
+        "title": "POT1 ONLINE",
+        "h": 568,
+        "top": 4063,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 153
+      },
+      {
+        "title": "POT2 ONLINE",
+        "h": 568,
+        "top": 4673,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 153
+      },
+      {
+        "title": "POT3 OFFLINE",
+        "h": 568,
+        "top": 5284,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 134
+      },
+      {
+        "title": "POT4 ONLINE",
+        "h": 568,
+        "top": 5894,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 153
+      },
+      {
+        "title": "DEVICE ASSIGNMENT",
+        "h": 774,
+        "top": 6506,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 321
+      },
+      {
+        "title": "NETWORK",
+        "h": 638,
+        "top": 7280,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 367
+      },
+      {
+        "title": "INTEGRATIONS",
+        "h": 269,
+        "top": 7918,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 140
+      },
+      {
+        "title": "CATALOG",
+        "h": 212,
+        "top": 8187,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 185
+      },
+      {
+        "title": "ESPHOME",
+        "h": 1978,
+        "top": 8399,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 1491
+      },
+      {
+        "title": "ZIGBEE (SKYCONNECT)",
+        "h": 231,
+        "top": 10377,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 186
+      },
+      {
+        "title": "BACKUP",
+        "h": 164,
+        "top": 10608,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 92
+      }
+    ],
+    "gauges": [],
+    "buttons": [
+      "Close",
+      "1h",
+      "6h",
+      "24h",
+      "48h",
+      "Cycle",
+      "Photo"
+    ],
+    "tabs": [
+      {
+        "label": "Live",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Grow",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Tune",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Fleet",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "Overview",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Calibrate",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Settings",
+        "active": true,
+        "inFold": true
+      }
+    ],
+    "honesty": "KIT HONEST",
+    "pageH1": "Settings DSC-HUB 7.1.0 \u2014 Pi appliance",
+    "slug": "settings",
+    "viewport": "390",
+    "shot": "space-audit-settings-390.png"
+  },
+  {
+    "url": "http://192.168.86.48:8787/#/ops/home",
+    "title": "DSC-HUB 7.1.0",
+    "vw": 390,
+    "vh": 844,
+    "scrollH": 5106,
+    "rootScrollH": 5106,
+    "bodyH": 844,
+    "chrome": {
+      "brand": {
+        "h": 42,
+        "present": true,
+        "top": 12,
+        "bottom": 54
+      },
+      "honesty": {
+        "h": 30,
+        "present": true,
+        "top": 64,
+        "bottom": 94
+      },
+      "primary": {
+        "h": 47,
+        "present": true,
+        "top": 104,
+        "bottom": 151
+      },
+      "secondary": {
+        "h": 42,
+        "present": true,
+        "top": 159,
+        "bottom": 201
+      },
+      "pageHeader": {
+        "h": 105,
+        "present": true,
+        "top": 217,
+        "bottom": 322
+      },
+      "chromeBottom": 201
+    },
+    "chromePx": 201,
+    "contentStart": 322,
+    "wastePct": 24,
+    "headerPlusChromePct": 38,
+    "cards": [
+      {
+        "title": "CANNALIB CATALOG API",
+        "h": 258,
+        "top": 499,
+        "inFold": true,
+        "foldFrac": 1,
+        "textLen": 75
+      },
+      {
+        "title": "HITS",
+        "h": 97,
+        "top": 540,
+        "inFold": true,
+        "foldFrac": 1,
+        "textLen": 6
+      },
+      {
+        "title": "BANDWIDTH IN",
+        "h": 97,
+        "top": 540,
+        "inFold": true,
+        "foldFrac": 1,
+        "textLen": 14
+      },
+      {
+        "title": "BANDWIDTH OUT",
+        "h": 97,
+        "top": 645,
+        "inFold": true,
+        "foldFrac": 1,
+        "textLen": 15
+      },
+      {
+        "title": "CORPUS STRAINS",
+        "h": 97,
+        "top": 645,
+        "inFold": true,
+        "foldFrac": 1,
+        "textLen": 16
+      },
+      {
+        "title": "SYSTEM MAP",
+        "h": 476,
+        "top": 860,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 32
+      },
+      {
+        "title": "RUNNING",
+        "h": 162,
+        "top": 1336,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 58
+      },
+      {
+        "title": "GROW LOG",
+        "h": 316,
+        "top": 1576,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 2181
+      },
+      {
+        "title": "OPERATIONAL NOW",
+        "h": 306,
+        "top": 1892,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 260
+      },
+      {
+        "title": "BANDS",
+        "h": 609,
+        "top": 2198,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 234
+      },
+      {
+        "title": "LUNG \u00b7 CFM",
+        "h": 722,
+        "top": 2806,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 181
+      },
+      {
+        "title": "OUT ALLOC",
+        "h": 97,
+        "top": 2891,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 15
+      },
+      {
+        "title": "RECIRC ALLOC",
+        "h": 97,
+        "top": 2891,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 18
+      },
+      {
+        "title": "INTAKE 4\u00d78",
+        "h": 97,
+        "top": 2996,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 16
+      },
+      {
+        "title": "INTAKE 2\u00d74",
+        "h": 97,
+        "top": 2996,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 16
+      },
+      {
+        "title": "TODAY",
+        "h": 129,
+        "top": 3528,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 52
+      },
+      {
+        "title": "PLANT ROSTER",
+        "h": 1168,
+        "top": 3657,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 207
+      },
+      {
+        "title": "KIT PULSE",
+        "h": 1168,
+        "top": 3657,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 245
+      },
+      {
+        "title": "ROOT & TANK",
+        "h": 269,
+        "top": 4825,
+        "inFold": false,
+        "foldFrac": 0,
+        "textLen": 100
+      }
+    ],
+    "gauges": [
+      {
+        "label": "4\u00d78 T",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "4\u00d78 RH",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "4\u00d78 VPD",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "2\u00d74 T",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "2\u00d74 RH",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "2\u00d74 VPD",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "ROOM T",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "ROOM RH",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "ROOT",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "P1",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "P2",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "P3",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      },
+      {
+        "label": "P4",
+        "value": "",
+        "inFold": false,
+        "empty": true
+      }
+    ],
+    "buttons": [
+      "Open Twin",
+      "Climate",
+      "HUB ONLINE",
+      "PANEL LINKED",
+      "BEAT 709",
+      "All clear",
+      "FLEET 7.0.0",
+      "CANNALIB OFF",
+      "P1 direct",
+      "P2 direct",
+      "P3 direct",
+      "P4 direct",
+      "Close",
+      "1h",
+      "6h",
+      "24h",
+      "48h",
+      "Cycle",
+      "Photo"
+    ],
+    "tabs": [
+      {
+        "label": "Live",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "Grow",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Tune",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Fleet",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Overview",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Mission",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Dash",
+        "active": true,
+        "inFold": true
+      },
+      {
+        "label": "Twin",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Climate",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "4\u00d78",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "2\u00d74",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Root",
+        "active": false,
+        "inFold": true
+      },
+      {
+        "label": "Light",
+        "active": false,
+        "inFold": true
+      }
+    ],
+    "honesty": "KIT HONEST",
+    "pageH1": "Home Everything running right now, at a glance. Open Twin Climate",
+    "slug": "dash",
+    "viewport": "390",
+    "shot": "space-audit-dash-390.png"
+  }
+]

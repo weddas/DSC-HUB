@@ -147,12 +147,10 @@ export function tentVitals(
 export function inventoryInService(
   fleet: FleetSnapshot,
   seatId: string,
-  defaultInService = true,
+  defaultInService = false,
 ): boolean {
   const row = fleet.inventory?.find((r) => r.seat_id === seatId);
   if (row && row.in_service != null) return !!row.in_service;
-  if (seatId === "ac" || seatId === "mister" || seatId === "tank") return false;
-  if (seatId === "pot3") return false;
   return defaultInService;
 }
 

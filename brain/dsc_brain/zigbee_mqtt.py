@@ -10,7 +10,7 @@ import time
 from typing import Any, Callable
 
 from .fleet_state import get_fleet_state, update_fleet_state
-from .settings import get_setting, list_inventory
+from .settings import get_setting, list_inventory, set_setting
 
 _logger = logging.getLogger(__name__)
 
@@ -18,6 +18,9 @@ try:
     import paho.mqtt.client as mqtt
 except ImportError:  # pragma: no cover
     mqtt = None  # type: ignore[assignment]
+
+_permit_timer: threading.Timer | None = None
+_permit_lock = threading.Lock()
 
 
 def _placement_map() -> dict[str, str]:
@@ -44,11 +47,34 @@ def _placement_map() -> dict[str, str]:
     return out
 
 
+def _clear_permit_join_flag() -> None:
+    set_setting("zigbee_permit_join", "false")
+
+
+def _schedule_permit_join_expiry(duration_s: int) -> None:
+    global _permit_timer
+    with _permit_lock:
+        if _permit_timer is not None:
+            _permit_timer.cancel()
+        _permit_timer = threading.Timer(float(duration_s), _clear_permit_join_flag)
+        _permit_timer.daemon = True
+        _permit_timer.start()
+
+
+def _cancel_permit_join_expiry() -> None:
+    global _permit_timer
+    with _permit_lock:
+        if _permit_timer is not None:
+            _permit_timer.cancel()
+            _permit_timer = None
+
+
 class ZigbeeMqttIngest:
     def __init__(self) -> None:
         self._thread: threading.Thread | None = None
         self._client: Any = None
         self._running = False
+        self._mqtt_connected = False
         self._canopy: dict[str, Any] = {}
         self._devices: list[dict[str, Any]] = []
         self._devices_updated_at: float | None = None
@@ -67,6 +93,7 @@ class ZigbeeMqttIngest:
 
     def stop(self) -> None:
         self._running = False
+        self._mqtt_connected = False
         if self._client:
             self._client.loop_stop()
             self._client.disconnect()
@@ -79,10 +106,17 @@ class ZigbeeMqttIngest:
 
         def on_connect(_c: Any, _u: Any, _f: Any, reason_code: Any, _p: Any = None) -> None:
             if reason_code == 0 or str(reason_code) == "Success":
+                self._mqtt_connected = True
                 client.subscribe("zigbee2mqtt/+")
                 client.subscribe("zigbee2mqtt/bridge/devices")
+            else:
+                self._mqtt_connected = False
+
+        def on_disconnect(_c: Any, _u: Any, _f: Any, reason_code: Any, _p: Any = None) -> None:
+            self._mqtt_connected = False
 
         client.on_connect = on_connect
+        client.on_disconnect = on_disconnect
         try:
             client.connect(host, port, 60)
             self._client = client
@@ -90,6 +124,7 @@ class ZigbeeMqttIngest:
             while self._running:
                 time.sleep(1.0)
         except Exception as exc:  # noqa: BLE001
+            self._mqtt_connected = False
             _logger.warning("Zigbee MQTT connect failed: %s", exc)
 
     def _on_message(self, _client: Any, _userdata: Any, msg: Any) -> None:
@@ -182,6 +217,7 @@ def start_zigbee_ingest() -> None:
 
 
 def stop_zigbee_ingest() -> None:
+    _cancel_permit_join_expiry()
     _ingest.stop()
 
 
@@ -197,11 +233,32 @@ def get_zigbee_by_placement() -> dict[str, dict[str, Any]]:
     return dict(_ingest._by_placement)
 
 
-def set_permit_join(enabled: bool, callback: Callable[[bool], None] | None = None) -> None:
-    """Publish zigbee2mqtt bridge permit_join (best-effort)."""
+def get_zigbee_health() -> dict[str, Any]:
+    permit_join = get_setting("zigbee_permit_join", "false").lower() == "true"
+    return {
+        "mqtt_connected": _ingest._mqtt_connected,
+        "device_count": len(_ingest._devices),
+        "devices_updated_at": _ingest._devices_updated_at,
+        "canopy_updated_at": _ingest._canopy.get("updated_at"),
+        "permit_join": permit_join,
+    }
+
+
+def set_permit_join(
+    enabled: bool,
+    duration_s: int = 120,
+    callback: Callable[[bool], None] | None = None,
+) -> None:
+    """Publish zigbee2mqtt bridge permit_join (best-effort). z2m 2.x expects {"time": N}."""
+    if enabled:
+        seconds = max(1, min(int(duration_s), 254))
+        _schedule_permit_join_expiry(seconds)
+    else:
+        seconds = 0
+        _cancel_permit_join_expiry()
     if mqtt is None or _ingest._client is None:
         return
-    payload = json.dumps({"permit_join": enabled})
+    payload = json.dumps({"time": seconds})
     _ingest._client.publish("zigbee2mqtt/bridge/request/permit_join", payload)
     if callback:
         callback(enabled)

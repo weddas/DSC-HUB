@@ -9,11 +9,18 @@ PASS="${1:-Digital}"
 AP_WAIT="${2:-120}"
 SSID="DSC-HUB Fallback Hotspot"
 SECRETS="/opt/dsc-hub-repo/firmware/v4/secrets.yaml"
+BRAIN_MDNS="${BRAIN_MDNS:-dsc-brain.local}"
+BRAIN_ETH_IP="${BRAIN_ETH_IP:-192.168.86.48}"
+IW_SCAN_TIMEOUT="${IW_SCAN_TIMEOUT:-30}"
 
 run_sudo() { echo "$PASS" | sudo -S "$@"; }
 
 get_secret() {
   grep "^dsc_hub_ap_password:" "$SECRETS" | sed -n 's/^[^:]*: "\(.*\)"/\1/p' | head -1
+}
+
+iw_scan() {
+  run_sudo timeout "$IW_SCAN_TIMEOUT" iw dev wlan0 scan 2>/dev/null || true
 }
 
 stop_brain_ap() {
@@ -87,13 +94,34 @@ if [ -z "$AP_PSK" ]; then
 fi
 
 echo "=== Hub fallback recovery (Pi wlan0 client) ==="
+echo "Brain: ${BRAIN_MDNS} / ${BRAIN_ETH_IP}"
+if ping -c1 -W2 "$BRAIN_ETH_IP" >/dev/null 2>&1 || ping -c1 -W2 "$BRAIN_MDNS" >/dev/null 2>&1; then
+  echo "Brain eth0 reachable"
+else
+  echo "WARN: Brain not pingable on eth0 — continuing (SSH session may still work)"
+fi
+
+# Pi AP OTA first (hub fleet address) before tearing down the Brain AP.
+HUB_PI_IP="10.42.0.10"
+if ping -c1 -W2 "$HUB_PI_IP" >/dev/null 2>&1; then
+  if (echo >/dev/tcp/"$HUB_PI_IP"/8266) 2>/dev/null || (echo >/dev/tcp/"$HUB_PI_IP"/6053) 2>/dev/null; then
+    echo "Hub reachable on Pi AP ($HUB_PI_IP) — trying OTA without stopping Brain AP..."
+    if run_sudo docker exec -w /config dsc-hub-esphome esphome upload dsc-hub.yaml --device "$HUB_PI_IP"; then
+      echo "OK via Pi AP: hub"
+      echo "=== done — hub reboots and should rejoin DSC-Brain within ~2 min ==="
+      exit 0
+    fi
+    echo "Pi AP OTA failed — falling back to hub SoftAP recovery"
+  fi
+fi
+
 stop_brain_ap
 
 end=$((SECONDS + AP_WAIT))
 found=0
-echo "Scanning for AP '${SSID}' up to ${AP_WAIT}s..."
+echo "Scanning for AP '${SSID}' up to ${AP_WAIT}s (iw scan timeout ${IW_SCAN_TIMEOUT}s)..."
 while [ "$SECONDS" -lt "$end" ]; do
-  if run_sudo iw dev wlan0 scan 2>/dev/null | grep -Fq "SSID: ${SSID}"; then
+  if iw_scan | grep -Fq "SSID: ${SSID}"; then
     found=1
     echo "Found AP: ${SSID}"
     break

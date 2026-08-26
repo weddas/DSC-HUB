@@ -24,6 +24,30 @@ import { parseFleetSnapshot, type FleetSnapshot, type InventoryRow, type SeatSna
 
 const AP_CHANNELS = ["1", "6", "11"];
 
+const AP_KEYS = ["ap_ssid", "ap_psk", "ap_channel"] as const;
+const INTEGRATION_KEYS = [
+  "ollama_base_url",
+  "ollama_model",
+  "cannalib_api_url",
+  "cannalib_api_key",
+  "cannalib_use_local_fallback",
+] as const;
+
+function pickSettings(settings: Record<string, string>, keys: readonly string[]): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const key of keys) {
+    if (settings[key] != null) out[key] = settings[key];
+  }
+  return out;
+}
+
+function inventoryGroup(seatId: string): string {
+  const id = seatId.toLowerCase();
+  if (id === "hub" || id === "control" || id === "panel") return "Brain & panel";
+  if (id.startsWith("pot")) return "Pots";
+  return "Appliances";
+}
+
 /** Per-device glyph — seat_id → icon. */
 function seatIcon(seatId: string): IconName {
   const id = seatId.toLowerCase();
@@ -46,7 +70,7 @@ function zigbeeIcon(type: string): IconName {
 
 function resolveSeat(fleet: FleetSnapshot, seatId: string): SeatSnapshot | null {
   if (seatId === "hub") return fleet.hub;
-  if (seatId === "panel") return fleet.panel;
+  if (seatId === "panel" || seatId === "control") return fleet.panel;
   if (fleet.pots[seatId]) return fleet.pots[seatId];
   if (fleet.sonoffs[seatId]) return fleet.sonoffs[seatId];
   return null;
@@ -102,10 +126,10 @@ function DeviceAssignmentRow({
     <tr>
       <td>{seatId}</td>
       <td>
-        <input value={fn} onChange={(e) => setFn(e.target.value)} placeholder="e.g. intake_temp" />
+        <input type="text" value={fn} onChange={(e) => setFn(e.target.value)} placeholder="e.g. intake_temp" />
       </td>
       <td>
-        <input value={place} onChange={(e) => setPlace(e.target.value)} placeholder="e.g. 4x8 intake duct" />
+        <input type="text" value={place} onChange={(e) => setPlace(e.target.value)} placeholder="e.g. 4x8 intake duct" />
       </td>
       <td>
         <input type="number" min="1" max="100" value={cap} onChange={(e) => setCap(e.target.value)} placeholder="100" />
@@ -152,7 +176,7 @@ function DeviceDetailCard({
         <dt>MAC</dt>
         <dd>{String(row.mac ?? "—")}</dd>
         <dt>Firmware</dt>
-        <dd>{seat?.firmware ?? seat?.values?.firmware_version ?? "—"}</dd>
+        <dd>{String(seat?.firmware ?? seat?.values?.firmware_version ?? "—")}</dd>
         <dt>Uptime</dt>
         <dd>{typeof uptime === "number" ? `${Math.round(uptime / 60)} min` : "—"}</dd>
         <dt>RSSI</dt>
@@ -173,7 +197,8 @@ function DeviceDetailCard({
 }
 
 export function SettingsPage() {
-  const [settings, setSettings] = useState<Record<string, string>>({});
+  const [apDraft, setApDraft] = useState<Record<string, string>>({});
+  const [integrationsDraft, setIntegrationsDraft] = useState<Record<string, string>>({});
   const [inventory, setInventory] = useState<Array<Record<string, unknown>>>([]);
   const [fleet, setFleet] = useState<FleetSnapshot | null>(null);
   const [network, setNetwork] = useState<Record<string, unknown> | null>(null);
@@ -186,6 +211,11 @@ export function SettingsPage() {
   const [networkResult, setNetworkResult] = useState<string>("");
   const [importResult, setImportResult] = useState<string>("");
   const [confirmNetwork, setConfirmNetwork] = useState(false);
+  const [pendingInService, setPendingInService] = useState<{ seatId: string; next: boolean } | null>(null);
+  const [pendingOta, setPendingOta] = useState<{ seatId: string; action: "ota" | "compile" } | null>(null);
+  const [pendingPermitJoin, setPendingPermitJoin] = useState<boolean | null>(null);
+  const [confirmReloadCatalogs, setConfirmReloadCatalogs] = useState(false);
+  const [pendingImport, setPendingImport] = useState<File | null>(null);
 
   const refresh = async () => {
     const [s, net, cat, esp, j, fleetRaw, zigbee] = await Promise.all([
@@ -197,7 +227,8 @@ export function SettingsPage() {
       get_fleet_state().catch(() => null),
       get_zigbee_devices().catch(() => ({ devices: [] as Array<Record<string, unknown>> })),
     ]);
-    setSettings(s.settings);
+    setApDraft(pickSettings(s.settings, AP_KEYS));
+    setIntegrationsDraft(pickSettings(s.settings, INTEGRATION_KEYS));
     setInventory(s.inventory);
     setNetwork(net);
     setCatalog(cat);
@@ -211,9 +242,13 @@ export function SettingsPage() {
     refresh().catch(() => undefined);
   }, []);
 
-  const save = async () => {
-    await patch_settings(settings);
+  const saveIntegrations = async () => {
+    await patch_settings(integrationsDraft);
     await refresh();
+  };
+
+  const saveNetworkDraft = async () => {
+    await patch_settings(apDraft);
   };
 
   const toggleInService = async (seatId: string, inService: boolean) => {
@@ -242,11 +277,22 @@ export function SettingsPage() {
   const inventoryRows = useMemo(
     () =>
       inventory.map((row) => ({
-        ...(row as InventoryRow),
+        ...(row as unknown as InventoryRow),
         seat: fleet ? resolveSeat(fleet, String(row.seat_id)) : null,
       })),
     [inventory, fleet],
   );
+
+  const inventoryGroups = useMemo(() => {
+    const groups = new Map<string, typeof inventoryRows>();
+    for (const row of inventoryRows) {
+      const group = inventoryGroup(String(row.seat_id));
+      const list = groups.get(group) ?? [];
+      list.push(row);
+      groups.set(group, list);
+    }
+    return Array.from(groups.entries());
+  }, [inventoryRows]);
 
   return (
     <div className="dsc-page">
@@ -255,21 +301,55 @@ export function SettingsPage() {
       <section className="dsc-card">
         <h3>Fleet inventory</h3>
         <p className="dsc-muted">Every device with its address, firmware, online state, and service status.</p>
-        <div className="dsc-grid">
-          {inventoryRows.map(({ seat, ...row }) => (
-            <div key={String(row.seat_id)} className="dsc-col-4">
-              <DeviceDetailCard row={row} seat={seat} />
-              <label style={{ display: "block", marginTop: 8, fontSize: "0.85rem" }}>
-                <input
-                  type="checkbox"
-                  checked={Boolean(row.in_service)}
-                  onChange={(e) => toggleInService(String(row.seat_id), e.target.checked)}
-                />{" "}
-                In service
-              </label>
+        {inventoryGroups.map(([group, rows]) => (
+          <details
+            key={group}
+            className="dsc-inventory-group"
+            open={rows.some(({ seat, in_service }) => !(seat?.online ?? false) || !in_service)}
+          >
+            <summary>{group}</summary>
+            <div className="dsc-grid">
+              {rows.map(({ seat, ...row }) => (
+                <div key={String(row.seat_id)} className="dsc-col-4">
+                  <DeviceDetailCard row={row} seat={seat} />
+                  <label style={{ display: "block", marginTop: 8, fontSize: "0.85rem" }}>
+                    <input
+                      type="checkbox"
+                      checked={Boolean(row.in_service)}
+                      onChange={(e) =>
+                        setPendingInService({ seatId: String(row.seat_id), next: e.target.checked })
+                      }
+                    />{" "}
+                    In service
+                  </label>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          </details>
+        ))}
+        <DecisionLayer
+          open={pendingInService != null}
+          onDismiss={() => setPendingInService(null)}
+          onConfirm={async () => {
+            if (!pendingInService) return;
+            const { seatId, next } = pendingInService;
+            setPendingInService(null);
+            await toggleInService(seatId, next);
+          }}
+          title={
+            pendingInService?.next
+              ? `Put ${pendingInService.seatId} in service`
+              : `Take ${pendingInService?.seatId ?? "device"} out of service`
+          }
+          confirmLabel={pendingInService?.next ? "Enable" : "Disable"}
+          help={null}
+        >
+          <p>
+            {pendingInService?.next
+              ? "The brain will treat this seat as part of the live kit."
+              : "Out-of-service seats stay visible but never fake readings."}
+          </p>
+        </DecisionLayer>
       </section>
 
       <section className="dsc-card">
@@ -278,7 +358,8 @@ export function SettingsPage() {
           Function and placement tell the brain what each sensor/fan measures. Capability override caps max fan/light
           output when hardware differs from nameplate.
         </p>
-        <table className="dsc-table">
+        <div className="dsc-table-scroll">
+          <table className="dsc-table">
           <thead>
             <tr>
               <th>Seat</th>
@@ -294,6 +375,7 @@ export function SettingsPage() {
             ))}
           </tbody>
         </table>
+        </div>
       </section>
 
       <section className="dsc-card">
@@ -304,24 +386,25 @@ export function SettingsPage() {
         <label>
           AP SSID
           <input
-            value={settings.ap_ssid ?? ""}
-            onChange={(e) => setSettings({ ...settings, ap_ssid: e.target.value })}
+            type="text"
+            value={apDraft.ap_ssid ?? ""}
+            onChange={(e) => setApDraft({ ...apDraft, ap_ssid: e.target.value })}
           />
         </label>
         <label>
           AP PSK
           <input
             type="password"
-            value={settings.ap_psk ?? ""}
-            onChange={(e) => setSettings({ ...settings, ap_psk: e.target.value })}
+            value={apDraft.ap_psk ?? ""}
+            onChange={(e) => setApDraft({ ...apDraft, ap_psk: e.target.value })}
             placeholder={network?.ap_psk_set ? "••••••••" : "set on first save"}
           />
         </label>
         <label>
           Channel
           <select
-            value={settings.ap_channel ?? "6"}
-            onChange={(e) => setSettings({ ...settings, ap_channel: e.target.value })}
+            value={apDraft.ap_channel ?? "6"}
+            onChange={(e) => setApDraft({ ...apDraft, ap_channel: e.target.value })}
           >
             {AP_CHANNELS.map((ch) => (
               <option key={ch} value={ch}>
@@ -331,24 +414,26 @@ export function SettingsPage() {
           </select>
         </label>
         {network?.dhcp_map ? (
-          <table className="dsc-table">
-            <thead>
-              <tr>
-                <th>Seat</th>
-                <th>Host</th>
-                <th>MAC</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(network.dhcp_map as Array<Record<string, unknown>>).map((row) => (
-                <tr key={String(row.seat_id)}>
-                  <td>{String(row.seat_id)}</td>
-                  <td>{String(row.host ?? "—")}</td>
-                  <td>{String(row.mac ?? "—")}</td>
+          <div className="dsc-table-scroll">
+            <table className="dsc-table">
+              <thead>
+                <tr>
+                  <th>Seat</th>
+                  <th>Host</th>
+                  <th>MAC</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {(network.dhcp_map as Array<Record<string, unknown>>).map((row) => (
+                  <tr key={String(row.seat_id)}>
+                    <td>{String(row.seat_id)}</td>
+                    <td>{String(row.host ?? "—")}</td>
+                    <td>{String(row.mac ?? "—")}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         ) : null}
         <Button variant="danger" onClick={() => setConfirmNetwork(true)}>
           Apply network
@@ -359,17 +444,18 @@ export function SettingsPage() {
           onDismiss={() => setConfirmNetwork(false)}
           onConfirm={async () => {
             setConfirmNetwork(false);
-            await save();
+            await saveNetworkDraft();
             const r = await apply_network();
             setNetworkResult(JSON.stringify(r, null, 2));
+            await refresh();
           }}
           title="Apply network settings"
           confirmLabel="Apply and restart Wi-Fi"
           help={null}
         >
           <p>
-            Saves the network settings and restarts the hub&apos;s Wi-Fi. Devices drop off briefly and reconnect on
-            their own.
+            Saves AP SSID, PSK, and channel only — then restarts the hub&apos;s Wi-Fi. Devices drop off briefly and
+            reconnect on their own.
           </p>
         </DecisionLayer>
       </section>
@@ -379,16 +465,18 @@ export function SettingsPage() {
         <label>
           Ollama URL
           <input
-            value={settings.ollama_base_url ?? ""}
-            onChange={(e) => setSettings({ ...settings, ollama_base_url: e.target.value })}
+            type="text"
+            value={integrationsDraft.ollama_base_url ?? ""}
+            onChange={(e) => setIntegrationsDraft({ ...integrationsDraft, ollama_base_url: e.target.value })}
             placeholder="http://192.168.86.2:11434"
           />
         </label>
         <label>
           Ollama model
           <input
-            value={settings.ollama_model ?? ""}
-            onChange={(e) => setSettings({ ...settings, ollama_model: e.target.value })}
+            type="text"
+            value={integrationsDraft.ollama_model ?? ""}
+            onChange={(e) => setIntegrationsDraft({ ...integrationsDraft, ollama_model: e.target.value })}
           />
         </label>
         <Button onClick={async () => setOllamaResult(JSON.stringify(await test_ollama()))}>Test Ollama</Button>
@@ -397,25 +485,26 @@ export function SettingsPage() {
         <label>
           CannaLib API URL
           <input
-            value={settings.cannalib_api_url ?? ""}
-            onChange={(e) => setSettings({ ...settings, cannalib_api_url: e.target.value })}
+            type="text"
+            value={integrationsDraft.cannalib_api_url ?? ""}
+            onChange={(e) => setIntegrationsDraft({ ...integrationsDraft, cannalib_api_url: e.target.value })}
           />
         </label>
         <label>
           CannaLib API key
           <input
             type="password"
-            value={settings.cannalib_api_key ?? ""}
-            onChange={(e) => setSettings({ ...settings, cannalib_api_key: e.target.value })}
+            value={integrationsDraft.cannalib_api_key ?? ""}
+            onChange={(e) => setIntegrationsDraft({ ...integrationsDraft, cannalib_api_key: e.target.value })}
           />
         </label>
         <label>
           <input
             type="checkbox"
-            checked={(settings.cannalib_use_local_fallback ?? "true") === "true"}
+            checked={(integrationsDraft.cannalib_use_local_fallback ?? "true") === "true"}
             onChange={(e) =>
-              setSettings({
-                ...settings,
+              setIntegrationsDraft({
+                ...integrationsDraft,
                 cannalib_use_local_fallback: e.target.checked ? "true" : "false",
               })
             }
@@ -438,7 +527,21 @@ export function SettingsPage() {
           Chemistry, height, and lineage come straight from the catalog — gaps are never filled with guesses.
         </p>
         <Button onClick={async () => setCatalog(await get_catalog_status())}>Refresh status</Button>
-        <Button onClick={async () => reload_catalogs()}>Reload local catalogs</Button>
+        <Button onClick={() => setConfirmReloadCatalogs(true)}>Reload local catalogs</Button>
+        <DecisionLayer
+          open={confirmReloadCatalogs}
+          onDismiss={() => setConfirmReloadCatalogs(false)}
+          onConfirm={async () => {
+            setConfirmReloadCatalogs(false);
+            await reload_catalogs();
+            setCatalog(await get_catalog_status());
+          }}
+          title="Reload local catalogs"
+          confirmLabel="Reload"
+          help={null}
+        >
+          <p>Re-reads on-Pi catalog indexes. Compose and Research pick up changes after reload.</p>
+        </DecisionLayer>
       </section>
 
       <section className="dsc-card">
@@ -447,7 +550,8 @@ export function SettingsPage() {
           Updates are sent over the air. One build runs at a time, and nothing is flashed unless you queue it.
         </p>
         <p className="dsc-muted">Pot 5 and beyond are unavailable until their firmware exists.</p>
-        <table className="dsc-table">
+        <div className="dsc-table-scroll">
+          <table className="dsc-table">
           <thead>
             <tr>
               <th>Seat</th>
@@ -465,10 +569,10 @@ export function SettingsPage() {
                 <td>{String(row.expected_firmware ?? "—")}</td>
                 <td>{row.online ? String(row.last_firmware ?? "online") : "offline"}</td>
                 <td>
-                  <Button onClick={() => queue_esphome_job(String(row.seat_id), "ota").then(refresh)}>
+                  <Button onClick={() => setPendingOta({ seatId: String(row.seat_id), action: "ota" })}>
                     Queue OTA
                   </Button>
-                  <Button onClick={() => queue_esphome_job(String(row.seat_id), "compile").then(refresh)}>
+                  <Button onClick={() => setPendingOta({ seatId: String(row.seat_id), action: "compile" })}>
                     Queue compile
                   </Button>
                 </td>
@@ -476,6 +580,26 @@ export function SettingsPage() {
             ))}
           </tbody>
         </table>
+        </div>
+        <DecisionLayer
+          open={pendingOta != null}
+          onDismiss={() => setPendingOta(null)}
+          onConfirm={async () => {
+            if (!pendingOta) return;
+            const job = pendingOta;
+            setPendingOta(null);
+            await queue_esphome_job(job.seatId, job.action);
+            await refresh();
+          }}
+          title={pendingOta?.action === "compile" ? "Queue firmware compile" : "Queue OTA flash"}
+          confirmLabel={pendingOta?.action === "compile" ? "Queue compile" : "Queue OTA"}
+          help={null}
+        >
+          <p>
+            Queues an ESPHome {pendingOta?.action === "compile" ? "compile" : "OTA"} job for{" "}
+            <strong>{pendingOta?.seatId ?? "device"}</strong>. Nothing flashes until the build worker runs.
+          </p>
+        </DecisionLayer>
         {jobs.length ? (
           <pre className="dsc-honesty">{JSON.stringify(jobs.slice(0, 3), null, 2)}</pre>
         ) : null}
@@ -485,11 +609,31 @@ export function SettingsPage() {
         <h3>Zigbee (SkyConnect)</h3>
         <p className="dsc-muted">Extra canopy sensors and smart plugs — separate from climate control.</p>
         <div className="dsc-row-actions">
-          <Button onClick={() => permit_join(true).then(refresh)}>Permit join (2 min)</Button>
-          <Button onClick={() => permit_join(false).then(refresh)}>Stop join</Button>
+          <Button onClick={() => setPendingPermitJoin(true)}>Permit join (2 min)</Button>
+          <Button onClick={() => setPendingPermitJoin(false)}>Stop join</Button>
         </div>
+        <DecisionLayer
+          open={pendingPermitJoin != null}
+          onDismiss={() => setPendingPermitJoin(null)}
+          onConfirm={async () => {
+            const enable = pendingPermitJoin === true;
+            setPendingPermitJoin(null);
+            await permit_join(enable);
+            await refresh();
+          }}
+          title={pendingPermitJoin ? "Permit Zigbee join" : "Stop Zigbee join"}
+          confirmLabel={pendingPermitJoin ? "Permit join" : "Stop join"}
+          help={null}
+        >
+          <p>
+            {pendingPermitJoin
+              ? "Opens the coordinator for new devices for about two minutes."
+              : "Closes join mode on the SkyConnect coordinator."}
+          </p>
+        </DecisionLayer>
         {zigbeeDevices.length ? (
-          <table className="dsc-table" style={{ marginTop: 12 }}>
+          <div className="dsc-table-scroll">
+            <table className="dsc-table" style={{ marginTop: 12 }}>
             <thead>
               <tr>
                 <th>Name</th>
@@ -517,6 +661,7 @@ export function SettingsPage() {
                 ))}
             </tbody>
           </table>
+          </div>
         ) : (
           <p className="dsc-muted" style={{ marginTop: 10 }}>
             No Zigbee devices reported yet — enable permit join, then refresh.
@@ -535,18 +680,36 @@ export function SettingsPage() {
           <input
             type="file"
             accept=".zip"
-            onChange={async (e) => {
+            onChange={(e) => {
               const f = e.target.files?.[0];
-              if (!f) return;
-              setImportResult(JSON.stringify(await backup_import(f)));
+              if (f) setPendingImport(f);
+              e.target.value = "";
             }}
           />
         </label>
+        <DecisionLayer
+          open={pendingImport != null}
+          onDismiss={() => setPendingImport(null)}
+          onConfirm={async () => {
+            const f = pendingImport;
+            setPendingImport(null);
+            if (!f) return;
+            setImportResult(JSON.stringify(await backup_import(f)));
+          }}
+          title="Import backup"
+          confirmLabel="Import"
+          help={null}
+        >
+          <p>
+            Restores ops sqlite and related files from <strong>{pendingImport?.name ?? "backup"}</strong>. This
+            overwrites live Pi state.
+          </p>
+        </DecisionLayer>
         {importResult ? <pre className="dsc-honesty">{importResult}</pre> : null}
       </section>
 
-      <Button primary onClick={save}>
-        Save settings
+      <Button primary onClick={saveIntegrations}>
+        Save integrations
       </Button>
     </div>
   );

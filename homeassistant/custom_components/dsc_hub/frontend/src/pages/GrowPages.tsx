@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { ComposePlant } from "../components/ComposePlant";
 import { CatalogResearch } from "../components/CatalogResearch";
+import { DecisionLayer } from "../components/DecisionLayer";
 import { OverflowMenu, SoilCrossSection, SlideDrawer } from "../components/chrome";
 import { HistoryDrawer } from "../components/HistoryDrawer";
 import { Button, Card, PageHeader, StatusChip } from "../components/ui";
@@ -44,6 +45,7 @@ export function PlantSeatPanel({
   const [stageDraft, setStageDraft] = useState(seat.growthStage === "—" ? "" : seat.growthStage);
   const [notesDraft, setNotesDraft] = useState(seat.notes === "—" ? "" : seat.notes);
   const [applyErr, setApplyErr] = useState<string | null>(null);
+  const [pendingTent, setPendingTent] = useState<TentId | null>(null);
   const [hist, setHist] = useState<{ id: string; label: string; unit: string } | null>(null);
 
   useEffect(() => {
@@ -400,17 +402,40 @@ export function PlantSeatPanel({
                 Digital-twin placement. Moves the plant on Twin; does not rewrite climate Want.
               </p>
               <div className="dsc-seat-actions">
-                <Button primary={seat.tent === "clone"} onClick={() => void applyTent("clone")}>
+                <Button primary={seat.tent === "clone"} onClick={() => setPendingTent("clone")}>
                   2×4
                 </Button>
-                <Button primary={seat.tent === "main"} onClick={() => void applyTent("main")}>
+                <Button primary={seat.tent === "main"} onClick={() => setPendingTent("main")}>
                   4×8
                 </Button>
-                <Button onClick={() => void applyTent("unassigned")}>Unassigned</Button>
+                <Button onClick={() => setPendingTent("unassigned")}>Unassigned</Button>
                 <Link to="/live/twin">
                   <Button>Open Twin</Button>
                 </Link>
               </div>
+              <DecisionLayer
+                open={pendingTent != null}
+                onDismiss={() => setPendingTent(null)}
+                onConfirm={() => {
+                  const tent = pendingTent;
+                  setPendingTent(null);
+                  if (tent) void applyTent(tent);
+                }}
+                title={
+                  pendingTent === "clone"
+                    ? "Move plant to 2×4"
+                    : pendingTent === "main"
+                      ? "Move plant to 4×8"
+                      : "Unassign tent"
+                }
+                confirmLabel="Apply tent"
+                help={null}
+              >
+                <p>
+                  Updates pot {pot} placement on the Twin. Climate Want is unchanged — use Climate or Compose for
+                  targets.
+                </p>
+              </DecisionLayer>
               {applyErr ? (
                 <p className="dsc-honesty">
                   <StatusChip label="Tent apply failed" tone="bad" /> {applyErr}

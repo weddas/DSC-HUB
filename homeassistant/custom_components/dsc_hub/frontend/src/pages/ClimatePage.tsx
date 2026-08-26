@@ -191,19 +191,20 @@ export function LiveClimatePage() {
         <div className="dsc-col-12">
           <Card className="dsc-glass" title="Command" icon="climate">
             <div className="dsc-mode-row">
-              <EntityToggle entityId="switch.dsc_hub_tent_full_auto_mode" label="Full Auto" icon="ok" />
-              <EntityToggle entityId="switch.dsc_hub_manual_takeover" label="Master takeover" icon="alert" />
-              <EntityToggle entityId="switch.dsc_hub_tent_manual_override" label="Fan override" icon="climate" />
-              <EntityToggle entityId="switch.dsc_hub_humidifier_intake_routing" label="Hum intake routing" icon="climate" />
-              <EntityToggle entityId="switch.dsc_hub_recirc_de_strat_pulse" label="RECIRC de-strat" icon="climate" />
+              <EntityToggle confirm entityId="switch.dsc_hub_tent_full_auto_mode" label="Full Auto" icon="ok" />
+              <EntityToggle confirm entityId="switch.dsc_hub_manual_takeover" label="Master takeover" icon="alert" />
+              <EntityToggle confirm entityId="switch.dsc_hub_tent_manual_override" label="Fan override" icon="climate" />
+              <EntityToggle confirm entityId="switch.dsc_hub_humidifier_intake_routing" label="Hum intake routing" icon="climate" />
+              <EntityToggle confirm entityId="switch.dsc_hub_recirc_de_strat_pulse" label="RECIRC de-strat" icon="climate" />
             </div>
             <div className="dsc-mode-selects">
               <EntitySelect entityId="select.dsc_hub_control_strategy" label="Strategy" icon="climate" />
               <EntitySelect entityId="select.dsc_hub_priority_tent" label="Priority tent" icon="tent" />
             </div>
             <div className="dsc-demand-row" style={{ marginTop: 12 }}>
-              <EntityToggle entityId="switch.dsc_hub_heater_demand" label="Heat" icon="climate" />
+              <EntityToggle confirm entityId="switch.dsc_hub_heater_demand" label="Heat" icon="climate" />
               <EntityToggle
+                confirm
                 entityId="switch.dsc_hub_ac_demand"
                 label="Cool"
                 icon="climate"
@@ -211,10 +212,10 @@ export function LiveClimatePage() {
                   state("binary_sensor.dsc_ac_capacity_offline") === "on" ? "AC ○" : undefined
                 }
               />
-              <EntityToggle entityId="switch.dsc_hub_humidifier_demand" label="Hum" icon="climate" />
-              <EntityToggle entityId="switch.dsc_hub_dehumidifier_demand" label="Dehum" icon="climate" />
-              <EntityToggle entityId="switch.dsc_hub_grow_mat_demand" label="Mat" icon="root" />
-              <EntityToggle entityId="switch.dsc_hub_clone_humidifier_demand" label="Mister" icon="clone" />
+              <EntityToggle confirm entityId="switch.dsc_hub_humidifier_demand" label="Hum" icon="climate" />
+              <EntityToggle confirm entityId="switch.dsc_hub_dehumidifier_demand" label="Dehum" icon="climate" />
+              <EntityToggle confirm entityId="switch.dsc_hub_grow_mat_demand" label="Mat" icon="root" />
+              <EntityToggle confirm entityId="switch.dsc_hub_clone_humidifier_demand" label="Mister" icon="clone" />
             </div>
             {fullAuto ? (
               <p className="dsc-honesty">

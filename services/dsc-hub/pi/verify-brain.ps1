@@ -1,6 +1,6 @@
 # Remote verify for DSC-Brain after deploy-brain.ps1
 param(
-    [string]$PiHost = "10.42.0.1",
+    [string]$PiHost = "192.168.86.48",
     [string]$PiUser = "dsc",
     [string]$PiPassword = "Digital",
     [string]$HostKey = "SHA256:4XD2kIJ5qNCnULKNmo/L9mvzLbmZdURLwLW7Utt9NJs"

@@ -8,6 +8,7 @@ substitutions:
   api_key_val: !secret dsc_pot4_api_key
   ota_password_val: !secret dsc_pot4_ota_password
   ap_password_val: !secret dsc_pot4_ap_password
+  ap_ssid: "DSC-POT4 Fallback"
   hub_mac: "84:1F:E8:16:E6:60"
   softap_bssid: "00:00:00:00:00:00"
   softap_ip: "10.42.0.24"

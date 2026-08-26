@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Button, Card, PageHeader, StatusChip } from "../components/ui";
+import { DecisionLayer } from "../components/DecisionLayer";
 import { save_calibration } from "../lib/fleetApi";
 import { useEntityBus } from "../hooks/useEntityBus";
 import { useFleetActions } from "../hooks/useFleetActions";
@@ -32,6 +33,7 @@ function FanCalibrateWizard() {
   const [msReading, setMsReading] = useState("");
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState("");
+  const [confirmStart, setConfirmStart] = useState(false);
 
   const target = CAL_TARGETS[targetIdx];
   const stepPct = STEP_PCTS[stepIdx];
@@ -174,10 +176,26 @@ function FanCalibrateWizard() {
             ))}
           </div>
           <div className="dsc-row-actions">
-            <Button variant="primary" disabled={saving} onClick={() => void startSession()}>
+            <Button variant="primary" disabled={saving} onClick={() => setConfirmStart(true)}>
               Start {target.label} session
             </Button>
           </div>
+          <DecisionLayer
+            open={confirmStart}
+            onDismiss={() => setConfirmStart(false)}
+            onConfirm={() => {
+              setConfirmStart(false);
+              void startSession();
+            }}
+            title={`Start ${target.label} calibration`}
+            confirmLabel="Start session"
+            help={null}
+          >
+            <p>
+              The hub will hold the {target.label} fan at stepped duties while you measure. Fans run until you finish or
+              abort.
+            </p>
+          </DecisionLayer>
         </Card>
       ) : null}
 
@@ -252,6 +270,7 @@ function LightParWizard() {
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState("");
   const [done, setDone] = useState(false);
+  const [confirmLightStart, setConfirmLightStart] = useState(false);
 
   const step = LIGHT_STEPS[stepIdx];
 
@@ -316,7 +335,7 @@ function LightParWizard() {
     return (
       <Card className="dsc-glass" title="Light curve saved" icon="ok">
         <p className="dsc-honesty">{status}</p>
-        <Button variant="secondary" onClick={() => void startWizard()}>
+        <Button variant="secondary" onClick={() => setConfirmLightStart(true)}>
           Re-run light wizard
         </Button>
       </Card>
@@ -351,7 +370,7 @@ function LightParWizard() {
         </label>
         <div className="dsc-row-actions">
           {stepIdx === 0 && !status ? (
-            <Button variant="primary" disabled={saving} onClick={() => void startWizard()}>
+            <Button variant="primary" disabled={saving} onClick={() => setConfirmLightStart(true)}>
               Start light wizard
             </Button>
           ) : (
@@ -361,6 +380,22 @@ function LightParWizard() {
           )}
         </div>
       </Card>
+      <DecisionLayer
+        open={confirmLightStart}
+        onDismiss={() => setConfirmLightStart(false)}
+        onConfirm={() => {
+          setConfirmLightStart(false);
+          void startWizard();
+        }}
+        title="Start light calibration"
+        confirmLabel="Start session"
+        help={null}
+      >
+        <p>
+          SF1000 will ramp through brightness steps while you measure LUX/PAR at canopy height. The fixture stays on
+          until you finish or abort.
+        </p>
+      </DecisionLayer>
       {status ? <p className="dsc-honesty">{status}</p> : null}
     </>
   );

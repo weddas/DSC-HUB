@@ -10,6 +10,20 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 
 ---
 
+## 2026-08-27 — Layout audit 7.1 (Pi SPA)
+
+> **CLOSED 2026-08-27 (7.1.2)** — All P0/P1 audit items fixed. See [`docs/qa/AUDIT-CLOSURE-7.1.2.md`](qa/AUDIT-CLOSURE-7.1.2.md). Historical notes retained below.
+
+Source: `docs/qa/LAYOUT-AUDIT-7.1.md`. Live Brain `192.168.86.48:8787`. No deploy, no commit, pot3 left OOS, Apply network / demand not fired.
+
+| ID | Pri | Item |
+|---|---|---|
+| N-LAYOUT-GRID2 | P0 | `.dsc-grid--2` is used on Dash Home (`DashHomePage.tsx`) but never defined in `dsc.css`. 12-col auto-place crushes Grow log / narrator / roster / Kit Pulse to ~103px (desktop) / ~34px (390). Kit Pulse leftover containment. |
+| N-LAYOUT-SETTINGS-TABLE | P0 | Settings assignment + ESPHome tables have no `overflow-x` wrapper; 627px / 419px tables vs 390 viewport. Queue OTA/compile buttons sit off-screen. |
+| N-LAYOUT-DRAWER-RAIL | P1 | Closed History/seat drawer rail (`translateX(105%)` + `left: -28px`) peeks as "Cl…" on every route at 1440 and 390. `z-index: 80`. |
+| N-LAYOUT-TENT-NAV | P1 | `TentCockpitPage` `setFocus(tent)` writes `?tent=` while `App.tsx` strips it except on Climate/Dash — replace-navigate fight blocks leaving 4×8/2×4 via hash/tabs until a section remount. |
+| N-LAYOUT-HEADER-ACTIONS | P1 | `.dsc-page-header` is nowrap flex; actions `flex-shrink: 0`. Compose "Browse Catalog" clipped at 390; Mission/Twin header buttons measure past the viewport. 4×8 header hits 364px tall. |
+
 ## 2026-08-27 — pot3 Add-as-Plant demo blocked (Pi SSH/HTTP down)
 
 - **Symptom:** After a successful brain deploy and pot3 enable/retire, a second `deploy-brain.ps1` upload failed. `192.168.86.30` still pings; TCP 22 and 8787 refuse/timeout. AP `10.42.0.1` is unreachable (hostapd likely down with userspace).
@@ -2519,6 +2533,8 @@ Do **not** reclaim .33/.39/.40/.47/.23 — other hosts answered there at cutover
 
 ## 2026-08-27 — appliance driver alias fix — in workspace, not yet committed
 
+> **CLOSED 2026-08-27 (7.1.2)** — Fix in tree + unit test. See [`docs/qa/AUDIT-CLOSURE-7.1.2.md`](qa/AUDIT-CLOSURE-7.1.2.md) WR-P0-1. Historical notes retained below.
+
 - During the heatmat demand→relay proof (acceptance #1), `brain/dsc_brain/appliance_driver.py` `_read_hub_demands` was emitting undiscovered `DEMAND_TO_SEAT` aliases as False; the phantom `growmat_demand` overwrote the real `grow_mat_demand` ON every ~2 s tick → heatmat relay physically chattered ON/OFF (~10 s period, `fleet_history` 16:52–16:55Z). Fixed to only report object_ids discovered on the hub; heatmat then proved cleanly (details in `docs/ops/SOAK-2026-08-26.md`).
 - **Workspace source is present** (confirmed 2026-08-27 closure coordinator): `_read_hub_demands` → `_demands_from_discovered` reports discovered oids only. Live on the Pi since 16:57Z 2026-08-26 (`/opt/dsc-hub-repo/brain` synced, `dsc-hub-brain:7.0.0` rebuilt). This pass did **not** redeploy.
 - Unit test landed: `test_appliance_undiscovered_aliases_not_emitted` in `brain/tests/test_brain_pi.py` (undiscovered aliases must not be emitted as False).
@@ -2535,13 +2551,504 @@ Do **not** reclaim .33/.39/.40/.47/.23 — other hosts answered there at cutover
 
 ## 2026-08-27 — Overview banner says HUB OFFLINE while `/fleet` hub.online is true
 
+> **CLOSED 2026-08-27 (7.1.2)** — Hub online chip reconciled. See [`docs/qa/AUDIT-CLOSURE-7.1.2.md`](qa/AUDIT-CLOSURE-7.1.2.md) DA-P0-2. Historical notes retained below.
+
 - Category: `next-plan`
 - During the pot3 full-grow demo the SPA banner stayed **HUB LINK DOWN / HUB OFFLINE** even while `GET /fleet` reported `hub.online=true` and Native API selects succeeded. Do not treat the banner as fleet truth until the link chip is reconciled.
 
+## 2026-08-27 — Overview pot moisture band ≠ Root pot want
+
+> **CLOSED 2026-08-27 (7.1.2)** — Shared `potWantBand`. See [`docs/qa/AUDIT-CLOSURE-7.1.2.md`](qa/AUDIT-CLOSURE-7.1.2.md) GAUGE-P0-1. Historical notes retained below.
+
+- Category: `next-plan`
+- Overview Root & tank hardcodes moisture 30–70 (`DashRootTankSection`). Root page uses `potWantBand`. Live: Overview P2 19.5% is amber; Root POT 2 moisture 19.5% is green. Same reading, two stories. Align the Overview strip to the seat want band.
+
 ## 2026-08-27 — `/fleet/computed` is ~6.4s and the SPA used to poll it every 2s
+
+> **CLOSED 2026-08-27 (7.1.2)** — Poll guard landed (5s + in-flight lock). See [`docs/qa/AUDIT-CLOSURE-7.1.2.md`](qa/AUDIT-CLOSURE-7.1.2.md). Endpoint perf remains next-plan. Historical notes retained below.
 
 - Category: `next-plan`
 - Cold curls of `http://192.168.86.30:8787/fleet/computed` consistently take ~6.4s. The SPA was polling every 2s, so three requests piled up, starved `/fleet` + the websocket, and the UI wedged on "Connecting to fleet…".
 - Frontend guard landed in UX pass 2 (`useBrain.tsx`): in-flight lock + 5s poll. That unblocks the dashboard; it does **not** make `/fleet/computed` fast.
 - Next: profile the computed helpers on the Pi (likely a serial HA/state walk) and cache or slim the payload. Do not raise the poll rate again until the endpoint is under ~1s.
+
+---
+
+## 2026-08-27 — relationship audit 7.1 (object graph)
+
+> **CLOSED 2026-08-27 (7.1.2)** — All P0/P1 audit items fixed. See [`docs/qa/AUDIT-CLOSURE-7.1.2.md`](qa/AUDIT-CLOSURE-7.1.2.md). Historical notes retained below.
+
+Source: [`docs/qa/RELATIONSHIP-AUDIT-7.1.md`](qa/RELATIONSHIP-AUDIT-7.1.md). Distinct from DEVICE / ZIGBEE / WORKFLOW / INPUT-REPLICATION. pot3 left OOS. No commit/demand/OTA/permit-join/tent write.
+
+### red-flag (P0)
+
+| ID | Item | Notes |
+|---|---|---|
+| REL-P0-1 | Three plant records, UI has no single SoT | SQLite `/roster` empty; 8-slot JSON empty; compose helpers still hold Northern Lights / QA Dummy → pot3 / 2×4 plus pot1 helper name `Amnesia Blue`. Revert cleared the seat, not the draft. |
+| REL-P0-2 | SPA seat graph never sees inventory `in_service` | `fleetToHass` merges `/fleet/computed` extras only; extras omit `input_boolean.dsc_potN_in_service`; `isPotInService` defaults missing to ON → pot3 re-enters the plant/tent UI while inventory is OOS. |
+| REL-P0-3 | 2×4 photoperiod parented to 4×8 SF1000 | `LivePages` / `PlantExtra` / clone dark-period / `dsc_lights_on_today_2x4` all use `light.dsc_hub_sf1000_dimmer`. Lighting derived from the wrong tent. |
+
+### next-plan (P1)
+
+| ID | Item | Notes |
+|---|---|---|
+| REL-P1-1 | Dual in-service SoT | Hub FW `switch.dsc_hub_potN_in_service` all off; brain inventory pot1/2/4 on. Mat demand ON, votes off, no plants. |
+| REL-P1-2 | Empty pots synthesize `veg` + ghost tent | Computed `growth_stage=veg` with no roster row; pot1 tent=`clone` → 2×4 cockpit can count a phantom plant. |
+| REL-P1-3 | No mother/clone plant edge | `clone_mode=Mother` is a lighting preset. Automation first-wins among 2×4 recipes and writes hub `grow_stage`. |
+| REL-P1-4 | Tent vocabulary / silent default | `tent_id()` unknown → `main`. Slots store `4x8`/`2x4`; pot helpers store `main`/`clone`. Apply-tent error blames the hub. |
+| REL-P1-5 | Appliance demand not on inventory | No `demand_oid` in `extra`. AC/mister are demand-only (no seat). `reduced_kit` binary stays off while attributes list planned OOS. |
+| REL-P1-6 | Zigbee placement graph empty | 0 devices, 0 placements; `zigbee_permit_join=true` leftover. Do not toggle join from this item. |
+
+---
+
+## 2026-08-27 — Settings completeness / honesty (7.1 audit)
+
+> **CLOSED 2026-08-27 (7.1.2)** — All P0/P1 audit items fixed. See [`docs/qa/AUDIT-CLOSURE-7.1.2.md`](qa/AUDIT-CLOSURE-7.1.2.md). Historical notes retained below.
+
+Source: [`docs/qa/SETTINGS-AUDIT-7.1.md`](qa/SETTINGS-AUDIT-7.1.md). Live Brain `192.168.86.48:8787` / `dsc-brain.local`. Danger controls not fired.
+
+### red-flag
+
+- ESPHome Queue OTA/compile is a sqlite ticket with no worker; copy says flashes go over the air. Two jobs already `queued` (control, hub).
+- Apply network copy says it restarts the hub Wi-Fi; `apply_network_configs()` only writes hostapd/dnsmasq files.
+- Settings seat `control` does not resolve `fleet.panel` — live panel shows as CONTROL OFFLINE.
+- `GET /settings` returns AP PSK in plaintext and unused HA dumps (`compose_helpers_json`, `plant_roster_slots_json`).
+
+### next-plan
+
+- One in-service SoT: Settings sqlite vs disabled Fleet Overview `input_boolean`s vs hub `switch.dsc_hub_*_in_service` (pots 1–3 off while inventory pot1/2/4 on). AC / mister / tank missing from Settings inventory.
+- Device assignment extras (`function` / `placement` / `capability_max_pct`) are write-only. No extra-sensor or Zigbee placement UI.
+- Show product FW 7.0.0.0 **and** ESPHome 2025.12.4; stamp sonoff/panel online+FW on the ESPHome table (live sonoffs currently “offline” there).
+- Zigbee: join-state chip, refresh, stick-down honesty. Sqlite `zigbee_permit_join=true` vs z2m yaml `permit_join: false`; device list empty.
+- Import backup needs a confirm. Map `/#/settings` → `/#/fleet/settings`. Per-device calibration is `/fleet/calibrate` only (DB empty).
+
+## 2026-08-27 — Interactive audit 7.1 (controls / behavior)
+
+> **CLOSED 2026-08-27 (7.1.2)** — All P0/P1 audit items fixed. See [`docs/qa/AUDIT-CLOSURE-7.1.2.md`](qa/AUDIT-CLOSURE-7.1.2.md). Historical notes retained below.
+
+Source: [`docs/qa/INTERACTIVE-AUDIT-7.1.md`](qa/INTERACTIVE-AUDIT-7.1.md). Visual/design is a sibling pass. Do not treat Fleet toggles or demand tiles as safe until these land.
+
+### red-flag (P0)
+
+- **IA-P0-1** Climate demand tiles (Heat/Cool/Hum/Dehum/Mat/Mister) and mode toggles write the hub on one click. No DecisionLayer. Cool ○ still looks armed when AC is capacity-offline.
+- **IA-P0-2** Settings **In service** checkboxes (`patch_inventory`) write immediately, including **hub**. No confirm. A11y tree marks them `readonly`.
+- **IA-P0-3** Settings **Queue OTA** ×10 has no confirm — same button chrome as Test CannaLib.
+- **IA-P0-4** Fleet / Learning `input_boolean` in-service `EntityToggle`s are **dead on the live Pi** (disabled, `—`). Kit gates only work via Settings checkboxes.
+- **IA-P0-5** Entity inspector **Turn on / Turn off** is a second unguarded demand path for switch/light/`input_boolean`.
+- **IA-P0-6** Light / 2×4 **SF1000** `EntityToggle` writes the lamp immediately (dark-period risk).
+
+### next-plan (P1)
+
+- **IA-P1-1** Closed BandChart history drawer leaks 8 tab stops (Close×2 + timespan) on every route.
+- **IA-P1-2** DecisionLayer does not trap Tab or hide the page (Apply network, honesty, Compose pickers).
+- **IA-P1-3** Overview/Dash Running chips look identical to clickable Fan chips but do nothing.
+- **IA-P1-4** Gauge/KPI hit-targets look like readouts; a11y name is SVG title soup.
+- **IA-P1-5** Want / photoperiod / seat fields commit on blur with no undo.
+- **IA-P1-6** `EntityToggle` tooltip is the raw entity id.
+- **IA-P1-7** Settings assignment inputs unlabeled; Channel combobox a11y name `1611`.
+- **IA-P1-8** Kit Pulse SVG nodes are unnamed `role="button"`.
+- **IA-P1-9** Roster rows are mouse-only `<tr onClick>`.
+- **IA-P1-10** Root pot card head is clickable with `role="presentation"`.
+- **IA-P1-11** Permit join / backup import / Reload catalogs / tent Apply have no confirm.
+- **IA-P1-12** Research / catalog pick writes build helpers without confirm.
+- **IA-P1-13** Calibrate / Learning “Start session” holds fans with one button.
+- **IA-P1-14** “Connecting to fleet…” has no retry/timeout.
+
+## 2026-08-27 — Workflow audit 7.1 (operator jobs)
+
+> **CLOSED 2026-08-27 (7.1.2)** — All P0/P1 audit items fixed. See [`docs/qa/AUDIT-CLOSURE-7.1.2.md`](qa/AUDIT-CLOSURE-7.1.2.md). Historical notes retained below.
+
+Source: [`docs/qa/WORKFLOW-AUDIT-7.1.md`](qa/WORKFLOW-AUDIT-7.1.md). Distinct from design (visuals) and interactive (per-control). These are chain breaks: grower cannot finish the job.
+
+### red-flag (P0)
+
+- **WF-P0-1** Overview P1 moisture is grey `—` while `/fleet` pot1 is 21.9% and `/history?entity_id=sensor.dsc_pot1_soil_moisture` has hours of points. `ENTITY_FLEET_MAP` maps `sensor.dsc_pot1_got_moisture` but **not** `sensor.dsc_pot1_soil_moisture` (pots 2–4 have both). Overview Root strip reads `_soil_moisture` only. Operator cannot see pot1 health on the landing page.
+- **WF-P0-2** Retire does not clear the Compose draft. Live helpers still hold Northern Lights / `QA Dummy (pot3 test)` / sprout `2026-07-09` / assign pot **3** / tent 2×4 after roster `[]` and pot3 OOS. One **Commit + assign** re-seats pot3. `retire_plant` never resets `input_text.dsc_build_*` / `input_select.dsc_build_assign_pot`.
+- **WF-P0-3** Settings **Queue OTA** is a sqlite row only (`status=queued`, detail says open `:6052` or `docker exec`). Two stale jobs (control + hub) from ~05:00Z still queued. No worker. Firmware recovery is ops scripts, not the SPA.
+
+### next-plan (P1)
+
+- **WF-P1-1** Dual in-service SoT: inventory pot1/2/4 `in_service=true`, hub `switch.dsc_hub_potN_in_service` all **off**. Settings checkbox writes inventory only. Fleet/Learning `input_boolean` toggles are dead on Pi (IA-P0-4). Grower cannot tell which gate the mat/alerts actually use.
+- **WF-P1-2** Settings seat `control` vs fleet `panel`: `/fleet` `panel.online=true` (10.42.0.11, fw 7.0.0.0) but Settings card is **CONTROL OFFLINE** because `resolveSeat` only matches `seatId === "panel"`.
+- **WF-P1-3** pot3 OOS is hidden from `/fleet.pots`, so Settings shows pot3 **OFFLINE** (not “out of service”). Honesty lie.
+- **WF-P1-4** Alert → playbook is prose only. Inspector has no “open Climate / Light / Root” CTA except the Capacity-offline banner. Grow log dark-period lines are not clickable.
+- **WF-P1-5** `apply_climate_want` reads `dsc_build_assign_pot`, not `dsc_build_climate_pot`. UI label “Climate apply pot” is a dead selector.
+- **WF-P1-6** Compose auto-stage chip (`sensor.dsc_build_expected_stage`) did not render on live Compose despite sprout `2026-07-09` (computed extras lag / `/fleet/computed` ~6s). Seat sprout/tent editors require a seated plant; empty roster is a dead end for workflow 3.
+- **WF-P1-7** Hash-jump / CDP navigate can unmount `#root` to “Connecting to fleet…” (title fallback 7.0.0). In-app tab clicks recovered; no error boundary (already noted in interface follow-ups).
+
+## 2026-08-27 — Device audit 7.1 (physical + ESPHome fleet)
+
+> **CLOSED 2026-08-27 (7.1.2)** — All P0/P1 audit items fixed. See [`docs/qa/AUDIT-CLOSURE-7.1.2.md`](qa/AUDIT-CLOSURE-7.1.2.md). Historical notes retained below.
+
+Source: [`docs/qa/DEVICE-AUDIT-7.1.md`](qa/DEVICE-AUDIT-7.1.md). Distinct from Zigbee. Read-only; pot3 left OOS.
+
+**Live counts:** inventory 10/10; in-service 9/9 online at `7.0.0.0`; AP 10/10 (pot3 still associated). `appliance_link` true; heatmat demand/relay ON, other Sonoffs OFF/OFF. Brain is `.48`; `.30` is not the Brain (reconfirmed). pot3 `in_service` **false** — the morning “still in_service true” outage note is superseded.
+
+### red-flag (P0)
+
+- **DV-P0-1** Settings ESPHome table + `resolveSeat("control")` tell the operator live nodes are dead. `/settings/esphome/devices` only merges online/FW for `hub` + `pots{}` — panel and all four Sonoffs render **offline** while `/fleet` has them at `7.0.0.0`. Same alias hole as **WF-P1-2**; the table makes it fleet-wide. Fix: map `control`→`panel`, merge `sonoffs` + `panel` in `settings_esphome_devices`.
+- **DV-P0-2** Ingest never expires `online`. Failed Native API poll keeps the previous `SeatState`. Overview/Fleet will say online when the node is dead. Expire after N missed cycles (serial poll is ~30–90 s — do not use a 45 s cut).
+
+### next-plan (P1)
+
+- **DV-P1-1** Dual `in_service` SoT (same as **WF-P1-1**): inventory pot1/2/4 on; hub `switch.dsc_hub_potN_in_service` all off. Settings writes sqlite only.
+- **DV-P1-2** Inventory `mac` all null; live `dnsmasq` reservations are IP-only. Operator cannot pin a radio to a seat from Settings. ARP on the Pi has the MACs (see audit table).
+- **DV-P1-3** Compose leftovers still target pot3 (same as **WF-P0-2**). Do **not** flip pot3 `in_service` to clean this up.
+- **DV-P1-4** pot4 in service + online + `7.0.0.0` with moisture/soil T/pH **null**. Kit map can show idle. Hardware isolate still open.
+- **DV-P1-5** `system.appliance_link` is hub-demand freshness (`hub_ok`), not per-Sonoff reachability. True today because all four are up.
+- **DV-P1-6** Grow stage Off but `4x8_window_open` true; SF1000 `on` at PWM 1; grow-log dark-period violations.
+
+### deferred (P2)
+
+- pot3 holds an AP slot while OOS (F-003).
+- Live `dnsmasq.conf` still has `dhcp-host=10.42.0.5,dsc-bridge`.
+- 8-sta cap not firing (10/10, minimal blob, `max_num_sta=32`); `update-alternatives` **Best** is still `cyfmac43455-sdio-standard.bin` — `--auto` would regress.
+
+---
+
+## 2026-08-27 — Input audit 7.1 (form fields)
+
+> **CLOSED 2026-08-27 (7.1.2)** — All P0/P1 audit items fixed. See [`docs/qa/AUDIT-CLOSURE-7.1.2.md`](qa/AUDIT-CLOSURE-7.1.2.md). Historical notes retained below.
+
+Source: [`docs/qa/INPUT-AUDIT-7.1.md`](qa/INPUT-AUDIT-7.1.md). Distinct from INTERACTIVE (clickables). Live `.48` / `dsc-brain.local`. Did not Commit, Apply network, Save settings, save cal, start a fan hold, toggle In service, or change a live plant sprout.
+
+**Counts:** 143 input instances · 59 roles scored · **41 fail (69%)**. Forms are **not operator-safe**.
+
+### red-flag (P0)
+
+| ID | Item | Notes |
+|---|---|---|
+| IN-P0-1 | Compose confirm-copy vs persist-on-blur | Footer says every action confirms. Nickname / sprout / slot / tent / assign / tank / strength / layer names / recipe write `POST /control/service` on blur or change. Live draft still Northern Lights / QA Dummy / pot 3 (WF-P0-2). |
+| IN-P0-2 | Nutrient slots 1–8 dead | Name + ml/L `disabled` on the live Pi. Helpers not on the bus. “Add from catalog” writes the same missing entities. |
+| IN-P0-3 | Learning numbers dead + max=100 fallback | Sample / EMA / 20 curve points disabled. `TargetNumber` uses `attributes.max ?? 100`. HA YAML CFM 1500 / PPFD 3000 / m/s 50 — a future write would clamp CFM to 100. |
+
+Already owned elsewhere (do not duplicate work): IA-P0-2 In service immediate; Settings audit PSK in `GET /settings`; IA-P1-5 Want/seat blur no undo.
+
+### next-plan (P1)
+
+| ID | Item | Notes |
+|---|---|---|
+| IN-P1-1 | Photoperiod time inputs dead | `4×8 opens` and `2×4 lights-on` disabled and empty. Sunrise/sunset/min dark/2×4 hours still persist on blur. |
+| IN-P1-2 | TargetNumber range/units | Climate VPD unlabeled, DOM 0–100 kPa. Temp max 100 °C. Light hours max 100. Silent clamp, no error text. |
+| IN-P1-3 | Catalog empty-flash + unlabeled search | First paint “No catalog hits” then proxy fills. Research search has no label. Placeholder “options are not culled.” Empty browse not cultivar-clean. Typeahead itself works. |
+| IN-P1-4 | Calibrate light no max | Height/LUX/PAR accept 999999. Error only on Save, and only for LUX ≤ 0. |
+| IN-P1-5 | Save settings is one unguarded PATCH | AP + Ollama + CannaLib together. Apply network has DecisionLayer; Save settings does not. |
+
+---
+
+## 2026-08-27 — Wiring audit 7.1 (physical + firmware channels)
+
+> **CLOSED 2026-08-27 (7.1.2)** — All P0/P1 audit items fixed. See [`docs/qa/AUDIT-CLOSURE-7.1.2.md`](qa/AUDIT-CLOSURE-7.1.2.md). Historical notes retained below.
+
+Source: [`docs/qa/WIRING-AUDIT-7.1.md`](qa/WIRING-AUDIT-7.1.md). Distinct from DEVICE (seats/IPs), RELATIONSHIP (plant graph), ZIGBEE. Read-only; no demand slam; pot3 left OOS.
+
+**Counts:** 9 wired actuator channels (4 Sonoff GPIO12 + 4 fan PWM + SF1000); 7 sensor buses; 3 named demands with no GPIO (AC, mister, GPIO5). `appliance_link` true = hub-poll freshness, not outlet proof.
+
+### red-flag (P0)
+
+- **WR-P0-1** Uncommitted `growmat_demand` alias fix — same gate as the 2026-08-27 appliance-driver FOLLOWUPS entry. Clean-checkout deploy will chatter the heatmat again. Do not re-slam to prove it.
+
+### next-plan (P1)
+
+- **WR-P1-1** Heatmat ON via clone-air proxy: hub `potN_in_service` + all `mat_vote_pot_*` OFF while inventory pot1/2/4 are in service. Switch name says root-zone; ladder is heating because clone air 23.7 °C < 25 °C. Wiring consequence of **DV-P1-1** — sync hub pot in-service / votes to inventory, or the mat name is a lie.
+- **WR-P1-2** `humidifier_intake_routing` live **OFF**; firmware default ON “matches confirmed physical placement.” No inventory `extra.placement`. Either the humidifier moved or the toggle drifted — plume steering is off either way.
+- **WR-P1-3** `control_ops` + Kit Pulse still name `switch.dsc_ac_main_relay` / `switch.dsc_clone_humidifier_main_relay`. No GPIO, no inventory seats (F-001 / F-002). Demand switches are honest-off; the relay entity ids are ghosts.
+
+F-001 / F-002 / GPIO5 4×8 lamp stay in the keep-open hardware list — not re-opened here.
+
+---
+
+## 2026-08-27 — Fallback / recovery audit 7.1
+
+> **CLOSED 2026-08-27 (7.1.2)** — All P0/P1 audit items fixed. See [`docs/qa/AUDIT-CLOSURE-7.1.2.md`](qa/AUDIT-CLOSURE-7.1.2.md). Historical notes retained below.
+
+Source: [`docs/qa/FALLBACK-AUDIT-7.1.md`](qa/FALLBACK-AUDIT-7.1.md). Distinct from DEVICE (seat health), SETTINGS, ZIGBEE. Read-only; SoftAP/join left off.
+
+**Live:** Brain `.48` / `dsc-brain.local`; `.30` not Brain. AP 10/10, `max_num_sta=32`. `/health` 7.1.0. Fallback flash scripts **not on the Pi**.
+
+### red-flag (P0)
+
+- **FB-P0-1** Recovery wrappers / LAN-first OTA still aim at `192.168.86.30` and studio `192.168.86.50/.51/.54/.184`. Fleet is `10.42.0.x`. `.51` and `.54` still ping on the house LAN — wrong-box flash risk. Fix defaults to `.48` / `dsc-brain.local` and OTA `10.42.0.50+` first.
+- **FB-P0-2** `network_apply.render_hostapd_conf` and `pi-bootstrap.sh` omit `max_num_sta=32` + deny. Copy-Apply or re-bootstrap undoes the 8-sta heal and orphans two seats into SoftAP. Cross-ref SETTINGS Apply-lie + DEVICE `--auto` blob note.
+- **FB-P0-3** `flash-sonoff-fallback-remote.sh` (untracked, CRLF) and `flash-hub-fallback-remote.sh` are not on the Pi. Unbounded `iw scan` already hung hostapd once. No on-box recover path; wrap scan in `timeout 30`.
+
+### next-plan (P1)
+
+- **FB-P1-1** CannaLib “local fallback” is a lie: `local_db_present=false` and `catalog_search` never reads sqlite.
+- **FB-P1-2** `dsc-hub-ap.service` is oneshot — hostapd death after start is silent. Need a real recover/watchdog (not another flash script).
+- **FB-P1-3** All pots share `DSC-POT Fallback Hotspot` — two-pot SoftAP collision.
+- **FB-P1-4** Live soak cron ≠ repo `soak-check.sh`. 15:00Z logged `sonoffs=2/4` with no alert. T+24h not closed.
+- **FB-P1-5** `apply_clone_tent_automation` skip/retry has no unit test; helper fallback can look applied. Couples to DV-P0-2 stale `hub.online`.
+- **FB-P1-6** `deploy-brain` / `verify-brain` / `island-proof` / `soak-check` ps1 default `10.42.0.1` — dead from studio LAN Windows.
+- **FB-P1-7** No pot/control flash-fallback script (hub + Sonoff only).
+
+---
+
+## 2026-08-27 — Input replication audit 7.1 (multi-surface honesty)
+
+> **CLOSED 2026-08-27 (7.1.2)** — All P0/P1 audit items fixed. See [`docs/qa/AUDIT-CLOSURE-7.1.2.md`](qa/AUDIT-CLOSURE-7.1.2.md). Historical notes retained below.
+
+Source: [`docs/qa/INPUT-REPLICATION-AUDIT-7.1.md`](qa/INPUT-REPLICATION-AUDIT-7.1.md). Distinct from INPUT-AUDIT (per-field validation — file not in tree this pass), SETTINGS, INTERACTIVE, RELATIONSHIP, WORKFLOW. Live `.48`. No plant commit, Apply network, cal save, demand, or pot3 in-service.
+
+Replication **confirms** REL-P0-1 (three plant records) and REL-P0-2 (Crop Scheduler treats missing `in_service` helper as ON). Not re-opened as new IDs.
+
+### red-flag (P0)
+
+| ID | Item | Notes |
+|---|---|---|
+| REP-P0-1 | Stage / clone-mode chips are not the Compose plant | Live: Compose auto-stage **Late (Push) Vegetative**; hub `grow_stage` **Off**; all pot `growth_stage` **veg** (empty-roster default); Crop Scheduler expected stage **—**. Grow log 06:06–06:11 flipped Late Push Veg / Mother → Off / Custom. No SPA editor on those chips. `apply_clone_tent_automation` + hub are silent writers. |
+
+### next-plan (P1)
+
+| ID | Item | Notes |
+|---|---|---|
+| REP-P1-1 | Calibrate vs Learning are clone skins | Calibrate: local m/s until Save. Learning: `TargetNumber` blur on the same `input_number.dsc_cal_*`. Merge or label one owner. |
+| REP-P1-2 | CannaLib URL ≠ catalog search | Settings `cannalib_api_url` is not what Pi `CatalogPicker` fetches (`/v1/catalogs`). Dash CANNALIB OFF is a third copy. |
+| REP-P1-3 | Settings Save vs Apply share one draft blob | Typing CannaLib then Apply persists integrations; typing SSID then Save persists AP without applying Wi-Fi. Split drafts. |
+| REP-P1-4 | 4×8 Want hours parented to hub stage Off | `sensor.dsc_expected_light_hours=0` while Compose day-48 veg and 2×4 hours=18. |
+| REP-P1-5 | Seat drafts + two litre fields | `PlantSeatPanel` resyncs only on pot change. Compose Tank L ≠ vessel L (`dsc_mix_tank_liters` vs `dsc_blend_total_l`). |
+
+---
+
+## 2026-08-27 — Full design audit (visual / IA)
+
+> **CLOSED 2026-08-27 (7.1.2)** — All P0/P1 audit items fixed. See [`docs/qa/AUDIT-CLOSURE-7.1.2.md`](qa/AUDIT-CLOSURE-7.1.2.md). Historical notes retained below.
+
+Source: [`docs/qa/DESIGN-AUDIT-7.1.md`](qa/DESIGN-AUDIT-7.1.md) § Full design audit (2026-08-27). Live Brain `.48:8787`, bundle `index-DwSYxFmR.js`. Distinct from INTERACTIVE / WORKFLOW / SETTINGS / RELATIONSHIP. Do not treat as a theme-tweak list.
+
+### red-flag (P0)
+
+| ID | Item | Notes |
+|---|---|---|
+| DA-P0-1 | Twin keepalive canvas steals clicks on 2×4 / 4×8 | `TwinKeepAlive.tsx` + `.dsc-twin-keepalive.is-active`. Click on Hub Details intercepted by `<canvas>`. Cage pointer-events to the Twin host only. |
+| DA-P0-2 | Dash System map says HUB OFFLINE while React says HUB ONLINE | `DashHomePage.tsx` `LegacyCardHost` / `dsc-system-map-card`. Same honesty class as the Overview banner follow-up; this is the leftover Lovelace island. Cut or bind to fleet hub.online. |
+
+Already logged (do not duplicate work): **WF-P0-1** Overview P1 moisture hole; **REL-P0-2** SPA never sees inventory `in_service` (Root “4 of 4 pots in service”).
+
+### next-plan (P1)
+
+| ID | Item | Notes |
+|---|---|---|
+| DA-P1-1 | Hub link Age is a raw float (`20402.7890625`) | `HubLinkLine.tsx` `String(uptime)` — format with `fmtDurationMs` / hours. |
+| DA-P1-2 | Seat moisture IEEE leftover (`Got M 21.80000114440918`) | `seatModel.buildPlantSeat` + Mission / 2×4 chips. Format to 1 decimal. Pass 1 claimed no runoff. |
+| DA-P1-3 | Light hours gauge wears `is-ok` at 0.00 h | `LightPage.tsx` ArcGauge. Collides with Overview “green = in band.” Use teal-muted progress, not in-band green. |
+| DA-P1-4 | Live IA: Overview ≈ Dash ≈ Mission | `routes.ts` — nine Live tabs. Kill or demote Dash/Mission before more polish. |
+| DA-P1-5 | Jargon leftovers after the copy purge | KIT HONEST (`Honesty.tsx`); History “THIN RECORDER” + “HA Home gauge popups”; lung / NO PLANT/STAGE RAIL / `W— · Need —`; Fleet Alerts subtitle is `CfmTrustLine`; “Panel product shell.” |
+| DA-P1-6 | Fleet 7/11 KPI is green | Incomplete kit is not in-band. Pass 1 screenshot had it red. |
+
+Already logged: Overview vs Root moisture bands (FOLLOWUPS 2026-08-27); **IA-P1-14** connecting splash; **IA-P1-1** closed-drawer tab leak; **IA-P0-1** / **IA-P1-3** demand tiles vs chrome.
+
+---
+
+## 2026-08-27 — Gauge audit 7.1 (rings / bars / bands)
+
+> **CLOSED 2026-08-27 (7.1.2)** — All P0/P1 audit items fixed. See [`docs/qa/AUDIT-CLOSURE-7.1.2.md`](qa/AUDIT-CLOSURE-7.1.2.md). Historical notes retained below.
+
+Source: [`docs/qa/GAUGE-AUDIT-7.1.md`](qa/GAUGE-AUDIT-7.1.md). Distinct from UX / DESIGN (broader UI). Rainbow fragments confirmed gone. pot3 left OOS. No demand / setpoint / commit.
+
+### red-flag (P0)
+
+| ID | Item | Notes |
+|---|---|---|
+| GAUGE-P0-1 | Overview vs Root moisture two-story | Overview hardcodes 30–70; Root uses `potWantBand` (default **0–45** when plant Want missing). Live P2 **19.4% amber vs green**. Elevates the earlier “Overview pot moisture band ≠ Root pot want” next-plan. Align both to the seat rail; missing rail = unbanded teal, not a fake in-band. |
+| GAUGE-P0-2 | Overview P1 grey empty while fleet/Root show 21.8% | Same hole as **WF-P0-1** (`ENTITY_FLEET_MAP` misses `sensor.dsc_pot1_soil_moisture`). Gauge pass re-confirmed on `.48`. Fix once. |
+
+### next-plan (P1)
+
+| ID | Item | Notes |
+|---|---|---|
+| GAUGE-P1-1 | Overview Room T/RH inherit 4×8 Want | Climate room triad is correctly teal / no band. Lung is not the tent. |
+| GAUGE-P1-2 | Climate Got/Want T always neon | Rows pass a single `want`, so `zoneTone` has no band. 4×8 Got 23 / Want 26 still green. Pass ±2 min/max. |
+| GAUGE-P1-3 | `potWantBand` moisture default `{0,45}` | Dryback-shaped fake band. `lo > 0` also rejects a real 0 min. |
+| GAUGE-P1-4 | Scale mismatch across pages | 4×8 T 10–40 vs 15–35; 2×4 VPD 0–2 vs 0–2.5. Number matches needle on one page only. |
+| GAUGE-P1-5 | ±2 + 1 °C grace paints a 3 ° miss green | 4×8 T 23.0 / Want 26 was green; amber only after 22.7. |
+| GAUGE-P1-6 | Room VPD `—` beside live T+RH | `sensor.dsc_hub_room_vpd_kpa` not on the fleet map. Do not invent kPa. |
+| GAUGE-P1-7 | Root still paints five empty pot3 gauges | Kit Pulse / inventory OOS; `isPotInService` defaults missing boolean on. **REL-P0-2**. Hide the row — do not enable pot3. |
+
+---
+
+## 2026-08-27 — Zigbee full-path audit 7.1
+
+> **CLOSED 2026-08-27 (7.1.2)** — All P0/P1 audit items fixed. See [`docs/qa/AUDIT-CLOSURE-7.1.2.md`](qa/AUDIT-CLOSURE-7.1.2.md). Historical notes retained below.
+
+Source: [`docs/qa/ZIGBEE-AUDIT-7.1.md`](qa/ZIGBEE-AUDIT-7.1.md). Distinct from SETTINGS (UI catalog), DEVICE (ESPHome fleet), RELATIONSHIP (placement graph note). No deploy, no stick reset, permit-join **not** opened.
+
+**Live:** Brain `.48` `/health` 7.1.0. End devices **0**. `dsc-hub-z2m` RestartCount **98**, `HOST_FATAL_ERROR`. SkyConnect v1.0 present. `database.db` 0 bytes. `/fleet.canopy` `{}`. Stale sqlite `zigbee_permit_join=true` **cleared to `false`** this pass (z2m was down; MQTT no-op). Relates to SETTINGS leftover + REL-P1-6.
+
+**Verdict:** Zigbee is a stub, not a product path. MUST “devices can be added” and “user-defined function/placement/settings” both fail.
+
+### red-flag (P0)
+
+| ID | Item | Notes |
+|---|---|---|
+| ZB-P0-1 | z2m crash-loops; coordinator never up | Serial opens, EZSP `HOST_FATAL_ERROR`. Empty pairing DB. Stop the restart hammer before more ASH resets. Leading hypothesis: `adapter: ember` vs older SkyConnect EZSP firmware — confirm, do not factory-reset from this item. |
+| ZB-P0-2 | “Zigbee devices can be added” is a lie | Settings empty-state + LIVE-ACCEPTANCE #8 PASS (“empty until paired”) hide a dead radio. |
+| ZB-P0-3 | Permit-join payload/timer/flag | Publishes `{"permit_join": bool}`; z2m 2.13 wants `{"time": N}`. `duration_s` unused. Sqlite flag never expires. Frontend off — this is the only join door. |
+
+### next-plan (P1)
+
+| ID | Item | Notes |
+|---|---|---|
+| ZB-P1-1 | No create-extra-seat API | `PATCH /settings/inventory/{id}` 404s unknown seats. Cannot add a user-defined device. |
+| ZB-P1-2 | No Zigbee rename / function / placement UI | `_placement_map` + `zigbee_placements` have no editor. Assignment table is the 10 ESPHome seats only. |
+| ZB-P1-3 | Overview / Climate ignore canopy | Hub tent/clone/room only. `sensor.dsc_canopy_*` never bound. Intake T/RH would stay invisible. |
+| ZB-P1-4 | No z2m / stick health on `/health` or Settings | Empty list ≠ stick-down. |
+| ZB-P1-5 | Dual z2m volume mounts | Repo `configuration.yaml` bind vs `/var/lib/dsc-hub/z2m` (0-byte config, empty db). Backup of the data dir can miss the live file. |
+
+---
+
+## 2026-08-27 — UX / first-run mental model (7.1)
+
+> **CLOSED 2026-08-27 (7.1.2)** — All P0/P1 audit items fixed. See [`docs/qa/AUDIT-CLOSURE-7.1.2.md`](qa/AUDIT-CLOSURE-7.1.2.md). Historical notes retained below.
+
+Source: [`docs/qa/UX-AUDIT-7.1.md`](qa/UX-AUDIT-7.1.md). Distinct from DESIGN (visual), INTERACTIVE (per-control), WORKFLOW (job chains). Live Overview / Climate / Fleet / Settings on `.48`. No writes.
+
+Already logged — do not duplicate work: **WF-P0-1** / **GAUGE-P0-2** (P1 moisture hole); **WF-P1-2** (CONTROL vs panel); **WF-P1-3** (pot3 empty vs OOS); **WF-P1-7** (no error boundary); **IA-P1-1** / **IA-P1-4** (drawer leak / gauge names); **REL-P1-4** (tent vocabulary in data); **DA-P1-4** / **DA-P1-5** (Live IA + jargon, filed as P1 visual); **REP-P1-1** (Calibrate vs Learning); Overview HUB OFFLINE vs `/fleet` (2026-08-27 next-plan).
+
+### red-flag (P0)
+
+| ID | Item | Notes |
+|---|---|---|
+| UX-P0-1 | Three homes + nine Live tabs | Overview / Mission / Dash(title Home) / Twin are peer destinations. Elevate **DA-P1-4**: a tired grower cannot answer “where am I?” in 60s. One Live home; demote the rest. |
+| UX-P0-2 | Four names for two tents | Chrome 4×8/2×4 vs hub `4x8 Main`/`2x4 Clone` vs clone mode Mother/Custom vs grow log `Clone - Custom`. Elevate **REL-P1-4** to chrome copy, not just slot strings. |
+| UX-P0-3 | Overview has no Brain/hub chip | KIT HONEST is the only global status. Dash/Mission show HUB ONLINE. Landing never forms “is the Brain up?” even when `/fleet.hub.online=true`. |
+| UX-P0-4 | Empty / live / OOS share one `—` | Mental-model face of **WF-P0-1** + **WF-P1-3**. P1 looked dead (fleet 21.8%); P3 looked the same (OOS); P4 is a true empty. Three states, one glyph. |
+
+### next-plan (P1)
+
+| ID | Item | Notes |
+|---|---|---|
+| UX-P1-1 | First-run copy leftovers | Brand “Plausible Deniability”; KIT HONEST; Twin “hass ticks”; History “HA Home gauge popups”; Climate “umbrella lung” + a11y `no plant/stage rail`. Overlaps **DA-P1-5** — keep one fix list. |
+| UX-P1-2 | Grow lands on Compose, not Roster | First Grow click is “build a blend.” Zero-plant state is not the default. |
+| UX-P1-3 | Two Overview labels | Live Overview and Fleet Overview are both “Overview” in the second nav row. |
+| UX-P1-4 | Amber means two things | Gauge amber = drifting. Running COOL/C-HUM amber = on. Same token, two stories. |
+| UX-P1-5 | Grow log is a firehose | 80 rows / 24h of demand flicker + `Stage - Off; Clone - Custom`. Dark-period warnings drown. Filter or collapse repeats. |
+| UX-P1-6 | 390px Live row clips Light | Secondary tabs are a fade-masked scroller, 40px tall. Live phone pass not completed (tab died). Confirm at 390px. |
+
+---
+
+## 2026-08-27 — Space / density (7.1)
+
+> **CLOSED 2026-08-27 (7.1.2)** — All P0/P1 audit items fixed. See [`docs/qa/AUDIT-CLOSURE-7.1.2.md`](qa/AUDIT-CLOSURE-7.1.2.md). Historical notes retained below.
+
+Source: [`docs/qa/SPACE-AUDIT-7.1.md`](qa/SPACE-AUDIT-7.1.md). Distinct from LAYOUT (overflow/overlap — that file was not in tree). Live first-fold at 1280×720 and 390×844 on `.48`. No writes.
+
+Already logged — do not duplicate: **UX-P0-1** (nine Live tabs / three homes — IA reason chrome is tall); **UX-P1-1** (brand tagline); **UX-P1-3** (two Overview labels); **UX-P1-6** (390 clips Live pills — **confirmed** this pass: Climate is off the 390 fold).
+
+### red-flag (P0)
+
+| ID | Item | Notes |
+|---|---|---|
+| SP-P0-1 | Chrome + duplicate page header | Brand + honesty + two tab rows + H1 = content starts y=278 (39% of 720) / y=280–406 on 390. Collapse to two chrome rows; drop restated H1. |
+| SP-P0-2 | TwinKeepAlive 70vh above Twin / 4×8 / 2×4 | Mounted before `<Routes>`. Page header at y≈940–1184. Cockpit (fans, seats, history) never on the first fold. Move canvas below header or make it a strip on tent pages. |
+| SP-P0-3 | Settings inventory wall | No accordion. 18 cards; 3 on 1280 fold / 1 on 390. Empty `—` MAC/uptime/RSSI. Assignment / Network / Save at 5905–10827 px. Accordion by role; default-open offline+OOS. |
+| SP-P0-4 | Overview Bands bury the glance | Bands card 600 px. Fan duties / Running / Root & tank / Grow log at y=892+. One compact 4×8+2×4 row so duties+root share 720. |
+
+### next-plan (P1)
+
+| ID | Item | Notes |
+|---|---|---|
+| SP-P1-1 | Duplicate CTAs | Overview Climate/Mission buttons; Mission NEXT repeats Open Twin / Climate Want. |
+| SP-P1-2 | Compose scroll-to-commit | Commit + assign is card 4 (Light + assign). Nutrition is eight empty slots. Sticky act or lead with assign. |
+| SP-P1-3 | Fleet KPI chrome | 7/11 + Surface 7.1.0 (already in header) + Alerts 0 own the fold. Pulse clipped; in-service toggles below. |
+| SP-P1-4 | Climate Want/gauges below Command | 1280 can hit demand without seeing T/RH/VPD. 390 shows Hub °C only. Put triad or Want on the fold. |
+| SP-P1-5 | Root one-pot fold | Coldest/mat KPIs skinny-wide; only POT 1 visible. |
+| SP-P1-6 | Light WANT HOURS empty boxes | Auto photoperiod / hold clipped under 0.00 h heroes. |
+| SP-P1-7 | Dash CannaLib tiles first | `/ops/home` fold is catalog bandwidth, not bands. |
+| SP-P1-8 | Skinny-left wide cards | Learning wizards and Mission Hub Link hug the left of max-width 1600. |
+
+---
+
+## 2026-08-27 — Sensor-value audit 7.1
+
+> **CLOSED 2026-08-27 (7.1.2)** — All P0/P1 audit items fixed. See [`docs/qa/AUDIT-CLOSURE-7.1.2.md`](qa/AUDIT-CLOSURE-7.1.2.md). Historical notes retained below.
+
+Source: [`docs/qa/SENSOR-VALUE-AUDIT-7.1.md`](qa/SENSOR-VALUE-AUDIT-7.1.md). Distinct from GAUGE (rings), DEVICE (online/fw), WIRING (relays), ZIGBEE (join). Live `.48` `/health` 7.1.0. pot3 left OOS. No cal save / demand / Apply network.
+
+Already logged — do not duplicate: **WF-P0-1 / GAUGE-P0-2** (Overview P1 moisture hole); **REL-P0-2 / GAUGE-P1-7** (4 of 4 / pot3 gauges); **GAUGE-P1-6** (Room VPD —); **ZB-P1-3** (canopy unused); **REL-P0-3** (2×4 hours parented to SF1000); **F-003 / POT4 isolate / F-008 / anemometer** (hardware keep-open).
+
+### red-flag (P0)
+
+| ID | Item | Notes |
+|---|---|---|
+| SV-P0-1 | `*_runtime_today` is UTC “today” | Brain container TZ UTC; host AEST. Dehum extras **19.09 h** at 06:45 AEST = ON since 2026-08-26 00:00Z. Local midnight recompute **5.36 h**. Set container `TZ=Australia/Sydney` or compute midnight in Sydney. |
+| SV-P0-2 | `lights_on_today_{4x8,2x4}` permanent **0.0** | Metrics never written to `fleet_history` (`all=0`). 4×8 window on; hub `light_delivered_hours` **2.64**. Record light/window 0/1 or stop publishing 0.0 as a live hour. |
+| SV-P0-3 | Air-path CFM labeled anemometer; digits are allocated proxies | Calibrate **0/4**. Climate shows in 170/94, dump 21, recirc 63. NP alert uses nameplate (inverted). Say “nameplate / allocated” or hide CFM until two curve points exist. |
+
+### next-plan (P1)
+
+| ID | Item | Notes |
+|---|---|---|
+| SV-P1-1 | EC not ingested | Firmware `soil_conductivity`; `POT_MAP` only `soil_ec`. Root EC — on live pot1/2. Map conductivity (+ N/P/K if we keep them as derived). |
+| SV-P1-2 | Compose Day 48 / Late Veg leftover | extras + Compose vs roster `[]` vs hub stage Off. Clear build helpers on retire/revert. |
+| SV-P1-3 | pot4 online + nulls; root fault stays off | Any other pot with soil T 5–45 clears the fault. Surface the dead probe without enabling pot3. |
+| SV-P1-4 | pot3 ESP-NOW link on while OOS | Hub binary true; seat not ingested. Don’t paint a link without numbers. |
+| SV-P1-5 | SF1000 ON / 0% / effectively_off | brightness 1; extras effectively_off on; 2×4 chip ON. One story. |
+| SV-P1-6 | DutyStrip 24 h is 0.0H vs runtime KPI | Demand switches missing from `history_ops.ENTITY_METRIC_MAP`. |
+| SV-P1-7 | `fleetToHass` skips `fleetFromHass` | extras-only holes feed Overview `num(soil_moisture)` and Climate room VPD. |
+
+---
+
+## 2026-08-27 — Theme tokens (7.1)
+
+> **CLOSED 2026-08-27 (7.1.2)** — All P0/P1 audit items fixed. See [`docs/qa/AUDIT-CLOSURE-7.1.2.md`](qa/AUDIT-CLOSURE-7.1.2.md). Historical notes retained below.
+
+Source: [`docs/qa/THEME-AUDIT-7.1.md`](qa/THEME-AUDIT-7.1.md). Distinct from DESIGN (visual language), SPACE, LAYOUT. Live `.48` / `dsc-brain.local`. pot3 left OOS. Apply network / demand not fired.
+
+Already logged — do not duplicate: **WF-P1-7** (hash-jump unmount / connecting flash); **UX-P1-4** (amber = drift vs on — semantics, not attach). 7.1.2 attach fix (`:root` + `.dsc-root` wrap) **is live** — not reopened.
+
+### red-flag (P0)
+
+| ID | Item | Notes |
+|---|---|---|
+| TH-P0-1 | Typeless Settings `<input>` skip token skin | `input[type=text]` does not match `<input>` with no type. Assignment / AP SSID / Ollama / CannaLib render UA **white** fields. Backup link is `dsc-button` (no CSS). Skin `input:not([type])` or add `type="text"`. |
+
+### next-plan (P1)
+
+| ID | Item | Notes |
+|---|---|---|
+| TH-P1-1 | Button hierarchy unused | `.dsc-btn-primary/-secondary/-danger` live only on Compose / Calibrate / Learning. Overview / Settings Save still `primary`/`teal` (neon vs teal “primary”). |
+| TH-P1-2 | Lime `#39ff14` leftover | ok-chips, demand-on, secondary active. Fights `--dsc-neon` `#66bb6a`. 7.1 already said kill this wash. |
+| TH-P1-3 | Collapsed token aliases | `--dsc-blue`≡`--dsc-teal`, `--dsc-gray-4`≡`--dsc-gray-5`, `--dsc-black-2`≡`--dsc-gray-1`, `--dsc-bad`≡`--dsc-bad-soft`. |
+| TH-P1-4 | Chart / lung hex bypass | `BandChartHost` Tailwind (`#f97316` `#22c55e` `#3b82f6`…); AirPath/Lung `#b388ff`. |
+| TH-P1-5 | Banner / drawer / narrator off-token | Slate-sky banners; dank `#121a16` drawers. |
+| TH-P1-6 | Section tab colors dead | `.dsc-tab.active` forces white over `.dsc-tab--*`. Twin / `.dsc-legacy-host` `#000` stay outside the scale. |
+
+---
+
+## 2026-08-27 — Graph / chart audit 7.1
+
+> **CLOSED 2026-08-27 (7.1.2)** — All P0/P1 audit items fixed. See [`docs/qa/AUDIT-CLOSURE-7.1.2.md`](qa/AUDIT-CLOSURE-7.1.2.md). Historical notes retained below.
+
+Source: [`docs/qa/GRAPH-AUDIT-7.1.md`](qa/GRAPH-AUDIT-7.1.md). Distinct from GAUGE (rings/meters/bars), UX, DESIGN, THEME, SPACE. Live `.48` `/history` + every plot route. pot3 left OOS. No setpoint / demand writes.
+
+Already logged — do not duplicate the row, **do escalate**: **SV-P1-6** (DutyStrip 0.0h vs runtime KPI) → lighting + heat-mat are **P0** when the page also says ON / 4.0 h today. **SV-P1-7** (extras-only room VPD) is the ingest half of **GR-P0-4**.
+
+### red-flag (P0)
+
+| ID | Item | Notes |
+|---|---|---|
+| GR-P0-1 | History `LIMIT 2000 ASC` drops newest | `list_history` keeps the oldest 2000. 48h tent T / pot moisture last point ~27h old; coldest-root hits the cap inside 6h. `stepHold` then paints the hole to now. Newest-first or raise cap. |
+| GR-P0-2 | Step-hold to now, no stale mark | `stepHoldSeries` appends `{t: now, v: last}`. Chart voids `lastSyncAt`. Root spark / truncated 48h look live and flat. |
+| GR-P0-3 | Fan duty chart empty | `sensor.dsc_fan_exhaust_*_pct` not in `ENTITY_METRIC_MAP`. Climate plot = “thin recorder” while sliders show live %. |
+| GR-P0-4 | Room VPD legend, no series | `sensor.dsc_hub_room_vpd_kpa` / `room_vpd` unmapped; hub values have no room VPD. Climate VPD last chip blank (Room is series[0]). |
+| GR-P0-5 | Light duty 0.0h while ON | 4×8 window + SF1000 binaries unmapped. Page: WINDOW OPEN / SF1000 ON. Strip: 0 cycles · 0.0h on. Elevate **SV-P1-6**. |
+| GR-P0-6 | Heat-mat strip 0.0h vs 4.0 h KPI | Same DutyStrip map hole on Root. |
+| GR-P0-7 | Analytics 48h VWC axis collapsed | All ticks the same `HH:mm`. `potGotEntity` can pick `got_moisture` (0 history) over `soil_moisture`. P3 OOS + P4 null stay in the legend. |
+
+### next-plan (P1)
+
+| ID | Item | Notes |
+|---|---|---|
+| GR-P1-1 | Last chip is series[0] (Room) | Climate T/RH “now” is Room, not 4×8. |
+| GR-P1-2 | Dual-axis extrema un-united | RH max 81.9 prints on the temp chart. |
+| GR-P1-3 | Severity glow + ghost smear | Legend colors ≠ stroke the operator sees. |
+| GR-P1-4 | EC never ingested, still legend | Pots have moisture / soil T / pH only. Seat copy “EC over time shown.” |
+| GR-P1-5 | 24h/48h ticks HH:mm only | Two mornings look reversed. Need a date. |
+| GR-P1-6 | Index downsample + nearest tooltip | Peaks can vanish; hover labels a point hours away. |
+| GR-P1-7 | Unmapped history fails silent | `[]` + Thin recorder. Drawer still shows entity id. |
+| GR-P1-8 | Overview/Dash Root spark held-flat | VPD sparks needle-spike at the right (hold join). |
+| GR-P1-9 | Duty track invisible when empty | Grey-on-near-black reads as a missing widget. |
+| GR-P1-10 | Chart hours sessionStorage is global | 48h on Analytics is 48h on Climate; ghost fetch then hits GR-P0-1. |
+
 

@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import datetime
+import json
 import time
 from typing import Any
+from zoneinfo import ZoneInfo
 
+from .compose_ops import _strain_is_auto
 from .compose_store import all_helpers, get_helper, get_roster_slots
 from .device_calibration import get_calibration
 from .hub_controls import HUB_FAN_ENTITY_TO_OID
@@ -13,6 +16,10 @@ from .settings import list_history, list_roster
 from .stage_model import expected_stage, tent_id
 from .want import resolve_want
 from .dash_computed import emit_dash_entities
+
+SYDNEY_TZ = ZoneInfo("Australia/Sydney")
+_COMPUTED_CACHE: dict[str, Any] = {"ts": 0.0, "key": None, "states": {}}
+_COMPUTED_TTL_SEC = 5.0
 
 FAN_PCT_ENTITIES: dict[str, str] = {
     "sensor.dsc_fan_intake_main_pct": "fan.dsc_hub_4_inch_intake_fan_main",
@@ -84,12 +91,11 @@ SELECT_OPTIONS: dict[str, list[str]] = {
     **{f"input_select.dsc_pot{n}_tent": ["clone", "main", "unassigned"] for n in range(1, 5)},
 }
 
-
 def _pot_in_service(inventory: list[dict[str, Any]] | None, pot_n: int) -> bool:
     row = next((r for r in (inventory or []) if r.get("seat_id") == f"pot{pot_n}"), None)
     if row is not None:
         return bool(row.get("in_service"))
-    return pot_n != 3
+    return False
 
 
 def _set_entity(
@@ -262,13 +268,13 @@ def _light_brightness_pct(states: dict[str, dict[str, Any]]) -> float | None:
 
 
 def _midnight_ts() -> float:
-    now = datetime.datetime.now()
+    now = datetime.datetime.now(SYDNEY_TZ)
     midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
     return midnight.timestamp()
 
 
 def _runtime_hours_today(seat_id: str, metric: str) -> float:
-    rows = list_history(seat_id, metric, _midnight_ts(), limit=5000)
+    rows = sorted(list_history(seat_id, metric, _midnight_ts(), limit=5000), key=lambda r: r["ts"])
     if not rows:
         return 0.0
     if len(rows) == 1:
@@ -309,6 +315,31 @@ def build_computed_hass_states(
     inventory: list[dict[str, Any]] | None = None,
 ) -> dict[str, dict[str, Any]]:
     """Emit HA-shaped computed entities for Pi compat layer."""
+    controls = (fleet.hub.values.get("controls") or {}) if fleet.hub else {}
+    controls_key = json.dumps(controls, sort_keys=True, default=str)
+    cache_key = (
+        getattr(fleet, "updated_at", 0.0),
+        tuple((r.get("seat_id"), r.get("in_service")) for r in (inventory or [])),
+        controls_key,
+    )
+    now = time.time()
+    if (
+        now - float(_COMPUTED_CACHE.get("ts", 0.0)) < _COMPUTED_TTL_SEC
+        and _COMPUTED_CACHE.get("key") == cache_key
+        and _COMPUTED_CACHE.get("states")
+    ):
+        return dict(_COMPUTED_CACHE["states"])
+
+    states = _build_computed_hass_states_uncached(fleet, inventory)
+    _COMPUTED_CACHE.update(ts=now, key=cache_key, states=states)
+    return states
+
+
+def _build_computed_hass_states_uncached(
+    fleet: Any,
+    inventory: list[dict[str, Any]] | None = None,
+) -> dict[str, dict[str, Any]]:
+    """Build computed entities without the short-lived response cache."""
     states: dict[str, dict[str, Any]] = {}
     helpers = all_helpers()
     controls = (fleet.hub.values.get("controls") or {}) if fleet.hub else {}
@@ -430,14 +461,35 @@ def build_computed_hass_states(
     if build_sprout:
         try:
             build_days = (datetime.date.today() - datetime.date.fromisoformat(build_sprout[:10])).days
+            strain_raw = str(helpers.get("input_text.dsc_build_strain", "")).strip()
+            strain_id = strain_raw.replace(" ", "_").lower()[:64]
             _set_entity(states, "sensor.dsc_build_days_since_sprout", max(0, build_days))
-            _set_entity(states, "sensor.dsc_build_expected_stage", expected_stage(max(0, build_days)))
+            _set_entity(
+                states,
+                "sensor.dsc_build_expected_stage",
+                expected_stage(max(0, build_days), auto=_strain_is_auto(strain_id)),
+            )
         except ValueError:
             pass
 
     for runtime_id, (seat_id, metric) in RUNTIME_ENTITIES.items():
         hours = _runtime_hours_today(seat_id, metric)
         _set_entity(states, runtime_id, hours, available=True, attributes={"unit_of_measurement": "h"})
+
+    _set_entity(
+        states,
+        "sensor.dsc_lights_on_today_2x4",
+        _runtime_hours_today("hub", "window_2x4_open"),
+        available=True,
+        attributes={"unit_of_measurement": "h"},
+    )
+    _set_entity(
+        states,
+        "sensor.dsc_lights_on_today_4x8",
+        _runtime_hours_today("hub", "window_4x8_open"),
+        available=True,
+        attributes={"unit_of_measurement": "h"},
+    )
 
     slots = get_roster_slots()
     occupied = sum(1 for s in slots if s.get("status") not in ("empty", "", None, "unknown", "unavailable"))
@@ -449,28 +501,29 @@ def build_computed_hass_states(
         row = roster_rows.get(seat_id, {})
         recipe = row.get("recipe") or {}
         strain_id = row.get("strain_id") or ""
-        stage = row.get("stage") or "veg"
-        plant_name = recipe.get("plant_name") or recipe.get("nickname") or ""
+        stage = row.get("stage") or ""
+        plant_name = recipe.get("plant_name") or recipe.get("nickname") or get_helper(f"text.dsc_pot{pot_n}_plant_name", "")
         strain_display = recipe.get("strain_display") or strain_id or ""
         tent = tent_id(str(recipe.get("tent") or get_helper(f"input_select.dsc_pot{pot_n}_tent", "unassigned")))
         sprout = recipe.get("sprout_date") or get_helper(f"datetime.dsc_pot{pot_n}_sprout_date", "")
-        growth_stage = recipe.get("growth_stage") or stage
-        if sprout:
+        occupied = bool(str(plant_name).strip())
+        growth_stage = recipe.get("growth_stage") or (stage if occupied else "")
+        if sprout and occupied:
             try:
                 sprout_dt = datetime.date.fromisoformat(str(sprout)[:10])
                 days = (datetime.date.today() - sprout_dt).days
-                derived = expected_stage(max(0, days))
+                derived = expected_stage(max(0, days), auto=_strain_is_auto(strain_id))
                 if derived and derived != "unknown":
                     growth_stage = recipe.get("growth_stage") or derived
                     _set_entity(states, f"sensor.dsc_pot{pot_n}_expected_stage", derived)
                 _set_entity(states, f"sensor.dsc_pot{pot_n}_days_since_sprout", max(0, days))
             except ValueError:
                 pass
-        _set_entity(states, f"text.dsc_pot{pot_n}_plant_name", plant_name)
+        _set_entity(states, f"text.dsc_pot{pot_n}_plant_name", plant_name if occupied else "")
         _set_entity(
             states,
             f"select.dsc_pot{pot_n}_growth_stage",
-            growth_stage,
+            growth_stage if occupied else "",
             attributes={"options": GROWTH_STAGE_OPTIONS},
         )
         _set_entity(
@@ -481,7 +534,7 @@ def build_computed_hass_states(
         )
         _set_entity(states, f"sensor.dsc_pot{pot_n}_strain_display", strain_display)
         _set_entity(states, f"datetime.dsc_pot{pot_n}_sprout_date", str(sprout)[:10] if sprout else "")
-        if strain_id:
+        if strain_id and occupied:
             want = resolve_want(strain_id=strain_id, stage=stage)
             bands = want.get("want") or {}
             if "temp_c" in bands:

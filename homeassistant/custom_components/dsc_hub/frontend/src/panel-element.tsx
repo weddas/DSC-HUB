@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { HashRouter } from "react-router-dom";
 import { App, DSC_PANEL_CSS } from "./App";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import { FleetProvider } from "./hooks/useFleet";
 import type { HomeAssistant } from "./vite-env";
 
@@ -63,7 +64,11 @@ class DscHubPanel extends HTMLElement {
       this.shadowRoot!.appendChild(mount);
 
       this._root = createRoot(mount);
-      this._root.render(<PanelRoot panel={this} />);
+      this._root.render(
+        <ErrorBoundary>
+          <PanelRoot panel={this} />
+        </ErrorBoundary>,
+      );
       this._mounted = true;
     }
   }

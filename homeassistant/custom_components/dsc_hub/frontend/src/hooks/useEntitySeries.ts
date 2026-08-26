@@ -43,7 +43,6 @@ export function useEntitySeries(
   const fleetTick = useFleetTick();
   const { points: seed } = useHistory(entityId, fetchHours, fetchPoints);
   const [live, setLive] = useState<SeriesPoint[]>([]);
-  const [lastSyncAt, setLastSyncAt] = useState<number | undefined>(undefined);
   const last = useRef<number | null>(null);
   const seeded = useRef(false);
 
@@ -51,7 +50,6 @@ export function useEntitySeries(
     seeded.current = false;
     setLive([]);
     last.current = null;
-    setLastSyncAt(undefined);
   }, [entityId, hours, maxPoints, fetchHours, withGhost]);
 
   useEffect(() => {
@@ -85,24 +83,26 @@ export function useEntitySeries(
       const next = [...prev, { t: now, v: mapped }];
       return next.slice(-maxPoints);
     });
-    setLastSyncAt(now);
     // tick / fleetTick drives live appends
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entityId, tick, fleetTick, source, fleet, available, num, state, maxPoints]);
 
   const heldCap = withGhost ? Math.max(fetchPoints, maxPoints * 2) : maxPoints * 2;
-  const { series, ghost } = useMemo(() => {
+  const { series, ghost, lastSyncAt } = useMemo(() => {
     const lastSeedT = seed.length ? seed[seed.length - 1].t : 0;
     const liveTail = live.filter((p) => p.t > lastSeedT + 250);
     const merged = seed.length ? [...seed, ...liveTail] : liveTail;
-    const held = stepHoldSeries(merged);
+    const lastRealT = merged.length ? merged[merged.length - 1].t : undefined;
+    const staleGap = lastRealT != null && Date.now() - lastRealT > 5 * 60 * 1000;
+    const held = stepHoldSeries(merged, Date.now(), { markStale: staleGap });
     const capped = held.length > heldCap ? held.slice(-heldCap) : held;
-    if (!withGhost) return { series: capped, ghost: [] as SeriesPoint[] };
+    if (!withGhost) return { series: capped, ghost: [] as SeriesPoint[], lastSyncAt: lastRealT };
     const windowMs = hours * 3600 * 1000;
     const cutoff = Date.now() - windowMs;
     return {
       series: capped.filter((p) => p.t >= cutoff),
       ghost: shiftPriorGhost(capped, hours),
+      lastSyncAt: lastRealT,
     };
   }, [seed, live, heldCap, withGhost, hours]);
 

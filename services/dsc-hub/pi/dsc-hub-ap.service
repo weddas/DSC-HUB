@@ -5,14 +5,13 @@ Before=dsc-hub-compose.service
 Wants=network-pre.target
 
 [Service]
-Type=oneshot
-RemainAfterExit=yes
-ExecStartPre=/etc/dsc-hub/wlan0-ap.sh
-ExecStart=/usr/sbin/hostapd -B /etc/dsc-hub/hostapd.conf
-ExecStartPost=/usr/sbin/dnsmasq -C /etc/dsc-hub/dnsmasq.conf -x /run/dsc-hub-dnsmasq.pid
-ExecStop=/bin/sh -c 'kill $(cat /run/dsc-hub-dnsmasq.pid 2>/dev/null) 2>/dev/null; killall hostapd 2>/dev/null; true'
-Restart=on-failure
+Type=simple
+Restart=always
 RestartSec=5
+ExecStartPre=/bin/sh -c 'killall wpa_supplicant 2>/dev/null; true'
+ExecStart=/etc/dsc-hub/ap-run.sh
+ExecStop=/bin/sh -c 'kill $(cat /run/dsc-hub-dnsmasq.pid 2>/dev/null) 2>/dev/null; killall hostapd dnsmasq 2>/dev/null; true'
+TimeoutStopSec=15
 
 [Install]
 WantedBy=multi-user.target

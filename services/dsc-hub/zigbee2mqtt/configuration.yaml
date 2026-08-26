@@ -5,7 +5,7 @@ mqtt:
   server: mqtt://mosquitto:1883
 serial:
   port: /dev/ttyACM0
-  adapter: ember
+  adapter: ezsp
 frontend:
   enabled: false
 advanced:

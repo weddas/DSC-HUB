@@ -7,6 +7,7 @@ from typing import Any
 
 from .compose_store import (
     blend_snapshot_from_helpers,
+    clear_build_helpers,
     find_roster_slot_for_strain,
     get_helper,
     next_empty_roster_slot,
@@ -213,6 +214,7 @@ def retire_plant(pot: str | None = None) -> dict[str, Any]:
                 "notes": "",
             },
         )
+    clear_build_helpers()
     return {"pot": n, "removed": removed, "roster_slot": slot_num}
 
 
@@ -248,13 +250,17 @@ def accept_mix() -> dict[str, Any]:
 
 
 def apply_climate_want() -> dict[str, Any]:
-    pot = str(get_helper("input_select.dsc_build_assign_pot", "none"))
+    pot = str(get_helper("input_select.dsc_build_climate_pot", "Fleet"))
     if pot not in ("1", "2", "3", "4"):
-        raise ValueError("Assign pot before applying climate want")
+        raise ValueError("Pick pot 1–4 on Climate apply pot before applying climate want")
     strain = str(get_helper("input_text.dsc_build_strain", "")).strip()
     from .want import resolve_want
 
-    want = resolve_want(strain_id=strain.replace(" ", "_").lower()[:64] or None, stage="veg")
+    stage = "veg"
+    row = next((r for r in list_roster() if r.get("seat_id") == f"pot{pot}"), None)
+    if row:
+        stage = str(row.get("stage") or "veg")
+    want = resolve_want(strain_id=strain.replace(" ", "_").lower()[:64] or None, stage=stage)
     bands = want.get("want") or {}
     if "temp_c" in bands:
         lo, hi = bands["temp_c"]

@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { Button, Icon } from "./ui";
 
 export function ResultChip({
@@ -23,9 +24,18 @@ export function ResultChip({
   );
 }
 
+function focusables(root: HTMLElement): HTMLElement[] {
+  return Array.from(
+    root.querySelectorAll<HTMLElement>(
+      'a[href], button:not([disabled]), textarea, input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
+    ),
+  ).filter((el) => !el.hasAttribute("disabled") && el.tabIndex !== -1);
+}
+
 /**
  * Fade overlay for decisions. Confirm is required when onConfirm is set.
  * Help slot stays empty until copy exists. z-index above .dsc-drawer-root (80).
+ * Portals to document.body; traps Tab and marks the shell inert while open.
  */
 export function DecisionLayer({
   open,
@@ -51,25 +61,43 @@ export function DecisionLayer({
   useEffect(() => {
     if (!open) return;
     restoreRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const shell = document.querySelector(".dsc-shell");
+    if (shell instanceof HTMLElement) shell.inert = true;
+
     const panel = panelRef.current;
-    const first = panel?.querySelector<HTMLElement>("button, input, select, textarea, [href]");
+    const first = panel ? focusables(panel)[0] : null;
     first?.focus();
+
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         e.preventDefault();
         onDismiss();
+        return;
+      }
+      if (e.key !== "Tab" || !panel) return;
+      const list = focusables(panel);
+      if (!list.length) return;
+      const firstEl = list[0];
+      const lastEl = list[list.length - 1];
+      if (e.shiftKey && document.activeElement === firstEl) {
+        e.preventDefault();
+        lastEl.focus();
+      } else if (!e.shiftKey && document.activeElement === lastEl) {
+        e.preventDefault();
+        firstEl.focus();
       }
     };
     window.addEventListener("keydown", onKey);
     return () => {
       window.removeEventListener("keydown", onKey);
+      if (shell instanceof HTMLElement) shell.inert = false;
       restoreRef.current?.focus?.();
     };
   }, [open, onDismiss]);
 
   if (!open) return null;
 
-  return (
+  const layer = (
     <div className="dsc-decision-root is-open" role="presentation">
       <div className="dsc-decision-scrim" onClick={onDismiss} />
       <aside
@@ -98,4 +126,6 @@ export function DecisionLayer({
       </aside>
     </div>
   );
+
+  return createPortal(layer, document.body);
 }

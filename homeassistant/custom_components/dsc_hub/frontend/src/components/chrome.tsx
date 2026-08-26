@@ -153,24 +153,33 @@ export function SlideDrawer({
   }, [open, onClose]);
 
   return (
-    <div className={`dsc-drawer-root${open ? " is-open" : ""}`} aria-hidden={!open}>
+    <div
+      className={`dsc-drawer-root${open ? " is-open" : ""}`}
+      aria-hidden={!open}
+      inert={!open ? true : undefined}
+    >
       <div className="dsc-drawer-scrim" onClick={onClose} />
       <aside
         ref={panelRef}
         className={`dsc-drawer-panel ${side}`}
         role="dialog"
-        aria-modal="true"
+        aria-modal={open ? "true" : undefined}
         aria-labelledby={titleId}
+        aria-hidden={!open}
+        inert={!open ? true : undefined}
+        hidden={!open ? true : undefined}
       >
-        <button
-          type="button"
-          className="dsc-drawer-rail"
-          aria-label="Close"
-          title="Close"
-          onClick={onClose}
-        >
-          Close
-        </button>
+        {open ? (
+          <button
+            type="button"
+            className="dsc-drawer-rail"
+            aria-label="Close"
+            title="Close"
+            onClick={onClose}
+          >
+            Close
+          </button>
+        ) : null}
         <div className="dsc-drawer-head">
           <h2 id={titleId}>{title}</h2>
           <IconButton label="Close" icon="close" onClick={onClose} />

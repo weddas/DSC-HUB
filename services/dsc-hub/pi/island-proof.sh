@@ -1,6 +1,6 @@
 #!/bin/bash
 # Automated island-proof checks (operator still confirms Nest/HA automations off).
-set -eu
+set -uo pipefail
 
 BASE="${1:-http://127.0.0.1:8787}"
 PASS="${2:-Digital}"
@@ -18,11 +18,19 @@ check() {
 echo "=== island proof: DSC-Brain 7.0.0 ==="
 
 echo "--- health ---"
-curl -sf "${BASE}/health" | tee /tmp/dsc-health.json
-echo
+if curl -sf "${BASE}/health" | tee /tmp/dsc-health.json; then
+  echo
+else
+  echo "FAIL: curl ${BASE}/health"
+  FAIL=1
+fi
 
-FLEET=$(curl -sf "${BASE}/fleet")
-echo "$FLEET" | python3 -c "
+FLEET_JSON="$(curl -sf "${BASE}/fleet" 2>/dev/null || true)"
+if [ -z "$FLEET_JSON" ]; then
+  echo "FAIL: curl ${BASE}/fleet"
+  FAIL=1
+else
+  echo "$FLEET_JSON" | python3 -c "
 import json,sys
 d=json.load(sys.stdin)
 h=d['hub']
@@ -41,6 +49,7 @@ if pot3 and pot3[0].get('in_service'):
     print('WARN: pot3 still in_service — F-003 gate')
 sys.exit(0 if h.get('online') else 1)
 " || FAIL=1
+fi
 
 echo "--- critical ingest ---"
 if [ -f /opt/dsc-hub-repo/brain/scripts/audit_hub_ingest.py ]; then

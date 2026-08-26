@@ -89,6 +89,17 @@ def get_helper(entity_id: str, default: Any = "") -> Any:
     return _load_helpers().get(entity_id, default)
 
 
+def clear_build_helpers() -> None:
+    """Reset compose draft fields after retire (WF-P0-2 / REL-P0-1)."""
+    for entity_id, default in DEFAULT_SELECTS.items():
+        if entity_id.startswith("input_select.dsc_build_"):
+            set_helper(entity_id, default)
+    for entity_id, default in DEFAULT_TEXT.items():
+        if entity_id.startswith(("input_text.dsc_build_", "input_datetime.dsc_build_")):
+            set_helper(entity_id, default)
+    set_helper("input_text.dsc_build_blend_snapshot", "")
+
+
 def set_helper(entity_id: str, value: Any) -> None:
     data = _load_helpers()
     if entity_id.startswith("input_boolean."):

@@ -13,8 +13,8 @@ import { BAND_CHART_TITLES, useBandChart, type BandChartKind } from "../componen
 import { useEntityBus } from "../hooks/useEntityBus";
 import { useHeldReading } from "../hooks/useHeldReading";
 import { useAlertSnooze } from "../hooks/useAlertSnooze";
-import { useInspector } from "../components/InspectorHost";
 import { useFleet } from "../hooks/useFleet";
+import { alertRoute, playbookFor } from "../lib/alertPlaybook";
 import type { RosterSlot } from "../lib/seatModel";
 
 /** Operational overview — critical alerts, area vitals, duties, root strip, grow log. */
@@ -24,7 +24,6 @@ export function OverviewPage() {
   const fleet = useFleet();
   const navigate = useNavigate();
   const { isSnoozed } = useAlertSnooze();
-  const inspector = useInspector();
   const bandChart = useBandChart();
   void tick;
 
@@ -88,17 +87,21 @@ export function OverviewPage() {
               : `${alerts} system alert(s)`}
           </strong>
           <ul className="dsc-fault-list" style={{ marginTop: 8 }}>
-            {faultIds.slice(0, 6).map((id) => (
-              <li key={id}>
-                <StatusChip
-                  label={id.split(".").pop()?.replace(/dsc_/, "").replace(/_/g, " ") || id}
-                  tone="bad"
-                  pulse
-                  icon="alert"
-                  onClick={() => inspector.open({ entityId: id, label: id, kind: "alert" })}
-                />
-              </li>
-            ))}
+            {faultIds.slice(0, 6).map((id) => {
+              const route = alertRoute(id);
+              const label = playbookFor(id, "alert").title;
+              return (
+                <li key={id}>
+                  <StatusChip
+                    label={label}
+                    tone="bad"
+                    pulse
+                    icon="alert"
+                    onClick={() => navigate(route.href)}
+                  />
+                </li>
+              );
+            })}
           </ul>
         </div>
       ) : null}

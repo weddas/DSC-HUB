@@ -56,7 +56,7 @@ export async function post_demand(seat: DemandSeat, on: boolean): Promise<unknow
 }
 
 export async function get_fleet_state(): Promise<Record<string, unknown>> {
-  const resp = await fetch("/fleet");
+  const resp = await fetch("/fleet?include_hass=true");
   if (!resp.ok) throw new Error("fleet fetch failed");
   return resp.json();
 }

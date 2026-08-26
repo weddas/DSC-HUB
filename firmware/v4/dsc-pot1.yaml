@@ -11,9 +11,10 @@ substitutions:
   api_key_val: !secret dsc_pot1_api_key
   ota_password_val: !secret dsc_pot1_ota_password
   ap_password_val: !secret dsc_pot1_ap_password
+  ap_ssid: "DSC-POT1 Fallback"
   hub_mac: "84:1F:E8:16:E6:60"
   softap_bssid: "00:00:00:00:00:00"
-  softap_ip: "192.168.86.181"
+  softap_ip: "10.42.0.21"
   wifi_bssid: "00:00:00:00:00:00"
   fleet_pot_index: "1"
 

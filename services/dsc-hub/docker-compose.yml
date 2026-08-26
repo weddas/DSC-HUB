@@ -79,12 +79,11 @@ services:
   zigbee2mqtt:
     image: koenkk/zigbee2mqtt:2
     container_name: dsc-hub-z2m
-    restart: unless-stopped
-  # Frontend off — brain Settings drives permit-join
+    # Cap restart attempts — SkyConnect EZSP failures must not ASH-hammer the stick.
+    restart: on-failure:5
     environment:
       TZ: Australia/Sydney
     volumes:
-      - ./zigbee2mqtt/configuration.yaml:/app/data/configuration.yaml
       - ${DSC_DATA:-/var/lib/dsc-hub}/z2m:/app/data
     devices:
       - ${ZIGBEE_DEVICE:-/dev/ttyACM0}:/dev/ttyACM0

@@ -1,4 +1,5 @@
-import { Card, EntityToggle, Kpi, PageHeader } from "../components/ui";
+import { Card, Kpi, PageHeader } from "../components/ui";
+import { InventoryInServiceToggle } from "../components/InventoryInServiceToggle";
 import { TimespanControl, CYCLE_TIMESPAN_EXTRAS } from "../components/HistoryDrawer";
 import { LearningWizard } from "../components/LearningWizard";
 import { TankCutaway } from "../components/TankCutaway";
@@ -13,7 +14,6 @@ import { ALL_POT_NUMBERS, isPotInService, potGotEntity } from "../lib/seatModel"
 import { resolveCfm } from "../lib/cfmProvenance";
 import { buildKitNodesFromFleet, kitInServiceCount, type KitNode } from "../lib/kitInventory";
 import { useFleet } from "../hooks/useFleet";
-import { useSettledAvailability } from "../hooks/useSettledAvailability";
 import { useInspector } from "../components/InspectorHost";
 
 const POT_COLORS = ["var(--dsc-blue)", "var(--dsc-teal)", "var(--dsc-purple)", "var(--dsc-amber)"];
@@ -33,12 +33,10 @@ export function TuneLearningPage() {
         <div className="dsc-col-12">
           <Card className="dsc-glass" title="Kit / In service" icon="settings">
             <div className="dsc-mode-row">
-              <EntityToggle entityId="input_boolean.dsc_ac_in_service" label="AC in service" icon="climate" />
-              <EntityToggle
-                entityId="input_boolean.dsc_clone_humidifier_in_service"
-                label="Clone mister"
-                icon="clone"
-              />
+              <InventoryInServiceToggle seatId="pot1" label="Pot 1" icon="root" />
+              <InventoryInServiceToggle seatId="pot2" label="Pot 2" icon="root" />
+              <InventoryInServiceToggle seatId="pot3" label="Pot 3" icon="root" />
+              <InventoryInServiceToggle seatId="pot4" label="Pot 4" icon="root" />
             </div>
           </Card>
         </div>
@@ -209,18 +207,14 @@ export function FleetOverviewPage() {
 
         <div className="dsc-col-12">
           <Card className="dsc-glass" title="Kit / In service" icon="settings">
+            <p className="dsc-muted" style={{ marginTop: 0 }}>
+              Inventory gates only — wired to Settings inventory PATCH, not dead input_boolean helpers.
+            </p>
             <div className="dsc-mode-row">
-              <EntityToggle entityId="input_boolean.dsc_ac_in_service" label="AC in service" icon="climate" />
-              <EntityToggle
-                entityId="input_boolean.dsc_clone_humidifier_in_service"
-                label="Clone mister"
-                icon="clone"
-              />
-              <EntityToggle entityId="input_boolean.dsc_pot1_in_service" label="Pot 1" icon="root" />
-              <EntityToggle entityId="input_boolean.dsc_pot2_in_service" label="Pot 2" icon="root" />
-              <EntityToggle entityId="input_boolean.dsc_pot3_in_service" label="Pot 3" icon="root" />
-              <EntityToggle entityId="input_boolean.dsc_pot4_in_service" label="Pot 4" icon="root" />
-              <EntityToggle entityId="input_boolean.dsc_tank_in_service" label="Tank" icon="tank" />
+              <InventoryInServiceToggle seatId="pot1" label="Pot 1" icon="root" />
+              <InventoryInServiceToggle seatId="pot2" label="Pot 2" icon="root" />
+              <InventoryInServiceToggle seatId="pot3" label="Pot 3" icon="root" />
+              <InventoryInServiceToggle seatId="pot4" label="Pot 4" icon="root" />
             </div>
           </Card>
         </div>

@@ -205,6 +205,43 @@ function potAlerts(n: number): Record<string, PlaybookEntry> {
 
 Object.assign(ALERTS, potAlerts(1), potAlerts(2), potAlerts(3), potAlerts(4));
 
+/** Route an active alert chip to the cockpit that can fix it. */
+export function alertRoute(entityId: string): { href: string; cta: string } {
+  if (
+    entityId.includes("dark") ||
+    entityId.includes("light") ||
+    entityId.includes("photo") ||
+    entityId.includes("catchup")
+  ) {
+    return { href: "/live/light", cta: "Open Light" };
+  }
+  if (
+    entityId.includes("root") ||
+    entityId.includes("pot") ||
+    entityId.includes("grow_mat") ||
+    entityId.includes("tank_")
+  ) {
+    return { href: "/live/root", cta: "Open Root" };
+  }
+  if (
+    entityId.includes("climate") ||
+    entityId.includes("humidifier") ||
+    entityId.includes("heater") ||
+    entityId.includes("vent") ||
+    entityId.includes("coherence") ||
+    entityId.includes("plant_specs")
+  ) {
+    return { href: "/live/climate", cta: "Open Climate" };
+  }
+  if (entityId.includes("failsafe") || entityId.includes("emergency")) {
+    return { href: "/live/mission", cta: "Mission" };
+  }
+  if (entityId.includes("reduced_kit") || entityId.includes("nest_channel")) {
+    return { href: "/fleet", cta: "Open Fleet" };
+  }
+  return { href: "/live/overview", cta: "Overview" };
+}
+
 export function playbookFor(
   entityId: string,
   kind?: "alert" | "kit" | "fleet" | "binary" | "numeric",

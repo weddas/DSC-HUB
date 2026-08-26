@@ -1,27 +1,4 @@
-import type { SeriesPoint } from "../viz/charts";
-
-const HOLD_GAP_MS = 2000;
-
-/** Recorder stores on change. Hold last good across gaps and out to `now`. */
-export function stepHoldSeries(points: SeriesPoint[], now = Date.now()): SeriesPoint[] {
-  if (!points.length) return [];
-  const sorted = [...points].sort((a, b) => a.t - b.t);
-  const out: SeriesPoint[] = [];
-  for (let i = 0; i < sorted.length; i++) {
-    const p = sorted[i];
-    if (!Number.isFinite(p.v)) continue;
-    const prev = out[out.length - 1];
-    if (prev && p.t - prev.t > HOLD_GAP_MS) {
-      out.push({ t: p.t - 1, v: prev.v });
-    }
-    out.push(p);
-  }
-  const last = out[out.length - 1];
-  if (last && now - last.t > HOLD_GAP_MS) {
-    out.push({ t: now, v: last.v });
-  }
-  return out;
-}
+export { stepHoldSeries } from "../viz/charts";
 
 export function isUnavailableState(raw: unknown): boolean {
   if (raw == null) return true;

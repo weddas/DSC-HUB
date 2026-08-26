@@ -19,14 +19,14 @@ from . import __version__
 from .backup_ops import export_backup_zip, import_backup_zip
 from .catalog import get_strain, init_db, reload_catalogs, search
 from .computed_ops import build_computed_hass_states
-from .control_ops import call_service_proxy
+from .control_ops import call_service_proxy, sync_inventory_in_service_to_hub
 from .history_ops import query_entity_history
 from .event_log import list_grow_log
 from .decision_loop import decision_tick
 from .appliance_driver import start_appliance_driver, stop_appliance_driver
 from .esphome_client import start_esphome_ingest, stop_esphome_ingest
-from .esphome_jobs import list_esphome_devices, list_jobs, queue_job
-from .fleet_state import get_fleet_state
+from .esphome_jobs import list_esphome_devices, list_jobs, queue_job, start_esphome_worker, stop_esphome_worker
+from .fleet_state import get_fleet_state, merge_inventory_oos_seats
 from .integrations import catalog_search, catalog_status, test_cannalib, test_ollama
 from .network_apply import apply_network_configs, network_status
 from .paths import EXPECTED_FIRMWARE, SURFACE_VERSION
@@ -36,13 +36,20 @@ from .settings import (
     list_inventory,
     list_learning,
     list_roster,
+    public_settings,
     set_setting,
     upsert_inventory,
     upsert_roster,
 )
 from .want import resolve_want
 from .device_calibration import get_calibration, set_calibration_step
-from .zigbee_mqtt import get_zigbee_devices, set_permit_join, start_zigbee_ingest, stop_zigbee_ingest
+from .zigbee_mqtt import (
+    get_zigbee_devices,
+    get_zigbee_health,
+    set_permit_join,
+    start_zigbee_ingest,
+    stop_zigbee_ingest,
+)
 
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
 if not STATIC_DIR.exists():
@@ -94,6 +101,16 @@ class InventoryPatch(BaseModel):
     extra: dict[str, Any] | None = None
 
 
+class InventoryCreate(BaseModel):
+    seat_id: str = Field(..., min_length=1, max_length=64)
+    role: str = "extra"
+    host: str | None = None
+    mac: str | None = None
+    api_key: str | None = None
+    in_service: bool = True
+    extra: dict[str, Any] | None = None
+
+
 class RosterPatch(BaseModel):
     strain_id: str | None = None
     stage: str | None = None
@@ -129,11 +146,13 @@ async def lifespan(app: FastAPI):  # noqa: ARG001
     init_settings_db()
     reload_catalogs()
     start_esphome_ingest()
+    start_esphome_worker()
     start_appliance_driver()
     start_zigbee_ingest()
     yield
     await stop_appliance_driver()
     await stop_esphome_ingest()
+    stop_esphome_worker()
     stop_zigbee_ingest()
 
 
@@ -182,6 +201,7 @@ def health() -> dict[str, Any]:
         "version": __version__,
         "surface": SURFACE_VERSION,
         "expected_firmware": EXPECTED_FIRMWARE,
+        "zigbee": get_zigbee_health(),
     }
 
 
@@ -193,6 +213,7 @@ def fleet(
     state = get_fleet_state()
     inventory = list_inventory()
     payload = state.to_dict()
+    merge_inventory_oos_seats(payload, inventory)
     payload["inventory"] = inventory
     if include_computed or include_hass:
         payload["hass_extras"] = build_computed_hass_states(state, inventory)
@@ -217,6 +238,7 @@ async def fleet_ws(websocket: WebSocket) -> None:
             st = get_fleet_state()
             inv = list_inventory()
             ws_payload = st.to_dict()
+            merge_inventory_oos_seats(ws_payload, inv)
             ws_payload["inventory"] = inv
             await websocket.send_json(ws_payload)
             import asyncio
@@ -228,23 +250,46 @@ async def fleet_ws(websocket: WebSocket) -> None:
 
 @app.get("/settings")
 def settings_get() -> dict[str, Any]:
-    return {"settings": get_all_settings(), "inventory": list_inventory()}
+    return {"settings": public_settings(), "inventory": list_inventory()}
 
 
 @app.patch("/settings")
-def settings_patch(body: SettingsPatch) -> dict[str, str]:
+def settings_patch(body: SettingsPatch) -> dict[str, Any]:
     for key, value in body.settings.items():
         set_setting(key, value)
-    return get_all_settings()
+    return public_settings()
 
 
 @app.patch("/settings/inventory/{seat_id}")
-def inventory_patch(seat_id: str, body: InventoryPatch) -> dict[str, Any]:
+async def inventory_patch(seat_id: str, body: InventoryPatch) -> dict[str, Any]:
     try:
         patch = body.model_dump(exclude_none=True)
-        return upsert_inventory(seat_id, patch)
+        result = upsert_inventory(seat_id, patch)
+        if "in_service" in patch:
+            try:
+                await sync_inventory_in_service_to_hub(seat_id, bool(result["in_service"]))
+            except Exception as exc:
+                import logging
+
+                logging.getLogger(__name__).warning(
+                    "inventory hub in_service sync failed for %s: %s", seat_id, exc
+                )
+        return result
     except KeyError as exc:
         raise HTTPException(404, f"unknown seat {seat_id}") from exc
+
+
+@app.post("/settings/inventory")
+def inventory_create(body: InventoryCreate) -> dict[str, Any]:
+    patch = body.model_dump(exclude={"seat_id"}, exclude_none=True)
+    return upsert_inventory(body.seat_id, patch, create=True)
+
+
+@app.post("/settings/inventory/create-extra-seat")
+def inventory_create_extra_seat(body: InventoryCreate) -> dict[str, Any]:
+    """Add a user-defined inventory seat (Zigbee sensor, extra appliance, …)."""
+    patch = body.model_dump(exclude={"seat_id"}, exclude_none=True)
+    return upsert_inventory(body.seat_id, patch, create=True)
 
 
 @app.post("/control/service")
@@ -337,15 +382,20 @@ async def integrations_test_cannalib() -> dict[str, Any]:
 
 
 @app.post("/settings/zigbee/permit-join")
-def zigbee_permit_join(body: PermitJoinBody) -> dict[str, bool]:
-    set_permit_join(body.enabled)
+def zigbee_permit_join(body: PermitJoinBody) -> dict[str, Any]:
+    set_permit_join(body.enabled, body.duration_s)
     set_setting("zigbee_permit_join", "true" if body.enabled else "false")
-    return {"permit_join": body.enabled}
+    return {"permit_join": body.enabled, "duration_s": body.duration_s if body.enabled else 0}
 
 
 @app.get("/settings/zigbee/devices")
 def settings_zigbee_devices() -> dict[str, Any]:
     return {"devices": get_zigbee_devices()}
+
+
+@app.get("/settings/zigbee/health")
+def settings_zigbee_health() -> dict[str, Any]:
+    return get_zigbee_health()
 
 
 @app.get("/settings/calibration/{device_id}")
@@ -382,8 +432,8 @@ def settings_network() -> dict[str, Any]:
 
 
 @app.post("/settings/network/apply")
-def settings_network_apply() -> dict[str, str]:
-    return apply_network_configs()
+def settings_network_apply() -> dict[str, Any]:
+    return apply_network_configs(restart_ap=True)
 
 
 @app.get("/settings/catalog/status")
@@ -391,18 +441,35 @@ async def settings_catalog_status() -> dict[str, Any]:
     return await catalog_status()
 
 
+# Inventory seat_id → fleet_state key (control panel is stored as panel).
+_FLEET_SEAT_ALIAS: dict[str, str] = {"control": "panel"}
+
+
+def _merge_fleet_device_status(dev: dict[str, Any], fleet: dict[str, Any]) -> None:
+    seat = str(dev["seat_id"])
+    fleet_key = _FLEET_SEAT_ALIAS.get(seat, seat)
+    if fleet_key in fleet.get("pots", {}):
+        pot = fleet["pots"][fleet_key]
+        dev["last_firmware"] = pot.get("firmware")
+        dev["online"] = pot.get("online")
+    elif fleet_key == "hub":
+        dev["last_firmware"] = fleet.get("hub", {}).get("firmware")
+        dev["online"] = fleet.get("hub", {}).get("online")
+    elif fleet_key == "panel":
+        dev["last_firmware"] = fleet.get("panel", {}).get("firmware")
+        dev["online"] = fleet.get("panel", {}).get("online")
+    elif fleet_key in fleet.get("sonoffs", {}):
+        son = fleet["sonoffs"][fleet_key]
+        dev["last_firmware"] = son.get("firmware")
+        dev["online"] = son.get("online")
+
+
 @app.get("/settings/esphome/devices")
 def settings_esphome_devices() -> dict[str, Any]:
     fleet = get_fleet_state().to_dict()
     devices = list_esphome_devices()
     for dev in devices:
-        seat = dev["seat_id"]
-        if seat in fleet.get("pots", {}):
-            dev["last_firmware"] = fleet["pots"][seat].get("firmware")
-            dev["online"] = fleet["pots"][seat].get("online")
-        elif seat == "hub":
-            dev["last_firmware"] = fleet.get("hub", {}).get("firmware")
-            dev["online"] = fleet.get("hub", {}).get("online")
+        _merge_fleet_device_status(dev, fleet)
     return {"expected_firmware": EXPECTED_FIRMWARE, "devices": devices}
 
 

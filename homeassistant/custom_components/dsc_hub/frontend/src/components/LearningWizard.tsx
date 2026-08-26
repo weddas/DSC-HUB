@@ -62,21 +62,22 @@ export function LearningWizard() {
         <Button variant="secondary" onClick={() => setStep("climate")}>Learn enable</Button>
       </Card>
 
-      <DecisionLayer open={step === "gate"} onDismiss={() => setStep(null)} title="Learn gate" help={null}>
+      <DecisionLayer
+        open={step === "gate"}
+        onDismiss={() => setStep(null)}
+        onConfirm={() => {
+          void callService("script", "turn_on", { entity_id: "script.dsc_cal_start" });
+          setStep("sample");
+        }}
+        title="Learn gate"
+        confirmLabel="Start session"
+        help={null}
+      >
         <p className="dsc-muted">
           Pick what to calibrate, then start the session. The hub holds each step steady while you measure.
         </p>
         <EntitySelect entityId="input_select.dsc_cal_target" label="Cal target" />
         <p className="dsc-kpi-sub">{state("input_text.dsc_cal_status", "")}</p>
-        <Button
-          variant="primary"
-          onClick={() => {
-            void callService("script", "turn_on", { entity_id: "script.dsc_cal_start" });
-            setStep("sample");
-          }}
-        >
-          Start session
-        </Button>
       </DecisionLayer>
 
       <DecisionLayer open={step === "sample"} onDismiss={() => setStep(null)} title="Sample" help={null}>

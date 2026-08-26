@@ -1,4 +1,6 @@
 import { parseBlendLayers, type SoilLayer } from "../components/chrome";
+import type { FleetSnapshot } from "./fleetModel";
+import { inventoryInService } from "./fleetModel";
 
 export type TentId = "unassigned" | "clone" | "main";
 
@@ -145,20 +147,32 @@ export function potsInTent(
 ): PlantSeatModel[] {
   return activePotNumbers(state)
     .map((n) => buildPlantSeat(n, { state, entity }))
-    .filter((s) => s.tent === tent);
+    .filter((s) => s.tent === tent && s.plantName !== "—" && s.plantName.trim() !== "");
 }
 
 export const ALL_POT_NUMBERS = [1, 2, 3, 4] as const;
 
-/** Pot is shown when in_service is on/missing; off = OOS hole (never fake Got). */
+/** Pot is shown when inventory in_service is on; off = OOS hole (never fake Got). */
 export function isPotInService(
   pot: number,
   state: (id: string, fallback?: string) => string,
 ): boolean {
   const id = `input_boolean.dsc_pot${pot}_in_service`;
-  const raw = state(id, "on");
-  if (raw === "unavailable" || raw === "unknown" || raw === "") return true;
+  const raw = state(id, "off");
+  if (raw === "unavailable" || raw === "unknown" || raw === "") return false;
   return raw === "on";
+}
+
+/** Prefer fleet inventory when present; fall back to HA helper state. */
+export function isPotInServiceWithFleet(
+  pot: number,
+  state: (id: string, fallback?: string) => string,
+  fleet?: FleetSnapshot | null,
+): boolean {
+  if (fleet?.inventory?.length) {
+    return inventoryInService(fleet, `pot${pot}`, false);
+  }
+  return isPotInService(pot, state);
 }
 
 export function activePotNumbers(

@@ -2,25 +2,30 @@
 
 from __future__ import annotations
 
+import datetime
 import time
 from typing import Any
+from zoneinfo import ZoneInfo
 
 import httpx
 
 from .compose_store import get_helper
 from .event_log import record_grow_log
+from .integrations import cannalib_base_url, cannalib_headers
 from .settings import get_setting, list_history, record_history
 
 _CANNALIB_CACHE: dict[str, Any] = {"ts": 0.0, "data": {}}
+_SYDNEY_TZ = ZoneInfo("Australia/Sydney")
 
 
 def _midnight_ts() -> float:
-    lt = time.localtime()
-    return time.mktime((lt.tm_year, lt.tm_mon, lt.tm_mday, 0, 0, 0, lt.tm_wday, lt.tm_yday, lt.tm_isdst))
+    now = datetime.datetime.now(_SYDNEY_TZ)
+    midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    return midnight.timestamp()
 
 
 def _runtime_hours_today(seat_id: str, metric: str) -> float:
-    rows = list_history(seat_id, metric, _midnight_ts(), limit=5000)
+    rows = sorted(list_history(seat_id, metric, _midnight_ts(), limit=5000), key=lambda r: r["ts"])
     if not rows:
         return 0.0
     total_sec = 0.0
@@ -34,7 +39,7 @@ def _runtime_hours_today(seat_id: str, metric: str) -> float:
 
 
 def _cycle_count_since(seat_id: str, metric: str, since_ts: float) -> int:
-    rows = list_history(seat_id, metric, since_ts, limit=5000)
+    rows = sorted(list_history(seat_id, metric, since_ts, limit=5000), key=lambda r: r["ts"])
     count = 0
     prev = 0.0
     for row in rows:
@@ -208,15 +213,12 @@ def _cannalib_snapshot() -> dict[str, Any]:
     now = time.time()
     if now - _CANNALIB_CACHE["ts"] < 30 and _CANNALIB_CACHE["data"]:
         return _CANNALIB_CACHE["data"]
-    base = get_setting("cannalib_api_url", "").rstrip("/")
+    base = cannalib_base_url()
     out: dict[str, Any] = {"online": False, "hits": 0, "bytes_in": 0, "bytes_out": 0, "corpus_strains": 0, "summary": "— MB"}
     if not base:
         _CANNALIB_CACHE.update(ts=now, data=out)
         return out
-    headers: dict[str, str] = {}
-    key = get_setting("cannalib_api_key", "")
-    if key:
-        headers["X-Cannalib-Key"] = key
+    headers = cannalib_headers()
     try:
         with httpx.Client(timeout=4.0) as client:
             metrics = client.get(f"{base}/v1/metrics", headers=headers)
@@ -293,8 +295,6 @@ def emit_dash_entities(
 
     since_hour = time.time() - 3600
     set_entity(states, "sensor.dsc_humidifier_cycles_last_hour", _cycle_count_since("hub", "switch_dsc_hub_humidifier_demand", since_hour), available=True)
-    set_entity(states, "sensor.dsc_lights_on_today_2x4", _runtime_hours_today("hub", "light_dsc_hub_sf1000_dimmer"), available=True, attributes={"unit_of_measurement": "h"})
-    set_entity(states, "sensor.dsc_lights_on_today_4x8", _runtime_hours_today("hub", "binary_dsc_hub_4x8_window_open"), available=True, attributes={"unit_of_measurement": "h"})
     set_entity(states, "sensor.dsc_dehumidifier_runtime_today", _runtime_hours_today("hub", "switch_dsc_hub_dehumidifier_demand"), available=True, attributes={"unit_of_measurement": "h"})
     set_entity(states, "sensor.dsc_ac_runtime_today", _runtime_hours_today("hub", "switch_dsc_hub_ac_demand"), available=True, attributes={"unit_of_measurement": "h"})
 

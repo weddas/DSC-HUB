@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { DecisionLayer } from "./DecisionLayer";
 import { iconSvg, type IconName } from "../icons";
 import { useEntityBus } from "../hooks/useEntityBus";
 import { useHass } from "../hooks/useHass";
@@ -245,6 +246,8 @@ export function StatusChip({
   );
 }
 
+export type EntityToggleConfirm = boolean | { title?: string; body?: string; confirmLabel?: string };
+
 /** Pressable demand / override switch via HA callService. */
 export function EntityToggle({
   entityId,
@@ -252,15 +255,19 @@ export function EntityToggle({
   warnWhenMissing,
   icon,
   showBrightness,
+  confirm,
 }: {
   entityId: string;
   label: string;
   warnWhenMissing?: string;
   icon?: IconName;
   showBrightness?: boolean;
+  /** When set, opens DecisionLayer before calling the hub. */
+  confirm?: EntityToggleConfirm;
 }) {
   const { state, available, attributes } = useFleetEntity(entityId);
   const { callService } = useFleetActions();
+  const [layerOpen, setLayerOpen] = useState(false);
   const on = state === "on";
   const ok = available;
   const domain = entityId.split(".")[0];
@@ -276,25 +283,66 @@ export function EntityToggle({
     }
   };
 
+  const onPress = () => {
+    if (!ok && !warnWhenMissing) return;
+    if (confirm) {
+      setLayerOpen(true);
+      return;
+    }
+    toggle();
+  };
+
+  const confirmCopy =
+    confirm === true
+      ? {
+          title: on ? `Turn off ${label}` : `Turn on ${label}`,
+          body: `This writes ${entityId} on the hub immediately.`,
+          confirmLabel: on ? "Turn off" : "Turn on",
+        }
+      : confirm
+        ? {
+            title: confirm.title ?? (on ? `Turn off ${label}` : `Turn on ${label}`),
+            body: confirm.body ?? `This writes ${entityId} on the hub immediately.`,
+            confirmLabel: confirm.confirmLabel ?? (on ? "Turn off" : "Turn on"),
+          }
+        : null;
+
   const brightness =
-    (showBrightness !== false) && domain === "light" && on
+    showBrightness !== false && domain === "light" && on
       ? Math.round((Number(attributes?.brightness ?? 0) / 255) * 100)
       : null;
 
   return (
-    <button
-      type="button"
-      className={`dsc-demand${on ? " is-on" : ""}${!ok ? " is-missing" : ""}`}
-      onClick={toggle}
-      disabled={!ok && !warnWhenMissing}
-      title={ok ? entityId : warnWhenMissing || `${entityId} unavailable`}
-    >
-      {icon ? <Icon name={icon} size={22} color="var(--dsc-teal)" className="dsc-demand-icon" /> : null}
-      <span className="dsc-demand-label">{label}</span>
-      <span className="dsc-demand-state">
-        {!ok ? warnWhenMissing || "—" : brightness != null ? `${brightness}%` : on ? "ON" : "OFF"}
-      </span>
-    </button>
+    <>
+      <button
+        type="button"
+        className={`dsc-demand${on ? " is-on" : ""}${!ok ? " is-missing" : ""}`}
+        onClick={onPress}
+        disabled={!ok && !warnWhenMissing}
+        title={ok ? entityId : warnWhenMissing || `${entityId} unavailable`}
+      >
+        {icon ? <Icon name={icon} size={22} color="var(--dsc-teal)" className="dsc-demand-icon" /> : null}
+        <span className="dsc-demand-label">{label}</span>
+        <span className="dsc-demand-state">
+          {!ok ? warnWhenMissing || "—" : brightness != null ? `${brightness}%` : on ? "ON" : "OFF"}
+        </span>
+      </button>
+      {confirmCopy ? (
+        <DecisionLayer
+          open={layerOpen}
+          onDismiss={() => setLayerOpen(false)}
+          onConfirm={() => {
+            setLayerOpen(false);
+            toggle();
+          }}
+          title={confirmCopy.title}
+          confirmLabel={confirmCopy.confirmLabel}
+          help={null}
+        >
+          <p>{confirmCopy.body}</p>
+        </DecisionLayer>
+      ) : null}
+    </>
   );
 }
 

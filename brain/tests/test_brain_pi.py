@@ -614,3 +614,208 @@ def test_esphome_job_queue(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> No
     job = queue_job("hub", "ota", temp_db)
     assert job["status"] == "queued"
     assert list_jobs(db_path=temp_db)[0]["seat_id"] == "hub"
+
+
+def test_public_settings_masks_ap_psk(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from dsc_brain.settings import get_all_settings, public_settings, set_setting
+
+    set_setting("ap_psk", "super-secret", temp_db)
+    set_setting("compose_helpers_json", '{"ghost": true}', temp_db)
+    raw = get_all_settings(temp_db)
+    assert raw["ap_psk"] == "super-secret"
+    pub = public_settings(temp_db)
+    assert pub["ap_psk_set"] is True
+    assert pub["ap_psk"] == ""
+    assert "compose_helpers_json" not in pub
+
+
+def test_settings_get_masks_ap_psk(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("DSC_DATA", str(temp_db.parent))
+    monkeypatch.setattr("dsc_brain.settings.DEFAULT_DB", temp_db)
+    from fastapi.testclient import TestClient
+
+    from dsc_brain.api import app
+    from dsc_brain.settings import set_setting
+
+    set_setting("ap_psk", "super-secret", temp_db)
+    client = TestClient(app)
+    resp = client.get("/settings")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["settings"]["ap_psk_set"] is True
+    assert body["settings"]["ap_psk"] == ""
+    assert "compose_helpers_json" not in body["settings"]
+
+
+def test_planned_oos_seats_in_inventory(temp_db: Path) -> None:
+    inv = {r["seat_id"]: r for r in list_inventory(temp_db)}
+    for seat in ("ac", "mister", "tank"):
+        assert seat in inv
+        assert inv[seat]["in_service"] is False
+
+
+def test_create_extra_seat_api(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("DSC_DATA", str(temp_db.parent))
+    monkeypatch.setattr("dsc_brain.settings.DEFAULT_DB", temp_db)
+    from fastapi.testclient import TestClient
+
+    from dsc_brain.api import app
+
+    client = TestClient(app)
+    resp = client.post(
+        "/settings/inventory/create-extra-seat",
+        json={
+            "seat_id": "zigbee_intake_qa",
+            "role": "extra",
+            "extra": {"placement": "4x8 intake duct", "zigbee_friendly_name": "intake_sensor"},
+        },
+    )
+    assert resp.status_code == 200
+    row = resp.json()
+    assert row["seat_id"] == "zigbee_intake_qa"
+    assert row["extra"]["placement"] == "4x8 intake duct"
+
+
+def test_permit_join_payload_time_format(monkeypatch: pytest.MonkeyPatch) -> None:
+    from dsc_brain.zigbee_mqtt import set_permit_join
+
+    published: list[tuple[str, str]] = []
+
+    class _FakeClient:
+        def publish(self, topic: str, payload: str) -> None:
+            published.append((topic, payload))
+
+    monkeypatch.setattr("dsc_brain.zigbee_mqtt._ingest._client", _FakeClient())
+    set_permit_join(True, duration_s=90)
+    assert published == [("zigbee2mqtt/bridge/request/permit_join", '{"time": 90}')]
+    set_permit_join(False)
+    assert published[-1] == ("zigbee2mqtt/bridge/request/permit_join", '{"time": 0}')
+
+
+def test_permit_join_expiry_clears_flag(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("dsc_brain.settings.DEFAULT_DB", temp_db)
+    from dsc_brain.settings import get_setting, set_setting
+    from dsc_brain.zigbee_mqtt import _schedule_permit_join_expiry
+
+    set_setting("zigbee_permit_join", "true", temp_db)
+    _schedule_permit_join_expiry(0.05)
+    time.sleep(0.2)
+    assert get_setting("zigbee_permit_join", db_path=temp_db) == "false"
+
+
+def test_hostapd_conf_fleet_heal_fields(temp_db: Path) -> None:
+    from dsc_brain.network_apply import render_hostapd_conf
+    from dsc_brain.settings import get_all_settings
+
+    conf = render_hostapd_conf(get_all_settings(temp_db))
+    assert "max_num_sta=32" in conf
+    assert "macaddr_acl=0" in conf
+    assert "deny_mac_file=/etc/dsc-hub/hostapd.deny" in conf
+
+
+def test_esphome_double_ota_blocked(temp_db: Path) -> None:
+    from dsc_brain.esphome_jobs import queue_job
+
+    queue_job("hub", "ota", temp_db)
+    with pytest.raises(RuntimeError, match="OTA already queued"):
+        queue_job("hub", "ota", temp_db)
+
+
+def test_planned_oos_inventory_defaults(temp_db: Path) -> None:
+    inv = {r["seat_id"]: r for r in list_inventory(temp_db)}
+    assert inv["ac"]["in_service"] is False
+    assert inv["mister"]["in_service"] is False
+    assert inv["tank"]["in_service"] is False
+
+
+def test_fleet_includes_oos_seats(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("DSC_DATA", str(temp_db.parent))
+    monkeypatch.setattr("dsc_brain.paths.DEFAULT_DB", temp_db)
+    monkeypatch.setattr("dsc_brain.settings.DEFAULT_DB", temp_db)
+    from fastapi.testclient import TestClient
+
+    from dsc_brain.api import app
+
+    client = TestClient(app)
+    resp = client.get("/fleet")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert "pot3" in body["pots"]
+    assert body["pots"]["pot3"]["online"] is False
+    assert body["pots"]["pot3"]["in_service"] is False
+
+
+def test_apply_clone_tent_skips_offline_hub(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    import asyncio
+
+    monkeypatch.setenv("DSC_DATA", str(temp_db.parent))
+    from dsc_brain.control_ops import apply_clone_tent_automation
+    from dsc_brain.fleet_state import FleetState, update_fleet_state
+
+    update_fleet_state(FleetState())
+    result = asyncio.run(apply_clone_tent_automation())
+    assert result["applied"] is False
+    assert result["reason"] == "hub offline"
+
+
+def test_list_history_newest_first(temp_db: Path) -> None:
+    from dsc_brain.settings import list_history, record_history
+
+    base = time.time() - 300
+    record_history("hub", "temp_c", 20.0, base, temp_db)
+    record_history("hub", "temp_c", 21.0, base + 60, temp_db)
+    record_history("hub", "temp_c", 22.0, base + 120, temp_db)
+    rows = list_history("hub", "temp_c", base - 1, db_path=temp_db)
+    assert [r["value"] for r in rows] == [22.0, 21.0, 20.0]
+
+
+def test_retire_clears_build_draft(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("DSC_DATA", str(temp_db.parent))
+    from dsc_brain.compose_ops import retire_plant
+    from dsc_brain.compose_store import default_roster_slots, get_helper, save_roster_slots, set_helper
+
+    save_roster_slots(default_roster_slots())
+    set_helper("input_text.dsc_build_strain", "Retire Me")
+    set_helper("input_text.dsc_build_nickname", "Gone")
+    set_helper("input_select.dsc_build_assign_pot", "2")
+    retire_plant("2")
+    assert get_helper("input_text.dsc_build_strain", "x") == ""
+    assert get_helper("input_select.dsc_build_climate_pot", "x") == "Fleet"
+    assert get_helper("input_select.dsc_build_custom_slot", "x") == "auto"
+
+
+def test_in_service_default_off_without_inventory_row(temp_db: Path) -> None:
+    from dsc_brain.fleet_state import FleetState
+
+    state = FleetState()
+    hass = state.to_hass_states(inventory=[])
+    assert hass["input_boolean.dsc_ac_in_service"]["state"] == "off"
+    assert hass["input_boolean.dsc_pot1_in_service"]["state"] == "off"
+    assert hass["input_boolean.dsc_pot3_in_service"]["state"] == "off"
+
+
+def test_online_stale_sec_alias() -> None:
+    from dsc_brain.esphome_client import ONLINE_STALE_SEC, _ONLINE_STALE_SEC
+
+    assert ONLINE_STALE_SEC == _ONLINE_STALE_SEC == 120.0
+
+
+def test_esphome_devices_merges_panel_and_sonoffs(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("DSC_DATA", str(temp_db.parent))
+    monkeypatch.setattr("dsc_brain.settings.DEFAULT_DB", temp_db)
+    monkeypatch.setattr("dsc_brain.paths.DEFAULT_DB", temp_db)
+    from fastapi.testclient import TestClient
+
+    from dsc_brain.api import app
+    from dsc_brain.fleet_state import FleetState, SeatState, update_fleet_state
+
+    state = FleetState()
+    state.panel = SeatState("panel", True, "7.0.0.0", {}, time.time())
+    state.sonoffs["heater"] = SeatState("heater", True, "7.0.0.0", {}, time.time())
+    update_fleet_state(state)
+    client = TestClient(app)
+    resp = client.get("/settings/esphome/devices")
+    assert resp.status_code == 200
+    by_seat = {d["seat_id"]: d for d in resp.json()["devices"]}
+    assert by_seat.get("control", {}).get("online") is True
+    assert by_seat.get("heater", {}).get("online") is True

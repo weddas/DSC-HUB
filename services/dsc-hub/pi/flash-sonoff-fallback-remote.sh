@@ -8,6 +8,9 @@ SEATS="${2:-heater heatmat humidifier dehumidifier}"
 AP_WAIT="${3:-120}"
 REPO="/opt/dsc-hub-repo/firmware/v4"
 SECRETS="${REPO}/secrets.yaml"
+BRAIN_MDNS="${BRAIN_MDNS:-dsc-brain.local}"
+BRAIN_ETH_IP="${BRAIN_ETH_IP:-192.168.86.48}"
+IW_SCAN_TIMEOUT="${IW_SCAN_TIMEOUT:-30}"
 
 run_sudo() { echo "$PASS" | sudo -S "$@"; }
 
@@ -29,22 +32,20 @@ declare -A APSECRET=(
   [humidifier]=dsc_humidifier_ap_password
   [dehumidifier]=dsc_dehumidifier_ap_password
 )
-declare -A PIIP=(
+declare -A OTAIP=(
   [heater]=10.42.0.50
   [heatmat]=10.42.0.51
   [humidifier]=10.42.0.54
   [dehumidifier]=10.42.0.55
 )
-declare -A LANIP=(
-  [heater]=192.168.86.50
-  [heatmat]=192.168.86.51
-  [humidifier]=192.168.86.54
-  [dehumidifier]=192.168.86.184
-)
 
 get_secret() {
   local key="$1"
   grep "^${key}:" "$SECRETS" | sed -n 's/^[^:]*: "\(.*\)"/\1/p' | head -1
+}
+
+iw_scan() {
+  run_sudo timeout "$IW_SCAN_TIMEOUT" iw dev wlan0 scan 2>/dev/null || true
 }
 
 stop_brain_ap() {
@@ -78,9 +79,9 @@ trap cleanup EXIT
 scan_for_ssid() {
   local ssid="$1"
   local end=$((SECONDS + AP_WAIT))
-  echo "Scanning for AP '${ssid}' up to ${AP_WAIT}s (power-cycle device if missing)..."
+  echo "Scanning for AP '${ssid}' up to ${AP_WAIT}s (iw scan timeout ${IW_SCAN_TIMEOUT}s; power-cycle device if missing)..."
   while [ "$SECONDS" -lt "$end" ]; do
-    if run_sudo iw dev wlan0 scan 2>/dev/null | grep -Fq "SSID: ${ssid}"; then
+    if iw_scan | grep -Fq "SSID: ${ssid}"; then
       echo "Found AP: ${ssid}"
       return 0
     fi
@@ -128,15 +129,15 @@ EOF
   return 1
 }
 
-try_lan_ota() {
+try_pi_ota() {
   local seat="$1" ip="$2" yaml="$3"
   if ! ping -c1 -W2 "$ip" >/dev/null 2>&1; then
-    echo "LAN offline: $ip"
+    echo "Pi AP offline: $ip"
     return 1
   fi
-  echo "LAN ping OK: $ip"
+  echo "Pi AP ping OK: $ip"
   if ! (echo >/dev/tcp/"$ip"/8266) 2>/dev/null && ! (echo >/dev/tcp/"$ip"/6053) 2>/dev/null; then
-    echo "LAN OTA/API closed on $ip"
+    echo "Pi AP OTA/API closed on $ip"
     return 1
   fi
   run_sudo docker exec -w /config dsc-hub-esphome esphome run "$yaml" --device "$ip" --no-logs
@@ -153,31 +154,36 @@ if [ -f /tmp/dsc-firmware-v4.tgz ]; then
 fi
 
 echo "=== Sonoff fallback flash 7.0.0.0 (Pi wlan0 client) ==="
+echo "Brain: ${BRAIN_MDNS} / ${BRAIN_ETH_IP}"
+if ping -c1 -W2 "$BRAIN_ETH_IP" >/dev/null 2>&1 || ping -c1 -W2 "$BRAIN_MDNS" >/dev/null 2>&1; then
+  echo "Brain eth0 reachable"
+else
+  echo "WARN: Brain not pingable on eth0 — continuing (SSH session may still work)"
+fi
 echo "Seats: $SEATS"
 
 for seat in $SEATS; do
   yaml="${YAML[$seat]:-}"
   ssid="${APSSID[$seat]:-}"
   secret_key="${APSECRET[$seat]:-}"
-  pi_ip="${PIIP[$seat]:-}"
-  lan_ip="${LANIP[$seat]:-}"
+  ota_ip="${OTAIP[$seat]:-}"
   [ -z "$yaml" ] && continue
 
   echo ""
   echo "=== $seat ($yaml) ==="
   ok=0
 
-  if try_lan_ota "$seat" "$lan_ip" "$yaml"; then
+  if try_pi_ota "$seat" "$ota_ip" "$yaml"; then
     ok=1
-    echo "OK via LAN: $seat"
+    echo "OK via Pi AP: $seat"
   else
     stop_brain_ap
     ap_psk="$(get_secret "$secret_key")"
     if [ -z "$ap_psk" ]; then
       echo "Missing secret $secret_key"
     elif scan_for_ssid "$ssid"; then
-      # NOTE: must stay inside `if` — a bare call under `set -e` aborts the
-      # whole script (EXIT trap fires) before any diagnostic prints.
+      # NOTE: must stay inside `if` — a bare call under `set -e` aborts
+      # the whole script (EXIT trap fires) before any diagnostic prints.
       if connect_fallback_ap "$ssid" "$ap_psk" && ping -c2 -W3 192.168.4.1 >/dev/null 2>&1; then
         if flash_fallback_ota "$yaml"; then
           ok=1
@@ -197,12 +203,12 @@ for seat in $SEATS; do
   fi
 
   if [ "$ok" -eq 1 ]; then
-    echo "Waiting for $seat on Pi AP ($pi_ip)..."
+    echo "Waiting for $seat on Pi AP ($ota_ip)..."
     sleep 25
-    if ping -c1 -W3 "$pi_ip" >/dev/null 2>&1; then
-      echo "Reachable on Pi AP: $pi_ip"
+    if ping -c1 -W3 "$ota_ip" >/dev/null 2>&1; then
+      echo "Reachable on Pi AP: $ota_ip"
     else
-      echo "Not yet on Pi AP ($pi_ip) — may need another minute"
+      echo "Not yet on Pi AP ($ota_ip) — may need another minute"
     fi
   else
     echo "FAIL: $seat"

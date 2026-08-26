@@ -6,7 +6,7 @@ import {
 } from "react";
 import type { FleetSnapshot, InventoryRow, SeatSnapshot } from "../lib/fleetModel";
 import { EMPTY_FLEET, hubVitals, inventoryInService, parseFleetSnapshot, tentVitals } from "../lib/fleetModel";
-import { fleetFromHass } from "../lib/fleetFromHass";
+import { fleetFromHass, enrichFleetFromHassStates } from "../lib/fleetFromHass";
 import type { HomeAssistant } from "../vite-env";
 
 export type FleetSource = "pi" | "ha";
@@ -45,7 +45,9 @@ export function FleetProvider({
 }) {
   const fleet = useMemo(() => {
     if (source === "pi" && fleetRaw) {
-      const parsed = parseFleetSnapshot(fleetRaw);
+      let parsed = parseFleetSnapshot(fleetRaw);
+      const apiHass = fleetRaw.hass_states as Record<string, import("../vite-env").HassEntity> | undefined;
+      parsed = enrichFleetFromHassStates(parsed, apiHass);
       if (Array.isArray(fleetRaw?.inventory)) {
         return { ...parsed, inventory: fleetRaw.inventory as InventoryRow[] };
       }

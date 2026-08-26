@@ -180,10 +180,6 @@ export function DashHomePage() {
 
       <HubLinkLine />
 
-      <Card className="dsc-glass" title="System map" icon="fleet">
-        <LegacyCardHost tag="dsc-system-map-card" />
-      </Card>
-
       <DashRunningChips bus={bus} />
       <DashFanChips bus={bus} onNavigate={navigate} />
 

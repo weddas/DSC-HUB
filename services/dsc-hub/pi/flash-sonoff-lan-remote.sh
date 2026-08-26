@@ -1,5 +1,5 @@
 #!/bin/bash
-# Flash Sonoffs on house LAN (192.168.86.x) from Pi ESPHome container.
+# Flash Sonoffs on the Pi AP island (10.42.0.x) from the ESPHome container.
 set -eu
 PASS="${1:-Digital}"
 SEATS="${2:-heater heatmat humidifier dehumidifier}"
@@ -12,11 +12,11 @@ declare -A YAML=(
   [humidifier]=dsc-humidifier.yaml
   [dehumidifier]=dsc-de-humidifier.yaml
 )
-declare -A LAN=(
-  [heater]=192.168.86.50
-  [heatmat]=192.168.86.51
-  [humidifier]=192.168.86.54
-  [dehumidifier]=192.168.86.184
+declare -A OTAIP=(
+  [heater]=10.42.0.50
+  [heatmat]=10.42.0.51
+  [humidifier]=10.42.0.54
+  [dehumidifier]=10.42.0.55
 )
 
 if [ -f /tmp/dsc-firmware-v4.tgz ]; then
@@ -24,10 +24,10 @@ if [ -f /tmp/dsc-firmware-v4.tgz ]; then
   tar -xzf /tmp/dsc-firmware-v4.tgz -C /opt/dsc-hub-repo/firmware/v4
 fi
 
-echo "=== Sonoff LAN flash 7.0.0.0 ==="
+echo "=== Sonoff Pi AP flash 7.0.0.0 ==="
 for seat in $SEATS; do
   yaml="${YAML[$seat]:-}"
-  ip="${LAN[$seat]:-}"
+  ip="${OTAIP[$seat]:-}"
   [ -z "$yaml" ] || [ -z "$ip" ] && continue
   echo ""
   echo "=== $seat ($yaml -> $ip) ==="

@@ -22,10 +22,10 @@ function Write-Log {
 }
 
 $Devices = @{
-    heater       = @{ Yaml = "dsc-heater.yaml";        LanIp = "192.168.86.50";  PiIp = "10.42.0.50";  ApSsid = "DSC-Heater Fallback Hotspot";        ApSecret = "dsc_heater_ap_password" }
-    heatmat      = @{ Yaml = "dsc-heatmat.yaml";       LanIp = "192.168.86.51";  PiIp = "10.42.0.51";  ApSsid = "DSC-HeatMat Fallback Hotspot";       ApSecret = "dsc_heatmat_ap_password" }
-    humidifier   = @{ Yaml = "dsc-humidifier.yaml";   LanIp = "192.168.86.54";  PiIp = "10.42.0.54";  ApSsid = "DSC-Humidifier Fallback Hotspot";    ApSecret = "dsc_humidifier_ap_password" }
-    dehumidifier = @{ Yaml = "dsc-de-humidifier.yaml"; LanIp = "192.168.86.184"; PiIp = "10.42.0.55"; ApSsid = "DSC-De-Humidifi Fallback Hotspot"; ApSecret = "dsc_dehumidifier_ap_password" }
+    heater       = @{ Yaml = "dsc-heater.yaml";        PiIp = "10.42.0.50";  ApSsid = "DSC-Heater Fallback Hotspot";        ApSecret = "dsc_heater_ap_password" }
+    heatmat      = @{ Yaml = "dsc-heatmat.yaml";       PiIp = "10.42.0.51";  ApSsid = "DSC-HeatMat Fallback Hotspot";       ApSecret = "dsc_heatmat_ap_password" }
+    humidifier   = @{ Yaml = "dsc-humidifier.yaml";   PiIp = "10.42.0.54";  ApSsid = "DSC-Humidifier Fallback Hotspot";    ApSecret = "dsc_humidifier_ap_password" }
+    dehumidifier = @{ Yaml = "dsc-de-humidifier.yaml"; PiIp = "10.42.0.55"; ApSsid = "DSC-De-Humidifi Fallback Hotspot"; ApSecret = "dsc_dehumidifier_ap_password" }
 }
 
 function Get-SecretsMap {
@@ -153,15 +153,15 @@ foreach ($seat in $Seats) {
     $ok = $false
 
     if (-not $FallbackOnly) {
-        if (Test-Connection $dev.LanIp -Count 1 -Quiet -ErrorAction SilentlyContinue) {
-            Write-Log "  LAN ping OK: $($dev.LanIp)"
-            if ((Test-TcpPort $dev.LanIp 8266) -or (Test-TcpPort $dev.LanIp 6053)) {
-                $ok = Invoke-EsphomeOta -Yaml $dev.Yaml -Device $dev.LanIp
+        if (Test-Connection $dev.PiIp -Count 1 -Quiet -ErrorAction SilentlyContinue) {
+            Write-Log "  Pi AP ping OK: $($dev.PiIp)"
+            if ((Test-TcpPort $dev.PiIp 8266) -or (Test-TcpPort $dev.PiIp 6053)) {
+                $ok = Invoke-EsphomeOta -Yaml $dev.Yaml -Device $dev.PiIp
             } else {
-                Write-Log "  LAN OTA/API ports closed on $($dev.LanIp)"
+                Write-Log "  Pi AP OTA/API ports closed on $($dev.PiIp)"
             }
         } else {
-            Write-Log "  LAN offline: $($dev.LanIp)"
+            Write-Log "  Pi AP offline: $($dev.PiIp)"
         }
     }
 

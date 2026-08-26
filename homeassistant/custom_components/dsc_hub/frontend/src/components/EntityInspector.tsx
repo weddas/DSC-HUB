@@ -1,6 +1,7 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { SlideDrawer } from "./chrome";
 import { Button, StatusChip } from "./ui";
+import { DecisionLayer } from "./DecisionLayer";
 import { useEntityBus } from "../hooks/useEntityBus";
 import { useFleetActions } from "../hooks/useFleetActions";
 import { useEntitySeries } from "../hooks/useEntitySeries";
@@ -45,6 +46,7 @@ export function EntityInspector({
   const { callService } = useFleetActions();
   const { hours, setHours, maxPoints } = useChartHours(6);
   const { isSnoozed, snooze, unsnooze } = useAlertSnooze();
+  const [toggleConfirm, setToggleConfirm] = useState(false);
   const entityId = target?.entityId ?? "";
   const liveState = entityId ? state(entityId, "") : "";
   const binary = target ? isBinaryEntity(entityId, target.kind, liveState) : false;
@@ -110,16 +112,24 @@ export function EntityInspector({
 
       {toggleable ? (
         <div className="dsc-chip-row" style={{ marginBottom: 10 }}>
-          <Button
-            primary
-            onClick={() =>
-              void callService(domain, liveState === "on" ? "turn_off" : "turn_on", {
-                entity_id: target.entityId,
-              })
-            }
-          >
+          <Button primary onClick={() => setToggleConfirm(true)}>
             {liveState === "on" ? "Turn off" : "Turn on"}
           </Button>
+          <DecisionLayer
+            open={toggleConfirm}
+            onDismiss={() => setToggleConfirm(false)}
+            onConfirm={() => {
+              setToggleConfirm(false);
+              void callService(domain, liveState === "on" ? "turn_off" : "turn_on", {
+                entity_id: target.entityId,
+              });
+            }}
+            title={liveState === "on" ? `Turn off ${target.label}` : `Turn on ${target.label}`}
+            confirmLabel={liveState === "on" ? "Turn off" : "Turn on"}
+            help={null}
+          >
+            <p>This writes {target.entityId} on the hub immediately.</p>
+          </DecisionLayer>
         </div>
       ) : null}
 

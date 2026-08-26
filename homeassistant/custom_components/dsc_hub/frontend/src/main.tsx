@@ -2,12 +2,14 @@ import { StrictMode, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { HashRouter } from "react-router-dom";
 import { App } from "./App";
+import { ErrorBoundary } from "./components/ErrorBoundary";
+import { Button } from "./components/ui";
 import { BrainProvider, useBrainContext } from "./hooks/useBrain";
 import { FleetProvider } from "./hooks/useFleet";
 import "./styles/dsc.css";
 
 function PiApp() {
-  const { hass, fleet, tick, loading, error } = useBrainContext();
+  const { hass, fleet, tick, loading, error, refresh } = useBrainContext();
   const surface =
     (fleet?.surface as string | undefined) ??
     (fleet?.expected_firmware ? `7.0.0 (${fleet.expected_firmware})` : "7.0.0");
@@ -19,8 +21,13 @@ function PiApp() {
   if (loading && !fleet) {
     return (
       <div className="dsc-root">
-        <div className="dsc-shell" style={{ padding: 24 }}>
+        <div className="dsc-shell dsc-connecting" style={{ padding: 24 }}>
           <p className="dsc-muted">Connecting to fleet…</p>
+          <div className="dsc-chip-row" style={{ marginTop: 12 }}>
+            <Button primary onClick={() => void refresh()}>
+              Retry
+            </Button>
+          </div>
         </div>
       </div>
     );
@@ -28,8 +35,13 @@ function PiApp() {
   if (error && !fleet) {
     return (
       <div className="dsc-root">
-        <div className="dsc-shell" style={{ padding: 24 }}>
+        <div className="dsc-shell dsc-connecting" style={{ padding: 24 }}>
           <p className="dsc-honesty">Fleet unavailable: {error}</p>
+          <div className="dsc-chip-row" style={{ marginTop: 12 }}>
+            <Button primary onClick={() => void refresh()}>
+              Retry
+            </Button>
+          </div>
         </div>
       </div>
     );
@@ -50,7 +62,9 @@ if (root) {
   createRoot(root).render(
     <StrictMode>
       <BrainProvider>
-        <PiApp />
+        <ErrorBoundary>
+          <PiApp />
+        </ErrorBoundary>
       </BrainProvider>
     </StrictMode>,
   );

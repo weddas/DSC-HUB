@@ -1,6 +1,7 @@
 import type { HassEntity, HomeAssistant } from "../vite-env";
 import type { FleetSnapshot, InventoryRow, SeatSnapshot } from "./fleetModel";
-import { EMPTY_FLEET, EMPTY_SEAT } from "./fleetModel";
+import { EMPTY_FLEET, EMPTY_SEAT, inventoryInService } from "./fleetModel";
+import { ENTITY_FLEET_MAP } from "./entityFleetMap";
 
 const IN_SERVICE_ENTITIES: Record<string, string> = {
   ac: "input_boolean.dsc_ac_in_service",
@@ -107,10 +108,16 @@ export function fleetFromHass(
       online: live,
       firmware: live ? st(hass, fw) : null,
       values: {
-        moisture_pct: numVal(hass, `sensor.dsc_pot${n}_soil_moisture`),
+        moisture_pct:
+          numVal(hass, `sensor.dsc_pot${n}_got_moisture`) ??
+          numVal(hass, `sensor.dsc_pot${n}_soil_moisture`),
         soil_temp_c: numVal(hass, `sensor.dsc_pot${n}_soil_temperature`),
-        ec_us: numVal(hass, `sensor.dsc_pot${n}_soil_ec`),
-        ph: numVal(hass, `sensor.dsc_pot${n}_soil_ph`),
+        ec_us:
+          numVal(hass, `sensor.dsc_pot${n}_got_ec`) ??
+          numVal(hass, `sensor.dsc_pot${n}_soil_conductivity`) ??
+          numVal(hass, `sensor.dsc_pot${n}_soil_ec`),
+        ph:
+          numVal(hass, `sensor.dsc_pot${n}_got_ph`) ?? numVal(hass, `sensor.dsc_pot${n}_soil_ph`),
       },
       last_seen: live ? Date.now() / 1000 : null,
     };
@@ -141,7 +148,7 @@ export function fleetFromHass(
     inventory ??
     Object.entries(IN_SERVICE_ENTITIES).map(([seat_id, eid]) => ({
       seat_id,
-      in_service: avail(hass, eid) ? st(hass, eid) === "on" : seat_id.startsWith("pot") && seat_id !== "pot3",
+      in_service: avail(hass, eid) ? st(hass, eid) === "on" : false,
     }));
 
   const canopy: Record<string, unknown> = {};
@@ -329,9 +336,44 @@ function computeVpd(tempC: number, rhPct: number): number {
 }
 
 function inventoryInServiceFromFleet(fleet: FleetSnapshot, seatId: string): boolean {
-  const row = fleet.inventory?.find((r) => r.seat_id === seatId);
-  if (row && row.in_service != null) return !!row.in_service;
-  if (seatId === "ac" || seatId === "mister" || seatId === "tank") return false;
-  if (seatId === "pot3") return false;
-  return true;
+  return inventoryInService(fleet, seatId, false);
+}
+
+/** Fill hub/pot seat metrics from Pi `hass_states` when fleet JSON omits them. */
+export function enrichFleetFromHassStates(
+  fleet: FleetSnapshot,
+  hassStates?: Record<string, HassEntity> | null,
+): FleetSnapshot {
+  if (!hassStates) return fleet;
+
+  const hubValues = { ...fleet.hub.values };
+  const pots = { ...fleet.pots };
+
+  for (const [entityId, ref] of Object.entries(ENTITY_FLEET_MAP)) {
+    const ent = hassStates[entityId];
+    if (!ent || ent.state === "unavailable" || ent.state === "unknown") continue;
+    const raw = ent.state;
+    const n = Number(raw);
+    if (!Number.isFinite(n) && ref.binary !== true) continue;
+    const value = ref.binary ? raw === "on" || raw === "1" || raw === "true" : n;
+
+    if (ref.seatId === "hub") {
+      if (hubValues[ref.metric] == null) hubValues[ref.metric] = value;
+      continue;
+    }
+    if (ref.seatId.startsWith("pot")) {
+      const seat = pots[ref.seatId];
+      if (!seat || seat.values[ref.metric] != null) continue;
+      pots[ref.seatId] = {
+        ...seat,
+        values: { ...seat.values, [ref.metric]: value },
+      };
+    }
+  }
+
+  return {
+    ...fleet,
+    hub: { ...fleet.hub, values: hubValues },
+    pots,
+  };
 }

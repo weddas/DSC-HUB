@@ -15,6 +15,37 @@ export interface SeriesPoint {
   v: number;
 }
 
+const HOLD_GAP_MS = 2000;
+const MAX_HOLD_TO_NOW_MS = 5 * 60 * 1000;
+
+/** Recorder stores on change. Hold last good across short gaps; stop at now unless stale-marked. */
+export function stepHoldSeries(
+  points: SeriesPoint[],
+  now = Date.now(),
+  opts?: { markStale?: boolean },
+): SeriesPoint[] {
+  if (!points.length) return [];
+  const sorted = [...points].sort((a, b) => a.t - b.t);
+  const out: SeriesPoint[] = [];
+  for (let i = 0; i < sorted.length; i++) {
+    const p = sorted[i];
+    if (!Number.isFinite(p.v)) continue;
+    const prev = out[out.length - 1];
+    if (prev && p.t - prev.t > HOLD_GAP_MS) {
+      out.push({ t: p.t - 1, v: prev.v });
+    }
+    out.push(p);
+  }
+  const last = out[out.length - 1];
+  if (last && now - last.t > HOLD_GAP_MS) {
+    const age = now - last.t;
+    if (opts?.markStale || age <= MAX_HOLD_TO_NOW_MS) {
+      out.push({ t: now, v: last.v });
+    }
+  }
+  return out;
+}
+
 export interface NamedSeries {
   id: string;
   label: string;
@@ -217,7 +248,14 @@ export function MultiLineChart({
   const [hover, setHover] = useState<{ t: number; x: number } | null>(null);
   const [pinned, setPinned] = useState(false);
 
-  void lastSyncAt;
+  const chartStale = useMemo(() => {
+    if (!named.length) return false;
+    const all = named.flatMap((s) => s.series);
+    if (!all.length) return false;
+    const lastDataT = Math.max(...all.map((p) => p.t));
+    const syncAge = lastSyncAt != null ? Date.now() - lastSyncAt : Date.now() - lastDataT;
+    return syncAge > MAX_HOLD_TO_NOW_MS;
+  }, [named, lastSyncAt]);
 
   const model = useMemo(() => {
     const all = named.flatMap((s) => s.series);
@@ -225,7 +263,8 @@ export function MultiLineChart({
     const left = domainForAxis(named, "left", yDomain?.left);
     const right = domainForAxis(named, "right", yDomain?.right);
     const t0 = Math.min(...all.map((p) => p.t));
-    const t1 = Math.max(...all.map((p) => p.t), Date.now());
+    const lastDataT = Math.max(...all.map((p) => p.t));
+    const t1 = chartStale ? lastDataT : Math.max(lastDataT, Date.now());
     const paths = named.map((s, i) => {
       const axis = s.axis || "left";
       const dom = axis === "right" ? right : left;
@@ -244,7 +283,7 @@ export function MultiLineChart({
       };
     });
     return { left, right, t0, t1, paths };
-  }, [named, height, hasRight, yDomain]);
+  }, [named, height, hasRight, yDomain, chartStale]);
 
   const gridLeft = useMemo(() => {
     if (!model) return [];
@@ -359,7 +398,10 @@ export function MultiLineChart({
   const lastPrimary = model?.paths[0]?.last?.v ?? null;
 
   return (
-    <div className="dsc-chart" style={{ position: "relative", width: "100%" }}>
+    <div
+      className={`dsc-chart${chartStale ? " is-stale" : ""}`}
+      style={{ position: "relative", width: "100%" }}
+    >
       <svg
         ref={svgRef}
         viewBox={`0 0 ${width} ${height}`}
@@ -572,7 +614,7 @@ export function MultiLineChart({
                       />
                     ))
                   )}
-                  {live && lastPt ? (
+                  {live && lastPt && !chartStale ? (
                     <circle cx={tipX} cy={tipY} r={3} fill={p.color} opacity={0.9} className="dsc-chart-tip" />
                   ) : null}
                   {p.ext.min != null ? (
@@ -775,6 +817,8 @@ export function ArcGauge({
   extrema,
   stale,
   onClick,
+  /** Progress counter — teal arc, never wears in-band green. */
+  progress,
 }: {
   value: number;
   min?: number;
@@ -787,6 +831,7 @@ export function ArcGauge({
   extrema?: { min?: number; max?: number };
   stale?: boolean;
   onClick?: () => void;
+  progress?: boolean;
 }) {
   // Hold needle at last good when stale/unavailable — never ease to min.
   const display = Number.isFinite(value) ? value : NaN;
@@ -800,16 +845,18 @@ export function ArcGauge({
   const c = 2 * Math.PI * r * 0.75;
   const dash = c * pct;
   const angAt = (v: number) => gaugeAngle(v, min, max);
-  const validBand = isValidBand(band) ? band : undefined;
+  const validBand = !progress && isValidBand(band) ? band : undefined;
   const holding = !!(hasData && stale);
-  const tone = zoneTone({
-    value: display,
-    band: validBand,
-    margin: defaultBandMargin(validBand, unit),
-    stale: holding,
-    available: hasData,
-  });
-  const toneCls = toneClass(tone);
+  const tone = progress
+    ? ("muted" as const)
+    : zoneTone({
+        value: display,
+        band: validBand,
+        margin: defaultBandMargin(validBand, unit),
+        stale: holding,
+        available: hasData,
+      });
+  const toneCls = progress ? "is-progress" : toneClass(tone);
   // Grey track + one in-band highlight. Rainbow fragments were unlabeled noise.
   const bandArc =
     hasData && validBand ? arcSlicePath(validBand.min, validBand.max, min, max, 60, 72, r) : "";
@@ -817,15 +864,17 @@ export function ArcGauge({
   // Teal only when no band is configured (neutral live reading).
   const stroke = !hasData
     ? GAUGE_PALETTE.gray4
-    : holding
-      ? GAUGE_PALETTE.amber
-      : tone === "critical"
-        ? GAUGE_PALETTE.bad
-        : tone === "warn"
-          ? GAUGE_PALETTE.amber
-          : validBand
-            ? GAUGE_PALETTE.ok
-            : GAUGE_PALETTE.teal;
+    : progress
+      ? GAUGE_PALETTE.teal
+      : holding
+        ? GAUGE_PALETTE.amber
+        : tone === "critical"
+          ? GAUGE_PALETTE.bad
+          : tone === "warn"
+            ? GAUGE_PALETTE.amber
+            : validBand
+              ? GAUGE_PALETTE.ok
+              : GAUGE_PALETTE.teal;
   const filterId = `dsc-gauge-glow-${useId().replace(/:/g, "")}`;
 
   const tickMarks: { v: number; kind: "band" | "ext" | "target" }[] = [];
@@ -838,11 +887,20 @@ export function ArcGauge({
     if (target != null && Number.isFinite(target)) tickMarks.push({ v: target, kind: "target" });
   }
 
+  const valueText = !hasData
+    ? "No data"
+    : holding
+      ? `${display.toFixed(display >= 100 ? 0 : display < 10 ? 2 : 1)} ${unit} held`
+      : `${display.toFixed(display >= 100 ? 0 : display < 10 ? 2 : 1)} ${unit}`;
+
   const gauge = (
     <div
       className={`dsc-gauge ${toneCls}${holding ? " is-stale" : ""}${onClick ? " is-clickable" : ""}`}
+      role="img"
+      aria-label={label}
+      aria-valuetext={valueText}
     >
-      <svg viewBox="0 0 120 90" width="140" height="105" aria-label={label}>
+      <svg viewBox="0 0 120 90" width="140" height="105" aria-hidden="true">
         <defs>
           <filter id={filterId} x="-40%" y="-40%" width="180%" height="180%">
             <feGaussianBlur stdDeviation="3.2" result="b" />

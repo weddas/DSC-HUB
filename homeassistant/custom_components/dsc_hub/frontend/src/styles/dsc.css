@@ -406,6 +406,65 @@ body {
   gap: 14px;
 }
 
+.dsc-grid--2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.dsc-table-scroll {
+  overflow-x: auto;
+  max-width: 100%;
+  -webkit-overflow-scrolling: touch;
+}
+
+.dsc-inventory-group {
+  margin-bottom: 12px;
+  border: 1px solid var(--dsc-gray-3);
+  border-radius: var(--dsc-radius);
+  padding: 8px 12px;
+}
+
+.dsc-inventory-group > summary {
+  cursor: pointer;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+  color: var(--dsc-gray-5);
+  margin-bottom: 8px;
+}
+
+.dsc-secondary-tabs .dsc-tab--demoted {
+  opacity: 0.62;
+  font-size: 0.82rem;
+}
+
+.dsc-secondary-tabs .dsc-tab--demoted:not(.active) {
+  border-style: dashed;
+}
+
+.dsc-inventory-group {
+  margin-bottom: 12px;
+  border: 1px solid var(--dsc-gray-3);
+  border-radius: var(--dsc-radius);
+  padding: 8px 12px;
+}
+
+.dsc-inventory-group > summary {
+  cursor: pointer;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+  color: var(--dsc-gray-5);
+  margin-bottom: 8px;
+}
+
+.dsc-gauge.is-progress .dsc-gauge-value {
+  color: var(--dsc-teal);
+}
+
 .dsc-col-3 { grid-column: span 3; }
 .dsc-col-4 { grid-column: span 4; }
 .dsc-col-6 { grid-column: span 6; }
@@ -420,6 +479,12 @@ body {
 @media (max-width: 720px) {
   .dsc-shell { padding: 12px; }
   .dsc-col-3, .dsc-col-4, .dsc-col-6, .dsc-col-8 { grid-column: span 12; }
+  .dsc-grid--2 { grid-template-columns: 1fr; }
+  .dsc-dash-home .dsc-gauge-matrix--bands { gap: 6px; }
+  .dsc-dash-home .dsc-gauge-matrix--bands .dsc-gauge-row-3 { gap: 4px; }
+  .dsc-dash-home .dsc-band-cell { padding: 4px 2px 6px; }
+  .dsc-dash-home .dsc-band-cell .dsc-gauge svg { max-width: 92px; }
+  .dsc-dash-home .dsc-band-zone-label { font-size: 0.62rem; letter-spacing: 0.08em; }
 }
 
 .dsc-card {
@@ -1204,10 +1269,12 @@ body {
   inset: 0;
   z-index: 80;
   pointer-events: none;
+  visibility: hidden;
 }
 
 .dsc-drawer-root.is-open {
   pointer-events: auto;
+  visibility: visible;
 }
 
 .dsc-drawer-scrim {
@@ -1266,6 +1333,11 @@ body {
   justify-content: center;
   cursor: pointer;
   z-index: 2;
+}
+
+.dsc-drawer-root:not(.is-open) .dsc-drawer-rail,
+.dsc-drawer-root:not(.is-open) .dsc-drawer-panel {
+  display: none;
 }
 
 .dsc-drawer-panel.right .dsc-drawer-rail {
@@ -1607,6 +1679,19 @@ body {
   justify-content: flex-end;
   gap: 8px;
   margin-top: 14px;
+}
+
+.dsc-chart.is-stale .dsc-chart-core {
+  opacity: 0.72;
+  stroke-dasharray: 4 3;
+}
+.dsc-chart.is-stale .dsc-chart-tip {
+  display: none;
+}
+.dsc-chart.is-stale .dsc-chart-last::after {
+  content: " · held";
+  color: var(--dsc-amber);
+  font-size: 0.85em;
 }
 .dsc-result-chip.is-empty {
   border-color: rgba(120, 160, 130, 0.28);
@@ -2257,6 +2342,7 @@ select option {
 }
 
 /* Native text / number / time inputs + textareas */
+input:not([type]),
 input[type="text"],
 input[type="number"],
 input[type="search"],
@@ -2273,12 +2359,14 @@ textarea {
   font: inherit;
   padding: 8px 10px;
 }
+input:not([type]):hover:not(:disabled),
 input[type="text"]:hover:not(:disabled),
 input[type="number"]:hover:not(:disabled),
 input[type="search"]:hover:not(:disabled),
 textarea:hover:not(:disabled) {
   border-color: var(--dsc-teal-dim);
 }
+input:not([type]):focus,
 input[type="text"]:focus,
 input[type="number"]:focus,
 input[type="search"]:focus,

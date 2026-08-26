@@ -22,6 +22,7 @@ from .hub_controls import (
     HUB_NUMBER_ENTITY_TO_OID,
     HUB_SELECT_ENTITY_TO_OID,
     HUB_SWITCH_ENTITY_TO_OID,
+    HUB_SWITCH_OID_TO_ENTITY,
 )
 
 _IN_SERVICE_ENTITY_TO_SEAT: dict[str, str] = {
@@ -39,8 +40,18 @@ _SONOFF_RELAY_ENTITY_TO_SEAT: dict[str, str] = {
     "switch.dsc_heatmat_main_relay": "heatmat",
     "switch.dsc_humidifier_main_relay": "humidifier",
     "switch.dsc_de_humidifier_main_relay": "dehumidifier",
-    "switch.dsc_ac_main_relay": "ac",
-    "switch.dsc_clone_humidifier_main_relay": "mister",
+}
+
+# Seats with demand switches but no physical Sonoff relay seat (guard writes).
+_PHANTOM_RELAY_SEATS = frozenset({"ac", "mister"})
+
+_INVENTORY_HUB_IN_SERVICE_OID: dict[str, str] = {
+    "ac": "ac_in_service",
+    "mister": "clone_humidifier_in_service",
+    "pot1": "pot1_in_service",
+    "pot2": "pot2_in_service",
+    "pot3": "pot3_in_service",
+    "pot4": "pot4_in_service",
 }
 
 _NUMBER_ENTITY_TO_OID = HUB_NUMBER_ENTITY_TO_OID
@@ -161,10 +172,47 @@ async def _hub_switch(entity_id: str, on: bool) -> dict[str, Any]:
                 pass
 
 
+async def _hub_in_service_switch(seat_id: str, on: bool) -> dict[str, Any]:
+    """Push inventory in_service to the hub ESP switch (not exposed on control proxy)."""
+    oid = _INVENTORY_HUB_IN_SERVICE_OID.get(seat_id)
+    if not oid:
+        return {"skipped": seat_id}
+    row = _inventory_row("hub")
+    host = (row or {}).get("host") or ""
+    api_key = _api_key(row, "hub")
+    if not host:
+        raise RuntimeError("hub host not configured in inventory")
+
+    keys = await _ensure_switch_keys(host, api_key, "hub_in_service", set(_INVENTORY_HUB_IN_SERVICE_OID.values()))
+    key = keys.get(oid)
+    if key is None:
+        raise RuntimeError(f"hub in_service switch {oid} not found")
+
+    client = make_api_client(host, api_key)
+    async with host_lock(host):
+        try:
+            await client.connect(login=True)
+            client.switch_command(key, on)
+            entity_id = HUB_SWITCH_OID_TO_ENTITY.get(oid, f"switch.dsc_hub_{oid}")
+            return {"entity_id": entity_id, "state": "on" if on else "off"}
+        finally:
+            try:
+                await client.disconnect()
+            except Exception:  # noqa: BLE001
+                pass
+
+
+async def sync_inventory_in_service_to_hub(seat_id: str, in_service: bool) -> dict[str, Any]:
+    """Mirror fleet inventory in_service onto hub ESP switches when inventory PATCHes."""
+    return await _hub_in_service_switch(seat_id, in_service)
+
+
 async def _sonoff_switch(entity_id: str, on: bool) -> dict[str, Any]:
     seat_id = _SONOFF_RELAY_ENTITY_TO_SEAT.get(entity_id)
     if not seat_id:
         raise ValueError(f"unsupported sonoff switch {entity_id}")
+    if seat_id in _PHANTOM_RELAY_SEATS:
+        raise RuntimeError(f"{seat_id} has no physical relay seat — use hub demand switch")
     row = _inventory_row(seat_id)
     if not row or not row.get("in_service"):
         raise RuntimeError(f"{seat_id} not in service")
@@ -348,6 +396,20 @@ async def _hub_select_retry(entity_id: str, option: str) -> dict[str, Any]:
         return await _hub_select(entity_id, option)
 
 
+def _seated_clone_recipe() -> dict[str, Any] | None:
+    """First roster row with a seated plant in the 2×4 tent (not tent-only ghosts)."""
+    for row in list_roster():
+        recipe = row.get("recipe") or {}
+        if tent_id(str(recipe.get("tent") or row.get("tent") or "")) != "clone":
+            continue
+        name = str(recipe.get("plant_name") or recipe.get("nickname") or "").strip()
+        strain = str(row.get("strain_id") or recipe.get("strain_display") or "").strip()
+        if not name and not strain:
+            continue
+        return recipe
+    return None
+
+
 async def apply_clone_tent_automation() -> dict[str, Any]:
     """Drive 2x4 clone-tent mode from roster plants when takeover is off."""
     takeover = _control_state("switch.dsc_hub_manual_takeover")
@@ -355,15 +417,9 @@ async def apply_clone_tent_automation() -> dict[str, Any]:
         return {"applied": False, "reason": "takeover on"}
     if not _hub_is_online():
         return {"applied": False, "reason": "hub offline"}
-    rows = list_roster()
-    clone_plants: list[dict[str, Any]] = []
-    for row in rows:
-        recipe = row.get("recipe") or {}
-        if tent_id(str(recipe.get("tent") or "")) == "clone":
-            clone_plants.append(recipe)
-    if not clone_plants:
-        return {"applied": False, "reason": "no 2x4 plants"}
-    recipe = clone_plants[0]
+    recipe = _seated_clone_recipe()
+    if not recipe:
+        return {"applied": False, "reason": "no seated 2x4 plant"}
     stage = str(recipe.get("growth_stage") or recipe.get("stage") or "")
     mode = clone_mode_for_stage(stage)
     hours = _clone_hours_for_stage(stage)

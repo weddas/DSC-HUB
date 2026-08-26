@@ -38,9 +38,10 @@ export function TwinKeepAlive() {
   const elRef = useRef<TwinCardEl | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "missing">("loading");
   const focusTent = focusTentFromPath(location.pathname);
-  const active =
-    location.pathname === "/live/twin" ||
-    location.pathname === "/ops/dash" ||
+  const twinVisible =
+    location.pathname === "/live/twin" || location.pathname === "/ops/dash";
+  const twinDataActive =
+    twinVisible ||
     location.pathname === "/live/main" ||
     location.pathname === "/live/clone" ||
     location.pathname === "/live/4x8" ||
@@ -92,13 +93,13 @@ export function TwinKeepAlive() {
   useEffect(() => {
     const el = elRef.current;
     const sync = () => {
-      const pause = !active || document.hidden;
+      const pause = !twinDataActive || document.hidden;
       el?.pause?.(pause);
     };
     sync();
     document.addEventListener("visibilitychange", sync);
     return () => document.removeEventListener("visibilitychange", sync);
-  }, [active, status]);
+  }, [twinDataActive, status]);
 
   useEffect(() => {
     elRef.current?.setHeld?.(hubHeld);
@@ -142,13 +143,13 @@ export function TwinKeepAlive() {
 
   return (
     <div
-      className={`dsc-twin-keepalive${active ? " is-active" : ""}`}
-      aria-hidden={!active}
-      inert={!active ? true : undefined}
+      className={`dsc-twin-keepalive${twinVisible ? " is-active" : ""}`}
+      aria-hidden={!twinVisible}
+      inert={!twinVisible ? true : undefined}
       data-status={status}
       data-focus-tent={focusTent || "both"}
       style={
-        active
+        twinVisible
           ? undefined
           : {
               pointerEvents: "none",
@@ -160,7 +161,7 @@ export function TwinKeepAlive() {
             }
       }
     >
-      <div className="dsc-twin-keepalive-host" ref={ref} />
+      <div className="dsc-twin-keepalive-host" ref={ref} style={twinVisible ? undefined : { pointerEvents: "none" }} />
       {status === "missing" ? (
         <div className="dsc-empty">
           <strong>dsc-the-dash-card</strong> did not register. Deploy{" "}

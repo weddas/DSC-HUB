@@ -1,6 +1,7 @@
 import { NavLink, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { Button, Icon, PageHeader } from "./components/ui";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import { HonestyRail } from "./components/Honesty";
 import { TwinKeepAlive } from "./components/TwinKeepAlive";
 import { SeatOverlayHost } from "./components/SeatOverlay";
@@ -124,7 +125,9 @@ function Shell({ surfaceVersion = "7.2.0" }: { surfaceVersion?: string }) {
               key={tab.id}
               to={tab.path}
               end={tab.path === "/fleet"}
-              className={({ isActive }) => `dsc-tab${isActive ? " active" : ""}`}
+              className={({ isActive }) =>
+                `dsc-tab${tab.demoted ? " dsc-tab--demoted" : ""}${isActive ? " active" : ""}`
+              }
             >
               <Icon name={tab.icon as IconName} size={14} />
               {tab.label}
@@ -133,43 +136,46 @@ function Shell({ surfaceVersion = "7.2.0" }: { surfaceVersion?: string }) {
         </nav>
       ) : null}
 
-      <TwinKeepAlive />
       <SeatOverlayHost />
 
-      <Routes>
-        <Route path="/" element={<Navigate to="/live/overview" replace />} />
-        <Route path="/live" element={<Navigate to="/live/overview" replace />} />
-        <Route path="/live/overview" element={<OverviewPage />} />
-        <Route path="/live/mission" element={<LiveMissionPage />} />
-        <Route path="/live/twin" element={<LiveTwinPage />} />
-        <Route path="/live/climate" element={<LiveClimatePage />} />
-        <Route path="/live/4x8" element={<LiveMainPage />} />
-        <Route path="/live/2x4" element={<LiveClonePage />} />
-        <Route path="/live/main" element={<Navigate to="/live/4x8" replace />} />
-        <Route path="/live/clone" element={<Navigate to="/live/2x4" replace />} />
-        <Route path="/live/root" element={<LiveRootPage />} />
-        <Route path="/live/light" element={<LiveLightPage />} />
-        <Route path="/grow" element={<Navigate to="/grow/compose" replace />} />
-        <Route path="/grow/compose" element={<GrowComposePage />} />
-        <Route path="/grow/research" element={<GrowResearchPage />} />
-        <Route path="/grow/roster" element={<GrowRosterPage />} />
-        <Route path="/tune" element={<Navigate to="/tune/learning" replace />} />
-        <Route path="/tune/learning" element={<TuneLearningPage />} />
-        <Route path="/tune/analytics" element={<TuneAnalyticsPage />} />
-        <Route path="/fleet" element={<FleetOverviewPage />} />
-        <Route path="/fleet/calibrate" element={<CalibratePage />} />
-        <Route path="/fleet/settings" element={<SettingsPage />} />
-        <Route path="/ops/home" element={<DashHomePage />} />
-        <Route path="/ops/dash" element={<LiveTwinPage />} />
-        {/* Legacy → 7.0 */}
-        <Route path="/ops/*" element={<LegacyRedirect />} />
-        <Route path="/plant/*" element={<LegacyRedirect />} />
-        <Route path="/plant" element={<LegacyRedirect />} />
-        <Route path="/advanced/*" element={<LegacyRedirect />} />
-        <Route path="/advanced" element={<LegacyRedirect />} />
-        <Route path="/system" element={<LegacyRedirect />} />
-        <Route path="*" element={<NotFoundPage />} />
-      </Routes>
+      <ErrorBoundary>
+        <Routes>
+          <Route path="/" element={<Navigate to="/live/overview" replace />} />
+          <Route path="/live" element={<Navigate to="/live/overview" replace />} />
+          <Route path="/live/overview" element={<OverviewPage />} />
+          <Route path="/live/mission" element={<LiveMissionPage />} />
+          <Route path="/live/twin" element={<LiveTwinPage />} />
+          <Route path="/live/climate" element={<LiveClimatePage />} />
+          <Route path="/live/4x8" element={<LiveMainPage />} />
+          <Route path="/live/2x4" element={<LiveClonePage />} />
+          <Route path="/live/main" element={<Navigate to="/live/4x8" replace />} />
+          <Route path="/live/clone" element={<Navigate to="/live/2x4" replace />} />
+          <Route path="/live/root" element={<LiveRootPage />} />
+          <Route path="/live/light" element={<LiveLightPage />} />
+          <Route path="/grow" element={<Navigate to="/grow/roster" replace />} />
+          <Route path="/grow/compose" element={<GrowComposePage />} />
+          <Route path="/grow/research" element={<GrowResearchPage />} />
+          <Route path="/grow/roster" element={<GrowRosterPage />} />
+          <Route path="/tune" element={<Navigate to="/tune/learning" replace />} />
+          <Route path="/tune/learning" element={<TuneLearningPage />} />
+          <Route path="/tune/analytics" element={<TuneAnalyticsPage />} />
+          <Route path="/fleet" element={<FleetOverviewPage />} />
+          <Route path="/fleet/calibrate" element={<CalibratePage />} />
+          <Route path="/fleet/settings" element={<SettingsPage />} />
+          <Route path="/settings" element={<Navigate to="/fleet/settings" replace />} />
+          <Route path="/ops/home" element={<DashHomePage />} />
+          <Route path="/ops/dash" element={<LiveTwinPage />} />
+          {/* Legacy → 7.0 */}
+          <Route path="/ops/*" element={<LegacyRedirect />} />
+          <Route path="/plant/*" element={<LegacyRedirect />} />
+          <Route path="/plant" element={<LegacyRedirect />} />
+          <Route path="/advanced/*" element={<LegacyRedirect />} />
+          <Route path="/advanced" element={<LegacyRedirect />} />
+          <Route path="/system" element={<LegacyRedirect />} />
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </ErrorBoundary>
+      <TwinKeepAlive />
     </div>
   );
 }

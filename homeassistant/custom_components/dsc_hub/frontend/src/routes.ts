@@ -6,11 +6,13 @@ export interface TabRoute {
   path: string;
   /** Must be a registered IconName — icon gate. */
   icon: string;
+  /** Secondary tab shown after cockpit routes — not a peer "home". */
+  demoted?: boolean;
 }
 
 export const PRIMARY_TABS: { id: PrimarySection; label: string; path: string; icon: string }[] = [
   { id: "live", label: "Live", path: "/live/overview", icon: "live" },
-  { id: "grow", label: "Grow", path: "/grow/compose", icon: "grow" },
+  { id: "grow", label: "Grow", path: "/grow/roster", icon: "grow" },
   { id: "tune", label: "Tune", path: "/tune/learning", icon: "tune" },
   { id: "fleet", label: "Fleet", path: "/fleet", icon: "fleet" },
 ];
@@ -18,14 +20,14 @@ export const PRIMARY_TABS: { id: PrimarySection; label: string; path: string; ic
 export const SECONDARY_TABS: Record<PrimarySection, TabRoute[]> = {
   live: [
     { id: "overview", label: "Overview", path: "/live/overview", icon: "home" },
-    { id: "mission", label: "Mission", path: "/live/mission", icon: "mission" },
-    { id: "dash", label: "Dash", path: "/ops/home", icon: "twin" },
-    { id: "twin", label: "Twin", path: "/live/twin", icon: "twin" },
     { id: "climate", label: "Climate", path: "/live/climate", icon: "climate" },
     { id: "main", label: "4×8", path: "/live/4x8", icon: "tent" },
     { id: "clone", label: "2×4", path: "/live/2x4", icon: "clone" },
     { id: "root", label: "Root", path: "/live/root", icon: "root" },
     { id: "light", label: "Light", path: "/live/light", icon: "lighting" },
+    { id: "twin", label: "Twin", path: "/live/twin", icon: "twin", demoted: true },
+    { id: "mission", label: "Mission", path: "/live/mission", icon: "mission", demoted: true },
+    { id: "dash", label: "Dash", path: "/ops/home", icon: "dash", demoted: true },
   ],
   grow: [
     { id: "compose", label: "Compose", path: "/grow/compose", icon: "compose" },
@@ -67,12 +69,13 @@ export const LEGACY_REDIRECTS: Record<string, string> = {
   "/advanced/trends": "/tune/analytics",
   "/advanced/history": "/tune/analytics",
   "/system": "/fleet",
+  "/settings": "/fleet/settings",
 };
 
 export function sectionFromPath(pathname: string): PrimarySection {
   if (pathname.startsWith("/grow") || pathname.startsWith("/plant")) return "grow";
   if (pathname.startsWith("/tune") || pathname.startsWith("/advanced")) return "tune";
-  if (pathname.startsWith("/fleet") || pathname.startsWith("/system")) return "fleet";
+  if (pathname.startsWith("/fleet") || pathname.startsWith("/system") || pathname.startsWith("/settings")) return "fleet";
   if (pathname.startsWith("/ops")) return "live";
   return "live";
 }

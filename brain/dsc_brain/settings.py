@@ -72,6 +72,9 @@ DEFAULT_INVENTORY: list[dict[str, Any]] = [
     {"seat_id": "heatmat", "role": "sonoff_heatmat", "host": "10.42.0.51"},
     {"seat_id": "humidifier", "role": "sonoff_humidifier", "host": "10.42.0.54"},
     {"seat_id": "dehumidifier", "role": "sonoff_dehumidifier", "host": "10.42.0.55"},
+    {"seat_id": "ac", "role": "appliance", "in_service": False},
+    {"seat_id": "mister", "role": "appliance", "in_service": False},
+    {"seat_id": "tank", "role": "appliance", "in_service": False},
 ]
 
 DEFAULT_SETTINGS: dict[str, str] = {
@@ -154,6 +157,23 @@ def get_all_settings(db_path: Path | None = None) -> dict[str, str]:
     return {r["key"]: r["value"] for r in rows}
 
 
+# Keys returned by GET /settings — internal HA helper dumps stay in sqlite only.
+_SETTINGS_RESPONSE_STRIP = frozenset({"compose_helpers_json", "plant_roster_slots_json"})
+
+
+def public_settings(db_path: Path | None = None) -> dict[str, Any]:
+    """Settings safe for the SPA: mask secrets and strip internal helper blobs."""
+    raw = get_all_settings(db_path)
+    out: dict[str, Any] = {}
+    for key, value in raw.items():
+        if key in _SETTINGS_RESPONSE_STRIP:
+            continue
+        out[key] = value
+    out["ap_psk_set"] = bool(raw.get("ap_psk"))
+    out["ap_psk"] = ""
+    return out
+
+
 def list_inventory(db_path: Path | None = None) -> list[dict[str, Any]]:
     conn = connect(db_path)
     rows = conn.execute(
@@ -169,15 +189,54 @@ def list_inventory(db_path: Path | None = None) -> list[dict[str, Any]]:
     return out
 
 
-def upsert_inventory(seat_id: str, patch: dict[str, Any], db_path: Path | None = None) -> dict[str, Any]:
+def upsert_inventory(
+    seat_id: str,
+    patch: dict[str, Any],
+    db_path: Path | None = None,
+    *,
+    create: bool = False,
+) -> dict[str, Any]:
     conn = connect(db_path)
     row = conn.execute(
         "SELECT seat_id, role, in_service, host, mac, api_key, extra_json FROM fleet_inventory WHERE seat_id=?",
         (seat_id,),
     ).fetchone()
     if not row:
+        if not create:
+            conn.close()
+            raise KeyError(seat_id)
+        role = str(patch.pop("role", "extra"))
+        in_svc = 1 if patch.get("in_service", True) else 0
+        host = patch.get("host")
+        mac = patch.get("mac")
+        api_key = patch.get("api_key")
+        extra = dict(patch.get("extra") or {})
+        conn.execute(
+            """
+            INSERT INTO fleet_inventory(seat_id, role, in_service, host, mac, api_key, extra_json)
+            VALUES(?, ?, ?, ?, ?, ?, ?)
+            """,
+            (seat_id, role, in_svc, host, mac, api_key, json.dumps(extra)),
+        )
+        conn.commit()
         conn.close()
-        raise KeyError(seat_id)
+        result = {
+            "seat_id": seat_id,
+            "role": role,
+            "in_service": bool(in_svc),
+            "host": host,
+            "mac": mac,
+            "api_key": api_key,
+            "extra": extra,
+        }
+        if "in_service" in patch:
+            try:
+                from .hub_native import sync_hub_in_service_sync
+
+                sync_hub_in_service_sync(seat_id, result["in_service"])
+            except Exception:  # noqa: BLE001
+                pass
+        return result
     data = dict(row)
     extra = json.loads(data["extra_json"] or "{}")
     if "host" in patch:
@@ -202,6 +261,13 @@ def upsert_inventory(seat_id: str, patch: dict[str, Any], db_path: Path | None =
     data["in_service"] = bool(data["in_service"])
     data["extra"] = extra
     data.pop("extra_json", None)
+    if "in_service" in patch:
+        try:
+            from .hub_native import sync_hub_in_service_sync
+
+            sync_hub_in_service_sync(seat_id, data["in_service"])
+        except Exception:  # noqa: BLE001
+            pass
     return data
 
 
@@ -228,12 +294,13 @@ def list_history(
     limit: int = 2000,
     db_path: Path | None = None,
 ) -> list[dict[str, Any]]:
+    """Return history points newest-first. Keeps the newest `limit` samples in range."""
     conn = connect(db_path)
     rows = conn.execute(
         """
         SELECT value, ts FROM fleet_history
         WHERE seat_id=? AND metric=? AND ts>=?
-        ORDER BY ts ASC
+        ORDER BY ts DESC
         LIMIT ?
         """,
         (seat_id, metric, since_ts, limit),

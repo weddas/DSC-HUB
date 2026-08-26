@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import shutil
+import subprocess
 from pathlib import Path
 from typing import Any
 
@@ -9,6 +11,7 @@ from .paths import BRAIN_DATA
 from .settings import get_all_settings, list_inventory
 
 ALLOWED_CHANNELS = {"1", "6", "11"}
+SYSTEM_ETC = Path("/etc/dsc-hub")
 
 
 def network_status() -> dict[str, Any]:
@@ -54,6 +57,9 @@ wpa=2
 wpa_key_mgmt=WPA-PSK
 wpa_passphrase={psk}
 rsn_pairwise=CCMP
+max_num_sta=32
+macaddr_acl=0
+deny_mac_file=/etc/dsc-hub/hostapd.deny
 """
 
 
@@ -78,19 +84,44 @@ def render_dnsmasq_conf(settings: dict[str, str], inventory: list[dict[str, Any]
     return "\n".join(lines) + "\n"
 
 
-def apply_network_configs() -> dict[str, str]:
-    """Write rendered configs under DSC_DATA/network for host copy/restart."""
+def apply_network_configs(restart_ap: bool = True) -> dict[str, Any]:
+    """Write rendered configs under DSC_DATA/network; copy to /etc and restart AP on Pi."""
     settings = get_all_settings()
     inventory = list_inventory()
     out_dir = BRAIN_DATA / "network"
     out_dir.mkdir(parents=True, exist_ok=True)
     hostapd_path = out_dir / "hostapd.conf"
     dnsmasq_path = out_dir / "dnsmasq.conf"
+    deny_path = out_dir / "hostapd.deny"
     hostapd_path.write_text(render_hostapd_conf(settings), encoding="utf-8")
     dnsmasq_path.write_text(render_dnsmasq_conf(settings, inventory), encoding="utf-8")
-    return {
+    if not deny_path.is_file():
+        deny_path.write_text("34:6f:24:da:41:77\n", encoding="utf-8")
+    result: dict[str, Any] = {
         "hostapd": str(hostapd_path),
         "dnsmasq": str(dnsmasq_path),
+        "hostapd_deny": str(deny_path),
         "restart": "sudo systemctl restart dsc-hub-ap.service",
         "warning": "Fleet Wi-Fi will reconnect after AP restart.",
     }
+    if restart_ap:
+        SYSTEM_ETC.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(hostapd_path, SYSTEM_ETC / "hostapd.conf")
+        shutil.copy2(dnsmasq_path, SYSTEM_ETC / "dnsmasq.conf")
+        shutil.copy2(deny_path, SYSTEM_ETC / "hostapd.deny")
+        result["copied_to"] = str(SYSTEM_ETC)
+        try:
+            proc = subprocess.run(
+                ["sudo", "systemctl", "restart", "dsc-hub-ap.service"],
+                capture_output=True,
+                text=True,
+                timeout=60,
+                check=False,
+            )
+            result["ap_restarted"] = proc.returncode == 0
+            if proc.returncode != 0:
+                result["restart_error"] = (proc.stderr or proc.stdout or "").strip()[:500]
+        except Exception as exc:  # noqa: BLE001
+            result["ap_restarted"] = False
+            result["restart_error"] = str(exc)
+    return result

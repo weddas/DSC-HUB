@@ -37,8 +37,25 @@ POT_MAP = {
     "soil_moisture": "moisture_pct",
     "soil_temperature": "soil_temp_c",
     "soil_ec": "ec_us",
+    "soil_conductivity": "ec_us",
     "soil_ph": "ph",
 }
+
+_ONLINE_STALE_SEC = 120.0
+
+_FAN_HISTORY_METRICS: dict[str, str] = {
+    "fan.dsc_hub_4_inch_intake_fan_main": "fan_intake_main_pct",
+    "fan.dsc_hub_4_inch_intake_fan_2x4": "fan_intake_2x4_pct",
+    "fan.dsc_hub_6_inch_exhaust_outside": "fan_exhaust_outside_pct",
+    "fan.dsc_hub_6_inch_exhaust_room": "fan_exhaust_room_pct",
+}
+
+_WINDOW_HISTORY_METRICS: dict[str, str] = {
+    "binary_sensor.dsc_hub_4x8_window_open": "window_4x8_open",
+    "binary_sensor.dsc_hub_2x4_window_open": "window_2x4_open",
+}
+
+ONLINE_STALE_SEC = _ONLINE_STALE_SEC
 
 
 class EsphomeIngest:
@@ -100,24 +117,34 @@ class EsphomeIngest:
         )
 
         for seat_id, row in seat_order:
+            role = row.get("role", "")
             if not row.get("in_service"):
+                self._mark_oos_seat(state, seat_id, role, prev)
                 continue
             host = row.get("host") or os.environ.get(f"DSC_{seat_id.upper()}_HOST")
-            role = row.get("role", "")
             api_key = row.get("api_key") or os.environ.get(f"DSC_{seat_id.upper()}_API_KEY", "")
             # Panel firmware disables Noise (RAM); plaintext API only.
             if role == "panel":
                 api_key = row.get("api_key") or ""
             if not host:
                 continue
+            polled = False
             try:
                 readings = await _fetch_device(host, api_key or "", role, seat_id)
                 self._apply_readings(state, seat_id, role, readings)
+                polled = True
             except Exception as exc:  # noqa: BLE001
                 _logger.debug("ESPHome %s @ %s: %s", seat_id, host, exc)
+            if not polled:
+                self._mark_stale_seat(state, seat_id, role, prev)
+
+        self._expire_unpolled_seats(state, prev, inventory)
 
         appliance = get_appliance_status()
         state.system["appliance_link"] = appliance.get("hub_ok", False)
+        state.system["appliance_link_note"] = (
+            "Hub demand poll freshness; not per-Sonoff reachability"
+        )
         state.system["relays"] = dict(appliance.get("relays", {}))
         for seat_id, relay_on in appliance.get("relays", {}).items():
             sonoff = state.sonoffs.get(seat_id)
@@ -126,6 +153,87 @@ class EsphomeIngest:
 
         _finalize_hub_binaries(state)
         return state
+
+    def _mark_oos_seat(
+        self,
+        state: FleetState,
+        seat_id: str,
+        role: str,
+        prev: FleetState,
+    ) -> None:
+        prior = self._prior_seat(prev, seat_id, role)
+        values = dict(prior.values if prior else {})
+        values["in_service"] = False
+        seat = SeatState(seat_id, False, prior.firmware if prior else None, values, prior.last_seen if prior else None)
+        self._place_seat(state, seat_id, role, seat)
+
+    def _mark_stale_seat(
+        self,
+        state: FleetState,
+        seat_id: str,
+        role: str,
+        prev: FleetState,
+    ) -> None:
+        prior = self._prior_seat(prev, seat_id, role)
+        if prior is None:
+            return
+        values = dict(prior.values)
+        values["in_service"] = True
+        seat = SeatState(seat_id, prior.online, prior.firmware, values, prior.last_seen)
+        self._place_seat(state, seat_id, role, seat)
+
+    def _expire_unpolled_seats(
+        self,
+        state: FleetState,
+        prev: FleetState,
+        inventory: dict[str, Any],
+    ) -> None:
+        now = time.time()
+        for seat_id, row in inventory.items():
+            if not row.get("in_service"):
+                continue
+            role = row.get("role", "")
+            seat = self._current_seat(state, seat_id, role)
+            if seat is None:
+                continue
+            last = seat.last_seen
+            if last is not None and now - last > _ONLINE_STALE_SEC:
+                seat.online = False
+
+    @staticmethod
+    def _prior_seat(prev: FleetState, seat_id: str, role: str) -> SeatState | None:
+        if role == "hub":
+            return prev.hub
+        if role == "panel":
+            return prev.panel
+        if role == "pot":
+            return prev.pots.get(seat_id)
+        if role.startswith("sonoff"):
+            return prev.sonoffs.get(seat_id)
+        return None
+
+    @staticmethod
+    def _current_seat(state: FleetState, seat_id: str, role: str) -> SeatState | None:
+        if role == "hub":
+            return state.hub
+        if role == "panel":
+            return state.panel
+        if role == "pot":
+            return state.pots.get(seat_id)
+        if role.startswith("sonoff"):
+            return state.sonoffs.get(seat_id)
+        return None
+
+    @staticmethod
+    def _place_seat(state: FleetState, seat_id: str, role: str, seat: SeatState) -> None:
+        if role == "hub":
+            state.hub = seat
+        elif role == "panel":
+            state.panel = seat
+        elif role == "pot":
+            state.pots[seat_id] = seat
+        elif role.startswith("sonoff"):
+            state.sonoffs[seat_id] = seat
 
     def _apply_readings(
         self,
@@ -183,6 +291,7 @@ class EsphomeIngest:
                     elif "root_zone_sensor_fault" in eid:
                         record_grow_log("⚠ Root-zone probes offline — mat fell back to clone-air control")
                 _PREV_HUB_DEMANDS[key] = st
+            _record_hub_chart_history(controls, binaries, now)
         elif role == "panel":
             state.panel = SeatState("panel", True, fw, values, now)
         elif role == "pot":
@@ -193,6 +302,29 @@ class EsphomeIngest:
         for metric, value in values.items():
             if isinstance(value, (int, float)):
                 record_history(seat_id, metric, float(value), now)
+
+
+def _record_hub_chart_history(
+    controls: dict[str, dict[str, Any]],
+    binaries: dict[str, bool],
+    now: float,
+) -> None:
+    for fan_entity, metric in _FAN_HISTORY_METRICS.items():
+        ctrl = controls.get(fan_entity)
+        if not ctrl:
+            continue
+        pct = float(ctrl.get("percentage") or 0) if ctrl.get("state") == "on" else 0.0
+        record_history("hub", metric, pct, now)
+    light = controls.get("light.dsc_hub_sf1000_dimmer")
+    if light:
+        on = light.get("state") == "on"
+        bri = float(light.get("brightness") or 0)
+        val = (bri / 255.0 * 100.0) if on and bri > 0 else 0.0
+        record_history("hub", "sf1000_brightness", val, now)
+    for eid, metric in _WINDOW_HISTORY_METRICS.items():
+        if eid not in binaries:
+            continue
+        record_history("hub", metric, 1.0 if binaries[eid] else 0.0, now)
 
 
 async def _fetch_device(host: str, api_key: str, role: str, seat_id: str) -> dict[str, Any]:

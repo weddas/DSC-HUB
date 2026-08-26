@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 import time
 from dataclasses import dataclass, field
 from typing import Any
@@ -89,12 +90,17 @@ class FleetState:
         states: dict[str, dict[str, Any]] = {}
         inv_by_id = {str(row.get("seat_id", "")): row for row in (inventory or [])}
 
-        def set_entity(eid: str, value: Any, available: bool = True) -> None:
+        def set_entity(
+            eid: str,
+            value: Any,
+            available: bool = True,
+            attributes: dict[str, Any] | None = None,
+        ) -> None:
             st = "unavailable" if not available else _stringify(value)
             states[eid] = {
                 "entity_id": eid,
                 "state": st,
-                "attributes": {},
+                "attributes": attributes or {},
             }
 
         surface = self.surface or SURFACE_VERSION
@@ -108,24 +114,23 @@ class FleetState:
             set_entity("sensor.dsc_hub_humidity", self.hub.values["rh_pct"])
             set_entity("sensor.dsc_hub_tent_humidity", self.hub.values["rh_pct"])
         if self.hub.values.get("vpd_kpa") is not None:
-            set_entity(
-                "sensor.dsc_hub_vpd",
-                self.hub.values["vd_kpa"]
-                if "vd_kpa" in self.hub.values
-                else self.hub.values["vpd_kpa"],
-            )
-            set_entity(
-                "sensor.dsc_hub_vpd_kpa",
-                self.hub.values["vd_kpa"]
-                if "vd_kpa" in self.hub.values
-                else self.hub.values["vpd_kpa"],
-            )
+            set_entity("sensor.dsc_hub_vpd", self.hub.values["vpd_kpa"])
+            set_entity("sensor.dsc_hub_vpd_kpa", self.hub.values["vpd_kpa"])
         # Always expose link helpers so Fleet shows dark/offline, not missing holes.
         set_entity("binary_sensor.dsc_hub_link", "on" if self.hub.online else "off")
         set_entity("binary_sensor.dsc_hub_panel_link", "on" if self.panel.online else "off")
         appliance = get_appliance_status()
-        set_entity("binary_sensor.dsc_pi_appliance_link", "on" if appliance.get("hub_ok") else "off")
-        set_entity("binary_sensor.dsc_reduced_kit", "off")
+        hub_ok = bool(appliance.get("hub_ok"))
+        relay_count = sum(1 for v in (appliance.get("relays") or {}).values() if v is not None)
+        set_entity(
+            "binary_sensor.dsc_pi_appliance_link",
+            "on" if hub_ok else "off",
+            attributes={
+                "honesty": "hub_native_api",
+                "detail": "Hub ESP reachable; Sonoff relay map is separate (appliance driver)",
+                "relays_mapped": relay_count,
+            },
+        )
         set_entity(
             "sensor.dsc_hub_heartbeat",
             self.hub.values.get("heartbeat", "—"),
@@ -146,6 +151,9 @@ class FleetState:
             set_entity("sensor.dsc_hub_room_temperature", self.hub.values["room_temp_c"])
         if self.hub.values.get("room_rh_pct") is not None:
             set_entity("sensor.dsc_hub_room_humidity", self.hub.values["room_rh_pct"])
+        if self.hub.values.get("room_vpd_kpa") is not None:
+            set_entity("sensor.dsc_hub_room_vpd_kpa", self.hub.values["room_vpd_kpa"])
+            set_entity("sensor.dsc_hub_room_vpd", self.hub.values["room_vpd_kpa"])
 
         if self.hub.firmware:
             set_entity("sensor.dsc_hub_firmware_version", self.hub.firmware, self.hub.online)
@@ -158,10 +166,7 @@ class FleetState:
 
         for seat_id, entity_id in _IN_SERVICE_ENTITIES.items():
             row = inv_by_id.get(seat_id, {})
-            if seat_id in ("ac", "mister", "tank") and not row:
-                in_svc = False
-            else:
-                in_svc = bool(row.get("in_service", 1))
+            in_svc = bool(row.get("in_service")) if row else False
             set_entity(entity_id, "on" if in_svc else "off")
 
         for pot_id, seat in self.pots.items():
@@ -218,10 +223,39 @@ def _seat_dict(seat: SeatState) -> dict[str, Any]:
     }
 
 
+def _oos_seat_dict(seat_id: str) -> dict[str, Any]:
+    return {
+        "seat_id": seat_id,
+        "online": False,
+        "firmware": None,
+        "values": {},
+        "last_seen": None,
+        "in_service": False,
+    }
+
+
+def merge_inventory_oos_seats(payload: dict[str, Any], inventory: list[dict[str, Any]]) -> None:
+    """Ensure OOS inventory rows appear in fleet pots/sonoffs as offline seats."""
+    pots = payload.setdefault("pots", {})
+    sonoffs = payload.setdefault("sonoffs", {})
+    for row in inventory:
+        if row.get("in_service"):
+            continue
+        seat_id = str(row.get("seat_id", ""))
+        role = str(row.get("role", ""))
+        oos = _oos_seat_dict(seat_id)
+        if role == "pot":
+            pots[seat_id] = oos
+        elif role.startswith("sonoff"):
+            sonoffs[seat_id] = oos
+
+
 def _stringify(value: Any) -> str:
     if isinstance(value, bool):
         return "on" if value else "off"
     if value is None:
+        return "unavailable"
+    if isinstance(value, float) and math.isnan(value):
         return "unavailable"
     return str(value)
 

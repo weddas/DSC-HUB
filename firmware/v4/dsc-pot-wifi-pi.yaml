@@ -15,7 +15,7 @@ wifi:
     subnet: 255.255.255.0
     dns1: 10.42.0.1
   ap:
-    ssid: DSC-POT Fallback Hotspot
+    ssid: ${ap_ssid}
     password: ${ap_password_val}
   on_connect:
     - lambda: |-

@@ -7,6 +7,7 @@ import { useHass } from "./useHass";
 import { useFleet, useFleetSource } from "./useFleet";
 import { fleetControlAttributes, fleetControlAvailable, fleetControlState } from "../lib/fleetControlMap";
 import { fleetEntityAvailable, fleetLiveNumber } from "../lib/entityFleetMap";
+import { fleetToHassCompat } from "../lib/fleetFromHass";
 import type { HassEntity } from "../vite-env";
 
 export function useEntityBus() {
@@ -14,11 +15,17 @@ export function useEntityBus() {
   const fleet = useFleet();
   const source = useFleetSource();
 
+  const compatStates = useMemo(
+    () => (source === "pi" ? fleetToHassCompat(fleet) : null),
+    [source, fleet],
+  );
+
   return useMemo(() => {
     if (source !== "pi") return hass;
 
     const entity = (entityId: string): HassEntity | undefined => {
-      const shim = hass.entity(entityId);
+      const fromBus = hass.entity(entityId);
+      if (fromBus) return fromBus;
       const ctrlState = fleetControlState(entityId, fleet);
       if (ctrlState != null) {
         return {
@@ -28,7 +35,7 @@ export function useEntityBus() {
           last_changed: new Date().toISOString(),
         };
       }
-      return shim;
+      return compatStates?.[entityId];
     };
 
     const available = (entityId: string) => {
@@ -57,5 +64,5 @@ export function useEntityBus() {
     };
 
     return { ...hass, entity, available, state, num };
-  }, [hass, fleet, source]);
+  }, [hass, fleet, source, compatStates]);
 }

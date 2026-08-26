@@ -17,6 +17,8 @@ ENTITY_METRIC_MAP: dict[str, tuple[str, str]] = {
     "sensor.dsc_hub_vpd": ("hub", "vpd_kpa"),
     "sensor.dsc_hub_room_temperature": ("hub", "room_temp_c"),
     "sensor.dsc_hub_room_humidity": ("hub", "room_rh_pct"),
+    "sensor.dsc_hub_room_vpd_kpa": ("hub", "room_vpd_kpa"),
+    "sensor.dsc_hub_room_vpd": ("hub", "room_vpd_kpa"),
     "sensor.dsc_hub_clone_temperature": ("hub", "clone_temp_c"),
     "sensor.dsc_hub_clone_humidity": ("hub", "clone_rh_pct"),
     "sensor.dsc_hub_clone_vpd_kpa": ("hub", "clone_vpd_kpa"),
@@ -42,6 +44,16 @@ ENTITY_METRIC_MAP: dict[str, tuple[str, str]] = {
     "switch.dsc_heatmat_main_relay": ("heatmat", "relay_on"),
     "switch.dsc_humidifier_main_relay": ("humidifier", "relay_on"),
     "switch.dsc_de_humidifier_main_relay": ("dehumidifier", "relay_on"),
+    "sensor.dsc_fan_intake_main_pct": ("hub", "fan_intake_main_pct"),
+    "sensor.dsc_fan_intake_2x4_pct": ("hub", "fan_intake_2x4_pct"),
+    "sensor.dsc_fan_exhaust_outside_pct": ("hub", "fan_exhaust_outside_pct"),
+    "sensor.dsc_fan_exhaust_room_pct": ("hub", "fan_exhaust_room_pct"),
+    "binary_sensor.dsc_hub_4x8_window_open": ("hub", "window_4x8_open"),
+    "binary_sensor.dsc_4x8_window_open": ("hub", "window_4x8_open"),
+    "binary_sensor.dsc_hub_2x4_window_open": ("hub", "window_2x4_open"),
+    "binary_sensor.dsc_2x4_window_open": ("hub", "window_2x4_open"),
+    "light.dsc_hub_sf1000_dimmer": ("hub", "sf1000_brightness"),
+    "switch.dsc_hub_grow_mat_demand": ("hub", "switch_dsc_hub_grow_mat_demand"),
 }
 
 
@@ -51,5 +63,5 @@ def query_entity_history(entity_id: str, hours: float = 6.0) -> list[dict[str, A
         return []
     seat_id, metric = key
     since = time.time() - hours * 3600.0
-    rows = list_history(seat_id, metric, since)
+    rows = sorted(list_history(seat_id, metric, since), key=lambda r: r["ts"])
     return [{"t": int(r["ts"] * 1000), "v": float(r["value"])} for r in rows if r.get("value") is not None]

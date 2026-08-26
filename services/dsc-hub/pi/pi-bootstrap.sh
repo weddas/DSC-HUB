@@ -29,8 +29,23 @@ if ! command -v docker >/dev/null 2>&1; then
 fi
 apt-get install -y docker-compose-plugin || true
 
+# Pin brcmfmac SDIO firmware to minimal variant (10+ STA AP slots; see FOLLOWUPS 2026-08-27).
+CYFMAC_ALT="/lib/firmware/cypress/cyfmac43455-sdio.bin"
+CYFMAC_MIN="/lib/firmware/cypress/cyfmac43455-sdio-minimal.bin"
+if [[ -f "${CYFMAC_MIN}" ]]; then
+  update-alternatives --install "${CYFMAC_ALT}" cyfmac43455-sdio.bin "${CYFMAC_MIN}" 100 \
+    2>/dev/null || true
+  update-alternatives --set cyfmac43455-sdio.bin "${CYFMAC_MIN}" 2>/dev/null || true
+  echo "Pinned cyfmac43455-sdio to minimal firmware"
+else
+  echo "WARN: ${CYFMAC_MIN} not found — skip cyfmac pin (run after apt firmware bump)"
+fi
+
 hostnamectl set-hostname dsc-brain || true
 mkdir -p "${DSC_DATA}"/{cannalib,z2m,mosquitto,esphome,firmware,backups}
+if [[ ! -f "${DSC_DATA}/z2m/configuration.yaml" ]]; then
+  cp "${COMPOSE_DIR}/zigbee2mqtt/configuration.yaml" "${DSC_DATA}/z2m/configuration.yaml"
+fi
 chmod 755 "${DSC_DATA}"
 
 # Swap on SSD (compile fallback path)
@@ -69,6 +84,13 @@ wpa=2
 wpa_key_mgmt=WPA-PSK
 wpa_passphrase=${AP_PSK}
 rsn_pairwise=CCMP
+max_num_sta=32
+macaddr_acl=0
+deny_mac_file=/etc/dsc-hub/hostapd.deny
+EOF
+
+cat > /etc/dsc-hub/hostapd.deny <<'EOF'
+34:6f:24:da:41:77
 EOF
 
 cat > /etc/dsc-hub/dnsmasq.conf <<EOF
@@ -100,6 +122,16 @@ ip addr flush dev wlan0
 ip addr add 10.42.0.1/24 dev wlan0
 WEOF
 chmod +x /etc/dsc-hub/wlan0-ap.sh
+
+install -m 0755 "${COMPOSE_DIR}/pi/dsc-hub-ap-run.sh" /etc/dsc-hub/ap-run.sh
+
+# Recovery scripts — on-box fallback flash path (LF; see .gitattributes)
+install -d /opt/dsc-hub-repo/services/dsc-hub/pi
+for _script in flash-sonoff-fallback-remote.sh flash-hub-fallback-remote.sh soak-check.sh island-proof.sh setup-soak-cron.sh; do
+  if [[ -f "${COMPOSE_DIR}/pi/${_script}" ]]; then
+    install -m 0755 "${COMPOSE_DIR}/pi/${_script}" "/opt/dsc-hub-repo/services/dsc-hub/pi/${_script}"
+  fi
+done
 
 # IP forward AP <-> eth0 (ETH01 switch)
 cat > /etc/sysctl.d/99-dsc-hub.conf <<EOF

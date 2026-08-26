@@ -11,6 +11,7 @@ import {
 import type { HassEntity, HomeAssistant } from "../vite-env";
 import { get_fleet_state, get_fleet_computed, call_service } from "../lib/fleetApi";
 import { parseFleetSnapshot } from "../lib/fleetModel";
+import { enrichFleetFromHassStates, fleetToHassCompat } from "../lib/fleetFromHass";
 
 function mergeHassExtras(
   states: Record<string, HassEntity>,
@@ -27,21 +28,21 @@ function mergeHassExtras(
   }
 }
 
-/** Pi compat shim — computed/helpers only; live reads go through useEntityBus + fleet. */
+/** Pi compat shim — synthetic HA bus from fleet snapshot + computed helpers. */
 export function fleetToHass(
   fleet: Record<string, unknown>,
   computed?: Record<string, unknown> | null,
 ): HomeAssistant {
-  const states: Record<string, HassEntity> = {};
-  const extras = computed?.hass_extras as Record<string, HassEntity> | undefined;
-  mergeHassExtras(states, extras);
   const parsed = parseFleetSnapshot(fleet);
-  states["binary_sensor.dsc_hub_link"] = {
-    entity_id: "binary_sensor.dsc_hub_link",
-    state: parsed.hub.online ? "on" : "off",
-    attributes: {},
-    last_changed: new Date().toISOString(),
-  };
+  let enriched = enrichFleetFromHassStates(parsed, fleet.hass_states as Record<string, HassEntity> | undefined);
+  const extras = computed?.hass_extras as Record<string, HassEntity> | undefined;
+  enriched = enrichFleetFromHassStates(enriched, extras);
+  const states: Record<string, HassEntity> = { ...fleetToHassCompat(enriched) };
+
+  const apiHass = fleet.hass_states as Record<string, HassEntity> | undefined;
+  mergeHassExtras(states, apiHass);
+  mergeHassExtras(states, extras);
+
   return {
     states,
     callService: async (domain: string, service: string, data?: Record<string, unknown>) =>

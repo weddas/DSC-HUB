@@ -10,6 +10,18 @@ from .settings import get_setting
 from .paths import CANNALIB_DB, DEFAULT_DB
 
 
+def cannalib_base_url() -> str:
+    return get_setting("cannalib_api_url", "").rstrip("/")
+
+
+def cannalib_headers() -> dict[str, str]:
+    headers: dict[str, str] = {}
+    key = get_setting("cannalib_api_key", "")
+    if key:
+        headers["X-Cannalib-Key"] = key
+    return headers
+
+
 async def test_ollama() -> dict[str, Any]:
     base = get_setting("ollama_base_url", "").rstrip("/")
     if not base:
@@ -27,13 +39,10 @@ async def test_ollama() -> dict[str, Any]:
 
 
 async def test_cannalib() -> dict[str, Any]:
-    base = get_setting("cannalib_api_url", "").rstrip("/")
+    base = cannalib_base_url()
     if not base:
         return {"ok": False, "detail": "CannaLib API URL not configured"}
-    headers: dict[str, str] = {}
-    key = get_setting("cannalib_api_key", "")
-    if key:
-        headers["X-Cannalib-Key"] = key
+    headers = cannalib_headers()
     try:
         async with httpx.AsyncClient(timeout=15.0) as client:
             health = await client.get(f"{base}/health", headers=headers)
@@ -53,13 +62,10 @@ async def test_cannalib() -> dict[str, Any]:
 
 
 async def catalog_search(kind: str, q: str = "", limit: int = 20) -> list[dict[str, Any]]:
-    base = get_setting("cannalib_api_url", "").rstrip("/")
+    base = cannalib_base_url()
     if not base:
         return []
-    headers: dict[str, str] = {}
-    key = get_setting("cannalib_api_key", "")
-    if key:
-        headers["X-Cannalib-Key"] = key
+    headers = cannalib_headers()
     plural = {
         "strain": "strains",
         "strains": "strains",
