@@ -4,37 +4,38 @@
 
 Notion: [Local webserver UI](https://app.notion.com/p/3b52b4cda37081c19048e794d4bdf819)
 
-## Surfaces (MVP)
+**Ship (7.1.1 closeout / SPA 7.1.0):** Bundle `index-Bxr2Zt3b`; default landing **Operational Overview**; HA Dash theme tokens; Calibrate + Settings device cards. Firmware train stays **7.0.0.0**. Acceptance: [`docs/qa/LIVE-ACCEPTANCE-7.1.md`](../qa/LIVE-ACCEPTANCE-7.1.md) · ingest: [`FLEET-INGEST.md`](FLEET-INGEST.md).
+
+## Surfaces (7.1 SPA)
 
 | Route | Job |
 |---|---|
-| `/` | Ops overview (vitals, ladder summary, alerts) |
-| `/plant` | Build a Plant + roster + catalog browse (research) |
+| `/live/overview` | Default ops landing (vitals / ladder summary) |
+| `/live/mission` | Mission retained |
+| `/ops/home` | Dash Home (band charts, grow log) |
+| `/fleet/calibrate` | Fan CFM + light PAR/LUX wizards → `/settings/calibration/{id}` |
+| `/settings` | Inventory cards, assignment, Zigbee, integrations |
+| `/plant` / compose | Build a Plant + roster (via control/service helpers) |
 
-> **HA wireframe (N-086):** Home Assistant `/dsc-hub-pro/catalog` is the interim
-> research browser over `/local/dsc-catalog/*.json`. The durable web `/plant`
-> browse mode will call brain catalog APIs — reuse section jobs/labels, not HA
-> helper coupling ([`docs/HA-SCAFFOLD.md`](../HA-SCAFFOLD.md)).
-| `/advanced` | Profiles, cal, overrides (API calls only) |
-| `/updates` | Brain version, catalog reload, firmware flash checklist |
+Hash router under Pi `:8787` (and HA panel dual-mode). Hard-refresh after deploy.
 
 ## API dependency
 
-All reads/writes go through brain HTTP API (`brain/dsc_brain/api.py`):
+Reads/writes go through brain HTTP API (`brain/dsc_brain/api.py`):
 
-- `GET /health`
-- `GET /catalogs/strains?q=`
-- `GET /want/{strain_id}`
-- `POST /roster/...`
-- `GET /decision/last` (dry-run proposals)
-- `POST /admin/reload-catalogs`
+- `GET /health` · `GET /fleet` · `GET /fleet/computed` · `WS /ws/fleet`
+- `POST /control/service` · `POST /control/demand`
+- `GET /history` · `GET /grow-log`
+- `GET|PATCH /settings*` · `GET|POST /settings/calibration/{device_id}`
+- Catalog / Want / decision endpoints as before
 
-## Non-goals (v1)
+## Non-goals
 
-- Three.js cinematic Dash parity
+- Three.js cinematic Dash parity as product SoT
 - Embedding fat strain dumps in the browser
-- Requiring Home Assistant
+- Requiring Home Assistant on Pi island
+- Reintroducing ETH01 bridge UI as the Sonoff path
 
 ## Host
 
-Pi 4 4GB LAN (`http://dsc-brain.local` or IP). Static UI can ship later; API stub is first.
+Pi 4 4GB+ (`http://10.42.0.1:8787` or eth0). Ops cutover: [`docs/ops/DSC-HUB-DOCKER.md`](../ops/DSC-HUB-DOCKER.md). Sonoff flash: [`docs/ops/SONOFF-FLASH.md`](../ops/SONOFF-FLASH.md).

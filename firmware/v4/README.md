@@ -1,12 +1,18 @@
 # DSC-HUB firmware v4
 
-Working directory for ESPHome configs. Current fleet release string:
-**Live train:** hub / Control / bridge / pots / Sonoffs **6.0.0.0** (SoftAP cutover;
-HA surface **7.2.0**). Tagged marketing cut may still say `v5.1.0`. See CHANGELOG / FOLLOWUPS.
+Working directory for ESPHome configs.
+
+| Train | Versions |
+|---|---|
+| **Pi island (product)** | Hub / Control / pots / Sonoffs **7.0.0.0** (`*-wifi-pi.yaml`, `10.42.0.0/24`) · brain/SPA **7.1.0** |
+| **HA SoftAP lab (soak)** | Historical SoftAP cutover docs may still say **6.0.0.0** / HA surface **7.2.0** |
+
+**Bridge retired (7.1):** `dsc-bridge*.yaml` live under [`../_history/v4/`](../_history/v4/). Pi island drives Sonoffs via brain appliance driver — see [`docs/ops/SONOFF-FLASH.md`](../../docs/ops/SONOFF-FLASH.md).
 
 Firmware QA: [docs/qa/FIRMWARE-QA-5.1.0.md](../../docs/qa/FIRMWARE-QA-5.1.0.md).
 Repo [README](../../README.md) and [INSTALL.md](../../INSTALL.md) for from-scratch HA setup.
 Standalone SoftAP unboxing (no HA): [SETUP.md](../../SETUP.md).
+Pi cutover: [docs/ops/DSC-HUB-DOCKER.md](../../docs/ops/DSC-HUB-DOCKER.md).
 
 ## Local vs HA
 
@@ -15,14 +21,18 @@ Standalone SoftAP unboxing (no HA): [SETUP.md](../../SETUP.md).
 | Here (`firmware/v4/`) | Stubs `!include` package bodies for Cursor edits + local flash. |
 | [`homeassistant/esphome/`](../../homeassistant/esphome/) | Same stubs with **git-pull** packages from GitHub. |
 
-Entry points (local lab): `dsc-hub.yaml`, `dsc-control.yaml`, `dsc-bridge.yaml`, `dsc-pot1.yaml`, …
-Kit SoftAP setup: `dsc-hub-kit.yaml`, `dsc-control-kit.yaml`, `dsc-pot{1..4}-kit.yaml`, `dsc-bridge-kit.yaml`
+Entry points (Pi / lab): `dsc-hub.yaml`, `dsc-control.yaml`, `dsc-pot1.yaml`, Sonoff stubs (`dsc-heater.yaml`, …).
+Kit SoftAP setup: `dsc-hub-kit.yaml`, `dsc-control-kit.yaml`, `dsc-pot{1..4}-kit.yaml` (bridge kit archived).
 
-WiFi is split into `dsc-*-wifi-lab.yaml` / `dsc-*-wifi-kit.yaml` so kit builds omit compile-time SSIDs.
-Fleet component: `components/dsc_fleet_setup/` (phone portal on hub; Control/pots/bridge join `DSC-Setup-*`).
-Bridge also hosts SoftAP `DSC-Anchor` (F-012 channel pin) + `components/dsc_api_client/` (F-010).
+WiFi is split into `dsc-*-wifi-lab.yaml` / `dsc-*-wifi-kit.yaml` / `dsc-*-wifi-pi.yaml` so kit builds omit compile-time SSIDs.
+Fleet component: `components/dsc_fleet_setup/` (phone portal on hub; Control/pots join `DSC-Setup-*`).
+Historical SoftAP Anchor + ETH01 client code remains in `_history` / `components/` for reference only.
 
 Package bodies are remote-git safe (no `!secret`). Stubs pass credentials (and hub/panel MACs + `espnow_cmd_tag`) as substitutions.
+
+### Pot Modbus (ESPHome 2025.12.4 on Pi)
+
+Do **not** set `turnaround_time` on pot UART Modbus — use `send_wait_time` only (dashboard on Pi rejects the former).
 
 Pots (`dsc-pot-common` **5.1.6+**): each soil channel has **Cal … Offset** / **Cal … Scale**
 config numbers (NVS). Formula `raw * scale + offset` applies before range/median and feeds
@@ -30,9 +40,9 @@ HA + ESP-NOW. **Soil * Raw** diagnostic templates reverse cal for lab wet measur
 **Reset Sensor Calibration** restores defaults and clears provenance. **Mark Soil Cal Peer Median**
 (5.1.5+) and **Mark Soil Cal Lab Buffer** (5.1.6+) stamp method after HA push / lab wet.
 
-## Panel (DSC-CONTROL **6.0.0.0**)
+## Panel (DSC-CONTROL **7.0.0.0**)
 
-Package body: [`dsc-control-common.yaml`](dsc-control-common.yaml).
+Package body: [`dsc-control-common.yaml`](dsc-control-common.yaml). Boot/about UI strings show **v7.0.0.0** / “Pi island”. Brain ingest uses **plaintext** Native API for `role=panel` — see [`docs/brain/FLEET-INGEST.md`](../../docs/brain/FLEET-INGEST.md).
 
 | Feature | Notes |
 |---|---|
@@ -86,11 +96,14 @@ esphome config dsc-hub.yaml
 esphome config dsc-control.yaml
 esphome config dsc-heater.yaml
 esphome config dsc-pot1.yaml
+# Bridge stubs are archived — do not expect dsc-bridge.yaml here.
 g++ -std=c++17 -Wall -Wextra -O2 -o verify_v4 verify_v4.cpp && ./verify_v4
 ```
 
 Requires `secrets.yaml` in this folder (gitignored). Start from `secrets.yaml.template` if needed.
 
-`espnow_cmd_tag` is **54727** (`0xD5C7`) on hub + panel — flash both after changing it.
+`espnow_cmd_tag` is **54727** (`0xD5C7`) on hub + panel — flash both after changing it (kit / parked ESP-NOW only).
 
-Fleet bring-up / cutover: [`../../INSTALL.md`](../../INSTALL.md) · [`../../UPGRADE.md`](../../UPGRADE.md).
+Control `project.version` and text `fw_version` must both read **7.0.0.0** on the Pi train.
+
+Fleet bring-up / cutover: [`../../docs/ops/DSC-HUB-DOCKER.md`](../../docs/ops/DSC-HUB-DOCKER.md) · [`../../docs/ops/SONOFF-FLASH.md`](../../docs/ops/SONOFF-FLASH.md) · [`../../INSTALL.md`](../../INSTALL.md).

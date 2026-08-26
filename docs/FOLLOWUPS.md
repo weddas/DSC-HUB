@@ -2407,3 +2407,22 @@ Do **not** reclaim .33/.39/.40/.47/.23 — other hosts answered there at cutover
 - Map non-critical hub entities (ladder waits, hub-side `*_in_service` switches) when tuning UI needs them.
 - Phase E: drop `hass_extras` / Pi `fleetToHass` shim after page migration soak.
 
+
+
+## 2026-08-26 — Docs: 7.1.1 fleet ingest + Sonoff flash SoT
+
+### done
+
+- Added `docs/brain/FLEET-INGEST.md` (panel plaintext, grow_mat_demand + host_lock, computed cal entities, zigbee placement).
+- Landed `docs/ops/SONOFF-FLASH.md` + cutover/SETUP/INSTALL/firmware README bridge-retirement alignment (carried from tip docs draft).
+- Rewrote `F010_APPLIANCE_BRIDGE.md` as archive pointer; WEBUI / DSC-HUB-DOCKER / services README → 7.1.1.
+
+### soak
+
+- T+24h hourly `soak-check.ps1` still open (ops).
+- Remaining heater/heatmat/humidifier relay soak if flaps recur after OID/lock hotfix.
+
+### next-plan
+
+- Prefer this tip docs PR over open drafts #77–#99 once merged.
+- Do not reintroduce ETH01 bridge as product Sonoff path; do not paste AP PSKs into Wiki/PRs.

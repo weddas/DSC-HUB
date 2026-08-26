@@ -90,33 +90,34 @@ render. Ops checklist:
 
 | Stub | Body | Expect after flash |
 |---|---|---|
-| `dsc-hub.yaml` | hub v4_0 + espnow | **6.0.0.0** |
-| `dsc-control.yaml` | control-common | **6.0.0.0** |
-| pots | pot-common | **6.0.0.0** |
-| `dsc-bridge.yaml` | bridge-common + SoftAP Anchor | **6.0.0.0** |
-| Sonoffs | sonoff-common (dual API client) | **6.0.0.0** |
+| `dsc-hub.yaml` | hub v4_0 + fleet-heal / wifi-pi | **7.0.0.0** (Pi) · lab SoftAP may differ |
+| `dsc-control.yaml` | control-common | **7.0.0.0** |
+| pots | pot-common | **7.0.0.0** |
+| Sonoffs | sonoff-common | **7.0.0.0** |
+| `dsc-bridge.yaml` | **Archived** → `firmware/_history/v4/` | Do not flash on Pi 7.1 |
 
 Stub `ref: master` (or tag when cut). Kits Validate even if not flashed on lab.
-Bridge needs `firmware/v4/components/dsc_api_client` and `dsc_anchor_ap` beside
-the stub (Sync copies both when `sync_esphome: true`, or flash from
-`firmware/v4/`). Secrets: `dsc_bridge_*`, `dsc_anchor_ap_password`, four
-`dsc_*_host`.
+Pi Sonoff OTA: [`docs/ops/SONOFF-FLASH.md`](docs/ops/SONOFF-FLASH.md).
 
-### Flash order
+### Flash order (Pi island)
 
-1. Hub · 2. Panel · 3. Pots · 4. **Bridge (ETH01)** · 5. Sonoffs
+1. Hub · 2. Pots · 3. Sonoffs · 4. Panel — **no bridge**
 
-This 7.2.0 pass OTAs **hub** (Control if it is on HA). Do **not** OTA pots
-while Modbus/hardware is OOS.
+Lab SoftAP soak that still mentions Anchor/bridge is historical; see FOLLOWUPS SoftAP sections.
 
-### Verify
+### Verify (Pi)
 
-- [ ] `sensor.dsc_hub_firmware_version` = **6.0.0.0** (and peers that are flashed)
-- [ ] `sensor.dsc_ha_surface_version` = **7.2.0**
-- [ ] `sensor.dsc_fleet_version_status` → **ok** (expected 6.0.0.0; no false 5.2.0 warn)
-- [ ] Sidebar **`/dsc-hub`** + Learning Phase B controls present (B default off)
-- [ ] Lovelace `/dsc-hub-pro/ops` still renders
-- [ ] Panel ESP-NOW UP; Bridge Anchor SoftAP up; Sonoffs follow via bridge (HA followers fallback)
+- [ ] Brain `/health` reports **7.1.0**; `/fleet` seats show firmware **7.0.0.0** when online
+- [ ] Sonoff demand → relay via `POST /control/demand` (hub online) — [`docs/brain/FLEET-INGEST.md`](docs/brain/FLEET-INGEST.md)
+- [ ] SPA Overview default (`index-Bxr2Zt3b`); Calibrate + Settings pass
+- [ ] Panel plaintext Native API (no Noise env key for `role=panel`)
+- [ ] Bridge not present on fleet path
+
+### Verify (HA lab soak — optional)
+
+- [ ] `sensor.dsc_ha_surface_version` = **7.2.0** when that shell is in use
+- [ ] Lovelace `/dsc-hub-pro/ops` still renders as hidden fallback
+- [ ] HA demand followers only if intentionally soaking without Pi brain
 
 ---
 
@@ -124,9 +125,9 @@ while Modbus/hardware is OOS.
 
 ```
 Cursor edit → push master
-  → DSC-HUB Sync (~60s) → packages / dashboard / www / stubs / bridge components
+  → DSC-HUB Sync (~60s) → packages / dashboard / www / stubs
   → Restart HA once if new helpers
   → ESPHome Validate/Install (changed devices only)
 ```
 
-See [`RELEASE.md`](RELEASE.md) rollout checklist · [`docs/qa/`](docs/qa/).
+See [`RELEASE.md`](RELEASE.md) rollout checklist · [`docs/qa/`](docs/qa/) · Pi ops [`docs/ops/DSC-HUB-DOCKER.md`](docs/ops/DSC-HUB-DOCKER.md).
