@@ -4,13 +4,15 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import re
 from typing import Any
 
 from .api_lock import host_lock
 from .native_api import make_api_client
-from .compose_ops import handle_script
-from .compose_store import set_helper
-from .settings import list_inventory, upsert_inventory
+from .compose_ops import handle_script, update_pot_recipe
+from .compose_store import get_helper, set_helper
+from .settings import list_inventory, list_roster, upsert_inventory
+from .stage_model import clone_mode_for_stage, stage_family, tent_id
 
 _logger = logging.getLogger(__name__)
 
@@ -305,6 +307,133 @@ async def _hub_select(entity_id: str, option: str) -> dict[str, Any]:
                 pass
 
 
+def _date_from_service(data: dict[str, Any]) -> str:
+    raw = str(data.get("date") or data.get("datetime") or data.get("value") or "")
+    return raw[:10] if raw else ""
+
+
+def _control_state(entity_id: str) -> str:
+    try:
+        from .fleet_state import get_fleet_state
+
+        fleet = get_fleet_state()
+        if not fleet.hub:
+            return ""
+        controls = (fleet.hub.values or {}).get("controls") or {}
+        entry = controls.get(entity_id) or {}
+        return str(entry.get("state") or "")
+    except Exception:  # noqa: BLE001
+        return ""
+
+
+def _clone_hours_for_stage(stage: str) -> float:
+    return 12.0 if stage_family(stage) == "flower" else 18.0
+
+
+def _hub_is_online() -> bool:
+    try:
+        from .fleet_state import get_fleet_state
+
+        fleet = get_fleet_state()
+        return bool(fleet.hub and getattr(fleet.hub, "online", False))
+    except Exception:  # noqa: BLE001
+        return False
+
+
+async def _hub_select_retry(entity_id: str, option: str) -> dict[str, Any]:
+    try:
+        return await _hub_select(entity_id, option)
+    except Exception:  # noqa: BLE001
+        await asyncio.sleep(1.0)
+        return await _hub_select(entity_id, option)
+
+
+async def apply_clone_tent_automation() -> dict[str, Any]:
+    """Drive 2x4 clone-tent mode from roster plants when takeover is off."""
+    takeover = _control_state("switch.dsc_hub_manual_takeover")
+    if takeover == "on":
+        return {"applied": False, "reason": "takeover on"}
+    if not _hub_is_online():
+        return {"applied": False, "reason": "hub offline"}
+    rows = list_roster()
+    clone_plants: list[dict[str, Any]] = []
+    for row in rows:
+        recipe = row.get("recipe") or {}
+        if tent_id(str(recipe.get("tent") or "")) == "clone":
+            clone_plants.append(recipe)
+    if not clone_plants:
+        return {"applied": False, "reason": "no 2x4 plants"}
+    recipe = clone_plants[0]
+    stage = str(recipe.get("growth_stage") or recipe.get("stage") or "")
+    mode = clone_mode_for_stage(stage)
+    hours = _clone_hours_for_stage(stage)
+    photo = "Follow 4x8" if stage_family(stage) == "flower" else "Independent"
+    writes: dict[str, Any] = {"stage": stage}
+    if mode:
+        try:
+            await _hub_select_retry("select.dsc_hub_clone_mode", mode)
+            writes["clone_mode"] = mode
+        except Exception as exc:  # noqa: BLE001
+            _logger.warning("clone_mode write failed: %s", exc)
+            set_helper("select.dsc_hub_clone_mode", mode)
+            writes["clone_mode"] = mode
+            writes["clone_mode_local"] = True
+    if stage:
+        try:
+            await _hub_select_retry("select.dsc_hub_grow_stage", stage)
+            writes["grow_stage"] = stage
+        except Exception as exc:  # noqa: BLE001
+            _logger.warning("grow_stage write failed: %s", exc)
+            set_helper("select.dsc_hub_grow_stage", stage)
+            writes["grow_stage"] = stage
+            writes["grow_stage_local"] = True
+    try:
+        await _hub_select_retry("select.dsc_hub_clone_photoperiod", photo)
+        writes["clone_photoperiod"] = photo
+    except Exception as exc:  # noqa: BLE001
+        _logger.warning("clone_photoperiod write failed: %s", exc)
+        set_helper("select.dsc_hub_clone_photoperiod", photo)
+        writes["clone_photoperiod"] = photo
+    try:
+        await _hub_number("number.dsc_hub_clone_light_hours", hours)
+        writes["clone_light_hours"] = hours
+    except Exception as exc:  # noqa: BLE001
+        _logger.warning("clone_light_hours write failed: %s", exc)
+        set_helper("number.dsc_hub_clone_light_hours", hours)
+        writes["clone_light_hours"] = hours
+    return {"applied": True, **writes}
+
+
+def _maybe_persist_pot_edit(entity_id: str, value: str) -> None:
+    pot_tent = re.match(r"input_select\.dsc_pot([1-4])_tent$", entity_id)
+    if pot_tent:
+        try:
+            update_pot_recipe(int(pot_tent.group(1)), {"tent": value})
+        except ValueError:
+            pass
+        return
+    pot_sprout = re.match(r"(?:input_datetime|datetime)\.dsc_pot([1-4])_sprout_date$", entity_id)
+    if pot_sprout and value:
+        try:
+            update_pot_recipe(int(pot_sprout.group(1)), {"sprout_date": value})
+        except ValueError:
+            pass
+        return
+    pot_stage = re.match(r"select\.dsc_pot([1-4])_growth_stage$", entity_id)
+    if pot_stage and value:
+        try:
+            update_pot_recipe(int(pot_stage.group(1)), {"growth_stage": value})
+        except ValueError:
+            pass
+        return
+    pot_name = re.match(r"text\.dsc_pot([1-4])_plant_name$", entity_id)
+    if pot_name:
+        try:
+            update_pot_recipe(int(pot_name.group(1)), {"plant_name": value})
+        except ValueError:
+            pass
+
+
 async def call_service_proxy(domain: str, service: str, data: dict[str, Any]) -> dict[str, Any]:
     entity_id = str(data.get("entity_id", ""))
     if not entity_id:
@@ -398,6 +527,9 @@ async def call_service_proxy(domain: str, service: str, data: dict[str, Any]) ->
         if entity_id in HUB_SELECT_ENTITY_TO_OID:
             return await _hub_select(entity_id, option)
         set_helper(entity_id, option)
+        _maybe_persist_pot_edit(entity_id, option)
+        if entity_id.startswith("select.dsc_pot") and entity_id.endswith("_growth_stage"):
+            await apply_clone_tent_automation()
         return {"entity_id": entity_id, "state": option}
 
     if domain == "input_select" and service == "select_option":
@@ -405,29 +537,48 @@ async def call_service_proxy(domain: str, service: str, data: dict[str, Any]) ->
         if not option:
             raise ValueError("option required")
         set_helper(entity_id, option)
+        _maybe_persist_pot_edit(entity_id, option)
+        if entity_id.endswith("_tent"):
+            await apply_clone_tent_automation()
         return {"entity_id": entity_id, "state": option}
 
     if domain in ("input_text", "text") and service == "set_value":
         value = str(data.get("value", ""))
         set_helper(entity_id, value)
+        _maybe_persist_pot_edit(entity_id, value)
         return {"entity_id": entity_id, "state": value}
 
     if domain == "input_datetime" and service == "set_datetime":
-        date = str(data.get("date", ""))
+        date = _date_from_service(data)
         if date:
             set_helper(entity_id, date)
+            _maybe_persist_pot_edit(entity_id, date)
+            if "sprout_date" in entity_id:
+                await apply_clone_tent_automation()
             return {"entity_id": entity_id, "state": date}
         raise ValueError("date required")
 
     if domain == "datetime" and service == "set_value":
-        date = str(data.get("date", ""))
+        date = _date_from_service(data)
         if date:
             set_helper(entity_id, date)
+            _maybe_persist_pot_edit(entity_id, date)
+            if "sprout_date" in entity_id:
+                await apply_clone_tent_automation()
             return {"entity_id": entity_id, "state": date}
         raise ValueError("date required")
 
     if domain == "script" and service == "turn_on":
-        return handle_script(entity_id, data)
+        result = handle_script(entity_id, data)
+        if entity_id in (
+            "script.dsc_build_plant_commit_and_assign",
+            "script.dsc_plant_assign_to_pot",
+            "script.dsc_plant_retire",
+        ):
+            auto = await apply_clone_tent_automation()
+            if isinstance(result, dict):
+                result = {**result, "clone_automation": auto}
+        return result
 
     raise ValueError(f"unsupported service {domain}.{service}")
 

@@ -98,6 +98,8 @@ class RosterPatch(BaseModel):
     strain_id: str | None = None
     stage: str | None = None
     recipe: dict[str, Any] | None = None
+    tent: str | None = None
+    sprout_date: str | None = None
 
 
 class PermitJoinBody(BaseModel):
@@ -299,7 +301,23 @@ def roster_get() -> dict[str, Any]:
 
 @app.patch("/roster/{seat_id}")
 def roster_patch(seat_id: str, body: RosterPatch) -> dict[str, Any]:
+    from .compose_ops import derived_stage_for
+    from .stage_model import stage_family, tent_id
+
     patch = body.model_dump(exclude_none=True)
+    tent = patch.pop("tent", None)
+    sprout = patch.pop("sprout_date", None)
+    recipe = dict(patch.get("recipe") or {})
+    if tent is not None:
+        recipe["tent"] = tent_id(str(tent))
+    if sprout is not None:
+        recipe["sprout_date"] = str(sprout)[:10]
+        stage = derived_stage_for(str(sprout), str(patch.get("strain_id") or ""))
+        if stage:
+            recipe["growth_stage"] = stage
+            patch["stage"] = stage_family(stage) or "veg"
+    if recipe:
+        patch["recipe"] = recipe
     return upsert_roster(seat_id, patch)
 
 

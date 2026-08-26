@@ -30,12 +30,16 @@ DEFAULT_SELECTS: dict[str, str] = {
     "input_select.dsc_light_fixture": "",
     "input_select.dsc_build_custom_slot": "auto",
     "input_select.dsc_build_climate_pot": "Fleet",
+    "input_select.dsc_build_tent": "4x8",
 }
 
 DEFAULT_TEXT: dict[str, str] = {
     "input_text.dsc_build_strain": "",
     "input_text.dsc_build_nickname": "",
     "input_text.dsc_build_recipe_note": "",
+    # Empty default keeps the sprout-date field enabled on a fresh brain
+    # (EntityDatetime disables itself when the entity does not exist).
+    "input_datetime.dsc_build_sprout_date": "",
     "input_text.dsc_blend_component_1_name": "",
     "input_text.dsc_blend_component_2_name": "",
     "input_text.dsc_blend_component_3_name": "",
@@ -112,6 +116,7 @@ def default_roster_slots() -> list[dict[str, Any]]:
             "blend": "",
             "recipe": "",
             "sprout": "",
+            "tent": "",
             "pot": "none",
             "seed_count": 0,
             "notes": "",

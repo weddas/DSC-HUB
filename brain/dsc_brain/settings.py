@@ -251,7 +251,11 @@ def list_roster(db_path: Path | None = None) -> list[dict[str, Any]]:
     out: list[dict[str, Any]] = []
     for r in rows:
         item = dict(r)
-        item["recipe"] = json.loads(item.pop("recipe_json") or "{}")
+        recipe = json.loads(item.pop("recipe_json") or "{}")
+        item["recipe"] = recipe
+        item["tent"] = recipe.get("tent") or "unassigned"
+        item["sprout_date"] = recipe.get("sprout_date") or ""
+        item["growth_stage"] = recipe.get("growth_stage") or item.get("stage")
         out.append(item)
     return out
 
@@ -293,6 +297,14 @@ def upsert_roster(seat_id: str, patch: dict[str, Any], db_path: Path | None = No
     data["recipe"] = recipe
     data.pop("recipe_json", None)
     return data
+
+
+def delete_roster(seat_id: str, db_path: Path | None = None) -> bool:
+    conn = connect(db_path)
+    cur = conn.execute("DELETE FROM roster WHERE seat_id=?", (seat_id,))
+    conn.commit()
+    conn.close()
+    return cur.rowcount > 0
 
 
 def append_learning(

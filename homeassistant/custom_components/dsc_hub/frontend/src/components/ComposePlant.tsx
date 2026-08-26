@@ -11,7 +11,7 @@ import { DEFAULT_VESSEL, resolveVesselSpec, vesselEntityId, VESSEL_CATALOG } fro
 import type { CatalogItem, CatalogKind } from "../lib/catalog";
 
 type DrawKind = CatalogKind | "vessel" | null;
-type ConfirmKind = "roster" | "assign" | "seat" | "mix" | "climate" | null;
+type ConfirmKind = "roster" | "assign" | "seat" | "mix" | "climate" | "retire" | null;
 
 const NUTRIENT_SLOTS = [1, 2, 3, 4, 5, 6, 7, 8] as const;
 
@@ -25,6 +25,9 @@ export function ComposePlant() {
   const strain = state("input_text.dsc_build_strain", "");
   const nick = state("input_text.dsc_build_nickname", "");
   const assign = state("input_select.dsc_build_assign_pot", "none");
+  const tent = state("input_select.dsc_build_tent", "4x8");
+  const expectedStage = state("sensor.dsc_build_expected_stage", "");
+  const expectedDays = state("sensor.dsc_build_days_since_sprout", "");
   const volumeL = num("input_number.dsc_blend_total_l", 20);
   const light = state("input_select.dsc_light_fixture", "");
   const vesselRaw = state("input_select.dsc_build_vessel", "");
@@ -115,6 +118,7 @@ export function ComposePlant() {
     void callService("script", "turn_on", { entity_id: "script.dsc_build_plant_commit" });
     void callService("script", "turn_on", {
       entity_id: "script.dsc_plant_assign_to_pot",
+      pot: assign,
       variables: { pot: assign },
     });
   };
@@ -154,6 +158,16 @@ export function ComposePlant() {
             ) : null}
             <EntityText entityId="input_text.dsc_build_nickname" label="Nickname" />
             <EntityDatetime entityId="input_datetime.dsc_build_sprout_date" label="Sprout date" />
+            {expectedStage ? (
+              <div className="dsc-chip-row" style={{ margin: "8px 0" }}>
+                <StatusChip label={`Auto stage · ${expectedStage}`} tone="ok" />
+                {expectedDays ? <StatusChip label={`Day ${expectedDays}`} tone="muted" /> : null}
+              </div>
+            ) : (
+              <p className="dsc-muted" style={{ margin: "6px 0 0", fontSize: 12 }}>
+                Set a sprout date and the growth stage is calculated from it.
+              </p>
+            )}
             <EntitySelect entityId="input_select.dsc_build_custom_slot" label="Custom strain slot" />
           </Card>
         </div>
@@ -193,7 +207,7 @@ export function ComposePlant() {
             ))}
             <EntityText entityId="input_text.dsc_build_recipe_note" label="Recipe note" multiline />
             <p className="dsc-muted" style={{ margin: "8px 0 0", fontSize: 12 }}>
-              ml = dose × tank × strength. Empty names stay empty — Compose does not invent products.
+              ml = dose × tank × strength. Empty slots stay empty.
             </p>
           </Card>
         </div>
@@ -218,20 +232,22 @@ export function ComposePlant() {
               </div>
             ) : null}
             <EntitySelect entityId="input_select.dsc_build_assign_pot" label="Assign pot" icon="root" />
+            <EntitySelect entityId="input_select.dsc_build_tent" label="Tent" icon="tent" />
             <EntitySelect entityId="input_select.dsc_build_climate_pot" label="Climate apply pot" icon="climate" />
             <div className="dsc-row-actions" style={{ marginTop: 12 }}>
-              <Button primary onClick={() => setConfirm("roster")}>
-                Commit roster
-              </Button>
-              <Button teal onClick={() => setConfirm("assign")}>
+              <Button variant="primary" onClick={() => setConfirm("assign")}>
                 Commit + assign
               </Button>
-              <Button onClick={() => setConfirm("seat")}>Assign seat</Button>
-              <Button onClick={() => setConfirm("mix")}>Accept mix</Button>
-              <Button onClick={() => setConfirm("climate")}>Apply climate Want</Button>
+              <Button variant="secondary" onClick={() => setConfirm("roster")}>
+                Commit roster
+              </Button>
+              <Button variant="secondary" onClick={() => setConfirm("seat")}>Assign seat</Button>
+              <Button variant="danger" onClick={() => setConfirm("mix")}>Accept mix</Button>
+              <Button variant="secondary" onClick={() => setConfirm("climate")}>Apply climate Want</Button>
+              <Button variant="danger" onClick={() => setConfirm("retire")}>Retire pot</Button>
             </div>
             <p className="dsc-honesty" style={{ marginBottom: 0 }}>
-              Confirm overlay writes HA scripts. Coupled mix stays on <code>input_number.dsc_blend_pct_N</code>.
+              Each action asks you to confirm before anything is saved.
             </p>
           </Card>
         </div>
@@ -275,13 +291,12 @@ export function ComposePlant() {
           ))}
         </div>
         <p className="dsc-muted" style={{ fontSize: 12 }}>
-          Default if helper missing: {DEFAULT_VESSEL.label}. Reload HA after packages load{" "}
-          <code>dsc_v4_vessel.yaml</code>.
+          Default vessel: {DEFAULT_VESSEL.label}.
         </p>
         {available("input_select.dsc_build_vessel") ? (
-          <StatusChip label="Vessel helper" tone="ok" />
+          <StatusChip label="Vessel saved to hub" tone="ok" />
         ) : (
-          <StatusChip label="Volume-only until vessel select exists" tone="warn" />
+          <StatusChip label="Volume only — vessel presets unavailable" tone="warn" />
         )}
       </DecisionLayer>
 
@@ -297,8 +312,8 @@ export function ComposePlant() {
         help={null}
       >
         <p>
-          Strain {nick || strain || "—"}. Vessel {vessel.label}. Assign helper stays {assign}. Runs{" "}
-          <code>script.dsc_build_plant_commit</code>.
+          Saves {nick || strain || "this plant"} with vessel {vessel.label} to the roster
+          {tent ? ` in the ${tent} tent` : ""}. Pot assignment stays {assign === "none" ? "unset" : assign}.
         </p>
       </DecisionLayer>
 
@@ -314,8 +329,9 @@ export function ComposePlant() {
         help={null}
       >
         <p>
-          Writes roster then assigns pot {assign === "none" ? "(none — pick a pot first)" : assign}. Copies vessel{" "}
-          {vessel.id} onto <code>{assign === "none" ? "—" : vesselEntityId(Number(assign))}</code> if that helper exists.
+          Saves the roster entry, then assigns it to pot {assign === "none" ? "(none — pick a pot first)" : assign} in
+          the {tent || "4x8"} tent and applies the {vessel.label} vessel to that pot.
+          {expectedStage ? ` Stage is auto-set to ${expectedStage}.` : ""}
         </p>
       </DecisionLayer>
 
@@ -326,6 +342,7 @@ export function ComposePlant() {
           copyVesselToPot(assign);
           void callService("script", "turn_on", {
             entity_id: "script.dsc_plant_assign_to_pot",
+            pot: assign,
             variables: { pot: assign },
           });
           setConfirm(null);
@@ -335,8 +352,8 @@ export function ComposePlant() {
         help={null}
       >
         <p>
-          Assigns current roster plant to pot {assign === "none" ? "(none — pick a pot first)" : assign} via{" "}
-          <code>script.dsc_plant_assign_to_pot</code>. Does not invent a roster row.
+          Assigns the current plant to pot {assign === "none" ? "(none — pick a pot first)" : assign}. Nothing is
+          created if the roster entry is missing.
         </p>
       </DecisionLayer>
 
@@ -352,8 +369,28 @@ export function ComposePlant() {
         help={null}
       >
         <p>
-          {mixTotal.toFixed(1)} ml from tank {tank} L × {Math.round(strengthFrac * 100)}% strength. Runs{" "}
-          <code>script.dsc_accept_mix</code>. Does not invent missing nutrients.
+          Deducts {mixTotal.toFixed(1)} ml from nutrient stock — tank {tank} L × {Math.round(strengthFrac * 100)}%
+          strength. Empty slots are left untouched.
+        </p>
+      </DecisionLayer>
+      <DecisionLayer
+        open={confirm === "retire"}
+        onDismiss={() => setConfirm(null)}
+        onConfirm={() => {
+          void callService("script", "turn_on", {
+            entity_id: "script.dsc_plant_retire",
+            pot: assign,
+            variables: { pot: assign },
+          });
+          setConfirm(null);
+        }}
+        title="Retire pot"
+        confirmLabel="Remove plant"
+        help={null}
+      >
+        <p>
+          Removes the plant from pot {assign === "none" ? "(none — pick a pot first)" : assign} and clears its roster
+          seat. This does not change the pot&apos;s in-service flag.
         </p>
       </DecisionLayer>
       <DecisionLayer
@@ -368,9 +405,8 @@ export function ComposePlant() {
         help={null}
       >
         <p>
-          Applies custom temp/RH Want to pot{" "}
-          {state("input_select.dsc_build_climate_pot", "Fleet")} via{" "}
-          <code>script.dsc_apply_climate_want</code>. Does not invent catalog bands.
+          Applies your custom temperature and humidity targets to pot{" "}
+          {state("input_select.dsc_build_climate_pot", "Fleet")}. Only values you entered are used.
         </p>
       </DecisionLayer>
     </div>

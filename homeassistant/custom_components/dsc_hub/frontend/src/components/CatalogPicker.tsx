@@ -23,13 +23,20 @@ export function CatalogPicker({
     let cancelled = false;
     const handle = window.setTimeout(() => {
       setBusy(true);
-      void searchCatalog(kind, q, state, 100).then((res) => {
-        if (cancelled) return;
-        setItems(res.items);
-        setSource(res.source);
-        setNote(res.note);
-        setBusy(false);
-      });
+      void searchCatalog(kind, q, state, 100)
+        .then((res) => {
+          if (cancelled) return;
+          setItems(res.items);
+          setSource(res.source);
+          setNote(res.note);
+          setBusy(false);
+        })
+        .catch(() => {
+          if (cancelled) return;
+          setItems([]);
+          setNote("Catalog search failed — try again.");
+          setBusy(false);
+        });
     }, 200);
     return () => {
       cancelled = true;

@@ -15,7 +15,8 @@ from .compose_store import (
     set_helper,
     update_roster_slot,
 )
-from .settings import upsert_roster
+from .settings import delete_roster, list_roster, upsert_roster
+from .stage_model import expected_stage, stage_family, tent_id
 
 CAL_PREFIX_BY_SCRIPT: dict[str, str] = {
     "script.dsc_cal_reset_curve_out": "dsc_cal_cfm_out",
@@ -28,12 +29,38 @@ CAL_PREFIX_BY_SCRIPT: dict[str, str] = {
 CAL_STEPS = (25, 50, 75, 100)
 
 
+def _strain_is_auto(strain_id: str) -> bool:
+    if not strain_id:
+        return False
+    from .catalog import get_strain
+
+    row = get_strain(strain_id)
+    return bool(row and str(row.get("type") or "").lower() == "auto")
+
+
+def derived_stage_for(sprout_date: str, strain_id: str = "") -> str:
+    """Stage auto-derived from sprout date (empty when no date)."""
+    if not sprout_date:
+        return ""
+    try:
+        sprout_dt = datetime.date.fromisoformat(sprout_date[:10])
+    except ValueError:
+        return ""
+    days = (datetime.date.today() - sprout_dt).days
+    return expected_stage(days, auto=_strain_is_auto(strain_id))
+
+
 def _pot_recipe_from_build() -> dict[str, Any]:
     strain = str(get_helper("input_text.dsc_build_strain", "")).strip()
     nickname = str(get_helper("input_text.dsc_build_nickname", "")).strip() or strain
     sprout = str(get_helper("input_datetime.dsc_build_sprout_date", ""))[:10]
     blend = blend_snapshot_from_helpers()
     recipe_note = str(get_helper("input_text.dsc_build_recipe_note", "")).strip()
+    tent = tent_id(str(get_helper("input_select.dsc_build_tent", "4x8")))
+    strain_id = strain.replace(" ", "_").lower()[:64]
+    # growth_stage is derived from the sprout date, not hand-picked; fall back
+    # to the veg family when no date is known.
+    stage = derived_stage_for(sprout, strain_id) or "veg"
     return {
         "plant_name": nickname,
         "nickname": nickname,
@@ -41,16 +68,22 @@ def _pot_recipe_from_build() -> dict[str, Any]:
         "blend": blend,
         "recipe": recipe_note,
         "sprout_date": sprout,
-        "growth_stage": "veg",
+        "growth_stage": stage,
+        "tent": tent,
     }
 
 
 def commit_to_roster() -> dict[str, Any]:
-    slot_num = next_empty_roster_slot()
+    strain = str(get_helper("input_text.dsc_build_strain", "")).strip()
+    if not strain:
+        raise ValueError("Strain is empty — pick or enter a strain first")
+    nickname = str(get_helper("input_text.dsc_build_nickname", "")).strip() or strain
+    # Re-committing the same plant updates its slot instead of duplicating it.
+    slot_num = find_roster_slot_for_strain(strain, nickname)
+    if slot_num <= 0:
+        slot_num = next_empty_roster_slot()
     if slot_num <= 0:
         raise RuntimeError("Roster full — all eight slots occupied")
-    strain = str(get_helper("input_text.dsc_build_strain", "")).strip()
-    nickname = str(get_helper("input_text.dsc_build_nickname", "")).strip() or strain
     assign_pot = str(get_helper("input_select.dsc_build_assign_pot", "none"))
     sprout = str(get_helper("input_datetime.dsc_build_sprout_date", ""))[:10]
     blend = blend_snapshot_from_helpers()
@@ -64,6 +97,7 @@ def commit_to_roster() -> dict[str, Any]:
             "blend": blend,
             "recipe": recipe,
             "sprout": sprout,
+            "tent": str(get_helper("input_select.dsc_build_tent", "4x8")),
             "pot": assign_pot if assign_pot in ("1", "2", "3", "4") else "none",
             "status": status,
         },
@@ -80,14 +114,12 @@ def assign_to_pot(pot: str | None = None) -> dict[str, Any]:
     if not strain:
         raise ValueError("Strain is empty — pick or enter a strain first")
     recipe = _pot_recipe_from_build()
-    tent = str(get_helper(f"input_select.dsc_pot{n}_tent", "main"))
-    recipe["tent"] = tent if tent in ("main", "clone", "unassigned") else "main"
     seat_id = f"pot{n}"
     upsert_roster(
         seat_id,
         {
             "strain_id": strain.replace(" ", "_").lower()[:64] or "generic_photoperiod",
-            "stage": recipe.get("growth_stage", "veg"),
+            "stage": stage_family(recipe.get("growth_stage", "")) or "veg",
             "recipe": recipe,
         },
     )
@@ -99,11 +131,95 @@ def assign_to_pot(pot: str | None = None) -> dict[str, Any]:
     roster_slot = find_roster_slot_for_strain(strain, recipe["nickname"])
     if roster_slot > 0:
         update_roster_slot(roster_slot, {"pot": n, "status": "active"})
-    return {"pot": n, "strain": strain, "roster_slot": roster_slot}
+    return {"pot": n, "strain": strain, "roster_slot": roster_slot, "tent": recipe["tent"]}
+
+
+def update_pot_recipe(pot_n: int, updates: dict[str, Any]) -> dict[str, Any]:
+    """Persist post-creation edits (name/sprout/stage/tent) into the roster row."""
+    seat_id = f"pot{pot_n}"
+    rows = {r["seat_id"]: r for r in list_roster()}
+    row = rows.get(seat_id)
+    if not row:
+        raise ValueError(f"No plant on pot {pot_n} — nothing to edit")
+    recipe_patch: dict[str, Any] = {}
+    patch: dict[str, Any] = {}
+    if "plant_name" in updates:
+        name = str(updates["plant_name"]).strip()
+        recipe_patch["plant_name"] = name
+        recipe_patch["nickname"] = name
+    if "sprout_date" in updates:
+        sprout = str(updates["sprout_date"])[:10]
+        recipe_patch["sprout_date"] = sprout
+        # Sprout date changed → re-derive the stage instead of keeping a stale one.
+        stage = derived_stage_for(sprout, str(row.get("strain_id") or ""))
+        if stage:
+            recipe_patch["growth_stage"] = stage
+            patch["stage"] = stage_family(stage) or "veg"
+    if "growth_stage" in updates:
+        stage = str(updates["growth_stage"]).strip()
+        recipe_patch["growth_stage"] = stage
+        patch["stage"] = stage_family(stage) or "veg"
+    if "tent" in updates:
+        recipe_patch["tent"] = tent_id(str(updates["tent"]))
+        set_helper(f"input_select.dsc_pot{pot_n}_tent", recipe_patch["tent"])
+    if not recipe_patch and not patch:
+        return row
+    patch["recipe"] = recipe_patch
+    result = upsert_roster(seat_id, patch)
+    # Mirror the visible fields onto the roster slot listing.
+    recipe = result.get("recipe") or {}
+    slot_num = find_roster_slot_for_strain(
+        str(recipe.get("strain_display") or ""), str(recipe.get("nickname") or "")
+    )
+    if slot_num > 0:
+        slot_patch: dict[str, Any] = {}
+        if "plant_name" in updates:
+            slot_patch["nickname"] = recipe.get("nickname", "")
+        if "sprout_date" in updates:
+            slot_patch["sprout"] = recipe.get("sprout_date", "")
+        if slot_patch:
+            update_roster_slot(slot_num, slot_patch)
+    return result
+
+
+def retire_plant(pot: str | None = None) -> dict[str, Any]:
+    """Remove a plant from its pot + roster and clear the pot helpers."""
+    n = str(pot or get_helper("input_select.dsc_build_assign_pot", "")).strip()
+    if n not in ("1", "2", "3", "4"):
+        raise ValueError("Select a valid pot (1-4) to retire")
+    seat_id = f"pot{n}"
+    rows = {r["seat_id"]: r for r in list_roster()}
+    row = rows.get(seat_id)
+    recipe = (row or {}).get("recipe") or {}
+    removed = delete_roster(seat_id)
+    set_helper(f"text.dsc_pot{n}_plant_name", "")
+    set_helper(f"select.dsc_pot{n}_growth_stage", "")
+    set_helper(f"input_select.dsc_pot{n}_tent", "unassigned")
+    set_helper(f"datetime.dsc_pot{n}_sprout_date", "")
+    slot_num = find_roster_slot_for_strain(
+        str(recipe.get("strain_display") or ""), str(recipe.get("nickname") or "")
+    )
+    if slot_num > 0:
+        update_roster_slot(
+            slot_num,
+            {
+                "status": "empty",
+                "nickname": "",
+                "strain": "",
+                "blend": "",
+                "recipe": "",
+                "sprout": "",
+                "pot": "none",
+                "notes": "",
+            },
+        )
+    return {"pot": n, "removed": removed, "roster_slot": slot_num}
 
 
 def commit_and_assign() -> dict[str, Any]:
-    if next_empty_roster_slot() <= 0:
+    strain = str(get_helper("input_text.dsc_build_strain", "")).strip()
+    nickname = str(get_helper("input_text.dsc_build_nickname", "")).strip() or strain
+    if find_roster_slot_for_strain(strain, nickname) <= 0 and next_empty_roster_slot() <= 0:
         raise RuntimeError("Roster full — commit+assign did not seat a pot")
     commit = commit_to_roster()
     assign_pot = str(get_helper("input_select.dsc_build_assign_pot", "none"))
@@ -201,6 +317,16 @@ def cal_finish() -> dict[str, Any]:
     return {"active": False, "finished": True}
 
 
+def _script_pot(data: dict[str, Any]) -> str | None:
+    pot = data.get("pot")
+    if pot not in (None, ""):
+        return str(pot)
+    variables = data.get("variables")
+    if isinstance(variables, dict) and variables.get("pot") not in (None, ""):
+        return str(variables.get("pot"))
+    return None
+
+
 def handle_script(entity_id: str, data: dict[str, Any] | None = None) -> dict[str, Any]:
     data = data or {}
     if entity_id == "script.dsc_build_plant_commit":
@@ -208,7 +334,9 @@ def handle_script(entity_id: str, data: dict[str, Any] | None = None) -> dict[st
     if entity_id == "script.dsc_build_plant_commit_and_assign":
         return commit_and_assign()
     if entity_id == "script.dsc_plant_assign_to_pot":
-        return assign_to_pot(str(data.get("pot", "")) or None)
+        return assign_to_pot(_script_pot(data))
+    if entity_id == "script.dsc_plant_retire":
+        return retire_plant(_script_pot(data))
     if entity_id == "script.dsc_accept_mix":
         return accept_mix()
     if entity_id == "script.dsc_apply_climate_want":
