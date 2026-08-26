@@ -176,8 +176,9 @@ for seat in $SEATS; do
     if [ -z "$ap_psk" ]; then
       echo "Missing secret $secret_key"
     elif scan_for_ssid "$ssid"; then
-      connect_fallback_ap "$ssid" "$ap_psk"
-      if ping -c2 -W3 192.168.4.1 >/dev/null 2>&1; then
+      # NOTE: must stay inside `if` — a bare call under `set -e` aborts the
+      # whole script (EXIT trap fires) before any diagnostic prints.
+      if connect_fallback_ap "$ssid" "$ap_psk" && ping -c2 -W3 192.168.4.1 >/dev/null 2>&1; then
         if flash_fallback_ota "$yaml"; then
           ok=1
           echo "OK via fallback AP: $seat"
@@ -185,7 +186,8 @@ for seat in $SEATS; do
           echo "FAIL OTA via fallback AP: $seat"
         fi
       else
-        echo "Fallback AP unreachable at 192.168.4.1"
+        echo "Fallback AP unreachable at 192.168.4.1 (association or ping failed)"
+        run_sudo iw dev wlan0 link || true
       fi
     else
       echo "Hint: power-cycle $seat away from house WiFi so fallback AP broadcasts"

@@ -68,6 +68,12 @@ else
   fi
 fi
 
+# BuildKit can cache COPY brain/static even after we extract a new SPA. Always sync.
+if [ -d "${REPO}/brain/static" ]; then
+  run_sudo docker cp "${REPO}/brain/static/." dsc-hub-brain:/app/static/
+  echo "=== hot-synced SPA static ==="
+fi
+
 sleep 3
 echo "=== deploy mode: ${DEPLOY_MODE} ==="
 curl -sf http://127.0.0.1:8787/health && echo || echo "health check failed"

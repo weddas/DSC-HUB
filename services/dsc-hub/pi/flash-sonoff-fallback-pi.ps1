@@ -15,9 +15,16 @@ $FirmwareDir = Join-Path $RepoRoot "firmware\v4"
 $FwTar = Join-Path $env:TEMP "dsc-firmware-v4.tgz"
 
 Write-Host "Pack firmware/v4..."
+if (Test-Path $FwTar) { Remove-Item $FwTar -Force }
 Push-Location $FirmwareDir
-& tar -czf $FwTar .
+# Exclude build caches; they churn during packing and bloat the upload.
+& tar --exclude=.esphome --exclude=__pycache__ -czf $FwTar .
+$tarExit = $LASTEXITCODE
 Pop-Location
+if ($tarExit -ne 0 -or -not (Test-Path $FwTar) -or (Get-Item $FwTar).Length -lt 100KB) {
+    throw "Firmware pack failed (tar exit $tarExit) - refusing to upload a corrupt archive"
+}
+Write-Host ("Packed {0:N1} MB" -f ((Get-Item $FwTar).Length / 1MB))
 
 Write-Host "Upload Pi fallback flasher + firmware to $PiHost (eth0; Brain AP may drop briefly)..."
 & pscp -batch -hostkey $HostKey -pw $PiPassword $RemoteSh "${PiUser}@${PiHost}:/tmp/flash-sonoff-fallback-remote.sh"
