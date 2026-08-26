@@ -59,10 +59,12 @@ flowchart TD
 
 Concat order (HACS + Sync + ha-sync):
 
-`system-map` → `airflow` → `three.min` → `dsc-dash-fx` → `the-dash` → **`build-plant`**
+`system-map` → `airflow` → `three.min` → `dsc-dash-fx` → `the-dash` →
+**`build-plant`** → `app-nav` → `catalog-browse`.
 
-Healthy bundle after Build a Plant: **~941 KB** (`dist/DSC-HUB.js`). Sync still
-refuses `< 500000` (F-013).
+Healthy tip umbrella: **~1011 KB** / 1 035 171 B (`dist/DSC-HUB.js`). Sync still
+refuses `< 500000` (F-013). Panel prefers dedicated `/local/dsc-*-card.js` first —
+see [`scripts/HACS-FRONTEND.md`](../../scripts/HACS-FRONTEND.md).
 
 ### Package (`dsc_v4_build_plant.yaml`)
 
