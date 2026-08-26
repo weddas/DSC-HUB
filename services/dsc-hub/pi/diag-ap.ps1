@@ -1,0 +1,5 @@
+$HostKey = "SHA256:4XD2kIJ5qNCnULKNmo/L9mvzLbmZdURLwLW7Utt9NJs"
+$pscp = "pscp -batch -hostkey `"$HostKey`" -pw Digital"
+$plink = "plink -batch -hostkey `"$HostKey`" -pw Digital dsc@10.42.0.1"
+Invoke-Expression "$pscp 'y:\Digital Stealth Care\Projects\DSC-HUB\services\dsc-hub\pi\diag-ap.sh' dsc@10.42.0.1:/tmp/diag-ap.sh"
+Invoke-Expression "$plink `"tr -d '\r' < /tmp/diag-ap.sh | bash`""

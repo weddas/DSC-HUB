@@ -359,7 +359,6 @@ esp32:
       # LVGL build. loopTask 8 KB is ESPHome's LVGL floor; do not raise.
       compiler_optimization: SIZE
       loop_task_stack_size: 8192
-      sram1_as_iram: false
     sdkconfig_options:
       # ----------------------------------------------------------
       #  WiFi is the BACKUP path on this panel — ESP-NOW carries all
@@ -1264,7 +1263,7 @@ text_sensor:
     name: "Firmware Version"
     id: fw_version
     icon: mdi:tag-check
-    lambda: 'return {"6.0.0.0"};'
+    lambda: 'return {"7.0.0.0"};'
     update_interval: 60s
   - platform: template
     id: sel_stage
