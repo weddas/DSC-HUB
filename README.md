@@ -55,6 +55,8 @@ flowchart LR
 | [`UPGRADE.md`](UPGRADE.md) | 5.0 → 5.1 cutover (add-on Update + flash) |
 | [`RELEASE.md`](RELEASE.md) | What’s new, rollout checklist |
 | [`scripts/ADDON.md`](scripts/ADDON.md) | Lab HA delivery — HAOS Sync add-on |
+| [`scripts/HA-SYNC-BOOTSTRAP.md`](scripts/HA-SYNC-BOOTSTRAP.md) | Unraid runner → HAOS `ha-sync.sh` |
+| [`docs/qa/HA-SYNC-OPENSSH-ASSETS.md`](docs/qa/HA-SYNC-OPENSSH-ASSETS.md) | Panel assets + OpenSSH 9+ scp pitfall |
 | [`docs/qa/FIRMWARE-QA-5.1.0.md`](docs/qa/FIRMWARE-QA-5.1.0.md) | Firmware Validate / flash QC |
 | [`docs/qa/ADDON-QA-5.1.0.md`](docs/qa/ADDON-QA-5.1.0.md) | Sync add-on QC |
 | [`homeassistant/README.md`](homeassistant/README.md) | Packages, HACS, entity notes |

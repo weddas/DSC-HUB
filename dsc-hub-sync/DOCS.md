@@ -17,6 +17,7 @@ also syncs `esphome/components/dsc_fleet_setup` since 5.1.2)
 | Bundled `www` cards + SVG + vendor | `/config/www/` (default on) |
 | `homeassistant/www/dsc-catalog/*.json` | `/config/www/dsc-catalog/` |
 | `homeassistant/esphome/dsc-*.yaml` | `/config/esphome/` (**default on** in 5.1.0) |
+| `homeassistant/custom_components/dsc_hub/` | `/config/custom_components/dsc_hub/` (`cp -a`, strips `frontend/node_modules`) |
 
 Also writes:
 
@@ -77,4 +78,5 @@ Auth failures appear clearly in the add-on log (no silent empty sync).
 [UPGRADE.md](https://github.com/weddas/DSC-HUB/UPGRADE.md) ·
 [scripts/ADDON.md](https://github.com/weddas/DSC-HUB/blob/master/scripts/ADDON.md) ·
 [docs/qa/ADDON-QA-5.1.0.md](https://github.com/weddas/DSC-HUB/blob/master/docs/qa/ADDON-QA-5.1.0.md) ·
-[docs/qa/LIVE-UI-BUILD-A-PLANT.md](https://github.com/weddas/DSC-HUB/blob/master/docs/qa/LIVE-UI-BUILD-A-PLANT.md)
+[docs/qa/LIVE-UI-BUILD-A-PLANT.md](https://github.com/weddas/DSC-HUB/blob/master/docs/qa/LIVE-UI-BUILD-A-PLANT.md) ·
+[docs/qa/HA-SYNC-OPENSSH-ASSETS.md](https://github.com/weddas/DSC-HUB/blob/master/docs/qa/HA-SYNC-OPENSSH-ASSETS.md) (Unraid `ha-sync.sh` alternate — tar-over-ssh for panel assets)
