@@ -163,6 +163,36 @@ export async function permit_join(enabled: boolean): Promise<void> {
   });
 }
 
+export async function get_zigbee_devices(): Promise<{ devices: Array<Record<string, unknown>> }> {
+  const resp = await fetch("/settings/zigbee/devices");
+  if (!resp.ok) throw new Error("zigbee devices failed");
+  return resp.json();
+}
+
+export async function get_calibration(
+  deviceId: string,
+  calType?: string,
+): Promise<{ device_id: string; calibrations: Array<Record<string, unknown>> }> {
+  const q = calType ? `?cal_type=${encodeURIComponent(calType)}` : "";
+  const resp = await fetch(`/settings/calibration/${encodeURIComponent(deviceId)}${q}`);
+  if (!resp.ok) throw new Error("calibration fetch failed");
+  return resp.json();
+}
+
+export async function save_calibration(
+  deviceId: string,
+  calType: string,
+  steps: Array<{ step_key: string; measured_value: number; unit?: string }>,
+): Promise<Record<string, unknown>> {
+  const resp = await fetch(`/settings/calibration/${encodeURIComponent(deviceId)}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ cal_type: calType, steps }),
+  });
+  if (!resp.ok) throw new Error("calibration save failed");
+  return resp.json();
+}
+
 export function backup_export_url(): string {
   return "/settings/backup/export";
 }

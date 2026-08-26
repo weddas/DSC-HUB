@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Button, PageHeader } from "../components/ui";
+import { useEffect, useMemo, useState } from "react";
+import { Button, PageHeader, StatusChip } from "../components/ui";
 import {
   apply_network,
   backup_export_url,
@@ -7,8 +7,10 @@ import {
   get_catalog_status,
   get_esphome_devices,
   get_esphome_jobs,
+  get_fleet_state,
   get_network_status,
   get_settings,
+  get_zigbee_devices,
   patch_inventory,
   patch_settings,
   permit_join,
@@ -17,28 +19,160 @@ import {
   test_cannalib,
   test_ollama,
 } from "../lib/fleetApi";
+import { parseFleetSnapshot, type FleetSnapshot, type InventoryRow, type SeatSnapshot } from "../lib/fleetModel";
 
 const AP_CHANNELS = ["1", "6", "11"];
+
+function resolveSeat(fleet: FleetSnapshot, seatId: string): SeatSnapshot | null {
+  if (seatId === "hub") return fleet.hub;
+  if (seatId === "panel") return fleet.panel;
+  if (fleet.pots[seatId]) return fleet.pots[seatId];
+  if (fleet.sonoffs[seatId]) return fleet.sonoffs[seatId];
+  return null;
+}
+
+function fmtLastSeen(ts: number | null | undefined): string {
+  if (ts == null || !Number.isFinite(ts)) return "—";
+  const d = new Date(ts * 1000);
+  return d.toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+}
+
+function extraField(row: Record<string, unknown>, key: string): string {
+  const extra = row.extra;
+  if (extra && typeof extra === "object") {
+    return String((extra as Record<string, unknown>)[key] ?? "");
+  }
+  if (typeof extra === "string" && extra) {
+    try {
+      const parsed = JSON.parse(extra) as Record<string, unknown>;
+      return String(parsed[key] ?? "");
+    } catch {
+      return "";
+    }
+  }
+  return "";
+}
+
+function DeviceAssignmentRow({
+  row,
+  onSave,
+}: {
+  row: Record<string, unknown>;
+  onSave: (
+    seatId: string,
+    row: Record<string, unknown>,
+    functionName: string,
+    placement: string,
+    capabilityMax: string,
+  ) => Promise<void>;
+}) {
+  const seatId = String(row.seat_id ?? "");
+  const [fn, setFn] = useState(extraField(row, "function"));
+  const [place, setPlace] = useState(extraField(row, "placement"));
+  const [cap, setCap] = useState(String(extraField(row, "capability_max_pct") || ""));
+
+  useEffect(() => {
+    setFn(extraField(row, "function"));
+    setPlace(extraField(row, "placement"));
+    setCap(String(extraField(row, "capability_max_pct") || ""));
+  }, [row]);
+
+  return (
+    <tr>
+      <td>{seatId}</td>
+      <td>
+        <input value={fn} onChange={(e) => setFn(e.target.value)} placeholder="e.g. intake_temp" />
+      </td>
+      <td>
+        <input value={place} onChange={(e) => setPlace(e.target.value)} placeholder="e.g. 4x8 intake duct" />
+      </td>
+      <td>
+        <input type="number" min="1" max="100" value={cap} onChange={(e) => setCap(e.target.value)} placeholder="100" />
+      </td>
+      <td>
+        <Button onClick={() => onSave(seatId, row, fn, place, cap)}>Save</Button>
+      </td>
+    </tr>
+  );
+}
+
+function DeviceDetailCard({
+  row,
+  seat,
+}: {
+  row: InventoryRow & Record<string, unknown>;
+  seat: SeatSnapshot | null;
+}) {
+  const seatId = String(row.seat_id ?? "—");
+  const role = String(
+    row.role ??
+      (row.extra && typeof row.extra === "object"
+        ? (row.extra as Record<string, unknown>).role
+        : "—"),
+  );
+  const online = seat?.online ?? false;
+  const inService = Boolean(row.in_service);
+  const uptime = seat?.values?.uptime;
+  const rssi = seat?.values?.wifi_rssi ?? seat?.values?.rssi;
+  const calFn = extraField(row, "function");
+  const calPlace = extraField(row, "placement");
+  return (
+    <div className="dsc-card">
+      <h3>
+        {seatId}
+        <StatusChip label={online ? "ONLINE" : "OFFLINE"} tone={online ? "ok" : "bad"} />
+      </h3>
+      <dl className="dsc-detail-list">
+        <dt>Role</dt>
+        <dd>{role}</dd>
+        <dt>IP / host</dt>
+        <dd>{String(row.host ?? seat?.values?.host ?? "—")}</dd>
+        <dt>MAC</dt>
+        <dd>{String(row.mac ?? "—")}</dd>
+        <dt>Firmware</dt>
+        <dd>{seat?.firmware ?? seat?.values?.firmware_version ?? "—"}</dd>
+        <dt>Uptime</dt>
+        <dd>{typeof uptime === "number" ? `${Math.round(uptime / 60)} min` : "—"}</dd>
+        <dt>RSSI</dt>
+        <dd>{rssi != null ? `${rssi} dBm` : "—"}</dd>
+        <dt>Online</dt>
+        <dd>{online ? "yes" : "no"}</dd>
+        <dt>In service</dt>
+        <dd>{inService ? "yes" : "no"}</dd>
+        <dt>Function</dt>
+        <dd>{calFn || "—"}</dd>
+        <dt>Placement</dt>
+        <dd>{calPlace || "—"}</dd>
+        <dt>Last seen</dt>
+        <dd>{fmtLastSeen(seat?.last_seen ?? null)}</dd>
+      </dl>
+    </div>
+  );
+}
 
 export function SettingsPage() {
   const [settings, setSettings] = useState<Record<string, string>>({});
   const [inventory, setInventory] = useState<Array<Record<string, unknown>>>([]);
+  const [fleet, setFleet] = useState<FleetSnapshot | null>(null);
   const [network, setNetwork] = useState<Record<string, unknown> | null>(null);
   const [catalog, setCatalog] = useState<Record<string, unknown> | null>(null);
   const [esphome, setEsphome] = useState<Array<Record<string, unknown>>>([]);
   const [jobs, setJobs] = useState<Array<Record<string, unknown>>>([]);
+  const [zigbeeDevices, setZigbeeDevices] = useState<Array<Record<string, unknown>>>([]);
   const [ollamaResult, setOllamaResult] = useState<string>("");
   const [cannalibResult, setCannalibResult] = useState<string>("");
   const [networkResult, setNetworkResult] = useState<string>("");
   const [importResult, setImportResult] = useState<string>("");
 
   const refresh = async () => {
-    const [s, net, cat, esp, j] = await Promise.all([
+    const [s, net, cat, esp, j, fleetRaw, zigbee] = await Promise.all([
       get_settings(),
       get_network_status(),
       get_catalog_status(),
       get_esphome_devices(),
       get_esphome_jobs(),
+      get_fleet_state().catch(() => null),
+      get_zigbee_devices().catch(() => ({ devices: [] as Array<Record<string, unknown>> })),
     ]);
     setSettings(s.settings);
     setInventory(s.inventory);
@@ -46,6 +180,8 @@ export function SettingsPage() {
     setCatalog(cat);
     setEsphome((esp.devices as Array<Record<string, unknown>>) ?? []);
     setJobs(j);
+    setFleet(fleetRaw ? parseFleetSnapshot(fleetRaw) : null);
+    setZigbeeDevices(zigbee.devices ?? []);
   };
 
   useEffect(() => {
@@ -62,9 +198,80 @@ export function SettingsPage() {
     await refresh();
   };
 
+  const saveDeviceMeta = async (
+    seatId: string,
+    row: Record<string, unknown>,
+    functionName: string,
+    placement: string,
+    capabilityMax: string,
+  ) => {
+    const extra =
+      row.extra && typeof row.extra === "object"
+        ? { ...(row.extra as Record<string, unknown>) }
+        : {};
+    extra.function = functionName;
+    extra.placement = placement;
+    if (capabilityMax) extra.capability_max_pct = Number(capabilityMax);
+    await patch_inventory(seatId, { extra });
+    await refresh();
+  };
+
+  const inventoryRows = useMemo(
+    () =>
+      inventory.map((row) => ({
+        ...(row as InventoryRow),
+        seat: fleet ? resolveSeat(fleet, String(row.seat_id)) : null,
+      })),
+    [inventory, fleet],
+  );
+
   return (
     <div className="dsc-page">
-      <PageHeader icon="settings" title="Settings" subtitle="DSC-HUB 7.0.0 — Pi appliance" />
+      <PageHeader icon="settings" title="Settings" subtitle="DSC-HUB 7.1.0 — Pi appliance" />
+
+      <section className="dsc-card">
+        <h3>Fleet inventory</h3>
+        <p className="dsc-muted">Per-seat detail from /fleet + inventory — IP, MAC, firmware, online, in_service, last_seen.</p>
+        <div className="dsc-grid">
+          {inventoryRows.map(({ seat, ...row }) => (
+            <div key={String(row.seat_id)} className="dsc-col-4">
+              <DeviceDetailCard row={row} seat={seat} />
+              <label style={{ display: "block", marginTop: 8, fontSize: "0.85rem" }}>
+                <input
+                  type="checkbox"
+                  checked={Boolean(row.in_service)}
+                  onChange={(e) => toggleInService(String(row.seat_id), e.target.checked)}
+                />{" "}
+                In service
+              </label>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="dsc-card">
+        <h3>Device assignment</h3>
+        <p className="dsc-muted">
+          Function and placement tell the brain what each sensor/fan measures. Capability override caps max fan/light
+          output when hardware differs from nameplate.
+        </p>
+        <table className="dsc-table">
+          <thead>
+            <tr>
+              <th>Seat</th>
+              <th>Function</th>
+              <th>Placement</th>
+              <th>Max %</th>
+              <th />
+            </tr>
+          </thead>
+          <tbody>
+            {inventory.map((row) => (
+              <DeviceAssignmentRow key={String(row.seat_id)} row={row} onSave={saveDeviceMeta} />
+            ))}
+          </tbody>
+        </table>
+      </section>
 
       <section className="dsc-card">
         <h3>Network</h3>
@@ -238,38 +445,41 @@ export function SettingsPage() {
       <section className="dsc-card">
         <h3>Zigbee (SkyConnect)</h3>
         <p className="dsc-muted">Additive canopy / plugs — not climate ladder legs.</p>
-        <Button onClick={() => permit_join(true)}>Permit join (2 min)</Button>
-        <Button onClick={() => permit_join(false)}>Stop join</Button>
-      </section>
-
-      <section className="dsc-card">
-        <h3>Fleet inventory</h3>
-        <table className="dsc-table">
-          <thead>
-            <tr>
-              <th>Seat</th>
-              <th>Role</th>
-              <th>Host</th>
-              <th>In service</th>
-            </tr>
-          </thead>
-          <tbody>
-            {inventory.map((row) => (
-              <tr key={String(row.seat_id)}>
-                <td>{String(row.seat_id)}</td>
-                <td>{String(row.role)}</td>
-                <td>{String(row.host ?? "—")}</td>
-                <td>
-                  <input
-                    type="checkbox"
-                    checked={Boolean(row.in_service)}
-                    onChange={(e) => toggleInService(String(row.seat_id), e.target.checked)}
-                  />
-                </td>
+        <div className="dsc-row-actions">
+          <Button onClick={() => permit_join(true).then(refresh)}>Permit join (2 min)</Button>
+          <Button onClick={() => permit_join(false).then(refresh)}>Stop join</Button>
+        </div>
+        {zigbeeDevices.length ? (
+          <table className="dsc-table" style={{ marginTop: 12 }}>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>IEEE</th>
+                <th>Type</th>
+                <th>Model</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {zigbeeDevices
+                .filter((d) => d.type !== "Coordinator")
+                .map((d) => (
+                  <tr key={String(d.ieee_address ?? d.friendly_name)}>
+                    <td>{String(d.friendly_name ?? "—")}</td>
+                    <td>{String(d.ieee_address ?? "—")}</td>
+                    <td>{String(d.type ?? "—")}</td>
+                    <td>
+                      {String(d.vendor ?? "")}
+                      {d.model ? ` ${String(d.model)}` : ""}
+                    </td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+        ) : (
+          <p className="dsc-muted" style={{ marginTop: 10 }}>
+            No Zigbee devices reported yet — enable permit join, then refresh. List from GET /settings/zigbee/devices.
+          </p>
+        )}
       </section>
 
       <section className="dsc-card">

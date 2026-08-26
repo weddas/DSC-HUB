@@ -29,6 +29,8 @@ import {
   FleetOverviewPage,
 } from "./pages/TuneFleetPages";
 import { SettingsPage } from "./pages/SettingsPage";
+import { OverviewPage } from "./pages/OverviewPage";
+import { CalibratePage } from "./pages/CalibratePage";
 import { DashHomePage } from "./pages/DashHomePage";
 import {
   PRIMARY_TABS,
@@ -54,8 +56,8 @@ function NotFoundPage() {
         subtitle={`${location.pathname} is not a DSC route.`}
       />
       <p className="dsc-honesty">Unknown hash — not a silent Mission redirect.</p>
-      <Button primary onClick={() => navigate("/live/mission")}>
-        Go Mission
+      <Button primary onClick={() => navigate("/live/overview")}>
+        Go Overview
       </Button>
     </div>
   );
@@ -87,7 +89,7 @@ function Shell({ surfaceVersion = "7.2.0" }: { surfaceVersion?: string }) {
   return (
     <div className="dsc-shell">
       <div className="dsc-brand-row">
-        <NavLink className="dsc-brand" to="/live/mission">
+        <NavLink className="dsc-brand" to="/live/overview">
           <Icon name="brand" size={36} color="var(--dsc-blue)" />
           <div className="dsc-brand-title">
             <strong>DSC - A Plausible Deniability Project.</strong>
@@ -135,8 +137,9 @@ function Shell({ surfaceVersion = "7.2.0" }: { surfaceVersion?: string }) {
       <SeatOverlayHost />
 
       <Routes>
-        <Route path="/" element={<Navigate to="/live/mission" replace />} />
-        <Route path="/live" element={<Navigate to="/live/mission" replace />} />
+        <Route path="/" element={<Navigate to="/live/overview" replace />} />
+        <Route path="/live" element={<Navigate to="/live/overview" replace />} />
+        <Route path="/live/overview" element={<OverviewPage />} />
         <Route path="/live/mission" element={<LiveMissionPage />} />
         <Route path="/live/twin" element={<LiveTwinPage />} />
         <Route path="/live/climate" element={<LiveClimatePage />} />
@@ -154,6 +157,7 @@ function Shell({ surfaceVersion = "7.2.0" }: { surfaceVersion?: string }) {
         <Route path="/tune/learning" element={<TuneLearningPage />} />
         <Route path="/tune/analytics" element={<TuneAnalyticsPage />} />
         <Route path="/fleet" element={<FleetOverviewPage />} />
+        <Route path="/fleet/calibrate" element={<CalibratePage />} />
         <Route path="/fleet/settings" element={<SettingsPage />} />
         <Route path="/ops/home" element={<DashHomePage />} />
         <Route path="/ops/dash" element={<LiveTwinPage />} />

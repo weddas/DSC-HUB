@@ -348,6 +348,13 @@ export function MultiLineChart({
     });
   }, [model, hover, height]);
 
+  const drawKey = model
+    ? `${model.t0}-${model.t1}-${model.paths.map((p) => p.d).join("|")}`
+    : "empty";
+  const drawProgress = useAnimProgress(drawKey);
+  const pathLen = width * 1.4;
+  const dash = animatedDash(pathLen, drawProgress);
+
   const lastPrimary = model?.paths[0]?.last?.v ?? null;
 
   return (
@@ -541,7 +548,8 @@ export function MultiLineChart({
                       strokeWidth={1.6}
                       strokeLinejoin="round"
                       strokeLinecap="round"
-                      strokeDasharray="5 4"
+                      strokeDasharray={dash.dasharray}
+                      strokeDashoffset={dash.dashoffset}
                       opacity={0.55}
                       className="dsc-chart-core"
                     />
@@ -555,6 +563,8 @@ export function MultiLineChart({
                         strokeWidth={2.2}
                         strokeLinejoin="round"
                         strokeLinecap="round"
+                        strokeDasharray={dash.dasharray}
+                        strokeDashoffset={dash.dashoffset}
                         filter={`url(#glow-${gid})`}
                         opacity={0.95}
                         className="dsc-chart-core"
@@ -669,6 +679,10 @@ function useEased(value: number, ms = 280): number {
       setShown(value);
       return;
     }
+    if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setShown(value);
+      return;
+    }
     const from = Number.isFinite(shown) ? shown : value;
     const start = performance.now();
     let raf = 0;
@@ -683,6 +697,33 @@ function useEased(value: number, ms = 280): number {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value, ms]);
   return shown;
+}
+
+/** Draw-in progress 0→1 on mount / data change (rAF eased). */
+function useAnimProgress(resetKey: unknown, duration = 520): number {
+  const [progress, setProgress] = useState(0);
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setProgress(1);
+      return;
+    }
+    setProgress(0);
+    const start = performance.now();
+    let raf = 0;
+    const step = (now: number) => {
+      const t = Math.min(1, (now - start) / duration);
+      setProgress(1 - (1 - t) ** 3);
+      if (t < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [resetKey, duration]);
+  return progress;
+}
+
+function animatedDash(pathLen: number, progress: number): { dasharray: string; dashoffset: number } {
+  const len = Math.max(pathLen, 1);
+  return { dasharray: `${len}`, dashoffset: len * (1 - progress) };
 }
 
 function arcPoint(cx: number, cy: number, r: number, angleRad: number): { x: number; y: number } {
@@ -734,13 +775,13 @@ function segmentArcs(
 
 /** Hex palette — SVG presentation attrs cannot use CSS var(); must match dsc.css tokens. */
 const GAUGE_PALETTE = {
-  track: "#334566",
-  teal: "#2ec4d6",
+  track: "#243044",
+  teal: "#26c6da",
   amber: "#ffb74d",
-  bad: "#ff6b8a",
-  gray4: "#8b95ab",
-  gray5: "#b6bfd4",
-  white: "#f2f5fb",
+  bad: "#ef5350",
+  gray4: "#8b95a8",
+  gray5: "#8b95a8",
+  white: "#e8eef8",
 } as const;
 
 export function ArcGauge({
@@ -910,7 +951,7 @@ export function ArcGauge({
   return gauge;
 }
 
-/** Compact sparkline for Mission / Root. */
+/** Compact sparkline for Mission / Root / Overview. */
 export function Sparkline({
   series,
   color = "var(--dsc-blue)",
@@ -922,6 +963,9 @@ export function Sparkline({
   width?: number;
   height?: number;
 }) {
+  const drawKey = series.length ? `${series[0].t}-${series[series.length - 1].t}-${series.length}` : "empty";
+  const drawProgress = useAnimProgress(drawKey, 420);
+
   if (series.length < 2) {
     return <div className="dsc-sparkline dsc-muted" style={{ width, height }} />;
   }
@@ -939,10 +983,80 @@ export function Sparkline({
       return `${i === 0 ? "M" : "L"}${x.toFixed(1)} ${y.toFixed(1)}`;
     })
     .join(" ");
+  const pathLen = width * 1.25;
+  const dash = animatedDash(pathLen, drawProgress);
   return (
     <svg className="dsc-sparkline" width={width} height={height} aria-hidden>
-      <path d={d} fill="none" stroke={color} strokeWidth="1.6" strokeLinecap="round" />
+      <path
+        d={d}
+        fill="none"
+        stroke={color}
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeDasharray={dash.dasharray}
+        strokeDashoffset={dash.dashoffset}
+      />
     </svg>
+  );
+}
+
+function GotWantBarRow({
+  row,
+}: {
+  row: {
+    label: string;
+    got: number;
+    wantMin?: number;
+    wantMax?: number;
+    want?: number;
+    unit?: string;
+    stale?: boolean;
+  };
+}) {
+  const want =
+    row.want != null
+      ? row.want
+      : row.wantMin != null && row.wantMax != null
+        ? (row.wantMin + row.wantMax) / 2
+        : NaN;
+  const gotMissing = !!row.stale || !Number.isFinite(row.got);
+  const max = Math.max(
+    gotMissing ? 0 : row.got,
+    Number.isFinite(want) ? want : 0,
+    row.wantMax ?? 0,
+    1,
+  );
+  const gotPct = gotMissing ? 0 : (row.got / max) * 100;
+  const wantPct = Number.isFinite(want) ? (want / max) * 100 : 0;
+  const easedGot = useEased(gotPct);
+  const easedWant = useEased(wantPct);
+
+  return (
+    <div className={`dsc-gotwant-row${gotMissing ? " is-stale" : ""}`}>
+      <div className="dsc-gotwant-label">{row.label}</div>
+      <div className="dsc-gotwant-track">
+        {Number.isFinite(want) ? (
+          <div className="dsc-gotwant-want" style={{ width: `${easedWant}%` }} />
+        ) : null}
+        {gotMissing ? null : (
+          <div className="dsc-gotwant-got" style={{ width: `${easedGot}%` }} />
+        )}
+      </div>
+      <div className="dsc-gotwant-vals">
+        <span>
+          Got {gotMissing ? "—" : row.got.toFixed(1)}
+          {gotMissing ? "" : row.unit || ""}
+        </span>
+        <span className="dsc-muted">
+          Want{" "}
+          {row.wantMin != null && row.wantMax != null
+            ? `${row.wantMin}–${row.wantMax}`
+            : Number.isFinite(want)
+              ? want.toFixed(1)
+              : "—"}
+        </span>
+      </div>
+    </div>
   );
 }
 
@@ -961,50 +1075,9 @@ export function GotWantBars({
 }) {
   return (
     <div className="dsc-gotwant">
-      {rows.map((row) => {
-        const want =
-          row.want != null
-            ? row.want
-            : row.wantMin != null && row.wantMax != null
-              ? (row.wantMin + row.wantMax) / 2
-              : NaN;
-        const gotMissing = !!row.stale || !Number.isFinite(row.got);
-        const max = Math.max(
-          gotMissing ? 0 : row.got,
-          Number.isFinite(want) ? want : 0,
-          row.wantMax ?? 0,
-          1,
-        );
-        const gotPct = gotMissing ? 0 : (row.got / max) * 100;
-        const wantPct = Number.isFinite(want) ? (want / max) * 100 : 0;
-        return (
-          <div key={row.label} className={`dsc-gotwant-row${gotMissing ? " is-stale" : ""}`}>
-            <div className="dsc-gotwant-label">{row.label}</div>
-            <div className="dsc-gotwant-track">
-              {Number.isFinite(want) ? (
-                <div className="dsc-gotwant-want" style={{ width: `${wantPct}%` }} />
-              ) : null}
-              {gotMissing ? null : (
-                <div className="dsc-gotwant-got" style={{ width: `${gotPct}%` }} />
-              )}
-            </div>
-            <div className="dsc-gotwant-vals">
-              <span>
-                Got {gotMissing ? "—" : row.got.toFixed(1)}
-                {gotMissing ? "" : row.unit || ""}
-              </span>
-              <span className="dsc-muted">
-                Want{" "}
-                {row.wantMin != null && row.wantMax != null
-                  ? `${row.wantMin}–${row.wantMax}`
-                  : Number.isFinite(want)
-                    ? want.toFixed(1)
-                    : "—"}
-              </span>
-            </div>
-          </div>
-        );
-      })}
+      {rows.map((row) => (
+        <GotWantBarRow key={row.label} row={row} />
+      ))}
     </div>
   );
 }

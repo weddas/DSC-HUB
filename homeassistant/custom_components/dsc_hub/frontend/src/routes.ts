@@ -9,7 +9,7 @@ export interface TabRoute {
 }
 
 export const PRIMARY_TABS: { id: PrimarySection; label: string; path: string; icon: string }[] = [
-  { id: "live", label: "Live", path: "/live/mission", icon: "live" },
+  { id: "live", label: "Live", path: "/live/overview", icon: "live" },
   { id: "grow", label: "Grow", path: "/grow/compose", icon: "grow" },
   { id: "tune", label: "Tune", path: "/tune/learning", icon: "tune" },
   { id: "fleet", label: "Fleet", path: "/fleet", icon: "fleet" },
@@ -17,6 +17,7 @@ export const PRIMARY_TABS: { id: PrimarySection; label: string; path: string; ic
 
 export const SECONDARY_TABS: Record<PrimarySection, TabRoute[]> = {
   live: [
+    { id: "overview", label: "Overview", path: "/live/overview", icon: "home" },
     { id: "mission", label: "Mission", path: "/live/mission", icon: "mission" },
     { id: "dash", label: "Dash", path: "/ops/home", icon: "twin" },
     { id: "twin", label: "Twin", path: "/live/twin", icon: "twin" },
@@ -37,13 +38,14 @@ export const SECONDARY_TABS: Record<PrimarySection, TabRoute[]> = {
   ],
   fleet: [
     { id: "overview", label: "Overview", path: "/fleet", icon: "fleet" },
+    { id: "calibrate", label: "Calibrate", path: "/fleet/calibrate", icon: "learning" },
     { id: "settings", label: "Settings", path: "/fleet/settings", icon: "settings" },
   ],
 };
 
 /** Legacy paths → 7.1 destinations (query preserved by caller when needed). */
 export const LEGACY_REDIRECTS: Record<string, string> = {
-  "/": "/live/mission",
+  "/": "/live/overview",
   "/ops": "/ops/home",
   "/ops/home": "/ops/home",
   "/ops/dash": "/ops/dash",
