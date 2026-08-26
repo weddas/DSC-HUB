@@ -24,7 +24,7 @@ Write-Host "Upload flash-fleet-remote.sh + firmware..."
 
 Write-Host "Flash order: $Seats"
 Write-Host "ESPHome OTA per device; hub alone can take 10+ minutes."
-$remote = "sed -i 's/`r$//' /tmp/flash-fleet-remote.sh; bash /tmp/flash-fleet-remote.sh $PiPassword $Seats"
+$remote = "sed -i 's/`r$//' /tmp/flash-fleet-remote.sh; bash /tmp/flash-fleet-remote.sh $PiPassword '$Seats'"
 & plink -batch -hostkey $HostKey -pw $PiPassword "${PiUser}@${PiHost}" $remote
 if ($LASTEXITCODE -ne 0) { throw "flash-fleet failed (exit $LASTEXITCODE)" }
 

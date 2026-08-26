@@ -270,7 +270,7 @@ text_sensor:
   - platform: template
     name: "Firmware Version"
     icon: mdi:tag-check
-    lambda: 'return {"5.2.0"};'
+    lambda: 'return {"7.0.0.0"};'
     update_interval: 60s
 
 button:
