@@ -10,6 +10,72 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 
 ---
 
+## 2026-08-27 — pot3 Add-as-Plant demo blocked (Pi SSH/HTTP down)
+
+- **Symptom:** After a successful brain deploy and pot3 enable/retire, a second `deploy-brain.ps1` upload failed. `192.168.86.30` still pings; TCP 22 and 8787 refuse/timeout. AP `10.42.0.1` is unreachable (hostapd likely down with userspace).
+- **Last known live state:** roster empty; pot3 **still in_service true**; takeover off / full auto on. Revert pot3 OOS when the Pi is reachable.
+- **Code is in-tree** (tent selector, sprout/auto-stage, 2x4 automation). Centerpiece screenshots `pot3-fullgrow-step*.png` not taken.
+- **Do not** power-cycle Understairs Network Outlet to recover — that would take the whole closet with it.
+
+## 2026-08-27 — 7.1.2 closure triage
+
+Verdict pass over open items below (history untouched; line refs point at the original entries). Basis: bridge retired from project, studio WiFi is SoT, live fleet verified 2026-08-26 on 7.0.0.0.
+
+### retired (superseded — bridge removed / studio WiFi is SoT)
+
+| Item | Ref | Verdict |
+|---|---|---|
+| F-010 appliance bridge soak note | L~1439 | Retired — ETH01 bridge removed from project; Sonoffs follow hub demand via brain |
+| F-011 SoftAP portal host on ETH01 | L~969 / L~989 | Retired — no bridge to invert onto; kit portal question moot on studio WiFi |
+| F-012 channel-anchor SoftAP | L~982 | Retired — no `DSC-Anchor`; studio AP / Pi AP are the WiFi SoT |
+| F-013 hub HA wired presence mirror | L~983 | Retired — bridge Ethernet mirror gone; Native API ingest is the live bus |
+| F-014 bridge SoftAP kit hello | L~990 | Retired — bridge hardware retired |
+| N-038 stale EVT republish | L~676 | Retired — ESP-NOW EVT path parked; cosmetic on a dead bus |
+| N-039 pot 0xD7 calendar vs epoch | L~677 | Retired — ESP-NOW diagnostic on a parked protocol |
+| N-096 F-010 board BOM + ESP-NOW demand protocol | L~1432 | Retired — HA-optional climate now runs through the Pi brain, not a bridge BOM |
+| SoftAP NAPT OTA broken / Nest-hold workaround | L~1923–1927 | Retired — no SoftAP OTA path in service; OTA is studio LAN / USB |
+| "Resume SoftAP/ESP-NOW deepening" deferrals | L~2271 / L~2309 / L~2376 | Retired as standing tasks — ESP-NOW code stays parked in tree; nothing schedules a resume |
+
+### closed (verified done live 2026-08-26)
+
+| Item | Ref | Evidence |
+|---|---|---|
+| Hub firmware flash to 7.0.0.0 | L~2399 | Hub live reports `7.0.0.0` (`/fleet` → `hub.firmware`; AUDIT-2026-08-26 sign-off) |
+| N-002 fleet version skew | L~34 | All in-service seats report `7.0.0.0` via `firmware_version` text sensor |
+| Pot FW display cosmetic | — | Pots now report product semver `7.0.0.0` (generic `firmware_version` text sensor), not ESPHome framework |
+| N-067 hub placement / Nest RSSI | L~1366 | Obsolete post-studio cutover — hub on studio AP / Pi AP, Nest path gone |
+| N-068 Build-a-Plant typeahead browser verify | L~1384 | Compose replaced the Lovelace card; typeahead card retired with it |
+| Sonoff cutover rows | L~2361–2366 | Sonoffs live on studio LAN, brain appliance driver drives relays; cutover soak done 2026-08-26 |
+| Non-critical hub ingest (~50 entities) | L~2407 | Closed this pass — audit §4 inventory mapped in `hub_controls.py` (binary 7 / number 22 / sensor 16 / switch 18 / text 6, slug + legacy ids); informational only, no control-proxy rows, no alert-path changes; `test_hub_ingest_informational_oids_mapped` |
+| Intake `*_allocated` CFM | L~2256 | Closed this pass — `sensor.dsc_cfm_intake_main_allocated` / `sensor.dsc_cfm_intake_2x4_allocated` in `computed_ops.py` (Σ exhaust split by intake pct share, curve-or-nameplate); `test_intake_allocated_cfm` |
+
+### keep open (explicit gates — do not close)
+
+| Item | Gate |
+|---|---|
+| F-001 AC relay | Hardware install |
+| F-002 clone mister | Hardware install |
+| F-003 POT3 probe replacement | Hardware (probe swap) |
+| POT4 probe isolate (L~1941 / L~2017) | Hardware — POT2 known-good probe swap test |
+| F-008 SCD41 real CO2 sensor | Hardware |
+| GPIO5 4x8 lamp | Hardware — window stays Got proxy until wired |
+| DSC-Tank firmware | Hardware — dummy contract only |
+| Anemometer CFM field readings | Operator measurement session |
+| Phase E `hass_extras` shim drop (L~2408) | Gated on 24h dash soak |
+| N-020..023 tuning soaks | Evidence-based thresholds; leave soaking |
+| R3F Twin extract | Parked until neon APIs soak |
+
+### dist/ ↔ www/ Dash IIFE sync check (Get-FileHash SHA256, 2026-08-27)
+
+- 16 of 18 shared files **match** (cards, catalog indexes, vendor, gltf, svg).
+- `dsc-system-map-card.js` **differs by design** — dist ships the fat concat (1,073,562 B, includes THREE), www ships the thin loader (10,644 B).
+- `DSC-HUB.js` **drifts**: dist copy is byte-identical to dist's fat `dsc-system-map-card.js` (hash `0F55B895…`), but `homeassistant/www/DSC-HUB.js` is a different build (1,041,269 B, hash `AFE21DFC…`) — stale umbrella bundle in www; resync on next frontend deploy pass (frontend owned by the SPA track).
+- `dist/README.md` has no www counterpart (docs-only, expected).
+
+Counts: **10 retired / 8 closed / 11 kept open.**
+
+---
+
 ## Seed ? deep dive + OOS pass (2026-08-03)
 
 ### deferred (hard / site)
@@ -2406,4 +2472,76 @@ Do **not** reclaim .33/.39/.40/.47/.23 — other hosts answered there at cutover
 
 - Map non-critical hub entities (ladder waits, hub-side `*_in_service` switches) when tuning UI needs them.
 - Phase E: drop `hass_extras` / Pi `fleetToHass` shim after page migration soak.
+
+---
+
+## 2026-08-27 — 7.1.2 interface remediation follow-ups
+
+- Frontend `tsc --noEmit` carries **23 pre-existing errors** (unused imports, `SeriesPoint[].at` lib target, `useBrain` Promise<null> generic, SettingsPage `unknown`→ReactNode, CalibratePage `icon="light"` not in IconName). Builds pass because both build scripts are Vite-only with no type gate. Worth a dedicated cleanup pass + adding `tsc --noEmit` to CI.
+- SPA chunk is 512 kB minified (Vite warns >500 kB) — consider route-level code splitting.
+- One-off: during CDP-driven screenshots, hash-jumping via `Page.navigate` from `/live/climate` → `/live/4x8` once left `#root` empty (React unmount, no console error). Not reproducible via in-app navigation or `location.hash` — likely a CDP artifact, but the SPA has no error boundary; adding one would make any future render crash visible instead of a black page.
+
+---
+
+## 2026-08-27 — Pi AP 8-station cap (brcmfmac) — FIXED
+
+### root cause
+
+- DSC-Brain (Pi 4 B, BCM43455) onboard WiFi in AP mode capped at **exactly 8 associated stations** with the default/standard brcmfmac firmware. Fleet needs 10; the 2 losers rotated per AP restart and fell into ESPHome fallback SoftAPs. `dmesg` symptom: `brcmf_cfg80211_del_station: SCB_DEAUTHENTICATE_FOR_REASON failed -512`. hostapd never logged a rejection (its default limit is 2007) and `iw list` does not expose the cap — it is internal to the firmware blob.
+- Baseline evidence (pre-fix, 01:12 AEST): 8/8 stations, hub (.10) + dehumidifier (.55) locked out.
+
+### fix applied (on Pi, 2026-08-27 ~02:30 AEST)
+
+1. **Minimal firmware variant** (frees chip heap for more STA slots):
+   `sudo update-alternatives --set cyfmac43455-sdio.bin /lib/firmware/cypress/cyfmac43455-sdio-minimal.bin` → reboot. Was `-standard` (auto mode, 7.45.234-era); now boots `wl0: Nov 1 2021 version 7.45.241 (1a2f2fa CY)` minimal.
+2. **`/etc/dsc-hub/hostapd.conf`** (backup at `hostapd.conf.bak-20260827`): added `max_num_sta=32`, `macaddr_acl=0`, `deny_mac_file=/etc/dsc-hub/hostapd.deny`.
+3. **`/etc/dsc-hub/hostapd.deny`**: contains stray non-fleet client `34:6f:24:da:41:77` (Digital-Matter, was leasing 10.42.0.132) so it can never take a fleet slot. Verified not associated post-fix.
+
+### result
+
+- **10/10 stations stable for 15 min** post-reboot; all fleet IPs (.10 .11 .21–.24 .50 .51 .54 .55) pinged UP simultaneously in 18/20 polls (misses were single-ping latency blips). Nothing left in fallback SoftAP; no rescue needed.
+- dsc-hub-ap.service active, wlan0 10.42.0.1/24, all 5 docker containers up, `/health` ok (7.1.0).
+
+### revert (if minimal firmware misbehaves)
+
+- `sudo update-alternatives --set cyfmac43455-sdio.bin /lib/firmware/cypress/cyfmac43455-sdio-standard.bin && sudo reboot` (or `--auto cyfmac43455-sdio.bin` to return to auto/standard).
+- hostapd config revert: restore `/etc/dsc-hub/hostapd.conf.bak-20260827`.
+
+### notes / soak
+
+- Minimal firmware drops some offload features; community reports perf degradation ~15–20 **active** clients. Fleet is 10–11 — fine, but note if the AP ever grows.
+- POT3 (10.42.0.23) associates and holds a slot while out-of-service in inventory (ties into F-003).
+- No USB WiFi NIC present (`lsusb`: CP210x + CH340 serial, Samsung SSD only) — second-AP option would need hardware if ever revisited.
+- Rescue-script incident (~01:41–02:10): `/tmp/flash-sonoff-fallback-remote.sh` hung >25 min on a single `iw dev wlan0 scan` spinning at 100% CPU with wlan0 down; killed only that stuck `iw` PID, script's own timeout+EXIT trap then restored the AP cleanly. If the script is reused, wrap the scan in `timeout 30`.
+- Stale root process on Pi since Aug 26 14:35: `esphome run dsc-hub.yaml --device 10.42.0.10` (PID 687046) still running — harmless log-follow, but kill on next maintenance touch.
+
+---
+
+## 2026-08-27 — appliance driver alias fix — in workspace, not yet committed
+
+- During the heatmat demand→relay proof (acceptance #1), `brain/dsc_brain/appliance_driver.py` `_read_hub_demands` was emitting undiscovered `DEMAND_TO_SEAT` aliases as False; the phantom `growmat_demand` overwrote the real `grow_mat_demand` ON every ~2 s tick → heatmat relay physically chattered ON/OFF (~10 s period, `fleet_history` 16:52–16:55Z). Fixed to only report object_ids discovered on the hub; heatmat then proved cleanly (details in `docs/ops/SOAK-2026-08-26.md`).
+- **Workspace source is present** (confirmed 2026-08-27 closure coordinator): `_read_hub_demands` → `_demands_from_discovered` reports discovered oids only. Live on the Pi since 16:57Z 2026-08-26 (`/opt/dsc-hub-repo/brain` synced, `dsc-hub-brain:7.0.0` rebuilt). This pass did **not** redeploy.
+- Unit test landed: `test_appliance_undiscovered_aliases_not_emitted` in `brain/tests/test_brain_pi.py` (undiscovered aliases must not be emitted as False).
+- Still **not git-committed**. Signoff commit must include `appliance_driver.py` + the test, or a clean-checkout deploy will regress the chatter bug.
+- Changelog/release bullets drafted at [`docs/qa/RELEASE-7.1.2-DRAFT.md`](qa/RELEASE-7.1.2-DRAFT.md) — siblings fill tent selector / sprout-date / pot3 Add-as-Plant / UX pass 2.
+
+---
+
+## 2026-08-27 — DSC-Brain DHCP moved off .30
+
+- Category: `ops`
+- After the overnight hang/reboot, `dsc-brain.local` resolved to **192.168.86.48** (TTL 64). `.30` still pings (TTL 255, MAC `E8-16-56-53-EC-AD`) but SSH/:8787 refused — not the Pi.
+- Pin a Nest DHCP reservation for the Pi MAC back to `.30`, or update docs/Kuma to `.48` / mDNS.
+
+## 2026-08-27 — Overview banner says HUB OFFLINE while `/fleet` hub.online is true
+
+- Category: `next-plan`
+- During the pot3 full-grow demo the SPA banner stayed **HUB LINK DOWN / HUB OFFLINE** even while `GET /fleet` reported `hub.online=true` and Native API selects succeeded. Do not treat the banner as fleet truth until the link chip is reconciled.
+
+## 2026-08-27 — `/fleet/computed` is ~6.4s and the SPA used to poll it every 2s
+
+- Category: `next-plan`
+- Cold curls of `http://192.168.86.30:8787/fleet/computed` consistently take ~6.4s. The SPA was polling every 2s, so three requests piled up, starved `/fleet` + the websocket, and the UI wedged on "Connecting to fleet…".
+- Frontend guard landed in UX pass 2 (`useBrain.tsx`): in-flight lock + 5s poll. That unblocks the dashboard; it does **not** make `/fleet/computed` fast.
+- Next: profile the computed helpers on the Pi (likely a serial HA/state walk) and cache or slim the payload. Do not raise the poll rate again until the endpoint is under ~1s.
 
