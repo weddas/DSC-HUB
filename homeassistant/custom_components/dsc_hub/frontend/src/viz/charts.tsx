@@ -7,8 +7,8 @@ import {
   useState,
   type PointerEvent as ReactPointerEvent,
 } from "react";
-import { toneClass, zoneTone } from "../lib/zoneTone";
-import { colorAtValue, type GaugeSegment } from "./gaugeTheme";
+import { defaultBandMargin, isValidBand, toneClass, toneCssColor, zoneTone } from "../lib/zoneTone";
+import { type GaugeSegment } from "./gaugeTheme";
 
 export interface SeriesPoint {
   t: number;
@@ -111,12 +111,13 @@ function buildPath(
     .join(" ");
 }
 
+/** Same thresholds as zoneTone: in band ±m = base, drifting ≤3m out = amber, beyond = red. */
 function severityColor(v: number, band: { min: number; max: number } | undefined, base: string): string {
   if (!band || !Number.isFinite(v)) return base;
   const span = Math.max(band.max - band.min, 1e-6);
-  const m = span * 0.12;
-  if (v < band.min || v > band.max) return "var(--dsc-bad)";
-  if (v < band.min + m || v > band.max - m) return "var(--dsc-amber)";
+  const m = Math.max(span * 0.12, 0.05);
+  if (v < band.min - 3 * m || v > band.max + 3 * m) return "var(--dsc-bad)";
+  if (v < band.min - m || v > band.max + m) return "var(--dsc-amber)";
   return base;
 }
 
@@ -726,8 +727,9 @@ function animatedDash(pathLen: number, progress: number): { dasharray: string; d
   return { dasharray: `${len}`, dashoffset: len * (1 - progress) };
 }
 
+/** SVG y grows downward — subtract the sine so the semicircle renders on top. */
 function arcPoint(cx: number, cy: number, r: number, angleRad: number): { x: number; y: number } {
-  return { x: cx + r * Math.cos(angleRad), y: cy + r * Math.sin(angleRad) };
+  return { x: cx + r * Math.cos(angleRad), y: cy - r * Math.sin(angleRad) };
 }
 
 function gaugeAngle(v: number, min: number, max: number): number {
@@ -744,39 +746,17 @@ function arcSlicePath(
   cy: number,
   r: number,
 ): string {
-  const a0 = gaugeAngle(vEnd, min, max);
-  const a1 = gaugeAngle(vStart, min, max);
-  const p0 = arcPoint(cx, cy, r, a0);
-  const p1 = arcPoint(cx, cy, r, a1);
-  return `M ${p0.x.toFixed(2)} ${p0.y.toFixed(2)} A ${r} ${r} 0 0 1 ${p1.x.toFixed(2)} ${p1.y.toFixed(2)}`;
-}
-
-function segmentArcs(
-  segments: GaugeSegment[],
-  min: number,
-  max: number,
-  cx: number,
-  cy: number,
-  r: number,
-): { d: string; color: string }[] {
-  const sorted = [...segments].sort((a, b) => a.from - b.from);
-  const out: { d: string; color: string }[] = [];
-  for (let i = 0; i < sorted.length; i++) {
-    const vStart = Math.max(min, sorted[i].from);
-    const vEnd = Math.min(max, i < sorted.length - 1 ? sorted[i + 1].from : max);
-    if (vEnd <= vStart) continue;
-    out.push({
-      d: arcSlicePath(vStart, vEnd, min, max, cx, cy, r),
-      color: sorted[i].color,
-    });
-  }
-  return out;
+  const p0 = arcPoint(cx, cy, r, gaugeAngle(vStart, min, max));
+  const p1 = arcPoint(cx, cy, r, gaugeAngle(vEnd, min, max));
+  // sweep=0 (SVG CCW) stays on the top semicircle after the y-up arcPoint flip.
+  return `M ${p0.x.toFixed(2)} ${p0.y.toFixed(2)} A ${r} ${r} 0 0 0 ${p1.x.toFixed(2)} ${p1.y.toFixed(2)}`;
 }
 
 /** Hex palette — SVG presentation attrs cannot use CSS var(); must match dsc.css tokens. */
 const GAUGE_PALETTE = {
   track: "#243044",
   teal: "#26c6da",
+  ok: "#66bb6a",
   amber: "#ffb74d",
   bad: "#ef5350",
   gray4: "#8b95a8",
@@ -792,7 +772,6 @@ export function ArcGauge({
   unit = "",
   target,
   band,
-  segments,
   extrema,
   stale,
   onClick,
@@ -811,48 +790,57 @@ export function ArcGauge({
 }) {
   // Hold needle at last good when stale/unavailable — never ease to min.
   const display = Number.isFinite(value) ? value : NaN;
-  const eased = useEased(Number.isFinite(display) ? display : min);
-  const needle = Number.isFinite(display) ? eased : min;
+  const hasData = Number.isFinite(display);
+  const eased = useEased(hasData ? display : min);
+  const needle = hasData ? eased : min;
   const clamped = Math.min(max, Math.max(min, needle));
   const span = Math.max(max - min, 1e-6);
-  const pct = Number.isFinite(display) ? (clamped - min) / span : 0;
+  const pct = hasData ? (clamped - min) / span : 0;
   const r = 46;
   const c = 2 * Math.PI * r * 0.75;
   const dash = c * pct;
   const angAt = (v: number) => gaugeAngle(v, min, max);
+  const validBand = isValidBand(band) ? band : undefined;
+  const holding = !!(hasData && stale);
   const tone = zoneTone({
     value: display,
-    band,
-    margin: band ? Math.max((band.max - band.min) * 0.12, 0.05) : undefined,
-    stale,
-    available: Number.isFinite(display),
+    band: validBand,
+    margin: defaultBandMargin(validBand, unit),
+    stale: holding,
+    available: hasData,
   });
   const toneCls = toneClass(tone);
-  const segArcs = segments?.length ? segmentArcs(segments, min, max, 60, 72, r) : [];
-  const stroke = !Number.isFinite(display)
+  // Grey track + one in-band highlight. Rainbow fragments were unlabeled noise.
+  const bandArc =
+    hasData && validBand ? arcSlicePath(validBand.min, validBand.max, min, max, 60, 72, r) : "";
+  // Unified semantics: grey = no data, amber = held/drifting, red = out of band, green = in band.
+  // Teal only when no band is configured (neutral live reading).
+  const stroke = !hasData
     ? GAUGE_PALETTE.gray4
-    : stale
+    : holding
       ? GAUGE_PALETTE.amber
-      : segments?.length
-        ? colorAtValue(segments, display, GAUGE_PALETTE.teal)
-        : tone === "critical"
-          ? GAUGE_PALETTE.bad
-          : tone === "warn"
-            ? GAUGE_PALETTE.amber
+      : tone === "critical"
+        ? GAUGE_PALETTE.bad
+        : tone === "warn"
+          ? GAUGE_PALETTE.amber
+          : validBand
+            ? GAUGE_PALETTE.ok
             : GAUGE_PALETTE.teal;
   const filterId = `dsc-gauge-glow-${useId().replace(/:/g, "")}`;
 
   const tickMarks: { v: number; kind: "band" | "ext" | "target" }[] = [];
-  if (band) {
-    tickMarks.push({ v: band.min, kind: "band" }, { v: band.max, kind: "band" });
+  if (hasData) {
+    if (validBand) {
+      tickMarks.push({ v: validBand.min, kind: "band" }, { v: validBand.max, kind: "band" });
+    }
+    if (extrema?.min != null) tickMarks.push({ v: extrema.min, kind: "ext" });
+    if (extrema?.max != null) tickMarks.push({ v: extrema.max, kind: "ext" });
+    if (target != null && Number.isFinite(target)) tickMarks.push({ v: target, kind: "target" });
   }
-  if (extrema?.min != null) tickMarks.push({ v: extrema.min, kind: "ext" });
-  if (extrema?.max != null) tickMarks.push({ v: extrema.max, kind: "ext" });
-  if (target != null && Number.isFinite(target)) tickMarks.push({ v: target, kind: "target" });
 
   const gauge = (
     <div
-      className={`dsc-gauge ${toneCls}${stale ? " is-stale" : ""}${onClick ? " is-clickable" : ""}`}
+      className={`dsc-gauge ${toneCls}${holding ? " is-stale" : ""}${onClick ? " is-clickable" : ""}`}
     >
       <svg viewBox="0 0 120 90" width="140" height="105" aria-label={label}>
         <defs>
@@ -864,38 +852,38 @@ export function ArcGauge({
             </feMerge>
           </filter>
         </defs>
-        {segArcs.length ? (
-          segArcs.map((seg, i) => (
-            <path
-              key={`seg-${i}`}
-              d={seg.d}
-              fill="none"
-              stroke={seg.color}
-              strokeWidth="10"
-              strokeLinecap="butt"
-              opacity={0.38}
-            />
-          ))
-        ) : (
-          <path
-            d="M18 72 A46 46 0 1 1 102 72"
-            fill="none"
-            stroke={GAUGE_PALETTE.track}
-            strokeWidth="10"
-            strokeLinecap="round"
-          />
-        )}
         <path
-          className="dsc-gauge-value"
           d="M18 72 A46 46 0 1 1 102 72"
           fill="none"
-          stroke={stroke}
+          stroke={GAUGE_PALETTE.track}
           strokeWidth="10"
-          strokeLinecap="round"
-          strokeDasharray={`${dash} ${c}`}
-          filter={`url(#${filterId})`}
-          style={{ transition: "stroke-dasharray 280ms ease, stroke 280ms ease" }}
+          strokeLinecap="butt"
         />
+        {bandArc ? (
+          <path
+            d={bandArc}
+            fill="none"
+            stroke={GAUGE_PALETTE.ok}
+            strokeWidth="10"
+            strokeLinecap="butt"
+            opacity={0.38}
+          >
+            <title>In-band range</title>
+          </path>
+        ) : null}
+        {hasData ? (
+          <path
+            className="dsc-gauge-value"
+            d="M18 72 A46 46 0 1 1 102 72"
+            fill="none"
+            stroke={stroke}
+            strokeWidth="10"
+            strokeLinecap="round"
+            strokeDasharray={`${dash} ${c}`}
+            filter={`url(#${filterId})`}
+            style={{ transition: "stroke-dasharray 280ms ease, stroke 280ms ease" }}
+          />
+        ) : null}
         {tickMarks.map((tm, i) => {
           const ang = angAt(tm.v);
           const o = arcPoint(60, 72, tm.kind === "ext" ? r - 2 : r + 1, ang);
@@ -906,6 +894,8 @@ export function ArcGauge({
               : tm.kind === "band"
                 ? GAUGE_PALETTE.amber
                 : GAUGE_PALETTE.gray5;
+          const tickTitle =
+            tm.kind === "target" ? "Target" : tm.kind === "band" ? "Want edge" : "Session extreme";
           return (
             <line
               key={`${tm.kind}-${i}`}
@@ -917,7 +907,9 @@ export function ArcGauge({
               strokeWidth={tm.kind === "target" ? 2.4 : 1.6}
               strokeLinecap="round"
               opacity={tm.kind === "ext" ? 0.65 : 0.95}
-            />
+            >
+              <title>{tickTitle}</title>
+            </line>
           );
         })}
         <text
@@ -933,8 +925,8 @@ export function ArcGauge({
             ? display.toFixed(display >= 100 ? 0 : display < 10 ? 2 : 1)
             : "—"}
         </text>
-        <text x="60" y="74" textAnchor="middle" fill={GAUGE_PALETTE.gray5} fontSize="10">
-          {stale ? "HELD" : unit}
+        <text x="60" y="74" textAnchor="middle" fill={holding ? GAUGE_PALETTE.amber : GAUGE_PALETTE.gray5} fontSize="10">
+          {holding ? "HELD" : hasData ? unit : "no data"}
         </text>
       </svg>
       <div className="dsc-gauge-label">{label}</div>
@@ -954,7 +946,7 @@ export function ArcGauge({
 /** Compact sparkline for Mission / Root / Overview. */
 export function Sparkline({
   series,
-  color = "var(--dsc-blue)",
+  color = "var(--dsc-teal)",
   width = 120,
   height = 28,
 }: {
@@ -1016,10 +1008,26 @@ function GotWantBarRow({
   const want =
     row.want != null
       ? row.want
-      : row.wantMin != null && row.wantMax != null
+      : row.wantMin != null && row.wantMax != null && row.wantMax > row.wantMin
         ? (row.wantMin + row.wantMax) / 2
         : NaN;
-  const gotMissing = !!row.stale || !Number.isFinite(row.got);
+  const gotMissing = !Number.isFinite(row.got);
+  const holding = !!(!gotMissing && row.stale);
+  const band =
+    row.wantMin != null &&
+    row.wantMax != null &&
+    Number.isFinite(row.wantMin) &&
+    Number.isFinite(row.wantMax) &&
+    row.wantMax > row.wantMin
+      ? { min: row.wantMin, max: row.wantMax }
+      : undefined;
+  const gotTone = zoneTone({
+    value: row.got,
+    band,
+    margin: defaultBandMargin(band, row.unit),
+    stale: holding,
+    available: !gotMissing,
+  });
   const max = Math.max(
     gotMissing ? 0 : row.got,
     Number.isFinite(want) ? want : 0,
@@ -1032,14 +1040,17 @@ function GotWantBarRow({
   const easedWant = useEased(wantPct);
 
   return (
-    <div className={`dsc-gotwant-row${gotMissing ? " is-stale" : ""}`}>
+    <div className={`dsc-gotwant-row${holding ? " is-stale" : gotMissing ? " is-muted" : ""}`}>
       <div className="dsc-gotwant-label">{row.label}</div>
       <div className="dsc-gotwant-track">
         {Number.isFinite(want) ? (
           <div className="dsc-gotwant-want" style={{ width: `${easedWant}%` }} />
         ) : null}
         {gotMissing ? null : (
-          <div className="dsc-gotwant-got" style={{ width: `${easedGot}%` }} />
+          <div
+            className="dsc-gotwant-got"
+            style={{ width: `${easedGot}%`, background: toneCssColor(gotTone) }}
+          />
         )}
       </div>
       <div className="dsc-gotwant-vals">
