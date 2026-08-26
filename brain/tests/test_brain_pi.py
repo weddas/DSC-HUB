@@ -2,12 +2,23 @@
 
 import os
 import tempfile
+import time
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
 from dsc_brain import __version__
 from dsc_brain.fleet_state import FleetState, SeatState, get_fleet_state, update_fleet_state
+from dsc_brain.hub_controls import (
+    HUB_BINARY_OID_TO_ENTITY,
+    HUB_NUMBER_ENTITY_TO_OID,
+    HUB_NUMBER_OID_TO_ENTITY,
+    HUB_SENSOR_OID_TO_KEY,
+    HUB_SWITCH_ENTITY_TO_OID,
+    HUB_SWITCH_OID_TO_ENTITY,
+    HUB_TEXT_SENSOR_OID_TO_KEY,
+)
 from dsc_brain.settings import (
     get_all_settings,
     init_settings_db,
@@ -60,6 +71,38 @@ def test_appliance_demand_map() -> None:
     assert DEMAND_TO_SEAT["heater_demand"] == "heater"
     assert DEMAND_TO_SEAT["grow_mat_demand"] == "heatmat"
     assert len(DEMAND_TO_SEAT) == 5
+
+
+def test_appliance_undiscovered_aliases_not_emitted() -> None:
+    """Phantom growmat_demand=False must not overwrite grow_mat_demand ON."""
+    from dsc_brain.appliance_driver import DEMAND_TO_SEAT, _demands_from_discovered
+
+    assert "growmat_demand" in DEMAND_TO_SEAT
+    assert DEMAND_TO_SEAT["growmat_demand"] == DEMAND_TO_SEAT["grow_mat_demand"] == "heatmat"
+
+    discovered = {
+        "heater_demand": 1,
+        "humidifier_demand": 2,
+        "dehumidifier_demand": 3,
+        "grow_mat_demand": 4,
+    }
+    live = {
+        "heater_demand": False,
+        "humidifier_demand": False,
+        "dehumidifier_demand": False,
+        "grow_mat_demand": True,
+    }
+
+    out = _demands_from_discovered(discovered, live)
+    assert "growmat_demand" not in out
+    assert out["grow_mat_demand"] is True
+    assert set(out) == set(discovered)
+
+    # The pre-fix loop over every DEMAND_TO_SEAT key defaulted the leftover
+    # alias to False and chattered the heatmat relay (~10 s period).
+    buggy = {oid: live.get(oid, False) for oid in DEMAND_TO_SEAT}
+    assert buggy["growmat_demand"] is False
+    assert buggy["grow_mat_demand"] is True
 
 
 def test_fleet_hass_pi_appliance_link() -> None:
@@ -127,6 +170,37 @@ def test_compose_commit_roster(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -
     assert result["slot"] == 1
 
 
+def test_stage_model_july_9_is_late_push_veg() -> None:
+    from datetime import date
+
+    from dsc_brain.stage_model import expected_stage, tent_id
+
+    assert (date(2026, 8, 27) - date(2026, 7, 9)).days == 49
+    assert expected_stage(49, auto=False) == "Late (Push) Vegetative"
+    assert tent_id("2x4") == "clone"
+    assert tent_id("4x8") == "main"
+
+
+def test_assign_to_pot_writes_tent_and_stage(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("dsc_brain.settings.DEFAULT_DB", temp_db)
+    from dsc_brain.compose_ops import assign_to_pot, derived_stage_for
+    from dsc_brain.compose_store import default_roster_slots, save_roster_slots, set_helper
+
+    save_roster_slots(default_roster_slots())
+    set_helper("input_text.dsc_build_strain", "Northern Lights")
+    set_helper("input_text.dsc_build_nickname", "NL pot3")
+    set_helper("input_datetime.dsc_build_sprout_date", "2026-07-09")
+    set_helper("input_select.dsc_build_tent", "2x4")
+    set_helper("input_select.dsc_build_assign_pot", "3")
+    result = assign_to_pot("3")
+    assert result["tent"] == "clone"
+    rows = list_roster(temp_db)
+    assert rows[0]["seat_id"] == "pot3"
+    assert rows[0]["tent"] == "clone"
+    assert rows[0]["sprout_date"] == "2026-07-09"
+    assert rows[0]["recipe"]["growth_stage"] == derived_stage_for("2026-07-09")
+
+
 def test_control_script_proxy(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("DSC_DATA", str(temp_db.parent))
     from fastapi.testclient import TestClient
@@ -191,6 +265,127 @@ def test_hub_ingest_critical_oids_mapped() -> None:
     )
     missing = [oid for oid in critical if oid not in known]
     assert not missing, f"critical hub oids not in ingest maps: {missing}"
+
+
+def test_hub_ingest_informational_oids_mapped() -> None:
+    """Non-critical hub entities (audit 2026-08-26 §4) land in ingest maps.
+
+    Representative sample per kind, asserting both the name-slug and legacy
+    internal-id variants resolve to the same target. Informational entities
+    stay ingest-only: no control-proxy (ENTITY_TO_OID) rows.
+    """
+    # switches — hub-side in-service flags, *_auto ladder gates, mat votes
+    assert HUB_SWITCH_OID_TO_ENTITY["pot3_in_service"] == "switch.dsc_hub_pot3_in_service"
+    assert HUB_SWITCH_OID_TO_ENTITY["pot3_in_service_switch"] == "switch.dsc_hub_pot3_in_service"
+    assert HUB_SWITCH_OID_TO_ENTITY["ac_in_service"] == "switch.dsc_hub_ac_in_service"
+    assert HUB_SWITCH_OID_TO_ENTITY["heater_auto"] == "switch.dsc_hub_heater_auto"
+    assert HUB_SWITCH_OID_TO_ENTITY["growmat_auto_switch"] == "switch.dsc_hub_grow_mat_auto"
+    assert HUB_SWITCH_OID_TO_ENTITY["mat_vote_pot_1"] == "switch.dsc_hub_mat_vote_pot_1"
+    assert HUB_SWITCH_OID_TO_ENTITY["lock_wifi_ap"] == "switch.dsc_hub_lock_wifi_ap"
+    # numbers — ladder waits, min-off times, photoperiod ramp, fleet-heal targets
+    assert HUB_NUMBER_OID_TO_ENTITY["ladder_wait_hum"] == "number.dsc_hub_ladder_wait_hum"
+    assert HUB_NUMBER_OID_TO_ENTITY["num_ladder_wait_hum"] == "number.dsc_hub_ladder_wait_hum"
+    assert HUB_NUMBER_OID_TO_ENTITY["humidifier_min_off-time"] == "number.dsc_hub_humidifier_min_off_time"
+    assert HUB_NUMBER_OID_TO_ENTITY["min_dark_hours"] == "number.dsc_hub_min_dark_hours"
+    assert HUB_NUMBER_OID_TO_ENTITY["sf1000_ramp_floor"] == "number.dsc_hub_sf1000_ramp_floor"
+    assert HUB_NUMBER_OID_TO_ENTITY["num_destrat_burst"] == "number.dsc_hub_de_strat_pulse_length"
+    assert HUB_NUMBER_OID_TO_ENTITY["mister_target_hours"] == "number.dsc_hub_mister_target_hours"
+    # sensors — WiFi/link diagnostics, light debt, CO2 estimate, fleet-heal bands
+    assert HUB_SENSOR_OID_TO_KEY["wifi_rssi"] == "wifi_rssi"
+    assert HUB_SENSOR_OID_TO_KEY["light_debt_h"] == "light_debt_hours"
+    assert HUB_SENSOR_OID_TO_KEY["light_debt_hours"] == "light_debt_hours"
+    assert HUB_SENSOR_OID_TO_KEY["co2_ppm_estimate"] == "dynamic_co2_ppm"
+    assert HUB_SENSOR_OID_TO_KEY["vpd_main_band_hours"] == "vpd_main_band_hours"
+    assert HUB_SENSOR_OID_TO_KEY["coherence_epoch_s"] == "coherence_epoch"
+    # binaries — link/heal diagnostics
+    assert HUB_BINARY_OID_TO_ENTITY["ota_blocked"] == "binary_sensor.dsc_hub_ota_blocked"
+    assert HUB_BINARY_OID_TO_ENTITY["ha_connected"] == "binary_sensor.dsc_hub_ha_link_status"
+    assert HUB_BINARY_OID_TO_ENTITY["ha_link_status"] == "binary_sensor.dsc_hub_ha_link_status"
+    assert HUB_BINARY_OID_TO_ENTITY["wifi_associated"] == "binary_sensor.dsc_hub_wifi_associated"
+    assert HUB_BINARY_OID_TO_ENTITY["learning_paused_bs"] == "binary_sensor.dsc_hub_learning_paused"
+    # text sensors — network/heal strings
+    assert HUB_TEXT_SENSOR_OID_TO_KEY["network_ssid"] == "wifi_ssid"
+    assert HUB_TEXT_SENSOR_OID_TO_KEY["ip_address"] == "ip_address"
+    assert HUB_TEXT_SENSOR_OID_TO_KEY["esphome_version"] == "esphome_version"
+    assert HUB_TEXT_SENSOR_OID_TO_KEY["last_evt_ts"] == "last_evt"
+    # ingest-only: informational entities gain no write/control-proxy rows
+    assert "switch.dsc_hub_pot3_in_service" not in HUB_SWITCH_ENTITY_TO_OID
+    assert "switch.dsc_hub_heater_auto" not in HUB_SWITCH_ENTITY_TO_OID
+    assert "number.dsc_hub_ladder_wait_hum" not in HUB_NUMBER_ENTITY_TO_OID
+
+
+def test_hub_ingest_informational_states_flow() -> None:
+    from dsc_brain.esphome_client import (
+        _hub_binaries_from_states,
+        _hub_controls_from_states,
+        _hub_sensors_from_states,
+        _hub_text_sensors_from_states,
+    )
+
+    states = {
+        1: SimpleNamespace(state=True),
+        2: SimpleNamespace(state=45.0),
+        3: SimpleNamespace(state=-61.0),
+        4: SimpleNamespace(state=True),
+        5: SimpleNamespace(state="DSC-Brain"),
+    }
+    key_to_object = {
+        1: "pot3_in_service",
+        2: "ladder_wait_hum",
+        3: "wifi_rssi",
+        4: "ota_blocked_bs",
+        5: "wifi_ssid",
+    }
+    controls = _hub_controls_from_states(states, key_to_object, [])
+    assert controls["switch.dsc_hub_pot3_in_service"]["state"] == "on"
+    assert controls["number.dsc_hub_ladder_wait_hum"]["state"] == "45.0"
+    sensors = _hub_sensors_from_states(states, key_to_object)
+    assert sensors["wifi_rssi"] == -61.0
+    binaries = _hub_binaries_from_states(states, key_to_object)
+    assert binaries["binary_sensor.dsc_hub_ota_blocked"] is True
+    texts = _hub_text_sensors_from_states(states, key_to_object)
+    assert texts["wifi_ssid"] == "DSC-Brain"
+
+
+def test_intake_allocated_cfm(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Intake *_allocated mirrors exhaust: Σ exhaust CFM split by intake fan pct share."""
+    monkeypatch.setenv("DSC_DATA", str(temp_db.parent))
+    from dsc_brain.compose_store import set_helper
+    from dsc_brain.computed_ops import build_computed_hass_states
+
+    set_helper("input_number.dsc_cfm_out_max", 200)
+    set_helper("input_number.dsc_cfm_recirc_max", 100)
+    set_helper("input_number.dsc_cfm_intake_main_max", 100)
+    set_helper("input_number.dsc_cfm_intake_clone_max", 100)
+
+    state = FleetState()
+    controls = {
+        "fan.dsc_hub_6_inch_exhaust_outside": {"state": "on", "percentage": 50},
+        "fan.dsc_hub_6_inch_exhaust_room": {"state": "off", "percentage": 0},
+        "fan.dsc_hub_4_inch_intake_fan_main": {"state": "on", "percentage": 60},
+        "fan.dsc_hub_4_inch_intake_fan_2x4": {"state": "on", "percentage": 20},
+    }
+    state.hub = SeatState("hub", True, "7.0.0.0", {"controls": controls}, time.time())
+    states = build_computed_hass_states(state)
+
+    # exhaust capacity 50% of 200 nameplate = 100 CFM; intake shares 60/80 and 20/80
+    assert states["sensor.dsc_cfm_exhaust_out"]["state"] == "100.0"
+    main = states["sensor.dsc_cfm_intake_main_allocated"]
+    clone = states["sensor.dsc_cfm_intake_2x4_allocated"]
+    assert main["state"] == "75.0"
+    assert clone["state"] == "25.0"
+    assert main["attributes"]["model"] == "mass_balance_allocated"
+    assert main["attributes"]["honesty"] == "Sigma_exhaust_times_fan_pct_split"
+    assert main["attributes"]["companion_capacity"] == "sensor.dsc_cfm_intake_main"
+    assert clone["attributes"]["companion_capacity"] == "sensor.dsc_cfm_intake_2x4"
+
+    # zero intake share → no divide-by-zero, allocations 0
+    controls["fan.dsc_hub_4_inch_intake_fan_main"] = {"state": "off", "percentage": 0}
+    controls["fan.dsc_hub_4_inch_intake_fan_2x4"] = {"state": "off", "percentage": 0}
+    state.hub = SeatState("hub", True, "7.0.0.0", {"controls": controls}, time.time())
+    states = build_computed_hass_states(state)
+    assert states["sensor.dsc_cfm_intake_main_allocated"]["state"] == "0.0"
+    assert states["sensor.dsc_cfm_intake_2x4_allocated"]["state"] == "0.0"
 
 
 def test_history_api(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
