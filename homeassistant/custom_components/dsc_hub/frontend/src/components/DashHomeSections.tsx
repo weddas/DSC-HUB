@@ -1,6 +1,7 @@
 import { Card, Kpi, StatusChip } from "./ui";
 import { ArcGauge, Sparkline } from "../viz/charts";
 import { rhSegments, rootSegments, tempSegments, vpdSegments, moistureSegments } from "../viz/gaugeTheme";
+import { defaultBandMargin, toneCssColor, zoneTone } from "../lib/zoneTone";
 import type { BandChartKind } from "./BandChartHost";
 import { useHistory } from "../hooks/useHistory";
 import { useZoneFocus, type ZoneFocus } from "../hooks/useZoneFocus";
@@ -70,7 +71,7 @@ export function DashNowStrip({
     <div className="dsc-status-strip">
       <StatusChip icon={hubOnline ? "ok" : "alert"} label={hubOnline ? "HUB ONLINE" : "HUB OFFLINE"} tone={hubOnline ? "ok" : "bad"} onClick={() => onChip?.("sensor.dsc_hub_uptime", "Hub")} />
       <StatusChip
-        label={panelOk ? "PANEL ESP-NOW" : panelHaOnly ? "PANEL HA-ONLY" : panelOffline ? "PANEL OFFLINE" : "PANEL…"}
+        label={panelOk ? "PANEL LINKED" : panelHaOnly ? "PANEL LIMITED LINK" : panelOffline ? "PANEL OFFLINE" : "PANEL…"}
         tone={panelOk ? "ok" : panelHaOnly ? "warn" : "bad"}
         onClick={() => onChip?.("binary_sensor.dsc_hub_panel_link", "Panel")}
       />
@@ -131,13 +132,13 @@ export function DashConditionalBanners({ bus, onNavigate }: { bus: Bus; onNaviga
     const attrs = entity("binary_sensor.dsc_reduced_kit")?.attributes || {};
     banners.push({
       show: true,
-      title: "Unexpected OOS — capacity offline",
-      body: `${attrs.offline || "a live lever is parked"} — Full Auto uses next-best in-service levers. Planned holes (${attrs.planned_oos || "—"}) are inventory, not this card.`,
+      title: "Capacity offline",
+      body: `${attrs.offline || "a device is unavailable"} — automation is using the next-best available equipment. Devices deliberately out of service (${attrs.planned_oos || "—"}) are not counted here.`,
       tone: "warn",
     });
   }
   if (state("switch.dsc_hub_manual_takeover") === "on") {
-    banners.push({ show: true, title: "MASTER MANUAL TAKEOVER ACTIVE", body: "Automation frozen — hub obeys HA only", tone: "warn" });
+    banners.push({ show: true, title: "MANUAL CONTROL ACTIVE", body: "Automation is paused — the hub only follows manual commands", tone: "warn" });
   }
   if (state("switch.dsc_hub_tent_manual_override") === "on") {
     banners.push({ show: true, title: "MANUAL FAN OVERRIDE ACTIVE", body: "Fan values held — photoperiod still driving the SF1000", tone: "warn" });
@@ -155,7 +156,7 @@ export function DashConditionalBanners({ bus, onNavigate }: { bus: Bus; onNaviga
         <div key={b.title} className={`dsc-banner dsc-banner--${b.tone}`}>
           <strong>{b.title}</strong>
           <p className="dsc-muted">{b.body}</p>
-          {b.title.includes("OOS") ? (
+          {b.title === "Capacity offline" ? (
             <button type="button" className="dsc-chip" onClick={() => onNavigate("/live/climate")}>
               Open Climate
             </button>
@@ -195,7 +196,7 @@ export function DashEspLinkChips({ bus, onNavigate }: { bus: Bus; onNavigate: (p
         return (
           <StatusChip
             key={n}
-            label={`P${n} ${on ? "ESP" : "HA"}`}
+            label={`P${n} ${on ? "direct" : "fallback"}`}
             tone={on ? "ok" : "muted"}
             onClick={() => onNavigate("/live/root")}
           />
@@ -219,23 +220,24 @@ export function DashRunningChips({ bus }: { bus: Bus }) {
   const rootFault = state("binary_sensor.dsc_hub_root_zone_sensor_fault") === "on";
   const darkViol = state("binary_sensor.dsc_clone_dark_period_violation") === "on";
   const chips = [
-    { label: "Heat", on: state("switch.dsc_hub_heater_demand") === "on", tone: state("switch.dsc_hub_heater_demand") === "on" ? "ok" : "muted" },
-    { label: acOos ? "Cool ○" : "Cool", on: state("switch.dsc_hub_ac_demand") === "on", tone: acOos ? "warn" : state("switch.dsc_hub_ac_demand") === "on" ? "ok" : "muted" },
-    { label: "Hum", on: state("switch.dsc_hub_humidifier_demand") === "on", tone: state("switch.dsc_hub_humidifier_demand") === "on" ? "ok" : "muted" },
-    { label: dehumOffline ? "Dehum offline" : "Dehum", on: state("switch.dsc_hub_dehumidifier_demand") === "on", tone: dehumOffline ? "bad" : state("switch.dsc_hub_dehumidifier_demand") === "on" ? "ok" : "muted" },
+    { label: "Heat", icon: "climate" as const, on: state("switch.dsc_hub_heater_demand") === "on", tone: state("switch.dsc_hub_heater_demand") === "on" ? "ok" : "muted" },
+    { label: acOos ? "Cool ○" : "Cool", icon: "climate" as const, on: state("switch.dsc_hub_ac_demand") === "on", tone: acOos ? "warn" : state("switch.dsc_hub_ac_demand") === "on" ? "ok" : "muted" },
+    { label: "Hum", icon: "tank" as const, on: state("switch.dsc_hub_humidifier_demand") === "on", tone: state("switch.dsc_hub_humidifier_demand") === "on" ? "ok" : "muted" },
+    { label: dehumOffline ? "Dehum offline" : "Dehum", icon: "tank" as const, on: state("switch.dsc_hub_dehumidifier_demand") === "on", tone: dehumOffline ? "bad" : state("switch.dsc_hub_dehumidifier_demand") === "on" ? "ok" : "muted" },
     {
       label: Number.isFinite(matT) ? `Mat ${matT.toFixed(1)}°C${matPot && matPot !== "none" ? ` P${matPot}` : ""}` : "Mat",
+      icon: "root" as const,
       on: state("switch.dsc_hub_grow_mat_demand") === "on",
       tone: rootFault ? "bad" : state("switch.dsc_hub_grow_mat_demand") === "on" ? "ok" : "muted",
     },
-    { label: chumOos ? "C-Hum ○" : "C-Hum", on: state("switch.dsc_hub_clone_humidifier_demand") === "on", tone: chumOos ? "warn" : state("switch.dsc_hub_clone_humidifier_demand") === "on" ? "ok" : "muted" },
-    { label: sfOn ? `SF ${sfPct}%` : "SF1000", on: sfOn, tone: darkViol ? "bad" : sfOn ? "ok" : "muted" },
+    { label: chumOos ? "C-Hum ○" : "C-Hum", icon: "clone" as const, on: state("switch.dsc_hub_clone_humidifier_demand") === "on", tone: chumOos ? "warn" : state("switch.dsc_hub_clone_humidifier_demand") === "on" ? "ok" : "muted" },
+    { label: sfOn ? `SF ${sfPct}%` : "SF1000", icon: "lighting" as const, on: sfOn, tone: darkViol ? "bad" : sfOn ? "ok" : "muted" },
   ];
   return (
     <Card className="dsc-glass" title="Running" icon="lighting">
       <div className="dsc-chip-row">
         {chips.map((c) => (
-          <StatusChip key={c.label} label={c.label} tone={c.tone as "ok" | "warn" | "bad" | "muted"} motion={c.on ? "duty" : undefined} />
+          <StatusChip key={c.label} label={c.label} icon={c.icon} tone={c.tone as "ok" | "warn" | "bad" | "muted"} motion={c.on ? "duty" : undefined} />
         ))}
       </div>
     </Card>
@@ -350,20 +352,33 @@ export function DashOperationalNow({ bus, onNavigate }: { bus: Bus; onNavigate: 
 
 function BandGaugeCell({
   entityId,
-  sparkColor,
   zone,
   gauge,
+  value,
+  band,
+  stale,
+  unit,
 }: {
   entityId: string;
-  sparkColor: string;
   zone?: "main" | "clone" | "room" | "root";
   gauge: ReactNode;
+  value: number;
+  band?: { min: number; max: number };
+  stale?: boolean;
+  unit?: string;
 }) {
   const { points } = useHistory(entityId, 24, 96);
+  const tone = zoneTone({
+    value,
+    band,
+    margin: defaultBandMargin(band, unit),
+    stale: !!(stale && Number.isFinite(value)),
+    available: Number.isFinite(value),
+  });
   return (
     <div className={`dsc-band-cell${zone ? ` dsc-band-cell--${zone}` : ""}`}>
       {gauge}
-      <Sparkline series={points} color={sparkColor} width={110} height={26} />
+      <Sparkline series={points} color={toneCssColor(tone)} width={110} height={26} />
     </div>
   );
 }
@@ -412,6 +427,9 @@ export function DashBandsGrid({
 
   return (
     <Card className="dsc-glass" title="Bands" icon="gauge">
+      <p className="dsc-muted" style={{ fontSize: 12, margin: "0 0 10px" }}>
+        Green = in band · amber = drifting · red = alert · grey = no data
+      </p>
       <div className="dsc-tent-segment" style={{ marginBottom: 10 }}>
         {BAND_FOCUS.map((o) => (
           <button
@@ -430,24 +448,31 @@ export function DashBandsGrid({
           <span className="dsc-gauge-row-tag">4×8</span>
           <BandGaugeCell
             entityId="sensor.dsc_hub_tent_temperature"
-            sparkColor="#f97316"
             zone="main"
+            value={r.tentT}
+            band={{ min: r.targetTemp - 2, max: r.targetTemp + 2 }}
+            stale={r.stale.tentT}
+            unit="°C"
             gauge={
-              <ArcGauge label="4×8 T" value={r.tentT} min={10} max={40} unit="°C" target={r.targetTemp} segments={tempSegments(r.targetTemp)} stale={r.stale.tentT} onClick={() => onChartOpen("temp")} />
+              <ArcGauge label="4×8 T" value={r.tentT} min={10} max={40} unit="°C" target={r.targetTemp} band={{ min: r.targetTemp - 2, max: r.targetTemp + 2 }} segments={tempSegments(r.targetTemp)} stale={r.stale.tentT} onClick={() => onChartOpen("temp")} />
             }
           />
           <BandGaugeCell
             entityId="sensor.dsc_hub_tent_humidity"
-            sparkColor="#38bdf8"
             zone="main"
+            value={r.tentRh}
+            band={{ min: r.rhMin, max: r.rhMax }}
+            stale={r.stale.tentRh}
             gauge={
               <ArcGauge label="4×8 RH" value={r.tentRh} min={0} max={100} unit="%" band={{ min: r.rhMin, max: r.rhMax }} segments={rhSegments(r.rhMin, r.rhMax)} stale={r.stale.tentRh} onClick={() => onChartOpen("rh")} />
             }
           />
           <BandGaugeCell
             entityId="sensor.dsc_hub_vpd_kpa"
-            sparkColor="#a78bfa"
             zone="main"
+            value={r.tentVpd}
+            band={{ min: r.vpdMin, max: r.vpdMax }}
+            stale={r.stale.tentVpd}
             gauge={
               <ArcGauge label="4×8 VPD" value={r.tentVpd} min={0} max={2.5} unit="kPa" band={{ min: r.vpdMin, max: r.vpdMax }} segments={vpdSegments(r.vpdMin, r.vpdMax)} stale={r.stale.tentVpd} onClick={() => onChartOpen("vpd")} />
             }
@@ -457,24 +482,31 @@ export function DashBandsGrid({
           <span className="dsc-gauge-row-tag">2×4</span>
           <BandGaugeCell
             entityId="sensor.dsc_hub_clone_temperature"
-            sparkColor="#22c55e"
             zone="clone"
+            value={r.cloneT}
+            band={{ min: r.cloneTargetTemp - 2, max: r.cloneTargetTemp + 2 }}
+            stale={r.stale.cloneT}
+            unit="°C"
             gauge={
-              <ArcGauge label="2×4 T" value={r.cloneT} min={10} max={40} unit="°C" target={r.cloneTargetTemp} segments={tempSegments(r.cloneTargetTemp)} stale={r.stale.cloneT} onClick={() => onChartOpen("temp")} />
+              <ArcGauge label="2×4 T" value={r.cloneT} min={10} max={40} unit="°C" target={r.cloneTargetTemp} band={{ min: r.cloneTargetTemp - 2, max: r.cloneTargetTemp + 2 }} segments={tempSegments(r.cloneTargetTemp)} stale={r.stale.cloneT} onClick={() => onChartOpen("temp")} />
             }
           />
           <BandGaugeCell
             entityId="sensor.dsc_hub_clone_humidity"
-            sparkColor="#2dd4bf"
             zone="clone"
+            value={r.cloneRh}
+            band={{ min: r.cloneRhMin, max: r.cloneRhMax }}
+            stale={r.stale.cloneRh}
             gauge={
               <ArcGauge label="2×4 RH" value={r.cloneRh} min={0} max={100} unit="%" band={{ min: r.cloneRhMin, max: r.cloneRhMax }} segments={rhSegments(r.cloneRhMin, r.cloneRhMax)} stale={r.stale.cloneRh} onClick={() => onChartOpen("rh")} />
             }
           />
           <BandGaugeCell
             entityId="sensor.dsc_hub_clone_vpd_kpa"
-            sparkColor="#818cf8"
             zone="clone"
+            value={r.cloneVpd}
+            band={{ min: r.cloneVpdMin, max: r.cloneVpdMax }}
+            stale={r.stale.cloneVpd}
             gauge={
               <ArcGauge label="2×4 VPD" value={r.cloneVpd} min={0} max={2} unit="kPa" band={{ min: r.cloneVpdMin, max: r.cloneVpdMax }} segments={vpdSegments(r.cloneVpdMin, r.cloneVpdMax)} stale={r.stale.cloneVpd} onClick={() => onChartOpen("vpd")} />
             }
@@ -484,24 +516,32 @@ export function DashBandsGrid({
           <span className="dsc-gauge-row-tag">Room</span>
           <BandGaugeCell
             entityId="sensor.dsc_hub_room_temperature"
-            sparkColor="#94a3b8"
             zone="room"
+            value={r.roomT}
+            band={{ min: r.targetTemp - 2, max: r.targetTemp + 2 }}
+            stale={r.stale.roomT}
+            unit="°C"
             gauge={
-              <ArcGauge label="Room T" value={r.roomT} min={10} max={40} unit="°C" target={r.targetTemp} segments={tempSegments(r.targetTemp)} stale={r.stale.roomT} onClick={() => onChartOpen("temp")} />
+              <ArcGauge label="Room T" value={r.roomT} min={10} max={40} unit="°C" target={r.targetTemp} band={{ min: r.targetTemp - 2, max: r.targetTemp + 2 }} segments={tempSegments(r.targetTemp)} stale={r.stale.roomT} onClick={() => onChartOpen("temp")} />
             }
           />
           <BandGaugeCell
             entityId="sensor.dsc_hub_room_humidity"
-            sparkColor="#64748b"
             zone="room"
+            value={r.roomRh}
+            band={{ min: r.rhMin, max: r.rhMax }}
+            stale={r.stale.roomRh}
             gauge={
               <ArcGauge label="Room RH" value={r.roomRh} min={0} max={100} unit="%" band={{ min: r.rhMin, max: r.rhMax }} segments={rhSegments(r.rhMin, r.rhMax)} stale={r.stale.roomRh} onClick={() => onChartOpen("rh")} />
             }
           />
           <BandGaugeCell
             entityId="sensor.dsc_coldest_root_zone_temp"
-            sparkColor="#fbbf24"
             zone="root"
+            value={r.rootT}
+            band={{ min: r.matLo, max: r.matHi }}
+            stale={r.stale.rootT}
+            unit="°C"
             gauge={
               <ArcGauge label="Root" value={r.rootT} min={10} max={32} unit="°C" band={{ min: r.matLo, max: r.matHi }} segments={rootSegments(r.matLo, r.matHi)} stale={r.stale.rootT} onClick={() => onChartOpen("root")} />
             }
@@ -557,7 +597,7 @@ export function DashRootTankSection({
           const name = state(`text.dsc_pot${n}_plant_name`, "—");
           const clean = !name || name === "unknown" || name === "unavailable" ? "—" : name;
           return (
-            <StatusChip key={n} label={`P${n} ${clean}`} tone={n === 3 ? "muted" : "ok"} onClick={() => onPot(n)} />
+            <StatusChip key={n} label={`P${n} ${clean}`} tone={clean === "—" ? "muted" : "ok"} onClick={() => onPot(n)} />
           );
         })}
       </div>
@@ -585,7 +625,7 @@ export function DashRootTankSection({
             max={100}
             unit="%"
             band={moistBand}
-            segments={moistureSegments()}
+            segments={moistureSegments(30, 70)}
             onClick={() => onPotChart(`pot${n}` as BandChartKind)}
           />
         ))}

@@ -74,7 +74,7 @@ export function useHeldReading(entityId: string): HeldReading {
       live: false,
     };
   }
-  return { value: NaN, stale: true, heldAt: undefined, live: false };
+  return { value: NaN, stale: false, heldAt: undefined, live: false };
 }
 
 function useOfflineMs(entityId: string): number | null {

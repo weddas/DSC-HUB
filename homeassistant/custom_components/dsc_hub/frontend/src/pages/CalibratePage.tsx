@@ -75,7 +75,7 @@ function FanCalibrateWizard() {
   const savePoint = async () => {
     const ms = Number(msReading);
     if (!Number.isFinite(ms) || ms <= 0) {
-      setStatus("Enter a valid m/s reading — skip rather than invent.");
+      setStatus("Enter a valid m/s reading, or skip this step.");
       return;
     }
     setSaving(true);
@@ -158,8 +158,8 @@ function FanCalibrateWizard() {
       {phase === "pick" ? (
         <Card className="dsc-glass" title="1 · Select duct" icon="fan">
           <p className="dsc-muted">
-            Per docs/ANEMOMETER-CFM: hold anemometer centerline at each fan step. Need ≥2 points per duct to leave
-            nameplate mode.
+            Hold the anemometer at the centre of the duct at each fan step. At least two measured points per duct are
+            needed before real curves replace the rated estimate.
           </p>
           <div className="dsc-chip-row" style={{ margin: "12px 0" }}>
             {CAL_TARGETS.map((t, i) => (
@@ -174,7 +174,7 @@ function FanCalibrateWizard() {
             ))}
           </div>
           <div className="dsc-row-actions">
-            <Button primary disabled={saving} onClick={() => void startSession()}>
+            <Button variant="primary" disabled={saving} onClick={() => void startSession()}>
               Start {target.label} session
             </Button>
           </div>
@@ -184,8 +184,8 @@ function FanCalibrateWizard() {
       {phase === "session" ? (
         <Card className="dsc-glass" title={`2 · Sample ${target.label} @ ${stepPct}%`} icon="gauge">
           <p className="dsc-honesty">
-            Set fan to {stepPct}% via hub/control. Hold anemometer in duct centerline. Enter measured m/s — CFM is
-            computed by scripts.
+            Set the fan to {stepPct}%. Hold the anemometer at the duct centreline and enter the measured m/s — CFM is
+            calculated for you.
           </p>
           <label>
             Anemometer m/s @ {stepPct}%
@@ -203,7 +203,7 @@ function FanCalibrateWizard() {
             />
           </label>
           <p className="dsc-kpi-sub">
-            Stored helpers: input_number.{target.prefix}_{stepPct}
+            Saved to the {target.label} curve at {stepPct}%.
           </p>
           <div className="dsc-stage-track">
             {STEP_PCTS.map((pct, i) => (
@@ -213,13 +213,13 @@ function FanCalibrateWizard() {
             ))}
           </div>
           <div className="dsc-row-actions">
-            <Button primary disabled={saving} onClick={() => void savePoint()}>
+            <Button variant="primary" disabled={saving} onClick={() => void savePoint()}>
               Save @ {stepPct}%
             </Button>
-            <Button disabled={saving} onClick={() => void skipPoint()}>
+            <Button variant="secondary" disabled={saving} onClick={() => void skipPoint()}>
               Skip step
             </Button>
-            <Button disabled={saving} onClick={() => void abortSession()}>
+            <Button variant="danger" disabled={saving} onClick={() => void abortSession()}>
               Abort
             </Button>
           </div>
@@ -229,9 +229,9 @@ function FanCalibrateWizard() {
       {phase === "done" ? (
         <Card className="dsc-glass" title="3 · Done" icon="ok">
           <p className="dsc-honesty">{status || "Session complete."}</p>
-          <p className="dsc-muted">Curve status: {curveStatus}. Allocated CFM on Climate uses curve when hub fans online.</p>
+          <p className="dsc-muted">Curve status: {curveStatus}. The Climate page uses this curve for its airflow numbers.</p>
           <div className="dsc-row-actions">
-            <Button primary onClick={resetWizard}>
+            <Button variant="primary" onClick={resetWizard}>
               Calibrate another duct
             </Button>
           </div>
@@ -266,7 +266,7 @@ function LightParWizard() {
     const lux = Number(luxReading);
     const par = Number(parReading);
     if (!Number.isFinite(lux) || lux <= 0) {
-      setStatus("Enter LUX at sensor height — skip rather than invent.");
+      setStatus("Enter the LUX reading at sensor height.");
       return;
     }
     setSaving(true);
@@ -316,7 +316,7 @@ function LightParWizard() {
     return (
       <Card className="dsc-glass" title="Light curve saved" icon="ok">
         <p className="dsc-honesty">{status}</p>
-        <Button primary onClick={() => void startWizard()}>
+        <Button variant="secondary" onClick={() => void startWizard()}>
           Re-run light wizard
         </Button>
       </Card>
@@ -351,11 +351,11 @@ function LightParWizard() {
         </label>
         <div className="dsc-row-actions">
           {stepIdx === 0 && !status ? (
-            <Button primary disabled={saving} onClick={() => void startWizard()}>
+            <Button variant="primary" disabled={saving} onClick={() => void startWizard()}>
               Start light wizard
             </Button>
           ) : (
-            <Button primary disabled={saving} onClick={() => void saveStep()}>
+            <Button variant="primary" disabled={saving} onClick={() => void saveStep()}>
               Save {step.label}
             </Button>
           )}
@@ -375,7 +375,7 @@ export function CalibratePage() {
       <PageHeader
         icon="learning"
         title="Calibrate"
-        subtitle="Fan anemometer curves + light LUX/PAR response — no invented points."
+        subtitle="Measure fan airflow and light output so the hub runs on real curves."
       />
 
       <div className="dsc-chip-row" style={{ marginBottom: 12 }}>

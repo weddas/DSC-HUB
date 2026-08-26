@@ -154,7 +154,7 @@ export function LiveMissionPage() {
           onClick={() => navigate("/fleet")}
         />
         <StatusChip
-          label={panelOk ? "PANEL ESP-NOW" : panelHaOnly ? "PANEL HA-ONLY" : panelOffline ? "PANEL OFFLINE" : "PANEL…"}
+          label={panelOk ? "PANEL LINKED" : panelHaOnly ? "PANEL LIMITED LINK" : panelOffline ? "PANEL OFFLINE" : "PANEL…"}
           tone={panelOk ? "ok" : panelHaOnly ? "warn" : "bad"}
           onClick={() =>
             inspector.open({ entityId: "binary_sensor.dsc_hub_panel_link", label: "Panel link", kind: "kit" })
@@ -210,13 +210,13 @@ export function LiveMissionPage() {
         {fullAuto && reducedKit ? (
           <StatusChip
             icon="alert"
-            label={honesty || "UNEXPECTED OOS"}
+            label={honesty || "CAPACITY OFFLINE"}
             tone="warn"
             pulse
             onClick={() =>
               inspector.open({
                 entityId: "binary_sensor.dsc_reduced_kit",
-                label: "Unexpected OOS",
+                label: "Capacity offline",
                 kind: "alert",
               })
             }
@@ -266,12 +266,12 @@ export function LiveMissionPage() {
                     onClick={() =>
                       window.dispatchEvent(new CustomEvent("dsc-dash-select-pot", { detail: { pot: s.pot } }))
                     }
-                    title={oos ? "OOS — no fake Got" : s.need}
+                    title={oos ? "Out of service — no data" : s.need}
                   >
                     <VesselGlyph spec={readPotVessel(s.pot, state, entity)} size={18} />
                     P{s.pot} {s.plantName !== "—" ? s.plantName : "—"} · Got M{" "}
                     {oos ? "—" : held.stale ? `${Number.isFinite(held.value) ? held.value.toFixed(0) : "—"}*` : s.moisture}
-                    {oos ? " · OOS" : ` · Need ${s.need}`}
+                    {oos ? " · Out of service" : ` · Need ${s.need}`}
                     {held.stale && !oos ? " · HELD" : ""}
                     {trust.labels.length ? ` · ${trust.labels.join("/")}` : ""}
                   </button>
@@ -296,13 +296,12 @@ export function LiveMissionPage() {
                       icon="alert"
                       onClick={() => inspector.open({ entityId: f.id, label: f.label, kind: "alert" })}
                     />
-                    <span className="dsc-muted">{f.id}</span>
                   </li>
                 ))}
                 {alerts > 0 && activeFaults.length === 0 ? (
                   <li>
                     <StatusChip label={`${alerts} system alert(s)`} tone="bad" pulse icon="alert" />
-                    <span className="dsc-muted">See Fleet for entity detail</span>
+                    <span className="dsc-muted">See Fleet for details</span>
                   </li>
                 ) : null}
               </ul>

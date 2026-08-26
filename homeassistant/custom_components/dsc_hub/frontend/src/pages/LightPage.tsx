@@ -153,14 +153,14 @@ export function LiveLightPage() {
                 onClick={() => open("sensor.dsc_expected_light_hours", "4×8 expected hours", "numeric")}
               />
             </div>
+            {/* Progress counter, not a live band — teal arc with a target tick, never "out of band" red. */}
             <ArcGauge
               label="Got / Want h"
               value={got4}
               min={0}
               max={24}
               unit="h"
-              target={hours4}
-              band={rail4.lightHours != null ? { min: rail4.lightHours - 0.5, max: rail4.lightHours + 0.5 } : undefined}
+              target={rail4.lightHours ?? hours4}
               onClick={() => open("sensor.dsc_lights_on_today_4x8", "4×8 hours today", "numeric")}
             />
             <Kpi label="Want hours" value={fmt(hours4, 0)} unit="h" onClick={() => open("sensor.dsc_expected_light_hours", "4×8 expected hours", "numeric")} />
@@ -204,14 +204,14 @@ export function LiveLightPage() {
                 onClick={() => open("sensor.dsc_clone_expected_light_hours", "2×4 expected hours", "numeric")}
               />
             </div>
+            {/* Progress counter, not a live band — teal arc with a target tick, never "out of band" red. */}
             <ArcGauge
               label="Got / Want h"
               value={got2}
               min={0}
               max={24}
               unit="h"
-              target={hours2}
-              band={rail2.lightHours != null ? { min: rail2.lightHours - 0.5, max: rail2.lightHours + 0.5 } : undefined}
+              target={rail2.lightHours ?? hours2}
               onClick={() => open("sensor.dsc_lights_on_today_2x4", "2×4 hours today", "numeric")}
             />
             <Kpi label="Want hours" value={fmt(hours2, 0)} unit="h" onClick={() => open("sensor.dsc_clone_expected_light_hours", "2×4 expected hours", "numeric")} />
@@ -252,7 +252,7 @@ export function LiveLightPage() {
             label="Deviation today"
             value={fmt(deviation, 2)}
             unit="h"
-            sub="Hub ledger — not a fake progress bar"
+            sub="Recorded by the hub"
             onClick={() => open("sensor.dsc_lights_deviation_today", "Lights deviation today", "numeric")}
           />
         </div>

@@ -145,7 +145,7 @@ export function resolveKitNodeFromFleet(def: KitDef, fleet: FleetSnapshot): KitN
         id: def.id,
         label: def.label,
         status: "oos",
-        subtitle: def.plannedWhenOff ? "Not built / parked" : "Out of service",
+        subtitle: def.plannedWhenOff ? "Not installed" : "Out of service",
         entityId: def.inServiceEntity,
         inServiceEntity: def.inServiceEntity,
         plannedOos: def.plannedWhenOff,
@@ -168,7 +168,7 @@ export function resolveKitNodeFromFleet(def: KitDef, fleet: FleetSnapshot): KitN
         id: def.id,
         label: def.label,
         status: "oos",
-        subtitle: def.plannedWhenOff ? "Not built / parked" : "Out of service",
+        subtitle: def.plannedWhenOff ? "Not installed" : "Out of service",
         entityId: def.inServiceEntity ?? entityId,
         inServiceEntity: def.inServiceEntity,
         plannedOos: def.plannedWhenOff,
@@ -180,7 +180,7 @@ export function resolveKitNodeFromFleet(def: KitDef, fleet: FleetSnapshot): KitN
         id: def.id,
         label: def.label,
         status: inventoryOn ? "dark" : "missing",
-        subtitle: inventoryOn ? "Dark" : undefined,
+        subtitle: inventoryOn ? "No data" : undefined,
         entityId: def.firmwareEntity ?? entityId,
         inServiceEntity: def.inServiceEntity,
         firmwareEntity: def.firmwareEntity,
@@ -203,7 +203,7 @@ export function resolveKitNodeFromFleet(def: KitDef, fleet: FleetSnapshot): KitN
         id: def.id,
         label: def.label,
         status: inventoryOn ? "dark" : "missing",
-        subtitle: inventoryOn ? "Dark" : undefined,
+        subtitle: inventoryOn ? "No data" : undefined,
         entityId: def.relayEntity ?? def.demandEntity ?? entityId,
         inServiceEntity: def.inServiceEntity,
         runtimeToday: def.runtimeToday,
@@ -234,7 +234,7 @@ export function resolveKitNodeFromFleet(def: KitDef, fleet: FleetSnapshot): KitN
         id: def.id,
         label: def.label,
         status: "oos",
-        subtitle: def.plannedWhenOff ? "Not built / parked" : "Out of service",
+        subtitle: def.plannedWhenOff ? "Not installed" : "Out of service",
         entityId: def.inServiceEntity ?? entityId,
         inServiceEntity: def.inServiceEntity,
         plannedOos: def.plannedWhenOff,
@@ -291,7 +291,7 @@ export function resolveKitNode(def: KitDef, hass: HassBits, settled: (id: string
         id: def.id,
         label: def.label,
         status: "oos",
-        subtitle: def.plannedWhenOff ? "Not built / parked" : "Out of service",
+        subtitle: def.plannedWhenOff ? "Not installed" : "Out of service",
         entityId: def.inServiceEntity,
         inServiceEntity: def.inServiceEntity,
         plannedOos: def.plannedWhenOff,
@@ -321,7 +321,7 @@ export function resolveKitNode(def: KitDef, hass: HassBits, settled: (id: string
       id: def.id,
       label: def.label,
       status: inventoryInService && hubLive ? "dark" : "missing",
-      subtitle: inventoryInService && hubLive ? "Dark" : undefined,
+      subtitle: inventoryInService && hubLive ? "No data" : undefined,
       entityId: probe || entityId,
       inServiceEntity: def.inServiceEntity,
       runtimeToday: def.runtimeToday,
@@ -335,7 +335,7 @@ export function resolveKitNode(def: KitDef, hass: HassBits, settled: (id: string
       id: def.id,
       label: def.label,
       status: "dark",
-      subtitle: "Dark",
+      subtitle: "No data",
       entityId: probe,
       inServiceEntity: def.inServiceEntity,
       runtimeToday: def.runtimeToday,
@@ -384,13 +384,13 @@ export function kitHoleLabel(status: KitNodeStatus, label: string): string {
     case "idle":
       return `${label} idle`;
     case "held":
-      return `${label} HELD`;
+      return `${label} held`;
     case "oos":
-      return `${label} OOS`;
+      return `${label} out of service`;
     case "missing":
-      return `${label} missing`;
+      return `${label} not set up`;
     case "dark":
-      return `${label} dark`;
+      return `${label} no data`;
     default: {
       const _exhaustive: never = status;
       return _exhaustive;

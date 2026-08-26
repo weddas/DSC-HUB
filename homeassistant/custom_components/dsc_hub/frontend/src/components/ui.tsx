@@ -64,10 +64,13 @@ export function Card({
   );
 }
 
+export type ButtonVariant = "primary" | "secondary" | "danger";
+
 export function Button({
   children,
   primary,
   teal,
+  variant,
   onClick,
   type = "button",
   disabled,
@@ -75,6 +78,7 @@ export function Button({
   children: ReactNode;
   primary?: boolean;
   teal?: boolean;
+  variant?: ButtonVariant;
   onClick?: () => void;
   type?: "button" | "submit";
   disabled?: boolean;
@@ -82,6 +86,23 @@ export function Button({
   const cls = ["dsc-btn"];
   if (primary) cls.push("primary");
   if (teal) cls.push("teal");
+  if (variant) {
+    switch (variant) {
+      case "primary":
+        cls.push("dsc-btn-primary");
+        break;
+      case "secondary":
+        cls.push("dsc-btn-secondary");
+        break;
+      case "danger":
+        cls.push("dsc-btn-danger");
+        break;
+      default: {
+        const _exhaustive: never = variant;
+        void _exhaustive;
+      }
+    }
+  }
   return (
     <button type={type} className={cls.join(" ")} onClick={onClick} disabled={disabled}>
       {children}

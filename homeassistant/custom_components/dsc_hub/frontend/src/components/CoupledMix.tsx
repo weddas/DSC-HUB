@@ -98,7 +98,7 @@ export function CoupledMix({ volumeL }: { volumeL: number }) {
         <StatusChip label={`Σ ${Math.round(sum)}%`} tone={Math.round(sum) === 100 ? "ok" : "warn"} />
         <StatusChip label={`${vol} L vessel`} tone="muted" />
         <span className="dsc-muted" style={{ fontSize: 12 }}>
-          Lock any but one remainder. Remainder absorbs leftover so Σ stays 100.
+          Lock the layers you want to keep — the remainder layer soaks up the rest so the total is always 100%.
         </span>
       </div>
       {LAYER_IDS.map((n) => {
@@ -149,7 +149,7 @@ export function CoupledMix({ volumeL }: { volumeL: number }) {
         );
       })}
       <p className="dsc-muted" style={{ margin: "8px 0 0", fontSize: 12 }}>
-        Recipe: {recipe || "Empty layers — scripts still read pct entities."}
+        Recipe: {recipe || "Mix not set yet."}
       </p>
     </div>
   );
