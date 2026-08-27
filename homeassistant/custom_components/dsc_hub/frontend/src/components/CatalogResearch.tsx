@@ -5,6 +5,7 @@ import { Button, Card, StatusChip } from "./ui";
 import { useEntityBus } from "../hooks/useEntityBus";
 import { useFleetActions } from "../hooks/useFleetActions";
 import { searchCatalog, type CatalogItem, type CatalogKind } from "../lib/catalog";
+import { applyCatalogPick, applyLightPick } from "../lib/composePlantLogic";
 
 const DOMAINS: { id: CatalogKind; label: string }[] = [
   { id: "strain", label: "Strains" },
@@ -123,7 +124,7 @@ function compareFields(kind: CatalogKind): { key: string; label: string }[] {
 }
 
 export function CatalogResearch() {
-  const { state } = useEntityBus();
+  const { state, entity } = useEntityBus();
   const { callService } = useFleetActions();
   const navigate = useNavigate();
   const [kind, setKind] = useState<CatalogKind>("strain");
@@ -140,17 +141,11 @@ export function CatalogResearch() {
 
   const useInCompose = (item: CatalogItem | null) => {
     if (!item) return;
-    if (kind === "strain") {
-      void callService("input_text", "set_value", { entity_id: "input_text.dsc_build_strain", value: item.name });
-    } else if (kind === "medium") {
-      void callService("input_text", "set_value", {
-        entity_id: "input_text.dsc_blend_component_1_name",
-        value: item.name,
-      });
-    } else if (kind === "nutrient") {
-      void callService("input_text", "set_value", { entity_id: "input_text.dsc_nutrient_1_name", value: item.name });
-    } else if (kind === "light") {
-      void callService("input_text", "set_value", { entity_id: "input_text.dsc_light_custom_name", value: item.name });
+    if (kind === "light") {
+      const fixtureOptions = (entity("input_select.dsc_light_fixture")?.attributes?.options as string[]) || [];
+      applyLightPick(item, callService, fixtureOptions);
+    } else {
+      applyCatalogPick(kind, item, callService, state);
     }
     navigate("/grow/compose");
   };

@@ -12,6 +12,7 @@ import { SlideDrawer } from "../components/chrome";
 import { TimespanControl, CYCLE_TIMESPAN_EXTRAS } from "../components/HistoryDrawer";
 import { AirPathMap } from "../components/AirPathMap";
 import { CropScheduler } from "../components/CropScheduler";
+import { TentLightClock } from "../components/TentLightClock";
 import { TwinViewport } from "../components/TwinViewport";
 import { TentTargetPanel } from "../components/TentTargets";
 import { resolveCfm } from "../lib/cfmProvenance";
@@ -250,23 +251,28 @@ function TentCockpitPage({ tent }: { tent: Exclude<TentId, "unassigned"> }) {
       />
 
       <div className="dsc-tent-cockpit-strip">
-        <StatusChip label={`${seats.length} plants`} tone="ok" />
+        <StatusChip label={`${seats.length} plants`} tone="ok" icon="roster" />
         <StatusChip
+          icon="climate"
           label={`T ${fmt(tDisplay ?? NaN)}°C`}
           tone={tHeld.stale && !tentVitals.online ? "warn" : "ok"}
           onClick={() => inspector.open({ entityId: tId, label: `${title} T`, unit: "°C" })}
         />
         <StatusChip
+          icon="tank"
           label={`RH ${fmt(rhDisplay ?? NaN, 0)}%`}
           tone={rhHeld.stale && !tentVitals.online ? "warn" : "ok"}
           onClick={() => inspector.open({ entityId: rhId, label: `${title} RH`, unit: "%" })}
         />
         <StatusChip
+          icon="gauge"
           label={`VPD ${fmt(vpdDisplay ?? NaN, 2)}`}
           tone={vpdHeld.stale && !tentVitals.online ? "warn" : "ok"}
           onClick={() => inspector.open({ entityId: vpdId, label: `${title} VPD`, unit: "kPa" })}
         />
         <StatusChip
+          icon="lighting"
+          motion={lit ? "glow" : undefined}
           label={
             tent === "clone" ? (lit ? "SF1000 ON" : "SF1000 OFF") : windowOpen ? "PHOTO ON" : "PHOTO OFF"
           }
@@ -281,6 +287,8 @@ function TentCockpitPage({ tent }: { tent: Exclude<TentId, "unassigned"> }) {
           }
         />
         <StatusChip
+          icon="fan"
+          motion={Number.isFinite(intakeReading.value) && intakeReading.value > 0 ? "fan" : undefined}
           label={`IN ${fmt(intakeReading.value, 0)} cfm`}
           tone="muted"
           onClick={() =>
@@ -292,6 +300,8 @@ function TentCockpitPage({ tent }: { tent: Exclude<TentId, "unassigned"> }) {
           }
         />
       </div>
+
+      <TentLightClock tent={tent} compact />
 
       <div className="dsc-grid">
         <div className="dsc-col-12">

@@ -40,6 +40,7 @@ export function TargetNumber({
   tone,
   hint,
   onLive,
+  disabled,
 }: {
   entityId: string;
   label: string;
@@ -47,10 +48,11 @@ export function TargetNumber({
   tone?: "ok" | "warn" | "critical" | "muted" | "stale";
   hint?: string;
   onLive?: (value: number) => void;
+  disabled?: boolean;
 }) {
   const { state, available, attributes } = useFleetEntity(entityId);
   const { callService: fleetCallService } = useFleetActions();
-  const ok = available;
+  const ok = available && !disabled;
   const live = Number(state);
   const min = Number(attributes?.min ?? 0);
   const max = Number(attributes?.max ?? 100);
@@ -121,6 +123,8 @@ function TentColumn({ tent, title, hero }: { tent: TentKind; title: string; hero
   const inspector = useInspector();
   const e = TENT_ENTITIES[tent];
   const rail = tentWantRail(tent, { state, entity });
+  const climateFollowsMain =
+    tent === "clone" && state("select.dsc_hub_clone_mode", "") === "Follow 4x8";
   const tHeld = useHeldReading(e.gotTemp);
   const rhHeld = useHeldReading(e.gotRh);
   const vpdHeld = useHeldReading(e.gotVpd);
@@ -187,12 +191,20 @@ function TentColumn({ tent, title, hero }: { tent: TentKind; title: string; hero
           ))}
         </div>
       ) : null}
+      {climateFollowsMain ? (
+        <div className="dsc-tent-follow-banner" style={{ marginBottom: 10 }}>
+          <StatusChip label="Following 4×8 climate" tone="ok" icon="tent" />
+          <p className="dsc-muted" style={{ margin: "8px 0 0", fontSize: 13 }}>
+            Clone mode is Follow 4×8 — Want targets are locked here. Edit 4×8 climate or change clone mode on the hub.
+          </p>
+        </div>
+      ) : null}
       <div className="dsc-target-grid">
-        <TargetNumber entityId={e.temp} label="Temp °C" step={0.5} tone={tScore.tone} hint={tScore.label} onLive={setDraftT} />
-        <TargetNumber entityId={e.rhMin} label="RH min %" step={1} tone={rhMinScore.tone} hint={rhMinScore.label} onLive={setDraftRhMin} />
-        <TargetNumber entityId={e.rhMax} label="RH max %" step={1} tone={rhMaxScore.tone} hint={rhMaxScore.label} onLive={setDraftRhMax} />
-        <TargetNumber entityId={e.vpdMin} label="VPD min" step={0.01} tone={vMinScore.tone} hint={vMinScore.label} onLive={setDraftVMin} />
-        <TargetNumber entityId={e.vpdMax} label="VPD max" step={0.01} tone={vMaxScore.tone} hint={vMaxScore.label} onLive={setDraftVMax} />
+        <TargetNumber entityId={e.temp} label="Temp °C" step={0.5} tone={tScore.tone} hint={tScore.label} onLive={setDraftT} disabled={climateFollowsMain} />
+        <TargetNumber entityId={e.rhMin} label="RH min %" step={1} tone={rhMinScore.tone} hint={rhMinScore.label} onLive={setDraftRhMin} disabled={climateFollowsMain} />
+        <TargetNumber entityId={e.rhMax} label="RH max %" step={1} tone={rhMaxScore.tone} hint={rhMaxScore.label} onLive={setDraftRhMax} disabled={climateFollowsMain} />
+        <TargetNumber entityId={e.vpdMin} label="VPD min" step={0.01} tone={vMinScore.tone} hint={vMinScore.label} onLive={setDraftVMin} disabled={climateFollowsMain} />
+        <TargetNumber entityId={e.vpdMax} label="VPD max" step={0.01} tone={vMaxScore.tone} hint={vMaxScore.label} onLive={setDraftVMax} disabled={climateFollowsMain} />
       </div>
     </div>
   );

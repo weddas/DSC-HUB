@@ -12,15 +12,18 @@ export function Icon({
   size = 16,
   className,
   color = "currentColor",
+  motion,
 }: {
   name: IconName;
   size?: number;
   className?: string;
   color?: string;
+  motion?: "pulse" | "spin" | "glow" | "breathe" | "duty";
 }) {
+  const motionClass = motion ? ` dsc-icon--${motion}` : "";
   return (
     <span
-      className={`dsc-icon${className ? ` ${className}` : ""}`}
+      className={`dsc-icon${motionClass}${className ? ` ${className}` : ""}`}
       role="img"
       aria-hidden
       style={{
@@ -74,6 +77,8 @@ export function Button({
   onClick,
   type = "button",
   disabled,
+  icon,
+  iconMotion,
 }: {
   children: ReactNode;
   primary?: boolean;
@@ -82,6 +87,8 @@ export function Button({
   onClick?: () => void;
   type?: "button" | "submit";
   disabled?: boolean;
+  icon?: IconName;
+  iconMotion?: "pulse" | "spin" | "glow" | "breathe" | "duty";
 }) {
   const cls = ["dsc-btn"];
   if (primary) cls.push("primary");
@@ -105,6 +112,7 @@ export function Button({
   }
   return (
     <button type={type} className={cls.join(" ")} onClick={onClick} disabled={disabled}>
+      {icon ? <Icon name={icon} size={14} motion={iconMotion} /> : null}
       {children}
     </button>
   );
@@ -118,6 +126,7 @@ export function Kpi({
   tone = "normal",
   stale,
   onClick,
+  icon,
 }: {
   label: string;
   value: string | number;
@@ -126,6 +135,7 @@ export function Kpi({
   tone?: "normal" | "ok" | "warn" | "bad" | "muted";
   stale?: boolean;
   onClick?: () => void;
+  icon?: IconName;
 }) {
   const toneClass = (() => {
     switch (tone) {
@@ -158,14 +168,14 @@ export function Kpi({
   if (onClick) {
     return (
       <button type="button" className="dsc-kpi-hit" onClick={onClick} title={`History · ${label}`}>
-        <Card title={label} className={stale ? "is-stale" : undefined}>
+        <Card title={label} className={stale ? "is-stale" : undefined} icon={icon}>
           {body}
         </Card>
       </button>
     );
   }
   return (
-    <Card title={label} className={stale ? "is-stale" : undefined}>
+    <Card title={label} className={stale ? "is-stale" : undefined} icon={icon}>
       {body}
     </Card>
   );
@@ -217,7 +227,7 @@ export function StatusChip({
   label: string;
   tone?: "ok" | "bad" | "warn" | "muted";
   pulse?: boolean;
-  motion?: "pulse" | "duty" | "breathe" | "fan";
+  motion?: "pulse" | "duty" | "breathe" | "fan" | "glow";
   icon?: IconName;
   onClick?: () => void;
 }) {
@@ -227,7 +237,11 @@ export function StatusChip({
     motion === "fan" ? (
       <Icon name="fan" size={11} className="dsc-fan-spin" />
     ) : icon ? (
-      <Icon name={icon} size={11} />
+      <Icon
+        name={icon}
+        size={11}
+        motion={motion === "glow" || motion === "duty" || motion === "breathe" ? motion : pulse ? "pulse" : undefined}
+      />
     ) : null;
   if (onClick) {
     return (
@@ -320,7 +334,15 @@ export function EntityToggle({
         disabled={!ok && !warnWhenMissing}
         title={ok ? entityId : warnWhenMissing || `${entityId} unavailable`}
       >
-        {icon ? <Icon name={icon} size={22} color="var(--dsc-teal)" className="dsc-demand-icon" /> : null}
+        {icon ? (
+          <Icon
+            name={icon}
+            size={22}
+            color="var(--dsc-teal)"
+            className="dsc-demand-icon"
+            motion={on ? (domain === "light" ? "glow" : "duty") : undefined}
+          />
+        ) : null}
         <span className="dsc-demand-label">{label}</span>
         <span className="dsc-demand-state">
           {!ok ? warnWhenMissing || "—" : brightness != null ? `${brightness}%` : on ? "ON" : "OFF"}
@@ -349,14 +371,16 @@ export function EntitySelect({
   entityId,
   label,
   icon,
+  disabled,
 }: {
   entityId: string;
   label: string;
   icon?: IconName;
+  disabled?: boolean;
 }) {
   const { state, available, attributes } = useFleetEntity(entityId);
   const { callService } = useFleetActions();
-  const ok = available;
+  const ok = available && !disabled;
   const current = state;
   const options = (attributes?.options as string[] | undefined) || [];
   const domain = entityId.split(".")[0];
@@ -572,10 +596,18 @@ function timeToService(hhmm: string): string {
 }
 
 /** Local draft for `time.*` helpers. Writes `time.set_value`. */
-export function EntityTime({ entityId, label }: { entityId: string; label: string }) {
+export function EntityTime({
+  entityId,
+  label,
+  disabled,
+}: {
+  entityId: string;
+  label: string;
+  disabled?: boolean;
+}) {
   const { available, state } = useEntityBus();
   const { callService } = useFleetActions();
-  const ok = available(entityId);
+  const ok = available(entityId) && !disabled;
   const live = timeToInput(state(entityId, ""));
   const [draft, setDraft] = useState(live);
   const focused = useRef(false);

@@ -11,6 +11,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { ALERT_ENTITY_IDS } from "../lib/alertPlaybook";
 import type { RosterSlot } from "../lib/seatModel";
 import type { CfmReading } from "../lib/cfmProvenance";
+import { TentLightClockStrip } from "./TentLightClock";
 
 type Bus = {
   state: (id: string, fb?: string) => string;
@@ -559,18 +560,23 @@ export function DashTodaySection({ bus }: { bus: Bus }) {
   const humTone = humCycles > 6 ? "bad" : humCycles > 3 ? "warn" : "ok";
   return (
     <Card className="dsc-glass" title="Today" icon="lighting">
-      <div className="dsc-chip-row">
+      <TentLightClockStrip />
+      <div className="dsc-chip-row" style={{ marginTop: 10 }}>
         <StatusChip
+          icon="tent"
+          motion={state("binary_sensor.dsc_hub_4x8_window_open") === "on" ? "glow" : undefined}
           label={`4×8 ${num("sensor.dsc_lights_on_today_4x8", 0).toFixed(1)}h / ${Math.round(num("sensor.dsc_expected_light_hours", 12))}h`}
           tone={state("binary_sensor.dsc_hub_4x8_window_open") === "on" ? "ok" : "muted"}
           onClick={() => {}}
         />
         <StatusChip
+          icon="lighting"
+          motion={state("light.dsc_hub_sf1000_dimmer") === "on" ? "glow" : undefined}
           label={`2×4 ${num("sensor.dsc_lights_on_today_2x4", 0).toFixed(1)}h / ${Math.round(num("sensor.dsc_clone_expected_light_hours", 12))}h`}
           tone={state("binary_sensor.dsc_clone_dark_period_violation") === "on" ? "bad" : "ok"}
         />
-        <StatusChip label={`Heat ${num("sensor.dsc_heater_runtime_today", 0).toFixed(1)}h`} tone={state("switch.dsc_hub_heater_demand") === "on" ? "ok" : "muted"} />
-        <StatusChip label={`Hum ${humCycles}/h`} tone={humTone} />
+        <StatusChip icon="climate" motion={state("switch.dsc_hub_heater_demand") === "on" ? "duty" : undefined} label={`Heat ${num("sensor.dsc_heater_runtime_today", 0).toFixed(1)}h`} tone={state("switch.dsc_hub_heater_demand") === "on" ? "ok" : "muted"} />
+        <StatusChip icon="tank" label={`Hum ${humCycles}/h`} tone={humTone} motion={humCycles > 3 ? "breathe" : undefined} />
       </div>
     </Card>
   );

@@ -78,6 +78,48 @@ function itemName(item: CatalogItem): string {
   return String(item.name || item.id || "").trim();
 }
 
+export type StrainTypeFilter = "all" | "indica" | "sativa" | "hybrid";
+export type StrainFormatFilter = "all" | "auto" | "photo";
+
+export interface StrainSearchFilters {
+  type: StrainTypeFilter;
+  format: StrainFormatFilter;
+  breeder: string;
+}
+
+export const DEFAULT_STRAIN_FILTERS: StrainSearchFilters = {
+  type: "all",
+  format: "all",
+  breeder: "",
+};
+
+function strainFormat(item: CatalogItem): "auto" | "photo" | "unknown" {
+  const name = itemName(item).toLowerCase();
+  if (/\bauto[\s-]?(flower|fem|seeds?)?s?\b/.test(name)) return "auto";
+  if (/\b(fem|regular|photoperiod)\b/.test(name)) return "photo";
+  return "unknown";
+}
+
+/** Client-side strain filters — API only accepts q/limit. */
+export function filterStrainItems(items: CatalogItem[], filters: StrainSearchFilters): CatalogItem[] {
+  const breederNeedle = filters.breeder.trim().toLowerCase();
+  return items.filter((item) => {
+    if (filters.type !== "all") {
+      const t = String(item.type ?? "").toLowerCase();
+      if (!t.includes(filters.type)) return false;
+    }
+    const fmt = strainFormat(item);
+    if (filters.format === "auto" && fmt !== "auto") return false;
+    if (filters.format === "photo" && fmt === "auto") return false;
+    if (breederNeedle) {
+      const breeder = String(item.breeder ?? item.brand ?? "").toLowerCase();
+      const name = itemName(item).toLowerCase();
+      if (!breeder.includes(breederNeedle) && !name.includes(breederNeedle)) return false;
+    }
+    return true;
+  });
+}
+
 /**
  * Strain browse must not list merch SKUs as cultivars.
  * Prefer API `kind === "strain"`; still drop capsules/rosin/mg lots by name.

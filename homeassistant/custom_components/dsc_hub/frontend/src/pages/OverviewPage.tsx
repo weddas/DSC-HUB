@@ -9,6 +9,7 @@ import {
   DashRootTankSection,
   DashRunningChips,
 } from "../components/DashHomeSections";
+import { TentLightClockStrip } from "../components/TentLightClock";
 import { BAND_CHART_TITLES, useBandChart, type BandChartKind } from "../components/BandChartHost";
 import { useEntityBus } from "../hooks/useEntityBus";
 import { useHeldReading } from "../hooks/useHeldReading";
@@ -107,6 +108,15 @@ export function OverviewPage() {
       ) : null}
 
       <DashConditionalBanners bus={bus} onNavigate={navigate} />
+
+      <Card className="dsc-glass" title="Photoperiod" icon="lighting">
+        <TentLightClockStrip />
+        <div className="dsc-row-actions" style={{ marginTop: 10 }}>
+          <Button teal icon="lighting" onClick={() => navigate("/live/light")}>
+            Open Light desk
+          </Button>
+        </div>
+      </Card>
 
       <DashBandsGrid
         readings={{

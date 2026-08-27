@@ -1,0 +1,481 @@
+import { useMemo, useState } from "react";
+import { CatalogPicker } from "./CatalogPicker";
+import { CoupledMix } from "./CoupledMix";
+import { DecisionLayer } from "./DecisionLayer";
+import { VesselGlyph } from "./VesselGlyph";
+import { Button, Card, EntitySelect, EntityText, EntityDatetime, Icon, StatusChip } from "./ui";
+import { TargetNumber } from "./TentTargets";
+import { useEntityBus } from "../hooks/useEntityBus";
+import { useFleetActions } from "../hooks/useFleetActions";
+import {
+  activeNutrientNames,
+  applyBlendLayers,
+  applyCatalogPick,
+  applyLightPick,
+  blendSummary,
+  NUTRIENT_SLOTS,
+  SOIL_PRESETS,
+} from "../lib/composePlantLogic";
+import { DEFAULT_VESSEL, resolveVesselSpec, vesselEntityId, VESSEL_CATALOG } from "../lib/vesselSpec";
+import type { CatalogItem } from "../lib/catalog";
+
+const STEPS = [
+  { id: "plant", label: "Plant", icon: "roster" as const },
+  { id: "soil", label: "Pot & soil", icon: "root" as const },
+  { id: "feed", label: "Feed", icon: "nutrient" as const, optional: true },
+  { id: "light", label: "Light", icon: "lighting" as const, optional: true },
+  { id: "review", label: "Review", icon: "ok" as const },
+] as const;
+
+function strainOk(strain: string): boolean {
+  return Boolean(strain && strain !== "unknown" && strain !== "unavailable");
+}
+
+export function PlantWizard() {
+  const { available, entity, num, state } = useEntityBus();
+  const { callService } = useFleetActions();
+  const [stepIdx, setStepIdx] = useState(0);
+  const [customBlend, setCustomBlend] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [confirmAdd, setConfirmAdd] = useState(false);
+  const [pickedStrain, setPickedStrain] = useState<CatalogItem | null>(null);
+  const [pickedLight, setPickedLight] = useState<CatalogItem | null>(null);
+  const [soilPresetId, setSoilPresetId] = useState<string | null>(null);
+  const [skippedFeed, setSkippedFeed] = useState(false);
+  const [skippedLight, setSkippedLight] = useState(false);
+
+  const step = STEPS[stepIdx];
+  const strain = state("input_text.dsc_build_strain", "");
+  const nick = state("input_text.dsc_build_nickname", "");
+  const assign = state("input_select.dsc_build_assign_pot", "none");
+  const tent = state("input_select.dsc_build_tent", "4x8");
+  const expectedStage = state("sensor.dsc_build_expected_stage", "");
+  const expectedDays = state("sensor.dsc_build_days_since_sprout", "");
+  const volumeL = num("input_number.dsc_blend_total_l", 20);
+  const light = state("input_select.dsc_light_fixture", "");
+  const vesselRaw = state("input_select.dsc_build_vessel", "");
+  const vessel = resolveVesselSpec(vesselRaw || undefined, volumeL);
+  const mixLabel = blendSummary(state);
+  const nutrients = activeNutrientNames(state);
+
+  const fixtureOptions = useMemo(
+    () => (entity("input_select.dsc_light_fixture")?.attributes?.options as string[]) || [],
+    [entity],
+  );
+
+  const canNext = useMemo(() => {
+    switch (step.id) {
+      case "plant":
+        return strainOk(strain) && assign !== "none";
+      case "soil":
+        return Boolean(vessel.label);
+      default:
+        return true;
+    }
+  }, [step.id, strain, assign, vessel.label]);
+
+  const onPickStrain = (item: CatalogItem) => {
+    setPickedStrain(item);
+    applyCatalogPick("strain", item, callService, state);
+  };
+
+  const onPickMedium = (item: CatalogItem) => {
+    setSoilPresetId(null);
+    applyCatalogPick("medium", item, callService, state);
+  };
+
+  const onPickNutrient = (item: CatalogItem) => {
+    setSkippedFeed(false);
+    applyCatalogPick("nutrient", item, callService, state);
+  };
+
+  const onPickLight = (item: CatalogItem) => {
+    setSkippedLight(false);
+    setPickedLight(item);
+    applyLightPick(item, callService, fixtureOptions);
+  };
+
+  const selectVessel = (spec: (typeof VESSEL_CATALOG)[number]) => {
+    const opts = (entity("input_select.dsc_build_vessel")?.attributes?.options as string[]) || [];
+    if (opts.includes(spec.id) && available("input_select.dsc_build_vessel")) {
+      void callService("input_select", "select_option", {
+        entity_id: "input_select.dsc_build_vessel",
+        option: spec.id,
+      });
+    }
+    void callService("input_number", "set_value", {
+      entity_id: "input_number.dsc_blend_total_l",
+      value: spec.volumeL,
+    });
+  };
+
+  const applyPreset = (presetId: string) => {
+    const preset = SOIL_PRESETS.find((p) => p.id === presetId);
+    if (!preset) return;
+    setSoilPresetId(presetId);
+    setCustomBlend(false);
+    applyBlendLayers(preset.layers, callService);
+  };
+
+  const copyVesselToPot = (pot: string) => {
+    const potN = Number(pot);
+    if (!Number.isFinite(potN) || pot === "none") return;
+    const id = vesselEntityId(potN);
+    if (!available(id)) return;
+    void callService("input_select", "select_option", { entity_id: id, option: vessel.id });
+  };
+
+  const commitAssign = () => {
+    copyVesselToPot(assign);
+    if (available("script.dsc_build_plant_commit_and_assign")) {
+      void callService("script", "turn_on", { entity_id: "script.dsc_build_plant_commit_and_assign" });
+      return;
+    }
+    void callService("script", "turn_on", { entity_id: "script.dsc_build_plant_commit" });
+    void callService("script", "turn_on", {
+      entity_id: "script.dsc_plant_assign_to_pot",
+      pot: assign,
+      variables: { pot: assign },
+    });
+  };
+
+  const goNext = () => {
+    if (step.id === "feed") setSkippedFeed(nutrients.length === 0);
+    if (step.id === "light") setSkippedLight(!light || light === "unknown");
+    setStepIdx((i) => Math.min(i + 1, STEPS.length - 1));
+  };
+
+  const goBack = () => setStepIdx((i) => Math.max(i - 1, 0));
+
+  const plantTitle = nick || strain || "New plant";
+  const potLabel = assign === "none" ? "—" : `Pot ${assign}`;
+
+  return (
+    <div className="dsc-plant-wizard">
+      <nav className="dsc-wizard-steps" aria-label="Add plant steps">
+        {STEPS.map((s, i) => {
+          const done = i < stepIdx;
+          const current = i === stepIdx;
+          return (
+            <button
+              key={s.id}
+              type="button"
+              className={`dsc-wizard-step${current ? " is-current" : ""}${done ? " is-done" : ""}`}
+              disabled={i > stepIdx && !canNext}
+              onClick={() => {
+                if (i <= stepIdx) setStepIdx(i);
+              }}
+            >
+              <Icon
+                name={s.icon}
+                size={14}
+                motion={current ? "glow" : done ? "pulse" : undefined}
+                color={current ? "var(--dsc-teal)" : done ? "var(--dsc-teal)" : "var(--dsc-gray-5)"}
+              />
+              <span className="dsc-wizard-step-num">{i + 1}</span>
+              <span className="dsc-wizard-step-label">
+                {s.label}
+                {s.optional ? " (optional)" : ""}
+              </span>
+            </button>
+          );
+        })}
+      </nav>
+
+      {step.id === "plant" ? (
+        <Card className="dsc-glass dsc-wizard-panel" title="1 · Which plant, which pot?" icon="roster">
+          <p className="dsc-muted" style={{ marginTop: 0, fontSize: 13 }}>
+            Search the catalog, give it a nickname, pick the empty pot, and set sprout date if you know it.
+          </p>
+          <CatalogPicker kind="strain" onPick={onPickStrain} placeholder="Search strains…" />
+          {pickedStrain || strainOk(strain) ? (
+            <div className="dsc-chip-row" style={{ margin: "10px 0" }}>
+              <StatusChip icon="roster" label={strain} tone="ok" />
+              {pickedStrain?.type ? <StatusChip icon="research" label={String(pickedStrain.type)} tone="muted" /> : null}
+              {pickedStrain?.height_cm_min != null ? (
+                <StatusChip
+                  label={`${pickedStrain.height_cm_min}${pickedStrain.height_cm_max != null ? `–${pickedStrain.height_cm_max}` : ""} cm`}
+                  tone="muted"
+                />
+              ) : null}
+            </div>
+          ) : (
+            <p className="dsc-honesty">Pick a strain to continue.</p>
+          )}
+          <div className="dsc-wizard-fields">
+            <EntityText entityId="input_text.dsc_build_nickname" label="Nickname (optional)" />
+            <EntityDatetime entityId="input_datetime.dsc_build_sprout_date" label="Sprout date" />
+            <EntitySelect entityId="input_select.dsc_build_assign_pot" label="Assign to pot" icon="root" />
+            <EntitySelect entityId="input_select.dsc_build_tent" label="Tent" icon="tent" />
+          </div>
+          {expectedStage ? (
+            <div className="dsc-chip-row" style={{ marginTop: 8 }}>
+              <StatusChip icon="grow" label={`Stage · ${expectedStage}`} tone="ok" />
+              {expectedDays ? <StatusChip icon="history" label={`Day ${expectedDays}`} tone="muted" /> : null}
+            </div>
+          ) : (
+            <p className="dsc-muted" style={{ margin: "8px 0 0", fontSize: 12 }}>
+              Sprout date auto-calculates growth stage after commit.
+            </p>
+          )}
+        </Card>
+      ) : null}
+
+      {step.id === "soil" ? (
+        <Card className="dsc-glass dsc-wizard-panel" title="2 · Pot size & growing medium" icon="compose">
+          <p className="dsc-muted" style={{ marginTop: 0, fontSize: 13 }}>
+            Tap a pot size, then pick a common mix or search the medium catalog. Custom blends are tucked away unless
+            you need them.
+          </p>
+          <div className="dsc-vessel-grid">
+            {VESSEL_CATALOG.map((spec) => (
+              <button
+                key={spec.id}
+                type="button"
+                className={`dsc-vessel-tile${spec.id === vessel.id ? " is-selected" : ""}`}
+                onClick={() => selectVessel(spec)}
+              >
+                <VesselGlyph spec={spec} size={36} />
+                <span>{spec.label}</span>
+              </button>
+            ))}
+          </div>
+          {!available("input_select.dsc_build_vessel") ? (
+            <StatusChip label="Volume only — vessel presets unavailable on hub" tone="warn" />
+          ) : null}
+
+          <h4 className="dsc-wizard-subhead">Quick mixes</h4>
+          <div className="dsc-soil-presets">
+            {SOIL_PRESETS.map((preset) => (
+              <button
+                key={preset.id}
+                type="button"
+                className={`dsc-chip dsc-soil-preset${soilPresetId === preset.id ? " dsc-chip--ok" : ""}`}
+                onClick={() => applyPreset(preset.id)}
+              >
+                <Icon name="root" size={12} /> {preset.label}
+              </button>
+            ))}
+          </div>
+
+          <h4 className="dsc-wizard-subhead">Or search catalog</h4>
+          <CatalogPicker kind="medium" onPick={onPickMedium} placeholder="Search mediums…" />
+          <div className="dsc-chip-row" style={{ marginTop: 8 }}>
+            <StatusChip label={mixLabel} tone={mixLabel === "Not set" ? "warn" : "ok"} icon="compose" />
+            <StatusChip label={`${vessel.volumeL || volumeL} L`} tone="muted" icon="tank" />
+          </div>
+
+          <div className="dsc-wizard-advanced-toggle">
+            <Button variant="secondary" icon="advanced" onClick={() => setCustomBlend((v) => !v)}>
+              {customBlend ? "Hide custom blend" : "Custom 3-layer blend"}
+            </Button>
+          </div>
+          {customBlend ? <CoupledMix volumeL={vessel.volumeL || volumeL} /> : null}
+        </Card>
+      ) : null}
+
+      {step.id === "feed" ? (
+        <Card className="dsc-glass dsc-wizard-panel" title="3 · Feed recipe (optional)" icon="nutrient">
+          <p className="dsc-muted" style={{ marginTop: 0, fontSize: 13 }}>
+            Skip if you are not mixing nutrients yet. Search to add bottles — defaults fill dose from the catalog when
+            available.
+          </p>
+          <div className="dsc-row-actions" style={{ marginBottom: 12 }}>
+            <Button
+              variant="secondary"
+              icon="nutrient"
+              onClick={() => {
+                setSkippedFeed(true);
+                goNext();
+              }}
+            >
+              Skip feed for now
+            </Button>
+          </div>
+          <CatalogPicker kind="nutrient" onPick={onPickNutrient} placeholder="Search nutrients…" />
+          {nutrients.length ? (
+            <div className="dsc-chip-row" style={{ margin: "10px 0" }}>
+              {nutrients.map((name) => (
+                <StatusChip key={name} label={name} tone="ok" icon="nutrient" />
+              ))}
+            </div>
+          ) : (
+            <p className="dsc-muted" style={{ fontSize: 12 }}>No nutrients added yet.</p>
+          )}
+          <details className="dsc-wizard-details">
+            <summary>Advanced — tank size & all slots</summary>
+            <div className="dsc-target-grid">
+              <TargetNumber entityId="input_number.dsc_mix_tank_liters" label="Tank L" step={0.5} />
+              <TargetNumber entityId="input_number.dsc_mix_strength_pct" label="Strength %" step={1} />
+            </div>
+            {NUTRIENT_SLOTS.map((n) => (
+              <div key={n} className="dsc-nutrient-slot">
+                <EntityText entityId={`input_text.dsc_nutrient_${n}_name`} label={`Slot ${n}`} />
+                <TargetNumber entityId={`input_number.dsc_nutrient_${n}_dose_ml_l`} label="ml/L" step={0.1} />
+              </div>
+            ))}
+            <EntityText entityId="input_text.dsc_build_recipe_note" label="Recipe note" multiline />
+          </details>
+        </Card>
+      ) : null}
+
+      {step.id === "light" ? (
+        <Card className="dsc-glass dsc-wizard-panel" title="4 · Light fixture (optional)" icon="lighting">
+          <p className="dsc-muted" style={{ marginTop: 0, fontSize: 13 }}>
+            Match a catalog fixture or pick from hub presets. Skip if the tent light is already configured.
+          </p>
+          <div className="dsc-row-actions" style={{ marginBottom: 12 }}>
+            <Button
+              variant="secondary"
+              icon="lighting"
+              onClick={() => {
+                setSkippedLight(true);
+                goNext();
+              }}
+            >
+              Skip light
+            </Button>
+          </div>
+          <CatalogPicker kind="light" onPick={onPickLight} placeholder="Search lights…" />
+          <EntitySelect entityId="input_select.dsc_light_fixture" label="Hub fixture preset" />
+          {pickedLight || (light && light !== "unknown") ? (
+            <div className="dsc-chip-row" style={{ marginTop: 8 }}>
+              <StatusChip label={light && light !== "unknown" ? light : pickedLight?.name || "—"} tone="ok" icon="lighting" motion="glow" />
+              {pickedLight?.wattage_w != null ? (
+                <StatusChip label={`${pickedLight.wattage_w} W`} tone="muted" />
+              ) : null}
+            </div>
+          ) : null}
+        </Card>
+      ) : null}
+
+      {step.id === "review" ? (
+        <Card className="dsc-glass dsc-wizard-panel" title="5 · Review & add" icon="compose">
+          <dl className="dsc-wizard-summary">
+            <div>
+              <dt>Plant</dt>
+              <dd>{plantTitle}</dd>
+            </div>
+            <div>
+              <dt>Pot</dt>
+              <dd>
+                {potLabel} · {tent}
+              </dd>
+            </div>
+            <div>
+              <dt>Vessel</dt>
+              <dd>{vessel.label}</dd>
+            </div>
+            <div>
+              <dt>Medium</dt>
+              <dd>{mixLabel}</dd>
+            </div>
+            <div>
+              <dt>Feed</dt>
+              <dd>{skippedFeed || !nutrients.length ? "Skipped" : nutrients.join(", ")}</dd>
+            </div>
+            <div>
+              <dt>Light</dt>
+              <dd>{skippedLight || !light || light === "unknown" ? "Skipped / tent default" : light}</dd>
+            </div>
+            {expectedStage ? (
+              <div>
+                <dt>Stage</dt>
+                <dd>
+                  {expectedStage}
+                  {expectedDays ? ` · day ${expectedDays}` : ""}
+                </dd>
+              </div>
+            ) : null}
+          </dl>
+          <div className="dsc-row-actions">
+            <Button variant="primary" disabled={assign === "none" || !strainOk(strain)} icon="compose" iconMotion="glow" onClick={() => setConfirmAdd(true)}>
+              Add plant to {assign === "none" ? "pot" : `pot ${assign}`}
+            </Button>
+          </div>
+          <details
+            className="dsc-wizard-details"
+            open={showAdvanced}
+            onToggle={(e) => setShowAdvanced((e.target as HTMLDetailsElement).open)}
+          >
+            <summary>Advanced actions</summary>
+            <div className="dsc-row-actions dsc-wizard-advanced-actions">
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  void callService("script", "turn_on", { entity_id: "script.dsc_build_plant_commit" });
+                }}
+              >
+                Roster only (no assign)
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  copyVesselToPot(assign);
+                  void callService("script", "turn_on", {
+                    entity_id: "script.dsc_plant_assign_to_pot",
+                    pot: assign,
+                    variables: { pot: assign },
+                  });
+                }}
+              >
+                Assign seat only
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={() => void callService("script", "turn_on", { entity_id: "script.dsc_apply_climate_want" })}
+              >
+                Apply climate Want
+              </Button>
+              <Button
+                variant="danger"
+                onClick={() => {
+                  void callService("script", "turn_on", {
+                    entity_id: "script.dsc_plant_retire",
+                    pot: assign,
+                    variables: { pot: assign },
+                  });
+                }}
+              >
+                Retire pot
+              </Button>
+            </div>
+            <EntitySelect entityId="input_select.dsc_build_climate_pot" label="Climate apply pot" icon="climate" />
+          </details>
+          <p className="dsc-muted" style={{ fontSize: 12, marginBottom: 0 }}>
+            Default vessel if unset: {DEFAULT_VESSEL.label}.
+          </p>
+        </Card>
+      ) : null}
+
+      <footer className="dsc-wizard-footer">
+        <Button variant="secondary" icon="history" disabled={stepIdx === 0} onClick={goBack}>
+          Back
+        </Button>
+        {step.id !== "review" ? (
+          <Button variant="primary" icon="ok" disabled={!canNext} onClick={goNext}>
+            {step.optional ? "Next (or skip above)" : "Next"}
+          </Button>
+        ) : null}
+      </footer>
+
+      <DecisionLayer
+        open={confirmAdd}
+        onDismiss={() => setConfirmAdd(false)}
+        onConfirm={() => {
+          commitAssign();
+          setConfirmAdd(false);
+        }}
+        title="Add plant"
+        confirmLabel={`Add to pot ${assign}`}
+        help={null}
+      >
+        <p>
+          Saves <strong>{plantTitle}</strong> with {vessel.label} and {mixLabel} to the roster, assigns{" "}
+          {potLabel} in {tent}, and copies the vessel to that pot.
+          {expectedStage ? ` Stage will be ${expectedStage}.` : ""}
+        </p>
+      </DecisionLayer>
+    </div>
+  );
+}

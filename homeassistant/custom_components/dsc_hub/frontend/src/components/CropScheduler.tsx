@@ -8,6 +8,7 @@ import {
 import { useEntityBus } from "../hooks/useEntityBus";
 import { Card, StatusChip } from "./ui";
 import { VesselGlyph } from "./VesselGlyph";
+import { TentLightClock } from "./TentLightClock";
 import { readPotVessel } from "../lib/vesselSpec";
 
 function stageIndex(stage: string): number {
@@ -30,12 +31,8 @@ export function CropScheduler({ compact }: { compact?: boolean }) {
   const idxs = live.map((s) => stageIndex(s.seat.stage)).filter((i) => i >= 0);
   const mixed = new Set(idxs).size > 1;
   const cur = idxs.length ? Math.max(...idxs) : -1;
-  const window4 = state("binary_sensor.dsc_hub_4x8_window_open") === "on";
-  const window2 = state("binary_sensor.dsc_hub_2x4_window_open") === "on";
   const catchup = state("binary_sensor.dsc_hub_light_catchup_active") === "on";
   const darkViol = state("binary_sensor.dsc_clone_dark_period_violation") === "on";
-  const hours4 = state("sensor.dsc_expected_light_hours", "—");
-  const hours2 = state("sensor.dsc_clone_expected_light_hours", "—");
 
   return (
     <Card className="dsc-glass" title="Crop scheduler" icon="roster">
@@ -53,12 +50,18 @@ export function CropScheduler({ compact }: { compact?: boolean }) {
           </span>
         ))}
       </div>
-      {mixed ? <StatusChip label="Mixed stages in tents" tone="warn" /> : null}
+      {mixed ? <StatusChip icon="alert" label="Mixed stages in tents" tone="warn" /> : null}
+      <div className="dsc-scheduler-tents">
+        <div className="dsc-scheduler-tent dsc-scheduler-tent--main">
+          <TentLightClock tent="main" compact />
+        </div>
+        <div className="dsc-scheduler-tent dsc-scheduler-tent--clone">
+          <TentLightClock tent="clone" compact />
+        </div>
+      </div>
       <div className="dsc-chip-row" style={{ margin: "8px 0" }}>
-        <StatusChip label={`4×8 ${window4 ? "window open" : "dark"} · Want ${hours4}h`} tone={window4 ? "ok" : "muted"} />
-        <StatusChip label={`2×4 ${window2 ? "window open" : "dark"} · Want ${hours2}h`} tone={window2 ? "ok" : "muted"} />
-        {catchup ? <StatusChip label="Catch-up" tone="warn" /> : null}
-        {darkViol ? <StatusChip label="2×4 dark violation" tone="bad" pulse /> : null}
+        {catchup ? <StatusChip icon="lighting" motion="breathe" label="Catch-up" tone="warn" /> : null}
+        {darkViol ? <StatusChip icon="alert" label="2×4 dark violation" tone="bad" pulse /> : null}
       </div>
       <div className={`dsc-scheduler-lanes${compact ? " is-compact" : ""}`}>
         {seats.map(({ seat, oos }) => {
@@ -77,7 +80,11 @@ export function CropScheduler({ compact }: { compact?: boolean }) {
               <VesselGlyph spec={readPotVessel(seat.pot, state, entity)} size={16} />
               <strong>P{seat.pot}</strong>
               <span>{oos ? "Out of service" : seat.plantName}</span>
-              <StatusChip label={tentLabel(seat.tent)} tone={oos || seat.tent === "unassigned" ? "muted" : "ok"} />
+              <StatusChip
+                label={tentLabel(seat.tent)}
+                icon={seat.tent === "main" ? "tent" : seat.tent === "clone" ? "clone" : "seat"}
+                tone={oos || seat.tent === "unassigned" ? "muted" : "ok"}
+              />
               <span className="dsc-muted">
                 {oos
                   ? "—"

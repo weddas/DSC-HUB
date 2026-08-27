@@ -464,7 +464,7 @@ export function GrowComposePage() {
       <PageHeader
         icon="compose"
         title="Compose"
-        subtitle="Build soil blend, roster commit, and Want handoff."
+        subtitle="Step through strain, pot, soil, and optional feed — one confirm to add."
         primaryAction={
           <Button teal onClick={() => navigate("/grow/roster")}>
             Open Roster / Seat
@@ -477,8 +477,8 @@ export function GrowComposePage() {
         }
       />
       <p className="dsc-honesty" style={{ marginTop: 0 }}>
-        Catalog traits (height, flowering, chemistry) appear when the catalog has real data — empty fields stay
-        empty. After committing, open Roster to assign a seat.
+        Five steps: plant → pot &amp; soil → feed (skip ok) → light (skip ok) → review. Quick soil presets cover most
+        mixes; catalog search fills in the rest.
       </p>
       <ComposePlant />
     </div>
