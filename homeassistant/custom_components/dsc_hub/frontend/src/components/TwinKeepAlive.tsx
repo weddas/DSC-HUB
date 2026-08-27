@@ -1,4 +1,5 @@
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useLocation } from "react-router-dom";
 import { useEntityBus } from "../hooks/useEntityBus";
 import { ensureLocalCard } from "../lib/ensureLocalCards";
@@ -6,6 +7,7 @@ import type { TwinCardEl, TwinFocusTent, VesselLive } from "../lib/dsc-twin-api"
 import { ALL_POT_NUMBERS, buildPlantSeat, isPotInService, readTent } from "../lib/seatModel";
 import { readPotVessel } from "../lib/vesselSpec";
 import { readPotTrust } from "../lib/potTrust";
+import { TWIN_SLOT_ID } from "./TwinViewport";
 
 const DscTwinCanvas = lazy(() =>
   import("../twin/DscTwinCanvas").then((m) => ({ default: m.DscTwinCanvas })),
@@ -74,6 +76,7 @@ export function TwinKeepAlive() {
   const ref = useRef<HTMLDivElement>(null);
   const elRef = useRef<TwinCardEl | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "missing">("loading");
+  const [slotEl, setSlotEl] = useState<HTMLElement | null>(null);
   const focusTent = focusTentFromPath(location.pathname);
   const twinVisible = location.pathname === "/live/twin" || location.pathname === "/ops/dash";
   const twinDataActive =
@@ -90,6 +93,14 @@ export function TwinKeepAlive() {
     () => buildPots(state, entity, num, hubHeld),
     [state, entity, num, hubHeld, tick],
   );
+
+  useLayoutEffect(() => {
+    if (!twinVisible) {
+      setSlotEl(null);
+      return;
+    }
+    setSlotEl(document.getElementById(TWIN_SLOT_ID));
+  }, [twinVisible, location.pathname]);
 
   useEffect(() => {
     if (USE_R3F_TWIN) {
@@ -161,7 +172,7 @@ export function TwinKeepAlive() {
     el.setPots(pots);
   }, [pots, status]);
 
-  return (
+  const twinBody = (
     <div
       className={`dsc-twin-keepalive${twinVisible ? " is-active" : ""}`}
       aria-hidden={!twinVisible}
@@ -170,16 +181,18 @@ export function TwinKeepAlive() {
       data-focus-tent={focusTent || "both"}
       data-engine={USE_R3F_TWIN ? "r3f" : "iife"}
       style={
-        twinVisible
-          ? { minHeight: twinVisible ? "min(70vh, 520px)" : undefined }
-          : {
-              pointerEvents: "none",
-              position: "fixed",
-              visibility: "hidden",
-              inset: 0,
-              zIndex: -1,
-              overflow: "hidden",
-            }
+        twinVisible && slotEl
+          ? undefined
+          : twinVisible
+            ? { minHeight: "min(70vh, 520px)" }
+            : {
+                pointerEvents: "none",
+                position: "fixed",
+                visibility: "hidden",
+                inset: 0,
+                zIndex: -1,
+                overflow: "hidden",
+              }
       }
     >
       <div className="dsc-twin-keepalive-host" ref={ref} style={{ width: "100%", height: "100%" }}>
@@ -197,4 +210,9 @@ export function TwinKeepAlive() {
       ) : null}
     </div>
   );
+
+  if (twinVisible && slotEl) {
+    return createPortal(twinBody, slotEl);
+  }
+  return twinBody;
 }

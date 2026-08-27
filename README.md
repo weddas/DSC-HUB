@@ -87,8 +87,8 @@ USB flash order (Pi cutover): hub → pots → Sonoffs → panel → soak → pr
 | Piece | Path |
 |---|---|
 | Sync add-on | [`dsc-hub-sync/`](dsc-hub-sync/) (**5.1.4+** ships Build a Plant + catalog) |
-| Lovelace (Pro) | `homeassistant/dashboards/dsc-hub-v4-dashboard.yaml` → URL **`dsc-hub-pro`** |
-| Lovelace (Build a Plant) | `homeassistant/dashboards/dsc-build-plant-dashboard.yaml` → URL **`dsc-build-plant`** |
+| Pi SPA (SoT) | `http://<brain-ip>:8787` — see [`RELEASE.md`](RELEASE.md) |
+| Lovelace (retired 7.3) | Archived: [`docs/archive/lovelace-7.3/`](docs/archive/lovelace-7.3/) |
 | Packages | `homeassistant/packages/dsc_v4_*.yaml` (incl. `dsc_v4_panel_ha_bus.yaml`) |
 | Config snippet | `homeassistant/configuration.snippet.yaml` (Pro + Build a Plant) |
 | ESPHome stubs | `homeassistant/esphome/dsc-*.yaml` |

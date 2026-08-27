@@ -11,7 +11,8 @@ Full software closure: version truth, graph QoL, flow Sankey (air/heat/humidity)
 - **Flow viz** — `FlowSankey` tabs (air/heat/humidity); cascade CFM + mass-balance binary; heat/humidity proxies in `computed_ops`.
 - **Calibration** — lab wet wizard (N-016); [`docs/ops/LAB-WET-CAL.md`](docs/ops/LAB-WET-CAL.md); heater temp OOS latch (N-014).
 - **Twin** — R3F wireframe scene on Pi SPA; legacy IIFE on HA panel path.
-- **Legacy** — Dash uses `AirPathMap`; Lovelace archived to `docs/archive/lovelace-7.3/`; `ha-sync` skips dashboard YAML.
+- **Legacy** — Dash uses `AirPathMap`; Lovelace archived to `docs/archive/lovelace-7.3/`; `ha-sync` skips dashboard YAML; source dashboards removed.
+- **Polish (7.3.0)** — live graph re-audit screenshots; Twin viewport portal; deploy script ignores Vite stderr; git tag `v7.3.0`.
 - **Phase E** — simplified `fleetToHass` (native fleet SoT + computed extras).
 - **Tests** — **61/61** brain tests (flow proxies, cascade, sonoff relay merge).
 

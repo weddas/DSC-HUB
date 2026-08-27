@@ -22,8 +22,7 @@ Repo: https://github.com/weddas/DSC-HUB · branch **`master`**
 |---|---|
 | `homeassistant/packages/dsc_v4_*.yaml` | `/config/packages/` |
 | `homeassistant/custom_components/dsc_hub/` | `/config/custom_components/dsc_hub/` (React panel) |
-| `homeassistant/dashboards/dsc-hub-v4-dashboard.yaml` | `/config/dashboards/` (YAML Lovelace **fallback**) |
-| `homeassistant/dashboards/dsc-build-plant-dashboard.yaml` | `/config/dashboards/` (Build a Plant) |
+| Lovelace YAML (retired 7.3) | Archive only: `docs/archive/lovelace-7.3/` — **Pi SPA `:8787` is SoT** |
 | `homeassistant/esphome/dsc-*.yaml` | `/config/esphome/` |
 | `homeassistant/www/dsc-system-map.*` | `/config/www/` (bundled cards) |
 | `homeassistant/www/dsc-catalog/*.json` | `/config/www/dsc-catalog/` (Build a Plant typeahead) |
@@ -31,8 +30,7 @@ Repo: https://github.com/weddas/DSC-HUB · branch **`master`**
 | `firmware/v4/secrets.yaml.template` | `/config/esphome/secrets.yaml` (fill in; never commit) |
 
 Merge [`homeassistant/configuration.snippet.yaml`](homeassistant/configuration.snippet.yaml)
-into `configuration.yaml` (packages + panel + YAML dashboards **`dsc-hub-pro`**
-fallback and **`dsc-build-plant`**).
+into `configuration.yaml` (packages + panel). Lovelace dashboard blocks in the snippet are commented out in 7.3+.
 
 ### Add-on (recommended)
 

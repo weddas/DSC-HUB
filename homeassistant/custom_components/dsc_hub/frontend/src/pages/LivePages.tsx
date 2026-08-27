@@ -12,6 +12,7 @@ import { SlideDrawer } from "../components/chrome";
 import { TimespanControl, CYCLE_TIMESPAN_EXTRAS } from "../components/HistoryDrawer";
 import { AirPathMap } from "../components/AirPathMap";
 import { CropScheduler } from "../components/CropScheduler";
+import { TwinViewport } from "../components/TwinViewport";
 import { TentTargetPanel } from "../components/TentTargets";
 import { resolveCfm } from "../lib/cfmProvenance";
 import { readPotTrust } from "../lib/potTrust";
@@ -74,6 +75,7 @@ export function LiveTwinPage() {
           </>
         }
       />
+      <TwinViewport />
       <p className="dsc-honesty dsc-muted" style={{ marginTop: 0 }}>
         Pick a pot in the twin to open its seat. Twin stays warm across Twin / 4×8 / 2×4.
         Orbit the scene — it no longer snaps home on hass ticks. 4×8 fixture glow follows the

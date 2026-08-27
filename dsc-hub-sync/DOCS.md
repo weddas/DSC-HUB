@@ -11,9 +11,7 @@ also syncs `esphome/components/dsc_fleet_setup` since 5.1.2)
 | Repo path | HA destination |
 |---|---|
 | `homeassistant/packages/dsc_v4_*.yaml` | `/config/packages/` |
-| `homeassistant/dashboards/dsc-hub-v4-dashboard.yaml` | `/config/dashboards/` |
-| `homeassistant/dashboards/dsc-build-plant-dashboard.yaml` | `/config/dashboards/` |
-| `homeassistant/dashboards/modules/view_*.yaml` | `/config/dashboards/modules/` |
+| Lovelace YAML | **Skipped since 7.3** — archive: `docs/archive/lovelace-7.3/` |
 | Bundled `www` cards + SVG + vendor | `/config/www/` (default on) |
 | `homeassistant/www/dsc-catalog/*.json` | `/config/www/dsc-catalog/` |
 | `homeassistant/esphome/dsc-*.yaml` | `/config/esphome/` (**default on** in 5.1.0) |

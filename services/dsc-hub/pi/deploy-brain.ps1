@@ -29,9 +29,13 @@ $pscp = "pscp -batch -hostkey `"$HostKey`" -pw $PiPassword"
 
 Write-Host "Build Pi SPA..."
 Push-Location $FrontendDir
-& npm.cmd run build:spa
-if ($LASTEXITCODE -ne 0) { throw "SPA build failed" }
+$prevEap = $ErrorActionPreference
+$ErrorActionPreference = "Continue"
+& npm.cmd run build:spa 2>&1 | ForEach-Object { Write-Host $_ }
+$spaExit = $LASTEXITCODE
+$ErrorActionPreference = $prevEap
 Pop-Location
+if ($spaExit -ne 0) { throw "SPA build failed (exit $spaExit)" }
 
 $SpaDist = Join-Path $FrontendDir "spa-dist"
 $WwwDir = Join-Path $RepoRoot "homeassistant\www"

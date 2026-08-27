@@ -8,11 +8,11 @@ import { BrainProvider, useBrainContext } from "./hooks/useBrain";
 import { FleetProvider } from "./hooks/useFleet";
 import "./styles/dsc.css";
 
+const DEFAULT_SURFACE = "7.3.0";
+
 function PiApp() {
   const { hass, fleet, tick, loading, error, refresh } = useBrainContext();
-  const surface =
-    (fleet?.surface as string | undefined) ??
-    (fleet?.expected_firmware ? `7.0.0 (${fleet.expected_firmware})` : "7.0.0");
+  const surface = (fleet?.surface as string | undefined) ?? DEFAULT_SURFACE;
 
   useEffect(() => {
     document.title = `DSC-HUB ${surface}`;

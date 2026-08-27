@@ -26,7 +26,7 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 | Lovelace YAML retired | `docs/archive/lovelace-7.3/` |
 | Phase E shim simplified | `useBrain.tsx` |
 
-**Remains (operator):** deploy 7.3 to `.48`, island-proof, z2m TS0201 pair, F-001–F-008 hardware.
+**Remains (operator):** z2m TS0201 pair + stick recovery, FlowSankey 48h soak closeout (~2026-08-29), F-001–F-008 hardware.
 
 ---
 

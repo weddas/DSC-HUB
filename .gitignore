@@ -85,6 +85,11 @@ firmware/v4/_patch_*.py
 # Pi SPA dev artifact (real bundle built in Docker frontend stage)
 brain/static/
 
+# Deploy script copies legacy IIFE assets into spa-dist — not source of truth
+homeassistant/custom_components/dsc_hub/frontend/spa-dist/dsc-*.js
+homeassistant/custom_components/dsc_hub/frontend/spa-dist/dsc-*.svg
+homeassistant/custom_components/dsc_hub/frontend/spa-dist/vendor/
+
 # Brain scrape ops
 brain/data/_*.pid
 brain/data/_*.err

@@ -91,6 +91,11 @@ body {
   border-color: var(--dsc-blue-dim);
 }
 
+.dsc-twin-slot {
+  min-height: min(68vh, 720px);
+  margin-bottom: 12px;
+}
+
 .dsc-twin-keepalive {
   /* Keep the Twin custom element mounted; do not display:none (kills WebGL size).
      When idle: out of flow, not visible, no pointer hit-testing. */
