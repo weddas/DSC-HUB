@@ -11,7 +11,7 @@ import {
 import type { HassEntity, HomeAssistant } from "../vite-env";
 import { get_fleet_state, get_fleet_computed, call_service } from "../lib/fleetApi";
 import { parseFleetSnapshot } from "../lib/fleetModel";
-import { enrichFleetFromHassStates, fleetToHassCompat } from "../lib/fleetFromHass";
+import { fleetToHassCompat } from "../lib/fleetFromHass";
 
 function mergeHassExtras(
   states: Record<string, HassEntity>,
@@ -28,15 +28,14 @@ function mergeHassExtras(
   }
 }
 
-/** Pi compat shim — synthetic HA bus from native fleet + computed helpers. */
+/** Pi synthetic HA bus — native fleet SoT + computed extras from /fleet/computed. */
 export function fleetToHass(
   fleet: Record<string, unknown>,
   computed?: Record<string, unknown> | null,
 ): HomeAssistant {
   const parsed = parseFleetSnapshot(fleet);
+  const states: Record<string, HassEntity> = { ...fleetToHassCompat(parsed) };
   const extras = computed?.hass_extras as Record<string, HassEntity> | undefined;
-  const enriched = enrichFleetFromHassStates(parsed, extras);
-  const states: Record<string, HassEntity> = { ...fleetToHassCompat(enriched) };
   mergeHassExtras(states, extras);
 
   return {
@@ -51,6 +50,7 @@ interface BrainContextValue {
   hass: HomeAssistant | null;
   tick: number;
   fleet: Record<string, unknown> | null;
+  computed: Record<string, unknown> | null;
   loading: boolean;
   error: string | null;
   refresh: () => Promise<void>;
@@ -85,8 +85,6 @@ export function BrainProvider({ children }: { children: ReactNode }) {
   const computedInFlight = useRef(false);
 
   const refreshComputed = useCallback(async () => {
-    // /fleet/computed can take several seconds on the Pi — never overlap requests,
-    // or the queue starves /fleet and the websocket and the UI wedges on "Connecting".
     if (computedInFlight.current) return;
     computedInFlight.current = true;
     try {
@@ -162,13 +160,13 @@ export function BrainProvider({ children }: { children: ReactNode }) {
       hass,
       tick,
       fleet,
+      computed,
       loading,
       error,
       refresh,
     }),
-    [hass, tick, fleet, loading, error, refresh],
+    [hass, tick, fleet, computed, loading, error, refresh],
   );
 
   return <BrainContext.Provider value={value}>{children}</BrainContext.Provider>;
 }
-

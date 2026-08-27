@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+## Pi appliance — **v7.3.0** (2026-08-27)
+
+Full software closure: version truth, graph QoL, flow Sankey (air/heat/humidity), lab wet cal, R3F Twin on Pi SPA, Lovelace YAML retired. See [`docs/qa/AUDIT-CLOSURE-7.3.md`](docs/qa/AUDIT-CLOSURE-7.3.md).
+
+- **Version** — unified `7.3.0` brain + surface + SPA chrome.
+- **Graphs** — leaf VPD history/UI; VPD/temp axis presets; 48h date ticks; [`GRAPH-REAUDIT-7.3.md`](docs/qa/GRAPH-REAUDIT-7.3.md).
+- **Flow viz** — `FlowSankey` tabs (air/heat/humidity); cascade CFM + mass-balance binary; heat/humidity proxies in `computed_ops`.
+- **Calibration** — lab wet wizard (N-016); [`docs/ops/LAB-WET-CAL.md`](docs/ops/LAB-WET-CAL.md); heater temp OOS latch (N-014).
+- **Twin** — R3F wireframe scene on Pi SPA; legacy IIFE on HA panel path.
+- **Legacy** — Dash uses `AirPathMap`; Lovelace archived to `docs/archive/lovelace-7.3/`; `ha-sync` skips dashboard YAML.
+- **Phase E** — simplified `fleetToHass` (native fleet SoT + computed extras).
+- **Tests** — **61/61** brain tests (flow proxies, cascade, sonoff relay merge).
+
 ## Pi appliance — **v7.2.0** (2026-08-27)
 
 Global modifiers, mobile soil probes, Zigbee multi-sensor, chart QoL, Sankey prototype. See [`docs/qa/AUDIT-CLOSURE-7.2.md`](docs/qa/AUDIT-CLOSURE-7.2.md).

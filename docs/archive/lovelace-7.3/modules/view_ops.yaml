@@ -1,0 +1,115 @@
+# Ops hub — primary product section (default landing). Deep-links to ops subviews.
+title: Ops
+icon: mdi:monitor-dashboard
+path: ops
+type: sections
+max_columns: 4
+sections:
+  - type: grid
+    cards:
+      - type: custom:dsc-app-nav-card
+      - type: heading
+        heading: Operational now
+        heading_style: title
+      - type: custom:mushroom-chips-card
+        alignment: start
+        chips:
+          - type: template
+            entity: sensor.dsc_hub_uptime
+            icon: >-
+              {{ 'mdi:chip' if not is_state(entity,'unavailable') else
+              'mdi:alert-circle' }}
+            icon_color: "{{ 'green' if not is_state(entity,'unavailable') else 'red' }}"
+            content: >-
+              {{ 'HUB ONLINE' if not is_state(entity,'unavailable') else
+              'HUB OFFLINE' }}
+          - type: template
+            entity: sensor.dsc_active_alert_count
+            icon: >-
+              {% set n = states(entity) | int(0) %}
+              {{ 'mdi:check-circle' if n == 0 else 'mdi:alert-decagram' }}
+            content: >
+              {% set n = states(entity) | int(0) %}
+              {{ 'All clear' if n == 0 else n ~ ' alert(s)' }}
+            icon_color: >
+              {% set n = states(entity) | int(0) %}
+              {{ 'green' if n == 0 else 'red' }}
+            tap_action:
+              action: navigate
+              navigation_path: /dsc-hub-pro/system
+          - type: template
+            entity: sensor.dsc_fleet_version_status
+            icon: mdi:clipboard-check
+            icon_color: >-
+              {% set s = states(entity) %}
+              {{ 'green' if s == 'ok' else 'amber' if s == 'warn' else 'red' }}
+            content: >-
+              {% set s = states(entity) %}
+              {{ 'FLEET OK' if s == 'ok' else 'FLEET DRIFT' }}
+            tap_action:
+              action: navigate
+              navigation_path: /dsc-hub-pro/system
+      - type: heading
+        heading: Spaces and levers
+        heading_style: title
+      - type: custom:mushroom-chips-card
+        alignment: start
+        chips:
+          - type: template
+            icon: mdi:home
+            icon_color: teal
+            content: Home full
+            tap_action:
+              action: navigate
+              navigation_path: /dsc-hub-pro/home
+          - type: template
+            icon: mdi:view-dashboard-variant
+            icon_color: cyan
+            content: The Dash
+            tap_action:
+              action: navigate
+              navigation_path: /dsc-hub-pro/dash
+          - type: template
+            icon: mdi:thermometer
+            icon_color: orange
+            content: Climate
+            tap_action:
+              action: navigate
+              navigation_path: /dsc-hub-pro/climate
+          - type: template
+            icon: mdi:greenhouse
+            icon_color: green
+            content: Main 4x8
+            tap_action:
+              action: navigate
+              navigation_path: /dsc-hub-pro/main-4x8
+          - type: template
+            icon: mdi:leaf
+            icon_color: light-green
+            content: Clone 2x4
+            tap_action:
+              action: navigate
+              navigation_path: /dsc-hub-pro/clone-2x4
+          - type: template
+            icon: mdi:sprout
+            icon_color: brown
+            content: Root zone
+            tap_action:
+              action: navigate
+              navigation_path: /dsc-hub-pro/root-zone
+          - type: template
+            icon: mdi:water
+            icon_color: blue
+            content: Tank
+            tap_action:
+              action: navigate
+              navigation_path: /dsc-hub-pro/tank
+          - type: template
+            icon: mdi:lightbulb-on
+            icon_color: amber
+            content: Lighting
+            tap_action:
+              action: navigate
+              navigation_path: /dsc-hub-pro/lighting
+      - type: custom:dsc-system-map-card
+        title: Fleet map

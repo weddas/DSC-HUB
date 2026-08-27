@@ -183,12 +183,23 @@ function buildColoredSegments(
   return segs;
 }
 
-function fmtTime(t: number): string {
+function fmtTime(t: number, chartHours?: number): string {
   const d = new Date(t);
   const hh = String(d.getHours()).padStart(2, "0");
   const mm = String(d.getMinutes()).padStart(2, "0");
+  if (chartHours != null && chartHours >= 24) {
+    const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    return `${days[d.getDay()]} ${hh}:${mm}`;
+  }
   return `${hh}:${mm}`;
 }
+
+const METRIC_AXIS_PRESETS: Record<string, { min: number; max: number }> = {
+  kpa: { min: 0, max: 2.5 },
+  "°c": { min: 15, max: 35 },
+  c: { min: 15, max: 35 },
+  "%": { min: 0, max: 100 },
+};
 
 function yFor(
   v: number,
@@ -205,15 +216,27 @@ function domainForAxis(
   series: NamedSeries[],
   axis: "left" | "right",
   fixed?: { min?: number; max?: number },
+  unitHintOverride?: string,
+  hasTargets?: boolean,
 ): { min: number; max: number } {
   if (fixed?.min != null && fixed?.max != null) return { min: fixed.min, max: fixed.max };
   const vals = series.filter((s) => (s.axis || "left") === axis).flatMap((s) => s.series.map((p) => p.v));
-  const unitHint = series.find((s) => (s.axis || "left") === axis)?.unit?.toLowerCase() ?? "";
+  const unitHint =
+    unitHintOverride?.toLowerCase() ??
+    series.find((s) => (s.axis || "left") === axis)?.unit?.toLowerCase() ??
+    "";
+  const preset = METRIC_AXIS_PRESETS[unitHint.replace(/\s/g, "")] ?? METRIC_AXIS_PRESETS[unitHint];
   if (!vals.length) {
+    if (preset) return preset;
     if (unitHint.includes("kpa")) return { min: 0, max: 2 };
     if (unitHint.includes("%")) return { min: 0, max: 100 };
     if (axis === "right") return { min: 0, max: 100 };
     return { min: 0, max: 1 };
+  }
+  if (preset && hasTargets) {
+    const lo = Math.min(...vals, preset.min);
+    const hi = Math.max(...vals, preset.max);
+    return padDomain(Math.min(lo, preset.min), Math.max(hi, preset.max));
   }
   if (axis === "right") {
     const lo = Math.min(...vals, 0);
@@ -233,6 +256,7 @@ export function MultiLineChart({
   lastSyncAt,
   targets = [],
   yDomain,
+  chartHours,
 }: {
   series: NamedSeries[];
   height?: number;
@@ -242,6 +266,7 @@ export function MultiLineChart({
   lastSyncAt?: number;
   targets?: ChartTarget[];
   yDomain?: { left?: { min: number; max: number }; right?: { min: number; max: number } };
+  chartHours?: number;
 }) {
   const gid = useId().replace(/:/g, "");
   const width = 640;
@@ -263,8 +288,8 @@ export function MultiLineChart({
   const model = useMemo(() => {
     const all = named.flatMap((s) => s.series);
     if (!all.length) return null;
-    const left = domainForAxis(named, "left", yDomain?.left);
-    const right = domainForAxis(named, "right", yDomain?.right);
+    const left = domainForAxis(named, "left", yDomain?.left, unit, targets.length > 0);
+    const right = domainForAxis(named, "right", yDomain?.right, unit, targets.length > 0);
     const t0 = Math.min(...all.map((p) => p.t));
     const lastDataT = Math.max(...all.map((p) => p.t));
     const t1 = chartStale ? lastDataT : Math.max(lastDataT, Date.now());
@@ -286,7 +311,7 @@ export function MultiLineChart({
       };
     });
     return { left, right, t0, t1, paths };
-  }, [named, height, hasRight, yDomain, chartStale]);
+  }, [named, height, hasRight, yDomain, chartStale, unit, targets.length]);
 
   const gridLeft = useMemo(() => {
     if (!model) return [];
@@ -323,10 +348,10 @@ export function MultiLineChart({
     for (let i = 0; i < n; i++) {
       const frac = i / (n - 1);
       const t = model.t0 + frac * span;
-      out.push({ x: pad.l + frac * innerW, label: fmtTime(t) });
+      out.push({ x: pad.l + frac * innerW, label: fmtTime(t, chartHours) });
     }
     return out;
-  }, [model]);
+  }, [model, chartHours]);
 
   const clientToChartX = useCallback(
     (clientX: number) => {
@@ -683,7 +708,7 @@ export function MultiLineChart({
             left: `${Math.min(92, Math.max(8, (hover.x / width) * 100))}%`,
           }}
         >
-          <div className="dsc-chart-tooltip-time">{fmtTime(hover.t)}</div>
+          <div className="dsc-chart-tooltip-time">{fmtTime(hover.t, chartHours)}</div>
           {hoverSamples.map((s) =>
             s.v == null ? null : (
               <div key={s.id} className="dsc-chart-tooltip-row">

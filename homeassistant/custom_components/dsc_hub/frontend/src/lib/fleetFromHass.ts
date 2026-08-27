@@ -224,6 +224,12 @@ export function fleetToHassCompat(fleet: FleetSnapshot): Record<string, HassEnti
     set("sensor.dsc_hub_clone_vpd_kpa", String(v.clone_vpd_kpa), hubLive);
     set("sensor.dsc_hub_clone_vpd", String(v.clone_vpd_kpa), hubLive);
   }
+  if (v.leaf_vpd_kpa != null) {
+    set("sensor.dsc_leaf_vpd_kpa", String(v.leaf_vpd_kpa), hubLive);
+  }
+  if (v.clone_leaf_vpd_kpa != null) {
+    set("sensor.dsc_clone_leaf_vpd_kpa", String(v.clone_leaf_vpd_kpa), hubLive);
+  }
 
   const binaries = v.binaries as Record<string, boolean> | undefined;
   if (binaries) {

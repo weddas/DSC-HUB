@@ -12,7 +12,7 @@ DEFAULT_DB = BRAIN_DATA / "dsc_ops.sqlite3"
 CANNALIB_ROOT = REPO_ROOT.parent / "CannaLib"
 CANNALIB_DB = CANNALIB_ROOT / "brain" / "data" / "dsc_brain.sqlite3"
 EXPECTED_FIRMWARE = os.environ.get("DSC_EXPECTED_FIRMWARE", "7.0.0.0")
-SURFACE_VERSION = os.environ.get("DSC_SURFACE_VERSION", "7.2.0")
+SURFACE_VERSION = os.environ.get("DSC_SURFACE_VERSION", "7.3.0")
 
 
 def resolve_cannalib_db() -> Path | None:

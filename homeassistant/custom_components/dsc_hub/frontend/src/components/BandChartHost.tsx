@@ -54,6 +54,8 @@ function BandChartDrawer({ target, onClose }: { target: BandChartTarget | null; 
   const cloneVpd = useEntitySeries("sensor.dsc_hub_clone_vpd_kpa", { hours, maxPoints: fetchPoints, withGhost: true });
   const roomVpdId = resolveRoomVpdEntity(entity);
   const roomVpd = useEntitySeries(roomVpdId, { hours, maxPoints: fetchPoints, withGhost: true });
+  const leafVpd = useEntitySeries("sensor.dsc_leaf_vpd_kpa", { hours, maxPoints: fetchPoints, withGhost: true });
+  const cloneLeafVpd = useEntitySeries("sensor.dsc_clone_leaf_vpd_kpa", { hours, maxPoints: fetchPoints, withGhost: true });
   const rootT = useEntitySeries("sensor.dsc_coldest_root_zone_temp", { hours, maxPoints: fetchPoints, withGhost: true });
 
   const potMoist1 = useEntitySeries("sensor.dsc_pot1_soil_moisture", { hours, maxPoints: fetchPoints, withGhost: true });
@@ -85,6 +87,7 @@ function BandChartDrawer({ target, onClose }: { target: BandChartTarget | null; 
         return {
           unit: "°C",
           height: 380,
+          yDomain: { left: { min: 15, max: 35 } },
           series: [
             ...withPriorGhost("mt", "4×8 Tent", tentT, ZONE.main, "°C"),
             ...withPriorGhost("ct", "2×4 Clone", cloneT, ZONE.clone, "°C"),
@@ -114,10 +117,13 @@ function BandChartDrawer({ target, onClose }: { target: BandChartTarget | null; 
         return {
           unit: "kPa",
           height: 380,
+          yDomain: { left: { min: 0, max: 2.5 } },
           series: [
             ...withPriorGhost("rv", "Room", roomVpd, ZONE.room, "kPa"),
-            ...withPriorGhost("mv", "4×8 Tent", tentVpd, ZONE.main, "kPa"),
-            ...withPriorGhost("cv", "2×4 Clone", cloneVpd, ZONE.clone, "kPa"),
+            ...withPriorGhost("mv", "4×8 air", tentVpd, ZONE.main, "kPa"),
+            ...withPriorGhost("cv", "2×4 air", cloneVpd, ZONE.clone, "kPa"),
+            ...withPriorGhost("lv", "4×8 leaf", leafVpd, "var(--dsc-green)", "kPa"),
+            ...withPriorGhost("clv", "2×4 leaf", cloneLeafVpd, "var(--dsc-green-dim)", "kPa"),
           ] satisfies NamedSeries[],
           targets: [
             { min: vpdMin, max: vpdMax, color: "var(--dsc-blue-dim)" },
@@ -158,6 +164,8 @@ function BandChartDrawer({ target, onClose }: { target: BandChartTarget | null; 
     tentVpd,
     cloneVpd,
     roomVpd,
+    leafVpd,
+    cloneLeafVpd,
     rootT,
     potMoist1,
     potMoist2,
@@ -203,6 +211,7 @@ function BandChartDrawer({ target, onClose }: { target: BandChartTarget | null; 
           live
           height={model.height}
           unit={model.unit}
+          chartHours={hours}
           lastSyncAt={lastSync}
           series={model.series}
           targets={model.targets}

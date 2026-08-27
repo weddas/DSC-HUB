@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { Button, Card, Kpi, PageHeader } from "../components/ui";
-import { LegacyCardHost } from "../components/LegacyCardHost";
+import { AirPathMap } from "../components/AirPathMap";
 import { HubLinkLine } from "../components/HubLinkLine";
 import { KitPulse } from "../components/KitPulse";
 import { CfmTrustLine } from "../components/CfmBadge";
@@ -103,8 +103,8 @@ export function DashHomePage() {
 
   const outCfm = resolveCfm("sensor.dsc_cfm_exhaust_out_allocated", "sensor.dsc_cfm_exhaust_out", { available, num });
   const recircCfm = resolveCfm("sensor.dsc_cfm_exhaust_recirc_allocated", "sensor.dsc_cfm_exhaust_recirc", { available, num });
-  const inMain = resolveCfm("sensor.dsc_cfm_intake_main", "sensor.dsc_cfm_intake_main", { available, num });
-  const inClone = resolveCfm("sensor.dsc_cfm_intake_2x4", "sensor.dsc_cfm_intake_2x4", { available, num });
+  const inMain = resolveCfm("sensor.dsc_cfm_intake_main_allocated", "sensor.dsc_cfm_intake_main", { available, num });
+  const inClone = resolveCfm("sensor.dsc_cfm_intake_2x4_allocated", "sensor.dsc_cfm_intake_2x4", { available, num });
   const cfmReadings = [outCfm, recircCfm, inMain, inClone];
 
   const kitNodes: KitNode[] = buildKitNodesFromFleet(fleet);
@@ -255,7 +255,7 @@ export function DashHomePage() {
           <Kpi label="Intake 4×8" value={fmtCfm(inMain).replace(" CFM", "")} unit="CFM" />
           <Kpi label="Intake 2×4" value={fmtCfm(inClone).replace(" CFM", "")} unit="CFM" />
         </div>
-        <LegacyCardHost tag="dsc-airflow-map-card" />
+        <AirPathMap intakeClone={inClone} intakeMain={inMain} outCfm={outCfm} recircCfm={recircCfm} />
       </Card>
 
       <DashTodaySection bus={bus} />

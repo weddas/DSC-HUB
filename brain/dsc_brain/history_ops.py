@@ -23,6 +23,8 @@ ENTITY_METRIC_MAP: dict[str, tuple[str, str]] = {
     "sensor.dsc_hub_clone_humidity": ("hub", "clone_rh_pct"),
     "sensor.dsc_hub_clone_vpd_kpa": ("hub", "clone_vpd_kpa"),
     "sensor.dsc_hub_clone_vpd": ("hub", "clone_vpd_kpa"),
+    "sensor.dsc_leaf_vpd_kpa": ("hub", "leaf_vpd_kpa"),
+    "sensor.dsc_clone_leaf_vpd_kpa": ("hub", "clone_leaf_vpd_kpa"),
     "sensor.dsc_coldest_root_zone_temp": ("hub", "coldest_root_c"),
     "sensor.dsc_pot1_soil_moisture": ("pot1", "moisture_pct"),
     "sensor.dsc_pot2_soil_moisture": ("pot2", "moisture_pct"),

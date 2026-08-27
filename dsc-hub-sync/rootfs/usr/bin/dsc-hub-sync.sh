@@ -139,30 +139,8 @@ stage_and_commit() {
     cp -f "${f}" "${STAGE}/packages/$(basename "${f}")"
   done
 
-  local dash="${src}/dashboards/dsc-hub-v4-dashboard.yaml"
-  if [[ -f "${dash}" ]]; then
-    cp -f "${dash}" "${STAGE}/dashboards/dsc-hub-v4-dashboard.yaml"
-  else
-    warn "Dashboard YAML missing — skipped"
-  fi
-  local build_dash="${src}/dashboards/dsc-build-plant-dashboard.yaml"
-  if [[ -f "${build_dash}" ]]; then
-    cp -f "${build_dash}" "${STAGE}/dashboards/dsc-build-plant-dashboard.yaml"
-    log "Staged dashboards/dsc-build-plant-dashboard.yaml"
-  else
-    warn "Build a Plant dashboard YAML missing — skipped"
-  fi
-  # Modular views (!include modules/view_*.yaml) — must ship with the shell
-  mkdir -p "${STAGE}/dashboards/modules"
-  local mods=("${src}/dashboards/modules"/view_*.yaml)
-  if [[ ${#mods[@]} -gt 0 ]]; then
-    for f in "${mods[@]}"; do
-      cp -f "${f}" "${STAGE}/dashboards/modules/$(basename "${f}")"
-    done
-    log "Staged ${#mods[@]} dashboard modules"
-  else
-    warn "No dashboards/modules/view_*.yaml — included views will be empty"
-  fi
+  # Lovelace YAML retired 7.3 — Pi SPA :8787 is SoT; archive under docs/archive/lovelace-7.3/
+  log "Skipping Lovelace YAML dashboards (7.3 — Pi SPA is SoT)"
 
   if bashio::config.true 'sync_www'; then
     log "Syncing www system-map SVG + bundled cards (system map + airflow + Three + Dash FX + Build a Plant)"

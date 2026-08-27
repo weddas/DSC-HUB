@@ -19,6 +19,7 @@ export default defineConfig({
         manualChunks(id) {
           if (id.includes("/pages/TuneFleetPages")) return "tune-fleet";
           if (id.includes("/pages/CalibratePage")) return "calibrate";
+          if (id.includes("/twin/") || id.includes("node_modules/three")) return "twin-three";
         },
       },
     },

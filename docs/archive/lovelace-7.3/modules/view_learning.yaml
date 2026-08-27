@@ -1,0 +1,903 @@
+title: Learning
+icon: mdi:brain
+path: learning
+subview: true
+type: sections
+max_columns: 4
+sections:
+  - type: grid
+    cards:
+      - type: heading
+        heading: DEVICE CALIBRATION — optional CFM / PPFD curves
+        heading_style: title
+      - type: markdown
+        content: >-
+          *Fully optional. Leave curves empty and capacity-proxy CFM stays
+          **% × nameplate** (attribute `model: linear`). Measure duct outlet
+          wind speed (or CFM) / canopy PPFD at 25→50→75→100% holds — ≥2
+          points enables interpolation (`model: curve`). **Do not invent
+          points.** See docs/ANEMOMETER-CFM.md. Status:
+          **{{ states('sensor.dsc_cfm_curves_status') }}**
+          (unset: {{ state_attr('sensor.dsc_cfm_curves_status','unset') }}).*
+      - type: entities
+        title: Wizard
+        show_header_toggle: false
+        entities:
+          - entity: input_select.dsc_cal_target
+            name: Target (fan or SF1000)
+          - entity: input_text.dsc_cal_status
+            name: Status
+          - entity: input_boolean.dsc_cal_active
+            name: Session active
+          - entity: input_number.dsc_cal_step_pct
+            name: Hold step %
+          - entity: input_number.dsc_cal_reading_ms
+            name: Anemometer m/s
+          - entity: input_number.dsc_cal_reading_cfm
+            name: Or enter CFM directly
+          - entity: input_number.dsc_cal_reading_ppfd
+            name: PPFD (SF1000 only)
+      - type: horizontal-stack
+        cards:
+          - type: button
+            name: Start
+            icon: mdi:play
+            tap_action:
+              action: call-service
+              service: script.dsc_cal_start
+          - type: button
+            name: Re-hold
+            icon: mdi:fan-clock
+            tap_action:
+              action: call-service
+              service: script.dsc_cal_hold_next
+          - type: button
+            name: Save point
+            icon: mdi:content-save
+            tap_action:
+              action: call-service
+              service: script.dsc_cal_save_point
+          - type: button
+            name: Skip
+            icon: mdi:skip-next
+            tap_action:
+              action: call-service
+              service: script.dsc_cal_skip_point
+          - type: button
+            name: Abort
+            icon: mdi:cancel
+            tap_action:
+              action: call-service
+              service: script.dsc_cal_abort
+      - type: entities
+        title: Duct Ø (cm) for m/s → CFM
+        show_header_toggle: false
+        entities:
+          - entity: input_number.dsc_duct_out_cm
+            name: OUT (default 6″)
+          - entity: input_number.dsc_duct_recirc_cm
+            name: RECIRC (default 6″)
+          - entity: input_number.dsc_duct_intake_main_cm
+            name: Intake Main (default 4″)
+          - entity: input_number.dsc_duct_intake_clone_cm
+            name: Intake 2x4 (default 4″)
+      - type: custom:expander-card
+        title: 📈 Stored CFM curves (0 = unset → linear %)
+        expanded: false
+        card_mod:
+          style: |
+            ha-card {
+              border-left: 3px solid rgba(56,189,248,0.4);
+              border-radius: 10px;
+            }
+            ha-card .title {
+              font-weight: 600;
+              letter-spacing: 0.3px;
+            }
+        cards:
+          - type: entities
+            show_header_toggle: false
+            entities:
+              - type: section
+                label: OUT exhaust
+              - entity: input_number.dsc_cal_cfm_out_25
+                name: "@25%"
+              - entity: input_number.dsc_cal_cfm_out_50
+                name: "@50%"
+              - entity: input_number.dsc_cal_cfm_out_75
+                name: "@75%"
+              - entity: input_number.dsc_cal_cfm_out_100
+                name: "@100%"
+              - type: section
+                label: RECIRC exhaust
+              - entity: input_number.dsc_cal_cfm_recirc_25
+                name: "@25%"
+              - entity: input_number.dsc_cal_cfm_recirc_50
+                name: "@50%"
+              - entity: input_number.dsc_cal_cfm_recirc_75
+                name: "@75%"
+              - entity: input_number.dsc_cal_cfm_recirc_100
+                name: "@100%"
+              - type: section
+                label: Intake Main
+              - entity: input_number.dsc_cal_cfm_intake_main_25
+                name: "@25%"
+              - entity: input_number.dsc_cal_cfm_intake_main_50
+                name: "@50%"
+              - entity: input_number.dsc_cal_cfm_intake_main_75
+                name: "@75%"
+              - entity: input_number.dsc_cal_cfm_intake_main_100
+                name: "@100%"
+              - type: section
+                label: Intake 2x4
+              - entity: input_number.dsc_cal_cfm_intake_clone_25
+                name: "@25%"
+              - entity: input_number.dsc_cal_cfm_intake_clone_50
+                name: "@50%"
+              - entity: input_number.dsc_cal_cfm_intake_clone_75
+                name: "@75%"
+              - entity: input_number.dsc_cal_cfm_intake_clone_100
+                name: "@100%"
+      - type: custom:expander-card
+        title: ☀️ SF1000 PPFD curve (0 = unset)
+        expanded: false
+        card_mod:
+          style: |
+            ha-card {
+              border-left: 3px solid rgba(56,189,248,0.4);
+              border-radius: 10px;
+            }
+            ha-card .title {
+              font-weight: 600;
+              letter-spacing: 0.3px;
+            }
+        cards:
+          - type: entities
+            show_header_toggle: false
+            entities:
+              - entity: sensor.dsc_sf1000_ppfd
+                name: Live PPFD (interpolated)
+              - entity: input_number.dsc_cal_ppfd_25
+                name: "@25%"
+              - entity: input_number.dsc_cal_ppfd_50
+                name: "@50%"
+              - entity: input_number.dsc_cal_ppfd_75
+                name: "@75%"
+              - entity: input_number.dsc_cal_ppfd_100
+                name: "@100%"
+      - type: horizontal-stack
+        cards:
+          - type: button
+            name: Reset OUT
+            icon: mdi:restore
+            tap_action:
+              action: call-service
+              service: script.dsc_cal_reset_curve_out
+          - type: button
+            name: Reset RECIRC
+            icon: mdi:restore
+            tap_action:
+              action: call-service
+              service: script.dsc_cal_reset_curve_recirc
+          - type: button
+            name: Reset Int Main
+            icon: mdi:restore
+            tap_action:
+              action: call-service
+              service: script.dsc_cal_reset_curve_intake_main
+          - type: button
+            name: Reset Int 2x4
+            icon: mdi:restore
+            tap_action:
+              action: call-service
+              service: script.dsc_cal_reset_curve_intake_clone
+          - type: button
+            name: Reset PPFD
+            icon: mdi:restore
+            tap_action:
+              action: call-service
+              service: script.dsc_cal_reset_curve_sf1000
+
+  - type: grid
+    cards:
+      - type: heading
+        heading: STATUS — Phase A+B (appliance auto-learn)
+        heading_style: title
+      - type: custom:mushroom-chips-card
+        alignment: start
+        chips:
+          - type: template
+            entity: sensor.dsc_learn_status
+            icon: mdi:brain
+            icon_color: >-
+              {% if is_state(entity,'ready') %}green
+              {% elif is_state(entity,'partial') %}teal
+              {% elif is_state(entity,'warming') %}amber
+              {% elif is_state(entity,'gated') %}orange
+              {% else %}grey{% endif %}
+            content: >-
+              {{ states(entity)|upper }}
+          - type: template
+            entity: binary_sensor.dsc_learn_gate_open
+            icon: >-
+              {{ 'mdi:gate-open' if is_state(entity,'on') else 'mdi:gate' }}
+            icon_color: "{{ 'green' if is_state(entity,'on') else 'orange' }}"
+            content: >-
+              {{ 'GATE OPEN' if is_state(entity,'on') else 'GATE CLOSED' }}
+          - type: template
+            entity: input_boolean.dsc_climate_learn_enabled
+            icon: mdi:toggle-switch
+            icon_color: "{{ 'cyan' if is_state(entity,'on') else 'grey' }}"
+            content: >-
+              {{ 'ENABLED' if is_state(entity,'on') else 'DISABLED' }}
+            tap_action:
+              action: toggle
+          - type: template
+            entity: sensor.dsc_plant_specs_status
+            icon: mdi:clipboard-check
+            icon_color: >-
+              {% if is_state(entity,'ok') %}green
+              {% elif is_state(entity,'warn') %}amber
+              {% else %}red{% endif %}
+            content: SPECS {{ states(entity)|upper }}
+          - type: template
+            entity: binary_sensor.dsc_hub_ha_link_status
+            icon: mdi:lan-connect
+            icon_color: "{{ 'green' if is_state(entity,'on') else 'red' }}"
+            content: >-
+              {{ 'HUB LINK' if is_state(entity,'on') else 'HUB OFFLINE' }}
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+          - type: custom:mushroom-template-card
+            entity: sensor.dsc_learn_status
+            primary: Learning status
+            secondary: >-
+              Trusted: {{ state_attr(entity,'trusted_levers') or 'none' }}
+            icon: mdi:brain
+            icon_color: >-
+              {% if is_state(entity,'ready') %}green
+              {% elif is_state(entity,'partial') %}teal
+              {% elif is_state(entity,'warming') %}amber
+              {% elif is_state(entity,'gated') %}orange
+              {% else %}grey{% endif %}
+            tap_action:
+              action: more-info
+          - type: custom:mushroom-template-card
+            entity: sensor.dsc_learn_activity
+            primary: What learning is doing
+            secondary: "{{ states(entity) }}"
+            icon: mdi:school-outline
+            icon_color: >-
+              {% set s = states(entity)|lower %}
+              {{ 'green' if s.startswith('learning') else
+                 'amber' if s.startswith('waiting') or s.startswith('paused') else
+                 'grey' }}
+            tap_action:
+              action: more-info
+          - type: custom:mushroom-template-card
+            entity: binary_sensor.dsc_learn_gate_open
+            primary: Sample gate
+            secondary: >-
+              {% if is_state(entity,'on') %}
+                {{ states('sensor.dsc_learn_activity') }}
+              {% else %}Blocked — enable learn / clear failsafe / takeover / fault{% endif %}
+            icon: mdi:gate-open
+            icon_color: "{{ 'green' if is_state(entity,'on') else 'orange' }}"
+            tap_action:
+              action: more-info
+      - type: markdown
+        content: >-
+          *Phase A measures **one air appliance at a time** (humidifier,
+          dehumidifier, heater, or AC **in service**). Fans and the grow mat
+          may stay on — that no longer blocks learning. Out-of-service levers
+          are skipped. Status chips move `warming` → `partial` → `ready` as
+          each lever hits the sample floor. **Activity** is the source of
+          truth (gate open ≠ measuring). Phase B (below) stays **off** until
+          Activity shows appliance samples climbing — then enable when ready.*
+
+  - type: grid
+    cards:
+      - type: heading
+        heading: PHASE B — ladder wait clamps (opt-in)
+        heading_style: subtitle
+      - type: custom:mushroom-chips-card
+        alignment: start
+        chips:
+          - type: template
+            entity: sensor.dsc_learn_phase_b_status
+            icon: mdi:tune-vertical
+            icon_color: >-
+              {% set s = states(entity) %}
+              {{ 'green' if s == 'idle' else 'amber' if s in ['warming','blocked'] else
+                 'grey' if s == 'off' else 'red' }}
+            content: >-
+              B {{ states(entity)|upper }}
+          - type: template
+            entity: input_boolean.dsc_climate_learn_phase_b_enabled
+            icon: mdi:write
+            icon_color: "{{ 'cyan' if is_state(entity,'on') else 'grey' }}"
+            content: >-
+              {{ 'B ON' if is_state(entity,'on') else 'B OFF' }}
+            tap_action:
+              action: toggle
+          - type: template
+            entity: input_boolean.dsc_learn_phase_b_locked
+            icon: mdi:lock
+            icon_color: "{{ 'orange' if is_state(entity,'on') else 'grey' }}"
+            content: >-
+              {{ 'LOCKED' if is_state(entity,'on') else 'WRITABLE' }}
+            tap_action:
+              action: toggle
+          - type: template
+            entity: sensor.dsc_learn_last_sample_age
+            icon: mdi:timer-sand
+            content: >-
+              {% if states(entity) in ['unknown','unavailable'] %}age —
+              {% else %}{{ states(entity) }} min{% endif %}
+      - type: entities
+        title: Ladder wait bases (hub NVS)
+        show_header_toggle: false
+        entities:
+          - type: conditional
+            conditions:
+              - entity: number.dsc_hub_ladder_wait_dehum
+                state_not: unavailable
+            row:
+              entity: number.dsc_hub_ladder_wait_dehum
+              name: Dehum wait (s)
+          - type: conditional
+            conditions:
+              - entity: number.dsc_hub_ladder_wait_hum
+                state_not: unavailable
+            row:
+              entity: number.dsc_hub_ladder_wait_hum
+              name: Hum wait (s)
+          - type: conditional
+            conditions:
+              - entity: number.dsc_hub_ladder_wait_heat
+                state_not: unavailable
+            row:
+              entity: number.dsc_hub_ladder_wait_heat
+              name: Heat wait (s)
+          - type: conditional
+            conditions:
+              - entity: number.dsc_hub_ladder_wait_ac
+                state_not: unavailable
+            row:
+              entity: number.dsc_hub_ladder_wait_ac
+              name: AC wait (s)
+          - type: conditional
+            conditions:
+              - entity: number.dsc_hub_ladder_wait_mat
+                state_not: unavailable
+            row:
+              entity: number.dsc_hub_ladder_wait_mat
+              name: Mat wait (s)
+          - type: section
+            label: Phase B clamps (HA)
+          - entity: input_number.dsc_learn_wait_floor_s
+          - entity: input_number.dsc_learn_wait_ceil_s
+          - entity: input_number.dsc_learn_phase_b_alpha
+      - type: conditional
+        conditions:
+          - condition: state
+            entity: number.dsc_hub_ladder_wait_dehum
+            state: unavailable
+        card:
+          type: markdown
+          content: >-
+            *Hub ladder wait numbers appear after ESPHome Install of hub
+            firmware **5.1.0** (Phase B NVS bases). Until then Phase B
+            clamps stay ready but have nothing to write.*
+      - type: markdown
+        content: >-
+          *Phase B writes **only** ladder base waits on the hub.
+          Failsafe, watchdog, min-off, and fans are never touched.
+          Default is **off**. Lock freezes writes after manual edits.*
+      - type: horizontal-stack
+        cards:
+          - type: button
+            name: Reset Phase A coeffs
+            icon: mdi:restore
+            tap_action:
+              action: none
+            hold_action:
+              action: call-service
+              service: script.dsc_climate_learn_reset
+          - type: button
+            name: Reset waits → open-loop
+            icon: mdi:timer-refresh
+            tap_action:
+              action: none
+            hold_action:
+              action: call-service
+              service: script.dsc_climate_learn_reset_waits
+      - type: markdown
+        content: "*Hold to reset*"
+
+  - type: grid
+    cards:
+      - type: heading
+        heading: APPLIANCE RESULTS — auto-collected effect DB
+        heading_style: title
+      - type: markdown
+        content: >-
+          *While levers are ON and the learn gate is open, Phase A EMA
+          samples real ΔT / ΔAH and stores efficiency vs nameplate
+          (`dsc_learn_eff_*`). This is the automatic results database for
+          heaters, humidifiers, dehumidifiers, mat, and vent. Fan / light
+          curves above are operator-measured.*
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+          - type: custom:mushroom-template-card
+            entity: input_number.dsc_learn_eff_heater
+            primary: Heater
+            secondary: >-
+              {{ states(entity) }}× nameplate ·
+              {{ states('input_number.dsc_learn_samples_heater')|int(0) }} samples
+            icon: mdi:radiator
+            icon_color: >-
+              {% set n = states('input_number.dsc_learn_samples_heater')|float(0) %}
+              {% set need = states('input_number.dsc_learn_min_samples')|float(5) %}
+              {{ 'green' if n >= need else 'amber' if n > 0 else 'grey' }}
+            tap_action:
+              action: more-info
+          - type: custom:mushroom-template-card
+            entity: input_number.dsc_learn_eff_hum
+            primary: Humidifier
+            secondary: >-
+              {{ states(entity) }}× nameplate ·
+              {{ states('input_number.dsc_learn_samples_hum')|int(0) }} samples
+            icon: mdi:air-humidifier
+            icon_color: >-
+              {% set n = states('input_number.dsc_learn_samples_hum')|float(0) %}
+              {% set need = states('input_number.dsc_learn_min_samples')|float(5) %}
+              {{ 'green' if n >= need else 'amber' if n > 0 else 'grey' }}
+            tap_action:
+              action: more-info
+          - type: custom:mushroom-template-card
+            entity: input_number.dsc_learn_eff_dehum
+            primary: Dehumidifier
+            secondary: >-
+              {{ states(entity) }}× nameplate ·
+              {{ states('input_number.dsc_learn_samples_dehum')|int(0) }} samples
+            icon: mdi:water-remove
+            icon_color: >-
+              {% set n = states('input_number.dsc_learn_samples_dehum')|float(0) %}
+              {% set need = states('input_number.dsc_learn_min_samples')|float(5) %}
+              {{ 'green' if n >= need else 'amber' if n > 0 else 'grey' }}
+            tap_action:
+              action: more-info
+          - type: custom:mushroom-template-card
+            entity: input_number.dsc_learn_eff_mat
+            primary: Grow mat
+            secondary: >-
+              {{ states(entity) }}× nameplate ·
+              {{ states('input_number.dsc_learn_samples_mat')|int(0) }} samples
+            icon: mdi:heating-coil
+            icon_color: >-
+              {% set n = states('input_number.dsc_learn_samples_mat')|float(0) %}
+              {% set need = states('input_number.dsc_learn_min_samples')|float(5) %}
+              {{ 'green' if n >= need else 'amber' if n > 0 else 'grey' }}
+            tap_action:
+              action: more-info
+          - type: custom:mushroom-template-card
+            entity: input_number.dsc_learn_eff_vent_cool
+            primary: Vent cool
+            secondary: >-
+              {{ states(entity) }}× ·
+              {{ states('input_number.dsc_learn_samples_vent_cool')|int(0) }} samples
+            icon: mdi:fan-chevron-up
+            icon_color: teal
+            tap_action:
+              action: more-info
+          - type: custom:mushroom-template-card
+            entity: input_number.dsc_learn_eff_vent_dry
+            primary: Vent dry
+            secondary: >-
+              {{ states(entity) }}× ·
+              {{ states('input_number.dsc_learn_samples_vent_dry')|int(0) }} samples
+            icon: mdi:weather-windy
+            icon_color: blue
+            tap_action:
+              action: more-info
+
+      - type: heading
+        heading: OUTPUTS — ETA & headroom
+        heading_style: title
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+          - type: custom:mushroom-template-card
+            entity: sensor.dsc_minutes_to_temp_target
+            primary: >-
+              {% set m = states(entity)|float(none) %}
+              {% if m is none %}ETA temp —
+              {% elif m|int == 0 %}At temp target
+              {% elif m|int >= 999 %}No capacity / wrong direction (not a clock)
+              {% else %}~{{ m|int }} min to temp{% endif %}
+            secondary: >-
+              Target {{ states('number.dsc_hub_target_temp') }}°C · tent
+              {{ states('sensor.dsc_hub_tent_temperature') }}°C
+            icon: mdi:thermometer-chevron-up
+            icon_color: teal
+            tap_action:
+              action: more-info
+          - type: custom:mushroom-template-card
+            entity: sensor.dsc_minutes_to_rh_target
+            primary: >-
+              {% set m = states(entity)|float(none) %}
+              {% if m is none %}ETA RH —
+              {% elif m|int == 0 %}RH in band
+              {% elif m|int >= 999 %}Wrong direction
+              {% else %}~{{ m|int }} min to RH{% endif %}
+            secondary: >-
+              Band {{ states('number.dsc_hub_rh_target_min') }}–{{
+              states('number.dsc_hub_rh_target_max') }}% · now
+              {{ states('sensor.dsc_hub_tent_humidity') }}%
+            icon: mdi:water-percent
+            icon_color: blue
+            tap_action:
+              action: more-info
+      - type: entities
+        title: Capacity (nameplate vs learned)
+        show_header_toggle: false
+        entities:
+          - entity: sensor.dsc_heat_balance_btu
+            name: Heat balance (nameplate)
+          - entity: sensor.dsc_heat_balance_btu_learned
+            name: Heat balance (learned)
+          - entity: sensor.dsc_moisture_net_rate
+            name: Moisture net (nameplate)
+          - entity: sensor.dsc_moisture_net_rate_learned
+            name: Moisture net (learned)
+          - entity: sensor.dsc_minutes_to_temp_target
+            name: Minutes to temp
+          - entity: sensor.dsc_minutes_to_rh_target
+            name: Minutes to RH
+      - type: custom:bar-card
+        title: Lever efficiency (1.0 = nameplate)
+        entities:
+          - entity: input_number.dsc_learn_eff_dehum
+            name: Dehum
+          - entity: input_number.dsc_learn_eff_hum
+            name: Hum
+          - entity: input_number.dsc_learn_eff_heater
+            name: Heater
+          - entity: input_number.dsc_learn_eff_mat
+            name: Mat
+          - entity: input_number.dsc_learn_eff_vent_cool
+            name: Vent cool
+          - entity: input_number.dsc_learn_eff_vent_dry
+            name: Vent dry
+          - entity: input_number.dsc_learn_eff_recirc
+            name: Recirc
+          - entity: input_number.dsc_learn_eff_ac
+            name: AC
+        min: 0
+        max: 2
+        height: 18
+        decimal: 2
+        positions:
+          icon: "off"
+          indicator: outside
+          name: inside
+          value: inside
+        severity:
+          - color: "#f87171"
+            from: 0
+            to: 0.5
+          - color: "#fbbf24"
+            from: 0.5
+            to: 0.85
+          - color: "#34d399"
+            from: 0.85
+            to: 1.15
+          - color: "#38bdf8"
+            from: 1.15
+            to: 2
+
+  - type: grid
+    column_span: 3
+    cards:
+      - type: heading
+        heading: CHARTS — efficiencies, ETA, climate response
+        heading_style: title
+      - type: custom:apexcharts-card
+        graph_span: 48h
+        update_interval: 5min
+        header:
+          show: true
+          title: Learned lever efficiency — 48 h
+          show_states: true
+          colorize_states: true
+        all_series_config:
+          extend_to: now
+          fill_raw: last
+          curve: smooth
+          stroke_width: 2
+        apex_config:
+          chart:
+            height: 280
+            animations:
+              enabled: false
+          legend:
+            show: true
+            position: top
+          yaxis:
+            - min: 0
+              max: 2
+              decimalsInFloat: 2
+              title:
+                text: "× nameplate"
+        series:
+          - entity: input_number.dsc_learn_eff_dehum
+            name: Dehum
+            color: "#38bdf8"
+          - entity: input_number.dsc_learn_eff_heater
+            name: Heater
+            color: "#f97316"
+          - entity: input_number.dsc_learn_eff_vent_cool
+            name: Vent cool
+            color: "#34d399"
+          - entity: input_number.dsc_learn_eff_vent_dry
+            name: Vent dry
+            color: "#a78bfa"
+          - entity: input_number.dsc_learn_eff_hum
+            name: Hum
+            color: "#22d3ee"
+      - type: custom:apexcharts-card
+        graph_span: 24h
+        update_interval: 2min
+        header:
+          show: true
+          title: ETA & headroom — 24 h
+          show_states: true
+          colorize_states: true
+        all_series_config:
+          extend_to: now
+          fill_raw: last
+        apex_config:
+          chart:
+            height: 260
+            animations:
+              enabled: false
+          legend:
+            show: true
+            position: top
+        yaxis:
+          - id: eta
+            decimals: 0
+            apex_config:
+              title:
+                text: min
+          - id: bal
+            opposite: true
+            decimals: 0
+            apex_config:
+              title:
+                text: BTU/h · g/h
+        series:
+          - entity: sensor.dsc_minutes_to_temp_target
+            name: Min → temp
+            yaxis_id: eta
+            curve: stepline
+            stroke_width: 2
+            color: "#f97316"
+            float_precision: 0
+          - entity: sensor.dsc_minutes_to_rh_target
+            name: Min → RH
+            yaxis_id: eta
+            curve: stepline
+            stroke_width: 2
+            color: "#38bdf8"
+            float_precision: 0
+          - entity: sensor.dsc_heat_balance_btu_learned
+            name: Heat learned
+            yaxis_id: bal
+            curve: smooth
+            stroke_width: 2
+            color: "#fbbf24"
+            float_precision: 0
+          - entity: sensor.dsc_moisture_net_rate_learned
+            name: Moisture learned
+            yaxis_id: bal
+            curve: smooth
+            stroke_width: 2
+            color: "#22d3ee"
+            float_precision: 1
+      - type: custom:apexcharts-card
+        graph_span: 12h
+        update_interval: 1min
+        header:
+          show: true
+          title: Tent response while learning — 12 h
+          show_states: true
+          colorize_states: true
+        all_series_config:
+          extend_to: now
+          fill_raw: last
+        apex_config:
+          chart:
+            height: 260
+            animations:
+              enabled: false
+          legend:
+            show: true
+            position: top
+        yaxis:
+          - id: temp
+            decimals: 1
+            apex_config:
+              title:
+                text: "°C"
+          - id: ah
+            opposite: true
+            decimals: 2
+            apex_config:
+              title:
+                text: "g/m³"
+        series:
+          - entity: sensor.dsc_hub_tent_temperature
+            name: Tent °C
+            yaxis_id: temp
+            curve: smooth
+            stroke_width: 2
+            color: "#f87171"
+          - entity: number.dsc_hub_target_temp
+            name: Target °C
+            yaxis_id: temp
+            curve: stepline
+            stroke_width: 1
+            color: "#fb923c"
+            stroke_dash: 4
+          - entity: sensor.dsc_ah_tent
+            name: Tent AH
+            yaxis_id: ah
+            curve: smooth
+            stroke_width: 2
+            color: "#60a5fa"
+          - entity: sensor.dsc_ah_room
+            name: Room AH
+            yaxis_id: ah
+            curve: smooth
+            stroke_width: 1
+            color: "#94a3b8"
+      - type: custom:mini-graph-card
+        name: Sample counts (confidence)
+        hours_to_show: 168
+        points_per_hour: 1
+        line_width: 2
+        animate: true
+        show:
+          state: true
+          fill: fade
+          legend: true
+          labels: false
+        entities:
+          - entity: input_number.dsc_learn_samples_dehum
+            name: Dehum
+            color: "#38bdf8"
+          - entity: input_number.dsc_learn_samples_heater
+            name: Heater
+            color: "#f97316"
+          - entity: input_number.dsc_learn_samples_vent_cool
+            name: Vent cool
+            color: "#34d399"
+          - entity: input_number.dsc_learn_samples_vent_dry
+            name: Vent dry
+            color: "#a78bfa"
+          - entity: input_number.dsc_learn_samples_hum
+            name: Hum
+            color: "#22d3ee"
+          - entity: input_number.dsc_learn_samples_mat
+            name: Mat
+            color: "#a3e635"
+
+  - type: grid
+    cards:
+      - type: heading
+        heading: SETTINGS
+        heading_style: title
+      - type: entities
+        title: Observer
+        show_header_toggle: false
+        entities:
+          - entity: input_boolean.dsc_climate_learn_enabled
+            name: Learning enabled
+          - entity: input_number.dsc_learn_alpha
+            name: EMA α (lower = slower)
+          - entity: input_number.dsc_learn_min_samples
+            name: Min samples to trust
+      - type: custom:expander-card
+        title: 🔢 Sample counts
+        expanded: false
+        card_mod:
+          style: |
+            ha-card {
+              border-left: 3px solid rgba(56,189,248,0.4);
+              border-radius: 10px;
+            }
+            ha-card .title {
+              font-weight: 600;
+              letter-spacing: 0.3px;
+            }
+        cards:
+          - type: entities
+            show_header_toggle: false
+            entities:
+              - entity: input_number.dsc_learn_samples_dehum
+                name: Dehum
+              - entity: input_number.dsc_learn_samples_hum
+                name: Hum
+              - entity: input_number.dsc_learn_samples_heater
+                name: Heater
+              - entity: input_number.dsc_learn_samples_mat
+                name: Mat
+              - entity: input_number.dsc_learn_samples_vent_cool
+                name: Vent cool
+              - entity: input_number.dsc_learn_samples_vent_dry
+                name: Vent dry
+              - entity: input_number.dsc_learn_samples_recirc
+                name: Recirc
+              - entity: input_number.dsc_learn_samples_ac
+                name: AC
+      - type: custom:expander-card
+        title: ⚙️ Coefficients (editable · 1.0 = nameplate)
+        expanded: false
+        card_mod:
+          style: |
+            ha-card {
+              border-left: 3px solid rgba(56,189,248,0.4);
+              border-radius: 10px;
+            }
+            ha-card .title {
+              font-weight: 600;
+              letter-spacing: 0.3px;
+            }
+        cards:
+          - type: entities
+            show_header_toggle: false
+            entities:
+              - entity: input_number.dsc_learn_eff_dehum
+                name: Dehum ×
+              - entity: input_number.dsc_learn_eff_hum
+                name: Hum ×
+              - entity: input_number.dsc_learn_eff_heater
+                name: Heater ×
+              - entity: input_number.dsc_learn_eff_mat
+                name: Mat ×
+              - entity: input_number.dsc_learn_eff_vent_cool
+                name: Vent cool ×
+              - entity: input_number.dsc_learn_eff_vent_dry
+                name: Vent dry ×
+              - entity: input_number.dsc_learn_eff_recirc
+                name: Recirc ×
+              - entity: input_number.dsc_learn_eff_ac
+                name: AC ×
+      - type: custom:mushroom-template-card
+        primary: Reset coefficients to nameplate
+        secondary: Hold to reset
+        icon: mdi:restore
+        icon_color: amber
+        tap_action:
+          action: more-info
+          entity: script.dsc_climate_learn_reset
+        hold_action:
+          action: call-service
+          service: script.dsc_climate_learn_reset
+      - type: markdown
+        content: >-
+          *Plant nameplates (CFM / volumes / L/day) stay under
+          **Climate → Plant specs**. Optional fan CFM / SF1000 PPFD
+          curves are on this page (unset = % × nameplate). Phase A
+          watches live ΔT/ΔAH while each lever is ON and the gate is
+          open — that is the automatic appliance results database.
+          AC / clone-mister rows only move once those actuators are
+          wired.*
+

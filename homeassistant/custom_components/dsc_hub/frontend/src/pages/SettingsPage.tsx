@@ -381,7 +381,7 @@ export function SettingsPage() {
 
   return (
     <div className="dsc-page">
-      <PageHeader icon="settings" title="Settings" subtitle="DSC-HUB 7.1.0 — Pi appliance" />
+      <PageHeader icon="settings" title="Settings" subtitle="DSC-HUB 7.3.0 — Pi appliance" />
 
       <section className="dsc-card">
         <h3>Fleet inventory</h3>

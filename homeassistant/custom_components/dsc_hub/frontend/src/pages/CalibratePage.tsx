@@ -431,6 +431,80 @@ function TankBiasPanel() {
   );
 }
 
+function LabWetCalPanel({ disabled }: { disabled: boolean }) {
+  const { callService } = useFleetActions();
+  const [pot, setPot] = useState("1");
+  const [bufferPct, setBufferPct] = useState("50");
+  const [status, setStatus] = useState("");
+  const [confirm, setConfirm] = useState(false);
+
+  const runLabWet = async () => {
+    setStatus(`Stamping pot${pot} with ${bufferPct}% buffer…`);
+    try {
+      await callService("script", "turn_on", {
+        entity_id: `script.dsc_pot${pot}_lab_wet_cal`,
+        variables: { buffer_pct: Number(bufferPct) },
+      });
+      setStatus(`Lab wet script triggered for pot${pot}. Verify buffer mark on Root Zone.`);
+    } catch (exc) {
+      setStatus(exc instanceof Error ? exc.message : "Lab wet failed — see docs/ops/LAB-WET-CAL.md");
+    } finally {
+      setConfirm(false);
+    }
+  };
+
+  return (
+    <Card className="dsc-glass" title="Lab wet calibration wizard (N-016)" icon="root">
+      <ol className="dsc-muted" style={{ fontSize: 13, marginBottom: 12, paddingLeft: 18 }}>
+        <li>Remove probe from soil; rinse in distilled water.</li>
+        <li>Soak probe in known buffer (document target % in notes).</li>
+        <li>Select pot and buffer %; confirm to stamp ESP scale.</li>
+        <li>Re-seat probe in idle home pot; verify reading within tolerance.</li>
+      </ol>
+      <div className="dsc-row-actions">
+        <label>
+          Pot
+          <select className="dsc-input" value={pot} onChange={(e) => setPot(e.target.value)}>
+            {[1, 2, 3, 4].map((n) => (
+              <option key={n} value={String(n)}>
+                pot{n}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Buffer %
+          <input
+            className="dsc-input"
+            type="number"
+            min={0}
+            max={100}
+            step={0.1}
+            value={bufferPct}
+            onChange={(e) => setBufferPct(e.target.value)}
+          />
+        </label>
+        <Button variant="primary" disabled={disabled} onClick={() => setConfirm(true)}>
+          Run lab wet stamp
+        </Button>
+      </div>
+      {status ? <p className="dsc-honesty">{status}</p> : null}
+      <DecisionLayer
+        open={confirm}
+        onDismiss={() => setConfirm(false)}
+        onConfirm={() => void runLabWet()}
+        title={`Lab wet pot${pot}`}
+        confirmLabel="Stamp buffer"
+        help={null}
+      >
+        <p>
+          This triggers the pot lab-wet script with buffer {bufferPct}%. Peer median does not replace this step.
+        </p>
+      </DecisionLayer>
+    </Card>
+  );
+}
+
 function SoilCalHonestyPanel() {
   const { callService } = useFleetActions();
   const [showWizard, setShowWizard] = useState(false);
@@ -489,7 +563,7 @@ function SoilCalHonestyPanel() {
       <p className="dsc-honesty">
         <strong>Lab buffer (lab wet)</strong> stamps a single channel with a known buffer solution on the pot ESP.
         After lab wet, treat that channel as buffer-calibrated until Reset. Peer median does not substitute for a wet
-        cal pass — see <code>docs/LAB-WET-CAL.md</code> for the operator procedure.
+        cal pass — see <code>docs/ops/LAB-WET-CAL.md</code> for the operator procedure.
       </p>
       <p className="dsc-honesty">
         Fan CFM and light PAR sessions on this page own <code>input_number.dsc_cal_*</code> and{" "}
@@ -506,6 +580,7 @@ function SoilCalHonestyPanel() {
       </div>
       {peerStatus ? <p className="dsc-honesty">{peerStatus}</p> : null}
       {pushStatus ? <p className="dsc-honesty">{pushStatus}</p> : null}
+      <LabWetCalPanel disabled={busy} />
       <DecisionLayer
         open={confirmPush}
         onDismiss={() => setConfirmPush(false)}

@@ -1,0 +1,2107 @@
+title: Home
+icon: mdi:monitor-dashboard
+path: home
+subview: true
+type: sections
+max_columns: 4
+sections:
+  - type: grid
+    cards:
+      - type: heading
+        heading: Now
+        heading_style: title
+      - type: custom:mushroom-chips-card
+        alignment: start
+        chips:
+          - type: template
+            entity: sensor.dsc_hub_uptime
+            icon: >-
+              {{ 'mdi:chip' if not is_state(entity,'unavailable') else
+              'mdi:alert-circle' }}
+            icon_color: "{{ 'green' if not is_state(entity,'unavailable') else 'red' }}"
+            content: >-
+              {{ 'HUB ONLINE' if not is_state(entity,'unavailable') else
+              'HUB OFFLINE' }}
+          - type: template
+            entity: sensor.dsc_control_wifi_rssi
+            icon: >-
+              {{ 'mdi:tablet-dashboard' if
+              is_state('binary_sensor.dsc_hub_panel_link','on')
+              or not is_state(entity,'unavailable') else
+              'mdi:tablet-dashboard-off' }}
+            icon_color: >-
+              {% if is_state('binary_sensor.dsc_hub_panel_link','on') %}green
+              {% elif not is_state(entity,'unavailable') %}amber
+              {% else %}red{% endif %}
+            content: >-
+              {% if is_state('binary_sensor.dsc_hub_panel_link','on') %}PANEL ESP-NOW
+              {% elif not is_state(entity,'unavailable') %}PANEL HA-ONLY
+              {% else %}PANEL OFFLINE{% endif %}
+            tap_action:
+              action: navigate
+              navigation_path: /dsc-hub-pro/system
+          - type: template
+            entity: sensor.dsc_hub_heartbeat
+            icon: mdi:heart-pulse
+            icon_color: >-
+              {% if is_state(entity,'unavailable') or is_state(entity,'unknown') %}red
+              {% else %}green{% endif %}
+            content: >-
+              {% if is_state(entity,'unavailable') or is_state(entity,'unknown') %}NO BEAT
+              {% else %}BEAT {{ states(entity) }}{% endif %}
+            tap_action:
+              action: navigate
+              navigation_path: /dsc-hub-pro/system
+          - type: template
+            entity: sensor.dsc_hub_uptime
+            icon: mdi:timer-outline
+            icon_color: >-
+              {{ 'green' if not is_state(entity,'unavailable') else 'red' }}
+            content: >-
+              {% set s = states(entity)|float(0) %}
+              {% if is_state(entity,'unavailable') %}—{% elif s >= 86400 %}{{
+              (s/86400)|round(1) }}d{% elif s >= 3600 %}{{ (s/3600)|round(1)
+              }}h{% else %}{{ (s/60)|round(0)|int }}m{% endif %}
+          - type: template
+            entity: sensor.dsc_active_alert_count
+            icon: >-
+              {% set n = states(entity) | int(0) %}
+              {{ 'mdi:check-circle' if n == 0 else 'mdi:alert-decagram' }}
+            content: >
+              {% set n = states(entity) | int(0) %}
+              {{ 'All clear' if n == 0 else n ~ ' alert(s)' }}
+            icon_color: >
+              {% set n = states(entity) | int(0) %}
+              {{ 'green' if n == 0 else 'red' }}
+            tap_action:
+              action: navigate
+              navigation_path: /dsc-hub-pro/system
+          - type: template
+            entity: sensor.dsc_fleet_version_status
+            icon: >-
+              {% set s = states(entity) %}
+              {{ 'mdi:check-decagram' if s == 'ok' else
+                 'mdi:alert' if s == 'warn' else 'mdi:alert-octagon' }}
+            icon_color: >-
+              {% set s = states(entity) %}
+              {{ 'green' if s == 'ok' else 'amber' if s == 'warn' else 'red' }}
+            content: >-
+              {% set s = states(entity) %}
+              {% set exp = state_attr(entity,'expected') or '5.1.0' %}
+              {{ 'FLEET ' ~ exp if s == 'ok' else 'FLEET DRIFT' }}
+            tap_action:
+              action: navigate
+              navigation_path: /dsc-hub-pro/system
+          - type: template
+            entity: sensor.dsc_cannalib_api_hits
+            icon: >-
+              {{ 'mdi:api' if is_state('binary_sensor.dsc_cannalib_api_online','on')
+                 else 'mdi:api-off' }}
+            icon_color: >-
+              {{ 'green' if is_state('binary_sensor.dsc_cannalib_api_online','on') else 'red' }}
+            content: >-
+              {% if is_state('binary_sensor.dsc_cannalib_api_online','on') %}
+                {{ 'CANNALIB ' ~ (states(entity)|int(0)) ~ ' hits' }}
+              {% else %}CANNALIB OFF{% endif %}
+            tap_action:
+              action: more-info
+              entity: sensor.dsc_cannalib_bandwidth_summary
+          - type: template
+            entity: sensor.dsc_cannalib_bandwidth_summary
+            icon: mdi:swap-vertical
+            icon_color: >-
+              {{ 'green' if is_state('binary_sensor.dsc_cannalib_api_online','on') else 'disabled' }}
+            content: >-
+              {% if is_state('binary_sensor.dsc_cannalib_api_online','on') %}
+                {{ states(entity) }}
+              {% else %}— MB{% endif %}
+            tap_action:
+              action: more-info
+              entity: sensor.dsc_cannalib_bandwidth_summary
+        card_mod:
+          style:
+            ".": |
+              @keyframes dsc-pulse-glow {
+                0%, 100% { filter: drop-shadow(0 0 0 transparent); }
+                50% { filter: drop-shadow(0 0 6px rgba(239,68,68,0.85)); }
+              }
+            "mushroom-template-chip:nth-child(5)$": |
+              mushroom-shape-icon {
+                {% if states('sensor.dsc_active_alert_count')|int(0) > 0 %}
+                animation: dsc-pulse-glow 1.4s ease-in-out infinite;
+                {% endif %}
+              }
+
+      - type: heading
+        heading: Cannalib catalog API
+        heading_style: subtitle
+      - type: tile
+        entity: sensor.dsc_cannalib_api_hits
+        name: Hits
+        icon: mdi:counter
+        vertical: false
+        color: green
+      - type: tile
+        entity: sensor.dsc_cannalib_bytes_in
+        name: Bandwidth in
+        icon: mdi:download-network
+        vertical: false
+      - type: tile
+        entity: sensor.dsc_cannalib_bytes_out
+        name: Bandwidth out
+        icon: mdi:upload-network
+        vertical: false
+      - type: tile
+        entity: sensor.dsc_cannalib_corpus_strains
+        name: Corpus strains
+        icon: mdi:cannabis
+        vertical: false
+        color: teal
+
+      - type: conditional
+        conditions:
+          - condition: state
+            entity: binary_sensor.dsc_reduced_kit
+            state: "on"
+        card:
+          type: custom:mushroom-template-card
+          primary: "Unexpected OOS — capacity offline"
+          secondary: >-
+            {{ state_attr('binary_sensor.dsc_reduced_kit','offline') | default('a live lever is parked') }}
+            — Full Auto uses next-best in-service levers.
+            Planned holes ({{ state_attr('binary_sensor.dsc_reduced_kit','planned_oos') }}) are inventory, not this card.
+            {% set gaps = state_attr('sensor.dsc_keepup_gaps','gaps') %}
+            {% if gaps %} Keep-up gaps: {{ gaps }}.{% endif %}
+            {{ state_attr('sensor.dsc_keepup_gaps','full_auto_honesty') }}
+          icon: mdi:package-variant-closed
+          icon_color: amber
+          tap_action:
+            action: navigate
+            navigation_path: /dsc-hub-pro/climate
+
+      - type: conditional
+        conditions:
+          - condition: state
+            entity: switch.dsc_hub_manual_takeover
+            state: "on"
+        card:
+          type: custom:mushroom-template-card
+          primary: MASTER MANUAL TAKEOVER ACTIVE
+          secondary: Automation frozen — hub obeys HA only
+          icon: mdi:gesture-tap-button
+          icon_color: purple
+          entity: switch.dsc_hub_manual_takeover
+          tap_action:
+            action: more-info
+      - type: conditional
+        conditions:
+          - condition: state
+            entity: switch.dsc_hub_tent_manual_override
+            state: "on"
+        card:
+          type: custom:mushroom-template-card
+          primary: MANUAL FAN OVERRIDE ACTIVE
+          secondary: Fan values held — photoperiod still driving the SF1000
+          icon: mdi:hand-back-right
+          icon_color: purple
+          entity: switch.dsc_hub_tent_manual_override
+          tap_action:
+            action: more-info
+      # v2.4: re-pointed at the CLONE tent — that is where the light is.
+      - type: conditional
+        conditions:
+          - condition: state
+            entity: binary_sensor.dsc_clone_dark_period_violation
+            state: "on"
+        card:
+          type: custom:mushroom-template-card
+          primary: ⚠ LIGHT ON IN 2x4 DARK PERIOD
+          secondary: SF1000 commanded on outside the clone window — herm risk
+          icon: mdi:weather-night-partly-cloudy
+          icon_color: red
+          entity: light.dsc_hub_sf1000_dimmer
+          tap_action:
+            action: more-info
+      - type: conditional
+        conditions:
+          - condition: state
+            entity: binary_sensor.dsc_hub_root_zone_sensor_fault
+            state: "on"
+        card:
+          type: custom:mushroom-template-card
+          primary: ROOT-ZONE PROBES OFFLINE
+          secondary: Grow mat fell back to clone-air control (v2.3 behaviour)
+          icon: mdi:thermometer-alert
+          icon_color: amber
+          entity: binary_sensor.dsc_hub_root_zone_sensor_fault
+          tap_action:
+            action: more-info
+      - type: custom:auto-entities
+        show_empty: false
+        card:
+          type: entities
+          title: ⚠️ Active System Alerts
+          state_color: true
+        filter:
+          include:
+            - entity_id: binary_sensor.dsc_hub_emergency_failsafe
+              state: "on"
+            - entity_id: binary_sensor.dsc_hub_climate_sensor_fault
+              state: "on"
+            - entity_id: binary_sensor.dsc_hub_aux_sensor_fault
+              state: "on"
+            - entity_id: binary_sensor.dsc_hub_root_zone_sensor_fault
+              state: "on"
+            - entity_id: binary_sensor.dsc_clone_dark_period_violation
+              state: "on"
+            - entity_id: binary_sensor.dsc_tank_*
+              state: "on"
+            - entity_id: binary_sensor.dsc_pot*_moisture_out_of_range
+              state: "on"
+            - entity_id: binary_sensor.dsc_pot*_ph_out_of_range
+              state: "on"
+            - entity_id: binary_sensor.dsc_pot*_root_zone_temp_out_of_range
+              state: "on"
+            - entity_id: binary_sensor.dsc_pot*_ec_*
+              state: "on"
+            - entity_id: binary_sensor.dsc_pot*_nitrogen_*
+              state: "on"
+      - type: custom:mushroom-chips-card
+        alignment: justify
+        chips:
+          - type: template
+            entity: binary_sensor.dsc_hub_pot1_esp_now_link
+            icon: mdi:access-point
+            icon_color: "{{ 'green' if is_state(entity,'on') else 'disabled' }}"
+            content: "P1 {{ 'ESP' if is_state(entity,'on') else 'HA' }}"
+            tap_action:
+              action: navigate
+              navigation_path: /dsc-hub-pro/root-zone
+          - type: template
+            entity: binary_sensor.dsc_hub_pot2_esp_now_link
+            icon: mdi:access-point
+            icon_color: "{{ 'green' if is_state(entity,'on') else 'disabled' }}"
+            content: "P2 {{ 'ESP' if is_state(entity,'on') else 'HA' }}"
+            tap_action:
+              action: navigate
+              navigation_path: /dsc-hub-pro/root-zone
+          - type: template
+            entity: binary_sensor.dsc_hub_pot3_esp_now_link
+            icon: mdi:access-point
+            icon_color: "{{ 'green' if is_state(entity,'on') else 'disabled' }}"
+            content: "P3 {{ 'ESP' if is_state(entity,'on') else 'HA' }}"
+            tap_action:
+              action: navigate
+              navigation_path: /dsc-hub-pro/root-zone
+          - type: template
+            entity: binary_sensor.dsc_hub_pot4_esp_now_link
+            icon: mdi:access-point
+            icon_color: "{{ 'green' if is_state(entity,'on') else 'disabled' }}"
+            content: "P4 {{ 'ESP' if is_state(entity,'on') else 'HA' }}"
+            tap_action:
+              action: navigate
+              navigation_path: /dsc-hub-pro/root-zone
+        card_mod:
+          style: |
+            @keyframes dsc-link-pulse {
+              0%, 100% { opacity: 1; }
+              50% { opacity: 0.55; }
+            }
+            mushroom-template-chip:nth-child(1) mushroom-shape-icon,
+            mushroom-template-chip:nth-child(2) mushroom-shape-icon,
+            mushroom-template-chip:nth-child(3) mushroom-shape-icon,
+            mushroom-template-chip:nth-child(4) mushroom-shape-icon {
+              {% if is_state('binary_sensor.dsc_hub_pot1_esp_now_link','on')
+                 or is_state('binary_sensor.dsc_hub_pot2_esp_now_link','on')
+                 or is_state('binary_sensor.dsc_hub_pot3_esp_now_link','on')
+                 or is_state('binary_sensor.dsc_hub_pot4_esp_now_link','on') %}
+              animation: dsc-link-pulse 2.4s ease-in-out infinite;
+              {% endif %}
+            }
+  - type: grid
+    column_span: 2
+    cards:
+      - type: heading
+        heading: SYSTEM MAP
+        heading_style: title
+      - type: custom:dsc-system-map-card
+        title: DSC-HUB
+        grid_options:
+          columns: 12
+          rows: 8
+      - type: markdown
+        content: >-
+          *SYSTEM MAP + AIRFLOW STATUS load from one JS resource: HACS
+          `DSC-HUB.js`, or `/local/dsc-system-map-card.js` (ha-sync deploys
+          both cards in that file). Hard-refresh after update. If you still
+          see a missing custom element, redownload the HACS DSC-HUB plugin
+          or re-add `/local/dsc-system-map-card.js` as a JavaScript resource.*
+      - type: heading
+        heading: Running
+        heading_style: subtitle
+      - type: custom:mushroom-chips-card
+        alignment: justify
+        chips:
+          - type: template
+            entity: switch.dsc_hub_heater_demand
+            icon: "{{ 'mdi:radiator' if is_state(entity,'on') else 'mdi:radiator-disabled' }}"
+            icon_color: "{{ 'deep-orange' if is_state(entity,'on') else 'disabled' }}"
+            content: Heat
+            tap_action:
+              action: more-info
+          - type: template
+            entity: switch.dsc_hub_ac_demand
+            icon: mdi:snowflake
+            icon_color: >-
+              {% if is_state('binary_sensor.dsc_ac_capacity_offline','on') %}amber
+              {% elif is_state(entity,'on') %}cyan
+              {% else %}disabled{% endif %}
+            content: >-
+              {% if is_state('binary_sensor.dsc_ac_capacity_offline','on') %}Cool ○
+              {% else %}Cool{% endif %}
+            tap_action:
+              action: more-info
+          - type: template
+            entity: switch.dsc_hub_humidifier_demand
+            icon: "{{ 'mdi:air-humidifier' if is_state(entity,'on') else 'mdi:air-humidifier-off' }}"
+            icon_color: "{{ 'blue' if is_state(entity,'on') else 'disabled' }}"
+            content: Hum
+            tap_action:
+              action: more-info
+          - type: template
+            entity: switch.dsc_hub_dehumidifier_demand
+            icon: mdi:water-remove
+            icon_color: >-
+              {% if not has_value('switch.dsc_de_humidifier_main_relay') %}red
+              {% elif is_state(entity,'on') %}teal
+              {% else %}disabled{% endif %}
+            content: >-
+              {% if not has_value('switch.dsc_de_humidifier_main_relay') %}Dehum offline
+              {% else %}Dehum{% endif %}
+            tap_action:
+              action: more-info
+          - type: template
+            entity: switch.dsc_hub_grow_mat_demand
+            icon: mdi:heating-coil
+            icon_color: >-
+              {% if is_state('binary_sensor.dsc_hub_root_zone_sensor_fault','on') %}red
+              {% elif is_state(entity,'on') %}orange
+              {% else %}disabled{% endif %}
+            content: >-
+              {% set t = states('sensor.dsc_coldest_root_zone_temp') %}
+              {% set p = state_attr('sensor.dsc_coldest_root_zone_temp','pot') %}
+              {% if t in ['unknown','unavailable',''] %}Mat
+              {%- else %}Mat {{ t|float(0)|round(1) }}C{% if p and p != 'none' %} P{{ p }}{% endif %}
+              {%- endif %}
+            tap_action:
+              action: more-info
+          - type: template
+            entity: switch.dsc_hub_clone_humidifier_demand
+            icon: mdi:sprinkler-variant
+            icon_color: >-
+              {% if is_state('binary_sensor.dsc_clone_humidifier_capacity_offline','on') %}amber
+              {% elif is_state(entity,'on') %}light-blue
+              {% else %}disabled{% endif %}
+            content: >-
+              {% if is_state('binary_sensor.dsc_clone_humidifier_capacity_offline','on') %}C-Hum ○
+              {% else %}C-Hum{% endif %}
+            tap_action:
+              action: more-info
+          - type: template
+            entity: light.dsc_hub_sf1000_dimmer
+            icon: >-
+              {% if is_state(entity,'on') %}mdi:lightbulb-on
+              {% else %}mdi:lightbulb-outline{% endif %}
+            icon_color: >-
+              {% if is_state('binary_sensor.dsc_clone_dark_period_violation','on') %}red
+              {% elif is_state(entity,'on') %}amber
+              {% else %}disabled{% endif %}
+            content: >-
+              {% set b = (state_attr(entity,'brightness') | float(0) / 255 * 100) | round(0) %}
+              {% if is_state(entity,'on') %}SF {{ b }}%{% else %}SF1000{% endif %}
+            tap_action:
+              action: more-info
+        card_mod:
+          style:
+            ".": |
+              @keyframes dsc-duty-pulse {
+                0%, 100% { filter: drop-shadow(0 0 0 transparent); transform: scale(1); }
+                50% { filter: drop-shadow(0 0 7px currentColor); transform: scale(1.08); }
+              }
+              @keyframes dsc-breathe {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.55; }
+              }
+            "mushroom-template-chip:nth-child(1)$": |
+              mushroom-shape-icon {
+                {% if is_state('switch.dsc_hub_heater_demand','on') %}
+                animation: dsc-duty-pulse 1.8s ease-in-out infinite;
+                {% endif %}
+              }
+            "mushroom-template-chip:nth-child(2)$": |
+              mushroom-shape-icon {
+                {% if is_state('switch.dsc_hub_ac_demand','on') %}
+                animation: dsc-duty-pulse 1.8s ease-in-out infinite;
+                {% endif %}
+              }
+            "mushroom-template-chip:nth-child(3)$": |
+              mushroom-shape-icon {
+                {% if is_state('switch.dsc_hub_humidifier_demand','on') %}
+                animation: dsc-duty-pulse 2s ease-in-out infinite;
+                {% endif %}
+              }
+            "mushroom-template-chip:nth-child(4)$": |
+              mushroom-shape-icon {
+                {% if not has_value('switch.dsc_de_humidifier_main_relay') %}
+                animation: dsc-breathe 1.2s ease-in-out infinite;
+                {% elif is_state('switch.dsc_hub_dehumidifier_demand','on') %}
+                animation: dsc-duty-pulse 2s ease-in-out infinite;
+                {% endif %}
+              }
+            "mushroom-template-chip:nth-child(5)$": |
+              mushroom-shape-icon {
+                {% if is_state('switch.dsc_hub_grow_mat_demand','on') %}
+                animation: dsc-duty-pulse 1.8s ease-in-out infinite;
+                {% endif %}
+              }
+            "mushroom-template-chip:nth-child(6)$": |
+              mushroom-shape-icon {
+                {% if is_state('switch.dsc_hub_clone_humidifier_demand','on') %}
+                animation: dsc-duty-pulse 2s ease-in-out infinite;
+                {% endif %}
+              }
+            "mushroom-template-chip:nth-child(7)$": |
+              mushroom-shape-icon {
+                {% if is_state('light.dsc_hub_sf1000_dimmer','on') %}
+                animation: dsc-breathe 2.6s ease-in-out infinite;
+                {% endif %}
+              }
+      - type: custom:mushroom-chips-card
+        alignment: justify
+        chips:
+          - type: template
+            entity: sensor.dsc_fan_intake_main_pct
+            icon: mdi:fan
+            icon_color: "{{ 'cyan' if states(entity)|float(0) > 0 else 'disabled' }}"
+            content: IN 4×8 {{ states(entity)|float(0)|round(0) }}%
+            tap_action:
+              action: navigate
+              navigation_path: /dsc-hub-pro/climate
+          - type: template
+            entity: sensor.dsc_fan_intake_2x4_pct
+            icon: mdi:fan
+            icon_color: "{{ 'cyan' if states(entity)|float(0) > 0 else 'disabled' }}"
+            content: IN 2×4 {{ states(entity)|float(0)|round(0) }}%
+            tap_action:
+              action: navigate
+              navigation_path: /dsc-hub-pro/climate
+          - type: template
+            entity: sensor.dsc_fan_exhaust_room_pct
+            icon: mdi:fan-chevron-up
+            icon_color: "{{ 'cyan' if states(entity)|float(0) > 0 else 'disabled' }}"
+            content: EX ROOM {{ states(entity)|float(0)|round(0) }}%
+            tap_action:
+              action: navigate
+              navigation_path: /dsc-hub-pro/climate
+          - type: template
+            entity: sensor.dsc_fan_exhaust_outside_pct
+            icon: mdi:fan-chevron-up
+            icon_color: "{{ 'cyan' if states(entity)|float(0) > 0 else 'disabled' }}"
+            content: EX OUT {{ states(entity)|float(0)|round(0) }}%
+            tap_action:
+              action: navigate
+              navigation_path: /dsc-hub-pro/climate
+        card_mod:
+          style:
+            ".": |
+              @keyframes dsc-fan-spin {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+              }
+            "mushroom-template-chip:nth-child(1)$": |
+              mushroom-shape-icon {
+                {% if states('sensor.dsc_fan_intake_main_pct')|float(0) > 0 %}
+                animation: dsc-fan-spin 1.3s linear infinite;
+                {% endif %}
+              }
+            "mushroom-template-chip:nth-child(2)$": |
+              mushroom-shape-icon {
+                {% if states('sensor.dsc_fan_intake_2x4_pct')|float(0) > 0 %}
+                animation: dsc-fan-spin 1.3s linear infinite;
+                {% endif %}
+              }
+            "mushroom-template-chip:nth-child(3)$": |
+              mushroom-shape-icon {
+                {% if states('sensor.dsc_fan_exhaust_room_pct')|float(0) > 0 %}
+                animation: dsc-fan-spin 1.1s linear infinite;
+                {% endif %}
+              }
+            "mushroom-template-chip:nth-child(4)$": |
+              mushroom-shape-icon {
+                {% if states('sensor.dsc_fan_exhaust_outside_pct')|float(0) > 0 %}
+                animation: dsc-fan-spin 1.4s linear infinite;
+                {% endif %}
+              }
+  - type: grid
+    cards:
+      - type: custom:logbook-card
+        title: Grow log
+        entity: input_boolean.dsc_event_log
+        history: 1
+        desc: true
+        show:
+          state: false
+          duration: false
+          start_date: true
+        custom_logs: true
+      # ============================================================
+      #  SYSTEM NARRATOR (collapsed by default — Home stays a pulse)
+      # ============================================================
+      - type: custom:expander-card
+        title: 📖 System narrator
+        expanded: false
+        card_mod:
+          style: |
+            ha-card {
+              border-left: 3px solid rgba(56,189,248,0.4);
+              border-radius: 10px;
+            }
+            ha-card .title {
+              font-weight: 600;
+              letter-spacing: 0.3px;
+            }
+        cards:
+          - type: markdown
+            content: >
+              {#- ================= GATHER STATE ================= -#}
+
+              {%- set ct   = states('sensor.dsc_hub_clone_temperature') |
+              float(0) -%}
+
+              {%- set crh  = states('sensor.dsc_hub_clone_humidity') | float(0)
+              -%}
+
+              {%- set cvpd = states('sensor.dsc_hub_clone_vpd_kpa') | float(0)
+              -%}
+
+              {%- set follow = is_state('select.dsc_hub_clone_mode','Follow 4x8') -%}
+
+              {%- set ct_target = states('number.dsc_hub_target_temp' if follow else
+              'number.dsc_hub_clone_target_temp') | float(24) -%}
+
+              {%- set cvmin = states('number.dsc_hub_vpd_target_min' if follow else
+              'number.dsc_hub_clone_vpd_min') | float(0.4) -%}
+
+              {%- set cvmax = states('number.dsc_hub_vpd_target_max' if follow else
+              'number.dsc_hub_clone_vpd_max') | float(0.8) -%}
+
+              {%- set crh_min = states('number.dsc_hub_rh_target_min' if follow else
+              'number.dsc_hub_clone_rh_min') | float(70) -%}
+
+
+              {%- set tt   = states('sensor.dsc_hub_tent_temperature') |
+              float(0) -%}
+
+              {%- set trh  = states('sensor.dsc_hub_tent_humidity') | float(0)
+              -%}
+
+              {%- set tvpd = states('sensor.dsc_hub_vpd_kpa') | float(0) -%}
+
+              {%- set tt_target = states('number.dsc_hub_target_temp') |
+              float(25) -%}
+
+              {%- set tvmin = states('number.dsc_hub_vpd_target_min') |
+              float(0.8) -%}
+
+              {%- set tvmax = states('number.dsc_hub_vpd_target_max') |
+              float(1.2) -%}
+
+
+              {%- set priority = states('select.dsc_hub_priority_tent') -%}
+
+              {%- set strategy = states('select.dsc_hub_control_strategy') -%}
+
+
+              {%- set mat_on   = is_state('switch.dsc_hub_grow_mat_demand','on')
+              -%}
+
+              {%- set heat_on  = is_state('switch.dsc_hub_heater_demand','on')
+              -%}
+
+              {%- set ac_on    = is_state('switch.dsc_hub_ac_demand','on') -%}
+
+              {%- set hum_on   =
+              is_state('switch.dsc_hub_humidifier_demand','on') -%}
+
+              {%- set dehum_on =
+              is_state('switch.dsc_hub_dehumidifier_demand','on') -%}
+
+              {%- set chum_on  =
+              is_state('switch.dsc_hub_clone_humidifier_demand','on') -%}
+
+
+              {#- ---- v2.4: root zone is the mat's sense point ---- -#}
+              {#- BUG-FIX 2026-08-02: coldest VOTED root, not POT1 — the
+                  mat votes across pots, so status must match the pot
+                  that actually drives heat. -#}
+
+              {%- set rz = states('sensor.dsc_coldest_root_zone_temp') | float(0)
+              -%}
+
+              {%- set rz_ok = has_value('sensor.dsc_coldest_root_zone_temp')
+              and is_state('binary_sensor.dsc_hub_root_zone_sensor_fault','off') -%}
+
+              {%- set rz_lo = states('number.dsc_hub_mat_root_zone_low') |
+              float(20) -%}
+
+              {%- set rz_hi = states('number.dsc_hub_mat_root_zone_high') |
+              float(24) -%}
+
+
+              {#- ---- v2.4: the SF1000 lives in the clone tent ---- -#}
+
+              {%- set sf_on = is_state('light.dsc_hub_sf1000_dimmer','on') -%}
+
+              {%- set sf_b = (state_attr('light.dsc_hub_sf1000_dimmer','brightness')
+              | float(0) / 255 * 100) | round(0) -%}
+
+              {%- set cwin = is_state('binary_sensor.dsc_hub_2x4_window_open','on') -%}
+
+              {%- set mwin = is_state('binary_sensor.dsc_hub_4x8_window_open','on') -%}
+
+              {%- set hold = is_state('switch.dsc_hub_manual_light_hold','on') -%}
+
+
+              {#- ---- optional trend sensors ---- -#}
+
+              {%- set ct_tr = none -%}
+
+              {%- set crh_tr = states('sensor.dsc_clone_rh_trend') | float(0) if
+              has_value('sensor.dsc_clone_rh_trend') else none -%}
+
+              {%- set cdir = 'steady' -%}
+
+              {%- if ct_tr is not none -%}
+                {%- set cdir = 'falling' if ct_tr <= -0.2 else ('rising' if ct_tr >= 0.2 else 'steady') -%}
+              {%- endif -%}
+
+              {%- set rhdir = '' -%}
+
+              {%- if crh_tr is not none -%}
+                {%- set rhdir = ' (falling)' if crh_tr <= -1 else (' (rising)' if crh_tr >= 1 else ' (steady)') -%}
+              {%- endif -%}
+
+
+              {#- ---- VPD sensitivity at current humidity (Tetens) ---- -#}
+
+              {%- set svp  = 0.6108 * (e ** (17.27 * ct / (ct + 237.3))) -%}
+
+              {%- set svp1 = 0.6108 * (e ** (17.27 * (ct - 1) / (ct - 1 +
+              237.3))) -%}
+
+              {%- set vpd_per_deg = (svp - svp1) * (1 - crh / 100) -%}
+
+              {%- set degs_to_floor = (((cvpd - cvmin) / vpd_per_deg) |
+              round(1)) if vpd_per_deg > 0 else 99 -%}
+
+              {%- set degs_to_ceiling = (((cvmax - cvpd) / vpd_per_deg) |
+              round(1)) if vpd_per_deg > 0 else 99 -%}
+
+
+              {#- ---- pot moisture ---- -#}
+
+              {%- set m1 = states('sensor.dsc_pot1_soil_moisture') | float(0)
+              -%}
+
+              {%- set m2 = states('sensor.dsc_pot2_soil_moisture') | float(0)
+              -%}
+
+              {%- set m4 = states('sensor.dsc_pot4_soil_moisture') | float(0)
+              -%}
+
+              {#- POT3 excluded: known probe fault reads 0.0% and would
+              always win a min(). A faulted sensor must never become
+              the driest pot. -#}
+
+              {%- set pmin = [m1, m2, m4] | min -%}
+
+              {%- set ndry = [m1, m2, m4] | select('lt', 30) | list | length -%}
+
+              {%- set driest = 'POT1' if pmin == m1 else ('POT2' if pmin == m2
+              else 'POT4') -%}
+
+
+              {#- ---- fans ---- -#}
+
+              {%- set fx  =
+              state_attr('fan.dsc_hub_6_inch_exhaust_outside','percentage') |
+              int(0) -%}
+
+              {%- set fr  =
+              state_attr('fan.dsc_hub_6_inch_exhaust_room','percentage') |
+              int(0) -%}
+
+              {%- set fi1 =
+              state_attr('fan.dsc_hub_4_inch_intake_fan_main','percentage') |
+              int(0) -%}
+
+              {%- set fi2 =
+              state_attr('fan.dsc_hub_4_inch_intake_fan_2x4','percentage') |
+              int(0) -%}
+
+
+              ## 🧠 System Narrator
+
+              *Serving: **{{ priority }}** · Strategy: **{{ strategy }}***
+
+
+              ### 🌿 Clone tent — *has the light*
+
+              Temperature is **{{ ct | round(1) }}°C** ({{ cdir }}) against a {{
+              ct_target | round(1) }}°C target, RH **{{ crh | round(0) | int
+              }}%**{{ rhdir }}, VPD **{{ cvpd | round(2) }} kPa** (band {{ cvmin
+              }}–{{ cvmax }}).
+
+              {% if sf_on -%}
+              ☀️ SF1000 at **{{ sf_b }}%**{{ ' — **HELD MANUALLY**, schedule paused' if hold else '' }}{{ ' ⚠️ **OUTSIDE THE WINDOW**' if not cwin else '' }}. Remember the lamp is a heater: it is adding load to this tent right now, and the 4x8 may be drinking that warmth through the chain.
+              {%- else -%}
+              🌙 SF1000 **dark**{{ ' (window is open — check Manual Light Hold)' if cwin else ' — in the dark period' }}.
+              {%- endif %}
+
+              {%- if heat_on %}
+
+              🔥 **Room heater demand is ACTIVE** — the hub is heating the
+              shared room. Expect RH to fall and VPD to climb as warm air
+              arrives.
+
+              {%- elif ct < ct_target %}
+
+              {%- if mat_on %} The grow mat is **ON** — but note it is holding
+              the ROOT ZONE to its band, not defending air temp; it will not
+              rescue this number.{% else %} The grow mat is off,{% endif %} Air
+              temp is **{{ (ct_target - ct) | round(1) }}°C under target**. The
+              room heater stays on standby because VPD ({{ cvpd | round(2) }})
+              is inside its band.
+
+              {%- if degs_to_floor < 99 %}
+
+              {%- if degs_to_floor <= 1 %}
+
+              ➡️ **Heater demand is imminent** — less than ~1°C more cooling (to
+              ≈{{ (ct - degs_to_floor) | round(1) }}°C) puts VPD under its {{
+              cvmin }} kPa floor.
+
+              {%- elif degs_to_floor <= 3 %}
+
+              ➡️ **If the clone tent cools another ~{{ degs_to_floor }}°C** (to
+              ≈{{ (ct - degs_to_floor) | round(1) }}°C at today's humidity), VPD
+              hits its {{ cvmin }} kPa floor — **heater demand will be
+              required**.
+
+              {%- else %}
+
+              On VPD alone, heater demand is still **~{{ degs_to_floor }}°C of
+              cooling away** — though the hub's own temperature deadband may
+              trip it sooner.
+
+              {%- endif %}
+
+              {%- endif %}
+
+              {%- else %}
+
+              Air temp is at/above target — no heating pressure.
+
+              {%- endif %}
+
+              {%- if mat_on or heat_on %}
+
+              💧 Watching humidity as heat is added: each +1°C lifts VPD by ≈{{
+              vpd_per_deg | round(2) }} kPa here. RH floor is {{ crh_min |
+              round(0) | int }}% (now {{ crh | round(0) | int }}%); clone
+              humidifier is {{ '**ON**' if chum_on else 'on standby' }}.
+
+              {%- endif %}
+
+              {%- if degs_to_ceiling <= 2 %}
+
+              ⚠️ Headroom warning: only ~{{ degs_to_ceiling }}°C of warming
+              before VPD tops its {{ cvmax }} kPa ceiling — expect exhaust to
+              ramp if heating continues.
+
+              {%- endif %}
+
+
+              ### ⬜ Main tent — *virtual window, no lamp*
+
+              **{{ tt | round(1) }}°C** / **{{ trh | round(0) | int }}%** / VPD
+              **{{ tvpd | round(2) }} kPa** (band {{ tvmin }}–{{ tvmax }}, temp
+              target {{ tt_target | round(1) }}°C). Window is **{{ 'OPEN' if
+              mwin else 'shut' }}** — schedule only; nothing is lit in here.
+
+              {%- set active = [] %}
+
+              {%- if heat_on %}{% set active = active + ['heater'] %}{% endif %}
+
+              {%- if ac_on %}{% set active = active + ['AC'] %}{% endif %}
+
+              {%- if hum_on %}{% set active = active + ['humidifier'] %}{% endif
+              %}
+
+              {%- if dehum_on %}{% set active = active + ['dehumidifier'] %}{%
+              endif %}
+
+              {%- if active | length > 0 %}
+
+              Running now: **{{ active | join(', ') }}**.
+
+              {%- elif tvmin <= tvpd <= tvmax %}
+
+              All room appliances on standby — VPD is inside its band.
+
+              {%- else %}
+
+              VPD is **{{ 'below' if tvpd < tvmin else 'above' }} its band** but
+              no appliance has fired yet — the hub is likely waiting out its
+              deadband, or the {{ priority }} priority is holding room
+              appliances for the other tent.
+
+              {%- endif %}
+
+
+              ### 🌱 Root zone — *the mat's sense point*
+
+              {% if rz_ok -%}
+              {%- set rz_pot = state_attr('sensor.dsc_coldest_root_zone_temp','pot') -%}
+              Coldest voted root{% if rz_pot and rz_pot not in ['none','unknown','unavailable'] %}
+              (POT{{ rz_pot }}){% endif %} is **{{ rz | round(1) }}°C** (band
+              {{ rz_lo }}–{{ rz_hi }}°C).
+              {%- if mat_on %} Mat **ON**, climbing toward {{ rz_hi }}°C.
+              {%- elif rz < rz_lo %} Below the floor — mat should fire shortly unless min-off is still running.
+              {%- else %} Inside the band; mat resting.
+              {%- endif %}
+              {%- else -%}
+              ⚠️ **Probe blind** — mat is on the v2.3 clone-air fallback, so the
+              root zone is unmeasured and probably sitting under target.
+              {%- endif %}
+
+              {%- if ndry == 0 %}
+
+              All live pots above 30% moisture (driest: {{ driest }} at {{ pmin |
+              round(1) }}%) — water buffer intact while climate shifts.
+
+              {%- else %}
+
+              ⚠️ **{{ ndry }} pot(s) under 30% moisture** — {{ driest }} is
+              driest at {{ pmin | round(1) }}%. Added heat accelerates drying;
+              consider watering before the heater runs.
+
+              {%- endif %}
+
+              {%- if is_state('binary_sensor.dsc_tank_ec_out_of_range','on') or
+              is_state('binary_sensor.dsc_tank_ph_out_of_range','on') %}
+
+              🚰 Tank needs attention before next feed:{{ ' EC out of range.' if
+              is_state('binary_sensor.dsc_tank_ec_out_of_range','on') }}{{ ' pH
+              out of range.' if
+              is_state('binary_sensor.dsc_tank_ph_out_of_range','on') }}
+
+              {%- endif %}
+
+
+              ### 💨 Airflow
+
+              Exhaust **{{ fx }}%** · recirc **{{ fr }}%** · intakes **{{ fi1
+              }}% / {{ fi2 }}%** —
+
+              {%- if fx < 30 %} fans are idling low to conserve heat and
+              humidity. They'll ramp if VPD overshoots {{ cvmax }} kPa (clone)
+              or {{ tvmax }} kPa (main), or if temps exceed limits.
+
+              {%- elif fx < 70 %} moderate venting — trading some
+              heat/humidity for fresh air exchange.
+
+              {%- else %} venting hard — actively dumping heat/humidity;
+              heating and exhaust are fighting, check strategy if this persists.
+
+              {%- endif %}
+
+
+              {%- set ac = states('sensor.dsc_active_alert_count')|int(0) %}
+              {%- if ac > 0 %}
+
+
+              ### ⚠️ Watchlist ({{ ac }})
+
+              See Home alert chip / Active System Alerts list.
+
+              {%- endif %}
+            text_only: true
+  - type: grid
+    column_span: 2
+    cards:
+
+      - type: heading
+        heading: Operational now
+        heading_style: title
+      - type: custom:vertical-stack-in-card
+        cards:
+          - type: custom:mushroom-chips-card
+            alignment: start
+            chips:
+              - type: template
+                content: >-
+                  {{ states('select.dsc_hub_grow_stage') }}
+                icon: mdi:sprout
+                icon_color: green
+              - type: template
+                content: >-
+                  {{ states('select.dsc_hub_clone_mode') }}
+                icon: mdi:sprout-outline
+                icon_color: light-green
+              - type: template
+                content: >-
+                  {{ states('select.dsc_hub_control_strategy') }}
+                icon: mdi:tune-variant
+                icon_color: teal
+              - type: template
+                content: >-
+                  Priority {{ states('select.dsc_hub_priority_tent') }}
+                icon: mdi:priority-high
+                icon_color: blue
+              - type: template
+                content: >-
+                  {% if is_state('switch.dsc_hub_manual_takeover','on') %}Takeover
+                  {% elif is_state('switch.dsc_hub_tent_manual_override','on') %}Fan override
+                  {% elif is_state('switch.dsc_hub_tent_full_auto_mode','on') %}Full Auto
+                  {% else %}Standby{% endif %}
+                icon: mdi:robot
+                icon_color: >-
+                  {% if is_state('switch.dsc_hub_manual_takeover','on') %}purple
+                  {% elif is_state('switch.dsc_hub_tent_manual_override','on') %}amber
+                  {% elif is_state('switch.dsc_hub_tent_full_auto_mode','on') %}green
+                  {% else %}disabled{% endif %}
+          - type: markdown
+            content: >-
+              {% set pri = states('select.dsc_hub_priority_tent') %}
+              {% set follow = is_state('select.dsc_hub_clone_mode','Follow 4x8') %}
+              {% macro band(val, lo, hi) -%}
+              {%- if val in ['unavailable','unknown','none',''] or lo in ['unavailable','unknown'] -%}?—
+              {%- else -%}
+              {%- set v = val|float(0) %}{%- set a = lo|float(0) %}{%- set b = hi|float(0) %}
+              {%- if v < a %}↓ low {{ '%.2f'|format(v-a) }}
+              {%- elif v > b %}↑ high +{{ '%.2f'|format(v-b) }}
+              {%- else %}→ on target{% endif %}
+              {%- endif %}
+              {%- endmacro %}
+              **4x8** {% set t = states('sensor.dsc_hub_tent_temperature') %}{{ '—' if t in ['unavailable','unknown'] else (t|float(0)|round(1)) }}°C /
+              {% set h = states('sensor.dsc_hub_tent_humidity') %}{{ '—' if h in ['unavailable','unknown'] else (h|float(0)|round(0)) }}% /
+              VPD {% set v = states('sensor.dsc_hub_vpd_kpa') %}{{ '—' if v in ['unavailable','unknown'] else v|float(0)|round(2) }}
+              ({{ band(states('sensor.dsc_hub_vpd_kpa'),
+              states('number.dsc_hub_vpd_target_min'),
+              states('number.dsc_hub_vpd_target_max')) }})
+              · band {{ states('number.dsc_hub_vpd_target_min') }}–{{
+              states('number.dsc_hub_vpd_target_max') }}
+
+
+              **2x4** {% set t = states('sensor.dsc_hub_clone_temperature') %}{{ '—' if t in ['unavailable','unknown'] else (t|float(0)|round(1)) }}°C /
+              {% set h = states('sensor.dsc_hub_clone_humidity') %}{{ '—' if h in ['unavailable','unknown'] else (h|float(0)|round(0)) }}% /
+              VPD {% set v = states('sensor.dsc_hub_clone_vpd_kpa') %}{{ '—' if v in ['unavailable','unknown'] else v|float(0)|round(2) }}
+              {%- if follow %} *(follows 4x8 bands)*
+              {%- set vlo = states('number.dsc_hub_vpd_target_min') %}
+              {%- set vhi = states('number.dsc_hub_vpd_target_max') %}
+              {%- else %}
+              {%- set vlo = states('number.dsc_hub_clone_vpd_min') %}
+              {%- set vhi = states('number.dsc_hub_clone_vpd_max') %}
+              {%- endif %}
+              ({{ band(states('sensor.dsc_hub_clone_vpd_kpa'), vlo, vhi) }})
+
+
+              Room appliances chase **{{ pri }}** bands.
+          - type: custom:mushroom-chips-card
+            alignment: start
+            chips:
+              - type: template
+                entity: sensor.dsc_hub_humidifier_fire_countdown
+                content: >-
+                  {% set d = is_state('switch.dsc_hub_humidifier_demand','on') %}
+                  {% set c = states(entity)|float(0) %}
+                  {% if d %}Hum live{% elif c > 0 %}Hum {{ c|round(0)|int }}s{% else %}Hum idle{% endif %}
+                icon: mdi:air-humidifier
+                icon_color: >-
+                  {% set d = is_state('switch.dsc_hub_humidifier_demand','on') %}
+                  {% set c = states(entity)|float(0) %}
+                  {{ 'green' if d else 'amber' if c > 0 else 'disabled' }}
+                tap_action:
+                  action: navigate
+                  navigation_path: /dsc-hub-pro/climate
+              - type: template
+                entity: sensor.dsc_hub_dehumidifier_fire_countdown
+                content: >-
+                  {% set d = is_state('switch.dsc_hub_dehumidifier_demand','on') %}
+                  {% set c = states(entity)|float(0) %}
+                  {% if d %}Dehum live{% elif c > 0 %}Dehum {{ c|round(0)|int }}s{% else %}Dehum idle{% endif %}
+                icon: mdi:air-humidifier-off
+                icon_color: >-
+                  {% set d = is_state('switch.dsc_hub_dehumidifier_demand','on') %}
+                  {% set c = states(entity)|float(0) %}
+                  {{ 'green' if d else 'amber' if c > 0 else 'disabled' }}
+                tap_action:
+                  action: navigate
+                  navigation_path: /dsc-hub-pro/climate
+              - type: template
+                entity: sensor.dsc_hub_heater_fire_countdown
+                content: >-
+                  {% set d = is_state('switch.dsc_hub_heater_demand','on') %}
+                  {% set c = states(entity)|float(0) %}
+                  {% if d %}Heat live{% elif c > 0 %}Heat {{ c|round(0)|int }}s{% else %}Heat idle{% endif %}
+                icon: mdi:radiator
+                icon_color: >-
+                  {% set d = is_state('switch.dsc_hub_heater_demand','on') %}
+                  {% set c = states(entity)|float(0) %}
+                  {{ 'green' if d else 'amber' if c > 0 else 'disabled' }}
+                tap_action:
+                  action: navigate
+                  navigation_path: /dsc-hub-pro/climate
+              - type: template
+                entity: sensor.dsc_hub_ac_fire_countdown
+                content: >-
+                  {% set d = is_state('switch.dsc_hub_ac_demand','on') %}
+                  {% set c = states(entity)|float(0) %}
+                  {% if d %}AC live{% elif c > 0 %}AC {{ c|round(0)|int }}s{% else %}AC idle{% endif %}
+                icon: mdi:snowflake
+                icon_color: >-
+                  {% set d = is_state('switch.dsc_hub_ac_demand','on') %}
+                  {% set c = states(entity)|float(0) %}
+                  {{ 'green' if d else 'amber' if c > 0 else 'disabled' }}
+                tap_action:
+                  action: navigate
+                  navigation_path: /dsc-hub-pro/climate
+              - type: template
+                entity: sensor.dsc_hub_grow_mat_fire_countdown
+                content: >-
+                  {% set d = is_state('switch.dsc_hub_grow_mat_demand','on') %}
+                  {% set c = states(entity)|float(0) %}
+                  {% if d %}Mat live{% elif c > 0 %}Mat {{ c|round(0)|int }}s{% else %}Mat idle{% endif %}
+                icon: mdi:heating-coil
+                icon_color: >-
+                  {% set d = is_state('switch.dsc_hub_grow_mat_demand','on') %}
+                  {% set c = states(entity)|float(0) %}
+                  {{ 'green' if d else 'amber' if c > 0 else 'disabled' }}
+              - type: template
+                content: >-
+                  Fans {{ state_attr('fan.dsc_hub_6_inch_exhaust_outside','percentage')|int(0) }}/{{
+                  state_attr('fan.dsc_hub_6_inch_exhaust_room','percentage')|int(0) }}%
+                icon: mdi:fan
+                icon_color: cyan
+                tap_action:
+                  action: navigate
+                  navigation_path: /dsc-hub-pro/climate
+
+      - type: heading
+        heading: Bands
+        heading_style: title
+      - type: grid
+        columns: 3
+        square: false
+        cards:
+          - type: custom:gauge-card-pro
+            entity: sensor.dsc_hub_tent_temperature
+            header: 4x8 Temp
+            min: 10
+            max: 40
+            needle: true
+            segments: >
+              {% set t = states('number.dsc_hub_target_temp')|float(25) %}
+              {{ [ {'from': 10, 'color': '#3b82f6'},
+                   {'from': t - 2, 'color': '#22c55e'},
+                   {'from': t + 2, 'color': '#ef4444'} ] }}
+            tap_action: 
+              action: fire-dom-event
+              browser_mod:
+                service: browser_mod.popup
+                data:
+                  title: Temperature — 24h
+                  size: wide
+                  content:
+                    type: custom:apexcharts-card
+                    graph_span: 24h
+                    header:
+                      show: true
+                      title: Temperature (°C) — all zones
+                      show_states: true
+                      colorize_states: true
+                    apex_config:
+                      chart:
+                        height: 380
+                    series:
+                      - entity: sensor.dsc_hub_tent_temperature
+                        name: 4x8 Tent
+                        stroke_width: 2
+                        extend_to: now
+                        color: '#f97316'
+                      - entity: sensor.dsc_hub_clone_temperature
+                        name: 2x4 Clone
+                        stroke_width: 2
+                        extend_to: now
+                        color: '#22c55e'
+                      - entity: sensor.dsc_hub_room_temperature
+                        name: Room
+                        stroke_width: 2
+                        extend_to: now
+                        color: '#94a3b8'
+                      - entity: number.dsc_hub_target_temp
+                        name: 4x8 Target
+                        curve: stepline
+                        stroke_width: 1
+                        extend_to: now
+                        color: '#f9731688'
+          - type: custom:gauge-card-pro
+            entity: sensor.dsc_hub_tent_humidity
+            header: 4x8 RH
+            min: 0
+            max: 100
+            needle: true
+            segments: >
+              {% set lo = states('number.dsc_hub_rh_target_min')|float(50)
+              %} {% set hi =
+              states('number.dsc_hub_rh_target_max')|float(70) %} {{ [
+              {'from': 0, 'color': '#f59e0b'},
+                   {'from': lo, 'color': '#22c55e'},
+                   {'from': hi, 'color': '#ef4444'} ] }}
+            tap_action: 
+              action: fire-dom-event
+              browser_mod:
+                service: browser_mod.popup
+                data:
+                  title: Humidity — 24h
+                  size: wide
+                  content:
+                    type: custom:apexcharts-card
+                    graph_span: 24h
+                    header:
+                      show: true
+                      title: Relative humidity (%) — all zones
+                      show_states: true
+                      colorize_states: true
+                    apex_config:
+                      chart:
+                        height: 380
+                    series:
+                      - entity: sensor.dsc_hub_tent_humidity
+                        name: 4x8 Tent
+                        stroke_width: 2
+                        extend_to: now
+                        color: '#3b82f6'
+                      - entity: sensor.dsc_hub_clone_humidity
+                        name: 2x4 Clone
+                        stroke_width: 2
+                        extend_to: now
+                        color: '#22c55e'
+                      - entity: sensor.dsc_hub_room_humidity
+                        name: Room
+                        stroke_width: 2
+                        extend_to: now
+                        color: '#94a3b8'
+          - type: custom:gauge-card-pro
+            entity: sensor.dsc_hub_vpd_kpa
+            header: 4x8 VPD
+            min: 0
+            max: 2.5
+            needle: true
+            segments: >
+              {% set lo = states('number.dsc_hub_vpd_target_min')|float(none) %}
+              {% set hi = states('number.dsc_hub_vpd_target_max')|float(none) %}
+              {% if lo is none or hi is none %}{{ [ {'from': 0, 'color': '#64748b'} ] }}
+              {% else %}{{ [ {'from': 0, 'color': '#3b82f6'},
+                   {'from': lo, 'color': '#22c55e'},
+                   {'from': hi, 'color': '#ef4444'} ] }}{% endif %}
+            tap_action: 
+              action: fire-dom-event
+              browser_mod:
+                service: browser_mod.popup
+                data:
+                  title: VPD — 24h
+                  size: wide
+                  content:
+                    type: custom:apexcharts-card
+                    graph_span: 24h
+                    header:
+                      show: true
+                      title: VPD (kPa) — both tents vs bands
+                      show_states: true
+                      colorize_states: true
+                    apex_config:
+                      chart:
+                        height: 380
+                    series:
+                      - entity: sensor.dsc_hub_vpd_kpa
+                        name: 4x8 VPD
+                        stroke_width: 2
+                        extend_to: now
+                        color: '#f97316'
+                      - entity: sensor.dsc_hub_clone_vpd_kpa
+                        name: 2x4 VPD
+                        stroke_width: 2
+                        extend_to: now
+                        color: '#22c55e'
+                      - entity: number.dsc_hub_vpd_target_min
+                        name: 4x8 floor
+                        curve: stepline
+                        stroke_width: 1
+                        extend_to: now
+                        color: '#f9731666'
+                      - entity: number.dsc_hub_vpd_target_max
+                        name: 4x8 ceiling
+                        curve: stepline
+                        stroke_width: 1
+                        extend_to: now
+                        color: '#f9731666'
+                      - entity: number.dsc_hub_clone_vpd_min
+                        name: 2x4 floor
+                        curve: stepline
+                        stroke_width: 1
+                        extend_to: now
+                        color: '#22c55e66'
+                      - entity: number.dsc_hub_clone_vpd_max
+                        name: 2x4 ceiling
+                        curve: stepline
+                        stroke_width: 1
+                        extend_to: now
+                        color: '#22c55e66'
+          - type: custom:gauge-card-pro
+            entity: sensor.dsc_hub_clone_temperature
+            header: 2x4 Temp
+            min: 10
+            max: 40
+            needle: true
+            segments: >
+              {% set follow = is_state('select.dsc_hub_clone_mode','Follow 4x8') %}
+              {% set t = states('number.dsc_hub_target_temp' if follow else
+              'number.dsc_hub_clone_target_temp')|float(none) %}
+              {% if t is none %}{{ [ {'from': 10, 'color': '#64748b'} ] }}
+              {% else %}{{ [ {'from': 10, 'color': '#3b82f6'},
+                   {'from': t - 2, 'color': '#22c55e'},
+                   {'from': t + 2, 'color': '#ef4444'} ] }}{% endif %}
+            tap_action:
+              action: fire-dom-event
+              browser_mod:
+                service: browser_mod.popup
+                data:
+                  title: Temperature — 24h
+                  size: wide
+                  content:
+                    type: custom:apexcharts-card
+                    graph_span: 24h
+                    header:
+                      show: true
+                      title: Temperature (°C) — all zones
+                      show_states: true
+                      colorize_states: true
+                    apex_config:
+                      chart:
+                        height: 380
+                    series:
+                      - entity: sensor.dsc_hub_tent_temperature
+                        name: 4x8 Tent
+                        stroke_width: 2
+                        extend_to: now
+                        color: '#f97316'
+                      - entity: sensor.dsc_hub_clone_temperature
+                        name: 2x4 Clone
+                        stroke_width: 2
+                        extend_to: now
+                        color: '#22c55e'
+                      - entity: sensor.dsc_hub_room_temperature
+                        name: Room
+                        stroke_width: 2
+                        extend_to: now
+                        color: '#94a3b8'
+                      - entity: number.dsc_hub_target_temp
+                        name: 4x8 Target
+                        curve: stepline
+                        stroke_width: 1
+                        extend_to: now
+                        color: '#f9731688'
+
+          - type: custom:gauge-card-pro
+            entity: sensor.dsc_hub_clone_humidity
+            header: 2x4 RH
+            min: 0
+            max: 100
+            needle: true
+            segments: >
+              {% set follow = is_state('select.dsc_hub_clone_mode','Follow 4x8') %}
+              {% set lo = states('number.dsc_hub_rh_target_min' if follow else
+              'number.dsc_hub_clone_rh_min')|float(none) %}
+              {% set hi = states('number.dsc_hub_rh_target_max' if follow else
+              'number.dsc_hub_clone_rh_max')|float(none) %}
+              {% if lo is none or hi is none %}{{ [ {'from': 0, 'color': '#64748b'} ] }}
+              {% else %}{{ [ {'from': 0, 'color': '#f59e0b'},
+                   {'from': lo, 'color': '#22c55e'},
+                   {'from': hi, 'color': '#ef4444'} ] }}{% endif %}
+            tap_action:
+              action: fire-dom-event
+              browser_mod:
+                service: browser_mod.popup
+                data:
+                  title: Humidity — 24h
+                  size: wide
+                  content:
+                    type: custom:apexcharts-card
+                    graph_span: 24h
+                    header:
+                      show: true
+                      title: Relative humidity (%) — all zones
+                      show_states: true
+                      colorize_states: true
+                    apex_config:
+                      chart:
+                        height: 380
+                    series:
+                      - entity: sensor.dsc_hub_tent_humidity
+                        name: 4x8 Tent
+                        stroke_width: 2
+                        extend_to: now
+                        color: '#3b82f6'
+                      - entity: sensor.dsc_hub_clone_humidity
+                        name: 2x4 Clone
+                        stroke_width: 2
+                        extend_to: now
+                        color: '#22c55e'
+                      - entity: sensor.dsc_hub_room_humidity
+                        name: Room
+                        stroke_width: 2
+                        extend_to: now
+                        color: '#94a3b8'
+
+          - type: custom:gauge-card-pro
+            entity: sensor.dsc_hub_clone_vpd_kpa
+            header: 2x4 VPD
+            min: 0
+            max: 2
+            needle: true
+            segments: >
+              {% set follow = is_state('select.dsc_hub_clone_mode','Follow 4x8') %}
+              {% set lo = states('number.dsc_hub_vpd_target_min' if follow else
+              'number.dsc_hub_clone_vpd_min')|float(none) %}
+              {% set hi = states('number.dsc_hub_vpd_target_max' if follow else
+              'number.dsc_hub_clone_vpd_max')|float(none) %}
+              {% if lo is none or hi is none %}{{ [ {'from': 0, 'color': '#64748b'} ] }}
+              {% else %}{{ [ {'from': 0, 'color': '#3b82f6'},
+                   {'from': lo, 'color': '#22c55e'},
+                   {'from': hi, 'color': '#ef4444'} ] }}{% endif %}
+            tap_action:
+              action: fire-dom-event
+              browser_mod:
+                service: browser_mod.popup
+                data:
+                  title: VPD — 24h
+                  size: wide
+                  content:
+                    type: custom:apexcharts-card
+                    graph_span: 24h
+                    header:
+                      show: true
+                      title: VPD (kPa) — both tents vs bands
+                      show_states: true
+                      colorize_states: true
+                    apex_config:
+                      chart:
+                        height: 380
+                    series:
+                      - entity: sensor.dsc_hub_vpd_kpa
+                        name: 4x8 VPD
+                        stroke_width: 2
+                        extend_to: now
+                        color: '#f97316'
+                      - entity: sensor.dsc_hub_clone_vpd_kpa
+                        name: 2x4 VPD
+                        stroke_width: 2
+                        extend_to: now
+                        color: '#22c55e'
+                      - entity: number.dsc_hub_vpd_target_min
+                        name: 4x8 floor
+                        curve: stepline
+                        stroke_width: 1
+                        extend_to: now
+                        color: '#f9731666'
+                      - entity: number.dsc_hub_vpd_target_max
+                        name: 4x8 ceiling
+                        curve: stepline
+                        stroke_width: 1
+                        extend_to: now
+                        color: '#f9731666'
+                      - entity: number.dsc_hub_clone_vpd_min
+                        name: 2x4 floor
+                        curve: stepline
+                        stroke_width: 1
+                        extend_to: now
+                        color: '#22c55e66'
+                      - entity: number.dsc_hub_clone_vpd_max
+                        name: 2x4 ceiling
+                        curve: stepline
+                        stroke_width: 1
+                        extend_to: now
+                        color: '#22c55e66'
+
+          - type: custom:gauge-card-pro
+            entity: sensor.dsc_hub_room_temperature
+            header: Room Tmp
+            min: 10
+            max: 40
+            needle: true
+            segments: >
+              {% set t =
+              states('number.dsc_hub_target_temp')|float(25) %} {{ [
+              {'from': 10, 'color': '#3b82f6'},
+                   {'from': t - 2, 'color': '#22c55e'},
+                   {'from': t + 2, 'color': '#ef4444'} ] }}
+            tap_action:
+              action: fire-dom-event
+              browser_mod:
+                service: browser_mod.popup
+                data:
+                  title: Temperature — 24h
+                  size: wide
+                  content:
+                    type: custom:apexcharts-card
+                    graph_span: 24h
+                    header:
+                      show: true
+                      title: Temperature (°C) — all zones
+                      show_states: true
+                      colorize_states: true
+                    apex_config:
+                      chart:
+                        height: 380
+                    series:
+                      - entity: sensor.dsc_hub_tent_temperature
+                        name: 4x8 Tent
+                        stroke_width: 2
+                        extend_to: now
+                        color: '#f97316'
+                      - entity: sensor.dsc_hub_clone_temperature
+                        name: 2x4 Clone
+                        stroke_width: 2
+                        extend_to: now
+                        color: '#22c55e'
+                      - entity: sensor.dsc_hub_room_temperature
+                        name: Room
+                        stroke_width: 2
+                        extend_to: now
+                        color: '#94a3b8'
+                      - entity: number.dsc_hub_target_temp
+                        name: 4x8 Target
+                        curve: stepline
+                        stroke_width: 1
+                        extend_to: now
+                        color: '#f9731688'
+
+          - type: custom:gauge-card-pro
+            entity: sensor.dsc_hub_room_humidity
+            header: Room RH
+            min: 0
+            max: 100
+            needle: true
+            segments: >
+              {% set lo = states('number.dsc_hub_rh_target_min')|float(50) %}
+              {% set hi = states('number.dsc_hub_rh_target_max')|float(70) %}
+              {{ [ {'from': 0, 'color': '#f59e0b'},
+                   {'from': lo, 'color': '#22c55e'},
+                   {'from': hi, 'color': '#ef4444'} ] }}
+            tap_action:
+              action: fire-dom-event
+              browser_mod:
+                service: browser_mod.popup
+                data:
+                  title: Humidity — 24h
+                  size: wide
+                  content:
+                    type: custom:apexcharts-card
+                    graph_span: 24h
+                    header:
+                      show: true
+                      title: Relative humidity (%) — all zones
+                      show_states: true
+                      colorize_states: true
+                    apex_config:
+                      chart:
+                        height: 380
+                    series:
+                      - entity: sensor.dsc_hub_tent_humidity
+                        name: 4x8 Tent
+                        stroke_width: 2
+                        extend_to: now
+                        color: '#3b82f6'
+                      - entity: sensor.dsc_hub_clone_humidity
+                        name: 2x4 Clone
+                        stroke_width: 2
+                        extend_to: now
+                        color: '#22c55e'
+                      - entity: sensor.dsc_hub_room_humidity
+                        name: Room
+                        stroke_width: 2
+                        extend_to: now
+                        color: '#94a3b8'
+
+          # v2.4: the mat's actual sense point, promoted to Home. It is a
+          # control input now, not just telemetry — if this gauge is wrong
+          # the mat is wrong. Decision number is coldest voted root, not POT1.
+          - type: custom:gauge-card-pro
+            entity: sensor.dsc_coldest_root_zone_temp
+            header: Root (coldest)
+            min: 10
+            max: 32
+            needle: true
+            segments: >
+              {% set lo = states('number.dsc_hub_mat_root_zone_low')|float(20) %}
+              {% set hi = states('number.dsc_hub_mat_root_zone_high')|float(24) %}
+              {{ [ {'from': 10, 'color': '#3b82f6'},
+                   {'from': lo, 'color': '#22c55e'},
+                   {'from': hi, 'color': '#ef4444'} ] }}
+            tap_action: 
+              action: fire-dom-event
+              browser_mod:
+                service: browser_mod.popup
+                data:
+                  title: Root zone — 24h
+                  size: wide
+                  content:
+                    type: custom:apexcharts-card
+                    graph_span: 24h
+                    header:
+                      show: true
+                      title: Soil temperature (°C) vs mat band
+                      show_states: true
+                      colorize_states: true
+                    apex_config:
+                      chart:
+                        height: 380
+                    series:
+                      - entity: sensor.dsc_coldest_root_zone_temp
+                        name: Coldest voted
+                        stroke_width: 3
+                        extend_to: now
+                        color: '#f97316'
+                      - entity: sensor.dsc_pot1_soil_temperature
+                        name: POT1
+                        stroke_width: 2
+                        extend_to: now
+                        color: '#22c55e'
+                      - entity: sensor.dsc_pot2_soil_temperature
+                        name: POT2
+                        stroke_width: 2
+                        extend_to: now
+                        color: '#84cc16'
+                      - entity: sensor.dsc_pot3_soil_temperature
+                        name: POT3
+                        stroke_width: 2
+                        extend_to: now
+                        color: '#a3a3a3'
+                      - entity: sensor.dsc_pot4_soil_temperature
+                        name: POT4
+                        stroke_width: 2
+                        extend_to: now
+                        color: '#14b8a6'
+                      - entity: number.dsc_hub_mat_root_zone_low
+                        name: Mat low
+                        curve: stepline
+                        stroke_width: 1
+                        extend_to: now
+                        color: '#3b82f688'
+                      - entity: number.dsc_hub_mat_root_zone_high
+                        name: Mat high
+                        curve: stepline
+                        stroke_width: 1
+                        extend_to: now
+                        color: '#ef444488'
+  - type: grid
+    column_span: 2
+    cards:
+      - type: heading
+        heading: TODAY
+        heading_style: subtitle
+      - type: custom:mushroom-chips-card
+        alignment: justify
+        chips:
+          # Virtual 4x8 window hours (no lamp) — clock icon on purpose.
+          - type: template
+            entity: sensor.dsc_lights_on_today_4x8
+            icon: mdi:sun-clock
+            icon_color: >-
+              {{ 'blue' if is_state('binary_sensor.dsc_hub_4x8_window_open','on')
+              else 'disabled' }}
+            content: >-
+              4×8 {{ states(entity)|float(0)|round(1) }}h / {{
+              states('sensor.dsc_expected_light_hours')|float(0)|round(0)
+              }}h
+            tap_action:
+              action: navigate
+              navigation_path: /dsc-hub-pro/lighting
+          - type: template
+            entity: sensor.dsc_lights_on_today_2x4
+            icon: mdi:white-balance-sunny
+            icon_color: >-
+              {{ 'red' if
+              is_state('binary_sensor.dsc_clone_dark_period_violation','on')
+              else 'amber' }}
+            content: >-
+              2×4 {{ states(entity)|float(0)|round(1) }}h / {{
+              states('sensor.dsc_clone_expected_light_hours')|float(0)|round(0)
+              }}h
+            tap_action:
+              action: navigate
+              navigation_path: /dsc-hub-pro/lighting
+          - type: template
+            entity: sensor.dsc_heater_runtime_today
+            icon: mdi:radiator
+            icon_color: "{{ 'deep-orange' if states(entity)|float(0) > 0 else 'disabled' }}"
+            content: Heat {{ states(entity)|float(0)|round(1) }}h
+          - type: template
+            entity: sensor.dsc_humidifier_cycles_last_hour
+            icon: mdi:sync-alert
+            icon_color: |-
+              {{ 'red' if states(entity)|float(0) > 6 else
+                 ('amber' if states(entity)|float(0) > 3 else 'green') }}
+            content: Hum {{ states(entity)|float(0)|round(0) }}/h
+        card_mod:
+          style: |
+            @keyframes dsc-sun-breathe {
+              0%, 100% { opacity: 1; transform: scale(1); }
+              50% { opacity: 0.65; transform: scale(1.08); }
+            }
+            mushroom-template-chip:nth-child(2) mushroom-shape-icon {
+              {% if is_state('light.dsc_hub_sf1000_dimmer','on')
+                 and not is_state('binary_sensor.dsc_clone_dark_period_violation','on') %}
+              animation: dsc-sun-breathe 2.8s ease-in-out infinite;
+              {% endif %}
+            }
+      - type: heading
+        heading: ROOT & TANK
+        heading_style: subtitle
+      - type: custom:mushroom-chips-card
+        alignment: start
+        chips:
+          - type: template
+            entity: text.dsc_pot1_plant_name
+            icon: mdi:numeric-1-circle
+            icon_color: green
+            content: "P1 {{ states(entity) if states(entity) not in ['unknown','unavailable',''] else '—' }}"
+            tap_action:
+              action: navigate
+              navigation_path: /dsc-hub-pro/root-zone
+          - type: template
+            entity: text.dsc_pot2_plant_name
+            icon: mdi:numeric-2-circle
+            icon_color: green
+            content: "P2 {{ states(entity) if states(entity) not in ['unknown','unavailable',''] else '—' }}"
+            tap_action:
+              action: navigate
+              navigation_path: /dsc-hub-pro/root-zone
+          - type: template
+            entity: text.dsc_pot3_plant_name
+            icon: mdi:numeric-3-circle
+            icon_color: grey
+            content: "P3 {{ states(entity) if states(entity) not in ['unknown','unavailable',''] else '—' }}"
+            tap_action:
+              action: navigate
+              navigation_path: /dsc-hub-pro/root-zone
+          - type: template
+            entity: text.dsc_pot4_plant_name
+            icon: mdi:numeric-4-circle
+            icon_color: green
+            content: "P4 {{ states(entity) if states(entity) not in ['unknown','unavailable',''] else '—' }}"
+            tap_action:
+              action: navigate
+              navigation_path: /dsc-hub-pro/root-zone
+      - type: markdown
+        content: >-
+          {% set slots = state_attr('sensor.dsc_plant_roster_summary', 'slots') or [] %}
+          {% for p in ['1','2','3','4'] %}
+          {% set matches = slots | selectattr('pot', 'equalto', p) | list %}
+          {% if matches | length > 0 %}
+          {% set slot = matches | first %}
+          **POT{{ p }} roster:** {{ slot.nickname or slot.strain or ('slot ' ~ slot.slot) }}
+          {%- if slot.blend %} · {{ slot.blend }}{% endif %}
+
+          {% endif %}
+          {% endfor %}
+      - type: grid
+        columns: 4
+        square: false
+        cards:
+          - type: custom:modern-circular-gauge
+            entity: sensor.dsc_pot1_soil_moisture
+            name: POT1
+            min: 0
+            max: 100
+            tap_action: 
+              action: fire-dom-event
+              browser_mod:
+                service: browser_mod.popup
+                data:
+                  title: POT1 — plant console
+                  size: wide
+                  content:
+                    type: vertical-stack
+                    cards:
+                      - type: entities
+                        entities:
+                          - entity: text.dsc_pot1_plant_name
+                            name: Plant
+                            icon: mdi:sprout
+                          - entity: select.dsc_pot1_growth_stage
+                            name: Growth stage
+                          - entity: select.dsc_pot1_strain
+                            name: Strain (pot contract)
+                          - entity: select.dsc_pot_1_strain
+                            name: Strain (pot underscore fallback)
+                          - entity: input_select.dsc_pot1_strain
+                            name: Strain (HA)
+                          - entity: date.dsc_pot_1_sprout_date
+                            name: Sprout (pot)
+                          - entity: input_datetime.dsc_pot1_sprout_date
+                            name: Sprout (HA)
+                          - entity: sensor.dsc_pot1_need_summary
+                            name: Need
+                          - entity: binary_sensor.dsc_hub_pot1_esp_now_link
+                            name: ESP-NOW link
+                          - entity: switch.dsc_hub_mat_vote_pot_1
+                            name: Mat vote
+                          - type: divider
+                          - entity: sensor.dsc_pot1_soil_moisture
+                            name: Moisture
+                          - entity: sensor.dsc_pot1_soil_temperature
+                            name: Soil temp
+                          - entity: sensor.dsc_pot1_soil_conductivity
+                            name: EC
+                          - entity: sensor.dsc_pot1_soil_ph
+                            name: pH
+                          - entity: sensor.dsc_pot1_soil_nitrogen
+                            name: N
+                          - entity: sensor.dsc_pot1_soil_phosphorus
+                            name: P
+                          - entity: sensor.dsc_pot1_soil_potassium
+                            name: K
+                      - type: custom:apexcharts-card
+                        graph_span: 48h
+                        header:
+                          show: true
+                          title: Moisture & soil temp — 48h
+                          show_states: true
+                        apex_config:
+                          chart:
+                            height: 260
+                        yaxis:
+                          - id: pct
+                            min: 0
+                            max: 100
+                          - id: temp
+                            opposite: true
+                        series:
+                          - entity: sensor.dsc_pot1_soil_moisture
+                            name: Moisture %
+                            yaxis_id: pct
+                            stroke_width: 2
+                            extend_to: now
+                            color: '#3b82f6'
+                          - entity: sensor.dsc_pot1_soil_temperature
+                            name: Soil °C
+                            yaxis_id: temp
+                            stroke_width: 2
+                            extend_to: now
+                            color: '#f97316'
+          - type: custom:modern-circular-gauge
+            entity: sensor.dsc_pot2_soil_moisture
+            name: POT2
+            min: 0
+            max: 100
+            tap_action: 
+              action: fire-dom-event
+              browser_mod:
+                service: browser_mod.popup
+                data:
+                  title: POT2 — plant console
+                  size: wide
+                  content:
+                    type: vertical-stack
+                    cards:
+                      - type: entities
+                        entities:
+                          - entity: text.dsc_pot2_plant_name
+                            name: Plant
+                            icon: mdi:sprout
+                          - entity: select.dsc_pot2_growth_stage
+                            name: Growth stage
+                          - entity: select.dsc_pot2_strain
+                            name: Strain (pot contract)
+                          - entity: select.dsc_pot_2_strain
+                            name: Strain (pot underscore fallback)
+                          - entity: input_select.dsc_pot2_strain
+                            name: Strain (HA)
+                          - entity: date.dsc_pot_2_sprout_date
+                            name: Sprout (pot)
+                          - entity: input_datetime.dsc_pot2_sprout_date
+                            name: Sprout (HA)
+                          - entity: sensor.dsc_pot2_need_summary
+                            name: Need
+                          - entity: binary_sensor.dsc_hub_pot2_esp_now_link
+                            name: ESP-NOW link
+                          - entity: switch.dsc_hub_mat_vote_pot_2
+                            name: Mat vote
+                          - type: divider
+                          - entity: sensor.dsc_pot2_soil_moisture
+                            name: Moisture
+                          - entity: sensor.dsc_pot2_soil_temperature
+                            name: Soil temp
+                          - entity: sensor.dsc_pot2_soil_conductivity
+                            name: EC
+                          - entity: sensor.dsc_pot2_soil_ph
+                            name: pH
+                          - entity: sensor.dsc_pot2_soil_nitrogen
+                            name: N
+                          - entity: sensor.dsc_pot2_soil_phosphorus
+                            name: P
+                          - entity: sensor.dsc_pot2_soil_potassium
+                            name: K
+                      - type: custom:apexcharts-card
+                        graph_span: 48h
+                        header:
+                          show: true
+                          title: Moisture & soil temp — 48h
+                          show_states: true
+                        apex_config:
+                          chart:
+                            height: 260
+                        yaxis:
+                          - id: pct
+                            min: 0
+                            max: 100
+                          - id: temp
+                            opposite: true
+                        series:
+                          - entity: sensor.dsc_pot2_soil_moisture
+                            name: Moisture %
+                            yaxis_id: pct
+                            stroke_width: 2
+                            extend_to: now
+                            color: '#3b82f6'
+                          - entity: sensor.dsc_pot2_soil_temperature
+                            name: Soil °C
+                            yaxis_id: temp
+                            stroke_width: 2
+                            extend_to: now
+                            color: '#f97316'
+          - type: custom:modern-circular-gauge
+            entity: sensor.dsc_pot3_soil_moisture
+            name: POT3
+            min: 0
+            max: 100
+            card_mod:
+              style: |
+                ha-card { /* pot styling via live alerts */ }
+            tap_action: 
+              action: fire-dom-event
+              browser_mod:
+                service: browser_mod.popup
+                data:
+                  title: POT3 — plant console
+                  size: wide
+                  content:
+                    type: vertical-stack
+                    cards:
+                      - type: entities
+                        entities:
+                          - entity: text.dsc_pot3_plant_name
+                            name: Plant
+                            icon: mdi:sprout
+                          - entity: select.dsc_pot3_growth_stage
+                            name: Growth stage
+                          - entity: select.dsc_pot3_strain
+                            name: Strain (pot contract)
+                          - entity: select.dsc_pot_3_strain
+                            name: Strain (pot underscore fallback)
+                          - entity: input_select.dsc_pot3_strain
+                            name: Strain (HA)
+                          - entity: date.dsc_pot_3_sprout_date
+                            name: Sprout (pot)
+                          - entity: input_datetime.dsc_pot3_sprout_date
+                            name: Sprout (HA)
+                          - entity: sensor.dsc_pot3_need_summary
+                            name: Need
+                          - entity: binary_sensor.dsc_hub_pot3_esp_now_link
+                            name: ESP-NOW link
+                          - entity: switch.dsc_hub_mat_vote_pot_3
+                            name: Mat vote
+                          - type: divider
+                          - entity: sensor.dsc_pot3_soil_moisture
+                            name: Moisture
+                          - entity: sensor.dsc_pot3_soil_temperature
+                            name: Soil temp
+                          - entity: sensor.dsc_pot3_soil_ph
+                            name: pH
+                          - entity: sensor.dsc_pot3_soil_phosphorus
+                            name: P
+                      - type: custom:apexcharts-card
+                        graph_span: 48h
+                        header:
+                          show: true
+                          title: Moisture & soil temp — 48h
+                          show_states: true
+                        apex_config:
+                          chart:
+                            height: 260
+                        yaxis:
+                          - id: pct
+                            min: 0
+                            max: 100
+                          - id: temp
+                            opposite: true
+                        series:
+                          - entity: sensor.dsc_pot3_soil_moisture
+                            name: Moisture %
+                            yaxis_id: pct
+                            stroke_width: 2
+                            extend_to: now
+                            color: '#3b82f6'
+                          - entity: sensor.dsc_pot3_soil_temperature
+                            name: Soil °C
+                            yaxis_id: temp
+                            stroke_width: 2
+                            extend_to: now
+                            color: '#f97316'
+          - type: custom:modern-circular-gauge
+            entity: sensor.dsc_pot4_soil_moisture
+            name: POT4
+            min: 0
+            max: 100
+            tap_action: 
+              action: fire-dom-event
+              browser_mod:
+                service: browser_mod.popup
+                data:
+                  title: POT4 — plant console
+                  size: wide
+                  content:
+                    type: vertical-stack
+                    cards:
+                      - type: entities
+                        entities:
+                          - entity: text.dsc_pot4_plant_name
+                            name: Plant
+                            icon: mdi:sprout
+                          - entity: select.dsc_pot4_growth_stage
+                            name: Growth stage
+                          - entity: select.dsc_pot4_strain
+                            name: Strain (pot contract)
+                          - entity: select.dsc_pot_4_strain
+                            name: Strain (pot underscore fallback)
+                          - entity: input_select.dsc_pot4_strain
+                            name: Strain (HA)
+                          - entity: date.dsc_pot_4_sprout_date
+                            name: Sprout (pot)
+                          - entity: input_datetime.dsc_pot4_sprout_date
+                            name: Sprout (HA)
+                          - entity: sensor.dsc_pot4_need_summary
+                            name: Need
+                          - entity: binary_sensor.dsc_hub_pot4_esp_now_link
+                            name: ESP-NOW link
+                          - entity: switch.dsc_hub_mat_vote_pot_4
+                            name: Mat vote
+                          - type: divider
+                          - entity: sensor.dsc_pot4_soil_moisture
+                            name: Moisture
+                          - entity: sensor.dsc_pot4_soil_temperature
+                            name: Soil temp
+                          - entity: sensor.dsc_pot4_soil_conductivity
+                            name: EC
+                          - entity: sensor.dsc_pot4_soil_ph
+                            name: pH
+                          - entity: sensor.dsc_pot4_soil_nitrogen
+                            name: N
+                          - entity: sensor.dsc_pot4_soil_phosphorus
+                            name: P
+                          - entity: sensor.dsc_pot4_soil_potassium
+                            name: K
+                      - type: custom:apexcharts-card
+                        graph_span: 48h
+                        header:
+                          show: true
+                          title: Moisture & soil temp — 48h
+                          show_states: true
+                        apex_config:
+                          chart:
+                            height: 260
+                        yaxis:
+                          - id: pct
+                            min: 0
+                            max: 100
+                          - id: temp
+                            opposite: true
+                        series:
+                          - entity: sensor.dsc_pot4_soil_moisture
+                            name: Moisture %
+                            yaxis_id: pct
+                            stroke_width: 2
+                            extend_to: now
+                            color: '#3b82f6'
+                          - entity: sensor.dsc_pot4_soil_temperature
+                            name: Soil °C
+                            yaxis_id: temp
+                            stroke_width: 2
+                            extend_to: now
+                            color: '#f97316'
+      - type: custom:mushroom-chips-card
+        alignment: start
+        chips:
+          - type: conditional
+            conditions:
+              - entity: sensor.water_tester_ph_current
+                state_not: unavailable
+            chip:
+              type: template
+              entity: sensor.water_tester_ph_current
+              icon: mdi:ph
+              icon_color: >-
+                {% set ph = states(entity)|float(0) %} {{ 'green' if 5.8 <= ph
+                <= 6.5 else 'red' }}
+              content: pH {{ states(entity) }}
+              tap_action:
+                action: navigate
+                navigation_path: /dsc-hub-pro/tank
+          - type: template
+            entity: sensor.dsc_tank_ec_normalized
+            icon: mdi:flash
+            icon_color: >-
+              {% set ec = states(entity)|float(0) %} {% set lo =
+              states('sensor.dsc_tank_ec_target_min')|float(0) %} {% set hi
+              = states('sensor.dsc_tank_ec_target_max')|float(99) %} {{
+              'green' if lo <= ec <= hi else 'red' }}
+            content: EC {{ states(entity) }}
+            tap_action:
+              action: navigate
+              navigation_path: /dsc-hub-pro/tank
+          - type: conditional
+            conditions:
+              - entity: sensor.water_tester_temperature
+                state_not: unavailable
+            chip:
+              type: template
+              entity: sensor.water_tester_temperature
+              icon: mdi:thermometer-water
+              icon_color: "{{ 'red' if states(entity)|float(0) > 24 else 'green' }}"
+              content: >-
+                {{ states(entity) }}°C{{ ' ⚠ PYTHIUM' if
+                states(entity)|float(0) > 24 else '' }}
+              tap_action:
+                action: navigate
+                navigation_path: /dsc-hub-pro/tank
+          - type: template
+            icon: mdi:grass
+            icon_color: lime
+            content: Open Root Zone
+            tap_action:
+              action: navigate
+              navigation_path: /dsc-hub-pro/root-zone
+

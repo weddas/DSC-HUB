@@ -157,24 +157,8 @@ for f in "${pkg_files[@]}"; do
   run_scp_atomic "${f}" "${HA_CONFIG_ROOT}/packages/$(basename "${f}")"
 done
 
-# --- dashboard ------------------------------------------------------------
-dash="${HA_SRC}/dashboards/dsc-hub-v4-dashboard.yaml"
-[[ -f "${dash}" ]] || die "Missing ${dash}"
-log "Syncing dashboards/dsc-hub-v4-dashboard.yaml + modules/"
-run_scp "${dash}" "${HA_CONFIG_ROOT}/dashboards/dsc-hub-v4-dashboard.yaml"
-build_dash="${HA_SRC}/dashboards/dsc-build-plant-dashboard.yaml"
-if [[ -f "${build_dash}" ]]; then
-  log "Syncing dashboards/dsc-build-plant-dashboard.yaml"
-  run_scp "${build_dash}" "${HA_CONFIG_ROOT}/dashboards/dsc-build-plant-dashboard.yaml"
-fi
-run_ssh "mkdir -p '${HA_CONFIG_ROOT}/dashboards/modules'"
-mod_dir="${HA_SRC}/dashboards/modules"
-[[ -d "${mod_dir}" ]] || die "Missing ${mod_dir}"
-mod_files=("${mod_dir}"/view_*.yaml)
-[[ ${#mod_files[@]} -gt 0 ]] || die "No view_*.yaml modules found"
-for f in "${mod_files[@]}"; do
-  run_scp "${f}" "${HA_CONFIG_ROOT}/dashboards/modules/$(basename "${f}")"
-done
+# --- dashboard (retired 7.3 — archived under docs/archive/lovelace-7.3/) ----
+log "Skipping Lovelace YAML dashboards (7.3 — Pi SPA is SoT; archive in repo docs/archive/lovelace-7.3/)"
 
 # --- www ------------------------------------------------------------------
 # System map SVG + bundled JS (system map + airflow + The Dash + Build + Nav + Catalog)

@@ -1,4 +1,11 @@
-"""Sensor trust mirrors — stuck pots, peer MAD, DHT disagree (N-020..N-022)."""
+"""Sensor trust mirrors — stuck pots, peer MAD, DHT disagree (N-020..N-023).
+
+Soak-chosen thresholds (7.3 pass):
+  N-020 stuck: |rate| <= 0.02 %/h for 45 min
+  N-021 peer MAD: divergence > helper mad_pct for 20 min (probe stations excluded)
+  N-022 DHT disagree: tent vs room delta > helper for 15 min, clear after 5 min agreement
+  N-023 tank bias: handled in Calibrate tank tab (EC/pH bias entities)
+"""
 
 from __future__ import annotations
 

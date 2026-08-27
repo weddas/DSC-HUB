@@ -1,0 +1,299 @@
+title: Trends
+icon: mdi:chart-multiline
+path: trends
+subview: true
+type: sections
+max_columns: 4
+sections:
+  - type: grid
+    column_span: 2
+    cards:
+      - type: heading
+        heading: 🧠 THE RESPONSE STACK — source → fans → result
+        heading_style: title
+      - type: custom:plotly-graph
+        title: Disturbance propagation — 24 h
+        hours_to_show: 24
+        refresh_interval: 300
+        layout:
+          height: 420
+          hovermode: x unified
+          grid:
+            rows: 3
+            columns: 1
+            pattern: independent
+          yaxis:
+            title: Source °C
+          yaxis2:
+            title: Fan %
+            range:
+              - 0
+              - 100
+          yaxis3:
+            title: Tent °C
+        entities:
+          - entity: sensor.dsc_hub_room_temperature
+            name: Room °C
+            yaxis: y1
+          - entity: sensor.dsc_hub_clone_temperature
+            name: 2x4 °C
+            yaxis: y1
+          - entity: sensor.dsc_fan_intake_main_pct
+            name: In 4x8 %
+            yaxis: y2
+            line:
+              shape: hv
+          - entity: sensor.dsc_fan_intake_2x4_pct
+            name: In 2x4 %
+            yaxis: y2
+            line:
+              shape: hv
+          - entity: sensor.dsc_fan_exhaust_room_pct
+            name: Ex Room %
+            yaxis: y2
+            line:
+              shape: hv
+          - entity: sensor.dsc_fan_exhaust_outside_pct
+            name: Ex Out %
+            yaxis: y2
+            line:
+              shape: hv
+          - entity: sensor.dsc_hub_tent_temperature
+            name: 4x8 °C
+            yaxis: y3
+          - entity: number.dsc_hub_target_temp
+            name: Target
+            yaxis: y3
+            line:
+              dash: dot
+      - type: markdown
+        content: >-
+          *v2.4 reading note: the 2x4 trace now carries the **SF1000's
+          waste heat**. A daily bump in the top panel that lines up with
+          the clone sunrise is the lamp, not a fault — and it is exactly
+          the heat the 4x8 borrows through the chain at night.*
+      - type: heading
+        heading: 🎛️ THE TRANSFER FUNCTION — the controller, drawn by data
+        heading_style: subtitle
+      - type: custom:plotly-graph
+        title: Fan % vs temp error — 48 h
+        hours_to_show: 48
+        refresh_interval: 300
+        layout:
+          height: 420
+          xaxis:
+            title: Temp error °C (tent − target)
+          yaxis:
+            title: Exhaust %
+            range:
+              - 0
+              - 100
+        entities:
+          - entity: sensor.dsc_main_temp_error
+            internal: true
+            fn: >-
+              $fn ({ xs, ys, vars }) => { vars.errYs = ys; vars.errXs = xs;
+              }
+          - entity: sensor.dsc_fan_exhaust_outside_pct
+            name: Exhaust vs error
+            mode: markers
+            marker:
+              size: 5
+            fn: |-
+              $fn ({ xs, ys, vars }) => {
+                const ex = vars.errXs || [], ey = vars.errYs || [];
+                const outX = [], outY = [];
+                let j = 0;
+                for (let i = 0; i < xs.length; i++) {
+                  while (j < ex.length - 1 && ex[j + 1] <= xs[i]) j++;
+                  if (ey[j] !== undefined && ys[i] !== null) {
+                    outX.push(ey[j]); outY.push(ys[i]);
+                  }
+                }
+                return { x: outX, y: outY };
+              }
+      - type: markdown
+        content: >-
+          *Read the scatter: clean S-curve = healthy loop · two separated
+          bands = hysteresis · flat gap = dead zone · smeared blob =
+          short-cycling. This is the v2.4 tuning instrument — change a band
+          on **Climate Engine → Live Tunables**, watch the cloud tighten.
+          No reflash between attempts, which is the whole point of the
+          runtime tunables.*
+  - type: grid
+    column_span: 2
+    cards:
+      - type: heading
+        heading: 🔍 FORENSICS
+        heading_style: title
+      # v2.4: new chart. The mat's closed loop is the headline change of
+      # this version and it needs an audit view — "did the band actually
+      # hold the soil?" should be answerable from one picture.
+      - type: custom:plotly-graph
+        title: Root zone vs mat runs vs the band — 48 h
+        hours_to_show: 48
+        refresh_interval: 300
+        layout:
+          height: 360
+          hovermode: x unified
+          yaxis:
+            title: °C
+          yaxis2:
+            overlaying: "y"
+            side: right
+            range:
+              - 0
+              - 1
+            visible: false
+        entities:
+          # BUG-FIX 2026-08-02: coldest voted root, not POT1
+          - entity: sensor.dsc_coldest_root_zone_temp
+            name: Root zone
+          - entity: sensor.dsc_hub_clone_temperature
+            name: Clone air
+            line:
+              dash: dot
+              width: 1
+          - entity: number.dsc_hub_mat_root_zone_low
+            name: Band low
+            line:
+              dash: dash
+          - entity: number.dsc_hub_mat_root_zone_high
+            name: Band high
+            line:
+              dash: dash
+          - entity: switch.dsc_hub_grow_mat_demand
+            name: Mat
+            yaxis: y2
+            fill: tozeroy
+            line:
+              shape: hv
+              width: 0
+            filters:
+              - map_y: "y === 'on' ? 1 : 0"
+      - type: markdown
+        content: >-
+          *The v2.4 acceptance test, in one chart. **Root zone should live
+          between the dashed lines**; mat blocks should be long and few,
+          not short and many. If root zone tracks the dotted air line
+          instead, the probe is blind and you are back on v2.3 behaviour —
+          check Root-Zone Sensor Fault.*
+      - type: custom:plotly-graph
+        title: 4x8 temp with heater/AC run shading — 48 h
+        hours_to_show: 48
+        refresh_interval: 300
+        layout:
+          height: 340
+          hovermode: x unified
+          yaxis:
+            title: °C
+          yaxis2:
+            overlaying: "y"
+            side: right
+            range:
+              - 0
+              - 1
+            visible: false
+        entities:
+          - entity: sensor.dsc_hub_tent_temperature
+            name: Tent °C
+          - entity: number.dsc_hub_target_temp
+            name: Target
+            line:
+              dash: dot
+          - entity: switch.dsc_hub_heater_demand
+            name: Heater
+            yaxis: y2
+            fill: tozeroy
+            line:
+              shape: hv
+              width: 0
+            filters:
+              - map_y: "y === 'on' ? 1 : 0"
+          - entity: switch.dsc_hub_ac_demand
+            name: AC
+            yaxis: y2
+            fill: tozeroy
+            line:
+              shape: hv
+              width: 0
+            filters:
+              - map_y: "y === 'on' ? 1 : 0"
+      - type: custom:plotly-graph
+        title: 4x8 RH with hum/dehum run shading — 48 h
+        hours_to_show: 48
+        refresh_interval: 300
+        layout:
+          height: 340
+          hovermode: x unified
+          yaxis:
+            title: "%RH"
+          yaxis2:
+            overlaying: "y"
+            side: right
+            range:
+              - 0
+              - 1
+            visible: false
+        entities:
+          - entity: sensor.dsc_hub_tent_humidity
+            name: RH
+          - entity: switch.dsc_hub_humidifier_demand
+            name: Hum
+            yaxis: y2
+            fill: tozeroy
+            line:
+              shape: hv
+              width: 0
+            filters:
+              - map_y: "y === 'on' ? 1 : 0"
+          - entity: switch.dsc_hub_dehumidifier_demand
+            name: Dehum
+            yaxis: y2
+            fill: tozeroy
+            line:
+              shape: hv
+              width: 0
+            filters:
+              - map_y: "y === 'on' ? 1 : 0"
+      - type: custom:plotly-graph
+        title: VPD overlay — both tents vs stage band, 48 h
+        hours_to_show: 48
+        refresh_interval: 300
+        layout:
+          height: 340
+          hovermode: x unified
+          yaxis:
+            title: kPa
+        entities:
+          - entity: sensor.dsc_hub_vpd_kpa
+            name: 4x8 VPD
+          - entity: sensor.dsc_hub_clone_vpd_kpa
+            name: 2x4 VPD
+          - entity: number.dsc_hub_vpd_target_min
+            name: Band min
+            line:
+              dash: dot
+          - entity: number.dsc_hub_vpd_target_max
+            name: Band max
+            line:
+              dash: dot
+      - type: heading
+        heading: 📓 GROW DIARY — Event Scribe
+        heading_style: subtitle
+      - type: custom:logbook-card
+        title: Grow log
+        entity: input_boolean.dsc_event_log
+        history: 7
+        desc: true
+        show:
+          state: false
+          duration: false
+          start_date: true
+        custom_logs: true
+      - type: markdown
+        content: >-
+          *Recorder tip: default `purge_keep_days: 10` is short for a full
+          grow. Prefer ~120 days (or export the grow log) so diary entries
+          survive the cycle — see NOTES-COMMENTS.md §4.*
+

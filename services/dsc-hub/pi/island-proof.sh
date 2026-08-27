@@ -15,7 +15,7 @@ check() {
   fi
 }
 
-echo "=== island proof: DSC-Brain 7.0.0 ==="
+echo "=== island proof: DSC-Brain 7.3.0 ==="
 
 echo "--- health ---"
 if curl -sf "${BASE}/health" | tee /tmp/dsc-health.json; then

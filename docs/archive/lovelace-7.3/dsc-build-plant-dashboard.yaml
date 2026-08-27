@@ -1,0 +1,44 @@
+# ==================================================================
+#  DSC Build a Plant — redirect stub (N-086)
+#  ------------------------------------------------------------------
+#  Composition moved to /dsc-hub-pro/plant-build under the unified
+#  DSC-HUB product shell. Sidebar entry is hidden
+#  (configuration.snippet.yaml show_in_sidebar: false).
+# ==================================================================
+
+title: Build a Plant
+views:
+  - title: Build
+    path: build
+    icon: mdi:sprout
+    type: sections
+    max_columns: 1
+    sections:
+      - type: grid
+        cards:
+          - type: markdown
+            content: |
+              ## Moved into DSC-HUB
+
+              Build a Plant now lives under the **Plant** section:
+
+              - Hub: [/dsc-hub-pro/plant](/dsc-hub-pro/plant)
+              - Compose: [/dsc-hub-pro/plant-build](/dsc-hub-pro/plant-build)
+              - Catalog: [/dsc-hub-pro/catalog](/dsc-hub-pro/catalog)
+          - type: custom:mushroom-chips-card
+            alignment: start
+            chips:
+              - type: template
+                icon: mdi:spa
+                icon_color: green
+                content: Open Compose
+                tap_action:
+                  action: navigate
+                  navigation_path: /dsc-hub-pro/plant-build
+              - type: template
+                icon: mdi:sprout
+                icon_color: teal
+                content: Plant hub
+                tap_action:
+                  action: navigate
+                  navigation_path: /dsc-hub-pro/plant

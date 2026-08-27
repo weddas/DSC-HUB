@@ -1,5 +1,7 @@
 # Graph / chart audit — DSC-HUB 7.1
 
+> **Superseded for ship/no-ship by [`GRAPH-REAUDIT-7.3.md`](GRAPH-REAUDIT-7.3.md)** — historical evidence only below.
+
 **Date:** 2026-08-27  
 **Surface:** Pi SPA `homeassistant/custom_components/dsc_hub/frontend` + Brain `/history`  
 **Live:** `http://192.168.86.48:8787/` (Brain). `.30` is not the Brain.  

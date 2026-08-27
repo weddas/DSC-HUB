@@ -1,0 +1,631 @@
+title: 4x8 Main
+icon: mdi:greenhouse
+path: main-4x8
+subview: true
+type: sections
+max_columns: 4
+sections:
+  - type: grid
+    cards:
+      - type: heading
+        heading: Stage & targets
+        heading_style: title
+      - type: custom:mushroom-select-card
+        entity: select.dsc_hub_grow_stage
+        name: Grow Stage
+        icon: mdi:sprout
+        icon_color: green
+      - type: custom:mushroom-template-card
+        entity: sensor.dsc_expected_light_hours
+        primary: >-
+          Virtual window {{ states(entity)|round(0) }}h on / {{ 24 -
+          states(entity)|float(0)|round(0) }}h dark
+        secondary: >-
+          {{ 'OPEN' if is_state('binary_sensor.dsc_hub_4x8_window_open','on')
+          else 'Shut' }} · stage sets duration · Follow-4x8 clones use this
+        icon: mdi:sun-clock
+        icon_color: >-
+          {{ 'blue' if is_state('binary_sensor.dsc_hub_4x8_window_open','on')
+          else 'disabled' }}
+        multiline_secondary: true
+        tap_action:
+          action: more-info
+      - type: entities
+        entities:
+          - entity: time.dsc_hub_lights_on_time
+            name: 4x8 Window Opens (stage sets hours)
+      - type: custom:mushroom-select-card
+        entity: select.dsc_hub_control_strategy
+        name: Strategy
+        icon: mdi:tune-variant
+      - type: markdown
+        content: >-
+          *Fans chase **{{ states('select.dsc_hub_control_strategy') }}**.
+          Other bands stay visible for context.*
+      - type: conditional
+        conditions:
+          - condition: state
+            entity: select.dsc_hub_grow_stage
+            state: Custom
+        card:
+          type: vertical-stack
+          cards:
+            - type: custom:mushroom-template-card
+              primary: Custom — 4x8 climate unlocked
+              secondary: Named stages reload presets when selected.
+              icon: mdi:lock-open-variant
+              icon_color: green
+              tap_action:
+                action: none
+            - type: grid
+              columns: 2
+              square: false
+              cards:
+                - type: custom:mushroom-number-card
+                  entity: number.dsc_hub_target_temp
+                  name: Target Temp
+                  icon: mdi:thermometer
+                  display_mode: buttons
+                - type: custom:mushroom-number-card
+                  entity: number.dsc_hub_rh_target_min
+                  name: RH Min
+                  icon: mdi:water-minus
+                  display_mode: buttons
+                - type: custom:mushroom-number-card
+                  entity: number.dsc_hub_rh_target_max
+                  name: RH Max
+                  icon: mdi:water-plus
+                  display_mode: buttons
+                - type: custom:mushroom-number-card
+                  entity: number.dsc_hub_vpd_target_min
+                  name: VPD Min
+                  icon: mdi:waves-arrow-up
+                  display_mode: buttons
+                - type: custom:mushroom-number-card
+                  entity: number.dsc_hub_vpd_target_max
+                  name: VPD Max
+                  icon: mdi:waves-arrow-up
+                  display_mode: buttons
+                - type: custom:mushroom-number-card
+                  entity: input_number.dsc_leaf_offset
+                  name: Leaf ΔT
+                  icon: mdi:leaf
+                  display_mode: buttons
+        card:
+          type: vertical-stack
+          cards:
+            - type: custom:mushroom-template-card
+              primary: >-
+                {% set s = states('select.dsc_hub_grow_stage') %}
+                {% if s == 'Off' %}Locked — 4x8 inactive
+                {% else %}Locked to {{ s }} presets{% endif %}
+              secondary: >-
+                Temp / RH / VPD are stage-owned. Switch Grow Stage →
+                **Custom** to fine-tune (named stages overwrite on select).
+              icon: mdi:lock
+              icon_color: amber
+              multiline_secondary: true
+              tap_action:
+                action: more-info
+                entity: select.dsc_hub_grow_stage
+            - type: grid
+              columns: 2
+              square: false
+              cards:
+                - type: custom:mushroom-template-card
+                  primary: "{{ states('number.dsc_hub_target_temp') }}°C"
+                  secondary: Target Temp
+                  icon: mdi:thermometer-lock
+                  icon_color: disabled
+                  tap_action:
+                    action: none
+                - type: custom:mushroom-template-card
+                  primary: >-
+                    {{ states('number.dsc_hub_rh_target_min')|float(0)|round(0) }}–{{
+                    states('number.dsc_hub_rh_target_max')|float(0)|round(0) }}%
+                  secondary: RH band
+                  icon: mdi:water-lock
+                  icon_color: disabled
+                  tap_action:
+                    action: none
+                - type: custom:mushroom-template-card
+                  primary: >-
+                    {{ states('number.dsc_hub_vpd_target_min') }}–{{
+                    states('number.dsc_hub_vpd_target_max') }} kPa
+                  secondary: VPD band
+                  icon: mdi:lock
+                  icon_color: disabled
+                  tap_action:
+                    action: none
+                - type: custom:mushroom-template-card
+                  primary: Switch to Custom
+                  secondary: Unlock 4x8 climate edits
+                  icon: mdi:lock-open-outline
+                  icon_color: green
+                  tap_action:
+                    action: call-service
+                    service: select.select_option
+                    target:
+                      entity_id: select.dsc_hub_grow_stage
+                    data:
+                      option: Custom
+      - type: heading
+        heading: ⚡ TENT APPLIANCE DEMANDS
+        heading_style: subtitle
+      - type: custom:mushroom-chips-card
+        alignment: justify
+        chips:
+          - type: entity
+            entity: switch.dsc_hub_heater_demand
+            icon: mdi:radiator
+          - type: entity
+            entity: switch.dsc_hub_ac_demand
+            icon: mdi:snowflake
+          - type: entity
+            entity: switch.dsc_hub_humidifier_demand
+            icon: mdi:air-humidifier
+          - type: entity
+            entity: switch.dsc_hub_dehumidifier_demand
+            icon: mdi:water-remove
+      - type: markdown
+        content: >-
+          *Full appliance modules live on the **Climate Engine** page — this
+          tent page is environment-first.*
+  - type: grid
+    column_span: 2
+    cards:
+      - type: heading
+        heading: 🌡️ ENVIRONMENT — 24 h
+        heading_style: title
+      - type: custom:mushroom-chips-card
+        alignment: end
+        chips:
+          - type: template
+            icon: mdi:arrow-expand-all
+            icon_color: orange
+            content: Temps
+            tap_action:
+              action: fire-dom-event
+              browser_mod:
+                service: browser_mod.popup
+                data:
+                  title: Temperature — 24h
+                  size: wide
+                  content:
+                    type: custom:apexcharts-card
+                    graph_span: 24h
+                    header:
+                      show: true
+                      title: Temperature (°C) — all zones
+                      show_states: true
+                      colorize_states: true
+                    apex_config:
+                      chart:
+                        height: 380
+                    series:
+                      - entity: sensor.dsc_hub_tent_temperature
+                        name: 4x8 Tent
+                        stroke_width: 2
+                        extend_to: now
+                        color: '#f97316'
+                      - entity: sensor.dsc_hub_clone_temperature
+                        name: 2x4 Clone
+                        stroke_width: 2
+                        extend_to: now
+                        color: '#22c55e'
+                      - entity: sensor.dsc_hub_room_temperature
+                        name: Room
+                        stroke_width: 2
+                        extend_to: now
+                        color: '#94a3b8'
+                      - entity: number.dsc_hub_target_temp
+                        name: 4x8 Target
+                        curve: stepline
+                        stroke_width: 1
+                        extend_to: now
+                        color: '#f9731688'
+
+          - type: template
+            icon: mdi:arrow-expand-all
+            icon_color: blue
+            content: Humidity
+            tap_action:
+              action: fire-dom-event
+              browser_mod:
+                service: browser_mod.popup
+                data:
+                  title: Humidity — 24h
+                  size: wide
+                  content:
+                    type: custom:apexcharts-card
+                    graph_span: 24h
+                    header:
+                      show: true
+                      title: Relative humidity (%) — all zones
+                      show_states: true
+                      colorize_states: true
+                    apex_config:
+                      chart:
+                        height: 380
+                    series:
+                      - entity: sensor.dsc_hub_tent_humidity
+                        name: 4x8 Tent
+                        stroke_width: 2
+                        extend_to: now
+                        color: '#3b82f6'
+                      - entity: sensor.dsc_hub_clone_humidity
+                        name: 2x4 Clone
+                        stroke_width: 2
+                        extend_to: now
+                        color: '#22c55e'
+                      - entity: sensor.dsc_hub_room_humidity
+                        name: Room
+                        stroke_width: 2
+                        extend_to: now
+                        color: '#94a3b8'
+
+          - type: template
+            icon: mdi:arrow-expand-all
+            icon_color: green
+            content: VPD
+            tap_action:
+              action: fire-dom-event
+              browser_mod:
+                service: browser_mod.popup
+                data:
+                  title: VPD — 24h
+                  size: wide
+                  content:
+                    type: custom:apexcharts-card
+                    graph_span: 24h
+                    header:
+                      show: true
+                      title: VPD (kPa) — both tents vs bands
+                      show_states: true
+                      colorize_states: true
+                    apex_config:
+                      chart:
+                        height: 380
+                    series:
+                      - entity: sensor.dsc_hub_vpd_kpa
+                        name: 4x8 VPD
+                        stroke_width: 2
+                        extend_to: now
+                        color: '#f97316'
+                      - entity: sensor.dsc_leaf_vpd_kpa
+                        name: 4x8 leaf VPD
+                        stroke_width: 1
+                        extend_to: now
+                        color: '#86efac'
+                      - entity: sensor.dsc_hub_clone_vpd_kpa
+                        name: 2x4 VPD
+                        stroke_width: 2
+                        extend_to: now
+                      - entity: sensor.dsc_clone_leaf_vpd_kpa
+                        name: 2x4 leaf VPD
+                        stroke_width: 1
+                        extend_to: now
+                        color: '#a7f3d0'
+                        color: '#22c55e'
+                      - entity: number.dsc_hub_vpd_target_min
+                        name: 4x8 floor
+                        curve: stepline
+                        stroke_width: 1
+                        extend_to: now
+                        color: '#f9731666'
+                      - entity: number.dsc_hub_vpd_target_max
+                        name: 4x8 ceiling
+                        curve: stepline
+                        stroke_width: 1
+                        extend_to: now
+                        color: '#f9731666'
+                      - entity: number.dsc_hub_clone_vpd_min
+                        name: 2x4 floor
+                        curve: stepline
+                        stroke_width: 1
+                        extend_to: now
+                        color: '#22c55e66'
+                      - entity: number.dsc_hub_clone_vpd_max
+                        name: 2x4 ceiling
+                        curve: stepline
+                        stroke_width: 1
+                        extend_to: now
+                        color: '#22c55e66'
+
+      - type: custom:apexcharts-card
+        graph_span: 24h
+        update_interval: 1min
+        header:
+          show: true
+          title: Temperature + heater/AC runs
+          show_states: false
+        apex_config:
+          chart:
+            height: 200
+          legend:
+            show: true
+        yaxis:
+          - id: primary
+            decimals: 1
+          - id: duty
+            opposite: true
+            min: 0
+            max: 1
+            show: false
+        series:
+          - entity: sensor.dsc_hub_tent_temperature
+            name: Tent
+            yaxis_id: primary
+            stroke_width: 2
+            show:
+              extremas: true
+          - entity: sensor.dsc_hub_room_temperature
+            name: Room
+            yaxis_id: primary
+            stroke_width: 2
+          - entity: number.dsc_hub_target_temp
+            name: Target
+            yaxis_id: primary
+            stroke_width: 1
+            stroke_dash: 4
+            show:
+              in_header: false
+              extremas: false
+          - entity: switch.dsc_hub_heater_demand
+            name: Heat
+            yaxis_id: duty
+            transform: "return x === 'on' ? 1 : 0;"
+            type: area
+            curve: stepline
+            stroke_width: 0
+            color: '#f97316'
+            show:
+              in_header: false
+              extremas: false
+          - entity: switch.dsc_hub_ac_demand
+            name: AC
+            yaxis_id: duty
+            transform: "return x === 'on' ? 1 : 0;"
+            type: area
+            curve: stepline
+            stroke_width: 0
+            color: '#22d3ee'
+            show:
+              in_header: false
+              extremas: false
+      - type: custom:apexcharts-card
+        graph_span: 24h
+        update_interval: 1min
+        header:
+          show: true
+          title: Humidity + hum/dehum runs
+          show_states: false
+        apex_config:
+          chart:
+            height: 200
+          legend:
+            show: true
+        yaxis:
+          - id: primary
+            decimals: 0
+          - id: duty
+            opposite: true
+            min: 0
+            max: 1
+            show: false
+        series:
+          - entity: sensor.dsc_hub_tent_humidity
+            name: RH
+            yaxis_id: primary
+            stroke_width: 2
+            show:
+              extremas: true
+          - entity: switch.dsc_hub_humidifier_demand
+            name: Hum
+            yaxis_id: duty
+            transform: "return x === 'on' ? 1 : 0;"
+            type: area
+            curve: stepline
+            stroke_width: 0
+            color: '#3b82f6'
+            show:
+              in_header: false
+              extremas: false
+          - entity: switch.dsc_hub_dehumidifier_demand
+            name: Dehum
+            yaxis_id: duty
+            transform: "return x === 'on' ? 1 : 0;"
+            type: area
+            curve: stepline
+            stroke_width: 0
+            color: '#14b8a6'
+            show:
+              in_header: false
+              extremas: false
+      - type: custom:mini-graph-card
+        name: VPD
+        hours_to_show: 24
+        cache: true
+        points_per_hour: 12
+        line_width: 2
+        entities:
+          - entity: sensor.dsc_hub_vpd_kpa
+            name: VPD
+          - entity: number.dsc_hub_vpd_target_min
+            name: Min
+            show_points: false
+          - entity: number.dsc_hub_vpd_target_max
+            name: Max
+            show_points: false
+        show:
+          labels: true
+          extrema: true
+        tap_action:
+          action: fire-dom-event
+          browser_mod:
+            service: browser_mod.popup
+            data:
+              title: VPD — 24h
+              size: wide
+              content:
+                type: custom:apexcharts-card
+                graph_span: 24h
+                header:
+                  show: true
+                  title: VPD (kPa) — both tents vs bands
+                  show_states: true
+                  colorize_states: true
+                apex_config:
+                  chart:
+                    height: 380
+                series:
+                  - entity: sensor.dsc_hub_vpd_kpa
+                    name: 4x8 VPD
+                    stroke_width: 2
+                    extend_to: now
+                    color: '#f97316'
+                  - entity: sensor.dsc_leaf_vpd_kpa
+                    name: 4x8 leaf VPD
+                    stroke_width: 1
+                    extend_to: now
+                    color: '#86efac'
+                  - entity: sensor.dsc_hub_clone_vpd_kpa
+                    name: 2x4 VPD
+                    stroke_width: 2
+                    extend_to: now
+                    color: '#22c55e'
+                  - entity: sensor.dsc_clone_leaf_vpd_kpa
+                    name: 2x4 leaf VPD
+                    stroke_width: 1
+                    extend_to: now
+                    color: '#a7f3d0'
+                  - entity: number.dsc_hub_vpd_target_min
+                    name: 4x8 floor
+                    curve: stepline
+                    stroke_width: 1
+                    extend_to: now
+                    color: '#f9731666'
+                  - entity: number.dsc_hub_vpd_target_max
+                    name: 4x8 ceiling
+                    curve: stepline
+                    stroke_width: 1
+                    extend_to: now
+                    color: '#f9731666'
+                  - entity: number.dsc_hub_clone_vpd_min
+                    name: 2x4 floor
+                    curve: stepline
+                    stroke_width: 1
+                    extend_to: now
+                    color: '#22c55e66'
+                  - entity: number.dsc_hub_clone_vpd_max
+                    name: 2x4 ceiling
+                    curve: stepline
+                    stroke_width: 1
+                    extend_to: now
+                    color: '#22c55e66'
+
+  - type: grid
+    cards:
+      # ============================================================
+      #  v2.4 — THIS TENT HAS NO LIGHT
+      #  Was "LIGHTING SNAPSHOT" showing the SF1000. That card was the
+      #  single most misleading thing on the dashboard after the
+      #  topology change: it put the clone tent's lamp on the 4x8's
+      #  page, so every glance said "the main tent is lit" while the
+      #  4x8 sat in the dark.
+      # ============================================================
+      - type: heading
+        heading: 💡 LIGHTING — none fitted
+        heading_style: title
+      - type: custom:mushroom-template-card
+        entity: binary_sensor.dsc_hub_4x8_window_open
+        primary: >-
+          4x8 window {{ 'OPEN' if is_state(entity,'on') else 'shut' }} — no
+          lamp fitted
+        secondary: >-
+          The SF1000 moved to the 2x4 in v2.4. This tent keeps a photoperiod
+          because the clones and the thermal loop still obey it. GPIO5 is
+          reserved for a light here.
+        icon: mdi:lightbulb-off-outline
+        icon_color: "{{ 'blue' if is_state(entity,'on') else 'disabled' }}"
+        multiline_secondary: true
+        tap_action:
+          action: navigate
+          navigation_path: /dsc-hub-pro/lighting
+      - type: custom:mini-graph-card
+        name: Virtual window — 24 h
+        hours_to_show: 24
+        cache: true
+        points_per_hour: 12
+        line_width: 1
+        height: 90
+        entities:
+          - entity: binary_sensor.dsc_hub_4x8_window_open
+            name: 4x8 window
+            show_fill: true
+            smoothing: false
+        lower_bound: 0
+        upper_bound: 1
+        show:
+          labels: false
+          fill: true
+      - type: heading
+        heading: 🫧 CO2
+        heading_style: subtitle
+      - type: custom:gauge-card-pro
+        entity: sensor.dsc_hub_dynamic_co2_ppm
+        header: Dynamic CO2 (uncalibrated trend)
+        min: 300
+        max: 2000
+        needle: true
+        segments: |
+          {{ [ {'from': 300, 'color': '#f59e0b'},
+               {'from': 800, 'color': '#22c55e'},
+               {'from': 1500, 'color': '#ef4444'} ] }}
+      - type: custom:mini-graph-card
+        name: CO2 trend — 24 h
+        hours_to_show: 24
+        points_per_hour: 4
+        line_width: 2
+        entities:
+          - entity: sensor.dsc_hub_dynamic_co2_ppm
+            name: CO2
+        show:
+          labels: true
+          extrema: true
+        tap_action:
+          action: fire-dom-event
+          browser_mod:
+            service: browser_mod.popup
+            data:
+              title: CO2 trend — 48h
+              size: wide
+              content:
+                type: custom:apexcharts-card
+                graph_span: 48h
+                header:
+                  show: true
+                  title: Dynamic CO2 (uncalibrated trend) — read shape, not ppm
+                  show_states: true
+                apex_config:
+                  chart:
+                    height: 380
+                series:
+                  - entity: sensor.dsc_hub_dynamic_co2_ppm
+                    name: CO2 est.
+                    stroke_width: 2
+                    extend_to: now
+                    color: '#a78bfa'
+                  - entity: sensor.dsc_fan_intake_main_pct
+                    name: Intake %
+                    curve: stepline
+                    stroke_width: 1
+                    extend_to: now
+                    color: '#34d399'
+      - type: markdown
+        content: >-
+          *Uncalibrated ADC estimate — read the **shape**, never the
+          number. Drops when the fresh-air floor lifts; climbs in a closed
+          loop. An SCD41 drops onto the existing I2C bus when you want real
+          ppm (block is parked in the firmware).*
+

@@ -1,5 +1,20 @@
 # DSC-HUB releases
 
+## Pi appliance — **v7.3.0** (full software closure)
+
+| | |
+|---|---|
+| **Brain / SPA** | **7.3.0** |
+| **Expected firmware** | **7.0.0.0** |
+| **Primary UI** | Pi SPA at `http://10.42.0.1:8787` |
+| **Studio LAN** | `http://192.168.86.48:8787` |
+| **Deploy** | [`services/dsc-hub/pi/studio-deploy.ps1`](services/dsc-hub/pi/studio-deploy.ps1) |
+| **Closure** | [`docs/qa/AUDIT-CLOSURE-7.3.md`](docs/qa/AUDIT-CLOSURE-7.3.md) |
+
+Graph re-audit, flow Sankey (air/heat/humidity), leaf VPD, lab wet cal, R3F Twin on Pi, Lovelace YAML archived. Pi SPA is the only operator surface.
+
+---
+
 ## Pi appliance — **v7.2.0** (global modifiers + soil probes + Zigbee)
 
 | | |

@@ -334,6 +334,39 @@ def _control_state(states: dict[str, dict[str, Any]], eid: str) -> str | None:
     return str(st)
 
 
+_SONOFF_RELAY_ENTITIES: dict[str, str] = {
+    "heater": "switch.dsc_heater_main_relay",
+    "heatmat": "switch.dsc_heatmat_main_relay",
+    "humidifier": "switch.dsc_humidifier_main_relay",
+    "dehumidifier": "switch.dsc_de_humidifier_main_relay",
+}
+
+
+def _states_with_sonoff_relays(
+    fleet: Any,
+    states: dict[str, dict[str, Any]],
+) -> dict[str, dict[str, Any]]:
+    """Merge fleet sonoff relay_on into HA-shaped view when relay entities are absent."""
+    merged = dict(states)
+    sonoffs = getattr(fleet, "sonoffs", None) or {}
+    for seat_id, seat in sonoffs.items():
+        relay_eid = _SONOFF_RELAY_ENTITIES.get(seat_id)
+        if not relay_eid:
+            continue
+        existing = merged.get(relay_eid)
+        if existing and _control_state(merged, relay_eid) is not None:
+            continue
+        relay_on = (getattr(seat, "values", None) or {}).get("relay_on")
+        if relay_on is None:
+            continue
+        merged[relay_eid] = {
+            "entity_id": relay_eid,
+            "state": "on" if relay_on else "off",
+            "attributes": {},
+        }
+    return merged
+
+
 def _num_state(states: dict[str, dict[str, Any]], eid: str) -> float | None:
     st = _control_state(states, eid)
     if st is None:
@@ -536,7 +569,7 @@ def _build_hot_computed_states(
     """Fast path: live CFM, fan pct, efficacy gates, alert rollups."""
     states: dict[str, dict[str, Any]] = {}
     cal_memo: dict[str, list[tuple[float, float]]] = {}
-    view = _states_with_controls(cold_states, controls)
+    view = _states_with_sonoff_relays(fleet, _states_with_controls(cold_states, controls))
 
     fan_pcts: dict[str, float] = {}
     for sensor_id, fan_entity in FAN_PCT_ENTITIES.items():
@@ -631,18 +664,84 @@ def _build_hot_computed_states(
         },
     )
 
+    total_intake = intake_main_alloc + intake_2x4_alloc
+    if total_intake >= 0.5:
+        direct_exhaust_2x4 = out_alloc * (intake_2x4_alloc / total_intake)
+        cascade_2x4 = max(0.0, round(intake_2x4_alloc - direct_exhaust_2x4, 1))
+    else:
+        cascade_2x4 = 0.0
+    _set_entity(
+        states,
+        "sensor.dsc_cfm_cascade_2x4_allocated",
+        cascade_2x4,
+        available=True,
+        attributes={
+            "unit_of_measurement": "CFM",
+            "model": "mass_balance_cascade",
+            "honesty": "intake_2x4_minus_direct_exhaust_share",
+        },
+    )
+    total_exhaust = out_alloc + recirc_alloc
+    imbalance = abs(total_intake - total_exhaust)
+    mass_ok = imbalance < max(5.0, 0.05 * max(total_intake, total_exhaust, 1.0))
+    _set_entity(states, "binary_sensor.dsc_flow_mass_balance_ok", mass_ok)
+
     tent_t = fleet.hub.values.get("temp_c") if fleet.hub else None
     tent_rh = fleet.hub.values.get("rh_pct") if fleet.hub else None
+    room_t = fleet.hub.values.get("room_temp_c") if fleet.hub else None
+    room_rh = fleet.hub.values.get("room_rh_pct") if fleet.hub else None
     rh_max = float(helpers.get("number.dsc_hub_rh_target_max", helpers.get("input_number.dsc_hub_rh_target_max", 70)) or 70)
+    rh_min = float(helpers.get("number.dsc_hub_rh_target_min", helpers.get("input_number.dsc_hub_rh_target_min", 45)) or 45)
     target_t = float(helpers.get("number.dsc_hub_target_temp", helpers.get("input_number.dsc_hub_target_temp", 25)) or 25)
 
     hum_demand = _control_state(view, "switch.dsc_hub_humidifier_demand") == "on"
     hum_relay = _control_state(view, "switch.dsc_humidifier_main_relay") == "on"
+    dehum_demand = _control_state(view, "switch.dsc_hub_dehumidifier_demand") == "on"
+    dehum_relay = _control_state(view, "switch.dsc_de_humidifier_main_relay") == "on"
     heat_demand = _control_state(view, "switch.dsc_hub_heater_demand") == "on"
     heat_relay = _control_state(view, "switch.dsc_heater_main_relay") == "on"
     mat_demand = _control_state(view, "switch.dsc_hub_grow_mat_demand") == "on"
     mat_relay = _control_state(view, "switch.dsc_heatmat_main_relay") == "on"
     out_pct = fan_pcts.get("sensor.dsc_fan_exhaust_outside_pct", 0.0)
+
+    heat_tent_w = 0.0
+    if heat_demand and heat_relay and room_t is not None and tent_t is not None:
+        heat_tent_w = round(max(0.0, float(tent_t) - float(room_t)) * 120.0, 1)
+    mat_w = round(80.0, 1) if mat_demand and mat_relay else 0.0
+    humidify_g = 0.0
+    if hum_demand and hum_relay and room_rh is not None:
+        humidify_g = round(max(0.0, rh_min - float(room_rh)) * 2.0, 2)
+    dehumidify_g = 0.0
+    if dehum_demand and dehum_relay and room_rh is not None:
+        dehumidify_g = round(max(0.0, float(room_rh) - rh_max) * 2.0, 2)
+    _set_entity(
+        states,
+        "sensor.dsc_flow_heat_tent_w",
+        heat_tent_w,
+        available=True,
+        attributes={"unit_of_measurement": "W", "model": "estimated_proxy", "honesty": "demand_times_delta_t"},
+    )
+    _set_entity(
+        states,
+        "sensor.dsc_flow_heat_mat_w",
+        mat_w,
+        available=True,
+        attributes={"unit_of_measurement": "W", "model": "estimated_proxy", "honesty": "mat_demand_on"},
+    )
+    _set_entity(
+        states,
+        "sensor.dsc_flow_humidify_g_h",
+        humidify_g,
+        available=True,
+        attributes={"unit_of_measurement": "g/h", "model": "estimated_proxy", "honesty": "demand_times_rh_gap"},
+    )
+    _set_entity(
+        states,
+        "sensor.dsc_flow_dehumidify_g_h",
+        dehumidify_g,
+        available=True,
+        attributes={"unit_of_measurement": "g/h", "model": "estimated_proxy", "honesty": "demand_times_rh_gap"},
+    )
 
     hum_runtime_h = runtime.hours_today("hub", "switch_dsc_hub_humidifier_demand")
     heat_runtime_h = runtime.hours_today("hub", "switch_dsc_hub_heater_demand")
@@ -660,6 +759,15 @@ def _build_hot_computed_states(
         and heat_relay
         and tent_t is not None
         and float(tent_t) >= (target_t + 0.3)
+        and heat_runtime_h * 3600 >= 480,
+    )
+    _set_entity(
+        states,
+        "binary_sensor.dsc_heater_temp_oos_latch",
+        heat_demand
+        and heat_relay
+        and tent_t is not None
+        and float(tent_t) < (target_t - 1.5)
         and heat_runtime_h * 3600 >= 480,
     )
 

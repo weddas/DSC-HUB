@@ -13,7 +13,7 @@ import {
 import { OverflowMenu } from "../components/chrome";
 import { TimespanControl, CYCLE_TIMESPAN_EXTRAS } from "../components/HistoryDrawer";
 import { AirPathMap } from "../components/AirPathMap";
-import { SankeyFlowPrototype } from "../components/SankeyFlowPrototype";
+import { FlowSankey } from "../components/FlowSankey";
 import { CropScheduler } from "../components/CropScheduler";
 import { TentTargetPanel } from "../components/TentTargets";
 import { resolveCfm } from "../lib/cfmProvenance";
@@ -72,6 +72,9 @@ export function LiveClimatePage() {
   const roomVpdId = resolveRoomVpdId(entity);
   const roomVpdHeld = useHeldReading(roomVpdId);
 
+  const leafVpdHeld = useHeldReading("sensor.dsc_leaf_vpd_kpa");
+  const cloneLeafVpdHeld = useHeldReading("sensor.dsc_clone_leaf_vpd_kpa");
+
   const tentT = useEntitySeries("sensor.dsc_hub_tent_temperature", { hours, maxPoints, withGhost: true });
   const tentRh = useEntitySeries("sensor.dsc_hub_tent_humidity", { hours, maxPoints, withGhost: true });
   const tentVpd = useEntitySeries("sensor.dsc_hub_vpd_kpa", { hours, maxPoints, withGhost: true });
@@ -81,6 +84,8 @@ export function LiveClimatePage() {
   const roomT = useEntitySeries("sensor.dsc_hub_room_temperature", { hours, maxPoints, withGhost: true });
   const roomRh = useEntitySeries("sensor.dsc_hub_room_humidity", { hours, maxPoints, withGhost: true });
   const roomVpd = useEntitySeries(roomVpdId, { hours, maxPoints, withGhost: true });
+  const leafVpd = useEntitySeries("sensor.dsc_leaf_vpd_kpa", { hours, maxPoints, withGhost: true });
+  const cloneLeafVpd = useEntitySeries("sensor.dsc_clone_leaf_vpd_kpa", { hours, maxPoints, withGhost: true });
   const fanOut = useEntitySeries("sensor.dsc_fan_exhaust_outside_pct", { hours, maxPoints });
   const fanRecirc = useEntitySeries("sensor.dsc_fan_exhaust_room_pct", { hours, maxPoints });
 
@@ -103,6 +108,18 @@ export function LiveClimatePage() {
     "sensor.dsc_cfm_intake_2x4",
     { available, num },
   );
+  const cascadeReading = resolveCfm(
+    "sensor.dsc_cfm_cascade_2x4_allocated",
+    "sensor.dsc_cfm_intake_2x4_allocated",
+    { available, num },
+  );
+  const massBalanceOk = available("binary_sensor.dsc_flow_mass_balance_ok")
+    ? state("binary_sensor.dsc_flow_mass_balance_ok") === "on"
+    : null;
+  const heatTentW = num("sensor.dsc_flow_heat_tent_w", 0);
+  const heatMatW = num("sensor.dsc_flow_heat_mat_w", 0);
+  const humidifyGh = num("sensor.dsc_flow_humidify_g_h", 0);
+  const dehumidifyGh = num("sensor.dsc_flow_dehumidify_g_h", 0);
 
   const roomAh = absoluteHumidity(roomTHeld.value, roomRhHeld.value);
   const tentAh = absoluteHumidity(tentTHeld.value, tentRhHeld.value);
@@ -326,6 +343,8 @@ export function LiveClimatePage() {
                 { label: "4×8 RH", got: tentRhHeld.value, stale: tentRhHeld.stale, wantMin: rhMin, wantMax: rhMax, unit: "%" },
                 { label: "2×4 VPD", got: cloneVpdHeld.value, stale: cloneVpdHeld.stale, wantMin: cloneVpdMin, wantMax: cloneVpdMax, unit: "kPa" },
                 { label: "4×8 VPD", got: tentVpdHeld.value, stale: tentVpdHeld.stale, wantMin: vpdMin, wantMax: vpdMax, unit: "kPa" },
+                { label: "4×8 leaf VPD", got: leafVpdHeld.value, stale: leafVpdHeld.stale, unit: "kPa" },
+                { label: "2×4 leaf VPD", got: cloneLeafVpdHeld.value, stale: cloneLeafVpdHeld.stale, unit: "kPa" },
               ]}
             />
           </Card>
@@ -335,7 +354,9 @@ export function LiveClimatePage() {
           <Card className="dsc-glass" title="Temperature" icon="climate">
             <MultiLineChart
               unit="°C"
+              chartHours={hours}
               lastSyncAt={Math.max(roomT.lastSyncAt ?? 0, cloneT.lastSyncAt ?? 0, tentT.lastSyncAt ?? 0) || undefined}
+              yDomain={{ left: { min: 15, max: 35 } }}
               series={[
                 ...withPriorGhost("rt", "Room", roomT, "var(--dsc-gray-5)", "°C"),
                 ...withPriorGhost("ct", "2×4", cloneT, "var(--dsc-teal)", "°C", { band: { min: cloneTargetTemp - 1.5, max: cloneTargetTemp + 1.5 } }),
@@ -349,6 +370,7 @@ export function LiveClimatePage() {
           <Card className="dsc-glass" title="Humidity" icon="climate">
             <MultiLineChart
               unit="%"
+              chartHours={hours}
               lastSyncAt={Math.max(roomRh.lastSyncAt ?? 0, cloneRh.lastSyncAt ?? 0, tentRh.lastSyncAt ?? 0) || undefined}
               yDomain={{ left: { min: 0, max: 100 } }}
               series={[
@@ -364,11 +386,27 @@ export function LiveClimatePage() {
           <Card className="dsc-glass" title="VPD" icon="climate">
             <MultiLineChart
               unit="kPa"
-              lastSyncAt={Math.max(roomVpd.lastSyncAt ?? 0, cloneVpd.lastSyncAt ?? 0, tentVpd.lastSyncAt ?? 0) || undefined}
+              chartHours={hours}
+              lastSyncAt={
+                Math.max(
+                  roomVpd.lastSyncAt ?? 0,
+                  cloneVpd.lastSyncAt ?? 0,
+                  tentVpd.lastSyncAt ?? 0,
+                  leafVpd.lastSyncAt ?? 0,
+                  cloneLeafVpd.lastSyncAt ?? 0,
+                ) || undefined
+              }
+              yDomain={{ left: { min: 0, max: 2.5 } }}
               series={[
                 ...withPriorGhost("rv", "Room", roomVpd, "var(--dsc-gray-5)", "kPa"),
-                ...withPriorGhost("cv", "2×4", cloneVpd, "var(--dsc-teal)", "kPa", { band: { min: cloneVpdMin, max: cloneVpdMax } }),
-                ...withPriorGhost("mv", "4×8", tentVpd, "var(--dsc-blue)", "kPa", { band: { min: vpdMin, max: vpdMax } }),
+                ...withPriorGhost("cv", "2×4 air", cloneVpd, "var(--dsc-teal)", "kPa", { band: { min: cloneVpdMin, max: cloneVpdMax } }),
+                ...withPriorGhost("mv", "4×8 air", tentVpd, "var(--dsc-blue)", "kPa", { band: { min: vpdMin, max: vpdMax } }),
+                ...withPriorGhost("lv", "4×8 leaf", leafVpd, "var(--dsc-green)", "kPa"),
+                ...withPriorGhost("clv", "2×4 leaf", cloneLeafVpd, "var(--dsc-green-dim)", "kPa"),
+              ]}
+              targets={[
+                { min: vpdMin, max: vpdMax, color: "var(--dsc-blue-dim)" },
+                { min: cloneVpdMin, max: cloneVpdMax, color: "var(--dsc-teal-dim)" },
               ]}
             />
           </Card>
@@ -382,11 +420,17 @@ export function LiveClimatePage() {
               outCfm={outReading}
               recircCfm={recReading}
             />
-            <SankeyFlowPrototype
+            <FlowSankey
               intakeClone={inCloneReading}
               intakeMain={inMainReading}
+              cascade={cascadeReading}
               outCfm={outReading}
               recircCfm={recReading}
+              heatTentW={heatTentW}
+              heatMatW={heatMatW}
+              humidifyGh={humidifyGh}
+              dehumidifyGh={dehumidifyGh}
+              massBalanceOk={massBalanceOk}
             />
           </Card>
         </div>

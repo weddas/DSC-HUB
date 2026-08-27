@@ -10,6 +10,26 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 
 ---
 
+## 2026-08-27 — 7.3 mega pass (closure)
+
+> **CLOSED 2026-08-27 (software)** — See [`docs/qa/AUDIT-CLOSURE-7.3.md`](qa/AUDIT-CLOSURE-7.3.md).
+
+| Deliverable | Status |
+|-------------|--------|
+| Version 7.3.0 unified | brain + surface + SPA |
+| Graph re-audit + axis QoL | [`GRAPH-REAUDIT-7.3.md`](qa/GRAPH-REAUDIT-7.3.md) |
+| FlowSankey air/heat/humidity | experimental on Climate |
+| Leaf VPD in charts | history + Climate + BandChart |
+| N-016 lab wet wizard | Calibrate + [`docs/ops/LAB-WET-CAL.md`](ops/LAB-WET-CAL.md) |
+| N-014 heater temp OOS latch | computed binary |
+| R3F Twin on Pi SPA | [`NEON-API-SOAK-7.3.md`](qa/NEON-API-SOAK-7.3.md) |
+| Lovelace YAML retired | `docs/archive/lovelace-7.3/` |
+| Phase E shim simplified | `useBrain.tsx` |
+
+**Remains (operator):** deploy 7.3 to `.48`, island-proof, z2m TS0201 pair, F-001–F-008 hardware.
+
+---
+
 ## 2026-08-27 — 7.2 mega pass (global modifiers, soil probes, Zigbee, Sankey)
 
 > **CLOSED 2026-08-27 (software)** — See [`docs/qa/AUDIT-CLOSURE-7.2.md`](qa/AUDIT-CLOSURE-7.2.md).

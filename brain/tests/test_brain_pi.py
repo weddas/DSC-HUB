@@ -39,7 +39,7 @@ def temp_db(monkeypatch: pytest.MonkeyPatch) -> Path:
 
 
 def test_version_is_pi_train() -> None:
-    assert __version__.startswith("7.1.0")
+    assert __version__.startswith("7.3.0")
 
 
 def test_settings_defaults(temp_db: Path) -> None:
@@ -395,6 +395,42 @@ def test_intake_allocated_cfm(temp_db: Path, monkeypatch: pytest.MonkeyPatch) ->
     assert states["sensor.dsc_cfm_intake_2x4_allocated"]["state"] == "0.0"
 
 
+def test_flow_proxies_and_cascade(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("DSC_DATA", str(temp_db.parent))
+    from dsc_brain.computed_ops import build_computed_hass_states, invalidate_computed_cache
+
+    invalidate_computed_cache()
+    state = FleetState()
+    state.hub = SeatState(
+        "hub",
+        True,
+        "7.0.0.0",
+        {
+            "temp_c": 26.0,
+            "room_temp_c": 22.0,
+            "rh_pct": 55.0,
+            "room_rh_pct": 48.0,
+            "controls": {
+                "switch.dsc_hub_heater_demand": {"state": "on"},
+                "switch.dsc_hub_humidifier_demand": {"state": "on"},
+                "switch.dsc_hub_grow_mat_demand": {"state": "on"},
+            },
+        },
+        time.time(),
+    )
+    state.sonoffs = {
+        "heater": SeatState("heater", True, "7.0.0.0", {"relay_on": True}, time.time()),
+        "humidifier": SeatState("humidifier", True, "7.0.0.0", {"relay_on": True}, time.time()),
+        "heatmat": SeatState("heatmat", True, "7.0.0.0", {"relay_on": True}, time.time()),
+    }
+    states = build_computed_hass_states(state)
+    assert float(states["sensor.dsc_flow_heat_tent_w"]["state"]) > 0
+    assert float(states["sensor.dsc_flow_heat_mat_w"]["state"]) > 0
+    assert "sensor.dsc_cfm_cascade_2x4_allocated" in states
+    assert "binary_sensor.dsc_flow_mass_balance_ok" in states
+    assert "binary_sensor.dsc_heater_temp_oos_latch" in states
+
+
 def test_history_api(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("DSC_DATA", str(temp_db.parent))
     from fastapi.testclient import TestClient
@@ -422,8 +458,8 @@ def test_health_endpoint() -> None:
     assert resp.status_code == 200
     body = resp.json()
     assert body["status"] == "ok"
-    assert body["version"] == "7.1.0"
-    assert body["surface"] == "7.1.0"
+    assert body["version"] == "7.3.0"
+    assert body["surface"] == "7.3.0"
     assert body["expected_firmware"] == "7.0.0.0"
 
 

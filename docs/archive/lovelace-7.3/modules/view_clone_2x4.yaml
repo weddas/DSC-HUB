@@ -1,0 +1,742 @@
+title: 2x4 Clone
+icon: mdi:sprout
+path: clone-2x4
+subview: true
+type: sections
+max_columns: 4
+sections:
+  - type: grid
+    cards:
+      - type: heading
+        heading: Mode & targets
+        heading_style: title
+      # v2.4 behaviour shift worth knowing before you touch this select:
+      # Clone Mode -> Off now DARKS THE SF1000. In v2.3 it only dropped
+      # the tent from arbitration.
+      - type: custom:mushroom-select-card
+        entity: select.dsc_hub_clone_mode
+        name: Clone Mode
+        icon: mdi:sprout-outline
+        icon_color: green
+      - type: conditional
+        conditions:
+          - condition: state
+            entity: select.dsc_hub_clone_mode
+            state: "Off"
+        card:
+          type: custom:mushroom-template-card
+          primary: 2x4 OFF — SF1000 is dark
+          secondary: >-
+            Clone Mode Off darks the SF1000. Set any other mode to restore
+            the schedule.
+          icon: mdi:lightbulb-off
+          icon_color: purple
+          multiline_secondary: true
+      - type: custom:mushroom-select-card
+        entity: select.dsc_hub_clone_photoperiod
+        name: Clone Photoperiod
+        icon: mdi:theme-light-dark
+      - type: conditional
+        conditions:
+          - condition: state
+            entity: select.dsc_hub_clone_photoperiod
+            state: Independent
+        card:
+          type: custom:mushroom-number-card
+          entity: number.dsc_hub_clone_light_hours
+          name: Light Hours
+          icon: mdi:sun-clock
+          display_mode: buttons
+      - type: conditional
+        conditions:
+          - condition: state
+            entity: select.dsc_hub_clone_photoperiod
+            state: Follow 4x8
+        card:
+          type: custom:mushroom-template-card
+          primary: >-
+            Window {{ states('sensor.dsc_expected_light_hours')|round(0) }}h
+            (follows 4x8)
+          secondary: >-
+            Clone hours locked — switch Clone Photoperiod to Independent
+            to edit. Opens {{ states('time.dsc_hub_lights_on_time') }}.
+          icon: mdi:lock
+          icon_color: amber
+          multiline_secondary: true
+          tap_action:
+            action: more-info
+            entity: select.dsc_hub_clone_photoperiod
+      - type: conditional
+        conditions:
+          - condition: state
+            entity: select.dsc_hub_clone_photoperiod
+            state: Independent
+        card:
+          type: entities
+          entities:
+            - entity: time.dsc_hub_clone_lights_on_time
+              name: Clone Lights-On Time
+      - type: conditional
+        conditions:
+          - condition: state
+            entity: select.dsc_hub_clone_photoperiod
+            state: Follow 4x8
+        card:
+          type: custom:mushroom-template-card
+          primary: >-
+            Opens with 4x8 at {{ states('time.dsc_hub_lights_on_time') }}
+          secondary: >-
+            Clone lights-on time locked while Photoperiod Follows 4x8.
+            Switch to Independent to set a counter-cycle start.
+          icon: mdi:lock
+          icon_color: amber
+          multiline_secondary: true
+          tap_action:
+            action: more-info
+            entity: select.dsc_hub_clone_photoperiod
+      - type: conditional
+        conditions:
+          - condition: state
+            entity: select.dsc_hub_clone_mode
+            state: Custom
+        card:
+          type: vertical-stack
+          cards:
+            - type: custom:mushroom-template-card
+              primary: Custom — climate targets unlocked
+              secondary: >-
+                Edits write to the hub. Named modes reload presets on select.
+              icon: mdi:lock-open-variant
+              icon_color: green
+              multiline_secondary: true
+              tap_action:
+                action: none
+            - type: grid
+              columns: 2
+              square: false
+              cards:
+                - type: custom:mushroom-number-card
+                  entity: number.dsc_hub_clone_target_temp
+                  name: Target Temp
+                  icon: mdi:thermometer
+                  display_mode: buttons
+                - type: custom:mushroom-number-card
+                  entity: number.dsc_hub_clone_rh_min
+                  name: RH Min
+                  icon: mdi:water-minus
+                  display_mode: buttons
+                - type: custom:mushroom-number-card
+                  entity: number.dsc_hub_clone_rh_max
+                  name: RH Max
+                  icon: mdi:water-plus
+                  display_mode: buttons
+                - type: custom:mushroom-number-card
+                  entity: number.dsc_hub_clone_vpd_min
+                  name: VPD Min
+                  icon: mdi:waves-arrow-up
+                  display_mode: buttons
+                - type: custom:mushroom-number-card
+                  entity: number.dsc_hub_clone_vpd_max
+                  name: VPD Max
+                  icon: mdi:waves-arrow-up
+                  display_mode: buttons
+      - type: conditional
+        conditions:
+          - condition: state
+            entity: select.dsc_hub_clone_mode
+            state_not: Custom
+        card:
+          type: vertical-stack
+          cards:
+            - type: custom:mushroom-template-card
+              primary: >-
+                {% set m = states('select.dsc_hub_clone_mode') %}
+                {% if m == 'Follow 4x8' %}Locked — following 4x8 targets
+                {% elif m == 'Off' %}Locked — 2x4 inactive
+                {% else %}Locked to {{ m }} presets{% endif %}
+              secondary: >-
+                Temp / RH / VPD are mode-owned. Switch Clone Mode → **Custom**
+                to fine-tune.
+              icon: mdi:lock
+              icon_color: amber
+              multiline_secondary: true
+              tap_action:
+                action: more-info
+                entity: select.dsc_hub_clone_mode
+            - type: grid
+              columns: 2
+              square: false
+              cards:
+                - type: custom:mushroom-template-card
+                  primary: >-
+                    {% set m = states('select.dsc_hub_clone_mode') %}
+                    {% if m == 'Follow 4x8' %}{{ states('number.dsc_hub_target_temp') }}°C
+                    {% else %}{{ states('number.dsc_hub_clone_target_temp') }}°C{% endif %}
+                  secondary: Target Temp
+                  icon: mdi:thermometer-lock
+                  icon_color: disabled
+                  tap_action:
+                    action: none
+                - type: custom:mushroom-template-card
+                  primary: >-
+                    {% set m = states('select.dsc_hub_clone_mode') %}
+                    {% if m == 'Follow 4x8' %}
+                    {{ states('number.dsc_hub_rh_target_min')|float(0)|round(0) }}–{{
+                    states('number.dsc_hub_rh_target_max')|float(0)|round(0) }}%
+                    {% else %}
+                    {{ states('number.dsc_hub_clone_rh_min')|float(0)|round(0) }}–{{
+                    states('number.dsc_hub_clone_rh_max')|float(0)|round(0) }}%
+                    {% endif %}
+                  secondary: RH band
+                  icon: mdi:water-lock
+                  icon_color: disabled
+                  tap_action:
+                    action: none
+                - type: custom:mushroom-template-card
+                  primary: >-
+                    {% set m = states('select.dsc_hub_clone_mode') %}
+                    {% if m == 'Follow 4x8' %}
+                    {{ states('number.dsc_hub_vpd_target_min') }}–{{
+                    states('number.dsc_hub_vpd_target_max') }} kPa
+                    {% else %}
+                    {{ states('number.dsc_hub_clone_vpd_min') }}–{{
+                    states('number.dsc_hub_clone_vpd_max') }} kPa
+                    {% endif %}
+                  secondary: VPD band
+                  icon: mdi:lock
+                  icon_color: disabled
+                  tap_action:
+                    action: none
+                - type: custom:mushroom-template-card
+                  primary: Switch to Custom
+                  secondary: Unlock clone climate edits
+                  icon: mdi:lock-open-outline
+                  icon_color: green
+                  tap_action:
+                    action: call-service
+                    service: select.select_option
+                    target:
+                      entity_id: select.dsc_hub_clone_mode
+                    data:
+                      option: Custom
+      - type: markdown
+        content: >-
+          *Climate targets are **mode-locked**. Only **Custom** unlocks
+          sliders. Photoperiod **Follow 4x8** locks clone light hours and
+          lights-on time.*
+  - type: grid
+    column_span: 2
+    cards:
+      - type: heading
+        heading: SF1000
+        heading_style: title
+      - type: conditional
+        conditions:
+          - condition: and
+            conditions:
+              - condition: state
+                entity: switch.dsc_hub_auto_photoperiod
+                state: "on"
+              - condition: state
+                entity: switch.dsc_hub_manual_light_hold
+                state: "off"
+              - condition: state
+                entity: switch.dsc_hub_manual_takeover
+                state: "off"
+        card:
+          type: custom:mushroom-template-card
+          primary: Schedule owns brightness
+          secondary: >-
+            Auto Photoperiod is driving the ramp. Tap Manual Light Hold
+            (or edit the light) to take over temporarily.
+          icon: mdi:lock
+          icon_color: amber
+          multiline_secondary: true
+          tap_action:
+            action: call-service
+            service: switch.turn_on
+            target:
+              entity_id: switch.dsc_hub_manual_light_hold
+      - type: custom:vertical-stack-in-card
+        cards:
+          - type: light
+            entity: light.dsc_hub_sf1000_dimmer
+            name: SF1000
+            features:
+              - type: light-brightness
+          - type: custom:mushroom-template-card
+            entity: light.dsc_hub_sf1000_dimmer
+            primary: >-
+              {% set b = (state_attr(entity,'brightness')|float(0)/255*100)|round(0) %}
+              {% if is_state(entity,'on') %}Lit — {{ b }}%{% else %}Dark{% endif %}
+            secondary: >-
+              {% set win = is_state('binary_sensor.dsc_hub_2x4_window_open','on') %}
+              {% if is_state('switch.dsc_hub_manual_light_hold','on') %}⚠ MANUAL HOLD — schedule paused, self-heals at next lights-off
+              {%- elif is_state('binary_sensor.dsc_clone_dark_period_violation','on') %}⚠ ON OUTSIDE THE WINDOW — herm risk
+              {%- elif win %}Window open · {{ states('select.dsc_hub_clone_photoperiod') }}
+              {%- else %}Dark period · {{ states('select.dsc_hub_clone_photoperiod') }}{% endif %}
+            icon: mdi:white-balance-sunny
+            icon_color: >-
+              {% if is_state('binary_sensor.dsc_clone_dark_period_violation','on') %}red
+              {%- elif is_state('switch.dsc_hub_manual_light_hold','on') %}purple
+              {%- elif is_state(entity,'on') %}amber{% else %}disabled{% endif %}
+            multiline_secondary: true
+          - type: custom:mushroom-chips-card
+            alignment: justify
+            chips:
+              - type: entity
+                entity: switch.dsc_hub_auto_photoperiod
+                icon: mdi:theme-light-dark
+              - type: entity
+                entity: switch.dsc_hub_manual_light_hold
+                icon: mdi:hand-back-right
+              - type: template
+                entity: sensor.dsc_lights_on_today_2x4
+                icon: mdi:white-balance-sunny
+                icon_color: amber
+                content: >-
+                  {{ states(entity)|float(0)|round(1) }}h / {{
+                  states('sensor.dsc_clone_expected_light_hours')|float(0)|round(0)
+                  }}h today
+              - type: template
+                entity: time.dsc_hub_clone_lights_on_time
+                icon: mdi:clock-start
+                icon_color: >-
+                  {{ 'amber' if is_state('select.dsc_hub_clone_photoperiod','Independent') else 'disabled' }}
+                content: >-
+                  {% if is_state('select.dsc_hub_clone_photoperiod','Follow 4x8') %}
+                  opens w/ 4x8 {{ states('time.dsc_hub_lights_on_time') }}
+                  {% else %}on {{ states(entity) }}{% endif %}
+                tap_action:
+                  action: more-info
+                  entity: select.dsc_hub_clone_photoperiod
+      - type: custom:mini-graph-card
+        name: SF1000 brightness — the ramp, 24 h
+        hours_to_show: 24
+        cache: true
+        points_per_hour: 12
+        line_width: 2
+        entities:
+          - entity: light.dsc_hub_sf1000_dimmer
+            name: SF1000 %
+            attribute: brightness
+            show_fill: true
+            transform: "return x / 255 * 100;"
+        show:
+          labels: true
+          extrema: true
+        tap_action: 
+          action: fire-dom-event
+          browser_mod:
+            service: browser_mod.popup
+            data:
+              title: ☀️ SF1000 — ramp detail
+              size: wide
+              content:
+                type: vertical-stack
+                cards:
+                  - type: custom:apexcharts-card
+                    graph_span: 48h
+                    header:
+                      show: true
+                      title: Brightness ramp vs 2x4 window — 48h
+                      show_states: true
+                    apex_config:
+                      chart:
+                        height: 320
+                    yaxis:
+                      - id: pct
+                        min: 0
+                        max: 100
+                      - id: duty
+                        opposite: true
+                        min: 0
+                        max: 1
+                        show: false
+                    series:
+                      - entity: light.dsc_hub_sf1000_dimmer
+                        attribute: brightness
+                        name: SF1000 %
+                        yaxis_id: pct
+                        transform: "return x / 255 * 100;"
+                        stroke_width: 2
+                        extend_to: now
+                        color: '#f59e0b'
+                      - entity: binary_sensor.dsc_hub_2x4_window_open
+                        name: Window
+                        yaxis_id: duty
+                        transform: "return x === 'on' ? 1 : 0;"
+                        type: area
+                        curve: stepline
+                        stroke_width: 0
+                        extend_to: now
+                        color: '#22c55e'
+                  - type: entities
+                    entities:
+                      - entity: number.dsc_hub_sf1000_target_brightness
+                        name: Target brightness
+                      - entity: number.dsc_hub_sf1000_ramp_floor
+                        name: Ramp floor
+                      - entity: number.dsc_hub_sunrise_duration
+                        name: Sunrise duration
+                      - entity: number.dsc_hub_sunset_duration
+                        name: Sunset duration
+                      - entity: time.dsc_hub_clone_lights_on_time
+                        name: Clone lights-on
+                      - entity: number.dsc_hub_clone_light_hours
+                        name: Clone light hours
+      - type: markdown
+        content: >-
+          *A healthy ramp is a **trapezoid**, not a rectangle: sunrise
+          climbs over the Sunrise Duration, holds at target, then sunsets to
+          exactly 0 at lights-off. A vertical edge at sunrise means the ramp
+          floor is set too high and the lamp is jumping past the dark
+          minutes — trim **SF1000 Ramp Floor** on Climate Engine.*
+      - type: heading
+        heading: 🌡️ CLONE ENVIRONMENT — 24 h
+        heading_style: subtitle
+      - type: custom:apexcharts-card
+        graph_span: 24h
+        update_interval: 1min
+        header:
+          show: true
+          title: Air temp vs ROOT ZONE + mat runs
+          show_states: false
+        apex_config:
+          chart:
+            height: 220
+          legend:
+            show: true
+        yaxis:
+          - id: primary
+            decimals: 1
+          - id: duty
+            opposite: true
+            min: 0
+            max: 1
+            show: false
+        series:
+          - entity: sensor.dsc_hub_clone_temperature
+            name: Clone air
+            yaxis_id: primary
+            stroke_width: 2
+          # BUG-FIX 2026-08-02: coldest voted root, not POT1
+          - entity: sensor.dsc_coldest_root_zone_temp
+            name: Root zone
+            yaxis_id: primary
+            stroke_width: 2
+            show:
+              extremas: true
+          - entity: number.dsc_hub_mat_root_zone_low
+            name: RZ low
+            yaxis_id: primary
+            stroke_width: 1
+            stroke_dash: 4
+            show:
+              in_header: false
+              extremas: false
+          - entity: number.dsc_hub_mat_root_zone_high
+            name: RZ high
+            yaxis_id: primary
+            stroke_width: 1
+            stroke_dash: 4
+            show:
+              in_header: false
+              extremas: false
+          - entity: switch.dsc_hub_grow_mat_demand
+            name: Mat
+            yaxis_id: duty
+            transform: "return x === 'on' ? 1 : 0;"
+            type: area
+            curve: stepline
+            stroke_width: 0
+            color: '#fb923c'
+            show:
+              in_header: false
+              extremas: false
+      - type: markdown
+        content: >-
+          *This is the v2.4 chart that matters. **Root zone** should live
+          between the two band lines; **air temp** is now just context. The
+          gap between them is exactly the problem v2.4 fixed: a 22 °C plate
+          setpoint was leaving the soil at 16–19 °C.*
+      - type: custom:apexcharts-card
+        graph_span: 24h
+        update_interval: 1min
+        header:
+          show: true
+          title: Humidity + clone channel demand
+          show_states: false
+        apex_config:
+          chart:
+            height: 200
+          legend:
+            show: true
+        yaxis:
+          - id: primary
+            decimals: 0
+          - id: duty
+            opposite: true
+            min: 0
+            max: 1
+            show: false
+        series:
+          - entity: sensor.dsc_hub_clone_humidity
+            name: RH
+            yaxis_id: primary
+            stroke_width: 2
+            show:
+              extremas: true
+          - entity: number.dsc_hub_clone_rh_min
+            name: Min
+            yaxis_id: primary
+            stroke_width: 1
+            stroke_dash: 4
+            show:
+              in_header: false
+              extremas: false
+          - entity: switch.dsc_hub_clone_humidifier_demand
+            name: Clone Hum
+            yaxis_id: duty
+            transform: "return x === 'on' ? 1 : 0;"
+            type: area
+            curve: stepline
+            stroke_width: 0
+            color: '#38bdf8'
+            show:
+              in_header: false
+              extremas: false
+      - type: custom:mini-graph-card
+        name: Clone VPD
+        hours_to_show: 24
+        cache: true
+        points_per_hour: 12
+        line_width: 2
+        entities:
+          - entity: sensor.dsc_hub_clone_vpd_kpa
+            name: VPD
+          - entity: number.dsc_hub_clone_vpd_min
+            name: Min
+            show_points: false
+          - entity: number.dsc_hub_clone_vpd_max
+            name: Max
+            show_points: false
+        show:
+          labels: true
+          extrema: true
+        tap_action:
+          action: fire-dom-event
+          browser_mod:
+            service: browser_mod.popup
+            data:
+              title: VPD — 24h
+              size: wide
+              content:
+                type: custom:apexcharts-card
+                graph_span: 24h
+                header:
+                  show: true
+                  title: VPD (kPa) — both tents vs bands
+                  show_states: true
+                  colorize_states: true
+                apex_config:
+                  chart:
+                    height: 380
+                series:
+                  - entity: sensor.dsc_hub_vpd_kpa
+                    name: 4x8 VPD
+                    stroke_width: 2
+                    extend_to: now
+                    color: '#f97316'
+                  - entity: sensor.dsc_hub_clone_vpd_kpa
+                    name: 2x4 VPD
+                    stroke_width: 2
+                    extend_to: now
+                    color: '#22c55e'
+                  - entity: number.dsc_hub_vpd_target_min
+                    name: 4x8 floor
+                    curve: stepline
+                    stroke_width: 1
+                    extend_to: now
+                    color: '#f9731666'
+                  - entity: number.dsc_hub_vpd_target_max
+                    name: 4x8 ceiling
+                    curve: stepline
+                    stroke_width: 1
+                    extend_to: now
+                    color: '#f9731666'
+                  - entity: number.dsc_hub_clone_vpd_min
+                    name: 2x4 floor
+                    curve: stepline
+                    stroke_width: 1
+                    extend_to: now
+                    color: '#22c55e66'
+                  - entity: number.dsc_hub_clone_vpd_max
+                    name: 2x4 ceiling
+                    curve: stepline
+                    stroke_width: 1
+                    extend_to: now
+                    color: '#22c55e66'
+
+  - type: grid
+    cards:
+      - type: heading
+        heading: ⚙️ LOCAL CLONE EQUIPMENT
+        heading_style: title
+      - type: custom:vertical-stack-in-card
+        card_mod:
+          style: |
+            ha-card {
+              border-left: 4px solid
+                {% if is_state('binary_sensor.dsc_hub_root_zone_sensor_fault','on') %}rgba(239,68,68,0.9)
+                {% elif is_state('switch.dsc_hub_grow_mat_demand','on') %}rgba(251,146,60,0.9)
+                {% elif states('sensor.dsc_hub_grow_mat_fire_countdown')|float(0) > 0 %}rgba(251,191,36,0.9)
+                {% elif states('sensor.dsc_hub_grow_mat_cooldown_remaining')|float(0) > 0 %}rgba(59,130,246,0.9)
+                {% else %}rgba(148,163,184,0.25){% endif %};
+            }
+        cards:
+          - type: custom:mushroom-template-card
+            entity: switch.dsc_hub_grow_mat_demand
+            primary: 🌱 Grow Mat · closed loop
+            secondary: >-
+              {% if is_state(entity,'on') %}RUNNING — on for {{
+              relative_time(states[entity].last_changed) }} {% else %}Idle —
+              last change {{ relative_time(states[entity].last_changed) }}
+              ago{% endif %} · Auto {{ 'armed' if
+              is_state('switch.dsc_hub_grow_mat_auto','on') else '⚠
+              DISARMED' }}
+            icon: mdi:heating-coil
+            icon_color: "{{ 'amber' if is_state(entity,'on') else 'disabled' }}"
+            tap_action:
+              action: more-info
+            hold_action:
+              action: call-service
+              service: switch.toggle
+              target:
+                entity_id: switch.dsc_hub_grow_mat_auto
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: binary_sensor.dsc_hub_root_zone_sensor_fault
+                state: "on"
+            card:
+              type: custom:mushroom-template-card
+              primary: ⚠ PROBES BLIND — air fallback active
+              secondary: >-
+                No pot probe has delivered a plausible reading in 5 min
+                (ESP-NOW and HA paths both stale). Mat reverted to v2.3
+                clone-air control: safe, but heating the wrong target.
+              icon: mdi:thermometer-alert
+              icon_color: red
+              multiline_secondary: true
+          - type: custom:bar-card
+            entities:
+              # BUG-FIX 2026-08-02: card said "coldest voted root" but
+              # was bound to POT1 — now the actual vote winner.
+              - entity: sensor.dsc_coldest_root_zone_temp
+                name: Coldest voted root
+            positions:
+              icon: "off"
+              indicator: inside
+              name: inside
+              value: inside
+            min: 14
+            max: 30
+            severity:
+              - color: "#3b82f6"
+                from: 14
+                to: 19.9
+              - color: "#22c55e"
+                from: 20
+                to: 24
+              - color: "#ef4444"
+                from: 24.1
+                to: 30
+          - type: custom:mushroom-chips-card
+            alignment: justify
+            chips:
+              - type: template
+                entity: sensor.dsc_coldest_root_zone_temp
+                icon: mdi:thermometer-chevron-down
+                icon_color: lime
+                content: >-
+                  {% set p = state_attr(entity,'pot') %}
+                  {% if not has_value(entity) %}Root —
+                  {%- else %}{{ states(entity)|float(0)|round(1) }}C{% if p and p != 'none' %} · POT{{ p }}{% endif %}
+                  {%- endif %}
+              - type: template
+                entity: sensor.dsc_grow_mat_runtime_today
+                icon: mdi:clock-outline
+                icon_color: amber
+                content: "{{ states(entity)|float(0)|round(1) }}h today"
+              - type: template
+                entity: sensor.dsc_hub_grow_mat_cooldown_remaining
+                icon: mdi:timer-sand
+                icon_color: "{{ 'blue' if states(entity)|float(0) > 0 else 'disabled' }}"
+                content: >-
+                  {% set c = states(entity)|float(0) %}
+                  {{ 'min-off ' ~ c|round(0) ~ 's' if c > 0 else 'free to fire' }}
+              - type: template
+                entity: switch.dsc_heatmat_main_relay
+                icon: mdi:toggle-switch-outline
+                icon_color: >-
+                  {% if not has_value(entity) %}red
+                  {%- elif is_state(entity,'on') %}green{% else %}disabled{% endif %}
+                content: >-
+                  {% if not has_value(entity) %}NODE OFFLINE
+                  {%- else %}relay {{ states(entity) }}{% endif %}
+      - type: custom:vertical-stack-in-card
+        card_mod:
+          style: |
+            ha-card {
+              border-left: 4px solid
+                {% if is_state('binary_sensor.dsc_clone_humidifier_capacity_offline','on') %}rgba(239,68,68,0.9)
+                {% elif is_state('switch.dsc_hub_clone_humidifier_demand','on') %}rgba(56,189,248,0.9)
+                {% elif states('sensor.dsc_hub_clone_humidifier_fire_countdown')|float(0) > 0 %}rgba(251,191,36,0.9)
+                {% else %}rgba(148,163,184,0.25){% endif %};
+            }
+        cards:
+          - type: custom:mushroom-template-card
+            entity: switch.dsc_hub_clone_humidifier_demand
+            primary: 💧 Clone humidifier · local channel
+            secondary: >-
+              {% if is_state(entity,'on') %}DEMAND LIVE — on for {{
+              relative_time(states[entity].last_changed) }} {% else
+              %}Channel idle{% endif %} · Auto {{ 'armed' if
+              is_state('switch.dsc_hub_clone_humidifier_auto','on') else '⚠
+              DISARMED' }} — the ROOM unit may still be humidifying this
+              tent (see Climate Engine)
+            icon: mdi:sprinkler-variant
+            icon_color: "{{ 'amber' if is_state(entity,'on') else 'disabled' }}"
+            multiline_secondary: true
+            tap_action:
+              action: more-info
+            hold_action:
+              action: call-service
+              service: switch.toggle
+              target:
+                entity_id: switch.dsc_hub_clone_humidifier_auto
+          - type: custom:mushroom-chips-card
+            alignment: justify
+            chips:
+              - type: template
+                entity: sensor.dsc_clone_humidifier_cycles_last_hour
+                icon: mdi:sync-alert
+                icon_color: |-
+                  {{ 'red' if states(entity)|float(0) > 6 else
+                     ('amber' if states(entity)|float(0) > 3 else 'green') }}
+                content: >-
+                  {{ states(entity)|float(0)|round(0) }} cyc/h — short-cycle
+                  watch
+              - type: template
+                entity: number.dsc_hub_clone_hum_hysteresis
+                icon: mdi:arrow-expand-vertical
+                icon_color: blue
+                content: "band +{{ states(entity) }}%"
+          - type: markdown
+            content: >-
+              *v2.4 widened the release band from +2 to **+6** and added a
+              180 s lock-out — this is the short-cycling fix. If cyc/h is
+              still above ~3, widen **Clone Hum Hysteresis** further on
+              Climate Engine; no reflash needed.*
+

@@ -1,0 +1,28 @@
+# Catalog Explorer — browse / compare / Use in Build (Plant subview).
+title: Catalog
+icon: mdi:bookshelf
+path: catalog
+subview: true
+type: panel
+cards:
+  - type: vertical-stack
+    cards:
+      - type: custom:mushroom-chips-card
+        alignment: start
+        chips:
+          - type: template
+            icon: mdi:arrow-left
+            icon_color: teal
+            content: Plant hub
+            tap_action:
+              action: navigate
+              navigation_path: /dsc-hub-pro/plant
+          - type: template
+            icon: mdi:spa
+            icon_color: green
+            content: Compose
+            tap_action:
+              action: navigate
+              navigation_path: /dsc-hub-pro/plant-build
+      - type: custom:dsc-catalog-browse-card
+        title: Catalog Explorer
