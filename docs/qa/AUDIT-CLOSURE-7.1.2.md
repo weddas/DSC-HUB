@@ -15,7 +15,7 @@ The 7.1.2 pass closed **all tracked P0/P1/P2 IDs** from the 18 source audits (~1
 |------|--------|----------|
 | Brain unit tests | **PASS** | `brain/tests/test_brain_pi.py` — **56/56** pass |
 | SPA build + tsc | **PASS** | `frontend-ci.yml`; route split chunks |
-| Live deploy to `.48` | **PASS** | `deploy-brain.ps1` 2026-08-27; SPA `index-BoHeNp3o.js` |
+| Live deploy to `.48` | **PASS** | `deploy-brain.ps1` 2026-08-27; SPA `index-Ck-kkOyW.js` (+ tune-fleet / calibrate chunks) |
 | `verify-brain.ps1` + `island-proof.ps1` | **PASS** | Post-deploy; hub online after ingest warmup |
 | Appendix A matrix | **PASS** | 100% rows below |
 | §9.3 former out-of-scope | **PASS** | Honest UI + docs; no ghost controls |

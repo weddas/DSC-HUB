@@ -10,6 +10,12 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 
 ---
 
+## 2026-08-27 — Eng docs for tip `86f8c2e` (sensor trust / computed / CI)
+
+- Category: `next-plan` (docs)
+- Runbooks: [`docs/brain/SENSOR-TRUST.md`](brain/SENSOR-TRUST.md), [`COMPUTED-CACHE.md`](brain/COMPUTED-CACHE.md), [`FRONTEND-CI.md`](brain/FRONTEND-CI.md); CannaLib + WEBUI indexes updated.
+- Prefer merge of tip docs PR + drafts **#108** / **#109** before more parallel fleet-truth copies.
+
 ## 2026-08-27 — Full software backlog pass (single coordinated pass)
 
 > **CLOSED 2026-08-27** — All software/code items from the backlog plan landed in-tree. Hardware installs remain honest-UI only.
