@@ -1,10 +1,10 @@
 # DSC-HUB 7.4 plan
 
 **Baseline:** 7.3 software closed 2026-08-27 · [`AUDIT-CLOSURE-7.3.md`](AUDIT-CLOSURE-7.3.md)  
-**Git:** `432d205` on `origin/master` · Pi SPA `index-IOZwdpgy.js` on `.48`  
+**Git tip:** `e66f136` on `origin/master` · SPA `index-DRfGbdor.js` · surface still **7.3.0** until Phase E  
 **Surface target:** `7.4.0` (brain + SPA unified when pass ships)
 
-7.3 delivered graphs, twin, Lovelace retirement, compose wizard, per-tent photoperiod clocks, and icon motion. **7.4 is unblock → prove → polish → wire** — not another mega feature dump before the stick and soaks are green.
+7.3 delivered graphs, twin, Lovelace retirement, compose wizard, per-tent photoperiod clocks, and icon motion. Tip `e66f136` adds **software-only demo mode**, PhotoperiodTimeline, airflow particle scaffold, `SkipSpaBuild`, and dashboard UX polish — still **WiP**, not a tagged 7.4.0. **7.4 remains unblock → prove → polish → wire** before the stick and soaks are green.
 
 ---
 
@@ -70,8 +70,8 @@ These are not polish; the UI already shows honest OOS until installed.
 
 | Track | Tasks | Done when |
 |-------|-------|-----------|
-| **D1 Tents & light** | Per-tent clocks (done in src); `PhotoperiodTimeline` scheduled 24h; split `CropScheduler`; per-tent stage chips; redeploy Pi | [`LIGHT-AUDIT-7.4-live.md`](LIGHT-AUDIT-7.4-live.md) checklist |
-| **D2 Airflow viz** | R3F particle lung-room per [`AIRFLOW-VIZ-7.4.md`](AIRFLOW-VIZ-7.4.md); fan trim when override; retire SVG ribbons | Climate tab parity sign-off |
+| **D1 Tents & light** | Per-tent clocks + `PhotoperiodTimeline` + split `CropScheduler` in tree (`e66f136`); live audit + redeploy still open | [`LIGHT-AUDIT-7.4-live.md`](LIGHT-AUDIT-7.4-live.md) · [`PHOTOPERIOD-TIMELINE.md`](../brain/PHOTOPERIOD-TIMELINE.md) |
+| **D2 Airflow viz** | Scaffold on Climate (`AirflowParticleViz`); finish trim/particles per [`AIRFLOW-VIZ-7.4.md`](AIRFLOW-VIZ-7.4.md); SVG ribbons still present | Climate tab parity sign-off |
 | **D3 QoL pass** | Parallel research suggestions → triage into FOLLOWUPS | Research doc reviewed |
 
 Live with 7.3 UI first (~1 week), then one coherent pass — not death-by-a-thousand-cuts.
@@ -125,6 +125,7 @@ Live with 7.3 UI first (~1 week), then one coherent pass — not death-by-a-thou
 ## References
 
 - [`AUDIT-CLOSURE-7.3.md`](AUDIT-CLOSURE-7.3.md)
+- [`docs/brain/DEMO-MODE.md`](../brain/DEMO-MODE.md) — software-only demo (`e66f136`)
 - [`FLOW-SANKEY-SOAK-7.3.md`](FLOW-SANKEY-SOAK-7.3.md)
 - [`docs/ops/ZIGBEE-RECOVERY.md`](../ops/ZIGBEE-RECOVERY.md)
 - [`FOLLOWUPS.md`](../FOLLOWUPS.md) — F-001–F-008, N-016, N-020..023

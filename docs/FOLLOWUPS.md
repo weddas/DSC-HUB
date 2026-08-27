@@ -10,6 +10,24 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 
 ---
 
+## 2026-08-27 — 7.4 software WiP landed (`e66f136`)
+
+> **IN TREE (not tagged 7.4.0)** — See [`docs/qa/PLAN-7.4.md`](qa/PLAN-7.4.md) · demo [`docs/brain/DEMO-MODE.md`](brain/DEMO-MODE.md).
+
+| Deliverable | Status |
+|-------------|--------|
+| Software-only demo mode | `DSC_DEMO_MODE` + `docker-compose.demo.yml` + simulator + DemoBanner |
+| PhotoperiodTimeline + split CropScheduler | Light page; live audit still open |
+| Airflow particle scaffold | Climate; trim/full D2 incomplete |
+| `deploy-brain.ps1 -SkipSpaBuild` | NAS-safe redeploy |
+| SPA rebuild | `index-DRfGbdor` |
+
+**Doc note (deferred):** `App.tsx` imports/renders `DemoBanner` twice — polish before public embed.
+
+**Still Phase 0:** FlowSankey 48h soak, z2m TS0201. Surface remains **7.3.0** until Phase E.
+
+---
+
 ## 2026-08-27 — 7.4 plan kickoff
 
 > **ACTIVE** — See [`docs/qa/PLAN-7.4.md`](qa/PLAN-7.4.md).
@@ -20,10 +38,10 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 | A | Hardware unblockers F-001–F-008, N-016 lab wet, N-020..023 trust soak |
 | B | FlowSankey graduate from experimental (post-soak) |
 | C | Zigbee UI once `radio_up` |
-| D | UX polish: compose, photoperiod, icons (after ~1 week live) |
+| D | UX polish: compose, photoperiod, icons (after ~1 week live) — D1/D2 partial in `e66f136` |
 | E | Version 7.4.0 + AUDIT-CLOSURE-7.4 |
 
-**Git baseline:** `432d205` pushed; Pi SPA `index-IOZwdpgy.js`.
+**Git baseline:** `e66f136` tip; Pi SPA `index-DRfGbdor.js` (surface still 7.3.0).
 
 ---
 
