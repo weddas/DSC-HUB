@@ -1,6 +1,6 @@
 # DSC-HUB Pi appliance — operations
 
-**Release:** DSC-HUB 7.0.0 — The Pi Release.
+**Release:** DSC-HUB **7.3.0** surface (firmware still **7.0.0.0**). Lovelace YAML sync is retired — [`LOVELACE-RETIRED.md`](LOVELACE-RETIRED.md).
 
 ## Network
 

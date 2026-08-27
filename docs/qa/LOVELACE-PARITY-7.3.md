@@ -23,4 +23,4 @@ Pi SPA `:8787` is the product SoT. Lovelace `/dsc-hub-pro` YAML is archived and 
 
 ## Emergency ops
 
-Use Pi SPA `:8787` or export archived YAML from `docs/archive/lovelace-7.3/` if HA Lovelace must be restored manually.
+Use Pi SPA `:8787` or export archived YAML from `docs/archive/lovelace-7.3/` if HA Lovelace must be restored manually. Full restore steps: [`docs/ops/LOVELACE-RETIRED.md`](../ops/LOVELACE-RETIRED.md).

@@ -19,3 +19,5 @@
 - [ ] Visual parity screenshot vs 7.1.2 baseline (operator post-deploy)
 
 Legacy [`dsc-the-dash-card.js`](../../homeassistant/www/dsc-the-dash-card.js) remains for HA `/dsc-hub` until that path migrates.
+
+Developer runbook: [`docs/brain/TWIN-R3F.md`](../brain/TWIN-R3F.md).

@@ -10,14 +10,14 @@
 | Version truth 7.3.0 | PASS |
 | Phase E shim simplified | PASS — native fleet + computed extras merge |
 | Graph re-audit | PASS — [`GRAPH-REAUDIT-7.3.md`](GRAPH-REAUDIT-7.3.md) |
-| Flow Sankey air/heat/humidity | PASS — experimental |
-| Leaf VPD history + UI | PASS |
-| N-016 lab wet wizard | PASS — UI + [`docs/ops/LAB-WET-CAL.md`](../ops/LAB-WET-CAL.md) |
+| Flow Sankey air/heat/humidity | PASS — experimental · [`FLOW-SANKEY.md`](../brain/FLOW-SANKEY.md) |
+| Leaf VPD history + UI | PASS — [`LEAF-VPD.md`](../brain/LEAF-VPD.md) |
+| N-016 lab wet wizard | PASS (UI) — backend gap noted in [`LAB-WET-CAL.md`](../ops/LAB-WET-CAL.md) |
 | N-014 heater temp OOS latch | PASS — computed binary |
 | Sensor trust thresholds documented | PASS — N-020..023 in `sensor_trust.py` |
 | IIFE cleanup (Dash airflow) | PASS — `AirPathMap` replaces LegacyCardHost on Dash |
-| R3F Twin (Pi SPA) | PASS — [`NEON-API-SOAK-7.3.md`](NEON-API-SOAK-7.3.md) |
-| Lovelace YAML retired | PASS — archived `docs/archive/lovelace-7.3/` |
+| R3F Twin (Pi SPA) | PASS — [`TWIN-R3F.md`](../brain/TWIN-R3F.md) · [`NEON-API-SOAK-7.3.md`](NEON-API-SOAK-7.3.md) |
+| Lovelace YAML retired | PASS — [`LOVELACE-RETIRED.md`](../ops/LOVELACE-RETIRED.md) · archive `docs/archive/lovelace-7.3/` |
 
 ## Operator gates
 
