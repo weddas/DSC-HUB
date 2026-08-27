@@ -1,6 +1,6 @@
 # DSC-HUB Pi appliance — operations
 
-**Release:** DSC-HUB 7.0.0 — The Pi Release.
+**Release:** DSC-HUB **7.3.0** surface (firmware still **7.0.0.0**). Lovelace YAML sync is retired — [`LOVELACE-RETIRED.md`](LOVELACE-RETIRED.md).
 
 ## Network
 
@@ -40,6 +40,13 @@ cd homeassistant/custom_components/dsc_hub/frontend
 npm install && npm run build:spa
 ```
 
+### Deploy notes (7.3 polish)
+
+- `services/dsc-hub/pi/deploy-brain.ps1` sets `$ErrorActionPreference = "Continue"` around `npm run build:spa` and pipes stderr through `Write-Host` so Vite warnings do not abort the script; exit code is still checked. It prints the hashed `assets/index-*.js` from `spa-dist/index.html` after build.
+- One-shot studio path: `studio-deploy.ps1` (NAS/`Y:` share) → same SPA build + Pi upload. After a live deploy, **commit** the hashed Vite outputs under `frontend/spa-dist/assets/` + `index.html` so the repo matches `.48` (tip `432d205`: `index-IOZwdpgy.js`).
+- Legacy IIFE copies under `frontend/spa-dist/dsc-*.js` / `vendor/` remain **gitignored** (deploy copies them for HA panel). Do not treat those IIFE copies as SPA SoT.
+- Verify on Pi: `grep -oE 'assets/index-[^"]+\.js' /app/static/index.html` (also used by `verify-brain.sh` / `island-proof.sh`).
+
 ## Monitoring
 
 - Uptime Kuma: `GET http://dsc-brain.local:8787/health`
@@ -54,4 +61,4 @@ npm install && npm run build:spa
 
 ## HA lab note
 
-HA custom panel may still show surface **7.2.0** in lab. Product appliance is **7.0.0** on Pi.
+HA custom panel may still load React dual-mode for lab. Product SoT is Pi SPA surface **7.3.0** (firmware **7.0.0.0**).

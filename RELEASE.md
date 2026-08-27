@@ -13,6 +13,8 @@
 
 Graph re-audit, flow Sankey (air/heat/humidity), leaf VPD, lab wet cal, R3F Twin on Pi, Lovelace YAML archived. Pi SPA is the only operator surface.
 
+Developer / ops: [`FLOW-SANKEY.md`](docs/brain/FLOW-SANKEY.md) · [`LEAF-VPD.md`](docs/brain/LEAF-VPD.md) · [`TWIN-R3F.md`](docs/brain/TWIN-R3F.md) · [`PLANT-WIZARD.md`](docs/brain/PLANT-WIZARD.md) · [`TENT-LIGHT-CLOCKS.md`](docs/brain/TENT-LIGHT-CLOCKS.md) · [`LOVELACE-RETIRED.md`](docs/ops/LOVELACE-RETIRED.md) · [`LAB-WET-CAL.md`](docs/ops/LAB-WET-CAL.md) · [`WEBUI.md`](docs/brain/WEBUI.md).
+
 ---
 
 ## Pi appliance — **v7.2.0** (global modifiers + soil probes + Zigbee)

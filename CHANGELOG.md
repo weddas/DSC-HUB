@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **Docs** — Plant Wizard + per-tent photoperiod clocks; spa-dist hash sync with studio-deploy (`index-IOZwdpgy`); 7.3 FlowSankey / leaf VPD / TwinViewport / Lovelace retirement runbooks; lab wet honesty gap.
+
 ## Pi appliance — **v7.3.0** (2026-08-27)
 
 Full software closure: version truth, graph QoL, flow Sankey (air/heat/humidity), lab wet cal, R3F Twin on Pi SPA, Lovelace YAML retired. See [`docs/qa/AUDIT-CLOSURE-7.3.md`](docs/qa/AUDIT-CLOSURE-7.3.md).

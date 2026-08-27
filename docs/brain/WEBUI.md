@@ -1,40 +1,57 @@
-# Local webserver UI spec
+# Local webserver UI (Pi SPA)
 
-**In one line:** Thin client of the brain API — presentation, advanced control, updates.
+**In one line:** Thin client of the brain API — presentation, advanced control, updates. Pi SPA at `:8787` is product SoT (7.3).
 
 Notion: [Local webserver UI](https://app.notion.com/p/3b52b4cda37081c19048e794d4bdf819)
 
-## Surfaces (MVP)
+## Surfaces (7.3)
 
-| Route | Job |
-|---|---|
-| `/` | Ops overview (vitals, ladder summary, alerts) |
-| `/plant` | Build a Plant + roster + catalog browse (research) |
+| Section | Default route | Job |
+|---------|---------------|-----|
+| **Live** | `/live/overview` | Overview vitals, Climate (leaf VPD + FlowSankey), tents, Root, Light |
+| **Grow** | `/grow/roster` | Compose / Research / Roster |
+| **Tune** | `/tune/learning` | Learning + Analytics |
+| **Fleet** | `/fleet` | Inventory overview, Calibrate, Settings |
 
-> **HA wireframe (N-086):** Home Assistant `/dsc-hub-pro/catalog` is the interim
-> research browser over `/local/dsc-catalog/*.json`. The durable web `/plant`
-> browse mode will call brain catalog APIs — reuse section jobs/labels, not HA
-> helper coupling ([`docs/HA-SCAFFOLD.md`](../HA-SCAFFOLD.md)).
-| `/advanced` | Profiles, cal, overrides (API calls only) |
-| `/updates` | Brain version, catalog reload, firmware flash checklist |
+Demoted Live tabs: Twin (`/live/twin`), Mission, Dash (`/ops/home`). Legacy paths redirect via `LEGACY_REDIRECTS` in `routes.ts`.
+
+### 7.3 feature anchors
+
+| Feature | Where | Doc |
+|---------|-------|-----|
+| Leaf VPD charts | Climate + BandChartHost | [`LEAF-VPD.md`](LEAF-VPD.md) |
+| Flow Sankey air/heat/humidity | Climate → Air path | [`FLOW-SANKEY.md`](FLOW-SANKEY.md) |
+| R3F Twin | `/live/twin`, `/ops/dash` | [`TWIN-R3F.md`](TWIN-R3F.md) |
+| Plant Wizard (compose stepper) | `/grow/compose` | [`PLANT-WIZARD.md`](PLANT-WIZARD.md) |
+| Per-tent light clocks + Follow lock | Light, Overview, Dash, CropScheduler | [`TENT-LIGHT-CLOCKS.md`](TENT-LIGHT-CLOCKS.md) |
+| Lab wet wizard UI | Fleet → Calibrate | [`../ops/LAB-WET-CAL.md`](../ops/LAB-WET-CAL.md) |
+| Lovelace retired | — | [`../ops/LOVELACE-RETIRED.md`](../ops/LOVELACE-RETIRED.md) |
+
+**Live SPA bundle (tip `432d205`):** `index-IOZwdpgy.js` + `tune-fleet-BMHrrqjE` + `calibrate-CJVd_vNV` + `twin-three` + `index-CFNtvkin.css` — keep `spa-dist/index.html` hashes aligned with `studio-deploy` / live `.48` (see [`../ops/DSC-HUB-DOCKER.md`](../ops/DSC-HUB-DOCKER.md)).
 
 ## API dependency
 
-All reads/writes go through brain HTTP API (`brain/dsc_brain/api.py`):
+Reads/writes go through brain HTTP (`brain/dsc_brain/api.py`) on Pi:
 
-- `GET /health`
-- `GET /catalogs/strains?q=`
-- `GET /want/{strain_id}`
-- `POST /roster/...`
-- `GET /decision/last` (dry-run proposals)
-- `POST /admin/reload-catalogs`
+- `GET /health`, `GET /fleet`, `GET /fleet/computed`, `GET /ws/fleet`
+- `POST /control/service`, `POST /control/demand`
+- `GET /history`, grow-log, settings, catalogs, decision tick
+- SPA static assets served with the brain container
 
-## Non-goals (v1)
+HA custom panel dual-mode still uses `hass.callService` when `VITE_DSC_PI` is unset.
 
-- Three.js cinematic Dash parity
+## Build notes
+
+- SPA: `npm run build:spa` with `vite.spa.config.ts` (`VITE_DSC_PI=1`).
+- Code splits: `tune-fleet`, `calibrate`, `twin-three` chunks.
+- Quality: `tsc --noEmit` + `.github/workflows/frontend-ci.yml`.
+
+## Non-goals
+
 - Embedding fat strain dumps in the browser
-- Requiring Home Assistant
+- Requiring Home Assistant for island ops
+- Restoring Lovelace YAML as a second SoT
 
 ## Host
 
-Pi 4 4GB LAN (`http://dsc-brain.local` or IP). Static UI can ship later; API stub is first.
+Pi 4 4GB+ — `http://dsc-brain.local:8787` or `http://10.42.0.1:8787` (AP) / studio `http://192.168.86.48:8787`.

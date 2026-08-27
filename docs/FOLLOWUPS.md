@@ -23,10 +23,28 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 | N-016 lab wet wizard | Calibrate + [`docs/ops/LAB-WET-CAL.md`](ops/LAB-WET-CAL.md) |
 | N-014 heater temp OOS latch | computed binary |
 | R3F Twin on Pi SPA | [`NEON-API-SOAK-7.3.md`](qa/NEON-API-SOAK-7.3.md) |
-| Lovelace YAML retired | `docs/archive/lovelace-7.3/` |
+| Lovelace YAML retired | [`ops/LOVELACE-RETIRED.md`](ops/LOVELACE-RETIRED.md) |
 | Phase E shim simplified | `useBrain.tsx` |
+| FlowSankey / leaf VPD / Twin docs | [`brain/FLOW-SANKEY.md`](brain/FLOW-SANKEY.md) · [`LEAF-VPD.md`](brain/LEAF-VPD.md) · [`TWIN-R3F.md`](brain/TWIN-R3F.md) |
 
 **Remains (operator):** z2m TS0201 pair + stick recovery, FlowSankey 48h soak closeout (~2026-08-29), F-001–F-008 hardware.
+
+### 2026-08-27 — docs automation (tip `73143f3`)
+
+| Category | Item |
+|----------|------|
+| `red-flag` | SPA `LabWetCalPanel` calls `script.dsc_potN_lab_wet_cal` — **not** implemented in `compose_ops.handle_script` or HA packages; Pi path returns unsupported script. Durable SoT remains `script.dsc_pots_apply_lab_wet_to_esp` ([`LAB-WET-CAL.md`](ops/LAB-WET-CAL.md)). |
+| `next-plan` | Implement Pi-native lab wet (or retarget wizard to two-point helpers) + peer capture/push scripts on island. |
+| `done` | Developer docs: FLOW-SANKEY, LEAF-VPD, TWIN-R3F (TwinViewport portal), LOVELACE-RETIRED (source tree removed), WEBUI refresh, deploy stderr / spa-dist notes. |
+| `soak` | FlowSankey 48h closeout — [`FLOW-SANKEY-SOAK-7.3.md`](qa/FLOW-SANKEY-SOAK-7.3.md). |
+
+### 2026-08-27 — docs automation (tip `432d205`)
+
+| Category | Item |
+|----------|------|
+| `done` | Plant Wizard + TentLightClock / Follow-lock runbooks; spa-dist hash sync ops note (`index-IOZwdpgy`); Notion tip bump. |
+| `done` | Carry-forward 7.3 architecture docs from draft #114 onto tip `432d205` branch. |
+| `next-plan` | Prefer merge this tip’s docs PR over older `engineering-documentation-*` drafts (#107–#114). |
 
 ---
 
