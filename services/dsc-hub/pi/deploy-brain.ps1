@@ -3,7 +3,8 @@ param(
     [string]$PiHost = "192.168.86.48",
     [string]$PiUser = "dsc",
     [string]$PiPassword = "Digital",
-    [string]$HostKey = "SHA256:4XD2kIJ5qNCnULKNmo/L9mvzLbmZdURLwLW7Utt9NJs"
+    [string]$HostKey = "SHA256:4XD2kIJ5qNCnULKNmo/L9mvzLbmZdURLwLW7Utt9NJs",
+    [switch]$SkipSpaBuild
 )
 
 $ErrorActionPreference = "Stop"
@@ -31,8 +32,13 @@ Write-Host "Build Pi SPA..."
 Push-Location $FrontendDir
 $prevEap = $ErrorActionPreference
 $ErrorActionPreference = "Continue"
-& npm.cmd run build:spa 2>&1 | ForEach-Object { Write-Host $_ }
-$spaExit = $LASTEXITCODE
+if ($SkipSpaBuild) {
+    Write-Host "SkipSpaBuild - using existing spa-dist"
+    $spaExit = 0
+} else {
+    & npm.cmd run build:spa 2>&1 | ForEach-Object { Write-Host $_ }
+    $spaExit = $LASTEXITCODE
+}
 $ErrorActionPreference = $prevEap
 Pop-Location
 if ($spaExit -ne 0) { throw "SPA build failed (exit $spaExit)" }
