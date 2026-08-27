@@ -43,6 +43,17 @@ from .settings import (
 )
 from .want import resolve_want
 from .device_calibration import get_calibration, set_calibration_step
+from .global_modifiers import get_global_modifiers, set_global_modifiers
+from .soil_tests import (
+    cancel_soil_test,
+    confirm_soil_test,
+    init_probe_station_defaults,
+    list_probe_stations,
+    list_soil_tests,
+    patch_probe_station,
+    poll_soil_test,
+    start_soil_test,
+)
 from .zigbee_mqtt import (
     get_zigbee_devices,
     get_zigbee_health,
@@ -140,10 +151,34 @@ class CalibrationWriteBody(BaseModel):
     steps: list[CalibrationStepBody] = Field(default_factory=list)
 
 
+class GlobalModifiersPatch(BaseModel):
+    fan_demand_scale: float | None = None
+    light_brightness_scale: float | None = None
+    temp_offset_c: dict[str, float] | None = None
+    rh_offset_pct: dict[str, float] | None = None
+
+
+class ProbeStationPatch(BaseModel):
+    idle_home_pot_id: str | None = None
+    tent: str | None = None
+
+
+class SoilTestStartBody(BaseModel):
+    probe_seat_id: str
+    target_pot_id: str
+    roster_seat_id: str | None = None
+    plant_label: str = ""
+    mode: str = "roster"
+    timing_note: str = "adhoc"
+    notes: str = ""
+    tent: str | None = None
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):  # noqa: ARG001
     init_db()
     init_settings_db()
+    init_probe_station_defaults()
     reload_catalogs()
     start_esphome_ingest()
     start_esphome_worker()
@@ -396,6 +431,69 @@ def settings_zigbee_devices() -> dict[str, Any]:
 @app.get("/settings/zigbee/health")
 def settings_zigbee_health() -> dict[str, Any]:
     return get_zigbee_health()
+
+
+@app.get("/settings/global-modifiers")
+def settings_global_modifiers_get() -> dict[str, Any]:
+    return {"modifiers": get_global_modifiers()}
+
+
+@app.patch("/settings/global-modifiers")
+def settings_global_modifiers_patch(body: GlobalModifiersPatch) -> dict[str, Any]:
+    patch = body.model_dump(exclude_none=True)
+    return {"modifiers": set_global_modifiers(patch)}
+
+
+@app.get("/settings/probe-stations")
+def settings_probe_stations_get() -> dict[str, Any]:
+    return {"stations": list_probe_stations()}
+
+
+@app.patch("/settings/probe-stations/{seat_id}")
+def settings_probe_stations_patch(seat_id: str, body: ProbeStationPatch) -> dict[str, Any]:
+    try:
+        return patch_probe_station(seat_id, body.model_dump(exclude_none=True))
+    except KeyError as exc:
+        raise HTTPException(404, f"unknown seat {seat_id}") from exc
+
+
+@app.post("/soil-tests/start")
+def soil_tests_start(body: SoilTestStartBody) -> dict[str, Any]:
+    try:
+        return start_soil_test(body.model_dump())
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
+@app.get("/soil-tests/{test_id}")
+def soil_tests_get(test_id: str) -> dict[str, Any]:
+    try:
+        return poll_soil_test(test_id)
+    except KeyError as exc:
+        raise HTTPException(404, "unknown test") from exc
+
+
+@app.post("/soil-tests/{test_id}/confirm")
+def soil_tests_confirm(test_id: str) -> dict[str, Any]:
+    try:
+        return confirm_soil_test(test_id)
+    except KeyError as exc:
+        raise HTTPException(404, "unknown test") from exc
+    except ValueError as exc:
+        raise HTTPException(409, str(exc)) from exc
+
+
+@app.post("/soil-tests/{test_id}/cancel")
+def soil_tests_cancel(test_id: str) -> dict[str, Any]:
+    return cancel_soil_test(test_id)
+
+
+@app.get("/soil-tests")
+def soil_tests_list(
+    roster_seat_id: str | None = Query(None),
+    limit: int = Query(50, ge=1, le=200),
+) -> dict[str, Any]:
+    return {"tests": list_soil_tests(roster_seat_id=roster_seat_id, limit=limit)}
 
 
 @app.get("/settings/calibration/{device_id}")

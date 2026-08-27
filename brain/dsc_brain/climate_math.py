@@ -42,3 +42,21 @@ def finalize_hub_climate(values: dict) -> None:
     room_vpd = compute_vpd_kpa(values.get("room_temp_c"), values.get("room_rh_pct"))
     if room_vpd is not None:
         values["room_vpd_kpa"] = room_vpd
+    leaf_offset = values.get("leaf_offset_c")
+    if leaf_offset is None:
+        try:
+            from .settings import get_setting
+
+            leaf_offset = float(get_setting("leaf_offset_c", "2") or 2)
+        except (TypeError, ValueError):
+            leaf_offset = 2.0
+    if values.get("temp_c") is not None and values.get("rh_pct") is not None:
+        leaf_t = float(values["temp_c"]) - float(leaf_offset)
+        leaf_vpd = compute_vpd_kpa(leaf_t, values.get("rh_pct"))
+        if leaf_vpd is not None:
+            values["leaf_vpd_kpa"] = leaf_vpd
+    if values.get("clone_temp_c") is not None and values.get("clone_rh_pct") is not None:
+        clone_leaf_t = float(values["clone_temp_c"]) - float(leaf_offset)
+        clone_leaf_vpd = compute_vpd_kpa(clone_leaf_t, values.get("clone_rh_pct"))
+        if clone_leaf_vpd is not None:
+            values["clone_leaf_vpd_kpa"] = clone_leaf_vpd

@@ -11,6 +11,7 @@ from zoneinfo import ZoneInfo
 from .compose_ops import _strain_is_auto
 from .compose_store import all_helpers, get_helper, get_roster_slots
 from .device_calibration import get_calibration
+from .global_modifiers import scale_fan_demand_pct, scale_light_brightness_pct
 from .runtime_history import HistoryMemo, RuntimeMemo, midnight_ts
 from .settings import list_roster
 from .stage_model import expected_stage, tent_id
@@ -540,8 +541,9 @@ def _build_hot_computed_states(
     fan_pcts: dict[str, float] = {}
     for sensor_id, fan_entity in FAN_PCT_ENTITIES.items():
         pct = _fan_pct_from_controls(controls, fan_entity) if hub_live else 0.0
-        fan_pcts[sensor_id] = pct
-        _set_entity(states, sensor_id, pct, available=True, attributes={"unit_of_measurement": "%"})
+        scaled = scale_fan_demand_pct(pct)
+        fan_pcts[sensor_id] = float(scaled if scaled is not None else pct)
+        _set_entity(states, sensor_id, fan_pcts[sensor_id], available=True, attributes={"unit_of_measurement": "%"})
 
     cfm_values: dict[str, float] = {}
     for cfm_id, pct_id, plate_id, cal_prefix in CFM_SPECS:
@@ -707,6 +709,9 @@ def _build_hot_computed_states(
     )
     bri_pct = _light_brightness_pct(view)
     if bri_pct is not None:
+        scaled = scale_light_brightness_pct(bri_pct)
+        if scaled is not None:
+            bri_pct = scaled
         _set_entity(
             states,
             "binary_sensor.dsc_light_effectively_off",

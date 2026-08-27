@@ -9,21 +9,36 @@ import {
   get_esphome_devices,
   get_esphome_jobs,
   get_fleet_state,
+  getGlobalModifiers,
   get_network_status,
+  getProbeStations,
   get_settings,
   get_zigbee_devices,
   get_zigbee_health,
   patch_inventory,
+  patchGlobalModifiers,
+  patchProbeStation,
   patch_settings,
   permit_join,
   queue_esphome_job,
   reload_catalogs,
   test_cannalib,
   test_ollama,
+  type ClimateZone,
+  type GlobalModifiers,
+  type ProbeStation,
 } from "../lib/fleetApi";
 import { parseFleetSnapshot, type FleetSnapshot, type InventoryRow, type SeatSnapshot } from "../lib/fleetModel";
 
 const AP_CHANNELS = ["1", "6", "11"];
+const CLIMATE_ZONES: ClimateZone[] = ["room", "clone", "main"];
+const ZONE_LABELS: Record<ClimateZone, string> = {
+  room: "Room",
+  clone: "2×4",
+  main: "4×8",
+};
+const IDLE_POT_OPTIONS = ["pot1", "pot2", "pot3", "pot4"] as const;
+const TENT_OPTIONS = ["2x4", "4x8"] as const;
 
 const AP_KEYS = ["ap_ssid", "ap_psk", "ap_channel"] as const;
 const INTEGRATION_KEYS = [
@@ -259,9 +274,13 @@ export function SettingsPage() {
   const [pendingPermitJoin, setPendingPermitJoin] = useState<boolean | null>(null);
   const [confirmReloadCatalogs, setConfirmReloadCatalogs] = useState(false);
   const [pendingImport, setPendingImport] = useState<File | null>(null);
+  const [globalModifiers, setGlobalModifiers] = useState<GlobalModifiers | null>(null);
+  const [modifiersDirty, setModifiersDirty] = useState(false);
+  const [probeStations, setProbeStations] = useState<ProbeStation[]>([]);
+  const [probeDrafts, setProbeDrafts] = useState<Record<string, { idle_home_pot_id: string; tent: string }>>({});
 
   const refresh = async () => {
-    const [s, net, cat, esp, j, fleetRaw, zigbee, zigbeeHealthRaw] = await Promise.all([
+    const [s, net, cat, esp, j, fleetRaw, zigbee, zigbeeHealthRaw, modifiers, stations] = await Promise.all([
       get_settings(),
       get_network_status(),
       get_catalog_status(),
@@ -270,6 +289,8 @@ export function SettingsPage() {
       get_fleet_state().catch(() => null),
       get_zigbee_devices().catch(() => ({ devices: [] as Array<Record<string, unknown>> })),
       get_zigbee_health().catch(() => null),
+      getGlobalModifiers().catch(() => null),
+      getProbeStations().catch(() => [] as ProbeStation[]),
     ]);
     setApDraft(pickSettings(s.settings, AP_KEYS));
     setIntegrationsDraft(pickSettings(s.settings, INTEGRATION_KEYS));
@@ -284,6 +305,22 @@ export function SettingsPage() {
     if (!zigbeePlacementsDirty) {
       setZigbeePlacementsDraft(parseZigbeePlacements(s.settings.zigbee_placements));
     }
+    if (!modifiersDirty && modifiers) {
+      setGlobalModifiers(modifiers);
+    }
+    setProbeStations(stations);
+    setProbeDrafts((prev) => {
+      const next = { ...prev };
+      for (const st of stations) {
+        if (!next[st.seat_id]) {
+          next[st.seat_id] = {
+            idle_home_pot_id: st.idle_home_pot_id || st.seat_id,
+            tent: st.tent || "2x4",
+          };
+        }
+      }
+      return next;
+    });
   };
 
   useEffect(() => {
@@ -424,6 +461,218 @@ export function SettingsPage() {
           </tbody>
         </table>
         </div>
+      </section>
+
+      <section className="dsc-card">
+        <details className="dsc-inventory-group" open>
+          <summary>Global tuning</summary>
+          <p className="dsc-muted">
+            Fleet-wide fan/light demand scale (0.5–1.5) and per-zone temperature / RH sensor offsets applied before
+            control and ingest.
+          </p>
+          {globalModifiers ? (
+            <>
+              <label>
+                Fan demand scale
+                <input
+                  type="range"
+                  min="0.5"
+                  max="1.5"
+                  step="0.05"
+                  value={globalModifiers.fan_demand_scale}
+                  onChange={(e) => {
+                    setModifiersDirty(true);
+                    setGlobalModifiers({
+                      ...globalModifiers,
+                      fan_demand_scale: Number(e.target.value),
+                    });
+                  }}
+                />
+                <span className="dsc-muted">{globalModifiers.fan_demand_scale.toFixed(2)}</span>
+              </label>
+              <label>
+                Light brightness scale
+                <input
+                  type="range"
+                  min="0.5"
+                  max="1.5"
+                  step="0.05"
+                  value={globalModifiers.light_brightness_scale}
+                  onChange={(e) => {
+                    setModifiersDirty(true);
+                    setGlobalModifiers({
+                      ...globalModifiers,
+                      light_brightness_scale: Number(e.target.value),
+                    });
+                  }}
+                />
+                <span className="dsc-muted">{globalModifiers.light_brightness_scale.toFixed(2)}</span>
+              </label>
+              <div className="dsc-table-scroll">
+                <table className="dsc-table">
+                  <thead>
+                    <tr>
+                      <th>Zone</th>
+                      <th>Temp offset °C</th>
+                      <th>RH offset %</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {CLIMATE_ZONES.map((zone) => (
+                      <tr key={zone}>
+                        <td>{ZONE_LABELS[zone]}</td>
+                        <td>
+                          <input
+                            type="number"
+                            step="0.1"
+                            value={globalModifiers.temp_offset_c[zone]}
+                            onChange={(e) => {
+                              setModifiersDirty(true);
+                              setGlobalModifiers({
+                                ...globalModifiers,
+                                temp_offset_c: {
+                                  ...globalModifiers.temp_offset_c,
+                                  [zone]: Number(e.target.value),
+                                },
+                              });
+                            }}
+                          />
+                        </td>
+                        <td>
+                          <input
+                            type="number"
+                            step="0.5"
+                            value={globalModifiers.rh_offset_pct[zone]}
+                            onChange={(e) => {
+                              setModifiersDirty(true);
+                              setGlobalModifiers({
+                                ...globalModifiers,
+                                rh_offset_pct: {
+                                  ...globalModifiers.rh_offset_pct,
+                                  [zone]: Number(e.target.value),
+                                },
+                              });
+                            }}
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <Button
+                onClick={async () => {
+                  if (!globalModifiers) return;
+                  const saved = await patchGlobalModifiers({
+                    fan_demand_scale: globalModifiers.fan_demand_scale,
+                    light_brightness_scale: globalModifiers.light_brightness_scale,
+                    temp_offset_c: globalModifiers.temp_offset_c,
+                    rh_offset_pct: globalModifiers.rh_offset_pct,
+                  });
+                  setGlobalModifiers(saved);
+                  setModifiersDirty(false);
+                }}
+              >
+                Save global tuning
+              </Button>
+            </>
+          ) : (
+            <p className="dsc-muted">Loading modifiers…</p>
+          )}
+        </details>
+      </section>
+
+      <section className="dsc-card">
+        <details className="dsc-inventory-group" open={probeStations.some((s) => s.reading_mode !== "idle")}>
+          <summary>Probe stations</summary>
+          <p className="dsc-muted">
+            Mobile soil probes idle at a home pot and publish thereabouts readings until a soil test moves them.
+          </p>
+          {probeStations.length ? (
+            <div className="dsc-table-scroll">
+              <table className="dsc-table">
+                <thead>
+                  <tr>
+                    <th>Seat</th>
+                    <th>Mode</th>
+                    <th>Idle home pot</th>
+                    <th>Tent</th>
+                    <th>Thereabouts moisture</th>
+                    <th />
+                  </tr>
+                </thead>
+                <tbody>
+                  {probeStations.map((st) => {
+                    const draft = probeDrafts[st.seat_id] ?? {
+                      idle_home_pot_id: st.idle_home_pot_id,
+                      tent: st.tent,
+                    };
+                    const moist = st.thereabouts?.moisture_pct;
+                    return (
+                      <tr key={st.seat_id}>
+                        <td>
+                          {st.seat_id}
+                          <StatusChip
+                            label={st.online ? "ONLINE" : "OFFLINE"}
+                            tone={st.online ? "ok" : "bad"}
+                          />
+                        </td>
+                        <td>{st.reading_mode}</td>
+                        <td>
+                          <select
+                            value={draft.idle_home_pot_id}
+                            onChange={(e) =>
+                              setProbeDrafts((prev) => ({
+                                ...prev,
+                                [st.seat_id]: { ...draft, idle_home_pot_id: e.target.value },
+                              }))
+                            }
+                          >
+                            {IDLE_POT_OPTIONS.map((p) => (
+                              <option key={p} value={p}>
+                                {p}
+                              </option>
+                            ))}
+                          </select>
+                        </td>
+                        <td>
+                          <select
+                            value={draft.tent}
+                            onChange={(e) =>
+                              setProbeDrafts((prev) => ({
+                                ...prev,
+                                [st.seat_id]: { ...draft, tent: e.target.value },
+                              }))
+                            }
+                          >
+                            {TENT_OPTIONS.map((t) => (
+                              <option key={t} value={t}>
+                                {t}
+                              </option>
+                            ))}
+                          </select>
+                        </td>
+                        <td>{moist != null && Number.isFinite(Number(moist)) ? `${Number(moist).toFixed(1)} %` : "—"}</td>
+                        <td>
+                          <Button
+                            onClick={async () => {
+                              await patchProbeStation(st.seat_id, draft);
+                              await refresh();
+                            }}
+                          >
+                            Save
+                          </Button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="dsc-honesty">No probe stations — assign role probe_station on a pot in inventory.</p>
+          )}
+        </details>
       </section>
 
       <section className="dsc-card">

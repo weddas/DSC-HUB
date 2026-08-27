@@ -963,3 +963,99 @@ def test_pot_binary_states_flow() -> None:
         "modbus_probe_online": False,
         "sensor_fault": True,
     }
+
+
+def test_global_modifiers_offsets_and_clamp(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("DSC_DATA", str(temp_db.parent))
+    from dsc_brain.global_modifiers import apply_temp_rh_offsets, get_global_modifiers, set_global_modifiers
+
+    set_global_modifiers({"temp_offset_c": {"room": 2.0}, "rh_offset_pct": {"room": -5.0}})
+    mods = get_global_modifiers()
+    assert mods["temp_offset_c"]["room"] == 2.0
+    t, rh, clamped = apply_temp_rh_offsets(20.0, 50.0, "room")
+    assert t == 22.0
+    assert rh == 45.0
+    assert clamped is False
+
+
+def test_global_modifiers_api(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("DSC_DATA", str(temp_db.parent))
+    from fastapi.testclient import TestClient
+
+    from dsc_brain.api import app
+    from dsc_brain.global_modifiers import set_global_modifiers
+
+    client = TestClient(app)
+    resp = client.patch("/settings/global-modifiers", json={"fan_demand_scale": 1.2})
+    assert resp.status_code == 200
+    assert resp.json()["modifiers"]["fan_demand_scale"] == 1.2
+    set_global_modifiers({"fan_demand_scale": 1.0})
+
+
+def test_soil_test_flow(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("DSC_DATA", str(temp_db.parent))
+    from dsc_brain.fleet_state import FleetState, SeatState, update_fleet_state
+    from dsc_brain.soil_tests import cancel_soil_test, confirm_soil_test, poll_soil_test
+    from dsc_brain.settings import upsert_inventory
+    from fastapi.testclient import TestClient
+
+    from dsc_brain.api import app
+
+    upsert_inventory(
+        "pot2",
+        {
+            "extra": {
+                "role": "probe_station",
+                "tent": "2x4",
+                "idle_home_pot_id": "pot2",
+                "probe_attached": True,
+            }
+        },
+        temp_db,
+    )
+    state = FleetState()
+    state.pots["pot2"] = SeatState(
+        "pot2",
+        True,
+        "7.0.0.0",
+        {"moisture_pct": 42.0, "ec_us": 800.0, "ph": 6.2, "soil_temp_c": 22.0},
+        None,
+    )
+    update_fleet_state(state)
+
+    client = TestClient(app)
+    start = client.post(
+        "/soil-tests/start",
+        json={
+            "probe_seat_id": "pot2",
+            "target_pot_id": "pot2",
+            "mode": "adhoc",
+            "timing_note": "adhoc",
+            "plant_label": "Test plant",
+        },
+    )
+    assert start.status_code == 200
+    test_id = start.json()["id"]
+    for _ in range(5):
+        poll = poll_soil_test(test_id)
+        if poll.get("stable"):
+            break
+    try:
+        confirm_soil_test(test_id)
+    except ValueError:
+        cancel_soil_test(test_id)
+    hist = client.get("/soil-tests")
+    assert hist.status_code == 200
+
+
+def test_zigbee_by_placement_entities(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("DSC_DATA", str(temp_db.parent))
+    from dsc_brain.fleet_state import FleetState
+
+    state = FleetState()
+    state.system["zigbee_by_placement"] = {
+        "canopy_4x8": {"temperature": 24.5, "humidity": 55.0},
+    }
+    states = state.to_hass_states([])
+    assert "sensor.dsc_zigbee_canopy_4x8_temperature" in states
+    assert "sensor.dsc_zigbee_canopy_4x8_humidity" in states

@@ -38,6 +38,21 @@ def _pot_in_service(inventory: list[dict[str, Any]] | None, pot_n: int) -> bool:
     return get_helper(f"input_boolean.dsc_pot{pot_n}_in_service", "on") == "on"
 
 
+def _is_probe_station(inventory: list[dict[str, Any]] | None, pot_n: int) -> bool:
+    row = next((r for r in (inventory or []) if r.get("seat_id") == f"pot{pot_n}"), None)
+    if not row:
+        return False
+    extra = row.get("extra") or {}
+    if isinstance(extra, str):
+        import json
+
+        try:
+            extra = json.loads(extra)
+        except json.JSONDecodeError:
+            extra = {}
+    return extra.get("role") == "probe_station"
+
+
 def _moisture_rate_per_hour(pot_n: int) -> float | None:
     since = time.time() - 6 * 3600
     rows = sorted(list_history(f"pot{pot_n}", "moisture_pct", since, limit=500), key=lambda r: r["ts"])
@@ -142,9 +157,11 @@ def emit_sensor_trust(
             _stuck_since.pop(n, None)
             continue
 
+        probe_station = _is_probe_station(inventory, n)
+
         pot = (fleet.pots or {}).get(f"pot{n}")
         moisture = pot.values.get("moisture_pct") if pot and pot.online else None
-        rate = _moisture_rate_per_hour(n) if moisture is not None else None
+        rate = _moisture_rate_per_hour(n) if moisture is not None and not probe_station else None
         stuck_raw = (
             rate is not None
             and abs(rate) < _STUCK_RATE_MAX
@@ -166,7 +183,7 @@ def emit_sensor_trust(
             f"⚠ Pot {n} soil moisture flatline — probe may be stuck",
         )
 
-        if pot and pot.online:
+        if pot and pot.online and not probe_station:
             for field, bucket in (("ph", ph_vals), ("ec_us", ec_vals), ("moisture_pct", moist_vals)):
                 raw = pot.values.get(field)
                 if raw is None:

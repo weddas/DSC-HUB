@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import json
+import os
 import sqlite3
 import time
 from pathlib import Path
 from typing import Any
 
-from .paths import DEFAULT_DB
+from .paths import DEFAULT_DB, _default_brain
 
 SETTINGS_SCHEMA = """
 CREATE TABLE IF NOT EXISTS settings (
@@ -91,7 +92,11 @@ DEFAULT_SETTINGS: dict[str, str] = {
 
 
 def connect(db_path: Path | None = None) -> sqlite3.Connection:
-    path = db_path or DEFAULT_DB
+    if db_path is None:
+        base = Path(os.environ.get("DSC_DATA", str(_default_brain)))
+        path = base / "dsc_ops.sqlite3"
+    else:
+        path = db_path
     path.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(path)
     conn.row_factory = sqlite3.Row

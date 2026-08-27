@@ -1,5 +1,23 @@
 # DSC-HUB releases
 
+## Pi appliance — **v7.2.0** (global modifiers + soil probes + Zigbee)
+
+| | |
+|---|---|
+| **Brain / SPA** | **7.1.0** brain · surface **7.2.0** |
+| **Expected firmware** | **7.0.0.0** |
+| **Primary UI** | Pi SPA at `http://10.42.0.1:8787` — **Overview** default landing |
+| **Studio LAN** | `http://192.168.86.48:8787` (`dsc-brain.local`) |
+| **Deploy** | [`services/dsc-hub/pi/studio-deploy.ps1`](services/dsc-hub/pi/studio-deploy.ps1) |
+| **Closure** | [`docs/qa/AUDIT-CLOSURE-7.2.md`](docs/qa/AUDIT-CLOSURE-7.2.md) |
+| **Zigbee ops** | [`docs/ops/ZIGBEE-RECOVERY.md`](docs/ops/ZIGBEE-RECOVERY.md) |
+
+Global modifiers, mobile soil probe wizard (pot2/pot4 stations), Zigbee per-placement sensors, chart QoL, experimental Sankey on Climate. **60/60** brain tests.
+
+**Pi SPA is SoT** — legacy `homeassistant/www/DSC-HUB.js` not required for island operation.
+
+---
+
 ## Pi appliance — **v7.1.2** (full software backlog pass)
 
 | | |

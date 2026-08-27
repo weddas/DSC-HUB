@@ -23,13 +23,19 @@ type BandChartApi = {
 const BandChartCtx = createContext<BandChartApi | null>(null);
 
 const ZONE = {
-  main: "#f97316",
-  clone: "#22c55e",
-  room: "#94a3b8",
+  main: "var(--dsc-blue)",
+  clone: "var(--dsc-teal)",
+  room: "var(--dsc-gray-5)",
 } as const;
 
+function resolveRoomVpdEntity(entity: (id: string) => unknown): string {
+  if (entity("sensor.dsc_hub_room_vpd_kpa")) return "sensor.dsc_hub_room_vpd_kpa";
+  if (entity("sensor.dsc_hub_room_vpd")) return "sensor.dsc_hub_room_vpd";
+  return "sensor.dsc_hub_room_vpd_kpa";
+}
+
 function BandChartDrawer({ target, onClose }: { target: BandChartTarget | null; onClose: () => void }) {
-  const { num } = useEntityBus();
+  const { num, entity } = useEntityBus();
   const defaultHours = target?.kind.startsWith("pot") ? 48 : 24;
   const { hours, setHours, maxPoints } = useChartHours(defaultHours);
 
@@ -46,6 +52,8 @@ function BandChartDrawer({ target, onClose }: { target: BandChartTarget | null; 
   const roomRh = useEntitySeries("sensor.dsc_hub_room_humidity", { hours, maxPoints: fetchPoints, withGhost: true });
   const tentVpd = useEntitySeries("sensor.dsc_hub_vpd_kpa", { hours, maxPoints: fetchPoints, withGhost: true });
   const cloneVpd = useEntitySeries("sensor.dsc_hub_clone_vpd_kpa", { hours, maxPoints: fetchPoints, withGhost: true });
+  const roomVpdId = resolveRoomVpdEntity(entity);
+  const roomVpd = useEntitySeries(roomVpdId, { hours, maxPoints: fetchPoints, withGhost: true });
   const rootT = useEntitySeries("sensor.dsc_coldest_root_zone_temp", { hours, maxPoints: fetchPoints, withGhost: true });
 
   const potMoist1 = useEntitySeries("sensor.dsc_pot1_soil_moisture", { hours, maxPoints: fetchPoints, withGhost: true });
@@ -83,8 +91,8 @@ function BandChartDrawer({ target, onClose }: { target: BandChartTarget | null; 
             ...withPriorGhost("rt", "Room", roomT, ZONE.room, "°C"),
           ] satisfies NamedSeries[],
           targets: [
-            { value: targetTemp, color: "#f9731688", label: "4×8 target" },
-            { value: cloneTargetTemp, color: "#22c55e88", label: "2×4 target" },
+            { value: targetTemp, color: "var(--dsc-blue-dim)", label: "4×8 target" },
+            { value: cloneTargetTemp, color: "var(--dsc-teal-dim)", label: "2×4 target" },
           ] satisfies ChartTarget[],
         };
       case "rh":
@@ -93,13 +101,13 @@ function BandChartDrawer({ target, onClose }: { target: BandChartTarget | null; 
           height: 380,
           yDomain: { left: { min: 0, max: 100 } },
           series: [
-            ...withPriorGhost("mrh", "4×8 Tent", tentRh, "#3b82f6", "%"),
+            ...withPriorGhost("mrh", "4×8 Tent", tentRh, ZONE.main, "%"),
             ...withPriorGhost("crh", "2×4 Clone", cloneRh, ZONE.clone, "%"),
             ...withPriorGhost("rrh", "Room", roomRh, ZONE.room, "%"),
           ] satisfies NamedSeries[],
           targets: [
-            { min: rhMin, max: rhMax, color: "#f9731688" },
-            { min: cloneRhMin, max: cloneRhMax, color: "#22c55e88" },
+            { min: rhMin, max: rhMax, color: "var(--dsc-blue-dim)" },
+            { min: cloneRhMin, max: cloneRhMax, color: "var(--dsc-teal-dim)" },
           ] satisfies ChartTarget[],
         };
       case "vpd":
@@ -107,12 +115,13 @@ function BandChartDrawer({ target, onClose }: { target: BandChartTarget | null; 
           unit: "kPa",
           height: 380,
           series: [
+            ...withPriorGhost("rv", "Room", roomVpd, ZONE.room, "kPa"),
             ...withPriorGhost("mv", "4×8 Tent", tentVpd, ZONE.main, "kPa"),
             ...withPriorGhost("cv", "2×4 Clone", cloneVpd, ZONE.clone, "kPa"),
           ] satisfies NamedSeries[],
           targets: [
-            { min: vpdMin, max: vpdMax, color: "#f9731688" },
-            { min: cloneVpdMin, max: cloneVpdMax, color: "#22c55e88" },
+            { min: vpdMin, max: vpdMax, color: "var(--dsc-blue-dim)" },
+            { min: cloneVpdMin, max: cloneVpdMax, color: "var(--dsc-teal-dim)" },
           ] satisfies ChartTarget[],
         };
       case "root":
@@ -148,6 +157,7 @@ function BandChartDrawer({ target, onClose }: { target: BandChartTarget | null; 
     roomRh,
     tentVpd,
     cloneVpd,
+    roomVpd,
     rootT,
     potMoist1,
     potMoist2,

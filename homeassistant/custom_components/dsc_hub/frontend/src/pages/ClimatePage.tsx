@@ -13,6 +13,7 @@ import {
 import { OverflowMenu } from "../components/chrome";
 import { TimespanControl, CYCLE_TIMESPAN_EXTRAS } from "../components/HistoryDrawer";
 import { AirPathMap } from "../components/AirPathMap";
+import { SankeyFlowPrototype } from "../components/SankeyFlowPrototype";
 import { CropScheduler } from "../components/CropScheduler";
 import { TentTargetPanel } from "../components/TentTargets";
 import { resolveCfm } from "../lib/cfmProvenance";
@@ -138,6 +139,20 @@ export function LiveClimatePage() {
   const dAhRoomClone = cloneAh - roomAh;
   const boughtH = num("sensor.dsc_bought_runtime_today");
   const dumpBtu = num("sensor.dsc_vent_heat_dump_btu");
+
+  const zigbeeByPlacement = fleet.system.zigbee_by_placement as
+    | Record<string, Record<string, unknown>>
+    | undefined;
+  const zigbeePlacementRows = useMemo(() => {
+    if (!zigbeeByPlacement || typeof zigbeeByPlacement !== "object") return [];
+    return Object.entries(zigbeeByPlacement).map(([placement, row]) => ({
+      placement,
+      temp: row.temperature,
+      rh: row.humidity,
+      name: String(row.friendly_name ?? placement),
+      updatedAt: typeof row.updated_at === "number" ? row.updated_at : null,
+    }));
+  }, [zigbeeByPlacement]);
 
   const rowLit = (id: "room" | "clone" | "main") =>
     focus === "compare" || focus === id ? "dsc-gauge-row-3 is-lit" : "dsc-gauge-row-3";
@@ -367,8 +382,46 @@ export function LiveClimatePage() {
               outCfm={outReading}
               recircCfm={recReading}
             />
+            <SankeyFlowPrototype
+              intakeClone={inCloneReading}
+              intakeMain={inMainReading}
+              outCfm={outReading}
+              recircCfm={recReading}
+            />
           </Card>
         </div>
+
+        {zigbeePlacementRows.length ? (
+          <div className="dsc-col-12">
+            <Card className="dsc-glass" title="Zigbee by placement" icon="gauge">
+              <p className="dsc-muted" style={{ fontSize: 12, marginBottom: 8 }}>
+                Canopy / duct sensors mapped in Settings → Zigbee placements. Offsets from global tuning apply.
+              </p>
+              <div className="dsc-table-scroll">
+                <table className="dsc-table">
+                  <thead>
+                    <tr>
+                      <th>Placement</th>
+                      <th>Device</th>
+                      <th>°C</th>
+                      <th>RH %</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {zigbeePlacementRows.map((row) => (
+                      <tr key={row.placement}>
+                        <td>{row.placement}</td>
+                        <td>{row.name}</td>
+                        <td>{row.temp != null && Number.isFinite(Number(row.temp)) ? Number(row.temp).toFixed(1) : "—"}</td>
+                        <td>{row.rh != null && Number.isFinite(Number(row.rh)) ? Number(row.rh).toFixed(0) : "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          </div>
+        ) : null}
 
         <div className="dsc-col-12">
           <Card className="dsc-glass" title="Fan duty %" icon="climate">

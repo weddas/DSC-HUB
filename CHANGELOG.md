@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+## Pi appliance — **v7.2.0** (2026-08-27)
+
+Global modifiers, mobile soil probes, Zigbee multi-sensor, chart QoL, Sankey prototype. See [`docs/qa/AUDIT-CLOSURE-7.2.md`](docs/qa/AUDIT-CLOSURE-7.2.md).
+
+- **Global tuning** — fan/light demand scale (0.5–1.5); per-zone temp/RH offsets with clamp; Settings accordion + API.
+- **Soil probe workflow** — pot2/pot4 as probe stations; idle home pot thereabouts readings; `SoilTestWizard` (7-channel confirmed tests); `soil_tests` SQLite + API.
+- **Zigbee** — per-placement `sensor.dsc_zigbee_*` entities; modifier offsets on ingest; [`docs/ops/ZIGBEE-RECOVERY.md`](docs/ops/ZIGBEE-RECOVERY.md).
+- **Charts** — room VPD in BandChartHost; unit-aware Y domains; CSS token colors.
+- **Climate** — experimental `SankeyFlowPrototype` (mass-balance CFM); Zigbee-by-placement table.
+- **Brain** — leaf VPD in `climate_math`; NPK ingest on pots; probe stations excluded from peer-MAD trust.
+- **Tests** — **60/60** brain tests; `settings.connect` respects `DSC_DATA` at call time.
+
 ## Pi appliance — **v7.1.2** (2026-08-27)
 
 Full 7.1 audit closure + software backlog pass. See [`docs/qa/AUDIT-CLOSURE-7.1.2.md`](docs/qa/AUDIT-CLOSURE-7.1.2.md).

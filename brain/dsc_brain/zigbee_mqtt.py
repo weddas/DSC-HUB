@@ -151,28 +151,50 @@ class ZigbeeMqttIngest:
             return
 
         now = time.time()
+        placements = _placement_map()
+        placement = placements.get(friendly_name)
+        payload_work = dict(payload)
+        if "temperature" in payload_work or "humidity" in payload_work:
+            placement_key = (placement or friendly_name).lower()
+            zone = (
+                "main"
+                if "4x8" in placement_key or "main" in placement_key
+                else "clone"
+                if "2x4" in placement_key or "clone" in placement_key
+                else "room"
+            )
+            from .global_modifiers import apply_temp_rh_offsets
+
+            temp_adj, rh_adj, _ = apply_temp_rh_offsets(
+                payload_work.get("temperature"),
+                payload_work.get("humidity"),
+                zone,
+            )
+            if temp_adj is not None:
+                payload_work["temperature"] = temp_adj
+            if rh_adj is not None:
+                payload_work["humidity"] = rh_adj
+
         state_row = {
             "friendly_name": friendly_name,
             "updated_at": now,
-            **payload,
+            **payload_work,
         }
         self._device_states[friendly_name] = state_row
 
-        placements = _placement_map()
-        placement = placements.get(friendly_name)
         if placement:
             self._by_placement[placement] = dict(state_row)
 
         # Legacy aggregate canopy (first temp/humidity seen or placement canopy/*).
-        if "temperature" in payload:
-            self._canopy["temp_c"] = payload.get("temperature")
-        if "humidity" in payload:
-            self._canopy["rh_pct"] = payload.get("humidity")
+        if "temperature" in payload_work:
+            self._canopy["temp_c"] = payload_work.get("temperature")
+        if "humidity" in payload_work:
+            self._canopy["rh_pct"] = payload_work.get("humidity")
         if placement and placement.lower().startswith("canopy"):
-            if "temperature" in payload:
-                self._canopy["temp_c"] = payload.get("temperature")
-            if "humidity" in payload:
-                self._canopy["rh_pct"] = payload.get("humidity")
+            if "temperature" in payload_work:
+                self._canopy["temp_c"] = payload_work.get("temperature")
+            if "humidity" in payload_work:
+                self._canopy["rh_pct"] = payload_work.get("humidity")
         self._canopy["last_topic"] = topic
         self._canopy["updated_at"] = now
 

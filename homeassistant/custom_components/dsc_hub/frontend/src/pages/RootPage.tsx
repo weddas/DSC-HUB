@@ -1,7 +1,9 @@
+import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Card, Kpi, PageHeader, StatusChip } from "../components/ui";
+import { Button, Card, Kpi, PageHeader, StatusChip } from "../components/ui";
 import { SlideDrawer } from "../components/chrome";
 import { DutyStrip } from "../components/DutyStrip";
+import { SoilTestWizard } from "../components/SoilTestWizard";
 import { useEntityBus } from "../hooks/useEntityBus";
 import { useEntitySeries } from "../hooks/useEntitySeries";
 import { useHeldReading } from "../hooks/useHeldReading";
@@ -23,6 +25,7 @@ import { readPotVessel } from "../lib/vesselSpec";
 import { VesselGlyph } from "../components/VesselGlyph";
 import { PlantSeatPanel } from "./GrowPages";
 import { fmtDurationMs } from "../lib/formatDuration";
+import { getProbeStations, type ProbeStation } from "../lib/fleetApi";
 
 function fmt(n: number, digits = 1): string {
   return Number.isFinite(n) ? n.toFixed(digits) : "—";
@@ -42,6 +45,14 @@ export function LiveRootPage() {
   const pot = raw >= 1 && raw <= 4 && isPotInService(raw, state) ? raw : null;
   const matHours = num("sensor.dsc_growmat_runtime_today");
   const matSec = num("sensor.dsc_heatmat_relay_on_time");
+  const [probeStations, setProbeStations] = useState<ProbeStation[]>([]);
+  const [soilWizardOpen, setSoilWizardOpen] = useState(false);
+
+  useEffect(() => {
+    getProbeStations()
+      .then(setProbeStations)
+      .catch(() => setProbeStations([]));
+  }, [soilWizardOpen]);
 
   const openPot = (n: number) => {
     const next = new URLSearchParams(params);
@@ -118,6 +129,48 @@ export function LiveRootPage() {
           />
         </div>
 
+        {probeStations.length ? (
+          <div className="dsc-col-12">
+            <Card className="dsc-glass" title="Probe stations · thereabouts" icon="root">
+              <p className="dsc-muted" style={{ marginTop: 0 }}>
+                Idle mobile probes report last-known soil at their home pot — not the plant under test.
+              </p>
+              <div className="dsc-grid">
+                {probeStations.map((st) => {
+                  const moist = st.thereabouts?.moisture_pct;
+                  const soilT = st.thereabouts?.soil_temp_c;
+                  return (
+                    <div key={st.seat_id} className="dsc-col-6">
+                      <div className="dsc-chip-row" style={{ marginBottom: 8 }}>
+                        <strong>{st.seat_id}</strong>
+                        <StatusChip label={st.tent} tone="muted" />
+                        <StatusChip
+                          label={st.reading_mode === "idle" ? "IDLE" : st.reading_mode.toUpperCase()}
+                          tone={st.reading_mode === "idle" ? "ok" : "warn"}
+                        />
+                        <StatusChip label={st.online ? "ONLINE" : "OFFLINE"} tone={st.online ? "ok" : "bad"} />
+                      </div>
+                      <p className="dsc-muted" style={{ margin: 0, fontSize: 12 }}>
+                        Home {st.idle_home_pot_id || "—"} · moisture{" "}
+                        {moist != null && Number.isFinite(Number(moist)) ? `${Number(moist).toFixed(1)} %` : "—"} · soil{" "}
+                        {soilT != null && Number.isFinite(Number(soilT)) ? `${Number(soilT).toFixed(1)} °C` : "—"}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="dsc-row-actions" style={{ marginTop: 12 }}>
+                <Button variant="primary" onClick={() => setSoilWizardOpen(true)}>
+                  Run soil test
+                </Button>
+                <Button variant="secondary" onClick={() => navigate("/fleet/calibrate")}>
+                  Soil cal
+                </Button>
+              </div>
+            </Card>
+          </div>
+        ) : null}
+
         {pots.map(({ n, seat, oos }) => (
           <div key={n} className="dsc-col-12">
             <RootPotCard pot={n} oos={oos} onOpenSeat={() => (oos ? undefined : openPot(n))} />
@@ -137,6 +190,11 @@ export function LiveRootPage() {
       >
         {pot != null ? <PlantSeatPanel pot={pot} onSelectPot={openPot} /> : null}
       </SlideDrawer>
+
+      <SlideDrawer open={soilWizardOpen} onClose={() => setSoilWizardOpen(false)} title="Soil test">
+        <SoilTestWizard onClose={() => setSoilWizardOpen(false)} />
+      </SlideDrawer>
+
       <p className="dsc-muted" style={{ marginTop: 8 }}>
         <button type="button" className="dsc-chip" onClick={() => navigate("/live/climate")}>
           Climate Want

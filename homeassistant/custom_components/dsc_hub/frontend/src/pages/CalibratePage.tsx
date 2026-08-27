@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Button, Card, PageHeader, StatusChip } from "../components/ui";
 import { DecisionLayer } from "../components/DecisionLayer";
 import { TargetNumber } from "../components/TentTargets";
+import { SoilTestWizard } from "../components/SoilTestWizard";
 import { save_calibration } from "../lib/fleetApi";
 import { useEntityBus } from "../hooks/useEntityBus";
 import { useFleetActions } from "../hooks/useFleetActions";
@@ -431,8 +432,55 @@ function TankBiasPanel() {
 }
 
 function SoilCalHonestyPanel() {
+  const { callService } = useFleetActions();
+  const [showWizard, setShowWizard] = useState(false);
+  const [peerStatus, setPeerStatus] = useState("");
+  const [pushStatus, setPushStatus] = useState("");
+  const [confirmPush, setConfirmPush] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  const capturePeer = async () => {
+    setBusy(true);
+    setPeerStatus("Running peer median capture…");
+    try {
+      await callService("script", "turn_on", { entity_id: "script.dsc_pots_capture_peer_baseline" });
+      setPeerStatus("Capture script triggered — check Root / Strains for updated offsets.");
+    } catch (exc) {
+      setPeerStatus(exc instanceof Error ? exc.message : "Capture failed");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const pushToEsp = async () => {
+    setBusy(true);
+    setPushStatus("Pushing peer offsets to ESP…");
+    try {
+      await callService("script", "turn_on", { entity_id: "script.dsc_pots_push_peer_offsets_to_esp" });
+      setPushStatus("Push script triggered — verify dual-stack clears on pots.");
+    } catch (exc) {
+      setPushStatus(exc instanceof Error ? exc.message : "Push failed");
+    } finally {
+      setBusy(false);
+      setConfirmPush(false);
+    }
+  };
+
   return (
-    <Card className="dsc-glass" title="Soil cal — peer median vs lab buffer (N-016)" icon="learning">
+    <>
+      <Card className="dsc-glass" title="Soil test wizard" icon="root">
+        <p className="dsc-muted">
+          Confirmed mobile-probe snapshots for roster plants — separate from peer median calibration below.
+        </p>
+        <div className="dsc-row-actions">
+          <Button variant="primary" onClick={() => setShowWizard((v) => !v)}>
+            {showWizard ? "Hide wizard" : "Open soil test wizard"}
+          </Button>
+        </div>
+        {showWizard ? <SoilTestWizard compact /> : null}
+      </Card>
+
+      <Card className="dsc-glass" title="Soil cal — peer median vs lab buffer (N-016)" icon="learning">
       <p className="dsc-honesty">
         <strong>Peer median</strong> aligns in-service pots to the fleet median. Fast for relative drift and mat vote
         coherence — but it is <em>not</em> lab truth. Use Mark Peer Median on Root Zone when probes agree directionally
@@ -448,7 +496,31 @@ function SoilCalHonestyPanel() {
         <code>script.dsc_cal_*</code>. Tune → Learning shares those entities with a different commit model (blur vs
         guided save-point).
       </p>
+      <div className="dsc-row-actions">
+        <Button variant="secondary" disabled={busy} onClick={() => void capturePeer()}>
+          Capture peer median
+        </Button>
+        <Button variant="danger" disabled={busy} onClick={() => setConfirmPush(true)}>
+          Push offsets to ESP
+        </Button>
+      </div>
+      {peerStatus ? <p className="dsc-honesty">{peerStatus}</p> : null}
+      {pushStatus ? <p className="dsc-honesty">{pushStatus}</p> : null}
+      <DecisionLayer
+        open={confirmPush}
+        onDismiss={() => setConfirmPush(false)}
+        onConfirm={() => void pushToEsp()}
+        title="Push peer offsets to ESP"
+        confirmLabel="Push to ESP"
+        help={null}
+      >
+        <p>
+          Merges HA peer offsets into each pot&apos;s ESP Cal Offset and clears HA offsets. Refuses if scale ≠ 1 unless
+          forced in HA.
+        </p>
+      </DecisionLayer>
     </Card>
+    </>
   );
 }
 

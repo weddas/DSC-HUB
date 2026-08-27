@@ -208,7 +208,10 @@ function domainForAxis(
 ): { min: number; max: number } {
   if (fixed?.min != null && fixed?.max != null) return { min: fixed.min, max: fixed.max };
   const vals = series.filter((s) => (s.axis || "left") === axis).flatMap((s) => s.series.map((p) => p.v));
+  const unitHint = series.find((s) => (s.axis || "left") === axis)?.unit?.toLowerCase() ?? "";
   if (!vals.length) {
+    if (unitHint.includes("kpa")) return { min: 0, max: 2 };
+    if (unitHint.includes("%")) return { min: 0, max: 100 };
     if (axis === "right") return { min: 0, max: 100 };
     return { min: 0, max: 1 };
   }

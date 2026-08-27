@@ -10,6 +10,27 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 
 ---
 
+## 2026-08-27 — 7.2 mega pass (global modifiers, soil probes, Zigbee, Sankey)
+
+> **CLOSED 2026-08-27 (software)** — See [`docs/qa/AUDIT-CLOSURE-7.2.md`](qa/AUDIT-CLOSURE-7.2.md).
+
+| Deliverable | Status |
+|-------------|--------|
+| Global modifiers (fan/light scale, temp/RH offsets) | API + Settings UI |
+| Zigbee per-placement entities + modifier offsets | `zigbee_mqtt.py`, Climate/Settings |
+| Mobile soil probe workflow | pot2/pot4 probe stations, `soil_tests` API, `SoilTestWizard` |
+| Idle home pot / thereabouts readings | Honest UI; excluded from peer-MAD |
+| Chart QoL | Room VPD in BandChartHost, unit-aware axis domains |
+| Sankey prototype | `SankeyFlowPrototype` on Climate (experimental) |
+| ZIGBEE-RECOVERY.md | Ops doc for stick + TS0201 |
+| Brain tests | 60/60 |
+
+**Remains (operator/hardware):** Live redeploy (`studio-deploy.ps1`), z2m radio recovery + TS0201 pair, fleet OTA, F-001–F-008 physical installs.
+
+**Pi SPA is SoT:** `homeassistant/www/DSC-HUB.js` umbrella is legacy; Pi SPA at `:8787` is canonical (`docs/qa/AUDIT-CLOSURE-7.2.md`).
+
+---
+
 ## 2026-08-27 — Full software backlog pass (single coordinated pass)
 
 > **CLOSED 2026-08-27** — All software/code items from the backlog plan landed in-tree. Hardware installs remain honest-UI only.

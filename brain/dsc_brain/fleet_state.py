@@ -154,6 +154,10 @@ class FleetState:
         if self.hub.values.get("room_vpd_kpa") is not None:
             set_entity("sensor.dsc_hub_room_vpd_kpa", self.hub.values["room_vpd_kpa"])
             set_entity("sensor.dsc_hub_room_vpd", self.hub.values["room_vpd_kpa"])
+        if self.hub.values.get("leaf_vpd_kpa") is not None:
+            set_entity("sensor.dsc_leaf_vpd_kpa", self.hub.values["leaf_vpd_kpa"])
+        if self.hub.values.get("clone_leaf_vpd_kpa") is not None:
+            set_entity("sensor.dsc_clone_leaf_vpd_kpa", self.hub.values["clone_leaf_vpd_kpa"])
 
         if self.hub.firmware:
             set_entity("sensor.dsc_hub_firmware_version", self.hub.firmware, self.hub.online)
@@ -176,6 +180,9 @@ class FleetState:
                 ("soil_temperature", "soil_temp_c"),
                 ("soil_ec", "ec_us"),
                 ("soil_ph", "ph"),
+                ("soil_nitrogen", "nitrogen"),
+                ("soil_phosphorus", "phosphorus"),
+                ("soil_potassium", "potassium"),
             ):
                 val = seat.values.get(key)
                 if val is not None:
@@ -223,6 +230,16 @@ class FleetState:
             set_entity("sensor.dsc_canopy_temperature", self.canopy["temp_c"])
         if self.canopy.get("rh_pct") is not None:
             set_entity("sensor.dsc_canopy_humidity", self.canopy["rh_pct"])
+
+        by_placement = (self.system or {}).get("zigbee_by_placement") or {}
+        for placement, row in by_placement.items():
+            if not isinstance(row, dict):
+                continue
+            slug = str(placement).lower().replace(" ", "_").replace("/", "_")[:48]
+            if row.get("temperature") is not None:
+                set_entity(f"sensor.dsc_zigbee_{slug}_temperature", row["temperature"])
+            if row.get("humidity") is not None:
+                set_entity(f"sensor.dsc_zigbee_{slug}_humidity", row["humidity"])
 
         return states
 

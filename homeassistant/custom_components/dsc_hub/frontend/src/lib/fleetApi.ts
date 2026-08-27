@@ -210,3 +210,162 @@ export async function backup_import(file: File): Promise<Record<string, string>>
   if (!resp.ok) throw new Error("backup import failed");
   return resp.json();
 }
+
+export type ClimateZone = "room" | "clone" | "main";
+
+export type GlobalModifiers = {
+  fan_demand_scale: number;
+  light_brightness_scale: number;
+  temp_offset_c: Record<ClimateZone, number>;
+  rh_offset_pct: Record<ClimateZone, number>;
+  sensor_clamp?: Record<string, { min: number; max: number }>;
+};
+
+export type GlobalModifiersPatch = {
+  fan_demand_scale?: number;
+  light_brightness_scale?: number;
+  temp_offset_c?: Partial<Record<ClimateZone, number>>;
+  rh_offset_pct?: Partial<Record<ClimateZone, number>>;
+};
+
+export async function getGlobalModifiers(): Promise<GlobalModifiers> {
+  const resp = await fetch("/settings/global-modifiers");
+  if (!resp.ok) throw new Error("global modifiers fetch failed");
+  const data = (await resp.json()) as { modifiers?: GlobalModifiers };
+  return data.modifiers as GlobalModifiers;
+}
+
+export async function patchGlobalModifiers(patch: GlobalModifiersPatch): Promise<GlobalModifiers> {
+  const resp = await fetch("/settings/global-modifiers", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(patch),
+  });
+  if (!resp.ok) throw new Error("global modifiers patch failed");
+  const data = (await resp.json()) as { modifiers?: GlobalModifiers };
+  return data.modifiers as GlobalModifiers;
+}
+
+export type ProbeStation = {
+  seat_id: string;
+  tent: string;
+  idle_home_pot_id: string;
+  reading_mode: string;
+  thereabouts: Record<string, unknown>;
+  online: boolean;
+};
+
+export type ProbeStationPatch = {
+  idle_home_pot_id?: string;
+  tent?: string;
+};
+
+export async function getProbeStations(): Promise<ProbeStation[]> {
+  const resp = await fetch("/settings/probe-stations");
+  if (!resp.ok) throw new Error("probe stations fetch failed");
+  const data = (await resp.json()) as { stations?: ProbeStation[] };
+  return data.stations ?? [];
+}
+
+export async function patchProbeStation(
+  seatId: string,
+  patch: ProbeStationPatch,
+): Promise<Record<string, unknown>> {
+  const resp = await fetch(`/settings/probe-stations/${encodeURIComponent(seatId)}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(patch),
+  });
+  if (!resp.ok) throw new Error("probe station patch failed");
+  return resp.json();
+}
+
+export type SoilTestStartBody = {
+  probe_seat_id: string;
+  target_pot_id: string;
+  roster_seat_id?: string | null;
+  plant_label?: string;
+  mode?: "roster" | "adhoc";
+  timing_note?: string;
+  notes?: string;
+  tent?: string | null;
+};
+
+export type SoilTestPoll = {
+  id: string;
+  status: "capturing" | "stable" | "confirmed";
+  stable?: boolean;
+  variance?: number;
+  elapsed_s?: number;
+  current?: Record<string, number | null>;
+  average?: Record<string, number | null>;
+  sample_count?: number;
+  test?: SoilTestRecord;
+};
+
+export type SoilTestRecord = {
+  id: string;
+  ts: number;
+  probe_seat_id: string;
+  tent: string;
+  target_pot_id: string;
+  roster_seat_id?: string | null;
+  plant_label: string;
+  mode: string;
+  timing_note: string;
+  notes: string;
+  readings: Record<string, number | null>;
+  stable_seconds?: number;
+  quality_score?: number;
+  confirmed: boolean;
+};
+
+export async function startSoilTest(body: SoilTestStartBody): Promise<{ id: string; status: string }> {
+  const resp = await fetch("/soil-tests/start", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!resp.ok) {
+    const text = await resp.text();
+    throw new Error(text || "soil test start failed");
+  }
+  return resp.json();
+}
+
+export async function pollSoilTest(testId: string): Promise<SoilTestPoll> {
+  const resp = await fetch(`/soil-tests/${encodeURIComponent(testId)}`);
+  if (!resp.ok) throw new Error("soil test poll failed");
+  return resp.json();
+}
+
+export async function confirmSoilTest(testId: string): Promise<{
+  test: SoilTestRecord;
+  return_home_pot_id?: string;
+  message?: string;
+}> {
+  const resp = await fetch(`/soil-tests/${encodeURIComponent(testId)}/confirm`, { method: "POST" });
+  if (!resp.ok) {
+    const text = await resp.text();
+    throw new Error(text || "soil test confirm failed");
+  }
+  return resp.json();
+}
+
+export async function cancelSoilTest(testId: string): Promise<{ cancelled: boolean; id?: string }> {
+  const resp = await fetch(`/soil-tests/${encodeURIComponent(testId)}/cancel`, { method: "POST" });
+  if (!resp.ok) throw new Error("soil test cancel failed");
+  return resp.json();
+}
+
+export async function listSoilTests(
+  rosterSeatId?: string,
+  limit = 50,
+): Promise<SoilTestRecord[]> {
+  const q = new URLSearchParams({ limit: String(limit) });
+  if (rosterSeatId) q.set("roster_seat_id", rosterSeatId);
+  const resp = await fetch(`/soil-tests?${q}`);
+  if (!resp.ok) throw new Error("soil tests list failed");
+  const data = (await resp.json()) as { tests?: SoilTestRecord[] };
+  return data.tests ?? [];
+}

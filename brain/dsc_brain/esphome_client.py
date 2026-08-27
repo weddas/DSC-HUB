@@ -12,6 +12,7 @@ from .appliance_driver import get_appliance_status
 from .climate_math import finalize_hub_climate
 from .event_log import record_grow_log
 from .fleet_state import FleetState, SeatState, get_fleet_state, update_fleet_state
+from .global_modifiers import apply_temp_rh_offsets
 from .hub_controls import (
     HUB_BINARY_OID_TO_ENTITY,
     HUB_FAN_OID_TO_ENTITY,
@@ -39,6 +40,9 @@ POT_MAP = {
     "soil_ec": "ec_us",
     "soil_conductivity": "ec_us",
     "soil_ph": "ph",
+    "soil_nitrogen": "nitrogen",
+    "soil_phosphorus": "phosphorus",
+    "soil_potassium": "potassium",
 }
 
 POT_BINARY_OID_TO_KEY: dict[str, str] = {
@@ -374,6 +378,7 @@ async def _fetch_device(host: str, api_key: str, role: str, seat_id: str) -> dic
                 values.update(_hub_text_sensors_from_states(states, key_to_object))
                 values["controls"] = _hub_controls_from_states(states, key_to_object, entities)
                 values["binaries"] = _hub_binaries_from_states(states, key_to_object, entities)
+                _apply_hub_climate_modifiers(values)
                 finalize_hub_climate(values)
                 hub_fw = values.get("firmware_version")
                 if hub_fw:
@@ -415,6 +420,25 @@ async def _fetch_device(host: str, api_key: str, role: str, seat_id: str) -> dic
         finally:
             await client.disconnect()
     return {"firmware": fw, "values": values}
+
+
+def _apply_hub_climate_modifiers(values: dict[str, Any]) -> None:
+    """Apply global temp/RH offsets before VPD recompute."""
+    pairs = (
+        ("temp_c", "rh_pct", "main"),
+        ("clone_temp_c", "clone_rh_pct", "clone"),
+        ("room_temp_c", "room_rh_pct", "room"),
+    )
+    clamped = False
+    for t_key, rh_key, zone in pairs:
+        t, rh, c = apply_temp_rh_offsets(values.get(t_key), values.get(rh_key), zone)
+        if t is not None:
+            values[t_key] = t
+        if rh is not None:
+            values[rh_key] = rh
+        clamped = clamped or c
+    if clamped:
+        values["sensor_clamp_active"] = True
 
 
 def _hub_sensors_from_states(
