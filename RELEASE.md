@@ -11,6 +11,9 @@
 | **Deploy** | [`services/dsc-hub/pi/studio-deploy.ps1`](services/dsc-hub/pi/studio-deploy.ps1) |
 | **Closure** | [`docs/qa/AUDIT-CLOSURE-7.2.md`](docs/qa/AUDIT-CLOSURE-7.2.md) |
 | **Zigbee ops** | [`docs/ops/ZIGBEE-RECOVERY.md`](docs/ops/ZIGBEE-RECOVERY.md) |
+| **Modifiers** | [`docs/brain/GLOBAL-MODIFIERS.md`](docs/brain/GLOBAL-MODIFIERS.md) |
+| **Soil probe** | [`docs/brain/SOIL-PROBE.md`](docs/brain/SOIL-PROBE.md) |
+| **SPA** | `index-DQgIy3uk` |
 
 Global modifiers, mobile soil probe wizard (pot2/pot4 stations), Zigbee per-placement sensors, chart QoL, experimental Sankey on Climate. **60/60** brain tests.
 

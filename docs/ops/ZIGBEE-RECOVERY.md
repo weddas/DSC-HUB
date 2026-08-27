@@ -1,7 +1,34 @@
-# Zigbee2MQTT radio recovery (SkyConnect / TS0201)
+# Zigbee2MQTT radio recovery + multi-sensor ingest (SkyConnect / TS0201)
 
 **Brain:** `http://192.168.86.48:8787` · Settings → Zigbee  
 **No factory reset** without explicit operator approval.
+
+Companion: global temp/RH offsets on Zigbee ingest — [`docs/brain/GLOBAL-MODIFIERS.md`](../brain/GLOBAL-MODIFIERS.md).
+
+## Multi-sensor model (7.2)
+
+```mermaid
+flowchart LR
+  stick[SkyConnect] --> z2m[zigbee2mqtt]
+  z2m -->|MQTT zigbee2mqtt/+| brain[zigbee_mqtt.py]
+  brain --> states[fleet.system.zigbee_device_states]
+  brain --> place[fleet.system.zigbee_by_placement]
+  place --> ents["sensor.dsc_zigbee_{slug}_temperature/humidity"]
+  brain --> canopy[fleet.canopy legacy aggregate]
+```
+
+| Concept | Where | Notes |
+|---------|-------|-------|
+| Placement map | settings `zigbee_placements` JSON **or** inventory `extra.zigbee_friendly_name` + `extra.placement` | Friendly name → label (e.g. `canopy_4x8`) |
+| Per-device state | `fleet.system.zigbee_device_states` | Full MQTT payload + `updated_at` |
+| Per-placement | `fleet.system.zigbee_by_placement` | Last row per placement label |
+| Virtual entities | `FleetState.to_hass_states` | `sensor.dsc_zigbee_{slug}_temperature` / `_humidity` (`slug` = placement lowercased) |
+| Modifiers | `apply_temp_rh_offsets` | Zone from placement: `4x8`/`main` → main, `2x4`/`clone` → clone, else room |
+| Health | `GET /settings/zigbee/health` | `radio_up`, `bridge_state`, `radio_note`, permit join |
+
+**SPA:** Climate page shows Zigbee-by-placement table; Settings → Zigbee placements when devices exist.
+
+**Constraint:** Built-in z2m converters for Tuya `TS0201` — no DSC device library. Multiple sensors need distinct placements or they overwrite the same `zigbee_by_placement` key.
 
 ## Symptoms
 

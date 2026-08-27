@@ -24,7 +24,9 @@ Notion (canonical Wiki): [Product layers](https://app.notion.com/p/3b52b4cda3708
 | [`SETUP.md`](../SETUP.md) | SoftAP kit unbox (product path) |
 | [`INSTALL.md`](../INSTALL.md) | HA lab bring-up (scaffold) |
 | [`docs/HA-SCAFFOLD.md`](HA-SCAFFOLD.md) | Promote-don't-deepen rules |
-| [`docs/brain/`](brain/) | Specs: decision loop, web UI, Pi appliance path |
+| [`docs/brain/`](brain/) | Specs: decision loop, web UI, global modifiers, soil probe, Pi appliance path |
+| [`docs/ops/ZIGBEE-RECOVERY.md`](ops/ZIGBEE-RECOVERY.md) | Zigbee radio recovery + multi-sensor placements (7.2) |
+| [`docs/qa/AUDIT-CLOSURE-7.2.md`](qa/AUDIT-CLOSURE-7.2.md) | 7.2 software closure checklist |
 
 ## Phases
 

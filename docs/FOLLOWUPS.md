@@ -16,14 +16,15 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 
 | Deliverable | Status |
 |-------------|--------|
-| Global modifiers (fan/light scale, temp/RH offsets) | API + Settings UI |
-| Zigbee per-placement entities + modifier offsets | `zigbee_mqtt.py`, Climate/Settings |
-| Mobile soil probe workflow | pot2/pot4 probe stations, `soil_tests` API, `SoilTestWizard` |
+| Global modifiers (fan/light scale, temp/RH offsets) | API + Settings UI — [`docs/brain/GLOBAL-MODIFIERS.md`](brain/GLOBAL-MODIFIERS.md) |
+| Zigbee per-placement entities + modifier offsets | `zigbee_mqtt.py`, Climate/Settings — [`docs/ops/ZIGBEE-RECOVERY.md`](ops/ZIGBEE-RECOVERY.md) |
+| Mobile soil probe workflow | pot2/pot4 probe stations, `soil_tests` API, `SoilTestWizard` — [`docs/brain/SOIL-PROBE.md`](brain/SOIL-PROBE.md) |
 | Idle home pot / thereabouts readings | Honest UI; excluded from peer-MAD |
 | Chart QoL | Room VPD in BandChartHost, unit-aware axis domains |
 | Sankey prototype | `SankeyFlowPrototype` on Climate (experimental) |
-| ZIGBEE-RECOVERY.md | Ops doc for stick + TS0201 |
+| ZIGBEE-RECOVERY.md | Ops doc for stick + TS0201 + multi-sensor |
 | Brain tests | 60/60 |
+| SPA tip hash | `index-DQgIy3uk` |
 
 **Remains (operator/hardware):** Live redeploy (`studio-deploy.ps1`), z2m radio recovery + TS0201 pair, fleet OTA, F-001–F-008 physical installs.
 
