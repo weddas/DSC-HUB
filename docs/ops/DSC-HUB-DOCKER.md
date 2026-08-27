@@ -6,10 +6,16 @@
 
 - **AP:** `DSC-Brain` 2.4 GHz, locked channel (1/6/11), WPA2.
 - **Subnet:** `10.42.0.0/24`, Pi AP `10.42.0.1`.
-- **eth0:** House uplink (optional). Climate runs island; Ollama + remote CannaLib need uplink.
-- **Avahi:** `dsc-brain.local`
+- **eth0:** House uplink (optional). Climate runs island; Ollama + remote CannaLib need uplink. Studio LAN deploy/flash defaults **`192.168.86.48`** (not `.30`).
+- **Avahi:** `dsc-brain.local` — prefer over sticky DHCP IPs.
 
 Fleet DHCP reservations live in `/etc/dsc-hub/dnsmasq.conf` (bootstrap template). After flash, add device MACs from Settings inventory.
+
+## Studio deploy (Windows + NAS)
+
+One-shot from studio PC: [`STUDIO-DEPLOY.md`](STUDIO-DEPLOY.md) · [`studio-deploy.ps1`](../../services/dsc-hub/pi/studio-deploy.ps1).
+
+Maps `Y:` to the NAS share when missing, then runs `deploy-brain` → `verify-brain` → `island-proof`. Use this instead of UNC/`cmd` when the repo lives on the share.
 
 ## Cutover checklist
 

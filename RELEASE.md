@@ -8,7 +8,8 @@
 | **Expected firmware** | **7.0.0.0** |
 | **Primary UI** | Pi SPA at `http://10.42.0.1:8787` — **Overview** default landing |
 | **Git tag** | `v7.1.1` |
-| **Deploy** | [`services/dsc-hub/pi/deploy-brain.ps1`](services/dsc-hub/pi/deploy-brain.ps1) |
+| **Deploy** | [`studio-deploy.ps1`](services/dsc-hub/pi/studio-deploy.ps1) (NAS one-shot) · [`deploy-brain.ps1`](services/dsc-hub/pi/deploy-brain.ps1) |
+| **Deploy runbook** | [`docs/ops/STUDIO-DEPLOY.md`](docs/ops/STUDIO-DEPLOY.md) |
 | **Acceptance** | [`docs/qa/LIVE-ACCEPTANCE-7.1.md`](docs/qa/LIVE-ACCEPTANCE-7.1.md) |
 | **Soak** | [`docs/ops/SOAK-2026-08-26.md`](docs/ops/SOAK-2026-08-26.md) |
 

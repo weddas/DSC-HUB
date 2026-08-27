@@ -31,6 +31,12 @@ Source: `docs/qa/LAYOUT-AUDIT-7.1.md`. Live Brain `192.168.86.48:8787`. No deplo
 - **Code is in-tree** (tent selector, sprout/auto-stage, 2x4 automation). Centerpiece screenshots `pot3-fullgrow-step*.png` not taken.
 - **Do not** power-cycle Understairs Network Outlet to recover — that would take the whole closet with it.
 
+## 2026-08-27 — studio-deploy one-shot (tip `408cdee`)
+
+- **Added:** `services/dsc-hub/pi/studio-deploy.ps1` — maps `Y:` to NAS when missing, then `deploy-brain` → `verify-brain` → `island-proof`.
+- **Docs:** [`docs/ops/STUDIO-DEPLOY.md`](ops/STUDIO-DEPLOY.md). Prefer this for live re-verify from studio LAN (closes UNC/`cmd` operator footguns).
+- **Still open:** live walk + closure screenshots (agent network cannot reach `.48`).
+
 ## 2026-08-27 — 7.1.2 closure triage
 
 Verdict pass over open items below (history untouched; line refs point at the original entries). Basis: bridge retired from project, studio WiFi is SoT, live fleet verified 2026-08-26 on 7.0.0.0.
