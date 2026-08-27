@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Button, Card, PageHeader, StatusChip } from "../components/ui";
 import { DecisionLayer } from "../components/DecisionLayer";
 import { TargetNumber } from "../components/TentTargets";
+import { SoftCalWizard } from "../components/SoftCalWizard";
 import { SoilTestWizard } from "../components/SoilTestWizard";
 import { save_calibration } from "../lib/fleetApi";
 import { useEntityBus } from "../hooks/useEntityBus";
@@ -542,9 +543,11 @@ function SoilCalHonestyPanel() {
 
   return (
     <>
+      <SoftCalWizard />
+
       <Card className="dsc-glass" title="Soil test wizard" icon="root">
         <p className="dsc-muted">
-          Confirmed mobile-probe snapshots for roster plants — separate from peer median calibration below.
+          Confirmed mobile-probe snapshots for roster plants — separate from soft calibrate and peer median below.
         </p>
         <div className="dsc-row-actions">
           <Button variant="primary" onClick={() => setShowWizard((v) => !v)}>
@@ -555,6 +558,10 @@ function SoilCalHonestyPanel() {
       </Card>
 
       <Card className="dsc-glass" title="Soil cal — peer median vs lab buffer (N-016)" icon="learning">
+      <p className="dsc-honesty">
+        <strong>Soft calibrate</strong> (above) averages selected probes in tap water against a known pH (and optional
+        EC), writes HA Got offsets, then a second capture after watering. Soft ≠ lab ESP stamp.
+      </p>
       <p className="dsc-honesty">
         <strong>Peer median</strong> aligns in-service pots to the fleet median. Fast for relative drift and mat vote
         coherence — but it is <em>not</em> lab truth. Use Mark Peer Median on Root Zone when probes agree directionally

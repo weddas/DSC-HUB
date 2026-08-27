@@ -10,6 +10,21 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 
 ---
 
+## 2026-08-28 — Soft calibrate pot probes
+
+> **next-plan / done (UI)** — Fleet → Calibrate → Soil · Soft calibrate wizard.
+
+| Item | Status |
+|------|--------|
+| SoftCalWizard: select pots, 15s raw average, known tap pH (+ optional EC) | done |
+| Write HA Got offsets (`input_number.dsc_potN_offset_*`) — not ESP lab stamp | done |
+| Capture 2 after water (averages; optional pH refine) | done |
+| All channels sampled (M/T/EC/pH/NPK); offsets only where HA helpers exist | done |
+| Pi-native Got without HA template enrichment | deferred — soft offsets ride HA Got = raw + offset stack |
+| Persist soft-cal session history in brain DB | deferred |
+
+---
+
 ## 2026-08-27 — 7.4 plan kickoff
 
 > **ACTIVE** — See [`docs/qa/PLAN-7.4.md`](qa/PLAN-7.4.md).

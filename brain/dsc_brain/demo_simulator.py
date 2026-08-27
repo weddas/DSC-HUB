@@ -25,7 +25,11 @@ from .settings import list_inventory, upsert_inventory
 
 _logger = logging.getLogger(__name__)
 
-_SEED_PATH = Path(__file__).resolve().parents[1] / "data" / "demo-fleet-seed.json"
+from .paths import REPO_ROOT
+
+_SEED_PATH = REPO_ROOT / "brain" / "data" / "demo-fleet-seed.json"
+if not _SEED_PATH.is_file():
+    _SEED_PATH = Path(__file__).resolve().parents[1] / "data" / "demo-fleet-seed.json"
 
 _DEMAND_ENTITY_TO_RELAY: dict[str, str] = {
     "switch.dsc_hub_heater_demand": "heater",

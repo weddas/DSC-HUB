@@ -1,5 +1,7 @@
 # DSC Brain — public software simulation (WiP demo)
-# No mosquitto, zigbee2mqtt, esphome, or LAN API keys. Fully isolated.
+# Unraid Compose Manager: point stack at this directory on the NAS share:
+#   /mnt/user/Digital-Documents/Digital Stealth Care/Projects/DSC-HUB/services/dsc-hub
+# No MQTT, ESPHome, Sonoffs, or LAN keys. Port 8788 on the host → 8787 in container.
 name: dsc-brain-demo
 
 services:
@@ -20,7 +22,7 @@ services:
       DSC_SURFACE_VERSION: 7.3.0-demo
       CANNALIB_USE_LOCAL_FALLBACK: "true"
     volumes:
-      - demo_ops:/data
+      - dsc_demo_ops:/data
     read_only: true
     tmpfs:
       - /tmp
@@ -28,4 +30,4 @@ services:
       - no-new-privileges:true
 
 volumes:
-  demo_ops:
+  dsc_demo_ops:

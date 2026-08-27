@@ -10,6 +10,7 @@ COPY brain/requirements.txt ./brain/requirements.txt
 RUN pip install --no-cache-dir -r brain/requirements.txt
 
 COPY brain/dsc_brain ./dsc_brain
+COPY brain/data/demo-fleet-seed.json ./brain/data/demo-fleet-seed.json
 COPY brain/static ./static
 COPY homeassistant/data ./homeassistant/data
 

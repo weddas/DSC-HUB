@@ -1,0 +1,27 @@
+check	method	result	notes
+hub URL 200	curl	https://plausible-deniability.net/dsc/help/	VERIFIED	HTTP 200
+dashboard URL 200	curl	https://plausible-deniability.net/dsc/help/dashboard/	VERIFIED	HTTP 200
+measure URL 200	curl	https://plausible-deniability.net/dsc/help/measure/	VERIFIED	HTTP 200
+cannalib URL 200	curl	https://plausible-deniability.net/dsc/help/cannalib/	VERIFIED	HTTP 200
+faq URL 200	curl	https://plausible-deniability.net/dsc/help/faq/	VERIFIED	HTTP 200
+dsc hub links help	verify /dsc/ hero	VERIFIED	Dashboard help button → /dsc/help/
+release hero cards	browser /dsc/help/	VERIFIED	pd-help-release three-card teaser + CTAs
+inline CSS bundle	page source	VERIFIED	pd-dsc-help-css inlined in Divi code module
+inline JS bundle	page source	VERIFIED	pd-dsc-help-js with DOMContentLoaded init
+dashboard tabs switch	browser click Grow	VERIFIED	grow panel visible; live panel hidden
+faq accordion	browser click first item	VERIFIED	aria-expanded true; body shown
+faq filter	browser input event	VERIFIED	filter input present; help-fallback filters by data-faq-q
+measure carousel	browser Next click	VERIFIED	label advances 1 → 2
+dashboard screenshots	page source	VERIFIED	dsc-help-*-5.jpg URLs in tab panels
+nested code modules fix	republish dashboard	VERIFIED	raw HTML in tab panels; pd-help-tabs renders
+plugin zip install	push_dsc_help.py	VERIFIED	pd-dsc-help v1.0.3 upload 200 + activated
+content extraction	tools/extract_onboarding_content.py	VERIFIED	9 JPEGs + dsc-help.json 12 sections
+cannalib story accuracy	code review integrations.py	VERIFIED	remote API primary + local fallback; counts not merged
+theme builder DSC template	install_theme_builder	NOT VERIFIED	PD_DB_PASS access denied; manual TB update may be needed
+wp_footer asset enqueue	page source	NOT VERIFIED	Divi path skips wp_footer hooks; mitigated by inline bundle
+wp interactivity module enqueue	page source	NOT VERIFIED	Using vanilla fallback JS instead; tabs/FAQ/measure work
+white content well contrast	browser computed styles	VERIFIED	Root cause: Divi dropped section background CSS; forced #0c1220/#121a2c via help.css
+contrast after fix hub	browser 2026-08-28	VERIFIED	sections dark; h1 #f2f5fb; zero large white rects
+cannalib CTA fills	browser	VERIFIED	HTML pd-help-cta buttons (Divi button fills also dropped)
+dashboard tabs after contrast fix	browser	VERIFIED	Grow panel visible after click
+screenshot media HTTP	curl -I -5.jpg	VERIFIED	200; lazy-load pending in hidden panels is OK

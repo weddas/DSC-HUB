@@ -12,6 +12,8 @@ from fastapi import FastAPI, File, HTTPException, Query, UploadFile, WebSocket, 
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
 from starlette.types import Receive, Scope, Send
 from pydantic import BaseModel, Field
 
@@ -217,6 +219,24 @@ async def lifespan(app: FastAPI):  # noqa: ARG001
 
 
 app = FastAPI(title="DSC Brain", version=__version__, lifespan=lifespan)
+
+
+class _DemoEmbedHeadersMiddleware(BaseHTTPMiddleware):
+    """Allow PD site to iframe the public demo origin."""
+
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        if not _demo_mode():
+            return response
+        response.headers["Content-Security-Policy"] = (
+            "frame-ancestors 'self' https://plausible-deniability.net https://www.plausible-deniability.net"
+        )
+        if "x-frame-options" in response.headers:
+            del response.headers["x-frame-options"]
+        return response
+
+
+app.add_middleware(_DemoEmbedHeadersMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],

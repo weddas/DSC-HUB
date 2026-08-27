@@ -415,6 +415,25 @@ body {
   background: color-mix(in srgb, var(--dsc-amber) 8%, transparent);
 }
 
+.dsc-soft-cal-table {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.dsc-soft-cal-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  font-size: 13px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--dsc-gray-3);
+  background: var(--dsc-gray-1);
+}
+
 .dsc-btn {
   appearance: none;
   border: 1px solid var(--dsc-gray-3);
