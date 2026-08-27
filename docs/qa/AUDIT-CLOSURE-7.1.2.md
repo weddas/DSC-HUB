@@ -19,7 +19,7 @@ The 7.1.2 pass closed **all tracked P0/P1/P2 IDs** from the 18 source audits (~1
 | Appendix A matrix | **PASS** | 100% rows below |
 | §9.3 former out-of-scope | **PASS** | Honest UI + docs; no ghost controls |
 
-**Ship rule met in-tree.** Re-verify live proofs post-deploy from studio LAN via `services/dsc-hub/pi/deploy-brain.ps1` + `verify-brain.ps1` + `island-proof.ps1`. Closure screenshots (`docs/qa/screens-7.1.2/closure-*`) pending that walk.
+**Ship rule met in-tree.** Re-verify live proofs post-deploy from studio LAN via `services/dsc-hub/pi/studio-deploy.ps1` (or `deploy-brain.ps1` + `verify-brain.ps1` + `island-proof.ps1`). See [`docs/ops/STUDIO-DEPLOY.md`](../ops/STUDIO-DEPLOY.md). Closure screenshots (`docs/qa/screens-7.1.2/closure-*`) pending that walk.
 
 **Supersedes:** All 18 `*-AUDIT-7.1.md` files for ship/no-ship. Source audits remain historical evidence.
 

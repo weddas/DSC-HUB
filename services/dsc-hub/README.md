@@ -24,32 +24,45 @@ Raspberry Pi 4 product stack: brain + SPA (`:8787`), optional local CannaLib fal
 | zigbee2mqtt | —    | SkyConnect coordinator                    |
 | esphome   | 6052   | OTA / compile dashboard (AP-only)         |
 
-## Deploy brain to Pi (Windows → DSC-Brain AP)
+## Deploy brain to Pi (Windows → studio LAN / AP)
 
-From repo root when Pi is on `10.42.0.1`:
+Default Pi host in scripts: **`192.168.86.48`** (also `dsc-brain.local` / AP `10.42.0.1`).
+
+**Preferred from studio Windows + NAS share** (maps `Y:` if needed, then deploy → verify → island-proof):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File "Y:\Digital Stealth Care\Projects\DSC-HUB\services\dsc-hub\pi\studio-deploy.ps1"
+```
+
+Runbook: [`docs/ops/STUDIO-DEPLOY.md`](../../docs/ops/STUDIO-DEPLOY.md). Avoid raw UNC/`cmd` for this chain.
+
+Deploy only (repo already on a drive letter):
 
 ```powershell
 services/dsc-hub/pi/deploy-brain.ps1
+# or: services/dsc-hub/pi/deploy-brain.ps1 -PiHost "dsc-brain.local"
 ```
 
 This builds the Pi SPA, uploads brain Python + static, then on the Pi:
 1. Tries `docker compose build brain` (needs Docker Hub / eth0)
 2. Falls back to hot-patch if offline
-3. Logs deploy mode: `image-build` or `hot-patch`
+3. Always `docker cp` SPA static (BuildKit cache can stale `COPY`)
+4. Logs deploy mode: `image-build` or `hot-patch`
 
-Verify after deploy:
+Verify after deploy (studio LAN):
 
 ```bash
-curl -s http://10.42.0.1:8787/health
-curl -s http://10.42.0.1:8787/fleet | jq '.hub.online, .surface, .inventory | length'
+curl -s http://192.168.86.48:8787/health
+curl -s http://192.168.86.48:8787/fleet | jq '.hub.online, .surface, .inventory | length'
 ```
 
-Hard refresh `http://10.42.0.1:8787/#/fleet` (Ctrl+Shift+R).
+Hard refresh `http://192.168.86.48:8787/` (Ctrl+Shift+R). On AP Wi‑Fi use `10.42.0.1`.
 
-From Windows after deploy:
+From Windows after deploy (or use `studio-deploy.ps1` which already chains these):
 
 ```powershell
 services/dsc-hub/pi/verify-brain.ps1
+services/dsc-hub/pi/island-proof.ps1
 ```
 
 Pi layout: `/opt/dsc-hub` (compose), `/opt/dsc-hub-repo` (full repo for builds). Bootstrap creates both symlinks.

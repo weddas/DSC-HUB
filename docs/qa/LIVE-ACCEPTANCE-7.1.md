@@ -91,8 +91,8 @@ First compose-assign during a post-restart hub reconnect claimed applied but fle
 **Brain URL:** `http://192.168.86.48:8787` (studio LAN) · `http://10.42.0.1:8787` (AP) · `http://dsc-brain.local:8787`  
 **Surface:** 7.1.2  
 **Closure doc:** [`AUDIT-CLOSURE-7.1.2.md`](AUDIT-CLOSURE-7.1.2.md)  
-**Deploy:** [`services/dsc-hub/pi/deploy-brain.ps1`](../../services/dsc-hub/pi/deploy-brain.ps1) → target **`.48`** (not `.30`)  
-**Verify:** [`verify-brain.ps1`](../../services/dsc-hub/pi/verify-brain.ps1) + [`island-proof.ps1`](../../services/dsc-hub/pi/island-proof.ps1)
+**Deploy:** [`studio-deploy.ps1`](../../services/dsc-hub/pi/studio-deploy.ps1) (preferred NAS one-shot) or [`deploy-brain.ps1`](../../services/dsc-hub/pi/deploy-brain.ps1) → target **`.48`** (not `.30`) · runbook [`STUDIO-DEPLOY.md`](../ops/STUDIO-DEPLOY.md)  
+**Verify:** [`verify-brain.ps1`](../../services/dsc-hub/pi/verify-brain.ps1) + [`island-proof.ps1`](../../services/dsc-hub/pi/island-proof.ps1) (chained by `studio-deploy.ps1`)
 
 > **Note:** Live deploy from the agent network timed out 2026-08-27. Rows below marked **PASS (code+test)** are proven in-tree (49/49 brain tests, SPA build `index-BoHeNp3o.js`). Re-run deploy + verify from studio LAN before tagging.
 
