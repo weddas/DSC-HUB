@@ -77,6 +77,17 @@ fi
 sleep 3
 echo "=== deploy mode: ${DEPLOY_MODE} ==="
 curl -sf http://127.0.0.1:8787/health && echo || echo "health check failed"
+echo "=== fleet ingest warmup (up to 90s) ==="
+waited=0
+while [ "$waited" -lt 90 ]; do
+  if curl -sf http://127.0.0.1:8787/fleet | python3 -c "import json,sys; d=json.load(sys.stdin); sys.exit(0 if d.get('hub',{}).get('online') else 1)" 2>/dev/null; then
+    echo "hub online after ${waited}s"
+    break
+  fi
+  sleep 5
+  waited=$((waited + 5))
+  echo "waiting for hub ingest (${waited}s)..."
+done
 echo "=== fleet acceptance ==="
 if command -v jq >/dev/null 2>&1; then
   curl -sf http://127.0.0.1:8787/fleet | jq '{

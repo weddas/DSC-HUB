@@ -15,12 +15,6 @@ export const FleetOverviewPage = lazy(() =>
 export const CalibratePage = lazy(() =>
   import("./pages/CalibratePage").then((m) => ({ default: m.CalibratePage })),
 );
-export const SoilTestWizard = lazy(() =>
-  import("./components/SoilTestWizard").then((m) => ({ default: m.SoilTestWizard })),
-);
-export const SankeyFlowPrototype = lazy(() =>
-  import("./components/SankeyFlowPrototype").then((m) => ({ default: m.SankeyFlowPrototype })),
-);
 
 export interface TabRoute {
   id: string;

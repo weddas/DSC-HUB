@@ -26,6 +26,22 @@ else
 fi
 
 FLEET_JSON="$(curl -sf "${BASE}/fleet" 2>/dev/null || true)"
+HUB_WARMUP_SEC="${HUB_WARMUP_SEC:-90}"
+HUB_POLL_SEC="${HUB_POLL_SEC:-5}"
+if [ -n "$FLEET_JSON" ]; then
+  waited=0
+  while [ "$waited" -lt "$HUB_WARMUP_SEC" ]; do
+    hub_online="$(echo "$FLEET_JSON" | python3 -c "import json,sys; d=json.load(sys.stdin); print('1' if d.get('hub',{}).get('online') else '0')" 2>/dev/null || echo 0)"
+    if [ "$hub_online" = "1" ]; then
+      break
+    fi
+    echo "waiting for hub ingest (${waited}s / ${HUB_WARMUP_SEC}s)..."
+    sleep "$HUB_POLL_SEC"
+    waited=$((waited + HUB_POLL_SEC))
+    FLEET_JSON="$(curl -sf "${BASE}/fleet" 2>/dev/null || true)"
+  done
+fi
+
 if [ -z "$FLEET_JSON" ]; then
   echo "FAIL: curl ${BASE}/fleet"
   FAIL=1
