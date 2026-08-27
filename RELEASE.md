@@ -1,5 +1,11 @@
 # DSC-HUB releases
 
+## Unreleased — 7.4 software WiP (`e66f136`)
+
+Software-only demo mode, PhotoperiodTimeline, airflow viz scaffold, `SkipSpaBuild`, SPA `index-DRfGbdor`. Surface/brain still **7.3.0** until Phase E. Demo runbook: [`docs/brain/DEMO-MODE.md`](docs/brain/DEMO-MODE.md) · plan [`docs/qa/PLAN-7.4.md`](docs/qa/PLAN-7.4.md).
+
+---
+
 ## Pi appliance — **v7.3.0** (full software closure)
 
 | | |
