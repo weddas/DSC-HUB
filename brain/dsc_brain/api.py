@@ -174,21 +174,46 @@ class SoilTestStartBody(BaseModel):
     tent: str | None = None
 
 
+def _demo_mode() -> bool:
+    from .demo_mode import is_demo_mode
+
+    return is_demo_mode()
+
+
+def _demo_forbidden() -> None:
+    raise HTTPException(403, detail=demo_blocked_detail())
+
+
+def demo_blocked_detail() -> str:
+    return "demo_simulation — blocked (software only, no hardware/network apply)"
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):  # noqa: ARG001
+    from .demo_mode import assert_demo_safe_config, is_demo_mode, prepare_demo_settings
+    from .demo_simulator import start_demo_simulator, stop_demo_simulator
+
     init_db()
     init_settings_db()
     init_probe_station_defaults()
     reload_catalogs()
-    start_esphome_ingest()
-    start_esphome_worker()
-    start_appliance_driver()
-    start_zigbee_ingest()
+    if is_demo_mode():
+        prepare_demo_settings()
+        assert_demo_safe_config()
+        start_demo_simulator()
+    else:
+        start_esphome_ingest()
+        start_esphome_worker()
+        start_appliance_driver()
+        start_zigbee_ingest()
     yield
-    await stop_appliance_driver()
-    await stop_esphome_ingest()
-    stop_esphome_worker()
-    stop_zigbee_ingest()
+    if is_demo_mode():
+        await stop_demo_simulator()
+    else:
+        await stop_appliance_driver()
+        await stop_esphome_ingest()
+        stop_esphome_worker()
+        stop_zigbee_ingest()
 
 
 app = FastAPI(title="DSC Brain", version=__version__, lifespan=lifespan)
@@ -231,13 +256,19 @@ if STATIC_DIR.is_dir():
 
 @app.get("/health")
 def health() -> dict[str, Any]:
-    return {
+    payload: dict[str, Any] = {
         "status": "ok",
         "version": __version__,
         "surface": SURFACE_VERSION,
         "expected_firmware": EXPECTED_FIRMWARE,
-        "zigbee": get_zigbee_health(),
+        "mode": "demo" if _demo_mode() else "live",
     }
+    if _demo_mode():
+        payload["simulation"] = True
+        payload["detail"] = "Software simulation only — no hardware connected"
+    else:
+        payload["zigbee"] = get_zigbee_health()
+    return payload
 
 
 @app.get("/fleet")
@@ -301,14 +332,15 @@ async def inventory_patch(seat_id: str, body: InventoryPatch) -> dict[str, Any]:
         patch = body.model_dump(exclude_none=True)
         result = upsert_inventory(seat_id, patch)
         if "in_service" in patch:
-            try:
-                await sync_inventory_in_service_to_hub(seat_id, bool(result["in_service"]))
-            except Exception as exc:
-                import logging
+            if not _demo_mode():
+                try:
+                    await sync_inventory_in_service_to_hub(seat_id, bool(result["in_service"]))
+                except Exception as exc:
+                    import logging
 
-                logging.getLogger(__name__).warning(
-                    "inventory hub in_service sync failed for %s: %s", seat_id, exc
-                )
+                    logging.getLogger(__name__).warning(
+                        "inventory hub in_service sync failed for %s: %s", seat_id, exc
+                    )
         return result
     except KeyError as exc:
         raise HTTPException(404, f"unknown seat {seat_id}") from exc
@@ -408,16 +440,22 @@ def learning_get(limit: int = Query(50, ge=1, le=500)) -> dict[str, Any]:
 
 @app.post("/settings/integrations/test-ollama")
 async def integrations_test_ollama() -> dict[str, Any]:
+    if _demo_mode():
+        return {"ok": False, "mode": "demo_simulation", "detail": "Ollama disabled in demo"}
     return await test_ollama()
 
 
 @app.post("/settings/integrations/test-cannalib")
 async def integrations_test_cannalib() -> dict[str, Any]:
+    if _demo_mode():
+        return {"ok": True, "mode": "demo_simulation", "detail": "Local catalog fallback only"}
     return await test_cannalib()
 
 
 @app.post("/settings/zigbee/permit-join")
 def zigbee_permit_join(body: PermitJoinBody) -> dict[str, Any]:
+    if _demo_mode():
+        _demo_forbidden()
     set_permit_join(body.enabled, body.duration_s)
     set_setting("zigbee_permit_join", "true" if body.enabled else "false")
     return {"permit_join": body.enabled, "duration_s": body.duration_s if body.enabled else 0}
@@ -531,6 +569,8 @@ def settings_network() -> dict[str, Any]:
 
 @app.post("/settings/network/apply")
 def settings_network_apply() -> dict[str, Any]:
+    if _demo_mode():
+        _demo_forbidden()
     return apply_network_configs(restart_ap=True)
 
 
@@ -578,6 +618,8 @@ def settings_esphome_jobs(limit: int = Query(20, ge=1, le=100)) -> dict[str, Any
 
 @app.post("/settings/esphome/jobs")
 def settings_esphome_queue(body: EsphomeJobBody) -> dict[str, Any]:
+    if _demo_mode():
+        _demo_forbidden()
     try:
         return queue_job(body.seat_id, body.action)
     except KeyError as exc:
@@ -600,6 +642,8 @@ def settings_backup_export() -> Response:
 
 @app.post("/settings/backup/import")
 async def settings_backup_import(file: UploadFile = File(...)) -> dict[str, str]:
+    if _demo_mode():
+        _demo_forbidden()
     raw = await file.read()
     if not raw:
         raise HTTPException(400, "empty upload")

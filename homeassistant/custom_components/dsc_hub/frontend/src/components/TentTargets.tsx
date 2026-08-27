@@ -4,8 +4,8 @@ import { useFleetActions } from "../hooks/useFleetActions";
 import { useFleetEntity } from "../hooks/useFleetEntity";
 import { useHeldReading } from "../hooks/useHeldReading";
 import { OverflowMenu } from "./chrome";
-import { draftTone, tentWantRail } from "../lib/tentWant";
-import { StatusChip } from "./ui";
+import { draftTone, tentStageRailLabel, tentWantRail } from "../lib/tentWant";
+import { EntitySelect, StatusChip } from "./ui";
 import { useInspector } from "./InspectorHost";
 
 export type TentKind = "main" | "clone";
@@ -140,11 +140,11 @@ function TentColumn({ tent, title, hero }: { tent: TentKind; title: string; hero
   const [draftVMin, setDraftVMin] = useState(num(e.vpdMin));
   const [draftVMax, setDraftVMax] = useState(num(e.vpdMax));
 
-  const tScore = draftTone(draftT, rail.temp);
-  const rhMinScore = draftTone(draftRhMin, rail.rh, draftRhMin > draftRhMax);
-  const rhMaxScore = draftTone(draftRhMax, rail.rh, draftRhMin > draftRhMax);
-  const vMinScore = draftTone(draftVMin, rail.vpd, draftVMin > draftVMax);
-  const vMaxScore = draftTone(draftVMax, rail.vpd, draftVMin > draftVMax);
+  const tScore = draftTone(draftT, rail.temp, false, rail);
+  const rhMinScore = draftTone(draftRhMin, rail.rh, draftRhMin > draftRhMax, rail);
+  const rhMaxScore = draftTone(draftRhMax, rail.rh, draftRhMin > draftRhMax, rail);
+  const vMinScore = draftTone(draftVMin, rail.vpd, draftVMin > draftVMax, rail);
+  const vMaxScore = draftTone(draftVMax, rail.vpd, draftVMin > draftVMax, rail);
 
   const openMoreInfo = (entityId: string, label: string, unit?: string) => {
     inspector.open({ entityId, label, unit });
@@ -154,11 +154,9 @@ function TentColumn({ tent, title, hero }: { tent: TentKind; title: string; hero
     <div className={`dsc-tent-targets${hero ? " is-hero" : ""}`}>
       <div className="dsc-tent-targets-head">
         <strong>{title}</strong>
+        <StatusChip icon="roster" label={tentStageRailLabel(rail, tent)} tone={rail.mixed ? "warn" : "muted"} />
         {rail.mixed ? <StatusChip label="mixed stages" tone="warn" /> : null}
         {rail.emptyLabel ? <StatusChip label={rail.emptyLabel} tone="muted" /> : null}
-        {rail.stages.map((s) => (
-          <StatusChip key={s} label={s} tone="muted" />
-        ))}
         <OverflowMenu
           label={`${title} more`}
           items={[
@@ -193,9 +191,17 @@ function TentColumn({ tent, title, hero }: { tent: TentKind; title: string; hero
       ) : null}
       {climateFollowsMain ? (
         <div className="dsc-tent-follow-banner" style={{ marginBottom: 10 }}>
-          <StatusChip label="Following 4×8 climate" tone="ok" icon="tent" />
+          <StatusChip label="Climate follows 4×8" tone="ok" icon="tent" />
           <p className="dsc-muted" style={{ margin: "8px 0 0", fontSize: 13 }}>
-            Clone mode is Follow 4×8 — Want targets are locked here. Edit 4×8 climate or change clone mode on the hub.
+            Clone climate mode is Follow 4×8 — Want targets lock here. Edit 4×8 climate or change mode below.
+          </p>
+        </div>
+      ) : null}
+      {tent === "clone" ? (
+        <div style={{ marginBottom: 10 }}>
+          <EntitySelect entityId="select.dsc_hub_clone_mode" label="Climate mode" icon="climate" />
+          <p className="dsc-muted" style={{ fontSize: 12, margin: "6px 0 0" }}>
+            Schedule follow (photoperiod) is on the Light desk — separate from climate mode.
           </p>
         </div>
       ) : null}

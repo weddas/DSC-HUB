@@ -24,7 +24,7 @@ export function AirflowParticleViz({
   return (
     <div className="dsc-airflow-viz">
       <div className="dsc-chip-row" style={{ marginBottom: 8 }}>
-        <StatusChip icon="climate" label="Particle lung room (preview)" tone="warn" />
+        <StatusChip icon="climate" label="Lung room airflow" tone="ok" />
         {!manualOverride ? (
           <StatusChip icon="settings" label="Fan trim locked — enable manual override" tone="muted" />
         ) : null}

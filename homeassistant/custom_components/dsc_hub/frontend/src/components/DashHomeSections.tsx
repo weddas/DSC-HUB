@@ -6,9 +6,10 @@ import type { BandChartKind } from "./BandChartHost";
 import { useHistory } from "../hooks/useHistory";
 import { useZoneFocus, type ZoneFocus } from "../hooks/useZoneFocus";
 import { get_grow_log, type GrowLogEvent } from "../lib/fleetApi";
-import { growLogSeverity, prepareGrowLog } from "../lib/growLogFilter";
+import { growLogSeverity, prepareGrowLog, filterGrowLog, type GrowLogFilter } from "../lib/growLogFilter";
 import { useEffect, useState, type ReactNode } from "react";
 import { ALERT_ENTITY_IDS } from "../lib/alertPlaybook";
+import { potMoistureNum } from "../lib/potReading";
 import type { RosterSlot } from "../lib/seatModel";
 import type { CfmReading } from "../lib/cfmProvenance";
 import { TentLightClockStrip } from "./TentLightClock";
@@ -627,7 +628,7 @@ export function DashRootTankSection({
           <ArcGauge
             key={n}
             label={`P${n}`}
-            value={num(`sensor.dsc_pot${n}_soil_moisture`, NaN)}
+            value={potMoistureNum(num, state, n)}
             min={0}
             max={100}
             unit="%"
@@ -658,6 +659,7 @@ export function DashGrowLog({ bus }: { bus: Bus }) {
   const { state } = bus;
   const [events, setEvents] = useState<GrowLogEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<GrowLogFilter>("all");
 
   useEffect(() => {
     let cancelled = false;
@@ -687,10 +689,22 @@ export function DashGrowLog({ bus }: { bus: Bus }) {
 
   return (
     <Card className="dsc-glass" title="Grow log" icon="roster">
+      <div className="dsc-chip-row" style={{ marginBottom: 8 }}>
+        {(["all", "alerts", "stage"] as const).map((mode) => (
+          <button
+            key={mode}
+            type="button"
+            className={`dsc-chip${filter === mode ? " dsc-chip--ok" : ""}`}
+            onClick={() => setFilter(mode)}
+          >
+            {mode === "all" ? "All" : mode === "alerts" ? "Alerts" : "Stage changes"}
+          </button>
+        ))}
+      </div>
       {loading && events.length === 0 ? <p className="dsc-muted">Loading…</p> : null}
-      {events.length ? (
+      {filterGrowLog(events, filter).length ? (
         <ul className="dsc-grow-log">
-          {events.map((ev) => (
+          {filterGrowLog(events, filter).map((ev) => (
             <li
               key={ev.id}
               className={growLogSeverity(ev.message) === "alert" ? "dsc-grow-log--alert" : undefined}

@@ -16,6 +16,19 @@ python -m dsc_brain.cli tick --seat pot1 --strain generic_photoperiod --temp 26.
 python -m dsc_brain.api   # http://127.0.0.1:8787/docs
 ```
 
+### Public WiP demo (software simulation only)
+
+```bash
+# Local
+set DSC_DEMO_MODE=1
+python -m dsc_brain.api
+
+# Docker (port 8788 → container 8787)
+docker compose -f services/dsc-hub/docker-compose.demo.yml up -d --build
+```
+
+Demo mode never starts ESPHome, MQTT, Zigbee, or Sonoff ingest. Controls update an in-process physics simulator seeded from `data/demo-fleet-seed.json`. No LAN hosts or API keys are permitted when `DSC_DEMO_MODE=1`.
+
 ## Layout
 
 | Path | Role |

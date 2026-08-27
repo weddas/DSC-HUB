@@ -2,6 +2,19 @@
 
 Raspberry Pi 4 product stack: brain + SPA (`:8787`), optional local CannaLib fallback (`:8790`), Mosquitto, Zigbee2MQTT (SkyConnect), ESPHome dashboard (`:6052`).
 
+## Public WiP demo (software simulation)
+
+Isolated from the Pi fleet — no ESPHome, MQTT, Sonoffs, or LAN API keys.
+
+```bash
+docker compose -f services/dsc-hub/docker-compose.demo.yml up -d --build
+# → http://localhost:8788  (mode=demo in GET /health)
+```
+
+Reverse-proxy `brain-demo.plausible-deniability.net` to port **8788** with WebSocket support and CSP `frame-ancestors https://plausible-deniability.net`. WordPress embed lives at `/dsc/demo/` (`push_dsc_demo.py`).
+
+Rebuild SPA after UI changes: `npm run build:spa` in `homeassistant/custom_components/dsc_hub/frontend`, then sync `spa-dist/` → `brain/static/`.
+
 ## Quick start (Pi)
 
 1. Flash **Raspberry Pi OS Lite 64-bit** with Raspberry Pi Imager (hostname `dsc-brain`, SSH key).

@@ -22,6 +22,8 @@ export interface TabRoute {
   path: string;
   /** Must be a registered IconName — icon gate. */
   icon: string;
+  /** Short tent/context line under tab label (7.4 T-03). */
+  subtitle?: string;
   /** Secondary tab shown after cockpit routes — not a peer "home". */
   demoted?: boolean;
 }
@@ -37,8 +39,8 @@ export const SECONDARY_TABS: Record<PrimarySection, TabRoute[]> = {
   live: [
     { id: "overview", label: "Overview", path: "/live/overview", icon: "home" },
     { id: "climate", label: "Climate", path: "/live/climate", icon: "climate" },
-    { id: "main", label: "4×8", path: "/live/4x8", icon: "tent" },
-    { id: "clone", label: "2×4", path: "/live/2x4", icon: "clone" },
+    { id: "main", label: "4×8", subtitle: "Flower", path: "/live/4x8", icon: "tent" },
+    { id: "clone", label: "2×4", subtitle: "Clone & veg", path: "/live/2x4", icon: "clone" },
     { id: "root", label: "Root", path: "/live/root", icon: "root" },
     { id: "light", label: "Light", path: "/live/light", icon: "lighting" },
     { id: "twin", label: "Twin", path: "/live/twin", icon: "twin", demoted: true },

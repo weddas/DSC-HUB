@@ -491,6 +491,13 @@ def _maybe_persist_pot_edit(entity_id: str, value: str) -> None:
 
 
 async def call_service_proxy(domain: str, service: str, data: dict[str, Any]) -> dict[str, Any]:
+    from .demo_mode import is_demo_mode
+
+    if is_demo_mode():
+        from .demo_simulator import demo_call_service
+
+        return await demo_call_service(domain, service, data)
+
     entity_id = str(data.get("entity_id", ""))
     if not entity_id:
         raise ValueError("entity_id required")

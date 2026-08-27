@@ -131,9 +131,7 @@ export function tentWantRail(tent: Exclude<TentId, "unassigned">, hass: HassBits
           ? "Seedling"
           : tentStage === "Mother"
             ? "Vegetative"
-            : tentStage === "Follow 4x8"
-              ? hass.state("select.dsc_hub_grow_stage", "")
-              : ""
+            : ""
         : tentStage;
     const rail = railForStage(fallbackStage);
     if (rail) {
@@ -162,25 +160,71 @@ export function tentWantRail(tent: Exclude<TentId, "unassigned">, hass: HassBits
   };
 }
 
+function stageRailName(rail: Pick<TentWantRail, "stages" | "lightHours">): string | null {
+  if (rail.stages.length === 1) {
+    const stage = rail.stages[0];
+    if (rail.lightHours != null) return `${stage} · ${rail.lightHours}h rail`;
+    return `${stage} · stage rail`;
+  }
+  return null;
+}
+
+/** Stage-named chip copy for Want bands (L-04). */
+export function wantChipLabel(
+  rail: Pick<TentWantRail, "stages" | "lightHours" | "emptyLabel">,
+  tone: ZoneTone,
+  fallback: string,
+): string {
+  const named = stageRailName(rail);
+  if (!named) return fallback;
+  switch (tone) {
+    case "ok":
+      return named;
+    case "warn":
+    case "stale":
+      return `approaching · ${named}`;
+    case "critical":
+      return `outside · ${named}`;
+    case "muted":
+      return rail.emptyLabel ?? named;
+    default: {
+      const _exhaustive: never = tone;
+      return _exhaustive;
+    }
+  }
+}
+
 export function draftTone(
   value: number,
   band: Band | null,
   pairBad?: boolean,
+  rail?: Pick<TentWantRail, "stages" | "lightHours" | "emptyLabel">,
 ): { tone: ZoneTone; label: string } {
   if (pairBad) return { tone: "critical", label: "min > max" };
-  if (!band) return { tone: "muted", label: "no plant/stage rail" };
+  if (!band) return { tone: "muted", label: rail?.emptyLabel ?? "no plant/stage rail" };
   const tone = zoneTone({ value, band, margin: (band.max - band.min) * 0.12 });
   const source = band.source === "plant" ? "plant Want" : "stage rail";
+  const base =
+    tone === "ok"
+      ? `in-band · ${source}`
+      : tone === "warn" || tone === "stale"
+        ? `approaching · ${source}`
+        : tone === "critical"
+          ? `outside · ${source}`
+          : source;
+  if (rail && band.source === "stage") {
+    return { tone, label: wantChipLabel(rail, tone, base) };
+  }
   switch (tone) {
     case "ok":
-      return { tone, label: `in-band · ${source}` };
+      return { tone, label: base };
     case "warn":
     case "stale":
-      return { tone: "warn", label: `approaching · ${source}` };
+      return { tone: "warn", label: base };
     case "critical":
-      return { tone, label: `outside · ${source}` };
+      return { tone, label: base };
     case "muted":
-      return { tone, label: source };
+      return { tone, label: base };
     default: {
       const _exhaustive: never = tone;
       return _exhaustive;
@@ -202,4 +246,16 @@ export function potWantBand(
 
 export function inServicePots(state: (id: string, fb?: string) => string): number[] {
   return ALL_POT_NUMBERS.filter((n) => isPotInService(n, state));
+}
+
+/** Stage rail label for a single tent's Want chips. */
+export function tentStageRailLabel(rail: TentWantRail, tent?: "main" | "clone"): string {
+  if (rail.stages.length === 1) {
+    const h = rail.lightHours != null ? `${rail.lightHours}h rail` : "stage rail";
+    return `${rail.stages[0]} · ${h}`;
+  }
+  if (rail.stages.length > 1) return `Mixed stages · ${rail.stages.join(", ")}`;
+  if (tent === "clone") return "2×4 empty · assign pots or set clone mode";
+  if (tent === "main") return "4×8 empty · assign pots or grow stage";
+  return rail.emptyLabel ?? "no plant/stage rail";
 }

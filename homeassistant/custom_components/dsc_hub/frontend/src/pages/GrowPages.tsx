@@ -7,6 +7,7 @@ import { OverflowMenu, SoilCrossSection, SlideDrawer } from "../components/chrom
 import { HistoryDrawer } from "../components/HistoryDrawer";
 import { Button, Card, PageHeader, StatusChip } from "../components/ui";
 import { useEntityBus } from "../hooks/useEntityBus";
+import { RehomeChecklist } from "../components/RehomeChecklist";
 import { useFleetActions } from "../hooks/useFleetActions";
 import { useEntitySeries } from "../hooks/useEntitySeries";
 import { useHeldReading } from "../hooks/useHeldReading";
@@ -46,6 +47,7 @@ export function PlantSeatPanel({
   const [notesDraft, setNotesDraft] = useState(seat.notes === "—" ? "" : seat.notes);
   const [applyErr, setApplyErr] = useState<string | null>(null);
   const [pendingTent, setPendingTent] = useState<TentId | null>(null);
+  const [applyPhotoTemplate, setApplyPhotoTemplate] = useState(true);
   const [hist, setHist] = useState<{ id: string; label: string; unit: string } | null>(null);
 
   useEffect(() => {
@@ -96,13 +98,30 @@ export function PlantSeatPanel({
     seat.strainDisplay === "—" ||
     /generic/i.test(seat.strainDisplay);
 
-  const applyTent = async (tent: TentId) => {
+  const applyTent = async (tent: TentId, photoTemplate?: boolean) => {
     setApplyErr(null);
     try {
       await callService("input_select", "select_option", {
         entity_id: `input_select.dsc_pot${pot}_tent`,
         option: tent,
       });
+      if (photoTemplate && tent !== "unassigned") {
+        if (tent === "clone") {
+          await callService("select", "select_option", {
+            entity_id: "select.dsc_hub_clone_photoperiod",
+            option: "Independent",
+          });
+          await callService("number", "set_value", {
+            entity_id: "number.dsc_hub_clone_light_hours",
+            value: 18,
+          });
+        } else if (tent === "main") {
+          await callService("number", "set_value", {
+            entity_id: "number.dsc_hub_min_dark_hours",
+            value: 12,
+          });
+        }
+      }
       // Confirm option stuck (HA may resolve without throwing on invalid option).
       window.setTimeout(() => {
         const now = hass?.states?.[`input_select.dsc_pot${pot}_tent`]?.state || "";
@@ -419,7 +438,7 @@ export function PlantSeatPanel({
                 onConfirm={() => {
                   const tent = pendingTent;
                   setPendingTent(null);
-                  if (tent) void applyTent(tent);
+                  if (tent) void applyTent(tent, applyPhotoTemplate);
                 }}
                 title={
                   pendingTent === "clone"
@@ -431,10 +450,23 @@ export function PlantSeatPanel({
                 confirmLabel="Apply tent"
                 help={null}
               >
+                {pendingTent && pendingTent !== "unassigned" ? (
+                  <RehomeChecklist from={seat.tent} to={pendingTent} />
+                ) : null}
                 <p>
                   Updates pot {pot} placement on the Twin. Climate Want is unchanged — use Climate or Compose for
                   targets.
                 </p>
+                {pendingTent === "clone" || pendingTent === "main" ? (
+                  <label className="dsc-check-row" style={{ display: "block", marginTop: 10 }}>
+                    <input
+                      type="checkbox"
+                      checked={applyPhotoTemplate}
+                      onChange={(e) => setApplyPhotoTemplate(e.target.checked)}
+                    />{" "}
+                    Apply photoperiod template ({pendingTent === "clone" ? "18h veg · independent 2×4" : "12h dark · 4×8"})
+                  </label>
+                ) : null}
               </DecisionLayer>
               {applyErr ? (
                 <p className="dsc-honesty">

@@ -44,6 +44,12 @@ _running = False
 
 
 def get_appliance_status() -> dict[str, Any]:
+    from .demo_mode import is_demo_mode
+
+    if is_demo_mode():
+        from .demo_simulator import get_demo_appliance_status
+
+        return get_demo_appliance_status()
     return dict(_status)
 
 

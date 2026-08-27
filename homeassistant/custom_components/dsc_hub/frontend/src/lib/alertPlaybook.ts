@@ -245,6 +245,9 @@ export function alertRoute(entityId: string): { href: string; cta: string } {
   ) {
     return { href: "/live/light", cta: "Open Light" };
   }
+  if (entityId.includes("vpd")) {
+    return { href: "/live/climate", cta: "Open Climate" };
+  }
   if (
     entityId.includes("root") ||
     entityId.includes("pot") ||

@@ -1,0 +1,350 @@
+{
+  "version": "7.0.0.0-demo",
+  "surface": "7.3.0-demo",
+  "expected_firmware": "7.0.0.0",
+  "hub": {
+    "seat_id": "hub",
+    "online": true,
+    "firmware": "6.0.0.0",
+    "values": {
+      "uptime": 130503.6875,
+      "heartbeat": 4359.0,
+      "temp_c": 21.0,
+      "rh_pct": 75.5999984741211,
+      "room_temp_c": 22.899999618530273,
+      "room_rh_pct": 71.0,
+      "clone_temp_c": 22.30000114440918,
+      "clone_rh_pct": 74.80000305175781,
+      "vpd_kpa": 0.607,
+      "clone_vpd_kpa": 0.679,
+      "dehumidifier_fire_countdown": 0.0,
+      "humidifier_fire_countdown": 0.0,
+      "heater_fire_countdown": 0.0,
+      "ac_fire_countdown": 0.0,
+      "grow_mat_fire_countdown": 0.0,
+      "clone_humidifier_fire_countdown": 0.0,
+      "humidifier_cooldown_remaining": 0.0,
+      "dehumidifier_cooldown_remaining": 0.0,
+      "ac_cooldown_remaining": 0.0,
+      "heater_cooldown_remaining": 0.0,
+      "grow_mat_cooldown_remaining": 0.0,
+      "clone_humidifier_cooldown_remaining": 0.0,
+      "firmware_version": "6.0.0.0",
+      "rf_status": "RF|H|B59|---|6|-43|OK",
+      "controls": {
+        "fan.dsc_hub_6_inch_exhaust_outside": {
+          "state": "on",
+          "percentage": 70
+        },
+        "fan.dsc_hub_6_inch_exhaust_room": {
+          "state": "on",
+          "percentage": 60
+        },
+        "fan.dsc_hub_4_inch_intake_fan_main": {
+          "state": "on",
+          "percentage": 8
+        },
+        "fan.dsc_hub_4_inch_intake_fan_2x4": {
+          "state": "on",
+          "percentage": 60
+        },
+        "light.dsc_hub_sf1000_dimmer": {
+          "state": "on",
+          "brightness": 1
+        },
+        "switch.dsc_hub_tent_manual_override": {
+          "state": "off"
+        },
+        "switch.dsc_hub_tent_full_auto_mode": {
+          "state": "on"
+        },
+        "switch.dsc_hub_auto_photoperiod": {
+          "state": "on"
+        },
+        "switch.dsc_hub_manual_takeover": {
+          "state": "off"
+        },
+        "switch.dsc_hub_humidifier_demand": {
+          "state": "off"
+        },
+        "switch.dsc_hub_dehumidifier_demand": {
+          "state": "on"
+        },
+        "switch.dsc_hub_heater_demand": {
+          "state": "off"
+        },
+        "switch.dsc_hub_grow_mat_demand": {
+          "state": "off"
+        },
+        "switch.dsc_hub_ac_demand": {
+          "state": "off"
+        },
+        "switch.dsc_hub_clone_humidifier_demand": {
+          "state": "off"
+        },
+        "switch.dsc_hub_humidifier_intake_routing": {
+          "state": "off"
+        },
+        "switch.dsc_hub_recirc_de_strat_pulse": {
+          "state": "off"
+        },
+        "number.dsc_hub_target_temp": {
+          "state": "22.0"
+        },
+        "number.dsc_hub_vpd_target_min": {
+          "state": "0.8"
+        },
+        "number.dsc_hub_vpd_target_max": {
+          "state": "1.1"
+        },
+        "number.dsc_hub_rh_target_min": {
+          "state": "55.0"
+        },
+        "number.dsc_hub_rh_target_max": {
+          "state": "65.0"
+        },
+        "number.dsc_hub_clone_target_temp": {
+          "state": "21.0"
+        },
+        "number.dsc_hub_clone_vpd_min": {
+          "state": "0.7"
+        },
+        "number.dsc_hub_clone_vpd_max": {
+          "state": "1.2"
+        },
+        "number.dsc_hub_clone_rh_min": {
+          "state": "60.0"
+        },
+        "number.dsc_hub_clone_rh_max": {
+          "state": "67.0"
+        },
+        "number.dsc_hub_clone_light_hours": {
+          "state": "18.0"
+        },
+        "number.dsc_hub_mat_root_zone_low": {
+          "state": "20.0"
+        },
+        "number.dsc_hub_mat_root_zone_high": {
+          "state": "22.0"
+        },
+        "select.dsc_hub_grow_stage": {
+          "state": "Off",
+          "options": [
+            "Germination",
+            "Seedling",
+            "Early Vegetative",
+            "Vegetative",
+            "Late (Push) Vegetative",
+            "Early Flowering",
+            "Flowering",
+            "Late Flowering",
+            "Final 48-72h Flowering",
+            "Dry Mode",
+            "Custom",
+            "Off"
+          ]
+        },
+        "select.dsc_hub_control_strategy": {
+          "state": "VPD",
+          "options": [
+            "VPD",
+            "Temperature",
+            "Humidity"
+          ]
+        },
+        "select.dsc_hub_clone_mode": {
+          "state": "Custom",
+          "options": [
+            "Follow 4x8",
+            "Clones & Seedlings",
+            "Mother",
+            "Custom",
+            "Off"
+          ]
+        },
+        "select.dsc_hub_clone_photoperiod": {
+          "state": "Independent",
+          "options": [
+            "Follow 4x8",
+            "Independent"
+          ]
+        },
+        "select.dsc_hub_priority_tent": {
+          "state": "2x4 Clone",
+          "options": [
+            "4x8 Main",
+            "2x4 Clone"
+          ]
+        }
+      },
+      "binaries": {
+        "binary_sensor.dsc_hub_climate_sensor_fault": false,
+        "binary_sensor.dsc_hub_aux_sensor_fault": false,
+        "binary_sensor.dsc_hub_root_zone_sensor_fault": false,
+        "binary_sensor.dsc_hub_emergency_failsafe": false,
+        "binary_sensor.dsc_hub_4x8_window_open": false,
+        "binary_sensor.dsc_hub_2x4_window_open": true,
+        "binary_sensor.dsc_hub_light_catchup_active": false,
+        "binary_sensor.dsc_hub_pot1_esp_now_link": true,
+        "binary_sensor.dsc_hub_pot2_esp_now_link": true,
+        "binary_sensor.dsc_hub_pot3_esp_now_link": true,
+        "binary_sensor.dsc_hub_pot4_esp_now_link": true,
+        "binary_sensor.dsc_hub_coherence_mismatch": false
+      },
+      "host": "10.42.0.10",
+      "seat_id": "hub"
+    }
+  },
+  "panel": {
+    "seat_id": "panel",
+    "online": false,
+    "firmware": null,
+    "values": {}
+  },
+  "pots": {
+    "pot1": {
+      "seat_id": "pot1",
+      "online": true,
+      "firmware": "2026.8.0",
+      "values": {
+        "moisture_pct": 22.5,
+        "soil_temp_c": 19.30000114440918,
+        "ph": 6.099999904632568
+      }
+    },
+    "pot2": {
+      "seat_id": "pot2",
+      "online": true,
+      "firmware": "2026.8.0",
+      "values": {
+        "moisture_pct": 20.100000381469727,
+        "soil_temp_c": 19.200000762939453,
+        "ph": 6.800000190734863
+      }
+    },
+    "pot3": {
+      "seat_id": "pot3",
+      "online": true,
+      "firmware": "2026.8.0",
+      "values": {
+        "moisture_pct": null,
+        "soil_temp_c": null,
+        "ph": null
+      }
+    },
+    "pot4": {
+      "seat_id": "pot4",
+      "online": true,
+      "firmware": "2026.8.0",
+      "values": {
+        "moisture_pct": null,
+        "soil_temp_c": null,
+        "ph": null
+      }
+    }
+  },
+  "sonoffs": {},
+  "canopy": {},
+  "system": {
+    "appliance_link": true,
+    "reduced_kit": false,
+    "relays": {
+      "heater": false,
+      "humidifier": false,
+      "dehumidifier": true,
+      "heatmat": false
+    }
+  },
+  "inventory": [
+    {
+      "seat_id": "control",
+      "role": "panel",
+      "in_service": true,
+      "host": "",
+      "mac": null,
+      "api_key": null,
+      "extra": {}
+    },
+    {
+      "seat_id": "dehumidifier",
+      "role": "sonoff_dehumidifier",
+      "in_service": true,
+      "host": "",
+      "mac": null,
+      "api_key": null,
+      "extra": {}
+    },
+    {
+      "seat_id": "heater",
+      "role": "sonoff_heater",
+      "in_service": true,
+      "host": "",
+      "mac": null,
+      "api_key": null,
+      "extra": {}
+    },
+    {
+      "seat_id": "heatmat",
+      "role": "sonoff_heatmat",
+      "in_service": true,
+      "host": "",
+      "mac": null,
+      "api_key": null,
+      "extra": {}
+    },
+    {
+      "seat_id": "hub",
+      "role": "hub",
+      "in_service": true,
+      "host": "",
+      "mac": null,
+      "api_key": null,
+      "extra": {}
+    },
+    {
+      "seat_id": "humidifier",
+      "role": "sonoff_humidifier",
+      "in_service": true,
+      "host": "",
+      "mac": null,
+      "api_key": null,
+      "extra": {}
+    },
+    {
+      "seat_id": "pot1",
+      "role": "pot",
+      "in_service": true,
+      "host": "",
+      "mac": null,
+      "api_key": null,
+      "extra": {}
+    },
+    {
+      "seat_id": "pot2",
+      "role": "pot",
+      "in_service": true,
+      "host": "",
+      "mac": null,
+      "api_key": null,
+      "extra": {}
+    },
+    {
+      "seat_id": "pot3",
+      "role": "pot",
+      "in_service": true,
+      "host": "",
+      "mac": null,
+      "api_key": null,
+      "extra": {}
+    },
+    {
+      "seat_id": "pot4",
+      "role": "pot",
+      "in_service": true,
+      "host": "",
+      "mac": null,
+      "api_key": null,
+      "extra": {}
+    }
+  ]
+}

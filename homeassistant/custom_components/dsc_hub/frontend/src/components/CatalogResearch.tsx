@@ -83,6 +83,20 @@ function fieldValue(item: CatalogItem, key: string): string {
   }
 }
 
+function chemistryTier(item: CatalogItem, sourceNote: string): { label: string; tone: "ok" | "warn" | "muted" } {
+  const via = String(item.matched_via ?? "").toLowerCase();
+  if (via === "science_alias" || item.science_alias) {
+    return { label: "Lab alias · verified tier", tone: "ok" };
+  }
+  if (item.composition && typeof item.composition === "object") {
+    return { label: "Bank claim · catalog NPK", tone: sourceNote.includes("local") ? "warn" : "ok" };
+  }
+  if (typeof item.composition === "string" && item.composition.trim()) {
+    return { label: "Bank claim · label copy", tone: "warn" };
+  }
+  return { label: "No chemistry on file", tone: "muted" };
+}
+
 function compareFields(kind: CatalogKind): { key: string; label: string }[] {
   switch (kind) {
     case "strain":
@@ -130,6 +144,7 @@ export function CatalogResearch() {
   const [kind, setKind] = useState<CatalogKind>("strain");
   const [selected, setSelected] = useState<CatalogItem | null>(null);
   const [compare, setCompare] = useState<CatalogItem[]>([]);
+  const [recent, setRecent] = useState<CatalogItem[]>([]);
   const [sourceNote, setSourceNote] = useState("");
   const fields = useMemo(() => compareFields(kind), [kind]);
 
@@ -141,13 +156,14 @@ export function CatalogResearch() {
 
   const useInCompose = (item: CatalogItem | null) => {
     if (!item) return;
+    setRecent((prev) => [item, ...prev.filter((x) => x.name !== item.name)].slice(0, 5));
     if (kind === "light") {
       const fixtureOptions = (entity("input_select.dsc_light_fixture")?.attributes?.options as string[]) || [];
       applyLightPick(item, callService, fixtureOptions);
     } else {
       applyCatalogPick(kind, item, callService, state);
     }
-    navigate("/grow/compose");
+    navigate(kind === "medium" || kind === "nutrient" ? "/grow/compose" : "/grow/compose");
   };
 
   return (
@@ -168,6 +184,9 @@ export function CatalogResearch() {
           </button>
         ))}
         <StatusChip label={sourceNote || "Catalog"} tone={sourceNote.includes("local") ? "warn" : "ok"} />
+        {recent.length ? (
+          <StatusChip label={`Recent: ${recent.map((r) => r.name).slice(0, 2).join(", ")}`} tone="muted" />
+        ) : null}
       </div>
       <div className="dsc-grid">
         <div className="dsc-col-6">
@@ -182,6 +201,12 @@ export function CatalogResearch() {
             ) : (
               <>
                 <h3 style={{ marginTop: 0 }}>{selected.name}</h3>
+                {kind === "nutrient" ? (
+                  <StatusChip
+                    label={chemistryTier(selected, sourceNote).label}
+                    tone={chemistryTier(selected, sourceNote).tone}
+                  />
+                ) : null}
                 <dl className="dsc-detail-list">
                   {fields.map((f) => (
                     <div key={f.key}>

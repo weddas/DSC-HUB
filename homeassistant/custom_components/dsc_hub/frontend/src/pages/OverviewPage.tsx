@@ -14,7 +14,7 @@ import { BAND_CHART_TITLES, useBandChart, type BandChartKind } from "../componen
 import { useEntityBus } from "../hooks/useEntityBus";
 import { useHeldReading } from "../hooks/useHeldReading";
 import { useAlertSnooze } from "../hooks/useAlertSnooze";
-import { useFleet } from "../hooks/useFleet";
+import { useSettledAvailability } from "../hooks/useSettledAvailability";
 import { alertRoute, playbookFor } from "../lib/alertPlaybook";
 import type { RosterSlot } from "../lib/seatModel";
 
@@ -23,6 +23,7 @@ export function OverviewPage() {
   const bus = useEntityBus();
   const { num, state, entity, tick } = bus;
   const fleet = useFleet();
+  const settled = useSettledAvailability();
   const navigate = useNavigate();
   const { isSnoozed } = useAlertSnooze();
   const bandChart = useBandChart();
@@ -59,6 +60,9 @@ export function OverviewPage() {
 
   const rosterSlots = (entity("sensor.dsc_plant_roster_summary")?.attributes?.slots || []) as RosterSlot[];
 
+  const hubOnline = fleet.hub.online || settled("sensor.dsc_hub_uptime");
+  const uptimeSec = num("sensor.dsc_hub_uptime", Number(fleet.hub.values.uptime) || 0);
+
   const openPot = (n: number) => {
     window.dispatchEvent(new CustomEvent("dsc-dash-select-pot", { detail: { pot: n } }));
     navigate("/live/root");
@@ -79,6 +83,19 @@ export function OverviewPage() {
           <Button onClick={() => navigate("/live/mission")}>Mission</Button>
         }
       />
+
+      <div className="dsc-status-strip">
+        <StatusChip
+          icon={hubOnline ? "ok" : "alert"}
+          label={hubOnline ? "HUB ONLINE" : "HUB OFFLINE"}
+          tone={hubOnline ? "ok" : "bad"}
+          onClick={() => navigate("/fleet")}
+        />
+        <StatusChip
+          label={Number.isFinite(uptimeSec) && uptimeSec > 0 ? `Up ${Math.round(uptimeSec / 3600)}h` : "Hub uptime"}
+          tone={hubOnline ? "muted" : "bad"}
+        />
+      </div>
 
       {faultIds.length > 0 || alerts > 0 ? (
         <div className="dsc-banner dsc-banner--bad" style={{ marginBottom: 12 }}>

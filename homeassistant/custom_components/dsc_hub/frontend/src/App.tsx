@@ -3,6 +3,8 @@ import { Suspense, useEffect } from "react";
 import { Button, Icon, PageHeader } from "./components/ui";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { HonestyRail } from "./components/Honesty";
+import { DemoBanner } from "./components/DemoBanner";
+import { DemoBanner } from "./components/DemoBanner";
 import { TwinKeepAlive } from "./components/TwinKeepAlive";
 import { SeatOverlayHost } from "./components/SeatOverlay";
 import { InspectorProvider } from "./components/InspectorHost";
@@ -114,6 +116,9 @@ function Shell({ surfaceVersion = "7.3.0" }: { surfaceVersion?: string }) {
         </div>
       </div>
 
+      <DemoBanner />
+      <DemoBanner />
+
       <HonestyRail />
 
       <nav className="dsc-primary-tabs" aria-label="Primary">
@@ -143,7 +148,12 @@ function Shell({ surfaceVersion = "7.3.0" }: { surfaceVersion?: string }) {
               }
             >
               <Icon name={tab.icon as IconName} size={14} />
-              {tab.label}
+              <span className="dsc-tab-label-stack">
+                <span>{tab.label}</span>
+                {"subtitle" in tab && tab.subtitle ? (
+                  <span className="dsc-tab-sub">{tab.subtitle}</span>
+                ) : null}
+              </span>
             </NavLink>
           ))}
         </nav>

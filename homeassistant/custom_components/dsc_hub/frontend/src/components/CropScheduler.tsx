@@ -1,4 +1,4 @@
-import { STAGE_ORDER, type TentWantRail } from "../lib/tentWant";
+import { STAGE_ORDER, tentStageRailLabel } from "../lib/tentWant";
 import {
   ALL_POT_NUMBERS,
   buildPlantSeat,
@@ -162,11 +162,4 @@ export function CropScheduler({ compact }: { compact?: boolean }) {
   );
 }
 
-/** Stage rail label for a single tent's Want chips. */
-export function tentStageRailLabel(rail: TentWantRail, tent?: "main" | "clone"): string {
-  if (rail.stages.length === 1) return `${rail.stages[0]} · stage rail`;
-  if (rail.stages.length > 1) return `Mixed stages · ${rail.stages.join(", ")}`;
-  if (tent === "clone") return "2×4 empty · set clone mode or assign pots";
-  if (tent === "main") return "4×8 empty · assign pots or grow stage";
-  return rail.emptyLabel ?? "no plant/stage rail";
-}
+export { tentStageRailLabel };

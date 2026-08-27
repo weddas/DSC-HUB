@@ -600,15 +600,19 @@ export function EntityTime({
   entityId,
   label,
   disabled,
+  hint,
 }: {
   entityId: string;
   label: string;
   disabled?: boolean;
+  hint?: string;
 }) {
-  const { available, state } = useEntityBus();
+  const { entity } = useEntityBus();
+  const { state, available } = useFleetEntity(entityId);
   const { callService } = useFleetActions();
-  const ok = available(entityId) && !disabled;
-  const live = timeToInput(state(entityId, ""));
+  const registered = Boolean(entity(entityId)) || available;
+  const ok = registered && !disabled;
+  const live = timeToInput(state === "unavailable" || state === "unknown" ? "" : state);
   const [draft, setDraft] = useState(live);
   const focused = useRef(false);
 
@@ -637,6 +641,7 @@ export function EntityTime({
           commit();
         }}
       />
+      {hint ? <span className="dsc-target-hint">{hint}</span> : null}
     </label>
   );
 }

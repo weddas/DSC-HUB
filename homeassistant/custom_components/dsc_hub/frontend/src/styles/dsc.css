@@ -80,6 +80,26 @@ body {
   margin-bottom: 10px;
 }
 
+.dsc-demo-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 12px;
+  padding: 10px 14px;
+  border: 1px solid rgba(255, 183, 77, 0.45);
+  border-radius: 12px;
+  background: rgba(255, 183, 77, 0.08);
+  color: var(--dsc-muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.dsc-demo-banner span {
+  flex: 1;
+  min-width: 200px;
+}
+
 .dsc-row-actions {
   display: flex;
   flex-wrap: wrap;
@@ -356,6 +376,43 @@ body {
   color: var(--dsc-neon);
   background: rgba(57, 255, 20, 0.08);
   box-shadow: var(--dsc-shadow-tight);
+}
+
+.dsc-tab-label-stack {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.15;
+  gap: 1px;
+}
+
+.dsc-tab-sub {
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: var(--dsc-gray-5);
+  font-weight: 400;
+}
+
+.dsc-secondary-tabs .dsc-tab.active .dsc-tab-sub {
+  color: color-mix(in srgb, var(--dsc-neon) 70%, var(--dsc-gray-5));
+}
+
+.dsc-checklist {
+  margin: 0;
+  padding-left: 1.2rem;
+  font-size: 13px;
+}
+
+.dsc-checklist li {
+  margin: 4px 0;
+}
+
+.dsc-rehome-checklist {
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px dashed color-mix(in srgb, var(--dsc-amber) 45%, transparent);
+  background: color-mix(in srgb, var(--dsc-amber) 8%, transparent);
 }
 
 .dsc-btn {

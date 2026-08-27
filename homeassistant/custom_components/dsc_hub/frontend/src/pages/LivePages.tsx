@@ -73,6 +73,9 @@ export function LiveTwinPage() {
           <>
             <Button onClick={() => navigate("/live/4x8")}>4×8 cockpit</Button>
             <Button onClick={() => navigate("/live/2x4")}>2×4 cockpit</Button>
+            <Button primary onClick={() => navigate("/grow/compose")}>
+              Compose plant
+            </Button>
           </>
         }
       />

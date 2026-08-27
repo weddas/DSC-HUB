@@ -1,0 +1,31 @@
+# DSC Brain — public software simulation (WiP demo)
+# No mosquitto, zigbee2mqtt, esphome, or LAN API keys. Fully isolated.
+name: dsc-brain-demo
+
+services:
+  brain:
+    build:
+      context: ../..
+      dockerfile: services/dsc-hub/brain/Dockerfile.prebuilt
+    image: dsc-hub-brain:7.3.0-demo
+    container_name: dsc-brain-demo
+    restart: unless-stopped
+    ports:
+      - "8788:8787"
+    environment:
+      DSC_DEMO_MODE: "1"
+      DSC_DATA: /data
+      DSC_REPO_ROOT: /app
+      DSC_EXPECTED_FIRMWARE: 7.0.0.0-demo
+      DSC_SURFACE_VERSION: 7.3.0-demo
+      CANNALIB_USE_LOCAL_FALLBACK: "true"
+    volumes:
+      - demo_ops:/data
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  demo_ops:

@@ -19,7 +19,8 @@ import { useEntityBus } from "../hooks/useEntityBus";
 import { useInspector } from "../components/InspectorHost";
 import { ArcGauge } from "../viz/charts";
 import { draftTone, tentWantRail } from "../lib/tentWant";
-import { tentPhotoperiodFollowsMain } from "../lib/lightSchedule";
+import { readTentPhotoperiodInput, tentPhotoperiodFollowsMain } from "../lib/lightSchedule";
+import { dliFromPpfdHours, fmtDli, readCalibratedPpfd } from "../lib/dliEstimate";
 
 function fmt(n: number, digits = 1): string {
   return Number.isFinite(n) ? n.toFixed(digits) : "—";
@@ -47,7 +48,15 @@ export function LiveLightPage() {
   const [draftCloneHours, setDraftCloneHours] = useState(cloneHoursLive);
   const followsMain = tentPhotoperiodFollowsMain(state);
   const independent = !followsMain;
+  const cloneClimateMode = state("select.dsc_hub_clone_mode", "—");
   const mainOnTime = state("time.dsc_hub_lights_on_time", "—");
+  const mainScheduleInput = readTentPhotoperiodInput("main", state, num);
+  const mainScheduleMissing = !mainScheduleInput.lightsOnTime || mainOnTime === "—" || mainOnTime === "unknown";
+  const manualHold = state("switch.dsc_hub_manual_light_hold") === "on";
+  const autoPhoto = state("switch.dsc_hub_auto_photoperiod") === "on";
+  const ppfd = readCalibratedPpfd(num, entity);
+  const dli4 = dliFromPpfdHours(ppfd ?? NaN, rail4.lightHours ?? hours4);
+  const dli2 = dliFromPpfdHours(ppfd ?? NaN, rail2.lightHours ?? hours2);
   const hoursBand4 =
     rail4.lightHours != null
       ? { min: rail4.lightHours - 0.5, max: rail4.lightHours + 0.5, source: "stage" as const, mixed: rail4.mixed }
@@ -66,11 +75,13 @@ export function LiveLightPage() {
         }
       : null;
   const impliedHours4 = Number.isFinite(draftDark) ? 24 - draftDark : hours4;
-  const hoursDraft4 = draftTone(impliedHours4, hoursBand4);
-  const darkDraft = draftTone(Number.isFinite(draftDark) ? draftDark : minDarkLive, darkBand);
+  const hoursDraft4 = draftTone(impliedHours4, hoursBand4, false, rail4);
+  const darkDraft = draftTone(Number.isFinite(draftDark) ? draftDark : minDarkLive, darkBand, false, rail4);
   const hoursDraft2 = draftTone(
     independent && Number.isFinite(draftCloneHours) ? draftCloneHours : hours2,
     hoursBand2,
+    false,
+    rail2,
   );
   const railTone = (tone: string): "ok" | "warn" | "bad" | "muted" =>
     tone === "critical" ? "bad" : tone === "ok" ? "ok" : tone === "muted" ? "muted" : "warn";
@@ -129,6 +140,26 @@ export function LiveLightPage() {
         ) : null}
       </div>
 
+      {mainScheduleMissing ? (
+        <div className="dsc-banner dsc-banner--warn" style={{ marginBottom: 12 }}>
+          <strong>4×8 lights-on time is not set — both tent schedules are dead until you set it.</strong>
+          <p className="dsc-muted" style={{ margin: "8px 0 0", fontSize: 13 }}>
+            Set <strong>Lights on</strong> on the 4×8 card below. 2×4 can mirror that window or run independent hours.
+          </p>
+        </div>
+      ) : null}
+
+      {(manualHold || !autoPhoto) && (darkViolation || catchup || missing) ? (
+        <div className="dsc-banner dsc-banner--warn" style={{ marginBottom: 12 }}>
+          <strong>Manual photoperiod override active</strong>
+          <p className="dsc-muted" style={{ margin: "8px 0 0", fontSize: 13 }}>
+            {manualHold ? "Manual light hold is on. " : ""}
+            {!autoPhoto ? "Auto photoperiod is off. " : ""}
+            Catch-up and dark alerts may reflect operator intent — confirm before clearing holds.
+          </p>
+        </div>
+      ) : null}
+
       <div className="dsc-grid">
         <div className="dsc-col-6">
           <Card className="dsc-glass dsc-light-hero dsc-tent-card dsc-tent-card--main" title="4×8 photoperiod" icon="tent">
@@ -180,7 +211,11 @@ export function LiveLightPage() {
               onClick={() => open("binary_sensor.dsc_hub_4x8_window_open", "4×8 window", "binary")}
             />
             <div className="dsc-target-grid" style={{ marginTop: 12 }}>
-              <EntityTime entityId="time.dsc_hub_lights_on_time" label="Lights on" />
+              <EntityTime
+                entityId="time.dsc_hub_lights_on_time"
+                label="Lights on"
+                hint={mainScheduleMissing ? "Required — schedules empty without this" : undefined}
+              />
               <TargetNumber entityId="number.dsc_hub_sunrise_duration" label="Sunrise min" />
               <TargetNumber entityId="number.dsc_hub_sunset_duration" label="Sunset min" />
               <TargetNumber
@@ -191,6 +226,20 @@ export function LiveLightPage() {
                 onLive={setDraftDark}
               />
             </div>
+            {ppfd != null ? (
+              <Kpi
+                label="DLI estimate"
+                value={fmtDli(dli4)}
+                unit="mol/m²/d"
+                sub={ppfd ? `@ ${Math.round(ppfd)} PPFD · ${fmt(hours4, 0)}h window` : "Calibrate PPFD on Fleet"}
+                icon="analytics"
+                onClick={() => open("input_number.dsc_cal_ppfd_100", "Calibrated PPFD", "numeric")}
+              />
+            ) : (
+              <p className="dsc-muted" style={{ fontSize: 12, marginBottom: 0 }}>
+                DLI estimate needs SF1000 PPFD calibration — Fleet → Calibrate.
+              </p>
+            )}
           </Card>
         </div>
 
@@ -198,8 +247,17 @@ export function LiveLightPage() {
           <Card className="dsc-glass dsc-light-hero dsc-tent-card dsc-tent-card--clone" title="2×4 photoperiod" icon="lighting">
             <TentLightClock tent="clone" />
             <p className="dsc-honesty" style={{ marginTop: 0 }}>
-              Clone tent — SF1000 is the live lamp. Schedule edits lock while Window source is Follow 4×8.
+              Clone tent — SF1000 is the live lamp. <strong>Schedule follow</strong> is below; climate follow is on the
+              Climate desk ({cloneClimateMode}).
             </p>
+            <div className="dsc-chip-row">
+              <StatusChip icon="clone" label={`Climate · ${cloneClimateMode}`} tone="muted" onClick={() => navigate("/live/climate")} />
+              <StatusChip
+                icon="lighting"
+                label={followsMain ? "Schedule · Follow 4×8" : "Schedule · Independent"}
+                tone={followsMain ? "ok" : "warn"}
+              />
+            </div>
             <div className="dsc-chip-row">
               <StatusChip
                 icon="lighting"
@@ -266,14 +324,17 @@ export function LiveLightPage() {
               <EntityToggle confirm entityId="switch.dsc_hub_auto_photoperiod" label="Auto photoperiod" icon="lighting" />
               <EntityToggle confirm entityId="switch.dsc_hub_manual_light_hold" label="Manual light hold" icon="settings" />
             </div>
-            <EntitySelect entityId="select.dsc_hub_clone_photoperiod" label="Window source" icon="clone" />
+            <EntitySelect entityId="select.dsc_hub_clone_photoperiod" label="Schedule source" icon="clone" />
             {followsMain ? (
               <div className="dsc-tent-follow-banner">
-                <StatusChip icon="tent" label="Following 4×8 schedule" tone="ok" />
+                <StatusChip icon="tent" label="Schedule follows 4×8" tone="ok" />
                 <p className="dsc-muted" style={{ margin: "8px 0 0", fontSize: 13 }}>
                   Opens at <strong>{mainOnTime}</strong> · <strong>{fmt(hours2, 0)} h</strong> window (mirrored from
-                  4×8). Edit the 4×8 card to change timing, or switch Window source to Independent.
+                  4×8). Edit the 4×8 card to change timing, or switch Schedule source to Independent.
                 </p>
+                <Button onClick={() => navigate("/live/climate")} style={{ marginTop: 8 }}>
+                  Climate mode ({cloneClimateMode}) →
+                </Button>
               </div>
             ) : (
               <div className="dsc-target-grid">
@@ -287,6 +348,15 @@ export function LiveLightPage() {
                 />
               </div>
             )}
+            {ppfd != null ? (
+              <Kpi
+                label="DLI estimate (2×4)"
+                value={fmtDli(dli2)}
+                unit="mol/m²/d"
+                sub={`@ ${Math.round(ppfd)} PPFD · SF1000`}
+                icon="analytics"
+              />
+            ) : null}
             {independent ? (
               <p className="dsc-muted" style={{ fontSize: 12, marginBottom: 0 }}>
                 Independent — 2×4 schedule does not track 4×8.

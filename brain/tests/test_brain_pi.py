@@ -1095,3 +1095,92 @@ def test_zigbee_by_placement_entities(temp_db: Path, monkeypatch: pytest.MonkeyP
     states = state.to_hass_states([])
     assert "sensor.dsc_zigbee_canopy_4x8_temperature" in states
     assert "sensor.dsc_zigbee_canopy_4x8_humidity" in states
+
+
+@pytest.fixture()
+def demo_client(temp_db: Path, monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("DSC_DATA", str(temp_db.parent))
+    monkeypatch.setenv("DSC_DEMO_MODE", "1")
+    from fastapi.testclient import TestClient
+
+    from dsc_brain.api import app
+
+    with TestClient(app) as client:
+        yield client
+
+
+def test_demo_health_mode(demo_client) -> None:
+    resp = demo_client.get("/health")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["mode"] == "demo"
+    assert body["simulation"] is True
+
+
+def test_demo_seeds_fleet_online(demo_client) -> None:
+    resp = demo_client.get("/fleet")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["hub"]["online"] is True
+    assert body["hub"]["values"].get("temp_c") is not None
+
+
+def test_demo_heater_raises_temp(demo_client) -> None:
+    before = demo_client.get("/fleet").json()["hub"]["values"]["temp_c"]
+    demo_client.post("/control/demand", json={"seat": "heater", "on": True})
+    time.sleep(1.2)
+    after = demo_client.get("/fleet").json()["hub"]["values"]["temp_c"]
+    assert after > before
+
+
+def test_demo_dehum_lowers_rh(demo_client) -> None:
+    demo_client.post("/control/demand", json={"seat": "dehumidifier", "on": True})
+    before = demo_client.get("/fleet").json()["hub"]["values"]["rh_pct"]
+    time.sleep(1.2)
+    after = demo_client.get("/fleet").json()["hub"]["values"]["rh_pct"]
+    assert after < before
+
+
+def test_demo_blocks_network_apply(demo_client) -> None:
+    resp = demo_client.post("/settings/network/apply")
+    assert resp.status_code == 403
+
+
+def test_demo_fan_updates_cfm(demo_client) -> None:
+    demo_client.post(
+        "/control/service",
+        json={
+            "domain": "fan",
+            "service": "set_percentage",
+            "data": {"entity_id": "fan.dsc_hub_6_inch_exhaust_outside", "percentage": 80},
+        },
+    )
+    computed = demo_client.get("/fleet/computed").json()["hass_extras"]
+    pct = float(computed["sensor.dsc_fan_exhaust_outside_pct"]["state"])
+    assert pct == 80.0
+    cfm = float(computed["sensor.dsc_cfm_exhaust_out"]["state"])
+    assert cfm > 0
+
+
+def test_demo_no_native_api_on_control(demo_client, monkeypatch: pytest.MonkeyPatch) -> None:
+    calls: list[str] = []
+
+    def _boom(*_a, **_k):
+        calls.append("native")
+        raise RuntimeError("native api must not run in demo")
+
+    monkeypatch.setattr("dsc_brain.native_api.make_api_client", _boom)
+    resp = demo_client.post("/control/demand", json={"seat": "heater", "on": True})
+    assert resp.status_code == 200
+    assert calls == []
+
+
+def test_demo_rejects_private_inventory_host(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("DSC_DATA", str(temp_db.parent))
+    monkeypatch.setenv("DSC_DEMO_MODE", "1")
+    from dsc_brain.demo_mode import assert_demo_safe_config
+    from dsc_brain.settings import upsert_inventory
+
+    upsert_inventory("hub", {"host": "192.168.1.10"})
+    with pytest.raises(RuntimeError, match="unsafe"):
+        assert_demo_safe_config()

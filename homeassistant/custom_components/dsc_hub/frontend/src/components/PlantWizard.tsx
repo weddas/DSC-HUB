@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { CatalogPicker } from "./CatalogPicker";
 import { CoupledMix } from "./CoupledMix";
 import { DecisionLayer } from "./DecisionLayer";
@@ -13,6 +13,8 @@ import {
   applyCatalogPick,
   applyLightPick,
   blendSummary,
+  clearComposeDraft,
+  hasComposeDraft,
   NUTRIENT_SLOTS,
   SOIL_PRESETS,
 } from "../lib/composePlantLogic";
@@ -43,12 +45,14 @@ export function PlantWizard() {
   const [soilPresetId, setSoilPresetId] = useState<string | null>(null);
   const [skippedFeed, setSkippedFeed] = useState(false);
   const [skippedLight, setSkippedLight] = useState(false);
+  const [retireConfirm, setRetireConfirm] = useState(false);
 
   const step = STEPS[stepIdx];
   const strain = state("input_text.dsc_build_strain", "");
   const nick = state("input_text.dsc_build_nickname", "");
   const assign = state("input_select.dsc_build_assign_pot", "none");
   const tent = state("input_select.dsc_build_tent", "4x8");
+  const draftOpen = hasComposeDraft(state);
   const expectedStage = state("sensor.dsc_build_expected_stage", "");
   const expectedDays = state("sensor.dsc_build_days_since_sprout", "");
   const volumeL = num("input_number.dsc_blend_total_l", 20);
@@ -147,6 +151,30 @@ export function PlantWizard() {
 
   const goBack = () => setStepIdx((i) => Math.max(i - 1, 0));
 
+  useEffect(() => {
+    try {
+      const remembered = localStorage.getItem("dsc_compose_tent");
+      if (remembered && available("input_select.dsc_build_tent")) {
+        void callService("input_select", "select_option", {
+          entity_id: "input_select.dsc_build_tent",
+          option: remembered,
+        });
+      }
+    } catch {
+      /* storage blocked */
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!tent || tent === "unknown") return;
+    try {
+      localStorage.setItem("dsc_compose_tent", tent);
+    } catch {
+      /* storage blocked */
+    }
+  }, [tent]);
+
   const plantTitle = nick || strain || "New plant";
   const potLabel = assign === "none" ? "—" : `Pot ${assign}`;
 
@@ -181,6 +209,15 @@ export function PlantWizard() {
           );
         })}
       </nav>
+
+      {draftOpen ? (
+        <div className="dsc-banner dsc-banner--warn" style={{ marginBottom: 12 }}>
+          <StatusChip label="Unsaved compose draft" tone="warn" />
+          <span className="dsc-muted" style={{ fontSize: 13, marginLeft: 8 }}>
+            Strain or pot is set — finish add or retire clears the draft.
+          </span>
+        </div>
+      ) : null}
 
       {step.id === "plant" ? (
         <Card className="dsc-glass dsc-wizard-panel" title="1 · Which plant, which pot?" icon="roster">
@@ -429,17 +466,34 @@ export function PlantWizard() {
               </Button>
               <Button
                 variant="danger"
-                onClick={() => {
-                  void callService("script", "turn_on", {
-                    entity_id: "script.dsc_plant_retire",
-                    pot: assign,
-                    variables: { pot: assign },
-                  });
-                }}
+                onClick={() => setRetireConfirm(true)}
               >
                 Retire pot
               </Button>
             </div>
+            <DecisionLayer
+              open={retireConfirm}
+              onDismiss={() => setRetireConfirm(false)}
+              onConfirm={() => {
+                setRetireConfirm(false);
+                void callService("script", "turn_on", {
+                  entity_id: "script.dsc_plant_retire",
+                  pot: assign,
+                  variables: { pot: assign },
+                });
+                clearComposeDraft(callService);
+                setStepIdx(0);
+                setPickedStrain(null);
+                setPickedLight(null);
+              }}
+              title="Retire pot and clear draft?"
+              confirmLabel="Retire"
+              help={null}
+            >
+              <p>
+                Retires pot {assign} on the hub and clears the compose draft (strain, nickname, assign pot).
+              </p>
+            </DecisionLayer>
             <EntitySelect entityId="input_select.dsc_build_climate_pot" label="Climate apply pot" icon="climate" />
           </details>
           <p className="dsc-muted" style={{ fontSize: 12, marginBottom: 0 }}>
