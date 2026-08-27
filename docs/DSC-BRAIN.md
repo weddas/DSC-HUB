@@ -24,7 +24,8 @@ Notion (canonical Wiki): [Product layers](https://app.notion.com/p/3b52b4cda3708
 | [`SETUP.md`](../SETUP.md) | SoftAP kit unbox (product path) |
 | [`INSTALL.md`](../INSTALL.md) | HA lab bring-up (scaffold) |
 | [`docs/HA-SCAFFOLD.md`](HA-SCAFFOLD.md) | Promote-don't-deepen rules |
-| [`docs/brain/`](brain/) | Specs: decision loop, web UI, Pi appliance path |
+| [`docs/brain/`](brain/) | Specs: decision loop, SPA/CI, computed cache, sensor trust |
+| [`docs/ops/CANNALIB-API.md`](ops/CANNALIB-API.md) | CannaLib client wiring + Pi sqlite fallback honesty |
 
 ## Phases
 
