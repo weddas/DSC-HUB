@@ -1,4 +1,20 @@
+import { lazy } from "react";
+
 export type PrimarySection = "live" | "grow" | "tune" | "fleet";
+
+/** Route-level code splits — Tune, Fleet, Calibrate, Learning. */
+export const TuneLearningPage = lazy(() =>
+  import("./pages/TuneFleetPages").then((m) => ({ default: m.TuneLearningPage })),
+);
+export const TuneAnalyticsPage = lazy(() =>
+  import("./pages/TuneFleetPages").then((m) => ({ default: m.TuneAnalyticsPage })),
+);
+export const FleetOverviewPage = lazy(() =>
+  import("./pages/TuneFleetPages").then((m) => ({ default: m.FleetOverviewPage })),
+);
+export const CalibratePage = lazy(() =>
+  import("./pages/CalibratePage").then((m) => ({ default: m.CalibratePage })),
+);
 
 export interface TabRoute {
   id: string;

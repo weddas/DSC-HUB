@@ -97,7 +97,10 @@ function BandChartDrawer({ target, onClose }: { target: BandChartTarget | null; 
             ...withPriorGhost("crh", "2×4 Clone", cloneRh, ZONE.clone, "%"),
             ...withPriorGhost("rrh", "Room", roomRh, ZONE.room, "%"),
           ] satisfies NamedSeries[],
-          targets: [{ min: rhMin, max: rhMax, color: "#22c55e88" }] satisfies ChartTarget[],
+          targets: [
+            { min: rhMin, max: rhMax, color: "#f9731688" },
+            { min: cloneRhMin, max: cloneRhMax, color: "#22c55e88" },
+          ] satisfies ChartTarget[],
         };
       case "vpd":
         return {
@@ -158,6 +161,8 @@ function BandChartDrawer({ target, onClose }: { target: BandChartTarget | null; 
     cloneTargetTemp,
     rhMin,
     rhMax,
+    cloneRhMin,
+    cloneRhMax,
     vpdMin,
     vpdMax,
     cloneVpdMin,
@@ -168,7 +173,13 @@ function BandChartDrawer({ target, onClose }: { target: BandChartTarget | null; 
 
   const thin = model ? model.series.every((s) => s.series.length < 2) : true;
   const lastSync = model
-    ? Math.max(...model.series.map((s) => s.series.at(-1)?.t ?? 0), 0) || undefined
+    ? Math.max(
+        ...model.series.map((s) => {
+          const last = s.series[s.series.length - 1];
+          return last?.t ?? 0;
+        }),
+        0,
+      ) || undefined
     : undefined;
 
   return (

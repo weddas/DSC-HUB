@@ -13,3 +13,21 @@ CANNALIB_ROOT = REPO_ROOT.parent / "CannaLib"
 CANNALIB_DB = CANNALIB_ROOT / "brain" / "data" / "dsc_brain.sqlite3"
 EXPECTED_FIRMWARE = os.environ.get("DSC_EXPECTED_FIRMWARE", "7.0.0.0")
 SURFACE_VERSION = os.environ.get("DSC_SURFACE_VERSION", "7.1.0")
+
+
+def resolve_cannalib_db() -> Path | None:
+    """On-Pi corpus sqlite for catalog fallback (read-only)."""
+    env = os.environ.get("CANNALIB_DB_PATH", "").strip()
+    if env:
+        path = Path(env)
+        if path.is_file():
+            return path
+    for candidate in (
+        CANNALIB_DB,
+        DEFAULT_DB.parent / "cannalib" / "dsc_brain.sqlite3",
+        BRAIN_DATA.parent / "cannalib" / "dsc_brain.sqlite3",
+        Path("/cannalib/dsc_brain.sqlite3"),
+    ):
+        if candidate.is_file():
+            return candidate
+    return None

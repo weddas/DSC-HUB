@@ -7,7 +7,8 @@ The live API, corpus, and scrape pipeline are no longer part of DSC-HUB.
 | Repo | `Y:\Digital Stealth Care\Projects\CannaLib` |
 | Ops | `CannaLib/docs/ops/CANNALIB-API.md` |
 | Public | https://cannalib.plausible-deniability.net |
-| LAN | http://192.168.86.2:8790 |
+| LAN gateway | http://192.168.86.2:8790 |
+| Pi stack (sidecar) | http://cannalib:8790 inside `dsc-hub` compose |
 
 Hub still owns the **client**:
 
@@ -16,7 +17,12 @@ Hub still owns the **client**:
 - curated Want YAML
 - capped `www/dsc-catalog/` indexes (built by CannaLib from sqlite, synced here)
 
-Live catalog is the CannaLib API (`input_text.dsc_cannalib_base_url`). Hub does not own the corpus.
+## Pi brain (7.x)
+
+- **Settings → Integrations → CannaLib API URL** is the source of truth for Compose / Research `CatalogPicker` on the Pi SPA (`VITE_DSC_PI=1` → brain `/v1/catalogs/…` proxy).
+- Compose env default: `CANNALIB_API_URL=http://cannalib:8790` (local sidecar). Gateway URL is for Unraid / studio LAN only.
+- **Local fallback:** when remote fails and **Use on-Pi sqlite fallback** is checked, brain reads `CANNALIB_DB_PATH` (default `/cannalib/dsc_brain.sqlite3`, volume-shared with the `cannalib` service). If no DB is mounted, `/v1/catalogs/*` returns **503** with an explicit message — no silent empty results.
+- Slim Want YAML (`/catalogs/*`) remains the last tier inside the brain proxy when the corpus DB is absent.
 
 Pull capped offline indexes (from this repo):
 

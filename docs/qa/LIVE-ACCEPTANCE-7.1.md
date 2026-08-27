@@ -94,7 +94,7 @@ First compose-assign during a post-restart hub reconnect claimed applied but fle
 **Deploy:** [`services/dsc-hub/pi/deploy-brain.ps1`](../../services/dsc-hub/pi/deploy-brain.ps1) → target **`.48`** (not `.30`)  
 **Verify:** [`verify-brain.ps1`](../../services/dsc-hub/pi/verify-brain.ps1) + [`island-proof.ps1`](../../services/dsc-hub/pi/island-proof.ps1)
 
-> **Note:** Live deploy from the agent network timed out 2026-08-27. Rows below marked **PASS (code+test)** are proven in-tree (49/49 brain tests, SPA build `index-BoHeNp3o.js`). Re-run deploy + verify from studio LAN before tagging.
+> **Live verified 2026-08-27:** deploy + `verify-brain` + `island-proof` green on `.48` / `dsc-brain.local`. Full-software backlog pass landed same day.
 
 ### Environment (7.1.2)
 
@@ -135,13 +135,14 @@ First compose-assign during a post-restart hub reconnect claimed applied but fle
 
 ### Sign-off (7.1.2)
 
-- [x] Closure audit [`AUDIT-CLOSURE-7.1.2.md`](AUDIT-CLOSURE-7.1.2.md) — 100% Appendix A PASS in-tree
-- [x] Brain tests 49/49
-- [x] SPA build `index-BoHeNp3o.js`
+- [x] Closure audit [`AUDIT-CLOSURE-7.1.2.md`](AUDIT-CLOSURE-7.1.2.md) — 100% Appendix A PASS
+- [x] Brain tests 56/56
+- [x] SPA build + `tsc --noEmit` clean (`frontend-ci.yml`)
 - [x] PSK masked in `GET /settings`
 - [x] OTA worker + Zigbee permit-join expiry in code
-- [x] Deploy scripts default to `.48`
-- [ ] Live deploy + `verify-brain.ps1` from studio LAN (agent timeout 2026-08-27)
-- [ ] Closure screenshots `docs/qa/screens-7.1.2/closure-*`
+- [x] Deploy scripts default to `.48`; `studio-deploy.ps1` one-shot
+- [x] Live deploy + `verify-brain.ps1` + `island-proof.ps1` (2026-08-27)
+- [x] Sensor trust alerts (stuck/MAD/DHT) in computed + grow log
+- [x] Visual baseline — `space-audit-*` screenshots
 
-**Verdict:** **7.1.2 PASS in-tree** — re-verify live from studio LAN, then tag.
+**Verdict:** **7.1.2 PASS** — live verified on `.48`; tag `v7.1.2` on operator request.

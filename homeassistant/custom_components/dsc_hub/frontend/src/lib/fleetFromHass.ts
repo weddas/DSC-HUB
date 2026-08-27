@@ -1,6 +1,6 @@
 import type { HassEntity, HomeAssistant } from "../vite-env";
 import type { FleetSnapshot, InventoryRow, SeatSnapshot } from "./fleetModel";
-import { EMPTY_FLEET, EMPTY_SEAT, inventoryInService } from "./fleetModel";
+import { EMPTY_FLEET, inventoryInService } from "./fleetModel";
 import { ENTITY_FLEET_MAP } from "./entityFleetMap";
 
 const IN_SERVICE_ENTITIES: Record<string, string> = {
@@ -32,32 +32,6 @@ function avail(hass: HomeAssistant, id: string): boolean {
 function numVal(hass: HomeAssistant, id: string): number | null {
   const v = Number(st(hass, id));
   return Number.isFinite(v) ? v : null;
-}
-
-function seatFromEntities(
-  seat_id: string,
-  linkEntity: string | undefined,
-  fwEntity: string | undefined,
-  valueEntities: Record<string, string>,
-  hass: HomeAssistant,
-): SeatSnapshot {
-  const online = linkEntity ? avail(hass, linkEntity) && st(hass, linkEntity) === "on" : false;
-  const live = linkEntity ? avail(hass, linkEntity) : fwEntity ? avail(hass, fwEntity) : false;
-  const values: Record<string, unknown> = {};
-  for (const [key, eid] of Object.entries(valueEntities)) {
-    if (avail(hass, eid)) {
-      const raw = st(hass, eid);
-      const n = Number(raw);
-      values[key] = Number.isFinite(n) && raw !== "" ? n : raw;
-    }
-  }
-  return {
-    seat_id,
-    online: live && (linkEntity ? online : true),
-    firmware: fwEntity && avail(hass, fwEntity) ? st(hass, fwEntity) : null,
-    values,
-    last_seen: live ? Date.now() / 1000 : null,
-  };
 }
 
 /** Build native FleetSnapshot from HA entity bus (panel mode). */
@@ -289,6 +263,22 @@ export function fleetToHassCompat(fleet: FleetSnapshot): Record<string, HassEnti
     }
     if (seat.firmware) {
       set(`sensor.dsc_pot${n}_firmware_version`, seat.firmware, live);
+    }
+    const potBins = seat.values.binaries as Record<string, boolean> | undefined;
+    if (potBins) {
+      if (potBins.clock_valid != null) {
+        set(`binary_sensor.dsc_pot${n}_clock_valid`, potBins.clock_valid ? "on" : "off", live);
+      }
+      if (potBins.modbus_probe_online != null) {
+        set(
+          `binary_sensor.dsc_pot${n}_modbus_probe_online`,
+          potBins.modbus_probe_online ? "on" : "off",
+          live,
+        );
+      }
+      if (potBins.sensor_fault != null) {
+        set(`binary_sensor.dsc_pot${n}_sensor_fault`, potBins.sensor_fault ? "on" : "off", live);
+      }
     }
   }
 

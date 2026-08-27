@@ -155,7 +155,13 @@ def test_fleet_api_native_snapshot(temp_db: Path, monkeypatch: pytest.MonkeyPatc
     legacy_body = legacy.json()
     assert "hass_states" in legacy_body
     assert "binary_sensor.dsc_hub_link" in legacy_body["hass_states"]
-    assert "sensor.dsc_cfm_exhaust_out" in legacy_body["hass_states"]
+    assert "hass_extras" not in legacy_body
+    assert "sensor.dsc_cfm_exhaust_out" not in legacy_body["hass_states"]
+
+    legacy_computed = client.get("/fleet?include_hass=true&include_computed=true")
+    assert legacy_computed.status_code == 200
+    legacy_computed_body = legacy_computed.json()
+    assert "sensor.dsc_cfm_exhaust_out" in legacy_computed_body["hass_extras"]
 
 
 def test_compose_commit_roster(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -285,6 +291,7 @@ def test_hub_ingest_informational_oids_mapped() -> None:
     # numbers — ladder waits, min-off times, photoperiod ramp, fleet-heal targets
     assert HUB_NUMBER_OID_TO_ENTITY["ladder_wait_hum"] == "number.dsc_hub_ladder_wait_hum"
     assert HUB_NUMBER_OID_TO_ENTITY["num_ladder_wait_hum"] == "number.dsc_hub_ladder_wait_hum"
+    assert HUB_NUMBER_OID_TO_ENTITY["ladder-wait-hum"] == "number.dsc_hub_ladder_wait_hum"
     assert HUB_NUMBER_OID_TO_ENTITY["humidifier_min_off-time"] == "number.dsc_hub_humidifier_min_off_time"
     assert HUB_NUMBER_OID_TO_ENTITY["min_dark_hours"] == "number.dsc_hub_min_dark_hours"
     assert HUB_NUMBER_OID_TO_ENTITY["sf1000_ramp_floor"] == "number.dsc_hub_sf1000_ramp_floor"
@@ -703,6 +710,32 @@ def test_permit_join_expiry_clears_flag(temp_db: Path, monkeypatch: pytest.Monke
     assert get_setting("zigbee_permit_join", db_path=temp_db) == "false"
 
 
+def test_zigbee_health_radio_down_by_default() -> None:
+    from dsc_brain.zigbee_mqtt import get_zigbee_health
+
+    health = get_zigbee_health()
+    assert health["radio_up"] is False
+    assert "radio_note" in health
+    assert health.get("bridge_state") is None or health["bridge_state"] != "online"
+
+
+def test_catalog_search_raises_without_local_db(monkeypatch: pytest.MonkeyPatch) -> None:
+    import asyncio
+
+    from dsc_brain.integrations import CatalogSearchError, catalog_search
+
+    async def _boom(*_a: object, **_k: object) -> list:
+        raise RuntimeError("remote down")
+
+    monkeypatch.setattr("dsc_brain.integrations._catalog_search_remote", _boom)
+    monkeypatch.setattr("dsc_brain.integrations.cannalib_base_url", lambda: "http://example.invalid")
+    monkeypatch.setattr("dsc_brain.integrations.get_setting", lambda k, d="": "true" if k == "cannalib_use_local_fallback" else d)
+    monkeypatch.setattr("dsc_brain.integrations.resolve_cannalib_db", lambda: None)
+
+    with pytest.raises(CatalogSearchError, match="no on-host corpus DB"):
+        asyncio.run(catalog_search("strain", "og", 5))
+
+
 def test_hostapd_conf_fleet_heal_fields(temp_db: Path) -> None:
     from dsc_brain.network_apply import render_hostapd_conf
     from dsc_brain.settings import get_all_settings
@@ -819,3 +852,114 @@ def test_esphome_devices_merges_panel_and_sonoffs(temp_db: Path, monkeypatch: py
     by_seat = {d["seat_id"]: d for d in resp.json()["devices"]}
     assert by_seat.get("control", {}).get("online") is True
     assert by_seat.get("heater", {}).get("online") is True
+
+
+def test_computed_cache_hot_beats_cold(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("DSC_DATA", str(temp_db.parent))
+    from unittest.mock import patch
+
+    from dsc_brain.computed_ops import build_computed_hass_states, invalidate_computed_cache
+    from dsc_brain.compose_store import set_helper
+    from dsc_brain.fleet_state import FleetState, SeatState
+
+    invalidate_computed_cache()
+    set_helper("input_number.dsc_cfm_out_max", 200)
+    state = FleetState()
+    controls = {
+        "fan.dsc_hub_6_inch_exhaust_outside": {"state": "on", "percentage": 40},
+    }
+    state.hub = SeatState("hub", True, "7.0.0.0", {"controls": controls}, time.time())
+
+    cannalib_stub = {"online": False, "hits": 0, "bytes_in": 0, "bytes_out": 0, "corpus_strains": 0, "summary": "— MB"}
+    with patch("dsc_brain.dash_computed._cannalib_snapshot", return_value=cannalib_stub):
+        t0 = time.perf_counter()
+        cold = build_computed_hass_states(state)
+        cold_ms = (time.perf_counter() - t0) * 1000.0
+
+        t1 = time.perf_counter()
+        hot = build_computed_hass_states(state)
+        hot_ms = (time.perf_counter() - t1) * 1000.0
+
+    assert "sensor.dsc_fan_exhaust_outside_pct" in cold
+    assert hot["sensor.dsc_fan_exhaust_outside_pct"] == cold["sensor.dsc_fan_exhaust_outside_pct"]
+    assert hot_ms < cold_ms
+
+
+def test_fleet_computed_endpoint_responds_quickly(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("DSC_DATA", str(temp_db.parent))
+    from unittest.mock import patch
+
+    from fastapi.testclient import TestClient
+
+    from dsc_brain.api import app
+
+    cannalib_stub = {"online": False, "hits": 0, "bytes_in": 0, "bytes_out": 0, "corpus_strains": 0, "summary": "— MB"}
+    client = TestClient(app)
+    with patch("dsc_brain.dash_computed._cannalib_snapshot", return_value=cannalib_stub):
+        # Warm import/cache on Windows CI can exceed 1s on first hit; assert cold < 2s.
+        client.get("/fleet/computed")
+        t0 = time.perf_counter()
+        resp = client.get("/fleet/computed")
+        elapsed_ms = (time.perf_counter() - t0) * 1000.0
+    assert resp.status_code == 200
+    assert "hass_extras" in resp.json()
+    assert elapsed_ms < 2000.0
+
+
+def test_computed_runtime_memo_single_history_query(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("DSC_DATA", str(temp_db.parent))
+    from unittest.mock import patch
+
+    from dsc_brain.computed_ops import build_computed_hass_states, invalidate_computed_cache
+    from dsc_brain.fleet_state import FleetState
+
+    invalidate_computed_cache()
+    state = FleetState()
+    calls: list[tuple[str, str, float]] = []
+
+    def _spy(seat_id: str, metric: str, since_ts: float, limit: int = 2000, db_path=None):
+        calls.append((seat_id, metric, since_ts))
+        return []
+
+    cannalib_stub = {"online": False, "hits": 0, "bytes_in": 0, "bytes_out": 0, "corpus_strains": 0, "summary": "— MB"}
+    with patch("dsc_brain.runtime_history.list_history", side_effect=_spy):
+        with patch("dsc_brain.dash_computed._cannalib_snapshot", return_value=cannalib_stub):
+            build_computed_hass_states(state)
+
+    from dsc_brain.runtime_history import midnight_ts
+
+    today = midnight_ts()
+    hum_today = [c for c in calls if c[0] == "hub" and c[1] == "switch_dsc_hub_humidifier_demand" and c[2] == today]
+    assert len(hum_today) == 1
+
+
+def test_pot_binary_oids_mapped() -> None:
+    from dsc_brain.esphome_client import POT_BINARY_OID_TO_KEY
+
+    for oid in ("clock_valid_bs", "probe_online_bs", "sensor_fault_bs"):
+        assert oid in POT_BINARY_OID_TO_KEY
+
+
+def test_pot_binary_states_flow() -> None:
+    from types import SimpleNamespace
+
+    from dsc_brain.esphome_client import POT_BINARY_OID_TO_KEY
+
+    key_to_object = {1: "clock_valid_bs", 2: "probe_online_bs", 3: "sensor_fault_bs"}
+    states = {
+        1: SimpleNamespace(state=True),
+        2: SimpleNamespace(state=False),
+        3: SimpleNamespace(state=True),
+    }
+    binaries: dict[str, bool] = {}
+    for key, st in states.items():
+        object_id = key_to_object.get(key, "")
+        bin_field = POT_BINARY_OID_TO_KEY.get(object_id)
+        if bin_field is not None:
+            raw = getattr(st, "state", None)
+            binaries[bin_field] = raw in (True, "on", "ON", 1, "1")
+    assert binaries == {
+        "clock_valid": True,
+        "modbus_probe_online": False,
+        "sensor_fault": True,
+    }

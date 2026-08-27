@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Button, Card, PageHeader, StatusChip } from "../components/ui";
 import { DecisionLayer } from "../components/DecisionLayer";
+import { TargetNumber } from "../components/TentTargets";
 import { save_calibration } from "../lib/fleetApi";
 import { useEntityBus } from "../hooks/useEntityBus";
 import { useFleetActions } from "../hooks/useFleetActions";
@@ -22,7 +23,7 @@ const LIGHT_STEPS = [
 ] as const;
 
 type WizardPhase = "pick" | "session" | "done";
-type CalTab = "fan" | "light";
+type CalTab = "fan" | "light" | "tank" | "soil";
 
 function FanCalibrateWizard() {
   const { state, num } = useEntityBus();
@@ -344,7 +345,7 @@ function LightParWizard() {
 
   return (
     <>
-      <Card className="dsc-glass" title="SF1000 brightness response" icon="light">
+      <Card className="dsc-glass" title="SF1000 brightness response" icon="lighting">
         <p className="dsc-muted">
           At fixed canopy height, ramp SF1000 25→100%. Enter meter readings at each step. PAR optional if meter supports
           it.
@@ -401,6 +402,56 @@ function LightParWizard() {
   );
 }
 
+function TankBiasPanel() {
+  const { state } = useEntityBus();
+  const ecNorm = state("sensor.dsc_tank_ec_normalized", "—");
+  const phCal = state("sensor.dsc_tank_ph_calibrated", "—");
+
+  return (
+    <Card className="dsc-glass" title="Tank EC / pH bias (N-023)" icon="learning">
+      <p className="dsc-honesty">
+        Raw Water Tester readings pass through a unit multiplier and additive bias before stage-band checks.
+        Adjust bias after a probe rinse and a known reference sample — not to chase a drifting probe.
+      </p>
+      <div className="dsc-grid">
+        <div className="dsc-col-6">
+          <TargetNumber entityId="input_number.dsc_tank_ec_multiplier" label="EC unit multiplier (1 or 1000)" step={999} />
+          <TargetNumber entityId="input_number.dsc_tank_ec_bias" label="EC bias µS/cm" step={1} />
+        </div>
+        <div className="dsc-col-6">
+          <TargetNumber entityId="input_number.dsc_tank_ph_bias" label="pH bias" step={0.01} />
+        </div>
+      </div>
+      <div className="dsc-chip-row">
+        <StatusChip label={`Normalized EC ${ecNorm} µS/cm`} tone={ecNorm === "—" ? "muted" : "ok"} />
+        <StatusChip label={`Calibrated pH ${phCal}`} tone={phCal === "—" ? "muted" : "ok"} />
+      </div>
+    </Card>
+  );
+}
+
+function SoilCalHonestyPanel() {
+  return (
+    <Card className="dsc-glass" title="Soil cal — peer median vs lab buffer (N-016)" icon="learning">
+      <p className="dsc-honesty">
+        <strong>Peer median</strong> aligns in-service pots to the fleet median. Fast for relative drift and mat vote
+        coherence — but it is <em>not</em> lab truth. Use Mark Peer Median on Root Zone when probes agree directionally
+        but one pot is an outlier.
+      </p>
+      <p className="dsc-honesty">
+        <strong>Lab buffer (lab wet)</strong> stamps a single channel with a known buffer solution on the pot ESP.
+        After lab wet, treat that channel as buffer-calibrated until Reset. Peer median does not substitute for a wet
+        cal pass — see <code>docs/LAB-WET-CAL.md</code> for the operator procedure.
+      </p>
+      <p className="dsc-honesty">
+        Fan CFM and light PAR sessions on this page own <code>input_number.dsc_cal_*</code> and{" "}
+        <code>script.dsc_cal_*</code>. Tune → Learning shares those entities with a different commit model (blur vs
+        guided save-point).
+      </p>
+    </Card>
+  );
+}
+
 /** Fleet → Calibrate — fan CFM + light PAR steppers. */
 export function CalibratePage() {
   const [tab, setTab] = useState<CalTab>("fan");
@@ -428,9 +479,26 @@ export function CalibratePage() {
         >
           Light PAR/LUX
         </button>
+        <button
+          type="button"
+          className={`dsc-chip${tab === "tank" ? " dsc-chip--ok" : ""}`}
+          onClick={() => setTab("tank")}
+        >
+          Tank bias
+        </button>
+        <button
+          type="button"
+          className={`dsc-chip${tab === "soil" ? " dsc-chip--ok" : ""}`}
+          onClick={() => setTab("soil")}
+        >
+          Soil cal
+        </button>
       </div>
 
-      {tab === "fan" ? <FanCalibrateWizard /> : <LightParWizard />}
+      {tab === "fan" ? <FanCalibrateWizard /> : null}
+      {tab === "light" ? <LightParWizard /> : null}
+      {tab === "tank" ? <TankBiasPanel /> : null}
+      {tab === "soil" ? <SoilCalHonestyPanel /> : null}
     </div>
   );
 }

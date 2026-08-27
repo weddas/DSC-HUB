@@ -1,5 +1,5 @@
 import { NavLink, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { Button, Icon, PageHeader } from "./components/ui";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { HonestyRail } from "./components/Honesty";
@@ -25,21 +25,20 @@ import {
   GrowRosterPage,
 } from "./pages/GrowPages";
 import {
-  TuneAnalyticsPage,
-  TuneLearningPage,
-  FleetOverviewPage,
-} from "./pages/TuneFleetPages";
-import { SettingsPage } from "./pages/SettingsPage";
-import { OverviewPage } from "./pages/OverviewPage";
-import { CalibratePage } from "./pages/CalibratePage";
-import { DashHomePage } from "./pages/DashHomePage";
-import {
   PRIMARY_TABS,
   SECONDARY_TABS,
   resolveLegacyRedirect,
   sectionFromPath,
+  TuneAnalyticsPage,
+  TuneLearningPage,
+  FleetOverviewPage,
+  CalibratePage,
   type PrimarySection,
 } from "./routes";
+import { SettingsPage } from "./pages/SettingsPage";
+import { OverviewPage } from "./pages/OverviewPage";
+import { DashHomePage } from "./pages/DashHomePage";
+import { preloadPiTwinAssets, piTwinRouteNeedsAssets } from "./lib/ensureLocalCards";
 import type { HomeAssistant } from "./vite-env";
 import dscCss from "./styles/dsc.css?inline";
 
@@ -71,11 +70,25 @@ function LegacyRedirect() {
   return <NotFoundPage />;
 }
 
+function RouteFallback() {
+  return (
+    <div className="dsc-page">
+      <p className="dsc-muted">Loading…</p>
+    </div>
+  );
+}
+
 function Shell({ surfaceVersion = "7.2.0" }: { surfaceVersion?: string }) {
   const location = useLocation();
   const navigate = useNavigate();
   const section: PrimarySection = sectionFromPath(location.pathname);
   const secondary = SECONDARY_TABS[section];
+
+  useEffect(() => {
+    if (piTwinRouteNeedsAssets(location.pathname)) {
+      void preloadPiTwinAssets();
+    }
+  }, [location.pathname]);
 
   useEffect(() => {
     if (location.pathname === "/live/climate" || location.pathname === "/ops/home") return;
@@ -139,7 +152,8 @@ function Shell({ surfaceVersion = "7.2.0" }: { surfaceVersion?: string }) {
       <SeatOverlayHost />
 
       <ErrorBoundary>
-        <Routes>
+        <Suspense fallback={<RouteFallback />}>
+          <Routes>
           <Route path="/" element={<Navigate to="/live/overview" replace />} />
           <Route path="/live" element={<Navigate to="/live/overview" replace />} />
           <Route path="/live/overview" element={<OverviewPage />} />
@@ -173,7 +187,8 @@ function Shell({ surfaceVersion = "7.2.0" }: { surfaceVersion?: string }) {
           <Route path="/advanced" element={<LegacyRedirect />} />
           <Route path="/system" element={<LegacyRedirect />} />
           <Route path="*" element={<NotFoundPage />} />
-        </Routes>
+          </Routes>
+        </Suspense>
       </ErrorBoundary>
       <TwinKeepAlive />
     </div>

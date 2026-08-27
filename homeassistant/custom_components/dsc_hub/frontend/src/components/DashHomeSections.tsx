@@ -6,6 +6,7 @@ import type { BandChartKind } from "./BandChartHost";
 import { useHistory } from "../hooks/useHistory";
 import { useZoneFocus, type ZoneFocus } from "../hooks/useZoneFocus";
 import { get_grow_log, type GrowLogEvent } from "../lib/fleetApi";
+import { growLogSeverity, prepareGrowLog } from "../lib/growLogFilter";
 import { useEffect, useState, type ReactNode } from "react";
 import { ALERT_ENTITY_IDS } from "../lib/alertPlaybook";
 import type { RosterSlot } from "../lib/seatModel";
@@ -40,7 +41,7 @@ export function DashNowStrip({
   heartbeat,
   beatOk,
   uptimeSec,
-  alerts,
+  alerts: _alerts,
   fleetStatus,
   fleetExpected,
   cannalibOnline,
@@ -167,7 +168,7 @@ export function DashConditionalBanners({ bus, onNavigate }: { bus: Bus; onNaviga
   );
 }
 
-export function DashActiveAlerts({ bus, activeIds, onAlert }: { bus: Bus; activeIds: string[]; onAlert: (id: string) => void }) {
+export function DashActiveAlerts({ activeIds, onAlert }: { bus: Bus; activeIds: string[]; onAlert: (id: string) => void }) {
   if (!activeIds.length) return null;
   return (
     <Card className="dsc-glass" title="Active system alerts" icon="alert">
@@ -658,7 +659,7 @@ export function DashGrowLog({ bus }: { bus: Bus }) {
     const load = () => {
       void get_grow_log(24, 80).then((rows) => {
         if (!cancelled) {
-          setEvents(rows);
+          setEvents(prepareGrowLog(rows));
           setLoading(false);
         }
       });
@@ -684,7 +685,10 @@ export function DashGrowLog({ bus }: { bus: Bus }) {
       {events.length ? (
         <ul className="dsc-grow-log">
           {events.map((ev) => (
-            <li key={ev.id}>
+            <li
+              key={ev.id}
+              className={growLogSeverity(ev.message) === "alert" ? "dsc-grow-log--alert" : undefined}
+            >
               <time className="dsc-muted" dateTime={new Date(ev.ts * 1000).toISOString()}>
                 {new Date(ev.ts * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
               </time>{" "}

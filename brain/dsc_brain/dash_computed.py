@@ -11,43 +11,18 @@ import httpx
 
 from .compose_store import get_helper
 from .event_log import record_grow_log
+from .sensor_trust import emit_sensor_trust
 from .integrations import cannalib_base_url, cannalib_headers
-from .settings import get_setting, list_history, record_history
+from .runtime_history import HistoryMemo, RuntimeMemo, cycle_count_since, midnight_ts
+from .settings import record_history
 
 _CANNALIB_CACHE: dict[str, Any] = {"ts": 0.0, "data": {}}
 _SYDNEY_TZ = ZoneInfo("Australia/Sydney")
+_PREV_DARK_VIOLATION = False
 
 
 def _midnight_ts() -> float:
-    now = datetime.datetime.now(_SYDNEY_TZ)
-    midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
-    return midnight.timestamp()
-
-
-def _runtime_hours_today(seat_id: str, metric: str) -> float:
-    rows = sorted(list_history(seat_id, metric, _midnight_ts(), limit=5000), key=lambda r: r["ts"])
-    if not rows:
-        return 0.0
-    total_sec = 0.0
-    for i in range(len(rows) - 1):
-        if (rows[i]["value"] or 0.0) > 0.5:
-            total_sec += max(0.0, rows[i + 1]["ts"] - rows[i]["ts"])
-    last = rows[-1]
-    if (last["value"] or 0.0) > 0.5:
-        total_sec += max(0.0, time.time() - last["ts"])
-    return round(total_sec / 3600.0, 2)
-
-
-def _cycle_count_since(seat_id: str, metric: str, since_ts: float) -> int:
-    rows = sorted(list_history(seat_id, metric, since_ts, limit=5000), key=lambda r: r["ts"])
-    count = 0
-    prev = 0.0
-    for row in rows:
-        val = 1.0 if (row["value"] or 0.0) > 0.5 else 0.0
-        if val > 0.5 and prev <= 0.5:
-            count += 1
-        prev = val
-    return count
+    return midnight_ts()
 
 
 def _coldest_root_zone(fleet: Any) -> tuple[float | None, str]:
@@ -249,8 +224,11 @@ def emit_dash_entities(
     *,
     set_entity: Any,
     inventory: list[dict[str, Any]] | None = None,
+    runtime: RuntimeMemo | None = None,
 ) -> None:
     """Add Home-dash entities into hass_extras map."""
+    runtime_memo = runtime or RuntimeMemo()
+    history = runtime_memo.history
 
     uptime = 0.0
     if fleet.hub and fleet.hub.online:
@@ -294,9 +272,9 @@ def emit_dash_entities(
         record_history("hub", "coldest_root_c", float(coldest), time.time())
 
     since_hour = time.time() - 3600
-    set_entity(states, "sensor.dsc_humidifier_cycles_last_hour", _cycle_count_since("hub", "switch_dsc_hub_humidifier_demand", since_hour), available=True)
-    set_entity(states, "sensor.dsc_dehumidifier_runtime_today", _runtime_hours_today("hub", "switch_dsc_hub_dehumidifier_demand"), available=True, attributes={"unit_of_measurement": "h"})
-    set_entity(states, "sensor.dsc_ac_runtime_today", _runtime_hours_today("hub", "switch_dsc_hub_ac_demand"), available=True, attributes={"unit_of_measurement": "h"})
+    set_entity(states, "sensor.dsc_humidifier_cycles_last_hour", cycle_count_since("hub", "switch_dsc_hub_humidifier_demand", since_hour, history=history), available=True)
+    set_entity(states, "sensor.dsc_dehumidifier_runtime_today", runtime_memo.hours_today("hub", "switch_dsc_hub_dehumidifier_demand"), available=True, attributes={"unit_of_measurement": "h"})
+    set_entity(states, "sensor.dsc_ac_runtime_today", runtime_memo.hours_today("hub", "switch_dsc_hub_ac_demand"), available=True, attributes={"unit_of_measurement": "h"})
 
     _emit_hub_controls(states, fleet, set_entity)
 
@@ -306,9 +284,14 @@ def emit_dash_entities(
     set_entity(states, "sensor.dsc_expected_light_hours", exp_main, available=True, attributes={"unit_of_measurement": "h"})
     set_entity(states, "sensor.dsc_clone_expected_light_hours", exp_clone, available=True, attributes={"unit_of_measurement": "h"})
 
-    set_entity(states, "binary_sensor.dsc_clone_dark_period_violation", "on" if _dark_period_violation(states) else "off", available=True)
-    if _control_state(states, "binary_sensor.dsc_clone_dark_period_violation") == "on":
+    global _PREV_DARK_VIOLATION
+    dark_violation = _dark_period_violation(states)
+    set_entity(states, "binary_sensor.dsc_clone_dark_period_violation", "on" if dark_violation else "off", available=True)
+    if dark_violation and not _PREV_DARK_VIOLATION:
         record_grow_log("⚠ Clone dark-period violation — SF1000 on outside the 2x4 window")
+    _PREV_DARK_VIOLATION = dark_violation
+
+    emit_sensor_trust(states, fleet, set_entity=set_entity, inventory=inventory)
 
     ac_oos = get_helper("input_boolean.dsc_ac_in_service", "off") != "on"
     mister_oos = get_helper("input_boolean.dsc_clone_humidifier_in_service", "off") != "on"

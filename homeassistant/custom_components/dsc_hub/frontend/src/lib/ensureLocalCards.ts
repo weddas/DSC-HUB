@@ -156,3 +156,20 @@ export async function ensureLocalCard(tag: string, timeoutMs = 12000): Promise<b
 export function localCardScriptHints(tag: string): string[] {
   return candidatesFor(tag).map((s) => s.split("?")[0]!);
 }
+
+/** Pi SPA: warm THREE + Dash card on twin/cockpit routes (TwinKeepAlive also loads on demand). */
+const PI_TWIN_ROUTE = /^\/(live\/(twin|4x8|2x4|main|clone)|ops\/dash)(\/|$)/;
+
+export function piTwinRouteNeedsAssets(pathname: string): boolean {
+  return PI_MODE && PI_TWIN_ROUTE.test(pathname);
+}
+
+export async function preloadPiTwinAssets(): Promise<void> {
+  if (!PI_MODE) return;
+  await ensureLocalCard("dsc-the-dash-card");
+}
+
+/*
+ * DSC-HUB.js drift: homeassistant/www/DSC-HUB.js may lag dist/ until ha-sync rebuilds
+ * the fat concat bundle. This loader always prefers dedicated /dsc-*-card.js IIFEs.
+ */

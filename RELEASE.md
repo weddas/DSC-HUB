@@ -1,5 +1,23 @@
 # DSC-HUB releases
 
+## Pi appliance — **v7.1.2** (full software backlog pass)
+
+| | |
+|---|---|
+| **Brain / SPA** | **7.1.0** brain · surface **7.1.2** |
+| **Expected firmware** | **7.0.0.0** |
+| **Primary UI** | Pi SPA at `http://10.42.0.1:8787` — **Overview** default landing |
+| **Studio LAN** | `http://192.168.86.48:8787` (`dsc-brain.local`) |
+| **Git tag** | `v7.1.2` _(operator request)_ |
+| **Deploy** | [`services/dsc-hub/pi/studio-deploy.ps1`](services/dsc-hub/pi/studio-deploy.ps1) or [`deploy-brain.ps1`](services/dsc-hub/pi/deploy-brain.ps1) |
+| **Verify** | [`verify-brain.ps1`](services/dsc-hub/pi/verify-brain.ps1) + [`island-proof.ps1`](services/dsc-hub/pi/island-proof.ps1) |
+| **Acceptance** | [`docs/qa/LIVE-ACCEPTANCE-7.1.md`](docs/qa/LIVE-ACCEPTANCE-7.1.md) §7.1.2 |
+| **Closure** | [`docs/qa/AUDIT-CLOSURE-7.1.2.md`](docs/qa/AUDIT-CLOSURE-7.1.2.md) |
+
+7.1 audit closure, frontend CI, computed cache, sensor trust, CannaLib/Zigbee honesty, Twin preload, pot UART soften. **56/56** brain tests; frontend `tsc` clean.
+
+---
+
 ## Pi appliance — **v7.1.1** (DSC-Brain island closeout)
 
 | | |

@@ -15,6 +15,12 @@ export default defineConfig({
     emptyOutDir: true,
     rollupOptions: {
       input: path.resolve(__dirname, "index.html"),
+      output: {
+        manualChunks(id) {
+          if (id.includes("/pages/TuneFleetPages")) return "tune-fleet";
+          if (id.includes("/pages/CalibratePage")) return "calibrate";
+        },
+      },
     },
     sourcemap: true,
     target: "es2020",

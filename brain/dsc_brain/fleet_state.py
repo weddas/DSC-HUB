@@ -186,6 +186,26 @@ class FleetState:
                     seat.firmware,
                     seat.online,
                 )
+            pot_bins = seat.values.get("binaries") or {}
+            if isinstance(pot_bins, dict):
+                if pot_bins.get("clock_valid") is not None:
+                    set_entity(
+                        f"binary_sensor.dsc_pot{n}_clock_valid",
+                        "on" if pot_bins.get("clock_valid") else "off",
+                        seat.online,
+                    )
+                if pot_bins.get("modbus_probe_online") is not None:
+                    set_entity(
+                        f"binary_sensor.dsc_pot{n}_modbus_probe_online",
+                        "on" if pot_bins.get("modbus_probe_online") else "off",
+                        seat.online,
+                    )
+                if pot_bins.get("sensor_fault") is not None:
+                    set_entity(
+                        f"binary_sensor.dsc_pot{n}_sensor_fault",
+                        "on" if pot_bins.get("sensor_fault") else "off",
+                        seat.online,
+                    )
 
         for seat_id, seat in self.sonoffs.items():
             relay = _SONOFF_RELAY.get(seat_id)
@@ -203,12 +223,6 @@ class FleetState:
             set_entity("sensor.dsc_canopy_temperature", self.canopy["temp_c"])
         if self.canopy.get("rh_pct") is not None:
             set_entity("sensor.dsc_canopy_humidity", self.canopy["rh_pct"])
-
-        from .computed_ops import build_computed_hass_states
-
-        computed = build_computed_hass_states(self, inventory)
-        for eid, ent in computed.items():
-            states[eid] = ent
 
         return states
 

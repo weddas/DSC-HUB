@@ -27,7 +27,7 @@ from .appliance_driver import start_appliance_driver, stop_appliance_driver
 from .esphome_client import start_esphome_ingest, stop_esphome_ingest
 from .esphome_jobs import list_esphome_devices, list_jobs, queue_job, start_esphome_worker, stop_esphome_worker
 from .fleet_state import get_fleet_state, merge_inventory_oos_seats
-from .integrations import catalog_search, catalog_status, test_cannalib, test_ollama
+from .integrations import CatalogSearchError, catalog_search, catalog_status, test_cannalib, test_ollama
 from .network_apply import apply_network_configs, network_status
 from .paths import EXPECTED_FIRMWARE, SURFACE_VERSION
 from .settings import (
@@ -215,7 +215,7 @@ def fleet(
     payload = state.to_dict()
     merge_inventory_oos_seats(payload, inventory)
     payload["inventory"] = inventory
-    if include_computed or include_hass:
+    if include_computed:
         payload["hass_extras"] = build_computed_hass_states(state, inventory)
     if include_hass:
         payload["hass_states"] = state.to_hass_states(inventory)
@@ -510,11 +510,13 @@ async def settings_backup_import(file: UploadFile = File(...)) -> dict[str, str]
 
 @app.get("/v1/catalogs/{kind}")
 async def catalogs_proxy(kind: str, q: str = Query(""), limit: int = Query(20, ge=1, le=100)) -> list[dict]:
-    """Prefer remote CannaLib API; fall back to local slim catalog."""
+    """Prefer remote CannaLib API; fall back to on-host corpus sqlite; then slim Want."""
     try:
         rows = await catalog_search(kind, q, limit)
         if rows:
             return rows
+    except CatalogSearchError as exc:
+        raise HTTPException(503, exc.detail) from exc
     except Exception:
         pass
     mapping = {

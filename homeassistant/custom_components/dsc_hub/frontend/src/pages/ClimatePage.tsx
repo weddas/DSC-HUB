@@ -18,7 +18,7 @@ import { TentTargetPanel } from "../components/TentTargets";
 import { resolveCfm } from "../lib/cfmProvenance";
 import { absoluteHumidity } from "../lib/potTrust";
 import { useEntityBus } from "../hooks/useEntityBus";
-import { useFleet, useHubVitals, useFleetSource, useFleetTick } from "../hooks/useFleet";
+import { useFleet, useHubVitals } from "../hooks/useFleet";
 import { useFleetEntity } from "../hooks/useFleetEntity";
 import { useEntitySeries } from "../hooks/useEntitySeries";
 import { useHeldReading } from "../hooks/useHeldReading";
@@ -26,7 +26,7 @@ import { useChartHours } from "../hooks/useChartHours";
 import { useZoneFocus, type ZoneFocus } from "../hooks/useZoneFocus";
 import { useInspector } from "../components/InspectorHost";
 import { withPriorGhost } from "../lib/chartSeries";
-import { ArcGauge, GotWantBars, MultiLineChart, seriesExtrema, type NamedSeries } from "../viz/charts";
+import { ArcGauge, GotWantBars, MultiLineChart, seriesExtrema } from "../viz/charts";
 import { rhSegments, tempSegments, vpdSegments } from "../viz/gaugeTheme";
 import { fmtDurationMs } from "../lib/formatDuration";
 

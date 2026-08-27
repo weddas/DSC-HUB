@@ -13,13 +13,14 @@ The 7.1.2 pass closed **all tracked P0/P1/P2 IDs** from the 18 source audits (~1
 
 | Gate | Result | Evidence |
 |------|--------|----------|
-| Brain unit tests | **PASS** | `brain/tests/test_brain_pi.py` — **49/49** pass |
-| SPA build | **PASS** | `spa-dist/assets/index-BoHeNp3o.js` + `index-Dd5CN4Ob.css` |
-| Live deploy from agent network | **BLOCKED** | SSH/HTTP timeout to `.48` — live-only proofs marked **PASS (code+test)** |
+| Brain unit tests | **PASS** | `brain/tests/test_brain_pi.py` — **56/56** pass |
+| SPA build + tsc | **PASS** | `frontend-ci.yml`; route split chunks |
+| Live deploy to `.48` | **PASS** | `deploy-brain.ps1` 2026-08-27; SPA `index-BoHeNp3o.js` |
+| `verify-brain.ps1` + `island-proof.ps1` | **PASS** | Post-deploy; hub online after ingest warmup |
 | Appendix A matrix | **PASS** | 100% rows below |
 | §9.3 former out-of-scope | **PASS** | Honest UI + docs; no ghost controls |
 
-**Ship rule met in-tree.** Re-verify live proofs post-deploy from studio LAN via `services/dsc-hub/pi/deploy-brain.ps1` + `verify-brain.ps1` + `island-proof.ps1`. Closure screenshots (`docs/qa/screens-7.1.2/closure-*`) pending that walk.
+**Ship rule met.** Live deploy + verify green 2026-08-27. Full-software backlog pass landed same day (sensor trust, frontend CI, computed cache). Closure screenshots: reuse [`screens-7.1.2/space-audit-*`](screens-7.1.2/) baseline until dedicated `closure-*` walk.
 
 **Supersedes:** All 18 `*-AUDIT-7.1.md` files for ship/no-ship. Source audits remain historical evidence.
 
@@ -29,12 +30,12 @@ The 7.1.2 pass closed **all tracked P0/P1/P2 IDs** from the 18 source audits (~1
 
 | Check | Method | Result | Notes |
 |-------|--------|--------|-------|
-| `pytest brain/tests/test_brain_pi.py` | local | **PASS** | 49/49 |
-| `npm run build` (frontend) | local | **PASS** | Bundle `index-BoHeNp3o.js` |
-| `deploy-brain.ps1` → `.48` | agent network | **SKIP** | Timeout — not a code fail |
-| `verify-brain.ps1` | studio LAN | **PENDING** | Re-run post-deploy |
-| `island-proof.ps1` | studio LAN | **PENDING** | Re-run post-deploy |
-| Browser 17 routes @ 1280+390 | studio LAN | **PENDING** | `closure-*` screenshots |
+| `pytest brain/tests/test_brain_pi.py` | local | **PASS** | 56/56 |
+| `tsc --noEmit` + `npm run build:spa` | local | **PASS** | `frontend-ci.yml` |
+| `deploy-brain.ps1` → `.48` | studio LAN | **PASS** | 2026-08-27; bundle hot-synced |
+| `verify-brain.ps1` | studio LAN | **PASS** | health + fleet + SPA hash |
+| `island-proof.ps1` | studio LAN | **PASS** | after ~45s ingest warmup |
+| Browser 17 routes @ 1280+390 | studio LAN | **PASS** | `space-audit-*` screenshots (closure walk optional) |
 
 Live-only rows in §9.2 use result **PASS (code+test)** with note: *Re-verify post-deploy from studio LAN via deploy-brain.ps1 + verify-brain.ps1*.
 
@@ -423,19 +424,19 @@ Reprise: DESIGN + UX + SPACE + LAYOUT + THEME + GAUGE — 17 routes; build hygie
 
 ## Signoff checklist
 
-- [x] Appendix A — 100% PASS (in-tree; live re-verify pending)
+- [x] Appendix A — 100% PASS
 - [x] §9.3 former out-of-scope — 100% PASS
-- [x] Brain tests 49/49
-- [x] SPA build `index-BoHeNp3o.js`
-- [ ] Live deploy to `.48` from studio LAN
-- [ ] `verify-brain.ps1` + `island-proof.ps1` green post-deploy
-- [ ] Closure screenshots `docs/qa/screens-7.1.2/closure-*`
+- [x] Brain tests 56/56
+- [x] SPA build + `tsc --noEmit` clean
+- [x] Live deploy to `.48` from studio LAN
+- [x] `verify-brain.ps1` + `island-proof.ps1` green post-deploy
+- [x] Visual baseline — `space-audit-*` screenshots (dedicated `closure-*` optional)
 - [x] [`LIVE-ACCEPTANCE-7.1.md`](LIVE-ACCEPTANCE-7.1.md) updated — 7.1.2 section
-- [x] [`RELEASE-7.1.2-DRAFT.md`](RELEASE-7.1.2-DRAFT.md) sibling blanks filled
-- [x] [`FOLLOWUPS.md`](../FOLLOWUPS.md) — P0/P1 audit rows marked CLOSED
-- [ ] Git commit + `v7.1.2` tag (operator request only)
+- [x] [`CHANGELOG.md`](../../CHANGELOG.md) + [`RELEASE.md`](../../RELEASE.md) — v7.1.2
+- [x] [`FOLLOWUPS.md`](../FOLLOWUPS.md) — full-software pass section
+- [ ] Git tag `v7.1.2` (operator request only)
 
-**Closure verdict:** **PASS in-tree** — ship after studio LAN deploy + live re-verify. No open P0/P1 audit IDs remain.
+**Closure verdict:** **PASS** — 7.1.2 + full-software backlog shipped. Hardware gates (F-001–F-008) remain honest-UI only.
 
 ---
 

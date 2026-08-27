@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useHass } from "./useHass";
-import { useFleetSource, useFleetTick } from "./useFleet";
-import { fleetEntityAvailable, fleetLiveNumber } from "../lib/entityFleetMap";
+import { useFleetSource } from "./useFleet";
 import { get_entity_history } from "../lib/fleetApi";
 import type { SeriesPoint } from "../viz/charts";
 import { stateToNumber } from "../lib/seriesHold";

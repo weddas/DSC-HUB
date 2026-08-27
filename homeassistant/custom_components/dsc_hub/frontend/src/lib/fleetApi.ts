@@ -56,7 +56,7 @@ export async function post_demand(seat: DemandSeat, on: boolean): Promise<unknow
 }
 
 export async function get_fleet_state(): Promise<Record<string, unknown>> {
-  const resp = await fetch("/fleet?include_hass=true");
+  const resp = await fetch("/fleet");
   if (!resp.ok) throw new Error("fleet fetch failed");
   return resp.json();
 }
@@ -166,6 +166,12 @@ export async function permit_join(enabled: boolean): Promise<void> {
 export async function get_zigbee_devices(): Promise<{ devices: Array<Record<string, unknown>> }> {
   const resp = await fetch("/settings/zigbee/devices");
   if (!resp.ok) throw new Error("zigbee devices failed");
+  return resp.json();
+}
+
+export async function get_zigbee_health(): Promise<Record<string, unknown>> {
+  const resp = await fetch("/settings/zigbee/health");
+  if (!resp.ok) throw new Error("zigbee health failed");
   return resp.json();
 }
 

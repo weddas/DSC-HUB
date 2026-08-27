@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+## Pi appliance — **v7.1.2** (2026-08-27)
+
+Full 7.1 audit closure + software backlog pass. See [`docs/qa/AUDIT-CLOSURE-7.1.2.md`](docs/qa/AUDIT-CLOSURE-7.1.2.md).
+
+- **7.1 audit remediation** — brain truth, object graph SoT, settings/workers, zigbee health honesty, command safety, wiring honesty, fallback ops, SPA chrome (Overview = Live home, DecisionLayer on P0 writes, inventory `in_service` default OFF).
+- **Quality gates** — `tsc --noEmit` clean; [`frontend-ci.yml`](.github/workflows/frontend-ci.yml); route-level code split (`tune-fleet`, `calibrate` chunks).
+- **Brain performance** — hot/cold `/fleet/computed` cache + `runtime_history.py` memo; Phase E shim simplified (`/fleet` fast path + `/fleet/computed` extras).
+- **Sensor trust** — `sensor_trust.py`: stuck-pot, peer-MAD, DHT-disagreement alerts with hysteresis; grow-log filter for noise.
+- **Calibration** — Calibrate soil peer-median vs lab-buffer docs; tank EC/pH bias tab; Learning banner points to Calibrate owner.
+- **Twin** — Pi SPA preloads THREE + dash card on twin/cockpit routes.
+- **Firmware** — pot UART `rx_timeout: 15`; separate `sensor_fault` binary; per-pot SoftAP SSIDs in YAML.
+- **CannaLib** — honest local sqlite fallback (503 when missing); Brain cannalib volume mount; Settings URL is catalog SoT.
+- **Zigbee** — bridge-state health (`radio_up` / `radio_note`); Settings placement editor when devices exist.
+- **Ops** — `studio-deploy.ps1`; deploy defaults `.48`; soak `sonoffs<4` alert.
+
 ## Pi appliance — **v7.1.1** (2026-08-26)
 
 - **Panel UI labels** — boot/about strings show `v7.0.0.0` (was hardcoded `v6.0.0.0`); OTA via Pi SSH tunnel.

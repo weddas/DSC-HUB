@@ -7,7 +7,15 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$RepoRoot = Resolve-Path (Join-Path $PSScriptRoot "..\..\..")
+$Share = "\\192.168.86.2\Digital-Documents"
+if (-not (Test-Path "Y:\")) {
+    Write-Host "Mapping Y: -> $Share (npm/vite require a drive letter, not UNC)"
+    net use Y: $Share /persistent:no | Out-Null
+}
+$RepoRoot = "Y:\Digital Stealth Care\Projects\DSC-HUB"
+if (-not (Test-Path (Join-Path $RepoRoot "brain\dsc_brain"))) {
+    $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path
+}
 $EnvFile = Join-Path $RepoRoot "services\dsc-hub\.env"
 $BrainDir = Join-Path $RepoRoot "brain"
 $FirmwareHub = Join-Path $RepoRoot "firmware\v4\dsc-hub.yaml"

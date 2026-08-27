@@ -239,6 +239,8 @@ template:
         device_class: problem
         delay_on:
           minutes: 15
+        delay_off:
+          minutes: 5
         icon: mdi:home-thermometer
         state: >
           {% set tt = states('sensor.dsc_hub_tent_temperature')|float(none) %}

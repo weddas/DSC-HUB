@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Button, Card, EntitySelect, EntityToggle, StatusChip } from "./ui";
 import { DecisionLayer } from "./DecisionLayer";
 import { TargetNumber } from "./TentTargets";
@@ -28,6 +29,14 @@ export function LearningWizard() {
 
   return (
     <>
+      <Card className="dsc-glass" title="CFM cal ownership" icon="learning">
+        <p className="dsc-honesty">
+          <Link to="/fleet/calibrate">Fleet → Calibrate</Link> owns the guided fan CFM session (
+          <code>input_number.dsc_cal_*</code>, <code>script.dsc_cal_save_point</code>). This wizard uses the same
+          entities — blur-commit here vs save-point flow there. Pick one surface per session.
+        </p>
+      </Card>
+
       <Card className="dsc-glass" title="Anemometer / PPFD cal" icon="learning">
         <div className="dsc-chip-row">
           <StatusChip label={`Curves ${curveStatus}`} tone={curveStatus === "—" ? "muted" : "ok"} />

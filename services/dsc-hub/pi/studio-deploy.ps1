@@ -1,23 +1,17 @@
 # One-shot: map repo drive (if needed), deploy brain, verify, island-proof.
-# Run from any PowerShell: right-click → Run with PowerShell, or:
+# Run from any PowerShell: right-click -> Run with PowerShell, or:
 #   powershell -ExecutionPolicy Bypass -File "\\...\studio-deploy.ps1"
 $ErrorActionPreference = "Stop"
 $Share = "\\192.168.86.2\Digital-Documents"
-$PiDir = Join-Path $Share "Digital Stealth Care\Projects\DSC-HUB\services\dsc-hub\pi"
 
 if (-not (Test-Path "Y:\")) {
     Write-Host "Mapping Y: -> $Share"
     net use Y: $Share /persistent:no | Out-Null
-    $RepoPi = "Y:\Digital Stealth Care\Projects\DSC-HUB\services\dsc-hub\pi"
-} else {
-    $RepoPi = $PiDir
-    if (-not (Test-Path (Join-Path $RepoPi "deploy-brain.ps1"))) {
-        $RepoPi = "Y:\Digital Stealth Care\Projects\DSC-HUB\services\dsc-hub\pi"
-    }
 }
 
+$RepoPi = "Y:\Digital Stealth Care\Projects\DSC-HUB\services\dsc-hub\pi"
 if (-not (Test-Path (Join-Path $RepoPi "deploy-brain.ps1"))) {
-    throw "Cannot find deploy-brain.ps1 at $RepoPi — map Y: or check NAS share."
+    throw "Cannot find deploy-brain.ps1 at $RepoPi - check NAS share and Y: mapping."
 }
 
 Set-Location $RepoPi

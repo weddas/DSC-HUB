@@ -28,26 +28,22 @@ function mergeHassExtras(
   }
 }
 
-/** Pi compat shim — synthetic HA bus from fleet snapshot + computed helpers. */
+/** Pi compat shim — synthetic HA bus from native fleet + computed helpers. */
 export function fleetToHass(
   fleet: Record<string, unknown>,
   computed?: Record<string, unknown> | null,
 ): HomeAssistant {
   const parsed = parseFleetSnapshot(fleet);
-  let enriched = enrichFleetFromHassStates(parsed, fleet.hass_states as Record<string, HassEntity> | undefined);
   const extras = computed?.hass_extras as Record<string, HassEntity> | undefined;
-  enriched = enrichFleetFromHassStates(enriched, extras);
+  const enriched = enrichFleetFromHassStates(parsed, extras);
   const states: Record<string, HassEntity> = { ...fleetToHassCompat(enriched) };
-
-  const apiHass = fleet.hass_states as Record<string, HassEntity> | undefined;
-  mergeHassExtras(states, apiHass);
   mergeHassExtras(states, extras);
 
   return {
     states,
     callService: async (domain: string, service: string, data?: Record<string, unknown>) =>
       call_service(domain, service, data ?? {}),
-    callWS: async () => null,
+    callWS: async <T,>(_msg?: Record<string, unknown>) => null as T,
   };
 }
 

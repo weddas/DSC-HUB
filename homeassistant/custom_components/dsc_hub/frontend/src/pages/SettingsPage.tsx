@@ -12,6 +12,7 @@ import {
   get_network_status,
   get_settings,
   get_zigbee_devices,
+  get_zigbee_health,
   patch_inventory,
   patch_settings,
   permit_join,
@@ -66,6 +67,45 @@ function seatIcon(seatId: string): IconName {
 /** Zigbee device type → icon. */
 function zigbeeIcon(type: string): IconName {
   return type === "Router" ? "system" : "gauge";
+}
+
+function parseZigbeePlacements(raw: string | undefined): Record<string, string> {
+  if (!raw) return {};
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
+    const out: Record<string, string> = {};
+    for (const [key, value] of Object.entries(parsed)) {
+      if (key && value) out[String(key)] = String(value);
+    }
+    return out;
+  } catch {
+    return {};
+  }
+}
+
+function ZigbeePlacementRow({
+  friendlyName,
+  placement,
+  onChange,
+}: {
+  friendlyName: string;
+  placement: string;
+  onChange: (friendlyName: string, placement: string) => void;
+}) {
+  return (
+    <tr>
+      <td>{friendlyName}</td>
+      <td>
+        <input
+          type="text"
+          value={placement}
+          onChange={(e) => onChange(friendlyName, e.target.value)}
+          placeholder="e.g. canopy center, 4x8 intake duct"
+        />
+      </td>
+    </tr>
+  );
 }
 
 function resolveSeat(fleet: FleetSnapshot, seatId: string): SeatSnapshot | null {
@@ -206,6 +246,9 @@ export function SettingsPage() {
   const [esphome, setEsphome] = useState<Array<Record<string, unknown>>>([]);
   const [jobs, setJobs] = useState<Array<Record<string, unknown>>>([]);
   const [zigbeeDevices, setZigbeeDevices] = useState<Array<Record<string, unknown>>>([]);
+  const [zigbeeHealth, setZigbeeHealth] = useState<Record<string, unknown> | null>(null);
+  const [zigbeePlacementsDraft, setZigbeePlacementsDraft] = useState<Record<string, string>>({});
+  const [zigbeePlacementsDirty, setZigbeePlacementsDirty] = useState(false);
   const [ollamaResult, setOllamaResult] = useState<string>("");
   const [cannalibResult, setCannalibResult] = useState<string>("");
   const [networkResult, setNetworkResult] = useState<string>("");
@@ -218,7 +261,7 @@ export function SettingsPage() {
   const [pendingImport, setPendingImport] = useState<File | null>(null);
 
   const refresh = async () => {
-    const [s, net, cat, esp, j, fleetRaw, zigbee] = await Promise.all([
+    const [s, net, cat, esp, j, fleetRaw, zigbee, zigbeeHealthRaw] = await Promise.all([
       get_settings(),
       get_network_status(),
       get_catalog_status(),
@@ -226,6 +269,7 @@ export function SettingsPage() {
       get_esphome_jobs(),
       get_fleet_state().catch(() => null),
       get_zigbee_devices().catch(() => ({ devices: [] as Array<Record<string, unknown>> })),
+      get_zigbee_health().catch(() => null),
     ]);
     setApDraft(pickSettings(s.settings, AP_KEYS));
     setIntegrationsDraft(pickSettings(s.settings, INTEGRATION_KEYS));
@@ -236,6 +280,10 @@ export function SettingsPage() {
     setJobs(j);
     setFleet(fleetRaw ? parseFleetSnapshot(fleetRaw) : null);
     setZigbeeDevices(zigbee.devices ?? []);
+    setZigbeeHealth(zigbeeHealthRaw);
+    if (!zigbeePlacementsDirty) {
+      setZigbeePlacementsDraft(parseZigbeePlacements(s.settings.zigbee_placements));
+    }
   };
 
   useEffect(() => {
@@ -522,6 +570,12 @@ export function SettingsPage() {
         <p className="dsc-honesty">
           {catalog ? String(catalog.note ?? "—") : "Loading…"} (source:{" "}
           {catalog ? String(catalog.source ?? "unknown") : "—"})
+          {catalog?.cannalib_api_url ? (
+            <>
+              {" "}
+              — URL: <code>{String(catalog.cannalib_api_url)}</code>
+            </>
+          ) : null}
         </p>
         <p className="dsc-muted">
           Chemistry, height, and lineage come straight from the catalog — gaps are never filled with guesses.
@@ -608,8 +662,25 @@ export function SettingsPage() {
       <section className="dsc-card">
         <h3>Zigbee (SkyConnect)</h3>
         <p className="dsc-muted">Extra canopy sensors and smart plugs — separate from climate control.</p>
+        <div className="dsc-chip-row" style={{ marginBottom: 10 }}>
+          <StatusChip
+            label={zigbeeHealth?.radio_up === true ? "RADIO UP" : "RADIO DOWN"}
+            tone={zigbeeHealth?.radio_up === true ? "ok" : "bad"}
+          />
+          {zigbeeHealth?.mqtt_connected === false ? (
+            <StatusChip label="MQTT OFFLINE" tone="bad" />
+          ) : null}
+          {zigbeeHealth?.permit_join === true ? <StatusChip label="JOIN OPEN" tone="warn" /> : null}
+          {zigbeeHealth?.radio_note ? (
+            <span className="dsc-muted" style={{ fontSize: 12 }}>
+              {String(zigbeeHealth.radio_note)}
+            </span>
+          ) : null}
+        </div>
         <div className="dsc-row-actions">
-          <Button onClick={() => setPendingPermitJoin(true)}>Permit join (2 min)</Button>
+          <Button onClick={() => setPendingPermitJoin(true)} disabled={zigbeeHealth?.radio_up !== true}>
+            Permit join (2 min)
+          </Button>
           <Button onClick={() => setPendingPermitJoin(false)}>Stop join</Button>
         </div>
         <DecisionLayer
@@ -631,40 +702,94 @@ export function SettingsPage() {
               : "Closes join mode on the SkyConnect coordinator."}
           </p>
         </DecisionLayer>
-        {zigbeeDevices.length ? (
-          <div className="dsc-table-scroll">
-            <table className="dsc-table" style={{ marginTop: 12 }}>
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>IEEE</th>
-                <th>Type</th>
-                <th>Model</th>
-              </tr>
-            </thead>
-            <tbody>
-              {zigbeeDevices
-                .filter((d) => d.type !== "Coordinator")
-                .map((d) => (
-                  <tr key={String(d.ieee_address ?? d.friendly_name)}>
-                    <td style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <Icon name={zigbeeIcon(String(d.type ?? ""))} size={14} color="var(--dsc-gray-5)" />
-                      {String(d.friendly_name ?? "—")}
-                    </td>
-                    <td>{String(d.ieee_address ?? "—")}</td>
-                    <td>{String(d.type ?? "—")}</td>
-                    <td>
-                      {String(d.vendor ?? "")}
-                      {d.model ? ` ${String(d.model)}` : ""}
-                    </td>
+        {zigbeeDevices.filter((d) => d.type !== "Coordinator").length ? (
+          <>
+            <div className="dsc-table-scroll">
+              <table className="dsc-table" style={{ marginTop: 12 }}>
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>IEEE</th>
+                    <th>Type</th>
+                    <th>Model</th>
                   </tr>
-                ))}
-            </tbody>
-          </table>
-          </div>
+                </thead>
+                <tbody>
+                  {zigbeeDevices
+                    .filter((d) => d.type !== "Coordinator")
+                    .map((d) => (
+                      <tr key={String(d.ieee_address ?? d.friendly_name)}>
+                        <td style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          <Icon name={zigbeeIcon(String(d.type ?? ""))} size={14} color="var(--dsc-gray-5)" />
+                          {String(d.friendly_name ?? "—")}
+                        </td>
+                        <td>{String(d.ieee_address ?? "—")}</td>
+                        <td>{String(d.type ?? "—")}</td>
+                        <td>
+                          {String(d.vendor ?? "")}
+                          {d.model ? ` ${String(d.model)}` : ""}
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
+            <h4 style={{ marginTop: 16 }}>Placements</h4>
+            <p className="dsc-muted">
+              Map each Zigbee friendly name to a tent placement label (e.g. canopy, intake). Climate and canopy
+              ingest use these labels.
+            </p>
+            <div className="dsc-table-scroll">
+              <table className="dsc-table">
+                <thead>
+                  <tr>
+                    <th>Friendly name</th>
+                    <th>Placement label</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {zigbeeDevices
+                    .filter((d) => d.type !== "Coordinator")
+                    .map((d) => {
+                      const fname = String(d.friendly_name ?? "");
+                      return (
+                        <ZigbeePlacementRow
+                          key={fname}
+                          friendlyName={fname}
+                          placement={zigbeePlacementsDraft[fname] ?? ""}
+                          onChange={(name, placement) => {
+                            setZigbeePlacementsDirty(true);
+                            setZigbeePlacementsDraft((prev) => ({ ...prev, [name]: placement }));
+                          }}
+                        />
+                      );
+                    })}
+                </tbody>
+              </table>
+            </div>
+            <Button
+              onClick={async () => {
+                const trimmed: Record<string, string> = {};
+                for (const [key, value] of Object.entries(zigbeePlacementsDraft)) {
+                  if (key && value.trim()) trimmed[key] = value.trim();
+                }
+                await patch_settings({ zigbee_placements: JSON.stringify(trimmed) });
+                setZigbeePlacementsDirty(false);
+                await refresh();
+              }}
+            >
+              Save placements
+            </Button>
+          </>
+        ) : zigbeeHealth?.radio_up === true ? (
+          <p className="dsc-muted" style={{ marginTop: 10 }}>
+            Coordinator is online but no end devices are paired yet — permit join when you are ready to add sensors
+            or plugs.
+          </p>
         ) : (
           <p className="dsc-muted" style={{ marginTop: 10 }}>
-            No Zigbee devices reported yet — enable permit join, then refresh.
+            SkyConnect coordinator is not online — fix USB, power, and <code>dsc-hub-z2m</code> logs before pairing.
+            An empty device list here means the radio is down, not that you have a clean network.
           </p>
         )}
       </section>

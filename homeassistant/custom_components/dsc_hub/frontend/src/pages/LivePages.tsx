@@ -250,17 +250,17 @@ function TentCockpitPage({ tent }: { tent: Exclude<TentId, "unassigned"> }) {
       <div className="dsc-tent-cockpit-strip">
         <StatusChip label={`${seats.length} plants`} tone="ok" />
         <StatusChip
-          label={`T ${fmt(tDisplay)}°C`}
+          label={`T ${fmt(tDisplay ?? NaN)}°C`}
           tone={tHeld.stale && !tentVitals.online ? "warn" : "ok"}
           onClick={() => inspector.open({ entityId: tId, label: `${title} T`, unit: "°C" })}
         />
         <StatusChip
-          label={`RH ${fmt(rhDisplay, 0)}%`}
+          label={`RH ${fmt(rhDisplay ?? NaN, 0)}%`}
           tone={rhHeld.stale && !tentVitals.online ? "warn" : "ok"}
           onClick={() => inspector.open({ entityId: rhId, label: `${title} RH`, unit: "%" })}
         />
         <StatusChip
-          label={`VPD ${fmt(vpdDisplay, 2)}`}
+          label={`VPD ${fmt(vpdDisplay ?? NaN, 2)}`}
           tone={vpdHeld.stale && !tentVitals.online ? "warn" : "ok"}
           onClick={() => inspector.open({ entityId: vpdId, label: `${title} VPD`, unit: "kPa" })}
         />

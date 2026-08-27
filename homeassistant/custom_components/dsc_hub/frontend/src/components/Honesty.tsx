@@ -4,7 +4,7 @@ import { Button, Card, StatusChip } from "./ui";
 import { DecisionLayer } from "./DecisionLayer";
 import { useEntityBus } from "../hooks/useEntityBus";
 import { useFleet } from "../hooks/useFleet";
-import { collectHonestyGaps, collectHonestyGapsFromFleet, nextRecommended, type HonestyGap } from "../lib/sensorHonesty";
+import { collectHonestyGapsFromFleet, nextRecommended, type HonestyGap } from "../lib/sensorHonesty";
 
 export function useHonestyGaps(): HonestyGap[] {
   const hass = useEntityBus();

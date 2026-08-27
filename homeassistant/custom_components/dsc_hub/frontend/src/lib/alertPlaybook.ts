@@ -151,6 +151,36 @@ const ALERTS: Record<string, PlaybookEntry> = {
     what: "Reservoir temperature is high enough to encourage unwanted growth.",
     fix: "Cool the tank or improve room airflow.",
   },
+  "binary_sensor.dsc_peer_mad_alert": {
+    title: "Peer probe divergence",
+    what: "In-service pot probes disagree beyond the MAD threshold — one may be stuck or outlier.",
+    fix: "Open Root. Check stuck/untrusted pots before trusting mat vote.",
+  },
+  "binary_sensor.dsc_dht_disagreement": {
+    title: "DHT disagreement",
+    what: "Tent, room, and clone temperature or humidity spans exceed threshold for 15+ minutes.",
+    fix: "Climate cue only — check DHT placement and ventilation. Not a failsafe trip.",
+  },
+  "binary_sensor.dsc_pot1_sensor_stuck": {
+    title: "Pot 1 stuck",
+    what: "Pot 1 soil moisture has not moved for the stuck window.",
+    fix: "Probe may be wedged or offline. Exclude from mat vote if untrusted.",
+  },
+  "binary_sensor.dsc_pot2_sensor_stuck": {
+    title: "Pot 2 stuck",
+    what: "Pot 2 soil moisture has not moved for the stuck window.",
+    fix: "Probe may be wedged or offline. Exclude from mat vote if untrusted.",
+  },
+  "binary_sensor.dsc_pot3_sensor_stuck": {
+    title: "Pot 3 stuck",
+    what: "Pot 3 soil moisture has not moved for the stuck window.",
+    fix: "Probe may be wedged or offline. Exclude from mat vote if untrusted.",
+  },
+  "binary_sensor.dsc_pot4_sensor_stuck": {
+    title: "Pot 4 stuck",
+    what: "Pot 4 soil moisture has not moved for the stuck window.",
+    fix: "Probe may be wedged or offline. Exclude from mat vote if untrusted.",
+  },
   "binary_sensor.dsc_hub_light_catchup_active": {
     title: "Light catch-up",
     what: "The 2×4 is making up missed light hours. The hours gauge shows what was actually delivered.",

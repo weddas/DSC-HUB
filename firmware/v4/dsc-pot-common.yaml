@@ -163,7 +163,7 @@ uart:
   # ESPHome 2026.6+ tight inter-frame window (#17180) — deliver bytes ASAP
   # so JXCT-style probes at 4800 baud do not get mid-frame discards.
   rx_full_threshold: 1
-  rx_timeout: 20
+  rx_timeout: 15
 
 modbus:
   id: modbus1
@@ -706,6 +706,13 @@ binary_sensor:
     entity_category: diagnostic
     icon: mdi:serial-port
     lambda: 'return id(probe_online);'
+  - platform: template
+    name: "Sensor Fault"
+    id: sensor_fault_bs
+    device_class: problem
+    entity_category: diagnostic
+    icon: mdi:alert-circle-outline
+    lambda: 'return !id(probe_online);'
 
 button:
   - platform: restart
@@ -1159,7 +1166,13 @@ interval:
   - interval: 15s
     then:
       - lambda: |-
-          id(clock_valid) = id(sntp_time).now().is_valid() || id(ha_time).now().is_valid();
+          bool cv = id(sntp_time).now().is_valid() || id(ha_time).now().is_valid();
+          if (cv != id(clock_valid)) {
+            id(clock_valid) = cv;
+            id(clock_valid_bs).publish_state(cv);
+          }
+          bool po = id(probe_online);
+          id(sensor_fault_bs).publish_state(!po);
   - interval: 10s
     then:
       - if:

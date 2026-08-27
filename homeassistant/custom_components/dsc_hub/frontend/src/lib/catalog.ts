@@ -148,7 +148,7 @@ export async function searchCatalog(
       return {
         items,
         source: "cannalib",
-        note: "Brain catalog proxy (remote API or local fallback)",
+        note: "Brain catalog proxy (Settings → CannaLib API URL)",
       };
     } catch {
       const local = preferScienceAliasHits(filterKind(kind, await searchLocal(kind, q)), q);

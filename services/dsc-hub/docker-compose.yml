@@ -32,11 +32,13 @@ services:
       CANNALIB_API_URL: ${CANNALIB_API_URL:-http://cannalib:8790}
       CANNALIB_API_KEY: ${CANNALIB_API_KEY:-}
       CANNALIB_USE_LOCAL_FALLBACK: ${CANNALIB_USE_LOCAL_FALLBACK:-true}
+      CANNALIB_DB_PATH: /cannalib/dsc_brain.sqlite3
       MQTT_HOST: mosquitto
       MQTT_PORT: "1883"
     volumes:
       - ${DSC_DATA:-/var/lib/dsc-hub}/ops:/data
       - ${DSC_DATA:-/var/lib/dsc-hub}/firmware:/firmware:ro
+      - ${DSC_DATA:-/var/lib/dsc-hub}/cannalib:/cannalib:ro
     depends_on:
       - mosquitto
       - cannalib

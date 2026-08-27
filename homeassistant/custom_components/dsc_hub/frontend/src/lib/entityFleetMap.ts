@@ -48,6 +48,18 @@ export const ENTITY_FLEET_MAP: Record<string, EntityFleetRef> = {
   "sensor.dsc_pot2_soil_ph": { seatId: "pot2", metric: "ph" },
   "sensor.dsc_pot3_soil_ph": { seatId: "pot3", metric: "ph" },
   "sensor.dsc_pot4_soil_ph": { seatId: "pot4", metric: "ph" },
+  "binary_sensor.dsc_pot1_clock_valid": { seatId: "pot1", metric: "clock_valid", binary: true },
+  "binary_sensor.dsc_pot2_clock_valid": { seatId: "pot2", metric: "clock_valid", binary: true },
+  "binary_sensor.dsc_pot3_clock_valid": { seatId: "pot3", metric: "clock_valid", binary: true },
+  "binary_sensor.dsc_pot4_clock_valid": { seatId: "pot4", metric: "clock_valid", binary: true },
+  "binary_sensor.dsc_pot1_modbus_probe_online": { seatId: "pot1", metric: "modbus_probe_online", binary: true },
+  "binary_sensor.dsc_pot2_modbus_probe_online": { seatId: "pot2", metric: "modbus_probe_online", binary: true },
+  "binary_sensor.dsc_pot3_modbus_probe_online": { seatId: "pot3", metric: "modbus_probe_online", binary: true },
+  "binary_sensor.dsc_pot4_modbus_probe_online": { seatId: "pot4", metric: "modbus_probe_online", binary: true },
+  "binary_sensor.dsc_pot1_sensor_fault": { seatId: "pot1", metric: "sensor_fault", binary: true },
+  "binary_sensor.dsc_pot2_sensor_fault": { seatId: "pot2", metric: "sensor_fault", binary: true },
+  "binary_sensor.dsc_pot3_sensor_fault": { seatId: "pot3", metric: "sensor_fault", binary: true },
+  "binary_sensor.dsc_pot4_sensor_fault": { seatId: "pot4", metric: "sensor_fault", binary: true },
   "switch.dsc_heater_main_relay": { seatId: "heater", metric: "relay_on", binary: true },
   "switch.dsc_heatmat_main_relay": { seatId: "heatmat", metric: "relay_on", binary: true },
   "switch.dsc_humidifier_main_relay": { seatId: "humidifier", metric: "relay_on", binary: true },
@@ -66,7 +78,11 @@ export function fleetLiveNumber(entityId: string, fleet: FleetSnapshot): number 
   if (!ref) return null;
   const values = seatValues(fleet, ref.seatId);
   if (!values) return null;
-  const raw = values[ref.metric];
+  let raw: unknown = values[ref.metric];
+  if (ref.binary && ref.seatId.startsWith("pot") && raw == null) {
+    const bins = values.binaries as Record<string, boolean> | undefined;
+    raw = bins?.[ref.metric];
+  }
   if (raw == null) return null;
   if (ref.binary) return raw === true || raw === "on" || raw === 1 || raw === "1" ? 1 : 0;
   const n = Number(raw);

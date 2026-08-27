@@ -3,7 +3,6 @@ import { Card, Kpi, PageHeader, StatusChip } from "../components/ui";
 import { SlideDrawer } from "../components/chrome";
 import { DutyStrip } from "../components/DutyStrip";
 import { useEntityBus } from "../hooks/useEntityBus";
-import { useFleet } from "../hooks/useFleet";
 import { useEntitySeries } from "../hooks/useEntitySeries";
 import { useHeldReading } from "../hooks/useHeldReading";
 import { useInspector } from "../components/InspectorHost";
@@ -31,7 +30,6 @@ function fmt(n: number, digits = 1): string {
 
 export function LiveRootPage() {
   const { state, entity, tick, num } = useEntityBus();
-  const fleet = useFleet();
   const inspector = useInspector();
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();

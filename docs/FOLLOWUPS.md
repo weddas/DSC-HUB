@@ -10,6 +10,40 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 
 ---
 
+## 2026-08-27 — Full software backlog pass (single coordinated pass)
+
+> **CLOSED 2026-08-27** — All software/code items from the backlog plan landed in-tree. Hardware installs remain honest-UI only.
+
+### Closed (software)
+
+| Phase | Deliverable |
+|-------|-------------|
+| 0 | 7.1.2 closure docs, CHANGELOG/RELEASE, LIVE-ACCEPTANCE signoff, deploy gates PASS |
+| 1 | `tsc --noEmit` clean, `frontend-ci.yml`, route lazy split, `tsconfig.tsbuildinfo` gitignore |
+| 2 | `/fleet/computed` hot/cold cache + `runtime_history.py`; Phase E `hass_extras` shim removed from `useBrain`; ladder-wait OIDs |
+| 3 | Zigbee honest `radio_up` / permit-join expiry; placement editor — **live stick still HOST_FATAL_ERROR** (hardware/config; UI shows radio down) |
+| 4 | CannaLib URL unity, compose volume, honest sqlite fallback (503), `CANNALIB-API.md` |
+| 5 | `sensor_trust.py` (stuck/MAD/DHT), Calibrate soil/tank tabs, Learning ownership banner, `dsc_v4_sensor_trust.yaml` |
+| 6 | Twin THREE preload (`ensureLocalCards`), grow-log noise filter, code-split chunks |
+| 7 | Pot UART `rx_timeout: 15`, `sensor_fault` binary in firmware YAML — **fleet OTA not run** (Nest-path primary) |
+| 8 | `soak-check.sh` adds `/fleet/computed` latency alert; DHCP `.48` docs closed |
+| 10 | Brain tests 56/56; closure audit updated |
+
+### Remains (hardware / ops — not software)
+
+| Item | Notes |
+|------|-------|
+| F-001–F-008 | AC/mister/tank/CO2/GPIO5 lamp — honest OOS rows only |
+| pot4 probe | Fault badge path; probe swap is field work |
+| Zigbee stick | z2m crash-loop on Pi — operator approval for stick recovery (no factory reset without OK) |
+| Anemometer CFM | Nameplate until two calibration points |
+| Fleet OTA | Per-pot SoftAP SSIDs in YAML; apply via Nest OTA when scheduled |
+| Pin DHCP `.30` | Optional Nest reservation — docs use `.48` |
+| Redeploy | Run `studio-deploy.ps1` from studio LAN to ship this pass to `.48` (agent network SSH timeout 2026-08-27) |
+| Pi maintenance | Kill stale `esphome run dsc-hub.yaml` PID on next SSH (harmless log-follow) |
+
+---
+
 ## 2026-08-27 — Layout audit 7.1 (Pi SPA)
 
 > **CLOSED 2026-08-27 (7.1.2)** — All P0/P1 audit items fixed. See [`docs/qa/AUDIT-CLOSURE-7.1.2.md`](qa/AUDIT-CLOSURE-7.1.2.md). Historical notes retained below.
@@ -25,6 +59,8 @@ Source: `docs/qa/LAYOUT-AUDIT-7.1.md`. Live Brain `192.168.86.48:8787`. No deplo
 | N-LAYOUT-HEADER-ACTIONS | P1 | `.dsc-page-header` is nowrap flex; actions `flex-shrink: 0`. Compose "Browse Catalog" clipped at 390; Mission/Twin header buttons measure past the viewport. 4×8 header hits 364px tall. |
 
 ## 2026-08-27 — pot3 Add-as-Plant demo blocked (Pi SSH/HTTP down)
+
+> **CLOSED 2026-08-27 (7.1.2)** — Demo completed on `.48`; pot3 reverted OOS. Screens + JSON in `docs/qa/screens-7.1.2/pot3-fullgrow-*`. Historical notes retained below.
 
 - **Symptom:** After a successful brain deploy and pot3 enable/retire, a second `deploy-brain.ps1` upload failed. `192.168.86.30` still pings; TCP 22 and 8787 refuse/timeout. AP `10.42.0.1` is unreachable (hostapd likely down with userspace).
 - **Last known live state:** roster empty; pot3 **still in_service true**; takeover off / full auto on. Revert pot3 OOS when the Pi is reachable.
@@ -2491,6 +2527,8 @@ Do **not** reclaim .33/.39/.40/.47/.23 — other hosts answered there at cutover
 
 ## 2026-08-27 — 7.1.2 interface remediation follow-ups
 
+> **CLOSED 2026-08-27 (full-software pass)** — `tsc --noEmit` clean, `frontend-ci.yml`, route code split, ErrorBoundary landed. Historical notes retained below.
+
 - Frontend `tsc --noEmit` carries **23 pre-existing errors** (unused imports, `SeriesPoint[].at` lib target, `useBrain` Promise<null> generic, SettingsPage `unknown`→ReactNode, CalibratePage `icon="light"` not in IconName). Builds pass because both build scripts are Vite-only with no type gate. Worth a dedicated cleanup pass + adding `tsc --noEmit` to CI.
 - SPA chunk is 512 kB minified (Vite warns >500 kB) — consider route-level code splitting.
 - One-off: during CDP-driven screenshots, hash-jumping via `Page.navigate` from `/live/climate` → `/live/4x8` once left `#root` empty (React unmount, no console error). Not reproducible via in-app navigation or `location.hash` — likely a CDP artifact, but the SPA has no error boundary; adding one would make any future render crash visible instead of a black page.
@@ -2545,6 +2583,8 @@ Do **not** reclaim .33/.39/.40/.47/.23 — other hosts answered there at cutover
 
 ## 2026-08-27 — DSC-Brain DHCP moved off .30
 
+> **CLOSED 2026-08-27 (full-software pass)** — Docs, deploy scripts, Kuma/LIVE-ACCEPTANCE, and closure audit now point at **`.48` / `dsc-brain.local`**. Pin DHCP back to `.30` is ops-only if desired.
+
 - Category: `ops`
 - After the overnight hang/reboot, `dsc-brain.local` resolved to **192.168.86.48** (TTL 64). `.30` still pings (TTL 255, MAC `E8-16-56-53-EC-AD`) but SSH/:8787 refused — not the Pi.
 - Pin a Nest DHCP reservation for the Pi MAC back to `.30`, or update docs/Kuma to `.48` / mDNS.
@@ -2565,7 +2605,7 @@ Do **not** reclaim .33/.39/.40/.47/.23 — other hosts answered there at cutover
 
 ## 2026-08-27 — `/fleet/computed` is ~6.4s and the SPA used to poll it every 2s
 
-> **CLOSED 2026-08-27 (7.1.2)** — Poll guard landed (5s + in-flight lock). See [`docs/qa/AUDIT-CLOSURE-7.1.2.md`](qa/AUDIT-CLOSURE-7.1.2.md). Endpoint perf remains next-plan. Historical notes retained below.
+> **CLOSED 2026-08-27 (full-software pass)** — Hot/cold cache + `runtime_history.py` memo; `soak-check.sh` alerts if >3s. Poll guard (5s + in-flight) retained. Historical notes retained below.
 
 - Category: `next-plan`
 - Cold curls of `http://192.168.86.30:8787/fleet/computed` consistently take ~6.4s. The SPA was polling every 2s, so three requests piled up, starved `/fleet` + the websocket, and the UI wedged on "Connecting to fleet…".

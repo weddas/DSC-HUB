@@ -11,15 +11,17 @@ from zoneinfo import ZoneInfo
 from .compose_ops import _strain_is_auto
 from .compose_store import all_helpers, get_helper, get_roster_slots
 from .device_calibration import get_calibration
-from .hub_controls import HUB_FAN_ENTITY_TO_OID
-from .settings import list_history, list_roster
+from .runtime_history import HistoryMemo, RuntimeMemo, midnight_ts
+from .settings import list_roster
 from .stage_model import expected_stage, tent_id
 from .want import resolve_want
 from .dash_computed import emit_dash_entities
 
 SYDNEY_TZ = ZoneInfo("Australia/Sydney")
-_COMPUTED_CACHE: dict[str, Any] = {"ts": 0.0, "key": None, "states": {}}
-_COMPUTED_TTL_SEC = 5.0
+_HOT_CACHE: dict[str, Any] = {"ts": 0.0, "key": None, "states": {}}
+_COLD_CACHE: dict[str, Any] = {"ts": 0.0, "key": None, "states": {}}
+_HOT_TTL_SEC = 2.0
+_COLD_TTL_SEC = 45.0
 
 FAN_PCT_ENTITIES: dict[str, str] = {
     "sensor.dsc_fan_intake_main_pct": "fan.dsc_hub_4_inch_intake_fan_main",
@@ -158,8 +160,27 @@ def _cal_points_from_storage(cal_prefix: str, helpers: dict[str, Any]) -> list[t
     return points
 
 
-def _cfm_from_pct(pct: float, nameplate: float, cal_prefix: str, helpers: dict[str, Any]) -> tuple[float, str, str]:
+def _cal_points_memoized(
+    cal_prefix: str,
+    helpers: dict[str, Any],
+    memo: dict[str, list[tuple[float, float]]],
+) -> list[tuple[float, float]]:
+    cached = memo.get(cal_prefix)
+    if cached is not None:
+        return cached
     points = _cal_points_from_storage(cal_prefix, helpers)
+    memo[cal_prefix] = points
+    return points
+
+
+def _cfm_from_pct_memoized(
+    pct: float,
+    nameplate: float,
+    cal_prefix: str,
+    helpers: dict[str, Any],
+    memo: dict[str, list[tuple[float, float]]],
+) -> tuple[float, str, str]:
+    points = _cal_points_memoized(cal_prefix, helpers, memo)
     measured = [v for _, v in points if v > 0]
     if len(measured) < 2:
         return round(pct / 100.0 * nameplate, 1), "linear", "capacity_proxy_nameplate"
@@ -180,6 +201,27 @@ def _cfm_from_pct(pct: float, nameplate: float, cal_prefix: str, helpers: dict[s
         return round(y0, 1), "curve", "measured_curve"
     val = y0 + (y1 - y0) * (pct - x0) / (x1 - x0)
     return round(val, 1), "curve", "measured_curve"
+
+
+def _states_with_controls(
+    base: dict[str, dict[str, Any]],
+    controls: dict[str, Any],
+) -> dict[str, dict[str, Any]]:
+    merged = dict(base)
+    for eid, ctrl in controls.items():
+        attrs: dict[str, Any] = {}
+        if ctrl.get("options"):
+            attrs["options"] = ctrl["options"]
+        if ctrl.get("percentage") is not None:
+            attrs["percentage"] = ctrl["percentage"]
+        if ctrl.get("brightness") is not None:
+            attrs["brightness"] = ctrl["brightness"]
+        merged[eid] = {
+            "entity_id": eid,
+            "state": str(ctrl.get("state", "unavailable")),
+            "attributes": attrs,
+        }
+    return merged
 
 
 def _light_curve_points() -> list[tuple[float, float, float]]:
@@ -267,27 +309,18 @@ def _light_brightness_pct(states: dict[str, dict[str, Any]]) -> float | None:
     return None
 
 
-def _midnight_ts() -> float:
-    now = datetime.datetime.now(SYDNEY_TZ)
-    midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
-    return midnight.timestamp()
+def invalidate_computed_cache() -> None:
+    """Drop hot/cold computed caches (tests or forced refresh)."""
+    _HOT_CACHE.update(ts=0.0, key=None, states={})
+    _COLD_CACHE.update(ts=0.0, key=None, states={})
 
 
-def _runtime_hours_today(seat_id: str, metric: str) -> float:
-    rows = sorted(list_history(seat_id, metric, _midnight_ts(), limit=5000), key=lambda r: r["ts"])
-    if not rows:
-        return 0.0
-    if len(rows) == 1:
-        return (rows[0]["value"] or 0.0) * (time.time() - rows[0]["ts"]) / 3600.0 if rows[0]["value"] else 0.0
-    total_sec = 0.0
-    for i in range(len(rows) - 1):
-        v = rows[i]["value"] or 0.0
-        if v > 0.5:
-            total_sec += max(0.0, rows[i + 1]["ts"] - rows[i]["ts"])
-    last = rows[-1]
-    if (last["value"] or 0.0) > 0.5:
-        total_sec += max(0.0, time.time() - last["ts"])
-    return round(total_sec / 3600.0, 2)
+def _helpers_cache_key(helpers: dict[str, Any]) -> str:
+    return json.dumps(helpers, sort_keys=True, default=str)
+
+
+def _inventory_cache_key(inventory: list[dict[str, Any]] | None) -> tuple[Any, ...]:
+    return tuple((r.get("seat_id"), r.get("in_service")) for r in (inventory or []))
 
 
 def _control_state(states: dict[str, dict[str, Any]], eid: str) -> str | None:
@@ -317,33 +350,192 @@ def build_computed_hass_states(
     """Emit HA-shaped computed entities for Pi compat layer."""
     controls = (fleet.hub.values.get("controls") or {}) if fleet.hub else {}
     controls_key = json.dumps(controls, sort_keys=True, default=str)
-    cache_key = (
-        getattr(fleet, "updated_at", 0.0),
-        tuple((r.get("seat_id"), r.get("in_service")) for r in (inventory or [])),
-        controls_key,
-    )
+    inv_key = _inventory_cache_key(inventory)
+    hot_key = (getattr(fleet, "updated_at", 0.0), inv_key, controls_key)
     now = time.time()
-    if (
-        now - float(_COMPUTED_CACHE.get("ts", 0.0)) < _COMPUTED_TTL_SEC
-        and _COMPUTED_CACHE.get("key") == cache_key
-        and _COMPUTED_CACHE.get("states")
-    ):
-        return dict(_COMPUTED_CACHE["states"])
 
-    states = _build_computed_hass_states_uncached(fleet, inventory)
-    _COMPUTED_CACHE.update(ts=now, key=cache_key, states=states)
+    helpers = all_helpers()
+    cold_key = (midnight_ts(), inv_key, _helpers_cache_key(helpers))
+    history = HistoryMemo()
+    runtime = RuntimeMemo(history)
+
+    cold_states: dict[str, dict[str, Any]]
+    if (
+        now - float(_COLD_CACHE.get("ts", 0.0)) < _COLD_TTL_SEC
+        and _COLD_CACHE.get("key") == cold_key
+        and _COLD_CACHE.get("states")
+    ):
+        cold_states = dict(_COLD_CACHE["states"])
+    else:
+        cold_states = _build_cold_computed_states(fleet, inventory, helpers, runtime=runtime)
+        _COLD_CACHE.update(ts=now, key=cold_key, states=cold_states)
+
+    if (
+        now - float(_HOT_CACHE.get("ts", 0.0)) < _HOT_TTL_SEC
+        and _HOT_CACHE.get("key") == hot_key
+        and _HOT_CACHE.get("states")
+    ):
+        return {**cold_states, **dict(_HOT_CACHE["states"])}
+
+    hot_states = _build_hot_computed_states(
+        fleet,
+        inventory,
+        helpers,
+        controls,
+        cold_states,
+        hub_live=bool(fleet.hub and fleet.hub.online),
+        runtime=runtime,
+    )
+    _HOT_CACHE.update(ts=now, key=hot_key, states=hot_states)
+    return {**cold_states, **hot_states}
+
+
+def _build_cold_computed_states(
+    fleet: Any,
+    inventory: list[dict[str, Any]] | None,
+    helpers: dict[str, Any],
+    *,
+    runtime: RuntimeMemo,
+) -> dict[str, dict[str, Any]]:
+    """Slow path: helpers, roster, runtime integrals, dash mirrors."""
+    states: dict[str, dict[str, Any]] = {}
+    cal_memo: dict[str, list[tuple[float, float]]] = {}
+
+    for eid, val in helpers.items():
+        domain = eid.split(".", 1)[0] if "." in eid else "sensor"
+        if domain in ("input_text", "input_select", "input_number", "input_datetime", "text", "select", "datetime"):
+            attrs: dict[str, Any] | None = None
+            if domain == "input_select":
+                opts = SELECT_OPTIONS.get(eid)
+                if opts:
+                    attrs = {"options": opts}
+            _set_entity(states, eid, val, available=True, attributes=attrs)
+        elif domain == "input_boolean":
+            _set_entity(states, eid, val, available=True)
+
+    for script_id in (
+        "script.dsc_build_plant_commit",
+        "script.dsc_build_plant_commit_and_assign",
+        "script.dsc_plant_assign_to_pot",
+        "script.dsc_plant_retire",
+    ):
+        _set_entity(states, script_id, "off", available=True)
+
+    build_sprout = str(helpers.get("input_datetime.dsc_build_sprout_date") or "")
+    if build_sprout:
+        try:
+            build_days = (datetime.date.today() - datetime.date.fromisoformat(build_sprout[:10])).days
+            strain_raw = str(helpers.get("input_text.dsc_build_strain", "")).strip()
+            strain_id = strain_raw.replace(" ", "_").lower()[:64]
+            _set_entity(states, "sensor.dsc_build_days_since_sprout", max(0, build_days))
+            _set_entity(
+                states,
+                "sensor.dsc_build_expected_stage",
+                expected_stage(max(0, build_days), auto=_strain_is_auto(strain_id)),
+            )
+        except ValueError:
+            pass
+
+    for runtime_id, (seat_id, metric) in RUNTIME_ENTITIES.items():
+        hours = runtime.hours_today(seat_id, metric)
+        _set_entity(states, runtime_id, hours, available=True, attributes={"unit_of_measurement": "h"})
+
+    _set_entity(
+        states,
+        "sensor.dsc_lights_on_today_2x4",
+        runtime.hours_today("hub", "window_2x4_open"),
+        available=True,
+        attributes={"unit_of_measurement": "h"},
+    )
+    _set_entity(
+        states,
+        "sensor.dsc_lights_on_today_4x8",
+        runtime.hours_today("hub", "window_4x8_open"),
+        available=True,
+        attributes={"unit_of_measurement": "h"},
+    )
+
+    slots = get_roster_slots()
+    occupied = sum(1 for s in slots if s.get("status") not in ("empty", "", None, "unknown", "unavailable"))
+    _set_entity(states, "sensor.dsc_plant_roster_summary", f"{occupied} occupied", attributes={"slots": slots})
+
+    roster_rows = {r["seat_id"]: r for r in list_roster()}
+    for pot_n in range(1, 5):
+        seat_id = f"pot{pot_n}"
+        row = roster_rows.get(seat_id, {})
+        recipe = row.get("recipe") or {}
+        strain_id = row.get("strain_id") or ""
+        stage = row.get("stage") or ""
+        plant_name = recipe.get("plant_name") or recipe.get("nickname") or get_helper(f"text.dsc_pot{pot_n}_plant_name", "")
+        strain_display = recipe.get("strain_display") or strain_id or ""
+        tent = tent_id(str(recipe.get("tent") or get_helper(f"input_select.dsc_pot{pot_n}_tent", "unassigned")))
+        sprout = recipe.get("sprout_date") or get_helper(f"datetime.dsc_pot{pot_n}_sprout_date", "")
+        pot_occupied = bool(str(plant_name).strip())
+        growth_stage = recipe.get("growth_stage") or (stage if pot_occupied else "")
+        if sprout and pot_occupied:
+            try:
+                sprout_dt = datetime.date.fromisoformat(str(sprout)[:10])
+                days = (datetime.date.today() - sprout_dt).days
+                derived = expected_stage(max(0, days), auto=_strain_is_auto(strain_id))
+                if derived and derived != "unknown":
+                    growth_stage = recipe.get("growth_stage") or derived
+                    _set_entity(states, f"sensor.dsc_pot{pot_n}_expected_stage", derived)
+                _set_entity(states, f"sensor.dsc_pot{pot_n}_days_since_sprout", max(0, days))
+            except ValueError:
+                pass
+        _set_entity(states, f"text.dsc_pot{pot_n}_plant_name", plant_name if pot_occupied else "")
+        _set_entity(
+            states,
+            f"select.dsc_pot{pot_n}_growth_stage",
+            growth_stage if pot_occupied else "",
+            attributes={"options": GROWTH_STAGE_OPTIONS},
+        )
+        _set_entity(
+            states,
+            f"input_select.dsc_pot{pot_n}_tent",
+            tent,
+            attributes={"options": SELECT_OPTIONS[f"input_select.dsc_pot{pot_n}_tent"]},
+        )
+        _set_entity(states, f"sensor.dsc_pot{pot_n}_strain_display", strain_display)
+        _set_entity(states, f"datetime.dsc_pot{pot_n}_sprout_date", str(sprout)[:10] if sprout else "")
+        if strain_id and pot_occupied:
+            want = resolve_want(strain_id=strain_id, stage=stage)
+            bands = want.get("want") or {}
+            if "temp_c" in bands:
+                _set_entity(states, f"sensor.dsc_pot{pot_n}_want_temp_min", bands["temp_c"][0])
+                _set_entity(states, f"sensor.dsc_pot{pot_n}_want_temp_max", bands["temp_c"][1])
+            if "rh_pct" in bands:
+                _set_entity(states, f"sensor.dsc_pot{pot_n}_want_rh_min", bands["rh_pct"][0])
+                _set_entity(states, f"sensor.dsc_pot{pot_n}_want_rh_max", bands["rh_pct"][1])
+
+    cal_active = get_helper("input_boolean.dsc_cal_active", "off") == "on"
+    curve_count = sum(
+        1
+        for prefix in ("dsc_cal_cfm_out", "dsc_cal_cfm_recirc", "dsc_cal_cfm_intake_main", "dsc_cal_cfm_intake_clone")
+        if len([v for _, v in _cal_points_memoized(prefix, helpers, cal_memo) if v > 0]) >= 2
+    )
+    _set_entity(states, "sensor.dsc_cfm_curves_status", f"{curve_count}/4 curves")
+    _set_entity(states, "sensor.dsc_learn_status", "idle" if not cal_active else "cal_active")
+    _set_entity(states, "binary_sensor.dsc_learn_gate_open", get_helper("input_boolean.dsc_learn_gate_open", "off"))
+
+    emit_dash_entities(states, fleet, set_entity=_set_entity, inventory=inventory, runtime=runtime)
     return states
 
 
-def _build_computed_hass_states_uncached(
+def _build_hot_computed_states(
     fleet: Any,
-    inventory: list[dict[str, Any]] | None = None,
+    inventory: list[dict[str, Any]] | None,
+    helpers: dict[str, Any],
+    controls: dict[str, Any],
+    cold_states: dict[str, dict[str, Any]],
+    *,
+    hub_live: bool,
+    runtime: RuntimeMemo,
 ) -> dict[str, dict[str, Any]]:
-    """Build computed entities without the short-lived response cache."""
+    """Fast path: live CFM, fan pct, efficacy gates, alert rollups."""
     states: dict[str, dict[str, Any]] = {}
-    helpers = all_helpers()
-    controls = (fleet.hub.values.get("controls") or {}) if fleet.hub else {}
-    hub_live = bool(fleet.hub and fleet.hub.online)
+    cal_memo: dict[str, list[tuple[float, float]]] = {}
+    view = _states_with_controls(cold_states, controls)
 
     fan_pcts: dict[str, float] = {}
     for sensor_id, fan_entity in FAN_PCT_ENTITIES.items():
@@ -355,7 +547,7 @@ def _build_computed_hass_states_uncached(
     for cfm_id, pct_id, plate_id, cal_prefix in CFM_SPECS:
         pct = fan_pcts.get(pct_id, 0.0)
         plate = float(helpers.get(plate_id, 0) or 0)
-        val, model, honesty = _cfm_from_pct(pct, plate, cal_prefix, helpers)
+        val, model, honesty = _cfm_from_pct_memoized(pct, plate, cal_prefix, helpers, cal_memo)
         cfm_values[cfm_id] = val
         _set_entity(
             states,
@@ -437,139 +629,22 @@ def _build_computed_hass_states_uncached(
         },
     )
 
-    for eid, val in helpers.items():
-        domain = eid.split(".", 1)[0] if "." in eid else "sensor"
-        if domain in ("input_text", "input_select", "input_number", "input_datetime", "text", "select", "datetime"):
-            attrs: dict[str, Any] | None = None
-            if domain == "input_select":
-                opts = SELECT_OPTIONS.get(eid)
-                if opts:
-                    attrs = {"options": opts}
-            _set_entity(states, eid, val, available=True, attributes=attrs)
-        elif domain == "input_boolean":
-            _set_entity(states, eid, val, available=True)
-
-    for script_id in (
-        "script.dsc_build_plant_commit",
-        "script.dsc_build_plant_commit_and_assign",
-        "script.dsc_plant_assign_to_pot",
-        "script.dsc_plant_retire",
-    ):
-        _set_entity(states, script_id, "off", available=True)
-
-    build_sprout = str(helpers.get("input_datetime.dsc_build_sprout_date") or "")
-    if build_sprout:
-        try:
-            build_days = (datetime.date.today() - datetime.date.fromisoformat(build_sprout[:10])).days
-            strain_raw = str(helpers.get("input_text.dsc_build_strain", "")).strip()
-            strain_id = strain_raw.replace(" ", "_").lower()[:64]
-            _set_entity(states, "sensor.dsc_build_days_since_sprout", max(0, build_days))
-            _set_entity(
-                states,
-                "sensor.dsc_build_expected_stage",
-                expected_stage(max(0, build_days), auto=_strain_is_auto(strain_id)),
-            )
-        except ValueError:
-            pass
-
-    for runtime_id, (seat_id, metric) in RUNTIME_ENTITIES.items():
-        hours = _runtime_hours_today(seat_id, metric)
-        _set_entity(states, runtime_id, hours, available=True, attributes={"unit_of_measurement": "h"})
-
-    _set_entity(
-        states,
-        "sensor.dsc_lights_on_today_2x4",
-        _runtime_hours_today("hub", "window_2x4_open"),
-        available=True,
-        attributes={"unit_of_measurement": "h"},
-    )
-    _set_entity(
-        states,
-        "sensor.dsc_lights_on_today_4x8",
-        _runtime_hours_today("hub", "window_4x8_open"),
-        available=True,
-        attributes={"unit_of_measurement": "h"},
-    )
-
-    slots = get_roster_slots()
-    occupied = sum(1 for s in slots if s.get("status") not in ("empty", "", None, "unknown", "unavailable"))
-    _set_entity(states, "sensor.dsc_plant_roster_summary", f"{occupied} occupied", attributes={"slots": slots})
-
-    roster_rows = {r["seat_id"]: r for r in list_roster()}
-    for pot_n in range(1, 5):
-        seat_id = f"pot{pot_n}"
-        row = roster_rows.get(seat_id, {})
-        recipe = row.get("recipe") or {}
-        strain_id = row.get("strain_id") or ""
-        stage = row.get("stage") or ""
-        plant_name = recipe.get("plant_name") or recipe.get("nickname") or get_helper(f"text.dsc_pot{pot_n}_plant_name", "")
-        strain_display = recipe.get("strain_display") or strain_id or ""
-        tent = tent_id(str(recipe.get("tent") or get_helper(f"input_select.dsc_pot{pot_n}_tent", "unassigned")))
-        sprout = recipe.get("sprout_date") or get_helper(f"datetime.dsc_pot{pot_n}_sprout_date", "")
-        occupied = bool(str(plant_name).strip())
-        growth_stage = recipe.get("growth_stage") or (stage if occupied else "")
-        if sprout and occupied:
-            try:
-                sprout_dt = datetime.date.fromisoformat(str(sprout)[:10])
-                days = (datetime.date.today() - sprout_dt).days
-                derived = expected_stage(max(0, days), auto=_strain_is_auto(strain_id))
-                if derived and derived != "unknown":
-                    growth_stage = recipe.get("growth_stage") or derived
-                    _set_entity(states, f"sensor.dsc_pot{pot_n}_expected_stage", derived)
-                _set_entity(states, f"sensor.dsc_pot{pot_n}_days_since_sprout", max(0, days))
-            except ValueError:
-                pass
-        _set_entity(states, f"text.dsc_pot{pot_n}_plant_name", plant_name if occupied else "")
-        _set_entity(
-            states,
-            f"select.dsc_pot{pot_n}_growth_stage",
-            growth_stage if occupied else "",
-            attributes={"options": GROWTH_STAGE_OPTIONS},
-        )
-        _set_entity(
-            states,
-            f"input_select.dsc_pot{pot_n}_tent",
-            tent,
-            attributes={"options": SELECT_OPTIONS[f"input_select.dsc_pot{pot_n}_tent"]},
-        )
-        _set_entity(states, f"sensor.dsc_pot{pot_n}_strain_display", strain_display)
-        _set_entity(states, f"datetime.dsc_pot{pot_n}_sprout_date", str(sprout)[:10] if sprout else "")
-        if strain_id and occupied:
-            want = resolve_want(strain_id=strain_id, stage=stage)
-            bands = want.get("want") or {}
-            if "temp_c" in bands:
-                _set_entity(states, f"sensor.dsc_pot{pot_n}_want_temp_min", bands["temp_c"][0])
-                _set_entity(states, f"sensor.dsc_pot{pot_n}_want_temp_max", bands["temp_c"][1])
-            if "rh_pct" in bands:
-                _set_entity(states, f"sensor.dsc_pot{pot_n}_want_rh_min", bands["rh_pct"][0])
-                _set_entity(states, f"sensor.dsc_pot{pot_n}_want_rh_max", bands["rh_pct"][1])
-
-    cal_active = get_helper("input_boolean.dsc_cal_active", "off") == "on"
-    curve_count = sum(
-        1
-        for prefix in ("dsc_cal_cfm_out", "dsc_cal_cfm_recirc", "dsc_cal_cfm_intake_main", "dsc_cal_cfm_intake_clone")
-        if len([v for _, v in _cal_points_from_storage(prefix, helpers) if v > 0]) >= 2
-    )
-    _set_entity(states, "sensor.dsc_cfm_curves_status", f"{curve_count}/4 curves")
-    _set_entity(states, "sensor.dsc_learn_status", "idle" if not cal_active else "cal_active")
-    _set_entity(states, "binary_sensor.dsc_learn_gate_open", get_helper("input_boolean.dsc_learn_gate_open", "off"))
-
     tent_t = fleet.hub.values.get("temp_c") if fleet.hub else None
     tent_rh = fleet.hub.values.get("rh_pct") if fleet.hub else None
     rh_max = float(helpers.get("number.dsc_hub_rh_target_max", helpers.get("input_number.dsc_hub_rh_target_max", 70)) or 70)
     target_t = float(helpers.get("number.dsc_hub_target_temp", helpers.get("input_number.dsc_hub_target_temp", 25)) or 25)
 
-    hum_demand = _control_state(states, "switch.dsc_hub_humidifier_demand") == "on"
-    hum_relay = _control_state(states, "switch.dsc_humidifier_main_relay") == "on"
-    heat_demand = _control_state(states, "switch.dsc_hub_heater_demand") == "on"
-    heat_relay = _control_state(states, "switch.dsc_heater_main_relay") == "on"
-    mat_demand = _control_state(states, "switch.dsc_hub_grow_mat_demand") == "on"
-    mat_relay = _control_state(states, "switch.dsc_heatmat_main_relay") == "on"
+    hum_demand = _control_state(view, "switch.dsc_hub_humidifier_demand") == "on"
+    hum_relay = _control_state(view, "switch.dsc_humidifier_main_relay") == "on"
+    heat_demand = _control_state(view, "switch.dsc_hub_heater_demand") == "on"
+    heat_relay = _control_state(view, "switch.dsc_heater_main_relay") == "on"
+    mat_demand = _control_state(view, "switch.dsc_hub_grow_mat_demand") == "on"
+    mat_relay = _control_state(view, "switch.dsc_heatmat_main_relay") == "on"
     out_pct = fan_pcts.get("sensor.dsc_fan_exhaust_outside_pct", 0.0)
 
-    hum_runtime_h = _runtime_hours_today("hub", "switch_dsc_hub_humidifier_demand")
-    heat_runtime_h = _runtime_hours_today("hub", "switch_dsc_hub_heater_demand")
-    mat_runtime_h = _runtime_hours_today("hub", "switch_dsc_hub_grow_mat_demand")
+    hum_runtime_h = runtime.hours_today("hub", "switch_dsc_hub_humidifier_demand")
+    heat_runtime_h = runtime.hours_today("hub", "switch_dsc_hub_heater_demand")
+    mat_runtime_h = runtime.hours_today("hub", "switch_dsc_hub_grow_mat_demand")
 
     _set_entity(
         states,
@@ -622,8 +697,6 @@ def _build_computed_hass_states_uncached(
     )
     _set_entity(states, "sensor.dsc_active_alert_count", alert_count)
 
-    emit_dash_entities(states, fleet, set_entity=_set_entity, inventory=inventory)
-
     off_pct, off_honesty = _effective_light_off_pct(helpers)
     _set_entity(
         states,
@@ -632,7 +705,7 @@ def _build_computed_hass_states_uncached(
         available=True,
         attributes={"unit_of_measurement": "%", "honesty": off_honesty},
     )
-    bri_pct = _light_brightness_pct(states)
+    bri_pct = _light_brightness_pct(view)
     if bri_pct is not None:
         _set_entity(
             states,
@@ -651,6 +724,7 @@ def _build_computed_hass_states_uncached(
         available=hub_live,
     )
 
+    dash_view = {**cold_states, **states}
     dash_alerts = sum(
         1
         for eid in (
@@ -667,8 +741,14 @@ def _build_computed_hass_states_uncached(
             "binary_sensor.dsc_humidifier_ineffective_suspect",
             "binary_sensor.dsc_heater_ineffective_suspect",
             "binary_sensor.dsc_grow_mat_ineffective_suspect",
+            "binary_sensor.dsc_peer_mad_alert",
+            "binary_sensor.dsc_dht_disagreement",
+            "binary_sensor.dsc_pot1_sensor_stuck",
+            "binary_sensor.dsc_pot2_sensor_stuck",
+            "binary_sensor.dsc_pot3_sensor_stuck",
+            "binary_sensor.dsc_pot4_sensor_stuck",
         )
-        if _control_state(states, eid) == "on"
+        if _control_state(dash_view, eid) == "on"
     )
     _set_entity(states, "sensor.dsc_active_alert_count", dash_alerts)
 

@@ -2,7 +2,6 @@ import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 
 import { DecisionLayer } from "./DecisionLayer";
 import { iconSvg, type IconName } from "../icons";
 import { useEntityBus } from "../hooks/useEntityBus";
-import { useHass } from "../hooks/useHass";
 import { useFleetActions } from "../hooks/useFleetActions";
 import { useFleetEntity } from "../hooks/useFleetEntity";
 

@@ -41,6 +41,15 @@ POT_MAP = {
     "soil_ph": "ph",
 }
 
+POT_BINARY_OID_TO_KEY: dict[str, str] = {
+    "clock_valid_bs": "clock_valid",
+    "clock_valid": "clock_valid",
+    "probe_online_bs": "modbus_probe_online",
+    "modbus_probe_online": "modbus_probe_online",
+    "sensor_fault_bs": "sensor_fault",
+    "sensor_fault": "sensor_fault",
+}
+
 _ONLINE_STALE_SEC = 120.0
 
 _FAN_HISTORY_METRICS: dict[str, str] = {
@@ -370,6 +379,7 @@ async def _fetch_device(host: str, api_key: str, role: str, seat_id: str) -> dic
                 if hub_fw:
                     fw = str(hub_fw).strip()
             elif role == "pot":
+                binaries: dict[str, bool] = {}
                 for key, st in states.items():
                     object_id = key_to_object.get(key, "")
                     for suffix, field in POT_MAP.items():
@@ -379,6 +389,12 @@ async def _fetch_device(host: str, api_key: str, role: str, seat_id: str) -> dic
                             except (TypeError, ValueError):
                                 values[field] = st.state
                             break
+                    bin_field = POT_BINARY_OID_TO_KEY.get(object_id)
+                    if bin_field is not None:
+                        raw = getattr(st, "state", None)
+                        binaries[bin_field] = raw in (True, "on", "ON", 1, "1")
+                if binaries:
+                    values["binaries"] = binaries
 
             # Product firmware stamp from Firmware Version text sensor (all roles).
             for key, st in states.items():

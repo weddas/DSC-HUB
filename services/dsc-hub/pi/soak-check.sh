@@ -28,5 +28,11 @@ if [ -n "$SONOFF_COUNT" ] && [ "$SONOFF_COUNT" -lt 4 ]; then
   echo "ALERT: sonoffs=${SONOFF_COUNT}/4 at $TS" | tee -a "$ALERT_LOG" >&2
 fi
 
+COMPUTED_MS="$(curl -sf --max-time 15 -o /dev/null -w '%{time_total}' "${BASE}/fleet/computed" 2>/dev/null || echo fail)"
+COMPUTED_MS_INT="$(echo "$COMPUTED_MS" | awk '{printf "%.0f", $1 * 1000}')"
+if [ "$COMPUTED_MS" != "fail" ] && [ "$COMPUTED_MS_INT" -gt 3000 ] 2>/dev/null; then
+  echo "ALERT: /fleet/computed ${COMPUTED_MS_INT}ms > 3000ms at $TS" | tee -a "$ALERT_LOG" >&2
+fi
+
 echo "soak snapshot: $LOG"
 tail -1 "$LOG"

@@ -80,6 +80,8 @@ class ZigbeeMqttIngest:
         self._devices_updated_at: float | None = None
         self._device_states: dict[str, dict[str, Any]] = {}
         self._by_placement: dict[str, dict[str, Any]] = {}
+        self._bridge_state: str | None = None
+        self._bridge_state_updated_at: float | None = None
 
     def start(self) -> None:
         if mqtt is None:
@@ -109,6 +111,7 @@ class ZigbeeMqttIngest:
                 self._mqtt_connected = True
                 client.subscribe("zigbee2mqtt/+")
                 client.subscribe("zigbee2mqtt/bridge/devices")
+                client.subscribe("zigbee2mqtt/bridge/state")
             else:
                 self._mqtt_connected = False
 
@@ -135,6 +138,9 @@ class ZigbeeMqttIngest:
             return
         if topic == "zigbee2mqtt/bridge/devices":
             self._update_devices(payload)
+            return
+        if topic == "zigbee2mqtt/bridge/state":
+            self._update_bridge_state(payload)
             return
         if not isinstance(payload, dict):
             return
@@ -208,6 +214,24 @@ class ZigbeeMqttIngest:
         state.system["zigbee_devices_updated_at"] = self._devices_updated_at
         update_fleet_state(state)
 
+    def _update_bridge_state(self, payload: Any) -> None:
+        state_val: str | None = None
+        if isinstance(payload, dict):
+            raw = payload.get("state")
+            if raw is not None:
+                state_val = str(raw).lower()
+        elif isinstance(payload, str):
+            state_val = payload.strip().lower()
+        if state_val not in ("online", "offline"):
+            return
+        self._bridge_state = state_val
+        self._bridge_state_updated_at = time.time()
+        fleet = get_fleet_state()
+        fleet.system = dict(fleet.system)
+        fleet.system["zigbee_bridge_state"] = state_val
+        fleet.system["zigbee_bridge_state_updated_at"] = self._bridge_state_updated_at
+        update_fleet_state(fleet)
+
 
 _ingest = ZigbeeMqttIngest()
 
@@ -235,9 +259,27 @@ def get_zigbee_by_placement() -> dict[str, dict[str, Any]]:
 
 def get_zigbee_health() -> dict[str, Any]:
     permit_join = get_setting("zigbee_permit_join", "false").lower() == "true"
+    end_devices = [d for d in _ingest._devices if d.get("type") != "Coordinator"]
+    bridge_state = _ingest._bridge_state
+    radio_up = bridge_state == "online"
+    if bridge_state is None and not _ingest._mqtt_connected:
+        radio_note = "MQTT offline — brain cannot reach zigbee2mqtt"
+    elif bridge_state == "offline":
+        radio_note = "Coordinator offline — check USB stick and dsc-hub-z2m logs"
+    elif bridge_state is None:
+        radio_note = "Coordinator state unknown — z2m has not published bridge/state yet"
+    elif radio_up:
+        radio_note = "Coordinator online"
+    else:
+        radio_note = f"Coordinator state: {bridge_state}"
     return {
         "mqtt_connected": _ingest._mqtt_connected,
+        "bridge_state": bridge_state,
+        "bridge_state_updated_at": _ingest._bridge_state_updated_at,
+        "radio_up": radio_up,
+        "radio_note": radio_note,
         "device_count": len(_ingest._devices),
+        "end_device_count": len(end_devices),
         "devices_updated_at": _ingest._devices_updated_at,
         "canopy_updated_at": _ingest._canopy.get("updated_at"),
         "permit_join": permit_join,
