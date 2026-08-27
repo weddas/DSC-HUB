@@ -21,3 +21,5 @@
 - [x] Visual parity doc — [`TWIN-PARITY-7.3.md`](TWIN-PARITY-7.3.md) (wireframe vs cinematic baseline)
 
 Legacy [`dsc-the-dash-card.js`](../../homeassistant/www/dsc-the-dash-card.js) remains for HA `/dsc-hub` until that path migrates.
+
+Developer runbook: [`docs/brain/TWIN-R3F.md`](../brain/TWIN-R3F.md).

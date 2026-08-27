@@ -18,15 +18,24 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 |-------------|--------|
 | Version 7.3.0 unified | brain + surface + SPA |
 | Graph re-audit + axis QoL | [`GRAPH-REAUDIT-7.3.md`](qa/GRAPH-REAUDIT-7.3.md) |
-| FlowSankey air/heat/humidity | experimental on Climate |
-| Leaf VPD in charts | history + Climate + BandChart |
-| N-016 lab wet wizard | Calibrate + [`docs/ops/LAB-WET-CAL.md`](ops/LAB-WET-CAL.md) |
+| FlowSankey air/heat/humidity | [`brain/FLOW-SANKEY.md`](brain/FLOW-SANKEY.md) |
+| Leaf VPD in charts | [`brain/LEAF-VPD.md`](brain/LEAF-VPD.md) |
+| N-016 lab wet wizard | UI + honesty gap — [`ops/LAB-WET-CAL.md`](ops/LAB-WET-CAL.md) |
 | N-014 heater temp OOS latch | computed binary |
-| R3F Twin on Pi SPA | [`NEON-API-SOAK-7.3.md`](qa/NEON-API-SOAK-7.3.md) |
-| Lovelace YAML retired | `docs/archive/lovelace-7.3/` |
+| R3F Twin on Pi SPA | [`brain/TWIN-R3F.md`](brain/TWIN-R3F.md) · [`NEON-API-SOAK-7.3.md`](qa/NEON-API-SOAK-7.3.md) |
+| Lovelace YAML retired | [`ops/LOVELACE-RETIRED.md`](ops/LOVELACE-RETIRED.md) |
 | Phase E shim simplified | `useBrain.tsx` |
 
 **Remains (operator):** z2m TS0201 pair + stick recovery, FlowSankey 48h soak closeout (~2026-08-29), F-001–F-008 hardware.
+
+### 2026-08-27 — docs automation (tip `73143f3`)
+
+| Category | Item |
+|----------|------|
+| `red-flag` | SPA `LabWetCalPanel` calls `script.dsc_potN_lab_wet_cal` — **not** implemented in `compose_ops.handle_script` or HA packages; Pi path returns unsupported script. Durable SoT remains `script.dsc_pots_apply_lab_wet_to_esp` ([`LAB-WET-CAL.md`](ops/LAB-WET-CAL.md)). |
+| `next-plan` | Implement Pi-native lab wet (or retarget wizard to two-point helpers) + peer capture/push scripts on island. |
+| `done` | Developer docs: FLOW-SANKEY, LEAF-VPD, TWIN-R3F (TwinViewport portal), LOVELACE-RETIRED (source tree removed), WEBUI refresh, deploy stderr / spa-dist notes. |
+| `soak` | FlowSankey 48h closeout — [`FLOW-SANKEY-SOAK-7.3.md`](qa/FLOW-SANKEY-SOAK-7.3.md). |
 
 ---
 
