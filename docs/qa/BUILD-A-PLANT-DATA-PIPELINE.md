@@ -1,12 +1,14 @@
 # Build a Plant — data pipeline (N-085)
 
+UI entry (tip `91a4715`+): stepper [`PlantWizard`](../brain/PLANT-WIZARD.md) at `/grow/compose` (alias `ComposePlant`). Catalog search + filters still feed the same helpers below.
+
 ```mermaid
 flowchart LR
   dumps["Fat dumps gitignored"] --> merge["merge_strain_catalogs.py"]
   merge --> merged["dsc_strains_merged.json"]
   merged --> idx["build_catalog_search_indexes.py"]
   idx --> www["/local/dsc-catalog"]
-  www --> card["Build a Plant card"]
+  www --> card["Plant Wizard / CatalogPicker"]
   curated["dsc_strain_catalog.yaml"] --> promote["promote_strain_catalog_to_ha.py"]
   promote --> ha["sensor.dsc_strain_catalog want_bands"]
   ha --> want["Want templates"]

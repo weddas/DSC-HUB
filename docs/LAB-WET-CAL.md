@@ -1,5 +1,7 @@
 # Lab wet two-point calibration (N-016)
 
+**Durable HA / package procedure.** For Pi SPA Calibrate wizard status and honesty gap, see [`docs/ops/LAB-WET-CAL.md`](ops/LAB-WET-CAL.md).
+
 Use **raw** probe readings (or reset cal first) against known buffers. Do **not** stack HA peer offsets with lab scale — Push/zero peers first, or enable Lab Wet Force.
 
 ## Prerequisites
