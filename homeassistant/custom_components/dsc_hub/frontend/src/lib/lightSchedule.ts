@@ -123,7 +123,9 @@ export function readTentPhotoperiodInput(
     lightsOnTime: follows
       ? state("time.dsc_hub_lights_on_time", "")
       : state("time.dsc_hub_clone_lights_on_time", ""),
-    expectedHours: num("sensor.dsc_clone_expected_light_hours", 18),
+    expectedHours: follows
+      ? num("sensor.dsc_expected_light_hours", 12)
+      : num("sensor.dsc_clone_expected_light_hours", 18),
   };
 }
 
@@ -133,4 +135,69 @@ export function tentWindowEntity(tent: TentPhotoperiodId): string {
 
 export function tentLiveLitEntity(tent: TentPhotoperiodId): string {
   return tent === "main" ? "binary_sensor.dsc_hub_4x8_window_open" : "light.dsc_hub_sf1000_dimmer";
+}
+
+export type DayScheduleSegment = {
+  /** Minutes from local midnight [0, 1440). */
+  startMin: number;
+  endMin: number;
+  kind: LightSchedulePhase;
+};
+
+export type DayScheduleView = {
+  valid: boolean;
+  segments: DayScheduleSegment[];
+  /** Minutes from local midnight for the now marker. */
+  nowMin: number;
+  onMin: number | null;
+  offMin: number | null;
+  hours: number;
+};
+
+/** Scheduled lit/dark bands for one local calendar day (24h strip). */
+export function dayScheduleSegments(
+  input: LightScheduleInput,
+  now = Date.now(),
+): DayScheduleView {
+  const onMin = parseTimeToMinutes(input.lightsOnTime);
+  const hours =
+    Number.isFinite(input.expectedHours) && input.expectedHours > 0 ? input.expectedHours : 12;
+  const nowDate = new Date(now);
+  const nowMin = nowDate.getHours() * 60 + nowDate.getMinutes();
+  const empty: DayScheduleView = {
+    valid: false,
+    segments: [{ startMin: 0, endMin: 1440, kind: "dark" }],
+    nowMin,
+    onMin: null,
+    offMin: null,
+    hours,
+  };
+  if (onMin == null) return empty;
+
+  const litEnd = (onMin + hours * 60) % (24 * 60);
+  const segments: DayScheduleSegment[] = [];
+  if (litEnd > onMin) {
+    if (onMin > 0) segments.push({ startMin: 0, endMin: onMin, kind: "dark" });
+    segments.push({ startMin: onMin, endMin: litEnd, kind: "lit" });
+    if (litEnd < 1440) segments.push({ startMin: litEnd, endMin: 1440, kind: "dark" });
+  } else {
+    segments.push({ startMin: 0, endMin: litEnd, kind: "lit" });
+    segments.push({ startMin: litEnd, endMin: onMin, kind: "dark" });
+    segments.push({ startMin: onMin, endMin: 1440, kind: "lit" });
+  }
+
+  return {
+    valid: true,
+    segments,
+    nowMin,
+    onMin,
+    offMin: litEnd,
+    hours,
+  };
+}
+
+export function fmtMinutesClock(min: number): string {
+  const h = Math.floor(min / 60) % 24;
+  const m = min % 60;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }

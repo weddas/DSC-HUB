@@ -10,8 +10,9 @@ import {
   PageHeader,
   StatusChip,
 } from "../components/ui";
-import { CropScheduler } from "../components/CropScheduler";
+import { CropScheduler, tentStageRailLabel } from "../components/CropScheduler";
 import { DutyStrip } from "../components/DutyStrip";
+import { PhotoperiodTimeline } from "../components/PhotoperiodTimeline";
 import { TentLightClock } from "../components/TentLightClock";
 import { TargetNumber } from "../components/TentTargets";
 import { useEntityBus } from "../hooks/useEntityBus";
@@ -149,6 +150,7 @@ export function LiveLightPage() {
                 tone={railTone(hoursDraft4.tone)}
                 onClick={() => open("sensor.dsc_expected_light_hours", "4×8 expected hours", "numeric")}
               />
+              <StatusChip icon="roster" label={tentStageRailLabel(rail4, "main")} tone={rail4.mixed ? "warn" : "muted"} />
             </div>
             <ArcGauge
               label="Got / Want h"
@@ -167,10 +169,14 @@ export function LiveLightPage() {
               icon="lighting"
               onClick={() => open("sensor.dsc_expected_light_hours", "4×8 expected hours", "numeric")}
             />
+            <PhotoperiodTimeline
+              tent="main"
+              onClick={() => open("binary_sensor.dsc_hub_4x8_window_open", "4×8 window", "binary")}
+            />
             <DutyStrip
               entityId="binary_sensor.dsc_hub_4x8_window_open"
               hours={24}
-              label="4×8 window 24h"
+              label="4×8 actual 24h"
               onClick={() => open("binary_sensor.dsc_hub_4x8_window_open", "4×8 window", "binary")}
             />
             <div className="dsc-target-grid" style={{ marginTop: 12 }}>
@@ -208,6 +214,7 @@ export function LiveLightPage() {
                 tone={railTone(hoursDraft2.tone)}
                 onClick={() => open("sensor.dsc_clone_expected_light_hours", "2×4 expected hours", "numeric")}
               />
+              <StatusChip icon="roster" label={tentStageRailLabel(rail2, "clone")} tone={rail2.mixed ? "warn" : "muted"} />
             </div>
             <ArcGauge
               label="Got / Want h"
@@ -234,10 +241,14 @@ export function LiveLightPage() {
               icon="analytics"
               onClick={() => open("sensor.dsc_lights_deviation_today", "Lights deviation today", "numeric")}
             />
+            <PhotoperiodTimeline
+              tent="clone"
+              onClick={() => open("light.dsc_hub_sf1000_dimmer", "SF1000", "binary")}
+            />
             <DutyStrip
               entityId="light.dsc_hub_sf1000_dimmer"
               hours={24}
-              label="SF1000 24h"
+              label="SF1000 actual 24h"
               onClick={() => open("light.dsc_hub_sf1000_dimmer", "SF1000", "binary")}
             />
             <div className="dsc-demand-row" style={{ marginTop: 12 }}>

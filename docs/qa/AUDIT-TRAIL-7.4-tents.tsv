@@ -1,0 +1,9 @@
+phase	unit	hypothesis	action	evidence	verdict
+A	frame	Separate tents + schedule viz falsifiable on live Pi	Framed predicate in LIGHT-AUDIT-7.4-live.md	docs/qa/LIGHT-AUDIT-7.4-live.md	VERIFIED
+B	design	Scheduled 24h strip distinct from duty history	PhotoperiodTimeline + dayScheduleSegments	src/components/PhotoperiodTimeline.tsx	INCONCLUSIVE — not on Pi yet
+B	design	Crop scheduler per tent	TentCropColumn split	src/components/CropScheduler.tsx	INCONCLUSIVE — not on Pi yet
+C	live-audit	Light page shows clocks on .48	Browser snapshot #/live/light	screenshot 2026-08-27T12-05-38Z	NOT VERIFIED — old bundle
+C	live-audit	Hub reachable	curl /health	{"status":"ok","surface":"7.3.0"}	VERIFIED
+C	product	2x4 dark violation visible	Status chip + SF1000 ON during DARK	browser snapshot	VERIFIED
+D	architect	Airflow particle viz spec	AIRFLOW-VIZ-7.4.md	docs/qa/AIRFLOW-VIZ-7.4.md	VERIFIED
+D	parallel-ux	QoL research doc	parallel-cli pro-fast	docs/qa/PARALLEL-UX-7.4-PENDING.md	BLOCKED — CLI missing

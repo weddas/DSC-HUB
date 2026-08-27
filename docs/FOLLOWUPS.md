@@ -10,6 +10,23 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 
 ---
 
+## 2026-08-27 — 7.4 plan kickoff
+
+> **ACTIVE** — See [`docs/qa/PLAN-7.4.md`](qa/PLAN-7.4.md).
+
+| Phase | Focus |
+|-------|--------|
+| 0 | Close 7.3 gates: FlowSankey 48h soak (~Aug 29), z2m stick + TS0201 |
+| A | Hardware unblockers F-001–F-008, N-016 lab wet, N-020..023 trust soak |
+| B | FlowSankey graduate from experimental (post-soak) |
+| C | Zigbee UI once `radio_up` |
+| D | UX polish: compose, photoperiod, icons (after ~1 week live) |
+| E | Version 7.4.0 + AUDIT-CLOSURE-7.4 |
+
+**Git baseline:** `432d205` pushed; Pi SPA `index-IOZwdpgy.js`.
+
+---
+
 ## 2026-08-27 — 7.3 mega pass (closure)
 
 > **CLOSED 2026-08-27 (software)** — See [`docs/qa/AUDIT-CLOSURE-7.3.md`](qa/AUDIT-CLOSURE-7.3.md).

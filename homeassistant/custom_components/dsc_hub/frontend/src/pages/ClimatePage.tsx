@@ -13,6 +13,7 @@ import {
 import { OverflowMenu } from "../components/chrome";
 import { TimespanControl, CYCLE_TIMESPAN_EXTRAS } from "../components/HistoryDrawer";
 import { AirPathMap } from "../components/AirPathMap";
+import { AirflowParticleViz } from "../components/airflow/AirflowParticleViz";
 import { FlowSankey } from "../components/FlowSankey";
 import { CropScheduler } from "../components/CropScheduler";
 import { TentTargetPanel } from "../components/TentTargets";
@@ -414,6 +415,15 @@ export function LiveClimatePage() {
 
         <div className="dsc-col-12">
           <Card className="dsc-glass" title="Air path" icon="climate">
+            <AirflowParticleViz
+              readings={{
+                intakeMain: inMainReading,
+                intakeClone: inCloneReading,
+                outCfm: outReading,
+                recircCfm: recReading,
+              }}
+              manualOverride={fanOverride}
+            />
             <AirPathMap
               intakeClone={inCloneReading}
               intakeMain={inMainReading}
