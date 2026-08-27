@@ -10,6 +10,22 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 
 ---
 
+## 2026-08-27 — Deploy proof hub-ingest warmup (`931a687`)
+
+> **CLOSED 2026-08-27 (software)** — False FAIL when `/health` green but `hub.online` still false after brain recreate.
+
+| Item | Status |
+|------|--------|
+| `deploy-brain-remote.sh` wait ≤90s / 5s poll for `hub.online` | landed tip `931a687` |
+| `island-proof.sh` `HUB_WARMUP_SEC` (default 90) / `HUB_POLL_SEC` (default 5) | landed |
+| `verify-brain.sh` still WARN-only (no hard wait) | intentional |
+| Unused `routes.ts` lazy exports for SoilTestWizard/Sankey | removed (components stay page-local) |
+| Ops SoT | [`docs/ops/DEPLOY-PROOF.md`](ops/DEPLOY-PROOF.md) |
+
+**Remains:** live `studio-deploy.ps1` on `.48` to confirm warmup window in the field.
+
+---
+
 ## 2026-08-27 — 7.2 mega pass (global modifiers, soil probes, Zigbee, Sankey)
 
 > **CLOSED 2026-08-27 (software)** — See [`docs/qa/AUDIT-CLOSURE-7.2.md`](qa/AUDIT-CLOSURE-7.2.md).
@@ -23,6 +39,7 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 | Chart QoL | Room VPD in BandChartHost, unit-aware axis domains |
 | Sankey prototype | `SankeyFlowPrototype` on Climate (experimental) |
 | ZIGBEE-RECOVERY.md | Ops doc for stick + TS0201 |
+| Deploy proof warmup (`931a687`) | `DEPLOY-PROOF.md`; island-proof / deploy-remote ≤90s |
 | Brain tests | 60/60 |
 
 **Remains (operator/hardware):** Live redeploy (`studio-deploy.ps1`), z2m radio recovery + TS0201 pair, fleet OTA, F-001–F-008 physical installs.

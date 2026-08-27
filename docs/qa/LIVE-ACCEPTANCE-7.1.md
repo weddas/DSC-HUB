@@ -92,7 +92,8 @@ First compose-assign during a post-restart hub reconnect claimed applied but fle
 **Surface:** 7.1.2  
 **Closure doc:** [`AUDIT-CLOSURE-7.1.2.md`](AUDIT-CLOSURE-7.1.2.md)  
 **Deploy:** [`services/dsc-hub/pi/deploy-brain.ps1`](../../services/dsc-hub/pi/deploy-brain.ps1) → target **`.48`** (not `.30`)  
-**Verify:** [`verify-brain.ps1`](../../services/dsc-hub/pi/verify-brain.ps1) + [`island-proof.ps1`](../../services/dsc-hub/pi/island-proof.ps1)
+**Verify:** [`verify-brain.ps1`](../../services/dsc-hub/pi/verify-brain.ps1) + [`island-proof.ps1`](../../services/dsc-hub/pi/island-proof.ps1)  
+**Hub ingest warmup:** tip `931a687` — deploy-remote + island-proof wait ≤90s for `hub.online` ([`DEPLOY-PROOF.md`](../ops/DEPLOY-PROOF.md)); `verify-brain` WARNs only
 
 > **Live verified 2026-08-27:** deploy + `verify-brain` + `island-proof` green on `.48` / `dsc-brain.local`. Full-software backlog pass landed same day.
 

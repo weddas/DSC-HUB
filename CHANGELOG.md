@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **Ops** — `deploy-brain-remote.sh` + `island-proof.sh` wait up to 90s for `hub.online` after brain restart (avoids false FAIL while Native API ingest warms). See [`docs/ops/DEPLOY-PROOF.md`](docs/ops/DEPLOY-PROOF.md). Tip `931a687`.
+
 ## Pi appliance — **v7.2.0** (2026-08-27)
 
 Global modifiers, mobile soil probes, Zigbee multi-sensor, chart QoL, Sankey prototype. See [`docs/qa/AUDIT-CLOSURE-7.2.md`](docs/qa/AUDIT-CLOSURE-7.2.md).

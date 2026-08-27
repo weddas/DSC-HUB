@@ -36,6 +36,9 @@ This builds the Pi SPA, uploads brain Python + static, then on the Pi:
 1. Tries `docker compose build brain` (needs Docker Hub / eth0)
 2. Falls back to hot-patch if offline
 3. Logs deploy mode: `image-build` or `hot-patch`
+4. Waits up to **90s** for `hub.online` on `/fleet` (ingest warmup after AP drop)
+
+Studio LAN one-shot (NAS/`Y:`): `services/dsc-hub/pi/studio-deploy.ps1` → deploy → verify → island-proof. Defaults **`192.168.86.48`**. Hub-ingest wait details: [`docs/ops/DEPLOY-PROOF.md`](../../docs/ops/DEPLOY-PROOF.md).
 
 Verify after deploy:
 
@@ -50,7 +53,10 @@ From Windows after deploy:
 
 ```powershell
 services/dsc-hub/pi/verify-brain.ps1
+services/dsc-hub/pi/island-proof.ps1
 ```
+
+`verify-brain` WARNs if hub still offline; `island-proof` waits (default 90s) then fails hard if still offline.
 
 Pi layout: `/opt/dsc-hub` (compose), `/opt/dsc-hub-repo` (full repo for builds). Bootstrap creates both symlinks.
 

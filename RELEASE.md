@@ -9,10 +9,11 @@
 | **Primary UI** | Pi SPA at `http://10.42.0.1:8787` — **Overview** default landing |
 | **Studio LAN** | `http://192.168.86.48:8787` (`dsc-brain.local`) |
 | **Deploy** | [`services/dsc-hub/pi/studio-deploy.ps1`](services/dsc-hub/pi/studio-deploy.ps1) |
+| **Verify** | [`verify-brain.ps1`](services/dsc-hub/pi/verify-brain.ps1) + [`island-proof.ps1`](services/dsc-hub/pi/island-proof.ps1) — hub ingest wait: [`docs/ops/DEPLOY-PROOF.md`](docs/ops/DEPLOY-PROOF.md) |
 | **Closure** | [`docs/qa/AUDIT-CLOSURE-7.2.md`](docs/qa/AUDIT-CLOSURE-7.2.md) |
 | **Zigbee ops** | [`docs/ops/ZIGBEE-RECOVERY.md`](docs/ops/ZIGBEE-RECOVERY.md) |
 
-Global modifiers, mobile soil probe wizard (pot2/pot4 stations), Zigbee per-placement sensors, chart QoL, experimental Sankey on Climate. **60/60** brain tests.
+Global modifiers, mobile soil probe wizard (pot2/pot4 stations), Zigbee per-placement sensors, chart QoL, experimental Sankey on Climate. **60/60** brain tests. Deploy/island-proof wait up to **90s** for `hub.online` after container restart (tip `931a687`).
 
 **Pi SPA is SoT** — legacy `homeassistant/www/DSC-HUB.js` not required for island operation.
 
