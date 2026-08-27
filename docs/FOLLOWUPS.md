@@ -52,7 +52,7 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 
 ## 2026-08-28 — Soft calibrate pot probes
 
-> **next-plan / done (UI)** — Fleet → Calibrate → Soil · Soft calibrate wizard.
+> **done (UI)** — Fleet → Calibrate → Soil · Soft calibrate wizard. Runbook: [`docs/ops/LAB-WET-CAL.md`](ops/LAB-WET-CAL.md).
 
 | Item | Status |
 |------|--------|
@@ -62,6 +62,26 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 | All channels sampled (M/T/EC/pH/NPK); offsets only where HA helpers exist | done |
 | Pi-native Got without HA template enrichment | deferred — soft offsets ride HA Got = raw + offset stack |
 | Persist soft-cal session history in brain DB | deferred |
+
+---
+
+## 2026-08-28 — 7.4 software WiP tip (`e281644`)
+
+> **IN TREE (not tagged 7.4.0)** — See [`docs/qa/PLAN-7.4.md`](qa/PLAN-7.4.md) · demo [`docs/brain/DEMO-MODE.md`](brain/DEMO-MODE.md).
+
+| Deliverable | Status |
+|-------------|--------|
+| Software-only demo mode | `DSC_DEMO_MODE` + `docker-compose.demo.yml` + simulator + DemoBanner |
+| Public demo host + PD iframe CSP | `brain-demo.plausible-deniability.net` → `:8788`; `frame-ancestors` for PD site |
+| Soft calibrate (HA Got offsets) | SoftCalWizard on Calibrate Soil |
+| PhotoperiodTimeline + split CropScheduler | Light page; live audit still open |
+| Airflow particle scaffold | Climate; trim/full D2 incomplete |
+| `deploy-brain.ps1 -SkipSpaBuild` | NAS-safe redeploy |
+| SPA rebuild | `index-CZEwOtDZ` (+ calibrate / tune-fleet) |
+
+**Doc note (deferred):** `App.tsx` imports/renders `DemoBanner` twice — polish before public embed.
+
+**Still Phase 0:** FlowSankey 48h soak, z2m TS0201. Surface remains **7.3.0** until Phase E.
 
 ---
 
@@ -75,10 +95,10 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 | A | Hardware unblockers F-001–F-008, N-016 lab wet, N-020..023 trust soak |
 | B | FlowSankey graduate from experimental (post-soak) |
 | C | Zigbee UI once `radio_up` |
-| D | UX polish: compose, photoperiod, icons (after ~1 week live) |
+| D | UX polish: compose, photoperiod, icons (after ~1 week live) — D1/D2 partial; soft cal + demo tunnel on tip |
 | E | Version 7.4.0 + AUDIT-CLOSURE-7.4 |
 
-**Git baseline:** `432d205` pushed; Pi SPA `index-IOZwdpgy.js`.
+**Git baseline:** `e281644` tip; Pi SPA `index-CZEwOtDZ.js` (surface still 7.3.0).
 
 ---
 

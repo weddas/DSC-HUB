@@ -29,6 +29,8 @@ docker compose -f services/dsc-hub/docker-compose.demo.yml up -d --build
 
 Demo mode never starts ESPHome, MQTT, Zigbee, or Sonoff ingest. Controls update an in-process physics simulator seeded from `data/demo-fleet-seed.json`. No LAN hosts or API keys are permitted when `DSC_DEMO_MODE=1`.
 
+Full runbook: [`docs/brain/DEMO-MODE.md`](../docs/brain/DEMO-MODE.md).
+
 ## Layout
 
 | Path | Role |
