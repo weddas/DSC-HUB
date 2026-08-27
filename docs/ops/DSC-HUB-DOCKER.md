@@ -49,6 +49,7 @@ npm install && npm run build:spa
 
 - Pi power-off → AP dies; Sonoffs failsafe OFF.
 - Brain container restart (deploy/`compose up`) briefly drops the hub AP; hub and fleet devices rejoin within ~2 min. Expect a short fleet-offline window on every deploy — not a fault.
+- **Deploy proof:** `/health` can be green while `hub.online` is still false. `deploy-brain-remote.sh` and `island-proof.sh` wait up to **90s** for hub ingest before failing (tip `931a687`). See [`DEPLOY-PROOF.md`](DEPLOY-PROOF.md).
 - LLM prose is not catalog SoT.
 - Zigbee plugs are additive; climate legs stay on Sonoffs.
 

@@ -13,6 +13,7 @@
 | Chart QoL | PASS | Room VPD in BandChartHost, unit-aware axis domains |
 | Sankey prototype | PASS | Experimental on Climate page |
 | ZIGBEE-RECOVERY.md | PASS | Ops doc for stick recovery + TS0201 |
+| Deploy proof warmup | PASS | `deploy-brain-remote` + `island-proof` wait ≤90s for `hub.online` (tip `931a687`); SoT [`DEPLOY-PROOF.md`](../ops/DEPLOY-PROOF.md) |
 
 ## Hardware (honest UI only)
 
@@ -33,5 +34,6 @@
 - [x] Soil test wizard + probe stations
 - [x] Zigbee per-device entities
 - [x] Sankey prototype flagged experimental
+- [x] Deploy/island-proof hub-ingest warmup (code tip `931a687`)
 - [ ] Live redeploy from studio LAN (operator)
 - [ ] z2m TS0201 pair proof (operator, radio up)
