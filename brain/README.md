@@ -23,7 +23,12 @@ python -m dsc_brain.api   # http://127.0.0.1:8787/docs
 | `dsc_brain/catalog.py` | YAML/JSON packs → SQLite |
 | `dsc_brain/want.py` | Want resolution |
 | `dsc_brain/decision_loop.py` | Need vs Got + proposal |
-| `dsc_brain/api.py` | FastAPI surface for future web UI |
+| `dsc_brain/api.py` | FastAPI + SPA host (`:8787`) |
+| `dsc_brain/global_modifiers.py` | Fan/light scales + zone temp/RH offsets (7.2) |
+| `dsc_brain/soil_tests.py` | Probe stations + confirmed soil tests (7.2) |
+| `dsc_brain/zigbee_mqtt.py` | z2m ingest, placements, health |
 | `dsc_brain/cli.py` | Offline ops without a server |
+
+Eng docs: [`docs/brain/GLOBAL-MODIFIERS.md`](../docs/brain/GLOBAL-MODIFIERS.md) · [`docs/brain/SOIL-PROBE.md`](../docs/brain/SOIL-PROBE.md) · [`docs/ops/ZIGBEE-RECOVERY.md`](../docs/ops/ZIGBEE-RECOVERY.md)
 
 Catalog authoring remains under `homeassistant/data/` until packs move; the brain **loads** them without needing Home Assistant.

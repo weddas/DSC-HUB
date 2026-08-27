@@ -8,7 +8,7 @@ Global modifiers, mobile soil probes, Zigbee multi-sensor, chart QoL, Sankey pro
 
 - **Global tuning** — fan/light demand scale (0.5–1.5); per-zone temp/RH offsets with clamp; Settings accordion + API.
 - **Soil probe workflow** — pot2/pot4 as probe stations; idle home pot thereabouts readings; `SoilTestWizard` (7-channel confirmed tests); `soil_tests` SQLite + API.
-- **Zigbee** — per-placement `sensor.dsc_zigbee_*` entities; modifier offsets on ingest; [`docs/ops/ZIGBEE-RECOVERY.md`](docs/ops/ZIGBEE-RECOVERY.md).
+- **Zigbee** — per-placement `sensor.dsc_zigbee_*` entities; modifier offsets on ingest; [`docs/ops/ZIGBEE-RECOVERY.md`](docs/ops/ZIGBEE-RECOVERY.md) · eng: [`GLOBAL-MODIFIERS.md`](docs/brain/GLOBAL-MODIFIERS.md) · [`SOIL-PROBE.md`](docs/brain/SOIL-PROBE.md).
 - **Charts** — room VPD in BandChartHost; unit-aware Y domains; CSS token colors.
 - **Climate** — experimental `SankeyFlowPrototype` (mass-balance CFM); Zigbee-by-placement table.
 - **Brain** — leaf VPD in `climate_math`; NPK ingest on pots; probe stations excluded from peer-MAD trust.
