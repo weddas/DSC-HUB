@@ -193,14 +193,47 @@ export function DashActiveAlerts({ activeIds, onAlert }: { bus: Bus; activeIds: 
 
 export function DashEspLinkChips({ bus, onNavigate }: { bus: Bus; onNavigate: (path: string) => void }) {
   return (
-    <div className="dsc-chip-row">
+    <div className="dsc-chip-row" role="group" aria-label="Pot radio vs Modbus probe">
       {[1, 2, 3, 4].map((n) => {
-        const on = bus.state(`binary_sensor.dsc_hub_pot${n}_esp_now_link`) === "on";
+        const espOn = bus.state(`binary_sensor.dsc_hub_pot${n}_esp_now_link`) === "on";
+        const modbusId = `binary_sensor.dsc_pot${n}_modbus_probe_online`;
+        const modbusKnown = bus.available(modbusId);
+        const modbusOn = bus.state(modbusId) === "on";
+        // ESP-NOW is the radio hop; Modbus is the soil probe bus — do not conflate.
+        let label: string;
+        let tone: "ok" | "warn" | "muted" | "bad";
+        let title: string;
+        if (espOn && modbusKnown && modbusOn) {
+          label = `P${n} ESP+probe`;
+          tone = "ok";
+          title = "ESP-NOW link up and Modbus probe online";
+        } else if (espOn && modbusKnown && !modbusOn) {
+          label = `P${n} ESP · probe dark`;
+          tone = "warn";
+          title = "Radio is up but the Modbus soil probe is offline — not an ESP failure";
+        } else if (espOn) {
+          label = `P${n} ESP`;
+          tone = "ok";
+          title = "ESP-NOW direct link up";
+        } else if (modbusKnown && modbusOn) {
+          label = `P${n} Modbus`;
+          tone = "ok";
+          title = "ESP-NOW down; Modbus probe still answering (fallback path)";
+        } else if (modbusKnown && !modbusOn) {
+          label = `P${n} probe dark`;
+          tone = "warn";
+          title = "No ESP-NOW and Modbus probe offline";
+        } else {
+          label = `P${n} link dark`;
+          tone = "muted";
+          title = "No ESP-NOW link (Modbus probe entity not present)";
+        }
         return (
           <StatusChip
             key={n}
-            label={`P${n} ${on ? "direct" : "fallback"}`}
-            tone={on ? "ok" : "muted"}
+            label={label}
+            tone={tone}
+            title={title}
             onClick={() => onNavigate("/live/root")}
           />
         );

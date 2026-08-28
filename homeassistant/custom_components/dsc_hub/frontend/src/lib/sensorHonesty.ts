@@ -1,4 +1,5 @@
 import { resolveCfm } from "./cfmProvenance";
+import { ALL_POT_NUMBERS, isPotInService } from "./seatModel";
 
 export type HonestyTone = "ok" | "warn" | "bad" | "muted";
 
@@ -114,7 +115,19 @@ export function collectHonestyGaps(hass: HassLike): HonestyGap[] {
     });
   }
 
-  // OOS pots are fully omitted from Live surfaces — no honesty chips naming them.
+  // Live omits OOS pots (no fake Got) — still surface a count so fleet holes are visible.
+  const oosPots = ALL_POT_NUMBERS.filter((n) => !isPotInService(n, st));
+  if (oosPots.length) {
+    gaps.push({
+      id: "oos-pots",
+      label: oosPots.length === 1 ? `Pot ${oosPots[0]} OOS` : `${oosPots.length} pots OOS`,
+      detail: `Pot${oosPots.length === 1 ? "" : "s"} ${oosPots.join(", ")} out of service — omitted from Live on purpose. Open Root or Settings to put back in service.`,
+      tone: "muted",
+      href: "/live/root",
+      cta: "Open Root",
+      priority: 50,
+    });
+  }
 
   if (on("binary_sensor.dsc_clone_dark_period_violation")) {
     gaps.push({

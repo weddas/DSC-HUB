@@ -223,6 +223,7 @@ export function StatusChip({
   motion,
   icon,
   onClick,
+  title,
 }: {
   label: string;
   tone?: "ok" | "bad" | "warn" | "muted";
@@ -230,6 +231,7 @@ export function StatusChip({
   motion?: "pulse" | "duty" | "breathe" | "fan" | "glow";
   icon?: IconName;
   onClick?: () => void;
+  title?: string;
 }) {
   const anim = motion ?? (pulse ? "pulse" : undefined);
   const cls = `dsc-chip dsc-chip--${tone}${anim ? ` dsc-chip--${anim}` : ""}`;
@@ -245,14 +247,14 @@ export function StatusChip({
     ) : null;
   if (onClick) {
     return (
-      <button type="button" className={`${cls} is-clickable`} onClick={onClick}>
+      <button type="button" className={`${cls} is-clickable`} title={title} onClick={onClick}>
         {leading}
         {label}
       </button>
     );
   }
   return (
-    <span className={cls}>
+    <span className={cls} title={title}>
       {leading}
       {label}
     </span>
