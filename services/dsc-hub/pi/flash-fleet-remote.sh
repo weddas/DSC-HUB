@@ -7,7 +7,7 @@ set -eu
 PASS="${1:-Digital}"
 REPO="/opt/dsc-hub-repo"
 CONFIG="/config"
-SEATS="${2:-hub pot2 pot1 pot3 pot4 heater heatmat humidifier dehumidifier control}"
+SEATS="${2:-hub pot2 pot1 heater heatmat humidifier dehumidifier control}"
 
 run_sudo() { echo "$PASS" | sudo -S "$@"; }
 

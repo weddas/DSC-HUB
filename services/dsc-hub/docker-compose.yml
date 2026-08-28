@@ -99,6 +99,11 @@ services:
     container_name: dsc-hub-esphome
     restart: unless-stopped
     command: ["dashboard", "/config"]
+    # Bridge network had no upstream DNS ("NO EXTERNAL NAMESERVERS") — PlatformIO
+    # OTA compile failed resolving github.com. Pin Nest + Google.
+    dns:
+      - 192.168.86.1
+      - 8.8.8.8
     ports:
       - "6052:6052"
     volumes:

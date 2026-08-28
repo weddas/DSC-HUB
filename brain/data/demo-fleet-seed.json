@@ -331,7 +331,7 @@
     {
       "seat_id": "pot3",
       "role": "pot",
-      "in_service": true,
+      "in_service": false,
       "host": "",
       "mac": null,
       "api_key": null,
@@ -340,7 +340,7 @@
     {
       "seat_id": "pot4",
       "role": "pot",
-      "in_service": true,
+      "in_service": false,
       "host": "",
       "mac": null,
       "api_key": null,

@@ -378,8 +378,17 @@ export function PlantSeatPanel({
                   </select>
                 </label>
                 <div className="dsc-chip-row">
-                  <StatusChip label={`Day ${seat.days}`} tone="ok" />
-                  <StatusChip label={seat.stage} tone="muted" />
+                  <StatusChip label={`Day ${seat.days || "—"}`} tone="muted" />
+                  <StatusChip
+                    label={
+                      seat.stage && seat.stage !== "—"
+                        ? `Expected · ${seat.stage}`
+                        : seat.days && seat.days !== "—"
+                          ? `Expected (day ${seat.days})`
+                          : "No expected stage"
+                    }
+                    tone="muted"
+                  />
                   {editStatus ? <StatusChip label={editStatus} tone="ok" /> : null}
                 </div>
                 {editErr ? (

@@ -172,11 +172,12 @@ esphome:
       then:
         - light.turn_off: backlight
     # v5.1.15 — blank → Starting (status + bar) → hello → load snapshot → Pulse.
-    # Keep LVGL paused (backlight off) through Wi-Fi/heap settle. Resume only
-    # the lite Starting page; hello the hub; wait for vitals/config/soil
-    # before arming the full widget tree.
+    # ESPHome 2025.12 dropped config `paused:` (priority-800 lvgl.pause caused
+    # codegen circular deps). Pause here with backlight already off, then
+    # settle / resume-lite / resume-full as before.
     - priority: -100
       then:
+        - lvgl.pause:
         - light.turn_off: backlight
         - lambda: |-
             ESP_LOGI("boot", "DSC-CONTROL 7.0.0.0 paused — free_heap=%u largest=%u",
@@ -185,12 +186,7 @@ esphome:
             id(boot_ui_ready) = false;
             id(gv_cfg_ok) = false;
             id(gv_soil_ok) = false;
-            for (lv_indev_t *in = lv_indev_get_next(nullptr); in != nullptr; in = lv_indev_get_next(in)) {
-              if (lv_indev_get_type(in) == LV_INDEV_TYPE_POINTER) {
-                lv_indev_set_scroll_limit(in, 40);
-                lv_indev_set_scroll_throw(in, 5);
-              }
-            }
+            // ESPHome 2025.12 LVGL dropped lv_indev_set_scroll_{limit,throw}.
             lv_obj_add_flag(id(tabbar), LV_OBJ_FLAG_HIDDEN);
         - delay: 10s
         - if:
@@ -759,21 +755,18 @@ sensor:
       name: "Panel Free Heap"
       id: panel_free_heap
       entity_category: diagnostic
-      on_value:
-        - lambda: |-
-            // Largest-free-block matters as much as free-total here. The two
-            // crashes on 26 Jul were a 768 B and a 300 B request failing while
-            // the heap still had usable bytes in it — fragmentation, not
-            // capacity. If this line ever starts printing LOW, the panel is
-            // back in the state that produced them.
-            float blk = id(panel_free_block).state;
-            if (isnan(blk))            ESP_LOGI("heap", "free=%.0f B  largest_block=(pending)", x);
-            else if (blk < 12000.0f)   ESP_LOGW("heap", "LOW  free=%.0f B  largest_block=%.0f B  <- LVGL draw buffers start failing near here", x, blk);
-            else                       ESP_LOGI("heap", "free=%.0f B  largest_block=%.0f B", x, blk);
     block:
       name: "Panel Largest Free Block"
       id: panel_free_block
       entity_category: diagnostic
+      # Log from block (not free): free.on_value → panel_free_block created a
+      # codegen circular dependency under ESPHome 2025.12 (same debug platform).
+      on_value:
+        - lambda: |-
+            float free_b = id(panel_free_heap).state;
+            if (isnan(free_b))         ESP_LOGI("heap", "free=(pending)  largest_block=%.0f B", x);
+            else if (x < 12000.0f)     ESP_LOGW("heap", "LOW  free=%.0f B  largest_block=%.0f B  <- LVGL draw buffers start failing near here", free_b, x);
+            else                       ESP_LOGI("heap", "free=%.0f B  largest_block=%.0f B", free_b, x);
   # onboard LDR (CdS on GPIO34) — logged for a future auto-dim pass
   - platform: adc
     pin: GPIO34
@@ -1647,11 +1640,9 @@ font:
 #  BLUE #2196F3  CYAN #00BCD4  RED #F44336  card #171B22  bg #0E1116
 # ==================================================================
 lvgl:
-  # v5.1.3 — start paused so setup/WiFi do not letter-draw under peak heap
-  # pressure. v5.1.5 on_boot: resume-lite (page_boot) then resume-full.
-  # Do not resume_on_input (a wake tap must not force paint before
-  # boot_ui_ready).
-  paused: true
+  # ESPHome 2025.12 dropped config `paused:` — pause via on_boot lvgl.pause
+  # (priority 800) instead. Keep resume_on_input false so a wake tap cannot
+  # force paint before boot_ui_ready.
   resume_on_input: false
   # v5.1.8 — single partial draw buffer ≈ 8% of framebuffer
   # (320×240×2×0.08 = 12,288 B) in internal SRAM. Checklist: never
@@ -1659,8 +1650,11 @@ lvgl:
   buffer_size: 8%
   displays:
     - cyd_display
+  # Hold-to-lock HUD: on_long_press(_repeat) drives hold_tick (no on_pressing).
   touchscreens:
-    - cyd_touch
+    - touchscreen_id: cyd_touch
+      long_press_time: 100ms
+      long_press_repeat_time: 50ms
   color_depth: 16
   default_font: f_body
   bg_color: 0x0E1116
@@ -1834,7 +1828,9 @@ lvgl:
           on_press:
             - lambda: 'id(lock_arm) = true;'
             - script.execute: hold_begin
-          on_pressing:
+          on_long_press:
+            - script.execute: hold_tick
+          on_long_press_repeat:
             - script.execute: hold_tick
           on_release:
             - script.execute: hold_finish
@@ -1946,7 +1942,9 @@ lvgl:
                   lambda: 'return id(lock_engaged);'
                 then:
                   - script.execute: hold_begin
-          on_pressing:
+          on_long_press:
+            - script.execute: hold_tick
+          on_long_press_repeat:
             - script.execute: hold_tick
           on_release:
             - script.execute: hold_finish
@@ -4493,6 +4491,7 @@ script:
   # Lock-begin only from lock_arm (lock_hit). Unlock from the overlay itself.
   # At 3s: set *_pending only — never hide/show overlay mid-press.
   # HUD show is deferred off the indev stack (delay in hold_begin).
+  # hold_tick is driven by on_long_press / on_long_press_repeat (ESPHome 2025.12+).
   - id: hold_begin
     mode: single
     then:
@@ -4723,13 +4722,13 @@ script:
           auto setc = [](lv_obj_t* o, uint32_t c){
             lv_color_t want = lv_color_hex(c);
             lv_color_t cur = lv_obj_get_style_text_color(o, LV_PART_MAIN);
-            if (lv_color_to_u32(cur) != lv_color_to_u32(want))
+            if (lv_color_to32(cur) != lv_color_to32(want))
               lv_obj_set_style_text_color(o, want, LV_PART_MAIN);
           };
           auto bordc = [](lv_obj_t* o, uint32_t c){
             lv_color_t want = lv_color_hex(c);
             lv_color_t cur = lv_obj_get_style_border_color(o, LV_PART_MAIN);
-            if (lv_color_to_u32(cur) != lv_color_to_u32(want))
+            if (lv_color_to32(cur) != lv_color_to32(want))
               lv_obj_set_style_border_color(o, want, LV_PART_MAIN);
           };
           auto setbar = [](lv_obj_t* o, int v){
@@ -4738,7 +4737,7 @@ script:
           auto setbarb = [](lv_obj_t* o, uint32_t c){
             lv_color_t want = lv_color_hex(c);
             lv_color_t cur = lv_obj_get_style_bg_color(o, LV_PART_INDICATOR);
-            if (lv_color_to_u32(cur) != lv_color_to_u32(want))
+            if (lv_color_to32(cur) != lv_color_to32(want))
               lv_obj_set_style_bg_color(o, want, LV_PART_INDICATOR);
           };
           auto setl = [](lv_obj_t* o, const char* s){

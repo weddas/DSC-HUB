@@ -4,7 +4,7 @@ param(
     [string]$PiUser = "dsc",
     [string]$PiPassword = "Digital",
     [string]$HostKey = "SHA256:4XD2kIJ5qNCnULKNmo/L9mvzLbmZdURLwLW7Utt9NJs",
-    [string]$Seats = "hub pot2 pot1 pot3 pot4 heater heatmat humidifier dehumidifier control"
+    [string]$Seats = "hub pot2 pot1 heater heatmat humidifier dehumidifier control"
 )
 
 $ErrorActionPreference = "Stop"

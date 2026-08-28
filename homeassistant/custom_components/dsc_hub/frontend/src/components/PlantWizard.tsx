@@ -247,7 +247,7 @@ export function PlantWizard() {
           </div>
           {expectedStage ? (
             <div className="dsc-chip-row" style={{ marginTop: 8 }}>
-              <StatusChip icon="grow" label={`Stage · ${expectedStage}`} tone="ok" />
+              <StatusChip icon="grow" label={`Expected · ${expectedStage}`} tone="muted" />
               {expectedDays ? <StatusChip icon="history" label={`Day ${expectedDays}`} tone="muted" /> : null}
             </div>
           ) : (
@@ -417,7 +417,7 @@ export function PlantWizard() {
             </div>
             {expectedStage ? (
               <div>
-                <dt>Stage</dt>
+                <dt>Expected stage (from sprout)</dt>
                 <dd>
                   {expectedStage}
                   {expectedDays ? ` · day ${expectedDays}` : ""}
@@ -527,7 +527,7 @@ export function PlantWizard() {
         <p>
           Saves <strong>{plantTitle}</strong> with {vessel.label} and {mixLabel} to the roster, assigns{" "}
           {potLabel} in {tent}, and copies the vessel to that pot.
-          {expectedStage ? ` Stage will be ${expectedStage}.` : ""}
+          {expectedStage ? ` Calendar expected stage will be ${expectedStage}.` : ""}
         </p>
       </DecisionLayer>
     </div>

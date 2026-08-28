@@ -100,9 +100,10 @@ export const KIT_DEFS: KitDef[] = [
   ...ALL_POT_NUMBERS.map(
     (n): KitDef => ({
       id: `pot${n}`,
-      label: `Pot ${n}`,
+      label: `Probe ${n}`,
       inServiceEntity: `input_boolean.dsc_probe${n}_in_service`,
-      plannedWhenOff: n === 3,
+      // Kit is probe1+2 only; 3/4 retired from hardware kit (planned OOS).
+      plannedWhenOff: n === 3 || n === 4,
       firmwareEntity: `sensor.dsc_probe${n}_firmware_version`,
     }),
   ),

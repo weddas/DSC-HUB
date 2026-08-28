@@ -58,7 +58,7 @@ def _inventory_in_service(inventory: list[dict[str, Any]] | None, seat_id: str, 
     for row in inventory or []:
         if row.get("seat_id") == seat_id:
             return bool(row.get("in_service", default))
-    defaults = {"ac": False, "mister": False, "pot3": False, "tank": False}
+    defaults = {"ac": False, "mister": False, "pot3": False, "pot4": False, "tank": False}
     return defaults.get(seat_id, default)
 
 

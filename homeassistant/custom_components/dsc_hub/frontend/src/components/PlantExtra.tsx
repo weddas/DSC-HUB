@@ -23,7 +23,17 @@ export function PlantExtra({ pot }: { pot: number }) {
       <div className="dsc-chip-row">
         <StatusChip label={photoperiodOn ? "Awake" : "Asleep"} tone={photoperiodOn ? "ok" : "muted"} />
         <StatusChip label={`Day ${days}`} tone="muted" />
-        <StatusChip label={stage === "—" ? "No stage Got" : stage} tone={stage === "—" ? "muted" : "ok"} />
+        {/* Calendar age model only — not live plant state; Growth stage select is SoT. */}
+        <StatusChip
+          label={
+            stage === "—" || !stage
+              ? days !== "—" && days !== ""
+                ? `Expected (day ${days})`
+                : "No expected stage"
+              : `Expected · ${stage}`
+          }
+          tone="muted"
+        />
         <StatusChip
           label={untrusted ? "Need blocked (untrusted)" : stress}
           tone={untrusted ? "warn" : stress === "calm" ? "ok" : "warn"}
