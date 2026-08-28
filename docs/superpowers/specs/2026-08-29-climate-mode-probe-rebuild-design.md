@@ -1,7 +1,7 @@
 # Climate Mode + DSC-Probe rebuild — design
 
 **Date:** 2026-08-29  
-**Status:** **approved** (operator Act-On + full suggestion list + entity-rename override)  
+**Status:** **approved** — Climate Mode + SoftCal Raw (`9343be6`); probe rename / `cal_session` / SoftCal history (`654d0f8`); Pi ESPHome DNS pin + Control ESPHome 2025.12 OTA path + pot3/4 kit retirement (`18849da`). Live OTA: hub + pot1 + pot2 + control @ 7.0.0.0. Ops: `docs/brain/CLIMATE-MODE-POLICY.md`, `PROBE-PLANT-MODEL.md`, `docs/ops/SOFT-CAL.md`, `ESPHOME-OTA-PI.md`.  
 **Source:** `docs/superpowers/plans/2026-08-29-pre-rebuild-interrogate.md`  
 **Plan:** `docs/superpowers/plans/2026-08-29-climate-mode-probe-rebuild.md`
 

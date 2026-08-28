@@ -18,6 +18,8 @@ Standalone SoftAP unboxing (no HA): [SETUP.md](../../SETUP.md).
 Entry points (local lab): `dsc-hub.yaml`, `dsc-control.yaml`, `dsc-bridge.yaml`, `DSC-Probe1.yaml`, …
 Kit SoftAP setup: `dsc-hub-kit.yaml`, `dsc-control-kit.yaml`, `DSC-Probe{1..4}-kit.yaml`, `dsc-bridge-kit.yaml`
 
+Device **names** are `dsc_probeN` (entity contract `sensor.dsc_probeN_*`). Live kit flashes **probe1 + probe2** only (pot3/4 planned OOS). Flash hub providers with in-kit probes in one train. Pi compile/OTA runbook (compose DNS pin + ESPHome 2025.12 Control path): [`../../docs/ops/ESPHOME-OTA-PI.md`](../../docs/ops/ESPHOME-OTA-PI.md). SoftCal / `cal_session`: [`../../docs/ops/SOFT-CAL.md`](../../docs/ops/SOFT-CAL.md).
+
 WiFi is split into `dsc-*-wifi-lab.yaml` / `dsc-*-wifi-kit.yaml` so kit builds omit compile-time SSIDs.
 Fleet component: `components/dsc_fleet_setup/` (phone portal on hub; Control/pots/bridge join `DSC-Setup-*`).
 Bridge also hosts SoftAP `DSC-Anchor` (F-012 channel pin) + `components/dsc_api_client/` (F-010).
@@ -30,14 +32,16 @@ HA + ESP-NOW. **Soil * Raw** diagnostic templates reverse cal for lab wet measur
 **Reset Sensor Calibration** restores defaults and clears provenance. **Mark Soil Cal Peer Median**
 (5.1.5+) and **Mark Soil Cal Lab Buffer** (5.1.6+) stamp method after HA push / lab wet.
 
-## Panel (DSC-CONTROL **6.0.0.0**)
+## Panel (DSC-CONTROL **7.0.0.0** / ESPHome 2025.12)
 
-Package body: [`dsc-control-common.yaml`](dsc-control-common.yaml).
+Package body: [`dsc-control-common.yaml`](dsc-control-common.yaml). Tip `18849da` unblocks Pi OTA under ESPHome **2025.12** (see [`ESPHOME-OTA-PI.md`](../../docs/ops/ESPHOME-OTA-PI.md) § Control).
 
 | Feature | Notes |
 |---|---|
 | Soil cards + detail | 0xD3 vitals / 0xD4 names; tap pot → NPK drill-down |
-| Hold-to-lock | Hold ~3 s on primary tabs; hold lock screen to unlock |
+| Boot pause | `on_boot` `lvgl.pause` (no config `paused:`) — backlight off → Starting → full UI |
+| Hold-to-lock | `on_long_press` / `on_long_press_repeat` (~3 s); not `on_pressing` |
+| Heap diag | Log from `panel_free_block.on_value` (avoid free↔block circular codegen) |
 | Demand / takeover gate | Confirm → Engage (not one stray tap) |
 | Connections | Wi‑Fi channel; ESP-NOW RX age + TX seq; silent → ping/WiFi bounce |
 | AP pin | Runtime only: hub **Lock WiFi AP** learns preferred BSSID into NVS; 0xD0 fleet-beats it; Control/pots `adopt_hub_wifi_ap`. Stubs stay `00:00:00:00:00:00` — never bake a site MAC into YAML. |

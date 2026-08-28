@@ -11,12 +11,16 @@
 
 Fleet DHCP reservations live in `/etc/dsc-hub/dnsmasq.conf` (bootstrap template). After flash, add device MACs from Settings inventory.
 
+## ESPHome compile / OTA
+
+Brain queues `docker exec dsc-hub-esphome esphome compile|run`. Container DNS is **pinned** (`192.168.86.1` + `8.8.8.8`) so PlatformIO can reach GitHub — see [`ESPHOME-OTA-PI.md`](ESPHOME-OTA-PI.md). Recreate `dsc-hub-esphome` after compose pull. Control YAML must be the ESPHome **2025.12** path before panel OTA.
+
 ## Cutover checklist
 
 1. Bootstrap Pi (`pi-bootstrap.sh`), compose up, `/health` green.
 2. Move SkyConnect from Unraid; z2m sees coordinator.
 3. Build firmware **7.0.0.0** (`wifi-pi` stubs); rotate Noise API keys → `.env` + Notion.
-4. Flash order: hub → pot2 canary → remaining pots → Sonoffs → panel.
+4. Flash order: hub → pot2 canary → pot1 → Sonoffs → panel. **Skip pot3/pot4** (retired from kit / planned OOS).
 5. Disable HA demand-follower automations and HA ESPHome integrations (do not delete packages until soak).
 6. Hub ESP-NOW parked on Pi path; brain polls hub demand switches and drives Sonoff relays (45s stale OFF).
 7. **Island proof:** Nest + HA off; tent on Pi AP; fleet chip `7.0.0.0`.
