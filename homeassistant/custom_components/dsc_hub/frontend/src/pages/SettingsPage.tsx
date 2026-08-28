@@ -37,7 +37,7 @@ const ZONE_LABELS: Record<ClimateZone, string> = {
   clone: "2×4",
   main: "4×8",
 };
-const IDLE_POT_OPTIONS = ["pot1", "pot2", "pot3", "pot4"] as const;
+const IDLE_POT_OPTIONS = ["", "pot1", "pot2", "pot3", "pot4"] as const;
 const TENT_OPTIONS = ["2x4", "4x8"] as const;
 
 const AP_KEYS = ["ap_ssid", "ap_psk", "ap_channel"] as const;
@@ -278,6 +278,8 @@ export function SettingsPage() {
   const [modifiersDirty, setModifiersDirty] = useState(false);
   const [probeStations, setProbeStations] = useState<ProbeStation[]>([]);
   const [probeDrafts, setProbeDrafts] = useState<Record<string, { idle_home_pot_id: string; tent: string }>>({});
+  const [probeErr, setProbeErr] = useState<string | null>(null);
+  const [pendingClearProbe, setPendingClearProbe] = useState<string | null>(null);
 
   const refresh = async () => {
     const [s, net, cat, esp, j, fleetRaw, zigbee, zigbeeHealthRaw, modifiers, stations] = await Promise.all([
@@ -310,14 +312,15 @@ export function SettingsPage() {
     }
     setProbeStations(stations);
     setProbeDrafts((prev) => {
-      const next = { ...prev };
+      const next: Record<string, { idle_home_pot_id: string; tent: string }> = {};
       for (const st of stations) {
-        if (!next[st.seat_id]) {
-          next[st.seat_id] = {
-            idle_home_pot_id: st.idle_home_pot_id || st.seat_id,
-            tent: st.tent || "2x4",
-          };
-        }
+        const existing = prev[st.seat_id];
+        // Prefer existing in-progress draft; otherwise seed from server.
+        // Empty idle_home is valid — never coerce "" → seat_id.
+        next[st.seat_id] = existing ?? {
+          idle_home_pot_id: st.idle_home_pot_id ?? "",
+          tent: st.tent || "2x4",
+        };
       }
       return next;
     });
@@ -587,6 +590,7 @@ export function SettingsPage() {
           <summary>Probe stations</summary>
           <p className="dsc-muted">
             Mobile soil probes idle at a home pot and publish thereabouts readings until a soil test moves them.
+            Unassign clears the home pot; Remove probe role demotes the seat so it is no longer a probe station.
           </p>
           {probeStations.length ? (
             <div className="dsc-table-scroll">
@@ -629,8 +633,8 @@ export function SettingsPage() {
                             }
                           >
                             {IDLE_POT_OPTIONS.map((p) => (
-                              <option key={p} value={p}>
-                                {p}
+                              <option key={p || "none"} value={p}>
+                                {p ? p : "— unassigned"}
                               </option>
                             ))}
                           </select>
@@ -654,14 +658,42 @@ export function SettingsPage() {
                         </td>
                         <td>{moist != null && Number.isFinite(Number(moist)) ? `${Number(moist).toFixed(1)} %` : "—"}</td>
                         <td>
-                          <Button
-                            onClick={async () => {
-                              await patchProbeStation(st.seat_id, draft);
-                              await refresh();
-                            }}
-                          >
-                            Save
-                          </Button>
+                          <div className="dsc-row-actions">
+                            <Button
+                              onClick={async () => {
+                                setProbeErr(null);
+                                try {
+                                  await patchProbeStation(st.seat_id, draft);
+                                  await refresh();
+                                } catch (exc) {
+                                  setProbeErr(exc instanceof Error ? exc.message : "Probe save failed");
+                                }
+                              }}
+                            >
+                              Save
+                            </Button>
+                            <Button
+                              variant="secondary"
+                              onClick={async () => {
+                                setProbeErr(null);
+                                try {
+                                  await patchProbeStation(st.seat_id, { idle_home_pot_id: "" });
+                                  setProbeDrafts((prev) => ({
+                                    ...prev,
+                                    [st.seat_id]: { ...draft, idle_home_pot_id: "" },
+                                  }));
+                                  await refresh();
+                                } catch (exc) {
+                                  setProbeErr(exc instanceof Error ? exc.message : "Unassign failed");
+                                }
+                              }}
+                            >
+                              Unassign pot
+                            </Button>
+                            <Button variant="danger" onClick={() => setPendingClearProbe(st.seat_id)}>
+                              Remove probe role
+                            </Button>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -672,8 +704,45 @@ export function SettingsPage() {
           ) : (
             <p className="dsc-honesty">No probe stations — assign role probe_station on a pot in inventory.</p>
           )}
+          {probeErr ? (
+            <p className="dsc-honesty">
+              <StatusChip label="Probe update failed" tone="bad" /> {probeErr}
+            </p>
+          ) : null}
         </details>
       </section>
+
+      <DecisionLayer
+        open={pendingClearProbe != null}
+        onDismiss={() => setPendingClearProbe(null)}
+        onConfirm={() => {
+          const seatId = pendingClearProbe;
+          setPendingClearProbe(null);
+          if (!seatId) return;
+          void (async () => {
+            setProbeErr(null);
+            try {
+              await patchProbeStation(seatId, { clear_role: true });
+              setProbeDrafts((prev) => {
+                const next = { ...prev };
+                delete next[seatId];
+                return next;
+              });
+              await refresh();
+            } catch (exc) {
+              setProbeErr(exc instanceof Error ? exc.message : "Remove probe role failed");
+            }
+          })();
+        }}
+        title={pendingClearProbe ? `Remove probe role from ${pendingClearProbe}?` : "Remove probe role"}
+        confirmLabel="Remove probe role"
+        help={null}
+      >
+        <p>
+          Demotes this seat so it is no longer a probe station (clears idle home and probe attachment). Does not delete
+          plants or soil readings.
+        </p>
+      </DecisionLayer>
 
       <section className="dsc-card">
         <h3>Network</h3>

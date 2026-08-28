@@ -1,6 +1,9 @@
 import { parseBlendLayers, type SoilLayer } from "../components/chrome";
 import type { FleetSnapshot } from "./fleetModel";
 import { inventoryInService } from "./fleetModel";
+import { fmtReading } from "./formatReading";
+
+export { fmtReading } from "./formatReading";
 
 export type TentId = "unassigned" | "clone" | "main";
 
@@ -47,6 +50,16 @@ function clean(v: string | undefined, fallback = "—"): string {
   return v;
 }
 
+function preferReading(
+  primary: string,
+  fallback: string,
+  digits: number,
+): string {
+  const a = clean(primary, "—");
+  if (a !== "—") return fmtReading(a, digits);
+  return fmtReading(clean(fallback, "—"), digits);
+}
+
 export function normalizeTent(raw: string | undefined): TentId {
   const v = String(raw || "").trim().toLowerCase();
   if (v === "clone" || v === "2x4" || v === "2×4") return "clone";
@@ -90,11 +103,8 @@ export function buildPlantSeat(
     ? slots.find((s) => String(s.pot) === String(pot))
     : undefined;
 
-  const prefer = (primary: string, fallback: string) => {
-    const a = clean(state(primary, ""));
-    if (a !== "—") return a;
-    return clean(state(fallback, ""));
-  };
+  const prefer = (primary: string, fallback: string, digits = 1) =>
+    preferReading(state(primary, ""), state(fallback, ""), digits);
 
   const blend = clean(roster?.blend, "");
   return {
@@ -110,13 +120,13 @@ export function buildPlantSeat(
     recipe: clean(roster?.recipe, ""),
     notes: clean(roster?.notes, ""),
     layers: parseBlendLayers(blend),
-    moisture: prefer(`sensor.dsc_pot${pot}_got_moisture`, `sensor.dsc_pot${pot}_soil_moisture`),
-    soilTemp: clean(state(`sensor.dsc_pot${pot}_soil_temperature`, "")),
-    ec: prefer(`sensor.dsc_pot${pot}_got_ec`, `sensor.dsc_pot${pot}_soil_conductivity`),
-    ph: prefer(`sensor.dsc_pot${pot}_got_ph`, `sensor.dsc_pot${pot}_soil_ph`),
-    n: clean(state(`sensor.dsc_pot${pot}_soil_nitrogen`, "")),
-    p: clean(state(`sensor.dsc_pot${pot}_soil_phosphorus`, "")),
-    k: clean(state(`sensor.dsc_pot${pot}_soil_potassium`, "")),
+    moisture: prefer(`sensor.dsc_pot${pot}_got_moisture`, `sensor.dsc_pot${pot}_soil_moisture`, 0),
+    soilTemp: fmtReading(clean(state(`sensor.dsc_pot${pot}_soil_temperature`, "")), 1),
+    ec: prefer(`sensor.dsc_pot${pot}_got_ec`, `sensor.dsc_pot${pot}_soil_conductivity`, 0),
+    ph: prefer(`sensor.dsc_pot${pot}_got_ph`, `sensor.dsc_pot${pot}_soil_ph`, 2),
+    n: fmtReading(clean(state(`sensor.dsc_pot${pot}_soil_nitrogen`, "")), 0),
+    p: fmtReading(clean(state(`sensor.dsc_pot${pot}_soil_phosphorus`, "")), 0),
+    k: fmtReading(clean(state(`sensor.dsc_pot${pot}_soil_potassium`, "")), 0),
     need: clean(state(`sensor.dsc_pot${pot}_need_summary`, "")),
     rosterSlot: roster?.slot ?? null,
   };

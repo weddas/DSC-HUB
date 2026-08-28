@@ -187,8 +187,11 @@ export function LiveRootPage() {
         open={pot != null}
         onClose={closePot}
         title={pot != null ? `Plant seat · POT${pot}` : "Plant seat"}
+        wide
       >
-        {pot != null ? <PlantSeatPanel pot={pot} onSelectPot={openPot} /> : null}
+        {pot != null ? (
+          <PlantSeatPanel pot={pot} onSelectPot={openPot} onRetired={closePot} />
+        ) : null}
       </SlideDrawer>
 
       <SlideDrawer open={soilWizardOpen} onClose={() => setSoilWizardOpen(false)} title="Soil test">

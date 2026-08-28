@@ -5,8 +5,10 @@ type Health = { mode?: string; simulation?: boolean; detail?: string };
 
 export function DemoBanner() {
   const [health, setHealth] = useState<Health | null>(null);
+  const embedded = typeof window !== "undefined" && window.self !== window.top;
 
   useEffect(() => {
+    if (embedded) return;
     let cancelled = false;
     fetch("/health")
       .then((r) => (r.ok ? r.json() : null))
@@ -17,9 +19,9 @@ export function DemoBanner() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [embedded]);
 
-  if (!health) return null;
+  if (embedded || !health) return null;
 
   return (
     <div className="dsc-demo-banner" role="status" aria-live="polite">

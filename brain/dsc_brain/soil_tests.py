@@ -120,8 +120,16 @@ def patch_probe_station(seat_id: str, patch: dict[str, Any]) -> dict[str, Any]:
         if row["seat_id"] != seat_id:
             continue
         extra = dict(row.get("extra") or {})
+        # Demote: seat is no longer a probe station (frees the idle-home pot).
+        if patch.get("clear_role"):
+            extra.pop("role", None)
+            extra.pop("idle_home_pot_id", None)
+            extra.pop("probe_attached", None)
+            extra["reading_mode"] = "idle"
+            return upsert_inventory(seat_id, {"extra": extra})
         if "idle_home_pot_id" in patch:
-            extra["idle_home_pot_id"] = str(patch["idle_home_pot_id"])
+            # Empty string = unassign pot from this probe (keep probe role).
+            extra["idle_home_pot_id"] = str(patch["idle_home_pot_id"] or "").strip()
         if "tent" in patch:
             extra["tent"] = str(patch["tent"])
         extra["role"] = "probe_station"

@@ -471,6 +471,7 @@ function TentCockpitPage({ tent }: { tent: Exclude<TentId, "unassigned"> }) {
           setParams(next, { replace: true });
         }}
         title={pot != null ? `Plant seat · POT${pot}` : "Plant seat"}
+        wide
       >
         {pot != null ? (
           <PlantSeatPanel
@@ -478,6 +479,11 @@ function TentCockpitPage({ tent }: { tent: Exclude<TentId, "unassigned"> }) {
             onSelectPot={(n) => {
               const next = new URLSearchParams(params);
               next.set("pot", String(n));
+              setParams(next, { replace: true });
+            }}
+            onRetired={() => {
+              const next = new URLSearchParams(params);
+              next.delete("pot");
               setParams(next, { replace: true });
             }}
           />

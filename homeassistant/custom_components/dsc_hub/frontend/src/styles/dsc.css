@@ -100,6 +100,37 @@ body {
   min-width: 200px;
 }
 
+.dsc-boot-track {
+  width: min(280px, 70%);
+  height: 6px;
+  margin-top: 14px;
+  border-radius: 999px;
+  background: var(--dsc-gray-2);
+  overflow: hidden;
+  border: 1px solid var(--dsc-gray-3);
+}
+
+.dsc-boot-bar {
+  width: 40%;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--dsc-teal), var(--dsc-neon), var(--dsc-blue));
+  animation: dsc-boot-indeterminate 1.1s ease-in-out infinite;
+}
+
+@keyframes dsc-boot-indeterminate {
+  0% { transform: translateX(-120%); }
+  100% { transform: translateX(320%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dsc-boot-bar {
+    animation: none;
+    width: 100%;
+    opacity: 0.75;
+  }
+}
+
 .dsc-row-actions {
   display: flex;
   flex-wrap: wrap;
@@ -1382,13 +1413,18 @@ body {
   position: absolute;
   top: 0;
   bottom: 0;
-  width: min(380px, 92vw);
+  width: min(400px, 92vw);
+  max-width: 100%;
   background: linear-gradient(165deg, #121a16, #0a100e);
   border: 1px solid var(--dsc-glass-border);
   box-shadow: -12px 0 40px rgba(0, 0, 0, 0.55);
   display: flex;
   flex-direction: column;
   transition: transform 220ms ease;
+}
+
+.dsc-drawer-panel--wide {
+  width: min(520px, 96vw);
 }
 
 .dsc-drawer-panel.right {
@@ -1460,12 +1496,53 @@ body {
   flex: 1;
   overflow: auto;
   padding: 14px 16px;
+  min-width: 0;
+}
+
+/* Seat panel in drawers AND Twin DecisionLayer overlay — never 2-col crush. */
+.dsc-drawer-body .dsc-seat-layout,
+.dsc-decision-body .dsc-seat-layout {
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+.dsc-drawer-body .dsc-seat-layout .dsc-col-6,
+.dsc-decision-body .dsc-seat-layout .dsc-col-6 {
+  grid-column: span 12;
+}
+
+.dsc-drawer-body .dsc-seat-panel,
+.dsc-decision-body .dsc-seat-panel {
+  min-width: 0;
+}
+
+.dsc-drawer-body .dsc-chip-row,
+.dsc-decision-body .dsc-chip-row {
+  flex-wrap: wrap;
 }
 
 .dsc-soil {
+  position: relative;
   width: 100%;
   max-width: 280px;
   margin: 0 auto;
+}
+
+.dsc-soil--empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.dsc-soil-empty-caption {
+  margin: 0;
+  padding: 0 8px;
+  text-align: center;
+  color: var(--dsc-gray-5);
+  font-size: 0.82rem;
+  line-height: 1.35;
+  max-width: 16rem;
 }
 
 .dsc-soil-pot {
@@ -1499,18 +1576,6 @@ body {
   color: rgba(244, 247, 244, 0.92);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.65);
   border-top: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.dsc-soil-empty {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--dsc-gray-5);
-  font-size: 0.85rem;
-  padding: 16px;
-  text-align: center;
 }
 
 .dsc-seat-layout {
@@ -1554,11 +1619,12 @@ body {
   font-weight: 600;
 }
 
-.dsc-table tr {
+.dsc-table tr.dsc-table-row--clickable {
   cursor: pointer;
 }
 
-.dsc-table tr:hover td {
+.dsc-table tr.dsc-table-row--clickable:hover td,
+.dsc-table tr.dsc-table-row--pot-live:hover td {
   background: rgba(38, 198, 218, 0.06);
 }
 
@@ -1693,6 +1759,8 @@ body {
 .dsc-seat-editors input,
 .dsc-seat-editors select,
 .dsc-seat-editors textarea {
+  width: 100%;
+  box-sizing: border-box;
   background: var(--dsc-gray-1);
   border: 1px solid var(--dsc-glass-border);
   border-radius: 8px;

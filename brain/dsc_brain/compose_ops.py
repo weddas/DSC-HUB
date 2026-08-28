@@ -148,21 +148,34 @@ def update_pot_recipe(pot_n: int, updates: dict[str, Any]) -> dict[str, Any]:
         name = str(updates["plant_name"]).strip()
         recipe_patch["plant_name"] = name
         recipe_patch["nickname"] = name
+        set_helper(f"text.dsc_pot{pot_n}_plant_name", name)
     if "sprout_date" in updates:
         sprout = str(updates["sprout_date"])[:10]
         recipe_patch["sprout_date"] = sprout
+        set_helper(f"datetime.dsc_pot{pot_n}_sprout_date", sprout)
         # Sprout date changed → re-derive the stage instead of keeping a stale one.
         stage = derived_stage_for(sprout, str(row.get("strain_id") or ""))
         if stage:
             recipe_patch["growth_stage"] = stage
             patch["stage"] = stage_family(stage) or "veg"
+            set_helper(f"select.dsc_pot{pot_n}_growth_stage", stage)
     if "growth_stage" in updates:
         stage = str(updates["growth_stage"]).strip()
         recipe_patch["growth_stage"] = stage
         patch["stage"] = stage_family(stage) or "veg"
+        if stage:
+            set_helper(f"select.dsc_pot{pot_n}_growth_stage", stage)
     if "tent" in updates:
         recipe_patch["tent"] = tent_id(str(updates["tent"]))
         set_helper(f"input_select.dsc_pot{pot_n}_tent", recipe_patch["tent"])
+    if "strain_display" in updates:
+        strain = str(updates["strain_display"]).strip()
+        recipe_patch["strain_display"] = strain
+        patch["strain_id"] = strain
+    if "notes" in updates:
+        recipe_patch["notes"] = str(updates["notes"])
+    if "blend" in updates:
+        recipe_patch["blend"] = str(updates["blend"])
     if not recipe_patch and not patch:
         return row
     patch["recipe"] = recipe_patch
@@ -178,6 +191,12 @@ def update_pot_recipe(pot_n: int, updates: dict[str, Any]) -> dict[str, Any]:
             slot_patch["nickname"] = recipe.get("nickname", "")
         if "sprout_date" in updates:
             slot_patch["sprout"] = recipe.get("sprout_date", "")
+        if "strain_display" in updates:
+            slot_patch["strain"] = recipe.get("strain_display", "")
+        if "notes" in updates:
+            slot_patch["notes"] = recipe.get("notes", "")
+        if "blend" in updates:
+            slot_patch["blend"] = recipe.get("blend", "")
         if slot_patch:
             update_roster_slot(slot_num, slot_patch)
     return result

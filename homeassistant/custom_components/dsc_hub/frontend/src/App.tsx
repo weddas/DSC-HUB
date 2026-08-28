@@ -4,7 +4,6 @@ import { Button, Icon, PageHeader } from "./components/ui";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { HonestyRail } from "./components/Honesty";
 import { DemoBanner } from "./components/DemoBanner";
-import { DemoBanner } from "./components/DemoBanner";
 import { TwinKeepAlive } from "./components/TwinKeepAlive";
 import { SeatOverlayHost } from "./components/SeatOverlay";
 import { InspectorProvider } from "./components/InspectorHost";
@@ -116,7 +115,6 @@ function Shell({ surfaceVersion = "7.3.0" }: { surfaceVersion?: string }) {
         </div>
       </div>
 
-      <DemoBanner />
       <DemoBanner />
 
       <HonestyRail />

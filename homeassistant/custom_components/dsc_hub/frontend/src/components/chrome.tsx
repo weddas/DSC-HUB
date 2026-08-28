@@ -107,12 +107,15 @@ export function SlideDrawer({
   onClose,
   title,
   side = "right",
+  wide = false,
   children,
 }: {
   open: boolean;
   onClose: () => void;
   title: string;
   side?: "left" | "right";
+  /** Wider panel for plant seats (~520px). History/inspector stay default. */
+  wide?: boolean;
   children: ReactNode;
 }) {
   const titleId = useId();
@@ -161,7 +164,7 @@ export function SlideDrawer({
       <div className="dsc-drawer-scrim" onClick={onClose} />
       <aside
         ref={panelRef}
-        className={`dsc-drawer-panel ${side}`}
+        className={`dsc-drawer-panel ${side}${wide ? " dsc-drawer-panel--wide" : ""}`}
         role="dialog"
         aria-modal={open ? "true" : undefined}
         aria-labelledby={titleId}
@@ -233,9 +236,9 @@ export function SoilCrossSection({
   const isValid = valid ?? (layers.length > 0 && Math.round(sum) === 100);
   if (!layers.length) {
     return (
-      <div className="dsc-soil">
-        <VesselGlyph spec={vessel} size={160} />
-        <div className="dsc-soil-empty">{emptyLabel}</div>
+      <div className="dsc-soil dsc-soil--empty">
+        <VesselGlyph spec={vessel} size={140} />
+        <p className="dsc-soil-empty-caption">{emptyLabel}</p>
       </div>
     );
   }

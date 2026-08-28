@@ -163,6 +163,17 @@ class GlobalModifiersPatch(BaseModel):
 class ProbeStationPatch(BaseModel):
     idle_home_pot_id: str | None = None
     tent: str | None = None
+    clear_role: bool | None = None
+
+
+class PotPlantPatch(BaseModel):
+    plant_name: str | None = None
+    strain_display: str | None = None
+    sprout_date: str | None = None
+    growth_stage: str | None = None
+    tent: str | None = None
+    notes: str | None = None
+    blend: str | None = None
 
 
 class SoilTestStartBody(BaseModel):
@@ -451,6 +462,19 @@ def roster_patch(seat_id: str, body: RosterPatch) -> dict[str, Any]:
     if recipe:
         patch["recipe"] = recipe
     return upsert_roster(seat_id, patch)
+
+
+@app.patch("/roster/pots/{pot_n}")
+def roster_pot_patch(pot_n: int, body: PotPlantPatch) -> dict[str, Any]:
+    """Full plant edit on an occupied pot (name, strain, sprout, stage, tent, notes, blend)."""
+    from .compose_ops import update_pot_recipe
+
+    if pot_n < 1 or pot_n > 4:
+        raise HTTPException(400, "pot must be 1–4")
+    try:
+        return update_pot_recipe(pot_n, body.model_dump(exclude_none=True))
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
 
 
 @app.get("/learning")

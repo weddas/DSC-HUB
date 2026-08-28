@@ -36,7 +36,7 @@ export function SeatOverlayHost() {
     >
       {pot != null ? (
         <>
-          <PlantSeatPanel pot={pot} onSelectPot={setPot} />
+          <PlantSeatPanel pot={pot} onSelectPot={setPot} onRetired={close} />
           {location.pathname !== "/live/root" ? (
             <div className="dsc-row-actions" style={{ marginTop: 12 }}>
               <Button

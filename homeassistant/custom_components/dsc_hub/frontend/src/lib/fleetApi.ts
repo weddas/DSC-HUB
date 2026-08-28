@@ -1,3 +1,5 @@
+import { formatApiError } from "./apiError";
+
 export async function get_entity_history(
   entityId: string,
   hours = 6,
@@ -258,6 +260,17 @@ export type ProbeStation = {
 export type ProbeStationPatch = {
   idle_home_pot_id?: string;
   tent?: string;
+  clear_role?: boolean;
+};
+
+export type PotPlantPatch = {
+  plant_name?: string;
+  strain_display?: string;
+  sprout_date?: string;
+  growth_stage?: string;
+  tent?: string;
+  notes?: string;
+  blend?: string;
 };
 
 export async function getProbeStations(): Promise<ProbeStation[]> {
@@ -276,7 +289,24 @@ export async function patchProbeStation(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(patch),
   });
-  if (!resp.ok) throw new Error("probe station patch failed");
+  if (!resp.ok) {
+    throw new Error(formatApiError(await resp.text(), "probe station patch failed"));
+  }
+  return resp.json();
+}
+
+export async function patchPotPlant(
+  pot: number,
+  patch: PotPlantPatch,
+): Promise<Record<string, unknown>> {
+  const resp = await fetch(`/roster/pots/${pot}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(patch),
+  });
+  if (!resp.ok) {
+    throw new Error(formatApiError(await resp.text(), "plant edit failed"));
+  }
   return resp.json();
 }
 

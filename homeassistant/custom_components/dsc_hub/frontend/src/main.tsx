@@ -21,8 +21,11 @@ function PiApp() {
   if (loading && !fleet) {
     return (
       <div className="dsc-root">
-        <div className="dsc-shell dsc-connecting" style={{ padding: 24 }}>
+        <div className="dsc-shell dsc-connecting" style={{ padding: 24 }} role="status" aria-live="polite">
           <p className="dsc-muted">Connecting to fleet…</p>
+          <div className="dsc-boot-track" aria-hidden="true">
+            <div className="dsc-boot-bar" />
+          </div>
           <div className="dsc-chip-row" style={{ marginTop: 12 }}>
             <Button primary onClick={() => void refresh()}>
               Retry
