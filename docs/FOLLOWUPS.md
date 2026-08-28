@@ -60,9 +60,9 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 | Overview missing `useFleet` import | **done** | Was a latent ReferenceError risk |
 | React Doctor score | **noted** | Full-tree ~38–41; spa-dist noise; intentional render-time hass/hold refs; smoke ok on wave |
 | Live help 1.2.2 tips | **verified** | Dashboard `Help: Full Auto vs takeover` + Tabs vs workflows present 2026-08-28 |
-| Live help 1.2.3 | **pending verify** | Public tunnel/WP LAN intermittent (502/530) — re-publish when up |
-| OOS pot count on honesty rail | **done** | Muted gap naming OOS pots → Root (no longer silent omit) |
-| ESP vs Modbus pot link chips | **done** | Dash chips split radio vs probe; tooltip honesty |
+| Live help 1.2.3 | **pending verify** | Public tunnel 502; WP LAN `10.10.10.13` still down — publish blocked |
+| Pi SPA deploy polish | **done** | Hot-patched `index-Ciw7XTuZ.js` to `.48:8787` after syncing C:→Y: spa-dist (deploy packs NAS tree) |
+| Docker prebuilt seed missing | **noted** | `demo-fleet-seed.json` missing from Pi build context → compose build fails, hot-patch path used; synced onto Y: |
 | Soft-cal Pi-native Got / session history | **deferred** | Needs brain/HA stack work — not this UX pass |
 | Phase 0 z2m / Sankey soak | **deferred** | Operator/hardware gates — do not paper over |
 | F-001–F-008 hardware | **deferred** | Honest OOS UI already; no fake wiring |
