@@ -90,8 +90,8 @@ SELECT_OPTIONS: dict[str, list[str]] = {
     "input_select.dsc_build_climate_pot": ["Fleet", "1", "2", "3", "4"],
     "input_select.dsc_build_tent": ["4x8", "2x4"],
     "input_select.dsc_build_vessel": VESSEL_OPTIONS,
-    **{f"input_select.dsc_pot{n}_vessel": VESSEL_OPTIONS for n in range(1, 5)},
-    **{f"input_select.dsc_pot{n}_tent": ["clone", "main", "unassigned"] for n in range(1, 5)},
+    **{f"input_select.dsc_probe{n}_vessel": VESSEL_OPTIONS for n in range(1, 5)},
+    **{f"input_select.dsc_probe{n}_tent": ["clone", "main", "unassigned"] for n in range(1, 5)},
 }
 
 def _pot_in_service(inventory: list[dict[str, Any]] | None, pot_n: int) -> bool:
@@ -500,10 +500,10 @@ def _build_cold_computed_states(
         recipe = row.get("recipe") or {}
         strain_id = row.get("strain_id") or ""
         stage = row.get("stage") or ""
-        plant_name = recipe.get("plant_name") or recipe.get("nickname") or get_helper(f"text.dsc_pot{pot_n}_plant_name", "")
+        plant_name = recipe.get("plant_name") or recipe.get("nickname") or get_helper(f"text.dsc_probe{pot_n}_plant_name", "")
         strain_display = recipe.get("strain_display") or strain_id or ""
-        tent = tent_id(str(recipe.get("tent") or get_helper(f"input_select.dsc_pot{pot_n}_tent", "unassigned")))
-        sprout = recipe.get("sprout_date") or get_helper(f"datetime.dsc_pot{pot_n}_sprout_date", "")
+        tent = tent_id(str(recipe.get("tent") or get_helper(f"input_select.dsc_probe{pot_n}_tent", "unassigned")))
+        sprout = recipe.get("sprout_date") or get_helper(f"datetime.dsc_probe{pot_n}_sprout_date", "")
         pot_occupied = bool(str(plant_name).strip())
         growth_stage = recipe.get("growth_stage") or (stage if pot_occupied else "")
         if sprout and pot_occupied:
@@ -513,34 +513,34 @@ def _build_cold_computed_states(
                 derived = expected_stage(max(0, days), auto=_strain_is_auto(strain_id))
                 if derived and derived != "unknown":
                     growth_stage = recipe.get("growth_stage") or derived
-                    _set_entity(states, f"sensor.dsc_pot{pot_n}_expected_stage", derived)
-                _set_entity(states, f"sensor.dsc_pot{pot_n}_days_since_sprout", max(0, days))
+                    _set_entity(states, f"sensor.dsc_probe{pot_n}_expected_stage", derived)
+                _set_entity(states, f"sensor.dsc_probe{pot_n}_days_since_sprout", max(0, days))
             except ValueError:
                 pass
-        _set_entity(states, f"text.dsc_pot{pot_n}_plant_name", plant_name if pot_occupied else "")
+        _set_entity(states, f"text.dsc_probe{pot_n}_plant_name", plant_name if pot_occupied else "")
         _set_entity(
             states,
-            f"select.dsc_pot{pot_n}_growth_stage",
+            f"select.dsc_probe{pot_n}_growth_stage",
             growth_stage if pot_occupied else "",
             attributes={"options": GROWTH_STAGE_OPTIONS},
         )
         _set_entity(
             states,
-            f"input_select.dsc_pot{pot_n}_tent",
+            f"input_select.dsc_probe{pot_n}_tent",
             tent,
-            attributes={"options": SELECT_OPTIONS[f"input_select.dsc_pot{pot_n}_tent"]},
+            attributes={"options": SELECT_OPTIONS[f"input_select.dsc_probe{pot_n}_tent"]},
         )
-        _set_entity(states, f"sensor.dsc_pot{pot_n}_strain_display", strain_display)
-        _set_entity(states, f"datetime.dsc_pot{pot_n}_sprout_date", str(sprout)[:10] if sprout else "")
+        _set_entity(states, f"sensor.dsc_probe{pot_n}_strain_display", strain_display)
+        _set_entity(states, f"datetime.dsc_probe{pot_n}_sprout_date", str(sprout)[:10] if sprout else "")
         if strain_id and pot_occupied:
             want = resolve_want(strain_id=strain_id, stage=stage)
             bands = want.get("want") or {}
             if "temp_c" in bands:
-                _set_entity(states, f"sensor.dsc_pot{pot_n}_want_temp_min", bands["temp_c"][0])
-                _set_entity(states, f"sensor.dsc_pot{pot_n}_want_temp_max", bands["temp_c"][1])
+                _set_entity(states, f"sensor.dsc_probe{pot_n}_want_temp_min", bands["temp_c"][0])
+                _set_entity(states, f"sensor.dsc_probe{pot_n}_want_temp_max", bands["temp_c"][1])
             if "rh_pct" in bands:
-                _set_entity(states, f"sensor.dsc_pot{pot_n}_want_rh_min", bands["rh_pct"][0])
-                _set_entity(states, f"sensor.dsc_pot{pot_n}_want_rh_max", bands["rh_pct"][1])
+                _set_entity(states, f"sensor.dsc_probe{pot_n}_want_rh_min", bands["rh_pct"][0])
+                _set_entity(states, f"sensor.dsc_probe{pot_n}_want_rh_max", bands["rh_pct"][1])
 
     cal_active = get_helper("input_boolean.dsc_cal_active", "off") == "on"
     curve_count = sum(
@@ -856,10 +856,10 @@ def _build_hot_computed_states(
             "binary_sensor.dsc_grow_mat_ineffective_suspect",
             "binary_sensor.dsc_peer_mad_alert",
             "binary_sensor.dsc_dht_disagreement",
-            "binary_sensor.dsc_pot1_sensor_stuck",
-            "binary_sensor.dsc_pot2_sensor_stuck",
-            "binary_sensor.dsc_pot3_sensor_stuck",
-            "binary_sensor.dsc_pot4_sensor_stuck",
+            "binary_sensor.dsc_probe1_sensor_stuck",
+            "binary_sensor.dsc_probe2_sensor_stuck",
+            "binary_sensor.dsc_probe3_sensor_stuck",
+            "binary_sensor.dsc_probe4_sensor_stuck",
         )
         if _control_state(dash_view, eid) == "on"
     )

@@ -161,22 +161,22 @@ const ALERTS: Record<string, PlaybookEntry> = {
     what: "Tent, room, and clone temperature or humidity spans exceed threshold for 15+ minutes.",
     fix: "Climate cue only — check DHT placement and ventilation. Not a failsafe trip.",
   },
-  "binary_sensor.dsc_pot1_sensor_stuck": {
+  "binary_sensor.dsc_probe1_sensor_stuck": {
     title: "Pot 1 stuck",
     what: "Pot 1 soil moisture has not moved for the stuck window.",
     fix: "Probe may be wedged or offline. Exclude from mat vote if untrusted.",
   },
-  "binary_sensor.dsc_pot2_sensor_stuck": {
+  "binary_sensor.dsc_probe2_sensor_stuck": {
     title: "Pot 2 stuck",
     what: "Pot 2 soil moisture has not moved for the stuck window.",
     fix: "Probe may be wedged or offline. Exclude from mat vote if untrusted.",
   },
-  "binary_sensor.dsc_pot3_sensor_stuck": {
+  "binary_sensor.dsc_probe3_sensor_stuck": {
     title: "Pot 3 stuck",
     what: "Pot 3 soil moisture has not moved for the stuck window.",
     fix: "Probe may be wedged or offline. Exclude from mat vote if untrusted.",
   },
-  "binary_sensor.dsc_pot4_sensor_stuck": {
+  "binary_sensor.dsc_probe4_sensor_stuck": {
     title: "Pot 4 stuck",
     what: "Pot 4 soil moisture has not moved for the stuck window.",
     fix: "Probe may be wedged or offline. Exclude from mat vote if untrusted.",
@@ -195,37 +195,37 @@ const ALERTS: Record<string, PlaybookEntry> = {
 
 function potAlerts(n: number): Record<string, PlaybookEntry> {
   return {
-    [`binary_sensor.dsc_pot${n}_moisture_out_of_range`]: {
+    [`binary_sensor.dsc_probe${n}_moisture_out_of_range`]: {
       title: `Pot ${n} moisture`,
       what: `Pot ${n} moisture has left its target band.`,
       fix: "Open Root and check that pot. Pots out of service never show made-up readings.",
     },
-    [`binary_sensor.dsc_pot${n}_ph_out_of_range`]: {
+    [`binary_sensor.dsc_probe${n}_ph_out_of_range`]: {
       title: `Pot ${n} pH`,
       what: `Pot ${n} pH has left its target band.`,
       fix: "Check the pot on Root. Confirm the probe before dosing.",
     },
-    [`binary_sensor.dsc_pot${n}_root_zone_temp_out_of_range`]: {
+    [`binary_sensor.dsc_probe${n}_root_zone_temp_out_of_range`]: {
       title: `Pot ${n} root T`,
       what: `Pot ${n} soil temperature has left its trusted band.`,
       fix: "Check the heat mat and airflow first. The mat should not run for a pot that is out of service.",
     },
-    [`binary_sensor.dsc_pot${n}_ec_salt_build_up`]: {
+    [`binary_sensor.dsc_probe${n}_ec_salt_build_up`]: {
       title: `Pot ${n} salt build-up`,
       what: `Pot ${n} nutrient strength is high compared with its baseline.`,
       fix: "Check the pot on Root. Decide flush vs feed from the pot's Need reading, not just this alert.",
     },
-    [`binary_sensor.dsc_pot${n}_ec_depleted_vs_baseline`]: {
+    [`binary_sensor.dsc_probe${n}_ec_depleted_vs_baseline`]: {
       title: `Pot ${n} EC depleted`,
       what: `Pot ${n} nutrient strength is low compared with its baseline.`,
       fix: "Feed based on the pot's Need reading. Confirm the probe is trusted.",
     },
-    [`binary_sensor.dsc_pot${n}_nitrogen_below_baseline`]: {
+    [`binary_sensor.dsc_probe${n}_nitrogen_below_baseline`]: {
       title: `Pot ${n} N below baseline`,
       what: `Pot ${n} nitrogen is below its rolling baseline.`,
       fix: "Check the NPK readings on Root. Do not act on an untrusted probe.",
     },
-    [`binary_sensor.dsc_pot${n}_nitrogen_depleting_fast`]: {
+    [`binary_sensor.dsc_probe${n}_nitrogen_depleting_fast`]: {
       title: `Pot ${n} N depleting`,
       what: `Pot ${n} nitrogen is falling faster than expected.`,
       fix: "Check the trend on Root and compare irrigation against the pot's Need.",

@@ -115,36 +115,36 @@ export function PlantSeatPanel({
   const moistId = potGotEntity(pot, "moisture", state);
   const ecId = potGotEntity(pot, "ec", state);
   const phId = potGotEntity(pot, "ph", state);
-  const drybackId = `sensor.dsc_pot${pot}_dryback_pct`;
+  const drybackId = `sensor.dsc_probe${pot}_dryback_pct`;
   const moistHeld = useHeldReading(moistId);
   const drybackHeld = useHeldReading(drybackId);
   const ecHeld = useHeldReading(ecId);
   const phHeld = useHeldReading(phId);
   const moistSeries = useEntitySeries(moistId, { hours: 6, maxPoints: 72 });
   const ecSeries = useEntitySeries(ecId, { hours: 6, maxPoints: 72 });
-  const learnedEcRaw = num(`input_number.dsc_pot${pot}_learned_ec_per_moisture`);
+  const learnedEcRaw = num(`input_number.dsc_probe${pot}_learned_ec_per_moisture`);
   const learnedEc =
-    available(`input_number.dsc_pot${pot}_learned_ec_per_moisture`) &&
+    available(`input_number.dsc_probe${pot}_learned_ec_per_moisture`) &&
     Number.isFinite(learnedEcRaw) &&
     learnedEcRaw !== 0
       ? learnedEcRaw
       : NaN;
 
-  const wantMoistMin = available(`sensor.dsc_pot${pot}_want_moisture_min`)
-    ? num(`sensor.dsc_pot${pot}_want_moisture_min`)
-    : num(`number.dsc_pot${pot}_want_moisture_min`);
-  const wantMoistMax = available(`sensor.dsc_pot${pot}_want_moisture_max`)
-    ? num(`sensor.dsc_pot${pot}_want_moisture_max`)
-    : num(`number.dsc_pot${pot}_want_moisture_max`);
-  const wantEcMin = num(`sensor.dsc_pot${pot}_want_ec_min`);
-  const wantEcMax = num(`sensor.dsc_pot${pot}_want_ec_max`);
-  const wantPhMin = num(`sensor.dsc_pot${pot}_want_ph_min`);
-  const wantPhMax = num(`sensor.dsc_pot${pot}_want_ph_max`);
+  const wantMoistMin = available(`sensor.dsc_probe${pot}_want_moisture_min`)
+    ? num(`sensor.dsc_probe${pot}_want_moisture_min`)
+    : num(`number.dsc_probe${pot}_want_moisture_min`);
+  const wantMoistMax = available(`sensor.dsc_probe${pot}_want_moisture_max`)
+    ? num(`sensor.dsc_probe${pot}_want_moisture_max`)
+    : num(`number.dsc_probe${pot}_want_moisture_max`);
+  const wantEcMin = num(`sensor.dsc_probe${pot}_want_ec_min`);
+  const wantEcMax = num(`sensor.dsc_probe${pot}_want_ec_max`);
+  const wantPhMin = num(`sensor.dsc_probe${pot}_want_ph_min`);
+  const wantPhMax = num(`sensor.dsc_probe${pot}_want_ph_max`);
   const hasWant =
     Number.isFinite(wantMoistMin) &&
     Number.isFinite(wantMoistMax) &&
-    (available(`sensor.dsc_pot${pot}_want_moisture_min`) ||
-      available(`number.dsc_pot${pot}_want_moisture_min`));
+    (available(`sensor.dsc_probe${pot}_want_moisture_min`) ||
+      available(`number.dsc_probe${pot}_want_moisture_min`));
   const hasWantEc = Number.isFinite(wantEcMin) && Number.isFinite(wantEcMax);
   const hasWantPh = Number.isFinite(wantPhMin) && Number.isFinite(wantPhMax);
   const genericStrain =
@@ -157,7 +157,7 @@ export function PlantSeatPanel({
     setApplyErr(null);
     try {
       await callService("input_select", "select_option", {
-        entity_id: `input_select.dsc_pot${pot}_tent`,
+        entity_id: `input_select.dsc_probe${pot}_tent`,
         option: tent,
       });
       if (photoTemplate && tent !== "unassigned") {
@@ -178,7 +178,7 @@ export function PlantSeatPanel({
         }
       }
       window.setTimeout(() => {
-        const now = hass?.states?.[`input_select.dsc_pot${pot}_tent`]?.state || "";
+        const now = hass?.states?.[`input_select.dsc_probe${pot}_tent`]?.state || "";
         if (now !== tent) {
           setApplyErr("Tent change did not stick — the hub rejected it. Try again.");
         }
@@ -272,7 +272,7 @@ export function PlantSeatPanel({
   };
 
   const stageOpts =
-    (entity(`select.dsc_pot${pot}_growth_stage`)?.attributes?.options as string[] | undefined) ||
+    (entity(`select.dsc_probe${pot}_growth_stage`)?.attributes?.options as string[] | undefined) ||
     [...GROWTH_STAGE_FALLBACK];
 
   const setStage = (v: string) => {

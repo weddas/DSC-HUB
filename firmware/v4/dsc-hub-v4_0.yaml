@@ -62,16 +62,16 @@
 # ignores faulted probes (POT3 reads a flat 0.0C), which is what
 # unblocked the min() that v2.4 parked.
 substitutions:
-  rootzone_temp_entity: sensor.dsc_pot1_soil_temperature
-  rootzone_temp_entity_2: sensor.dsc_pot2_soil_temperature
-  rootzone_temp_entity_3: sensor.dsc_pot3_soil_temperature
-  rootzone_temp_entity_4: sensor.dsc_pot4_soil_temperature
+  rootzone_temp_entity: sensor.dsc_probe1_soil_temperature
+  rootzone_temp_entity_2: sensor.dsc_probe2_soil_temperature
+  rootzone_temp_entity_3: sensor.dsc_probe3_soil_temperature
+  rootzone_temp_entity_4: sensor.dsc_probe4_soil_temperature
   # Plant names live on each pot (permanent NVS). Hub mirrors them from HA
   # for the panel 0xD4 relay — packet_transport cannot carry text.
-  pot1_plant_entity: text.dsc_pot1_plant_name
-  pot2_plant_entity: text.dsc_pot2_plant_name
-  pot3_plant_entity: text.dsc_pot3_plant_name
-  pot4_plant_entity: text.dsc_pot4_plant_name
+  pot1_plant_entity: text.dsc_probe1_plant_name
+  pot2_plant_entity: text.dsc_probe2_plant_name
+  pot3_plant_entity: text.dsc_probe3_plant_name
+  pot4_plant_entity: text.dsc_probe4_plant_name
 
 esphome:
   name: dsc-hub
@@ -290,7 +290,7 @@ ota:
 #         air rung now biases warm (on below target, off at target+1.5)
 #         and logs loudly that it's an air proxy, NOT a root reading.
 #    REMINDER: the proper fix is ESP-NOW live (60s per-pot heartbeat) —
-#    if your pots aren't yet on dsc-pot-common v2.4.1 with espnow_key,
+#    if your pots aren't yet on DSC-Probe-common v2.4.1 with espnow_key,
 #    the mat is HA-mirror-only and leans on fix #1 above.
 #  (Built on v2.4.2 below.)
 #  ---------------------------------------------------------------
@@ -370,7 +370,7 @@ ota:
 #    19 Jul). Per-pot source-select: ESP-NOW fresh -> HA mirror ->
 #    clone-air rung -> mat OFF. Per-pot link watchdog binaries. The
 #    mat's sense loop now survives HA restarts. Flash hub first, then
-#    pots (dsc-pot-common v2.4.1); same espnow_key secret everywhere.
+#    pots (DSC-Probe-common v2.4.1); same espnow_key secret everywhere.
 #  * HA-DROP RESILIENCE + SENSOR EFFICIENCY: api reboot_timeout 0s
 #    (hub never self-reboots on HA loss), wifi power_save_mode none
 #    (the classic dropped-socket cause), RSSI 15s->60s, uptime
@@ -595,10 +595,10 @@ ota:
 #
 #  DEVICE INVENTORY (captured 19 Jul 2026):
 #    DSC-HUB    84:1F:E8:16:E6:60   192.168.86.33   dsc-hub.local
-#    DSC-POT#1  8C:4F:00:27:E0:10   192.168.86.47   dsc_pot1.local
-#    DSC-POT#2  F0:24:F9:59:C3:14   192.168.86.39   dsc_pot2.local
-#    DSC-POT#3  A0:A3:B3:90:DA:B0   192.168.86.40   dsc_pot3.local
-#    DSC-POT#4  EC:E3:34:7B:E7:A8   192.168.86.49   dsc_pot4.local
+#    DSC-Probe #1  8C:4F:00:27:E0:10   192.168.86.47   dsc_probe1.local
+#    DSC-Probe #2  F0:24:F9:59:C3:14   192.168.86.39   dsc_probe2.local
+#    DSC-Probe #3  A0:A3:B3:90:DA:B0   192.168.86.40   dsc_probe3.local
+#    DSC-Probe #4  EC:E3:34:7B:E7:A8   192.168.86.49   dsc_probe4.local
 #
 #  FLASH-ORDER + PREREQUISITES:
 #   1. Add `espnow_key: "<random string>"` to secrets.yaml on the hub
@@ -609,7 +609,7 @@ ota:
 #      fallback chain means a split degrades to the HA path — the mat
 #      keeps working — but the whole point is to not need it.)
 #   3. Flash THIS hub first (it just listens; hearing nothing is the
-#      designed fallback), then roll dsc-pot-common v2.4.1 to the pots
+#      designed fallback), then roll DSC-Probe-common v2.4.1 to the pots
 #      — POT2 first as canary, per the install instructions.
 #  NOTE: requires ESP32 (any framework — arduino is fine; verified
 #  against the espnow component schema in ESPHome 2026.6.5).
@@ -618,10 +618,10 @@ ota:
 espnow:
   auto_add_peer: false
   peers:
-    - 8C:4F:00:27:E0:10   # DSC-POT#1
-    - F0:24:F9:59:C3:14   # DSC-POT#2
-    - A0:A3:B3:90:DA:B0   # DSC-POT#3 (moisture probe faulted — temp link still useful)
-    - EC:E3:34:7B:E7:A8   # DSC-POT#4
+    - 8C:4F:00:27:E0:10   # DSC-Probe #1
+    - F0:24:F9:59:C3:14   # DSC-Probe #2
+    - A0:A3:B3:90:DA:B0   # DSC-Probe #3 (moisture probe faulted — temp link still useful)
+    - EC:E3:34:7B:E7:A8   # DSC-Probe #4
 
 # The hub is a pure CONSUMER: providers only, no outgoing sensors.
 # (Do not add a top-level encryption: key here — the schema requires
@@ -631,13 +631,13 @@ packet_transport:
     id: pt_espnow
     update_interval: 60s
     providers:
-      - name: dsc_pot1
+      - name: dsc_probe1
         encryption: ${espnow_key}
-      - name: dsc_pot2
+      - name: dsc_probe2
         encryption: ${espnow_key}
-      - name: dsc_pot3
+      - name: dsc_probe3
         encryption: ${espnow_key}
-      - name: dsc_pot4
+      - name: dsc_probe4
         encryption: ${espnow_key}
 
 # Time: SNTP primary (internet, HA-independent) so the photoperiod
@@ -3450,7 +3450,7 @@ sensor:
   # filter (5-45C) applies to every source. These four are internal —
   # HA already has the pots' own entities; re-exporting would twin them.
   - platform: packet_transport
-    provider: dsc_pot1
+    provider: dsc_probe1
     remote_id: soil_temperature
     id: rz_now_1
     internal: true
@@ -3459,7 +3459,7 @@ sensor:
           id(rz_rx_1_at) = millis();   // radio heard (even NaN / 0 °C)
           if (!isnan(x) && x > 5.0f && x < 45.0f) { id(rz_now_1_at) = millis(); id(last_valid_rootzone_time) = millis(); }
   - platform: packet_transport
-    provider: dsc_pot2
+    provider: dsc_probe2
     remote_id: soil_temperature
     id: rz_now_2
     internal: true
@@ -3468,7 +3468,7 @@ sensor:
           id(rz_rx_2_at) = millis();
           if (!isnan(x) && x > 5.0f && x < 45.0f) { id(rz_now_2_at) = millis(); id(last_valid_rootzone_time) = millis(); }
   - platform: packet_transport
-    provider: dsc_pot3
+    provider: dsc_probe3
     remote_id: soil_temperature
     id: rz_now_3
     internal: true
@@ -3477,7 +3477,7 @@ sensor:
           id(rz_rx_3_at) = millis();
           if (!isnan(x) && x > 5.0f && x < 45.0f) { id(rz_now_3_at) = millis(); id(last_valid_rootzone_time) = millis(); }
   - platform: packet_transport
-    provider: dsc_pot4
+    provider: dsc_probe4
     remote_id: soil_temperature
     id: rz_now_4
     internal: true

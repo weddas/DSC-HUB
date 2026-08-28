@@ -187,7 +187,7 @@ export function GrowRosterPage() {
                 const potLive = joined && isPotInService(p, state);
                 const potTent = joined ? readTent(state, p) : "unassigned";
                 const tent = tentLabel(potTent !== "unassigned" ? potTent : normalizeTent(s.tent));
-                const need = joined ? state(`sensor.dsc_pot${p}_need_summary`, "—") : "—";
+                const need = joined ? state(`sensor.dsc_probe${p}_need_summary`, "—") : "—";
                 const vessel = joined ? readPotVessel(p, state, entity) : null;
                 return (
                   <tr

@@ -28,10 +28,10 @@ from .hub_controls import (
 _IN_SERVICE_ENTITY_TO_SEAT: dict[str, str] = {
     "input_boolean.dsc_ac_in_service": "ac",
     "input_boolean.dsc_clone_humidifier_in_service": "mister",
-    "input_boolean.dsc_pot1_in_service": "pot1",
-    "input_boolean.dsc_pot2_in_service": "pot2",
-    "input_boolean.dsc_pot3_in_service": "pot3",
-    "input_boolean.dsc_pot4_in_service": "pot4",
+    "input_boolean.dsc_probe1_in_service": "pot1",
+    "input_boolean.dsc_probe2_in_service": "pot2",
+    "input_boolean.dsc_probe3_in_service": "pot3",
+    "input_boolean.dsc_probe4_in_service": "pot4",
     "input_boolean.dsc_tank_in_service": "tank",
 }
 
@@ -464,28 +464,28 @@ async def apply_clone_tent_automation() -> dict[str, Any]:
 
 
 def _maybe_persist_pot_edit(entity_id: str, value: str) -> None:
-    pot_tent = re.match(r"input_select\.dsc_pot([1-4])_tent$", entity_id)
+    pot_tent = re.match(r"input_select\.dsc_probe([1-4])_tent$", entity_id)
     if pot_tent:
         try:
             update_pot_recipe(int(pot_tent.group(1)), {"tent": value})
         except ValueError:
             pass
         return
-    pot_sprout = re.match(r"(?:input_datetime|datetime)\.dsc_pot([1-4])_sprout_date$", entity_id)
+    pot_sprout = re.match(r"(?:input_datetime|datetime)\.dsc_probe([1-4])_sprout_date$", entity_id)
     if pot_sprout and value:
         try:
             update_pot_recipe(int(pot_sprout.group(1)), {"sprout_date": value})
         except ValueError:
             pass
         return
-    pot_stage = re.match(r"select\.dsc_pot([1-4])_growth_stage$", entity_id)
+    pot_stage = re.match(r"select\.dsc_probe([1-4])_growth_stage$", entity_id)
     if pot_stage and value:
         try:
             update_pot_recipe(int(pot_stage.group(1)), {"growth_stage": value})
         except ValueError:
             pass
         return
-    pot_name = re.match(r"text\.dsc_pot([1-4])_plant_name$", entity_id)
+    pot_name = re.match(r"text\.dsc_probe([1-4])_plant_name$", entity_id)
     if pot_name:
         try:
             update_pot_recipe(int(pot_name.group(1)), {"plant_name": value})
@@ -594,7 +594,7 @@ async def call_service_proxy(domain: str, service: str, data: dict[str, Any]) ->
             return await _hub_select(entity_id, option)
         set_helper(entity_id, option)
         _maybe_persist_pot_edit(entity_id, option)
-        if entity_id.startswith("select.dsc_pot") and entity_id.endswith("_growth_stage"):
+        if entity_id.startswith("select.dsc_probe") and entity_id.endswith("_growth_stage"):
             await apply_clone_tent_automation()
         return {"entity_id": entity_id, "state": option}
 

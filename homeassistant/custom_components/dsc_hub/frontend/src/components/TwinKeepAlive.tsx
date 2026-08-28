@@ -61,7 +61,7 @@ function buildPots(
       ec: Number(seat.ec),
       ph: Number(seat.ph),
       soilT: Number(seat.soilTemp),
-      dryback: num(`sensor.dsc_pot${n}_dryback_pct`),
+      dryback: num(`sensor.dsc_probe${n}_dryback_pct`),
       need: seat.need,
       held: hubHeld,
       untrusted: trust.untrusted,

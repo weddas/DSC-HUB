@@ -1,9 +1,9 @@
 # ==================================================================
-#  DSC-POT#1 — KIT stub
+#  DSC-Probe #1 — KIT stub
 # ==================================================================
 substitutions:
-  name: dsc_pot1
-  friendly_name: DSC-POT#1
+  name: dsc_probe1
+  friendly_name: DSC-Probe #1
   espnow_key: !secret espnow_key
   api_key_val: !secret dsc_pot1_api_key
   ota_password_val: !secret dsc_pot1_ota_password

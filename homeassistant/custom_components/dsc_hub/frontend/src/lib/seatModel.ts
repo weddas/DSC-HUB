@@ -71,7 +71,7 @@ export function readTent(
   state: (id: string, fallback?: string) => string,
   pot: number,
 ): TentId {
-  return normalizeTent(state(`input_select.dsc_pot${pot}_tent`, "unassigned"));
+  return normalizeTent(state(`input_select.dsc_probe${pot}_tent`, "unassigned"));
 }
 
 export function tentLabel(tent: TentId): string {
@@ -109,25 +109,25 @@ export function buildPlantSeat(
   const blend = clean(roster?.blend, "");
   return {
     pot,
-    plantName: clean(state(`text.dsc_pot${pot}_plant_name`, "")),
-    strainDisplay: clean(state(`sensor.dsc_pot${pot}_strain_display`, "")),
-    sprout: clean(state(`datetime.dsc_pot${pot}_sprout_date`, ""), "—").slice(0, 10),
-    days: clean(state(`sensor.dsc_pot${pot}_days_since_sprout`, "")),
-    stage: clean(state(`sensor.dsc_pot${pot}_expected_stage`, "")),
-    growthStage: clean(state(`select.dsc_pot${pot}_growth_stage`, "")),
+    plantName: clean(state(`text.dsc_probe${pot}_plant_name`, "")),
+    strainDisplay: clean(state(`sensor.dsc_probe${pot}_strain_display`, "")),
+    sprout: clean(state(`datetime.dsc_probe${pot}_sprout_date`, ""), "—").slice(0, 10),
+    days: clean(state(`sensor.dsc_probe${pot}_days_since_sprout`, "")),
+    stage: clean(state(`sensor.dsc_probe${pot}_expected_stage`, "")),
+    growthStage: clean(state(`select.dsc_probe${pot}_growth_stage`, "")),
     tent: readTent(state, pot),
     blend,
     recipe: clean(roster?.recipe, ""),
     notes: clean(roster?.notes, ""),
     layers: parseBlendLayers(blend),
-    moisture: prefer(`sensor.dsc_pot${pot}_got_moisture`, `sensor.dsc_pot${pot}_soil_moisture`, 0),
-    soilTemp: fmtReading(clean(state(`sensor.dsc_pot${pot}_soil_temperature`, "")), 1),
-    ec: prefer(`sensor.dsc_pot${pot}_got_ec`, `sensor.dsc_pot${pot}_soil_conductivity`, 0),
-    ph: prefer(`sensor.dsc_pot${pot}_got_ph`, `sensor.dsc_pot${pot}_soil_ph`, 2),
-    n: fmtReading(clean(state(`sensor.dsc_pot${pot}_soil_nitrogen`, "")), 0),
-    p: fmtReading(clean(state(`sensor.dsc_pot${pot}_soil_phosphorus`, "")), 0),
-    k: fmtReading(clean(state(`sensor.dsc_pot${pot}_soil_potassium`, "")), 0),
-    need: clean(state(`sensor.dsc_pot${pot}_need_summary`, "")),
+    moisture: prefer(`sensor.dsc_probe${pot}_got_moisture`, `sensor.dsc_probe${pot}_soil_moisture`, 0),
+    soilTemp: fmtReading(clean(state(`sensor.dsc_probe${pot}_soil_temperature`, "")), 1),
+    ec: prefer(`sensor.dsc_probe${pot}_got_ec`, `sensor.dsc_probe${pot}_soil_conductivity`, 0),
+    ph: prefer(`sensor.dsc_probe${pot}_got_ph`, `sensor.dsc_probe${pot}_soil_ph`, 2),
+    n: fmtReading(clean(state(`sensor.dsc_probe${pot}_soil_nitrogen`, "")), 0),
+    p: fmtReading(clean(state(`sensor.dsc_probe${pot}_soil_phosphorus`, "")), 0),
+    k: fmtReading(clean(state(`sensor.dsc_probe${pot}_soil_potassium`, "")), 0),
+    need: clean(state(`sensor.dsc_probe${pot}_need_summary`, "")),
     rosterSlot: roster?.slot ?? null,
   };
 }
@@ -138,13 +138,13 @@ export function potGotEntity(
   kind: "moisture" | "ec" | "ph",
   state: (id: string, fallback?: string) => string,
 ): string {
-  const got = `sensor.dsc_pot${pot}_got_${kind}`;
+  const got = `sensor.dsc_probe${pot}_got_${kind}`;
   const fb =
     kind === "moisture"
-      ? `sensor.dsc_pot${pot}_soil_moisture`
+      ? `sensor.dsc_probe${pot}_soil_moisture`
       : kind === "ec"
-        ? `sensor.dsc_pot${pot}_soil_conductivity`
-        : `sensor.dsc_pot${pot}_soil_ph`;
+        ? `sensor.dsc_probe${pot}_soil_conductivity`
+        : `sensor.dsc_probe${pot}_soil_ph`;
   const raw = state(got, "");
   if (raw && raw !== "unavailable" && raw !== "unknown") return got;
   return fb;
@@ -167,7 +167,7 @@ export function isPotInService(
   pot: number,
   state: (id: string, fallback?: string) => string,
 ): boolean {
-  const id = `input_boolean.dsc_pot${pot}_in_service`;
+  const id = `input_boolean.dsc_probe${pot}_in_service`;
   const raw = state(id, "off");
   if (raw === "unavailable" || raw === "unknown" || raw === "") return false;
   return raw === "on";

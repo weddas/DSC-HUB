@@ -7,75 +7,75 @@
 
 template:
   - sensor:
-      - name: "DSC-POT1 EC vs Tank"
-        unique_id: dsc_pot1_ec_vs_tank
+      - name: "DSC-Probe1 EC vs Tank"
+        unique_id: dsc_probe1_ec_vs_tank
         unit_of_measurement: "µS/cm"
         state_class: measurement
         icon: mdi:swap-vertical-bold
         state: >
-          {% set soil = states('sensor.dsc_pot1_soil_conductivity')|float(none) %}
+          {% set soil = states('sensor.dsc_probe1_soil_conductivity')|float(none) %}
           {% set tank = states('sensor.dsc_tank_ec_normalized')|float(none) %}
           {{ (soil - tank)|round(0) if soil is not none and tank is not none else none }}
 
-      - name: "DSC-POT2 EC vs Tank"
-        unique_id: dsc_pot2_ec_vs_tank
+      - name: "DSC-Probe2 EC vs Tank"
+        unique_id: dsc_probe2_ec_vs_tank
         unit_of_measurement: "µS/cm"
         state_class: measurement
         icon: mdi:swap-vertical-bold
         state: >
-          {% set soil = states('sensor.dsc_pot2_soil_conductivity')|float(none) %}
+          {% set soil = states('sensor.dsc_probe2_soil_conductivity')|float(none) %}
           {% set tank = states('sensor.dsc_tank_ec_normalized')|float(none) %}
           {{ (soil - tank)|round(0) if soil is not none and tank is not none else none }}
 
-      - name: "DSC-POT3 EC vs Tank"
-        unique_id: dsc_pot3_ec_vs_tank
+      - name: "DSC-Probe3 EC vs Tank"
+        unique_id: dsc_probe3_ec_vs_tank
         unit_of_measurement: "µS/cm"
         state_class: measurement
         icon: mdi:swap-vertical-bold
         state: >
-          {% set soil = states('sensor.dsc_pot3_soil_conductivity')|float(none) %}
+          {% set soil = states('sensor.dsc_probe3_soil_conductivity')|float(none) %}
           {% set tank = states('sensor.dsc_tank_ec_normalized')|float(none) %}
           {{ (soil - tank)|round(0) if soil is not none and tank is not none else none }}
 
-      - name: "DSC-POT4 EC vs Tank"
-        unique_id: dsc_pot4_ec_vs_tank
+      - name: "DSC-Probe4 EC vs Tank"
+        unique_id: dsc_probe4_ec_vs_tank
         unit_of_measurement: "µS/cm"
         state_class: measurement
         icon: mdi:swap-vertical-bold
         state: >
-          {% set soil = states('sensor.dsc_pot4_soil_conductivity')|float(none) %}
+          {% set soil = states('sensor.dsc_probe4_soil_conductivity')|float(none) %}
           {% set tank = states('sensor.dsc_tank_ec_normalized')|float(none) %}
           {{ (soil - tank)|round(0) if soil is not none and tank is not none else none }}
 
 sensor:
   - platform: derivative
-    name: "DSC-POT1 EC Uptake Slope"
-    unique_id: dsc_pot1_ec_uptake_slope
-    source: sensor.dsc_pot1_soil_conductivity
+    name: "DSC-Probe1 EC Uptake Slope"
+    unique_id: dsc_probe1_ec_uptake_slope
+    source: sensor.dsc_probe1_soil_conductivity
     time_window: "06:00:00"
     unit_time: h
     round: 1
 
   - platform: derivative
-    name: "DSC-POT2 EC Uptake Slope"
-    unique_id: dsc_pot2_ec_uptake_slope
-    source: sensor.dsc_pot2_soil_conductivity
+    name: "DSC-Probe2 EC Uptake Slope"
+    unique_id: dsc_probe2_ec_uptake_slope
+    source: sensor.dsc_probe2_soil_conductivity
     time_window: "06:00:00"
     unit_time: h
     round: 1
 
   - platform: derivative
-    name: "DSC-POT3 EC Uptake Slope"
-    unique_id: dsc_pot3_ec_uptake_slope
-    source: sensor.dsc_pot3_soil_conductivity
+    name: "DSC-Probe3 EC Uptake Slope"
+    unique_id: dsc_probe3_ec_uptake_slope
+    source: sensor.dsc_probe3_soil_conductivity
     time_window: "06:00:00"
     unit_time: h
     round: 1
 
   - platform: derivative
-    name: "DSC-POT4 EC Uptake Slope"
-    unique_id: dsc_pot4_ec_uptake_slope
-    source: sensor.dsc_pot4_soil_conductivity
+    name: "DSC-Probe4 EC Uptake Slope"
+    unique_id: dsc_probe4_ec_uptake_slope
+    source: sensor.dsc_probe4_soil_conductivity
     time_window: "06:00:00"
     unit_time: h
     round: 1

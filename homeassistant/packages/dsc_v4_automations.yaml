@@ -783,10 +783,10 @@ automation:
             temperature. The mat still works — it is just heating to the
             wrong target.
 
-            Soil temps: P1 {{ states('sensor.dsc_pot1_soil_temperature') }}°C ·
-            P2 {{ states('sensor.dsc_pot2_soil_temperature') }}°C ·
-            P3 {{ states('sensor.dsc_pot3_soil_temperature') }}°C ·
-            P4 {{ states('sensor.dsc_pot4_soil_temperature') }}°C.
+            Soil temps: P1 {{ states('sensor.dsc_probe1_soil_temperature') }}°C ·
+            P2 {{ states('sensor.dsc_probe2_soil_temperature') }}°C ·
+            P3 {{ states('sensor.dsc_probe3_soil_temperature') }}°C ·
+            P4 {{ states('sensor.dsc_probe4_soil_temperature') }}°C.
 
             ESP-NOW links:
             P1 {{ states('binary_sensor.dsc_hub_pot1_esp_now_link') }} ·
@@ -848,8 +848,8 @@ automation:
           entity_id: input_boolean.dsc_event_log
           message: >-
             {% set ns = namespace(vals=[]) %}
-            {% for e in ['sensor.dsc_pot1_soil_temperature','sensor.dsc_pot2_soil_temperature',
-                         'sensor.dsc_pot3_soil_temperature','sensor.dsc_pot4_soil_temperature'] %}
+            {% for e in ['sensor.dsc_probe1_soil_temperature','sensor.dsc_probe2_soil_temperature',
+                         'sensor.dsc_probe3_soil_temperature','sensor.dsc_probe4_soil_temperature'] %}
               {% if has_value(e) %}
                 {% set v = states(e) | float(0) %}
                 {% if 5 <= v <= 45 %}{% set ns.vals = ns.vals + [v] %}{% endif %}
@@ -1149,10 +1149,10 @@ automation:
         entity_id:
           - input_boolean.dsc_ac_in_service
           - input_boolean.dsc_clone_humidifier_in_service
-          - input_boolean.dsc_pot1_in_service
-          - input_boolean.dsc_pot2_in_service
-          - input_boolean.dsc_pot3_in_service
-          - input_boolean.dsc_pot4_in_service
+          - input_boolean.dsc_probe1_in_service
+          - input_boolean.dsc_probe2_in_service
+          - input_boolean.dsc_probe3_in_service
+          - input_boolean.dsc_probe4_in_service
       - trigger: state
         entity_id: binary_sensor.dsc_hub_ha_link_status
         to: "on"
@@ -1166,13 +1166,13 @@ automation:
               hub: switch.dsc_hub_ac_in_service
             - ha: input_boolean.dsc_clone_humidifier_in_service
               hub: switch.dsc_hub_clone_humidifier_in_service
-            - ha: input_boolean.dsc_pot1_in_service
+            - ha: input_boolean.dsc_probe1_in_service
               hub: switch.dsc_hub_pot1_in_service
-            - ha: input_boolean.dsc_pot2_in_service
+            - ha: input_boolean.dsc_probe2_in_service
               hub: switch.dsc_hub_pot2_in_service
-            - ha: input_boolean.dsc_pot3_in_service
+            - ha: input_boolean.dsc_probe3_in_service
               hub: switch.dsc_hub_pot3_in_service
-            - ha: input_boolean.dsc_pot4_in_service
+            - ha: input_boolean.dsc_probe4_in_service
               hub: switch.dsc_hub_pot4_in_service
       - repeat:
           for_each: "{{ pairs }}"

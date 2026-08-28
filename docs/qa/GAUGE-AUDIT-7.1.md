@@ -76,10 +76,10 @@ Pots: pot1 **21.8% / 18.4 °C / pH 6.30**; pot2 **19.4% / 18.5 °C / pH 7.20**; 
 | Overview | Room T | `room_temperature` | **same ±2 as 4×8 tent target** | grey `—` | **23.8 °C green** — lung scored as tent |
 | Overview | Room RH | `room_humidity` | **same 50–60 as 4×8** | grey `—` | **60.6% green** — lung scored as tent |
 | Overview | Root | `sensor.dsc_coldest_root_zone_temp` | mat 20–22 + 1 °C | grey `—` | **18.4 °C amber** · sparkline amber |
-| Overview Root & tank | P1 % | `num(sensor.dsc_pot1_soil_moisture)` — **not** in `ENTITY_FLEET_MAP` | hardcoded **30–70** | grey `—` / `no data` | **grey empty** while `/fleet` pot1 **21.8%** (WF-P0-1) |
-| Overview | P2 % | `sensor.dsc_pot2_soil_moisture` | 30–70 | grey | **19.4% amber** · dash 19.4% of 0–100 |
-| Overview | P3 % | `sensor.dsc_pot3_soil_moisture` | 30–70 | grey | **grey empty** (OOS, no pot in `/fleet`) |
-| Overview | P4 % | `sensor.dsc_pot4_soil_moisture` | 30–70 | grey | **grey empty** (online, null moisture — honest) |
+| Overview Root & tank | P1 % | `num(sensor.dsc_probe1_soil_moisture)` — **not** in `ENTITY_FLEET_MAP` | hardcoded **30–70** | grey `—` / `no data` | **grey empty** while `/fleet` pot1 **21.8%** (WF-P0-1) |
+| Overview | P2 % | `sensor.dsc_probe2_soil_moisture` | 30–70 | grey | **19.4% amber** · dash 19.4% of 0–100 |
+| Overview | P3 % | `sensor.dsc_probe3_soil_moisture` | 30–70 | grey | **grey empty** (OOS, no pot in `/fleet`) |
+| Overview | P4 % | `sensor.dsc_probe4_soil_moisture` | 30–70 | grey | **grey empty** (online, null moisture — honest) |
 | Climate `/live/climate` triad | Room T | held `room_temp_c` | **no band → teal** | grey | **23.9 °C teal** · extrema ticks only |
 | Climate | Room RH | held `room_rh_pct` | no band → teal | grey | **60.9% teal** |
 | Climate | Room VPD | `sensor.dsc_hub_room_vpd_kpa` (not on fleet map) | no band | grey | **`—` / `no data`** while T+RH live |
@@ -89,7 +89,7 @@ Pots: pot1 **21.8% / 18.4 °C / pH 6.30**; pot2 **19.4% / 18.5 °C / pH 7.20**; 
 | Climate Got/Want | 2×4 / 4×8 T | held T; Want = target only | **no ±2 band → always neon** | muted | **4×8 Got 23 Want 26 still green** |
 | Climate Got/Want | 2×4 / 4×8 RH, VPD | wantMin/wantMax | `zoneTone` + 12% | muted | all neon this pass (grace) |
 | Root `/live/root` | P1 Moisture | `useHeldReading(potGotEntity moisture)` | `potWantBand` or **default 0–45** | grey | **21.8% green** (same metric Overview empty / 30–70 would be amber) |
-| Root | P1 Soil °C | `sensor.dsc_pot1_soil_temperature` | **no band → teal** | grey | **18.4 °C teal** (Overview Root same number **amber**) |
+| Root | P1 Soil °C | `sensor.dsc_probe1_soil_temperature` | **no band → teal** | grey | **18.4 °C teal** (Overview Root same number **amber**) |
 | Root | P1 Dryback / EC | dryback / EC entities | dryback 0–45 if moisture band max is 45; EC if want exists | grey | both **no data** |
 | Root | P1 pH | fleet `ph` | no band → teal | grey | **6.30 teal** · **unit string empty** |
 | Root | P2 Moisture | same | default 0–45 | grey | **19.4% green** vs Overview **amber** |

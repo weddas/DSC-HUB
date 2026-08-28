@@ -1,6 +1,7 @@
 #!/bin/bash
-# Flash DSC fleet to 7.0.0.0 via ESPHome on the Pi (AP island).
+# Flash DSC fleet via ESPHome on the Pi (AP island).
 # Order: hub → pot2 canary → pot1,pot3,pot4 → sonoffs → panel
+# Probe devices rename to dsc_probeN but YAML filenames stay dsc-potN.yaml.
 set -eu
 
 PASS="${1:-Digital}"
@@ -42,7 +43,7 @@ declare -A HOST=(
   [dehumidifier]=10.42.0.55
 )
 
-echo "=== DSC fleet flash train 7.0.0.0 ==="
+echo "=== DSC fleet flash train (Climate Mode + DSC-Probe rename) ==="
 for seat in $SEATS; do
   yaml="${YAML[$seat]:-}"
   host="${HOST[$seat]:-}"

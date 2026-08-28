@@ -224,12 +224,12 @@ function RootPotCard({ pot, oos, onOpenSeat }: { pot: number; oos: boolean; onOp
   const trust = readPotTrust(pot, state);
   const moistId = potGotEntity(pot, "moisture", state);
   const series = useEntitySeries(moistId, { hours: 6, maxPoints: 48 });
-  const dry = useHeldReading(`sensor.dsc_pot${pot}_dryback_pct`);
-  const soil = useHeldReading(`sensor.dsc_pot${pot}_soil_temperature`);
+  const dry = useHeldReading(`sensor.dsc_probe${pot}_dryback_pct`);
+  const soil = useHeldReading(`sensor.dsc_probe${pot}_soil_temperature`);
   const moist = useHeldReading(moistId);
   const ec = useHeldReading(potGotEntity(pot, "ec", state));
   const ph = useHeldReading(potGotEntity(pot, "ph", state));
-  const rate = useHeldReading(`sensor.dsc_pot${pot}_soil_moisture_rate`);
+  const rate = useHeldReading(`sensor.dsc_probe${pot}_soil_moisture_rate`);
   const mBand = potWantBand(pot, "moisture", state);
   const ecBand = potWantBand(pot, "ec", state);
   const phBand = potWantBand(pot, "ph", state);
@@ -241,8 +241,8 @@ function RootPotCard({ pot, oos, onOpenSeat }: { pot: number; oos: boolean; onOp
   };
 
   return (
-    <Card className={`dsc-glass dsc-pot-card${oos ? " is-oos" : ""}`} title={`Pot ${pot}`} icon="root">
-      <div className="dsc-pot-card-head" onClick={onOpenSeat} role="presentation">
+    <Card className={`dsc-glass DSC-Probe-card${oos ? " is-oos" : ""}`} title={`Pot ${pot}`} icon="root">
+      <div className="DSC-Probe-card-head" onClick={onOpenSeat} role="presentation">
         <VesselGlyph spec={readPotVessel(pot, state, entity)} size={28} />
         <div>
           <strong>{oos ? "Out of service" : seat.plantName}</strong>
@@ -277,23 +277,23 @@ function RootPotCard({ pot, oos, onOpenSeat }: { pot: number; oos: boolean; onOp
       ) : (
         <div className="dsc-gauge-row">
           <ArcGauge label="Moisture" value={moist.value} min={0} max={100} unit="%" band={mBand} segments={mBand ? moistureSegments(mBand.min, mBand.max) : moistureSegments()} stale={moist.stale} onClick={() => inspector.open({ entityId: moistId, label: `P${pot} moisture`, unit: "%" })} />
-          <ArcGauge label="Soil °C" value={soil.value} min={10} max={40} unit="°C" stale={soil.stale} onClick={() => inspector.open({ entityId: `sensor.dsc_pot${pot}_soil_temperature`, label: `P${pot} soil T`, unit: "°C" })} />
-          <ArcGauge label="Dryback" value={dry.value} min={0} max={100} unit="%" band={dryBand} stale={dry.stale} onClick={() => inspector.open({ entityId: `sensor.dsc_pot${pot}_dryback_pct`, label: `P${pot} dryback`, unit: "%" })} />
+          <ArcGauge label="Soil °C" value={soil.value} min={10} max={40} unit="°C" stale={soil.stale} onClick={() => inspector.open({ entityId: `sensor.dsc_probe${pot}_soil_temperature`, label: `P${pot} soil T`, unit: "°C" })} />
+          <ArcGauge label="Dryback" value={dry.value} min={0} max={100} unit="%" band={dryBand} stale={dry.stale} onClick={() => inspector.open({ entityId: `sensor.dsc_probe${pot}_dryback_pct`, label: `P${pot} dryback`, unit: "%" })} />
           <ArcGauge label="EC" value={ec.value} min={0} max={3000} unit="" band={ecBand} stale={ec.stale} onClick={() => inspector.open({ entityId: potGotEntity(pot, "ec", state), label: `P${pot} EC` })} />
           <ArcGauge label="pH" value={ph.value} min={4} max={8} unit="" band={phBand} stale={ph.stale} onClick={() => inspector.open({ entityId: potGotEntity(pot, "ph", state), label: `P${pot} pH` })} />
-          <button type="button" className="dsc-npk-hit" onClick={open(`sensor.dsc_pot${pot}_soil_nitrogen`, `P${pot} N`)}>
-            N {available(`sensor.dsc_pot${pot}_soil_nitrogen`) ? seat.n : "—"}
+          <button type="button" className="dsc-npk-hit" onClick={open(`sensor.dsc_probe${pot}_soil_nitrogen`, `P${pot} N`)}>
+            N {available(`sensor.dsc_probe${pot}_soil_nitrogen`) ? seat.n : "—"}
           </button>
-          <button type="button" className="dsc-npk-hit" onClick={open(`sensor.dsc_pot${pot}_soil_phosphorus`, `P${pot} P`)}>
-            P {available(`sensor.dsc_pot${pot}_soil_phosphorus`) ? seat.p : "—"}
+          <button type="button" className="dsc-npk-hit" onClick={open(`sensor.dsc_probe${pot}_soil_phosphorus`, `P${pot} P`)}>
+            P {available(`sensor.dsc_probe${pot}_soil_phosphorus`) ? seat.p : "—"}
           </button>
-          <button type="button" className="dsc-npk-hit" onClick={open(`sensor.dsc_pot${pot}_soil_potassium`, `P${pot} K`)}>
-            K {available(`sensor.dsc_pot${pot}_soil_potassium`) ? seat.k : "—"}
+          <button type="button" className="dsc-npk-hit" onClick={open(`sensor.dsc_probe${pot}_soil_potassium`, `P${pot} K`)}>
+            K {available(`sensor.dsc_probe${pot}_soil_potassium`) ? seat.k : "—"}
           </button>
           <button
             type="button"
             className="dsc-npk-hit"
-            onClick={open(`sensor.dsc_pot${pot}_soil_moisture_rate`, `P${pot} moisture rate`)}
+            onClick={open(`sensor.dsc_probe${pot}_soil_moisture_rate`, `P${pot} moisture rate`)}
           >
             Rate {Number.isFinite(rate.value) ? rate.value.toFixed(2) : "—"}
             {rate.stale ? " *" : ""}

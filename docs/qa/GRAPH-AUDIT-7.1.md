@@ -62,13 +62,13 @@ Empty default copy: **"thin recorder"** — jargon, and it is used both for “n
 | `sensor.dsc_hub_clone_*` T/RH/VPD | — | ~1787 | — | live | Mapped |
 | `sensor.dsc_fan_exhaust_outside_pct` / `room_pct` | **0** | **0** | **0** | — | **Not mapped; chart is empty** |
 | `sensor.dsc_coldest_root_zone_temp` | **2000** | **2000** | **2000** | 6h window ends **~5.6h ago** | Cap + constant write |
-| `sensor.dsc_pot1_soil_moisture` | 395 | 1966 | **2000** | live / 48h last **~27h ago** | 21.8–23.2% |
-| `sensor.dsc_pot1_got_moisture` | **0** | **0** | **0** | — | Seat helper prefers this when present |
-| `sensor.dsc_pot1_soil_ec` / `got_ec` / `soil_conductivity` | **0** | **0** | **0** | — | **EC not ingested** |
-| `sensor.dsc_pot1_soil_ph` | 395 | 1967 | — | live | Mapped; `got_ph` is 0 |
-| `sensor.dsc_pot2_soil_moisture` | 393 | 1969 | **2000** | live / 48h truncated | 2.9–20.4% (real swing) |
-| `sensor.dsc_pot3_soil_moisture` | **0** | **0** | **0** | — | pot3 OOS — correct empty |
-| `sensor.dsc_pot4_soil_moisture` / temp | **0** | **0** | **0** | — | pot4 **in service**, values **null** |
+| `sensor.dsc_probe1_soil_moisture` | 395 | 1966 | **2000** | live / 48h last **~27h ago** | 21.8–23.2% |
+| `sensor.dsc_probe1_got_moisture` | **0** | **0** | **0** | — | Seat helper prefers this when present |
+| `sensor.dsc_probe1_soil_ec` / `got_ec` / `soil_conductivity` | **0** | **0** | **0** | — | **EC not ingested** |
+| `sensor.dsc_probe1_soil_ph` | 395 | 1967 | — | live | Mapped; `got_ph` is 0 |
+| `sensor.dsc_probe2_soil_moisture` | 393 | 1969 | **2000** | live / 48h truncated | 2.9–20.4% (real swing) |
+| `sensor.dsc_probe3_soil_moisture` | **0** | **0** | **0** | — | pot3 OOS — correct empty |
+| `sensor.dsc_probe4_soil_moisture` / temp | **0** | **0** | **0** | — | pot4 **in service**, values **null** |
 | `binary_sensor.dsc_hub_4x8_window_open` | **0** | **0** | **0** | — | Duty strip unmapped |
 | `light.dsc_hub_sf1000_dimmer` | **0** | **0** | **0** | — | Duty strip unmapped |
 | `switch.dsc_heater_main_relay` | — | 453 | — | ~7 min | Mapped; demand switch is not |

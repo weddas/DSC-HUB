@@ -178,80 +178,80 @@ input_select:
 template:
   - binary_sensor:
       - name: "DSC POT1 Dual Cal Stack"
-        unique_id: dsc_pot1_dual_cal_stack
+        unique_id: dsc_probe1_dual_cal_stack
         device_class: problem
         icon: mdi:layers-triple
         state: >
-          {% if not is_state('input_boolean.dsc_pot1_in_service','on') %}false
+          {% if not is_state('input_boolean.dsc_probe1_in_service','on') %}false
           {% else %}
           {% set eps = 0.05 %}
-          {% set ha_ph = states('input_number.dsc_pot1_offset_ph')|float(0)|abs %}
-          {% set ha_ec = states('input_number.dsc_pot1_offset_ec_us')|float(0)|abs %}
-          {% set ha_m = states('input_number.dsc_pot1_offset_moisture')|float(0)|abs %}
+          {% set ha_ph = states('input_number.dsc_probe1_offset_ph')|float(0)|abs %}
+          {% set ha_ec = states('input_number.dsc_probe1_offset_ec_us')|float(0)|abs %}
+          {% set ha_m = states('input_number.dsc_probe1_offset_moisture')|float(0)|abs %}
           {% set ha = ha_ph > eps or ha_ec > 1 or ha_m > eps %}
-          {% set eo = states('number.dsc_pot1_cal_ph_offset')|float(0)|abs > eps
-             or states('number.dsc_pot1_cal_conductivity_offset')|float(0)|abs > 1
-             or states('number.dsc_pot1_cal_moisture_offset')|float(0)|abs > eps
-             or (states('number.dsc_pot1_cal_ph_scale')|float(1) - 1)|abs > 0.02
-             or (states('number.dsc_pot1_cal_conductivity_scale')|float(1) - 1)|abs > 0.02
-             or (states('number.dsc_pot1_cal_moisture_scale')|float(1) - 1)|abs > 0.02 %}
+          {% set eo = states('number.dsc_probe1_cal_ph_offset')|float(0)|abs > eps
+             or states('number.dsc_probe1_cal_conductivity_offset')|float(0)|abs > 1
+             or states('number.dsc_probe1_cal_moisture_offset')|float(0)|abs > eps
+             or (states('number.dsc_probe1_cal_ph_scale')|float(1) - 1)|abs > 0.02
+             or (states('number.dsc_probe1_cal_conductivity_scale')|float(1) - 1)|abs > 0.02
+             or (states('number.dsc_probe1_cal_moisture_scale')|float(1) - 1)|abs > 0.02 %}
           {{ ha and eo }}
           {% endif %}
       - name: "DSC POT2 Dual Cal Stack"
-        unique_id: dsc_pot2_dual_cal_stack
+        unique_id: dsc_probe2_dual_cal_stack
         device_class: problem
         icon: mdi:layers-triple
         state: >
-          {% if not is_state('input_boolean.dsc_pot2_in_service','on') %}false
+          {% if not is_state('input_boolean.dsc_probe2_in_service','on') %}false
           {% else %}
           {% set eps = 0.05 %}
-          {% set ha = states('input_number.dsc_pot2_offset_ph')|float(0)|abs > eps
-             or states('input_number.dsc_pot2_offset_ec_us')|float(0)|abs > 1
-             or states('input_number.dsc_pot2_offset_moisture')|float(0)|abs > eps %}
-          {% set eo = states('number.dsc_pot2_cal_ph_offset')|float(0)|abs > eps
-             or states('number.dsc_pot2_cal_conductivity_offset')|float(0)|abs > 1
-             or states('number.dsc_pot2_cal_moisture_offset')|float(0)|abs > eps
-             or (states('number.dsc_pot2_cal_ph_scale')|float(1) - 1)|abs > 0.02
-             or (states('number.dsc_pot2_cal_conductivity_scale')|float(1) - 1)|abs > 0.02
-             or (states('number.dsc_pot2_cal_moisture_scale')|float(1) - 1)|abs > 0.02 %}
+          {% set ha = states('input_number.dsc_probe2_offset_ph')|float(0)|abs > eps
+             or states('input_number.dsc_probe2_offset_ec_us')|float(0)|abs > 1
+             or states('input_number.dsc_probe2_offset_moisture')|float(0)|abs > eps %}
+          {% set eo = states('number.dsc_probe2_cal_ph_offset')|float(0)|abs > eps
+             or states('number.dsc_probe2_cal_conductivity_offset')|float(0)|abs > 1
+             or states('number.dsc_probe2_cal_moisture_offset')|float(0)|abs > eps
+             or (states('number.dsc_probe2_cal_ph_scale')|float(1) - 1)|abs > 0.02
+             or (states('number.dsc_probe2_cal_conductivity_scale')|float(1) - 1)|abs > 0.02
+             or (states('number.dsc_probe2_cal_moisture_scale')|float(1) - 1)|abs > 0.02 %}
           {{ ha and eo }}
           {% endif %}
       - name: "DSC POT3 Dual Cal Stack"
-        unique_id: dsc_pot3_dual_cal_stack
+        unique_id: dsc_probe3_dual_cal_stack
         device_class: problem
         icon: mdi:layers-triple
         state: >
-          {% if not is_state('input_boolean.dsc_pot3_in_service','on') %}false
+          {% if not is_state('input_boolean.dsc_probe3_in_service','on') %}false
           {% else %}
           {% set eps = 0.05 %}
-          {% set ha = states('input_number.dsc_pot3_offset_ph')|float(0)|abs > eps
-             or states('input_number.dsc_pot3_offset_ec_us')|float(0)|abs > 1
-             or states('input_number.dsc_pot3_offset_moisture')|float(0)|abs > eps %}
-          {% set eo = states('number.dsc_pot3_cal_ph_offset')|float(0)|abs > eps
-             or states('number.dsc_pot3_cal_conductivity_offset')|float(0)|abs > 1
-             or states('number.dsc_pot3_cal_moisture_offset')|float(0)|abs > eps
-             or (states('number.dsc_pot3_cal_ph_scale')|float(1) - 1)|abs > 0.02
-             or (states('number.dsc_pot3_cal_conductivity_scale')|float(1) - 1)|abs > 0.02
-             or (states('number.dsc_pot3_cal_moisture_scale')|float(1) - 1)|abs > 0.02 %}
+          {% set ha = states('input_number.dsc_probe3_offset_ph')|float(0)|abs > eps
+             or states('input_number.dsc_probe3_offset_ec_us')|float(0)|abs > 1
+             or states('input_number.dsc_probe3_offset_moisture')|float(0)|abs > eps %}
+          {% set eo = states('number.dsc_probe3_cal_ph_offset')|float(0)|abs > eps
+             or states('number.dsc_probe3_cal_conductivity_offset')|float(0)|abs > 1
+             or states('number.dsc_probe3_cal_moisture_offset')|float(0)|abs > eps
+             or (states('number.dsc_probe3_cal_ph_scale')|float(1) - 1)|abs > 0.02
+             or (states('number.dsc_probe3_cal_conductivity_scale')|float(1) - 1)|abs > 0.02
+             or (states('number.dsc_probe3_cal_moisture_scale')|float(1) - 1)|abs > 0.02 %}
           {{ ha and eo }}
           {% endif %}
       - name: "DSC POT4 Dual Cal Stack"
-        unique_id: dsc_pot4_dual_cal_stack
+        unique_id: dsc_probe4_dual_cal_stack
         device_class: problem
         icon: mdi:layers-triple
         state: >
-          {% if not is_state('input_boolean.dsc_pot4_in_service','on') %}false
+          {% if not is_state('input_boolean.dsc_probe4_in_service','on') %}false
           {% else %}
           {% set eps = 0.05 %}
-          {% set ha = states('input_number.dsc_pot4_offset_ph')|float(0)|abs > eps
-             or states('input_number.dsc_pot4_offset_ec_us')|float(0)|abs > 1
-             or states('input_number.dsc_pot4_offset_moisture')|float(0)|abs > eps %}
-          {% set eo = states('number.dsc_pot4_cal_ph_offset')|float(0)|abs > eps
-             or states('number.dsc_pot4_cal_conductivity_offset')|float(0)|abs > 1
-             or states('number.dsc_pot4_cal_moisture_offset')|float(0)|abs > eps
-             or (states('number.dsc_pot4_cal_ph_scale')|float(1) - 1)|abs > 0.02
-             or (states('number.dsc_pot4_cal_conductivity_scale')|float(1) - 1)|abs > 0.02
-             or (states('number.dsc_pot4_cal_moisture_scale')|float(1) - 1)|abs > 0.02 %}
+          {% set ha = states('input_number.dsc_probe4_offset_ph')|float(0)|abs > eps
+             or states('input_number.dsc_probe4_offset_ec_us')|float(0)|abs > 1
+             or states('input_number.dsc_probe4_offset_moisture')|float(0)|abs > eps %}
+          {% set eo = states('number.dsc_probe4_cal_ph_offset')|float(0)|abs > eps
+             or states('number.dsc_probe4_cal_conductivity_offset')|float(0)|abs > 1
+             or states('number.dsc_probe4_cal_moisture_offset')|float(0)|abs > eps
+             or (states('number.dsc_probe4_cal_ph_scale')|float(1) - 1)|abs > 0.02
+             or (states('number.dsc_probe4_cal_conductivity_scale')|float(1) - 1)|abs > 0.02
+             or (states('number.dsc_probe4_cal_moisture_scale')|float(1) - 1)|abs > 0.02 %}
           {{ ha and eo }}
           {% endif %}
       - name: "DSC Dual Cal Stack Fleet"
@@ -259,10 +259,10 @@ template:
         device_class: problem
         icon: mdi:layers-triple
         state: >
-          {{ is_state('binary_sensor.dsc_pot1_dual_cal_stack','on')
-             or is_state('binary_sensor.dsc_pot2_dual_cal_stack','on')
-             or is_state('binary_sensor.dsc_pot3_dual_cal_stack','on')
-             or is_state('binary_sensor.dsc_pot4_dual_cal_stack','on') }}
+          {{ is_state('binary_sensor.dsc_probe1_dual_cal_stack','on')
+             or is_state('binary_sensor.dsc_probe2_dual_cal_stack','on')
+             or is_state('binary_sensor.dsc_probe3_dual_cal_stack','on')
+             or is_state('binary_sensor.dsc_probe4_dual_cal_stack','on') }}
 
   - sensor:
       - name: "DSC Dual Cal Stack Summary"
@@ -661,10 +661,10 @@ automation:
     triggers:
       - trigger: numeric_state
         entity_id:
-          - sensor.dsc_pot1_soil_moisture_rate
-          - sensor.dsc_pot2_soil_moisture_rate
-          - sensor.dsc_pot3_soil_moisture_rate
-          - sensor.dsc_pot4_soil_moisture_rate
+          - sensor.dsc_probe1_soil_moisture_rate
+          - sensor.dsc_probe2_soil_moisture_rate
+          - sensor.dsc_probe3_soil_moisture_rate
+          - sensor.dsc_probe4_soil_moisture_rate
         above: 1.5
         for:
           minutes: 10

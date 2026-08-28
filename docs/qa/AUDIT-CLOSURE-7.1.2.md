@@ -100,7 +100,7 @@ Reprise: SENSOR-VALUE + GRAPH audits — `/fleet`, `/history`, runtime TZ, `ligh
 | ID | Source | Acceptance | Method | Result | Evidence |
 |----|--------|------------|--------|--------|----------|
 | GAUGE-P0-1 | GAUGE | Overview moisture band = Root `potWantBand` | Overview + Root | PASS (code+test) | `OverviewPage.tsx`, `tentWant.ts` `potWantBand` |
-| GAUGE-P0-2 | GAUGE | Overview P1 moisture shows fleet value | Overview gauge | PASS (code+test) | `entityFleetMap.ts` `sensor.dsc_pot1_soil_moisture` — WF-P0-1 |
+| GAUGE-P0-2 | GAUGE | Overview P1 moisture shows fleet value | Overview gauge | PASS (code+test) | `entityFleetMap.ts` `sensor.dsc_probe1_soil_moisture` — WF-P0-1 |
 | GAUGE-P1-1 | GAUGE | Room T/RH unbanded on Overview | Bands section | PASS (code+test) | `OverviewPage.tsx` |
 | GAUGE-P1-2 | GAUGE | Climate Got/Want use real ±2 band | Climate triad | PASS (code+test) | `ClimatePage.tsx`, `ui.tsx` ArcGauge |
 | GAUGE-P1-3 | GAUGE | Missing plant rail = unbanded teal | Root pots | PASS (code+test) | `tentWant.ts` `potWantBand` |
@@ -208,7 +208,7 @@ Reprise: DEVICE + WIRING + FALLBACK — 10/10 STA, online expiry, panel map, scr
 | FB-P0-3 | FB | `iw scan` wrapped in timeout 30 | flash scripts | PASS (code+test) | `flash-*-fallback-remote.sh` |
 | FB-P1-1 | FB | CannaLib URL single source | Settings | PASS (code+test) | REP-P1-2 |
 | FB-P1-2 | FB | `dsc-hub-ap.service` watchdog not oneshot | systemd unit | PASS (code+test) | `services/dsc-hub/pi/dsc-hub-ap.service`, `dsc-hub-ap-run.sh` |
-| FB-P1-3 | FB | Per-pot SoftAP SSIDs in firmware | YAML | PASS (code+test) | `firmware/v4/dsc-pot*.yaml` |
+| FB-P1-3 | FB | Per-pot SoftAP SSIDs in firmware | YAML | PASS (code+test) | `firmware/v4/DSC-Probe*.yaml` |
 | FB-P1-4 | FB | Soak cron aligned; sonoffs<4 alert | soak scripts | PASS (code+test) | `soak-check.sh`, `setup-soak-cron.sh` |
 | FB-P1-5 | FB | `apply_clone_tent` skip when hub offline | API | PASS (code+test) | `test_apply_clone_tent_skips_offline_hub` |
 | FB-P1-6 | FB | ps1 wrappers accept Brain LAN IP | verify/deploy ps1 | PASS (code+test) | `verify-brain.ps1`, `deploy-brain.ps1` |

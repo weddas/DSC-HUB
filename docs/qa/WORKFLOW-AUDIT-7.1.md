@@ -37,7 +37,7 @@ Sibling audits (do not conflate):
 
 ## Top 8 breaks
 
-1. **P0 — P1 moisture hole on Overview.** `/fleet` pot1 `moisture_pct=21.9`, `/history` has a dense 6 h series, Overview Root strip is grey `—`. `ENTITY_FLEET_MAP` has `sensor.dsc_pot1_got_moisture` but not `sensor.dsc_pot1_soil_moisture`; Overview reads `_soil_moisture` only. Pots 2–4 have both keys. Landing page lies about pot1.
+1. **P0 — P1 moisture hole on Overview.** `/fleet` pot1 `moisture_pct=21.9`, `/history` has a dense 6 h series, Overview Root strip is grey `—`. `ENTITY_FLEET_MAP` has `sensor.dsc_probe1_got_moisture` but not `sensor.dsc_probe1_soil_moisture`; Overview reads `_soil_moisture` only. Pots 2–4 have both keys. Landing page lies about pot1.
 2. **P0 — Retire leaves a loaded gun on Compose.** Roster empty, pot3 OOS, hub stage Off/Custom — but helpers still show Northern Lights, nickname `QA Dummy (pot3 test)`, sprout 2026-07-09, **assign pot 3**, tent 2×4. `retire_plant` clears pot helpers + roster row, not the build draft. Confirm dialog will happily write pot3 again.
 3. **P0 — Firmware/OTA in the SPA is a ticket stub.** `POST /settings/esphome/jobs` inserts `queued` and tells the operator to open `:6052` or `docker exec`. Live jobs for control + hub still queued from ~05:00Z. Recovery is `flash-*-fallback*.sh` / USB — not a grower workflow.
 4. **P1 — Dual in-service truth.** Inventory pot1/2/4 `true`, hub `switch.dsc_hub_potN_in_service` all **off**. Settings checkbox patches inventory. Fleet/Learning toggles are dead on Pi. Mat votes all off while heatmat demand is on. Operator cannot answer “is this pot in the control loop?”

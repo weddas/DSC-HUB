@@ -101,9 +101,9 @@ export const KIT_DEFS: KitDef[] = [
     (n): KitDef => ({
       id: `pot${n}`,
       label: `Pot ${n}`,
-      inServiceEntity: `input_boolean.dsc_pot${n}_in_service`,
+      inServiceEntity: `input_boolean.dsc_probe${n}_in_service`,
       plannedWhenOff: n === 3,
-      firmwareEntity: `sensor.dsc_pot${n}_firmware_version`,
+      firmwareEntity: `sensor.dsc_probe${n}_firmware_version`,
     }),
   ),
   {

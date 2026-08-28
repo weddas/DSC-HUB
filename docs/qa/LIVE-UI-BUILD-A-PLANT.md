@@ -151,8 +151,8 @@ surface while proving plant identity remains independent of sensor health:
 1. Open `/dsc-build-plant/build`; select a catalog strain, nickname, blend,
    recipe, and Assign pot **3**.
 2. Commit + assign. Confirm the assign bridge writes
-   `text.dsc_pot3_plant_name`, the canonical `select.dsc_pot3_strain` /
-   `datetime.dsc_pot3_sprout_date`, and secondary underscore entities when
+   `text.dsc_probe3_plant_name`, the canonical `select.dsc_probe3_strain` /
+   `datetime.dsc_probe3_sprout_date`, and secondary underscore entities when
    available.
 3. Open Pro Home and Root Zone. Confirm the POT3 chip/name and matching roster
    nickname/blend/recipe render even while POT3 telemetry remains OOS.

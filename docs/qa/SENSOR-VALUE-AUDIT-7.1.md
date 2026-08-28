@@ -219,5 +219,5 @@ Already filed: **GAUGE-P1-6** room VPD; **ZB-P1-3** canopy unused; **DA-P1-2** I
 `brain/dsc_brain/{computed_ops,hub_controls,dash_computed,fleet_state,esphome_client,climate_math,history_ops,device_calibration,compose_ops}.py`  
 `frontend/src/lib/{entityFleetMap,fleetFromHass,fleetModel,cfmProvenance,sensorHonesty,seatModel}.ts`  
 `frontend/src/{hooks/useBrain.tsx,hooks/useEntityBus.ts,hooks/useHeldReading.ts,pages/OverviewPage.tsx,pages/ClimatePage.tsx,pages/RootPage.tsx,components/DashHomeSections.tsx}`  
-`firmware/v4/dsc-pot-common.yaml` (soil pipeline)  
+`firmware/v4/DSC-Probe-common.yaml` (soil pipeline)  
 `docs/qa/LIVE-ACCEPTANCE-7.1.md`

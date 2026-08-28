@@ -859,8 +859,8 @@ def test_in_service_default_off_without_inventory_row(temp_db: Path) -> None:
     state = FleetState()
     hass = state.to_hass_states(inventory=[])
     assert hass["input_boolean.dsc_ac_in_service"]["state"] == "off"
-    assert hass["input_boolean.dsc_pot1_in_service"]["state"] == "off"
-    assert hass["input_boolean.dsc_pot3_in_service"]["state"] == "off"
+    assert hass["input_boolean.dsc_probe1_in_service"]["state"] == "off"
+    assert hass["input_boolean.dsc_probe3_in_service"]["state"] == "off"
 
 
 def test_online_stale_sec_alias() -> None:

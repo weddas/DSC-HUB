@@ -72,7 +72,7 @@ export function TuneAnalyticsPage() {
   ];
   const moistSeries = byPot.filter((p) => isPotInService(p.n, state));
   const worstNeed = ALL_POT_NUMBERS.filter((n) => isPotInService(n, state))
-    .map((n) => ({ n, need: state(`sensor.dsc_pot${n}_need_summary`, "—") }))
+    .map((n) => ({ n, need: state(`sensor.dsc_probe${n}_need_summary`, "—") }))
     .find((row) => row.need && row.need !== "—" && !/^ok$/i.test(row.need));
 
   return (

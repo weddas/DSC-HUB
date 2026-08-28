@@ -143,50 +143,50 @@ template:
 
   - binary_sensor:
       - name: "DSC POT1 Sensor Stuck"
-        unique_id: dsc_pot1_sensor_stuck
+        unique_id: dsc_probe1_sensor_stuck
         device_class: problem
         delay_on:
           minutes: 45
         state: >
-          {% if not is_state('input_boolean.dsc_pot1_in_service','on') %}false
+          {% if not is_state('input_boolean.dsc_probe1_in_service','on') %}false
           {% else %}
           {% set win = states('input_number.dsc_trust_stuck_minutes')|float(45) %}
-          {{ states('sensor.dsc_pot1_soil_moisture_rate')|float(0)|abs < 0.02
-             and states('sensor.dsc_pot1_soil_moisture') not in ['unknown','unavailable','']
+          {{ states('sensor.dsc_probe1_soil_moisture_rate')|float(0)|abs < 0.02
+             and states('sensor.dsc_probe1_soil_moisture') not in ['unknown','unavailable','']
              and win >= 15 }}
           {% endif %}
       - name: "DSC POT2 Sensor Stuck"
-        unique_id: dsc_pot2_sensor_stuck
+        unique_id: dsc_probe2_sensor_stuck
         device_class: problem
         delay_on:
           minutes: 45
         state: >
-          {% if not is_state('input_boolean.dsc_pot2_in_service','on') %}false
+          {% if not is_state('input_boolean.dsc_probe2_in_service','on') %}false
           {% else %}
-          {{ states('sensor.dsc_pot2_soil_moisture_rate')|float(0)|abs < 0.02
-             and states('sensor.dsc_pot2_soil_moisture') not in ['unknown','unavailable',''] }}
+          {{ states('sensor.dsc_probe2_soil_moisture_rate')|float(0)|abs < 0.02
+             and states('sensor.dsc_probe2_soil_moisture') not in ['unknown','unavailable',''] }}
           {% endif %}
       - name: "DSC POT3 Sensor Stuck"
-        unique_id: dsc_pot3_sensor_stuck
+        unique_id: dsc_probe3_sensor_stuck
         device_class: problem
         delay_on:
           minutes: 45
         state: >
-          {% if not is_state('input_boolean.dsc_pot3_in_service','on') %}false
+          {% if not is_state('input_boolean.dsc_probe3_in_service','on') %}false
           {% else %}
-          {{ states('sensor.dsc_pot3_soil_moisture_rate')|float(0)|abs < 0.02
-             and states('sensor.dsc_pot3_soil_moisture') not in ['unknown','unavailable',''] }}
+          {{ states('sensor.dsc_probe3_soil_moisture_rate')|float(0)|abs < 0.02
+             and states('sensor.dsc_probe3_soil_moisture') not in ['unknown','unavailable',''] }}
           {% endif %}
       - name: "DSC POT4 Sensor Stuck"
-        unique_id: dsc_pot4_sensor_stuck
+        unique_id: dsc_probe4_sensor_stuck
         device_class: problem
         delay_on:
           minutes: 45
         state: >
-          {% if not is_state('input_boolean.dsc_pot4_in_service','on') %}false
+          {% if not is_state('input_boolean.dsc_probe4_in_service','on') %}false
           {% else %}
-          {{ states('sensor.dsc_pot4_soil_moisture_rate')|float(0)|abs < 0.02
-             and states('sensor.dsc_pot4_soil_moisture') not in ['unknown','unavailable',''] }}
+          {{ states('sensor.dsc_probe4_soil_moisture_rate')|float(0)|abs < 0.02
+             and states('sensor.dsc_probe4_soil_moisture') not in ['unknown','unavailable',''] }}
           {% endif %}
 
       - name: "DSC Peer MAD Alert"
@@ -206,33 +206,33 @@ template:
       # Fleet MAD is notify-only (dsc_peer_mad_alert). Do not stamp every
       # in-service pot untrusted — that auto-cleared all mat votes.
       - name: "DSC POT1 Untrusted"
-        unique_id: dsc_pot1_untrusted
+        unique_id: dsc_probe1_untrusted
         device_class: problem
         icon: mdi:shield-off
         state: >
-          {{ is_state('input_boolean.dsc_pot1_in_service','on')
-             and is_state('binary_sensor.dsc_pot1_sensor_stuck','on') }}
+          {{ is_state('input_boolean.dsc_probe1_in_service','on')
+             and is_state('binary_sensor.dsc_probe1_sensor_stuck','on') }}
       - name: "DSC POT2 Untrusted"
-        unique_id: dsc_pot2_untrusted
+        unique_id: dsc_probe2_untrusted
         device_class: problem
         icon: mdi:shield-off
         state: >
-          {{ is_state('input_boolean.dsc_pot2_in_service','on')
-             and is_state('binary_sensor.dsc_pot2_sensor_stuck','on') }}
+          {{ is_state('input_boolean.dsc_probe2_in_service','on')
+             and is_state('binary_sensor.dsc_probe2_sensor_stuck','on') }}
       - name: "DSC POT3 Untrusted"
-        unique_id: dsc_pot3_untrusted
+        unique_id: dsc_probe3_untrusted
         device_class: problem
         icon: mdi:shield-off
         state: >
-          {{ is_state('input_boolean.dsc_pot3_in_service','on')
-             and is_state('binary_sensor.dsc_pot3_sensor_stuck','on') }}
+          {{ is_state('input_boolean.dsc_probe3_in_service','on')
+             and is_state('binary_sensor.dsc_probe3_sensor_stuck','on') }}
       - name: "DSC POT4 Untrusted"
-        unique_id: dsc_pot4_untrusted
+        unique_id: dsc_probe4_untrusted
         device_class: problem
         icon: mdi:shield-off
         state: >
-          {{ is_state('input_boolean.dsc_pot4_in_service','on')
-             and is_state('binary_sensor.dsc_pot4_sensor_stuck','on') }}
+          {{ is_state('input_boolean.dsc_probe4_in_service','on')
+             and is_state('binary_sensor.dsc_probe4_sensor_stuck','on') }}
 
       - name: "DSC DHT Disagreement"
         unique_id: dsc_dht_disagreement
@@ -293,10 +293,10 @@ automation:
     triggers:
       - trigger: state
         entity_id:
-          - binary_sensor.dsc_pot1_sensor_stuck
-          - binary_sensor.dsc_pot2_sensor_stuck
-          - binary_sensor.dsc_pot3_sensor_stuck
-          - binary_sensor.dsc_pot4_sensor_stuck
+          - binary_sensor.dsc_probe1_sensor_stuck
+          - binary_sensor.dsc_probe2_sensor_stuck
+          - binary_sensor.dsc_probe3_sensor_stuck
+          - binary_sensor.dsc_probe4_sensor_stuck
         to: "on"
     actions:
       - action: persistent_notification.create
@@ -326,10 +326,10 @@ automation:
     triggers:
       - trigger: state
         entity_id:
-          - binary_sensor.dsc_pot1_untrusted
-          - binary_sensor.dsc_pot2_untrusted
-          - binary_sensor.dsc_pot3_untrusted
-          - binary_sensor.dsc_pot4_untrusted
+          - binary_sensor.dsc_probe1_untrusted
+          - binary_sensor.dsc_probe2_untrusted
+          - binary_sensor.dsc_probe3_untrusted
+          - binary_sensor.dsc_probe4_untrusted
         to: "on"
     conditions:
       - condition: state

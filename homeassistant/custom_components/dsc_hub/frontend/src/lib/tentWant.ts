@@ -99,13 +99,13 @@ export function tentWantRail(tent: Exclude<TentId, "unassigned">, hass: HassBits
     }
     if (s.need && s.need !== "—" && s.need !== "ok" && !needs.includes(s.need)) needs.push(s.need);
 
-    const tMin = numWant(hass.state, `sensor.dsc_pot${s.pot}_want_temp_min`);
-    const tMax = numWant(hass.state, `sensor.dsc_pot${s.pot}_want_temp_max`);
+    const tMin = numWant(hass.state, `sensor.dsc_probe${s.pot}_want_temp_min`);
+    const tMax = numWant(hass.state, `sensor.dsc_probe${s.pot}_want_temp_max`);
     if (Number.isFinite(tMin) && Number.isFinite(tMax)) {
       temp = intersect(temp, { min: tMin, max: tMax, source: "plant" });
     }
-    const rMin = numWant(hass.state, `sensor.dsc_pot${s.pot}_want_rh_min`);
-    const rMax = numWant(hass.state, `sensor.dsc_pot${s.pot}_want_rh_max`);
+    const rMin = numWant(hass.state, `sensor.dsc_probe${s.pot}_want_rh_min`);
+    const rMax = numWant(hass.state, `sensor.dsc_probe${s.pot}_want_rh_max`);
     if (Number.isFinite(rMin) && Number.isFinite(rMax)) {
       rh = intersect(rh, { min: rMin, max: rMax, source: "plant" });
     }
@@ -237,8 +237,8 @@ export function potWantBand(
   kind: "moisture" | "ec" | "ph",
   state: (id: string, fb?: string) => string,
 ): { min: number; max: number } | undefined {
-  const lo = Number(state(`sensor.dsc_pot${pot}_want_${kind}_min`, ""));
-  const hi = Number(state(`sensor.dsc_pot${pot}_want_${kind}_max`, ""));
+  const lo = Number(state(`sensor.dsc_probe${pot}_want_${kind}_min`, ""));
+  const hi = Number(state(`sensor.dsc_probe${pot}_want_${kind}_max`, ""));
   if (lo > 0 && hi > 0 && hi >= lo) return { min: lo, max: hi };
   if (kind === "moisture") return { min: 0, max: 45 };
   return undefined;

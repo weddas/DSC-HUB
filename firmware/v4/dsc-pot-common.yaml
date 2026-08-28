@@ -1,9 +1,9 @@
 # ==================================================================
-#  DIGITAL-PLANT  ·  DSC-POT COMMON PACKAGE               (v4.0)
+#  DIGITAL-PLANT  ·  DSC-Probe COMMON PACKAGE               (v4.0)
 #  ESP32 · RS485 Modbus 7-in-1 NPK soil probe (JXCT-style)
 #  ------------------------------------------------------------------
 #  One package, four nodes. Fix once, deploy everywhere. The four
-#  dsc-pot{1..4}.yaml stubs set ONLY name + friendly_name + secrets and
+#  DSC-Probe{1..4}.yaml stubs set ONLY name + friendly_name + secrets and
 #  !include this file — never put logic in a stub.
 #
 #  Remote-git safe: no !secret in this file — stubs pass wifi_ssid,
@@ -11,9 +11,15 @@
 #  homeassistant/esphome/ pull this package from GitHub).
 # ==================================================================
 #
-#  ⚠ ENTITY IDs ARE A CONTRACT (sensor.dsc_pot1_soil_*, NO underscore
-#  before the digit). Referenced by the HA stat/alert packages, the
-#  dashboard, and the HUB's closed-loop grow mat. Do not rename a node.
+#  ⚠ ENTITY IDs ARE A CONTRACT (sensor.dsc_probe1_soil_*). Renamed from
+#  dsc_potN 2026-08-29 — hub packet_transport providers must match.
+#  Flash hub + probes in the same OTA train.
+#
+#  v7.1.0 — Climate rebuild (Aug 2026)
+#   * Device name dsc_probeN / friendly DSC-Probe #N
+#   * cal_session: burst Modbus 2.5s for 45s + pause ESP-NOW soil TX
+#   * assigned_plant_id text (roster id | empty); plant_name vacant=""
+#   * soil_cal_last stamps from SNTP when HA time invalid
 #
 #  v5.2.0 — ETH01 SoftAP ANCHOR ADOPT (Aug 2026)
 #   * Preferred WiFi AP is DSC-Anchor (bridge SoftAP), not Nest. Hub Lock
@@ -124,8 +130,8 @@ esphome:
   name: ${name}
   friendly_name: ${friendly_name}
   project:
-    name: digital_emotions.dsc-pot
-    version: "7.0.0.0"
+    name: digital_emotions.dsc-probe
+    version: "7.1.0.0"
 
 esp32:
   board: esp32dev
@@ -148,7 +154,7 @@ ota:
   - platform: esphome
     password: ${ota_password_val}
 
-# WiFi lives in dsc-pot-wifi-lab.yaml / dsc-pot-wifi-kit.yaml (stub).
+# WiFi lives in DSC-Probe-wifi-lab.yaml / DSC-Probe-wifi-kit.yaml (stub).
 
 # ==================================================================
 #  RS485 / MODBUS
@@ -189,8 +195,8 @@ modbus_controller:
 # ==================================================================
 #  SENSOR CALIBRATION  —  config numbers (NVS-backed)
 #  ------------------------------------------------------------------
-#  Entity ids (examples for pot1): number.dsc_pot1_cal_moisture_offset,
-#  number.dsc_pot1_cal_moisture_scale, … for each soil channel.
+#  Entity ids (examples for pot1): number.dsc_probe1_cal_moisture_offset,
+#  number.dsc_probe1_cal_moisture_scale, … for each soil channel.
 #  Applied in the sensor filters below so HA + ESP-NOW stay consistent.
 #  Provenance: text.soil_cal_method / text.soil_cal_last + binary
 #  soil_calibrated. set_action stamps method=manual (muted during Reset).
@@ -816,11 +822,32 @@ text:
     id: plant_name
     icon: "mdi:tag-text-outline"
     optimistic: true
-    restore_value: true
-    initial_value: "Unassigned"
+    restore_value: false
+    initial_value: ""
     max_length: 32
     mode: text
+    entity_category: diagnostic
+  - platform: template
+    name: "Assigned Plant Id"
+    id: assigned_plant_id
+    icon: "mdi:identifier"
+    optimistic: true
+    restore_value: true
+    initial_value: ""
+    max_length: 64
+    mode: text
     entity_category: config
+    # Roster plant id | empty. Idle dock is separate (Soil Test return).
+  - platform: template
+    name: "Cal Capture"
+    id: cal_capture_diag
+    icon: mdi:chart-bell-curve
+    optimistic: true
+    restore_value: false
+    initial_value: ""
+    max_length: 80
+    mode: text
+    entity_category: diagnostic
 
 select:
   - platform: template
@@ -875,7 +902,7 @@ datetime:
 #  ------------------------------------------------------------------
 #  Every 60s (matching the probe poll) this node unicasts its full soil
 #  set to the hub MAC, xxtea-signed with espnow_key. The provider NAME
-#  is this node's name: (dsc_pot1..4 via the stubs) and MUST match the
+#  is this node's name: (dsc_probe1..4 via the stubs) and MUST match the
 #  hub's providers: list — it does, by construction.
 #
 #  v4.0: the sensors: list now carries ALL SEVEN fields (was temp +
@@ -931,6 +958,34 @@ globals:
     type: bool
     restore_value: false
     initial_value: 'false'
+  - id: cal_session_active
+    type: bool
+    restore_value: false
+    initial_value: 'false'
+  - id: espnow_cal_pause
+    type: bool
+    restore_value: false
+    initial_value: 'false'
+  - id: cal_session_started_ms
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+  - id: cal_burst_count
+    type: int
+    restore_value: false
+    initial_value: '0'
+  - id: cal_ph_sum
+    type: float
+    restore_value: false
+    initial_value: '0'
+  - id: cal_temp_sum
+    type: float
+    restore_value: false
+    initial_value: '0'
+  - id: cal_temp_last
+    type: float
+    restore_value: false
+    initial_value: 'NAN'
 
 espnow:
   auto_add_peer: false
@@ -998,15 +1053,28 @@ packet_transport:
     encryption:
       key: ${espnow_key}
     # Sensor ids here are what the hub's remote_id: fields reference.
-    # v4.0: full soil set (was soil_temperature + soil_moisture only).
+    # During cal_session, update_interval is raised so mat ignores mid-cal.
     sensors:
-      - soil_temperature     # the closed-loop mat's sense point (unchanged)
+      - soil_temperature
       - soil_moisture
       - soil_conductivity
       - soil_ph
       - soil_nitrogen
       - soil_phosphorus
       - soil_potassium
+
+switch:
+  - platform: template
+    name: "Cal Session"
+    id: cal_session
+    icon: mdi:timer-sand
+    entity_category: config
+    optimistic: true
+    restore_mode: DISABLED
+    turn_on_action:
+      - script.execute: cal_session_start
+    turn_off_action:
+      - script.execute: cal_session_stop
 
 script:
   - id: cal_stamp_manual
@@ -1020,13 +1088,59 @@ script:
                 id: cal_method
                 value: "manual"
             - lambda: |-
-                auto now = id(ha_time).now();
+                ESPTime now = id(ha_time).now();
+                if (!now.is_valid()) now = id(sntp_time).now();
                 if (!now.is_valid()) return;
                 char buf[32];
                 snprintf(buf, sizeof(buf), "%04d-%02d-%02dT%02d:%02d:%02d",
                          now.year, now.month, now.day_of_month,
                          now.hour, now.minute, now.second);
                 id(cal_last).make_call().set_value(std::string(buf)).perform();
+
+  - id: cal_session_start
+    mode: restart
+    then:
+      - lambda: |-
+          id(cal_session_active) = true;
+          id(espnow_cal_pause) = true;
+          id(cal_session_started_ms) = millis();
+          id(cal_burst_count) = 0;
+          id(cal_ph_sum) = 0.0f;
+          id(cal_temp_sum) = 0.0f;
+          id(cal_temp_last) = NAN;
+          id(soil_sensor_bus).set_update_interval(2500);
+          id(pt_espnow).set_update_interval(3600000);  // pause soil ESP-NOW (~1h)
+          ESP_LOGI("cal", "Cal session ON — Modbus burst 2.5s, ESP-NOW soil paused");
+      - delay: 45s
+      - script.execute: cal_session_finish
+
+  - id: cal_session_finish
+    mode: single
+    then:
+      - lambda: |-
+          int n = id(cal_burst_count);
+          float ph_avg = n > 0 ? id(cal_ph_sum) / n : NAN;
+          float t_avg = n > 0 ? id(cal_temp_sum) / n : NAN;
+          char buf[80];
+          if (n >= 3 && !isnan(ph_avg)) {
+            snprintf(buf, sizeof(buf), "n=%d ph_avg=%.2f t_avg=%.1f", n, ph_avg, t_avg);
+          } else {
+            snprintf(buf, sizeof(buf), "cached_not_sigma n=%d", n);
+          }
+          id(cal_capture_diag).publish_state(std::string(buf));
+          ESP_LOGI("cal", "Cal Capture %s", buf);
+      - script.execute: cal_session_stop
+
+  - id: cal_session_stop
+    mode: single
+    then:
+      - lambda: |-
+          id(cal_session_active) = false;
+          id(espnow_cal_pause) = false;
+          id(soil_sensor_bus).set_update_interval(60000);
+          id(pt_espnow).set_update_interval(60000);
+          id(cal_session).publish_state(false);
+          ESP_LOGI("cal", "Cal session OFF — Modbus 60s, ESP-NOW soil restored");
 
   # Accept hub 0xD0 BSSID handshake → disconnect/reconnect to THAT AP.
   - id: adopt_hub_wifi_ap
@@ -1158,6 +1272,26 @@ script:
 
 # Hub 0xD0 every 5s. Silent ladder: ping → WiFi bounce (API rebind) → reboot.
 interval:
+  - interval: 2.5s
+    then:
+      - if:
+          condition:
+            lambda: 'return id(cal_session_active);'
+          then:
+            - component.update: soil_sensor_bus
+            - lambda: |-
+                float ph = id(soil_ph_raw).state;
+                float t = id(soil_temperature_raw).state;
+                if (isnan(ph) || isnan(t)) return;
+                // Temp co-read gate: reject wild ΔT vs last sample
+                if (!isnan(id(cal_temp_last)) && fabsf(t - id(cal_temp_last)) > 3.0f) {
+                  ESP_LOGW("cal", "Cal sample rejected — ΔT %.1fC", t - id(cal_temp_last));
+                  return;
+                }
+                id(cal_temp_last) = t;
+                id(cal_ph_sum) = id(cal_ph_sum) + ph;
+                id(cal_temp_sum) = id(cal_temp_sum) + t;
+                id(cal_burst_count) = id(cal_burst_count) + 1;
   - interval: 10s
     then:
       - script.execute: tx_rf_card

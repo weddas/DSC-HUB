@@ -7,7 +7,7 @@
 # ==================================================================
 
 input_select:
-  dsc_pot1_tent:
+  dsc_probe1_tent:
     name: "DSC Pot 1 Tent"
     icon: mdi:tent
     options:
@@ -15,7 +15,7 @@ input_select:
       - "clone"
       - "main"
     initial: "clone"
-  dsc_pot2_tent:
+  dsc_probe2_tent:
     name: "DSC Pot 2 Tent"
     icon: mdi:tent
     options:
@@ -23,7 +23,7 @@ input_select:
       - "clone"
       - "main"
     initial: "clone"
-  dsc_pot3_tent:
+  dsc_probe3_tent:
     name: "DSC Pot 3 Tent"
     icon: mdi:tent
     options:
@@ -31,7 +31,7 @@ input_select:
       - "clone"
       - "main"
     initial: "main"
-  dsc_pot4_tent:
+  dsc_probe4_tent:
     name: "DSC Pot 4 Tent"
     icon: mdi:tent
     options:

@@ -197,7 +197,7 @@ No new live-safety P0 (no swapped channel proven; four proven seats match demand
 | `services/dsc-hub/docker-compose.yml` | API-key env only — not a pinout |
 | `firmware/v4/dsc-hub-v4_0.yaml` | PWM / DHT / ADC / demand ids |
 | `firmware/v4/dsc-sonoff-common.yaml` + stubs | GPIO12 relay |
-| `firmware/v4/dsc-pot-common.yaml` | RS485 pinout |
+| `firmware/v4/DSC-Probe-common.yaml` | RS485 pinout |
 | `firmware/v4/dsc-hub-espnow-parked.yaml` | `tx_appliance_demand` no-op |
 | `homeassistant/custom_components/dsc_hub/frontend/src/lib/kitInventory.ts` | UI demand/relay pairing |
 | [LIVE-ACCEPTANCE-7.1](LIVE-ACCEPTANCE-7.1.md) §1 | Demand→relay proof (do not re-slam) |

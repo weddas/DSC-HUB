@@ -42,7 +42,7 @@ def _pot_in_service(inventory: list[dict[str, Any]] | None, pot_n: int) -> bool:
     row = next((r for r in (inventory or []) if r.get("seat_id") == f"pot{pot_n}"), None)
     if row is not None:
         return bool(row.get("in_service", True))
-    return get_helper(f"input_boolean.dsc_pot{pot_n}_in_service", "on") == "on"
+    return get_helper(f"input_boolean.dsc_probe{pot_n}_in_service", "on") == "on"
 
 
 def _is_probe_station(inventory: list[dict[str, Any]] | None, pot_n: int) -> bool:
@@ -58,6 +58,28 @@ def _is_probe_station(inventory: list[dict[str, Any]] | None, pot_n: int) -> boo
         except json.JSONDecodeError:
             extra = {}
     return extra.get("role") == "probe_station"
+
+
+def _assigned_plant_id(inventory: list[dict[str, Any]] | None, pot_n: int) -> str:
+    """Roster plant id for this probe; empty = vacant (exclude from peer MAD)."""
+    row = next((r for r in (inventory or []) if r.get("seat_id") == f"pot{pot_n}"), None)
+    if row:
+        extra = row.get("extra") or {}
+        if isinstance(extra, str):
+            import json
+
+            try:
+                extra = json.loads(extra)
+            except json.JSONDecodeError:
+                extra = {}
+        aid = str(extra.get("assigned_plant_id") or "").strip()
+        if aid:
+            return aid
+    return str(get_helper(f"text.dsc_probe{pot_n}_assigned_plant_id", "") or "").strip()
+
+
+def _exclude_from_peer_mad(inventory: list[dict[str, Any]] | None, pot_n: int) -> bool:
+    return _is_probe_station(inventory, pot_n) or not _assigned_plant_id(inventory, pot_n)
 
 
 def _moisture_rate_per_hour(pot_n: int) -> float | None:
@@ -159,8 +181,8 @@ def emit_sensor_trust(
 
     for n in range(1, 5):
         if not _pot_in_service(inventory, n):
-            set_entity(states, f"binary_sensor.dsc_pot{n}_sensor_stuck", False)
-            set_entity(states, f"binary_sensor.dsc_pot{n}_untrusted", False)
+            set_entity(states, f"binary_sensor.dsc_probe{n}_sensor_stuck", False)
+            set_entity(states, f"binary_sensor.dsc_probe{n}_untrusted", False)
             _stuck_since.pop(n, None)
             continue
 
@@ -182,15 +204,15 @@ def emit_sensor_trust(
             _stuck_since.pop(n, None)
             stuck = False
 
-        set_entity(states, f"binary_sensor.dsc_pot{n}_sensor_stuck", stuck)
-        set_entity(states, f"binary_sensor.dsc_pot{n}_untrusted", stuck)
+        set_entity(states, f"binary_sensor.dsc_probe{n}_sensor_stuck", stuck)
+        set_entity(states, f"binary_sensor.dsc_probe{n}_untrusted", stuck)
         _edge_log(
             f"pot{n}_stuck",
             stuck,
             f"⚠ Pot {n} soil moisture flatline — probe may be stuck",
         )
 
-        if pot and pot.online and not probe_station:
+        if pot and pot.online and not _exclude_from_peer_mad(inventory, n):
             for field, bucket in (("ph", ph_vals), ("ec_us", ec_vals), ("moisture_pct", moist_vals)):
                 raw = pot.values.get(field)
                 if raw is None:

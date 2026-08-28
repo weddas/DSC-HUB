@@ -565,165 +565,165 @@ template:
             {{ out }}
 
       - name: "DSC POT1 Want Temp Min"
-        unique_id: dsc_pot1_want_temp_min
+        unique_id: dsc_probe1_want_temp_min
         unit_of_measurement: "°C"
         state: >
-          {% set s = states('select.dsc_pot_1_strain') %}
-          {% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_pot1_strain') %}{% endif %}
-          {% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot1_strain') %}{% endif %}
+          {% set s = states('select.dsc_probe1_strain') %}
+          {% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_probe1_strain') %}{% endif %}
+          {% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_probe1_strain') %}{% endif %}
           {% if s.startswith('Custom') %}
             {{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_temp_min')|float(0) }}
           {% else %}0{% endif %}
       - name: "DSC POT1 Want Temp Max"
-        unique_id: dsc_pot1_want_temp_max
+        unique_id: dsc_probe1_want_temp_max
         unit_of_measurement: "°C"
         state: >
-          {% set s = states('select.dsc_pot_1_strain') %}
-          {% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_pot1_strain') %}{% endif %}
-          {% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot1_strain') %}{% endif %}
+          {% set s = states('select.dsc_probe1_strain') %}
+          {% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_probe1_strain') %}{% endif %}
+          {% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_probe1_strain') %}{% endif %}
           {% if s.startswith('Custom') %}
             {{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_temp_max')|float(0) }}
           {% else %}0{% endif %}
       - name: "DSC POT1 Want RH Min"
-        unique_id: dsc_pot1_want_rh_min
+        unique_id: dsc_probe1_want_rh_min
         unit_of_measurement: "%"
         state: >
-          {% set s = states('select.dsc_pot_1_strain') %}
-          {% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_pot1_strain') %}{% endif %}
-          {% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot1_strain') %}{% endif %}
+          {% set s = states('select.dsc_probe1_strain') %}
+          {% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_probe1_strain') %}{% endif %}
+          {% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_probe1_strain') %}{% endif %}
           {% if s.startswith('Custom') %}
             {{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_rh_min')|float(0) }}
           {% else %}0{% endif %}
       - name: "DSC POT1 Want RH Max"
-        unique_id: dsc_pot1_want_rh_max
+        unique_id: dsc_probe1_want_rh_max
         unit_of_measurement: "%"
         state: >
-          {% set s = states('select.dsc_pot_1_strain') %}
-          {% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_pot1_strain') %}{% endif %}
-          {% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot1_strain') %}{% endif %}
+          {% set s = states('select.dsc_probe1_strain') %}
+          {% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_probe1_strain') %}{% endif %}
+          {% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_probe1_strain') %}{% endif %}
           {% if s.startswith('Custom') %}
             {{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_rh_max')|float(0) }}
           {% else %}0{% endif %}
 
       - name: "DSC POT2 Want Temp Min"
-        unique_id: dsc_pot2_want_temp_min
+        unique_id: dsc_probe2_want_temp_min
         unit_of_measurement: "°C"
         state: >
-          {% set s = states('select.dsc_pot_2_strain') %}
-          {% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_pot2_strain') %}{% endif %}
-          {% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot2_strain') %}{% endif %}
+          {% set s = states('select.dsc_probe2_strain') %}
+          {% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_probe2_strain') %}{% endif %}
+          {% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_probe2_strain') %}{% endif %}
           {% if s.startswith('Custom') %}
             {{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_temp_min')|float(0) }}
           {% else %}0{% endif %}
       - name: "DSC POT2 Want Temp Max"
-        unique_id: dsc_pot2_want_temp_max
+        unique_id: dsc_probe2_want_temp_max
         unit_of_measurement: "°C"
         state: >
-          {% set s = states('select.dsc_pot_2_strain') %}
-          {% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_pot2_strain') %}{% endif %}
-          {% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot2_strain') %}{% endif %}
+          {% set s = states('select.dsc_probe2_strain') %}
+          {% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_probe2_strain') %}{% endif %}
+          {% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_probe2_strain') %}{% endif %}
           {% if s.startswith('Custom') %}
             {{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_temp_max')|float(0) }}
           {% else %}0{% endif %}
       - name: "DSC POT2 Want RH Min"
-        unique_id: dsc_pot2_want_rh_min
+        unique_id: dsc_probe2_want_rh_min
         unit_of_measurement: "%"
         state: >
-          {% set s = states('select.dsc_pot_2_strain') %}
-          {% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_pot2_strain') %}{% endif %}
-          {% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot2_strain') %}{% endif %}
+          {% set s = states('select.dsc_probe2_strain') %}
+          {% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_probe2_strain') %}{% endif %}
+          {% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_probe2_strain') %}{% endif %}
           {% if s.startswith('Custom') %}
             {{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_rh_min')|float(0) }}
           {% else %}0{% endif %}
       - name: "DSC POT2 Want RH Max"
-        unique_id: dsc_pot2_want_rh_max
+        unique_id: dsc_probe2_want_rh_max
         unit_of_measurement: "%"
         state: >
-          {% set s = states('select.dsc_pot_2_strain') %}
-          {% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_pot2_strain') %}{% endif %}
-          {% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot2_strain') %}{% endif %}
+          {% set s = states('select.dsc_probe2_strain') %}
+          {% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_probe2_strain') %}{% endif %}
+          {% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_probe2_strain') %}{% endif %}
           {% if s.startswith('Custom') %}
             {{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_rh_max')|float(0) }}
           {% else %}0{% endif %}
 
       - name: "DSC POT3 Want Temp Min"
-        unique_id: dsc_pot3_want_temp_min
+        unique_id: dsc_probe3_want_temp_min
         unit_of_measurement: "°C"
         state: >
-          {% set s = states('select.dsc_pot_3_strain') %}
-          {% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_pot3_strain') %}{% endif %}
-          {% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot3_strain') %}{% endif %}
+          {% set s = states('select.dsc_probe3_strain') %}
+          {% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_probe3_strain') %}{% endif %}
+          {% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_probe3_strain') %}{% endif %}
           {% if s.startswith('Custom') %}
             {{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_temp_min')|float(0) }}
           {% else %}0{% endif %}
       - name: "DSC POT3 Want Temp Max"
-        unique_id: dsc_pot3_want_temp_max
+        unique_id: dsc_probe3_want_temp_max
         unit_of_measurement: "°C"
         state: >
-          {% set s = states('select.dsc_pot_3_strain') %}
-          {% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_pot3_strain') %}{% endif %}
-          {% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot3_strain') %}{% endif %}
+          {% set s = states('select.dsc_probe3_strain') %}
+          {% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_probe3_strain') %}{% endif %}
+          {% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_probe3_strain') %}{% endif %}
           {% if s.startswith('Custom') %}
             {{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_temp_max')|float(0) }}
           {% else %}0{% endif %}
       - name: "DSC POT3 Want RH Min"
-        unique_id: dsc_pot3_want_rh_min
+        unique_id: dsc_probe3_want_rh_min
         unit_of_measurement: "%"
         state: >
-          {% set s = states('select.dsc_pot_3_strain') %}
-          {% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_pot3_strain') %}{% endif %}
-          {% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot3_strain') %}{% endif %}
+          {% set s = states('select.dsc_probe3_strain') %}
+          {% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_probe3_strain') %}{% endif %}
+          {% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_probe3_strain') %}{% endif %}
           {% if s.startswith('Custom') %}
             {{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_rh_min')|float(0) }}
           {% else %}0{% endif %}
       - name: "DSC POT3 Want RH Max"
-        unique_id: dsc_pot3_want_rh_max
+        unique_id: dsc_probe3_want_rh_max
         unit_of_measurement: "%"
         state: >
-          {% set s = states('select.dsc_pot_3_strain') %}
-          {% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_pot3_strain') %}{% endif %}
-          {% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot3_strain') %}{% endif %}
+          {% set s = states('select.dsc_probe3_strain') %}
+          {% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_probe3_strain') %}{% endif %}
+          {% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_probe3_strain') %}{% endif %}
           {% if s.startswith('Custom') %}
             {{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_rh_max')|float(0) }}
           {% else %}0{% endif %}
 
       - name: "DSC POT4 Want Temp Min"
-        unique_id: dsc_pot4_want_temp_min
+        unique_id: dsc_probe4_want_temp_min
         unit_of_measurement: "°C"
         state: >
-          {% set s = states('select.dsc_pot_4_strain') %}
-          {% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_pot4_strain') %}{% endif %}
-          {% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot4_strain') %}{% endif %}
+          {% set s = states('select.dsc_probe4_strain') %}
+          {% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_probe4_strain') %}{% endif %}
+          {% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_probe4_strain') %}{% endif %}
           {% if s.startswith('Custom') %}
             {{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_temp_min')|float(0) }}
           {% else %}0{% endif %}
       - name: "DSC POT4 Want Temp Max"
-        unique_id: dsc_pot4_want_temp_max
+        unique_id: dsc_probe4_want_temp_max
         unit_of_measurement: "°C"
         state: >
-          {% set s = states('select.dsc_pot_4_strain') %}
-          {% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_pot4_strain') %}{% endif %}
-          {% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot4_strain') %}{% endif %}
+          {% set s = states('select.dsc_probe4_strain') %}
+          {% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_probe4_strain') %}{% endif %}
+          {% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_probe4_strain') %}{% endif %}
           {% if s.startswith('Custom') %}
             {{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_temp_max')|float(0) }}
           {% else %}0{% endif %}
       - name: "DSC POT4 Want RH Min"
-        unique_id: dsc_pot4_want_rh_min
+        unique_id: dsc_probe4_want_rh_min
         unit_of_measurement: "%"
         state: >
-          {% set s = states('select.dsc_pot_4_strain') %}
-          {% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_pot4_strain') %}{% endif %}
-          {% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot4_strain') %}{% endif %}
+          {% set s = states('select.dsc_probe4_strain') %}
+          {% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_probe4_strain') %}{% endif %}
+          {% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_probe4_strain') %}{% endif %}
           {% if s.startswith('Custom') %}
             {{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_rh_min')|float(0) }}
           {% else %}0{% endif %}
       - name: "DSC POT4 Want RH Max"
-        unique_id: dsc_pot4_want_rh_max
+        unique_id: dsc_probe4_want_rh_max
         unit_of_measurement: "%"
         state: >
-          {% set s = states('select.dsc_pot_4_strain') %}
-          {% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_pot4_strain') %}{% endif %}
-          {% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_pot4_strain') %}{% endif %}
+          {% set s = states('select.dsc_probe4_strain') %}
+          {% if s in ['unknown','unavailable',''] %}{% set s = states('select.dsc_probe4_strain') %}{% endif %}
+          {% if s in ['unknown','unavailable',''] %}{% set s = states('input_select.dsc_probe4_strain') %}{% endif %}
           {% if s.startswith('Custom') %}
             {{ states('input_number.dsc_custom_strain_' ~ s.split(' ')[1] ~ '_rh_max')|float(0) }}
           {% else %}0{% endif %}

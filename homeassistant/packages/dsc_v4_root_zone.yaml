@@ -18,10 +18,10 @@ template:
         state: >-
           {% set ns = namespace(vals=[], which='none', votes=0) %}
           {% set pots = [
-            ('1', 'sensor.dsc_pot1_soil_temperature', 'switch.dsc_hub_mat_vote_pot_1'),
-            ('2', 'sensor.dsc_pot2_soil_temperature', 'switch.dsc_hub_mat_vote_pot_2'),
-            ('3', 'sensor.dsc_pot3_soil_temperature', 'switch.dsc_hub_mat_vote_pot_3'),
-            ('4', 'sensor.dsc_pot4_soil_temperature', 'switch.dsc_hub_mat_vote_pot_4')
+            ('1', 'sensor.dsc_probe1_soil_temperature', 'switch.dsc_hub_mat_vote_pot_1'),
+            ('2', 'sensor.dsc_probe2_soil_temperature', 'switch.dsc_hub_mat_vote_pot_2'),
+            ('3', 'sensor.dsc_probe3_soil_temperature', 'switch.dsc_hub_mat_vote_pot_3'),
+            ('4', 'sensor.dsc_probe4_soil_temperature', 'switch.dsc_hub_mat_vote_pot_4')
           ] %}
           {% for p, e, v in pots %}
             {% if is_state(v, 'on') %}{% set ns.votes = ns.votes + 1 %}{% endif %}
@@ -40,10 +40,10 @@ template:
           pot: >-
             {% set ns = namespace(best=none, best_t=999, votes=0) %}
             {% set pots = [
-              ('1', 'sensor.dsc_pot1_soil_temperature', 'switch.dsc_hub_mat_vote_pot_1'),
-              ('2', 'sensor.dsc_pot2_soil_temperature', 'switch.dsc_hub_mat_vote_pot_2'),
-              ('3', 'sensor.dsc_pot3_soil_temperature', 'switch.dsc_hub_mat_vote_pot_3'),
-              ('4', 'sensor.dsc_pot4_soil_temperature', 'switch.dsc_hub_mat_vote_pot_4')
+              ('1', 'sensor.dsc_probe1_soil_temperature', 'switch.dsc_hub_mat_vote_pot_1'),
+              ('2', 'sensor.dsc_probe2_soil_temperature', 'switch.dsc_hub_mat_vote_pot_2'),
+              ('3', 'sensor.dsc_probe3_soil_temperature', 'switch.dsc_hub_mat_vote_pot_3'),
+              ('4', 'sensor.dsc_probe4_soil_temperature', 'switch.dsc_hub_mat_vote_pot_4')
             ] %}
             {% for p, e, v in pots %}
               {% if is_state(v, 'on') %}{% set ns.votes = ns.votes + 1 %}{% endif %}
@@ -68,10 +68,10 @@ template:
         state: >-
           {% set ns = namespace(vals=[], votes=0) %}
           {% set pots = [
-            ('1', 'sensor.dsc_pot1_soil_temperature', 'switch.dsc_hub_mat_vote_pot_1'),
-            ('2', 'sensor.dsc_pot2_soil_temperature', 'switch.dsc_hub_mat_vote_pot_2'),
-            ('3', 'sensor.dsc_pot3_soil_temperature', 'switch.dsc_hub_mat_vote_pot_3'),
-            ('4', 'sensor.dsc_pot4_soil_temperature', 'switch.dsc_hub_mat_vote_pot_4')
+            ('1', 'sensor.dsc_probe1_soil_temperature', 'switch.dsc_hub_mat_vote_pot_1'),
+            ('2', 'sensor.dsc_probe2_soil_temperature', 'switch.dsc_hub_mat_vote_pot_2'),
+            ('3', 'sensor.dsc_probe3_soil_temperature', 'switch.dsc_hub_mat_vote_pot_3'),
+            ('4', 'sensor.dsc_probe4_soil_temperature', 'switch.dsc_hub_mat_vote_pot_4')
           ] %}
           {% for p, e, v in pots %}
             {% if is_state(v, 'on') %}{% set ns.votes = ns.votes + 1 %}{% endif %}

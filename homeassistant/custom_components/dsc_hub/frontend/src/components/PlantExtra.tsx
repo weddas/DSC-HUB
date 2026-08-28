@@ -4,12 +4,12 @@ import { StatusChip } from "./ui";
 /** Generic neon plant extra — stage, days, Need/stress, awake/asleep. No cultivar mesh; no narrator. */
 export function PlantExtra({ pot }: { pot: number }) {
   const { available, state, num } = useEntityBus();
-  const stage = state(`sensor.dsc_pot${pot}_expected_stage`, "—");
-  const days = state(`sensor.dsc_pot${pot}_days_since_sprout`, "—");
-  const need = state(`sensor.dsc_pot${pot}_need_summary`, "—");
-  const untrusted = state(`binary_sensor.dsc_pot${pot}_untrusted`) === "on";
-  const dry = num(`sensor.dsc_pot${pot}_dryback_pct`);
-  const tent = state(`input_select.dsc_pot${pot}_tent`, "unassigned");
+  const stage = state(`sensor.dsc_probe${pot}_expected_stage`, "—");
+  const days = state(`sensor.dsc_probe${pot}_days_since_sprout`, "—");
+  const need = state(`sensor.dsc_probe${pot}_need_summary`, "—");
+  const untrusted = state(`binary_sensor.dsc_probe${pot}_untrusted`) === "on";
+  const dry = num(`sensor.dsc_probe${pot}_dryback_pct`);
+  const tent = state(`input_select.dsc_probe${pot}_tent`, "unassigned");
   const windowOpen =
     tent === "clone"
       ? state("light.dsc_hub_sf1000_dimmer") === "on"
@@ -29,7 +29,7 @@ export function PlantExtra({ pot }: { pot: number }) {
           tone={untrusted ? "warn" : stress === "calm" ? "ok" : "warn"}
         />
       </div>
-      {!available(`sensor.dsc_pot${pot}_expected_stage`) ? (
+      {!available(`sensor.dsc_probe${pot}_expected_stage`) ? (
         <p className="dsc-muted" style={{ margin: "8px 0 0", fontSize: 12 }}>
           No cultivar mesh. Missing fields stay empty.
         </p>

@@ -210,6 +210,9 @@ async def lifespan(app: FastAPI):  # noqa: ARG001
     init_db()
     init_settings_db()
     init_probe_station_defaults()
+    from .soft_cal_history import init_soft_cal_history
+
+    init_soft_cal_history()
     reload_catalogs()
     if is_demo_mode():
         prepare_demo_settings()
@@ -579,6 +582,28 @@ def soil_tests_list(
     limit: int = Query(50, ge=1, le=200),
 ) -> dict[str, Any]:
     return {"tests": list_soil_tests(roster_seat_id=roster_seat_id, limit=limit)}
+
+
+@app.get("/soft-cal/sessions")
+def soft_cal_sessions(
+    probe_n: int | None = Query(None),
+    limit: int = Query(50, ge=1, le=200),
+) -> dict[str, Any]:
+    from .soft_cal_history import list_soft_cal_sessions
+
+    return {"sessions": list_soft_cal_sessions(probe_n=probe_n, limit=limit)}
+
+
+@app.post("/soft-cal/sessions")
+def soft_cal_session_record(body: dict[str, Any]) -> dict[str, Any]:
+    from .soft_cal_history import record_soft_cal_session
+
+    probe_n = int(body.get("probe_n") or 0)
+    phase = str(body.get("phase") or "")
+    payload = body.get("payload") if isinstance(body.get("payload"), dict) else {}
+    if probe_n < 1 or probe_n > 4 or not phase:
+        raise HTTPException(status_code=400, detail="probe_n 1-4 and phase required")
+    return record_soft_cal_session(probe_n, phase, payload)
 
 
 @app.get("/settings/calibration/{device_id}")

@@ -53,10 +53,10 @@ template:
             ('hub', states('sensor.dsc_hub_firmware_version')),
             ('panel', states('sensor.dsc_control_firmware_version')),
             ('bridge', states('sensor.dsc_bridge_esphome_version')),
-            ('pot1', states('sensor.dsc_pot1_firmware_version')),
-            ('pot2', states('sensor.dsc_pot2_firmware_version')),
-            ('pot3', states('sensor.dsc_pot3_firmware_version')),
-            ('pot4', states('sensor.dsc_pot4_firmware_version')),
+            ('pot1', states('sensor.dsc_probe1_firmware_version')),
+            ('pot2', states('sensor.dsc_probe2_firmware_version')),
+            ('pot3', states('sensor.dsc_probe3_firmware_version')),
+            ('pot4', states('sensor.dsc_probe4_firmware_version')),
             ('heater', states('sensor.dsc_heater_firmware_version')),
             ('heatmat', states('sensor.dsc_heatmat_firmware_version')),
             ('humidifier', states('sensor.dsc_humidifier_firmware_version')),
@@ -69,7 +69,7 @@ template:
           {% for name, ver in checks %}
             {% if name == 'bridge' and ver in ['unknown','unavailable',''] %}
               {# Bridge optional until flashed — do not fail fleet chip. #}
-            {% elif name == 'pot3' and not is_state('input_boolean.dsc_pot3_in_service','on') %}
+            {% elif name == 'pot3' and not is_state('input_boolean.dsc_probe3_in_service','on') %}
               {# Planned OOS — firmware-missing is inventory, not fleet drift. #}
             {% elif name.startswith('pot') and not is_state('input_boolean.dsc_' ~ name ~ '_in_service','on') %}
               {# In-service off — skip firmware-missing for that node. #}
@@ -93,10 +93,10 @@ template:
             {{ '6.0.0.0' if exp in ['unknown','unavailable',''] else exp }}
           hub: "{{ states('sensor.dsc_hub_firmware_version') }}"
           panel: "{{ states('sensor.dsc_control_firmware_version') }}"
-          pot1: "{{ states('sensor.dsc_pot1_firmware_version') }}"
-          pot2: "{{ states('sensor.dsc_pot2_firmware_version') }}"
-          pot3: "{{ states('sensor.dsc_pot3_firmware_version') }}"
-          pot4: "{{ states('sensor.dsc_pot4_firmware_version') }}"
+          pot1: "{{ states('sensor.dsc_probe1_firmware_version') }}"
+          pot2: "{{ states('sensor.dsc_probe2_firmware_version') }}"
+          pot3: "{{ states('sensor.dsc_probe3_firmware_version') }}"
+          pot4: "{{ states('sensor.dsc_probe4_firmware_version') }}"
           heater: "{{ states('sensor.dsc_heater_firmware_version') }}"
           heatmat: "{{ states('sensor.dsc_heatmat_firmware_version') }}"
           humidifier: "{{ states('sensor.dsc_humidifier_firmware_version') }}"

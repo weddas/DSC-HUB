@@ -41,10 +41,10 @@ _DEMAND_ENTITY_TO_RELAY: dict[str, str] = {
 _IN_SERVICE_ENTITY_TO_SEAT: dict[str, str] = {
     "input_boolean.dsc_ac_in_service": "ac",
     "input_boolean.dsc_clone_humidifier_in_service": "mister",
-    "input_boolean.dsc_pot1_in_service": "pot1",
-    "input_boolean.dsc_pot2_in_service": "pot2",
-    "input_boolean.dsc_pot3_in_service": "pot3",
-    "input_boolean.dsc_pot4_in_service": "pot4",
+    "input_boolean.dsc_probe1_in_service": "pot1",
+    "input_boolean.dsc_probe2_in_service": "pot2",
+    "input_boolean.dsc_probe3_in_service": "pot3",
+    "input_boolean.dsc_probe4_in_service": "pot4",
     "input_boolean.dsc_tank_in_service": "tank",
 }
 

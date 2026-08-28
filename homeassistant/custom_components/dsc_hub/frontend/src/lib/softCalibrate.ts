@@ -36,14 +36,14 @@ export function softCalEntityIds(pot: SoftCalPot): {
   dualCalStack: string;
 } {
   return {
-    moisture: `sensor.dsc_pot${pot}_soil_moisture_raw`,
-    soilTemp: `sensor.dsc_pot${pot}_soil_temperature_raw`,
-    ec: `sensor.dsc_pot${pot}_soil_conductivity_raw`,
-    ph: `sensor.dsc_pot${pot}_soil_ph_raw`,
-    offsetPh: `input_number.dsc_pot${pot}_offset_ph`,
-    offsetEc: `input_number.dsc_pot${pot}_offset_ec_us`,
-    offsetMoisture: `input_number.dsc_pot${pot}_offset_moisture`,
-    dualCalStack: `binary_sensor.dsc_pot${pot}_dual_cal_stack`,
+    moisture: `sensor.dsc_probe${pot}_soil_moisture_raw`,
+    soilTemp: `sensor.dsc_probe${pot}_soil_temperature_raw`,
+    ec: `sensor.dsc_probe${pot}_soil_conductivity_raw`,
+    ph: `sensor.dsc_probe${pot}_soil_ph_raw`,
+    offsetPh: `input_number.dsc_probe${pot}_offset_ph`,
+    offsetEc: `input_number.dsc_probe${pot}_offset_ec_us`,
+    offsetMoisture: `input_number.dsc_probe${pot}_offset_moisture`,
+    dualCalStack: `binary_sensor.dsc_probe${pot}_dual_cal_stack`,
   };
 }
 

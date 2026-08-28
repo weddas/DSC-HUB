@@ -93,7 +93,7 @@ sensor:
   # Soil (7 channels × 4 pots → gv_soil[28])
   - platform: homeassistant
     id: ha_p1_temp
-    entity_id: sensor.dsc_pot1_soil_temperature
+    entity_id: sensor.dsc_probe1_soil_temperature
     internal: true
     on_value:
       - lambda: |-
@@ -102,163 +102,163 @@ sensor:
           id(gv_hub_last) = millis();
   - platform: homeassistant
     id: ha_p1_moist
-    entity_id: sensor.dsc_pot1_soil_moisture
+    entity_id: sensor.dsc_probe1_soil_moisture
     internal: true
     on_value:
       - lambda: 'id(gv_soil)[1] = x;'
   - platform: homeassistant
     id: ha_p1_ec
-    entity_id: sensor.dsc_pot1_soil_conductivity
+    entity_id: sensor.dsc_probe1_soil_conductivity
     internal: true
     on_value:
       - lambda: 'id(gv_soil)[2] = x;'
   - platform: homeassistant
     id: ha_p1_ph
-    entity_id: sensor.dsc_pot1_soil_ph
+    entity_id: sensor.dsc_probe1_soil_ph
     internal: true
     on_value:
       - lambda: 'id(gv_soil)[3] = x;'
   - platform: homeassistant
     id: ha_p1_n
-    entity_id: sensor.dsc_pot1_soil_nitrogen
+    entity_id: sensor.dsc_probe1_soil_nitrogen
     internal: true
     on_value:
       - lambda: 'id(gv_soil)[4] = x;'
   - platform: homeassistant
     id: ha_p1_p
-    entity_id: sensor.dsc_pot1_soil_phosphorus
+    entity_id: sensor.dsc_probe1_soil_phosphorus
     internal: true
     on_value:
       - lambda: 'id(gv_soil)[5] = x;'
   - platform: homeassistant
     id: ha_p1_k
-    entity_id: sensor.dsc_pot1_soil_potassium
+    entity_id: sensor.dsc_probe1_soil_potassium
     internal: true
     on_value:
       - lambda: 'id(gv_soil)[6] = x;'
   - platform: homeassistant
     id: ha_p2_temp
-    entity_id: sensor.dsc_pot2_soil_temperature
+    entity_id: sensor.dsc_probe2_soil_temperature
     internal: true
     on_value:
       - lambda: 'id(gv_soil)[7] = x;'
   - platform: homeassistant
     id: ha_p2_moist
-    entity_id: sensor.dsc_pot2_soil_moisture
+    entity_id: sensor.dsc_probe2_soil_moisture
     internal: true
     on_value:
       - lambda: 'id(gv_soil)[8] = x;'
   - platform: homeassistant
     id: ha_p2_ec
-    entity_id: sensor.dsc_pot2_soil_conductivity
+    entity_id: sensor.dsc_probe2_soil_conductivity
     internal: true
     on_value:
       - lambda: 'id(gv_soil)[9] = x;'
   - platform: homeassistant
     id: ha_p2_ph
-    entity_id: sensor.dsc_pot2_soil_ph
+    entity_id: sensor.dsc_probe2_soil_ph
     internal: true
     on_value:
       - lambda: 'id(gv_soil)[10] = x;'
   - platform: homeassistant
     id: ha_p2_n
-    entity_id: sensor.dsc_pot2_soil_nitrogen
+    entity_id: sensor.dsc_probe2_soil_nitrogen
     internal: true
     on_value:
       - lambda: 'id(gv_soil)[11] = x;'
   - platform: homeassistant
     id: ha_p2_p
-    entity_id: sensor.dsc_pot2_soil_phosphorus
+    entity_id: sensor.dsc_probe2_soil_phosphorus
     internal: true
     on_value:
       - lambda: 'id(gv_soil)[12] = x;'
   - platform: homeassistant
     id: ha_p2_k
-    entity_id: sensor.dsc_pot2_soil_potassium
+    entity_id: sensor.dsc_probe2_soil_potassium
     internal: true
     on_value:
       - lambda: 'id(gv_soil)[13] = x;'
   - platform: homeassistant
     id: ha_p3_temp
-    entity_id: sensor.dsc_pot3_soil_temperature
+    entity_id: sensor.dsc_probe3_soil_temperature
     internal: true
     on_value:
       - lambda: 'id(gv_soil)[14] = x;'
   - platform: homeassistant
     id: ha_p3_moist
-    entity_id: sensor.dsc_pot3_soil_moisture
+    entity_id: sensor.dsc_probe3_soil_moisture
     internal: true
     on_value:
       - lambda: 'id(gv_soil)[15] = x;'
   - platform: homeassistant
     id: ha_p3_ec
-    entity_id: sensor.dsc_pot3_soil_conductivity
+    entity_id: sensor.dsc_probe3_soil_conductivity
     internal: true
     on_value:
       - lambda: 'id(gv_soil)[16] = x;'
   - platform: homeassistant
     id: ha_p3_ph
-    entity_id: sensor.dsc_pot3_soil_ph
+    entity_id: sensor.dsc_probe3_soil_ph
     internal: true
     on_value:
       - lambda: 'id(gv_soil)[17] = x;'
   - platform: homeassistant
     id: ha_p3_n
-    entity_id: sensor.dsc_pot3_soil_nitrogen
+    entity_id: sensor.dsc_probe3_soil_nitrogen
     internal: true
     on_value:
       - lambda: 'id(gv_soil)[18] = x;'
   - platform: homeassistant
     id: ha_p3_p
-    entity_id: sensor.dsc_pot3_soil_phosphorus
+    entity_id: sensor.dsc_probe3_soil_phosphorus
     internal: true
     on_value:
       - lambda: 'id(gv_soil)[19] = x;'
   - platform: homeassistant
     id: ha_p3_k
-    entity_id: sensor.dsc_pot3_soil_potassium
+    entity_id: sensor.dsc_probe3_soil_potassium
     internal: true
     on_value:
       - lambda: 'id(gv_soil)[20] = x;'
   - platform: homeassistant
     id: ha_p4_temp
-    entity_id: sensor.dsc_pot4_soil_temperature
+    entity_id: sensor.dsc_probe4_soil_temperature
     internal: true
     on_value:
       - lambda: 'id(gv_soil)[21] = x;'
   - platform: homeassistant
     id: ha_p4_moist
-    entity_id: sensor.dsc_pot4_soil_moisture
+    entity_id: sensor.dsc_probe4_soil_moisture
     internal: true
     on_value:
       - lambda: 'id(gv_soil)[22] = x;'
   - platform: homeassistant
     id: ha_p4_ec
-    entity_id: sensor.dsc_pot4_soil_conductivity
+    entity_id: sensor.dsc_probe4_soil_conductivity
     internal: true
     on_value:
       - lambda: 'id(gv_soil)[23] = x;'
   - platform: homeassistant
     id: ha_p4_ph
-    entity_id: sensor.dsc_pot4_soil_ph
+    entity_id: sensor.dsc_probe4_soil_ph
     internal: true
     on_value:
       - lambda: 'id(gv_soil)[24] = x;'
   - platform: homeassistant
     id: ha_p4_n
-    entity_id: sensor.dsc_pot4_soil_nitrogen
+    entity_id: sensor.dsc_probe4_soil_nitrogen
     internal: true
     on_value:
       - lambda: 'id(gv_soil)[25] = x;'
   - platform: homeassistant
     id: ha_p4_p
-    entity_id: sensor.dsc_pot4_soil_phosphorus
+    entity_id: sensor.dsc_probe4_soil_phosphorus
     internal: true
     on_value:
       - lambda: 'id(gv_soil)[26] = x;'
   - platform: homeassistant
     id: ha_p4_k
-    entity_id: sensor.dsc_pot4_soil_potassium
+    entity_id: sensor.dsc_probe4_soil_potassium
     internal: true
     on_value:
       - lambda: 'id(gv_soil)[27] = x;'

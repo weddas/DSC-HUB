@@ -1,7 +1,7 @@
-# DSC-POT#1 — HA stub (studio LAN)
+# DSC-Probe #1 — HA stub (studio LAN)
 substitutions:
-  name: dsc_pot1
-  friendly_name: DSC-POT#1
+  name: dsc_probe1
+  friendly_name: DSC-Probe #1
   wifi_ssid: !secret wifi_ssid
   wifi_password: !secret wifi_password
   lan_ip: "192.168.86.181"
@@ -20,7 +20,7 @@ packages:
     url: https://github.com/weddas/DSC-HUB
     ref: master
     files:
-      - firmware/v4/dsc-pot-wifi-lab.yaml
+      - firmware/v4/DSC-Probe-wifi-lab.yaml
       - firmware/v4/dsc-pot-common.yaml
     refresh: 1h
 

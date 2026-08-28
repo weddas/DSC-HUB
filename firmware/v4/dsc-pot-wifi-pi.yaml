@@ -1,5 +1,5 @@
 # ==================================================================
-#  DSC-POT · Pi appliance WiFi (DSC-Brain AP)
+#  DSC-Probe · Pi appliance WiFi (DSC-Brain AP)
 # ==================================================================
 wifi:
   networks:

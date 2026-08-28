@@ -196,7 +196,7 @@ export function DashEspLinkChips({ bus, onNavigate }: { bus: Bus; onNavigate: (p
     <div className="dsc-chip-row" role="group" aria-label="Pot radio vs Modbus probe">
       {[1, 2, 3, 4].map((n) => {
         const espOn = bus.state(`binary_sensor.dsc_hub_pot${n}_esp_now_link`) === "on";
-        const modbusId = `binary_sensor.dsc_pot${n}_modbus_probe_online`;
+        const modbusId = `binary_sensor.dsc_probe${n}_modbus_probe_online`;
         const modbusKnown = bus.available(modbusId);
         const modbusOn = bus.state(modbusId) === "on";
         // ESP-NOW is the radio hop; Modbus is the soil probe bus — do not conflate.
@@ -635,7 +635,7 @@ export function DashRootTankSection({
     <Card className="dsc-glass" title="Root & tank" icon="root">
       <div className="dsc-chip-row">
         {[1, 2, 3, 4].map((n) => {
-          const name = state(`text.dsc_pot${n}_plant_name`, "—");
+          const name = state(`text.dsc_probe${n}_plant_name`, "—");
           const clean = !name || name === "unknown" || name === "unavailable" ? "—" : name;
           return (
             <StatusChip key={n} label={`P${n} ${clean}`} tone={clean === "—" ? "muted" : "ok"} onClick={() => onPot(n)} />

@@ -90,7 +90,7 @@ export function VesselSelect({
   onPicked?: () => void;
 }) {
   const { available, callService, entity, state } = useEntityBus();
-  const id = `input_select.dsc_pot${pot}_vessel`;
+  const id = `input_select.dsc_probe${pot}_vessel`;
   const ok = available(id);
   const options = (entity(id)?.attributes?.options as string[] | undefined) || [];
   const current = state(id, "");

@@ -15,8 +15,8 @@ Standalone SoftAP unboxing (no HA): [SETUP.md](../../SETUP.md).
 | Here (`firmware/v4/`) | Stubs `!include` package bodies for Cursor edits + local flash. |
 | [`homeassistant/esphome/`](../../homeassistant/esphome/) | Same stubs with **git-pull** packages from GitHub. |
 
-Entry points (local lab): `dsc-hub.yaml`, `dsc-control.yaml`, `dsc-bridge.yaml`, `dsc-pot1.yaml`, …
-Kit SoftAP setup: `dsc-hub-kit.yaml`, `dsc-control-kit.yaml`, `dsc-pot{1..4}-kit.yaml`, `dsc-bridge-kit.yaml`
+Entry points (local lab): `dsc-hub.yaml`, `dsc-control.yaml`, `dsc-bridge.yaml`, `DSC-Probe1.yaml`, …
+Kit SoftAP setup: `dsc-hub-kit.yaml`, `dsc-control-kit.yaml`, `DSC-Probe{1..4}-kit.yaml`, `dsc-bridge-kit.yaml`
 
 WiFi is split into `dsc-*-wifi-lab.yaml` / `dsc-*-wifi-kit.yaml` so kit builds omit compile-time SSIDs.
 Fleet component: `components/dsc_fleet_setup/` (phone portal on hub; Control/pots/bridge join `DSC-Setup-*`).
@@ -24,7 +24,7 @@ Bridge also hosts SoftAP `DSC-Anchor` (F-012 channel pin) + `components/dsc_api_
 
 Package bodies are remote-git safe (no `!secret`). Stubs pass credentials (and hub/panel MACs + `espnow_cmd_tag`) as substitutions.
 
-Pots (`dsc-pot-common` **5.1.6+**): each soil channel has **Cal … Offset** / **Cal … Scale**
+Pots (`DSC-Probe-common` **5.1.6+**): each soil channel has **Cal … Offset** / **Cal … Scale**
 config numbers (NVS). Formula `raw * scale + offset` applies before range/median and feeds
 HA + ESP-NOW. **Soil * Raw** diagnostic templates reverse cal for lab wet measured points.
 **Reset Sensor Calibration** restores defaults and clears provenance. **Mark Soil Cal Peer Median**
@@ -85,7 +85,7 @@ In [`dsc-hub-v4_0.yaml`](dsc-hub-v4_0.yaml): `Mat Vote Pot 1`–`4` (`switch.dsc
 esphome config dsc-hub.yaml
 esphome config dsc-control.yaml
 esphome config dsc-heater.yaml
-esphome config dsc-pot1.yaml
+esphome config DSC-Probe1.yaml
 g++ -std=c++17 -Wall -Wextra -O2 -o verify_v4 verify_v4.cpp && ./verify_v4
 ```
 

@@ -21,20 +21,20 @@ input_boolean:
     name: DSC Clone Humidifier In Service
     icon: mdi:sprinkler-variant
     initial: false
-  dsc_pot1_in_service:
-    name: DSC POT1 In Service
+  dsc_probe1_in_service:
+    name: DSC-Probe #1 In Service
     icon: mdi:flower
     initial: true
-  dsc_pot2_in_service:
-    name: DSC POT2 In Service
+  dsc_probe2_in_service:
+    name: DSC-Probe #2 In Service
     icon: mdi:flower
     initial: true
-  dsc_pot3_in_service:
-    name: DSC POT3 In Service
+  dsc_probe3_in_service:
+    name: DSC-Probe #3 In Service
     icon: mdi:flower-outline
     initial: false
-  dsc_pot4_in_service:
-    name: DSC POT4 In Service
+  dsc_probe4_in_service:
+    name: DSC-Probe #4 In Service
     icon: mdi:flower
     initial: true
 
@@ -162,9 +162,9 @@ template:
              or is_state('input_boolean.dsc_dehumidifier_operator_lockout', 'on')
              or is_state('input_boolean.dsc_clone_humidifier_temp_oos', 'on')
              or is_state('input_boolean.dsc_clone_humidifier_operator_lockout', 'on')
-             or not is_state('input_boolean.dsc_pot1_in_service', 'on')
-             or not is_state('input_boolean.dsc_pot2_in_service', 'on')
-             or not is_state('input_boolean.dsc_pot4_in_service', 'on') }}
+             or not is_state('input_boolean.dsc_probe1_in_service', 'on')
+             or not is_state('input_boolean.dsc_probe2_in_service', 'on')
+             or not is_state('input_boolean.dsc_probe4_in_service', 'on') }}
         attributes:
           planned_oos: >-
             {% set ns = namespace(items=[]) %}
@@ -174,7 +174,7 @@ template:
             {% if not is_state('input_boolean.dsc_clone_humidifier_in_service', 'on') %}
               {% set ns.items = ns.items + ['Clone mister'] %}
             {% endif %}
-            {% if not is_state('input_boolean.dsc_pot3_in_service', 'on') %}
+            {% if not is_state('input_boolean.dsc_probe3_in_service', 'on') %}
               {% set ns.items = ns.items + ['POT3'] %}
             {% endif %}
             {% if not is_state('input_boolean.dsc_tank_in_service', 'on') %}
@@ -268,10 +268,10 @@ template:
         device_class: problem
         icon: mdi:heating-coil
         state: >-
-          {% set any_pot = is_state('input_boolean.dsc_pot1_in_service','on')
-             or is_state('input_boolean.dsc_pot2_in_service','on')
-             or is_state('input_boolean.dsc_pot3_in_service','on')
-             or is_state('input_boolean.dsc_pot4_in_service','on') %}
+          {% set any_pot = is_state('input_boolean.dsc_probe1_in_service','on')
+             or is_state('input_boolean.dsc_probe2_in_service','on')
+             or is_state('input_boolean.dsc_probe3_in_service','on')
+             or is_state('input_boolean.dsc_probe4_in_service','on') %}
           {% set rz = states('sensor.dsc_coldest_root_zone_temp')|float(none) %}
           {% set low = states('number.dsc_hub_mat_root_zone_low')|float(20)
              if has_value('number.dsc_hub_mat_root_zone_low') else 20 %}

@@ -26,10 +26,10 @@ _SONOFF_FW: dict[str, str] = {
 _IN_SERVICE_ENTITIES: dict[str, str] = {
     "ac": "input_boolean.dsc_ac_in_service",
     "mister": "input_boolean.dsc_clone_humidifier_in_service",
-    "pot1": "input_boolean.dsc_pot1_in_service",
-    "pot2": "input_boolean.dsc_pot2_in_service",
-    "pot3": "input_boolean.dsc_pot3_in_service",
-    "pot4": "input_boolean.dsc_pot4_in_service",
+    "pot1": "input_boolean.dsc_probe1_in_service",
+    "pot2": "input_boolean.dsc_probe2_in_service",
+    "pot3": "input_boolean.dsc_probe3_in_service",
+    "pot4": "input_boolean.dsc_probe4_in_service",
     "tank": "input_boolean.dsc_tank_in_service",
 }
 
@@ -186,10 +186,10 @@ class FleetState:
             ):
                 val = seat.values.get(key)
                 if val is not None:
-                    set_entity(f"sensor.dsc_pot{n}_{metric}", val, seat.online)
+                    set_entity(f"sensor.dsc_probe{n}_{metric}", val, seat.online)
             if seat.firmware:
                 set_entity(
-                    f"sensor.dsc_pot{n}_firmware_version",
+                    f"sensor.dsc_probe{n}_firmware_version",
                     seat.firmware,
                     seat.online,
                 )
@@ -197,19 +197,19 @@ class FleetState:
             if isinstance(pot_bins, dict):
                 if pot_bins.get("clock_valid") is not None:
                     set_entity(
-                        f"binary_sensor.dsc_pot{n}_clock_valid",
+                        f"binary_sensor.dsc_probe{n}_clock_valid",
                         "on" if pot_bins.get("clock_valid") else "off",
                         seat.online,
                     )
                 if pot_bins.get("modbus_probe_online") is not None:
                     set_entity(
-                        f"binary_sensor.dsc_pot{n}_modbus_probe_online",
+                        f"binary_sensor.dsc_probe{n}_modbus_probe_online",
                         "on" if pot_bins.get("modbus_probe_online") else "off",
                         seat.online,
                     )
                 if pot_bins.get("sensor_fault") is not None:
                     set_entity(
-                        f"binary_sensor.dsc_pot{n}_sensor_fault",
+                        f"binary_sensor.dsc_probe{n}_sensor_fault",
                         "on" if pot_bins.get("sensor_fault") else "off",
                         seat.online,
                     )

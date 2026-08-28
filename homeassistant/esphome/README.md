@@ -21,7 +21,7 @@
 | `dsc-hub.yaml` | `dsc-hub-v4_0.yaml` **and** `dsc-hub-espnow-primary.yaml` |
 | `dsc-control.yaml` | `dsc-control-common.yaml` (+ `cyd_glyphs.yaml` via sibling `!include`) |
 | `dsc-heater` / `heatmat` / `humidifier` / `de-humidifier` | `dsc-sonoff-common.yaml` |
-| `dsc-pot1` … `dsc-pot4` | `dsc-pot-common.yaml` |
+| `DSC-Probe1` … `DSC-Probe4` | `DSC-Probe-common.yaml` |
 
 ## Install
 

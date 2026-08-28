@@ -59,7 +59,7 @@ const CATALOG_BY_ID = new Map(VESSEL_CATALOG.map((v) => [v.id, v]));
 export const DEFAULT_VESSEL: VesselSpec = VESSEL_CATALOG[2];
 
 export function vesselEntityId(pot: number): string {
-  return `input_select.dsc_pot${pot}_vessel`;
+  return `input_select.dsc_probe${pot}_vessel`;
 }
 
 export function parseVesselId(raw: string | undefined | null): string {

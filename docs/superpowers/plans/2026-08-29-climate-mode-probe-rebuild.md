@@ -250,7 +250,7 @@ Protocol: bump version field used by panel; panel `clampi` / `CMODE_N[]` length 
 
 ### Task 7: Firmware cal_session burst + ESP-NOW pause
 
-**Files:** pot common + hub if needed — `firmware/v4` pot YAMLs / `dsc-pot-common`
+**Files:** pot common + hub if needed — `firmware/v4` pot YAMLs / `DSC-Probe-common`
 
 - Add `cal_session` switch/script: Modbus update_interval 2–5s for 30–60s; median/MAD diagnostic; restore 60s
 - Flag/pause ESP-NOW soil publishes during session

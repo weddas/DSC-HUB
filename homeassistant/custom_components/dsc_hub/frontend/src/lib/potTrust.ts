@@ -17,8 +17,8 @@ export function readPotTrust(
   state: (id: string, fallback?: string) => string,
 ): PotTrust {
   const inService = isPotInService(pot, state);
-  const stuck = state(`binary_sensor.dsc_pot${pot}_sensor_stuck`) === "on";
-  const untrusted = state(`binary_sensor.dsc_pot${pot}_untrusted`) === "on";
+  const stuck = state(`binary_sensor.dsc_probe${pot}_sensor_stuck`) === "on";
+  const untrusted = state(`binary_sensor.dsc_probe${pot}_untrusted`) === "on";
   const peerSummary = state("sensor.dsc_peer_divergence_summary", "");
   const peer =
     inService &&

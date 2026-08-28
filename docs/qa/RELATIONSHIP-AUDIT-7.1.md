@@ -93,7 +93,7 @@ APIs: `GET /roster`, `GET /fleet`, `GET /fleet/computed`, `GET /settings`, `GET 
 | Seated plants (SQLite `/roster`) | **0** | `{"roster":[]}` |
 | Occupied roster slots | **0** | `sensor.dsc_plant_roster_summary` = `0 occupied` |
 | Orphan seated plants (plant, no pot) | **0** | Impossible on SQLite PK; slots also empty |
-| Ghost helper plants | **1** | `text.dsc_pot1_plant_name` helper still `Amnesia Blue` (computed overwrites display to `""`) |
+| Ghost helper plants | **1** | `text.dsc_probe1_plant_name` helper still `Amnesia Blue` (computed overwrites display to `""`) |
 | Leftover Compose drafts | **1** | Northern Lights / QA Dummy (pot3 test) → assign pot **3**, tent **2x4**, sprout **2026-07-09** |
 | Empty in-service pots | **3** | pot1, pot2, pot4 |
 | OOS pots | **1** | **pot3 `in_service=false`** — confirmed, not changed |
@@ -130,7 +130,7 @@ pot3 **is OOS** on inventory and omitted from `fleet.pots`. This pass did not pu
 ### UI implies a link the store does not have
 
 1. **Compose draft after revert.** Helpers still hold Northern Lights / QA Dummy / pot **3** / 2×4 / sprout 2026-07-09 / expected stage Late (Push) Vegetative day 48. `/roster` is empty. Acceptance 7.1.1 #5 said the dummy was reverted; the draft was not cleared.
-2. **pot1 → 2×4.** Computed `input_select.dsc_pot1_tent=clone` with empty plant. `potsInTent("clone")` + tent cockpit `${seats.length} plants` will count a phantom 2×4 plant.
+2. **pot1 → 2×4.** Computed `input_select.dsc_probe1_tent=clone` with empty plant. `potsInTent("clone")` + tent cockpit `${seats.length} plants` will count a phantom 2×4 plant.
 3. **Empty pots are `veg`.** `computed_ops` does `stage = row.get("stage") or "veg"` when there is no roster row. Seat editors and Want fallbacks see a growth stage that no plant owns.
 4. **2×4 lamp = SF1000.** `LivePages.tsx` (`lit = tent === "clone" ? cloneLampOn : windowOpen`), `PlantExtra.tsx` (clone awake = SF1000 on), `dash_computed._dark_period_violation`, `sensor.dsc_lights_on_today_2x4` (SF1000 runtime). The 4×8 fixture is the 2×4 photoperiod parent.
 5. **Apply-to-tent copy** (`GrowPages.tsx`) says “the hub rejected it” on helper write failure. Tent is a pot helper / recipe field, not a hub entity.

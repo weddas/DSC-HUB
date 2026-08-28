@@ -17,7 +17,7 @@ input_select:
       - felt_15l
       - plastic_taper_15l
     initial: generic_fabric_20l
-  dsc_pot1_vessel:
+  dsc_probe1_vessel:
     name: "DSC Pot 1 vessel"
     icon: mdi:bag-personal
     options:
@@ -28,7 +28,7 @@ input_select:
       - felt_15l
       - plastic_taper_15l
     initial: generic_fabric_20l
-  dsc_pot2_vessel:
+  dsc_probe2_vessel:
     name: "DSC Pot 2 vessel"
     icon: mdi:bag-personal
     options:
@@ -39,7 +39,7 @@ input_select:
       - felt_15l
       - plastic_taper_15l
     initial: generic_fabric_20l
-  dsc_pot3_vessel:
+  dsc_probe3_vessel:
     name: "DSC Pot 3 vessel"
     icon: mdi:bag-personal
     options:
@@ -50,7 +50,7 @@ input_select:
       - felt_15l
       - plastic_taper_15l
     initial: generic_tall_pet_20l
-  dsc_pot4_vessel:
+  dsc_probe4_vessel:
     name: "DSC Pot 4 vessel"
     icon: mdi:bag-personal
     options:

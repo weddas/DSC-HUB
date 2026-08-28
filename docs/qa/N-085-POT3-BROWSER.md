@@ -20,7 +20,7 @@
 | Step | Result |
 |---|---|
 | T-043 Build typeahead | Catalog chip **59 items**; Blue Dream selectable; **PPFD map** chip after sensors healthy |
-| T-044 Commit+assign POT3 | Roster: nick `POT3 Test`, strain `Blue Dream`, pot `3`, status `active`; seat: `input_select.dsc_pot3_strain=Custom 1`, `custom_1_name=Blue Dream`, `strain_display=Blue Dream` |
+| T-044 Commit+assign POT3 | Roster: nick `POT3 Test`, strain `Blue Dream`, pot `3`, status `active`; seat: `input_select.dsc_probe3_strain=Custom 1`, `custom_1_name=Blue Dream`, `strain_display=Blue Dream` |
 | T-045 Pro Strains | Roster **occupied**; Build a Plant deep-link present; POT3 expander opens (plant_name **unavailable** — ESP offline) |
 | T-046 Climate Want | Helpers 22–26°C / 50–60% RH → Want sensors **22/26/50/60**; Apply script run; hub `number.dsc_hub_*` **unavailable** (hub offline) — write path not live-proven |
 | T-047 Mix short-stock | `short_stock_any=true`; stock1 held at **5 ml** through Accept (Base A skipped); other covered lines burned (`last_accepted` 90 ml) — soak did not require Accept to burn the short line |
@@ -30,7 +30,7 @@
 
 ## Honesty leftovers
 
-- `text.dsc_pot3_plant_name` stays **unavailable** while pot ESP is offline — nickname lives on roster + Custom slot until F-003/pot online.
+- `text.dsc_probe3_plant_name` stays **unavailable** while pot ESP is offline — nickname lives on roster + Custom slot until F-003/pot online.
 - Chemistry chip on Build card depends on typeahead hit (`has_chemistry` / `thc_range`); catalog promote/want_bands path is live; index chem fields should be re-checked after next index rebuild if chip empty.
 - Full ~36k Herbies merge remains best-effort (MVP gate used).
 - Deferred unchanged: plant_id DB, Dash merge, pumps, PPFD OCR.

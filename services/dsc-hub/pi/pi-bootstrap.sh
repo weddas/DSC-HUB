@@ -104,10 +104,10 @@ address=/dsc-brain.local/${AP_NET}
 # Static reservations — MACs from Settings inventory after first flash
 dhcp-host=10.42.0.10,dsc-hub
 dhcp-host=10.42.0.11,dsc-control
-dhcp-host=10.42.0.21,dsc-pot1
-dhcp-host=10.42.0.22,dsc-pot2
-dhcp-host=10.42.0.23,dsc-pot3
-dhcp-host=10.42.0.24,dsc-pot4
+dhcp-host=10.42.0.21,DSC-Probe1
+dhcp-host=10.42.0.22,DSC-Probe2
+dhcp-host=10.42.0.23,DSC-Probe3
+dhcp-host=10.42.0.24,DSC-Probe4
 dhcp-host=10.42.0.50,dsc-heater
 dhcp-host=10.42.0.51,dsc-heatmat
 dhcp-host=10.42.0.54,dsc-humidifier

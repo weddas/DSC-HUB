@@ -49,10 +49,10 @@ export function LiveMissionPage() {
   const cloneT = useHeldReading("sensor.dsc_hub_clone_temperature");
   const cloneRh = useHeldReading("sensor.dsc_hub_clone_humidity");
   const cloneVpd = useHeldReading("sensor.dsc_hub_clone_vpd_kpa");
-  const potM1 = useHeldReading("sensor.dsc_pot1_got_moisture");
-  const potM2 = useHeldReading("sensor.dsc_pot2_got_moisture");
-  const potM3 = useHeldReading("sensor.dsc_pot3_got_moisture");
-  const potM4 = useHeldReading("sensor.dsc_pot4_got_moisture");
+  const potM1 = useHeldReading("sensor.dsc_probe1_got_moisture");
+  const potM2 = useHeldReading("sensor.dsc_probe2_got_moisture");
+  const potM3 = useHeldReading("sensor.dsc_probe3_got_moisture");
+  const potM4 = useHeldReading("sensor.dsc_probe4_got_moisture");
   const potMoistureHeld = [potM1, potM2, potM3, potM4];
 
   const panelLink = fleet.panel.online ? "on" : state("binary_sensor.dsc_hub_panel_link");

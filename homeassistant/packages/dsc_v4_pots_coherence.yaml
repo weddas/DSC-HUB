@@ -14,28 +14,28 @@ input_number:
     initial: 8
     unit_of_measurement: "%"
     mode: box
-  dsc_pot1_learned_ec_per_moisture:
+  dsc_probe1_learned_ec_per_moisture:
     name: "DSC POT1 Learned ΔEC/Δmoisture"
     min: -200
     max: 200
     step: 0.5
     initial: 0
     mode: box
-  dsc_pot2_learned_ec_per_moisture:
+  dsc_probe2_learned_ec_per_moisture:
     name: "DSC POT2 Learned ΔEC/Δmoisture"
     min: -200
     max: 200
     step: 0.5
     initial: 0
     mode: box
-  dsc_pot3_learned_ec_per_moisture:
+  dsc_probe3_learned_ec_per_moisture:
     name: "DSC POT3 Learned ΔEC/Δmoisture"
     min: -200
     max: 200
     step: 0.5
     initial: 0
     mode: box
-  dsc_pot4_learned_ec_per_moisture:
+  dsc_probe4_learned_ec_per_moisture:
     name: "DSC POT4 Learned ΔEC/Δmoisture"
     min: -200
     max: 200
@@ -46,107 +46,107 @@ input_number:
 template:
   - sensor:
       - name: "DSC POT1 Dryback Pct"
-        unique_id: dsc_pot1_dryback_pct
+        unique_id: dsc_probe1_dryback_pct
         unit_of_measurement: "%"
         icon: mdi:water-minus
         state: >
-          {% set peak = states('sensor.dsc_pot1_soil_moisture_daily_max')|float(none) %}
-          {% set now = states('sensor.dsc_pot1_got_moisture')|float(none) %}
-          {% if now is none %}{% set now = states('sensor.dsc_pot1_soil_moisture')|float(none) %}{% endif %}
-          {% set rate = states('sensor.dsc_pot1_soil_moisture_rate')|float(0) %}
+          {% set peak = states('sensor.dsc_probe1_soil_moisture_daily_max')|float(none) %}
+          {% set now = states('sensor.dsc_probe1_got_moisture')|float(none) %}
+          {% if now is none %}{% set now = states('sensor.dsc_probe1_soil_moisture')|float(none) %}{% endif %}
+          {% set rate = states('sensor.dsc_probe1_soil_moisture_rate')|float(0) %}
           {% if peak is none or now is none or peak <= 0 %}none
           {% elif rate > 0.5 %}0
           {% else %}{{ ((peak - now) / peak * 100)|round(1) }}{% endif %}
         attributes:
-          peak: "{{ states('sensor.dsc_pot1_soil_moisture_daily_max') }}"
+          peak: "{{ states('sensor.dsc_probe1_soil_moisture_daily_max') }}"
           note: "Relative points of this probe's own scale (peak today → now)."
 
       - name: "DSC POT2 Dryback Pct"
-        unique_id: dsc_pot2_dryback_pct
+        unique_id: dsc_probe2_dryback_pct
         unit_of_measurement: "%"
         icon: mdi:water-minus
         state: >
-          {% set peak = states('sensor.dsc_pot2_soil_moisture_daily_max')|float(none) %}
-          {% set now = states('sensor.dsc_pot2_got_moisture')|float(none) %}
-          {% if now is none %}{% set now = states('sensor.dsc_pot2_soil_moisture')|float(none) %}{% endif %}
-          {% set rate = states('sensor.dsc_pot2_soil_moisture_rate')|float(0) %}
+          {% set peak = states('sensor.dsc_probe2_soil_moisture_daily_max')|float(none) %}
+          {% set now = states('sensor.dsc_probe2_got_moisture')|float(none) %}
+          {% if now is none %}{% set now = states('sensor.dsc_probe2_soil_moisture')|float(none) %}{% endif %}
+          {% set rate = states('sensor.dsc_probe2_soil_moisture_rate')|float(0) %}
           {% if peak is none or now is none or peak <= 0 %}none
           {% elif rate > 0.5 %}0
           {% else %}{{ ((peak - now) / peak * 100)|round(1) }}{% endif %}
 
       - name: "DSC POT3 Dryback Pct"
-        unique_id: dsc_pot3_dryback_pct
+        unique_id: dsc_probe3_dryback_pct
         unit_of_measurement: "%"
         icon: mdi:water-minus
         state: >
-          {% set peak = states('sensor.dsc_pot3_soil_moisture_daily_max')|float(none) %}
-          {% set now = states('sensor.dsc_pot3_got_moisture')|float(none) %}
-          {% if now is none %}{% set now = states('sensor.dsc_pot3_soil_moisture')|float(none) %}{% endif %}
-          {% set rate = states('sensor.dsc_pot3_soil_moisture_rate')|float(0) %}
+          {% set peak = states('sensor.dsc_probe3_soil_moisture_daily_max')|float(none) %}
+          {% set now = states('sensor.dsc_probe3_got_moisture')|float(none) %}
+          {% if now is none %}{% set now = states('sensor.dsc_probe3_soil_moisture')|float(none) %}{% endif %}
+          {% set rate = states('sensor.dsc_probe3_soil_moisture_rate')|float(0) %}
           {% if peak is none or now is none or peak <= 0 %}none
           {% elif rate > 0.5 %}0
           {% else %}{{ ((peak - now) / peak * 100)|round(1) }}{% endif %}
 
       - name: "DSC POT4 Dryback Pct"
-        unique_id: dsc_pot4_dryback_pct
+        unique_id: dsc_probe4_dryback_pct
         unit_of_measurement: "%"
         icon: mdi:water-minus
         state: >
-          {% set peak = states('sensor.dsc_pot4_soil_moisture_daily_max')|float(none) %}
-          {% set now = states('sensor.dsc_pot4_got_moisture')|float(none) %}
-          {% if now is none %}{% set now = states('sensor.dsc_pot4_soil_moisture')|float(none) %}{% endif %}
-          {% set rate = states('sensor.dsc_pot4_soil_moisture_rate')|float(0) %}
+          {% set peak = states('sensor.dsc_probe4_soil_moisture_daily_max')|float(none) %}
+          {% set now = states('sensor.dsc_probe4_got_moisture')|float(none) %}
+          {% if now is none %}{% set now = states('sensor.dsc_probe4_soil_moisture')|float(none) %}{% endif %}
+          {% set rate = states('sensor.dsc_probe4_soil_moisture_rate')|float(0) %}
           {% if peak is none or now is none or peak <= 0 %}none
           {% elif rate > 0.5 %}0
           {% else %}{{ ((peak - now) / peak * 100)|round(1) }}{% endif %}
 
       - name: "DSC POT1 Coherence Summary"
-        unique_id: dsc_pot1_coherence_summary
+        unique_id: dsc_probe1_coherence_summary
         icon: mdi:compare
         state: >
-          {% if not is_state('input_boolean.dsc_pot1_in_service','on') %}OOS
-          {% elif is_state('binary_sensor.dsc_pot1_coherence_flag','on') %}
+          {% if not is_state('input_boolean.dsc_probe1_in_service','on') %}OOS
+          {% elif is_state('binary_sensor.dsc_probe1_coherence_flag','on') %}
             Moisture moved with peers but EC response diverged — check probe/salt/channel
           {% else %}OK — event response within band{% endif %}
 
       - name: "DSC POT2 Coherence Summary"
-        unique_id: dsc_pot2_coherence_summary
+        unique_id: dsc_probe2_coherence_summary
         icon: mdi:compare
         state: >
-          {% if not is_state('input_boolean.dsc_pot2_in_service','on') %}OOS
-          {% elif is_state('binary_sensor.dsc_pot2_coherence_flag','on') %}
+          {% if not is_state('input_boolean.dsc_probe2_in_service','on') %}OOS
+          {% elif is_state('binary_sensor.dsc_probe2_coherence_flag','on') %}
             Moisture moved with peers but EC response diverged — check probe/salt/channel
           {% else %}OK — event response within band{% endif %}
 
       - name: "DSC POT3 Coherence Summary"
-        unique_id: dsc_pot3_coherence_summary
+        unique_id: dsc_probe3_coherence_summary
         icon: mdi:compare
         state: >
-          {% if not is_state('input_boolean.dsc_pot3_in_service','on') %}OOS
-          {% elif is_state('binary_sensor.dsc_pot3_coherence_flag','on') %}
+          {% if not is_state('input_boolean.dsc_probe3_in_service','on') %}OOS
+          {% elif is_state('binary_sensor.dsc_probe3_coherence_flag','on') %}
             Moisture moved with peers but EC response diverged — check probe/salt/channel
           {% else %}OK — event response within band{% endif %}
 
       - name: "DSC POT4 Coherence Summary"
-        unique_id: dsc_pot4_coherence_summary
+        unique_id: dsc_probe4_coherence_summary
         icon: mdi:compare
         state: >
-          {% if not is_state('input_boolean.dsc_pot4_in_service','on') %}OOS
-          {% elif is_state('binary_sensor.dsc_pot4_coherence_flag','on') %}
+          {% if not is_state('input_boolean.dsc_probe4_in_service','on') %}OOS
+          {% elif is_state('binary_sensor.dsc_probe4_coherence_flag','on') %}
             Moisture moved with peers but EC response diverged — check probe/salt/channel
           {% else %}OK — event response within band{% endif %}
 
   - binary_sensor:
       - name: "DSC POT1 Coherence Flag"
-        unique_id: dsc_pot1_coherence_flag
+        unique_id: dsc_probe1_coherence_flag
         icon: mdi:alert-decagram
         delay_on:
           minutes: 10
         state: >
-          {% if not is_state('input_boolean.dsc_pot1_in_service','on') %}false
+          {% if not is_state('input_boolean.dsc_probe1_in_service','on') %}false
           {% else %}
           {% set thr = states('input_number.dsc_coherence_moisture_event_pts')|float(8) %}
-          {% set m1 = states('sensor.dsc_pot1_soil_moisture_rate')|float(0) %}
+          {% set m1 = states('sensor.dsc_probe1_soil_moisture_rate')|float(0) %}
           {% set peers = [] %}
           {% for n in [2,3,4] %}
             {% if is_state('input_boolean.dsc_pot' ~ n ~ '_in_service','on') %}
@@ -155,8 +155,8 @@ template:
           {% endfor %}
           {% set peer_up = peers|select('>=', thr / 6)|list|length %}
           {% set me_up = m1 >= (thr / 6) %}
-          {% set ec1 = states('sensor.dsc_pot1_ec_uptake_slope')|float(0) %}
-          {% set learned = states('input_number.dsc_pot1_learned_ec_per_moisture')|float(0) %}
+          {% set ec1 = states('sensor.dsc_probe1_ec_uptake_slope')|float(0) %}
+          {% set learned = states('input_number.dsc_probe1_learned_ec_per_moisture')|float(0) %}
           {% set peer_ec = namespace(v=[]) %}
           {% for n in [2,3,4] %}
             {% if is_state('input_boolean.dsc_pot' ~ n ~ '_in_service','on') %}
@@ -168,15 +168,15 @@ template:
           {% endif %}
 
       - name: "DSC POT2 Coherence Flag"
-        unique_id: dsc_pot2_coherence_flag
+        unique_id: dsc_probe2_coherence_flag
         icon: mdi:alert-decagram
         delay_on:
           minutes: 10
         state: >
-          {% if not is_state('input_boolean.dsc_pot2_in_service','on') %}false
+          {% if not is_state('input_boolean.dsc_probe2_in_service','on') %}false
           {% else %}
           {% set thr = states('input_number.dsc_coherence_moisture_event_pts')|float(8) %}
-          {% set m2 = states('sensor.dsc_pot2_soil_moisture_rate')|float(0) %}
+          {% set m2 = states('sensor.dsc_probe2_soil_moisture_rate')|float(0) %}
           {% set peers = [] %}
           {% for n in [1,3,4] %}
             {% if is_state('input_boolean.dsc_pot' ~ n ~ '_in_service','on') %}
@@ -185,7 +185,7 @@ template:
           {% endfor %}
           {% set peer_up = peers|select('>=', thr / 6)|list|length %}
           {% set me_up = m2 >= (thr / 6) %}
-          {% set ec2 = states('sensor.dsc_pot2_ec_uptake_slope')|float(0) %}
+          {% set ec2 = states('sensor.dsc_probe2_ec_uptake_slope')|float(0) %}
           {% set peer_ec = namespace(v=[]) %}
           {% for n in [1,3,4] %}
             {% if is_state('input_boolean.dsc_pot' ~ n ~ '_in_service','on') %}
@@ -197,15 +197,15 @@ template:
           {% endif %}
 
       - name: "DSC POT3 Coherence Flag"
-        unique_id: dsc_pot3_coherence_flag
+        unique_id: dsc_probe3_coherence_flag
         icon: mdi:alert-decagram
         delay_on:
           minutes: 10
         state: >
-          {% if not is_state('input_boolean.dsc_pot3_in_service','on') %}false
+          {% if not is_state('input_boolean.dsc_probe3_in_service','on') %}false
           {% else %}
           {% set thr = states('input_number.dsc_coherence_moisture_event_pts')|float(8) %}
-          {% set m3 = states('sensor.dsc_pot3_soil_moisture_rate')|float(0) %}
+          {% set m3 = states('sensor.dsc_probe3_soil_moisture_rate')|float(0) %}
           {% set peers = [] %}
           {% for n in [1,2,4] %}
             {% if is_state('input_boolean.dsc_pot' ~ n ~ '_in_service','on') %}
@@ -214,7 +214,7 @@ template:
           {% endfor %}
           {% set peer_up = peers|select('>=', thr / 6)|list|length %}
           {% set me_up = m3 >= (thr / 6) %}
-          {% set ec3 = states('sensor.dsc_pot3_ec_uptake_slope')|float(0) %}
+          {% set ec3 = states('sensor.dsc_probe3_ec_uptake_slope')|float(0) %}
           {% set peer_ec = namespace(v=[]) %}
           {% for n in [1,2,4] %}
             {% if is_state('input_boolean.dsc_pot' ~ n ~ '_in_service','on') %}
@@ -226,15 +226,15 @@ template:
           {% endif %}
 
       - name: "DSC POT4 Coherence Flag"
-        unique_id: dsc_pot4_coherence_flag
+        unique_id: dsc_probe4_coherence_flag
         icon: mdi:alert-decagram
         delay_on:
           minutes: 10
         state: >
-          {% if not is_state('input_boolean.dsc_pot4_in_service','on') %}false
+          {% if not is_state('input_boolean.dsc_probe4_in_service','on') %}false
           {% else %}
           {% set thr = states('input_number.dsc_coherence_moisture_event_pts')|float(8) %}
-          {% set m4 = states('sensor.dsc_pot4_soil_moisture_rate')|float(0) %}
+          {% set m4 = states('sensor.dsc_probe4_soil_moisture_rate')|float(0) %}
           {% set peers = [] %}
           {% for n in [1,2,3] %}
             {% if is_state('input_boolean.dsc_pot' ~ n ~ '_in_service','on') %}
@@ -243,7 +243,7 @@ template:
           {% endfor %}
           {% set peer_up = peers|select('>=', thr / 6)|list|length %}
           {% set me_up = m4 >= (thr / 6) %}
-          {% set ec4 = states('sensor.dsc_pot4_ec_uptake_slope')|float(0) %}
+          {% set ec4 = states('sensor.dsc_probe4_ec_uptake_slope')|float(0) %}
           {% set peer_ec = namespace(v=[]) %}
           {% for n in [1,2,3] %}
             {% if is_state('input_boolean.dsc_pot' ~ n ~ '_in_service','on') %}
@@ -292,19 +292,19 @@ automation:
     max: 4
     triggers:
       - trigger: numeric_state
-        entity_id: sensor.dsc_pot1_soil_moisture_rate
+        entity_id: sensor.dsc_probe1_soil_moisture_rate
         above: 1.5
         for: "00:15:00"
       - trigger: numeric_state
-        entity_id: sensor.dsc_pot2_soil_moisture_rate
+        entity_id: sensor.dsc_probe2_soil_moisture_rate
         above: 1.5
         for: "00:15:00"
       - trigger: numeric_state
-        entity_id: sensor.dsc_pot3_soil_moisture_rate
+        entity_id: sensor.dsc_probe3_soil_moisture_rate
         above: 1.5
         for: "00:15:00"
       - trigger: numeric_state
-        entity_id: sensor.dsc_pot4_soil_moisture_rate
+        entity_id: sensor.dsc_probe4_soil_moisture_rate
         above: 1.5
         for: "00:15:00"
     conditions:

@@ -6,10 +6,10 @@ import { ENTITY_FLEET_MAP } from "./entityFleetMap";
 const IN_SERVICE_ENTITIES: Record<string, string> = {
   ac: "input_boolean.dsc_ac_in_service",
   mister: "input_boolean.dsc_clone_humidifier_in_service",
-  pot1: "input_boolean.dsc_pot1_in_service",
-  pot2: "input_boolean.dsc_pot2_in_service",
-  pot3: "input_boolean.dsc_pot3_in_service",
-  pot4: "input_boolean.dsc_pot4_in_service",
+  pot1: "input_boolean.dsc_probe1_in_service",
+  pot2: "input_boolean.dsc_probe2_in_service",
+  pot3: "input_boolean.dsc_probe3_in_service",
+  pot4: "input_boolean.dsc_probe4_in_service",
   tank: "input_boolean.dsc_tank_in_service",
 };
 
@@ -75,7 +75,7 @@ export function fleetFromHass(
   const pots: Record<string, SeatSnapshot> = {};
   for (const n of [1, 2, 3, 4]) {
     const id = `pot${n}`;
-    const fw = `sensor.dsc_pot${n}_firmware_version`;
+    const fw = `sensor.dsc_probe${n}_firmware_version`;
     const live = avail(hass, fw);
     pots[id] = {
       seat_id: id,
@@ -83,15 +83,15 @@ export function fleetFromHass(
       firmware: live ? st(hass, fw) : null,
       values: {
         moisture_pct:
-          numVal(hass, `sensor.dsc_pot${n}_got_moisture`) ??
-          numVal(hass, `sensor.dsc_pot${n}_soil_moisture`),
-        soil_temp_c: numVal(hass, `sensor.dsc_pot${n}_soil_temperature`),
+          numVal(hass, `sensor.dsc_probe${n}_got_moisture`) ??
+          numVal(hass, `sensor.dsc_probe${n}_soil_moisture`),
+        soil_temp_c: numVal(hass, `sensor.dsc_probe${n}_soil_temperature`),
         ec_us:
-          numVal(hass, `sensor.dsc_pot${n}_got_ec`) ??
-          numVal(hass, `sensor.dsc_pot${n}_soil_conductivity`) ??
-          numVal(hass, `sensor.dsc_pot${n}_soil_ec`),
+          numVal(hass, `sensor.dsc_probe${n}_got_ec`) ??
+          numVal(hass, `sensor.dsc_probe${n}_soil_conductivity`) ??
+          numVal(hass, `sensor.dsc_probe${n}_soil_ec`),
         ph:
-          numVal(hass, `sensor.dsc_pot${n}_got_ph`) ?? numVal(hass, `sensor.dsc_pot${n}_soil_ph`),
+          numVal(hass, `sensor.dsc_probe${n}_got_ph`) ?? numVal(hass, `sensor.dsc_probe${n}_soil_ph`),
       },
       last_seen: live ? Date.now() / 1000 : null,
     };
@@ -249,41 +249,41 @@ export function fleetToHassCompat(fleet: FleetSnapshot): Record<string, HassEnti
     const moisture = seat.values.moisture_pct;
     if (moisture != null) {
       const s = String(moisture);
-      set(`sensor.dsc_pot${n}_soil_moisture`, s, live);
-      set(`sensor.dsc_pot${n}_got_moisture`, s, live);
+      set(`sensor.dsc_probe${n}_soil_moisture`, s, live);
+      set(`sensor.dsc_probe${n}_got_moisture`, s, live);
     }
     const soilT = seat.values.soil_temp_c;
     if (soilT != null) {
-      set(`sensor.dsc_pot${n}_soil_temperature`, String(soilT), live);
+      set(`sensor.dsc_probe${n}_soil_temperature`, String(soilT), live);
     }
     const ec = seat.values.ec_us;
     if (ec != null) {
-      set(`sensor.dsc_pot${n}_soil_ec`, String(ec), live);
-      set(`sensor.dsc_pot${n}_soil_conductivity`, String(ec), live);
-      set(`sensor.dsc_pot${n}_got_ec`, String(ec), live);
+      set(`sensor.dsc_probe${n}_soil_ec`, String(ec), live);
+      set(`sensor.dsc_probe${n}_soil_conductivity`, String(ec), live);
+      set(`sensor.dsc_probe${n}_got_ec`, String(ec), live);
     }
     const ph = seat.values.ph;
     if (ph != null) {
-      set(`sensor.dsc_pot${n}_soil_ph`, String(ph), live);
-      set(`sensor.dsc_pot${n}_got_ph`, String(ph), live);
+      set(`sensor.dsc_probe${n}_soil_ph`, String(ph), live);
+      set(`sensor.dsc_probe${n}_got_ph`, String(ph), live);
     }
     if (seat.firmware) {
-      set(`sensor.dsc_pot${n}_firmware_version`, seat.firmware, live);
+      set(`sensor.dsc_probe${n}_firmware_version`, seat.firmware, live);
     }
     const potBins = seat.values.binaries as Record<string, boolean> | undefined;
     if (potBins) {
       if (potBins.clock_valid != null) {
-        set(`binary_sensor.dsc_pot${n}_clock_valid`, potBins.clock_valid ? "on" : "off", live);
+        set(`binary_sensor.dsc_probe${n}_clock_valid`, potBins.clock_valid ? "on" : "off", live);
       }
       if (potBins.modbus_probe_online != null) {
         set(
-          `binary_sensor.dsc_pot${n}_modbus_probe_online`,
+          `binary_sensor.dsc_probe${n}_modbus_probe_online`,
           potBins.modbus_probe_online ? "on" : "off",
           live,
         );
       }
       if (potBins.sensor_fault != null) {
-        set(`binary_sensor.dsc_pot${n}_sensor_fault`, potBins.sensor_fault ? "on" : "off", live);
+        set(`binary_sensor.dsc_probe${n}_sensor_fault`, potBins.sensor_fault ? "on" : "off", live);
       }
     }
   }

@@ -192,9 +192,9 @@ function TentCockpitPage({ tent }: { tent: Exclude<TentId, "unassigned"> }) {
         return;
       }
       const ids = pots.flatMap((n) => [
-        `text.dsc_pot${n}_plant_name`,
-        `input_select.dsc_pot${n}_tent`,
-        `select.dsc_pot${n}_growth_stage`,
+        `text.dsc_probe${n}_plant_name`,
+        `input_select.dsc_probe${n}_tent`,
+        `select.dsc_probe${n}_growth_stage`,
       ]);
       const end = new Date();
       const start = new Date(end.getTime() - 48 * 3600 * 1000);
@@ -353,7 +353,7 @@ function TentCockpitPage({ tent }: { tent: Exclude<TentId, "unassigned"> }) {
                 <div className="dsc-empty">No pots assigned — Apply to tent from a seat.</div>
               ) : (
                 seats.map((s) => {
-                  const db = Number(state(`sensor.dsc_pot${s.pot}_dryback_pct`));
+                  const db = Number(state(`sensor.dsc_probe${s.pot}_dryback_pct`));
                   const drybackWarn = Number.isFinite(db) && db > 45;
                   const trust = readPotTrust(s.pot, state);
                   const glow = !trust.blockNeedAct && drybackWarn;

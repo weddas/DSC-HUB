@@ -58,14 +58,14 @@ function BandChartDrawer({ target, onClose }: { target: BandChartTarget | null; 
   const cloneLeafVpd = useEntitySeries("sensor.dsc_clone_leaf_vpd_kpa", { hours, maxPoints: fetchPoints, withGhost: true });
   const rootT = useEntitySeries("sensor.dsc_coldest_root_zone_temp", { hours, maxPoints: fetchPoints, withGhost: true });
 
-  const potMoist1 = useEntitySeries("sensor.dsc_pot1_soil_moisture", { hours, maxPoints: fetchPoints, withGhost: true });
-  const potMoist2 = useEntitySeries("sensor.dsc_pot2_soil_moisture", { hours, maxPoints: fetchPoints, withGhost: true });
-  const potMoist3 = useEntitySeries("sensor.dsc_pot3_soil_moisture", { hours, maxPoints: fetchPoints, withGhost: true });
-  const potMoist4 = useEntitySeries("sensor.dsc_pot4_soil_moisture", { hours, maxPoints: fetchPoints, withGhost: true });
-  const potTemp1 = useEntitySeries("sensor.dsc_pot1_soil_temperature", { hours, maxPoints: fetchPoints, withGhost: true });
-  const potTemp2 = useEntitySeries("sensor.dsc_pot2_soil_temperature", { hours, maxPoints: fetchPoints, withGhost: true });
-  const potTemp3 = useEntitySeries("sensor.dsc_pot3_soil_temperature", { hours, maxPoints: fetchPoints, withGhost: true });
-  const potTemp4 = useEntitySeries("sensor.dsc_pot4_soil_temperature", { hours, maxPoints: fetchPoints, withGhost: true });
+  const potMoist1 = useEntitySeries("sensor.dsc_probe1_soil_moisture", { hours, maxPoints: fetchPoints, withGhost: true });
+  const potMoist2 = useEntitySeries("sensor.dsc_probe2_soil_moisture", { hours, maxPoints: fetchPoints, withGhost: true });
+  const potMoist3 = useEntitySeries("sensor.dsc_probe3_soil_moisture", { hours, maxPoints: fetchPoints, withGhost: true });
+  const potMoist4 = useEntitySeries("sensor.dsc_probe4_soil_moisture", { hours, maxPoints: fetchPoints, withGhost: true });
+  const potTemp1 = useEntitySeries("sensor.dsc_probe1_soil_temperature", { hours, maxPoints: fetchPoints, withGhost: true });
+  const potTemp2 = useEntitySeries("sensor.dsc_probe2_soil_temperature", { hours, maxPoints: fetchPoints, withGhost: true });
+  const potTemp3 = useEntitySeries("sensor.dsc_probe3_soil_temperature", { hours, maxPoints: fetchPoints, withGhost: true });
+  const potTemp4 = useEntitySeries("sensor.dsc_probe4_soil_temperature", { hours, maxPoints: fetchPoints, withGhost: true });
 
   const targetTemp = num("number.dsc_hub_target_temp", 25);
   const cloneTargetTemp = num("number.dsc_hub_clone_target_temp", 24);
