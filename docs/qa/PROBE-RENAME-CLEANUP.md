@@ -18,3 +18,5 @@
 8. [ ] Re-run REL-P1-1/2/3 relationship audit
 
 **OTA train order:** hub (providers) → pot2 canary → pot1 → control. Skip pot3/pot4 (out of kit).
+
+Ops SoT: [`../ops/ESPHOME-OTA-PI.md`](../ops/ESPHOME-OTA-PI.md) (compose DNS pin + Control ESPHome 2025.12) · [`../brain/PROBE-PLANT-MODEL.md`](../brain/PROBE-PLANT-MODEL.md) (kit + Expected chips).
