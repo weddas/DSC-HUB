@@ -8,9 +8,9 @@
 
 **After OTA soak (cleanup):**
 
-1. [x] HA Entity Registry: delete orphan `*_dsc_potN_*` after rediscovery (ops pass 2026-08-29)
+1. [x] HA/brain helper orphans: migrated `compose_helpers_json` `dsc_pot*` → `dsc_probe*` (2026-08-29); `hass_extras` pot orphan count **0**
 2. [x] Confirm no live code references `dsc_pot[1-4]` entity ids (archive OK) — rename pass `654d0f8`
-3. [ ] Inventory `extra.assigned_plant_id` populated; vacant = empty string
+3. [x] Inventory `extra.assigned_plant_id`: pot1=`pot1` (Amnesia Blue); pot2/3/4 vacant `""`
 4. [x] Probe NVS: plant_name no longer restores "Unassigned"; strip legacy growth_stage/strain UI from operator path (roster SoT)
 5. [ ] SoftAP docs labels Pot→Probe (IPs unchanged)
 6. [x] Dual resolve `dsc_pot_N` underscore form: gone
@@ -18,3 +18,5 @@
 8. [ ] Re-run REL-P1-1/2/3 relationship audit
 
 **OTA train order:** hub (providers) → pot2 canary → pot1 → control. Skip pot3/pot4 (out of kit).
+
+**Compose note:** brain env must use `DSC_POTN_API_KEY` (uppercase) — lowercase `dsc_potN_API_KEY` silently emptied encrypt keys (`19b5c4b`).
