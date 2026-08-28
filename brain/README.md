@@ -27,7 +27,7 @@ python -m dsc_brain.api
 docker compose -f services/dsc-hub/docker-compose.demo.yml up -d --build
 ```
 
-Demo mode never starts ESPHome, MQTT, Zigbee, or Sonoff ingest. Controls update an in-process physics simulator seeded from `data/demo-fleet-seed.json`. No LAN hosts or API keys are permitted when `DSC_DEMO_MODE=1`.
+Demo mode never starts ESPHome, MQTT, Zigbee, or Sonoff ingest. Controls update an in-process physics simulator seeded from `data/demo-fleet-seed.json`. No LAN hosts or API keys are permitted when `DSC_DEMO_MODE=1`. Runbook: [`docs/brain/DEMO-MODE.md`](../docs/brain/DEMO-MODE.md). Live Pi image builds also COPY that seed (`Dockerfile.prebuilt`); `deploy-brain.ps1` packs it into the upload tarball (tip `4817c47`).
 
 ## Layout
 

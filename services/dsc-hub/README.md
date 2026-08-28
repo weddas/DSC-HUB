@@ -39,16 +39,21 @@ Rebuild SPA after UI changes: `npm run build:spa` in `homeassistant/custom_compo
 
 ## Deploy brain to Pi (Windows → DSC-Brain AP)
 
-From repo root when Pi is on `10.42.0.1`:
+From repo root when Pi is on `10.42.0.1` (or studio LAN `.48`):
 
 ```powershell
 services/dsc-hub/pi/deploy-brain.ps1
+# NAS-safe when spa-dist hashes already match tip:
+services/dsc-hub/pi/deploy-brain.ps1 -SkipSpaBuild
 ```
 
-This builds the Pi SPA, uploads brain Python + static, then on the Pi:
-1. Tries `docker compose build brain` (needs Docker Hub / eth0)
-2. Falls back to hot-patch if offline
-3. Logs deploy mode: `image-build` or `hot-patch`
+This builds the Pi SPA, packs brain Python + **`data/demo-fleet-seed.json`** + static, then on the Pi:
+1. Tries `docker compose build brain` (`Dockerfile.prebuilt`; needs Docker Hub / eth0 **and** the seed file in `/opt/dsc-hub-repo/brain/data/`)
+2. Falls back to hot-patch if build fails (offline Hub, other COPY errors)
+3. Always `docker cp`s SPA static afterward (BuildKit may cache `COPY brain/static`)
+4. Logs deploy mode: `image-build` or `hot-patch`
+
+Tip **`4817c47`**: packer includes `demo-fleet-seed.json` and throws if missing on the **Y:** NAS tree — closes the prior silent hot-patch fallback when the seed was omitted. Studio packs the NAS tree; sync spa-dist C:→Y: before deploy. Full runbook: [`docs/ops/DSC-HUB-DOCKER.md`](../../docs/ops/DSC-HUB-DOCKER.md) · demo: [`docs/brain/DEMO-MODE.md`](../../docs/brain/DEMO-MODE.md).
 
 Verify after deploy:
 

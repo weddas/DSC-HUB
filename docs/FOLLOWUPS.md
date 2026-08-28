@@ -62,7 +62,7 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 | Live help 1.2.2 tips | **verified** | Dashboard `Help: Full Auto vs takeover` + Tabs vs workflows present 2026-08-28 |
 | Live help 1.2.3 | **pending verify** | Public tunnel 502; WP LAN `10.10.10.13` still down — publish blocked |
 | Pi SPA deploy polish | **done** | Hot-patched `index-Ciw7XTuZ.js` to `.48:8787` after syncing C:→Y: spa-dist (deploy packs NAS tree) |
-| Docker prebuilt seed missing | **noted** | `demo-fleet-seed.json` missing from Pi build context → compose build fails, hot-patch path used; synced onto Y: |
+| Docker prebuilt seed missing | **done** | Tip `4817c47` — `deploy-brain.ps1` packs `data/demo-fleet-seed.json` into brain tarball (throws if missing on Y:) |
 | Soft-cal Pi-native Got / session history | **deferred** | Needs brain/HA stack work — not this UX pass |
 | Pre-rebuild Climate Mode A + DSC-Probe | **next-plan** | Interrogate 2026-08-29: do **not** put full stages on `clone_mode`; Pi owns Follow Plants; probe/plant/assignment split — see `docs/superpowers/plans/2026-08-29-pre-rebuild-interrogate.md` |
 | Phase 0 z2m / Sankey soak | **deferred** | Operator/hardware gates — do not paper over |
