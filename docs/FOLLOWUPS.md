@@ -12,19 +12,21 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 
 ## 2026-08-28 — DSC Help PD site (polish / deferred)
 
-> **next-plan** — Live at `/dsc/help/*` (WordPress-PD). Contrast + a11y pass shipped (v1.1.x). Remaining editorial/design debt below.
+> **done (v1.2.0)** — Live at `/dsc/help/*` (WordPress-PD). Closure pass: measure hashes, FAQ `<details>`, workflow groups, mobile diagram fallbacks, subnav, fail-loud Theme Builder.
 
 | Item | Status | Suggestion |
 |------|--------|------------|
-| Workflow wall (11 long cards, no TOC) | deferred | Editorial pass: collapse workflows into accordion by tab (Live/Grow/Tune/Fleet), or sticky page TOC jumping to `#wf-N`. Cap first viewport to 3 “start here” workflows; rest behind `<details>`. |
-| SVG labels tiny on mobile | deferred | Per-diagram responsive redesign: raise SVG text to ≥12px at phone widths, or swap to stacked HTML cards below 480px. Prefer one shared `diagram_labels` scale helper. |
-| Measure deep-links all land on guide 1 | deferred | Add `#fan` / `#light` / `#soil` hashes; open matching card from FAQ/workflow links; or stack all guides without carousel. |
-| FAQ accordion a11y (aria-controls / details) | deferred | Prefer native `<details>`/`<summary>`, or wire `aria-controls` + body ids. |
-| Hardcoded “Eleven/Fourteen/Seven” counts | deferred | Derive from `len(dsc-help.json)` lists at publish time. |
+| Workflow wall (11 long cards, no TOC) | done | Grouped Live/Grow/Fleet with sticky TOC + first-open `<details>` per group (Tune empty until content lands). |
+| SVG labels tiny on mobile | done | SVG label floor raised; HTML `.pd-help-diagram-fallback` under 480px for architecture / cannalib / measures. |
+| Measure deep-links all land on guide 1 | done | Stacked guides with `#fan`/`#light`/…; FAQ + workflow linkify use hashes. |
+| FAQ accordion a11y (aria-controls / details) | done | Native `<details>`/`<summary>`; filter keeps empty-state. |
+| Hardcoded “Eleven/Fourteen/Seven” counts | done | Derived from `len(...)` via `_count_word` at publish time. |
 
 | Theme Builder help descendants | done | REST `pages?parent=` walk used; TB install 200 — PD DSC template includes help page ids 590–594. |
 | Hardcoded `-N.jpg` media URLs | done | `resolve_help_media()` queries `/wp/v2/media?search=dsc-help-{key}` and picks newest matching `source_url`. |
-| Dead Interactivity API / unused shortcodes | done | Plugin v1.1.1: vanilla fallback JS only; shortcodes mirror widgets without `data-wp-*`; `help-store.js` removed. |
+| Dead Interactivity API / unused shortcodes | done | Plugin v1.1.1→1.2.0: vanilla fallback JS only; shortcodes mirror widgets without `data-wp-*`; `help-store.js` removed. |
+
+> **follow-on (not blocking):** `tools/extract_onboarding_content.py` still omits `id`/`group` — regenerating content JSON from the extract tool would wipe those fields until the extractor is updated.
 
 ---
 

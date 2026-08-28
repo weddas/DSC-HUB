@@ -17,7 +17,7 @@ nested code modules fix	republish dashboard	VERIFIED	raw HTML in tab panels; pd-
 plugin zip install	push_dsc_help.py	VERIFIED	pd-dsc-help v1.0.3 upload 200 + activated
 content extraction	tools/extract_onboarding_content.py	VERIFIED	9 JPEGs + dsc-help.json 12 sections
 cannalib story accuracy	code review integrations.py	VERIFIED	remote API primary + local fallback; counts not merged
-theme builder DSC template	install_theme_builder	NOT VERIFIED	PD_DB_PASS access denied; manual TB update may be needed
+theme builder DSC template	install_theme_builder REST	VERIFIED	2026-08-28 closure: tb install 200; help ids 590-594 on PD DSC template; push fails loud on TB error
 wp_footer asset enqueue	page source	NOT VERIFIED	Divi path skips wp_footer hooks; mitigated by inline bundle
 wp interactivity module enqueue	page source	NOT VERIFIED	Using vanilla fallback JS instead; tabs/FAQ/measure work
 white content well contrast	browser computed styles	VERIFIED	Root cause: Divi dropped section background CSS; forced #0c1220/#121a2c via help.css
@@ -26,3 +26,10 @@ cannalib CTA fills	browser	VERIFIED	HTML pd-help-cta buttons (Divi button fills 
 dashboard tabs after contrast fix	browser	VERIFIED	Grow panel visible after click
 screenshot media HTTP	curl -I -5.jpg	VERIFIED	200; lazy-load pending in hidden panels is OK
 interrogate UI pass 1.1.0	republish + HTML verify	VERIFIED	list numbers, left align, tab a11y, init guard, CTA fills
+closure 1.2.0 plugin	push_dsc_help.py	VERIFIED	plugin activated; data-ver 1.2.0 on all help pages
+measure hash deep-links	browser /measure/#light + FAQ href	VERIFIED	Light guide in view; FAQ Fan CFM → /dsc/help/measure/#fan
+faq native details	CDP count details.pd-help-faq-item	VERIFIED	14 details; opens without JS; filter retained
+workflow groups	page source /dashboard/	VERIFIED	pd-help-wf-group + sticky TOC; 11 details grouped
+diagram mobile fallback	page source + CSS	VERIFIED	pd-help-diagram-fallback present; hide SVG ≤480px
+help sibling subnav	browser	VERIFIED	pd-help-subnav with aria-current on active page
+dynamic counts	hub/dashboard generators	VERIFIED	_count_word(len) for workflows/faq/measures
