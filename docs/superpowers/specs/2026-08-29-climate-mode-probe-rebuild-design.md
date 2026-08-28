@@ -1,9 +1,10 @@
 # Climate Mode + DSC-Probe rebuild — design
 
 **Date:** 2026-08-29  
-**Status:** **approved** (operator Act-On + full suggestion list + entity-rename override)  
+**Status:** **approved** — Act-on wave 1 shipped tip `516a6b3` / `9343be6` (Climate Mode policy + Follow Plants + SoftCal Raw honesty). Residual: probe rename / `assigned_plant_id`, SoftCal→ESP NVS, `cal_session` burst.  
 **Source:** `docs/superpowers/plans/2026-08-29-pre-rebuild-interrogate.md`  
-**Plan:** `docs/superpowers/plans/2026-08-29-climate-mode-probe-rebuild.md`
+**Plan:** `docs/superpowers/plans/2026-08-29-climate-mode-probe-rebuild.md`  
+**Operator SoT:** `docs/brain/CLIMATE-MODE-POLICY.md` · `docs/ops/SOFT-CAL.md` · `docs/brain/PROBE-PLANT-MODEL.md`
 
 ## Goal
 

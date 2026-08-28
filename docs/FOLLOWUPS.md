@@ -64,7 +64,7 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 | Pi SPA deploy polish | **done** | Hot-patched `index-Ciw7XTuZ.js` to `.48:8787` after syncing C:→Y: spa-dist (deploy packs NAS tree) |
 | Docker prebuilt seed missing | **noted** | `demo-fleet-seed.json` missing from Pi build context → compose build fails, hot-patch path used; synced onto Y: |
 | Soft-cal Pi-native Got / session history | **deferred** | Needs brain/HA stack work — not this UX pass |
-| Pre-rebuild Climate Mode A + DSC-Probe | **in progress** | Spec approved 2026-08-29 (entity rename in scope). Plan: `docs/superpowers/plans/2026-08-29-climate-mode-probe-rebuild.md` · Spec: `docs/superpowers/specs/2026-08-29-climate-mode-probe-rebuild-design.md` |
+| Pre-rebuild Climate Mode A + DSC-Probe | **partial** | Tip `516a6b3`/`9343be6`: policy taxonomy, Follow Plants Pi job, no grow_stage overwrite, 0xD1 v2 fail-closed, SoftCal Raw + dual_cal_stack gate, lab wet script fix. Residual: probe rename / `assigned_plant_id`, SoftCal→ESP NVS, cal_session burst. Docs: `docs/brain/CLIMATE-MODE-POLICY.md` · `docs/ops/SOFT-CAL.md` · co-flash `docs/qa/PANEL-HUB-COFLASH-CHECKLIST.md` |
 | Phase 0 z2m / Sankey soak | **deferred** | Operator/hardware gates — do not paper over |
 | F-001–F-008 hardware | **deferred** | Honest OOS UI already; no fake wiring |
 | Live tab demotion (Twin/Mission/Dash) | **done earlier** | `demoted: true` in `routes.ts` — keep |
