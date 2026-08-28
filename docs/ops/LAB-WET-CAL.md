@@ -22,6 +22,8 @@ Peer median aligns pots relative to each other; **lab wet** stamps one channel a
 
 ## Related
 
+- Two-point buffer procedure (helpers + Push): [`../LAB-WET-CAL.md`](../LAB-WET-CAL.md)
+- SoftCal honesty: [`SOFT-CAL.md`](SOFT-CAL.md)
 - [`CalibratePage.tsx`](../../homeassistant/custom_components/dsc_hub/frontend/src/pages/CalibratePage.tsx) — UI wizard
 - Package: `homeassistant/packages/dsc_v4_sensor_cal.yaml` (`dsc_pots_apply_lab_wet_to_esp`)
 - [`docs/FOLLOWUPS.md`](../FOLLOWUPS.md) — N-016 tracking
