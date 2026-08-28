@@ -11,7 +11,7 @@ docker compose -f services/dsc-hub/docker-compose.demo.yml up -d --build
 # → http://localhost:8788  (mode=demo in GET /health)
 ```
 
-Runbook: [`docs/brain/DEMO-MODE.md`](../../docs/brain/DEMO-MODE.md). Reverse-proxy the demo host to port **8788** with WebSocket support if embedding publicly. Do not put live API keys in demo env.
+Runbook: [`docs/brain/DEMO-MODE.md`](../../docs/brain/DEMO-MODE.md). Public host `brain-demo.plausible-deniability.net` → `:8788` (tunnel helpers under `scripts/add-brain-demo-tunnel*`). Demo responses allow PD iframe via CSP `frame-ancestors`. Do not put live API keys in demo env.
 
 Rebuild SPA after UI changes: `npm run build:spa` in `homeassistant/custom_components/dsc_hub/frontend`, then sync `spa-dist/` → `brain/static/`.
 

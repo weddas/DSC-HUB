@@ -2,7 +2,7 @@
 
 **Intent:** Show a **calendar-day 24h on/off strip** per tent on the Light page so operators see scheduled light hours vs stage Want — separate from duty/history strips.
 
-**Tip:** `e66f136` · QA walk [`docs/qa/LIGHT-AUDIT-7.4-live.md`](../qa/LIGHT-AUDIT-7.4-live.md)
+**Tip:** `e281644` · QA walk [`docs/qa/LIGHT-AUDIT-7.4-live.md`](../qa/LIGHT-AUDIT-7.4-live.md)
 
 ## Where it lives
 

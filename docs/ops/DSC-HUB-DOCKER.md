@@ -1,6 +1,6 @@
 # DSC-HUB Pi appliance — operations
 
-**Release:** DSC-HUB 7.0.0 — The Pi Release · tip **`e66f136`** (7.4 software WiP; surface still **7.3.0**).
+**Release:** DSC-HUB 7.0.0 — The Pi Release · tip **`e281644`** (7.4 software WiP; surface still **7.3.0**).
 
 ## Network
 
@@ -13,14 +13,15 @@ Fleet DHCP reservations live in `/etc/dsc-hub/dnsmasq.conf` (bootstrap template)
 
 ## Software-only demo (not the Pi fleet)
 
-Isolated Compose — **no** ESPHome / MQTT / Zigbee / LAN keys. Host port **8788**.
+Isolated Compose — **no** ESPHome / MQTT / Zigbee / LAN keys. Host port **8788**. Public hostname: `brain-demo.plausible-deniability.net` (Cloudflare tunnel → `:8788`).
 
 ```bash
 docker compose -f services/dsc-hub/docker-compose.demo.yml up -d --build
+# or on NAS: services/dsc-hub/pi/deploy-brain-demo-remote.sh
 curl -s http://localhost:8788/health   # mode=demo
 ```
 
-Runbook: [`docs/brain/DEMO-MODE.md`](../brain/DEMO-MODE.md). Never point demo inventory at private hosts or set `DSC_*_API_KEY`.
+Runbook: [`docs/brain/DEMO-MODE.md`](../brain/DEMO-MODE.md). Never point demo inventory at private hosts or set `DSC_*_API_KEY`. Soft calibrate / lab wet: [`LAB-WET-CAL.md`](LAB-WET-CAL.md).
 
 ## Deploy: SkipSpaBuild
 
@@ -28,7 +29,7 @@ Runbook: [`docs/brain/DEMO-MODE.md`](../brain/DEMO-MODE.md). Never point demo in
 
 After any SPA change that must land on Pi: build (or omit `-SkipSpaBuild`), commit matching `spa-dist` hashes when the tree tracks them, hard-refresh `:8787`.
 
-Current tip spa-dist entry: `index-DRfGbdor.js`.
+Current tip spa-dist entry: `index-CZEwOtDZ.js`.
 
 ## Cutover checklist
 
