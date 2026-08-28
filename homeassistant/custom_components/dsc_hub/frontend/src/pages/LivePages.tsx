@@ -24,7 +24,6 @@ import { useTentVitals } from "../hooks/useFleet";
 import { useEntitySeries } from "../hooks/useEntitySeries";
 import { useHeldReading } from "../hooks/useHeldReading";
 import { useChartHours } from "../hooks/useChartHours";
-import { useZoneFocus } from "../hooks/useZoneFocus";
 import { useInspector } from "../components/InspectorHost";
 import { MultiLineChart } from "../viz/charts";
 import { potsInTent, isPotInService, type TentId } from "../lib/seatModel";
@@ -104,15 +103,10 @@ function TentCockpitPage({ tent }: { tent: Exclude<TentId, "unassigned"> }) {
   const tentVitals = useTentVitals(tent);
   const navigate = useNavigate();
   const inspector = useInspector();
-  const { setFocus } = useZoneFocus();
   const [params, setParams] = useSearchParams();
   const [log, setLog] = useState<string[]>([]);
   const { hours, setHours, maxPoints } = useChartHours(6);
   void tick;
-
-  useEffect(() => {
-    setFocus(tent);
-  }, [tent, setFocus]);
 
   const seats = potsInTent(tent, state, entity);
   const seatKey = seats.map((s) => s.pot).join(",");

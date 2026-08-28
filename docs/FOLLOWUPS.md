@@ -37,6 +37,8 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 | useHass / useHeldReading lint regressions | **done** | hassRef + entityId hold clear restored during-render (not effect) |
 | Overview HelpTips placement | **done** | Moved beside climate bands (not hub status strip); Escape closes tip |
 | Live Climate / Light / SoftCal `?` tips | **done** | Full Auto vs takeover; photoperiod Want; soft cal ≠ lab stamp |
+| Root / Settings `?` tips | **done** | Got vs idle probe; In service honesty |
+| Tent cockpit `?tent=` URL fight | **done** | Removed `setFocus(tent)` from TentCockpit — App strip + write loop was sticky nav (N-LAYOUT-TENT-NAV residue) |
 | Conditional hook `usePanelOfflineMs` | **done** | Always call `useOfflineMs` |
 | Help `?` tips on PD hub | **done** | Want/Got/Need + colour honesty; dashboard Full Auto tips in 1.2.2 |
 | Overview missing `useFleet` import | **done** | Was a latent ReferenceError risk |

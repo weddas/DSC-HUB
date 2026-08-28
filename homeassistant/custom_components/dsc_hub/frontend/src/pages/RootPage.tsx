@@ -4,6 +4,7 @@ import { Button, Card, Kpi, PageHeader, StatusChip } from "../components/ui";
 import { SlideDrawer } from "../components/chrome";
 import { DutyStrip } from "../components/DutyStrip";
 import { SoilTestWizard } from "../components/SoilTestWizard";
+import { HelpTip } from "../components/HelpTip";
 import { useEntityBus } from "../hooks/useEntityBus";
 import { useEntitySeries } from "../hooks/useEntitySeries";
 import { useHeldReading } from "../hooks/useHeldReading";
@@ -71,6 +72,15 @@ export function LiveRootPage() {
         icon="root"
         title="Root"
         subtitle={`${svc.inService} of ${svc.total} pots in service. Pots without sensors show no data.`}
+        actions={
+          <HelpTip title="Got vs idle probe">
+            <p>
+              Pot cards show <b>Got</b> soil from the seated probe (or soft-cal offset). Idle mobile probes on the
+              thereabouts strip report their <em>home pot</em> last-known — not the plant you are testing.
+            </p>
+            <p>Example: probe A parked at POT2 home while you soil-test POT4 → thereabouts still reads POT2 moisture.</p>
+          </HelpTip>
+        }
       />
       <div className="dsc-grid">
         <div className="dsc-col-4">

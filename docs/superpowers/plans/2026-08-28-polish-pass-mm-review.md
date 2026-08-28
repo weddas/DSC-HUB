@@ -40,7 +40,7 @@
 
 ## Next coherent slices (keep goal open)
 
-1. More SPA desks with `?` tips + missing operator copy (Live / Settings / Soft-cal entry).
-2. Deslop / navigate patterns peer to CatalogResearch where still noisy.
-3. Focused React Doctor on remaining critical hooks in SPA `src/` only (exclude spa-dist).
+1. ~~More SPA desks with `?` tips~~ — Climate / Light / SoftCal / Root / Settings done; Grow/Compose next if capacity.
+2. ~~Tent cockpit `?tent=` sticky nav~~ — fixed: no `setFocus` write from cockpit (App still strips off Climate).
+3. Focused React Doctor on remaining critical hooks in SPA `src/` only (exclude spa-dist). Score ~40; ref-during-render on hass/hold is intentional post Act-on.
 4. Re-run adversarial review after the next UX slice, not after every chip tweak.

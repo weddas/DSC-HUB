@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Button, Icon, PageHeader, StatusChip, type IconName } from "../components/ui";
+import { HelpTip } from "../components/HelpTip";
 import { DecisionLayer } from "../components/DecisionLayer";
 import {
   apply_network,
@@ -384,7 +385,20 @@ export function SettingsPage() {
 
   return (
     <div className="dsc-page">
-      <PageHeader icon="settings" title="Settings" subtitle="DSC-HUB 7.3.0 — Pi appliance" />
+      <PageHeader
+        icon="settings"
+        title="Settings"
+        subtitle="DSC-HUB 7.3.0 — Pi appliance"
+        actions={
+          <HelpTip title="In service">
+            <p>
+              <b>In service</b> means the brain treats the seat as live kit. Out of service stays visible but never fakes
+              Got — grey quiet, not an alarm flood.
+            </p>
+            <p>Example: spare pot offline → uncheck In service → Root and cockpits stop counting it as a plant seat.</p>
+          </HelpTip>
+        }
+      />
 
       <section className="dsc-card">
         <h3>Fleet inventory</h3>

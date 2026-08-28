@@ -92,6 +92,16 @@ export function HassProvider({
     }, TICK_DEBOUNCE_MS);
   };
 
+  // Clear pending debounce on unmount (attach/revision bumps share bumpTick).
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+        debounceRef.current = null;
+      }
+    };
+  }, []);
+
   // First attach (or drop) of the hass object — not every parent identity replace.
   useEffect(() => {
     if (hassPresent) bumpTick();
