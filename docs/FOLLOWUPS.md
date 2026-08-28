@@ -90,6 +90,7 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 | Notes gated when no roster slot; fmtReading + stale Got chip parity | done |
 | Smoke tests: `npm run test:smoke` (fmtReading / formatApiError / stages) | done |
 | Soft ≠ probe home ≠ tent unassign ≠ plant retire (three layers) | done |
+| Pi Dockerfile.prebuilt COPY seed — deploy tar omitted `data/demo-fleet-seed.json` | done — `deploy-brain.ps1` packs seed into brain tarball |
 
 ---
 

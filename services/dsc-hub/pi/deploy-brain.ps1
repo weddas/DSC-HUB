@@ -73,7 +73,12 @@ $SpaTarPath = Join-Path $env:TEMP "dsc-spa-static.tgz"
 if (Test-Path $TarPath) { Remove-Item $TarPath -Force }
 if (Test-Path $SpaTarPath) { Remove-Item $SpaTarPath -Force }
 Push-Location $BrainDir
-tar -czf $TarPath dsc_brain requirements.txt
+# Include demo seed so Dockerfile.prebuilt COPY brain/data/demo-fleet-seed.json succeeds on Pi.
+$seedRel = "data\demo-fleet-seed.json"
+if (-not (Test-Path (Join-Path $BrainDir $seedRel))) {
+    throw "Missing brain/data/demo-fleet-seed.json - required for brain image build"
+}
+tar -czf $TarPath dsc_brain requirements.txt data/demo-fleet-seed.json
 Pop-Location
 Push-Location $SpaDist
 tar -czf $SpaTarPath .
