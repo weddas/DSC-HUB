@@ -1,13 +1,13 @@
 # Multi-model review — DSC polish pass
 
-**Lineage:** NAS polish on `origin/master` through `c1eaedd`, plus wave-2 honesty/nav cherry-pick (HubLink Age, ZoneFocus, Honesty overflow, CFM, tips, deslop).  
-**Live help:** 1.2.2 verified earlier; PD 1.2.3 on WordPress-PD `1064b0d` — **live publish/verify pending** (public tunnel intermittent 502/530).  
+**Lineage:** NAS polish on `origin/master` through `c1eaedd`, plus wave-2 honesty/nav (`8fc5e33`) and OOS/ESP cues (`adbd5c1`).  
+**Live help:** 1.2.2 verified earlier; PD 1.2.3 on WordPress-PD `1064b0d` — **live publish/verify pending** (public tunnel 530).  
 **Reviewers:** grok + composer (prior Act-on); wave-2 fix-first after SlideDrawer inert regression.
 
 ## Verdict
 
 **SHIP-WITH-NOTES** for SPA polish after wave-2 fix-first (SlideDrawer `.dsc-shell` inert reverted — drawer is inside the shell).  
-**Full `/goal` still not complete** — live PD help 1.2.3 unverified; hardware/Phase0 deferred.
+**Full `/goal` still not complete** — live PD help 1.2.3 unverified; Pi deploy blocked; hardware/Phase0 deferred.
 
 ## Consensus — Act-on (closed)
 
@@ -24,19 +24,23 @@
 | TentTargets stale Got as dash | **Fixed:** held values + `· held` |
 | CFM nameplate invisible to Honesty | **Fixed:** `resolveCfm` kind gap → Learning |
 | SlideDrawer shell inert | **Reverted** — would lock drawer inside `.dsc-shell` |
+| Silent OOS pots | **Fixed:** muted honesty gap → Root |
+| ESP vs Modbus conflated on Dash | **Fixed:** separate chip states + titles |
 
 ## Evidence gate (goal)
 
 | Gate | Status |
 |------|--------|
 | FOLLOWUPS addressed or re-triaged | Polish triage merged; hardware/Phase0 deferred |
-| Live help verified | 1.2.2 yes; **1.2.3 not live-verified** |
+| Live help verified | 1.2.2 yes; **1.2.3 not live-verified** (530) |
 | React health on touched SPA | Smoke ok; Doctor ~38–41 full-tree baseline; intentional render-time refs |
 | Multi-model review recorded | This file |
+| Pi SPA deploy | **Blocked** — `build:spa` ok; missing gitignored `.env`; Pi `:8787` timeout |
 | Full objective | **Not complete** |
 
 ## Next coherent slices (keep goal open)
 
 1. Publish + browser-verify PD help 1.2.3 when WP/tunnel is up.
-2. Focused React Doctor on remaining `src/` criticals (exclude spa-dist / intentional refs).
-3. Soft-cal Got history, Phase 0 z2m/Sankey, F-001–F-008: stay deferred — do not fake.
+2. Restore `services/dsc-hub/.env` from Notion credentials DB and deploy SPA when Pi `.48` is reachable.
+3. Focused React Doctor on remaining `src/` criticals (exclude spa-dist / intentional refs).
+4. Soft-cal Got history, Phase 0 z2m/Sankey, F-001–F-008: stay deferred — do not fake.
