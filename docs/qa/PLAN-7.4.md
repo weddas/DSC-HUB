@@ -1,8 +1,9 @@
 # DSC-HUB 7.4 plan
 
 **Baseline:** 7.3 software closed 2026-08-27 · [`AUDIT-CLOSURE-7.3.md`](AUDIT-CLOSURE-7.3.md)  
-**Git:** `432d205` on `origin/master` · Pi SPA `index-IOZwdpgy.js` on `.48`  
-**Surface target:** `7.4.0` (brain + SPA unified when pass ships)
+**Git:** `8fc5e33` on `origin/master` · Pi SPA `index-DL1EcjhX.js` (+ `calibrate-D1D5CnxU` · `tune-fleet-IPnSFs3d`) until HelpTip rebuild  
+**Surface target:** `7.4.0` (brain + SPA unified when pass ships)  
+**WiP runbooks on tip:** [`HELP-TIP.md`](../brain/HELP-TIP.md) · [`DEMO-MODE.md`](../brain/DEMO-MODE.md) · [`PHOTOPERIOD-TIMELINE.md`](../brain/PHOTOPERIOD-TIMELINE.md) · [`PLANT-SEAT.md`](../brain/PLANT-SEAT.md) · soft/lab layers [`LAB-WET-CAL.md`](../ops/LAB-WET-CAL.md)
 
 7.3 delivered graphs, twin, Lovelace retirement, compose wizard, per-tent photoperiod clocks, and icon motion. **7.4 is unblock → prove → polish → wire** — not another mega feature dump before the stick and soaks are green.
 
