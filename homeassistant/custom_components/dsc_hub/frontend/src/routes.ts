@@ -43,9 +43,9 @@ export const SECONDARY_TABS: Record<PrimarySection, TabRoute[]> = {
     { id: "clone", label: "2×4", subtitle: "Clone & veg", path: "/live/2x4", icon: "clone" },
     { id: "root", label: "Root", path: "/live/root", icon: "root" },
     { id: "light", label: "Light", path: "/live/light", icon: "lighting" },
-    { id: "twin", label: "Twin", path: "/live/twin", icon: "twin", demoted: true },
-    { id: "mission", label: "Mission", path: "/live/mission", icon: "mission", demoted: true },
-    { id: "dash", label: "Dash", path: "/ops/home", icon: "dash", demoted: true },
+    { id: "twin", label: "Twin", subtitle: "3D view", path: "/live/twin", icon: "twin", demoted: true },
+    { id: "mission", label: "Mission", subtitle: "Triage", path: "/live/mission", icon: "mission", demoted: true },
+    { id: "dash", label: "Dash", subtitle: "Legacy", path: "/ops/home", icon: "dash", demoted: true },
   ],
   grow: [
     { id: "compose", label: "Compose", path: "/grow/compose", icon: "compose" },

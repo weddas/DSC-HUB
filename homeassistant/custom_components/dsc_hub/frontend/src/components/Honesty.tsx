@@ -45,6 +45,16 @@ export function HonestyRail({ gaps }: { gaps?: HonestyGap[] }) {
             <StatusChip icon="alert" label={g.label} tone={g.tone === "bad" ? "bad" : "warn"} />
           </button>
         ))}
+        {list.length > 6 ? (
+          <button
+            type="button"
+            className="dsc-honesty-hit"
+            onClick={() => setOpen(list[6])}
+            title={`${list.length - 6} more honesty gap(s)`}
+          >
+            <StatusChip label={`+${list.length - 6}`} tone="muted" />
+          </button>
+        ) : null}
       </div>
       <DecisionLayer
         open={open != null}

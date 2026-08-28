@@ -72,10 +72,13 @@ export function collectHonestyGaps(hass: HassLike): HonestyGap[] {
   }
 
   if (hass.available && !hass.available("binary_sensor.dsc_hub_panel_link")) {
+    const panelLimited = hass.available("sensor.dsc_control_wifi_rssi");
     gaps.push({
       id: "panel-dark",
-      label: "Panel link down",
-      detail: "The control panel link is down — Mission shows how long it has been out.",
+      label: panelLimited ? "Panel limited link" : "Panel link down",
+      detail: panelLimited
+        ? "Panel Wi‑Fi RSSI is present but panel link is off — treat as limited, not a full outage."
+        : "The control panel link is down — Mission shows how long it has been out.",
       tone: "warn",
       href: "/fleet",
       cta: "Open Fleet",
@@ -183,21 +186,12 @@ export function collectHonestyGapsFromFleet(
   if (!fleet.hub.online) {
     gaps.push({
       id: "hub-link",
-      label: "Hub link down",
-      detail: "The hub is offline — readings are held at their last known values.",
+      label: "Hub offline",
+      detail: "The hub is offline — readings are held at their last known values. Reconnect snaps to live.",
       tone: "bad",
       href: "/fleet",
       cta: "Open Fleet",
       priority: 9,
-    });
-    gaps.push({
-      id: "hub-dark",
-      label: "Hub offline",
-      detail: "Showing last good vitals. Reconnect snaps to live.",
-      tone: "bad",
-      href: "/fleet",
-      cta: "Open Fleet",
-      priority: 10,
     });
   }
 
@@ -214,10 +208,13 @@ export function collectHonestyGapsFromFleet(
   }
 
   if (!fleet.panel.online) {
+    const panelLimited = hass?.available?.("sensor.dsc_control_wifi_rssi") === true;
     gaps.push({
       id: "panel-dark",
-      label: "Panel link down",
-      detail: "The control panel link is down — Mission shows how long it has been out.",
+      label: panelLimited ? "Panel limited link" : "Panel link down",
+      detail: panelLimited
+        ? "Panel Wi‑Fi is up but the panel link binary is off — Mission shows limited-link tone, not a full outage."
+        : "The control panel link is down — Mission shows how long it has been out.",
       tone: "warn",
       href: "/fleet",
       cta: "Open Fleet",

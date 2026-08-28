@@ -62,7 +62,7 @@ export function LiveTwinPage() {
       <PageHeader
         icon="twin"
         title="Twin"
-        subtitle="Cinematic digital twin — pick a pot to open Root seat."
+        subtitle="Cinematic digital twin — pick a pot to open its seat overlay."
         primaryAction={
           <Button teal onClick={() => navigate("/live/climate")}>
             Set Climate Want
@@ -72,6 +72,7 @@ export function LiveTwinPage() {
           <>
             <Button onClick={() => navigate("/live/4x8")}>4×8 cockpit</Button>
             <Button onClick={() => navigate("/live/2x4")}>2×4 cockpit</Button>
+            <Button onClick={() => navigate("/live/root")}>Open Root</Button>
             <Button primary onClick={() => navigate("/grow/compose")}>
               Compose plant
             </Button>
@@ -80,9 +81,9 @@ export function LiveTwinPage() {
       />
       <TwinViewport />
       <p className="dsc-honesty dsc-muted" style={{ marginTop: 0 }}>
-        Pick a pot in the twin to open its seat. Twin stays warm across Twin / 4×8 / 2×4.
-        Orbit the scene — it no longer snaps home on hass ticks. 4×8 fixture glow follows the
-        photoperiod window until a main lamp is wired.
+        Pick a pot in the twin to open its seat overlay (stay on Twin). Use Open Root for the Root desk.
+        Twin stays warm across Twin / 4×8 / 2×4. Orbit the scene — it no longer snaps home on hass ticks. 4×8 fixture
+        glow follows the photoperiod window until a main lamp is wired.
       </p>
       <div className="dsc-grid" style={{ marginTop: 12 }}>
         <div className="dsc-col-12">

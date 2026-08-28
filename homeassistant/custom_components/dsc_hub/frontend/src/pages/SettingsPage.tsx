@@ -542,14 +542,16 @@ export function SettingsPage() {
                           <input
                             type="number"
                             step="0.1"
+                            aria-label={`${ZONE_LABELS[zone]} temp offset °C`}
                             value={globalModifiers.temp_offset_c[zone]}
                             onChange={(e) => {
                               setModifiersDirty(true);
+                              const n = Number(e.target.value);
                               setGlobalModifiers({
                                 ...globalModifiers,
                                 temp_offset_c: {
                                   ...globalModifiers.temp_offset_c,
-                                  [zone]: Number(e.target.value),
+                                  [zone]: Number.isFinite(n) ? n : 0,
                                 },
                               });
                             }}
@@ -559,14 +561,16 @@ export function SettingsPage() {
                           <input
                             type="number"
                             step="0.5"
+                            aria-label={`${ZONE_LABELS[zone]} RH offset %`}
                             value={globalModifiers.rh_offset_pct[zone]}
                             onChange={(e) => {
                               setModifiersDirty(true);
+                              const n = Number(e.target.value);
                               setGlobalModifiers({
                                 ...globalModifiers,
                                 rh_offset_pct: {
                                   ...globalModifiers.rh_offset_pct,
-                                  [zone]: Number(e.target.value),
+                                  [zone]: Number.isFinite(n) ? n : 0,
                                 },
                               });
                             }}

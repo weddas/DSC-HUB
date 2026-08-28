@@ -3,6 +3,7 @@ import { Icon } from "./ui";
 import type { IconName } from "../icons";
 import { VesselGlyph } from "./VesselGlyph";
 import { DEFAULT_VESSEL, type VesselSpec } from "../lib/vesselSpec";
+import { isTopModalLayer, popModalLayer, pushModalLayer } from "../lib/modalLayer";
 
 export function IconButton({
   label,
@@ -129,13 +130,17 @@ export function SlideDrawer({
     const first = panel ? focusables(panel)[0] : null;
     first?.focus();
 
+    const layerId = pushModalLayer();
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
+        if (!isTopModalLayer(layerId)) return;
         e.preventDefault();
+        e.stopPropagation();
         onClose();
         return;
       }
       if (e.key !== "Tab" || !panel) return;
+      if (!isTopModalLayer(layerId)) return;
       const list = focusables(panel);
       if (!list.length) return;
       const firstEl = list[0];
@@ -148,9 +153,10 @@ export function SlideDrawer({
         firstEl.focus();
       }
     };
-    window.addEventListener("keydown", onKey);
+    window.addEventListener("keydown", onKey, true);
     return () => {
-      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("keydown", onKey, true);
+      popModalLayer(layerId);
       restoreRef.current?.focus?.();
     };
   }, [open, onClose]);
@@ -161,7 +167,19 @@ export function SlideDrawer({
       aria-hidden={!open}
       inert={!open ? true : undefined}
     >
-      <div className="dsc-drawer-scrim" onClick={onClose} />
+      <div
+        className="dsc-drawer-scrim"
+        role="button"
+        tabIndex={-1}
+        aria-label="Close drawer"
+        onClick={onClose}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onClose();
+          }
+        }}
+      />
       <aside
         ref={panelRef}
         className={`dsc-drawer-panel ${side}${wide ? " dsc-drawer-panel--wide" : ""}`}

@@ -1,28 +1,7 @@
 import { useEffect, useId, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Button, Icon } from "./ui";
-
-export function ResultChip({
-  label,
-  empty = false,
-  onClick,
-}: {
-  label: string;
-  empty?: boolean;
-  onClick?: () => void;
-}) {
-  const body = (
-    <span className={`dsc-result-chip${empty ? " is-empty" : ""}`}>
-      <span>{label}</span>
-    </span>
-  );
-  if (!onClick) return body;
-  return (
-    <button type="button" className="dsc-result-chip-hit" onClick={onClick}>
-      {body}
-    </button>
-  );
-}
+import { isTopModalLayer, popModalLayer, pushModalLayer } from "../lib/modalLayer";
 
 function focusables(root: HTMLElement): HTMLElement[] {
   return Array.from(
@@ -68,13 +47,17 @@ export function DecisionLayer({
     const first = panel ? focusables(panel)[0] : null;
     first?.focus();
 
+    const layerId = pushModalLayer();
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
+        if (!isTopModalLayer(layerId)) return;
         e.preventDefault();
+        e.stopPropagation();
         onDismiss();
         return;
       }
       if (e.key !== "Tab" || !panel) return;
+      if (!isTopModalLayer(layerId)) return;
       const list = focusables(panel);
       if (!list.length) return;
       const firstEl = list[0];
@@ -87,9 +70,10 @@ export function DecisionLayer({
         firstEl.focus();
       }
     };
-    window.addEventListener("keydown", onKey);
+    window.addEventListener("keydown", onKey, true);
     return () => {
-      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("keydown", onKey, true);
+      popModalLayer(layerId);
       if (shell instanceof HTMLElement) shell.inert = false;
       restoreRef.current?.focus?.();
     };
@@ -99,7 +83,19 @@ export function DecisionLayer({
 
   const layer = (
     <div className="dsc-decision-root is-open" role="presentation">
-      <div className="dsc-decision-scrim" onClick={onDismiss} />
+      <div
+        className="dsc-decision-scrim"
+        role="button"
+        tabIndex={-1}
+        aria-label="Dismiss"
+        onClick={onDismiss}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onDismiss();
+          }
+        }}
+      />
       <aside
         ref={panelRef}
         className="dsc-decision-panel"

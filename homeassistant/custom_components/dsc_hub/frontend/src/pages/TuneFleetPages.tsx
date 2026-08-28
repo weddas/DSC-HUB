@@ -81,6 +81,15 @@ export function TuneAnalyticsPage() {
         icon="analytics"
         title="Analytics"
         subtitle="In-service pots. Climate charts live on Climate; this is the root pack."
+        actions={
+          <HelpTip title="Analytics pack">
+            <p>
+              Analytics is the root moisture pack and a secondary tent T/RH glance — not the Climate Want desk. Worst Need
+              points at the pot that needs Root attention first.
+            </p>
+            <p>Example: P3 Need “dry” → open Root seat for P3, not another Climate setpoint rewrite.</p>
+          </HelpTip>
+        }
       />
       <div className="dsc-chip-row" style={{ marginBottom: 12 }}>
         <TimespanControl

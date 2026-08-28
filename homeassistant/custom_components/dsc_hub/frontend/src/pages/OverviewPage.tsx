@@ -67,8 +67,9 @@ export function OverviewPage() {
   const uptimeSec = num("sensor.dsc_hub_uptime", Number(fleet.hub.values.uptime) || 0);
 
   const openPot = (n: number) => {
+    // Stay on Overview — SeatOverlayHost opens the seat. Navigating to /live/root without
+    // ?pot= drops the selection when the overlay closes (U-09 stay/overlay).
     window.dispatchEvent(new CustomEvent("dsc-dash-select-pot", { detail: { pot: n } }));
-    navigate("/live/root");
   };
 
   return (

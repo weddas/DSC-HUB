@@ -27,6 +27,13 @@ function fmt(n: number, digits = 1): string {
   return Number.isFinite(n) ? n.toFixed(digits) : "—";
 }
 
+function railTone(tone: string): "ok" | "warn" | "bad" | "muted" {
+  if (tone === "critical") return "bad";
+  if (tone === "ok") return "ok";
+  if (tone === "muted") return "muted";
+  return "warn";
+}
+
 export function LiveLightPage() {
   const { state, num, entity } = useEntityBus();
   const navigate = useNavigate();
@@ -84,8 +91,6 @@ export function LiveLightPage() {
     false,
     rail2,
   );
-  const railTone = (tone: string): "ok" | "warn" | "bad" | "muted" =>
-    tone === "critical" ? "bad" : tone === "ok" ? "ok" : tone === "muted" ? "muted" : "warn";
   const heaterOn = state("switch.dsc_hub_heater_demand") === "on";
   const dump = num("sensor.dsc_vent_heat_dump_btu");
   const lightsBuying =

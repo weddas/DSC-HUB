@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { Button, Card, Kpi, PageHeader } from "../components/ui";
+import { HelpTip } from "../components/HelpTip";
 import { AirPathMap } from "../components/AirPathMap";
 import { HubLinkLine } from "../components/HubLinkLine";
 import { KitPulse } from "../components/KitPulse";
@@ -125,21 +126,30 @@ export function DashHomePage() {
 
   const openPot = (n: number) => {
     window.dispatchEvent(new CustomEvent("dsc-dash-select-pot", { detail: { pot: n } }));
-    navigate("/live/root");
   };
 
   return (
     <div className="dsc-page dsc-dash-home">
       <PageHeader
         icon="home"
-        title="Home"
-        subtitle="Everything running right now, at a glance."
+        title="Dash"
+        subtitle="Legacy Lovelace-parity dump — prefer Overview for daily ops."
         primaryAction={
-          <Button teal onClick={() => navigate("/live/twin")}>
-            Open Twin
+          <Button teal onClick={() => navigate("/live/overview")}>
+            Open Overview
           </Button>
         }
-        actions={<Button onClick={() => navigate("/live/climate")}>Climate</Button>}
+        actions={
+          <>
+            <HelpTip title="Dash vs Overview">
+              <p>
+                Dash is the demoted dump surface kept for parity. <b>Overview</b> is the Live home — alerts, bands,
+                duties.
+              </p>
+            </HelpTip>
+            <Button onClick={() => navigate("/live/climate")}>Climate</Button>
+          </>
+        }
       />
 
       <DashNowStrip
