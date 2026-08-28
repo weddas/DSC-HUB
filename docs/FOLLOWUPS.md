@@ -64,7 +64,7 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 | Pi SPA deploy polish | **done** | Hot-patched `index-Ciw7XTuZ.js` to `.48:8787` after syncing C:→Y: spa-dist (deploy packs NAS tree) |
 | Docker prebuilt seed missing | **noted** | `demo-fleet-seed.json` missing from Pi build context → compose build fails, hot-patch path used; synced onto Y: |
 | Soft-cal Pi-native Got / session history | **deferred** | Needs brain/HA stack work — not this UX pass |
-| Pre-rebuild Climate Mode A + DSC-Probe | **closing** | OTA live: hub, pot1, pot2, control @ 7.0.0.0. pot3/pot4 **retired from kit** (planned OOS). ESPHome DNS pin in compose. Control ESPHome 2025.12 LVGL fixes. Expected-stage chips labeled Expected. Cleanup + SPA deploy this pass. |
+| Pre-rebuild Climate Mode A + DSC-Probe | **closed ops** | OTA: hub/pot1/pot2/control @ 7.0.0.0. pot3/4 retired from kit. SPA Expected chips deployed. Helper orphans migrated. `DSC_POT*_API_KEY` compose casing fixed (`19b5c4b`). SoftCal API up (0 sessions). Climate Mode live: clone_mode **Follow Plants**. Remains: SoftAP docs labels, REL-P1 audit. |
 | Phase 0 z2m / Sankey soak | **deferred** | Operator/hardware gates — do not paper over |
 | F-001–F-008 hardware | **deferred** | Honest OOS UI already; no fake wiring. **F-003 pot3** + pot4: retired from kit 2026-08-29 (not chasing hardware). |
 | Live tab demotion (Twin/Mission/Dash) | **done earlier** | `demoted: true` in `routes.ts` — keep |
