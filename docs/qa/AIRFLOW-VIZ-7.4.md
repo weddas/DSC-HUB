@@ -1,8 +1,8 @@
 # Airflow visualization — 7.4 architecture
 
-**Status:** Design scaffold (implement Phase D2 after tent/photoperiod deploy)  
+**Status:** Scaffold **landed** (still on tip `8fc5e33`) — `AirflowParticleViz` + lazy `AirflowParticleScene` on Climate “Air path”. SVG `AirPathMap` is the live lung (unused `LungLoop` removed). Trim panel / full particle field / CFD hints still incomplete (Phase D2).  
 **Reference demo:** `y:\gemini-code-1787831771428.html`  
-**Replaces:** static `AirPathMap.tsx` SVG ribbons on Climate tab (keep CFM trust lines)
+**Coexists with:** static `AirPathMap.tsx` SVG ribbons + experimental `FlowSankey` (keep CFM trust lines)
 
 ---
 

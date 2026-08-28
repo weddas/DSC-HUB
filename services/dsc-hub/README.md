@@ -11,9 +11,9 @@ docker compose -f services/dsc-hub/docker-compose.demo.yml up -d --build
 # → http://localhost:8788  (mode=demo in GET /health)
 ```
 
-Reverse-proxy `brain-demo.plausible-deniability.net` to port **8788** with WebSocket support and CSP `frame-ancestors https://plausible-deniability.net`. WordPress embed lives at `/dsc/demo/` (`push_dsc_demo.py`).
+Reverse-proxy `brain-demo.plausible-deniability.net` to port **8788** with WebSocket support. Demo API sets CSP `frame-ancestors` for PD apex/www. WordPress embed lives at `/dsc/demo/`. Full runbook: [`docs/brain/DEMO-MODE.md`](../../docs/brain/DEMO-MODE.md). Tunnel helpers: `scripts/add-brain-demo-tunnel.py` / `add-brain-demo-tunnel-remote.sh` (store `CF_API_TOKEN` in Notion credentials — never commit).
 
-Rebuild SPA after UI changes: `npm run build:spa` in `homeassistant/custom_components/dsc_hub/frontend`, then sync `spa-dist/` → `brain/static/`.
+Rebuild SPA after UI changes: `npm run build:spa` in `homeassistant/custom_components/dsc_hub/frontend`, then sync `spa-dist/` → `brain/static/`. Tip spa-dist: `index-Ciw7XTuZ` (+ `tune-fleet-KoWKiPmD` · `calibrate-CzxOXAJy`).
 
 ## Quick start (Pi)
 
@@ -43,12 +43,17 @@ From repo root when Pi is on `10.42.0.1`:
 
 ```powershell
 services/dsc-hub/pi/deploy-brain.ps1
+# NAS-safe when spa-dist hashes already match tip:
+services/dsc-hub/pi/deploy-brain.ps1 -SkipSpaBuild
 ```
 
-This builds the Pi SPA, uploads brain Python + static, then on the Pi:
-1. Tries `docker compose build brain` (needs Docker Hub / eth0)
-2. Falls back to hot-patch if offline
-3. Logs deploy mode: `image-build` or `hot-patch`
+Default builds the Pi SPA, uploads brain Python + static, then on the Pi:
+1. Tries `docker compose build brain` (needs Docker Hub / eth0 **and** `brain/data/demo-fleet-seed.json` in the Pi repo tree)
+2. Falls back to hot-patch if build fails (common when the seed file was omitted from the upload tarball)
+3. Always `docker cp`s SPA static afterward (BuildKit may cache `COPY brain/static`)
+4. Logs deploy mode: `image-build` or `hot-patch`
+
+**Pitfalls:** `deploy-brain.ps1` packs only `dsc_brain` + `requirements.txt` — not `brain/data/demo-fleet-seed.json` — so `Dockerfile.prebuilt` COPY often fails and deploy uses hot-patch. Studio packs the **Y:** NAS tree; sync spa-dist C:→Y: before deploy. Full runbook: [`docs/ops/DSC-HUB-DOCKER.md`](../../docs/ops/DSC-HUB-DOCKER.md).
 
 Verify after deploy:
 
