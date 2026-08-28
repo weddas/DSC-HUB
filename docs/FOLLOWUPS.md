@@ -12,7 +12,7 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 
 ## 2026-08-28 — DSC Help PD site (polish / deferred)
 
-> **done (v1.2.0)** — Live at `/dsc/help/*` (WordPress-PD). Closure pass: measure hashes, FAQ `<details>`, workflow groups, mobile diagram fallbacks, subnav, fail-loud Theme Builder.
+> **done (v1.2.0)** — Live at `/dsc/help/*` (WordPress-PD). Closure pass: measure hashes, FAQ `<details>`, workflow groups, mobile diagram fallbacks, subnav, fail-loud Theme Builder. Tip `8208461` adds SPA `HelpTip` (Overview Want/Got/Need + colour) + HubLinkLine Age format (source); Pi runbooks: [`docs/brain/WEBUI.md`](brain/WEBUI.md) · [`docs/brain/HELP-TIP.md`](brain/HELP-TIP.md).
 
 | Item | Status | Suggestion |
 |------|--------|------------|
@@ -41,6 +41,24 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 | Phase 0 z2m / Sankey soak | **deferred** | Operator/hardware gates — do not paper over |
 | F-001–F-008 hardware | **deferred** | Honest OOS UI already; no fake wiring |
 | Live tab demotion (Twin/Mission/Dash) | **done earlier** | `demoted: true` in `routes.ts` — keep |
+
+---
+
+## 2026-08-28 — HubLinkLine Age + SPA HelpTip
+
+> **done (source)** — tips `39d7f88` → `8208461`. Docs: [`docs/brain/HELP-TIP.md`](brain/HELP-TIP.md).
+
+| Item | Status |
+|------|--------|
+| Age/Beat via `fmtUptimeSeconds` (prefer HA age entities, else fleet seconds) | done |
+| Inline `?` `HelpTip` (`<details>`, no JS) on HubLinkLine | done |
+| Overview hub `Up` via `fmtUptimeSeconds` (not hour-only) | done — tip `8208461` |
+| Want/Got + Colour honesty Overview tips | done — tip `8208461` |
+| Conditional hooks (`usePanelOfflineMs`, held-reading id reset, hassRef) | done — tip `8208461` |
+| Overview `useFleet` import (latent ReferenceError) | done — tip `8208461` |
+| Rebuild spa-dist so operators see HelpTip / Age format | next-plan — committed hash still `index-DL1EcjhX` / `tune-fleet-IPnSFs3d` |
+| Full Auto Overview tip | next-plan — PD Help 1.2.2 has it; SPA not yet |
+| Mission/Dash Beat labels outside HubLinkLine still raw in places | deferred |
 
 ---
 
@@ -94,7 +112,7 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 | D | UX polish: compose, photoperiod, icons (after ~1 week live) |
 | E | Version 7.4.0 + AUDIT-CLOSURE-7.4 |
 
-**Git baseline:** `432d205` pushed; Pi SPA `index-IOZwdpgy.js`.
+**Git baseline:** `8208461` on `origin/master`; Pi SPA `index-DL1EcjhX.js` (+ calibrate/tune-fleet chunks) until HelpTip rebuild. Runbooks: [`docs/brain/HELP-TIP.md`](brain/HELP-TIP.md) · [`docs/brain/DEMO-MODE.md`](brain/DEMO-MODE.md) · [`docs/ops/LAB-WET-CAL.md`](ops/LAB-WET-CAL.md) · [`docs/brain/PLANT-SEAT.md`](brain/PLANT-SEAT.md).
 
 ---
 
@@ -2998,7 +3016,7 @@ Already logged (do not duplicate work): **WF-P0-1** Overview P1 moisture hole; *
 
 | ID | Item | Notes |
 |---|---|---|
-| DA-P1-1 | Hub link Age is a raw float (`20402.7890625`) | `HubLinkLine.tsx` `String(uptime)` — format with `fmtDurationMs` / hours. |
+| DA-P1-1 | Hub link Age is a raw float (`20402.7890625`) | **done** tip `39d7f88`/`8208461` — `HubLinkLine` + Overview `fmtUptimeSeconds`; see [`docs/brain/HELP-TIP.md`](brain/HELP-TIP.md). SPA rebuild still needed. |
 | DA-P1-2 | Seat moisture IEEE leftover (`Got M 21.80000114440918`) | `seatModel.buildPlantSeat` + Mission / 2×4 chips. Format to 1 decimal. Pass 1 claimed no runoff. |
 | DA-P1-3 | Light hours gauge wears `is-ok` at 0.00 h | `LightPage.tsx` ArcGauge. Collides with Overview “green = in band.” Use teal-muted progress, not in-band green. |
 | DA-P1-4 | Live IA: Overview ≈ Dash ≈ Mission | `routes.ts` — nine Live tabs. Kill or demote Dash/Mission before more polish. |
