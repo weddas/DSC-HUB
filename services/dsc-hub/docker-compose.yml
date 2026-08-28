@@ -19,10 +19,11 @@ services:
       DSC_SURFACE_VERSION: ${DSC_SURFACE_VERSION:-7.3.0}
       DSC_HUB_API_KEY: ${DSC_HUB_API_KEY:-}
       DSC_CONTROL_API_KEY: ${DSC_CONTROL_API_KEY:-}
-      dsc_pot1_API_KEY: ${dsc_pot1_API_KEY:-}
-      dsc_pot2_API_KEY: ${dsc_pot2_API_KEY:-}
-      dsc_pot3_API_KEY: ${dsc_pot3_API_KEY:-}
-      dsc_pot4_API_KEY: ${dsc_pot4_API_KEY:-}
+      # Must match .env + esphome_client `DSC_{SEAT}_API_KEY` (uppercase).
+      DSC_POT1_API_KEY: ${DSC_POT1_API_KEY:-}
+      DSC_POT2_API_KEY: ${DSC_POT2_API_KEY:-}
+      DSC_POT3_API_KEY: ${DSC_POT3_API_KEY:-}
+      DSC_POT4_API_KEY: ${DSC_POT4_API_KEY:-}
       DSC_HEATER_API_KEY: ${DSC_HEATER_API_KEY:-}
       DSC_HEATMAT_API_KEY: ${DSC_HEATMAT_API_KEY:-}
       DSC_HUMIDIFIER_API_KEY: ${DSC_HUMIDIFIER_API_KEY:-}
