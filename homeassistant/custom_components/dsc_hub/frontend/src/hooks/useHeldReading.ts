@@ -34,10 +34,13 @@ export function useHeldReading(entityId: string): HeldReading {
   const prevId = useRef(entityId);
   const [, bump] = useState(0);
 
-  if (prevId.current !== entityId) {
-    prevId.current = entityId;
-    hold.current = null;
-  }
+  useEffect(() => {
+    if (prevId.current !== entityId) {
+      prevId.current = entityId;
+      hold.current = null;
+      bump((n) => n + 1);
+    }
+  }, [entityId]);
 
   const fleetVal = source === "pi" ? fleetLiveNumber(entityId, fleet) : null;
   const fleetOk = source === "pi" ? fleetEntityAvailable(entityId, fleet) : false;
@@ -108,8 +111,9 @@ export function useBeatOfflineMs(): number | null {
 export function usePanelOfflineMs(): number | null {
   const fleet = useFleet();
   const source = useFleetSource();
+  const fromEntity = useOfflineMs("binary_sensor.dsc_hub_panel_link");
   if (source === "pi" && !fleet.panel.online && fleet.panel.last_seen) {
     return Date.now() - fleet.panel.last_seen * 1000;
   }
-  return useOfflineMs("binary_sensor.dsc_hub_panel_link");
+  return fromEntity;
 }

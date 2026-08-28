@@ -28,6 +28,20 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 
 > **follow-on (not blocking):** ~~`tools/extract_onboarding_content.py` still omits `id`/`group`~~ **done 2026-08-28** — extractor emits `group` + `id`; Compose-draft WIP copy aligned with `clear_build_helpers()`.
 
+### Polish-pass triage (2026-08-28 evening)
+
+| Item | Status | Notes |
+|------|--------|-------|
+| HubLinkLine raw float Age | **done** | `fmtUptimeSeconds` + `?` tip (`39d7f88` + follow-up) |
+| Conditional hook `usePanelOfflineMs` | **done** | Always call `useOfflineMs` |
+| Help `?` tips on PD hub | **done** | Want/Got/Need + colour honesty; dashboard Full Auto tips in 1.2.2 |
+| Overview missing `useFleet` import | **done** | Was a latent ReferenceError risk |
+| React Doctor score 38 | **noted** | Full-tree baseline; spa-dist noise; fix critical hooks first not mass-memo |
+| Soft-cal Pi-native Got / session history | **deferred** | Needs brain/HA stack work — not this UX pass |
+| Phase 0 z2m / Sankey soak | **deferred** | Operator/hardware gates — do not paper over |
+| F-001–F-008 hardware | **deferred** | Honest OOS UI already; no fake wiring |
+| Live tab demotion (Twin/Mission/Dash) | **done earlier** | `demoted: true` in `routes.ts` — keep |
+
 ---
 
 ## 2026-08-28 — Probe unassign + plant full edit/delete

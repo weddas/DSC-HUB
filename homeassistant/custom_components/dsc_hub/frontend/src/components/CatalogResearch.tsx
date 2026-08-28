@@ -163,7 +163,7 @@ export function CatalogResearch() {
     } else {
       applyCatalogPick(kind, item, callService, state);
     }
-    navigate(kind === "medium" || kind === "nutrient" ? "/grow/compose" : "/grow/compose");
+    navigate("/grow/compose");
   };
 
   return (

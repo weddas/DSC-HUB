@@ -12,11 +12,14 @@ import {
 import { TentLightClockStrip } from "../components/TentLightClock";
 import { BAND_CHART_TITLES, useBandChart, type BandChartKind } from "../components/BandChartHost";
 import { useEntityBus } from "../hooks/useEntityBus";
+import { useFleet } from "../hooks/useFleet";
 import { useHeldReading } from "../hooks/useHeldReading";
+import { HelpTip } from "../components/HelpTip";
 import { useAlertSnooze } from "../hooks/useAlertSnooze";
 import { useSettledAvailability } from "../hooks/useSettledAvailability";
 import { alertRoute, playbookFor } from "../lib/alertPlaybook";
 import type { RosterSlot } from "../lib/seatModel";
+import { fmtUptimeSeconds } from "../lib/formatDuration";
 
 /** Operational overview — critical alerts, area vitals, duties, root strip, grow log. */
 export function OverviewPage() {
@@ -92,9 +95,23 @@ export function OverviewPage() {
           onClick={() => navigate("/fleet")}
         />
         <StatusChip
-          label={Number.isFinite(uptimeSec) && uptimeSec > 0 ? `Up ${Math.round(uptimeSec / 3600)}h` : "Hub uptime"}
+          label={
+            Number.isFinite(uptimeSec) && uptimeSec > 0
+              ? `Up ${fmtUptimeSeconds(uptimeSec)}`
+              : "Hub uptime"
+          }
           tone={hubOnline ? "muted" : "bad"}
         />
+        <HelpTip title="Want · Got · Need">
+          <p>
+            <b>Want</b> is the target. <b>Got</b> is measured. <b>Need</b> is the gap the brain proposes.
+          </p>
+          <p>Example: Want 55% RH, Got 62% → Need a drier path — not a guessed setpoint rewrite.</p>
+        </HelpTip>
+        <HelpTip title="Colour honesty">
+          <p>Teal/green = in band. Amber = drifting. Red = out of band. Grey = no data or out of service.</p>
+          <p>Out of service kit stays quiet on purpose — missing hardware is not an alarm.</p>
+        </HelpTip>
       </div>
 
       {faultIds.length > 0 || alerts > 0 ? (

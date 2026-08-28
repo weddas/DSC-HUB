@@ -79,9 +79,12 @@ export function HassProvider({
   const [tick, setTick] = useState(0);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hassRef = useRef(hass);
-  hassRef.current = hass;
   const conn = hass?.connection;
   const hassPresent = !!hass;
+
+  useEffect(() => {
+    hassRef.current = hass;
+  }, [hass]);
 
   const bumpTick = () => {
     if (debounceRef.current) return;
