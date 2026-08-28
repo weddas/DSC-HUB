@@ -5,6 +5,7 @@ import { CatalogResearch } from "../components/CatalogResearch";
 import { DecisionLayer } from "../components/DecisionLayer";
 import { SlideDrawer } from "../components/chrome";
 import { Button, Card, PageHeader, StatusChip } from "../components/ui";
+import { HelpTip } from "../components/HelpTip";
 import { useEntityBus } from "../hooks/useEntityBus";
 import { useFleetActions } from "../hooks/useFleetActions";
 import { PlantSeatPanel } from "../components/PlantSeatPanel";
@@ -35,9 +36,18 @@ export function GrowComposePage() {
           </Button>
         }
         actions={
-          <Button primary onClick={() => navigate("/grow/research")}>
-            Browse Catalog
-          </Button>
+          <>
+            <HelpTip title="Compose draft">
+              <p>
+                Compose builds a draft in helpers, then one confirm commits the plant. Retiring a plant clears the draft
+                helpers so the next compose starts empty — not half a leftover WIP.
+              </p>
+              <p>Example: delete plant on POT3 → reopen Compose → strain/pot steps should be blank, ready for the next seat.</p>
+            </HelpTip>
+            <Button primary onClick={() => navigate("/grow/research")}>
+              Browse Catalog
+            </Button>
+          </>
         }
       />
       <p className="dsc-honesty" style={{ marginTop: 0 }}>
@@ -127,6 +137,15 @@ export function GrowRosterPage() {
           <Link to="/grow/compose">
             <Button primary>Use in Compose</Button>
           </Link>
+        }
+        actions={
+          <HelpTip title="Edit vs Delete">
+            <p>
+              <b>Edit</b> opens the seat drawer for identity, tent, and notes. <b>Delete</b> retires the plant and clears
+              the pot slot — Compose draft helpers clear too.
+            </p>
+            <p>Out-of-service pots stay on Root grey; they will not appear as live roster seats until In service is back on.</p>
+          </HelpTip>
         }
       />
       <div style={{ marginBottom: 14 }}>
