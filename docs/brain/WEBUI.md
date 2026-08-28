@@ -1,40 +1,61 @@
-# Local webserver UI spec
+# Local webserver UI (Pi SPA)
 
-**In one line:** Thin client of the brain API — presentation, advanced control, updates.
+**In one line:** Thin client of the brain API — presentation, advanced control, updates. Brain remains truth.
 
 Notion: [Local webserver UI](https://app.notion.com/p/3b52b4cda37081c19048e794d4bdf819)
 
-## Surfaces (MVP)
+## Tip (`e281644` — 7.4 WiP)
 
-| Route | Job |
+| | |
 |---|---|
-| `/` | Ops overview (vitals, ladder summary, alerts) |
-| `/plant` | Build a Plant + roster + catalog browse (research) |
+| Surface | Still **7.3.0** until Phase E `7.4.0` |
+| SPA bundle (spa-dist) | `index-CZEwOtDZ` (+ `tune-fleet-DOCPaGha` · `calibrate-RKpt74TC` · twin-three · AirflowParticleScene) |
+| Default landing | `#/live/overview` |
+| Demo | Same routes; banner when `GET /health` → `mode=demo` — [`DEMO-MODE.md`](DEMO-MODE.md) |
+| Public demo | `brain-demo.plausible-deniability.net` (iframe CSP for PD) |
 
-> **HA wireframe (N-086):** Home Assistant `/dsc-hub-pro/catalog` is the interim
-> research browser over `/local/dsc-catalog/*.json`. The durable web `/plant`
-> browse mode will call brain catalog APIs — reuse section jobs/labels, not HA
-> helper coupling ([`docs/HA-SCAFFOLD.md`](../HA-SCAFFOLD.md)).
-| `/advanced` | Profiles, cal, overrides (API calls only) |
-| `/updates` | Brain version, catalog reload, firmware flash checklist |
+## Primary sections
 
-## API dependency
+| Section | Default path | Job |
+|---------|--------------|-----|
+| Live | `/live/overview` | Fleet vitals, climate, tents, root, light, demoted twin/mission/dash |
+| Grow | `/grow/roster` | Compose (Plant Wizard), research, roster |
+| Tune | `/tune/learning` | Learning + analytics |
+| Fleet | `/fleet` | Overview, calibrate, settings |
 
-All reads/writes go through brain HTTP API (`brain/dsc_brain/api.py`):
+Secondary Live tabs demote Twin / Mission / Dash (`demoted: true` in `routes.ts`) so Overview + Climate + tents stay primary.
 
-- `GET /health`
-- `GET /catalogs/strains?q=`
-- `GET /want/{strain_id}`
-- `POST /roster/...`
-- `GET /decision/last` (dry-run proposals)
-- `POST /admin/reload-catalogs`
+## 7.4 SPA surfaces (software)
 
-## Non-goals (v1)
+| Surface | Notes |
+|---------|-------|
+| Soft calibrate | Calibrate Soil — tap-water → HA Got offsets — [`LAB-WET-CAL.md`](../ops/LAB-WET-CAL.md) |
+| Photoperiod timeline | Light page 24h strips — [`PHOTOPERIOD-TIMELINE.md`](PHOTOPERIOD-TIMELINE.md) |
+| Airflow particle viz | Climate “Air path” lazy R3F scaffold — [`AIRFLOW-VIZ-7.4.md`](../qa/AIRFLOW-VIZ-7.4.md); SVG `AirPathMap` + FlowSankey still present |
+| Demo banner | `DemoBanner` polls `/health` (duplicate import/render still deferred polish) |
+| Rehome checklist / DLI / grow-log filter | UX polish on tip; no separate runbook yet |
 
-- Three.js cinematic Dash parity
-- Embedding fat strain dumps in the browser
-- Requiring Home Assistant
+## API dependency (canonical)
+
+Reads/writes go through brain HTTP (`brain/dsc_brain/api.py`):
+
+- `GET /health` · `GET /fleet` · `GET /fleet/computed` · `WS /ws/fleet`
+- `POST /control/service` · `POST /control/demand`
+- Settings, catalogs, history, grow-log, decision tick
+
+In demo mode, hardware/network apply endpoints return **403** — see [`DEMO-MODE.md`](DEMO-MODE.md). Soft calibrate writes go through `input_number.set_value` on the HA-backed Got stack (same control service path).
 
 ## Host
 
-Pi 4 4GB LAN (`http://dsc-brain.local` or IP). Static UI can ship later; API stub is first.
+- Live Pi: `http://dsc-brain.local:8787` or `10.42.0.1:8787` / studio `.48`
+- Public demo compose: host **8788** → container 8787 · public hostname above
+
+## Non-goals
+
+- Browser owning catalog DB or Want/Need math as SoT
+- Reviving Lovelace YAML as product UI ([archive](../archive/lovelace-7.3/))
+
+## Related
+
+- [`DEMO-MODE.md`](DEMO-MODE.md) · [`DECISION_LOOP.md`](DECISION_LOOP.md) · [`../DSC-BRAIN.md`](../DSC-BRAIN.md)
+- Deploy / hash sync: [`../ops/DSC-HUB-DOCKER.md`](../ops/DSC-HUB-DOCKER.md)

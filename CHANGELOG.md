@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+### 7.4 software WiP (`e281644` — not tagged)
+
+- **Demo mode** — `DSC_DEMO_MODE` software simulation + `docker-compose.demo.yml` (host `:8788`); fail-closed LAN/API-key scrub; PD iframe CSP + `brain-demo.plausible-deniability.net` tunnel helpers; [`docs/brain/DEMO-MODE.md`](docs/brain/DEMO-MODE.md).
+- **Soft calibrate** — tap-water / after-water wizard writes HA Got offsets (`input_number.dsc_potN_offset_*`); [`docs/ops/LAB-WET-CAL.md`](docs/ops/LAB-WET-CAL.md).
+- **Light** — `PhotoperiodTimeline` 24h strips + split CropScheduler; [`docs/brain/PHOTOPERIOD-TIMELINE.md`](docs/brain/PHOTOPERIOD-TIMELINE.md).
+- **Climate** — `AirflowParticleViz` R3F scaffold (SVG map + FlowSankey retained).
+- **Deploy** — `deploy-brain.ps1 -SkipSpaBuild` for NAS-safe redeploys.
+- **SPA** — `index-CZEwOtDZ` (+ tune-fleet / calibrate SoftCal / twin-three / AirflowParticleScene).
+- Surface / brain package version remain **7.3.0** until Phase E ([`PLAN-7.4.md`](docs/qa/PLAN-7.4.md)).
+
 ## Pi appliance — **v7.3.0** (2026-08-27)
 
 Full software closure: version truth, graph QoL, flow Sankey (air/heat/humidity), lab wet cal, R3F Twin on Pi SPA, Lovelace YAML retired. See [`docs/qa/AUDIT-CLOSURE-7.3.md`](docs/qa/AUDIT-CLOSURE-7.3.md).

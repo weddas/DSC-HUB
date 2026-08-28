@@ -1,5 +1,11 @@
 # DSC-HUB releases
 
+## Unreleased — 7.4 software WiP (`e281644`)
+
+Software-only demo mode (public PD embed host + CSP), soft calibrate HA offsets, PhotoperiodTimeline, airflow viz scaffold, `SkipSpaBuild`, SPA `index-CZEwOtDZ`. Surface/brain still **7.3.0** until Phase E. Demo: [`docs/brain/DEMO-MODE.md`](docs/brain/DEMO-MODE.md) · cal [`docs/ops/LAB-WET-CAL.md`](docs/ops/LAB-WET-CAL.md) · plan [`docs/qa/PLAN-7.4.md`](docs/qa/PLAN-7.4.md).
+
+---
+
 ## Pi appliance — **v7.3.0** (full software closure)
 
 | | |
