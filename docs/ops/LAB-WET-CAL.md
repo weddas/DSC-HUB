@@ -4,7 +4,7 @@ Peer median aligns pots relative to each other; **lab wet** stamps one channel a
 
 ## Procedure
 
-1. Mark the pot **out of grow service** if it is a probe station — use Settings inventory, not ad-hoc YAML.
+1. Mark the pot **out of grow service** if it is a probe station — use Settings inventory, not ad-hoc YAML. To free idle home without demoting the station, Settings → Probe stations → **Unassign pot**; to demote entirely use **Remove probe role** (`clear_role`). See [`../brain/PLANT-SEAT.md`](../brain/PLANT-SEAT.md).
 2. Remove the soil probe; rinse with distilled water.
 3. Immerse in a documented buffer (typical mid-range moisture reference for your probe family).
 4. On Pi SPA → **Tune → Calibrate → Soil**, run **Lab wet calibration wizard** with pot id and buffer %.

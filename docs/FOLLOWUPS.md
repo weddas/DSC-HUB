@@ -30,7 +30,7 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 
 ## 2026-08-28 — Probe unassign + plant full edit/delete
 
-> **done (UI + API)** — Settings probe stations · Grow Roster / Plant Seat · interrogate fixes.
+> **done (UI + API + docs)** — Settings probe stations · Grow Roster / Plant Seat · interrogate fixes · [`docs/brain/PLANT-SEAT.md`](brain/PLANT-SEAT.md).
 
 | Item | Status |
 |------|--------|
@@ -47,6 +47,7 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 | Notes gated when no roster slot; fmtReading + stale Got chip parity | done |
 | Smoke tests: `npm run test:smoke` (fmtReading / formatApiError / stages) | done |
 | Soft ≠ probe home ≠ tent unassign ≠ plant retire (three layers) | done |
+| Engineering runbook PLANT-SEAT + PLANT-WIZARD + WEBUI tip pointers | done |
 
 ---
 
