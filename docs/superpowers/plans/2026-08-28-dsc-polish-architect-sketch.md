@@ -16,10 +16,10 @@ Maintainer regenerates dsc-help.json → id/group survive extract tool
 
 | Surface | Contract |
 |---------|----------|
-| `help_tip(summary, body_html)` | Native `<details>` `?` callout; no JS |
-| `HubLinkLine` | Ages via `fmtUptimeSeconds` only — never raw floats |
-| `extract_onboarding_content.CONTENT` | Always emit `workflows[].group` + `measures[].id` |
-| SPA `HelpTip` (next) | Mirror PD tip pattern for Want/Got/Full Auto on Overview |
+| `help_tip(summary, body_html)` | Native `<details>` `?` callout; no JS (PD / WordPress) |
+| `HubLinkLine` | Ages via `fmtUptimeSeconds` only — never raw floats (**done** tip `39d7f88`) |
+| `extract_onboarding_content.CONTENT` | Always emit `workflows[].group` + `measures[].id` (**done**) |
+| SPA `HelpTip` | Shipped on HubLinkLine — [`docs/brain/HELP-TIP.md`](../../brain/HELP-TIP.md); Want/Got/Full Auto tips still **next** |
 
 ## Synthesis decision
 
