@@ -11,6 +11,10 @@
 
 Fleet DHCP reservations live in `/etc/dsc-hub/dnsmasq.conf` (bootstrap template). After flash, add device MACs from Settings inventory.
 
+## ESPHome compile / OTA
+
+Brain queues `docker exec dsc-hub-esphome esphome compile|run`. Compile needs Pi outbound DNS/HTTPS to PlatformIO/GitHub — see [`ESPHOME-OTA-PI.md`](ESPHOME-OTA-PI.md). Probe rename + Climate Mode trains must not start until compile succeeds or USB/prebuilt is used.
+
 ## Cutover checklist
 
 1. Bootstrap Pi (`pi-bootstrap.sh`), compose up, `/health` green.

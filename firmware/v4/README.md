@@ -18,6 +18,8 @@ Standalone SoftAP unboxing (no HA): [SETUP.md](../../SETUP.md).
 Entry points (local lab): `dsc-hub.yaml`, `dsc-control.yaml`, `dsc-bridge.yaml`, `DSC-Probe1.yaml`, …
 Kit SoftAP setup: `dsc-hub-kit.yaml`, `dsc-control-kit.yaml`, `DSC-Probe{1..4}-kit.yaml`, `dsc-bridge-kit.yaml`
 
+Device **names** are `dsc_probeN` (entity contract `sensor.dsc_probeN_*`). Flash hub providers with probes in one train. Pi compile/OTA runbook (PlatformIO DNS pitfalls): [`../../docs/ops/ESPHOME-OTA-PI.md`](../../docs/ops/ESPHOME-OTA-PI.md). SoftCal / `cal_session`: [`../../docs/ops/SOFT-CAL.md`](../../docs/ops/SOFT-CAL.md).
+
 WiFi is split into `dsc-*-wifi-lab.yaml` / `dsc-*-wifi-kit.yaml` so kit builds omit compile-time SSIDs.
 Fleet component: `components/dsc_fleet_setup/` (phone portal on hub; Control/pots/bridge join `DSC-Setup-*`).
 Bridge also hosts SoftAP `DSC-Anchor` (F-012 channel pin) + `components/dsc_api_client/` (F-010).

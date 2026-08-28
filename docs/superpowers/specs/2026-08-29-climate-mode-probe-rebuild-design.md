@@ -1,7 +1,7 @@
 # Climate Mode + DSC-Probe rebuild — design
 
 **Date:** 2026-08-29  
-**Status:** **approved** (operator Act-On + full suggestion list + entity-rename override)  
+**Status:** **approved** — Climate Mode + SoftCal Raw shipped (`9343be6`); probe rename / `cal_session` / SoftCal history API in tree (`654d0f8`); **live OTA soak blocked** on Pi PlatformIO DNS (`331b91f`). Tip-verified ops: `docs/brain/CLIMATE-MODE-POLICY.md`, `PROBE-PLANT-MODEL.md`, `docs/ops/SOFT-CAL.md`, `ESPHOME-OTA-PI.md`.  
 **Source:** `docs/superpowers/plans/2026-08-29-pre-rebuild-interrogate.md`  
 **Plan:** `docs/superpowers/plans/2026-08-29-climate-mode-probe-rebuild.md`
 
