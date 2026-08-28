@@ -10,6 +10,46 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 
 ---
 
+## 2026-08-28 — DSC Help PD site (polish / deferred)
+
+> **next-plan** — Live at `/dsc/help/*` (WordPress-PD). Contrast + a11y pass shipped (v1.1.x). Remaining editorial/design debt below.
+
+| Item | Status | Suggestion |
+|------|--------|------------|
+| Workflow wall (11 long cards, no TOC) | deferred | Editorial pass: collapse workflows into accordion by tab (Live/Grow/Tune/Fleet), or sticky page TOC jumping to `#wf-N`. Cap first viewport to 3 “start here” workflows; rest behind `<details>`. |
+| SVG labels tiny on mobile | deferred | Per-diagram responsive redesign: raise SVG text to ≥12px at phone widths, or swap to stacked HTML cards below 480px. Prefer one shared `diagram_labels` scale helper. |
+| Measure deep-links all land on guide 1 | deferred | Add `#fan` / `#light` / `#soil` hashes; open matching card from FAQ/workflow links; or stack all guides without carousel. |
+| FAQ accordion a11y (aria-controls / details) | deferred | Prefer native `<details>`/`<summary>`, or wire `aria-controls` + body ids. |
+| Hardcoded “Eleven/Fourteen/Seven” counts | deferred | Derive from `len(dsc-help.json)` lists at publish time. |
+
+| Theme Builder help descendants | done | REST `pages?parent=` walk used; TB install 200 — PD DSC template includes help page ids 590–594. |
+| Hardcoded `-N.jpg` media URLs | done | `resolve_help_media()` queries `/wp/v2/media?search=dsc-help-{key}` and picks newest matching `source_url`. |
+| Dead Interactivity API / unused shortcodes | done | Plugin v1.1.1: vanilla fallback JS only; shortcodes mirror widgets without `data-wp-*`; `help-store.js` removed. |
+
+---
+
+## 2026-08-28 — Probe unassign + plant full edit/delete
+
+> **done (UI + API)** — Settings probe stations · Grow Roster / Plant Seat · interrogate fixes.
+
+| Item | Status |
+|------|--------|
+| PATCH probe station: empty `idle_home_pot_id` unassigns pot; `clear_role` demotes probe | done |
+| Settings: Unassign pot + Remove probe role (confirm) + try/catch | done |
+| Probe draft seed uses `?? ""` (never `\|\| seat_id`) | done |
+| `PATCH /roster/pots/{n}` — name, strain, blend, sprout, stage, notes | done |
+| PlantSeatPanel extracted; Identity blur-save with dirty-check; brain-only writes | done |
+| Edit errors on Identity; tent errors on tent card; FastAPI detail parse | done |
+| Delete closes drawer/overlay via `onRetired`; drafts cleared | done |
+| Twin DecisionLayer + drawer seat single-col CSS | done |
+| Wide SlideDrawer only for plant seats; history stays ~400px | done |
+| STAGE_FALLBACK matches brain (no Dry Mode/Off); sprout syncs stageDraft | done |
+| Notes gated when no roster slot; fmtReading + stale Got chip parity | done |
+| Smoke tests: `npm run test:smoke` (fmtReading / formatApiError / stages) | done |
+| Soft ≠ probe home ≠ tent unassign ≠ plant retire (three layers) | done |
+
+---
+
 ## 2026-08-28 — Soft calibrate pot probes
 
 > **next-plan / done (UI)** — Fleet → Calibrate → Soil · Soft calibrate wizard.

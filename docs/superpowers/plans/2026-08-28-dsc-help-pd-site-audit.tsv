@@ -25,3 +25,4 @@ contrast after fix hub	browser 2026-08-28	VERIFIED	sections dark; h1 #f2f5fb; ze
 cannalib CTA fills	browser	VERIFIED	HTML pd-help-cta buttons (Divi button fills also dropped)
 dashboard tabs after contrast fix	browser	VERIFIED	Grow panel visible after click
 screenshot media HTTP	curl -I -5.jpg	VERIFIED	200; lazy-load pending in hidden panels is OK
+interrogate UI pass 1.1.0	republish + HTML verify	VERIFIED	list numbers, left align, tab a11y, init guard, CTA fills
