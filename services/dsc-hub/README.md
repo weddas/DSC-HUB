@@ -11,9 +11,9 @@ docker compose -f services/dsc-hub/docker-compose.demo.yml up -d --build
 # → http://localhost:8788  (mode=demo in GET /health)
 ```
 
-Reverse-proxy `brain-demo.plausible-deniability.net` to port **8788** with WebSocket support and CSP `frame-ancestors https://plausible-deniability.net`. WordPress embed lives at `/dsc/demo/` (`push_dsc_demo.py`).
+Reverse-proxy `brain-demo.plausible-deniability.net` to port **8788** with WebSocket support. Demo API sets CSP `frame-ancestors` for PD apex/www. WordPress embed lives at `/dsc/demo/`. Full runbook: [`docs/brain/DEMO-MODE.md`](../../docs/brain/DEMO-MODE.md). Tunnel helpers: `scripts/add-brain-demo-tunnel.py` / `add-brain-demo-tunnel-remote.sh` (store `CF_API_TOKEN` in Notion credentials — never commit).
 
-Rebuild SPA after UI changes: `npm run build:spa` in `homeassistant/custom_components/dsc_hub/frontend`, then sync `spa-dist/` → `brain/static/`.
+Rebuild SPA after UI changes: `npm run build:spa` in `homeassistant/custom_components/dsc_hub/frontend`, then sync `spa-dist/` → `brain/static/`. Tip spa-dist: `index-DL1EcjhX`.
 
 ## Quick start (Pi)
 
@@ -43,9 +43,11 @@ From repo root when Pi is on `10.42.0.1`:
 
 ```powershell
 services/dsc-hub/pi/deploy-brain.ps1
+# NAS-safe when spa-dist hashes already match tip:
+services/dsc-hub/pi/deploy-brain.ps1 -SkipSpaBuild
 ```
 
-This builds the Pi SPA, uploads brain Python + static, then on the Pi:
+Default builds the Pi SPA, uploads brain Python + static, then on the Pi:
 1. Tries `docker compose build brain` (needs Docker Hub / eth0)
 2. Falls back to hot-patch if offline
 3. Logs deploy mode: `image-build` or `hot-patch`

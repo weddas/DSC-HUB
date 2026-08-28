@@ -1,6 +1,6 @@
 # DSC-HUB Pi appliance — operations
 
-**Release:** DSC-HUB 7.0.0 — The Pi Release.
+**Release:** DSC-HUB 7.0.0 — The Pi Release · tip **`8fc5e33`** (7.4 software WiP; surface still **7.3.0**).
 
 ## Network
 
@@ -10,6 +10,28 @@
 - **Avahi:** `dsc-brain.local`
 
 Fleet DHCP reservations live in `/etc/dsc-hub/dnsmasq.conf` (bootstrap template). After flash, add device MACs from Settings inventory.
+
+## Software-only demo (not the Pi fleet)
+
+Isolated Compose — **no** ESPHome / MQTT / Zigbee / LAN keys. Host port **8788**. Public hostname: `brain-demo.plausible-deniability.net` (Cloudflare tunnel → `:8788`).
+
+```bash
+docker compose -f services/dsc-hub/docker-compose.demo.yml up -d --build
+# or on NAS: services/dsc-hub/pi/deploy-brain-demo-remote.sh
+curl -s http://localhost:8788/health   # mode=demo
+```
+
+Runbook: [`docs/brain/DEMO-MODE.md`](../brain/DEMO-MODE.md). Never point demo inventory at private hosts or set `DSC_*_API_KEY`. Soft calibrate / lab wet: [`LAB-WET-CAL.md`](LAB-WET-CAL.md). Plant seat / probe layers: [`../brain/PLANT-SEAT.md`](../brain/PLANT-SEAT.md).
+
+## Deploy: SkipSpaBuild
+
+`services/dsc-hub/pi/deploy-brain.ps1 -SkipSpaBuild` reuses the existing `spa-dist/` tree (NAS-safe when `npm run build:spa` already ran or committed hashes are current). Default path still builds SPA then packs static into the brain image / hot-patch.
+
+After any SPA change that must land on Pi: build (or omit `-SkipSpaBuild`), commit matching `spa-dist` hashes when the tree tracks them, hard-refresh `:8787`.
+
+Current tip spa-dist entry: `index-DL1EcjhX.js` (+ `calibrate-D1D5CnxU` · `tune-fleet-IPnSFs3d`).
+
+**Pitfall (tips `39d7f88`→`8fc5e33`):** HubLinkLine online→`Up` / offline→`Down` + `HS`/`HB #` honesty + desk-wide `HelpTip` landed in **source** only. Committed `tune-fleet-IPnSFs3d` / `index-DL1EcjhX` still lack `dsc-help-tip` until the next `npm run build:spa` / deploy without `-SkipSpaBuild`. See [`../brain/HELP-TIP.md`](../brain/HELP-TIP.md).
 
 ## Cutover checklist
 
@@ -54,4 +76,4 @@ npm install && npm run build:spa
 
 ## HA lab note
 
-HA custom panel may still show surface **7.2.0** in lab. Product appliance is **7.0.0** on Pi.
+HA custom panel may lag Pi surface. Product appliance SPA on Pi is SoT (`:8787`). Lovelace YAML retired (7.3 archive).

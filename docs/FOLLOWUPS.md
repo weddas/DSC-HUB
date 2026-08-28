@@ -12,7 +12,7 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 
 ## 2026-08-28 — DSC Help PD site (polish / deferred)
 
-> **done (v1.2.0)** — Live at `/dsc/help/*` (WordPress-PD). Closure pass: measure hashes, FAQ `<details>`, workflow groups, mobile diagram fallbacks, subnav, fail-loud Theme Builder.
+> **done (v1.2.0)** — Live at `/dsc/help/*` (WordPress-PD). Closure pass: measure hashes, FAQ `<details>`, workflow groups, mobile diagram fallbacks, subnav, fail-loud Theme Builder. Tip `8fc5e33` ships SPA `HelpTip` desk map + HubLinkLine Up/Down/`HS`·`HB #` honesty (source); Pi runbooks: [`docs/brain/WEBUI.md`](brain/WEBUI.md) · [`docs/brain/HELP-TIP.md`](brain/HELP-TIP.md).
 
 | Item | Status | Suggestion |
 |------|--------|------------|
@@ -68,6 +68,25 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 
 ---
 
+## 2026-08-28 — HubLinkLine Age + SPA HelpTip
+
+> **done (source)** — tips `39d7f88` → `8fc5e33`. Docs: [`docs/brain/HELP-TIP.md`](brain/HELP-TIP.md).
+
+| Item | Status |
+|------|--------|
+| Age as online→`Up` / offline→`Down` via `fmtUptimeSeconds` (`0` → `0S`) | done — tip `8fc5e33` |
+| Beat = `HS` handshake duration **or** `HB #` heartbeat count (never tick-as-hours) | done — tip `8fc5e33` |
+| Inline `?` `HelpTip` + opaque `modalLayer` symbols | done — tip `8fc5e33` |
+| Desk tips: Overview / Climate / Light / SoftCal / Root / Settings / Compose / Research / Roster / Learning / Analytics / Fleet / Calibrate / Mission / Twin / cockpit / Dash | done — tip `8fc5e33` |
+| ZoneFocus URL ownership + bare-Climate focus keep + `emphasize` | done — tip `8fc5e33` |
+| Honesty rail `+N` / held Got / CFM nameplate / CTAs avoid Mission | done — tip `8fc5e33` |
+| Conditional hooks (`usePanelOfflineMs`; hold/hass **during render**) | done — tip `deafc88`+ (mm-review Act-on) |
+| Overview `useFleet` import (latent ReferenceError) | done — tip `8208461` |
+| Rebuild spa-dist so operators see HelpTip / Age format | next-plan — committed hash still `index-DL1EcjhX` / `tune-fleet-IPnSFs3d` |
+| PD Help 1.2.3 live verify | pending — tunnel/WP LAN intermittent |
+
+---
+
 ## 2026-08-28 — Probe unassign + plant full edit/delete
 
 > **done (UI + API)** — Settings probe stations · Grow Roster / Plant Seat · interrogate fixes.
@@ -118,7 +137,7 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 | D | UX polish: compose, photoperiod, icons (after ~1 week live) |
 | E | Version 7.4.0 + AUDIT-CLOSURE-7.4 |
 
-**Git baseline:** `432d205` pushed; Pi SPA `index-IOZwdpgy.js`.
+**Git baseline:** `8fc5e33` on `origin/master`; Pi SPA `index-DL1EcjhX.js` (+ calibrate/tune-fleet chunks) until HelpTip rebuild. Runbooks: [`docs/brain/HELP-TIP.md`](brain/HELP-TIP.md) · [`docs/brain/DEMO-MODE.md`](brain/DEMO-MODE.md) · [`docs/ops/LAB-WET-CAL.md`](ops/LAB-WET-CAL.md) · [`docs/brain/PLANT-SEAT.md`](brain/PLANT-SEAT.md).
 
 ---
 
@@ -3022,7 +3041,7 @@ Already logged (do not duplicate work): **WF-P0-1** Overview P1 moisture hole; *
 
 | ID | Item | Notes |
 |---|---|---|
-| DA-P1-1 | Hub link Age is a raw float (`20402.7890625`) | `HubLinkLine.tsx` `String(uptime)` — format with `fmtDurationMs` / hours. |
+| DA-P1-1 | Hub link Age is a raw float (`20402.7890625`) | **done** tip `39d7f88`→`8fc5e33` — `HubLinkLine` Up/Down/`HS`·`HB #` + Overview `fmtUptimeSeconds`; see [`docs/brain/HELP-TIP.md`](brain/HELP-TIP.md). SPA rebuild still needed. |
 | DA-P1-2 | Seat moisture IEEE leftover (`Got M 21.80000114440918`) | `seatModel.buildPlantSeat` + Mission / 2×4 chips. Format to 1 decimal. Pass 1 claimed no runoff. |
 | DA-P1-3 | Light hours gauge wears `is-ok` at 0.00 h | `LightPage.tsx` ArcGauge. Collides with Overview “green = in band.” Use teal-muted progress, not in-band green. |
 | DA-P1-4 | Live IA: Overview ≈ Dash ≈ Mission | `routes.ts` — nine Live tabs. Kill or demote Dash/Mission before more polish. |
