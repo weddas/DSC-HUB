@@ -61,8 +61,9 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 | React Doctor score | **noted** | Full-tree ~38–41; spa-dist noise; intentional render-time hass/hold refs; smoke ok on wave |
 | Live help 1.2.2 tips | **verified** | Dashboard `Help: Full Auto vs takeover` + Tabs vs workflows present 2026-08-28 |
 | Live help 1.2.3 | **pending verify** | Public tunnel/WP LAN intermittent (502/530) — re-publish when up |
-| OOS pot count on honesty rail | **done** | Muted gap naming OOS pots → Root (no longer silent omit) |
-| ESP vs Modbus pot link chips | **done** | Dash chips split radio vs probe; tooltip honesty |
+| OOS pot count on honesty rail | **done** | Muted gap naming OOS pots → Root (no longer silent omit) — tip `adbd5c1` · docs HELP-TIP |
+| ESP vs Modbus pot link chips | **done** | Dash chips split radio vs probe; tooltip honesty — tip `adbd5c1` · docs HELP-TIP |
+| spa-dist HelpTip / honesty rebuild | **done** | Tip `a50d402` ships `index-Ciw7XTuZ` + `tune-fleet-KoWKiPmD` (was source-only through `8fc5e33`) |
 | Soft-cal Pi-native Got / session history | **deferred** | Needs brain/HA stack work — not this UX pass |
 | Phase 0 z2m / Sankey soak | **deferred** | Operator/hardware gates — do not paper over |
 | F-001–F-008 hardware | **deferred** | Honest OOS UI already; no fake wiring |
@@ -3024,7 +3025,7 @@ Already logged (do not duplicate work): **WF-P0-1** Overview P1 moisture hole; *
 
 | ID | Item | Notes |
 |---|---|---|
-| DA-P1-1 | Hub link Age is a raw float (`20402.7890625`) | `HubLinkLine.tsx` `String(uptime)` — format with `fmtDurationMs` / hours. |
+| DA-P1-1 | Hub link Age is a raw float (`20402.7890625`) | **done** tip `39d7f88`→`a50d402` — `fmtUptimeSeconds` + Up/Down/`HS`·`HB #` + HelpTip; spa-dist rebuilt. See [`docs/brain/HELP-TIP.md`](brain/HELP-TIP.md). |
 | DA-P1-2 | Seat moisture IEEE leftover (`Got M 21.80000114440918`) | `seatModel.buildPlantSeat` + Mission / 2×4 chips. Format to 1 decimal. Pass 1 claimed no runoff. |
 | DA-P1-3 | Light hours gauge wears `is-ok` at 0.00 h | `LightPage.tsx` ArcGauge. Collides with Overview “green = in band.” Use teal-muted progress, not in-band green. |
 | DA-P1-4 | Live IA: Overview ≈ Dash ≈ Mission | `routes.ts` — nine Live tabs. Kill or demote Dash/Mission before more polish. |

@@ -1,5 +1,9 @@
 # DSC-HUB releases
 
+## Unreleased (7.4 WiP — tip `a50d402`)
+
+Docs SoT for software already on master: HubLinkLine online→`Up` / offline→`Down` + `HS`/`HB #` honesty, desk-wide `HelpTip` map (incl. Mission/Twin/cockpit), ZoneFocus URL ownership + bare-Climate focus keep, honesty rail OOS pot count / held Got / CFM nameplate, Dash ESP vs Modbus probe chips ([`HELP-TIP.md`](docs/brain/HELP-TIP.md) · [`WEBUI.md`](docs/brain/WEBUI.md)), plant seat edit/delete + probe unassign ([`PLANT-SEAT.md`](docs/brain/PLANT-SEAT.md)), soft calibrate layers ([`LAB-WET-CAL.md`](docs/ops/LAB-WET-CAL.md)), software demo + PD embed ([`DEMO-MODE.md`](docs/brain/DEMO-MODE.md)), photoperiod timeline ([`PHOTOPERIOD-TIMELINE.md`](docs/brain/PHOTOPERIOD-TIMELINE.md)). Surface remains **7.3.0** until Phase E bumps `7.4.0`. Committed SPA `index-Ciw7XTuZ` (+ `tune-fleet-KoWKiPmD` · `calibrate-CzxOXAJy`). Pi deploy / Help 1.2.3 still gated (`f382900`).
+
 ## Pi appliance — **v7.3.0** (full software closure)
 
 | | |
