@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Button, Card, PageHeader, StatusChip } from "../components/ui";
+import { HelpTip } from "../components/HelpTip";
 import { DecisionLayer } from "../components/DecisionLayer";
 import { TargetNumber } from "../components/TentTargets";
 import { SoftCalWizard } from "../components/SoftCalWizard";
@@ -616,6 +617,15 @@ export function CalibratePage() {
         icon="learning"
         title="Calibrate"
         subtitle="Measure fan airflow and light output so the hub runs on real curves."
+        actions={
+          <HelpTip title="Curves vs nameplate">
+            <p>
+              Calibrate replaces nameplate guesses with measured Fan CFM and Light PAR/LUX curves. Soft calibrate (Soil
+              tab) only shifts Got offsets — it does not flash probes.
+            </p>
+            <p>Example: OUT duct at 40% duty → anemometer m/s → accept point → brain CFM badges switch from nameplate to allocated.</p>
+          </HelpTip>
+        }
       />
 
       <div className="dsc-chip-row" style={{ marginBottom: 12 }}>
