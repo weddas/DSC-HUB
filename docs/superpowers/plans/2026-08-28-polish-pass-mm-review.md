@@ -32,15 +32,16 @@
 
 | Gate | Status |
 |------|--------|
-| FOLLOWUPS addressed or re-triaged | Partial — polish triage updated; hardware/Phase0 correctly deferred |
-| Live help verified | 1.2.2 OK |
-| React health on touched SPA | Act-on regressions closed; not a full Doctor green |
-| Multi-model review recorded | This file |
+| FOLLOWUPS addressed or re-triaged | Partial — polish triage updated through Fleet/Learning/Research tips + ZoneFocus; hardware/Phase0 deferred |
+| Live help verified | Hub Want/Got + Colour tips; Dashboard Full Auto + Tabs tips present (browser 2026-08-28) |
+| React health on touched SPA | Act-on regressions closed; LungLoop deslop; ZoneFocus URL ownership; Doctor ~40 full-tree (spa-dist noise) |
+| Multi-model review recorded | This file + Act-on closed |
 | Full objective (spectacular UX pass, all gaps) | **Not complete** — continue goal |
 
 ## Next coherent slices (keep goal open)
 
-1. ~~More SPA desks with `?` tips~~ — Climate / Light / SoftCal / Root / Settings done; Grow/Compose next if capacity.
-2. ~~Tent cockpit `?tent=` sticky nav~~ — fixed: no `setFocus` write from cockpit (App still strips off Climate).
-3. Focused React Doctor on remaining critical hooks in SPA `src/` only (exclude spa-dist). Score ~40; ref-during-render on hass/hold is intentional post Act-on.
-4. Re-run adversarial review after the next UX slice, not after every chip tweak.
+1. ~~More SPA desks with `?` tips~~ — Climate / Light / SoftCal / Root / Settings / Compose / Roster / Fleet / Learning / Research done.
+2. ~~Tent cockpit `?tent=` sticky nav~~ + ZoneFocus URL ownership fixed.
+3. Calibrate desks / Analytics / Mission (demoted) tips if operators still land there.
+4. Focused React Doctor on remaining src/ criticals excluding intentional render-time refs; exclude spa-dist.
+5. Re-run adversarial multi-model review after the next non-tip UX slice.

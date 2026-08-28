@@ -39,11 +39,16 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 | Live Climate / Light / SoftCal `?` tips | **done** | Full Auto vs takeover; photoperiod Want; soft cal ≠ lab stamp |
 | Root / Settings `?` tips | **done** | Got vs idle probe; In service honesty |
 | Tent cockpit `?tent=` URL fight | **done** | Removed `setFocus(tent)` from TentCockpit — App strip + write loop was sticky nav (N-LAYOUT-TENT-NAV residue) |
+| ZoneFocus URL ownership | **done** | `setFocus` only writes `?tent=` on Climate/Dash; React state is SoT elsewhere |
 | Grow Compose / Roster `?` tips | **done** | Draft clear on retire; Edit vs Delete |
+| Fleet / Learning / Research `?` tips | **done** | Kit pulse; learning samples; catalog honesty |
+| Unused `LungLoop.tsx` | **done** | Deslop — AirPathMap is the live lung viz |
+| Page header wrap (Compose + tips) | **done** | `.dsc-page-header` flex-wrap so actions/`?` don't clip at 390 |
 | Conditional hook `usePanelOfflineMs` | **done** | Always call `useOfflineMs` |
 | Help `?` tips on PD hub | **done** | Want/Got/Need + colour honesty; dashboard Full Auto tips in 1.2.2 |
 | Overview missing `useFleet` import | **done** | Was a latent ReferenceError risk |
-| React Doctor score 38 | **noted** | Full-tree baseline; spa-dist noise; fix critical hooks first not mass-memo |
+| React Doctor score 38 | **noted** | Full-tree ~40 after Act-on; spa-dist noise; intentional render-time hass/hold refs |
+| Live help 1.2.2 tips | **verified** | Dashboard `Help: Full Auto vs takeover` + Tabs vs workflows present 2026-08-28 |
 | Soft-cal Pi-native Got / session history | **deferred** | Needs brain/HA stack work — not this UX pass |
 | Phase 0 z2m / Sankey soak | **deferred** | Operator/hardware gates — do not paper over |
 | F-001–F-008 hardware | **deferred** | Honest OOS UI already; no fake wiring |

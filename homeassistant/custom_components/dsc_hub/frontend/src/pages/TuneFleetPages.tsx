@@ -1,4 +1,5 @@
 import { Card, Kpi, PageHeader } from "../components/ui";
+import { HelpTip } from "../components/HelpTip";
 import { InventoryInServiceToggle } from "../components/InventoryInServiceToggle";
 import { TimespanControl, CYCLE_TIMESPAN_EXTRAS } from "../components/HistoryDrawer";
 import { LearningWizard } from "../components/LearningWizard";
@@ -25,6 +26,15 @@ export function TuneLearningPage() {
         icon="learning"
         title="Learning"
         subtitle="Measure fan output, review the sample, then accept it into the curve."
+        actions={
+          <HelpTip title="Learning samples">
+            <p>
+              Learning writes measured fan CFM into the curve the brain trusts. Skip or reject a bad sample — a guessed
+              point is worse than a gap.
+            </p>
+            <p>Example: run exhaust at a known %, capture anemometer CFM, accept only if the reading was steady.</p>
+          </HelpTip>
+        }
       />
       <div className="dsc-grid">
         <div className="dsc-col-12">
@@ -164,6 +174,15 @@ export function FleetOverviewPage() {
         icon="fleet"
         title="Fleet"
         subtitle={`${svc.inService} of ${svc.total} devices in service. Device health, tank, and service toggles.`}
+        actions={
+          <HelpTip title="Kit pulse">
+            <p>
+              Fleet is the kit desk — online/offline and In service, not climate Want. Grey quiet means out of service or
+              no data, not a silent alarm.
+            </p>
+            <p>Hub link chips (Up/Down/Beat) tell link honesty; open Settings to change In service for a seat.</p>
+          </HelpTip>
+        }
       />
       <div className="dsc-grid">
         <div className="dsc-col-12">

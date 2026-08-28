@@ -2,10 +2,12 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
+  useState,
   type ReactNode,
 } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useLocation, useSearchParams } from "react-router-dom";
 
 export type ZoneFocus = "main" | "clone" | "compare" | "room";
 
@@ -22,18 +24,34 @@ function parseFocus(raw: string | null): ZoneFocus {
   return "main";
 }
 
+/** Routes that own `?tent=` / `?zone=` in the URL (Shell strips elsewhere). */
+function pathOwnsTentQuery(pathname: string): boolean {
+  return pathname === "/live/climate" || pathname === "/ops/home";
+}
+
 export function ZoneFocusProvider({ children }: { children: ReactNode }) {
+  const location = useLocation();
   const [params, setParams] = useSearchParams();
-  const focus = parseFocus(params.get("tent") ?? params.get("zone"));
+  const urlOwned = pathOwnsTentQuery(location.pathname);
+  const urlFocus = parseFocus(params.get("tent") ?? params.get("zone"));
+  const [focus, setFocusState] = useState<ZoneFocus>(urlFocus);
+
+  // Climate / Dash own the query string — mirror into React state when present.
+  useEffect(() => {
+    if (urlOwned) setFocusState(urlFocus);
+  }, [urlOwned, urlFocus]);
 
   const setFocus = useCallback(
     (next: ZoneFocus) => {
+      setFocusState(next);
+      // Never write ?tent= on routes Shell will strip — that fight sticks Live tabs.
+      if (!urlOwned) return;
       const nextParams = new URLSearchParams(params);
       nextParams.set("tent", next);
       nextParams.delete("zone");
       setParams(nextParams, { replace: true });
     },
-    [params, setParams],
+    [params, setParams, urlOwned],
   );
 
   const value = useMemo(() => ({ focus, setFocus }), [focus, setFocus]);

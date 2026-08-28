@@ -69,6 +69,16 @@ export function GrowResearchPage() {
         subtitle="Live CannaLib catalog — strains, mediums, nutrients, and lights."
         actions={
           <>
+            <HelpTip title="Catalog honesty">
+              <p>
+                Research only shows chips the catalog actually has. Missing chem or height is a blank — never invented
+                filler.
+              </p>
+              <p>
+                <b>Use in Compose</b> drafts helpers for a new plant; <b>Open Seat</b> jumps to a plant already on the
+                roster.
+              </p>
+            </HelpTip>
             <Button primary onClick={() => navigate("/grow/compose")}>
               Use in Compose
             </Button>
