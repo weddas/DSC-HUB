@@ -171,3 +171,13 @@ Consensus across B/C/D is high-confidence.
 6. Later: entity id migration / NVS plant strip after soak.
 
 **Do not rebuild until Act On items are in the approved spec.**
+
+## Approved design SoT (docs)
+
+Engineering runbooks (verified against tip `906ad71` source):
+
+- [`docs/brain/CLIMATE-MODE-POLICY.md`](../../brain/CLIMATE-MODE-POLICY.md)
+- [`docs/brain/PROBE-PLANT-MODEL.md`](../../brain/PROBE-PLANT-MODEL.md)
+- [`docs/ops/SOFT-CAL.md`](../../ops/SOFT-CAL.md)
+
+Implement against those; keep this plan as the interrogate audit trail.

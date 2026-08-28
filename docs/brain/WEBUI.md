@@ -4,6 +4,14 @@
 
 Notion: [Local webserver UI](https://app.notion.com/p/3b52b4cda37081c19048e794d4bdf819)
 
+## Pre-rebuild design gates
+
+Before expanding 2×4 Climate Mode or Pot→Probe rename, read:
+
+- [`CLIMATE-MODE-POLICY.md`](CLIMATE-MODE-POLICY.md) — policy select only; Pi Follow Plants
+- [`PROBE-PLANT-MODEL.md`](PROBE-PLANT-MODEL.md) — probe · plant · assignment
+- [`../ops/SOFT-CAL.md`](../ops/SOFT-CAL.md) — SoftCal honesty vs lab wet
+
 ## Surfaces (MVP)
 
 | Route | Job |
