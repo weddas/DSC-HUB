@@ -27,6 +27,7 @@ import { useHeldReading } from "../hooks/useHeldReading";
 import { useChartHours } from "../hooks/useChartHours";
 import { useZoneFocus, type ZoneFocus } from "../hooks/useZoneFocus";
 import { useInspector } from "../components/InspectorHost";
+import { HelpTip } from "../components/HelpTip";
 import { withPriorGhost } from "../lib/chartSeries";
 import { ArcGauge, GotWantBars, MultiLineChart, seriesExtrema } from "../viz/charts";
 import { rhSegments, tempSegments, vpdSegments } from "../viz/gaugeTheme";
@@ -229,6 +230,16 @@ export function LiveClimatePage() {
               <EntityToggle confirm entityId="switch.dsc_hub_tent_manual_override" label="Fan override" icon="climate" />
               <EntityToggle confirm entityId="switch.dsc_hub_humidifier_intake_routing" label="Hum intake routing" icon="climate" />
               <EntityToggle confirm entityId="switch.dsc_hub_recirc_de_strat_pulse" label="RECIRC de-strat" icon="climate" />
+              <HelpTip title="Full Auto vs takeover">
+                <p>
+                  <b>Full Auto</b> lets the brain chase Want with fans and demand switches.{" "}
+                  <b>Master takeover</b> freezes automation so you own every flip.
+                </p>
+                <p>
+                  Example: walk-in check → takeover on → nudge exhaust → takeover off when the room is stable again.
+                  Fan override only frees the fan sliders; demand toggles stay brain-owned unless takeover is on.
+                </p>
+              </HelpTip>
             </div>
             <div className="dsc-mode-selects">
               <EntitySelect entityId="select.dsc_hub_control_strategy" label="Strategy" icon="climate" />

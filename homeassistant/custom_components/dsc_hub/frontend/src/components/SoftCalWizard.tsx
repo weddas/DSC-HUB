@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
 import { Button, Card, StatusChip } from "./ui";
 import { DecisionLayer } from "./DecisionLayer";
+import { HelpTip } from "./HelpTip";
 import { useEntityBus } from "../hooks/useEntityBus";
 import { useFleetActions } from "../hooks/useFleetActions";
 import {
@@ -168,6 +169,18 @@ export function SoftCalWizard() {
 
   return (
     <Card className="dsc-glass" title="Soft calibrate (tap water → after water)" icon="root">
+      <div className="dsc-chip-row" style={{ marginBottom: 8 }}>
+        <HelpTip title="Soft cal vs lab stamp">
+          <p>
+            Soft cal writes <b>Got offsets in HA</b> so the desk reads honest without flashing probes. It is not a lab
+            ESP recalibration stamp.
+          </p>
+          <p>
+            Example: tap reads pH 6.2 while meter says 7.0 → Soft Calibrate → Got shifts by +0.8. Capture 2 after watering
+            only refines if you enter a known pH again.
+          </p>
+        </HelpTip>
+      </div>
       <p className="dsc-honesty" style={{ marginTop: 0 }}>
         Put selected probes in a glass of tap water, enter the real pH, Soft Calibrate to average drift and write{" "}
         <strong>HA Got offsets</strong> (not lab ESP stamp). Then seat in watered pots and Soft Calibrate again for

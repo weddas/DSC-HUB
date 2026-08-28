@@ -102,16 +102,6 @@ export function OverviewPage() {
           }
           tone={hubOnline ? "muted" : "bad"}
         />
-        <HelpTip title="Want · Got · Need">
-          <p>
-            <b>Want</b> is the target. <b>Got</b> is measured. <b>Need</b> is the gap the brain proposes.
-          </p>
-          <p>Example: Want 55% RH, Got 62% → Need a drier path — not a guessed setpoint rewrite.</p>
-        </HelpTip>
-        <HelpTip title="Colour honesty">
-          <p>Teal/green = in band. Amber = drifting. Red = out of band. Grey = no data or out of service.</p>
-          <p>Out of service kit stays quiet on purpose — missing hardware is not an alarm.</p>
-        </HelpTip>
       </div>
 
       {faultIds.length > 0 || alerts > 0 ? (
@@ -151,6 +141,22 @@ export function OverviewPage() {
           </Button>
         </div>
       </Card>
+
+      <div className="dsc-chip-row" style={{ marginBottom: 8 }}>
+        <span className="dsc-muted" style={{ fontSize: 12, alignSelf: "center" }}>
+          Climate bands
+        </span>
+        <HelpTip title="Want · Got · Need">
+          <p>
+            <b>Want</b> is the target. <b>Got</b> is measured. <b>Need</b> is the gap the brain proposes.
+          </p>
+          <p>Example: Want 55% RH, Got 62% → Need a drier path — not a guessed setpoint rewrite.</p>
+        </HelpTip>
+        <HelpTip title="Colour honesty">
+          <p>Teal/green = in band. Amber = drifting. Red = out of band. Grey = no data or out of service.</p>
+          <p>Out of service kit stays quiet on purpose — missing hardware is not an alarm.</p>
+        </HelpTip>
+      </div>
 
       <DashBandsGrid
         readings={{

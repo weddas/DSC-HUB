@@ -17,6 +17,7 @@ import { TentLightClock } from "../components/TentLightClock";
 import { TargetNumber } from "../components/TentTargets";
 import { useEntityBus } from "../hooks/useEntityBus";
 import { useInspector } from "../components/InspectorHost";
+import { HelpTip } from "../components/HelpTip";
 import { ArcGauge } from "../viz/charts";
 import { draftTone, tentWantRail } from "../lib/tentWant";
 import { readTentPhotoperiodInput, tentPhotoperiodFollowsMain } from "../lib/lightSchedule";
@@ -106,6 +107,16 @@ export function LiveLightPage() {
         }
       />
       <div className="dsc-status-strip">
+        <HelpTip title="Photoperiod Want">
+          <p>
+            Each tent keeps its own on-window and dark floor. Stage rails tint the hour drafts — amber means the draft
+            fights the crop stage, not that the lamp failed.
+          </p>
+          <p>
+            Example: flower Want 12/12 → set min dark near 12h; a 18h clone draft on the 4×8 rail should look wrong on
+            purpose.
+          </p>
+        </HelpTip>
         {darkViolation ? (
           <StatusChip
             icon="alert"

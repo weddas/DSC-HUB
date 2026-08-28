@@ -689,6 +689,11 @@ body {
 .dsc-help-tip {
   position: relative;
   display: inline-block;
+  z-index: 1;
+}
+
+.dsc-help-tip[open] {
+  z-index: 40;
 }
 
 .dsc-help-tip summary {
@@ -727,6 +732,8 @@ body {
   left: 0;
   top: calc(100% + 8px);
   width: min(320px, 78vw);
+  max-height: min(50vh, 320px);
+  overflow: auto;
   padding: 12px 14px;
   border-radius: 12px;
   border: 1px solid var(--dsc-gray-3);
@@ -735,6 +742,13 @@ body {
   font-size: 0.8rem;
   line-height: 1.45;
   box-shadow: var(--dsc-shadow);
+}
+
+/* Prefer opening left when the tip sits near the right edge of a chip row. */
+.dsc-chip-row > .dsc-help-tip:last-child .dsc-help-tip-body,
+.dsc-status-strip > .dsc-help-tip:last-child .dsc-help-tip-body {
+  left: auto;
+  right: 0;
 }
 
 .dsc-help-tip-body strong {

@@ -34,13 +34,12 @@ export function useHeldReading(entityId: string): HeldReading {
   const prevId = useRef(entityId);
   const [, bump] = useState(0);
 
-  useEffect(() => {
-    if (prevId.current !== entityId) {
-      prevId.current = entityId;
-      hold.current = null;
-      bump((n) => n + 1);
-    }
-  }, [entityId]);
+  // Clear hold during render when the entity changes — an effect would leak the prior pot's
+  // last-known-good for at least one frame (and any child that reads before paint).
+  if (prevId.current !== entityId) {
+    prevId.current = entityId;
+    hold.current = null;
+  }
 
   const fleetVal = source === "pi" ? fleetLiveNumber(entityId, fleet) : null;
   const fleetOk = source === "pi" ? fleetEntityAvailable(entityId, fleet) : false;
