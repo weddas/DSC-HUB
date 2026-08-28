@@ -215,6 +215,16 @@ export function LiveClimatePage() {
             {opt.label}
           </button>
         ))}
+        <HelpTip title="Zone focus">
+          <p>
+            Focus lights gauges and Want columns for the zone you are walking. <b>All</b> (compare) keeps both tents
+            hot. <b>Room</b> is the umbrella lung — not a tent Want editor.
+          </p>
+          <p>
+            Example: dial 2×4 RH → tap 2×4 so that column stays bright and 4×8 dims. Bare Climate URL keeps your last
+            focus; only <code>?tent=</code> rewrites it.
+          </p>
+        </HelpTip>
         <TimespanControl hours={hours} setHours={setHours} extras={CYCLE_TIMESPAN_EXTRAS} />
         <Button teal onClick={() => navigate("/fleet")}>
           Kit / Fleet
@@ -321,7 +331,10 @@ export function LiveClimatePage() {
         </div>
 
         <div className="dsc-col-12">
-          <TentTargetPanel hero />
+          <TentTargetPanel
+            hero
+            emphasize={focus === "main" || focus === "clone" ? focus : undefined}
+          />
         </div>
 
         <div className="dsc-col-12">

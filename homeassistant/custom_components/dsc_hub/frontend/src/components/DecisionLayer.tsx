@@ -83,19 +83,7 @@ export function DecisionLayer({
 
   const layer = (
     <div className="dsc-decision-root is-open" role="presentation">
-      <div
-        className="dsc-decision-scrim"
-        role="button"
-        tabIndex={-1}
-        aria-label="Dismiss"
-        onClick={onDismiss}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            onDismiss();
-          }
-        }}
-      />
+      <div className="dsc-decision-scrim" aria-hidden="true" onClick={onDismiss} />
       <aside
         ref={panelRef}
         className="dsc-decision-panel"

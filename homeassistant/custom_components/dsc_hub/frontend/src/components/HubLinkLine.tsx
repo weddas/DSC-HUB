@@ -26,13 +26,14 @@ export function HubLinkLine() {
   const downAge = available("sensor.dsc_hub_api_down_age")
     ? asFiniteNumber(state("sensor.dsc_hub_api_down_age", "—"))
     : null;
-  // Prefer honest labels: "Up …" from uptime; only show "Down …" when API-down age is positive.
-  const age =
-    downAge != null && downAge > 0
+  // Never show "Up …" while offline; never show residual "Down …" while online.
+  const age = !online
+    ? downAge != null && downAge > 0
       ? `Down ${durationLabel(downAge)}`
-      : uptimeSec != null
-        ? `Up ${durationLabel(uptimeSec)}`
-        : "—";
+      : "Down —"
+    : uptimeSec != null
+      ? `Up ${durationLabel(uptimeSec)}`
+      : "—";
 
   const bounce = available("sensor.dsc_hub_link_recovery_bounces")
     ? state("sensor.dsc_hub_link_recovery_bounces", "—")
@@ -43,12 +44,12 @@ export function HubLinkLine() {
     ? asFiniteNumber(state("sensor.dsc_hub_ha_handshake_age", "—"))
     : null;
   const beatCount = asFiniteNumber(heartbeat);
-  // Handshake age is seconds; hub_heartbeat is a tick counter — never format the counter as duration.
+  // Distinct labels: handshake age is time; heartbeat is a tick count.
   const beat =
     handshakeSec != null
-      ? durationLabel(handshakeSec)
+      ? `HS ${durationLabel(handshakeSec)}`
       : beatCount != null
-        ? String(Math.trunc(beatCount))
+        ? `HB #${Math.trunc(beatCount)}`
         : "—";
 
   return (
@@ -61,12 +62,16 @@ export function HubLinkLine() {
       <StatusChip label={age} tone="muted" />
       <StatusChip label={`Bounces ${bounce}`} tone="muted" />
       <StatusChip label={`RF ${rf}`} tone="muted" />
-      <StatusChip label={`Beat ${beat}`} tone="muted" />
+      <StatusChip label={beat} tone="muted" />
       {fleet.surface ? <StatusChip label={fleet.surface} tone="muted" /> : null}
       <HelpTip title="Hub link chips">
         <p>
-          <b>Up</b> is hub uptime while the link is healthy. <b>Down</b> appears only when API-down age is positive.
-          <b> Beat</b> is handshake age in time when HA exposes it; otherwise it is the hub heartbeat <em>count</em>, not hours.
+          <b>Up</b> is hub uptime while the link is healthy. <b>Down</b> appears when the link is offline (or API-down age
+          is positive). Never trust an Up chip next to HUB LINK DOWN.
+        </p>
+        <p>
+          <b>HS</b> is handshake age in time. <b>HB #</b> is the heartbeat tick count — not hours. Example: Up 2H 14M with
+          HB #1847 means healthy link and a live counter, not 1847 hours.
         </p>
         <p>Grey RF is not always a fault — inventory out-of-service stays quiet on purpose.</p>
       </HelpTip>

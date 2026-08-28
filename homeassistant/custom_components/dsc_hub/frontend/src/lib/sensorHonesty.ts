@@ -1,3 +1,5 @@
+import { resolveCfm } from "./cfmProvenance";
+
 export type HonestyTone = "ok" | "warn" | "bad" | "muted";
 
 export type HonestyGap = {
@@ -65,8 +67,8 @@ export function collectHonestyGaps(hass: HassLike): HonestyGap[] {
       label: "Heartbeat missing",
       detail: "The hub's heartbeat has stopped arriving — readings stay held until it returns.",
       tone: "bad",
-      href: "/live/mission",
-      cta: "Mission",
+      href: "/fleet",
+      cta: "Open Fleet",
       priority: 12,
     });
   }
@@ -78,7 +80,7 @@ export function collectHonestyGaps(hass: HassLike): HonestyGap[] {
       label: panelLimited ? "Panel limited link" : "Panel link down",
       detail: panelLimited
         ? "Panel Wi‑Fi RSSI is present but panel link is off — treat as limited, not a full outage."
-        : "The control panel link is down — Mission shows how long it has been out.",
+        : "The control panel link is down — check Fleet link chips for how long.",
       tone: "warn",
       href: "/fleet",
       cta: "Open Fleet",
@@ -166,12 +168,41 @@ export function collectHonestyGaps(hass: HassLike): HonestyGap[] {
     gaps.push({
       id: "failsafe",
       label: "Emergency failsafe",
-      detail: "Hub failsafe active.",
+      detail: "Hub failsafe active — Overview shows Next Recommended; Climate owns command.",
       tone: "bad",
-      href: "/live/mission",
-      cta: "Mission",
+      href: "/live/overview",
+      cta: "Open Overview",
       priority: 5,
     });
+  }
+
+  // Nameplate CFM is still a Learning gap even when kit link health is clean.
+  if (hass.available) {
+    const available = hass.available.bind(hass);
+    const num = (id: string, fallback = NaN) => {
+      const n = Number(hass.state(id, "nan"));
+      return Number.isFinite(n) ? n : fallback;
+    };
+    const ducts: [string, string][] = [
+      ["sensor.dsc_cfm_intake_main_allocated", "sensor.dsc_cfm_intake_main"],
+      ["sensor.dsc_cfm_intake_2x4_allocated", "sensor.dsc_cfm_intake_2x4"],
+      ["sensor.dsc_cfm_exhaust_out_allocated", "sensor.dsc_cfm_exhaust_out"],
+      ["sensor.dsc_cfm_exhaust_recirc_allocated", "sensor.dsc_cfm_exhaust_recirc"],
+    ];
+    const anyNameplate = ducts.some(
+      ([alloc, plate]) => resolveCfm(alloc, plate, { available, num }).kind === "nameplate",
+    );
+    if (anyNameplate) {
+      gaps.push({
+        id: "cfm-nameplate",
+        label: "CFM nameplate",
+        detail: "One or more ducts still guess CFM from fan % × nameplate — Learning measures real flow.",
+        tone: "warn",
+        href: "/tune/learning",
+        cta: "Open Learning",
+        priority: 40,
+      });
+    }
   }
 
   return gaps.sort((a, b) => a.priority - b.priority);
@@ -201,8 +232,8 @@ export function collectHonestyGapsFromFleet(
       label: "Heartbeat missing",
       detail: "The hub's heartbeat has stopped arriving — readings stay held until it returns.",
       tone: "bad",
-      href: "/live/mission",
-      cta: "Mission",
+      href: "/fleet",
+      cta: "Open Fleet",
       priority: 12,
     });
   }
@@ -213,8 +244,8 @@ export function collectHonestyGapsFromFleet(
       id: "panel-dark",
       label: panelLimited ? "Panel limited link" : "Panel link down",
       detail: panelLimited
-        ? "Panel Wi‑Fi is up but the panel link binary is off — Mission shows limited-link tone, not a full outage."
-        : "The control panel link is down — Mission shows how long it has been out.",
+        ? "Panel Wi‑Fi is up but the panel link binary is off — treat as limited, not a full outage."
+        : "The control panel link is down — check Fleet link chips for how long.",
       tone: "warn",
       href: "/fleet",
       cta: "Open Fleet",

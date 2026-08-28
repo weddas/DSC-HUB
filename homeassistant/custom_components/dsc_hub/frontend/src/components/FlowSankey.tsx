@@ -236,6 +236,3 @@ export function FlowSankey({
     </div>
   );
 }
-
-/** @deprecated Use FlowSankey */
-export { FlowSankey as SankeyFlowPrototype };

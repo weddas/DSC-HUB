@@ -27,6 +27,7 @@ import { useChartHours } from "../hooks/useChartHours";
 import { useInspector } from "../components/InspectorHost";
 import { MultiLineChart } from "../viz/charts";
 import { potsInTent, isPotInService, type TentId } from "../lib/seatModel";
+import { HelpTip } from "../components/HelpTip";
 import { PlantSeatPanel } from "./GrowPages";
 
 export { LiveClimatePage } from "./ClimatePage";
@@ -70,6 +71,16 @@ export function LiveTwinPage() {
         }
         actions={
           <>
+            <HelpTip title="Twin seat overlay">
+              <p>
+                Click a pot to open its seat overlay <b>on Twin</b> — you stay in the scene. <b>Open Root</b> is the full
+                Root desk for moisture/EC work across seats.
+              </p>
+              <p>
+                Example: spot pot 3 dry in orbit → click pot → adjust Need in the overlay → dismiss and keep flying.
+                Twin stays warm across Twin / 4×8 / 2×4.
+              </p>
+            </HelpTip>
             <Button onClick={() => navigate("/live/4x8")}>4×8 cockpit</Button>
             <Button onClick={() => navigate("/live/2x4")}>2×4 cockpit</Button>
             <Button onClick={() => navigate("/live/root")}>Open Root</Button>
@@ -242,9 +253,21 @@ function TentCockpitPage({ tent }: { tent: Exclude<TentId, "unassigned"> }) {
           </Button>
         }
         actions={
-          <Button primary onClick={() => navigate(`/live/climate?tent=${tent}`)}>
-            Climate Want
-          </Button>
+          <>
+            <HelpTip title="Tent cockpit">
+              <p>
+                This desk is one tent: seats, Want editors, and air path. <b>IN cfm</b> may be Learning-allocated or still
+                nameplate (fan % × rating) — dashed paths need Learning.
+              </p>
+              <p>
+                Example: nudge Want RH here, then <b>Climate Want</b> for Full Auto / demand command on the shared Climate
+                desk with <code>?tent=</code> already set.
+              </p>
+            </HelpTip>
+            <Button primary onClick={() => navigate(`/live/climate?tent=${tent}`)}>
+              Climate Want
+            </Button>
+          </>
         }
       />
 

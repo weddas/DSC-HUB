@@ -24,7 +24,10 @@ export function HonestyRail({ gaps }: { gaps?: HonestyGap[] }) {
   const computed = useHonestyGaps();
   const list = gaps ?? computed;
   const [open, setOpen] = useState<HonestyGap | null>(null);
+  const [overflowOpen, setOverflowOpen] = useState(false);
   const navigate = useNavigate();
+  const overflow = list.length > 6 ? list.slice(6) : [];
+
   if (!list.length) {
     return (
       <div className="dsc-honesty-rail" aria-label="Honesty">
@@ -45,14 +48,15 @@ export function HonestyRail({ gaps }: { gaps?: HonestyGap[] }) {
             <StatusChip icon="alert" label={g.label} tone={g.tone === "bad" ? "bad" : "warn"} />
           </button>
         ))}
-        {list.length > 6 ? (
+        {overflow.length ? (
           <button
             type="button"
             className="dsc-honesty-hit"
-            onClick={() => setOpen(list[6])}
-            title={`${list.length - 6} more honesty gap(s)`}
+            onClick={() => setOverflowOpen(true)}
+            title={`${overflow.length} more honesty gap(s)`}
+            aria-label={`Show ${overflow.length} more honesty gaps`}
           >
-            <StatusChip label={`+${list.length - 6}`} tone="muted" />
+            <StatusChip label={`+${overflow.length}`} tone="muted" />
           </button>
         ) : null}
       </div>
@@ -72,6 +76,30 @@ export function HonestyRail({ gaps }: { gaps?: HonestyGap[] }) {
         help={null}
       >
         <p>{open?.detail}</p>
+      </DecisionLayer>
+      <DecisionLayer
+        open={overflowOpen}
+        onDismiss={() => setOverflowOpen(false)}
+        title={`${overflow.length} more honesty gap${overflow.length === 1 ? "" : "s"}`}
+        help={null}
+      >
+        <ul className="dsc-honesty-overflow-list">
+          {overflow.map((g) => (
+            <li key={g.id}>
+              <button
+                type="button"
+                className="dsc-honesty-overflow-item"
+                onClick={() => {
+                  setOverflowOpen(false);
+                  setOpen(g);
+                }}
+              >
+                <StatusChip icon="alert" label={g.label} tone={g.tone === "bad" ? "bad" : "warn"} />
+                <span className="dsc-muted">{g.detail}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
       </DecisionLayer>
     </>
   );

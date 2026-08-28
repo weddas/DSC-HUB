@@ -13,6 +13,7 @@ import { useHeldReading, useHubOfflineMs, useBeatOfflineMs, usePanelOfflineMs } 
 import { fmtDurationMs } from "../lib/formatDuration";
 import { buildPlantSeat, ALL_POT_NUMBERS, isPotInService } from "../lib/seatModel";
 import { HubLinkLine } from "../components/HubLinkLine";
+import { HelpTip } from "../components/HelpTip";
 import { VesselGlyph } from "../components/VesselGlyph";
 import { readPotVessel } from "../lib/vesselSpec";
 import { readPotTrust } from "../lib/potTrust";
@@ -110,6 +111,16 @@ export function LiveMissionPage() {
         }
         actions={
           <>
+            <HelpTip title="Mission triage">
+              <p>
+                <b>HELD VITALS</b> are last-known readings while the link is soft. <b>PANEL LIMITED LINK</b> means Wi‑Fi
+                RSSI without a full panel link — different from <b>NO BEAT</b>.
+              </p>
+              <p>
+                Example: Hub up + NO BEAT → open Fleet for link chips. Command flips still live on Climate; Mission is
+                the triage glance.
+              </p>
+            </HelpTip>
             <Button primary onClick={() => navigate("/live/climate")}>
               Climate Want
             </Button>

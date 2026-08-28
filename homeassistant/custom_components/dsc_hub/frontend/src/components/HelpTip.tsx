@@ -1,7 +1,7 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import { isTopModalLayer, popModalLayer, pushModalLayer } from "../lib/modalLayer";
 
-type DetailsWithLayer = HTMLDetailsElement & { _dscLayer?: number };
+type DetailsWithLayer = HTMLDetailsElement & { _dscLayer?: symbol };
 
 /** Inline ? help callout — native details, works without JS. */
 export function HelpTip({ title, children }: { title: string; children: ReactNode }) {
@@ -11,20 +11,32 @@ export function HelpTip({ title, children }: { title: string; children: ReactNod
     const el = ref.current;
     if (!el) return;
 
-    const onToggle = () => {
+    const clearLayer = () => {
       const tip = el as DetailsWithLayer;
-      if (el.open) {
-        tip._dscLayer = pushModalLayer();
-      } else if (tip._dscLayer) {
+      if (tip._dscLayer) {
         popModalLayer(tip._dscLayer);
         delete tip._dscLayer;
       }
     };
 
+    const ensureLayer = () => {
+      const tip = el as DetailsWithLayer;
+      if (!el.open) {
+        clearLayer();
+        return;
+      }
+      if (!tip._dscLayer) tip._dscLayer = pushModalLayer();
+    };
+
+    // Remount / Strict Mode: re-register if already open.
+    ensureLayer();
+
+    const onToggle = () => ensureLayer();
+
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape" || !el.open) return;
       const tip = el as DetailsWithLayer;
-      if (tip._dscLayer != null && !isTopModalLayer(tip._dscLayer)) return;
+      if (tip._dscLayer == null || !isTopModalLayer(tip._dscLayer)) return;
       e.preventDefault();
       e.stopPropagation();
       el.open = false;
@@ -35,8 +47,7 @@ export function HelpTip({ title, children }: { title: string; children: ReactNod
     return () => {
       el.removeEventListener("toggle", onToggle);
       document.removeEventListener("keydown", onKey, true);
-      const tip = el as DetailsWithLayer;
-      if (tip._dscLayer) popModalLayer(tip._dscLayer);
+      clearLayer();
     };
   }, []);
 

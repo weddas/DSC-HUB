@@ -1,25 +1,20 @@
 /**
- * Nested Escape ownership for DecisionLayer / SlideDrawer / overlays.
- * Only the topmost registered layer may handle Escape.
+ * Nested Escape ownership for DecisionLayer / SlideDrawer / HelpTip.
+ * Opaque tokens (not depth-as-id) so out-of-order unmount cannot orphan higher layers.
  */
-let depth = 0;
+const stack: symbol[] = [];
 
-export function pushModalLayer(): number {
-  depth += 1;
-  return depth;
+export function pushModalLayer(): symbol {
+  const token = Symbol("modal-layer");
+  stack.push(token);
+  return token;
 }
 
-export function popModalLayer(layerId: number): void {
-  if (layerId <= 0) return;
-  if (depth === layerId) {
-    depth -= 1;
-    return;
-  }
-  // Out-of-order unmount (parent closed first) — clamp to the closed id.
-  if (layerId < depth) depth = layerId - 1;
-  if (depth < 0) depth = 0;
+export function popModalLayer(token: symbol): void {
+  const i = stack.lastIndexOf(token);
+  if (i >= 0) stack.splice(i, 1);
 }
 
-export function isTopModalLayer(layerId: number): boolean {
-  return layerId > 0 && layerId === depth;
+export function isTopModalLayer(token: symbol): boolean {
+  return stack.length > 0 && stack[stack.length - 1] === token;
 }

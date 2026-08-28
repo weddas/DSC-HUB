@@ -33,13 +33,14 @@ export function ZoneFocusProvider({ children }: { children: ReactNode }) {
   const location = useLocation();
   const [params, setParams] = useSearchParams();
   const urlOwned = pathOwnsTentQuery(location.pathname);
-  const urlFocus = parseFocus(params.get("tent") ?? params.get("zone"));
-  const [focus, setFocusState] = useState<ZoneFocus>(urlFocus);
+  const tentRaw = params.get("tent") ?? params.get("zone");
+  const [focus, setFocusState] = useState<ZoneFocus>(() => parseFocus(tentRaw));
 
-  // Climate / Dash own the query string — mirror into React state when present.
+  // Sync from URL only when tent/zone is present — bare Climate entry must keep in-memory focus.
   useEffect(() => {
-    if (urlOwned) setFocusState(urlFocus);
-  }, [urlOwned, urlFocus]);
+    if (!urlOwned || tentRaw == null) return;
+    setFocusState(parseFocus(tentRaw));
+  }, [urlOwned, tentRaw]);
 
   const setFocus = useCallback(
     (next: ZoneFocus) => {

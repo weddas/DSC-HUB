@@ -34,21 +34,33 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 |------|--------|-------|
 | HubLinkLine raw float Age | **done** | `fmtUptimeSeconds` + `?` tip (`39d7f88` + follow-up) |
 | HubLinkLine Beat/Age honesty | **done** | Beat never formats heartbeat tick as duration; Age is Up/Down with correct 0 semantics (mm-review Act-on) |
+| HubLinkLine offline Up / online Down / HS·HB labels | **done** | No Up while offline; no residual Down while online; `HS` duration vs `HB #` count + tip examples |
 | useHass / useHeldReading lint regressions | **done** | hassRef + entityId hold clear restored during-render (not effect) |
+| Nested Escape (drawer/confirm) | **done** | Opaque `modalLayer` symbol stack; topmost Escape for DecisionLayer / SlideDrawer / HelpTip |
 | Overview HelpTips placement | **done** | Moved beside climate bands (not hub status strip); Escape closes tip |
 | Live Climate / Light / SoftCal `?` tips | **done** | Full Auto vs takeover; photoperiod Want; soft cal ≠ lab stamp |
 | Root / Settings `?` tips | **done** | Got vs idle probe; In service honesty |
 | Tent cockpit `?tent=` URL fight | **done** | Removed `setFocus(tent)` from TentCockpit — App strip + write loop was sticky nav (N-LAYOUT-TENT-NAV residue) |
-| ZoneFocus URL ownership | **done** | `setFocus` only writes `?tent=` on Climate/Dash; React state is SoT elsewhere |
+| ZoneFocus URL ownership | **done** | `setFocus` only writes `?tent=` on Climate/Dash; sync from URL only when `tent`/`zone` present |
 | Grow Compose / Roster `?` tips | **done** | Draft clear on retire; Edit vs Delete |
 | Fleet / Learning / Research `?` tips | **done** | Kit pulse; learning samples; catalog honesty |
+| Grow secondary vs landing | **done** | Roster first in Grow tabs (matches `/grow/roster` landing) |
+| Honesty rail hub/panel / `+N` | **done** | Single hub chip; panel limited link; `+N` opens overflow list |
+| Honesty CTAs → demoted Mission | **done** | Beat/failsafe/panel copy point Fleet / Overview |
+| TentTargets stale Got as dash | **done** | Keep held values + HELD / `· held` styling |
+| Zone focus cosmetic only | **done** | Tip + `emphasize` dims Want columns |
+| Mission/Twin/cockpit HelpTips | **done** | Operator examples on triage / seat overlay / CFM |
+| SlideDrawer shell inert | **done** | Tried DecisionLayer parity; **reverted** — drawer is inside `.dsc-shell`; presentational scrim kept |
+| CFM nameplate honesty | **done** | Gap via `resolveCfm(...).kind === "nameplate"` → Learning |
+| Dead barrel + Sankey alias | **done** | Removed `components/index.ts` + `SankeyFlowPrototype` |
 | Unused `LungLoop.tsx` | **done** | Deslop — AirPathMap is the live lung viz |
 | Page header wrap (Compose + tips) | **done** | `.dsc-page-header` flex-wrap so actions/`?` don't clip at 390 |
 | Conditional hook `usePanelOfflineMs` | **done** | Always call `useOfflineMs` |
-| Help `?` tips on PD hub | **done** | Want/Got/Need + colour honesty; dashboard Full Auto tips in 1.2.2 |
+| Help `?` tips on PD hub | **done** | Want/Got/Need + colour honesty; dashboard Full Auto tips in 1.2.2; Tune honesty in PD 1.2.3 (WordPress-PD `1064b0d`, live publish pending) |
 | Overview missing `useFleet` import | **done** | Was a latent ReferenceError risk |
-| React Doctor score 38 | **noted** | Full-tree ~40 after Act-on; spa-dist noise; intentional render-time hass/hold refs |
+| React Doctor score | **noted** | Full-tree ~38–41; spa-dist noise; intentional render-time hass/hold refs; smoke ok on wave |
 | Live help 1.2.2 tips | **verified** | Dashboard `Help: Full Auto vs takeover` + Tabs vs workflows present 2026-08-28 |
+| Live help 1.2.3 | **pending verify** | Public tunnel/WP LAN intermittent (502/530) — re-publish when up |
 | Soft-cal Pi-native Got / session history | **deferred** | Needs brain/HA stack work — not this UX pass |
 | Phase 0 z2m / Sankey soak | **deferred** | Operator/hardware gates — do not paper over |
 | F-001–F-008 hardware | **deferred** | Honest OOS UI already; no fake wiring |

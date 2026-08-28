@@ -126,6 +126,7 @@ export function SlideDrawer({
   useEffect(() => {
     if (!open) return;
     restoreRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    // Do NOT set .dsc-shell inert — SlideDrawer lives inside the shell (unlike DecisionLayer portal).
     const panel = panelRef.current;
     const first = panel ? focusables(panel)[0] : null;
     first?.focus();
@@ -167,19 +168,7 @@ export function SlideDrawer({
       aria-hidden={!open}
       inert={!open ? true : undefined}
     >
-      <div
-        className="dsc-drawer-scrim"
-        role="button"
-        tabIndex={-1}
-        aria-label="Close drawer"
-        onClick={onClose}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            onClose();
-          }
-        }}
-      />
+      <div className="dsc-drawer-scrim" aria-hidden="true" onClick={onClose} />
       <aside
         ref={panelRef}
         className={`dsc-drawer-panel ${side}${wide ? " dsc-drawer-panel--wide" : ""}`}
