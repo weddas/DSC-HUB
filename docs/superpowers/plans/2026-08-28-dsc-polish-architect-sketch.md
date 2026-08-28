@@ -7,7 +7,7 @@
 ```
 Operator lands on /dsc/help/ → understands product honesty in <10s
   ? tip opens Want/Got/Need + colour semantics with examples
-Operator lands on Overview (:8787) → Age/Beat chips are human durations
+Operator lands on Overview (:8787) → hub Up is human duration; Want/Got + Colour ? tips open
 Retire plant → Compose draft empty (brain clear_build_helpers)
 Maintainer regenerates dsc-help.json → id/group survive extract tool
 ```
@@ -16,10 +16,10 @@ Maintainer regenerates dsc-help.json → id/group survive extract tool
 
 | Surface | Contract |
 |---------|----------|
-| `help_tip(summary, body_html)` | Native `<details>` `?` callout; no JS |
-| `HubLinkLine` | Ages via `fmtUptimeSeconds` only — never raw floats |
-| `extract_onboarding_content.CONTENT` | Always emit `workflows[].group` + `measures[].id` |
-| SPA `HelpTip` (next) | Mirror PD tip pattern for Want/Got/Full Auto on Overview |
+| `help_tip(summary, body_html)` | Native `<details>` `?` callout; no JS (PD / WordPress) |
+| `HubLinkLine` | Ages via `fmtUptimeSeconds` only — never raw floats (**done** tip `39d7f88`) |
+| `extract_onboarding_content.CONTENT` | Always emit `workflows[].group` + `measures[].id` (**done**) |
+| SPA `HelpTip` | HubLinkLine + Overview Want/Got/Colour (**done** tip `8208461`) — [`docs/brain/HELP-TIP.md`](../../brain/HELP-TIP.md); Full Auto tip still **next**; **SPA rebuild** still required |
 
 ## Synthesis decision
 
