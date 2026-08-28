@@ -12,7 +12,7 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 
 ## 2026-08-28 — DSC Help PD site (polish / deferred)
 
-> **done (v1.2.0)** — Live at `/dsc/help/*` (WordPress-PD). Closure pass: measure hashes, FAQ `<details>`, workflow groups, mobile diagram fallbacks, subnav, fail-loud Theme Builder.
+> **done (v1.2.0)** — Live at `/dsc/help/*` (WordPress-PD). Closure pass: measure hashes, FAQ `<details>`, workflow groups, mobile diagram fallbacks, subnav, fail-loud Theme Builder. Tip `b84edc2` closes the FOLLOWUPS polish row; Pi SPA / brain runbooks for the same window: [`docs/brain/WEBUI.md`](brain/WEBUI.md).
 
 | Item | Status | Suggestion |
 |------|--------|------------|
@@ -49,6 +49,7 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 | Notes gated when no roster slot; fmtReading + stale Got chip parity | done |
 | Smoke tests: `npm run test:smoke` (fmtReading / formatApiError / stages) | done |
 | Soft ≠ probe home ≠ tent unassign ≠ plant retire (three layers) | done |
+| Docs runbook | done — [`docs/brain/PLANT-SEAT.md`](brain/PLANT-SEAT.md) · [`docs/brain/PLANT-WIZARD.md`](brain/PLANT-WIZARD.md) |
 
 ---
 
@@ -64,6 +65,7 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 | All channels sampled (M/T/EC/pH/NPK); offsets only where HA helpers exist | done |
 | Pi-native Got without HA template enrichment | deferred — soft offsets ride HA Got = raw + offset stack |
 | Persist soft-cal session history in brain DB | deferred |
+| Docs layers (soft · peer · lab) | done — [`docs/ops/LAB-WET-CAL.md`](ops/LAB-WET-CAL.md) |
 
 ---
 
@@ -80,7 +82,7 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 | D | UX polish: compose, photoperiod, icons (after ~1 week live) |
 | E | Version 7.4.0 + AUDIT-CLOSURE-7.4 |
 
-**Git baseline:** `432d205` pushed; Pi SPA `index-IOZwdpgy.js`.
+**Git baseline:** `b84edc2` on `origin/master`; Pi SPA `index-DL1EcjhX.js` (+ calibrate/tune-fleet chunks). Demo / soft cal / plant seat runbooks: [`docs/brain/DEMO-MODE.md`](brain/DEMO-MODE.md) · [`docs/ops/LAB-WET-CAL.md`](ops/LAB-WET-CAL.md) · [`docs/brain/PLANT-SEAT.md`](brain/PLANT-SEAT.md).
 
 ---
 

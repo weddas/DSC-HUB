@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- **Plant seat ops** — `PATCH /roster/pots/{n}` identity blur-save; delete via `script.dsc_plant_retire`; Settings probe **Unassign pot** / **Remove probe role** (`clear_role`). Shared `PlantSeatPanel`. Docs: [`docs/brain/PLANT-SEAT.md`](docs/brain/PLANT-SEAT.md) · [`docs/brain/PLANT-WIZARD.md`](docs/brain/PLANT-WIZARD.md).
+- **Soft calibrate** — tap-water → HA Got offsets (`SoftCalWizard`); layers documented in [`docs/ops/LAB-WET-CAL.md`](docs/ops/LAB-WET-CAL.md). Soft ≠ peer ≠ lab wet ≠ probe home.
+- **Software demo** — `DSC_DEMO_MODE` + Compose `:8788` + PD embed CSP; runbook [`docs/brain/DEMO-MODE.md`](docs/brain/DEMO-MODE.md). Deploy `-SkipSpaBuild` noted in [`docs/ops/DSC-HUB-DOCKER.md`](docs/ops/DSC-HUB-DOCKER.md).
+- **Photoperiod timeline** — Light page 24h strips; [`docs/brain/PHOTOPERIOD-TIMELINE.md`](docs/brain/PHOTOPERIOD-TIMELINE.md).
+- Tip `b84edc2` · SPA `index-DL1EcjhX` (+ `calibrate-D1D5CnxU` · `tune-fleet-IPnSFs3d`). Surface still **7.3.0** until Phase E.
+
 ## Pi appliance — **v7.3.0** (2026-08-27)
 
 Full software closure: version truth, graph QoL, flow Sankey (air/heat/humidity), lab wet cal, R3F Twin on Pi SPA, Lovelace YAML retired. See [`docs/qa/AUDIT-CLOSURE-7.3.md`](docs/qa/AUDIT-CLOSURE-7.3.md).
