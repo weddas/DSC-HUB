@@ -26,7 +26,7 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 | Hardcoded `-N.jpg` media URLs | done | `resolve_help_media()` queries `/wp/v2/media?search=dsc-help-{key}` and picks newest matching `source_url`. |
 | Dead Interactivity API / unused shortcodes | done | Plugin v1.1.1→1.2.0: vanilla fallback JS only; shortcodes mirror widgets without `data-wp-*`; `help-store.js` removed. |
 
-> **follow-on (not blocking):** `tools/extract_onboarding_content.py` still omits `id`/`group` — regenerating content JSON from the extract tool would wipe those fields until the extractor is updated.
+> **follow-on (not blocking):** ~~`tools/extract_onboarding_content.py` still omits `id`/`group`~~ **done 2026-08-28** — extractor emits `group` + `id`; Compose-draft WIP copy aligned with `clear_build_helpers()`.
 
 ---
 
