@@ -127,9 +127,9 @@ export function tentWantRail(tent: Exclude<TentId, "unassigned">, hass: HassBits
   if (!seats.length || (!temp && !rh && !vpd)) {
     const fallbackStage =
       tent === "clone"
-        ? tentStage === "Clones & Seedlings"
+        ? tentStage === "Follow Plants" || tentStage === "Clones & Seedlings"
           ? "Seedling"
-          : tentStage === "Mother"
+          : tentStage === "Custom" || tentStage === "Mother"
             ? "Vegetative"
             : ""
         : tentStage;

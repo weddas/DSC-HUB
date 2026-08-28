@@ -149,9 +149,9 @@ espnow:
           case 18: val ? id(hum_intake_routing_switch).turn_on() : id(hum_intake_routing_switch).turn_off(); break;
           case 19: val ? id(destrat_pulse_switch).turn_on()      : id(destrat_pulse_switch).turn_off();      break;
           // ----- selects: set_index triggers each select's set_action -----
-          case 20: id(grow_stage).make_call().set_index((size_t) clampi(val,0,10)).perform(); break;
+          case 20: id(grow_stage).make_call().set_index((size_t) clampi(val,0,11)).perform(); break;
           case 21: id(control_strategy).make_call().set_index((size_t) clampi(val,0,2)).perform(); break;
-          case 22: id(clone_mode).make_call().set_index((size_t) clampi(val,0,4)).perform(); break;
+          case 22: id(clone_mode).make_call().set_index((size_t) clampi(val,0,3)).perform(); break;
           case 23: id(clone_photo_select).make_call().set_index((size_t) clampi(val,0,1)).perform(); break;
           case 24: id(priority_tent_select).make_call().set_index((size_t) clampi(val,0,1)).perform(); break;
           // ----- fans: mirror the OLED live-adjust (engage Manual, drive fan) -----
@@ -355,7 +355,7 @@ script:
             std::vector<uint8_t> p; p.reserve(60);
             auto i16 = [&](float v, float sc){ int16_t t = isnan(v) ? (int16_t)0x8000 : (int16_t) lroundf(v * sc); p.push_back(t & 0xFF); p.push_back((t >> 8) & 0xFF); };
             auto u8  = [&](int v){ p.push_back((uint8_t)(v < 0 ? 0 : (v > 255 ? 255 : v))); };
-            p.push_back(0xD1); p.push_back(0x01);
+            p.push_back(0xD1); p.push_back(0x02);
             i16(id(temp_sensor).state,100);   i16(id(clone_temp).state,100); i16(id(room_temp).state,100);
             i16(id(humidity_sensor).state,100); i16(id(clone_rh).state,100); i16(id(room_rh).state,100);
             i16(id(vpd_sensor).state,100);    i16(id(clone_vpd).state,100);
@@ -390,7 +390,7 @@ script:
             std::vector<uint8_t> p; p.reserve(60);
             auto i16 = [&](float v, float sc){ int16_t t = isnan(v) ? (int16_t)0x8000 : (int16_t) lroundf(v * sc); p.push_back(t & 0xFF); p.push_back((t >> 8) & 0xFF); };
             auto u8  = [&](int v){ p.push_back((uint8_t)(v < 0 ? 0 : (v > 255 ? 255 : v))); };
-            p.push_back(0xD1); p.push_back(0x01);
+            p.push_back(0xD1); p.push_back(0x02);
             i16(id(temp_sensor).state,100);   i16(id(clone_temp).state,100); i16(id(room_temp).state,100);
             i16(id(humidity_sensor).state,100); i16(id(clone_rh).state,100); i16(id(room_rh).state,100);
             i16(id(vpd_sensor).state,100);    i16(id(clone_vpd).state,100);

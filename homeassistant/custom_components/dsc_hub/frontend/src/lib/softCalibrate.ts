@@ -1,17 +1,15 @@
-/** Soft calibrate — tap-water + after-water captures → HA Got offsets (not lab ESP). */
+/** Soft calibrate — Raw Modbus captures → prefer ESP NVS cal plane (not stacked HA+ESP). */
 
 export const SOFT_CAL_POTS = [1, 2, 3, 4] as const;
 export type SoftCalPot = (typeof SOFT_CAL_POTS)[number];
 export type SoftCalPhase = "water" | "after_water";
 
+/** SoftCal channels only — N/P/K are EC-derived; do not SoftCal as independent. */
 export type SoftCalChannels = {
   moisture: number | null;
   soilTemp: number | null;
   ec: number | null;
   ph: number | null;
-  n: number | null;
-  p: number | null;
-  k: number | null;
 };
 
 export type SoftCalSample = SoftCalChannels & { pot: SoftCalPot; at: number };
@@ -25,30 +23,27 @@ export type SoftCalOffsets = {
 const SAMPLE_MS = 1000;
 const SAMPLE_COUNT = 15;
 const WATER_MOISTURE_TARGET = 100;
+const MIN_UNIQUE_MODBUS = 3;
 
 export function softCalEntityIds(pot: SoftCalPot): {
   moisture: string;
   soilTemp: string;
   ec: string;
   ph: string;
-  n: string;
-  p: string;
-  k: string;
   offsetPh: string;
   offsetEc: string;
   offsetMoisture: string;
+  dualCalStack: string;
 } {
   return {
-    moisture: `sensor.dsc_pot${pot}_soil_moisture`,
-    soilTemp: `sensor.dsc_pot${pot}_soil_temperature`,
-    ec: `sensor.dsc_pot${pot}_soil_conductivity`,
-    ph: `sensor.dsc_pot${pot}_soil_ph`,
-    n: `sensor.dsc_pot${pot}_soil_nitrogen`,
-    p: `sensor.dsc_pot${pot}_soil_phosphorus`,
-    k: `sensor.dsc_pot${pot}_soil_potassium`,
+    moisture: `sensor.dsc_pot${pot}_soil_moisture_raw`,
+    soilTemp: `sensor.dsc_pot${pot}_soil_temperature_raw`,
+    ec: `sensor.dsc_pot${pot}_soil_conductivity_raw`,
+    ph: `sensor.dsc_pot${pot}_soil_ph_raw`,
     offsetPh: `input_number.dsc_pot${pot}_offset_ph`,
     offsetEc: `input_number.dsc_pot${pot}_offset_ec_us`,
     offsetMoisture: `input_number.dsc_pot${pot}_offset_moisture`,
+    dualCalStack: `binary_sensor.dsc_pot${pot}_dual_cal_stack`,
   };
 }
 
@@ -66,30 +61,16 @@ export function readSoftCalChannels(
     soilTemp: finiteOrNull(num(ids.soilTemp, NaN)),
     ec: finiteOrNull(num(ids.ec, NaN)),
     ph: finiteOrNull(num(ids.ph, NaN)),
-    n: finiteOrNull(num(ids.n, NaN)),
-    p: finiteOrNull(num(ids.p, NaN)),
-    k: finiteOrNull(num(ids.k, NaN)),
   };
 }
 
 export function averageChannels(samples: SoftCalChannels[]): SoftCalChannels {
-  const keys: (keyof SoftCalChannels)[] = [
-    "moisture",
-    "soilTemp",
-    "ec",
-    "ph",
-    "n",
-    "p",
-    "k",
-  ];
+  const keys: (keyof SoftCalChannels)[] = ["moisture", "soilTemp", "ec", "ph"];
   const out: SoftCalChannels = {
     moisture: null,
     soilTemp: null,
     ec: null,
     ph: null,
-    n: null,
-    p: null,
-    k: null,
   };
   for (const key of keys) {
     const vals = samples.map((s) => s[key]).filter((v): v is number => v != null && Number.isFinite(v));
@@ -149,25 +130,44 @@ export type SoftCalCaptureResult = {
   varianceMoisture: number | null;
   offsets: SoftCalOffsets | null;
   sampleCount: number;
+  uniqueModbusTimestamps: number;
+  cachedNotSigma: boolean;
+};
+
+export type SoftCalEntityMeta = {
+  lastUpdated?: string | number | null;
 };
 
 /**
- * Collect SAMPLE_COUNT raw readings ~1s apart for each selected pot.
- * Caller supplies a live `num` reader (re-read each tick).
+ * Collect SAMPLE_COUNT readings. Prefer unique Modbus last_updated stamps (≥3)
+ * or flag cachedNotSigma (1 Hz poll of a 60s holding register is not σ).
  */
 export async function captureSoftCalAverages(
   pots: SoftCalPot[],
   num: (id: string, fb?: number) => number,
-  opts?: { samples?: number; intervalMs?: number; onTick?: (done: number, total: number) => void },
+  opts?: {
+    samples?: number;
+    intervalMs?: number;
+    onTick?: (done: number, total: number) => void;
+    entityMeta?: (id: string) => SoftCalEntityMeta | undefined;
+  },
 ): Promise<SoftCalCaptureResult[]> {
   const total = opts?.samples ?? SAMPLE_COUNT;
   const intervalMs = opts?.intervalMs ?? SAMPLE_MS;
   const buckets = new Map<SoftCalPot, SoftCalChannels[]>();
-  for (const pot of pots) buckets.set(pot, []);
+  const stamps = new Map<SoftCalPot, Set<string>>();
+  for (const pot of pots) {
+    buckets.set(pot, []);
+    stamps.set(pot, new Set());
+  }
 
   for (let i = 0; i < total; i++) {
     for (const pot of pots) {
+      const ids = softCalEntityIds(pot);
       buckets.get(pot)!.push(readSoftCalChannels(pot, num));
+      const meta = opts?.entityMeta?.(ids.ph);
+      const stamp = meta?.lastUpdated != null ? String(meta.lastUpdated) : `tick-${i}`;
+      stamps.get(pot)!.add(stamp);
     }
     opts?.onTick?.(i + 1, total);
     if (i < total - 1) {
@@ -177,6 +177,7 @@ export async function captureSoftCalAverages(
 
   return pots.map((pot) => {
     const samples = buckets.get(pot) ?? [];
+    const unique = stamps.get(pot)?.size ?? 0;
     const average = averageChannels(samples);
     return {
       pot,
@@ -185,6 +186,8 @@ export async function captureSoftCalAverages(
       varianceMoisture: channelVariance(samples, "moisture"),
       offsets: null,
       sampleCount: samples.length,
+      uniqueModbusTimestamps: unique,
+      cachedNotSigma: unique < MIN_UNIQUE_MODBUS,
     };
   });
 }
@@ -200,4 +203,11 @@ export function attachWaterOffsets(
   }));
 }
 
-export { SAMPLE_COUNT, WATER_MOISTURE_TARGET };
+export function softCalBlockedByDualStack(
+  pot: SoftCalPot,
+  state: (id: string, fb?: string) => string,
+): boolean {
+  return state(softCalEntityIds(pot).dualCalStack, "off") === "on";
+}
+
+export { SAMPLE_COUNT, WATER_MOISTURE_TARGET, MIN_UNIQUE_MODBUS };

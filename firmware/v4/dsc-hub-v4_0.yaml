@@ -102,14 +102,22 @@ esphome:
             // not re-fire on boot, and Off historically returned before
             // writing the idx — so vitals could keep broadcasting the old
             // mode after a power cycle while Clone Mode was already Off.
+            // Policy remap (vitals 0xD1 ver 0x02): Follow 4x8 / Follow Plants /
+            // Custom / Off. Migrate legacy Mother / Clones & Seedlings once.
             {
               const char *opt = id(clone_mode).current_option();
               std::string m = opt ? opt : "";
-              if      (m == "Follow 4x8")         id(clone_mode_idx) = 0;
-              else if (m == "Clones & Seedlings") id(clone_mode_idx) = 1;
-              else if (m == "Mother")            id(clone_mode_idx) = 2;
-              else if (m == "Custom")            id(clone_mode_idx) = 3;
-              else if (m == "Off")               id(clone_mode_idx) = 4;
+              if (m == "Clones & Seedlings" || m == "Clones") {
+                id(clone_mode).make_call().set_option("Follow Plants").perform();
+                m = "Follow Plants";
+              } else if (m == "Mother") {
+                id(clone_mode).make_call().set_option("Custom").perform();
+                m = "Custom";
+              }
+              if      (m == "Follow 4x8")     id(clone_mode_idx) = 0;
+              else if (m == "Follow Plants") id(clone_mode_idx) = 1;
+              else if (m == "Custom")        id(clone_mode_idx) = 2;
+              else if (m == "Off")           id(clone_mode_idx) = 3;
             }
         - lambda: |-
             // v2.4.2 (BUG-3): SEED THE SAFE VENTILATION BASELINE UNCONDITIONALLY.
@@ -1076,12 +1084,12 @@ globals:
     type: float
     restore_value: true
     initial_value: '80.0'
-  - id: clone_mode_idx              # 0=Follow 4x8, 1=Clones&Seedlings,
-    type: int                       # 2=Mother, 3=Custom, 4=Off (select
-    restore_value: true             # can't re-fire set_action on boot ->
-    initial_value: '1'              # int mirror persists, like strategy_idx)
-  # Latch: apply_clone_mode may write preset numbers while mode != Custom.
-  # HA / panel / entity UI writes are rejected unless mode is Custom.
+  - id: clone_mode_idx              # 0=Follow 4x8, 1=Follow Plants,
+    type: int                       # 2=Custom, 3=Off (select can't re-fire
+    restore_value: true             # set_action on boot -> int mirror)
+    initial_value: '1'
+  # Latch: legacy preset stamps (removed for Follow Plants). HA / panel
+  # writes accepted when Custom or Follow Plants (Pi owns numbers).
   - id: clone_preset_write
     type: bool
     restore_value: false
@@ -2018,21 +2026,19 @@ select:
           else id(control_strategy_idx) = 2;
       - script.execute: tx_panel_sync
 
-  # ===== v2.2 · CLONE MODE — small select, not a second stage engine.
-  # Clones don't traverse ten stages in a 2x4. Follow 4x8 reads the
-  # main stage targets live; the presets write clone defaults into the
-  # sliders once (fine-tune after, it persists); Custom never writes.
+  # ===== Climate Mode — policy select, not a second stage engine.
+  # Follow 4x8: live main stage targets. Follow Plants: Pi writes clone_*
+  # numbers (~12h Want intersection). Custom: sliders alone. Off: park 2x4.
   - platform: template
     name: "Clone Mode"
     id: clone_mode
     icon: "mdi:sprout-outline"
     optimistic: true
     restore_value: true
-    initial_option: "Clones & Seedlings"
+    initial_option: "Follow Plants"
     options:
       - "Follow 4x8"
-      - "Clones & Seedlings"
-      - "Mother"
+      - "Follow Plants"
       - "Custom"
       - "Off"
     set_action:
@@ -2279,13 +2285,14 @@ number:
           condition:
             lambda: |-
               return id(clone_preset_write) ||
-                     id(clone_mode).current_option() == "Custom";
+                     id(clone_mode).current_option() == "Custom" ||
+                     id(clone_mode).current_option() == "Follow Plants";
           then:
             - globals.set: {id: clone_temp_target, value: !lambda 'return x;'}
             - script.execute: tx_panel_sync
           else:
             - lambda: |-
-                ESP_LOGW("clone", "Reject Clone Target Temp — mode '%s' (switch to Custom)",
+                ESP_LOGW("clone", "Reject Clone Target Temp — mode '%s' (Custom or Follow Plants)",
                          id(clone_mode).current_option());
                 id(num_clone_temp).publish_state(id(clone_temp_target));
 
@@ -2305,13 +2312,14 @@ number:
           condition:
             lambda: |-
               return id(clone_preset_write) ||
-                     id(clone_mode).current_option() == "Custom";
+                     id(clone_mode).current_option() == "Custom" ||
+                     id(clone_mode).current_option() == "Follow Plants";
           then:
             - globals.set: {id: clone_vpd_min, value: !lambda 'return x;'}
             - script.execute: tx_panel_sync
           else:
             - lambda: |-
-                ESP_LOGW("clone", "Reject Clone VPD Min — mode '%s' (switch to Custom)",
+                ESP_LOGW("clone", "Reject Clone VPD Min — mode '%s' (Custom or Follow Plants)",
                          id(clone_mode).current_option());
                 id(num_clone_vpd_min).publish_state(id(clone_vpd_min));
 
@@ -2331,13 +2339,14 @@ number:
           condition:
             lambda: |-
               return id(clone_preset_write) ||
-                     id(clone_mode).current_option() == "Custom";
+                     id(clone_mode).current_option() == "Custom" ||
+                     id(clone_mode).current_option() == "Follow Plants";
           then:
             - globals.set: {id: clone_vpd_max, value: !lambda 'return x;'}
             - script.execute: tx_panel_sync
           else:
             - lambda: |-
-                ESP_LOGW("clone", "Reject Clone VPD Max — mode '%s' (switch to Custom)",
+                ESP_LOGW("clone", "Reject Clone VPD Max — mode '%s' (Custom or Follow Plants)",
                          id(clone_mode).current_option());
                 id(num_clone_vpd_max).publish_state(id(clone_vpd_max));
 
@@ -2357,13 +2366,14 @@ number:
           condition:
             lambda: |-
               return id(clone_preset_write) ||
-                     id(clone_mode).current_option() == "Custom";
+                     id(clone_mode).current_option() == "Custom" ||
+                     id(clone_mode).current_option() == "Follow Plants";
           then:
             - globals.set: {id: clone_rh_min, value: !lambda 'return x;'}
             - script.execute: tx_panel_sync
           else:
             - lambda: |-
-                ESP_LOGW("clone", "Reject Clone RH Min — mode '%s' (switch to Custom)",
+                ESP_LOGW("clone", "Reject Clone RH Min — mode '%s' (Custom or Follow Plants)",
                          id(clone_mode).current_option());
                 id(num_clone_rh_min).publish_state(id(clone_rh_min));
 
@@ -2383,13 +2393,14 @@ number:
           condition:
             lambda: |-
               return id(clone_preset_write) ||
-                     id(clone_mode).current_option() == "Custom";
+                     id(clone_mode).current_option() == "Custom" ||
+                     id(clone_mode).current_option() == "Follow Plants";
           then:
             - globals.set: {id: clone_rh_max, value: !lambda 'return x;'}
             - script.execute: tx_panel_sync
           else:
             - lambda: |-
-                ESP_LOGW("clone", "Reject Clone RH Max — mode '%s' (switch to Custom)",
+                ESP_LOGW("clone", "Reject Clone RH Max — mode '%s' (Custom or Follow Plants)",
                          id(clone_mode).current_option());
                 id(num_clone_rh_max).publish_state(id(clone_rh_max));
 
@@ -3881,50 +3892,45 @@ script:
           ESP_LOGI("grow", "Boot: stage '%s' relabelled (%dh light), targets untouched",
                    s.c_str(), id(stage_light_hours));
 
-  # ---- v2.2 · Clone Mode loader. Presets write defaults ONCE into the
-  # clone sliders (fine-tune persists after). Follow 4x8 / Custom never
-  # write — Follow resolves against the live main targets at runtime.
+  # ---- Climate Mode loader. Policy only — no Mother/Clones preset stamps.
+  # Follow 4x8 / Follow Plants / Custom never stamp numbers here.
+  # Unknown mode: FAIL CLOSED (log + return) — never else→wet-clone presets.
   - id: apply_clone_mode
     mode: restart
     then:
       - lambda: |-
           const char *opt = id(clone_mode).current_option();
           std::string m = opt ? opt : "";
-          // v2.3: OFF = 2x4 out of service. Excluded from arbitration and
-          // from its donor/reservoir role; its intake trickles (see
-          // run_climate_logic). Sliders untouched.
-          // v2.4: the SF1000 lives in THIS tent — Clone Mode Off darks it.
           if (m == "Off") {
-            id(clone_mode_idx) = 4;   // vitals 0xD1 broadcasts this; panel maps 4="Off"
+            id(clone_mode_idx) = 3;   // vitals 0xD1 ver 0x02; panel maps 3="Off"
             id(clone_active) = false;
             id(clone_hum_demand).turn_off();
             id(clone_lights_on) = false;
             id(light_ramp_state) = 0;
             id(light_current_pct) = 0.0f;
-            id(light_write_guard_until) = millis() + 1000;   // our write, don't self-latch
-            id(light_sf1000).turn_off().perform();           // dark the tent now
+            id(light_write_guard_until) = millis() + 1000;
+            id(light_sf1000).turn_off().perform();
             ESP_LOGI("clone", "Mode OFF -> 2x4 inactive (no draw, no donor, SF1000 off)");
             return;
           }
           id(clone_active) = true;
-          if      (m == "Follow 4x8")  { id(clone_mode_idx) = 0; ESP_LOGI("clone", "Mode: Follow 4x8 (live main targets)"); return; }
-          else if (m == "Mother")      { id(clone_mode_idx) = 2; }
-          else if (m == "Custom")      { id(clone_mode_idx) = 3; ESP_LOGI("clone", "Mode: Custom (sliders untouched)"); return; }
-          else                         { id(clone_mode_idx) = 1; }
-          float tt, vmin, vmax, rmin, rmax;
-          if (id(clone_mode_idx) == 2) { tt=25; vmin=0.8f; vmax=1.1f; rmin=55; rmax=65; }  // Mother = veg-like
-          else                         { tt=24; vmin=0.4f; vmax=0.8f; rmin=70; rmax=80; }  // Clones & Seedlings
-          // Preset latch: set_action rejects non-Custom HA/panel writes, but
-          // this path must stamp the mode defaults onto the number entities.
-          id(clone_preset_write) = true;
-          id(num_clone_temp).make_call().set_value(tt).perform();
-          id(num_clone_vpd_min).make_call().set_value(vmin).perform();
-          id(num_clone_vpd_max).make_call().set_value(vmax).perform();
-          id(num_clone_rh_min).make_call().set_value(rmin).perform();
-          id(num_clone_rh_max).make_call().set_value(rmax).perform();
-          id(clone_preset_write) = false;
-          ESP_LOGI("clone", "Mode '%s': VPD %.1f-%.1f, RH %.0f-%.0f, %.0fC",
-                   m.c_str(), vmin, vmax, rmin, rmax, tt);
+          if (m == "Follow 4x8") {
+            id(clone_mode_idx) = 0;
+            ESP_LOGI("clone", "Mode: Follow 4x8 (live main targets)");
+            return;
+          }
+          if (m == "Follow Plants") {
+            id(clone_mode_idx) = 1;
+            ESP_LOGI("clone", "Mode: Follow Plants (Pi owns clone_* numbers; no stamp)");
+            return;
+          }
+          if (m == "Custom") {
+            id(clone_mode_idx) = 2;
+            ESP_LOGI("clone", "Mode: Custom (sliders untouched)");
+            return;
+          }
+          ESP_LOGW("clone", "Unknown Climate Mode '%s' — no stamp (fail-closed)", m.c_str());
+          return;
 
   # ---- Climate auto-curve + humidifier/dehumidifier demand ----
   - id: run_climate_logic

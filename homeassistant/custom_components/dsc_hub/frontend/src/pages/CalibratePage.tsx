@@ -441,13 +441,18 @@ function LabWetCalPanel({ disabled }: { disabled: boolean }) {
   const [confirm, setConfirm] = useState(false);
 
   const runLabWet = async () => {
-    setStatus(`Stamping pot${pot} with ${bufferPct}% buffer…`);
+    setStatus(`Stamping pot${pot} via dsc_pots_apply_lab_wet_to_esp…`);
     try {
-      await callService("script", "turn_on", {
-        entity_id: `script.dsc_pot${pot}_lab_wet_cal`,
-        variables: { buffer_pct: Number(bufferPct) },
+      await callService("input_number", "set_value", {
+        entity_id: "input_number.dsc_lab_wet_pot",
+        value: Number(pot),
       });
-      setStatus(`Lab wet script triggered for pot${pot}. Verify buffer mark on Root Zone.`);
+      await callService("script", "turn_on", {
+        entity_id: "script.dsc_pots_apply_lab_wet_to_esp",
+      });
+      setStatus(
+        `Lab wet → ESP script triggered for pot${pot} (buffer ${bufferPct}% noted in helpers). Verify on Root Zone.`,
+      );
     } catch (exc) {
       setStatus(exc instanceof Error ? exc.message : "Lab wet failed — see docs/ops/LAB-WET-CAL.md");
     } finally {

@@ -104,6 +104,9 @@
 #  v5.1.12: blank boot — backlight off until page_boot is painted; hold
 #  Starting until ESP-NOW hub vitals (timeout fallback); then arm full UI.
 #  Kills the white-noise flash while Wi-Fi/heap settle with LVGL paused.
+#  v5.1.15: Climate Mode policy remap (0xD1 ver 0x02) — Follow 4x8 /
+#    Follow Plants / Custom / Off. Grow stage label rail includes Custom
+#    before Off (idx 0–11). **Flash hub + panel together.**
 #  v5.1.14: ESP-NOW silent recovery ladder (hello ping → WiFi bounce →
 #    reboot) + optional wifi_bssid AP pin; accepts hub 0xD0 fleet beat.
 #  v5.1.13: panel hello (op 57) so hub knows glass is coming; Starting
@@ -1268,7 +1271,7 @@ text_sensor:
     internal: true
     update_interval: never
     lambda: |-
-        const char* o[]={"Germination","Seedling","Early Vegetative","Vegetative","Late (Push) Vegetative","Early Flowering","Flowering","Late Flowering","Final 48-72h Flowering","Dry Mode","Off"}; int i=id(gv_stage); return std::string(i>=0&&i<11?o[i]:"--");
+        const char* o[]={"Germination","Seedling","Early Vegetative","Vegetative","Late (Push) Vegetative","Early Flowering","Flowering","Late Flowering","Final 48-72h Flowering","Dry Mode","Custom","Off"}; int i=id(gv_stage); return std::string(i>=0&&i<12?o[i]:"--");
   # pot plant-name labels (hub relays via 0xD4 from pot HA entities)
   - platform: template
     id: p1_plant
@@ -1301,7 +1304,7 @@ text_sensor:
     internal: true
     update_interval: never
     lambda: |-
-        const char* o[]={"Follow 4x8","Clones & Seedlings","Mother","Custom","Off"}; int i=id(gv_cmode); return std::string(i>=0&&i<5?o[i]:"--");
+        const char* o[]={"Follow 4x8","Follow Plants","Custom","Off"}; int i=id(gv_cmode); return std::string(i>=0&&i<4?o[i]:"--");
   - platform: template
     id: sel_priority
     internal: true
@@ -4798,8 +4801,8 @@ script:
           bool fan_int_main_on = id(gv_fan_imain) > 0, fan_int_clone_on = id(gv_fan_iclone) > 0;
           bool st_full_auto = mode & 1, st_takeover = mode & 4, st_auto_photo = mode & 8;
           bool st_light_hold = mode & 16, st_hum_routing = coord & 1, st_destrat = coord & 2;
-          static const char* CMODE_N[] = {"Follow 4x8","Clones & Seedlings","Mother","Custom","Off"};
-          const char* sel_clone_mode = (cmode>=0&&cmode<5)?CMODE_N[cmode]:"--";
+          static const char* CMODE_N[] = {"Follow 4x8","Follow Plants","Custom","Off"};
+          const char* sel_clone_mode = (cmode>=0&&cmode<4)?CMODE_N[cmode]:"--";
           const char* p1_plant = id(gv_plant1).c_str();
           const char* p2_plant = id(gv_plant2).c_str();
           const char* p3_plant = id(gv_plant3).c_str();

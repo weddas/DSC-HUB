@@ -34,6 +34,11 @@ ENTITY_METRIC_MAP: dict[str, tuple[str, str]] = {
     "sensor.dsc_pot2_soil_temperature": ("pot2", "soil_temp_c"),
     "sensor.dsc_pot3_soil_temperature": ("pot3", "soil_temp_c"),
     "sensor.dsc_pot4_soil_temperature": ("pot4", "soil_temp_c"),
+    "sensor.dsc_pot1_soil_conductivity": ("pot1", "ec_us"),
+    "sensor.dsc_pot2_soil_conductivity": ("pot2", "ec_us"),
+    "sensor.dsc_pot3_soil_conductivity": ("pot3", "ec_us"),
+    "sensor.dsc_pot4_soil_conductivity": ("pot4", "ec_us"),
+    # Legacy alias — prefer soil_conductivity when both exist in ingest
     "sensor.dsc_pot1_soil_ec": ("pot1", "ec_us"),
     "sensor.dsc_pot2_soil_ec": ("pot2", "ec_us"),
     "sensor.dsc_pot3_soil_ec": ("pot3", "ec_us"),

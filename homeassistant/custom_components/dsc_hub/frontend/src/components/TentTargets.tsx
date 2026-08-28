@@ -215,7 +215,9 @@ function TentColumn({
         <div style={{ marginBottom: 10 }}>
           <EntitySelect entityId="select.dsc_hub_clone_mode" label="Climate mode" icon="climate" />
           <p className="dsc-muted" style={{ fontSize: 12, margin: "6px 0 0" }}>
-            Schedule follow (photoperiod) is on the Light desk — separate from climate mode.
+            Follow 4×8 mirrors main stage targets. Follow Plants intersects Want for 2×4 plants (Pi,
+            ~12h). Custom leaves sliders alone. Off parks the 2×4. Photoperiod follow is on Light —
+            separate from climate mode.
           </p>
         </div>
       ) : null}

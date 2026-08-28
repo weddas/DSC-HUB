@@ -12,6 +12,7 @@ import {
   captureSoftCalAverages,
   readSoftCalChannels,
   roundOffset,
+  softCalBlockedByDualStack,
   softCalEntityIds,
   type SoftCalCaptureResult,
   type SoftCalPhase,
@@ -32,15 +33,17 @@ function CaptureTable({ rows }: { rows: SoftCalCaptureResult[] }) {
           <span>T {fmt(row.average.soilTemp)}°C</span>
           <span>EC {fmt(row.average.ec, 0)}</span>
           <span>pH {fmt(row.average.ph, 2)}</span>
-          <span>
-            NPK {fmt(row.average.n, 0)}/{fmt(row.average.p, 0)}/{fmt(row.average.k, 0)}
-          </span>
+          {row.cachedNotSigma ? (
+            <StatusChip label="cached not σ" tone="warn" />
+          ) : (
+            <StatusChip label={`${row.uniqueModbusTimestamps} unique`} tone="ok" />
+          )}
           {row.offsets ? (
             <span className="dsc-muted">
               Δ pH {fmt(row.offsets.ph, 2)} · M {fmt(row.offsets.moisture)} · EC {fmt(row.offsets.ec, 0)}
             </span>
           ) : null}
-          {row.variancePh != null ? (
+          {row.variancePh != null && !row.cachedNotSigma ? (
             <StatusChip label={`σ pH ${row.variancePh.toFixed(2)}`} tone={row.variancePh <= 0.15 ? "ok" : "warn"} />
           ) : null}
         </div>
@@ -54,7 +57,7 @@ function CaptureTable({ rows }: { rows: SoftCalCaptureResult[] }) {
  * then second capture after watering in pots (verify / optional pH refine).
  */
 export function SoftCalWizard() {
-  const { num } = useEntityBus();
+  const { num, entity, state } = useEntityBus();
   const { callService } = useFleetActions();
   const [selected, setSelected] = useState<SoftCalPot[]>([1, 2]);
   const [phase, setPhase] = useState<SoftCalPhase>("water");
@@ -96,17 +99,28 @@ export function SoftCalWizard() {
 
     setBusy(true);
     setStatus("");
-    setProgress(`Sampling ${SAMPLE_COUNT}s…`);
+    setProgress(`Sampling ${SAMPLE_COUNT}s (Soil * Raw)…`);
     try {
       let rows = await captureSoftCalAverages(selected, num, {
         onTick: (done, total) => setProgress(`Sampling ${done}/${total}…`),
+        entityMeta: (id) => {
+          const ent = entity(id);
+          return { lastUpdated: (ent as { last_updated?: string } | undefined)?.last_updated ?? null };
+        },
       });
+      if (rows.some((r) => r.cachedNotSigma)) {
+        setStatus(
+          "Warning: fewer than 3 unique Modbus timestamps — showing “cached not σ”. Prefer cal_session burst firmware or wait for fresh polls.",
+        );
+      }
       if (phase === "water") {
         rows = attachWaterOffsets(rows, ph, ecRaw);
         setWaterRows(rows);
         setPendingApply(rows);
         setProgress("");
-        setStatus("Tap-water averages ready — confirm to write soft HA offsets.");
+        if (!rows.some((r) => r.cachedNotSigma)) {
+          setStatus("Tap-water Raw averages ready — confirm to write soft offsets (gate dual_cal_stack).");
+        }
       } else {
         if (Number.isFinite(ph) && knownPh.trim() !== "") {
           rows = attachWaterOffsets(rows, ph, ecRaw);
@@ -126,10 +140,17 @@ export function SoftCalWizard() {
     } finally {
       setBusy(false);
     }
-  }, [knownEc, knownPh, num, phase, selected]);
+  }, [entity, knownEc, knownPh, num, phase, selected]);
 
   const applyOffsets = async () => {
     if (!pendingApply) return;
+    const blocked = pendingApply.filter((row) => softCalBlockedByDualStack(row.pot, state));
+    if (blocked.length) {
+      setStatus(
+        `Blocked: dual_cal_stack on pot ${blocked.map((b) => b.pot).join(", ")} — push SoftCal to ESP NVS and zero HA offsets first.`,
+      );
+      return;
+    }
     setBusy(true);
     setStatus("Writing soft HA offsets…");
     try {
@@ -154,7 +175,7 @@ export function SoftCalWizard() {
       setPendingApply(null);
       if (phase === "water") {
         setStatus(
-          "Soft offsets written (Got = raw + offset). Seat probes in watered pots, then Soft Calibrate again for capture 2.",
+          "Soft offsets written. Prefer one cal plane: push to ESP NVS and zero HA when ready. Then Soft Calibrate again after seating probes.",
         );
         setPhase("after_water");
       } else {
@@ -184,8 +205,9 @@ export function SoftCalWizard() {
       <p className="dsc-honesty" style={{ marginTop: 0 }}>
         Put selected probes in a glass of tap water, enter the real pH, Soft Calibrate to average drift and write{" "}
         <strong>HA Got offsets</strong> (not lab ESP stamp). Then seat in watered pots and Soft Calibrate again for
-        capture 2. Channels sampled: moisture, temp, EC, pH, NPK — offsets apply to pH / moisture
-        {knownEc.trim() ? " / EC" : ""} only.
+        capture 2. Samples <strong>Soil * Raw</strong> (moisture, temp, EC, pH) — not N/P/K. Offsets apply to pH /
+        moisture
+        {knownEc.trim() ? " / EC" : ""} only. Gate: dual_cal_stack blocks commit.
       </p>
 
       <div className="dsc-chip-row" style={{ marginBottom: 10 }}>
