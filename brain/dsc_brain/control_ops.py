@@ -411,7 +411,11 @@ def _seated_clone_recipe() -> dict[str, Any] | None:
 
 
 async def apply_clone_tent_automation() -> dict[str, Any]:
-    """Drive 2x4 clone-tent mode from roster plants when takeover is off."""
+    """Drive 2x4 Climate Mode from roster when takeover is off.
+
+    Never writes select.dsc_hub_grow_stage (4×8 stage is main-tent owned).
+    Follow Plants numbers are written by apply_follow_plants.
+    """
     takeover = _control_state("switch.dsc_hub_manual_takeover")
     if takeover == "on":
         return {"applied": False, "reason": "takeover on"}
@@ -422,8 +426,6 @@ async def apply_clone_tent_automation() -> dict[str, Any]:
         return {"applied": False, "reason": "no seated 2x4 plant"}
     stage = str(recipe.get("growth_stage") or recipe.get("stage") or "")
     mode = clone_mode_for_stage(stage)
-    hours = _clone_hours_for_stage(stage)
-    photo = "Follow 4x8" if stage_family(stage) == "flower" else "Independent"
     writes: dict[str, Any] = {"stage": stage}
     if mode:
         try:
@@ -434,15 +436,16 @@ async def apply_clone_tent_automation() -> dict[str, Any]:
             set_helper("select.dsc_hub_clone_mode", mode)
             writes["clone_mode"] = mode
             writes["clone_mode_local"] = True
-    if stage:
-        try:
-            await _hub_select_retry("select.dsc_hub_grow_stage", stage)
-            writes["grow_stage"] = stage
-        except Exception as exc:  # noqa: BLE001
-            _logger.warning("grow_stage write failed: %s", exc)
-            set_helper("select.dsc_hub_grow_stage", stage)
-            writes["grow_stage"] = stage
-            writes["grow_stage_local"] = True
+    from .climate_mode import is_follow_plants_mode
+    from .follow_plants import apply_follow_plants
+
+    if mode and is_follow_plants_mode(mode):
+        follow = await apply_follow_plants(force=True)
+        writes["follow_plants"] = follow
+        return {"applied": bool(follow.get("applied")), **writes}
+
+    hours = _clone_hours_for_stage(stage)
+    photo = "Follow 4x8" if stage_family(stage) == "flower" else "Independent"
     try:
         await _hub_select_retry("select.dsc_hub_clone_photoperiod", photo)
         writes["clone_photoperiod"] = photo

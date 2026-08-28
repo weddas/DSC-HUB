@@ -170,4 +170,4 @@ Consensus across B/C/D is high-confidence.
 5. Probe friendly rename + assigned_plant_id UI (entity ids stable).  
 6. Later: entity id migration / NVS plant strip after soak.
 
-**Do not rebuild until Act On items are in the approved spec.**
+**Act-On + full suggestion list approved 2026-08-29** (operator override: probe rename = entity rename). Spec: `docs/superpowers/specs/2026-08-29-climate-mode-probe-rebuild-design.md`. Plan: `docs/superpowers/plans/2026-08-29-climate-mode-probe-rebuild.md`.

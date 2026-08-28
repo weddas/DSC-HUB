@@ -72,11 +72,10 @@ def stage_family(stage: str) -> str:
     return "veg"
 
 
-# Hub 2x4 clone-tent mode by stage family (select.dsc_hub_clone_mode options:
-# Follow 4x8 / Clones & Seedlings / Mother / Custom / Off).
+# Hub 2x4 Climate Mode by stage family (policy taxonomy — not Mother/Clones stamps).
 CLONE_MODE_BY_FAMILY: dict[str, str] = {
-    "seedling": "Clones & Seedlings",
-    "veg": "Mother",
+    "seedling": "Follow Plants",
+    "veg": "Follow Plants",
     "flower": "Follow 4x8",
 }
 

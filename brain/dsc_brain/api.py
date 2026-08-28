@@ -205,6 +205,7 @@ def demo_blocked_detail() -> str:
 async def lifespan(app: FastAPI):  # noqa: ARG001
     from .demo_mode import assert_demo_safe_config, is_demo_mode, prepare_demo_settings
     from .demo_simulator import start_demo_simulator, stop_demo_simulator
+    from .follow_plants_job import start_follow_plants_job, stop_follow_plants_job
 
     init_db()
     init_settings_db()
@@ -219,10 +220,12 @@ async def lifespan(app: FastAPI):  # noqa: ARG001
         start_esphome_worker()
         start_appliance_driver()
         start_zigbee_ingest()
+        start_follow_plants_job()
     yield
     if is_demo_mode():
         await stop_demo_simulator()
     else:
+        await stop_follow_plants_job()
         await stop_appliance_driver()
         await stop_esphome_ingest()
         stop_esphome_worker()
