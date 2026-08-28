@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **Plant seat ops** — `PATCH /roster/pots/{n}` for identity blur-save; delete via `script.dsc_plant_retire`; Settings probe **Unassign pot** / **Remove probe role** (`clear_role`). Shared `PlantSeatPanel`. Docs: [`docs/brain/PLANT-SEAT.md`](docs/brain/PLANT-SEAT.md) · [`docs/brain/PLANT-WIZARD.md`](docs/brain/PLANT-WIZARD.md). Tip `174e14e` · SPA `index-DL1EcjhX`.
+
 ## Pi appliance — **v7.3.0** (2026-08-27)
 
 Full software closure: version truth, graph QoL, flow Sankey (air/heat/humidity), lab wet cal, R3F Twin on Pi SPA, Lovelace YAML retired. See [`docs/qa/AUDIT-CLOSURE-7.3.md`](docs/qa/AUDIT-CLOSURE-7.3.md).
