@@ -11,11 +11,14 @@ export function DutyStrip({
   hours = 24,
   onClick,
   label = "24h on/off",
+  actualWhenHistory = false,
 }: {
   entityId: string;
   hours?: number;
   onClick?: () => void;
   label?: string;
+  /** Append "· Actual" only when history points exist. */
+  actualWhenHistory?: boolean;
 }) {
   const { state, entity } = useEntityBus();
   const { points, loading } = useHistory(entityId, hours, 720);
@@ -55,10 +58,17 @@ export function DutyStrip({
       ? new Date(lastChanged).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
       : "—";
 
+  const hasHistory = !loading && points.length > 0;
+  const displayLabel = actualWhenHistory
+    ? hasHistory
+      ? `${label} · Actual`
+      : label
+    : label;
+
   const body = (
     <div className="dsc-duty-strip">
       <div className="dsc-duty-meta">
-        <span>{label}</span>
+        <span>{displayLabel}</span>
         <span className="dsc-muted">
           {windows.length} cycle{windows.length === 1 ? "" : "s"} · last {lastRun} ·{" "}
           {loading ? "…" : `${(onMs / 3600000).toFixed(1)}h on`}
@@ -77,7 +87,7 @@ export function DutyStrip({
 
   if (onClick) {
     return (
-      <button type="button" className="dsc-duty-hit" onClick={onClick} title={`History · ${label}`}>
+      <button type="button" className="dsc-duty-hit" onClick={onClick} title={`History · ${displayLabel}`}>
         {body}
       </button>
     );

@@ -20,8 +20,9 @@ import { useInspector } from "../components/InspectorHost";
 import { HelpTip } from "../components/HelpTip";
 import { ArcGauge } from "../viz/charts";
 import { draftTone, tentWantRail } from "../lib/tentWant";
-import { readTentPhotoperiodInput, tentPhotoperiodFollowsMain } from "../lib/lightSchedule";
+import { readTentPhotoperiodInput } from "../lib/lightSchedule";
 import { dliFromPpfdHours, fmtDli, readCalibratedPpfd } from "../lib/dliEstimate";
+import { buildCloneLightDesk } from "../lib/lightViewModel";
 
 function fmt(n: number, digits = 1): string {
   return Number.isFinite(n) ? n.toFixed(digits) : "—";
@@ -41,27 +42,28 @@ export function LiveLightPage() {
   const darkViolation = state("binary_sensor.dsc_clone_dark_period_violation") === "on";
   const missing = state("binary_sensor.dsc_clone_light_missing_in_window") === "on";
   const catchup = state("binary_sensor.dsc_hub_light_catchup_active") === "on";
-  const lightOn = state("light.dsc_hub_sf1000_dimmer") === "on";
+  const cloneDesk = buildCloneLightDesk({ state, num, entity });
+  const lightOn = cloneDesk.sfOn;
   const windowOpen = state("binary_sensor.dsc_hub_4x8_window_open") === "on";
   const hours4 = num("sensor.dsc_expected_light_hours");
-  const hours2 = num("sensor.dsc_clone_expected_light_hours");
+  const hours2 = cloneDesk.wantHours ?? num("sensor.dsc_clone_expected_light_hours");
   const got4 = num("sensor.dsc_lights_on_today_4x8");
-  const got2 = num("sensor.dsc_lights_on_today_2x4");
-  const deviation = num("sensor.dsc_lights_deviation_today");
+  const got2 = cloneDesk.gotHours ?? num("sensor.dsc_lights_on_today_2x4");
+  const deviation = cloneDesk.deviationHours ?? num("sensor.dsc_lights_deviation_today");
   const rail4 = tentWantRail("main", { state, entity });
   const rail2 = tentWantRail("clone", { state, entity });
   const minDarkLive = num("number.dsc_hub_min_dark_hours");
   const cloneHoursLive = num("number.dsc_hub_clone_light_hours");
   const [draftDark, setDraftDark] = useState(minDarkLive);
   const [draftCloneHours, setDraftCloneHours] = useState(cloneHoursLive);
-  const followsMain = tentPhotoperiodFollowsMain(state);
+  const followsMain = cloneDesk.followsMain;
   const independent = !followsMain;
   const cloneClimateMode = state("select.dsc_hub_clone_mode", "—");
   const mainOnTime = state("time.dsc_hub_lights_on_time", "—");
   const mainScheduleInput = readTentPhotoperiodInput("main", state, num);
   const mainScheduleMissing = !mainScheduleInput.lightsOnTime || mainOnTime === "—" || mainOnTime === "unknown";
-  const manualHold = state("switch.dsc_hub_manual_light_hold") === "on";
-  const autoPhoto = state("switch.dsc_hub_auto_photoperiod") === "on";
+  const manualHold = cloneDesk.manualHold;
+  const autoPhoto = cloneDesk.autoPhotoperiod;
   const ppfd = readCalibratedPpfd(num, entity);
   const dli4 = dliFromPpfdHours(ppfd ?? NaN, rail4.lightHours ?? hours4);
   const dli2 = dliFromPpfdHours(ppfd ?? NaN, rail2.lightHours ?? hours2);
@@ -223,7 +225,8 @@ export function LiveLightPage() {
             <DutyStrip
               entityId="binary_sensor.dsc_hub_4x8_window_open"
               hours={24}
-              label="4×8 actual 24h"
+              label="4×8 24h"
+              actualWhenHistory
               onClick={() => open("binary_sensor.dsc_hub_4x8_window_open", "4×8 window", "binary")}
             />
             <div className="dsc-target-grid" style={{ marginTop: 12 }}>
@@ -278,7 +281,7 @@ export function LiveLightPage() {
               <StatusChip
                 icon="lighting"
                 motion={lightOn ? "glow" : undefined}
-                label={lightOn ? "SF1000 ON" : "SF1000 OFF"}
+                label={cloneDesk.headerLabel}
                 tone={lightOn ? "ok" : "muted"}
                 onClick={() => open("light.dsc_hub_sf1000_dimmer", "SF1000", "binary")}
               />
@@ -317,12 +320,14 @@ export function LiveLightPage() {
             />
             <PhotoperiodTimeline
               tent="clone"
+              scheduleValid={cloneDesk.scheduleValid}
               onClick={() => open("light.dsc_hub_sf1000_dimmer", "SF1000", "binary")}
             />
             <DutyStrip
               entityId="light.dsc_hub_sf1000_dimmer"
               hours={24}
-              label="SF1000 actual 24h"
+              label="SF1000 24h"
+              actualWhenHistory
               onClick={() => open("light.dsc_hub_sf1000_dimmer", "SF1000", "binary")}
             />
             <div className="dsc-demand-row" style={{ marginTop: 12 }}>

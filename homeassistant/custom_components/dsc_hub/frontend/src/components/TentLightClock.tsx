@@ -3,6 +3,7 @@ import type { TentPhotoperiodId } from "../lib/lightSchedule";
 import { tentLabel } from "../lib/seatModel";
 import { useTentLightSchedule } from "../hooks/useTentLightSchedule";
 import { useEntityBus } from "../hooks/useEntityBus";
+import { buildCloneLightDesk, headerSfLabel } from "../lib/lightViewModel";
 import { Icon, StatusChip } from "./ui";
 import type { IconName } from "../icons";
 
@@ -18,17 +19,19 @@ export function TentLightClock({
   compact?: boolean;
 }) {
   const schedule = useTentLightSchedule(tent);
-  const { state } = useEntityBus();
+  const { state, num, entity } = useEntityBus();
+  const cloneDesk = tent === "clone" ? buildCloneLightDesk({ state, num, entity }) : null;
   const windowOpen =
     tent === "main"
       ? state("binary_sensor.dsc_hub_4x8_window_open") === "on"
       : state("binary_sensor.dsc_hub_2x4_window_open") === "on";
-  const lampOn = tent === "clone" && state("light.dsc_hub_sf1000_dimmer") === "on";
+  const lampOn = tent === "clone" && (cloneDesk?.sfOn ?? state("light.dsc_hub_sf1000_dimmer") === "on");
   const title = tentLabel(tent);
-  const isLit = schedule.valid && schedule.phase === "lit";
+  const scheduleOk = cloneDesk ? cloneDesk.scheduleValid : schedule.valid;
+  const isLit = scheduleOk && schedule.phase === "lit";
   const liveActive = isLit && (windowOpen || lampOn);
 
-  if (!schedule.valid) {
+  if (!scheduleOk) {
     return (
       <div className={`dsc-light-clocks dsc-light-clocks--${tent}${compact ? " is-compact" : ""}`}>
         <div className="dsc-light-clocks-head">
@@ -79,7 +82,10 @@ export function TentLightClock({
           <StatusChip
             icon="lighting"
             motion={schedule.phase === "lit" ? "duty" : "pulse"}
-            label="SF1000 ON"
+            label={
+              cloneDesk?.headerLabel ??
+              headerSfLabel({ sfOn: true, sfBrightness: cloneDesk?.sfBrightness ?? null })
+            }
             tone={schedule.phase === "lit" ? "ok" : "bad"}
             pulse={schedule.phase !== "lit"}
           />

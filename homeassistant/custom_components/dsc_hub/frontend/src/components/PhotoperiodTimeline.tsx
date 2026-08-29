@@ -16,14 +16,18 @@ export function PhotoperiodTimeline({
   tent,
   onClick,
   label,
+  scheduleValid: scheduleValidProp,
 }: {
   tent: TentPhotoperiodId;
   onClick?: () => void;
   label?: string;
+  /** When set, overrides local parse for NO SCHEDULE (clone desk SoT). */
+  scheduleValid?: boolean;
 }) {
   const { state, num, entity } = useEntityBus();
   const input = readTentPhotoperiodInput(tent, state, num);
   const schedule = dayScheduleSegments(input);
+  const scheduleValid = scheduleValidProp ?? schedule.valid;
   const sunriseMin = num("number.dsc_hub_sunrise_duration", 0);
   const sunsetMin = num("number.dsc_hub_sunset_duration", 0);
   const seats = potsInTent(tent, state, entity).filter((s) => isPotInService(s.pot, state));
@@ -32,7 +36,7 @@ export function PhotoperiodTimeline({
     if (!rail) return acc;
     return acc == null ? rail.lightHours : Math.min(acc, rail.lightHours);
   }, null);
-  const scheduleHours = schedule.valid ? schedule.hours : null;
+  const scheduleHours = scheduleValid ? schedule.hours : null;
   const flipAhead =
     stageHours != null && scheduleHours != null && stageHours < scheduleHours - 0.5
       ? `Stage wants ${stageHours}h · schedule ${scheduleHours.toFixed(0)}h — flip countdown when you shorten the window`
@@ -43,11 +47,11 @@ export function PhotoperiodTimeline({
     (tent === "main" ? "4×8 schedule 24h" : "2×4 schedule 24h");
 
   const onLabel =
-    schedule.valid && schedule.onMin != null
+    scheduleValid && schedule.onMin != null
       ? fmtMinutesClock(schedule.onMin)
       : "—";
   const offLabel =
-    schedule.valid && schedule.offMin != null
+    scheduleValid && schedule.offMin != null
       ? fmtMinutesClock(schedule.offMin)
       : "—";
 
@@ -56,10 +60,10 @@ export function PhotoperiodTimeline({
       <div className="dsc-duty-meta">
         <span>{title}</span>
         <span className="dsc-muted">
-          {schedule.valid
+          {scheduleValid
             ? `On ${onLabel} · Off ${offLabel} · ${schedule.hours.toFixed(0)}h lit`
             : "No schedule — set lights-on time"}
-          {schedule.valid && (sunriseMin > 0 || sunsetMin > 0)
+          {scheduleValid && (sunriseMin > 0 || sunsetMin > 0)
             ? ` · ramp ${Math.round(sunriseMin + sunsetMin)}m`
             : ""}
         </span>
@@ -71,7 +75,7 @@ export function PhotoperiodTimeline({
       ) : null}
       <svg viewBox="0 0 1440 22" className="dsc-photo-timeline-svg" preserveAspectRatio="none" aria-hidden>
         <rect x="0" y="6" width={1440} height="10" rx="2" fill="var(--dsc-gray-3)" />
-        {schedule.valid
+        {scheduleValid
           ? schedule.segments.map((seg, i) =>
               seg.kind === "lit" ? (
                 <g key={`${seg.startMin}-${i}`}>
@@ -112,7 +116,7 @@ export function PhotoperiodTimeline({
               ) : null,
             )
           : null}
-        {schedule.valid ? (
+        {scheduleValid ? (
           <line
             x1={schedule.nowMin}
             x2={schedule.nowMin}

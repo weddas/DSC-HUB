@@ -14,6 +14,7 @@ import type { RosterSlot } from "../lib/seatModel";
 import { KIT_PROBE_NUMBERS, probeLabel } from "../lib/seatModel";
 import type { CfmReading } from "../lib/cfmProvenance";
 import { TentLightClockStrip } from "./TentLightClock";
+import { buildCloneLightDesk, headerSfLabel } from "../lib/lightViewModel";
 
 type Bus = {
   state: (id: string, fb?: string) => string;
@@ -247,10 +248,9 @@ export function DashRunningChips({ bus }: { bus: Bus }) {
   const { state, num } = bus;
   const matT = num("sensor.dsc_coldest_root_zone_temp", NaN);
   const matPot = String(bus.entity("sensor.dsc_coldest_root_zone_temp")?.attributes?.pot || "");
-  const sfEntity = bus.entity("light.dsc_hub_sf1000_dimmer");
-  const sfBri = Math.round((Number(sfEntity?.attributes?.brightness ?? 0) / 255) * 100);
-  const sfOn = state("light.dsc_hub_sf1000_dimmer") === "on" && sfBri >= 1;
-  const sfPct = sfBri;
+  const cloneDesk = buildCloneLightDesk(bus);
+  const sfOn = cloneDesk.sfOn && (cloneDesk.sfBrightness == null || cloneDesk.sfBrightness > 0);
+  const sfLabel = headerSfLabel({ sfOn: cloneDesk.sfOn, sfBrightness: cloneDesk.sfBrightness });
   const acOos = state("binary_sensor.dsc_ac_capacity_offline") === "on";
   const chumOos = state("binary_sensor.dsc_clone_humidifier_capacity_offline") === "on";
   const dehumOffline = !bus.available("switch.dsc_de_humidifier_main_relay");
@@ -268,7 +268,7 @@ export function DashRunningChips({ bus }: { bus: Bus }) {
       tone: rootFault ? "bad" : state("switch.dsc_hub_grow_mat_demand") === "on" ? "ok" : "muted",
     },
     { label: chumOos ? "C-Hum ○" : "C-Hum", icon: "clone" as const, on: state("switch.dsc_hub_clone_humidifier_demand") === "on", tone: chumOos ? "warn" : state("switch.dsc_hub_clone_humidifier_demand") === "on" ? "ok" : "muted" },
-    { label: sfOn ? `SF ${sfPct}%` : "SF1000", icon: "lighting" as const, on: sfOn, tone: darkViol ? "bad" : sfOn ? "ok" : "muted" },
+    { label: sfLabel, icon: "lighting" as const, on: sfOn, tone: darkViol ? "bad" : cloneDesk.sfOn ? "ok" : "muted" },
   ];
   return (
     <Card className="dsc-glass" title="Running" icon="lighting">
