@@ -143,7 +143,12 @@ export function DashConditionalBanners({ bus, onNavigate }: { bus: Bus; onNaviga
     });
   }
   if (state("switch.dsc_hub_manual_takeover") === "on") {
-    banners.push({ show: true, title: "MANUAL CONTROL ACTIVE", body: "Automation is paused — the hub only follows manual commands", tone: "warn" });
+    banners.push({
+      show: true,
+      title: "Manual takeover — brain will re-plan on clear/reconnect",
+      body: "",
+      tone: "warn",
+    });
   }
   if (state("switch.dsc_hub_tent_manual_override") === "on") {
     banners.push({ show: true, title: "MANUAL FAN OVERRIDE ACTIVE", body: "Fan values held — photoperiod still driving the SF1000", tone: "warn" });
@@ -160,7 +165,7 @@ export function DashConditionalBanners({ bus, onNavigate }: { bus: Bus; onNaviga
       {banners.map((b) => (
         <div key={b.title} className={`dsc-banner dsc-banner--${b.tone}`}>
           <strong>{b.title}</strong>
-          <p className="dsc-muted">{b.body}</p>
+          {b.body ? <p className="dsc-muted">{b.body}</p> : null}
           {b.title === "Capacity offline" ? (
             <button type="button" className="dsc-chip" onClick={() => onNavigate("/live/climate")}>
               Open Climate
@@ -256,6 +261,14 @@ export function DashRunningChips({ bus }: { bus: Bus }) {
   const dehumOffline = !bus.available("switch.dsc_de_humidifier_main_relay");
   const rootFault = state("binary_sensor.dsc_hub_root_zone_sensor_fault") === "on";
   const darkViol = state("binary_sensor.dsc_clone_dark_period_violation") === "on";
+  // RUNNING chip → same demand / light entities Climate + Light write (shared SoT):
+  // Heat → switch.dsc_hub_heater_demand
+  // Cool → switch.dsc_hub_ac_demand
+  // Hum → switch.dsc_hub_humidifier_demand
+  // Dehum → switch.dsc_hub_dehumidifier_demand
+  // Mat → switch.dsc_hub_grow_mat_demand
+  // C-Hum → switch.dsc_hub_clone_humidifier_demand
+  // SF1000 → light.dsc_hub_sf1000_dimmer (via lightViewModel)
   const chips = [
     { label: "Heat", icon: "climate" as const, on: state("switch.dsc_hub_heater_demand") === "on", tone: state("switch.dsc_hub_heater_demand") === "on" ? "ok" : "muted" },
     { label: acOos ? "Cool ○" : "Cool", icon: "climate" as const, on: state("switch.dsc_hub_ac_demand") === "on", tone: acOos ? "warn" : state("switch.dsc_hub_ac_demand") === "on" ? "ok" : "muted" },
@@ -281,23 +294,31 @@ export function DashRunningChips({ bus }: { bus: Bus }) {
   );
 }
 
+/** Shared-duct fan plant labels — same pct sensors Climate / brain emit. */
+export const SHARED_AIR_FAN_PCT: readonly { label: string; id: string }[] = [
+  { label: "IN 4×8", id: "sensor.dsc_fan_intake_main_pct" },
+  { label: "IN 2×4", id: "sensor.dsc_fan_intake_2x4_pct" },
+  { label: "EX ROOM", id: "sensor.dsc_fan_exhaust_room_pct" },
+  { label: "EX OUT", id: "sensor.dsc_fan_exhaust_outside_pct" },
+];
+
+export function fanPctChip(bus: Bus, id: string): { live: boolean; pct: number } {
+  if (!bus.available(id)) return { live: false, pct: NaN };
+  const pct = Math.round(bus.num(id, NaN));
+  return { live: Number.isFinite(pct), pct };
+}
+
 export function DashFanChips({ bus, onNavigate }: { bus: Bus; onNavigate: (path: string) => void }) {
-  const ids = [
-    ["IN 4×8", "sensor.dsc_fan_intake_main_pct"],
-    ["IN 2×4", "sensor.dsc_fan_intake_2x4_pct"],
-    ["EX ROOM", "sensor.dsc_fan_exhaust_room_pct"],
-    ["EX OUT", "sensor.dsc_fan_exhaust_outside_pct"],
-  ] as const;
   return (
-    <div className="dsc-chip-row">
-      {ids.map(([label, id]) => {
-        const pct = Math.round(bus.num(id, 0));
+    <div className="dsc-chip-row" role="group" aria-label="Shared air fan plant">
+      {SHARED_AIR_FAN_PCT.map(({ label, id }) => {
+        const { live, pct } = fanPctChip(bus, id);
         return (
           <StatusChip
             key={id}
-            label={`${label} ${pct}%`}
-            tone={pct > 0 ? "ok" : "muted"}
-            motion={pct > 0 ? "fan" : undefined}
+            label={live ? `${label} ${pct}%` : `${label} —`}
+            tone={live && pct > 0 ? "ok" : "muted"}
+            motion={live && pct > 0 ? "fan" : undefined}
             onClick={() => onNavigate("/live/climate")}
           />
         );
@@ -340,8 +361,10 @@ export function DashOperationalNow({ bus, onNavigate }: { bus: Bus; onNavigate: 
     ["AC", "sensor.dsc_hub_ac_fire_countdown", "switch.dsc_hub_ac_demand"],
     ["Mat", "sensor.dsc_hub_grow_mat_fire_countdown", "switch.dsc_hub_grow_mat_demand"],
   ] as const;
-  const outPct = Math.round(bus.num("sensor.dsc_fan_exhaust_outside_pct", 0));
-  const recPct = Math.round(bus.num("sensor.dsc_fan_exhaust_room_pct", 0));
+  const outFan = fanPctChip(bus, "sensor.dsc_fan_exhaust_outside_pct");
+  const recFan = fanPctChip(bus, "sensor.dsc_fan_exhaust_room_pct");
+  const fansLive = outFan.live && recFan.live;
+  const fansMoving = fansLive && (outFan.pct > 0 || recFan.pct > 0);
   return (
     <Card className="dsc-glass" title="Operational now" icon="climate">
       <div className="dsc-chip-row" style={{ marginBottom: 10 }}>
@@ -377,9 +400,9 @@ export function DashOperationalNow({ bus, onNavigate }: { bus: Bus; onNavigate: 
           );
         })}
         <StatusChip
-          label={`Fans ${outPct}/${recPct}%`}
-          tone={outPct > 0 || recPct > 0 ? "ok" : "muted"}
-          motion={outPct > 0 || recPct > 0 ? "fan" : undefined}
+          label={fansLive ? `Fans ${outFan.pct}/${recFan.pct}%` : "Fans —"}
+          tone={fansMoving ? "ok" : "muted"}
+          motion={fansMoving ? "fan" : undefined}
           onClick={() => onNavigate("/live/climate")}
         />
       </div>

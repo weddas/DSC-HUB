@@ -30,6 +30,7 @@ import { withPriorGhost } from "../lib/chartSeries";
 import { ArcGauge, GotWantBars, MultiLineChart, seriesExtrema } from "../viz/charts";
 import { rhSegments, tempSegments, vpdSegments } from "../viz/gaugeTheme";
 import { fmtDurationMs } from "../lib/formatDuration";
+import { SHARED_AIR_FAN_PCT, fanPctChip } from "../components/DashHomeSections";
 
 function resolveRoomVpdId(entity: (id: string) => unknown): string {
   if (entity("sensor.dsc_hub_room_vpd_kpa")) return "sensor.dsc_hub_room_vpd_kpa";
@@ -58,8 +59,10 @@ export function LiveClimatePage() {
   const { hours, setHours, maxPoints } = useChartHours(6);
   const fanOverride = useFleetEntity("switch.dsc_hub_tent_manual_override").state === "on";
   const fullAuto = useFleetEntity("switch.dsc_hub_tent_full_auto_mode").state === "on";
+  const manualTakeover = useFleetEntity("switch.dsc_hub_manual_takeover").state === "on";
   const honesty = String(entity("sensor.dsc_keepup_gaps")?.attributes?.full_auto_honesty ?? "");
   const reducedKit = !!fleet.system.reduced_kit;
+  const fanBus = { state, num, available, entity };
 
   const tentTHeld = useHeldReading("sensor.dsc_hub_tent_temperature");
   const tentRhHeld = useHeldReading("sensor.dsc_hub_tent_humidity");
@@ -216,6 +219,12 @@ export function LiveClimatePage() {
           Kit / Fleet
         </Button>
       </div>
+
+      {manualTakeover ? (
+        <div className="dsc-banner dsc-banner--warn" style={{ marginBottom: 14 }}>
+          <strong>Manual takeover — brain will re-plan on clear/reconnect</strong>
+        </div>
+      ) : null}
 
       <div className="dsc-grid">
         <div className="dsc-col-12">
@@ -472,6 +481,20 @@ export function LiveClimatePage() {
 
         <div className="dsc-col-12">
           <Card className="dsc-glass" title="Fan duty %" icon="climate">
+            <div className="dsc-chip-row" role="group" aria-label="Shared air fan plant" style={{ marginBottom: 10 }}>
+              {SHARED_AIR_FAN_PCT.map(({ label, id }) => {
+                const { live, pct } = fanPctChip(fanBus, id);
+                return (
+                  <StatusChip
+                    key={id}
+                    label={live ? `${label} ${pct}%` : `${label} —`}
+                    tone={live && pct > 0 ? "ok" : "muted"}
+                    motion={live && pct > 0 ? "fan" : undefined}
+                    onClick={() => open(id, label, "%")}
+                  />
+                );
+              })}
+            </div>
             <MultiLineChart
               unit="%"
               yDomain={{ left: { min: 0, max: 100 } }}
