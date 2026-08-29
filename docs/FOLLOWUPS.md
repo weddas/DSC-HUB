@@ -10,6 +10,21 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 
 ---
 
+## 2026-08-29 — Brain control recovery design locked (`653808d`)
+
+| Item | Status | Notes |
+|------|--------|-------|
+| Design lock (restore-then-advance, bar 1/2, peers + premium) | **done (docs)** | [spec](superpowers/specs/2026-08-29-brain-control-recovery-design.md) · [CONTROL-RECOVERY.md](brain/CONTROL-RECOVERY.md) |
+| Physical topology: two tents, one shared air plant | **done (docs)** | Tip `3e5af0c` — 4x8 + 2x4 share intake/exhaust; OGB = behavior bar only |
+| Peer landscape beyond OGB | **done (docs)** | Tip `f25c762` — HAGR, Irrigation-Strategy, Mycodo, GroLab, farmOS, Growlink/AROYA |
+| Premium lessons (truth / closed-loop / local failover / 3D projection) | **done (docs)** | Tip `653808d` — Twin demoted today; never a second controller |
+| Hub Manual Takeover | **done (fw)** | `switch.dsc_hub_manual_takeover` / `ha_takeover_active`; brain skips emit when on |
+| Bar 1: HA-era parity + reconnect temporary override | **next-plan** | Not implemented — needs writing-plans inventory (incl. shared-duct / Follow 4x8 climate) then single control API |
+| Bar 2: plant↔probe detach/reassign | **next-plan** | After bar 1 |
+| Override expiry policy | **deferred** | Open point in design — timeout vs clear vs both |
+
+---
+
 ## 2026-08-29 — Encode + NPK producers + commit
 
 | Item | Status | Notes |
