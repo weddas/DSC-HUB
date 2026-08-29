@@ -870,7 +870,8 @@ export function ArcGauge({
   const span = Math.max(max - min, 1e-6);
   const pct = hasData ? (clamped - min) / span : 0;
   const r = 46;
-  const c = 2 * Math.PI * r * 0.75;
+  /** True top semicircle path length (π·r), not 270° guess. */
+  const c = Math.PI * r;
   const dash = c * pct;
   const angAt = (v: number) => gaugeAngle(v, min, max);
   const validBand = !progress && isValidBand(band) ? band : undefined;
@@ -903,8 +904,6 @@ export function ArcGauge({
             : validBand
               ? GAUGE_PALETTE.ok
               : GAUGE_PALETTE.teal;
-  const filterId = `dsc-gauge-glow-${useId().replace(/:/g, "")}`;
-
   const tickMarks: { v: number; kind: "band" | "ext" | "target" }[] = [];
   if (hasData) {
     if (validBand) {
@@ -921,6 +920,12 @@ export function ArcGauge({
       ? `${display.toFixed(display >= 100 ? 0 : display < 10 ? 2 : 1)} ${unit} held`
       : `${display.toFixed(display >= 100 ? 0 : display < 10 ? 2 : 1)} ${unit}`;
 
+  const fmtScale = (v: number) =>
+    Number.isFinite(v) ? v.toFixed(Math.abs(v) >= 100 || Number.isInteger(v) ? 0 : 1) : "";
+
+  // Top semicircle: large-arc=0 (not the long way around).
+  const semi = `M18 72 A${r} ${r} 0 0 1 102 72`;
+
   const gauge = (
     <div
       className={`dsc-gauge ${toneCls}${holding ? " is-stale" : ""}${onClick ? " is-clickable" : ""}`}
@@ -928,18 +933,9 @@ export function ArcGauge({
       aria-label={label}
       aria-valuetext={valueText}
     >
-      <svg viewBox="0 0 120 90" width="140" height="105" aria-hidden="true">
-        <defs>
-          <filter id={filterId} x="-40%" y="-40%" width="180%" height="180%">
-            <feGaussianBlur stdDeviation="3.2" result="b" />
-            <feMerge>
-              <feMergeNode in="b" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
+      <svg viewBox="0 -10 120 100" width="140" height="110" aria-hidden="true" overflow="visible">
         <path
-          d="M18 72 A46 46 0 1 1 102 72"
+          d={semi}
           fill="none"
           stroke={GAUGE_PALETTE.track}
           strokeWidth="10"
@@ -960,13 +956,12 @@ export function ArcGauge({
         {hasData ? (
           <path
             className="dsc-gauge-value"
-            d="M18 72 A46 46 0 1 1 102 72"
+            d={semi}
             fill="none"
             stroke={stroke}
             strokeWidth="10"
             strokeLinecap="round"
             strokeDasharray={`${dash} ${c}`}
-            filter={`url(#${filterId})`}
             style={{ transition: "stroke-dasharray 280ms ease, stroke 280ms ease" }}
           />
         ) : null}
@@ -998,6 +993,12 @@ export function ArcGauge({
             </line>
           );
         })}
+        <text x="14" y="88" textAnchor="start" fill={GAUGE_PALETTE.gray5} fontSize="9" fontFamily="var(--dsc-mono)">
+          {fmtScale(min)}
+        </text>
+        <text x="106" y="88" textAnchor="end" fill={GAUGE_PALETTE.gray5} fontSize="9" fontFamily="var(--dsc-mono)">
+          {fmtScale(max)}
+        </text>
         <text
           x="60"
           y="58"

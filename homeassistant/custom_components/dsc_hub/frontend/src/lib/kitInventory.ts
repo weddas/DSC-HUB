@@ -1,4 +1,4 @@
-import { ALL_POT_NUMBERS, isPotInService } from "./seatModel";
+import { KIT_PROBE_NUMBERS, isPotInService } from "./seatModel";
 import type { FleetSnapshot } from "./fleetModel";
 import { inventoryInService } from "./fleetModel";
 
@@ -97,13 +97,12 @@ export const KIT_DEFS: KitDef[] = [
     demandEntity: "switch.dsc_hub_clone_humidifier_demand",
     relayEntity: "switch.dsc_clone_humidifier_main_relay",
   },
-  ...ALL_POT_NUMBERS.map(
+  ...KIT_PROBE_NUMBERS.map(
     (n): KitDef => ({
       id: `pot${n}`,
       label: `Probe ${n}`,
       inServiceEntity: `input_boolean.dsc_probe${n}_in_service`,
-      // Kit is probe1+2 only; 3/4 retired from hardware kit (planned OOS).
-      plannedWhenOff: n === 3 || n === 4,
+      plannedWhenOff: false,
       firmwareEntity: `sensor.dsc_probe${n}_firmware_version`,
     }),
   ),

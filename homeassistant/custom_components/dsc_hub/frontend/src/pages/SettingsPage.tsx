@@ -38,7 +38,7 @@ const ZONE_LABELS: Record<ClimateZone, string> = {
   clone: "2×4",
   main: "4×8",
 };
-const IDLE_POT_OPTIONS = ["", "pot1", "pot2", "pot3", "pot4"] as const;
+const IDLE_POT_OPTIONS = ["", "pot1", "pot2"] as const;
 const TENT_OPTIONS = ["2x4", "4x8"] as const;
 
 const AP_KEYS = ["ap_ssid", "ap_psk", "ap_channel"] as const;
@@ -61,7 +61,7 @@ function pickSettings(settings: Record<string, string>, keys: readonly string[])
 function inventoryGroup(seatId: string): string {
   const id = seatId.toLowerCase();
   if (id === "hub" || id === "control" || id === "panel") return "Brain & panel";
-  if (id.startsWith("pot")) return "Pots";
+  if (id.startsWith("pot")) return "Probes";
   return "Appliances";
 }
 

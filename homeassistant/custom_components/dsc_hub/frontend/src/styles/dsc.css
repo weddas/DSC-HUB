@@ -1205,20 +1205,50 @@ body {
 }
 
 @keyframes dsc-gauge-live {
-  0%, 100% { opacity: 0.92; filter: drop-shadow(0 0 4px rgba(46, 196, 214, 0.25)); }
-  50% { opacity: 1; filter: drop-shadow(0 0 10px rgba(46, 196, 214, 0.55)); }
+  0%, 100% { opacity: 0.92; }
+  50% { opacity: 1; }
 }
 
 @keyframes dsc-gauge-breathe {
-  0%, 100% { opacity: 0.88; filter: drop-shadow(0 0 4px rgba(255, 183, 77, 0.25)); }
-  50% { opacity: 1; filter: drop-shadow(0 0 12px rgba(255, 107, 138, 0.55)); }
+  0%, 100% { opacity: 0.88; }
+  50% { opacity: 1; }
 }
 
 .dsc-gauge-row {
   display: flex;
-  justify-content: space-around;
+  justify-content: flex-start;
+  flex-wrap: nowrap;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.dsc-gauge-row--root {
+  align-items: flex-end;
+}
+
+.dsc-gauge {
+  overflow: visible;
+  flex: 0 0 auto;
+}
+
+.dsc-npk-row {
+  display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  margin-top: 10px;
+}
+
+.dsc-npk-hint {
+  display: block;
+  font-size: 0.65rem;
+  opacity: 0.65;
+  margin-top: 2px;
+}
+
+.dsc-npk-hit--static {
+  cursor: default;
+  opacity: 0.75;
 }
 
 .dsc-gauge-matrix {

@@ -122,7 +122,7 @@ export function buildPlantSeat(
     layers: parseBlendLayers(blend),
     moisture: prefer(`sensor.dsc_probe${pot}_got_moisture`, `sensor.dsc_probe${pot}_soil_moisture`, 0),
     soilTemp: fmtReading(clean(state(`sensor.dsc_probe${pot}_soil_temperature`, "")), 1),
-    ec: prefer(`sensor.dsc_probe${pot}_got_ec`, `sensor.dsc_probe${pot}_soil_conductivity`, 0),
+    ec: prefer(`sensor.dsc_probe${pot}_got_ec`, `sensor.dsc_probe${pot}_soil_ec`, 0),
     ph: prefer(`sensor.dsc_probe${pot}_got_ph`, `sensor.dsc_probe${pot}_soil_ph`, 2),
     n: fmtReading(clean(state(`sensor.dsc_probe${pot}_soil_nitrogen`, "")), 0),
     p: fmtReading(clean(state(`sensor.dsc_probe${pot}_soil_phosphorus`, "")), 0),
@@ -132,6 +132,14 @@ export function buildPlantSeat(
   };
 }
 
+function entityLive(
+  state: (id: string, fallback?: string) => string,
+  id: string,
+): boolean {
+  const raw = state(id, "");
+  return !!raw && raw !== "unavailable" && raw !== "unknown";
+}
+
 /** Entity id helpers for Got / dryback history. */
 export function potGotEntity(
   pot: number,
@@ -139,15 +147,15 @@ export function potGotEntity(
   state: (id: string, fallback?: string) => string,
 ): string {
   const got = `sensor.dsc_probe${pot}_got_${kind}`;
-  const fb =
-    kind === "moisture"
-      ? `sensor.dsc_probe${pot}_soil_moisture`
-      : kind === "ec"
-        ? `sensor.dsc_probe${pot}_soil_conductivity`
-        : `sensor.dsc_probe${pot}_soil_ph`;
-  const raw = state(got, "");
-  if (raw && raw !== "unavailable" && raw !== "unknown") return got;
-  return fb;
+  if (entityLive(state, got)) return got;
+  if (kind === "moisture") return `sensor.dsc_probe${pot}_soil_moisture`;
+  if (kind === "ph") return `sensor.dsc_probe${pot}_soil_ph`;
+  // EC: Pi fleet map keys soil_ec; conductivity/got_ec are aliases.
+  const soilEc = `sensor.dsc_probe${pot}_soil_ec`;
+  if (entityLive(state, soilEc)) return soilEc;
+  const cond = `sensor.dsc_probe${pot}_soil_conductivity`;
+  if (entityLive(state, cond)) return cond;
+  return soilEc;
 }
 
 export function potsInTent(
@@ -160,7 +168,15 @@ export function potsInTent(
     .filter((s) => s.tent === tent && s.plantName !== "—" && s.plantName.trim() !== "");
 }
 
+/** Full entity universe (Device restore / maps). Not the Live kit. */
 export const ALL_POT_NUMBERS = [1, 2, 3, 4] as const;
+
+/** Operator kit — Live Root, honesty, Fleet pulse, idle-home defaults. */
+export const KIT_PROBE_NUMBERS = [1, 2] as const;
+
+export function probeLabel(n: number): string {
+  return `Probe ${n}`;
+}
 
 /** Pot is shown when inventory in_service is on; off = OOS hole (never fake Got). */
 export function isPotInService(
@@ -187,14 +203,14 @@ export function isPotInServiceWithFleet(
 
 export function activePotNumbers(
   state: (id: string, fallback?: string) => string,
-  pots: number[] = [...ALL_POT_NUMBERS],
+  pots: number[] = [...KIT_PROBE_NUMBERS],
 ): number[] {
   return pots.filter((n) => isPotInService(n, state));
 }
 
 export function inServiceCount(
   state: (id: string, fallback?: string) => string,
-  pots: number[] = [...ALL_POT_NUMBERS],
+  pots: number[] = [...KIT_PROBE_NUMBERS],
 ): { inService: number; total: number } {
   return { inService: activePotNumbers(state, pots).length, total: pots.length };
 }

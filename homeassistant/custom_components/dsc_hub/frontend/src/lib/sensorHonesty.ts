@@ -1,5 +1,5 @@
 import { resolveCfm } from "./cfmProvenance";
-import { ALL_POT_NUMBERS, isPotInService } from "./seatModel";
+import { KIT_PROBE_NUMBERS, isPotInService } from "./seatModel";
 
 export type HonestyTone = "ok" | "warn" | "bad" | "muted";
 
@@ -115,13 +115,13 @@ export function collectHonestyGaps(hass: HassLike): HonestyGap[] {
     });
   }
 
-  // Live omits OOS pots (no fake Got) — still surface a count so fleet holes are visible.
-  const oosPots = ALL_POT_NUMBERS.filter((n) => !isPotInService(n, st));
+  // Live omits OOS kit probes (no fake Got) — never nag about retired 3/4.
+  const oosPots = [...KIT_PROBE_NUMBERS].filter((n) => !isPotInService(n, st));
   if (oosPots.length) {
     gaps.push({
       id: "oos-pots",
-      label: oosPots.length === 1 ? `Pot ${oosPots[0]} OOS` : `${oosPots.length} pots OOS`,
-      detail: `Pot${oosPots.length === 1 ? "" : "s"} ${oosPots.join(", ")} out of service — omitted from Live on purpose. Open Root or Settings to put back in service.`,
+      label: oosPots.length === 1 ? `Probe ${oosPots[0]} OOS` : `${oosPots.length} probes OOS`,
+      detail: `Probe${oosPots.length === 1 ? "" : "s"} ${oosPots.join(", ")} out of service — omitted from Live on purpose. Open Root or Settings to put back in service.`,
       tone: "muted",
       href: "/live/root",
       cta: "Open Root",

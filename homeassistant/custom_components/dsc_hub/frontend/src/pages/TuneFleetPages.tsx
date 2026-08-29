@@ -11,7 +11,7 @@ import { useEntityBus } from "../hooks/useEntityBus";
 import { useEntitySeries } from "../hooks/useEntitySeries";
 import { useChartHours } from "../hooks/useChartHours";
 import { MultiLineChart } from "../viz/charts";
-import { ALL_POT_NUMBERS, isPotInService, potGotEntity } from "../lib/seatModel";
+import { KIT_PROBE_NUMBERS, isPotInService, potGotEntity } from "../lib/seatModel";
 import { resolveCfm } from "../lib/cfmProvenance";
 import { buildKitNodesFromFleet, kitInServiceCount, type KitNode } from "../lib/kitInventory";
 import { useFleet } from "../hooks/useFleet";
@@ -43,10 +43,8 @@ export function TuneLearningPage() {
         <div className="dsc-col-12">
           <Card className="dsc-glass" title="Kit / In service" icon="settings">
             <div className="dsc-mode-row">
-              <InventoryInServiceToggle seatId="pot1" label="Pot 1" icon="root" />
-              <InventoryInServiceToggle seatId="pot2" label="Pot 2" icon="root" />
-              <InventoryInServiceToggle seatId="pot3" label="Pot 3" icon="root" />
-              <InventoryInServiceToggle seatId="pot4" label="Pot 4" icon="root" />
+              <InventoryInServiceToggle seatId="pot1" label="Probe 1" icon="root" />
+              <InventoryInServiceToggle seatId="pot2" label="Probe 2" icon="root" />
             </div>
           </Card>
         </div>
@@ -62,16 +60,13 @@ export function TuneAnalyticsPage() {
   const rhSeries = useEntitySeries("sensor.dsc_hub_tent_humidity", { maxPoints, hours });
   const p1m = useEntitySeries(potGotEntity(1, "moisture", state), { maxPoints, hours });
   const p2m = useEntitySeries(potGotEntity(2, "moisture", state), { maxPoints, hours });
-  const p3m = useEntitySeries(potGotEntity(3, "moisture", state), { maxPoints, hours });
-  const p4m = useEntitySeries(potGotEntity(4, "moisture", state), { maxPoints, hours });
   const byPot = [
     { n: 1 as const, series: p1m },
     { n: 2 as const, series: p2m },
-    { n: 3 as const, series: p3m },
-    { n: 4 as const, series: p4m },
   ];
   const moistSeries = byPot.filter((p) => isPotInService(p.n, state));
-  const worstNeed = ALL_POT_NUMBERS.filter((n) => isPotInService(n, state))
+  const worstNeed = [...KIT_PROBE_NUMBERS]
+    .filter((n) => isPotInService(n, state))
     .map((n) => ({ n, need: state(`sensor.dsc_probe${n}_need_summary`, "—") }))
     .find((row) => row.need && row.need !== "—" && !/^ok$/i.test(row.need));
 
@@ -80,14 +75,14 @@ export function TuneAnalyticsPage() {
       <PageHeader
         icon="analytics"
         title="Analytics"
-        subtitle="In-service pots. Climate charts live on Climate; this is the root pack."
+        subtitle="In-service probes. Climate charts live on Climate; this is the root pack."
         actions={
           <HelpTip title="Analytics pack">
             <p>
               Analytics is the root moisture pack and a secondary tent T/RH glance — not the Climate Want desk. Worst Need
-              points at the pot that needs Root attention first.
+              points at the probe that needs Root attention first.
             </p>
-            <p>Example: P3 Need “dry” → open Root seat for P3, not another Climate setpoint rewrite.</p>
+            <p>Example: Probe 1 Need “dry” → open Root for Probe 1, not another Climate setpoint rewrite.</p>
           </HelpTip>
         }
       />
@@ -239,10 +234,8 @@ export function FleetOverviewPage() {
               Inventory gates only — wired to Settings inventory PATCH, not dead input_boolean helpers.
             </p>
             <div className="dsc-mode-row">
-              <InventoryInServiceToggle seatId="pot1" label="Pot 1" icon="root" />
-              <InventoryInServiceToggle seatId="pot2" label="Pot 2" icon="root" />
-              <InventoryInServiceToggle seatId="pot3" label="Pot 3" icon="root" />
-              <InventoryInServiceToggle seatId="pot4" label="Pot 4" icon="root" />
+              <InventoryInServiceToggle seatId="pot1" label="Probe 1" icon="root" />
+              <InventoryInServiceToggle seatId="pot2" label="Probe 2" icon="root" />
             </div>
           </Card>
         </div>

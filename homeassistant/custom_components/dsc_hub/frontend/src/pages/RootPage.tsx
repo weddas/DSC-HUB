@@ -8,16 +8,17 @@ import { HelpTip } from "../components/HelpTip";
 import { useEntityBus } from "../hooks/useEntityBus";
 import { useEntitySeries } from "../hooks/useEntitySeries";
 import { useHeldReading } from "../hooks/useHeldReading";
+import { useFleet } from "../hooks/useFleet";
 import { useInspector } from "../components/InspectorHost";
 import { ArcGauge, Sparkline } from "../viz/charts";
-import { moistureSegments } from "../viz/gaugeTheme";
 import { defaultBandMargin, toneCssColor, zoneTone } from "../lib/zoneTone";
 import {
-  ALL_POT_NUMBERS,
+  KIT_PROBE_NUMBERS,
   buildPlantSeat,
   inServiceCount,
-  isPotInService,
+  isPotInServiceWithFleet,
   potGotEntity,
+  probeLabel,
   tentLabel,
 } from "../lib/seatModel";
 import { potWantBand } from "../lib/tentWant";
@@ -34,16 +35,25 @@ function fmt(n: number, digits = 1): string {
 
 export function LiveRootPage() {
   const { state, entity, tick, num } = useEntityBus();
+  const fleet = useFleet();
   const inspector = useInspector();
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   void tick;
-  const pots = [...ALL_POT_NUMBERS]
-    .map((n) => ({ n, seat: buildPlantSeat(n, { state, entity }), oos: !isPotInService(n, state) }))
+  const pots = [...KIT_PROBE_NUMBERS]
+    .map((n) => ({
+      n,
+      seat: buildPlantSeat(n, { state, entity }),
+      oos: !isPotInServiceWithFleet(n, state, fleet),
+    }))
     .sort((a, b) => Number(a.oos) - Number(b.oos));
-  const svc = inServiceCount(state);
+  const svc = inServiceCount(state, [...KIT_PROBE_NUMBERS]);
   const raw = Number(params.get("pot") || 0);
-  const pot = raw >= 1 && raw <= 4 && isPotInService(raw, state) ? raw : null;
+  const pot =
+    (KIT_PROBE_NUMBERS as readonly number[]).includes(raw) &&
+    isPotInServiceWithFleet(raw, state, fleet)
+      ? raw
+      : null;
   const matHours = num("sensor.dsc_growmat_runtime_today");
   const matSec = num("sensor.dsc_heatmat_relay_on_time");
   const [probeStations, setProbeStations] = useState<ProbeStation[]>([]);
@@ -71,14 +81,18 @@ export function LiveRootPage() {
       <PageHeader
         icon="root"
         title="Root"
-        subtitle={`${svc.inService} of ${svc.total} pots in service. Pots without sensors show no data.`}
+        subtitle={`${svc.inService} of ${svc.total} probes in service. Probes without sensors show no data.`}
         actions={
           <HelpTip title="Got vs idle probe">
             <p>
-              Pot cards show <b>Got</b> soil from the seated probe (or soft-cal offset). Idle mobile probes on the
-              thereabouts strip report their <em>home pot</em> last-known — not the plant you are testing.
+              Probe cards show <b>Got</b> soil from the assigned plant&apos;s probe (or soft-cal offset). Idle mobile
+              probes on the thereabouts strip report their <em>home probe</em> last-known — not the plant you are
+              testing.
             </p>
-            <p>Example: probe A parked at POT2 home while you soil-test POT4 → thereabouts still reads POT2 moisture.</p>
+            <p>
+              Example: a mobile probe parked at Probe 2 home while you soil-test another vessel → thereabouts still
+              reads Probe 2 moisture.
+            </p>
           </HelpTip>
         }
       />
@@ -117,7 +131,8 @@ export function LiveRootPage() {
         <div className="dsc-col-4">
           <Card title="Notes">
             <p className="dsc-muted" style={{ margin: 0 }}>
-              Mat loop uses per-pot sense with plausibility filter. Metric click opens inspector; card chrome opens the seat.
+              Mat loop uses per-probe sense with a plausibility filter. Metric click opens inspector; card opens the
+              plant panel.
             </p>
           </Card>
         </div>
@@ -143,7 +158,7 @@ export function LiveRootPage() {
           <div className="dsc-col-12">
             <Card className="dsc-glass" title="Probe stations · thereabouts" icon="root">
               <p className="dsc-muted" style={{ marginTop: 0 }}>
-                Idle mobile probes report last-known soil at their home pot — not the plant under test.
+                Idle mobile probes report last-known soil at their home probe — not the plant under test.
               </p>
               <div className="dsc-grid">
                 {probeStations.map((st) => {
@@ -181,14 +196,9 @@ export function LiveRootPage() {
           </div>
         ) : null}
 
-        {pots.map(({ n, seat, oos }) => (
+        {pots.map(({ n, oos }) => (
           <div key={n} className="dsc-col-12">
-            <RootPotCard pot={n} oos={oos} onOpenSeat={() => (oos ? undefined : openPot(n))} />
-            {oos ? null : (
-              <button type="button" className="dsc-btn" style={{ marginTop: 6 }} onClick={() => openPot(n)}>
-                Open {seat.plantName !== "—" ? seat.plantName : `POT${n}`} seat
-              </button>
-            )}
+            <RootProbeCard pot={n} oos={oos} onOpen={() => (oos ? undefined : openPot(n))} />
           </div>
         ))}
       </div>
@@ -196,7 +206,16 @@ export function LiveRootPage() {
       <SlideDrawer
         open={pot != null}
         onClose={closePot}
-        title={pot != null ? `Plant seat · POT${pot}` : "Plant seat"}
+        title={
+          pot != null
+            ? `${probeLabel(pot)}${
+                (() => {
+                  const name = pots.find((p) => p.n === pot)?.seat.plantName;
+                  return name && name !== "—" ? ` · ${name}` : "";
+                })()
+              }`
+            : "Probe"
+        }
         wide
       >
         {pot != null ? (
@@ -217,23 +236,35 @@ export function LiveRootPage() {
   );
 }
 
-function RootPotCard({ pot, oos, onOpenSeat }: { pot: number; oos: boolean; onOpenSeat: () => void }) {
-  const { state, entity, available } = useEntityBus();
+function RootProbeCard({ pot, oos, onOpen }: { pot: number; oos: boolean; onOpen: () => void }) {
+  const { state, entity } = useEntityBus();
   const inspector = useInspector();
   const seat = buildPlantSeat(pot, { state, entity });
   const trust = readPotTrust(pot, state);
   const moistId = potGotEntity(pot, "moisture", state);
+  const ecId = potGotEntity(pot, "ec", state);
+  const phId = potGotEntity(pot, "ph", state);
+  const nId = `sensor.dsc_probe${pot}_soil_nitrogen`;
+  const pId = `sensor.dsc_probe${pot}_soil_phosphorus`;
+  const kId = `sensor.dsc_probe${pot}_soil_potassium`;
+  const dryId = `sensor.dsc_probe${pot}_dryback_pct`;
+  const rateId = `sensor.dsc_probe${pot}_soil_moisture_rate`;
   const series = useEntitySeries(moistId, { hours: 6, maxPoints: 48 });
-  const dry = useHeldReading(`sensor.dsc_probe${pot}_dryback_pct`);
+  const dry = useHeldReading(dryId);
   const soil = useHeldReading(`sensor.dsc_probe${pot}_soil_temperature`);
   const moist = useHeldReading(moistId);
-  const ec = useHeldReading(potGotEntity(pot, "ec", state));
-  const ph = useHeldReading(potGotEntity(pot, "ph", state));
-  const rate = useHeldReading(`sensor.dsc_probe${pot}_soil_moisture_rate`);
+  const ec = useHeldReading(ecId);
+  const ph = useHeldReading(phId);
+  const rate = useHeldReading(rateId);
+  const nHeld = useHeldReading(nId);
+  const pHeld = useHeldReading(pId);
+  const kHeld = useHeldReading(kId);
   const mBand = potWantBand(pot, "moisture", state);
   const ecBand = potWantBand(pot, "ec", state);
   const phBand = potWantBand(pot, "ph", state);
-  const dryBand = mBand && mBand.max !== 45 ? undefined : { min: 0, max: 45 };
+  const dryBand = { min: 0, max: 45 };
+  const showDryback = Number.isFinite(dry.value);
+  const fmtChip = (v: number, digits = 0) => (Number.isFinite(v) ? v.toFixed(digits) : "—");
 
   const open = (id: string, label: string, unit?: string) => (e: { stopPropagation: () => void }) => {
     e.stopPropagation();
@@ -241,8 +272,8 @@ function RootPotCard({ pot, oos, onOpenSeat }: { pot: number; oos: boolean; onOp
   };
 
   return (
-    <Card className={`dsc-glass DSC-Probe-card${oos ? " is-oos" : ""}`} title={`Pot ${pot}`} icon="root">
-      <div className="DSC-Probe-card-head" onClick={onOpenSeat} role="presentation">
+    <Card className={`dsc-glass dsc-pot-card${oos ? " is-oos" : ""}`} title={probeLabel(pot)} icon="root">
+      <div className="dsc-pot-card-head" onClick={onOpen} role="presentation">
         <VesselGlyph spec={readPotVessel(pot, state, entity)} size={28} />
         <div>
           <strong>{oos ? "Out of service" : seat.plantName}</strong>
@@ -275,30 +306,97 @@ function RootPotCard({ pot, oos, onOpenSeat }: { pot: number; oos: boolean; onOp
       {oos ? (
         <p className="dsc-muted">Out of service — not measuring.</p>
       ) : (
-        <div className="dsc-gauge-row">
-          <ArcGauge label="Moisture" value={moist.value} min={0} max={100} unit="%" band={mBand} segments={mBand ? moistureSegments(mBand.min, mBand.max) : moistureSegments()} stale={moist.stale} onClick={() => inspector.open({ entityId: moistId, label: `P${pot} moisture`, unit: "%" })} />
-          <ArcGauge label="Soil °C" value={soil.value} min={10} max={40} unit="°C" stale={soil.stale} onClick={() => inspector.open({ entityId: `sensor.dsc_probe${pot}_soil_temperature`, label: `P${pot} soil T`, unit: "°C" })} />
-          <ArcGauge label="Dryback" value={dry.value} min={0} max={100} unit="%" band={dryBand} stale={dry.stale} onClick={() => inspector.open({ entityId: `sensor.dsc_probe${pot}_dryback_pct`, label: `P${pot} dryback`, unit: "%" })} />
-          <ArcGauge label="EC" value={ec.value} min={0} max={3000} unit="" band={ecBand} stale={ec.stale} onClick={() => inspector.open({ entityId: potGotEntity(pot, "ec", state), label: `P${pot} EC` })} />
-          <ArcGauge label="pH" value={ph.value} min={4} max={8} unit="" band={phBand} stale={ph.stale} onClick={() => inspector.open({ entityId: potGotEntity(pot, "ph", state), label: `P${pot} pH` })} />
-          <button type="button" className="dsc-npk-hit" onClick={open(`sensor.dsc_probe${pot}_soil_nitrogen`, `P${pot} N`)}>
-            N {available(`sensor.dsc_probe${pot}_soil_nitrogen`) ? seat.n : "—"}
-          </button>
-          <button type="button" className="dsc-npk-hit" onClick={open(`sensor.dsc_probe${pot}_soil_phosphorus`, `P${pot} P`)}>
-            P {available(`sensor.dsc_probe${pot}_soil_phosphorus`) ? seat.p : "—"}
-          </button>
-          <button type="button" className="dsc-npk-hit" onClick={open(`sensor.dsc_probe${pot}_soil_potassium`, `P${pot} K`)}>
-            K {available(`sensor.dsc_probe${pot}_soil_potassium`) ? seat.k : "—"}
-          </button>
-          <button
-            type="button"
-            className="dsc-npk-hit"
-            onClick={open(`sensor.dsc_probe${pot}_soil_moisture_rate`, `P${pot} moisture rate`)}
-          >
-            Rate {Number.isFinite(rate.value) ? rate.value.toFixed(2) : "—"}
-            {rate.stale ? " *" : ""}
-          </button>
-        </div>
+        <>
+          <div className="dsc-gauge-row dsc-gauge-row--root">
+            <ArcGauge
+              label="Moisture"
+              value={moist.value}
+              min={0}
+              max={100}
+              unit="%"
+              band={mBand}
+              stale={moist.stale}
+              onClick={() =>
+                inspector.open({ entityId: moistId, label: `${probeLabel(pot)} moisture`, unit: "%" })
+              }
+            />
+            <ArcGauge
+              label="Soil °C"
+              value={soil.value}
+              min={10}
+              max={40}
+              unit="°C"
+              stale={soil.stale}
+              onClick={() =>
+                inspector.open({
+                  entityId: `sensor.dsc_probe${pot}_soil_temperature`,
+                  label: `${probeLabel(pot)} soil T`,
+                  unit: "°C",
+                })
+              }
+            />
+            {showDryback ? (
+              <ArcGauge
+                label="Dryback"
+                value={dry.value}
+                min={0}
+                max={60}
+                unit="%"
+                band={dryBand}
+                stale={dry.stale}
+                onClick={() =>
+                  inspector.open({ entityId: dryId, label: `${probeLabel(pot)} dryback`, unit: "%" })
+                }
+              />
+            ) : null}
+            <ArcGauge
+              label="EC"
+              value={ec.value}
+              min={0}
+              max={3000}
+              unit=""
+              band={ecBand}
+              stale={ec.stale}
+              onClick={() => inspector.open({ entityId: ecId, label: `${probeLabel(pot)} EC` })}
+            />
+            <ArcGauge
+              label="pH"
+              value={ph.value}
+              min={4}
+              max={8}
+              unit=""
+              band={phBand}
+              stale={ph.stale}
+              onClick={() => inspector.open({ entityId: phId, label: `${probeLabel(pot)} pH` })}
+            />
+          </div>
+          <div className="dsc-npk-row">
+            <button type="button" className="dsc-npk-hit" onClick={open(nId, `${probeLabel(pot)} N (from EC)`)}>
+              N {fmtChip(nHeld.value, 0)}
+              {nHeld.stale ? " *" : ""}
+              <span className="dsc-npk-hint">from EC</span>
+            </button>
+            <button type="button" className="dsc-npk-hit" onClick={open(pId, `${probeLabel(pot)} P (from EC)`)}>
+              P {fmtChip(pHeld.value, 0)}
+              {pHeld.stale ? " *" : ""}
+              <span className="dsc-npk-hint">from EC</span>
+            </button>
+            <button type="button" className="dsc-npk-hit" onClick={open(kId, `${probeLabel(pot)} K (from EC)`)}>
+              K {fmtChip(kHeld.value, 0)}
+              {kHeld.stale ? " *" : ""}
+              <span className="dsc-npk-hint">from EC</span>
+            </button>
+            <button type="button" className="dsc-npk-hit" onClick={open(rateId, `${probeLabel(pot)} moisture rate`)}>
+              Rate {Number.isFinite(rate.value) ? rate.value.toFixed(2) : "—"}
+              {rate.stale ? " *" : ""}
+            </button>
+            {!showDryback ? (
+              <span className="dsc-npk-hit dsc-npk-hit--static" title="No dryback entity on this bus">
+                Dryback · no channel
+              </span>
+            ) : null}
+          </div>
+        </>
       )}
     </Card>
   );
