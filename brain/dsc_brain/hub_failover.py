@@ -14,6 +14,7 @@ class HubOverride:
     active: bool
     forced: dict[str, str] = field(default_factory=dict)
     since_ts: float = 0.0
+    pending_reassert: bool = False
 
 
 _current: HubOverride = HubOverride(active=False, forced={}, since_ts=0.0)
@@ -47,17 +48,22 @@ def should_reassert(override: HubOverride, now: float, *, ttl_sec: float = DEFAU
     return (now - override.since_ts) >= ttl_sec
 
 
-def clear_override(*, now: float | None = None) -> HubOverride:
+def clear_override(*, now: float | None = None, pending_reassert: bool = False) -> HubOverride:
     """Clear temporary override (TTL expiry or explicit takeover clear)."""
     global _current
     ts = now if now is not None else _current.since_ts
-    _current = HubOverride(active=False, forced={}, since_ts=ts)
+    _current = HubOverride(
+        active=False,
+        forced={},
+        since_ts=ts,
+        pending_reassert=pending_reassert,
+    )
     return _current
 
 
 def note_takeover_cleared(now: float) -> HubOverride:
     """Explicit clear of switch.dsc_hub_manual_takeover → drop override + re-assert."""
-    if not _current.active:
+    if not _current.active and not _current.pending_reassert:
         return _current
     return clear_override(now=now)
 
@@ -87,21 +93,29 @@ def evaluate_failover(
     Advance failover policy.
 
     Returns (override, force_reassert).
-    force_reassert when TTL expired or takeover cleared while override was active;
-    both paths clear the temporary override.
+    force_reassert when takeover is cleared after an active override or sticky
+    pending_reassert (TTL already fired under takeover). Both clear the temporary
+    override; TTL under takeover clears the binary but keeps pending_reassert.
     """
+    global _current
     o = override if override is not None else _current
-    if not o.active:
+
+    if not o.active and not o.pending_reassert:
         return o, False
 
     if not takeover:
-        cleared = clear_override(now=now)
+        cleared = clear_override(now=now, pending_reassert=False)
         return cleared, True
 
-    if should_reassert(o, now, ttl_sec=ttl_sec):
-        cleared = clear_override(now=now)
-        return cleared, True
+    # Takeover still ON.
+    if o.active and should_reassert(o, now, ttl_sec=ttl_sec):
+        # TTL fired under takeover: drop binary, sticky pending until clear.
+        sticky = clear_override(now=now, pending_reassert=True)
+        return sticky, False
 
+    # Sync module state when caller passed an explicit override snapshot.
+    if override is not None:
+        _current = o
     return o, False
 
 
@@ -116,6 +130,7 @@ def emit_override_entity(states: dict[str, Any], override: HubOverride, set_enti
             "since_ts": override.since_ts,
             "forced": dict(override.forced),
             "ttl_sec": DEFAULT_TTL_SEC,
+            "pending_reassert": override.pending_reassert,
         },
     )
 
