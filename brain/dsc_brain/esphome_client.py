@@ -13,6 +13,7 @@ from .climate_math import finalize_hub_climate
 from .event_log import record_grow_log
 from .fleet_state import FleetState, SeatState, get_fleet_state, update_fleet_state
 from .global_modifiers import apply_temp_rh_offsets
+from .hub_failover import on_hub_reconnect, snapshot_from_hub_values
 from .hub_controls import (
     HUB_BINARY_OID_TO_ENTITY,
     HUB_FAN_OID_TO_ENTITY,
@@ -260,8 +261,21 @@ class EsphomeIngest:
         values = readings.get("values", {})
         if role == "hub":
             global _BOOT_GROW_LOGGED
+            prev_hub = get_fleet_state().hub
+            was_online = bool(prev_hub and prev_hub.online)
             state.hub = SeatState("hub", True, fw, values, now)
             controls = values.get("controls") or {}
+            takeover_ctrl = controls.get("switch.dsc_hub_manual_takeover") or {}
+            takeover = str(takeover_ctrl.get("state", "off")).lower() == "on"
+            ov = on_hub_reconnect(
+                was_online=was_online,
+                is_online=True,
+                snapshot=snapshot_from_hub_values(values),
+                takeover=takeover,
+                now=now,
+            )
+            if ov is not None and ov.active:
+                record_grow_log("Hub reconnect — temporary override until TTL/clear")
             if not _BOOT_GROW_LOGGED:
                 stage = (controls.get("select.dsc_hub_grow_stage") or {}).get("state", "")
                 mode = (controls.get("select.dsc_hub_clone_mode") or {}).get("state", "")

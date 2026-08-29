@@ -52,6 +52,10 @@ export function HubLinkLine() {
         ? `HB #${Math.trunc(beatCount)}`
         : "—";
 
+  const overrideActive =
+    available("binary_sensor.dsc_brain_hub_override_active") &&
+    state("binary_sensor.dsc_brain_hub_override_active") === "on";
+
   return (
     <div className="dsc-chip-row">
       <StatusChip
@@ -59,6 +63,9 @@ export function HubLinkLine() {
         label={online ? "HUB LINK" : "HUB LINK DOWN"}
         tone={online ? "ok" : "bad"}
       />
+      {overrideActive ? (
+        <StatusChip icon="alert" label="RECONNECT OVERRIDE" tone="warn" />
+      ) : null}
       <StatusChip label={age} tone="muted" />
       <StatusChip label={`Bounces ${bounce}`} tone="muted" />
       <StatusChip label={`RF ${rf}`} tone="muted" />
@@ -72,6 +79,10 @@ export function HubLinkLine() {
         <p>
           <b>HS</b> is handshake age in time. <b>HB #</b> is the heartbeat tick count — not hours. Example: Up 2H 14M with
           HB #1847 means healthy link and a live counter, not 1847 hours.
+        </p>
+        <p>
+          <b>RECONNECT OVERRIDE</b> means the brain recorded a temporary override after hub reconnect with manual
+          takeover. It clears after 15 minutes or when master takeover is turned off — then the brain re-asserts Want.
         </p>
         <p>Grey RF is not always a fault — inventory out-of-service stays quiet on purpose.</p>
       </HelpTip>

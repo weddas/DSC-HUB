@@ -6,6 +6,12 @@ import time
 import uuid
 from typing import Any
 
+from .hub_failover import (
+    DEFAULT_TTL_SEC,
+    HubOverride,
+    evaluate_failover,
+    get_override,
+)
 from .want import resolve_want
 
 try:
@@ -34,10 +40,26 @@ def decision_tick(
     custom_want: dict[str, Any] | None = None,
     manual_takeover: bool = False,
     emit: bool = False,
+    hub_override: HubOverride | None = None,
+    now: float | None = None,
+    ttl_sec: float = DEFAULT_TTL_SEC,
     db_path=None,
 ) -> dict[str, Any]:
-    """Compute a proposal. ``emit=True`` reserved for Phase D hub write path."""
+    """Compute a proposal. ``emit=True`` reserved for Phase D hub write path.
+
+    While a reconnect temporary override is active, hold full re-assert until TTL
+    or explicit clear of ``switch.dsc_hub_manual_takeover``; then force Want→act.
+    """
     got = got or {}
+    ts = time.time() if now is None else now
+    override = hub_override if hub_override is not None else get_override()
+    override, force_reassert = evaluate_failover(
+        takeover=manual_takeover,
+        now=ts,
+        ttl_sec=ttl_sec,
+        override=override,
+    )
+
     resolved = resolve_want(
         strain_id=strain_id,
         stage=stage,
@@ -61,9 +83,16 @@ def decision_tick(
         elif status == "high":
             advisories.append(f"{metric} above Want")
 
-    if manual_takeover:
+    hold_for_override = override.active and not force_reassert
+    do_emit = bool(emit or force_reassert) and not hold_for_override and not manual_takeover
+
+    if manual_takeover and not force_reassert:
         advisories.append("Manual Takeover asserted — brain will not emit cmds")
-    elif emit:
+    elif hold_for_override:
+        advisories.append("Hub reconnect override active — holding re-assert until TTL/clear")
+    elif do_emit:
+        if force_reassert:
+            advisories.append("Hub override cleared — forcing Want→act re-assert")
         proposal_cmds: list[dict[str, Any]] = []
         for metric, status in need.items():
             if status == "low":
@@ -80,7 +109,7 @@ def decision_tick(
 
     return {
         "tick_id": str(uuid.uuid4()),
-        "ts": time.time(),
+        "ts": ts,
         "seat": seat,
         "want_meta": {
             "source": resolved["source"],
@@ -94,7 +123,9 @@ def decision_tick(
         "advisories": advisories,
         "safety": {
             "hub_must_clamp": True,
-            "emit": emit,
+            "emit": do_emit,
             "manual_takeover": manual_takeover,
+            "hub_override_active": override.active,
+            "force_reassert": force_reassert,
         },
     }

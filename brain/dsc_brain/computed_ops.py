@@ -10,14 +10,16 @@ from zoneinfo import ZoneInfo
 
 from .compose_ops import _strain_is_auto, update_pot_recipe
 from .compose_store import all_helpers, get_helper, get_roster_slots
+from .dash_computed import emit_dash_entities
+from .decision_loop import decision_tick
 from .device_calibration import get_calibration
 from .global_modifiers import scale_fan_demand_pct, scale_light_brightness_pct
+from .hub_failover import emit_override_entity, evaluate_failover, get_override
+from .light_loop import build_light_loop, emit_light_loop
 from .runtime_history import HistoryMemo, RuntimeMemo, midnight_ts
 from .settings import list_roster
 from .stage_model import expected_stage, stage_rank, tent_id
 from .want import resolve_want
-from .dash_computed import emit_dash_entities
-from .light_loop import build_light_loop, emit_light_loop
 
 SYDNEY_TZ = ZoneInfo("Australia/Sydney")
 _HOT_CACHE: dict[str, Any] = {"ts": 0.0, "key": None, "states": {}}
@@ -555,7 +557,37 @@ def _build_cold_computed_states(
     light_hub = _hub_values_for_light_loop(fleet, runtime)
     light_snap = build_light_loop(helpers=light_helpers, hub_values=light_hub, now_ts=time.time())
     emit_light_loop(states, light_snap, _set_entity)
+
+    # Hub reconnect temporary override → SPA binary; TTL/takeover clear → re-assert.
+    now_ts = time.time()
+    takeover = _manual_takeover_on(fleet, helpers)
+    override, force_reassert = evaluate_failover(takeover=takeover, now=now_ts, override=get_override())
+    emit_override_entity(states, override, _set_entity)
+    if force_reassert:
+        try:
+            decision_tick(
+                seat="hub",
+                strain_id=None,
+                stage="veg",
+                manual_takeover=takeover,
+                emit=True,
+                hub_override=override,
+                now=now_ts,
+            )
+        except Exception:  # noqa: BLE001 — never fail computed emit on re-assert
+            pass
     return states
+
+
+def _manual_takeover_on(fleet: Any, helpers: dict[str, Any]) -> bool:
+    eid = "switch.dsc_hub_manual_takeover"
+    if helpers.get(eid) is not None:
+        return str(helpers.get(eid)).lower() == "on"
+    if fleet.hub:
+        ctrl = (fleet.hub.values.get("controls") or {}).get(eid) or {}
+        if isinstance(ctrl, dict) and ctrl.get("state") is not None:
+            return str(ctrl.get("state")).lower() == "on"
+    return False
 
 
 def _helpers_for_light_loop(helpers: dict[str, Any], fleet: Any) -> dict[str, Any]:
