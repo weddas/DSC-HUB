@@ -1,0 +1,13 @@
+﻿ts	phase	decision	why	evidence	result
+2026-08-29T06:08:53Z	frame	armed Bar 2 goal after Bar 1 merge f0d18ce	recovery design bar 2 is next ship bar; user said do not stop	docs/superpowers/specs/2026-08-29-brain-control-recovery-design.md	goal armed
+2026-08-29T06:11:49Z	frame	skipped second arena; used climate-mode three-object model	shape already approved; laziness protocol	docs/superpowers/specs/2026-08-29-climate-mode-probe-rebuild-design.md	skip arena
+2026-08-29T06:11:49Z	design	wrote Bar 2 plan plant-probe-lifecycle.md	riskiest-unknown-first; harness before features	docs/superpowers/plans/2026-08-29-plant-probe-lifecycle.md	plan ready
+2026-08-29T06:32:36Z	verify	Pi unreachable after hot-patch restart hung	ARP Reachable MAC E4-5F-01-E0-93-B3 but TCP 22/8787 timeout; WoL sent	.audit/bar2-pi-smoke.ps1	INCONCLUSIVE
+2026-08-29T06:32:36Z	unit	plant_probe 4 tests + light/failover still green	sequence-verifiable-units before SPA	brain/tests/test_plant_probe.py	tests green
+2026-08-29T06:38:59Z	ops	background waiter polling SSH after Pi hang	never-block; need power-cycle to finish verify	.audit/bar2-wait-and-finish.ps1	waiting
+2026-08-29T06:50:28Z	inventory	absorbed explore inventory; fixed Root stations tick refresh	inventory said soilWizardOpen-only; Settings dock never reached Root	RootPage.tsx stations useEffect	coded
+2026-08-29T06:51:05Z	fix	Root stations refresh on entity tick not soilWizardOpen-only	explore inventory gap 4 live coherence	RootPage.tsx	coded
+2026-08-29T06:56:37Z	verify	Pi hot-patch index-CEeqi1BT.js; openapi detach/assign/move	waiter recovered after Pi reboot	.audit/bar2-pi-recover.log	VERIFIED
+2026-08-29T06:56:37Z	verify	lifecycle smoke assign/detach/reassign/retire pot2; Amnesia untouched	prove-it-works on real brain	.audit/bar2-pi-smoke.ps1 BAR2_SMOKE_OK	VERIFIED
+2026-08-29T06:56:37Z	verify	move + Amnesia detach/restore; helper assigned_plant_id=slot:1	full Bar2 predicate on Pi	BAR2_MOVE_DETACH_REASSIGN_OK	VERIFIED
+2026-08-29T06:56:37Z	verify	SPA Roster Detach/Delete + Root station vs plant seat screenshots	SPA client of brain SoT	docs/qa-screenshots-2026-08-29/bar2-roster.png,bar2-root.png	VERIFIED

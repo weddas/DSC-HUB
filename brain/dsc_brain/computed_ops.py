@@ -459,6 +459,9 @@ def _build_cold_computed_states(
         "script.dsc_build_plant_commit_and_assign",
         "script.dsc_plant_assign_to_pot",
         "script.dsc_plant_retire",
+        "script.dsc_plant_detach",
+        "script.dsc_plant_assign_slot",
+        "script.dsc_plant_move",
     ):
         _set_entity(states, script_id, "off", available=True)
 

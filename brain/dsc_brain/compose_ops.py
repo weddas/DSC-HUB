@@ -132,6 +132,9 @@ def assign_to_pot(pot: str | None = None) -> dict[str, Any]:
     roster_slot = find_roster_slot_for_strain(strain, recipe["nickname"])
     if roster_slot > 0:
         update_roster_slot(roster_slot, {"pot": n, "status": "active"})
+    from .plant_probe import sync_assignment_on_compose_assign
+
+    sync_assignment_on_compose_assign(int(n), roster_slot)
     return {"pot": n, "strain": strain, "roster_slot": roster_slot, "tent": recipe["tent"]}
 
 
@@ -234,6 +237,9 @@ def retire_plant(pot: str | None = None) -> dict[str, Any]:
             },
         )
     clear_build_helpers()
+    from .plant_probe import sync_assignment_on_compose_assign
+
+    sync_assignment_on_compose_assign(int(n), 0)
     return {"pot": n, "removed": removed, "roster_slot": slot_num}
 
 
@@ -362,6 +368,30 @@ def handle_script(entity_id: str, data: dict[str, Any] | None = None) -> dict[st
         return assign_to_pot(_script_pot(data))
     if entity_id == "script.dsc_plant_retire":
         return retire_plant(_script_pot(data))
+    if entity_id == "script.dsc_plant_detach":
+        from .plant_probe import detach_plant_from_probe
+
+        pot = _script_pot(data)
+        if pot is None:
+            raise ValueError("pot required to detach")
+        return detach_plant_from_probe(int(pot))
+    if entity_id == "script.dsc_plant_assign_slot":
+        from .plant_probe import assign_plant_to_probe
+
+        slot = data.get("slot") or (data.get("variables") or {}).get("slot")
+        pot = _script_pot(data)
+        if slot is None or pot is None:
+            raise ValueError("slot and pot required to assign")
+        return assign_plant_to_probe(int(slot), int(pot))
+    if entity_id == "script.dsc_plant_move":
+        from .plant_probe import move_plant
+
+        variables = data.get("variables") if isinstance(data.get("variables"), dict) else {}
+        frm = data.get("from_pot") or variables.get("from_pot")
+        to = data.get("to_pot") or variables.get("to_pot")
+        if frm is None or to is None:
+            raise ValueError("from_pot and to_pot required to move")
+        return move_plant(int(frm), int(to))
     if entity_id == "script.dsc_accept_mix":
         return accept_mix()
     if entity_id == "script.dsc_apply_climate_want":

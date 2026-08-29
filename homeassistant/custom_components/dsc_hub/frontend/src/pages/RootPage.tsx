@@ -39,7 +39,6 @@ export function LiveRootPage() {
   const inspector = useInspector();
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
-  void tick;
   const pots = [...KIT_PROBE_NUMBERS]
     .map((n) => ({
       n,
@@ -60,17 +59,25 @@ export function LiveRootPage() {
   const [soilWizardOpen, setSoilWizardOpen] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
     getProbeStations()
-      .then((list) =>
+      .then((list) => {
+        if (cancelled) return;
         setProbeStations(
           list.filter((st) => {
             const m = /^pot(\d+)$/i.exec(st.seat_id);
             return m != null && (KIT_PROBE_NUMBERS as readonly number[]).includes(Number(m[1]));
           }),
-        ),
-      )
-      .catch(() => setProbeStations([]));
-  }, [soilWizardOpen]);
+        );
+      })
+      .catch(() => {
+        if (!cancelled) setProbeStations([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+    // tick: Settings dock patches must reach Root without opening Soil test
+  }, [soilWizardOpen, tick]);
 
   const openPot = (n: number) => {
     const next = new URLSearchParams(params);
@@ -92,13 +99,12 @@ export function LiveRootPage() {
         actions={
           <HelpTip title="Got vs idle probe">
             <p>
-              Probe cards show <b>Got</b> soil from the assigned plant&apos;s probe (or soft-cal offset). Idle mobile
-              probes on the thereabouts strip report their <em>home probe</em> last-known — not the plant you are
-              testing.
+              Probe cards show <b>Got</b> soil only when a plant is assigned to that probe. Detached plants stay on the
+              Roster with no probe. Idle mobile probes on the thereabouts strip report their <em>home probe</em>{" "}
+              last-known — not the plant under test.
             </p>
             <p>
-              Example: a mobile probe parked at Probe 2 home while you soil-test another vessel → thereabouts still
-              reads Probe 2 moisture.
+              Layers: SoftCal ≠ probe-station home ≠ tent place ≠ <b>detach</b> ≠ delete/retire.
             </p>
           </HelpTip>
         }

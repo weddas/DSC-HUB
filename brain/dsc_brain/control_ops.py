@@ -665,6 +665,9 @@ async def call_service_proxy(domain: str, service: str, data: dict[str, Any]) ->
             "script.dsc_build_plant_commit_and_assign",
             "script.dsc_plant_assign_to_pot",
             "script.dsc_plant_retire",
+            "script.dsc_plant_detach",
+            "script.dsc_plant_assign_slot",
+            "script.dsc_plant_move",
         ):
             auto = await apply_clone_tent_automation()
             if isinstance(result, dict):

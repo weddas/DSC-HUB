@@ -9,7 +9,7 @@ import { useEntityBus } from "../hooks/useEntityBus";
 import { useFleetActions } from "../hooks/useFleetActions";
 import { useEntitySeries } from "../hooks/useEntitySeries";
 import { useHeldReading } from "../hooks/useHeldReading";
-import { patchPotPlant } from "../lib/fleetApi";
+import { patchPotPlant, detachPlantFromProbe, movePlantBetweenProbes } from "../lib/fleetApi";
 import { GROWTH_STAGE_FALLBACK } from "../lib/growthStages";
 import { ArcGauge, GotWantBars, MultiLineChart } from "../viz/charts";
 import {
@@ -17,12 +17,14 @@ import {
   buildPlantSeat,
   fmtReading,
   potGotEntity,
+  probeLabel,
   tentLabel,
   type TentId,
 } from "../lib/seatModel";
 import { readPotVessel } from "../lib/vesselSpec";
 import { PlantExtra } from "./PlantExtra";
 import { VesselGlyph } from "./VesselGlyph";
+import { useBrainContext } from "../hooks/useBrain";
 
 type FieldBaseline = {
   name: string;
@@ -72,6 +74,7 @@ export function PlantSeatPanel({
 }) {
   const { hass, state, entity, available, tick, num } = useEntityBus();
   const { callService } = useFleetActions();
+  const { refresh: refreshBrain } = useBrainContext();
   const navigate = useNavigate();
   void tick;
   const seat = buildPlantSeat(pot, { state, entity });
@@ -85,9 +88,12 @@ export function PlantSeatPanel({
   const [applyErr, setApplyErr] = useState<string | null>(null);
   const [editErr, setEditErr] = useState<string | null>(null);
   const [retireErr, setRetireErr] = useState<string | null>(null);
+  const [lifecycleErr, setLifecycleErr] = useState<string | null>(null);
   const [editStatus, setEditStatus] = useState<string | null>(null);
   const [pendingTent, setPendingTent] = useState<TentId | null>(null);
   const [applyPhotoTemplate, setApplyPhotoTemplate] = useState(true);
+  const [detachConfirm, setDetachConfirm] = useState(false);
+  const [moveTo, setMoveTo] = useState<number | null>(null);
   const [retireConfirm, setRetireConfirm] = useState(false);
   const [hist, setHist] = useState<{ id: string; label: string; unit: string } | null>(null);
 
@@ -265,11 +271,43 @@ export function PlantSeatPanel({
       });
       setRetireConfirm(false);
       clearDraftsAfterRetire();
+      await refreshBrain();
       onRetired?.();
     } catch (exc) {
       setRetireErr(exc instanceof Error ? exc.message : "Retire failed");
     }
   };
+
+  const detachPlant = async () => {
+    setLifecycleErr(null);
+    try {
+      await detachPlantFromProbe(pot);
+      setDetachConfirm(false);
+      clearDraftsAfterRetire();
+      await refreshBrain();
+      onRetired?.();
+    } catch (exc) {
+      setLifecycleErr(exc instanceof Error ? exc.message : "Detach failed");
+    }
+  };
+
+  const movePlant = async () => {
+    if (moveTo == null) return;
+    setLifecycleErr(null);
+    try {
+      await movePlantBetweenProbes(pot, moveTo);
+      setMoveTo(null);
+      await refreshBrain();
+      onSelectPot?.(moveTo);
+    } catch (exc) {
+      setLifecycleErr(exc instanceof Error ? exc.message : "Move failed");
+    }
+  };
+
+  const vacantTargets = activePotNumbers(state).filter((n) => {
+    if (n === pot) return false;
+    return !state(`text.dsc_probe${n}_plant_name`, "").trim();
+  });
 
   const stageOpts =
     (entity(`select.dsc_probe${pot}_growth_stage`)?.attributes?.options as string[] | undefined) ||
@@ -653,9 +691,61 @@ export function PlantSeatPanel({
           </div>
 
           <div className="dsc-col-12">
+            <Card className="dsc-glass" title="Probe assignment">
+              <p className="dsc-muted" style={{ marginTop: 0 }}>
+                Detach keeps the plant on the roster with no probe. Move reassigns to another vacant kit probe. Delete
+                destroys the plant.
+              </p>
+              <div className="dsc-chip-row" style={{ gap: 8, flexWrap: "wrap" }}>
+                <Button onClick={() => setDetachConfirm(true)}>Detach from probe</Button>
+                {vacantTargets.map((n) => (
+                  <Button key={n} onClick={() => setMoveTo(n)}>
+                    Move to {probeLabel(n)}
+                  </Button>
+                ))}
+              </div>
+              <DecisionLayer
+                open={detachConfirm}
+                onDismiss={() => setDetachConfirm(false)}
+                onConfirm={() => {
+                  void detachPlant();
+                }}
+                title={`Detach plant from ${probeLabel(pot)}?`}
+                confirmLabel="Detach"
+                help={null}
+              >
+                <p>
+                  Frees this probe. The plant stays on the roster as detached. SoftCal and probe-station home are
+                  unchanged.
+                </p>
+              </DecisionLayer>
+              <DecisionLayer
+                open={moveTo != null}
+                onDismiss={() => setMoveTo(null)}
+                onConfirm={() => {
+                  void movePlant();
+                }}
+                title={moveTo != null ? `Move plant to ${probeLabel(moveTo)}?` : "Move"}
+                confirmLabel="Move"
+                help={null}
+              >
+                <p>
+                  Leaves {probeLabel(pot)} vacant and places this plant on{" "}
+                  {moveTo != null ? probeLabel(moveTo) : "the target probe"}.
+                </p>
+              </DecisionLayer>
+              {lifecycleErr ? (
+                <p className="dsc-honesty">
+                  <StatusChip label="Lifecycle failed" tone="bad" /> {lifecycleErr}
+                </p>
+              ) : null}
+            </Card>
+          </div>
+
+          <div className="dsc-col-12">
             <Card className="dsc-glass" title="Delete plant">
               <p className="dsc-muted" style={{ marginTop: 0 }}>
-                Clears this pot’s plant, roster row, and helpers. Does not change probe-station home assignment.
+                Destroys this plant and empties its roster slot. Prefer Detach if you only need to free the probe.
               </p>
               <Button variant="danger" onClick={() => setRetireConfirm(true)}>
                 Delete plant from pot {pot}

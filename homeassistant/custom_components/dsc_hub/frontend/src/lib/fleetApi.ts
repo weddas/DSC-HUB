@@ -310,6 +310,41 @@ export async function patchPotPlant(
   return resp.json();
 }
 
+export async function detachPlantFromProbe(pot: number): Promise<Record<string, unknown>> {
+  const resp = await fetch(`/roster/detach/${pot}`, { method: "POST" });
+  if (!resp.ok) {
+    throw new Error(formatApiError(await resp.text(), "detach failed"));
+  }
+  return resp.json();
+}
+
+export async function assignPlantToProbe(slot: number, pot: number): Promise<Record<string, unknown>> {
+  const resp = await fetch(`/roster/assign`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ slot, pot }),
+  });
+  if (!resp.ok) {
+    throw new Error(formatApiError(await resp.text(), "assign failed"));
+  }
+  return resp.json();
+}
+
+export async function movePlantBetweenProbes(
+  fromPot: number,
+  toPot: number,
+): Promise<Record<string, unknown>> {
+  const resp = await fetch(`/roster/move`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ from_pot: fromPot, to_pot: toPot }),
+  });
+  if (!resp.ok) {
+    throw new Error(formatApiError(await resp.text(), "move failed"));
+  }
+  return resp.json();
+}
+
 export type SoilTestStartBody = {
   probe_seat_id: string;
   target_pot_id: string;

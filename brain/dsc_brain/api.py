@@ -176,6 +176,16 @@ class PotPlantPatch(BaseModel):
     blend: str | None = None
 
 
+class RosterAssignBody(BaseModel):
+    slot: int
+    pot: int
+
+
+class RosterMoveBody(BaseModel):
+    from_pot: int
+    to_pot: int
+
+
 class SoilTestStartBody(BaseModel):
     probe_seat_id: str
     target_pot_id: str
@@ -479,6 +489,39 @@ def roster_pot_patch(pot_n: int, body: PotPlantPatch) -> dict[str, Any]:
         raise HTTPException(400, "pot must be 1–4")
     try:
         return update_pot_recipe(pot_n, body.model_dump(exclude_none=True))
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
+@app.post("/roster/detach/{pot_n}")
+def roster_detach(pot_n: int) -> dict[str, Any]:
+    """Detach plant from probe; keep roster slot (not retire)."""
+    from .plant_probe import detach_plant_from_probe
+
+    if pot_n < 1 or pot_n > 4:
+        raise HTTPException(400, "pot must be 1–4")
+    try:
+        return detach_plant_from_probe(pot_n)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
+@app.post("/roster/assign")
+def roster_assign(body: RosterAssignBody) -> dict[str, Any]:
+    from .plant_probe import assign_plant_to_probe
+
+    try:
+        return assign_plant_to_probe(body.slot, body.pot)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
+@app.post("/roster/move")
+def roster_move(body: RosterMoveBody) -> dict[str, Any]:
+    from .plant_probe import move_plant
+
+    try:
+        return move_plant(body.from_pot, body.to_pot)
     except ValueError as exc:
         raise HTTPException(400, str(exc)) from exc
 

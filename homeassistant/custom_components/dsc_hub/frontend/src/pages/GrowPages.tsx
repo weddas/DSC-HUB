@@ -22,6 +22,7 @@ import {
 import { readPotVessel } from "../lib/vesselSpec";
 import { VesselGlyph } from "../components/VesselGlyph";
 import { CropScheduler } from "../components/CropScheduler";
+import { assignPlantToProbe, detachPlantFromProbe } from "../lib/fleetApi";
 
 export { PlantSeatPanel } from "../components/PlantSeatPanel";
 
@@ -107,8 +108,21 @@ export function GrowRosterPage() {
   const [params, setParams] = useSearchParams();
   const [retirePot, setRetirePot] = useState<number | null>(null);
   const [retireErr, setRetireErr] = useState<string | null>(null);
+  const [detachPot, setDetachPot] = useState<number | null>(null);
+  const [lifecycleErr, setLifecycleErr] = useState<string | null>(null);
+  const [assignSlot, setAssignSlot] = useState<number | null>(null);
+  const [assignPot, setAssignPot] = useState<number>(KIT_PROBE_NUMBERS[0] ?? 1);
   void tick;
-  const slots = rosterSlots(entity);
+  const allSlots = rosterSlots(entity);
+  const slots = allSlots.filter((s) => {
+    const st = String(s.status || "");
+    return !["empty", "", "unknown", "unavailable"].includes(st);
+  });
+  const vacantProbes = KIT_PROBE_NUMBERS.filter((n) => {
+    if (!isPotInService(n, state)) return false;
+    const name = state(`text.dsc_probe${n}_plant_name`, "").trim();
+    return !name;
+  });
   const raw = Number(params.get("pot") || 0);
   const pot =
     raw >= 1 &&
@@ -147,24 +161,49 @@ export function GrowRosterPage() {
     }
   };
 
+  const confirmDetach = async () => {
+    if (detachPot == null) return;
+    setLifecycleErr(null);
+    try {
+      await detachPlantFromProbe(detachPot);
+      await refreshBrain();
+      if (pot === detachPot) closePot();
+      setDetachPot(null);
+    } catch (exc) {
+      setLifecycleErr(exc instanceof Error ? exc.message : "Detach failed");
+    }
+  };
+
+  const confirmAssign = async () => {
+    if (assignSlot == null) return;
+    setLifecycleErr(null);
+    try {
+      await assignPlantToProbe(assignSlot, assignPot);
+      await refreshBrain();
+      setAssignSlot(null);
+    } catch (exc) {
+      setLifecycleErr(exc instanceof Error ? exc.message : "Assign failed");
+    }
+  };
+
   return (
     <div className="dsc-page">
       <PageHeader
         icon="roster"
         title="Roster"
-        subtitle="Plants on kit probes — Edit opens the plant drawer; Delete clears the probe assignment."
+        subtitle="Detach frees a probe without deleting the plant; Delete retires the plant."
         primaryAction={
           <Link to="/grow/compose">
             <Button primary>Use in Compose</Button>
           </Link>
         }
         actions={
-          <HelpTip title="Edit vs Delete">
+          <HelpTip title="Detach vs Delete">
             <p>
-              <b>Edit</b> opens the plant drawer for identity, tent, and notes. <b>Delete</b> retires the plant and clears
-              the probe assignment — Compose draft helpers clear too.
+              <b>Detach</b> keeps the plant on the roster with no probe. <b>Assign</b> binds a detached plant to a vacant
+              kit probe. <b>Delete</b> destroys the plant.
             </p>
-            <p>Out-of-service probes stay on Root grey; they will not appear as live roster rows until In service is back on.</p>
+            <p>Probe-station home and SoftCal are separate layers — they are not detach.</p>
           </HelpTip>
         }
       />
@@ -224,9 +263,30 @@ export function GrowRosterPage() {
                       <StatusChip label={tent} tone="muted" />
                     </td>
                     <td>
-                      <div className="dsc-chip-row" style={{ flexWrap: "nowrap", gap: 6 }}>
+                      <div className="dsc-chip-row" style={{ flexWrap: "wrap", gap: 6 }}>
                         {potLive ? (
                           <Button onClick={() => openPot(p)}>Edit</Button>
+                        ) : null}
+                        {joined ? (
+                          <Button
+                            onClick={() => {
+                              setLifecycleErr(null);
+                              setDetachPot(p);
+                            }}
+                          >
+                            Detach
+                          </Button>
+                        ) : null}
+                        {!joined && vacantProbes.length ? (
+                          <Button
+                            onClick={() => {
+                              setLifecycleErr(null);
+                              setAssignPot(vacantProbes[0] ?? 1);
+                              setAssignSlot(Number(s.slot));
+                            }}
+                          >
+                            Assign
+                          </Button>
                         ) : null}
                         {joined ? (
                           <Button
@@ -252,7 +312,55 @@ export function GrowRosterPage() {
             <StatusChip label="Delete failed" tone="bad" /> {retireErr}
           </p>
         ) : null}
+        {lifecycleErr ? (
+          <p className="dsc-honesty">
+            <StatusChip label="Lifecycle failed" tone="bad" /> {lifecycleErr}
+          </p>
+        ) : null}
       </Card>
+
+      <DecisionLayer
+        open={detachPot != null}
+        onDismiss={() => setDetachPot(null)}
+        onConfirm={() => {
+          void confirmDetach();
+        }}
+        title={detachPot != null ? `Detach plant from ${probeLabel(detachPot)}?` : "Detach"}
+        confirmLabel="Detach"
+        help={null}
+      >
+        <p>
+          Frees {detachPot != null ? probeLabel(detachPot) : "this probe"} and keeps the plant on the roster with no
+          probe. SoftCal and probe-station home are unchanged. Delete if you mean to destroy the plant.
+        </p>
+      </DecisionLayer>
+
+      <DecisionLayer
+        open={assignSlot != null}
+        onDismiss={() => setAssignSlot(null)}
+        onConfirm={() => {
+          void confirmAssign();
+        }}
+        title={assignSlot != null ? `Assign roster #${assignSlot} to a probe?` : "Assign"}
+        confirmLabel="Assign"
+        help={null}
+      >
+        <p>Pick a vacant kit probe for this detached plant.</p>
+        <label>
+          Probe
+          <select
+            value={assignPot}
+            onChange={(e) => setAssignPot(Number(e.target.value))}
+            style={{ display: "block", marginTop: 8 }}
+          >
+            {vacantProbes.map((n) => (
+              <option key={n} value={n}>
+                {probeLabel(n)}
+              </option>
+            ))}
+          </select>
+        </label>
+      </DecisionLayer>
 
       <DecisionLayer
         open={retirePot != null}
@@ -265,8 +373,8 @@ export function GrowRosterPage() {
         help={null}
       >
         <p>
-          Removes the plant from {retirePot != null ? probeLabel(retirePot) : "this probe"} and clears its roster
-          slot. Probe home assignment is unchanged.
+          Destroys the plant on {retirePot != null ? probeLabel(retirePot) : "this probe"} and empties its roster slot.
+          Use Detach if you only want to free the probe.
         </p>
       </DecisionLayer>
 
