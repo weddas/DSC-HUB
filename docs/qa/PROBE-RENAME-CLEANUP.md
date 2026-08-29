@@ -20,3 +20,5 @@
 **OTA train order:** hub (providers) → pot2 canary → pot1 → control. Skip pot3/pot4 (out of kit).
 
 **Compose note:** brain env must use `DSC_POTN_API_KEY` (uppercase) — lowercase `dsc_potN_API_KEY` silently emptied encrypt keys (`19b5c4b`).
+
+Ops SoT: [`../ops/ESPHOME-OTA-PI.md`](../ops/ESPHOME-OTA-PI.md) (compose DNS pin + Control ESPHome 2025.12 + API-key casing) · [`../brain/PROBE-PLANT-MODEL.md`](../brain/PROBE-PLANT-MODEL.md) (kit + Expected chips) · [`../ops/SOFT-CAL.md`](../ops/SOFT-CAL.md) · [`../brain/CLIMATE-MODE-POLICY.md`](../brain/CLIMATE-MODE-POLICY.md).
