@@ -56,13 +56,41 @@ OGB was a **starting pointer**, not the only reference. Bar-1 design must steal 
 | **[farmOS](https://github.com/farmos/farmos)** | Open farm **records / planning**, not real-time HVAC | Roster/history/compliance-style records later; don’t confuse with control SoT | Using it as the climate controller |
 | **Growlink / AROYA domain** (commercial refs) | P0–P3 irrigation phases, dryback %, VWC/EC steering language | Shared vocabulary for Root honesty (dryback/rate already partial); generative vs vegetative cues | Cloud lock-in or cloning their UI |
 
+### §Premium — what paid platforms sell (worth ≠ wallpaper)
+
+Hobby/open stacks often ship **sensors + toggles + pretty charts**. Premium stacks (AROYA, Growlink, TrolMaster Hydro-X/Pro, Pulse Pro/Hub, TSRgrow GROWHub, and hybrids) charge for **outcomes operators will bet a crop on**:
+
+| What you pay for | How premium does it | DSC implication |
+|------------------|---------------------|-----------------|
+| **Truth you can act on** | One authority for “is the light on?” / “are we in dryback?” — UI, app, and actuator agree | Kill dual stories (Light ON vs 0%; Follow 4x8 vs no schedule) |
+| **Closed-loop steering** | AROYA/Growlink: WC%/EC/dryback → irrigation recipes; not moisture dials for show | Root/Overview must name metrics and drive Need, or stay empty |
+| **Local industrial reliability** | TrolMaster: on-prem modular brain, daisy-chain modules, works when cloud dies; backup settings to USB | Matches DSC **brain SoT + hub offline takeover**; never cloud-only control |
+| **Calibrated substrate / climate instrumentation** | Purpose-built sensors (Pulse Pro: leaf VPD, PPFD/DLI, CO₂; AROYA substrate) | Prefer honest “no channel” over fake NPK/CFM theater |
+| **Recipes + photoperiod as SoT** | Stage/day recipes; sunrise/sunset lighting; grow-day = lights-on cycle | Light Want hours come from schedule engine, not a free-floating 0–24 gauge |
+| **Ops / compliance layer** | TSRgrow: energy, batch/GMP-ish reporting, zone light steering at facility scale | Later bars: audit of overrides, not bar-1 blocker |
+| **Service without killing the crop** | Hot-swap / remote power / service outside the room (TSRgrow narrative) | Hub/brain restart must not invent contradictory SPA state |
+| **Explicit control authority** | Facilities often **combine** TrolMaster (climate/light) + Growlink (irrigation analytics) with **defined who wins** | DSC forbids silent dual-run; brain owns act; SPA never invents a third commander |
+
+**Worth over nothing** = *repeatable harvest confidence*: fewer false alarms, fewer “why is it lying?”, fewer nights babysitting. Wallpaper 3D and contradictory chips are negative value.
+
+### Industrial reliability ∩ sleek 3D (how premium actually splits layers)
+
+Paid products that feel both **industrial** and **modern** almost never put the physics engine inside the glamorous view:
+
+1. **Control plane (boring, sacred)** — setpoints, schedules, interlocks, failover, ack, override. Looks like SCADA/HMI or a dense Pro tablet (TrolMaster), not a game.  
+2. **Insight plane** — charts, dryback curves, KPIs, recipes, alerts (Growlink/AROYA/Pulse). Same SoT as (1).  
+3. **Presence / spatial plane (optional)** — facility map, twin, light zones (TSRgrow-style visibility). **Read-only projection** of (1), never a second controller.
+
+**DSC rule for Twin / 3D / Overview chrome:** sleek is allowed only as a **projection of brain SoT**. If the twin or Overview cannot cite the same entity the actuator uses, it stays gated or blank with honesty — never a competing story. Shared-duct 4x8+2x4 is one air plant in both the industrial layer and any 3D air-path.
+
 ### Cross-cutting lessons for DSC bar 1
 
-1. **One SoT per loop** (Mycodo/OGB/HAGR) — Light hours ON/%/schedule must be one engine; Overview chips must be the same entities.  
+1. **One SoT per loop** (Mycodo/OGB/HAGR + premium) — Light hours ON/%/schedule must be one engine; Overview chips must be the same entities.  
 2. **Photoperiod defines the grow-day** (Irrigation-Strategy/Growlink) — Follow 4x8 is inheritance of that day, not a sticker.  
-3. **Manual override is first-class** (Irrigation-Strategy) — hub takeover + brain re-plan, not silent fight.  
+3. **Manual override is first-class** (Irrigation-Strategy / TrolMaster local) — hub takeover + brain re-plan, not silent fight.  
 4. **Consolidated trust** (HAGR grow_monitor) — prefer one honest alert story over contradictory status pills.  
-5. **Topology beats templates** — peers with N rooms still don’t excuse modeling 4x8+2x4 as two HVAC islands when ducting is shared.
+5. **Topology beats templates** — peers with N rooms still don’t excuse modeling 4x8+2x4 as two HVAC islands when ducting is shared.  
+6. **3D never owns control** (premium split) — Twin/Overview are projections or they stay gated.
 
 ## §1 — Control ownership (SoT)
 
