@@ -42,9 +42,22 @@ flowchart LR
 
 - Bypass hub failsafe / min-off / fire countdown
 - Drive Sonoff relays through HA as the *product* path (lab OK until F-010)
-- Emit commands when Manual Takeover is asserted (unless user-approved advanced override)
+- Emit commands when Manual Takeover is asserted (unless force re-assert after override clear)
+- Invent a second photoperiod / demand story in the SPA (bind to brain-emitted entities)
+
+## Takeover vs hub failover (Bar 1 shipped)
+
+| Mode | Behavior |
+|---|---|
+| Manual Takeover `on` | Advisories only — no emit (unless `force_reassert` after clear) |
+| Reconnect temporary override | `hub_failover`: hold full re-assert while `override.active`; TTL **900s** under takeover → clear binary + sticky `pending_reassert`; clear takeover → `force_reassert` |
+| Computed emit path | `computed_ops` evaluates failover each tick; on force → `decision_tick(seat=hub, emit=True)` with stage from grow_stage/roster |
+
+Climate Mode (`Follow 4x8` / `Follow Plants`) assumes **shared ducting** between 4x8 and 2x4. Twin/3D must stay a **projection** of this loop (or stay gated).
+
+See [CONTROL-RECOVERY.md](CONTROL-RECOVERY.md) · [design](../superpowers/specs/2026-08-29-brain-control-recovery-design.md) · [hub_failover.py](../../brain/dsc_brain/hub_failover.py).
 
 ## Implementation
 
-Python: [`brain/dsc_brain/decision_loop.py`](../../brain/dsc_brain/decision_loop.py)  
-Dry-run by default (`emit=False`); live emit is Phase D.
+Python: [`brain/dsc_brain/decision_loop.py`](../../brain/dsc_brain/decision_loop.py) · wiring: [`computed_ops.py`](../../brain/dsc_brain/computed_ops.py) · reconnect: [`esphome_client.py`](../../brain/dsc_brain/esphome_client.py)  
+Dry-run by default (`emit=False`); Bar 1 re-assert uses `emit=True` on force only.

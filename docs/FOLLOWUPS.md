@@ -10,6 +10,14 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 
 ---
 
+## 2026-08-29 — Docs: Bar 1 shipped index (tip `f0d18ce`)
+
+| Item | Status | Notes |
+|------|--------|-------|
+| CONTROL-RECOVERY developer index | **done (this docs PR)** | Maps Tasks 1–6 + honesty pass to shipped modules; replaces “plan only / modules absent” drafts (#137 era) |
+| Notion tip blurbs | **done (this docs PR)** | Engineering Ops · Pi offline brain · Local webserver UI → tip `f0d18ce` (no secrets) |
+| Residual runtime gaps | **unchanged** | See Bar 1 final review below — pending_reassert chip, lights_on_time ingest, dual dash emit, 2×4 Got window |
+
 ## 2026-08-29 — Bar 1 final review (FOLLOWUPS only)
 
 | Item | Status | Notes |
