@@ -10,6 +10,35 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 
 ---
 
+## 2026-08-29 — Browser SPA full exercise (SURFACE 7.3.0 @ `.48:8787`)
+
+> Source: browser QA on SURFACE 7.3.0 @ `.48:8787` — create/delete plant on pot2 worked via `/roster`; UI lagged until hard reload. In scope for **professional UI redesign** goal. Screenshots: `docs/qa-screenshots-2026-08-29/` (46 PNGs).
+
+| Item | Status | Severity | Notes |
+|------|--------|----------|-------|
+| Climate airflow canvas blank (300×150 vs parent; α=0) | **red-flag** | P0 | `#/live/climate` — Three.js/R3F resize; reinforces “one CFM surface” judo |
+| Twin 3D blank (same 300×150) | **red-flag** | P0 | `#/live/twin` — demoted but broken |
+| POT/Seat language + POT3/4 still on Root/Fleet | **red-flag** | P1 | Matches interrogate; Mission copy claims OOS omitted — Root contradicts |
+| NPK empty on live EC/pH pots | **red-flag** | P1 | Probe API `nitrogen: 0` + sensor_fault; fleet map gap |
+| Stage SoT split (Amnesia Late UI vs Early API) | **red-flag** | P1 | Roster/seat vs `/roster` `growth_stage` |
+| Probe station dual home (`pot2` → idle_home pot1) | **next-plan** | P1 | Modbus offline / fault while Root shows moisture |
+| Compose UI stale until reload after add/delete | **next-plan** | P2 | Roster cache / tick |
+| Nickname ignored on compose commit | **deferred** | P2 | |
+| Catalog leading-quote strain names | **deferred** | P2 | |
+| History X-axis collapsed (identical labels) | **next-plan** | P2 | Root seat + Analytics |
+| Dryback always no data | **red-flag** | P2 | Aligns fleet map / Root honesty |
+| Need — / NO TARGET BANDS for rostered plant | **next-plan** | P2 | |
+| Sankey MASS IMBALANCE + CFM mismatch | **red-flag** | P2 | Gate/delete experimental Sankey |
+| Tent NO SCHEDULE both tents | **soak** | P2 | Ops, not SPA-only |
+| Climate RH chart max 100 spike | **soak** | P2 | |
+| Dash Cannalib — + conflicting dark vs Root live | **red-flag** | P2 | Stale entity story |
+| Settings ESPHome failed dump / Zigbee RADIO DOWN / MACs — | **deferred** | P2 | Hardware + honesty of failed job JSON |
+| Delete plant leaves tent assignment sticky | **deferred** | P3 | |
+| Empty seat still offers Delete plant | **deferred** | P3 | |
+| `#/fleet/overview` 404 (overview is `#/fleet`) | **deferred** | P3 | Dead route |
+
+---
+
 ## 2026-08-28 — DSC Help PD site (polish / deferred)
 
 > **done (v1.2.0)** — Live at `/dsc/help/*` (WordPress-PD). Closure pass: measure hashes, FAQ `<details>`, workflow groups, mobile diagram fallbacks, subnav, fail-loud Theme Builder.
