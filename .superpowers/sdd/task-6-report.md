@@ -3,7 +3,7 @@
 **Status:** DONE (failover smoke partial)  
 **Branch:** `feat/brain-control-recovery-bar1`  
 **Runtime code changed:** no (hot-patch + docs only)  
-**Docs commit:** (pending) `docs: Bar 1 Pi verify evidence for brain control recovery`
+**Docs commit:** `dadd8b8` — `docs: Bar 1 Pi verify evidence for brain control recovery`
 
 ## What was done
 
