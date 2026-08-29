@@ -69,12 +69,11 @@ export function useHistory(
         series.sort((a, b) => a.t - b.t);
         setPoints(downsample(series, maxPoints));
       } catch (e) {
-        if (!cancelled) {
-          setError(e instanceof Error ? e.message : "history unavailable");
-          setPoints([]);
-        }
+        if (cancelled) return;
+        setError(e instanceof Error ? e.message : "history unavailable");
+        setPoints([]);
       } finally {
-        if (!cancelled) setLoading(false);
+        setLoading(false);
       }
     }
 
@@ -128,12 +127,11 @@ export function useHistory(
         series.sort((a, b) => a.t - b.t);
         setPoints(downsample(series, maxPoints));
       } catch (e) {
-        if (!cancelled) {
-          setError(e instanceof Error ? e.message : "history unavailable");
-          setPoints([]);
-        }
+        if (cancelled) return;
+        setError(e instanceof Error ? e.message : "history unavailable");
+        setPoints([]);
       } finally {
-        if (!cancelled) setLoading(false);
+        setLoading(false);
       }
     }
 

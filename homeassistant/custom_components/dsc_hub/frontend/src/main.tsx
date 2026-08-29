@@ -1,4 +1,4 @@
-import { StrictMode, useEffect } from "react";
+import { StrictMode, useEffect, useMemo } from "react";
 import { createRoot } from "react-dom/client";
 import { HashRouter } from "react-router-dom";
 import { App } from "./App";
@@ -6,13 +6,23 @@ import { ErrorBoundary } from "./components/ErrorBoundary";
 import { Button } from "./components/ui";
 import { BrainProvider, useBrainContext } from "./hooks/useBrain";
 import { FleetProvider } from "./hooks/useFleet";
+import type { HassEntity } from "./vite-env";
 import "./styles/dsc.css";
 
 const DEFAULT_SURFACE = "7.3.0";
 
 function PiApp() {
-  const { hass, fleet, tick, loading, error, refresh } = useBrainContext();
+  const { hass, fleet, computed, tick, loading, error, refresh } = useBrainContext();
   const surface = (fleet?.surface as string | undefined) ?? DEFAULT_SURFACE;
+
+  /** Merge /fleet/computed hass_extras into fleetRaw so enrichFleetFromHassStates fills dryback/rate/NPK. */
+  const fleetRaw = useMemo(() => {
+    if (!fleet) return null;
+    const extras = computed?.hass_extras as Record<string, HassEntity> | undefined;
+    if (!extras || !Object.keys(extras).length) return fleet;
+    const prior = (fleet.hass_states as Record<string, HassEntity> | undefined) ?? {};
+    return { ...fleet, hass_states: { ...prior, ...extras } };
+  }, [fleet, computed]);
 
   useEffect(() => {
     document.title = `DSC-HUB ${surface}`;
@@ -50,7 +60,7 @@ function PiApp() {
     );
   }
   return (
-    <FleetProvider fleetRaw={fleet} tick={tick} source="pi" loading={loading} error={error}>
+    <FleetProvider fleetRaw={fleetRaw} tick={tick} source="pi" loading={loading} error={error}>
       <HashRouter>
         <div className="dsc-root">
           <App hass={hass} surfaceVersion={surface} hassRevision={tick} fleetSource="pi" />

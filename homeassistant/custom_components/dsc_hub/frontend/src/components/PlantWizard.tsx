@@ -7,6 +7,7 @@ import { Button, Card, EntitySelect, EntityText, EntityDatetime, Icon, StatusChi
 import { TargetNumber } from "./TentTargets";
 import { useEntityBus } from "../hooks/useEntityBus";
 import { useFleetActions } from "../hooks/useFleetActions";
+import { useBrainContext } from "../hooks/useBrain";
 import {
   activeNutrientNames,
   applyBlendLayers,
@@ -20,10 +21,11 @@ import {
 } from "../lib/composePlantLogic";
 import { DEFAULT_VESSEL, resolveVesselSpec, vesselEntityId, VESSEL_CATALOG } from "../lib/vesselSpec";
 import type { CatalogItem } from "../lib/catalog";
+import { KIT_PROBE_NUMBERS, probeLabel } from "../lib/seatModel";
 
 const STEPS = [
   { id: "plant", label: "Plant", icon: "roster" as const },
-  { id: "soil", label: "Pot & soil", icon: "root" as const },
+  { id: "soil", label: "Probe & soil", icon: "root" as const },
   { id: "feed", label: "Feed", icon: "nutrient" as const, optional: true },
   { id: "light", label: "Light", icon: "lighting" as const, optional: true },
   { id: "review", label: "Review", icon: "ok" as const },
@@ -36,6 +38,7 @@ function strainOk(strain: string): boolean {
 export function PlantWizard() {
   const { available, entity, num, state } = useEntityBus();
   const { callService } = useFleetActions();
+  const { refresh: refreshBrain } = useBrainContext();
   const [stepIdx, setStepIdx] = useState(0);
   const [customBlend, setCustomBlend] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -129,18 +132,19 @@ export function PlantWizard() {
     void callService("input_select", "select_option", { entity_id: id, option: vessel.id });
   };
 
-  const commitAssign = () => {
+  const commitAssign = async () => {
     copyVesselToPot(assign);
     if (available("script.dsc_build_plant_commit_and_assign")) {
-      void callService("script", "turn_on", { entity_id: "script.dsc_build_plant_commit_and_assign" });
-      return;
+      await callService("script", "turn_on", { entity_id: "script.dsc_build_plant_commit_and_assign" });
+    } else {
+      await callService("script", "turn_on", { entity_id: "script.dsc_build_plant_commit" });
+      await callService("script", "turn_on", {
+        entity_id: "script.dsc_plant_assign_to_pot",
+        pot: assign,
+        variables: { pot: assign },
+      });
     }
-    void callService("script", "turn_on", { entity_id: "script.dsc_build_plant_commit" });
-    void callService("script", "turn_on", {
-      entity_id: "script.dsc_plant_assign_to_pot",
-      pot: assign,
-      variables: { pot: assign },
-    });
+    await refreshBrain();
   };
 
   const goNext = () => {
@@ -176,7 +180,25 @@ export function PlantWizard() {
   }, [tent]);
 
   const plantTitle = nick || strain || "New plant";
-  const potLabel = assign === "none" ? "—" : `Pot ${assign}`;
+  const potLabel = assign === "none" ? "—" : probeLabel(Number(assign));
+
+  const assignOptions = useMemo(() => {
+    const raw = (entity("input_select.dsc_build_assign_pot")?.attributes?.options as string[]) || [];
+    const kit = new Set<string>(["none", ...KIT_PROBE_NUMBERS.map(String)]);
+    const filtered = raw.filter((o) => kit.has(o));
+    return filtered.length ? filtered : ["none", ...KIT_PROBE_NUMBERS.map(String)];
+  }, [entity]);
+
+  useEffect(() => {
+    if (assign === "none") return;
+    const n = Number(assign);
+    if (!(KIT_PROBE_NUMBERS as readonly number[]).includes(n)) {
+      void callService("input_select", "select_option", {
+        entity_id: "input_select.dsc_build_assign_pot",
+        option: "none",
+      });
+    }
+  }, [assign, callService]);
 
   return (
     <div className="dsc-plant-wizard">
@@ -214,15 +236,15 @@ export function PlantWizard() {
         <div className="dsc-banner dsc-banner--warn" style={{ marginBottom: 12 }}>
           <StatusChip label="Unsaved compose draft" tone="warn" />
           <span className="dsc-muted" style={{ fontSize: 13, marginLeft: 8 }}>
-            Strain or pot is set — finish add or retire clears the draft.
+            Strain or probe is set — finish add or retire clears the draft.
           </span>
         </div>
       ) : null}
 
       {step.id === "plant" ? (
-        <Card className="dsc-glass dsc-wizard-panel" title="1 · Which plant, which pot?" icon="roster">
+        <Card className="dsc-glass dsc-wizard-panel" title="1 · Which plant, which probe?" icon="roster">
           <p className="dsc-muted" style={{ marginTop: 0, fontSize: 13 }}>
-            Search the catalog, give it a nickname, pick the empty pot, and set sprout date if you know it.
+            Search the catalog, give it a nickname, pick an empty kit probe, and set sprout date if you know it.
           </p>
           <CatalogPicker kind="strain" onPick={onPickStrain} placeholder="Search strains…" />
           {pickedStrain || strainOk(strain) ? (
@@ -242,7 +264,27 @@ export function PlantWizard() {
           <div className="dsc-wizard-fields">
             <EntityText entityId="input_text.dsc_build_nickname" label="Nickname (optional)" />
             <EntityDatetime entityId="input_datetime.dsc_build_sprout_date" label="Sprout date" />
-            <EntitySelect entityId="input_select.dsc_build_assign_pot" label="Assign to pot" icon="root" />
+            <label className="dsc-field">
+              <span className="dsc-field-label">
+                <Icon name="root" size={14} /> Assign to probe
+              </span>
+              <select
+                className="dsc-input"
+                value={assignOptions.includes(assign) ? assign : "none"}
+                onChange={(e) => {
+                  void callService("input_select", "select_option", {
+                    entity_id: "input_select.dsc_build_assign_pot",
+                    option: e.target.value,
+                  });
+                }}
+              >
+                {assignOptions.map((opt) => (
+                  <option key={opt} value={opt}>
+                    {opt === "none" ? "— none —" : probeLabel(Number(opt))}
+                  </option>
+                ))}
+              </select>
+            </label>
             <EntitySelect entityId="input_select.dsc_build_tent" label="Tent" icon="tent" />
           </div>
           {expectedStage ? (
@@ -427,7 +469,7 @@ export function PlantWizard() {
           </dl>
           <div className="dsc-row-actions">
             <Button variant="primary" disabled={assign === "none" || !strainOk(strain)} icon="compose" iconMotion="glow" onClick={() => setConfirmAdd(true)}>
-              Add plant to {assign === "none" ? "pot" : `pot ${assign}`}
+              Add plant to {assign === "none" ? "probe" : potLabel}
             </Button>
           </div>
           <details
@@ -456,7 +498,7 @@ export function PlantWizard() {
                   });
                 }}
               >
-                Assign seat only
+                Assign probe only
               </Button>
               <Button
                 variant="secondary"
@@ -468,33 +510,46 @@ export function PlantWizard() {
                 variant="danger"
                 onClick={() => setRetireConfirm(true)}
               >
-                Retire pot
+                Retire plant
               </Button>
             </div>
             <DecisionLayer
               open={retireConfirm}
               onDismiss={() => setRetireConfirm(false)}
               onConfirm={() => {
-                setRetireConfirm(false);
-                void callService("script", "turn_on", {
-                  entity_id: "script.dsc_plant_retire",
-                  pot: assign,
-                  variables: { pot: assign },
-                });
-                clearComposeDraft(callService);
-                setStepIdx(0);
-                setPickedStrain(null);
-                setPickedLight(null);
+                void (async () => {
+                  setRetireConfirm(false);
+                  await callService("script", "turn_on", {
+                    entity_id: "script.dsc_plant_retire",
+                    pot: assign,
+                    variables: { pot: assign },
+                  });
+                  clearComposeDraft(callService);
+                  await refreshBrain();
+                  setStepIdx(0);
+                  setPickedStrain(null);
+                  setPickedLight(null);
+                })();
               }}
-              title="Retire pot and clear draft?"
+              title="Retire plant and clear draft?"
               confirmLabel="Retire"
               help={null}
             >
               <p>
-                Retires pot {assign} on the hub and clears the compose draft (strain, nickname, assign pot).
+                Retires {potLabel} on the hub and clears the compose draft (strain, nickname, assign probe).
               </p>
             </DecisionLayer>
-            <EntitySelect entityId="input_select.dsc_build_climate_pot" label="Climate apply pot" icon="climate" />
+            <EntitySelect
+              entityId="input_select.dsc_build_climate_pot"
+              label="Climate apply probe"
+              icon="climate"
+              filterOptions={(opts) =>
+                opts.filter((o) => {
+                  const n = Number(o);
+                  return o === "Fleet" || (KIT_PROBE_NUMBERS as readonly number[]).includes(n);
+                })
+              }
+            />
           </details>
           <p className="dsc-muted" style={{ fontSize: 12, marginBottom: 0 }}>
             Default vessel if unset: {DEFAULT_VESSEL.label}.
@@ -517,16 +572,15 @@ export function PlantWizard() {
         open={confirmAdd}
         onDismiss={() => setConfirmAdd(false)}
         onConfirm={() => {
-          commitAssign();
-          setConfirmAdd(false);
+          void commitAssign().then(() => setConfirmAdd(false));
         }}
         title="Add plant"
-        confirmLabel={`Add to pot ${assign}`}
+        confirmLabel={`Add to ${potLabel}`}
         help={null}
       >
         <p>
           Saves <strong>{plantTitle}</strong> with {vessel.label} and {mixLabel} to the roster, assigns{" "}
-          {potLabel} in {tent}, and copies the vessel to that pot.
+          {potLabel} in {tent}, and copies the vessel to that probe.
           {expectedStage ? ` Calendar expected stage will be ${expectedStage}.` : ""}
         </p>
       </DecisionLayer>

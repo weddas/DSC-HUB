@@ -1,5 +1,6 @@
 import { resolveCfm } from "./cfmProvenance";
-import { KIT_PROBE_NUMBERS, isPotInService } from "./seatModel";
+import { KIT_PROBE_NUMBERS, isPotInServiceWithFleet } from "./seatModel";
+import type { FleetSnapshot } from "./fleetModel";
 
 export type HonestyTone = "ok" | "warn" | "bad" | "muted";
 
@@ -22,7 +23,10 @@ type HassLike = {
   ) => { attributes?: Record<string, unknown>; last_changed?: string } | undefined;
 };
 
-export function collectHonestyGaps(hass: HassLike): HonestyGap[] {
+export function collectHonestyGaps(
+  hass: HassLike,
+  fleet?: FleetSnapshot | null,
+): HonestyGap[] {
   const gaps: HonestyGap[] = [];
   const st = (id: string, fb = "unknown") => hass.state(id, fb);
   const on = (id: string) => st(id) === "on";
@@ -116,7 +120,10 @@ export function collectHonestyGaps(hass: HassLike): HonestyGap[] {
   }
 
   // Live omits OOS kit probes (no fake Got) — never nag about retired 3/4.
-  const oosPots = [...KIT_PROBE_NUMBERS].filter((n) => !isPotInService(n, st));
+  // Prefer fleet inventory when present so Root / Settings / honesty agree.
+  const oosPots = [...KIT_PROBE_NUMBERS].filter(
+    (n) => !isPotInServiceWithFleet(n, st, fleet ?? null),
+  );
   if (oosPots.length) {
     gaps.push({
       id: "oos-pots",
@@ -279,9 +286,11 @@ export function collectHonestyGapsFromFleet(
   }
 
   if (hass) {
-    gaps.push(...collectHonestyGaps(hass).filter((g) =>
-      !["hub-link", "hub-dark", "beat-dark", "panel-dark", "reduced-kit"].includes(g.id),
-    ));
+    gaps.push(
+      ...collectHonestyGaps(hass, fleet).filter(
+        (g) => !["hub-link", "hub-dark", "beat-dark", "panel-dark", "reduced-kit"].includes(g.id),
+      ),
+    );
   }
 
   return gaps.sort((a, b) => a.priority - b.priority);

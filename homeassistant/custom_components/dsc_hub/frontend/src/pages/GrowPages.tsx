@@ -8,9 +8,12 @@ import { Button, Card, PageHeader, StatusChip } from "../components/ui";
 import { HelpTip } from "../components/HelpTip";
 import { useEntityBus } from "../hooks/useEntityBus";
 import { useFleetActions } from "../hooks/useFleetActions";
+import { useBrainContext } from "../hooks/useBrain";
 import { PlantSeatPanel } from "../components/PlantSeatPanel";
 import {
   isPotInService,
+  KIT_PROBE_NUMBERS,
+  probeLabel,
   readTent,
   rosterSlots,
   tentLabel,
@@ -29,10 +32,10 @@ export function GrowComposePage() {
       <PageHeader
         icon="compose"
         title="Compose"
-        subtitle="Step through strain, pot, soil, and optional feed — one confirm to add."
+        subtitle="Step through strain, probe, soil, and optional feed — one confirm to add."
         primaryAction={
           <Button teal onClick={() => navigate("/grow/roster")}>
-            Open Roster / Seat
+            Open Roster
           </Button>
         }
         actions={
@@ -42,7 +45,7 @@ export function GrowComposePage() {
                 Compose builds a draft in helpers, then one confirm commits the plant. Retiring a plant clears the draft
                 helpers so the next compose starts empty — not half a leftover WIP.
               </p>
-              <p>Example: delete plant on POT3 → reopen Compose → strain/pot steps should be blank, ready for the next seat.</p>
+              <p>Example: delete plant on Probe 2 → reopen Compose → strain/probe steps should be blank.</p>
             </HelpTip>
             <Button primary onClick={() => navigate("/grow/research")}>
               Browse Catalog
@@ -51,8 +54,8 @@ export function GrowComposePage() {
         }
       />
       <p className="dsc-honesty" style={{ marginTop: 0 }}>
-        Five steps: plant → pot &amp; soil → feed (skip ok) → light (skip ok) → review. Quick soil presets cover most
-        mixes; catalog search fills in the rest.
+        Five steps: plant → probe &amp; soil → feed (skip ok) → light (skip ok) → review. Quick soil presets cover most
+        mixes; catalog search fills in the rest. Kit probes only (Probe 1–2).
       </p>
       <ComposePlant />
     </div>
@@ -75,7 +78,7 @@ export function GrowResearchPage() {
                 filler.
               </p>
               <p>
-                <b>Use in Compose</b> drafts helpers for a new plant; <b>Open Seat</b> jumps to a plant already on the
+                <b>Use in Compose</b> drafts helpers for a new plant; <b>Open Roster</b> jumps to a plant already on the
                 roster.
               </p>
             </HelpTip>
@@ -83,14 +86,14 @@ export function GrowResearchPage() {
               Use in Compose
             </Button>
             <Button teal onClick={() => navigate("/grow/roster")}>
-              Open Seat
+              Open Roster
             </Button>
           </>
         }
       />
       <p className="dsc-honesty" style={{ marginTop: 0 }}>
         Height, flowering, and chemistry chips appear only when the catalog has real data — gaps are shown as gaps.
-        Use in Compose to draft a plant, or Open Seat to work with a plant already on the roster.
+        Use in Compose to draft a plant, or Open Roster to work with a plant already assigned.
       </p>
       <CatalogResearch />
     </div>
@@ -100,16 +103,22 @@ export function GrowResearchPage() {
 export function GrowRosterPage() {
   const { entity, state, tick } = useEntityBus();
   const { callService } = useFleetActions();
+  const { refresh: refreshBrain } = useBrainContext();
   const [params, setParams] = useSearchParams();
   const [retirePot, setRetirePot] = useState<number | null>(null);
   const [retireErr, setRetireErr] = useState<string | null>(null);
   void tick;
   const slots = rosterSlots(entity);
   const raw = Number(params.get("pot") || 0);
-  const pot = raw >= 1 && raw <= 4 && isPotInService(raw, state) ? raw : null;
+  const pot =
+    raw >= 1 &&
+    (KIT_PROBE_NUMBERS as readonly number[]).includes(raw) &&
+    isPotInService(raw, state)
+      ? raw
+      : null;
 
   const openPot = (n: number) => {
-    if (!isPotInService(n, state)) return;
+    if (!(KIT_PROBE_NUMBERS as readonly number[]).includes(n) || !isPotInService(n, state)) return;
     const next = new URLSearchParams(params);
     next.set("pot", String(n));
     setParams(next, { replace: true });
@@ -130,6 +139,7 @@ export function GrowRosterPage() {
         pot: String(retirePot),
         variables: { pot: String(retirePot) },
       });
+      await refreshBrain();
       if (pot === retirePot) closePot();
       setRetirePot(null);
     } catch (exc) {
@@ -142,7 +152,7 @@ export function GrowRosterPage() {
       <PageHeader
         icon="roster"
         title="Roster"
-        subtitle="Seats — Edit opens the plant drawer; Delete clears pot + roster slot."
+        subtitle="Plants on kit probes — Edit opens the plant drawer; Delete clears the probe assignment."
         primaryAction={
           <Link to="/grow/compose">
             <Button primary>Use in Compose</Button>
@@ -151,10 +161,10 @@ export function GrowRosterPage() {
         actions={
           <HelpTip title="Edit vs Delete">
             <p>
-              <b>Edit</b> opens the seat drawer for identity, tent, and notes. <b>Delete</b> retires the plant and clears
-              the pot slot — Compose draft helpers clear too.
+              <b>Edit</b> opens the plant drawer for identity, tent, and notes. <b>Delete</b> retires the plant and clears
+              the probe assignment — Compose draft helpers clear too.
             </p>
-            <p>Out-of-service pots stay on Root grey; they will not appear as live roster seats until In service is back on.</p>
+            <p>Out-of-service probes stay on Root grey; they will not appear as live roster rows until In service is back on.</p>
           </HelpTip>
         }
       />
@@ -164,7 +174,7 @@ export function GrowRosterPage() {
       <Card className="dsc-glass" title="Roster" icon="roster">
         {!slots.length ? (
           <p className="dsc-muted" style={{ marginTop: 0 }}>
-            No plants in roster yet. Commit from Compose, then assign a pot.
+            No plants in roster yet. Commit from Compose, then assign a probe.
           </p>
         ) : (
           <table className="dsc-table">
@@ -174,7 +184,7 @@ export function GrowRosterPage() {
                 <th>Name</th>
                 <th>Strain</th>
                 <th>Status</th>
-                <th>Pot</th>
+                <th>Probe</th>
                 <th>Need</th>
                 <th>Tent</th>
                 <th>Actions</th>
@@ -250,19 +260,20 @@ export function GrowRosterPage() {
         onConfirm={() => {
           void confirmRetire();
         }}
-        title={retirePot != null ? `Delete plant on pot ${retirePot}?` : "Delete plant"}
+        title={retirePot != null ? `Delete plant on ${probeLabel(retirePot)}?` : "Delete plant"}
         confirmLabel="Delete plant"
         help={null}
       >
         <p>
-          Removes the plant from pot {retirePot} and clears its roster slot. Probe home assignment is unchanged.
+          Removes the plant from {retirePot != null ? probeLabel(retirePot) : "this probe"} and clears its roster
+          slot. Probe home assignment is unchanged.
         </p>
       </DecisionLayer>
 
       <SlideDrawer
         open={pot != null}
         onClose={closePot}
-        title={pot != null ? `Plant seat · POT${pot}` : "Plant seat"}
+        title={pot != null ? `${probeLabel(pot)} · plant` : "Plant"}
         wide
       >
         {pot != null ? (

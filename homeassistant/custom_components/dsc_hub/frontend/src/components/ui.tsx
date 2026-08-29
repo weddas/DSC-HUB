@@ -374,17 +374,21 @@ export function EntitySelect({
   label,
   icon,
   disabled,
+  filterOptions,
 }: {
   entityId: string;
   label: string;
   icon?: IconName;
   disabled?: boolean;
+  /** Narrow HA option list for kit surfaces (e.g. Probe 1–2 only). */
+  filterOptions?: (options: string[]) => string[];
 }) {
   const { state, available, attributes } = useFleetEntity(entityId);
   const { callService } = useFleetActions();
   const ok = available && !disabled;
   const current = state;
-  const options = (attributes?.options as string[] | undefined) || [];
+  const rawOptions = (attributes?.options as string[] | undefined) || [];
+  const options = filterOptions ? filterOptions(rawOptions) : rawOptions;
   const domain = entityId.split(".")[0];
   const [open, setOpen] = useState(false);
   const interacting = useRef(false);

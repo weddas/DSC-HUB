@@ -1,6 +1,8 @@
 /** Soft calibrate — Raw Modbus captures → prefer ESP NVS cal plane (not stacked HA+ESP). */
 
-export const SOFT_CAL_POTS = [1, 2, 3, 4] as const;
+import { KIT_PROBE_NUMBERS } from "./seatModel";
+
+export const SOFT_CAL_POTS = KIT_PROBE_NUMBERS;
 export type SoftCalPot = (typeof SOFT_CAL_POTS)[number];
 export type SoftCalPhase = "water" | "after_water";
 

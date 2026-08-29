@@ -13,7 +13,6 @@ import { TimespanControl, CYCLE_TIMESPAN_EXTRAS } from "../components/HistoryDra
 import { AirPathMap } from "../components/AirPathMap";
 import { CropScheduler } from "../components/CropScheduler";
 import { TentLightClock } from "../components/TentLightClock";
-import { TwinViewport } from "../components/TwinViewport";
 import { TentTargetPanel } from "../components/TentTargets";
 import { resolveCfm } from "../lib/cfmProvenance";
 import { readPotTrust } from "../lib/potTrust";
@@ -26,7 +25,7 @@ import { useHeldReading } from "../hooks/useHeldReading";
 import { useChartHours } from "../hooks/useChartHours";
 import { useInspector } from "../components/InspectorHost";
 import { MultiLineChart } from "../viz/charts";
-import { potsInTent, isPotInService, type TentId } from "../lib/seatModel";
+import { potsInTent, isPotInServiceWithFleet, type TentId } from "../lib/seatModel";
 import { HelpTip } from "../components/HelpTip";
 import { PlantSeatPanel } from "./GrowPages";
 
@@ -40,72 +39,37 @@ function fmt(n: number, digits = 1): string {
 
 export function LiveTwinPage() {
   const navigate = useNavigate();
-  const { available, num } = useEntityBus();
-  const inMain = resolveCfm("sensor.dsc_cfm_intake_main_allocated", "sensor.dsc_cfm_intake_main", {
-    available,
-    num,
-  });
-  const inClone = resolveCfm("sensor.dsc_cfm_intake_2x4_allocated", "sensor.dsc_cfm_intake_2x4", {
-    available,
-    num,
-  });
-  const outCfm = resolveCfm("sensor.dsc_cfm_exhaust_out_allocated", "sensor.dsc_cfm_exhaust_out", {
-    available,
-    num,
-  });
-  const recCfm = resolveCfm(
-    "sensor.dsc_cfm_exhaust_recirc_allocated",
-    "sensor.dsc_cfm_exhaust_recirc",
-    { available, num },
-  );
   return (
     <div className="dsc-page dsc-page--twin-chrome">
       <PageHeader
         icon="twin"
         title="Twin"
-        subtitle="Cinematic digital twin — pick a pot to open its seat overlay."
+        subtitle="Demoted — gated until the WebGL canvas resizes correctly. Use Climate Air path for CFM."
         primaryAction={
           <Button teal onClick={() => navigate("/live/climate")}>
-            Set Climate Want
+            Climate air path
           </Button>
         }
         actions={
           <>
-            <HelpTip title="Twin seat overlay">
+            <HelpTip title="Twin status">
               <p>
-                Click a pot to open its seat overlay <b>on Twin</b> — you stay in the scene. <b>Open Root</b> is the full
-                Root desk for moisture/EC work across seats.
-              </p>
-              <p>
-                Example: spot pot 3 dry in orbit → click pot → adjust Need in the overlay → dismiss and keep flying.
-                Twin stays warm across Twin / 4×8 / 2×4.
+                Twin is demoted. The viewport often stuck at a blank 300×150 canvas. Prefer Climate&apos;s{" "}
+                <b>Air path</b> for CFM and Root for probe soil.
               </p>
             </HelpTip>
+            <Button onClick={() => navigate("/live/root")}>Open Root</Button>
             <Button onClick={() => navigate("/live/4x8")}>4×8 cockpit</Button>
             <Button onClick={() => navigate("/live/2x4")}>2×4 cockpit</Button>
-            <Button onClick={() => navigate("/live/root")}>Open Root</Button>
-            <Button primary onClick={() => navigate("/grow/compose")}>
-              Compose plant
-            </Button>
           </>
         }
       />
-      <TwinViewport />
-      <p className="dsc-honesty dsc-muted" style={{ marginTop: 0 }}>
-        Pick a pot in the twin to open its seat overlay (stay on Twin). Use Open Root for the Root desk.
-        Twin stays warm across Twin / 4×8 / 2×4. Orbit the scene — it no longer snaps home on hass ticks. 4×8 fixture
-        glow follows the photoperiod window until a main lamp is wired.
-      </p>
-      <div className="dsc-grid" style={{ marginTop: 12 }}>
-        <div className="dsc-col-12">
-          <CropScheduler />
-        </div>
-        <div className="dsc-col-12">
-          <Card className="dsc-glass" title="Air path" icon="climate">
-            <AirPathMap intakeClone={inClone} intakeMain={inMain} outCfm={outCfm} recircCfm={recCfm} />
-          </Card>
-        </div>
-      </div>
+      <Card className="dsc-glass" title="3D twin unavailable" icon="twin">
+        <p className="dsc-muted" style={{ margin: 0 }}>
+          The cinematic twin is parked until resize and kit Probe labeling are honest. It is not a live ops surface.
+          Crop schedule stays on Mission / Grow; air CFM lives on Climate.
+        </p>
+      </Card>
     </div>
   );
 }
@@ -124,7 +88,10 @@ function TentCockpitPage({ tent }: { tent: Exclude<TentId, "unassigned"> }) {
   const seatKey = seats.map((s) => s.pot).join(",");
   const raw = Number(params.get("pot") || 0);
   const pot =
-    raw >= 1 && raw <= 4 && isPotInService(raw, state) && seats.some((s) => s.pot === raw)
+    raw >= 1 &&
+    raw <= 4 &&
+    isPotInServiceWithFleet(raw, state) &&
+    seats.some((s) => s.pot === raw)
       ? raw
       : null;
 
@@ -347,7 +314,7 @@ function TentCockpitPage({ tent }: { tent: Exclude<TentId, "unassigned"> }) {
         </div>
 
         <div className="dsc-col-12">
-          <Card className="dsc-glass" title="Seat strip" icon="seat">
+          <Card className="dsc-glass" title="Probe strip" icon="root">
             <div className="dsc-chip-row">
               {seats.length === 0 ? (
                 <div className="dsc-empty">No pots assigned — Apply to tent from a seat.</div>
@@ -488,7 +455,7 @@ function TentCockpitPage({ tent }: { tent: Exclude<TentId, "unassigned"> }) {
           next.delete("pot");
           setParams(next, { replace: true });
         }}
-        title={pot != null ? `Plant seat · POT${pot}` : "Plant seat"}
+        title={pot != null ? `${probeLabel(pot)} · plant` : "Plant"}
         wide
       >
         {pot != null ? (

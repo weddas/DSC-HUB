@@ -222,7 +222,7 @@ export function SoftCalWizard() {
             className={`dsc-chip${selected.includes(pot) ? " dsc-chip--ok" : ""}`}
             onClick={() => togglePot(pot)}
           >
-            Pot {pot}
+            Probe {pot}
           </button>
         ))}
       </div>

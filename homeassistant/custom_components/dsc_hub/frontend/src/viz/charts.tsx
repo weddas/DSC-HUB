@@ -271,7 +271,10 @@ export function MultiLineChart({
   const gid = useId().replace(/:/g, "");
   const width = 640;
   const hasRight = named.some((s) => s.axis === "right");
-  const pad = { l: 40, r: hasRight ? 40 : 14, t: 16, b: 28 };
+  const pad = useMemo(
+    () => ({ l: 40, r: hasRight ? 40 : 14, t: 16, b: 28 }),
+    [hasRight],
+  );
   const svgRef = useRef<SVGSVGElement | null>(null);
   const [hover, setHover] = useState<{ t: number; x: number } | null>(null);
   const [pinned, setPinned] = useState(false);
@@ -311,7 +314,7 @@ export function MultiLineChart({
       };
     });
     return { left, right, t0, t1, paths };
-  }, [named, height, hasRight, yDomain, chartStale, unit, targets.length]);
+  }, [named, height, hasRight, yDomain, chartStale, unit, targets.length, pad]);
 
   const gridLeft = useMemo(() => {
     if (!model) return [];
@@ -324,7 +327,7 @@ export function MultiLineChart({
       out.push({ y, label: v.toFixed(Math.abs(v) >= 100 ? 0 : 1) });
     }
     return out;
-  }, [model, height]);
+  }, [model, height, pad]);
 
   const gridRight = useMemo(() => {
     if (!model || !hasRight) return [];
@@ -337,7 +340,7 @@ export function MultiLineChart({
       out.push({ y, label: v.toFixed(Math.abs(v) >= 100 ? 0 : 1) });
     }
     return out;
-  }, [model, height, hasRight]);
+  }, [model, height, hasRight, pad]);
 
   const timeTicks = useMemo(() => {
     if (!model) return [];
@@ -351,7 +354,7 @@ export function MultiLineChart({
       out.push({ x: pad.l + frac * innerW, label: fmtTime(t, chartHours) });
     }
     return out;
-  }, [model, chartHours]);
+  }, [model, chartHours, pad]);
 
   const clientToChartX = useCallback(
     (clientX: number) => {
@@ -365,7 +368,7 @@ export function MultiLineChart({
       const t = model.t0 + frac * Math.max(model.t1 - model.t0, 1);
       return { t, x: clamped };
     },
-    [model],
+    [model, pad],
   );
 
   const onPointerMove = (e: ReactPointerEvent) => {
@@ -414,7 +417,7 @@ export function MultiLineChart({
         x: pad.l + ((best.t - model.t0) / Math.max(model.t1 - model.t0, 1)) * (width - pad.l - pad.r),
       };
     });
-  }, [model, hover, height]);
+  }, [model, hover, height, pad]);
 
   const drawKey = model
     ? `${model.t0}-${model.t1}-${model.paths.map((p) => p.d).join("|")}`

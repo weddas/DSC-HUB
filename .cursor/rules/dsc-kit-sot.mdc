@@ -1,0 +1,28 @@
+---
+description: Kit probe SoT — KIT_PROBE_NUMBERS, Probe/Plant chrome, WithFleet in-service
+globs: homeassistant/custom_components/dsc_hub/frontend/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# DSC kit source of truth
+
+## Kit probes
+
+- Operator Live / Grow / SoftCal / SoilTest / honesty OOS lists use `KIT_PROBE_NUMBERS` from `seatModel.ts` (currently `[1, 2]`).
+- `ALL_POT_NUMBERS` is for Device inventory, entity maps, and Advanced restore only — never for Live plant cards or Compose assign options.
+
+## Chrome
+
+- Operator UI says **Probe** / **Plant**, not Seat / POT / pot slot.
+- Settings Device may keep internal `seat_id` (`pot1`…) and an Advanced restore section for probes 3–4.
+
+## In-service
+
+- Prefer `isPotInServiceWithFleet(n, state, fleet)` when fleet inventory is available so Root, Settings, and honesty agree.
+- Bare `isPotInService` is HA-helper-only fallback.
+
+## Do not
+
+- Offer pot 3/4 on Compose assign, Root thereabouts, or Live kit cards.
+- Synthesize Got / Need for out-of-service probes.
+---

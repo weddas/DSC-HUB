@@ -87,9 +87,34 @@ Browser on `.48:8787` `#/live/root`:
 
 One composition language across Live secondaries. **One** CFM surface (`AirPathMap`); remove or feature-flag Sankey + R3F airflow/Twin until canvas resize works. Horizontal Want/Got where Root set the pattern. Font scale tokens (no random micro-labels). Demoted Twin/Mission/Dash stay demoted; blank Twin must not ship as “Orbit” theater.
 
+### B decisions (2026-08-29)
+
+- Climate: Air path only + honesty note; Sankey/particle out of tree.
+- Twin + Ops dash (`LiveTwinPage`): honesty card; no `TwinViewport`; `TwinKeepAlive` gated off those surfaces.
+- Research note: `docs/superpowers/research/2026-08-29-pass-b-live-visual.md`.
+
+### B verification
+
+1. Climate — no Sankey / particle canvas.
+2. Twin / Ops dash — honesty, no blank WebGL.
+3. Pass A Root checks still pass after redeploy.
+
 ## Pass C — Settings (scoped)
 
 Promote Settings out of Fleet dump. Sections: **Hub / Brain / Device / API / Network / Server / General**. Device: discover → assign → in-service. Inventory group “Probes” not “Pots”. OTA/apply honesty closed loops (SETTINGS-AUDIT-7.1).
+
+### C decisions (2026-08-29)
+
+- Settings is a **primary** tab; Fleet keeps Overview + Calibrate only.
+- Paths: `/settings/{hub|brain|device|api|network|server|general}`; `/fleet/settings` redirects to `/settings/device`.
+- SoftCal / SoilTest / lab-wet pickers → `KIT_PROBE_NUMBERS`; idle-home options labeled Probe N.
+- Architect: `docs/superpowers/plans/2026-08-29-pass-c-settings-architect.md`.
+
+### C verification
+
+1. Primary nav shows Settings; seven secondaries.
+2. Device section: inventory + probes; SoftCal chips Probe 1–2 only.
+3. Network / API / Hub backup still reachable; OTA honesty copy intact.
 
 ---
 

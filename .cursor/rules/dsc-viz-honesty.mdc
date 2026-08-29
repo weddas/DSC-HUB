@@ -1,0 +1,28 @@
+---
+description: Live visual honesty — one CFM surface; no blank WebGL theater
+globs: homeassistant/custom_components/dsc_hub/frontend/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# DSC Live visual honesty
+
+## Climate airflow
+
+- Operator Climate shows **one** CFM surface: Air path map (+ honesty note).
+- Do not mount Sankey or Three.js particle scenes on Climate until they resize, balance mass, and survive SPA verify.
+
+## Twin / Ops dash
+
+- Keep `TWIN_SURFACE_GATED` (or equivalent) until Twin WebGL is reliable.
+- Prefer an honesty card over a blank canvas.
+
+## Gauges and chips
+
+- Prefer held readings with stale marks over empty theater dials.
+- NPK / Rate / Dryback: show value when the bus has a finite metric; otherwise omit or label `· no channel` / `from EC` — never permanent `—` chips that imply a live channel.
+
+## Do not
+
+- Re-enable gated viz for “polish” without Pi screenshot proof.
+- Invent CFM or dryback numbers when producers are missing.
+---

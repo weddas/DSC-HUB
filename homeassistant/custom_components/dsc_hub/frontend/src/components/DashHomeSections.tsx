@@ -11,6 +11,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { ALERT_ENTITY_IDS } from "../lib/alertPlaybook";
 import { potMoistureNum } from "../lib/potReading";
 import type { RosterSlot } from "../lib/seatModel";
+import { KIT_PROBE_NUMBERS, probeLabel } from "../lib/seatModel";
 import type { CfmReading } from "../lib/cfmProvenance";
 import { TentLightClockStrip } from "./TentLightClock";
 
@@ -194,7 +195,7 @@ export function DashActiveAlerts({ activeIds, onAlert }: { bus: Bus; activeIds: 
 export function DashEspLinkChips({ bus, onNavigate }: { bus: Bus; onNavigate: (path: string) => void }) {
   return (
     <div className="dsc-chip-row" role="group" aria-label="Pot radio vs Modbus probe">
-      {[1, 2, 3, 4].map((n) => {
+      {[...KIT_PROBE_NUMBERS].map((n) => {
         const espOn = bus.state(`binary_sensor.dsc_hub_pot${n}_esp_now_link`) === "on";
         const modbusId = `binary_sensor.dsc_probe${n}_modbus_probe_online`;
         const modbusKnown = bus.available(modbusId);
@@ -634,22 +635,22 @@ export function DashRootTankSection({
   return (
     <Card className="dsc-glass" title="Root & tank" icon="root">
       <div className="dsc-chip-row">
-        {[1, 2, 3, 4].map((n) => {
+        {[...KIT_PROBE_NUMBERS].map((n) => {
           const name = state(`text.dsc_probe${n}_plant_name`, "—");
           const clean = !name || name === "unknown" || name === "unavailable" ? "—" : name;
           return (
-            <StatusChip key={n} label={`P${n} ${clean}`} tone={clean === "—" ? "muted" : "ok"} onClick={() => onPot(n)} />
+            <StatusChip key={n} label={`${probeLabel(n)} ${clean}`} tone={clean === "—" ? "muted" : "ok"} onClick={() => onPot(n)} />
           );
         })}
       </div>
       {rosterSlots.some((s) => s.pot && s.pot !== "none") ? (
         <div className="dsc-muted" style={{ fontSize: 13, margin: "8px 0" }}>
-          {["1", "2", "3", "4"].map((p) => {
-            const slot = rosterSlots.find((s) => String(s.pot) === p);
+          {KIT_PROBE_NUMBERS.map((p) => {
+            const slot = rosterSlots.find((s) => String(s.pot) === String(p));
             if (!slot) return null;
             return (
               <div key={p}>
-                <strong>POT{p} roster:</strong> {slot.nickname || slot.strain || `slot ${slot.slot}`}
+                <strong>Probe {p} roster:</strong> {slot.nickname || slot.strain || `slot ${slot.slot}`}
                 {slot.blend ? ` · ${slot.blend}` : ""}
               </div>
             );
@@ -657,10 +658,10 @@ export function DashRootTankSection({
         </div>
       ) : null}
       <div className="dsc-gauge-matrix dsc-gauge-matrix--pots">
-        {[1, 2, 3, 4].map((n) => (
+        {[...KIT_PROBE_NUMBERS].map((n) => (
           <ArcGauge
             key={n}
-            label={`P${n}`}
+            label={probeLabel(n)}
             value={potMoistureNum(num, state, n)}
             min={0}
             max={100}

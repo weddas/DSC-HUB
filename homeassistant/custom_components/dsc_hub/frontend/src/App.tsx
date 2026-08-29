@@ -140,7 +140,7 @@ function Shell({ surfaceVersion = "7.3.0" }: { surfaceVersion?: string }) {
             <NavLink
               key={tab.id}
               to={tab.path}
-              end={tab.path === "/fleet"}
+              end={tab.path === "/fleet" || tab.path.startsWith("/settings/")}
               className={({ isActive }) =>
                 `dsc-tab${tab.demoted ? " dsc-tab--demoted" : ""}${isActive ? " active" : ""}`
               }
@@ -183,8 +183,9 @@ function Shell({ surfaceVersion = "7.3.0" }: { surfaceVersion?: string }) {
           <Route path="/tune/analytics" element={<TuneAnalyticsPage />} />
           <Route path="/fleet" element={<FleetOverviewPage />} />
           <Route path="/fleet/calibrate" element={<CalibratePage />} />
-          <Route path="/fleet/settings" element={<SettingsPage />} />
-          <Route path="/settings" element={<Navigate to="/fleet/settings" replace />} />
+          <Route path="/fleet/settings" element={<Navigate to="/settings/device" replace />} />
+          <Route path="/settings" element={<Navigate to="/settings/device" replace />} />
+          <Route path="/settings/:section" element={<SettingsPage />} />
           <Route path="/ops/home" element={<DashHomePage />} />
           <Route path="/ops/dash" element={<LiveTwinPage />} />
           {/* Legacy → 7.0 */}

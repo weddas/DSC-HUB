@@ -137,7 +137,7 @@ export function CropScheduler({ compact }: { compact?: boolean }) {
       {unassigned.length ? (
         <>
           <p className="dsc-muted" style={{ fontSize: 12, margin: "12px 0 6px" }}>
-            Unassigned pots
+            Unassigned probes
           </p>
           <div className={`dsc-scheduler-lanes${compact ? " is-compact" : ""}`}>
             {unassigned.map(({ seat }) => (

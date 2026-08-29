@@ -10,7 +10,7 @@ import {
   type ProbeStation,
   type SoilTestPoll,
 } from "../lib/fleetApi";
-import { rosterSlots } from "../lib/seatModel";
+import { rosterSlots, KIT_PROBE_NUMBERS } from "../lib/seatModel";
 import { useEntityBus } from "../hooks/useEntityBus";
 
 const TIMING_OPTIONS = [
@@ -21,7 +21,7 @@ const TIMING_OPTIONS = [
   { id: "adhoc", label: "Ad hoc" },
 ] as const;
 
-const POT_IDS = ["pot1", "pot2", "pot3", "pot4"] as const;
+const POT_IDS = KIT_PROBE_NUMBERS.map((n) => `pot${n}` as const);
 
 type WizardStep =
   | "station"

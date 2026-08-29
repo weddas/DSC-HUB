@@ -10,7 +10,77 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 
 ---
 
-## 2026-08-29 — Pass A design interrogate disposition
+## 2026-08-29 — Residual honesty / roster refresh / improve-react
+
+> Bundle on Pi: `index-0DSfzkB0.js` (post chrome polish) after create/undo verified on `index-jKB_lWhX.js` @ `?v=residuals-jKB`. Shots: `residuals-01-root.png`, `residuals-02-roster-after-create.png`, `residuals-03-roster-after-delete.png`.
+
+| Item | Status | Notes |
+|------|--------|-------|
+| Honesty OOS uses fleet dual SoT | **done** | `collectHonestyGaps(hass, fleet?)` + `isPotInServiceWithFleet` |
+| Root Rate / Dryback honesty | **done** | Both probes show `Rate · no channel` + `Dryback · no channel`; NPK still `from EC` |
+| Roster/Compose brain refresh | **done** | Create Probe 2 → roster shows plant without hard reload; Delete → Unassigned without hard reload |
+| improve-react 001 / 002 | **done** | `charts.tsx` stabilize `pad`; `useHistory` unconditional `finally` loading reset |
+| Probe chrome leftovers | **done** | Roster Pot→Probe; Assign probe only; climate apply kit-filtered; Unassigned probes |
+| Mid-reflect skill/rule drafts | **awaiting approve** | Do not write until user says yes — see reflect research |
+
+---
+
+## 2026-08-29 — Multipant create/undo browser QA (SURFACE 7.3.0)
+
+> Bundle on Pi: `index-CD6kFTk7.js` @ `http://192.168.86.48:8787/?v=multipant-qa`. Evidence: `docs/qa-screenshots-2026-08-29/multipant-*.png`. Created `"Old School" Blueberry` on pot/Probe 2 then deleted (roster clean after hard reload). Nickname `QA Multipant` ignored (known deferred).
+
+| Item | Status | Notes |
+|------|--------|-------|
+| Roster Probe language | **next-plan** | Still Seats / POT column / P1·P2; Compose `ASSIGN TO POT` + pots 3–4 selectable; delete modal does say “Probe home assignment” |
+| Compose UI lag after add/delete | **done** | Browser create/undo Probe 2 on `?v=residuals-jKB` — plant appeared & cleared without hard reload; shots `residuals-02`…`03` |
+| Root Probe Stations shows Probe 4 idle/offline | **done** | Thereabouts kit-filtered in prior fix pass |
+| Device inventory pot3/4 + SEAT chrome | **open** | Unchanged intentional inventory; idle-home `<select>` options are Probe 1/2 only (good) |
+| Nickname ignored on compose | **deferred** | Reconfirmed |
+| Catalog leading-quote strain names | **deferred** | Reconfirmed (`"Old School" Blueberry`) |
+| cursor-ide-browser navigate from subagent | **out-of-scope** | `browser_tabs` new worked briefly; `browser_navigate` always “No browser tab available” — QA completed via browser-use/CDP against local Chrome |
+
+---
+
+## 2026-08-29 — Pass A Pi verify (closed)
+
+> Source: [Browser verify Pass A Root](23dddf0e-8b1d-41a0-82d8-e7afddd6ccd8) — **6/6 PASS** on bundle `index-DFU9bTn5.js`. Shots: `docs/qa-screenshots-2026-08-29/pass-a-*.png`. Residual: Probe Stations still label hardware `pot2`/`pot4` (not seat chrome) → Pass C / copy pass.
+
+## 2026-08-29 — Pass B Live visual gate (verified on Pi)
+
+| Item | Status | Notes |
+|------|--------|-------|
+| Climate Sankey + particle viz | **done** | Air path only + honesty note; no MASS IMBALANCE Sankey |
+| Twin / Ops dash blank WebGL | **done** | Honesty card; `TWIN_SURFACE_GATED`; same on `#/ops/dash` |
+| Redeploy + browser verify | **done** | Hot-patched `index-CMcwqTE4.js`; shots `pass-b-01`…`pass-b-03` |
+
+Next: Pass C Settings tree (Hub / Brain / Device / API / Network / Server / General). Mid-reflect pending user approve for skill/rule edits (Probe Stations pot labels friction).
+
+## 2026-08-29 — Pass C Settings IA (shipped SPA + Pi hot-patch)
+
+| Item | Status | Notes |
+|------|--------|-------|
+| Settings primary + 7 secondaries | **done** | `#/settings/{hub,brain,device,api,network,server,general}` — bundle `index-iCJaIP9w.js` |
+| SoftCal / SoilTest / lab-wet kit SoT | **done** | `KIT_PROBE_NUMBERS`; idle-home options labeled Probe N |
+| Device inventory still lists pot3/4 | **open** | Intentional for Device restore; Live kit remains 1–2 |
+| Root thereabouts potN chrome | **done** | Seat/home lines use Probe N labels |
+| Shots | **done** | `docs/qa-screenshots-2026-08-29/pass-c-*.png` |
+
+Remaining goal work: mid-reflect skill/rule drafts still await your **yes** before writing (see `docs/superpowers/research/2026-08-29-reflect-spa-redesign.md`). Intentional follow-ups: Device inventory pot3/4; NPK producers. Commit when you want.
+
+## 2026-08-29 — Multipant QA + residual fixes
+
+> Source: [Browser multi-plant QA](499c3dbc-8311-4e65-b20c-b8e977160c3c) on `index-CD6kFTk7.js`, then fix pass → `index-CJF1T3oH.js`.
+
+| Check | Result |
+|-------|--------|
+| Create/delete plant on pot2 | **PASS** (reload lag remains) |
+| SoftCal / Twin / Climate gate | **PASS** |
+| Compose offered pot 3/4 | **fixed** — kit Probe select only |
+| Root THEREABOUTS Probe 4 | **fixed** — kit stations filter |
+| Roster Seat/POT chrome | **fixed** — Probe/Plant copy |
+| Shots | `multipant-*.png` |
+
+
 
 > Source: Pass A design interrogate vs commits `8064e0f` / `1006afc`. Full text: `docs/superpowers/research/2026-08-29-pass-a-interrogate.md`.
 

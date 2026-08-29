@@ -61,7 +61,14 @@ export function LiveRootPage() {
 
   useEffect(() => {
     getProbeStations()
-      .then(setProbeStations)
+      .then((list) =>
+        setProbeStations(
+          list.filter((st) => {
+            const m = /^pot(\d+)$/i.exec(st.seat_id);
+            return m != null && (KIT_PROBE_NUMBERS as readonly number[]).includes(Number(m[1]));
+          }),
+        ),
+      )
       .catch(() => setProbeStations([]));
   }, [soilWizardOpen]);
 
@@ -164,10 +171,16 @@ export function LiveRootPage() {
                 {probeStations.map((st) => {
                   const moist = st.thereabouts?.moisture_pct;
                   const soilT = st.thereabouts?.soil_temp_c;
+                  const seatProbe = /^pot(\d+)$/i.exec(st.seat_id);
+                  const seatTitle = seatProbe ? probeLabel(Number(seatProbe[1])) : st.seat_id;
+                  const homeProbe = /^pot(\d+)$/i.exec(st.idle_home_pot_id || "");
+                  const homeLabel = homeProbe
+                    ? probeLabel(Number(homeProbe[1]))
+                    : st.idle_home_pot_id || "—";
                   return (
                     <div key={st.seat_id} className="dsc-col-6">
                       <div className="dsc-chip-row" style={{ marginBottom: 8 }}>
-                        <strong>{st.seat_id}</strong>
+                        <strong>{seatTitle}</strong>
                         <StatusChip label={st.tent} tone="muted" />
                         <StatusChip
                           label={st.reading_mode === "idle" ? "IDLE" : st.reading_mode.toUpperCase()}
@@ -176,7 +189,7 @@ export function LiveRootPage() {
                         <StatusChip label={st.online ? "ONLINE" : "OFFLINE"} tone={st.online ? "ok" : "bad"} />
                       </div>
                       <p className="dsc-muted" style={{ margin: 0, fontSize: 12 }}>
-                        Home {st.idle_home_pot_id || "—"} · moisture{" "}
+                        Home {homeLabel} · moisture{" "}
                         {moist != null && Number.isFinite(Number(moist)) ? `${Number(moist).toFixed(1)} %` : "—"} · soil{" "}
                         {soilT != null && Number.isFinite(Number(soilT)) ? `${Number(soilT).toFixed(1)} °C` : "—"}
                       </p>
@@ -386,10 +399,16 @@ function RootProbeCard({ pot, oos, onOpen }: { pot: number; oos: boolean; onOpen
               {kHeld.stale ? " *" : ""}
               <span className="dsc-npk-hint">from EC</span>
             </button>
-            <button type="button" className="dsc-npk-hit" onClick={open(rateId, `${probeLabel(pot)} moisture rate`)}>
-              Rate {Number.isFinite(rate.value) ? rate.value.toFixed(2) : "—"}
-              {rate.stale ? " *" : ""}
-            </button>
+            {!Number.isFinite(rate.value) ? (
+              <span className="dsc-npk-hit dsc-npk-hit--static" title="No moisture-rate entity on this bus">
+                Rate · no channel
+              </span>
+            ) : (
+              <button type="button" className="dsc-npk-hit" onClick={open(rateId, `${probeLabel(pot)} moisture rate`)}>
+                Rate {rate.value.toFixed(2)}
+                {rate.stale ? " *" : ""}
+              </button>
+            )}
             {!showDryback ? (
               <span className="dsc-npk-hit dsc-npk-hit--static" title="No dryback entity on this bus">
                 Dryback · no channel

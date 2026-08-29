@@ -14,6 +14,8 @@ const DscTwinCanvas = lazy(() =>
 );
 
 const USE_R3F_TWIN = import.meta.env.VITE_DSC_PI === "1";
+/** Pass B: blank Twin theater gated until canvas resize + Probe chrome are honest. */
+const TWIN_SURFACE_GATED = true;
 
 function focusTentFromPath(pathname: string): TwinFocusTent {
   if (pathname === "/live/main" || pathname === "/live/4x8") return "main";
@@ -78,19 +80,22 @@ export function TwinKeepAlive() {
   const [status, setStatus] = useState<"loading" | "ready" | "missing">("loading");
   const [slotEl, setSlotEl] = useState<HTMLElement | null>(null);
   const focusTent = focusTentFromPath(location.pathname);
-  const twinVisible = location.pathname === "/live/twin" || location.pathname === "/ops/dash";
+  const twinVisible =
+    !TWIN_SURFACE_GATED &&
+    (location.pathname === "/live/twin" || location.pathname === "/ops/dash");
   const twinDataActive =
-    twinVisible ||
-    location.pathname === "/live/main" ||
-    location.pathname === "/live/clone" ||
-    location.pathname === "/live/4x8" ||
-    location.pathname === "/live/2x4";
+    !TWIN_SURFACE_GATED &&
+    (twinVisible ||
+      location.pathname === "/live/main" ||
+      location.pathname === "/live/clone" ||
+      location.pathname === "/live/4x8" ||
+      location.pathname === "/live/2x4");
   const hubHeld = available("binary_sensor.dsc_hub_link")
     ? state("binary_sensor.dsc_hub_link") !== "on"
     : !available("sensor.dsc_hub_uptime");
 
   const pots = useMemo(
-    () => buildPots(state, entity, num, hubHeld),
+    () => (TWIN_SURFACE_GATED ? [] : buildPots(state, entity, num, hubHeld)),
     [state, entity, num, hubHeld, tick],
   );
 
@@ -103,8 +108,8 @@ export function TwinKeepAlive() {
   }, [twinVisible, location.pathname]);
 
   useEffect(() => {
-    if (USE_R3F_TWIN) {
-      setStatus("ready");
+    if (TWIN_SURFACE_GATED || USE_R3F_TWIN) {
+      if (!TWIN_SURFACE_GATED && USE_R3F_TWIN) setStatus("ready");
       return;
     }
     const host = ref.current;
@@ -136,12 +141,12 @@ export function TwinKeepAlive() {
   }, []);
 
   useEffect(() => {
-    if (USE_R3F_TWIN) return;
+    if (TWIN_SURFACE_GATED || USE_R3F_TWIN) return;
     if (elRef.current && hass) elRef.current.hass = hass;
   }, [hass, tick]);
 
   useEffect(() => {
-    if (USE_R3F_TWIN) return;
+    if (TWIN_SURFACE_GATED || USE_R3F_TWIN) return;
     const el = elRef.current;
     if (!el) return;
     el.setFocusTent?.(focusTent);
@@ -149,7 +154,7 @@ export function TwinKeepAlive() {
   }, [focusTent, location.pathname, status]);
 
   useEffect(() => {
-    if (USE_R3F_TWIN) return;
+    if (TWIN_SURFACE_GATED || USE_R3F_TWIN) return;
     const el = elRef.current;
     const sync = () => {
       const pause = !twinDataActive || document.hidden;
@@ -161,16 +166,18 @@ export function TwinKeepAlive() {
   }, [twinDataActive, status]);
 
   useEffect(() => {
-    if (USE_R3F_TWIN) return;
+    if (TWIN_SURFACE_GATED || USE_R3F_TWIN) return;
     elRef.current?.setHeld?.(hubHeld);
   }, [hubHeld, status]);
 
   useEffect(() => {
-    if (USE_R3F_TWIN) return;
+    if (TWIN_SURFACE_GATED || USE_R3F_TWIN) return;
     const el = elRef.current;
     if (!el?.setPots) return;
     el.setPots(pots);
   }, [pots, status]);
+
+  if (TWIN_SURFACE_GATED) return null;
 
   const twinBody = (
     <div

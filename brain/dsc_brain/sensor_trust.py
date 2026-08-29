@@ -164,6 +164,31 @@ def _edge_log(key: str, active: bool, message: str) -> None:
     _prev_alert[key] = active
 
 
+def _moisture_daily_peak(pot_n: int) -> float | None:
+    from .runtime_history import midnight_ts
+
+    since = midnight_ts()
+    rows = list_history(f"pot{pot_n}", "moisture_pct", since, limit=2000)
+    if not rows:
+        return None
+    try:
+        return max(float(r["value"]) for r in rows if r.get("value") is not None)
+    except (TypeError, ValueError):
+        return None
+
+
+def _dryback_pct(pot_n: int, moisture: float | None, rate: float | None) -> float | None:
+    """Relative dryback: (peak_today - now) / peak * 100. Mirrors HA template."""
+    if moisture is None:
+        return None
+    peak = _moisture_daily_peak(pot_n)
+    if peak is None or peak <= 0:
+        return None
+    if rate is not None and rate > 0.5:
+        return 0.0
+    return round((peak - float(moisture)) / peak * 100.0, 1)
+
+
 def emit_sensor_trust(
     states: dict[str, dict[str, Any]],
     fleet: Any,
@@ -190,11 +215,36 @@ def emit_sensor_trust(
 
         pot = (fleet.pots or {}).get(f"pot{n}")
         moisture = pot.values.get("moisture_pct") if pot and pot.online else None
-        rate = _moisture_rate_per_hour(n) if moisture is not None and not probe_station else None
+        try:
+            moisture_f = float(moisture) if moisture is not None else None
+        except (TypeError, ValueError):
+            moisture_f = None
+        rate = _moisture_rate_per_hour(n) if moisture_f is not None and not probe_station else None
+        if rate is not None:
+            set_entity(
+                states,
+                f"sensor.dsc_probe{n}_soil_moisture_rate",
+                round(rate, 4),
+                available=True,
+                attributes={"unit_of_measurement": "%/h", "honesty": "history_slope_6h"},
+            )
+            if pot is not None:
+                pot.values["moisture_rate"] = round(rate, 4)
+        dryback = _dryback_pct(n, moisture_f, rate) if moisture_f is not None and not probe_station else None
+        if dryback is not None:
+            set_entity(
+                states,
+                f"sensor.dsc_probe{n}_dryback_pct",
+                dryback,
+                available=True,
+                attributes={"unit_of_measurement": "%", "honesty": "peak_today_to_now"},
+            )
+            if pot is not None:
+                pot.values["dryback_pct"] = dryback
         stuck_raw = (
             rate is not None
             and abs(rate) < _STUCK_RATE_MAX
-            and moisture is not None
+            and moisture_f is not None
         )
         if stuck_raw:
             if n not in _stuck_since:

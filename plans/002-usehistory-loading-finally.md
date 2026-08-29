@@ -1,6 +1,6 @@
 # 002 — Clarify useHistory loading reset (cancelled vs finally)
 
-- **Status**: TODO
+- **Status**: DONE (2026-08-29)
 - **Commit**: `05e8471`
 - **Severity**: MEDIUM
 - **Category**: Bugs & correctness

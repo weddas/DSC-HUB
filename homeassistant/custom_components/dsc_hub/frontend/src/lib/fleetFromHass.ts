@@ -92,6 +92,11 @@ export function fleetFromHass(
           numVal(hass, `sensor.dsc_probe${n}_soil_ec`),
         ph:
           numVal(hass, `sensor.dsc_probe${n}_got_ph`) ?? numVal(hass, `sensor.dsc_probe${n}_soil_ph`),
+        nitrogen: numVal(hass, `sensor.dsc_probe${n}_soil_nitrogen`),
+        phosphorus: numVal(hass, `sensor.dsc_probe${n}_soil_phosphorus`),
+        potassium: numVal(hass, `sensor.dsc_probe${n}_soil_potassium`),
+        dryback_pct: numVal(hass, `sensor.dsc_probe${n}_dryback_pct`),
+        moisture_rate: numVal(hass, `sensor.dsc_probe${n}_soil_moisture_rate`),
       },
       last_seen: live ? Date.now() / 1000 : null,
     };
@@ -266,6 +271,26 @@ export function fleetToHassCompat(fleet: FleetSnapshot): Record<string, HassEnti
     if (ph != null) {
       set(`sensor.dsc_probe${n}_soil_ph`, String(ph), live);
       set(`sensor.dsc_probe${n}_got_ph`, String(ph), live);
+    }
+    const nitrogen = seat.values.nitrogen ?? seat.values.n;
+    if (nitrogen != null) {
+      set(`sensor.dsc_probe${n}_soil_nitrogen`, String(nitrogen), live);
+    }
+    const phosphorus = seat.values.phosphorus ?? seat.values.p;
+    if (phosphorus != null) {
+      set(`sensor.dsc_probe${n}_soil_phosphorus`, String(phosphorus), live);
+    }
+    const potassium = seat.values.potassium ?? seat.values.k;
+    if (potassium != null) {
+      set(`sensor.dsc_probe${n}_soil_potassium`, String(potassium), live);
+    }
+    const dryback = seat.values.dryback_pct;
+    if (dryback != null) {
+      set(`sensor.dsc_probe${n}_dryback_pct`, String(dryback), live);
+    }
+    const moistureRate = seat.values.moisture_rate;
+    if (moistureRate != null) {
+      set(`sensor.dsc_probe${n}_soil_moisture_rate`, String(moistureRate), live);
     }
     if (seat.firmware) {
       set(`sensor.dsc_probe${n}_firmware_version`, seat.firmware, live);

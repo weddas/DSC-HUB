@@ -103,8 +103,12 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Cursor local (keep rules if added later under .cursor/rules)
-.cursor/
+# Cursor local — track shared rules/skills; ignore the rest
+.cursor/*
+!.cursor/rules/
+!.cursor/rules/**
+!.cursor/skills/
+!.cursor/skills/**
 
 # Superseded tree — canonical firmware is firmware/v4/
 firmware/DSC-HUB v4/**

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { Button, Icon, PageHeader, StatusChip, type IconName } from "../components/ui";
 import { HelpTip } from "../components/HelpTip";
 import { DecisionLayer } from "../components/DecisionLayer";
@@ -30,6 +31,8 @@ import {
   type ProbeStation,
 } from "../lib/fleetApi";
 import { parseFleetSnapshot, type FleetSnapshot, type InventoryRow, type SeatSnapshot } from "../lib/fleetModel";
+import { parseSettingsSection, type SettingsSectionId } from "../routes";
+import { probeLabel } from "../lib/seatModel";
 
 const AP_CHANNELS = ["1", "6", "11"];
 const CLIMATE_ZONES: ClimateZone[] = ["room", "clone", "main"];
@@ -40,6 +43,16 @@ const ZONE_LABELS: Record<ClimateZone, string> = {
 };
 const IDLE_POT_OPTIONS = ["", "pot1", "pot2"] as const;
 const TENT_OPTIONS = ["2x4", "4x8"] as const;
+
+const SECTION_SUBTITLE: Record<SettingsSectionId, string> = {
+  hub: "Appliance backup and restore",
+  brain: "Global tuning and catalog",
+  device: "Inventory, assignment, probes, Zigbee, ESPHome",
+  api: "Ollama and CannaLib integrations",
+  network: "SoftAP and DHCP — Apply restarts hub Wi‑Fi",
+  server: "ESPHome job queue and host ops",
+  general: "Kit language and operator notes",
+};
 
 const AP_KEYS = ["ap_ssid", "ap_psk", "ap_channel"] as const;
 const INTEGRATION_KEYS = [
@@ -61,6 +74,8 @@ function pickSettings(settings: Record<string, string>, keys: readonly string[])
 function inventoryGroup(seatId: string): string {
   const id = seatId.toLowerCase();
   if (id === "hub" || id === "control" || id === "panel") return "Brain & panel";
+  if (id === "pot1" || id === "pot2") return "Kit probes";
+  if (id === "pot3" || id === "pot4") return "Advanced restore (Probe 3–4)";
   if (id.startsWith("pot")) return "Probes";
   return "Appliances";
 }
@@ -253,6 +268,8 @@ function DeviceDetailCard({
 }
 
 export function SettingsPage() {
+  const location = useLocation();
+  const section = parseSettingsSection(location.pathname);
   const [apDraft, setApDraft] = useState<Record<string, string>>({});
   const [integrationsDraft, setIntegrationsDraft] = useState<Record<string, string>>({});
   const [inventory, setInventory] = useState<Array<Record<string, unknown>>>([]);
@@ -388,26 +405,35 @@ export function SettingsPage() {
       <PageHeader
         icon="settings"
         title="Settings"
-        subtitle="DSC-HUB 7.3.0 — Pi appliance"
+        subtitle={SECTION_SUBTITLE[section]}
         actions={
           <HelpTip title="In service">
             <p>
-              <b>In service</b> means the brain treats the seat as live kit. Out of service stays visible but never fakes
+              <b>In service</b> means the brain treats the probe as live kit. Out of service stays visible but never fakes
               Got — grey quiet, not an alarm flood.
             </p>
-            <p>Example: spare pot offline → uncheck In service → Root and cockpits stop counting it as a plant seat.</p>
+            <p>Example: spare probe offline → uncheck In service → Root and cockpits stop counting it.</p>
           </HelpTip>
         }
       />
 
-      <section className="dsc-card">
+      <section className="dsc-card" hidden={section !== "device"}>
         <h3>Fleet inventory</h3>
+        <p className="dsc-muted">
+          Device funnel: discover (ESPHome / Zigbee below) → assign function/placement → In service. Brain only consumes
+          in-service kit. <b>Kit probes</b> are Probe 1–2 (Live Root). <b>Advanced restore</b> holds Probe 3–4 hardware
+          rows for bring-back — not Live cards.
+        </p>
         <p className="dsc-muted">Every device with its address, firmware, online state, and service status.</p>
         {inventoryGroups.map(([group, rows]) => (
           <details
             key={group}
             className="dsc-inventory-group"
-            open={rows.some(({ seat, in_service }) => !(seat?.online ?? false) || !in_service)}
+            open={
+              group.startsWith("Advanced")
+                ? false
+                : rows.some(({ seat, in_service }) => !(seat?.online ?? false) || !in_service)
+            }
           >
             <summary>{group}</summary>
             <div className="dsc-grid">
@@ -454,7 +480,7 @@ export function SettingsPage() {
         </DecisionLayer>
       </section>
 
-      <section className="dsc-card">
+      <section className="dsc-card" hidden={section !== "device"}>
         <h3>Device assignment</h3>
         <p className="dsc-muted">
           Function and placement tell the brain what each sensor/fan measures. Capability override caps max fan/light
@@ -464,7 +490,7 @@ export function SettingsPage() {
           <table className="dsc-table">
           <thead>
             <tr>
-              <th>Seat</th>
+              <th>Device</th>
               <th>Function</th>
               <th>Placement</th>
               <th>Max %</th>
@@ -480,7 +506,7 @@ export function SettingsPage() {
         </div>
       </section>
 
-      <section className="dsc-card">
+      <section className="dsc-card" hidden={section !== "brain"}>
         <details className="dsc-inventory-group" open>
           <summary>Global tuning</summary>
           <p className="dsc-muted">
@@ -603,7 +629,7 @@ export function SettingsPage() {
         </details>
       </section>
 
-      <section className="dsc-card">
+      <section className="dsc-card" hidden={section !== "device"}>
         <details className="dsc-inventory-group" open={probeStations.some((s) => s.reading_mode !== "idle")}>
           <summary>Probe stations</summary>
           <p className="dsc-muted">
@@ -615,7 +641,7 @@ export function SettingsPage() {
               <table className="dsc-table">
                 <thead>
                   <tr>
-                    <th>Seat</th>
+                    <th>Device</th>
                     <th>Mode</th>
                     <th>Idle home pot</th>
                     <th>Tent</th>
@@ -652,7 +678,7 @@ export function SettingsPage() {
                           >
                             {IDLE_POT_OPTIONS.map((p) => (
                               <option key={p || "none"} value={p}>
-                                {p ? p : "— unassigned"}
+                                {p ? probeLabel(Number(p.replace("pot", ""))) : "— unassigned"}
                               </option>
                             ))}
                           </select>
@@ -706,7 +732,7 @@ export function SettingsPage() {
                                 }
                               }}
                             >
-                              Unassign pot
+                              Unassign home
                             </Button>
                             <Button variant="danger" onClick={() => setPendingClearProbe(st.seat_id)}>
                               Remove probe role
@@ -762,7 +788,7 @@ export function SettingsPage() {
         </p>
       </DecisionLayer>
 
-      <section className="dsc-card">
+      <section className="dsc-card" hidden={section !== "network"}>
         <h3>Network</h3>
         <p className="dsc-muted">
           Channel is limited to 1, 6, or 11. Applying restarts the hub&apos;s Wi-Fi — devices reconnect on their own.
@@ -802,7 +828,7 @@ export function SettingsPage() {
             <table className="dsc-table">
               <thead>
                 <tr>
-                  <th>Seat</th>
+                  <th>Device</th>
                   <th>Host</th>
                   <th>MAC</th>
                 </tr>
@@ -844,7 +870,7 @@ export function SettingsPage() {
         </DecisionLayer>
       </section>
 
-      <section className="dsc-card">
+      <section className="dsc-card" hidden={section !== "api"}>
         <h3>Integrations</h3>
         <label>
           Ollama URL
@@ -901,7 +927,7 @@ export function SettingsPage() {
         {cannalibResult ? <pre className="dsc-honesty">{cannalibResult}</pre> : null}
       </section>
 
-      <section className="dsc-card">
+      <section className="dsc-card" hidden={section !== "brain"}>
         <h3>Catalog</h3>
         <p className="dsc-honesty">
           {catalog ? String(catalog.note ?? "—") : "Loading…"} (source:{" "}
@@ -934,7 +960,7 @@ export function SettingsPage() {
         </DecisionLayer>
       </section>
 
-      <section className="dsc-card">
+      <section className="dsc-card" hidden={section !== "device" && section !== "server"}>
         <h3>ESPHome</h3>
         <p className="dsc-muted">
           Updates are sent over the air. One build runs at a time, and nothing is flashed unless you queue it.
@@ -944,7 +970,7 @@ export function SettingsPage() {
           <table className="dsc-table">
           <thead>
             <tr>
-              <th>Seat</th>
+              <th>Device</th>
               <th>YAML</th>
               <th>Expected</th>
               <th>Last seen</th>
@@ -995,7 +1021,7 @@ export function SettingsPage() {
         ) : null}
       </section>
 
-      <section className="dsc-card">
+      <section className="dsc-card" hidden={section !== "device"}>
         <h3>Zigbee (SkyConnect)</h3>
         <p className="dsc-muted">Extra canopy sensors and smart plugs — separate from climate control.</p>
         <div className="dsc-chip-row" style={{ marginBottom: 10 }}>
@@ -1130,7 +1156,7 @@ export function SettingsPage() {
         )}
       </section>
 
-      <section className="dsc-card">
+      <section className="dsc-card" hidden={section !== "hub"}>
         <h3>Backup</h3>
         <p className="dsc-muted">Export ops sqlite, manifest, optional .env and z2m data.</p>
         <a className="dsc-button" href={backup_export_url()} download="dsc-hub-backup.zip">
@@ -1169,9 +1195,32 @@ export function SettingsPage() {
         {importResult ? <pre className="dsc-honesty">{importResult}</pre> : null}
       </section>
 
-      <Button primary onClick={saveIntegrations}>
-        Save integrations
-      </Button>
+      {section === "api" ? (
+        <Button primary onClick={saveIntegrations}>
+          Save integrations
+        </Button>
+      ) : null}
+
+      {section === "general" ? (
+        <section className="dsc-card">
+          <h3>General</h3>
+          <p className="dsc-muted">
+            Operator kit is Probe 1–2. Live Root and SoftCal only offer kit probes. Device → Advanced restore (future)
+            is the only place for pot 3/4 entity maps.
+          </p>
+          <p className="dsc-honesty">
+            Settings are split by blast radius: Hub (backup), Brain (tuning), Device (kit), API, Network, Server
+            (ESPHome jobs), General.
+          </p>
+        </section>
+      ) : null}
+
+      {section === "server" ? (
+        <p className="dsc-muted" style={{ marginTop: 8 }}>
+          ESPHome queue and device table are shared with Device. Prefer Device for day-to-day OTA; use this tab when
+          watching job history.
+        </p>
+      ) : null}
     </div>
   );
 }

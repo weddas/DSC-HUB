@@ -4,8 +4,8 @@ Commit stamp when opened: `05e8471`. Source scan: `react-doctor-report.json` (re
 
 | Plan | Status | Depends on | Notes |
 |------|--------|------------|-------|
-| [001-multilinechart-stabilize-pad.md](001-multilinechart-stabilize-pad.md) | TODO | — | Hot chart path; do first |
-| [002-usehistory-loading-finally.md](002-usehistory-loading-finally.md) | TODO | — | Independent |
+| [001-multilinechart-stabilize-pad.md](001-multilinechart-stabilize-pad.md) | DONE (2026-08-29) | — | Hot chart path; do first |
+| [002-usehistory-loading-finally.md](002-usehistory-loading-finally.md) | DONE (2026-08-29) | — | Independent |
 
 ## Intentionally not planned (settled / noise)
 

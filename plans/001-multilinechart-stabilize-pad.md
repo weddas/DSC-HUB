@@ -1,6 +1,6 @@
 # 001 — Stabilize MultiLineChart `pad` for exhaustive-deps
 
-- **Status**: TODO
+- **Status**: DONE (2026-08-29)
 - **Commit**: `05e8471`
 - **Severity**: HIGH
 - **Category**: Bugs & correctness

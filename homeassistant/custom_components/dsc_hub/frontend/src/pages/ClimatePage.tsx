@@ -13,8 +13,6 @@ import {
 import { OverflowMenu } from "../components/chrome";
 import { TimespanControl, CYCLE_TIMESPAN_EXTRAS } from "../components/HistoryDrawer";
 import { AirPathMap } from "../components/AirPathMap";
-import { AirflowParticleViz } from "../components/airflow/AirflowParticleViz";
-import { FlowSankey } from "../components/FlowSankey";
 import { CropScheduler } from "../components/CropScheduler";
 import { TentTargetPanel } from "../components/TentTargets";
 import { resolveCfm } from "../lib/cfmProvenance";
@@ -110,18 +108,6 @@ export function LiveClimatePage() {
     "sensor.dsc_cfm_intake_2x4",
     { available, num },
   );
-  const cascadeReading = resolveCfm(
-    "sensor.dsc_cfm_cascade_2x4_allocated",
-    "sensor.dsc_cfm_intake_2x4_allocated",
-    { available, num },
-  );
-  const massBalanceOk = available("binary_sensor.dsc_flow_mass_balance_ok")
-    ? state("binary_sensor.dsc_flow_mass_balance_ok") === "on"
-    : null;
-  const heatTentW = num("sensor.dsc_flow_heat_tent_w", 0);
-  const heatMatW = num("sensor.dsc_flow_heat_mat_w", 0);
-  const humidifyGh = num("sensor.dsc_flow_humidify_g_h", 0);
-  const dehumidifyGh = num("sensor.dsc_flow_dehumidify_g_h", 0);
 
   const roomAh = absoluteHumidity(roomTHeld.value, roomRhHeld.value);
   const tentAh = absoluteHumidity(tentTHeld.value, tentRhHeld.value);
@@ -439,33 +425,16 @@ export function LiveClimatePage() {
 
         <div className="dsc-col-12">
           <Card className="dsc-glass" title="Air path" icon="climate">
-            <AirflowParticleViz
-              readings={{
-                intakeMain: inMainReading,
-                intakeClone: inCloneReading,
-                outCfm: outReading,
-                recircCfm: recReading,
-              }}
-              manualOverride={fanOverride}
-            />
             <AirPathMap
               intakeClone={inCloneReading}
               intakeMain={inMainReading}
               outCfm={outReading}
               recircCfm={recReading}
             />
-            <FlowSankey
-              intakeClone={inCloneReading}
-              intakeMain={inMainReading}
-              cascade={cascadeReading}
-              outCfm={outReading}
-              recircCfm={recReading}
-              heatTentW={heatTentW}
-              heatMatW={heatMatW}
-              humidifyGh={humidifyGh}
-              dehumidifyGh={dehumidifyGh}
-              massBalanceOk={massBalanceOk}
-            />
+            <p className="dsc-muted" style={{ marginTop: 8, fontSize: "0.85rem" }}>
+              Air path is the CFM map only. Particle / Sankey prototypes are gated until they resize and balance
+              honestly.
+            </p>
           </Card>
         </div>
 

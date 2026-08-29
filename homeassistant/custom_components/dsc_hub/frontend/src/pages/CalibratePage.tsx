@@ -8,6 +8,7 @@ import { SoilTestWizard } from "../components/SoilTestWizard";
 import { save_calibration } from "../lib/fleetApi";
 import { useEntityBus } from "../hooks/useEntityBus";
 import { useFleetActions } from "../hooks/useFleetActions";
+import { KIT_PROBE_NUMBERS } from "../lib/seatModel";
 
 const CAL_TARGETS = [
   { id: "out", label: "OUT exhaust", prefix: "dsc_cal_cfm_out", select: "OUT" },
@@ -470,11 +471,11 @@ function LabWetCalPanel({ disabled }: { disabled: boolean }) {
       </ol>
       <div className="dsc-row-actions">
         <label>
-          Pot
+          Probe
           <select className="dsc-input" value={pot} onChange={(e) => setPot(e.target.value)}>
-            {[1, 2, 3, 4].map((n) => (
+            {KIT_PROBE_NUMBERS.map((n) => (
               <option key={n} value={String(n)}>
-                pot{n}
+                Probe {n}
               </option>
             ))}
           </select>

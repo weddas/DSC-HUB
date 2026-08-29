@@ -1,6 +1,6 @@
 import { lazy } from "react";
 
-export type PrimarySection = "live" | "grow" | "tune" | "fleet";
+export type PrimarySection = "live" | "grow" | "tune" | "fleet" | "settings";
 
 /** Route-level code splits — Tune, Fleet, Calibrate, Learning. */
 export const TuneLearningPage = lazy(() =>
@@ -33,7 +33,20 @@ export const PRIMARY_TABS: { id: PrimarySection; label: string; path: string; ic
   { id: "grow", label: "Grow", path: "/grow/roster", icon: "grow" },
   { id: "tune", label: "Tune", path: "/tune/learning", icon: "tune" },
   { id: "fleet", label: "Fleet", path: "/fleet", icon: "fleet" },
+  { id: "settings", label: "Settings", path: "/settings/device", icon: "settings" },
 ];
+
+export const SETTINGS_SECTIONS = [
+  "hub",
+  "brain",
+  "device",
+  "api",
+  "network",
+  "server",
+  "general",
+] as const;
+
+export type SettingsSectionId = (typeof SETTINGS_SECTIONS)[number];
 
 export const SECONDARY_TABS: Record<PrimarySection, TabRoute[]> = {
   live: [
@@ -59,7 +72,15 @@ export const SECONDARY_TABS: Record<PrimarySection, TabRoute[]> = {
   fleet: [
     { id: "overview", label: "Overview", path: "/fleet", icon: "fleet" },
     { id: "calibrate", label: "Calibrate", path: "/fleet/calibrate", icon: "learning" },
-    { id: "settings", label: "Settings", path: "/fleet/settings", icon: "settings" },
+  ],
+  settings: [
+    { id: "hub", label: "Hub", subtitle: "Backup", path: "/settings/hub", icon: "home" },
+    { id: "brain", label: "Brain", subtitle: "Tuning", path: "/settings/brain", icon: "advanced" },
+    { id: "device", label: "Device", subtitle: "Kit", path: "/settings/device", icon: "fleet" },
+    { id: "api", label: "API", subtitle: "Integrations", path: "/settings/api", icon: "catalog" },
+    { id: "network", label: "Network", subtitle: "AP", path: "/settings/network", icon: "climate" },
+    { id: "server", label: "Server", subtitle: "Jobs", path: "/settings/server", icon: "system" },
+    { id: "general", label: "General", path: "/settings/general", icon: "settings" },
   ],
 };
 
@@ -87,15 +108,24 @@ export const LEGACY_REDIRECTS: Record<string, string> = {
   "/advanced/trends": "/tune/analytics",
   "/advanced/history": "/tune/analytics",
   "/system": "/fleet",
-  "/settings": "/fleet/settings",
+  "/settings": "/settings/device",
+  "/fleet/settings": "/settings/device",
 };
 
 export function sectionFromPath(pathname: string): PrimarySection {
   if (pathname.startsWith("/grow") || pathname.startsWith("/plant")) return "grow";
   if (pathname.startsWith("/tune") || pathname.startsWith("/advanced")) return "tune";
-  if (pathname.startsWith("/fleet") || pathname.startsWith("/system") || pathname.startsWith("/settings")) return "fleet";
+  if (pathname.startsWith("/settings")) return "settings";
+  if (pathname.startsWith("/fleet") || pathname.startsWith("/system")) return "fleet";
   if (pathname.startsWith("/ops")) return "live";
   return "live";
+}
+
+export function parseSettingsSection(pathname: string): SettingsSectionId {
+  const part = pathname.replace(/^\/settings\/?/, "").split("/")[0] || "device";
+  return (SETTINGS_SECTIONS as readonly string[]).includes(part)
+    ? (part as SettingsSectionId)
+    : "device";
 }
 
 export function resolveLegacyRedirect(pathname: string, search: string): string | null {

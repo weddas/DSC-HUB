@@ -64,18 +64,19 @@ export const ENTITY_FLEET_MAP: Record<string, EntityFleetRef> = {
   "sensor.dsc_probe2_soil_moisture_rate": { seatId: "pot2", metric: "moisture_rate" },
   "sensor.dsc_probe3_soil_moisture_rate": { seatId: "pot3", metric: "moisture_rate" },
   "sensor.dsc_probe4_soil_moisture_rate": { seatId: "pot4", metric: "moisture_rate" },
-  "sensor.dsc_probe1_soil_nitrogen": { seatId: "pot1", metric: "n" },
-  "sensor.dsc_probe2_soil_nitrogen": { seatId: "pot2", metric: "n" },
-  "sensor.dsc_probe3_soil_nitrogen": { seatId: "pot3", metric: "n" },
-  "sensor.dsc_probe4_soil_nitrogen": { seatId: "pot4", metric: "n" },
-  "sensor.dsc_probe1_soil_phosphorus": { seatId: "pot1", metric: "p" },
-  "sensor.dsc_probe2_soil_phosphorus": { seatId: "pot2", metric: "p" },
-  "sensor.dsc_probe3_soil_phosphorus": { seatId: "pot3", metric: "p" },
-  "sensor.dsc_probe4_soil_phosphorus": { seatId: "pot4", metric: "p" },
-  "sensor.dsc_probe1_soil_potassium": { seatId: "pot1", metric: "k" },
-  "sensor.dsc_probe2_soil_potassium": { seatId: "pot2", metric: "k" },
-  "sensor.dsc_probe3_soil_potassium": { seatId: "pot3", metric: "k" },
-  "sensor.dsc_probe4_soil_potassium": { seatId: "pot4", metric: "k" },
+  // Match brain / ESPHome pot values keys (nitrogen|phosphorus|potassium), not short n|p|k.
+  "sensor.dsc_probe1_soil_nitrogen": { seatId: "pot1", metric: "nitrogen" },
+  "sensor.dsc_probe2_soil_nitrogen": { seatId: "pot2", metric: "nitrogen" },
+  "sensor.dsc_probe3_soil_nitrogen": { seatId: "pot3", metric: "nitrogen" },
+  "sensor.dsc_probe4_soil_nitrogen": { seatId: "pot4", metric: "nitrogen" },
+  "sensor.dsc_probe1_soil_phosphorus": { seatId: "pot1", metric: "phosphorus" },
+  "sensor.dsc_probe2_soil_phosphorus": { seatId: "pot2", metric: "phosphorus" },
+  "sensor.dsc_probe3_soil_phosphorus": { seatId: "pot3", metric: "phosphorus" },
+  "sensor.dsc_probe4_soil_phosphorus": { seatId: "pot4", metric: "phosphorus" },
+  "sensor.dsc_probe1_soil_potassium": { seatId: "pot1", metric: "potassium" },
+  "sensor.dsc_probe2_soil_potassium": { seatId: "pot2", metric: "potassium" },
+  "sensor.dsc_probe3_soil_potassium": { seatId: "pot3", metric: "potassium" },
+  "sensor.dsc_probe4_soil_potassium": { seatId: "pot4", metric: "potassium" },
   "binary_sensor.dsc_probe1_clock_valid": { seatId: "pot1", metric: "clock_valid", binary: true },
   "binary_sensor.dsc_probe2_clock_valid": { seatId: "pot2", metric: "clock_valid", binary: true },
   "binary_sensor.dsc_probe3_clock_valid": { seatId: "pot3", metric: "clock_valid", binary: true },
@@ -117,12 +118,42 @@ export function fleetLiveNumber(entityId: string, fleet: FleetSnapshot): number 
   return Number.isFinite(n) ? n : null;
 }
 
+/** True when the mapped metric is present (finite / binary), not merely seat online. */
+export function fleetMetricPresent(entityId: string, fleet: FleetSnapshot): boolean {
+  const ref = ENTITY_FLEET_MAP[entityId];
+  if (!ref) return false;
+  if (ref.binary) {
+    const values = seatValues(fleet, ref.seatId);
+    if (!values) return false;
+    let raw: unknown = values[ref.metric];
+    if (raw == null && ref.seatId.startsWith("pot")) {
+      const bins = values.binaries as Record<string, boolean> | undefined;
+      raw = bins?.[ref.metric];
+    }
+    return raw != null;
+  }
+  return fleetLiveNumber(entityId, fleet) != null;
+}
+
 export function fleetEntityAvailable(entityId: string, fleet: FleetSnapshot): boolean {
   const ref = ENTITY_FLEET_MAP[entityId];
   if (!ref) return false;
   if (ref.seatId === "hub") return fleet.hub.online;
   if (ref.seatId === "panel") return fleet.panel.online;
-  if (ref.seatId.startsWith("pot")) return !!fleet.pots[ref.seatId]?.online;
+  if (ref.seatId.startsWith("pot")) {
+    const online = !!fleet.pots[ref.seatId]?.online;
+    // Derived soil metrics: available only when produced (avoids lying empty dials).
+    if (
+      ref.metric === "dryback_pct" ||
+      ref.metric === "moisture_rate" ||
+      ref.metric === "nitrogen" ||
+      ref.metric === "phosphorus" ||
+      ref.metric === "potassium"
+    ) {
+      return online && fleetMetricPresent(entityId, fleet);
+    }
+    return online;
+  }
   return !!fleet.sonoffs[ref.seatId]?.online;
 }
 

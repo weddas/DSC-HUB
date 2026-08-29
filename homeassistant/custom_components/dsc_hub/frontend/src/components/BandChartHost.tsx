@@ -251,8 +251,8 @@ export const BAND_CHART_TITLES: Record<BandChartKind, string> = {
   rh: "Humidity — 24h",
   vpd: "VPD — 24h",
   root: "Soil temperature — 24h",
-  pot1: "POT1 — moisture & soil temp",
-  pot2: "POT2 — moisture & soil temp",
-  pot3: "POT3 — moisture & soil temp",
-  pot4: "POT4 — moisture & soil temp",
+  pot1: "Probe 1 — moisture & soil temp",
+  pot2: "Probe 2 — moisture & soil temp",
+  pot3: "Probe 3 — moisture & soil temp",
+  pot4: "Probe 4 — moisture & soil temp",
 };
