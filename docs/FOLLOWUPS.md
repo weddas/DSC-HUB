@@ -182,7 +182,9 @@ Remaining goal work: mid-reflect skill/rule drafts still await your **yes** befo
 | Mission/Twin/Analytics/scheduler 4-pot | **done** | switched to kit SoT |
 | TuneFleet pot3/4 toggles + Pot labels | **done** | Probe 1/2 only |
 | NPK `available()` / dual glow / scale text / DSC-Probe CSS | **done** | held + from EC; min/max text; CSS glow removed; `dsc-pot-card` |
-| Fleet map without producers (NPK/dryback/rate keys) | **next-plan** | map aliases exist; `fleetFromHass` still thin — Root uses HA held path; Pi may still show 0/— until brain payload keys align |
+| Fleet map without producers (NPK/dryback/rate keys) | **done (Pi)** | Live `/fleet` pot.values already carry nitrogen/potassium/dryback_pct/moisture_rate; ENTITY_FLEET_MAP + enrich path aligned. `got_ph` aliases added. Phosphorus absent when ESP omits it. |
+| Hub Early vs plant Late Flowering | **noted (intentional)** | `select.dsc_hub_grow_stage` is 4×8-owned; probe expected/growth_stage is plant SoT. Clone automation never writes hub grow_stage. |
+| Coldest root on faulted Modbus | **done** | `_coldest_root_zone` skips sensor_fault / modbus dark; emits unavailable when none trusted. Tests `test_coldest_root_honesty.py`. |
 | Honesty still HA-only `isPotInService` (not WithFleet) | **done (partial)** | Honesty rail already WithFleet; Root subtitle now `inServiceCountWithFleet`. Twin/others may still use HA-only. |
 | SoftCal / SoilTestWizard 1–4 pickers | **deferred** | Pass C Device |
 

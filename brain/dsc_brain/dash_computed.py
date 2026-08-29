@@ -39,6 +39,12 @@ def _coldest_root_zone(fleet: Any) -> tuple[float | None, str]:
         seat = (fleet.pots or {}).get(f"pot{n}")
         if not seat or not seat.online:
             continue
+        bins = seat.values.get("binaries") or {}
+        if isinstance(bins, dict):
+            if bins.get("sensor_fault") is True:
+                continue
+            if bins.get("modbus_probe_online") is False:
+                continue
         raw = seat.values.get("soil_temp_c")
         if raw is None:
             continue
@@ -270,6 +276,14 @@ def emit_dash_entities(
             attributes={"pot": col_pot, "unit_of_measurement": "°C"},
         )
         record_history("hub", "coldest_root_c", float(coldest), time.time())
+    else:
+        set_entity(
+            states,
+            "sensor.dsc_coldest_root_zone_temp",
+            "unavailable",
+            available=False,
+            attributes={"pot": "none", "unit_of_measurement": "°C", "reason": "no trusted soil temp"},
+        )
 
     since_hour = time.time() - 3600
     set_entity(states, "sensor.dsc_humidifier_cycles_last_hour", cycle_count_since("hub", "switch_dsc_hub_humidifier_demand", since_hour, history=history), available=True)
