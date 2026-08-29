@@ -27,6 +27,19 @@ The Pi SPA shows a **status collage**, not an operator desk. Single screens cont
 | Bar 1 (first ship) | HA-era **parity** on control loops **plus** hub failover (manual takeover + reconnect re-plan) |
 | Bar 2 (immediate next) | Plant ↔ probe assign / move / **detach** |
 | Later | Advanced brain logic / AI — not before bars 1–2 |
+| Physical topology | **Two tents, one shared air plant** — 4x8 (main) + 2x4 (clone) share the same ducting, exhaust, and intake setup (not two isolated OGB rooms) |
+
+## §0 — Physical topology (hard constraint)
+
+DSC is **two grow volumes on one HVAC skeleton**:
+
+- **4x8 (main)** and **2x4 (clone)** are both real tents with their own climate sensors, lights, and plant/probe seats.
+- They **share** ducting, **exhaust**, and **intake** (same fan plant / air path — not independent per-tent blowers as in a multi-room OGB install).
+- Climate Want/Need must therefore be a **coupled** problem: clone modes like Follow 4x8 / Follow Plants are first-class because air is shared; UI must never imply two disconnected room controllers.
+- Fan duties (IN 4x8 / IN 2x4 / EX ROOM / EX OUT) and CFM are labels on **one** shared plant, not four unrelated gadgets.
+- Light can still differ per tent (e.g. SF1000 on 2x4 Follow 4x8 photoperiod) while air remains shared.
+
+OGB is a **behavior bar** (UI matches the room loop), not a license to model DSC as N independent rooms.
 
 ## §1 — Control ownership (SoT)
 
@@ -43,8 +56,8 @@ The Pi SPA shows a **status collage**, not an operator desk. Single screens cont
 | Surface | Parity means |
 |---------|----------------|
 | **Light / SF1000** | One schedule SoT (incl. Follow 4x8 vs independent). ON/OFF/% and “hours Got/Want/Actual/Deviation” all from the same photoperiod engine. “No schedule” only when brain truly has none — never while claiming Follow 4x8 / Auto photoperiod ON |
-| **Climate** | Demand tiles and RUNNING chips reflect brain commands + hub ack; Want bands from stage/roster; no orphan “Follow X” chrome without a live mode SoT |
-| **Overview** | Climate arcs, fan %, RUNNING (incl. MAT), Root strip are **labels of the same entities** the control loop uses — not a second dashboard math. Probe % must name the metric (e.g. moisture) and seat meaning (plant vs station) |
+| **Climate** | Demand tiles and RUNNING chips reflect brain commands + hub ack; Want bands from stage/roster; no orphan “Follow X” chrome without a live mode SoT. **Coupled tents:** 2x4 vs 4x8 modes must match shared-duct policy (Follow 4x8 / Follow Plants), not two solo room loops |
+| **Overview** | Climate arcs (2x4 + room/4x8), fan %, RUNNING (incl. MAT), Root strip are **labels of the same entities** the control loop uses — not a second dashboard math. Fan row = shared air plant. Probe % must name the metric (e.g. moisture) and seat meaning (plant vs station) |
 | **Root (kit probes)** | Got soil from brain/fleet enrich; trust chips from real binaries; no peer/stage lies |
 | **Honesty rail** | Gaps only when dual SoT (helper vs fleet) actually disagree; never as decoration |
 
@@ -105,12 +118,13 @@ The Pi SPA shows a **status collage**, not an operator desk. Single screens cont
 ### Non-goals (this design)
 
 - Replacing brain with OGB product  
+- Modeling 4x8 and 2x4 as **independent** HVAC rooms (they share ducting / exhaust / intake)  
 - Dual-running HA + brain as equal controllers  
 - More SPA polish passes before bar 1
 
 ## Implementation sequencing (high level)
 
-1. **Inventory** HA package loops (light schedule, climate demand, photoperiod Follow, roster→Want) vs current brain emitters — gap list only, no UI paint.  
+1. **Inventory** HA package loops (light schedule, climate demand, photoperiod Follow, **shared-duct / Follow 4x8 climate**, roster→Want) vs current brain emitters — gap list only, no UI paint.  
 2. **Single control API** on brain for those loops; SPA binds Live pages to it.  
 3. **Kill third stories** (duplicate hour math, summary chips that ignore MAD/schedule SoT).  
 4. **Hub failover protocol** (manual takeover + reconnect override).  
