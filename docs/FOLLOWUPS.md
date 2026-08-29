@@ -10,23 +10,39 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 
 ---
 
+## 2026-08-29 — Pass A design interrogate disposition
+
+> Source: Pass A design interrogate vs commits `8064e0f` / `1006afc`. Full text: `docs/superpowers/research/2026-08-29-pass-a-interrogate.md`.
+
+| Finding | Status | Notes |
+|---------|--------|-------|
+| Kit Pulse / KIT_DEFS still ALL_POT | **done** | `KIT_DEFS` → `KIT_PROBE_NUMBERS` only |
+| Mission/Twin/Analytics/scheduler 4-pot | **done** | switched to kit SoT |
+| TuneFleet pot3/4 toggles + Pot labels | **done** | Probe 1/2 only |
+| NPK `available()` / dual glow / scale text / DSC-Probe CSS | **done** | held + from EC; min/max text; CSS glow removed; `dsc-pot-card` |
+| Fleet map without producers (NPK/dryback/rate keys) | **next-plan** | map aliases exist; `fleetFromHass` still thin — Root uses HA held path; Pi may still show 0/— until brain payload keys align |
+| Honesty still HA-only `isPotInService` (not WithFleet) | **next-plan** | Root uses WithFleet; honesty rail still helper — dual SoT residual |
+| SoftCal / SoilTestWizard 1–4 pickers | **deferred** | Pass C Device |
+
+---
+
 ## 2026-08-29 — Browser SPA full exercise (SURFACE 7.3.0 @ `.48:8787`)
 
-> Source: browser QA on SURFACE 7.3.0 @ `.48:8787` — create/delete plant on pot2 worked via `/roster`; UI lagged until hard reload. In scope for **professional UI redesign** goal. Screenshots: `docs/qa-screenshots-2026-08-29/` (46 PNGs).
+> Source: browser QA on SURFACE 7.3.0 @ `.48:8787` — create/delete plant on pot2 worked via `/roster`; UI lagged until hard reload. In scope for **professional UI redesign** goal. Screenshots: `docs/qa-screenshots-2026-08-29/` (46 PNGs). **Pass A landed in repo** — re-verify on Pi after spa-dist deploy.
 
 | Item | Status | Severity | Notes |
 |------|--------|----------|-------|
 | Climate airflow canvas blank (300×150 vs parent; α=0) | **red-flag** | P0 | `#/live/climate` — Three.js/R3F resize; reinforces “one CFM surface” judo |
 | Twin 3D blank (same 300×150) | **red-flag** | P0 | `#/live/twin` — demoted but broken |
-| POT/Seat language + POT3/4 still on Root/Fleet | **red-flag** | P1 | Matches interrogate; Mission copy claims OOS omitted — Root contradicts |
-| NPK empty on live EC/pH pots | **red-flag** | P1 | Probe API `nitrogen: 0` + sensor_fault; fleet map gap |
+| POT/Seat language + POT3/4 still on Root/Fleet | **done (SPA)** | P1 | Pass A — confirm on Pi after deploy |
+| NPK empty on live EC/pH pots | **next-plan** | P1 | Held path + map; producer/key + sensor_fault honesty still open |
 | Stage SoT split (Amnesia Late UI vs Early API) | **red-flag** | P1 | Roster/seat vs `/roster` `growth_stage` |
 | Probe station dual home (`pot2` → idle_home pot1) | **next-plan** | P1 | Modbus offline / fault while Root shows moisture |
 | Compose UI stale until reload after add/delete | **next-plan** | P2 | Roster cache / tick |
 | Nickname ignored on compose commit | **deferred** | P2 | |
 | Catalog leading-quote strain names | **deferred** | P2 | |
 | History X-axis collapsed (identical labels) | **next-plan** | P2 | Root seat + Analytics |
-| Dryback always no data | **red-flag** | P2 | Aligns fleet map / Root honesty |
+| Dryback always no data | **next-plan** | P2 | UI omits dial when no channel; producer still missing |
 | Need — / NO TARGET BANDS for rostered plant | **next-plan** | P2 | |
 | Sankey MASS IMBALANCE + CFM mismatch | **red-flag** | P2 | Gate/delete experimental Sankey |
 | Tent NO SCHEDULE both tents | **soak** | P2 | Ops, not SPA-only |
