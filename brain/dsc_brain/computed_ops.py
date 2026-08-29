@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import datetime
 import json
+import logging
 import time
 from typing import Any
 from zoneinfo import ZoneInfo
@@ -13,13 +14,16 @@ from .compose_store import all_helpers, get_helper, get_roster_slots
 from .dash_computed import emit_dash_entities
 from .decision_loop import decision_tick
 from .device_calibration import get_calibration
+from .event_log import record_grow_log
 from .global_modifiers import scale_fan_demand_pct, scale_light_brightness_pct
 from .hub_failover import emit_override_entity, evaluate_failover, get_override
 from .light_loop import build_light_loop, emit_light_loop
 from .runtime_history import HistoryMemo, RuntimeMemo, midnight_ts
 from .settings import list_roster
-from .stage_model import expected_stage, stage_rank, tent_id
+from .stage_model import expected_stage, stage_family, stage_rank, tent_id
 from .want import resolve_want
+
+_logger = logging.getLogger(__name__)
 
 SYDNEY_TZ = ZoneInfo("Australia/Sydney")
 _HOT_CACHE: dict[str, Any] = {"ts": 0.0, "key": None, "states": {}}
@@ -569,19 +573,59 @@ def _build_cold_computed_states(
     override, force_reassert = evaluate_failover(takeover=takeover, now=now_ts, override=get_override())
     emit_override_entity(states, override, _set_entity)
     if force_reassert:
+        stage = _resolve_hub_tick_stage(light_helpers, fleet)
         try:
             decision_tick(
                 seat="hub",
                 strain_id=None,
-                stage="veg",
+                stage=stage,
                 manual_takeover=takeover,
                 emit=True,
                 hub_override=override,
                 now=now_ts,
             )
-        except Exception:  # noqa: BLE001 — never fail computed emit on re-assert
-            pass
+        except Exception as exc:  # noqa: BLE001 — never fail computed emit on re-assert
+            _logger.warning("hub re-assert decision_tick failed: %s", exc)
+            try:
+                record_grow_log(f"Hub re-assert failed: {exc}")
+            except Exception:  # noqa: BLE001 — grow-log must not break emit
+                _logger.debug("grow-log write failed after re-assert error", exc_info=True)
     return states
+
+
+def _resolve_hub_tick_stage(helpers: dict[str, Any], fleet: Any) -> str:
+    """Want-band family for hub ticks: grow_stage helper/control, else roster main tent."""
+    raw = helpers.get("select.dsc_hub_grow_stage") or helpers.get("input_select.dsc_hub_grow_stage")
+    if not raw and fleet and getattr(fleet, "hub", None):
+        ctrl = (fleet.hub.values.get("controls") or {}).get("select.dsc_hub_grow_stage") or {}
+        if isinstance(ctrl, dict) and ctrl.get("state") is not None:
+            raw = ctrl.get("state")
+    if raw:
+        fam = stage_family(str(raw))
+        if fam:
+            return fam
+    try:
+        rows = list_roster()
+    except Exception:  # noqa: BLE001
+        rows = []
+    main_stages: list[str] = []
+    any_stages: list[str] = []
+    for row in rows:
+        recipe = row.get("recipe") or {}
+        name = str(recipe.get("plant_name") or recipe.get("nickname") or "").strip()
+        if not name and not row.get("strain_id"):
+            continue
+        st = str(row.get("stage") or recipe.get("growth_stage") or "").strip()
+        if not st:
+            continue
+        any_stages.append(st)
+        if tent_id(str(recipe.get("tent") or row.get("tent") or "")) == "main":
+            main_stages.append(st)
+    for st in main_stages or any_stages:
+        fam = stage_family(st)
+        if fam:
+            return fam
+    return "veg"
 
 
 def _manual_takeover_on(fleet: Any, helpers: dict[str, Any]) -> bool:
@@ -664,7 +708,18 @@ def _build_hot_computed_states(
 
     fan_pcts: dict[str, float] = {}
     for sensor_id, fan_entity in FAN_PCT_ENTITIES.items():
-        pct = _fan_pct_from_controls(controls, fan_entity) if hub_live else 0.0
+        if not hub_live:
+            # Hub dark: do not publish theater 0% as live — SPA must see unavailable.
+            fan_pcts[sensor_id] = 0.0
+            _set_entity(
+                states,
+                sensor_id,
+                None,
+                available=False,
+                attributes={"unit_of_measurement": "%"},
+            )
+            continue
+        pct = _fan_pct_from_controls(controls, fan_entity)
         scaled = scale_fan_demand_pct(pct)
         fan_pcts[sensor_id] = float(scaled if scaled is not None else pct)
         _set_entity(states, sensor_id, fan_pcts[sensor_id], available=True, attributes={"unit_of_measurement": "%"})

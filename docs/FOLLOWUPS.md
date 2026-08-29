@@ -10,6 +10,15 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 
 ---
 
+## 2026-08-29 — Bar 1 final review (FOLLOWUPS only)
+
+| Item | Status | Notes |
+|------|--------|-------|
+| Dual dash→light_loop emit cleanup | **deferred** | `emit_dash_entities` still sets expected light hours; `emit_light_loop` overwrites. Harmless redundancy — drop dash duplicate later. |
+| SPA chip for `pending_reassert` | **next-plan** | Sticky bit exists on override; SPA only shows active override today. Surface pending so operators know TTL fired under takeover. |
+| `lights_on_time` ingest into hub_controls | **next-plan** | Follow schedules stay invalid until hub datetime maps onto helper/control bus (Task 2 gap). |
+| 2×4 Got window vs lamp delivered-hours | **deferred** | Got 2×4 still `window_2x4_open` when `light_delivered_hours` absent; HA golden = SF1000 ON until delivered-hours ingest. |
+
 ## 2026-08-29 — Bar 1 Pi verify (brain control recovery)
 
 | Item | Status | Notes |

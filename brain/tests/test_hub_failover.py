@@ -7,6 +7,33 @@ from dsc_brain.hub_failover import (
     should_reassert,
 )
 from dsc_brain.decision_loop import decision_tick
+from dsc_brain.computed_ops import FAN_PCT_ENTITIES, _resolve_hub_tick_stage
+
+
+def test_resolve_hub_tick_stage_from_grow_stage():
+    """Re-assert must not hardcode veg — flower grow_stage → flower family."""
+    class _Fleet:
+        hub = None
+
+    assert _resolve_hub_tick_stage({"select.dsc_hub_grow_stage": "Flowering"}, _Fleet()) == "flower"
+    assert _resolve_hub_tick_stage({"select.dsc_hub_grow_stage": "Vegetative"}, _Fleet()) == "veg"
+    assert _resolve_hub_tick_stage({}, _Fleet()) == "veg"
+
+
+def test_fan_pct_unavailable_when_hub_dark(tmp_path, monkeypatch):
+    """Hub offline must not emit available=True fan pct at 0.0 theater."""
+    monkeypatch.setenv("DSC_DATA", str(tmp_path))
+    from dsc_brain.computed_ops import build_computed_hass_states, invalidate_computed_cache
+    from dsc_brain.fleet_state import FleetState, SeatState
+
+    invalidate_computed_cache()
+    state = FleetState()
+    state.hub = SeatState("hub", False, "0.0.0.0", {"controls": {}}, time.time())
+    extras = build_computed_hass_states(state)
+    for sensor_id in FAN_PCT_ENTITIES:
+        ent = extras[sensor_id]
+        assert ent["state"] == "unavailable"
+        assert ent["state"] != "0.0"
 
 
 def test_manual_takeover_helper_wins_in_hass_extras(tmp_path, monkeypatch):
