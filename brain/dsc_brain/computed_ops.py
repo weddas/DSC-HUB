@@ -17,6 +17,7 @@ from .settings import list_roster
 from .stage_model import expected_stage, stage_rank, tent_id
 from .want import resolve_want
 from .dash_computed import emit_dash_entities
+from .light_loop import build_light_loop, emit_light_loop
 
 SYDNEY_TZ = ZoneInfo("Australia/Sydney")
 _HOT_CACHE: dict[str, Any] = {"ts": 0.0, "key": None, "states": {}}
@@ -474,21 +475,6 @@ def _build_cold_computed_states(
         hours = runtime.hours_today(seat_id, metric)
         _set_entity(states, runtime_id, hours, available=True, attributes={"unit_of_measurement": "h"})
 
-    _set_entity(
-        states,
-        "sensor.dsc_lights_on_today_2x4",
-        runtime.hours_today("hub", "window_2x4_open"),
-        available=True,
-        attributes={"unit_of_measurement": "h"},
-    )
-    _set_entity(
-        states,
-        "sensor.dsc_lights_on_today_4x8",
-        runtime.hours_today("hub", "window_4x8_open"),
-        available=True,
-        attributes={"unit_of_measurement": "h"},
-    )
-
     slots = get_roster_slots()
     occupied = sum(1 for s in slots if s.get("status") not in ("empty", "", None, "unknown", "unavailable"))
     _set_entity(states, "sensor.dsc_plant_roster_summary", f"{occupied} occupied", attributes={"slots": slots})
@@ -563,7 +549,65 @@ def _build_cold_computed_states(
     _set_entity(states, "binary_sensor.dsc_learn_gate_open", get_helper("input_boolean.dsc_learn_gate_open", "off"))
 
     emit_dash_entities(states, fleet, set_entity=_set_entity, inventory=inventory, runtime=runtime)
+
+    # Photoperiod SoT: overwrite got/want/deviation (and honesty) from light_loop.
+    light_helpers = _helpers_for_light_loop(helpers, fleet)
+    light_hub = _hub_values_for_light_loop(fleet, runtime)
+    light_snap = build_light_loop(helpers=light_helpers, hub_values=light_hub, now_ts=time.time())
+    emit_light_loop(states, light_snap, _set_entity)
     return states
+
+
+def _helpers_for_light_loop(helpers: dict[str, Any], fleet: Any) -> dict[str, Any]:
+    """Merge compose helpers with live hub control states light_loop needs."""
+    merged = dict(helpers)
+    if not fleet.hub:
+        return merged
+    controls = fleet.hub.values.get("controls") or {}
+    for eid in (
+        "select.dsc_hub_clone_photoperiod",
+        "select.dsc_hub_clone_mode",
+        "select.dsc_hub_grow_stage",
+        "number.dsc_hub_clone_light_hours",
+        "time.dsc_hub_lights_on_time",
+        "datetime.dsc_hub_lights_on_time",
+        "switch.dsc_hub_auto_photoperiod",
+    ):
+        if eid in merged:
+            continue
+        ctrl = controls.get(eid)
+        if isinstance(ctrl, dict) and ctrl.get("state") is not None:
+            merged[eid] = ctrl.get("state")
+    return merged
+
+
+def _hub_values_for_light_loop(fleet: Any, runtime: RuntimeMemo) -> dict[str, Any]:
+    """SF dimmer + delivered/got hours for light_loop (never invent ON from gauges)."""
+    out: dict[str, Any] = {
+        "got_hours_2x4": runtime.hours_today("hub", "window_2x4_open"),
+        "got_hours_4x8": runtime.hours_today("hub", "window_4x8_open"),
+    }
+    if not fleet.hub:
+        out["sf1000_on"] = False
+        return out
+    controls = fleet.hub.values.get("controls") or {}
+    light = controls.get("light.dsc_hub_sf1000_dimmer") or {}
+    out["sf1000_on"] = str(light.get("state", "")).lower() == "on"
+    bri = light.get("brightness")
+    if bri is not None:
+        try:
+            bri_f = float(bri)
+            # ESPHome often reports 0–255; snapshot prefers 0–1 fraction when >1.
+            out["sf1000_brightness"] = bri_f / 255.0 if bri_f > 1.0 else bri_f
+        except (TypeError, ValueError):
+            pass
+    delivered = fleet.hub.values.get("light_delivered_hours")
+    if delivered is None:
+        sensors = fleet.hub.values.get("sensors") or {}
+        delivered = sensors.get("light_delivered_hours")
+    if delivered is not None:
+        out["light_delivered_hours"] = delivered
+    return out
 
 
 def _build_hot_computed_states(
