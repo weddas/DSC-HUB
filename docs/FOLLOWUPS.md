@@ -10,6 +10,18 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 
 ---
 
+## 2026-08-29 — Brain control recovery design locked (`acae659`)
+
+| Item | Status | Notes |
+|------|--------|-------|
+| Design lock (restore-then-advance, bar 1/2, OGB acceptance) | **done (docs)** | [spec](superpowers/specs/2026-08-29-brain-control-recovery-design.md) · [CONTROL-RECOVERY.md](brain/CONTROL-RECOVERY.md) |
+| Hub Manual Takeover | **done (fw)** | `switch.dsc_hub_manual_takeover` / `ha_takeover_active`; brain skips emit when on |
+| Bar 1: HA-era parity + reconnect temporary override | **next-plan** | Not implemented — needs writing-plans inventory then single control API |
+| Bar 2: plant↔probe detach/reassign | **next-plan** | After bar 1 |
+| Override expiry policy | **deferred** | Open point in design — timeout vs clear vs both |
+
+---
+
 ## 2026-08-29 — Encode + NPK producers + commit
 
 | Item | Status | Notes |
