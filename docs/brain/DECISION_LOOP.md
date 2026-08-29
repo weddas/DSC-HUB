@@ -44,6 +44,14 @@ flowchart LR
 - Drive Sonoff relays through HA as the *product* path (lab OK until F-010)
 - Emit commands when Manual Takeover is asserted (unless user-approved advanced override)
 
+## Takeover vs control recovery
+
+Today: `manual_takeover=True` (or hub `switch.dsc_hub_manual_takeover` on) blocks emit / Climate Mode / Follow Plants apply. That is **not** yet the full Bar 1 reconnect contract (`hub_failover`: temporary override → re-plan → re-assert TTL **900s** or clear + SPA override chrome). Plan: [bar1](../superpowers/plans/2026-08-29-brain-control-recovery-bar1.md).
+
+Climate Mode (`Follow 4x8` / `Follow Plants`) assumes **shared ducting** between 4x8 and 2x4 — not two independent HVAC rooms. Twin/3D must stay a **projection** of this loop (or stay gated), never a second commander.
+
+See [CONTROL-RECOVERY.md](CONTROL-RECOVERY.md) and the [design spec](../superpowers/specs/2026-08-29-brain-control-recovery-design.md).
+
 ## Implementation
 
 Python: [`brain/dsc_brain/decision_loop.py`](../../brain/dsc_brain/decision_loop.py)  

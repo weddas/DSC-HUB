@@ -1,4 +1,4 @@
-﻿# DSC-HUB ? Master follow-up list
+﻿# DSC-HUB — Master follow-up list
 
 Standing process for every plan:
 
@@ -6,7 +6,22 @@ Standing process for every plan:
 2. **During:** note findings, warnings, incomplete fixes, red flags  
 3. **End:** append a dated section (do not leave soak/log issues in chat only)
 
-Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `done`
+Categories: `red-flag` · `soak` · `deferred` · `next-plan` · `out-of-scope` · `done`
+
+---
+
+## 2026-08-29 — Brain control recovery Bar 1 plan (`f3f7b10`)
+
+| Item | Status | Notes |
+|------|--------|-------|
+| Design lock (restore-then-advance, peers + premium) | **done (docs)** | [spec](superpowers/specs/2026-08-29-brain-control-recovery-design.md) · [CONTROL-RECOVERY.md](brain/CONTROL-RECOVERY.md) |
+| Physical topology: two tents, one shared air plant | **done (docs)** | Tip `3e5af0c` — 4x8 + 2x4 share intake/exhaust |
+| Peer landscape + premium lessons | **done (docs)** | Tips `f25c762` / `653808d` |
+| Hub Manual Takeover | **done (fw)** | `switch.dsc_hub_manual_takeover` / `ha_takeover_active`; brain skips emit when on |
+| Bar 1 **implementation plan** | **done (docs)** | [bar1 plan](superpowers/plans/2026-08-29-brain-control-recovery-bar1.md) — inventory, `light_loop`, SPA view-model, shared-air chips, `hub_failover` TTL 900s, Pi verify |
+| Override expiry policy | **done (plan lock)** | TTL **900s** or clear of Manual Takeover (both clear override) |
+| Bar 1 runtime (`light_loop` / `hub_failover` / `lightViewModel`) | **next-plan** | Modules **absent** on tip — execute plan Tasks 1→6; do not claim shipped |
+| Bar 2: plant↔probe detach/reassign | **next-plan** | Write plan only after Bar 1 Task 6 passes |
 
 ---
 
