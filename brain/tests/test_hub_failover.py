@@ -1,3 +1,5 @@
+import time
+
 from dsc_brain.hub_failover import (
     evaluate_failover,
     note_reconnect,
@@ -5,6 +7,36 @@ from dsc_brain.hub_failover import (
     should_reassert,
 )
 from dsc_brain.decision_loop import decision_tick
+
+
+def test_manual_takeover_helper_wins_in_hass_extras(tmp_path, monkeypatch):
+    """Helper persist must surface in hass_extras even when hub control says off."""
+    monkeypatch.setenv("DSC_DATA", str(tmp_path))
+    from dsc_brain.compose_store import set_helper
+    from dsc_brain.computed_ops import build_computed_hass_states, invalidate_computed_cache
+    from dsc_brain.fleet_state import FleetState, SeatState
+
+    invalidate_computed_cache()
+    set_helper("switch.dsc_hub_manual_takeover", "on")
+    state = FleetState()
+    state.hub = SeatState(
+        "hub",
+        True,
+        "7.0.0.0",
+        {
+            "controls": {
+                "switch.dsc_hub_manual_takeover": {"state": "off"},
+            },
+        },
+        time.time(),
+    )
+    extras = build_computed_hass_states(state)
+    assert extras["switch.dsc_hub_manual_takeover"]["state"] == "on"
+
+    set_helper("switch.dsc_hub_manual_takeover", "off")
+    invalidate_computed_cache()
+    extras = build_computed_hass_states(state)
+    assert extras["switch.dsc_hub_manual_takeover"]["state"] == "off"
 
 
 def test_reconnect_with_takeover_sets_override():

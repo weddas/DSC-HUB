@@ -144,6 +144,19 @@ async def _ensure_number_keys(host: str, api_key: str, cache_key: str, object_id
     return await _ensure_entity_keys(host, api_key, cache_key, object_ids, _number_keys)
 
 
+_MANUAL_TAKEOVER_EID = "switch.dsc_hub_manual_takeover"
+
+
+def _switch_key_for_entity(keys: dict[str, int], entity_id: str, primary_oid: str) -> int | None:
+    """Resolve Native API key; accept slug + legacy object_id aliases."""
+    if primary_oid in keys:
+        return keys[primary_oid]
+    for oid, eid in HUB_SWITCH_OID_TO_ENTITY.items():
+        if eid == entity_id and oid in keys:
+            return keys[oid]
+    return None
+
+
 async def _hub_switch(entity_id: str, on: bool) -> dict[str, Any]:
     oid = HUB_SWITCH_ENTITY_TO_OID.get(entity_id)
     if not oid:
@@ -154,8 +167,11 @@ async def _hub_switch(entity_id: str, on: bool) -> dict[str, Any]:
     if not host:
         raise RuntimeError("hub host not configured in inventory")
 
-    keys = await _ensure_switch_keys(host, api_key, "hub", set(HUB_SWITCH_ENTITY_TO_OID.values()))
-    key = keys.get(oid)
+    alias_oids = {o for o, e in HUB_SWITCH_OID_TO_ENTITY.items() if e == entity_id}
+    keys = await _ensure_switch_keys(
+        host, api_key, "hub", set(HUB_SWITCH_ENTITY_TO_OID.values()) | alias_oids
+    )
+    key = _switch_key_for_entity(keys, entity_id, oid)
     if key is None:
         raise RuntimeError(f"hub switch {oid} not found")
 
@@ -164,7 +180,12 @@ async def _hub_switch(entity_id: str, on: bool) -> dict[str, Any]:
         try:
             await client.connect(login=True)
             client.switch_command(key, on)
-            return {"entity_id": entity_id, "state": "on" if on else "off"}
+            state = "on" if on else "off"
+            # Persist policy switch so /fleet/computed hass_extras + failover
+            # see on/off even when hub poll lags or resets the live control.
+            if entity_id == _MANUAL_TAKEOVER_EID:
+                set_helper(entity_id, state)
+            return {"entity_id": entity_id, "state": state}
         finally:
             try:
                 await client.disconnect()
@@ -361,6 +382,10 @@ def _date_from_service(data: dict[str, Any]) -> str:
 
 
 def _control_state(entity_id: str) -> str:
+    if entity_id == _MANUAL_TAKEOVER_EID:
+        helper = get_helper(entity_id)
+        if helper is not None and str(helper) != "":
+            return str(helper)
     try:
         from .fleet_state import get_fleet_state
 

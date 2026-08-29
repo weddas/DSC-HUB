@@ -334,10 +334,13 @@ async def demo_call_service(domain: str, service: str, data: dict[str, Any]) -> 
                 on = not _ctrl_on(controls, entity_id)
             else:
                 raise ValueError(f"unsupported switch service {service}")
-            _set_ctrl(controls, entity_id, state="on" if on else "off")
+            state_s = "on" if on else "off"
+            _set_ctrl(controls, entity_id, state=state_s)
+            if entity_id == "switch.dsc_hub_manual_takeover":
+                set_helper(entity_id, state_s)
             _sync_relays_from_demands(state)
             update_fleet_state(state)
-            return {"entity_id": entity_id, "state": "on" if on else "off", "demo": True}
+            return {"entity_id": entity_id, "state": state_s, "demo": True}
         if entity_id in _SONOFF_RELAY_ENTITY_TO_SEAT:
             seat = _SONOFF_RELAY_ENTITY_TO_SEAT[entity_id]
             on = service == "turn_on" or (service == "toggle" and not (state.system or {}).get("relays", {}).get(seat))

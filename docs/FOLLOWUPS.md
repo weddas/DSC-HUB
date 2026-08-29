@@ -17,11 +17,12 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 | Hot-patch SPA + brain | **done** | Soft `docker restart` (no rebuild). Bundle `index-fFZO7204.js` (≥ `index-CwyQSH4R.js`). Modules: `light_loop`, `hub_failover`, `computed_ops`, `decision_loop`, `esphome_client`, `api` |
 | Light acceptance | **done** | After setting `time.dsc_hub_lights_on_time=06:00:00`: Follow 4×8 + schedule OK (no NO SCHEDULE); SF1000 ON; Got/Want/Deviation from sensors (12.7h / 12h / ~0.7h). Was unset before verify (honesty correctly said no schedule) |
 | Overview vs Climate | **done** | Same tick: SF1000 ON; fans IN 4×8 0% / IN 2×4 24% / EX ROOM 20% / EX OUT 15%; MAT off / demand off |
-| Failover smoke (takeover) | **partial** | SPA banner string in bundle; Climate MASTER TAKEOVER UI present. `POST /control/service` turn_on returns `state=on` but `/fleet/computed` keeps `switch.dsc_hub_manual_takeover=off` — banner never lights. `tent_manual_override` flapped during attempts |
+| Failover smoke (takeover) | **done** | Persist fix: `_hub_switch` → `set_helper`; computed overlays helper over hub mirror. Pi re-smoke: turn_on → computed `on`; turn_off → `off`. Left off. Earlier `tent_manual_override` flap still noted |
 | Screenshots | **done** | `docs/qa-screenshots-2026-08-29/bar1-light-*.png`, `bar1-overview-*.png`, `bar1-climate-*.png` |
 | Live schedule write | **noted** | Left `time.dsc_hub_lights_on_time=06:00:00` on Pi (was empty); honesty now `ok` |
+| manual_takeover persist | **done** | `fix(brain): persist manual_takeover into computed hass_extras` — Bar 1 gate unblocked |
 
-Next open: make `switch.dsc_hub_manual_takeover` persist through hub write ↔ computed extras (failover banner unverifiable until then).
+Next open: optional `tent_manual_override` OID/map flap from earlier probes (non-blocking).
 
 ## 2026-08-29 — Encode + NPK producers + commit
 

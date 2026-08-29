@@ -552,6 +552,11 @@ def _build_cold_computed_states(
 
     emit_dash_entities(states, fleet, set_entity=_set_entity, inventory=inventory, runtime=runtime)
 
+    # Policy helper wins over hub mirror for manual takeover (SPA banner / failover).
+    takeover_helper = helpers.get("switch.dsc_hub_manual_takeover")
+    if takeover_helper is not None:
+        _set_entity(states, "switch.dsc_hub_manual_takeover", takeover_helper, available=True)
+
     # Photoperiod SoT: overwrite got/want/deviation (and honesty) from light_loop.
     light_helpers = _helpers_for_light_loop(helpers, fleet)
     light_hub = _hub_values_for_light_loop(fleet, runtime)
