@@ -1,40 +1,65 @@
 # Local webserver UI spec
 
-**In one line:** Thin client of the brain API — presentation, advanced control, updates.
+**In one line:** Thin client of the brain API — presentation, advanced control, updates. Canonical host: Pi `:8787`.
 
 Notion: [Local webserver UI](https://app.notion.com/p/3b52b4cda37081c19048e794d4bdf819)
 
-## Surfaces (MVP)
+## Surfaces (product SPA)
 
 | Route | Job |
 |---|---|
-| `/` | Ops overview (vitals, ladder summary, alerts) |
-| `/plant` | Build a Plant + roster + catalog browse (research) |
+| `#/live/overview` | Default landing — vitals, honesty rail, HubLink, pending-reassert banner |
+| `#/live/root` | Probe Got cards; stations thereabouts; vacant ≠ station ≠ planted |
+| `#/live/light` · Climate | `lightViewModel` + shared-air demand chips (Bar 1) |
+| `#/grow/roster` · `#/grow/compose` | Roster lifecycle + Plant Wizard; `probeLabel` chrome |
+| `#/fleet` · `#/fleet/calibrate` | Fleet + SoftCal / soil cal; Need chips from `need_summary` |
+| `#/settings/...` | Blast-radius Settings (probe stations = dock/role, not detach) |
 
-> **HA wireframe (N-086):** Home Assistant `/dsc-hub-pro/catalog` is the interim
-> research browser over `/local/dsc-catalog/*.json`. The durable web `/plant`
-> browse mode will call brain catalog APIs — reuse section jobs/labels, not HA
-> helper coupling ([`docs/HA-SCAFFOLD.md`](../HA-SCAFFOLD.md)).
-| `/advanced` | Profiles, cal, overrides (API calls only) |
-| `/updates` | Brain version, catalog reload, firmware flash checklist |
+> **HA wireframe (N-086):** Home Assistant `/dsc-hub-pro/catalog` is the interim research browser. Durable catalog browse calls brain APIs — reuse labels, not HA helper coupling ([`docs/HA-SCAFFOLD.md`](../HA-SCAFFOLD.md)).
+
+## Honesty surfaces (tip `6230383` → `5db15bb`)
+
+SPA is a **client** of brain honesty — see [`HONESTY.md`](HONESTY.md).
+
+| Chrome | Source |
+|---|---|
+| Root HOME ONLINE / DARK / FAULT | Station API `home_trustworthy` / Modbus / fault — withhold gauges when untrustworthy |
+| Root SENSOR FAULT / PROBE DARK | `readPotTrust` via `useEntityBus` — **`fleetLiveState` maps Pi binaries to `on`/`off`** (not `1`/`0`); gauges blank when fault/dark |
+| Root NPK / Rate | Same `readingOk` gate as gauges — withhold `—` on fault/dark (`33e702e`); when OK, NPK **from EC** |
+| Root in-service subtitle | `inServiceCountWithFleet` (fleet inventory SoT, not HA-only) |
+| Root / Tune history | `potGotEntity` → `GET /history`; brain maps `got_moisture`/`got_ec`/`got_ph` to same fleet_history metrics as `soil_*` |
+| Fleet enrich / held Got | `ENTITY_FLEET_MAP` includes `got_ph` (+ moisture/ec) → same seat metrics (`5db15bb`) |
+| Coldest root KPI | `sensor.dsc_coldest_root_zone_temp` from brain — skips `sensor_fault` / Modbus-dark pots; `unavailable` when none trusted (`5db15bb`) |
+| Roster / Tune Need | `sensor.dsc_probe{N}_need_summary` + want min/max bands from computed |
+| Light schedule | `time.dsc_hub_lights_on_time` / clone (hub TimeState ingest) via `lightViewModel` |
+| PENDING REASSERT | `binary_sensor.dsc_brain_hub_override_active` attr `pending_reassert` — HubLinkLine + Dash banner |
+| Probe language | `probeLabel(n)` on Roster / Compose / Root / Tune |
+
+Bundle after coldest-root + `got_ph` map: **`index-Dq8ysX3P.js`**. Shots: `honesty-root-fault.png`, `honesty-npk-rate-withheld.png`.
+
+Bar 2 assign/move/detach lifecycle developer SoT: draft [#139](https://github.com/weddas/DSC-HUB/pull/139). SoftCal ≠ idle_home ≠ tent ≠ detach ≠ retire.
 
 ## API dependency
 
-All reads/writes go through brain HTTP API (`brain/dsc_brain/api.py`):
+Reads/writes go through brain HTTP (`brain/dsc_brain/api.py`), including:
 
-- `GET /health`
-- `GET /catalogs/strains?q=`
-- `GET /want/{strain_id}`
-- `POST /roster/...`
-- `GET /decision/last` (dry-run proposals)
-- `POST /admin/reload-catalogs`
+- `GET /health`, `GET /fleet`, `GET /fleet/computed`, `GET /ws/fleet`
+- `GET /history?entity_id=` — `history_ops.ENTITY_METRIC_MAP` (include `got_*` aliases)
+- Probe stations / soil tests (thereabouts + honesty flags)
+- Roster: `PATCH /roster/pots/{n}`, `POST /roster/detach/{n}`, `POST /roster/assign`, `POST /roster/move`
+- `POST /control/service` (scripts: `dsc_plant_detach` / `_assign_slot` / `_move` / `_retire`)
+- Catalogs, Want, decision, settings, SoftCal
 
-## Non-goals (v1)
+Do not invent a third assignment, Want, schedule, or NPK story in the browser.
 
-- Three.js cinematic Dash parity
+
+## Non-goals
+
+- Three.js cinematic Dash as primary ops
 - Embedding fat strain dumps in the browser
-- Requiring Home Assistant
+- Requiring Home Assistant for product ops
+- Dual isolated HVAC rooms / Twin as controller
 
 ## Host
 
-Pi 4 4GB LAN (`http://dsc-brain.local` or IP). Static UI can ship later; API stub is first.
+Pi 4 4GB+ LAN (`http://dsc-brain.local` or Pi IP `:8787`). Deploy: [`../ops/DSC-HUB-DOCKER.md`](../ops/DSC-HUB-DOCKER.md).
