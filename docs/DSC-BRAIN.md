@@ -25,7 +25,7 @@ Notion (canonical Wiki): [Product layers](https://app.notion.com/p/3b52b4cda3708
 | [`INSTALL.md`](../INSTALL.md) | HA lab bring-up (scaffold) |
 | [`docs/HA-SCAFFOLD.md`](HA-SCAFFOLD.md) | Promote-don't-deepen rules |
 | [`docs/brain/`](brain/) | Specs: honesty, decision loop, web UI, Pi appliance path |
-| [`docs/brain/HONESTY.md`](brain/HONESTY.md) | Dual-home / schedule ingest / Want·Need / pending_reassert (tip `6230383`) |
+| [`docs/brain/HONESTY.md`](brain/HONESTY.md) | Dual-home / schedule / Want·Need / pending_reassert / Pi binary bus on/off (`6230383` + `cc288d7`) |
 
 ## Phases
 
