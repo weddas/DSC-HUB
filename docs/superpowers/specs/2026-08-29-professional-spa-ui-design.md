@@ -1,7 +1,7 @@
 # Professional SPA UI redesign (hobby → operator)
 
 **Date:** 2026-08-29  
-**Status:** Approved direction — Approach 1 (Mycodo split + kit SoT); ship **A → B → C**  
+**Status:** **Shipped** tip `07bf25f` (Pass A–C + residuals + NPK/dryback/rate producers). Tip **`8b3169c`** live on Pi (`index-CrVRU9Qb.js`): peer MAD honesty, station rate/dryback, calendar stage advance. Operator SoT: [`../../brain/KIT-SOT-SPA.md`](../../brain/KIT-SOT-SPA.md) · [`../../ops/FLEET-SOIL-METRICS.md`](../../ops/FLEET-SOIL-METRICS.md).  
 **Goal:** Restore operator confidence with honest kit model, professional Root/Live, then Settings by blast radius.
 
 ## Problem
