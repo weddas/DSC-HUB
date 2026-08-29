@@ -1,7 +1,7 @@
 # Professional SPA UI redesign (hobby → operator)
 
 **Date:** 2026-08-29  
-**Status:** Approved direction — Approach 1 (Mycodo split + kit SoT); ship **A → B → C**  
+**Status:** **Shipped** tip `07bf25f` (Pass A–C + residuals + NPK/dryback/rate producers). Pi live verify of producers **blocked** tip `8b70d5f` (redeploy gate). Operator SoT: [`../../brain/KIT-SOT-SPA.md`](../../brain/KIT-SOT-SPA.md) · [`../../ops/FLEET-SOIL-METRICS.md`](../../ops/FLEET-SOIL-METRICS.md).  
 **Goal:** Restore operator confidence with honest kit model, professional Root/Live, then Settings by blast radius.
 
 ## Problem
