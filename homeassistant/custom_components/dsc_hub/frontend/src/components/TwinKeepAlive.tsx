@@ -4,7 +4,7 @@ import { useLocation } from "react-router-dom";
 import { useEntityBus } from "../hooks/useEntityBus";
 import { ensureLocalCard } from "../lib/ensureLocalCards";
 import type { TwinCardEl, TwinFocusTent, VesselLive } from "../lib/dsc-twin-api";
-import { ALL_POT_NUMBERS, buildPlantSeat, isPotInService, readTent } from "../lib/seatModel";
+import { KIT_PROBE_NUMBERS, buildPlantSeat, isPotInService, readTent } from "../lib/seatModel";
 import { readPotVessel } from "../lib/vesselSpec";
 import { readPotTrust } from "../lib/potTrust";
 import { TWIN_SLOT_ID } from "./TwinViewport";
@@ -39,11 +39,11 @@ function buildPots(
   hubHeld: boolean,
 ): VesselLive[] {
   const tentSlots: Record<"clone" | "main", number[]> = { clone: [], main: [] };
-  ALL_POT_NUMBERS.forEach((n) => {
+  KIT_PROBE_NUMBERS.forEach((n) => {
     const tent = readTent(state, n);
     if (tent === "clone" || tent === "main") tentSlots[tent].push(n);
   });
-  return ALL_POT_NUMBERS.map((n) => {
+  return KIT_PROBE_NUMBERS.map((n) => {
     const seat = buildPlantSeat(n, { state, entity });
     const vessel = readPotVessel(n, state, entity);
     const trust = readPotTrust(n, state);

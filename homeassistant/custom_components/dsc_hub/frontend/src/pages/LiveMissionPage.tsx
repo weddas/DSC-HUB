@@ -11,7 +11,7 @@ import { NextRecommendedCard } from "../components/Honesty";
 import { useEntityBus } from "../hooks/useEntityBus";
 import { useHeldReading, useHubOfflineMs, useBeatOfflineMs, usePanelOfflineMs } from "../hooks/useHeldReading";
 import { fmtDurationMs } from "../lib/formatDuration";
-import { buildPlantSeat, ALL_POT_NUMBERS, isPotInService } from "../lib/seatModel";
+import { buildPlantSeat, KIT_PROBE_NUMBERS, isPotInService } from "../lib/seatModel";
 import { HubLinkLine } from "../components/HubLinkLine";
 import { HelpTip } from "../components/HelpTip";
 import { VesselGlyph } from "../components/VesselGlyph";
@@ -77,7 +77,7 @@ export function LiveMissionPage() {
     id,
     label: id.split(".").pop()?.replace(/dsc_/, "").replace(/_/g, " ") || id,
   }));
-  const seats = ALL_POT_NUMBERS.map((n) => buildPlantSeat(n, { state, entity }));
+  const seats = KIT_PROBE_NUMBERS.map((n) => buildPlantSeat(n, { state, entity }));
   const kitNodes: KitNode[] = buildKitNodesFromFleet(fleet);
   const svc = kitInServiceCount(kitNodes);
   const outCfm = resolveCfm("sensor.dsc_cfm_exhaust_out_allocated", "sensor.dsc_cfm_exhaust_out", {

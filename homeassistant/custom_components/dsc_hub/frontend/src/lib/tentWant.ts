@@ -1,4 +1,4 @@
-import { ALL_POT_NUMBERS, isPotInService, potsInTent, type TentId } from "./seatModel";
+import { KIT_PROBE_NUMBERS, isPotInService, potsInTent, type TentId } from "./seatModel";
 import { zoneTone, type ZoneTone } from "./zoneTone";
 
 /** Hub firmware stage presets (dsc-hub-v4_0 apply_stage) — labeled stage rail, not catalog Want. */
@@ -245,7 +245,7 @@ export function potWantBand(
 }
 
 export function inServicePots(state: (id: string, fb?: string) => string): number[] {
-  return ALL_POT_NUMBERS.filter((n) => isPotInService(n, state));
+  return [...KIT_PROBE_NUMBERS].filter((n) => isPotInService(n, state));
 }
 
 /** Stage rail label for a single tent's Want chips. */

@@ -1,6 +1,6 @@
 import { STAGE_ORDER, tentStageRailLabel } from "../lib/tentWant";
 import {
-  ALL_POT_NUMBERS,
+  KIT_PROBE_NUMBERS,
   buildPlantSeat,
   isPotInService,
   tentLabel,
@@ -113,7 +113,7 @@ function TentCropColumn({
 
 export function CropScheduler({ compact }: { compact?: boolean }) {
   const hass = useEntityBus();
-  const seats = ALL_POT_NUMBERS.map((n) => ({
+  const seats = KIT_PROBE_NUMBERS.map((n) => ({
     seat: buildPlantSeat(n, hass),
     oos: !isPotInService(n, hass.state),
   }));
