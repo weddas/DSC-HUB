@@ -10,6 +10,14 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 
 ---
 
+## 2026-08-29 — Honesty docs (automation)
+
+| Item | Status | Notes |
+|------|--------|-------|
+| Developer SoT `docs/brain/HONESTY.md` | **done (docs)** | Tip `6230383` — dual-home, TimeState ingest, Want/Need emit, pending_reassert, dash dual-emit. |
+| WEBUI / DECISION_LOOP / brain README / DSC-BRAIN | **done (docs)** | Cross-links + SPA honesty surfaces. |
+| Notion tip blurbs | **done (docs)** | Engineering Ops · Pi offline brain · Local webserver UI. |
+
 ## 2026-08-29 — Honesty followups (dual-home + schedule + Need)
 
 | Item | Status | Notes |
