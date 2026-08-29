@@ -24,6 +24,11 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 | Dual dash→light_loop emit | **done (code)** | Dash no longer pre-emits expected light hours. |
 | Twin/Sankey / climate-mode / SoftCal AI | **deferred** | After dual-home + schedule soak. |
 | Plant UUID beyond `slot:N` | **deferred** | By design. |
+| `tent_manual_override` flap | **noted / cleared** | `/control/service` turn_off sticks (≥12s poll). Was `on` during honesty smoke; left `off` after re-smoke. `hub_override_active` was already `off`. |
+| Pi re-smoke (honesty close) | **done** | Bundle `index-CLqaVJXR.js`. Fleet pot1/2: `sensor_fault=true`, `modbus_probe_online=false` while raw moisture still in payload — SPA withholds. Live Root: SENSOR FAULT / PROBE DARK / (NO ACT), gauges **no data**, thereabouts HOME DARK/FAULT moisture —. Shots: `honesty-root-fault.png`, `honesty-close-resmoke.png`. Want moisture min 45; need_summary honest dash; dryback pot1=3.7 pot2=65.2; stage plant Late Flowering vs hub `select.dsc_hub_grow_stage=Early Flowering` (dual SoT residual). NPK N/K=0 @ EC 45 while faulted (producer present). Override cleared. |
+| Root NPK/Rate on fault | **done** | Bundle `index-wtobVnOJ.js`. Gate N/P/K/Rate on `readingOk` like gauges — live shows N/P/K/Rate —. Shot `honesty-npk-rate-withheld.png`. |
+| Root in-service subtitle uses fleet | **done** | `inServiceCountWithFleet` (inventory SoT); was HA-only `inServiceCount`. |
+| Roster Probe language (multipant residual) | **done (code)** | Grow/Compose use `probeLabel` / “Assign to probe”; stale multipant row below marked superseded. |
 
 ## 2026-08-29 — Bar 2 plant↔probe lifecycle
 
@@ -118,7 +123,7 @@ Still open: Roster/Compose Probe language leftovers; nickname ignored; catalog q
 
 | Item | Status | Notes |
 |------|--------|-------|
-| Roster Probe language | **next-plan** | Still Seats / POT column / P1·P2; Compose `ASSIGN TO POT` + pots 3–4 selectable; delete modal does say “Probe home assignment” |
+| Roster Probe language | **done (superseded)** | Honesty + Bar 2: `probeLabel` / Assign to probe. Residual pot3/4 inventory chrome stays deferred. |
 | Compose UI lag after add/delete | **done** | Browser create/undo Probe 2 on `?v=residuals-jKB` — plant appeared & cleared without hard reload; shots `residuals-02`…`03` |
 | Root Probe Stations shows Probe 4 idle/offline | **done** | Thereabouts kit-filtered in prior fix pass |
 | Device inventory pot3/4 + SEAT chrome | **open** | Unchanged intentional inventory; idle-home `<select>` options are Probe 1/2 only (good) |
@@ -178,7 +183,7 @@ Remaining goal work: mid-reflect skill/rule drafts still await your **yes** befo
 | TuneFleet pot3/4 toggles + Pot labels | **done** | Probe 1/2 only |
 | NPK `available()` / dual glow / scale text / DSC-Probe CSS | **done** | held + from EC; min/max text; CSS glow removed; `dsc-pot-card` |
 | Fleet map without producers (NPK/dryback/rate keys) | **next-plan** | map aliases exist; `fleetFromHass` still thin — Root uses HA held path; Pi may still show 0/— until brain payload keys align |
-| Honesty still HA-only `isPotInService` (not WithFleet) | **next-plan** | Root uses WithFleet; honesty rail still helper — dual SoT residual |
+| Honesty still HA-only `isPotInService` (not WithFleet) | **done (partial)** | Honesty rail already WithFleet; Root subtitle now `inServiceCountWithFleet`. Twin/others may still use HA-only. |
 | SoftCal / SoilTestWizard 1–4 pickers | **deferred** | Pass C Device |
 
 ---
@@ -198,7 +203,7 @@ Remaining goal work: mid-reflect skill/rule drafts still await your **yes** befo
 | Compose UI stale until reload after add/delete | **soak** | P2 | Bar 2 tick refresh; re-smoke |
 | Nickname ignored on compose commit | **deferred** | P2 | |
 | Catalog leading-quote strain names | **deferred** | P2 | |
-| History X-axis collapsed (identical labels) | **next-plan** | P2 | Root seat + Analytics |
+| History X-axis collapsed (identical labels) | **done (root cause)** | `/history` had no `got_*` aliases while SPA `potGotEntity` prefers got when live → empty/thin series. Mapped `got_moisture/ec/ph` → same fleet_history metrics in `history_ops.py`. |
 | Dryback always no data | **done (prior)** | P2 | Producers shipped; re-smoke |
 | Need — / NO TARGET BANDS for rostered plant | **done (honesty pass)** | P2 | Brain want + need_summary emit |
 | Sankey MASS IMBALANCE + CFM mismatch | **red-flag** | P2 | Gate/delete experimental Sankey |

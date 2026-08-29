@@ -15,7 +15,7 @@ import { defaultBandMargin, toneCssColor, zoneTone } from "../lib/zoneTone";
 import {
   KIT_PROBE_NUMBERS,
   buildPlantSeat,
-  inServiceCount,
+  inServiceCountWithFleet,
   isPotInServiceWithFleet,
   potGotEntity,
   probeLabel,
@@ -46,7 +46,7 @@ export function LiveRootPage() {
       oos: !isPotInServiceWithFleet(n, state, fleet),
     }))
     .sort((a, b) => Number(a.oos) - Number(b.oos));
-  const svc = inServiceCount(state, [...KIT_PROBE_NUMBERS]);
+  const svc = inServiceCountWithFleet(state, fleet, [...KIT_PROBE_NUMBERS]);
   const raw = Number(params.get("pot") || 0);
   const pot =
     (KIT_PROBE_NUMBERS as readonly number[]).includes(raw) &&
@@ -312,6 +312,10 @@ function RootProbeCard({
   const dryV = readingOk ? dry.value : Number.NaN;
   const ecV = readingOk ? ec.value : Number.NaN;
   const phV = readingOk ? ph.value : Number.NaN;
+  const nV = readingOk ? nHeld.value : Number.NaN;
+  const pV = readingOk ? pHeld.value : Number.NaN;
+  const kV = readingOk ? kHeld.value : Number.NaN;
+  const rateV = readingOk ? rate.value : Number.NaN;
   const unassigned = !oos && (seat.plantName === "—" || seat.plantName.trim() === "");
   const headName = oos ? "Out of service" : unassigned ? (station ? "Probe station" : "Unassigned") : seat.plantName;
   const needLabel = oos
@@ -431,21 +435,25 @@ function RootProbeCard({
           </div>
           <div className="dsc-npk-row">
             <button type="button" className="dsc-npk-hit" onClick={open(nId, `${probeLabel(pot)} N (from EC)`)}>
-              N {fmtChip(nHeld.value, 0)}
-              {nHeld.stale ? " *" : ""}
+              N {fmtChip(nV, 0)}
+              {readingOk && nHeld.stale ? " *" : ""}
               <span className="dsc-npk-hint">from EC</span>
             </button>
             <button type="button" className="dsc-npk-hit" onClick={open(pId, `${probeLabel(pot)} P (from EC)`)}>
-              P {fmtChip(pHeld.value, 0)}
-              {pHeld.stale ? " *" : ""}
+              P {fmtChip(pV, 0)}
+              {readingOk && pHeld.stale ? " *" : ""}
               <span className="dsc-npk-hint">from EC</span>
             </button>
             <button type="button" className="dsc-npk-hit" onClick={open(kId, `${probeLabel(pot)} K (from EC)`)}>
-              K {fmtChip(kHeld.value, 0)}
-              {kHeld.stale ? " *" : ""}
+              K {fmtChip(kV, 0)}
+              {readingOk && kHeld.stale ? " *" : ""}
               <span className="dsc-npk-hint">from EC</span>
             </button>
-            {!Number.isFinite(rate.value) ? (
+            {!readingOk ? (
+              <span className="dsc-npk-hit dsc-npk-hit--static" title="Probe dark or fault — rate withheld">
+                Rate —
+              </span>
+            ) : !Number.isFinite(rateV) ? (
               <span
                 className="dsc-npk-hit dsc-npk-hit--static"
                 title={station ? "Station moisture history not yet long enough for rate" : "No moisture-rate entity on this bus"}
@@ -454,7 +462,7 @@ function RootProbeCard({
               </span>
             ) : (
               <button type="button" className="dsc-npk-hit" onClick={open(rateId, `${probeLabel(pot)} moisture rate`)}>
-                Rate {rate.value.toFixed(2)}
+                Rate {rateV.toFixed(2)}
                 {rate.stale ? " *" : ""}
               </button>
             )}

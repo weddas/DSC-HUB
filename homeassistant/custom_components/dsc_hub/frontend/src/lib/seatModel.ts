@@ -215,6 +215,17 @@ export function inServiceCount(
   return { inService: activePotNumbers(state, pots).length, total: pots.length };
 }
 
+export function inServiceCountWithFleet(
+  state: (id: string, fallback?: string) => string,
+  fleet?: FleetSnapshot | null,
+  pots: number[] = [...KIT_PROBE_NUMBERS],
+): { inService: number; total: number } {
+  return {
+    inService: pots.filter((n) => isPotInServiceWithFleet(n, state, fleet)).length,
+    total: pots.length,
+  };
+}
+
 export function rosterSlots(
   entity: (id: string) => { attributes?: Record<string, unknown> } | undefined,
 ): RosterSlot[] {
