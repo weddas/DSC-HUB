@@ -44,7 +44,20 @@ flowchart LR
 - Drive Sonoff relays through HA as the *product* path (lab OK until F-010)
 - Emit commands when Manual Takeover is asserted (unless user-approved advanced override)
 
+## Want / Need emit (computed SoT, tip `6230383`)
+
+Cold computed (`computed_ops._build_cold_computed_states`) publishes HA-parity sensors the SPA already reads:
+
+| Emit | When |
+|---|---|
+| `sensor.dsc_probe{N}_want_{temp,rh,moisture,ec,ph}_{min,max}` | Occupied pot; band present in resolved Want |
+| `sensor.dsc_probe{N}_need_summary` | Occupied pot; Got gated on online + not fault + Modbus not dark |
+
+Need text is empty (`—`) when bands missing or Got unreadable — never a fake moisture band. Schedule helpers for photoperiod come from hub TimeState ingest (`time.dsc_hub_lights_on_time`) via `_helpers_for_light_loop` → `light_loop`.
+
+Full honesty map (dual-home stations, pending_reassert, dash dual-emit cleanup): [`HONESTY.md`](HONESTY.md).
+
 ## Implementation
 
-Python: [`brain/dsc_brain/decision_loop.py`](../../brain/dsc_brain/decision_loop.py)  
+Python: [`brain/dsc_brain/decision_loop.py`](../../brain/dsc_brain/decision_loop.py) · want/need emit in [`computed_ops.py`](../../brain/dsc_brain/computed_ops.py)  
 Dry-run by default (`emit=False`); live emit is Phase D.
