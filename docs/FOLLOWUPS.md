@@ -10,6 +10,20 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 
 ---
 
+## 2026-08-29 — Honesty followups (dual-home + schedule + Need)
+
+| Item | Status | Notes |
+|------|--------|-------|
+| Dual-home station thereabouts | **done (code)** | Withhold home moisture when Modbus/fault; SPA HOME ONLINE/DARK/FAULT. Tests `test_probe_station_honesty.py`. |
+| Root gauges on probe dark/fault | **done (code)** | No held theater; `blockNeedAct` includes Modbus offline. |
+| `lights_on_time` hub ingest | **done (code)** | `HUB_TIME_OID_TO_ENTITY` + TimeState ingest. Tests `test_hub_time_ingest.py`. |
+| SPA `pending_reassert` chip | **done (code)** | HubLinkLine + Dash banner. |
+| Need — / Want bands | **done (code)** | Brain emits want moisture/ec/ph + `need_summary`; no fake 0–45 moisture band. |
+| Roster/Compose Probe language | **done (code)** | `probeLabel` on Roster / CropScheduler / TuneFleet. |
+| Dual dash→light_loop emit | **done (code)** | Dash no longer pre-emits expected light hours. |
+| Twin/Sankey / climate-mode / SoftCal AI | **deferred** | After dual-home + schedule soak. |
+| Plant UUID beyond `slot:N` | **deferred** | By design. |
+
 ## 2026-08-29 — Bar 2 plant↔probe lifecycle
 
 | Item | Status | Notes |
@@ -20,16 +34,16 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 | SPA Roster + seat Detach/Assign/Move | **done (code)** | `GrowPages`, `PlantSeatPanel`, `fleetApi`; Delete stays retire. Bundle `index-CEeqi1BT.js` (Root tick fix). |
 | Root stations live refresh | **done (code)** | Was `soilWizardOpen`-only (explore inventory); now refreshes on entity `tick` too. |
 | Pi hot-patch + SPA verify | **done** | Bundle `index-CEeqi1BT.js`. API smoke assign/detach/reassign/retire on pot2; move+Amnesia detach/restore OK. Shots: `docs/qa-screenshots-2026-08-29/bar2-roster.png`, `bar2-root.png`. |
-| Dual-home station lie (pot2→idle_home pot1) | **next-plan** | Inventory highest-risk unknown; not Bar 2 ship gate if detach SoT works. |
+| Dual-home station lie (pot2→idle_home pot1) | **done (honesty pass)** | See honesty followups section above. |
 | Dedicated plant UUID SoT | **deferred** | Transitional `slot:N`; climate-mode plant-id keying later. |
 
 ## 2026-08-29 — Bar 1 final review (FOLLOWUPS only)
 
 | Item | Status | Notes |
 |------|--------|-------|
-| Dual dash→light_loop emit cleanup | **deferred** | `emit_dash_entities` still sets expected light hours; `emit_light_loop` overwrites. Harmless redundancy — drop dash duplicate later. |
-| SPA chip for `pending_reassert` | **next-plan** | Sticky bit exists on override; SPA only shows active override today. Surface pending so operators know TTL fired under takeover. |
-| `lights_on_time` ingest into hub_controls | **next-plan** | Follow schedules stay invalid until hub datetime maps onto helper/control bus (Task 2 gap). |
+| Dual dash→light_loop emit cleanup | **done (honesty pass)** | Dash no longer pre-emits expected light hours. |
+| SPA chip for `pending_reassert` | **done (honesty pass)** | HubLinkLine + Dash banner. |
+| `lights_on_time` ingest into hub_controls | **done (honesty pass)** | Time OID map + ingest. |
 | 2×4 Got window vs lamp delivered-hours | **deferred** | Got 2×4 still `window_2x4_open` when `light_delivered_hours` absent; HA golden = SF1000 ON until delivered-hours ingest. |
 
 ## 2026-08-29 — Bar 1 Pi verify (brain control recovery)
@@ -177,15 +191,15 @@ Remaining goal work: mid-reflect skill/rule drafts still await your **yes** befo
 | Climate airflow canvas blank (300×150 vs parent; α=0) | **red-flag** | P0 | `#/live/climate` — Three.js/R3F resize; reinforces “one CFM surface” judo |
 | Twin 3D blank (same 300×150) | **red-flag** | P0 | `#/live/twin` — demoted but broken |
 | POT/Seat language + POT3/4 still on Root/Fleet | **done (SPA)** | P1 | Pass A — confirm on Pi after deploy |
-| NPK empty on live EC/pH pots | **next-plan** | P1 | Held path + map; producer/key + sensor_fault honesty still open |
-| Stage SoT split (Amnesia Late UI vs Early API) | **red-flag** | P1 | Roster/seat vs `/roster` `growth_stage` |
-| Probe station dual home (`pot2` → idle_home pot1) | **next-plan** | P1 | Modbus offline / fault while Root shows moisture |
-| Compose UI stale until reload after add/delete | **next-plan** | P2 | Roster cache / tick |
+| NPK empty on live EC/pH pots | **done (prior)** | P1 | Producers shipped; re-smoke after honesty hot-patch |
+| Stage SoT split (Amnesia Late UI vs Early API) | **done (prior)** | P1 | Calendar advance; re-smoke live |
+| Probe station dual home (`pot2` → idle_home pot1) | **done (honesty pass)** | P1 | Withhold thereabouts + Root gauge honesty |
+| Compose UI stale until reload after add/delete | **soak** | P2 | Bar 2 tick refresh; re-smoke |
 | Nickname ignored on compose commit | **deferred** | P2 | |
 | Catalog leading-quote strain names | **deferred** | P2 | |
 | History X-axis collapsed (identical labels) | **next-plan** | P2 | Root seat + Analytics |
-| Dryback always no data | **next-plan** | P2 | UI omits dial when no channel; producer still missing |
-| Need — / NO TARGET BANDS for rostered plant | **next-plan** | P2 | |
+| Dryback always no data | **done (prior)** | P2 | Producers shipped; re-smoke |
+| Need — / NO TARGET BANDS for rostered plant | **done (honesty pass)** | P2 | Brain want + need_summary emit |
 | Sankey MASS IMBALANCE + CFM mismatch | **red-flag** | P2 | Gate/delete experimental Sankey |
 | Tent NO SCHEDULE both tents | **soak** | P2 | Ops, not SPA-only |
 | Climate RH chart max 100 spike | **soak** | P2 | |

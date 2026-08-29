@@ -3,6 +3,7 @@ import {
   KIT_PROBE_NUMBERS,
   buildPlantSeat,
   isPotInService,
+  probeLabel,
   tentLabel,
   type TentId,
 } from "../lib/seatModel";
@@ -98,7 +99,7 @@ function TentCropColumn({
               }
             >
               <VesselGlyph spec={readPotVessel(seat.pot, hass.state, hass.entity)} size={16} />
-              <strong>P{seat.pot}</strong>
+              <strong>{probeLabel(seat.pot)}</strong>
               <span>{seat.plantName}</span>
               <span className="dsc-muted">
                 W{week ?? "—"} · {Number.isFinite(days) ? `${days}d` : "—"} · {seat.stage} · Need {seat.need}
@@ -150,7 +151,7 @@ export function CropScheduler({ compact }: { compact?: boolean }) {
                 }
               >
                 <VesselGlyph spec={readPotVessel(seat.pot, hass.state, hass.entity)} size={16} />
-                <strong>P{seat.pot}</strong>
+                <strong>{probeLabel(seat.pot)}</strong>
                 <span>{seat.plantName}</span>
                 <StatusChip label="Unassigned" icon="seat" tone="muted" />
               </button>

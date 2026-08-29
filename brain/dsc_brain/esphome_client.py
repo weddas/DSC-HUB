@@ -23,6 +23,7 @@ from .hub_controls import (
     HUB_SENSOR_OID_TO_KEY,
     HUB_SWITCH_OID_TO_ENTITY,
     HUB_TEXT_SENSOR_OID_TO_KEY,
+    HUB_TIME_OID_TO_ENTITY,
 )
 from .api_lock import host_lock
 from .native_api import make_api_client
@@ -544,6 +545,18 @@ def _hub_controls_from_states(
             state = str(getattr(st, "state", "") or "")
             opts = select_options.get(object_id, [])
             put(entity_id, state, options=opts)
+        elif object_id in HUB_TIME_OID_TO_ENTITY:
+            entity_id = HUB_TIME_OID_TO_ENTITY[object_id]
+            if bool(getattr(st, "missing_state", False)):
+                put(entity_id, "")
+            else:
+                try:
+                    hour = int(getattr(st, "hour", 0) or 0)
+                    minute = int(getattr(st, "minute", 0) or 0)
+                    second = int(getattr(st, "second", 0) or 0)
+                    put(entity_id, f"{hour:02d}:{minute:02d}:{second:02d}")
+                except (TypeError, ValueError):
+                    put(entity_id, str(getattr(st, "state", "") or ""))
 
     return controls
 

@@ -251,7 +251,7 @@ export function GrowRosterPage() {
                       {joined ? (
                         <span className="dsc-chip-row">
                           {vessel ? <VesselGlyph spec={vessel} size={22} /> : null}
-                          P{p}
+                          {probeLabel(p)}
                           {!potLive ? <StatusChip label="Out of service" tone="warn" /> : null}
                         </span>
                       ) : (

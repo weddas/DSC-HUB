@@ -255,6 +255,14 @@ export type ProbeStation = {
   reading_mode: string;
   thereabouts: Record<string, unknown>;
   online: boolean;
+  thereabouts_source?: string | null;
+  home_online?: boolean;
+  home_trustworthy?: boolean;
+  home_sensor_fault?: boolean;
+  home_modbus_ok?: boolean;
+  seat_online?: boolean;
+  seat_sensor_fault?: boolean;
+  seat_modbus_ok?: boolean;
 };
 
 export type ProbeStationPatch = {

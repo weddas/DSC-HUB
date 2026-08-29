@@ -80,6 +80,25 @@ def _is_probe_station_seat(seat_id: str) -> bool:
     return cfg.get("role") == "probe_station"
 
 
+def _pot_home_trust(pot_id: str) -> dict[str, Any]:
+    """Idle-home honesty: online + Modbus + sensor_fault from fleet pot binaries."""
+    fleet = get_fleet_state()
+    pot = fleet.pots.get(pot_id) if pot_id else None
+    online = bool(pot and pot.online)
+    bins = (pot.values or {}).get("binaries") or {} if pot else {}
+    fault = bool(bins.get("sensor_fault"))
+    modbus = bins.get("modbus_probe_online")
+    # Unknown Modbus = do not invent offline; known off = dark.
+    modbus_ok = True if modbus is None else bool(modbus)
+    trustworthy = online and (not fault) and modbus_ok
+    return {
+        "online": online,
+        "sensor_fault": fault,
+        "modbus_ok": modbus_ok,
+        "trustworthy": trustworthy,
+    }
+
+
 def list_probe_stations() -> list[dict[str, Any]]:
     out: list[dict[str, Any]] = []
     fleet = get_fleet_state()
@@ -94,14 +113,19 @@ def list_probe_stations() -> list[dict[str, Any]]:
             continue
         seat_id = str(row["seat_id"])
         idle_home = str(extra.get("idle_home_pot_id") or "")
+        source_id = idle_home if idle_home and idle_home in fleet.pots else (seat_id if seat_id in fleet.pots else "")
+        home_trust = _pot_home_trust(source_id) if source_id else {
+            "online": False,
+            "sensor_fault": False,
+            "modbus_ok": False,
+            "trustworthy": False,
+        }
+        seat_trust = _pot_home_trust(seat_id)
+        # Thereabouts = dock home soil only when that home is trustworthy.
+        # Never mirror home moisture as live station truth when Modbus/fault disagree.
         thereabouts: dict[str, Any] = {}
-        online = False
-        if idle_home and idle_home in fleet.pots:
-            thereabouts = dict(fleet.pots[idle_home].values or {})
-            online = bool(fleet.pots[idle_home].online)
-        elif seat_id in fleet.pots:
-            thereabouts = dict(fleet.pots[seat_id].values or {})
-            online = bool(fleet.pots[seat_id].online)
+        if source_id and home_trust["trustworthy"]:
+            thereabouts = dict(fleet.pots[source_id].values or {})
         out.append(
             {
                 "seat_id": seat_id,
@@ -109,7 +133,15 @@ def list_probe_stations() -> list[dict[str, Any]]:
                 "idle_home_pot_id": idle_home,
                 "reading_mode": extra.get("reading_mode") or "idle",
                 "thereabouts": thereabouts,
-                "online": online,
+                "thereabouts_source": source_id or None,
+                "online": bool(home_trust["online"]),
+                "home_online": bool(home_trust["online"]),
+                "home_trustworthy": bool(home_trust["trustworthy"]),
+                "home_sensor_fault": bool(home_trust["sensor_fault"]),
+                "home_modbus_ok": bool(home_trust["modbus_ok"]),
+                "seat_online": bool(seat_trust["online"]),
+                "seat_sensor_fault": bool(seat_trust["sensor_fault"]),
+                "seat_modbus_ok": bool(seat_trust["modbus_ok"]),
             }
         )
     return out

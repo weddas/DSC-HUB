@@ -239,8 +239,8 @@ export function potWantBand(
 ): { min: number; max: number } | undefined {
   const lo = Number(state(`sensor.dsc_probe${pot}_want_${kind}_min`, ""));
   const hi = Number(state(`sensor.dsc_probe${pot}_want_${kind}_max`, ""));
-  if (lo > 0 && hi > 0 && hi >= lo) return { min: lo, max: hi };
-  if (kind === "moisture") return { min: 0, max: 45 };
+  // Do not invent a theater band when Want sensors are absent (Need — / NO TARGET).
+  if (Number.isFinite(lo) && Number.isFinite(hi) && hi >= lo) return { min: lo, max: hi };
   return undefined;
 }
 

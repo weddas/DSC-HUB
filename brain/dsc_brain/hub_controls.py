@@ -212,6 +212,19 @@ HUB_SELECT_ENTITY_TO_OID: dict[str, str] = {
     "select.dsc_hub_clone_photoperiod": "clone_photoperiod",
 }
 
+# ESPHome datetime (type: time) → HA/SPA time.* entity_ids (ingest only).
+HUB_TIME_OID_TO_ENTITY: dict[str, str] = {
+    "lights_on_time": "time.dsc_hub_lights_on_time",
+    "clone_lights_on_time": "time.dsc_hub_clone_lights_on_time",
+}
+
+HUB_TIME_ENTITY_TO_OID: dict[str, str] = {
+    "time.dsc_hub_lights_on_time": "lights_on_time",
+    "datetime.dsc_hub_lights_on_time": "lights_on_time",
+    "time.dsc_hub_clone_lights_on_time": "clone_lights_on_time",
+    "datetime.dsc_hub_clone_lights_on_time": "clone_lights_on_time",
+}
+
 # ESPHome object_id → hub.values metric key (exact match — id and name-slug variants)
 HUB_SENSOR_OID_TO_KEY: dict[str, str] = {
     "temp_sensor": "temp_c",

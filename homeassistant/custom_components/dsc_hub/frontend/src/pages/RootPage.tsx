@@ -175,14 +175,16 @@ export function LiveRootPage() {
               </p>
               <div className="dsc-grid">
                 {probeStations.map((st) => {
-                  const moist = st.thereabouts?.moisture_pct;
-                  const soilT = st.thereabouts?.soil_temp_c;
+                  const moist = st.home_trustworthy === false ? null : st.thereabouts?.moisture_pct;
+                  const soilT = st.home_trustworthy === false ? null : st.thereabouts?.soil_temp_c;
                   const seatProbe = /^pot(\d+)$/i.exec(st.seat_id);
                   const seatTitle = seatProbe ? probeLabel(Number(seatProbe[1])) : st.seat_id;
                   const homeProbe = /^pot(\d+)$/i.exec(st.idle_home_pot_id || "");
                   const homeLabel = homeProbe
                     ? probeLabel(Number(homeProbe[1]))
                     : st.idle_home_pot_id || "—";
+                  const homeOnline = st.home_online ?? st.online;
+                  const homeOk = st.home_trustworthy !== false && homeOnline;
                   return (
                     <div key={st.seat_id} className="dsc-col-6">
                       <div className="dsc-chip-row" style={{ marginBottom: 8 }}>
@@ -192,7 +194,12 @@ export function LiveRootPage() {
                           label={st.reading_mode === "idle" ? "IDLE" : st.reading_mode.toUpperCase()}
                           tone={st.reading_mode === "idle" ? "ok" : "warn"}
                         />
-                        <StatusChip label={st.online ? "ONLINE" : "OFFLINE"} tone={st.online ? "ok" : "bad"} />
+                        <StatusChip
+                          label={homeOk ? "HOME ONLINE" : "HOME DARK"}
+                          tone={homeOk ? "ok" : "bad"}
+                        />
+                        {st.home_sensor_fault ? <StatusChip label="HOME FAULT" tone="bad" /> : null}
+                        {st.home_modbus_ok === false ? <StatusChip label="HOME PROBE DARK" tone="warn" /> : null}
                       </div>
                       <p className="dsc-muted" style={{ margin: 0, fontSize: 12 }}>
                         Home {homeLabel} · moisture{" "}
@@ -299,6 +306,12 @@ function RootProbeCard({
   const dryBand = { min: 0, max: 45 };
   const showDryback = Number.isFinite(dry.value);
   const fmtChip = (v: number, digits = 0) => (Number.isFinite(v) ? v.toFixed(digits) : "—");
+  const readingOk = !trust.labels.includes("sensor fault") && !trust.labels.includes("probe dark");
+  const moistV = readingOk ? moist.value : Number.NaN;
+  const soilV = readingOk ? soil.value : Number.NaN;
+  const dryV = readingOk ? dry.value : Number.NaN;
+  const ecV = readingOk ? ec.value : Number.NaN;
+  const phV = readingOk ? ph.value : Number.NaN;
   const unassigned = !oos && (seat.plantName === "—" || seat.plantName.trim() === "");
   const headName = oos ? "Out of service" : unassigned ? (station ? "Probe station" : "Unassigned") : seat.plantName;
   const needLabel = oos
@@ -338,11 +351,11 @@ function RootProbeCard({
           series={series.series}
           color={toneCssColor(
             zoneTone({
-              value: moist.value,
+              value: moistV,
               band: mBand,
               margin: defaultBandMargin(mBand),
-              stale: moist.stale,
-              available: Number.isFinite(moist.value),
+              stale: moist.stale || !readingOk,
+              available: readingOk && Number.isFinite(moistV),
             }),
           )}
           width={140}
@@ -356,23 +369,23 @@ function RootProbeCard({
           <div className="dsc-gauge-row dsc-gauge-row--root">
             <ArcGauge
               label="Moisture"
-              value={moist.value}
+              value={moistV}
               min={0}
               max={100}
               unit="%"
               band={mBand}
-              stale={moist.stale}
+              stale={moist.stale || !readingOk}
               onClick={() =>
                 inspector.open({ entityId: moistId, label: `${probeLabel(pot)} moisture`, unit: "%" })
               }
             />
             <ArcGauge
               label="Soil °C"
-              value={soil.value}
+              value={soilV}
               min={10}
               max={40}
               unit="°C"
-              stale={soil.stale}
+              stale={soil.stale || !readingOk}
               onClick={() =>
                 inspector.open({
                   entityId: `sensor.dsc_probe${pot}_soil_temperature`,
@@ -384,12 +397,12 @@ function RootProbeCard({
             {showDryback ? (
               <ArcGauge
                 label="Dryback"
-                value={dry.value}
+                value={dryV}
                 min={0}
                 max={60}
                 unit="%"
                 band={dryBand}
-                stale={dry.stale}
+                stale={dry.stale || !readingOk}
                 onClick={() =>
                   inspector.open({ entityId: dryId, label: `${probeLabel(pot)} dryback`, unit: "%" })
                 }
@@ -397,22 +410,22 @@ function RootProbeCard({
             ) : null}
             <ArcGauge
               label="EC"
-              value={ec.value}
+              value={ecV}
               min={0}
               max={3000}
               unit=""
               band={ecBand}
-              stale={ec.stale}
+              stale={ec.stale || !readingOk}
               onClick={() => inspector.open({ entityId: ecId, label: `${probeLabel(pot)} EC` })}
             />
             <ArcGauge
               label="pH"
-              value={ph.value}
+              value={phV}
               min={4}
               max={8}
               unit=""
               band={phBand}
-              stale={ph.stale}
+              stale={ph.stale || !readingOk}
               onClick={() => inspector.open({ entityId: phId, label: `${probeLabel(pot)} pH` })}
             />
           </div>

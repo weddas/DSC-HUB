@@ -537,15 +537,19 @@ def _build_cold_computed_states(
         )
         _set_entity(states, f"sensor.dsc_probe{pot_n}_strain_display", strain_display)
         _set_entity(states, f"datetime.dsc_probe{pot_n}_sprout_date", str(sprout)[:10] if sprout else "")
-        if strain_id and pot_occupied:
-            want = resolve_want(strain_id=strain_id, stage=stage)
+        if pot_occupied:
+            fam = stage_family(str(growth_stage or stage)) or "veg"
+            want = resolve_want(strain_id=strain_id or None, stage=fam)
             bands = want.get("want") or {}
-            if "temp_c" in bands:
-                _set_entity(states, f"sensor.dsc_probe{pot_n}_want_temp_min", bands["temp_c"][0])
-                _set_entity(states, f"sensor.dsc_probe{pot_n}_want_temp_max", bands["temp_c"][1])
-            if "rh_pct" in bands:
-                _set_entity(states, f"sensor.dsc_probe{pot_n}_want_rh_min", bands["rh_pct"][0])
-                _set_entity(states, f"sensor.dsc_probe{pot_n}_want_rh_max", bands["rh_pct"][1])
+            _emit_probe_want_bands(states, pot_n, bands)
+            pot = fleet.pots.get(seat_id) if fleet else None
+            got = dict(pot.values or {}) if pot and pot.online else {}
+            bins = (pot.values or {}).get("binaries") or {} if pot else {}
+            reading_ok = bool(pot and pot.online) and not bins.get("sensor_fault")
+            if bins.get("modbus_probe_online") is False:
+                reading_ok = False
+            need = _need_summary_text(got if reading_ok else {}, bands)
+            _set_entity(states, f"sensor.dsc_probe{pot_n}_need_summary", need)
 
     cal_active = get_helper("input_boolean.dsc_cal_active", "off") == "on"
     curve_count = sum(
@@ -640,6 +644,73 @@ def _manual_takeover_on(fleet: Any, helpers: dict[str, Any]) -> bool:
         if isinstance(ctrl, dict) and ctrl.get("state") is not None:
             return str(ctrl.get("state")).lower() == "on"
     return False
+
+
+def _emit_probe_want_bands(states: dict[str, dict[str, Any]], pot_n: int, bands: dict[str, Any]) -> None:
+    """Publish Want min/max sensors SPA Need / target-band chrome read."""
+    mapping = (
+        ("temp_c", "want_temp"),
+        ("rh_pct", "want_rh"),
+        ("moisture_pct", "want_moisture"),
+        ("ec_us", "want_ec"),
+        ("ph", "want_ph"),
+    )
+    for key, slug in mapping:
+        band = bands.get(key)
+        if not isinstance(band, (list, tuple)) or len(band) < 2:
+            continue
+        try:
+            lo, hi = float(band[0]), float(band[1])
+        except (TypeError, ValueError):
+            continue
+        _set_entity(states, f"sensor.dsc_probe{pot_n}_{slug}_min", lo)
+        _set_entity(states, f"sensor.dsc_probe{pot_n}_{slug}_max", hi)
+
+
+def _opt_got(values: dict[str, Any], *keys: str) -> float | None:
+    for key in keys:
+        raw = values.get(key)
+        if raw is None:
+            continue
+        try:
+            return float(raw)
+        except (TypeError, ValueError):
+            continue
+    return None
+
+
+def _need_summary_text(got: dict[str, Any], bands: dict[str, Any]) -> str:
+    """HA-parity Need summary from Got vs Want (brain SoT when templates absent)."""
+    bits: list[str] = []
+    g_ec = _opt_got(got, "ec_us", "ec")
+    ec = bands.get("ec_us")
+    if g_ec is not None and isinstance(ec, (list, tuple)) and len(ec) >= 2:
+        lo, hi = float(ec[0]), float(ec[1])
+        if g_ec < lo:
+            bits.append(f"EC low vs Want by ~{round(lo - g_ec)} µS/cm")
+        elif g_ec > hi:
+            bits.append(f"EC high vs Want by ~{round(g_ec - hi)} µS/cm")
+    g_ph = _opt_got(got, "ph")
+    ph = bands.get("ph")
+    if g_ph is not None and isinstance(ph, (list, tuple)) and len(ph) >= 2:
+        lo, hi = float(ph[0]), float(ph[1])
+        if g_ph < lo:
+            bits.append("pH low")
+        elif g_ph > hi:
+            bits.append("pH high")
+    g_m = _opt_got(got, "moisture_pct", "moisture")
+    moist = bands.get("moisture_pct")
+    if g_m is not None and isinstance(moist, (list, tuple)) and len(moist) >= 2:
+        lo, hi = float(moist[0]), float(moist[1])
+        if g_m < lo:
+            bits.append("moisture low")
+        elif g_m > hi:
+            bits.append("moisture high")
+    if not bands.get("moisture_pct") and not bands.get("ec_us") and not bands.get("ph"):
+        return "—"
+    if not got:
+        return "—"
+    return "; ".join(bits) if bits else "On target vs Want bands"
 
 
 def _helpers_for_light_loop(helpers: dict[str, Any], fleet: Any) -> dict[str, Any]:

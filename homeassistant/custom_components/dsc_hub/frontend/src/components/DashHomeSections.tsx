@@ -158,6 +158,15 @@ export function DashConditionalBanners({ bus, onNavigate }: { bus: Bus; onNaviga
       tone: "warn",
     });
   }
+  const pendingReassert = Boolean(entity("binary_sensor.dsc_brain_hub_override_active")?.attributes?.pending_reassert);
+  if (pendingReassert && state("binary_sensor.dsc_brain_hub_override_active") !== "on") {
+    banners.push({
+      show: true,
+      title: "Pending re-assert — takeover still on after reconnect TTL; clear takeover to re-plan",
+      body: "",
+      tone: "warn",
+    });
+  }
   if (state("switch.dsc_hub_tent_manual_override") === "on") {
     banners.push({ show: true, title: "MANUAL FAN OVERRIDE ACTIVE", body: "Fan values held — photoperiod still driving the SF1000", tone: "warn" });
   }

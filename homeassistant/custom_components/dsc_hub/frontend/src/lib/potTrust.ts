@@ -38,7 +38,7 @@ export function readPotTrust(
     stuck,
     untrusted,
     peerDivergence: peer,
-    blockNeedAct: untrusted || stuck || sensorFault,
+    blockNeedAct: untrusted || stuck || sensorFault || modbusOffline,
     tone,
     labels,
   };

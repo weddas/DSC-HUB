@@ -278,11 +278,8 @@ def emit_dash_entities(
 
     _emit_hub_controls(states, fleet, set_entity)
 
-    grow_stage = _control_state(states, "select.dsc_hub_grow_stage") or get_helper("select.dsc_hub_grow_stage", "Germination")
-    exp_main = _expected_light_hours(grow_stage)
-    exp_clone = _clone_expected_light_hours(states)
-    set_entity(states, "sensor.dsc_expected_light_hours", exp_main, available=True, attributes={"unit_of_measurement": "h"})
-    set_entity(states, "sensor.dsc_clone_expected_light_hours", exp_clone, available=True, attributes={"unit_of_measurement": "h"})
+    # Expected light hours: owned by light_loop (emit_light_loop overwrites). Do not
+    # pre-emit dash stage-default hours — that was dual-home theater before overwrite.
 
     global _PREV_DARK_VIOLATION
     dark_violation = _dark_period_violation(states)

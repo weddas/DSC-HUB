@@ -20,7 +20,7 @@ function durationLabel(seconds: number): string {
 export function HubLinkLine() {
   const { online, uptime, heartbeat } = useHubVitals();
   const fleet = useFleet();
-  const { state, available } = useEntityBus();
+  const { state, available, entity } = useEntityBus();
 
   const uptimeSec = asFiniteNumber(uptime);
   const downAge = available("sensor.dsc_hub_api_down_age")
@@ -55,6 +55,8 @@ export function HubLinkLine() {
   const overrideActive =
     available("binary_sensor.dsc_brain_hub_override_active") &&
     state("binary_sensor.dsc_brain_hub_override_active") === "on";
+  const overrideAttrs = entity("binary_sensor.dsc_brain_hub_override_active")?.attributes || {};
+  const pendingReassert = Boolean(overrideAttrs.pending_reassert);
 
   return (
     <div className="dsc-chip-row">
@@ -65,6 +67,9 @@ export function HubLinkLine() {
       />
       {overrideActive ? (
         <StatusChip icon="alert" label="RECONNECT OVERRIDE" tone="warn" />
+      ) : null}
+      {pendingReassert && !overrideActive ? (
+        <StatusChip icon="alert" label="PENDING REASSERT" tone="warn" />
       ) : null}
       <StatusChip label={age} tone="muted" />
       <StatusChip label={`Bounces ${bounce}`} tone="muted" />
@@ -83,6 +88,10 @@ export function HubLinkLine() {
         <p>
           <b>RECONNECT OVERRIDE</b> means the brain recorded a temporary override after hub reconnect with manual
           takeover. It clears after 15 minutes or when master takeover is turned off — then the brain re-asserts Want.
+        </p>
+        <p>
+          <b>PENDING REASSERT</b> means the reconnect TTL already fired while takeover is still on — override binary is
+          off, but Want will not re-assert until takeover clears.
         </p>
         <p>Grey RF is not always a fault — inventory out-of-service stays quiet on purpose.</p>
       </HelpTip>

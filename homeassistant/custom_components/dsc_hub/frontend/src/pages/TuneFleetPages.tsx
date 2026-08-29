@@ -11,7 +11,7 @@ import { useEntityBus } from "../hooks/useEntityBus";
 import { useEntitySeries } from "../hooks/useEntitySeries";
 import { useChartHours } from "../hooks/useChartHours";
 import { MultiLineChart } from "../viz/charts";
-import { KIT_PROBE_NUMBERS, isPotInService, potGotEntity } from "../lib/seatModel";
+import { KIT_PROBE_NUMBERS, isPotInService, potGotEntity, probeLabel } from "../lib/seatModel";
 import { resolveCfm } from "../lib/cfmProvenance";
 import { buildKitNodesFromFleet, kitInServiceCount, type KitNode } from "../lib/kitInventory";
 import { useFleet } from "../hooks/useFleet";
@@ -134,7 +134,7 @@ export function TuneAnalyticsPage() {
                 lastSyncAt={Math.max(...moistSeries.map((p) => p.series.lastSyncAt ?? 0)) || undefined}
                 series={moistSeries.map((p, i) => ({
                   id: `p${p.n}`,
-                  label: worstNeed?.n === p.n ? `P${p.n} Need` : `P${p.n}`,
+                  label: worstNeed?.n === p.n ? `${probeLabel(p.n)} Need` : probeLabel(p.n),
                   series: p.series.series,
                   color: POT_COLORS[i % POT_COLORS.length],
                   unit: "%",
@@ -143,7 +143,7 @@ export function TuneAnalyticsPage() {
             )}
             {worstNeed ? (
               <p className="dsc-kpi-sub">
-                Worst Need P{worstNeed.n}: {worstNeed.need}
+                Worst Need {probeLabel(worstNeed.n)}: {worstNeed.need}
               </p>
             ) : null}
           </Card>
