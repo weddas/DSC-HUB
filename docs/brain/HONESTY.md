@@ -2,7 +2,7 @@
 
 **In one line:** Never show theater readings, schedules, or Need text the brain cannot defend from live telemetry.
 
-**Status:** Shipped tip `6230383` (closes Bar 1 residuals + dual-home station lie). Tests: `brain/tests/test_probe_station_honesty.py`, `brain/tests/test_hub_time_ingest.py`.
+**Status:** Shipped tip `6230383` (dual-home + schedule + Want/Need) · SPA binary bus tip `cc288d7` / evidence `2bb0643` (`index-CLqaVJXR.js`). Tests: `brain/tests/test_probe_station_honesty.py`, `brain/tests/test_hub_time_ingest.py`. Shot: `docs/qa-screenshots-2026-08-29/honesty-root-fault.png`.
 
 Notion: [Pi offline brain](https://app.notion.com/p/3b52b4cda370818e8b66f671689f7a57) · [Local webserver UI](https://app.notion.com/p/3b52b4cda37081c19048e794d4bdf819) · [Engineering Ops](https://app.notion.com/p/3b02b4cda37081fda872fe551e60c116)
 
@@ -10,7 +10,7 @@ Related: [DECISION_LOOP.md](DECISION_LOOP.md) · [WEBUI.md](WEBUI.md) · FOLLOWU
 
 ## Why
 
-Operators were seeing **held moisture** on a probe station whose idle home was Modbus-dark, **NO SCHEDULE** / wrong photoperiod while hub `lights_on_time` existed on the wire, **Need —** with no Want bands for rostered plants, and **silent TTL expiry** under Manual Takeover (`pending_reassert` sticky but invisible).
+Operators were seeing **held moisture** on a probe station whose idle home was Modbus-dark, **NO SCHEDULE** / wrong photoperiod while hub `lights_on_time` existed on the wire, **Need —** with no Want bands for rostered plants, **silent TTL expiry** under Manual Takeover (`pending_reassert` sticky but invisible), and — after honesty brain shipped — **Root gauges still lying** because Pi fleet binaries arrived as `1`/`0` while trust chips compared `=== "on"`.
 
 Honesty rule: **empty / dark / pending beats a confident lie.**
 
@@ -35,6 +35,9 @@ flowchart TB
     failover[hub_failover sticky pending_reassert] --> overrideBin[binary_sensor.dsc_brain_hub_override_active]
   end
   subgraph spa [SPA client]
+    fleet --> bus[useEntityBus fleetLiveState]
+    bus -->|on/off not 1/0| trust[readPotTrust isBinaryOn]
+    trust --> rootCards[Root SENSOR FAULT / PROBE DARK]
     api --> root[Root HOME ONLINE/DARK/FAULT]
     computed --> roster[Roster / Tune Need chips]
     lightLoop --> lightVM[lightViewModel]
@@ -136,11 +139,33 @@ No fake moisture band when catalog/stage omit `moisture_pct`. SPA Roster / Tune 
 | Overview Dash banners | “Pending re-assert — takeover still on…” |
 | HelpTip | Explains TTL vs takeover clear |
 
+## 5. Pi fleet binary bus → HA-shaped `on`/`off`
+
+**Bug (pre-`cc288d7`):** On Pi source, `useEntityBus().state()` used `fleetLiveNumber` and returned `String(1)` / `String(0)` for mapped binaries. `readPotTrust` compared with `=== "on"`, so Modbus offline and `sensor_fault` never matched — Root kept glowing held Got while probes were dark/fault.
+
+**Fix (verified):**
+
+| Layer | Behavior |
+|---|---|
+| `entityFleetMap.fleetLiveState` | Mapped binaries → `"on"` / `"off"` (never `"1"` / `"0"`); numerics stay `String(n)` |
+| `useEntityBus.state` | Prefers `fleetLiveState` over number stringify |
+| `potTrust.isBinaryOn` | Accepts `on` / `true` / `1` (defense in depth) |
+| Modbus known | Treats `""` / `unavailable` / `—` as unknown; known + not-on → **probe dark** |
+
+RootProbeCard: `readingOk` false when labels include `sensor fault` or `probe dark` → gauges `NaN` (no held theater). Chips render from `trust.labels`. Bundle **`index-CLqaVJXR.js`**. Evidence shot: `docs/qa-screenshots-2026-08-29/honesty-root-fault.png`.
+
+### Pitfalls
+
+- Do **not** route binaries through `fleetLiveNumber` → `String(n)` for trust / chip comparisons.
+- HA path already uses `on`/`off`; the bug is **Pi fleet path only**.
+- `fleetLiveNumber` still returns `0|1` for `num()` — correct for dials; wrong for state strings.
+
 ## Operator / developer checklist
 
 | Symptom | Check |
 |---|---|
 | Station shows home moisture while HOME DARK | Brain build pre-`6230383`, or SPA ignoring `home_trustworthy` |
+| Root shows live moisture with SENSOR FAULT / PROBE DARK absent | SPA pre-`cc288d7` / pre-`index-CLqaVJXR.js` — binary bus `1`/`0` vs `on` |
 | Light “NO SCHEDULE” with hub time set | Time OID not in controls; verify ingest + `_helpers_for_light_loop` |
 | Need always `—` with live EC/pH | Want bands missing for stage, or `reading_ok` false (fault/Modbus) |
 | No PENDING REASSERT after TTL under takeover | SPA bundle pre-honesty; sticky attr only on override entity |
@@ -152,3 +177,4 @@ No fake moisture band when catalog/stage omit `moisture_pct`. SPA Roster / Tune 
 - Mirror idle-home moisture when Modbus/fault disagree
 - Pre-emit light hours from grow_stage defaults in dash
 - Treat Twin / Sankey as control or Got SoT
+- Compare fleet binary state with `=== "on"` without normalizing `1`/`0`

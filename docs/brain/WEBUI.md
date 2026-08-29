@@ -17,17 +17,20 @@ Notion: [Local webserver UI](https://app.notion.com/p/3b52b4cda37081c19048e794d4
 
 > **HA wireframe (N-086):** Home Assistant `/dsc-hub-pro/catalog` is the interim research browser. Durable catalog browse calls brain APIs — reuse labels, not HA helper coupling ([`docs/HA-SCAFFOLD.md`](../HA-SCAFFOLD.md)).
 
-## Honesty surfaces (tip `6230383`)
+## Honesty surfaces (tip `6230383` + binary bus `cc288d7`)
 
 SPA is a **client** of brain honesty — see [`HONESTY.md`](HONESTY.md).
 
 | Chrome | Source |
 |---|---|
 | Root HOME ONLINE / DARK / FAULT | Station API `home_trustworthy` / Modbus / fault — withhold gauges when untrustworthy |
+| Root SENSOR FAULT / PROBE DARK | `readPotTrust` via `useEntityBus` — **`fleetLiveState` maps Pi binaries to `on`/`off`** (not `1`/`0`); gauges blank when fault/dark |
 | Roster / Tune Need | `sensor.dsc_probe{N}_need_summary` + want min/max bands from computed |
 | Light schedule | `time.dsc_hub_lights_on_time` / clone (hub TimeState ingest) via `lightViewModel` |
 | PENDING REASSERT | `binary_sensor.dsc_brain_hub_override_active` attr `pending_reassert` — HubLinkLine + Dash banner |
 | Probe language | `probeLabel(n)` on Roster / Compose / Root / Tune |
+
+Bundle after binary fix: **`index-CLqaVJXR.js`**. Shot: `docs/qa-screenshots-2026-08-29/honesty-root-fault.png`.
 
 Bar 2 assign/move/detach lifecycle developer SoT: draft [#139](https://github.com/weddas/DSC-HUB/pull/139). SoftCal ≠ idle_home ≠ tent ≠ detach ≠ retire.
 

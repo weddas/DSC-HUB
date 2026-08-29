@@ -2,7 +2,7 @@
 
 | Doc | Topic |
 |---|---|
-| [HONESTY.md](HONESTY.md) | Dual-home stations, lights_on_time ingest, Want/Need emit, pending_reassert (tip `6230383`) |
+| [HONESTY.md](HONESTY.md) | Dual-home, lights_on_time, Want/Need, pending_reassert, Pi binary bus on/off (`6230383` + `cc288d7`) |
 | [DECISION_LOOP.md](DECISION_LOOP.md) | Want vs Got → proposal; hub clamps; computed Want/Need sensors |
 | [WEBUI.md](WEBUI.md) | Local webserver presentation / honesty chrome / routes |
 | [F010_APPLIANCE_BRIDGE.md](F010_APPLIANCE_BRIDGE.md) | Sonoffs without HA |
