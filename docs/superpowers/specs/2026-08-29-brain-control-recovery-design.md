@@ -3,7 +3,7 @@
 > Date: 2026-08-29  
 > Status: draft for user review (brainstorm locked; not yet implemented)  
 > Source chat: Professional UI redesign / control honesty  
-> Peers consulted: OpenGrowBox (room-loop), HAGR (VPD + crop-steering shape)
+> Peers consulted: OpenGrowBox (start), plus HAGR, HA-Irrigation-Strategy, Mycodo, GroLab, farmOS, Growlink/AROYA domain language, open-crop-steering (see §Peers)
 
 ## Problem
 
@@ -40,6 +40,29 @@ DSC is **two grow volumes on one HVAC skeleton**:
 - Light can still differ per tent (e.g. SF1000 on 2x4 Follow 4x8 photoperiod) while air remains shared.
 
 OGB is a **behavior bar** (UI matches the room loop), not a license to model DSC as N independent rooms.
+
+## §Peers — what other systems teach DSC (not clones)
+
+OGB was a **starting pointer**, not the only reference. Bar-1 design must steal patterns from several lines of work; none replace DSC’s two-tent shared-duct topology.
+
+| Project | What it is | Steal for DSC | Do **not** steal |
+|---------|------------|---------------|------------------|
+| **[OpenGrowBox](https://github.com/OpenGrow-Box/OpenGrowBox-HA)** | HA integration: label devices by role, hit T/RH/VPD/light/CO₂ targets per “room” | One control loop per grow volume; dashboard = that loop; offline-capable local brain story | Unlimited independent rooms / one HVAC per room (DSC shares ducting) |
+| **[HAGR](https://github.com/JakeTheRabbit/HAGR)** | Lived-in HA grow-room packages: VPD climate, ESPHome, dosing, **four-phase crop steering**, consolidated AppDaemon alerts | Package-shaped Want→act; day/night thresholds; **one severity-graded alert** instead of chip spam; leaf vs air VPD honesty | Assuming multi-zone HVAC isolation |
+| **[HA-Irrigation-Strategy](https://github.com/JakeTheRabbit/HA-Irrigation-Strategy)** | Autonomous P0→P1→P2→P3 crop-steering irrigation on VWC/EC; grow-day = photoperiod; per-zone **manual override** | Photoperiod-aligned “day”; dryback/VWC as first-class Root SoT (bar 2+/later irrigation); **manual override then rejoin plan** (matches hub takeover) | Full irrigation stack as bar-1 blocker if climate/light still lie |
+| **[Mycodo](https://github.com/kizniche/Mycodo)** | Pi environmental regulation: Inputs ↔ Outputs, PID, setpoint tracking over time, timers, notes on graphs | **Single regulation brain** on Pi; every UI widget bound to a real Input/Output/Function; changing setpoints over photoperiod/stage | Generic multi-room without shared-air coupling |
+| **[GroLab / Open Grow](https://opengrow.pt)** | Modular hardware: GroNode brain + Power/Tank/Soil modules; store & execute schedules locally | **Brain core + edge modules** (maps to DSC brain + hub/fleet); local schedule execution when link drops | Closed commercial module SKUs as product scope |
+| **[open-crop-steering](https://github.com/JakeTheRabbit)** (ecosystem, early) | Versioned immutable cultivation plans + AI runtime behind **hard guardrails** + audit | Later-bar AI: plans versioned, guardrailed, auditable — not free-form chat driving relays | AI in bar 1 |
+| **[farmOS](https://github.com/farmos/farmos)** | Open farm **records / planning**, not real-time HVAC | Roster/history/compliance-style records later; don’t confuse with control SoT | Using it as the climate controller |
+| **Growlink / AROYA domain** (commercial refs) | P0–P3 irrigation phases, dryback %, VWC/EC steering language | Shared vocabulary for Root honesty (dryback/rate already partial); generative vs vegetative cues | Cloud lock-in or cloning their UI |
+
+### Cross-cutting lessons for DSC bar 1
+
+1. **One SoT per loop** (Mycodo/OGB/HAGR) — Light hours ON/%/schedule must be one engine; Overview chips must be the same entities.  
+2. **Photoperiod defines the grow-day** (Irrigation-Strategy/Growlink) — Follow 4x8 is inheritance of that day, not a sticker.  
+3. **Manual override is first-class** (Irrigation-Strategy) — hub takeover + brain re-plan, not silent fight.  
+4. **Consolidated trust** (HAGR grow_monitor) — prefer one honest alert story over contradictory status pills.  
+5. **Topology beats templates** — peers with N rooms still don’t excuse modeling 4x8+2x4 as two HVAC islands when ducting is shared.
 
 ## §1 — Control ownership (SoT)
 
@@ -109,7 +132,7 @@ OGB is a **behavior bar** (UI matches the room loop), not a license to model DSC
 2. Overview RUNNING / fans / MAT / SF1000 agree with Climate/Light for the same tick.  
 3. Hub link drop → operator can force devices; reconnect → brain logs override and re-asserts; SPA shows that story.  
 4. Spot-check against HA-era package behavior notes (reference docs in repo / archived packages) for climate demand + photoperiod.  
-5. OGB bar: “would a grower trust this page against the room?” — yes for Light, Climate, Overview.
+5. Peer bar: “would a grower trust this page against the room?” (OGB/Mycodo/HAGR honesty) — yes for Light, Climate, Overview; shared-duct coupling visible, not two solo rooms.
 
 ### Bar 2 done when
 
@@ -117,10 +140,11 @@ OGB is a **behavior bar** (UI matches the room loop), not a license to model DSC
 
 ### Non-goals (this design)
 
-- Replacing brain with OGB product  
+- Replacing brain with OGB, Mycodo, GroLab, or HAGR as the product  
 - Modeling 4x8 and 2x4 as **independent** HVAC rooms (they share ducting / exhaust / intake)  
 - Dual-running HA + brain as equal controllers  
-- More SPA polish passes before bar 1
+- More SPA polish passes before bar 1  
+- Shipping full P0–P3 irrigation stack before climate/light parity (Irrigation-Strategy is a **later** Root depth reference)
 
 ## Implementation sequencing (high level)
 
