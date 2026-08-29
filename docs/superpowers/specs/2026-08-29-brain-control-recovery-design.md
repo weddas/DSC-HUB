@@ -3,7 +3,8 @@
 > Date: 2026-08-29  
 > Status: draft for user review (brainstorm locked; not yet implemented)  
 > Source chat: Professional UI redesign / control honesty  
-> Peers consulted: OpenGrowBox (room-loop), HAGR (VPD + crop-steering shape)
+> Peers consulted: OpenGrowBox (room-loop), HAGR (VPD + crop-steering shape)  
+> Developer index (current code vs this design): [docs/brain/CONTROL-RECOVERY.md](../../brain/CONTROL-RECOVERY.md)
 
 ## Problem
 
