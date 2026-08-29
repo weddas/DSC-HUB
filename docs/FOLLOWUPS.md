@@ -16,6 +16,7 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 |------|--------|-------|
 | Dual-home station thereabouts | **done (code)** | Withhold home moisture when Modbus/fault; SPA HOME ONLINE/DARK/FAULT. Tests `test_probe_station_honesty.py`. |
 | Root gauges on probe dark/fault | **done (code)** | No held theater; `blockNeedAct` includes Modbus offline. |
+| Pi binary bus `1`/`0` vs `on`/`off` | **done** | `fleetLiveState` + potTrust accept both — Root shows SENSOR FAULT / PROBE DARK + no-data gauges. Bundle `index-CLqaVJXR.js`. |
 | `lights_on_time` hub ingest | **done (code)** | `HUB_TIME_OID_TO_ENTITY` + TimeState ingest. Tests `test_hub_time_ingest.py`. |
 | SPA `pending_reassert` chip | **done (code)** | HubLinkLine + Dash banner. |
 | Need — / Want bands | **done (code)** | Brain emits want moisture/ec/ph + `need_summary`; no fake 0–45 moisture band. |

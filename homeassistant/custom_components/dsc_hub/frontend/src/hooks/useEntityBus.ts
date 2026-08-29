@@ -6,7 +6,7 @@ import { useMemo } from "react";
 import { useHass } from "./useHass";
 import { useFleet, useFleetSource } from "./useFleet";
 import { fleetControlAttributes, fleetControlAvailable, fleetControlState } from "../lib/fleetControlMap";
-import { fleetEntityAvailable, fleetLiveNumber } from "../lib/entityFleetMap";
+import { fleetEntityAvailable, fleetLiveNumber, fleetLiveState } from "../lib/entityFleetMap";
 import { fleetToHassCompat } from "../lib/fleetFromHass";
 import type { HassEntity } from "../vite-env";
 
@@ -47,8 +47,9 @@ export function useEntityBus() {
     const state = (entityId: string, fallback = "—") => {
       const ctrl = fleetControlState(entityId, fleet);
       if (ctrl != null) return ctrl;
-      const live = fleetLiveNumber(entityId, fleet);
-      if (live != null && Number.isFinite(live)) return String(live);
+      // Binaries must be on/off — String(1)/String(0) breaks trust chips (=== "on").
+      const liveState = fleetLiveState(entityId, fleet);
+      if (liveState != null) return liveState;
       return hass.state(entityId, fallback);
     };
 

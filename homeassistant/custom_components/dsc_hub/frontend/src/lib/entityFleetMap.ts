@@ -118,6 +118,16 @@ export function fleetLiveNumber(entityId: string, fleet: FleetSnapshot): number 
   return Number.isFinite(n) ? n : null;
 }
 
+/** HA-shaped state string for fleet-mapped entities (binaries → on/off, not 1/0). */
+export function fleetLiveState(entityId: string, fleet: FleetSnapshot): string | null {
+  const ref = ENTITY_FLEET_MAP[entityId];
+  if (!ref) return null;
+  const live = fleetLiveNumber(entityId, fleet);
+  if (live == null || !Number.isFinite(live)) return null;
+  if (ref.binary) return live > 0 ? "on" : "off";
+  return String(live);
+}
+
 /** True when the mapped metric is present (finite / binary), not merely seat online. */
 export function fleetMetricPresent(entityId: string, fleet: FleetSnapshot): boolean {
   const ref = ENTITY_FLEET_MAP[entityId];
