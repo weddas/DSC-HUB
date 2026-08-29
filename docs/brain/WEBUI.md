@@ -17,7 +17,7 @@ Notion: [Local webserver UI](https://app.notion.com/p/3b52b4cda37081c19048e794d4
 
 > **HA wireframe (N-086):** Home Assistant `/dsc-hub-pro/catalog` is the interim research browser. Durable catalog browse calls brain APIs — reuse labels, not HA helper coupling ([`docs/HA-SCAFFOLD.md`](../HA-SCAFFOLD.md)).
 
-## Honesty surfaces (tip `6230383` + binary bus `cc288d7`)
+## Honesty surfaces (tip `6230383` → `33e702e`)
 
 SPA is a **client** of brain honesty — see [`HONESTY.md`](HONESTY.md).
 
@@ -25,12 +25,15 @@ SPA is a **client** of brain honesty — see [`HONESTY.md`](HONESTY.md).
 |---|---|
 | Root HOME ONLINE / DARK / FAULT | Station API `home_trustworthy` / Modbus / fault — withhold gauges when untrustworthy |
 | Root SENSOR FAULT / PROBE DARK | `readPotTrust` via `useEntityBus` — **`fleetLiveState` maps Pi binaries to `on`/`off`** (not `1`/`0`); gauges blank when fault/dark |
+| Root NPK / Rate | Same `readingOk` gate as gauges — withhold `—` on fault/dark (`33e702e`); when OK, NPK **from EC** |
+| Root in-service subtitle | `inServiceCountWithFleet` (fleet inventory SoT, not HA-only) |
+| Root / Tune history | `potGotEntity` → `GET /history`; brain maps `got_moisture`/`got_ec`/`got_ph` to same fleet_history metrics as `soil_*` |
 | Roster / Tune Need | `sensor.dsc_probe{N}_need_summary` + want min/max bands from computed |
 | Light schedule | `time.dsc_hub_lights_on_time` / clone (hub TimeState ingest) via `lightViewModel` |
 | PENDING REASSERT | `binary_sensor.dsc_brain_hub_override_active` attr `pending_reassert` — HubLinkLine + Dash banner |
 | Probe language | `probeLabel(n)` on Roster / Compose / Root / Tune |
 
-Bundle after binary fix: **`index-CLqaVJXR.js`**. Shot: `docs/qa-screenshots-2026-08-29/honesty-root-fault.png`.
+Bundle after NPK/Rate + history: **`index-wtobVnOJ.js`**. Shots: `honesty-root-fault.png`, `honesty-npk-rate-withheld.png`.
 
 Bar 2 assign/move/detach lifecycle developer SoT: draft [#139](https://github.com/weddas/DSC-HUB/pull/139). SoftCal ≠ idle_home ≠ tent ≠ detach ≠ retire.
 
@@ -39,12 +42,14 @@ Bar 2 assign/move/detach lifecycle developer SoT: draft [#139](https://github.co
 Reads/writes go through brain HTTP (`brain/dsc_brain/api.py`), including:
 
 - `GET /health`, `GET /fleet`, `GET /fleet/computed`, `GET /ws/fleet`
+- `GET /history?entity_id=` — `history_ops.ENTITY_METRIC_MAP` (include `got_*` aliases)
 - Probe stations / soil tests (thereabouts + honesty flags)
 - Roster: `PATCH /roster/pots/{n}`, `POST /roster/detach/{n}`, `POST /roster/assign`, `POST /roster/move`
 - `POST /control/service` (scripts: `dsc_plant_detach` / `_assign_slot` / `_move` / `_retire`)
 - Catalogs, Want, decision, settings, SoftCal
 
-Do not invent a third assignment, Want, or schedule story in the browser.
+Do not invent a third assignment, Want, schedule, or NPK story in the browser.
+
 
 ## Non-goals
 

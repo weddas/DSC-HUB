@@ -2,7 +2,7 @@
 
 **In one line:** Never show theater readings, schedules, or Need text the brain cannot defend from live telemetry.
 
-**Status:** Shipped tip `6230383` (dual-home + schedule + Want/Need) · SPA binary bus tip `cc288d7` / evidence `2bb0643` (`index-CLqaVJXR.js`). Tests: `brain/tests/test_probe_station_honesty.py`, `brain/tests/test_hub_time_ingest.py`. Shot: `docs/qa-screenshots-2026-08-29/honesty-root-fault.png`.
+**Status:** Shipped tip `6230383` (dual-home + schedule + Want/Need) · SPA binary bus `cc288d7` / evidence `2bb0643` · Root NPK/Rate + `got_*` history tip `33e702e` (`index-wtobVnOJ.js`). Tests: `brain/tests/test_probe_station_honesty.py`, `brain/tests/test_hub_time_ingest.py`. Shots: `honesty-root-fault.png`, `honesty-npk-rate-withheld.png`.
 
 Notion: [Pi offline brain](https://app.notion.com/p/3b52b4cda370818e8b66f671689f7a57) · [Local webserver UI](https://app.notion.com/p/3b52b4cda37081c19048e794d4bdf819) · [Engineering Ops](https://app.notion.com/p/3b02b4cda37081fda872fe551e60c116)
 
@@ -10,7 +10,7 @@ Related: [DECISION_LOOP.md](DECISION_LOOP.md) · [WEBUI.md](WEBUI.md) · FOLLOWU
 
 ## Why
 
-Operators were seeing **held moisture** on a probe station whose idle home was Modbus-dark, **NO SCHEDULE** / wrong photoperiod while hub `lights_on_time` existed on the wire, **Need —** with no Want bands for rostered plants, **silent TTL expiry** under Manual Takeover (`pending_reassert` sticky but invisible), and — after honesty brain shipped — **Root gauges still lying** because Pi fleet binaries arrived as `1`/`0` while trust chips compared `=== "on"`.
+Operators were seeing **held moisture** on a probe station whose idle home was Modbus-dark, **NO SCHEDULE** / wrong photoperiod while hub `lights_on_time` existed on the wire, **Need —** with no Want bands for rostered plants, **silent TTL expiry** under Manual Takeover (`pending_reassert` sticky but invisible), **Root gauges still lying** because Pi fleet binaries arrived as `1`/`0` while trust chips compared `=== "on"`, then — after gauges blanked — **NPK / Rate chips still showing held numbers** while SENSOR FAULT / PROBE DARK, plus **Root history charts collapsing** because SPA prefers `got_*` entities that `/history` did not map.
 
 Honesty rule: **empty / dark / pending beats a confident lie.**
 
@@ -30,18 +30,23 @@ flowchart TB
     helpers --> lightLoop
     fleet --> stations[list_probe_stations]
     fleet --> cold[_build_cold_computed_states]
+    fleet --> histMap[history_ops ENTITY_METRIC_MAP]
     stations -->|thereabouts only if trustworthy| api[/fleet stations API/]
     cold -->|want_* + need_summary| computed[/fleet/computed/]
+    histMap -->|got_* and soil_* same metrics| history[/history/]
     failover[hub_failover sticky pending_reassert] --> overrideBin[binary_sensor.dsc_brain_hub_override_active]
   end
   subgraph spa [SPA client]
     fleet --> bus[useEntityBus fleetLiveState]
     bus -->|on/off not 1/0| trust[readPotTrust isBinaryOn]
-    trust --> rootCards[Root SENSOR FAULT / PROBE DARK]
+    trust --> readingOk[RootProbeCard readingOk]
+    readingOk --> rootCards[Gauges + NPK + Rate blank on fault/dark]
     api --> root[Root HOME ONLINE/DARK/FAULT]
+    potGot[potGotEntity prefers got_*] --> history
     computed --> roster[Roster / Tune Need chips]
     lightLoop --> lightVM[lightViewModel]
     overrideBin --> hubLink[PENDING REASSERT chip + Dash banner]
+    fleetInv[inServiceCountWithFleet] --> rootSub[Root in-service subtitle]
   end
 ```
 
@@ -152,7 +157,7 @@ No fake moisture band when catalog/stage omit `moisture_pct`. SPA Roster / Tune 
 | `potTrust.isBinaryOn` | Accepts `on` / `true` / `1` (defense in depth) |
 | Modbus known | Treats `""` / `unavailable` / `—` as unknown; known + not-on → **probe dark** |
 
-RootProbeCard: `readingOk` false when labels include `sensor fault` or `probe dark` → gauges `NaN` (no held theater). Chips render from `trust.labels`. Bundle **`index-CLqaVJXR.js`**. Evidence shot: `docs/qa-screenshots-2026-08-29/honesty-root-fault.png`.
+RootProbeCard: `readingOk` false when labels include `sensor fault` or `probe dark` → gauges `NaN` (no held theater). Chips render from `trust.labels`. Bundle after binary fix: **`index-CLqaVJXR.js`**. Evidence shot: `docs/qa-screenshots-2026-08-29/honesty-root-fault.png`.
 
 ### Pitfalls
 
@@ -160,12 +165,60 @@ RootProbeCard: `readingOk` false when labels include `sensor fault` or `probe da
 - HA path already uses `on`/`off`; the bug is **Pi fleet path only**.
 - `fleetLiveNumber` still returns `0|1` for `num()` — correct for dials; wrong for state strings.
 
+## 6. Root NPK / Rate gated on `readingOk` (tip `33e702e`)
+
+**Bug:** After §5, moisture/EC/pH gauges blanked on fault/dark, but N/P/K chips still rendered held EC-derived values (often `0`) and Rate still opened history — theater next to SENSOR FAULT / PROBE DARK.
+
+**Fix (verified in `RootPage.tsx`):**
+
+| Surface | Behavior when `readingOk === false` |
+|---|---|
+| N / P / K chips | `NaN` → `fmtChip` shows `—`; stale `*` suppressed |
+| Rate | Static **Rate —** (`title`: probe dark or fault — rate withheld); no history open |
+| Gauges (prior) | Already `NaN` when not `readingOk` |
+
+`readingOk` = trust labels do **not** include `sensor fault` or `probe dark` (same gate as gauges). When healthy: NPK remain **from EC** producers (not invented chem); Rate uses moisture-rate entity when finite.
+
+### In-service subtitle
+
+Root header count uses `inServiceCountWithFleet(state, fleet, KIT_PROBE_NUMBERS)` — prefers fleet inventory SoT over HA-only `inServiceCount`. Matches kit honesty / OOS lists (`dsc-kit-sot`).
+
+Bundle **`index-wtobVnOJ.js`**. Shot: `docs/qa-screenshots-2026-08-29/honesty-npk-rate-withheld.png`.
+
+### Pitfalls
+
+- Do **not** show finite held NPK when fault/dark just because the producer entity exists — withhold with gauges.
+- Do **not** invent N/P/K numbers; withhold or show EC-derived held only when `readingOk`.
+- Twin / other surfaces may still use HA-only `isPotInService` — Root subtitle is WithFleet.
+
+## 7. `got_*` history aliases (`history_ops.ENTITY_METRIC_MAP`)
+
+**Bug:** SPA `potGotEntity(pot, kind)` prefers live `sensor.dsc_probe{N}_got_{moisture|ec|ph}` over `soil_*`. `/history` only mapped `soil_*` → fleet_history metrics, so series were empty/thin and X-axis labels collapsed.
+
+**Fix (verified in `brain/dsc_brain/history_ops.py`):**
+
+| SPA entity (preferred when live) | Same fleet_history metric |
+|---|---|
+| `sensor.dsc_probe{N}_got_moisture` | `moisture_pct` (with `soil_moisture`) |
+| `sensor.dsc_probe{N}_got_ec` | `ec_us` (with `soil_ec` / conductivity) |
+| `sensor.dsc_probe{N}_got_ph` | `ph` (with `soil_ph`) |
+
+Aliases are ingest/query only — no second history store. Tune / Root charts that call `useEntitySeries(potGotEntity(...))` hit the same metrics.
+
+### Pitfalls
+
+- Adding a new Got entity id without an `ENTITY_METRIC_MAP` alias recreates empty charts.
+- Prefer extending the map over teaching SPA to always request `soil_*` for history.
+
 ## Operator / developer checklist
 
 | Symptom | Check |
 |---|---|
 | Station shows home moisture while HOME DARK | Brain build pre-`6230383`, or SPA ignoring `home_trustworthy` |
 | Root shows live moisture with SENSOR FAULT / PROBE DARK absent | SPA pre-`cc288d7` / pre-`index-CLqaVJXR.js` — binary bus `1`/`0` vs `on` |
+| Root gauges blank but NPK/Rate still numeric on fault | SPA pre-`33e702e` / pre-`index-wtobVnOJ.js` — chips not gated on `readingOk` |
+| Root / Tune moisture history empty or X-axis collapsed | `/history` missing `got_*` aliases — need tip `33e702e` `history_ops` |
+| Root in-service count disagrees with fleet inventory | Using HA-only `inServiceCount` — prefer `inServiceCountWithFleet` |
 | Light “NO SCHEDULE” with hub time set | Time OID not in controls; verify ingest + `_helpers_for_light_loop` |
 | Need always `—` with live EC/pH | Want bands missing for stage, or `reading_ok` false (fault/Modbus) |
 | No PENDING REASSERT after TTL under takeover | SPA bundle pre-honesty; sticky attr only on override entity |
@@ -174,7 +227,9 @@ RootProbeCard: `readingOk` false when labels include `sensor fault` or `probe da
 ## Never
 
 - Invent height / chem / PPFD / NPK for honesty chrome
+- Show held NPK / Rate when SENSOR FAULT or PROBE DARK
 - Mirror idle-home moisture when Modbus/fault disagree
 - Pre-emit light hours from grow_stage defaults in dash
 - Treat Twin / Sankey as control or Got SoT
 - Compare fleet binary state with `=== "on"` without normalizing `1`/`0`
+- Map SPA history to `got_*` without an `ENTITY_METRIC_MAP` alias

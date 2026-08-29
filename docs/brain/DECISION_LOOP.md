@@ -55,7 +55,7 @@ Cold computed (`computed_ops._build_cold_computed_states`) publishes HA-parity s
 
 Need text is empty (`—`) when bands missing or Got unreadable — never a fake moisture band. Schedule helpers for photoperiod come from hub TimeState ingest (`time.dsc_hub_lights_on_time`) via `_helpers_for_light_loop` → `light_loop`.
 
-Full honesty map (dual-home stations, pending_reassert, dash dual-emit cleanup): [`HONESTY.md`](HONESTY.md).
+Full honesty map (dual-home stations, pending_reassert, dash dual-emit cleanup, Root NPK/Rate `readingOk`, `got_*` history aliases): [`HONESTY.md`](HONESTY.md).
 
 ## Implementation
 
