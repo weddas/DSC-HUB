@@ -10,6 +10,19 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 
 ---
 
+## 2026-08-29 — Encode + NPK producers + commit
+
+| Item | Status | Notes |
+|------|--------|-------|
+| Rules / skill encodes | **done** | `.cursor/rules/dsc-kit-sot.mdc`, `dsc-viz-honesty.mdc`, `.cursor/skills/dsc-spa-pi-verify` (gitignore allowlist) |
+| Fleet NPK producers | **done (code)** | Map keys → `nitrogen\|phosphorus\|potassium`; `fleetToHassCompat` emits; computed extras merge into fleet enrich |
+| Dryback / moisture_rate | **done (code)** | Brain `emit_sensor_trust` produces both; needs Pi brain container pick-up |
+| Device inventory pot3/4 | **done** | Kit probes vs Advanced restore (Probe 3–4); Device column labels |
+| Commit + push | **done** | `07bf25f` on `origin/master` |
+| Pi hot-patch after NPK | **blocked** | SSH/HTTP to `.48` timed out after restart attempt — redeploy SPA `index-CNKKWCfT.js` + `sensor_trust.py` when Pi is back |
+
+---
+
 ## 2026-08-29 — Residual honesty / roster refresh / improve-react
 
 > Bundle on Pi: `index-0DSfzkB0.js` (post chrome polish) after create/undo verified on `index-jKB_lWhX.js` @ `?v=residuals-jKB`. Shots: `residuals-01-root.png`, `residuals-02-roster-after-create.png`, `residuals-03-roster-after-delete.png`.
