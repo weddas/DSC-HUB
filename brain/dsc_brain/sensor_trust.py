@@ -219,7 +219,9 @@ def emit_sensor_trust(
             moisture_f = float(moisture) if moisture is not None else None
         except (TypeError, ValueError):
             moisture_f = None
-        rate = _moisture_rate_per_hour(n) if moisture_f is not None and not probe_station else None
+        # Stations still get rate/dryback when moisture is live — Root should not say "no channel".
+        # Stuck/untrusted stay plant-only so idle park flats do not trip trust.
+        rate = _moisture_rate_per_hour(n) if moisture_f is not None else None
         if rate is not None:
             set_entity(
                 states,
@@ -230,7 +232,7 @@ def emit_sensor_trust(
             )
             if pot is not None:
                 pot.values["moisture_rate"] = round(rate, 4)
-        dryback = _dryback_pct(n, moisture_f, rate) if moisture_f is not None and not probe_station else None
+        dryback = _dryback_pct(n, moisture_f, rate) if moisture_f is not None else None
         if dryback is not None:
             set_entity(
                 states,
@@ -242,7 +244,8 @@ def emit_sensor_trust(
             if pot is not None:
                 pot.values["dryback_pct"] = dryback
         stuck_raw = (
-            rate is not None
+            not probe_station
+            and rate is not None
             and abs(rate) < _STUCK_RATE_MAX
             and moisture_f is not None
         )

@@ -211,7 +211,12 @@ export function LiveRootPage() {
 
         {pots.map(({ n, oos }) => (
           <div key={n} className="dsc-col-12">
-            <RootProbeCard pot={n} oos={oos} onOpen={() => (oos ? undefined : openPot(n))} />
+            <RootProbeCard
+              pot={n}
+              oos={oos}
+              station={probeStations.some((st) => st.seat_id === `pot${n}`)}
+              onOpen={() => (oos ? undefined : openPot(n))}
+            />
           </div>
         ))}
       </div>
@@ -249,7 +254,17 @@ export function LiveRootPage() {
   );
 }
 
-function RootProbeCard({ pot, oos, onOpen }: { pot: number; oos: boolean; onOpen: () => void }) {
+function RootProbeCard({
+  pot,
+  oos,
+  station,
+  onOpen,
+}: {
+  pot: number;
+  oos: boolean;
+  station: boolean;
+  onOpen: (() => void) | undefined;
+}) {
   const { state, entity } = useEntityBus();
   const inspector = useInspector();
   const seat = buildPlantSeat(pot, { state, entity });
@@ -278,6 +293,21 @@ function RootProbeCard({ pot, oos, onOpen }: { pot: number; oos: boolean; onOpen
   const dryBand = { min: 0, max: 45 };
   const showDryback = Number.isFinite(dry.value);
   const fmtChip = (v: number, digits = 0) => (Number.isFinite(v) ? v.toFixed(digits) : "—");
+  const unassigned = !oos && (seat.plantName === "—" || seat.plantName.trim() === "");
+  const headName = oos ? "Out of service" : unassigned ? (station ? "Probe station" : "Unassigned") : seat.plantName;
+  const needLabel = oos
+    ? "No data"
+    : unassigned
+      ? "No targets"
+      : trust.blockNeedAct
+        ? `${seat.need} (no act)`
+        : `Need ${seat.need}`;
+  const needTone =
+    oos || unassigned || seat.need === "ok" || seat.need === "—"
+      ? "muted"
+      : seat.need
+        ? "warn"
+        : "ok";
 
   const open = (id: string, label: string, unit?: string) => (e: { stopPropagation: () => void }) => {
     e.stopPropagation();
@@ -289,13 +319,10 @@ function RootProbeCard({ pot, oos, onOpen }: { pot: number; oos: boolean; onOpen
       <div className="dsc-pot-card-head" onClick={onOpen} role="presentation">
         <VesselGlyph spec={readPotVessel(pot, state, entity)} size={28} />
         <div>
-          <strong>{oos ? "Out of service" : seat.plantName}</strong>
+          <strong>{headName}</strong>
           <div className="dsc-chip-row">
             <StatusChip label={tentLabel(seat.tent)} tone={oos || seat.tent === "unassigned" ? "muted" : "ok"} />
-            <StatusChip
-              label={oos ? "No data" : trust.blockNeedAct ? `${seat.need} (no act)` : `Need ${seat.need}`}
-              tone={oos ? "muted" : seat.need && seat.need !== "ok" && seat.need !== "—" ? "warn" : "ok"}
-            />
+            <StatusChip label={needLabel} tone={needTone} />
             {trust.labels.map((l) => (
               <StatusChip key={l} label={l} tone="warn" />
             ))}
@@ -400,8 +427,11 @@ function RootProbeCard({ pot, oos, onOpen }: { pot: number; oos: boolean; onOpen
               <span className="dsc-npk-hint">from EC</span>
             </button>
             {!Number.isFinite(rate.value) ? (
-              <span className="dsc-npk-hit dsc-npk-hit--static" title="No moisture-rate entity on this bus">
-                Rate · no channel
+              <span
+                className="dsc-npk-hit dsc-npk-hit--static"
+                title={station ? "Station moisture history not yet long enough for rate" : "No moisture-rate entity on this bus"}
+              >
+                {station ? "Rate · waiting" : "Rate · no channel"}
               </span>
             ) : (
               <button type="button" className="dsc-npk-hit" onClick={open(rateId, `${probeLabel(pot)} moisture rate`)}>
@@ -410,8 +440,11 @@ function RootProbeCard({ pot, oos, onOpen }: { pot: number; oos: boolean; onOpen
               </button>
             )}
             {!showDryback ? (
-              <span className="dsc-npk-hit dsc-npk-hit--static" title="No dryback entity on this bus">
-                Dryback · no channel
+              <span
+                className="dsc-npk-hit dsc-npk-hit--static"
+                title={station ? "Station dryback waits on moisture history" : "No dryback entity on this bus"}
+              >
+                {station ? "Dryback · waiting" : "Dryback · no channel"}
               </span>
             ) : null}
           </div>

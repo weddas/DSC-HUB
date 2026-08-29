@@ -8,13 +8,13 @@ import time
 from typing import Any
 from zoneinfo import ZoneInfo
 
-from .compose_ops import _strain_is_auto
+from .compose_ops import _strain_is_auto, update_pot_recipe
 from .compose_store import all_helpers, get_helper, get_roster_slots
 from .device_calibration import get_calibration
 from .global_modifiers import scale_fan_demand_pct, scale_light_brightness_pct
 from .runtime_history import HistoryMemo, RuntimeMemo, midnight_ts
 from .settings import list_roster
-from .stage_model import expected_stage, tent_id
+from .stage_model import expected_stage, stage_rank, tent_id
 from .want import resolve_want
 from .dash_computed import emit_dash_entities
 
@@ -512,8 +512,18 @@ def _build_cold_computed_states(
                 days = (datetime.date.today() - sprout_dt).days
                 derived = expected_stage(max(0, days), auto=_strain_is_auto(strain_id))
                 if derived and derived != "unknown":
-                    growth_stage = recipe.get("growth_stage") or derived
                     _set_entity(states, f"sensor.dsc_probe{pot_n}_expected_stage", derived)
+                    recipe_stage = str(recipe.get("growth_stage") or "").strip()
+                    # Calendar advances select when ahead; keep operator override only if later than age model.
+                    if not recipe_stage or stage_rank(derived) > stage_rank(recipe_stage):
+                        growth_stage = derived
+                        if recipe_stage != derived:
+                            try:
+                                update_pot_recipe(pot_n, {"growth_stage": derived})
+                            except Exception:
+                                pass
+                    else:
+                        growth_stage = recipe_stage
                 _set_entity(states, f"sensor.dsc_probe{pot_n}_days_since_sprout", max(0, days))
             except ValueError:
                 pass

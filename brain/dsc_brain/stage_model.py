@@ -72,6 +72,25 @@ def stage_family(stage: str) -> str:
     return "veg"
 
 
+# Ordered for age-model advance (must match select.dsc_probeN_growth_stage options).
+STAGE_RANK: dict[str, int] = {
+    "Germination": 0,
+    "Seedling": 1,
+    "Early Vegetative": 2,
+    "Vegetative": 3,
+    "Late (Push) Vegetative": 4,
+    "Early Flowering": 5,
+    "Flowering": 6,
+    "Late Flowering": 7,
+    "Final 48-72h Flowering": 8,
+}
+
+
+def stage_rank(stage: str) -> int:
+    """Rank for calendar advance; unknown labels sort as -1."""
+    return STAGE_RANK.get((stage or "").strip(), -1)
+
+
 # Hub 2x4 Climate Mode by stage family (policy taxonomy — not Mother/Clones stamps).
 CLONE_MODE_BY_FAMILY: dict[str, str] = {
     "seedling": "Follow Plants",

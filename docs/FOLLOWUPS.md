@@ -19,7 +19,30 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 | Dryback / moisture_rate | **done (code)** | Brain `emit_sensor_trust` produces both; needs Pi brain container pick-up |
 | Device inventory pot3/4 | **done** | Kit probes vs Advanced restore (Probe 3–4); Device column labels |
 | Commit + push | **done** | `07bf25f` on `origin/master` |
-| Pi hot-patch after NPK | **blocked** | SSH/HTTP to `.48` timed out after restart attempt — redeploy SPA `index-CNKKWCfT.js` + `sensor_trust.py` when Pi is back |
+| Pi hot-patch after NPK | **done** | Redeployed 2026-08-29 ~13:42 — bundle `index-CNKKWCfT.js`; pot1 dryback/rate + N/K on fleet; health OK |
+
+## 2026-08-29 — Root trust / station rate (post-screenshot)
+
+| Item | Status | Notes |
+|------|--------|-------|
+| False PEER DIVERGENCE | **done** | `readPotTrust` now uses `binary_sensor.dsc_peer_mad_alert`, not always-on summary string |
+| Probe2 Rate/Dryback no channel | **done** | Stations emit rate/dryback; stuck still plant-only; Root unassigned chrome + waiting copy |
+| Pi bundle | **done** | `index-DU_rSJ3b.js` + sensor_trust hot-patch; pot2 dryback/rate live |
+
+Next open (screenshot/FOLLOWUPS): stage SoT Early vs Expected Late; sensor_fault/modbus offline honesty while moisture live; Roster Probe language leftovers.
+
+## 2026-08-29 — Root continue (peer / station / stage / fault)
+
+| Item | Status | Notes |
+|------|--------|-------|
+| Peer divergence false chip | **done** | mad_alert binary only |
+| Station rate/dryback | **done** | emit for stations; stuck plant-only; Root waiting copy |
+| Unassigned Root chrome | **done** | Probe station / No targets |
+| Stage SoT Early vs Late | **done** | calendar advances `growth_stage` when ahead of recipe; pot1 → Late Flowering |
+| sensor_fault / probe dark chips | **done** | potTrust labels + blockNeedAct on fault |
+| Pi | **done** | `index-CrVRU9Qb.js` |
+
+Still open: Roster/Compose Probe language leftovers; nickname ignored; catalog quotes.
 
 ---
 
