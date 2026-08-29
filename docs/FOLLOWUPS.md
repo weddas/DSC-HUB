@@ -10,6 +10,14 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 
 ---
 
+## 2026-08-29 — Honesty docs (automation)
+
+| Item | Status | Notes |
+|------|--------|-------|
+| Developer SoT `docs/brain/HONESTY.md` | **done (docs)** | Tip `6230383` + binary bus `cc288d7` — dual-home, TimeState ingest, Want/Need, pending_reassert, `fleetLiveState` on/off. |
+| WEBUI / DECISION_LOOP / brain README / DSC-BRAIN | **done (docs)** | Cross-links + SPA honesty surfaces + binary bus pitfall. |
+| Notion tip blurbs | **done (docs)** | Engineering Ops · Pi offline brain · Local webserver UI (tip `2bb0643`). |
+
 ## 2026-08-29 — Honesty followups (dual-home + schedule + Need)
 
 | Item | Status | Notes |
