@@ -47,4 +47,6 @@ T0 inventory (this doc) → T1 `plant_probe` → T2 API wire → T3 SPA → T4 R
 
 ## Post-implementation note (same day)
 
-Landed on `feat/brain-control-recovery-bar2`: `plant_probe` write path, detach≠retire, move, SPA actions, compose `assigned_plant_id` sync, Root stations refresh on `tick`. Explore inventory still correct that **Pi verify** and dual-home soak are open; Aug-28 FOLLOWUPS “unassign done” remains dock/role only.
+Landed on `master` tip `fe55e4e`: `plant_probe` write path, detach≠retire, move, SPA actions, compose `assigned_plant_id` sync, Root stations refresh on `tick`. **Pi verify closed** (`.audit/bar2-plant-probe.tsv` · shots `bar2-*.png`). Dual-home soak remains **next-plan**. Aug-28 FOLLOWUPS “unassign done” remains dock/role only.
+
+Developer SoT: [`../../brain/PLANT-PROBE-LIFECYCLE.md`](../../brain/PLANT-PROBE-LIFECYCLE.md).
