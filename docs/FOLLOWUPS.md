@@ -20,6 +20,7 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 | SPA Roster + seat Detach/Assign/Move | **done (code)** | `GrowPages`, `PlantSeatPanel`, `fleetApi`; Delete stays retire. Bundle `index-CEeqi1BT.js` (Root tick fix). |
 | Root stations live refresh | **done (code)** | Was `soilWizardOpen`-only (explore inventory); now refreshes on entity `tick` too. |
 | Pi hot-patch + SPA verify | **done** | Bundle `index-CEeqi1BT.js`. API smoke assign/detach/reassign/retire on pot2; move+Amnesia detach/restore OK. Shots: `docs/qa-screenshots-2026-08-29/bar2-roster.png`, `bar2-root.png`. |
+| Developer docs catch-up | **done (docs)** | [`docs/brain/PLANT-PROBE-LIFECYCLE.md`](brain/PLANT-PROBE-LIFECYCLE.md) + WEBUI/README index; Notion tip `fe55e4e`. |
 | Dual-home station lie (pot2→idle_home pot1) | **next-plan** | Inventory highest-risk unknown; not Bar 2 ship gate if detach SoT works. |
 | Dedicated plant UUID SoT | **deferred** | Transitional `slot:N`; climate-mode plant-id keying later. |
 
