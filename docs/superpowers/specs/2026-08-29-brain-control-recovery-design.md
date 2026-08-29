@@ -1,7 +1,7 @@
 # DSC-HUB brain control recovery — design
 
 > Date: 2026-08-29  
-> Status: draft for user review (brainstorm locked; not yet implemented)  
+> Status: **approved** 2026-08-29 (user) — implementation plan next  
 > Source chat: Professional UI redesign / control honesty  
 > Peers consulted: OpenGrowBox (start), plus HAGR, HA-Irrigation-Strategy, Mycodo, GroLab, farmOS, Growlink/AROYA domain language, open-crop-steering (see §Peers)
 
