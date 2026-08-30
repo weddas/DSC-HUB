@@ -40,6 +40,9 @@ ZIGBEE_ROLE_CATALOG: list[dict[str, Any]] = [
     {"id": "co2_tent", "label": "CO₂", "consume": False, "kind": "gas"},
     {"id": "lux_canopy", "label": "Lux / illuminance", "consume": False, "kind": "light"},
     {"id": "leak_floor", "label": "Water leak (floor)", "consume": False, "kind": "safety"},
+    {"id": "leak_floor_room", "label": "Water leak (floor · room)", "consume": False, "kind": "safety"},
+    {"id": "leak_floor_4x8", "label": "Water leak (floor · 4×8)", "consume": False, "kind": "safety"},
+    {"id": "leak_floor_2x4", "label": "Water leak (floor · 2×4)", "consume": False, "kind": "safety"},
     {"id": "leak_tank", "label": "Tank / reservoir leak", "consume": True, "kind": "safety"},
     {"id": "door_tent", "label": "Tent door", "consume": False, "kind": "safety"},
 ]

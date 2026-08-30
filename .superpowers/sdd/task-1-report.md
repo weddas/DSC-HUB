@@ -1,4 +1,4 @@
-# Task 1 Report — `problem_when` polarity in evaluator (TDD)
+# Task 1 Report — Roles + `floor_flood_alert` recipe (TDD)
 
 **Status:** DONE  
 **Branch:** (unchanged — working tree)  
@@ -7,29 +7,37 @@
 
 ## What was done
 
-Generalized `tank_full_appliance` evaluator with `problem_when` polarity so dry/inactive can mean problem (humidifier empty) while preserving default wet=problem for dehum tank full.
+Added three space-scoped floor leak roles to the Zigbee role catalog, a banner-only `floor_flood_alert` recipe (no appliance OOS / relay force), and `flood_banner_template(problem_when)` helper for SPA defaults. Reused existing `_apply_active` / `_apply_clear` paths — flood params omit `seat_id` and `force_relay`, so only banner + grow-log fire.
 
 ### Steps completed (TDD)
 
 1. **RED — Write failing tests**  
-   Added `test_problem_when_inactive_oos_on_dry`, `test_problem_when_inactive_clears_on_wet`, and `test_banner_template` to `brain/tests/test_zigbee_policies.py`.
+   Appended to `brain/tests/test_zigbee_policies.py`:
+   - `test_floor_flood_wet_banner_no_oos`
+   - `test_floor_flood_dry_clears_banner`
+   - `test_floor_flood_inactive_polarity`
+   - `test_flood_banner_template`  
+   Appended to `brain/tests/test_zigbee_capability.py`:
+   - `test_floor_space_roles_in_safety_filter`
 
 2. **RED — Run tests (expect FAIL)**  
    ```
-   cd brain && python -m pytest tests/test_zigbee_policies.py::test_problem_when_inactive_oos_on_dry -v
+   cd brain && python -m pytest tests/test_zigbee_policies.py::test_floor_flood_wet_banner_no_oos tests/test_zigbee_policies.py::test_flood_banner_template tests/test_zigbee_capability.py::test_floor_space_roles_in_safety_filter -v
    ```
-   **Evidence:** dry + `problem_when=inactive` returned `action=clear` instead of `active` (always used raw active).
+   **Evidence (3 failed):**
+   - `test_floor_flood_wet_banner_no_oos` → `ValueError: unknown recipe_id floor_flood_alert`
+   - `test_flood_banner_template` → `ImportError: cannot import name 'flood_banner_template'`
+   - `test_floor_space_roles_in_safety_filter` → `AssertionError: 'leak_floor_room' not in {'door_tent', 'leak_floor', 'leak_tank', 'unbound'}`
 
-3. **GREEN — Implement**  
-   - `evaluate_device_policies`: compute `problem_when` param, derive `problem = active if active-polarity else (not active)`, edge-detect on `problem`, store both `active` (raw) and `problem` in `zigbee_policy_state`.
-   - Recipe catalog: label → "Liquid level → appliance OOS"; added `problem_when` default, `device_classes`, `param_schema`.
-   - Added `banner_template(seat_id, problem_when)` for SPA defaults.
+3. **GREEN — Implement catalog + helper**  
+   - `brain/dsc_brain/zigbee_mqtt.py`: added `leak_floor_room`, `leak_floor_4x8`, `leak_floor_2x4` after `leak_floor` in `ZIGBEE_ROLE_CATALOG`.
+   - `brain/dsc_brain/zigbee_policies.py`: added `flood_banner_template(problem_when)`; added `floor_flood_alert` to `RECIPE_CATALOG` after `tank_full_appliance` with `device_classes`, `suggested_roles`, `param_schema`, and banner-only defaults (no `seat_id` / `force_relay`).
 
-4. **GREEN — Run full policy tests (expect PASS)**  
+4. **GREEN — Run full policy + capability tests (expect PASS)**  
    ```
-   cd brain && python -m pytest tests/test_zigbee_policies.py -q
+   cd brain && python -m pytest tests/test_zigbee_policies.py tests/test_zigbee_capability.py -v
    ```
-   **Evidence:** `12 passed in 2.56s`
+   **Evidence:** `31 passed in 4.64s`
 
 5. **Commit** — skipped (user did not ask).
 
@@ -37,47 +45,33 @@ Generalized `tank_full_appliance` evaluator with `problem_when` polarity so dry/
 
 | Brief requirement | Met |
 |-------------------|-----|
-| Keep recipe id `tank_full_appliance` | yes |
-| Label → "Liquid level → appliance OOS" | yes |
-| `problem_when: active\|inactive` param | yes |
-| Invert raw when `inactive` for problem edge | yes |
-| Store raw + problem in policy state | yes |
-| `device_classes`, `param_schema` on catalog | yes |
-| `banner_template(seat_id, problem_when)` helper | yes |
-| Occupancy unchanged in `normalize_binary_active` | yes (no edit) |
-| Existing dehum wet→OOS / dry→restore tests pass | yes |
+| Roles `leak_floor_room`, `leak_floor_4x8`, `leak_floor_2x4` in catalog | yes |
+| Roles appear in liquid/safety filter | yes |
+| Recipe id `floor_flood_alert` in `RECIPE_CATALOG` | yes |
+| Banner-only (no OOS, no relay force) | yes — verified by `test_floor_flood_wet_banner_no_oos` |
+| Wet → critical banner; dry → clear | yes |
+| `problem_when: inactive` polarity | yes |
+| `flood_banner_template(problem_when)` helper | yes |
+| No evaluator fork (reuse `_apply_active` / `_apply_clear`) | yes |
+| Tank regressions pass | yes — all 13 existing policy tests green |
 | TDD RED→GREEN | yes |
 
 ## Test summary
 
-`12 passed` — all `test_zigbee_policies.py` including new inactive-polarity dry-OOS and wet-restore cases; existing tank_full and MQTT ingest tests unchanged.
+`31 passed` — 17 policy tests (4 new floor-flood + 13 existing tank/legacy) and 14 capability tests (1 new role filter + 13 existing).
 
 ## Concerns
 
-1. **`test_dry_does_not_clobber_manual_oos` prev state** — still seeds legacy `active: True`; now correctly treated as prior problem via fallback (same as review fix).
-2. **SPA not updated** — Settings still shows old label "Tank full → appliance OOS" in `SettingsPage.tsx`; Task 2+ scope.
-3. **Invalid `problem_when` values** — silently fall back to `active`; no grow-log or API validation error (acceptable for v1 per brief).
+1. **Brief typo `get_role_catalog`** — codebase uses `get_zigbee_role_catalog`; test uses existing name (consistent with other capability tests).
+2. **SPA not updated** — `floor_flood_alert` recipe and `flood_banner_template` not wired in Settings UI; out of scope for this task.
+3. **`test_filter_recipes_liquid_includes_tank_full`** — still only asserts `tank_full_appliance`; `floor_flood_alert` is also liquid-eligible but not explicitly tested (harmless; filter logic is generic).
 
 ## Files touched
 
 | Path | Action |
 |------|--------|
-| `brain/dsc_brain/zigbee_policies.py` | `problem_when` eval, catalog/schema, `banner_template` |
-| `brain/tests/test_zigbee_policies.py` | 3 new tests |
+| `brain/dsc_brain/zigbee_mqtt.py` | 3 new floor space roles |
+| `brain/dsc_brain/zigbee_policies.py` | `floor_flood_alert` recipe, `flood_banner_template` |
+| `brain/tests/test_zigbee_policies.py` | 4 new tests |
+| `brain/tests/test_zigbee_capability.py` | 1 new test |
 | `.superpowers/sdd/task-1-report.md` | this report |
-
-## Review fix — legacy `zigbee_policy_state` edge detect
-
-**Finding:** After upgrade, entries with only legacy `active` (old problem/wet state) could mis-compare against new raw `active`, wrongly re-firing `_apply_active` on first evaluate.
-
-**Change:** In `evaluate_device_policies`, previous problem for edge detect now uses `prev["problem"]` when present, else falls back to legacy `prev["active"]`. Still stores both `active` (raw) and `problem` on every evaluate.
-
-**Test:** `test_legacy_policy_state_active_means_problem_no_refire` — seeds `{recipe_id, active: True}`, evaluates wet with `problem_when=active`, asserts `changed` is False and no relay force.
-
-**Test run:**
-```
-cd brain && python -m pytest tests/test_zigbee_policies.py -q
-13 passed in 2.32s
-```
-
-**Commit:** none (per user rule).

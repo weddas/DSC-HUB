@@ -35,6 +35,7 @@ import {
   filterZigbeeRolesForClass,
   isZigbeeSafetyLeakRole,
   zigbeeBannerTemplate,
+  zigbeeFloodBannerTemplate,
   type ClimateZone,
   type GlobalModifiers,
   type ProbeStation,
@@ -126,21 +127,37 @@ function parseZigbeePlacements(raw: string | undefined): Record<string, string> 
   }
 }
 
-const LIQUID_TASK_ID = "tank_full_appliance";
+const TANK_TASK_ID = "tank_full_appliance";
+const FLOOD_TASK_ID = "floor_flood_alert";
+const TASK_PARAM_IDS = new Set([TANK_TASK_ID, FLOOD_TASK_ID]);
 
 function effectiveZigbeeClass(inferred: string, override?: string): string {
   return String(override || inferred || "other").toLowerCase();
 }
 
-function liquidTaskDefaults(recipe: ZigbeeRecipe | undefined): Record<string, unknown> {
+function taskParamDefaults(
+  recipeId: string,
+  recipe: ZigbeeRecipe | undefined,
+): Record<string, unknown> {
   const defaults = recipe?.default_params ?? {};
+  if (recipeId === FLOOD_TASK_ID) {
+    const problem_when = String(defaults.problem_when ?? "active");
+    return {
+      problem_when,
+      banner: String(defaults.banner ?? zigbeeFloodBannerTemplate(problem_when)),
+      banner_tone: String(defaults.banner_tone ?? "critical"),
+    };
+  }
   return {
     seat_id: String(defaults.seat_id ?? "dehumidifier"),
     problem_when: String(defaults.problem_when ?? "active"),
     force_relay: String(defaults.force_relay ?? "off"),
     banner: String(
       defaults.banner ??
-        zigbeeBannerTemplate(String(defaults.seat_id ?? "dehumidifier"), String(defaults.problem_when ?? "active")),
+        zigbeeBannerTemplate(
+          String(defaults.seat_id ?? "dehumidifier"),
+          String(defaults.problem_when ?? "active"),
+        ),
     ),
     banner_tone: String(defaults.banner_tone ?? "critical"),
   };
@@ -195,17 +212,36 @@ function ZigbeeBindRow({
     const current = allRecipes.find((r) => r.id === recipeId);
     if (current) recipeOptions = [...recipeOptions, current];
   }
-  const liquidRecipe = allRecipes.find((r) => r.id === LIQUID_TASK_ID);
-  const showTaskParams = role !== "unbound" && recipeId === LIQUID_TASK_ID;
+  const showTaskParams = role !== "unbound" && TASK_PARAM_IDS.has(recipeId);
+  const isFlood = recipeId === FLOOD_TASK_ID;
   const seatId = String(policyParams.seat_id ?? "dehumidifier");
   const problemWhen = String(policyParams.problem_when ?? "active");
   const banner = String(policyParams.banner ?? "");
 
-  const updateLiquidParam = (patch: Partial<{ seat_id: string; problem_when: string; banner: string }>) => {
-    const nextSeat = patch.seat_id ?? seatId;
+  const updateTaskParam = (patch: Partial<{ seat_id: string; problem_when: string; banner: string }>) => {
     const nextPolarity = patch.problem_when ?? problemWhen;
-    const prevTemplate = zigbeeBannerTemplate(seatId, problemWhen);
     let nextBanner = patch.banner ?? banner;
+    if (isFlood) {
+      const prevTemplate = zigbeeFloodBannerTemplate(problemWhen);
+      if (patch.problem_when != null) {
+        const nextTemplate = zigbeeFloodBannerTemplate(nextPolarity);
+        if (banner === prevTemplate || !banner.trim()) {
+          nextBanner = nextTemplate;
+        }
+      }
+      onPolicyChange(ieee, {
+        recipe_id: recipeId,
+        params: {
+          ...policyParams,
+          problem_when: nextPolarity,
+          banner: nextBanner,
+          banner_tone: policyParams.banner_tone ?? "critical",
+        },
+      });
+      return;
+    }
+    const nextSeat = patch.seat_id ?? seatId;
+    const prevTemplate = zigbeeBannerTemplate(seatId, problemWhen);
     if (patch.seat_id != null || patch.problem_when != null) {
       const nextTemplate = zigbeeBannerTemplate(nextSeat, nextPolarity);
       if (banner === prevTemplate || !banner.trim()) {
@@ -290,8 +326,14 @@ function ZigbeeBindRow({
             onChange={(e) => {
               const nextRecipe = e.target.value;
               onBindingChange(ieee, { role, zone, recipe_id: nextRecipe, capability_override: capabilityOverride });
-              if (nextRecipe === LIQUID_TASK_ID) {
-                onPolicyChange(ieee, { recipe_id: nextRecipe, params: liquidTaskDefaults(liquidRecipe) });
+              if (TASK_PARAM_IDS.has(nextRecipe)) {
+                onPolicyChange(ieee, {
+                  recipe_id: nextRecipe,
+                  params: taskParamDefaults(
+                    nextRecipe,
+                    allRecipes.find((r) => r.id === nextRecipe),
+                  ),
+                });
               } else if (nextRecipe === "none") {
                 onPolicyChange(ieee, { recipe_id: "none", params: {} });
               }
@@ -303,7 +345,8 @@ function ZigbeeBindRow({
               ? recipeOptions
               : [
                   { id: "none", label: "No task" },
-                  { id: LIQUID_TASK_ID, label: "Liquid level → appliance OOS" },
+                  { id: TANK_TASK_ID, label: "Liquid level → appliance OOS" },
+                  { id: FLOOD_TASK_ID, label: "Floor flood → alert" },
                 ]
             ).map((r) => (
               <option key={r.id} value={r.id}>
@@ -322,16 +365,18 @@ function ZigbeeBindRow({
         <tr>
           <td colSpan={7} style={{ background: "var(--dsc-gray-1, rgba(255,255,255,0.03))" }}>
             <div className="dsc-row-actions" style={{ flexWrap: "wrap", gap: 12, alignItems: "flex-end" }}>
-              <label>
-                Appliance
-                <select value={seatId} onChange={(e) => updateLiquidParam({ seat_id: e.target.value })}>
-                  <option value="dehumidifier">Dehumidifier</option>
-                  <option value="humidifier">Humidifier</option>
-                </select>
-              </label>
+              {recipeId === TANK_TASK_ID ? (
+                <label>
+                  Appliance
+                  <select value={seatId} onChange={(e) => updateTaskParam({ seat_id: e.target.value })}>
+                    <option value="dehumidifier">Dehumidifier</option>
+                    <option value="humidifier">Humidifier</option>
+                  </select>
+                </label>
+              ) : null}
               <label>
                 Problem when
-                <select value={problemWhen} onChange={(e) => updateLiquidParam({ problem_when: e.target.value })}>
+                <select value={problemWhen} onChange={(e) => updateTaskParam({ problem_when: e.target.value })}>
                   <option value="active">Wet / active = problem</option>
                   <option value="inactive">Dry / inactive = problem</option>
                 </select>
@@ -341,8 +386,12 @@ function ZigbeeBindRow({
                 <input
                   type="text"
                   value={banner}
-                  onChange={(e) => updateLiquidParam({ banner: e.target.value })}
-                  placeholder={zigbeeBannerTemplate(seatId, problemWhen)}
+                  onChange={(e) => updateTaskParam({ banner: e.target.value })}
+                  placeholder={
+                    isFlood
+                      ? zigbeeFloodBannerTemplate(problemWhen)
+                      : zigbeeBannerTemplate(seatId, problemWhen)
+                  }
                 />
               </label>
             </div>
@@ -1468,14 +1517,23 @@ export function SettingsPage() {
                         { id: "clone_dome", label: "Clone dome", kind: "climate" },
                         { id: "leak_tank", label: "Tank / reservoir leak", kind: "safety" },
                         { id: "leak_floor", label: "Water leak (floor)", kind: "safety" },
+                        { id: "leak_floor_room", label: "Water leak (floor · room)", kind: "safety" },
+                        { id: "leak_floor_4x8", label: "Water leak (floor · 4×8)", kind: "safety" },
+                        { id: "leak_floor_2x4", label: "Water leak (floor · 2×4)", kind: "safety" },
                       ];
                       const fallbackRecipes: ZigbeeRecipe[] = [
                         { id: "none", label: "No task" },
                         {
-                          id: LIQUID_TASK_ID,
+                          id: TANK_TASK_ID,
                           label: "Liquid level → appliance OOS",
                           device_classes: ["liquid", "safety"],
-                          default_params: liquidTaskDefaults(undefined),
+                          default_params: taskParamDefaults(TANK_TASK_ID, undefined),
+                        },
+                        {
+                          id: FLOOD_TASK_ID,
+                          label: "Floor flood → alert",
+                          device_classes: ["liquid", "safety"],
+                          default_params: taskParamDefaults(FLOOD_TASK_ID, undefined),
                         },
                       ];
                       return (

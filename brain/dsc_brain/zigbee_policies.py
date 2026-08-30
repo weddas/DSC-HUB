@@ -47,6 +47,29 @@ RECIPE_CATALOG: list[dict[str, Any]] = [
         },
         "description": "When leak/tank sensor hits problem polarity: OOS seat, force relay off, critical banner. Clear on opposite edge if this policy owns OOS.",
     },
+    {
+        "id": "floor_flood_alert",
+        "label": "Floor flood → alert",
+        "when": "active",
+        "clear_when": "inactive",
+        "default_params": {
+            "problem_when": "active",
+            "banner": "Floor water detected",
+            "banner_tone": "critical",
+        },
+        "device_classes": ["liquid", "safety"],
+        "suggested_roles": [
+            "leak_floor_room",
+            "leak_floor_4x8",
+            "leak_floor_2x4",
+            "leak_floor",
+        ],
+        "param_schema": {
+            "problem_when": {"type": "enum", "values": ["active", "inactive"]},
+            "banner": {"type": "string"},
+        },
+        "description": "When floor sensor hits problem polarity: critical banner + grow-log only. No appliance OOS. Clear on opposite edge.",
+    },
 ]
 
 _VALID_RECIPES = frozenset(str(r["id"]) for r in RECIPE_CATALOG)
@@ -67,6 +90,13 @@ def banner_template(seat_id: str, problem_when: str) -> str:
     if polarity == "inactive":
         return "Dehumidifier tank EMPTY - refill"
     return "Dehumidifier tank FULL - empty tank"
+
+
+def flood_banner_template(problem_when: str) -> str:
+    polarity = str(problem_when or "active").strip().lower()
+    if polarity == "inactive":
+        return "Floor dry alarm — check sensor"
+    return "Floor water detected"
 
 
 def _recipe_by_id(recipe_id: str) -> dict[str, Any] | None:

@@ -12,16 +12,22 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 
 ## 2026-08-30 ? Zigbee device tasks (universal path; recipes one-at-a-time)
 
+**2026-08-31 ? policy honesty + floor flood:** [`docs/superpowers/specs/2026-08-31-zigbee-policy-honesty-floor-flood-design.md`](superpowers/specs/2026-08-31-zigbee-policy-honesty-floor-flood-design.md) ? [`docs/superpowers/plans/2026-08-31-zigbee-policy-honesty-floor-flood.md`](superpowers/plans/2026-08-31-zigbee-policy-honesty-floor-flood.md)
+
 | Item | Status | Notes |
 |------|--------|-------|
 | Spec (framework) | **done** | `docs/superpowers/specs/2026-08-30-zigbee-device-tasks-design.md` ? same Task path for every Zigbee device; curated recipes only |
 | Spec (Role vs Task + operator params) | **approved** | `docs/superpowers/specs/2026-08-30-zigbee-role-vs-task-operator-design.md` ? Role-only datapoints; capability-filtered Role/Zone/Task selects; liquid Task params; Show all escape |
 | Framework | **done (live)** | `zigbee_policies.py` + MQTT evaluate + Settings Task column + Overview `critical_banners` / `dsc-banner--critical-live`; ESPHome poll preserves policy keys; `occupancy` = wet for SNZB-03-fingerprinted liquid sensors |
-| Recipe `tank_full_appliance` | **done (Pi evidence)** | Inject + live bind `0xa4c138b9e2b9b690` leak_tank ? dehum OOS on occupancy; dry restore. Desk sensors unbound |
+| Recipe `tank_full_appliance` | **done (Pi evidence)** | Inject + live bind `0xa4c138b9e2b9b690` leak_tank → dehum OOS on occupancy; dry restore. Desk ieee now used for floor flood (2026-08-31) |
 | Role `leak_tank` | **done (live)** | Catalog + by_role safety row |
 | Operator params + filtered selects (implement) | **done (live)** | Pi task5 2026-08-30: hotpatch `zigbee_policies.py`+`zigbee_mqtt.py`, SPA `index-nLu-U8CF.js`; QA `problem_when=inactive` dry?OOS+banner / wet?clear; live `0xa4c138b9e2b9b690` `problem_when=active` wet?OOS+banner / dry?clear (policy re-bound via `.audit/zb-bind-tank-occ.sh`) |
-| Policy problem vs raw wet in UI | **next-plan** | Backend stores both; Live/Climate still show raw wet only |
-| Later recipes | **next-plan** | e.g. `floor_flood_alert` (banner+log only) ? add **one at a time**, not a massive catalog |
+| Policy problem vs raw wet in UI | **done** | Climate safety chips: Wet/Dry primary + Problem/Clear when Task bound; plan 2026-08-31 |
+| Recipe `floor_flood_alert` | **done (live)** | Task 5 Pi 2026-08-31: desk `0xa4c1385a686af7df` room + `0xa4c1380d734f2033` 4×8 bound `floor_flood_alert`; independent `zb-policy-<ieee>` banners; wet→banner no OOS; dry→clear; tank unchanged |
+| Roles `leak_floor_room` / `_4x8` / `_2x4` | **done (catalog)** | Distinct floor roles so room + 4?8 don't clobber Climate honesty row; 2?4 selectable |
+| Multi-sensor per space (`*_b` roles) | **next-plan** | Extension path in spec; one ieee per role id this pass |
+| `leak_floor_2x4` live bind | **deferred** | Until hardware in 2?4 |
+| Later recipes | **next-plan** | Add **one at a time**, not a massive catalog |
 
 ---
 

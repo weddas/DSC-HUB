@@ -252,7 +252,14 @@ export function filterZigbeeRecipesForClass(
 }
 
 export function isZigbeeSafetyLeakRole(roleId: string): boolean {
-  return roleId === "leak_tank" || roleId === "leak_floor";
+  const id = String(roleId || "");
+  return id === "leak_tank" || id === "leak_floor" || id.startsWith("leak_floor_");
+}
+
+export function zigbeeFloodBannerTemplate(problemWhen: string): string {
+  const polarity = String(problemWhen || "active").toLowerCase();
+  if (polarity === "inactive") return "Floor dry alarm — check sensor";
+  return "Floor water detected";
 }
 
 export async function get_zigbee_roles(): Promise<{ roles: ZigbeeRole[] }> {

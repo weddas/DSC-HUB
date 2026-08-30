@@ -1,92 +1,38 @@
-# Task 1 Review — `problem_when` polarity in evaluator
-
-**Reviewer:** subagent (task-scoped gate)  
-**Date:** 2026-08-30  
-**Artifacts:** task-1-brief.md, task-1-report.md, task-1-review-pkg.diff, spec `2026-08-30-zigbee-role-vs-task-operator-design.md`
-
----
-
-## Verdict
-
-| Gate | Result |
-|------|--------|
-| **Spec compliance (Task 1 scope)** | ✅ |
-| **Task quality** | **Approved** |
-
-Task 1 delivers the evaluator-side `problem_when` polarity, catalog/schema updates, and `banner_template` helper as specified. Out-of-scope items (SPA label, capability filtering, migration script) are correctly deferred.
-
----
-
-## Spec compliance (Task 1 scope)
-
-### Met
-
-- Recipe id remains `tank_full_appliance`; catalog label updated to **Liquid level → appliance OOS**.
-- Evaluator accepts `problem_when: "active" | "inactive"` with invalid values falling back to `"active"`.
-- Problem edge uses inverted raw when `problem_when == "inactive"`:
-  `problem = active if problem_when == "active" else (not active)`.
-- Edge detection and `_apply_active` / `_apply_clear` run on `problem`, not raw `active`.
-- `zigbee_policy_state` stores `active` (raw), `problem`, and `problem_when` for honesty.
-- Recipe catalog adds `device_classes`, `suggested_roles`, `param_schema` (seat_id, problem_when, banner).
-- `banner_template(seat_id, problem_when)` helper present for SPA defaults.
-- `normalize_binary_active` unchanged — occupancy remains last-resort wet signal.
-- TDD flow evidenced: failing inactive-polarity test, implementation, 12/12 policy tests passing (per report; not re-run here).
-- New tests cover humidifier empty (dry → OOS, wet → restore) using `occupancy` payload.
-- Default dehum wet=problem behavior preserved via `default_params.problem_when = "active"` and existing tests.
-
-### Gaps (non-blocking for Task 1)
-
-- **SPA / Settings UI** still shows old task label — explicitly Task 2+; not a Task 1 miss.
-- **No explicit migration test** for partial/empty stored params → merged defaults on save/evaluate (behavior is present via `save_zigbee_policies` default merge; acceptable for this task).
-- **Honesty state not asserted in tests** — implementation writes `active` + `problem` to fleet state, but new tests do not read back `zigbee_policy_state` (see Minor).
-
----
-
-## Code quality
+### Spec Compliance
+- ✅ One new recipe only (`floor_flood_alert`) — `brain/dsc_brain/zigbee_policies.py:50-72`
+- ✅ Never OOS / `force_relay` — defaults omit `seat_id`/`force_relay`; `_apply_active` skips seat/relay when empty — `zigbee_policies.py:55-59`, `246-268`; asserted in `test_zigbee_policies.py:421-458`
+- ✅ Distinct roles `leak_floor_room`, `leak_floor_4x8`, `leak_floor_2x4`; `leak_floor` retained — `brain/dsc_brain/zigbee_mqtt.py:42-45`
+- ✅ `suggested_roles` includes room, 4×8, 2×4, and generic `leak_floor` — `zigbee_policies.py:61-66`
+- ✅ Opposite-edge clear via shared evaluator (`prev_problem` edge → `_apply_clear`) — `zigbee_policies.py:352-378`; dry clear test — `test_zigbee_policies.py:461-491`
+- ✅ Params `problem_when` + `banner` (no seat in schema) — `zigbee_policies.py:67-70`
+- ✅ `flood_banner_template(problem_when) -> str` — `zigbee_policies.py:95-99`; tested — `test_zigbee_policies.py:526-530`
+- ✅ Extend shared evaluator; no separate flood module or SPA changes — diff limited to catalog + policies + tests
+- ✅ New floor roles in liquid/safety filter — `test_zigbee_capability.py:194-202`
+- ✅ TDD RED→GREEN (report evidence) — `task-1-report.md:23-40`
+- ⚠️ Cannot verify from diff: `31 passed` test run (report only); Pi/SPA acceptance (out of Task 1 scope)
+- ⚠️ Cannot verify from diff: `floor_flood_alert` appears in `filter_recipes_for_class("liquid", …)` — logic is generic (`zigbee_mqtt.py:118-132`) but no explicit assertion added
 
 ### Strengths
+- Faithful TDD: failing tests written first with documented RED failures, then minimal catalog/recipe/helper implementation.
+- Correct architectural choice: reuses `_apply_active` / `_apply_clear` and `evaluate_device_policies` without a flood-specific fork; empty `seat_id` naturally yields banner-only behavior.
+- Strong behavioral test for the key honesty constraint: wet edge upserts banner, leaves dehum/humidifier `in_service` and does not call `force_set_sonoff_relay_sync`.
+- Recipe catalog shape matches existing `tank_full_appliance` conventions (`when`, `clear_when`, `device_classes`, `param_schema`, `banner_tone` default).
+- Role entries use correct `kind: safety`, `consume: False`, and proper Unicode labels (·, ×, —).
+- No unrelated files touched; tank regression tests left intact with additive test-only changes.
 
-- Polarity logic is localized and readable; param sanitization is defensive.
-- Return payloads include both `active` and `problem`, aligning with spec honesty goals.
-- `banner_template` covers both appliance × polarity combinations with sensible copy.
-- Tests follow existing patterns (temp_db, fleet reset, relay mock) and integrate with MQTT ingest paths.
-- Scope discipline: only `zigbee_policies.py` + tests touched; no unrelated refactors.
+### Issues (Critical / Important / Minor)
 
-### Findings
+**Critical**
+- None.
 
-#### Important
+**Important**
+- None.
 
-1. **Legacy `zigbee_policy_state` without `problem` key** — Edge detect uses `prev_problem = prev.get("problem")` only. Pre-upgrade entries that stored `{ "active": true }` without `problem` will treat `prev_problem` as `None` on the next wet reading (`problem=True`), causing a false edge and re-firing `_apply_active` (duplicate banner/grow-log). Not a correctness break (OOS stays OOS), but noisy on Pi upgrade. Consider deriving `prev_problem` from legacy `prev["active"]` + stored/default `problem_when` when `problem` is absent. Implementer noted related concern in report.
+**Minor**
+- `test_filter_recipes_liquid_includes_tank_full` still asserts only `tank_full_appliance`; brief acceptance item 2 also calls for recipes filtered correctly — adding `floor_flood_alert` to that assertion would close the loop (`test_zigbee_capability.py:68-75`).
+- `test_floor_flood_dry_clears_banner` verifies banner removal and `out["problem"] is False` but does not assert persisted `zigbee_policy_state["0xflood1"]["problem"] is False` (wet test does check state) — `test_zigbee_policies.py:461-491`.
+- `flood_banner_template` has no docstring while sibling `banner_template` does — minor consistency nit (`zigbee_policies.py:95-99`).
 
-#### Minor
-
-1. **Policy-state honesty untested** — Brief calls out storing raw + problem for honesty; no test asserts fleet `zigbee_policy_state` after evaluate (e.g. dry/inactive → `{ active: false, problem: true }`).
-2. **`test_problem_when_inactive_oos_on_dry` thin assertions** — Confirms OOS and `action=active` but not banner text or `out["problem"]`.
-3. **`banner_template("humidifier", "active")`** returns FULL copy — semantically odd for humidifier-empty use case; only matters if SPA picks active polarity for humidifier (unlikely operator path).
-4. **Grow-log reason still `tank_full`** in `_apply_active` — pre-existing string; humidifier-empty path logs same reason tag (cosmetic).
-5. **PEP8 spacing** — single blank line between `_apply_active` and `_apply_clear` (two preferred); negligible.
-
----
-
-## Checklist vs brief
-
-| Requirement | Status |
-|-------------|--------|
-| Files: `zigbee_policies.py`, `test_zigbee_policies.py` | ✅ |
-| `test_problem_when_inactive_oos_on_dry` | ✅ |
-| `test_problem_when_inactive_clears_on_wet` | ✅ |
-| Evaluator `problem_when` + inverted problem edge | ✅ |
-| Store raw + problem in policy state | ✅ (impl; not tested) |
-| Catalog label + schema + device_classes | ✅ |
-| `banner_template` helper | ✅ |
-| Occupancy unchanged | ✅ |
-| No commit (user rule) | ✅ |
-| Full `test_zigbee_policies.py` pass | ✅ (per report) |
-
----
-
-## Recommendation
-
-**Approve Task 1** for merge into the working branch / continuation to Task 2.
-
-Optional follow-up before Pi hotpatch (can be Task 1.1 or folded into Task 2): legacy `prev_problem` derivation to avoid duplicate OOS on first post-upgrade wet reading; add one test seeding old `{ active: true }` state and asserting `changed=False` on repeat wet.
+### Assessment
+**Task quality:** Approved  
+**Reasoning:** The diff delivers exactly what Task 1 scoped: three space floor roles, one banner-only `floor_flood_alert` recipe, the SPA helper, and TDD unit coverage for wet/dry/inverted polarity without OOS or relay side effects. Remaining gaps are minor test-completeness nits, not spec violations.

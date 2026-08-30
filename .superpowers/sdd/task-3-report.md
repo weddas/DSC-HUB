@@ -1,62 +1,44 @@
-# Task 3 Report — Persist capability_override on bind
+# Task 3 Report — Climate safety honesty (Wet/Dry + Problem/Clear)
 
 **Status:** DONE  
-**Branch:** (unchanged — working tree)  
-**Commit:** none (per user rule)  
-**Runtime code changed:** yes
+**Commit:** none (per instructions)
 
 ## What was done
 
-Round-tripped optional `capability_override` through `save_zigbee_bindings` / `load_zigbee_bindings` so operator sticky class (e.g. occupancy-only sensor treated as liquid after Show-all bind) survives Save and reload.
+`ClimatePage.tsx` now splits Zigbee roles into climate vs safety (`isZigbeeSafetyLeakRole`). Climate table shows T/RH roles only. Safety subsection shows Wet/Dry chips from raw `wet`/`active`; Problem/Clear only when `zigbee_device_policies[ieee].recipe_id !== "none"` and `zigbee_policy_state[ieee].problem` is boolean. Card gates on climate **or** safety rows. Problem tone uses `warn` (no `critical` in StatusChip).
 
-### Steps completed (TDD)
+## Build
 
-1. **RED — Write failing test**  
-   Added `test_save_binding_capability_override_persists` in `brain/tests/test_zigbee_capability.py`:
-   - `save_zigbee_bindings` with `capability_override: "liquid"` on occupancy-only device
-   - `load_zigbee_bindings` returns override
-   - `get_zigbee_devices()` reports `capability_class` and `capability_override` as `liquid` (no monkeypatch on load)
+```
+cd homeassistant/custom_components/dsc_hub/frontend && npm run build:spa
+exit 0 — vite 6.4.3, 163 modules, ~4.4s
+```
 
-2. **RED — Run test (expect FAIL before impl)**  
-   Would fail: saved/loaded binding dict omitted `capability_override`.
-
-3. **GREEN — Implement**  
-   - `load_zigbee_bindings`: include `capability_override` when present and valid (`_CLASS_ROLE_KINDS` keys).
-   - `save_zigbee_bindings`: accept optional `capability_override`; validate on save; persist in cleaned binding row.
-
-4. **GREEN — Run tests (expect PASS)**  
-   ```
-   cd brain; python -m pytest tests/test_zigbee_capability.py -v
-   ```
-   **Evidence:** `13 passed in 0.27s`
-
-5. **Commit** — skipped (user did not ask).
+New assets: `index-Cj_Rsb-d.js`, `calibrate-ojEKvnJ8.js`, `tune-fleet-JEAIzL5O.js` (+ maps).
 
 ## Self-review
 
 | Brief requirement | Met |
 |-------------------|-----|
-| Optional `capability_override` on binding row | yes |
-| Persist through `save_zigbee_bindings` | yes |
-| Persist through `load_zigbee_bindings` | yes |
-| Test: save liquid override; occupancy-only → class liquid | yes |
-| Invalid override rejected on save | yes |
-| Invalid override ignored on load | yes |
-| No git commit | yes |
+| Import `isZigbeeSafetyLeakRole` | yes |
+| Split `zigbeeClimateRows` / `zigbeeSafetyRows` | yes |
+| `recipe_id` from `zigbee_device_policies` only | yes |
+| Omit Problem/Clear when recipe none or no policy state | yes |
+| Gate card on climate or safety | yes |
+| Safety chip subsection below climate table | yes |
+| `npm run build:spa` exit 0 | yes |
+| No commit | yes |
+| Settings untouched | yes |
 
-## Test summary
+## Concerns
 
-`13 passed` — 12 existing capability tests + 1 new persistence test.
-
-## Concerns / follow-ups
-
-1. **SPA wiring** — Task 4 must set `capability_override` when operator picks a safety role via Show all on a motion-class device.
-2. **Clearing override** — save without the key leaves prior override in DB; SPA should omit or explicitly clear when operator reverts class.
+1. **Live verify** — Wet/Problem chips need fleet with bound leak role + task recipe on Pi; not exercised in this pass.
+2. **Unknown wet** — `Wet/Dry —` uses `ok` tone; acceptable per brief but could read optimistic if sensor never reports.
 
 ## Files touched
 
 | Path | Action |
 |------|--------|
-| `brain/dsc_brain/zigbee_mqtt.py` | `load_zigbee_bindings` / `save_zigbee_bindings` include `capability_override` |
-| `brain/tests/test_zigbee_capability.py` | new persistence test |
+| `homeassistant/custom_components/dsc_hub/frontend/src/pages/ClimatePage.tsx` | climate/safety split + safety chips |
+| `homeassistant/custom_components/dsc_hub/frontend/spa-dist/**` | rebuild output |
 | `.superpowers/sdd/task-3-report.md` | this report |

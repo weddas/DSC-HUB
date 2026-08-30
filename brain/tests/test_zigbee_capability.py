@@ -189,3 +189,14 @@ def test_save_binding_capability_override_persists(
     assert end.get("capability_override") == "liquid"
     _ingest._devices = []
     _ingest._device_states = {}
+
+
+def test_floor_space_roles_in_safety_filter() -> None:
+    from dsc_brain.zigbee_mqtt import filter_roles_for_class, get_zigbee_role_catalog
+
+    roles = get_zigbee_role_catalog()
+    ids = {r["id"] for r in filter_roles_for_class("liquid", roles)}
+    assert "leak_floor_room" in ids
+    assert "leak_floor_4x8" in ids
+    assert "leak_floor_2x4" in ids
+    assert "leak_floor" in ids

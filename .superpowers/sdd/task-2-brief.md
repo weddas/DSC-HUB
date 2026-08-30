@@ -1,76 +1,104 @@
-# Task brief
-
-## Global Constraints
-
-- Spec: `docs/superpowers/specs/2026-08-30-zigbee-role-vs-task-operator-design.md` (approved)
-- Parent: `docs/superpowers/specs/2026-08-30-zigbee-device-tasks-design.md`
-- Keep recipe id `tank_full_appliance`; change label only
-- Pi: never bare `docker kill`; prefer `timeout 25 docker restart` or SPA-only `docker cp`
-- Commit only when user asks
-- Occupancy remains a wet signal in `normalize_binary_active` (already live)
-
-
-### Task 2: Capability class inference (TDD)
+﻿### Task 2: Settings â€” shared task params + safety role helper
 
 **Files:**
-- Create: `brain/tests/test_zigbee_capability.py`
-- Modify: `brain/dsc_brain/zigbee_mqtt.py` (helpers + `get_zigbee_devices`)
+- Modify: `homeassistant/custom_components/dsc_hub/frontend/src/lib/fleetApi.ts`
+- Modify: `homeassistant/custom_components/dsc_hub/frontend/src/pages/SettingsPage.tsx`
 
 **Interfaces:**
-- Produces:
-  - `infer_capability_class(exposes_props: set[str], state_keys: set[str]) -> str`
-  - `filter_roles_for_class(class: str, roles: list) -> list`
-  - `filter_recipes_for_class(class: str, recipes: list) -> list`
-  - Device dict gains `capability_class`, optional `capability_override`
+- Consumes: recipe catalog from API (`floor_flood_alert`, new roles)
+- Produces: `isZigbeeSafetyLeakRole(roleId)` true for `leak_tank` and any id starting with `leak_floor`; `zigbeeFloodBannerTemplate(problemWhen)`; Settings shows Appliance only for tank
 
-- [ ] **Step 1: Failing tests**
+- [ ] **Step 1: Extend `fleetApi.ts` helpers**
 
-```python
-from dsc_brain.zigbee_mqtt import infer_capability_class, filter_roles_for_class
+Replace:
 
-def test_infer_climate():
-    assert infer_capability_class({"temperature", "humidity"}, set()) == "climate"
-
-def test_infer_liquid_from_water_leak():
-    assert infer_capability_class({"water_leak", "battery"}, set()) == "liquid"
-
-def test_infer_occupancy_alone_is_motion():
-    assert infer_capability_class({"occupancy", "battery"}, set()) == "motion"
-
-def test_filter_climate_roles_exclude_leak():
-    roles = filter_roles_for_class("climate", get_zigbee_role_catalog())
-    ids = {r["id"] for r in roles}
-    assert "intake" in ids and "canopy_4x8" in ids
-    assert "leak_tank" not in ids
-    assert "unbound" in ids
+```typescript
+export function isZigbeeSafetyLeakRole(roleId: string): boolean {
+  return roleId === "leak_tank" || roleId === "leak_floor";
+}
 ```
 
-- [ ] **Step 2: Run — expect FAIL** (import/missing)
+With:
 
-- [ ] **Step 3: Implement inference**
+```typescript
+export function isZigbeeSafetyLeakRole(roleId: string): boolean {
+  const id = String(roleId || "");
+  return id === "leak_tank" || id === "leak_floor" || id.startsWith("leak_floor_");
+}
 
-```python
-def infer_capability_class(exposes: set[str], state_keys: set[str] | None = None) -> str:
-    keys = {*(exposes or), *((state_keys) or set())}
-    keys = {str(k).lower() for k in keys}
-    if keys & {"water_leak", "leak", "moisture"}:
-        return "liquid"
-    if keys & {"temperature", "humidity"}:
-        return "climate"
-    if keys & {"state"} and not (keys & {"temperature", "humidity"}):
-        # weak plug hint — refine with device type if needed
-        pass
-    if "occupancy" in keys and not (keys & {"water_leak", "temperature"}):
-        return "motion"
-    return "other"
+export function zigbeeFloodBannerTemplate(problemWhen: string): string {
+  const polarity = String(problemWhen || "active").toLowerCase();
+  if (polarity === "inactive") return "Floor dry alarm â€” check sensor";
+  return "Floor water detected";
+}
 ```
 
-Map class → role kinds: climate→`climate`; liquid→`safety`; plug→`plug`; motion/other→`none` (Unbound only until Show all).
+- [ ] **Step 2: Generalize Settings task-params UI**
 
-Wire into `get_zigbee_devices()`: compute class from bridge definition exposes if cached, else from `_device_states` keys; apply binding `capability_override` if set.
+In `SettingsPage.tsx`:
 
-- [ ] **Step 4: Tests PASS**
+1. Constants:
 
-Run: `cd brain && python -m pytest tests/test_zigbee_capability.py tests/test_zigbee_policies.py -q`
+```typescript
+const TANK_TASK_ID = "tank_full_appliance";
+const FLOOD_TASK_ID = "floor_flood_alert";
+const TASK_PARAM_IDS = new Set([TANK_TASK_ID, FLOOD_TASK_ID]);
+```
+
+2. Defaults helper:
+
+```typescript
+function taskParamDefaults(
+  recipeId: string,
+  recipe: ZigbeeRecipe | undefined,
+): Record<string, unknown> {
+  const defaults = recipe?.default_params ?? {};
+  if (recipeId === FLOOD_TASK_ID) {
+    const problem_when = String(defaults.problem_when ?? "active");
+    return {
+      problem_when,
+      banner: String(defaults.banner ?? zigbeeFloodBannerTemplate(problem_when)),
+      banner_tone: String(defaults.banner_tone ?? "critical"),
+    };
+  }
+  // tank (existing liquidTaskDefaults body)
+  return {
+    seat_id: String(defaults.seat_id ?? "dehumidifier"),
+    problem_when: String(defaults.problem_when ?? "active"),
+    force_relay: String(defaults.force_relay ?? "off"),
+    banner: String(
+      defaults.banner ??
+        zigbeeBannerTemplate(
+          String(defaults.seat_id ?? "dehumidifier"),
+          String(defaults.problem_when ?? "active"),
+        ),
+    ),
+    banner_tone: String(defaults.banner_tone ?? "critical"),
+  };
+}
+```
+
+3. `showTaskParams = role !== "unbound" && TASK_PARAM_IDS.has(recipeId)`
+4. On recipe change to flood/tank: `params: taskParamDefaults(nextRecipe, recipe)`
+5. Param updater: if flood, only `problem_when` + `banner`; regenerating banner on polarity uses `zigbeeFloodBannerTemplate` for flood and `zigbeeBannerTemplate` for tank
+6. Render Appliance `<select>` only when `recipeId === TANK_TASK_ID`
+7. Fallback recipes/roles arrays in Settings include flood recipe + three space roles
+
+- [ ] **Step 3: Typecheck / build SPA**
+
+```bash
+cd homeassistant/custom_components/dsc_hub/frontend
+npm run build:spa
+```
+
+Expected: exit 0; new hashed assets under spa-dist (or projectâ€™s usual SPA out dir)
+
+- [ ] **Step 4: Commit** (only if user asked)
+
+```bash
+git add homeassistant/custom_components/dsc_hub/frontend/src/lib/fleetApi.ts homeassistant/custom_components/dsc_hub/frontend/src/pages/SettingsPage.tsx
+git commit -m "feat(spa): Settings task params for floor flood alert"
+```
 
 ---
+

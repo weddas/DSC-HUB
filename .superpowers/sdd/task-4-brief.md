@@ -1,38 +1,24 @@
-# Task brief
-
-## Global Constraints
-
-- Spec: `docs/superpowers/specs/2026-08-30-zigbee-role-vs-task-operator-design.md` (approved)
-- Parent: `docs/superpowers/specs/2026-08-30-zigbee-device-tasks-design.md`
-- Keep recipe id `tank_full_appliance`; change label only
-- Pi: never bare `docker kill`; prefer `timeout 25 docker restart` or SPA-only `docker cp`
-- Commit only when user asks
-- Occupancy remains a wet signal in `normalize_binary_active` (already live)
-
-
-### Task 4: Settings SPA — filtered selects + Task params
+﻿### Task 4: FOLLOWUPS + docs status
 
 **Files:**
-- Modify: `homeassistant/custom_components/dsc_hub/frontend/src/pages/SettingsPage.tsx`
-- Modify: `homeassistant/custom_components/dsc_hub/frontend/src/lib/fleetApi.ts`
-- Build: SPA `npm run build` (or project’s spa build script) → `spa-dist`
+- Modify: `docs/FOLLOWUPS.md` (2026-08-30 Zigbee device tasks section)
+- Optionally mark related rows in one-pass section if needed
 
-**Interfaces:**
-- Consumes: `device.capability_class`, recipe `device_classes` / `param_schema`, roles `kind`
-- Produces: Save still `put_zigbee_bindings` + `put_zigbee_policies` with full params
+- [ ] **Step 1: Update FOLLOWUPS**
 
-- [ ] **Step 1: Types in fleetApi** — recipes include `device_classes?`, `param_schema?`; devices include `capability_class?`
+In `## 2026-08-30 â€” Zigbee device tasks`:
 
-- [ ] **Step 2: ZigbeeBindRow** — props: `capabilityClass`, `showAll`, `onToggleShowAll`, filtered role/zone/recipe options; when recipe is liquid-level, render:
-  - `<select>` Appliance (dehumidifier/humidifier)
-  - `<select>` Problem when (labels: “Wet / active = problem”, “Dry / inactive = problem”)
-  - `<input>` Banner text
-  - Changing appliance/polarity refreshes banner from template **only if** banner still equals previous template (don’t clobber custom edits)
+| Item | Status |
+|------|--------|
+| Policy problem vs raw wet in UI | **done** (Climate safety chips; this plan) |
+| Recipe `floor_flood_alert` | **done (Pi evidence pending Task 5)** then **done (live)** after Task 5 |
+| Roles `leak_floor_room` / `_4x8` / `_2x4` | **done (catalog)** |
+| Multi-sensor per space (`*_b` roles) | **next-plan** |
+| `leak_floor_2x4` live bind | **deferred** until hardware in 2Ã—4 |
 
-- [ ] **Step 3: Filter helpers (client)** — mirror server rules; if `showAll`, use full catalogs
+Add dated note pointing at this plan + spec.
 
-- [ ] **Step 4: Help copy** under table: *Role is where this sensor lives. Task is optional — No task only reports into Live/Climate.*
-
-- [ ] **Step 5: Build SPA** and smoke-check Settings types compile
+- [ ] **Step 2: Commit** (only if user asked)
 
 ---
+

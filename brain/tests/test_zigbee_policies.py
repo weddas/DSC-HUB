@@ -416,3 +416,115 @@ def test_mqtt_ingest_occupancy_as_tank_wet(temp_db: Path, monkeypatch: pytest.Mo
     _ingest._on_message(None, None, _Msg())
     assert _seat("dehumidifier", temp_db)["in_service"] is False
     assert _ingest._by_role.get("leak_tank", {}).get("wet") is True
+
+
+def test_floor_flood_wet_banner_no_oos(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("dsc_brain.settings.DEFAULT_DB", temp_db)
+    forced: list[tuple[str, bool]] = []
+    monkeypatch.setattr(
+        "dsc_brain.appliance_driver.force_set_sonoff_relay_sync",
+        lambda seat, on: forced.append((seat, on)),
+    )
+    from dsc_brain.fleet_state import get_fleet_state, update_fleet_state
+    from dsc_brain.zigbee_policies import evaluate_device_policies, save_zigbee_policies
+
+    fleet = get_fleet_state()
+    fleet.system = dict(fleet.system)
+    fleet.system["zigbee_policy_state"] = {}
+    fleet.system["critical_banners"] = []
+    update_fleet_state(fleet)
+
+    save_zigbee_policies(
+        {
+            "0xflood1": {
+                "recipe_id": "floor_flood_alert",
+                "enabled": True,
+                "params": {"problem_when": "active", "banner": "Floor water detected"},
+            }
+        }
+    )
+    out = evaluate_device_policies(
+        ieee="0xflood1",
+        friendly_name="desk_flood",
+        payload={"occupancy": True},
+    )
+    assert out and out["changed"] is True and out["problem"] is True
+    assert _seat("dehumidifier", temp_db)["in_service"] is True
+    assert _seat("humidifier", temp_db)["in_service"] is True
+    assert forced == []
+    banners = get_fleet_state().system.get("critical_banners") or []
+    assert any(b.get("id") == "zb-policy-0xflood1" for b in banners)
+    st = get_fleet_state().system["zigbee_policy_state"]["0xflood1"]
+    assert st["active"] is True and st["problem"] is True
+
+
+def test_floor_flood_dry_clears_banner(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("dsc_brain.settings.DEFAULT_DB", temp_db)
+    from dsc_brain.fleet_state import get_fleet_state, update_fleet_state
+    from dsc_brain.zigbee_policies import evaluate_device_policies, save_zigbee_policies
+
+    fleet = get_fleet_state()
+    fleet.system = dict(fleet.system)
+    fleet.system["zigbee_policy_state"] = {
+        "0xflood1": {"recipe_id": "floor_flood_alert", "active": True, "problem": True}
+    }
+    fleet.system["critical_banners"] = [
+        {"id": "zb-policy-0xflood1", "text": "Floor water detected", "tone": "critical"}
+    ]
+    update_fleet_state(fleet)
+    save_zigbee_policies(
+        {
+            "0xflood1": {
+                "recipe_id": "floor_flood_alert",
+                "enabled": True,
+                "params": {"problem_when": "active", "banner": "Floor water detected"},
+            }
+        }
+    )
+    out = evaluate_device_policies(
+        ieee="0xflood1",
+        friendly_name="desk_flood",
+        payload={"occupancy": False},
+    )
+    assert out and out["changed"] is True and out["problem"] is False
+    banners = get_fleet_state().system.get("critical_banners") or []
+    assert not any(b.get("id") == "zb-policy-0xflood1" for b in banners)
+
+
+def test_floor_flood_inactive_polarity(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("dsc_brain.settings.DEFAULT_DB", temp_db)
+    from dsc_brain.fleet_state import get_fleet_state, update_fleet_state
+    from dsc_brain.zigbee_policies import evaluate_device_policies, save_zigbee_policies
+
+    fleet = get_fleet_state()
+    fleet.system = dict(fleet.system)
+    fleet.system["zigbee_policy_state"] = {}
+    fleet.system["critical_banners"] = []
+    update_fleet_state(fleet)
+    save_zigbee_policies(
+        {
+            "0xflood2": {
+                "recipe_id": "floor_flood_alert",
+                "enabled": True,
+                "params": {
+                    "problem_when": "inactive",
+                    "banner": "Floor dry alarm — check sensor",
+                },
+            }
+        }
+    )
+    out = evaluate_device_policies(
+        ieee="0xflood2",
+        friendly_name="inv",
+        payload={"occupancy": False},
+    )
+    assert out and out["problem"] is True and out["changed"] is True
+    banners = get_fleet_state().system.get("critical_banners") or []
+    assert any(b.get("id") == "zb-policy-0xflood2" for b in banners)
+
+
+def test_flood_banner_template() -> None:
+    from dsc_brain.zigbee_policies import flood_banner_template
+
+    assert flood_banner_template("active") == "Floor water detected"
+    assert "dry" in flood_banner_template("inactive").lower() or "Dry" in flood_banner_template("inactive")

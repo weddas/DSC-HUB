@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { Fragment, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Button,
@@ -32,6 +32,7 @@ import { ArcGauge, GotWantBars, MultiLineChart, seriesExtrema } from "../viz/cha
 import { rhSegments, tempSegments, vpdSegments } from "../viz/gaugeTheme";
 import { fmtDurationMs } from "../lib/formatDuration";
 import { SHARED_AIR_FAN_PCT, fanPctChip } from "../components/DashHomeSections";
+import { isZigbeeSafetyLeakRole } from "../lib/fleetApi";
 
 function resolveRoomVpdId(entity: (id: string) => unknown): string {
   if (entity("sensor.dsc_hub_room_vpd_kpa")) return "sensor.dsc_hub_room_vpd_kpa";
@@ -159,17 +160,64 @@ export function LiveClimatePage() {
   const zigbeeByRole = (fleet.system.zigbee_by_role ?? fleet.system.zigbee_by_placement) as
     | Record<string, Record<string, unknown>>
     | undefined;
-  const zigbeeRoleRows = useMemo(() => {
-    if (!zigbeeByRole || typeof zigbeeByRole !== "object") return [];
-    return Object.entries(zigbeeByRole).map(([role, row]) => ({
-      role,
-      zone: String(row.zone ?? "—"),
-      temp: row.temperature,
-      rh: row.humidity,
-      name: String(row.friendly_name ?? role),
-      updatedAt: typeof row.updated_at === "number" ? row.updated_at : null,
-    }));
+  const bindings = (fleet.system.zigbee_device_bindings ?? {}) as Record<
+    string,
+    { role?: string; zone?: string; recipe_id?: string }
+  >;
+  const policies = (fleet.system.zigbee_device_policies ?? {}) as Record<
+    string,
+    { recipe_id?: string }
+  >;
+  const policyState = (fleet.system.zigbee_policy_state ?? {}) as Record<
+    string,
+    { problem?: boolean; active?: boolean }
+  >;
+
+  function ieeeForRole(roleId: string): string | null {
+    for (const [ieee, row] of Object.entries(bindings)) {
+      if (String(row?.role ?? "") === roleId) return ieee;
+    }
+    return null;
+  }
+
+  const zigbeeClimateRows = useMemo(() => {
+    if (!zigbeeByRole) return [];
+    return Object.entries(zigbeeByRole)
+      .filter(([role]) => !isZigbeeSafetyLeakRole(role))
+      .map(([role, row]) => ({
+        role,
+        zone: String(row.zone ?? "—"),
+        temp: row.temperature,
+        rh: row.humidity,
+        name: String(row.friendly_name ?? role),
+      }));
   }, [zigbeeByRole]);
+
+  const zigbeeSafetyRows = useMemo(() => {
+    if (!zigbeeByRole) return [];
+    return Object.entries(zigbeeByRole)
+      .filter(([role]) => isZigbeeSafetyLeakRole(role))
+      .map(([role, row]) => {
+        const ieee = ieeeForRole(role);
+        const recipeId = ieee ? String(policies[ieee]?.recipe_id ?? "none") : "none";
+        const st = ieee ? policyState[ieee] : undefined;
+        const wet =
+          typeof row.wet === "boolean"
+            ? row.wet
+            : typeof row.active === "boolean"
+              ? row.active
+              : null;
+        const showProblem = Boolean(ieee && recipeId !== "none" && st && typeof st.problem === "boolean");
+        return {
+          role,
+          zone: String(row.zone ?? "—"),
+          name: String(row.friendly_name ?? role),
+          wet,
+          showProblem,
+          problem: showProblem ? Boolean(st?.problem) : null,
+        };
+      });
+  }, [zigbeeByRole, bindings, policies, policyState]);
 
   const rowLit = (id: "room" | "clone" | "main") =>
     focus === "compare" || focus === id ? "dsc-gauge-row-3 is-lit" : "dsc-gauge-row-3";
@@ -474,7 +522,10 @@ export function LiveClimatePage() {
           </Card>
         </div>
 
-        {canopyRole || Number.isFinite(canopyTempHeld.value) || zigbeeRoleRows.length ? (
+        {canopyRole ||
+        Number.isFinite(canopyTempHeld.value) ||
+        zigbeeClimateRows.length ||
+        zigbeeSafetyRows.length ? (
           <div className="dsc-col-12">
             <Card className="dsc-glass" title="Zigbee by role" icon="gauge">
               <p className="dsc-muted" style={{ fontSize: 12, marginBottom: 8 }}>
@@ -499,7 +550,7 @@ export function LiveClimatePage() {
                   />
                 ) : null}
               </div>
-              {zigbeeRoleRows.length ? (
+              {zigbeeClimateRows.length ? (
                 <div className="dsc-table-scroll">
                   <table className="dsc-table">
                     <thead>
@@ -512,7 +563,7 @@ export function LiveClimatePage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {zigbeeRoleRows.map((row) => (
+                      {zigbeeClimateRows.map((row) => (
                         <tr key={row.role}>
                           <td>{row.role}</td>
                           <td>{row.zone}</td>
@@ -532,11 +583,40 @@ export function LiveClimatePage() {
                     </tbody>
                   </table>
                 </div>
-              ) : (
+              ) : zigbeeSafetyRows.length ? null : (
                 <p className="dsc-muted" style={{ fontSize: 12 }}>
                   No climate roles bound yet — permit join, then set Role + Zone and Save.
                 </p>
               )}
+              {zigbeeSafetyRows.length ? (
+                <>
+                  <p className="dsc-muted" style={{ fontSize: 12, marginTop: 12, marginBottom: 8 }}>
+                    Safety — Wet/Dry is the raw sensor. Problem/Clear appears only when a Task is bound.
+                  </p>
+                  <div className="dsc-chip-row">
+                    {zigbeeSafetyRows.map((row) => (
+                      <Fragment key={row.role}>
+                        <StatusChip
+                          label={`${row.role} · ${row.zone} · ${row.name}`}
+                          tone="muted"
+                        />
+                        <StatusChip
+                          label={
+                            row.wet === true ? "Wet" : row.wet === false ? "Dry" : "Wet/Dry —"
+                          }
+                          tone={row.wet === true ? "warn" : "ok"}
+                        />
+                        {row.showProblem ? (
+                          <StatusChip
+                            label={row.problem ? "Problem" : "Clear"}
+                            tone={row.problem ? "warn" : "ok"}
+                          />
+                        ) : null}
+                      </Fragment>
+                    ))}
+                  </div>
+                </>
+              ) : null}
             </Card>
           </div>
         ) : null}

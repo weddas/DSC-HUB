@@ -1,80 +1,93 @@
-# Task 2 Report — Capability class inference (TDD)
+# Task 2 Report: Settings — shared task params + safety role helper
 
-**Status:** DONE  
-**Branch:** (unchanged — working tree)  
-**Commit:** none (per user rule: commit only when asked)  
-**Runtime code changed:** yes
+## Status: Complete
 
-## What was done
+SPA-only changes per brief. No commits made.
 
-Added capability-class inference and catalog filtering helpers in `zigbee_mqtt.py`, wired `capability_class` (and optional `capability_override`) onto each device from `get_zigbee_devices()`, and stored `expose_props` from Z2M bridge device payloads for honest class fingerprinting before first MQTT state.
+## Files changed
 
-### Steps completed (TDD)
+| File | Change |
+|------|--------|
+| `homeassistant/custom_components/dsc_hub/frontend/src/lib/fleetApi.ts` | Extended `isZigbeeSafetyLeakRole`; added `zigbeeFloodBannerTemplate` |
+| `homeassistant/custom_components/dsc_hub/frontend/src/pages/SettingsPage.tsx` | Generalized task-params UI for tank + flood recipes |
 
-1. **RED — Write failing tests**  
-   Created `brain/tests/test_zigbee_capability.py` with 12 tests covering:
-   - `infer_capability_class` (climate, liquid, motion, liquid-over-climate priority, other)
-   - `filter_roles_for_class` (climate excludes leak roles; liquid safety-only; motion unbound-only)
-   - `filter_recipes_for_class` (liquid includes `tank_full_appliance`; climate none-only)
-   - `get_zigbee_devices` capability from live state keys and binding `capability_override`
+## Implementation summary
 
-2. **RED — Run tests (expect FAIL)**  
-   ```
-   cd brain; python -m pytest tests/test_zigbee_capability.py -q
-   ```
-   **Evidence:** 12 failed — `ImportError` for missing helpers; `KeyError: 'capability_class'` on device rows.
+### fleetApi.ts
 
-3. **GREEN — Implement**  
-   - `infer_capability_class(exposes_props, state_keys)` — liquid > climate > motion > other; occupancy wet signal unchanged in policies layer.
-   - `filter_roles_for_class(class, roles)` — climate→`kind: climate`; liquid→`kind: safety`; plug→`kind: plug`; motion/other→unbound only.
-   - `filter_recipes_for_class(class, recipes)` — always includes `none`; others require `capability_class` in recipe `device_classes`.
-   - `_expose_properties_from_exposes` + `expose_props` on bridge device rows (`_update_devices`, successful `device_interview`).
-   - `get_zigbee_devices()` sets `capability_class`; sets `capability_override` when binding carries override (Task 3 will persist on save).
+- **`isZigbeeSafetyLeakRole(roleId)`** — now returns true for `leak_tank`, `leak_floor`, and any id starting with `leak_floor_` (covers `leak_floor_room`, `leak_floor_4x8`, `leak_floor_2x4`).
+- **`zigbeeFloodBannerTemplate(problemWhen)`** — mirrors brain `flood_banner_template`: `"Floor water detected"` (active) / `"Floor dry alarm — check sensor"` (inactive).
 
-4. **GREEN — Run full test suite (expect PASS)**  
-   ```
-   cd brain; python -m pytest tests/test_zigbee_capability.py tests/test_zigbee_policies.py -q
-   ```
-   **Evidence:** `25 passed in 2.29s`
+### SettingsPage.tsx
 
-5. **Commit** — skipped (user did not ask).
+- Constants: `TANK_TASK_ID`, `FLOOD_TASK_ID`, `TASK_PARAM_IDS` Set.
+- **`taskParamDefaults(recipeId, recipe)`** — flood path returns `problem_when`, `banner`, `banner_tone`; tank path preserves existing seat/appliance defaults.
+- **`showTaskParams`** — `role !== "unbound" && TASK_PARAM_IDS.has(recipeId)`.
+- Recipe change handler seeds params via `taskParamDefaults` for both tank and flood.
+- **`updateTaskParam`** — flood updates only polarity + banner (auto-regenerates via `zigbeeFloodBannerTemplate`); tank keeps appliance + polarity + banner (via `zigbeeBannerTemplate`).
+- **Appliance `<select>`** — rendered only when `recipeId === TANK_TASK_ID`.
+- **Fallback arrays** — roles include three space-specific floor leak roles; recipes include `floor_flood_alert`.
+
+## Build
+
+```text
+cd homeassistant/custom_components/dsc_hub/frontend
+npm.cmd run build:spa
+```
+
+- **Exit code:** 0
+- **Output:** `spa-dist/assets/index-CqcbMep5.js` (new hash), plus CSS/chunk assets
 
 ## Self-review
 
-| Brief requirement | Met |
-|-------------------|-----|
-| `infer_capability_class(exposes_props, state_keys) -> str` | yes |
-| `filter_roles_for_class(class, roles) -> list` | yes |
-| `filter_recipes_for_class(class, recipes) -> list` | yes |
-| Device dict gains `capability_class` | yes |
-| Optional `capability_override` on device when binding has it | yes |
-| climate → kind climate (+ unbound) | yes |
-| liquid → kind safety (+ unbound) | yes |
-| plug → kind plug (+ unbound) | yes |
-| motion/other → unbound only | yes |
-| Recipes filter by `device_classes` intersection; always `none` | yes |
-| Wire into `get_zigbee_devices()` | yes |
-| Exposes from bridge definition when cached | yes |
-| Fallback to `_device_states` keys | yes |
-| Binding `capability_override` applied | yes |
-| TDD RED→GREEN | yes |
-| No git commit | yes |
+| Brief requirement | Done? | Notes |
+|-------------------|-------|-------|
+| Extend `isZigbeeSafetyLeakRole` | ✓ | Matches brief verbatim |
+| Add `zigbeeFloodBannerTemplate` | ✓ | Text matches brain `flood_banner_template` |
+| `TASK_PARAM_IDS` Set | ✓ | |
+| `taskParamDefaults` helper | ✓ | Flood + tank branches |
+| Shared task-params panel | ✓ | Both recipes show Problem when + Banner |
+| Appliance select tank-only | ✓ | Conditional on `TANK_TASK_ID` |
+| Fallback roles (3 space floor) | ✓ | room / 4×8 / 2×4 |
+| Fallback flood recipe | ✓ | |
+| `npm run build:spa` exit 0 | ✓ | |
+| No commit | ✓ | |
 
-## Test summary
+### Concerns / follow-ups
 
-`25 passed` — 12 new capability tests + 13 existing policy tests unchanged.
+1. **No unit tests in SPA** — helpers are thin mirrors of brain; brain tests cover banner templates. SPA build is the gate for this task.
+2. **`liquidRecipe` variable name** in `ZigbeeBindRow` is now misnamed (holds current recipe, not tank-only) — cosmetic only; rename optional in a polish pass.
+3. **Role auto-override to `liquid` class** — existing behavior for `isZigbeeSafetyLeakRole` now also triggers for `leak_floor_*` ids, which is intended.
 
-## Concerns / follow-ups
+## Brain files
 
-1. **Plug inference weak** — brief leaves `state`-only devices as `other`; plug kind filtering exists but inference does not yet return `plug` (deferred until device-type refinement).
-2. **Task 3 scope** — `save_zigbee_bindings` does not yet accept/persist `capability_override`; read path works when override is present in stored JSON.
-3. **SPA not updated** — Settings filtered selects remain Task 4; server helpers ready for API consumers.
-4. **`definition` on device rows** — now stored from bridge list for expose extraction; slightly larger device payload (acceptable for Settings honesty).
+Untouched per task scope (Task 1 uncommitted brain work remains separate).
 
-## Files touched
+---
 
-| Path | Action |
+## Task 2 review fix — recipe-change param seeding
+
+### Status: Fixed
+
+Review finding: when the Task/recipe `<select>` changed in `ZigbeeBindRow`, `taskParamDefaults(nextRecipe, liquidRecipe)` passed the **current** recipe catalog row (`recipeId`), so tank↔flood switches seeded the wrong banner/defaults.
+
+### Change
+
+| File | Change |
 |------|--------|
-| `brain/dsc_brain/zigbee_mqtt.py` | inference/filter helpers, expose_props cache, `get_zigbee_devices` wiring |
-| `brain/tests/test_zigbee_capability.py` | new — 12 tests |
-| `.superpowers/sdd/task-2-report.md` | this report |
+| `homeassistant/custom_components/dsc_hub/frontend/src/pages/SettingsPage.tsx` | Recipe `onChange` now resolves `allRecipes.find((r) => r.id === nextRecipe)` for `taskParamDefaults`; removed unused misnamed `liquidRecipe` variable |
+
+### Build (post-fix)
+
+```text
+cd homeassistant/custom_components/dsc_hub/frontend
+npm.cmd run build:spa
+```
+
+- **Exit code:** 0
+- **Output:** `spa-dist/assets/index-Cl2q9nOC.js` (new hash), plus CSS/chunk assets
+- **Duration:** ~3.7s
+
+### No commit
+
+Per instructions — fix remains uncommitted.

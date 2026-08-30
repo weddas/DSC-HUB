@@ -1,51 +1,38 @@
-# Task 5 report � Pi hotpatch + evidence
+﻿# Task 5 report — Pi hotpatch + desk flood evidence
 
-**Date:** 2026-08-30  
-**Pi:** 192.168.86.48 (dsc-hub-brain 7.3.0)
+**Date:** 2026-08-31  
+**Status:** DONE  
+**Pi:** 192.168.86.48 (power-cycled by operator after prior sudo hang)
 
-## Prep (desk)
+## Deploy
 
-- Rebuilt SPA: `npm run build:spa` ? `spa-dist/assets/index-nLu-U8CF.js` (SettingsPage unbound-params fix included).
-- Staged brain modules: `zigbee_policies.py`, `zigbee_mqtt.py`.
+- SPA: `index-Cj_Rsb-d.js` → `dsc-hub-brain:/app/static/`
+- Brain: `zigbee_policies.py` + `zigbee_mqtt.py` → `/app/dsc_brain/`
+- Restart: `timeout 25 docker restart dsc-hub-brain` (sudo -S)
+- Health: `health_ok 7.3.0`
+- Script: `.audit/task5-desk-flood-run.sh`
 
-## Hotpatch (live)
+## Bind
 
-- Uploaded `/tmp/task5-spa.tgz`, `/tmp/task5-brain.tgz` via pscp.
-- `docker cp` ? `dsc-hub-brain:/app/static/` and `/app/dsc_brain/{zigbee_policies,zigbee_mqtt}.py`.
-- `timeout 25 docker restart dsc-hub-brain` (no bare kill).
-- Verified: `GET /` serves `assets/index-nLu-U8CF.js`; `/health` ok.
+| ieee | role | zone | recipe |
+|------|------|------|--------|
+| `0xa4c1385a686af7df` | `leak_floor_room` | `room` | `floor_flood_alert` |
+| `0xa4c1380d734f2033` | `leak_floor_4x8` | `4x8` | `floor_flood_alert` |
+| `0xa4c138b9e2b9b690` | `leak_tank` | `4x8` | `tank_full_appliance` (preserved) |
 
-**Note:** First run hung on `sudo -S` over plink while Pi briefly dropped SSH/ping (~5 min); recovered; rerun used docker-with-sudo fallback in `.audit/task5-pi-hotpatch-evidence.sh`.
+## MQTT evidence (occupancy)
 
-## Evidence � `problem_when=inactive` (QA ieee `0xqa_task5_inactive`)
+1. **Baseline dry** — both flood policies `problem=False`; `banners=[]`
+2. **WET room** — `zb-policy-0xa4c1385a686af7df` present; 4×8 banner absent; room `problem=True`
+3. **DRY room** — banners cleared; room `problem=False`
+4. **WET 4×8** — `zb-policy-0xa4c1380d734f2033` present; room banner absent; room `problem=False`
+5. **DRY 4×8** — banners cleared
 
-Policy: `seat_id=humidifier`, `problem_when=inactive`, role `leak_tank`, MQTT topic `zigbee2mqtt/qa_task5_inactive`.
+## Honesty / OOS
 
-| Inject | `qa_problem` | Banners |
-|--------|----------------|---------|
-| `occupancy: false` (dry) | `True` | critical banner present |
-| `occupancy: true` (wet) | `False` | `[]` |
+- Post-run inventory: `dehumidifier in_service=true`, `humidifier in_service=true` (flood did not OOS)
+- Fleet `zigbee_by_role`: `leak_floor_room` zone=room wet=False; `leak_floor_4x8` zone=4x8 wet=False (independent rows, no clobber)
 
-## Evidence � live tank `0xa4c138b9e2b9b690`
+## Log
 
-- Binding already `leak_tank` / Dehumidifier tank; **policy was missing** on disk ? restored with `.audit/zb-bind-tank-occ.sh` (`tank_full_appliance`, `seat_id=dehumidifier`, default `problem_when=active`).
-- MQTT `occupancy: true` ? `live_problem True`, `problem_when active`, critical banner `Dehumidifier tank FULL - empty tank`.
-- MQTT `occupancy: false` ? `live_problem False`, banners cleared.
-
-## Recipes API (post-hotpatch)
-
-`tank_full_appliance` exposes `param_schema` for `seat_id` (dehumidifier/humidifier), `problem_when` (active/inactive), `banner`; defaults include `problem_when: active`.
-
-## Artifacts
-
-- `.audit/task5-pi-hotpatch-evidence.sh` � hotpatch + QA inactive polarity loop
-- `.audit/task5-live-smoke.sh` � live ieee wet/dry smoke
-
-## FOLLOWUPS
-
-Updated **Operator params + filtered selects (implement)** ? **done (live)** with evidence note.
-
-## Not done / follow-up
-
-- QA binding `0xqa_task5_inactive` left on Pi for soak; disable/remove if undesired.
-- `capability_class` not surfaced on `/settings/zigbee/recipes` JSON (field absent); SPA filtering may use other keys � no blocker for policy params evidence.
+Remote log: `/tmp/task5-desk-flood.log` on Pi; EXIT:0
