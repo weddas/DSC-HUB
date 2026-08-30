@@ -38,3 +38,27 @@ All reads/writes go through brain HTTP API (`brain/dsc_brain/api.py`):
 ## Host
 
 Pi 4 4GB LAN (`http://dsc-brain.local` or IP). Static UI can ship later; API stub is first.
+
+## Settings → Zigbee (tip `f7b4e80`)
+
+Device Kit Zigbee rows: **Role · Zone · Task** with capability-filtered selects; **Show all** escape.
+
+| Task | Params UI | Act |
+|------|-----------|-----|
+| No task | — | Datapoint only |
+| Liquid level → appliance OOS | Appliance · Problem when · Banner | OOS + force relay + banner |
+| Floor flood → alert | Problem when · Banner (no Appliance) | Banner + grow-log only |
+
+Climate sensors stay **No task**. Kit liquid tanks may publish wet on `occupancy` — not motion. Overview shows `critical_banners` from policy edges.
+
+SoT: [ZIGBEE-ROLE-TASK.md](ZIGBEE-ROLE-TASK.md) · SPA bundle `index-Cj_Rsb-d.js` · radio ops [ZIGBEE-RECOVERY.md](../ops/ZIGBEE-RECOVERY.md).
+
+## Climate Zigbee honesty (tip `f7b4e80`)
+
+Climate **Zigbee by role** card splits climate temp/RH from safety:
+
+- Safety chips: **Wet/Dry** from `zigbee_by_role` (raw).
+- **Problem/Clear** only when Task ≠ `none` and `fleet.system.zigbee_policy_state[ieee].problem` is present — SPA must not invent Clear from Dry alone.
+- Distinct floor roles (`leak_floor_room` / `_4x8` / `_2x4`) so two sensors do not clobber one honesty row.
+
+Helper: `isZigbeeSafetyLeakRole` / `zigbeeFloodBannerTemplate` in `fleetApi.ts`.
