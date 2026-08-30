@@ -70,19 +70,19 @@ Built-in z2m converters handle Tuya `TS0201` (`0x0402` + `0x0405`). No DSC-HUB d
 2. After a **fresh power-cycle** (Docker healthy, `/health` already answering): timed `docker stop` + `docker start`,
 3. Operator **power-cycle** if Docker is already wedged — do not keep issuing stop/restart/kill.
 
-Safe pattern when a restart is unavoidable **and** `/health` is already up:
+Safe pattern when a restart is unavoidable **and** `/health` is already up (use your operator sudo; **never commit passwords**):
 
 ```bash
-echo Digital | sudo -S timeout 15 docker stop dsc-hub-brain
-echo Digital | sudo -S timeout 30 docker start dsc-hub-brain
+sudo timeout 15 docker stop dsc-hub-brain
+sudo timeout 30 docker start dsc-hub-brain
 # If ping/SSH die: power-cycle the Pi — do not keep issuing docker commands.
 ```
 
 Legacy (still timeout-wrapped; last resort before power-cycle):
 
 ```bash
-echo Digital | sudo -S timeout 8 docker kill -s KILL dsc-hub-z2m || true
-echo Digital | sudo -S timeout 15 docker start dsc-hub-z2m
+sudo timeout 8 docker kill -s KILL dsc-hub-z2m || true
+sudo timeout 15 docker start dsc-hub-z2m
 ```
 
 Prefer editing `/var/lib/dsc-hub/z2m/configuration.yaml` in place; if the file is **0 bytes**, restore from `configuration_backup_v*.yaml` before any restart.
