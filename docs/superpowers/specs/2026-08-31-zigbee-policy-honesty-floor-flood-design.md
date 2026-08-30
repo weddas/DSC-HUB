@@ -15,8 +15,9 @@
 
 1. Climate honesty: for each bound safety leak role, show **Wet/Dry** primary; when that ieee has Task ≠ `none` and policy state exists, add secondary **Problem/Clear** from `zigbee_policy_state.problem` (SPA must not re-derive from wet alone).
 2. Add one recipe: `floor_flood_alert` — opposite-edge clear; params `problem_when` + `banner`; never OOS / force_relay.
-3. Distinct floor roles so both desk sensors publish honesty rows: room and 4×8.
+3. Distinct floor roles so both desk sensors publish honesty rows: room and 4×8; catalog also includes **2×4** as a selectable space (no evidence bind required this pass).
 4. Pi evidence: tank Task still shows wet + problem badge; both desk sensors bound as flood Tasks (room + 4×8) with wet→banner / dry→clear and no seat OOS.
+5. Leave a clear extension path for **multiple sensors per space** later (not implemented this pass).
 
 ## Non-goals
 
@@ -24,7 +25,7 @@
 - Additional recipes beyond `floor_flood_alert`
 - Twin safety chips; Settings bind-row redesign beyond shared task-params
 - Changing tank OOS semantics or inventing a free-form IFTTT graph
-- Merging two devices under one `by_role` key via zone (rejected — use distinct roles, same rule as multi-height climate)
+- Implementing multi-sensor-per-space now (catalog/roles stay one ieee per role id this pass; see extension below)
 
 ## Decisions (approved)
 
@@ -52,14 +53,15 @@ Climate Zigbee card
 
 ### Distinct floor roles
 
-Add catalog roles (kind `safety`):
+Add catalog roles (kind `safety`) — one **primary** slot per space this pass:
 
-| id | label | Intended zone |
-|----|-------|----------------|
-| `leak_floor_room` | Water leak (floor · room) | `room` |
-| `leak_floor_4x8` | Water leak (floor · 4×8) | `4x8` |
+| id | label | Intended zone | This pass |
+|----|-------|----------------|-----------|
+| `leak_floor_room` | Water leak (floor · room) | `room` | Evidence bind (desk) |
+| `leak_floor_4x8` | Water leak (floor · 4×8) | `4x8` | Evidence bind (desk) |
+| `leak_floor_2x4` | Water leak (floor · 2×4) | `2x4` | Catalog + Settings only (future bind) |
 
-Keep existing `leak_floor` as a generic safety role (still valid / Show-all). New recipes and filters treat all three as safety leak roles for capability filtering and SPA helpers (`isZigbeeSafetyLeakRole`).
+Keep existing `leak_floor` as a generic safety role (still valid / Show-all). Recipe filters and SPA helpers (`isZigbeeSafetyLeakRole`) treat **all** `leak_floor*` ids as safety leak roles.
 
 **Evidence bind (desk sensors):**
 
@@ -68,7 +70,18 @@ Keep existing `leak_floor` as a generic safety role (still valid / Show-all). Ne
 | `0xa4c1385a686af7df` or `0xa4c1380d734f2033` | `leak_floor_room` | `room` | `floor_flood_alert` |
 | the other | `leak_floor_4x8` | `4x8` | `floor_flood_alert` |
 
-Operator may swap which ieee maps to which role; both must be bound and live before close.
+Operator may swap which ieee maps to which role; both must be bound and live before close. Do **not** require a 2×4 bind for acceptance.
+
+### Future: multiple sensors per space
+
+This pass: one ieee per role id (`by_role[role]` last-writer-wins — unchanged).
+
+Later (FOLLOWUPS / separate design), allow N sensors per space without one-off wiring:
+
+1. **Preferred:** indexed role slots in catalog, e.g. `leak_floor_4x8`, `leak_floor_4x8_b`, `leak_floor_room_b` (same pattern as multi-height climate roles) — each keeps its own honesty row + `zb-policy-{ieee}` banner.
+2. **Alternative:** `zigbee_by_role` safety values become lists keyed by ieee (bigger SPA/brain change).
+
+Do not use zone alone to multiplex devices under one role id. Policies already evaluate **per ieee**, so multi-sensor banners work as soon as each ieee has a unique role (or list row) + Task.
 
 ### Recipe `floor_flood_alert`
 
@@ -76,7 +89,7 @@ Operator may swap which ieee maps to which role; both must be bound and live bef
 |-------|--------|
 | Label | Floor flood → alert |
 | `device_classes` | `liquid`, `safety` |
-| `suggested_roles` | `leak_floor_room`, `leak_floor_4x8`, `leak_floor` |
+| `suggested_roles` | `leak_floor_room`, `leak_floor_4x8`, `leak_floor_2x4`, `leak_floor` |
 | Defaults | `problem_when: active`, `banner: "Floor water detected"`, `banner_tone: critical` |
 | Params | `problem_when`, `banner` only |
 | Problem edge | Upsert `zb-policy-{ieee}` critical banner + grow-log |
@@ -125,4 +138,5 @@ Default banner when polarity changes (SPA helper):
 
 - Further recipes after this one
 - Dismissible sticky flood banners
-- Multi-device under one role key (if ever needed, separate design)
+- Multi-sensor-per-space (indexed `*_b` roles or list-valued safety `by_role`) — path sketched above; implement when a second sensor is needed in the same space
+- Live bind / evidence for `leak_floor_2x4` when hardware is placed in the 2×4 tent
