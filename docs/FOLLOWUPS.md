@@ -19,7 +19,7 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 | Framework | **done (live)** | `zigbee_policies.py` + MQTT evaluate + Settings Task column + Overview `critical_banners` / `dsc-banner--critical-live`; ESPHome poll preserves policy keys; `occupancy` = wet for SNZB-03-fingerprinted liquid sensors |
 | Recipe `tank_full_appliance` | **done (Pi evidence)** | Inject + live bind `0xa4c138b9e2b9b690` leak_tank ? dehum OOS on occupancy; dry restore. Desk sensors unbound |
 | Role `leak_tank` | **done (live)** | Catalog + by_role safety row |
-| Operator params + filtered selects (implement) | **done (live)** | Pi task5 2026-08-30: hotpatch `zigbee_policies.py`+`zigbee_mqtt.py`, SPA `index-nLu-U8CF.js`; QA `problem_when=inactive` dry?OOS+banner / wet?clear; live `0xa4c138b9e2b9b690` `problem_when=active` wet?OOS+banner / dry?clear (policy re-bound via `.audit/zb-bind-tank-occ.sh`) |
+| Operator params + filtered selects (implement) | **done (live)** | Pi task5 2026-08-30: hotpatch `zigbee_policies.py`+`zigbee_mqtt.py`, SPA `index-nLu-U8CF.js`; QA `problem_when=inactive` dry→OOS+banner / wet→clear; live `0xa4c138b9e2b9b690` `problem_when=active` wet→OOS+banner / dry→clear (policy re-bound via `.audit/zb-bind-tank-occ.sh`). Developer SoT: `docs/brain/ZIGBEE-ROLE-TASK.md` |
 | Policy problem vs raw wet in UI | **next-plan** | Backend stores both; Live/Climate still show raw wet only |
 | Later recipes | **next-plan** | e.g. `floor_flood_alert` (banner+log only) ? add **one at a time**, not a massive catalog |
 
