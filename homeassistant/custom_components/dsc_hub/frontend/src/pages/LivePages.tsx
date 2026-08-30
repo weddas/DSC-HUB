@@ -19,7 +19,7 @@ import { readPotTrust } from "../lib/potTrust";
 import { VesselGlyph } from "../components/VesselGlyph";
 import { readPotVessel } from "../lib/vesselSpec";
 import { useEntityBus } from "../hooks/useEntityBus";
-import { useTentVitals } from "../hooks/useFleet";
+import { useTentVitals, useFleet } from "../hooks/useFleet";
 import { useEntitySeries } from "../hooks/useEntitySeries";
 import { useHeldReading } from "../hooks/useHeldReading";
 import { useChartHours } from "../hooks/useChartHours";
@@ -28,6 +28,7 @@ import { MultiLineChart } from "../viz/charts";
 import { potsInTent, isPotInServiceWithFleet, type TentId } from "../lib/seatModel";
 import { HelpTip } from "../components/HelpTip";
 import { PlantSeatPanel } from "./GrowPages";
+import { TwinViewport } from "../components/TwinViewport";
 
 export { LiveClimatePage } from "./ClimatePage";
 export { LiveRootPage } from "./RootPage";
@@ -37,8 +38,83 @@ function fmt(n: number, digits = 1): string {
   return Number.isFinite(n) ? n.toFixed(digits) : "—";
 }
 
+/** Spec path: Twin consumes Zigbee canopy the same way Climate/Overview do. */
+function TwinCanopyStrip() {
+  const fleet = useFleet();
+  const navigate = useNavigate();
+  const canopyRole =
+    typeof fleet.canopy?.role === "string" ? String(fleet.canopy.role) : null;
+  const canopyDevice =
+    typeof fleet.canopy?.friendly_name === "string" ? String(fleet.canopy.friendly_name) : null;
+  const canopyTemp =
+    fleet.canopy?.temp_c != null && Number.isFinite(Number(fleet.canopy.temp_c))
+      ? Number(fleet.canopy.temp_c)
+      : null;
+  const canopyRh =
+    fleet.canopy?.rh_pct != null && Number.isFinite(Number(fleet.canopy.rh_pct))
+      ? Number(fleet.canopy.rh_pct)
+      : null;
+  return (
+    <div className="dsc-chip-row" style={{ marginBottom: 10 }}>
+      {canopyRole ? (
+        <StatusChip
+          label={
+            canopyTemp != null
+              ? `Canopy ${canopyTemp.toFixed(1)}°C${
+                  canopyRh != null ? ` / ${canopyRh.toFixed(0)}%` : ""
+                } ← ${canopyRole}${canopyDevice ? ` (${canopyDevice})` : ""}`
+              : `Canopy ← ${canopyRole}${canopyDevice ? ` (${canopyDevice})` : ""}`
+          }
+          tone="ok"
+          onClick={() => navigate("/live/climate")}
+        />
+      ) : (
+        <StatusChip
+          label="Canopy unbound"
+          tone="muted"
+          onClick={() => navigate("/settings/device")}
+        />
+      )}
+    </div>
+  );
+}
+
+/** Pi SPA builds with VITE_DSC_PI=1 — R3F TwinKeepAlive portals into TwinViewport. */
+const PI_TWIN_SURFACE = import.meta.env.VITE_DSC_PI === "1";
+
 export function LiveTwinPage() {
   const navigate = useNavigate();
+  if (PI_TWIN_SURFACE) {
+    return (
+      <div className="dsc-page dsc-page--twin">
+        <PageHeader
+          icon="twin"
+          title="Twin"
+          subtitle="3D grow room — probes and tents. Prefer Climate Air path for CFM mass-balance."
+          primaryAction={
+            <Button teal onClick={() => navigate("/live/climate")}>
+              Climate air path
+            </Button>
+          }
+          actions={
+            <>
+              <HelpTip title="Twin status">
+                <p>
+                  R3F twin owns resize on Pi. Climate <b>Air path</b> remains the CFM SoT; Root owns probe soil.
+                  Canopy chip below is Zigbee-by-role (same SoT as Climate/Overview).
+                </p>
+              </HelpTip>
+              <Button onClick={() => navigate("/live/root")}>Open Root</Button>
+              <Button onClick={() => navigate("/live/4x8")}>4×8 cockpit</Button>
+              <Button onClick={() => navigate("/live/2x4")}>2×4 cockpit</Button>
+            </>
+          }
+        />
+        <TwinCanopyStrip />
+        <TwinViewport />
+      </div>
+    );
+  }
   return (
     <div className="dsc-page dsc-page--twin-chrome">
       <PageHeader
@@ -115,7 +191,14 @@ function TentCockpitPage({ tent }: { tent: Exclude<TentId, "unassigned"> }) {
         : "binary_sensor.dsc_hub_2x4_window_open",
     ) === "on";
   const cloneLampOn = state("light.dsc_hub_sf1000_dimmer") === "on";
-  const lit = tent === "clone" ? cloneLampOn : windowOpen;
+  const twinState = state("light.dsc_hub_twin_sf1000");
+  const twinAvailable =
+    available("light.dsc_hub_twin_sf1000") &&
+    twinState !== "unavailable" &&
+    twinState !== "unknown" &&
+    twinState !== "";
+  const twinLampOn = twinState === "on";
+  const lit = tent === "clone" ? cloneLampOn : twinAvailable ? twinLampOn : windowOpen;
   const intakeReading =
     tent === "main"
       ? resolveCfm("sensor.dsc_cfm_intake_main_allocated", "sensor.dsc_cfm_intake_main", { available, num })
@@ -262,14 +345,28 @@ function TentCockpitPage({ tent }: { tent: Exclude<TentId, "unassigned"> }) {
           icon="lighting"
           motion={lit ? "glow" : undefined}
           label={
-            tent === "clone" ? (lit ? "SF1000 ON" : "SF1000 OFF") : windowOpen ? "PHOTO ON" : "PHOTO OFF"
+            tent === "clone"
+              ? lit
+                ? "SF1000 ON"
+                : "SF1000 OFF"
+              : twinAvailable
+                ? lit
+                  ? "TWIN ON"
+                  : "TWIN OFF"
+                : windowOpen
+                  ? "PHOTO ON"
+                  : "PHOTO OFF"
           }
           tone={lit ? "ok" : "muted"}
           onClick={() =>
             inspector.open({
               entityId:
-                tent === "clone" ? "light.dsc_hub_sf1000_dimmer" : "binary_sensor.dsc_hub_4x8_window_open",
-              label: tent === "clone" ? "SF1000" : "4×8 window",
+                tent === "clone"
+                  ? "light.dsc_hub_sf1000_dimmer"
+                  : twinAvailable
+                    ? "light.dsc_hub_twin_sf1000"
+                    : "binary_sensor.dsc_hub_4x8_window_open",
+              label: tent === "clone" ? "SF1000" : twinAvailable ? "Twin SF1000" : "4×8 window",
               kind: "binary",
             })
           }

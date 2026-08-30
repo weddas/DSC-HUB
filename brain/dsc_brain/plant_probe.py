@@ -1,16 +1,17 @@
 """Plant ↔ probe assignment SoT (Bar 2).
 
-Probe = hardware potN. Plant = roster slot. Assignment = inventory
-extra.assigned_plant_id (\"slot:N\") plus pot-keyed roster row while live.
+Probe = hardware potN. Plant = durable UUID (migrated from legacy slot:N).
+Assignment = inventory extra.assigned_plant_id plus pot-keyed roster row while live.
 idle_home remains Soil Test dock only — never use it as plant assignment.
 """
 
 from __future__ import annotations
 
 import json
+import uuid
 from typing import Any
 
-from .compose_store import get_helper, get_roster_slots, set_helper, update_roster_slot
+from .compose_store import get_helper, get_roster_slots, save_roster_slots, set_helper, update_roster_slot
 from .settings import delete_roster, list_inventory, list_roster, upsert_inventory, upsert_roster
 from .stage_model import stage_family, tent_id
 
@@ -18,18 +19,80 @@ STASH_KEY = "plant_stash"
 
 
 def plant_id_for_slot(slot_num: int) -> str:
-    return f"slot:{int(slot_num)}"
+    """Legacy helper — prefer ensure_plant_uuid(slot_num) for new writes."""
+    return ensure_plant_uuid(int(slot_num))
+
+
+def ensure_plant_uuid(slot_num: int) -> str:
+    """Stable plant UUID for a roster slot; persists plant_uuid on the slot row."""
+    slots = get_roster_slots()
+    changed = False
+    found: dict[str, Any] | None = None
+    for slot in slots:
+        if int(slot.get("slot") or 0) != int(slot_num):
+            continue
+        found = slot
+        existing = str(slot.get("plant_uuid") or "").strip()
+        if existing:
+            return existing
+        new_id = f"plant:{uuid.uuid4()}"
+        slot["plant_uuid"] = new_id
+        changed = True
+        break
+    if found is None:
+        raise ValueError(f"invalid roster slot {slot_num}")
+    if changed:
+        save_roster_slots(slots)
+    return str(found.get("plant_uuid") or "")
 
 
 def parse_slot_plant_id(plant_id: str) -> int | None:
+    """Resolve plant id to roster slot number (legacy slot:N or plant:UUID)."""
     raw = str(plant_id or "").strip()
-    if not raw.startswith("slot:"):
+    if raw.startswith("slot:"):
+        try:
+            n = int(raw.split(":", 1)[1])
+        except ValueError:
+            return None
+        return n if 1 <= n <= 8 else None
+    if raw.startswith("plant:"):
+        for slot in get_roster_slots():
+            if str(slot.get("plant_uuid") or "") == raw:
+                return int(slot.get("slot") or 0) or None
         return None
-    try:
-        n = int(raw.split(":", 1)[1])
-    except ValueError:
-        return None
-    return n if 1 <= n <= 8 else None
+    return None
+
+
+def migrate_legacy_plant_ids() -> int:
+    """Ensure every non-empty slot has plant_uuid; rewrite inventory assigned_plant_id from slot:N."""
+    slots = get_roster_slots()
+    changed = False
+    for slot in slots:
+        status = str(slot.get("status") or "")
+        if status in ("empty", "", "unknown", "unavailable"):
+            continue
+        if not str(slot.get("plant_uuid") or "").strip():
+            slot["plant_uuid"] = f"plant:{uuid.uuid4()}"
+            changed = True
+    if changed:
+        save_roster_slots(slots)
+    rewritten = 0
+    for row in list_inventory():
+        if not str(row.get("seat_id") or "").startswith("pot"):
+            continue
+        extra = dict(row.get("extra") or {})
+        aid = str(extra.get("assigned_plant_id") or "")
+        slot_n = parse_slot_plant_id(aid) if aid.startswith("slot:") else None
+        if slot_n:
+            new_id = ensure_plant_uuid(slot_n)
+            if new_id != aid:
+                extra["assigned_plant_id"] = new_id
+                upsert_inventory(str(row["seat_id"]), {"extra": extra})
+                pot_n = int(str(row["seat_id"]).replace("pot", "") or "0")
+                if 1 <= pot_n <= 4:
+                    set_helper(f"text.dsc_probe{pot_n}_assigned_plant_id", new_id)
+                rewritten += 1
+    return rewritten
 
 
 def _clear_probe_helpers(pot_n: int) -> None:

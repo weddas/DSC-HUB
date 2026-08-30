@@ -36,7 +36,7 @@ function railTone(tone: string): "ok" | "warn" | "bad" | "muted" {
 }
 
 export function LiveLightPage() {
-  const { state, num, entity } = useEntityBus();
+  const { state, num, entity, available } = useEntityBus();
   const navigate = useNavigate();
   const inspector = useInspector();
   const darkViolation = state("binary_sensor.dsc_clone_dark_period_violation") === "on";
@@ -45,6 +45,10 @@ export function LiveLightPage() {
   const cloneDesk = buildCloneLightDesk({ state, num, entity });
   const lightOn = cloneDesk.sfOn;
   const windowOpen = state("binary_sensor.dsc_hub_4x8_window_open") === "on";
+  const twinEntity = "light.dsc_hub_twin_sf1000";
+  const twinAvailable = available(twinEntity);
+  const twinOn = twinAvailable && state(twinEntity) === "on";
+  const mainLit = twinAvailable ? twinOn : windowOpen;
   const hours4 = num("sensor.dsc_expected_light_hours");
   const hours2 = cloneDesk.wantHours ?? num("sensor.dsc_clone_expected_light_hours");
   const got4 = num("sensor.dsc_lights_on_today_4x8");
@@ -96,7 +100,7 @@ export function LiveLightPage() {
   const heaterOn = state("switch.dsc_hub_heater_demand") === "on";
   const dump = num("sensor.dsc_vent_heat_dump_btu");
   const lightsBuying =
-    (lightOn || windowOpen) && (heaterOn || (Number.isFinite(dump) && dump > 0));
+    (lightOn || mainLit) && (heaterOn || (Number.isFinite(dump) && dump > 0));
 
   const open = (id: string, label: string, kind?: "alert" | "binary" | "numeric") =>
     inspector.open({ entityId: id, label, kind: kind || "numeric" });
@@ -183,9 +187,20 @@ export function LiveLightPage() {
           <Card className="dsc-glass dsc-light-hero dsc-tent-card dsc-tent-card--main" title="4×8 photoperiod" icon="tent">
             <TentLightClock tent="main" />
             <p className="dsc-honesty" style={{ marginTop: 0 }}>
-              Main tent schedule — Got tracks the photoperiod window until a GPIO lamp exists.
+              {twinAvailable
+                ? "Main tent — Twin SF1000 (GPIO5) is the live lamp when available; window remains photoperiod SoT for Got hours."
+                : "Main tent schedule — Got tracks the photoperiod window until a GPIO lamp exists."}
             </p>
             <div className="dsc-chip-row">
+              {twinAvailable ? (
+                <StatusChip
+                  icon="lighting"
+                  motion={twinOn ? "glow" : undefined}
+                  label={twinOn ? "TWIN SF1000 ON" : "TWIN SF1000 OFF"}
+                  tone={twinOn ? "ok" : "muted"}
+                  onClick={() => open(twinEntity, "Twin SF1000", "binary")}
+                />
+              ) : null}
               <StatusChip
                 icon="tent"
                 motion={windowOpen ? "glow" : undefined}
@@ -229,6 +244,11 @@ export function LiveLightPage() {
               actualWhenHistory
               onClick={() => open("binary_sensor.dsc_hub_4x8_window_open", "4×8 window", "binary")}
             />
+            {twinAvailable ? (
+              <div className="dsc-chip-row" style={{ marginTop: 10 }}>
+                <EntityToggle entityId={twinEntity} label="Twin SF1000" />
+              </div>
+            ) : null}
             <div className="dsc-target-grid" style={{ marginTop: 12 }}>
               <EntityTime
                 entityId="time.dsc_hub_lights_on_time"

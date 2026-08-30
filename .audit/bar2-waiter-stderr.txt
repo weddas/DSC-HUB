@@ -1,0 +1,7 @@
+At C:\Users\cmgwe\Documents\DSC-HUB\.audit\bar2-wait-and-finish.ps1:53 char:87
++ ... /index-[^"]+\.js /opt/dsc-hub-repo/brain/static/index.html | head -1'
++                                                                         ~
+The string is missing the terminator: '.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : TerminatorExpectedAtEndOfString
+ 

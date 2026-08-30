@@ -1497,6 +1497,15 @@ output:
     # re-applies the persisted live value at boot and on change.
     min_power: 0.32
     zero_means_zero: true
+  - platform: ledc
+    pin: GPIO5
+    id: light_twin_sf1000_pwm
+    frequency: 1000 Hz
+    # 4x8 Twin SF1000 PWM. Same ramp-floor pattern as clone until a
+    # dedicated Twin ramp floor number is added. Hardware PWM module
+    # must be wired for live brightness (FOLLOWUPS).
+    min_power: 0.32
+    zero_means_zero: true
 
 fan:
   # While Full Auto owns the curve, HA speed writes are logged and the next
@@ -1562,6 +1571,24 @@ light:
             id(manual_light_hold_switch).publish_state(true);
             id(manual_banner_until) = millis() + 2000;
             ESP_LOGI("light", "External SF1000 change -> Manual Light Hold latched");
+          }
+
+  - platform: monochromatic
+    output: light_twin_sf1000_pwm
+    name: "Twin SF1000"
+    id: light_twin_sf1000
+    # 4x8 main tent lamp (GPIO5). Photoperiod / Twin SPA prefer this
+    # entity; clone SF1000 Dimmer stays on GPIO23. Manual hold shares
+    # the same latch as clone until a twin-specific hold is split.
+    on_state:
+      - lambda: |-
+          if (millis() < id(light_write_guard_until)) return;
+          if (id(ha_takeover_active)) return;
+          if (!id(manual_light_hold)) {
+            id(manual_light_hold) = true;
+            id(manual_light_hold_switch).publish_state(true);
+            id(manual_banner_until) = millis() + 2000;
+            ESP_LOGI("light", "External Twin SF1000 change -> Manual Light Hold latched");
           }
 
 # ==========================================

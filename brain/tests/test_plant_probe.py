@@ -54,8 +54,21 @@ def test_assign_after_detach_restores_probe(plant_db: Path) -> None:
     assert len(rows) == 1
     assert rows[0]["seat_id"] == "pot2"
     assert get_helper("text.dsc_probe2_plant_name", "") == "Amnesia"
-    assert get_helper("text.dsc_probe2_assigned_plant_id", "") == "slot:1"
+    assert get_helper("text.dsc_probe2_assigned_plant_id", "").startswith("plant:")
     assert get_helper("text.dsc_probe1_plant_name", "x") == ""
+
+
+def test_plant_uuid_survives_move(plant_db: Path) -> None:
+    from dsc_brain.compose_store import get_helper, get_roster_slots
+    from dsc_brain.plant_probe import move_plant
+
+    before = get_helper("text.dsc_probe1_assigned_plant_id", "")
+    assert before.startswith("plant:")
+    move_plant(1, 2)
+    after = get_helper("text.dsc_probe2_assigned_plant_id", "")
+    assert after == before
+    slot = next(s for s in get_roster_slots() if s["slot"] == 1)
+    assert slot.get("plant_uuid") == before
 
 
 def test_move_plant_atomic(plant_db: Path) -> None:

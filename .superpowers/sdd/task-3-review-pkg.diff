@@ -1,0 +1,521 @@
+﻿# Review package Task 3
+BASE: 5ee1b8bd51242688a665033e320691ca368f2de7
+HEAD: bbc9d146a6c57f8cfb0718f31fb0506cf5674061
+
+## log
+bbc9d14 fix(spa): single light view-model for Light page and Overview SF chip
+
+## stat
+ ...calibrate-DvVRwnU_.js => calibrate-C-29iViG.js} |   4 +-
+ ...e-DvVRwnU_.js.map => calibrate-C-29iViG.js.map} |   2 +-
+ .../frontend/spa-dist/assets/index-C90Gey84.js     |  19 ++++
+ .../frontend/spa-dist/assets/index-C90Gey84.js.map |   1 +
+ .../frontend/spa-dist/assets/index-CrVRU9Qb.js     |  19 ----
+ .../frontend/spa-dist/assets/index-CrVRU9Qb.js.map |   1 -
+ ...ne-fleet-DtlL6uSF.js => tune-fleet--Hbn5n6r.js} |   8 +-
+ ...-DtlL6uSF.js.map => tune-fleet--Hbn5n6r.js.map} |   2 +-
+ .../dsc_hub/frontend/spa-dist/index.html           |   6 +-
+ .../frontend/src/components/DashHomeSections.tsx   |  10 +-
+ .../dsc_hub/frontend/src/components/DutyStrip.tsx  |  14 ++-
+ .../src/components/PhotoperiodTimeline.tsx         |  18 ++--
+ .../frontend/src/components/TentLightClock.tsx     |  16 ++-
+ .../frontend/src/lib/lightViewModel.test.ts        |  52 +++++++++
+ .../dsc_hub/frontend/src/lib/lightViewModel.ts     | 118 +++++++++++++++++++++
+ .../dsc_hub/frontend/src/pages/LightPage.tsx       |  27 +++--
+ 16 files changed, 256 insertions(+), 61 deletions(-)
+
+## diff (src + index.html)
+diff --git a/homeassistant/custom_components/dsc_hub/frontend/spa-dist/index.html b/homeassistant/custom_components/dsc_hub/frontend/spa-dist/index.html
+index 7e5adb9..640dcd3 100644
+--- a/homeassistant/custom_components/dsc_hub/frontend/spa-dist/index.html
++++ b/homeassistant/custom_components/dsc_hub/frontend/spa-dist/index.html
+@@ -4,10 +4,10 @@
+     <meta charset="UTF-8" />
+     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+     <title>DSC-HUB</title>
+-    <script type="module" crossorigin src="/assets/index-CrVRU9Qb.js"></script>
++    <script type="module" crossorigin src="/assets/index-C90Gey84.js"></script>
+     <link rel="modulepreload" crossorigin href="/assets/twin-three-DadJ1S6g.js">
+-    <link rel="modulepreload" crossorigin href="/assets/tune-fleet-DtlL6uSF.js">
+-    <link rel="modulepreload" crossorigin href="/assets/calibrate-DvVRwnU_.js">
++    <link rel="modulepreload" crossorigin href="/assets/tune-fleet--Hbn5n6r.js">
++    <link rel="modulepreload" crossorigin href="/assets/calibrate-C-29iViG.js">
+     <link rel="stylesheet" crossorigin href="/assets/index-C1bgvQF7.css">
+   </head>
+   <body>
+diff --git a/homeassistant/custom_components/dsc_hub/frontend/src/components/DashHomeSections.tsx b/homeassistant/custom_components/dsc_hub/frontend/src/components/DashHomeSections.tsx
+index 46b7fcc..2bd20de 100644
+--- a/homeassistant/custom_components/dsc_hub/frontend/src/components/DashHomeSections.tsx
++++ b/homeassistant/custom_components/dsc_hub/frontend/src/components/DashHomeSections.tsx
+@@ -14,6 +14,7 @@ import type { RosterSlot } from "../lib/seatModel";
+ import { KIT_PROBE_NUMBERS, probeLabel } from "../lib/seatModel";
+ import type { CfmReading } from "../lib/cfmProvenance";
+ import { TentLightClockStrip } from "./TentLightClock";
++import { buildCloneLightDesk, headerSfLabel } from "../lib/lightViewModel";
+ 
+ type Bus = {
+   state: (id: string, fb?: string) => string;
+@@ -247,10 +248,9 @@ export function DashRunningChips({ bus }: { bus: Bus }) {
+   const { state, num } = bus;
+   const matT = num("sensor.dsc_coldest_root_zone_temp", NaN);
+   const matPot = String(bus.entity("sensor.dsc_coldest_root_zone_temp")?.attributes?.pot || "");
+-  const sfEntity = bus.entity("light.dsc_hub_sf1000_dimmer");
+-  const sfBri = Math.round((Number(sfEntity?.attributes?.brightness ?? 0) / 255) * 100);
+-  const sfOn = state("light.dsc_hub_sf1000_dimmer") === "on" && sfBri >= 1;
+-  const sfPct = sfBri;
++  const cloneDesk = buildCloneLightDesk(bus);
++  const sfOn = cloneDesk.sfOn && (cloneDesk.sfBrightness == null || cloneDesk.sfBrightness > 0);
++  const sfLabel = headerSfLabel({ sfOn: cloneDesk.sfOn, sfBrightness: cloneDesk.sfBrightness });
+   const acOos = state("binary_sensor.dsc_ac_capacity_offline") === "on";
+   const chumOos = state("binary_sensor.dsc_clone_humidifier_capacity_offline") === "on";
+   const dehumOffline = !bus.available("switch.dsc_de_humidifier_main_relay");
+@@ -268,7 +268,7 @@ export function DashRunningChips({ bus }: { bus: Bus }) {
+       tone: rootFault ? "bad" : state("switch.dsc_hub_grow_mat_demand") === "on" ? "ok" : "muted",
+     },
+     { label: chumOos ? "C-Hum Ôùï" : "C-Hum", icon: "clone" as const, on: state("switch.dsc_hub_clone_humidifier_demand") === "on", tone: chumOos ? "warn" : state("switch.dsc_hub_clone_humidifier_demand") === "on" ? "ok" : "muted" },
+-    { label: sfOn ? `SF ${sfPct}%` : "SF1000", icon: "lighting" as const, on: sfOn, tone: darkViol ? "bad" : sfOn ? "ok" : "muted" },
++    { label: sfLabel, icon: "lighting" as const, on: sfOn, tone: darkViol ? "bad" : cloneDesk.sfOn ? "ok" : "muted" },
+   ];
+   return (
+     <Card className="dsc-glass" title="Running" icon="lighting">
+diff --git a/homeassistant/custom_components/dsc_hub/frontend/src/components/DutyStrip.tsx b/homeassistant/custom_components/dsc_hub/frontend/src/components/DutyStrip.tsx
+index 20f6020..4287222 100644
+--- a/homeassistant/custom_components/dsc_hub/frontend/src/components/DutyStrip.tsx
++++ b/homeassistant/custom_components/dsc_hub/frontend/src/components/DutyStrip.tsx
+@@ -11,11 +11,14 @@ export function DutyStrip({
+   hours = 24,
+   onClick,
+   label = "24h on/off",
++  actualWhenHistory = false,
+ }: {
+   entityId: string;
+   hours?: number;
+   onClick?: () => void;
+   label?: string;
++  /** Append "┬À Actual" only when history points exist. */
++  actualWhenHistory?: boolean;
+ }) {
+   const { state, entity } = useEntityBus();
+   const { points, loading } = useHistory(entityId, hours, 720);
+@@ -55,10 +58,17 @@ export function DutyStrip({
+       ? new Date(lastChanged).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+       : "ÔÇö";
+ 
++  const hasHistory = !loading && points.length > 0;
++  const displayLabel = actualWhenHistory
++    ? hasHistory
++      ? `${label} ┬À Actual`
++      : label
++    : label;
++
+   const body = (
+     <div className="dsc-duty-strip">
+       <div className="dsc-duty-meta">
+-        <span>{label}</span>
++        <span>{displayLabel}</span>
+         <span className="dsc-muted">
+           {windows.length} cycle{windows.length === 1 ? "" : "s"} ┬À last {lastRun} ┬À{" "}
+           {loading ? "ÔÇª" : `${(onMs / 3600000).toFixed(1)}h on`}
+@@ -77,7 +87,7 @@ export function DutyStrip({
+ 
+   if (onClick) {
+     return (
+-      <button type="button" className="dsc-duty-hit" onClick={onClick} title={`History ┬À ${label}`}>
++      <button type="button" className="dsc-duty-hit" onClick={onClick} title={`History ┬À ${displayLabel}`}>
+         {body}
+       </button>
+     );
+diff --git a/homeassistant/custom_components/dsc_hub/frontend/src/components/PhotoperiodTimeline.tsx b/homeassistant/custom_components/dsc_hub/frontend/src/components/PhotoperiodTimeline.tsx
+index 37d3302..e8e57ee 100644
+--- a/homeassistant/custom_components/dsc_hub/frontend/src/components/PhotoperiodTimeline.tsx
++++ b/homeassistant/custom_components/dsc_hub/frontend/src/components/PhotoperiodTimeline.tsx
+@@ -16,14 +16,18 @@ export function PhotoperiodTimeline({
+   tent,
+   onClick,
+   label,
++  scheduleValid: scheduleValidProp,
+ }: {
+   tent: TentPhotoperiodId;
+   onClick?: () => void;
+   label?: string;
++  /** When set, overrides local parse for NO SCHEDULE (clone desk SoT). */
++  scheduleValid?: boolean;
+ }) {
+   const { state, num, entity } = useEntityBus();
+   const input = readTentPhotoperiodInput(tent, state, num);
+   const schedule = dayScheduleSegments(input);
++  const scheduleValid = scheduleValidProp ?? schedule.valid;
+   const sunriseMin = num("number.dsc_hub_sunrise_duration", 0);
+   const sunsetMin = num("number.dsc_hub_sunset_duration", 0);
+   const seats = potsInTent(tent, state, entity).filter((s) => isPotInService(s.pot, state));
+@@ -32,7 +36,7 @@ export function PhotoperiodTimeline({
+     if (!rail) return acc;
+     return acc == null ? rail.lightHours : Math.min(acc, rail.lightHours);
+   }, null);
+-  const scheduleHours = schedule.valid ? schedule.hours : null;
++  const scheduleHours = scheduleValid ? schedule.hours : null;
+   const flipAhead =
+     stageHours != null && scheduleHours != null && stageHours < scheduleHours - 0.5
+       ? `Stage wants ${stageHours}h ┬À schedule ${scheduleHours.toFixed(0)}h ÔÇö flip countdown when you shorten the window`
+@@ -43,11 +47,11 @@ export function PhotoperiodTimeline({
+     (tent === "main" ? "4├ù8 schedule 24h" : "2├ù4 schedule 24h");
+ 
+   const onLabel =
+-    schedule.valid && schedule.onMin != null
++    scheduleValid && schedule.onMin != null
+       ? fmtMinutesClock(schedule.onMin)
+       : "ÔÇö";
+   const offLabel =
+-    schedule.valid && schedule.offMin != null
++    scheduleValid && schedule.offMin != null
+       ? fmtMinutesClock(schedule.offMin)
+       : "ÔÇö";
+ 
+@@ -56,10 +60,10 @@ export function PhotoperiodTimeline({
+       <div className="dsc-duty-meta">
+         <span>{title}</span>
+         <span className="dsc-muted">
+-          {schedule.valid
++          {scheduleValid
+             ? `On ${onLabel} ┬À Off ${offLabel} ┬À ${schedule.hours.toFixed(0)}h lit`
+             : "No schedule ÔÇö set lights-on time"}
+-          {schedule.valid && (sunriseMin > 0 || sunsetMin > 0)
++          {scheduleValid && (sunriseMin > 0 || sunsetMin > 0)
+             ? ` ┬À ramp ${Math.round(sunriseMin + sunsetMin)}m`
+             : ""}
+         </span>
+@@ -71,7 +75,7 @@ export function PhotoperiodTimeline({
+       ) : null}
+       <svg viewBox="0 0 1440 22" className="dsc-photo-timeline-svg" preserveAspectRatio="none" aria-hidden>
+         <rect x="0" y="6" width={1440} height="10" rx="2" fill="var(--dsc-gray-3)" />
+-        {schedule.valid
++        {scheduleValid
+           ? schedule.segments.map((seg, i) =>
+               seg.kind === "lit" ? (
+                 <g key={`${seg.startMin}-${i}`}>
+@@ -112,7 +116,7 @@ export function PhotoperiodTimeline({
+               ) : null,
+             )
+           : null}
+-        {schedule.valid ? (
++        {scheduleValid ? (
+           <line
+             x1={schedule.nowMin}
+             x2={schedule.nowMin}
+diff --git a/homeassistant/custom_components/dsc_hub/frontend/src/components/TentLightClock.tsx b/homeassistant/custom_components/dsc_hub/frontend/src/components/TentLightClock.tsx
+index 40e94d5..0cc49da 100644
+--- a/homeassistant/custom_components/dsc_hub/frontend/src/components/TentLightClock.tsx
++++ b/homeassistant/custom_components/dsc_hub/frontend/src/components/TentLightClock.tsx
+@@ -3,6 +3,7 @@ import type { TentPhotoperiodId } from "../lib/lightSchedule";
+ import { tentLabel } from "../lib/seatModel";
+ import { useTentLightSchedule } from "../hooks/useTentLightSchedule";
+ import { useEntityBus } from "../hooks/useEntityBus";
++import { buildCloneLightDesk, headerSfLabel } from "../lib/lightViewModel";
+ import { Icon, StatusChip } from "./ui";
+ import type { IconName } from "../icons";
+ 
+@@ -18,17 +19,19 @@ export function TentLightClock({
+   compact?: boolean;
+ }) {
+   const schedule = useTentLightSchedule(tent);
+-  const { state } = useEntityBus();
++  const { state, num, entity } = useEntityBus();
++  const cloneDesk = tent === "clone" ? buildCloneLightDesk({ state, num, entity }) : null;
+   const windowOpen =
+     tent === "main"
+       ? state("binary_sensor.dsc_hub_4x8_window_open") === "on"
+       : state("binary_sensor.dsc_hub_2x4_window_open") === "on";
+-  const lampOn = tent === "clone" && state("light.dsc_hub_sf1000_dimmer") === "on";
++  const lampOn = tent === "clone" && (cloneDesk?.sfOn ?? state("light.dsc_hub_sf1000_dimmer") === "on");
+   const title = tentLabel(tent);
+-  const isLit = schedule.valid && schedule.phase === "lit";
++  const scheduleOk = cloneDesk ? cloneDesk.scheduleValid : schedule.valid;
++  const isLit = scheduleOk && schedule.phase === "lit";
+   const liveActive = isLit && (windowOpen || lampOn);
+ 
+-  if (!schedule.valid) {
++  if (!scheduleOk) {
+     return (
+       <div className={`dsc-light-clocks dsc-light-clocks--${tent}${compact ? " is-compact" : ""}`}>
+         <div className="dsc-light-clocks-head">
+@@ -79,7 +82,10 @@ export function TentLightClock({
+           <StatusChip
+             icon="lighting"
+             motion={schedule.phase === "lit" ? "duty" : "pulse"}
+-            label="SF1000 ON"
++            label={
++              cloneDesk?.headerLabel ??
++              headerSfLabel({ sfOn: true, sfBrightness: cloneDesk?.sfBrightness ?? null })
++            }
+             tone={schedule.phase === "lit" ? "ok" : "bad"}
+             pulse={schedule.phase !== "lit"}
+           />
+diff --git a/homeassistant/custom_components/dsc_hub/frontend/src/lib/lightViewModel.test.ts b/homeassistant/custom_components/dsc_hub/frontend/src/lib/lightViewModel.test.ts
+new file mode 100644
+index 0000000..2782302
+--- /dev/null
++++ b/homeassistant/custom_components/dsc_hub/frontend/src/lib/lightViewModel.test.ts
+@@ -0,0 +1,52 @@
++import assert from "node:assert/strict";
++import { buildCloneLightDesk, headerSfLabel } from "./lightViewModel";
++
++assert.equal(headerSfLabel({ sfOn: true, sfBrightness: 80 }), "SF1000 ON");
++assert.equal(headerSfLabel({ sfOn: true, sfBrightness: 0 }), "SF1000 ON ┬À 0%");
++assert.equal(headerSfLabel({ sfOn: false, sfBrightness: 0 }), "SF1000 OFF");
++assert.equal(headerSfLabel({ sfOn: true, sfBrightness: null }), "SF1000 ON");
++
++function mockBus(map: Record<string, { state?: string; num?: number; attrs?: Record<string, unknown> }>) {
++  return {
++    state: (id: string, fb = "ÔÇö") => map[id]?.state ?? fb,
++    num: (id: string, fb = NaN) => (map[id]?.num != null ? map[id]!.num! : fb),
++    entity: (id: string) =>
++      map[id] ? { attributes: map[id].attrs ?? {} } : undefined,
++  };
++}
++
++const followOk = buildCloneLightDesk(
++  mockBus({
++    "light.dsc_hub_sf1000_dimmer": { state: "on", attrs: { brightness: 200 } },
++    "select.dsc_hub_clone_photoperiod": { state: "Follow 4x8" },
++    "time.dsc_hub_lights_on_time": { state: "06:00:00" },
++    "sensor.dsc_clone_expected_light_hours": { num: 12, attrs: { honesty: "ok" } },
++    "sensor.dsc_lights_on_today_2x4": { num: 4.5 },
++    "sensor.dsc_lights_deviation_today": { num: -7.5 },
++    "switch.dsc_hub_auto_photoperiod": { state: "on" },
++    "switch.dsc_hub_manual_light_hold": { state: "off" },
++  }),
++);
++assert.equal(followOk.followsMain, true);
++assert.equal(followOk.scheduleValid, true);
++assert.equal(followOk.headerLabel, "SF1000 ON");
++assert.equal(followOk.sfBrightness, 78);
++assert.equal(followOk.wantHours, 12);
++assert.equal(followOk.gotHours, 4.5);
++
++const followNoSchedule = buildCloneLightDesk(
++  mockBus({
++    "light.dsc_hub_sf1000_dimmer": { state: "on", attrs: { brightness: 0 } },
++    "select.dsc_hub_clone_photoperiod": { state: "Follow 4x8" },
++    "time.dsc_hub_lights_on_time": { state: "" },
++    "sensor.dsc_clone_expected_light_hours": {
++      num: 12,
++      attrs: { honesty: "no schedule: main on-time unset" },
++    },
++  }),
++);
++assert.equal(followNoSchedule.scheduleValid, false);
++assert.equal(followNoSchedule.headerLabel, "SF1000 ON ┬À 0%");
++assert.match(followNoSchedule.scheduleHonesty, /no schedule|unset/i);
++
++console.log("lightViewModel tests ok");
+diff --git a/homeassistant/custom_components/dsc_hub/frontend/src/lib/lightViewModel.ts b/homeassistant/custom_components/dsc_hub/frontend/src/lib/lightViewModel.ts
+new file mode 100644
+index 0000000..e4a6143
+--- /dev/null
++++ b/homeassistant/custom_components/dsc_hub/frontend/src/lib/lightViewModel.ts
+@@ -0,0 +1,118 @@
++import { tentPhotoperiodFollowsMain } from "./lightSchedule";
++
++/** Bus slice used by the clone light desk (HA or Pi fleet). */
++export type LightDeskBus = {
++  state: (id: string, fb?: string) => string;
++  num: (id: string, fb?: number) => number;
++  entity: (id: string) => { attributes?: Record<string, unknown> } | undefined;
++};
++
++export type LightDeskModel = {
++  sfOn: boolean;
++  sfBrightness: number | null;
++  headerLabel: string;
++  scheduleValid: boolean;
++  scheduleHonesty: string;
++  wantHours: number | null;
++  gotHours: number | null;
++  deviationHours: number | null;
++  followsMain: boolean;
++  autoPhotoperiod: boolean;
++  manualHold: boolean;
++};
++
++/**
++ * SF header chip: ON only when on and brightness is null or >0;
++ * "ON ┬À 0%" when on at zero; OFF when not on.
++ */
++export function headerSfLabel({
++  sfOn,
++  sfBrightness,
++}: {
++  sfOn: boolean;
++  sfBrightness: number | null;
++}): string {
++  if (!sfOn) return "SF1000 OFF";
++  if (sfBrightness === 0) return "SF1000 ON ┬À 0%";
++  return "SF1000 ON";
++}
++
++function finiteOrNull(n: number): number | null {
++  return Number.isFinite(n) ? n : null;
++}
++
++/** HA brightness is 0ÔÇô255; fleet may already be 0ÔÇô1 or 0ÔÇô100. Normalize to percent. */
++export function readSfBrightnessPct(
++  entity: { attributes?: Record<string, unknown> } | undefined,
++): number | null {
++  const raw = entity?.attributes?.brightness;
++  if (raw == null || raw === "") return null;
++  const n = Number(raw);
++  if (!Number.isFinite(n)) return null;
++  if (n > 0 && n <= 1) return Math.round(n * 100);
++  if (n > 100) return Math.round((n / 255) * 100);
++  return Math.round(n);
++}
++
++function timeUnset(val: string): boolean {
++  const t = String(val || "").trim();
++  return !t || t === "ÔÇö" || t === "unknown" || t === "unavailable" || t === "none";
++}
++
++/**
++ * Single clone-light story for Light page + Overview SF chip.
++ * Schedule validity mirrors brain light_loop: Follow + missing main on-time ÔåÆ invalid.
++ */
++export function buildCloneLightDesk(bus: LightDeskBus): LightDeskModel {
++  const { state, num, entity } = bus;
++  const sfEntity = entity("light.dsc_hub_sf1000_dimmer");
++  const sfOn = state("light.dsc_hub_sf1000_dimmer") === "on";
++  const sfBrightness = readSfBrightnessPct(sfEntity);
++
++  const followsMain = tentPhotoperiodFollowsMain(state);
++  const mainOnTime = state("time.dsc_hub_lights_on_time", "");
++  const cloneOnTime = state("time.dsc_hub_clone_lights_on_time", "");
++
++  const honestyFrom =
++    entity("sensor.dsc_clone_expected_light_hours")?.attributes?.honesty ??
++    entity("sensor.dsc_expected_light_hours")?.attributes?.honesty ??
++    entity("time.dsc_hub_lights_on_time")?.attributes?.honesty;
++  const honestyAttr = String(honestyFrom ?? "").trim();
++
++  let scheduleValid: boolean;
++  let scheduleHonesty: string;
++  if (followsMain && timeUnset(mainOnTime)) {
++    scheduleValid = false;
++    scheduleHonesty =
++      honestyAttr && /no schedule|unset/i.test(honestyAttr)
++        ? honestyAttr
++        : "no schedule: main on-time unset";
++  } else if (!followsMain && timeUnset(cloneOnTime)) {
++    // Independent still needs its own on-time for clocks/timeline.
++    scheduleValid = false;
++    scheduleHonesty = honestyAttr && honestyAttr !== "ok" ? honestyAttr : "no schedule: clone on-time unset";
++  } else {
++    scheduleValid = true;
++    scheduleHonesty = honestyAttr || "ok";
++  }
++
++  // Brain rule: never claim invalid while Follow + valid ÔÇö clamp.
++  if (followsMain && scheduleValid === false && !timeUnset(mainOnTime)) {
++    scheduleValid = true;
++    scheduleHonesty = honestyAttr || "ok";
++  }
++
++  return {
++    sfOn,
++    sfBrightness,
++    headerLabel: headerSfLabel({ sfOn, sfBrightness }),
++    scheduleValid,
++    scheduleHonesty,
++    wantHours: finiteOrNull(num("sensor.dsc_clone_expected_light_hours")),
++    gotHours: finiteOrNull(num("sensor.dsc_lights_on_today_2x4")),
++    deviationHours: finiteOrNull(num("sensor.dsc_lights_deviation_today")),
++    followsMain,
++    autoPhotoperiod: state("switch.dsc_hub_auto_photoperiod") === "on",
++    manualHold: state("switch.dsc_hub_manual_light_hold") === "on",
++  };
++}
+diff --git a/homeassistant/custom_components/dsc_hub/frontend/src/pages/LightPage.tsx b/homeassistant/custom_components/dsc_hub/frontend/src/pages/LightPage.tsx
+index 812395f..8219180 100644
+--- a/homeassistant/custom_components/dsc_hub/frontend/src/pages/LightPage.tsx
++++ b/homeassistant/custom_components/dsc_hub/frontend/src/pages/LightPage.tsx
+@@ -20,8 +20,9 @@ import { useInspector } from "../components/InspectorHost";
+ import { HelpTip } from "../components/HelpTip";
+ import { ArcGauge } from "../viz/charts";
+ import { draftTone, tentWantRail } from "../lib/tentWant";
+-import { readTentPhotoperiodInput, tentPhotoperiodFollowsMain } from "../lib/lightSchedule";
++import { readTentPhotoperiodInput } from "../lib/lightSchedule";
+ import { dliFromPpfdHours, fmtDli, readCalibratedPpfd } from "../lib/dliEstimate";
++import { buildCloneLightDesk } from "../lib/lightViewModel";
+ 
+ function fmt(n: number, digits = 1): string {
+   return Number.isFinite(n) ? n.toFixed(digits) : "ÔÇö";
+@@ -41,27 +42,28 @@ export function LiveLightPage() {
+   const darkViolation = state("binary_sensor.dsc_clone_dark_period_violation") === "on";
+   const missing = state("binary_sensor.dsc_clone_light_missing_in_window") === "on";
+   const catchup = state("binary_sensor.dsc_hub_light_catchup_active") === "on";
+-  const lightOn = state("light.dsc_hub_sf1000_dimmer") === "on";
++  const cloneDesk = buildCloneLightDesk({ state, num, entity });
++  const lightOn = cloneDesk.sfOn;
+   const windowOpen = state("binary_sensor.dsc_hub_4x8_window_open") === "on";
+   const hours4 = num("sensor.dsc_expected_light_hours");
+-  const hours2 = num("sensor.dsc_clone_expected_light_hours");
++  const hours2 = cloneDesk.wantHours ?? num("sensor.dsc_clone_expected_light_hours");
+   const got4 = num("sensor.dsc_lights_on_today_4x8");
+-  const got2 = num("sensor.dsc_lights_on_today_2x4");
+-  const deviation = num("sensor.dsc_lights_deviation_today");
++  const got2 = cloneDesk.gotHours ?? num("sensor.dsc_lights_on_today_2x4");
++  const deviation = cloneDesk.deviationHours ?? num("sensor.dsc_lights_deviation_today");
+   const rail4 = tentWantRail("main", { state, entity });
+   const rail2 = tentWantRail("clone", { state, entity });
+   const minDarkLive = num("number.dsc_hub_min_dark_hours");
+   const cloneHoursLive = num("number.dsc_hub_clone_light_hours");
+   const [draftDark, setDraftDark] = useState(minDarkLive);
+   const [draftCloneHours, setDraftCloneHours] = useState(cloneHoursLive);
+-  const followsMain = tentPhotoperiodFollowsMain(state);
++  const followsMain = cloneDesk.followsMain;
+   const independent = !followsMain;
+   const cloneClimateMode = state("select.dsc_hub_clone_mode", "ÔÇö");
+   const mainOnTime = state("time.dsc_hub_lights_on_time", "ÔÇö");
+   const mainScheduleInput = readTentPhotoperiodInput("main", state, num);
+   const mainScheduleMissing = !mainScheduleInput.lightsOnTime || mainOnTime === "ÔÇö" || mainOnTime === "unknown";
+-  const manualHold = state("switch.dsc_hub_manual_light_hold") === "on";
+-  const autoPhoto = state("switch.dsc_hub_auto_photoperiod") === "on";
++  const manualHold = cloneDesk.manualHold;
++  const autoPhoto = cloneDesk.autoPhotoperiod;
+   const ppfd = readCalibratedPpfd(num, entity);
+   const dli4 = dliFromPpfdHours(ppfd ?? NaN, rail4.lightHours ?? hours4);
+   const dli2 = dliFromPpfdHours(ppfd ?? NaN, rail2.lightHours ?? hours2);
+@@ -223,7 +225,8 @@ export function LiveLightPage() {
+             <DutyStrip
+               entityId="binary_sensor.dsc_hub_4x8_window_open"
+               hours={24}
+-              label="4├ù8 actual 24h"
++              label="4├ù8 24h"
++              actualWhenHistory
+               onClick={() => open("binary_sensor.dsc_hub_4x8_window_open", "4├ù8 window", "binary")}
+             />
+             <div className="dsc-target-grid" style={{ marginTop: 12 }}>
+@@ -278,7 +281,7 @@ export function LiveLightPage() {
+               <StatusChip
+                 icon="lighting"
+                 motion={lightOn ? "glow" : undefined}
+-                label={lightOn ? "SF1000 ON" : "SF1000 OFF"}
++                label={cloneDesk.headerLabel}
+                 tone={lightOn ? "ok" : "muted"}
+                 onClick={() => open("light.dsc_hub_sf1000_dimmer", "SF1000", "binary")}
+               />
+@@ -317,12 +320,14 @@ export function LiveLightPage() {
+             />
+             <PhotoperiodTimeline
+               tent="clone"
++              scheduleValid={cloneDesk.scheduleValid}
+               onClick={() => open("light.dsc_hub_sf1000_dimmer", "SF1000", "binary")}
+             />
+             <DutyStrip
+               entityId="light.dsc_hub_sf1000_dimmer"
+               hours={24}
+-              label="SF1000 actual 24h"
++              label="SF1000 24h"
++              actualWhenHistory
+               onClick={() => open("light.dsc_hub_sf1000_dimmer", "SF1000", "binary")}
+             />
+             <div className="dsc-demand-row" style={{ marginTop: 12 }}>
+

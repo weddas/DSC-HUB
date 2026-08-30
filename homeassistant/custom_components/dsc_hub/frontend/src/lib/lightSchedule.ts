@@ -134,7 +134,7 @@ export function tentWindowEntity(tent: TentPhotoperiodId): string {
 }
 
 export function tentLiveLitEntity(tent: TentPhotoperiodId): string {
-  return tent === "main" ? "binary_sensor.dsc_hub_4x8_window_open" : "light.dsc_hub_sf1000_dimmer";
+  return tent === "main" ? "light.dsc_hub_twin_sf1000" : "light.dsc_hub_sf1000_dimmer";
 }
 
 export type DayScheduleSegment = {

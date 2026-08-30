@@ -1,0 +1,22 @@
+COMPILE_EXIT:0
+RAM:   [=         ]  14.0% (used 45956 bytes from 327680 bytes)
+Flash: [=======   ]  66.7% (used 1223623 bytes from 1835008 bytes)
+Building .pioenvs/dsc-hub/firmware.bin
+Creating ESP32 image...
+Successfully created ESP32 image.
+merge_factory_bin([".pioenvs/dsc-hub/firmware.bin"], [".pioenvs/dsc-hub/firmware.elf"])
+Info: bootloader.bin not found - skipping
+Info: partition-table.bin not found - skipping
+Info: ota_data_initial.bin not found - skipping
+Info: dsc-hub.bin not found - skipping
+Using FLASH_EXTRA_IMAGES from PlatformIO environment
+Merging binaries into /config/.esphome/build/dsc-hub/.pioenvs/dsc-hub/firmware.factory.bin
+Merging binaries with esptool
+SHA digest in image updated.
+Wrote 0x13ad60 bytes to file '/config/.esphome/build/dsc-hub/.pioenvs/dsc-hub/firmware.factory.bin', ready to flash to offset 0x0.
+Successfully created /config/.esphome/build/dsc-hub/.pioenvs/dsc-hub/firmware.factory.bin
+esp32_copy_ota_bin([".pioenvs/dsc-hub/firmware.bin"], [".pioenvs/dsc-hub/firmware.elf"])
+Copied firmware to /config/.esphome/build/dsc-hub/.pioenvs/dsc-hub/firmware.ota.bin
+======================== [SUCCESS] Took 176.80 seconds ========================
+INFO Successfully compiled program.
+INFO Successfully compiled program.

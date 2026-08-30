@@ -14,8 +14,8 @@ const DscTwinCanvas = lazy(() =>
 );
 
 const USE_R3F_TWIN = import.meta.env.VITE_DSC_PI === "1";
-/** Pass B: blank Twin theater gated until canvas resize + Probe chrome are honest. */
-const TWIN_SURFACE_GATED = true;
+/** Pass B gate lifted on Pi SPA — R3F Twin owns resize; HA IIFE stays gated. */
+const TWIN_SURFACE_GATED = import.meta.env.VITE_DSC_PI !== "1";
 
 function focusTentFromPath(pathname: string): TwinFocusTent {
   if (pathname === "/live/main" || pathname === "/live/4x8") return "main";

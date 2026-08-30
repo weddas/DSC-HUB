@@ -1,0 +1,529 @@
+﻿# Review Task 5 (post-fix)
+BASE: 2afa4cc105c2fc6490eafaa1a92233c96d75ca35
+HEAD: b3c171652dce93af0d2b19e42fbcedc40a305ce9
+
+## log
+b3c1716 fix(brain): sticky pending_reassert after TTL under takeover
+bb8bfce feat(brain): hub reconnect temporary override and re-assert TTL
+
+## stat
+ .superpowers/sdd/task-5-report.md                  | 113 +++++++++++++++
+ brain/dsc_brain/computed_ops.py                    |  36 ++++-
+ brain/dsc_brain/decision_loop.py                   |  41 +++++-
+ brain/dsc_brain/esphome_client.py                  |  14 ++
+ brain/dsc_brain/hub_failover.py                    | 160 +++++++++++++++++++++
+ brain/tests/test_hub_failover.py                   |  46 ++++++
+ ...calibrate-BMo04Y60.js => calibrate-DvOe50zN.js} |   4 +-
+ ...e-BMo04Y60.js.map => calibrate-DvOe50zN.js.map} |   2 +-
+ .../frontend/spa-dist/assets/index-CwyQSH4R.js.map |   1 -
+ .../{index-CwyQSH4R.js => index-fFZO7204.js}       |  14 +-
+ .../frontend/spa-dist/assets/index-fFZO7204.js.map |   1 +
+ ...ne-fleet-rfRm3C4V.js => tune-fleet-t3gUWHIB.js} |  12 +-
+ ...-rfRm3C4V.js.map => tune-fleet-t3gUWHIB.js.map} |   2 +-
+ .../dsc_hub/frontend/spa-dist/index.html           |   6 +-
+ .../frontend/src/components/DashHomeSections.tsx   |   8 ++
+ .../frontend/src/components/HubLinkLine.tsx        |  11 ++
+ 16 files changed, 443 insertions(+), 28 deletions(-)
+
+## diff
+diff --git a/brain/dsc_brain/computed_ops.py b/brain/dsc_brain/computed_ops.py
+index 9bb36eb..d666b8f 100644
+--- a/brain/dsc_brain/computed_ops.py
++++ b/brain/dsc_brain/computed_ops.py
+@@ -8,18 +8,20 @@ import time
+ from typing import Any
+ from zoneinfo import ZoneInfo
+ 
+ from .compose_ops import _strain_is_auto, update_pot_recipe
+ from .compose_store import all_helpers, get_helper, get_roster_slots
++from .dash_computed import emit_dash_entities
++from .decision_loop import decision_tick
+ from .device_calibration import get_calibration
+ from .global_modifiers import scale_fan_demand_pct, scale_light_brightness_pct
++from .hub_failover import emit_override_entity, evaluate_failover, get_override
++from .light_loop import build_light_loop, emit_light_loop
+ from .runtime_history import HistoryMemo, RuntimeMemo, midnight_ts
+ from .settings import list_roster
+ from .stage_model import expected_stage, stage_rank, tent_id
+ from .want import resolve_want
+-from .dash_computed import emit_dash_entities
+-from .light_loop import build_light_loop, emit_light_loop
+ 
+ SYDNEY_TZ = ZoneInfo("Australia/Sydney")
+ _HOT_CACHE: dict[str, Any] = {"ts": 0.0, "key": None, "states": {}}
+ _COLD_CACHE: dict[str, Any] = {"ts": 0.0, "key": None, "states": {}}
+ _HOT_TTL_SEC = 2.0
+@@ -553,13 +555,43 @@ def _build_cold_computed_states(
+     # Photoperiod SoT: overwrite got/want/deviation (and honesty) from light_loop.
+     light_helpers = _helpers_for_light_loop(helpers, fleet)
+     light_hub = _hub_values_for_light_loop(fleet, runtime)
+     light_snap = build_light_loop(helpers=light_helpers, hub_values=light_hub, now_ts=time.time())
+     emit_light_loop(states, light_snap, _set_entity)
++
++    # Hub reconnect temporary override ÔåÆ SPA binary; TTL/takeover clear ÔåÆ re-assert.
++    now_ts = time.time()
++    takeover = _manual_takeover_on(fleet, helpers)
++    override, force_reassert = evaluate_failover(takeover=takeover, now=now_ts, override=get_override())
++    emit_override_entity(states, override, _set_entity)
++    if force_reassert:
++        try:
++            decision_tick(
++                seat="hub",
++                strain_id=None,
++                stage="veg",
++                manual_takeover=takeover,
++                emit=True,
++                hub_override=override,
++                now=now_ts,
++            )
++        except Exception:  # noqa: BLE001 ÔÇö never fail computed emit on re-assert
++            pass
+     return states
+ 
+ 
++def _manual_takeover_on(fleet: Any, helpers: dict[str, Any]) -> bool:
++    eid = "switch.dsc_hub_manual_takeover"
++    if helpers.get(eid) is not None:
++        return str(helpers.get(eid)).lower() == "on"
++    if fleet.hub:
++        ctrl = (fleet.hub.values.get("controls") or {}).get(eid) or {}
++        if isinstance(ctrl, dict) and ctrl.get("state") is not None:
++            return str(ctrl.get("state")).lower() == "on"
++    return False
++
++
+ def _helpers_for_light_loop(helpers: dict[str, Any], fleet: Any) -> dict[str, Any]:
+     """Merge compose helpers with live hub control states light_loop needs."""
+     merged = dict(helpers)
+     if not fleet.hub:
+         return merged
+diff --git a/brain/dsc_brain/decision_loop.py b/brain/dsc_brain/decision_loop.py
+index 0b3c896..34a87e3 100644
+--- a/brain/dsc_brain/decision_loop.py
++++ b/brain/dsc_brain/decision_loop.py
+@@ -4,10 +4,16 @@ from __future__ import annotations
+ 
+ import time
+ import uuid
+ from typing import Any
+ 
++from .hub_failover import (
++    DEFAULT_TTL_SEC,
++    HubOverride,
++    evaluate_failover,
++    get_override,
++)
+ from .want import resolve_want
+ 
+ try:
+     from .hub_native import emit_proposal_sync
+ except ImportError:  # pragma: no cover
+@@ -32,14 +38,30 @@ def decision_tick(
+     stage: str = "veg",
+     got: dict[str, float | None] | None = None,
+     custom_want: dict[str, Any] | None = None,
+     manual_takeover: bool = False,
+     emit: bool = False,
++    hub_override: HubOverride | None = None,
++    now: float | None = None,
++    ttl_sec: float = DEFAULT_TTL_SEC,
+     db_path=None,
+ ) -> dict[str, Any]:
+-    """Compute a proposal. ``emit=True`` reserved for Phase D hub write path."""
++    """Compute a proposal. ``emit=True`` reserved for Phase D hub write path.
++
++    While a reconnect temporary override is active, hold full re-assert until TTL
++    or explicit clear of ``switch.dsc_hub_manual_takeover``; then force WantÔåÆact.
++    """
+     got = got or {}
++    ts = time.time() if now is None else now
++    override = hub_override if hub_override is not None else get_override()
++    override, force_reassert = evaluate_failover(
++        takeover=manual_takeover,
++        now=ts,
++        ttl_sec=ttl_sec,
++        override=override,
++    )
++
+     resolved = resolve_want(
+         strain_id=strain_id,
+         stage=stage,
+         custom=custom_want,
+         db_path=db_path,
+@@ -59,13 +81,20 @@ def decision_tick(
+         if status == "low":
+             advisories.append(f"{metric} below Want")
+         elif status == "high":
+             advisories.append(f"{metric} above Want")
+ 
+-    if manual_takeover:
++    hold_for_override = override.active and not force_reassert
++    do_emit = bool(emit or force_reassert) and not hold_for_override and not manual_takeover
++
++    if manual_takeover and not force_reassert:
+         advisories.append("Manual Takeover asserted ÔÇö brain will not emit cmds")
+-    elif emit:
++    elif hold_for_override:
++        advisories.append("Hub reconnect override active ÔÇö holding re-assert until TTL/clear")
++    elif do_emit:
++        if force_reassert:
++            advisories.append("Hub override cleared ÔÇö forcing WantÔåÆact re-assert")
+         proposal_cmds: list[dict[str, Any]] = []
+         for metric, status in need.items():
+             if status == "low":
+                 proposal_cmds.append({"type": "demand_on", "metric": f"{metric}_low"})
+             elif status == "high":
+@@ -78,11 +107,11 @@ def decision_tick(
+         else:
+             commands.append({"type": "noop", "reason": "hub emit unavailable"})
+ 
+     return {
+         "tick_id": str(uuid.uuid4()),
+-        "ts": time.time(),
++        "ts": ts,
+         "seat": seat,
+         "want_meta": {
+             "source": resolved["source"],
+             "stage": resolved["stage"],
+             "strain_id": resolved["strain_id"],
+@@ -92,9 +121,11 @@ def decision_tick(
+         "need": need,
+         "commands": commands,
+         "advisories": advisories,
+         "safety": {
+             "hub_must_clamp": True,
+-            "emit": emit,
++            "emit": do_emit,
+             "manual_takeover": manual_takeover,
++            "hub_override_active": override.active,
++            "force_reassert": force_reassert,
+         },
+     }
+diff --git a/brain/dsc_brain/esphome_client.py b/brain/dsc_brain/esphome_client.py
+index 13f60cd..c9267ca 100644
+--- a/brain/dsc_brain/esphome_client.py
++++ b/brain/dsc_brain/esphome_client.py
+@@ -11,10 +11,11 @@ from typing import Any
+ from .appliance_driver import get_appliance_status
+ from .climate_math import finalize_hub_climate
+ from .event_log import record_grow_log
+ from .fleet_state import FleetState, SeatState, get_fleet_state, update_fleet_state
+ from .global_modifiers import apply_temp_rh_offsets
++from .hub_failover import on_hub_reconnect, snapshot_from_hub_values
+ from .hub_controls import (
+     HUB_BINARY_OID_TO_ENTITY,
+     HUB_FAN_OID_TO_ENTITY,
+     HUB_LIGHT_OID_TO_ENTITY,
+     HUB_NUMBER_OID_TO_ENTITY,
+@@ -258,12 +259,25 @@ class EsphomeIngest:
+         now = time.time()
+         fw = readings.get("firmware", EXPECTED_FIRMWARE)
+         values = readings.get("values", {})
+         if role == "hub":
+             global _BOOT_GROW_LOGGED
++            prev_hub = get_fleet_state().hub
++            was_online = bool(prev_hub and prev_hub.online)
+             state.hub = SeatState("hub", True, fw, values, now)
+             controls = values.get("controls") or {}
++            takeover_ctrl = controls.get("switch.dsc_hub_manual_takeover") or {}
++            takeover = str(takeover_ctrl.get("state", "off")).lower() == "on"
++            ov = on_hub_reconnect(
++                was_online=was_online,
++                is_online=True,
++                snapshot=snapshot_from_hub_values(values),
++                takeover=takeover,
++                now=now,
++            )
++            if ov is not None and ov.active:
++                record_grow_log("Hub reconnect ÔÇö temporary override until TTL/clear")
+             if not _BOOT_GROW_LOGGED:
+                 stage = (controls.get("select.dsc_hub_grow_stage") or {}).get("state", "")
+                 mode = (controls.get("select.dsc_hub_clone_mode") or {}).get("state", "")
+                 bits = [b for b in (f"Stage - {stage}" if stage else None, f"Clone - {mode}" if mode else None) if b]
+                 if bits:
+diff --git a/brain/dsc_brain/hub_failover.py b/brain/dsc_brain/hub_failover.py
+new file mode 100644
+index 0000000..ac1602b
+--- /dev/null
++++ b/brain/dsc_brain/hub_failover.py
+@@ -0,0 +1,160 @@
++"""Hub reconnect failover: temporary override + re-assert TTL."""
++
++from __future__ import annotations
++
++from dataclasses import dataclass, field
++from typing import Any
++
++DEFAULT_TTL_SEC = 900.0
++OVERRIDE_ENTITY_ID = "binary_sensor.dsc_brain_hub_override_active"
++
++
++@dataclass
++class HubOverride:
++    active: bool
++    forced: dict[str, str] = field(default_factory=dict)
++    since_ts: float = 0.0
++    pending_reassert: bool = False
++
++
++_current: HubOverride = HubOverride(active=False, forced={}, since_ts=0.0)
++
++
++def get_override() -> HubOverride:
++    return _current
++
++
++def reset_override() -> None:
++    """Test helper ÔÇö clear module override state."""
++    global _current
++    _current = HubOverride(active=False, forced={}, since_ts=0.0)
++
++
++def note_reconnect(snapshot: dict, takeover: bool, now: float) -> HubOverride:
++    """Record reconnect ingest. Takeover ÔåÆ temporary override; else no override."""
++    global _current
++    if not takeover:
++        _current = HubOverride(active=False, forced={}, since_ts=now)
++        return _current
++    forced = {str(k): str(v) for k, v in (snapshot or {}).items()}
++    _current = HubOverride(active=True, forced=forced, since_ts=now)
++    return _current
++
++
++def should_reassert(override: HubOverride, now: float, *, ttl_sec: float = DEFAULT_TTL_SEC) -> bool:
++    """True when an active override has exceeded TTL and must re-assert WantÔåÆact."""
++    if not override.active:
++        return False
++    return (now - override.since_ts) >= ttl_sec
++
++
++def clear_override(*, now: float | None = None, pending_reassert: bool = False) -> HubOverride:
++    """Clear temporary override (TTL expiry or explicit takeover clear)."""
++    global _current
++    ts = now if now is not None else _current.since_ts
++    _current = HubOverride(
++        active=False,
++        forced={},
++        since_ts=ts,
++        pending_reassert=pending_reassert,
++    )
++    return _current
++
++
++def note_takeover_cleared(now: float) -> HubOverride:
++    """Explicit clear of switch.dsc_hub_manual_takeover ÔåÆ drop override + re-assert."""
++    if not _current.active and not _current.pending_reassert:
++        return _current
++    return clear_override(now=now)
++
++
++def on_hub_reconnect(
++    *,
++    was_online: bool,
++    is_online: bool,
++    snapshot: dict,
++    takeover: bool,
++    now: float,
++) -> HubOverride | None:
++    """Fire note_reconnect only on offlineÔåÆonline transition."""
++    if was_online or not is_online:
++        return None
++    return note_reconnect(snapshot, takeover, now)
++
++
++def evaluate_failover(
++    *,
++    takeover: bool,
++    now: float,
++    ttl_sec: float = DEFAULT_TTL_SEC,
++    override: HubOverride | None = None,
++) -> tuple[HubOverride, bool]:
++    """
++    Advance failover policy.
++
++    Returns (override, force_reassert).
++    force_reassert when takeover is cleared after an active override or sticky
++    pending_reassert (TTL already fired under takeover). Both clear the temporary
++    override; TTL under takeover clears the binary but keeps pending_reassert.
++    """
++    global _current
++    o = override if override is not None else _current
++
++    if not o.active and not o.pending_reassert:
++        return o, False
++
++    if not takeover:
++        cleared = clear_override(now=now, pending_reassert=False)
++        return cleared, True
++
++    # Takeover still ON.
++    if o.active and should_reassert(o, now, ttl_sec=ttl_sec):
++        # TTL fired under takeover: drop binary, sticky pending until clear.
++        sticky = clear_override(now=now, pending_reassert=True)
++        return sticky, False
++
++    # Sync module state when caller passed an explicit override snapshot.
++    if override is not None:
++        _current = o
++    return o, False
++
++
++def emit_override_entity(states: dict[str, Any], override: HubOverride, set_entity: Any) -> None:
++    """Emit binary_sensor.dsc_brain_hub_override_active for SPA."""
++    set_entity(
++        states,
++        OVERRIDE_ENTITY_ID,
++        "on" if override.active else "off",
++        available=True,
++        attributes={
++            "since_ts": override.since_ts,
++            "forced": dict(override.forced),
++            "ttl_sec": DEFAULT_TTL_SEC,
++            "pending_reassert": override.pending_reassert,
++        },
++    )
++
++
++def snapshot_from_hub_values(values: dict[str, Any] | None) -> dict[str, str]:
++    """Flatten hub controls / lights into a forced-state snapshot for override."""
++    if not values:
++        return {}
++    out: dict[str, str] = {}
++    controls = values.get("controls") or {}
++    for eid, ctrl in controls.items():
++        if not isinstance(ctrl, dict):
++            continue
++        st = ctrl.get("state")
++        if st is None:
++            continue
++        # Prefer short keys for known actuators; keep entity id otherwise.
++        if eid == "light.dsc_hub_sf1000_dimmer":
++            out["sf1000"] = str(st)
++        elif eid.startswith("switch.dsc_hub_") and eid.endswith("_demand"):
++            short = eid.removeprefix("switch.dsc_hub_").removesuffix("_demand")
++            out[short] = str(st)
++        else:
++            out[eid] = str(st)
++    if "sf1000_on" in values and "sf1000" not in out:
++        out["sf1000"] = "on" if values.get("sf1000_on") else "off"
++    return out
+diff --git a/brain/tests/test_hub_failover.py b/brain/tests/test_hub_failover.py
+new file mode 100644
+index 0000000..bf10ac2
+--- /dev/null
++++ b/brain/tests/test_hub_failover.py
+@@ -0,0 +1,46 @@
++from dsc_brain.hub_failover import (
++    evaluate_failover,
++    note_reconnect,
++    reset_override,
++    should_reassert,
++)
++from dsc_brain.decision_loop import decision_tick
++
++
++def test_reconnect_with_takeover_sets_override():
++    reset_override()
++    o = note_reconnect({"sf1000": "on"}, takeover=True, now=1000.0)
++    assert o.active is True
++    assert should_reassert(o, now=1000.0, ttl_sec=900) is False
++    assert should_reassert(o, now=1000.0 + 901, ttl_sec=900) is True
++
++
++def test_reconnect_without_takeover_no_override():
++    reset_override()
++    o = note_reconnect({}, takeover=False, now=1000.0)
++    assert o.active is False
++
++
++def test_ttl_under_takeover_then_clear_forces_reassert():
++    """TTL while takeover stays ON must sticky-pending; clear later ÔåÆ re-assert."""
++    reset_override()
++    note_reconnect({"sf1000": "on"}, takeover=True, now=1000.0)
++
++    # Wait >900s with takeover still ON ÔÇö binary clears, pending sticks, no emit yet.
++    o_ttl, force_ttl = evaluate_failover(takeover=True, now=1000.0 + 901, ttl_sec=900)
++    assert o_ttl.active is False
++    assert o_ttl.pending_reassert is True
++    assert force_ttl is False
++
++    # Clear takeover after TTL already fired ÔåÆ force_reassert / emit true.
++    tick = decision_tick(
++        seat="hub",
++        strain_id=None,
++        stage="veg",
++        manual_takeover=False,
++        emit=False,
++        now=1000.0 + 902,
++        ttl_sec=900,
++    )
++    assert tick["safety"]["force_reassert"] is True
++    assert tick["safety"]["emit"] is True
+diff --git a/homeassistant/custom_components/dsc_hub/frontend/src/components/DashHomeSections.tsx b/homeassistant/custom_components/dsc_hub/frontend/src/components/DashHomeSections.tsx
+index fe6d1a7..7032b27 100644
+--- a/homeassistant/custom_components/dsc_hub/frontend/src/components/DashHomeSections.tsx
++++ b/homeassistant/custom_components/dsc_hub/frontend/src/components/DashHomeSections.tsx
+@@ -148,10 +148,18 @@ export function DashConditionalBanners({ bus, onNavigate }: { bus: Bus; onNaviga
+       title: "Manual takeover ÔÇö brain will re-plan on clear/reconnect",
+       body: "",
+       tone: "warn",
+     });
+   }
++  if (state("binary_sensor.dsc_brain_hub_override_active") === "on") {
++    banners.push({
++      show: true,
++      title: "Reconnect override active ÔÇö brain re-asserts after TTL or takeover clear",
++      body: "",
++      tone: "warn",
++    });
++  }
+   if (state("switch.dsc_hub_tent_manual_override") === "on") {
+     banners.push({ show: true, title: "MANUAL FAN OVERRIDE ACTIVE", body: "Fan values held ÔÇö photoperiod still driving the SF1000", tone: "warn" });
+   }
+   if (state("binary_sensor.dsc_clone_dark_period_violation") === "on") {
+     banners.push({ show: true, title: "LIGHT ON IN 2x4 DARK PERIOD", body: "SF1000 commanded on outside the clone window ÔÇö herm risk", tone: "bad" });
+diff --git a/homeassistant/custom_components/dsc_hub/frontend/src/components/HubLinkLine.tsx b/homeassistant/custom_components/dsc_hub/frontend/src/components/HubLinkLine.tsx
+index e36a236..3212198 100644
+--- a/homeassistant/custom_components/dsc_hub/frontend/src/components/HubLinkLine.tsx
++++ b/homeassistant/custom_components/dsc_hub/frontend/src/components/HubLinkLine.tsx
+@@ -50,17 +50,24 @@ export function HubLinkLine() {
+       ? `HS ${durationLabel(handshakeSec)}`
+       : beatCount != null
+         ? `HB #${Math.trunc(beatCount)}`
+         : "ÔÇö";
+ 
++  const overrideActive =
++    available("binary_sensor.dsc_brain_hub_override_active") &&
++    state("binary_sensor.dsc_brain_hub_override_active") === "on";
++
+   return (
+     <div className="dsc-chip-row">
+       <StatusChip
+         icon={online ? "ok" : "alert"}
+         label={online ? "HUB LINK" : "HUB LINK DOWN"}
+         tone={online ? "ok" : "bad"}
+       />
++      {overrideActive ? (
++        <StatusChip icon="alert" label="RECONNECT OVERRIDE" tone="warn" />
++      ) : null}
+       <StatusChip label={age} tone="muted" />
+       <StatusChip label={`Bounces ${bounce}`} tone="muted" />
+       <StatusChip label={`RF ${rf}`} tone="muted" />
+       <StatusChip label={beat} tone="muted" />
+       {fleet.surface ? <StatusChip label={fleet.surface} tone="muted" /> : null}
+@@ -71,10 +78,14 @@ export function HubLinkLine() {
+         </p>
+         <p>
+           <b>HS</b> is handshake age in time. <b>HB #</b> is the heartbeat tick count ÔÇö not hours. Example: Up 2H 14M with
+           HB #1847 means healthy link and a live counter, not 1847 hours.
+         </p>
++        <p>
++          <b>RECONNECT OVERRIDE</b> means the brain recorded a temporary override after hub reconnect with manual
++          takeover. It clears after 15 minutes or when master takeover is turned off ÔÇö then the brain re-asserts Want.
++        </p>
+         <p>Grey RF is not always a fault ÔÇö inventory out-of-service stays quiet on purpose.</p>
+       </HelpTip>
+     </div>
+   );
+ }
+

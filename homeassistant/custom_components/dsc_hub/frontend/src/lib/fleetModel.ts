@@ -33,6 +33,7 @@ export interface FleetSnapshot {
   system: Record<string, unknown>;
   updated_at: number;
   inventory?: InventoryRow[];
+  root_steering?: Record<string, unknown>;
 }
 
 export const EMPTY_SEAT = (seat_id: string): SeatSnapshot => ({
@@ -99,6 +100,10 @@ export function parseFleetSnapshot(raw: Record<string, unknown> | null | undefin
     system: (raw.system as Record<string, unknown>) ?? {},
     updated_at: typeof raw.updated_at === "number" ? raw.updated_at : 0,
     inventory,
+    root_steering:
+      raw.root_steering && typeof raw.root_steering === "object"
+        ? (raw.root_steering as Record<string, unknown>)
+        : undefined,
   };
 }
 

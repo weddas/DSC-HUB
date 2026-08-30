@@ -30,16 +30,8 @@ export function useHeldReading(entityId: string): HeldReading {
   const { available, tick, entity } = useEntityBus();
   const fleet = useFleet();
   const source = useFleetSource();
-  const hold = useRef<{ value: number; at: number } | null>(null);
-  const prevId = useRef(entityId);
+  const holds = useRef<Record<string, { value: number; at: number }>>({});
   const [, bump] = useState(0);
-
-  // Clear hold during render when the entity changes — an effect would leak the prior pot's
-  // last-known-good for at least one frame (and any child that reads before paint).
-  if (prevId.current !== entityId) {
-    prevId.current = entityId;
-    hold.current = null;
-  }
 
   const fleetVal = source === "pi" ? fleetLiveNumber(entityId, fleet) : null;
   const fleetOk = source === "pi" ? fleetEntityAvailable(entityId, fleet) : false;
@@ -53,10 +45,11 @@ export function useHeldReading(entityId: string): HeldReading {
       ? fleetVal
       : parseLiveNumber(entity(entityId)?.state, liveOk);
   const suspiciousZero = hubDark && raw === 0;
+  const held = holds.current[entityId];
 
   useEffect(() => {
     if (liveOk && Number.isFinite(raw) && !suspiciousZero) {
-      hold.current = { value: raw, at: Date.now() };
+      holds.current[entityId] = { value: raw, at: Date.now() };
       bump((n) => n + 1);
       return;
     }
@@ -66,13 +59,13 @@ export function useHeldReading(entityId: string): HeldReading {
   }, [entityId, liveOk, raw, suspiciousZero, tick, entity]);
 
   if (liveOk && Number.isFinite(raw) && !suspiciousZero) {
-    return { value: raw, stale: false, heldAt: hold.current?.at, live: true };
+    return { value: raw, stale: false, heldAt: held?.at, live: true };
   }
-  if (hold.current != null) {
+  if (held != null) {
     return {
-      value: hold.current.value,
+      value: held.value,
       stale: true,
-      heldAt: hold.current.at,
+      heldAt: held.at,
       live: false,
     };
   }

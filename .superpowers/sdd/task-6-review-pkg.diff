@@ -1,0 +1,24 @@
+﻿# Review Task 6
+BASE: b3c171652dce93af0d2b19e42fbcedc40a305ce9
+HEAD: 7812f54634441b053df147b9e96b33e8e7590f1c
+
+## log
+7812f54 docs: record Bar 1 verify commit hash in task-6 report
+dadd8b8 docs: Bar 1 Pi verify evidence for brain control recovery
+
+## stat
+ .superpowers/sdd/task-6-report.md                  |  71 +++++++++++++++++++++
+ docs/FOLLOWUPS.md                                  |  13 ++++
+ .../bar1-climate-command.png                       | Bin 0 -> 187199 bytes
+ .../bar1-climate-desk.png                          | Bin 0 -> 187199 bytes
+ .../bar1-climate-takeover-confirmed.png            | Bin 0 -> 182436 bytes
+ .../bar1-climate-takeover-off.png                  | Bin 0 -> 182413 bytes
+ .../bar1-climate-takeover-on-live.png              | Bin 0 -> 183873 bytes
+ .../bar1-climate-takeover-on.png                   | Bin 0 -> 182379 bytes
+ docs/qa-screenshots-2026-08-29/bar1-light-desk.png | Bin 0 -> 236711 bytes
+ .../bar1-light-schedule-ok.png                     | Bin 0 -> 236711 bytes
+ .../bar1-overview-ops.png                          | Bin 0 -> 229898 bytes
+ .../bar1-overview-shared-air.png                   | Bin 0 -> 229898 bytes
+ 12 files changed, 84 insertions(+)
+
+See report and screenshots; binary PNG diffs omitted.

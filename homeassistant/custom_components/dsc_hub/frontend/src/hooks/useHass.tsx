@@ -3,6 +3,7 @@ import {
   createElement,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -79,8 +80,9 @@ export function HassProvider({
   const [tick, setTick] = useState(0);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hassRef = useRef(hass);
-  // Mirror prop into ref during render so child accessors never see a stale hass.
-  hassRef.current = hass;
+  useLayoutEffect(() => {
+    hassRef.current = hass;
+  }, [hass]);
   const conn = hass?.connection;
   const hassPresent = !!hass;
 

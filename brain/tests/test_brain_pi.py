@@ -746,6 +746,60 @@ def test_permit_join_expiry_clears_flag(temp_db: Path, monkeypatch: pytest.Monke
     assert get_setting("zigbee_permit_join", db_path=temp_db) == "false"
 
 
+def test_permit_join_live_from_bridge_info() -> None:
+    from dsc_brain.zigbee_mqtt import _ingest, get_zigbee_health
+
+    _ingest._permit_join_live = None
+    _ingest._permit_join_end = None
+    _ingest._update_permit_join_from_bridge({"permit_join": True, "permit_join_end": 12345.0})
+    health = get_zigbee_health()
+    assert health["permit_join"] is True
+    assert health["permit_join_end"] == 12345.0
+    _ingest._update_permit_join_from_bridge({"time": 0})
+    assert get_zigbee_health()["permit_join"] is False
+    _ingest._permit_join_live = None
+    _ingest._permit_join_end = None
+
+
+def test_permit_join_ignores_bridge_false_while_end_open() -> None:
+    import time as time_mod
+
+    from dsc_brain.zigbee_mqtt import _ingest, get_zigbee_health
+
+    _ingest._permit_join_live = True
+    _ingest._permit_join_end = time_mod.time() + 120.0
+    _ingest._update_permit_join_from_bridge({"permit_join": False})
+    assert get_zigbee_health()["permit_join"] is True
+    _ingest._update_permit_join_from_bridge({"time": 90})
+    health = get_zigbee_health()
+    assert health["permit_join"] is True
+    assert health["permit_join_end"] is not None
+    assert float(health["permit_join_end"]) > time_mod.time()
+    _ingest._permit_join_live = None
+    _ingest._permit_join_end = None
+
+
+def test_device_joined_event_adds_unbound_row() -> None:
+    from dsc_brain.zigbee_mqtt import _ingest, get_zigbee_devices, get_zigbee_health
+
+    _ingest._devices = [
+        {"ieee_address": "0xcoord", "friendly_name": "Coordinator", "type": "Coordinator"}
+    ]
+    _ingest._handle_bridge_event(
+        {
+            "type": "device_joined",
+            "data": {"ieee_address": "0xabc", "friendly_name": "0xabc"},
+        }
+    )
+    devices = get_zigbee_devices()
+    ends = [d for d in devices if d.get("type") != "Coordinator"]
+    assert len(ends) == 1
+    assert ends[0]["ieee_address"] == "0xabc"
+    assert ends[0]["status"] == "unbound"
+    assert get_zigbee_health()["end_device_count"] == 1
+    _ingest._devices = []
+
+
 def test_zigbee_health_radio_down_by_default() -> None:
     from dsc_brain.zigbee_mqtt import get_zigbee_health
 
@@ -1082,6 +1136,182 @@ def test_soil_test_flow(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         cancel_soil_test(test_id)
     hist = client.get("/soil-tests")
     assert hist.status_code == 200
+
+
+def test_zigbee_unbound_does_not_fill_canopy(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("dsc_brain.settings.DEFAULT_DB", temp_db)
+    from dsc_brain.fleet_state import get_fleet_state
+    from dsc_brain.zigbee_mqtt import _ingest
+
+    _ingest._devices = [{"ieee_address": "0xabc", "friendly_name": "sensor_a", "type": "EndDevice"}]
+    _ingest._by_role = {}
+    _ingest._canopy = {}
+
+    class _Msg:
+        topic = "zigbee2mqtt/sensor_a"
+        payload = b'{"temperature": 22.0, "humidity": 50.0}'
+
+    _ingest._on_message(None, None, _Msg())
+    assert get_fleet_state().canopy.get("temp_c") is None
+    assert "sensor_a" in _ingest._device_states
+
+
+def test_zigbee_canopy_role_fills_canopy(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("dsc_brain.settings.DEFAULT_DB", temp_db)
+    from dsc_brain.fleet_state import get_fleet_state
+    from dsc_brain.settings import set_setting
+    from dsc_brain.zigbee_mqtt import _ingest, save_zigbee_bindings
+
+    save_zigbee_bindings(
+        {
+            "0xabc": {
+                "role": "canopy_4x8",
+                "zone": "4x8",
+                "alias": "",
+                "enabled": True,
+                "friendly_name": "sensor_a",
+            }
+        }
+    )
+    _ingest._devices = [{"ieee_address": "0xabc", "friendly_name": "sensor_a", "type": "EndDevice"}]
+    _ingest._by_role = {}
+    _ingest._canopy = {}
+
+    class _Msg:
+        topic = "zigbee2mqtt/sensor_a"
+        payload = b'{"temperature": 24.5, "humidity": 55.0}'
+
+    _ingest._on_message(None, None, _Msg())
+    assert get_fleet_state().canopy.get("temp_c") == 24.5
+    assert get_fleet_state().system.get("zigbee_by_role", {}).get("canopy_4x8", {}).get("humidity") == 55.0
+
+
+def test_zigbee_binding_follows_ieee_not_friendly_name(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("dsc_brain.settings.DEFAULT_DB", temp_db)
+    from dsc_brain.fleet_state import get_fleet_state
+    from dsc_brain.zigbee_mqtt import _ingest, save_zigbee_bindings
+
+    save_zigbee_bindings(
+        {
+            "0xabc": {
+                "role": "canopy_4x8",
+                "zone": "4x8",
+                "enabled": True,
+                "friendly_name": "old_name",
+            }
+        }
+    )
+    _ingest._devices = [{"ieee_address": "0xabc", "friendly_name": "new_name", "type": "EndDevice"}]
+    _ingest._by_role = {}
+    _ingest._canopy = {}
+
+    class _Msg:
+        topic = "zigbee2mqtt/new_name"
+        payload = b'{"temperature": 21.0, "humidity": 40.0}'
+
+    _ingest._on_message(None, None, _Msg())
+    assert get_fleet_state().canopy.get("temp_c") == 21.0
+
+
+def test_zigbee_save_bindings_reroutes_cached_state(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Assigning a role must integrate into fleet/Climate without waiting for next MQTT."""
+    monkeypatch.setattr("dsc_brain.settings.DEFAULT_DB", temp_db)
+    from dsc_brain.fleet_state import get_fleet_state
+    from dsc_brain.zigbee_mqtt import _ingest, save_zigbee_bindings
+
+    _ingest._devices = [{"ieee_address": "0xabc", "friendly_name": "sensor_a", "type": "EndDevice"}]
+    _ingest._by_role = {}
+    _ingest._canopy = {}
+    _ingest._device_states = {}
+
+    class _Msg:
+        topic = "zigbee2mqtt/sensor_a"
+        payload = b'{"temperature": 23.0, "humidity": 48.0}'
+
+    _ingest._on_message(None, None, _Msg())
+    assert get_fleet_state().canopy.get("temp_c") is None
+
+    save_zigbee_bindings(
+        {
+            "0xabc": {
+                "role": "canopy_4x8",
+                "zone": "4x8",
+                "enabled": True,
+                "friendly_name": "sensor_a",
+            }
+        }
+    )
+    assert get_fleet_state().canopy.get("temp_c") == 23.0
+    assert get_fleet_state().system.get("zigbee_by_role", {}).get("canopy_4x8", {}).get("humidity") == 48.0
+
+
+def test_esphome_poll_does_not_clobber_zigbee_canopy(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """ESPHome snapshot write-back must keep Zigbee canopy / by_role (race fix)."""
+    monkeypatch.setenv("DSC_DATA", str(temp_db.parent))
+    monkeypatch.setattr("dsc_brain.settings.DEFAULT_DB", temp_db)
+    from dsc_brain.fleet_state import FleetState, get_fleet_state, update_fleet_state
+    from dsc_brain.zigbee_mqtt import _ingest, apply_zigbee_cache_to_state, save_zigbee_bindings
+
+    save_zigbee_bindings(
+        {
+            "0xrace": {
+                "role": "canopy_4x8",
+                "zone": "4x8",
+                "enabled": True,
+                "friendly_name": "race_canopy",
+            }
+        }
+    )
+    _ingest._devices = [{"ieee_address": "0xrace", "friendly_name": "race_canopy", "type": "EndDevice"}]
+    _ingest._by_role = {}
+    _ingest._canopy = {}
+    _ingest._device_states = {}
+
+    class _Msg:
+        topic = "zigbee2mqtt/race_canopy"
+        payload = b'{"temperature": 26.5, "humidity": 51.0}'
+
+    _ingest._on_message(None, None, _Msg())
+    assert get_fleet_state().canopy.get("temp_c") == 26.5
+
+    # Simulate ESPHome building from a stale empty snapshot (lost-update race).
+    stale = FleetState()
+    stale.system = {"appliance_link": True}
+    apply_zigbee_cache_to_state(stale)
+    update_fleet_state(stale)
+
+    assert get_fleet_state().canopy.get("temp_c") == 26.5
+    assert get_fleet_state().system.get("zigbee_by_role", {}).get("canopy_4x8", {}).get("humidity") == 51.0
+    assert get_fleet_state().system.get("appliance_link") is True
+
+
+def test_zigbee_roles_and_bindings_api(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("DSC_DATA", str(temp_db.parent))
+    monkeypatch.setattr("dsc_brain.settings.DEFAULT_DB", temp_db)
+    from fastapi.testclient import TestClient
+
+    from dsc_brain.api import app
+
+    client = TestClient(app)
+    roles = client.get("/settings/zigbee/roles")
+    assert roles.status_code == 200
+    assert any(r["id"] == "canopy_4x8" for r in roles.json()["roles"])
+    put = client.put(
+        "/settings/zigbee/bindings",
+        json={
+            "bindings": {
+                "0xdead": {
+                    "role": "intake",
+                    "zone": "4x8",
+                    "enabled": True,
+                    "friendly_name": "intake1",
+                }
+            }
+        },
+    )
+    assert put.status_code == 200
+    got = client.get("/settings/zigbee/bindings")
+    assert got.json()["bindings"]["0xdead"]["role"] == "intake"
 
 
 def test_zigbee_by_placement_entities(temp_db: Path, monkeypatch: pytest.MonkeyPatch) -> None:

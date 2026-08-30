@@ -241,6 +241,16 @@ class FleetState:
             if row.get("humidity") is not None:
                 set_entity(f"sensor.dsc_zigbee_{slug}_humidity", row["humidity"])
 
+        by_role = (self.system or {}).get("zigbee_by_role") or {}
+        for role, row in by_role.items():
+            if not isinstance(row, dict):
+                continue
+            slug = str(role).lower().replace(" ", "_").replace("/", "_")[:48]
+            if row.get("temperature") is not None:
+                set_entity(f"sensor.dsc_zigbee_{slug}_temperature", row["temperature"])
+            if row.get("humidity") is not None:
+                set_entity(f"sensor.dsc_zigbee_{slug}_humidity", row["humidity"])
+
         return states
 
 

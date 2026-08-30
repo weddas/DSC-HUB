@@ -18,6 +18,7 @@ import {
   type SoftCalPhase,
   type SoftCalPot,
 } from "../lib/softCalibrate";
+import { getSoftCalAdvice } from "../lib/fleetApi";
 
 function fmt(v: number | null | undefined, digits = 1): string {
   return v != null && Number.isFinite(v) ? v.toFixed(digits) : "—";
@@ -69,6 +70,34 @@ export function SoftCalWizard() {
   const [waterRows, setWaterRows] = useState<SoftCalCaptureResult[] | null>(null);
   const [afterRows, setAfterRows] = useState<SoftCalCaptureResult[] | null>(null);
   const [pendingApply, setPendingApply] = useState<SoftCalCaptureResult[] | null>(null);
+  const [aiNote, setAiNote] = useState("");
+
+  const askAi = async () => {
+    setAiNote("");
+    setBusy(true);
+    try {
+      const pot = selected[0] ?? 1;
+      const ch = readSoftCalChannels(pot, num);
+      const advice = await getSoftCalAdvice({
+        seat: `pot${pot}`,
+        got: {
+          moisture_pct: ch.moisture,
+          ph: ch.ph,
+          ec_us: ch.ec,
+          temp_c: ch.soilTemp,
+        },
+        soft_cal: { phase, pots: selected, knownPh, knownEc },
+      });
+      const acts = (advice.actions ?? []).map((a) => a.type).join(", ") || "none";
+      setAiNote(
+        `${advice.narrative ?? ""}\n\nGuardrailed actions: ${acts}${advice.ollama ? " · Ollama" : " · decision_tick only"}`,
+      );
+    } catch (e) {
+      setAiNote(e instanceof Error ? e.message : "AI advice failed");
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const togglePot = (pot: SoftCalPot) => {
     setSelected((prev) => {
@@ -286,10 +315,18 @@ export function SoftCalWizard() {
         >
           Switch to {phase === "water" ? "after-water" : "tap-water"} phase
         </Button>
+        <Button variant="secondary" disabled={busy} onClick={() => void askAi()}>
+          Ask Brain (guardrailed)
+        </Button>
       </div>
 
       {progress ? <p className="dsc-honesty">{progress}</p> : null}
       {status ? <p className="dsc-honesty">{status}</p> : null}
+      {aiNote ? (
+        <pre className="dsc-honesty" style={{ whiteSpace: "pre-wrap" }}>
+          {aiNote}
+        </pre>
+      ) : null}
 
       {waterRows ? (
         <>

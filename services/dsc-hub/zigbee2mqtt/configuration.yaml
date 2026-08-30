@@ -5,7 +5,8 @@ mqtt:
   server: mqtt://mosquitto:1883
 serial:
   port: /dev/ttyACM0
-  adapter: ezsp
+  # z2m 2.x: ember (EZSP v13). Pair with SkyConnect EmberZNet 7.4.x if HOST_FATAL_ERROR.
+  adapter: ember
 frontend:
   enabled: false
 advanced:

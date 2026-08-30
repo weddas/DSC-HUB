@@ -188,10 +188,13 @@ HUB_FAN_ENTITY_TO_OID: dict[str, str] = {
 HUB_LIGHT_OID_TO_ENTITY: dict[str, str] = {
     "light_sf1000": "light.dsc_hub_sf1000_dimmer",
     "sf1000_dimmer": "light.dsc_hub_sf1000_dimmer",
+    "light_twin_sf1000": "light.dsc_hub_twin_sf1000",
+    "twin_sf1000": "light.dsc_hub_twin_sf1000",
 }
 
 HUB_LIGHT_ENTITY_TO_OID: dict[str, str] = {
     "light.dsc_hub_sf1000_dimmer": "sf1000_dimmer",
+    "light.dsc_hub_twin_sf1000": "twin_sf1000",
 }
 
 HUB_SELECT_OID_TO_ENTITY: dict[str, str] = {

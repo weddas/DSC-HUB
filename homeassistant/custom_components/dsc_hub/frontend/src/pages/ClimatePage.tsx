@@ -13,6 +13,7 @@ import {
 import { OverflowMenu } from "../components/chrome";
 import { TimespanControl, CYCLE_TIMESPAN_EXTRAS } from "../components/HistoryDrawer";
 import { AirPathMap } from "../components/AirPathMap";
+import { FlowSankey } from "../components/FlowSankey";
 import { CropScheduler } from "../components/CropScheduler";
 import { TentTargetPanel } from "../components/TentTargets";
 import { resolveCfm } from "../lib/cfmProvenance";
@@ -148,19 +149,27 @@ export function LiveClimatePage() {
   const boughtH = num("sensor.dsc_bought_runtime_today");
   const dumpBtu = num("sensor.dsc_vent_heat_dump_btu");
 
-  const zigbeeByPlacement = fleet.system.zigbee_by_placement as
+  const canopyTempHeld = useHeldReading("sensor.dsc_canopy_temperature");
+  const canopyRhHeld = useHeldReading("sensor.dsc_canopy_humidity");
+  const canopyRole =
+    typeof fleet.canopy?.role === "string" ? String(fleet.canopy.role) : null;
+  const canopyDevice =
+    typeof fleet.canopy?.friendly_name === "string" ? String(fleet.canopy.friendly_name) : null;
+
+  const zigbeeByRole = (fleet.system.zigbee_by_role ?? fleet.system.zigbee_by_placement) as
     | Record<string, Record<string, unknown>>
     | undefined;
-  const zigbeePlacementRows = useMemo(() => {
-    if (!zigbeeByPlacement || typeof zigbeeByPlacement !== "object") return [];
-    return Object.entries(zigbeeByPlacement).map(([placement, row]) => ({
-      placement,
+  const zigbeeRoleRows = useMemo(() => {
+    if (!zigbeeByRole || typeof zigbeeByRole !== "object") return [];
+    return Object.entries(zigbeeByRole).map(([role, row]) => ({
+      role,
+      zone: String(row.zone ?? "—"),
       temp: row.temperature,
       rh: row.humidity,
-      name: String(row.friendly_name ?? placement),
+      name: String(row.friendly_name ?? role),
       updatedAt: typeof row.updated_at === "number" ? row.updated_at : null,
     }));
-  }, [zigbeeByPlacement]);
+  }, [zigbeeByRole]);
 
   const rowLit = (id: "room" | "clone" | "main") =>
     focus === "compare" || focus === id ? "dsc-gauge-row-3 is-lit" : "dsc-gauge-row-3";
@@ -440,41 +449,94 @@ export function LiveClimatePage() {
               outCfm={outReading}
               recircCfm={recReading}
             />
+            <FlowSankey
+              intakeClone={inCloneReading}
+              intakeMain={inMainReading}
+              cascade={resolveCfm(
+                "sensor.dsc_cfm_cascade_allocated",
+                "sensor.dsc_cfm_cascade",
+                { available, num },
+              )}
+              outCfm={outReading}
+              recircCfm={recReading}
+              heatTentW={Number.isFinite(num("sensor.dsc_heat_tent_w")) ? num("sensor.dsc_heat_tent_w") : 0}
+              heatMatW={Number.isFinite(num("sensor.dsc_heatmat_w")) ? num("sensor.dsc_heatmat_w") : 0}
+              humidifyGh={Number.isFinite(num("sensor.dsc_humidify_gh")) ? num("sensor.dsc_humidify_gh") : 0}
+              dehumidifyGh={
+                Number.isFinite(num("sensor.dsc_dehumidify_gh")) ? num("sensor.dsc_dehumidify_gh") : 0
+              }
+              massBalanceOk={null}
+            />
             <p className="dsc-muted" style={{ marginTop: 8, fontSize: "0.85rem" }}>
-              Air path is the CFM map only. Particle / Sankey prototypes are gated until they resize and balance
-              honestly.
+              Sankey shows CFM provenance per link (Allocated / Nameplate). Missing cascade/heat/humidity sensors
+              read as 0 — not invented balance.
             </p>
           </Card>
         </div>
 
-        {zigbeePlacementRows.length ? (
+        {canopyRole || Number.isFinite(canopyTempHeld.value) || zigbeeRoleRows.length ? (
           <div className="dsc-col-12">
-            <Card className="dsc-glass" title="Zigbee by placement" icon="gauge">
+            <Card className="dsc-glass" title="Zigbee by role" icon="gauge">
               <p className="dsc-muted" style={{ fontSize: 12, marginBottom: 8 }}>
-                Canopy / duct sensors mapped in Settings → Zigbee placements. Offsets from global tuning apply.
+                Assign Role/Zone in Settings → Device → Zigbee. Save re-routes into Climate immediately.
+                Unbound sensors never fill canopy.
               </p>
-              <div className="dsc-table-scroll">
-                <table className="dsc-table">
-                  <thead>
-                    <tr>
-                      <th>Placement</th>
-                      <th>Device</th>
-                      <th>°C</th>
-                      <th>RH %</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {zigbeePlacementRows.map((row) => (
-                      <tr key={row.placement}>
-                        <td>{row.placement}</td>
-                        <td>{row.name}</td>
-                        <td>{row.temp != null && Number.isFinite(Number(row.temp)) ? Number(row.temp).toFixed(1) : "—"}</td>
-                        <td>{row.rh != null && Number.isFinite(Number(row.rh)) ? Number(row.rh).toFixed(0) : "—"}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="dsc-chip-row" style={{ marginBottom: 10 }}>
+                {canopyRole ? (
+                  <StatusChip
+                    label={`Canopy ← ${canopyRole}${canopyDevice ? ` (${canopyDevice})` : ""}`}
+                    tone="ok"
+                  />
+                ) : (
+                  <StatusChip label="Canopy unbound" tone="muted" />
+                )}
+                {Number.isFinite(canopyTempHeld.value) ? (
+                  <StatusChip
+                    label={`Canopy ${canopyTempHeld.value.toFixed(1)}°C / ${
+                      Number.isFinite(canopyRhHeld.value) ? `${canopyRhHeld.value.toFixed(0)}% RH` : "— RH"
+                    }`}
+                    tone={canopyTempHeld.stale ? "warn" : "ok"}
+                  />
+                ) : null}
               </div>
+              {zigbeeRoleRows.length ? (
+                <div className="dsc-table-scroll">
+                  <table className="dsc-table">
+                    <thead>
+                      <tr>
+                        <th>Role</th>
+                        <th>Zone</th>
+                        <th>Device</th>
+                        <th>°C</th>
+                        <th>RH %</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {zigbeeRoleRows.map((row) => (
+                        <tr key={row.role}>
+                          <td>{row.role}</td>
+                          <td>{row.zone}</td>
+                          <td>{row.name}</td>
+                          <td>
+                            {row.temp != null && Number.isFinite(Number(row.temp))
+                              ? Number(row.temp).toFixed(1)
+                              : "—"}
+                          </td>
+                          <td>
+                            {row.rh != null && Number.isFinite(Number(row.rh))
+                              ? Number(row.rh).toFixed(0)
+                              : "—"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className="dsc-muted" style={{ fontSize: 12 }}>
+                  No climate roles bound yet — permit join, then set Role + Zone and Save.
+                </p>
+              )}
             </Card>
           </div>
         ) : null}

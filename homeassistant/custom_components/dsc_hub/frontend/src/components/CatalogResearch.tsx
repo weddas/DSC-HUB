@@ -154,7 +154,7 @@ export function CatalogResearch() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [kind]);
 
-  const useInCompose = (item: CatalogItem | null) => {
+  const sendToCompose = (item: CatalogItem | null) => {
     if (!item) return;
     setRecent((prev) => [item, ...prev.filter((x) => x.name !== item.name)].slice(0, 5));
     if (kind === "light") {
@@ -216,7 +216,7 @@ export function CatalogResearch() {
                   ))}
                 </dl>
                 <div className="dsc-row-actions">
-                  <Button primary onClick={() => useInCompose(selected)}>
+                  <Button primary onClick={() => sendToCompose(selected)}>
                     Use in Compose
                   </Button>
                   <Button

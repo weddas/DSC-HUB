@@ -25,6 +25,8 @@ import { readPotVessel } from "../lib/vesselSpec";
 import { PlantExtra } from "./PlantExtra";
 import { VesselGlyph } from "./VesselGlyph";
 import { useBrainContext } from "../hooks/useBrain";
+import { useFleet } from "../hooks/useFleet";
+import { phaseLabel, potSteering, type RootSteeringSnapshot } from "../lib/rootSteering";
 
 type FieldBaseline = {
   name: string;
@@ -75,6 +77,11 @@ export function PlantSeatPanel({
   const { hass, state, entity, available, tick, num } = useEntityBus();
   const { callService } = useFleetActions();
   const { refresh: refreshBrain } = useBrainContext();
+  const fleet = useFleet();
+  const steering = potSteering(
+    fleet.root_steering as RootSteeringSnapshot | undefined,
+    `pot${pot}`,
+  );
   const navigate = useNavigate();
   void tick;
   const seat = buildPlantSeat(pot, { state, entity });
@@ -521,6 +528,14 @@ export function PlantSeatPanel({
 
           <div className="dsc-col-6">
             <Card className="dsc-glass" title="Dryback">
+              {steering ? (
+                <div style={{ marginBottom: 8 }}>
+                  <StatusChip
+                    label={phaseLabel(steering.phase ?? null)}
+                    tone={steering.act_allowed ? "ok" : "muted"}
+                  />
+                </div>
+              ) : null}
               <ArcGauge
                 label="Dryback"
                 value={drybackHeld.value}
