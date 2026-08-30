@@ -62,7 +62,7 @@ Brain-commanded irrigation shot. No SPA→relay shortcut.
 |------|----------|
 | Resolve seat | First enabled Zigbee binding with `role=plug_pump` + `friendly_name` |
 | Duration | Clamp `duration_s` to **0.5–30** (default 2) |
-| Publish | `zigbee2mqtt/{friendly_name}/set` → `{"state":"ON","on_time":N}` |
+| Publish | `zigbee2mqtt/{friendly_name}/set` → `{"state":"ON","on_time":N}` via ingest MQTT client (`paho` required in the brain image) |
 | Audit | `record_grow_log` — SHOT / OOS / FAIL |
 
 Responses:
