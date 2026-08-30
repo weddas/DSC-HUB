@@ -38,3 +38,13 @@ All reads/writes go through brain HTTP API (`brain/dsc_brain/api.py`):
 ## Host
 
 Pi 4 4GB LAN (`http://dsc-brain.local` or IP). Static UI can ship later; API stub is first.
+
+## Settings → Zigbee (tip `c224eba` / `e126f654`)
+
+Device Kit Zigbee rows: **Role · Zone · Task** with capability-filtered selects; **Show all** escape; liquid Task params (appliance / problem polarity / banner). Climate sensors stay **No task** datapoints. Kit liquid tanks may publish wet on `occupancy` — not motion. Overview shows `critical_banners` from liquid OOS.
+
+SoT: [ZIGBEE-ROLE-TASK.md](ZIGBEE-ROLE-TASK.md) · SPA bundle `index-nLu-U8CF.js` · radio ops [ZIGBEE-RECOVERY.md](../ops/ZIGBEE-RECOVERY.md).
+
+## Root steering (Bar 3)
+
+SPA must consume `fleet.root_steering` / `GET /control/root-steering` for P0–P3 — never invent phase. SoT: [ROOT-STEERING.md](ROOT-STEERING.md).

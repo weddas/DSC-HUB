@@ -1,7 +1,13 @@
 # Zigbee2MQTT radio recovery (SkyConnect / TS0201)
 
-**Brain:** `http://192.168.86.48:8787` · Settings → Zigbee  
+**Brain:** Settings → Zigbee on the Pi SPA (`:8787`)  
 **No factory reset** without explicit operator approval.
+
+**Operator bind path (Role / Zone / Task, liquid polarity, occupancy-as-wet):** [ZIGBEE-ROLE-TASK.md](../brain/ZIGBEE-ROLE-TASK.md) — not covered here.
+
+## Pi docker caution
+
+Prefer `timeout 25 docker restart zigbee2mqtt` (or stop+start / power-cycle) over bare `docker kill` / untimed `docker restart` — this Pi has wedged SSH/8787 after hung docker ops. Do not wipe `database.db` without operator approval.
 
 ## Symptoms
 

@@ -21,3 +21,4 @@
 - Twin SF1000 and Zigbee/Z2M/SkyConnect are in-scope product surfaces; Zigbee onboarding is role/task binding with `capability_class` (optional `capability_override`) and operator-chosen `problem_when` (e.g. tank-full or humidifier-empty → appliance OOS), not bare device join alone.
 - Some kit Zigbee leak/liquid sensors expose wet/dry as `occupancy` (liquid present), not PIR motion — do not treat occupancy as motion for those SKUs.
 - Recurring friction is encoded only after approval (e.g. `.cursor/rules/dsc-kit-sot.mdc`, `dsc-viz-honesty.mdc`); durable ops debt stays in `docs/FOLLOWUPS.md`.
+- Developer SoT for the Zigbee bind path: `docs/brain/ZIGBEE-ROLE-TASK.md`. Bar 3 phase SoT: `docs/brain/ROOT-STEERING.md`.

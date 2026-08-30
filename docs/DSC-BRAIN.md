@@ -24,7 +24,10 @@ Notion (canonical Wiki): [Product layers](https://app.notion.com/p/3b52b4cda3708
 | [`SETUP.md`](../SETUP.md) | SoftAP kit unbox (product path) |
 | [`INSTALL.md`](../INSTALL.md) | HA lab bring-up (scaffold) |
 | [`docs/HA-SCAFFOLD.md`](HA-SCAFFOLD.md) | Promote-don't-deepen rules |
-| [`docs/brain/`](brain/) | Specs: decision loop, web UI, Pi appliance path |
+| [`docs/brain/`](brain/) | Specs: decision loop, web UI, Zigbee Role/Task, root steering, Pi appliance path |
+| [`docs/brain/ZIGBEE-ROLE-TASK.md`](brain/ZIGBEE-ROLE-TASK.md) | Settings Zigbee Role vs Task + liquid polarity (tip `e126f654`) |
+| [`docs/brain/ROOT-STEERING.md`](brain/ROOT-STEERING.md) | Bar 3 P0–P3 phase SoT |
+| [`docs/ops/ZIGBEE-RECOVERY.md`](ops/ZIGBEE-RECOVERY.md) | z2m / SkyConnect radio recovery |
 
 ## Phases
 

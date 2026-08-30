@@ -49,6 +49,9 @@ flowchart LR
 |---|---|
 | [`SETUP.md`](SETUP.md) | **Product unbox** — SoftAP kit without HA |
 | [`docs/DSC-BRAIN.md`](docs/DSC-BRAIN.md) | Pi offline brain + webserver product shape |
+| [`docs/brain/ZIGBEE-ROLE-TASK.md`](docs/brain/ZIGBEE-ROLE-TASK.md) | Settings Zigbee Role vs Task + liquid OOS (tip `e126f654`) |
+| [`docs/brain/ROOT-STEERING.md`](docs/brain/ROOT-STEERING.md) | Bar 3 P0–P3 root steering SoT |
+| [`docs/ops/ZIGBEE-RECOVERY.md`](docs/ops/ZIGBEE-RECOVERY.md) | Zigbee2MQTT / SkyConnect radio recovery |
 | [`docs/HA-SCAFFOLD.md`](docs/HA-SCAFFOLD.md) | HA = lab soak; promote-don't-deepen |
 | [`brain/README.md`](brain/README.md) | Catalog SQLite / Want / API stub (Phase B) |
 | [`INSTALL.md`](INSTALL.md) | Lab HA + fleet bring-up |
