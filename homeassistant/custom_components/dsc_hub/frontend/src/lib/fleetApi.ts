@@ -157,11 +157,12 @@ export async function test_cannalib(): Promise<Record<string, unknown>> {
   return resp.json();
 }
 
-export async function permit_join(enabled: boolean): Promise<void> {
+/** z2m max useful window is 254s; keep open long enough for factory-reset + LED blink. */
+export async function permit_join(enabled: boolean, duration_s = 254): Promise<void> {
   await fetch("/settings/zigbee/permit-join", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ enabled }),
+    body: JSON.stringify({ enabled, duration_s: enabled ? duration_s : 0 }),
   });
 }
 
@@ -174,6 +175,127 @@ export async function get_zigbee_devices(): Promise<{ devices: Array<Record<stri
 export async function get_zigbee_health(): Promise<Record<string, unknown>> {
   const resp = await fetch("/settings/zigbee/health");
   if (!resp.ok) throw new Error("zigbee health failed");
+  return resp.json();
+}
+
+export type ZigbeeRoleKind = "none" | "climate" | "safety" | "plug" | "meter" | "button" | "gas" | "light";
+
+export type ZigbeeRole = {
+  id: string;
+  label: string;
+  consume?: boolean;
+  kind?: ZigbeeRoleKind | string;
+};
+
+export type ZigbeeParamSchemaField = {
+  type: string;
+  values?: string[];
+};
+
+export type ZigbeeRecipe = {
+  id: string;
+  label: string;
+  description?: string;
+  suggested_roles?: string[];
+  device_classes?: string[];
+  param_schema?: Record<string, ZigbeeParamSchemaField>;
+  default_params?: Record<string, unknown>;
+};
+
+export type ZigbeeCapabilityClass = "climate" | "liquid" | "plug" | "motion" | "other" | "safety";
+
+const CLASS_ROLE_KINDS: Record<string, ReadonlySet<string>> = {
+  climate: new Set(["climate"]),
+  liquid: new Set(["safety"]),
+  safety: new Set(["safety"]),
+  plug: new Set(["plug"]),
+  motion: new Set(),
+  other: new Set(),
+};
+
+/** Mirror brain `banner_template` for SPA param defaults. */
+export function zigbeeBannerTemplate(seatId: string, problemWhen: string): string {
+  const seat = String(seatId || "").trim().toLowerCase();
+  const polarity = String(problemWhen || "active").trim().toLowerCase();
+  if (seat === "humidifier") {
+    if (polarity === "inactive") return "Humidifier EMPTY - refill";
+    return "Humidifier tank FULL - empty tank";
+  }
+  if (polarity === "inactive") return "Dehumidifier tank EMPTY - refill";
+  return "Dehumidifier tank FULL - empty tank";
+}
+
+export function filterZigbeeRolesForClass(
+  capabilityClass: string,
+  roles: ZigbeeRole[],
+): ZigbeeRole[] {
+  const allowed = CLASS_ROLE_KINDS[String(capabilityClass).toLowerCase()] ?? new Set<string>();
+  return roles.filter((role) => {
+    const kind = String(role.kind ?? "none");
+    const id = String(role.id ?? "");
+    return id === "unbound" || allowed.has(kind);
+  });
+}
+
+export function filterZigbeeRecipesForClass(
+  capabilityClass: string,
+  recipes: ZigbeeRecipe[],
+): ZigbeeRecipe[] {
+  const cap = String(capabilityClass).toLowerCase();
+  return recipes.filter((recipe) => {
+    const id = String(recipe.id ?? "");
+    if (id === "none") return true;
+    const classes = recipe.device_classes;
+    if (!Array.isArray(classes)) return false;
+    return classes.some((c) => String(c).toLowerCase() === cap);
+  });
+}
+
+export function isZigbeeSafetyLeakRole(roleId: string): boolean {
+  return roleId === "leak_tank" || roleId === "leak_floor";
+}
+
+export async function get_zigbee_roles(): Promise<{ roles: ZigbeeRole[] }> {
+  const resp = await fetch("/settings/zigbee/roles");
+  if (!resp.ok) throw new Error("zigbee roles failed");
+  return resp.json();
+}
+
+export async function put_zigbee_bindings(
+  bindings: Record<string, Record<string, unknown>>,
+): Promise<{ bindings: Record<string, Record<string, unknown>> }> {
+  const resp = await fetch("/settings/zigbee/bindings", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ bindings }),
+  });
+  if (!resp.ok) throw new Error("zigbee bindings save failed");
+  return resp.json();
+}
+
+export async function get_zigbee_recipes(): Promise<{ recipes: ZigbeeRecipe[] }> {
+  const resp = await fetch("/settings/zigbee/recipes");
+  if (!resp.ok) throw new Error("zigbee recipes failed");
+  return resp.json();
+}
+
+export async function get_zigbee_policies(): Promise<{
+  policies: Record<string, { recipe_id: string; enabled?: boolean; params?: Record<string, unknown> }>;
+}> {
+  const resp = await fetch("/settings/zigbee/policies");
+  if (!resp.ok) throw new Error("zigbee policies failed");
+  return resp.json();
+}
+
+export async function put_zigbee_policies(
+  policies: Record<string, Record<string, unknown>>,
+): Promise<{ policies: Record<string, Record<string, unknown>> }> {
+  const resp = await fetch("/settings/zigbee/policies", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ policies }),
+  });
+  if (!resp.ok) throw new Error("zigbee policies save failed");
   return resp.json();
 }
 
@@ -280,6 +402,30 @@ export type PotPlantPatch = {
   notes?: string;
   blend?: string;
 };
+
+export async function getSoftCalAdvice(body: {
+  seat?: string;
+  strain_id?: string | null;
+  stage?: string;
+  got?: Record<string, number | null>;
+  soft_cal?: Record<string, unknown>;
+  manual_takeover?: boolean;
+}): Promise<{
+  ok: boolean;
+  narrative?: string;
+  advisories?: string[];
+  actions?: Array<{ type: string; detail?: string }>;
+  ollama?: boolean;
+  guardrail?: string;
+}> {
+  const resp = await fetch("/ai/soft-cal-advice", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!resp.ok) throw new Error("soft-cal advice failed");
+  return resp.json();
+}
 
 export async function getProbeStations(): Promise<ProbeStation[]> {
   const resp = await fetch("/settings/probe-stations");

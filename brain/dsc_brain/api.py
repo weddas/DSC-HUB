@@ -56,12 +56,25 @@ from .soil_tests import (
     poll_soil_test,
     start_soil_test,
 )
+from .root_steering import (
+    build_root_steering_snapshot,
+    is_root_steering_override,
+    set_root_steering_override,
+)
 from .zigbee_mqtt import (
     get_zigbee_devices,
     get_zigbee_health,
+    get_zigbee_role_catalog,
+    load_zigbee_bindings,
+    save_zigbee_bindings,
     set_permit_join,
     start_zigbee_ingest,
     stop_zigbee_ingest,
+)
+from .zigbee_policies import (
+    get_recipe_catalog,
+    load_zigbee_policies,
+    save_zigbee_policies,
 )
 
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
@@ -134,7 +147,15 @@ class RosterPatch(BaseModel):
 
 class PermitJoinBody(BaseModel):
     enabled: bool = True
-    duration_s: int = 120
+    duration_s: int = 254
+
+
+class ZigbeeBindingsBody(BaseModel):
+    bindings: dict[str, dict[str, Any]] = Field(default_factory=dict)
+
+
+class ZigbeePoliciesBody(BaseModel):
+    policies: dict[str, dict[str, Any]] = Field(default_factory=dict)
 
 
 class EsphomeJobBody(BaseModel):
@@ -224,6 +245,12 @@ async def lifespan(app: FastAPI):  # noqa: ARG001
 
     init_soft_cal_history()
     reload_catalogs()
+    try:
+        from .plant_probe import migrate_legacy_plant_ids
+
+        migrate_legacy_plant_ids()
+    except Exception:  # noqa: BLE001
+        pass
     if is_demo_mode():
         prepare_demo_settings()
         assert_demo_safe_config()
@@ -328,12 +355,63 @@ def fleet(
     payload = state.to_dict()
     merge_inventory_oos_seats(payload, inventory)
     payload["inventory"] = inventory
+    lights_on = False
+    hub_vals = (payload.get("hub") or {}).get("values") or {}
+    twin = hub_vals.get("twin_sf1000_on")
+    sf = hub_vals.get("sf1000_on")
+    # Prefer explicit light state from hass_states when present
+    hass = state.to_hass_states(inventory)
+    twin_st = (hass.get("light.dsc_hub_twin_sf1000") or {}).get("state")
+    sf_st = (hass.get("light.dsc_hub_sf1000_dimmer") or {}).get("state")
+    win = (hass.get("binary_sensor.dsc_hub_4x8_window_open") or {}).get("state")
+    if twin_st == "on" or sf_st == "on" or win == "on":
+        lights_on = True
+    elif twin is True or sf is True:
+        lights_on = True
+    reading_ok: dict[str, bool] = {}
+    for pot_id, pot in (payload.get("pots") or {}).items():
+        vals = (pot or {}).get("values") or {}
+        reading_ok[str(pot_id)] = bool(pot.get("online")) and not bool(vals.get("sensor_fault"))
+    payload["root_steering"] = build_root_steering_snapshot(
+        state.pots,
+        lights_on=lights_on,
+        reading_ok_by_pot=reading_ok,
+    )
     if include_computed:
         payload["hass_extras"] = build_computed_hass_states(state, inventory)
     if include_hass:
-        payload["hass_states"] = state.to_hass_states(inventory)
+        payload["hass_states"] = hass
     return payload
 
+
+class RootSteeringOverrideBody(BaseModel):
+    enabled: bool = True
+
+
+@app.get("/control/root-steering")
+def control_root_steering_get() -> dict[str, Any]:
+    return fleet().get("root_steering") or {}
+
+
+@app.post("/control/root-steering/override")
+def control_root_steering_override(body: RootSteeringOverrideBody) -> dict[str, Any]:
+    if _demo_mode():
+        _demo_forbidden()
+    set_root_steering_override(body.enabled)
+    return {"override": is_root_steering_override(), "root_steering": control_root_steering_get()}
+
+
+@app.post("/control/irrigation/shot")
+def control_irrigation_shot(body: dict[str, Any] | None = None) -> dict[str, Any]:
+    """IrrigAct: Zigbee plug_pump shot when bound; honest OOS otherwise."""
+    if _demo_mode():
+        _demo_forbidden()
+    from .irrigact import irrigation_shot
+
+    b = body or {}
+    pot_id = str(b.get("pot_id") or "")
+    duration_s = float(b.get("duration_s") or 2.0)
+    return irrigation_shot(pot_id=pot_id, duration_s=duration_s)
 
 @app.get("/fleet/computed")
 def fleet_computed() -> dict[str, Any]:
@@ -559,6 +637,48 @@ def settings_zigbee_devices() -> dict[str, Any]:
     return {"devices": get_zigbee_devices()}
 
 
+@app.get("/settings/zigbee/roles")
+def settings_zigbee_roles() -> dict[str, Any]:
+    return {"roles": get_zigbee_role_catalog()}
+
+
+@app.get("/settings/zigbee/bindings")
+def settings_zigbee_bindings_get() -> dict[str, Any]:
+    return {"bindings": load_zigbee_bindings()}
+
+
+@app.put("/settings/zigbee/bindings")
+def settings_zigbee_bindings_put(body: ZigbeeBindingsBody) -> dict[str, Any]:
+    if _demo_mode():
+        _demo_forbidden()
+    try:
+        cleaned = save_zigbee_bindings(body.bindings)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return {"bindings": cleaned}
+
+
+@app.get("/settings/zigbee/recipes")
+def settings_zigbee_recipes() -> dict[str, Any]:
+    return {"recipes": get_recipe_catalog()}
+
+
+@app.get("/settings/zigbee/policies")
+def settings_zigbee_policies_get() -> dict[str, Any]:
+    return {"policies": load_zigbee_policies()}
+
+
+@app.put("/settings/zigbee/policies")
+def settings_zigbee_policies_put(body: ZigbeePoliciesBody) -> dict[str, Any]:
+    if _demo_mode():
+        _demo_forbidden()
+    try:
+        cleaned = save_zigbee_policies(body.policies)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return {"policies": cleaned}
+
+
 @app.get("/settings/zigbee/health")
 def settings_zigbee_health() -> dict[str, Any]:
     return get_zigbee_health()
@@ -627,8 +747,24 @@ def soil_tests_list(
     return {"tests": list_soil_tests(roster_seat_id=roster_seat_id, limit=limit)}
 
 
+@app.post("/ai/soft-cal-advice")
+async def ai_soft_cal_advice(body: dict[str, Any] | None = None) -> dict[str, Any]:
+    """SoftCal + climate-mode AI: narrative + guardrailed actions (no invent actuators)."""
+    from .soft_cal_ai import soft_cal_climate_advice
+
+    b = body or {}
+    return await soft_cal_climate_advice(
+        seat=str(b.get("seat") or "pot1"),
+        strain_id=b.get("strain_id"),
+        stage=str(b.get("stage") or "veg"),
+        got=b.get("got") if isinstance(b.get("got"), dict) else None,
+        soft_cal=b.get("soft_cal") if isinstance(b.get("soft_cal"), dict) else None,
+        manual_takeover=bool(b.get("manual_takeover")),
+    )
+
+
 @app.get("/soft-cal/sessions")
-def soft_cal_sessions(
+def soft_cal_sessions_list(
     probe_n: int | None = Query(None),
     limit: int = Query(50, ge=1, le=200),
 ) -> dict[str, Any]:

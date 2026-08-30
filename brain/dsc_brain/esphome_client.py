@@ -29,6 +29,7 @@ from .api_lock import host_lock
 from .native_api import make_api_client
 from .paths import EXPECTED_FIRMWARE, SURFACE_VERSION
 from .settings import list_inventory, record_history
+from .zigbee_mqtt import apply_zigbee_cache_to_state
 
 _logger = logging.getLogger(__name__)
 
@@ -104,6 +105,9 @@ class EsphomeIngest:
         while self._running:
             try:
                 state = await self._poll_once()
+                # Zigbee MQTT may have advanced canopy during this long poll —
+                # stamp ingest cache so we never clobber role-bound climate.
+                apply_zigbee_cache_to_state(state)
                 update_fleet_state(state)
             except Exception as exc:  # noqa: BLE001
                 _logger.warning("ESPHome ingest poll failed: %s", exc)
@@ -349,6 +353,12 @@ def _record_hub_chart_history(
         bri = float(light.get("brightness") or 0)
         val = (bri / 255.0 * 100.0) if on and bri > 0 else 0.0
         record_history("hub", "sf1000_brightness", val, now)
+    twin = controls.get("light.dsc_hub_twin_sf1000")
+    if twin:
+        on = twin.get("state") == "on"
+        bri = float(twin.get("brightness") or 0)
+        val = (bri / 255.0 * 100.0) if on and bri > 0 else 0.0
+        record_history("hub", "twin_sf1000_brightness", val, now)
     for eid, metric in _WINDOW_HISTORY_METRICS.items():
         if eid not in binaries:
             continue

@@ -2546,6 +2546,27 @@ button.dsc-chip.is-clickable:hover {
   background: rgba(239, 68, 68, 0.1);
 }
 
+/* Zigbee policy critical — full-bleed Live attention strip */
+.dsc-banner--critical-live {
+  border: 2px solid rgba(239, 68, 68, 0.95);
+  border-left-width: 8px;
+  background: linear-gradient(
+    90deg,
+    rgba(239, 68, 68, 0.28) 0%,
+    rgba(239, 68, 68, 0.14) 40%,
+    rgba(15, 23, 42, 0.55) 100%
+  );
+  color: #fecaca;
+  font-size: clamp(1.15rem, 2.4vw, 1.55rem);
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  line-height: 1.25;
+  padding: 18px 20px;
+  margin: 0 0 14px;
+  text-transform: none;
+  box-shadow: 0 0 0 1px rgba(127, 29, 29, 0.45) inset;
+}
+
 .dsc-banner strong {
   display: block;
   margin-bottom: 4px;

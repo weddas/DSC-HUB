@@ -9,7 +9,7 @@ import threading
 import time
 from typing import Any, Callable
 
-from .fleet_state import get_fleet_state, update_fleet_state
+from .fleet_state import FleetState, get_fleet_state, update_fleet_state
 from .settings import get_setting, list_inventory, set_setting
 
 _logger = logging.getLogger(__name__)
@@ -22,9 +22,147 @@ except ImportError:  # pragma: no cover
 _permit_timer: threading.Timer | None = None
 _permit_lock = threading.Lock()
 
+# Role catalog — consume=True means Brain routes climate state into fleet slots.
+ZIGBEE_ROLE_CATALOG: list[dict[str, Any]] = [
+    {"id": "unbound", "label": "Unbound", "consume": False, "kind": "none"},
+    {"id": "canopy_4x8", "label": "Canopy 4×8", "consume": True, "kind": "climate"},
+    {"id": "canopy_2x4", "label": "Canopy 2×4", "consume": True, "kind": "climate"},
+    {"id": "intake", "label": "Intake", "consume": True, "kind": "climate"},
+    {"id": "exhaust", "label": "Exhaust", "consume": True, "kind": "climate"},
+    {"id": "room", "label": "Room / ambient", "consume": True, "kind": "climate"},
+    {"id": "clone_dome", "label": "Clone dome", "consume": True, "kind": "climate"},
+    {"id": "plug_pump", "label": "Pump plug", "consume": False, "kind": "plug"},
+    {"id": "plug_dosing", "label": "Dosing plug", "consume": False, "kind": "plug"},
+    {"id": "plug_backup_dehum", "label": "Backup dehumidifier", "consume": False, "kind": "plug"},
+    {"id": "plug_fan_aux", "label": "Aux fan plug", "consume": False, "kind": "plug"},
+    {"id": "meter_wall", "label": "Power meter", "consume": False, "kind": "meter"},
+    {"id": "button_override", "label": "Override button", "consume": False, "kind": "button"},
+    {"id": "co2_tent", "label": "CO₂", "consume": False, "kind": "gas"},
+    {"id": "lux_canopy", "label": "Lux / illuminance", "consume": False, "kind": "light"},
+    {"id": "leak_floor", "label": "Water leak (floor)", "consume": False, "kind": "safety"},
+    {"id": "leak_tank", "label": "Tank / reservoir leak", "consume": True, "kind": "safety"},
+    {"id": "door_tent", "label": "Tent door", "consume": False, "kind": "safety"},
+]
+
+_VALID_ROLES = frozenset(str(r["id"]) for r in ZIGBEE_ROLE_CATALOG)
+_CANOPY_ROLES = ("canopy_4x8", "canopy_2x4")
+_VALID_ZONES = frozenset({"4x8", "2x4", "room", "shared"})
+
+
+def get_zigbee_role_catalog() -> list[dict[str, Any]]:
+    return list(ZIGBEE_ROLE_CATALOG)
+
+
+_CLASS_ROLE_KINDS: dict[str, frozenset[str]] = {
+    "climate": frozenset({"climate"}),
+    "liquid": frozenset({"safety"}),
+    "plug": frozenset({"plug"}),
+    "motion": frozenset(),
+    "other": frozenset(),
+}
+
+_STATE_META_KEYS = frozenset(
+    {"friendly_name", "updated_at", "role", "zone", "active", "wet", "linkquality", "last_seen"}
+)
+
+
+def _expose_properties_from_exposes(exposes: Any) -> set[str]:
+    """Extract property names from a Z2M definition exposes list."""
+    out: set[str] = set()
+    if not isinstance(exposes, list):
+        return out
+    for item in exposes:
+        if not isinstance(item, dict):
+            continue
+        prop = item.get("property")
+        if prop:
+            out.add(str(prop).lower())
+        features = item.get("features")
+        if isinstance(features, list):
+            out.update(_expose_properties_from_exposes(features))
+    return out
+
+
+def infer_capability_class(
+    exposes_props: set[str] | None = None,
+    state_keys: set[str] | None = None,
+) -> str:
+    keys = {*(exposes_props or set()), *(state_keys or set())}
+    keys = {str(k).lower() for k in keys}
+    if keys & {"water_leak", "leak", "moisture"}:
+        return "liquid"
+    if keys & {"temperature", "humidity"}:
+        return "climate"
+    if keys & {"state"} and not (keys & {"temperature", "humidity"}):
+        # weak plug hint — refine with device type if needed
+        pass
+    if "occupancy" in keys and not (keys & {"water_leak", "temperature"}):
+        return "motion"
+    return "other"
+
+
+def filter_roles_for_class(capability_class: str, roles: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    allowed_kinds = _CLASS_ROLE_KINDS.get(str(capability_class).lower(), frozenset())
+    out: list[dict[str, Any]] = []
+    for role in roles:
+        kind = str(role.get("kind") or "none")
+        role_id = str(role.get("id") or "")
+        if role_id == "unbound" or kind in allowed_kinds:
+            out.append(role)
+    return out
+
+
+def filter_recipes_for_class(
+    capability_class: str,
+    recipes: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    cap = str(capability_class).lower()
+    out: list[dict[str, Any]] = []
+    for recipe in recipes:
+        recipe_id = str(recipe.get("id") or "")
+        if recipe_id == "none":
+            out.append(recipe)
+            continue
+        device_classes = recipe.get("device_classes")
+        if isinstance(device_classes, list) and cap in {str(c).lower() for c in device_classes}:
+            out.append(recipe)
+    return out
+
+
+def _device_state_signal_keys(friendly_name: str) -> set[str]:
+    state = _ingest._device_states.get(friendly_name) or {}
+    if not isinstance(state, dict):
+        return set()
+    return {str(k).lower() for k in state if str(k).lower() not in _STATE_META_KEYS}
+
+
+def _device_expose_props(device: dict[str, Any]) -> set[str]:
+    cached = device.get("expose_props")
+    if isinstance(cached, list):
+        return {str(p).lower() for p in cached if p}
+    definition = device.get("definition")
+    if isinstance(definition, dict):
+        return _expose_properties_from_exposes(definition.get("exposes"))
+    return set()
+
+
+def _resolve_device_capability_class(
+    device: dict[str, Any],
+    binding: dict[str, Any] | None,
+) -> tuple[str, str | None]:
+    override = None
+    if binding and binding.get("capability_override"):
+        override = str(binding["capability_override"]).lower()
+        return override, override
+    friendly_name = str(device.get("friendly_name") or "")
+    expose_props = _device_expose_props(device)
+    state_keys = _device_state_signal_keys(friendly_name) if friendly_name else set()
+    inferred = infer_capability_class(expose_props, state_keys)
+    return inferred, None
+
 
 def _placement_map() -> dict[str, str]:
-    """friendly_name → placement label (settings JSON + inventory extras)."""
+    """Legacy friendly_name → placement label (settings JSON + inventory extras)."""
     out: dict[str, str] = {}
     raw = get_setting("zigbee_placements", "")
     if raw:
@@ -47,8 +185,208 @@ def _placement_map() -> dict[str, str]:
     return out
 
 
+def _legacy_label_to_role(label: str) -> str:
+    key = label.strip().lower().replace(" ", "_").replace("/", "_")
+    if key in _VALID_ROLES and key != "unbound":
+        return key
+    if "canopy" in key and ("2x4" in key or "clone" in key):
+        return "canopy_2x4"
+    if "canopy" in key:
+        return "canopy_4x8"
+    if "intake" in key:
+        return "intake"
+    if "exhaust" in key:
+        return "exhaust"
+    if "clone" in key or "dome" in key:
+        return "clone_dome"
+    if "room" in key or "ambient" in key:
+        return "room"
+    return "unbound"
+
+
+def _legacy_label_to_zone(label: str) -> str:
+    key = label.strip().lower()
+    if "2x4" in key or "clone" in key:
+        return "2x4"
+    if "room" in key:
+        return "room"
+    if "4x8" in key or "main" in key or "canopy" in key:
+        return "4x8"
+    return "shared"
+
+
+def load_zigbee_bindings() -> dict[str, dict[str, Any]]:
+    """ieee → binding dict."""
+    out: dict[str, dict[str, Any]] = {}
+    raw = get_setting("zigbee_device_bindings", "")
+    if raw:
+        try:
+            parsed = json.loads(raw)
+            if isinstance(parsed, dict):
+                for ieee, row in parsed.items():
+                    if not ieee or not isinstance(row, dict):
+                        continue
+                    role = str(row.get("role") or "unbound")
+                    if role not in _VALID_ROLES:
+                        role = "unbound"
+                    zone = str(row.get("zone") or "shared")
+                    if zone not in _VALID_ZONES:
+                        zone = "shared"
+                    binding: dict[str, Any] = {
+                        "role": role,
+                        "zone": zone,
+                        "alias": str(row.get("alias") or ""),
+                        "enabled": bool(row.get("enabled", True)),
+                        "friendly_name": str(row.get("friendly_name") or ""),
+                    }
+                    override = row.get("capability_override")
+                    if override:
+                        cap = str(override).lower()
+                        if cap in _CLASS_ROLE_KINDS:
+                            binding["capability_override"] = cap
+                    out[str(ieee)] = binding
+        except json.JSONDecodeError:
+            pass
+    return out
+
+
+def save_zigbee_bindings(bindings: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    """Validate and persist ieee-keyed bindings. Returns normalized map.
+
+    Immediately re-routes cached MQTT device states into by_role / canopy so
+    Climate/Overview update on Save without waiting for the next payload.
+    """
+    cleaned: dict[str, dict[str, Any]] = {}
+    if not isinstance(bindings, dict):
+        raise ValueError("bindings must be an object keyed by ieee")
+    for ieee, row in bindings.items():
+        if not ieee or not isinstance(row, dict):
+            continue
+        role = str(row.get("role") or "unbound")
+        if role not in _VALID_ROLES:
+            raise ValueError(f"invalid role: {role}")
+        zone = str(row.get("zone") or "shared")
+        if zone not in _VALID_ZONES:
+            raise ValueError(f"invalid zone: {zone}")
+        binding: dict[str, Any] = {
+            "role": role,
+            "zone": zone,
+            "alias": str(row.get("alias") or ""),
+            "enabled": bool(row.get("enabled", True)),
+            "friendly_name": str(row.get("friendly_name") or ""),
+        }
+        override = row.get("capability_override")
+        if override is not None and override != "":
+            cap = str(override).lower()
+            if cap not in _CLASS_ROLE_KINDS:
+                raise ValueError(f"invalid capability_override: {override}")
+            binding["capability_override"] = cap
+        cleaned[str(ieee)] = binding
+    set_setting("zigbee_device_bindings", json.dumps(cleaned))
+    _reapply_bindings_to_fleet()
+    return cleaned
+
+
+def _reapply_bindings_to_fleet() -> None:
+    """Rebuild zigbee_by_role + canopy from cached device states using current bindings."""
+    climate_roles = {str(r["id"]) for r in ZIGBEE_ROLE_CATALOG if r.get("kind") == "climate"}
+    by_role: dict[str, dict[str, Any]] = {}
+    by_placement: dict[str, dict[str, Any]] = {}
+    for friendly_name, state_row in list(_ingest._device_states.items()):
+        if not isinstance(state_row, dict):
+            continue
+        binding = _binding_for_friendly(str(friendly_name), _ingest._devices)
+        role = str(binding.get("role") or "unbound") if binding else "unbound"
+        zone = str(binding.get("zone") or "shared") if binding else "shared"
+        enabled = bool(binding.get("enabled", True)) if binding else False
+        updated = dict(state_row)
+        updated["role"] = role
+        updated["zone"] = zone
+        updated["friendly_name"] = friendly_name
+        _ingest._device_states[friendly_name] = updated
+        if enabled and role != "unbound" and role in climate_roles:
+            by_role[role] = dict(updated)
+            by_placement[role] = dict(updated)
+    _ingest._by_role = by_role
+    _ingest._by_placement = by_placement
+    _ingest._canopy = _recompute_canopy(by_role)
+    fleet_state = get_fleet_state()
+    fleet_state.canopy = dict(_ingest._canopy)
+    fleet_state.system = dict(fleet_state.system)
+    fleet_state.system["zigbee_device_states"] = dict(_ingest._device_states)
+    fleet_state.system["zigbee_by_placement"] = dict(_ingest._by_placement)
+    fleet_state.system["zigbee_by_role"] = dict(_ingest._by_role)
+    fleet_state.system["zigbee_placements"] = _placement_map()
+    fleet_state.system["zigbee_device_bindings"] = load_zigbee_bindings()
+    update_fleet_state(fleet_state)
+
+
+def _binding_for_friendly(
+    friendly_name: str, devices: list[dict[str, Any]] | None = None
+) -> dict[str, Any] | None:
+    """Resolve binding for a MQTT friendly_name (prefer ieee match)."""
+    bindings = load_zigbee_bindings()
+    device_list = devices if devices is not None else []
+    ieee: str | None = None
+    for d in device_list:
+        if str(d.get("friendly_name") or "") == friendly_name:
+            ieee = str(d.get("ieee_address") or "") or None
+            break
+    if ieee and ieee in bindings:
+        return {"ieee": ieee, **bindings[ieee]}
+    for ieee_key, row in bindings.items():
+        if str(row.get("friendly_name") or "") == friendly_name:
+            return {"ieee": ieee_key, **row}
+    label = _placement_map().get(friendly_name)
+    if label:
+        role = _legacy_label_to_role(label)
+        if role == "unbound":
+            return None
+        return {
+            "ieee": ieee or "",
+            "role": role,
+            "zone": _legacy_label_to_zone(label),
+            "alias": "",
+            "enabled": True,
+            "friendly_name": friendly_name,
+            "legacy_placement": label,
+        }
+    return None
+
+
+def _role_conflict_map(bindings: dict[str, dict[str, Any]]) -> dict[str, list[str]]:
+    claimed: dict[str, list[str]] = {}
+    for ieee, row in bindings.items():
+        role = str(row.get("role") or "unbound")
+        if role == "unbound" or not row.get("enabled", True):
+            continue
+        claimed.setdefault(role, []).append(ieee)
+    return {role: ieees for role, ieees in claimed.items() if len(ieees) > 1}
+
+
+def _recompute_canopy(by_role: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    """Only canopy roles fill fleet.canopy; prefer 4x8 over 2x4."""
+    canopy: dict[str, Any] = {}
+    for role in _CANOPY_ROLES:
+        row = by_role.get(role)
+        if not isinstance(row, dict):
+            continue
+        if row.get("temperature") is not None:
+            canopy["temp_c"] = row.get("temperature")
+        if row.get("humidity") is not None:
+            canopy["rh_pct"] = row.get("humidity")
+        if canopy:
+            canopy["role"] = role
+            canopy["updated_at"] = row.get("updated_at")
+            canopy["friendly_name"] = row.get("friendly_name")
+            break
+    return canopy
+
+
 def _clear_permit_join_flag() -> None:
     set_setting("zigbee_permit_join", "false")
+    _ingest._permit_join_live = False
+    _ingest._permit_join_end = None
 
 
 def _schedule_permit_join_expiry(duration_s: int) -> None:
@@ -59,6 +397,19 @@ def _schedule_permit_join_expiry(duration_s: int) -> None:
         _permit_timer = threading.Timer(float(duration_s), _clear_permit_join_flag)
         _permit_timer.daemon = True
         _permit_timer.start()
+
+
+def _permit_end_still_open(end: float | None, now: float | None = None) -> bool:
+    """True when permit_join_end is in the future (seconds or ms epoch)."""
+    if end is None:
+        return False
+    try:
+        end_s = float(end)
+    except (TypeError, ValueError):
+        return False
+    if end_s > 1e12:  # epoch ms
+        end_s /= 1000.0
+    return end_s > float(now if now is not None else time.time())
 
 
 def _cancel_permit_join_expiry() -> None:
@@ -80,8 +431,12 @@ class ZigbeeMqttIngest:
         self._devices_updated_at: float | None = None
         self._device_states: dict[str, dict[str, Any]] = {}
         self._by_placement: dict[str, dict[str, Any]] = {}
+        self._by_role: dict[str, dict[str, Any]] = {}
         self._bridge_state: str | None = None
         self._bridge_state_updated_at: float | None = None
+        # Live z2m permit_join (from bridge/info or response) — SoT for JOIN OPEN chip.
+        self._permit_join_live: bool | None = None
+        self._permit_join_end: float | None = None
 
     def start(self) -> None:
         if mqtt is None:
@@ -112,6 +467,9 @@ class ZigbeeMqttIngest:
                 client.subscribe("zigbee2mqtt/+")
                 client.subscribe("zigbee2mqtt/bridge/devices")
                 client.subscribe("zigbee2mqtt/bridge/state")
+                client.subscribe("zigbee2mqtt/bridge/info")
+                client.subscribe("zigbee2mqtt/bridge/response/permit_join")
+                client.subscribe("zigbee2mqtt/bridge/event")
             else:
                 self._mqtt_connected = False
 
@@ -142,6 +500,16 @@ class ZigbeeMqttIngest:
         if topic == "zigbee2mqtt/bridge/state":
             self._update_bridge_state(payload)
             return
+        if topic == "zigbee2mqtt/bridge/info":
+            self._update_permit_join_from_bridge(payload)
+            return
+        if topic == "zigbee2mqtt/bridge/response/permit_join":
+            data = payload.get("data") if isinstance(payload, dict) else None
+            self._update_permit_join_from_bridge(data if isinstance(data, dict) else payload)
+            return
+        if topic == "zigbee2mqtt/bridge/event" and isinstance(payload, dict):
+            self._handle_bridge_event(payload)
+            return
         if not isinstance(payload, dict):
             return
         if not topic.startswith("zigbee2mqtt/"):
@@ -151,24 +519,22 @@ class ZigbeeMqttIngest:
             return
 
         now = time.time()
-        placements = _placement_map()
-        placement = placements.get(friendly_name)
+        binding = _binding_for_friendly(friendly_name, self._devices)
+        role = str(binding.get("role") or "unbound") if binding else "unbound"
+        zone = str(binding.get("zone") or "shared") if binding else "shared"
+        enabled = bool(binding.get("enabled", True)) if binding else False
         payload_work = dict(payload)
         if "temperature" in payload_work or "humidity" in payload_work:
-            placement_key = (placement or friendly_name).lower()
-            zone = (
-                "main"
-                if "4x8" in placement_key or "main" in placement_key
-                else "clone"
-                if "2x4" in placement_key or "clone" in placement_key
-                else "room"
-            )
             from .global_modifiers import apply_temp_rh_offsets
 
             temp_adj, rh_adj, _ = apply_temp_rh_offsets(
                 payload_work.get("temperature"),
                 payload_work.get("humidity"),
-                zone,
+                "main"
+                if zone == "4x8"
+                else "clone"
+                if zone == "2x4"
+                else "room",
             )
             if temp_adj is not None:
                 payload_work["temperature"] = temp_adj
@@ -178,33 +544,61 @@ class ZigbeeMqttIngest:
         state_row = {
             "friendly_name": friendly_name,
             "updated_at": now,
+            "role": role,
+            "zone": zone,
             **payload_work,
         }
         self._device_states[friendly_name] = state_row
 
-        if placement:
-            self._by_placement[placement] = dict(state_row)
+        if enabled and role != "unbound" and role in {
+            str(r["id"]) for r in ZIGBEE_ROLE_CATALOG if r.get("kind") == "climate"
+        }:
+            self._by_role[role] = dict(state_row)
+            # Keep placement alias for older SPA/tests
+            self._by_placement[role] = dict(state_row)
+        elif enabled and role != "unbound" and role in {
+            str(r["id"]) for r in ZIGBEE_ROLE_CATALOG if r.get("kind") == "safety"
+        }:
+            from .zigbee_policies import normalize_binary_active
 
-        # Legacy aggregate canopy (first temp/humidity seen or placement canopy/*).
-        if "temperature" in payload_work:
-            self._canopy["temp_c"] = payload_work.get("temperature")
-        if "humidity" in payload_work:
-            self._canopy["rh_pct"] = payload_work.get("humidity")
-        if placement and placement.lower().startswith("canopy"):
-            if "temperature" in payload_work:
-                self._canopy["temp_c"] = payload_work.get("temperature")
-            if "humidity" in payload_work:
-                self._canopy["rh_pct"] = payload_work.get("humidity")
-        self._canopy["last_topic"] = topic
-        self._canopy["updated_at"] = now
+            wet = normalize_binary_active(payload_work)
+            safety_row = dict(state_row)
+            if wet is not None:
+                safety_row["active"] = wet
+                safety_row["wet"] = wet
+            self._by_role[role] = safety_row
+            self._by_placement[role] = safety_row
+
+        # Canopy only from canopy roles — never first-sensor-wins
+        self._canopy = _recompute_canopy(self._by_role)
+        if self._canopy:
+            self._canopy["last_topic"] = topic
 
         fleet_state = get_fleet_state()
         fleet_state.canopy = dict(self._canopy)
         fleet_state.system = dict(fleet_state.system)
         fleet_state.system["zigbee_device_states"] = dict(self._device_states)
         fleet_state.system["zigbee_by_placement"] = dict(self._by_placement)
-        fleet_state.system["zigbee_placements"] = placements
+        fleet_state.system["zigbee_by_role"] = dict(self._by_role)
+        fleet_state.system["zigbee_placements"] = _placement_map()
+        fleet_state.system["zigbee_device_bindings"] = load_zigbee_bindings()
         update_fleet_state(fleet_state)
+
+        # Universal device→task path (any ieee with a recipe)
+        ieee: str | None = None
+        if isinstance(binding, dict):
+            ieee = str(binding.get("ieee") or binding.get("ieee_address") or "") or None
+        if not ieee:
+            for d in self._devices:
+                if str(d.get("friendly_name") or "") == friendly_name:
+                    ieee = str(d.get("ieee_address") or "") or None
+                    break
+        try:
+            from .zigbee_policies import evaluate_device_policies
+
+            evaluate_device_policies(ieee=ieee, friendly_name=friendly_name, payload=payload_work)
+        except Exception as exc:  # noqa: BLE001
+            _logger.debug("zigbee policy eval skipped: %s", exc)
 
     def _update_devices(self, payload: Any) -> None:
         if not isinstance(payload, list):
@@ -213,19 +607,19 @@ class ZigbeeMqttIngest:
         for item in payload:
             if not isinstance(item, dict):
                 continue
+            definition = item.get("definition") if isinstance(item.get("definition"), dict) else {}
+            expose_props = sorted(_expose_properties_from_exposes(definition.get("exposes")))
             devices.append(
                 {
                     "ieee_address": item.get("ieee_address") or item.get("ieeeAddress"),
                     "friendly_name": item.get("friendly_name") or item.get("friendlyName"),
                     "type": item.get("type"),
-                    "model": (item.get("definition") or {}).get("model")
-                    if isinstance(item.get("definition"), dict)
-                    else item.get("model"),
-                    "vendor": (item.get("definition") or {}).get("vendor")
-                    if isinstance(item.get("definition"), dict)
-                    else item.get("vendor"),
+                    "model": definition.get("model") or item.get("model"),
+                    "vendor": definition.get("vendor") or item.get("vendor"),
                     "supported": item.get("supported"),
                     "disabled": item.get("disabled"),
+                    "definition": definition or None,
+                    "expose_props": expose_props or None,
                 }
             )
         self._devices = devices
@@ -254,6 +648,107 @@ class ZigbeeMqttIngest:
         fleet.system["zigbee_bridge_state_updated_at"] = self._bridge_state_updated_at
         update_fleet_state(fleet)
 
+    def _update_permit_join_from_bridge(self, payload: Any) -> None:
+        """Track live z2m permit_join from bridge/info or response/permit_join."""
+        if not isinstance(payload, dict):
+            return
+        if "permit_join" not in payload and "time" not in payload:
+            return
+        if "time" in payload and "permit_join" not in payload:
+            try:
+                seconds = int(payload.get("time") or 0)
+            except (TypeError, ValueError):
+                return
+            self._permit_join_live = seconds > 0
+            if seconds > 0:
+                self._permit_join_end = time.time() + float(seconds)
+            else:
+                self._permit_join_end = None
+        elif "permit_join" in payload:
+            live = bool(payload.get("permit_join"))
+            # Ignore brief bridge/info false while our end window is still open
+            # (renewal race / multi-publisher flaps).
+            if (not live) and _permit_end_still_open(self._permit_join_end):
+                live = True
+            self._permit_join_live = live
+            if not live:
+                self._permit_join_end = None
+        end = payload.get("permit_join_end")
+        if end is not None:
+            try:
+                self._permit_join_end = float(end)
+            except (TypeError, ValueError):
+                pass
+        set_setting("zigbee_permit_join", "true" if self._permit_join_live else "false")
+
+    def _handle_bridge_event(self, payload: dict[str, Any]) -> None:
+        """Optimistic end-device row on join so Settings Unbound appears before full interview."""
+        ev = str(payload.get("type") or "")
+        data = payload.get("data") if isinstance(payload.get("data"), dict) else {}
+        ieee = str(data.get("ieee_address") or "").strip()
+        fn = str(data.get("friendly_name") or ieee).strip()
+        _logger.info("zigbee bridge event %s ieee=%s fn=%s", ev, ieee, fn)
+        if not ieee:
+            return
+        if ev == "device_leave":
+            self._devices = [d for d in self._devices if str(d.get("ieee_address")) != ieee]
+            self._devices_updated_at = time.time()
+            state = get_fleet_state()
+            state.system = dict(state.system)
+            state.system["zigbee_devices"] = list(self._devices)
+            state.system["zigbee_devices_updated_at"] = self._devices_updated_at
+            update_fleet_state(state)
+            return
+        if ev not in ("device_joined", "device_announce", "device_interview"):
+            return
+        existing = next((d for d in self._devices if str(d.get("ieee_address")) == ieee), None)
+        model = None
+        vendor = None
+        supported = None
+        definition: dict[str, Any] = {}
+        expose_props: list[str] | None = None
+        if ev == "device_interview" and data.get("status") == "successful":
+            definition = data.get("definition") if isinstance(data.get("definition"), dict) else {}
+            model = definition.get("model")
+            vendor = definition.get("vendor")
+            supported = data.get("supported")
+            props = sorted(_expose_properties_from_exposes(definition.get("exposes")))
+            expose_props = props or None
+        if existing is None:
+            row: dict[str, Any] = {
+                "ieee_address": ieee,
+                "friendly_name": fn or ieee,
+                "type": "EndDevice",
+                "model": model,
+                "vendor": vendor,
+                "supported": supported,
+                "disabled": False,
+            }
+            if definition:
+                row["definition"] = definition
+            if expose_props:
+                row["expose_props"] = expose_props
+            self._devices = list(self._devices) + [row]
+        else:
+            if fn:
+                existing["friendly_name"] = fn
+            if model is not None:
+                existing["model"] = model
+            if vendor is not None:
+                existing["vendor"] = vendor
+            if supported is not None:
+                existing["supported"] = supported
+            if definition:
+                existing["definition"] = definition
+            if expose_props:
+                existing["expose_props"] = expose_props
+        self._devices_updated_at = time.time()
+        state = get_fleet_state()
+        state.system = dict(state.system)
+        state.system["zigbee_devices"] = list(self._devices)
+        state.system["zigbee_devices_updated_at"] = self._devices_updated_at
+        update_fleet_state(state)
+
 
 _ingest = ZigbeeMqttIngest()
 
@@ -268,7 +763,34 @@ def stop_zigbee_ingest() -> None:
 
 
 def get_zigbee_devices() -> list[dict[str, Any]]:
-    return list(_ingest._devices)
+    bindings = load_zigbee_bindings()
+    conflicts = _role_conflict_map(bindings)
+    out: list[dict[str, Any]] = []
+    for d in _ingest._devices:
+        row = dict(d)
+        ieee = str(row.get("ieee_address") or "")
+        binding = bindings.get(ieee)
+        if binding is None and row.get("friendly_name"):
+            binding = _binding_for_friendly(str(row.get("friendly_name")), _ingest._devices)
+            if binding and binding.get("ieee"):
+                # strip helper keys for API
+                binding = {
+                    k: v
+                    for k, v in binding.items()
+                    if k in ("role", "zone", "alias", "enabled", "friendly_name", "capability_override")
+                }
+        role = str((binding or {}).get("role") or "unbound")
+        status = "unbound"
+        if binding and role != "unbound" and binding.get("enabled", True):
+            status = "conflict" if role in conflicts else "bound"
+        capability_class, capability_override = _resolve_device_capability_class(row, binding)
+        row["binding"] = binding
+        row["status"] = status
+        row["capability_class"] = capability_class
+        if capability_override:
+            row["capability_override"] = capability_override
+        out.append(row)
+    return out
 
 
 def get_zigbee_device_states() -> dict[str, dict[str, Any]]:
@@ -279,8 +801,45 @@ def get_zigbee_by_placement() -> dict[str, dict[str, Any]]:
     return dict(_ingest._by_placement)
 
 
+def get_zigbee_by_role() -> dict[str, dict[str, Any]]:
+    return dict(_ingest._by_role)
+
+
+def apply_zigbee_cache_to_state(state: FleetState) -> None:
+    """Stamp Zigbee ingest cache onto a fleet snapshot.
+
+    ESPHome polls copy fleet at start and write back after multi-second awaits;
+    without this, those writes clobber canopy / zigbee_* system keys mid-flight.
+    Also preserve Zigbee *policy* keys (banners / policy_state) that may have been
+    written by MQTT evaluate while the ESPHome poll was in flight.
+    """
+    live_sys = dict(get_fleet_state().system or {})
+    state.canopy = dict(_ingest._canopy)
+    state.system = dict(state.system)
+    state.system["zigbee_device_states"] = dict(_ingest._device_states)
+    state.system["zigbee_by_placement"] = dict(_ingest._by_placement)
+    state.system["zigbee_by_role"] = dict(_ingest._by_role)
+    state.system["zigbee_placements"] = _placement_map()
+    state.system["zigbee_device_bindings"] = load_zigbee_bindings()
+    if _ingest._devices:
+        state.system["zigbee_devices"] = list(_ingest._devices)
+    if _ingest._devices_updated_at is not None:
+        state.system["zigbee_devices_updated_at"] = _ingest._devices_updated_at
+    if _ingest._bridge_state is not None:
+        state.system["zigbee_bridge_state"] = _ingest._bridge_state
+    if _ingest._bridge_state_updated_at is not None:
+        state.system["zigbee_bridge_state_updated_at"] = _ingest._bridge_state_updated_at
+    for key in ("critical_banners", "zigbee_policy_state", "zigbee_device_policies"):
+        if key in live_sys:
+            state.system[key] = live_sys[key]
+
 def get_zigbee_health() -> dict[str, Any]:
-    permit_join = get_setting("zigbee_permit_join", "false").lower() == "true"
+    if _permit_end_still_open(_ingest._permit_join_end):
+        permit_join = True
+    elif _ingest._permit_join_live is not None:
+        permit_join = bool(_ingest._permit_join_live)
+    else:
+        permit_join = get_setting("zigbee_permit_join", "false").lower() == "true"
     end_devices = [d for d in _ingest._devices if d.get("type") != "Coordinator"]
     bridge_state = _ingest._bridge_state
     radio_up = bridge_state == "online"
@@ -305,6 +864,7 @@ def get_zigbee_health() -> dict[str, Any]:
         "devices_updated_at": _ingest._devices_updated_at,
         "canopy_updated_at": _ingest._canopy.get("updated_at"),
         "permit_join": permit_join,
+        "permit_join_end": _ingest._permit_join_end,
     }
 
 
@@ -317,9 +877,15 @@ def set_permit_join(
     if enabled:
         seconds = max(1, min(int(duration_s), 254))
         _schedule_permit_join_expiry(seconds)
+        _ingest._permit_join_live = True
+        _ingest._permit_join_end = time.time() + float(seconds)
+        set_setting("zigbee_permit_join", "true")
     else:
         seconds = 0
         _cancel_permit_join_expiry()
+        _ingest._permit_join_live = False
+        _ingest._permit_join_end = None
+        set_setting("zigbee_permit_join", "false")
     if mqtt is None or _ingest._client is None:
         return
     payload = json.dumps({"time": seconds})

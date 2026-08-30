@@ -65,6 +65,22 @@ export function OverviewPage() {
 
   const hubOnline = fleet.hub.online || settled("sensor.dsc_hub_uptime");
   const uptimeSec = num("sensor.dsc_hub_uptime", Number(fleet.hub.values.uptime) || 0);
+  const canopyRole =
+    typeof fleet.canopy?.role === "string" ? String(fleet.canopy.role) : null;
+  const canopyDevice =
+    typeof fleet.canopy?.friendly_name === "string" ? String(fleet.canopy.friendly_name) : null;
+  const canopyTemp =
+    fleet.canopy?.temp_c != null && Number.isFinite(Number(fleet.canopy.temp_c))
+      ? Number(fleet.canopy.temp_c)
+      : null;
+  const canopyRh =
+    fleet.canopy?.rh_pct != null && Number.isFinite(Number(fleet.canopy.rh_pct))
+      ? Number(fleet.canopy.rh_pct)
+      : null;
+
+  const criticalBanners = Array.isArray(fleet.system?.critical_banners)
+    ? (fleet.system.critical_banners as Array<Record<string, unknown>>)
+    : [];
 
   const openPot = (n: number) => {
     // Stay on Overview — SeatOverlayHost opens the seat. Navigating to /live/root without
@@ -103,7 +119,46 @@ export function OverviewPage() {
           }
           tone={hubOnline ? "muted" : "bad"}
         />
+        {canopyRole ? (
+          <StatusChip
+            label={
+              canopyTemp != null
+                ? `Canopy ${canopyTemp.toFixed(1)}°C${
+                    canopyRh != null ? ` / ${canopyRh.toFixed(0)}%` : ""
+                  } ← ${canopyRole}${canopyDevice ? ` (${canopyDevice})` : ""}`
+                : `Canopy ← ${canopyRole}${canopyDevice ? ` (${canopyDevice})` : ""}`
+            }
+            tone="ok"
+            onClick={() => navigate("/live/climate")}
+          />
+        ) : (
+          <StatusChip
+            label="Canopy unbound"
+            tone="muted"
+            onClick={() => navigate("/settings/device")}
+          />
+        )}
       </div>
+
+      {criticalBanners.length > 0
+        ? criticalBanners.map((b) => {
+            const text = String(b.text ?? "").trim();
+            if (!text) return null;
+            const isCritical = String(b.tone ?? "critical") !== "warn";
+            return (
+              <div
+                key={String(b.id ?? text)}
+                className={
+                  isCritical ? "dsc-banner dsc-banner--critical-live" : "dsc-banner dsc-banner--warn"
+                }
+                role="alert"
+                aria-live="assertive"
+              >
+                {text}
+              </div>
+            );
+          })
+        : null}
 
       {faultIds.length > 0 || alerts > 0 ? (
         <div className="dsc-banner dsc-banner--bad" style={{ marginBottom: 12 }}>

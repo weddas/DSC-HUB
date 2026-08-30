@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
+import threading
 import time
 from typing import Any
 
@@ -120,12 +121,20 @@ async def _read_hub_demands(hub_row: dict[str, Any]) -> dict[str, bool] | None:
             pass
 
 
-async def _set_sonoff_relay(seat_id: str, on: bool, inventory: dict[str, dict[str, Any]]) -> None:
-    if _relay_commanded.get(seat_id) is on:
+async def _set_sonoff_relay(
+    seat_id: str,
+    on: bool,
+    inventory: dict[str, dict[str, Any]],
+    *,
+    force: bool = False,
+) -> None:
+    if _relay_commanded.get(seat_id) is on and not force:
         return
 
     row = inventory.get(seat_id)
-    if not row or not row.get("in_service"):
+    if not row:
+        return
+    if not force and not row.get("in_service"):
         return
     host = row.get("host") or ""
     api_key = _api_key_for(seat_id, row)
@@ -150,7 +159,12 @@ async def _set_sonoff_relay(seat_id: str, on: bool, inventory: dict[str, dict[st
             client.switch_command(key, on)
             _relay_commanded[seat_id] = on
             record_history(seat_id, "relay_on", 1.0 if on else 0.0, time.time())
-            _logger.info("appliance %s main_relay -> %s", seat_id, "ON" if on else "OFF")
+            _logger.info(
+                "appliance %s main_relay -> %s%s",
+                seat_id,
+                "ON" if on else "OFF",
+                " (force)" if force else "",
+            )
     except Exception as exc:  # noqa: BLE001
         _logger.warning("Sonoff %s @ %s command failed: %s", seat_id, host, exc)
     finally:
@@ -158,6 +172,28 @@ async def _set_sonoff_relay(seat_id: str, on: bool, inventory: dict[str, dict[st
             await client.disconnect()
         except Exception:  # noqa: BLE001
             pass
+
+
+async def force_set_sonoff_relay(seat_id: str, on: bool) -> None:
+    """Safety path — command relay even when seat is already OOS (e.g. tank full)."""
+    inventory_list = list_inventory()
+    inventory = {str(r["seat_id"]): r for r in inventory_list}
+    await _set_sonoff_relay(seat_id, on, inventory, force=True)
+
+
+def force_set_sonoff_relay_sync(seat_id: str, on: bool) -> None:
+    """Sync wrapper for Zigbee policy evaluator (may run off the main loop)."""
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        # MQTT/paho thread — do not asyncio.run here (blocks evaluate mid-flight).
+        threading.Thread(
+            target=lambda: asyncio.run(force_set_sonoff_relay(seat_id, on)),
+            daemon=True,
+            name=f"force-relay-{seat_id}",
+        ).start()
+        return
+    loop.create_task(force_set_sonoff_relay(seat_id, on))
 
 
 async def _tick_once() -> None:

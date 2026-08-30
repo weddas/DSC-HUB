@@ -17,18 +17,29 @@ import {
   get_settings,
   get_zigbee_devices,
   get_zigbee_health,
+  get_zigbee_policies,
+  get_zigbee_recipes,
+  get_zigbee_roles,
   patch_inventory,
   patchGlobalModifiers,
   patchProbeStation,
   patch_settings,
   permit_join,
+  put_zigbee_bindings,
+  put_zigbee_policies,
   queue_esphome_job,
   reload_catalogs,
   test_cannalib,
   test_ollama,
+  filterZigbeeRecipesForClass,
+  filterZigbeeRolesForClass,
+  isZigbeeSafetyLeakRole,
+  zigbeeBannerTemplate,
   type ClimateZone,
   type GlobalModifiers,
   type ProbeStation,
+  type ZigbeeRecipe,
+  type ZigbeeRole,
 } from "../lib/fleetApi";
 import { parseFleetSnapshot, type FleetSnapshot, type InventoryRow, type SeatSnapshot } from "../lib/fleetModel";
 import { parseSettingsSection, type SettingsSectionId } from "../routes";
@@ -115,27 +126,230 @@ function parseZigbeePlacements(raw: string | undefined): Record<string, string> 
   }
 }
 
-function ZigbeePlacementRow({
-  friendlyName,
-  placement,
-  onChange,
+const LIQUID_TASK_ID = "tank_full_appliance";
+
+function effectiveZigbeeClass(inferred: string, override?: string): string {
+  return String(override || inferred || "other").toLowerCase();
+}
+
+function liquidTaskDefaults(recipe: ZigbeeRecipe | undefined): Record<string, unknown> {
+  const defaults = recipe?.default_params ?? {};
+  return {
+    seat_id: String(defaults.seat_id ?? "dehumidifier"),
+    problem_when: String(defaults.problem_when ?? "active"),
+    force_relay: String(defaults.force_relay ?? "off"),
+    banner: String(
+      defaults.banner ??
+        zigbeeBannerTemplate(String(defaults.seat_id ?? "dehumidifier"), String(defaults.problem_when ?? "active")),
+    ),
+    banner_tone: String(defaults.banner_tone ?? "critical"),
+  };
+}
+
+function ZigbeeBindRow({
+  ieee,
+  name,
+  model,
+  status,
+  role,
+  zone,
+  recipeId,
+  policyParams,
+  capabilityClass,
+  capabilityOverride,
+  showAll,
+  onToggleShowAll,
+  allRoles,
+  allRecipes,
+  onBindingChange,
+  onPolicyChange,
 }: {
-  friendlyName: string;
-  placement: string;
-  onChange: (friendlyName: string, placement: string) => void;
+  ieee: string;
+  name: string;
+  model: string;
+  status: string;
+  role: string;
+  zone: string;
+  recipeId: string;
+  policyParams: Record<string, unknown>;
+  capabilityClass: string;
+  capabilityOverride?: string;
+  showAll: boolean;
+  onToggleShowAll: () => void;
+  allRoles: ZigbeeRole[];
+  allRecipes: ZigbeeRecipe[];
+  onBindingChange: (
+    ieee: string,
+    patch: { role: string; zone: string; recipe_id: string; capability_override?: string },
+  ) => void;
+  onPolicyChange: (ieee: string, patch: { recipe_id: string; params: Record<string, unknown> }) => void;
 }) {
+  const effectiveClass = effectiveZigbeeClass(capabilityClass, capabilityOverride);
+  let roleOptions = showAll ? allRoles : filterZigbeeRolesForClass(effectiveClass, allRoles);
+  let recipeOptions = showAll ? allRecipes : filterZigbeeRecipesForClass(effectiveClass, allRecipes);
+  if (!roleOptions.some((r) => r.id === role)) {
+    const current = allRoles.find((r) => r.id === role);
+    if (current) roleOptions = [...roleOptions, current];
+  }
+  if (!recipeOptions.some((r) => r.id === recipeId)) {
+    const current = allRecipes.find((r) => r.id === recipeId);
+    if (current) recipeOptions = [...recipeOptions, current];
+  }
+  const liquidRecipe = allRecipes.find((r) => r.id === LIQUID_TASK_ID);
+  const showTaskParams = role !== "unbound" && recipeId === LIQUID_TASK_ID;
+  const seatId = String(policyParams.seat_id ?? "dehumidifier");
+  const problemWhen = String(policyParams.problem_when ?? "active");
+  const banner = String(policyParams.banner ?? "");
+
+  const updateLiquidParam = (patch: Partial<{ seat_id: string; problem_when: string; banner: string }>) => {
+    const nextSeat = patch.seat_id ?? seatId;
+    const nextPolarity = patch.problem_when ?? problemWhen;
+    const prevTemplate = zigbeeBannerTemplate(seatId, problemWhen);
+    let nextBanner = patch.banner ?? banner;
+    if (patch.seat_id != null || patch.problem_when != null) {
+      const nextTemplate = zigbeeBannerTemplate(nextSeat, nextPolarity);
+      if (banner === prevTemplate || !banner.trim()) {
+        nextBanner = nextTemplate;
+      }
+    }
+    onPolicyChange(ieee, {
+      recipe_id: recipeId,
+      params: {
+        ...policyParams,
+        seat_id: nextSeat,
+        problem_when: nextPolarity,
+        banner: nextBanner,
+        force_relay: policyParams.force_relay ?? "off",
+        banner_tone: policyParams.banner_tone ?? "critical",
+      },
+    });
+  };
+
   return (
-    <tr>
-      <td>{friendlyName}</td>
-      <td>
-        <input
-          type="text"
-          value={placement}
-          onChange={(e) => onChange(friendlyName, e.target.value)}
-          placeholder="e.g. canopy center, 4x8 intake duct"
-        />
-      </td>
-    </tr>
+    <>
+      <tr>
+        <td>
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <Icon name={zigbeeIcon("EndDevice")} size={14} color="var(--dsc-gray-5)" />
+            {name}
+          </div>
+          <div className="dsc-muted" style={{ fontSize: 11 }}>
+            {ieee || "—"}
+            {capabilityOverride ? ` · class ${capabilityOverride}` : capabilityClass ? ` · ${capabilityClass}` : null}
+          </div>
+        </td>
+        <td>{model || "—"}</td>
+        <td>
+          <StatusChip
+            label={status === "bound" ? "BOUND" : status === "conflict" ? "CONFLICT" : "UNBOUND"}
+            tone={status === "bound" ? "ok" : status === "conflict" ? "warn" : "muted"}
+          />
+        </td>
+        <td>
+          <select
+            value={role}
+            onChange={(e) => {
+              const nextRole = e.target.value;
+              let nextOverride = capabilityOverride;
+              if (showAll && isZigbeeSafetyLeakRole(nextRole) && (capabilityClass === "motion" || capabilityClass === "other")) {
+                nextOverride = "liquid";
+              } else if (!isZigbeeSafetyLeakRole(nextRole)) {
+                nextOverride = undefined;
+              }
+              onBindingChange(ieee, {
+                role: nextRole,
+                zone,
+                recipe_id: nextRole === "unbound" ? "none" : recipeId,
+                capability_override: nextOverride,
+              });
+            }}
+          >
+            {roleOptions.map((r) => (
+              <option key={r.id} value={r.id}>
+                {r.label}
+              </option>
+            ))}
+          </select>
+        </td>
+        <td>
+          <select
+            value={zone}
+            onChange={(e) =>
+              onBindingChange(ieee, { role, zone: e.target.value, recipe_id: recipeId, capability_override: capabilityOverride })
+            }
+          >
+            <option value="4x8">4×8</option>
+            <option value="2x4">2×4</option>
+            <option value="room">Room</option>
+            <option value="shared">Shared</option>
+          </select>
+        </td>
+        <td>
+          <select
+            value={recipeId}
+            onChange={(e) => {
+              const nextRecipe = e.target.value;
+              onBindingChange(ieee, { role, zone, recipe_id: nextRecipe, capability_override: capabilityOverride });
+              if (nextRecipe === LIQUID_TASK_ID) {
+                onPolicyChange(ieee, { recipe_id: nextRecipe, params: liquidTaskDefaults(liquidRecipe) });
+              } else if (nextRecipe === "none") {
+                onPolicyChange(ieee, { recipe_id: "none", params: {} });
+              }
+            }}
+            disabled={role === "unbound"}
+            title={role === "unbound" ? "Bind a Role first" : "Task / recipe when sensor is active"}
+          >
+            {(recipeOptions.length
+              ? recipeOptions
+              : [
+                  { id: "none", label: "No task" },
+                  { id: LIQUID_TASK_ID, label: "Liquid level → appliance OOS" },
+                ]
+            ).map((r) => (
+              <option key={r.id} value={r.id}>
+                {r.label}
+              </option>
+            ))}
+          </select>
+        </td>
+        <td>
+          <Button variant="secondary" onClick={onToggleShowAll}>
+            {showAll ? "Filtered" : "Show all"}
+          </Button>
+        </td>
+      </tr>
+      {showTaskParams ? (
+        <tr>
+          <td colSpan={7} style={{ background: "var(--dsc-gray-1, rgba(255,255,255,0.03))" }}>
+            <div className="dsc-row-actions" style={{ flexWrap: "wrap", gap: 12, alignItems: "flex-end" }}>
+              <label>
+                Appliance
+                <select value={seatId} onChange={(e) => updateLiquidParam({ seat_id: e.target.value })}>
+                  <option value="dehumidifier">Dehumidifier</option>
+                  <option value="humidifier">Humidifier</option>
+                </select>
+              </label>
+              <label>
+                Problem when
+                <select value={problemWhen} onChange={(e) => updateLiquidParam({ problem_when: e.target.value })}>
+                  <option value="active">Wet / active = problem</option>
+                  <option value="inactive">Dry / inactive = problem</option>
+                </select>
+              </label>
+              <label style={{ flex: "1 1 240px" }}>
+                Banner text
+                <input
+                  type="text"
+                  value={banner}
+                  onChange={(e) => updateLiquidParam({ banner: e.target.value })}
+                  placeholder={zigbeeBannerTemplate(seatId, problemWhen)}
+                />
+              </label>
+            </div>
+          </td>
+        </tr>
+      ) : null}
+    </>
   );
 }
 
@@ -280,8 +494,19 @@ export function SettingsPage() {
   const [jobs, setJobs] = useState<Array<Record<string, unknown>>>([]);
   const [zigbeeDevices, setZigbeeDevices] = useState<Array<Record<string, unknown>>>([]);
   const [zigbeeHealth, setZigbeeHealth] = useState<Record<string, unknown> | null>(null);
-  const [zigbeePlacementsDraft, setZigbeePlacementsDraft] = useState<Record<string, string>>({});
-  const [zigbeePlacementsDirty, setZigbeePlacementsDirty] = useState(false);
+  const [zigbeeRoles, setZigbeeRoles] = useState<ZigbeeRole[]>([]);
+  const [zigbeeRecipes, setZigbeeRecipes] = useState<ZigbeeRecipe[]>([]);
+  const [zigbeeBindDraft, setZigbeeBindDraft] = useState<
+    Record<
+      string,
+      { role: string; zone: string; friendly_name: string; enabled: boolean; capability_override?: string }
+    >
+  >({});
+  const [zigbeeShowAll, setZigbeeShowAll] = useState<Record<string, boolean>>({});
+  const [zigbeePolicyDraft, setZigbeePolicyDraft] = useState<
+    Record<string, { recipe_id: string; enabled: boolean; params: Record<string, unknown> }>
+  >({});
+  const [zigbeeBindDirty, setZigbeeBindDirty] = useState(false);
   const [ollamaResult, setOllamaResult] = useState<string>("");
   const [cannalibResult, setCannalibResult] = useState<string>("");
   const [networkResult, setNetworkResult] = useState<string>("");
@@ -300,7 +525,21 @@ export function SettingsPage() {
   const [pendingClearProbe, setPendingClearProbe] = useState<string | null>(null);
 
   const refresh = async () => {
-    const [s, net, cat, esp, j, fleetRaw, zigbee, zigbeeHealthRaw, modifiers, stations] = await Promise.all([
+    const [
+      s,
+      net,
+      cat,
+      esp,
+      j,
+      fleetRaw,
+      zigbee,
+      zigbeeHealthRaw,
+      modifiers,
+      stations,
+      rolesRaw,
+      recipesRaw,
+      policiesRaw,
+    ] = await Promise.all([
       get_settings(),
       get_network_status(),
       get_catalog_status(),
@@ -311,6 +550,16 @@ export function SettingsPage() {
       get_zigbee_health().catch(() => null),
       getGlobalModifiers().catch(() => null),
       getProbeStations().catch(() => [] as ProbeStation[]),
+      get_zigbee_roles().catch(() => ({ roles: [] as ZigbeeRole[] })),
+      get_zigbee_recipes().catch(() => ({
+        recipes: [] as ZigbeeRecipe[],
+      })),
+      get_zigbee_policies().catch(() => ({
+        policies: {} as Record<
+          string,
+          { recipe_id: string; enabled?: boolean; params?: Record<string, unknown> }
+        >,
+      })),
     ]);
     setApDraft(pickSettings(s.settings, AP_KEYS));
     setIntegrationsDraft(pickSettings(s.settings, INTEGRATION_KEYS));
@@ -322,8 +571,41 @@ export function SettingsPage() {
     setFleet(fleetRaw ? parseFleetSnapshot(fleetRaw) : null);
     setZigbeeDevices(zigbee.devices ?? []);
     setZigbeeHealth(zigbeeHealthRaw);
-    if (!zigbeePlacementsDirty) {
-      setZigbeePlacementsDraft(parseZigbeePlacements(s.settings.zigbee_placements));
+    setZigbeeRoles(rolesRaw.roles ?? []);
+    setZigbeeRecipes(recipesRaw.recipes ?? []);
+    if (!zigbeeBindDirty) {
+      const draft: Record<
+        string,
+        { role: string; zone: string; friendly_name: string; enabled: boolean; capability_override?: string }
+      > = {};
+      const policyDraft: Record<
+        string,
+        { recipe_id: string; enabled: boolean; params: Record<string, unknown> }
+      > = {};
+      const policies = policiesRaw.policies ?? {};
+      for (const d of zigbee.devices ?? []) {
+        if (d.type === "Coordinator") continue;
+        const ieee = String(d.ieee_address ?? "");
+        if (!ieee) continue;
+        const binding = (d.binding as Record<string, unknown> | null) || null;
+        draft[ieee] = {
+          role: String(binding?.role ?? "unbound"),
+          zone: String(binding?.zone ?? "shared"),
+          friendly_name: String(d.friendly_name ?? ""),
+          enabled: binding?.enabled === false ? false : true,
+          capability_override: binding?.capability_override
+            ? String(binding.capability_override)
+            : undefined,
+        };
+        const pol = policies[ieee];
+        policyDraft[ieee] = {
+          recipe_id: String(pol?.recipe_id ?? "none"),
+          enabled: pol?.enabled === false ? false : true,
+          params: (pol?.params as Record<string, unknown>) ?? {},
+        };
+      }
+      setZigbeeBindDraft(draft);
+      setZigbeePolicyDraft(policyDraft);
     }
     if (!modifiersDirty && modifiers) {
       setGlobalModifiers(modifiers);
@@ -347,6 +629,67 @@ export function SettingsPage() {
   useEffect(() => {
     refresh().catch(() => undefined);
   }, []);
+
+  // While permit-join is open, poll Zigbee health/devices so a newly paired end
+  // device appears in the Role/Zone/Task table without a hard refresh.
+  useEffect(() => {
+    if (zigbeeHealth?.permit_join !== true) return;
+    const id = window.setInterval(() => {
+      void (async () => {
+        try {
+          const [zigbee, zigbeeHealthRaw, policiesRaw] = await Promise.all([
+            get_zigbee_devices().catch(() => ({ devices: [] as Array<Record<string, unknown>> })),
+            get_zigbee_health().catch(() => null),
+            get_zigbee_policies().catch(() => ({
+              policies: {} as Record<
+                string,
+                { recipe_id: string; enabled?: boolean; params?: Record<string, unknown> }
+              >,
+            })),
+          ]);
+          setZigbeeDevices(zigbee.devices ?? []);
+          setZigbeeHealth(zigbeeHealthRaw);
+          if (!zigbeeBindDirty) {
+            const draft: Record<
+              string,
+              { role: string; zone: string; friendly_name: string; enabled: boolean; capability_override?: string }
+            > = {};
+            const policyDraft: Record<
+              string,
+              { recipe_id: string; enabled: boolean; params: Record<string, unknown> }
+            > = {};
+            const policies = policiesRaw.policies ?? {};
+            for (const d of zigbee.devices ?? []) {
+              if (d.type === "Coordinator") continue;
+              const ieee = String(d.ieee_address ?? "");
+              if (!ieee) continue;
+              const binding = (d.binding as Record<string, unknown> | null) || null;
+              draft[ieee] = {
+                role: String(binding?.role ?? "unbound"),
+                zone: String(binding?.zone ?? "shared"),
+                friendly_name: String(d.friendly_name ?? ""),
+                enabled: binding?.enabled === false ? false : true,
+                capability_override: binding?.capability_override
+                  ? String(binding.capability_override)
+                  : undefined,
+              };
+              const pol = policies[ieee];
+              policyDraft[ieee] = {
+                recipe_id: String(pol?.recipe_id ?? "none"),
+                enabled: pol?.enabled === false ? false : true,
+                params: (pol?.params as Record<string, unknown>) ?? {},
+              };
+            }
+            setZigbeeBindDraft(draft);
+            setZigbeePolicyDraft(policyDraft);
+          }
+        } catch {
+          /* join poll is best-effort */
+        }
+      })();
+    }, 4000);
+    return () => window.clearInterval(id);
+  }, [zigbeeHealth?.permit_join, zigbeeBindDirty]);
 
   const saveIntegrations = async () => {
     await patch_settings(integrationsDraft);
@@ -1026,8 +1369,12 @@ export function SettingsPage() {
         <p className="dsc-muted">Extra canopy sensors and smart plugs — separate from climate control.</p>
         <div className="dsc-chip-row" style={{ marginBottom: 10 }}>
           <StatusChip
-            label={zigbeeHealth?.radio_up === true ? "RADIO UP" : "RADIO DOWN"}
-            tone={zigbeeHealth?.radio_up === true ? "ok" : "bad"}
+            label={
+              zigbeeHealth == null ? "RADIO …" : zigbeeHealth.radio_up === true ? "RADIO UP" : "RADIO DOWN"
+            }
+            tone={
+              zigbeeHealth == null ? "muted" : zigbeeHealth.radio_up === true ? "ok" : "bad"
+            }
           />
           {zigbeeHealth?.mqtt_connected === false ? (
             <StatusChip label="MQTT OFFLINE" tone="bad" />
@@ -1041,7 +1388,7 @@ export function SettingsPage() {
         </div>
         <div className="dsc-row-actions">
           <Button onClick={() => setPendingPermitJoin(true)} disabled={zigbeeHealth?.radio_up !== true}>
-            Permit join (2 min)
+            Permit join (~4 min)
           </Button>
           <Button onClick={() => setPendingPermitJoin(false)}>Stop join</Button>
         </div>
@@ -1060,68 +1407,129 @@ export function SettingsPage() {
         >
           <p>
             {pendingPermitJoin
-              ? "Opens the coordinator for new devices for about two minutes."
+              ? "Opens the coordinator for new devices for about four minutes (z2m max). Factory-reset sensors from the old Thread/Zigbee network before pairing — this coordinator is a new network (channel 11)."
               : "Closes join mode on the SkyConnect coordinator."}
           </p>
         </DecisionLayer>
         {zigbeeDevices.filter((d) => d.type !== "Coordinator").length ? (
           <>
+            <p className="dsc-muted" style={{ marginTop: 12 }}>
+              New devices appear after permit join. Assign a <strong>Role</strong>, <strong>Zone</strong>, and
+              optional <strong>Task</strong> — lists are filtered by device type; use <strong>Show all</strong> for
+              mis-fingerprinted sensors (e.g. occupancy-only liquid probes).
+            </p>
+            <p className="dsc-muted" style={{ marginTop: 8, fontSize: 13 }}>
+              Role is where this sensor lives (intake, canopy, tank…). Task is optional — leave <strong>No task</strong>{" "}
+              to only report into Live/Climate.
+            </p>
+            {Object.values(zigbeeBindDraft).filter((b) => b.role === "unbound").length ? (
+              <StatusChip
+                label={`UNBOUND ${Object.values(zigbeeBindDraft).filter((b) => b.role === "unbound").length}`}
+                tone="warn"
+              />
+            ) : null}
             <div className="dsc-table-scroll">
               <table className="dsc-table" style={{ marginTop: 12 }}>
                 <thead>
                   <tr>
-                    <th>Name</th>
-                    <th>IEEE</th>
-                    <th>Type</th>
+                    <th>Device</th>
                     <th>Model</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {zigbeeDevices
-                    .filter((d) => d.type !== "Coordinator")
-                    .map((d) => (
-                      <tr key={String(d.ieee_address ?? d.friendly_name)}>
-                        <td style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                          <Icon name={zigbeeIcon(String(d.type ?? ""))} size={14} color="var(--dsc-gray-5)" />
-                          {String(d.friendly_name ?? "—")}
-                        </td>
-                        <td>{String(d.ieee_address ?? "—")}</td>
-                        <td>{String(d.type ?? "—")}</td>
-                        <td>
-                          {String(d.vendor ?? "")}
-                          {d.model ? ` ${String(d.model)}` : ""}
-                        </td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
-            </div>
-            <h4 style={{ marginTop: 16 }}>Placements</h4>
-            <p className="dsc-muted">
-              Map each Zigbee friendly name to a tent placement label (e.g. canopy, intake). Climate and canopy
-              ingest use these labels.
-            </p>
-            <div className="dsc-table-scroll">
-              <table className="dsc-table">
-                <thead>
-                  <tr>
-                    <th>Friendly name</th>
-                    <th>Placement label</th>
+                    <th>Status</th>
+                    <th>Role</th>
+                    <th>Zone</th>
+                    <th>Task</th>
+                    <th />
                   </tr>
                 </thead>
                 <tbody>
                   {zigbeeDevices
                     .filter((d) => d.type !== "Coordinator")
                     .map((d) => {
-                      const fname = String(d.friendly_name ?? "");
+                      const ieee = String(d.ieee_address ?? "");
+                      const draft = zigbeeBindDraft[ieee] ?? {
+                        role: "unbound",
+                        zone: "shared",
+                        friendly_name: String(d.friendly_name ?? ""),
+                        enabled: true,
+                      };
+                      const policy = zigbeePolicyDraft[ieee] ?? {
+                        recipe_id: "none",
+                        enabled: true,
+                        params: {},
+                      };
+                      const model = `${String(d.vendor ?? "")}${d.model ? ` ${String(d.model)}` : ""}`.trim();
+                      const fallbackRoles: ZigbeeRole[] = [
+                        { id: "unbound", label: "Unbound", kind: "none" },
+                        { id: "canopy_4x8", label: "Canopy 4×8", kind: "climate" },
+                        { id: "canopy_2x4", label: "Canopy 2×4", kind: "climate" },
+                        { id: "intake", label: "Intake", kind: "climate" },
+                        { id: "exhaust", label: "Exhaust", kind: "climate" },
+                        { id: "room", label: "Room", kind: "climate" },
+                        { id: "clone_dome", label: "Clone dome", kind: "climate" },
+                        { id: "leak_tank", label: "Tank / reservoir leak", kind: "safety" },
+                        { id: "leak_floor", label: "Water leak (floor)", kind: "safety" },
+                      ];
+                      const fallbackRecipes: ZigbeeRecipe[] = [
+                        { id: "none", label: "No task" },
+                        {
+                          id: LIQUID_TASK_ID,
+                          label: "Liquid level → appliance OOS",
+                          device_classes: ["liquid", "safety"],
+                          default_params: liquidTaskDefaults(undefined),
+                        },
+                      ];
                       return (
-                        <ZigbeePlacementRow
-                          key={fname}
-                          friendlyName={fname}
-                          placement={zigbeePlacementsDraft[fname] ?? ""}
-                          onChange={(name, placement) => {
-                            setZigbeePlacementsDirty(true);
-                            setZigbeePlacementsDraft((prev) => ({ ...prev, [name]: placement }));
+                        <ZigbeeBindRow
+                          key={ieee || String(d.friendly_name)}
+                          ieee={ieee}
+                          name={String(d.friendly_name ?? "—")}
+                          model={model}
+                          status={String(d.status ?? (draft.role === "unbound" ? "unbound" : "bound"))}
+                          role={draft.role}
+                          zone={draft.zone}
+                          recipeId={policy.recipe_id}
+                          policyParams={policy.params}
+                          capabilityClass={String(d.capability_class ?? "other")}
+                          capabilityOverride={draft.capability_override}
+                          showAll={Boolean(zigbeeShowAll[ieee])}
+                          onToggleShowAll={() =>
+                            setZigbeeShowAll((prev) => ({ ...prev, [ieee]: !prev[ieee] }))
+                          }
+                          allRoles={zigbeeRoles.length ? zigbeeRoles : fallbackRoles}
+                          allRecipes={zigbeeRecipes.length ? zigbeeRecipes : fallbackRecipes}
+                          onBindingChange={(id, patch) => {
+                            setZigbeeBindDirty(true);
+                            setZigbeeBindDraft((prev) => {
+                              const base = {
+                                role: patch.role,
+                                zone: patch.zone,
+                                friendly_name: String(d.friendly_name ?? prev[id]?.friendly_name ?? ""),
+                                enabled: true,
+                              };
+                              if (patch.capability_override) {
+                                return { ...prev, [id]: { ...base, capability_override: patch.capability_override } };
+                              }
+                              return { ...prev, [id]: base };
+                            });
+                            setZigbeePolicyDraft((prev) => ({
+                              ...prev,
+                              [id]: {
+                                recipe_id: patch.role === "unbound" ? "none" : patch.recipe_id,
+                                enabled: true,
+                                params: patch.role === "unbound" ? {} : (prev[id]?.params ?? {}),
+                              },
+                            }));
+                          }}
+                          onPolicyChange={(id, patch) => {
+                            setZigbeeBindDirty(true);
+                            setZigbeePolicyDraft((prev) => ({
+                              ...prev,
+                              [id]: {
+                                recipe_id: patch.recipe_id,
+                                enabled: true,
+                                params: patch.params,
+                              },
+                            }));
                           }}
                         />
                       );
@@ -1131,23 +1539,39 @@ export function SettingsPage() {
             </div>
             <Button
               onClick={async () => {
-                const trimmed: Record<string, string> = {};
-                for (const [key, value] of Object.entries(zigbeePlacementsDraft)) {
-                  if (key && value.trim()) trimmed[key] = value.trim();
-                }
-                await patch_settings({ zigbee_placements: JSON.stringify(trimmed) });
-                setZigbeePlacementsDirty(false);
+                await put_zigbee_bindings(zigbeeBindDraft);
+                await put_zigbee_policies(zigbeePolicyDraft);
+                setZigbeeBindDirty(false);
                 await refresh();
               }}
+              disabled={!zigbeeBindDirty}
             >
-              Save placements
+              Save roles &amp; tasks
             </Button>
           </>
-        ) : zigbeeHealth?.radio_up === true ? (
+        ) : zigbeeHealth == null ? (
           <p className="dsc-muted" style={{ marginTop: 10 }}>
-            Coordinator is online but no end devices are paired yet — permit join when you are ready to add sensors
-            or plugs.
+            Loading Zigbee radio status…
           </p>
+        ) : zigbeeHealth.radio_up === true ? (
+          <div className="dsc-muted" style={{ marginTop: 10, fontSize: 13, lineHeight: 1.45 }}>
+            <p style={{ margin: "0 0 8px" }}>
+              Coordinator online — no end devices yet. Role/Zone rows appear here as soon as a sensor joins
+              (this page polls while JOIN OPEN).
+            </p>
+            <ol style={{ margin: 0, paddingLeft: 18 }}>
+              <li>Confirm JOIN OPEN (or tap Permit join ~4 min). Keep house ZHA pairing closed so the sensor joins this SkyConnect.</li>
+              <li>
+                Factory-reset a TS0201 (hold reset ~5s until LED blinks). Leaving ZHA alone is not enough —
+                hold reset near this Pi. Freed grow sensors: Canopy Middle/Left/Right, Tent Top, Floor, Tent Bottom.
+                DSC network is new after Zigbee re-flash (channel 11).
+              </li>
+              <li>
+                When the Unbound row appears, assign Role + Zone → Save roles (or wait for auto-bind). Climate /
+                Overview / Twin pick it up immediately.
+              </li>
+            </ol>
+          </div>
         ) : (
           <p className="dsc-muted" style={{ marginTop: 10 }}>
             SkyConnect coordinator is not online — fix USB, power, and <code>dsc-hub-z2m</code> logs before pairing.
@@ -1205,8 +1629,8 @@ export function SettingsPage() {
         <section className="dsc-card">
           <h3>General</h3>
           <p className="dsc-muted">
-            Operator kit is Probe 1–2. Live Root and SoftCal only offer kit probes. Device → Advanced restore (future)
-            is the only place for pot 3/4 entity maps.
+            Operator kit is Probe 1–2. Live Root and SoftCal only offer kit probes. Device →{" "}
+            <b>Advanced restore</b> is where Probe 3–4 inventory seats live (toggle in-service when hardware returns).
           </p>
           <p className="dsc-honesty">
             Settings are split by blast radius: Hub (backup), Brain (tuning), Device (kit), API, Network, Server
