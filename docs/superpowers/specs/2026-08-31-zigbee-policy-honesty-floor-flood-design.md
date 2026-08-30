@@ -1,7 +1,7 @@
 # Zigbee policy honesty + floor flood alert
 
 **Date:** 2026-08-31  
-**Status:** draft — pending user review  
+**Status:** approved  
 **Extends:** [2026-08-30-zigbee-role-vs-task-operator-design.md](./2026-08-30-zigbee-role-vs-task-operator-design.md), [2026-08-30-zigbee-device-tasks-design.md](./2026-08-30-zigbee-device-tasks-design.md)  
 **Closes FOLLOWUPS:** Policy problem vs raw wet in UI; next recipe `floor_flood_alert` (one only)
 
