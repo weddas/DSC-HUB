@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { HashRouter } from "react-router-dom";
 import { App } from "./App";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import { DscRoot } from "./components/ParallaxStars";
 import { Button } from "./components/ui";
 import { BrainProvider, useBrainContext } from "./hooks/useBrain";
 import { FleetProvider } from "./hooks/useFleet";
@@ -30,31 +31,27 @@ function PiApp() {
 
   if (loading && !fleet) {
     return (
-      <div className="dsc-root">
-        <div className="dsc-shell dsc-connecting" style={{ padding: 24 }} role="status" aria-live="polite">
-          <p className="dsc-muted">Connecting to fleet…</p>
-          <div className="dsc-boot-track" aria-hidden="true">
-            <div className="dsc-boot-bar" />
-          </div>
-          <div className="dsc-chip-row" style={{ marginTop: 12 }}>
-            <Button primary onClick={() => void refresh()}>
-              Retry
-            </Button>
-          </div>
+      <div className="dsc-shell dsc-connecting" style={{ padding: 24 }} role="status" aria-live="polite">
+        <p className="dsc-muted">Connecting to fleet…</p>
+        <div className="dsc-boot-track" aria-hidden="true">
+          <div className="dsc-boot-bar" />
+        </div>
+        <div className="dsc-chip-row" style={{ marginTop: 12 }}>
+          <Button primary onClick={() => void refresh()}>
+            Retry
+          </Button>
         </div>
       </div>
     );
   }
   if (error && !fleet) {
     return (
-      <div className="dsc-root">
-        <div className="dsc-shell dsc-connecting" style={{ padding: 24 }}>
-          <p className="dsc-honesty">Fleet unavailable: {error}</p>
-          <div className="dsc-chip-row" style={{ marginTop: 12 }}>
-            <Button primary onClick={() => void refresh()}>
-              Retry
-            </Button>
-          </div>
+      <div className="dsc-shell dsc-connecting" style={{ padding: 24 }}>
+        <p className="dsc-honesty">Fleet unavailable: {error}</p>
+        <div className="dsc-chip-row" style={{ marginTop: 12 }}>
+          <Button primary onClick={() => void refresh()}>
+            Retry
+          </Button>
         </div>
       </div>
     );
@@ -62,9 +59,7 @@ function PiApp() {
   return (
     <FleetProvider fleetRaw={fleetRaw} tick={tick} source="pi" loading={loading} error={error}>
       <HashRouter>
-        <div className="dsc-root">
-          <App hass={hass} surfaceVersion={surface} hassRevision={tick} fleetSource="pi" />
-        </div>
+        <App hass={hass} surfaceVersion={surface} hassRevision={tick} fleetSource="pi" />
       </HashRouter>
     </FleetProvider>
   );
@@ -75,9 +70,11 @@ if (root) {
   createRoot(root).render(
     <StrictMode>
       <BrainProvider>
-        <ErrorBoundary>
-          <PiApp />
-        </ErrorBoundary>
+        <DscRoot>
+          <ErrorBoundary>
+            <PiApp />
+          </ErrorBoundary>
+        </DscRoot>
       </BrainProvider>
     </StrictMode>,
   );

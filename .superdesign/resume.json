@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "targets": {
+    "/ops/home": {
+      "targetKind": "existing-ui",
+      "projectId": "8ff688c1-d34d-4b59-8994-1760b5cf4a74",
+      "baselineDraftId": "aaa17ee0-9376-43b5-b7b7-d4e52979a00a",
+      "activeDraftId": "aaa17ee0-9376-43b5-b7b7-d4e52979a00a",
+      "designSystemPath": ".superdesign/design-system.md",
+      "referenceIds": ["www-assets-brand-dsc-brand-mark.svg"],
+      "brandAssets": {
+        "logo": {
+          "assetKey": "www-assets-brand-dsc-brand-mark.svg",
+          "url": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/8ff688c1-d34d-4b59-8994-1760b5cf4a74/brand-assets/www-assets-brand-dsc-brand-mark.svg/dsc-brand-mark.svg",
+          "sourcePath": "homeassistant/custom_components/dsc_hub/www/assets/brand/dsc-brand-mark.svg"
+        }
+      },
+      "contextFiles": [
+        ".superdesign/design-system.md",
+        "homeassistant/custom_components/dsc_hub/frontend/src/App.tsx:104:205",
+        "homeassistant/custom_components/dsc_hub/frontend/src/pages/DashHomePage.tsx",
+        "homeassistant/custom_components/dsc_hub/frontend/src/components/DashHomeSections.tsx:40:805",
+        "homeassistant/custom_components/dsc_hub/frontend/src/components/ui.tsx:1:262",
+        "homeassistant/custom_components/dsc_hub/frontend/src/routes.ts:31:85",
+        "homeassistant/custom_components/dsc_hub/frontend/src/styles/dsc.css:1:45",
+        "homeassistant/custom_components/dsc_hub/frontend/src/styles/dsc.css:231:520",
+        "homeassistant/custom_components/dsc_hub/frontend/src/components/Honesty.tsx:23:76",
+        "homeassistant/custom_components/dsc_hub/frontend/src/components/HelpTip.tsx"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "89e8eeee24952ac1a15b6e97b884c54e00b68bf99566163b8a76b511e69bec18",
+        "homeassistant/custom_components/dsc_hub/frontend/src/App.tsx": "e9d8025c5565943425da434c06c206efb03406ef1a253116bd552dfda908b505",
+        "homeassistant/custom_components/dsc_hub/frontend/src/pages/DashHomePage.tsx": "f61f0e9f5b04a67262bbf852c430709d19921356e0be2af8bc81e18c9f13d286",
+        "homeassistant/custom_components/dsc_hub/frontend/src/components/DashHomeSections.tsx": "115943a69d138ece882a39888a17498d91d491d43145d3cc0ee9b30584c36567",
+        "homeassistant/custom_components/dsc_hub/frontend/src/components/ui.tsx": "60875fcae5bfdeb65d8d2acd40245a7e6a512857a7073e3e21493c70c637e926",
+        "homeassistant/custom_components/dsc_hub/frontend/src/routes.ts": "275fce5da5ae2b337f05178c217b2233b111a2586c608413311efe33c71565ea",
+        "homeassistant/custom_components/dsc_hub/frontend/src/styles/dsc.css": "3411bf3248c3827f6ebd6d7972c0f8fce8fbec99d166f496695918b30029be56",
+        "homeassistant/custom_components/dsc_hub/frontend/src/components/Honesty.tsx": "6dbf6839863a51d2c8d1893265f55f63d68a8187fcc4500be077e1347b27ebde",
+        "homeassistant/custom_components/dsc_hub/frontend/src/components/HelpTip.tsx": "1200bc3594c2c7b6fbb00560e2efc4b48d02857786bef6409f83677cbfd78738"
+      },
+      "components": [
+        {
+          "name": "AppShell",
+          "id": "ec69e877-cb3a-45f8-8928-a0ddfffd20d6",
+          "sourcePath": "homeassistant/custom_components/dsc_hub/frontend/src/App.tsx",
+          "logoAssetKey": "www-assets-brand-dsc-brand-mark.svg"
+        },
+        {
+          "name": "PageHeader",
+          "id": "d9339d11-3e4b-46aa-ab1a-77bdbbff36f4",
+          "sourcePath": "homeassistant/custom_components/dsc_hub/frontend/src/components/ui.tsx"
+        },
+        {
+          "name": "ParallaxStars",
+          "id": "381ba61c-2701-4bc9-a8fe-f332b38a013f",
+          "sourcePath": "homeassistant/custom_components/dsc_hub/frontend/src/components/ParallaxStars.tsx"
+        }
+      ],
+      "drafts": {
+        "aaa17ee0-9376-43b5-b7b7-d4e52979a00a": {
+          "title": "Current Dash Home",
+          "visualDirection": "operator dump with token parallax-star page wash (no title overlay)",
+          "currentVersion": 2
+        },
+        "c6108cf7-49e4-4069-8c12-d8d04a3bef10": {
+          "title": "DSC Hub - Premium Steering Console",
+          "visualDirection": "premium grow-steering / OGB-class",
+          "parentDraftId": "aaa17ee0-9376-43b5-b7b7-d4e52979a00a",
+          "currentVersion": 1
+        },
+        "b8ba2858-a108-46da-99d8-241c93fc2286": {
+          "title": "DSC Hub - High Contrast Dash",
+          "visualDirection": "high-contrast public-PD readability",
+          "parentDraftId": "aaa17ee0-9376-43b5-b7b7-d4e52979a00a",
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-08-31T00:47:00.000Z"
+    }
+  }
+}

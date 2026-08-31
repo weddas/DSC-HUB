@@ -5,10 +5,13 @@ import { DecisionLayer } from "../components/DecisionLayer";
 import { TargetNumber } from "../components/TentTargets";
 import { SoftCalWizard } from "../components/SoftCalWizard";
 import { SoilTestWizard } from "../components/SoilTestWizard";
+import { CalOutcomeStrip } from "../components/CalOutcomeStrip";
 import { save_calibration } from "../lib/fleetApi";
 import { useEntityBus } from "../hooks/useEntityBus";
+import { useFleet } from "../hooks/useFleet";
 import { useFleetActions } from "../hooks/useFleetActions";
 import { KIT_PROBE_NUMBERS } from "../lib/seatModel";
+import { ASSIGNED_PROBE_BANNER, probeAssignedPlantId, probeAssignmentDisplay } from "../lib/probeAssignment";
 
 const CAL_TARGETS = [
   { id: "out", label: "OUT exhaust", prefix: "dsc_cal_cfm_out", select: "OUT" },
@@ -162,11 +165,21 @@ function FanCalibrateWizard() {
         ) : null}
       </div>
 
+      <CalOutcomeStrip
+        what="Map duct % → CFM with anemometer (live fan hold)."
+        process="Select duct → Start session → sample 25 / 50 / 75 / 100% → save or skip points → finish."
+        expected={`sensor.dsc_cfm_curves_status reflects that duct (now: ${curveStatus}). Incomplete curves stay warn until enough points.`}
+      />
+
       {phase === "pick" ? (
         <Card className="dsc-glass" title="1 · Select duct" icon="fan">
           <p className="dsc-muted">
             Hold the anemometer at the centre of the duct at each fan step. At least two measured points per duct are
             needed before real curves replace the rated estimate.
+          </p>
+          <p className="dsc-honesty" style={{ marginTop: 8 }}>
+            <strong>Start holds live fans</strong> at stepped duties until you finish or abort. Have the anemometer
+            ready before confirming.
           </p>
           <div className="dsc-chip-row" style={{ margin: "12px 0" }}>
             {CAL_TARGETS.map((t, i) => (
@@ -182,7 +195,7 @@ function FanCalibrateWizard() {
           </div>
           <div className="dsc-row-actions">
             <Button variant="primary" disabled={saving} onClick={() => setConfirmStart(true)}>
-              Start {target.label} session
+              Start {target.label} session (holds live fans)
             </Button>
           </div>
           <DecisionLayer
@@ -193,7 +206,7 @@ function FanCalibrateWizard() {
               void startSession();
             }}
             title={`Start ${target.label} calibration`}
-            confirmLabel="Start session"
+            confirmLabel="Start session (live hold)"
             help={null}
           >
             <p>
@@ -436,10 +449,16 @@ function TankBiasPanel() {
 
 function LabWetCalPanel({ disabled }: { disabled: boolean }) {
   const { callService } = useFleetActions();
+  const { state, entity } = useEntityBus();
+  const fleet = useFleet();
   const [pot, setPot] = useState("1");
   const [bufferPct, setBufferPct] = useState("50");
   const [status, setStatus] = useState("");
   const [confirm, setConfirm] = useState(false);
+
+  const potN = Number(pot);
+  const assignedId = probeAssignedPlantId(potN, fleet, state);
+  const assignedLabel = assignedId ? probeAssignmentDisplay(potN, fleet, state, entity) : "";
 
   const runLabWet = async () => {
     setStatus(`Stamping pot${pot} via dsc_pots_apply_lab_wet_to_esp…`);
@@ -463,6 +482,17 @@ function LabWetCalPanel({ disabled }: { disabled: boolean }) {
 
   return (
     <Card className="dsc-glass" title="Lab wet calibration wizard (N-016)" icon="root">
+      <CalOutcomeStrip
+        what="Stamp one channel with a known buffer on the probe ESP."
+        process="Rinse → soak in buffer → select probe + buffer % → stamp → re-seat and verify."
+        expected="Lab wet script success; peer median is not a substitute for this step."
+      />
+      {assignedId ? (
+        <p className="dsc-honesty" role="status">
+          {ASSIGNED_PROBE_BANNER}
+          {assignedLabel ? ` (${assignedLabel})` : ""}
+        </p>
+      ) : null}
       <ol className="dsc-muted" style={{ fontSize: 13, marginBottom: 12, paddingLeft: 18 }}>
         <li>Remove probe from soil; rinse in distilled water.</li>
         <li>Soak probe in known buffer (document target % in notes).</li>
@@ -565,6 +595,11 @@ function SoilCalHonestyPanel() {
       </Card>
 
       <Card className="dsc-glass" title="Soil cal — peer median vs lab buffer (N-016)" icon="learning">
+      <CalOutcomeStrip
+        what="Capture / push peer median offsets across in-service probes."
+        process="Capture peer baseline → review Root / Strains → optional push to ESP."
+        expected="Peer script status updates; peer median ≠ lab wet truth."
+      />
       <p className="dsc-honesty">
         <strong>Soft calibrate</strong> (above) averages selected probes in tap water against a known pH (and optional
         EC), writes HA Got offsets, then a second capture after watering. Soft ≠ lab ESP stamp.

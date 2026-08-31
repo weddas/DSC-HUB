@@ -1,3 +1,64 @@
+# Theme
+
+No `tailwind.config`. Custom CSS only: `src/styles/dsc.css`.
+
+## Part 1 — compact token summary (`:root`, `:host`, `.dsc-root`)
+
+Tokens live on `:root` (island SPA), `:host` (HA panel shadow root), and `.dsc-root`.
+
+### Colors
+
+| Token | Value |
+|---|---|
+| `--dsc-black` | `#0b0e14` |
+| `--dsc-black-2` / `--dsc-gray-1` | `#12171f` |
+| `--dsc-gray-2` | `#1a2230` |
+| `--dsc-gray-3` | `#243044` |
+| `--dsc-gray-4` / `--dsc-gray-5` | `#8b95a8` |
+| `--dsc-blue` / `--dsc-teal` | `#26c6da` |
+| `--dsc-blue-dim` | `rgba(38, 198, 218, 0.4)` |
+| `--dsc-teal-dim` | `rgba(38, 198, 218, 0.45)` |
+| `--dsc-teal-glow` | `rgba(38, 198, 218, 0.55)` |
+| `--dsc-purple` | `#a78bfa` |
+| `--dsc-purple-dim` | `rgba(167, 139, 250, 0.35)` |
+| `--dsc-neon` | `#66bb6a` |
+| `--dsc-neon-dim` | `rgba(102, 187, 106, 0.32)` |
+| `--dsc-neon-glow` | `rgba(0, 230, 118, 0.4)` |
+| `--dsc-orange` | `#ff8a65` |
+| `--dsc-amber` | `#ffb74d` |
+| `--dsc-bad` / `--dsc-bad-soft` | `#ef5350` |
+| `--dsc-white` | `#e8eef8` |
+| `--dsc-soil-1` | `#5b9f6b` |
+| `--dsc-soil-2` | `#4a8f9f` |
+| `--dsc-soil-3` | `#c4a35a` |
+| `--dsc-soil-4` | `#8d6e63` |
+| `--dsc-glass` | `rgba(18, 23, 31, 0.78)` |
+| `--dsc-glass-border` | `rgba(36, 48, 68, 0.55)` |
+
+### Shadows / radius / type
+
+| Token | Value |
+|---|---|
+| `--dsc-shadow` | `0 8px 24px rgba(0, 0, 0, 0.45)` |
+| `--dsc-shadow-tight` | `0 2px 8px rgba(0, 0, 0, 0.55)` |
+| `--dsc-radius` | `10px` |
+| `--dsc-radius-lg` | `14px` |
+| `--dsc-font` | `"Segoe UI", "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif` |
+| `--dsc-mono` | `"Cascadia Code", "IBM Plex Mono", ui-monospace, monospace` |
+
+### Additional `--dsc-*` notes (grep)
+
+- **`--dsc-muted`:** referenced (`color: var(--dsc-muted)` on `.dsc-demo-banner`) but **not declared** on `:root`. Class `.dsc-muted` uses `color: var(--dsc-gray-5)` instead.
+- **`--dsc-text`:** used as `var(--dsc-text, #eef1f8)` — not declared on `:root`; fallback `#eef1f8`.
+- Dim/glow companions listed above (`-dim`, `-glow`) are the only extra color tokens in `:root`.
+
+---
+
+## Part 2 — FULL `src/styles/dsc.css`
+
+No `tailwind.config` in this frontend.
+
+```css
 /* Tokens live on :root (island SPA document), :host (HA panel shadow root) and
    .dsc-root (explicit mount wrapper) so no surface can ever lose the cascade. */
 :root, :host, .dsc-root {
@@ -63,95 +124,14 @@ body {
 }
 
 .dsc-root {
-  position: relative;
-  isolation: isolate;
   height: 100%;
   min-height: 100%;
-  overflow: hidden;
-  background: var(--dsc-black);
-  --dsc-stars-far: color-mix(in srgb, var(--dsc-white) 38%, transparent);
-  --dsc-stars-mid: color-mix(in srgb, var(--dsc-teal) 42%, transparent);
-  --dsc-stars-near: color-mix(in srgb, var(--dsc-white) 62%, transparent);
-}
-
-/* Scroll lives on the body sibling so the wash does not move with the desk. */
-.dsc-root-body {
-  position: relative;
-  z-index: 1;
-  height: 100%;
   overflow: auto;
-}
-
-/* Decorative atmosphere only — not a live sensor viz. */
-.dsc-stars {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  overflow: hidden;
-  pointer-events: none;
-  contain: paint;
-}
-
-.dsc-stars-atmosphere {
-  position: absolute;
-  inset: 0;
   background:
-    radial-gradient(ellipse at bottom, var(--dsc-gray-2) 0%, transparent 58%),
-    radial-gradient(1100px 560px at 8% -12%, color-mix(in srgb, var(--dsc-teal) 12%, transparent), transparent 55%),
-    radial-gradient(900px 520px at 92% -8%, color-mix(in srgb, var(--dsc-teal) 8%, transparent), transparent 50%),
-    radial-gradient(700px 420px at 70% 100%, color-mix(in srgb, var(--dsc-neon) 4%, transparent), transparent 55%);
-}
-
-.dsc-stars-layer {
-  position: absolute;
-  left: 0;
-  top: 0;
-  background: transparent;
-  animation: dsc-stars-drift linear infinite;
-}
-
-.dsc-stars-layer--sm {
-  width: 1px;
-  height: 1px;
-  animation-duration: calc(90s / var(--dsc-stars-speed, 0.4));
-}
-
-.dsc-stars-layer--md {
-  width: 2px;
-  height: 2px;
-  animation-duration: calc(150s / var(--dsc-stars-speed, 0.4));
-}
-
-.dsc-stars-layer--lg {
-  width: 3px;
-  height: 3px;
-  animation-duration: calc(210s / var(--dsc-stars-speed, 0.4));
-}
-
-.dsc-stars-echo {
-  position: absolute;
-  top: 2000px;
-  left: 0;
-  width: inherit;
-  height: inherit;
-  background: transparent;
-}
-
-@keyframes dsc-stars-drift {
-  from { transform: translateY(0); }
-  to { transform: translateY(-2000px); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .dsc-stars-layer {
-    animation: none;
-  }
-}
-
-@media (prefers-contrast: more) {
-  .dsc-stars-layer {
-    opacity: 0.35;
-  }
+    radial-gradient(1100px 560px at 8% -12%, rgba(38, 198, 218, 0.12), transparent 55%),
+    radial-gradient(900px 520px at 92% -8%, rgba(38, 198, 218, 0.08), transparent 50%),
+    radial-gradient(700px 420px at 70% 100%, rgba(102, 187, 106, 0.04), transparent 55%),
+    var(--dsc-black);
 }
 
 .dsc-honesty-rail {
@@ -3014,31 +2994,6 @@ input[type="checkbox"]:disabled {
   min-height: min(38vh, 380px);
   max-height: min(48vh, 440px);
 }
-/* Native selects / inputs must paint above neighboring glass cards */
-.dsc-wizard-panel,
-.dsc-plant-wizard .dsc-wizard-panel {
-  overflow: visible;
-  position: relative;
-  z-index: 1;
-}
-.dsc-wizard-panel .dsc-input,
-.dsc-wizard-panel select.dsc-input,
-.dsc-wizard-fields .dsc-input,
-.dsc-wizard-fields select.dsc-input {
-  position: relative;
-  z-index: 2;
-}
-.dsc-decision-panel:has(select.dsc-input):not(:has(.dsc-catalog-picker)) {
-  overflow: visible;
-}
-.dsc-cal-outcome {
-  color: var(--dsc-gray-5);
-  line-height: 1.35;
-}
-.dsc-cal-outcome strong {
-  color: var(--dsc-white);
-  font-weight: 600;
-}
 .dsc-wizard-fields {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -3375,3 +3330,4 @@ input[type="checkbox"]:disabled {
     animation: none !important;
   }
 }
+```

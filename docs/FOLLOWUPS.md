@@ -10,6 +10,25 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 
 ---
 
+## 2026-08-31 — Operator correctness Wave 1 (SoftCal / Build-a-Plant / cal UX)
+
+**Spec:** [`docs/superpowers/specs/2026-08-31-operator-correctness-wave1-design.md`](superpowers/specs/2026-08-31-operator-correctness-wave1-design.md)  
+**Plan:** [`docs/superpowers/plans/2026-08-31-operator-correctness-wave1.md`](superpowers/plans/2026-08-31-operator-correctness-wave1.md)
+
+| Item | Status | Notes |
+|------|--------|-------|
+| SoftCal assignment chips | **done (live)** | `Probe N · {plant/name\|Unassigned} · SoftCal OK`; pot1/pot2 assigned on Pi fleet |
+| CalOutcomeStrip (fan/SoftCal/lab/peer/soil) | **done (live)** | Shared What/Process/Expected; fan Start holds live fans copy |
+| Soil/lab assigned banners | **done (code)** | `ASSIGNED_PROBE_BANNER` when probe has plant |
+| Nickname flush on Next/commit | **done (code)** | `flushEntityTextDrafts` + `peekEntityTextDraft` so mid-typing survives step change |
+| Select stacking / overflow | **done (code)** | `.dsc-wizard-panel` overflow visible; decision panel select case |
+| Learning demotion copy | **done (code)** | Calibrate = guided fan SoT |
+| Pi SPA hotpatch | **done** | `index-XS57jN-m.js` / `calibrate-CpykSWoW.js` (verify after deploy); bundle contains SoftCal OK + What: + holds live fans |
+| Operator visual smoke (browser) | **soak** | Confirm SoftCal chips + fan strip on `:8787` once |
+| Waves 2–5 (CannaLib, PPFD, Twin, polish) | **next-plan** | Same CreateGoal objective; Zigbee+extra HW parked |
+
+---
+
 ## 2026-08-30 ? Zigbee device tasks (universal path; recipes one-at-a-time)
 
 **2026-08-31 ? policy honesty + floor flood:** [`docs/superpowers/specs/2026-08-31-zigbee-policy-honesty-floor-flood-design.md`](superpowers/specs/2026-08-31-zigbee-policy-honesty-floor-flood-design.md) ? [`docs/superpowers/plans/2026-08-31-zigbee-policy-honesty-floor-flood.md`](superpowers/plans/2026-08-31-zigbee-policy-honesty-floor-flood.md)
@@ -3547,5 +3566,13 @@ Already logged ? do not duplicate the row, **do escalate**: **SV-P1-6** (DutyStr
 | GR-P1-8 | Overview/Dash Root spark held-flat | VPD sparks needle-spike at the right (hold join). |
 | GR-P1-9 | Duty track invisible when empty | Grey-on-near-black reads as a missing widget. |
 | GR-P1-10 | Chart hours sessionStorage is global | 48h on Analytics is 48h on Climate; ghost fetch then hits GR-P0-1. |
+
+---
+
+## 2026-08-31 — Superdesign init (Dash Home)
+
+| Item | Status | Notes |
+|------|--------|-------|
+| `--dsc-muted` undeclared | deferred | `dsc.css` uses `var(--dsc-muted)` (demo banner) but `:root` never defines it. `.dsc-muted` already uses `--dsc-gray-5`. Declare the token or drop the alias. |
 
 

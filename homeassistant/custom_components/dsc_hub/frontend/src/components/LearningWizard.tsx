@@ -31,9 +31,10 @@ export function LearningWizard() {
     <>
       <Card className="dsc-glass" title="CFM cal ownership" icon="learning">
         <p className="dsc-honesty">
-          <Link to="/fleet/calibrate">Fleet → Calibrate</Link> owns the guided fan CFM session (
-          <code>input_number.dsc_cal_*</code>, <code>script.dsc_cal_save_point</code>). This wizard uses the same
-          entities — blur-commit here vs save-point flow there. Pick one surface per session.
+          Guided fan CFM sessions live on <Link to="/fleet/calibrate">Fleet → Calibrate</Link> (select duct → live hold →
+          save points). This Learning page edits the <strong>same</strong>{" "}
+          <code>input_number.dsc_cal_*</code> / <code>script.dsc_cal_*</code> helpers for gate and climate learn — pick one
+          surface per fan session; prefer Calibrate for the anemometer walk.
         </p>
       </Card>
 

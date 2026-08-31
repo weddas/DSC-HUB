@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button, Card, StatusChip } from "./ui";
+import { CalOutcomeStrip } from "./CalOutcomeStrip";
 import { DecisionLayer } from "./DecisionLayer";
 import {
   cancelSoilTest,
@@ -12,6 +13,8 @@ import {
 } from "../lib/fleetApi";
 import { rosterSlots, KIT_PROBE_NUMBERS } from "../lib/seatModel";
 import { useEntityBus } from "../hooks/useEntityBus";
+import { useFleet } from "../hooks/useFleet";
+import { ASSIGNED_PROBE_BANNER, probeAssignedPlantId, probeAssignmentDisplay } from "../lib/probeAssignment";
 
 const TIMING_OPTIONS = [
   { id: "before_water", label: "Before water" },
@@ -66,7 +69,8 @@ export type SoilTestWizardProps = {
 };
 
 export function SoilTestWizard({ initialStationId, onClose, compact }: SoilTestWizardProps) {
-  const { entity } = useEntityBus();
+  const { entity, state } = useEntityBus();
+  const fleet = useFleet();
   const [step, setStep] = useState<WizardStep>("station");
   const [stations, setStations] = useState<ProbeStation[]>([]);
   const [stationId, setStationId] = useState(initialStationId ?? "");
@@ -216,6 +220,17 @@ export function SoilTestWizard({ initialStationId, onClose, compact }: SoilTestW
     <span className={`dsc-stage-pill${step === s ? " is-on" : ""}`}>{label}</span>
   );
 
+  const targetPotN = Number(String(targetPotId).replace(/^pot/, ""));
+  const stationPotN = Number(String(stationId).replace(/^pot/, ""));
+  const bannerPotN =
+    Number.isFinite(targetPotN) && targetPotN > 0
+      ? targetPotN
+      : Number.isFinite(stationPotN) && stationPotN > 0
+        ? stationPotN
+        : 0;
+  const assignedId = bannerPotN ? probeAssignedPlantId(bannerPotN, fleet, state) : "";
+  const assignedLabel = assignedId ? probeAssignmentDisplay(bannerPotN, fleet, state, entity) : "";
+
   return (
     <div className={compact ? "" : "dsc-soil-wizard"}>
       {!compact ? (
@@ -225,6 +240,18 @@ export function SoilTestWizard({ initialStationId, onClose, compact }: SoilTestW
             pot when finished.
           </p>
         </Card>
+      ) : null}
+
+      <CalOutcomeStrip
+        what="Hold a confirmed soil reading at station timing for a target plant / pot."
+        process="Station → plant → timing → move → capture → confirm → return home."
+        expected="Confirmed soil-test row in brain history (not SoftCal offsets)."
+      />
+      {assignedId ? (
+        <p className="dsc-honesty" role="status" style={{ marginBottom: 8 }}>
+          {ASSIGNED_PROBE_BANNER}
+          {assignedLabel ? ` · Probe ${bannerPotN}: ${assignedLabel}` : ""}
+        </p>
       ) : null}
 
       <div className="dsc-stage-track" style={{ margin: "12px 0", flexWrap: "wrap" }}>

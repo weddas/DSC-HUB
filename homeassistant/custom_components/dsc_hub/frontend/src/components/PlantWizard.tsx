@@ -3,7 +3,7 @@ import { CatalogPicker } from "./CatalogPicker";
 import { CoupledMix } from "./CoupledMix";
 import { DecisionLayer } from "./DecisionLayer";
 import { VesselGlyph } from "./VesselGlyph";
-import { Button, Card, EntitySelect, EntityText, EntityDatetime, Icon, StatusChip } from "./ui";
+import { Button, Card, EntitySelect, EntityText, EntityDatetime, Icon, StatusChip, flushEntityTextDrafts, peekEntityTextDraft } from "./ui";
 import { TargetNumber } from "./TentTargets";
 import { useEntityBus } from "../hooks/useEntityBus";
 import { useFleetActions } from "../hooks/useFleetActions";
@@ -52,7 +52,8 @@ export function PlantWizard() {
 
   const step = STEPS[stepIdx];
   const strain = state("input_text.dsc_build_strain", "");
-  const nick = state("input_text.dsc_build_nickname", "");
+  const nickBus = state("input_text.dsc_build_nickname", "");
+  const nick = peekEntityTextDraft("input_text.dsc_build_nickname") ?? nickBus;
   const assign = state("input_select.dsc_build_assign_pot", "none");
   const tent = state("input_select.dsc_build_tent", "4x8");
   const draftOpen = hasComposeDraft(state);
@@ -132,7 +133,12 @@ export function PlantWizard() {
     void callService("input_select", "select_option", { entity_id: id, option: vessel.id });
   };
 
+  const flushEntityDrafts = async () => {
+    await flushEntityTextDrafts(callService);
+  };
+
   const commitAssign = async () => {
+    await flushEntityDrafts();
     copyVesselToPot(assign);
     if (available("script.dsc_build_plant_commit_and_assign")) {
       await callService("script", "turn_on", { entity_id: "script.dsc_build_plant_commit_and_assign" });
@@ -147,7 +153,8 @@ export function PlantWizard() {
     await refreshBrain();
   };
 
-  const goNext = () => {
+  const goNext = async () => {
+    await flushEntityDrafts();
     if (step.id === "feed") setSkippedFeed(nutrients.length === 0);
     if (step.id === "light") setSkippedLight(!light || light === "unknown");
     setStepIdx((i) => Math.min(i + 1, STEPS.length - 1));

@@ -103,6 +103,9 @@ Thumbs.db
 .vscode/
 .idea/
 
+# Superdesign scratch (init + resume stay tracked)
+.superdesign/tmp/
+
 # Cursor local — track shared rules/skills; ignore the rest
 .cursor/*
 !.cursor/rules/

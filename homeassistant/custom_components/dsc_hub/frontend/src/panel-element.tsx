@@ -3,6 +3,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { HashRouter } from "react-router-dom";
 import { App, DSC_PANEL_CSS } from "./App";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import { DscRoot } from "./components/ParallaxStars";
 import { FleetProvider } from "./hooks/useFleet";
 import type { HomeAssistant } from "./vite-env";
 
@@ -59,15 +60,16 @@ class DscHubPanel extends HTMLElement {
       this.shadowRoot!.appendChild(style);
 
       const mount = document.createElement("div");
-      mount.className = "dsc-root";
       mount.style.height = "100%";
       this.shadowRoot!.appendChild(mount);
 
       this._root = createRoot(mount);
       this._root.render(
-        <ErrorBoundary>
-          <PanelRoot panel={this} />
-        </ErrorBoundary>,
+        <DscRoot>
+          <ErrorBoundary>
+            <PanelRoot panel={this} />
+          </ErrorBoundary>
+        </DscRoot>,
       );
       this._mounted = true;
     }

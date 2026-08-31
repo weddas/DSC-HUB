@@ -1,8 +1,10 @@
 import { useCallback, useState } from "react";
 import { Button, Card, StatusChip } from "./ui";
+import { CalOutcomeStrip } from "./CalOutcomeStrip";
 import { DecisionLayer } from "./DecisionLayer";
 import { HelpTip } from "./HelpTip";
 import { useEntityBus } from "../hooks/useEntityBus";
+import { useFleet } from "../hooks/useFleet";
 import { useFleetActions } from "../hooks/useFleetActions";
 import {
   SOFT_CAL_POTS,
@@ -19,6 +21,7 @@ import {
   type SoftCalPot,
 } from "../lib/softCalibrate";
 import { getSoftCalAdvice } from "../lib/fleetApi";
+import { softCalAssignmentChipLabel } from "../lib/probeAssignment";
 
 function fmt(v: number | null | undefined, digits = 1): string {
   return v != null && Number.isFinite(v) ? v.toFixed(digits) : "—";
@@ -59,6 +62,7 @@ function CaptureTable({ rows }: { rows: SoftCalCaptureResult[] }) {
  */
 export function SoftCalWizard() {
   const { num, entity, state } = useEntityBus();
+  const fleet = useFleet();
   const { callService } = useFleetActions();
   const [selected, setSelected] = useState<SoftCalPot[]>([1, 2]);
   const [phase, setPhase] = useState<SoftCalPhase>("water");
@@ -219,6 +223,11 @@ export function SoftCalWizard() {
 
   return (
     <Card className="dsc-glass" title="Soft calibrate (tap water → after water)" icon="root">
+      <CalOutcomeStrip
+        what="Soft offsets vs tap / after-water (Got plane — not lab ESP stamp)."
+        process="Pick probe(s) → tap-water Soft Calibrate → apply → seat after water → Soft Calibrate again."
+        expected="Offsets on SoftCal plane; dual_cal_stack blocks apply if active. N/P/K are not SoftCal channels."
+      />
       <div className="dsc-chip-row" style={{ marginBottom: 8 }}>
         <HelpTip title="Soft cal vs lab stamp">
           <p>
@@ -236,7 +245,8 @@ export function SoftCalWizard() {
         <strong>HA Got offsets</strong> (not lab ESP stamp). Then seat in watered pots and Soft Calibrate again for
         capture 2. Samples <strong>Soil * Raw</strong> (moisture, temp, EC, pH) — not N/P/K. Offsets apply to pH /
         moisture
-        {knownEc.trim() ? " / EC" : ""} only. Gate: dual_cal_stack blocks commit.
+        {knownEc.trim() ? " / EC" : ""} only. Gate: dual_cal_stack blocks commit. SoftCal is allowed while a plant is
+        assigned — chip shows assignment; detach only if you need Soil Test relocation.
       </p>
 
       <div className="dsc-chip-row" style={{ marginBottom: 10 }}>
@@ -253,6 +263,15 @@ export function SoftCalWizard() {
           >
             Probe {pot}
           </button>
+        ))}
+      </div>
+      <div className="dsc-chip-row" style={{ marginBottom: 10 }}>
+        {selected.map((pot) => (
+          <StatusChip
+            key={`assign-${pot}`}
+            label={`Probe ${pot} · ${softCalAssignmentChipLabel(pot, fleet, state, entity)}`}
+            tone="ok"
+          />
         ))}
       </div>
 

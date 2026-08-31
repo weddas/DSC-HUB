@@ -19,24 +19,22 @@ export class ErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.error) {
       return (
-        <div className="dsc-root">
-          <div className="dsc-shell" style={{ padding: 24 }}>
-            <p className="dsc-honesty">Something went wrong loading this view.</p>
-            <p className="dsc-muted" style={{ fontSize: 13 }}>
-              {this.state.error.message}
-            </p>
-            <div className="dsc-chip-row" style={{ marginTop: 12 }}>
-              <Button
-                primary
-                onClick={() => {
-                  this.setState({ error: null });
-                  this.props.onRetry?.();
-                }}
-              >
-                Retry
-              </Button>
-              <Button onClick={() => window.location.reload()}>Reload page</Button>
-            </div>
+        <div className="dsc-shell" style={{ padding: 24 }}>
+          <p className="dsc-honesty">Something went wrong loading this view.</p>
+          <p className="dsc-muted" style={{ fontSize: 13 }}>
+            {this.state.error.message}
+          </p>
+          <div className="dsc-chip-row" style={{ marginTop: 12 }}>
+            <Button
+              primary
+              onClick={() => {
+                this.setState({ error: null });
+                this.props.onRetry?.();
+              }}
+            >
+              Retry
+            </Button>
+            <Button onClick={() => window.location.reload()}>Reload page</Button>
           </div>
         </div>
       );
