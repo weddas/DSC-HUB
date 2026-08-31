@@ -23,7 +23,7 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 | Nickname flush on Next/commit | **done (code)** | `flushEntityTextDrafts` + `peekEntityTextDraft` so mid-typing survives step change |
 | Select stacking / overflow | **done (code)** | `.dsc-wizard-panel` overflow visible; decision panel select case |
 | Learning demotion copy | **done (code)** | Calibrate = guided fan SoT |
-| Pi SPA hotpatch | **done** | `index-XS57jN-m.js` / `calibrate-CpykSWoW.js` (verify after deploy); bundle contains SoftCal OK + What: + holds live fans |
+| Pi SPA hotpatch | **done** | Tip `15d7016` spa-dist `index-Bx0-MSV-.js` / `calibrate-CadBxMGV.js` (supersedes `XS57jN-m` / `JuWgMbJV`); SoftCal OK + What: + holds live fans; SoT OPERATOR-WAVE1 / OPERATOR-POLISH |
 | Operator visual smoke (browser) | **done (live)** | All cal tabs What/Process/Expected; Fan+Light hold copy; SoftCal chips; Roster Detach on assigned rows |
 | CreateGoal completion gate | **done** | 2026-08-31 — fan HW parked per objective; genus CC0 strain reference live on Pi Research |
 | Waves 2–5 (CannaLib, PPFD, Twin, polish) | **next-plan** | Same CreateGoal objective; Zigbee+extra HW parked |
