@@ -1,8 +1,8 @@
 # Wave 2 CannaLib — browse / search / icons / images
 
 **Date:** 2026-08-31  
-**Status:** draft — implementing against DSC-HUB stack; live CannaLib deploy needed for remote offset  
-**Parent goal:** DSC operator polish
+**Status:** landed on tip `28953ae` / `94705f0` — hub trampoline + brain + SPA done; production CDN offset still deferred  
+**Parent goal:** DSC operator polish · **SoT:** [`docs/brain/OPERATOR-POLISH.md`](../../brain/OPERATOR-POLISH.md)
 
 ## Problem
 
@@ -10,29 +10,30 @@ SPA catalog asks limit=100; live CannaLib defaults ≤50 and **ignores** `offset
 
 ## Goals
 
-1. Browse past first page (Load more / offset)
-2. Multi-field search (name + type + breeder + summary/excerpts when present)
-3. Better row icons (indica / sativa / hybrid / auto)
-4. Strain images from licensed hydrate only (honest blank when `media.n=0`)
+1. Browse past first page (Load more / offset) — **done** (brain detects remote head-page repeat → local OFFSET)
+2. Multi-field search (name + type + breeder + summary/excerpts when present) — **done**
+3. Better row icons (indica / sativa / hybrid / auto) — **done**
+4. Strain images from licensed hydrate only (honest blank when `media.n=0`) — **done** (Pi media proxy; cultivar-specific still upstream `media_n=0`)
 
 ## Decisions
 
 | Topic | Choice |
 |-------|--------|
-| Remote offset | Add to hub `services/cannalib/standalone_server.py` + brain proxy; live deploy is separate follow-up |
+| Remote offset | Hub `services/cannalib/standalone_server.py` + brain proxy; **live CDN deploy** still FOLLOWUPS |
 | Fallback browse | Brain local SQLite `OFFSET` when remote ignores offset or fails |
-| Images | Hydrate `GET /v1/catalogs/strains/{id}`; show licensed sample only; no marketing hotlink |
-| Icons | New IconNames for strain types; nutrient/light keep distinct glyphs |
+| Images | Hydrate `GET /v1/catalogs/strains/{id}` + `/v1/media/assets/{id}`; no marketing hotlink |
+| Icons | IconNames for strain types; nutrient/light keep distinct glyphs |
 
 ## Non-goals
 
 - Full 175k JSON dump in browser
-- Wave 3 PPFD crops
 - Rebuilding live CannaLib haystack FTS (note in FOLLOWUPS)
+
+Wave 3 kit PPFD crops landed separately under `/dsc-catalog/ppfd/` (same tip train).
 
 ## Acceptance
 
-1. Empty-q Load more appends new strains (not duplicate head page) via brain local and/or deployed CannaLib offset
-2. Typing breeder/type substring finds hits on local + returned remote rows
-3. Strain rows show type-specific icons
-4. Detail panel shows image or honest “No licensed image”
+1. Empty-q Load more appends new strains (not duplicate head page) via brain local and/or deployed CannaLib offset — **verified** offset_ok smoke
+2. Typing breeder/type substring finds hits on local + returned remote rows — **verified**
+3. Strain rows show type-specific icons — **verified**
+4. Detail panel shows image or honest blank — **verified** (genus reference when corpus links; cultivar `media_n=0`)
