@@ -1,7 +1,10 @@
 ## Learned User Preferences
 
 - Prefer one coherent end-to-end pass over narrow phasing; keep polish and operator UX first-class, not a later polish pass.
-- Demand behavioral honesty: gauges, chips, and labels must match real Light/Climate/Root Want→Got state — no blank WebGL/Sankey theater or status collages that look live when they are not.
+- Demand behavioral honesty: gauges, chips, and labels must match real Light/Climate/Root Want→Got state — no blank WebGL/Sankey theater or status collages that look live when they are not; strain catalog images only when upstream media exists.
+- Calibrate surfaces each expose What→Process→Expected; live calibration must state that Start holds live actuators until finish.
+- Entity-bus round-trip must not gate wizard Next or primary actions — use local strain/assign/text drafts until the bus catches up.
+- Operator SPA charting consolidates on ECharts (arc gauges, Sankey, charts); do not stack additional chart libraries without exhausting alternatives first.
 - Operator chrome uses Probe/Plant language only (not Seat/POT); Expected/calendar stage must not read as live plant state.
 - Pi brain is the control source of truth (Want→Got→Need→act), more capable than the former HA packages; hub may apply temporary offline/manual tweaks, then brain re-asserts on reconnect.
 - Research peer grow/crop-steering products (OGB and others, including premium) before inventing information architecture or control UX.
@@ -20,4 +23,5 @@
 - Operator hub takeover is a temporary override; reconnect must re-plan from brain (`pending_reassert` is part of that story).
 - Twin SF1000 and Zigbee/Z2M/SkyConnect are in-scope product surfaces; Zigbee onboarding is role/task binding with `capability_class` (optional `capability_override`) and operator-chosen `problem_when`, not bare device join alone. `tank_full_appliance` may OOS; `floor_flood_alert` is banner-only (never OOS). Space leak roles: `leak_floor_room` / `leak_floor_4x8` / `leak_floor_2x4`.
 - Some kit Zigbee leak/liquid sensors expose wet/dry as `occupancy` (liquid present), not PIR motion — do not treat occupancy as motion for those SKUs. Climate Wet/Dry is that raw reading; Problem/Clear comes only from bound `policy_state` (SPA must not infer problem from wet).
+- Light fixture PPFD maps are local static assets under `/dsc-catalog/ppfd/` (manifest + images), not vendor CDN hotlinks in the SPA.
 - Recurring friction is encoded only after approval (e.g. `.cursor/rules/dsc-kit-sot.mdc`, `dsc-viz-honesty.mdc`); durable ops debt stays in `docs/FOLLOWUPS.md`.

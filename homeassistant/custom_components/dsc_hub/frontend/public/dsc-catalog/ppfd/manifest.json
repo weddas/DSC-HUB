@@ -1,0 +1,38 @@
+{
+  "spider_farmer_sf1000": {
+    "id": "spider_farmer_sf1000",
+    "name": "2026 Newest Version Spider Farmer\u00ae SF1000 100W Full",
+    "source_url": "https://www.spider-farmer.com/wp-content/uploads/2026/03/SF1000-2512-PPFD-Map-Bridgelux-values-\u200b\u200bsame-as-Samsung-phone.jpg",
+    "local_path": "/dsc-catalog/ppfd/spider_farmer_sf1000.jpg",
+    "ha_path": "/local/dsc-catalog/ppfd/spider_farmer_sf1000.jpg",
+    "file": "spider_farmer_sf1000.jpg",
+    "bytes": 116958
+  },
+  "spider_farmer_sf2000": {
+    "id": "spider_farmer_sf2000",
+    "name": "2026 New Spider Farmer\u00ae SF2000 200W Full Spectrum Dimmable LED Grow Light For 4x2'/5x3'",
+    "source_url": "https://www.spider-farmer.com/wp-content/uploads/2021/05/SF2000-2512-PPFD-Map-Bridgelux-values-\u200b\u200bsame-as-Samsung.jpg",
+    "local_path": "/dsc-catalog/ppfd/spider_farmer_sf2000.jpg",
+    "ha_path": "/local/dsc-catalog/ppfd/spider_farmer_sf2000.jpg",
+    "file": "spider_farmer_sf2000.jpg",
+    "bytes": 874498
+  },
+  "spider_farmer_se7000": {
+    "id": "spider_farmer_se7000",
+    "name": "Spider Farmer 5'x5'x6.5' Complete Grow Tent Kit I 2026 New SE7000 730W LED Grow Light I 6\" Inline Fan with GGS Controller Kits I Clip Fan",
+    "source_url": "https://www.spider-farmer.com/wp-content/uploads/2021/05/SF4000-2512-PPFD-Map-Bridgelux-values-\u200b\u200bsame-as-Samsung.jpg",
+    "local_path": "/dsc-catalog/ppfd/spider_farmer_se7000.jpg",
+    "ha_path": "/local/dsc-catalog/ppfd/spider_farmer_se7000.jpg",
+    "file": "spider_farmer_se7000.jpg",
+    "bytes": 914694
+  },
+  "mars_hydro_ts1000": {
+    "id": "mars_hydro_ts1000",
+    "name": "Bundle Sale Mars Hydro TS1000 150W Dimmable Full Spectrum LED Grow Light + iControl Smart Controller Kits",
+    "source_url": "https://marshydroau.com/wp-content/uploads/2021/07/TS1000-PPFD.jpg",
+    "local_path": "/dsc-catalog/ppfd/mars_hydro_ts1000.jpg",
+    "ha_path": "/local/dsc-catalog/ppfd/mars_hydro_ts1000.jpg",
+    "file": "mars_hydro_ts1000.jpg",
+    "bytes": 1138587
+  }
+}

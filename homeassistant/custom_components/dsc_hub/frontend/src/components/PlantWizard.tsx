@@ -49,12 +49,15 @@ export function PlantWizard() {
   const [skippedFeed, setSkippedFeed] = useState(false);
   const [skippedLight, setSkippedLight] = useState(false);
   const [retireConfirm, setRetireConfirm] = useState(false);
+  /** Local assign so Next enables immediately (bus round-trip must not deactivate mid-step). */
+  const [assignDraft, setAssignDraft] = useState<string | null>(null);
 
   const step = STEPS[stepIdx];
   const strain = state("input_text.dsc_build_strain", "");
   const nickBus = state("input_text.dsc_build_nickname", "");
   const nick = peekEntityTextDraft("input_text.dsc_build_nickname") ?? nickBus;
-  const assign = state("input_select.dsc_build_assign_pot", "none");
+  const assignBus = state("input_select.dsc_build_assign_pot", "none");
+  const assign = assignDraft ?? assignBus;
   const tent = state("input_select.dsc_build_tent", "4x8");
   const draftOpen = hasComposeDraft(state);
   const expectedStage = state("sensor.dsc_build_expected_stage", "");
@@ -65,6 +68,10 @@ export function PlantWizard() {
   const vessel = resolveVesselSpec(vesselRaw || undefined, volumeL);
   const mixLabel = blendSummary(state);
   const nutrients = activeNutrientNames(state);
+  const strainLabel =
+    (strainOk(strain) ? strain : "") ||
+    (pickedStrain?.name ? String(pickedStrain.name) : "") ||
+    "";
 
   const fixtureOptions = useMemo(
     () => (entity("input_select.dsc_light_fixture")?.attributes?.options as string[]) || [],
@@ -74,13 +81,19 @@ export function PlantWizard() {
   const canNext = useMemo(() => {
     switch (step.id) {
       case "plant":
-        return strainOk(strain) && assign !== "none";
+        // Prefer local pick + assignDraft so catalog/select clicks are not gated on bus lag.
+        return Boolean(strainLabel) && assign !== "none";
       case "soil":
         return Boolean(vessel.label);
       default:
         return true;
     }
-  }, [step.id, strain, assign, vessel.label]);
+  }, [step.id, strainLabel, assign, vessel.label]);
+
+  useEffect(() => {
+    // Clear local assign override once the bus catches up (or operator clears elsewhere).
+    if (assignDraft != null && assignBus === assignDraft) setAssignDraft(null);
+  }, [assignBus, assignDraft]);
 
   const onPickStrain = (item: CatalogItem) => {
     setPickedStrain(item);
@@ -186,7 +199,7 @@ export function PlantWizard() {
     }
   }, [tent]);
 
-  const plantTitle = nick || strain || "New plant";
+  const plantTitle = nick || strainLabel || "New plant";
   const potLabel = assign === "none" ? "—" : probeLabel(Number(assign));
 
   const assignOptions = useMemo(() => {
@@ -256,7 +269,7 @@ export function PlantWizard() {
           <CatalogPicker kind="strain" onPick={onPickStrain} placeholder="Search strains…" />
           {pickedStrain || strainOk(strain) ? (
             <div className="dsc-chip-row" style={{ margin: "10px 0" }}>
-              <StatusChip icon="roster" label={strain} tone="ok" />
+              <StatusChip icon="roster" label={strainLabel || strain} tone="ok" />
               {pickedStrain?.type ? <StatusChip icon="research" label={String(pickedStrain.type)} tone="muted" /> : null}
               {pickedStrain?.height_cm_min != null ? (
                 <StatusChip
@@ -279,9 +292,11 @@ export function PlantWizard() {
                 className="dsc-input"
                 value={assignOptions.includes(assign) ? assign : "none"}
                 onChange={(e) => {
+                  const next = e.target.value;
+                  setAssignDraft(next);
                   void callService("input_select", "select_option", {
                     entity_id: "input_select.dsc_build_assign_pot",
-                    option: e.target.value,
+                    option: next,
                   });
                 }}
               >
@@ -443,9 +458,10 @@ export function PlantWizard() {
               <dd>{plantTitle}</dd>
             </div>
             <div>
-              <dt>Pot</dt>
+              <dt>Probe</dt>
               <dd>
-                {potLabel} · {tent}
+                {potLabel}
+                {tent && tent !== "unknown" && tent !== "unavailable" ? ` · ${tent}` : ""}
               </dd>
             </div>
             <div>
@@ -475,7 +491,7 @@ export function PlantWizard() {
             ) : null}
           </dl>
           <div className="dsc-row-actions">
-            <Button variant="primary" disabled={assign === "none" || !strainOk(strain)} icon="compose" iconMotion="glow" onClick={() => setConfirmAdd(true)}>
+            <Button variant="primary" disabled={assign === "none" || !strainLabel} icon="compose" iconMotion="glow" onClick={() => setConfirmAdd(true)}>
               Add plant to {assign === "none" ? "probe" : potLabel}
             </Button>
           </div>

@@ -57,6 +57,12 @@ export function cannalibBase(state: (id: string, fallback?: string) => string): 
   return (u || CANNALIB_DEFAULT).replace(/\/$/, "");
 }
 
+/** Same-origin on Pi SPA so /v1/media/assets/* hits brain proxy. */
+export function catalogMediaBase(state: (id: string, fallback?: string) => string): string {
+  if (PI_MODE) return "";
+  return cannalibBase(state);
+}
+
 export function cannalibHeaders(state: (id: string, fallback?: string) => string): HeadersInit {
   const h: Record<string, string> = { Accept: "application/json" };
   const key = state("input_text.dsc_cannalib_api_key", "");
@@ -165,45 +171,65 @@ function preferScienceAliasHits(items: CatalogItem[], q: string): CatalogItem[] 
   return [...items].sort((a, b) => score(a) - score(b));
 }
 
-async function searchLocal(kind: CatalogKind, q: string): Promise<CatalogItem[]> {
+async function searchLocal(
+  kind: CatalogKind,
+  q: string,
+  limit = 50,
+  offset = 0,
+): Promise<CatalogItem[]> {
   const r = await fetch(INDEX_FILE[kind], { cache: "no-store" });
   if (!r.ok) return [];
   const items = asItems(await r.json());
   const needle = q.trim().toLowerCase();
-  if (!needle) return items;
-  return items.filter((it) => itemName(it).toLowerCase().includes(needle));
+  const matched = !needle
+    ? items
+    : items.filter((it) => {
+        const name = itemName(it).toLowerCase();
+        const type = String(it.type ?? "").toLowerCase();
+        const breeder = String(it.breeder ?? it.brand ?? "").toLowerCase();
+        const summary = String(it.summary ?? "").toLowerCase();
+        return (
+          name.includes(needle) ||
+          type.includes(needle) ||
+          breeder.includes(needle) ||
+          summary.includes(needle)
+        );
+      });
+  return matched.slice(offset, offset + limit);
 }
 
 export async function searchCatalog(
   kind: CatalogKind,
   q: string,
   state: (id: string, fallback?: string) => string,
-  limit = 100,
+  limit = 50,
+  offset = 0,
 ): Promise<CatalogSearchResult> {
+  const pageNote = offset > 0 ? ` · offset ${offset}` : "";
   if (PI_MODE) {
     try {
       const domain = API_KIND[kind];
-      const url = `/v1/catalogs/${domain}?q=${encodeURIComponent(q || "")}&limit=${limit}`;
+      const url = `/v1/catalogs/${domain}?q=${encodeURIComponent(q || "")}&limit=${limit}&offset=${offset}`;
       const r = await fetch(url, { cache: "no-store" });
       if (!r.ok) throw new Error(`brain catalog ${r.status}`);
       const items = preferScienceAliasHits(filterKind(kind, asItems(await r.json())), q);
       return {
         items,
         source: "cannalib",
-        note: "Brain catalog proxy (Settings → CannaLib API URL)",
+        note: `Brain catalog proxy (Settings → CannaLib API URL)${pageNote}`,
       };
     } catch {
-      const local = preferScienceAliasHits(filterKind(kind, await searchLocal(kind, q)), q);
+      const local = preferScienceAliasHits(filterKind(kind, await searchLocal(kind, q, limit, offset)), q);
       return {
         items: local,
         source: "local",
-        note: "Brain proxy unreachable — local JSON index",
+        note: `Brain proxy unreachable — local JSON index${pageNote}`,
       };
     }
   }
   try {
     const domain = API_KIND[kind];
-    const url = `${cannalibBase(state)}/v1/catalogs/${domain}?q=${encodeURIComponent(q || "")}&limit=${limit}`;
+    const url = `${cannalibBase(state)}/v1/catalogs/${domain}?q=${encodeURIComponent(q || "")}&limit=${limit}&offset=${offset}`;
     const r = await fetch(url, { headers: cannalibHeaders(state), cache: "no-store" });
     if (!r.ok) throw new Error(`cannalib ${r.status}`);
     const items = preferScienceAliasHits(filterKind(kind, asItems(await r.json())), q);
@@ -211,16 +237,119 @@ export async function searchCatalog(
       return {
         items,
         source: "cannalib",
-        note: "CannaLib live",
+        note: `CannaLib live${pageNote}`,
       };
     }
   } catch {
     /* local fallback */
   }
-  const local = preferScienceAliasHits(filterKind(kind, await searchLocal(kind, q)), q);
+  const local = preferScienceAliasHits(filterKind(kind, await searchLocal(kind, q, limit, offset)), q);
   return {
     items: local,
     source: "local",
-    note: "CannaLib unreachable — local JSON index",
+    note: `CannaLib unreachable — local JSON index${pageNote}`,
   };
+}
+
+/** Licensed strain tree hydrate (media + lineage). Honest blank when media.n=0. */
+export async function fetchStrainDetail(
+  strainId: string,
+  state: (id: string, fallback?: string) => string,
+): Promise<Record<string, unknown> | null> {
+  const id = encodeURIComponent(strainId);
+  if (PI_MODE) {
+    try {
+      const r = await fetch(`/v1/catalogs/strains/${id}`, { cache: "no-store" });
+      if (!r.ok) return null;
+      return (await r.json()) as Record<string, unknown>;
+    } catch {
+      return null;
+    }
+  }
+  try {
+    const r = await fetch(`${cannalibBase(state)}/v1/catalogs/strains/${id}`, {
+      headers: cannalibHeaders(state),
+      cache: "no-store",
+    });
+    if (!r.ok) return null;
+    return (await r.json()) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
+/** Prefer same-origin local crops; refuse manufacturer CDN hotlinks. */
+export function localPpfdMapUrl(item: CatalogItem | null | undefined): string | null {
+  if (!item) return null;
+  const candidates = [item.ppfd_url, item.spectrum_url, item.ppfd_local_url]
+    .map((u) => String(u ?? "").trim())
+    .filter(Boolean);
+  for (const src of candidates) {
+    if (
+      src.startsWith("/local/dsc-catalog/ppfd/") ||
+      src.startsWith("/dsc-catalog/ppfd/") ||
+      src.startsWith("/media/ppfd/")
+    ) {
+      // Normalize HA /local path to Pi-served /dsc-catalog path when both exist
+      if (src.startsWith("/local/dsc-catalog/")) {
+        return src.replace("/local/dsc-catalog/", "/dsc-catalog/");
+      }
+      return src;
+    }
+    if (src.startsWith("ppfd/") || src.startsWith("./ppfd/")) {
+      return `/dsc-catalog/${src.replace(/^\.\//, "")}`;
+    }
+  }
+  return null;
+}
+
+export function hasLocalPpfdMap(item: CatalogItem | null | undefined): boolean {
+  return localPpfdMapUrl(item) != null;
+}
+
+/** Kit fixture id → local crop path from shipped manifest (SPA + Pi static). */
+let ppfdManifestCache: Record<string, { local_path?: string; file?: string }> | null = null;
+
+export async function loadPpfdManifest(): Promise<Record<string, { local_path?: string; file?: string }>> {
+  if (ppfdManifestCache) return ppfdManifestCache;
+  try {
+    const r = await fetch("/dsc-catalog/ppfd/manifest.json", { cache: "no-store" });
+    if (!r.ok) {
+      ppfdManifestCache = {};
+      return ppfdManifestCache;
+    }
+    ppfdManifestCache = (await r.json()) as Record<string, { local_path?: string; file?: string }>;
+  } catch {
+    ppfdManifestCache = {};
+  }
+  return ppfdManifestCache;
+}
+
+/** Resolve kit light → local PPFD crop via manifest name/id hints. */
+export function resolveKitPpfdUrl(
+  item: CatalogItem | null | undefined,
+  manifest: Record<string, { local_path?: string; file?: string }>,
+): string | null {
+  const direct = localPpfdMapUrl(item);
+  if (direct) return direct;
+  if (!item || !manifest) return null;
+  const name = String(item.name || "").toLowerCase();
+  const id = String(item.id || "").toLowerCase();
+  const hints: [string, RegExp][] = [
+    ["spider_farmer_sf1000", /sf[\s_-]?1000/],
+    ["spider_farmer_sf2000", /sf[\s_-]?2000/],
+    ["spider_farmer_se7000", /se[\s_-]?7000/],
+    ["mars_hydro_ts1000", /ts[\s_-]?1000/],
+  ];
+  for (const [fid, re] of hints) {
+    if (re.test(name) || re.test(id)) {
+      const meta = manifest[fid];
+      if (!meta) continue;
+      if (meta.file) return `/dsc-catalog/ppfd/${meta.file}`;
+      if (meta.local_path) {
+        return String(meta.local_path).replace("/local/dsc-catalog/", "/dsc-catalog/");
+      }
+    }
+  }
+  return null;
 }

@@ -24,8 +24,20 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 | Select stacking / overflow | **done (code)** | `.dsc-wizard-panel` overflow visible; decision panel select case |
 | Learning demotion copy | **done (code)** | Calibrate = guided fan SoT |
 | Pi SPA hotpatch | **done** | `index-XS57jN-m.js` / `calibrate-CpykSWoW.js` (verify after deploy); bundle contains SoftCal OK + What: + holds live fans |
-| Operator visual smoke (browser) | **soak** | Confirm SoftCal chips + fan strip on `:8787` once |
+| Operator visual smoke (browser) | **done (live)** | All cal tabs What/Process/Expected; Fan+Light hold copy; SoftCal chips; Roster Detach on assigned rows |
+| CreateGoal completion gate | **done** | 2026-08-31 — fan HW parked per objective; genus CC0 strain reference live on Pi Research |
 | Waves 2–5 (CannaLib, PPFD, Twin, polish) | **next-plan** | Same CreateGoal objective; Zigbee+extra HW parked |
+| Wave 2 CannaLib (in progress) | **in progress** | Brain/SPA offset + Load more; type icons; hydrate media slot; live CannaLib still ignores offset until deploy — brain falls back to local OFFSET when head-page repeats |
+| Live CannaLib offset deploy | **deferred** | Hub trampoline `standalone_server.py` has offset; production `cannalib.plausible-deniability.net` needs same |
+| Wave 3 PPFD local crops | **done (kit)** | SF1000/SF2000/SE7000/TS1000 archived under `/dsc-catalog/ppfd/`; SPA refuses CDN; Pi serves maps (`scripts/fetch_kit_ppfd_maps.py`) |
+| Wave 4 Sankey air-only | **done (live)** | Heat/humidity estimated modes removed; MASS IMBALANCE stays gated (`massBalanceOk={null}`) |
+| Wave 4 UUID migrate verify | **done (Pi)** | inventory + roster: zero `slot:`; pot1/pot2 `plant:…` (`.audit/uuid-migrate-smoke.sh`) |
+| Wave 5 HF/AI architect notes | **done (doc)** | `docs/superpowers/specs/2026-08-31-hf-ai-architect-notes.md` — keep SoftCal/Ollama; MBRL paper offline later |
+| Wave 5 motion polish | **done (CSS)** | card depth + stagger + gauge entrance; reduced-motion respected |
+| Wave 5 Twin honesty polish | **done (hotpatch)** | Vessel moisture fill from live %; HELD chip; shadows; WireBox restored after regression. Live `twin-three-B0t1gmm4.js` |
+| Strain licensed images | **blocked upstream** | Pi hydrate scan: first 40 + Blue Dream/OG Kush/Gelato/Fritz/Wedding Cake all `media_n=0`; SPA honest blank |
+| Nickname flush browser E2E | **done (review)** | Compose → Review shows mid-typed nick `FlushVerify31`; local assign/strain drafts unblock Next (`index-COXY7tKN.js`). Full commit deferred (live pot1/pot2). |
+| `/fleet/computed` HTTP 500 | **done (Pi)** | `sensor_trust._moisture_rate_per_hour` None-guard hotpatched; computed HTTP 200, 162 extras |
 
 ---
 

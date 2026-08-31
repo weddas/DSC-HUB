@@ -362,10 +362,19 @@ function LightParWizard() {
 
   return (
     <>
+      <CalOutcomeStrip
+        what="Map SF1000 brightness % → LUX/PAR at fixed canopy height."
+        process="Set height → Start → measure at 25 / 50 / 75 / 100% → save each step → finish turns fixture off."
+        expected="Brain light_par curve used for effective-off; incomplete steps leave nameplate behavior."
+      />
       <Card className="dsc-glass" title="SF1000 brightness response" icon="lighting">
         <p className="dsc-muted">
           At fixed canopy height, ramp SF1000 25→100%. Enter meter readings at each step. PAR optional if meter supports
           it.
+        </p>
+        <p className="dsc-honesty" style={{ marginTop: 8 }}>
+          <strong>Start holds the live SF1000</strong> at stepped brightness until you finish. Have the meter at canopy
+          height before confirming.
         </p>
         <label>
           Sensor height (cm)
@@ -426,6 +435,11 @@ function TankBiasPanel() {
 
   return (
     <Card className="dsc-glass" title="Tank EC / pH bias (N-023)" icon="learning">
+      <CalOutcomeStrip
+        what="Correct Water Tester EC/pH before stage-band checks (bias, not SoftCal)."
+        process="Rinse probe → known reference sample → set multiplier/bias → confirm normalized chips."
+        expected={`Normalized EC ${ecNorm} µS/cm · calibrated pH ${phCal}. Drift chase without a reference is dishonest.`}
+      />
       <p className="dsc-honesty">
         Raw Water Tester readings pass through a unit multiplier and additive bias before stage-band checks.
         Adjust bias after a probe rinse and a known reference sample — not to chase a drifting probe.

@@ -548,6 +548,14 @@ export function peekEntityTextDraft(entityId: string): string | undefined {
 export async function flushEntityTextDrafts(
   callService: (domain: string, service: string, data: Record<string, unknown>) => Promise<unknown> | unknown,
 ): Promise<void> {
+  // Prefer live DOM values (covers mid-typing when React onChange lagged or focus moved).
+  document.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>("[data-entity-id]").forEach((el) => {
+    const entityId = el.getAttribute("data-entity-id");
+    if (!entityId) return;
+    if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
+      entityTextDrafts.set(entityId, el.value);
+    }
+  });
   const active = document.activeElement;
   if (active instanceof HTMLElement) active.blur();
   const entries = [...entityTextDrafts.entries()];
@@ -611,7 +619,11 @@ export function EntityText({
   return (
     <label className={`dsc-target-num${!ok ? " is-disabled" : ""}`}>
       <span className="dsc-target-num-label">{label}</span>
-      {multiline ? <textarea rows={rows} {...bind} /> : <input type="text" {...bind} />}
+      {multiline ? (
+        <textarea rows={rows} data-entity-id={entityId} {...bind} />
+      ) : (
+        <input type="text" data-entity-id={entityId} {...bind} />
+      )}
     </label>
   );
 }

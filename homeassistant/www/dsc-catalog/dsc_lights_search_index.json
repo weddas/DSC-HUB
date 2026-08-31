@@ -64,11 +64,12 @@
       "wattage_w": 100.0,
       "ppf_umol_s": null,
       "efficacy_umol_j": 2.5,
-      "has_ppfd": false,
+      "has_ppfd": true,
       "has_spectrum": true,
-      "ppfd_url": null,
+      "ppfd_url": "/dsc-catalog/ppfd/spider_farmer_sf1000.jpg",
       "spectrum_url": "https://www.spider-farmer.com/wp-content/uploads/2026/06/Bridgelux-Diodes-Full-Spectrum-150x150.jpg",
-      "source": "sqlite"
+      "source": "sqlite",
+      "ppfd_local": true
     },
     {
       "id": "spider_farmer_light_2_packs_sf1000_100w_led_grow_lights_for_2x4",
@@ -79,9 +80,10 @@
       "efficacy_umol_j": 2.5,
       "has_ppfd": true,
       "has_spectrum": true,
-      "ppfd_url": "https://www.spider-farmer.com/wp-content/uploads/2023/06/SE5000-EVO-PPFD-MAP-120x120cm-600x600.jpg",
+      "ppfd_url": "/dsc-catalog/ppfd/spider_farmer_sf1000.jpg",
       "spectrum_url": "https://www.spider-farmer.com/wp-content/uploads/2021/05/EVO-SF1000-Samsung-lm301h-evo-led-grow-light-full-spectrum-1-150x150.jpg",
-      "source": "sqlite"
+      "source": "sqlite",
+      "ppfd_local": true
     },
     {
       "id": "mars_hydro_au_light_2packs_fc_e15000_led_grow_lights",
@@ -209,9 +211,10 @@
       "efficacy_umol_j": 2.7,
       "has_ppfd": true,
       "has_spectrum": true,
-      "ppfd_url": "https://www.spider-farmer.com/wp-content/uploads/2021/09/PPFD-MAP-of-SE3000-300W-Led-600x600.jpg",
+      "ppfd_url": "/dsc-catalog/ppfd/spider_farmer_sf2000.jpg",
       "spectrum_url": "https://www.spider-farmer.com/wp-content/uploads/2022/07/2024-Newest-Version-Spider-Farmer-Dimmable-Foldable-Full-Spectrum-300W-Led-Grow-Light-G-Series-G3000-For-3X3-600x600.jpg",
-      "source": "sqlite"
+      "source": "sqlite",
+      "ppfd_local": true
     },
     {
       "id": "spider_farmer_light_spider_farmer_2x2x6_60cm_x_60cm_x_180cm_indoor_grow_tent_white_2000d_oxford_clot",
@@ -274,9 +277,10 @@
       "efficacy_umol_j": 2.7,
       "has_ppfd": true,
       "has_spectrum": true,
-      "ppfd_url": "https://www.spider-farmer.com/wp-content/uploads/2021/05/SF2000-2512-PPFD-Map-Bridgelux-values-​​same-as-Samsung.jpg",
+      "ppfd_url": "/dsc-catalog/ppfd/spider_farmer_sf2000.jpg",
       "spectrum_url": "https://www.spider-farmer.com/wp-content/uploads/2021/05/Bridgelux-Diodes-Full-Spectrum.jpg",
-      "source": "sqlite"
+      "source": "sqlite",
+      "ppfd_local": true
     },
     {
       "id": "spider_farmer_light_sf_2000_led_grow_light",
@@ -287,9 +291,10 @@
       "efficacy_umol_j": 2.7,
       "has_ppfd": true,
       "has_spectrum": true,
-      "ppfd_url": "https://www.spider-farmer.com/wp-content/uploads/2021/05/SF2000-PPFD-150x150.jpg",
+      "ppfd_url": "/dsc-catalog/ppfd/spider_farmer_sf2000.jpg",
       "spectrum_url": "https://www.spider-farmer.com/wp-content/uploads/2021/05/Bridgelux-Diodes-Full-Spectrum-150x150.jpg",
-      "source": "sqlite"
+      "source": "sqlite",
+      "ppfd_local": true
     },
     {
       "id": "spider_farmer_light_spider_farmer_se_1000w_led_grow_light",
@@ -339,9 +344,10 @@
       "efficacy_umol_j": null,
       "has_ppfd": true,
       "has_spectrum": false,
-      "ppfd_url": "https://marshydroau.com/wp-content/uploads/2021/07/TS1000-PPFD-150x150.jpg",
+      "ppfd_url": "/dsc-catalog/ppfd/mars_hydro_ts1000.jpg",
       "spectrum_url": null,
-      "source": "sqlite"
+      "source": "sqlite",
+      "ppfd_local": true
     },
     {
       "id": "spider_farmer_light_spider_farmer_cool_mist_humidifier_for_plants",
@@ -417,9 +423,10 @@
       "efficacy_umol_j": 2.5,
       "has_ppfd": true,
       "has_spectrum": true,
-      "ppfd_url": "https://www.spider-farmer.com/wp-content/uploads/2026/03/SF1000-2512-PPFD-Map-Bridgelux-values-​​same-as-Samsung-phone.jpg",
+      "ppfd_url": "/dsc-catalog/ppfd/spider_farmer_sf1000.jpg",
       "spectrum_url": "https://www.spider-farmer.com/wp-content/uploads/2021/05/EVO-SF1000-Samsung-lm301h-evo-led-grow-light-full-spectrum.jpg",
-      "source": "sqlite"
+      "source": "sqlite",
+      "ppfd_local": true
     },
     {
       "id": "spider_farmer_light_sf_1000_led_grow_light",
@@ -430,9 +437,10 @@
       "efficacy_umol_j": null,
       "has_ppfd": true,
       "has_spectrum": true,
-      "ppfd_url": "https://www.spider-farmer.com/wp-content/uploads/2021/05/SF1000-2512-PPFD-Map-Bridgelux-values-​​same-as-Samsung-150x150.jpg",
+      "ppfd_url": "/dsc-catalog/ppfd/spider_farmer_sf1000.jpg",
       "spectrum_url": "https://www.spider-farmer.com/wp-content/uploads/2021/05/Bridgelux-Diodes-Full-Spectrum-150x150.jpg",
-      "source": "sqlite"
+      "source": "sqlite",
+      "ppfd_local": true
     },
     {
       "id": "spider_farmer_light_sf1000d",
@@ -443,9 +451,10 @@
       "efficacy_umol_j": 2.5,
       "has_ppfd": true,
       "has_spectrum": true,
-      "ppfd_url": "https://www.spider-farmer.com/wp-content/uploads/2023/06/SE5000-EVO-PPFD-MAP-120x120cm-600x600.jpg",
+      "ppfd_url": "/dsc-catalog/ppfd/spider_farmer_sf1000.jpg",
       "spectrum_url": "https://www.spider-farmer.com/wp-content/uploads/2021/05/Bridgelux-Diodes-Full-Spectrum-150x150.jpg",
-      "source": "sqlite"
+      "source": "sqlite",
+      "ppfd_local": true
     },
     {
       "id": "spider_farmer_light_sf_4000_led_grow_light",
@@ -480,11 +489,12 @@
       "wattage_w": 100.0,
       "ppf_umol_s": null,
       "efficacy_umol_j": null,
-      "has_ppfd": false,
+      "has_ppfd": true,
       "has_spectrum": true,
-      "ppfd_url": null,
+      "ppfd_url": "/dsc-catalog/ppfd/spider_farmer_sf1000.jpg",
       "spectrum_url": "https://pinterest.com/pin/create/button/?url=https://www.spider-farmer.com/products/2026-smart-control-grow-kit-sf1000d-dimmable-full-spectrum-led-4-ventilation-system-6-clip-fan-2-3x2-3-grow-tent-app-control-via-wi-fi-bluetooth-with-ggs-s-station/&media=https://www.spider-farmer.com/wp-content/uploads/2026/07/SF1000D-smart-kits.png",
-      "source": "sqlite"
+      "source": "sqlite",
+      "ppfd_local": true
     },
     {
       "id": "spider_farmer_light_200x_phone_microscope_lens_magnifier_with_led_uv_light",
@@ -729,9 +739,10 @@
       "efficacy_umol_j": 2.7,
       "has_ppfd": true,
       "has_spectrum": true,
-      "ppfd_url": "https://www.spider-farmer.com/wp-content/uploads/2022/12/SF2000PRO-2601-PPFD-Map-Bridgelux-values-__same-as-Samsung-150x150.jpg",
+      "ppfd_url": "/dsc-catalog/ppfd/spider_farmer_sf2000.jpg",
       "spectrum_url": "https://www.spider-farmer.com/wp-content/uploads/2022/12/Bridgelux-Diodes-Full-Spectrum-150x150.jpg",
-      "source": "sqlite"
+      "source": "sqlite",
+      "ppfd_local": true
     },
     {
       "id": "spider_farmer_light_spider_farmer_glowr40_deep_red_spectrum_660nm_supplemental_led_grow_light",
@@ -1652,9 +1663,10 @@
       "efficacy_umol_j": null,
       "has_ppfd": true,
       "has_spectrum": false,
-      "ppfd_url": "https://marshydroau.com/wp-content/uploads/2021/07/TS1000-PPFD.jpg",
+      "ppfd_url": "/dsc-catalog/ppfd/mars_hydro_ts1000.jpg",
       "spectrum_url": null,
-      "source": "sqlite"
+      "source": "sqlite",
+      "ppfd_local": true
     },
     {
       "id": "mars_hydro_au_light_ts_1000_led_with_icontrol_kits",
@@ -1665,9 +1677,10 @@
       "efficacy_umol_j": null,
       "has_ppfd": true,
       "has_spectrum": false,
-      "ppfd_url": "https://marshydroau.com/wp-content/uploads/2021/07/TS1000-PPFD-150x150.jpg",
+      "ppfd_url": "/dsc-catalog/ppfd/mars_hydro_ts1000.jpg",
       "spectrum_url": null,
-      "source": "sqlite"
+      "source": "sqlite",
+      "ppfd_local": true
     },
     {
       "id": "spider_farmer_light_bundle_sale_spider_farmer_ggs_ac10_smart_power_strip_drip_irrigation_set_5_in_1_",
@@ -4978,11 +4991,12 @@
       "wattage_w": 150.0,
       "ppf_umol_s": 343.0,
       "efficacy_umol_j": 2.3,
-      "has_ppfd": false,
+      "has_ppfd": true,
       "has_spectrum": true,
-      "ppfd_url": null,
+      "ppfd_url": "/dsc-catalog/ppfd/mars_hydro_ts1000.jpg",
       "spectrum_url": "https://marshydroau.com/wp-content/uploads/2021/07/mars-hydro-ts-1000-best-dimmable-full-sepctrum-led-grow-light-for-indoor-plants-spectrum-150x150.jpg",
-      "source": "sqlite"
+      "source": "sqlite",
+      "ppfd_local": true
     },
     {
       "id": "mars_hydro_au_light_ts1000_full_grow_kits",
@@ -4993,9 +5007,10 @@
       "efficacy_umol_j": null,
       "has_ppfd": true,
       "has_spectrum": true,
-      "ppfd_url": "https://marshydroau.com/wp-content/uploads/2021/07/TS-1000-PPFD-MAP-1-150x150.jpg",
+      "ppfd_url": "/dsc-catalog/ppfd/mars_hydro_ts1000.jpg",
       "spectrum_url": "https://marshydroau.com/wp-content/uploads/2024/07/Mars-Hydro-TS1000-OPTIMIZED-FULL-SPECTRUM-Rich-red-light-significantly-boosts-plant-yield-1-scaled-1.jpg",
-      "source": "sqlite"
+      "source": "sqlite",
+      "ppfd_local": true
     },
     {
       "id": "mars_hydro_au_light_ts600_led_grow_lights_60x60x140cm_grow_tent_combo",
@@ -5773,9 +5788,10 @@
       "efficacy_umol_j": null,
       "has_ppfd": true,
       "has_spectrum": true,
-      "ppfd_url": "https://www.spider-farmer.com/wp-content/uploads/2021/09/SE7000-evo-led-PPFD-MAP-150x150.jpg",
+      "ppfd_url": "/dsc-catalog/ppfd/spider_farmer_se7000.jpg",
       "spectrum_url": "https://www.spider-farmer.com/wp-content/uploads/2021/09/SE7000-EVO-Spectrum-Ratio-150x150.jpg",
-      "source": "sqlite"
+      "source": "sqlite",
+      "ppfd_local": true
     },
     {
       "id": "spider_farmer_light_pre_owned_spider_farmer_g5000_480w_wifi_bluetooth_app_controlled_dimmable_cost_e",
@@ -5812,9 +5828,10 @@
       "efficacy_umol_j": null,
       "has_ppfd": true,
       "has_spectrum": true,
-      "ppfd_url": "https://www.spider-farmer.com/wp-content/uploads/2021/12/NEW-SE1000W-EVO-PPFD-Map-150x150.jpg",
+      "ppfd_url": "/dsc-catalog/ppfd/mars_hydro_ts1000.jpg",
       "spectrum_url": "https://www.spider-farmer.com/wp-content/uploads/2021/12/SE1000W-EVO-OPTIMIZED-SPECTRUM-150x150.jpg",
-      "source": "sqlite"
+      "source": "sqlite",
+      "ppfd_local": true
     },
     {
       "id": "spider_farmer_light_prime_big_deal_i_spider_farmer_se3000_300w_led_grow_light_full_spectrum_samsung_",
@@ -5864,9 +5881,10 @@
       "efficacy_umol_j": 2.7,
       "has_ppfd": true,
       "has_spectrum": true,
-      "ppfd_url": "https://www.spider-farmer.com/wp-content/uploads/2022/12/SF2000PRO-2601-PPFD-Map-Bridgelux-values-__same-as-Samsung-150x150.jpg",
+      "ppfd_url": "/dsc-catalog/ppfd/spider_farmer_sf2000.jpg",
       "spectrum_url": "https://pinterest.com/pin/create/button/?url=https://www.spider-farmer.com/products/sf2000pro-200w-full-spectrum-dimmable-led/&media=https://www.spider-farmer.com/wp-content/uploads/2022/12/Spider-Farmer-New-SF2000Pro-2601-LED-Grow-Light.jpg",
-      "source": "sqlite"
+      "source": "sqlite",
+      "ppfd_local": true
     },
     {
       "id": "spider_farmer_light_pre_owned_spider_farmer_ggs_ac10_power_strip_with_10_outlets",
@@ -5929,9 +5947,10 @@
       "efficacy_umol_j": 2.9,
       "has_ppfd": true,
       "has_spectrum": true,
-      "ppfd_url": "https://www.spider-farmer.com/wp-content/uploads/2021/09/SE7000-evo-led-PPFD-MAP-150x150.jpg",
+      "ppfd_url": "/dsc-catalog/ppfd/spider_farmer_se7000.jpg",
       "spectrum_url": "https://www.spider-farmer.com/wp-content/uploads/2021/09/SE7000-EVO-Spectrum-Ratio-150x150.jpg",
-      "source": "sqlite"
+      "source": "sqlite",
+      "ppfd_local": true
     },
     {
       "id": "spider_farmer_light_pre_owned_sf2000_led_grow_light",
@@ -5942,9 +5961,10 @@
       "efficacy_umol_j": 2.7,
       "has_ppfd": true,
       "has_spectrum": true,
-      "ppfd_url": "https://www.spider-farmer.com/wp-content/uploads/2021/05/EVO-SF2000-PPFD1-150x150.jpg",
+      "ppfd_url": "/dsc-catalog/ppfd/spider_farmer_sf2000.jpg",
       "spectrum_url": "https://www.spider-farmer.com/wp-content/uploads/2021/05/Spider-Farmer-sf2000-200W-Full-Spectrum-led-grow-light-1200x1200.jpg",
-      "source": "sqlite"
+      "source": "sqlite",
+      "ppfd_local": true
     },
     {
       "id": "spider_farmer_light_pre_owned_upgraded_spider_farmer_3x3x6_90cm_x_90cm_x_180cm_indoor_grow_tent_1680",
@@ -6280,9 +6300,10 @@
       "efficacy_umol_j": 2.7,
       "has_ppfd": true,
       "has_spectrum": true,
-      "ppfd_url": "https://www.spider-farmer.com/wp-content/uploads/2022/12/SF2000-pro-samsung-lm301h-evo-PPFD.jpg",
+      "ppfd_url": "/dsc-catalog/ppfd/spider_farmer_sf2000.jpg",
       "spectrum_url": "https://www.spider-farmer.com/wp-content/uploads/2022/07/2024-Newest-Version-Spider-Farmer-Dimmable-Foldable-Full-Spectrum-300W-Led-Grow-Light-G-Series-G3000-For-3X3-600x600.jpg",
-      "source": "sqlite"
+      "source": "sqlite",
+      "ppfd_local": true
     },
     {
       "id": "spider_farmer_light_sf300_seed_starting_kit",
@@ -6410,9 +6431,10 @@
       "efficacy_umol_j": null,
       "has_ppfd": true,
       "has_spectrum": true,
-      "ppfd_url": "https://www.spider-farmer.com/wp-content/uploads/2021/09/SE7000-evo-led-PPFD-MAP-600x600.jpg",
+      "ppfd_url": "/dsc-catalog/ppfd/spider_farmer_sf2000.jpg",
       "spectrum_url": "https://www.spider-farmer.com/wp-content/uploads/2022/01/2024-Newest-Version-Spider-Farmer-Dimmable-Foldable-Full-Spectrum-1000W-Led-Grow-Light-G-Series-G1000W-Precision-Dimming-Box-1-600x600.jpg",
-      "source": "sqlite"
+      "source": "sqlite",
+      "ppfd_local": true
     },
     {
       "id": "spider_farmer_light_g4500_dwc_hydroponic_system_7_gallon_4_bucket_ggs_ac5",
@@ -6449,9 +6471,10 @@
       "efficacy_umol_j": null,
       "has_ppfd": true,
       "has_spectrum": true,
-      "ppfd_url": "https://www.spider-farmer.com/wp-content/uploads/2023/03/NEW-SE4500-320W-PPFD-MAP-600x600.jpg",
+      "ppfd_url": "/dsc-catalog/ppfd/spider_farmer_se7000.jpg",
       "spectrum_url": "https://www.spider-farmer.com/wp-content/uploads/2025/04/Full-Spectrum-730W-Led-Grow-Light-SE-Series-SE7000-150x150.jpg",
-      "source": "sqlite"
+      "source": "sqlite",
+      "ppfd_local": true
     },
     {
       "id": "spider_farmer_light_smart_hydroponic_grow_tent_kit_dwc_system_with_g8600_800w_led_2_clip_fans_4_7_ga",
@@ -6722,9 +6745,10 @@
       "efficacy_umol_j": 2.9,
       "has_ppfd": true,
       "has_spectrum": true,
-      "ppfd_url": "https://www.spider-farmer.com/wp-content/uploads/2021/05/SF4000-2512-PPFD-Map-Bridgelux-values-​​same-as-Samsung.jpg",
+      "ppfd_url": "/dsc-catalog/ppfd/spider_farmer_se7000.jpg",
       "spectrum_url": "https://www.spider-farmer.com/wp-content/uploads/2022/01/2024-Newest-Version-Spider-Farmer-Dimmable-Foldable-Full-Spectrum-1000W-Led-Grow-Light-G-Series-G1000W-Precision-Dimming-Box-1.jpg",
-      "source": "sqlite"
+      "source": "sqlite",
+      "ppfd_local": true
     },
     {
       "id": "spider_farmer_light_spider_farmer_5x5x6_5_complete_grow_tent_kit_i_se7000_evo_730w_led_grow_light_i_",
@@ -6735,9 +6759,10 @@
       "efficacy_umol_j": null,
       "has_ppfd": true,
       "has_spectrum": true,
-      "ppfd_url": "https://www.spider-farmer.com/wp-content/uploads/2021/09/SE7000-evo-led-PPFD-MAP-150x150.jpg",
+      "ppfd_url": "/dsc-catalog/ppfd/spider_farmer_se7000.jpg",
       "spectrum_url": "https://www.spider-farmer.com/wp-content/uploads/2022/01/2024-Newest-Version-Spider-Farmer-Dimmable-Foldable-Full-Spectrum-1000W-Led-Grow-Light-G-Series-G1000W-Precision-Dimming-Box-1-600x600.jpg",
-      "source": "sqlite"
+      "source": "sqlite",
+      "ppfd_local": true
     },
     {
       "id": "spider_farmer_light_5l_humidifier_ggs_ac5_power_strip_kit",
@@ -6852,9 +6877,10 @@
       "efficacy_umol_j": null,
       "has_ppfd": true,
       "has_spectrum": true,
-      "ppfd_url": "https://www.spider-farmer.com/wp-content/uploads/2021/05/SF2000-2512-PPFD-Map-Bridgelux-values-​​same-as-Samsung-150x150.jpg",
+      "ppfd_url": "/dsc-catalog/ppfd/spider_farmer_sf2000.jpg",
       "spectrum_url": "https://www.spider-farmer.com/wp-content/uploads/2022/07/2024-Newest-Version-Spider-Farmer-Dimmable-Foldable-Full-Spectrum-300W-Led-Grow-Light-G-Series-G3000-Precision-Dimming-Box-600x600.jpg",
-      "source": "sqlite"
+      "source": "sqlite",
+      "ppfd_local": true
     },
     {
       "id": "spider_farmer_light_sf2000pro_200w_led_with_90x90x180cm_pro_grow_tent_for_3_6_plants_setup",
@@ -6865,9 +6891,10 @@
       "efficacy_umol_j": null,
       "has_ppfd": true,
       "has_spectrum": true,
-      "ppfd_url": "https://www.spider-farmer.com/wp-content/uploads/2022/12/SF2000PRO-2601-PPFD-Map-Bridgelux-values-__same-as-Samsung-150x150.jpg",
+      "ppfd_url": "/dsc-catalog/ppfd/spider_farmer_sf2000.jpg",
       "spectrum_url": "https://www.spider-farmer.com/wp-content/uploads/2022/07/2024-Newest-Version-Spider-Farmer-Dimmable-Foldable-Full-Spectrum-300W-Led-Grow-Light-G-Series-G3000-Precision-Dimming-Box-600x600.jpg",
-      "source": "sqlite"
+      "source": "sqlite",
+      "ppfd_local": true
     },
     {
       "id": "spider_farmer_light_complete_grow_tent_kit_sf1000_evo_100w_led_lighting_2x2_grow_tent_for_1_2_plant_",
@@ -6878,9 +6905,10 @@
       "efficacy_umol_j": 2.5,
       "has_ppfd": true,
       "has_spectrum": true,
-      "ppfd_url": "https://www.spider-farmer.com/wp-content/uploads/2021/05/SF1000-2512-PPFD-Map-Bridgelux-values-​​same-as-Samsung-150x150.jpg",
+      "ppfd_url": "/dsc-catalog/ppfd/spider_farmer_sf1000.jpg",
       "spectrum_url": "https://www.spider-farmer.com/wp-content/uploads/2022/01/2024-Newest-Version-Spider-Farmer-Dimmable-Foldable-Full-Spectrum-1000W-Led-Grow-Light-G-Series-G1000W-Precision-Dimming-Box-1-600x600.jpg",
-      "source": "sqlite"
+      "source": "sqlite",
+      "ppfd_local": true
     },
     {
       "id": "spider_farmer_light_complete_grow_tent_kit_se1500_evo_150w_led_lighting_2x2_grow_tent_for_1_2_plant_",
@@ -7305,11 +7333,12 @@
       "wattage_w": 100.0,
       "ppf_umol_s": 245.7,
       "efficacy_umol_j": null,
-      "has_ppfd": false,
+      "has_ppfd": true,
       "has_spectrum": true,
-      "ppfd_url": null,
+      "ppfd_url": "/dsc-catalog/ppfd/spider_farmer_sf1000.jpg",
       "spectrum_url": "https://cdn.shopify.com/s/files/1/0566/5252/9717/files/Bridgelux-Diodes-Full-Spectrum-1000x1000_68e2c276-6452-4f32-8769-91c2524ed84a.jpg?v=1784099087",
-      "source": "sqlite"
+      "source": "sqlite",
+      "ppfd_local": true
     },
     {
       "id": "growkings_light_spider_farmer_sf2000_led_grow_light_200w",
@@ -7320,9 +7349,10 @@
       "efficacy_umol_j": null,
       "has_ppfd": true,
       "has_spectrum": true,
-      "ppfd_url": "https://cdn.shopify.com/s/files/1/0566/5252/9717/files/SF2000-PPFD-1000x1000.jpg?v=1784095939",
+      "ppfd_url": "/dsc-catalog/ppfd/spider_farmer_sf2000.jpg",
       "spectrum_url": "https://cdn.shopify.com/s/files/1/0566/5252/9717/files/Bridgelux-Diodes-Full-Spectrum-1000x1000.jpg?v=1784095938",
-      "source": "sqlite"
+      "source": "sqlite",
+      "ppfd_local": true
     },
     {
       "id": "growkings_light_spider_farmer_sf300_led_grow_light_33w",
@@ -7411,9 +7441,10 @@
       "efficacy_umol_j": 2.7,
       "has_ppfd": true,
       "has_spectrum": true,
-      "ppfd_url": "https://www.spider-farmer.com/wp-content/uploads/2022/12/EVO-SF2000-Pro-PPFD-150x150.jpg",
+      "ppfd_url": "/dsc-catalog/ppfd/spider_farmer_sf2000.jpg",
       "spectrum_url": "https://www.spider-farmer.com/wp-content/uploads/2022/07/2024-Newest-Version-Spider-Farmer-Dimmable-Foldable-Full-Spectrum-300W-Led-Grow-Light-G-Series-G3000-For-3X3-600x600.jpg",
-      "source": "sqlite"
+      "source": "sqlite",
+      "ppfd_local": true
     },
     {
       "id": "spider_farmer_light_sf1000_evo_smart_complete_grow_tent_kit_60x60x180pro_1_2_plant_setup",
@@ -7424,9 +7455,10 @@
       "efficacy_umol_j": null,
       "has_ppfd": true,
       "has_spectrum": true,
-      "ppfd_url": "https://www.spider-farmer.com/wp-content/uploads/2021/05/SF1000-2512-PPFD-Map-Bridgelux-values-​​same-as-Samsung-150x150.jpg",
+      "ppfd_url": "/dsc-catalog/ppfd/spider_farmer_sf1000.jpg",
       "spectrum_url": "https://www.spider-farmer.com/wp-content/uploads/2024/08/2024-Newest-Version-Spider-Farmer-Dimmable-Foldable-Full-Spectrum-800W-Led-Grow-Light-G-Series-G8600-Precision-Dimming-Box-600x600.jpg",
-      "source": "sqlite"
+      "source": "sqlite",
+      "ppfd_local": true
     },
     {
       "id": "spider_farmer_light_spider_farmer_s_station_controller_dehumidifier_kit",
@@ -7552,11 +7584,12 @@
       "wattage_w": 100.0,
       "ppf_umol_s": null,
       "efficacy_umol_j": null,
-      "has_ppfd": false,
+      "has_ppfd": true,
       "has_spectrum": true,
-      "ppfd_url": null,
+      "ppfd_url": "/dsc-catalog/ppfd/spider_farmer_sf1000.jpg",
       "spectrum_url": "https://pinterest.com/pin/create/button/?url=https://www.spider-farmer.com/products/sf1000-led-grow-light-full-spectrum-70x70cm-grow-tent-kits-carbon-filter-indoor/&media=https://www.spider-farmer.com/wp-content/uploads/2021/05/SF-1000-Kits-New-Dioleds-1.png",
-      "source": "sqlite"
+      "source": "sqlite",
+      "ppfd_local": true
     },
     {
       "id": "spider_farmer_light_spider_farmer_sf1000_led_complete_grow_tent_kits_with_temperature_humidity_contr",
@@ -7565,11 +7598,12 @@
       "wattage_w": 100.0,
       "ppf_umol_s": null,
       "efficacy_umol_j": null,
-      "has_ppfd": false,
+      "has_ppfd": true,
       "has_spectrum": true,
-      "ppfd_url": null,
+      "ppfd_url": "/dsc-catalog/ppfd/spider_farmer_sf1000.jpg",
       "spectrum_url": "https://www.spider-farmer.com/wp-content/uploads/2022/01/Spider-Farmer-G-1000w-Foldable-Full-Spectrum-Cost-Effective-Led-Grow-Lights_1-600x600.jpg",
-      "source": "sqlite"
+      "source": "sqlite",
+      "ppfd_local": true
     },
     {
       "id": "spider_farmer_light_spider_farmer_sf2000_complete_grow_tent_kits_with_temperature_humidity_controlle",
@@ -7580,9 +7614,10 @@
       "efficacy_umol_j": null,
       "has_ppfd": true,
       "has_spectrum": true,
-      "ppfd_url": "https://www.spider-farmer.com/wp-content/uploads/2021/05/SF4000-2512-PPFD-Map-Bridgelux-values-​​same-as-Samsung-600x600.jpg",
+      "ppfd_url": "/dsc-catalog/ppfd/spider_farmer_sf2000.jpg",
       "spectrum_url": "https://www.spider-farmer.com/wp-content/uploads/2022/01/2024-Newest-Version-Spider-Farmer-Dimmable-Foldable-Full-Spectrum-1000W-Led-Grow-Light-G-Series-G1000W-Precision-Dimming-Box-1-600x600.jpg",
-      "source": "sqlite"
+      "source": "sqlite",
+      "ppfd_local": true
     },
     {
       "id": "spider_farmer_light_new_sf2000_led_grow_light_2x4_grow_tent_kits",
@@ -7591,11 +7626,12 @@
       "wattage_w": 100.0,
       "ppf_umol_s": null,
       "efficacy_umol_j": null,
-      "has_ppfd": false,
+      "has_ppfd": true,
       "has_spectrum": true,
-      "ppfd_url": null,
+      "ppfd_url": "/dsc-catalog/ppfd/spider_farmer_sf2000.jpg",
       "spectrum_url": "https://www.spider-farmer.com/wp-content/uploads/2022/07/2024-Newest-Version-Spider-Farmer-Dimmable-Foldable-Full-Spectrum-300W-Led-Grow-Light-G-Series-G3000-Precision-Dimming-Box-600x600.jpg",
-      "source": "sqlite"
+      "source": "sqlite",
+      "ppfd_local": true
     },
     {
       "id": "spider_farmer_light_spider_farmer_4_inch_quiet_inline_duct_fan_with_temperature_humidity_controller",
@@ -8618,11 +8654,12 @@
       "wattage_w": 730.0,
       "ppf_umol_s": null,
       "efficacy_umol_j": null,
-      "has_ppfd": false,
+      "has_ppfd": true,
       "has_spectrum": true,
-      "ppfd_url": null,
+      "ppfd_url": "/dsc-catalog/ppfd/spider_farmer_se7000.jpg",
       "spectrum_url": "https://www.spider-farmer.com/wp-content/uploads/2026/05/Spider-Farmer-Supplemental-IR-LED-Light-Bar-Set-for-Plant_spectrum_60cm_1-150x150.jpg",
-      "source": "sqlite"
+      "source": "sqlite",
+      "ppfd_local": true
     },
     {
       "id": "spider_farmer_light_sf_1000_led_grow_light_and_uvr3016_supplemental_light_bars",
@@ -8633,9 +8670,10 @@
       "efficacy_umol_j": null,
       "has_ppfd": true,
       "has_spectrum": true,
-      "ppfd_url": "https://www.spider-farmer.com/wp-content/uploads/2026/05/SF1000-2512-PPFD-Map-Bridgelux-values-__same-as-Samsung-150x150.jpg",
+      "ppfd_url": "/dsc-catalog/ppfd/spider_farmer_sf1000.jpg",
       "spectrum_url": "https://www.spider-farmer.com/wp-content/uploads/2026/05/Spider-Farmer-Supplemental-IR-LED-Light-Bar-Set-for-Plant_spectrum_60cm_1-150x150.jpg",
-      "source": "sqlite"
+      "source": "sqlite",
+      "ppfd_local": true
     },
     {
       "id": "spider_farmer_light_sf_2000_led_grow_light_and_uvr3016_supplemental_light_bars",
@@ -8646,9 +8684,10 @@
       "efficacy_umol_j": null,
       "has_ppfd": true,
       "has_spectrum": true,
-      "ppfd_url": "https://www.spider-farmer.com/wp-content/uploads/2021/05/SF2000-PPFD-150x150.jpg",
+      "ppfd_url": "/dsc-catalog/ppfd/spider_farmer_sf2000.jpg",
       "spectrum_url": "https://www.spider-farmer.com/wp-content/uploads/2026/05/Spider-Farmer-Supplemental-IR-LED-Light-Bar-Set-for-Plant_spectrum_60cm_1-150x150.jpg",
-      "source": "sqlite"
+      "source": "sqlite",
+      "ppfd_local": true
     },
     {
       "id": "spider_farmer_light_sf_7000_led_grow_light_and_uvr6030_supplemental_light_bars",
@@ -8906,9 +8945,10 @@
       "efficacy_umol_j": null,
       "has_ppfd": true,
       "has_spectrum": false,
-      "ppfd_url": "https://marshydroau.com/wp-content/uploads/2021/07/TS-1000-PPFD-MAP-1-150x150.jpg",
+      "ppfd_url": "/dsc-catalog/ppfd/mars_hydro_ts1000.jpg",
       "spectrum_url": null,
-      "source": "sqlite"
+      "source": "sqlite",
+      "ppfd_local": true
     },
     {
       "id": "mars_hydro_au_light_mars_hydro_tsl2000_led_smart_grow_light_60x120x180cm_complete_grow_tent_kits_wit",
@@ -8945,9 +8985,10 @@
       "efficacy_umol_j": null,
       "has_ppfd": true,
       "has_spectrum": false,
-      "ppfd_url": "https://marshydroau.com/wp-content/uploads/2021/07/TS-1000-PPFD-MAP-1-150x150.jpg",
+      "ppfd_url": "/dsc-catalog/ppfd/mars_hydro_ts1000.jpg",
       "spectrum_url": null,
-      "source": "sqlite"
+      "source": "sqlite",
+      "ppfd_local": true
     },
     {
       "id": "mars_hydro_au_light_2025_mars_hydro_ifresh_4_inch_inline_duct_fan_and_refillable_carbon_filter_combo",

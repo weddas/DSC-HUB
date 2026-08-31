@@ -4,7 +4,7 @@ import { CatalogPicker } from "./CatalogPicker";
 import { Button, Card, StatusChip } from "./ui";
 import { useEntityBus } from "../hooks/useEntityBus";
 import { useFleetActions } from "../hooks/useFleetActions";
-import { searchCatalog, type CatalogItem, type CatalogKind } from "../lib/catalog";
+import { catalogMediaBase, fetchStrainDetail, hasLocalPpfdMap, loadPpfdManifest, localPpfdMapUrl, resolveKitPpfdUrl, searchCatalog, type CatalogItem, type CatalogKind } from "../lib/catalog";
 import { applyCatalogPick, applyLightPick } from "../lib/composePlantLogic";
 
 const DOMAINS: { id: CatalogKind; label: string }[] = [
@@ -67,7 +67,7 @@ function fieldValue(item: CatalogItem, key: string): string {
     case "ppe":
       return rec.efficacy_umol_j != null ? String(rec.efficacy_umol_j) : "—";
     case "ppfd":
-      return rec.has_ppfd || rec.ppfd_url ? "yes" : "—";
+      return hasLocalPpfdMap(rec) ? "local crop" : "—";
     case "composition":
       if (typeof rec.composition === "string") return rec.composition;
       if (rec.composition && typeof rec.composition === "object") {
@@ -137,6 +137,30 @@ function compareFields(kind: CatalogKind): { key: string; label: string }[] {
   }
 }
 
+function licensedMediaUrls(
+  detail: Record<string, unknown> | null,
+  base: string,
+): string[] {
+  if (!detail) return [];
+  const evidence = detail.evidence as { media?: { sample?: unknown[] } } | undefined;
+  const sample = evidence?.media?.sample;
+  if (!Array.isArray(sample)) return [];
+  const out: string[] = [];
+  for (const raw of sample) {
+    if (!raw || typeof raw !== "object") continue;
+    const row = raw as Record<string, unknown>;
+    const entity = String(row.entity_id ?? row.kind ?? "").toLowerCase();
+    if (entity.includes("comparative")) continue;
+    const license = String(row.license ?? row.license_id ?? row.license_type ?? "").toUpperCase();
+    if (license && !/(CC0|CC_BY|PUBLIC_DOMAIN)/.test(license)) continue;
+    const src = String(row.source_url ?? row.url ?? row.path ?? "").trim();
+    if (!src) continue;
+    if (src.startsWith("/")) out.push(`${base.replace(/\/$/, "")}${src}`);
+    else if (src.startsWith("http")) out.push(src);
+  }
+  return out.slice(0, 3);
+}
+
 export function CatalogResearch() {
   const { state, entity } = useEntityBus();
   const { callService } = useFleetActions();
@@ -146,13 +170,64 @@ export function CatalogResearch() {
   const [compare, setCompare] = useState<CatalogItem[]>([]);
   const [recent, setRecent] = useState<CatalogItem[]>([]);
   const [sourceNote, setSourceNote] = useState("");
+  const [hydrate, setHydrate] = useState<Record<string, unknown> | null>(null);
+  const [hydrateNote, setHydrateNote] = useState("");
+  const [ppfdManifest, setPpfdManifest] = useState<Record<string, { local_path?: string; file?: string }>>({});
   const fields = useMemo(() => compareFields(kind), [kind]);
+  const mediaUrls = useMemo(
+    () => licensedMediaUrls(hydrate, catalogMediaBase(state)),
+    [hydrate, state],
+  );
+  const lightPpfdUrl = useMemo(
+    () => (kind === "light" ? resolveKitPpfdUrl(selected, ppfdManifest) : null),
+    [kind, selected, ppfdManifest],
+  );
+
+  useEffect(() => {
+    void loadPpfdManifest().then(setPpfdManifest);
+  }, []);
 
   useEffect(() => {
     void searchCatalog(kind, "", state, 8).then((r) => setSourceNote(r.note));
     // Tick-stable: do not refetch the source chip on every hass identity.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [kind]);
+
+  useEffect(() => {
+    if (kind !== "strain" || !selected) {
+      setHydrate(null);
+      setHydrateNote("");
+      return;
+    }
+    const id = String(selected.id || selected.name_norm || "").trim();
+    if (!id) {
+      setHydrate(null);
+      setHydrateNote("No strain id — cannot hydrate media.");
+      return;
+    }
+    let cancelled = false;
+    setHydrateNote("Hydrating…");
+    void fetchStrainDetail(id, state).then((detail) => {
+      if (cancelled) return;
+      setHydrate(detail);
+      if (!detail) {
+        setHydrateNote("No licensed image (hydrate miss).");
+        return;
+      }
+      const n = Number((detail.evidence as { media?: { n?: number } } | undefined)?.media?.n ?? 0);
+      const filled = (detail.evidence as { media?: { filled_from?: { note?: string } } } | undefined)
+        ?.media?.filled_from;
+      if (n > 0 && filled?.note) {
+        setHydrateNote(filled.note);
+      } else {
+        setHydrateNote(n > 0 ? "" : "No licensed image on file.");
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [kind, selected?.id, selected?.name]);
 
   const sendToCompose = (item: CatalogItem | null) => {
     if (!item) return;
@@ -201,6 +276,57 @@ export function CatalogResearch() {
             ) : (
               <>
                 <h3 style={{ marginTop: 0 }}>{selected.name}</h3>
+                {kind === "strain" ? (
+                  <div className="dsc-catalog-media" style={{ marginBottom: 10 }}>
+                    {mediaUrls.length ? (
+                      <div className="dsc-chip-row" style={{ gap: 8 }}>
+                        {mediaUrls.map((src) => (
+                          <img
+                            key={src}
+                            src={src}
+                            alt=""
+                            style={{
+                              maxWidth: 140,
+                              maxHeight: 100,
+                              objectFit: "cover",
+                              borderRadius: 6,
+                              border: "1px solid rgba(120,160,130,0.25)",
+                            }}
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="dsc-muted" style={{ fontSize: 12, margin: 0 }}>
+                        {hydrateNote || "No licensed image."}
+                      </p>
+                    )}
+                  </div>
+                ) : null}
+                {kind === "light" ? (
+                  <div className="dsc-catalog-media" style={{ marginBottom: 10 }}>
+                    {lightPpfdUrl ? (
+                      <img
+                        src={lightPpfdUrl}
+                        alt="Local PPFD map crop"
+                        style={{
+                          maxWidth: "100%",
+                          maxHeight: 180,
+                          objectFit: "contain",
+                          borderRadius: 6,
+                          border: "1px solid rgba(120,160,130,0.25)",
+                        }}
+                      />
+                    ) : (
+                      <p className="dsc-muted" style={{ fontSize: 12, margin: 0 }}>
+                        No local PPFD crop on file
+                        {selected.ppfd_url && String(selected.ppfd_url).startsWith("http")
+                          ? " (manufacturer CDN not shown)"
+                          : ""}
+                        .
+                      </p>
+                    )}
+                  </div>
+                ) : null}
                 {kind === "nutrient" ? (
                   <StatusChip
                     label={chemistryTier(selected, sourceNote).label}

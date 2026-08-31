@@ -595,8 +595,42 @@ body {
   to { opacity: 1; transform: none; }
 }
 
+/* Wave 5: card depth + staggered entrance (motion only — no fake readings) */
+.dsc-glass {
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 10px 28px rgba(0, 0, 0, 0.42),
+    0 2px 6px rgba(0, 0, 0, 0.35);
+  animation: dsc-card-in 220ms ease both;
+}
+.dsc-grid > :nth-child(1) { --dsc-stagger: 0; }
+.dsc-grid > :nth-child(2) { --dsc-stagger: 1; }
+.dsc-grid > :nth-child(3) { --dsc-stagger: 2; }
+.dsc-grid > :nth-child(4) { --dsc-stagger: 3; }
+.dsc-grid > :nth-child(5) { --dsc-stagger: 4; }
+.dsc-grid > :nth-child(6) { --dsc-stagger: 5; }
+.dsc-grid > .dsc-col-3 .dsc-glass,
+.dsc-grid > .dsc-col-4 .dsc-glass,
+.dsc-grid > .dsc-col-6 .dsc-glass,
+.dsc-grid > .dsc-col-8 .dsc-glass,
+.dsc-grid > .dsc-col-12 .dsc-glass {
+  animation-delay: calc(var(--dsc-stagger, 0) * 40ms);
+}
+@keyframes dsc-card-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+.dsc-gauge {
+  animation: dsc-gauge-in 320ms ease both;
+}
+@keyframes dsc-gauge-in {
+  from { opacity: 0.35; transform: scale(0.96); }
+  to { opacity: 1; transform: none; }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .dsc-page, .dsc-btn, .dsc-tab, .dsc-live-pulse {
+  .dsc-page, .dsc-btn, .dsc-tab, .dsc-live-pulse,
+  .dsc-glass, .dsc-gauge {
     animation: none !important;
     transition: none !important;
   }

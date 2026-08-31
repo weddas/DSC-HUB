@@ -23,8 +23,9 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlparse
 
-VERSION = "0.2.1-stdlib"
+VERSION = "0.2.2-stdlib"
 DB_PATH = Path(os.environ.get("CANNALIB_DB_PATH", "/data/dsc_brain.sqlite3"))
+MEDIA_ROOT = Path(os.environ.get("CANNALIB_MEDIA_ROOT", "/data/media"))
 HOST = os.environ.get("CANNALIB_HOST", "0.0.0.0")
 PORT = int(os.environ.get("CANNALIB_PORT", "8790"))
 REQUIRE_KEY = os.environ.get("CANNALIB_REQUIRE_API_KEY", "false").lower() in (
@@ -313,9 +314,10 @@ def _hydrate(name_norms: list[str], matched: dict[str, str]) -> list[dict]:
     return out
 
 
-def search_strains(q: str, limit: int = 20) -> list[dict]:
+def search_strains(q: str, limit: int = 20, offset: int = 0) -> list[dict]:
     c = connect()
     limit = _clamp_limit(limit)
+    offset = max(0, int(offset or 0))
     needle = _norm_q(q)
     matched: dict[str, str] = {}
     norms: list[str] = []
@@ -329,12 +331,14 @@ def search_strains(q: str, limit: int = 20) -> list[dict]:
 
     if not needle:
         for r in c.execute(
-            "SELECT name_norm FROM strain_canonical ORDER BY curated DESC, name LIMIT ?",
-            (limit,),
+            "SELECT name_norm FROM strain_canonical ORDER BY curated DESC, name LIMIT ? OFFSET ?",
+            (limit, offset),
         ):
             add(r["name_norm"], "curated")
         return _hydrate(norms, matched)
 
+    # Offset on filtered search: fetch window then slice (stdlib simplicity).
+    fetch_cap = min(limit + offset, MAX_LIMIT * 20)
     safe = _escape_like(needle)
     like = f"%{safe}%"
     prefix = f"{safe}%"
@@ -345,49 +349,224 @@ def search_strains(q: str, limit: int = 20) -> list[dict]:
         """
         SELECT name_norm FROM strain_canonical
         WHERE name_norm = ? OR name_norm LIKE ? OR lower(name) LIKE ?
+           OR lower(COALESCE(type,'')) LIKE ?
         ORDER BY
           CASE WHEN name_norm = ? OR lower(name) = ? THEN 0
                WHEN name_norm LIKE ? OR lower(name) LIKE ? THEN 1 ELSE 2 END,
           curated DESC, length(name), name
         LIMIT ?
         """,
-        (norm_eq, norm_prefix, prefix, norm_eq, safe, norm_prefix, prefix, limit),
+        (norm_eq, norm_prefix, prefix, like, norm_eq, safe, norm_prefix, prefix, fetch_cap),
     ):
         if add(r["name_norm"], "name"):
-            return _hydrate(norms, matched)
+            break
 
-    for r in c.execute(
-        """
-        SELECT DISTINCT name_norm FROM science_alias
-        WHERE name_norm IS NOT NULL AND name_norm != ''
-          AND (alias_norm = ? OR alias_norm LIKE ? OR lower(alias) = ? OR lower(alias) LIKE ?)
-        LIMIT ?
-        """,
-        (norm_eq, norm_prefix, safe, prefix, limit),
-    ):
-        if add(r["name_norm"], "alias"):
-            return _hydrate(norms, matched)
-
-    remain = limit - len(norms)
-    if remain > 0:
+    if len(norms) < fetch_cap:
         for r in c.execute(
             """
-            SELECT name_norm FROM strain_canonical
-            WHERE lower(name) LIKE ? OR name_norm LIKE ?
-            ORDER BY curated DESC, length(name), name LIMIT ?
+            SELECT DISTINCT name_norm FROM science_alias
+            WHERE name_norm IS NOT NULL AND name_norm != ''
+              AND (alias_norm = ? OR alias_norm LIKE ? OR lower(alias) = ? OR lower(alias) LIKE ?)
+            LIMIT ?
             """,
-            (like, f"%{norm_eq}%", remain + 30),
+            (norm_eq, norm_prefix, safe, prefix, fetch_cap - len(norms)),
         ):
-            if add(r["name_norm"], "name"):
+            if add(r["name_norm"], "alias"):
                 break
-    return _hydrate(norms[:limit], matched)
+
+    window = norms[offset : offset + limit]
+    window_matched = {n: matched[n] for n in window if n in matched}
+    return _hydrate(window, window_matched)
+
+
+def search_products(kind: str, q: str, limit: int = 20, offset: int = 0) -> list[dict]:
+    table = {
+        "nutrients": "nutrient_product",
+        "nutrient": "nutrient_product",
+        "mediums": "medium_product",
+        "medium": "medium_product",
+        "lights": "light_fixture",
+        "light": "light_fixture",
+    }.get(kind)
+    if not table or table not in _SAFE_TABLES:
+        raise ValueError("unknown kind")
+    c = connect()
+    limit = _clamp_limit(limit)
+    offset = max(0, int(offset or 0))
+    needle = _norm_q(q)
+    if not needle:
+        rows = c.execute(
+            f"SELECT id, name, brand FROM {table} ORDER BY name LIMIT ? OFFSET ?",
+            (limit, offset),
+        ).fetchall()
+    else:
+        like = f"%{_escape_like(needle)}%"
+        rows = c.execute(
+            f"""
+            SELECT id, name, brand FROM {table}
+            WHERE lower(name) LIKE ? OR lower(COALESCE(brand,'')) LIKE ?
+            ORDER BY name
+            LIMIT ? OFFSET ?
+            """,
+            (like, like, limit, offset),
+        ).fetchall()
+    return [
+        {
+            "id": row["id"] or row["name"],
+            "name": row["name"],
+            "brand": row["brand"],
+            "breeder": row["brand"],
+            "kind": kind.rstrip("s") if kind.endswith("s") else kind,
+            "source": "sqlite",
+        }
+        for row in rows
+    ]
 
 
 def get_strain(strain_id: str) -> dict | None:
-    c = connect()
     sid = (strain_id or "").strip()[:MAX_PATH_ID_LEN]
     if not sid:
         return None
+    try:
+        from strain_tree import build_strain_tree
+
+        c = connect()
+        tree = build_strain_tree(c, sid)
+        if not tree:
+            return _get_strain_slim(sid)
+        _maybe_fill_type_reference_media(c, tree)
+        _attach_media_urls(tree.get("evidence") or {})
+        return tree
+    except ImportError:
+        return _get_strain_slim(sid)
+
+
+_PUBLIC_MEDIA_LICENSES = ("CC0_PUBLIC_DOMAIN", "CC_BY_4.0", "CC_BY_SA")
+_TYPE_MEDIA_ENTITY = {
+    "indica": "cannabis_indica",
+    "sativa": "cannabis_sativa",
+    "hybrid": "cannabis_sativa",
+    "ruderalis": "cannabis_sativa",
+}
+
+
+def _media_row_dict(row: sqlite3.Row) -> dict:
+    return {
+        "id": row["id"],
+        "kind": row["kind"],
+        "source_url": row["source_url"],
+        "author_credit": row["author_credit"],
+        "license_type": row["license_type"],
+        "license": row["license_type"],
+        "verified": bool(row["is_verified_phenotype"]),
+        "entity_kind": row["entity_kind"],
+        "entity_id": row["entity_id"],
+        "url": f"/v1/media/assets/{row['id']}",
+    }
+
+
+def _resolve_media_path(raw: str | None) -> Path | None:
+    if not raw:
+        return None
+    root = MEDIA_ROOT.resolve()
+    normalized = str(raw).replace("\\", "/")
+    marker = "/media/"
+    idx = normalized.lower().find(marker)
+    if idx >= 0:
+        rel = normalized[idx + len(marker) :]
+    elif normalized.startswith("/data/media/"):
+        rel = normalized[len("/data/media/") :]
+    else:
+        return None
+    candidate = (root / rel).resolve()
+    if not str(candidate).startswith(str(root)):
+        return None
+    return candidate if candidate.is_file() else None
+
+
+def _maybe_fill_type_reference_media(conn: sqlite3.Connection, tree: dict) -> None:
+    """Honest genus-level CC media when no cultivar-specific assets exist."""
+    ev = tree.setdefault("evidence", {})
+    media = ev.setdefault("media", {"n": 0, "sample": [], "filled_from": None})
+    if media.get("sample"):
+        return
+    name_norm = tree.get("name_norm")
+    if not name_norm:
+        return
+    row = conn.execute(
+        "SELECT type FROM strain_canonical WHERE name_norm = ? LIMIT 1",
+        (name_norm,),
+    ).fetchone()
+    if not row:
+        return
+    entity = _TYPE_MEDIA_ENTITY.get(str(row["type"] or "").lower())
+    if not entity:
+        return
+    lic_ph = ",".join("?" * len(_PUBLIC_MEDIA_LICENSES))
+    rows = conn.execute(
+        f"""
+        SELECT id, kind, source_url, author_credit, license_type,
+               is_verified_phenotype, entity_kind, entity_id, local_path
+        FROM media_asset
+        WHERE entity_id = ? AND license_type IN ({lic_ph})
+          AND kind IN ('phenotype_photo','plant_photo','flower_photo','anatomy_photo')
+        ORDER BY is_verified_phenotype DESC, id
+        LIMIT 6
+        """,
+        (entity, *_PUBLIC_MEDIA_LICENSES),
+    ).fetchall()
+    if not rows:
+        return
+    sample = [_media_row_dict(r) for r in rows if _resolve_media_path(r["local_path"])]
+    if not sample:
+        return
+    media["n"] = len(sample)
+    media["sample"] = sample
+    media["filled_from"] = {
+        "kind": "type_reference",
+        "id": entity,
+        "note": "Genus-level CC reference — not this cultivar",
+    }
+
+
+def _attach_media_urls(evidence: dict) -> None:
+    media = evidence.get("media") or {}
+    sample = media.get("sample") or []
+    for row in sample:
+        if not isinstance(row, dict):
+            continue
+        if row.get("license_type") and not row.get("license"):
+            row["license"] = row["license_type"]
+        if row.get("id") and not row.get("url"):
+            row["url"] = f"/v1/media/assets/{row['id']}"
+
+
+def get_media_asset(asset_id: str) -> tuple[bytes, str] | None:
+    aid = (asset_id or "").strip()[:MAX_PATH_ID_LEN]
+    if not aid:
+        return None
+    c = connect()
+    row = c.execute(
+        "SELECT local_path, license_type FROM media_asset WHERE id = ? LIMIT 1",
+        (aid,),
+    ).fetchone()
+    if not row or row["license_type"] not in _PUBLIC_MEDIA_LICENSES:
+        return None
+    path = _resolve_media_path(row["local_path"])
+    if path is None:
+        return None
+    suffix = path.suffix.lower()
+    mime = {
+        ".webp": "image/webp",
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".png": "image/png",
+    }.get(suffix, "application/octet-stream")
+    return path.read_bytes(), mime
+
+
+def _get_strain_slim(sid: str) -> dict | None:
+    c = connect()
     row = c.execute(
         "SELECT name_norm FROM strain_canonical WHERE name_norm = ? LIMIT 1", (sid,)
     ).fetchone()
@@ -406,46 +585,6 @@ def get_strain(strain_id: str) -> dict | None:
             items = _hydrate([r["name_norm"]], {r["name_norm"]: "id"})
             return items[0] if items else None
     return None
-
-
-def search_products(kind: str, q: str, limit: int = 20) -> list[dict]:
-    table = {
-        "nutrients": "nutrient_product",
-        "nutrient": "nutrient_product",
-        "mediums": "medium_product",
-        "medium": "medium_product",
-        "lights": "light_fixture",
-        "light": "light_fixture",
-    }.get(kind)
-    if not table or table not in _SAFE_TABLES:
-        raise ValueError("unknown kind")
-    c = connect()
-    limit = _clamp_limit(limit)
-    needle = _norm_q(q)
-    if not needle:
-        rows = c.execute(
-            f"SELECT id, name, brand FROM {table} ORDER BY name LIMIT ?", (limit,)
-        ).fetchall()
-    else:
-        like = f"%{_escape_like(needle)}%"
-        rows = c.execute(
-            f"""
-            SELECT id, name, brand FROM {table}
-            WHERE lower(name) LIKE ? OR lower(COALESCE(brand,'')) LIKE ?
-            ORDER BY name LIMIT ?
-            """,
-            (like, like, limit),
-        ).fetchall()
-    return [
-        {
-            "id": r["id"] or slug(kind, r["name"] or ""),
-            "name": r["name"],
-            "brand": r["brand"],
-            "breeder": r["brand"],
-            "source": "sqlite",
-        }
-        for r in rows
-    ]
 
 
 def rate_gate(client: str) -> tuple[bool, int, float]:
@@ -680,6 +819,17 @@ class Handler(BaseHTTPRequestHandler):
                 )
                 return
 
+            m = re.match(r"^/v1/media/assets/([^/]+)$", path)
+            if m:
+                aid = unquote(m.group(1))[:MAX_PATH_ID_LEN]
+                got = get_media_asset(aid)
+                if not got:
+                    self._json(404, {"detail": "media not found"})
+                    return
+                data, mime = got
+                self._send(200, data, mime)
+                return
+
             m = re.match(r"^/v1/catalogs/strains/([^/]+)$", path)
             if m:
                 record(hydrate_total=1)
@@ -696,29 +846,35 @@ class Handler(BaseHTTPRequestHandler):
                 kind = m.group(1).lower()
                 q = (qs.get("q") or [""])[0][:MAX_Q_LEN]
                 limit = _clamp_limit((qs.get("limit") or ["20"])[0])
+                try:
+                    offset = max(0, int((qs.get("offset") or ["0"])[0]))
+                except ValueError:
+                    offset = 0
                 record(search_total=1)
                 if kind in ("strains", "strain"):
-                    items = search_strains(q, limit)
+                    items = search_strains(q, limit, offset)
                     self._json(
                         200,
                         {
                             "kind": "strains",
                             "q": q,
+                            "offset": offset,
                             "count": len(items),
-                            "capped": False,
+                            "capped": len(items) >= limit,
                             "items": items,
                         },
                     )
                     return
                 if kind in ("nutrients", "nutrient", "mediums", "medium", "lights", "light"):
-                    items = search_products(kind, q, limit)
+                    items = search_products(kind, q, limit, offset)
                     self._json(
                         200,
                         {
                             "kind": kind if kind.endswith("s") else kind + "s",
                             "q": q,
+                            "offset": offset,
                             "count": len(items),
-                            "capped": False,
+                            "capped": len(items) >= limit,
                             "items": items,
                         },
                     )

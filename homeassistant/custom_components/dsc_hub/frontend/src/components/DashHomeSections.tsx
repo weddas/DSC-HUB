@@ -585,7 +585,7 @@ export function DashBandsGrid({
             band={{ min: r.cloneVpdMin, max: r.cloneVpdMax }}
             stale={r.stale.cloneVpd}
             gauge={
-              <ArcGauge label="2×4 VPD" value={r.cloneVpd} min={0} max={2} unit="kPa" band={{ min: r.cloneVpdMin, max: r.cloneVpdMax }} segments={vpdSegments(r.cloneVpdMin, r.cloneVpdMax)} stale={r.stale.cloneVpd} onClick={() => onChartOpen("vpd")} />
+              <ArcGauge label="2×4 VPD" value={r.cloneVpd} min={0} max={2.5} unit="kPa" band={{ min: r.cloneVpdMin, max: r.cloneVpdMax }} segments={vpdSegments(r.cloneVpdMin, r.cloneVpdMax)} stale={r.stale.cloneVpd} onClick={() => onChartOpen("vpd")} />
             }
           />
         </div>

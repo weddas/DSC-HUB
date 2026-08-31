@@ -507,17 +507,11 @@ export function LiveClimatePage() {
               )}
               outCfm={outReading}
               recircCfm={recReading}
-              heatTentW={Number.isFinite(num("sensor.dsc_heat_tent_w")) ? num("sensor.dsc_heat_tent_w") : 0}
-              heatMatW={Number.isFinite(num("sensor.dsc_heatmat_w")) ? num("sensor.dsc_heatmat_w") : 0}
-              humidifyGh={Number.isFinite(num("sensor.dsc_humidify_gh")) ? num("sensor.dsc_humidify_gh") : 0}
-              dehumidifyGh={
-                Number.isFinite(num("sensor.dsc_dehumidify_gh")) ? num("sensor.dsc_dehumidify_gh") : 0
-              }
               massBalanceOk={null}
             />
             <p className="dsc-muted" style={{ marginTop: 8, fontSize: "0.85rem" }}>
-              Sankey shows CFM provenance per link (Allocated / Nameplate). Missing cascade/heat/humidity sensors
-              read as 0 — not invented balance.
+              Sankey is air CFM only (Allocated / Nameplate). Heat and humidity estimated splits are not shown.
+              Missing cascade links read as 0 — not invented balance.
             </p>
           </Card>
         </div>

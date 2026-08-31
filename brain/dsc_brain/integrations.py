@@ -101,12 +101,16 @@ async def _catalog_search_remote(
     kind: str,
     q: str,
     limit: int,
+    offset: int = 0,
 ) -> list[dict[str, Any]]:
     _singular, path_kind = _catalog_kind_paths(kind)
+    params: dict[str, Any] = {"q": q, "limit": limit}
+    if offset > 0:
+        params["offset"] = offset
     async with httpx.AsyncClient(timeout=20.0) as client:
         resp = await client.get(
             f"{base}/v1/catalogs/{path_kind}",
-            params={"q": q, "limit": limit},
+            params=params,
             headers=headers,
         )
         resp.raise_for_status()
@@ -121,10 +125,11 @@ def _escape_like(s: str) -> str:
     return s.replace("\\", "\\\\").replace("%", "").replace("_", "")
 
 
-def _catalog_search_local(db_path: Any, kind: str, q: str, limit: int) -> list[dict[str, Any]]:
+def _catalog_search_local(db_path: Any, kind: str, q: str, limit: int, offset: int = 0) -> list[dict[str, Any]]:
     singular, _path_kind = _catalog_kind_paths(kind)
     needle = " ".join((q or "").strip().lower().split())
     limit = max(1, min(int(limit), 100))
+    offset = max(0, int(offset))
     conn = sqlite3.connect(f"file:{db_path.as_posix()}?mode=ro", uri=True)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA query_only=ON")
@@ -136,19 +141,20 @@ def _catalog_search_local(db_path: Any, kind: str, q: str, limit: int) -> list[d
                     """
                     SELECT name_norm, name, type FROM strain_canonical
                     WHERE lower(name) LIKE ? OR name_norm LIKE ?
+                       OR lower(COALESCE(type,'')) LIKE ?
                     ORDER BY curated DESC, length(name), name
-                    LIMIT ?
+                    LIMIT ? OFFSET ?
                     """,
-                    (like, f"%{needle.replace(' ', '_')}%", limit),
+                    (like, f"%{needle.replace(' ', '_')}%", like, limit, offset),
                 ).fetchall()
             else:
                 rows = conn.execute(
                     """
                     SELECT name_norm, name, type FROM strain_canonical
                     ORDER BY curated DESC, name
-                    LIMIT ?
+                    LIMIT ? OFFSET ?
                     """,
-                    (limit,),
+                    (limit, offset),
                 ).fetchall()
             return [
                 {
@@ -176,14 +182,14 @@ def _catalog_search_local(db_path: Any, kind: str, q: str, limit: int) -> list[d
                 SELECT id, name, brand FROM {table}
                 WHERE lower(name) LIKE ? OR lower(COALESCE(brand,'')) LIKE ?
                 ORDER BY name
-                LIMIT ?
+                LIMIT ? OFFSET ?
                 """,
-                (like, like, limit),
+                (like, like, limit, offset),
             ).fetchall()
         else:
             rows = conn.execute(
-                f"SELECT id, name, brand FROM {table} ORDER BY name LIMIT ?",
-                (limit,),
+                f"SELECT id, name, brand FROM {table} ORDER BY name LIMIT ? OFFSET ?",
+                (limit, offset),
             ).fetchall()
         return [
             {
@@ -200,13 +206,20 @@ def _catalog_search_local(db_path: Any, kind: str, q: str, limit: int) -> list[d
         conn.close()
 
 
-async def catalog_search(kind: str, q: str = "", limit: int = 20) -> list[dict[str, Any]]:
+async def catalog_search(kind: str, q: str = "", limit: int = 20, offset: int = 0) -> list[dict[str, Any]]:
     base = cannalib_base_url()
     headers = cannalib_headers()
     remote_err = "CannaLib API URL not configured"
+    offset = max(0, int(offset or 0))
     if base:
         try:
-            return await _catalog_search_remote(base, headers, kind, q, limit)
+            remote = await _catalog_search_remote(base, headers, kind, q, limit, offset)
+            # Live CannaLib historically ignored offset — detect head-page repeat.
+            if offset > 0 and remote:
+                head = await _catalog_search_remote(base, headers, kind, q, min(limit, 5), 0)
+                if head and remote and head[0].get("id") == remote[0].get("id"):
+                    raise CatalogSearchError("remote offset ignored")
+            return remote
         except Exception as exc:  # noqa: BLE001
             remote_err = str(exc)
 
@@ -223,7 +236,43 @@ async def catalog_search(kind: str, q: str = "", limit: int = 20) -> list[dict[s
             "(expected CANNALIB_DB_PATH or dsc_brain.sqlite3 under cannalib/)"
         )
 
-    return _catalog_search_local(db_path, kind, q, limit)
+    return _catalog_search_local(db_path, kind, q, limit, offset)
+
+
+async def catalog_strain_detail(strain_id: str) -> dict[str, Any] | None:
+    """Proxy live CannaLib strain tree hydrate; None when missing."""
+    sid = (strain_id or "").strip()
+    if not sid:
+        return None
+    base = cannalib_base_url()
+    if not base:
+        return None
+    headers = cannalib_headers()
+    async with httpx.AsyncClient(timeout=20.0) as client:
+        resp = await client.get(f"{base}/v1/catalogs/strains/{sid}", headers=headers)
+        if resp.status_code == 404:
+            return None
+        resp.raise_for_status()
+        data = resp.json()
+        return data if isinstance(data, dict) else None
+
+
+async def catalog_media_asset(asset_id: str) -> tuple[bytes, str] | None:
+    """Proxy licensed media bytes from live CannaLib (gateway or sidecar)."""
+    aid = (asset_id or "").strip()
+    if not aid:
+        return None
+    base = cannalib_base_url()
+    if not base:
+        return None
+    headers = cannalib_headers()
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        resp = await client.get(f"{base}/v1/media/assets/{aid}", headers=headers)
+        if resp.status_code == 404:
+            return None
+        resp.raise_for_status()
+        mime = resp.headers.get("content-type") or "application/octet-stream"
+        return resp.content, mime
 
 
 async def catalog_status() -> dict[str, Any]:

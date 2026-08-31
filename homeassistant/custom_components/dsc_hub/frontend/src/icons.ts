@@ -54,5 +54,9 @@ const ICON_PATH: Record<IconName, string> = {
   build: "icons/dsc-icon-build.svg",
   catalog: "icons/dsc-icon-catalog.svg",
   strains: "icons/dsc-icon-strains.svg",
+  strainIndica: "icons/dsc-icon-strains.svg",
+  strainSativa: "icons/dsc-icon-strains.svg",
+  strainHybrid: "icons/dsc-icon-strains.svg",
+  strainAuto: "icons/dsc-icon-strains.svg",
   trends: "icons/dsc-icon-trends.svg",
 };

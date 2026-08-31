@@ -29,7 +29,7 @@ from .appliance_driver import start_appliance_driver, stop_appliance_driver
 from .esphome_client import start_esphome_ingest, stop_esphome_ingest
 from .esphome_jobs import list_esphome_devices, list_jobs, queue_job, start_esphome_worker, stop_esphome_worker
 from .fleet_state import get_fleet_state, merge_inventory_oos_seats
-from .integrations import CatalogSearchError, catalog_search, catalog_status, test_cannalib, test_ollama
+from .integrations import CatalogSearchError, catalog_search, catalog_status, catalog_strain_detail, test_cannalib, test_ollama
 from .network_apply import apply_network_configs, network_status
 from .paths import EXPECTED_FIRMWARE, SURFACE_VERSION
 from .settings import (
@@ -902,10 +902,15 @@ async def settings_backup_import(file: UploadFile = File(...)) -> dict[str, str]
 
 
 @app.get("/v1/catalogs/{kind}")
-async def catalogs_proxy(kind: str, q: str = Query(""), limit: int = Query(20, ge=1, le=100)) -> list[dict]:
+async def catalogs_proxy(
+    kind: str,
+    q: str = Query(""),
+    limit: int = Query(20, ge=1, le=100),
+    offset: int = Query(0, ge=0, le=500_000),
+) -> list[dict]:
     """Prefer remote CannaLib API; fall back to on-host corpus sqlite; then slim Want."""
     try:
-        rows = await catalog_search(kind, q, limit)
+        rows = await catalog_search(kind, q, limit, offset)
         if rows:
             return rows
     except CatalogSearchError as exc:
@@ -926,6 +931,33 @@ async def catalogs_proxy(kind: str, q: str = Query(""), limit: int = Query(20, g
     if not key:
         raise HTTPException(400, f"unknown kind {kind}")
     return search(key, q, limit=limit)
+
+
+@app.get("/v1/catalogs/strains/{strain_id}")
+async def strain_detail_proxy(strain_id: str) -> dict[str, Any]:
+    """Live CannaLib strain_tree hydrate (licensed media when present)."""
+    try:
+        detail = await catalog_strain_detail(strain_id)
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(502, f"CannaLib strain hydrate failed: {exc}") from exc
+    if not detail:
+        raise HTTPException(404, "strain not found")
+    return detail
+
+
+@app.get("/v1/media/assets/{asset_id}")
+async def media_asset_proxy(asset_id: str) -> Response:
+    """Proxy CannaLib licensed strain media for Pi same-origin Research cards."""
+    from .integrations import catalog_media_asset
+
+    try:
+        got = await catalog_media_asset(asset_id)
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(502, f"CannaLib media proxy failed: {exc}") from exc
+    if not got:
+        raise HTTPException(404, "media not found")
+    data, mime = got
+    return Response(content=data, media_type=mime)
 
 
 @app.post("/admin/reload-catalogs")

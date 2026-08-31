@@ -85,11 +85,15 @@ def _exclude_from_peer_mad(inventory: list[dict[str, Any]] | None, pot_n: int) -
 def _moisture_rate_per_hour(pot_n: int) -> float | None:
     since = time.time() - 6 * 3600
     rows = sorted(list_history(f"pot{pot_n}", "moisture_pct", since, limit=500), key=lambda r: r["ts"])
-    if len(rows) < 2:
+    usable = [r for r in rows if r.get("value") is not None]
+    if len(usable) < 2:
         return None
-    first, last = rows[0], rows[-1]
-    dt_h = max((last["ts"] - first["ts"]) / 3600.0, 1 / 60)
-    return (float(last["value"]) - float(first["value"])) / dt_h
+    first, last = usable[0], usable[-1]
+    try:
+        dt_h = max((float(last["ts"]) - float(first["ts"])) / 3600.0, 1 / 60)
+        return (float(last["value"]) - float(first["value"])) / dt_h
+    except (TypeError, ValueError):
+        return None
 
 
 def _max_peer_divergence(values: list[float]) -> float | None:
