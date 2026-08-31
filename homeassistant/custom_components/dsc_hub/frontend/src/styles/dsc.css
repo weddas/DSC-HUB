@@ -604,7 +604,8 @@ body {
   .dsc-dash-home .dsc-gauge-matrix--bands { gap: 6px; }
   .dsc-dash-home .dsc-gauge-matrix--bands .dsc-gauge-row-3 { gap: 4px; }
   .dsc-dash-home .dsc-band-cell { padding: 4px 2px 6px; }
-  .dsc-dash-home .dsc-band-cell .dsc-gauge svg { max-width: 92px; }
+  .dsc-dash-home .dsc-band-cell .dsc-gauge svg,
+  .dsc-dash-home .dsc-band-cell .dsc-gauge .dsc-echart { max-width: 92px; }
   .dsc-dash-home .dsc-band-zone-label { font-size: 0.62rem; letter-spacing: 0.08em; }
 }
 
@@ -1227,6 +1228,17 @@ body {
   align-items: flex-end;
 }
 
+.dsc-echart {
+  width: 100%;
+  min-width: 0;
+}
+
+.dsc-gauge .dsc-echart,
+.dsc-gauge-chart {
+  width: 140px;
+  height: 110px;
+}
+
 .dsc-gauge {
   overflow: visible;
   flex: 0 0 auto;
@@ -1303,11 +1315,12 @@ body {
   opacity: 0.9;
 }
 
-.dsc-gauge-row-3 .dsc-gauge svg {
+.dsc-gauge-row-3 .dsc-gauge svg,
+.dsc-gauge-row-3 .dsc-gauge .dsc-echart,
+.dsc-gauge-row-3 .dsc-gauge-chart {
   width: 100%;
   max-width: 96px;
-  height: auto;
-  max-height: 72px;
+  height: 72px;
 }
 
 .dsc-gauge-row-3 .dsc-gauge-label {
@@ -2495,7 +2508,8 @@ button.dsc-chip.is-clickable:hover {
   justify-content: center;
 }
 
-.dsc-dash-home .dsc-band-cell .dsc-gauge svg {
+.dsc-dash-home .dsc-band-cell .dsc-gauge svg,
+.dsc-dash-home .dsc-band-cell .dsc-gauge .dsc-echart {
   width: 100%;
   max-width: 118px;
   height: auto;

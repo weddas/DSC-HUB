@@ -18,6 +18,6 @@
 - 2×4 Climate Mode is policy-only: Follow 4x8 · Follow Plants · Custom · Off; Follow Plants is Pi-owned (~12h and on roster/assign change) and writes `clone_*` numbers only.
 - SoftCal uses one ESP NVS calibration plane (gate dual stacks); do not SoftCal N/P/K as independent measured channels.
 - Operator hub takeover is a temporary override; reconnect must re-plan from brain (`pending_reassert` is part of that story).
-- Twin SF1000 and Zigbee/Z2M/SkyConnect are in-scope product surfaces; Zigbee onboarding is role/task binding with `capability_class` (optional `capability_override`) and operator-chosen `problem_when` (e.g. tank-full or humidifier-empty → appliance OOS), not bare device join alone.
-- Some kit Zigbee leak/liquid sensors expose wet/dry as `occupancy` (liquid present), not PIR motion — do not treat occupancy as motion for those SKUs.
+- Twin SF1000 and Zigbee/Z2M/SkyConnect are in-scope product surfaces; Zigbee onboarding is role/task binding with `capability_class` (optional `capability_override`) and operator-chosen `problem_when`, not bare device join alone. `tank_full_appliance` may OOS; `floor_flood_alert` is banner-only (never OOS). Space leak roles: `leak_floor_room` / `leak_floor_4x8` / `leak_floor_2x4`.
+- Some kit Zigbee leak/liquid sensors expose wet/dry as `occupancy` (liquid present), not PIR motion — do not treat occupancy as motion for those SKUs. Climate Wet/Dry is that raw reading; Problem/Clear comes only from bound `policy_state` (SPA must not infer problem from wet).
 - Recurring friction is encoded only after approval (e.g. `.cursor/rules/dsc-kit-sot.mdc`, `dsc-viz-honesty.mdc`); durable ops debt stays in `docs/FOLLOWUPS.md`.
