@@ -1,8 +1,8 @@
 # Wave 2 CannaLib — browse / search / icons / images
 
 **Date:** 2026-08-31  
-**Status:** draft — implementing against DSC-HUB stack; live CannaLib deploy needed for remote offset  
-**Parent goal:** DSC operator polish
+**Status:** landed in tip `28953ae` / spa `15d7016` (brain + hub trampoline + SPA). Live CannaLib CDN offset deploy still deferred (FOLLOWUPS).  
+**Parent goal:** DSC operator polish · SoT: [`docs/brain/OPERATOR-POLISH.md`](../../brain/OPERATOR-POLISH.md)
 
 ## Problem
 
