@@ -6,11 +6,22 @@ Standing process for every plan:
 2. **During:** note findings, warnings, incomplete fixes, red flags  
 3. **End:** append a dated section (do not leave soak/log issues in chat only)
 
-Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `done`
+Categories: `red-flag` · `soak` · `deferred` · `next-plan` · `out-of-scope` · `done`
 
 ---
 
-## 2026-08-30 ? Zigbee device tasks (universal path; recipes one-at-a-time)
+## 2026-08-31 · SPA ECharts viz (tip `8f4c3e1`)
+
+| Item | Status | Notes |
+|------|--------|-------|
+| Gauges / lines / Sankey → Apache ECharts 6 | **done (code)** | `viz/echartsSetup.ts` · `EChart.tsx` · `charts.tsx` · `FlowSankey.tsx`; spa-dist `index-DLMlcKND.js` |
+| Developer SoT | **done (docs)** | [`docs/brain/VIZ-ECHARTS.md`](brain/VIZ-ECHARTS.md) |
+| Climate mounts FlowSankey beside AirPathMap | **soak** | Still EXPERIMENTAL; `massBalanceOk={null}`; zero links omitted. Conflicts with `.cursor/rules/dsc-viz-honesty.mdc` “one CFM surface” until Pi screenshot verify / graduate or re-gate |
+| Pi SPA verify screenshots for ECharts gauges + Sankey resize | **next-plan** | Use `dsc-spa-pi-verify` skill after deploy |
+
+---
+
+## 2026-08-30 · Zigbee device tasks (universal path; recipes one-at-a-time)
 
 **2026-08-31 ? policy honesty + floor flood:** [`docs/superpowers/specs/2026-08-31-zigbee-policy-honesty-floor-flood-design.md`](superpowers/specs/2026-08-31-zigbee-policy-honesty-floor-flood-design.md) ? [`docs/superpowers/plans/2026-08-31-zigbee-policy-honesty-floor-flood.md`](superpowers/plans/2026-08-31-zigbee-policy-honesty-floor-flood.md)
 

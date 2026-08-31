@@ -38,3 +38,18 @@ All reads/writes go through brain HTTP API (`brain/dsc_brain/api.py`):
 ## Host
 
 Pi 4 4GB LAN (`http://dsc-brain.local` or IP). Static UI can ship later; API stub is first.
+
+## Live viz — ECharts (tip `8f4c3e1`)
+
+Operator gauges, history lines, sparklines, and Climate FlowSankey render via Apache ECharts 6 (tree-shaken canvas), not hand SVG.
+
+| | |
+|---|---|
+| Wrapper | `frontend/src/viz/EChart.tsx` + `echartsSetup.ts` |
+| Widgets | `MultiLineChart` · `ArcGauge` · `Sparkline` in `viz/charts.tsx`; `GotWantBars` stays DOM |
+| Climate Air path | `AirPathMap` (SoT CFM schematic) + **EXPERIMENTAL** `FlowSankey` (zero links omitted; `massBalanceOk={null}`) |
+| spa-dist | `index-DLMlcKND.js` · `tune-fleet-V_5VfxFS.js` · `calibrate-BvTMD8cv.js` |
+
+Honesty unchanged: held/stale gauges, no invented CFM/balance, Sankey is informational only.
+
+SoT: [VIZ-ECHARTS.md](VIZ-ECHARTS.md).
