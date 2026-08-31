@@ -25,7 +25,9 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 | Learning demotion copy | **done (code)** | Calibrate = guided fan SoT |
 | Pi SPA hotpatch | **done** | `index-XS57jN-m.js` / `calibrate-CpykSWoW.js` (verify after deploy); bundle contains SoftCal OK + What: + holds live fans |
 | Operator visual smoke (browser) | **soak** | Confirm SoftCal chips + fan strip on `:8787` once |
+| Pinned star wash readability | **soak** | Confirm `.dsc-stars` stays fixed while desk scrolls; gauges remain readable (tip `bae50fa`) |
 | Waves 2–5 (CannaLib, PPFD, Twin, polish) | **next-plan** | Same CreateGoal objective; Zigbee+extra HW parked |
+| Developer SoT OPERATOR-WAVE1 | **done (docs PR)** | `docs/brain/OPERATOR-WAVE1.md` — assignment / strips / flush / pinned wash |
 
 ---
 

@@ -38,3 +38,20 @@ All reads/writes go through brain HTTP API (`brain/dsc_brain/api.py`):
 ## Host
 
 Pi 4 4GB LAN (`http://dsc-brain.local` or IP). Static UI can ship later; API stub is first.
+
+## Live operator SPA — tip `bae50fa`
+
+Pi `:8787` HashRouter SPA (not the MVP route table above). Atmosphere + Wave 1 honesty:
+
+| | |
+|---|---|
+| Mount | `DscRoot` → pinned `ParallaxStars` (decorative) + scrolling `.dsc-root-body` |
+| Assignment | `lib/probeAssignment.ts` — SoftCal chip / Soil·lab banner; **no** auto-detach |
+| Cal strips | `CalOutcomeStrip` on SoftCal, Soil Test, fan, lab wet, peer |
+| Nickname | `flushEntityTextDrafts` / `peekEntityTextDraft` before PlantWizard Next/commit |
+| Fan SoT | `/fleet/calibrate` — Learning deep-links only |
+| spa-dist | `index-XS57jN-m.js` · `calibrate-CpykSWoW.js` · `tune-fleet-CvWffS4i.js` |
+
+Prior tip `8f4c3e1` moved gauges/graphs/Sankey to Apache ECharts (still in this SPA train; hashes above supersede `index-DLMlcKND.js`). Draft SoT PR [#147](https://github.com/weddas/DSC-HUB/pull/147) for full ECharts doc.
+
+SoT: [OPERATOR-WAVE1.md](OPERATOR-WAVE1.md).
