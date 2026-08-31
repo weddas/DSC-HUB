@@ -23,11 +23,11 @@ Categories: `red-flag` ? `soak` ? `deferred` ? `next-plan` ? `out-of-scope` ? `d
 | Nickname flush on Next/commit | **done (code)** | `flushEntityTextDrafts` + `peekEntityTextDraft` so mid-typing survives step change |
 | Select stacking / overflow | **done (code)** | `.dsc-wizard-panel` overflow visible; decision panel select case |
 | Learning demotion copy | **done (code)** | Calibrate = guided fan SoT |
-| Pi SPA hotpatch | **done** | `index-XS57jN-m.js` / `calibrate-CpykSWoW.js` (verify after deploy); bundle contains SoftCal OK + What: + holds live fans |
+| Pi SPA hotpatch | **done** | tip `94705f0`: `index-JuWgMbJV.js` / `calibrate-BNJCw6ba.js` / `twin-three-B0t1gmm4.js`; SoftCal OK + What: + holds live fans |
 | Operator visual smoke (browser) | **done (live)** | All cal tabs What/Process/Expected; Fan+Light hold copy; SoftCal chips; Roster Detach on assigned rows |
 | CreateGoal completion gate | **done** | 2026-08-31 — fan HW parked per objective; genus CC0 strain reference live on Pi Research |
-| Waves 2–5 (CannaLib, PPFD, Twin, polish) | **next-plan** | Same CreateGoal objective; Zigbee+extra HW parked |
-| Wave 2 CannaLib (in progress) | **in progress** | Brain/SPA offset + Load more; type icons; hydrate media slot; live CannaLib still ignores offset until deploy — brain falls back to local OFFSET when head-page repeats |
+| Waves 2–5 (CannaLib, PPFD, Twin, polish) | **done (code)** | tip `28953ae`; developer SoT `docs/brain/OPERATOR-POLISH.md` |
+| Wave 2 CannaLib | **done (hub+brain)** | offset + Load more + type icons + media proxy; live CDN offset still deferred — brain falls back to local OFFSET when head-page repeats |
 | Live CannaLib offset deploy | **deferred** | Hub trampoline `standalone_server.py` has offset; production `cannalib.plausible-deniability.net` needs same |
 | Wave 3 PPFD local crops | **done (kit)** | SF1000/SF2000/SE7000/TS1000 archived under `/dsc-catalog/ppfd/`; SPA refuses CDN; Pi serves maps (`scripts/fetch_kit_ppfd_maps.py`) |
 | Wave 4 Sankey air-only | **done (live)** | Heat/humidity estimated modes removed; MASS IMBALANCE stays gated (`massBalanceOk={null}`) |
